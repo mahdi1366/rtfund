@@ -44,8 +44,8 @@ switch ($task)
 	case "elementDelete":
 		elementDelete();
 		
-	case "elementSave":
-		elementSave();
+	case "SaveElement":
+		SaveElement();
 		
 	//........................
 	case "GetPursuitCode":
@@ -202,40 +202,28 @@ function ChangeLevel()
 
 function SelectElements()
 {
-	$no = count(FormElements::select("FormID=" . $_GET["FormID"]));
-	
-	$temp = FormElements::select("FormID=" . $_GET["FormID"] . " order by " . $_GET["sort"] . " " . $_GET["dir"]);
-	
-	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
+	$temp = FGR_FormElements::select(" FormID=? " . dataReader::makeOrder(), array($_REQUEST["FormID"]));
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
 
-function elementDelete()
+function SaveElement()
 {
-	FormElements::delete("ElementID=" . $_POST["ElementID"]);
-	dataAccess::AUDIT("حذف جزء قالب فرم با عنوان [" . $_POST["ElementTitle"] . "]");
-	echo "true";
-	die();
-}
-
-function elementSave()
-{
-	$obj = new FormElements();
+	$obj = new FGR_FormElements();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
-	if(isset($_POST["FormID"]))			$obj->FormID = $_POST["FormID"];
-	if(isset($_POST["ElementTitle"]))	$obj->ElementTitle = $_POST["ElementTitle"];
-	if(isset($_POST["ElementType"]))	$obj->ElementType = $_POST["ElementType"];
-	if(isset($_POST["ElementValue"]))	$obj->ElementValue = $_POST["ElementValue"];
-	if(isset($_POST["width"]))			$obj->width = $_POST["width"];
-	if(isset($_POST["referenceDesc"]) && $_POST["referenceDesc"] != "---")	
-		$obj->referenceDesc = $_POST["referenceDesc"];
-		
-	if(isset($_POST["ordering"]))		$obj->ordering = $_POST["ordering"];
+	if($obj->TypeID == "")
+		$obj->TypeID = PDONULL;
 	
-	
-	if(isset($_POST["referenceField"]))
+	if($obj->ElType != "combo")
 	{
-		if(strpos($_POST["referenceField"], "info_") === false)
+		$obj->ElValue = "";
+		$obj->TypeID = 0;
+	}
+
+	/*if(isset($obj->RefField))
+	{
+		if(strpos($obj->referenceField, "info_") === false)
 		{
 			$obj->referenceField = $_POST["referenceField"];
 			$obj->referenceInfoID = 0;
@@ -251,22 +239,23 @@ function elementSave()
 	{
 		$obj->referenceField = "";
 		$obj->referenceInfoID = 0;
-	}
+	}*/
 	//----------------------------------------------------------------------
 	
-	if($_POST["ElementID"] == "")
-	{
-		$obj->ElementID = null;
-		$obj->insert();
-		$obj->ElementID = FormElements::LastID();
-		dataAccess::AUDIT("ایجاد اجراء قالب فرم با کد[" . $obj->ElementID . "]");
-	}
-	else 
-	{
-		$obj->ElementID = $_POST["ElementID"];
-		$obj->update("ElementID=" . $obj->ElementID);
-		dataAccess::AUDIT("ویرایش اجراء قالب فرم با کد[" . $obj->ElementID . "]");
-	}
+	if($obj->ElementID > 0)
+		$result = $obj->EditElement();
+	else
+		$result = $obj->AddElement();
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function elementDelete()
+{
+	FormElements::delete("ElementID=" . $_POST["ElementID"]);
+	dataAccess::AUDIT("حذف جزء قالب فرم با عنوان [" . $_POST["ElementTitle"] . "]");
 	echo "true";
 	die();
 }

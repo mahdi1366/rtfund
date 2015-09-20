@@ -123,21 +123,21 @@ class FGR_FormElements extends PdoDataAccess
 {
 	public $ElementID;
 	public $FormID;
-	public $ElementTitle;
-	public $ElementType;
-	public $ElementValue;
-	public $referenceField;
-	public $referenceDesc;
-	public $referenceInfoID;
+	public $ElTitle;
+	public $ElType;
+	public $ElValue;
+	public $RefField;
+	public $RefDesc;
+	public $TypeID;
 	public $ordering;
 	public $width;
 	
-	public static function select($where = "")
+	public static function select($where = "", $param = array())
 	{
-		$query = "SELECT * FROM fm_form_details";
+		$query = "SELECT * FROM FGR_FormElements";
 		$query .= ($where != "") ? " where " . $where : "";
 		
-		return PdoDataAccess::runquery($query);
+		return PdoDataAccess::runquery($query, $param);
 	}
 	
 	public static function selectWithWfmValues($FormID, $letterID, $PersonID, $RefID)
@@ -148,7 +148,7 @@ class FGR_FormElements extends PdoDataAccess
 				if(a.PersonID=" . $PersonID . " or r.des_PersonID=" . $PersonID . ",1,0) as access,
 				1 as active
 
-			from fm_form_details as f
+			from FGR_FormElements as f
 				left join fm_element_access as a on(a.FormID=f.FormID and a.ElementID=f.ElementID and a.StepID=1)
 			 	left join wfm_replacement as r on(a.PersonID=r.src_PersonID and des_PersonID=1002 and
         				StartDate <= now() and now() <= EndDate)
@@ -162,8 +162,8 @@ class FGR_FormElements extends PdoDataAccess
 				if(a.PersonID=$PersonID or des_PersonID=$PersonID, 1, 0) as access,
 				if(s.RefID $RefID, 1, 0) as active
 
-			from fm_form_details as f
-				left join wfm_form_details as w on(f.ElementID=w.ElementID and LetterID=$letterID)
+			from FGR_FormElements as f
+				left join wFGR_FormElements as w on(f.ElementID=w.ElementID and LetterID=$letterID)
     			left join wfm_send as s on(s.LetterID=$letterID and s.SendStatus='raw')
 				
     			left join fm_workflow as wf on(wf.FormID=f.FormID and wf.StepID=s.StepID)
@@ -181,41 +181,52 @@ class FGR_FormElements extends PdoDataAccess
 	
 	public function AddElement()
 	{
-		PdoDataAccess::insert("fm_form_details",$this->MakeItemArray());
-	}
-	
-	public function EditElement($where)
-	{
-		PdoDataAccess::update("fm_form_details",$this->MakeItemArray(), $where);
-	}
-	
-	public static function RemoveElement($where)
-	{
-		PdoDataAccess::delete("fm_form_details",$where);
-	}
-	
-	public static function LastID()
-	{
-		return PdoDataAccess::GetLastID("fm_form_details", "ElementID");
-	}
-	
-	function MakeItemArray()
-	{
-		$arr = array();
+		if(empty($this->ordering))
+		{
+			$order = PdoDataAccess::GetLastID("FGR_FormElements", "ordering", "FormID=?", array($this->FormID));
+			$this->ordering = $order+1;
+		}
 		
-		if(isset($this->ElementID)) $arr[] = array("ElementID" , $this->ElementID);
-		if(isset($this->FormID)) $arr[] = array("FormID" , $this->FormID);
-		if(isset($this->ElementTitle)) $arr[] = array("ElementTitle" , $this->ElementTitle);
-		if(isset($this->ElementType)) $arr[] = array("ElementType" , $this->ElementType);
-		if(isset($this->ElementValue)) $arr[] = array("ElementValue" , $this->ElementValue);
-		if(isset($this->referenceField)) $arr[] = array("referenceField" , $this->referenceField);
-		if(isset($this->referenceDesc)) $arr[] = array("referenceDesc" , $this->referenceDesc);
-		if(isset($this->referenceInfoID)) $arr[] = array("referenceInfoID" , $this->referenceInfoID);
-		if(isset($this->ordering)) $arr[] = array("ordering" , $this->ordering);
-		if(isset($this->width)) $arr[] = array("width" , $this->width);
+		if(!PdoDataAccess::insert("FGR_FormElements",$this))
+			return false;
 		
-		return $arr;
+		$this->ElementID = parent::InsertID();
+		
+	 	$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->ElementID;
+		$daObj->SubObjectID = $this->FormID;
+		$daObj->TableName = "FGR_FormElements";
+		$daObj->execute();
+		return true;	
 	}
+	
+	public function EditElement()
+	{
+		if(!PdoDataAccess::update("FGR_FormElements",$this, "ElementID=:e", array(":e" => $this->ElementID)))
+			return false;
+		
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_update;
+		$daObj->MainObjectID = $this->ElementID;
+		$daObj->SubObjectID = $this->FormID;
+		$daObj->TableName = "FGR_FormElements";
+		$daObj->execute();
+		return true;	
+	}
+	
+	public static function RemoveElement($ElementID)
+	{
+		PdoDataAccess::delete("FGR_FormElements","ElementID=?", array($ElementID));
+		
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_delete;
+		$daObj->MainObjectID = $ElementID;
+		$daObj->TableName = "FGR_FormElements";
+		$daObj->execute();
+		return true;	
+	}
+	
 }
 
 class wfm_form extends PdoDataAccess
@@ -295,9 +306,9 @@ class wfm_form_detail extends PdoDataAccess
 	
 	function select($where)
 	{
-		$query = "select wfm_form_details.*,
-			fm_form_details.ElementType,fm_form_details.ElementValue as fmElementValue
-			from wfm_form_details join fm_form_details using(ElementID)";
+		$query = "select wFGR_FormElements.*,
+			FGR_FormElements.ElementType,FGR_FormElements.ElementValue as fmElementValue
+			from wFGR_FormElements join FGR_FormElements using(ElementID)";
 		$query .= ($where != "") ? " where " . $where : "";
 		
 		return PdoDataAccess::runquery($query);
@@ -305,17 +316,17 @@ class wfm_form_detail extends PdoDataAccess
 	
 	public function AddDetail()
 	{
-		PdoDataAccess::insert("wfm_form_details",$this->MakeItemArray());
+		PdoDataAccess::insert("wFGR_FormElements",$this->MakeItemArray());
 	}
 	
 	public function EditDetail($where)
 	{
-		PdoDataAccess::update("wfm_form_details",$this->MakeItemArray(), $where);
+		PdoDataAccess::update("wFGR_FormElements",$this->MakeItemArray(), $where);
 	}
 	
 	public static function RemoveDetail($where)
 	{
-		PdoDataAccess::delete("wfm_form_details",$where);
+		PdoDataAccess::delete("wFGR_FormElements",$where);
 	}
 	
 	function MakeItemArray()

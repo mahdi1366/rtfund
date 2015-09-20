@@ -39,12 +39,12 @@ $col->sortable = false;
 $col->width = 40;
 //---------------------------
 $col = $dg->addColumn("گردش","","");
-$col->renderer = "FGR_Form.workflowRender";
+$col->renderer = "FGR_Form.stepsRender";
 $col->sortable = false;
 $col->width = 40;
 //---------------------------
 
-$dg->addButton("Add","ایجاد","add","function(){FGR_FormObject.LoadInfo('new')}");
+$dg->addButton("","ایجاد","add","function(){FGR_FormObject.LoadInfo('new')}");
 
 $dg->height = 300;
 $dg->title = "فرم های ایجاد شده";
@@ -59,70 +59,145 @@ $grid = $dg->makeGrid_returnObjects();
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "form.data.php?task=SelectElements","dg_elements");
 
+$dg->addColumn('', "FormID", "string", true);
 $dg->addColumn('كد جزء', "ElementID", "string", true);
 
 $col = $dg->addColumn("ترتیب","ordering","string");
 $col->width = 40;
-$col->editor = ColumnEditor::NumberField();
+$col->editor = ColumnEditor::NumberField(true);
 
-$col = $dg->addColumn('عنوان', "ElementTitle", "string");
+$col = $dg->addColumn('عنوان', "ElTitle", "string");
 $col->editor = ColumnEditor::TextField();
 
 $col = $dg->addColumn('عرض', "width", "string");
-$col->editor = ColumnEditor::TextField();
+$col->editor = ColumnEditor::TextField(true);
 $col->width = 40;
 $typeArr = array(
-	array("id" => "textfield" , "value" => "متن ساده"),
+	array("id" => "textfield" , "value" => "فیلد متنی"),
+	array("id" => "numberfield" , "value" => "فیلد عددی"),
+	array("id" => "currencyfield" , "value" => "فیلد مبلغ"),
+	array("id" => "textarea" , "value" => "فیلد متن بلند"),
 	array("id" => "shdatefield" , "value" => "تاریخ"),
-	array("id" => "displayfield" , "value" => "اطلاعات نمایشی"),
-	array("id" => "textarea" , "value" => "توضیحات"),
-	array("id" => "combo" , "value" => "کشویی"),
+	array("id" => "displayfield" , "value" => "اطلاعات نمایشی"),	
+	array("id" => "combo" , "value" => "فیلد کشویی"),
 	array("id" => "radio" , "value" => "انتخابی یکتا"),
-	array("id" => "checkbox" , "value" => "انتخابی"),
-	array("id" => "bind" , "value" => "مقدار داده اصلی")
+	array("id" => "checkbox" , "value" => "انتخابی چندگانه")
 );
-$col = $dg->addColumn("نوع ستون","ElementType","string");
-$col->editor = ColumnEditor::ComboBox($typeArr, "id", "value");
-$col->width = 70;
+$col = $dg->addColumn("نوع ستون","ElType","string");
+$col->editor = ColumnEditor::ComboBox($typeArr, "id", "value", "", "editor_ElType");
+$col->width = 100;
 
-$col = $dg->addColumn("","ElementValue","string");
+$col = $dg->addColumn("مقادیر آیتم","ElValue","string");
+$col->editor = ColumnEditor::TextField(true, "editor_ElValue");
+
+$temp = PdoDataAccess::runquery("select * from BaseTypes");
+$col = $dg->addColumn("دامین مرجع","TypeID","string");
+$col->editor = ColumnEditor::ComboBox($temp, "TypeID", "TypeDesc", "", "editor_TypeID", true);
+$col->width = 100;
+
+$col = $dg->addColumn("فیلد مرجع","RefField","string");
 $col->editor = ColumnEditor::TextField(true);
 
-$col = $dg->addColumn("","referenceField","string");
-$col->editor = ColumnEditor::TextField(true);
-
-$dg->addColumn("","referenceInfoID","string", true);
-//---------------------------
-$dg->addButton("return","بازگشت","undo","function(){FGR_FormObject.Return()}");
-
-$dg->addButton("Add","ایجاد","add","function(){FGR_FormObject.AddElement()}");
+$dg->addButton("","بازگشت","undo","function(){FGR_FormObject.Return('elementsWin')}");
+$dg->addButton("","ایجاد","add","function(){FGR_FormObject.AddElement()}");
 
 	
 	$col = $dg->addColumn("حذف","","");
-	$col->renderer = "deleteElementRender";
+	$col->renderer = "FGR_Form.deleteElementRender";
 	$col->sortable = false;
-	$col->width = 30;
+	$col->width = 40;
 	
 $dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(v,p,r){return ManageCreditDescObj.SaveData(v,p,r);}";
+$dg->rowEditOkHandler = "function(store,record){return FGR_FormObject.SaveElement(store,record);}";
 
-
-//---------------------------
 $dg->height = 400;
 $dg->title = "اجزای فرم ";
-$dg->width = 700;
+$dg->width = 750;
 $dg->editorGrid = true;
 $dg->EnableSearch = false;
 $dg->DefaultSortField = "ordering";
+$dg->autoExpandColumn = "ElTitle";
 $dg->EnablePaging = false;
 $dg->DefaultSortDir = "asc";
 $ElGrid = $dg->makeGrid_returnObjects();
+
+//..............................................................................
+
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "form.data.php?task=SelectSteps", "dg_grid");
+
+$dg->addColumn('کد مرحله', "StepID", "string", true);
+
+$col = $dg->addColumn('عنوان مرحله', "StepTitle", "string");
+$col->width = 40;
+
+$col = $dg->addColumn('مجری', "fullName", "string");
+$col->width = 50;
+
+$col = $dg->addColumn('مهلت به روز', "BreakDuration", "string");
+$col->width = 20;
+
+$dg->addColumn('', "elements", "string",true);
+$dg->addColumn('', "PersonID", "string",true);
+//---------------------------
+$col = $dg->addColumn('بالا', "", "string");
+$col->renderer = "FGR_Form.UPRender";
+$col->sortable = false;
+$col->width = 10;
+
+$col = $dg->addColumn('پایین', "", "string");
+$col->renderer = "FGR_Form.DOWNRender";
+$col->sortable = false;
+$col->width = 10;
+
+$dg->addButton("","ایجاد مرحله", "add", "function(){FGR_FormObject.AddStep()}");
+$dg->addButton("","بازگشت","undo","function(){FGR_FormObject.Return('stepsWin')}");
+
+$col = $dg->addColumn("حذف","","");
+$col->renderer = "FGR_Form.DeleteStepRender";
+$col->sortable = false;
+$col->width = 10;
+
+$dg->enableRowEdit = true;
+$dg->rowEditOkHandler = "function(store,record){return FGR_FormObject.SaveStep(store,record);}";
+
+$dg->height = 300;
+$dg->title = "مراحل گردش فرم";
+$dg->width = 600;
+$dg->DefaultSortField = "StepID";
+$dg->autoExpandColumn = "StepTitle";
+$dg->EnablePaging = false;
+$dg->EnableSearch = false;
+$stepsGrid = $dg->makeGrid_returnObjects();
+
 ?>
 <script>
 	FGR_FormObject.grid = <?= $grid?>;
 	FGR_FormObject.grid.render(FGR_FormObject.get("dg_forms"));
 
 	FGR_FormObject.ElementsGrid = <?= $ElGrid?>;
+	FGR_FormObject.ElementsGrid.plugins[0].on("beforeedit", function(editor,e){
+		
+		editor = FGR_FormObject.ElementsGrid.plugins[0].getEditor();
+		editor.down("[itemId=editor_ElValue]").setDisabled(e.record.data.ElType != "combo");
+		editor.down("[itemId=editor_TypeID]").setDisabled(e.record.data.ElType != "combo");
+		
+		editor.down("[itemId=editor_ElType]").addListener("change", function(){
+			
+			editor = FGR_FormObject.ElementsGrid.plugins[0].getEditor();
+			
+			editor.down("[itemId=editor_ElValue]").setDisabled(true);
+			editor.down("[itemId=editor_TypeID]").setDisabled(true);
+				
+			if(this.getValue() == "combo")
+			{
+				editor.down("[itemId=editor_ElValue]").setDisabled(false);
+				editor.down("[itemId=editor_TypeID]").setDisabled(false);
+			}
+		});
+	});
+	
+	FGR_FormObject.StepsGrid = <?= $stepsGrid?>;
+	
 </script>
 <center>
 	<br>

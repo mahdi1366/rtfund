@@ -184,11 +184,16 @@ FGR_Form.elementRender = function()
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-FGR_Form.workflowRender = function()
+FGR_Form.stepsRender = function()
 {
-	return "<div align='center' title='تعریف گردش فرم' class='refresh' onclick='workflowInfo();' " +
+	return "<div align='center' title='تعریف گردش فرم' class='refresh' onclick='FGR_FormObject.StepsWin();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+FGR_Form.prototype.Return = function(el)
+{
+	eval("this." + el + '.hide();');	
 }
 
 //........................................................
@@ -204,7 +209,7 @@ FGR_Form.prototype.ElementWin = function()
 	{
 		this.elementsWin = new Ext.window.Window({
 			autoScroll : true,
-			width : 300,
+			width : 780,
 			modal : true,
 			title : "اجزای فرم",
 			closeAction : "hide",
@@ -232,15 +237,18 @@ FGR_Form.deleteElementRender = function()
 
 FGR_Form.prototype.AddElement = function()
 {
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
 	var modelClass = this.ElementsGrid.getStore().model;
 	var record = new modelClass({
+		FormID : record.data.FormID,
 		ElementID : "",
 		ElementTitle : ""
 	});
 
-	this.grid.plugins[0].cancelEdit();
-	this.grid.getStore().insert(0, record);
-	this.grid.plugins[0].startEdit(0, 0);
+	this.ElementsGrid.plugins[0].cancelEdit();
+	this.ElementsGrid.getStore().insert(0, record);
+	this.ElementsGrid.plugins[0].startEdit(0, 0);
 }
 
 FGR_Form.prototype.DeleteElement = function()
@@ -271,6 +279,149 @@ FGR_Form.prototype.DeleteElement = function()
 	});
 	
 }
+
+FGR_Form.prototype.SaveElement = function(store,record){
+
+	mask = new Ext.LoadMask(this.ElementsGrid, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		params: {
+			task: 'SaveElement',
+			record : Ext.encode(record.data)
+		},
+		url: this.address_prefix + 'form.data.php',
+		method: 'POST',
+
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+			if(st.success)
+			{
+				FGR_FormObject.ElementsGrid.getStore().load();
+			}
+			else
+			{
+				alert(st.data);
+			}
+		},
+		failure: function(){}
+	});
+}
+
+//........................................................
+
+FGR_Form.prototype.StepsWin = function()
+{
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.StepsGrid.getStore().proxy.extraParams = {
+		FormID : record.data.FormID
+	};
+	
+	if(!this.stepsWin)
+	{
+		this.stepsWin = new Ext.window.Window({
+			autoScroll : true,
+			width : 780,
+			modal : true,
+			title : "اجزای فرم",
+			closeAction : "hide",
+			items : new Ext.form.Panel({
+				plain: true,
+				border: 0,
+				bodyPadding: 5,
+				items : [this.StepsGrid]
+			})
+		});
+	}
+	
+	if(this.StepsGrid.rendered)
+		this.StepsGrid.getStore().load();
+	
+	this.stepsWin.show();
+}
+
+FGR_Form.DeleteStepRender = function()
+{
+	return "<div align='center' title='حذف' class='remove' onclick='FGR_FormObject.DeleteStep();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+FGR_Form.prototype.AddStep = function()
+{
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+	var modelClass = this.StepsGrid.getStore().model;
+	var record = new modelClass({
+		FormID : record.data.FormID,
+		ElementID : "",
+		ElementTitle : ""
+	});
+
+	this.StepsGrid.plugins[0].cancelEdit();
+	this.StepsGrid.getStore().insert(0, record);
+	this.StepsGrid.plugins[0].startEdit(0, 0);
+}
+
+FGR_Form.prototype.DeleteStep = function()
+{
+	var record = this.StepsGrid.getSelectionModel().getLastSelected();
+	
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = FGR_FormObject;
+		var mask = new Ext.LoadMask(me.StepsGrid, {msg:'در حال ذخيره سازي...'});
+		mask.show();
+		
+		Ext.Ajax.request({
+		  	url : me.address_prefix + "form.data.php",
+		  	method : "POST",
+		  	params : {
+		  		task : "DeleteElement",
+		  		StepID : record.data.StepID
+		  	},
+		  	success : function(response,o)
+		  	{
+				mask.hide();
+		  		FGR_FormObject.StepsGrid.getStore().load();
+		  	}	
+		});
+	});
+	
+}
+
+FGR_Form.prototype.SaveStep = function(store,record){
+
+	mask = new Ext.LoadMask(this.StepsGrid, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		params: {
+			task: 'SaveElement',
+			record : Ext.encode(record.data)
+		},
+		url: this.address_prefix + 'form.data.php',
+		method: 'POST',
+
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+			if(st.success)
+			{
+				FGR_FormObject.StepsGrid.getStore().load();
+			}
+			else
+			{
+				alert(st.data);
+			}
+		},
+		failure: function(){}
+	});
+}
+
 
 
 
