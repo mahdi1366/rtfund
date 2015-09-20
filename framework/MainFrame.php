@@ -153,6 +153,7 @@ require_once 'MainFrame.js.php';
 				framework = new FrameWorkClass();
 				if(FrameWorkClass.StartPage != "" && FrameWorkClass.StartPage != undefined)
 					framework.OpenPage(FrameWorkClass.StartPage, "صفحه اصلی");
+				FrameWorkClass.SystemLoad();
 			}, 700);
 		</script>
 

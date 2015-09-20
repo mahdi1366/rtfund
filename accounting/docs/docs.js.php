@@ -662,6 +662,8 @@ AccDocs.beforeRowEdit = function(editor,e){
 
 AccDocs.deleteitemRender = function(v,p,record)
 {
+	if(record.data.locked == "YES")
+		return "";
 	var record = AccDocsObject.grid.getStore().getAt(0);
 	if(record.data.DocStatus != "RAW")
 		return "";

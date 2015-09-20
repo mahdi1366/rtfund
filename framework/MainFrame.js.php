@@ -83,27 +83,31 @@ function FrameWorkClass()
 					autoWidth : true,
 					xtype: 'container',
 					layout : "vbox",
+					style : "background-color:white;vertical-align: middle; padding: 4px;",
+					height : 232,
 					items : [{
 						xtype : "container",
-						height : 230,
-						html: '<div style="width: 200px;background-color:white; vertical-align: middle; padding-right: 4px; padding-top: 4px; padding-bottom: 4px;" align="center">'+
-							
-							'<table width="96%" style="background-color : #35bc7a;border-radius:20px"><tr>'+
-								'<td id="framework_TD_Date" style="color:white;width: 70%;padding-right: 8px;padding-top: 8px;'+
-									'vertical-align: middle;font-size:12px;font-weight: bold;"></td>'+
-								'<td align="left" style="padding:5px;">'+
+						height : 150,
+						width : 190,
+						html: '<table style="background-color : #35bc7a;border-radius:20px;width:100%"><tr>'+
+								'<td id="framework_TD_Date" style="color:white;width: 70%;line-height: 18px;'+
+									'vertical-align: middle;font-size:12px;font-weight: bold;padding:5px"></td>'+
+								'<td align="left" style="padding:4px;">'+
 									'<embed type="application/x-shockwave-flash" width="70" height="70" src="/framework/icons/clock.swf" wmode="transparent"></embed>'+
 								'</td></tr></table>' +
 								
-							'<div style="width:96%;margin-top:4px;color:white;line-height: 2;font-weight: bold;background-color : #f86924;border-radius:20px; line_height:">'+
+							'<div style="margin-top:4px;color:white;line-height: 18px;font-weight: bold;'+
+								'background-color : #f86924;border-radius:20px; padding:6px">'+
 							"<?= $SystemName?>"+
 							"<br> کاربر : <?= $_SESSION['USER']["fullname"] ?>"+
-							"<br> شناسه : <?= $_SESSION['USER']["UserID"]?></div>" +
-					
-					'<div style="width:96%;margin-top:4px;color:white;background-color : #FFCC00;font-weight: bold;border-radius:20px;line-height: 2;">'+
-							"<?= $SystemName?>"+
-							"<br> کاربر : <?= $_SESSION['USER']["fullname"] ?>"+
-							"<br> شناسه : <?= $_SESSION['USER']["UserID"]?></div></div>"
+							"<br> شناسه : <?= $_SESSION['USER']["UserID"]?></div>"
+					},{
+						xtype : "container",
+						itemId : "DIV_SystemInfo",
+						height : 70,
+						width : 190,
+						style : "margin-top:3px;color:white;background-color : #FFCC00;" +
+							"font-weight: bold;border-radius:20px;line-height: 2;padding:6px"
 					}]
 					
 				}],
@@ -141,6 +145,8 @@ function FrameWorkClass()
 		//------------------------------------------------------------------
         ]
 	});
+	
+	this.SystemInfo = this.view.down("[itemId=DIV_SystemInfo]");
 
 	var now = new Date();
 	var XDate = GtoJ(now);
@@ -258,5 +264,5 @@ FrameWorkClass.prototype.formatUrl = function(url)
 	return "/" + list2.join("/");
 }
 
-
+FrameWorkClass.SystemLoad = function(){};
 </script>

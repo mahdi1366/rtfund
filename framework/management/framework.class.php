@@ -271,6 +271,19 @@ class FRW_access extends PdoDataAccess {
 		return true;
 	}
 
+	static function GetAccess($MenuID){
+		
+		$obj = new FRW_access();
+		PdoDataAccess::FillObject($obj, "select * from FRW_access where MenuID=? AND PersonID=?",
+				array($MenuID, $_SESSION["USER"]["PersonID"]));
+		
+		$obj->ViewFlag =	$obj->ViewFlag == "YES" ? true : false;
+		$obj->AddFlag =		$obj->AddFlag == "YES" ? true : false;
+		$obj->EditFlag =	$obj->EditFlag == "YES" ? true : false;
+		$obj->RemoveFlag =	$obj->RemoveFlag == "YES" ? true : false;
+		
+		return $obj;
+	}
 }
 
 ?>

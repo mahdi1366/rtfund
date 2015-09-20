@@ -512,6 +512,15 @@ function UpdateChecks(){
 
 function RegisterEndDoc(){
 	
+	$dt = PdoDataAccess::runquery("select * from ACC_docs where DocType='ENDCYCLE' 
+		AND BranchID=? AND CycleID=?", 
+			array($_SESSION["accounting"]["CycleID"],$_SESSION["accounting"]["BranchID"]));
+	if(count($dt) > 0)
+	{
+		echo Response::createObjectiveResponse(false, "سند اختتامیه در این دوره قبلا صادر شده است");
+		die();
+	}
+	
 	$LocalNo = $_POST["LocalNo"];
 	if($LocalNo != "")
 	{
@@ -561,13 +570,20 @@ function RegisterEndDoc(){
 		where CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 			AND BranchID = " . $_SESSION["accounting"]["BranchID"] . "
 		group by CostID,TafsiliID	
+		having sum(CreditorAmount-DebtorAmount)<>0
 	", array(), $pdo);
 	
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
 		$pdo->rollBack();
-		print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	
+	if(PdoDataAccess::AffectedRows($pdo) == 0)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "ردیفی برای صدور سند اختتامیه یافت نشد");
 		die();
 	}
 	
@@ -578,24 +594,50 @@ function RegisterEndDoc(){
 
 function RegisterStartDoc(){
 	
-	$DocID = $_POST["DocID"];
-	$dt = PdoDataAccess::runquery("select * from ACC_docs where DocID=?" , array($DocID));
+	$dt = PdoDataAccess::runquery("select * from ACC_docs where DocType='STARTCYCLE' 
+		AND BranchID=? AND CycleID=?", 
+			array($_SESSION["accounting"]["CycleID"],$_SESSION["accounting"]["BranchID"]));
 	if(count($dt) > 0)
 	{
-		echo Response::createObjectiveResponse(false, "شماره برگه وارد شده موجود می باشد");
+		echo Response::createObjectiveResponse(false, "سند افتتاحیه در این دوره قبلا صادر شده است");
+		die();
+	}
+	
+	$LocalNo = $_POST["LocalNo"];
+	if($LocalNo != "")
+	{
+		$dt = PdoDataAccess::runquery("select * from ACC_docs 
+			where BranchID=? AND CycleID=? AND LocalNo=?" , 
+
+			array($_SESSION["accounting"]["BranchID"], 
+				$_SESSION["accounting"]["CycleID"], 
+				$LocalNo));
+
+		if(count($dt) > 0)
+		{
+			echo Response::createObjectiveResponse(false, "شماره برگه وارد شده موجود می باشد");
+			die();
+		}
+	}
+	
+	$dt = PdoDataAccess::runquery("select * from ACC_cycles where CycleID<" . 
+			$_SESSION["accounting"]["CycleID"]);
+	if(count($dt) == 0)
+	{
+		Response::createObjectiveResponse(false, "دوره ایی قبل این دوره برای صدور سند افتتاحیه موجود نمی باشد");
 		die();
 	}
 	
 	$pdo = PdoDataAccess::getPdoObject();
-	/* @var $pdo PDO */
 	$pdo->beginTransaction();
 	//---------------- account header doc --------------------
 	$obj = new ACC_docs();
-	$obj->DocID = $DocID;
+	$obj->LocalNo = $LocalNo;
 	$obj->RegDate = PDONOW;
 	$obj->regPersonID = $_SESSION['USER']["PersonID"];
-	$obj->DocDate = DateModules::shamsi_to_miladi($date);
+	$obj->DocDate = PDONOW;
 	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
+	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
 	$obj->description = "سند افتتاحیه";
 	$obj->DocType = "STARTCYCLE";
 	$result = $obj->Add($pdo);
@@ -608,27 +650,31 @@ function RegisterStartDoc(){
 	}
 	
 	PdoDataAccess::runquery("
-		insert into ACC_DocItems
-		SELECT $DocID,@i:=@i+1,t1.* FROM
-		(
-
-		select KolID,moinID,TafsiliID,Tafsili2ID,
+		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,locked)
+		select $obj->DocID,CostID,TafsiliType,TafsiliID,
 			if( sum(DebtorAmount-CreditorAmount)>0, sum(DebtorAmount-CreditorAmount), 0 ),
 			if( sum(CreditorAmount-DebtorAmount)>0, sum(CreditorAmount-DebtorAmount), 0 ),
-			'',1
+			1
 		from ACC_DocItems i
 		join ACC_docs using(DocID)
-		where CycleID=" . ($_SESSION["accounting"]["CycleID"]-1) . " AND DocType<>'ENDCYCLE'
-		group by KolID,moinID,TafsiliID,Tafsili2ID
-	
-	)t1
-	,(select @i:=0)t2;", array(), $pdo);
+		where CycleID=" . $_SESSION["accounting"]["CycleID"]-1 . "
+			AND BranchID = " . $_SESSION["accounting"]["BranchID"] . "
+		group by CostID,TafsiliID	
+		having sum(CreditorAmount-DebtorAmount)<>0
+	", array(), $pdo);
 	
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
 		$pdo->rollBack();
 		print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	
+	if(PdoDataAccess::AffectedRows($pdo) == 0)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "ردیفی برای صدور سند افتتاحیه یافت نشد");
 		die();
 	}
 	

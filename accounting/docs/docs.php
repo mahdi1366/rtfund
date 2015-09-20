@@ -215,10 +215,21 @@ bars[1].hide();
 AccDocsObject.itemGrid = <?= $itemsgrid ?>;
 AccDocsObject.itemGrid.plugins[0].on("beforeedit", AccDocs.beforeRowEdit);
 AccDocsObject.itemGrid.plugins[0].on("beforeedit", function(editor,e){
+	
+	if(e.record.data.locked == "YES")
+		return false;
+	
 	if(!e.record.data.ItemID)
 		return AccDocsObject.AddAccess;
 	return AccDocsObject.EditAccess;
 });
+AccDocsObject.itemGrid.getView().getRowClass = function(record, index)
+{
+	if(record.data.locked == "YES")
+		return "violetRow";
+	return "";
+}
+
 //...................................................
 AccDocsObject.checkGrid = <?= $checksgrid ?>;
 AccDocsObject.checkGrid.plugins[0].on("beforeedit", AccDocs.beforeCheckEdit);

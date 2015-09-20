@@ -30,6 +30,9 @@ function CloseOpenDoc()
 			name : "LocalNo",
 			fieldLabel : "شماره سند",		
 			hideTrigger : true
+		},{
+			xtype : "fieldset",
+			html : "توجه : در صورتیکه شماره سند را وارد نکنید، سند در آخرین برگه صادر می شود"
 		}],
 		buttons : [{
 			text : "صدور سند اختتامیه",
@@ -45,13 +48,16 @@ function CloseOpenDoc()
 					url: CloseOpenDocObj.address_prefix + 'doc.data.php?task=RegisterEndDoc',
 					success: function(fp, o) {
 						if(o.result.success)
-							alert("سند با موفقیت صادر شد");
+							Ext.MessageBox.alert("","سند با موفقیت صادر شد");
 						else
-							alert(o.result.data);
+							Ext.MessageBox.alert("",o.result.data);
 						
 						mask.hide();
 					},
-					failure : function(){mask.hide();}
+					failure : function(fp, o){
+						Ext.MessageBox.alert("",o.result.data);
+						mask.hide();
+					}
 				});
 			}
 		},{
@@ -68,13 +74,16 @@ function CloseOpenDoc()
 					url: CloseOpenDocObj.address_prefix + 'doc.data.php?task=RegisterStartDoc',
 					success: function(fp, o) {
 						if(o.result.success)
-							alert("سند با موفقیت صادر شد");
+							Ext.MessageBox.alert("","سند با موفقیت صادر شد");
 						else
-							alert(o.result.data);
+							Ext.MessageBox.alert("",o.result.data);
 						
 						mask.hide();
 					},
-					failure : function(){mask.hide();}
+					failure : function(fp, o){
+						Ext.MessageBox.alert("",o.result.data);
+						mask.hide();
+					}
 				});
 			}
 		}]

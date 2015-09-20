@@ -71,11 +71,15 @@ $_SESSION['USER']["RecentSystems"] = array();
 				padding-top: 50px;
 				text-overflow: ellipsis;
 				vertical-align: middle;	
+				height : 150px;
+				overflow: hidden;
 			}
 			
 			.SystemDesc {
-				line-height: 18px;
+				line-height: 19px;
 				margin: 10px;
+				height : 150px;
+				overflow: hidden;
 			}
 			
 			.systemTitle {
