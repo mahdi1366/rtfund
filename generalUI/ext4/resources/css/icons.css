@@ -1,0 +1,70 @@
+/*
+ * Ext JS Library 2.0
+ * Copyright(c) 2006-2007, Ext JS, LLC.
+ * licensing@extjs.com
+ * 
+ * http://extjs.com/license
+ */
+#button-grid .x-panel-body {border:1px solid #99bbe8;border-top:0 none;}
+.blueText		{color: #0D6EB2;font-weight: bold;}
+.icon-grid		{background-image:url('/generalUI/ext4/resources/themes/icons/grid.gif') !important;}
+.add			{background-image:url('/generalUI/ext4/resources/themes/icons/add.gif') !important;}
+.arrow_left		{background-image:url('/generalUI/ext4/resources/themes/icons/arrow-left.gif') !important;}
+.arrow_right	{background-image:url('/generalUI/ext4/resources/themes/icons/arrow-right.gif') !important;}
+.arrow_up		{background-image:url('/generalUI/ext4/resources/themes/icons/arrow-up.gif') !important;}
+.arrow_down		{background-image:url('/generalUI/ext4/resources/themes/icons/arrow-down.gif') !important;}
+.option			{background-image:url('/generalUI/ext4/resources/themes/icons/plugin.gif') !important;}
+.cross			{background-image:url('/generalUI/ext4/resources/themes/icons/cross.gif') !important;}
+.remove			{background-image:url('/generalUI/ext4/resources/themes/icons/delete.gif') !important;}
+.edit			{background-image:url('/generalUI/ext4/resources/themes/icons/edit.gif') !important;background-color: transparent;}
+.print			{background-image:url('/generalUI/ext4/resources/themes/icons/print.gif') !important;}
+.refresh		{background-image:url('/generalUI/ext4/resources/themes/icons/table_refresh.gif') !important;}
+.view			{background-image:url('/generalUI/ext4/resources/themes/icons/view.gif') !important;}
+.reload			{background-image:url('/generalUI/ext4/resources/themes/default/grid/done.gif') !important;}
+.save			{background-image:url('/generalUI/ext4/resources/themes/icons/save.gif') !important;}
+.send			{background-image:url('/generalUI/ext4/resources/themes/icons/send.png') !important;}
+.undo			{background-image:url('/generalUI/ext4/resources/themes/icons/undo.gif') !important;}
+.return			{background-image:url('/generalUI/ext4/resources/themes/icons/return.gif') !important;}
+.back			{background-image:url('/generalUI/ext4/resources/themes/icons/back.gif') !important;}
+.forward		{background-image:url('/generalUI/ext4/resources/themes/icons/forward.gif') !important;}
+.help			{background-image:url('/generalUI/ext4/resources/themes/icons/help.gif') !important;}
+.list			{background-image:url('/generalUI/ext4/resources/themes/icons/list.gif') !important;}
+.search			{background-image:url('/generalUI/ext4/resources/themes/icons/search.gif') !important;}
+.info			{background-image:url('/generalUI/ext4/resources/themes/icons/info.gif') !important;}
+.info2			{background-image:url('/generalUI/ext4/resources/themes/icons/info2.png') !important;}
+.clear			{background-image:url('/generalUI/ext4/resources/themes/icons/clear.gif') !important;}
+.excel			{background-image:url('/generalUI/ext4/resources/themes/icons/excel.gif') !important;}
+.history		{background-image:url('/generalUI/ext4/resources/themes/icons/history.gif') !important;}
+.warning		{background-image:url('/generalUI/ext4/resources/themes/icons/warning.gif') !important;}
+.user			{background-image:url('/generalUI/ext4/resources/themes/icons/user.gif') !important;}
+.user_edit      	{background-image:url('/generalUI/ext4/resources/themes/icons/user_edit.gif') !important;}
+.user_add       	{background-image:url('/generalUI/ext4/resources/themes/icons/user_add.gif') !important;}
+.user_delete	{background-image:url('/generalUI/ext4/resources/themes/icons/user_delete.gif') !important;}
+.loading        	{background-image:url('/generalUI/ext4/resources/themes/icons/loading.gif') !important;}
+.tick			{background-image:url('/generalUI/ext4/resources/themes/icons/tick.gif') !important;}
+.copy			{background-image:url('/generalUI/ext4/resources/themes/icons/copy.gif') !important;}
+.not_pay		{background-image:url('/generalUI/resources/images/icons/not_pay.gif') !important;}
+.process		{background-image:url('/generalUI/ext4/resources/themes/icons/process.gif') !important;}
+.up				{background-image:url('/generalUI/ext4/resources/themes/icons/up.gif') !important;}
+.down			{background-image:url('/generalUI/ext4/resources/themes/icons/down.gif') !important;}
+.app			{background-image:url('/generalUI/ext4/resources/themes/icons/app.gif') !important;}
+.connect		{background-image:url('/generalUI/ext4/resources/themes/icons/connect.gif') !important;}
+.upload			{background-image:url('/generalUI/ext4/resources/themes/icons/upload.gif') !important;}
+.comment		{background-image:url('/generalUI/ext4/resources/themes/icons/comment.png') !important;}
+.setting		{background-image:url('/generalUI/ext4/resources/themes/icons/setting.gif') !important;}
+.letter			{background-image:url('/generalUI/ext4/resources/themes/icons/letter.gif') !important;}
+.icon-magnifier	{background-image:url('/generalUI/ext4/resources/themes/icons/search.gif') !important;}
+.report			{background-image:url('/generalUI/ext4/resources/themes/icons/report.gif') !important;}
+.sum			{background-image:url('/generalUI/ext4/resources/themes/icons/sum.png') !important;}
+.attach			{background-image:url('/generalUI/ext4/resources/themes/icons/attach.gif') !important;}
+.account		{background-image:url('/generalUI/ext4/resources/themes/icons/account.gif') !important;}
+.epay			{background-image:url('/generalUI/ext4/resources/themes/icons/epay.png') !important;}
+.lock			{background-image:url('/generalUI/ext4/resources/themes/icons/lock.gif') !important;}
+.unlock			{background-image:url('/generalUI/ext4/resources/themes/icons/unlock.gif') !important;}
+
+.pinkRow .x-grid-cell,.pinkRow .x-grid-rowwrap-div {background-color: #FFB8C9; }
+.greenRow .x-grid-cell,.greenRow .x-grid-rowwrap-div {background-color: #D0F7E2; }
+.yellowRow .x-grid-cell,.yellowRow .x-grid-rowwrap-div {background-color: #FCFCB6; }
+.violetRow .x-grid-cell,.violetRow .x-grid-rowwrap-div {background-color: #E7DBFF; }
+.ltrDir {direction:ltr}
+.rtlDir {direction:rtl}
