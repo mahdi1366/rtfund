@@ -1,7 +1,7 @@
 <?php
 //---------------------------
 // programmer:	Jafarkhani
-// create Date:	89.02
+// create Date:	94.06
 //---------------------------
 require_once '../header.inc.php';
 require_once 'form.class.php';
@@ -31,8 +31,8 @@ switch ($task)
 	case "SaveSteps":
 		SaveSteps();
 		
-	case "DeleteSteps":
-		DeleteSteps();
+	case "DeleteStep":
+		DeleteStep();
 	
 	case "ChangeLevel":
 		ChangeLevel();
@@ -117,35 +117,25 @@ function RemoveFile()
 
 function SelectSteps()
 {
-	$temp = dataAccess::RUNQUERY("select w.*, 
-		concat(u.name,' ',u.family)as fullName,
-		group_concat(a.ElementID) as elements
-		
-		from fm_workflow as w 
-			join um_user as u using(PersonID) 
-			left join fm_element_access as a 
-				on(w.FormID=a.FormID and w.PersonID=a.PersonID and w.StepID=a.StepID)
-					
-		where w.FormID=" . $_REQUEST["FormID"] . "
-		group by w.FormID,StepID");
-	
+	$temp = FGR_steps::select("FormID=? " . dataReader::makeOrder(), array($_REQUEST["FormID"]));	
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
 
 function SaveSteps()
 {
+	$obj = new FGR_steps();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
-	$StepID = (!empty($_POST["StepID"])) ? $_POST["StepID"] : 
-		dataAccess::GetLastID("fm_workflow", "StepID", "FormID=" . $_POST["FormID"]) + 1;
+	if(empty($obj->StepID))
+		$result = $obj->AddStep();
+	else
+		$result = $obj->EditStep();
 	
-	dataAccess::RUNQUERY("insert into fm_workflow values(" . $_POST["FormID"] . ",$StepID,'" .
-		$_POST["StepTitle"] . "'," . $_POST["PersonID"] . "," . $_POST["BreakDuration"] . ")
-		on duplicate key update StepTitle='" . $_POST["StepTitle"] . "', 
-								PersonID=" . $_POST["PersonID"] . ",
-								BreakDuration=" . $_POST["BreakDuration"]);
-
-	dataAccess::AUDIT("ایجاد/ویرایش مرحله [$StepID] گردش برای فرم کد[" . $_POST["FormID"] . "]");
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse($result, "");
+	die();
+	
 	
 	//.............................
 	dataAccess::RUNQUERY("delete from fm_element_access where FormID=" . $_POST["FormID"] . 
@@ -173,28 +163,26 @@ function SaveSteps()
 	die();
 }
 
-function DeleteSteps()
+function DeleteStep()
 {
-	$temp = dataAccess::RUNQUERY("delete from fm_workflow where FormID=" . $_REQUEST["FormID"] . 
-		" and StepID=" . $_POST["StepID"]);
-	
-	dataAccess::RUNQUERY("update fm_workflow set StepID=StepID-1 where FormID=" . $_REQUEST["FormID"] . 
-		" and StepID>" . $_POST["StepID"]);
-	
-	dataAccess::AUDIT("حذف مرحله [" . $_POST["StepID"] . "] گردش فرم [" . $_REQUEST["FormID"] . "]");
+	$result = FGR_steps::RemoveStep($_REQUEST["StepID"]);
+	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
 function ChangeLevel()
 {
-	$curStepID = $_POST["StepID"];
-	$secStepID = ($_POST["direction"] == "up") ? $_POST["StepID"] - 1 : $_POST["StepID"] + 1;
+	$FormID = $_POST["FormID"];
+	$StepID = $_POST["StepID"];
+	$ordering = $_POST["ordering"];
+	$newOrder = ($_POST["direction"] == "up") ? $_POST["ordering"]*1 - 1 : $_POST["ordering"]*1 + 1;
 	
-	dataAccess::RUNQUERY("update fm_workflow set StepID=10000 where StepID=" . $secStepID . " and FormID=" . $_POST["FormID"]);
-	dataAccess::RUNQUERY("update fm_workflow set StepID=$secStepID where StepID=" . $curStepID . " and FormID=" . $_POST["FormID"]);
-	dataAccess::RUNQUERY("update fm_workflow set StepID=$curStepID where StepID=10000 and FormID=" . $_POST["FormID"]);
+	PdoDataAccess::runquery("update FGR_steps set ordering=? where FormID=? AND ordering=?", array($ordering, $FormID, $newOrder));
+	PdoDataAccess::runquery("update FGR_steps set ordering=? where FormID=? AND StepID=?", array($newOrder, $FormID, $StepID));
 	
-	echo "true";
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse(true, "");
 	die();
 }
 

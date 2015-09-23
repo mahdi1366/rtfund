@@ -1,9 +1,8 @@
 <?php
 //---------------------------
 // programmer:	Jafarkhani
-// create Date:	89.02
+// create Date:	94.06
 //---------------------------
-require_once inc_component;
 
 class FGR_forms extends PdoDataAccess
 {
@@ -69,34 +68,6 @@ class FGR_forms extends PdoDataAccess
 		return true;
 	}
 	
-	
-	function Drp_AllForms($drpName, $extraRow = "", $onChangeFn = "")
-	{
-		$obj = new DROPDOWN();
-		$obj->datasource = PdoDataAccess::runquery("
-		select *
-			from fm_forms as f
-			join fm_workflow as w on(w.FormID=f.FormID and w.StepID=1)
-		    left join wfm_replacement as r on(r.src_PersonID=w.PersonID and StartDate <= now() and now() <= EndDate)
-		
-		    where w.PersonID=" . $_SESSION["PersonID"] . " or des_PersonID=" . $_SESSION["PersonID"] . "
-			order by FormName
-		");
-		
-		if($extraRow != "")
-			$obj->datasource = array_merge(array(array("FormID"=>0, "FormName"=>$extraRow)) , $obj->datasource);
-		
-		$obj->valuefield = "%FormID%";
-		$obj->textfield = "%FormName%";
-		$obj->Style = 'class="x-form-text x-form-field" style="width:100%"';
-		
-		if($onChangeFn != "")
-			$obj->Style .= ' onchange="' . $onChangeFn . '(this);"';
-			
-		$obj->id = $drpName;
-		return $obj->bind_dropdown();
-	}
-
 	function GetSummery($PersonID)
 	{
 		$query = "select * from wfm_send where ToPersonID=" . $PersonID . " and ViewFlag=0";
@@ -224,6 +195,94 @@ class FGR_FormElements extends PdoDataAccess
 		$daObj->MainObjectID = $ElementID;
 		$daObj->TableName = "FGR_FormElements";
 		$daObj->execute();
+		return true;	
+	}
+	
+}
+
+class FGR_steps extends PdoDataAccess
+{
+	public $StepID;
+	public $FormID;
+	public $ordering;
+	public $StepTitle;
+	public $PostID;
+	public $BreakDuration;
+	
+	function __construct($StepID = ""){
+		
+		if($StepID != "")
+			parent::FillObject ($this, "select * from FGR_steps where StepID=?", array($StepID));
+	}
+	
+	public static function select($where = "", $param = array())
+	{
+		$query = "SELECT s.* ,PostName
+			FROM FGR_steps s
+				join BSC_posts using(PostID)";
+		$query .= ($where != "") ? " where " . $where : "";
+		
+		return PdoDataAccess::runquery($query, $param);
+	}
+	
+	public function AddStep()
+	{
+		if(empty($this->ordering))
+		{
+			$order = PdoDataAccess::GetLastID("FGR_steps", "ordering", "FormID=?", array($this->FormID));
+			$this->ordering = $order+1;
+		}
+		
+		if(!PdoDataAccess::insert("FGR_steps",$this))
+			return false;
+		
+		$this->StepID = parent::InsertID();
+		
+	 	$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->StepID;
+		$daObj->SubObjectID = $this->FormID;
+		$daObj->TableName = "FGR_steps";
+		$daObj->execute();
+		return true;	
+	}
+	
+	public function EditStep()
+	{
+		if(!PdoDataAccess::update("FGR_steps",$this, "StepID=:e", array(":e" => $this->StepID)))
+			return false;
+		
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_update;
+		$daObj->MainObjectID = $this->StepID;
+		$daObj->SubObjectID = $this->FormID;
+		$daObj->TableName = "FGR_steps";
+		$daObj->execute();
+		return true;	
+	}
+	
+	public static function RemoveStep($StepID)
+	{
+		$pdo = parent::getPdoObject();
+		$pdo->beginTransaction();
+		
+		if(!PdoDataAccess::delete("FGR_StepElements", "StepID=?", array($StepID), $pdo))
+			return false;
+		
+		$obj = new FGR_steps($StepID);
+		parent::runquery("update FGR_steps set ordering=ordering-1 where FormID=? AND ordering>?", 
+			array($obj->FormID, $obj->ordering), $pdo);
+		
+		if(!PdoDataAccess::delete("FGR_steps","StepID=?", array($StepID), $pdo))
+			return false;
+		
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_delete;
+		$daObj->MainObjectID = $StepID;
+		$daObj->TableName = "FGR_steps";
+		$daObj->execute($pdo);
+		
+		$pdo->commit();
 		return true;	
 	}
 	

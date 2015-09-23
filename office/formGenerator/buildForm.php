@@ -126,28 +126,34 @@ $ElGrid = $dg->makeGrid_returnObjects();
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "form.data.php?task=SelectSteps", "dg_grid");
 
 $dg->addColumn('کد مرحله', "StepID", "string", true);
+$dg->addColumn('', "FormID", "string", true);
+$dg->addColumn('', "PostName", "string", true);
+
+$col = $dg->addColumn('ترتیب مرحله', "ordering", "string");
+$col->editor = ColumnEditor::NumberField();
 
 $col = $dg->addColumn('عنوان مرحله', "StepTitle", "string");
-$col->width = 40;
+$col->editor = ColumnEditor::TextField();
 
-$col = $dg->addColumn('مجری', "fullName", "string");
-$col->width = 50;
+$col = $dg->addColumn('پست مجری', "PostID", "string");
+$col->renderer = "function(v,p,r){return r.data.PostName}";
+$col->editor = "FGR_FormObject.PostCombo";
+$col->width = 150;
 
-$col = $dg->addColumn('مهلت به روز', "BreakDuration", "string");
-$col->width = 20;
+$col = $dg->addColumn('مهلت (روز)', "BreakDuration", "string");
+$col->editor = ColumnEditor::NumberField();
+$col->width = 70;
 
-$dg->addColumn('', "elements", "string",true);
-$dg->addColumn('', "PersonID", "string",true);
 //---------------------------
 $col = $dg->addColumn('بالا', "", "string");
 $col->renderer = "FGR_Form.UPRender";
 $col->sortable = false;
-$col->width = 10;
+$col->width = 30;
 
 $col = $dg->addColumn('پایین', "", "string");
 $col->renderer = "FGR_Form.DOWNRender";
 $col->sortable = false;
-$col->width = 10;
+$col->width = 30;
 
 $dg->addButton("","ایجاد مرحله", "add", "function(){FGR_FormObject.AddStep()}");
 $dg->addButton("","بازگشت","undo","function(){FGR_FormObject.Return('stepsWin')}");
@@ -155,15 +161,17 @@ $dg->addButton("","بازگشت","undo","function(){FGR_FormObject.Return('steps
 $col = $dg->addColumn("حذف","","");
 $col->renderer = "FGR_Form.DeleteStepRender";
 $col->sortable = false;
-$col->width = 10;
+$col->width = 40;
 
 $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(store,record){return FGR_FormObject.SaveStep(store,record);}";
 
 $dg->height = 300;
 $dg->title = "مراحل گردش فرم";
-$dg->width = 600;
-$dg->DefaultSortField = "StepID";
+$dg->width = 750;
+$dg->DefaultSortField = "ordering";
+$dg->emptyTextOfHiddenColumns = true;
+$dg->DefaultSortDir = "ASC";
 $dg->autoExpandColumn = "StepTitle";
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;

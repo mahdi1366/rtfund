@@ -78,6 +78,9 @@ function FGR_Form()
 				handler : function(){
 					me = FGR_FormObject;
 					
+					var mask = new Ext.LoadMask(me.formPanel, {msg:'در حال ذخيره سازي...'});
+					mask.show();
+					
 					me.formPanel.getForm().submit({
 						clientValidation: true,
 						isUpload : true,
@@ -85,15 +88,13 @@ function FGR_Form()
 						method : "POST",
 					
 						success : function(form,action){
-							if(action.result.success)
-							{
-								FGR_FormObject.grid.getStore().load();
-							}
-							else
-							{
-								alert("عملیات مورد نظر با شکست مواجه شد.");
-							}
+							mask.hide();
+							FGR_FormObject.grid.getStore().load();
 							FGR_FormObject.formPanel.hide();
+						},
+						failure : function(form,action){
+							mask.hide();
+							Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد.");
 						}
 					});
 				}
@@ -106,6 +107,22 @@ function FGR_Form()
 			}]
 	});
 	this.formPanel.hide();
+	
+	this.PostCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			proxy:{
+				type: 'jsonp',
+				url: this.address_prefix + '../domain.data.php?task=SelectPosts',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			autoLoad : true,
+			fields :  ['PostID','PostName']
+		}),
+		allowBlank : false,
+		displayField: 'PostName',
+		valueField : "PostID",
+		queryMode : 'local'
+	});
 	
 }
 
@@ -380,7 +397,7 @@ FGR_Form.prototype.DeleteStep = function()
 		  	url : me.address_prefix + "form.data.php",
 		  	method : "POST",
 		  	params : {
-		  		task : "DeleteElement",
+		  		task : "DeleteStep",
 		  		StepID : record.data.StepID
 		  	},
 		  	success : function(response,o)
@@ -400,7 +417,7 @@ FGR_Form.prototype.SaveStep = function(store,record){
 
 	Ext.Ajax.request({
 		params: {
-			task: 'SaveElement',
+			task: 'SaveSteps',
 			record : Ext.encode(record.data)
 		},
 		url: this.address_prefix + 'form.data.php',
@@ -422,56 +439,74 @@ FGR_Form.prototype.SaveStep = function(store,record){
 	});
 }
 
-
-
-
-
-
-FGR_Form.prototype.workflowInfo = function()
+FGR_Form.UPRender = function(v,p,r)
 {
-	var record = dg_grid.selModel.getSelected();
-	OpenPage("../formGenerator/workflow.php?FormID=" + record.data.FormID);
+	if(r.data.ordering == 1)
+		return "";
+	return "<div align='center' title='حرکت مرحله به بالا' class='up' onclick='FGR_FormObject.changeLevel(\"up\");' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-FGR_Form.prototype.LoadInfo = function(mode)
+FGR_Form.DOWNRender= function(v,p,r)
 {
-	this.formPanel.show();
+	store = FGR_FormObject.StepsGrid.getStore();
+	if(store.getAt(store.getCount()-1).data.StepID == r.data.StepID)
+		return "";
+	return "<div align='center' title='حرکت مرحله به پایین' class='down' onclick='FGR_FormObject.changeLevel(\"down\");' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+FGR_Form.prototype.changeLevel = function(direction)
+{
+	var record = this.StepsGrid.getSelectionModel().getLastSelected();
 	
-	if(mode == "new")
-		this.formPanel.getForm().reset();
-	else
-	{
-		var record = this.grid.getSelectionModel().getLastSelected();
-		this.formPanel.loadRecord(record);
-	}
-}
-
-FGR_Form.prototype.RemoveFile = function()
-{
 	Ext.Ajax.request({
-	  	url : "../formGenerator/form.data.php",
+	  	url : this.address_prefix + "form.data.php",
 	  	method : "POST",
 	  	params : {
-	  		task : "RemoveFile",
-	  		FormID: document.getElementById("FormID").value,
-	  		FileType: document.getElementById("FileType").value
-	  		},
-	  	
-	  	success : function(response){
-  			dg_store.reload();
-  			document.getElementById("newForm").style.display = "none";
-	  	}		  	
-	});
+	  		task : "ChangeLevel",
+	  		FormID : record.data.FormID,
+	  		StepID : record.data.StepID,
+			ordering : record.data.ordering,
+	  		direction : direction
+	  	},
+	  	success : function()
+	  	{
+	  		FGR_FormObject.StepsGrid.getStore().load();
+	  	}	
+	});		
 }
 
-FGR_Form.referenceRender = function(value)
+FGR_Form.prototype.StepsWin = function()
 {
-	switch(value)
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.StepsGrid.getStore().proxy.extraParams = {
+		FormID : record.data.FormID
+	};
+	
+	if(!this.stepsWin)
 	{
-		case "devotions": return "موقوفه";
-		case "states": return "رقبه";
-		case "rents": return "اجاره";
+		this.stepsWin = new Ext.window.Window({
+			autoScroll : true,
+			width : 780,
+			modal : true,
+			title : "اجزای فرم",
+			closeAction : "hide",
+			items : new Ext.form.Panel({
+				plain: true,
+				border: 0,
+				bodyPadding: 5,
+				items : [this.StepsGrid]
+			})
+		});
 	}
+	
+	if(this.StepsGrid.rendered)
+		this.StepsGrid.getStore().load();
+	
+	this.stepsWin.show();
 }
 
 </script>
