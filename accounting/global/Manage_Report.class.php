@@ -23,7 +23,7 @@ class Manage_Report extends PdoDataAccess{
 				" . ($excel ? "" : "src='/framework/icons/logo.jpg'") . "></div>".
 
 			"<div style='float:right;font-family:b titr;font-size:15px;width:60%' align=center>" . 
-				"<br>صندوق پژوهش و فناوری خراسان رضوی" . 
+				"<br>" . SoftwareName .
 				"<br>" . $title . "</div>
 
 			<div style='text-align: left;float:right;width:20%;font-family:tahoma;font-size:11px' align=left>

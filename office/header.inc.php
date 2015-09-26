@@ -15,8 +15,8 @@ require_once 'DataAudit.class.php';
 
 session_start();
 
-if(!isset($_SESSION['USER'])){
-	
+if(empty($_SESSION['USER']) ||  empty($_SESSION['USER']["PersonID"])){
+	header("location: /framework/login.php");
 	die();
 }
 

@@ -1,7 +1,7 @@
 <?php
 //---------------------------
 // programmer:	Jafarkhani
-// create Date:	88.12
+// create Date:	94.06
 //---------------------------
 require_once '../header.inc.php';
 require_once 'baseInfo.class.php';

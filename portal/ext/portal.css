@@ -1,0 +1,233 @@
+@import url("font-awesome.min.css");
+@font-face{font-family:'IranNastaliq';src:url('IranNastaliq.ttf');font-weight:normal;font-style:normal}
+
+body{
+      padding:0px;
+      margin:0px;
+      font-size: 13px;
+      font-family:tahoma;
+      color: #408080;
+      line-height:20px;
+      background-color:#f0f0f0 !important;
+}
+form{
+	margin:0px;
+	padding:0px;
+}
+body, table, tr, td, div, span {
+	font-size:13px;
+	font-family:tahoma;
+	line-height:20px;	
+}
+a:link {
+	color: #ffffff;
+	text-decoration: none;
+}
+a:visited {
+	text-decoration: none;
+	color: #3ab1d3;
+}
+a:hover {
+	text-decoration: underline;
+	color: #ffffff;
+}
+a:active {
+	text-decoration: none;
+	color: #c0c0c0;
+}
+.header{
+    width:1024px;
+    height:120px;
+    clear:both;
+    text-align:left;
+}
+
+.headerLogo{
+    width:224px;
+    height:100px;
+    margin-right:0px;
+    margin-top:11px;
+    float:right;
+    display:inline;
+	background-color: #F05A49;
+	font-family: IranNastaliq;
+	font-size:31px;
+	padding-top : 30px;
+	color : white;
+	text-align:center;
+}
+.headerLogo:hover{
+	background-color: #D7BAFF;
+}
+
+.headerItems{
+    width:142px;
+	cursor: pointer;
+    height:100px;
+    margin-right:18px;
+    margin-top:11px;
+    float:right;
+    display:inline;
+    text-align:center;
+	background-color: white;
+	font-family: FontAwesome;
+	font-size: 50px;
+	padding-top : 15px;
+}
+.headerItems:hover{
+	padding-top : 10px;
+    border-top: 5px solid;
+	border-bottom: 5px solid;
+}
+
+.main{
+    width:1024px;
+    height:422px;
+    clear:both;
+    margin-top:8px;
+    text-align:left;
+}
+
+.mainFrame{
+    width:800px;
+	border : 1px solid #ddd;
+	background-color: white;
+    height:460px;
+    margin-left:0px;
+    margin-top:0px;
+	margin-bottom: 10px;
+    float:left;
+    display:inline;
+    text-align:center;
+	padding-top : 20px;
+	padding-bottom: 20px;
+}
+
+.menu{
+    width:224px;
+	border : 1px solid #ddd;
+    height:460px;
+    margin-left:0px;
+    margin-top:0px;
+	margin-bottom: 10px;
+    float:left;
+    display:inline;
+    text-align:right;
+	padding-right: 10px;
+	background-color: white;
+}
+.menuHeaders{
+    border-bottom: 1px solid #800000;
+    color: #800000;
+    font-family: tahoma;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 20px;
+    margin: 5px 5px 5px 14px;
+    text-align: right;
+}
+.menuItem{
+	cursor: pointer;
+    margin-left:4px;
+    display:inline-block;
+    text-align:right;
+    height:40px;
+	width:100%;
+    color:#408080;
+	vertical-align: middle;
+    font-family:Arial, 'Times New Roman',Times, serif;
+}
+.menuItem:hover{
+	color : Highlight;
+}
+.menuIcon{
+	border-width: 2px;
+	border-style: solid;
+	border-radius: 100%;
+    color: #35bc7a;
+    font-family: FontAwesome;
+    font-size: 20px;
+    padding-top: 8px;
+	float : right;
+	width : 38px;
+	height: 38px;
+	text-align: center;
+}
+.menuText{
+	font-family:tahoma;
+	font-size: 13px;
+	margin-right:40px;
+	width: 70%;
+	padding-top: 7px;
+}
+
+
+.example_3{
+    width:1024px;
+    height:300px;
+    clear:both;
+    margin-top:27px;
+    text-align:left;
+	border:0 important;
+}
+
+.footer{
+    width:100%;
+    height:100px;
+    clear:both;
+    margin-top:28px;
+	background-color: #3C474D;
+    text-align:center;
+    display:inline-block;
+    text-align:right;
+}
+
+.copyright{
+    width:100%;
+    height:67px;
+    clear:both;
+    margin-top:0px;
+    background-color: #282F33;
+	text-align:center;
+    height:44px;
+    padding-top:11px;
+    display:inline-block;
+    color:#ffffff;
+    font-size:12px;
+    font-family:Arial, 'Times New Roman',Times, serif;
+     line-height:30px;
+}
+
+
+#example_24{
+    width:30%;
+    height:353px;
+    margin-left:2px;
+    margin-top:3px;
+    float:left;
+    display:inline;
+    background-color:#35bc7a;
+    text-align:left;
+}
+
+#example_25{
+    width:30%;
+    height:353px;
+    margin-left:31px;
+    margin-top:3px;
+    float:left;
+    display:inline;
+    background-color:#f86924;
+    text-align:left;
+}
+
+#example_26{
+    width:30%;
+    height:353px;
+    margin-left:31px;
+    margin-top:3px;
+    float:left;
+    display:inline;
+    background-color:#ff9f00;
+    text-align:left;
+}

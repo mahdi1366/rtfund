@@ -216,12 +216,27 @@ class FRW_access extends PdoDataAccess {
 	public $RemoveFlag;
 
 	static function getAccessMenus($SystemID) {
+		
 		return parent::runquery("
 			select g.MenuID GroupID, g.MenuDesc GroupDesc, m.*, s.*
 			from FRW_menus m 
 			join FRW_menus g on(m.ParentID=g.MenuID)
 			join FRW_systems s on(m.SystemID=s.SystemID)
 			join FRW_access a on(a.personID=" . $_SESSION["USER"]["PersonID"] . " and m.MenuID=a.MenuID)
+			
+			where m.ParentID>0 AND m.IsActive='YES' AND m.SystemID=?
+			order by g.ordering,m.ordering", array($SystemID));
+	}
+	
+	static function getPortalMenus($SystemID) {
+		
+		return parent::runquery("
+			select g.MenuID GroupID, g.MenuDesc GroupDesc, m.*, s.*
+			from FRW_menus m 
+			join FRW_menus g on(m.ParentID=g.MenuID)
+			join FRW_systems s on(m.SystemID=s.SystemID)
+			join BSC_peoples a on(a.PeopleID=" . $_SESSION["USER"]["PeopleID"] . " and 
+				(g.IsBorrow=a.IsBorrow OR g.IsShareholder=a.IsShareholder)	)
 			
 			where m.ParentID>0 AND m.IsActive='YES' AND m.SystemID=?
 			order by g.ordering,m.ordering", array($SystemID));

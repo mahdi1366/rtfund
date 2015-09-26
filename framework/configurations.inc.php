@@ -14,5 +14,5 @@ class sys_config{
 	 );
 }
 
-
+define("SoftwareName", "صندوق پژوهش و فناوری خراسان رضوی");
 ?>

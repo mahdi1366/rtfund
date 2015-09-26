@@ -1,7 +1,7 @@
 <?php
 //---------------------------
 // programmer:	Jafarkhani
-// create Date:	89.10
+// create Date: 94.06
 //---------------------------
 
 class BSC_units extends PdoDataAccess

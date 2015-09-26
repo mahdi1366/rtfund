@@ -19,7 +19,7 @@ $_SESSION['USER']["RecentSystems"] = array();
 ?>
 <html>
 	<head>
-		<title>نرم افزار جامع صندوق پژوهش و فناوری خراسان رضوی</title>
+		<title>نرم افزار جامع <?= SoftwareName?></title>
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<script>
 			function OpenSystem(SystemID, SysPath){
