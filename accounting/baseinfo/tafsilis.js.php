@@ -120,10 +120,10 @@ Tafsili.prototype.LoadTafsilis = function(){
 
 Tafsili.DeleteRender = function(v,p,r)
 {
-	return "<td><div align='center' title='حذف' class='remove' "+
+	return "<div align='center' title='حذف' class='remove' "+
 		"onclick='TafsiliObject.DeleteTafsili();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div></td></tr></table>";
+		"cursor:pointer;width:100%;height:16'></div>";
 }
 
 Tafsili.prototype.AddTafsili = function(){

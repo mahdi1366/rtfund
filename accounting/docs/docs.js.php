@@ -79,6 +79,17 @@ function AccDocs()
 				type: 'jsonp',
 				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
 				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			listeners : {
+				beforeload : function(store){
+					if(!store.proxy.extraParams.TafsiliType)
+					{
+						group = AccDocsObject.tafsiliGroupCombo.getValue();
+						if(group == "")
+							return false;
+						this.proxy.extraParams["TafsiliType"] = group;
+					}
+				}
 			}
 		}),
 		emptyText:'انتخاب تفصیلی ...',

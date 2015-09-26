@@ -61,9 +61,9 @@ $grid = $dg->makeGrid_returnObjects();
     var TafsiliObject = new Tafsili();	
 
 	TafsiliObject.grid = <?= $grid ?>;
-	TafsiliObject.grid.plugins[0].on("beforeedit", function(editor,e){
+	/*TafsiliObject.grid.plugins[0].on("beforeedit", function(editor,e){
 		if(!e.record.data.TafsiliID)
-			return AccountObj.AddAccess;
-		return AccountObj.EditAccess;
-	});
+			return TafsiliObject.AddAccess;
+		return TafsiliObject.EditAccess;
+	});*/
 </script>

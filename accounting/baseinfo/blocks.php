@@ -75,8 +75,8 @@ for ($i = 0; $i < count($temp); $i++) {
         BlockObj.grid<?= $i ?> = <?= $GBlock ?>;
 		BlockObj.grid<?= $i ?>.plugins[0].on("beforeedit", function(editor,e){
 			if(!e.record.data.BlockID)
-				return AccountObj.AddAccess;
-			return AccountObj.EditAccess;
+				return BlockObj.AddAccess;
+			return BlockObj.EditAccess;
 		});
 		
 		BlockObj.mainTab.add({
