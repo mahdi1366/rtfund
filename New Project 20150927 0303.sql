@@ -69,7 +69,7 @@ CREATE TABLE `ACC_DocChecks` (
   `CheckStatus` smallint(5) unsigned NOT NULL DEFAULT '1' COMMENT 'وضعیت چک',
   `description` varchar(500) DEFAULT NULL COMMENT 'توضیحات',
   `reciever` varchar(500) DEFAULT NULL,
-  PRIMARY KEY (`CheckID`) USING BTREE,
+  PRIMARY KEY (`CheckID`) ,
   KEY `FK_ACC_DocChecks_1` (`AccountID`),
   KEY `FK_ACC_DocChecks_2` (`DocID`),
   CONSTRAINT `FK_ACC_DocChecks_1` FOREIGN KEY (`AccountID`) REFERENCES `acc_accounts` (`AccountID`),
@@ -102,7 +102,7 @@ CREATE TABLE `ACC_DocItems` (
   `CreditorAmount` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'مبلغ بستانکار',
   `details` varchar(500) DEFAULT NULL COMMENT 'جزئیات',
   `locked` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'قفل بودن ردیف',
-  PRIMARY KEY (`ItemID`) USING BTREE,
+  PRIMARY KEY (`ItemID`) ,
   KEY `FK_ACC_DocItems_1` (`DocID`),
   KEY `FK_ACC_DocItems_2` (`CostID`),
   KEY `FK_ACC_DocItems_3` (`TafsiliID`),
@@ -193,7 +193,7 @@ CREATE TABLE `ACC_blocks` (
   `BranchID` int(10) unsigned NOT NULL COMMENT 'کد شعبه',
   `essence` enum('DEBTOR','CREDITOR','NONE') NOT NULL DEFAULT 'NONE' COMMENT 'ماهیت',
   `IsActive` enum('YES','NO') NOT NULL,
-  PRIMARY KEY (`BlockID`) USING BTREE
+  PRIMARY KEY (`BlockID`) 
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
 
 --
@@ -451,7 +451,7 @@ CREATE TABLE `BaseInfo` (
   `TypeID` int(10) unsigned NOT NULL COMMENT 'کد نوع',
   `InfoID` int(10) unsigned NOT NULL COMMENT 'کد آیتم',
   `InfoDesc` varchar(500) NOT NULL COMMENT 'عنوان',
-  PRIMARY KEY (`InfoID`,`TypeID`) USING BTREE
+  PRIMARY KEY (`InfoID`,`TypeID`) 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --

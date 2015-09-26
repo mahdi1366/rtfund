@@ -22,25 +22,6 @@ PortalClass.prototype = {};
 
 function PortalClass()
 {
-	this.ExpireInterval = setInterval(function(){
-		
-		Ext.Ajax.request({
-			url : "header.inc.php",
-			method : "POST",
-
-			success : function(response)
-			{
-				if(response.responseText.trim() != "")
-				{
-					framework.centerPanel.tabBar.getEl().dom.innerHTML = "<div align=center style=width:100%;color:red;font-size:12px;font-weight:bold;>"+
-						"<br>شما در سیستم غیر فعال شده اید. لطفا مجدد وارد سیستم شوید...<br>&nbsp;</div>";
-					clearInterval(framework.ExpireInterval);
-				}
-			}
-		});
-		
-	}, 600000);
-	
 	this.mainPanel = new Ext.Panel({
 		border : 0,
 		height : 418,

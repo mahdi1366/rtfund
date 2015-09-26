@@ -147,7 +147,6 @@ if(isset($_POST["UserName"]))
 		function loginFN()
 		{
 			document.getElementById("md5Pass").value = MD5(document.getElementById('password').value);
-			document.getElementById('password').value = '***************';
 		}
 		
 		function BodyLoad(){
@@ -173,7 +172,7 @@ if(isset($_POST["UserName"]))
 		<br><?= SoftwareName?></div>
 		<form method="post" id="MainForm" onsubmit="return loginFN();">
 			<div id="UserNameDiv"><input type="text" name="UserName" id="UserName" placeholder="کلمه کاربری ..." required="required" class="wrong" /></div>
-			<div id="PasswordDiv"><input type="password" name="password" id="password" placeholder="رمز عبور ..." required="required" /></div>
+			<div id="PasswordDiv"><input type="password" id="password" placeholder="رمز عبور ..." required="required" /></div>
 			<button type="submit" class="btn btn-primary btn-block btn-large ">ورود</button>
 			<input type="hidden" id="md5Pass" name="md5Pass">
 		</form>

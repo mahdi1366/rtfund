@@ -16,7 +16,7 @@ require_once 'DataAudit.class.php';
 session_start();
 
 if(empty($_SESSION['USER']) ||  empty($_SESSION['USER']["PersonID"])){
-	header("location: /framework/login.php");
+	echo "<script>window.location='/framework/login.php';</script>";
 	die();
 }
 

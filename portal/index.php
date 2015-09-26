@@ -100,23 +100,31 @@ for ($i = 0; $i < count($menus); $i++) {
 				<div align=left style="width:90%;font-family:tahoma;font-size:12px;font-weight:bold">ورود به سایت</div>
 				</div>
 			</a>
-			<div class="headerItems" style="color:#1E8BC3">
-				<span class="fa fa-home"></span><br>
-				<font style="font-family:tahoma;font-size:12px;font-weight:bold">صفحه اصلی</font>
-			</div>
-			<div class="headerItems" style="color:#F86924;" onclick="portal.OpenPage('/portal/global/PersonalInfo.php','');">
+			<!----------------------------------------------------------------->
+			<div class="headerItems" style="color:#1E8BC3;" 
+				 onclick="portal.OpenPage('/portal/global/PersonalInfo.php','');">
 				<span class="fa fa-user"></span><br>
 				<font style="font-family:tahoma;font-size:12px;font-weight:bold">اطلاعات شخصی</font>
 			</div>
+			<!----------------------------------------------------------------->
+			<div class="headerItems" style="color:#F86924;" 
+				 onclick="portal.OpenPage('/portal/global/ChangePassword.php','');">
+				<span class="fa fa-key"></span><br>
+				<font style="font-family:tahoma;font-size:12px;font-weight:bold">تغییر رمز عبور</font>
+			</div>
+			<!----------------------------------------------------------------->
 			<div class="headerItems" style="color:#FF9F00">
 				<span class="fa fa-comments-o"></span><br>
 				<font style="font-family:tahoma;font-size:12px;font-weight:bold">پیام ها</font>
 			</div>
+			<!----------------------------------------------------------------->
 			<div class="headerItems" style="color:#35BC7A">
 				<span class="fa fa-pencil-square-o"></span><br>
 				<font style="font-family:tahoma;font-size:12px;font-weight:bold">نظر سنجی</font>
 			</div>
-			<div class="headerItems" style="color:#F05A49">
+			<!----------------------------------------------------------------->
+			<div class="headerItems" style="color:#F05A49"
+				 onclick="portal.OpenPage('/portal/logout.php','');">
 				<span class="fa fa-sign-out"></span><br>
 				<font style="font-family:tahoma;font-size:12px;font-weight:bold">خروج</font>
 			</div>

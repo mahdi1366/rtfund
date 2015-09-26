@@ -37,10 +37,10 @@ $col->renderer = "User.deleteRender";
 $col->sortable = false;
 $col->width = 40;
 
-$col = $dg->addColumn("","personID","");
+$col = $dg->addColumn("reset pass","personID","");
 $col->renderer = "User.resetPassRender";
 $col->sortable = false;
-$col->width = 40;
+$col->width = 80;
 
 $dg->addButton = true;
 $dg->addHandler = "function(){UserObject.Adding();}";
@@ -49,7 +49,7 @@ $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(v,p,r){return UserObject.saveData(v,p,r);}";
 
 $dg->height = 350;
-$dg->width = 600;
+$dg->width = 700;
 $dg->DefaultSortField = "lname";
 $dg->autoExpandColumn = "lname";
 $dg->editorGrid = true;

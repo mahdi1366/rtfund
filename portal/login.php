@@ -192,7 +192,7 @@ if(isset($_POST["UserName"]))
 			<div class="headerText">ورود به پرتال</div>
 			<form method="post" id="MainForm" onsubmit="return loginFN();">
 				<div id="UserNameDiv"><input type="text" name="UserName" id="UserName" placeholder="کلمه کاربری ..." required="required" /></div>
-				<div id="PasswordDiv"><input type="password" name="password" id="password" placeholder="رمز عبور ..." required="required" /></div>
+				<div id="PasswordDiv"><input type="password" id="password" placeholder="رمز عبور ..." required="required" /></div>
 				<button type="submit" class="btn  ">ورود</button>
 				<div class="forget"> رمز عبور را فراموش کرده ام |</div>
 				<input type="hidden" id="md5Pass" name="md5Pass">

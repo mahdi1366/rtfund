@@ -16,7 +16,7 @@ require_once 'DataAudit.class.php';
 session_start();
 
 if(empty($_SESSION['USER']) ||  empty($_SESSION['USER']["PeopleID"])){
-	header("location: /portal/login.php");
+	echo "<script>window.location='/portal/login.php';</script>";
 	die();
 }
 

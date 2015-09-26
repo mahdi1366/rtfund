@@ -17,7 +17,7 @@ require_once getenv("DOCUMENT_ROOT") . '/framework/management/framework.class.ph
 session_start();
 
 if(empty($_SESSION['USER']) ||  empty($_SESSION['USER']["PersonID"])){
-	header("location: /framework/login.php");
+	echo "<script>window.location='/framework/login.php';</script>";
 	die();
 }
 

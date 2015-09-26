@@ -35,37 +35,35 @@ function PersonalInfo()
 			fieldLabel: 'نام',
 			name: 'fullname'
 		},{
-			xtype : "numberfield",
+			xtype : "textfield",
+			regex: /^\d{10}$/,
+			maskRe: /[\d\-]/,
 			fieldLabel: 'کد ملی',
-			name: 'NationalID',
-			maxLength : 10,
-			hideTrigger : true
+			name: 'NationalID'
 		},{
-			xtype : "numberfield",
+			xtype : "textfield",
+			regex: /^\d{10}$/,
+			maskRe: /[\d\-]/,
 			fieldLabel: 'کد اقتصادی',
-			name: 'EconomicID',
-			maxLength : 10,
-			hideTrigger : true
+			name: 'EconomicID'
 		},{
-			xtype : "numberfield",
+			xtype : "textfield",
+			regex: /^\d{11}$/,
+			maskRe: /[\d\-]/,
 			fieldLabel: 'شماره تلفن',
-			name: 'PhoneNo',
-			maxLength : 11,
-			emptyText : "فرمت صحیح : 05138820405",
-			hideTrigger : true
+			name: 'PhoneNo'
 		},{
-			xtype : "numberfield",
+			xtype : "textfield",
+			regex: /^\d{11}$/,
+			maskRe: /[\d\-]/,
 			fieldLabel: 'تلفن همراه',
-			maxLength : 11,
-			name: 'mobile',
-			emptyText : "فرمت صحیح : 09155001020",
-			hideTrigger : true
+			name: 'mobile'
 		},{
 			xtype : "textfield",
 			vtype : "email",
-			emptyText : "فرمت صحیح : user@yahoo.com",
 			fieldLabel: 'پست الکترونیک',
-			name: 'email'
+			name: 'email',
+			fieldStyle : "direction:ltr"
 		},{
 			xtype : "textarea",
 			fieldLabel: 'آدرس',
@@ -78,46 +76,18 @@ function PersonalInfo()
 			handler: function() {
 				
 				me = PersonalInfoObject;
-				this.up('form').getForm().submit({
+				mask = new Ext.LoadMask(me.mainPanel, {msg:'در حال ذخيره سازي...'});
+				mask.show();  
+				me.mainPanel.getForm().submit({
+					clientValidation: true,
+					url: me.address_prefix + 'global.data.php?task=SavePersonalInfo' , 
+					method: "POST",
 					
+					success : function(form,result){
+						mask.hide();
+						Ext.MessageBox.alert("","اطلاعات با موفقیت ذخیره شد");
+					}
 				});
-				
-				if (me.formPanel.form.isValid()) {
-					var mask = new Ext.LoadMask(Ext.getCmp(me.TabID),{msg: 'تغییر رمز عبور ...'});
-					mask.show();
-
-					Ext.Ajax.request({
-						url: me.address_prefix + 'global.data.php' , 
-						params: {
-							task: "SavePersonalInfo"
-						},
-						method: "POST",
-
-						success : function(response,options)
-						{
-							mask.hide();
-							if(response.responseText == "CurPassError")
-							{
-								alert("رمز عبور فعلی اشتباه می باشد");
-								return;
-							}
-							if(response.responseText == "true")
-							{
-								alert("رمز شما با موفقیت تغییر یافت");
-								Ext.getCmp("cur_pass").setValue();
-								Ext.getCmp("new_pass").setValue();
-								Ext.getCmp("new_pass2").setValue();
-							}
-							else
-								alert("عملیات مورد نظر با شکست مواجه شد");
-						},
-						failure : function(response)
-						{
-							alert("عملیات مورد نظر با شکست مواجه شد");
-							mask.hide();
-						}
-					});
-				}
 			}
 
 		}]
