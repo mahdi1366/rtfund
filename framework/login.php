@@ -19,7 +19,7 @@ if(isset($_POST["UserName"]))
 	$user = $_POST["UserName"];
 	$pass = $_POST["md5Pass"];
 	
-	$temp = PdoDataAccess::runquery("select * from FRW_persons where userID=?", array($user));
+	$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($user));
 	if(count($temp) == 0)
 	{
 		$return = "WrongUserName";

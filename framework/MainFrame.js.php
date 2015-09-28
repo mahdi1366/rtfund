@@ -100,7 +100,7 @@ function FrameWorkClass()
 								'background-color : #f86924;border-radius:20px; padding:6px">'+
 							"<?= $SystemName?>"+
 							"<br> کاربر : <?= $_SESSION['USER']["fullname"] ?>"+
-							"<br> شناسه : <?= $_SESSION['USER']["UserID"]?></div>"
+							"<br> شناسه : <?= $_SESSION['USER']["UserName"]?></div>"
 					},{
 						xtype : "container",
 						itemId : "DIV_SystemInfo",

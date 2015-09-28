@@ -14,11 +14,11 @@ form{
 	margin:0px;
 	padding:0px;
 }
-body, table, tr, td, div, span {
+/*body, table, tr, td, div, span {
 	font-size:13px;
 	font-family:tahoma;
 	line-height:20px;	
-}
+}*/
 a:link {
 	color: #ffffff;
 	text-decoration: none;
@@ -99,8 +99,7 @@ a:active {
     float:left;
     display:inline;
     text-align:center;
-	padding-top : 20px;
-	padding-bottom: 20px;
+	padding: 10px;
 }
 
 .menu{

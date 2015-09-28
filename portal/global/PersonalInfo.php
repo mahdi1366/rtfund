@@ -33,7 +33,11 @@ function PersonalInfo()
 		items: [{
 			xtype : "textfield",
 			fieldLabel: 'نام',
-			name: 'fullname'
+			name: 'fname'
+		},{
+			xtype : "textfield",
+			fieldLabel: 'نام خانوادگی',
+			name: 'lname'
 		},{
 			xtype : "textfield",
 			regex: /^\d{10}$/,
@@ -86,6 +90,10 @@ function PersonalInfo()
 					success : function(form,result){
 						mask.hide();
 						Ext.MessageBox.alert("","اطلاعات با موفقیت ذخیره شد");
+					},
+					failure : function(){
+						mask.hide();
+						Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
 					}
 				});
 			}
@@ -99,10 +107,10 @@ function PersonalInfo()
 	this.store = new Ext.data.Store({
 		proxy:{
 			type: 'jsonp',
-			url: this.address_prefix + "global.data.php?task=SelectPeopleInfo",
+			url: this.address_prefix + "global.data.php?task=SelectPersonInfo",
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["fullname","UserName","NationalID","EconomicID","PhoneNo","mobile","address","email"],
+		fields : ["fname","lname","UserName","NationalID","EconomicID","PhoneNo","mobile","address","email"],
 		autoLoad : true,
 		listeners :{
 			load : function(){

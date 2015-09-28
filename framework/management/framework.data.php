@@ -5,6 +5,7 @@
 //-------------------------
 include('../header.inc.php');
 require_once 'framework.class.php';
+require_once 'persons.class.php';
 include_once inc_dataReader;
 require_once inc_response;
 
@@ -37,19 +38,16 @@ if(isset($_REQUEST["task"]))
 		case "selectPersons":
 			selectPersons();
 			
-		case "SaveUserAccess":
-			SaveUserAccess();
+		case "SavePersonAccess":
+			SavePersonAccess();
 			
 		//------------------
+					
+		case "SavePerson":
+			SavePerson();
 			
-		case "selectUsers":
-			selectUsers();
-			
-		case "SaveUser":
-			SaveUser();
-			
-		case "DeleteUser":
-			DeleteUser();
+		case "DeletePerson":
+			DeletePerson();
 			
 		case "ResetPass":
 			ResetPass();
@@ -130,22 +128,7 @@ function selectAccess(){
 	die();
 }
 
-function selectPersons(){
-	$param = array();
-	$query = "select *, concat(fname, ' ', lname) fullname from FRW_persons where 1=1";
-	
-	if(!empty($_REQUEST["query"]))
-	{
-		$query .= " AND concat(fname,' ',lname) like :p";
-		$param[":p"] = "%" . $_REQUEST["query"] . "%";
-	}
-	
-	$temp = PdoDataAccess::runquery($query, $param);
-	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
-	die();
-}
-
-function SaveUserAccess(){
+function SavePersonAccess(){
 	
 	$keys = array_keys($_POST);
 
@@ -186,37 +169,48 @@ function SaveUserAccess(){
 
 //--------------------------------------------------
 
-function selectUsers(){
+function selectPersons(){
 	
-	$temp = FRW_persons::GetAll();
-	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	$where = "IsStaff='YES'";
+	$param = array();
+	
+	if(!empty($_REQUEST["query"]))
+	{
+		$where .= " AND concat(fname,' ',lname) like :p";
+		$param[":p"] = "%" . $_REQUEST["query"] . "%";
+	}
+	
+	$temp = BSC_persons::SelectAll($where, $param);
+	$no = count($temp);
+	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
+	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
 	die();
 }
 
-function SaveUser(){
+function SavePerson(){
 	
-	$obj = new FRW_persons();
+	$obj = new BSC_persons();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
 	if($obj->PersonID > 0)
-		$result = $obj->EditUser();
+		$result = $obj->EditPerson();
 	else 
-		$result = $obj->AddUser();
+		$result = $obj->AddPerson();
 	
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
-function DeleteUser(){
+function DeletePerson(){
 	
-	$result = FRW_persons::DeleteUser($_POST["PersonID"]);
+	$result = BSC_persons::DeletePerson($_POST["PersonID"]);
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
 function ResetPass(){
 	
-	$result = FRW_persons::ResetPass($_POST["PersonID"]);
+	$result = BSC_persons::ResetPass($_POST["PersonID"]);
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }

@@ -4,7 +4,7 @@
 // create Date:	94.06
 //---------------------------
 require_once '../header.inc.php';
-require_once 'people.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/framework/management/persons.class.php';
 require_once inc_response;
 require_once inc_dataReader;
 
@@ -12,8 +12,8 @@ $task = isset($_POST["task"]) ? $_POST["task"] : (isset($_GET["task"]) ? $_GET["
 
 switch ($task)
 {
-	case "SelectPeopleInfo":
-		SelectPeopleInfo();
+	case "SelectPersonInfo":
+		SelectPersonInfo();
 		
 	case "SavePersonalInfo":
 		SavePersonalInfo();
@@ -22,29 +22,29 @@ switch ($task)
 		changePass();
 }
 
-function SelectPeopleInfo(){
-	$dt = PdoDataAccess::runquery("select UserName,fullname,NationalID,EconomicID,PhoneNo,mobile,address,email 
-		from BSC_peoples where PeopleID=?", array($_SESSION["USER"]["PeopleID"]));
+function SelectPersonInfo(){
 	
-	echo dataReader::getJsonData($dt, count($dt), $_REQUEST["callback"]);
+	$temp = BSC_persons::SelectAll("PersonID=?", array($_SESSION["USER"]["PersonID"]));
+	$temp = PdoDataAccess::fetchAll($temp, 0, 1);
+	echo dataReader::getJsonData($temp, 1, $_GET["callback"]);
 	die();
 }
 
 function SavePersonalInfo(){
 	
-	$obj = new BSC_peoples();
-	$obj->PeopleID = $_SESSION["USER"]["PeopleID"];
+	$obj = new BSC_persons();
+	$obj->PersonID = $_SESSION["USER"]["PersonID"];
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
-	$result = $obj->EditPeople();
+	$result = $obj->EditPerson();
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
 function changePass(){
 	
-	$dt = PdoDataAccess::runquery("select * from BSC_peoples where PeopleID=:p",
-			array(":p" => $_SESSION['USER']["PeopleID"]));
+	$dt = PdoDataAccess::runquery("select * from BSC_persons where PersonID=:p",
+			array(":p" => $_SESSION['USER']["PersonID"]));
 	if(count($dt) == 0)
 	{ 		
 		echo Response::createObjectiveResponse(false, "");
@@ -60,8 +60,8 @@ function changePass(){
 		die();
 	}
 
-	PdoDataAccess::RUNQUERY("update BSC_peoples set UserPass=? where PeopleID=?",
-		array($hasher->HashPassword($_POST["new_pass"]), $_SESSION["USER"]["PeopleID"]));
+	PdoDataAccess::RUNQUERY("update BSC_persons set UserPass=? where PersonID=?",
+		array($hasher->HashPassword($_POST["new_pass"]), $_SESSION["USER"]["PersonID"]));
 								
 	if( ExceptionHandler::GetExceptionCount() != 0 )
 	{				

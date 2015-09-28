@@ -57,7 +57,7 @@ User.prototype.Deleting = function()
 		  	url : this.address_prefix + "framework.data.php",
 		  	method : "POST",
 		  	params : {
-		  		task : "DeleteUser",
+		  		task : "DeletePerson",
 		  		PersonID : record.data.PersonID
 		  	},
 		  	success : function(response,o)
@@ -75,7 +75,7 @@ User.prototype.saveData = function(store,record)
 
 	Ext.Ajax.request({
 		params: {
-			task: 'SaveUser',
+			task: 'SavePerson',
 			record : Ext.encode(record.data)
 		},
 		url: this.address_prefix +'framework.data.php',

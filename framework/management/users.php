@@ -7,7 +7,7 @@ include_once("../header.inc.php");
 require_once inc_dataGrid;
 require_once 'users.js.php';
 
-$dg = new sadaf_datagrid("dg",$js_prefix_address . "framework.data.php?task=selectUsers","div_grid_user");
+$dg = new sadaf_datagrid("dg",$js_prefix_address . "framework.data.php?task=selectPersons","div_grid_user");
 
 $dg->addColumn("کد","PersonID","string", true);
 $dg->addColumn("","IsActive","string", true);
@@ -22,7 +22,7 @@ $col = $dg->addColumn("نام خانوادگي","lname","string");
 $col->editor = ColumnEditor::TextField();
 $col->sortable = false;
 
-$col = $dg->addColumn("نام كاربري","UserID","string");
+$col = $dg->addColumn("نام كاربري","UserName","string");
 $col->editor = ColumnEditor::TextField();
 $col->sortable = false;
 $col->width = 120;

@@ -130,82 +130,6 @@ class FRW_Menus extends PdoDataAccess {
 
 }
 
-class FRW_persons extends PdoDataAccess {
-
-	public $PersonID;
-	public $UserID;
-	public $UserPass;
-	public $fname;
-	public $lname;
-	public $IsActive;
-	public $PostID;
-
-	static function GetAll($where  = "", $param = array()){
-	
-		return PdoDataAccess::runquery("select * from FRW_persons where 1=1" . $where , $param);
-	}
-	
-	function AddUser() {
-
-		$result = PdoDataAccess::insert("FRW_persons", $this);
-		if ($result === false)
-			return false;
-
-		$this->PersonID = parent::InsertID();
-
-		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->PersonID;
-		$daObj->TableName = "FRW_persons";
-		$daObj->execute();
-		return true;
-	}
-
-	function EditUser() {
-		
-		$result = PdoDataAccess::update("FRW_persons", $this, "PersonID=:pid", array(":pid" => $this->PersonID));
-		if ($result === false)
-			return false;
-
-		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->MainObjectID = $this->PersonID;
-		$daObj->TableName = "FRW_persons";
-		$daObj->execute();
-		return true;
-	}
-
-	static public function DeleteUser($PersonID) {
-		
-		$result = PdoDataAccess::runquery("update FRW_persons set IsActive='NO' where PersonID=?", array($PersonID));
-		if ($result === false)
-			return false;
-
-		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->MainObjectID = $PersonID;
-		$daObj->TableName = "FRW_persons";
-		$daObj->execute();
-		return true;
-	}
-	
-	static public function ResetPass($PersonID) {
-		
-		$result = PdoDataAccess::runquery("update FRW_persons set UserPass=null where PersonID=?", array($PersonID));
-		if ($result === false)
-			return false;
-
-		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->MainObjectID = $PersonID;
-		$daObj->description = "پاک کردن پسورد";
-		$daObj->TableName = "FRW_persons";
-		$daObj->execute();
-		return true;
-	}
-
-}
-
 class FRW_access extends PdoDataAccess {
 
 	public $MenuID;
@@ -235,8 +159,13 @@ class FRW_access extends PdoDataAccess {
 			from FRW_menus m 
 			join FRW_menus g on(m.ParentID=g.MenuID)
 			join FRW_systems s on(m.SystemID=s.SystemID)
-			join BSC_peoples a on(a.PeopleID=" . $_SESSION["USER"]["PeopleID"] . " and 
-				(g.IsBorrow=a.IsBorrow OR g.IsShareholder=a.IsShareholder)	)
+			join BSC_persons a on(a.PersonID=" . $_SESSION["USER"]["PersonID"] . " and 
+				(
+					if(g.IsBorrow='YES',a.IsBorrow='YES',0=1) OR 
+					if(g.IsShareholder='YES',a.IsShareholder='YES',0=1) OR 
+					if(g.IsStaff='YES',a.IsStaff='YES',0=1)	
+				)
+			)
 			
 			where m.ParentID>0 AND m.IsActive='YES' AND m.SystemID=?
 			order by g.ordering,m.ordering", array($SystemID));

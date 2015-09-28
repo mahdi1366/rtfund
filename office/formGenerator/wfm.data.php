@@ -92,7 +92,7 @@ function AllLetters()
 				$where .= " and FormName like '%" . $_GET["query"] . "%'";
 				break;
 			case "fullname":
-				$where .= " and concat(name,' ',family) like '%" . $_GET["query"] . "%'";
+				$where .= " and concat(fname,' ',lname) like '%" . $_GET["query"] . "%'";
 				break;
 			case "regDate":
 				$where .= " and regDate='" . CommenModules::Shamsi_to_Miladi($_GET["query"]) . "'";
@@ -591,8 +591,8 @@ function GetHistoryTreeNodes()
 function ReplacementSelect()
 {
 	$query = "select *, 
-		concat(u1.name,' ',u1.family) as src_fullName, 
-		concat(u2.name,' ',u2.family) as des_fullName 
+		concat(u1.fname,' ',u1.lname) as src_fullName, 
+		concat(u2.fname,' ',u2.lname) as des_fullName 
 		
 		from wfm_replacement as w
 		join um_user as u1 on(u1.PersonID=w.src_PersonID)

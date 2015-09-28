@@ -28,7 +28,9 @@ class LON_loans extends PdoDataAccess
 	
 	static function SelectAll($where = "", $param = array()){
 		
-		return PdoDataAccess::runquery_fetchMode("select * from LON_loans where " . $where, $param);
+		return PdoDataAccess::runquery_fetchMode("select l.*,InfoDesc GroupDesc from LON_loans l
+			join BaseInfo bf on(bf.TypeID=1 AND bf.InfoID=l.GroupID)
+			where " . $where, $param);
 	}
 	
 	function AddLoan()

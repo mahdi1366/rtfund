@@ -30,7 +30,7 @@ class ACC_docs extends PdoDataAccess {
 		
 		$query = "select sd.*, concat(fname,' ',lname) as regPerson
 			from ACC_docs sd
-			join FRW_persons p on(regPersonID=PersonID)";
+			join BSC_persons p on(regPersonID=PersonID)";
 		
 		$query .= ($where != "") ? " where " . $where : "";
 		

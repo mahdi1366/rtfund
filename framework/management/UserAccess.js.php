@@ -171,7 +171,7 @@ Access.prototype.saveAction = function()
 	var mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg: 'در حال ذخيره اطلاعات ...'});
 	mask.show();
 	Ext.Ajax.request({
-		url: this.address_prefix + 'framework.data.php?task=SaveUserAccess',
+		url: this.address_prefix + 'framework.data.php?task=SavePersonAccess',
 		form: this.get("MainForm"),
 		method: "POST",
 

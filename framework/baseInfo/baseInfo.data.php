@@ -202,7 +202,7 @@ function SelectUserBranches(){
 	$temp = PdoDataAccess::runquery("
 		select b.*,concat(fname, ' ', lname) fullname, BranchName 
 		from BSC_BranchAccess b 
-		join FRW_persons using(PersonID)
+		join BSC_persons using(PersonID)
 		join BSC_branches using(BranchID)");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();

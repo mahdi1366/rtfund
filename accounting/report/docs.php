@@ -15,7 +15,7 @@ if(isset($_REQUEST["show"]))
 					sum(DebtorAmount) bdSum
 			from ACC_docs d
 			join ACC_DocItems di using(docID)
-			join FRW_persons p on(RegPersonID=PersonID)
+			join BSC_persons p on(RegPersonID=PersonID)
 			where d.CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 				AND d.BranchID=" . $_SESSION["accounting"]["BranchID"];
 	
