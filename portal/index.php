@@ -59,7 +59,7 @@ for ($i = 0; $i < count($menus); $i++) {
 		<title><?= SoftwareName?></title>
 		<link rel="stylesheet" type="text/css" href="ext/portal.css" />
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/Loading.css" />
-		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-all-gray.css" />
+		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-all.css" />
 		<script>
 			var portal;
 			setTimeout(function(){
