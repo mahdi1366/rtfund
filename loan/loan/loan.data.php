@@ -8,28 +8,26 @@ include_once inc_dataReader;
 include_once inc_response;
 include_once 'loan.Class.php';
 
+$task = $_REQUEST["task"];
+switch ($task) {
 
-if (isset($_REQUEST["task"])) {
-	switch ($_REQUEST["task"]) {
-		
-		case "AddGroup":
-			AddGroup();
-			
-		case "SelectLoanGroups":
-			SelectLoanGroups();
-			
-		case "DeleteGroup":
-			DeleteGroup();
-		
-		case "GetAllLoans":
-			GetAllLoans();
+	case "AddGroup":
+		AddGroup();
 
-		case "SaveLoan":
-			SaveLoan();
-		
-		case "DeleteLoan":
-			DeleteLoan();
-	}
+	case "SelectLoanGroups":
+		SelectLoanGroups();
+
+	case "DeleteGroup":
+		DeleteGroup();
+
+	case "GetAllLoans":
+		GetAllLoans();
+
+	case "SaveLoan":
+		SaveLoan();
+
+	case "DeleteLoan":
+		DeleteLoan();
 }
 
 function AddGroup(){

@@ -89,13 +89,14 @@ function NewLoanRequest()
 		record = NewLoanRequestObject.grid.getSelectionModel().getLastSelected();
 		NewLoanRequestObject.mainPanel.loadRecord(record);
 		NewLoanRequestObject.mainPanel.doLayout();
+		NewLoanRequestObject.mainPanel.down("[name=ReqAmount]").setMaxValue(record.data.MaxAmount);
+		NewLoanRequestObject.mainPanel.down("[name=ReqAmount]").setValue(record.data.MaxAmount);
 	});
 	
 	this.grid.getStore().on("beforeload", function(){
 		if(this.proxy.extraParams.GroupID == null)
 			return false;
 	});
-	
 	
 	this.mainPanel = new Ext.form.FormPanel({
 		renderTo : this.get("mainForm"),
@@ -121,6 +122,12 @@ function NewLoanRequest()
 					fieldCls : "blueText"
 				},
 				items : [{
+					xtype : "container",
+					colspan :2 ,
+					width: 300,
+					style : "margin-right:5px; color:#0d6eb2",					
+					html : "<font color=red>" + "توجه: " + "</font>" + "برای مشاهده جزئیات هر وام روی عنوان وام کلیک کنید."
+				},{
 					fieldLabel: 'سقف مبلغ',
 					name: 'MaxAmount',
 					renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
@@ -166,40 +173,53 @@ function NewLoanRequest()
 		},{
 			xtype : "fieldset",
 			title : "جزئیات درخواست",
-			layout : "columns",
-			columns : 2,
 			items : [{
 				xtype : "currencyfield",
 				name : "ReqAmount",
+				allowBlank : false,
+				beforeLabelTextTpl: required,
 				fieldLabel : "مبلغ درخواستی",
-				hideTrigger: true
+				hideTrigger: true,
+				afterSubTpl: '<tpl>ریال</tpl>'
 			},{
-				xtype : "textfield",
+				xtype : "textarea",
 				fieldLabel : "توضیحات",
+				anchor : "90%",
 				name : "ReqDetails"
 			}]
 		}],
 
 		buttons : [{
-			text : "ذخیره",
+			text : "ثبت درخواست وام و ارسال به صندوق",
 			iconCls: 'save',
 			handler: function() {
+				
+				if(!NewLoanRequestObject.grid.getSelectionModel().getLastSelected())
+				{
+					Ext.MessageBox.alert("","لطفا وام مورد نظر خود را با کلیک بر روی عنوان وام انتخاب نمایید.");
+					return;
+				}
 				
 				me = NewLoanRequestObject;
 				mask = new Ext.LoadMask(me.mainPanel, {msg:'در حال ذخيره سازي...'});
 				mask.show();  
 				me.mainPanel.getForm().submit({
 					clientValidation: true,
-					url: me.address_prefix + 'global.data.php?task=SaveNewLoanRequest' , 
+					url: me.address_prefix + '../../loan/request/request.data.php?task=SaveLoanRequest' , 
 					method: "POST",
-					
-					success : function(form,result){
+					params : {
+						LoanID : NewLoanRequestObject.grid.getSelectionModel().getLastSelected().data.LoanID
+					},
+					success : function(form,action){
 						mask.hide();
-						Ext.MessageBox.alert("","اطلاعات با موفقیت ذخیره شد");
+						me = NewLoanRequestObject;
+						me.mainPanel.hide();
+						me.SendedPanel.getComponent("requestID").update('شماره پیگیری درخواست : ' + action.result.data);
+						me.SendedPanel.show();
 					},
 					failure : function(){
 						mask.hide();
-						Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+						//Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
 					}
 				});
 			}
@@ -207,7 +227,24 @@ function NewLoanRequest()
 		}]
 	});
 
-	
+	this.SendedPanel = new Ext.panel.Panel({
+		hidden : true,
+		renderTo : this.get("SendForm"),
+		width : 400,
+		style : "margin-top:30px",
+		frame : true,
+		items : [{
+			xtype : "container",
+			html : "<br>" + "درخواست شما با موفقیت ثبت گردید" + "<br><br>"
+		},{
+			xtype : "container",
+			cls : "blueText",
+			itemId : "requestID"
+		},{
+			xtype : "container",
+			html : "<br>" + "از منوی وام های دریافتی می توانید وضعیت درخواست خود را بررسی کنید" + "<br><br>"
+		}]
+	});
 	
 }
 
@@ -222,5 +259,9 @@ NewLoanRequest.prototype.NewLoanRequest = function()
 }
 
 </script>
+
 	<div id="DivGrid"></div>
 	<div id="mainForm"></div>
+<center>
+	<div id="SendForm"></div>
+</center>

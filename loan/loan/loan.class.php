@@ -73,4 +73,5 @@ class LON_loans extends PdoDataAccess
 	 	return true;
 	}
 }
+
 ?>

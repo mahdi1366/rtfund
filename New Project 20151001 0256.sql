@@ -571,7 +571,7 @@ CREATE TABLE `DataAudit` (
   `ActionTime` datetime NOT NULL COMMENT 'زمان انجام عمل',
   `QueryString` varchar(2000) COLLATE utf8_persian_ci DEFAULT NULL COMMENT 'query اجرا شده',
   PRIMARY KEY (`DataAuditID`)
-) ENGINE=MyISAM AUTO_INCREMENT=465 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
+) ENGINE=MyISAM AUTO_INCREMENT=470 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
 
 --
 -- Dumping data for table `DataAudit`
@@ -1043,7 +1043,12 @@ INSERT INTO `DataAudit` (`DataAuditID`,`PersonID`,`TableName`,`MainObjectID`,`Su
  (461,1000,'BSC_persons',1000,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-09-29 00:55:11','update BSC_persons set PersonID=\'1000\',fname=\'شبنم\',lname=\'جعفرخانی\',NationalID=\'0943021723\',EconomicID=null,PhoneNo=null,mobile=null,address=null,email=null where  PersonID=\'1000\''),
  (462,1000,'BSC_persons',1000,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-09-29 00:55:37','update BSC_persons set PersonID=\'1000\',fname=\'شبنم\',lname=\'جعفرخانی\',NationalID=\'0943021723\',EconomicID=null,PhoneNo=null,mobile=null,address=null,email=null where  PersonID=\'1000\''),
  (463,1000,'BSC_persons',1000,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-09-29 00:56:05','update BSC_persons set PersonID=\'1000\',fname=\'شبنم\',lname=\'جعفرخانی\',NationalID=\'0943021723\',EconomicID=null,PhoneNo=null,mobile=null,address=null,email=null where  PersonID=\'1000\''),
- (464,1000,'BSC_persons',1000,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-09-29 00:56:13','update BSC_persons set PersonID=\'1000\',fname=\'شبنم\',lname=\'جعفرخانی\',NationalID=\'0943021723\',EconomicID=null,PhoneNo=null,mobile=null,address=\'sdfsdf\',email=null where  PersonID=\'1000\'');
+ (464,1000,'BSC_persons',1000,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-09-29 00:56:13','update BSC_persons set PersonID=\'1000\',fname=\'شبنم\',lname=\'جعفرخانی\',NationalID=\'0943021723\',EconomicID=null,PhoneNo=null,mobile=null,address=\'sdfsdf\',email=null where  PersonID=\'1000\''),
+ (465,1000,'LON_requests',1,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-01 02:16:44','insert into LON_requests(LoanID,PersonID,ReqDate,ReqAmount) values (\'1\',\'1000\',now(),\'120000000\')'),
+ (466,1000,'LON_requests',2,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-01 02:30:39','insert into LON_requests(LoanID,PersonID,ReqDate,ReqAmount) values (\'1\',\'1000\',now(),\'120000000\')'),
+ (467,1000,'LON_requests',3,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-01 02:31:03','insert into LON_requests(LoanID,PersonID,ReqDate,ReqAmount) values (\'3\',\'1000\',now(),\'1000000000000\')'),
+ (468,1000,'LON_requests',4,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-01 02:32:58','insert into LON_requests(LoanID,PersonID,ReqDate,ReqAmount) values (\'1\',\'1000\',now(),\'120000000\')'),
+ (469,1000,'LON_requests',1001,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-01 02:33:38','insert into LON_requests(LoanID,PersonID,ReqDate,ReqAmount) values (\'1\',\'1000\',now(),\'120000000\')');
 /*!40000 ALTER TABLE `DataAudit` ENABLE KEYS */;
 
 
@@ -1262,7 +1267,7 @@ INSERT INTO `FRW_menus` (`SystemID`,`MenuID`,`ParentID`,`MenuDesc`,`IsActive`,`o
  (1000,39,0,'وام گیرنده','YES',2,NULL,NULL,'YES','NO','NO'),
  (1000,40,0,'سهامداران','YES',1,NULL,NULL,'NO','YES','NO'),
  (1000,41,39,'درخواست وام','YES',1,'clone','loan/NewLoanRequest.php','YES','NO','NO'),
- (1000,42,39,'مدیریت وام های دریافتی','YES',2,'list','/','YES','NO','NO'),
+ (1000,42,39,'وام های دریافتی','YES',2,'list','loan/LoanRequests.php','YES','NO','NO'),
  (1000,43,39,'پرداخت اقساط','YES',3,'credit-card','/','YES','NO','NO'),
  (1000,44,40,'مدیریت سهام','YES',1,'database','/','NO','YES','NO');
 /*!40000 ALTER TABLE `FRW_menus` ENABLE KEYS */;
@@ -1383,19 +1388,23 @@ DROP TABLE IF EXISTS `LON_requests`;
 CREATE TABLE `LON_requests` (
   `RequestID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد درخواست',
   `LoanID` int(10) unsigned NOT NULL COMMENT 'کد وام',
-  `PeopleID` int(10) unsigned NOT NULL COMMENT 'کد فرد',
+  `PersonID` int(10) unsigned NOT NULL COMMENT 'کد فرد',
   `ReqDate` datetime NOT NULL COMMENT 'تاریخ درخواست',
   `ReqAmount` decimal(15,0) NOT NULL COMMENT 'مبلغ درخواست',
   `OkAmount` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'مبلغ تایید شده',
-  `StatusID` int(10) unsigned NOT NULL COMMENT 'وضعیت',
+  `StatusID` int(10) unsigned NOT NULL DEFAULT '1' COMMENT 'وضعیت',
+  `ReqDetails` varchar(4000) DEFAULT NULL,
   PRIMARY KEY (`RequestID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1002 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `LON_requests`
 --
 
 /*!40000 ALTER TABLE `LON_requests` DISABLE KEYS */;
+INSERT INTO `LON_requests` (`RequestID`,`LoanID`,`PersonID`,`ReqDate`,`ReqAmount`,`OkAmount`,`StatusID`,`ReqDetails`) VALUES 
+ (1000,1,1000,'2015-10-01 02:16:44','120000000','0',1,NULL),
+ (1001,1,1000,'2015-10-01 02:33:38','120000000','0',1,NULL);
 /*!40000 ALTER TABLE `LON_requests` ENABLE KEYS */;
 
 

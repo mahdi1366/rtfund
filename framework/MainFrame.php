@@ -143,6 +143,7 @@ require_once 'MainFrame.js.php';
 ?>
 
 		<script>
+			var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
 			Ext.QuickTips.init();
 			var framework;
 			setTimeout(function(){

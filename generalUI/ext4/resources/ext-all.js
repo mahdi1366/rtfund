@@ -46289,7 +46289,7 @@ Ext.define("Ext.form.Labelable", {
                 '</td>',
             '</tpl>',
             '<td class="{baseBodyCls} {fieldBodyCls}" id="{id}-bodyEl" role="presentation" colspan="{bodyColspan}">',
-                '{beforeSubTpl}',
+				'{beforeSubTpl}',
                 '{[values.$comp.getSubTplMarkup()]}',
                 '{afterSubTpl}',
             '</td>',
@@ -46551,6 +46551,60 @@ Ext.define("Ext.form.Labelable", {
 });
 //---------- added by jafarkhani -------------
 Ext.apply(Ext.form.Labelable.prototype,{direction: "rtl"});
+/*---- using afterSubTpl for write something after textfield input ----------*/
+Ext.override(Ext.form.Labelable, {
+
+	labelableRenderTpl: [
+        '<tpl if="labelAlign==\'top\'">',
+            '<tr>',
+                '<td id="{id}-labelCell" colspan="3" style="{labelCellStyle}" {labelCellAttrs}>',
+                    '{beforeLabelTpl}',
+                    '<label id="{id}-labelEl" {labelAttrTpl}<tpl if="inputId"> for="{inputId}"</tpl> class="{labelCls}"',
+                        '<tpl if="labelStyle"> style="{labelStyle}"</tpl>>',
+                        '{beforeLabelTextTpl}',
+                        '<tpl if="fieldLabel">{fieldLabel}{labelSeparator}</tpl>',
+                        '{afterLabelTextTpl}',
+                    '</label>',
+                    '{afterLabelTpl}',
+                '</td>',
+            '</tr>',
+        '</tpl>',
+        '<tr id="{id}-inputRow" <tpl if="inFormLayout">id="{id}" class="{componentClass}"</tpl>>',
+            '<tpl if="labelOnLeft">',
+                '<td id="{id}-labelCell" style="{labelCellStyle}" {labelCellAttrs}>',
+                    '{beforeLabelTpl}',
+                    '<label id="{id}-labelEl" {labelAttrTpl}<tpl if="inputId"> for="{inputId}"</tpl> class="{labelCls}"',
+                        '<tpl if="labelStyle"> style="{labelStyle}"</tpl>>',
+                        '{beforeLabelTextTpl}',
+                        '<tpl if="fieldLabel">{fieldLabel}{labelSeparator}</tpl>',
+                        '{afterLabelTextTpl}',
+                    '</label>',
+                    '{afterLabelTpl}',
+                '</td>',
+            '</tpl>',
+            '<td class="{baseBodyCls} {fieldBodyCls}" id="{id}-bodyEl" role="presentation" colspan="{bodyColspan}">',
+				'<table width=100%><tr><td>{beforeSubTpl}</td>',
+                '<td>{[values.$comp.getSubTplMarkup()]}</td>',
+                '<td>&nbsp;{afterSubTpl}</td></tr></table>',
+            '</td>',
+            '<tpl if="msgTarget==\'side\'">',
+                '<td id="{id}-errorEl" class="{errorMsgCls}" style="display:none" width="{errorIconWidth}"></td>',
+            '</tpl>',
+        '</tr>',
+        '<tpl if="msgTarget==\'under\'">',
+            '<tr>',
+                '<tpl if="labelOnLeft">',
+                    '<td></td>',
+                '</tpl>',
+                '<td id="{id}-errorEl" class="{errorMsgClass}" colspan="{[values.labelOnLeft ? 2 : 3]}" style="display:none"></td>',
+            '</tr>',
+        '</tpl>',
+        {
+            disableFormats: true
+        }
+    ]
+});
+//-------------------------------------------
 Ext.define('Ext.form.RadioManager', {
     extend: 'Ext.util.MixedCollection',
     singleton: true,

@@ -61,6 +61,7 @@ for ($i = 0; $i < count($menus); $i++) {
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/Loading.css" />
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-all.css" />
 		<script>
+			var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
 			var portal;
 			setTimeout(function(){
 				Ext.onReady(function(){
