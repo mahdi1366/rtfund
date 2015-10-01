@@ -386,7 +386,7 @@ CREATE TABLE `BSC_persons` (
   `IsShareholder` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'سهامدار',
   `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
   `PostID` int(10) unsigned DEFAULT NULL,
-  PRIMARY KEY (`PersonID`) USING BTREE
+  PRIMARY KEY (`PersonID`) 
 ) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8 COMMENT='ذینفعان';
 
 --

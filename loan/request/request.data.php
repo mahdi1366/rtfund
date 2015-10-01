@@ -32,7 +32,8 @@ function SaveLoanRequest(){
 
 function SelectRequests(){
 	
-	$dt = LON_requests::SelectAll("r.PersonID=?", array($_SESSION["USER"]["PersonID"]));
+	$dt = LON_requests::SelectAll("r.PersonID=? " . dataReader::makeOrder(), 
+			array($_SESSION["USER"]["PersonID"]));
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

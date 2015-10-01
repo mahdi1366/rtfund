@@ -27,7 +27,7 @@ $col = $dg->addColumn("وضعیت", "StatusDesc", "");
 $col->width = 100;
 
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 400;
+$dg->height = 420;
 $dg->width = 770;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
