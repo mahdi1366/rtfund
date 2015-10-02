@@ -98,9 +98,8 @@ $col->width = 100;
 $col = $dg->addColumn("فیلد مرجع","RefField","string");
 $col->editor = ColumnEditor::TextField(true);
 
-$dg->addButton("","بازگشت","undo","function(){FGR_FormObject.Return('elementsWin')}");
 $dg->addButton("","ایجاد","add","function(){FGR_FormObject.AddElement()}");
-
+$dg->addButton("","بازگشت","undo","function(){FGR_FormObject.Return('elementsWin')}");
 	
 	$col = $dg->addColumn("حذف","","");
 	$col->renderer = "FGR_Form.deleteElementRender";
@@ -111,7 +110,6 @@ $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(store,record){return FGR_FormObject.SaveElement(store,record);}";
 
 $dg->height = 400;
-$dg->title = "اجزای فرم ";
 $dg->width = 750;
 $dg->editorGrid = true;
 $dg->EnableSearch = false;
@@ -167,7 +165,6 @@ $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(store,record){return FGR_FormObject.SaveStep(store,record);}";
 
 $dg->height = 300;
-$dg->title = "مراحل گردش فرم";
 $dg->width = 750;
 $dg->DefaultSortField = "ordering";
 $dg->emptyTextOfHiddenColumns = true;

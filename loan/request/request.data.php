@@ -16,6 +16,11 @@ switch ($task) {
 		
 	case "SelectRequests":
 		SelectRequests();
+		
+	//-------------------------------------------
+		
+	case "FillParts":
+		FillParts();
 }
 
 function SaveLoanRequest(){
@@ -38,5 +43,9 @@ function SelectRequests(){
 	die();
 }
 
+//------------------------------------------------
 
+function FillParts(){
+	
+}
 ?>

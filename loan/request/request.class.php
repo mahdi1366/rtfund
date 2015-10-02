@@ -75,4 +75,71 @@ class LON_requests extends PdoDataAccess
 	}
 }
 
+class LON_RequestParts extends PdoDataAccess
+{
+	public $PartID;
+	public $PartID;
+	public $PartDate;
+	public $PartAmount;
+	public $StatusID;
+			
+	function __construct($PartID = "") {
+		
+		if($PartID != "")
+			PdoDataAccess::FillObject ($this, "select * from LON_RequestParts where PartID=?", array($PartID));
+	}
+	
+	static function SelectAll($where = "", $param = array()){
+		
+		return PdoDataAccess::runquery("
+			select r.*, bi.InfoDesc StatusDesc
+			from LON_RequestParts r
+			join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=StatusID)
+			where " . $where, $param);
+	}
+	
+	function AddPart()
+	{
+		$this->ReqDate = PDONOW;
+		
+		if (!parent::insert("LON_RequestParts", $this)) {
+			return false;
+		}
+		$this->PartID = parent::InsertID();
+		
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->PartID;
+		$daObj->TableName = "LON_RequestParts";
+		$daObj->execute();
+		return true;
+	}
+	
+	function EditPart()
+	{
+	 	if( parent::update("LON_RequestParts",$this," PartID=:l", array(":l" => $this->PartID)) === false )
+	 		return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_update;
+		$daObj->MainObjectID = $this->PartID;
+		$daObj->TableName = "LON_RequestParts";
+		$daObj->execute();
+	 	return true;
+    }
+	
+	static function DeletePart($PartID){
+		
+		if( parent::delete("LON_RequestParts"," PartID=?", array($PartID)) === false )
+	 		return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_delete;
+		$daObj->MainObjectID = $PartID;
+		$daObj->TableName = "LON_RequestParts";
+		$daObj->execute();
+	 	return true;
+	}
+}
+
 ?>

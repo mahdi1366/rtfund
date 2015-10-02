@@ -1,84 +1,13 @@
 <?php
 //---------------------------
 // programmer:	Jafarkhani
-// create Date:	89.02
+// create Date:	94.07
 //---------------------------
 require_once 'header.php';
-include_once '../global/public.php';
-include_once '../formGenerator/form.class.php';
-include_once '../userManagement/um.class.php';
 require_once(inc_dataGrid);
+require_once 'CreatedForms.js.php';
 
-?>
-<script type="text/javascript" src="../formGenerator/Forms.js?4"></script>
-<script type="text/javascript">
-function AddingAction(){Adding();};
-
-function referenceRender(v,p,r)
-{
-	var referenceName;
-	switch(r.data.reference)
-	{
-		case "devotions": referenceName = "موقوفه";break;
-		case "states": referenceName = "رقبه";break;
-		case "rents": referenceName = "اجاره";break;
-	}
-	
-	return referenceName + " کد " + v;
-}
-function operationRender(v,p,r)
-{
-	return "<div align='center' title='مشاهده فرم' onclick='operationMenu(event);' " +
-		"style='background-repeat:no-repeat;background-position:center;"+
-		"background-image:url(images/setting.gif);" +
-		"cursor:pointer;width:100%;height:16'></div>";
-}
-function operationMenu(e)
-{
-	var record = dg_grid.selModel.getSelected();
-	var op_menu = new Ext.menu.Menu();
-	
-	op_menu.add({text: 'مشاهده فرم',iconCls: 'info',handler : function(){showInfo('create');} });
-	
-	var readonly = (record.data.StepID == '1') ? "false" : "true";
-	op_menu.add({text: 'پیوست',iconCls: 'attach',handler : function(){Attaching(readonly);} });
-	
-	if(record.data.StepID == '1')
-	{
-		op_menu.add({text: 'ارسال فرم',iconCls: 'send',handler : function(){Sending('send','create');} });
-		op_menu.add({text: 'حذف',iconCls: 'remove',handler : function(){Deleting();} });
-	}
-	op_menu.add({text: 'سابقه',iconCls: 'history',handler : function(){showHistoryForm();} });
-	
-	op_menu.showAt([e.clientX-100, e.clientY+5]);
-}
-
-function unloadFn()
-{
-	if(win)
-	{
-		win.destroy();
-		win = null;
-	}
-	if(sendWin)
-	{
-		sendWin.destroy();
-		sendWin = null;
-	}
-	if(AttachWin)
-	{
-		AttachWin.destroy();
-		AttachWin = null;
-	}
-	if(HistoryWin)
-	{
-		HistoryWin.destroy();
-		HistoryWin = null;
-	}
-}
-</script>
-<?php
-$dg = new sadaf_datagrid("dg","../formGenerator/wfm.data.php" ,"dg_forms");
+$dg = new sadaf_datagrid("dg",$js_prefix_address . "wfm.data.php" ,"dg_forms");
 $dg->method = "POST";
 $dg->baseParams = "task: 'CreatedFormsSelect'";
 
