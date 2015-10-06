@@ -73,10 +73,12 @@ function Menu()
 				xtype : "textfield",
 				name : "MenuPath",
 				anchor : "95%",
+				fieldStyle : "direction:ltr",
 				fieldLabel : "مسیر"
 			},{
 				xtype : "textfield",
 				name : "icon",
+				fieldStyle : "direction:ltr",
 				fieldLabel : "آیکون"
 			},{
 				xtype : "numberfield",

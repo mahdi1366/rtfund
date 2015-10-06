@@ -13,14 +13,14 @@ $dg->addColumn("کد وام", "LoanID", "", true);
 $dg->addColumn("", "GroupID", "", true);
 $dg->addColumn("", "GroupDesc", "", true);
 $dg->addColumn("مبلغ بیمه", "InsureAmount", "", true);
-$dg->addColumn("مبلغ قسط اول", "FirstCostusAmount", "", true);
+$dg->addColumn("مبلغ قسط اول", "FirstPartAmount", "", true);
 $dg->addColumn("درصد دیرکرد", "ForfeitPercent", "", true);
 $dg->addColumn("درصد کارمزد", "FeePercent", "", true);
 $dg->addColumn("مبلغ کارمزد", "FeeAmount", "", true);
 $dg->addColumn("درصد سود", "ProfitPercent", "", true);
 
-$dg->addColumn("", "CostusCount", "", true);
-$dg->addColumn("", "CostusInterval", "", true);
+$dg->addColumn("", "PartCount", "", true);
+$dg->addColumn("", "PartInterval", "", true);
 $dg->addColumn("", "DelayCount", "", true);
 $dg->addColumn("", "MaxAmount", "", true);
 
@@ -133,11 +133,11 @@ function NewLoanRequest()
 					renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
 				},{
 					fieldLabel: 'تعداد اقساط',
-					name: 'CostusCount'
+					name: 'PartCount'
 				},{
 					fieldLabel: 'فاصله اقساط',
 					renderer : function(v){ return v + " روز"},
-					name: 'CostusInterval',
+					name: 'PartInterval',
 					value : 0
 				},{
 					fieldLabel: 'مدت تنفس',
@@ -149,7 +149,7 @@ function NewLoanRequest()
 					renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
 				},{
 					fieldLabel: 'مبلغ قسط اول',
-					name: 'FirstCostusAmount',
+					name: 'FirstPartAmount',
 					renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
 				},{
 					fieldLabel: 'درصد سود',
@@ -174,6 +174,25 @@ function NewLoanRequest()
 			xtype : "fieldset",
 			title : "جزئیات درخواست",
 			items : [{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../../framework/baseinfo/baseinfo.data.php?' +
+							"task=SelectBranches",
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields : ['BranchID','BranchName'],
+					autoLoad : true					
+				}),
+				fieldLabel : "شعبه اخذ وام",
+				queryMode : 'local',
+				allowBlank : false,
+				beforeLabelTextTpl: required,
+				displayField : "BranchName",
+				valueField : "BranchID",
+				name : "BranchID"
+			},{
 				xtype : "currencyfield",
 				name : "ReqAmount",
 				allowBlank : false,

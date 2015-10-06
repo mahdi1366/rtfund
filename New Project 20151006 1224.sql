@@ -303,6 +303,7 @@ CREATE TABLE `ACC_tafsilis` (
   `TafsiliDesc` varchar(500) NOT NULL COMMENT 'عنوان',
   `BranchID` int(10) unsigned NOT NULL COMMENT 'کد شعبه',
   `IsActive` enum('YES','NO') NOT NULL default 'YES',
+  `PersonID` int(10) unsigned default NULL,
   PRIMARY KEY  (`TafsiliID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -311,10 +312,10 @@ CREATE TABLE `ACC_tafsilis` (
 --
 
 /*!40000 ALTER TABLE `ACC_tafsilis` DISABLE KEYS */;
-INSERT INTO `ACC_tafsilis` (`TafsiliID`,`TafsiliCode`,`TafsiliType`,`TafsiliDesc`,`BranchID`,`IsActive`) VALUES 
- (1,'1000',1,'شرکت ی111',1,'YES'),
- (2,'1001',1,'شرکت 2',1,'YES'),
- (3,'1',2,'شخص 1',1,'YES');
+INSERT INTO `ACC_tafsilis` (`TafsiliID`,`TafsiliCode`,`TafsiliType`,`TafsiliDesc`,`BranchID`,`IsActive`,`PersonID`) VALUES 
+ (1,'1000',1,'شرکت ی111',1,'YES',NULL),
+ (2,'1001',1,'شرکت 2',1,'YES',NULL),
+ (3,'1',2,'شخص 1',1,'YES',NULL);
 /*!40000 ALTER TABLE `ACC_tafsilis` ENABLE KEYS */;
 
 
@@ -336,7 +337,8 @@ CREATE TABLE `BSC_BranchAccess` (
 
 /*!40000 ALTER TABLE `BSC_BranchAccess` DISABLE KEYS */;
 INSERT INTO `BSC_BranchAccess` (`PersonID`,`BranchID`,`IsCurrent`) VALUES 
- (1000,1,'NO');
+ (1000,1,'NO'),
+ (1000,2,'NO');
 /*!40000 ALTER TABLE `BSC_BranchAccess` ENABLE KEYS */;
 
 
@@ -574,7 +576,7 @@ CREATE TABLE `DataAudit` (
   `ActionTime` datetime NOT NULL COMMENT 'زمان انجام عمل',
   `QueryString` varchar(2000) collate utf8_persian_ci default NULL COMMENT 'query اجرا شده',
   PRIMARY KEY  (`DataAuditID`)
-) ENGINE=MyISAM AUTO_INCREMENT=470 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
+) ENGINE=MyISAM AUTO_INCREMENT=485 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
 
 --
 -- Dumping data for table `DataAudit`
@@ -1051,7 +1053,22 @@ INSERT INTO `DataAudit` (`DataAuditID`,`PersonID`,`TableName`,`MainObjectID`,`Su
  (466,1000,'LON_requests',2,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-01 02:30:39','insert into LON_requests(LoanID,PersonID,ReqDate,ReqAmount) values (\'1\',\'1000\',now(),\'120000000\')'),
  (467,1000,'LON_requests',3,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-01 02:31:03','insert into LON_requests(LoanID,PersonID,ReqDate,ReqAmount) values (\'3\',\'1000\',now(),\'1000000000000\')'),
  (468,1000,'LON_requests',4,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-01 02:32:58','insert into LON_requests(LoanID,PersonID,ReqDate,ReqAmount) values (\'1\',\'1000\',now(),\'120000000\')'),
- (469,1000,'LON_requests',1001,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-01 02:33:38','insert into LON_requests(LoanID,PersonID,ReqDate,ReqAmount) values (\'1\',\'1000\',now(),\'120000000\')');
+ (469,1000,'LON_requests',1001,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-01 02:33:38','insert into LON_requests(LoanID,PersonID,ReqDate,ReqAmount) values (\'1\',\'1000\',now(),\'120000000\')'),
+ (470,1000,'LON_loans',1,NULL,'UPDATE',1000,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-06 20:28:17','update LON_loans set LoanID=\'1\',GroupID=\'1\',LoanDesc=\'وام طرح های بزرگ\',MaxAmount=\'120000000\',PartCount=\'24\',PartInterval=\'30\',DelayCount=\'60\',InsureAmount=\'1200000\',FirstPartAmount=\'18800000\',ForfeitPercent=\'10\',FeePercent=\'4\',FeeAmount=\'0\',ProfitPercent=\'20\' where  LoanID=\'1\''),
+ (471,1000,'LON_loans',1,NULL,'UPDATE',1000,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-06 20:28:56','update LON_loans set LoanID=\'1\',GroupID=\'1\',LoanDesc=\'وام طرح های بزرگ\',MaxAmount=\'120000000\',PartCount=\'24\',PartInterval=\'30\',DelayCount=\'60\',InsureAmount=\'1200000\',FirstPartAmount=\'18800000\',ForfeitPercent=\'10\',FeePercent=\'4\',FeeAmount=\'0\',ProfitPercent=\'20\' where  LoanID=\'1\''),
+ (472,1000,'LON_loans',1,NULL,'UPDATE',1000,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-06 20:31:36','update LON_loans set LoanID=\'1\',GroupID=\'1\',LoanDesc=\'وام طرح های بزرگ\',MaxAmount=\'120000000\',PartCount=\'24\',PartInterval=\'30\',DelayCount=\'60\',InsureAmount=\'1200000\',FirstPartAmount=\'18800000\',ForfeitPercent=\'10\',FeePercent=\'4\',FeeAmount=\'0\',ProfitPercent=\'20\' where  LoanID=\'1\''),
+ (473,1000,'LON_requests',1,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-06 20:31:48','insert into LON_requests(LoanID,PersonID,ReqDate,ReqAmount,PartCount,PartInterval,DelayCount,InsureAmount,FirstPartAmount,ForfeitPercent,FeePercent,FeeAmount,ProfitPercent) values (\'1\',\'1000\',now(),\'120000000\',\'24\',\'30\',\'60\',\'1200000\',\'18800000\',\'10\',\'4\',\'0\',\'20\')'),
+ (474,1000,'LON_requests',1,NULL,'UPDATE',1000,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-06 21:01:13','update LON_requests set RequestID=\'1\',ReqAmount=\'120000000\',ReqDetails=null,PartCount=\'24\',PartInterval=\'30\',DelayCount=\'60\',InsureAmount=\'1200000\',FirstPartAmount=\'18800000\',ForfeitPercent=\'10\',FeePercent=\'5\',FeeAmount=\'0\',ProfitPercent=\'20\' where  RequestID=\'1\''),
+ (475,1000,'LON_requests',1,NULL,'UPDATE',1000,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-06 21:16:37','update LON_requests set RequestID=\'1\',OkAmount=\'120000000\',ReqDetails=null,PartCount=\'24\',PartInterval=\'30\',DelayCount=\'60\',InsureAmount=\'1200000\',FirstPartAmount=\'18800000\',ForfeitPercent=\'10\',FeePercent=\'5\',FeeAmount=\'0\',ProfitPercent=\'20\' where  RequestID=\'1\''),
+ (476,1000,'LON_requests',2,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-06 21:47:04','insert into LON_requests(BranchID,LoanID,PersonID,ReqDate,ReqAmount,StatusID,PartCount,PartInterval,DelayCount,InsureAmount,FirstPartAmount,ForfeitPercent,FeePercent,FeeAmount,ProfitPercent) values (\'2\',\'4\',\'1000\',now(),\'200000000\',\'10\',\'36\',\'30\',\'12\',\'120000\',\'2000000\',\'30\',\'20\',\'0\',\'10\')'),
+ (477,1000,'FRW_menus',45,NULL,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-06 23:36:52','insert into FRW_menus(SystemID,ParentID,MenuDesc,IsActive,ordering,icon,MenuPath) values (\'6\',\'13\',\'مدیریت ذینفعان\',\'YES\',\'2\',\'users.gif\',\'../framework/person/persons.php\')'),
+ (478,1000,'FRW_menus',17,NULL,'UPDATE',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-06 23:40:10','update FRW_menus set SystemID=\'6\',MenuID=\'17\',ParentID=\'0\',MenuDesc=\'گزارشات\',ordering=\'3\' where MenuID=\'17\''),
+ (479,1000,'FRW_menus',13,NULL,'UPDATE',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-06 23:40:42','update FRW_menus set SystemID=\'6\',MenuID=\'13\',ParentID=\'0\',MenuDesc=\'اطلاعات پایه\',ordering=\'1\' where MenuID=\'13\''),
+ (480,1000,'FRW_menus',15,NULL,'UPDATE',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-06 23:40:48','update FRW_menus set SystemID=\'6\',MenuID=\'15\',ParentID=\'0\',MenuDesc=\'اعطای تسهیلات\',ordering=\'2\' where MenuID=\'15\''),
+ (481,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-06 23:55:26','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'14\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (482,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-06 23:55:26','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'45\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (483,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-06 23:55:26','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'16\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (484,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-06 23:55:26','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'18\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')');
 /*!40000 ALTER TABLE `DataAudit` ENABLE KEYS */;
 
 
@@ -1201,7 +1218,8 @@ INSERT INTO `FRW_access` (`MenuID`,`PersonID`,`ViewFlag`,`AddFlag`,`EditFlag`,`R
  (34,1000,'YES','NO','NO','NO'),
  (35,1000,'YES','YES','YES','YES'),
  (36,1000,'YES','YES','NO','NO'),
- (38,1000,'YES','YES','YES','YES');
+ (38,1000,'YES','YES','YES','YES'),
+ (45,1000,'YES','YES','YES','YES');
 /*!40000 ALTER TABLE `FRW_access` ENABLE KEYS */;
 
 
@@ -1245,11 +1263,11 @@ INSERT INTO `FRW_menus` (`SystemID`,`MenuID`,`ParentID`,`MenuDesc`,`IsActive`,`o
  (1,10,9,'واحدهای سازمان','YES',1,'unit.png','baeinfo/units.php','NO','NO','NO'),
  (1,11,9,'مدیریت شعب','YES',2,NULL,'baseinfo/branches.php','NO','NO','NO'),
  (1,12,9,'دسترسی شعب','YES',3,NULL,'baseInfo/BranchAccess.php','NO','NO','NO'),
- (6,13,0,'اطلاعات پایه','YES',NULL,NULL,NULL,'NO','NO','NO'),
+ (6,13,0,'اطلاعات پایه','YES',1,NULL,NULL,'NO','NO','NO'),
  (6,14,13,'انواع وام','YES',1,NULL,'loan/loans.php','NO','NO','NO'),
- (6,15,0,'اعطای تسهیلات','YES',NULL,NULL,NULL,'NO','NO','NO'),
+ (6,15,0,'اعطای تسهیلات','YES',2,NULL,NULL,'NO','NO','NO'),
  (6,16,15,'مدیریت درخواست ها','YES',1,NULL,'request/LoanRequests.php','NO','NO','NO'),
- (6,17,0,'گزارشات','YES',NULL,NULL,NULL,'NO','NO','NO'),
+ (6,17,0,'گزارشات','YES',3,NULL,NULL,'NO','NO','NO'),
  (6,18,17,'گزارش درخواست های تسهیلات','YES',1,NULL,'report/requests.php','NO','NO','NO'),
  (2,19,0,'گزارشات','YES',3,NULL,NULL,'NO','NO','NO'),
  (2,21,0,'عملیات برگه','YES',2,NULL,NULL,'NO','NO','NO'),
@@ -1270,9 +1288,10 @@ INSERT INTO `FRW_menus` (`SystemID`,`MenuID`,`ParentID`,`MenuDesc`,`IsActive`,`o
  (1000,39,0,'وام گیرنده','YES',2,NULL,NULL,'YES','NO','NO'),
  (1000,40,0,'سهامداران','YES',1,NULL,NULL,'NO','YES','NO'),
  (1000,41,39,'درخواست وام','YES',1,'clone','loan/NewLoanRequest.php','YES','NO','NO'),
- (1000,42,39,'وام های دریافتی','YES',2,'list','loan/LoanRequests.php','YES','NO','NO'),
+ (1000,42,39,'وام های دریافتی','YES',2,'list','loan/MyRequests.php','YES','NO','NO'),
  (1000,43,39,'پرداخت اقساط','YES',3,'credit-card','/','YES','NO','NO'),
- (1000,44,40,'مدیریت سهام','YES',1,'database','/','NO','YES','NO');
+ (1000,44,40,'مدیریت سهام','YES',1,'database','/','NO','YES','NO'),
+ (6,45,13,'مدیریت ذینفعان','YES',2,'users.gif','../framework/person/persons.php','NO','NO','NO');
 /*!40000 ALTER TABLE `FRW_menus` ENABLE KEYS */;
 
 
@@ -1380,11 +1399,11 @@ CREATE TABLE `LON_loans` (
   `GroupID` int(10) unsigned NOT NULL COMMENT 'کد گروه وام',
   `LoanDesc` varchar(500) NOT NULL COMMENT 'عنوان وام',
   `MaxAmount` decimal(15,0) NOT NULL default '0' COMMENT 'سقف مبلغ',
-  `CostusCount` smallint(5) unsigned NOT NULL default '0' COMMENT 'تعداد اقساط',
-  `CostusInterval` smallint(5) unsigned NOT NULL default '0' COMMENT 'فاصله اقساط',
+  `PartCount` smallint(5) unsigned NOT NULL default '0' COMMENT 'تعداد اقساط',
+  `PartInterval` smallint(5) unsigned NOT NULL default '0' COMMENT 'فاصله اقساط',
   `DelayCount` smallint(5) unsigned NOT NULL default '0' COMMENT 'زمان تنفس به ماه',
   `InsureAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ بیمه',
-  `FirstCostusAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ قسط اول',
+  `FirstPartAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ قسط اول',
   `ForfeitPercent` smallint(5) unsigned NOT NULL default '0' COMMENT 'درصد جریمه',
   `FeePercent` smallint(5) unsigned NOT NULL default '0' COMMENT 'درصد کارمزد',
   `FeeAmount` decimal(15,0) NOT NULL default '0' COMMENT 'کارمزد ثابت',
@@ -1397,8 +1416,8 @@ CREATE TABLE `LON_loans` (
 --
 
 /*!40000 ALTER TABLE `LON_loans` DISABLE KEYS */;
-INSERT INTO `LON_loans` (`LoanID`,`GroupID`,`LoanDesc`,`MaxAmount`,`CostusCount`,`CostusInterval`,`DelayCount`,`InsureAmount`,`FirstCostusAmount`,`ForfeitPercent`,`FeePercent`,`FeeAmount`,`ProfitPercent`) VALUES 
- (1,1,'وام طرح های بزرگ','120000000',36,30,365,'1200000','1200000',10,10,'20000',20),
+INSERT INTO `LON_loans` (`LoanID`,`GroupID`,`LoanDesc`,`MaxAmount`,`PartCount`,`PartInterval`,`DelayCount`,`InsureAmount`,`FirstPartAmount`,`ForfeitPercent`,`FeePercent`,`FeeAmount`,`ProfitPercent`) VALUES 
+ (1,1,'وام طرح های بزرگ','120000000',24,30,60,'1200000','18800000',10,4,'0',20),
  (3,2,'وام مسکن شماره 1000','1000000000000',24,30,60,'12000','10000000',20,30,'0',10),
  (4,3,'وام جزیی 1','200000000',36,30,12,'120000','2000000',30,20,'0',10),
  (5,2,'نمست نمست بت مست بمنتسی','120000000',34,0,0,'0','0',0,0,'0',0);
@@ -1412,6 +1431,7 @@ INSERT INTO `LON_loans` (`LoanID`,`GroupID`,`LoanDesc`,`MaxAmount`,`CostusCount`
 DROP TABLE IF EXISTS `LON_requests`;
 CREATE TABLE `LON_requests` (
   `RequestID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد درخواست',
+  `BranchID` int(10) unsigned NOT NULL,
   `LoanID` int(10) unsigned NOT NULL COMMENT 'کد وام',
   `PersonID` int(10) unsigned NOT NULL COMMENT 'کد فرد',
   `ReqDate` datetime NOT NULL COMMENT 'تاریخ درخواست',
@@ -1419,6 +1439,15 @@ CREATE TABLE `LON_requests` (
   `OkAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ تایید شده',
   `StatusID` int(10) unsigned NOT NULL default '1' COMMENT 'وضعیت',
   `ReqDetails` varchar(4000) default NULL,
+  `PartCount` smallint(5) unsigned NOT NULL default '0' COMMENT 'تعداد اقساط',
+  `PartInterval` smallint(5) unsigned NOT NULL default '0' COMMENT 'فاصله اقساط',
+  `DelayCount` smallint(5) unsigned NOT NULL default '0' COMMENT 'زمان تنفس به ماه',
+  `InsureAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ بیمه',
+  `FirstPartAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ قسط اول',
+  `ForfeitPercent` smallint(5) unsigned NOT NULL default '0' COMMENT 'درصد جریمه',
+  `FeePercent` smallint(5) unsigned NOT NULL default '0' COMMENT 'درصد کارمزد',
+  `FeeAmount` decimal(15,0) NOT NULL default '0' COMMENT 'کارمزد ثابت',
+  `ProfitPercent` smallint(5) unsigned NOT NULL default '0' COMMENT 'درصد سود',
   PRIMARY KEY  (`RequestID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -1427,9 +1456,9 @@ CREATE TABLE `LON_requests` (
 --
 
 /*!40000 ALTER TABLE `LON_requests` DISABLE KEYS */;
-INSERT INTO `LON_requests` (`RequestID`,`LoanID`,`PersonID`,`ReqDate`,`ReqAmount`,`OkAmount`,`StatusID`,`ReqDetails`) VALUES 
- (1000,1,1000,'2015-10-01 02:16:44','120000000','0',10,NULL),
- (1001,3,1000,'2015-10-01 02:33:38','120000000','0',10,NULL);
+INSERT INTO `LON_requests` (`RequestID`,`BranchID`,`LoanID`,`PersonID`,`ReqDate`,`ReqAmount`,`OkAmount`,`StatusID`,`ReqDetails`,`PartCount`,`PartInterval`,`DelayCount`,`InsureAmount`,`FirstPartAmount`,`ForfeitPercent`,`FeePercent`,`FeeAmount`,`ProfitPercent`) VALUES 
+ (1,1,1,1000,'2015-10-06 20:31:48','120000000','120000000',10,NULL,24,30,60,'1200000','18800000',10,5,'0',20),
+ (2,2,4,1000,'2015-10-06 21:47:04','200000000','0',10,NULL,36,30,12,'120000','2000000',30,20,'0',10);
 /*!40000 ALTER TABLE `LON_requests` ENABLE KEYS */;
 
 

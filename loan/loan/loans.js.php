@@ -8,6 +8,10 @@ Loan.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : '<?= $js_prefix_address ?>',
 
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -138,12 +142,12 @@ Loan.prototype.LoanInfo = function(mode)
 				},{
 					xtype:'numberfield',
 					fieldLabel: 'تعداد اقساط',
-					name: 'CostusCount',
+					name: 'PartCount',
 					hideTrigger : true
 				},{
 					xtype:'numberfield',
 					fieldLabel: 'فاصله اقساط(روز)',
-					name: 'CostusInterval',
+					name: 'PartInterval',
 					hideTrigger : true
 				},{
 					xtype:'numberfield',
@@ -158,7 +162,7 @@ Loan.prototype.LoanInfo = function(mode)
 				},{
 					xtype:'currencyfield',
 					fieldLabel: 'مبلغ قسط اول',
-					name: 'FirstCostusAmount',
+					name: 'FirstPartAmount',
 					hideTrigger : true	
 				},{
 					xtype:'numberfield',
@@ -191,6 +195,9 @@ Loan.prototype.LoanInfo = function(mode)
 					text : "ذخیره",
 					iconCls : "save",
 					handler : function(){
+						mask = new Ext.LoadMask(LoanObject.formPanel, {msg:'در حال حذف ...'});
+						mask.show();
+						
 						LoanObject.formPanel.getForm().submit({
 							clientValidation: true,
 							url : LoanObject.address_prefix + 'loan.data.php?task=SaveLoan',
@@ -200,12 +207,16 @@ Loan.prototype.LoanInfo = function(mode)
 							},
 
 							success : function(form,action){
+								mask.hide();
 								if(action.result.success)
 									LoanObject.grid.getStore().load();
 								else
 									alert("عملیات مورد نظر با شکست مواجه شد.");
 								
 								LoanObject.formPanel.hide();
+							},
+							failure : function(){
+								mask.hide();
 							}
 						});
 					}
@@ -234,15 +245,25 @@ Loan.prototype.LoanInfo = function(mode)
 
 Loan.OperationRender = function(v,p,r)
 {
-	return "<table width=100%><tr><td><div align='center' title='ویرایش وام' class='edit' "+
+	st = "<table width=100%><tr><td>";
+	
+	if(LoanObject.EditAccess)
+		st += "<div align='center' title='ویرایش وام' class='edit' "+
 		"onclick='LoanObject.LoanInfo(\"edit\");' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div></td>" + 
-		
-		"<td><div align='center' title='حذف وام' class='remove' "+
+		"cursor:pointer;width:100%;height:16'></div>";
+	
+	st += "</td><td>";
+	
+	if(LoanObject.RemoveAccess)	
+		st += "<div align='center' title='حذف وام' class='remove' "+
 		"onclick='LoanObject.DeleteLoan();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div></td></tr></table>";
+		"cursor:pointer;width:100%;height:16'></div>";
+	
+	st += "</td></tr></table>";
+	
+	return st;
 }
 
 Loan.prototype.DeleteGroup = function(GroupID)

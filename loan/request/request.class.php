@@ -7,6 +7,7 @@
 class LON_requests extends PdoDataAccess
 {
 	public $RequestID;
+	public $BranchID;
 	public $LoanID;
 	public $PersonID;
 	public $ReqDate;
@@ -14,6 +15,16 @@ class LON_requests extends PdoDataAccess
 	public $OkAmount;
 	public $StatusID;
 	public $ReqDetails;
+	
+	public $PartCount;
+	public $PartInterval;
+	public $DelayCount;
+	public $InsureAmount;
+	public $FirstPartAmount;
+	public $ForfeitPercent;
+	public $FeePercent;
+	public $FeeAmount;
+	public $ProfitPercent;
 			
 	function __construct($RequestID = "") {
 		
@@ -24,8 +35,12 @@ class LON_requests extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select r.*,concat(fname, ' ', lname) fullname,l.*, bi.InfoDesc StatusDesc
+			select r.*,concat(fname, ' ', lname) fullname,
+				l.LoanDesc,l.MaxAmount, 
+				bi.InfoDesc StatusDesc,
+				BranchName
 			from LON_requests r
+			join BSC_branches using(BranchID)
 			join LON_loans l using(LoanID)
 			join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
 			join BSC_persons using(PersonID)
@@ -77,7 +92,6 @@ class LON_requests extends PdoDataAccess
 
 class LON_RequestParts extends PdoDataAccess
 {
-	public $PartID;
 	public $PartID;
 	public $PartDate;
 	public $PartAmount;
