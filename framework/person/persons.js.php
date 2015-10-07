@@ -4,7 +4,7 @@
 //	Date		: 90.10
 //-----------------------------
 
-User.prototype = {
+Person.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
@@ -13,30 +13,30 @@ User.prototype = {
 	}
 };
 
-function User()
+function Person()
 {
 
 }
 
-User.deleteRender = function(v,p,r)
+Person.deleteRender = function(v,p,r)
 {
 	if(r.data.IsActive == "NO")
 		return "";
-	return "<div align='center' title='حذف کاربر' class='remove' onclick='UserObject.Deleting();' " +
+	return "<div align='center' title='حذف کاربر' class='remove' onclick='PersonObject.Deleting();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-User.resetPassRender = function(v,p,r)
+Person.resetPassRender = function(v,p,r)
 {
 	if(r.data.IsActive == "NO")
 		return "";
-	return "<div align='center' title='حذف رمز عبور' class='undo' onclick='UserObject.ResetPass();' " +
+	return "<div align='center' title='حذف رمز عبور' class='undo' onclick='PersonObject.ResetPass();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-User.prototype.Adding = function()
+Person.prototype.Adding = function()
 {
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
@@ -48,7 +48,7 @@ User.prototype.Adding = function()
 	this.grid.plugins[0].startEdit(0, 0);
 }
 
-User.prototype.Deleting = function()
+Person.prototype.Deleting = function()
 {
 	var record = this.grid.getSelectionModel().getLastSelected();
 	if(record && confirm("آيا مايل به حذف مي باشيد؟"))
@@ -62,13 +62,13 @@ User.prototype.Deleting = function()
 		  	},
 		  	success : function(response,o)
 		  	{
-		  		UserObject.grid.getStore().load();
+		  		PersonObject.grid.getStore().load();
 		  	}
 		});
 	}
 }
 
-User.prototype.saveData = function(store,record)
+Person.prototype.saveData = function(store,record)
 {
     mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخیره سازی ...'});
 	mask.show();
@@ -86,7 +86,7 @@ User.prototype.saveData = function(store,record)
 			var st = Ext.decode(response.responseText);
 			if(st.success)
 			{
-				UserObject.grid.getStore().load();
+				PersonObject.grid.getStore().load();
 			}
 			else
 			{
@@ -97,7 +97,7 @@ User.prototype.saveData = function(store,record)
 	});
 }
 
-User.prototype.ResetPass = function()
+Person.prototype.ResetPass = function()
 {
 	var record = this.grid.getSelectionModel().getLastSelected();
 		
@@ -118,7 +118,7 @@ User.prototype.ResetPass = function()
 			if(st.success)
 			{
 				Ext.MessageBox.alert("Warning","رمز عبور با موفقیت حذف گردید. بعد از اولین بار ورود به  سیستم رمز عبور تنظیم خواهد شد.");
-				UserObject.grid.getStore().load();
+				PersonObject.grid.getStore().load();
 			}
 			else
 			{

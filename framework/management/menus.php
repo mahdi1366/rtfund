@@ -37,8 +37,10 @@ $col->editor = ColumnEditor::TextField();
 $col->sortable = false;
 
 $col = $dg->addColumn("مسیر", "MenuPath", "string");
-$col->editor = ColumnEditor::TextField();
+$col->editor = "MenuObject.PathField";
 $col->sortable = false;
+$col->align = "left";
+$col->renderer = "function(v){return '<div style=direction:ltr>' + v + '</div>'; }";
 $col->width = 250;
 
 $col = $dg->addColumn("آیکون", "icon", "string");
@@ -91,12 +93,19 @@ $grid = $dg->makeGrid_returnObjects();
 
 <script>
 	
+MenuObject.PathField = new Ext.form.TextField({
+	allowBlank : false,
+	fieldStyle : "direction:ltr"
+})
+	
 MenuObject.grid = <?= $grid?>;
 MenuObject.grid.plugins[0].on("beforeedit", function(editor,e){
 		if(e.record.data.MenuID == null || e.record.data.MenuID == "")
 			return false;
 	});
-	
+
+//MenuObject.grid.plugins[0].down("[itemId=cmp_path]")
+
 //Ext.getCmp("title").on("keydown", function(elem,e){if(e.getKey() == 13)AddMenu();});
 //Ext.get("elementTitle").addKeyListener(13, function(){AddElement();});	
 </script>

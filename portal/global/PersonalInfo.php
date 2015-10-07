@@ -71,6 +71,7 @@ function PersonalInfo()
 		},{
 			xtype : "textarea",
 			fieldLabel: 'آدرس',
+			width : 368,
 			name: 'address'
 		}],
 

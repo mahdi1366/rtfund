@@ -65,7 +65,7 @@ LoanRequests.prototype.LoanInfo = function(){
 		this.LoanInfoWin = new Ext.window.Window({
 			width : 500,
 			renderTo : this.get(this.TabID),
-			height : 410,
+			height : 430,
 			title: 'مشخصات درخواست وام',
 			modal : true,
 			closeAction : "hide",
@@ -78,53 +78,72 @@ LoanRequests.prototype.LoanInfo = function(){
 					style : "margin-right:10px",
 					anchor : "98%",
 					defaults : {
-						xtype : "displayfield",
-						style : "margin-top:10px",
 						labelWidth : 80,
 						width : 220,
-						fieldCls : "blueText"
+						hideTrigger : true
 					},
 					items : [{
 						fieldLabel: 'سقف مبلغ',
 						name: 'MaxAmount',
-						renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
+						style : "margin-bottom:8px",
+						xtype : "displayfield",
+						renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"},
+						fieldCls : "blueText"
 					},{
-						fieldLabel: 'تعداد اقساط',
-						name: 'CostusCount'
+						fieldLabel: 'مبلغ درخواست',
+						name: 'ReqAmount',
+						style : "margin-bottom:8px",
+						xtype : "displayfield",
+						renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"},
+						fieldCls : "blueText"
 					},{
 						fieldLabel: 'فاصله اقساط',
-						renderer : function(v){ return v + " روز"},
-						name: 'CostusInterval',
-						value : 0
+						xtype : "numberfield",
+						afterSubTpl: "&nbsp;روز",
+						name: 'PartInterval'
+					},{
+						fieldLabel: 'تعداد اقساط',
+						name: 'PartCount',
+						width : 205,
+						xtype : "numberfield"
 					},{
 						fieldLabel: 'مدت تنفس',
-						renderer : function(v){ return v + " ماه"},
+						xtype : "numberfield",
+						afterSubTpl: "&nbsp;روز",
 						name: 'DelayCount'
 					},{
 						fieldLabel: 'مبلغ بیمه',
 						name: 'InsureAmount',
-						renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
+						xtype : "currencyfield",
+						afterSubTpl: "ریال"
 					},{
 						fieldLabel: 'مبلغ قسط اول',
-						name: 'FirstCostusAmount',
-						renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
+						name: 'FirstPartAmount',
+						xtype : "currencyfield",
+						afterSubTpl: "ریال"
 					},{
 						fieldLabel: 'درصد سود',
 						name: 'ProfitPercent',
-						renderer : function(v){ return v + " %"},
-						value : 0
+						xtype : "numberfield",
+						afterSubTpl: "&nbsp;%&nbsp;",
+						MaxValue : 100
 					},{
 						fieldLabel: 'درصد دیرکرد',
-						renderer : function(v){ return v + " %"},
+						xtype : "numberfield",
+						afterSubTpl: "&nbsp;%&nbsp;",
+						MaxValue : 100,
 						name: 'ForfeitPercent'
 					},{
 						fieldLabel: 'درصد کارمزد',
-						renderer : function(v){ return v + " %"},
+						xtype : "numberfield",
+						afterSubTpl: "&nbsp;%&nbsp;",
+						MaxValue : 100,
 						name: 'FeePercent'
 					},{
 						fieldLabel: 'مبلغ کارمزد',
 						name: 'FeeAmount',
-						rrenderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
+						xtype : "currencyfield",
+						afterSubTpl: "ریال"
 					}]
 				},{
 					xtype : "fieldset",
@@ -132,23 +151,26 @@ LoanRequests.prototype.LoanInfo = function(){
 					anchor : "98%",
 					style : "margin-right:10px",
 					items : [{
-						xtype : "displayfield",
-						name : "ReqAmount",
-						style : "margin-top:10px",
-						fieldCls : "blueText",
-						fieldLabel : "مبلغ درخواستی",
-						afterSubTpl: '<tpl>ریال</tpl>'
+						xtype : "currencyfield",
+						name : "OkAmount",
+						fieldLabel : "مبلغ مورد تایید",
+						hideTrigger : true,
+						afterSubTpl: "ریال"
 					},{
-						xtype : "displayfield",
+						xtype : "textarea",
 						fieldLabel : "توضیحات",
-						style : "margin-top:10px",
-						fieldCls : "blueText",
 						anchor : "90%",
 						name : "ReqDetails"
 					}]
 				}]
 			}),
 			buttons :[{
+				text : "ذخیره",
+				iconCls : "save",
+				handler : function(){
+					LoanRequestsObject.SaveLoanRequest();
+				}
+			},{
 				text : "بازگشت",
 				iconCls : "undo",
 				handler : function(){
@@ -160,8 +182,33 @@ LoanRequests.prototype.LoanInfo = function(){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
 	this.LoanInfoWin.down('form').loadRecord(record);
+	this.LoanInfoWin.down("[name=OkAmount]").setMaxValue(record.data.MaxAmount);
 	this.LoanInfoWin.show();
 	this.LoanInfoWin.center();
+}
+
+LoanRequests.prototype.SaveLoanRequest = function(){
+	
+	mask = new Ext.LoadMask(this.LoanInfoWin, {msg:'در حال ذخيره سازي...'});
+	mask.show();  
+	this.LoanInfoWin.down('form').getForm().submit({
+		clientValidation: true,
+		url: this.address_prefix + 'request.data.php?task=SaveLoanRequest' , 
+		method: "POST",
+		params : {
+			RequestID : this.grid.getSelectionModel().getLastSelected().data.RequestID
+		},
+		
+		success : function(form,action){
+			mask.hide();
+			LoanRequestsObject.LoanInfoWin.hide();
+			LoanRequestsObject.grid.getStore().load();
+		},
+		failure : function(){
+			mask.hide();
+			//Ext.thisssageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+		}
+	});
 }
 
 </script>

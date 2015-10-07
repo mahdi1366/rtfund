@@ -10,11 +10,11 @@ class LON_loans extends PdoDataAccess
 	public $GroupID;
 	public $LoanDesc;
 	public $MaxAmount;
-	public $CostusCount;
-	public $CostusInterval;
+	public $PartCount;
+	public $PartInterval;
 	public $DelayCount;
 	public $InsureAmount;
-	public $FirstCostusAmount;
+	public $FirstPartAmount;
 	public $ForfeitPercent;
 	public $FeePercent;
 	public $FeeAmount;

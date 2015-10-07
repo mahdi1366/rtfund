@@ -7,7 +7,7 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "../../loan/request/request.data.php?task=SelectRequests", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "../../loan/request/request.data.php?task=SelectMyRequests", "grid_div");
 
 $col = $dg->addColumn("پیگیری", "RequestID", "");
 $col->width = 50;

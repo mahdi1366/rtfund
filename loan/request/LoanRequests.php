@@ -8,23 +8,27 @@ require_once '../header.inc.php';
 require_once inc_dataGrid;
 require_once 'LoanRequests.js.php';
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "../../loan/request/request.data.php?task=SelectRequests", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectAllRequests", "grid_div");
 
 $dg->addColumn("", "StatusID", "", true);
+$dg->addColumn("", "BranchID", "", true);
 $dg->addColumn("", "GroupDesc", "", true);
 $dg->addColumn("", "InsureAmount", "", true);
-$dg->addColumn("", "FirstCostusAmount", "", true);
+$dg->addColumn("", "FirstPartAmount", "", true);
 $dg->addColumn("", "ForfeitPercent", "", true);
 $dg->addColumn("", "FeePercent", "", true);
 $dg->addColumn("", "FeeAmount", "", true);
 $dg->addColumn("", "ProfitPercent", "", true);
-$dg->addColumn("", "CostusCount", "", true);
-$dg->addColumn("", "CostusInterval", "", true);
+$dg->addColumn("", "PartCount", "", true);
+$dg->addColumn("", "PartInterval", "", true);
 $dg->addColumn("", "DelayCount", "", true);
 $dg->addColumn("", "MaxAmount", "", true);
 
-$col = $dg->addColumn("کد درخواست", "RequestID", "");
+$col = $dg->addColumn("شماره", "RequestID", "");
 $col->width = 50;
+
+$col = $dg->addColumn("شعبه", "BranchName", "");
+$col->width = 80;
 
 $col = $dg->addColumn("تاریخ درخواست", "ReqDate", GridColumn::ColumnType_date);
 $col->width = 110;

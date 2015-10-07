@@ -228,6 +228,19 @@ class FRW_access extends PdoDataAccess {
 		
 		return $obj;
 	}
+
+	static function GetAccessBranches(){
+		
+		$dt = PdoDataAccess::runquery("select BranchID from BSC_BranchAccess where PersonID=?",
+			array($_SESSION["USER"]["PersonID"]));
+		
+		$arr = array();
+		foreach($dt as $row)
+			$arr[] = $row["BranchID"];
+		
+		return $arr;				
+	}
+	
 }
 
 ?>

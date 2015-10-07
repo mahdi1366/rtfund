@@ -138,10 +138,10 @@ class PdoDataAccess extends ExceptionHandler
 		{
 			$index = array_search($src_keys[$i], $dst_keys);
 			
-			if(is_int($src_keys[$i]))
-				continue;
+			//if(is_int($src_keys[$i]))
+			//	continue;
 			
-			if($index !== false && !isset($destinationObj->$src_keys[$i]))
+			if($index !== false && empty($destinationObj->$src_keys[$i]))
 				eval("\$destinationObj->" . $src_keys[$i] . " = \$sourceObj->" . $src_keys[$i] . ";");
 		}
 		return true;

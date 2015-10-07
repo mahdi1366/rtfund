@@ -6,6 +6,9 @@
 include('../header.inc.php');
 include_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
 require_once 'loans.js.php';
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "loan.data.php?task=GetAllLoans", "grid_div");
@@ -13,7 +16,7 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "loan.data.php?task=GetAllLo
 $dg->addColumn("کد وام", "LoanID", "", true);
 $dg->addColumn("", "GroupID", "", true);
 $dg->addColumn("مبلغ بیمه", "InsureAmount", "", true);
-$dg->addColumn("مبلغ قسط اول", "FirstCostusAmount", "", true);
+$dg->addColumn("مبلغ قسط اول", "FirstPartAmount", "", true);
 $dg->addColumn("درصد دیرکرد", "ForfeitPercent", "", true);
 $dg->addColumn("درصد کارمزد", "FeePercent", "", true);
 $dg->addColumn("مبلغ کارمزد", "FeeAmount", "", true);
@@ -24,11 +27,11 @@ $col = $dg->addColumn("عنوان وام", "LoanDesc", "");
 $col = $dg->addColumn("سقف مبلغ", "MaxAmount", GridColumn::ColumnType_money);
 $col->width = 140;
 
-$col = $dg->addColumn("تعداد اقساط", "CostusCount");
+$col = $dg->addColumn("تعداد اقساط", "PartCount");
 $col->width = 80;
 $col->align = "center";
 
-$col = $dg->addColumn("فاصله اقساط", "CostusInterval", "");
+$col = $dg->addColumn("فاصله اقساط", "PartInterval", "");
 $col->width = 80;
 $col->align = "center";
 
@@ -36,9 +39,11 @@ $col = $dg->addColumn("مدت تنفس", "DelayCount", "");
 $col->width = 80;
 $col->align = "center";
 
-$dg->addButton = true;
-$dg->addHandler = "function(){LoanObject.LoanInfo('new');}";
-
+if($accessObj->AddFlag)
+{
+	$dg->addButton = true;
+	$dg->addHandler = "function(){LoanObject.LoanInfo('new');}";
+}
 $dg->title = "لیست وام ها";
 
 $dg->height = 500;
