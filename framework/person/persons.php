@@ -12,21 +12,42 @@ require_once '../management/framework.class.php';
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
-$dg = new sadaf_datagrid("dg",$js_prefix_address . "persons.data.php?task=selectAllPersons", "div_grid_persons");
+$dg = new sadaf_datagrid("dg",$js_prefix_address . "persons.data.php?task=selectPersons", "div_grid_persons");
 
 $dg->addColumn("کد","PersonID","string", true);
 $dg->addColumn("","IsActive","string", true);
 
-$col = $dg->addColumn("نام","fname","string");
+$col = $dg->addColumn("نام و نام خانوادگی","fullname","string");
+$col->sortable = false;
+
+$col = $dg->addColumn("نام كاربري","UserName","string");
 $col->sortable = false;
 $col->width = 120;
 
-$col = $dg->addColumn("نام خانوادگي","lname","string");
+$col = $dg->addColumn("<font style=font-size:10px>مشتری</font>","IsCustomer","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
 $col->sortable = false;
+$col->align = "center";
+$col->width = 35;
 
-$col = $dg->addColumn("نام كاربري","PersonName","string");
+$col = $dg->addColumn("<font style=font-size:10px>سهامدار</font>","IsShareholder","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
 $col->sortable = false;
-$col->width = 120;
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>عامل</font>","IsAgent","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->sortable = false;
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>حامی</font>","IsSupporter","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->sortable = false;
+$col->align = "center";
+$col->width = 35;
+
 
 if($accessObj->RemoveFlag)
 {
@@ -43,8 +64,8 @@ if($accessObj->AddFlag)
 
 $dg->height = 350;
 $dg->width = 700;
-$dg->DefaultSortField = "lname";
-$dg->autoExpandColumn = "lname";
+$dg->DefaultSortField = "fullname";
+$dg->autoExpandColumn = "fullname";
 $grid = $dg->makeGrid_returnObjects();
 ?>
 <style type="text/css">

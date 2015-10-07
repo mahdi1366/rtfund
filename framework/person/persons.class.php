@@ -17,10 +17,14 @@ class BSC_persons extends PdoDataAccess
 	public $mobile;
 	public $address;
 	public $email;
-	public $IsBorrow;
+	
+	public $IsCustomer;
 	public $IsShareholder;
-	public $IsActive;
+	public $IsAgent;
+	public $IsSupporter;
 	public $IsStaff;
+	
+	public $IsActive;
 	public $PostID;
 			
 	function __construct($PersonID = "") {
