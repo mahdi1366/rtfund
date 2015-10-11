@@ -9,8 +9,10 @@ class BSC_persons extends PdoDataAccess
 	public $PersonID;
 	public $UserName;
 	public $UserPass;
+	public $IsReal;
 	public $fname;
 	public $lname;
+	public $CompanyName;
 	public $NationalID;
 	public $EconomicID;
 	public $PhoneNo;

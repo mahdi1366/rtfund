@@ -22,7 +22,6 @@ PersonalInfo.prototype = {
 function PersonalInfo()
 {
 	this.mainPanel = new Ext.form.FormPanel({
-		renderTo : this.get("mainForm"),
 		frame: true,
 		hidden : true,
 		title: 'اطلاعات شخصی',
@@ -38,6 +37,10 @@ function PersonalInfo()
 			xtype : "textfield",
 			fieldLabel: 'نام خانوادگی',
 			name: 'lname'
+		},{
+			xtype : "textfield",
+			fieldLabel: 'نام شرکت',
+			name: 'CompanyName'
 		},{
 			xtype : "textfield",
 			regex: /^\d{10}$/,
@@ -111,17 +114,46 @@ function PersonalInfo()
 			url: this.address_prefix + "global.data.php?task=SelectPersonInfo",
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["fname","lname","UserName","NationalID","EconomicID","PhoneNo","mobile","address","email"],
+		fields : ["IsReal","fname","lname","CompanyName","UserName","NationalID","EconomicID","PhoneNo","mobile","address","email"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
 				PersonalInfoObject.mainPanel.loadRecord(this.getAt(0));
+				
+				if(this.getAt(0).data.IsReal == "YES")
+					PersonalInfoObject.mainPanel.down("[name=CompanyName]").hide();
+				else
+				{
+					PersonalInfoObject.mainPanel.down("[name=fname]").hide();
+					PersonalInfoObject.mainPanel.down("[name=lname]").hide();
+				}
+				
 				PersonalInfoObject.mainPanel.show();
 				PersonalInfoObject.mainPanel.center();
 				mask.hide();    
 			}
 		}
 	});	
+	
+	this.tabPanel = new Ext.TabPanel({
+		renderTo: this.get("mainForm"),
+		activeTab: 0,
+		plain:true,
+		autoHeight : true,
+		width: 750,
+		height : 420,
+		defaults:{
+			autoHeight: true, 
+			autoWidth : true            
+		},
+		items:[{
+			title : "اطلاعات شخصی",
+			items : this.mainPanel
+		},{
+			title : "مدارک"//,
+			//items : this.attachgrid
+		}]
+	});
 	
 }
 
