@@ -164,7 +164,8 @@ class FRW_access extends PdoDataAccess {
 					if(g.IsCustomer='YES',a.IsCustomer='YES',0=1) OR 
 					if(g.IsShareholder='YES',a.IsShareholder='YES',0=1) OR 
 					if(g.IsStaff='YES',a.IsStaff='YES',0=1)	OR
-					if(g.IsAgent='YES',a.IsAgent='YES',0=1)	
+					if(g.IsAgent='YES',a.IsAgent='YES',0=1)	OR
+					if(g.IsSupporter='YES',a.IsSupporter='YES',0=1)	
 				)
 			)
 			
