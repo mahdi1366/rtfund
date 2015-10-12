@@ -10,15 +10,14 @@ class LON_loans extends PdoDataAccess
 	public $GroupID;
 	public $LoanDesc;
 	public $MaxAmount;
-	public $PartCount;
-	public $PartInterval;
-	public $DelayCount;
-	public $InsureAmount;
-	public $FirstPartAmount;
+	public $PayCount;
+	public $IntervalType;
+	public $PayInterval;
+	public $DelayMonth;
 	public $ForfeitPercent;
-	public $FeePercent;
-	public $FeeAmount;
-	public $ProfitPercent;
+	public $CustomerFee;
+	public $FundFee;
+	public $AgentFee;
 			
 	function __construct($LoanID = "") {
 		

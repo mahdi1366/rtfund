@@ -16,7 +16,7 @@ class LON_requests extends PdoDataAccess
 	public $StatusID;
 	public $ReqDetails;
 	
-	public $PartCount;
+	public $PayCount;
 	public $PartInterval;
 	public $DelayCount;
 	public $InsureAmount;
@@ -90,12 +90,22 @@ class LON_requests extends PdoDataAccess
 	}
 }
 
-class LON_RequestParts extends PdoDataAccess
+class LON_ReqParts extends PdoDataAccess
 {
 	public $PartID;
-	public $PartDate;
+	public $RequestID;
+	public $PartDesc;
+	public $PayDate;
 	public $PartAmount;
-	public $StatusID;
+	public $PayCount;
+	public $IntervalType;
+	public $PayInteval;
+	public $DelayMonths;
+	public $ForfeitPercent;
+	public $CustomerFee;
+	public $FundFee;
+	public $AgentFee;
+
 			
 	function __construct($PartID = "") {
 		
@@ -106,9 +116,8 @@ class LON_RequestParts extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select r.*, bi.InfoDesc StatusDesc
+			select r.*
 			from LON_RequestParts r
-			join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=StatusID)
 			where " . $where, $param);
 	}
 	

@@ -103,7 +103,7 @@ LoanRequests.prototype.LoanInfo = function(){
 						name: 'PartInterval'
 					},{
 						fieldLabel: 'تعداد اقساط',
-						name: 'PartCount',
+						name: 'PayCount',
 						width : 205,
 						xtype : "numberfield"
 					},{

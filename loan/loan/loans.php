@@ -15,27 +15,26 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "loan.data.php?task=GetAllLo
 
 $dg->addColumn("کد وام", "LoanID", "", true);
 $dg->addColumn("", "GroupID", "", true);
-$dg->addColumn("مبلغ بیمه", "InsureAmount", "", true);
-$dg->addColumn("مبلغ قسط اول", "FirstPartAmount", "", true);
 $dg->addColumn("درصد دیرکرد", "ForfeitPercent", "", true);
-$dg->addColumn("درصد کارمزد", "FeePercent", "", true);
-$dg->addColumn("مبلغ کارمزد", "FeeAmount", "", true);
-$dg->addColumn("درصد سود", "ProfitPercent", "", true);
+$dg->addColumn("", "CustomerFee", "", true);
+$dg->addColumn("", "FundFee", "", true);
+$dg->addColumn("", "AgentFee", "", true);
+$dg->addColumn("", "IntervalType", "", true);
 
 $col = $dg->addColumn("عنوان وام", "LoanDesc", "");
 
 $col = $dg->addColumn("سقف مبلغ", "MaxAmount", GridColumn::ColumnType_money);
 $col->width = 140;
 
-$col = $dg->addColumn("تعداد اقساط", "PartCount");
+$col = $dg->addColumn("تعداد اقساط", "PayCount");
 $col->width = 80;
 $col->align = "center";
 
-$col = $dg->addColumn("فاصله اقساط", "PartInterval", "");
+$col = $dg->addColumn("فاصله اقساط", "PayInterval", "");
 $col->width = 80;
 $col->align = "center";
 
-$col = $dg->addColumn("مدت تنفس", "DelayCount", "");
+$col = $dg->addColumn("مدت تنفس", "DelayMonth", "");
 $col->width = 80;
 $col->align = "center";
 

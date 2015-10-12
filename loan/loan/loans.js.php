@@ -127,6 +127,9 @@ Loan.prototype.LoanInfo = function(mode)
 				columns :2,
 				width:750
 			},
+			defaults : {
+				width : 180
+			},
 			items: [{
 					xtype:'textfield',
 					fieldLabel: 'عنوان وام',
@@ -138,54 +141,67 @@ Loan.prototype.LoanInfo = function(mode)
 					xtype:'currencyfield',
 					fieldLabel: 'سقف مبلغ',
 					name: 'MaxAmount',
+					width : 250,
 					hideTrigger : true
 				},{
 					xtype:'numberfield',
 					fieldLabel: 'تعداد اقساط',
-					name: 'PartCount',
+					name: 'PayCount',
 					hideTrigger : true
 				},{
-					xtype:'numberfield',
-					fieldLabel: 'فاصله اقساط(روز)',
-					name: 'PartInterval',
-					hideTrigger : true
+					xtype : "container",
+					layout : "hbox",
+					width : 250,
+					items : [{
+						xtype:'numberfield',
+						fieldLabel: 'فاصله اقساط',
+						name: 'PayInterval',
+						hideTrigger : true,
+						width : 180
+					},{
+						xtype : "radio",
+						boxLabel : "ماه",
+						inputValue : "MONTH",
+						checked : true,
+						name : "IntervalType"
+					},{
+						xtype : "radio",
+						boxLabel : "روز",
+						inputValue : "DAY",
+						name : "IntervalType"
+					}]
 				},{
 					xtype:'numberfield',
-					fieldLabel: 'مدت تنفس (ماه)',
-					name: 'DelayCount',
-					hideTrigger : true
-				},{
-					xtype:'currencyfield',
-					fieldLabel: 'مبلغ بیمه',
-					name: 'InsureAmount',
-					hideTrigger : true			
-				},{
-					xtype:'currencyfield',
-					fieldLabel: 'مبلغ قسط اول',
-					name: 'FirstPartAmount',
-					hideTrigger : true	
-				},{
-					xtype:'numberfield',
-					fieldLabel: 'درصد سود',
-					name: 'ProfitPercent',
-					maxValue  : 100,
+					fieldLabel: 'مدت تنفس',
+					afterSubTpl : "ماه",
+					name: 'DelayMonth',
 					hideTrigger : true
 				},{
 					xtype:'numberfield',
 					fieldLabel: 'درصد دیرکرد',
+					afterSubTpl : "%",
 					name: 'ForfeitPercent',
 					maxValue  : 100,
 					hideTrigger : true
 				},{
 					xtype:'numberfield',
-					fieldLabel: 'درصد کارمزد',
-					name: 'FeePercent',
+					fieldLabel: 'کارمزد مشتری',
+					afterSubTpl : "%",
+					name: 'CustomerFee',
 					maxValue  : 100,
 					hideTrigger : true
 				},{
-					xtype:'currencyfield',
-					fieldLabel: 'مبلغ کارمزد',
-					name: 'FeeAmount',
+					xtype:'numberfield',
+					fieldLabel: 'کارمزد صندوق',
+					afterSubTpl : "%",
+					name: 'FundFee',
+					maxValue  : 100,
+					hideTrigger : true
+				},{
+					xtype:'numberfield',
+					fieldLabel: 'کارمزد عامل',
+					name: 'AgentFee',
+					afterSubTpl : "%",
 					hideTrigger : true					
 				},{
 					xtype : "hidden",

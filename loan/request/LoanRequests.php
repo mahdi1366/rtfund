@@ -19,7 +19,7 @@ $dg->addColumn("", "ForfeitPercent", "", true);
 $dg->addColumn("", "FeePercent", "", true);
 $dg->addColumn("", "FeeAmount", "", true);
 $dg->addColumn("", "ProfitPercent", "", true);
-$dg->addColumn("", "PartCount", "", true);
+$dg->addColumn("", "PayCount", "", true);
 $dg->addColumn("", "PartInterval", "", true);
 $dg->addColumn("", "DelayCount", "", true);
 $dg->addColumn("", "MaxAmount", "", true);

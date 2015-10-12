@@ -22,6 +22,12 @@ switch ($task) {
 		SelectAllRequests();
 		
 	//-------------------------------------------
+	
+	case "GetRequestParts":
+		GetRequestParts();
+		
+	case "SavePart":
+		SavePart();
 		
 	case "FillParts":
 		FillParts();
@@ -66,7 +72,40 @@ function SelectAllRequests(){
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
+
 //------------------------------------------------
+
+function GetRequestParts(){
+	
+	if(empty($_REQUEST["RequestID"]))
+	{
+		echo dataReader::getJsonData(array(), 0, $_GET["callback"]);
+		die();
+	}
+	
+	$RequestID = $_REQUEST["RequestID"];
+	
+	$dt = LON_ReqParts::SelectAll("RequestID=?", array($RequestID));
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();	
+}
+
+function SavePart(){
+	
+	$RequestID = $_REQUEST["RequestID"];
+	
+	if(empty($_REQUEST["RequestID"]))
+	{
+		$obj = new LON_requests();
+		$obj->PersonID = $_SESSION["USER"]["PersonID"];
+		$obj->StatusID = 1;
+		$obj->AddRequest();
+		$RequestID = $obj->RequestID;
+	}
+	
+	
+	
+}
 
 function FillParts(){
 	

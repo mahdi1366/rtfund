@@ -91,8 +91,8 @@ function SaveLoan() {
 	else
 		$result = $obj->EditLoan();
 
-	if($obj->FeeAmount == "")
-		$obj->FeeAmount = 0;
+	if($obj->FundFee == "")
+		$obj->FundFee = 0;
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();

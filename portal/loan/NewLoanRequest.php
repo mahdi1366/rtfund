@@ -12,14 +12,11 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "../../loan/loan/loan.data.p
 $dg->addColumn("کد وام", "LoanID", "", true);
 $dg->addColumn("", "GroupID", "", true);
 $dg->addColumn("", "GroupDesc", "", true);
-$dg->addColumn("مبلغ بیمه", "InsureAmount", "", true);
-$dg->addColumn("مبلغ قسط اول", "FirstPartAmount", "", true);
 $dg->addColumn("درصد دیرکرد", "ForfeitPercent", "", true);
 $dg->addColumn("درصد کارمزد", "FeePercent", "", true);
-$dg->addColumn("مبلغ کارمزد", "FeeAmount", "", true);
-$dg->addColumn("درصد سود", "ProfitPercent", "", true);
 
 $dg->addColumn("", "PartCount", "", true);
+$dg->addColumn("", "IntervalType", "", true);
 $dg->addColumn("", "PartInterval", "", true);
 $dg->addColumn("", "DelayCount", "", true);
 $dg->addColumn("", "MaxAmount", "", true);

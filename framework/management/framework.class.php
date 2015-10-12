@@ -161,9 +161,10 @@ class FRW_access extends PdoDataAccess {
 			join FRW_systems s on(m.SystemID=s.SystemID)
 			join BSC_persons a on(a.PersonID=" . $_SESSION["USER"]["PersonID"] . " and 
 				(
-					if(g.IsBorrow='YES',a.IsBorrow='YES',0=1) OR 
+					if(g.IsCustomer='YES',a.IsCustomer='YES',0=1) OR 
 					if(g.IsShareholder='YES',a.IsShareholder='YES',0=1) OR 
-					if(g.IsStaff='YES',a.IsStaff='YES',0=1)	
+					if(g.IsStaff='YES',a.IsStaff='YES',0=1)	OR
+					if(g.IsAgent='YES',a.IsAgent='YES',0=1)	
 				)
 			)
 			
