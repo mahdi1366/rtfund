@@ -9,30 +9,31 @@ require_once inc_dataGrid;
 
 $dg = new sadaf_datagrid("dg","/loan/request/request.data.php?task=GetRequestParts", "grid_div");
 
-$dg->addColumn("", "RequestID", "", true);
-$dg->addColumn("", "GroupID", "", true);
-$dg->addColumn("", "GroupDesc", "", true);
-$dg->addColumn("", "ForfeitPercent", "", true);
-$dg->addColumn("", "FeePercent", "", true);
-
-$dg->addColumn("", "PartCount", "", true);
-$dg->addColumn("", "IntervalType", "", true);
-$dg->addColumn("", "PartInterval", "", true);
-$dg->addColumn("", "DelayCount", "", true);
-$dg->addColumn("", "MaxAmount", "", true);
+$dg->addColumn("", "PartID", "", true);
+$dg->addColumn("", "RequestID","", true);
+$dg->addColumn("", "PayDate","", true);
+$dg->addColumn("", "PartAmount","", true);
+$dg->addColumn("", "PayCount","", true);
+$dg->addColumn("", "IntervalType","", true);
+$dg->addColumn("", "PayInteval","", true);
+$dg->addColumn("", "DelayMonths","", true);
+$dg->addColumn("", "ForfeitPercent","", true);
+$dg->addColumn("", "CustomerFee","", true);
+$dg->addColumn("", "FundFee","", true);
+$dg->addColumn("", "AgentFee","", true);
 
 $col = $dg->addColumn("عنوان مرحله", "PartDesc", "");
 $col->editor = ColumnEditor::TextField();
 $col->sortable = false;
 
-$dg->addButton("", "ایجاد مرحله جدید پرداخت", "add", "function(){NewLoanRequestObject.AddPart();}");
+$dg->addButton("", "ایجاد مرحله پرداخت", "add", "function(){NewLoanRequestObject.AddPart();}");
 
 $dg->HeaderMenu = false;
 $dg->hideHeaders = true;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 150;
-$dg->width = 300;
+$dg->width = 150;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "MaxAmount";
@@ -58,11 +59,11 @@ function NewLoanRequest()
 	this.grid = <?= $grid ?>;
 	this.grid.on("itemclick", function(){
 		record = NewLoanRequestObject.grid.getSelectionModel().getLastSelected();
-		NewLoanRequestObject.mainPanel.loadRecord(record);
-		NewLoanRequestObject.mainPanel.doLayout();
-		NewLoanRequestObject.mainPanel.down("[name=ReqAmount]").setMaxValue(record.data.MaxAmount);
-		NewLoanRequestObject.mainPanel.down("[name=ReqAmount]").setValue(record.data.MaxAmount);
+		NewLoanRequestObject.PartsPanel.loadRecord(record);
+		NewLoanRequestObject.PartsPanel.doLayout();
 	});
+	
+	//this.grid.getStore().proxy.extraParams = {RequestID: this.RequestID};
 	
 	this.mainPanel = new Ext.form.FormPanel({
 		renderTo : this.get("mainForm"),
@@ -74,8 +75,24 @@ function NewLoanRequest()
 				type : "table",
 				columns : 2
 			},			
+			defaults : {
+				width : 400
+			},
 			title : "اطلاعات درخواست",
 			items : [{
+				xtype : "textfield",
+				allowBlank : false,
+				name : "CompanyName",
+				beforeLabelTextTpl: required,
+				fieldLabel : "شرکت وام گیرنده"
+			},{
+				xtype : "textfield",
+				name : "NationalID",
+				width : 305,
+				allowBlank : false,
+				beforeLabelTextTpl: required,
+				fieldLabel : "کد اقتصادی"
+			},{
 				xtype : "combo",
 				store : new Ext.data.SimpleStore({
 					proxy: {
@@ -97,6 +114,7 @@ function NewLoanRequest()
 			},{
 				xtype : "currencyfield",
 				name : "ReqAmount",
+				width : 310,
 				allowBlank : false,
 				beforeLabelTextTpl: required,
 				fieldLabel : "مبلغ کل وام",
@@ -105,100 +123,89 @@ function NewLoanRequest()
 			},{
 				xtype : "textarea",
 				fieldLabel : "توضیحات",
-				width : 550,
+				width : 700,
 				rows : 1,
 				colspan : 2,				
 				name : "ReqDetails"
+			},{
+				xtype : "button",
+				width : 150,
+				iconCls : "save",
+				colspan : 2,
+				style : "float:left;margin-left:20px",
+				text : "ذخیره معرفی اخذ وام",
+				handler : function(){ NewLoanRequestObject.SaveRequest(); }
 			}]
-		},{
+		}]		
+	});
+	
+	this.PartsPanel =  new Ext.form.FormPanel({
+		renderTo : this.get("PartForm"),
+		//hidden : true,
+		width: 750,
+		border : 0,
+		items: [{
 			xtype : "fieldset",
 			title : "مراحل پرداخت وام",
 			layout : "column",
 			columns : 2,
-			anchor : "100%",
 			items :[this.grid,{
 				xtype : "container",
 				style : "margin-right:10px",
 				layout : {
 					type : "table",
-					columns : 2
+					columns : 3
 				},
 				defaults : {
 					xtype : "displayfield",
-					labelWidth : 80,	
 					hideTrigger : true,
-					width : 150,
-					labelWidth : 90,
+					width : 180,
+					labelWidth : 80,
 					style : "margin-top:10px",
 					fieldCls : "blueText"
 				},
 				items : [{
 					fieldLabel: 'مبلغ پرداخت',
-					name: 'PartAmount'
+					name: 'PartAmount',
+					renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
 				},{
 					fieldLabel: 'تاریخ پرداخت',
-					name: 'PayDate'
+					name: 'PayDate',
+					renderer : function(v){return MiladiToShamsi(v);}
 				},{
 					fieldLabel: 'فاصله اقساط',
-					name: 'PayInterval'
+					name: 'PayInteval'
 				},{
-					fieldLabel: 'تعداد ماه تنفس',
-					name: 'DelayMonth'
+					fieldLabel: 'مدت تنفس',
+					name: 'DelayMonths',
+					renderer : function(v){ return v + " ماه"}
 				},{
 					fieldLabel: 'تعداد اقساط',
 					name: 'PayCount'
 				},{
 					fieldLabel: 'درصد دیرکرد',
-					name: 'ForfeitPercent'
+					name: 'ForfeitPercent',
+					renderer : function(v){ return v + " %"}
 				},{
 					fieldLabel: 'کارمزد صندوق',
-					name: 'FundFee'
+					name: 'FundFee',
+					renderer : function(v){ return v + " %"}
 				},{
 					fieldLabel: 'کارمزد عامل',
-					name: 'AgentFee'
+					name: 'AgentFee',
+					renderer : function(v){ return v + " %"}
 				},{
 					fieldLabel: 'کارمزد مشتری',
 					name: 'CustomerFee'	,		
+					renderer : function(v){ return v + " %"},
 					colspan : 2
 				}]
 			}]
 		}],
-
 		buttons : [{
-			text : "ثبت درخواست وام و ارسال به صندوق",
-			iconCls: 'save',
-			handler: function() {
-				
-				if(!NewLoanRequestObject.grid.getSelectionModel().getLastSelected())
-				{
-					Ext.MessageBox.alert("","لطفا وام مورد نظر خود را با کلیک بر روی عنوان وام انتخاب نمایید.");
-					return;
-				}
-				
-				me = NewLoanRequestObject;
-				mask = new Ext.LoadMask(me.mainPanel, {msg:'در حال ذخيره سازي...'});
-				mask.show();  
-				me.mainPanel.getForm().submit({
-					clientValidation: true,
-					url: me.address_prefix + '../../loan/request/request.data.php?task=SaveLoanRequest' , 
-					method: "POST",
-					params : {
-						LoanID : NewLoanRequestObject.grid.getSelectionModel().getLastSelected().data.LoanID
-					},
-					success : function(form,action){
-						mask.hide();
-						me = NewLoanRequestObject;
-						me.mainPanel.hide();
-						me.SendedPanel.getComponent("requestID").update('شماره پیگیری درخواست : ' + action.result.data);
-						me.SendedPanel.show();
-					},
-					failure : function(){
-						mask.hide();
-						//Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
-					}
-				});
-			}
-
+			text : "ذخیره و ارسال درخواست",
+			iconCls : "save",
+			handler : function(){ 	}
 		}]
 	});
 
@@ -225,6 +232,35 @@ function NewLoanRequest()
 
 NewLoanRequestObject = new NewLoanRequest();
 
+NewLoanRequest.prototype.SaveRequest = function(){
+
+	mask = new Ext.LoadMask(this.mainPanel, {msg:'در حال ذخيره سازي...'});
+	mask.show();  
+	
+	this.mainPanel.getForm().submit({
+		clientValidation: true,
+		url: this.address_prefix + '../../loan/request/request.data.php?task=SaveLoanRequest' , 
+		method: "POST",
+		params : {
+			RequestID : this.RequestID
+		},
+		
+		success : function(form,action){
+			mask.hide();
+			me = NewLoanRequestObject;
+			
+			me.RequestID = action.result.data;
+			me.grid.getStore().proxy.extraParams = {RequestID: me.RequestID};
+			me.grid.getStore().load();
+			me.PartsPanel.show();
+		},
+		failure : function(){
+			mask.hide();
+			//Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+		}
+	});
+}
+
 NewLoanRequest.prototype.AddPart = function(){
 	
 	if(!this.PartWin)
@@ -246,11 +282,13 @@ NewLoanRequest.prototype.AddPart = function(){
 					hideTrigger : true,
 					width : 150,
 					labelWidth : 90,
+					allowBlank : false,
+					beforeLabelTextTpl: required,
 					fieldCls : "blueText"
 				},				
 				items :[{
 					xtype : "textfield",
-					name : "PartName",
+					name : "PartDesc",
 					fieldLabel : "عنوان مرحله",
 					colspan : 2,
 					width : 500
@@ -273,6 +311,8 @@ NewLoanRequest.prototype.AddPart = function(){
 						xtype:'numberfield',
 						fieldLabel: 'فاصله اقساط',
 						hideTrigger : true,
+						allowBlank : false,
+						beforeLabelTextTpl: required,
 						name: 'PayInterval',
 						labelWidth: 90,
 						width : 150
@@ -289,8 +329,9 @@ NewLoanRequest.prototype.AddPart = function(){
 						name : "IntervalType"
 					}]
 				},{
-					fieldLabel: 'تعداد ماه تنفس',
-					name: 'DelayMonth'
+					fieldLabel: 'مدت تنفس',
+					name: 'DelayMonths',
+					afterSubTpl : "ماه"
 				},{
 					fieldLabel: 'تعداد اقساط',
 					name: 'PayCount'
@@ -330,7 +371,7 @@ NewLoanRequest.prototype.AddPart = function(){
 NewLoanRequest.prototype.SavePart = function(){
 
 	mask = new Ext.LoadMask(this.PartWin, {msg:'در حال ذخیره سازی ...'});
-	mask.show();
+	//mask.show();
 
 	this.PartWin.down('form').getForm().submit({
 		clientValidation: true,
@@ -344,6 +385,8 @@ NewLoanRequest.prototype.SavePart = function(){
 			mask.hide();
 
 			NewLoanRequestObject.RequestID = action.result.data;
+			NewLoanRequestObject.grid.getStore().proxy.extraParams = {RequestID: NewLoanRequestObject.RequestID};
+			NewLoanRequestObject.grid.getStore().load();
 			NewLoanRequestObject.PartWin.hide();
 		},
 		failure: function(){
@@ -357,6 +400,7 @@ NewLoanRequest.prototype.SavePart = function(){
 
 	<div id="DivGrid"></div>
 	<div id="mainForm"></div>
+	<div id="PartForm"></div>
 <center>
 	<div id="SendForm"></div>
 </center>

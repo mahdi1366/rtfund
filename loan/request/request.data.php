@@ -94,17 +94,39 @@ function SavePart(){
 	
 	$RequestID = $_REQUEST["RequestID"];
 	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
 	if(empty($_REQUEST["RequestID"]))
 	{
 		$obj = new LON_requests();
 		$obj->PersonID = $_SESSION["USER"]["PersonID"];
 		$obj->StatusID = 1;
-		$obj->AddRequest();
+		if(!$obj->AddRequest($pdo))
+		{
+			$pdo->rollBack();
+			print_r(ExceptionHandler::PopAllExceptions());
+			echo Response::createObjectiveResponse(false, "خطا در ثبت درخواست");
+			die();
+		}
 		$RequestID = $obj->RequestID;
 	}
 	
+	$obj = new LON_ReqParts();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	$obj->RequestID = $RequestID;
 	
+	if(!$obj->AddPart($pdo))
+	{
+		$pdo->rollBack();
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo Response::createObjectiveResponse(false, "خطا در ثبت مرحله");
+		die();
+	}
 	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, $RequestID);
+	die();
 }
 
 function FillParts(){

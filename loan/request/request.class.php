@@ -15,16 +15,6 @@ class LON_requests extends PdoDataAccess
 	public $OkAmount;
 	public $StatusID;
 	public $ReqDetails;
-	
-	public $PayCount;
-	public $PartInterval;
-	public $DelayCount;
-	public $InsureAmount;
-	public $FirstPartAmount;
-	public $ForfeitPercent;
-	public $FeePercent;
-	public $FeeAmount;
-	public $ProfitPercent;
 			
 	function __construct($RequestID = "") {
 		
@@ -47,19 +37,19 @@ class LON_requests extends PdoDataAccess
 			where " . $where, $param);
 	}
 	
-	function AddRequest()
+	function AddRequest($pdo = null)
 	{
 		$this->ReqDate = PDONOW;
 		
-	 	if(!parent::insert("LON_requests",$this))
+	 	if(!parent::insert("LON_requests",$this, $pdo))
 			return false;
-		$this->RequestID = parent::InsertID();
+		$this->RequestID = parent::InsertID($pdo);
 		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->MainObjectID = $this->RequestID;
 		$daObj->TableName = "LON_requests";
-		$daObj->execute();
+		$daObj->execute($pdo);
 		return true;
 	}
 	
@@ -100,7 +90,7 @@ class LON_ReqParts extends PdoDataAccess
 	public $PayCount;
 	public $IntervalType;
 	public $PayInteval;
-	public $DelayMonths;
+	public $DelaMonths;
 	public $ForfeitPercent;
 	public $CustomerFee;
 	public $FundFee;
@@ -109,57 +99,57 @@ class LON_ReqParts extends PdoDataAccess
 			
 	function __construct($PartID = "") {
 		
+		$this->DT_PayDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
 		if($PartID != "")
-			PdoDataAccess::FillObject ($this, "select * from LON_RequestParts where PartID=?", array($PartID));
+			PdoDataAccess::FillObject ($this, "select * from LON_ReqParts where PartID=?", array($PartID));
 	}
 	
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
 			select r.*
-			from LON_RequestParts r
+			from LON_ReqParts r
 			where " . $where, $param);
 	}
 	
-	function AddPart()
+	function AddPart($pdo = null)
 	{
-		$this->ReqDate = PDONOW;
-		
-		if (!parent::insert("LON_RequestParts", $this)) {
+		if (!parent::insert("LON_ReqParts", $this, $pdo)) {
 			return false;
 		}
-		$this->PartID = parent::InsertID();
+		$this->PartID = parent::InsertID($pdo);
 		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->MainObjectID = $this->PartID;
-		$daObj->TableName = "LON_RequestParts";
-		$daObj->execute();
+		$daObj->TableName = "LON_ReqParts";
+		$daObj->execute($pdo);
 		return true;
 	}
 	
 	function EditPart()
 	{
-	 	if( parent::update("LON_RequestParts",$this," PartID=:l", array(":l" => $this->PartID)) === false )
+	 	if( parent::update("LON_ReqParts",$this," PartID=:l", array(":l" => $this->PartID)) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
 		$daObj->MainObjectID = $this->PartID;
-		$daObj->TableName = "LON_RequestParts";
+		$daObj->TableName = "LON_ReqParts";
 		$daObj->execute();
 	 	return true;
     }
 	
 	static function DeletePart($PartID){
 		
-		if( parent::delete("LON_RequestParts"," PartID=?", array($PartID)) === false )
+		if( parent::delete("LON_ReqParts"," PartID=?", array($PartID)) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
 		$daObj->MainObjectID = $PartID;
-		$daObj->TableName = "LON_RequestParts";
+		$daObj->TableName = "LON_ReqParts";
 		$daObj->execute();
 	 	return true;
 	}
