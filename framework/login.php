@@ -38,6 +38,8 @@ if(isset($_POST["UserName"]))
 		
 			$_SESSION['USER'] = $temp[0];
 			$_SESSION['USER']["fullname"] = $temp[0]["fname"] . " " . $temp[0]["lname"];
+			$_SESSION['USER']["framework"] = true;
+			$_SESSION['USER']["portal"] = false;
 			//..........................................................
 			if (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
 				if ( strlen($_SERVER['HTTP_X_FORWARDED_FOR']) > 15 )

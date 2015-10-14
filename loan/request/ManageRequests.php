@@ -6,7 +6,7 @@
 
 require_once '../header.inc.php';
 require_once inc_dataGrid;
-require_once 'LoanRequests.js.php';
+require_once 'ManageRequests.js.php';
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectAllRequests", "grid_div");
 
@@ -45,7 +45,7 @@ $col = $dg->addColumn("وضعیت", "StatusDesc", "");
 $col->width = 100;
 
 $col = $dg->addColumn('عملیات', '', 'string');
-$col->renderer = "LoanRequests.OperationRender";
+$col->renderer = "ManageRequest.OperationRender";
 $col->width = 50;
 $col->align = "center";
 
@@ -58,8 +58,8 @@ $dg->autoExpandColumn = "LoanDesc";
 $grid = $dg->makeGrid_returnObjects();
 ?>
 <script>
-LoanRequestsObject.grid = <?= $grid ?>;
-LoanRequestsObject.grid.render(LoanRequestsObject.get("DivGrid"));
+ManageRequestObject.grid = <?= $grid ?>;
+ManageRequestObject.grid.render(ManageRequestObject.get("DivGrid"));
 </script>
 <center><br>
 	<div id="DivGrid"></div>

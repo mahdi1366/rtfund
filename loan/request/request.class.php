@@ -9,12 +9,13 @@ class LON_requests extends PdoDataAccess
 	public $RequestID;
 	public $BranchID;
 	public $LoanID;
-	public $PersonID;
+	public $ReqPersonID;
 	public $ReqDate;
 	public $ReqAmount;
 	public $OkAmount;
 	public $StatusID;
 	public $ReqDetails;
+	public $LoanPersonID;
 			
 	function __construct($RequestID = "") {
 		
@@ -25,15 +26,19 @@ class LON_requests extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select r.*,concat(fname, ' ', lname) fullname,
-				l.LoanDesc,l.MaxAmount, 
+			select r.*,
+				if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) ReqFullname,
+				if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) LoanFullname,
+				l.LoanDesc,
+				l.MaxAmount, 
 				bi.InfoDesc StatusDesc,
 				BranchName
 			from LON_requests r
 			join BSC_branches using(BranchID)
-			join LON_loans l using(LoanID)
+			left join LON_loans l using(LoanID)
 			join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
-			join BSC_persons using(PersonID)
+			join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
+			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 			where " . $where, $param);
 	}
 	

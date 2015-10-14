@@ -4,7 +4,7 @@
 //	Date		: 1394.07
 //-----------------------------
 
-LoanRequests.prototype = {
+ManageRequest.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
@@ -13,28 +13,28 @@ LoanRequests.prototype = {
 	}
 };
 
-function LoanRequests(){
+function ManageRequest(){
 	
 	
 }
 
-LoanRequestsObject = new LoanRequests();
+ManageRequestObject = new ManageRequest();
 
-LoanRequests.prototype.LoanRequests = function(){
+ManageRequest.prototype.ManageRequest = function(){
 	if(this.get("new_pass").value != this.get("new_pass2").value)
 	{
 		return;
 	}
 }
 
-LoanRequests.OperationRender = function(value, p, record){
+ManageRequest.OperationRender = function(value, p, record){
 	
-	return "<div  title='عملیات' class='setting' onclick='LoanRequestsObject.OperationMenu(event);' " +
+	return "<div  title='عملیات' class='setting' onclick='ManageRequestObject.OperationMenu(event);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-LoanRequests.prototype.OperationMenu = function(e){
+ManageRequest.prototype.OperationMenu = function(e){
 
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
@@ -42,23 +42,30 @@ LoanRequests.prototype.OperationMenu = function(e){
 	if(record.data.StatusID == "10")
 	{
 		op_menu.add({text: 'جزئیات درخواست',iconCls: 'info2', 
-		handler : function(){ return LoanRequestsObject.LoanInfo(); }});
+		handler : function(){ return ManageRequestObject.LoanInfo(); }});
 	
 		op_menu.add({text: 'تایید درخواست',iconCls: 'tick', 
-		handler : function(){ return LoanRequestsObject.ChangeStatus("confirm"); }});
+		handler : function(){ return ManageRequestObject.ChangeStatus("confirm"); }});
 	
 		op_menu.add({text: 'رد درخواست',iconCls: 'undo',
-		handler : function(){ return LoanRequestsObject.ChangeStatus("reject"); }});
+		handler : function(){ return ManageRequestObject.ChangeStatus("reject"); }});
 	}
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
-LoanRequests.prototype.ChangeStatus = function(mode){
+ManageRequest.prototype.ChangeStatus = function(mode){
 	
 	
 }
 
-LoanRequests.prototype.LoanInfo = function(){
+ManageRequest.prototype.LoanInfo = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	framework.OpenPage(this.address_prefix + "RequestInfo.php", "اطلاعات درخواست وام" , {
+		RequestID : record.data.RequestID
+	});
+	
+	return;
 	
 	if(!this.LoanInfoWin)
 	{
@@ -168,7 +175,7 @@ LoanRequests.prototype.LoanInfo = function(){
 				text : "ذخیره",
 				iconCls : "save",
 				handler : function(){
-					LoanRequestsObject.SaveLoanRequest();
+					ManageRequestObject.SaveLoanRequest();
 				}
 			},{
 				text : "بازگشت",
@@ -187,7 +194,7 @@ LoanRequests.prototype.LoanInfo = function(){
 	this.LoanInfoWin.center();
 }
 
-LoanRequests.prototype.SaveLoanRequest = function(){
+ManageRequest.prototype.SaveLoanRequest = function(){
 	
 	mask = new Ext.LoadMask(this.LoanInfoWin, {msg:'در حال ذخيره سازي...'});
 	mask.show();  
@@ -201,8 +208,8 @@ LoanRequests.prototype.SaveLoanRequest = function(){
 		
 		success : function(form,action){
 			mask.hide();
-			LoanRequestsObject.LoanInfoWin.hide();
-			LoanRequestsObject.grid.getStore().load();
+			ManageRequestObject.LoanInfoWin.hide();
+			ManageRequestObject.grid.getStore().load();
 		},
 		failure : function(){
 			mask.hide();

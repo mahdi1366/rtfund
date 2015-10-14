@@ -66,9 +66,16 @@ function SelectAllRequests(){
 	
 	$branches = FRW_access::GetAccessBranches();
 	$where = "BranchID in(" . implode(",", $branches) . ")";
+	$param = array();
+	
+	if(!empty($_REQUEST["RequestID"]))
+	{
+		$where .= " AND RequestID=:r";
+		$param[":r"] = $_REQUEST["RequestID"];
+	}
 	
 	$where .= dataReader::makeOrder();
-	$dt = LON_requests::SelectAll($where);
+	$dt = LON_requests::SelectAll($where, $param);
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

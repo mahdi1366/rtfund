@@ -7,6 +7,18 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
+$RequestID = !empty($_POST["RequestID"]) ? $_POST["RequestID"] : 0;
+
+if($_SESSION["USER"]["framework"])
+	$User = "Staff";
+else
+{
+	if($_SESSION["USER"]["IsAgent"] == "YES")
+		$User = "Agent";
+	else if($_SESSION["USER"]["IsCustomer"] == "YES")
+		$User = "Customer";
+}
+
 $dg = new sadaf_datagrid("dg","/loan/request/request.data.php?task=GetRequestParts", "grid_div");
 
 $dg->addColumn("", "PartID", "", true);
@@ -26,7 +38,7 @@ $col = $dg->addColumn("عنوان مرحله", "PartDesc", "");
 $col->editor = ColumnEditor::TextField();
 $col->sortable = false;
 
-$dg->addButton("", "ایجاد مرحله پرداخت", "add", "function(){NewLoanRequestObject.AddPart();}");
+$dg->addButton("", "ایجاد مرحله پرداخت", "add", "function(){RequestInfoObject.AddPart();}");
 
 $dg->HeaderMenu = false;
 $dg->hideHeaders = true;
@@ -43,43 +55,99 @@ $grid = $dg->makeGrid_returnObjects();
 ?>
 <script>
 	
-NewLoanRequest.prototype = {
+RequestInfo.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
-	RequestID : "",
+	RequestID : <?= $RequestID ?>,
+	User : '<?= $User ?>',
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
 };
 
-function NewLoanRequest()
+function RequestInfo()
 {
 	this.grid = <?= $grid ?>;
+	this.BuildForms();
+	
+	if(this.RequestID > 0)
+	{
+		this.grid.getStore().proxy.ExtraParams = { RequestID : this.RequestID };
+		
+		mask = new Ext.LoadMask(this.companyPanel, {msg:'در حال ذخيره سازي...'});
+		mask.show();  
+		this.store = new Ext.data.Store({
+			proxy:{
+				type: 'jsonp',
+				url: this.address_prefix + "request.data.php?task=SelectAllRequests&RequestID=" + this.RequestID,
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			fields : ["RequestID","BranchName","ReqPersonID","ReqFullname","LoanPersonID","LoanFullname",
+						"ReqDate","ReqAmount","ReqDetails","CompanyName","NationID"],
+			autoLoad : true,
+			listeners :{
+				load : function(){
+					RequestInfoObject.companyPanel.loadRecord(this.getAt(0));
+					mask.hide();
+				}
+			}
+		});
+	}
+	
 	this.grid.on("itemclick", function(){
-		record = NewLoanRequestObject.grid.getSelectionModel().getLastSelected();
-		NewLoanRequestObject.PartsPanel.loadRecord(record);
-		NewLoanRequestObject.PartsPanel.doLayout();
+		record = RequestInfoObject.grid.getSelectionModel().getLastSelected();
+		RequestInfoObject.PartsPanel.loadRecord(record);
+		RequestInfoObject.PartsPanel.doLayout();
 	});
 	
-	//this.grid.getStore().proxy.extraParams = {RequestID: this.RequestID};
+	this.CustomizeForm();
+}
+
+
+RequestInfo.prototype.BuildForms = function(){
 	
-	this.mainPanel = new Ext.form.FormPanel({
+	this.companyPanel = new Ext.form.FormPanel({
 		renderTo : this.get("mainForm"),
 		width: 750,
 		border : 0,
 		items: [{
 			xtype : "fieldset",
+			title : "اطلاعات درخواست",
 			layout : {
 				type : "table",
 				columns : 2
 			},			
 			defaults : {
-				width : 400
-			},
-			title : "اطلاعات درخواست",
+				width : 350,				
+				labelWidth : 130
+			},			
 			items : [{
+				xtype : "displayfield",
+				fieldCls : "blueText",
+				name : "ReqFullname",
+				style : "margin-bottom:10px",
+				fieldLabel : "ثبت کننده درخواست"
+			},{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../../framework/person/persons.data.php?' +
+							"task=selectPersons&UserType=IsCumstomer",
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields : ['PersonID','fullname'],
+					autoLoad : true					
+				}),
+				fieldLabel : "مشتری",
+				allowBlank : false,
+				beforeLabelTextTpl: required,
+				displayField : "fullname",
+				valueField : "PersonID",
+				name : "LoanPersonID"
+			},{
 				xtype : "textfield",
 				allowBlank : false,
 				name : "CompanyName",
@@ -88,7 +156,6 @@ function NewLoanRequest()
 			},{
 				xtype : "textfield",
 				name : "NationalID",
-				width : 305,
 				allowBlank : false,
 				beforeLabelTextTpl: required,
 				fieldLabel : "کد اقتصادی"
@@ -114,12 +181,10 @@ function NewLoanRequest()
 			},{
 				xtype : "currencyfield",
 				name : "ReqAmount",
-				width : 310,
 				allowBlank : false,
 				beforeLabelTextTpl: required,
-				fieldLabel : "مبلغ کل وام",
-				hideTrigger: true,
-				afterSubTpl: '<tpl>ریال</tpl>'
+				fieldLabel : "مبلغ درخواست",
+				hideTrigger: true
 			},{
 				xtype : "textarea",
 				fieldLabel : "توضیحات",
@@ -130,18 +195,18 @@ function NewLoanRequest()
 			},{
 				xtype : "button",
 				width : 150,
+				itemId : "cmp_save",
 				iconCls : "save",
 				colspan : 2,
 				style : "float:left;margin-left:20px",
 				text : "ذخیره معرفی اخذ وام",
-				handler : function(){ NewLoanRequestObject.SaveRequest(); }
+				handler : function(){ RequestInfoObject.SaveRequest(); }
 			}]
 		}]		
 	});
 	
 	this.PartsPanel =  new Ext.form.FormPanel({
 		renderTo : this.get("PartForm"),
-		//hidden : true,
 		width: 750,
 		border : 0,
 		items: [{
@@ -230,9 +295,26 @@ function NewLoanRequest()
 		
 }
 
-NewLoanRequestObject = new NewLoanRequest();
+RequestInfo.prototype.CustomizeForm = function(){
+	
+	if(this.User == "Staff")
+	{
+		//this.companyPanel.getEl().readonly();
+		//this.companyPanel.getComponent("cmp_save").hide();
+	}
+	if(this.User == "Agent")
+	{
+		
+	}
+	if(this.User == "Customer")
+	{
+		
+	}
+}
 
-NewLoanRequest.prototype.SaveRequest = function(){
+RequestInfoObject = new RequestInfo();
+
+RequestInfo.prototype.SaveRequest = function(){
 
 	mask = new Ext.LoadMask(this.mainPanel, {msg:'در حال ذخيره سازي...'});
 	mask.show();  
@@ -247,7 +329,7 @@ NewLoanRequest.prototype.SaveRequest = function(){
 		
 		success : function(form,action){
 			mask.hide();
-			me = NewLoanRequestObject;
+			me = RequestInfoObject;
 			
 			me.RequestID = action.result.data;
 			me.grid.getStore().proxy.extraParams = {RequestID: me.RequestID};
@@ -261,7 +343,7 @@ NewLoanRequest.prototype.SaveRequest = function(){
 	});
 }
 
-NewLoanRequest.prototype.AddPart = function(){
+RequestInfo.prototype.AddPart = function(){
 	
 	if(!this.PartWin)
 	{
@@ -354,7 +436,7 @@ NewLoanRequest.prototype.AddPart = function(){
 				text : "ذخیره",
 				iconCls : "save",
 				handler : function(){
-					NewLoanRequestObject.SavePart();
+					RequestInfoObject.SavePart();
 				}
 			},{
 				text : "انصراف",
@@ -368,7 +450,7 @@ NewLoanRequest.prototype.AddPart = function(){
 	this.PartWin.show();
 }
 
-NewLoanRequest.prototype.SavePart = function(){
+RequestInfo.prototype.SavePart = function(){
 
 	mask = new Ext.LoadMask(this.PartWin, {msg:'در حال ذخیره سازی ...'});
 	//mask.show();
@@ -384,10 +466,10 @@ NewLoanRequest.prototype.SavePart = function(){
 		success: function(form,action){
 			mask.hide();
 
-			NewLoanRequestObject.RequestID = action.result.data;
-			NewLoanRequestObject.grid.getStore().proxy.extraParams = {RequestID: NewLoanRequestObject.RequestID};
-			NewLoanRequestObject.grid.getStore().load();
-			NewLoanRequestObject.PartWin.hide();
+			RequestInfoObject.RequestID = action.result.data;
+			RequestInfoObject.grid.getStore().proxy.extraParams = {RequestID: RequestInfoObject.RequestID};
+			RequestInfoObject.grid.getStore().load();
+			RequestInfoObject.PartWin.hide();
 		},
 		failure: function(){
 			mask.hide();
@@ -397,10 +479,10 @@ NewLoanRequest.prototype.SavePart = function(){
 
 
 </script>
-
+<center>
 	<div id="DivGrid"></div>
 	<div id="mainForm"></div>
 	<div id="PartForm"></div>
-<center>
 	<div id="SendForm"></div>
+	
 </center>

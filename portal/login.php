@@ -39,6 +39,8 @@ if(isset($_POST["email"]))
 		
 		$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($user));
 		$_SESSION['USER'] = $temp[0];
+		$_SESSION['USER']["framework"] = true;
+		$_SESSION['USER']["portal"] = true;
 		//..........................................................
 		if (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
 			if ( strlen($_SERVER['HTTP_X_FORWARDED_FOR']) > 15 )

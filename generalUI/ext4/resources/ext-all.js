@@ -46585,7 +46585,7 @@ Ext.override(Ext.form.Labelable, {
             '<td class="{baseBodyCls} {fieldBodyCls}" id="{id}-bodyEl" role="presentation" colspan="{bodyColspan}">',
 				'<table width=100%><tr><td>{beforeSubTpl}</td>',
                 '<td>{[values.$comp.getSubTplMarkup()]}</td>',
-                '<td>&nbsp;{afterSubTpl}</td></tr></table>',
+                '<td>{afterSubTpl}</td></tr></table>',
             '</td>',
             '<tpl if="msgTarget==\'side\'">',
                 '<td id="{id}-errorEl" class="{errorMsgCls}" style="display:none" width="{errorIconWidth}"></td>',

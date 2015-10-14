@@ -28,8 +28,20 @@ if(isset($_REQUEST["task"]))
 
 function selectPersons(){
 	
-	$where = "IsStaff='YES'";
+	$where = "1=1";
 	$param = array();
+	
+	if(!empty($_REQUEST["UserType"]))
+	{
+		switch($_REQUEST["UserType"])
+		{
+			case "IsAgent":		$where .= " AND IsAgent='YES'";break;
+			case "IsCustomer":	$where .= " AND IsCustomer='YES'";break;
+		}
+	}
+	else
+		$where .= " AND IsStaff='YES'";
+	
 	
 	if(!empty($_REQUEST["query"]))
 	{
