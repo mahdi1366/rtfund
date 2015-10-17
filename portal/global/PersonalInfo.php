@@ -5,7 +5,43 @@
 //-----------------------------
 
 require_once '../header.inc.php';
+require_once inc_dataGrid;
 
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "../../dms/dms.data.php?task=SelectAll&ObjectType=Person&ObjectID=?" .
+		$_SESSION["USER"]["PersonID"] , "grid_div");
+
+$dg->addColumn("", "DocumentID", "", true);
+$dg->addColumn("", "IsConfirm", "", true);
+
+$col = $dg->addColumn("مدرک", "DocType", "");
+$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from BaseInfo where typeID=8"), "InfoID", "InfoDesc");
+$col->width = 140;
+
+$col = $dg->addColumn("توضیح", "DocDesc", "");
+$col->editor = ColumnEditor::TextField(true);
+
+$col = $dg->addColumn("فایل", "FileType", "");
+$col->renderer = "function(v,p,r){return PersonalInfo.FileRender(v,p,r)}";
+$col->editor = "this.FileCmp";
+$col->width = 100;
+
+$col = $dg->addColumn("عملیات", "", "");
+$col->renderer = "function(v,p,r){return PersonalInfo.OperationRender(v,p,r)}";
+$col->width = 100;
+
+$dg->addButton("", "اضافه مدرک", "add", "function(){PersonalInfoObject.AddDocument();}");
+
+$dg->enableRowEdit = true;
+$dg->rowEditOkHandler = "function(){return PersonalInfoObject.SaveDocument();}";
+
+$dg->emptyTextOfHiddenColumns = true;
+$dg->height = 350;
+$dg->width = 690;
+$dg->EnableSearch = false;
+$dg->EnablePaging = false;
+$dg->DefaultSortField = "DocTypeDesc";
+$dg->autoExpandColumn = "DocDesc";
+$grid = $dg->makeGrid_returnObjects();
 
 ?>
 <script>
@@ -21,6 +57,19 @@ PersonalInfo.prototype = {
 
 function PersonalInfo()
 {
+	this.FileCmp = new Ext.form.File({
+		name : "FileType"
+	});
+	
+	
+	this.grid = <?= $grid ?>;
+	this.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.IsConfirm == "YES")
+			return "greenRow";
+		return "";
+	}
+
 	this.mainPanel = new Ext.form.FormPanel({
 		frame: true,
 		hidden : true,
@@ -121,11 +170,16 @@ function PersonalInfo()
 				PersonalInfoObject.mainPanel.loadRecord(this.getAt(0));
 				
 				if(this.getAt(0).data.IsReal == "YES")
+				{
 					PersonalInfoObject.mainPanel.down("[name=CompanyName]").hide();
+					PersonalInfoObject.mainPanel.down("[name=EconomicID]").hide();
+					
+				}
 				else
 				{
 					PersonalInfoObject.mainPanel.down("[name=fname]").hide();
 					PersonalInfoObject.mainPanel.down("[name=lname]").hide();
+					PersonalInfoObject.mainPanel.down("[name=NationalID]").hide();
 				}
 				
 				PersonalInfoObject.mainPanel.show();
@@ -150,11 +204,11 @@ function PersonalInfo()
 			title : "اطلاعات شخصی",
 			items : this.mainPanel
 		},{
-			title : "مدارک"//,
-			//items : this.attachgrid
+			title : "مدارک",
+			style : "padding:20px",
+			items : this.grid
 		}]
-	});
-	
+	});	
 }
 
 PersonalInfoObject = new PersonalInfo();
@@ -167,6 +221,114 @@ PersonalInfo.prototype.PersonalInfo = function()
 	}
 }
 
-</script>
+PersonalInfo.FileRender = function(v,p,r){
+	
+	return "<div align='center' title='مشاهده فایل' class='attach' "+
+		"onclick='PersonalInfo.ShowFile(" + r.data.DocumentID + ");' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:18px;height:16;float:right'></div>";
+}
 
-<div id="mainForm"></div>
+PersonalInfo.ShowFile = function(DocumentID){
+	
+	window.open("../../dms/ShowFile.php?DocumentID=" + DocumentID);
+}
+
+PersonalInfo.OperationRender = function(v,p,r){
+	
+	if(r.data.IsConfirm == "YES")
+		return "";
+	
+	return "<div align='center' title='ویرایش' class='edit' "+
+		"onclick='PersonalInfoObject.EditDocument();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:18px;height:16;float:right'></div>" + 
+		
+		 "<div align='center' title='حذف' class='remove' "+
+		"onclick='PersonalInfoObject.DeleteDocument();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:18px;height:16;float:right'></div>";		
+}
+
+PersonalInfo.prototype.AddDocument = function(){
+	
+	var modelClass = this.grid.getStore().model;
+	var record = new modelClass({
+		DocumentID: null,
+		DocDesc: null
+	});
+
+	this.grid.plugins[0].cancelEdit();
+	this.grid.getStore().insert(0, record);
+	this.grid.plugins[0].startEdit(0, 0);
+}
+
+PersonalInfo.prototype.SaveDocument = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		url: this.address_prefix +'../../dms/dms.data.php',
+		method: "POST",
+		isUpload : true,
+		form : this.get("MainForm"),
+		params: {
+			task: "SaveDocument",
+			record: Ext.encode(record.data)
+		},
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+
+			if(st.success)
+			{   
+				PersonalInfoObject.grid.getStore().load();
+			}
+			else
+			{
+				if(st.data == "")
+					alert("خطا در اجرای عملیات");
+				else
+					alert(st.data);
+			}
+		},
+		failure: function(){}
+	});
+}
+
+PersonalInfo.prototype.DeleteDocument = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = PersonalInfoObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + '../../dms/dms.data.php',
+			params:{
+				task: "DeleteDocumentID",
+				DocumentID : record.data.DocumentID
+			},
+			method: 'POST',
+
+			success: function(response,option){
+				mask.hide();
+				PersonalInfoObject.grid.getStore().load();
+			},
+			failure: function(){}
+		});
+	});
+}
+
+
+</script>
+<form id="MainForm" enctype="multipart/form-data">
+	<div id="mainForm"><div>
+</form>
