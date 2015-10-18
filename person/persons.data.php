@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // Create Date:	89.11
 //-------------------------
-include('../header.inc.php');
+include('header.inc.php');
 require_once 'persons.class.php';
 include_once inc_dataReader;
 require_once inc_response;
@@ -39,8 +39,6 @@ function selectPersons(){
 			case "IsCustomer":	$where .= " AND IsCustomer='YES'";break;
 		}
 	}
-	else
-		$where .= " AND IsStaff='YES'";
 	
 	
 	if(!empty($_REQUEST["query"]))

@@ -77,6 +77,8 @@ else if(isset($_POST["UserName"]))
 		else
 		{
 			$_SESSION['USER'] = $temp[0];
+			$_SESSION['USER']["framework"] = false;
+			$_SESSION['USER']["portal"] = true;
 			//..........................................................
 			if (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
 				if ( strlen($_SERVER['HTTP_X_FORWARDED_FOR']) > 15 )

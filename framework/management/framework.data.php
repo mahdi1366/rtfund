@@ -5,7 +5,7 @@
 //-------------------------
 include('../header.inc.php');
 require_once 'framework.class.php';
-require_once '../person/persons.class.php';
+require_once '../../person/persons.class.php';
 include_once inc_dataReader;
 require_once inc_response;
 
@@ -42,13 +42,7 @@ if(isset($_REQUEST["task"]))
 			SavePersonAccess();
 			
 		//------------------
-					
-		case "SavePerson":
-			SavePerson();
-			
-		case "DeletePerson":
-			DeletePerson();
-			
+
 		case "ResetPass":
 			ResetPass();
 	}
@@ -184,27 +178,6 @@ function selectPersons(){
 	$no = count($temp);
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
-	die();
-}
-
-function SavePerson(){
-	
-	$obj = new BSC_persons();
-	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
-	
-	if($obj->PersonID > 0)
-		$result = $obj->EditPerson();
-	else 
-		$result = $obj->AddPerson();
-	
-	echo Response::createObjectiveResponse($result, "");
-	die();
-}
-
-function DeletePerson(){
-	
-	$result = BSC_persons::DeletePerson($_POST["PersonID"]);
-	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 

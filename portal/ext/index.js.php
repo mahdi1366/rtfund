@@ -37,7 +37,7 @@ PortalClass.prototype.OpenPage = function(itemURL, params)
 	if(itemURL == "")
 		return;
 
-	if(arguments.length < 3)
+	if(arguments.length < 2)
 		params = {};
 
 	itemURL = this.formatUrl(itemURL);

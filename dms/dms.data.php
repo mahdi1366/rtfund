@@ -17,14 +17,11 @@ switch ($task) {
 	case "SaveDocument":
 		SaveDocument();
 
-	case "GetAllLoans":
-		GetAllLoans();
+	case "DeleteDocument":
+		DeleteDocument();	
 
-	case "SaveLoan":
-		SaveLoan();
-
-	case "DeleteLoan":
-		DeleteLoan();
+	case "ConfirmDocument":
+		ConfirmDocument();
 }
 
 function SelectAll(){
@@ -32,15 +29,15 @@ function SelectAll(){
 	$where = "1=1";
 	$param = array();
 	
-	if(!empty($_REQUEST["SourceType"]))
+	if(!empty($_REQUEST["ObjectType"]))
 	{
-		$where .= " AND SourceType=:st";
-		$param[":st"] = $_REQUEST["SourceType"];
+		$where .= " AND ObjectType=:st";
+		$param[":st"] = $_REQUEST["ObjectType"];
 	}
-	if(!empty($_REQUEST["SourceID"]))
+	if(!empty($_REQUEST["ObjectID"]))
 	{
-		$where .= " AND SourceID=:sid";
-		$param[":sid"] = $_REQUEST["SourceID"];
+		$where .= " AND ObjectID=:sid";
+		$param[":sid"] = $_REQUEST["ObjectID"];
 	}
 	
 	$temp = DMS_documents::SelectAll($where, $param);
@@ -50,88 +47,75 @@ function SelectAll(){
 
 function SaveDocument() {
 
-	$st = preg_split("/\./", $_FILES ['FileType']['name']);
-    $extension = strtolower($st [count($st) - 1]);
-    if (in_array($extension, array("jpg", "jpeg", "gif", "png", "pdf")) === false) 
+	if(!empty($_FILES["FileType"]["tmp_name"]))
 	{
-        Response::createObjectiveResponse(false, "فرمت فایل ارسالی نامعتبر است");
-        die();
-    }
+		$st = preg_split("/\./", $_FILES ['FileType']['name']);
+		$extension = strtolower($st [count($st) - 1]);
+		if (in_array($extension, array("jpg", "jpeg", "gif", "png", "pdf")) === false) 
+		{
+			Response::createObjectiveResponse(false, "فرمت فایل ارسالی نامعتبر است");
+			die();
+		}
+	}	
 	//..............................................
 	
 	$obj = new DMS_documents();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	$obj->ObjectID = $_POST["ObjectID"];
+	$obj->ObjectType = $_POST["ObjectType"];
 
-	if (empty($_POST["DocumentID"]))
+	if (empty($obj->DocumentID))
 		$result = $obj->AddDocument();
 	else
 		$result = $obj->EditDocument();
-	
 	if(!$result)
 	{
 		echo Response::createObjectiveResponse($result, "");
 		die();
 	}
 	
-    $obj->FileType = $extension;
-    $fp = fopen(getenv("DOCUMENT_ROOT") . "/storage/documents/". $obj->DocumentID . "." . $extension, "w");
-    fwrite($fp, substr(fread(fopen($_FILES['FileType']['tmp_name'], 'r'), $_FILES ['FileType']['size']),200) );
-    fclose($fp);
-	$obj->FileContent = substr(fread(fopen($_FILES['FileType']['tmp_name'], 'r'), $_FILES ['FileType']['size']), 0, 200);
+	if(!empty($_FILES["FileType"]["tmp_name"]))
+	{
 	
-	$db = PdoDataAccess::getPdoObject();
-	$stmt = $db->prepare("insert into DMS_documents(DocumentID, FileType, FileContent) " .
-		"VALUES (:did, :ft, EMPTY_BLOB()) RETURNING PIC_DATA INTO :data");
-	$stmt->bindParam(":did", $obj->DocumentID);
-	$stmt->bindParam(":ft", $obj->FileType);
-	$stmt->bindParam(":data", $obj->FileContent, PDO::PARAM_LOB);
-	$stmt->execute();
-	
+		$fp = fopen(getenv("DOCUMENT_ROOT") . "/storage/documents/". $obj->DocumentID . "." . $extension, "w");
+		fwrite($fp, substr(fread(fopen($_FILES['FileType']['tmp_name'], 'r'), $_FILES ['FileType']['size']),200) );
+		fclose($fp);
+		$obj->FileContent = substr(fread(fopen($_FILES['FileType']['tmp_name'], 'r'), $_FILES ['FileType']['size']), 0, 200);
+
+		$db = PdoDataAccess::getPdoObject();
+		$stmt = $db->prepare("update DMS_documents set FileType = :ft, FileContent = :data where DocumentID=:did");
+		$stmt->bindParam(":did", $obj->DocumentID);
+		$stmt->bindParam(":ft", $extension);
+		$stmt->bindParam(":data", $obj->FileContent, PDO::PARAM_LOB);
+		$stmt->execute();
+	}
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
-function DeleteGroup(){
+function DeleteDocument() {
 	
-	$dt = PdoDataAccess::runquery("select * from LON_loans where GroupID=?",array($_POST["GroupID"]));
-	if(count($dt)  > 0)
-	{
-		echo Response::createObjectiveResponse(false, "");
-		die();
-	}
+	$DocumentID = $_POST["DocumentID"];
 	
-	PdoDataAccess::runquery("delete from BaseInfo where TypeID=1 AND InfoID=?",array($_POST["GroupID"]));
-	echo Response::createObjectiveResponse(true, "");
-	die();
-}
-
-function GetAllLoans() {
-	$where = " GroupID=:g";
-	$whereParam = array();
-	$whereParam[":g"] = $_GET["GroupID"];
-	
-	$field = isset($_GET ["fields"]) ? $_GET ["fields"] : "";
-	if (isset($_GET ["query"]) && $_GET ["query"] != "") {
-		$where .= " AND " . $field . " LIKE :qry ";
-		$whereParam[":qry"] = "%" . $_GET["query"] . "%";
-	}
-
-	$temp = LON_loans::SelectAll($where, $whereParam);
-	$no = $temp->rowCount();
-	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
-
-	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
-	die();
-}
-
-function DeleteLoan() {
-	
-	$LoanID = $_POST["LoanID"];
-	$result = LON_loans::DeleteLoan($LoanID);
+	$obj = new DMS_documents($DocumentID);
+	$result = DMS_documents::DeleteDocument($DocumentID);
+	unlink(getenv("DOCUMENT_ROOT") . "/storage/documents/". $obj->DocumentID . "." . $obj->FileType);
 	
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
+function ConfirmDocument(){
+	
+	$obj = new DMS_documents();
+	
+	$obj->DocumentID = $_REQUEST["DocumentID"];
+	$obj->IsConfirm = "YES";
+	$obj->ConfirmPersonID = $_SESSION["USER"]["PersonID"];
+	
+	$result = $obj->EditDocument();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 ?>

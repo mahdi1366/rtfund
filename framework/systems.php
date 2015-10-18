@@ -103,7 +103,17 @@ $_SESSION['USER']["RecentSystems"] = array();
 		</style>
 	</head>
 	<body DIR=RTL>
+		<?php
 		
+		if(count($systems) == 0)
+		{
+			echo "<center><br><br><br><font style='font-family:b titr;'>";
+			echo "شما به نرم افزار جامع صندوق پژوهش و فناوری خراسان رضوی دسترسی ندارید.";
+			echo "</font></center></body>";
+			die();
+		}
+		
+		?>
 		<div class="header-top"></div>
 			
 		<div class="header"></div>

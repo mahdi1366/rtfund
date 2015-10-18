@@ -4,7 +4,7 @@
 // create Date:	94.06
 //---------------------------
 require_once '../header.inc.php';
-require_once getenv("DOCUMENT_ROOT") . '/framework/person/persons.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/person/persons.class.php';
 require_once inc_response;
 require_once inc_dataReader;
 

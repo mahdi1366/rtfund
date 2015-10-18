@@ -15,6 +15,11 @@ class LON_requests extends PdoDataAccess
 	public $OkAmount;
 	public $StatusID;
 	public $ReqDetails;
+	public $CompanyName;
+	public $NationalID;
+	public $LoanPersonID;
+	public $assurance;
+	public $AgentGuarantee;
 	public $LoanPersonID;
 			
 	function __construct($RequestID = "") {
@@ -72,6 +77,9 @@ class LON_requests extends PdoDataAccess
     }
 	
 	static function DeleteRequest($RequestID){
+		
+		if( parent::delete("LON_reqParts"," RequestID=?", array($RequestID)) === false )
+	 		return false;
 		
 		if( parent::delete("LON_requests"," RequestID=?", array($RequestID)) === false )
 	 		return false;

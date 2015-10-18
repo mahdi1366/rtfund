@@ -9,7 +9,9 @@ require_once 'systems.js.php';
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "framework.data.php?task=selectSystems","div_grid_user");
 
-$dg->addColumn("کد","SystemID","string", true);
+$col = $dg->addColumn("کد","SystemID","string");
+$col->editor = ColumnEditor::NumberField();
+$col->width = 50;
 
 $col = $dg->addColumn("عنوان سیستم","SysName","string");
 $col->editor = ColumnEditor::TextField();
@@ -38,7 +40,7 @@ $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(v,p,r){return SystemObject.saveData(v,p,r);}";
 
 $dg->height = 350;
-$dg->width = 600;
+$dg->width = 700;
 $dg->DefaultSortField = "SysName";
 $dg->autoExpandColumn = "SysName";
 $dg->editorGrid = true;

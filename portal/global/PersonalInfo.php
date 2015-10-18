@@ -7,10 +7,12 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "../../dms/dms.data.php?task=SelectAll&ObjectType=Person&ObjectID=?" .
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "../../dms/dms.data.php?task=SelectAll&ObjectType=Person&ObjectID=" .
 		$_SESSION["USER"]["PersonID"] , "grid_div");
 
 $dg->addColumn("", "DocumentID", "", true);
+$dg->addColumn("", "ObjectType", "", true);
+$dg->addColumn("", "ObjectID", "", true);
 $dg->addColumn("", "IsConfirm", "", true);
 
 $col = $dg->addColumn("مدرک", "DocType", "");
@@ -23,11 +25,12 @@ $col->editor = ColumnEditor::TextField(true);
 $col = $dg->addColumn("فایل", "FileType", "");
 $col->renderer = "function(v,p,r){return PersonalInfo.FileRender(v,p,r)}";
 $col->editor = "this.FileCmp";
+$col->align = "center";
 $col->width = 100;
 
 $col = $dg->addColumn("عملیات", "", "");
 $col->renderer = "function(v,p,r){return PersonalInfo.OperationRender(v,p,r)}";
-$col->width = 100;
+$col->width = 60;
 
 $dg->addButton("", "اضافه مدرک", "add", "function(){PersonalInfoObject.AddDocument();}");
 
@@ -35,7 +38,7 @@ $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(){return PersonalInfoObject.SaveDocument();}";
 
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 350;
+$dg->height = 330;
 $dg->width = 690;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
@@ -206,7 +209,11 @@ function PersonalInfo()
 		},{
 			title : "مدارک",
 			style : "padding:20px",
-			items : this.grid
+			items : [this.grid,{
+				xtype : "container",
+				cls : "blueText",
+				html : "ردیف های سبز رنگ ردیف های تایید شده و برابر اصل شده توسط صندوق بوده و قابل تغییر نمی باشند"
+			}]
 		}]
 	});	
 }
@@ -226,7 +233,7 @@ PersonalInfo.FileRender = function(v,p,r){
 	return "<div align='center' title='مشاهده فایل' class='attach' "+
 		"onclick='PersonalInfo.ShowFile(" + r.data.DocumentID + ");' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:18px;height:16;float:right'></div>";
+		"cursor:pointer;width:100%;height:16;float:right'></div>";
 }
 
 PersonalInfo.ShowFile = function(DocumentID){
@@ -239,15 +246,10 @@ PersonalInfo.OperationRender = function(v,p,r){
 	if(r.data.IsConfirm == "YES")
 		return "";
 	
-	return "<div align='center' title='ویرایش' class='edit' "+
-		"onclick='PersonalInfoObject.EditDocument();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:18px;height:16;float:right'></div>" + 
-		
-		 "<div align='center' title='حذف' class='remove' "+
+	return  "<div align='center' title='حذف' class='remove' "+
 		"onclick='PersonalInfoObject.DeleteDocument();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:18px;height:16;float:right'></div>";		
+		"cursor:pointer;width:100%;height:16;float:right'></div>";		
 }
 
 PersonalInfo.prototype.AddDocument = function(){
@@ -276,7 +278,9 @@ PersonalInfo.prototype.SaveDocument = function(){
 		form : this.get("MainForm"),
 		params: {
 			task: "SaveDocument",
-			record: Ext.encode(record.data)
+			record: Ext.encode(record.data),
+			ObjectID : '<?= $_SESSION["USER"]["PersonID"] ?>',
+			ObjectType : "person"
 		},
 		success: function(response){
 			mask.hide();
@@ -313,7 +317,7 @@ PersonalInfo.prototype.DeleteDocument = function(){
 		Ext.Ajax.request({
 			url: me.address_prefix + '../../dms/dms.data.php',
 			params:{
-				task: "DeleteDocumentID",
+				task: "DeleteDocument",
 				DocumentID : record.data.DocumentID
 			},
 			method: 'POST',
