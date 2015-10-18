@@ -402,7 +402,7 @@ CREATE TABLE `BSC_persons` (
 /*!40000 ALTER TABLE `BSC_persons` DISABLE KEYS */;
 INSERT INTO `BSC_persons` (`PersonID`,`UserName`,`UserPass`,`IsReal`,`fname`,`lname`,`CompanyName`,`NationalID`,`EconomicID`,`PhoneNo`,`mobile`,`address`,`email`,`IsStaff`,`IsCustomer`,`IsShareholder`,`IsAgent`,`IsSupporter`,`IsActive`,`PostID`) VALUES 
  (1000,'admin','$P$BCy9D77Tk5UrJibOCgIkum/NYvq3Ym1','YES','شبنم','جعفرخانی','','0943021723',NULL,NULL,NULL,'sdfsdf',NULL,'YES','YES','YES','YES','YES','YES',1),
- (1005,'park','$P$BcoXpMFz3xw6B108dtdAtm.iA9V5pa0','NO',' ',NULL,'پارک علم و فناوری',NULL,NULL,NULL,NULL,NULL,'park@us.com','NO','YES','NO','YES','NO','YES',NULL);
+ (1005,'park','$P$BcoXpMFz3xw6B108dtdAtm.iA9V5pa0','NO',' ',NULL,'پارک علم و فناوری',NULL,'7777777777',NULL,NULL,'جاده قوچان - پارک علم و فناوری','park@us.com','NO','YES','NO','YES','NO','YES',NULL);
 /*!40000 ALTER TABLE `BSC_persons` ENABLE KEYS */;
 
 
@@ -475,10 +475,21 @@ INSERT INTO `BaseInfo` (`TypeID`,`InfoID`,`InfoDesc`) VALUES
  (3,1,'حساب جاری'),
  (4,1,'در جریان'),
  (5,1,'درخواست خام'),
+ (7,1,'وثیقه ملکی'),
+ (8,1,'صفحه اول شناسنامه'),
  (1,2,'وام های مسکن'),
  (2,2,'اشخاص'),
  (3,2,'حساب سپرده '),
+ (7,2,'ضمانت بانکی'),
+ (8,2,'صفحه دوم شناسنامه'),
  (1,3,'وام های جزیی'),
+ (7,3,'سفته'),
+ (8,3,'توضیحات شناسنامه'),
+ (7,4,'چک'),
+ (8,4,'کارت ملی'),
+ (7,5,'کسر از حقوق'),
+ (8,5,'پشت کارت ملی'),
+ (7,6,'ماشین آلات'),
  (5,10,'ارسال درخواست'),
  (6,10,'خام'),
  (5,20,'رد درخواست'),
@@ -500,7 +511,7 @@ CREATE TABLE `BaseTypes` (
   `FieldName` varchar(100) DEFAULT NULL COMMENT 'نام فیلد',
   `editable` enum('YES','NO') NOT NULL,
   PRIMARY KEY (`TypeID`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `BaseTypes`
@@ -513,7 +524,9 @@ INSERT INTO `BaseTypes` (`TypeID`,`SystemID`,`TypeDesc`,`TableName`,`FieldName`,
  (3,2,'نوع حساب بانکی','ACC_accounts','AccountType','NO'),
  (4,2,'وضعیت چک','ACC_DocChecks','CheckStatus','NO'),
  (5,6,'وضعیت درخواست وام','LON_requests','StatusID','NO'),
- (6,6,'وضعیت قسط وام','LON_RequestParts','StatusID','NO');
+ (6,6,'وضعیت قسط وام','LON_RequestParts','StatusID','NO'),
+ (7,6,'انواع تضمین','LON_requests','assurance','YES'),
+ (8,7,'انواع مدارک','DMS_documents','DocType','NO');
 /*!40000 ALTER TABLE `BaseTypes` ENABLE KEYS */;
 
 
@@ -524,19 +537,27 @@ INSERT INTO `BaseTypes` (`TypeID`,`SystemID`,`TypeDesc`,`TableName`,`FieldName`,
 DROP TABLE IF EXISTS `DMS_documents`;
 CREATE TABLE `DMS_documents` (
   `DocumentID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد سند',
+  `DocDesc` varchar(200) DEFAULT NULL COMMENT 'توضیحات کلی',
   `DocType` int(10) unsigned NOT NULL COMMENT 'نوع سند',
   `ObjectType` varchar(50) DEFAULT NULL COMMENT 'نوع آبجکت',
   `ObjectID` int(10) unsigned DEFAULT NULL COMMENT 'کد آبجکت',
-  `fileType` int(10) unsigned NOT NULL COMMENT 'نوع فایل',
-  `fileContent` tinyblob NOT NULL COMMENT 'قسمتی از محتوای فایل',
+  `FileType` varchar(20) DEFAULT NULL COMMENT 'نوع فایل',
+  `FileContent` tinyblob COMMENT 'قسمتی از محتوای فایل',
+  `IsConfirm` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'برابر اصل',
+  `ConfirmPersonID` int(10) unsigned DEFAULT NULL COMMENT 'فرد تایید کننده',
   PRIMARY KEY (`DocumentID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `DMS_documents`
 --
 
 /*!40000 ALTER TABLE `DMS_documents` DISABLE KEYS */;
+INSERT INTO `DMS_documents` (`DocumentID`,`DocDesc`,`DocType`,`ObjectType`,`ObjectID`,`FileType`,`FileContent`,`IsConfirm`,`ConfirmPersonID`) VALUES 
+ (18,NULL,1,'person',1000,'jpg',0xFFD8FFE000104A46494600010200006400640000FFEC00114475636B7900010004000000640000FFEE000E41646F62650064C000000001FFDB008400010101010101010101010101010101010101010101010101010101010101010101010101010101010101010202020202020202020202030303030303030303030101010101010102010102020201020203030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303FFC0001108012C00C80301,'YES',1000),
+ (19,NULL,4,'person',1000,'pdf',0x255044462D312E330A25E2E3CFD30A312030206F626A0A3C3C0A2F4C656E67746820363234330A2F46696C746572205B2F466C6174654465636F64655D0A3E3E0A73747265616D0A5885D5994BAB64C7B185E7F52BCAB36EC329ED4755ED2A381CB06CB54133DB07EE40EDC9C56E5D84647063B87FDF11192B2256EEC8EA6EC9606C0C2D9FAF763EE21D99F9F7C3D7AF87AFDE4DC7F9F8FAE1302FC749FE27FF596EF7D3BA1CD7FB69BA4DEBF1F5A7C377CFD33C2D2FF3F3B4BE9C9FA7F3CBD3FA3C5D5E9E1C5C5F,'YES',1000),
+ (20,'qqqqq',1,'person',1005,'jpg',0xFFD8FFE000104A46494600010101012C012C0000FFE106E545786966000049492A000800000001001250040001000000010000001A000000030028010300010000000200000001020400010000004400000002020400010000009906000000000000FFD8FFE000104A46494600010101000500050000FFDB004300080606070605080707070909080A0C140D0C0B0B0C1912130F141D1A1F1E1D1A1C1C20242E2720222C231C1C2837292C30313434341F27393D38323C2E333432FFDB0043010909090C0B0C180D,'NO',NULL),
+ (22,NULL,5,'person',1005,'jpg',0xFFD8FFE000104A46494600010100000100010000FFFE003E43524541544F523A2067642D6A7065672076312E3020287573696E6720494A47204A50454720763632292C2064656661756C74207175616C6974790AFFDB004300080606070605080707070909080A0C140D0C0B0B0C1912130F141D1A1F1E1D1A1C1C20242E2720222C231C1C2837292C30313434341F27393D38323C2E333432FFDB0043010909090C0B0C180D0D1832211C2132323232323232323232323232323232323232323232323232323232,'YES',1000);
 /*!40000 ALTER TABLE `DMS_documents` ENABLE KEYS */;
 
 
@@ -579,9 +600,9 @@ CREATE TABLE `DataAudit` (
   `description` varchar(200) COLLATE utf8_persian_ci DEFAULT NULL COMMENT 'توضیحات بیشتر',
   `IPAddress` varchar(100) COLLATE utf8_persian_ci NOT NULL COMMENT 'آدرس آی پی کامپیوتر عمل کننده',
   `ActionTime` datetime NOT NULL COMMENT 'زمان انجام عمل',
-  `QueryString` varchar(2000) COLLATE utf8_persian_ci DEFAULT NULL COMMENT 'query اجرا شده',
+  `QueryString` varchar(2000) CHARACTER SET utf8 DEFAULT NULL COMMENT 'query اجرا شده',
   PRIMARY KEY (`DataAuditID`)
-) ENGINE=MyISAM AUTO_INCREMENT=510 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
+) ENGINE=MyISAM AUTO_INCREMENT=551 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
 
 --
 -- Dumping data for table `DataAudit`
@@ -1099,7 +1120,48 @@ INSERT INTO `DataAudit` (`DataAuditID`,`PersonID`,`TableName`,`MainObjectID`,`Su
 INSERT INTO `DataAudit` (`DataAuditID`,`PersonID`,`TableName`,`MainObjectID`,`SubObjectID`,`ActionType`,`SystemID`,`PageName`,`description`,`IPAddress`,`ActionTime`,`QueryString`) VALUES 
  (507,1000,'LON_ReqParts',6,NULL,'ADD',2,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-13 14:53:39','insert into LON_ReqParts(RequestID,PartDesc,PayDate,PartAmount,PayCount,IntervalType,ForfeitPercent,CustomerFee,FundFee,AgentFee) values (\'19\',\'م اول\',\'2016/01/06\',\'60000000\',\'12\',\'MONTH\',\'4\',\'5\',\'10\',\'2\')'),
  (508,1000,'LON_requests',20,NULL,'ADD',2,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-13 14:54:58','insert into LON_requests(BranchID,PersonID,ReqDate,ReqAmount,StatusID) values (\'2\',\'1000\',now(),\'21312\',\'10\')'),
- (509,1000,'LON_requests',20,NULL,'UPDATE',2,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-13 14:55:01','update LON_requests set RequestID=\'20\',BranchID=\'2\',ReqAmount=\'21312\',ReqDetails=null where  RequestID=\'20\'');
+ (509,1000,'LON_requests',20,NULL,'UPDATE',2,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-13 14:55:01','update LON_requests set RequestID=\'20\',BranchID=\'2\',ReqAmount=\'21312\',ReqDetails=null where  RequestID=\'20\''),
+ (510,1000,'DMS_documents',1,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-17 14:14:28','insert into DMS_documents(DocType) values (\'1\')'),
+ (511,1000,'DMS_documents',2,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-17 14:16:07','insert into DMS_documents(DocType) values (\'1\')'),
+ (512,1000,'DMS_documents',3,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-17 14:16:48','insert into DMS_documents(DocType) values (\'1\')'),
+ (513,1000,'DMS_documents',4,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-17 14:17:40','insert into DMS_documents(DocType) values (\'1\')'),
+ (514,1000,'DMS_documents',5,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-17 14:26:58','insert into DMS_documents(DocType) values (\'1\')'),
+ (515,1000,'DMS_documents',6,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-17 14:36:21','insert into DMS_documents(DocType) values (\'1\')'),
+ (516,1000,'DMS_documents',7,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-17 14:36:46','insert into DMS_documents(DocType) values (\'1\')'),
+ (517,1000,'DMS_documents',8,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-17 14:37:13','insert into DMS_documents(DocType) values (\'1\')'),
+ (518,1000,'DMS_documents',9,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-17 14:38:34','insert into DMS_documents(DocType) values (\'1\')'),
+ (519,1000,'DMS_documents',10,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-17 14:40:28','insert into DMS_documents(DocType) values (\'1\')'),
+ (520,1000,'DMS_documents',11,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 08:28:59','insert into DMS_documents(DocType) values (\'1\')'),
+ (521,1000,'DMS_documents',12,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 08:33:19','insert into DMS_documents(DocType) values (\'2\')'),
+ (522,1000,'DMS_documents',13,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 08:36:02','insert into DMS_documents(DocType) values (\'2\')'),
+ (523,1000,'DMS_documents',11,NULL,'DELETE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 08:51:44','delete from DMS_documents where  DocumentID=\'11\''),
+ (524,1000,'DMS_documents',12,NULL,'DELETE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 08:51:47','delete from DMS_documents where  DocumentID=\'12\''),
+ (525,1000,'DMS_documents',13,NULL,'DELETE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 08:51:51','delete from DMS_documents where  DocumentID=\'13\''),
+ (526,1000,'DMS_documents',14,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 08:52:44','insert into DMS_documents(DocType) values (\'1\')'),
+ (527,1000,'DMS_documents',14,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 09:00:58','update DMS_documents set DocumentID=\'14\',DocDesc=\'aaaaaaaaaaa\',DocType=\'1\',FileType=\'jpg\' where  DocumentID=\'14\''),
+ (528,1000,'DMS_documents',14,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 09:01:15','update DMS_documents set DocumentID=\'14\',DocDesc=\'یسشیسش\',DocType=\'1\',FileType=\'jpg\' where  DocumentID=\'14\''),
+ (529,1000,'DMS_documents',15,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 09:02:10','insert into DMS_documents(DocType) values (\'3\')'),
+ (530,1000,'DMS_documents',16,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 09:04:33','insert into DMS_documents(DocType) values (\'4\')'),
+ (531,1000,'DMS_documents',17,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 09:05:12','insert into DMS_documents(DocType) values (\'5\')'),
+ (532,1000,'DMS_documents',17,NULL,'DELETE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 09:05:20','delete from DMS_documents where  DocumentID=\'17\''),
+ (533,1000,'DMS_documents',16,NULL,'DELETE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 09:06:38','delete from DMS_documents where  DocumentID=\'16\''),
+ (534,1000,'DMS_documents',15,NULL,'DELETE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 09:06:46','delete from DMS_documents where  DocumentID=\'15\''),
+ (535,1000,'DMS_documents',14,NULL,'DELETE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 09:06:48','delete from DMS_documents where  DocumentID=\'14\''),
+ (536,1000,'DMS_documents',18,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 09:07:45','insert into DMS_documents(DocType) values (\'1\')'),
+ (537,1000,'FRW_systems',1001,NULL,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-18 09:22:09','insert into FRW_systems(SysName,SysPath,SysIcon,IsActive) values (\'سیستم مدیریت ذینفعان\',\'person\',\'person.gif\',\'YES\')'),
+ (538,1000,'FRW_systems',8,NULL,'UPDATE',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-18 09:23:34','update FRW_systems set SystemID=\'8\',SysName=\'سیستم مدیریت ذینفعان\',SysPath=\'person\',SysIcon=\'person.gif\',IsActive=\'YES\' where SystemID=\'8\''),
+ (539,1000,'FRW_systems',8,NULL,'UPDATE',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-18 09:23:40','update FRW_systems set SystemID=\'8\',SysName=\'سیستم مدیریت ذینفعان\',SysPath=\'person\',SysIcon=\'person.gif\',IsActive=\'YES\' where SystemID=\'8\''),
+ (540,1000,'FRW_menus',48,NULL,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-18 09:29:57','insert into FRW_menus(SystemID,ParentID,MenuDesc,ordering) values (\'8\',\'0\',\'مدیریت ذینفعان\',\'1\')'),
+ (541,1000,'FRW_menus',49,NULL,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-18 09:36:50','insert into FRW_menus(SystemID,ParentID,MenuDesc,IsActive,ordering,icon,MenuPath) values (\'8\',\'48\',\'اطلاعات و مدارک ذینفعان\',\'YES\',\'1\',\'user\',\'persons.php\')'),
+ (542,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-18 09:38:13','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'49\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (543,1000,'DMS_documents',19,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 13:49:00','insert into DMS_documents(DocType) values (\'4\')'),
+ (544,1000,'DMS_documents',19,NULL,'UPDATE',8,'http://rtfund/person/start.php?SystemID=8',NULL,'127.0.0.1','2015-10-18 13:50:22','update DMS_documents set DocumentID=\'19\',IsConfirm=\'YES\',ConfirmPersonID=\'1000\' where  DocumentID=\'19\''),
+ (545,1005,'BSC_persons',1005,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 13:56:07','update BSC_persons set PersonID=\'1005\',fname=\' \',lname=null,CompanyName=\'پارک علم و فناوری\',NationalID=null,EconomicID=\'7777777777\',PhoneNo=null,mobile=null,address=\'جاده قوچان - پارک علم و فناوری\',email=\'park@us.com\' where  PersonID=\'1005\''),
+ (546,1005,'DMS_documents',20,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 14:00:41','insert into DMS_documents(DocDesc,DocType) values (\'qqqqq\',\'1\')'),
+ (547,1005,'DMS_documents',21,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 14:02:14','insert into DMS_documents(DocType,ObjectType,ObjectID) values (\'4\',\'person\',\'1005\')'),
+ (548,1005,'DMS_documents',21,NULL,'DELETE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 14:03:56','delete from DMS_documents where  DocumentID=\'21\''),
+ (549,1005,'DMS_documents',22,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-18 14:04:06','insert into DMS_documents(DocType,ObjectType,ObjectID) values (\'5\',\'person\',\'1005\')'),
+ (550,1000,'DMS_documents',22,NULL,'UPDATE',8,'http://rtfund/person/start.php?SystemID=8',NULL,'127.0.0.1','2015-10-18 14:07:56','update DMS_documents set DocumentID=\'22\',IsConfirm=\'YES\',ConfirmPersonID=\'1000\' where  DocumentID=\'22\'');
 /*!40000 ALTER TABLE `DataAudit` ENABLE KEYS */;
 
 
@@ -1250,7 +1312,8 @@ INSERT INTO `FRW_access` (`MenuID`,`PersonID`,`ViewFlag`,`AddFlag`,`EditFlag`,`R
  (35,1000,'YES','YES','YES','YES'),
  (36,1000,'YES','YES','NO','NO'),
  (38,1000,'YES','YES','YES','YES'),
- (45,1000,'YES','YES','YES','YES');
+ (45,1000,'YES','YES','YES','YES'),
+ (49,1000,'YES','YES','YES','YES');
 /*!40000 ALTER TABLE `FRW_access` ENABLE KEYS */;
 
 
@@ -1276,7 +1339,7 @@ CREATE TABLE `FRW_menus` (
   PRIMARY KEY (`MenuID`),
   KEY `FK_FRW_menus_1` (`SystemID`),
   CONSTRAINT `FK_FRW_menus_1` FOREIGN KEY (`SystemID`) REFERENCES `frw_systems` (`SystemID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `FRW_menus`
@@ -1326,7 +1389,9 @@ INSERT INTO `FRW_menus` (`SystemID`,`MenuID`,`ParentID`,`MenuDesc`,`IsActive`,`o
  (1000,44,40,'مدیریت سهام','YES',1,'database','/','NO','YES','NO','NO','NO'),
  (6,45,13,'مدیریت ذینفعان','YES',2,'users.gif','../framework/person/persons.php','NO','NO','NO','NO','NO'),
  (1000,46,0,'عاملین','YES',NULL,NULL,NULL,'NO','NO','NO','YES','NO'),
- (1000,47,46,'معرفی اخذ وام','YES',NULL,NULL,'loan/AgentNewRequest.php','NO','NO','NO','YES','NO');
+ (1000,47,46,'معرفی اخذ وام','YES',NULL,NULL,'loan/AgentNewRequest.php','NO','NO','NO','YES','NO'),
+ (8,48,0,'مدیریت ذینفعان','YES',1,NULL,NULL,'NO','NO','NO','NO','NO'),
+ (8,49,48,'اطلاعات و مدارک ذینفعان','YES',1,'user','persons.php','NO','NO','NO','NO','NO');
 /*!40000 ALTER TABLE `FRW_menus` ENABLE KEYS */;
 
 
@@ -1342,7 +1407,7 @@ CREATE TABLE `FRW_systems` (
   `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
   `SysIcon` varchar(500) NOT NULL,
   PRIMARY KEY (`SystemID`)
-) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1002 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `FRW_systems`
@@ -1354,6 +1419,8 @@ INSERT INTO `FRW_systems` (`SystemID`,`SysName`,`SysPath`,`IsActive`,`SysIcon`) 
  (2,'سیستم حسابداری ','accounting','YES','accountancy.gif'),
  (4,'سیستم اتوماسیون اداری','office','YES','office.gif'),
  (6,'سیستم تسهیلات','loan','YES','loan.jpg'),
+ (7,'سیستم مدیریت اسناد','dms','YES','document.gif'),
+ (8,'سیستم مدیریت ذینفعان','person','YES','person.png'),
  (1000,'پرتال ','portal','YES','-');
 /*!40000 ALTER TABLE `FRW_systems` ENABLE KEYS */;
 
@@ -1380,6 +1447,52 @@ INSERT INTO `FRW_units` (`UnitID`,`ParentID`,`UnitName`) VALUES
  (8,1,'معاونت'),
  (9,NULL,'اداری');
 /*!40000 ALTER TABLE `FRW_units` ENABLE KEYS */;
+
+
+--
+-- Definition of table `LON_PartPayments`
+--
+
+DROP TABLE IF EXISTS `LON_PartPayments`;
+CREATE TABLE `LON_PartPayments` (
+  `PayID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ردیف پرداخت',
+  `PartID` int(10) unsigned NOT NULL COMMENT 'کد مرحله وام',
+  `PayDate` date NOT NULL COMMENT 'تاریخ سررسید',
+  `PayAmount` decimal(15,0) NOT NULL COMMENT 'مبلغ قابل پرداخت',
+  `StatusID` smallint(5) unsigned NOT NULL DEFAULT '1',
+  `FeePercent` smallint(5) unsigned NOT NULL COMMENT 'درصد کارمزد',
+  `PaidDate` datetime NOT NULL COMMENT 'تاریخ پرداخت',
+  `PaidAmount` decimal(15,0) NOT NULL COMMENT 'مبلغ چرداخت شده',
+  PRIMARY KEY (`PayID`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `LON_PartPayments`
+--
+
+/*!40000 ALTER TABLE `LON_PartPayments` DISABLE KEYS */;
+/*!40000 ALTER TABLE `LON_PartPayments` ENABLE KEYS */;
+
+
+--
+-- Definition of table `LON_ReqDocs`
+--
+
+DROP TABLE IF EXISTS `LON_ReqDocs`;
+CREATE TABLE `LON_ReqDocs` (
+  `ReqDocID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'مدرک درخواست',
+  `RequestID` int(10) unsigned NOT NULL COMMENT 'شماره درخواست',
+  `DocType` int(10) unsigned NOT NULL COMMENT 'نوع مدرک',
+  `description` varchar(5000) NOT NULL COMMENT 'توضیحات',
+  PRIMARY KEY (`ReqDocID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `LON_ReqDocs`
+--
+
+/*!40000 ALTER TABLE `LON_ReqDocs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `LON_ReqDocs` ENABLE KEYS */;
 
 
 --
@@ -1492,6 +1605,8 @@ CREATE TABLE `LON_requests` (
   `CompanyName` varchar(5000) DEFAULT NULL COMMENT 'شرکت معرفی شده',
   `NationalID` varchar(20) DEFAULT NULL COMMENT 'کد اقتصادی',
   `LoanPersonID` int(10) unsigned DEFAULT NULL COMMENT 'وام گیرنده',
+  `assurance` smallint(5) unsigned DEFAULT NULL COMMENT 'تضمین وام',
+  `AgentGuarantee` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'با ضمانت عامل',
   PRIMARY KEY (`RequestID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8;
 
@@ -1500,13 +1615,13 @@ CREATE TABLE `LON_requests` (
 --
 
 /*!40000 ALTER TABLE `LON_requests` DISABLE KEYS */;
-INSERT INTO `LON_requests` (`RequestID`,`BranchID`,`LoanID`,`ReqPersonID`,`ReqDate`,`ReqAmount`,`OkAmount`,`StatusID`,`ReqDetails`,`CompanyName`,`NationalID`,`LoanPersonID`) VALUES 
- (15,NULL,NULL,1000,'2015-10-13 11:48:18','0','0',1,NULL,'','',NULL),
- (16,1,NULL,1000,'2015-10-13 11:57:46','120000000','0',10,NULL,'شرکت فلان','05131684972',NULL),
- (17,1,NULL,1000,'2015-10-13 13:42:03','120000000','0',10,NULL,NULL,NULL,NULL),
- (18,1,NULL,1000,'2015-10-13 13:43:04','120000000','0',10,NULL,NULL,NULL,NULL),
- (19,2,NULL,1000,'2015-10-13 13:47:59','150000000','0',10,NULL,NULL,NULL,NULL),
- (20,2,NULL,1000,'2015-10-13 14:54:58','21312','0',10,NULL,NULL,NULL,NULL);
+INSERT INTO `LON_requests` (`RequestID`,`BranchID`,`LoanID`,`ReqPersonID`,`ReqDate`,`ReqAmount`,`OkAmount`,`StatusID`,`ReqDetails`,`CompanyName`,`NationalID`,`LoanPersonID`,`assurance`,`AgentGuarantee`) VALUES 
+ (15,NULL,NULL,1000,'2015-10-13 11:48:18','0','0',1,NULL,'','',NULL,NULL,'NO'),
+ (16,1,NULL,1000,'2015-10-13 11:57:46','120000000','0',10,NULL,'شرکت فلان','05131684972',NULL,NULL,'NO'),
+ (17,1,NULL,1000,'2015-10-13 13:42:03','120000000','0',10,NULL,NULL,NULL,NULL,NULL,'NO'),
+ (18,1,NULL,1000,'2015-10-13 13:43:04','120000000','0',10,NULL,NULL,NULL,NULL,NULL,'NO'),
+ (19,2,NULL,1000,'2015-10-13 13:47:59','150000000','0',10,NULL,NULL,NULL,NULL,NULL,'NO'),
+ (20,2,NULL,1000,'2015-10-13 14:54:58','21312','0',10,NULL,NULL,NULL,NULL,NULL,'NO');
 /*!40000 ALTER TABLE `LON_requests` ENABLE KEYS */;
 
 

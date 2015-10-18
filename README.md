@@ -1,7 +1,0 @@
-# rtfund
----
----
-
-
-
-shabi at home
