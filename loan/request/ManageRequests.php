@@ -12,17 +12,8 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=Selec
 
 $dg->addColumn("", "StatusID", "", true);
 $dg->addColumn("", "BranchID", "", true);
-$dg->addColumn("", "GroupDesc", "", true);
-$dg->addColumn("", "InsureAmount", "", true);
-$dg->addColumn("", "FirstPartAmount", "", true);
-$dg->addColumn("", "ForfeitPercent", "", true);
-$dg->addColumn("", "FeePercent", "", true);
-$dg->addColumn("", "FeeAmount", "", true);
-$dg->addColumn("", "ProfitPercent", "", true);
-$dg->addColumn("", "PayCount", "", true);
-$dg->addColumn("", "PartInterval", "", true);
-$dg->addColumn("", "DelayCount", "", true);
-$dg->addColumn("", "MaxAmount", "", true);
+$dg->addColumn("", "BorrowerDesc", "", true);
+$dg->addColumn("", "BorrowerID", "", true);
 
 $col = $dg->addColumn("شماره", "RequestID", "");
 $col->width = 50;
@@ -33,13 +24,14 @@ $col->width = 80;
 $col = $dg->addColumn("تاریخ درخواست", "ReqDate", GridColumn::ColumnType_date);
 $col->width = 110;
 
-$col = $dg->addColumn("عنوان وام درخواستی", "LoanDesc", "");
-
 $col = $dg->addColumn("مبلغ درخواست", "ReqAmount", GridColumn::ColumnType_money);
 $col->width = 100;
 
-$col = $dg->addColumn("مبلغ تایید شده", "OkAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("درخواست کننده", "ReqFullname");
 $col->width = 100;
+
+$col = $dg->addColumn("گیرنده وام", "LoanFullname");
+$col->renderer = "function(v,p,r){ alert(v); return v == '' || v == null ? r.data.BorrowerDesc : v;}";
 
 $col = $dg->addColumn("وضعیت", "StatusDesc", "");
 $col->width = 100;
@@ -54,7 +46,7 @@ $dg->height = 420;
 $dg->width = 770;
 $dg->title = "درخواست های وام";
 $dg->DefaultSortField = "ReqDate";
-$dg->autoExpandColumn = "LoanDesc";
+$dg->autoExpandColumn = "LoanFullname";
 $grid = $dg->makeGrid_returnObjects();
 ?>
 <script>

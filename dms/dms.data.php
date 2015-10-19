@@ -41,6 +41,7 @@ function SelectAll(){
 	}
 	
 	$temp = DMS_documents::SelectAll($where, $param);
+	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }

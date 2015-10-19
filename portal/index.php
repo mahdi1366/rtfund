@@ -102,13 +102,13 @@ for ($i = 0; $i < count($menus); $i++) {
 			</a>
 			<!----------------------------------------------------------------->
 			<div class="headerItems" style="color:#1E8BC3;" 
-				 onclick="portal.OpenPage('/portal/global/PersonalInfo.php','');">
+				 onclick="portal.OpenPage('/portal/global/PersonalInfo.php');">
 				<span class="fa fa-user"></span><br>
 				<font style="font-family:tahoma;font-size:12px;font-weight:bold">اطلاعات شخصی</font>
 			</div>
 			<!----------------------------------------------------------------->
 			<div class="headerItems" style="color:#F86924;" 
-				 onclick="portal.OpenPage('/portal/global/ChangePassword.php','');">
+				 onclick="portal.OpenPage('/portal/global/ChangePassword.php');">
 				<span class="fa fa-key"></span><br>
 				<font style="font-family:tahoma;font-size:12px;font-weight:bold">تغییر رمز عبور</font>
 			</div>
@@ -124,7 +124,7 @@ for ($i = 0; $i < count($menus); $i++) {
 			</div>
 			<!----------------------------------------------------------------->
 			<div class="headerItems" style="color:#F05A49"
-				 onclick="portal.OpenPage('/portal/logout.php','');">
+				 onclick="portal.OpenPage('/portal/logout.php');">
 				<span class="fa fa-sign-out"></span><br>
 				<font style="font-family:tahoma;font-size:12px;font-weight:bold">خروج</font>
 			</div>

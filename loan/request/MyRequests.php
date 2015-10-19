@@ -11,6 +11,7 @@ require_once inc_dataGrid;
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectMyRequests", "grid_div");
 
 $dg->addColumn("", "StatusID", "", true);
+$dg->addColumn("", "StatusID", "", true);
 
 $col = $dg->addColumn("پیگیری", "RequestID", "");
 $col->width = 50;
@@ -18,12 +19,9 @@ $col->width = 50;
 $col = $dg->addColumn("تاریخ درخواست", "ReqDate", GridColumn::ColumnType_date);
 $col->width = 110;
 
-$col = $dg->addColumn("شرکت", "CompanyName", "");
+$col = $dg->addColumn("شرکت", "BorrowerDesc", "");
 
 $col = $dg->addColumn("مبلغ درخواست", "ReqAmount", GridColumn::ColumnType_money);
-$col->width = 100;
-
-$col = $dg->addColumn("مبلغ تایید شده", "OkAmount", GridColumn::ColumnType_money);
 $col->width = 100;
 
 $col = $dg->addColumn("وضعیت", "StatusDesc", "");
@@ -40,7 +38,7 @@ $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->title = "درخواست ارسالی";
 $dg->DefaultSortField = "ReqDate";
-$dg->autoExpandColumn = "CompanyName";
+$dg->autoExpandColumn = "BorrowerDesc";
 $grid = $dg->makeGrid_returnObjects();
 ?>
 <script>

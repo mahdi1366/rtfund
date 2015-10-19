@@ -40,6 +40,11 @@ function selectPersons(){
 		}
 	}
 	
+	if(!empty($_REQUEST["PersonID"]))
+	{
+		$where .= " AND PersonID=:p";
+		$param[":p"] = $_REQUEST["PersonID"];
+	}
 	
 	if(!empty($_REQUEST["query"]))
 	{

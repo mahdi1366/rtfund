@@ -25,10 +25,10 @@ class DMS_documents extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select d.*, infoDesc DocTypeDesc, concat(fname, ' ', lname) fullname
+			select d.*, infoDesc DocTypeDesc, concat(fname, ' ', lname) confirmfullname
 			from DMS_documents d	
 			join BaseInfo on(InfoID=d.DocType AND TypeID=8)
-			left join BCS_persons on(PersonID=ConfirmPersonID)
+			left join BSC_persons on(PersonID=ConfirmPersonID)
 			where " . $where, $param);
 	}
 	

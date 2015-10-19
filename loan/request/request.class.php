@@ -12,15 +12,13 @@ class LON_requests extends PdoDataAccess
 	public $ReqPersonID;
 	public $ReqDate;
 	public $ReqAmount;
-	public $OkAmount;
 	public $StatusID;
 	public $ReqDetails;
-	public $CompanyName;
-	public $NationalID;
+	public $BorrowerDesc;
+	public $BorrowerID;
 	public $LoanPersonID;
 	public $assurance;
 	public $AgentGuarantee;
-	public $LoanPersonID;
 			
 	function __construct($RequestID = "") {
 		

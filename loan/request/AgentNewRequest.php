@@ -80,12 +80,12 @@ function NewLoanRequest()
 			items : [{
 				xtype : "textfield",
 				allowBlank : false,
-				name : "CompanyName",
+				name : "BorrowerDesc",
 				beforeLabelTextTpl: required,
 				fieldLabel : "شرکت وام گیرنده"
 			},{
 				xtype : "textfield",
-				name : "NationalID",
+				name : "BorrowerID",
 				width : 305,
 				allowBlank : false,
 				beforeLabelTextTpl: required,

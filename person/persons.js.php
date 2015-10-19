@@ -102,12 +102,18 @@ function Person()
 					me.mainPanel.down("[name=CompanyName]").hide();
 					me.mainPanel.down("[name=EconomicID]").hide();
 					
+					me.mainPanel.down("[name=fname]").show();
+					me.mainPanel.down("[name=lname]").show();
+					me.mainPanel.down("[name=NationalID]").show();
 				}
 				else
 				{
 					me.mainPanel.down("[name=fname]").hide();
 					me.mainPanel.down("[name=lname]").hide();
 					me.mainPanel.down("[name=NationalID]").hide();
+					
+					me.mainPanel.down("[name=CompanyName]").show();
+					me.mainPanel.down("[name=EconomicID]").show();
 				}
 				
 				me.mainPanel.show();
@@ -307,12 +313,13 @@ Person.prototype.ShowInfo = function(){
 
 		this.tabPanel.setDisabled(false);
 		this.PersonStore.proxy.extraParams = {PersonID : record.data.PersonID};
-
+		this.PersonStore.load();		
+		
 		this.docgrid.getStore().proxy.extraParams = {
 			ObjectID : record.data.PersonID
 		};
-
-		this.PersonStore.load();		
+		this.docgrid.getStore().load();
+		
 	
 }
 

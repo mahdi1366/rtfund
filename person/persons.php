@@ -82,14 +82,17 @@ $col->width = 140;
 
 $col = $dg->addColumn("توضیح", "DocDesc", "");
 
+$col = $dg->addColumn("تایید کننده", "confirmfullname");
+$col->width = 120;
+
 $col = $dg->addColumn("فایل", "FileType", "");
 $col->renderer = "function(v,p,r){return Person.FileRender(v,p,r)}";
 $col->align = "center";
-$col->width = 100;
+$col->width = 40;
 
 $col = $dg->addColumn("تایید", "", "");
 $col->renderer = "function(v,p,r){return Person.ConfirmRender(v,p,r)}";
-$col->width = 60;
+$col->width = 40;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 210;
