@@ -230,7 +230,7 @@ class sadaf_datagrid
 	//-------------------------------------------------------------------------
 	function addButton($id,$text,$iconCls,$handler, $tooltip = "")
 	{
-		$this->buttons[] = "{id: '$id',text: '$text',iconCls: '$iconCls',handler: $handler, tooltip : '$tooltip'}";
+		$this->buttons[] = "{itemId: '$id',text: '$text',iconCls: '$iconCls',handler: $handler, tooltip : '$tooltip'}";
 	}
 	//-------------------------------------------------------------------------
 	function addObject($object)

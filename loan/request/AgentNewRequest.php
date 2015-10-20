@@ -15,7 +15,7 @@ $dg->addColumn("", "PayDate","", true);
 $dg->addColumn("", "PartAmount","", true);
 $dg->addColumn("", "PayCount","", true);
 $dg->addColumn("", "IntervalType","", true);
-$dg->addColumn("", "PayInteval","", true);
+$dg->addColumn("", "PayInterval","", true);
 $dg->addColumn("", "DelayMonths","", true);
 $dg->addColumn("", "ForfeitPercent","", true);
 $dg->addColumn("", "CustomerFee","", true);
@@ -172,7 +172,7 @@ function NewLoanRequest()
 					renderer : function(v){return MiladiToShamsi(v);}
 				},{
 					fieldLabel: 'فاصله اقساط',
-					name: 'PayInteval'
+					name: 'PayInterval'
 				},{
 					fieldLabel: 'مدت تنفس',
 					name: 'DelayMonths',

@@ -39,11 +39,11 @@ ManageRequest.prototype.OperationMenu = function(e){
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
 	
-	if(record.data.StatusID == "10")
-	{
-		op_menu.add({text: 'جزئیات درخواست',iconCls: 'info2', 
+	op_menu.add({text: 'جزئیات درخواست',iconCls: 'info2', 
 		handler : function(){ return ManageRequestObject.LoanInfo(); }});
 	
+	if(record.data.StatusID == "10")
+	{
 		op_menu.add({text: 'تایید درخواست',iconCls: 'tick', 
 		handler : function(){ return ManageRequestObject.ChangeStatus("confirm"); }});
 	
@@ -55,7 +55,28 @@ ManageRequest.prototype.OperationMenu = function(e){
 
 ManageRequest.prototype.ChangeStatus = function(mode){
 	
+	record = this.grid.getSelectionModel().getLastSelected();
 	
+	StatusID = mode == "confirm" ? 30 : 20;
+	
+	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخيره سازي...'});
+	mask.show();  
+	
+	Ext.Ajax.request({
+		methos : "post",
+		url : this.address_prefix + "request.data.php",
+		params : {
+			task : "ChangeRequesrStatus",
+			RequestID : record.data.RequestID,
+			StatusID : StatusID,
+			desc : ""
+		},
+		
+		success : function(){
+			mask.hide();
+			ManageRequestObject.grid.getStore().load()
+		}
+	});
 }
 
 ManageRequest.prototype.LoanInfo = function(){

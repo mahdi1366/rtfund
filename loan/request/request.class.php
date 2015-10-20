@@ -100,8 +100,8 @@ class LON_ReqParts extends PdoDataAccess
 	public $PartAmount;
 	public $PayCount;
 	public $IntervalType;
-	public $PayInteval;
-	public $DelaMonths;
+	public $PayInterval;
+	public $DelayMonths;
 	public $ForfeitPercent;
 	public $CustomerFee;
 	public $FundFee;
@@ -161,6 +161,77 @@ class LON_ReqParts extends PdoDataAccess
 		$daObj->ActionType = DataAudit::Action_delete;
 		$daObj->MainObjectID = $PartID;
 		$daObj->TableName = "LON_ReqParts";
+		$daObj->execute();
+	 	return true;
+	}
+}
+
+class LON_PartPayments extends PdoDataAccess
+{
+	public $PayID;
+	public $PartID;
+	public $PayDate;
+	public $PayAmount;
+	public $FeeAmount;
+	public $FeePercent;
+	public $PaidDate;
+	public $PaidAmount;
+	public $StatusID;
+			
+	function __construct($PayID = "") {
+		
+		$this->DT_PayDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_PaidDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
+		if($PayID != "")
+			PdoDataAccess::FillObject ($this, "select * from LON_PartPayments where PayID=?", array($PayID));
+	}
+	
+	static function SelectAll($where = "", $param = array()){
+		
+		return PdoDataAccess::runquery("
+			select p.*
+			from LON_PartPayments p
+			where " . $where, $param);
+	}
+	
+	function AddPart($pdo = null)
+	{
+		if (!parent::insert("LON_PartPayments", $this, $pdo)) {
+			return false;
+		}
+		$this->PayID = parent::InsertID($pdo);
+		
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->PayID;
+		$daObj->TableName = "LON_PartPayments";
+		$daObj->execute($pdo);
+		return true;
+	}
+	
+	function EditPart()
+	{
+	 	if( parent::update("LON_PartPayments",$this," PayID=:l", array(":l" => $this->PayID)) === false )
+	 		return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_update;
+		$daObj->MainObjectID = $this->PayID;
+		$daObj->TableName = "LON_PartPayments";
+		$daObj->execute();
+	 	return true;
+    }
+	
+	static function DeletePart($PayID){
+		
+		if( parent::delete("LON_PartPayments"," PayID=?", array($PayID)) === false )
+	 		return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_delete;
+		$daObj->MainObjectID = $PayID;
+		$daObj->TableName = "LON_PartPayments";
 		$daObj->execute();
 	 	return true;
 	}

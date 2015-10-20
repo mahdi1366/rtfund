@@ -99,6 +99,12 @@ if (count($syslist) > 1) {
 	$sysArray = $sysArray1 . "'-'," . substr($sysArray2, 0, strlen($sysArray2) - 1);
 }
 
+if(count($menus) == 0)
+{
+	echo "<script>window.location='/framework/login.php';</script>";
+	die();
+}
+
 $SystemName = $menus[0]["SysName"];
 ?>
 <html>

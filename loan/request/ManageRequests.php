@@ -31,7 +31,7 @@ $col = $dg->addColumn("درخواست کننده", "ReqFullname");
 $col->width = 100;
 
 $col = $dg->addColumn("گیرنده وام", "LoanFullname");
-$col->renderer = "function(v,p,r){ alert(v); return v == '' || v == null ? r.data.BorrowerDesc : v;}";
+$col->renderer = "function(v,p,r){return v == '' || v == null ? r.data.BorrowerDesc : v;}";
 
 $col = $dg->addColumn("وضعیت", "StatusDesc", "");
 $col->width = 100;

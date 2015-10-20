@@ -1508,7 +1508,7 @@ CREATE TABLE `LON_ReqParts` (
   `PartAmount` decimal(15,0) NOT NULL,
   `PayCount` smallint(5) unsigned NOT NULL DEFAULT '1',
   `IntervalType` enum('MONTH','DAY') NOT NULL DEFAULT 'MONTH',
-  `PayInteval` smallint(5) unsigned NOT NULL DEFAULT '1',
+  `PayInterval` smallint(5) unsigned NOT NULL DEFAULT '1',
   `DelayMonths` smallint(5) unsigned NOT NULL DEFAULT '0',
   `ForfeitPercent` smallint(5) unsigned NOT NULL DEFAULT '0',
   `CustomerFee` smallint(5) unsigned NOT NULL DEFAULT '0',
@@ -1522,7 +1522,7 @@ CREATE TABLE `LON_ReqParts` (
 --
 
 /*!40000 ALTER TABLE `LON_ReqParts` DISABLE KEYS */;
-INSERT INTO `LON_ReqParts` (`PartID`,`RequestID`,`PartDesc`,`PayDate`,`PartAmount`,`PayCount`,`IntervalType`,`PayInteval`,`DelayMonths`,`ForfeitPercent`,`CustomerFee`,`FundFee`,`AgentFee`) VALUES 
+INSERT INTO `LON_ReqParts` (`PartID`,`RequestID`,`PartDesc`,`PayDate`,`PartAmount`,`PayCount`,`IntervalType`,`PayInterval`,`DelayMonths`,`ForfeitPercent`,`CustomerFee`,`FundFee`,`AgentFee`) VALUES 
  (1,15,'','2015-10-26','60000000',12,'MONTH',1,0,4,4,10,0),
  (2,16,'مرحله اول','2015-10-26','60000000',12,'MONTH',1,6,4,4,10,0),
  (3,16,'مرحله دوم','2015-06-29','60000000',12,'DAY',1,0,4,10,4,6),

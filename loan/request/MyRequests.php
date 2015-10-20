@@ -63,7 +63,11 @@ MyRequestObject = new MyRequest();
 MyRequest.OperationRender = function(v,p,r){
 	
 	if(r.data.StatusID != "1")
-		return "";
+		return "<div align='center' title='جزئیات درخواست' class='info' "+
+		"onclick='MyRequestObject.EditRequest();' " +
+		"style='float:right;background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:18px;height:16'></div>";
+		
 	return "<div align='center' title='ویرایش' class='edit' "+
 		"onclick='MyRequestObject.EditRequest();' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +

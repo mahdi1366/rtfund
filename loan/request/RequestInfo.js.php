@@ -9,6 +9,7 @@ RequestInfo.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 
 	RequestID : <?= $RequestID ?>,
+	StatusID : 0,
 	User : '<?= $User ?>',
 
 	get : function(elementID){
@@ -24,7 +25,11 @@ function RequestInfo()
 		RequestInfoObject.PartsPanel.loadRecord(record);
 		RequestInfoObject.PartsPanel.doLayout();
 		RequestInfoObject.LoadSummary(record);
+		RequestInfoObject.PartsPanel.down("[name=PayInterval]").setValue(record.data.PayInterval + " " + 
+			(record.data.IntervalType == "DAY" ? "روز" : "ماه"));
 	});
+	
+	this.paymentGrid = <?= $grid2 ?>;
 	
 	if(this.RequestID > 0)
 	{
@@ -38,12 +43,31 @@ function RequestInfo()
 				url: this.address_prefix + "request.data.php?task=SelectAllRequests&RequestID=" + this.RequestID,
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
-			fields : ["RequestID","BranchName","ReqPersonID","ReqFullname","LoanPersonID","LoanFullname",
-						"ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID","assurance"],
+			fields : ["RequestID","BranchID","BranchName","ReqPersonID","ReqFullname","LoanPersonID","LoanFullname",
+						"ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID","assurance","AgentGuarantee","StatusID"],
 			autoLoad : true,
 			listeners :{
 				load : function(){
-					RequestInfoObject.companyPanel.loadRecord(this.getAt(0));
+					me = RequestInfoObject;
+					
+					me.companyPanel.loadRecord(this.getAt(0));
+					if(this.getAt(0).data.AgentGuarantee == "YES")
+						me.companyPanel.down("[name=AgentGuarantee]").setValue(true);
+					
+					me.StatusID = this.getAt(0).StatusID;
+					if(me.User == "Agent" && me.StatusID != 1)
+					{
+						me.companyPanel.getEl().readonly();
+						me.companyPanel.down("[itemId=cmp_save]").hide();
+						me.PartsPanel.down("[itemId=cmp_save]").hide();
+						me.grid.down("[itemId=addPart]").hide();
+						me.grid.down("[dataIndex=PartID]").hide();
+					}	
+					if(me.User == "Staff" && me.StatusID != "10")
+					{
+						me.companyPanel.getEl().readonly();
+						me.companyPanel.down("[itemId=cmp_save]").hide();
+					}	
 					mask.hide();
 				}
 			}
@@ -56,7 +80,7 @@ function RequestInfo()
 
 RequestInfo.OperationRender = function(v,p,r){
 	
-	return "<div align='center' title='ویرایش' class='edit' "+
+	st = "<div align='center' title='ویرایش' class='edit' "+
 		"onclick='RequestInfoObject.PartInfo(\"edit\");' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:18px;height:16'></div>" + 
@@ -65,6 +89,14 @@ RequestInfo.OperationRender = function(v,p,r){
 		"onclick='RequestInfoObject.DeletePart();' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:18px;height:16'></div>";
+	
+	if(RequestInfoObject.User == "Staff")
+		st += "<div align='center' title='اقساط' class='list' "+
+		"onclick='RequestInfoObject.LoadPartPayments();' " +
+		"style='float:right;background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:18px;height:16'></div>";
+	
+	return st;
 }
 
 RequestInfo.prototype.BuildForms = function(){
@@ -77,7 +109,7 @@ RequestInfo.prototype.BuildForms = function(){
 			xtype : "fieldset",
 			title : "اطلاعات درخواست",
 			layout : {
-				type : "table",
+				type : "column",
 				columns : 2
 			},			
 			defaults : {
@@ -108,12 +140,19 @@ RequestInfo.prototype.BuildForms = function(){
 				name : "LoanPersonID"
 			},{
 				xtype : "textfield",
-				name : "CompanyName",
-				fieldLabel : "شرکت وام گیرنده"
+				name : "BorrowerDesc",
+				fieldLabel : "فرد حقیقی / حقوقی"
 			},{
 				xtype : "textfield",
-				name : "NationalID",
-				fieldLabel : "کد اقتصادی"
+				name : "BorrowerID",
+				fieldLabel : "کد ملی / کد اقتصادی"
+			},{
+				xtype : "currencyfield",
+				name : "ReqAmount",
+				allowBlank : false,
+				beforeLabelTextTpl: required,
+				fieldLabel : "مبلغ درخواست",
+				hideTrigger: true
 			},{
 				xtype : "combo",
 				store : new Ext.data.SimpleStore({
@@ -133,13 +172,6 @@ RequestInfo.prototype.BuildForms = function(){
 				displayField : "BranchName",
 				valueField : "BranchID",
 				name : "BranchID"
-			},{
-				xtype : "currencyfield",
-				name : "ReqAmount",
-				allowBlank : false,
-				beforeLabelTextTpl: required,
-				fieldLabel : "مبلغ درخواست",
-				hideTrigger: true
 			},{
 				xtype : "combo",
 				store : new Ext.data.SimpleStore({
@@ -172,11 +204,11 @@ RequestInfo.prototype.BuildForms = function(){
 				name : "ReqDetails"
 			},{
 				xtype : "button",
-				width : 150,
+				width : 100,
 				itemId : "cmp_save",
 				iconCls : "save",
 				colspan : 2,
-				style : "float:left;margin-left:20px",
+				style : "float:left;margin-left : 27px",
 				text : "ذخیره",
 				handler : function(){ RequestInfoObject.SaveRequest('save'); }
 			}]
@@ -185,7 +217,7 @@ RequestInfo.prototype.BuildForms = function(){
 	
 	this.PartsPanel =  new Ext.form.FormPanel({
 		renderTo : this.get("PartForm"),
-		width: 750,
+		width: 780,
 		border : 0,
 		items: [{
 			xtype : "fieldset",
@@ -202,7 +234,7 @@ RequestInfo.prototype.BuildForms = function(){
 				defaults : {
 					xtype : "displayfield",
 					hideTrigger : true,
-					width : 180,
+					width : 130,
 					labelWidth : 80,
 					style : "margin-bottom:5px",
 					fieldCls : "blueText"
@@ -217,7 +249,7 @@ RequestInfo.prototype.BuildForms = function(){
 					renderer : function(v){return MiladiToShamsi(v);}
 				},{
 					fieldLabel: 'فاصله اقساط',
-					name: 'PayInteval'
+					name: 'PayInterval'
 				},{
 					fieldLabel: 'مدت تنفس',
 					name: 'DelayMonths',
@@ -249,6 +281,7 @@ RequestInfo.prototype.BuildForms = function(){
 		buttons : [{
 			text : "ذخیره و ارسال درخواست",
 			iconCls : "save",
+			itemId : "cmp_save",
 			handler : function(){ RequestInfoObject.SaveRequest('send'); }
 		}]
 	});
@@ -275,8 +308,7 @@ RequestInfo.prototype.CustomizeForm = function(){
 	
 	if(this.User == "Staff")
 	{
-		//this.companyPanel.getEl().readonly();
-		this.companyPanel.down("[itemId=cmp_save]").hide();
+		this.PartsPanel.down("[itemId=cmp_save]").hide();
 	}
 	if(this.User == "Agent")
 	{
@@ -446,7 +478,8 @@ RequestInfo.prototype.PartInfo = function(mode){
 	{
 		record = this.grid.getSelectionModel().getLastSelected();
 		this.PartWin.down('form').loadRecord(record);
-		this.PartWin.down("[name=PayInterval]").setValue(record.data.PayInteval*1);
+		this.PartWin.down("[name=PayDate]").setValue(MiladiToShamsi(record.data.PayDate));
+		this.PartWin.down("[name=PayInterval]").setValue(record.data.PayInterval*1);
 		this.PartWin.down("[itemId=monthInterval]").setValue(record.data.IntervalType == "MONTH" ? true : false);
 		this.PartWin.down("[itemId=dayInterval]").setValue(record.data.IntervalType == "DAY" ? true : false);
 	}
@@ -513,7 +546,8 @@ RequestInfo.prototype.LoadSummary = function(record){
 	function PMT(F8, F9, F7, YearMonths) {  
 		F8 = F8/(YearMonths*100);
 		F7 = -F7;
-		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); } 
+		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
+	} 
 	function ComputeFee(F7, F8, F9, YearMonths){
 		
 		return (((F7*F8/YearMonths*( Math.pow((1+(F8/YearMonths)),F9)))/
@@ -557,8 +591,8 @@ RequestInfo.prototype.LoadSummary = function(record){
 		YearMonths = Math.floor(365/
 		record.data.PayInterval);
 
-	FirstPay = roundUp(PMT(record.data.CustomerFee,	record.data.PayCount, record.data.PartAmount),-3);
-	TotalFee = Math.round(ComputeFee(record.data.PartAmount,record.data.CustomerFee/100,record.data.PayCount));
+	FirstPay = roundUp(PMT(record.data.CustomerFee,	record.data.PayCount, record.data.PartAmount, YearMonths),-3);
+	TotalFee = Math.round(ComputeFee(record.data.PartAmount, record.data.CustomerFee/100, record.data.PayCount, YearMonths));
 	FundFee = Math.round((record.data.FundFee/record.data.CustomerFee)*TotalFee);
 	AgentFee = TotalFee - FundFee;
 	
@@ -575,11 +609,61 @@ RequestInfo.prototype.LoadSummary = function(record){
 	this.get("SUM_FundFee").innerHTML = Ext.util.Format.Money(FundFee);	
 	this.get("SUM_AgentFee").innerHTML = Ext.util.Format.Money(AgentFee);	
 	
-	this.get("SUM_Fee_1Year").innerHTML = YearFeeCompute(record, TotalFee, 1);
-	this.get("SUM_Fee_2Year").innerHTML = YearFeeCompute(record, TotalFee, 2);
-	this.get("SUM_Fee_3Year").innerHTML = YearFeeCompute(record, TotalFee, 3);
-	this.get("SUM_Fee_4Year").innerHTML = YearFeeCompute(record, TotalFee, 4);
+	this.get("SUM_Fee_1Year").innerHTML = YearFeeCompute(record, TotalFee, 1, YearMonths);
+	this.get("SUM_Fee_2Year").innerHTML = YearFeeCompute(record, TotalFee, 2, YearMonths);
+	this.get("SUM_Fee_3Year").innerHTML = YearFeeCompute(record, TotalFee, 3, YearMonths);
+	this.get("SUM_Fee_4Year").innerHTML = YearFeeCompute(record, TotalFee, 4, YearMonths);
 }
 
+RequestInfo.prototype.LoadPartPayments = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+	{
+		Ext.MessageBox.alert("","ابتدا مرحله مورد نظر خود را انتخاب کنید");
+		return;
+	}
+	
+	if(!this.PartPaymentsWin)
+	{
+		this.PartPaymentsWin = new Ext.window.Window({
+			width : 700,
+			height : 500,
+			modal : true,
+			items : this.paymentGrid,
+			closeAction : "hide"
+		});
+		
+		Ext.getCmp(this.TabID).add(this.PartPaymentsWin);
+	}
+	
+	this.paymentGrid.getStore().proxy.extraParams = {
+		PartID : record.data.PartID
+	};
+	
+	this.PartPaymentsWin.show();
+	this.PartPaymentsWin.center();
+}
+
+RequestInfo.prototype.ComputePayments = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+	mask = new Ext.LoadMask(this.PartPaymentsWin, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		url: this.address_prefix +'request.data.php',
+		method: "POST",
+		params: {
+			task: "ComputePartPayments",
+			PartID : record.data.PartID
+		},
+		success: function(response){
+			mask.hide();
+			RequestInfoObject.paymentGrid.getStore().load();
+		}
+	});
+}
 
 </script>
