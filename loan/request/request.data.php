@@ -231,11 +231,16 @@ function PMT($CustomerFee, $PayCount, $PartAmount, $YearMonths) {
 	$PartAmount = -$PartAmount;
 	return $CustomerFee * $PartAmount * pow((1 + $CustomerFee), $PayCount) / (1 - pow((1 + $CustomerFee), $PayCount)); 
 } 
-function roundUp($number, $digits)
-{
+function roundUp($number, $digits){
 	$factor = pow(10,$digits);
 	return ceil($number*$factor) / $factor;
 }
+function ComputeFee($PartAmount, $CustomerFeePercent, $PayCount, $YearMonths){
+		
+	return ((($PartAmount*$CustomerFeePercent/$YearMonths*( pow((1+($CustomerFeePercent/$YearMonths)),$PayCount)))/
+		((pow((1+($CustomerFeePercent/$YearMonths)),$PayCount))-1))*$PayCount)-$PartAmount;
+}
+
 //....................
 
 function ComputePartPayments(){
@@ -246,9 +251,21 @@ function ComputePartPayments(){
 	if($obj->IntervalType == "DAY")
 		$YearMonths = floor(365/$obj->PayInterval);
 	
-	$payments = roundUp( PMT($obj->CustomerFee, $obj->PayCount, $obj->PartAmount, $YearMonth) );
+	$FirstPay = roundUp( PMT($obj->CustomerFee, $obj->PayCount, $obj->PartAmount, $YearMonth) );
+	$TotalFee = round(ComputeFee($obj->PartAmount, $obj->CustomerFee/100, $obj->PayCount, $YearMonths));
+	$LastPay = $obj->PartAmount*1 + $TotalFee - $FirstPay*($obj->PayCount-1);
 	
-	//foreach($i=0; )	
+	$netPartPaments = round($obj->PartAmount/$obj->PayCount);
+	$lastNetPayment = $obj->PartAmount*1 - $netPartPaments*($obj->PayCount-1);
+	
+	for($i=0; $i < $obj->PayCount-1; $i++)
+	{
+		$obj2 = new LON_PartPayments();
+		$obj2->PartID = $obj->PartID;
+		$obj2->PayAmount = $netPartPaments;
+		$obj2->FeeAmount = $FirstPay - $netPartPaments;
+		$obj2->FeePercent = $obj->CustomerFee;
+	}
 }
 
 ?>
