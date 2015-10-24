@@ -50,6 +50,14 @@ switch ($task) {
 		
 	case "ComputePartPayments":
 		ComputePartPayments();
+		
+	case "SavePartPayment":
+		SavePartPayment();
+		
+	//----------------------------------------------
+		
+	case "GetLastFundComment":
+		GetLastFundComment();
 }
 
 function SaveLoanRequest(){
@@ -139,7 +147,7 @@ function DeleteRequest(){
 	die();
 }
 
-function ChangeStatus($RequestID, $StatusID, $description = "", $LogOnly = false){
+function ChangeStatus($RequestID, $StatusID, $StepComment = "", $LogOnly = false){
 	
 	if(!$LogOnly)
 	{
@@ -149,21 +157,18 @@ function ChangeStatus($RequestID, $StatusID, $description = "", $LogOnly = false
 		if(!$obj->EditRequest())
 			return false;
 	}
-	$result = PdoDataAccess::runquery("insert into LON_ReqFlow(RequestID,PersonID,StatusID,ActDate,description) 
-		values(?,?,?,?,?)", array(
+	PdoDataAccess::runquery("insert into LON_ReqFlow(RequestID,PersonID,StatusID,ActDate,StepComment) 
+		values(?,?,?,now(),?)", array(
 			$RequestID,
 			$_SESSION["USER"]["PersonID"],
 			$StatusID,
-			PDONOW,
-			$description
+			$StepComment
 		));
-	
-	return $result;
 }
 
 function ChangeRequesrStatus(){
 	
-	$result = ChangeStatus($_POST["RequestID"],$_POST["StatusID"],$_POST["desc"]);
+	$result = ChangeStatus($_POST["RequestID"],$_POST["StatusID"],$_POST["StepComment"]);
 	Response::createObjectiveResponse($result, "");
 	die();
 }
@@ -226,46 +231,126 @@ function GetPartPayments(){
 }
 
 //....................
-function PMT($CustomerFee, $PayCount, $PartAmount, $YearMonths) {  
-	$CustomerFee = $CustomerFee/($YearMonths*100);
+function PMT($CustomerWage, $PayCount, $PartAmount, $YearMonths) {  
+	$CustomerWage = $CustomerWage/($YearMonths*100);
 	$PartAmount = -$PartAmount;
-	return $CustomerFee * $PartAmount * pow((1 + $CustomerFee), $PayCount) / (1 - pow((1 + $CustomerFee), $PayCount)); 
+	return $CustomerWage * $PartAmount * pow((1 + $CustomerWage), $PayCount) / (1 - pow((1 + $CustomerWage), $PayCount)); 
 } 
 function roundUp($number, $digits){
 	$factor = pow(10,$digits);
 	return ceil($number*$factor) / $factor;
 }
-function ComputeFee($PartAmount, $CustomerFeePercent, $PayCount, $YearMonths){
+function ComputeWage($PartAmount, $CustomerWagePercent, $PayCount, $YearMonths){
 		
-	return ((($PartAmount*$CustomerFeePercent/$YearMonths*( pow((1+($CustomerFeePercent/$YearMonths)),$PayCount)))/
-		((pow((1+($CustomerFeePercent/$YearMonths)),$PayCount))-1))*$PayCount)-$PartAmount;
+	return ((($PartAmount*$CustomerWagePercent/$YearMonths*( pow((1+($CustomerWagePercent/$YearMonths)),$PayCount)))/
+		((pow((1+($CustomerWagePercent/$YearMonths)),$PayCount))-1))*$PayCount)-$PartAmount;
 }
+function AddToJDate($jdate, $day=0, $month=0) {
 
+	if($day == 0)
+	{
+		$jdate_array = preg_split('/[\-\/]/',$jdate);
+		$year = $jdate_array[1]*1+$month > 12 ? $jdate_array[0]*1+1 : $jdate_array[0];
+		$month = $jdate_array[1]*1+$month > 12 ? $jdate_array[1]*1-12+$month : $jdate_array[1]*1+$month;
+		$day = $jdate_array[2];
+		return $year . "-" . $month . "-" . $day;
+	}
+	return DateModules::AddToJDate($jdate, $day);
+}
 //....................
 
 function ComputePartPayments(){
 	
 	$obj = new LON_ReqParts($_REQUEST["PartID"]);
 	
-	$YearMonth = 12;
+	PdoDataAccess::runquery("delete from LON_PartPayments where PartID=?", array($obj->PartID));
+	
+	$YearMonths = 12;
 	if($obj->IntervalType == "DAY")
 		$YearMonths = floor(365/$obj->PayInterval);
 	
-	$FirstPay = roundUp( PMT($obj->CustomerFee, $obj->PayCount, $obj->PartAmount, $YearMonth) );
-	$TotalFee = round(ComputeFee($obj->PartAmount, $obj->CustomerFee/100, $obj->PayCount, $YearMonths));
-	$LastPay = $obj->PartAmount*1 + $TotalFee - $FirstPay*($obj->PayCount-1);
-	
+	$allPay = roundUp( PMT($obj->CustomerWage, $obj->PayCount, $obj->PartAmount, $YearMonths), -3);
+	$TotalWage = round(ComputeWage($obj->PartAmount, $obj->CustomerWage/100, $obj->PayCount, $YearMonths));
+	$LastPay = $obj->PartAmount*1 + $TotalWage - $allPay*($obj->PayCount-1);
 	$netPartPaments = round($obj->PartAmount/$obj->PayCount);
 	$lastNetPayment = $obj->PartAmount*1 - $netPartPaments*($obj->PayCount-1);
+	
+	$gdate = DateModules::miladi_to_shamsi($obj->PayDate);
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
 	
 	for($i=0; $i < $obj->PayCount-1; $i++)
 	{
 		$obj2 = new LON_PartPayments();
+		
+		$obj2->PayDate = AddToJDate($gdate, 
+			$obj->IntervalType == "DAY" ? $obj->PayInterval*($i+1) : 0, 
+			$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
 		$obj2->PartID = $obj->PartID;
 		$obj2->PayAmount = $netPartPaments;
-		$obj2->FeeAmount = $FirstPay - $netPartPaments;
-		$obj2->FeePercent = $obj->CustomerFee;
+		$obj2->WageAmount = $allPay - $netPartPaments;
+		$obj2->CustomerWage = $obj->CustomerWage;
+		$obj2->FundWage = $obj->FundWage;
+		
+		if(!$obj2->AddPartPayment($pdo))
+		{
+			$pdo->rollBack();
+			echo Response::createObjectiveResponse(false, "");
+			die();
+		}
 	}
+	
+	$obj2 = new LON_PartPayments();
+		
+	$obj2->PayDate = AddToJDate($gdate, 
+		$obj->IntervalType == "DAY" ? $obj->PayInterval*($obj->PayCount) : 0, 
+		$obj->IntervalType == "MONTH" ? $obj->PayInterval*($obj->PayCount) : 0);
+	$obj2->PartID = $obj->PartID;
+	$obj2->PayAmount = $lastNetPayment;
+	$obj2->WageAmount = $LastPay - $lastNetPayment;
+	$obj2->CustomerWage = $obj->CustomerWage;
+	$obj2->FundWage = $obj->FundWage;
+
+	if(!$obj2->AddPartPayment($pdo))
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function SavePartPayment(){
+	
+	$obj = new LON_PartPayments();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	$result = $obj->EditPartPayment();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//-------------------------------------------------
+
+function GetLastFundComment(){
+	
+	if(empty($_POST["RequestID"]))
+	{
+		echo Response::createObjectiveResponse(true, $comment);
+		die();
+	}
+	$RequestID = $_POST["RequestID"];
+	
+	$dt = PdoDataAccess::runquery("select * from LON_ReqFlow 
+		where RequestID=? AND StatusID=60 order by FlowID desc", array($RequestID));
+	
+	$comment = count($dt)>0 ? $dt[0]["StepComment"] : '';
+	echo Response::createObjectiveResponse(true, $comment);
+	die();
 }
 
 ?>

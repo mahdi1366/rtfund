@@ -16,7 +16,7 @@ $return = "";
 //------------- register ------------------
 if(isset($_POST["email"]))
 {
-	require_once getenv("DOCUMENT_ROOT") . '/framework/person/persons.class.php';
+	require_once getenv("DOCUMENT_ROOT") . '/person/persons.class.php';
 	
 	$user = $_POST["UserName"];
 	$pass = $_POST["md5Pass"];

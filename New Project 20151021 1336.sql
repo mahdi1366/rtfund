@@ -1472,7 +1472,7 @@ CREATE TABLE `LON_PartPayments` (
   `PaidDate` datetime NOT NULL COMMENT 'تاریخ پرداخت',
   `PaidAmount` decimal(15,0) NOT NULL COMMENT 'مبلغ چرداخت شده',
   `StatusID` smallint(5) unsigned NOT NULL,
-  PRIMARY KEY (`PayID`) USING BTREE
+  PRIMARY KEY (`PayID`) 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --

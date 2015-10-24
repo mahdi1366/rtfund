@@ -13,7 +13,7 @@ $dg->addColumn("کد وام", "LoanID", "", true);
 $dg->addColumn("", "GroupID", "", true);
 $dg->addColumn("", "GroupDesc", "", true);
 $dg->addColumn("درصد دیرکرد", "ForfeitPercent", "", true);
-$dg->addColumn("درصد کارمزد", "FeePercent", "", true);
+$dg->addColumn("درصد کارمزد", "WagePercent", "", true);
 
 $dg->addColumn("", "PartCount", "", true);
 $dg->addColumn("", "IntervalType", "", true);
@@ -160,10 +160,10 @@ function NewLoanRequest()
 				},{
 					fieldLabel: 'درصد کارمزد',
 					renderer : function(v){ return v + " %"},
-					name: 'FeePercent'
+					name: 'WagePercent'
 				},{
 					fieldLabel: 'مبلغ کارمزد',
-					name: 'FeeAmount',
+					name: 'WageAmount',
 					rrenderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
 				}]
 			}]

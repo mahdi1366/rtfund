@@ -13,8 +13,8 @@ $dg->addColumn("", "PayID","", true);
 $dg->addColumn("", "PartID","", true);
 $dg->addColumn("", "PayDate","", true);
 $dg->addColumn("", "PayAmount","", true);
-$dg->addColumn("", "FeeAmount","", true);
-$dg->addColumn("", "FeePercent","", true);
+$dg->addColumn("", "WageAmount","", true);
+$dg->addColumn("", "WagePercent","", true);
 $dg->addColumn("", "PaidDate","", true);
 $dg->addColumn("", "PaidAmount","", true);
 $dg->addColumn("", "StatusID","", true);
@@ -25,10 +25,10 @@ $col->sortable = false;
 $col = $dg->addColumn("مبلغ خالص", "PartID", GridColumn::ColumnType_money);
 $col->width = 80;
 
-$col = $dg->addColumn("کارمزد", "FeeAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("کارمزد", "WageAmount", GridColumn::ColumnType_money);
 $col->width = 80;
 
-$col = $dg->addColumn("کارمزد", "FeePercent", "");
+$col = $dg->addColumn("کارمزد", "WagePercent", "");
 $col->width = 80;
 
 $dg->HeaderMenu = false;

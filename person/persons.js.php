@@ -77,11 +77,10 @@ function Person()
 			title : "مدارک",
 			style : "padding:10px",
 			itemId : "documents",
-			items : [{
-				xtype : "container",
-				cls : "blueText",
-				html : "<br>" + "ردیف های سبز رنگ ردیف های تایید شده و برابر اصل شده توسط صندوق بوده و قابل تغییر نمی باشند"
-			}]
+			loader : {
+				url : this.address_prefix + "../dms/documents.php",
+				scripts : true
+			}
 		}]
 	});	
 	
@@ -91,7 +90,8 @@ function Person()
 			url: this.address_prefix + "persons.data.php?task=selectPersons",
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["IsReal","fname","lname","CompanyName","UserName","NationalID","EconomicID","PhoneNo","mobile","address","email"],
+		fields : ["IsReal","fname","lname","CompanyName","UserName","NationalID",
+			"EconomicID","PhoneNo","mobile","address","email"],
 		listeners :{
 			load : function(){
 				me = PersonObject;
@@ -241,72 +241,6 @@ Person.prototype.ResetPass = function()
 	});
 }
 
-//..............................................................................
-
-Person.FileRender = function(v,p,r){
-	
-	return "<div align='center' title='مشاهده فایل' class='attach' "+
-		"onclick='Person.ShowFile(" + r.data.DocumentID + ");' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16;float:right'></div>";
-}
-
-Person.ShowFile = function(DocumentID){
-	
-	window.open("../../dms/ShowFile.php?DocumentID=" + DocumentID);
-}
-
-Person.ConfirmRender = function(v,p,r){
-	
-	if(r.data.IsConfirm == "YES")
-		return "";
-	
-	return "<div align='center' title='تایید' class='tick' "+
-		"onclick='PersonObject.ConfirmDocument();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:18px;height:16;float:right'></div>";
-}
-
-Person.prototype.ConfirmDocument = function(){
-	
-	Ext.MessageBox.confirm("","فایل با اصل مدرک مطابق می باشد",function(btn){
-		if(btn == "no")
-			return;
-		
-		me = PersonObject;
-		
-		var record = me.docgrid.getSelectionModel().getLastSelected();
-		mask = new Ext.LoadMask(me.docgrid,{msg:'در حال ذخیره سازی ...'});
-		mask.show();
-
-		Ext.Ajax.request({
-			url: me.address_prefix +'../../dms/dms.data.php',
-			method: "POST",
-			params: {
-				task: "ConfirmDocument",
-				DocumentID : record.data.DocumentID
-			},
-			success: function(response){
-				mask.hide();
-				var st = Ext.decode(response.responseText);
-
-				if(st.success)
-				{   
-					PersonObject.docgrid.getStore().load();
-				}
-				else
-				{
-					if(st.data == "")
-						alert("خطا در اجرای عملیات");
-					else
-						alert(st.data);
-				}
-			},
-			failure: function(){}
-		});
-	});
-}
-
 Person.prototype.ShowInfo = function(){
 	
 		var record = this.grid.getSelectionModel().getLastSelected();
@@ -315,12 +249,12 @@ Person.prototype.ShowInfo = function(){
 		this.PersonStore.proxy.extraParams = {PersonID : record.data.PersonID};
 		this.PersonStore.load();		
 		
-		this.docgrid.getStore().proxy.extraParams = {
-			ObjectID : record.data.PersonID
-		};
-		this.docgrid.getStore().load();
 		
-	
+		this.tabPanel.getComponent("documents").loader.load({
+			params : {
+				ObjectID : record.data.PersonID
+			}
+		});
 }
 
 </script>

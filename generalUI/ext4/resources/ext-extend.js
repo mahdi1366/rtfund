@@ -2647,7 +2647,7 @@ Ext.apply(Ext.dom.Element.prototype , {
         var elems = this.dom.getElementsByTagName("input");
 		for (i = 0; i < elems.length; )
 		{
-			if(ExceptionList.find(elems[i].id) != -1)
+			if(ExceptionList.find(elems[i].id) != -1 || ExceptionList.find(elems[i].name) != -1)
 			{
 				i++;
 				continue;
@@ -2693,7 +2693,7 @@ Ext.apply(Ext.dom.Element.prototype , {
 		elems = this.dom.getElementsByTagName("select");
 		for (i = 0; i < elems.length; )
 		{
-			if(ExceptionList.find(elems[i].id) != -1)
+			if(ExceptionList.find(elems[i].id) != -1 || ExceptionList.find(elems[i].name) != -1)
 			{
 				i++;
 				continue;
@@ -2711,7 +2711,7 @@ Ext.apply(Ext.dom.Element.prototype , {
 		elems = this.dom.getElementsByTagName("textarea");
 		for (i = 0; i < elems.length; )
 		{
-			if(ExceptionList.find(elems[i].id) != -1)
+			if(ExceptionList.find(elems[i].id) != -1 || ExceptionList.find(elems[i].name) != -1)
 			{
 				i++;
 				continue;
@@ -2727,12 +2727,16 @@ Ext.apply(Ext.dom.Element.prototype , {
 		var index = 0;
 		while(elems.length > index)
 		{
-			if(ExceptionList.find(elems[index].parentNode.parentNode.firstChild.firstChild.id) != -1)
+			el = elems[index].parentNode.parentNode.firstChild;
+			
+			if(ExceptionList.find(el.firstChild.id) != -1 ||
+				( el.children.length > 0 && ExceptionList.find(el.children[0].name) != -1 ) ||
+				( el.children.length > 1 && ExceptionList.find(el.children[1].name) != -1 ) )
 			{
 				index++;
 				continue;
 			}
-			elems[index].parentNode.removeChild(elems[0]);
+			elems[index].parentNode.removeChild(elems[index]);
 		}
 
 	}

@@ -187,22 +187,16 @@ Loan.prototype.LoanInfo = function(mode)
 					xtype:'numberfield',
 					fieldLabel: 'کارمزد مشتری',
 					afterSubTpl : "%",
-					name: 'CustomerFee',
+					name: 'CustomerWage',
 					maxValue  : 100,
 					hideTrigger : true
 				},{
 					xtype:'numberfield',
 					fieldLabel: 'کارمزد صندوق',
 					afterSubTpl : "%",
-					name: 'FundFee',
+					name: 'FundWage',
 					maxValue  : 100,
 					hideTrigger : true
-				},{
-					xtype:'numberfield',
-					fieldLabel: 'کارمزد عامل',
-					name: 'AgentFee',
-					afterSubTpl : "%",
-					hideTrigger : true					
 				},{
 					xtype : "hidden",
 					name : "LoanID"

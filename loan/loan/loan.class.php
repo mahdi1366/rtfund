@@ -15,9 +15,8 @@ class LON_loans extends PdoDataAccess
 	public $PayInterval;
 	public $DelayMonth;
 	public $ForfeitPercent;
-	public $CustomerFee;
-	public $FundFee;
-	public $AgentFee;
+	public $CustomerWage;
+	public $FundWage;
 			
 	function __construct($LoanID = "") {
 		

@@ -68,7 +68,17 @@ function SaveDocument() {
 	if (empty($obj->DocumentID))
 		$result = $obj->AddDocument();
 	else
+	{
+		$oldObj = new DMS_documents($obj->DocumentID);
+		if($oldObj->IsConfirm == "YES")
+		{
+			echo Response::createObjectiveResponse(false, "");
+			die();
+		}
+		$obj->IsConfirm = "NOTSET";
+		
 		$result = $obj->EditDocument();
+	}
 	if(!$result)
 	{
 		echo Response::createObjectiveResponse($result, "");
@@ -100,6 +110,12 @@ function DeleteDocument() {
 	$DocumentID = $_POST["DocumentID"];
 	
 	$obj = new DMS_documents($DocumentID);
+	if($obj->IsConfirm == "YES")
+	{
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	
 	$result = DMS_documents::DeleteDocument($DocumentID);
 	unlink(getenv("DOCUMENT_ROOT") . "/storage/documents/". $obj->DocumentID . "." . $obj->FileType);
 	
@@ -112,8 +128,9 @@ function ConfirmDocument(){
 	$obj = new DMS_documents();
 	
 	$obj->DocumentID = $_REQUEST["DocumentID"];
-	$obj->IsConfirm = "YES";
+	$obj->IsConfirm = $_POST["mode"];
 	$obj->ConfirmPersonID = $_SESSION["USER"]["PersonID"];
+	$obj->RejectDesc = $_POST["RejectDesc"];
 	
 	$result = $obj->EditDocument();
 	echo Response::createObjectiveResponse($result, "");

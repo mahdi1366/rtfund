@@ -45,19 +45,94 @@ ManageRequest.prototype.OperationMenu = function(e){
 	if(record.data.StatusID == "10")
 	{
 		op_menu.add({text: 'تایید درخواست',iconCls: 'tick', 
-		handler : function(){ return ManageRequestObject.ChangeStatus("confirm"); }});
+		handler : function(){ return ManageRequestObject.beforeChangeStatus(30); }});
 	
-		op_menu.add({text: 'رد درخواست',iconCls: 'undo',
-		handler : function(){ return ManageRequestObject.ChangeStatus("reject"); }});
+		op_menu.add({text: 'رد درخواست',iconCls: 'cross',
+		handler : function(){ return ManageRequestObject.beforeChangeStatus(20); }});
 	}
+	if(record.data.StatusID == "30")
+	{
+		op_menu.add({text: 'ارسال به مشتری جهت تکمیل مدارک',iconCls: 'send',
+		handler : function(){ return ManageRequestObject.beforeChangeStatus(40); }});
+	}
+	if(record.data.StatusID == "50")
+	{
+		op_menu.add({text: 'تایید مدارک مشتری',iconCls: 'send',
+		handler : function(){ return ManageRequestObject.beforeChangeStatus(70); }});
+	
+		op_menu.add({text: 'عدم تایید مدارک',iconCls: 'cross',
+		handler : function(){ return ManageRequestObject.beforeChangeStatus(60); }});
+	}
+	if(record.data.StatusID == "70")
+	{
+		op_menu.add({text: 'پرداخت وام',iconCls: 'send',
+		handler : function(){ return ManageRequestObject.beforeChangeStatus(80); }});
+	}
+	if(new Array(50,70,80).indexOf(record.data.StatusID*1) != -1)
+	{
+		op_menu.add({text: 'مدارک وام',iconCls: 'attach', 
+			handler : function(){ return ManageRequestObject.LoanDocuments('loan'); }});
+
+		op_menu.add({text: 'مدارک وام گیرنده',iconCls: 'attach', 
+			handler : function(){ return ManageRequestObject.LoanDocuments('person'); }});
+	}
+	
+	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
+		handler : function(){ return ManageRequestObject.ShowHistory(); }});
+	
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
-ManageRequest.prototype.ChangeStatus = function(mode){
+ManageRequest.prototype.beforeChangeStatus = function(StatusID){
+	
+	if(new Array(20,60).indexOf(StatusID) == -1)
+	{
+		Ext.MessageBox.confirm("","آیا مایل به تایید می باشید؟", function(btn){
+			if(btn == "no")
+				return;
+			
+			ManageRequestObject.ChangeStatus (StatusID, "");
+		});
+		return;
+	}
+	if(!this.commentWin)
+	{
+		this.commentWin = new Ext.window.Window({
+			width : 412,
+			height : 198,
+			modal : true,
+			title : "دلیل رد مدرک برای مشتری",
+			bodyStyle : "background-color:white",
+			items : [{
+				xtype : "textarea",
+				width : 400,
+				rows : 8,
+				name : "StepComment"
+			}],
+			closeAction : "hide",
+			buttons : [{
+				text : "اعمال",				
+				iconCls : "save",
+				itemId : "btn_save"
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.commentWin);
+	}
+	this.commentWin.down("[itemId=btn_save]").setHandler(function(){
+		ManageRequestObject.ChangeStatus(StatusID, 
+			this.up('window').down("[name=StepComment]").getValue());});
+	this.commentWin.show();
+	this.commentWin.center();
+}
+
+ManageRequest.prototype.ChangeStatus = function(StatusID, StepComment){
 	
 	record = this.grid.getSelectionModel().getLastSelected();
-	
-	StatusID = mode == "confirm" ? 30 : 20;
 	
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخيره سازي...'});
 	mask.show();  
@@ -69,12 +144,14 @@ ManageRequest.prototype.ChangeStatus = function(mode){
 			task : "ChangeRequesrStatus",
 			RequestID : record.data.RequestID,
 			StatusID : StatusID,
-			desc : ""
+			StepComment : StepComment
 		},
 		
 		success : function(){
 			mask.hide();
-			ManageRequestObject.grid.getStore().load()
+			ManageRequestObject.grid.getStore().load();
+			if(ManageRequestObject.commentWin)
+				ManageRequestObject.commentWin.hide();
 		}
 	});
 }
@@ -116,6 +193,77 @@ ManageRequest.prototype.SaveLoanRequest = function(){
 		failure : function(){
 			mask.hide();
 			//Ext.thisssageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+		}
+	});
+}
+
+ManageRequest.prototype.LoanDocuments = function(ObjectType){
+
+	if(!this.documentWin)
+	{
+		this.documentWin = new Ext.window.Window({
+			width : 720,
+			height : 440,
+			modal : true,
+			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
+			closeAction : "hide",
+			loader : {
+				url : "../../dms/documents.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.documentWin);
+	}
+
+	this.documentWin.show();
+	this.documentWin.center();
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.documentWin.loader.load({
+		scripts : true,
+		params : {
+			ExtTabID : this.documentWin.getEl().id,
+			ObjectType : ObjectType,
+			ObjectID : ObjectType == "loan" ? record.data.RequestID : record.data.LoanPersonID
+		}
+	});
+}
+
+ManageRequest.prototype.ShowHistory = function(){
+
+	if(!this.HistoryWin)
+	{
+		this.HistoryWin = new Ext.window.Window({
+			title: 'سابقه گردش درخواست',
+			modal : true,
+			autoScroll : true,
+			width: 700,
+			height : 500,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "history.php",
+				scripts : true
+			},
+			buttons : [{
+					text : "بازگشت",
+					iconCls : "undo",
+					handler : function(){
+						this.up('window').hide();
+					}
+				}]
+		});
+		Ext.getCmp(this.TabID).add(this.HistoryWin);
+	}
+	this.HistoryWin.show();
+	this.HistoryWin.center();
+	this.HistoryWin.loader.load({
+		params : {
+			RequestID : this.grid.getSelectionModel().getLastSelected().data.RequestID
 		}
 	});
 }

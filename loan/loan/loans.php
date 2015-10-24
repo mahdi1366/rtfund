@@ -16,9 +16,8 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "loan.data.php?task=GetAllLo
 $dg->addColumn("کد وام", "LoanID", "", true);
 $dg->addColumn("", "GroupID", "", true);
 $dg->addColumn("درصد دیرکرد", "ForfeitPercent", "", true);
-$dg->addColumn("", "CustomerFee", "", true);
-$dg->addColumn("", "FundFee", "", true);
-$dg->addColumn("", "AgentFee", "", true);
+$dg->addColumn("", "CustomerWage", "", true);
+$dg->addColumn("", "FundWage", "", true);
 $dg->addColumn("", "IntervalType", "", true);
 
 $col = $dg->addColumn("عنوان وام", "LoanDesc", "");

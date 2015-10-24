@@ -29,9 +29,8 @@ $dg->addColumn("", "IntervalType","", true);
 $dg->addColumn("", "PayInterval","", true);
 $dg->addColumn("", "DelayMonths","", true);
 $dg->addColumn("", "ForfeitPercent","", true);
-$dg->addColumn("", "CustomerFee","", true);
-$dg->addColumn("", "FundFee","", true);
-$dg->addColumn("", "AgentFee","", true);
+$dg->addColumn("", "CustomerWage","", true);
+$dg->addColumn("", "FundWage","", true);
 
 $col = $dg->addColumn("عنوان مرحله", "PartDesc", "");
 $col->editor = ColumnEditor::TextField();
@@ -48,7 +47,7 @@ $dg->hideHeaders = true;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 150;
-$dg->width = 180;
+$dg->width = 170;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "MaxAmount";
@@ -62,31 +61,53 @@ $dg = new sadaf_datagrid("dg","/loan/request/request.data.php?task=GetPartPaymen
 
 $dg->addColumn("", "PayID","", true);
 $dg->addColumn("", "PartID","", true);
-$dg->addColumn("", "PayDate","", true);
 $dg->addColumn("", "PayAmount","", true);
-$dg->addColumn("", "FeeAmount","", true);
-$dg->addColumn("", "FeePercent","", true);
+$dg->addColumn("", "WageAmount","", true);
+$dg->addColumn("", "WagePercent","", true);
 $dg->addColumn("", "PaidDate","", true);
 $dg->addColumn("", "PaidAmount","", true);
 $dg->addColumn("", "StatusID","", true);
 
-$col = $dg->addColumn("تاریخ سررسید", "PayDate", "");
+$col = $dg->addColumn("تاریخ سررسید", "PayDate", GridColumn::ColumnType_date);
+$col->editor = ColumnEditor::SHDateField();
 $col->sortable = false;
 
-$col = $dg->addColumn("مبلغ خالص", "PartID", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مبلغ خالص", "PayAmount", GridColumn::ColumnType_money);
 $col->width = 80; 
 
-$col = $dg->addColumn("کارمزد", "FeeAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مبلغ کارمزد", "WageAmount", GridColumn::ColumnType_money);
 $col->width = 80;
 
-$col = $dg->addColumn("کارمزد", "FeePercent", "");
-$col->width = 80;
+$col = $dg->addColumn("کارمزد مشتری", "CustomerWage", "");
+$col->width = 50;
+$col->align = "center";
+
+$col = $dg->addColumn("کارمزد صندوق", "FundWage", "");
+$col->width = 50;
+$col->align = "center";
 
 $dg->addButton("", "محاسبه اقساط", "list", "function(){RequestInfoObject.ComputePayments();}");
 
-$dg->HeaderMenu = false;
-$dg->hideHeaders = true;
-$dg->title = "لیست اقساط";
+$col = $dg->addColumn("شماره چک", "ChequeNo", "");
+$col->editor = ColumnEditor::NumberField(true);
+$col->width = 50;
+
+$col = $dg->addColumn("تاریخ چک", "ChequeDate", GridColumn::ColumnType_date);
+$col->editor = ColumnEditor::SHDateField(true);
+$col->width = 70;
+
+$col = $dg->addColumn("بانک", "ChequeBank", "");
+$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from ACC_banks"), 
+	"BankID", "BankDesc", "", true);
+$col->width = 70;
+
+$col = $dg->addColumn("شعبه", "ChequeBranch", "");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 70;
+
+$dg->enableRowEdit = true;
+$dg->rowEditOkHandler = "function(store,record){return RequestInfoObject.SavePartPayment(store,record);}";
+
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 460;
 $dg->width = 680;
@@ -115,7 +136,6 @@ require_once 'RequestInfo.js.php';
 	}
 </style>
 <center>
-	<br>
 	<div id="mainForm"></div>
 	<div id="PartForm"></div>
 	<div id="SendForm"></div>
@@ -141,33 +161,33 @@ require_once 'RequestInfo.js.php';
 		<div style="float:right"><table style="width:170px" class="summary">
 			<tr>
 				<td style="width:70px;direction:rtl;background-color: #dfe8f6;">کارمزد وام</td>
-				<td><div id="SUM_TotalFee" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_TotalWage" class="blueText">&nbsp;</div></td>
 			</tr>
-			<tr>
+			<tr id="TR_FundWage">
 				<td style="direction:rtl;background-color: #dfe8f6;">سهم صندوق</td>
-				<td><div id="SUM_FundFee" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_FundWage" class="blueText">&nbsp;</div></td>
 			</tr>
-			<tr>
+			<tr id="TR_AgentWage">
 				<td style="direction:rtl;background-color: #dfe8f6;">سهم عامل</td>
-				<td><div id="SUM_AgentFee" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_AgentWage" class="blueText">&nbsp;</div></td>
 			</tr>
 		</table></div>
 		<div style="float:right"><table  style="width:200px" class="summary">
 			<tr>
 				<td style="direction:rtl;width:85px;background-color: #dfe8f6;">کارمزد سال اول</td>
-				<td><div id="SUM_Fee_1Year" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_Wage_1Year" class="blueText">&nbsp;</div></td>
 			</tr>
 			<tr>
 				<td style="direction:rtl;background-color: #dfe8f6;">کارمزد سال دوم</td>
-				<td><div id="SUM_Fee_2Year" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_Wage_2Year" class="blueText">&nbsp;</div></td>
 			</tr>
 			<tr>
 				<td style="direction:rtl;background-color: #dfe8f6;">کارمزد سال سوم</td>
-				<td><div id="SUM_Fee_3Year" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_Wage_3Year" class="blueText">&nbsp;</div></td>
 			</tr>
 			<tr>
 				<td style="direction:rtl;background-color: #dfe8f6;">کارمزد سال چهارم</td>
-				<td><div id="SUM_Fee_4Year" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_Wage_4Year" class="blueText">&nbsp;</div></td>
 			</tr>
 		</table></div>
 	</div> 

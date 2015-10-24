@@ -43,8 +43,9 @@ function RequestInfo()
 				url: this.address_prefix + "request.data.php?task=SelectAllRequests&RequestID=" + this.RequestID,
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
-			fields : ["RequestID","BranchID","BranchName","ReqPersonID","ReqFullname","LoanPersonID","LoanFullname",
-						"ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID","assurance","AgentGuarantee","StatusID"],
+			fields : ["RequestID","BranchID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
+						"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
+						"assurance","AgentGuarantee","StatusID","DocumentDesc"],
 			autoLoad : true,
 			listeners :{
 				load : function(){
@@ -65,9 +66,25 @@ function RequestInfo()
 					}	
 					if(me.User == "Staff" && me.StatusID != "10")
 					{
-						me.companyPanel.getEl().readonly();
-						me.companyPanel.down("[itemId=cmp_save]").hide();
+						me.PartsPanel.down("[itemId=cmp_save]").hide();
 					}	
+					if(me.User == "Customer")
+					{
+						me.companyPanel.down("[name=LoanPersonID]").hide();
+						me.companyPanel.down("[name=BorrowerDesc]").hide();
+						me.companyPanel.down("[name=BorrowerID]").hide();
+						me.companyPanel.down("[name=ReqDetails]").hide();
+						me.companyPanel.down("[itemId=cmp_save]").hide();
+						me.companyPanel.getEl().readonly();
+						me.companyPanel.doLayout();
+						
+						me.grid.down("[itemId=addPart]").hide();
+						me.grid.down("[dataIndex=PartID]").hide();	
+						me.PartsPanel.down("[itemId=cmp_save]").hide();
+						me.PartsPanel.down("[name=FundWage]").getEl().dom.style.display = "none";
+						me.get("TR_FundWage").style.display = "none";
+						me.get("TR_AgentWage").style.display = "none";
+					}
 					mask.hide();
 				}
 			}
@@ -150,7 +167,6 @@ RequestInfo.prototype.BuildForms = function(){
 				xtype : "currencyfield",
 				name : "ReqAmount",
 				allowBlank : false,
-				beforeLabelTextTpl: required,
 				fieldLabel : "مبلغ درخواست",
 				hideTrigger: true
 			},{
@@ -168,7 +184,6 @@ RequestInfo.prototype.BuildForms = function(){
 				fieldLabel : "شعبه اخذ وام",
 				queryMode : 'local',
 				allowBlank : false,
-				beforeLabelTextTpl: required,
 				displayField : "BranchName",
 				valueField : "BranchID",
 				name : "BranchID"
@@ -186,7 +201,6 @@ RequestInfo.prototype.BuildForms = function(){
 				fieldLabel : "تضمین",
 				queryMode : 'local',
 				allowBlank : false,
-				beforeLabelTextTpl: required,
 				displayField : "InfoDesc",
 				valueField : "InfoID",
 				name : "assurance"
@@ -203,6 +217,13 @@ RequestInfo.prototype.BuildForms = function(){
 				colspan : 2,				
 				name : "ReqDetails"
 			},{
+				xtype : "textarea",
+				fieldLabel : "توضیحات مدارک",
+				colspan : 2,
+				width : 700,
+				rows : 1,
+				name : "DocumentDesc"
+			},{
 				xtype : "button",
 				width : 100,
 				itemId : "cmp_save",
@@ -217,14 +238,20 @@ RequestInfo.prototype.BuildForms = function(){
 	
 	this.PartsPanel =  new Ext.form.FormPanel({
 		renderTo : this.get("PartForm"),
-		width: 780,
+		width: 770,
 		border : 0,
 		items: [{
 			xtype : "fieldset",
 			title : "مراحل پرداخت وام",
 			layout : "column",
 			columns : 2,
-			items :[this.grid,{
+			items :[{
+				xtype : "container",
+				colspan : 2,
+				width : 770,
+				cls : "blueText",
+				html : "برای مشاهده جزئیات هر مرحله روی عنوان مرحله کلیک کنید" + "<hr>"
+			},this.grid,{
 				xtype : "container",
 				style : "margin-right:10px",
 				layout : {
@@ -234,7 +261,7 @@ RequestInfo.prototype.BuildForms = function(){
 				defaults : {
 					xtype : "displayfield",
 					hideTrigger : true,
-					width : 130,
+					width : 180,
 					labelWidth : 80,
 					style : "margin-bottom:5px",
 					fieldCls : "blueText"
@@ -263,11 +290,11 @@ RequestInfo.prototype.BuildForms = function(){
 					renderer : function(v){ return v + " %"}
 				},{
 					fieldLabel: 'کارمزد مشتری',
-					name: 'CustomerFee'	,		
+					name: 'CustomerWage'	,		
 					renderer : function(v){ return v + " %"}
 				},{
 					fieldLabel: 'سهم صندوق',
-					name: 'FundFee',
+					name: 'FundWage',
 					colspan : 2,
 					renderer : function(v){ return v + " %"}
 				},{
@@ -351,7 +378,10 @@ RequestInfo.prototype.SaveRequest = function(mode){
 			me.RequestID = action.result.data;
 			me.grid.getStore().proxy.extraParams = {RequestID: me.RequestID};
 			me.grid.getStore().load();
-			me.companyPanel.down("[itemId=cmp_save]").hide();
+			
+			if(me.User == "Agent")
+				me.companyPanel.down("[itemId=cmp_save]").hide();
+			
 			me.PartsPanel.show();
 			
 			if( mode == "send")
@@ -448,10 +478,10 @@ RequestInfo.prototype.PartInfo = function(mode){
 					name: 'ForfeitPercent'
 				},{
 					fieldLabel: 'کارمزد مشتری',
-					name: 'CustomerFee'	
+					name: 'CustomerWage'	
 				},{
 					fieldLabel: 'کارمزد صندوق',
-					name: 'FundFee'
+					name: 'FundWage'
 				},{
 					xtype : "hidden",
 					name : "PartID"
@@ -548,7 +578,7 @@ RequestInfo.prototype.LoadSummary = function(record){
 		F7 = -F7;
 		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
 	} 
-	function ComputeFee(F7, F8, F9, YearMonths){
+	function ComputeWage(F7, F8, F9, YearMonths){
 		
 		return (((F7*F8/YearMonths*( Math.pow((1+(F8/YearMonths)),F9)))/
 			((Math.pow((1+(F8/YearMonths)),F9))-1))*F9)-F7;
@@ -558,7 +588,7 @@ RequestInfo.prototype.LoadSummary = function(record){
 		var factor = Math.pow(10,digits);
 		return Math.ceil(number*factor) / factor;
 	}
-	function YearFeeCompute(record,TotalFee,yearNo, YearMonths){
+	function YearWageCompute(record,TotalWage,yearNo, YearMonths){
 		
 		PayMonth = MiladiToShamsi(record.data.PayDate).split('/')[1]*1;
 		FirstYearPayCount = YearMonths - PayMonth;
@@ -582,7 +612,7 @@ RequestInfo.prototype.LoadSummary = function(record){
 			curMonths = LastYeatPayCount;
 		
 		var val = ((((F9-BeforeMonths)*(F9-BeforeMonths+1))-
-			(F9-BeforeMonths-curMonths)*(F9-BeforeMonths-curMonths+1)))/(F9*(F9+1))*TotalFee;
+			(F9-BeforeMonths-curMonths)*(F9-BeforeMonths-curMonths+1)))/(F9*(F9+1))*TotalWage;
 		return Ext.util.Format.Money(Math.round(val));
 	}
 
@@ -591,29 +621,31 @@ RequestInfo.prototype.LoadSummary = function(record){
 		YearMonths = Math.floor(365/
 		record.data.PayInterval);
 
-	FirstPay = roundUp(PMT(record.data.CustomerFee,	record.data.PayCount, record.data.PartAmount, YearMonths),-3);
-	TotalFee = Math.round(ComputeFee(record.data.PartAmount, record.data.CustomerFee/100, record.data.PayCount, YearMonths));
-	FundFee = Math.round((record.data.FundFee/record.data.CustomerFee)*TotalFee);
-	AgentFee = TotalFee - FundFee;
+	FirstPay = roundUp(PMT(record.data.CustomerWage,	record.data.PayCount, record.data.PartAmount, YearMonths),-3);
+	TotalWage = Math.round(ComputeWage(record.data.PartAmount, record.data.CustomerWage/100, record.data.PayCount, YearMonths));
+	FundWage = Math.round((record.data.FundWage/record.data.CustomerWage)*TotalWage);
+	AgentWage = TotalWage - FundWage;
 	
-	TotalDelay = Math.round(record.data.PartAmount*record.data.CustomerFee*record.data.DelayMonths/
+	TotalDelay = Math.round(record.data.PartAmount*record.data.CustomerWage*record.data.DelayMonths/
 					(YearMonths*100));
-	LastPay = record.data.PartAmount*1 + TotalFee - FirstPay*(record.data.PayCount-1);
+	LastPay = record.data.PartAmount*1 + TotalWage - FirstPay*(record.data.PayCount-1);
 	
 	this.get("SUM_PayAmount").innerHTML = Ext.util.Format.Money(FirstPay);
 	this.get("SUM_LastPayAmount").innerHTML = Ext.util.Format.Money(LastPay);
 	this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(TotalDelay);
 	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - TotalDelay);	
 	
-	this.get("SUM_TotalFee").innerHTML = Ext.util.Format.Money(TotalFee);	
-	this.get("SUM_FundFee").innerHTML = Ext.util.Format.Money(FundFee);	
-	this.get("SUM_AgentFee").innerHTML = Ext.util.Format.Money(AgentFee);	
+	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage);	
+	this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(FundWage);	
+	this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
 	
-	this.get("SUM_Fee_1Year").innerHTML = YearFeeCompute(record, TotalFee, 1, YearMonths);
-	this.get("SUM_Fee_2Year").innerHTML = YearFeeCompute(record, TotalFee, 2, YearMonths);
-	this.get("SUM_Fee_3Year").innerHTML = YearFeeCompute(record, TotalFee, 3, YearMonths);
-	this.get("SUM_Fee_4Year").innerHTML = YearFeeCompute(record, TotalFee, 4, YearMonths);
+	this.get("SUM_Wage_1Year").innerHTML = YearWageCompute(record, TotalWage, 1, YearMonths);
+	this.get("SUM_Wage_2Year").innerHTML = YearWageCompute(record, TotalWage, 2, YearMonths);
+	this.get("SUM_Wage_3Year").innerHTML = YearWageCompute(record, TotalWage, 3, YearMonths);
+	this.get("SUM_Wage_4Year").innerHTML = YearWageCompute(record, TotalWage, 4, YearMonths);
 }
+
+//.........................................................
 
 RequestInfo.prototype.LoadPartPayments = function(){
 	
@@ -628,6 +660,7 @@ RequestInfo.prototype.LoadPartPayments = function(){
 	{
 		this.PartPaymentsWin = new Ext.window.Window({
 			width : 700,
+			title : "لیست اقساط",
 			height : 500,
 			modal : true,
 			items : this.paymentGrid,
@@ -640,30 +673,65 @@ RequestInfo.prototype.LoadPartPayments = function(){
 	this.paymentGrid.getStore().proxy.extraParams = {
 		PartID : record.data.PartID
 	};
-	
+	this.paymentGrid.getStore().load();
 	this.PartPaymentsWin.show();
 	this.PartPaymentsWin.center();
 }
 
 RequestInfo.prototype.ComputePayments = function(){
 	
-	var record = this.grid.getSelectionModel().getLastSelected();
+	Ext.MessageBox.confirm("","در صورت محاسبه مجدد کلیه ردیف ها حذف و مجدد محاسبه و ایجاد می شوند <br>" + 
+		"آیا مایل به محاسبه مجدد می باشید؟",function(btn){
+		if(btn == "no")
+			return;
+		me = RequestInfoObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
 	
-	mask = new Ext.LoadMask(this.PartPaymentsWin, {msg:'در حال ذخیره سازی ...'});
+		mask = new Ext.LoadMask(me.PartPaymentsWin, {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "ComputePartPayments",
+				PartID : record.data.PartID
+			},
+			success: function(response){
+				mask.hide();
+				RequestInfoObject.paymentGrid.getStore().load();
+			}
+		});
+	});
+	
+}
+
+RequestInfo.prototype.SavePartPayment = function(store, record){
+
+	mask = new Ext.LoadMask(this.paymentGrid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 
 	Ext.Ajax.request({
 		url: this.address_prefix +'request.data.php',
 		method: "POST",
 		params: {
-			task: "ComputePartPayments",
-			PartID : record.data.PartID
+			task: "SavePartPayment",
+			record: Ext.encode(record.data)
 		},
 		success: function(response){
 			mask.hide();
-			RequestInfoObject.paymentGrid.getStore().load();
-		}
+			var st = Ext.decode(response.responseText);
+
+			if(st.success)
+			{   
+				RequestInfoObject.paymentGrid.getStore().load();
+			}
+			else
+			{
+				alert("خطا در اجرای عملیات");
+			}
+		},
+		failure: function(){}
 	});
 }
-
 </script>

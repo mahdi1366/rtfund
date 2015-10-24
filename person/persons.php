@@ -70,39 +70,7 @@ $dg->width = 750;
 $dg->DefaultSortField = "fullname";
 $dg->autoExpandColumn = "fullname";
 $grid = $dg->makeGrid_returnObjects();
-//..........................................................
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "../../dms/dms.data.php?task=SelectAll&ObjectType=Person" , "grid_div");
-
-$dg->addColumn("", "DocumentID", "", true);
-$dg->addColumn("", "IsConfirm", "", true);
-
-$col = $dg->addColumn("مدرک", "DocTypeDesc", "");
-$col->width = 140;
-
-$col = $dg->addColumn("توضیح", "DocDesc", "");
-
-$col = $dg->addColumn("تایید کننده", "confirmfullname");
-$col->width = 120;
-
-$col = $dg->addColumn("فایل", "FileType", "");
-$col->renderer = "function(v,p,r){return Person.FileRender(v,p,r)}";
-$col->align = "center";
-$col->width = 40;
-
-$col = $dg->addColumn("تایید", "", "");
-$col->renderer = "function(v,p,r){return Person.ConfirmRender(v,p,r)}";
-$col->width = 40;
-
-$dg->emptyTextOfHiddenColumns = true;
-$dg->height = 210;
-$dg->width = 690;
-$dg->EnableSearch = false;
-$dg->EnablePaging = false;
-$dg->disableFooter = true;
-$dg->DefaultSortField = "DocTypeDesc";
-$dg->autoExpandColumn = "DocDesc";
-$grid2 = $dg->makeGrid_returnObjects();
 ?>
 <style type="text/css">
 .pinkRow, .pinkRow td,.pinkRow div{ background-color:#FFB8C9 !important;}
@@ -110,16 +78,6 @@ $grid2 = $dg->makeGrid_returnObjects();
 <script>
 
 var PersonObject = new Person();
-
-PersonObject.docgrid = <?= $grid2?>;
-PersonObject.docgrid.getView().getRowClass = function(record, index)
-	{
-		if(record.data.IsConfirm == "YES")
-			return "greenRow";
-		return "";
-	}
-
-PersonObject.tabPanel.getComponent("documents").insert(0,PersonObject.docgrid);
 
 PersonObject.grid = <?= $grid?>;
 PersonObject.grid.getView().getRowClass = function(record)

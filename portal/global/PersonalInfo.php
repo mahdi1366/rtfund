@@ -209,11 +209,15 @@ function PersonalInfo()
 		},{
 			title : "مدارک",
 			style : "padding:20px",
-			items : [this.grid,{
-				xtype : "container",
-				cls : "blueText",
-				html : "ردیف های سبز رنگ ردیف های تایید شده و برابر اصل شده توسط صندوق بوده و قابل تغییر نمی باشند"
-			}]
+			loader : {
+				url : "../../dms/documents.php",
+				scripts : true,
+				autoLoad : true,
+				params : {
+					 ObjectType : "person",
+					 ExtTabID : this.tabPanel.getEl()
+				}
+			}
 		}]
 	});	
 }
@@ -227,110 +231,6 @@ PersonalInfo.prototype.PersonalInfo = function()
 		return;
 	}
 }
-
-PersonalInfo.FileRender = function(v,p,r){
-	
-	return "<div align='center' title='مشاهده فایل' class='attach' "+
-		"onclick='PersonalInfo.ShowFile(" + r.data.DocumentID + ");' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16;float:right'></div>";
-}
-
-PersonalInfo.ShowFile = function(DocumentID){
-	
-	window.open("../../dms/ShowFile.php?DocumentID=" + DocumentID);
-}
-
-PersonalInfo.OperationRender = function(v,p,r){
-	
-	if(r.data.IsConfirm == "YES")
-		return "";
-	
-	return  "<div align='center' title='حذف' class='remove' "+
-		"onclick='PersonalInfoObject.DeleteDocument();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16;float:right'></div>";		
-}
-
-PersonalInfo.prototype.AddDocument = function(){
-	
-	var modelClass = this.grid.getStore().model;
-	var record = new modelClass({
-		DocumentID: null,
-		DocDesc: null
-	});
-
-	this.grid.plugins[0].cancelEdit();
-	this.grid.getStore().insert(0, record);
-	this.grid.plugins[0].startEdit(0, 0);
-}
-
-PersonalInfo.prototype.SaveDocument = function(){
-	
-	var record = this.grid.getSelectionModel().getLastSelected();
-	mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg:'در حال ذخیره سازی ...'});
-	mask.show();
-
-	Ext.Ajax.request({
-		url: this.address_prefix +'../../dms/dms.data.php',
-		method: "POST",
-		isUpload : true,
-		form : this.get("MainForm"),
-		params: {
-			task: "SaveDocument",
-			record: Ext.encode(record.data),
-			ObjectID : '<?= $_SESSION["USER"]["PersonID"] ?>',
-			ObjectType : "person"
-		},
-		success: function(response){
-			mask.hide();
-			var st = Ext.decode(response.responseText);
-
-			if(st.success)
-			{   
-				PersonalInfoObject.grid.getStore().load();
-			}
-			else
-			{
-				if(st.data == "")
-					alert("خطا در اجرای عملیات");
-				else
-					alert(st.data);
-			}
-		},
-		failure: function(){}
-	});
-}
-
-PersonalInfo.prototype.DeleteDocument = function(){
-	
-	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
-		if(btn == "no")
-			return;
-		
-		me = PersonalInfoObject;
-		var record = me.grid.getSelectionModel().getLastSelected();
-		
-		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
-		mask.show();
-
-		Ext.Ajax.request({
-			url: me.address_prefix + '../../dms/dms.data.php',
-			params:{
-				task: "DeleteDocument",
-				DocumentID : record.data.DocumentID
-			},
-			method: 'POST',
-
-			success: function(response,option){
-				mask.hide();
-				PersonalInfoObject.grid.getStore().load();
-			},
-			failure: function(){}
-		});
-	});
-}
-
 
 </script>
 <form id="MainForm" enctype="multipart/form-data">

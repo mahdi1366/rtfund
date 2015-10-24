@@ -15,6 +15,7 @@ class DMS_documents extends PdoDataAccess
 	public $FileContent;
 	public $IsConfirm;
 	public $ConfirmPersonID;
+	public $RejectDesc;
 			
 	function __construct($DocumentID = "") {
 		

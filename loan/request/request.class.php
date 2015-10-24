@@ -19,7 +19,8 @@ class LON_requests extends PdoDataAccess
 	public $LoanPersonID;
 	public $assurance;
 	public $AgentGuarantee;
-			
+	public $DocumentDesc;	
+	
 	function __construct($RequestID = "") {
 		
 		if($RequestID != "")
@@ -32,14 +33,13 @@ class LON_requests extends PdoDataAccess
 			select r.*,
 				if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) ReqFullname,
 				if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) LoanFullname,
-				l.LoanDesc,
-				l.MaxAmount, 
 				bi.InfoDesc StatusDesc,
+				bi2.InfoDesc assuranceDesc,
 				BranchName
 			from LON_requests r
 			join BSC_branches using(BranchID)
-			left join LON_loans l using(LoanID)
 			join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
+			join BaseInfo bi2 on(bi2.TypeID=7 AND bi2.InfoID=assurance)
 			join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 			where " . $where, $param);
@@ -103,10 +103,8 @@ class LON_ReqParts extends PdoDataAccess
 	public $PayInterval;
 	public $DelayMonths;
 	public $ForfeitPercent;
-	public $CustomerFee;
-	public $FundFee;
-	public $AgentFee;
-
+	public $CustomerWage;
+	public $FundWage;
 			
 	function __construct($PartID = "") {
 		
@@ -172,16 +170,23 @@ class LON_PartPayments extends PdoDataAccess
 	public $PartID;
 	public $PayDate;
 	public $PayAmount;
-	public $FeeAmount;
-	public $FeePercent;
+	public $WageAmount;
+	public $CustomerWage;
+	public $FundWage;
 	public $PaidDate;
 	public $PaidAmount;
 	public $StatusID;
+	
+	public $ChequeNo;
+	public $ChequeDate;
+	public $ChequeBank;
+	public $ChequeBranch;
 			
 	function __construct($PayID = "") {
 		
 		$this->DT_PayDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_PaidDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_ChequeDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($PayID != "")
 			PdoDataAccess::FillObject ($this, "select * from LON_PartPayments where PayID=?", array($PayID));
@@ -195,7 +200,7 @@ class LON_PartPayments extends PdoDataAccess
 			where " . $where, $param);
 	}
 	
-	function AddPart($pdo = null)
+	function AddPartPayment($pdo = null)
 	{
 		if (!parent::insert("LON_PartPayments", $this, $pdo)) {
 			return false;
@@ -210,7 +215,7 @@ class LON_PartPayments extends PdoDataAccess
 		return true;
 	}
 	
-	function EditPart()
+	function EditPartPayment()
 	{
 	 	if( parent::update("LON_PartPayments",$this," PayID=:l", array(":l" => $this->PayID)) === false )
 	 		return false;
@@ -223,7 +228,7 @@ class LON_PartPayments extends PdoDataAccess
 	 	return true;
     }
 	
-	static function DeletePart($PayID){
+	static function DeletePartPayment($PayID){
 		
 		if( parent::delete("LON_PartPayments"," PayID=?", array($PayID)) === false )
 	 		return false;
