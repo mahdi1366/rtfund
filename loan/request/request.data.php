@@ -54,6 +54,9 @@ switch ($task) {
 	case "SavePartPayment":
 		SavePartPayment();
 		
+	case "PayPart":
+		PayPart();
+		
 	//----------------------------------------------
 		
 	case "GetLastFundComment":
@@ -147,14 +150,14 @@ function DeleteRequest(){
 	die();
 }
 
-function ChangeStatus($RequestID, $StatusID, $StepComment = "", $LogOnly = false){
+function ChangeStatus($RequestID, $StatusID, $StepComment = "", $LogOnly = false, $pdo = null){
 	
 	if(!$LogOnly)
 	{
 		$obj = new LON_requests();
 		$obj->RequestID = $_POST["RequestID"];
 		$obj->StatusID = $StatusID;
-		if(!$obj->EditRequest())
+		if(!$obj->EditRequest($pdo))
 			return false;
 	}
 	PdoDataAccess::runquery("insert into LON_ReqFlow(RequestID,PersonID,StatusID,ActDate,StepComment) 
@@ -163,7 +166,7 @@ function ChangeStatus($RequestID, $StatusID, $StepComment = "", $LogOnly = false
 			$_SESSION["USER"]["PersonID"],
 			$StatusID,
 			$StepComment
-		));
+		), $pdo);
 }
 
 function ChangeRequesrStatus(){
@@ -218,6 +221,24 @@ function DeletePart(){
 }
 
 function FillParts(){
+	
+}
+
+function PayPart(){
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$PartID = $_POST["PartID"];
+	$partobj = new LON_ReqParts($PartID);
+	$partobj->IsPayed = "YES";
+	$partobj->EditPart($pdo);
+	ChangeStatus($partobj->RequestID, "80", $partobj->PartDesc, false, $pdo);
+	
+	$ReqObj = new LON_requests($partobj->RequestID);
+	
+	RegisterPayPartDoc($ReqObj, $partobj, $pdo);
+	
 	
 }
 

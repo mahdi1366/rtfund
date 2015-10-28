@@ -97,23 +97,32 @@ function RequestInfo()
 
 RequestInfo.OperationRender = function(v,p,r){
 	
-	st = "<div align='center' title='ویرایش' class='edit' "+
-		"onclick='RequestInfoObject.PartInfo(\"edit\");' " +
-		"style='float:right;background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:18px;height:16'></div>" + 
-		
-		"<div align='center' title='حذف' class='remove' "+
-		"onclick='RequestInfoObject.DeletePart();' " +
-		"style='float:right;background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:18px;height:16'></div>";
+	return "<div  title='عملیات' class='setting' onclick='RequestInfoObject.OperationMenu(event);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+RequestInfo.prototype.OperationMenu = function(e){
+
+	record = this.grid.getSelectionModel().getLastSelected();
+	var op_menu = new Ext.menu.Menu();
 	
-	if(RequestInfoObject.User == "Staff")
-		st += "<div align='center' title='اقساط' class='list' "+
-		"onclick='RequestInfoObject.LoadPartPayments();' " +
-		"style='float:right;background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:18px;height:16'></div>";
+	op_menu.add({text: 'ویرایش',iconCls: 'edit', 
+		handler : function(){ return RequestInfoObject.PartInfo("edit"); }});
 	
-	return st;
+	op_menu.add({text: 'حذف',iconCls: 'remove', 
+		handler : function(){ return RequestInfoObject.DeletePart(); }});
+	
+	if(this.User == "Staff")
+	{
+		op_menu.add({text: 'اقساط',iconCls: 'list',
+		handler : function(){ return RequestInfoObject.LoadPartPayments(); }});
+	}
+	
+	op_menu.add({text: 'پرداخت',iconCls: 'epay',
+		handler : function(){ return RequestInfoObject.PayPart(); }});
+	
+	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
 RequestInfo.prototype.BuildForms = function(){
@@ -734,4 +743,35 @@ RequestInfo.prototype.SavePartPayment = function(store, record){
 		failure: function(){}
 	});
 }
+
+//.........................................................
+
+RequestInfo.prototype.PayPart = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به پرداخت این مرحله از وام می باشید؟",function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		me = RequestInfoObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "PayPart",
+				PartID : record.data.PartID
+			},
+			success: function(response){
+				mask.hide();
+				RequestInfoObject.grid.getStore().load();
+			}
+		});
+	});
+}
+
 </script>

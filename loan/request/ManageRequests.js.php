@@ -65,8 +65,6 @@ ManageRequest.prototype.OperationMenu = function(e){
 	}
 	if(record.data.StatusID == "70")
 	{
-		op_menu.add({text: 'پرداخت وام',iconCls: 'send',
-		handler : function(){ return ManageRequestObject.beforeChangeStatus(80); }});
 	}
 	if(new Array(50,70,80).indexOf(record.data.StatusID*1) != -1)
 	{

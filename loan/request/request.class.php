@@ -45,8 +45,7 @@ class LON_requests extends PdoDataAccess
 			where " . $where, $param);
 	}
 	
-	function AddRequest($pdo = null)
-	{
+	function AddRequest($pdo = null){
 		$this->ReqDate = PDONOW;
 		
 	 	if(!parent::insert("LON_requests",$this, $pdo))
@@ -61,16 +60,16 @@ class LON_requests extends PdoDataAccess
 		return true;
 	}
 	
-	function EditRequest()
-	{
-	 	if( parent::update("LON_requests",$this," RequestID=:l", array(":l" => $this->RequestID)) === false )
+	function EditRequest($pdo = null){
+		
+	 	if( parent::update("LON_requests",$this," RequestID=:l", array(":l" => $this->RequestID), $pdo) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
 		$daObj->MainObjectID = $this->RequestID;
 		$daObj->TableName = "LON_requests";
-		$daObj->execute();
+		$daObj->execute($pdo);
 	 	return true;
     }
 	
@@ -105,7 +104,8 @@ class LON_ReqParts extends PdoDataAccess
 	public $ForfeitPercent;
 	public $CustomerWage;
 	public $FundWage;
-			
+	public $IsPayed;
+	
 	function __construct($PartID = "") {
 		
 		$this->DT_PayDate = DataMember::CreateDMA(DataMember::DT_DATE);
@@ -122,8 +122,8 @@ class LON_ReqParts extends PdoDataAccess
 			where " . $where, $param);
 	}
 	
-	function AddPart($pdo = null)
-	{
+	function AddPart($pdo = null){
+		
 		if (!parent::insert("LON_ReqParts", $this, $pdo)) {
 			return false;
 		}
@@ -137,16 +137,16 @@ class LON_ReqParts extends PdoDataAccess
 		return true;
 	}
 	
-	function EditPart()
-	{
-	 	if( parent::update("LON_ReqParts",$this," PartID=:l", array(":l" => $this->PartID)) === false )
+	function EditPart($pdo = null){
+		
+	 	if( parent::update("LON_ReqParts",$this," PartID=:l", array(":l" => $this->PartID), $pdo) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
 		$daObj->MainObjectID = $this->PartID;
 		$daObj->TableName = "LON_ReqParts";
-		$daObj->execute();
+		$daObj->execute($pdo);
 	 	return true;
     }
 	
@@ -200,8 +200,7 @@ class LON_PartPayments extends PdoDataAccess
 			where " . $where, $param);
 	}
 	
-	function AddPartPayment($pdo = null)
-	{
+	function AddPartPayment($pdo = null){
 		if (!parent::insert("LON_PartPayments", $this, $pdo)) {
 			return false;
 		}
@@ -215,8 +214,7 @@ class LON_PartPayments extends PdoDataAccess
 		return true;
 	}
 	
-	function EditPartPayment()
-	{
+	function EditPartPayment(){
 	 	if( parent::update("LON_PartPayments",$this," PayID=:l", array(":l" => $this->PayID)) === false )
 	 		return false;
 

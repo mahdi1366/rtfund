@@ -16,6 +16,9 @@ class ACC_docs extends PdoDataAccess {
 	public $DocType;
 	public $description;
 	public $regPersonID;
+	
+	public $SourceType;
+	public $SourceID;
 		
 	function __construct($DocID = "") {
 		

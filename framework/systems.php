@@ -53,7 +53,7 @@ $_SESSION['USER']["RecentSystems"] = array();
 			.system {
 				display: -moz-box;
 				width: 30%;
-				margin-left: 15px;
+				margin-left: 20px;
 				font-family: tahoma;
 				font-size: 12px;
 				border : medium none rgba(255, 255, 255, 0.2);
@@ -73,6 +73,8 @@ $_SESSION['USER']["RecentSystems"] = array();
 				vertical-align: middle;	
 				height : 150px;
 				overflow: hidden;
+				background-position: center center;
+				background-repeat: no-repeat;
 			}
 			
 			.SystemDesc {
@@ -128,7 +130,7 @@ $_SESSION['USER']["RecentSystems"] = array();
 
 					echo "
 						<div class=system onclick=\"OpenSystem('" . $systems[$i]["SystemID"] . "','" . $systems[$i]["SysPath"] . "')\" >" .
-							"<div class=SystemIcon>" . "<img src='icons/SysIcons/" . $systems[$i]["SysPath"]  . ".png'>" . "</div>" . 
+							"<div class=SystemIcon style=background-image:url('icons/SysIcons/" . $systems[$i]["SysPath"]  . ".png')></div>" . 
 							"<div class=SystemDesc><div class=SystemTitle>" . $systems[$i]["SysName"] . "</div><br>" . $systems[$i]["menuNames"] . "</p>" .  "</div></div>";
 				}
 				if (count($systems) % 3 != 0)

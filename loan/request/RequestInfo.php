@@ -38,7 +38,7 @@ $col->sortable = false;
 
 $col = $dg->addColumn("", "PartID");
 $col->renderer = "RequestInfo.OperationRender";
-$col->width = 70;
+$col->width = 40;
 
 $dg->addButton("addPart", "ایجاد مرحله پرداخت", "add", "function(){RequestInfoObject.PartInfo('new');}");
 
