@@ -9,17 +9,16 @@ require_once inc_dataGrid;
 
 $dg = new sadaf_datagrid("dg","/loan/request/request.data.php?task=GetRequestParts", "grid_div");
 
-$dg->addColumn("", "PayID","", true);
+$dg->addColumn("", "InstallmentID","", true);
 $dg->addColumn("", "PartID","", true);
-$dg->addColumn("", "PayDate","", true);
-$dg->addColumn("", "PayAmount","", true);
+$dg->addColumn("", "InstallmentAmount","", true);
 $dg->addColumn("", "WageAmount","", true);
 $dg->addColumn("", "WagePercent","", true);
 $dg->addColumn("", "PaidDate","", true);
 $dg->addColumn("", "PaidAmount","", true);
 $dg->addColumn("", "StatusID","", true);
 
-$col = $dg->addColumn("تاریخ سررسید", "PayDate", "");
+$col = $dg->addColumn("تاریخ سررسید", "PartDate", "");
 $col->sortable = false;
 
 $col = $dg->addColumn("مبلغ خالص", "PartID", GridColumn::ColumnType_money);
@@ -39,7 +38,7 @@ $dg->height = 150;
 $dg->width = 150;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
-$dg->DefaultSortField = "PayDate";
+$dg->DefaultSortField = "PartDate";
 $dg->disableFooter = true;
 
 $grid = $dg->makeGrid_returnObjects();

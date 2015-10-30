@@ -25,6 +25,8 @@ switch($ObjectType)
 		$obj = new LON_requests($ObjectID);
 		if($_SESSION["USER"]["IsCustomer"] == "YES" && in_array($obj->StatusID, array(40,60)) )
 			$access = true;
+		if($_SESSION["USER"]["IsStaff"] == "YES")
+			$access = true;
 		break;
 }
 //------------------------------------------------------
@@ -36,6 +38,10 @@ $dg->addColumn("", "DocumentID", "", true);
 $dg->addColumn("", "ObjectType", "", true);
 $dg->addColumn("", "ObjectID", "", true);
 $dg->addColumn("", "IsConfirm", "", true);
+$dg->addColumn("", "RegPersonID", "", true);
+
+$col = $dg->addColumn("گروه مدرک", "param1Title", "");
+$col->width = 120;
 
 if($access)
 {
@@ -46,6 +52,11 @@ if($access)
 else 
 	$col = $dg->addColumn("مدرک", "DocTypeDesc", "");
 $col->width = 140;
+
+$col = $dg->addColumn("سریال سند", "DocSerial", "");
+if($access)
+	$col->editor = ColumnEditor::TextField(true);
+$col->width = 80;
 
 $col = $dg->addColumn("عنوان مدرک ارسالی", "DocDesc", "");
 if($access)
@@ -67,7 +78,7 @@ if($access)
 {
 	$col = $dg->addColumn("حذف", "", "");
 	$col->renderer = "function(v,p,r){return ManageDocument.OperationRender(v,p,r)}";
-	$col->width = 60;
+	$col->width = 40;
 
 	$dg->addButton("", "اضافه مدرک", "add", "function(){ManageDocumentObject.AddDocument();}");
 	
@@ -122,6 +133,8 @@ function ManageDocument()
 		this.grid.plugins[0].on("beforeedit", function(editor,e){
 			if(e.record.data.IsConfirm == "YES")
 				return false;
+			if(e.record.data.RegPersonID != "<?= $_SESSION["USER"]["PersonID"] ?>")
+				return false;	
 			return true;
 		});
 	this.grid.render(this.get("div_grid"));
@@ -130,6 +143,9 @@ function ManageDocument()
 ManageDocumentObject = new ManageDocument();
 
 ManageDocument.FileRender = function(v,p,r){
+	
+	if(v == "" || v == null)
+		return "";
 	
 	return "<div align='center' title='مشاهده فایل' class='attach' "+
 		"onclick='ManageDocument.ShowFile(" + r.data.DocumentID + ");' " +
@@ -144,7 +160,7 @@ ManageDocument.ShowFile = function(DocumentID){
 
 ManageDocument.OperationRender = function(v,p,r){
 	
-	if(r.data.IsConfirm == "YES")
+	if(r.data.IsConfirm == "YES" || r.data.RegPersonID != "<?= $_SESSION["USER"]["PersonID"] ?>")
 		return "";
 	
 	return  "<div align='center' title='حذف' class='remove' "+

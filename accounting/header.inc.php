@@ -12,6 +12,8 @@ set_include_path(get_include_path() . PATH_SEPARATOR . getenv("DOCUMENT_ROOT") .
 require_once 'PDODataAccess.class.php';
 require_once 'classconfig.inc.php';
 require_once 'DataAudit.class.php';
+require_once 'definitions.inc.php';
+
 require_once getenv("DOCUMENT_ROOT") . '/framework/management/framework.class.php';
 
 session_start();
@@ -26,4 +28,6 @@ $address_prefix = getenv("DOCUMENT_ROOT");
 $js_prefix_address = implode("/" , 
 		array_splice(preg_split('/\//', $_SERVER["SCRIPT_NAME"]),0,
 		count(preg_split('/\//', $_SERVER["SCRIPT_NAME"]))-1)) . "/";
+
+
 ?>

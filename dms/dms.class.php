@@ -9,11 +9,13 @@ class DMS_documents extends PdoDataAccess
 	public $DocumentID;
 	public $DocDesc;
 	public $DocType;
+	public $DocSerial;
 	public $ObjectType;
 	public $ObjectID;
 	public $FileType;
 	public $FileContent;
 	public $IsConfirm;
+	public $RegPersonID;
 	public $ConfirmPersonID;
 	public $RejectDesc;
 			
@@ -26,15 +28,19 @@ class DMS_documents extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select d.*, infoDesc DocTypeDesc, concat(fname, ' ', lname) confirmfullname
+			select d.*, b1.infoDesc DocTypeDesc, concat(fname, ' ', lname) confirmfullname,
+				b2.infoDesc param1Title	
 			from DMS_documents d	
-			join BaseInfo on(InfoID=d.DocType AND TypeID=8)
+			join BaseInfo b1 on(InfoID=d.DocType AND TypeID=8)
+			left join  BaseInfo b2 on(b1.param1=b2.InfoID AND b2.TypeID=7)
 			left join BSC_persons on(PersonID=ConfirmPersonID)
 			where " . $where, $param);
 	}
 	
 	function AddDocument()
 	{
+		$this->RegPersonID = $_SESSION["USER"]["PersonID"];
+		
 	 	if(!parent::insert("DMS_documents",$this))
 			return false;
 		$this->DocumentID = parent::InsertID();

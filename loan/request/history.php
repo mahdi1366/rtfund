@@ -9,7 +9,7 @@ $RequestID = $_POST["RequestID"];
 
 $query = "select f.*,concat(fname, ' ', lname) fullname, b.InfoDesc StatusDesc
 			from LON_ReqFlow f 
-				join BaseInfo b on (b.InfoID = f.StatusID) 
+				join BaseInfo b on (b.InfoID = f.StatusID AND TypeID=5) 
 				join BSC_persons using(PersonID) 
 				where f.RequestID=?
 			order by FlowId";

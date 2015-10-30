@@ -30,9 +30,6 @@ $col->width = 110;
 if($_SESSION["USER"]["IsCustomer"] != "YES")
 	$col = $dg->addColumn("شرکت", "BorrowerDesc", "");
 
-$col = $dg->addColumn("تضمین", "assuranceDesc", "");
-$col->width = 120;
-
 $col = $dg->addColumn("مبلغ درخواست", "ReqAmount", GridColumn::ColumnType_money);
 $col->width = 100;
 

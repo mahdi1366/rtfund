@@ -22,9 +22,9 @@ else
 $dg = new sadaf_datagrid("dg","/loan/request/request.data.php?task=GetRequestParts", "grid_div");
 
 $dg->addColumn("", "RequestID","", true);
-$dg->addColumn("", "PayDate","", true);
+$dg->addColumn("", "PartDate","", true);
 $dg->addColumn("", "PartAmount","", true);
-$dg->addColumn("", "PayCount","", true);
+$dg->addColumn("", "InstallmentCount","", true);
 $dg->addColumn("", "IntervalType","", true);
 $dg->addColumn("", "PayInterval","", true);
 $dg->addColumn("", "DelayMonths","", true);
@@ -57,22 +57,22 @@ $grid = $dg->makeGrid_returnObjects();
 
 //......................................................
 
-$dg = new sadaf_datagrid("dg","/loan/request/request.data.php?task=GetPartPayments", "grid_div");
+$dg = new sadaf_datagrid("dg","/loan/request/request.data.php?task=GetPartInstallments", "grid_div");
 
-$dg->addColumn("", "PayID","", true);
+$dg->addColumn("", "InstallmentID","", true);
 $dg->addColumn("", "PartID","", true);
-$dg->addColumn("", "PayAmount","", true);
+$dg->addColumn("", "InstallmentAmount","", true);
 $dg->addColumn("", "WageAmount","", true);
 $dg->addColumn("", "WagePercent","", true);
 $dg->addColumn("", "PaidDate","", true);
 $dg->addColumn("", "PaidAmount","", true);
 $dg->addColumn("", "StatusID","", true);
 
-$col = $dg->addColumn("تاریخ سررسید", "PayDate", GridColumn::ColumnType_date);
+$col = $dg->addColumn("تاریخ سررسید", "InstallmentDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
 $col->sortable = false;
 
-$col = $dg->addColumn("مبلغ خالص", "PayAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مبلغ خالص", "InstallmentAmount", GridColumn::ColumnType_money);
 $col->width = 80; 
 
 $col = $dg->addColumn("مبلغ کارمزد", "WageAmount", GridColumn::ColumnType_money);
@@ -113,7 +113,7 @@ $dg->height = 460;
 $dg->width = 680;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
-$dg->DefaultSortField = "PayDate";
+$dg->DefaultSortField = "InstallmentDate";
 
 $grid2 = $dg->makeGrid_returnObjects();
 
@@ -146,7 +146,7 @@ require_once 'RequestInfo.js.php';
 				<td style="background-color: #dfe8f6;">سود دوره تنفس</td>
 			</tr>
 			<tr>
-				<td><div id="SUM_PayAmount" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_InstallmentAmount" class="blueText">&nbsp;</div></td>
 				<td><div id="SUM_Delay" class="blueText">&nbsp;</div></td>
 			</tr>
 			<tr>
@@ -154,13 +154,13 @@ require_once 'RequestInfo.js.php';
 				<td style="background-color: #dfe8f6;">خالص پرداختی</td>
 			</tr>
 			<tr>
-				<td><div id="SUM_LastPayAmount" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_LastInstallmentAmount" class="blueText">&nbsp;</div></td>
 				<td><div id="SUM_NetAmount" class="blueText">&nbsp;</div></td>
 			</tr>			
 		</table></div>
 		<div style="float:right"><table style="width:170px" class="summary">
 			<tr>
-				<td style="width:70px;direction:rtl;background-color: #dfe8f6;">کارمزد وام</td>
+				<td style="width:90px;direction:rtl;background-color: #dfe8f6;">کارمزد وام</td>
 				<td><div id="SUM_TotalWage" class="blueText">&nbsp;</div></td>
 			</tr>
 			<tr id="TR_FundWage">
@@ -168,11 +168,11 @@ require_once 'RequestInfo.js.php';
 				<td><div id="SUM_FundWage" class="blueText">&nbsp;</div></td>
 			</tr>
 			<tr id="TR_AgentWage">
-				<td style="direction:rtl;background-color: #dfe8f6;">سهم عامل</td>
+				<td style="direction:rtl;background-color: #dfe8f6;">سهم سرمایه گذار</td>
 				<td><div id="SUM_AgentWage" class="blueText">&nbsp;</div></td>
 			</tr>
 		</table></div>
-		<div style="float:right"><table  style="width:200px" class="summary">
+		<div style="float:right"><table  style="width:180px" class="summary">
 			<tr>
 				<td style="direction:rtl;width:85px;background-color: #dfe8f6;">کارمزد سال اول</td>
 				<td><div id="SUM_Wage_1Year" class="blueText">&nbsp;</div></td>

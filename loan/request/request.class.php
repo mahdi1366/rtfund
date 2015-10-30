@@ -17,7 +17,7 @@ class LON_requests extends PdoDataAccess
 	public $BorrowerDesc;
 	public $BorrowerID;
 	public $LoanPersonID;
-	public $assurance;
+	public $guarantees;
 	public $AgentGuarantee;
 	public $DocumentDesc;	
 	
@@ -34,12 +34,10 @@ class LON_requests extends PdoDataAccess
 				if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) ReqFullname,
 				if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) LoanFullname,
 				bi.InfoDesc StatusDesc,
-				bi2.InfoDesc assuranceDesc,
 				BranchName
 			from LON_requests r
 			join BSC_branches using(BranchID)
 			join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
-			join BaseInfo bi2 on(bi2.TypeID=7 AND bi2.InfoID=assurance)
 			join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 			where " . $where, $param);
@@ -95,9 +93,9 @@ class LON_ReqParts extends PdoDataAccess
 	public $PartID;
 	public $RequestID;
 	public $PartDesc;
-	public $PayDate;
+	public $PartDate;
 	public $PartAmount;
-	public $PayCount;
+	public $InstallmentCount;
 	public $IntervalType;
 	public $PayInterval;
 	public $DelayMonths;
@@ -108,7 +106,7 @@ class LON_ReqParts extends PdoDataAccess
 	
 	function __construct($PartID = "") {
 		
-		$this->DT_PayDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_PartDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($PartID != "")
 			PdoDataAccess::FillObject ($this, "select * from LON_ReqParts where PartID=?", array($PartID));
@@ -164,12 +162,12 @@ class LON_ReqParts extends PdoDataAccess
 	}
 }
 
-class LON_PartPayments extends PdoDataAccess
+class LON_installments extends PdoDataAccess
 {
-	public $PayID;
+	public $InstallmentID;
 	public $PartID;
-	public $PayDate;
-	public $PayAmount;
+	public $InstallmentDate;
+	public $InstallmentAmount;
 	public $WageAmount;
 	public $CustomerWage;
 	public $FundWage;
@@ -182,59 +180,59 @@ class LON_PartPayments extends PdoDataAccess
 	public $ChequeBank;
 	public $ChequeBranch;
 			
-	function __construct($PayID = "") {
+	function __construct($InstallmentID = "") {
 		
-		$this->DT_PayDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_InstallmentDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_PaidDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_ChequeDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
-		if($PayID != "")
-			PdoDataAccess::FillObject ($this, "select * from LON_PartPayments where PayID=?", array($PayID));
+		if($InstallmentID != "")
+			PdoDataAccess::FillObject ($this, "select * from LON_installments where InstallmentID=?", array($InstallmentID));
 	}
 	
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
 			select p.*
-			from LON_PartPayments p
+			from LON_installments p
 			where " . $where, $param);
 	}
 	
 	function AddPartPayment($pdo = null){
-		if (!parent::insert("LON_PartPayments", $this, $pdo)) {
+		if (!parent::insert("LON_installments", $this, $pdo)) {
 			return false;
 		}
-		$this->PayID = parent::InsertID($pdo);
+		$this->InstallmentID = parent::InsertID($pdo);
 		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->PayID;
-		$daObj->TableName = "LON_PartPayments";
+		$daObj->MainObjectID = $this->InstallmentID;
+		$daObj->TableName = "LON_installments";
 		$daObj->execute($pdo);
 		return true;
 	}
 	
 	function EditPartPayment(){
-	 	if( parent::update("LON_PartPayments",$this," PayID=:l", array(":l" => $this->PayID)) === false )
+	 	if( parent::update("LON_installments",$this," InstallmentID=:l", array(":l" => $this->InstallmentID)) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->MainObjectID = $this->PayID;
-		$daObj->TableName = "LON_PartPayments";
+		$daObj->MainObjectID = $this->InstallmentID;
+		$daObj->TableName = "LON_installments";
 		$daObj->execute();
 	 	return true;
     }
 	
-	static function DeletePartPayment($PayID){
+	static function DeletePartPayment($InstallmentID){
 		
-		if( parent::delete("LON_PartPayments"," PayID=?", array($PayID)) === false )
+		if( parent::delete("LON_installments"," InstallmentID=?", array($InstallmentID)) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->MainObjectID = $PayID;
-		$daObj->TableName = "LON_PartPayments";
+		$daObj->MainObjectID = $InstallmentID;
+		$daObj->TableName = "LON_installments";
 		$daObj->execute();
 	 	return true;
 	}

@@ -1,7 +1,7 @@
 -- MySQL Administrator dump 1.4
 --
 -- ------------------------------------------------------
--- Server version	5.1.35-community
+-- Server version	5.0.27-community-nt
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -27,21 +27,21 @@ USE rtfund;
 
 DROP TABLE IF EXISTS `ACC_CostCodes`;
 CREATE TABLE `ACC_CostCodes` (
-  `CostID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد ردیف',
+  `CostID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد ردیف',
   `level1` int(10) unsigned NOT NULL COMMENT 'سطح 1',
-  `level2` int(10) unsigned DEFAULT NULL COMMENT 'سطح 2',
-  `level3` int(10) unsigned DEFAULT NULL COMMENT 'سطح 3',
+  `level2` int(10) unsigned default NULL COMMENT 'سطح 2',
+  `level3` int(10) unsigned default NULL COMMENT 'سطح 3',
   `BranchID` int(10) unsigned NOT NULL COMMENT 'کد شعبه',
-  `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
-  `CostCode` varchar(45) DEFAULT NULL COMMENT 'کد حساب',
-  PRIMARY KEY (`CostID`),
+  `IsActive` enum('YES','NO') NOT NULL default 'YES',
+  `CostCode` varchar(45) default NULL COMMENT 'کد حساب',
+  PRIMARY KEY  (`CostID`),
   KEY `FK_ACC_CostCodes_1` (`level1`),
   KEY `FK_ACC_CostCodes_2` (`level2`),
   KEY `FK_ACC_CostCodes_3` (`level3`),
   CONSTRAINT `FK_ACC_CostCodes_1` FOREIGN KEY (`level1`) REFERENCES `acc_blocks` (`BlockID`),
   CONSTRAINT `FK_ACC_CostCodes_2` FOREIGN KEY (`level2`) REFERENCES `acc_blocks` (`BlockID`),
   CONSTRAINT `FK_ACC_CostCodes_3` FOREIGN KEY (`level3`) REFERENCES `acc_blocks` (`BlockID`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COMMENT='کدهای حساب';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='کدهای حساب';
 
 --
 -- Dumping data for table `ACC_CostCodes`
@@ -49,6 +49,7 @@ CREATE TABLE `ACC_CostCodes` (
 
 /*!40000 ALTER TABLE `ACC_CostCodes` DISABLE KEYS */;
 INSERT INTO `ACC_CostCodes` (`CostID`,`level1`,`level2`,`level3`,`BranchID`,`IsActive`,`CostCode`) VALUES 
+ (1,10,NULL,NULL,1,'YES','02'),
  (4,2,3,6,1,'YES','10102'),
  (5,2,4,7,1,'YES','10203');
 /*!40000 ALTER TABLE `ACC_CostCodes` ENABLE KEYS */;
@@ -61,20 +62,20 @@ INSERT INTO `ACC_CostCodes` (`CostID`,`level1`,`level2`,`level3`,`BranchID`,`IsA
 DROP TABLE IF EXISTS `ACC_DocChecks`;
 CREATE TABLE `ACC_DocChecks` (
   `DocID` int(10) unsigned NOT NULL COMMENT 'کد سند',
-  `CheckID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد چک',
+  `CheckID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد چک',
   `AccountID` int(10) unsigned NOT NULL COMMENT 'کد حساب',
   `CheckNo` int(10) unsigned NOT NULL COMMENT 'شماره چک',
   `CheckDate` date NOT NULL COMMENT 'تاریخ چک',
   `amount` decimal(15,0) NOT NULL COMMENT 'مبلغ',
-  `CheckStatus` smallint(5) unsigned NOT NULL DEFAULT '1' COMMENT 'وضعیت چک',
-  `description` varchar(500) DEFAULT NULL COMMENT 'توضیحات',
-  `reciever` varchar(500) DEFAULT NULL,
-  PRIMARY KEY (`CheckID`),
+  `CheckStatus` smallint(5) unsigned NOT NULL default '1' COMMENT 'وضعیت چک',
+  `description` varchar(500) default NULL COMMENT 'توضیحات',
+  `reciever` varchar(500) default NULL,
+  PRIMARY KEY  (`CheckID`),
   KEY `FK_ACC_DocChecks_1` (`AccountID`),
   KEY `FK_ACC_DocChecks_2` (`DocID`),
   CONSTRAINT `FK_ACC_DocChecks_1` FOREIGN KEY (`AccountID`) REFERENCES `acc_accounts` (`AccountID`),
   CONSTRAINT `FK_ACC_DocChecks_2` FOREIGN KEY (`DocID`) REFERENCES `acc_docs` (`DocID`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `ACC_DocChecks`
@@ -94,38 +95,62 @@ INSERT INTO `ACC_DocChecks` (`DocID`,`CheckID`,`AccountID`,`CheckNo`,`CheckDate`
 DROP TABLE IF EXISTS `ACC_DocItems`;
 CREATE TABLE `ACC_DocItems` (
   `DocID` int(10) unsigned NOT NULL COMMENT 'کد سند',
-  `ItemID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد ردیف',
+  `ItemID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد ردیف',
   `CostID` int(10) unsigned NOT NULL COMMENT 'کد حساب',
-  `TafsiliType` smallint(5) unsigned DEFAULT NULL,
-  `TafsiliID` int(10) unsigned DEFAULT NULL COMMENT 'کد تفصیلی',
-  `DebtorAmount` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'مبلغ بدهکار',
-  `CreditorAmount` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'مبلغ بستانکار',
-  `details` varchar(500) DEFAULT NULL COMMENT 'جزئیات',
-  `locked` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'قفل بودن ردیف',
-  PRIMARY KEY (`ItemID`),
+  `TafsiliType` smallint(5) unsigned default NULL,
+  `TafsiliID` int(10) unsigned default NULL COMMENT 'کد تفصیلی',
+  `DebtorAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ بدهکار',
+  `CreditorAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ بستانکار',
+  `details` varchar(500) default NULL COMMENT 'جزئیات',
+  `locked` enum('YES','NO') NOT NULL default 'NO' COMMENT 'قفل بودن ردیف',
+  `SourceType` varchar(50) default NULL,
+  `SourceID` int(10) unsigned default NULL,
+  PRIMARY KEY  (`ItemID`),
   KEY `FK_ACC_DocItems_1` (`DocID`),
   KEY `FK_ACC_DocItems_2` (`CostID`),
   KEY `FK_ACC_DocItems_3` (`TafsiliID`),
   CONSTRAINT `FK_ACC_DocItems_1` FOREIGN KEY (`DocID`) REFERENCES `acc_docs` (`DocID`),
   CONSTRAINT `FK_ACC_DocItems_2` FOREIGN KEY (`CostID`) REFERENCES `acc_costcodes` (`CostID`),
   CONSTRAINT `FK_ACC_DocItems_3` FOREIGN KEY (`TafsiliID`) REFERENCES `acc_tafsilis` (`TafsiliID`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `ACC_DocItems`
 --
 
 /*!40000 ALTER TABLE `ACC_DocItems` DISABLE KEYS */;
-INSERT INTO `ACC_DocItems` (`DocID`,`ItemID`,`CostID`,`TafsiliType`,`TafsiliID`,`DebtorAmount`,`CreditorAmount`,`details`,`locked`) VALUES 
- (1,2,4,1,1,'150000','0',NULL,'NO'),
- (1,3,5,2,3,'0','150000',NULL,'NO'),
- (4,4,4,1,1,'15478000','0',NULL,'NO'),
- (1,5,4,1,1,'350000','0',NULL,'NO'),
- (1,6,5,1,1,'0','350000',NULL,'NO'),
- (14,16,4,1,1,'0','15978000',NULL,'YES'),
- (14,17,5,1,1,'350000','0',NULL,'YES'),
- (14,18,5,2,3,'150000','0',NULL,'YES');
+INSERT INTO `ACC_DocItems` (`DocID`,`ItemID`,`CostID`,`TafsiliType`,`TafsiliID`,`DebtorAmount`,`CreditorAmount`,`details`,`locked`,`SourceType`,`SourceID`) VALUES 
+ (1,2,4,1,1,'150000','0',NULL,'NO',NULL,NULL),
+ (1,3,5,2,3,'0','150000',NULL,'NO',NULL,NULL),
+ (4,4,4,1,1,'15478000','0',NULL,'NO',NULL,NULL),
+ (1,5,4,1,1,'350000','0',NULL,'NO',NULL,NULL),
+ (1,6,5,1,1,'0','350000',NULL,'NO',NULL,NULL),
+ (14,16,4,1,1,'0','15978000',NULL,'YES',NULL,NULL),
+ (14,17,5,1,1,'350000','0',NULL,'YES',NULL,NULL),
+ (14,18,5,2,3,'150000','0',NULL,'YES',NULL,NULL);
 /*!40000 ALTER TABLE `ACC_DocItems` ENABLE KEYS */;
+
+
+--
+-- Definition of table `ACC_UserState`
+--
+
+DROP TABLE IF EXISTS `ACC_UserState`;
+CREATE TABLE `ACC_UserState` (
+  `PersonID` int(10) unsigned NOT NULL,
+  `BranchID` smallint(5) unsigned NOT NULL,
+  `CycleID` smallint(5) unsigned NOT NULL,
+  PRIMARY KEY  (`PersonID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `ACC_UserState`
+--
+
+/*!40000 ALTER TABLE `ACC_UserState` DISABLE KEYS */;
+INSERT INTO `ACC_UserState` (`PersonID`,`BranchID`,`CycleID`) VALUES 
+ (1000,1,1394);
+/*!40000 ALTER TABLE `ACC_UserState` ENABLE KEYS */;
 
 
 --
@@ -134,18 +159,18 @@ INSERT INTO `ACC_DocItems` (`DocID`,`ItemID`,`CostID`,`TafsiliType`,`TafsiliID`,
 
 DROP TABLE IF EXISTS `ACC_accounts`;
 CREATE TABLE `ACC_accounts` (
-  `AccountID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد حساب',
+  `AccountID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد حساب',
   `BankID` int(10) unsigned NOT NULL COMMENT 'کد بانک',
   `BranchID` int(10) unsigned NOT NULL COMMENT 'کد شعبه',
   `AccountDesc` varchar(500) NOT NULL COMMENT 'عنوان حساب',
   `IsActive` enum('YES','NO') NOT NULL,
   `AccountNo` varchar(500) NOT NULL COMMENT 'شماره حساب',
   `AccountType` int(10) unsigned NOT NULL COMMENT 'نوع حساب',
-  `TafsiliID` int(10) unsigned DEFAULT NULL,
-  PRIMARY KEY (`AccountID`),
+  `TafsiliID` int(10) unsigned default NULL,
+  PRIMARY KEY  (`AccountID`),
   KEY `FK_ACC_accounts_1` (`BankID`),
   CONSTRAINT `FK_ACC_accounts_1` FOREIGN KEY (`BankID`) REFERENCES `acc_banks` (`BankID`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `ACC_accounts`
@@ -163,12 +188,12 @@ INSERT INTO `ACC_accounts` (`AccountID`,`BankID`,`BranchID`,`AccountDesc`,`IsAct
 
 DROP TABLE IF EXISTS `ACC_banks`;
 CREATE TABLE `ACC_banks` (
-  `BankID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد بانک',
+  `BankID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد بانک',
   `BranchID` int(10) unsigned NOT NULL,
   `BankDesc` varchar(500) NOT NULL COMMENT 'عنوان بانک',
-  `IsAvtive` enum('YES','NO') NOT NULL DEFAULT 'YES',
-  PRIMARY KEY (`BankID`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+  `IsAvtive` enum('YES','NO') NOT NULL default 'YES',
+  PRIMARY KEY  (`BankID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `ACC_banks`
@@ -186,15 +211,15 @@ INSERT INTO `ACC_banks` (`BankID`,`BranchID`,`BankDesc`,`IsAvtive`) VALUES
 
 DROP TABLE IF EXISTS `ACC_blocks`;
 CREATE TABLE `ACC_blocks` (
-  `BlockID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد بلاک',
+  `BlockID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد بلاک',
   `LevelID` smallint(5) unsigned NOT NULL,
   `BlockCode` varchar(10) NOT NULL COMMENT 'کد سطح',
   `BlockDesc` varchar(500) NOT NULL COMMENT 'عنوان بلاک',
   `BranchID` int(10) unsigned NOT NULL COMMENT 'کد شعبه',
-  `essence` enum('DEBTOR','CREDITOR','NONE') NOT NULL DEFAULT 'NONE' COMMENT 'ماهیت',
+  `essence` enum('DEBTOR','CREDITOR','NONE') NOT NULL default 'NONE' COMMENT 'ماهیت',
   `IsActive` enum('YES','NO') NOT NULL,
-  PRIMARY KEY (`BlockID`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
+  PRIMARY KEY  (`BlockID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `ACC_blocks`
@@ -209,7 +234,8 @@ INSERT INTO `ACC_blocks` (`BlockID`,`LevelID`,`BlockCode`,`BlockDesc`,`BranchID`
  (6,3,'02','پرداختنی',1,'NONE','YES'),
  (7,3,'03','معین 1',1,'NONE','YES'),
  (8,3,'04','سسس',1,'NONE','YES'),
- (9,3,'05','ییشسیش',1,'NONE','YES');
+ (9,3,'05','ییشسیش',1,'NONE','YES'),
+ (10,1,'02','وام ها',1,'NONE','YES');
 /*!40000 ALTER TABLE `ACC_blocks` ENABLE KEYS */;
 
 
@@ -219,13 +245,13 @@ INSERT INTO `ACC_blocks` (`BlockID`,`LevelID`,`BlockCode`,`BlockDesc`,`BranchID`
 
 DROP TABLE IF EXISTS `ACC_cheques`;
 CREATE TABLE `ACC_cheques` (
-  `ChequeID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد دسته چک',
+  `ChequeID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد دسته چک',
   `AccountID` int(10) unsigned NOT NULL COMMENT 'کد حساب',
   `SerialNo` varchar(100) NOT NULL COMMENT 'شماره سریال',
   `MinNo` decimal(10,0) NOT NULL COMMENT 'از شماره',
   `MaxNo` decimal(10,0) NOT NULL COMMENT 'تا شماره',
   `IsActive` enum('YES','NO') NOT NULL,
-  PRIMARY KEY (`ChequeID`),
+  PRIMARY KEY  (`ChequeID`),
   KEY `FK_ACC_cheques_1` (`AccountID`),
   CONSTRAINT `FK_ACC_cheques_1` FOREIGN KEY (`AccountID`) REFERENCES `acc_accounts` (`AccountID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -244,11 +270,11 @@ CREATE TABLE `ACC_cheques` (
 
 DROP TABLE IF EXISTS `ACC_cycles`;
 CREATE TABLE `ACC_cycles` (
-  `CycleID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد دوره ',
+  `CycleID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد دوره ',
   `CycleDesc` varchar(500) NOT NULL,
   `CycleYear` smallint(5) unsigned NOT NULL COMMENT 'سال',
-  `IsClosed` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'بسته است؟',
-  PRIMARY KEY (`CycleID`)
+  `IsClosed` enum('YES','NO') NOT NULL default 'NO' COMMENT 'بسته است؟',
+  PRIMARY KEY  (`CycleID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -256,6 +282,8 @@ CREATE TABLE `ACC_cycles` (
 --
 
 /*!40000 ALTER TABLE `ACC_cycles` DISABLE KEYS */;
+INSERT INTO `ACC_cycles` (`CycleID`,`CycleDesc`,`CycleYear`,`IsClosed`) VALUES 
+ (1394,'دوره سال 1394',1394,'NO');
 /*!40000 ALTER TABLE `ACC_cycles` ENABLE KEYS */;
 
 
@@ -265,18 +293,18 @@ CREATE TABLE `ACC_cycles` (
 
 DROP TABLE IF EXISTS `ACC_docs`;
 CREATE TABLE `ACC_docs` (
-  `DocID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد سند',
+  `DocID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد سند',
   `CycleID` int(10) unsigned NOT NULL COMMENT 'کد دوره',
   `BranchID` int(10) unsigned NOT NULL COMMENT 'کد شعبه',
   `LocalNo` smallint(5) unsigned NOT NULL,
   `DocDate` date NOT NULL COMMENT 'تاریخ سند',
   `RegDate` date NOT NULL COMMENT 'تاریخ ثبت سند',
-  `DocStatus` varchar(50) NOT NULL DEFAULT 'RAW' COMMENT 'وضعیت برگه',
-  `DocType` varchar(50) NOT NULL DEFAULT 'NORMAL' COMMENT 'نوع برگه',
-  `description` varchar(500) DEFAULT NULL COMMENT 'توضیحات',
+  `DocStatus` varchar(50) NOT NULL default 'RAW' COMMENT 'وضعیت برگه',
+  `DocType` varchar(50) NOT NULL default 'NORMAL' COMMENT 'نوع برگه',
+  `description` varchar(500) default NULL COMMENT 'توضیحات',
   `RegPersonID` int(10) unsigned NOT NULL COMMENT 'ثبت کننده',
-  PRIMARY KEY (`DocID`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
+  PRIMARY KEY  (`DocID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `ACC_docs`
@@ -284,10 +312,10 @@ CREATE TABLE `ACC_docs` (
 
 /*!40000 ALTER TABLE `ACC_docs` DISABLE KEYS */;
 INSERT INTO `ACC_docs` (`DocID`,`CycleID`,`BranchID`,`LocalNo`,`DocDate`,`RegDate`,`DocStatus`,`DocType`,`description`,`RegPersonID`) VALUES 
- (1,1,1,1,'2015-09-18','2015-09-18','ARCHIVE','NORMAL',NULL,1000),
- (2,1,1,2,'2015-09-21','2015-09-18','RAW','NORMAL',NULL,1000),
- (4,1,1,4,'2015-09-21','2015-09-18','RAW','NORMAL',NULL,1000),
- (14,1,1,5,'2015-09-21','2015-09-20','RAW','ENDCYCLE','سند اختتامیه',1000);
+ (1,1,1,1,'2015-09-18','2015-09-18','ARCHIVE','2',NULL,1000),
+ (2,1,1,2,'2015-09-21','2015-09-18','RAW','2',NULL,1000),
+ (4,1,1,4,'2015-09-21','2015-09-18','RAW','2',NULL,1000),
+ (14,1,1,5,'2015-09-21','2015-09-20','RAW','3','سند اختتامیه',1000);
 /*!40000 ALTER TABLE `ACC_docs` ENABLE KEYS */;
 
 
@@ -297,15 +325,15 @@ INSERT INTO `ACC_docs` (`DocID`,`CycleID`,`BranchID`,`LocalNo`,`DocDate`,`RegDat
 
 DROP TABLE IF EXISTS `ACC_tafsilis`;
 CREATE TABLE `ACC_tafsilis` (
-  `TafsiliID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد تفصیلی',
+  `TafsiliID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد تفصیلی',
   `TafsiliCode` varchar(100) NOT NULL COMMENT 'کد تفصیلی',
   `TafsiliType` int(10) unsigned NOT NULL COMMENT 'نوع تفصیلی',
   `TafsiliDesc` varchar(500) NOT NULL COMMENT 'عنوان',
   `BranchID` int(10) unsigned NOT NULL COMMENT 'کد شعبه',
-  `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
-  `PersonID` int(10) unsigned DEFAULT NULL,
-  PRIMARY KEY (`TafsiliID`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+  `IsActive` enum('YES','NO') NOT NULL default 'YES',
+  `PersonID` int(10) unsigned default NULL,
+  PRIMARY KEY  (`TafsiliID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `ACC_tafsilis`
@@ -314,8 +342,13 @@ CREATE TABLE `ACC_tafsilis` (
 /*!40000 ALTER TABLE `ACC_tafsilis` DISABLE KEYS */;
 INSERT INTO `ACC_tafsilis` (`TafsiliID`,`TafsiliCode`,`TafsiliType`,`TafsiliDesc`,`BranchID`,`IsActive`,`PersonID`) VALUES 
  (1,'1000',1,'شرکت ی111',1,'YES',NULL),
- (2,'1001',1,'شرکت 2',1,'YES',NULL),
- (3,'1',2,'شخص 1',1,'YES',NULL);
+ (3,'1394',2,'1394',1,'YES',NULL),
+ (4,'1395',2,'1395',1,'YES',NULL),
+ (5,'1396',2,'1396',1,'YES',NULL),
+ (6,'1397',2,'1397',1,'YES',NULL),
+ (7,'1398',2,'1398',1,'YES',NULL),
+ (8,'1399',2,'1399',1,'YES',NULL),
+ (9,'1400',2,'1400',1,'YES',NULL);
 /*!40000 ALTER TABLE `ACC_tafsilis` ENABLE KEYS */;
 
 
@@ -325,11 +358,11 @@ INSERT INTO `ACC_tafsilis` (`TafsiliID`,`TafsiliCode`,`TafsiliType`,`TafsiliDesc
 
 DROP TABLE IF EXISTS `BSC_BranchAccess`;
 CREATE TABLE `BSC_BranchAccess` (
-  `PersonID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `PersonID` int(10) unsigned NOT NULL auto_increment,
   `BranchID` int(10) unsigned NOT NULL,
   `IsCurrent` enum('YES','NO') NOT NULL,
-  PRIMARY KEY (`PersonID`,`BranchID`)
-) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=latin1;
+  PRIMARY KEY  (`PersonID`,`BranchID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `BSC_BranchAccess`
@@ -348,11 +381,11 @@ INSERT INTO `BSC_BranchAccess` (`PersonID`,`BranchID`,`IsCurrent`) VALUES
 
 DROP TABLE IF EXISTS `BSC_branches`;
 CREATE TABLE `BSC_branches` (
-  `BranchID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `BranchName` varchar(500) CHARACTER SET utf8 NOT NULL,
+  `BranchID` int(10) unsigned NOT NULL auto_increment,
+  `BranchName` varchar(500) character set utf8 NOT NULL,
   `IsActive` enum('YES','NO') NOT NULL,
-  PRIMARY KEY (`BranchID`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1 COMMENT='شعبه ها';
+  PRIMARY KEY  (`BranchID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='شعبه ها';
 
 --
 -- Dumping data for table `BSC_branches`
@@ -372,28 +405,28 @@ INSERT INTO `BSC_branches` (`BranchID`,`BranchName`,`IsActive`) VALUES
 
 DROP TABLE IF EXISTS `BSC_persons`;
 CREATE TABLE `BSC_persons` (
-  `PersonID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد فرد',
+  `PersonID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد فرد',
   `UserName` varchar(100) NOT NULL COMMENT 'کلمه کاربری',
   `UserPass` varchar(60) NOT NULL COMMENT 'رمز عبور',
   `IsReal` enum('YES','NO') NOT NULL COMMENT 'حقیقی است؟',
-  `fname` varchar(500) DEFAULT NULL COMMENT 'عنوان',
-  `lname` varchar(200) DEFAULT NULL,
-  `CompanyName` varchar(200) DEFAULT NULL,
-  `NationalID` varchar(10) DEFAULT NULL COMMENT 'کد ملی',
-  `EconomicID` varchar(10) DEFAULT NULL COMMENT 'کد اقتصادی',
-  `PhoneNo` varchar(45) DEFAULT NULL COMMENT 'تلفن',
-  `mobile` varchar(45) DEFAULT NULL COMMENT 'موبایل',
-  `address` varchar(500) DEFAULT NULL COMMENT 'آدرس',
-  `email` varchar(100) DEFAULT NULL,
-  `IsStaff` enum('YES','NO') NOT NULL DEFAULT 'NO',
-  `IsCustomer` enum('YES','NO') CHARACTER SET latin1 NOT NULL DEFAULT 'YES' COMMENT 'مشتری',
-  `IsShareholder` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'سهامدار',
-  `IsAgent` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'عامل',
-  `IsSupporter` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'حامی',
-  `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
-  `PostID` int(10) unsigned DEFAULT NULL,
-  PRIMARY KEY (`PersonID`)
-) ENGINE=InnoDB AUTO_INCREMENT=1006 DEFAULT CHARSET=utf8 COMMENT='ذینفعان';
+  `fname` varchar(500) default NULL COMMENT 'عنوان',
+  `lname` varchar(200) default NULL,
+  `CompanyName` varchar(200) default NULL,
+  `NationalID` varchar(10) default NULL COMMENT 'کد ملی',
+  `EconomicID` varchar(10) default NULL COMMENT 'کد اقتصادی',
+  `PhoneNo` varchar(45) default NULL COMMENT 'تلفن',
+  `mobile` varchar(45) default NULL COMMENT 'موبایل',
+  `address` varchar(500) default NULL COMMENT 'آدرس',
+  `email` varchar(100) default NULL,
+  `IsStaff` enum('YES','NO') NOT NULL default 'NO',
+  `IsCustomer` enum('YES','NO') character set latin1 NOT NULL default 'YES' COMMENT 'مشتری',
+  `IsShareholder` enum('YES','NO') NOT NULL default 'NO' COMMENT 'سهامدار',
+  `IsAgent` enum('YES','NO') NOT NULL default 'NO' COMMENT 'عامل',
+  `IsSupporter` enum('YES','NO') NOT NULL default 'NO' COMMENT 'حامی',
+  `IsActive` enum('YES','NO') NOT NULL default 'YES',
+  `PostID` int(10) unsigned default NULL,
+  PRIMARY KEY  (`PersonID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='ذینفعان';
 
 --
 -- Dumping data for table `BSC_persons`
@@ -402,7 +435,8 @@ CREATE TABLE `BSC_persons` (
 /*!40000 ALTER TABLE `BSC_persons` DISABLE KEYS */;
 INSERT INTO `BSC_persons` (`PersonID`,`UserName`,`UserPass`,`IsReal`,`fname`,`lname`,`CompanyName`,`NationalID`,`EconomicID`,`PhoneNo`,`mobile`,`address`,`email`,`IsStaff`,`IsCustomer`,`IsShareholder`,`IsAgent`,`IsSupporter`,`IsActive`,`PostID`) VALUES 
  (1000,'admin','$P$BCy9D77Tk5UrJibOCgIkum/NYvq3Ym1','YES','شبنم','جعفرخانی','','0943021723',NULL,NULL,NULL,'sdfsdf',NULL,'YES','YES','YES','YES','YES','YES',1),
- (1005,'park','$P$BcoXpMFz3xw6B108dtdAtm.iA9V5pa0','NO',' ',NULL,'پارک علم و فناوری',NULL,'7777777777',NULL,NULL,'جاده قوچان - پارک علم و فناوری','park@us.com','NO','YES','NO','YES','NO','YES',NULL);
+ (1005,'park','$P$BcoXpMFz3xw6B108dtdAtm.iA9V5pa0','NO',' ',NULL,'پارک علم و فناوری',NULL,'7777777777',NULL,NULL,'جاده قوچان - پارک علم و فناوری','park@us.com','NO','YES','NO','YES','NO','YES',NULL),
+ (1006,'data','$P$BNVG9Rrdv82.HBgdV6Gsq8SsXOJN671','NO',NULL,NULL,'شرکت داده 3',NULL,NULL,NULL,NULL,NULL,'data3@yahoo.com','NO','YES','NO','NO','NO','YES',NULL);
 /*!40000 ALTER TABLE `BSC_persons` ENABLE KEYS */;
 
 
@@ -412,11 +446,11 @@ INSERT INTO `BSC_persons` (`PersonID`,`UserName`,`UserPass`,`IsReal`,`fname`,`ln
 
 DROP TABLE IF EXISTS `BSC_posts`;
 CREATE TABLE `BSC_posts` (
-  `PostID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `PostID` int(10) unsigned NOT NULL auto_increment,
   `UnitID` int(10) unsigned NOT NULL,
   `PostName` varchar(500) NOT NULL,
-  PRIMARY KEY (`PostID`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='پست هاي سازماني';
+  PRIMARY KEY  (`PostID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='پست هاي سازماني';
 
 --
 -- Dumping data for table `BSC_posts`
@@ -435,11 +469,11 @@ INSERT INTO `BSC_posts` (`PostID`,`UnitID`,`PostName`) VALUES
 
 DROP TABLE IF EXISTS `BSC_units`;
 CREATE TABLE `BSC_units` (
-  `UnitID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `ParentID` int(10) unsigned DEFAULT NULL,
-  `UnitName` varchar(500) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`UnitID`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1 COMMENT='واحدهای سازمانی';
+  `UnitID` int(10) unsigned NOT NULL auto_increment,
+  `ParentID` int(10) unsigned default NULL,
+  `UnitName` varchar(500) character set utf8 NOT NULL,
+  PRIMARY KEY  (`UnitID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='واحدهای سازمانی';
 
 --
 -- Dumping data for table `BSC_units`
@@ -461,7 +495,8 @@ CREATE TABLE `BaseInfo` (
   `TypeID` int(10) unsigned NOT NULL COMMENT 'کد نوع',
   `InfoID` int(10) unsigned NOT NULL COMMENT 'کد آیتم',
   `InfoDesc` varchar(500) NOT NULL COMMENT 'عنوان',
-  PRIMARY KEY (`InfoID`,`TypeID`)
+  `param1` smallint(5) unsigned NOT NULL default '0',
+  PRIMARY KEY  (`InfoID`,`TypeID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -469,32 +504,51 @@ CREATE TABLE `BaseInfo` (
 --
 
 /*!40000 ALTER TABLE `BaseInfo` DISABLE KEYS */;
-INSERT INTO `BaseInfo` (`TypeID`,`InfoID`,`InfoDesc`) VALUES 
- (1,1,'وام های جعاله'),
- (2,1,'شرکتها'),
- (3,1,'حساب جاری'),
- (4,1,'در جریان'),
- (5,1,'درخواست خام'),
- (7,1,'وثیقه ملکی'),
- (8,1,'صفحه اول شناسنامه'),
- (1,2,'وام های مسکن'),
- (2,2,'اشخاص'),
- (3,2,'حساب سپرده '),
- (7,2,'ضمانت بانکی'),
- (8,2,'صفحه دوم شناسنامه'),
- (1,3,'وام های جزیی'),
- (7,3,'سفته'),
- (8,3,'توضیحات شناسنامه'),
- (7,4,'چک'),
- (8,4,'کارت ملی'),
- (7,5,'کسر از حقوق'),
- (8,5,'پشت کارت ملی'),
- (7,6,'ماشین آلات'),
- (5,10,'ارسال درخواست'),
- (6,10,'خام'),
- (5,20,'رد درخواست'),
- (6,20,'پرداخت شده'),
- (5,30,'تایید درخواست');
+INSERT INTO `BaseInfo` (`TypeID`,`InfoID`,`InfoDesc`,`param1`) VALUES 
+ (1,1,'وام های جعاله',0),
+ (2,1,'اشخاص حقیقی و حقوقی',0),
+ (3,1,'حساب جاری',0),
+ (4,1,'در جریان',0),
+ (5,1,'درخواست خام',0),
+ (7,1,'تضمین',0),
+ (8,1,'وثیقه ملکی',1),
+ (9,1,'سند افتتاحیه',0),
+ (1,2,'وام های مسکن',0),
+ (2,2,'سال',0),
+ (3,2,'حساب سپرده ',0),
+ (7,2,'مدارک شخص حقیقی',0),
+ (8,2,'ضمانت بانکی',1),
+ (9,2,'سند دستی',0),
+ (1,3,'وام های جزیی',0),
+ (7,3,'مدارک شخص حقوقی',0),
+ (8,3,'چک',1),
+ (9,3,'سند اختتامیه',0),
+ (8,4,'سفته',1),
+ (9,4,'سند پرداخت مرحله وام',0),
+ (8,5,'کسر از حقوق',1),
+ (9,5,'سند پرداخت قسط',0),
+ (8,6,'ماشین آلات',1),
+ (9,6,'سند جریمه تاخیر پرداخت اقساط',0),
+ (9,7,'سند محاسبه سود سپرده',0),
+ (5,10,'ارسال درخواست',0),
+ (6,10,'خام',0),
+ (5,20,'رد درخواست',0),
+ (6,20,'پرداخت شده',0),
+ (8,21,'صفحه اول شناسنامه',2),
+ (8,22,'صفحه دوم شناسنامه',2),
+ (8,23,'توضیحات شناسنامه',2),
+ (8,24,'کارت ملی',2),
+ (8,25,'پشت کارت ملی',2),
+ (5,30,'تایید درخواست',0),
+ (5,40,'ارسال به مشتری جهت تکمیل مدارک',0),
+ (8,41,'اساسنامه',3),
+ (8,42,'آگهی ثبتی',3),
+ (8,43,'آگهی روزنامه رسمی',3),
+ (8,44,'آخرین تغییرات',3),
+ (5,50,'تکمیل مدارک توسط مشتری',0),
+ (5,60,'عدم تایید مدارک',0),
+ (5,70,'تایید مدارک مشتری',0),
+ (5,80,'پرداخت وام',0);
 /*!40000 ALTER TABLE `BaseInfo` ENABLE KEYS */;
 
 
@@ -504,14 +558,14 @@ INSERT INTO `BaseInfo` (`TypeID`,`InfoID`,`InfoDesc`) VALUES
 
 DROP TABLE IF EXISTS `BaseTypes`;
 CREATE TABLE `BaseTypes` (
-  `TypeID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد نوع',
+  `TypeID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد نوع',
   `SystemID` int(10) unsigned NOT NULL,
-  `TypeDesc` varchar(500) DEFAULT NULL COMMENT 'عنوان',
-  `TableName` varchar(100) DEFAULT NULL COMMENT 'نام جدول',
-  `FieldName` varchar(100) DEFAULT NULL COMMENT 'نام فیلد',
+  `TypeDesc` varchar(500) default NULL COMMENT 'عنوان',
+  `TableName` varchar(100) default NULL COMMENT 'نام جدول',
+  `FieldName` varchar(100) default NULL COMMENT 'نام فیلد',
   `editable` enum('YES','NO') NOT NULL,
-  PRIMARY KEY (`TypeID`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
+  PRIMARY KEY  (`TypeID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `BaseTypes`
@@ -525,8 +579,9 @@ INSERT INTO `BaseTypes` (`TypeID`,`SystemID`,`TypeDesc`,`TableName`,`FieldName`,
  (4,2,'وضعیت چک','ACC_DocChecks','CheckStatus','NO'),
  (5,6,'وضعیت درخواست وام','LON_requests','StatusID','NO'),
  (6,6,'وضعیت قسط وام','LON_RequestParts','StatusID','NO'),
- (7,6,'انواع تضمین','LON_requests','assurance','YES'),
- (8,7,'انواع مدارک','DMS_documents','DocType','NO');
+ (7,7,'گروه مدرک','BaseInfo','param1','YES'),
+ (8,7,'نوع مدرک','DMS_documents','DocType','NO'),
+ (9,2,'نوع سند','ACC_docs','DocType','NO');
 /*!40000 ALTER TABLE `BaseTypes` ENABLE KEYS */;
 
 
@@ -536,28 +591,34 @@ INSERT INTO `BaseTypes` (`TypeID`,`SystemID`,`TypeDesc`,`TableName`,`FieldName`,
 
 DROP TABLE IF EXISTS `DMS_documents`;
 CREATE TABLE `DMS_documents` (
-  `DocumentID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد سند',
-  `DocDesc` varchar(200) DEFAULT NULL COMMENT 'توضیحات کلی',
+  `DocumentID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد سند',
+  `DocDesc` varchar(200) default NULL COMMENT 'توضیحات کلی',
   `DocType` int(10) unsigned NOT NULL COMMENT 'نوع سند',
-  `ObjectType` varchar(50) DEFAULT NULL COMMENT 'نوع آبجکت',
-  `ObjectID` int(10) unsigned DEFAULT NULL COMMENT 'کد آبجکت',
-  `FileType` varchar(20) DEFAULT NULL COMMENT 'نوع فایل',
+  `DocSerial` varchar(100) default NULL,
+  `ObjectType` varchar(50) default NULL COMMENT 'نوع آبجکت',
+  `ObjectID` int(10) unsigned default NULL COMMENT 'کد آبجکت',
+  `FileType` varchar(20) default NULL COMMENT 'نوع فایل',
   `FileContent` tinyblob COMMENT 'قسمتی از محتوای فایل',
-  `IsConfirm` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'برابر اصل',
-  `ConfirmPersonID` int(10) unsigned DEFAULT NULL COMMENT 'فرد تایید کننده',
-  PRIMARY KEY (`DocumentID`)
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8;
+  `IsConfirm` enum('NOTSET','YES','NO') NOT NULL default 'NOTSET' COMMENT 'برابر اصل',
+  `RegPersonID` int(10) unsigned NOT NULL,
+  `ConfirmPersonID` int(10) unsigned default NULL COMMENT 'فرد تایید کننده',
+  `RejectDesc` varchar(2000) default NULL,
+  PRIMARY KEY  (`DocumentID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `DMS_documents`
 --
 
 /*!40000 ALTER TABLE `DMS_documents` DISABLE KEYS */;
-INSERT INTO `DMS_documents` (`DocumentID`,`DocDesc`,`DocType`,`ObjectType`,`ObjectID`,`FileType`,`FileContent`,`IsConfirm`,`ConfirmPersonID`) VALUES 
- (18,NULL,1,'person',1000,'jpg',0xFFD8FFE000104A46494600010200006400640000FFEC00114475636B7900010004000000640000FFEE000E41646F62650064C000000001FFDB008400010101010101010101010101010101010101010101010101010101010101010101010101010101010101010202020202020202020202030303030303030303030101010101010102010102020201020203030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303FFC0001108012C00C80301,'YES',1000),
- (19,NULL,4,'person',1000,'pdf',0x255044462D312E330A25E2E3CFD30A312030206F626A0A3C3C0A2F4C656E67746820363234330A2F46696C746572205B2F466C6174654465636F64655D0A3E3E0A73747265616D0A5885D5994BAB64C7B185E7F52BCAB36EC329ED4755ED2A381CB06CB54133DB07EE40EDC9C56E5D84647063B87FDF11192B2256EEC8EA6EC9606C0C2D9FAF763EE21D99F9F7C3D7AF87AFDE4DC7F9F8FAE1302FC749FE27FF596EF7D3BA1CD7FB69BA4DEBF1F5A7C377CFD33C2D2FF3F3B4BE9C9FA7F3CBD3FA3C5D5E9E1C5C5F,'YES',1000),
- (20,'qqqqq',1,'person',1005,'jpg',0xFFD8FFE000104A46494600010101012C012C0000FFE106E545786966000049492A000800000001001250040001000000010000001A000000030028010300010000000200000001020400010000004400000002020400010000009906000000000000FFD8FFE000104A46494600010101000500050000FFDB004300080606070605080707070909080A0C140D0C0B0B0C1912130F141D1A1F1E1D1A1C1C20242E2720222C231C1C2837292C30313434341F27393D38323C2E333432FFDB0043010909090C0B0C180D,'NO',NULL),
- (22,NULL,5,'person',1005,'jpg',0xFFD8FFE000104A46494600010100000100010000FFFE003E43524541544F523A2067642D6A7065672076312E3020287573696E6720494A47204A50454720763632292C2064656661756C74207175616C6974790AFFDB004300080606070605080707070909080A0C140D0C0B0B0C1912130F141D1A1F1E1D1A1C1C20242E2720222C231C1C2837292C30313434341F27393D38323C2E333432FFDB0043010909090C0B0C180D0D1832211C2132323232323232323232323232323232323232323232323232323232,'YES',1000);
+INSERT INTO `DMS_documents` (`DocumentID`,`DocDesc`,`DocType`,`DocSerial`,`ObjectType`,`ObjectID`,`FileType`,`FileContent`,`IsConfirm`,`RegPersonID`,`ConfirmPersonID`,`RejectDesc`) VALUES 
+ (18,NULL,1,NULL,'person',1000,'jpg',0xFFD8FFE000104A46494600010200006400640000FFEC00114475636B7900010004000000640000FFEE000E41646F62650064C000000001FFDB008400010101010101010101010101010101010101010101010101010101010101010101010101010101010101010202020202020202020202030303030303030303030101010101010102010102020201020203030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303FFC0001108012C00C80301,'YES',0,1000,NULL),
+ (19,NULL,4,NULL,'person',1000,'pdf',0x255044462D312E330A25E2E3CFD30A312030206F626A0A3C3C0A2F4C656E67746820363234330A2F46696C746572205B2F466C6174654465636F64655D0A3E3E0A73747265616D0A5885D5994BAB64C7B185E7F52BCAB36EC329ED4755ED2A381CB06CB54133DB07EE40EDC9C56E5D84647063B87FDF11192B2256EEC8EA6EC9606C0C2D9FAF763EE21D99F9F7C3D7AF87AFDE4DC7F9F8FAE1302FC749FE27FF596EF7D3BA1CD7FB69BA4DEBF1F5A7C377CFD33C2D2FF3F3B4BE9C9FA7F3CBD3FA3C5D5E9E1C5C5F,'YES',0,1000,NULL),
+ (20,'qqqqq',1,NULL,'person',1005,'jpg',0xFFD8FFE000104A46494600010101012C012C0000FFE106E545786966000049492A000800000001001250040001000000010000001A000000030028010300010000000200000001020400010000004400000002020400010000009906000000000000FFD8FFE000104A46494600010101000500050000FFDB004300080606070605080707070909080A0C140D0C0B0B0C1912130F141D1A1F1E1D1A1C1C20242E2720222C231C1C2837292C30313434341F27393D38323C2E333432FFDB0043010909090C0B0C180D,'NOTSET',0,NULL,NULL),
+ (22,NULL,5,NULL,'person',1005,'jpg',0xFFD8FFE000104A46494600010100000100010000FFFE003E43524541544F523A2067642D6A7065672076312E3020287573696E6720494A47204A50454720763632292C2064656661756C74207175616C6974790AFFDB004300080606070605080707070909080A0C140D0C0B0B0C1912130F141D1A1F1E1D1A1C1C20242E2720222C231C1C2837292C30313434341F27393D38323C2E333432FFDB0043010909090C0B0C180D0D1832211C2132323232323232323232323232323232323232323232323232323232,'YES',0,1000,NULL),
+ (23,'ضامن ',4,NULL,'loan',19,'jpg',0xFFD8FFE000104A46494600010201006000600000FFE135E14578696600004D4D002A00000008000D010E000200000010000000AA011200030000000100010000011A000500000001000000BA011B000500000001000000C2012800030000000100020000013100020000001C000000CA0132000200000014000000E6013B00020000001C000000FA829800020000001C000001169C9B000100000020000001329C9D00010000003800000152EA1C0007000007C40000018A87690004000000010000095000001194,'YES',0,1000,''),
+ (26,'ضامن',3,NULL,'loan',19,'jpg',0xFFD8FFE000104A46494600010201006000600000FFE123844578696600004D4D002A00000008000D010E000200000010000000AA011200030000000100010000011A000500000001000000BA011B000500000001000000C2012800030000000100020000013100020000001C000000CA0132000200000014000000E6013B00020000001C000000FA829800020000001C000001169C9B000100000020000001329C9D00010000003800000152EA1C0007000007C40000018A87690004000000010000095000001194,'YES',0,1000,NULL),
+ (27,NULL,3,NULL,'person',1006,'jpg',0xFFD8FFE000104A4649460001010100B400B40000FFE11DF64578696600004D4D002A00000008000D000B000200000026000008B6010E000200000020000008DC010F000200000006000008FC011000020000001900000902011200030000000100010000011A0005000000010000091C011B0005000000010000092401280003000000010002000001310002000000260000092C013200020000001400000952021300030000000100020000876900040000000100000966EA1C00070000080C000000AA00000000,'YES',0,1000,NULL);
 /*!40000 ALTER TABLE `DMS_documents` ENABLE KEYS */;
 
 
@@ -567,12 +628,12 @@ INSERT INTO `DMS_documents` (`DocumentID`,`DocDesc`,`DocType`,`ObjectType`,`Obje
 
 DROP TABLE IF EXISTS `DMS_packages`;
 CREATE TABLE `DMS_packages` (
-  `PackageID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد بسته',
-  `PackDesc` varchar(500) CHARACTER SET utf8 NOT NULL COMMENT 'عتوان',
-  `ObjectType` varchar(50) CHARACTER SET utf8 DEFAULT NULL COMMENT 'نوع آبجکت',
-  `ObjectID` int(10) unsigned DEFAULT NULL COMMENT 'کد آبجکت',
-  `description` varchar(1000) CHARACTER SET utf8 DEFAULT NULL COMMENT 'توضیحات',
-  PRIMARY KEY (`PackageID`)
+  `PackageID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد بسته',
+  `PackDesc` varchar(500) character set utf8 NOT NULL COMMENT 'عتوان',
+  `ObjectType` varchar(50) character set utf8 default NULL COMMENT 'نوع آبجکت',
+  `ObjectID` int(10) unsigned default NULL COMMENT 'کد آبجکت',
+  `description` varchar(1000) character set utf8 default NULL COMMENT 'توضیحات',
+  PRIMARY KEY  (`PackageID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -589,20 +650,20 @@ CREATE TABLE `DMS_packages` (
 
 DROP TABLE IF EXISTS `DataAudit`;
 CREATE TABLE `DataAudit` (
-  `DataAuditID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `DataAuditID` int(10) unsigned NOT NULL auto_increment,
   `PersonID` int(11) NOT NULL COMMENT 'کد شخصی عمل کننده',
-  `TableName` varchar(100) COLLATE utf8_persian_ci NOT NULL COMMENT 'نام جدول',
+  `TableName` varchar(100) collate utf8_persian_ci NOT NULL COMMENT 'نام جدول',
   `MainObjectID` int(11) NOT NULL COMMENT 'کد داده اصلی دستکاری شده',
-  `SubObjectID` int(11) DEFAULT NULL COMMENT 'کد داده فرعی دستکاری شده',
-  `ActionType` enum('ADD','DELETE','UPDATE','VIEW','SEARCH','SEND','RETURN','CONFIRM','REJECT','OTHER') CHARACTER SET utf8 DEFAULT NULL COMMENT 'نوع عمل',
+  `SubObjectID` int(11) default NULL COMMENT 'کد داده فرعی دستکاری شده',
+  `ActionType` enum('ADD','DELETE','UPDATE','VIEW','SEARCH','SEND','RETURN','CONFIRM','REJECT','OTHER') character set utf8 default NULL COMMENT 'نوع عمل',
   `SystemID` int(11) NOT NULL COMMENT 'کد سیستم جاری',
-  `PageName` varchar(100) COLLATE utf8_persian_ci NOT NULL COMMENT 'نام صفحه ای این دستکاری توسط آن انجام شده',
-  `description` varchar(200) COLLATE utf8_persian_ci DEFAULT NULL COMMENT 'توضیحات بیشتر',
-  `IPAddress` varchar(100) COLLATE utf8_persian_ci NOT NULL COMMENT 'آدرس آی پی کامپیوتر عمل کننده',
+  `PageName` varchar(100) collate utf8_persian_ci NOT NULL COMMENT 'نام صفحه ای این دستکاری توسط آن انجام شده',
+  `description` varchar(200) collate utf8_persian_ci default NULL COMMENT 'توضیحات بیشتر',
+  `IPAddress` varchar(100) collate utf8_persian_ci NOT NULL COMMENT 'آدرس آی پی کامپیوتر عمل کننده',
   `ActionTime` datetime NOT NULL COMMENT 'زمان انجام عمل',
-  `QueryString` varchar(2000) CHARACTER SET utf8 DEFAULT NULL COMMENT 'query اجرا شده',
-  PRIMARY KEY (`DataAuditID`)
-) ENGINE=MyISAM AUTO_INCREMENT=559 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
+  `QueryString` varchar(2000) character set utf8 default NULL COMMENT 'query اجرا شده',
+  PRIMARY KEY  (`DataAuditID`)
+) ENGINE=MyISAM AUTO_INCREMENT=897 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
 
 --
 -- Dumping data for table `DataAudit`
@@ -1169,7 +1230,346 @@ INSERT INTO `DataAudit` (`DataAuditID`,`PersonID`,`TableName`,`MainObjectID`,`Su
  (555,1000,'LON_ReqParts',3,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-20 08:52:27','update LON_ReqParts set PartID=\'3\',RequestID=\'16\',PartDesc=\'مرحله دوم\',PayDate=\'2015/10/26\',PartAmount=\'60000000\',PayCount=\'12\',IntervalType=\'DAY\',PayInterval=\'60\',DelayMonths=\'6\',ForfeitPercent=\'4\',CustomerFee=\'4\',FundFee=\'10\' where  PartID=\'3\''),
  (556,1000,'LON_requests',16,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-20 09:15:55','update LON_requests set RequestID=\'16\',BranchID=\'1\',ReqAmount=\'120000000\',StatusID=\'1\',ReqDetails=\'مثلا یه چیزی ....\',BorrowerDesc=\'شرکت فلان\',BorrowerID=\'05131684972\',LoanPersonID=\'1005\',assurance=\'1\',AgentGuarantee=\'YES\' where  RequestID=\'16\''),
  (557,1000,'LON_requests',16,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-20 10:13:55','update LON_requests set RequestID=\'16\' where  RequestID=\'16\''),
- (558,1000,'LON_requests',16,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-20 10:14:12','update LON_requests set RequestID=\'16\',StatusID=\'30\' where  RequestID=\'16\'');
+ (558,1000,'LON_requests',16,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-20 10:14:12','update LON_requests set RequestID=\'16\',StatusID=\'30\' where  RequestID=\'16\''),
+ (559,1000,'LON_PartPayments',1,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:15:45','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (560,1000,'LON_PartPayments',2,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:15:45','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (561,1000,'LON_PartPayments',3,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:15:45','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (562,1000,'LON_PartPayments',4,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:15:45','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (563,1000,'LON_PartPayments',5,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:15:45','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (564,1000,'LON_PartPayments',6,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:15:45','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (565,1000,'LON_PartPayments',7,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:15:45','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (566,1000,'LON_PartPayments',8,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:15:45','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (567,1000,'LON_PartPayments',9,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:15:45','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (568,1000,'LON_PartPayments',10,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:15:45','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (569,1000,'LON_PartPayments',11,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:15:45','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (570,1000,'LON_PartPayments',12,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:15:45','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'108931\',\'4\',\'10\')'),
+ (571,1000,'LON_PartPayments',13,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:18:17','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/10/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (572,1000,'LON_PartPayments',14,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:18:17','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/10/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (573,1000,'LON_PartPayments',15,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:18:17','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/10/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (574,1000,'LON_PartPayments',16,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:18:17','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/10/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (575,1000,'LON_PartPayments',17,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:18:17','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/10/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (576,1000,'LON_PartPayments',18,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:18:17','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/10/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (577,1000,'LON_PartPayments',19,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:18:17','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/10/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (578,1000,'LON_PartPayments',20,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:18:17','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/10/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (579,1000,'LON_PartPayments',21,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:18:17','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/10/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (580,1000,'LON_PartPayments',22,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:18:17','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/10/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (581,1000,'LON_PartPayments',23,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:18:17','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/10/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (582,1000,'LON_PartPayments',24,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:18:17','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'108931\',\'4\',\'10\')'),
+ (583,1000,'LON_PartPayments',25,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:20:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (584,1000,'LON_PartPayments',26,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:20:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/12/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (585,1000,'LON_PartPayments',27,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:20:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/01/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (586,1000,'LON_PartPayments',28,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:20:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/02/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (587,1000,'LON_PartPayments',29,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:20:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/03/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (588,1000,'LON_PartPayments',30,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:20:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/04/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (589,1000,'LON_PartPayments',31,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:20:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/05/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (590,1000,'LON_PartPayments',32,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:20:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/06/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (591,1000,'LON_PartPayments',33,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:20:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/07/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (592,1000,'LON_PartPayments',34,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:20:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/08/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (593,1000,'LON_PartPayments',35,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:20:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/09/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (594,1000,'LON_PartPayments',36,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:20:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'1970/01/01\',\'5000000\',\'108931\',\'4\',\'10\')'),
+ (595,1000,'LON_PartPayments',37,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:49:10','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (596,1000,'LON_PartPayments',38,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:49:10','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/12/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (597,1000,'LON_PartPayments',39,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:49:10','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/01/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (598,1000,'LON_PartPayments',40,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:49:10','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/02/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (599,1000,'LON_PartPayments',41,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:49:10','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/03/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (600,1000,'LON_PartPayments',42,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:49:10','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/04/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (601,1000,'LON_PartPayments',43,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:49:10','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/05/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (602,1000,'LON_PartPayments',44,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:49:10','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/06/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (603,1000,'LON_PartPayments',45,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:49:10','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/07/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (604,1000,'LON_PartPayments',46,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:49:10','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/08/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (605,1000,'LON_PartPayments',47,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:49:10','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/09/26\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (606,1000,'LON_PartPayments',48,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:49:10','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/10/26\',\'5000000\',\'108931\',\'4\',\'10\')'),
+ (607,1000,'LON_PartPayments',49,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:50:53','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (608,1000,'LON_PartPayments',50,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:50:53','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (609,1000,'LON_PartPayments',51,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:50:53','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (610,1000,'LON_PartPayments',52,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:50:53','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (611,1000,'LON_PartPayments',53,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:50:53','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (612,1000,'LON_PartPayments',54,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:50:53','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (613,1000,'LON_PartPayments',55,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:50:53','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (614,1000,'LON_PartPayments',56,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:50:53','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (615,1000,'LON_PartPayments',57,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:50:53','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (616,1000,'LON_PartPayments',58,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:50:53','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (617,1000,'LON_PartPayments',59,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:50:53','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (618,1000,'LON_PartPayments',60,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:50:53','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'108931\',\'4\',\'10\')'),
+ (619,1000,'LON_PartPayments',61,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:54:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (620,1000,'LON_PartPayments',62,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:54:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/12/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (621,1000,'LON_PartPayments',63,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:54:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/01/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (622,1000,'LON_PartPayments',64,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:54:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/02/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (623,1000,'LON_PartPayments',65,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:54:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/03/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (624,1000,'LON_PartPayments',66,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:54:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/04/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (625,1000,'LON_PartPayments',67,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:54:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/05/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (626,1000,'LON_PartPayments',68,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:54:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/06/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (627,1000,'LON_PartPayments',69,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:54:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/07/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (628,1000,'LON_PartPayments',70,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:54:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/08/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (629,1000,'LON_PartPayments',71,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:54:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/09/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (630,1000,'LON_PartPayments',72,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:54:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/10/25\',\'5000000\',\'108931\',\'4\',\'10\')'),
+ (631,1000,'LON_PartPayments',73,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:14','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (632,1000,'LON_PartPayments',74,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:14','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/12/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (633,1000,'LON_PartPayments',75,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:14','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/01/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (634,1000,'LON_PartPayments',76,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:14','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/02/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (635,1000,'LON_PartPayments',77,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:14','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/03/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (636,1000,'LON_PartPayments',78,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:14','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/04/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (637,1000,'LON_PartPayments',79,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:14','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/05/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (638,1000,'LON_PartPayments',80,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:14','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/06/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (639,1000,'LON_PartPayments',81,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:14','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/07/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (640,1000,'LON_PartPayments',82,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:14','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/08/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (641,1000,'LON_PartPayments',83,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:14','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/09/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (642,1000,'LON_PartPayments',84,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:14','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/10/25\',\'5000000\',\'108931\',\'4\',\'10\')'),
+ (643,1000,'LON_PartPayments',85,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:32','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (644,1000,'LON_PartPayments',86,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:32','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/12/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (645,1000,'LON_PartPayments',87,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:32','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/01/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (646,1000,'LON_PartPayments',88,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:32','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/02/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (647,1000,'LON_PartPayments',89,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:32','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/03/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (648,1000,'LON_PartPayments',90,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:32','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/04/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (649,1000,'LON_PartPayments',91,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:32','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/05/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (650,1000,'LON_PartPayments',92,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:32','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/06/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (651,1000,'LON_PartPayments',93,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:32','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/07/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (652,1000,'LON_PartPayments',94,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:32','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/08/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (653,1000,'LON_PartPayments',95,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:32','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/09/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (654,1000,'LON_PartPayments',96,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:32','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/10/25\',\'5000000\',\'108931\',\'4\',\'10\')'),
+ (655,1000,'LON_PartPayments',97,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:55','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (656,1000,'LON_PartPayments',98,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:55','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/12/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (657,1000,'LON_PartPayments',99,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:55','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/01/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (658,1000,'LON_PartPayments',100,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:55','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/02/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (659,1000,'LON_PartPayments',101,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:55','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/03/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (660,1000,'LON_PartPayments',102,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:55','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/04/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (661,1000,'LON_PartPayments',103,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:55','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/05/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (662,1000,'LON_PartPayments',104,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:55','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/06/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (663,1000,'LON_PartPayments',105,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:55','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/07/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (664,1000,'LON_PartPayments',106,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:55','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/08/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (665,1000,'LON_PartPayments',107,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:55','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/09/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (666,1000,'LON_PartPayments',108,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:57:55','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/10/25\',\'5000000\',\'108931\',\'4\',\'10\')'),
+ (667,1000,'LON_PartPayments',109,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:58:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (668,1000,'LON_PartPayments',110,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:58:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/12/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (669,1000,'LON_PartPayments',111,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:58:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/01/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (670,1000,'LON_PartPayments',112,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:58:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/02/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (671,1000,'LON_PartPayments',113,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:58:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/03/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (672,1000,'LON_PartPayments',114,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:58:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/04/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (673,1000,'LON_PartPayments',115,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:58:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/05/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (674,1000,'LON_PartPayments',116,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:58:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/06/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (675,1000,'LON_PartPayments',117,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:58:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/07/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (676,1000,'LON_PartPayments',118,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:58:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/08/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (677,1000,'LON_PartPayments',119,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:58:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/09/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (678,1000,'LON_PartPayments',120,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:58:24','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/10/25\',\'5000000\',\'108931\',\'4\',\'10\')'),
+ (679,1000,'LON_PartPayments',121,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:39','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (680,1000,'LON_PartPayments',122,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:39','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/12/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (681,1000,'LON_PartPayments',123,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:39','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/01/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (682,1000,'LON_PartPayments',124,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:39','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/02/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (683,1000,'LON_PartPayments',125,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:39','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/03/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (684,1000,'LON_PartPayments',126,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:39','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/04/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (685,1000,'LON_PartPayments',127,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:39','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/05/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (686,1000,'LON_PartPayments',128,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:39','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/06/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (687,1000,'LON_PartPayments',129,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:39','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/07/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (688,1000,'LON_PartPayments',130,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:39','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/08/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (689,1000,'LON_PartPayments',131,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:39','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/09/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (690,1000,'LON_PartPayments',132,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:39','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/10/25\',\'5000000\',\'108931\',\'4\',\'10\')'),
+ (691,1000,'LON_PartPayments',133,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:41','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (692,1000,'LON_PartPayments',134,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:41','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/12/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (693,1000,'LON_PartPayments',135,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:41','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/01/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (694,1000,'LON_PartPayments',136,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:41','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/02/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (695,1000,'LON_PartPayments',137,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:41','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/03/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (696,1000,'LON_PartPayments',138,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:41','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/04/23\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (697,1000,'LON_PartPayments',139,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:41','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/05/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (698,1000,'LON_PartPayments',140,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:41','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/06/24\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (699,1000,'LON_PartPayments',141,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:41','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/07/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (700,1000,'LON_PartPayments',142,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:41','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/08/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (701,1000,'LON_PartPayments',143,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:41','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/09/25\',\'5000000\',\'109000\',\'4\',\'10\')'),
+ (702,1000,'LON_PartPayments',144,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 10:59:41','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/10/25\',\'5000000\',\'108931\',\'4\',\'10\')'),
+ (703,1000,'LON_PartPayments',145,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:22:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'3\',\'2015/12/25\',\'5000000\',\'220000\',\'4\',\'10\')'),
+ (704,1000,'LON_PartPayments',146,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:22:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'3\',\'2016/02/23\',\'5000000\',\'220000\',\'4\',\'10\')'),
+ (705,1000,'LON_PartPayments',147,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:22:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'3\',\'2016/04/23\',\'5000000\',\'220000\',\'4\',\'10\')'),
+ (706,1000,'LON_PartPayments',148,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:22:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'3\',\'2016/06/22\',\'5000000\',\'220000\',\'4\',\'10\')'),
+ (707,1000,'LON_PartPayments',149,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:22:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'3\',\'2016/08/21\',\'5000000\',\'220000\',\'4\',\'10\')'),
+ (708,1000,'LON_PartPayments',150,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:22:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'3\',\'2016/10/20\',\'5000000\',\'220000\',\'4\',\'10\')'),
+ (709,1000,'LON_PartPayments',151,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:22:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'3\',\'2016/12/19\',\'5000000\',\'220000\',\'4\',\'10\')'),
+ (710,1000,'LON_PartPayments',152,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:22:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'3\',\'2017/02/17\',\'5000000\',\'220000\',\'4\',\'10\')'),
+ (711,1000,'LON_PartPayments',153,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:22:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'3\',\'2017/04/18\',\'5000000\',\'220000\',\'4\',\'10\')'),
+ (712,1000,'LON_PartPayments',154,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:22:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'3\',\'2017/06/17\',\'5000000\',\'220000\',\'4\',\'10\')'),
+ (713,1000,'LON_PartPayments',155,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:22:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'3\',\'2017/08/16\',\'5000000\',\'220000\',\'4\',\'10\')'),
+ (714,1000,'LON_PartPayments',156,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:22:50','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'3\',\'2017/10/15\',\'5000000\',\'211669\',\'4\',\'10\')'),
+ (715,1000,'LON_ReqParts',2,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:24:47','update LON_ReqParts set PartID=\'2\',RequestID=\'16\',PartDesc=\'مرحله اول\',PayDate=\'2015/10/26\',PartAmount=\'60000000\',PayCount=\'12\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'6\',ForfeitPercent=\'4\',CustomerWage=\'10\',FundWage=\'10\' where  PartID=\'2\''),
+ (716,1000,'LON_PartPayments',157,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:25:02','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (717,1000,'LON_PartPayments',158,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:25:02','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/12/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (718,1000,'LON_PartPayments',159,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:25:02','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/01/24\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (719,1000,'LON_PartPayments',160,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:25:02','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/02/23\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (720,1000,'LON_PartPayments',161,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:25:02','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/03/23\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (721,1000,'LON_PartPayments',162,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:25:02','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/04/23\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (722,1000,'LON_PartPayments',163,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:25:02','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/05/24\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (723,1000,'LON_PartPayments',164,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:25:02','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/06/24\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (724,1000,'LON_PartPayments',165,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:25:02','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/07/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (725,1000,'LON_PartPayments',166,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:25:02','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/08/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (726,1000,'LON_PartPayments',167,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:25:02','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/09/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (727,1000,'LON_PartPayments',168,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 11:25:02','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/10/25\',\'5000000\',\'274439\',\'10\',\'10\')'),
+ (728,1000,'LON_PartPayments',157,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:05:24','update LON_PartPayments set PayID=\'157\',PartID=\'2\',PayDate=\'2015/11/25\',PayAmount=\'5000000\',WageAmount=\'275000\',CustomerWage=\'10\',FundWage=\'10\',StatusID=\'1\',ChequeNo=\'1234\',ChequeDate=\'1394-09-04\',ChequeBank=\'1\',ChequeBranch=\'فردوسی\' where  PayID=\'157\''),
+ (729,1000,'LON_PartPayments',157,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:06:47','update LON_PartPayments set PayID=\'157\',PartID=\'2\',PayDate=\'2015/11/25\',PayAmount=\'5000000\',WageAmount=\'275000\',CustomerWage=\'10\',FundWage=\'10\',StatusID=\'1\',ChequeNo=\'1234\',ChequeDate=\'2015/11/26\',ChequeBank=\'1\',ChequeBranch=\'فردوسی\' where  PayID=\'157\''),
+ (730,1000,'LON_PartPayments',158,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:15:24','update LON_PartPayments set PayID=\'158\',PartID=\'2\',PayDate=\'2015/12/25\',PayAmount=\'5000000\',WageAmount=\'275000\',CustomerWage=\'10\',FundWage=\'10\',StatusID=\'1\',ChequeNo=\'8798\',ChequeDate=\'2015/12/25\',ChequeBank=\'1\',ChequeBranch=\'پارک\' where  PayID=\'158\''),
+ (731,1000,'LON_PartPayments',158,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:15:54','update LON_PartPayments set PayID=\'158\',PartID=\'2\',PayDate=\'2015/12/26\',PayAmount=\'5000000\',WageAmount=\'275000\',CustomerWage=\'10\',FundWage=\'10\',StatusID=\'1\',ChequeNo=\'8798\',ChequeDate=\'2015/12/25\',ChequeBank=\'1\',ChequeBranch=\'پارک\' where  PayID=\'158\''),
+ (732,1000,'LON_PartPayments',158,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:16:05','update LON_PartPayments set PayID=\'158\',PartID=\'2\',PayDate=\'2015/12/26\',PayAmount=\'5000000\',WageAmount=\'275000\',CustomerWage=\'10\',FundWage=\'10\',StatusID=\'1\',ChequeNo=\'8798\',ChequeDate=\'2015/12/26\',ChequeBank=\'1\',ChequeBranch=\'پارک\' where  PayID=\'158\''),
+ (733,1000,'LON_PartPayments',164,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:18:28','update LON_PartPayments set PayID=\'164\',PartID=\'2\',PayDate=\'2016/06/24\',PayAmount=\'5000000\',WageAmount=\'275000\',CustomerWage=\'10\',FundWage=\'10\',StatusID=\'1\',ChequeNo=\'6656\',ChequeDate=\'2016/06/24\',ChequeBank=\'1\',ChequeBranch=\'یسیشسیش\' where  PayID=\'164\''),
+ (734,1000,'LON_PartPayments',164,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:19:11','update LON_PartPayments set PayID=\'164\',PartID=\'2\',PayDate=\'2016/06/24\',PayAmount=\'5000000\',WageAmount=\'275000\',CustomerWage=\'10\',FundWage=\'10\',StatusID=\'1\',ChequeNo=\'6656\',ChequeDate=\'2016/06/24\',ChequeBank=\'1\',ChequeBranch=\'لببپ\' where  PayID=\'164\''),
+ (735,1000,'LON_PartPayments',169,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:22:31','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (736,1000,'LON_PartPayments',170,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:22:31','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/12/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (737,1000,'LON_PartPayments',171,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:22:31','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/01/24\',\'5000000\',\'275000\',\'10\',\'10\')');
+INSERT INTO `DataAudit` (`DataAuditID`,`PersonID`,`TableName`,`MainObjectID`,`SubObjectID`,`ActionType`,`SystemID`,`PageName`,`description`,`IPAddress`,`ActionTime`,`QueryString`) VALUES 
+ (738,1000,'LON_PartPayments',172,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:22:31','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/02/23\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (739,1000,'LON_PartPayments',173,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:22:31','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/03/23\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (740,1000,'LON_PartPayments',174,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:22:31','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/04/23\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (741,1000,'LON_PartPayments',175,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:22:31','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/05/24\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (742,1000,'LON_PartPayments',176,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:22:31','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/06/24\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (743,1000,'LON_PartPayments',177,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:22:31','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/07/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (744,1000,'LON_PartPayments',178,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:22:31','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/08/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (745,1000,'LON_PartPayments',179,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:22:31','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/09/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (746,1000,'LON_PartPayments',180,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:22:31','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/10/25\',\'5000000\',\'274439\',\'10\',\'10\')'),
+ (747,1000,'LON_PartPayments',181,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:23:52','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (748,1000,'LON_PartPayments',182,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:23:52','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/12/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (749,1000,'LON_PartPayments',183,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:23:52','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/01/24\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (750,1000,'LON_PartPayments',184,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:23:52','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/02/23\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (751,1000,'LON_PartPayments',185,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:23:52','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/03/23\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (752,1000,'LON_PartPayments',186,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:23:52','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/04/23\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (753,1000,'LON_PartPayments',187,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:23:52','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/05/24\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (754,1000,'LON_PartPayments',188,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:23:52','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/06/24\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (755,1000,'LON_PartPayments',189,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:23:52','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/07/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (756,1000,'LON_PartPayments',190,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:23:52','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/08/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (757,1000,'LON_PartPayments',191,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:23:52','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/09/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (758,1000,'LON_PartPayments',192,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:23:52','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/10/25\',\'5000000\',\'274439\',\'10\',\'10\')'),
+ (759,1000,'LON_PartPayments',184,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:24:48','update LON_PartPayments set PayID=\'184\',PartID=\'2\',PayDate=\'2016/02/23\',PayAmount=\'5000000\',WageAmount=\'275000\',CustomerWage=\'10\',FundWage=\'10\',StatusID=\'1\',ChequeBank=\'1\',ChequeBranch=null where  PayID=\'184\''),
+ (760,1000,'LON_PartPayments',193,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:24:51','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/11/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (761,1000,'LON_PartPayments',194,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:24:51','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2015/12/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (762,1000,'LON_PartPayments',195,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:24:51','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/01/24\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (763,1000,'LON_PartPayments',196,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:24:51','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/02/23\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (764,1000,'LON_PartPayments',197,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:24:51','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/03/23\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (765,1000,'LON_PartPayments',198,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:24:51','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/04/23\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (766,1000,'LON_PartPayments',199,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:24:51','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/05/24\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (767,1000,'LON_PartPayments',200,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:24:51','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/06/24\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (768,1000,'LON_PartPayments',201,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:24:51','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/07/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (769,1000,'LON_PartPayments',202,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:24:51','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/08/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (770,1000,'LON_PartPayments',203,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:24:51','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/09/25\',\'5000000\',\'275000\',\'10\',\'10\')'),
+ (771,1000,'LON_PartPayments',204,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-22 23:24:51','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'2\',\'2016/10/25\',\'5000000\',\'274439\',\'10\',\'10\')'),
+ (772,1000,'LON_requests',16,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 00:28:36','update LON_requests set RequestID=\'16\',StatusID=\'40\' where  RequestID=\'16\''),
+ (773,1000,'BSC_persons',1006,NULL,'ADD',1000,'http://rtfund/portal/login.php',NULL,'127.0.0.1','2015-10-23 00:30:45','insert into BSC_persons(UserName,UserPass,IsReal,CompanyName,email,IsCustomer) values (\'data\',\'$P$BNVG9Rrdv82.HBgdV6Gsq8SsXOJN671\',\'NO\',\'شرکت داده 3\',\'data3@yahoo.com\',\'YES\')'),
+ (774,1000,'LON_ReqParts',5,NULL,'DELETE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:28:30','delete from LON_ReqParts where  PartID=\'5\''),
+ (775,1000,'LON_PartPayments',205,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:29:00','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'4\',\'2016/02/20\',\'5000000\',\'275000\',\'10\',\'4\')'),
+ (776,1000,'LON_PartPayments',206,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:29:00','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'4\',\'2016/03/20\',\'5000000\',\'275000\',\'10\',\'4\')'),
+ (777,1000,'LON_PartPayments',207,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:29:00','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'4\',\'2016/04/20\',\'5000000\',\'275000\',\'10\',\'4\')'),
+ (778,1000,'LON_PartPayments',208,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:29:00','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'4\',\'2016/05/21\',\'5000000\',\'275000\',\'10\',\'4\')'),
+ (779,1000,'LON_PartPayments',209,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:29:00','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'4\',\'2016/06/21\',\'5000000\',\'275000\',\'10\',\'4\')'),
+ (780,1000,'LON_PartPayments',210,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:29:00','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'4\',\'2016/07/22\',\'5000000\',\'275000\',\'10\',\'4\')'),
+ (781,1000,'LON_PartPayments',211,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:29:00','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'4\',\'2016/08/22\',\'5000000\',\'275000\',\'10\',\'4\')'),
+ (782,1000,'LON_PartPayments',212,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:29:00','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'4\',\'2016/09/22\',\'5000000\',\'275000\',\'10\',\'4\')'),
+ (783,1000,'LON_PartPayments',213,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:29:00','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'4\',\'2016/10/22\',\'5000000\',\'275000\',\'10\',\'4\')'),
+ (784,1000,'LON_PartPayments',214,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:29:00','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'4\',\'2016/11/21\',\'5000000\',\'275000\',\'10\',\'4\')'),
+ (785,1000,'LON_PartPayments',215,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:29:00','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'4\',\'2016/12/21\',\'5000000\',\'275000\',\'10\',\'4\')'),
+ (786,1000,'LON_PartPayments',216,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:29:00','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'4\',\'2017/01/20\',\'5000000\',\'274439\',\'10\',\'4\')'),
+ (787,1000,'LON_requests',19,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:47:01','update LON_requests set RequestID=\'19\',BranchID=\'2\',ReqAmount=\'150000000\',ReqDetails=null,BorrowerDesc=null,BorrowerID=null,LoanPersonID=\'1006\',assurance=\'2\',AgentGuarantee=\'NO\' where  RequestID=\'19\''),
+ (788,1000,'LON_requests',19,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:57:44','update LON_requests set RequestID=\'19\',BranchID=\'2\',ReqAmount=\'150000000\',ReqDetails=null,BorrowerDesc=null,BorrowerID=null,LoanPersonID=\'1006\',assurance=\'2\',AgentGuarantee=\'NO\' where  RequestID=\'19\''),
+ (789,1000,'LON_PartPayments',217,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:58:06','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'6\',\'2016/02/05\',\'5000000\',\'137000\',\'5\',\'10\')'),
+ (790,1000,'LON_PartPayments',218,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:58:06','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'6\',\'2016/03/06\',\'5000000\',\'137000\',\'5\',\'10\')'),
+ (791,1000,'LON_PartPayments',219,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:58:06','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'6\',\'2016/04/04\',\'5000000\',\'137000\',\'5\',\'10\')'),
+ (792,1000,'LON_PartPayments',220,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:58:06','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'6\',\'2016/05/05\',\'5000000\',\'137000\',\'5\',\'10\')'),
+ (793,1000,'LON_PartPayments',221,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:58:06','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'6\',\'2016/06/05\',\'5000000\',\'137000\',\'5\',\'10\')'),
+ (794,1000,'LON_PartPayments',222,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:58:06','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'6\',\'2016/07/06\',\'5000000\',\'137000\',\'5\',\'10\')'),
+ (795,1000,'LON_PartPayments',223,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:58:06','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'6\',\'2016/08/06\',\'5000000\',\'137000\',\'5\',\'10\')'),
+ (796,1000,'LON_PartPayments',224,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:58:06','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'6\',\'2016/09/06\',\'5000000\',\'137000\',\'5\',\'10\')'),
+ (797,1000,'LON_PartPayments',225,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:58:06','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'6\',\'2016/10/07\',\'5000000\',\'137000\',\'5\',\'10\')'),
+ (798,1000,'LON_PartPayments',226,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:58:06','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'6\',\'2016/11/06\',\'5000000\',\'137000\',\'5\',\'10\')'),
+ (799,1000,'LON_PartPayments',227,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:58:06','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'6\',\'2016/12/06\',\'5000000\',\'137000\',\'5\',\'10\')'),
+ (800,1000,'LON_PartPayments',228,NULL,'ADD',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:58:06','insert into LON_PartPayments(PartID,PayDate,PayAmount,WageAmount,CustomerWage,FundWage) values (\'6\',\'2017/01/05\',\'5000000\',\'130387\',\'5\',\'10\')'),
+ (801,1000,'LON_requests',19,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:58:58','update LON_requests set RequestID=\'19\',StatusID=\'30\' where  RequestID=\'19\''),
+ (802,1000,'LON_requests',19,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 03:59:41','update LON_requests set RequestID=\'19\',StatusID=\'40\' where  RequestID=\'19\''),
+ (803,1006,'LON_requests',19,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-23 10:29:23','update LON_requests set RequestID=\'19\',StatusID=\'50\' where  RequestID=\'19\''),
+ (804,1000,'LON_requests',19,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 10:34:13','update LON_requests set RequestID=\'19\',BranchID=\'2\',ReqAmount=\'150000000\',ReqDetails=null,BorrowerDesc=null,BorrowerID=null,LoanPersonID=\'1006\',assurance=\'2\',AgentGuarantee=\'NO\',DocumentDesc=\'یک ضامن حقیقی با فیش حقوقی و حکم کارگزینی\nاطلاعات کامل مدیران شرکت\' where  RequestID=\'19\''),
+ (805,1006,'DMS_documents',23,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-23 10:36:55','insert into DMS_documents(DocDesc,DocType,ObjectType,ObjectID) values (\'ضامن \',\'4\',\'person\',\'1006\')'),
+ (806,1006,'DMS_documents',24,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-23 10:39:29','insert into DMS_documents(DocDesc,DocType,ObjectType,ObjectID) values (\'ضامن\',\'1\',\'loan\',\'19\')'),
+ (807,1006,'DMS_documents',24,NULL,'DELETE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-23 10:40:16','delete from DMS_documents where  DocumentID=\'24\''),
+ (808,1006,'DMS_documents',25,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-23 11:01:22','insert into DMS_documents(DocDesc,DocType,ObjectType,ObjectID) values (\'ضامن\',\'1\',\'loan\',\'19\')'),
+ (809,1006,'LON_requests',19,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-23 11:01:28','update LON_requests set RequestID=\'19\',StatusID=\'50\' where  RequestID=\'19\''),
+ (810,1006,'LON_requests',19,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-23 11:01:38','update LON_requests set RequestID=\'19\',StatusID=\'50\' where  RequestID=\'19\''),
+ (811,1006,'LON_requests',19,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-23 11:02:22','update LON_requests set RequestID=\'19\',StatusID=\'50\' where  RequestID=\'19\''),
+ (812,1000,'DMS_documents',23,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 21:48:46','update DMS_documents set DocumentID=\'23\',IsConfirm=\'YES\',ConfirmPersonID=\'1000\' where  DocumentID=\'23\''),
+ (813,1000,'DMS_documents',25,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 21:54:25','update DMS_documents set DocumentID=\'25\',IsConfirm=\'NO\',ConfirmPersonID=\'1000\' where  DocumentID=\'25\''),
+ (814,1000,'DMS_documents',25,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 21:54:59','update DMS_documents set DocumentID=\'25\',IsConfirm=\'NO\',ConfirmPersonID=\'1000\' where  DocumentID=\'25\''),
+ (815,1000,'LON_requests',19,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-23 21:57:15','update LON_requests set RequestID=\'19\',StatusID=\'60\' where  RequestID=\'19\''),
+ (816,1006,'DMS_documents',25,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-23 22:35:57','update DMS_documents set DocumentID=\'25\',DocDesc=\'ضامن \',DocType=\'1\',ObjectType=\'loan\',ObjectID=\'19\',FileType=\'jpg\',IsConfirm=\'NOTSET\',RejectDesc=\'سشتی مشیت خنشصم\' where  DocumentID=\'25\''),
+ (817,1006,'LON_requests',19,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-23 22:55:52','update LON_requests set RequestID=\'19\',StatusID=\'50\' where  RequestID=\'19\''),
+ (818,1000,'DMS_documents',25,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 00:48:18','update DMS_documents set DocumentID=\'25\',IsConfirm=\'NO\',ConfirmPersonID=\'1000\',RejectDesc=\'function () {\n        var me = this,\n            val = me.rawToValue(me.processRawValue(me.getRawValue()));\n        me.value = val;\n        return val;\n    }\' where  DocumentID=\'25\''),
+ (819,1000,'DMS_documents',25,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 00:54:27','update DMS_documents set DocumentID=\'25\',IsConfirm=\'NO\',ConfirmPersonID=\'1000\',RejectDesc=\'function () {\n        var me = this,\n            val = me.rawToValue(me.processRawValue(me.getRawValue()));\n        me.value = val;\n        return val;\n    }\' where  DocumentID=\'25\''),
+ (820,1000,'DMS_documents',25,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 00:55:51','update DMS_documents set DocumentID=\'25\',IsConfirm=\'NO\',ConfirmPersonID=\'1000\',RejectDesc=\'تناقض در شرح و فایل ارسالی\' where  DocumentID=\'25\''),
+ (821,1000,'DMS_documents',25,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 00:57:22','update DMS_documents set DocumentID=\'25\',IsConfirm=\'NO\',ConfirmPersonID=\'1000\',RejectDesc=\'تناقض در فایل ارسالی با شرح\' where  DocumentID=\'25\''),
+ (822,1000,'LON_requests',19,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 00:57:35','update LON_requests set RequestID=\'19\',StatusID=\'60\' where  RequestID=\'19\''),
+ (823,1006,'DMS_documents',25,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-24 00:58:27','update DMS_documents set DocumentID=\'25\',DocDesc=\'ضامن اول\',DocType=\'1\',ObjectType=\'loan\',ObjectID=\'19\',FileType=\'jpg\',IsConfirm=\'NOTSET\',RejectDesc=\'تناقض در فایل ارسالی با شرح\' where  DocumentID=\'25\''),
+ (824,1006,'DMS_documents',25,NULL,'DELETE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-24 00:58:35','delete from DMS_documents where  DocumentID=\'25\''),
+ (825,1006,'DMS_documents',26,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-24 00:58:50','insert into DMS_documents(DocDesc,DocType,ObjectType,ObjectID) values (\'ضامن\',\'3\',\'loan\',\'19\')'),
+ (826,1006,'LON_requests',19,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-24 00:59:04','update LON_requests set RequestID=\'19\',StatusID=\'50\' where  RequestID=\'19\''),
+ (827,1000,'DMS_documents',26,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 00:59:59','update DMS_documents set DocumentID=\'26\',IsConfirm=\'YES\',ConfirmPersonID=\'1000\',RejectDesc=null where  DocumentID=\'26\''),
+ (828,1000,'DMS_documents',26,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 01:00:46','update DMS_documents set DocumentID=\'26\',IsConfirm=\'YES\',ConfirmPersonID=\'1000\',RejectDesc=null where  DocumentID=\'26\''),
+ (829,1000,'LON_requests',19,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 01:09:27','update LON_requests set RequestID=\'19\',StatusID=\'60\' where  RequestID=\'19\''),
+ (830,1000,'LON_requests',18,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 02:09:30','update LON_requests set RequestID=\'18\',StatusID=\'30\' where  RequestID=\'18\''),
+ (831,1000,'LON_requests',18,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 02:11:52','update LON_requests set RequestID=\'18\',StatusID=\'40\' where  RequestID=\'18\''),
+ (832,1000,'LON_requests',19,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 02:16:10','update LON_requests set RequestID=\'19\',StatusID=\'60\' where  RequestID=\'19\''),
+ (833,1000,'LON_requests',19,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 02:19:29','update LON_requests set RequestID=\'19\',StatusID=\'60\' where  RequestID=\'19\''),
+ (834,1000,'LON_requests',19,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 02:20:25','update LON_requests set RequestID=\'19\',StatusID=\'60\' where  RequestID=\'19\''),
+ (835,1006,'DMS_documents',27,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-24 02:45:02','insert into DMS_documents(DocType,ObjectType,ObjectID) values (\'3\',\'person\',\'1006\')'),
+ (836,1006,'LON_requests',19,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-10-24 02:45:13','update LON_requests set RequestID=\'19\',StatusID=\'50\' where  RequestID=\'19\''),
+ (837,1000,'DMS_documents',27,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 02:49:32','update DMS_documents set DocumentID=\'27\',IsConfirm=\'YES\',ConfirmPersonID=\'1000\',RejectDesc=null where  DocumentID=\'27\''),
+ (838,1000,'LON_requests',19,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-24 02:49:41','update LON_requests set RequestID=\'19\',StatusID=\'70\' where  RequestID=\'19\''),
+ (839,1000,'LON_requests',19,NULL,'UPDATE',6,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-28 08:46:42','update LON_requests set RequestID=\'19\',StatusID=\'80\' where  RequestID=\'19\''),
+ (840,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 00:52:46','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'34\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (841,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 00:52:46','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'8\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (842,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 00:52:46','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'25\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (843,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 00:52:46','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'36\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (844,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 00:52:46','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'22\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (845,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 00:52:46','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'23\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (846,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 00:52:46','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'26\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (847,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 00:52:46','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'27\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (848,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 00:52:46','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'28\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (849,1000,'ACC_tafsilis',2,NULL,'DELETE',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 00:53:22','delete from ACC_tafsilis where  TafsiliID=\'2\''),
+ (850,1000,'ACC_tafsilis',3,NULL,'UPDATE',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 01:55:49','update ACC_tafsilis set TafsiliID=\'3\',TafsiliType=\'2\',TafsiliCode=\'1\',TafsiliDesc=\'94\' where  TafsiliID=\'3\''),
+ (851,1000,'ACC_tafsilis',4,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 01:55:58','insert into ACC_tafsilis(TafsiliType,TafsiliCode,TafsiliDesc,BranchID) values (\'2\',\'95\',\'95\',\'1\')'),
+ (852,1000,'ACC_tafsilis',4,NULL,'UPDATE',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 01:56:11','update ACC_tafsilis set TafsiliID=\'4\',TafsiliType=\'2\',TafsiliCode=\'95\',TafsiliDesc=\'95\' where  TafsiliID=\'4\''),
+ (853,1000,'ACC_tafsilis',3,NULL,'UPDATE',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 01:56:16','update ACC_tafsilis set TafsiliID=\'3\',TafsiliType=\'2\',TafsiliCode=\'1394\',TafsiliDesc=\'94\' where  TafsiliID=\'3\''),
+ (854,1000,'ACC_tafsilis',3,NULL,'UPDATE',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 01:56:22','update ACC_tafsilis set TafsiliID=\'3\',TafsiliType=\'2\',TafsiliCode=\'1394\',TafsiliDesc=\'1394\' where  TafsiliID=\'3\''),
+ (855,1000,'ACC_tafsilis',4,NULL,'UPDATE',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 01:56:26','update ACC_tafsilis set TafsiliID=\'4\',TafsiliType=\'2\',TafsiliCode=\'1395\',TafsiliDesc=\'1395\' where  TafsiliID=\'4\''),
+ (856,1000,'ACC_tafsilis',5,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 01:56:38','insert into ACC_tafsilis(TafsiliType,TafsiliCode,TafsiliDesc,BranchID) values (\'2\',\'1396\',\'1396\',\'1\')'),
+ (857,1000,'ACC_tafsilis',6,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 01:56:46','insert into ACC_tafsilis(TafsiliType,TafsiliCode,TafsiliDesc,BranchID) values (\'2\',\'1397\',\'1397\',\'1\')'),
+ (858,1000,'ACC_tafsilis',7,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 01:56:52','insert into ACC_tafsilis(TafsiliType,TafsiliCode,TafsiliDesc,BranchID) values (\'2\',\'1398\',\'1398\',\'1\')'),
+ (859,1000,'ACC_tafsilis',8,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 01:57:01','insert into ACC_tafsilis(TafsiliType,TafsiliCode,TafsiliDesc,BranchID) values (\'2\',\'1399\',\'1399\',\'1\')'),
+ (860,1000,'ACC_tafsilis',9,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 01:57:08','insert into ACC_tafsilis(TafsiliType,TafsiliCode,TafsiliDesc,BranchID) values (\'2\',\'1400\',\'1400\',\'1\')'),
+ (861,1000,'FRW_menus',50,NULL,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 13:16:49','insert into FRW_menus(SystemID,ParentID,MenuDesc,IsActive,ordering,MenuPath) values (\'2\',\'7\',\'تعیین شعبه و دوره\',\'YES\',\'1\',\'global/UserState.php\')'),
+ (862,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 13:17:04','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'50\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (863,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 13:17:04','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'34\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (864,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 13:17:04','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'8\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (865,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 13:17:04','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'25\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (866,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 13:17:04','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'36\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (867,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 13:17:04','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'22\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (868,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 13:17:04','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'23\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (869,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 13:17:04','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'26\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (870,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 13:17:04','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'27\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (871,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-10-30 13:17:04','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'28\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (872,1000,'ACC_blocks',10,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 14:33:59','insert into ACC_blocks(LevelID,BlockCode,BlockDesc,BranchID) values (\'1\',\'02\',\'وام ها\',\'1\')'),
+ (873,1000,'ACC_CostCodes',6,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-10-30 14:34:43','update ACC_CostCodes c \n			left join ACC_blocks b1 on(b1.levelID=1 AND b1.blockID=c.level1)\n			left join ACC_blocks b2 on(b2.levelID=2 AND b2.blockID=c.level2)\n			left join ACC_blocks b3 on(b3.levelID=3 AND b3.blockID=c.level3)\n			set c.CostCode=concat(ifnull(b1.blockCode,\'\'),\n								ifnull(b2.blockCode,\'\'),\n								ifnull(b3.blockCode,\'\') )\n			where CostID=\'6\''),
+ (874,1000,'LON_ReqParts',6,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:41:14','update LON_ReqParts set PartID=\'6\',RequestID=\'19\',PartDesc=\'م اول\',PartDate=\'2016/01/06\',PartAmount=\'60000000\',InstallmentCount=\'12\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'0\',ForfeitPercent=\'4\',CustomerWage=\'5\',FundWage=\'10\',IsPayed=\'YES\' where  PartID=\'6\''),
+ (875,1000,'LON_ReqParts',6,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:42:33','update LON_ReqParts set PartID=\'6\',RequestID=\'19\',PartDesc=\'م اول\',PartDate=\'2016/01/06\',PartAmount=\'60000000\',InstallmentCount=\'12\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'0\',ForfeitPercent=\'4\',CustomerWage=\'5\',FundWage=\'10\',IsPayed=\'YES\' where  PartID=\'6\''),
+ (876,1000,'LON_requests',19,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:42:33','update LON_requests set RequestID=\'19\',StatusID=\'80\' where  RequestID=\'19\''),
+ (877,1000,'LON_ReqParts',6,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:43:53','update LON_ReqParts set PartID=\'6\',RequestID=\'19\',PartDesc=\'م اول\',PartDate=\'2016/01/06\',PartAmount=\'60000000\',InstallmentCount=\'12\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'0\',ForfeitPercent=\'4\',CustomerWage=\'5\',FundWage=\'10\',IsPayed=\'YES\' where  PartID=\'6\''),
+ (878,1000,'LON_requests',19,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:43:53','update LON_requests set RequestID=\'19\',StatusID=\'80\' where  RequestID=\'19\''),
+ (879,1000,'LON_ReqParts',6,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:44:18','update LON_ReqParts set PartID=\'6\',RequestID=\'19\',PartDesc=\'م اول\',PartDate=\'2016/01/06\',PartAmount=\'60000000\',InstallmentCount=\'12\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'0\',ForfeitPercent=\'4\',CustomerWage=\'5\',FundWage=\'10\',IsPayed=\'YES\' where  PartID=\'6\''),
+ (880,1000,'LON_requests',19,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:44:18','update LON_requests set RequestID=\'19\',StatusID=\'80\' where  RequestID=\'19\''),
+ (881,1000,'LON_ReqParts',6,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:45:00','update LON_ReqParts set PartID=\'6\',RequestID=\'19\',PartDesc=\'م اول\',PartDate=\'2016/01/06\',PartAmount=\'60000000\',InstallmentCount=\'12\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'0\',ForfeitPercent=\'4\',CustomerWage=\'5\',FundWage=\'10\',IsPayed=\'YES\' where  PartID=\'6\''),
+ (882,1000,'LON_requests',19,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:45:00','update LON_requests set RequestID=\'19\',StatusID=\'80\' where  RequestID=\'19\''),
+ (883,1000,'LON_ReqParts',6,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:46:06','update LON_ReqParts set PartID=\'6\',RequestID=\'19\',PartDesc=\'م اول\',PartDate=\'2016/01/06\',PartAmount=\'60000000\',InstallmentCount=\'12\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'0\',ForfeitPercent=\'4\',CustomerWage=\'5\',FundWage=\'10\',IsPayed=\'YES\' where  PartID=\'6\''),
+ (884,1000,'LON_requests',19,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:46:06','update LON_requests set RequestID=\'19\',StatusID=\'80\' where  RequestID=\'19\''),
+ (885,1000,'LON_ReqParts',6,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:46:37','update LON_ReqParts set PartID=\'6\',RequestID=\'19\',PartDesc=\'م اول\',PartDate=\'2016/01/06\',PartAmount=\'60000000\',InstallmentCount=\'12\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'0\',ForfeitPercent=\'4\',CustomerWage=\'5\',FundWage=\'10\',IsPayed=\'YES\' where  PartID=\'6\''),
+ (886,1000,'LON_requests',19,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:46:37','update LON_requests set RequestID=\'19\',StatusID=\'80\' where  RequestID=\'19\''),
+ (887,1000,'LON_ReqParts',6,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:47:21','update LON_ReqParts set PartID=\'6\',RequestID=\'19\',PartDesc=\'م اول\',PartDate=\'2016/01/06\',PartAmount=\'60000000\',InstallmentCount=\'12\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'0\',ForfeitPercent=\'4\',CustomerWage=\'5\',FundWage=\'10\',IsPayed=\'YES\' where  PartID=\'6\''),
+ (888,1000,'LON_requests',19,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:47:21','update LON_requests set RequestID=\'19\',StatusID=\'80\' where  RequestID=\'19\''),
+ (889,1000,'LON_ReqParts',6,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:48:10','update LON_ReqParts set PartID=\'6\',RequestID=\'19\',PartDesc=\'م اول\',PartDate=\'2016/01/06\',PartAmount=\'60000000\',InstallmentCount=\'12\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'0\',ForfeitPercent=\'4\',CustomerWage=\'5\',FundWage=\'10\',IsPayed=\'YES\' where  PartID=\'6\''),
+ (890,1000,'LON_requests',19,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:48:10','update LON_requests set RequestID=\'19\',StatusID=\'80\' where  RequestID=\'19\''),
+ (891,1000,'LON_ReqParts',6,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:50:14','update LON_ReqParts set PartID=\'6\',RequestID=\'19\',PartDesc=\'م اول\',PartDate=\'2016/01/06\',PartAmount=\'60000000\',InstallmentCount=\'12\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'0\',ForfeitPercent=\'4\',CustomerWage=\'5\',FundWage=\'10\',IsPayed=\'YES\' where  PartID=\'6\''),
+ (892,1000,'LON_requests',19,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:50:14','update LON_requests set RequestID=\'19\',StatusID=\'80\' where  RequestID=\'19\''),
+ (893,1000,'LON_ReqParts',6,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:50:45','update LON_ReqParts set PartID=\'6\',RequestID=\'19\',PartDesc=\'م اول\',PartDate=\'2016/01/06\',PartAmount=\'60000000\',InstallmentCount=\'12\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'0\',ForfeitPercent=\'4\',CustomerWage=\'5\',FundWage=\'10\',IsPayed=\'YES\' where  PartID=\'6\''),
+ (894,1000,'LON_requests',19,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:50:45','update LON_requests set RequestID=\'19\',StatusID=\'80\' where  RequestID=\'19\''),
+ (895,1000,'LON_ReqParts',6,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:51:17','update LON_ReqParts set PartID=\'6\',RequestID=\'19\',PartDesc=\'م اول\',PartDate=\'2016/01/06\',PartAmount=\'60000000\',InstallmentCount=\'12\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'0\',ForfeitPercent=\'4\',CustomerWage=\'5\',FundWage=\'10\',IsPayed=\'YES\' where  PartID=\'6\''),
+ (896,1000,'LON_requests',19,NULL,'UPDATE',2,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-10-30 14:51:17','update LON_requests set RequestID=\'19\',StatusID=\'80\' where  RequestID=\'19\'');
 /*!40000 ALTER TABLE `DataAudit` ENABLE KEYS */;
 
 
@@ -1179,17 +1579,17 @@ INSERT INTO `DataAudit` (`DataAuditID`,`PersonID`,`TableName`,`MainObjectID`,`Su
 
 DROP TABLE IF EXISTS `FGR_FormElements`;
 CREATE TABLE `FGR_FormElements` (
-  `ElementID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `ElementID` int(10) unsigned NOT NULL auto_increment,
   `FormID` int(10) unsigned NOT NULL,
-  `ElTitle` varchar(45) CHARACTER SET utf8 NOT NULL,
+  `ElTitle` varchar(45) character set utf8 NOT NULL,
   `ElType` varchar(45) NOT NULL,
-  `ElValue` varchar(45) DEFAULT NULL,
-  `RefField` varchar(45) DEFAULT NULL,
-  `TypeID` int(10) unsigned DEFAULT NULL,
+  `ElValue` varchar(45) default NULL,
+  `RefField` varchar(45) default NULL,
+  `TypeID` int(10) unsigned default NULL,
   `ordering` varchar(45) NOT NULL,
-  `width` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`ElementID`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
+  `width` varchar(45) default NULL,
+  PRIMARY KEY  (`ElementID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `FGR_FormElements`
@@ -1211,7 +1611,7 @@ DROP TABLE IF EXISTS `FGR_StepElements`;
 CREATE TABLE `FGR_StepElements` (
   `StepID` int(10) unsigned NOT NULL,
   `ElementID` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`StepID`,`ElementID`)
+  PRIMARY KEY  (`StepID`,`ElementID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -1228,12 +1628,12 @@ CREATE TABLE `FGR_StepElements` (
 
 DROP TABLE IF EXISTS `FGR_forms`;
 CREATE TABLE `FGR_forms` (
-  `FormID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد فرم',
+  `FormID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد فرم',
   `FormName` varchar(500) NOT NULL COMMENT 'عنوان فرم',
-  `reference` varchar(45) DEFAULT NULL COMMENT 'آیتم',
-  `FileInclude` enum('YES','NO') DEFAULT 'NO',
-  PRIMARY KEY (`FormID`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+  `reference` varchar(45) default NULL COMMENT 'آیتم',
+  `FileInclude` enum('YES','NO') default 'NO',
+  PRIMARY KEY  (`FormID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `FGR_forms`
@@ -1251,16 +1651,16 @@ INSERT INTO `FGR_forms` (`FormID`,`FormName`,`reference`,`FileInclude`) VALUES
 
 DROP TABLE IF EXISTS `FGR_steps`;
 CREATE TABLE `FGR_steps` (
-  `StepID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد مرحله',
+  `StepID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد مرحله',
   `FormID` int(10) unsigned NOT NULL COMMENT 'کد فرم',
   `ordering` smallint(5) unsigned NOT NULL COMMENT 'ترتیب',
   `StepTitle` varchar(200) NOT NULL COMMENT 'عنوان مرحله',
   `PostID` int(10) unsigned NOT NULL COMMENT 'پست',
   `BreakDuration` smallint(5) unsigned NOT NULL COMMENT 'مهلت به روز',
-  PRIMARY KEY (`StepID`),
+  PRIMARY KEY  (`StepID`),
   KEY `FK_FGR_steps_1` (`FormID`),
   CONSTRAINT `FK_FGR_steps_1` FOREIGN KEY (`FormID`) REFERENCES `fgr_forms` (`FormID`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `FGR_steps`
@@ -1282,11 +1682,11 @@ DROP TABLE IF EXISTS `FRW_access`;
 CREATE TABLE `FRW_access` (
   `MenuID` int(11) NOT NULL,
   `PersonID` int(11) NOT NULL,
-  `ViewFlag` enum('YES','NO') DEFAULT 'NO',
-  `AddFlag` enum('YES','NO') DEFAULT 'NO',
-  `EditFlag` enum('YES','NO') DEFAULT 'NO',
-  `RemoveFlag` enum('YES','NO') DEFAULT 'NO',
-  PRIMARY KEY (`MenuID`,`PersonID`)
+  `ViewFlag` enum('YES','NO') default 'NO',
+  `AddFlag` enum('YES','NO') default 'NO',
+  `EditFlag` enum('YES','NO') default 'NO',
+  `RemoveFlag` enum('YES','NO') default 'NO',
+  PRIMARY KEY  (`MenuID`,`PersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -1308,7 +1708,7 @@ INSERT INTO `FRW_access` (`MenuID`,`PersonID`,`ViewFlag`,`AddFlag`,`EditFlag`,`R
  (18,1000,'YES','YES','YES','YES'),
  (22,1000,'YES','YES','YES','YES'),
  (23,1000,'YES','YES','YES','YES'),
- (25,1000,'YES','YES','NO','NO'),
+ (25,1000,'YES','YES','YES','YES'),
  (26,1000,'YES','YES','YES','YES'),
  (27,1000,'YES','YES','YES','YES'),
  (28,1000,'YES','YES','YES','YES'),
@@ -1316,12 +1716,13 @@ INSERT INTO `FRW_access` (`MenuID`,`PersonID`,`ViewFlag`,`AddFlag`,`EditFlag`,`R
  (31,1000,'YES','YES','YES','YES'),
  (32,1000,'YES','YES','YES','YES'),
  (33,1000,'YES','YES','YES','YES'),
- (34,1000,'YES','NO','NO','NO'),
+ (34,1000,'YES','YES','YES','YES'),
  (35,1000,'YES','YES','YES','YES'),
- (36,1000,'YES','YES','NO','NO'),
+ (36,1000,'YES','YES','YES','YES'),
  (38,1000,'YES','YES','YES','YES'),
  (45,1000,'YES','YES','YES','YES'),
- (49,1000,'YES','YES','YES','YES');
+ (49,1000,'YES','YES','YES','YES'),
+ (50,1000,'YES','YES','YES','YES');
 /*!40000 ALTER TABLE `FRW_access` ENABLE KEYS */;
 
 
@@ -1332,22 +1733,22 @@ INSERT INTO `FRW_access` (`MenuID`,`PersonID`,`ViewFlag`,`AddFlag`,`EditFlag`,`R
 DROP TABLE IF EXISTS `FRW_menus`;
 CREATE TABLE `FRW_menus` (
   `SystemID` int(10) unsigned NOT NULL,
-  `MenuID` int(11) NOT NULL AUTO_INCREMENT,
-  `ParentID` int(10) unsigned DEFAULT NULL,
+  `MenuID` int(11) NOT NULL auto_increment,
+  `ParentID` int(10) unsigned default NULL,
   `MenuDesc` varchar(500) NOT NULL,
-  `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
-  `ordering` smallint(5) unsigned DEFAULT NULL,
-  `icon` varchar(200) DEFAULT NULL,
-  `MenuPath` varchar(500) DEFAULT NULL,
-  `IsCustomer` enum('YES','NO') NOT NULL DEFAULT 'NO',
-  `IsShareholder` enum('YES','NO') NOT NULL DEFAULT 'NO',
-  `IsStaff` enum('YES','NO') NOT NULL DEFAULT 'NO',
-  `IsAgent` enum('YES','NO') NOT NULL DEFAULT 'NO',
-  `IsSupporter` enum('YES','NO') NOT NULL DEFAULT 'NO',
-  PRIMARY KEY (`MenuID`),
+  `IsActive` enum('YES','NO') NOT NULL default 'YES',
+  `ordering` smallint(5) unsigned default NULL,
+  `icon` varchar(200) default NULL,
+  `MenuPath` varchar(500) default NULL,
+  `IsCustomer` enum('YES','NO') NOT NULL default 'NO',
+  `IsShareholder` enum('YES','NO') NOT NULL default 'NO',
+  `IsStaff` enum('YES','NO') NOT NULL default 'NO',
+  `IsAgent` enum('YES','NO') NOT NULL default 'NO',
+  `IsSupporter` enum('YES','NO') NOT NULL default 'NO',
+  PRIMARY KEY  (`MenuID`),
   KEY `FK_FRW_menus_1` (`SystemID`),
   CONSTRAINT `FK_FRW_menus_1` FOREIGN KEY (`SystemID`) REFERENCES `frw_systems` (`SystemID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `FRW_menus`
@@ -1399,7 +1800,8 @@ INSERT INTO `FRW_menus` (`SystemID`,`MenuID`,`ParentID`,`MenuDesc`,`IsActive`,`o
  (1000,46,0,'عاملین','YES',NULL,NULL,NULL,'NO','NO','NO','YES','NO'),
  (1000,47,46,'معرفی اخذ وام','YES',NULL,NULL,'../loan/request/RequestInfo.php','NO','NO','NO','YES','NO'),
  (8,48,0,'مدیریت ذینفعان','YES',1,NULL,NULL,'NO','NO','NO','NO','NO'),
- (8,49,48,'اطلاعات و مدارک ذینفعان','YES',1,'users.gif','persons.php','NO','NO','NO','NO','NO');
+ (8,49,48,'اطلاعات و مدارک ذینفعان','YES',1,'users.gif','persons.php','NO','NO','NO','NO','NO'),
+ (2,50,7,'تعیین شعبه و دوره','YES',1,NULL,'global/UserState.php','NO','NO','NO','NO','NO');
 /*!40000 ALTER TABLE `FRW_menus` ENABLE KEYS */;
 
 
@@ -1409,13 +1811,13 @@ INSERT INTO `FRW_menus` (`SystemID`,`MenuID`,`ParentID`,`MenuDesc`,`IsActive`,`o
 
 DROP TABLE IF EXISTS `FRW_systems`;
 CREATE TABLE `FRW_systems` (
-  `SystemID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `SysName` varchar(500) CHARACTER SET utf8 COLLATE utf8_persian_ci NOT NULL,
+  `SystemID` int(10) unsigned NOT NULL auto_increment,
+  `SysName` varchar(500) character set utf8 collate utf8_persian_ci NOT NULL,
   `SysPath` varchar(500) NOT NULL,
-  `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
+  `IsActive` enum('YES','NO') NOT NULL default 'YES',
   `SysIcon` varchar(500) NOT NULL,
-  PRIMARY KEY (`SystemID`)
-) ENGINE=InnoDB AUTO_INCREMENT=1002 DEFAULT CHARSET=latin1;
+  PRIMARY KEY  (`SystemID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `FRW_systems`
@@ -1439,11 +1841,11 @@ INSERT INTO `FRW_systems` (`SystemID`,`SysName`,`SysPath`,`IsActive`,`SysIcon`) 
 
 DROP TABLE IF EXISTS `FRW_units`;
 CREATE TABLE `FRW_units` (
-  `UnitID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `ParentID` int(10) unsigned DEFAULT NULL,
-  `UnitName` varchar(500) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`UnitID`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1 COMMENT='واحدهای سازمانی';
+  `UnitID` int(10) unsigned NOT NULL auto_increment,
+  `ParentID` int(10) unsigned default NULL,
+  `UnitName` varchar(500) character set utf8 NOT NULL,
+  PRIMARY KEY  (`UnitID`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='واحدهای سازمانی';
 
 --
 -- Dumping data for table `FRW_units`
@@ -1458,65 +1860,18 @@ INSERT INTO `FRW_units` (`UnitID`,`ParentID`,`UnitName`) VALUES
 
 
 --
--- Definition of table `LON_PartPayments`
---
-
-DROP TABLE IF EXISTS `LON_PartPayments`;
-CREATE TABLE `LON_PartPayments` (
-  `PayID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ردیف پرداخت',
-  `PartID` int(10) unsigned NOT NULL COMMENT 'کد مرحله وام',
-  `PayDate` date NOT NULL COMMENT 'تاریخ سررسید',
-  `PayAmount` decimal(15,0) NOT NULL COMMENT 'مبلغ خالص',
-  `FeeAmount` decimal(15,0) NOT NULL COMMENT 'مبلغ کارمزد',
-  `FeePercent` smallint(5) unsigned NOT NULL COMMENT 'درصد کارمزد',
-  `PaidDate` datetime NOT NULL COMMENT 'تاریخ پرداخت',
-  `PaidAmount` decimal(15,0) NOT NULL COMMENT 'مبلغ چرداخت شده',
-  `StatusID` smallint(5) unsigned NOT NULL,
-  PRIMARY KEY (`PayID`) 
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `LON_PartPayments`
---
-
-/*!40000 ALTER TABLE `LON_PartPayments` DISABLE KEYS */;
-/*!40000 ALTER TABLE `LON_PartPayments` ENABLE KEYS */;
-
-
---
--- Definition of table `LON_ReqDocs`
---
-
-DROP TABLE IF EXISTS `LON_ReqDocs`;
-CREATE TABLE `LON_ReqDocs` (
-  `ReqDocID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'مدرک درخواست',
-  `RequestID` int(10) unsigned NOT NULL COMMENT 'شماره درخواست',
-  `DocType` int(10) unsigned NOT NULL COMMENT 'نوع مدرک',
-  `description` varchar(5000) NOT NULL COMMENT 'توضیحات',
-  PRIMARY KEY (`ReqDocID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `LON_ReqDocs`
---
-
-/*!40000 ALTER TABLE `LON_ReqDocs` DISABLE KEYS */;
-/*!40000 ALTER TABLE `LON_ReqDocs` ENABLE KEYS */;
-
-
---
 -- Definition of table `LON_ReqFlow`
 --
 
 DROP TABLE IF EXISTS `LON_ReqFlow`;
 CREATE TABLE `LON_ReqFlow` (
-  `FlowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `FlowID` int(10) unsigned NOT NULL auto_increment,
   `RequestID` int(10) unsigned NOT NULL,
   `PersonID` int(10) unsigned NOT NULL,
   `StatusID` smallint(5) unsigned NOT NULL,
   `ActDate` datetime NOT NULL,
-  `description` varchar(500) CHARACTER SET utf8 DEFAULT NULL,
-  PRIMARY KEY (`FlowID`)
+  `StepComment` varchar(500) character set utf8 default NULL,
+  PRIMARY KEY  (`FlowID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -1524,6 +1879,15 @@ CREATE TABLE `LON_ReqFlow` (
 --
 
 /*!40000 ALTER TABLE `LON_ReqFlow` DISABLE KEYS */;
+INSERT INTO `LON_ReqFlow` (`FlowID`,`RequestID`,`PersonID`,`StatusID`,`ActDate`,`StepComment`) VALUES 
+ (1,1,1,1,'2015-10-24 02:10:20',''),
+ (2,18,1000,40,'2015-10-24 02:11:52',''),
+ (3,19,1000,60,'2015-10-24 02:16:10',''),
+ (4,19,1000,60,'2015-10-24 02:19:29','یشس ی یش شی ش'),
+ (5,19,1000,60,'2015-10-24 02:20:25','منی کیمسن بکسنی بکنسی ب کنبسی نیکم'),
+ (6,19,1006,50,'2015-10-24 02:45:13',''),
+ (7,19,1000,70,'2015-10-24 02:49:41',''),
+ (8,19,1000,80,'2015-10-28 08:46:42','');
 /*!40000 ALTER TABLE `LON_ReqFlow` ENABLE KEYS */;
 
 
@@ -1533,55 +1897,114 @@ CREATE TABLE `LON_ReqFlow` (
 
 DROP TABLE IF EXISTS `LON_ReqParts`;
 CREATE TABLE `LON_ReqParts` (
-  `PartID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `PartID` int(10) unsigned NOT NULL auto_increment,
   `RequestID` int(10) unsigned NOT NULL,
   `PartDesc` varchar(200) NOT NULL,
-  `PayDate` date NOT NULL,
+  `PartDate` date NOT NULL,
   `PartAmount` decimal(15,0) NOT NULL,
-  `PayCount` smallint(5) unsigned NOT NULL DEFAULT '1',
-  `IntervalType` enum('MONTH','DAY') NOT NULL DEFAULT 'MONTH',
-  `PayInterval` smallint(5) unsigned NOT NULL DEFAULT '1',
-  `DelayMonths` smallint(5) unsigned NOT NULL DEFAULT '0',
-  `ForfeitPercent` smallint(5) unsigned NOT NULL DEFAULT '0',
-  `CustomerFee` smallint(5) unsigned NOT NULL DEFAULT '0',
-  `FundFee` smallint(5) unsigned NOT NULL DEFAULT '0',
-  `AgentFee` smallint(5) unsigned NOT NULL DEFAULT '0',
-  PRIMARY KEY (`PartID`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+  `InstallmentCount` smallint(5) unsigned NOT NULL default '1',
+  `IntervalType` enum('MONTH','DAY') NOT NULL default 'MONTH',
+  `PayInterval` smallint(5) unsigned NOT NULL default '1',
+  `DelayMonths` smallint(5) unsigned NOT NULL default '0',
+  `ForfeitPercent` smallint(5) unsigned NOT NULL default '0',
+  `CustomerWage` smallint(5) unsigned NOT NULL default '0',
+  `FundWage` smallint(5) unsigned NOT NULL default '0',
+  `IsPayed` enum('YES','NO') NOT NULL default 'NO',
+  PRIMARY KEY  (`PartID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `LON_ReqParts`
 --
 
 /*!40000 ALTER TABLE `LON_ReqParts` DISABLE KEYS */;
-INSERT INTO `LON_ReqParts` (`PartID`,`RequestID`,`PartDesc`,`PayDate`,`PartAmount`,`PayCount`,`IntervalType`,`PayInterval`,`DelayMonths`,`ForfeitPercent`,`CustomerFee`,`FundFee`,`AgentFee`) VALUES 
- (1,15,'','2015-10-26','60000000',12,'MONTH',1,0,4,4,10,0),
- (2,16,'مرحله اول','2015-10-26','60000000',12,'MONTH',1,6,4,4,10,0),
- (3,16,'مرحله دوم','2015-10-26','60000000',12,'DAY',60,6,4,4,10,6),
- (4,18,'مرحله اول','2016-01-21','60000000',12,'MONTH',1,0,4,10,4,6),
- (5,18,'مرحله دوم','2016-01-21','60000000',12,'MONTH',1,0,4,10,4,6),
- (6,19,'م اول','2016-01-06','60000000',12,'MONTH',1,0,4,5,10,2);
+INSERT INTO `LON_ReqParts` (`PartID`,`RequestID`,`PartDesc`,`PartDate`,`PartAmount`,`InstallmentCount`,`IntervalType`,`PayInterval`,`DelayMonths`,`ForfeitPercent`,`CustomerWage`,`FundWage`,`IsPayed`) VALUES 
+ (1,15,'','2015-10-26','60000000',12,'MONTH',1,0,4,4,10,'NO'),
+ (2,16,'مرحله اول','2015-10-26','60000000',12,'MONTH',1,6,4,10,10,'NO'),
+ (3,16,'مرحله دوم','2015-10-26','60000000',12,'DAY',60,6,4,4,10,'NO'),
+ (4,18,'مرحله اول','2016-01-21','60000000',12,'MONTH',1,0,4,10,4,'NO'),
+ (6,19,'م اول','2016-01-06','60000000',12,'MONTH',1,0,4,5,10,'NO');
 /*!40000 ALTER TABLE `LON_ReqParts` ENABLE KEYS */;
 
 
 --
--- Definition of table `LON_guarantors`
+-- Definition of table `LON_installments`
 --
 
-DROP TABLE IF EXISTS `LON_guarantors`;
-CREATE TABLE `LON_guarantors` (
-  `RowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `LoanID` int(10) unsigned NOT NULL,
-  `fullname` varchar(500) NOT NULL,
-  PRIMARY KEY (`RowID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+DROP TABLE IF EXISTS `LON_installments`;
+CREATE TABLE `LON_installments` (
+  `InstallmentID` int(10) unsigned NOT NULL auto_increment COMMENT 'ردیف پرداخت',
+  `PartID` int(10) unsigned NOT NULL COMMENT 'کد مرحله وام',
+  `InstallmentDate` date NOT NULL COMMENT 'تاریخ سررسید',
+  `InstallmentAmount` decimal(15,0) NOT NULL COMMENT 'مبلغ خالص',
+  `WageAmount` decimal(15,0) NOT NULL COMMENT 'مبلغ کارمزد',
+  `CustomerWage` smallint(5) unsigned NOT NULL COMMENT 'درصد کارمزد',
+  `FundWage` smallint(5) unsigned NOT NULL,
+  `PaidDate` datetime default NULL COMMENT 'تاریخ پرداخت',
+  `PaidAmount` decimal(15,0) default NULL COMMENT 'مبلغ چرداخت شده',
+  `StatusID` smallint(5) unsigned NOT NULL default '1',
+  `ChequeNo` decimal(10,0) default NULL,
+  `ChequeDate` date default NULL,
+  `ChequeBank` smallint(5) unsigned default NULL,
+  `ChequeBranch` varchar(200) default NULL,
+  PRIMARY KEY  USING BTREE (`InstallmentID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `LON_guarantors`
+-- Dumping data for table `LON_installments`
 --
 
-/*!40000 ALTER TABLE `LON_guarantors` DISABLE KEYS */;
-/*!40000 ALTER TABLE `LON_guarantors` ENABLE KEYS */;
+/*!40000 ALTER TABLE `LON_installments` DISABLE KEYS */;
+INSERT INTO `LON_installments` (`InstallmentID`,`PartID`,`InstallmentDate`,`InstallmentAmount`,`WageAmount`,`CustomerWage`,`FundWage`,`PaidDate`,`PaidAmount`,`StatusID`,`ChequeNo`,`ChequeDate`,`ChequeBank`,`ChequeBranch`) VALUES 
+ (145,3,'2015-12-25','5000000','220000',4,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (146,3,'2016-02-23','5000000','220000',4,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (147,3,'2016-04-23','5000000','220000',4,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (148,3,'2016-06-22','5000000','220000',4,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (149,3,'2016-08-21','5000000','220000',4,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (150,3,'2016-10-20','5000000','220000',4,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (151,3,'2016-12-19','5000000','220000',4,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (152,3,'2017-02-17','5000000','220000',4,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (153,3,'2017-04-18','5000000','220000',4,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (154,3,'2017-06-17','5000000','220000',4,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (155,3,'2017-08-16','5000000','220000',4,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (156,3,'2017-10-15','5000000','211669',4,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (193,2,'2015-11-25','5000000','275000',10,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (194,2,'2015-12-25','5000000','275000',10,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (195,2,'2016-01-24','5000000','275000',10,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (196,2,'2016-02-23','5000000','275000',10,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (197,2,'2016-03-23','5000000','275000',10,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (198,2,'2016-04-23','5000000','275000',10,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (199,2,'2016-05-24','5000000','275000',10,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (200,2,'2016-06-24','5000000','275000',10,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (201,2,'2016-07-25','5000000','275000',10,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (202,2,'2016-08-25','5000000','275000',10,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (203,2,'2016-09-25','5000000','275000',10,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (204,2,'2016-10-25','5000000','274439',10,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (205,4,'2016-02-20','5000000','275000',10,4,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (206,4,'2016-03-20','5000000','275000',10,4,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (207,4,'2016-04-20','5000000','275000',10,4,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (208,4,'2016-05-21','5000000','275000',10,4,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (209,4,'2016-06-21','5000000','275000',10,4,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (210,4,'2016-07-22','5000000','275000',10,4,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (211,4,'2016-08-22','5000000','275000',10,4,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (212,4,'2016-09-22','5000000','275000',10,4,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (213,4,'2016-10-22','5000000','275000',10,4,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (214,4,'2016-11-21','5000000','275000',10,4,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (215,4,'2016-12-21','5000000','275000',10,4,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (216,4,'2017-01-20','5000000','274439',10,4,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (217,6,'2016-02-05','5000000','137000',5,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (218,6,'2016-03-06','5000000','137000',5,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (219,6,'2016-04-04','5000000','137000',5,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (220,6,'2016-05-05','5000000','137000',5,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (221,6,'2016-06-05','5000000','137000',5,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (222,6,'2016-07-06','5000000','137000',5,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (223,6,'2016-08-06','5000000','137000',5,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (224,6,'2016-09-06','5000000','137000',5,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (225,6,'2016-10-07','5000000','137000',5,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (226,6,'2016-11-06','5000000','137000',5,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (227,6,'2016-12-06','5000000','137000',5,10,NULL,NULL,1,NULL,NULL,NULL,NULL),
+ (228,6,'2017-01-05','5000000','130387',5,10,NULL,NULL,1,NULL,NULL,NULL,NULL);
+/*!40000 ALTER TABLE `LON_installments` ENABLE KEYS */;
 
 
 --
@@ -1590,21 +2013,21 @@ CREATE TABLE `LON_guarantors` (
 
 DROP TABLE IF EXISTS `LON_loans`;
 CREATE TABLE `LON_loans` (
-  `LoanID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد وام',
+  `LoanID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد وام',
   `GroupID` int(10) unsigned NOT NULL COMMENT 'کد گروه وام',
   `LoanDesc` varchar(500) NOT NULL COMMENT 'عنوان وام',
-  `MaxAmount` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'سقف مبلغ',
-  `PartCount` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT 'تعداد اقساط',
-  `PartInterval` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT 'فاصله اقساط',
-  `DelayCount` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT 'زمان تنفس به ماه',
-  `InsureAmount` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'مبلغ بیمه',
-  `FirstPartAmount` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'مبلغ قسط اول',
-  `ForfeitPercent` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT 'درصد جریمه',
-  `FeePercent` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT 'درصد کارمزد',
-  `FeeAmount` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'کارمزد ثابت',
-  `ProfitPercent` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT 'درصد سود',
-  PRIMARY KEY (`LoanID`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+  `MaxAmount` decimal(15,0) NOT NULL default '0' COMMENT 'سقف مبلغ',
+  `PartCount` smallint(5) unsigned NOT NULL default '0' COMMENT 'تعداد اقساط',
+  `PartInterval` smallint(5) unsigned NOT NULL default '0' COMMENT 'فاصله اقساط',
+  `DelayCount` smallint(5) unsigned NOT NULL default '0' COMMENT 'زمان تنفس به ماه',
+  `InsureAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ بیمه',
+  `FirstPartAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ قسط اول',
+  `ForfeitPercent` smallint(5) unsigned NOT NULL default '0' COMMENT 'درصد جریمه',
+  `FeePercent` smallint(5) unsigned NOT NULL default '0' COMMENT 'درصد کارمزد',
+  `FeeAmount` decimal(15,0) NOT NULL default '0' COMMENT 'کارمزد ثابت',
+  `ProfitPercent` smallint(5) unsigned NOT NULL default '0' COMMENT 'درصد سود',
+  PRIMARY KEY  (`LoanID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `LON_loans`
@@ -1625,34 +2048,35 @@ INSERT INTO `LON_loans` (`LoanID`,`GroupID`,`LoanDesc`,`MaxAmount`,`PartCount`,`
 
 DROP TABLE IF EXISTS `LON_requests`;
 CREATE TABLE `LON_requests` (
-  `RequestID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد درخواست',
-  `BranchID` int(10) unsigned DEFAULT NULL,
-  `LoanID` int(10) unsigned DEFAULT NULL COMMENT 'کد وام',
+  `RequestID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد درخواست',
+  `BranchID` int(10) unsigned default NULL,
+  `LoanID` int(10) unsigned default NULL COMMENT 'کد وام',
   `ReqPersonID` int(10) unsigned NOT NULL COMMENT 'ثبت کننده درخواست',
   `ReqDate` datetime NOT NULL COMMENT 'تاریخ درخواست',
-  `ReqAmount` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'مبلغ درخواست',
-  `StatusID` int(10) unsigned NOT NULL DEFAULT '1' COMMENT 'وضعیت',
-  `ReqDetails` varchar(4000) DEFAULT NULL,
-  `BorrowerDesc` varchar(5000) DEFAULT NULL COMMENT 'شرکت معرفی شده',
-  `BorrowerID` varchar(20) DEFAULT NULL COMMENT 'کد اقتصادی',
-  `LoanPersonID` int(10) unsigned DEFAULT NULL COMMENT 'وام گیرنده',
-  `assurance` smallint(5) unsigned DEFAULT NULL COMMENT 'تضمین وام',
-  `AgentGuarantee` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'با ضمانت عامل',
-  PRIMARY KEY (`RequestID`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8;
+  `ReqAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ درخواست',
+  `StatusID` int(10) unsigned NOT NULL default '1' COMMENT 'وضعیت',
+  `ReqDetails` varchar(4000) default NULL,
+  `BorrowerDesc` varchar(5000) default NULL COMMENT 'شرکت معرفی شده',
+  `BorrowerID` varchar(20) default NULL COMMENT 'کد اقتصادی',
+  `LoanPersonID` int(10) unsigned default NULL COMMENT 'وام گیرنده',
+  `guarantees` varchar(20) default NULL COMMENT 'تضمین وام',
+  `AgentGuarantee` enum('YES','NO') NOT NULL default 'NO' COMMENT 'با ضمانت عامل',
+  `DocumentDesc` varchar(2000) default NULL COMMENT 'توضیحات مدارک',
+  PRIMARY KEY  (`RequestID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `LON_requests`
 --
 
 /*!40000 ALTER TABLE `LON_requests` DISABLE KEYS */;
-INSERT INTO `LON_requests` (`RequestID`,`BranchID`,`LoanID`,`ReqPersonID`,`ReqDate`,`ReqAmount`,`StatusID`,`ReqDetails`,`BorrowerDesc`,`BorrowerID`,`LoanPersonID`,`assurance`,`AgentGuarantee`) VALUES 
- (15,NULL,NULL,1000,'2015-10-13 11:48:18','0',1,NULL,'','',NULL,NULL,'NO'),
- (16,1,NULL,1000,'2015-10-13 11:57:46','120000000',30,'مثلا یه چیزی ....','شرکت فلان','05131684972',1005,1,'YES'),
- (17,1,NULL,1000,'2015-10-13 13:42:03','120000000',10,NULL,NULL,NULL,NULL,NULL,'NO'),
- (18,1,NULL,1000,'2015-10-13 13:43:04','120000000',10,NULL,NULL,NULL,NULL,NULL,'NO'),
- (19,2,NULL,1000,'2015-10-13 13:47:59','150000000',10,NULL,NULL,NULL,NULL,NULL,'NO'),
- (20,2,NULL,1000,'2015-10-13 14:54:58','21312',10,NULL,NULL,NULL,NULL,NULL,'NO');
+INSERT INTO `LON_requests` (`RequestID`,`BranchID`,`LoanID`,`ReqPersonID`,`ReqDate`,`ReqAmount`,`StatusID`,`ReqDetails`,`BorrowerDesc`,`BorrowerID`,`LoanPersonID`,`guarantees`,`AgentGuarantee`,`DocumentDesc`) VALUES 
+ (15,NULL,NULL,1000,'2015-10-13 11:48:18','0',1,NULL,'','',NULL,'2','NO',NULL),
+ (16,1,NULL,1000,'2015-10-13 11:57:46','120000000',40,'مثلا یه چیزی ....','شرکت فلان','05131684972',1005,'1','YES',NULL),
+ (17,1,NULL,1000,'2015-10-13 13:42:03','120000000',10,NULL,NULL,NULL,NULL,'3','NO',NULL),
+ (18,1,NULL,1000,'2015-10-13 13:43:04','120000000',40,NULL,NULL,NULL,NULL,'2','NO',NULL),
+ (19,2,NULL,1000,'2015-10-13 13:47:59','150000000',70,NULL,NULL,NULL,1006,'2','NO','یک ضامن حقیقی با فیش حقوقی و حکم کارگزینی\nاطلاعات کامل مدیران شرکت'),
+ (20,2,NULL,1000,'2015-10-13 14:54:58','21312',10,NULL,NULL,NULL,NULL,'1','NO',NULL);
 /*!40000 ALTER TABLE `LON_requests` ENABLE KEYS */;
 
 
@@ -1662,11 +2086,11 @@ INSERT INTO `LON_requests` (`RequestID`,`BranchID`,`LoanID`,`ReqPersonID`,`ReqDa
 
 DROP TABLE IF EXISTS `WFM_RequestElements`;
 CREATE TABLE `WFM_RequestElements` (
-  `RowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `RowID` int(10) unsigned NOT NULL auto_increment,
   `RequestID` int(10) unsigned NOT NULL,
   `ElementID` int(10) unsigned NOT NULL,
   `ElementValue` varchar(5000) NOT NULL,
-  PRIMARY KEY (`RowID`)
+  PRIMARY KEY  (`RowID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -1683,12 +2107,12 @@ CREATE TABLE `WFM_RequestElements` (
 
 DROP TABLE IF EXISTS `WFM_requests`;
 CREATE TABLE `WFM_requests` (
-  `RequetID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `RequetID` int(10) unsigned NOT NULL auto_increment,
   `FormID` int(10) unsigned NOT NULL,
   `RequestNo` int(10) unsigned NOT NULL,
   `RegPersonID` int(10) unsigned NOT NULL,
   `RegDate` datetime NOT NULL,
-  PRIMARY KEY (`RequetID`)
+  PRIMARY KEY  (`RequetID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --

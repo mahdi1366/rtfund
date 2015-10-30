@@ -16,9 +16,6 @@ class ACC_docs extends PdoDataAccess {
 	public $DocType;
 	public $description;
 	public $regPersonID;
-	
-	public $SourceType;
-	public $SourceID;
 		
 	function __construct($DocID = "") {
 		
@@ -115,7 +112,7 @@ class ACC_docs extends PdoDataAccess {
 			return false;
 		}
 
-		$this->DocID = parent::InsertID();
+		$this->DocID = parent::InsertID($pdo2);
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
@@ -222,6 +219,8 @@ class ACC_DocItems extends PdoDataAccess {
 	public $CreditorAmount;
 	public $details;
 	public $locked;
+	public $SourceType;
+	public $SourceID;
 	
 	function __construct() {
 	}
@@ -247,13 +246,13 @@ class ACC_DocItems extends PdoDataAccess {
 		if (!parent::insert("ACC_DocItems", $this, $pdo))
 			return false;
 		
-		$this->ItemID = parent::InsertID();
+		$this->ItemID = parent::InsertID($pdo);
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->MainObjectID = $this->ItemID;
 		$daObj->TableName = "ACC_DocItems";
-		$daObj->execute();
+		$daObj->execute($pdo);
 		return true;
 	}
 

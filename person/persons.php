@@ -35,7 +35,7 @@ $col->sortable = false;
 $col->align = "center";
 $col->width = 35;
 
-$col = $dg->addColumn("<font style=font-size:10px>عامل</font>","IsAgent","string");
+$col = $dg->addColumn("<font style=font-size:10px>سرمایه گذار</font>","IsAgent","string");
 $col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
 $col->sortable = false;
 $col->align = "center";

@@ -21,8 +21,8 @@ switch ($task) {
 	case "SelectAllRequests":
 		SelectAllRequests();
 		
-	case "SelectAssurances":
-		SelectAssurances();
+	case "Selectguarantees":
+		Selectguarantees();
 		
 	case "DeleteRequest":
 		DeleteRequest();
@@ -45,8 +45,8 @@ switch ($task) {
 		
 	//----------------------------------------------
 		
-	case "GetPartPayments":
-		GetPartPayments();
+	case "GetPartInstallments":
+		GetPartInstallments();
 		
 	case "ComputePartPayments":
 		ComputePartPayments();
@@ -72,6 +72,13 @@ function SaveLoanRequest(){
 		$obj->StatusID = 10;
 	
 	$obj->AgentGuarantee = isset($_POST["AgentGuarantee"]) ? "YES" : "NO";	
+
+	$obj->guarantees = array();
+	$arr = array_keys($_POST);
+	foreach($arr as $index)
+		if(strpos($index, "guarantee") !== false)
+			$obj->guarantees[] = str_replace("guarantee_", "", $index);
+	$obj->guarantees = implode(",", $obj->guarantees);
 	
 	if(empty($obj->RequestID))
 	{
@@ -136,9 +143,9 @@ function SelectAllRequests(){
 	die();
 }
 
-function SelectAssurances(){
+function Selectguarantees(){
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=7");
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=8 and param1=1");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -155,7 +162,7 @@ function ChangeStatus($RequestID, $StatusID, $StepComment = "", $LogOnly = false
 	if(!$LogOnly)
 	{
 		$obj = new LON_requests();
-		$obj->RequestID = $_POST["RequestID"];
+		$obj->RequestID = $RequestID;
 		$obj->StatusID = $StatusID;
 		if(!$obj->EditRequest($pdo))
 			return false;
@@ -237,35 +244,66 @@ function PayPart(){
 	
 	$ReqObj = new LON_requests($partobj->RequestID);
 	
+	require_once '../../accounting/docs/import.data.php';
 	RegisterPayPartDoc($ReqObj, $partobj, $pdo);
-	
-	
+	die();
 }
 
 //------------------------------------------------
 
-function GetPartPayments(){
+function GetPartInstallments(){
 	
-	$dt = LON_PartPayments::SelectAll("PartID=?", array($_REQUEST["PartID"]));
+	$dt = LON_installments::SelectAll("PartID=?", array($_REQUEST["PartID"]));
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
 
 //....................
-function PMT($CustomerWage, $PayCount, $PartAmount, $YearMonths) {  
+function PMT($CustomerWage, $InstallmentCount, $PartAmount, $YearMonths) {  
 	$CustomerWage = $CustomerWage/($YearMonths*100);
 	$PartAmount = -$PartAmount;
-	return $CustomerWage * $PartAmount * pow((1 + $CustomerWage), $PayCount) / (1 - pow((1 + $CustomerWage), $PayCount)); 
+	return $CustomerWage * $PartAmount * pow((1 + $CustomerWage), $InstallmentCount) / (1 - pow((1 + $CustomerWage), $InstallmentCount)); 
 } 
+function ComputeWage($PartAmount, $CustomerWagePercent, $InstallmentCount, $YearMonths){
+		
+	return ((($PartAmount*$CustomerWagePercent/$YearMonths*( pow((1+($CustomerWagePercent/$YearMonths)),$InstallmentCount)))/
+		((pow((1+($CustomerWagePercent/$YearMonths)),$InstallmentCount))-1))*$InstallmentCount)-$PartAmount;
+}
 function roundUp($number, $digits){
 	$factor = pow(10,$digits);
 	return ceil($number*$factor) / $factor;
 }
-function ComputeWage($PartAmount, $CustomerWagePercent, $PayCount, $YearMonths){
+function YearWageCompute($PartObj, $TotalWage, $yearNo, $YearMonths){
 		
-	return ((($PartAmount*$CustomerWagePercent/$YearMonths*( pow((1+($CustomerWagePercent/$YearMonths)),$PayCount)))/
-		((pow((1+($CustomerWagePercent/$YearMonths)),$PayCount))-1))*$PayCount)-$PartAmount;
+	$PayMonth = preg_split('/\//',DateModules::MiladiToShamsi($PartObj->PartDate));
+	$PayMonth = $PayMonth[1]*1;
+	$PayMonth = $PayMonth*$YearMonths/12;
+	
+	$FirstYearInstallmentCount = $YearMonths - $PayMonth;
+	$MidYearInstallmentCount = Math.floor(($PartObj->InstallmentCount-$FirstYearInstallmentCount) / $YearMonths);
+	$LastYeatInstallmentCount = ($PartObj->InstallmentCount-$FirstYearInstallmentCount) % $YearMonths;
+
+	if($yearNo > $MidYearInstallmentCount+2)
+		return 0;
+
+	$F9 = $PartObj->InstallmentCount*1;
+	$BeforeMonths = 0;
+	if($yearNo == 2)
+		$BeforeMonths = $FirstYearInstallmentCount;
+	else if($yearNo > 2)
+		$BeforeMonths = $FirstYearInstallmentCount + ($yearNo-2)*$YearMonths;
+
+	$curMonths = $FirstYearInstallmentCount;
+	if($yearNo > 1 && $yearNo <= $MidYearInstallmentCount+1)
+		$curMonths = $YearMonths;
+	else if($yearNo > $MidYearInstallmentCount+1)
+		$curMonths = $LastYeatInstallmentCount;
+
+	$val = (((($F9-$BeforeMonths)*($F9-$BeforeMonths+1))-
+		($F9-$BeforeMonths-$curMonths)*($F9-$BeforeMonths-$curMonths+1)))/($F9*($F9+1))*$TotalWage;
+	return $val;
 }
+
 function AddToJDate($jdate, $day=0, $month=0) {
 
 	if($day == 0)
@@ -284,33 +322,33 @@ function ComputePartPayments(){
 	
 	$obj = new LON_ReqParts($_REQUEST["PartID"]);
 	
-	PdoDataAccess::runquery("delete from LON_PartPayments where PartID=?", array($obj->PartID));
+	PdoDataAccess::runquery("delete from LON_installments where PartID=?", array($obj->PartID));
 	
 	$YearMonths = 12;
 	if($obj->IntervalType == "DAY")
 		$YearMonths = floor(365/$obj->PayInterval);
 	
-	$allPay = roundUp( PMT($obj->CustomerWage, $obj->PayCount, $obj->PartAmount, $YearMonths), -3);
-	$TotalWage = round(ComputeWage($obj->PartAmount, $obj->CustomerWage/100, $obj->PayCount, $YearMonths));
-	$LastPay = $obj->PartAmount*1 + $TotalWage - $allPay*($obj->PayCount-1);
-	$netPartPaments = round($obj->PartAmount/$obj->PayCount);
-	$lastNetPayment = $obj->PartAmount*1 - $netPartPaments*($obj->PayCount-1);
+	$allPay = roundUp( PMT($obj->CustomerWage, $obj->InstallmentCount, $obj->PartAmount, $YearMonths), -3);
+	$TotalWage = round(ComputeWage($obj->PartAmount, $obj->CustomerWage/100, $obj->InstallmentCount, $YearMonths));
+	$LastPay = $obj->PartAmount*1 + $TotalWage - $allPay*($obj->InstallmentCount-1);
+	$PureInstallmentAmount = round($obj->PartAmount/$obj->InstallmentCount);
+	$lastInstallmentAmount = $obj->PartAmount*1 - $PureInstallmentAmount*($obj->InstallmentCount-1);
 	
-	$gdate = DateModules::miladi_to_shamsi($obj->PayDate);
+	$gdate = DateModules::miladi_to_shamsi($obj->PartDate);
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	for($i=0; $i < $obj->PayCount-1; $i++)
+	for($i=0; $i < $obj->InstallmentCount-1; $i++)
 	{
-		$obj2 = new LON_PartPayments();
+		$obj2 = new LON_installments();
 		
-		$obj2->PayDate = AddToJDate($gdate, 
+		$obj2->InstallmentDate = AddToJDate($gdate, 
 			$obj->IntervalType == "DAY" ? $obj->PayInterval*($i+1) : 0, 
 			$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
 		$obj2->PartID = $obj->PartID;
-		$obj2->PayAmount = $netPartPaments;
-		$obj2->WageAmount = $allPay - $netPartPaments;
+		$obj2->InstallmentAmount = $PureInstallmentAmount;
+		$obj2->WageAmount = $allPay - $PureInstallmentAmount;
 		$obj2->CustomerWage = $obj->CustomerWage;
 		$obj2->FundWage = $obj->FundWage;
 		
@@ -322,14 +360,14 @@ function ComputePartPayments(){
 		}
 	}
 	
-	$obj2 = new LON_PartPayments();
+	$obj2 = new LON_installments();
 		
-	$obj2->PayDate = AddToJDate($gdate, 
-		$obj->IntervalType == "DAY" ? $obj->PayInterval*($obj->PayCount) : 0, 
-		$obj->IntervalType == "MONTH" ? $obj->PayInterval*($obj->PayCount) : 0);
+	$obj2->InstallmentDate = AddToJDate($gdate, 
+		$obj->IntervalType == "DAY" ? $obj->PayInterval*($obj->InstallmentCount) : 0, 
+		$obj->IntervalType == "MONTH" ? $obj->PayInterval*($obj->InstallmentCount) : 0);
 	$obj2->PartID = $obj->PartID;
-	$obj2->PayAmount = $lastNetPayment;
-	$obj2->WageAmount = $LastPay - $lastNetPayment;
+	$obj2->InstallmentAmount = $lastInstallmentAmount;
+	$obj2->WageAmount = $LastPay - $lastInstallmentAmount;
 	$obj2->CustomerWage = $obj->CustomerWage;
 	$obj2->FundWage = $obj->FundWage;
 
@@ -347,7 +385,7 @@ function ComputePartPayments(){
 
 function SavePartPayment(){
 	
-	$obj = new LON_PartPayments();
+	$obj = new LON_installments();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
 	$result = $obj->EditPartPayment();

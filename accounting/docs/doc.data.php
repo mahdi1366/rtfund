@@ -512,7 +512,7 @@ function UpdateChecks(){
 
 function RegisterEndDoc(){
 	
-	$dt = PdoDataAccess::runquery("select * from ACC_docs where DocType='ENDCYCLE' 
+	$dt = PdoDataAccess::runquery("select * from ACC_docs where DocType=" . DOCTYPE_ENDCYCLE . " 
 		AND BranchID=? AND CycleID=?", 
 			array($_SESSION["accounting"]["CycleID"],$_SESSION["accounting"]["BranchID"]));
 	if(count($dt) > 0)
@@ -549,7 +549,7 @@ function RegisterEndDoc(){
 	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
 	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
 	$obj->description = "سند اختتامیه";
-	$obj->DocType = "ENDCYCLE";
+	$obj->DocType = DOCTYPE_ENDCYCLE;
 	$result = $obj->Add($pdo);
 
 	if (!$result) {
@@ -594,7 +594,7 @@ function RegisterEndDoc(){
 
 function RegisterStartDoc(){
 	
-	$dt = PdoDataAccess::runquery("select * from ACC_docs where DocType='STARTCYCLE' 
+	$dt = PdoDataAccess::runquery("select * from ACC_docs where DocType=" . DOCTYPE_STARTCYCLE . "
 		AND BranchID=? AND CycleID=?", 
 			array($_SESSION["accounting"]["CycleID"],$_SESSION["accounting"]["BranchID"]));
 	if(count($dt) > 0)
@@ -639,7 +639,7 @@ function RegisterStartDoc(){
 	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
 	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
 	$obj->description = "سند افتتاحیه";
-	$obj->DocType = "STARTCYCLE";
+	$obj->DocType = DOCTYPE_STARTCYCLE;
 	$result = $obj->Add($pdo);
 
 	if (!$result) {

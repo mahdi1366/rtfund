@@ -1,7 +1,7 @@
 <?php
 //-----------------------------
 //	Programmer	: SH.Jafarkhani
-//	Date		: 90.10
+//	Date		: 94.06
 //-----------------------------
 
 include_once 'header.inc.php';
