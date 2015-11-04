@@ -21,13 +21,13 @@ $dg_cost->addcolumn('','level3',GridColumn::ColumnType_int,true);
 $col = $dg_cost->addcolumn('کد حساب','CostCode');
 
 $col = $dg_cost->addcolumn("گروه حساب", "LevelTitle1");
-$col->width = 100;
+$col->width = 200;
 
 $col = $dg_cost->addcolumn("حساب کل", "LevelTitle2");
-$col->width = 100;
+$col->width = 200;
 
 $col = $dg_cost->addcolumn("معین", "LevelTitle3");
-$col->width = 100;
+$col->width = 200;
 
 if($accessObj->RemoveFlag)
 {
@@ -46,7 +46,7 @@ $dg_cost->addButton('prn__btn', 'چاپ کد حسابها', 'print', 'function(e
 $dg_cost->title = 'کدینگ حساب';
 $dg_cost->width = 870;
 $dg_cost->pageSize = 19;
-$dg_cost->height=600;
+$dg_cost->height=620;
 $dg_cost->autoExpandColumn = "CostCode";
 $dgCost = $dg_cost->makeGrid_returnObjects();
 

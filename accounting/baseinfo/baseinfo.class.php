@@ -86,7 +86,6 @@ class ACC_CostCodes extends PdoDataAccess {
     public $level3;
     public $IsActive;
     public $CostCode;
-	public $BranchID;
 
     function __construct($CstID = '') {
 

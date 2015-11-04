@@ -203,7 +203,7 @@ function SelectCostCode() {
 
     $param = array();
 
-    $where = "cc.IsActive='YES' AND cc.BranchID=" . $_SESSION["accounting"]["BranchID"];
+    $where = "cc.IsActive='YES' ";
 
     if (!empty($_REQUEST['query'])) {
         if (isset($_REQUEST['fields'])) {
@@ -228,28 +228,10 @@ function SelectCostCode() {
     $where .= dataReader::makeOrder();
 
     $list = ACC_CostCodes::SelectCost($where, $param);
-    //print_r(ExceptionHandler::PopAllExceptions());
+    print_r(ExceptionHandler::PopAllExceptions());
     $count = $list->RowCount();
     $list = PdoDataAccess::fetchAll($list, $_GET["start"], $_GET["limit"]);
-    
-	/*for ($i = 0; $i < count($list); $i++) {
-        $remainderRecord = CostCode::GetCostRemainder($_SESSION["ACCUSER"]['UnitID'], $_SESSION["ACCUSER"]['PeriodID'], $list[$i]['CostID']);
-        $difference = $remainderRecord["amount"];
-        if ($remainderRecord["essence"] == "CREDITOR")
-            $difference = (-1) * $difference;
-        if (empty($difference) || $difference == 0)
-            $list[$i]['CostRemain'] = '0';
-        else {
-
-            if ($difference < 0) {
-                $list[$i]['CostRemain'] = number_format($difference * -1);
-                $list[$i]['SignRemain'] = 1;
-            } else {
-                $list[$i]['CostRemain'] = number_format($difference);
-                $list[$i]['SignRemain'] = 0;
-            }
-        }
-    }*/
+   
     echo dataReader::getJsonData($list, $count, $_GET['callback']);
     die();
 }
