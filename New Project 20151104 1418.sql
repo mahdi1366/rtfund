@@ -43401,7 +43401,7 @@ CREATE TABLE `tblPaySalary` (
   `دستمزدماهانه` decimal(9,0) DEFAULT NULL,
   `حق_مسكن_و_خواربار` decimal(9,0) DEFAULT NULL,
   `جمع_دستمزد_و_مزاياي_ماهانه_مشمول` decimal(9,0) DEFAULT NULL,
-  `جمع_دستمزد_و_مزاياي_ماهانه_مشمول_و_غير_مشمول` decimal(9,0) DEFAULT NULL,
+  `x` decimal(9,0) DEFAULT NULL comment 'جمع_دستمزد_و_مزاياي_ماهانه_مشمول_و_غير_مشمول',
   `حق_بيمه_سهم_بيمه_شده` decimal(9,0) DEFAULT NULL,
   `ماليات` decimal(9,0) DEFAULT NULL,
   `مساعده` decimal(9,0) DEFAULT NULL,
@@ -50889,7 +50889,7 @@ CREATE TABLE `LON_installments` (
   `ChequeDate` date DEFAULT NULL,
   `ChequeBank` smallint(5) unsigned DEFAULT NULL,
   `ChequeBranch` varchar(200) DEFAULT NULL,
-  PRIMARY KEY (`InstallmentID`) USING BTREE
+  PRIMARY KEY (`InstallmentID`) 
 ) ENGINE=InnoDB AUTO_INCREMENT=229 DEFAULT CHARSET=utf8;
 
 --

@@ -103,8 +103,8 @@ $dg->autoExpandColumn = "DocDesc";
 $grid = $dg->makeGrid_returnObjects();
 
 ?>
+
 <script>
-	
 ManageDocument.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
@@ -137,6 +137,7 @@ function ManageDocument()
 				return false;	
 			return true;
 		});
+		
 	this.grid.render(this.get("div_grid"));
 }
 

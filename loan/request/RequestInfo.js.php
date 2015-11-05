@@ -19,6 +19,9 @@ RequestInfo.prototype = {
 
 function RequestInfo()
 {
+	this.mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
+	this.mask.show();
+	
 	this.grid = <?= $grid ?>;
 	this.grid.on("itemclick", function(){
 		record = RequestInfoObject.grid.getSelectionModel().getLastSelected();
@@ -44,15 +47,17 @@ function RequestInfo()
 				RequestInfoObject.LoadRequestInfo();
 			}
 		}, 100);
-	
+		
 	if(this.RequestID == 0)
+	{
 		this.CustomizeForm(null);
+		this.mask.hide();
+	}	
 }
 
 RequestInfo.prototype.LoadRequestInfo = function(){
 	
-	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
-	mask.show();  
+	  
 	this.store = new Ext.data.Store({
 		proxy:{
 			type: 'jsonp',
@@ -80,7 +85,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 				//..........................................................
 
 				me.CustomizeForm(this.getAt(0));
-				mask.hide();
+				me.mask.hide();
 			}
 		}
 	});
@@ -126,7 +131,7 @@ RequestInfo.prototype.BuildForms = function(){
 			xtype : "fieldset",
 			title : "اطلاعات درخواست",
 			layout : {
-				type : "table",
+				type : "column",
 				columns : 2
 			},			
 			defaults : {
@@ -204,7 +209,7 @@ RequestInfo.prototype.BuildForms = function(){
 						RequestInfo.buildRender = new Ext.data.SimpleStore({
 							proxy: {
 								type: 'jsonp',
-								url: 'request/request.data.php?task=Selectguarantees',
+								url: '/loan/request/request.data.php?task=Selectguarantees',
 								reader: {root: 'rows',totalProperty: 'totalCount'}
 							},
 							fields : ['InfoID','InfoDesc'],
@@ -398,8 +403,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.companyPanel.down("[name=ReqDetails]").hide();
 			this.companyPanel.down("[itemId=cmp_save]").hide();
 			this.companyPanel.getEl().readonly();
-			this.companyPanel.doLayout();
-
+			
 			this.grid.down("[itemId=addPart]").hide();
 			this.grid.down("[dataIndex=PartID]").hide();	
 			this.PartsPanel.down("[itemId=cmp_save]").hide();

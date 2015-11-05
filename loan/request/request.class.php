@@ -193,8 +193,10 @@ class LON_installments extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select p.*
+			select p.*,b.BankDesc
 			from LON_installments p
+			join LON_ReqParts rp using(PartID)
+			left join ACC_banks b on(ChequeBank=BankID)
 			where " . $where, $param);
 	}
 	

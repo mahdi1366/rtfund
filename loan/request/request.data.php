@@ -61,6 +61,12 @@ switch ($task) {
 		
 	case "GetLastFundComment":
 		GetLastFundComment();
+		
+	//-----------------------------------------------
+		
+	case "selectMyParts":
+		selectMyParts();
+		
 }
 
 function SaveLoanRequest(){
@@ -253,7 +259,15 @@ function PayPart(){
 
 function GetPartInstallments(){
 	
-	$dt = LON_installments::SelectAll("PartID=?", array($_REQUEST["PartID"]));
+	$dt = LON_installments::SelectAll("PartID=? " . dataReader::makeOrder() , array($_REQUEST["PartID"]));
+	
+	for($i=0; $i < count($dt); $i++)
+	{
+		if($dt["instal"])
+		$dt[$i]["ForfeitAmount"] = 0;
+		
+	}
+	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -409,6 +423,21 @@ function GetLastFundComment(){
 	
 	$comment = count($dt)>0 ? $dt[0]["StepComment"] : '';
 	echo Response::createObjectiveResponse(true, $comment);
+	die();
+}
+
+//-------------------------------------------------
+
+function selectMyParts(){
+	
+	$query = "select * 
+		from LON_ReqParts p
+		join LON_requests using(RequestID)
+		join LON_installments using(PartID)
+		where LoanPersonID=? 
+		Group by p.PartID";
+	$dt = PdoDataAccess::runquery($query, array($_SESSION["USER"]["PersonID"]));
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
 

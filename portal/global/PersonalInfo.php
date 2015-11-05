@@ -208,18 +208,27 @@ function PersonalInfo()
 			items : this.mainPanel
 		},{
 			title : "مدارک",
-			style : "padding:20px",
+			style : "padding:20px",		
+			itemId : "cmp_documents",						
 			loader : {
 				url : "../../dms/documents.php",
-				scripts : true,
-				autoLoad : true,
-				params : {
-					 ObjectType : "person",
-					 ExtTabID : this.tabPanel.getEl()
+				scripts : true
+			},
+			listeners :{
+				activate : function(){
+					this.loader.load({
+						scripts : true,
+						params : {
+							ExtTabID : this.id,
+							ObjectType : "person"
+						}
+					});
 				}
 			}
 		}]
 	});	
+	
+	
 }
 
 PersonalInfoObject = new PersonalInfo();
