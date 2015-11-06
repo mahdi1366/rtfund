@@ -70,6 +70,7 @@ if ($menuStr != "") {
 	$menuStr .= "]}]}";
 }
 //------------------------------------------------------------------------------
+$sysArray = "";
 $sysArray1 = "";
 $sysArray2 = "";
 $syslist = FRW_access::getAccessSystems();

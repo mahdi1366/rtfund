@@ -64,6 +64,7 @@ for ($i = 0; $i < count($menus); $i++) {
 			var portal;
 			setTimeout(function(){
 				Ext.onReady(function(){
+					Ext.QuickTips.init();
 					Ext.get('loading').remove();
 					Ext.get('loading-mask').fadeOut({
 						remove:true

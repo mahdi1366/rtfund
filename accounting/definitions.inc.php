@@ -15,4 +15,5 @@ define("DOCTYPE_DEPOSIT_PROFIT", "7");
 
 define("TAFTYPE_PERSONS", "1");
 define("TAFTYPE_YEARS", "2");
+define("TAFTYPE_BANKS", "3");
 ?>

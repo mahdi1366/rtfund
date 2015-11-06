@@ -50,6 +50,14 @@ class BSC_persons extends PdoDataAccess
 			return false;
 		$this->PersonID = parent::InsertID();
 		
+		require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
+		$obj = new ACC_tafsilis();
+		$obj->ObjectID = $this->PersonID;
+		$obj->TafsiliCode = $this->PersonID;
+		$obj->TafsiliDesc = $this->IsReal == "YES" ? $this->fname . " " . $this->lname : $this->CompanyName;
+		$obj->TafsiliType = "1";
+		$obj->AddTafsili();
+		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->MainObjectID = $this->PersonID;

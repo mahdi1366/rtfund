@@ -10,10 +10,20 @@ require_once 'doc.class.php';
 require_once inc_dataReader;
 require_once inc_response;
 
-$task = isset($_POST ["task"]) ? $_POST ["task"] : (isset($_GET ["task"]) ? $_GET ["task"] : "");
+function FindCostID($costCode)
+{
+	$dt = PdoDataAccess::runquery("select * from ACC_CostCodes where IsActive='YES' AND CostCode=?",
+		array($costCode));
+	return $dt[0]["CostID"];
+}
 
-switch ($task) {
+function FindTafsiliID($TafsiliCode, $TafsiliType)
+{
+	$dt = PdoDataAccess::runquery("select * from ACC_tafsilis "
+			. "where IsActive='YES' AND TafsiliCode=? AND TafsiliType=?",
+		array($TafsiliCode, $TafsiliType));
 	
+	return $dt[0]["TafsiliID"];
 }
 
 function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
@@ -40,7 +50,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		}
 	}*/
 	
-	$CycleID = substr($PartObj->PartDate, 0 , 4);
+	$CycleID = substr(DateModules::miladi_to_shamsi($PartObj->PartDate), 0 , 4);
 	
 	
 	//---------------- add doc header --------------------
@@ -51,34 +61,10 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$obj->CycleID = $CycleID;
 	$obj->BranchID = $ReqObj->BranchID;
 	$obj->DocType = DOCTYPE_LOAN_PAYMENT;
+	$obj->description = "پرداخت مرحله " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
 	
-	$result = $obj->Add($pdo);
-
-	if (!$result) {
-		$pdo->rollBack();
-		print_r(ExceptionHandler::PopAllExceptions());
-		echo Response::createObjectiveResponse(false, "");
-		die();
-	}
-	
-	//----------------- add Doc items ------------------------
-		
-	$itemObj = new ACC_DocItems();
-	$itemObj->DocID = $obj->DocID;
-	$itemObj->CostID = 1;
-	$itemObj->DebtorAmount = $PartObj->PartAmount;
-	$itemObj->CreditorAmount = 0;
-	$itemObj->TafsiliType = TAFTYPE_PERSONS;
-	$itemObj->TafsiliID = $ReqObj->LoanPersonID;
-	$itemObj->locked = "YES";
-	$itemObj->SourceType = "PAY_LOAN_PART";
-	$itemObj->SourceID = $PartObj->PartID;
-	if(!$itemObj->Add($pdo))
-	{
-		$pdo->rollBack();
-		echo Response::createObjectiveResponse(false, "");
-		die();
-	}
+	if(!$obj->Add($pdo))
+		return false;
 	
 	//--------------------------------------------------------
 	
@@ -96,61 +82,135 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	
 	$TotalDelay = round($PartObj->PartAmount*$PartObj->CustomerWage*$PartObj->DelayMonths/1200);
 	$curYear = substr(DateModules::miladi_to_shamsi($PartObj->PartDate), 0, 4)*1;
-	//--------------------------------------------------------
 	
+	//----------------- add Doc items ------------------------
+		
+	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $obj->DocID;
+	$itemObj->CostID = FindCostID(10110);
+	$itemObj->DebtorAmount = $PartObj->PartAmount;
+	$itemObj->CreditorAmount = 0;
+	$itemObj->TafsiliType = TAFTYPE_PERSONS;
+	$itemObj->TafsiliID = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
+	$itemObj->Tafsili2Type = TAFTYPE_PERSONS;
+	$itemObj->Tafsili2ID = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+	$itemObj->locked = "YES";
+	$itemObj->SourceType = "PAY_LOAN_PART";
+	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID2 = $PartObj->PartID;
+	if(!$itemObj->Add($pdo))
+		return false;
+	
+	// ---- bank ----
+	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $obj->DocID;
+	$itemObj->CostID = FindCostID(10101);
+	$itemObj->DebtorAmount = 0;
+	$itemObj->CreditorAmount = $PartObj->PartAmount - $TotalDelay;
+	$itemObj->TafsiliType = TAFTYPE_BANKS;
+	$itemObj->locked = "YES";
+	$itemObj->SourceType = "PAY_LOAN_PART";
+	$itemObj->SourceID = $PartObj->PartID;
+	if(!$itemObj->Add($pdo))
+		return false;
+	
+	//---- delay -----
+	if($TotalDelay > 0)
+	{
+		unset($itemObj->ItemID);
+		unset($itemObj->Tafsili2Type);
+		unset($itemObj->Tafsili2ID);
+		$itemObj->CostID = FindCostID(30310);
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $TotalDelay;
+		$itemObj->TafsiliType = TAFTYPE_YEARS;
+		$itemObj->details = "کارمزد دوره تنفس";
+		$itemObj->TafsiliID = FindTafsiliID($curYear, TAFTYPE_YEARS);
+		if(!$itemObj->Add($pdo))
+			return false;
+	}	
+	//---- کارمزد-----
 	$amountArr = array(
-		$curYear => $TotalDelay, 
 		$curYear => $year1, 
 		$curYear+1 => $year2, 
 		$curYear+2 => $year3, 
 		$curYear+3 => $year4);
 	
-	foreach($amountArr as $TafsiliID => $amount)
+	foreach($amountArr as $year => $amount)
 	{
-		if($amount == 0 || $amount = "")
+		if($amount == 0 || $amount == "")
 			continue;
 		
 		unset($itemObj->ItemID);
-		$itemObj->CostID = 1;
+		$itemObj->details = "";
+		unset($itemObj->Tafsili2Type);
+		unset($itemObj->Tafsili2ID);
+		$itemObj->CostID = FindCostID(30310);
 		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $amount;
+		$itemObj->CreditorAmount = round($amount);
 		$itemObj->TafsiliType = TAFTYPE_YEARS;
-		$itemObj->TafsiliID = $TafsiliID;
+		$itemObj->TafsiliID = FindTafsiliID($year, TAFTYPE_YEARS);
 		if(!$itemObj->Add($pdo))
-		{
-			$pdo->rollBack();
-			echo Response::createObjectiveResponse(false, "");
-			die();
-		}
+			return false;
+		
+		unset($itemObj->ItemID);
+		unset($itemObj->Tafsili2Type);
+		unset($itemObj->Tafsili2ID);
+		$itemObj->CostID = FindCostID(20102);
+		$itemObj->DebtorAmount = round($amount);
+		$itemObj->CreditorAmount = 0;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+		if(!$itemObj->Add($pdo))
+			return false;
 	}
 	
+	//---- کسر از سپرده -----
+	unset($itemObj->ItemID);
+	unset($itemObj->Tafsili2Type);
+	unset($itemObj->Tafsili2ID);
+	$itemObj->CostID = FindCostID(20102);
+	$itemObj->DebtorAmount = $PartObj->PartAmount;
+	$itemObj->CreditorAmount = 0;
+	$itemObj->TafsiliType = TAFTYPE_PERSONS;
+	$itemObj->TafsiliID = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+	if(!$itemObj->Add($pdo))
+		return false;
+
+	unset($itemObj->ItemID);
+	unset($itemObj->Tafsili2Type);
+	unset($itemObj->Tafsili2ID);
+	$itemObj->CostID = FindCostID(30660);
+	$itemObj->DebtorAmount = 0;
+	$itemObj->CreditorAmount = $PartObj->PartAmount;
+	$itemObj->TafsiliType = TAFTYPE_PERSONS;
+	$itemObj->TafsiliID = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+	if(!$itemObj->Add($pdo))
+		return false;
+	
+	//------ ایجاد چک ------
+	$chequeObj = new ACC_DocChecks();
+	$chequeObj->DocID = $obj->DocID;
+	$chequeObj->CheckDate = $PartObj->PartDate;
+	$chequeObj->amount = $PartObj->PartAmount - $TotalDelay;
+	$chequeObj->TafsiliID = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
+	$chequeObj->description = " پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
+	$chequeObj->Add($pdo);
 	//--------------------------------------------------------
 	
-	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+	/*$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 	if($PersonObj->IsAgent)
 	{
 		
-	}
+	}*/
 	
 	//---------------------------------------------------------
-	
+	print_r(ExceptionHandler::PopAllExceptions());
 	if(ExceptionHandler::GetExceptionCount() > 0)
-	{
-		$pdo->rollBack();
-		echo Response::createObjectiveResponse(false, "");
-		die();
-	}
+		return false;
+		
 	
-	if(PdoDataAccess::AffectedRows($pdo) == 0)
-	{
-		$pdo->rollBack();
-		echo Response::createObjectiveResponse(false, "ردیفی برای صدور سند اختتامیه یافت نشد");
-		die();
-	}
-	
-	$pdo->commit();
-	echo Response::createObjectiveResponse(true, "");
-	die();
+	return true;
 }
 
 ?>

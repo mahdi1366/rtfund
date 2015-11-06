@@ -4,7 +4,7 @@
 //	Date		: 1394.07
 //-----------------------------
 
-ManageRequest.prototype = {
+MyForm.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
@@ -13,7 +13,7 @@ ManageRequest.prototype = {
 	}
 };
 
-function ManageRequest(){
+function MyForm(){
 	
 	this.LoanInfoPanel = new Ext.panel.Panel({
 		renderTo : this.get("LoanInfo"),
@@ -26,94 +26,57 @@ function ManageRequest(){
 	});
 }
 
-ManageRequestObject = new ManageRequest();
+MyFormObject = new MyForm();
 
-ManageRequest.prototype.ManageRequest = function(){
+MyForm.prototype.MyForm = function(){
 	if(this.get("new_pass").value != this.get("new_pass2").value)
 	{
 		return;
 	}
 }
 
-ManageRequest.OperationRender = function(value, p, record){
+MyForm.OperationRender = function(value, p, record){
 	
-	return "<div  title='عملیات' class='setting' onclick='ManageRequestObject.OperationMenu(event);' " +
+	return "<div  title='عملیات' class='setting' onclick='MyFormObject.OperationMenu(event);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-ManageRequest.prototype.OperationMenu = function(e){
+MyForm.prototype.OperationMenu = function(e){
 
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
 	
-	op_menu.add({text: 'جزئیات درخواست',iconCls: 'info2', 
-		handler : function(){ return ManageRequestObject.LoanInfo(); }});
+	op_menu.add({text: 'اطلاعات آیتم',iconCls: 'info2', 
+		handler : function(){ return MyFormObject.LoanInfo(); }});
 	
-	if(record.data.StatusID == "10")
-	{
-		op_menu.add({text: 'تایید درخواست',iconCls: 'tick', 
-		handler : function(){ return ManageRequestObject.beforeChangeStatus(30); }});
-	
-		op_menu.add({text: 'رد درخواست',iconCls: 'cross',
-		handler : function(){ return ManageRequestObject.beforeChangeStatus(20); }});
-	}
-	if(record.data.StatusID == "30")
-	{
-		op_menu.add({text: 'ارسال به مشتری جهت تکمیل مدارک',iconCls: 'send',
-		handler : function(){ return ManageRequestObject.beforeChangeStatus(40); }});
-	}
-	if(record.data.StatusID == "50")
-	{
-		op_menu.add({text: 'تایید مدارک مشتری',iconCls: 'send',
-		handler : function(){ return ManageRequestObject.beforeChangeStatus(70); }});
-	
-		op_menu.add({text: 'عدم تایید مدارک',iconCls: 'cross',
-		handler : function(){ return ManageRequestObject.beforeChangeStatus(60); }});
-	}
-	if(record.data.StatusID == "70")
-	{
-	}
-	if(new Array(50,60,70,80).indexOf(record.data.StatusID*1) != -1)
-	{
-		op_menu.add({text: 'مدارک وام',iconCls: 'attach', 
-			handler : function(){ return ManageRequestObject.LoanDocuments('loan'); }});
+	op_menu.add({text: 'تایید درخواست',iconCls: 'tick', 
+	handler : function(){ return MyFormObject.beforeChangeStatus('CONFIRM'); }});
 
-		op_menu.add({text: 'مدارک وام گیرنده',iconCls: 'attach', 
-			handler : function(){ return ManageRequestObject.LoanDocuments('person'); }});
-	}
+	op_menu.add({text: 'رد درخواست',iconCls: 'cross',
+	handler : function(){ return MyFormObject.beforeChangeStatus('REJECT'); }});
 	
 	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
-		handler : function(){ return ManageRequestObject.ShowHistory(); }});
+		handler : function(){ return MyFormObject.ShowHistory(); }});
 	
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
-ManageRequest.prototype.beforeChangeStatus = function(StatusID){
+MyForm.prototype.beforeChangeStatus = function(mode){
 	
-	if(new Array(20,60).indexOf(StatusID) == -1)
-	{
-		Ext.MessageBox.confirm("","آیا مایل به تایید می باشید؟", function(btn){
-			if(btn == "no")
-				return;
-			
-			ManageRequestObject.ChangeStatus (StatusID, "");
-		});
-		return;
-	}
 	if(!this.commentWin)
 	{
 		this.commentWin = new Ext.window.Window({
 			width : 412,
 			height : 198,
 			modal : true,
-			title : "دلیل رد مدرک برای درخواست کننده",
+			title : "توضیحات",
 			bodyStyle : "background-color:white",
 			items : [{
 				xtype : "textarea",
 				width : 400,
 				rows : 8,
-				name : "StepComment"
+				name : "ActionComment"
 			}],
 			closeAction : "hide",
 			buttons : [{
@@ -130,13 +93,12 @@ ManageRequest.prototype.beforeChangeStatus = function(StatusID){
 		Ext.getCmp(this.TabID).add(this.commentWin);
 	}
 	this.commentWin.down("[itemId=btn_save]").setHandler(function(){
-		ManageRequestObject.ChangeStatus(StatusID, 
-			this.up('window').down("[name=StepComment]").getValue());});
+		MyFormObject.ChangeStatus(mode, this.up('window').down("[name=ActionComment]").getValue());});
 	this.commentWin.show();
 	this.commentWin.center();
 }
 
-ManageRequest.prototype.ChangeStatus = function(StatusID, StepComment){
+MyForm.prototype.ChangeStatus = function(mode, ActionComment){
 	
 	record = this.grid.getSelectionModel().getLastSelected();
 	
@@ -145,25 +107,25 @@ ManageRequest.prototype.ChangeStatus = function(StatusID, StepComment){
 	
 	Ext.Ajax.request({
 		methos : "post",
-		url : this.address_prefix + "request.data.php",
+		url : this.address_prefix + "wfm.data.php",
 		params : {
-			task : "ChangeRequesrStatus",
-			RequestID : record.data.RequestID,
-			StatusID : StatusID,
-			StepComment : StepComment
+			task : "ChangeStatus",
+			RowID : record.data.RowID,
+			mode : mode,
+			ActionComment : ActionComment
 		},
 		
 		success : function(){
 			mask.hide();
-			ManageRequestObject.grid.getStore().load();
-			if(ManageRequestObject.commentWin)
-				ManageRequestObject.commentWin.hide();
-			ManageRequestObject.LoanInfoPanel.hide();
+			MyFormObject.grid.getStore().load();
+			if(MyFormObject.commentWin)
+				MyFormObject.commentWin.hide();
+			MyFormObject.LoanInfoPanel.hide();
 		}
 	});
 }
 
-ManageRequest.prototype.LoanInfo = function(){
+MyForm.prototype.LoanInfo = function(){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
 	this.LoanInfoPanel.loader.load({
@@ -188,7 +150,7 @@ ManageRequest.prototype.LoanInfo = function(){
 	this.LoanInfoWin.center();
 }
 
-ManageRequest.prototype.SaveLoanRequest = function(){
+MyForm.prototype.SaveLoanRequest = function(){
 	
 	mask = new Ext.LoadMask(this.LoanInfoWin, {msg:'در حال ذخيره سازي...'});
 	mask.show();  
@@ -202,8 +164,8 @@ ManageRequest.prototype.SaveLoanRequest = function(){
 		
 		success : function(form,action){
 			mask.hide();
-			ManageRequestObject.LoanInfoWin.hide();
-			ManageRequestObject.grid.getStore().load();
+			MyFormObject.LoanInfoWin.hide();
+			MyFormObject.grid.getStore().load();
 		},
 		failure : function(){
 			mask.hide();
@@ -212,7 +174,7 @@ ManageRequest.prototype.SaveLoanRequest = function(){
 	});
 }
 
-ManageRequest.prototype.LoanDocuments = function(ObjectType){
+MyForm.prototype.LoanDocuments = function(ObjectType){
 
 	if(!this.documentWin)
 	{
@@ -249,7 +211,7 @@ ManageRequest.prototype.LoanDocuments = function(ObjectType){
 	});
 }
 
-ManageRequest.prototype.ShowHistory = function(){
+MyForm.prototype.ShowHistory = function(){
 
 	if(!this.HistoryWin)
 	{
@@ -278,7 +240,7 @@ ManageRequest.prototype.ShowHistory = function(){
 	this.HistoryWin.center();
 	this.HistoryWin.loader.load({
 		params : {
-			RequestID : this.grid.getSelectionModel().getLastSelected().data.RequestID
+			RowID : this.grid.getSelectionModel().getLastSelected().data.RowID
 		}
 	});
 }

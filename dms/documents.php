@@ -23,14 +23,13 @@ switch($ObjectType)
 	case "loan":
 		require_once '../loan/request/request.class.php';
 		$obj = new LON_requests($ObjectID);
-		if($_SESSION["USER"]["IsCustomer"] == "YES" && in_array($obj->StatusID, array(40,60)) )
+		if($_SESSION["USER"]["IsCustomer"] == "YES" && in_array($obj->StatusID, array("40","60")) )
 			$access = true;
-		if($_SESSION["USER"]["IsStaff"] == "YES")
+		if($_SESSION["USER"]["IsStaff"] == "YES" && $obj->StatusID == "50")
 			$access = true;
 		break;
 }
 //------------------------------------------------------
-
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "dms.data.php?" .
 		"task=SelectAll&ObjectType=" . $ObjectType . "&ObjectID=" . $ObjectID, "grid_div");
 
@@ -39,18 +38,19 @@ $dg->addColumn("", "ObjectType", "", true);
 $dg->addColumn("", "ObjectID", "", true);
 $dg->addColumn("", "IsConfirm", "", true);
 $dg->addColumn("", "RegPersonID", "", true);
-
-$col = $dg->addColumn("گروه مدرک", "param1Title", "");
+$dg->addColumn("", "param1Title", "", true);
+$dg->addColumn("", "DocTypeDesc", "", true);
+	
+$col = $dg->addColumn("گروه مدرک", "param1", "");
+if($access)
+	$col->editor = "this.DocTypeGroupCombo";
+$col->renderer = "function(v,p,r){return r.data.param1Title;}";
 $col->width = 120;
 
+$col = $dg->addColumn("مدرک", "DocType", "");
+$col->renderer = "function(v,p,r){return r.data.DocTypeDesc;}";
 if($access)
-{
-	$col = $dg->addColumn("مدرک", "DocType", "");
-	$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from BaseInfo where typeID=8"), 
-			"InfoID", "InfoDesc");
-}
-else 
-	$col = $dg->addColumn("مدرک", "DocTypeDesc", "");
+	$col->editor = "this.DocTypeCombo";
 $col->width = 140;
 
 $col = $dg->addColumn("سریال سند", "DocSerial", "");
@@ -103,8 +103,8 @@ $dg->autoExpandColumn = "DocDesc";
 $grid = $dg->makeGrid_returnObjects();
 
 ?>
-
 <script>
+	
 ManageDocument.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
@@ -114,10 +114,59 @@ ManageDocument.prototype = {
 	}
 };
 
-function ManageDocument()
-{
+function ManageDocument(){
+	
 	this.FileCmp = new Ext.form.File({
 		name : "FileType"
+	});
+
+	this.DocTypeGroupCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			fields:["InfoID","InfoDesc"],
+			proxy: {
+				type: 'jsonp',
+				url: this.address_prefix + 'dms.data.php?task=selectDocTypeGroups',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			autoLoad : true
+		}),
+		typeAhead: false,
+		queryMode : "local",
+		valueField : "InfoID",
+		displayField : "InfoDesc",
+		listeners : {
+			select : function(combo,records){
+				ManageDocumentObject.DocTypeCombo.setValue();
+				ManageDocumentObject.DocTypeCombo.getStore().proxy.extraParams["GroupID"] = this.getValue();
+				ManageDocumentObject.DocTypeCombo.getStore().load();
+			}
+		}
+	});
+	
+	this.DocTypeCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			fields:["InfoID","InfoDesc"],
+			proxy: {
+				type: 'jsonp',
+				url: this.address_prefix + 'dms.data.php?task=selectDocTypes',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			listeners : {
+				beforeload : function(store){
+					if(!store.proxy.extraParams.GroupID)
+					{
+						group = ManageDocumentObject.DocTypeGroupCombo.getValue();
+						if(group == "")
+							return false;
+						this.proxy.extraParams["GroupID"] = group;
+					}
+				}
+			}
+		}),
+		typeAhead: false,
+		pageSize : 10,
+		valueField : "InfoID",
+		displayField : "InfoDesc"
 	});
 
 	this.grid = <?= $grid ?>;
@@ -133,7 +182,8 @@ function ManageDocument()
 		this.grid.plugins[0].on("beforeedit", function(editor,e){
 			if(e.record.data.IsConfirm == "YES")
 				return false;
-			if(e.record.data.RegPersonID != "<?= $_SESSION["USER"]["PersonID"] ?>")
+			if(e.record.data.DocumentID > 0 &&
+				e.record.data.RegPersonID != "<?= $_SESSION["USER"]["PersonID"] ?>")
 				return false;	
 			return true;
 		});
@@ -243,6 +293,7 @@ ManageDocument.prototype.SaveDocument = function(){
 			if(st.success)
 			{   
 				ManageDocumentObject.grid.getStore().load();
+				ManageDocumentObject.FileCmp.reset();
 			}
 			else
 			{
@@ -388,10 +439,21 @@ ManageDocument.prototype.ConfirmDocument = function(mode){
 <?}?>
 </script>
 <form id="MainForm" enctype="multipart/form-data">
-	<div id="div_grid"><div>
-	<div class="blueText" style="line-height: 21px">
+	<table width=100%>
+		<tr>
+			<td class="blueText" style="line-height: 21px">
 	ردیف های سبز رنگ ردیف های تایید شده و برابر اصل شده توسط صندوق بوده و قابل تغییر نمی باشند
 	<br>
 	ردیف های قرمز ردیف های رد شده توسط صندوق می باشند
+	</div></td>
+			<td width="55px" align='left' style='cursor:pointer' data-qtip='برای ویرایش ردیف روی ردیف دبل کلیک کنید'>
+				راهنما<div align='center' class='help' style='background-repeat:no-repeat;
+					 background-position:center;width:24px;height:16;float:right'></div>
+			</td>
+		</tr>
+	</table>
+	
+	<div>
+		<div id="div_grid"><div>
 	</div>
 </form>

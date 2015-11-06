@@ -33,6 +33,10 @@ class LON_requests extends PdoDataAccess
 			select r.*,
 				if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) ReqFullname,
 				if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) LoanFullname,
+				case when p1.IsCustomer='YES' then 'Customer'
+					 when p1.IsAgent='YES' then 'Agent'
+					 when p1.IsStaff='YES' then 'Staff'
+				end ReqPersonRole,
 				bi.InfoDesc StatusDesc,
 				BranchName
 			from LON_requests r
@@ -115,8 +119,8 @@ class LON_ReqParts extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select r.*
-			from LON_ReqParts r
+			select rp.*,r.StatusID
+			from LON_ReqParts rp join LON_requests r using(RequestID)
 			where " . $where, $param);
 	}
 	
@@ -193,7 +197,7 @@ class LON_installments extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select p.*,b.BankDesc
+			select p.*,rp.*,b.BankDesc
 			from LON_installments p
 			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)

@@ -16,6 +16,8 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "baseinfo.data.php?task=GetA
 
 $dg->addColumn("کد", "TafsiliID", "", true);
 $dg->addColumn("", "TafsiliType", "", true);
+$dg->addColumn("", "title", "", true);
+$dg->addColumn("", "ObjectID", "", true);
 
 $col = $dg->addColumn("کد تفصیلی", "TafsiliCode");
 $col->editor = ColumnEditor::TextField();
@@ -45,6 +47,7 @@ $dg->width = 750;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "TafsiliDesc";
 $dg->autoExpandColumn = "TafsiliDesc";
+$dg->emptyTextOfHiddenColumns = true;
 $grid = $dg->makeGrid_returnObjects();
 
 ?>
@@ -61,9 +64,11 @@ $grid = $dg->makeGrid_returnObjects();
     var TafsiliObject = new Tafsili();	
 
 	TafsiliObject.grid = <?= $grid ?>;
-	/*TafsiliObject.grid.plugins[0].on("beforeedit", function(editor,e){
+	TafsiliObject.grid.plugins[0].on("beforeedit", function(editor,e){
+		if(e.record.data.ObjectID*1 > 0)
+			return false;
 		if(!e.record.data.TafsiliID)
 			return TafsiliObject.AddAccess;
 		return TafsiliObject.EditAccess;
-	});*/
+	});
 </script>

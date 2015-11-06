@@ -43,7 +43,7 @@ $col->width = 50;
 $col->align = "center";
 
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 420;
+$dg->height = 220;
 $dg->width = 770;
 $dg->title = "درخواست های وام";
 $dg->DefaultSortField = "ReqDate";
@@ -56,4 +56,6 @@ ManageRequestObject.grid.render(ManageRequestObject.get("DivGrid"));
 </script>
 <center><br>
 	<div id="DivGrid"></div>
+	<br>
+	<div id="LoanInfo"></div>
 </center>

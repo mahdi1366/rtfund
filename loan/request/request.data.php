@@ -8,6 +8,7 @@ include_once inc_dataReader;
 include_once inc_response;
 include_once 'request.class.php';
 require_once '../loan/loan.class.php';
+require_once "../../office/workflow/wfm.class.php";
 
 $task = $_REQUEST["task"];
 switch ($task) {
@@ -57,6 +58,8 @@ switch ($task) {
 	case "PayPart":
 		PayPart();
 		
+	case "StartFlow":
+		StartFlow();
 	//----------------------------------------------
 		
 	case "GetLastFundComment":
@@ -201,6 +204,13 @@ function GetRequestParts(){
 	$RequestID = $_REQUEST["RequestID"];
 	
 	$dt = LON_ReqParts::SelectAll("RequestID=?", array($RequestID));
+	
+	for($i=0; $i < count($dt);$i++)
+	{
+		$dt[$i]["IsStarted"] = WFM_FlowRows::IsFlowStarted(1, $dt[$i]["PartID"]) ? "YES" : "NO";
+		$dt[$i]["IsEnded"] = WFM_FlowRows::IsFlowEnded(1, $dt[$i]["PartID"]) ? "YES" : "NO";
+	}
+	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();	
 }
@@ -251,23 +261,42 @@ function PayPart(){
 	$ReqObj = new LON_requests($partobj->RequestID);
 	
 	require_once '../../accounting/docs/import.data.php';
-	RegisterPayPartDoc($ReqObj, $partobj, $pdo);
+	$result = RegisterPayPartDoc($ReqObj, $partobj, $pdo);
+	
+	if(!$result)
+	{
+		$pdo->rollBack();
+		print_r(ExceptionHandler::PopAllExceptions());
+	}
+	else
+		$pdo->commit();
+	
+	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
+function StartFlow(){
+	
+	$PartID = $_REQUEST["PartID"];
+	$result = WFM_FlowRows::StartFlow(1, $PartID);
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 //------------------------------------------------
 
 function GetPartInstallments(){
 	
 	$dt = LON_installments::SelectAll("PartID=? " . dataReader::makeOrder() , array($_REQUEST["PartID"]));
-	
 	for($i=0; $i < count($dt); $i++)
 	{
-		if($dt["instal"])
 		$dt[$i]["ForfeitAmount"] = 0;
-		
+		if ($dt[$i]["InstallmentDate"] < DateModules::Now()) {
+			$forfeitDays = DateModules::GDateMinusGDate(DateModules::Now(),$dt[$i]["InstallmentDate"]);
+			$dt[$i]["ForfeitAmount"] = 
+				($dt[$i]["InstallmentAmount"]+$dt[$i]["WageAmount"])*
+					$dt[$i]["ForfeitPercent"]*$forfeitDays/100;
+		}
 	}
-	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -289,12 +318,12 @@ function roundUp($number, $digits){
 }
 function YearWageCompute($PartObj, $TotalWage, $yearNo, $YearMonths){
 		
-	$PayMonth = preg_split('/\//',DateModules::MiladiToShamsi($PartObj->PartDate));
+	$PayMonth = preg_split('/\//',DateModules::miladi_to_shamsi($PartObj->PartDate));
 	$PayMonth = $PayMonth[1]*1;
 	$PayMonth = $PayMonth*$YearMonths/12;
 	
 	$FirstYearInstallmentCount = $YearMonths - $PayMonth;
-	$MidYearInstallmentCount = Math.floor(($PartObj->InstallmentCount-$FirstYearInstallmentCount) / $YearMonths);
+	$MidYearInstallmentCount = floor(($PartObj->InstallmentCount-$FirstYearInstallmentCount) / $YearMonths);
 	$LastYeatInstallmentCount = ($PartObj->InstallmentCount-$FirstYearInstallmentCount) % $YearMonths;
 
 	if($yearNo > $MidYearInstallmentCount+2)

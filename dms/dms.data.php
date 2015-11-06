@@ -22,6 +22,12 @@ switch ($task) {
 
 	case "ConfirmDocument":
 		ConfirmDocument();
+		
+	case "selectDocTypeGroups":
+		selectDocTypeGroups();
+		
+	case "selectDocTypes":
+		selectDocTypes();
 }
 
 function SelectAll(){
@@ -136,4 +142,20 @@ function ConfirmDocument(){
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
+
+function selectDocTypeGroups(){
+	
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=7");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function selectDocTypes(){
+	
+	$groupID = $_REQUEST["GroupID"];
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=8 AND param1=?", array($groupID));
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
 ?>

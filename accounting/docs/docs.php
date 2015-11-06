@@ -50,6 +50,8 @@ $dg->addColumn("","DocID","",true);
 $dg->addColumn("","CostDesc","",true);
 $dg->addColumn("","TafsiliDesc","",true);
 $dg->addColumn("","TafsiliGroupDesc","",true);
+$dg->addColumn("","Tafsili2Desc","",true);
+$dg->addColumn("","Tafsili2GroupDesc","",true);
 $dg->addColumn("", "locked", "", true);
 
 $col = $dg->addColumn("ردیف","ItemID","", true);
@@ -68,17 +70,27 @@ $col->editor = "AccDocsObject.tafsiliCombo";
 $col->renderer = "function(v,p,r){return r.data.TafsiliDesc;}";
 $col->width = 150;
 
-$col = $dg->addColumn("مبلغ بدهکار", "DebtorAmount", GridColumn::ColumnType_money);
-$col->editor = ColumnEditor::CurrencyField(true, "cmp_DebtorAmount");
+$col = $dg->addColumn("گروه تفصیلی2", "Tafsili2Type");
+$col->editor = "AccDocsObject.tafsili2GroupCombo";
+$col->renderer = "function(v,p,r){return r.data.Tafsili2GroupDesc;}";
 $col->width = 100;
 
-$col = $dg->addColumn("مبلغ بستانکار", "CreditorAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("تفصیلی2", "Tafsili2ID");
+$col->editor = "AccDocsObject.tafsili2Combo";
+$col->renderer = "function(v,p,r){return r.data.Tafsili2Desc;}";
+$col->width = 150;
+
+$col = $dg->addColumn("بدهکار", "DebtorAmount", GridColumn::ColumnType_money);
+$col->editor = ColumnEditor::CurrencyField(true, "cmp_DebtorAmount");
+$col->width = 80;
+
+$col = $dg->addColumn("بستانکار", "CreditorAmount", GridColumn::ColumnType_money);
 $col->editor = ColumnEditor::CurrencyField(true, "cmp_CreditorAmount");
-$col->width = 100;
+$col->width = 80;
 
 $col = $dg->addColumn("جزئیات", "details");
 $col->editor = ColumnEditor::TextField(true, "cmp_details");
-$col->width = 150;
+$col->width = 120;
 $col->ellipsis = 100;
 
 if($accessObj->RemoveFlag)
@@ -99,7 +111,7 @@ $dg->rowEditOkHandler = "function(v,p,r){ return AccDocsObject.SaveItem(v,p,r);}
 
 $dg->DefaultSortField = "DebtorAmount";
 $dg->autoExpandColumn = "CostID";
-$dg->DefaultSortDir = "ASC";
+$dg->DefaultSortDir = "DESC";
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 320;
 $itemsgrid = $dg->makeGrid_returnObjects();
@@ -108,6 +120,7 @@ $dgh = new sadaf_datagrid("dg",$js_prefix_address."doc.data.php?task=selectCheck
 
 $dgh->addColumn("","DocID","",true);
 $dgh->addColumn("","AccountDesc","",true);
+$dgh->addColumn("","TafsiliDesc","",true);
 
 $col = $dgh->addColumn("کد","CheckID","",true);
 $col->width = 50;
@@ -129,8 +142,9 @@ $col = $dgh->addColumn("مبلغ", "amount", GridColumn::ColumnType_money);
 $col->editor = ColumnEditor::CurrencyField();
 $col->width = 80;
 
-$col = $dgh->addColumn("در وجه", "reciever");
-$col->editor = ColumnEditor::TextField(true);
+$col = $dgh->addColumn("در وجه", "TafsiliID");
+$col->renderer = "function(v,p,r){return r.data.TafsiliDesc;}";
+$col->editor = "AccDocsObject.checkTafsiliCombo";
 
 $col = $dgh->addColumn("بابت", "description");
 $col->editor = ColumnEditor::TextField(true);
@@ -217,8 +231,21 @@ AccDocsObject.itemGrid.plugins[0].on("beforeedit", AccDocs.beforeRowEdit);
 AccDocsObject.itemGrid.plugins[0].on("beforeedit", function(editor,e){
 	
 	if(e.record.data.locked == "YES")
-		return false;
+	{
+		items = AccDocsObject.itemGrid.columns;
+		for(i=0; i<items.length; i++)
+			items[i].getEditor().disable();
+			
+		if(e.record.data.TafsiliType != null && e.record.data.TafsiliID == null)
+			AccDocsObject.itemGrid.columns.findObject("dataIndex","TafsiliID").getEditor().enable();
+		if(e.record.data.Tafsili2Type != null && e.record.data.Tafsili2ID == null)
+			AccDocsObject.itemGrid.columns.findObject("dataIndex","Tafsili2ID").getEditor().enable();
+		return true;
+	}
 	
+	for(i=0; i<items.length; i++)
+		items[i].getEditor().disable(false);
+		
 	if(!e.record.data.ItemID)
 		return AccDocsObject.AddAccess;
 	return AccDocsObject.EditAccess;

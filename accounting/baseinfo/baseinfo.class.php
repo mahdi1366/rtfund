@@ -10,7 +10,6 @@ class ACC_blocks extends PdoDataAccess{
 	public $BlockCode;
 	public $BlockDesc;
 	public $essence;
-	public $BranchID;
 
     function __construct($BlockID = "")
     {
@@ -86,7 +85,6 @@ class ACC_CostCodes extends PdoDataAccess {
     public $level3;
     public $IsActive;
     public $CostCode;
-	public $BranchID;
 
     function __construct($CstID = '') {
 
@@ -97,7 +95,6 @@ class ACC_CostCodes extends PdoDataAccess {
 
     function InsertCost($pdo = null) {
 
-		$this->BranchID = $_SESSION["accounting"]["BranchID"];
         if ($pdo == null) {
             $db = parent::getPdoObject();
             $db->beginTransaction();
@@ -216,12 +213,13 @@ class ACC_CostCodes extends PdoDataAccess {
 }
 
 class ACC_tafsilis extends PdoDataAccess{
+	
 	public $TafsiliID;
 	public $TafsiliType;
 	public $TafsiliCode;
 	public $TafsiliDesc;
-	public $BranchID;
 	public $IsActive;
+	public $ObjectID;
 			
 	function __construct($TafsiliID = "") {
 		
@@ -231,13 +229,14 @@ class ACC_tafsilis extends PdoDataAccess{
 	
 	static function SelectAll($where = "", $param = array()){
 		
-		return PdoDataAccess::runquery_fetchMode("select * from ACC_tafsilis where " . $where, $param);
+		return PdoDataAccess::runquery_fetchMode(
+			"select t.*
+				from ACC_tafsilis t
+				where " . $where, $param);
 	}
 	
 	function AddTafsili()
 	{
-		$this->BranchID = $_SESSION["accounting"]["BranchID"];
-				
 	 	if(!parent::insert("ACC_tafsilis",$this))
 			return false;
 		$this->TafsiliID = parent::InsertID();
@@ -266,7 +265,9 @@ class ACC_tafsilis extends PdoDataAccess{
 	static function DeleteTafsili($TafsiliID){
 		
 		if( parent::delete("ACC_tafsilis"," TafsiliID=?", array($TafsiliID)) === false )
-	 		return false;
+		{
+			parent::runquery("update ACC_tafsilis set IsActive='NO' where TafsiliID=?", array($TafsiliID));
+		}
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
@@ -361,7 +362,6 @@ class ACC_accounts extends PdoDataAccess {
 	public $AccountNo;
     public $AccountType;
     public $IsActive;
-    public $TafsiliID;
 
 	public $_BankDesc;
 	
@@ -393,6 +393,13 @@ class ACC_accounts extends PdoDataAccess {
 
         $this->AccountID = parent::InsertID();
 
+		$obj = new ACC_tafsilis();
+		$obj->ObjectID = $this->AccountID;
+		$obj->TafsiliCode = $this->AccountNo;
+		$obj->TafsiliDesc = $this->AccountDesc;
+		$obj->TafsiliType = "3";
+		$obj->AddTafsili();
+		
         $daObj = new DataAudit();
         $daObj->ActionType = DataAudit::Action_add;
         $daObj->MainObjectID = $this->AccountID;

@@ -18,7 +18,7 @@ Tafsili.prototype = {
 }
 
 function Tafsili(){
-	
+
 	this.groupPnl = new Ext.form.Panel({
 		renderTo: this.get("div_selectGroup"),
 		title: "انتخاب گروه",
@@ -105,21 +105,23 @@ function Tafsili(){
 
 Tafsili.prototype.LoadTafsilis = function(){
 
-	TafsiliObject.TafsiliType = this.groupPnl.down('[name=TafsiliType]').getValue();
+	this.TafsiliType = this.groupPnl.down('[name=TafsiliType]').getValue();
 
-	TafsiliObject.grid.getStore().proxy.extraParams.TafsiliType = TafsiliObject.TafsiliType;
+	this.grid.getStore().proxy.extraParams.TafsiliType = this.TafsiliType;
 
-	if(TafsiliObject.grid.rendered)
-		TafsiliObject.grid.getStore().load();
+	if(this.grid.rendered)
+		this.grid.getStore().load();
 	else
-		TafsiliObject.grid.render(TafsiliObject.get("grid_div"));
+		this.grid.render(this.get("grid_div"));
 	
-	TafsiliObject.grid.show();
-	TafsiliObject.groupPnl.collapse();
+	this.grid.show();
+	this.groupPnl.collapse();
 }
 
-Tafsili.DeleteRender = function(v,p,r)
-{
+Tafsili.DeleteRender = function(v,p,r){
+	
+	if(r.data.ObjectID*1 > 0)
+		return "";
 	return "<div align='center' title='حذف' class='remove' "+
 		"onclick='TafsiliObject.DeleteTafsili();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
@@ -173,8 +175,8 @@ Tafsili.prototype.SaveTafsili = function(index){
 	});
 }
 
-Tafsili.prototype.DeleteGroup = function(TafsiliType)
-{
+Tafsili.prototype.DeleteGroup = function(TafsiliType){
+	
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
 		if(btn == "no")
 			return;
@@ -212,8 +214,8 @@ Tafsili.prototype.DeleteGroup = function(TafsiliType)
 	});
 }
 
-Tafsili.prototype.DeleteTafsili = function()
-{
+Tafsili.prototype.DeleteTafsili = function(){
+	
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
 		if(btn == "no")
 			return;

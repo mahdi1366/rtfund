@@ -29,7 +29,7 @@ class DMS_documents extends PdoDataAccess
 		
 		return PdoDataAccess::runquery("
 			select d.*, b1.infoDesc DocTypeDesc, concat(fname, ' ', lname) confirmfullname,
-				b2.infoDesc param1Title	
+				b2.infoDesc param1Title	,b1.param1
 			from DMS_documents d	
 			join BaseInfo b1 on(InfoID=d.DocType AND TypeID=8)
 			left join  BaseInfo b2 on(b1.param1=b2.InfoID AND b2.TypeID=7)

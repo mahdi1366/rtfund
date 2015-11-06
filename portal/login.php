@@ -254,7 +254,7 @@ else if(isset($_POST["UserName"]))
 					
 					document.getElementById("fname").value = "<?= $_POST["fname"] ?>";
 					document.getElementById("lname").value = "<?= $_POST["lname"] ?>";
-					document.getElementById("company").value = "<?= $_POST["company"] ?>";
+					document.getElementById("CompanyName").value = "<?= $_POST["CompanyName"] ?>";
 					document.getElementById("email").value = "<?= $_POST["email"] ?>";
 					document.getElementById("UserName2").value = "";
 					document.getElementById("UserName2").placeholder = "کلمه کاربری تکراری می باشد";
@@ -272,11 +272,11 @@ else if(isset($_POST["UserName"]))
 		function ChangePersonType(elem){
 			document.getElementById("fname").style.display = elem.value == "YES" ? "block" : "none";
 			document.getElementById("lname").style.display = elem.value == "YES" ? "block" : "none";
-			document.getElementById("company").style.display = elem.value == "YES" ? "none" : "block";
+			document.getElementById("CompanyName").style.display = elem.value == "YES" ? "none" : "block";
 			
 			document.getElementById("fname").required = elem.value == "YES" ? "required" : "";
 			document.getElementById("lname").required = elem.value == "YES" ? "required" : "";
-			document.getElementById("company").required = elem.value == "YES" ? "" : "required";
+			document.getElementById("CompanyName").required = elem.value == "YES" ? "" : "required";
 		}
 		
 		function ConfirmPassword(input) {
@@ -314,7 +314,7 @@ else if(isset($_POST["UserName"]))
 				</div>
 				<input type="text" name="fname" class="textfield" id="fname" placeholder="نام ..." required="required" dir="rtl"/>
 				<input type="text" name="lname" class="textfield" id="lname" placeholder="نام خانوادگی ..." required="required" dir="rtl"/>
-				<input type="text" name="CompanyName" style="display:none" class="textfield" id="company" placeholder="نام شرکت ..." dir="rtl"/>
+				<input type="text" name="CompanyName" style="display:none" class="textfield" id="CompanyName" placeholder="نام شرکت ..." dir="rtl"/>
 				<input type="email" name="email" id="email" class="textfield" placeholder="پست الکترونیک ..." required="required" />
 				<div id="UserNameDiv2"><input type="text" id="UserName2" name="UserName" class="textfield" placeholder="کلمه کاربری ..." required="required" /></div>
 				<input type="password" class="textfield" id="password1" placeholder="رمز عبور ..." required="required" />

@@ -215,27 +215,33 @@ class ACC_DocItems extends PdoDataAccess {
 	public $CostID;
 	public $TafsiliType;
 	public $TafsiliID;
+	public $Tafsili2Type;
+	public $Tafsili2ID;
 	public $DebtorAmount;
 	public $CreditorAmount;
 	public $details;
 	public $locked;
 	public $SourceType;
 	public $SourceID;
+	public $SourceID2;
 	
 	function __construct() {
 	}
 
 	static function GetAll($where = "", $whereParam = array()) {
 		
-		$query = "select si.*,concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc) CostDesc,t.TafsiliDesc,
-			b.InfoDesc TafsiliGroupDesc
+		$query = "select si.*,concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc) CostDesc,
+			t.TafsiliDesc,bi.InfoDesc TafsiliGroupDesc,
+			t2.TafsiliDesc as Tafsili2Desc,bi2.InfoDesc Tafsili2GroupDesc
 		from ACC_DocItems si
 			left join acc_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(cc.level1=b1.blockID)
 			left join ACC_blocks b2 on(cc.level2=b2.blockID)
 			left join ACC_blocks b3 on(cc.level3=b3.blockID)
-			left join BaseInfo b on(TafsiliType=InfoID AND TypeID=2)
+			left join BaseInfo bi on(TafsiliType=InfoID AND TypeID=2)
+			left join BaseInfo bi2 on(Tafsili2Type=bi2.InfoID AND bi2.TypeID=2)
 			left join ACC_Tafsilis t on(t.TafsiliID=si.TafsiliID)
+			left join ACC_Tafsilis t2 on(t2.TafsiliID=si.Tafsili2ID)
 			";
 		$query .= ($where != "") ? " where " . $where : "";
 		return parent::runquery_fetchMode($query, $whereParam);
@@ -293,7 +299,7 @@ class ACC_DocChecks extends PdoDataAccess {
 	public $CheckDate;
 	public $amount;
 	public $CheckStatus;
-	public $reciever;
+	public $TafsiliID;
 	public $description;
 
     function __construct()
@@ -303,10 +309,11 @@ class ACC_DocChecks extends PdoDataAccess {
 
     static function GetAll($where = "",$whereParam = array())
     {
-	    $query = "select c.*,a.*,b.infoDesc as StatusTitle, bk.BankDesc
+	    $query = "select c.*,a.*,b.infoDesc as StatusTitle, bk.BankDesc, t.TafsiliDesc
 					from ACC_DocChecks c
-					join ACC_accounts a using(AccountID)
-					join ACC_banks bk on(a.BankID=bk.BankID)
+					left join ACC_accounts a using(AccountID)
+					left join ACC_banks bk on(a.BankID=bk.BankID)
+					left join ACC_tafsilis t on(TafsiliType=" . TAFTYPE_PERSONS . " AND t.TafsiliID=c.TafsiliID)
 					join BaseInfo b on(b.typeID=4 AND b.InfoID=CheckStatus)
 			";
 	    $query .= ($where != "") ? " where " . $where : "";

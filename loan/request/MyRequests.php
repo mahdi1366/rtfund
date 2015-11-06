@@ -63,8 +63,8 @@ MyRequest.prototype = {
 	}
 };
 
-function MyRequest()
-{
+function MyRequest(){
+	
 	this.grid = <?= $grid ?>;
 	this.grid.render(this.get("DivGrid"))
 }
@@ -83,12 +83,6 @@ MyRequest.prototype.OperationMenu = function(e){
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
 	
-	op_menu.add({text: 'اطلاعات وام',iconCls: 'info2', 
-		handler : function(){ return MyRequestObject.EditRequest(); }});
-	
-	op_menu.add({text: 'مدارک وام',iconCls: 'attach', 
-		handler : function(){ return MyRequestObject.LoadAttaches(); }});
-	
 	if(this.User == "Customer" && (record.data.StatusID == "40" || record.data.StatusID == "60"))
 	{
 		op_menu.add({text: 'تایید تکمیل مدارک',iconCls: 'tick', 
@@ -99,6 +93,15 @@ MyRequest.prototype.OperationMenu = function(e){
 		op_menu.add({text: "دلیل رد مدارک",iconCls: 'comment', 
 		handler : function(){ return MyRequestObject.ShowComment(); }});
 	}	
+	
+	op_menu.add({text: 'اطلاعات وام',iconCls: 'info2', 
+		handler : function(){ return MyRequestObject.EditRequest(); }});
+	
+	op_menu.add({text: 'مدارک وام',iconCls: 'attach', 
+		handler : function(){ return MyRequestObject.LoadAttaches(); }});
+	
+	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
+		handler : function(){ return MyRequestObject.ShowHistory(); }});
 	
 	if(record.data.StatusID == "1")
 	{
@@ -112,8 +115,8 @@ MyRequest.prototype.OperationMenu = function(e){
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
-MyRequest.prototype.EditRequest = function()
-{
+MyRequest.prototype.EditRequest = function(){
+	
 	var record = this.grid.getSelectionModel().getLastSelected();
 	if(this.User == "Agent")
 	{
@@ -126,7 +129,7 @@ MyRequest.prototype.EditRequest = function()
 		{
 			this.RequestInfoWin = new Ext.window.Window({
 				width : 800,
-				height : 430,
+				height : 460,
 				modal : true,
 				bodyStyle : "background-color:white",
 				closeAction : "hide",
@@ -155,8 +158,8 @@ MyRequest.prototype.EditRequest = function()
 	}
 }
 
-MyRequest.prototype.DeleteRequest = function()
-{
+MyRequest.prototype.DeleteRequest = function(){
+	
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟",function(btn){
 		if(btn == "no")
 			return;
@@ -291,6 +294,39 @@ MyRequest.prototype.ShowComment = function(){
 	this.commentWin.center();
 }
 
+MyRequest.prototype.ShowHistory = function(){
+
+	if(!this.HistoryWin)
+	{
+		this.HistoryWin = new Ext.window.Window({
+			title: 'سابقه گردش درخواست',
+			modal : true,
+			autoScroll : true,
+			width: 700,
+			height : 500,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "history.php",
+				scripts : true
+			},
+			buttons : [{
+					text : "بازگشت",
+					iconCls : "undo",
+					handler : function(){
+						this.up('window').hide();
+					}
+				}]
+		});
+		Ext.getCmp(this.TabID).add(this.HistoryWin);
+	}
+	this.HistoryWin.show();
+	this.HistoryWin.center();
+	this.HistoryWin.loader.load({
+		params : {
+			RequestID : this.grid.getSelectionModel().getLastSelected().data.RequestID
+		}
+	});
+}
 </script>
 <center>
 	<div id="DivGrid"></div>

@@ -5,6 +5,7 @@
 //-------------------------
 include('header.inc.php');
 require_once 'persons.class.php';
+require_once '../framework/PasswordHash.php';
 include_once inc_dataReader;
 require_once inc_response;
 
@@ -37,6 +38,7 @@ function selectPersons(){
 		{
 			case "IsAgent":		$where .= " AND IsAgent='YES'";break;
 			case "IsCustomer":	$where .= " AND IsCustomer='YES'";break;
+			case "IsStaff":		$where .= " AND IsStaff='YES'";break;
 		}
 	}
 	
@@ -63,6 +65,12 @@ function SavePerson(){
 	
 	$obj = new BSC_persons();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	$hash_cost_log2 = 8;	
+	$hasher = new PasswordHash($hash_cost_log2, true);
+	$obj->UserPass = $hasher->HashPassword(md5("123456"));
+	$obj->IsStaff = "YES";
+	$obj->IsReal = "YES";
 	
 	if($obj->PersonID > 0)
 		$result = $obj->EditPerson();

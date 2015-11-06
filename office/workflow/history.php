@@ -4,19 +4,20 @@
 // create Date:	91.12
 //---------------------------
 include("../header.inc.php");
+require_once './wfm.class.php';
 require_once inc_component;
-$RequestID = $_POST["RequestID"];
 
-$query = "select f.*,
-				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname , 
-				b.InfoDesc StatusDesc
-			from LON_ReqFlow f 
-				join BaseInfo b on (b.InfoID = f.StatusID AND TypeID=5) 
-				join BSC_persons using(PersonID) 
-				where f.RequestID=?
-			order by FlowId";
-$Logs = PdoDataAccess::runquery($query, array($RequestID));
+$FlowRowObj = new WFM_FlowRows($_REQUEST["RowID"]);
 
+$query = "select fr.* ,
+				ifnull(fs.StepDesc,'شروع گردش') StepDesc,
+				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname
+			from WFM_FlowRows fr
+			left join WFM_FlowSteps fs on(fr.FlowID=fs.FlowID and fs.StepID=fr.StepID)
+			join BSC_persons p on(fr.PersonID=p.PersonID)
+			where fr.FlowID=? AND fr.ObjectID=?
+			order by RowID";
+$Logs = PdoDataAccess::runquery($query, array($FlowRowObj->FlowID, $FlowRowObj->ObjectID));
 $tbl_content = "";
 
 if(count($Logs) == 0)
@@ -30,13 +31,14 @@ else
 		$tbl_content .= "<tr " . ($i%2 == 1 ? "style='background-color:#efefef'" : "") . ">
 			<td width=250px>[" . ($i+1) . "]". ($i+1<10 ? "&nbsp;" : "") . "&nbsp;
 				<img align='top' src='/generalUI/ext4/resources/themes/icons/user_comment.gif'>&nbsp;
-				" . $Logs[$i]["StatusDesc"] . "</td>
+				" . $Logs[$i]["StepDesc"] . " [ " . 
+				($Logs[$i]["ActionType"] == "CONFIRM" ? "تایید" : "رد") . " ] </td>
 			<td  width=150px>" . $Logs[$i]["fullname"] . "</td>
-			<td width=110px>" . substr($Logs[$i]["ActDate"], 11) . " " . 
-								DateModules::miladi_to_shamsi($Logs[$i]["ActDate"]) . "</td>
+			<td width=110px>" . substr($Logs[$i]["ActionDate"], 11) . " " . 
+								DateModules::miladi_to_shamsi($Logs[$i]["ActionDate"]) . "</td>
 			<td><div style='cursor:pointer' class='qtip-target' data-qtip='" . 
-				$Logs[$i]["StepComment"] . "'>" .
-				String::ellipsis($Logs[$i]["StepComment"], 48). "</div></td>
+				$Logs[$i]["ActionComment"] . "'>" .
+				String::ellipsis($Logs[$i]["ActionComment"], 48). "</div></td>
 		</tr>";
 	}
 }

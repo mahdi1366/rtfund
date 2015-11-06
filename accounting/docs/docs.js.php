@@ -71,7 +71,6 @@ function AccDocs()
 		}
 	});
 	
-	
 	this.tafsiliCombo = new Ext.form.ComboBox({
 		store: new Ext.data.Store({
 			fields:["TafsiliID","TafsiliDesc"],
@@ -90,6 +89,73 @@ function AccDocs()
 						this.proxy.extraParams["TafsiliType"] = group;
 					}
 				}
+			}
+		}),
+		emptyText:'انتخاب تفصیلی ...',
+		typeAhead: false,
+		pageSize : 10,
+		valueField : "TafsiliID",
+		displayField : "TafsiliDesc"
+	});
+	
+	this.tafsili2GroupCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			fields:["InfoID","InfoDesc"],
+			proxy: {
+				type: 'jsonp',
+				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			autoLoad : true
+		}),
+		emptyText:"گروه تفصیلی",
+		typeAhead: false,
+		queryMode : "local",
+		valueField : "InfoID",
+		displayField : "InfoDesc",
+		listeners : {
+			select : function(combo,records){
+				AccDocsObject.tafsili2Combo.setValue();
+				AccDocsObject.tafsili2Combo.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
+				AccDocsObject.tafsili2Combo.getStore().load();
+			}
+		}
+	});
+	
+	this.tafsili2Combo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			fields:["TafsiliID","TafsiliDesc"],
+			proxy: {
+				type: 'jsonp',
+				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			listeners : {
+				beforeload : function(store){
+					if(!store.proxy.extraParams.TafsiliType)
+					{
+						group = AccDocsObject.tafsili2GroupCombo.getValue();
+						if(group == "")
+							return false;
+						this.proxy.extraParams["TafsiliType"] = group;
+					}
+				}
+			}
+		}),
+		emptyText:'انتخاب تفصیلی ...',
+		typeAhead: false,
+		pageSize : 10,
+		valueField : "TafsiliID",
+		displayField : "TafsiliDesc"
+	});
+	
+	this.checkTafsiliCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			fields:["TafsiliID","TafsiliDesc"],
+			proxy: {
+				type: 'jsonp',
+				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=1',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
 			}
 		}),
 		emptyText:'انتخاب تفصیلی ...',
@@ -364,7 +430,7 @@ AccDocs.prototype.SaveDoc = function(){
 
 		success : function(form,action){
 			AccDocsObject.docWin.hide();
-			AccDocsObject.grid.plugins[0].field.setValue('');
+			//AccDocsObject.grid.plugins[0].field.setValue('');
 			AccDocsObject.grid.getStore().proxy.extraParams["query"] = "";
 			AccDocsObject.grid.getStore().loadPage(action.result.data*1);
 		},

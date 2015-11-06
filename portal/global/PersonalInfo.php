@@ -208,7 +208,7 @@ function PersonalInfo()
 			items : this.mainPanel
 		},{
 			title : "مدارک",
-			style : "padding:20px",		
+			style : "padding:0 20px 0 20px",		
 			itemId : "cmp_documents",						
 			loader : {
 				url : "../../dms/documents.php",
@@ -242,6 +242,4 @@ PersonalInfo.prototype.PersonalInfo = function()
 }
 
 </script>
-<form id="MainForm" enctype="multipart/form-data">
-	<div id="mainForm"><div>
-</form>
+<div id="mainForm"><div>

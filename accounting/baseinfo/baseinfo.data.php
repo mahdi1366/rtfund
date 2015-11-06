@@ -105,6 +105,10 @@ switch ($task) {
 		break;    
 	case 'Getaccounts':
 		getaccounts();
+		
+	//------------------------------------
+		
+
 }
 
 function SelectBlocks() {
@@ -203,7 +207,7 @@ function SelectCostCode() {
 
     $param = array();
 
-    $where = "cc.IsActive='YES' AND cc.BranchID=" . $_SESSION["accounting"]["BranchID"];
+    $where = "cc.IsActive='YES' ";
 
     if (!empty($_REQUEST['query'])) {
         if (isset($_REQUEST['fields'])) {
@@ -228,7 +232,7 @@ function SelectCostCode() {
     $where .= dataReader::makeOrder();
 
     $list = ACC_CostCodes::SelectCost($where, $param);
-    //print_r(ExceptionHandler::PopAllExceptions());
+    print_r(ExceptionHandler::PopAllExceptions());
     $count = $list->RowCount();
     $list = PdoDataAccess::fetchAll($list, $_GET["start"], $_GET["limit"]);
     
@@ -319,7 +323,7 @@ function DeleteGroup(){
 }
 
 function GetAllTafsilis() {
-	$where = " TafsiliType=:g";
+	$where = " IsActive='YES' AND TafsiliType=:g";
 	$whereParam = array();
 	$whereParam[":g"] = $_GET["TafsiliType"];
 	
@@ -553,29 +557,6 @@ function deleteCheque() {
 	$res = $ChequeBook->DeleteCheque();
 
 	Response::createObjectiveResponse($res, '');
-	die();
-}
-
-function getaccounts($status) {
-	$where = 'IsActive=\'YES\'';
-	$param = array();
-	if (isset($_REQUEST['query'])) {
-		$where .= " and (AccountCode like :entry 
-                     or BranchName like :entry 
-                     or BankName like :entry )";
-		$param[':entry'] = '%' . $_REQUEST['query'] . '%';
-	}
-	if ($status == 'glob') {
-		$where .= ' and Branchglobality=\'GLOBAL\'';
-		$list = accounts::Selectaccounts($where, $param);
-		$count = accounts::Selectaccounts($where, $param, true);
-		$count = $count[0]['co'];
-	} elseif ($status == 'loc') {
-		$list = accounts::GetLocallyAccessibleaccounts($where, $param);
-		$count = accounts::GetLocallyAccessibleaccounts($where, $param, true);
-		$count = $count[0]['co'];
-	}
-	echo dataReader::getJsonData($list, $count, $_GET['callback']);
 	die();
 }
 

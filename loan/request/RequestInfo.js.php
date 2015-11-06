@@ -17,8 +17,8 @@ RequestInfo.prototype = {
 	}
 };
 
-function RequestInfo()
-{
+function RequestInfo(){
+	
 	this.mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
 	this.mask.show();
 	
@@ -56,15 +56,14 @@ function RequestInfo()
 }
 
 RequestInfo.prototype.LoadRequestInfo = function(){
-	
-	  
+		
 	this.store = new Ext.data.Store({
 		proxy:{
 			type: 'jsonp',
 			url: this.address_prefix + "request.data.php?task=SelectAllRequests&RequestID=" + this.RequestID,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["RequestID","BranchID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
+		fields : ["RequestID","BranchID","BranchName","ReqPersonID","ReqPersonRole","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
 					"guarantees","AgentGuarantee","StatusID","DocumentDesc"],
 		autoLoad : true,
@@ -101,23 +100,38 @@ RequestInfo.OperationRender = function(v,p,r){
 RequestInfo.prototype.OperationMenu = function(e){
 
 	record = this.grid.getSelectionModel().getLastSelected();
+	ReqRecord = this.store.getAt(0);
+	
 	var op_menu = new Ext.menu.Menu();
-	
-	op_menu.add({text: 'ویرایش',iconCls: 'edit', 
-		handler : function(){ return RequestInfoObject.PartInfo("edit"); }});
-	
-	op_menu.add({text: 'حذف',iconCls: 'remove', 
-		handler : function(){ return RequestInfoObject.DeletePart(); }});
-	
+
 	if(this.User == "Staff")
 	{
-		op_menu.add({text: 'اقساط',iconCls: 'list',
-		handler : function(){ return RequestInfoObject.LoadPartPayments(); }});
+		if(record.data.IsStarted == "NO")
+		{
+			op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
+			handler : function(){ return RequestInfoObject.StartFlow(); }});
+		}	
+		if(record.data.IsEnded == "YES")
+		{
+			op_menu.add({text: 'اقساط',iconCls: 'list',
+			handler : function(){ return RequestInfoObject.LoadPartPayments(); }});
+		
+			op_menu.add({text: 'پرداخت',iconCls: 'epay',
+			handler : function(){ return RequestInfoObject.PayPart(); }});
+		}
+		
+	}	
+	if(record.data.IsPayed == "NO")
+	{
+		if(this.User == "Agent" || (this.User == "Staff" && ReqRecord.data.ReqPersonRole != "Agent"))
+		{
+			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
+				handler : function(){ return RequestInfoObject.PartInfo("edit"); }});
+
+			op_menu.add({text: 'حذف',iconCls: 'remove', 
+				handler : function(){ return RequestInfoObject.DeletePart(); }});
+		}
 	}
-	
-	op_menu.add({text: 'پرداخت',iconCls: 'epay',
-		handler : function(){ return RequestInfoObject.PayPart(); }});
-	
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
@@ -199,6 +213,7 @@ RequestInfo.prototype.BuildForms = function(){
 				layout : "hbox",
 				itemId : "cmp_guarantees",
 				width : 700,
+				height : 23,
 				items : [{
 					xtype : "displayfield",
 					value: "تضمین :",
@@ -267,7 +282,7 @@ RequestInfo.prototype.BuildForms = function(){
 	
 	this.PartsPanel =  new Ext.form.FormPanel({
 		renderTo : this.get("PartForm"),
-		width: 770,
+		width: 750,
 		border : 0,
 		items: [{
 			xtype : "fieldset",
@@ -277,7 +292,7 @@ RequestInfo.prototype.BuildForms = function(){
 			items :[{
 				xtype : "container",
 				colspan : 2,
-				width : 770,
+				width : 750,
 				cls : "blueText",
 				html : "برای مشاهده جزئیات هر مرحله روی عنوان مرحله کلیک کنید" + "<hr>"
 			},this.grid,{
@@ -329,7 +344,7 @@ RequestInfo.prototype.BuildForms = function(){
 				},{
 					colspan : 3,
 					xtype : "container",
-					width : 560,
+					width : 540,
 					contentEl : this.get("summaryDIV")
 				}]
 			}]
@@ -355,6 +370,9 @@ RequestInfo.prototype.BuildForms = function(){
 			xtype : "container",
 			cls : "blueText",
 			itemId : "requestID"
+		},{
+			xtype : "container",
+			html : "<br>"
 		}]
 	});
 		
@@ -377,11 +395,12 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		this.companyPanel.down("[name=LoanPersonID]").hide();		
 		this.companyPanel.down("[name=BranchID]").setValue(1);
 		this.companyPanel.down("[name=BranchID]").hide();		
+		this.companyPanel.doLayout();
 	}
 	
 	if(record != null)
 	{
-		if(this.User == "Agent" && record.data.StatusID != 1)
+		if(this.User == "Agent" && record.data.StatusID != "1" && record.data.StatusID != "20")
 		{
 			this.companyPanel.getEl().readonly();
 			this.companyPanel.down("[itemId=cmp_save]").hide();
@@ -389,11 +408,23 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.grid.down("[itemId=addPart]").hide();
 			this.grid.down("[dataIndex=PartID]").hide();
 		}	
-		if(this.User == "Staff" && record.data.StatusID*1 >= "70")
+		if(this.User == "Staff")
 		{
-			this.companyPanel.getEl().readonly();
-			this.companyPanel.doLayout();
-			this.companyPanel.down("[itemId=cmp_save]").hide();
+			if(record.data.ReqPersonRole == "Agent")
+			{
+				if(record.data.StatusID == "10")
+				{
+					this.companyPanel.getEl().readonly(new Array("LoanPersonID","DocumentDesc"));
+				}
+				else
+				{
+					this.companyPanel.getEl().readonly();
+					this.companyPanel.down("[itemId=cmp_save]").hide();
+				}
+				this.companyPanel.doLayout();
+				this.grid.down("[itemId=addPart]").hide();
+				//this.grid.down("[dataIndex=PartID]").hide();
+			}
 		}	
 		if(this.User == "Customer")
 		{
@@ -411,6 +442,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.get("TR_FundWage").style.display = "none";
 			this.get("TR_AgentWage").style.display = "none";
 		}
+		this.companyPanel.doLayout();
 	}
 }
 
@@ -717,6 +749,10 @@ RequestInfo.prototype.LoadPartPayments = function(){
 	
 	if(!this.PartPaymentsWin)
 	{
+		this.paymentGrid.plugins[0].on("beforeedit", function(editor,e){
+			if(e.record.data.IsPayed == "YES")
+				return false;
+		});
 		this.PartPaymentsWin = new Ext.window.Window({
 			width : 700,
 			title : "لیست اقساط",
@@ -823,5 +859,34 @@ RequestInfo.prototype.PayPart = function(){
 		});
 	});
 }
+
+RequestInfo.prototype.StartFlow = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به شروع گردش تایید پرداخت مرحله می باشید؟",function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		me = RequestInfoObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "StartFlow",
+				PartID : record.data.PartID
+			},
+			success: function(response){
+				mask.hide();
+				RequestInfoObject.grid.getStore().load();
+			}
+		});
+	});
+}
+
 
 </script>
