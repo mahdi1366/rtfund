@@ -32,17 +32,21 @@ $_SESSION['USER']["RecentSystems"] = array();
 			}
 			
 			.header-top {
-				height : 70px;
-				background-color : #a07eb0;
+				width : 100%;
+				border-bottom: 3px solid #a07eb0;
+				position: absolute;
+				top: 0;
 			}
 			
 			.header {
-				background-image: url('icons/header.jpg');
-				height: 350px;
+				height : 70px;
+				background-color: #67406c;
+				margin-bottom: 10px;
 			}
 			
 			.menus{
-				width : 1000px;				
+				width : 1000px;	
+				margin-top: 120px;
 			}
 			
 			.systemRow{
@@ -95,12 +99,14 @@ $_SESSION['USER']["RecentSystems"] = array();
 			.footer-top {
 				width : 100%;
 				border-top: 3px solid #a07eb0;
-				margin: 20px 0 20px 0;
+				position: absolute;
+				bottom: 0;
 			}
 			
 			.footer {
 				height : 70px;
 				background-color: #67406c;
+				margin-top: 10px;
 			}
 		</style>
 	</head>
@@ -116,10 +122,9 @@ $_SESSION['USER']["RecentSystems"] = array();
 		}
 		
 		?>
-		<div class="header-top"></div>
-			
-		<div class="header"></div>
-		
+		<div class="header-top" > 
+			<div class="header"></div>
+		</div>	
 		<center>
 			<div class="menus" align="right">
 				
@@ -139,10 +144,9 @@ $_SESSION['USER']["RecentSystems"] = array();
 				
 			</div>
 			
-			<div class="footer-top" > </div>
-			
-			<div class="footer"></div>
-			
+			<div class="footer-top" > 
+				<div class="footer"></div>
+			</div>			
 		</center>
 </body>
 </html>

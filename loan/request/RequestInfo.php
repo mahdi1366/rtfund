@@ -76,32 +76,19 @@ $dg->addColumn("", "IsPayed","", true);
 $col = $dg->addColumn("تاریخ قسط", "InstallmentDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
 
-$col = $dg->addColumn("مبلغ خالص", "InstallmentAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مبلغ", "InstallmentAmount", GridColumn::ColumnType_money);
 $col->width = 80; 
-
-$col = $dg->addColumn("مبلغ کارمزد", "WageAmount", GridColumn::ColumnType_money);
-$col->width = 80;
 
 $col = $dg->addColumn("مبلغ جریمه", "ForfeitAmount", GridColumn::ColumnType_money);
 $col->width = 80;
 
-$col = $dg->addColumn("کارمزد مشتری", "CustomerWage", "");
-$col->width = 50;
-$col->align = "center";
-
-$col = $dg->addColumn("کارمزد صندوق", "FundWage", "");
-$col->width = 50;
-$col->align = "center";
-
-$dg->addButton("", "محاسبه اقساط", "list", "function(){RequestInfoObject.ComputePayments();}");
-
 $col = $dg->addColumn("شماره چک", "ChequeNo", "");
 $col->editor = ColumnEditor::NumberField(true);
-$col->width = 50;
+$col->width = 90;
 
 $col = $dg->addColumn("تاریخ چک", "ChequeDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField(true);
-$col->width = 70;
+$col->width = 90;
 
 $col = $dg->addColumn("بانک", "ChequeBank", "");
 $col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from ACC_banks"), 
@@ -110,7 +97,9 @@ $col->width = 70;
 
 $col = $dg->addColumn("شعبه", "ChequeBranch", "");
 $col->editor = ColumnEditor::TextField(true);
-$col->width = 70;
+$col->width = 90;
+
+$dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", "function(){RequestInfoObject.ComputeInstallments();}");
 
 $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(store,record){return RequestInfoObject.SavePartPayment(store,record);}";

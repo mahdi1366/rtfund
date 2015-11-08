@@ -216,7 +216,7 @@ MyForm.prototype.ShowHistory = function(){
 	if(!this.HistoryWin)
 	{
 		this.HistoryWin = new Ext.window.Window({
-			title: 'سابقه گردش درخواست',
+			title: 'سابقه گردش',
 			modal : true,
 			autoScroll : true,
 			width: 700,

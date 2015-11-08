@@ -266,12 +266,11 @@ function PayPart(){
 	if(!$result)
 	{
 		$pdo->rollBack();
-		print_r(ExceptionHandler::PopAllExceptions());
 	}
 	else
 		$pdo->commit();
 	
-	echo Response::createObjectiveResponse($result, "");
+	echo Response::createObjectiveResponse($result, !$result ? PdoDataAccess::GetExceptionsToString() : "");
 	die();
 }
 
@@ -292,9 +291,7 @@ function GetPartInstallments(){
 		$dt[$i]["ForfeitAmount"] = 0;
 		if ($dt[$i]["InstallmentDate"] < DateModules::Now()) {
 			$forfeitDays = DateModules::GDateMinusGDate(DateModules::Now(),$dt[$i]["InstallmentDate"]);
-			$dt[$i]["ForfeitAmount"] = 
-				($dt[$i]["InstallmentAmount"]+$dt[$i]["WageAmount"])*
-					$dt[$i]["ForfeitPercent"]*$forfeitDays/100;
+			$dt[$i]["ForfeitAmount"] = $dt[$i]["InstallmentAmount"]*$dt[$i]["ForfeitPercent"]*$forfeitDays/100;
 		}
 	}
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
@@ -374,8 +371,6 @@ function ComputePartPayments(){
 	$allPay = roundUp( PMT($obj->CustomerWage, $obj->InstallmentCount, $obj->PartAmount, $YearMonths), -3);
 	$TotalWage = round(ComputeWage($obj->PartAmount, $obj->CustomerWage/100, $obj->InstallmentCount, $YearMonths));
 	$LastPay = $obj->PartAmount*1 + $TotalWage - $allPay*($obj->InstallmentCount-1);
-	$PureInstallmentAmount = round($obj->PartAmount/$obj->InstallmentCount);
-	$lastInstallmentAmount = $obj->PartAmount*1 - $PureInstallmentAmount*($obj->InstallmentCount-1);
 	
 	$gdate = DateModules::miladi_to_shamsi($obj->PartDate);
 	
@@ -390,10 +385,7 @@ function ComputePartPayments(){
 			$obj->IntervalType == "DAY" ? $obj->PayInterval*($i+1) : 0, 
 			$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
 		$obj2->PartID = $obj->PartID;
-		$obj2->InstallmentAmount = $PureInstallmentAmount;
-		$obj2->WageAmount = $allPay - $PureInstallmentAmount;
-		$obj2->CustomerWage = $obj->CustomerWage;
-		$obj2->FundWage = $obj->FundWage;
+		$obj2->InstallmentAmount = $allPay;
 		
 		if(!$obj2->AddPartPayment($pdo))
 		{
@@ -409,10 +401,7 @@ function ComputePartPayments(){
 		$obj->IntervalType == "DAY" ? $obj->PayInterval*($obj->InstallmentCount) : 0, 
 		$obj->IntervalType == "MONTH" ? $obj->PayInterval*($obj->InstallmentCount) : 0);
 	$obj2->PartID = $obj->PartID;
-	$obj2->InstallmentAmount = $lastInstallmentAmount;
-	$obj2->WageAmount = $LastPay - $lastInstallmentAmount;
-	$obj2->CustomerWage = $obj->CustomerWage;
-	$obj2->FundWage = $obj->FundWage;
+	$obj2->InstallmentAmount = $LastPay;
 
 	if(!$obj2->AddPartPayment($pdo))
 	{

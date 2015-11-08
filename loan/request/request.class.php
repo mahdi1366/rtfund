@@ -172,11 +172,11 @@ class LON_installments extends PdoDataAccess
 	public $PartID;
 	public $InstallmentDate;
 	public $InstallmentAmount;
-	public $WageAmount;
-	public $CustomerWage;
-	public $FundWage;
+	
 	public $PaidDate;
 	public $PaidAmount;
+	public $PaidRefNo;
+	
 	public $StatusID;
 	
 	public $ChequeNo;
@@ -204,21 +204,8 @@ class LON_installments extends PdoDataAccess
 			where " . $where, $param);
 	}
 	
-	function AddPartPayment($pdo = null){
-		if (!parent::insert("LON_installments", $this, $pdo)) {
-			return false;
-		}
-		$this->InstallmentID = parent::InsertID($pdo);
+	function EditInstallment(){
 		
-		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->InstallmentID;
-		$daObj->TableName = "LON_installments";
-		$daObj->execute($pdo);
-		return true;
-	}
-	
-	function EditPartPayment(){
 	 	if( parent::update("LON_installments",$this," InstallmentID=:l", array(":l" => $this->InstallmentID)) === false )
 	 		return false;
 
@@ -230,18 +217,6 @@ class LON_installments extends PdoDataAccess
 	 	return true;
     }
 	
-	static function DeletePartPayment($InstallmentID){
-		
-		if( parent::delete("LON_installments"," InstallmentID=?", array($InstallmentID)) === false )
-	 		return false;
-
-		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->MainObjectID = $InstallmentID;
-		$daObj->TableName = "LON_installments";
-		$daObj->execute();
-	 	return true;
-	}
 }
 
 ?>

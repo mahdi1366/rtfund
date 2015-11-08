@@ -32,7 +32,7 @@ function RequestInfo(){
 			(record.data.IntervalType == "DAY" ? "روز" : "ماه"));
 	});
 	
-	this.paymentGrid = <?= $grid2 ?>;
+	this.InstallmentGrid = <?= $grid2 ?>;
 	
 	if(this.RequestID > 0)
 		this.grid.getStore().proxy.extraParams = { RequestID : this.RequestID };
@@ -114,10 +114,11 @@ RequestInfo.prototype.OperationMenu = function(e){
 		if(record.data.IsEnded == "YES")
 		{
 			op_menu.add({text: 'اقساط',iconCls: 'list',
-			handler : function(){ return RequestInfoObject.LoadPartPayments(); }});
+			handler : function(){ return RequestInfoObject.LoadInstallments(); }});
 		
-			op_menu.add({text: 'پرداخت',iconCls: 'epay',
-			handler : function(){ return RequestInfoObject.PayPart(); }});
+			if(record.data.IsPayed == "NO")
+				op_menu.add({text: 'پرداخت',iconCls: 'epay',
+				handler : function(){ return RequestInfoObject.PayPart(); }});
 		}
 		
 	}	
@@ -132,6 +133,10 @@ RequestInfo.prototype.OperationMenu = function(e){
 				handler : function(){ return RequestInfoObject.DeletePart(); }});
 		}
 	}
+	
+	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
+		handler : function(){ return RequestInfoObject.ShowHistory(); }});
+	
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
@@ -738,7 +743,7 @@ RequestInfo.prototype.LoadSummary = function(record){
 
 //.........................................................
 
-RequestInfo.prototype.LoadPartPayments = function(){
+RequestInfo.prototype.LoadInstallments = function(){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
 	if(!record)
@@ -747,33 +752,39 @@ RequestInfo.prototype.LoadPartPayments = function(){
 		return;
 	}
 	
-	if(!this.PartPaymentsWin)
+	if(!this.InstallmentsWin)
 	{
-		this.paymentGrid.plugins[0].on("beforeedit", function(editor,e){
+		this.InstallmentGrid.plugins[0].on("beforeedit", function(editor,e){
 			if(e.record.data.IsPayed == "YES")
 				return false;
 		});
-		this.PartPaymentsWin = new Ext.window.Window({
+		this.InstallmentsWin = new Ext.window.Window({
 			width : 700,
 			title : "لیست اقساط",
 			height : 500,
 			modal : true,
-			items : this.paymentGrid,
+			items : this.InstallmentGrid,
 			closeAction : "hide"
 		});
 		
-		Ext.getCmp(this.TabID).add(this.PartPaymentsWin);
+		Ext.getCmp(this.TabID).add(this.InstallmentsWin);
 	}
 	
-	this.paymentGrid.getStore().proxy.extraParams = {
+	this.InstallmentGrid.getStore().proxy.extraParams = {
 		PartID : record.data.PartID
 	};
-	this.paymentGrid.getStore().load();
-	this.PartPaymentsWin.show();
-	this.PartPaymentsWin.center();
+	
+	if(record.data.IsPayed == "YES")
+		this.InstallmentGrid.down("[itemId=cmp_computeInstallment]").hide();
+	else
+		this.InstallmentGrid.down("[itemId=cmp_computeInstallment]").show();
+	
+	this.InstallmentGrid.getStore().load();
+	this.InstallmentsWin.show();
+	this.InstallmentsWin.center();
 }
 
-RequestInfo.prototype.ComputePayments = function(){
+RequestInfo.prototype.ComputeInstallments = function(){
 	
 	Ext.MessageBox.confirm("","در صورت محاسبه مجدد کلیه ردیف ها حذف و مجدد محاسبه و ایجاد می شوند <br>" + 
 		"آیا مایل به محاسبه مجدد می باشید؟",function(btn){
@@ -782,19 +793,19 @@ RequestInfo.prototype.ComputePayments = function(){
 		me = RequestInfoObject;
 		var record = me.grid.getSelectionModel().getLastSelected();
 	
-		mask = new Ext.LoadMask(me.PartPaymentsWin, {msg:'در حال ذخیره سازی ...'});
+		mask = new Ext.LoadMask(me.InstallmentsWin, {msg:'در حال ذخیره سازی ...'});
 		mask.show();
 
 		Ext.Ajax.request({
 			url: me.address_prefix +'request.data.php',
 			method: "POST",
 			params: {
-				task: "ComputePartPayments",
+				task: "ComputeInstallments",
 				PartID : record.data.PartID
 			},
 			success: function(response){
 				mask.hide();
-				RequestInfoObject.paymentGrid.getStore().load();
+				RequestInfoObject.InstallmentGrid.getStore().load();
 			}
 		});
 	});
@@ -803,7 +814,7 @@ RequestInfo.prototype.ComputePayments = function(){
 
 RequestInfo.prototype.SavePartPayment = function(store, record){
 
-	mask = new Ext.LoadMask(this.paymentGrid, {msg:'در حال ذخیره سازی ...'});
+	mask = new Ext.LoadMask(this.InstallmentGrid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 
 	Ext.Ajax.request({
@@ -819,7 +830,7 @@ RequestInfo.prototype.SavePartPayment = function(store, record){
 
 			if(st.success)
 			{   
-				RequestInfoObject.paymentGrid.getStore().load();
+				RequestInfoObject.InstallmentGrid.getStore().load();
 			}
 			else
 			{
@@ -853,6 +864,13 @@ RequestInfo.prototype.PayPart = function(){
 				PartID : record.data.PartID
 			},
 			success: function(response){
+				
+				result = Ext.decode(response.responseText);
+				if(!result.success)
+					Ext.MessageBox.alert("", result.data);
+				else
+					Ext.MessageBox.alert("", "سند پرداخت با موفقیت صادر گردید");
+				
 				mask.hide();
 				RequestInfoObject.grid.getStore().load();
 			}
@@ -888,5 +906,39 @@ RequestInfo.prototype.StartFlow = function(){
 	});
 }
 
+RequestInfo.prototype.ShowHistory = function(){
+
+	if(!this.HistoryWin)
+	{
+		this.HistoryWin = new Ext.window.Window({
+			title: 'سابقه گردش',
+			modal : true,
+			autoScroll : true,
+			width: 700,
+			height : 500,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "../../office/workflow/history.php",
+				scripts : true
+			},
+			buttons : [{
+					text : "بازگشت",
+					iconCls : "undo",
+					handler : function(){
+						this.up('window').hide();
+					}
+				}]
+		});
+		Ext.getCmp(this.TabID).add(this.HistoryWin);
+	}
+	this.HistoryWin.show();
+	this.HistoryWin.center();
+	this.HistoryWin.loader.load({
+		params : {
+			FlowID : 1,
+			ObjectID : this.grid.getSelectionModel().getLastSelected().data.PartID
+		}
+	});
+}
 
 </script>

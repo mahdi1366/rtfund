@@ -10,20 +10,21 @@ require_once 'doc.class.php';
 require_once inc_dataReader;
 require_once inc_response;
 
-function FindCostID($costCode)
-{
+function FindCostID($costCode){
+	
 	$dt = PdoDataAccess::runquery("select * from ACC_CostCodes where IsActive='YES' AND CostCode=?",
 		array($costCode));
-	return $dt[0]["CostID"];
+	
+	return count($dt) == 0? false : $dt[0]["CostID"];
 }
 
-function FindTafsiliID($TafsiliCode, $TafsiliType)
-{
+function FindTafsiliID($TafsiliCode, $TafsiliType){
+	
 	$dt = PdoDataAccess::runquery("select * from ACC_tafsilis "
 			. "where IsActive='YES' AND TafsiliCode=? AND TafsiliType=?",
 		array($TafsiliCode, $TafsiliType));
 	
-	return $dt[0]["TafsiliID"];
+	return count($dt) == 0? false : $dt[0]["TafsiliID"];
 }
 
 function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
@@ -83,6 +84,59 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$TotalDelay = round($PartObj->PartAmount*$PartObj->CustomerWage*$PartObj->DelayMonths/1200);
 	$curYear = substr(DateModules::miladi_to_shamsi($PartObj->PartDate), 0, 4)*1;
 	
+	//------------------ find tafsilis ---------------
+	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
+	if(!$LoanPersonTafsili)
+	{
+		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->LoanPersonID . "]");
+		return false;
+	}
+	$ReqPersonTafsili = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+	if(!$ReqPersonTafsili)
+	{
+		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
+		return false;
+	}
+	
+	$amountArr = array();
+	$curYearTafsili = FindTafsiliID($curYear, TAFTYPE_YEARS);
+	if(!$curYear)
+	{
+		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $curYear . "]");
+		return false;
+	}
+	$amountArr[$curYearTafsili] = $year1;
+	
+	if($year2 > 0)
+	{
+		$Year2Tafsili = FindTafsiliID($curYear+1, TAFTYPE_YEARS);
+		if(!$Year2Tafsili)
+		{
+			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . ($curYear+1) . "]");
+			return false;
+		}
+		$amountArr[$Year2Tafsili] = $year2;
+	}
+	if($year3 > 0)
+	{
+		$Year3Tafsili = FindTafsiliID($curYear+2, TAFTYPE_YEARS);
+		if(!$Year3Tafsili)
+		{
+			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . ($curYear+2) . "]");
+			return false;
+		}
+		$amountArr[$Year3Tafsili] = $year3;
+	}
+	if($year4 > 0)
+	{
+		$Year4Tafsili = FindTafsiliID($curYear+3, TAFTYPE_YEARS);
+		if(!$Year4Tafsili)
+		{
+			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . ($curYear+3) . "]");
+			return false;
+		}
+		$amountArr[$Year4Tafsili] = $year4;
+	}
 	//----------------- add Doc items ------------------------
 		
 	$itemObj = new ACC_DocItems();
@@ -91,9 +145,9 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$itemObj->DebtorAmount = $PartObj->PartAmount;
 	$itemObj->CreditorAmount = 0;
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
-	$itemObj->TafsiliID = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
+	$itemObj->TafsiliID = $LoanPersonTafsili;
 	$itemObj->Tafsili2Type = TAFTYPE_PERSONS;
-	$itemObj->Tafsili2ID = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+	$itemObj->Tafsili2ID = $ReqPersonTafsili;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = "PAY_LOAN_PART";
 	$itemObj->SourceID = $ReqObj->RequestID;
@@ -125,18 +179,12 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$itemObj->CreditorAmount = $TotalDelay;
 		$itemObj->TafsiliType = TAFTYPE_YEARS;
 		$itemObj->details = "کارمزد دوره تنفس";
-		$itemObj->TafsiliID = FindTafsiliID($curYear, TAFTYPE_YEARS);
+		$itemObj->TafsiliID = $curYearTafsili;
 		if(!$itemObj->Add($pdo))
 			return false;
 	}	
 	//---- کارمزد-----
-	$amountArr = array(
-		$curYear => $year1, 
-		$curYear+1 => $year2, 
-		$curYear+2 => $year3, 
-		$curYear+3 => $year4);
-	
-	foreach($amountArr as $year => $amount)
+	foreach($amountArr as $yearTafsili => $amount)
 	{
 		if($amount == 0 || $amount == "")
 			continue;
@@ -149,7 +197,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = round($amount);
 		$itemObj->TafsiliType = TAFTYPE_YEARS;
-		$itemObj->TafsiliID = FindTafsiliID($year, TAFTYPE_YEARS);
+		$itemObj->TafsiliID = $yearTafsili;
 		if(!$itemObj->Add($pdo))
 			return false;
 		
@@ -160,7 +208,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$itemObj->DebtorAmount = round($amount);
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+		$itemObj->TafsiliID = $ReqPersonTafsili;
 		if(!$itemObj->Add($pdo))
 			return false;
 	}
@@ -173,7 +221,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$itemObj->DebtorAmount = $PartObj->PartAmount;
 	$itemObj->CreditorAmount = 0;
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
-	$itemObj->TafsiliID = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+	$itemObj->TafsiliID = $ReqPersonTafsili;
 	if(!$itemObj->Add($pdo))
 		return false;
 
@@ -184,7 +232,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$itemObj->DebtorAmount = 0;
 	$itemObj->CreditorAmount = $PartObj->PartAmount;
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
-	$itemObj->TafsiliID = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+	$itemObj->TafsiliID = $ReqPersonTafsili;
 	if(!$itemObj->Add($pdo))
 		return false;
 	
@@ -193,7 +241,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$chequeObj->DocID = $obj->DocID;
 	$chequeObj->CheckDate = $PartObj->PartDate;
 	$chequeObj->amount = $PartObj->PartAmount - $TotalDelay;
-	$chequeObj->TafsiliID = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
+	$chequeObj->TafsiliID = $LoanPersonTafsili;
 	$chequeObj->description = " پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
 	$chequeObj->Add($pdo);
 	//--------------------------------------------------------
@@ -205,7 +253,6 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	}*/
 	
 	//---------------------------------------------------------
-	print_r(ExceptionHandler::PopAllExceptions());
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
 		

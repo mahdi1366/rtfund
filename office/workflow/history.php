@@ -7,8 +7,20 @@ include("../header.inc.php");
 require_once './wfm.class.php';
 require_once inc_component;
 
-$FlowRowObj = new WFM_FlowRows($_REQUEST["RowID"]);
-
+if(!empty($_REQUEST["RowID"]))
+{
+	$FlowRowObj = new WFM_FlowRows($_REQUEST["RowID"]);
+	$FlowID = $FlowRowObj->FlowID;
+	$ObjectID = $FlowRowObj->ObjectID;
+}
+else if(!empty($_REQUEST["FlowID"]) && !empty($_REQUEST["ObjectID"]))
+{
+	$FlowID = $_REQUEST["FlowID"];
+	$ObjectID = $_REQUEST["ObjectID"];
+}
+else
+	die();
+	 
 $query = "select fr.* ,
 				ifnull(fs.StepDesc,'شروع گردش') StepDesc,
 				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname
@@ -17,7 +29,7 @@ $query = "select fr.* ,
 			join BSC_persons p on(fr.PersonID=p.PersonID)
 			where fr.FlowID=? AND fr.ObjectID=?
 			order by RowID";
-$Logs = PdoDataAccess::runquery($query, array($FlowRowObj->FlowID, $FlowRowObj->ObjectID));
+$Logs = PdoDataAccess::runquery($query, array($FlowID, $ObjectID));
 $tbl_content = "";
 
 if(count($Logs) == 0)
@@ -28,11 +40,13 @@ else
 {
 	for ($i=0; $i<count($Logs); $i++)
 	{
-		$tbl_content .= "<tr " . ($i%2 == 1 ? "style='background-color:#efefef'" : "") . ">
+		$backgroundColor = ($i%2 == 1 ? "style='background-color:#efefef'" : "");
+		$backgroundColor = $Logs[$i]["ActionType"] == "REJECT" ? "style='background-color:#ffccd1'" : $backgroundColor;
+		
+		$tbl_content .= "<tr " . $backgroundColor . ">
 			<td width=250px>[" . ($i+1) . "]". ($i+1<10 ? "&nbsp;" : "") . "&nbsp;
-				<img align='top' src='/generalUI/ext4/resources/themes/icons/user_comment.gif'>&nbsp;
-				" . $Logs[$i]["StepDesc"] . " [ " . 
-				($Logs[$i]["ActionType"] == "CONFIRM" ? "تایید" : "رد") . " ] </td>
+				<img align='top' src='/generalUI/ext4/resources/themes/icons/user_comment.gif'>&nbsp;" .
+				($Logs[$i]["ActionType"] == "CONFIRM" ? "تایید" : "رد") . " مرحله " . $Logs[$i]["StepDesc"] . " </td>
 			<td  width=150px>" . $Logs[$i]["fullname"] . "</td>
 			<td width=110px>" . substr($Logs[$i]["ActionDate"], 11) . " " . 
 								DateModules::miladi_to_shamsi($Logs[$i]["ActionDate"]) . "</td>
