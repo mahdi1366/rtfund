@@ -120,6 +120,7 @@ if(isset($_POST["UserName"]))
 			-ms-transition: box-shadow .5s ease;
 			transition: box-shadow .5s ease;
 			vertical-align: middle;
+			font-family: tahoma;
 		}
 		
 		.wrong input{
