@@ -12,14 +12,13 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "../../loan/loan/loan.data.p
 $dg->addColumn("کد وام", "LoanID", "", true);
 $dg->addColumn("", "GroupID", "", true);
 $dg->addColumn("", "GroupDesc", "", true);
-$dg->addColumn("درصد دیرکرد", "ForfeitPercent", "", true);
-$dg->addColumn("درصد کارمزد", "WagePercent", "", true);
-
-$dg->addColumn("", "PartCount", "", true);
+$dg->addColumn("", "InstallmentCount", "", true);
 $dg->addColumn("", "IntervalType", "", true);
-$dg->addColumn("", "PartInterval", "", true);
-$dg->addColumn("", "DelayCount", "", true);
+$dg->addColumn("", "PayInterval", "", true);
+$dg->addColumn("", "DelayMonths", "", true);
 $dg->addColumn("", "MaxAmount", "", true);
+$dg->addColumn("","ForfeitPercent", "", true);
+$dg->addColumn("","CustomerWage", "", true);
 
 $col = $dg->addColumn("عنوان وام", "LoanDesc", "");
 $col->sortable = false;
@@ -31,19 +30,30 @@ $dg->hideHeaders = true;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 150;
-$dg->width = 300;
+$dg->width = 220;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "MaxAmount";
 $dg->disableFooter = true;
 
 $grid = $dg->makeGrid_returnObjects();
+
+$LoanID = 0;
+$RequestID = !empty($_REQUEST["RequestID"]) ? $_REQUEST["RequestID"] : 0;
+if($RequestID > 0)
+{
+	$obj = new LON_requests($RequestID);
+	$LoanID = $obj->LoanID;
+}
+
 ?>
 <script>
 	
 NewLoanRequest.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
+
+	LoanID : <?= $LoanID?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -71,7 +81,8 @@ function NewLoanRequest()
 		queryMode : "local",
 		name : "GroupID",
 		displayField : "InfoDesc",
-		fieldLabel : "انتخاب گروه وام",
+		labelWidth : 50,
+		fieldLabel : "گروه وام",
 		listeners :{
 			change : function(){
 				me = NewLoanRequestObject;
@@ -86,8 +97,11 @@ function NewLoanRequest()
 		record = NewLoanRequestObject.grid.getSelectionModel().getLastSelected();
 		NewLoanRequestObject.mainPanel.loadRecord(record);
 		NewLoanRequestObject.mainPanel.doLayout();
+		NewLoanRequestObject.LoadSummary(record);
 		NewLoanRequestObject.mainPanel.down("[name=ReqAmount]").setMaxValue(record.data.MaxAmount);
 		NewLoanRequestObject.mainPanel.down("[name=ReqAmount]").setValue(record.data.MaxAmount);
+		NewLoanRequestObject.mainPanel.down("[name=PayInterval]").setValue(record.data.PayInterval + " " + 
+			(record.data.IntervalType == "DAY" ? "روز" : "ماه"));
 	});
 	
 	this.grid.getStore().on("beforeload", function(){
@@ -109,62 +123,50 @@ function NewLoanRequest()
 				xtype : "container",
 				layout : {
 					type : "table",
-					columns : 2
+					columns : 4
 				},
 				defaults : {
 					xtype : "displayfield",
 					style : "margin-top:10px",
-					labelWidth : 80,
-					width : 220,
+					labelWidth : 73,
+					width : 130,
 					fieldCls : "blueText"
 				},
 				items : [{
 					xtype : "container",
-					colspan :2 ,
+					colspan : 4 ,
 					width: 300,
 					style : "margin-right:5px; color:#0d6eb2",					
 					html : "<font color=red>" + "توجه: " + "</font>" + "برای مشاهده جزئیات هر وام روی عنوان وام کلیک کنید."
 				},{
 					fieldLabel: 'سقف مبلغ',
+					colspan : 3,
+					width : 280,
 					name: 'MaxAmount',
 					renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
 				},{
 					fieldLabel: 'تعداد اقساط',
-					name: 'PartCount'
+					name: 'InstallmentCount'
 				},{
 					fieldLabel: 'فاصله اقساط',
-					renderer : function(v){ return v + " روز"},
-					name: 'PartInterval',
+					name: 'PayInterval',
 					value : 0
 				},{
 					fieldLabel: 'مدت تنفس',
 					renderer : function(v){ return v + " ماه"},
-					name: 'DelayCount'
+					name: 'DelayMonths'
 				},{
-					fieldLabel: 'مبلغ بیمه',
-					name: 'InsureAmount',
-					renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
-				},{
-					fieldLabel: 'مبلغ قسط اول',
-					name: 'FirstPartAmount',
-					renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
-				},{
-					fieldLabel: 'درصد سود',
-					name: 'ProfitPercent',
+					fieldLabel: 'درصد کارمزد',
 					renderer : function(v){ return v + " %"},
-					value : 0
+					name: 'CustomerWage'
 				},{
 					fieldLabel: 'درصد دیرکرد',
 					renderer : function(v){ return v + " %"},
 					name: 'ForfeitPercent'
 				},{
-					fieldLabel: 'درصد کارمزد',
-					renderer : function(v){ return v + " %"},
-					name: 'WagePercent'
-				},{
-					fieldLabel: 'مبلغ کارمزد',
-					name: 'WageAmount',
-					rrenderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
+					xtype : "container",
+					cospan : 4,
+					contentEl : this.get("summaryDIV")
 				}]
 			}]
 		},{
@@ -243,6 +245,28 @@ function NewLoanRequest()
 		}]
 	});
 
+	if(this.LoanID > 0)
+	{
+		this.grid.hide();
+		this.store = new Ext.data.Store({
+			proxy:{
+				type: 'jsonp',
+				url: this.address_prefix + "../loan/loan.data.php?task=GetAllLoans&LoanID=" + this.LoanID,
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			fields : ["InstallmentCount","IntervalType","PayInterval","DelayMonths","MaxAmount","ForfeitPercent","CustomerWage"],
+			autoLoad : true,
+			listeners :{
+				load : function(){
+					me = RequestInfoObject;
+					me.mainPanel.loadRecord(this.getAt(0));
+				}
+			}
+		});
+		
+		return;
+	}
+
 	this.SendedPanel = new Ext.panel.Panel({
 		hidden : true,
 		renderTo : this.get("SendForm"),
@@ -274,10 +298,76 @@ NewLoanRequest.prototype.NewLoanRequest = function()
 	}
 }
 
+NewLoanRequest.prototype.LoadSummary = function(record){
+
+	function PMT(F8, F9, F7, YearMonths) {  
+		F8 = F8/(YearMonths*100);
+		F7 = -F7;
+		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
+	} 
+	function ComputeWage(F7, F8, F9, YearMonths){
+		
+		return (((F7*F8/YearMonths*( Math.pow((1+(F8/YearMonths)),F9)))/
+			((Math.pow((1+(F8/YearMonths)),F9))-1))*F9)-F7;
+	}
+	function roundUp(number, digits)
+	{
+		var factor = Math.pow(10,digits);
+		return Math.ceil(number*factor) / factor;
+	}
+	
+	YearMonths = 12;
+	if(record.data.IntervalType == "DAY")
+		YearMonths = Math.floor(365/record.data.PayInterval);
+
+	FirstPay = roundUp(PMT(record.data.CustomerWage,record.data.InstallmentCount, record.data.MaxAmount, YearMonths),-3);
+	TotalWage = Math.round(ComputeWage(record.data.MaxAmount, record.data.CustomerWage/100, record.data.InstallmentCount, YearMonths));
+
+	TotalDelay = Math.round(record.data.MaxAmount*record.data.CustomerWage*record.data.DelayMonths/1200);
+	LastPay = record.data.MaxAmount*1 + TotalWage - FirstPay*(record.data.InstallmentCount-1);
+	
+	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay);
+	this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(TotalDelay);
+	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.MaxAmount - TotalDelay);	
+	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage);	
+
+}
+
 </script>
 
 	<div id="DivGrid"></div>
 	<div id="mainForm"></div>
 <center>
 	<div id="SendForm"></div>
+	
+	<style>
+	.summary {
+		border : 1px solid #b5b8c8;
+		border-collapse: collapse;
+	}
+	.summary td{
+		border: 1px solid #b5b8c8;
+		line-height: 21px;
+		direction: ltr;
+		text-align: center;
+		padding: 0 5px;
+	}
+	</style>
+	<div id="summaryDIV">
+		<div style="float:right">
+			<table style="width:500px" class="summary">
+			<tr>
+				<td style="width:25%;background-color: #dfe8f6;">مبلغ هر قسط</td>
+				<td style="width:25%;background-color: #dfe8f6;">سود دوره تنفس</td>
+				<td style="width:25%;background-color: #dfe8f6;">کارمزد وام</td>
+				<td style="width:25%;background-color: #dfe8f6;">خالص پرداختی</td>
+			</tr>
+			<tr>
+				<td><div id="SUM_InstallmentAmount" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_Delay" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_TotalWage" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_NetAmount" class="blueText">&nbsp;</div></td>
+			</tr>
+		</table></div>		
+	</div> 
 </center>

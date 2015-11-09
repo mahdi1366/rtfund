@@ -89,7 +89,7 @@ function FrameWorkClass()
 						xtype : "container",
 						height : 150,
 						width : 190,
-						html: '<table style="background-color : #35bc7a;border-radius:20px;width:100%"><tr>'+
+						html: '<table style="background-color : #00c3e0;border-radius:20px;width:100%"><tr>'+
 								'<td id="framework_TD_Date" style="color:white;width: 70%;line-height: 18px;'+
 									'vertical-align: middle;font-size:12px;font-weight: bold;padding:5px"></td>'+
 								'<td align="left" style="padding:4px;">'+
@@ -97,7 +97,7 @@ function FrameWorkClass()
 								'</td></tr></table>' +
 								
 							'<div style="margin-top:4px;color:white;line-height: 18px;font-weight: bold;'+
-								'background-color : #f86924;border-radius:20px; padding:6px">'+
+								'background-color : #009de0;border-radius:20px; padding:6px">'+
 							"<?= $SystemName?>"+
 							"<br> کاربر : <?= $_SESSION['USER']["fullname"] ?>"+
 							"<br> شناسه : <?= $_SESSION['USER']["UserName"]?></div>"
@@ -106,7 +106,7 @@ function FrameWorkClass()
 						itemId : "DIV_SystemInfo",
 						height : 70,
 						width : 190,
-						style : "margin-top:3px;color:white;background-color : #FFCC00;" +
+						style : "margin-top:3px;color:white;background-color : #196ebe;" +
 							"font-weight: bold;border-radius:20px;line-height: 2;padding:6px"
 					}]
 					

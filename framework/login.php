@@ -58,83 +58,7 @@ if(isset($_POST["UserName"]))
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>ورود به سیستم</title>
-    <style>
-      
-		.btn { display: inline-block; *display: inline; *zoom: 1; padding: 4px 10px 4px; margin-bottom: 0; font-size: 13px; line-height: 18px; color: #333333; text-align: center;text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75); vertical-align: middle; background-color: #f5f5f5; background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6); background-image: -ms-linear-gradient(top, #ffffff, #e6e6e6); background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#e6e6e6)); background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6); background-image: -o-linear-gradient(top, #ffffff, #e6e6e6); background-image: linear-gradient(top, #ffffff, #e6e6e6); background-repeat: repeat-x; filter: progid:dximagetransform.microsoft.gradient(startColorstr=#ffffff, endColorstr=#e6e6e6, GradientType=0); border-color: #e6e6e6 #e6e6e6 #e6e6e6; border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25); border: 1px solid #e6e6e6; -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05); -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05); cursor: pointer; *margin-left: .3em; }
-		.btn:hover, .btn:active, .btn.active, .btn.disabled, .btn[disabled] { background-color: #e6e6e6; }
-		.btn-large { padding: 9px 14px; font-size: 15px; line-height: normal; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px; }
-		.btn:hover { color: #333333; text-decoration: none; background-color: #e6e6e6; background-position: 0 -15px; -webkit-transition: background-position 0.1s linear; -moz-transition: background-position 0.1s linear; -ms-transition: background-position 0.1s linear; -o-transition: background-position 0.1s linear; transition: background-position 0.1s linear; }
-		.btn-primary, .btn-primary:hover { text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25); color: #ffffff; }
-		.btn-primary.active { color: rgba(255, 255, 255, 0.75); }
-		.btn-primary { background-color: #4a77d4; background-image: -moz-linear-gradient(top, #6eb6de, #4a77d4); background-image: -ms-linear-gradient(top, #6eb6de, #4a77d4); background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#6eb6de), to(#4a77d4)); background-image: -webkit-linear-gradient(top, #6eb6de, #4a77d4); background-image: -o-linear-gradient(top, #6eb6de, #4a77d4); background-image: linear-gradient(top, #6eb6de, #4a77d4); background-repeat: repeat-x; filter: progid:dximagetransform.microsoft.gradient(startColorstr=#6eb6de, endColorstr=#4a77d4, GradientType=0);  border: 1px solid #3762bc; text-shadow: 1px 1px 1px rgba(0,0,0,0.4); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.5); }
-		.btn-primary:hover, .btn-primary:active, .btn-primary.active, .btn-primary.disabled, .btn-primary[disabled] { filter: none; background-color: #4a77d4; }
-		.btn-block { width: 100%; display:block; }
-
-		* { -webkit-box-sizing:border-box; -moz-box-sizing:border-box; -ms-box-sizing:border-box; -o-box-sizing:border-box; box-sizing:border-box; }
-
-		html { width: 100%; height:100%; overflow:hidden; }
-
-		body { 
-			width: 100%;
-			height:100%;
-			font-family: 'Open Sans', sans-serif;
-			/*background: #092756;
-			background: -moz-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%),-moz-linear-gradient(top,  rgba(57,173,219,.25) 0%, rgba(42,60,87,.4) 100%), -moz-linear-gradient(-45deg,  #670d10 0%, #092756 100%);
-			background: -webkit-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%), -webkit-linear-gradient(top,  rgba(57,173,219,.25) 0%,rgba(42,60,87,.4) 100%), -webkit-linear-gradient(-45deg,  #670d10 0%,#092756 100%);
-			background: -o-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%), -o-linear-gradient(top,  rgba(57,173,219,.25) 0%,rgba(42,60,87,.4) 100%), -o-linear-gradient(-45deg,  #670d10 0%,#092756 100%);
-			background: -ms-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%), -ms-linear-gradient(top,  rgba(57,173,219,.25) 0%,rgba(42,60,87,.4) 100%), -ms-linear-gradient(-45deg,  #670d10 0%,#092756 100%);
-			background: -webkit-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%), linear-gradient(to bottom,  rgba(57,173,219,.25) 0%,rgba(42,60,87,.4) 100%), linear-gradient(135deg,  #670d10 0%,#092756 100%);
-			filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3E1D6D', endColorstr='#092756',GradientType=1 );*/
-			background-image : url('icons/bg.jpg');
-		}
-		.login { 
-			background: rgba(255, 255, 255, 0.3) none repeat scroll 0 0;
-			border-radius: 20px;
-			height: 350px;
-			left: 50%;
-			margin: -200px 0 0 -200px;
-			padding: 40px;
-			position: absolute;
-			top: 50%;
-			width: 400px;
-		}
-		.login h1 { color: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.3); letter-spacing:1px; text-align:center; }
-
-		input { 
-			width: 100%; 
-			margin-bottom: 10px; 
-			background: rgba(0,0,0,0.3);
-			border: none;
-			outline: none;
-			padding: 10px;
-			font-size: 13px;
-			color: #fff;
-			text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
-			border: 1px solid rgba(0,0,0,0.3);
-			border-radius: 4px;
-			box-shadow: inset 0 -5px 45px rgba(100,100,100,0.2), 0 1px 1px rgba(255,255,255,0.2);
-			-webkit-transition: box-shadow .5s ease;
-			-moz-transition: box-shadow .5s ease;
-			-o-transition: box-shadow .5s ease;
-			-ms-transition: box-shadow .5s ease;
-			transition: box-shadow .5s ease;
-			vertical-align: middle;
-			font-family: tahoma;
-		}
-		
-		.wrong input{
-			width: 90%; 
-			border: 1px solid #9E423E;
-		}
-		.wrong::after {
-			content : url(icons/cross.png);
-			padding-left: 6px;
-			color: #f5443b !important;
-		}
-		
-		input:focus { box-shadow: inset 0 -5px 45px rgba(100,100,100,0.4), 0 1px 1px rgba(255,255,255,0.2); }
-    </style>
+     <title>نرم افزار <?= SoftwareName?></title>
 	<? require_once 'md5.php'; ?>
 	<script>
 		function pressing(e)
@@ -166,19 +90,123 @@ if(isset($_POST["UserName"]))
 			}	
 		}
 	</script>
+	 <style>
+	  body td div{
+		  font-family: tahoma;
+	  }
+	.headerDiv{
+		height: 180px;
+		width : 100%;
+		background-color: #63d1d0;
+		border-bottom: 15px solid #368cbf;
+	}
+	.footerDiv{
+		background-color: #388ebf;
+		position: absolute;
+		bottom: 0;
+		font-family: tahoma;
+		font-size: 12px;
+		height : 100px;
+		width : 100%;
+		color : white;		
+	}
+	.mainDiv{
+		width : 500px;	
+		right : 35%;
+		top : 35%;
+		position: absolute;
+
+	}
+	.title{
+		font-family: tahoma;
+		font-size: 14px;
+		font-weight: bold;
+		color: #5f99c2;
+	}
+	.textfield {
+		border: 1px solid #cacaca;
+		font-size: 12px;
+		padding: 5px;
+		margin-bottom: 10px;
+		vertical-align: middle;
+		width: 200px;
+		font-family: tahoma;
+	}
+	.wrong input {
+		border: 1px solid #9e423e;
+	}
+	.wrong::after {
+		color: #f5443b !important;
+		content: url("icons/cross.png");
+		padding-right: 6px;
+	}
+
+	.btn{
+		background-color: #5f99c2;
+		border: 0 none;
+		cursor: pointer;
+		border-radius: 10px;
+		color: white;
+		float: right;
+		font-size: 12px;
+		font-weight: bold;
+		height: 30px;
+		font-family: tahoma;
+	}
+
+	.btn:hover {
+		background-color: #63d1d0;
+	}
+	.forget{
+		cursor: pointer;
+		color: #5f99c2;
+		font-family: tahoma;
+		font-size: 11px;
+		font-weight: bold;
+		margin-top: 10px;
+		margin-right: 4px;
+	}
+	.forget:hover{
+		color: #63d1d0;
+	}	
+  </style>
   </head>
 
-  <body onkeydown="pressing(event);" onload="return BodyLoad();">
+  <body dir="rtl" style="margin:0"  onkeydown="pressing(event);" onload="return BodyLoad();">
 
-    <div class="login">
-		<div style="color: white; font-family: tahoma; font-size: 14px; font-weight: bold; text-align: center; line-height: 30px; padding-bottom: 30px;">نرم افزار جامع 
-		<br><?= SoftwareName?></div>
-		<form method="post" id="MainForm" onsubmit="return loginFN();">
-			<div id="UserNameDiv"><input type="text" name="UserName" id="UserName" placeholder="کلمه کاربری ..." required="required" class="wrong" /></div>
-			<div id="PasswordDiv"><input type="password" id="password" placeholder="رمز عبور ..." required="required" /></div>
-			<button type="submit" class="btn btn-primary btn-block btn-large ">ورود</button>
-			<input type="hidden" id="md5Pass" name="md5Pass">
-		</form>
-	</div>
+	  <center>
+		<div class="headerDiv" align="center">
+			<div style="width:800;right : 20%;position: absolute;" align="right"><br><br><img width="180px" src="../framework/icons/LoginLogo.png"></div>
+		</div>
+		<div align="center">
+		<div class="mainDiv">
+			<table width="100%">
+				<tr>
+					<td width="200px" style="vertical-align: middle;"><img src="../framework/icons/keys.jpg"</td>
+					<td style="vertical-align: top;">
+						<div id="loginDIV">
+							<form method="post" id="MainForm" onsubmit="return loginFN();">
+								<div class="title" > ورود به پرتال </div>
+								<br>
+								<div style="font-size: 12px">جهت ورود به پرتال نام کاربری و کلمه عبور خود را وارد کنید.
+									درغیر اینصورت با زدن دکمه ثبت نام به پرتال وارد شوید.</div>
+								<br>
+								<div id="UserNameDiv"><input type="text" name="UserName" class="textfield" id="UserName" 
+									placeholder="کلمه کاربری ..." required="required" dir="ltr" /></div>
+								<div id="PasswordDiv"><input type="password" class="textfield" id="password" 
+									placeholder="رمز عبور ..." required="required" dir="ltr"/></div>
+								<button type="submit" style="width:80px" class="btn  ">ورود</button>
+								<div class="forget">&nbsp;| رمز عبور را فراموش کرده ام </div>
+								<input type="hidden" id="md5Pass" name="md5Pass">
+							</form>
+						</div>										
+					</td>
+				</tr>
+			</table>
+		</div>
+		</div>
+		<div class="footerDiv"> <br><br>
+<br>© کلیه حقوق این نرم افزار محفوظ است.</div>
+	</center>	  
   </body>
 </html>

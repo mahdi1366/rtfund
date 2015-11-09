@@ -31,22 +31,16 @@ $_SESSION['USER']["RecentSystems"] = array();
 				margin: 0;
 			}
 			
-			.header-top {
+			.headerDiv{
+				height: 180px;
 				width : 100%;
-				border-bottom: 3px solid #a07eb0;
-				position: absolute;
-				top: 0;
-			}
-			
-			.header {
-				height : 70px;
-				background-color: #67406c;
-				margin-bottom: 10px;
+				background-color: #7175cd;
+				border-bottom: 15px solid #50467f;
 			}
 			
 			.menus{
 				width : 1000px;	
-				margin-top: 120px;
+				margin-top: 35px;
 			}
 			
 			.systemRow{
@@ -55,8 +49,9 @@ $_SESSION['USER']["RecentSystems"] = array();
 			}
 			
 			.system {
-				display: -moz-box;
-				width: 30%;
+				float : right;
+				width: 300px;
+				margin-bottom: 20px;
 				margin-left: 20px;
 				font-family: tahoma;
 				font-size: 12px;
@@ -76,6 +71,7 @@ $_SESSION['USER']["RecentSystems"] = array();
 				text-overflow: ellipsis;
 				vertical-align: middle;	
 				height : 150px;
+				float: right;
 				overflow: hidden;
 				background-position: center center;
 				background-repeat: no-repeat;
@@ -85,6 +81,7 @@ $_SESSION['USER']["RecentSystems"] = array();
 				line-height: 19px;
 				margin: 10px;
 				height : 150px;
+				padding-right : 4px;
 				overflow: hidden;
 			}
 			
@@ -96,39 +93,36 @@ $_SESSION['USER']["RecentSystems"] = array();
 				width : 185px;
 			}			
 						
-			.footer-top {
-				width : 100%;
-				border-top: 3px solid #a07eb0;
+			.footerDiv{
+				background-color: #575ca5;
 				position: absolute;
 				bottom: 0;
-			}
-			
-			.footer {
-				height : 70px;
-				background-color: #67406c;
-				margin-top: 10px;
+				font-family: tahoma;
+				font-size: 12px;
+				height : 100px;
+				width : 100%;
+				color : white;		
 			}
 		</style>
 	</head>
-	<body DIR=RTL>
-		<?php
+	<body DIR=RTL style="margin:0">
 		
-		if(count($systems) == 0)
-		{
-			echo "<center><br><br><br><font style='font-family:b titr;'>";
-			echo "شما به نرم افزار جامع صندوق پژوهش و فناوری خراسان رضوی دسترسی ندارید.";
-			echo "</font></center></body>";
-			die();
-		}
-		
-		?>
-		<div class="header-top" > 
-			<div class="header"></div>
-		</div>	
+		<div class="headerDiv" align="center">
+			<div style="width:800;right : 20%;position: absolute;" align="right"><br><br><img width="180px" src="../framework/icons/LoginLogo.png"></div>
+		</div>
 		<center>
 			<div class="menus" align="right">
-				
-				<?
+			<?php
+
+			if(count($systems) == 0)
+			{
+				echo "<center><br><br><br><font style='font-family:b titr;'>";
+				echo "شما به نرم افزار جامع صندوق پژوهش و فناوری خراسان رضوی دسترسی ندارید.";
+				echo "</font></center></body>";
+				die();
+			}
+			else
+			{
 				for ($i = 0; $i < count($systems); $i++) {
 					if ($i % 3 == 0)
 						echo $i == 0 ? '<div class="systemRow">' : '</div><div class="systemRow">';
@@ -140,13 +134,12 @@ $_SESSION['USER']["RecentSystems"] = array();
 				}
 				if (count($systems) % 3 != 0)
 					echo "</div>";
-				?>
-				
+			}
+			?>
+
 			</div>
-			
-			<div class="footer-top" > 
-				<div class="footer"></div>
-			</div>			
+			<div class="footerDiv"> <br><br>
+<br>© کلیه حقوق این نرم افزار محفوظ است.</div>
 		</center>
 </body>
 </html>

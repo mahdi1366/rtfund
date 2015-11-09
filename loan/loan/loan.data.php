@@ -67,6 +67,12 @@ function GetAllLoans() {
 	$whereParam = array();
 	$whereParam[":g"] = $_GET["GroupID"];
 	
+	if(!empty($_REQUEST["LoanID"]))
+	{
+		$where .= " AND LoanID=:l";
+		$whereParam[":l"] = $_REQUEST["LoanID"];
+	}
+	
 	$field = isset($_GET ["fields"]) ? $_GET ["fields"] : "";
 	if (isset($_GET ["query"]) && $_GET ["query"] != "") {
 		$where .= " AND " . $field . " LIKE :qry ";

@@ -291,33 +291,9 @@ else if(isset($_POST["UserName"]))
 		}
 	</script>
   </head>
-  <style>
-	  .headerDiv{
-		  height: 150px;
-		  width : 100%;
-		  background-color: #88a401;
-		  border-bottom: 15px solid #314e00;
-	  }
-	  .footerDiv{
-		  background-color: #324e03;
-		  position: absolute;
-		  bottom: 0;
-		  height : 100px;
-		  width : 100%;
-		  vertical-align: middle;
-	  }
-  </style>
-  <body style="margin:0" onkeydown="pressing(event);" onload="return BodyLoad();">
-	  
-	  <div class="headerDiv">
-		  <div class=""></div>
-	  </div>
-	  
-	  
-	  
-	  <div class="footerDiv"></div>
-	  
-	  <? die(); ?>
+
+  <body onkeydown="pressing(event);" onload="return BodyLoad();">
+
     <div class="login">
 		<div  id="loginDIV" style="padding: 40px 40px 50px;">
 			<div class="headerText">ورود به پرتال</div>

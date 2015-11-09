@@ -77,9 +77,6 @@ function SaveLoanRequest(){
 	$obj = new LON_requests();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
-	if(isset($_POST["sending"]) &&  $_POST["sending"] == "true")
-		$obj->StatusID = 10;
-	
 	$obj->AgentGuarantee = isset($_POST["AgentGuarantee"]) ? "YES" : "NO";	
 
 	$obj->guarantees = array();
@@ -89,9 +86,23 @@ function SaveLoanRequest(){
 			$obj->guarantees[] = str_replace("guarantee_", "", $index);
 	$obj->guarantees = implode(",", $obj->guarantees);
 	
+	//------------------------------------------------------
+	if($_SESSION["USER"]["IsCustomer"] == "YES")
+	{
+		$obj->LoanPersonID = $_SESSION["USER"]["PersonID"];
+		$obj->StatusID = 10;
+	}
+	if($_SESSION["USER"]["IsAgent"] == "YES")
+	{
+		if(isset($_POST["sending"]) &&  $_POST["sending"] == "true")
+			$obj->StatusID = 10;
+		else
+			$obj->StatusID = 1;
+	}
+	//------------------------------------------------------
+	
 	if(empty($obj->RequestID))
 	{
-		$obj->StatusID = $_SESSION["USER"]["IsAgent"] ? 1 : 10;
 		$obj->ReqPersonID = $_SESSION["USER"]["PersonID"];		
 		$obj->AgentGuarantee = isset($_POST["AgentGuarantee"]) ? "YES" : "NO";
 		$result = $obj->AddRequest();

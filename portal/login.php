@@ -98,121 +98,7 @@ else if(isset($_POST["UserName"]))
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <title>پرتال <?= SoftwareName?></title>
-    <style>
-      
-	html {
-		height: 100%;
-		overflow: hidden;
-		width: 100%;
-	}
-	body {
-		height: 100%;
-		width: 100%;
-		font-family: tahoma;
-		font-size : 12px;
-	}
-	.login {
-		background-color: #e9e9e9;
-		border: 0;
-		border-radius: 30px;
-		left: 45%;
-		margin: -200px 0 0 -200px;
-		position: absolute;
-		top: 45%;
-		width: 440px;
-		box-shadow: 2px 2px 5px #c1c1c1;
-	}
-	.headerText {
-		color: #f44b38;
-		font-family: tahoma;
-		font-weight: bold;
-		padding-bottom: 20px;
-		text-align: center;
-	}
-	.textfield {
-		background-color: #cfcfcf;
-		border: 1px solid #cacaca;
-		border-radius: 25px;
-		color: #555;
-		font-size: 13px;
-		margin-bottom: 10px;
-		padding: 10px;
-		vertical-align: middle;
-		width: 100%;
-		font-family: tahoma;
-	}
-	.wrong input {
-		border: 1px solid #9e423e;
-		width: 90%;
-	}
-	.wrong::after {
-		color: #f5443b !important;
-		content: url("ext/cross.png");
-		padding-left: 6px;
-	}
-	
-	.btn{
-		background-color: #f45b4b;
-		border: 0 none;
-		cursor: pointer;
-		border-radius: 25px;
-		color: white;
-		float: right;
-		font-size: 14px;
-		font-weight: bold;
-		height: 40px;
-		width: 100px;
-		font-family: tahoma;
-	}
-	.btn2{
-		background-color: #f45b4b;
-		border: 0 none;
-		cursor: pointer;
-		border-radius: 25px;
-		color: white;
-		float: right;
-		font-size: 14px;
-		font-weight: bold;
-		height: 35px;
-		width: 150px;
-		float : left;
-		font-family: tahoma;
-	}
-	.btn:hover , .btn2:hover{
-		background-color: #28d8d8;
-	}
-	.forget{
-		cursor: pointer;
-		color: #e84f3d;
-		float: right;
-		font-family: tahoma;
-		font-size: 11px;
-		font-weight: bold;
-		height: 40px;
-		margin-right: 4px;
-		margin-top: 13px;
-	}
-	.forget:hover{
-		color: #28d8d8;
-	}	
-	.footer{
-		background-color: #f45b4b;
-		border-radius: 0 0 30px 30px;
-		border-top: 1px solid #a72d1e;
-		color: white;
-		font-family: tahoma;
-		font-size: 14px;
-		font-weight: bold;
-		height: 86px;
-		line-height: 25px;
-		margin-top: 10px;
-		padding-right: 20px;
-		padding-top: 20px;
-		text-align: right;
-		width: 420px;
-	}
-    </style>
-	<? require_once 'md5.php'; ?>
+  	<? require_once 'md5.php'; ?>
 	<script>
 		function pressing(e)
 		{
@@ -290,46 +176,146 @@ else if(isset($_POST["UserName"]))
 			}
 		}
 	</script>
-  </head>
+	 <style>
+	  body td div{
+		  font-family: tahoma;
+	  }
+	.headerDiv{
+		height: 180px;
+		width : 100%;
+		background-color: #88a401;
+		border-bottom: 15px solid #314e00;
+	}
+	.footerDiv{
+		background-color: #324e03;
+		position: absolute;
+		bottom: 0;
+		font-family: tahoma;
+		font-size: 12px;
+		height : 100px;
+		width : 100%;
+		color : white;		
+	}
+	.mainDiv{
+		width : 500px;	
+		right : 35%;
+		top : 30%;
+		position: absolute;
 
-  <body onkeydown="pressing(event);" onload="return BodyLoad();">
+	}
+	.title{
+		font-family: tahoma;
+		font-size: 14px;
+		font-weight: bold;
+		color: #74a724;
+	}
+	.textfield {
+		border: 1px solid #cacaca;
+		font-size: 12px;
+		padding: 5px;
+		margin-bottom: 10px;
+		vertical-align: middle;
+		width: 200px;
+		font-family: tahoma;
+	}
+	.wrong input {
+		border: 1px solid #9e423e;
+	}
+	.wrong::after {
+		color: #f5443b !important;
+		content: url("ext/cross.png");
+		padding-right: 6px;
+	}
 
-    <div class="login">
-		<div  id="loginDIV" style="padding: 40px 40px 50px;">
-			<div class="headerText">ورود به پرتال</div>
-			<form method="post" id="MainForm" onsubmit="return loginFN();">
-				<div id="UserNameDiv"><input type="text" name="UserName" class="textfield" id="UserName" placeholder="کلمه کاربری ..." required="required" /></div>
-				<div id="PasswordDiv"><input type="password" class="textfield" id="password" placeholder="رمز عبور ..." required="required" /></div>
-				<button type="submit" class="btn  ">ورود</button>
-				<div class="forget"> رمز عبور را فراموش کرده ام |</div>
-				<input type="hidden" id="md5Pass" name="md5Pass">
-				<br><br>
-				<button type="button" onclick="Register(true)" class="btn2">ثبت نام در سامانه</button>
-			</form>
+	.btn{
+		background-color: #74a724;
+		border: 0 none;
+		cursor: pointer;
+		border-radius: 10px;
+		color: white;
+		float: right;
+		font-size: 12px;
+		font-weight: bold;
+		height: 30px;
+		font-family: tahoma;
+	}
+
+	.btn:hover {
+		background-color: #679caa;
+	}
+	.forget{
+		cursor: pointer;
+		color: #74a724;
+		font-family: tahoma;
+		font-size: 11px;
+		font-weight: bold;
+		margin-top: 10px;
+		margin-right: 4px;
+	}
+	.forget:hover{
+		color: #76c9df;
+	}	
+  </style>
+  </head> 
+  <body dir="rtl" style="margin:0" onkeydown="pressing(event);" onload="return BodyLoad();">
+	<center>
+		<div class="headerDiv" align="center">
+			<div style="width:800;right : 20%;position: absolute;" align="right"><br><br><img width="180px" src="../framework/icons/LoginLogo.png"></div>
 		</div>
-		
-		<div  id="registerDIV" style="display:none;padding: 40px 40px 30px;" align="right">
-			<div class="headerText">ثبت نام در پرتال</div>
-			<form method="post" id="MainForm2" onsubmit="return RegisterFN();">
-				<div style="margin-bottom:10px;direction:rtl">
-					<input type="radio" id="isReal" name="IsReal" value="YES" onclick="ChangePersonType(this);" checked> حقیقی
-					<input type="radio" id="noReal" name="IsReal" value="NO" onclick="ChangePersonType(this);" value="LEGAL"> حقوقی
-				</div>
-				<input type="text" name="fname" class="textfield" id="fname" placeholder="نام ..." required="required" dir="rtl"/>
-				<input type="text" name="lname" class="textfield" id="lname" placeholder="نام خانوادگی ..." required="required" dir="rtl"/>
-				<input type="text" name="CompanyName" style="display:none" class="textfield" id="CompanyName" placeholder="نام شرکت ..." dir="rtl"/>
-				<input type="email" name="email" id="email" class="textfield" placeholder="پست الکترونیک ..." required="required" />
-				<div id="UserNameDiv2"><input type="text" id="UserName2" name="UserName" class="textfield" placeholder="کلمه کاربری ..." required="required" /></div>
-				<input type="password" class="textfield" id="password1" placeholder="رمز عبور ..." required="required" />
-				<input type="password" class="textfield" id="password2" placeholder="تکرار رمز عبور ..." required="required" oninput="ConfirmPassword(this)"/>
-				<input type="hidden" id="md5Pass2" name="md5Pass">
-				
-				<button type="submit" style="float:right;width:100px" class="btn2"> ثبت نام </button>
-				<button type="button" onclick="Register(false)" class="btn2" style="font-size: 20px;font-weight: bolder;padding-bottom: 3px;width: 38px;">←</button>
-			</form>
+		<div align="center">
+		<div class="mainDiv">
+			<table width="100%">
+				<tr>
+					<td width="200px" style="vertical-align: middle;"><img src="../framework/icons/keys.jpg"</td>
+					<td style="vertical-align: top;">
+						<div id="loginDIV">
+							<form method="post" id="MainForm" onsubmit="return loginFN();">
+								<div class="title" > ورود به پرتال </div>
+								<br>
+								<div style="font-size: 12px">جهت ورود به پرتال نام کاربری و کلمه عبور خود را وارد کنید.
+									درغیر اینصورت با زدن دکمه ثبت نام به پرتال وارد شوید.</div>
+								<br>
+								<div id="UserNameDiv"><input type="text" name="UserName" class="textfield" id="UserName" 
+									placeholder="کلمه کاربری ..." required="required" dir="ltr" /></div>
+								<div id="PasswordDiv"><input type="password" class="textfield" id="password" 
+									placeholder="رمز عبور ..." required="required" dir="ltr"/></div>
+								<button type="submit" style="width:80px" class="btn  ">ورود</button>
+								<div class="forget">&nbsp;| رمز عبور را فراموش کرده ام </div>
+								<br><div onclick="Register(true)" class="forget">ثبت نام در سامانه</div>
+								<input type="hidden" id="md5Pass" name="md5Pass">
+							</form>
+						</div>
+						<div  id="registerDIV" style="display:none;" align="right">
+							<div class="title">ثبت نام در پرتال</div>
+							<form method="post" id="MainForm2" onsubmit="return RegisterFN();">
+								<div style="font-size: 12px">جهت ثبت نام در پرتال کلیه مشخصات خود را به دقت وارد کنید.</div>
+								<br>
+								<div style="margin-bottom:10px;direction:rtl;font-size: 13px">
+									<input type="radio" id="isReal" name="IsReal" value="YES" onclick="ChangePersonType(this);" checked> حقیقی
+									<input type="radio" id="noReal" name="IsReal" value="NO" onclick="ChangePersonType(this);" value="LEGAL"> حقوقی
+								</div>
+								<input type="text" name="fname" class="textfield" id="fname" placeholder="نام ..." required="required" dir="rtl"/>
+								<input type="text" name="lname" class="textfield" id="lname" placeholder="نام خانوادگی ..." required="required" dir="rtl"/>
+								<input type="text" name="CompanyName" style="display:none" class="textfield" id="CompanyName" 
+									   placeholder="نام شرکت ..." dir="rtl"/>
+								<input type="email" name="email" id="email" class="textfield" placeholder="پست الکترونیک ..." required="required" dir="ltr"/>
+								<div id="UserNameDiv2"><input type="text" id="UserName2" name="UserName" class="textfield" 
+										placeholder="کلمه کاربری ..." required="required" dir="ltr"/></div>
+								<input type="password" class="textfield" id="password1" placeholder="رمز عبور ..." required="required" dir="ltr"/>
+								<input type="password" class="textfield" id="password2" placeholder="تکرار رمز عبور ..." required="required" 
+									   dir="ltr" oninput="ConfirmPassword(this)"/>
+								<input type="hidden" id="md5Pass2" name="md5Pass">
+								<button type="submit" style="float:right;width:100px" class="btn"> ثبت نام </button>
+								<button type="button" onclick="Register(false)" class="btn" style="float:left;width: 58px;">بازگشت</button>
+							</form>
+						</div>						
+					</td>
+				</tr>
+			</table>
 		</div>
-		<div class="footer">پرتال جامع	
-			<br><?= SoftwareName?></div>
-	</div>
-  </body>
+		</div>
+		<div class="footerDiv"> <br><br>
+<br>© کلیه حقوق این نرم افزار محفوظ است.</div>
+	</center>	  
+</body>
 </html>
