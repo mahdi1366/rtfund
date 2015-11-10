@@ -116,6 +116,19 @@ function SaveLoanRequest(){
 			ChangeStatus($obj->RequestID,$obj->StatusID, "", true);
 	}
 	
+	if($_SESSION["USER"]["IsCustomer"] == "YES" && $obj->LoanID > 0)
+	{
+		$loanObj = new LON_loans($obj->LoanID);
+		$PartObj = new LON_ReqParts();
+		PdoDataAccess::FillObjectByObject($loanObj, &$PartObj);
+		$PartObj->RequestID = $obj->RequestID;
+		$PartObj->PartDesc = "مرحله اول";
+		$PartObj->FundWage = $loanObj->CustomerWage;
+		$PartObj->PartAmount = $obj->ReqAmount;
+		$PartObj->PartDate = PDONOW;
+		$PartObj->AddPart();
+	}
+	
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, $obj->RequestID);
 	die();
@@ -158,7 +171,7 @@ function SelectAllRequests(){
 	
 	$where .= dataReader::makeOrder();
 	$dt = LON_requests::SelectAll($where, $param);
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

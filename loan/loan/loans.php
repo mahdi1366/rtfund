@@ -33,7 +33,7 @@ $col = $dg->addColumn("فاصله اقساط", "PayInterval", "");
 $col->width = 80;
 $col->align = "center";
 
-$col = $dg->addColumn("مدت تنفس", "DelayMonth", "");
+$col = $dg->addColumn("مدت تنفس", "DelayMonths", "");
 $col->width = 80;
 $col->align = "center";
 

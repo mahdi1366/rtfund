@@ -13,7 +13,7 @@ class LON_loans extends PdoDataAccess
 	public $PayCount;
 	public $IntervalType;
 	public $PayInterval;
-	public $DelayMonth;
+	public $DelayMonths;
 	public $ForfeitPercent;
 	public $CustomerWage;
 	public $FundWage;

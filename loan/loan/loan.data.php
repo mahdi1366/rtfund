@@ -63,10 +63,15 @@ function DeleteGroup(){
 }
 
 function GetAllLoans() {
-	$where = " GroupID=:g";
-	$whereParam = array();
-	$whereParam[":g"] = $_GET["GroupID"];
 	
+	$where = "1=1";
+	$whereParam = array();
+	
+	if(!empty($_GET["GroupID"]))
+	{
+		$where .= " AND GroupID=:g";
+		$whereParam[":g"] = $_GET["GroupID"];
+	}
 	if(!empty($_REQUEST["LoanID"]))
 	{
 		$where .= " AND LoanID=:l";

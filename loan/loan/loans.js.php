@@ -174,7 +174,7 @@ Loan.prototype.LoanInfo = function(mode)
 					xtype:'numberfield',
 					fieldLabel: 'مدت تنفس',
 					afterSubTpl : "ماه",
-					name: 'DelayMonth',
+					name: 'DelayMonths',
 					hideTrigger : true
 				},{
 					xtype:'numberfield',

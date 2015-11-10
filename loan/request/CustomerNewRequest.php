@@ -5,6 +5,7 @@
 //-----------------------------
 
 require_once '../header.inc.php';
+require_once 'request.class.php';
 require_once inc_dataGrid;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "../../loan/loan/loan.data.php?task=GetAllLoans", "grid_div");
@@ -39,12 +40,7 @@ $dg->disableFooter = true;
 $grid = $dg->makeGrid_returnObjects();
 
 $LoanID = 0;
-$RequestID = !empty($_REQUEST["RequestID"]) ? $_REQUEST["RequestID"] : 0;
-if($RequestID > 0)
-{
-	$obj = new LON_requests($RequestID);
-	$LoanID = $obj->LoanID;
-}
+$RequestID = !empty($_REQUEST["RequestID"]) ? $_REQUEST["RequestID"]*1 : 0;
 
 ?>
 <script>
@@ -53,7 +49,7 @@ NewLoanRequest.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
-	LoanID : <?= $LoanID?>,
+	RequestID : <?= $RequestID?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -210,6 +206,8 @@ function NewLoanRequest()
 		buttons : [{
 			text : "ثبت درخواست وام و ارسال به صندوق",
 			iconCls: 'save',
+			hidden : this.RequestID >0 ? true : false,
+			itemId : "saveBtn",
 			handler: function() {
 				
 				if(!NewLoanRequestObject.grid.getSelectionModel().getLastSelected())
@@ -245,21 +243,34 @@ function NewLoanRequest()
 		}]
 	});
 
-	if(this.LoanID > 0)
+	if(this.RequestID > 0)
 	{
 		this.grid.hide();
+		
+		mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
+		mask.show();
+		
 		this.store = new Ext.data.Store({
 			proxy:{
 				type: 'jsonp',
-				url: this.address_prefix + "../loan/loan.data.php?task=GetAllLoans&LoanID=" + this.LoanID,
+				url: this.address_prefix + "request.data.php?task=SelectAllRequests&RequestID=" + this.RequestID,
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
-			fields : ["InstallmentCount","IntervalType","PayInterval","DelayMonths","MaxAmount","ForfeitPercent","CustomerWage"],
+			fields : ["BranchID","ReqAmount","ReqDetails","InstallmentCount","IntervalType","PayInterval",
+				"DelayMonths","MaxAmount","ForfeitPercent","CustomerWage"],
 			autoLoad : true,
 			listeners :{
 				load : function(){
-					me = RequestInfoObject;
+					var record = this.getAt(0);
+					me = NewLoanRequestObject;
 					me.mainPanel.loadRecord(this.getAt(0));
+					me.LoadSummary(record);
+					me.mainPanel.down("[name=PayInterval]").setValue(record.data.PayInterval + " " + 
+						(record.data.IntervalType == "DAY" ? "روز" : "ماه"));
+					me.mainPanel.getEl().readonly();
+					me.mainPanel.doLayout();
+					
+					mask.hide();
 				}
 			}
 		});

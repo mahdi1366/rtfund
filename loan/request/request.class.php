@@ -30,7 +30,7 @@ class LON_requests extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select r.*,
+			select r.*,l.*,
 				if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) ReqFullname,
 				if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) LoanFullname,
 				case when p1.IsCustomer='YES' then 'Customer'
@@ -40,6 +40,7 @@ class LON_requests extends PdoDataAccess
 				bi.InfoDesc StatusDesc,
 				BranchName
 			from LON_requests r
+			left join LON_loans l using(LoanID)
 			join BSC_branches using(BranchID)
 			join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
 			join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)

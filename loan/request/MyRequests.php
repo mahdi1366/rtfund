@@ -19,7 +19,7 @@ else
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectMyRequests", "grid_div");
 
 $dg->addColumn("", "StatusID", "", true);
-$dg->addColumn("", "StatusID", "", true);
+$dg->addColumn("", "LoanID", "", true);
 
 $col = $dg->addColumn("پیگیری", "RequestID", "");
 $col->width = 50;
@@ -94,8 +94,16 @@ MyRequest.prototype.OperationMenu = function(e){
 		handler : function(){ return MyRequestObject.ShowComment(); }});
 	}	
 	
-	op_menu.add({text: 'اطلاعات وام',iconCls: 'info2', 
-		handler : function(){ return MyRequestObject.EditRequest(); }});
+	if(this.User == "Customer" && record.data.LoanID > 0 && record.data.StatusID == "10")
+	{
+		op_menu.add({text: 'اطلاعات وام',iconCls: 'info2', 
+		handler : function(){ return MyRequestObject.EditRequest(false); }});
+	}
+	else
+		op_menu.add({text: 'اطلاعات وام',iconCls: 'info2',	
+		handler : function(){ return MyRequestObject.EditRequest(true); }});
+	
+	
 	
 	op_menu.add({text: 'مدارک وام',iconCls: 'attach', 
 		handler : function(){ return MyRequestObject.LoadAttaches(); }});
@@ -115,7 +123,7 @@ MyRequest.prototype.OperationMenu = function(e){
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
-MyRequest.prototype.EditRequest = function(){
+MyRequest.prototype.EditRequest = function(HavePart){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
 	if(this.User == "Agent")
@@ -131,7 +139,7 @@ MyRequest.prototype.EditRequest = function(){
 				width : 800,
 				height : 460,
 				modal : true,
-				bodyStyle : "background-color:white",
+				bodyStyle : "background-color:white;padding-right:10px",
 				closeAction : "hide",
 				loader : {
 					url : "../loan/request/RequestInfo.php",
@@ -148,7 +156,9 @@ MyRequest.prototype.EditRequest = function(){
 		
 		this.RequestInfoWin.show();
 		this.RequestInfoWin.center();
+		
 		this.RequestInfoWin.loader.load({
+			url : HavePart ? "../loan/request/RequestInfo.php" : "../loan/request/CustomerNewRequest.php",
 			scripts : true,
 			params : {
 				ExtTabID : this.RequestInfoWin.getEl().id,

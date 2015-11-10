@@ -76,11 +76,13 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 				me.companyPanel.loadRecord(this.getAt(0));
 				if(this.getAt(0).data.AgentGuarantee == "YES")
 					me.companyPanel.down("[name=AgentGuarantee]").setValue(true);
-				arr = this.getAt(0).data.guarantees.split(",");
-				for(i=0; i<arr.length; i++)
-					if(arr[i] != "")
-						me.companyPanel.down("[name=guarantee_" + arr[i] + "]").setValue(true);
-
+				if(this.getAt(0).data.guarantees != null)
+				{
+					arr = this.getAt(0).data.guarantees.split(",");
+					for(i=0; i<arr.length; i++)
+						if(arr[i] != "")
+							me.companyPanel.down("[name=guarantee_" + arr[i] + "]").setValue(true);
+				}
 				//..........................................................
 
 				me.CustomizeForm(this.getAt(0));
