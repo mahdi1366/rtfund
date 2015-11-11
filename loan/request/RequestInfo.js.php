@@ -124,7 +124,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 		}
 		
 	}	
-	if(record.data.IsPayed == "NO")
+	if(record.data.IsPayed == "NO" && record.data.IsStarted == "NO")
 	{
 		if(this.User == "Agent" || (this.User == "Staff" && ReqRecord.data.ReqPersonRole != "Agent"))
 		{
@@ -431,6 +431,14 @@ RequestInfo.prototype.CustomizeForm = function(record){
 				this.companyPanel.doLayout();
 				this.grid.down("[itemId=addPart]").hide();
 				//this.grid.down("[dataIndex=PartID]").hide();
+			}
+			else
+			{
+				if(record.data.StatusID == "70")
+				{
+					this.companyPanel.getEl().readonly();
+					this.companyPanel.down("[itemId=cmp_save]").hide();
+				}
 			}
 		}	
 		if(this.User == "Customer")
