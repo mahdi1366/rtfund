@@ -32,7 +32,7 @@ $_SESSION['USER']["RecentSystems"] = array();
 			}
 			
 			.headerDiv{
-				height: 180px;
+				height: 150px;
 				width : 100%;
 				background-color: #7175cd;
 				border-bottom: 15px solid #50467f;
@@ -40,12 +40,13 @@ $_SESSION['USER']["RecentSystems"] = array();
 			
 			.menus{
 				width : 1000px;	
-				margin-top: 35px;
+				margin-bottom: 20px;
 			}
 			
 			.systemRow{
 				width : 100%;
 				margin-top: 20px;
+				height : 200px;
 			}
 			
 			.system {
@@ -95,22 +96,21 @@ $_SESSION['USER']["RecentSystems"] = array();
 						
 			.footerDiv{
 				background-color: #575ca5;
-				position: absolute;
-				bottom: 0;
 				font-family: tahoma;
 				font-size: 12px;
-				height : 100px;
+				height : 80px;
 				width : 100%;
 				color : white;		
 			}
 		</style>
 	</head>
 	<body DIR=RTL style="margin:0">
-		
-		<div class="headerDiv" align="center">
-			<div style="width:800;right : 20%;position: absolute;" align="right"><br><br><img width="180px" src="../framework/icons/LoginLogo.png"></div>
-		</div>
 		<center>
+		<div class="headerDiv" align="center">
+			<div style="width:800;right : 20%;position: absolute;" align="right">
+				<br><img width="150px" src="../framework/icons/LoginLogo.png"></div>
+		</div>
+		
 			<div class="menus" align="right">
 			<?php
 
@@ -138,8 +138,8 @@ $_SESSION['USER']["RecentSystems"] = array();
 			?>
 
 			</div>
-			<div class="footerDiv"> <br><br>
-<br>© کلیه حقوق این نرم افزار محفوظ است.</div>
+			<div class="footerDiv"> <br>
+				<br>© کلیه حقوق این نرم افزار محفوظ است.</div>
 		</center>
 </body>
 </html>

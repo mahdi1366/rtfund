@@ -65,7 +65,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 		},
 		fields : ["RequestID","BranchID","BranchName","ReqPersonID","ReqPersonRole","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
-					"guarantees","AgentGuarantee","StatusID","DocumentDesc"],
+					"guarantees","AgentGuarantee","StatusID","DocumentDesc","SupportPersonID"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -108,7 +108,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 
 	if(this.User == "Staff")
 	{
-		if(record.data.IsStarted == "NO")
+		if(record.data.IsStarted == "NO" && record.data.StatusID == "70")
 		{
 			op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
 			handler : function(){ return RequestInfoObject.StartFlow(); }});
@@ -126,7 +126,8 @@ RequestInfo.prototype.OperationMenu = function(e){
 	}	
 	if(record.data.IsPayed == "NO" && record.data.IsStarted == "NO")
 	{
-		if(this.User == "Agent" || (this.User == "Staff" && ReqRecord.data.ReqPersonRole != "Agent"))
+		if((this.User == "Agent" && record.data.StatusID== "1") || 
+			(this.User == "Staff" && record.data.StatusID != "70" && ReqRecord.data.ReqPersonRole != "Agent"))
 		{
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 				handler : function(){ return RequestInfoObject.PartInfo("edit"); }});
@@ -136,7 +137,8 @@ RequestInfo.prototype.OperationMenu = function(e){
 		}
 	}
 	
-	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
+	if(record.data.StatusID == "70")
+		op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
 		handler : function(){ return RequestInfoObject.ShowHistory(); }});
 	
 	op_menu.showAt(e.pageX-120, e.pageY);
@@ -164,14 +166,32 @@ RequestInfo.prototype.BuildForms = function(){
 				fieldCls : "blueText",
 				name : "ReqFullname",
 				style : "margin-bottom:10px",
-				fieldLabel : "ثبت کننده درخواست"
+				fieldLabel : "درخواست کننده"
+			},{
+				xtype : "combo",
+				hidden : true,
+				store : new Ext.data.SimpleStore({
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../../person/persons.data.php?' +
+							"task=selectPersons&UserType=IsSupporter",
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields : ['PersonID','fullname'],
+					autoLoad : true					
+				}),
+				fieldLabel : "معرفی کننده",
+				displayField : "fullname",
+				valueField : "PersonID",
+				name : "SupportPersonID",
+				itemId : "cmp_Supporter"
 			},{
 				xtype : "combo",
 				store : new Ext.data.SimpleStore({
 					proxy: {
 						type: 'jsonp',
 						url: this.address_prefix + '../../person/persons.data.php?' +
-							"task=selectPersons&UserType=IsCumstomer",
+							"task=selectPersons&UserType=IsCustomer",
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
 					fields : ['PersonID','fullname'],
@@ -390,6 +410,16 @@ RequestInfo.prototype.CustomizeForm = function(record){
 	if(this.User == "Staff")
 	{
 		this.PartsPanel.down("[itemId=cmp_save]").hide();
+		
+		if(record == null)
+		{
+			this.companyPanel.down("[itemId=cmp_Supporter]").show();
+			this.companyPanel.down("[name=ReqFullname]").hide();
+			this.companyPanel.down("[name=BorrowerDesc]").hide();
+			this.companyPanel.down("[name=BorrowerID]").hide();
+			this.companyPanel.down("[name=AgentGuarantee]").hide();
+			this.PartsPanel.hide();
+		}
 	}
 	if(this.User == "Agent")
 	{
@@ -440,14 +470,26 @@ RequestInfo.prototype.CustomizeForm = function(record){
 					this.companyPanel.down("[itemId=cmp_save]").hide();
 				}
 			}
+			
+			if(record.data.ReqPersonRole == "Staff")
+			{
+				this.companyPanel.down("[itemId=cmp_Supporter]").show();
+				this.companyPanel.down("[name=ReqFullname]").hide();
+				this.companyPanel.down("[name=BorrowerDesc]").hide();
+				this.companyPanel.down("[name=BorrowerID]").hide();
+			}
 		}	
 		if(this.User == "Customer")
 		{
+			this.companyPanel.down("[itemId=cmp_Supporter]").show();
 			this.companyPanel.down("[name=LoanPersonID]").hide();
 			this.companyPanel.down("[name=BorrowerDesc]").hide();
 			this.companyPanel.down("[name=BorrowerID]").hide();
 			this.companyPanel.down("[name=ReqDetails]").hide();
 			this.companyPanel.down("[itemId=cmp_save]").hide();
+			if(record.data.ReqPersonRole == "Staff")
+				this.companyPanel.down("[name=AgentGuarantee]").hide();
+			
 			this.companyPanel.getEl().readonly();
 			
 			this.grid.down("[itemId=addPart]").hide();
@@ -489,6 +531,8 @@ RequestInfo.prototype.SaveRequest = function(mode){
 				me.companyPanel.down("[itemId=cmp_save]").hide();
 			
 			me.PartsPanel.show();
+			
+			me.LoadRequestInfo();
 			
 			if( mode == "send")
 			{

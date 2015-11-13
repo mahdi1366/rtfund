@@ -15,6 +15,7 @@ $dg->addColumn("", "BranchID", "", true);
 $dg->addColumn("", "BorrowerDesc", "", true);
 $dg->addColumn("", "BorrowerID", "", true);
 $dg->addColumn("", "LoanPersonID", "", true);
+$dg->addColumn("", "ReqPersonRole", "", true);
 
 $col = $dg->addColumn("شماره", "RequestID", "");
 $col->width = 50;

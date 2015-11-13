@@ -15,7 +15,7 @@ $dg->addColumn("", "BankDesc", "", true);
 $dg->addColumn("", "ChequeBranch", "", true);
 
 $col = $dg->addColumn("سررسید", "InstallmentDate", GridColumn::ColumnType_date);
-$col->width = 90;
+$col->width = 80;
 
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
 
@@ -32,6 +32,7 @@ $col = $dg->addColumn("شماره پیگیری", "PaidRefNo", "");
 $col->width = 90;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo", "string");
+$col->renderer = "Installment.ChequeRender";
 $col->width = 80;
 
 $col = $dg->addColumn("پرداخت", "");
@@ -85,12 +86,29 @@ function Installment()
 					url: this.address_prefix + 'request.data.php?task=selectMyParts',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['PartID','PartDesc',"RequestID","PartDate"]
+				fields :  ['PartAmount','PartDesc',"RequestID","PartDate", "PartID"]
 			}),
-			displayField: 'PartDesc',
+			displayField: 'RequestID',
 			valueField : "PartID",
 			queryMode: "local",
 			width : 600,
+			tpl: new Ext.XTemplate(
+				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
+				'<td style="padding:7px">کد وام</td>',
+				'<td style="padding:7px">مرحله وام</td>',
+				'<td style="padding:7px">مبلغ وام</td>',
+				'<td style="padding:7px">تاریخ پرداخت</td> </tr>',
+				'<tpl for=".">',
+					'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
+
+					'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">{PartDesc}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">',
+						'{[Ext.util.Format.Money(values.PartAmount)]}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">{PartDate}</td> </tr>',
+				'</tpl>',
+				'</table>'
+			),
 			itemId : "PartID",
 			listeners :{
 				select : function(){
@@ -117,6 +135,19 @@ Installment.payRender = function(v,p,r){
 	return  "<div  title='پرداخت قسط' class='epay' onclick='InstallmentObject.PayInstallment();' " +
 		"style='float:left;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+Installment.ChequeRender = function(v,p,r){
+
+	
+	var qtip = "<table>"+
+			"<tr><td style=padding:3px>تاریخ چک :</td><td><b>" + MiladiToShamsi(r.data.ChequeDate) + "</b></td></tr>" +
+			"<tr><td style=padding:3px>بانک :</td><td><b>" + r.data.BankDesc + "</b></td></tr>" +
+			"<tr><td style=padding:3px>شعبه :</td><td><b>" + r.data.ChequeBranch + "</b></td></tr>" +
+			"</table>";
+	if(v != null)
+		p.tdAttr = 'data-qtip=\"' + qtip + '\"';
+	return v;
 }
 
 var InstallmentObject = new Installment();

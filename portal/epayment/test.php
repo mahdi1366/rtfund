@@ -61,12 +61,12 @@ function ShowStatus($ErrorCode) {
 }
 
 $result = "";
-if (!isset($_POST["resultCode"])) {
+if (!isset($_REQUEST["resultCode"])) {
 	$result = "تراکنش بی نتیجه";
 }
-else if ($_POST["resultCode"] == 100) {
+else if ($_REQUEST["resultCode"] == 100) {
 
-	$InstallmentID = $_POST["paymentId"];
+	$InstallmentID = $_REQUEST["paymentId"];
 
 	$obj = new LON_installments($InstallmentID);
 	if (!($obj->InstallmentID > 0)) {
@@ -74,43 +74,9 @@ else if ($_POST["resultCode"] == 100) {
 	}
 	else
 	{
-		$ns = 'http://tejarat/paymentGateway/definitions';
-		$wsdl2 = "https://kica.shaparak.ir/epay/services";
-		$soapclient = new nusoap_client($wsdl2, '', 'lb1.um.ac.ir', '81');
-		$parameters = array(
-			'merchantId' => $MerchantID,
-			'referenceNumber' => $_POST['referenceId']);
+		$totalAmount = 1000;
 
-		echo $totalAmount = $soapclient->call('verifyRequest', $parameters, $ns);
-		//	echo $soapclient->request;
-		//	echo '<br><br>';
-		//	echo $soapclient->response;
-		//	echo '<br><br>';
-
-		if ($soapclient->fault) {
-			echo '<h2>Fault (Expect - The request contains an invalid SOAP body)</h2><pre>';
-			print_r($totalAmount);
-			echo '</pre>';
-		} 
-		//	echo $soapclient->request;
-		//	echo '<br><br>';
-		//	echo $soapclient->response;
-		//	echo '<br><br>';
-		//	print_r($totalAmount);
-
-		$x = $soapclient->response;
-		//	echo $x;
-
-		$starttag = stripos($x, '<verifyresponse xmlns="http://tejarat/paymentGateway/definitions">');
-		$endtag = stripos($x, '</verifyresponse>');
-
-		$endofstarttag = $starttag + strlen('<verifyresponse xmlns="http://tejarat/paymentGateway/definitions">') - 1;
-		$lenresponse = $endtag - $endofstarttag - 1;
-
-		$result = substr($x, $endofstarttag + 1, $lenresponse);
-		$totalAmount = $result;
-		$totalAmount = intval($totalAmount);
-
+		
 		if ($totalAmount > 0) {
 			$result = "پرداخت الكترونيكي شما به درستي انجام گرفت. شماره رسيد بانكي زير براي شما صادر گرديده است: </p>";
 			$result .= "<table width=80% align=center border=1 cellspacing=0 cellpadding=5 dir=rtl>
@@ -120,14 +86,14 @@ else if ($_POST["resultCode"] == 100) {
 				</tr>
 				<tr>
 					<td> شماره پیگیری: </td>
-					<td dir=ltr align=right><b>" . $_POST['referenceId'] . "</b></td>
+					<td dir=ltr align=right><b>" . $_REQUEST['referenceId'] . "</b></td>
 				</tr>
 			</table>";
 
 			$obj->StatusID = "100";
 			$obj->PaidAmount = $totalAmount;
 			$obj->PaidDate = PDONOW;
-			$obj->PaidRefNo = $_POST['referenceId'];
+			$obj->PaidRefNo = $_REQUEST['referenceId'];
 					
 			$pdo = PdoDataAccess::getPdoObject();
 			$pdo->beginTransaction();
@@ -140,9 +106,10 @@ else if ($_POST["resultCode"] == 100) {
 					$error = true;
 			if($error)
 			{
+				print_r(ExceptionHandler::PopAllExceptions());
 				$pdo->rollBack();
-				$result .= "<br> عملیات پرداخت قسط در نرم افزار صندوق به درستی ثبت نگردید. <br>" . 
-						" جهت اعمال آن با صندوق تماس بگیرید.";
+				$result .= "<br> عملیات پرداخت قسط در نرم افزار صندوق به درستی ثبت نگردید. " . 
+						"<br> جهت اعمال آن با صندوق تماس بگیرید." ;
 			}
 			else
 				$pdo->commit();
@@ -153,11 +120,11 @@ else if ($_POST["resultCode"] == 100) {
 }
 else 
 {
-	$result = ShowStatus($_POST["resultCode"]) . "<br>";
+	$result = ShowStatus($_REQUEST["resultCode"]) . "<br>";
 	
-	if (isset($_POST['referenceId'])) {
+	if (isset($_REQUEST['referenceId'])) {
 		$result .= '<p align=center><font face=tahoma size=3>';
-		$result .= 'کد پیگیری:' . $_POST['referenceId'];
+		$result .= 'کد پیگیری:' . $_REQUEST['referenceId'];
 		$result .= '</font></p>';
 	}
 }

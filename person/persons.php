@@ -54,15 +54,15 @@ $col->width = 40;
 
 if($accessObj->RemoveFlag)
 {
-	$col = $dg->addColumn("حذف","personID","");
-	$col->renderer = "Person.deleteRender";
-	$col->sortable = false;
-	$col->width = 40;
+	//$col = $dg->addColumn("حذف","personID","");
+	//$col->renderer = "Person.deleteRender";
+	//$col->sortable = false;
+	//$col->width = 40;
 }
 if($accessObj->AddFlag)
 {
-	$dg->addButton = true;
-	$dg->addHandler = "function(){PersonObject.Adding();}";
+	//$dg->addButton = true;
+	//$dg->addHandler = "function(){PersonObject.Adding();}";
 }
 
 $dg->height = 350;

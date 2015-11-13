@@ -60,8 +60,10 @@ class ACC_docs extends PdoDataAccess {
 			else
 				$DocDate = DateModules::shamsi_to_miladi ($DocDate, "-");
 			
-			$dt = PdoDataAccess::runquery("select * from ACC_docs where LocalNo>? order by LocalNo limit 1",
-					array($this->LocalNo), $pdo);
+			$dt = PdoDataAccess::runquery("select * from ACC_docs 
+				where LocalNo>? AND BranchID=? AND CycleID=?
+				order by LocalNo limit 1",
+					array($this->LocalNo, $this->BranchID, $this->CycleID), $pdo);
 			
 			if(count($dt) > 0 && strcmp($DocDate,$dt[0]["DocDate"]) > 0)
 			{

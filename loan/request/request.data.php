@@ -49,8 +49,8 @@ switch ($task) {
 	case "GetPartInstallments":
 		GetPartInstallments();
 		
-	case "ComputePartPayments":
-		ComputePartPayments();
+	case "ComputeInstallments":
+		ComputeInstallments();
 		
 	case "SavePartPayment":
 		SavePartPayment();
@@ -382,7 +382,7 @@ function AddToJDate($jdate, $day=0, $month=0) {
 }
 //....................
 
-function ComputePartPayments(){
+function ComputeInstallments(){
 	
 	$obj = new LON_ReqParts($_REQUEST["PartID"]);
 	
@@ -396,7 +396,8 @@ function ComputePartPayments(){
 	$TotalWage = round(ComputeWage($obj->PartAmount, $obj->CustomerWage/100, $obj->InstallmentCount, $YearMonths));
 	$LastPay = $obj->PartAmount*1 + $TotalWage - $allPay*($obj->InstallmentCount-1);
 	
-	$gdate = DateModules::miladi_to_shamsi($obj->PartDate);
+	$jdate = DateModules::miladi_to_shamsi($obj->PartDate);
+	$jdate = AddToJDate($jdate, 0, $obj->DelayMonths);
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
@@ -405,13 +406,13 @@ function ComputePartPayments(){
 	{
 		$obj2 = new LON_installments();
 		
-		$obj2->InstallmentDate = AddToJDate($gdate, 
+		$obj2->InstallmentDate = AddToJDate($jdate, 
 			$obj->IntervalType == "DAY" ? $obj->PayInterval*($i+1) : 0, 
 			$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
 		$obj2->PartID = $obj->PartID;
 		$obj2->InstallmentAmount = $allPay;
 		
-		if(!$obj2->AddPartPayment($pdo))
+		if(!$obj2->AddInstallment($pdo))
 		{
 			$pdo->rollBack();
 			echo Response::createObjectiveResponse(false, "");
@@ -421,13 +422,13 @@ function ComputePartPayments(){
 	
 	$obj2 = new LON_installments();
 		
-	$obj2->InstallmentDate = AddToJDate($gdate, 
+	$obj2->InstallmentDate = AddToJDate($jdate, 
 		$obj->IntervalType == "DAY" ? $obj->PayInterval*($obj->InstallmentCount) : 0, 
 		$obj->IntervalType == "MONTH" ? $obj->PayInterval*($obj->InstallmentCount) : 0);
 	$obj2->PartID = $obj->PartID;
 	$obj2->InstallmentAmount = $LastPay;
 
-	if(!$obj2->AddPartPayment($pdo))
+	if(!$obj2->AddInstallment($pdo))
 	{
 		$pdo->rollBack();
 		echo Response::createObjectiveResponse(false, "");

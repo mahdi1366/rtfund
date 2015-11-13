@@ -20,6 +20,7 @@ class LON_requests extends PdoDataAccess
 	public $guarantees;
 	public $AgentGuarantee;
 	public $DocumentDesc;	
+	public $SupportPersonID;
 	
 	function __construct($RequestID = "") {
 		
@@ -77,6 +78,10 @@ class LON_requests extends PdoDataAccess
     }
 	
 	static function DeleteRequest($RequestID){
+		
+		$obj = new LON_requests($RequestID);
+		if($obj->StatusID != "1")
+			return false;
 		
 		if( parent::delete("LON_reqParts"," RequestID=?", array($RequestID)) === false )
 	 		return false;
@@ -205,16 +210,30 @@ class LON_installments extends PdoDataAccess
 			where " . $where, $param);
 	}
 	
-	function EditInstallment(){
+	function AddInstallment(){
 		
-	 	if( parent::update("LON_installments",$this," InstallmentID=:l", array(":l" => $this->InstallmentID)) === false )
+	 	if(!parent::insert("LON_installments",$this))
+	 		return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->InstallmentID;
+		$daObj->TableName = "LON_installments";
+		$daObj->execute();
+	 	return true;
+    }
+	
+	function EditInstallment($pdo = null){
+		
+	 	if( parent::update("LON_installments",$this," InstallmentID=:l", 
+				array(":l" => $this->InstallmentID), $pdo) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
 		$daObj->MainObjectID = $this->InstallmentID;
 		$daObj->TableName = "LON_installments";
-		$daObj->execute();
+		$daObj->execute($pdo);
 	 	return true;
     }
 	

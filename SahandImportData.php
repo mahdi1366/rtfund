@@ -31,4 +31,27 @@ where levelCode=2
 	where b1.levelID=3
  * 
  */
+
+/*
+
+select * from tblCoding t1
+left join tblCoding t2 on(t1.AccCode=t2.AccParentCode)
+where t1.levelCode=1 AND t2.AccCode is null;
+
+
+select t1.AccCode,t2.AccCode,t1.AccName,t2.AccName from tblCoding t2
+join tblCoding t1 on(t2.AccParentCode=t1.AccCode)
+left join tblCoding t3 on(t2.AccCode=t3.AccParentCode)
+where t2.levelCode=2 AND t3.AccCode is null;
+
+
+SELECT t3.AccCode,t2.AccCode,t1.AccCode, t3.AccName,t2.AccName,t1.AccName
+FROM tblCoding t1
+join tblCOding t2 on(t1.AccParentCode=t2.AccCode)
+join tblCOding t3 on(t2.AccParentCode=t3.AccCode)
+where t1.levelCode=3;
+ * 
+ * 
+ */
+
 ?>

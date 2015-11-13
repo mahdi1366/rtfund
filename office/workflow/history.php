@@ -21,7 +21,7 @@ else if(!empty($_REQUEST["FlowID"]) && !empty($_REQUEST["ObjectID"]))
 else
 	die();
 	 
-$query = "select fr.* ,
+$query = "select fr.* ,fs.StepID,
 				ifnull(fs.StepDesc,'شروع گردش') StepDesc,
 				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname
 			from WFM_FlowRows fr
@@ -54,6 +54,33 @@ else
 				$Logs[$i]["ActionComment"] . "'>" .
 				String::ellipsis($Logs[$i]["ActionComment"], 48). "</div></td>
 		</tr>";
+	}
+	//------------------------ get next one ------------------------------------
+	$StepID = ($Logs[$i-1]["StepID"] == "" ? 0 : $Logs[$i-1]["StepID"]) + 1;
+	$query = "select StepDesc,po.PostName,
+				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname
+			from WFM_FlowSteps fs
+			join BSC_posts po using(PostID)
+			join BSC_persons p on(p.PostID=fs.PostID)			
+			where fs.FlowID=? AND fs.StepID=?";
+	$nextOne = PdoDataAccess::runquery($query, array($FlowID, $StepID));
+	if(count($nextOne)>0)
+	{
+		$str = "";
+		foreach($nextOne as $row)
+			$str .= $row["fullname"] . " [ پست : " . $row["PostName"] . " ] و ";
+		$str = substr($str, 0, strlen($str)-3);
+		
+		$tbl_content .= "<tr style='background-color:#A9E8E8'>
+				<td colspan=4 align=center>در حال حاضر فرم در مرحله <b>" . 
+				$nextOne[0]["StepDesc"] . "</b>  در کارتابل <b>" . $str . "</b> می باشد.</td>
+			</tr>";
+	}
+	else
+	{
+		$tbl_content .= "<tr style='background-color:#A9E8E8'>
+			<td colspan=4 align=center><b>گردش فرم پایان یافته است.</b></td>
+			<tr>";
 	}
 }
 ?>

@@ -5,6 +5,7 @@
 //-----------------------------
 
 class ACC_blocks extends PdoDataAccess{
+	
     public $BlockID;
 	public $LevelID;
 	public $BlockCode;
@@ -28,8 +29,6 @@ class ACC_blocks extends PdoDataAccess{
     {
 		if($this->BlockID == "")
 			unset($this->BlockID);
-		
-		$this->BranchID = $_SESSION["accounting"]["BranchID"];
 		
 	    if( parent::insert("ACC_blocks", $this) === false )
 		    return false;

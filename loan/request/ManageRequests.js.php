@@ -50,6 +50,14 @@ ManageRequest.prototype.OperationMenu = function(e){
 	op_menu.add({text: 'جزئیات درخواست',iconCls: 'info2', 
 		handler : function(){ return ManageRequestObject.LoanInfo(); }});
 	
+	if(record.data.StatusID == "1" && record.data.ReqPersonRole == "Staff")
+	{
+		op_menu.add({text: 'تایید درخواست',iconCls: 'tick', 
+		handler : function(){ return ManageRequestObject.beforeChangeStatus(30); }});
+		
+		op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
+		handler : function(){ return ManageRequestObject.deleteRequest(30); }});
+	}
 	if(record.data.StatusID == "10")
 	{
 		op_menu.add({text: 'تایید درخواست',iconCls: 'tick', 
@@ -282,5 +290,39 @@ ManageRequest.prototype.ShowHistory = function(){
 		}
 	});
 }
+
+ManageRequest.prototype.deleteRequest = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به حذف درخواست می باشید؟",function(btn){
+		if(btn == "no")
+			return;
+		
+		me = ManageRequestObject;
+		record = me.grid.getSelectionModel().getLastSelected();
+		
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخيره سازي...'});
+		mask.show();  
+
+		Ext.Ajax.request({
+			methos : "post",
+			url : me.address_prefix + "request.data.php",
+			params : {
+				task : "DeleteRequest",
+				RequestID : record.data.RequestID
+			},
+
+			success : function(){
+				mask.hide();
+				ManageRequestObject.grid.getStore().load();
+				if(ManageRequestObject.commentWin)
+					ManageRequestObject.commentWin.hide();
+				ManageRequestObject.LoanInfoPanel.hide();
+			}
+		});
+	});
+	
+	
+}
+
 
 </script>

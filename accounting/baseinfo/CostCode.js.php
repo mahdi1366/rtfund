@@ -39,7 +39,7 @@ function CostCode(){
 					valueField : 'BlockID',
 					displayField : 'BlockDesc',
 					tpl: new Ext.XTemplate(
-					'<table cellspacing="0" width="100%"><tr class="x-grid3-header">',
+					'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct">',
 					'<td height="23px">کد</td>',
 					'<td>عنوان</td></tr>',
 					'<tpl for=".">',
@@ -58,7 +58,7 @@ function CostCode(){
 					xtype : "button",
 					iconCls : "add",
 					itemId : "btn_level_" + (i+1),
-					hidden : i>1 ? false : true,
+					hidden : i>0 ? false : true,
 					handler : function(){CostCodeObj.AddNewBlock(this);}
 				}]
 		});

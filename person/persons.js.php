@@ -63,12 +63,10 @@ function Person()
 		activeTab: 0,
 		disabled : true,
 		plain:true,
-		autoHeight : true,
 		width: 750,
-		height : 300,
+		height : 450,
 		defaults:{
-			autoHeight: true, 
-			autoWidth : true            
+ 			autoWidth : true            
 		},
 		items:[{
 			title : "اطلاعات شخصی",
@@ -80,6 +78,18 @@ function Person()
 			loader : {
 				url : this.address_prefix + "../dms/documents.php",
 				scripts : true
+			},
+			listeners :{
+				activate : function(){
+					this.loader.load({
+						scripts : true,
+						params : {
+							ExtTabID : this.id,
+							ObjectType : "person",
+							PersonID : PersonObject.PersonStore.getAt(0).data.PersonID
+						}
+					});
+				}
 			}
 		}]
 	});	
@@ -163,10 +173,12 @@ Person.prototype.Adding = function()
 Person.prototype.Deleting = function()
 {
 	var record = this.grid.getSelectionModel().getLastSelected();
-	if(record && confirm("آيا مايل به حذف مي باشيد؟"))
-	{
+	Ext.MessageBox.confirm("","آيا مايل به حذف مي باشيد؟", function(btn){
+		if(btn == "no")
+			return;
+		
 		Ext.Ajax.request({
-		  	url : this.address_prefix + "framework.data.php",
+		  	url : this.address_prefix + "persons.data.php",
 		  	method : "POST",
 		  	params : {
 		  		task : "DeletePerson",
@@ -177,7 +189,7 @@ Person.prototype.Deleting = function()
 		  		PersonObject.grid.getStore().load();
 		  	}
 		});
-	}
+	});
 }
 
 Person.prototype.saveData = function(store,record)
@@ -243,18 +255,24 @@ Person.prototype.ResetPass = function()
 
 Person.prototype.ShowInfo = function(){
 	
-		var record = this.grid.getSelectionModel().getLastSelected();
+	var record = this.grid.getSelectionModel().getLastSelected();
 
-		this.tabPanel.setDisabled(false);
-		this.PersonStore.proxy.extraParams = {PersonID : record.data.PersonID};
-		this.PersonStore.load();		
-		
-		
+	this.tabPanel.setDisabled(false);
+	this.PersonStore.proxy.extraParams = {PersonID : record.data.PersonID};
+	this.PersonStore.load();		
+
+	if(this.tabPanel.activeTab.itemId == "documents")
+	{
 		this.tabPanel.getComponent("documents").loader.load({
 			params : {
+				ExtTabID : this.tabPanel.getComponent("documents").id,
+				ObjectType : "person",
 				ObjectID : record.data.PersonID
 			}
 		});
+	}
+
+	
 }
 
 </script>

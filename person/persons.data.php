@@ -39,6 +39,8 @@ function selectPersons(){
 			case "IsAgent":		$where .= " AND IsAgent='YES'";break;
 			case "IsCustomer":	$where .= " AND IsCustomer='YES'";break;
 			case "IsStaff":		$where .= " AND IsStaff='YES'";break;
+			case "IsSupporter":	$where .= " AND IsSupporter='YES'";break;
+		
 		}
 	}
 	
