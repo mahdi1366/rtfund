@@ -62,42 +62,6 @@ MyForm.prototype.OperationMenu = function(e){
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
-MyForm.prototype.beforeChangeStatus = function(mode){
-	
-	if(!this.commentWin)
-	{
-		this.commentWin = new Ext.window.Window({
-			width : 412,
-			height : 198,
-			modal : true,
-			title : "توضیحات",
-			bodyStyle : "background-color:white",
-			items : [{
-				xtype : "textarea",
-				width : 400,
-				rows : 8,
-				name : "ActionComment"
-			}],
-			closeAction : "hide",
-			buttons : [{
-				text : "اعمال",				
-				iconCls : "save",
-				itemId : "btn_save"
-			},{
-				text : "بازگشت",
-				iconCls : "undo",
-				handler : function(){this.up('window').hide();}
-			}]
-		});
-		
-		Ext.getCmp(this.TabID).add(this.commentWin);
-	}
-	this.commentWin.down("[itemId=btn_save]").setHandler(function(){
-		MyFormObject.ChangeStatus(mode, this.up('window').down("[name=ActionComment]").getValue());});
-	this.commentWin.show();
-	this.commentWin.center();
-}
-
 MyForm.prototype.ChangeStatus = function(mode, ActionComment){
 	
 	record = this.grid.getSelectionModel().getLastSelected();
