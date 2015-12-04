@@ -5,7 +5,7 @@
 //-------------------------
 include('../header.inc.php');
 require_once 'framework.class.php';
-require_once '../../person/persons.class.php';
+require_once '../person/persons.class.php';
 include_once inc_dataReader;
 require_once inc_response;
 

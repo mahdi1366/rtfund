@@ -28,6 +28,12 @@ switch ($task) {
 		
 	case "selectDocTypes":
 		selectDocTypes();
+		
+	case "selectAllParams":
+		selectAllParams();
+		
+	case "selectParamValues":
+		selectParamValues();
 }
 
 function SelectAll(){
@@ -47,7 +53,23 @@ function SelectAll(){
 	}
 	
 	$temp = DMS_documents::SelectAll($where, $param);
-	print_r(ExceptionHandler::PopAllExceptions());
+	for($i=0; $i<count($temp); $i++)
+	{
+		$temp[$i]["paramValues"] = "";
+		
+		$dt = PdoDataAccess::runquery("select * from DMS_DocParamValues join DMS_DocParams using(ParamID)
+			where DocumentID=?", array($temp[$i]["DocumentID"]));
+		foreach($dt as $row)
+		{
+			$value = $row["ParamValue"];
+			if($row["ParamType"] == "currencyfield")
+				$value = number_format($value);
+			$temp[$i]["paramValues"] .= $row["ParamDesc"] . " : " . $value . "<br>";
+		}
+		if($temp[$i]["paramValues"] != "")
+			$temp[$i]["paramValues"] = substr($temp[$i]["paramValues"], 0 , strlen($temp[$i]["paramValues"])-4);
+	}
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -67,7 +89,7 @@ function SaveDocument() {
 	//..............................................
 	
 	$obj = new DMS_documents();
-	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	$obj->ObjectID = $_POST["ObjectID"];
 	$obj->ObjectType = $_POST["ObjectType"];
 
@@ -90,6 +112,19 @@ function SaveDocument() {
 		echo Response::createObjectiveResponse($result, "");
 		die();
 	}
+	
+	//-------------- params ------------------
+	PdoDataAccess::runquery("delete from DMS_DocParamValues where DocumentID=?", array($obj->DocumentID));
+	$arr = array_keys($_POST);
+	foreach($arr as $key)
+	{
+		if(strpos($key, "Param") !== false)
+		{
+			PdoDataAccess::runquery("insert into DMS_DocParamValues values(?,?,?)",
+				array($obj->DocumentID, substr($key,5), $_POST[$key] ));
+		}
+	}
+	//----------------------------------------
 	
 	if(!empty($_FILES["FileType"]["tmp_name"]))
 	{
@@ -158,4 +193,18 @@ function selectDocTypes(){
 	die();
 }
 
+function selectAllParams(){
+	
+	$dt = PdoDataAccess::runquery("select * from DMS_DocParams");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function selectParamValues(){
+	
+	$dt = PdoDataAccess::runquery("select * from DMS_DocParamValues where DocumentID=?", 
+			array($_GET["DocumentID"]));
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
 ?>

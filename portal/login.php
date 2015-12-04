@@ -16,7 +16,7 @@ $return = "";
 //------------- register ------------------
 if(isset($_POST["email"]))
 {
-	require_once getenv("DOCUMENT_ROOT") . '/person/persons.class.php';
+	require_once getenv("DOCUMENT_ROOT") . '/framework/person/persons.class.php';
 	
 	$user = $_POST["UserName"];
 	$pass = $_POST["md5Pass"];
@@ -76,6 +76,15 @@ else if(isset($_POST["UserName"]))
 		}
 		else
 		{
+			if($temp[0]["IsActive"] == "NO")
+			{
+				echo '<meta http-equiv="content-type" content="text/html; charset=utf-8" />';
+				echo "<body dir=rtl><center><br><br><br><font style='font-family:b titr;'>";
+				echo "یوزر شما غیر فعال شده است. لطفا جهت پیگیری با صندوق تماس حاصل فرمایید.";
+				echo "</font></center></body>";
+				die();
+			}
+			
 			$_SESSION['USER'] = $temp[0];
 			$_SESSION['USER']["framework"] = false;
 			$_SESSION['USER']["portal"] = true;

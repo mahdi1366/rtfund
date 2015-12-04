@@ -40,34 +40,24 @@ $dg->addColumn("", "IsConfirm", "", true);
 $dg->addColumn("", "RegPersonID", "", true);
 $dg->addColumn("", "param1Title", "", true);
 $dg->addColumn("", "DocTypeDesc", "", true);
-	
-$col = $dg->addColumn("گروه مدرک", "param1", "");
-if($access)
-	$col->editor = "this.DocTypeGroupCombo";
-$col->renderer = "function(v,p,r){return r.data.param1Title;}";
+$dg->addColumn("", "param1", "", true);
+$dg->addColumn("", "DocType", "", true);
+
+$col = $dg->addColumn("گروه مدرک", "param1Title", "");
+$col->width = 100;
+
+$col = $dg->addColumn("مدرک", "DocTypeDesc", "");
 $col->width = 120;
 
-$col = $dg->addColumn("مدرک", "DocType", "");
-$col->renderer = "function(v,p,r){return r.data.DocTypeDesc;}";
-if($access)
-	$col->editor = "this.DocTypeCombo";
-$col->width = 140;
-
-$col = $dg->addColumn("سریال سند", "DocSerial", "");
-if($access)
-	$col->editor = ColumnEditor::TextField(true);
-$col->width = 80;
+$col = $dg->addColumn("اطلاعات مدرک", "paramValues", "");
+$col->width = 150;
 
 $col = $dg->addColumn("عنوان مدرک ارسالی", "DocDesc", "");
-if($access)
-	$col->editor = ColumnEditor::TextField(true);
 
 $col = $dg->addColumn("فایل", "FileType", "");
 $col->renderer = "function(v,p,r){return ManageDocument.FileRender(v,p,r)}";
-if($access)
-	$col->editor = "this.FileCmp";
 $col->align = "center";
-$col->width = 100;
+$col->width = 30;
 
 $col = $dg->addColumn("توضیحات کارشناس", "RejectDesc", "");
 $col->renderer = "function(v,p,r){return ManageDocument.commentRender(v,p,r)}";
@@ -76,9 +66,9 @@ $col->width = 60;
 
 if($access)
 {
-	$col = $dg->addColumn("حذف", "", "");
+	$col = $dg->addColumn("عملیات", "", "");
 	$col->renderer = "function(v,p,r){return ManageDocument.OperationRender(v,p,r)}";
-	$col->width = 40;
+	$col->width = 60;
 
 	$dg->addButton("", "اضافه مدرک", "add", "function(){ManageDocumentObject.AddDocument();}");
 	
@@ -116,60 +106,182 @@ ManageDocument.prototype = {
 
 function ManageDocument(){
 	
-	this.FileCmp = new Ext.form.File({
-		name : "FileType"
+	this.ParamsStore = new Ext.data.Store({
+		fields:["DocType","ParamID","ParamDesc","ParamType"],
+		proxy: {
+			type: 'jsonp',
+			url: this.address_prefix + 'dms.data.php?task=selectAllParams',
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		},
+		autoLoad : true
 	});
-
-	this.DocTypeGroupCombo = new Ext.form.ComboBox({
-		store: new Ext.data.Store({
-			fields:["InfoID","InfoDesc"],
-			proxy: {
-				type: 'jsonp',
-				url: this.address_prefix + 'dms.data.php?task=selectDocTypeGroups',
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			},
-			autoLoad : true
-		}),
-		typeAhead: false,
-		queryMode : "local",
-		valueField : "InfoID",
-		displayField : "InfoDesc",
-		listeners : {
-			select : function(combo,records){
-				ManageDocumentObject.DocTypeCombo.setValue();
-				ManageDocumentObject.DocTypeCombo.getStore().proxy.extraParams["GroupID"] = this.getValue();
-				ManageDocumentObject.DocTypeCombo.getStore().load();
-			}
+	
+	this.paramValuesStore = new Ext.data.Store({
+		fields:["ParamID","ParamValue"],
+		proxy: {
+			type: 'jsonp',
+			url: this.address_prefix + 'dms.data.php?task=selectParamValues',
+			reader: {root: 'rows',totalProperty: 'totalCount'}
 		}
 	});
 	
-	this.DocTypeCombo = new Ext.form.ComboBox({
-		store: new Ext.data.Store({
-			fields:["InfoID","InfoDesc"],
-			proxy: {
-				type: 'jsonp',
-				url: this.address_prefix + 'dms.data.php?task=selectDocTypes',
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			},
+	this.formPanel = new Ext.form.Panel({
+		renderTo: this.get("MainForm"),      
+		width : 650,
+		style : "margin-top:10px",
+		bodyPadding: ' 10 10 12 10',
+		frame: true,
+		layout :{
+			type : "table",
+			columns :2
+		},
+		title: 'اطلاعات مدرک',
+		hidden : true,
+		items : [{
+			xtype : "combo",
+			fieldLabel : "گروه مدرک",
+			allowBlank : false,
+			name : "param1",
+			itemId : "DocTypeGroupCombo",
+			store: new Ext.data.Store({
+				fields:["InfoID","InfoDesc"],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + 'dms.data.php?task=selectDocTypeGroups',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				autoLoad : true
+			}),
+			typeAhead: false,
+			queryMode : "local",
+			valueField : "InfoID",
+			displayField : "InfoDesc",
 			listeners : {
-				beforeload : function(store){
-					if(!store.proxy.extraParams.GroupID)
-					{
-						group = ManageDocumentObject.DocTypeGroupCombo.getValue();
-						if(group == "")
-							return false;
-						this.proxy.extraParams["GroupID"] = group;
-					}
+				change : function(combo,records){
+					me = ManageDocumentObject;
+					me.formPanel.getComponent("DocTypeCombo").setValue();
+					me.formPanel.getComponent("DocTypeCombo").getStore().proxy.extraParams["GroupID"] = 
+						this.getValue();
+					me.formPanel.getComponent("DocTypeCombo").getStore().load();
 				}
 			}
-		}),
-		typeAhead: false,
-		pageSize : 10,
-		valueField : "InfoID",
-		displayField : "InfoDesc"
+		},{
+			xtype : "combo",
+			fieldLabel : "مدرک",
+			allowBlank : false,
+			itemId : "DocTypeCombo",
+			name : "DocType",
+			store: new Ext.data.Store({
+				fields:["InfoID","InfoDesc"],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + 'dms.data.php?task=selectDocTypes',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				listeners : {
+					beforeload : function(store){
+						if(!store.proxy.extraParams.GroupID)
+						{
+							me = ManageDocumentObject;							
+							group = me.formPanel.getComponent("DocTypeGroupCombo").getValue();
+							if(group == "")
+								return false;
+							this.proxy.extraParams["GroupID"] = group;
+						}
+					}				
+				}
+			}),
+			listeners : {
+				change : function(combo,value){
+					//-------------- make params -----------------	
+					DocType = value;
+
+					me = ManageDocumentObject;
+					ParamsFS = me.formPanel.getComponent("ParamsFS");
+					ParamsFS.removeAll();
+					
+					me.ParamsStore.each(function(record){
+						if(DocType == record.data.DocType)
+						{
+							ParamsFS.add({
+								xtype : record.data.ParamType,
+								name : "Param" + record.data.ParamID,
+								fieldLabel : record.data.ParamDesc,
+								hideTrigger : (record.data.ParamType == "numberfield" || 
+									record.data.ParamType == "currencyfield" ? true : false)
+							});
+						}
+					});
+					
+					if(ParamsFS.items.length > 0)
+						ParamsFS.setTitle("اطلاعات " + combo.getRawValue());
+					
+					//------------- fill params -------------------
+					DocumentID = me.formPanel.down("[name=DocumentID]").getValue();
+					if(DocumentID > 0)
+					{
+						me.paramValuesStore.load({
+							params : {
+								DocumentID : DocumentID
+							},
+							callback : function(){
+								store = ManageDocumentObject.paramValuesStore;
+								store.each(function(record){
+									me.formPanel.down("[name=Param" + 
+										record.data.ParamID + "]").setValue(record.data.ParamValue);
+								});
+							}
+						});
+					}					
+				}
+			},
+			typeAhead: false,
+			valueField : "InfoID",
+			displayField : "InfoDesc"
+		},{
+			xtype : "textfield",
+			allowBlank : false,
+			fieldLabel : "شرح مدرک",
+			name : "DocDesc"
+		},{
+			xtype : "filefield",
+			fieldLabel : "فایل مدرک",
+			name : "FileType"
+		},{
+			xtype : "fieldset",
+			colspan : 2,
+			itemId : "ParamsFS",
+			layout : "column",
+			columns : 2
+		},{
+			xtype : "hidden",
+			name : "DocumentID"
+		}],
+		buttons : [{
+			text : "ذخیره",
+			iconCls : "save",
+			handler : function(){ ManageDocumentObject.SaveDocument(); }
+		},{
+			text : "انصراف",
+			iconCls : "undo",
+			handler : function(){
+				ManageDocumentObject.formPanel.hide();
+				ManageDocumentObject.grid.show();
+			}
+		}]
 	});
 
 	this.grid = <?= $grid ?>;
+	this.grid.addDocked({
+		xtype: 'toolbar',
+		dock: 'bottom',
+		items: [{ 
+			xtype: 'container', 
+			width : 680,
+			html : "ردیف های سبز رنگ ردیف های تایید شده و برابر اصل شده توسط صندوق بوده و قابل تغییر نمی باشند"+
+				"<br>ردیف های قرمز ردیف های رد شده توسط صندوق می باشند"
+		}
+    ]});
 	this.grid.getView().getRowClass = function(record, index)
 	{
 		if(record.data.IsConfirm == "YES")
@@ -185,6 +297,7 @@ function ManageDocument(){
 			if(e.record.data.DocumentID > 0 &&
 				e.record.data.RegPersonID != "<?= $_SESSION["USER"]["PersonID"] ?>")
 				return false;	
+				
 			return true;
 		});
 		
@@ -214,10 +327,15 @@ ManageDocument.OperationRender = function(v,p,r){
 	if(r.data.IsConfirm == "YES" || r.data.RegPersonID != "<?= $_SESSION["USER"]["PersonID"] ?>")
 		return "";
 	
-	return  "<div align='center' title='حذف' class='remove' "+
+	return "<div align='center' title='ویرایش' class='edit' "+
+		"onclick='ManageDocumentObject.EditDocument();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:20px;height:16;float:right'></div>" +
+	
+	"<div align='center' title='حذف' class='remove' "+
 		"onclick='ManageDocumentObject.DeleteDocument();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16;float:right'></div>";		
+		"cursor:pointer;width:20px;height:16;float:right'></div>" ;		
 }
 
 ManageDocument.commentRender = function(v,p,r){
@@ -258,52 +376,56 @@ ManageDocument.prototype.ShowComment = function(){
 
 ManageDocument.prototype.AddDocument = function(){
 	
-	var modelClass = this.grid.getStore().model;
-	var record = new modelClass({
-		DocumentID: null,
-		DocDesc: null
-	});
+	this.formPanel.show();
+	this.formPanel.getComponent("ParamsFS").removeAll();
+	this.grid.hide();
+}
 
-	this.grid.plugins[0].cancelEdit();
-	this.grid.getStore().insert(0, record);
-	this.grid.plugins[0].startEdit(0, 0);
+ManageDocument.prototype.EditDocument = function(){
+	
+	this.formPanel.show();
+	this.grid.hide();
+	this.formPanel.getComponent("ParamsFS").removeAll();
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.formPanel.getForm().reset();
+	this.formPanel.down("[name=DocumentID]").setValue(record.data.DocumentID);
+	this.formPanel.loadRecord(record);	
 }
 
 ManageDocument.prototype.SaveDocument = function(){
 	
-	var record = this.grid.getSelectionModel().getLastSelected();
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg:'در حال ذخیره سازی ...'});
 	mask.show();
 
-	Ext.Ajax.request({
+	this.formPanel.getForm().submit({
+		clientValidation: true,
 		url: this.address_prefix +'dms.data.php',
 		method: "POST",
 		isUpload : true,
-		form : this.get("MainForm"),
 		params: {
 			task: "SaveDocument",
-			record: Ext.encode(record.data),
 			ObjectID : '<?= $ObjectID ?>',
 			ObjectType : '<?= $ObjectType ?>'
 		},
-		success: function(response){
+		success: function(form,action){
 			mask.hide();
-			var st = Ext.decode(response.responseText);
 
-			if(st.success)
+			if(action.result.success)
 			{   
 				ManageDocumentObject.grid.getStore().load();
-				ManageDocumentObject.FileCmp.reset();
+				ManageDocumentObject.formPanel.hide();
+				ManageDocumentObject.grid.show();
 			}
 			else
 			{
-				if(st.data == "")
+				if(action.result.data == "")
 					alert("خطا در اجرای عملیات");
 				else
-					alert(st.data);
+					alert(action.result.data);
 			}
 		},
-		failure: function(){}
+		failure: function(){mask.hide();}
 	});
 }
 
@@ -438,22 +560,10 @@ ManageDocument.prototype.ConfirmDocument = function(mode){
 
 <?}?>
 </script>
-<form id="MainForm" enctype="multipart/form-data">
-	<table width=100%>
-		<tr>
-			<td class="blueText" style="line-height: 21px">
-	ردیف های سبز رنگ ردیف های تایید شده و برابر اصل شده توسط صندوق بوده و قابل تغییر نمی باشند
-	<br>
-	ردیف های قرمز ردیف های رد شده توسط صندوق می باشند
-	</div></td>
-			<td width="55px" align='left' style='cursor:pointer' data-qtip='برای ویرایش ردیف روی ردیف دبل کلیک کنید'>
-				راهنما<div align='center' class='help' style='background-repeat:no-repeat;
-					 background-position:center;width:24px;height:16;float:right'></div>
-			</td>
-		</tr>
-	</table>
-	
-	<div>
-		<div id="div_grid"><div>
-	</div>
-</form>
+<br>
+<center>
+	<div id="MainForm"></div>
+</center>
+<div>
+	<div id="div_grid"><div>
+</div>

@@ -30,7 +30,7 @@ class LON_requests extends PdoDataAccess
 	
 	static function SelectAll($where = "", $param = array()){
 		
-		return PdoDataAccess::runquery("
+		return PdoDataAccess::runquery_fetchMode("
 			select r.*,l.*,
 				if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) ReqFullname,
 				if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) LoanFullname,
@@ -125,7 +125,7 @@ class LON_ReqParts extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select rp.*,r.StatusID
+			select rp.*,r.StatusID, r.imp_VamCode
 			from LON_ReqParts rp join LON_requests r using(RequestID)
 			where " . $where, $param);
 	}
@@ -183,10 +183,10 @@ class LON_installments extends PdoDataAccess
 	public $PaidAmount;
 	public $PaidRefNo;
 	
-	public $StatusID;
+	public $IsPaid;
+	public $PaidType;
 	
 	public $ChequeNo;
-	public $ChequeDate;
 	public $ChequeBank;
 	public $ChequeBranch;
 			
@@ -194,7 +194,6 @@ class LON_installments extends PdoDataAccess
 		
 		$this->DT_InstallmentDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_PaidDate = DataMember::CreateDMA(DataMember::DT_DATE);
-		$this->DT_ChequeDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($InstallmentID != "")
 			PdoDataAccess::FillObject ($this, "select * from LON_installments where InstallmentID=?", array($InstallmentID));
@@ -203,8 +202,9 @@ class LON_installments extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select p.*,rp.*,b.BankDesc
+			select p.*,rp.*,b.BankDesc, bi.InfoDesc PaidTypeDesc
 			from LON_installments p
+			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PaidType)
 			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
 			where " . $where, $param);

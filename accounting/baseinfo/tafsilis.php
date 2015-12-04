@@ -44,7 +44,6 @@ $dg->rowEditOkHandler = "function(){return TafsiliObject.SaveTafsili();}";
 $dg->title = "لیست تفصیلی ها";
 $dg->height = 500;
 $dg->width = 750;
-$dg->EnablePaging = false;
 $dg->DefaultSortField = "TafsiliDesc";
 $dg->autoExpandColumn = "TafsiliDesc";
 $dg->emptyTextOfHiddenColumns = true;

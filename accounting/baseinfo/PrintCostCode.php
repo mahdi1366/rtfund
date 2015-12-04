@@ -11,7 +11,7 @@ require_once inc_reportGenerator;
 Manage_Report::BeginReport();
 
 echo "<br><br>";
-$dataTable = ACC_CostCodes::SelectCost("cc.BranchID=" . $_SESSION["accounting"]["BranchID"]);
+$dataTable = ACC_CostCodes::SelectCost(" 1=1 order by Costcode");
 
 $rpg = new ReportGenerator();
 

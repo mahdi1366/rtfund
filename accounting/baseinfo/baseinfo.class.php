@@ -116,8 +116,8 @@ class ACC_CostCodes extends PdoDataAccess {
 			left join ACC_blocks b2 on(b2.levelID=2 AND b2.blockID=c.level2)
 			left join ACC_blocks b3 on(b3.levelID=3 AND b3.blockID=c.level3)
 			set c.CostCode=concat(ifnull(b1.blockCode,''),
-								ifnull(b2.blockCode,''),
-								ifnull(b3.blockCode,'') )
+								ifnull(concat('-',b2.BlockCode),''),
+								ifnull(concat('-',b3.BlockCode),'') )
 			where CostID=?";
         $res = parent::runquery($query, array($this->CostID), $db);
         if ($res === false) {

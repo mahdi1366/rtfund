@@ -72,21 +72,37 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 				me = RequestInfoObject;
 
 				//..........................................................
-
-				me.companyPanel.loadRecord(this.getAt(0));
-				if(this.getAt(0).data.AgentGuarantee == "YES")
+				record = this.getAt(0);
+				me.companyPanel.loadRecord(record);
+				
+				R1 = me.companyPanel.down("[name=LoanPersonID]").getStore().load({
+					params : {
+						PersonID : record.data.LoanPersonID
+					},
+					callback : function(){
+						me.companyPanel.down("[name=LoanPersonID]").setValue(this.getAt(0).data.PersonID);
+					}
+				});
+				
+				if(record.data.AgentGuarantee == "YES")
 					me.companyPanel.down("[name=AgentGuarantee]").setValue(true);
-				if(this.getAt(0).data.guarantees != null)
+				if(record.data.guarantees != null)
 				{
-					arr = this.getAt(0).data.guarantees.split(",");
+					arr = record.data.guarantees.split(",");
 					for(i=0; i<arr.length; i++)
 						if(arr[i] != "")
 							me.companyPanel.down("[name=guarantee_" + arr[i] + "]").setValue(true);
 				}
 				//..........................................................
-
-				me.CustomizeForm(this.getAt(0));
-				me.mask.hide();
+				
+				var t = setInterval(function(){
+					if(!R1.isLoading())
+					{
+						clearInterval(t);
+						me.CustomizeForm(record);
+						me.mask.hide();
+					}
+				}, 1000);
 			}
 		}
 	});
@@ -108,10 +124,24 @@ RequestInfo.prototype.OperationMenu = function(e){
 
 	if(this.User == "Staff")
 	{
+		if(record.data.imp_VamCode*1 > 0)
+		{
+			op_menu.add({text: 'اقساط',iconCls: 'list',
+			handler : function(){ return RequestInfoObject.LoadInstallments(); }});
+		
+			op_menu.showAt(e.pageX-120, e.pageY);
+			return;
+		}
 		if(record.data.IsStarted == "NO" && record.data.StatusID == "70")
 		{
 			op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
 			handler : function(){ return RequestInfoObject.StartFlow(); }});
+		
+			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
+				handler : function(){ return RequestInfoObject.PartInfo("edit"); }});
+			
+			op_menu.add({text: 'حذف',iconCls: 'remove', 
+				handler : function(){ return RequestInfoObject.DeletePart(); }});
 		}	
 		if(record.data.IsEnded == "YES")
 		{
@@ -121,12 +151,19 @@ RequestInfo.prototype.OperationMenu = function(e){
 			if(record.data.IsPayed == "NO")
 				op_menu.add({text: 'پرداخت',iconCls: 'epay',
 				handler : function(){ return RequestInfoObject.PayPart(); }});
+			else if(record.data.DocStatus == "RAW")
+				op_menu.add({text: 'برگشت پرداخت',iconCls: 'undo',
+				handler : function(){ return RequestInfoObject.ReturnPayPart(); }});
+			else if(record.data.IsPartEnded == "NO")
+				op_menu.add({text: 'اتمام مرحله و ایجاد مرحله جدید',iconCls: "app",
+				handler : function(){ return RequestInfoObject.EndPart(); }});
+				
 		}
 		
 	}	
 	if(record.data.IsPayed == "NO" && record.data.IsStarted == "NO")
 	{
-		if((this.User == "Agent" && record.data.StatusID== "1") || 
+		if((this.User == "Agent" && record.data.StatusID == "1") || 
 			(this.User == "Staff" && record.data.StatusID != "70" && ReqRecord.data.ReqPersonRole != "Agent"))
 		{
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
@@ -173,7 +210,7 @@ RequestInfo.prototype.BuildForms = function(){
 				store : new Ext.data.SimpleStore({
 					proxy: {
 						type: 'jsonp',
-						url: this.address_prefix + '../../person/persons.data.php?' +
+						url: this.address_prefix + '../../framework/person/persons.data.php?' +
 							"task=selectPersons&UserType=IsSupporter",
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
@@ -190,12 +227,11 @@ RequestInfo.prototype.BuildForms = function(){
 				store : new Ext.data.SimpleStore({
 					proxy: {
 						type: 'jsonp',
-						url: this.address_prefix + '../../person/persons.data.php?' +
+						url: this.address_prefix + '../../framework/person/persons.data.php?' +
 							"task=selectPersons&UserType=IsCustomer",
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
-					fields : ['PersonID','fullname'],
-					autoLoad : true					
+					fields : ['PersonID','fullname']
 				}),
 				fieldLabel : "مشتری",
 				displayField : "fullname",
@@ -220,7 +256,7 @@ RequestInfo.prototype.BuildForms = function(){
 				store : new Ext.data.SimpleStore({
 					proxy: {
 						type: 'jsonp',
-						url: this.address_prefix + '../../framework/baseinfo/baseinfo.data.php?' +
+						url: this.address_prefix + '../../framework/baseInfo/baseInfo.data.php?' +
 							"task=SelectBranches",
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
@@ -234,18 +270,16 @@ RequestInfo.prototype.BuildForms = function(){
 				valueField : "BranchID",
 				name : "BranchID"
 			},{
-				xtype : "container",
+				xtype : "fieldset",
+				title : "تضمین",
 				colspan : 2,
-				style : "margin-right:5px",
-				layout : "hbox",
+				layout : {
+					type : "table",
+					columns : 6
+				},
 				itemId : "cmp_guarantees",
 				width : 700,
-				height : 23,
-				items : [{
-					xtype : "displayfield",
-					value: "تضمین :",
-					width : 110
-				}],
+				height : 80,
 				listeners :{
 					afterrender : function(){
 						RequestInfo.buildRender = new Ext.data.SimpleStore({
@@ -332,7 +366,7 @@ RequestInfo.prototype.BuildForms = function(){
 				defaults : {
 					xtype : "displayfield",
 					hideTrigger : true,
-					width : 180,
+					width : 170,
 					labelWidth : 80,
 					style : "margin-bottom:5px",
 					fieldCls : "blueText"
@@ -340,6 +374,7 @@ RequestInfo.prototype.BuildForms = function(){
 				items : [{
 					fieldLabel: 'مبلغ پرداخت',
 					name: 'PartAmount',
+					width : 200,
 					renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
 				},{
 					fieldLabel: 'تاریخ پرداخت',
@@ -724,6 +759,10 @@ RequestInfo.prototype.DeletePart = function(){
 RequestInfo.prototype.LoadSummary = function(record){
 
 	function PMT(F8, F9, F7, YearMonths) {  
+		
+		if(F8 == 0)
+			return F7/F9;
+				
 		F8 = F8/(YearMonths*100);
 		F7 = -F7;
 		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
@@ -772,13 +811,20 @@ RequestInfo.prototype.LoadSummary = function(record){
 	if(record.data.IntervalType == "DAY")
 		YearMonths = Math.floor(365/record.data.PayInterval);
 
-	FirstPay = roundUp(PMT(record.data.CustomerWage,record.data.InstallmentCount, record.data.PartAmount, YearMonths),-3);
-	TotalWage = Math.round(ComputeWage(record.data.PartAmount, record.data.CustomerWage/100, record.data.InstallmentCount, YearMonths));
+	FirstPay = roundUp(PMT(record.data.CustomerWage,record.data.InstallmentCount, 
+		record.data.PartAmount, YearMonths),-3);
+	TotalWage = Math.round(ComputeWage(record.data.PartAmount, record.data.CustomerWage/100, 
+		record.data.InstallmentCount, YearMonths));
+	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
 	FundWage = Math.round((record.data.FundWage/record.data.CustomerWage)*TotalWage);
+	FundWage = !isInt(FundWage) ? 0 : FundWage;
 	AgentWage = TotalWage - FundWage;
 	
 	TotalDelay = Math.round(record.data.PartAmount*record.data.CustomerWage*record.data.DelayMonths/1200);
 	LastPay = record.data.PartAmount*1 + TotalWage - FirstPay*(record.data.InstallmentCount-1);
+	
+	if(record.data.InstallmentCount == 1)
+		LastPay = 0;
 	
 	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay);
 	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay);
@@ -797,6 +843,20 @@ RequestInfo.prototype.LoadSummary = function(record){
 
 //.........................................................
 
+RequestInfo.InstallmentPaidInfo = function(v,p,r){
+	
+	if(r.data.IsPaid == "NO")
+		return "";
+	
+	return "<table width=100%>"+
+			"<tr><td>نحوه پرداخت : </td><td>" + r.data.PaidTypeDesc + "</td></tr>" +
+			"<tr><td>تاریخ پرداخت: </td><td>" + MiladiToShamsi(r.data.PaidDate.substring(0,10)) + "</td></tr>" + 
+			"<tr><td>مبلغ پرداخت : </td><td>" + Ext.util.Format.Money(r.data.PaidAmount) + "</td></tr>" + 
+			"<tr><td>شماره پیگیری : </td><td>" + (r.data.PaidRefNo == null ? "-" : r.data.PaidRefNo) + "</td></tr>" + 
+			"<tr><td>شماره فیش : </td><td>" + (r.data.PaidBillNo == null ? "-" : r.data.PaidBillNo) + "</td></tr>" + 
+			"</table>";
+}
+
 RequestInfo.prototype.LoadInstallments = function(){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
@@ -809,11 +869,13 @@ RequestInfo.prototype.LoadInstallments = function(){
 	if(!this.InstallmentsWin)
 	{
 		this.InstallmentGrid.plugins[0].on("beforeedit", function(editor,e){
-			if(e.record.data.IsPayed == "YES")
+			//if(e.record.data.IsPayed == "YES")
+			//	return false;
+			if(e.record.data.IsPaid == "YES")
 				return false;
 		});
 		this.InstallmentsWin = new Ext.window.Window({
-			width : 700,
+			width : 750,
 			title : "لیست اقساط",
 			height : 500,
 			modal : true,
@@ -895,6 +957,15 @@ RequestInfo.prototype.SavePartPayment = function(store, record){
 	});
 }
 
+RequestInfo.PayCodeRender = function(v,p,r){
+
+	st = r.data.InstallmentID.toString().lpad("0", 11);
+	num = (st[0]*11) + (st[1]*10) + (st[2]*9) + (st[3]*1) + (st[4]*2) + (st[5]*3)
+		+ (st[6]*4) + (st[7]*5) + (st[8]*6) + (st[9]*7) + (st[10]*8);
+	remain = num % 99;
+	
+	return st + remain.toString().lpad("0", 2);
+}
 //.........................................................
 
 RequestInfo.prototype.PayPart = function(){
@@ -924,6 +995,78 @@ RequestInfo.prototype.PayPart = function(){
 					Ext.MessageBox.alert("", result.data);
 				else
 					Ext.MessageBox.alert("", "سند پرداخت با موفقیت صادر گردید");
+				
+				mask.hide();
+				RequestInfoObject.grid.getStore().load();
+			}
+		});
+	});
+}
+
+RequestInfo.prototype.ReturnPayPart = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به برگشت پرداخت این مرحله از وام می باشید؟",function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		me = RequestInfoObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "ReturnPayPart",
+				PartID : record.data.PartID
+			},
+			success: function(response){
+				
+				result = Ext.decode(response.responseText);
+				if(!result.success)
+					Ext.MessageBox.alert("", result.data);
+				else
+					Ext.MessageBox.alert("", "سند پرداخت با موفقیت برگشت گردید");
+				
+				mask.hide();
+				RequestInfoObject.grid.getStore().load();
+			}
+		});
+	});
+}
+
+RequestInfo.prototype.EndPart = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به اتمام این مرحله از وام می باشید؟" 
+		+ "<br>توجه : تغییرات اعمال شده قابل برگشت نمی باشد." 
+		+ "<br>فقط زمانی این کار را انجام دهید که از انجام آن مطمئن هستید" , function(btn){
+				
+		if(btn == "no")
+			return;
+		
+		me = RequestInfoObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "EndPart",
+				PartID : record.data.PartID
+			},
+			success: function(response){
+				
+				result = Ext.decode(response.responseText);
+				if(!result.success)
+					Ext.MessageBox.alert("error", result.data);
+				else
+					Ext.MessageBox.alert("", "عملیات مورد نظر با موفقیت انجام گردید");
 				
 				mask.hide();
 				RequestInfoObject.grid.getStore().load();

@@ -44,7 +44,8 @@ $col->width = 50;
 $col->align = "center";
 
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 220;
+$dg->height = 235;
+$dg->pageSize = 5;
 $dg->width = 770;
 $dg->title = "درخواست های وام";
 $dg->DefaultSortField = "ReqDate";

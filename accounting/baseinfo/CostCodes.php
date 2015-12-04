@@ -20,13 +20,13 @@ $dg_cost->addcolumn('','level3',GridColumn::ColumnType_int,true);
 
 $col = $dg_cost->addcolumn('کد حساب','CostCode');
 
-$col = $dg_cost->addcolumn("گروه حساب", "LevelTitle1");
+$col = $dg_cost->addcolumn("کل", "LevelTitle1");
 $col->width = 200;
 
-$col = $dg_cost->addcolumn("حساب کل", "LevelTitle2");
+$col = $dg_cost->addcolumn("معین", "LevelTitle2");
 $col->width = 200;
 
-$col = $dg_cost->addcolumn("معین", "LevelTitle3");
+$col = $dg_cost->addcolumn("جزء معین", "LevelTitle3");
 $col->width = 200;
 
 if($accessObj->RemoveFlag)

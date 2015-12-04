@@ -82,11 +82,11 @@ $col->width = 150;
 
 $col = $dg->addColumn("بدهکار", "DebtorAmount", GridColumn::ColumnType_money);
 $col->editor = ColumnEditor::CurrencyField(true, "cmp_DebtorAmount");
-$col->width = 80;
+$col->width = 90;
 
 $col = $dg->addColumn("بستانکار", "CreditorAmount", GridColumn::ColumnType_money);
 $col->editor = ColumnEditor::CurrencyField(true, "cmp_CreditorAmount");
-$col->width = 80;
+$col->width = 90;
 
 $col = $dg->addColumn("جزئیات", "details");
 $col->editor = ColumnEditor::TextField(true, "cmp_details");
@@ -228,28 +228,6 @@ bars[1].hide();
 //...................................................
 AccDocsObject.itemGrid = <?= $itemsgrid ?>;
 AccDocsObject.itemGrid.plugins[0].on("beforeedit", AccDocs.beforeRowEdit);
-AccDocsObject.itemGrid.plugins[0].on("beforeedit", function(editor,e){
-	
-	if(e.record.data.locked == "YES")
-	{
-		items = AccDocsObject.itemGrid.columns;
-		for(i=0; i<items.length; i++)
-			items[i].getEditor().disable();
-			
-		if(e.record.data.TafsiliType != null && e.record.data.TafsiliID == null)
-			AccDocsObject.itemGrid.columns.findObject("dataIndex","TafsiliID").getEditor().enable();
-		if(e.record.data.Tafsili2Type != null && e.record.data.Tafsili2ID == null)
-			AccDocsObject.itemGrid.columns.findObject("dataIndex","Tafsili2ID").getEditor().enable();
-		return true;
-	}
-	
-	for(i=0; i<items.length; i++)
-		items[i].getEditor().disable(false);
-		
-	if(!e.record.data.ItemID)
-		return AccDocsObject.AddAccess;
-	return AccDocsObject.EditAccess;
-});
 AccDocsObject.itemGrid.getView().getRowClass = function(record, index)
 {
 	if(record.data.locked == "YES")

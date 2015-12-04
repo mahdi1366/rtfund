@@ -81,8 +81,9 @@ class BSC_persons extends PdoDataAccess
 	
 	static function DeletePerson($PersonID){
 		
-		if( parent::delete("BSC_persons"," PersonID=?", array($PersonID)) === false )
-	 		return false;
+		PdoDataAccess::runquery("update BSC_persons set IsActive='NO' where PersonID=?", array($PersonID));
+		PdoDataAccess::runquery("update ACC_tafsilis set IsActive='NO' 
+			where TafsiliType=1 AND ObjectID=?", array($PersonID));
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
@@ -94,7 +95,12 @@ class BSC_persons extends PdoDataAccess
 	
 	static public function ResetPass($PersonID) {
 		
-		$result = PdoDataAccess::runquery("update BSC_persons set UserPass=null where PersonID=?", array($PersonID));
+		$hash_cost_log2 = 8;	
+		$hasher = new PasswordHash($hash_cost_log2, true);
+		$newPass = $hasher->HashPassword(md5("123456"));
+		
+		$result = PdoDataAccess::runquery("update BSC_persons set UserPass=? where PersonID=?", 
+			array($newPass, $PersonID));
 		if ($result === false)
 			return false;
 

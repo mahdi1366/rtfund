@@ -107,7 +107,6 @@ switch ($task) {
 		getaccounts();
 		
 	//------------------------------------
-		
 
 }
 
@@ -125,7 +124,7 @@ function SelectBlocks() {
 	
 	if(!isset($_REQUEST['fields']) && !empty($_REQUEST['query']))
 	{
-		$where .= " AND BlockDesc like :qu";
+		$where .= " AND ( BlockDesc like :qu or BlockCode like :qu)";
 		$param[':qu'] = '%' . $_REQUEST['query'] . '%';
 	}
 	
@@ -168,8 +167,8 @@ function SaveBlockData() {
 
 		set cc.CostCode = concat(
 		cb1.BlockCode,
-		ifnull(cb2.BlockCode,''),
-		ifnull(cb3.BlockCode,'') )
+		ifnull(concat('-',cb2.BlockCode),''),
+		ifnull(concat('-',cb3.BlockCode),'') )
 
 		where level" . $block->LevelID . " = " . $block->BlockID);
     }
@@ -327,13 +326,14 @@ function GetAllTafsilis() {
 	$whereParam = array();
 	$whereParam[":g"] = $_GET["TafsiliType"];
 	
-	$field = isset($_GET ["fields"]) ? $_GET ["fields"] : "";
+	$field = isset($_GET ["fields"]) ? $_GET ["fields"] : "TafsiliDesc";
 	if (isset($_GET ["query"]) && $_GET ["query"] != "") {
 		$where .= " AND " . $field . " LIKE :qry ";
 		$whereParam[":qry"] = "%" . $_GET["query"] . "%";
 	}
 
 	$temp = ACC_tafsilis::SelectAll($where, $whereParam);
+	print_r(ExceptionHandler::PopAllExceptions());
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 

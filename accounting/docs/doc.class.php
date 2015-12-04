@@ -236,14 +236,14 @@ class ACC_DocItems extends PdoDataAccess {
 			t.TafsiliDesc,bi.InfoDesc TafsiliGroupDesc,
 			t2.TafsiliDesc as Tafsili2Desc,bi2.InfoDesc Tafsili2GroupDesc
 		from ACC_DocItems si
-			left join acc_CostCodes cc using(CostID)
+			left join ACC_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(cc.level1=b1.blockID)
 			left join ACC_blocks b2 on(cc.level2=b2.blockID)
 			left join ACC_blocks b3 on(cc.level3=b3.blockID)
 			left join BaseInfo bi on(TafsiliType=InfoID AND TypeID=2)
 			left join BaseInfo bi2 on(Tafsili2Type=bi2.InfoID AND bi2.TypeID=2)
-			left join ACC_Tafsilis t on(t.TafsiliID=si.TafsiliID)
-			left join ACC_Tafsilis t2 on(t2.TafsiliID=si.Tafsili2ID)
+			left join ACC_tafsilis t on(t.TafsiliID=si.TafsiliID)
+			left join ACC_tafsilis t2 on(t2.TafsiliID=si.Tafsili2ID)
 			";
 		$query .= ($where != "") ? " where " . $where : "";
 		return parent::runquery_fetchMode($query, $whereParam);

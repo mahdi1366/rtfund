@@ -15,4 +15,6 @@ class sys_config{
 }
 
 define("SoftwareName", "صندوق پژوهش و فناوری خراسان رضوی");
+
+define("Default_Agent_Loan", "9");
 ?>

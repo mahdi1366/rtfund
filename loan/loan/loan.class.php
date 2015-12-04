@@ -17,11 +17,15 @@ class LON_loans extends PdoDataAccess
 	public $ForfeitPercent;
 	public $CustomerWage;
 	public $FundWage;
+	public $BlockID;
+	
+	public $_BlockCode;
 			
 	function __construct($LoanID = "") {
 		
 		if($LoanID != "")
-			PdoDataAccess::FillObject ($this, "select * from LON_loans where LoanID=?", array($LoanID));
+			PdoDataAccess::FillObject ($this, "select l.*,b.BlockCode _BlockCode
+				from LON_loans l join ACC_Blocks b using(BlockID) where LoanID=?", array($LoanID));
 	}
 	
 	static function SelectAll($where = "", $param = array()){

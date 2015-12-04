@@ -13,6 +13,8 @@ require_once 'PDODataAccess.class.php';
 require_once 'classconfig.inc.php';
 require_once 'DataAudit.class.php';
 
+require_once getenv("DOCUMENT_ROOT") . '/framework/management/framework.class.php';
+
 session_start();
 
 if(empty($_SESSION['USER']) ||  empty($_SESSION['USER']["PersonID"])){

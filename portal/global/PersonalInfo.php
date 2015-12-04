@@ -107,7 +107,6 @@ function PersonalInfo()
 			name: 'EconomicID'
 		},{
 			xtype : "textfield",
-			regex: /^\d{11}$/,
 			maskRe: /[\d\-]/,
 			fieldLabel: 'شماره تلفن',
 			name: 'PhoneNo'
@@ -126,7 +125,7 @@ function PersonalInfo()
 		},{
 			xtype : "textarea",
 			fieldLabel: 'آدرس',
-			width : 368,
+			width : 380,
 			name: 'address'
 		}],
 
@@ -232,14 +231,6 @@ function PersonalInfo()
 }
 
 PersonalInfoObject = new PersonalInfo();
-
-PersonalInfo.prototype.PersonalInfo = function()
-{
-	if(this.get("new_pass").value != this.get("new_pass2").value)
-	{
-		return;
-	}
-}
 
 </script>
 <div id="mainForm"><div>

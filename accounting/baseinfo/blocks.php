@@ -18,9 +18,9 @@ $Essence = array(array('val' => 'DEBTOR', 'name' => 'بدهکار'),
     array('val' => 'NONE', 'name' => 'هیچکدام'));
 
 $temp = array(
-	array("LevelID" => 1, "LevelTitle" => "گروه حساب", "HasEssence" => false),
-	array("LevelID" => 2, "LevelTitle" => "حساب کل", "HasEssence" => true),
-	array("LevelID" => 3, "LevelTitle" => "حساب معین", "HasEssence" => false)
+	array("LevelID" => 1, "LevelTitle" => "حساب کل", "HasEssence" => false),
+	array("LevelID" => 2, "LevelTitle" => "حساب معین", "HasEssence" => true),
+	array("LevelID" => 3, "LevelTitle" => "حساب جزء معین", "HasEssence" => false)
 );
 for ($i = 0; $i < count($temp); $i++) {
     $levelID = $temp[$i]['LevelID'];

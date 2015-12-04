@@ -136,7 +136,10 @@ function removeDoc() {
 
 function confirm() {
 
-	PdoDataAccess::runquery("update ACC_docs set DocStatus='CONFIRM' where DocID=" . $_POST["DocID"]);
+	$status = "CONFIRM";
+	if(isset($_POST["undo"]) && $_POST["undo"] == "true")
+		$status = "RAW";
+	PdoDataAccess::runquery("update ACC_docs set DocStatus='$status' where DocID=" . $_POST["DocID"]);
 	echo "true";
 	die();
 }
@@ -244,7 +247,7 @@ function selectDocItems() {
 	if (isset($_GET["fields"]) && !empty($_GET["query"])) {
 		switch ($_GET["fields"]) {
 			case "TafsiliID":
-				$where .= " AND t.tafsiliTitle like :tl";
+				$where .= " AND t.tafsiliDesc like :tl";
 				$whereParam[":tl"] = "%" . $_GET["query"] . "%";
 				break;
 			case "moinID":
@@ -252,7 +255,7 @@ function selectDocItems() {
 				$whereParam[":tl"] = "%" . $_GET["query"] . "%";
 				break;
 			case "tafsili2ID":
-				$where .= " AND 2t.tafsiliTitle like :tl";
+				$where .= " AND t2.tafsiliDesc like :tl";
 				$whereParam[":tl"] = "%" . $_GET["query"] . "%";
 				break;
 			case "kolID":
@@ -271,8 +274,8 @@ function selectDocItems() {
 	}
 	$where .= dataReader::makeOrder();
 
-
 	$temp = ACC_DocItems::GetAll($where, $whereParam);
+	print_r(ExceptionHandler::PopAllExceptions());
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	//..........................................................................
@@ -293,8 +296,15 @@ function saveDocItem() {
 	$obj = new ACC_DocItems();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 
+	if($obj->TafsiliType == "")
+		$obj->TafsiliType = PDONULL;
 	if($obj->TafsiliID == "")
 		$obj->TafsiliID = PDONULL;
+	if($obj->Tafsili2Type == "")
+		$obj->Tafsili2Type = PDONULL;
+	if($obj->Tafsili2ID == "")
+		$obj->Tafsili2ID = PDONULL;
+	
 	if ($obj->ItemID == "0")
 		$return = $obj->Add();
 	else

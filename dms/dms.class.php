@@ -9,7 +9,6 @@ class DMS_documents extends PdoDataAccess
 	public $DocumentID;
 	public $DocDesc;
 	public $DocType;
-	public $DocSerial;
 	public $ObjectType;
 	public $ObjectID;
 	public $FileType;

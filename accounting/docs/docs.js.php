@@ -283,6 +283,9 @@ AccDocs.prototype.operationhMenu = function(e){
 		}
 		if(record != null && record.data.DocStatus == "CONFIRM" && this.EditAccess)
 		{
+			op_menu.add({text: 'برگشت از تایید',iconCls: 'undo', 
+				handler : function(){ return AccDocsObject.UndoConfirmDoc(); } });
+			
 			op_menu.add({text: 'بایگانی',iconCls: 'archive', 
 				handler : function(){ return AccDocsObject.archiveDoc(); } });
 		}
@@ -535,6 +538,35 @@ AccDocs.prototype.confirmDoc = function()
 	});
 }
 
+AccDocs.prototype.UndoConfirmDoc = function()
+{
+	var record = this.grid.getStore().getAt(0);
+
+	Ext.MessageBox.confirm("","آیا مایل به برگشت از تایید می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = AccDocsObject;
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال تایید سند ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'doc.data.php?task=confirm',
+			params:{
+				DocID: record.data.DocID,
+				undo : "true"
+			},
+			method: 'POST',
+
+			success: function(response){
+				mask.hide();
+				AccDocsObject.grid.getStore().load();
+			},
+			failure: function(){}
+		});
+	});
+}
+
 AccDocs.prototype.archiveDoc = function()
 {
 	var record = this.grid.getStore().getAt(0);
@@ -722,7 +754,7 @@ AccDocs.beforeRowEdit = function(editor,e){
 	if(record.data.DocStatus != "RAW")
 		return false;
 	
-	if(e.record.data.locked == "1")
+	if(e.record.data.locked == "YES")
 	{
 		editor.editor.down("[itemId=cmp_DebtorAmount]").disable();
 		editor.editor.down("[itemId=cmp_CreditorAmount]").disable();
@@ -734,6 +766,27 @@ AccDocs.beforeRowEdit = function(editor,e){
 		editor.editor.down("[itemId=cmp_CreditorAmount]").enable();
 		editor.editor.down("[itemId=cmp_details]").enable();
 	}
+	
+	items = AccDocsObject.itemGrid.columns;
+	
+	if(e.record.data.locked == "YES")
+	{
+		for(i=0; i<items.length; i++)
+			items[i].getEditor().disable();
+			
+		if(e.record.data.TafsiliType != null && e.record.data.TafsiliID == null)
+			AccDocsObject.itemGrid.columns.findObject("dataIndex","TafsiliID").getEditor().enable();
+		if(e.record.data.Tafsili2Type != null && e.record.data.Tafsili2ID == null)
+			AccDocsObject.itemGrid.columns.findObject("dataIndex","Tafsili2ID").getEditor().enable();
+		return true;
+	}
+	
+	for(i=0; i<items.length; i++)
+		items[i].getEditor().enable();
+		
+	if(!e.record.data.ItemID)
+		return AccDocsObject.AddAccess;
+	return AccDocsObject.EditAccess;
 	
 }
 
@@ -758,6 +811,7 @@ AccDocs.prototype.AddItem = function()
 	var modelClass = this.itemGrid.getStore().model;
 	var record = new modelClass({
 		ItemID : 0,
+		locked : "NO",
 		DocID : this.grid.getStore().getAt(0).data.DocID,
 		CostID : "",
 		TafsiliID : "",

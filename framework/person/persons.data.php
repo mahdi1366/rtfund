@@ -1,11 +1,12 @@
 <?php
 //-------------------------
 // programmer:	Jafarkhani
-// Create Date:	89.11
+// Create Date:	94.7
 //-------------------------
-include('header.inc.php');
+include('../header.inc.php');
 require_once 'persons.class.php';
-require_once '../framework/PasswordHash.php';
+require_once '../PasswordHash.php';
+
 include_once inc_dataReader;
 require_once inc_response;
 
@@ -24,12 +25,15 @@ if(isset($_REQUEST["task"]))
 			
 		case "selectPersons":
 			selectPersons();
+			
+		case "selectPosts":
+			selectPosts();
 	}
 }
 
 function selectPersons(){
 	
-	$where = "1=1";
+	$where = "IsActive='YES'";
 	$param = array();
 	
 	if(!empty($_REQUEST["UserType"]))
@@ -40,24 +44,32 @@ function selectPersons(){
 			case "IsCustomer":	$where .= " AND IsCustomer='YES'";break;
 			case "IsStaff":		$where .= " AND IsStaff='YES'";break;
 			case "IsSupporter":	$where .= " AND IsSupporter='YES'";break;
-		
 		}
 	}
 	
+	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) 
+	{
+        $field = $_REQUEST['fields'];
+		$field = $_REQUEST['fields'] == "fullname" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;
+        $where .= ' and ' . $field . ' like :fld';
+		$_REQUEST['query'] = $_REQUEST['query'] == "*" ? "YES" : $_REQUEST['query'];
+        $param[':fld'] = '%' . $_REQUEST['query'] . '%';
+    }
+		
 	if(!empty($_REQUEST["PersonID"]))
 	{
 		$where .= " AND PersonID=:p";
 		$param[":p"] = $_REQUEST["PersonID"];
 	}
 	
-	if(!empty($_REQUEST["query"]))
+	if(!empty($_REQUEST["query"]) && !isset($_REQUEST['fields']))
 	{
-		$where .= " AND concat(fname,' ',lname) like :p";
+		$where .= " AND ( concat(fname,' ',lname) like :p or CompanyName like :p)";
 		$param[":p"] = "%" . $_REQUEST["query"] . "%";
 	}
 	
 	$temp = BSC_persons::SelectAll($where, $param);
-	$no = count($temp);
+	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
 	die();
@@ -66,13 +78,26 @@ function selectPersons(){
 function SavePerson(){
 	
 	$obj = new BSC_persons();
-	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
-	$hash_cost_log2 = 8;	
-	$hasher = new PasswordHash($hash_cost_log2, true);
-	$obj->UserPass = $hasher->HashPassword(md5("123456"));
-	$obj->IsStaff = "YES";
-	$obj->IsReal = "YES";
+	if(empty($obj->PersonID))
+	{
+		$hash_cost_log2 = 8;	
+		$hasher = new PasswordHash($hash_cost_log2, true);
+		$obj->UserPass = $hasher->HashPassword(md5("123456"));
+	}
+	
+	if($obj->IsReal == "YES")
+	{
+		$obj->CompanyName = PDONULL;
+		$obj->EconomicID = PDONULL;
+	}
+	else
+	{
+		$obj->fname = PDONULL;
+		$obj->lname = PDONULL;
+		$obj->NationalID = PDONULL;
+	}
 	
 	if($obj->PersonID > 0)
 		$result = $obj->EditPerson();
@@ -94,6 +119,13 @@ function ResetPass(){
 	
 	$result = BSC_persons::ResetPass($_POST["PersonID"]);
 	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function selectPosts(){
+	
+	$temp = PdoDataAccess::runquery("select * from BSC_posts");
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
 

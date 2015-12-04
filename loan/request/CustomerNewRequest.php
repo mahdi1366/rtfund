@@ -173,7 +173,7 @@ function NewLoanRequest()
 				store : new Ext.data.SimpleStore({
 					proxy: {
 						type: 'jsonp',
-						url: this.address_prefix + '../../framework/baseinfo/baseinfo.data.php?' +
+						url: this.address_prefix + '../../framework/baseInfo/baseInfo.data.php?' +
 							"task=SelectBranches",
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},

@@ -9,7 +9,21 @@ function isInt(value) {
          parseInt(Number(value)) == value && 
          !isNaN(parseInt(value, 10));
 } 
- 
+
+String.prototype.lpad = function(padString, length) {
+    var str = this;
+    while (str.length < length)
+        str = padString + str;
+    return str;
+}
+
+String.prototype.rpad = function(padString, length) {
+    var str = this;
+    while (str.length < length)
+        str = str + padString;
+    return str;
+}
+
 Array.prototype.find = function(o)
 {
 	for(var i = 0; i < this.length; i++)

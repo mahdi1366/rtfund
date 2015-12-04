@@ -35,6 +35,9 @@ $dg->addColumn("", "FundWage","", true);
 $dg->addColumn("", "IsPayed","", true);
 $dg->addColumn("", "IsStarted","", true);
 $dg->addColumn("", "IsEnded","", true);
+$dg->addColumn("", "DocStatus","", true);
+$dg->addColumn("", "IsPartEnded","", true);
+$dg->addColumn("", "imp_VamCode","", true);
 
 $col = $dg->addColumn("عنوان مرحله", "PartDesc", "");
 $col->editor = ColumnEditor::TextField();
@@ -68,27 +71,30 @@ $dg->addColumn("", "PartID","", true);
 $dg->addColumn("", "InstallmentAmount","", true);
 $dg->addColumn("", "WageAmount","", true);
 $dg->addColumn("", "WagePercent","", true);
+$dg->addColumn("", "IsPaid","", true);
+$dg->addColumn("", "IsPayed","", true);
 $dg->addColumn("", "PaidDate","", true);
 $dg->addColumn("", "PaidAmount","", true);
-$dg->addColumn("", "StatusID","", true);
-$dg->addColumn("", "IsPayed","", true);
+$dg->addColumn("", "PaidTypeDesc","", true);
+$dg->addColumn("", "PaidBillNo", "", true);
 
-$col = $dg->addColumn("تاریخ قسط", "InstallmentDate", GridColumn::ColumnType_date);
+$col = $dg->addColumn("سررسید", "InstallmentDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
+$col->width = 80; 
+
+$col = $dg->addColumn("شناسه واریز", "");
+$col->renderer = "function(v,p,r){ return RequestInfo.PayCodeRender(v,p,r);}";
+$col->width = 100;
 
 $col = $dg->addColumn("مبلغ", "InstallmentAmount", GridColumn::ColumnType_money);
-$col->width = 80; 
+$col->width = 100; 
 
 $col = $dg->addColumn("مبلغ جریمه", "ForfeitAmount", GridColumn::ColumnType_money);
 $col->width = 80;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo", "");
 $col->editor = ColumnEditor::NumberField(true);
-$col->width = 90;
-
-$col = $dg->addColumn("تاریخ چک", "ChequeDate", GridColumn::ColumnType_date);
-$col->editor = ColumnEditor::SHDateField(true);
-$col->width = 90;
+$col->width = 70;
 
 $col = $dg->addColumn("بانک", "ChequeBank", "");
 $col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from ACC_banks"), 
@@ -99,6 +105,9 @@ $col = $dg->addColumn("شعبه", "ChequeBranch", "");
 $col->editor = ColumnEditor::TextField(true);
 $col->width = 90;
 
+$col = $dg->addColumn("اطلاعات پرداخت", "PaidRefNo", "");
+$col->renderer = "function(v,p,r){ return RequestInfo.InstallmentPaidInfo(v,p,r);}";
+
 $dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", "function(){RequestInfoObject.ComputeInstallments();}");
 
 $dg->enableRowEdit = true;
@@ -106,10 +115,11 @@ $dg->rowEditOkHandler = "function(store,record){return RequestInfoObject.SavePar
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 460;
-$dg->width = 680;
+$dg->width = 730;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "InstallmentDate";
+$dg->autoExpandColumn = "PaidRefNo";
 $dg->DefaultSortDir = "ASC";
 $grid2 = $dg->makeGrid_returnObjects();
 
