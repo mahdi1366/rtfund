@@ -132,7 +132,7 @@ function MoveStep(){
 			array($FlowID, $StepID + $direction));
 	
 	PdoDataAccess::runquery("update WFM_FlowSteps set StepID=? where FlowID=? AND StepID=1000",
-			array($StepID + $revdirection, $FlowID));
+			array($StepID + $direction, $FlowID));
 	
 	echo Response::createObjectiveResponse(true, "");
 	die();
