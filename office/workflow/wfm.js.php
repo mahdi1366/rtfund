@@ -135,6 +135,8 @@ WFM.deleteStepRender = function(v,p,r)
 
 WFM.upRender = function(v,p,r)
 {
+	if(r.data.StepID == 1)
+		return "";
 	return "<div align='center' title='حذف ' class='up' onclick='WFMObject.moveStep(-1);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
@@ -142,6 +144,10 @@ WFM.upRender = function(v,p,r)
 
 WFM.downRender = function(v,p,r)
 {
+	store = WFMObject.StepsGrid.getStore();
+	record = store.getAt(store.getCount()-1);
+	if(r.data.StepID == record.data.StepID)
+		return "";
 	return "<div align='center' title='حذف ' class='down' onclick='WFMObject.moveStep(1);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";

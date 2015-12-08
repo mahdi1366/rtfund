@@ -5,7 +5,7 @@
 //-----------------------------
 include_once("../header.inc.php");
 require_once inc_dataGrid;
-require_once 'WFM.js.php';
+require_once 'wfm.js.php';
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "wfm.data.php?task=SelectAllFlows","");
 
