@@ -234,22 +234,25 @@ WFM.prototype.moveStep = function(direction)
 WFM.prototype.DeleteStep = function()
 {
 	var record = this.StepsGrid.getSelectionModel().getLastSelected();
-	if(record && confirm("آيا مايل به حذف مي باشيد؟"))
-	{
+	Ext.MessageBox.confirm("", "آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		me = WFMObject;
+		
 		Ext.Ajax.request({
-		  	url : this.address_prefix + "wfm.data.php",
+		  	url : me.address_prefix + "wfm.data.php",
 		  	method : "POST",
 		  	params : {
 		  		task : "DeleteStep",
 		  		FlowID : record.data.FlowID,
 				StepID : record.data.StepID
 		  	},
-		  	success : function(response,o)
+		  	success : function()
 		  	{
 		  		WFMObject.StepsGrid.getStore().load();
 		  	}
 		});
-	}
+	});
 }
 
 </script>

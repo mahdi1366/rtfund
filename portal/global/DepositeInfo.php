@@ -8,7 +8,7 @@ require_once '../header.inc.php';
 require_once inc_dataGrid;
 
 $ShortDepositeCostID = 66;
-$LongDepositeCostID = 119;
+$LongDepositeCostID = 119 ;
 
 $CurYear = substr(DateModules::shNow(),0,4);
 
@@ -18,7 +18,8 @@ $temp = PdoDataAccess::runquery("
 	left join ACC_tafsilis t1 on(t1.TafsiliType=1 AND di.TafsiliID=t1.TafsiliID)
 	left join ACC_tafsilis t2 on(t2.TafsiliType=1 AND di.Tafsili2ID=t2.TafsiliID)
 	where CycleID=:year AND CostID in($ShortDepositeCostID,$LongDepositeCostID) 
-		AND (t1.ObjectID=:pid or t2.ObjectID=:pid)
+		AND (t1.ObjectID=:pid or t2.ObjectID=:pid) 
+		AND DocStatus in('CONFIRM','ARCHIVE')
 	group by CostID
 	order by CostID
 ", array(":year" => $CurYear, ":pid" => $_SESSION["USER"]["PersonID"]));
@@ -33,7 +34,7 @@ for($i=0; $i < count($temp); $i++)
 
 //------------------------------------------------------------------------------
 
-$dg = new sadaf_datagrid("dg","global/global.data.php?task=DepositeFlow", "");
+$dg = new sadaf_datagrid("dg","global/global.data.php?task=AccDocFlow", "");
 
 $col = $dg->addColumn("تاریخ", "DocDate", GridColumn::ColumnType_date);
 $col->width = 80;

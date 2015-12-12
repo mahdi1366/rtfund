@@ -196,7 +196,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$itemObj->Tafsili2ID = $SupporterTafsili;
 	}
 	$itemObj->locked = "YES";
-	$itemObj->SourceType = "PAY_LOAN_PART";
+	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
 	if(!$itemObj->Add($pdo))
@@ -275,7 +275,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$itemObj->CreditorAmount = $PartObj->PartAmount - $TotalDelay;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	$itemObj->locked = "YES";
-	$itemObj->SourceType = "PAY_LOAN_PART";
+	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $PartObj->PartID;
 	if(!$itemObj->Add($pdo))
 	{
@@ -314,11 +314,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			return false;
 		}
 	}
-	//---------- ردیف های تضمین ها ----------
+	//---------- ردیف های تضمین  ----------
 	
 	$dt = PdoDataAccess::runquery("select * from DMS_documents 
 		join BaseInfo b on(InfoID=DocType AND TypeID=8)
-		join ACC_DocItems on(SourceType='DOCUMENT' AND SourceID=DocumentID)
+		join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
 		where b.param1=1 AND ObjectType='loan' AND ObjectID=?", array($ReqObj->RequestID));
 	
 	if(count($dt) == 0)
@@ -344,7 +344,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			$itemObj->CreditorAmount = 0;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $LoanPersonTafsili;
-			$itemObj->SourceType = "DOCUMENT";
+			$itemObj->SourceType = DOCTYPE_DOCUMENT;
 			$itemObj->SourceID = $row["DocumentID"];
 			$itemObj->details = $row["DocTypeDesc"];
 			if(!$itemObj->Add($pdo))
@@ -415,7 +415,7 @@ function ReturnPayPartDoc($partobj, $pdo){
 	
 	$temp = PdoDataAccess::runquery("select DocID 
 		from ACC_DocItems join ACC_docs using(DocID) 
-		where SourceType='PAY_LOAN_PART' AND SourceID=? AND SourceID2=?", 
+		where SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND SourceID=? AND SourceID2=?", 
 		array($partobj->RequestID, $partobj->PartID), $pdo);
 	
 	if(count($temp) == 0)
@@ -588,7 +588,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 		$itemObj->Tafsili2ID = $SupporterTafsili;
 	}
 	$itemObj->locked = "YES";
-	$itemObj->SourceType = "PAY_LOAN_PART";
+	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
 	if(!$itemObj->Add($pdo))
@@ -667,7 +667,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	$itemObj->CreditorAmount = 0;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	$itemObj->locked = "YES";
-	$itemObj->SourceType = "PAY_LOAN_PART";
+	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $PartObj->PartID;
 	if(!$itemObj->Add($pdo))
 	{
@@ -790,7 +790,7 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 		$itemObj->Tafsili2ID = $SupporterTafsili;
 	}
 	$itemObj->locked = "YES";
-	$itemObj->SourceType = "PAY_LOAN_INSTALLMENT";
+	$itemObj->SourceType = DOCTYPE_INSTALLMENT_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $InstallmentObj->InstallmentID;
 	if(!$itemObj->Add($pdo))
@@ -804,7 +804,7 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 	$itemObj->CreditorAmount = 0;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	$itemObj->locked = "YES";
-	$itemObj->SourceType = "PAY_LOAN_PART";
+	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $PartObj->PartID;
 	if(!$itemObj->Add($pdo))
 		return false;
@@ -840,6 +840,176 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 		return false;
 		
 	return true;
+}
+
+//---------------------------------------------------------------
+
+function ComputeDepositeProfit(){
+	
+	//-------------- get latest deposite compute -------------
+	$FirstYearDay = DateModules::shamsi_to_miladi($_SESSION["accounting"]["CycleID"] . "-01-01", "-");
+	$dt = PdoDataAccess::runquery("select DocID,DocDate 
+		from ACC_docs where DocType=" . DOCTYPE_DEPOSIT_PROFIT . " 
+			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+			AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "	
+		order by DocID desc");
+	
+	$LatestComputeDate = count($dt)==0 ? $FirstYearDay : $dt[0]["DocDate"];
+	$LatestComputeDocID = count($dt)==0 ? 0 : $dt[0]["DocID"];
+	
+	//----------- check for all docs confirm --------------
+	/*$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
+		join ACC_docItems using(DocID)
+		where DocID>=? AND CostID in(" . ShortDepositeCostID . "," . LongDepositeCostID . ")
+		AND DocStatus not in('CONFIRM','ARCHIVE')", array($LatestComputeDocID));
+	if(count($dt) > 0 && $dt[0][0] != "")
+	{
+		echo Response::createObjectiveResponse(false, "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند و قادر به صدور سند سود سپرده نمی باشید.");
+		die();
+	}
+	*/
+	//--------------get percents -----------------
+	$dt = PdoDataAccess::runquery("select * from ACC_cycles where CycleID=" . 
+			$_SESSION["accounting"]["CycleID"]);
+	$DepositePercents = array(
+		ShortDepositeCostID => $dt[0]["ShortDepositPercent"],
+		LongDepositeCostID  => $dt[0]["LongDepositPercent"]
+	);
+	
+	//------------ get sum of deposites ----------------
+	$dt = PdoDataAccess::runquery("select TafsiliID,CostID,sum(CreditorAmount-DebtorAmount) amount
+		from ACC_DocItems join ACC_docs using(DocID)
+		where DocID<=? 
+			AND CostID in(" . ShortDepositeCostID . "," . LongDepositeCostID . ")
+			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+			AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
+		group by TafsiliID,CostID", 
+		array($LatestComputeDocID));
+	$DepositeAmount = array(
+		ShortDepositeCostID => array(),
+		LongDepositeCostID => array()
+	);
+	
+	foreach($dt as $row)
+	{
+		$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] = $row["amount"];
+		$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $LatestComputeDate;
+	}
+	//------------ get the Deposite amount -------------
+	$dt = PdoDataAccess::runquery("
+		select CostID,TafsiliID,DocDate,CreditorAmount-DebtorAmount amount
+		from ACC_DocItems 
+			join ACC_docs using(DocID)
+		where CostID in(" . ShortDepositeCostID . "," . LongDepositeCostID . ")
+			AND DocID > ?
+			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+			AND BranchID=" . $_SESSION["accounting"]["BranchID"], array($LatestComputeDocID));
+	
+	foreach($dt as $row)
+	{
+		if(!isset($DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"]))
+		{
+			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $FirstYearDay;
+			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] = 0;
+		}
+		$lastDate = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"];
+		$days = DateModules::GDateMinusGDate($row["DocDate"], $lastDate);
+		
+		$amount = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] * $days * 
+			$DepositePercents[ $row["CostID"] ]/(100*30.5);
+		
+		if(!isset($DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"]))
+			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] = 0;
+		$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] += $amount;
+		
+		//echo $row["TafsiliID"] ."@" . $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] . "\n";
+		
+		$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] += $row["amount"];
+		$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $row["DocDate"];	
+	}
+	
+	foreach($DepositeAmount[ ShortDepositeCostID ] as $tafsili => &$row)
+	{
+		$days = DateModules::GDateMinusGDate(DateModules::Now(), $row["lastDate"]);
+		$amount = $row["amount"] * $days * $DepositePercents[ ShortDepositeCostID ]/(100*30.5);
+
+		if(!isset($row["profit"]))
+			$row["profit"] = 0;
+		$row["profit"] += $amount;
+		
+		//echo $tafsili ."@" . $DepositeAmount[ ShortDepositeCostID ][ $tafsili ]["profit"] . "\n";
+	}
+	foreach($DepositeAmount[ LongDepositeCostID ] as $tafsili => &$row)
+	{
+		$days = DateModules::GDateMinusGDate(DateModules::Now(), $row["lastDate"]);
+		$amount = $row["amount"] * $days * $DepositePercents[ LongDepositeCostID ]/(100*30.5);
+
+		if(!isset($row["profit"]))
+			$row["profit"] = 0;
+		$row["profit"] += $amount;
+		
+		//echo $tafsili ."@" . $DepositeAmount[ ShortDepositeCostID ][ $tafsili ]["profit"] . "\n";
+	}
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	//--------------- add doc header ------------------
+	$obj = new ACC_docs();
+	$obj->RegDate = PDONOW;
+	$obj->regPersonID = $_SESSION['USER']["PersonID"];
+	$obj->DocDate = PDONOW;
+	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
+	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
+	$obj->DocType = DOCTYPE_DEPOSIT_PROFIT;
+	$obj->description = "محاسبه سود سپرده";
+	
+	if(!$obj->Add($pdo))
+	{
+		echo Response::createObjectiveResponse(false, "خطا در ایجاد سند");
+		die();
+	}
+	
+	//---------------- add DocItems -------------------
+	$sumAmount = 0;
+	foreach($DepositeAmount as $CostID => $DepRow)
+	{
+		foreach($DepRow as $TafsiliID => $itemrow)
+		{
+			$itemObj = new ACC_DocItems();
+			$itemObj->DocID = $obj->DocID;
+			$itemObj->CostID = $CostID;
+			$itemObj->CreditorAmount = round($itemrow["profit"]>0 ? $itemrow["profit"] : 0);
+			$itemObj->DebtorAmount = round($itemrow["profit"]<0 ? -1*$itemrow["profit"] : 0);
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $TafsiliID;
+			$itemObj->locked = "YES";
+			$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
+			if(!$itemObj->Add($pdo))
+			{
+				echo Response::createObjectiveResponse(false, "خطا در ایجاد ردیف سند");
+				die();
+			}
+			
+			$sumAmount += round($itemrow["profit"]);
+		}
+	}
+	//---------------------- add fund row ----------------
+	
+	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $obj->DocID;
+	$itemObj->CostID = FundCostID;
+	$itemObj->DebtorAmount= $sumAmount;
+	$itemObj->CreditorAmount = 0;
+	$itemObj->locked = "YES";
+	$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
+	if(!$itemObj->Add($pdo))
+		return false;
+	
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();	
 }
 
 ?>

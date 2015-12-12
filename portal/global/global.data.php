@@ -21,8 +21,8 @@ switch ($task)
 	case "changePass":
 		changePass();
 		
-	case "DepositeFlow":
-		DepositeFlow();
+	case "AccDocFlow":
+		AccDocFlow();
 }
 
 function SelectPersonInfo(){
@@ -75,9 +75,9 @@ function changePass(){
 	die();
 }
 
-function DepositeFlow(){
+function AccDocFlow(){
 	
-	$CostID = $_GET["CostID"];
+	$CostID = $_REQUEST["CostID"];
 	$CurYear = substr(DateModules::shNow(),0,4);
 
 	$temp = PdoDataAccess::runquery_fetchMode("
@@ -90,6 +90,7 @@ function DepositeFlow(){
 		left join ACC_tafsilis t1 on(t1.TafsiliType=1 AND di.TafsiliID=t1.TafsiliID)
 		left join ACC_tafsilis t2 on(t2.TafsiliType=1 AND di.Tafsili2ID=t2.TafsiliID)
 		where CycleID=:year AND CostID=:cid AND (t1.ObjectID=:pid or t2.ObjectID=:pid)
+			AND DocStatus in('CONFIRM','ARCHIVE')
 		order by DocDate
 	", array(":year" => $CurYear, ":pid" => $_SESSION["USER"]["PersonID"], ":cid" => $CostID));
 	//print_r(ExceptionHandler::PopAllExceptions());
@@ -99,4 +100,7 @@ function DepositeFlow(){
 	echo dataReader::getJsonData($temp, $count, $_GET["callback"]);
 	die();	
 }
+
+
+
 ?>

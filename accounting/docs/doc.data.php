@@ -65,6 +65,9 @@ switch ($task) {
 		
 	case "RegisterStartDoc":
 		RegisterStartDoc();
+		
+	case "ComputeDoc": 
+		ComputeDoc();
 }
 
 function selectDocs() {
@@ -139,8 +142,28 @@ function confirm() {
 	$status = "CONFIRM";
 	if(isset($_POST["undo"]) && $_POST["undo"] == "true")
 		$status = "RAW";
+	
+	//------------ check for register deposite -------------
+	if($status == "RAW")
+	{
+		$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems where DocID=? 
+			AND CostID in(".ShortDepositeCostID.",".LongDepositeCostID.") ", array($_POST["DocID"]));
+		if(count($dt) > 0)
+		{
+			$dt = PdoDataAccess::runquery("select LocalNo from ACC_docs where 
+				DocID>? AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+				AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
+				AND DocType=" . DOCTYPE_DEPOSIT_PROFIT, array($_POST["DocID"]));
+			if(count($dt) > 0)
+			{
+				echo Response::createObjectiveResponse(false, "سند سپرده با شماره " . $dt[0][0] . " بر اساس این برگه صادر شده و قادر به برگشت این برگه نمی باشید.");
+				die();						
+			}
+		}
+	}
+	
 	PdoDataAccess::runquery("update ACC_docs set DocStatus='$status' where DocID=" . $_POST["DocID"]);
-	echo "true";
+	echo Response::createObjectiveResponse(true, "");
 	die();
 }
 
@@ -693,4 +716,17 @@ function RegisterStartDoc(){
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
+
+function ComputeDoc(){
+	
+	require_once 'import.data.php';
+	
+	switch($_POST["ComputeType"])
+	{
+		case "DepositeProfit":
+			ComputeDepositeProfit();
+			break;
+	}
+}
+
 ?>

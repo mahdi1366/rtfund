@@ -10,6 +10,7 @@ include_once inc_response;
 include_once 'request.class.php';
 require_once '../loan/loan.class.php';
 require_once "../../office/workflow/wfm.class.php";
+require_once '../../accounting/definitions.inc.php';
 
 $task = $_REQUEST["task"];
 switch ($task) {
@@ -261,7 +262,7 @@ function GetRequestParts(){
 	for($i=0; $i < count($dt);$i++)
 	{
 		$temp = PdoDataAccess::runquery("select DocStatus 
-			from ACC_DocItems join ACC_docs using(DocID) where SourceType='PAY_LOAN_PART' AND 
+			from ACC_DocItems join ACC_docs using(DocID) where SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND 
 			SourceID=? AND SourceID2=?", array($dt[$i]["RequestID"], $dt[$i]["PartID"]));
 		$dt[$i]["DocStatus"] = count($temp) == 0 ? "" : $temp[0]["DocStatus"];
 		
@@ -345,7 +346,7 @@ function ReturnPayPart(){
 	
 	//------------- check for Acc doc confirm -------------------
 	$temp = PdoDataAccess::runquery("select DocStatus 
-		from ACC_DocItems join ACC_docs using(DocID) where SourceType='PAY_LOAN_PART' AND 
+		from ACC_DocItems join ACC_docs using(DocID) where SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND 
 		SourceID=? AND SourceID2=?", array($partobj->RequestID, $partobj->PartID));
 	if(count($temp) > 0 && $temp[0]["DocStatus"] != "RAW")
 	{
@@ -648,7 +649,7 @@ function SelectReadyToPayParts(){
 		join LON_requests r using(RequestID)
 		join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 		left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
-		left join ACC_DocItems di on(SourceType='PAY_LOAN_PART' AND SourceID=RequestID AND SourceID2=PartID)
+		left join ACC_DocItems di on(SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND SourceID=RequestID AND SourceID2=PartID)
 		where FlowID=1 AND StepID=? AND ActionType='CONFIRM' AND di.ItemID is null",
 		array($dt[0][0]));
 

@@ -184,7 +184,9 @@ function SelectAllForms(){
 					b.InfoDesc ObjectTypeDesc,
 					ifnull(fs.StepDesc,'شروع گردش') StepDesc,
 					if(p.IsReal='YES',concat(p.fname, ' ',p.lname),p.CompanyName) fullname,
-					$ObjectDesc ObjectDesc
+					$ObjectDesc ObjectDesc,
+					b.param1 url,
+					b.param2 parameter
 				from WFM_FlowRows fr
 				join ( select max(RowID) RowID,FlowID,ObjectID from WFM_FlowRows group by FlowID,ObjectID )t
 					using(RowID,FlowID,ObjectID)

@@ -668,6 +668,8 @@ CREATE TABLE `ACC_cycles` (
   `CycleDesc` varchar(500) NOT NULL,
   `CycleYear` smallint(5) unsigned NOT NULL COMMENT 'سال',
   `IsClosed` enum('YES','NO') NOT NULL default 'NO' COMMENT 'بسته است؟',
+  `ShortDepositPercent` smallint(5) unsigned NOT NULL default '0',
+  `LongDepositPercent` smallint(5) unsigned NOT NULL default '0',
   PRIMARY KEY  (`CycleID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -676,8 +678,8 @@ CREATE TABLE `ACC_cycles` (
 --
 
 /*!40000 ALTER TABLE `ACC_cycles` DISABLE KEYS */;
-INSERT INTO `ACC_cycles` (`CycleID`,`CycleDesc`,`CycleYear`,`IsClosed`) VALUES 
- (1394,'دوره سال 1394',1394,'NO');
+INSERT INTO `ACC_cycles` (`CycleID`,`CycleDesc`,`CycleYear`,`IsClosed`,`ShortDepositPercent`,`LongDepositPercent`) VALUES 
+ (1394,'دوره سال 1394',1394,'NO',10,20);
 /*!40000 ALTER TABLE `ACC_cycles` ENABLE KEYS */;
 
 
@@ -693,7 +695,7 @@ CREATE TABLE `ACC_docs` (
   `LocalNo` smallint(5) unsigned NOT NULL,
   `DocDate` date NOT NULL COMMENT 'تاریخ سند',
   `RegDate` date NOT NULL COMMENT 'تاریخ ثبت سند',
-  `DocStatus` varchar(50) NOT NULL default 'RAW' COMMENT 'وضعیت برگه',
+  `DocStatus` enum('RAW','DELETED','CONFIRM','ARCHIVE') NOT NULL default 'RAW' COMMENT 'وضعیت برگه',
   `DocType` varchar(50) NOT NULL default 'NORMAL' COMMENT 'نوع برگه',
   `description` varchar(500) default NULL COMMENT 'توضیحات',
   `RegPersonID` int(10) unsigned NOT NULL COMMENT 'ثبت کننده',
@@ -1378,7 +1380,7 @@ CREATE TABLE `BaseInfo` (
   `TypeID` int(10) unsigned NOT NULL COMMENT 'کد نوع',
   `InfoID` int(10) unsigned NOT NULL COMMENT 'کد آیتم',
   `InfoDesc` varchar(500) NOT NULL COMMENT 'عنوان',
-  `param1` varchar(20) default '0',
+  `param1` varchar(100) default '0',
   `param2` varchar(45) default NULL,
   PRIMARY KEY  (`InfoID`,`TypeID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -1389,7 +1391,7 @@ CREATE TABLE `BaseInfo` (
 
 /*!40000 ALTER TABLE `BaseInfo` DISABLE KEYS */;
 INSERT INTO `BaseInfo` (`TypeID`,`InfoID`,`InfoDesc`,`param1`,`param2`) VALUES 
- (1,1,'وام های جعاله','0',NULL),
+ (1,1,'وام های صندوق','0',NULL),
  (2,1,'اشخاص و شرکتها','0',NULL),
  (3,1,'حساب جاری','0',NULL),
  (4,1,'در جریان','0',NULL),
@@ -1399,8 +1401,7 @@ INSERT INTO `BaseInfo` (`TypeID`,`InfoID`,`InfoDesc`,`param1`,`param2`) VALUES
  (8,1,'وثیقه ملکی','1',NULL),
  (9,1,'سند افتتاحیه','0',NULL),
  (10,1,'پرداخت وام','RequestID','PartID'),
- (11,1,'پرداخت مرحله وام','0',NULL),
- (1,2,'وام های مسکن','0',NULL),
+ (11,1,'پرداخت مرحله وام','../../loan/request/RequestInfo.php','RequestID'),
  (2,2,'سال','0',NULL),
  (3,2,'حساب سپرده ','0',NULL),
  (4,2,'وصول شده','0',NULL),
@@ -1409,7 +1410,6 @@ INSERT INTO `BaseInfo` (`TypeID`,`InfoID`,`InfoDesc`,`param1`,`param2`) VALUES
  (8,2,'ضمانت بانکی','1',NULL),
  (9,2,'سند دستی','0',NULL),
  (10,2,'پرداخت قسط','0',NULL),
- (1,3,'وام های جزیی','0',NULL),
  (2,3,'بانک ها','0',NULL),
  (4,3,'مسدود','0',NULL),
  (6,3,'کسر از حقوق','0',NULL),
@@ -1419,11 +1419,11 @@ INSERT INTO `BaseInfo` (`TypeID`,`InfoID`,`InfoDesc`,`param1`,`param2`) VALUES
  (4,4,'برگشتي','0',NULL),
  (6,4,'پرداخت الکترونیک','0',NULL),
  (8,4,'سفته','1',NULL),
- (9,4,'سند پرداخت مرحله وام','0',NULL),
+ (9,4,'سند پرداخت مرحله وام','RequestID','PartID'),
  (4,5,'گم شده','0',NULL),
  (6,5,'دفترچه اقساط','0',NULL),
  (8,5,'کسر از حقوق','1',NULL),
- (9,5,'سند پرداخت قسط','0',NULL),
+ (9,5,'سند پرداخت قسط','RequestID','InstallmentID'),
  (4,6,'ابطال شده','0',NULL),
  (8,6,'ماشین آلات','1',NULL),
  (9,6,'سند جریمه تاخیر پرداخت اقساط','0',NULL),
@@ -1431,6 +1431,7 @@ INSERT INTO `BaseInfo` (`TypeID`,`InfoID`,`InfoDesc`,`param1`,`param2`) VALUES
  (9,7,'سند محاسبه سود سپرده','0',NULL),
  (6,8,'پرداخت از حساب','0',NULL),
  (8,8,'اوراق مشارکت بی نام','1',NULL),
+ (9,8,'مدرک','DocumentID',NULL),
  (6,9,'چک','0',NULL),
  (5,10,'ارسال درخواست','0',NULL),
  (5,20,'رد درخواست','0',NULL),
@@ -3851,83 +3852,13 @@ CREATE TABLE `DataAudit` (
   `ActionTime` datetime NOT NULL COMMENT 'زمان انجام عمل',
   `QueryString` varchar(2000) character set utf8 default NULL COMMENT 'query اجرا شده',
   PRIMARY KEY  (`DataAuditID`)
-) ENGINE=MyISAM AUTO_INCREMENT=2089 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
+) ENGINE=MyISAM AUTO_INCREMENT=2315 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
 
 --
 -- Dumping data for table `DataAudit`
 --
 
 /*!40000 ALTER TABLE `DataAudit` DISABLE KEYS */;
-INSERT INTO `DataAudit` (`DataAuditID`,`PersonID`,`TableName`,`MainObjectID`,`SubObjectID`,`ActionType`,`SystemID`,`PageName`,`description`,`IPAddress`,`ActionTime`,`QueryString`) VALUES 
- (2020,1000,'ACC_CostCodes',12,NULL,'DELETE',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 00:35:53','delete from ACC_CostCodes where CostID=\'12\''),
- (2021,1000,'ACC_docs',1,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 00:42:48','insert into ACC_docs(CycleID,BranchID,LocalNo,DocDate,RegDate,description,regPersonID) values (\'1394\',\'1\',\'1\',\'2015/12/03\',\'2015/12/02\',\'حساب های قرض الحسنه تاکنون\',\'1000\')'),
- (2022,1000,'ACC_DocItems',179,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 15:19:52','insert into ACC_DocItems(DocID,ItemID,CostID,DebtorAmount,CreditorAmount,locked) values (\'1\',\'0\',\'1\',\'1084181643\',\'0\',\'NO\')'),
- (2023,1000,'ACC_docs',1,NULL,'UPDATE',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 15:21:44','update ACC_docs set DocID=\'1\',CycleID=\'1394\',BranchID=\'1\',LocalNo=\'1\',DocDate=\'2015/12/03\',description=\'حساب های قرض الحسنه انتقالی از نرم افزار قدیم\' where  DocID=\'1\''),
- (2024,1000,'ACC_docs',2,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 19:04:18','insert into ACC_docs(CycleID,BranchID,LocalNo,DocDate,RegDate,description,regPersonID) values (\'1394\',\'1\',\'2\',now(),\'2015/12/03\',\'حساب های سپرده کوتاه مدت\',\'1000\')'),
- (2025,1000,'ACC_DocItems',180,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 19:04:41','insert into ACC_DocItems(DocID,ItemID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,locked) values (\'2\',\'0\',\'66\',\'1\',\'1002\',\'0\',\'6115230053\',\'NO\')'),
- (2026,1000,'ACC_DocItems',181,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 19:05:21','insert into ACC_DocItems(DocID,ItemID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,locked) values (\'2\',\'0\',\'66\',\'1\',\'1203\',\'0\',\'40389608\',\'NO\')'),
- (2027,1000,'ACC_DocItems',182,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 19:06:59','insert into ACC_DocItems(DocID,ItemID,CostID,DebtorAmount,CreditorAmount,locked) values (\'2\',\'0\',\'1\',\'6155619661\',\'0\',\'NO\')'),
- (2028,1000,'ACC_blocks',122,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 19:26:30','insert into ACC_blocks(LevelID,BlockCode,BlockDesc) values (\'3\',\'53\',\'حقوق پرسنل\')'),
- (2029,1000,'ACC_CostCodes',69,NULL,'DELETE',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 19:26:46','delete from ACC_CostCodes where CostID=\'69\''),
- (2030,1000,'ACC_blocks',122,NULL,'UPDATE',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 19:27:07','update ACC_blocks set BlockID=\'122\',LevelID=\'3\',BlockCode=\'01\',BlockDesc=\'حقوق پرسنل\' where  BlockID=\'122\''),
- (2031,1000,'ACC_blocks',114,NULL,'UPDATE',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 19:27:16','update ACC_blocks set BlockID=\'114\',LevelID=\'3\',BlockCode=\'08\',BlockDesc=\'حق بیمه کارکنان صندوق سهم کارفرما\' where  BlockID=\'114\''),
- (2032,1000,'ACC_CostCodes',149,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 19:27:36','update ACC_CostCodes c \n			left join ACC_blocks b1 on(b1.levelID=1 AND b1.blockID=c.level1)\n			left join ACC_blocks b2 on(b2.levelID=2 AND b2.blockID=c.level2)\n			left join ACC_blocks b3 on(b3.levelID=3 AND b3.blockID=c.level3)\n			set c.CostCode=concat(ifnull(b1.blockCode,\'\'),\n								ifnull(concat(\'-\',b2.BlockCode),\'\'),\n								ifnull(concat(\'-\',b3.BlockCode),\'\') )\n			where CostID=\'149\''),
- (2033,1000,'ACC_docs',3,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 20:32:06','insert into ACC_docs(CycleID,BranchID,LocalNo,DocDate,RegDate,description,regPersonID) values (\'1394\',\'1\',\'3\',now(),\'2015/12/03\',\'هزینه ها\',\'1000\')'),
- (2034,1000,'ACC_docs',3,NULL,'UPDATE',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 20:32:22','update ACC_docs set DocID=\'3\',CycleID=\'1394\',BranchID=\'1\',LocalNo=\'3\',DocDate=\'2015/12/03\',description=\'هزینه ها انتقالی از نرم افزار قدیم\' where  DocID=\'3\''),
- (2035,1000,'ACC_DocItems',203,NULL,'ADD',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 20:34:57','insert into ACC_DocItems(DocID,ItemID,CostID,DebtorAmount,CreditorAmount,locked) values (\'3\',\'0\',\'1\',\'0\',\'675667301\',\'NO\')'),
- (2036,1000,'ACC_docs',2,NULL,'UPDATE',2,'http://rtfund/accounting/start.php?SystemID=2',NULL,'127.0.0.1','2015-12-03 20:35:13','update ACC_docs set DocID=\'2\',CycleID=\'1394\',BranchID=\'1\',LocalNo=\'2\',DocDate=\'2015/12/03\',description=\'حساب های سپرده کوتاه مدت انتقالی از نرم افزار قدیم\' where  DocID=\'2\''),
- (2037,1000,'BSC_persons',1000,NULL,'UPDATE',8,'http://rtfund/person/start.php?SystemID=8',NULL,'127.0.0.1','2015-12-04 12:35:43','update BSC_persons set PersonID=\'1000\',UserName=\'admin\',IsReal=\'YES\',fname=\'شبنم\',lname=\'جعفرخانی\',NationalID=\'0943021723\',PhoneNo=null,mobile=null,address=\'sdfsdf\',email=\'jafarkhani_sh@yahoo.com\',IsStaff=\'YES\',PostID=\'1\' where  PersonID=\'1000\''),
- (2038,1000,'BSC_persons',1120,NULL,'UPDATE',8,'http://rtfund/person/start.php?SystemID=8',NULL,'127.0.0.1','2015-12-04 12:36:43','update BSC_persons set PersonID=\'1120\',UserName=null,IsReal=\'NO\',CompanyName=\'ایستا ارتباط کاوشگر\',EconomicID=null,PhoneNo=\'36044014\',mobile=\'09153141653\',address=\'بلواررفیعی 10/4بلوک 3واحد2\',email=null,IsCustomer=\'YES\',PostID=null where  PersonID=\'1120\''),
- (2039,1000,'BSC_persons',1120,NULL,'UPDATE',8,'http://rtfund/person/start.php?SystemID=8',NULL,'127.0.0.1','2015-12-04 12:38:14','update BSC_persons set PersonID=\'1120\',UserName=null,IsReal=\'NO\',fname=null,lname=null,CompanyName=\'ایستا ارتباط کاوشگر\',NationalID=null,EconomicID=null,PhoneNo=\'36044014\',mobile=\'09153141653\',address=\'بلواررفیعی 10/4بلوک 3واحد2\',email=null,IsCustomer=\'YES\',PostID=null where  PersonID=\'1120\''),
- (2040,1000,'BSC_persons',1001,NULL,'UPDATE',8,'http://rtfund/person/start.php?SystemID=8','پاک کردن پسورد','127.0.0.1','2015-12-04 13:24:23','update BSC_persons set UserPass=\'$P$BxRr4XWjqcX8mcQp0wYFryxdiSllgF.\' where PersonID=\'1001\''),
- (2041,1001,'DMS_documents',644,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-12-04 13:32:54','insert into DMS_documents(DocDesc,DocType,ObjectType,ObjectID,RegPersonID) values (\'اساسنامه\',\'41\',\'person\',\'1001\',\'1001\')'),
- (2042,1000,'DMS_documents',644,NULL,'UPDATE',8,'http://rtfund/person/start.php?SystemID=8',NULL,'127.0.0.1','2015-12-04 13:33:46','update DMS_documents set DocumentID=\'644\',IsConfirm=\'YES\',ConfirmPersonID=\'1000\',RejectDesc=null where  DocumentID=\'644\''),
- (2043,1000,'BSC_persons',1120,NULL,'UPDATE',8,'http://rtfund/person/start.php?SystemID=8',NULL,'127.0.0.1','2015-12-04 13:37:10','update BSC_persons set PersonID=\'1120\',UserName=\'ista_ertebat\',IsReal=\'NO\',fname=null,lname=null,CompanyName=\'ایستا ارتباط کاوشگر\',NationalID=null,EconomicID=null,PhoneNo=\'36044014\',mobile=\'09153141653\',address=\'بلواررفیعی 10/4بلوک 3واحد2\',email=null,IsCustomer=\'YES\',PostID=null where  PersonID=\'1120\''),
- (2044,1000,'BSC_persons',1120,NULL,'UPDATE',8,'http://rtfund/person/start.php?SystemID=8','پاک کردن پسورد','127.0.0.1','2015-12-04 13:37:15','update BSC_persons set UserPass=\'$P$BwSE5l.e4RwskLVWe0KJ1woXvecDdP1\' where PersonID=\'1120\''),
- (2045,1000,'FRW_menus',6,NULL,'UPDATE',8,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 13:53:00','update FRW_menus set SystemID=\'1\',MenuID=\'6\',MenuDesc=\'مدیریت ذینفعان\',IsActive=\'YES\',ordering=\'1\',icon=\'users.gif\',MenuPath=\'person/persons.php\' where MenuID=\'6\''),
- (2046,1000,'FRW_menus',49,NULL,'DELETE',8,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 13:53:15','delete from FRW_menus where MenuID=\'49\''),
- (2047,1000,'FRW_menus',48,NULL,'DELETE',8,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 13:53:18','delete from FRW_menus where MenuID=\'48\''),
- (2048,1000,'BSC_persons',1000,NULL,'DELETE',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 14:02:44','update ACC_tafsilis set IsActive=\'NO\' \r\n			where TafsiliType=1 AND ObjectID=\'1000\''),
- (2049,1000,'BSC_persons',1120,NULL,'DELETE',2,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 14:50:50','update ACC_tafsilis set IsActive=\'NO\' \r\n			where TafsiliType=1 AND ObjectID=\'1120\''),
- (2050,1000,'ACC_tafsilis',1247,NULL,'ADD',2,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 15:05:29','insert into ACC_tafsilis(TafsiliType,TafsiliCode,TafsiliDesc,ObjectID) values (\'1\',\'1249\',\'مهدی مروی\',\'1249\')'),
- (2051,1000,'BSC_persons',1249,NULL,'ADD',2,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 15:05:29','insert into DataAudit(PersonID,SystemID,PageName,IPAddress,ActionTime,TableName,MainObjectID,ActionType,QueryString) values (\'1000\',\'2\',\'http://rtfund/framework/start.php?SystemID=1\',\'127.0.0.1\',now(),\'ACC_tafsilis\',\'1247\',\'ADD\',\'insert into ACC_tafsilis(TafsiliType,TafsiliCode,TafsiliDesc,ObjectID) values (\'1\',\'1249\',\'مهدی مروی\',\'1249\')\')'),
- (2052,1000,'BSC_persons',1249,NULL,'UPDATE',2,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 15:05:55','update BSC_persons set PersonID=\'1249\',UserName=\'marvi\',IsReal=\'YES\',fname=\'مهدی\',lname=\'مروی\',CompanyName=null,NationalID=null,EconomicID=null,PhoneNo=null,mobile=null,address=null,email=null,IsCustomer=\'YES\',IsStaff=\'YES\',PostID=null where  PersonID=\'1249\''),
- (2053,1000,'BSC_persons',1249,NULL,'DELETE',2,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 15:06:04','update ACC_tafsilis set IsActive=\'NO\' \r\n			where TafsiliType=1 AND ObjectID=\'1249\''),
- (2054,1000,'FRW_menus',56,NULL,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 17:58:04','insert into FRW_menus(SystemID,ParentID,MenuDesc,IsActive,ordering,icon,MenuPath) values (\'4\',\'52\',\'مدیریت فرم ها\',\'YES\',\'2\',\'manage.gif\',\'workflow/ManageForms.php\')'),
- (2055,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 17:58:23','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'31\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
- (2056,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 17:58:23','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'30\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
- (2057,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 17:58:24','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'32\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
- (2058,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 17:58:24','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'53\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
- (2059,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 17:58:24','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'56\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
- (2060,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 17:58:24','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'38\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
- (2061,1000,'LON_requests',227,NULL,'ADD',4,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-12-04 18:04:05','insert into LON_requests(RequestID,BranchID,LoanID,ReqPersonID,ReqDate,ReqAmount,LoanPersonID,guarantees,AgentGuarantee,SupportPersonID) values (\'0\',\'1\',\'9\',\'1000\',now(),\'145780000\',\'1006\',\'1,2\',\'NO\',\'1003\')'),
- (2062,1000,'LON_ReqParts',227,NULL,'ADD',4,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-12-04 18:04:45','insert into LON_ReqParts(RequestID,PartDesc,PartDate,PartAmount,InstallmentCount,IntervalType,PayInterval,DelayMonths,ForfeitPercent,CustomerWage,FundWage) values (\'227\',\'مرحله 1\',\'2016/02/02\',\'125000000\',\'12\',\'MONTH\',\'1\',\'0\',\'4\',\'4\',\'4\')'),
- (2063,1000,'LON_requests',227,NULL,'UPDATE',4,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-12-04 18:05:06','update LON_requests set RequestID=\'227\',StatusID=\'30\' where  RequestID=\'227\''),
- (2064,1000,'WFM_FlowRows',1,NULL,'ADD',4,'http://rtfund/loan/start.php?SystemID=6',NULL,'127.0.0.1','2015-12-04 18:05:42','insert into WFM_FlowRows(FlowID,StepID,ObjectID,PersonID,ActionDate,ActionType) values (\'1\',\'0\',\'227\',\'1000\',now(),\'CONFIRM\')'),
- (2065,1000,'FRW_menus',57,NULL,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 20:50:04','insert into FRW_menus(SystemID,ParentID,MenuDesc,IsActive,ordering,icon,MenuPath) values (\'4\',\'37\',\'مدیریت گردش کار\',\'YES\',\'1\',\'flow.gif\',\'workflow/wfm.php\')'),
- (2066,1000,'FRW_menus',57,NULL,'UPDATE',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 20:50:14','update FRW_menus set SystemID=\'4\',MenuID=\'57\',MenuDesc=\'مدیریت گردش کار\',IsActive=\'YES\',ordering=\'2\',icon=\'flow.gif\',MenuPath=\'workflow/wfm.php\' where MenuID=\'57\''),
- (2067,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 20:50:37','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'31\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
- (2068,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 20:50:37','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'30\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
- (2069,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 20:50:37','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'32\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
- (2070,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 20:50:37','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'53\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
- (2071,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 20:50:37','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'56\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
- (2072,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 20:50:37','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'38\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
- (2073,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2015-12-04 20:50:37','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'57\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
- (2074,1000,'WFM_flows',2,NULL,'ADD',1,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 21:52:27','insert into WFM_flows(ObjectType,FlowDesc) values (\'1\',\'گردش فرم 1\')'),
- (2075,1000,'WFM_flows',2,NULL,'DELETE',1,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 21:56:38','delete from WFM_flows where  FlowID=\'2\''),
- (2076,1000,'WFM_flows',1,NULL,'UPDATE',1,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 21:58:12','update WFM_flows set FlowID=\'1\',ObjectType=\'1\',FlowDesc=\'گردش مرحله وام---\' where  FlowID=\'1\''),
- (2077,1000,'WFM_flows',1,NULL,'UPDATE',1,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 21:58:15','update WFM_flows set FlowID=\'1\',ObjectType=\'1\',FlowDesc=\'گردش مرحله وام\' where  FlowID=\'1\''),
- (2078,1000,'WFM_FlowSteps',1,3,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 22:46:01','insert into WFM_FlowSteps(FlowID,StepID,StepDesc,PostID) values (\'1\',\'3\',\'dsdsad\',\'3\')'),
- (2079,1000,'WFM_FlowSteps',1,4,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 22:46:10','insert into WFM_FlowSteps(FlowID,StepID,StepDesc,PostID) values (\'1\',\'4\',\'dsdsad\',\'3\')'),
- (2080,1000,'WFM_FlowSteps',1,4,'DELETE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 22:46:42','delete from WFM_FlowSteps where  FlowID=\'1\' AND StepID=\'4\''),
- (2081,1000,'WFM_FlowSteps',1,3,'DELETE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 22:47:55','update WFM_FlowSteps set StepID=StepID-1 where StepID>\'3\' AND FlowID=\'1\''),
- (2082,1000,'WFM_FlowSteps',1,3,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 22:48:02','insert into WFM_FlowSteps(FlowID,StepID,StepDesc,PostID) values (\'1\',\'3\',\'sdfsdfsd\',\'2\')'),
- (2083,1000,'WFM_FlowSteps',1,4,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 22:48:07','insert into WFM_FlowSteps(FlowID,StepID,StepDesc,PostID) values (\'1\',\'4\',\'sdfsdfsd\',\'2\')'),
- (2084,1000,'WFM_FlowSteps',1,3,'DELETE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 22:49:39','update WFM_FlowSteps set StepID=StepID-1 where StepID>\'3\' AND FlowID=\'1\''),
- (2085,1000,'WFM_FlowSteps',1,4,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 22:49:51','insert into WFM_FlowSteps(FlowID,StepID,StepDesc,PostID) values (\'1\',\'4\',\'qqqqqqq\',\'1\')'),
- (2086,1000,'WFM_FlowSteps',1,5,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 22:49:56','insert into WFM_FlowSteps(FlowID,StepID,StepDesc,PostID) values (\'1\',\'5\',\'ddddddd\',\'2\')'),
- (2087,1000,'WFM_FlowSteps',1,3,'DELETE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 22:50:02','update WFM_FlowSteps set StepID=StepID-1 where StepID>\'3\' AND FlowID=\'1\''),
- (2088,1000,'WFM_FlowSteps',1,5,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-04 22:50:12','insert into WFM_FlowSteps(FlowID,StepID,StepDesc,PostID) values (\'1\',\'5\',\'sadasdas\',\'3\')');
 /*!40000 ALTER TABLE `DataAudit` ENABLE KEYS */;
 
 
@@ -4170,7 +4101,8 @@ INSERT INTO `FRW_menus` (`SystemID`,`MenuID`,`ParentID`,`MenuDesc`,`IsActive`,`o
  (6,54,15,'ایجاد درخواست وام','YES',1,NULL,'request/RequestInfo.php','NO','NO','NO','NO','NO'),
  (1000,55,46,'اطلاعات سپرده','YES',1,'database','global/DepositeInfo.php','NO','NO','NO','YES','NO'),
  (4,56,52,'مدیریت فرم ها','YES',2,'manageForm.png','workflow/ManageForms.php','NO','NO','NO','NO','NO'),
- (4,57,37,'مدیریت گردش کار','YES',2,'flow.png','workflow/wfm.php','NO','NO','NO','NO','NO');
+ (4,57,37,'مدیریت گردش کار','YES',2,'flow.png','workflow/wfm.php','NO','NO','NO','NO','NO'),
+ (1000,58,39,'اطلاعات قرض الحسنه','YES',4,NULL,'global/AccountInfo.php','YES','NO','NO','YES','NO');
 /*!40000 ALTER TABLE `FRW_menus` ENABLE KEYS */;
 
 
@@ -4248,8 +4180,6 @@ CREATE TABLE `LON_ReqFlow` (
 --
 
 /*!40000 ALTER TABLE `LON_ReqFlow` DISABLE KEYS */;
-INSERT INTO `LON_ReqFlow` (`FlowID`,`RequestID`,`PersonID`,`StatusID`,`ActDate`,`StepComment`) VALUES 
- (1,227,1000,30,'2015-12-04 18:05:06','');
 /*!40000 ALTER TABLE `LON_ReqFlow` ENABLE KEYS */;
 
 
@@ -4508,8 +4438,7 @@ INSERT INTO `LON_ReqParts` (`PartID`,`RequestID`,`PartDesc`,`PartDate`,`PartAmou
  (223,223,'مرحله اول','2015-10-11','475000000',12,'MONTH',1,12,0,0,0,'YES'),
  (224,224,'مرحله اول','2015-10-13','2300000000',1,'MONTH',1,0,0,0,0,'YES'),
  (225,225,'مرحله اول','2015-10-13','7500000000',1,'MONTH',1,0,0,0,0,'YES'),
- (226,226,'مرحله اول','2015-10-29','30628465',9,'MONTH',1,3,0,5,5,'YES'),
- (227,227,'مرحله 1','2016-02-02','125000000',12,'MONTH',1,0,4,4,4,'NO');
+ (226,226,'مرحله اول','2015-10-29','30628465',9,'MONTH',1,3,0,5,5,'YES');
 /*!40000 ALTER TABLE `LON_ReqParts` ENABLE KEYS */;
 
 
@@ -6579,15 +6508,15 @@ CREATE TABLE `LON_loans` (
 
 /*!40000 ALTER TABLE `LON_loans` DISABLE KEYS */;
 INSERT INTO `LON_loans` (`LoanID`,`GroupID`,`LoanDesc`,`MaxAmount`,`InstallmentCount`,`IntervalType`,`PayInterval`,`DelayMonths`,`ForfeitPercent`,`CustomerWage`,`BlockID`) VALUES 
- (1,1,'وام قرض الحسنه','0',0,'MONTH',0,0,'0',0,45),
- (2,1,'وام کارگشائی','0',0,'MONTH',0,0,'0',0,46),
- (3,1,'وام ضروری','0',0,'MONTH',0,0,'0',0,47),
- (4,1,'وام پژوهشی','0',0,'MONTH',0,0,'0',0,48),
- (5,1,'وام علم تا عمل','0',0,'MONTH',0,0,'0',0,50),
- (6,1,'وام قرض الحسنه خیرین','0',0,'MONTH',0,0,'0',0,52),
- (7,1,'وام فناوریهای نوین','0',0,'MONTH',0,0,'0',0,54),
- (8,1,'وام تجاری سازی','0',0,'MONTH',0,0,'0',0,55),
- (9,1,'وام عاملیت','0',0,'MONTH',0,0,'0',0,119);
+ (1,1,'وام قرض الحسنه','10000000',0,'MONTH',0,0,'0',0,45),
+ (2,1,'وام کارگشائی','10000000',0,'MONTH',0,0,'0',0,46),
+ (3,1,'وام ضروری','10000000',0,'MONTH',0,0,'0',0,47),
+ (4,1,'وام پژوهشی','10000000',0,'MONTH',0,0,'0',0,48),
+ (5,1,'وام علم تا عمل','10000000',0,'MONTH',0,0,'0',0,50),
+ (6,1,'وام قرض الحسنه خیرین','10000000',0,'MONTH',0,0,'0',0,52),
+ (7,1,'وام فناوریهای نوین','10000000',0,'MONTH',0,0,'0',0,54),
+ (8,1,'وام تجاری سازی','10000000',0,'MONTH',0,0,'0',0,55),
+ (9,1,'وام عاملیت','10000000',0,'MONTH',0,0,'0',0,119);
 /*!40000 ALTER TABLE `LON_loans` ENABLE KEYS */;
 
 
@@ -6848,7 +6777,8 @@ INSERT INTO `LON_requests` (`RequestID`,`BranchID`,`LoanID`,`ReqPersonID`,`ReqDa
  (224,1,9,1003,'2015-10-13 00:00:00','2300000000',70,'',NULL,NULL,1120,NULL,'NO',NULL,1003,227),
  (225,1,9,1003,'2015-10-13 00:00:00','7500000000',70,'',NULL,NULL,1121,NULL,'NO',NULL,1003,228),
  (226,1,9,1002,'2015-10-29 00:00:00','30628465',70,'',NULL,NULL,1123,NULL,'NO',NULL,NULL,229),
- (227,1,9,1000,'2015-12-04 18:04:05','145780000',70,NULL,NULL,NULL,1006,'1,2','NO',NULL,1003,NULL);
+ (227,1,9,1000,'2015-12-04 18:04:05','145780000',70,NULL,NULL,NULL,1006,'1,2','NO',NULL,1003,NULL),
+ (228,1,1,1120,'2015-12-11 21:15:27','10000000',10,NULL,NULL,NULL,1120,NULL,'NO',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `LON_requests` ENABLE KEYS */;
 
 
@@ -6874,8 +6804,6 @@ CREATE TABLE `WFM_FlowRows` (
 --
 
 /*!40000 ALTER TABLE `WFM_FlowRows` DISABLE KEYS */;
-INSERT INTO `WFM_FlowRows` (`RowID`,`FlowID`,`StepID`,`ObjectID`,`PersonID`,`ActionDate`,`ActionType`,`ActionComment`) VALUES 
- (1,1,0,227,1000,'2015-12-04 18:05:42','CONFIRM',NULL);
 /*!40000 ALTER TABLE `WFM_FlowRows` ENABLE KEYS */;
 
 
@@ -6899,10 +6827,7 @@ CREATE TABLE `WFM_FlowSteps` (
 /*!40000 ALTER TABLE `WFM_FlowSteps` DISABLE KEYS */;
 INSERT INTO `WFM_FlowSteps` (`FlowID`,`StepID`,`StepDesc`,`PostID`) VALUES 
  (1,1,'تایید اولیه',1),
- (1,2,'تایید ناظر',3),
- (1,4,'qqqqqqq',1),
- (1,5,'sadasdas',3),
- (1,1001,'ddddddd',2);
+ (1,2,'تایید ناظر',3);
 /*!40000 ALTER TABLE `WFM_FlowSteps` ENABLE KEYS */;
 
 

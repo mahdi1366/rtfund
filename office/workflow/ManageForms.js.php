@@ -32,12 +32,47 @@ ManageForm.prototype.OperationMenu = function(e){
 	var op_menu = new Ext.menu.Menu();
 	
 	op_menu.add({text: 'اطلاعات آیتم',iconCls: 'info2', 
-		handler : function(){ return ManageFormObject.LoanInfo(); }});
+		handler : function(){ return ManageFormObject.FormInfo(); }});
 	
 	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
 		handler : function(){ return ManageFormObject.ShowHistory(); }});
 	
 	op_menu.showAt(e.pageX-120, e.pageY);
+}
+
+ManageForm.prototype.FormInfo = function(){
+	
+	if(!this.FormInfoWindow)
+	{
+		this.FormInfoWindow = new Ext.window.Window({
+			width : 800,
+			height : 400,
+			autoScroll : true,
+			modal : true,
+			title : "اطلاعات فرم مربوطه",
+			bodyStyle : "background-color:white",
+			loader : {
+				scripts : true
+			},
+			closeAction : "hide",
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+	}
+	
+	this.FormInfoWindow.show();	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+	eval("param = {ExtTabID : '" + this.FormInfoWindow.getEl().id + "'," + 
+					record.data.parameter + " : '" + record.data.ObjectID + "'}");
+	
+	this.FormInfoWindow.loader.load({
+		url : record.data.url,
+		params : param
+	}); 	
 }
 
 ManageForm.prototype.ShowHistory = function(){

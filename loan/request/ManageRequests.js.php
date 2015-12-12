@@ -187,13 +187,6 @@ ManageRequest.prototype.LoanInfo = function(){
 	});
 	
 	return;
-	
-	
-	
-	var record = this.grid.getSelectionModel().getLastSelected();
-	this.LoanInfoWin.down('form').loadRecord(record);
-	this.LoanInfoWin.show();
-	this.LoanInfoWin.center();
 }
 
 ManageRequest.prototype.SaveLoanRequest = function(){

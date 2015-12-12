@@ -264,8 +264,13 @@ AccDocs.prototype.operationhMenu = function(e){
 	if(this.CycleIsOpen)
 	{
 		if(this.AddAccess)
-            op_menu.add({text: 'اضافه برگه',iconCls: 'add', 
+        {
+			op_menu.add({text: 'اضافه برگه',iconCls: 'add', 
 				handler : function(){ return AccDocsObject.AddDoc(); }})
+			
+			op_menu.add({text: 'محاسبه سود سپرده',iconCls: 'copy', 
+				handler : function(){ return AccDocsObject.ComputeDoc('DepositeProfit'); }})
+		}
 
 		if(record != null && record.data.DocStatus == "RAW")
 		{
@@ -530,8 +535,13 @@ AccDocs.prototype.confirmDoc = function()
 			method: 'POST',
 
 			success: function(response){
+				result = Ext.decode(response.responseText);
 				mask.hide();
-				AccDocsObject.grid.getStore().load();
+				if(result.success)
+					AccDocsObject.grid.getStore().load();
+				else
+					Ext.MessageBox.alert("Error", 
+						result.data == "" ? "عملیات مورد نظر با شکست مواجه شد" : result.data);
 			},
 			failure: function(){}
 		});
@@ -559,8 +569,13 @@ AccDocs.prototype.UndoConfirmDoc = function()
 			method: 'POST',
 
 			success: function(response){
+				result = Ext.decode(response.responseText);
 				mask.hide();
-				AccDocsObject.grid.getStore().load();
+				if(result.success)
+					AccDocsObject.grid.getStore().load();
+				else
+					Ext.MessageBox.alert("Error", 
+						result.data == "" ? "عملیات مورد نظر با شکست مواجه شد" : result.data);
 			},
 			failure: function(){}
 		});
@@ -619,6 +634,44 @@ AccDocs.prototype.SearchDoc = function(){
 	});
 
 }    
+
+AccDocs.prototype.ComputeDoc = function(ComputeType)
+{
+	switch(ComputeType)
+	{
+		case "DepositeProfit":
+			msg = "آیا مایل به محاسبه و صدور سند سود سپرده های کوتاه مدت و بلند مدت می باشید؟";
+			break;
+	}
+	Ext.MessageBox.confirm("", msg, function(btn){
+		if(btn == "no")
+			return;
+		
+		me = AccDocsObject;
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال تایید سند ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'doc.data.php?task=ComputeDoc',
+			params:{
+				ComputeType : ComputeType
+			},
+			method: 'POST',
+
+			success: function(response){
+				result = Ext.decode(response.responseText);
+				mask.hide();
+				if(result.success)
+					AccDocsObject.grid.getStore().loadPage(AccDocsObject.grid.getStore().totalCount+1);
+				else
+					Ext.MessageBox.alert("Error", 
+						result.data == "" ? "عملیات مورد نظر با شکست مواجه شد" : result.data);
+			},
+			failure: function(){}
+		});
+	});
+}
+
 //.........................................................
 
 AccDocs.prototype.check_deleteRender = function()

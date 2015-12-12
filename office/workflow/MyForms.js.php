@@ -15,15 +15,6 @@ MyForm.prototype = {
 
 function MyForm(){
 	
-	this.LoanInfoPanel = new Ext.panel.Panel({
-		renderTo : this.get("LoanInfo"),
-		border : 0,
-		hidden : true,
-		loader : {
-			url : this.address_prefix + "RequestInfo.php",
-			scripts : true
-		}
-	});
 }
 
 MyFormObject = new MyForm();
@@ -48,7 +39,7 @@ MyForm.prototype.OperationMenu = function(e){
 	var op_menu = new Ext.menu.Menu();
 	
 	op_menu.add({text: 'اطلاعات آیتم',iconCls: 'info2', 
-		handler : function(){ return MyFormObject.LoanInfo(); }});
+		handler : function(){ return MyFormObject.FormInfo(); }});
 	
 	op_menu.add({text: 'تایید درخواست',iconCls: 'tick', 
 	handler : function(){ return MyFormObject.beforeChangeStatus('CONFIRM'); }});
@@ -89,29 +80,39 @@ MyForm.prototype.ChangeStatus = function(mode, ActionComment){
 	});
 }
 
-MyForm.prototype.LoanInfo = function(){
+MyForm.prototype.FormInfo = function(){
 	
+	if(!this.FormInfoWindow)
+	{
+		this.FormInfoWindow = new Ext.window.Window({
+			width : 800,
+			height : 400,
+			autoScroll : true,
+			modal : true,
+			title : "اطلاعات فرم مربوطه",
+			bodyStyle : "background-color:white",
+			loader : {
+				scripts : true
+			},
+			closeAction : "hide",
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+	}
+	
+	this.FormInfoWindow.show();	
 	var record = this.grid.getSelectionModel().getLastSelected();
-	this.LoanInfoPanel.loader.load({
-		params : {
-			ExtTabID : this.LoanInfoPanel.getEl().id,
-			RequestID : record.data.RequestID}
-	});
-	this.LoanInfoPanel.show();	
-	return;
 	
-	framework.OpenPage(this.address_prefix + "RequestInfo.php", "اطلاعات درخواست وام" , {
-		RequestID : record.data.RequestID
-	});
+	eval("param = {ExtTabID : '" + this.FormInfoWindow.getEl().id + "'," + 
+					record.data.parameter + " : '" + record.data.ObjectID + "'}");
 	
-	return;
-	
-	
-	
-	var record = this.grid.getSelectionModel().getLastSelected();
-	this.LoanInfoWin.down('form').loadRecord(record);
-	this.LoanInfoWin.show();
-	this.LoanInfoWin.center();
+	this.FormInfoWindow.loader.load({
+		url : record.data.url,
+		params : param
+	}); 	
 }
 
 MyForm.prototype.SaveLoanRequest = function(){

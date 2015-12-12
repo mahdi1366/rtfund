@@ -138,6 +138,7 @@ MyRequest.prototype.EditRequest = function(HavePart){
 			this.RequestInfoWin = new Ext.window.Window({
 				width : 800,
 				height : 460,
+				autoScroll : true,
 				modal : true,
 				bodyStyle : "background-color:white;padding-right:10px",
 				closeAction : "hide",

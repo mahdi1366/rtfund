@@ -131,6 +131,7 @@ function NewLoanRequest()
 				items : [{
 					xtype : "container",
 					colspan : 4 ,
+					itemId : "SelectStepDesc",
 					width: 300,
 					style : "margin-right:5px; color:#0d6eb2",					
 					html : "<font color=red>" + "توجه: " + "</font>" + "برای مشاهده جزئیات هر وام روی عنوان وام کلیک کنید."
@@ -246,7 +247,7 @@ function NewLoanRequest()
 	if(this.RequestID > 0)
 	{
 		this.grid.hide();
-		
+		this.mainPanel.down("[itemId=SelectStepDesc]").update("");
 		mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
 		mask.show();
 		
@@ -300,14 +301,6 @@ function NewLoanRequest()
 }
 
 NewLoanRequestObject = new NewLoanRequest();
-
-NewLoanRequest.prototype.NewLoanRequest = function()
-{
-	if(this.get("new_pass").value != this.get("new_pass2").value)
-	{
-		return;
-	}
-}
 
 NewLoanRequest.prototype.LoadSummary = function(record){
 

@@ -46,14 +46,14 @@ $temp = PdoDataAccess::runquery("
 	<table style="width:100%">
 	<tr>
 	    <td width="25%">
-			<img src="../../img/logo3.png" style="width:80px" />
+			<img src="/framework/icons/logo.jpg" style="width:120px" />
 		</td>
 	    <td style="height: 80px;font-family: b titr;font-size:16px" align="center">
 			<br>سند حسابداری
 	    </td>
 	    <td width="20%" align="center" >
 			شماره سند : 
-			<?= $docID?><br><br>
+			<?= $DocObject->LocalNo ?><br><br>
 			تاریخ سند :
 			<?= DateModules::miladi_to_shamsi($DocObject->DocDate)?>
 	    </td>

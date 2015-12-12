@@ -17,6 +17,8 @@ $dg->addColumn("", "ObjectID", "", true);
 $dg->addColumn("", "PersonID", "", true);
 $dg->addColumn("", "ActionType", "", true);
 $dg->addColumn("", "ActionComment", "", true);
+$dg->addColumn("", "url", "", true);
+$dg->addColumn("", "parameter", "", true);
 
 $col = $dg->addColumn("نوع فرم", "ObjectTypeDesc", "");
 $col->width = 130;
