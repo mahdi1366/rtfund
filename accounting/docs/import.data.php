@@ -858,7 +858,7 @@ function ComputeDepositeProfit(){
 	$LatestComputeDocID = count($dt)==0 ? 0 : $dt[0]["DocID"];
 	
 	//----------- check for all docs confirm --------------
-	/*$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
+	$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
 		join ACC_docItems using(DocID)
 		where DocID>=? AND CostID in(" . ShortDepositeCostID . "," . LongDepositeCostID . ")
 		AND DocStatus not in('CONFIRM','ARCHIVE')", array($LatestComputeDocID));
@@ -867,7 +867,7 @@ function ComputeDepositeProfit(){
 		echo Response::createObjectiveResponse(false, "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند و قادر به صدور سند سود سپرده نمی باشید.");
 		die();
 	}
-	*/
+	
 	//--------------get percents -----------------
 	$dt = PdoDataAccess::runquery("select * from ACC_cycles where CycleID=" . 
 			$_SESSION["accounting"]["CycleID"]);
