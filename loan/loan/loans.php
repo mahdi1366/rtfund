@@ -17,7 +17,6 @@ $dg->addColumn("کد وام", "LoanID", "", true);
 $dg->addColumn("", "GroupID", "", true);
 $dg->addColumn("درصد دیرکرد", "ForfeitPercent", "", true);
 $dg->addColumn("", "CustomerWage", "", true);
-$dg->addColumn("", "FundWage", "", true);
 $dg->addColumn("", "IntervalType", "", true);
 
 $col = $dg->addColumn("عنوان وام", "LoanDesc", "");
@@ -25,7 +24,7 @@ $col = $dg->addColumn("عنوان وام", "LoanDesc", "");
 $col = $dg->addColumn("سقف مبلغ", "MaxAmount", GridColumn::ColumnType_money);
 $col->width = 140;
 
-$col = $dg->addColumn("تعداد اقساط", "PayCount");
+$col = $dg->addColumn("تعداد اقساط", "InstallmentCount");
 $col->width = 80;
 $col->align = "center";
 

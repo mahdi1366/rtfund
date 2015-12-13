@@ -50,7 +50,7 @@ Branch.prototype.saveData = function(store,record)
 			task: 'SaveBranch',
 			record : Ext.encode(record.data)
 		},
-		url: this.address_prefix +'baseinfo.data.php',
+		url: this.address_prefix +'baseInfo.data.php',
 		method: 'POST',
 
 		success: function(response){

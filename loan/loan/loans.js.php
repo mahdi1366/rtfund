@@ -146,7 +146,7 @@ Loan.prototype.LoanInfo = function(mode)
 				},{
 					xtype:'numberfield',
 					fieldLabel: 'تعداد اقساط',
-					name: 'PayCount',
+					name: 'InstallmentCount',
 					hideTrigger : true
 				},{
 					xtype : "container",
@@ -188,13 +188,6 @@ Loan.prototype.LoanInfo = function(mode)
 					fieldLabel: 'کارمزد مشتری',
 					afterSubTpl : "%",
 					name: 'CustomerWage',
-					maxValue  : 100,
-					hideTrigger : true
-				},{
-					xtype:'numberfield',
-					fieldLabel: 'کارمزد صندوق',
-					afterSubTpl : "%",
-					name: 'FundWage',
 					maxValue  : 100,
 					hideTrigger : true
 				},{

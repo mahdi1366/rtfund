@@ -13,7 +13,7 @@ $CurYear = substr(DateModules::shNow(),0,4);
 
 $temp = PdoDataAccess::runquery("
 	select sum(CreditorAmount-DebtorAmount) amount 
-	from ACC_DocItems di join Acc_docs d using(DocID)
+	from ACC_DocItems di join ACC_docs d using(DocID)
 	left join ACC_tafsilis t1 on(t1.TafsiliType=1 AND di.TafsiliID=t1.TafsiliID)
 	left join ACC_tafsilis t2 on(t2.TafsiliType=1 AND di.Tafsili2ID=t2.TafsiliID)
 	where CycleID=:year 
@@ -25,6 +25,7 @@ $temp = PdoDataAccess::runquery("
 ", array(":year" => $CurYear, ":pid" => $_SESSION["USER"]["PersonID"]));
 
 $TotalAmount = count($temp) > 0 ? $temp[0]["amount"] : 0;
+
 //------------------------------------------------------------------------------
 
 $dg = new sadaf_datagrid("dg","global/global.data.php?task=AccDocFlow&CostID=" . $GharzolhasaneCostID, "");

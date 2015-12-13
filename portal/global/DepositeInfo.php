@@ -14,7 +14,7 @@ $CurYear = substr(DateModules::shNow(),0,4);
 
 $temp = PdoDataAccess::runquery("
 	select CostID, sum(CreditorAmount-DebtorAmount) amount 
-	from ACC_DocItems di join Acc_docs d using(DocID)
+	from ACC_DocItems di join ACC_docs d using(DocID)
 	left join ACC_tafsilis t1 on(t1.TafsiliType=1 AND di.TafsiliID=t1.TafsiliID)
 	left join ACC_tafsilis t2 on(t2.TafsiliType=1 AND di.Tafsili2ID=t2.TafsiliID)
 	where CycleID=:year AND CostID in($ShortDepositeCostID,$LongDepositeCostID) 

@@ -12,7 +12,8 @@ set_include_path(get_include_path() . PATH_SEPARATOR . getenv("DOCUMENT_ROOT") .
 require_once 'PDODataAccess.class.php';
 require_once 'classconfig.inc.php';
 require_once 'DataAudit.class.php';
-require_once 'definitions.inc.php';
+
+require_once getenv("DOCUMENT_ROOT") . '/accounting/definitions.inc.php';
 
 require_once getenv("DOCUMENT_ROOT") . '/framework/management/framework.class.php';
 

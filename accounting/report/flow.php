@@ -108,18 +108,33 @@ if(isset($_REQUEST["show"]))
 		//.....................................
 		if(isset($_REQUEST["level1"]))
 		{
-			$where .= " AND cc.level1 = :l1";
-			$whereParam[":l1"] = $_REQUEST["level1"];
+			if(empty($_REQUEST["level1"]))
+				$where .= " AND cc.level1 is null";
+			else
+			{
+				$where .= " AND cc.level1 = :l1";
+				$whereParam[":l1"] = $_REQUEST["level1"];
+			}
 		}
 		if(isset($_REQUEST["level2"]))
 		{
-			$where .= " AND cc.level2 = :l2";
-			$whereParam[":l2"] = $_REQUEST["level2"];
+			if(empty($_REQUEST["level2"]))
+				$where .= " AND cc.level2 is null";
+			else
+			{
+				$where .= " AND cc.level2 = :l2";
+				$whereParam[":l2"] = $_REQUEST["level2"];
+			}
 		}
 		if(isset($_REQUEST["level3"]))
 		{
-			$where .= " AND cc.level3 = :l3";
-			$whereParam[":l3"] = $_REQUEST["level3"];
+			if(empty($_REQUEST["level3"]))
+				$where .= " AND cc.level3 is null";
+			else
+			{
+				$where .= " AND cc.level3 = :l3";
+				$whereParam[":l3"] = $_REQUEST["level3"];
+			}
 		}
 		if(!empty($_REQUEST["TafsiliGroup"]))
 		{

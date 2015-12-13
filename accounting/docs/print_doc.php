@@ -25,13 +25,14 @@ $temp = PdoDataAccess::runquery("
 			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
 			left join BaseInfo b on(TafsiliType=InfoID AND TypeID=2)
-			left join ACC_Tafsilis t on(t.TafsiliID=di.TafsiliID)
+			left join ACC_tafsilis t on(t.TafsiliID=di.TafsiliID)
 			
 		where di.DocID=?
 		group by if(DebtorAmount<>0,0,1),di.CostID,di.TafsiliID
 		order by if(DebtorAmount<>0,0,1),cc.CostCode", 
 		
 		array($docID));
+
 ?>
 <meta content='text/html; charset=utf-8' http-equiv='Content-Type'/>
 <style media="print">

@@ -10,13 +10,12 @@ class LON_loans extends PdoDataAccess
 	public $GroupID;
 	public $LoanDesc;
 	public $MaxAmount;
-	public $PayCount;
+	public $InstallmentCount;
 	public $IntervalType;
 	public $PayInterval;
 	public $DelayMonths;
 	public $ForfeitPercent;
 	public $CustomerWage;
-	public $FundWage;
 	public $BlockID;
 	
 	public $_BlockCode;

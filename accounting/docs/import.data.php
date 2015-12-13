@@ -859,7 +859,7 @@ function ComputeDepositeProfit(){
 	
 	//----------- check for all docs confirm --------------
 	$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
-		join ACC_docItems using(DocID)
+		join ACC_DocItems using(DocID)
 		where DocID>=? AND CostID in(" . ShortDepositeCostID . "," . LongDepositeCostID . ")
 		AND DocStatus not in('CONFIRM','ARCHIVE')", array($LatestComputeDocID));
 	if(count($dt) > 0 && $dt[0][0] != "")
@@ -1004,7 +1004,9 @@ function ComputeDepositeProfit(){
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
 	if(!$itemObj->Add($pdo))
+	{
 		return false;
+	}
 	
 	
 	$pdo->commit();
