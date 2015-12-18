@@ -50,6 +50,13 @@ StartPage.prototype = {
 function StartPage(){
 	
 	this.grid = <?= $grid ?>;
+	
+	this.grid.on("itemdblclick", function(view, record){
+			
+		framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", {RequestID : record.data.RequestID});
+
+	});
+	
 	this.grid.render(this.get("DivGrid"));
 }
 

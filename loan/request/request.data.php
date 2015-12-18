@@ -81,6 +81,9 @@ switch ($task) {
 	case "SelectReadyToPayParts":
 		SelectReadyToPayParts();
 		
+	case "selectRequestStatuses":
+		selectRequestStatuses();
+		
 }
 
 function SaveLoanRequest(){
@@ -100,7 +103,8 @@ function SaveLoanRequest(){
 	//------------------------------------------------------
 	if($_SESSION["USER"]["IsCustomer"] == "YES")
 	{
-		$obj->LoanPersonID = $_SESSION["USER"]["PersonID"];
+		if(!isset($obj->LoanPersonID))
+			$obj->LoanPersonID = $_SESSION["USER"]["PersonID"];
 		$obj->StatusID = 10;
 	}
 	if($_SESSION["USER"]["IsAgent"] == "YES")
@@ -126,25 +130,25 @@ function SaveLoanRequest(){
 		$result = $obj->AddRequest();
 		if($result)
 			ChangeStatus($obj->RequestID,$obj->StatusID, "", true);
+		
+		if($_SESSION["USER"]["IsCustomer"] == "YES" && $obj->LoanID > 0)
+		{
+			$loanObj = new LON_loans($obj->LoanID);
+			$PartObj = new LON_ReqParts();
+			PdoDataAccess::FillObjectByObject($loanObj, $PartObj);
+			$PartObj->RequestID = $obj->RequestID;
+			$PartObj->PartDesc = "مرحله اول";
+			$PartObj->FundWage = $loanObj->CustomerWage;
+			$PartObj->PartAmount = $obj->ReqAmount;
+			$PartObj->PartDate = PDONOW;
+			$PartObj->AddPart();
+		}
 	}
 	else
 	{
 		$result = $obj->EditRequest();
 		if($result)
 			ChangeStatus($obj->RequestID,$obj->StatusID, "", true);
-	}
-	
-	if($_SESSION["USER"]["IsCustomer"] == "YES" && $obj->LoanID > 0)
-	{
-		$loanObj = new LON_loans($obj->LoanID);
-		$PartObj = new LON_ReqParts();
-		PdoDataAccess::FillObjectByObject($loanObj, $PartObj);
-		$PartObj->RequestID = $obj->RequestID;
-		$PartObj->PartDesc = "مرحله اول";
-		$PartObj->FundWage = $loanObj->CustomerWage;
-		$PartObj->PartAmount = $obj->ReqAmount;
-		$PartObj->PartDate = PDONOW;
-		$PartObj->AddPart();
 	}
 	
 	//print_r(ExceptionHandler::PopAllExceptions());
@@ -657,4 +661,10 @@ function SelectReadyToPayParts(){
 	die();
 }
 
+
+function selectRequestStatuses(){
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=5");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
 ?>

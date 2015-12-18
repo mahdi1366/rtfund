@@ -47,6 +47,12 @@ ManageRequest.prototype.OperationMenu = function(e){
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
 	
+	if('<?= $_SESSION["USER"]["UserName"] ?>' == 'admin')
+	{
+		op_menu.add({text: 'تغییر وضعیت',iconCls: 'refresh', 
+		handler : function(){ return ManageRequestObject.SetStatus(); }});
+	}
+	
 	op_menu.add({text: 'جزئیات درخواست',iconCls: 'info2', 
 		handler : function(){ return ManageRequestObject.LoanInfo(); }});
 	
@@ -56,7 +62,7 @@ ManageRequest.prototype.OperationMenu = function(e){
 		handler : function(){ return ManageRequestObject.beforeChangeStatus(30); }});
 		
 		op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
-		handler : function(){ return ManageRequestObject.deleteRequest(30); }});
+		handler : function(){ return ManageRequestObject.deleteRequest(); }});
 	}
 	if(record.data.StatusID == "10")
 	{
@@ -66,14 +72,19 @@ ManageRequest.prototype.OperationMenu = function(e){
 		op_menu.add({text: 'رد درخواست',iconCls: 'cross',
 		handler : function(){ return ManageRequestObject.beforeChangeStatus(20); }});
 	}
-	if(record.data.StatusID == "30")
+	if(record.data.StatusID == "30" || record.data.StatusID == "35")
 	{
 		op_menu.add({text: 'ارسال به مشتری جهت تکمیل مدارک',iconCls: 'send',
 		handler : function(){ return ManageRequestObject.beforeChangeStatus(40); }});
 	}
+	if(record.data.StatusID == "40")
+	{
+		op_menu.add({text: 'برگشت از مشتری',iconCls: 'back',
+		handler : function(){ return ManageRequestObject.ChangeStatus(35, ""); }});
+	}
 	if(record.data.StatusID == "50")
 	{
-		op_menu.add({text: 'تایید مدارک مشتری',iconCls: 'send',
+		op_menu.add({text: 'تایید مدارک مشتری',iconCls: 'tick',
 		handler : function(){ return ManageRequestObject.beforeChangeStatus(70); }});
 	
 		op_menu.add({text: 'عدم تایید مدارک',iconCls: 'cross',
@@ -169,6 +180,63 @@ ManageRequest.prototype.ChangeStatus = function(StatusID, StepComment){
 			ManageRequestObject.LoanInfoPanel.hide();
 		}
 	});
+}
+
+ManageRequest.prototype.SetStatus = function(){
+	
+	if(!this.setStatusWin)
+	{
+		this.setStatusWin = new Ext.window.Window({
+			width : 412,
+			height : 198,
+			modal : true,
+			title : "تغییر وضعیت",
+			defaults : {width : 380},
+			bodyStyle : "background-color:white",
+			items : [{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + "request.data.php?task=selectRequestStatuses",
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields : ['InfoID','InfoDesc'],
+					autoLoad : true					
+				}),
+				fieldLabel : "وضعیت جدید",
+				queryMode : 'local',
+				allowBlank : false,
+				displayField : "InfoDesc",
+				valueField : "InfoID",
+				itemId : "StatusID"
+			},{
+				xtype : "textarea",
+				itemId : "comment",
+				fieldLabel : "توضیحات"
+			}],
+			closeAction : "hide",
+			buttons : [{
+				text : "تغییر وضعیت",				
+				iconCls : "save",
+				itemId : "btn_save",
+				handler : function(){
+					status = this.up('window').getComponent("StatusID").getValue();
+					comment = this.up('window').getComponent("comment").getValue();
+					ManageRequestObject.ChangeStatus(status, "[تغییر وضعیت]" + comment);
+					this.up('window').hide();
+				}
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.setStatusWin);
+	}
+	this.setStatusWin.show();
+	this.setStatusWin.center();
 }
 
 ManageRequest.prototype.LoanInfo = function(){

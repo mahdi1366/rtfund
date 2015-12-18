@@ -20,6 +20,12 @@ switch ($task)
 		
 	case "DeleteFlow":
 		DeleteFlow();
+		
+	case "selectFlowSteps":
+		selectFlowSteps();
+		
+	case "SetStatus":
+		SetStatus();
 	//............................
 		
 	case "SelectSteps":
@@ -82,6 +88,30 @@ function DeleteFlow(){
 	die();
 }
 
+function selectFlowSteps(){
+	
+	$dt = PdoDataAccess::runquery("select * from WFM_FlowSteps where FlowID=?", array($_GET["FlowID"]));
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SetStatus(){
+	
+	$mode = $_REQUEST["mode"];
+	$SourceObj = new WFM_FlowRows($_POST["RowID"]);
+	
+	$newObj = new WFM_FlowRows();
+	$newObj->FlowID = $SourceObj->FlowID;
+	$newObj->ObjectID = $SourceObj->ObjectID;
+	$newObj->PersonID = $_SESSION["USER"]["PersonID"];
+	$newObj->StepID = $_POST["StepID"];
+	$newObj->ActionType = "CONFIRM";
+	$newObj->ActionDate = PDONOW;
+	$newObj->ActionComment = $_POST["ActionComment"];
+	$result = $newObj->AddFlowRow();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 //............................
 
 function SelectSteps(){

@@ -235,6 +235,7 @@ RequestInfo.prototype.BuildForms = function(){
 				}),
 				fieldLabel : "مشتری",
 				displayField : "fullname",
+				pageSize : 20,
 				valueField : "PersonID",
 				name : "LoanPersonID"
 			},{

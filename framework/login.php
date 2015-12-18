@@ -42,7 +42,7 @@ if(isset($_POST["UserName"]))
 				echo "یوزر شما غیر فعال شده است. لطفا جهت پیگیری با صندوق تماس حاصل فرمایید.";
 				echo "</font></center></body>";
 				die();
-			}
+			} 
 		
 			$_SESSION['USER'] = $temp[0];
 			$_SESSION['USER']["fullname"] = $temp[0]["fname"] . " " . $temp[0]["lname"];
