@@ -188,20 +188,20 @@ if(isset($_POST["UserName"]))
 		</div>
 		<div align="center">
 		<div class="mainDiv">
-			<table width="100%">
+			<table width="100%"> 
 				<tr>
 					<td width="200px" style="vertical-align: middle;"><img src="../framework/icons/keys.jpg"</td>
 					<td style="vertical-align: top;">
 						<div id="loginDIV">
-							<form method="post" id="MainForm" onsubmit="return loginFN();">
+							<form method="post" id="MainForm" onsubmit="return loginFN();" autocomplete="off">
 								<div class="title" > ورود به پرتال </div>
 								<br>
 								<div style="font-size: 12px">جهت ورود به پرتال نام کاربری و کلمه عبور خود را وارد کنید.
 									درغیر اینصورت با زدن دکمه ثبت نام به پرتال وارد شوید.</div>
 								<br>
-								<div id="UserNameDiv"><input type="text" name="UserName" class="textfield" id="UserName" 
+								<div id="UserNameDiv"><input autocomplete="off" type="text" name="UserName" class="textfield" id="UserName" 
 									placeholder="کلمه کاربری ..." required="required" dir="ltr" /></div>
-								<div id="PasswordDiv"><input type="password" class="textfield" id="password" 
+								<div id="PasswordDiv"><input autocomplete="off" type="password" class="textfield" id="password" 
 									placeholder="رمز عبور ..." required="required" dir="ltr"/></div>
 								<button type="submit" style="width:80px" class="btn  ">ورود</button>
 								<div class="forget">&nbsp;| رمز عبور را فراموش کرده ام </div>
