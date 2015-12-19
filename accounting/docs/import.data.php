@@ -92,7 +92,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$YearMonths = floor(365/$PartObj->PayInterval);
 	$TotalWage = round(ComputeWage($PartObj->PartAmount, $PartObj->CustomerWage/100, 
 			$PartObj->InstallmentCount, $YearMonths));	
-	$FundFactor = $PartObj->FundWage/$PartObj->CustomerWage;
+	$FundFactor = $PartObj->CustomerWage*1 == 0 ? 0 : $PartObj->FundWage/$PartObj->CustomerWage;
 	
 	$year1 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 1, $YearMonths);
 	$year2 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 2, $YearMonths);
@@ -328,8 +328,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			SELECT DocumentID, ParamValue, InfoDesc as DocTypeDesc
 				FROM DMS_DocParamValues
 				join DMS_DocParams using(ParamID)
-				join DMS_documents using(DocumentID)
-				join BaseInfo b on(InfoID=DocType AND TypeID=8)
+				join DMS_documents d using(DocumentID)
+				join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
 			where b.param1=1 AND paramType='currencyfield' AND ObjectType='loan' AND ObjectID=?",
 			array($ReqObj->RequestID), $pdo);
 
@@ -355,39 +355,42 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			$SumAmount += $row["ParamValue"]*1;
 		}
 
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType);
-		unset($itemObj->TafsiliID);
-		unset($itemObj->Tafsili2Type);
-		unset($itemObj->Tafsili2ID);
-		unset($itemObj->details);
-		$itemObj->CostID = $CostCode_guaranteeAmount2;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $SumAmount;	
-		if(!$itemObj->Add($pdo))
+		if($SumAmount > 0)
 		{
-			ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
-			return false;
-		}
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliID);
+			unset($itemObj->Tafsili2Type);
+			unset($itemObj->Tafsili2ID);
+			unset($itemObj->details);
+			$itemObj->CostID = $CostCode_guaranteeAmount2;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $SumAmount;	
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
+				return false;
+			}
 
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeCount;
-		$itemObj->DebtorAmount = count($dt);
-		$itemObj->CreditorAmount = 0;	
-		if(!$itemObj->Add($pdo))
-		{
-			ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
-			return false;
-		}
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_guaranteeCount;
+			$itemObj->DebtorAmount = count($dt);
+			$itemObj->CreditorAmount = 0;	
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
+				return false;
+			}
 
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeCount2;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = count($dt);
-		if(!$itemObj->Add($pdo))
-		{
-			ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
-			return false;
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_guaranteeCount2;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = count($dt);
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
+				return false;
+			}
 		}
 	}
 	//------ ایجاد چک ------

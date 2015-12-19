@@ -328,7 +328,7 @@ function PayPart(){
 	
 	require_once '../../accounting/docs/import.data.php';
 	$result = RegisterPayPartDoc($ReqObj, $partobj, $pdo);
-	
+	print_r(ExceptionHandler::PopAllExceptions());
 	if(!$result)
 	{
 		$pdo->rollBack();
@@ -484,7 +484,10 @@ function PMT($CustomerWage, $InstallmentCount, $PartAmount, $YearMonths) {
 	return $CustomerWage * $PartAmount * pow((1 + $CustomerWage), $InstallmentCount) / (1 - pow((1 + $CustomerWage), $InstallmentCount)); 
 } 
 function ComputeWage($PartAmount, $CustomerWagePercent, $InstallmentCount, $YearMonths){
-		
+	
+	if($CustomerWagePercent == 0)
+		return 0;
+	
 	return ((($PartAmount*$CustomerWagePercent/$YearMonths*( pow((1+($CustomerWagePercent/$YearMonths)),$InstallmentCount)))/
 		((pow((1+($CustomerWagePercent/$YearMonths)),$InstallmentCount))-1))*$InstallmentCount)-$PartAmount;
 }

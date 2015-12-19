@@ -22,7 +22,8 @@ if(isset($_POST["UserName"]))
 	$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($user));
 	if(count($temp) == 0)
 	{
-		$return = "WrongUserName";
+		echo "WrongUserName";
+		die();
 	}
 	else
 	{
@@ -31,7 +32,8 @@ if(isset($_POST["UserName"]))
 		$hasher = new PasswordHash($hash_cost_log2, true);
 		if (!$hasher->CheckPassword($pass, $temp[0]["UserPass"])) {
 		
-			$return = "WrongPassword";		
+			echo "WrongPassword";	
+			die();
 		}
 		else
 		{
@@ -57,7 +59,8 @@ if(isset($_POST["UserName"]))
 			else
 				$_SESSION['LIPAddress'] = $_SERVER['REMOTE_ADDR'];
 			//..........................................................
-			header("location: systems.php");
+			echo "true";
+			die();	
 		}
 	}
 }
@@ -66,39 +69,11 @@ if(isset($_POST["UserName"]))
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-     <title>نرم افزار <?= SoftwareName?></title>
+	<meta http-equiv="expires" content="now">
+	<meta http-equiv="pragma" content="no-cache">
+    <title>نرم افزار <?= SoftwareName?></title>
 	<? require_once 'md5.php'; ?>
-	<script>
-		function pressing(e)
-		{
-			var c = (e.keyCode)? e.keyCode: (e.charCode)? e.charCode: e.which;
-			if(c == 13)
-			{
-				loginFN();
-				document.getElementById('MainForm').submit();
-				return false;
-			}
-		}
-		function loginFN()
-		{
-			document.getElementById("md5Pass").value = MD5(document.getElementById('password').value);
-		}
-		
-		function BodyLoad(){
-			
-			document.getElementById('UserName').focus();
-			var error = '<?= $return ?>';
-			if(error == "WrongUserName")
-				document.getElementById("UserNameDiv").className = "wrong";
-			if(error == "WrongPassword")
-			{
-				document.getElementById("PasswordDiv").className = "wrong";
-				document.getElementById("UserName").value = "<?= isset($_POST["UserName"]) ? $_POST["UserName"] : "" ?>";
-				document.getElementById('password').focus();
-			}	
-		}
-	</script>
-	 <style>
+	<style>
 	  body td div{
 		  font-family: tahoma;
 	  }
@@ -119,7 +94,7 @@ if(isset($_POST["UserName"]))
 		color : white;		
 	}
 	.mainDiv{
-		width : 500px;	
+		width : 533px;	
 		right : 35%;
 		top : 35%;
 		position: absolute;
@@ -145,8 +120,21 @@ if(isset($_POST["UserName"]))
 	}
 	.wrong::after {
 		color: #f5443b !important;
-		content: url("icons/cross.png");
+		content: "کلمه کاربری اشتباه است";
 		padding-right: 6px;
+		vertical-align: super;
+		font-size: 11px;
+	}
+	
+	.wrong2 input {
+		border: 1px solid #9e423e;
+	}
+	.wrong2::after {
+		color: #f5443b !important;
+		content: "رمز عبور اشتباه است";
+		padding-right: 6px;
+		vertical-align: super;
+		font-size: 11px;
 	}
 
 	.btn{
@@ -177,11 +165,154 @@ if(isset($_POST["UserName"]))
 	.forget:hover{
 		color: #63d1d0;
 	}	
-  </style>
+	
+	#ajax-loading{
+		position: fixed;
+		top: 0;
+		left: 0;
+		height:100%;
+		width:100%;
+		z-index: 9999999;
+		background-color : #999;
+		opacity: 0.7;
+		filter: alpha(opacity=70); /* ie */
+		-moz-opacity: 0.7; /* mozilla */    
+		display : none;
+	}
+	#ajax-loading div{
+		position: absolute;
+		width: 30px;
+		height: 30px;
+		left: 50%;
+		top: 10%;
+		margin: 0 0 0 -15px;
+		border: 8px solid #fff;
+		border-right-color: transparent;
+		border-radius: 50%;
+		box-shadow: 0 0 25px 2px #eee;
+		-webkit-animation: spin 1s linear infinite;
+		-moz-animation: spin 1s linear infinite;
+		-ms-animation: spin 1s linear infinite;
+		-o-animation: spin 1s linear infinite;
+		animation: spin 1s linear infinite;
+	} 
+	#ajax-loading span{
+		position: absolute;
+		left: 44%;
+		top: 20%;
+		font-family: tahoma;
+		color: white;
+		direction : rtl;
+		font-weight : bold;
+	}
+	@-webkit-keyframes spin
+	{
+		from { -webkit-transform: rotate(0deg); opacity: 0.4; }
+		50% { -webkit-transform: rotate(180deg); opacity: 1; }
+		to { -webkit-transform: rotate(360deg); opacity: 0.4; }
+	}
+	@-moz-keyframes spin
+	{
+		from { -moz-transform: rotate(0deg); opacity: 0.4; }
+		50% { -moz-transform: rotate(180deg); opacity: 1; }
+		to { -moz-transform: rotate(360deg); opacity: 0.4; }
+	}
+	@-ms-keyframes spin
+	{
+		from { -ms-transform: rotate(0deg); opacity: 0.4; }
+		50% { -ms-transform: rotate(180deg); opacity: 1; }
+		to { -ms-transform: rotate(360deg); opacity: 0.4; }
+	}
+	@-o-keyframes spin
+	{
+		from { -o-transform: rotate(0deg); opacity: 0.4; }
+		50% { -o-transform: rotate(180deg); opacity: 1; }
+		to { -o-transform: rotate(360deg); opacity: 0.4; }
+	}
+	@keyframes spin
+	{
+		from { transform: rotate(0deg); opacity: 0.2; }
+		50% { transform: rotate(180deg); opacity: 1; }
+		to { transform: rotate(360deg); opacity: 0.2; }
+	} 
+	</style>
+	<script>
+		function pressing(e)
+		{
+			var c = (e.keyCode)? e.keyCode: (e.charCode)? e.charCode: e.which;
+			if(c == 13)
+			{
+				loginFN();				
+			}
+		}
+		function loginFN()
+		{
+			
+			if(document.getElementById('UserName').value == "")
+			{
+				document.getElementById("UserNameDiv").className = "wrong";
+				document.getElementById('UserName').focus();
+				return;
+			}
+			if(document.getElementById('password').value == "")
+			{
+				document.getElementById("PasswordDiv").className = "wrong2";
+				document.getElementById('password').focus();
+				return;
+			}
+			
+			document.getElementById("UserNameDiv").className = "";
+			document.getElementById("PasswordDiv").className = "";
+			document.getElementById("md5Pass").value = MD5(document.getElementById('password').value);
+			
+			var xmlhttp;
+			if (window.XMLHttpRequest)
+			{
+				// code for IE7+, Firefox, Chrome, Opera, Safari
+				xmlhttp = new XMLHttpRequest();
+			}
+			else
+			{
+				// code for IE6, IE5
+				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			xmlhttp.onreadystatechange = function()
+			{
+				if (xmlhttp.readyState==4 && xmlhttp.status==200)
+				{
+					if(xmlhttp.responseText == "true")
+					{
+						document.getElementById('UserName').value == "";
+						document.getElementById('password').value == "";
+						document.getElementById('md5Pass').value == "";
+						window.location = "systems.php";
+						return;
+					}
+					error = xmlhttp.responseText;
+					document.getElementById("ajax-loading").style.display = "none";
+					if(error == "WrongUserName")
+						document.getElementById("UserNameDiv").className = "wrong";
+					if(error == "WrongPassword")
+					{
+						document.getElementById("PasswordDiv").className = "wrong2";
+						document.getElementById('password').focus();
+					}	
+				}
+			}
+			xmlhttp.open("POST","login.php",true);
+			document.getElementById("ajax-loading").style.display = "block";
+			xmlhttp.send(new FormData(document.getElementById("mainForm")));
+		}		
+		
+		function BodyLoad(){
+			
+			document.getElementById('UserName').focus();
+		}
+	</script> 
   </head>
 
   <body dir="rtl" style="margin:0"  onkeydown="pressing(event);" onload="return BodyLoad();">
-
+	<div id="ajax-loading"><div></div><span>در حال ورود به سیستم . . .</span></div>
 	  <center>
 		<div class="headerDiv" align="center">
 			<div style="width:800;right : 20%;position: absolute;" align="right"><br><br><img width="180px" src="../framework/icons/LoginLogo.png"></div>
@@ -193,17 +324,17 @@ if(isset($_POST["UserName"]))
 					<td width="200px" style="vertical-align: middle;"><img src="../framework/icons/keys.jpg"</td>
 					<td style="vertical-align: top;">
 						<div id="loginDIV">
-							<form method="post" id="MainForm" onsubmit="return loginFN();" autocomplete="off">
+							<form id="mainForm" method="post" autocomplete="off">
 								<div class="title" > ورود به پرتال </div>
 								<br>
 								<div style="font-size: 12px">جهت ورود به پرتال نام کاربری و کلمه عبور خود را وارد کنید.
 									درغیر اینصورت با زدن دکمه ثبت نام به پرتال وارد شوید.</div>
 								<br>
-								<div id="UserNameDiv"><input autocomplete="off" type="text" name="UserName" class="textfield" id="UserName" 
+								<div id="UserNameDiv"><input autocomplete="off" type="text" class="textfield" name="UserName" id="UserName" 
 									placeholder="کلمه کاربری ..." required="required" dir="ltr" /></div>
 								<div id="PasswordDiv"><input autocomplete="off" type="password" class="textfield" id="password" 
 									placeholder="رمز عبور ..." required="required" dir="ltr"/></div>
-								<button type="submit" style="width:80px" class="btn  ">ورود</button>
+								<button onclick="loginFN();" type="button" style="width:80px" class="btn  ">ورود</button>
 								<div class="forget">&nbsp;| رمز عبور را فراموش کرده ام </div>
 								<input type="hidden" id="md5Pass" name="md5Pass">
 							</form>
