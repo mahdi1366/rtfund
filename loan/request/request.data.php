@@ -328,7 +328,7 @@ function PayPart(){
 	
 	require_once '../../accounting/docs/import.data.php';
 	$result = RegisterPayPartDoc($ReqObj, $partobj, $pdo);
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 	if(!$result)
 	{
 		$pdo->rollBack();

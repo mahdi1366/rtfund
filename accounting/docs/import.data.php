@@ -116,7 +116,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$LoanMode = "Agent";
 	if($PersonObj->IsStaff == "YES" && $ReqObj->SupportPersonID > 0)
 		$LoanMode = "Supporter";
-	if($PersonObj->IsCustomer == "YES")
+	else if($PersonObj->IsCustomer == "YES")
 		$LoanMode = "Customer";
 	
 	if($LoanMode == "Agent")
@@ -201,7 +201,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$itemObj->SourceID2 = $PartObj->PartID;
 	if(!$itemObj->Add($pdo))
 	{
-		ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
+		ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "1"); 
 		return false;
 	}
 	
@@ -219,7 +219,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$itemObj->TafsiliID = $curYearTafsili;
 		if(!$itemObj->Add($pdo))
 		{
-			ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
+			ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "2"); 
 			return false;
 		}
 	}	
@@ -241,7 +241,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$itemObj->TafsiliID = $yearTafsili;
 		if(!$itemObj->Add($pdo))
 		{
-			ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
+			ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "3"); 
 			return false;
 		}
 		
@@ -257,7 +257,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			$itemObj->TafsiliID = $ReqPersonTafsili;
 			if(!$itemObj->Add($pdo))
 			{
-				ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
+				ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "4"); 
 				return false;
 			}
 		}
@@ -279,7 +279,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$itemObj->SourceID = $PartObj->PartID;
 	if(!$itemObj->Add($pdo))
 	{
-		ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
+		ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "5"); 
 		return false;
 	}
 	
@@ -296,7 +296,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$itemObj->TafsiliID = $ReqPersonTafsili;
 		if(!$itemObj->Add($pdo))
 		{
-			ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
+			ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "6"); 
 			return false;
 		}
 
@@ -310,7 +310,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$itemObj->TafsiliID = $ReqPersonTafsili;
 		if(!$itemObj->Add($pdo))
 		{
-			ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
+			ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "7"); 
 			return false;
 		}
 	}
@@ -349,7 +349,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			$itemObj->details = $row["DocTypeDesc"];
 			if(!$itemObj->Add($pdo))
 			{
-				ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
+				ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "8"); 
 				return false;
 			}
 			$SumAmount += $row["ParamValue"]*1;
@@ -378,7 +378,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			$itemObj->CreditorAmount = 0;	
 			if(!$itemObj->Add($pdo))
 			{
-				ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
+				ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "10"); 
 				return false;
 			}
 
@@ -388,7 +388,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			$itemObj->CreditorAmount = count($dt);
 			if(!$itemObj->Add($pdo))
 			{
-				ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
+				ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "11"); 
 				return false;
 			}
 		}
