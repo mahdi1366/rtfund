@@ -150,6 +150,9 @@ ALTER TABLE `rtfund`.`ACC_tafsilis` AUTO_INCREMENT = 1000;
 insert into rtfund.ACC_tafsilis(TafsiliCode,TafsiliType,TafsiliDesc,ObjectID)
 select PersonID,1,if(IsReal='YES', concat(fname,' ',lname), CompanyName),PersonID
 from rtfund.BSC_persons;
+ * 
+update rtfund.ACC_tafsilis set TafsiliDesc= replace(TafsiliDesc,'  ',' ');
+update rtfund.ACC_tafsilis  set TafsiliDesc= trim(TafsiliDesc);
 ********************************************************************************
 ALTER TABLE `rtfund`.`LON_requests` MODIFY COLUMN `ReqDate` VARCHAR(100) NOT NULL COMMENT 'تاریخ درخواست';
 
@@ -294,10 +297,68 @@ update ACC_DocItems set details = replace(replace(details,'ي','ی'),'ك','ک')
 
 ایجاد ردیف صندوق از مجموع هزینه ها 
 ********************************************************************************
- */
+
+update tblCoding set AccName = replace(replace(AccName,'ي','ی'),'ك','ک');
+update tblCoding set AccName= replace(AccName,'  ',' ');
+ * 
+ * 
+insert into rtfund.imp_MapCodes
+select
+ifnull(CostID, case substr(AccCode,1,6)
+  when '110-16' then 125
+  when '110-19' then 125
+  when '110-23' then 50
+  when '110-27' then 125 end),
+AccCode, TafsiliID ,
+case substr(AccCode,1,6)
+  when '110-16' then 1002
+  when '110-19' then 1004
+  when '110-27' then 1003
+  else null end
+from tblAccDocDetail join tblCoding using(AccCode)
+left join rtfund.ACC_tafsilis on(AccName like concat('%',TafsiliDesc, '%') )
+left join rtfund.ACC_CostCodes on(CostCode= substr(AccCode,1,6))
+where AccCode like '110%' AND length(AccCode) > 6
+group by AccCode;
+ * 
+ * 
+insert into rtfund.imp_MapCodes
+select CostID,AccCode, TafsiliID , null
+from tblAccDocDetail join tblCoding using(AccCode)
+left join rtfund.ACC_tafsilis on(AccName like concat('%',TafsiliDesc, '%') )
+left join rtfund.ACC_CostCodes on(CostCode= substr(AccCode,1,6))
+where AccCode like '209%' AND length(AccCode) > 6
+group by AccCode;
+ * 
+ * 
+ * 
+ * 
+ *  */
+
+
+SELECT AccCode,AccName, count(*) FROM sahand.tblAccDocDetail
+join tblCoding using(AccCode)
+left join rtfund.imp_MapCodes using(AccCode)
+
+where CostID is null
+
+group by AccCode;
+
+
+insert into rtfund.imp_MapCodes
+select
+CostID,
+AccCode, TafsiliID , null
 
 
 
+from tblAccDocDetail join tblCoding using(AccCode)
+left join rtfund.ACC_tafsilis on(AccName like concat('%',TafsiliDesc, '%') )
+left join rtfund.ACC_CostCodes on(CostCode= substr(AccCode,1,6))
+
+where AccCode like '209%' AND length(AccCode) > 6
+
+group by AccCode;
 
 
 

@@ -4,7 +4,7 @@
 // Create Date:	93.06
 //-------------------------
 require_once '../header.inc.php';
-require_once('libtejarat/nusoap.php');
+require_once('../../libtejarat/nusoap.php');
 require_once '../../loan/request/request.class.php';
 require_once '../../accounting/docs/import.data.php';
 

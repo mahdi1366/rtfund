@@ -14,7 +14,7 @@ require_once 'tafsilis.js.php';
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "baseinfo.data.php?task=GetAllTafsilis", "grid_div");
 
-$dg->addColumn("کد", "TafsiliID", "", true);
+$dg->addColumn("", "TafsiliID", "", true);
 $dg->addColumn("", "TafsiliType", "", true);
 $dg->addColumn("", "title", "", true);
 $dg->addColumn("", "ObjectID", "", true);
