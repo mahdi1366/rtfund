@@ -335,32 +335,24 @@ group by AccCode;
  * 
  *  */
 
-
+/*
 SELECT AccCode,AccName, count(*) FROM sahand.tblAccDocDetail
 join tblCoding using(AccCode)
 left join rtfund.imp_MapCodes using(AccCode)
-
 where CostID is null
-
 group by AccCode;
-
 
 insert into rtfund.imp_MapCodes
 select
 CostID,
 AccCode, TafsiliID , null
-
-
-
 from tblAccDocDetail join tblCoding using(AccCode)
 left join rtfund.ACC_tafsilis on(AccName like concat('%',TafsiliDesc, '%') )
 left join rtfund.ACC_CostCodes on(CostCode= substr(AccCode,1,6))
-
 where AccCode like '209%' AND length(AccCode) > 6
-
 group by AccCode;
 
-
+*/
 
 
 
