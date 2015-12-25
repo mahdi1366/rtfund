@@ -37,9 +37,9 @@ CREATE TABLE `ACC_CostCodes` (
   KEY `FK_ACC_CostCodes_1` (`level1`),
   KEY `FK_ACC_CostCodes_2` (`level2`),
   KEY `FK_ACC_CostCodes_3` (`level3`),
-  CONSTRAINT `FK_ACC_CostCodes_1` FOREIGN KEY (`level1`) REFERENCES `acc_blocks` (`BlockID`),
-  CONSTRAINT `FK_ACC_CostCodes_2` FOREIGN KEY (`level2`) REFERENCES `acc_blocks` (`BlockID`),
-  CONSTRAINT `FK_ACC_CostCodes_3` FOREIGN KEY (`level3`) REFERENCES `acc_blocks` (`BlockID`)
+  CONSTRAINT `FK_ACC_CostCodes_1` FOREIGN KEY (`level1`) REFERENCES `ACC_blocks` (`BlockID`),
+  CONSTRAINT `FK_ACC_CostCodes_2` FOREIGN KEY (`level2`) REFERENCES `ACC_blocks` (`BlockID`),
+  CONSTRAINT `FK_ACC_CostCodes_3` FOREIGN KEY (`level3`) REFERENCES `ACC_blocks` (`BlockID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='کدهای حساب';
 
 --
@@ -163,8 +163,8 @@ CREATE TABLE `ACC_DocChecks` (
   PRIMARY KEY  (`CheckID`),
   KEY `FK_ACC_DocChecks_1` (`AccountID`),
   KEY `FK_ACC_DocChecks_2` (`DocID`),
-  CONSTRAINT `FK_ACC_DocChecks_1` FOREIGN KEY (`AccountID`) REFERENCES `acc_accounts` (`AccountID`),
-  CONSTRAINT `FK_ACC_DocChecks_2` FOREIGN KEY (`DocID`) REFERENCES `acc_docs` (`DocID`)
+  CONSTRAINT `FK_ACC_DocChecks_1` FOREIGN KEY (`AccountID`) REFERENCES `ACC_accounts` (`AccountID`),
+  CONSTRAINT `FK_ACC_DocChecks_2` FOREIGN KEY (`DocID`) REFERENCES `ACC_docs` (`DocID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -199,9 +199,9 @@ CREATE TABLE `ACC_DocItems` (
   KEY `FK_ACC_DocItems_1` (`DocID`),
   KEY `FK_ACC_DocItems_2` (`CostID`),
   KEY `FK_ACC_DocItems_3` (`TafsiliID`),
-  CONSTRAINT `FK_ACC_DocItems_1` FOREIGN KEY (`DocID`) REFERENCES `acc_docs` (`DocID`),
-  CONSTRAINT `FK_ACC_DocItems_2` FOREIGN KEY (`CostID`) REFERENCES `acc_costcodes` (`CostID`),
-  CONSTRAINT `FK_ACC_DocItems_3` FOREIGN KEY (`TafsiliID`) REFERENCES `acc_tafsilis` (`TafsiliID`)
+  CONSTRAINT `FK_ACC_DocItems_1` FOREIGN KEY (`DocID`) REFERENCES `ACC_docs` (`DocID`),
+  CONSTRAINT `FK_ACC_DocItems_2` FOREIGN KEY (`CostID`) REFERENCES `ACC_costcodes` (`CostID`),
+  CONSTRAINT `FK_ACC_DocItems_3` FOREIGN KEY (`TafsiliID`) REFERENCES `ACC_tafsilis` (`TafsiliID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -4134,7 +4134,7 @@ CREATE TABLE `ACC_accounts` (
   `TafsiliID` int(10) unsigned default NULL,
   PRIMARY KEY  (`AccountID`),
   KEY `FK_ACC_accounts_1` (`BankID`),
-  CONSTRAINT `FK_ACC_accounts_1` FOREIGN KEY (`BankID`) REFERENCES `acc_banks` (`BankID`)
+  CONSTRAINT `FK_ACC_accounts_1` FOREIGN KEY (`BankID`) REFERENCES `ACC_banks` (`BankID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -4329,7 +4329,7 @@ CREATE TABLE `ACC_cheques` (
   `IsActive` enum('YES','NO') NOT NULL,
   PRIMARY KEY  (`ChequeID`),
   KEY `FK_ACC_cheques_1` (`AccountID`),
-  CONSTRAINT `FK_ACC_cheques_1` FOREIGN KEY (`AccountID`) REFERENCES `acc_accounts` (`AccountID`)
+  CONSTRAINT `FK_ACC_cheques_1` FOREIGN KEY (`AccountID`) REFERENCES `ACC_accounts` (`AccountID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -5959,7 +5959,7 @@ CREATE TABLE `DMS_DocParamValues` (
   `ParamID` int(10) unsigned NOT NULL,
   `ParamValue` varchar(500) NOT NULL,
   PRIMARY KEY  (`DocumentID`,`ParamID`),
-  CONSTRAINT `FK_DMS_DocParamValues_1` FOREIGN KEY (`DocumentID`) REFERENCES `dms_documents` (`DocumentID`)
+  CONSTRAINT `FK_DMS_DocParamValues_1` FOREIGN KEY (`DocumentID`) REFERENCES `DMS_documents` (`DocumentID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -8535,7 +8535,7 @@ CREATE TABLE `FRW_menus` (
   `IsSupporter` enum('YES','NO') NOT NULL default 'NO',
   PRIMARY KEY  (`MenuID`),
   KEY `FK_FRW_menus_1` (`SystemID`),
-  CONSTRAINT `FK_FRW_menus_1` FOREIGN KEY (`SystemID`) REFERENCES `frw_systems` (`SystemID`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `FK_FRW_menus_1` FOREIGN KEY (`SystemID`) REFERENCES `FRW_systems` (`SystemID`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -8745,7 +8745,7 @@ CREATE TABLE `LON_ReqDocs` (
   `description` varchar(5000) NOT NULL COMMENT 'توضیحات',
   PRIMARY KEY  (`ReqDocID`),
   KEY `FK_LON_ReqDocs_1` (`RequestID`),
-  CONSTRAINT `FK_LON_ReqDocs_1` FOREIGN KEY (`RequestID`) REFERENCES `lon_requests` (`RequestID`)
+  CONSTRAINT `FK_LON_ReqDocs_1` FOREIGN KEY (`RequestID`) REFERENCES `LON_requests` (`RequestID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -8804,7 +8804,7 @@ CREATE TABLE `LON_ReqParts` (
   `IsPayed` enum('YES','NO') NOT NULL default 'NO',
   PRIMARY KEY  (`PartID`),
   KEY `FK_LON_ReqParts_1` (`RequestID`),
-  CONSTRAINT `FK_LON_ReqParts_1` FOREIGN KEY (`RequestID`) REFERENCES `lon_requests` (`RequestID`)
+  CONSTRAINT `FK_LON_ReqParts_1` FOREIGN KEY (`RequestID`) REFERENCES `LON_requests` (`RequestID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -9086,7 +9086,7 @@ CREATE TABLE `LON_installments` (
   `imp_SerialNo` int(10) unsigned default NULL,
   PRIMARY KEY  (`InstallmentID`),
   KEY `FK_LON_installments_1` (`PartID`),
-  CONSTRAINT `FK_LON_installments_1` FOREIGN KEY (`PartID`) REFERENCES `lon_reqparts` (`PartID`)
+  CONSTRAINT `FK_LON_installments_1` FOREIGN KEY (`PartID`) REFERENCES `LON_reqparts` (`PartID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
