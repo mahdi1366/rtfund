@@ -15,7 +15,7 @@ $temp = PdoDataAccess::runquery("
 	select sum(CreditorAmount-DebtorAmount) amount 
 	from ACC_DocItems di join ACC_docs d using(DocID)
 	left join ACC_tafsilis t1 on(t1.TafsiliType=1 AND di.TafsiliID=t1.TafsiliID)
-	left join ACC_tafsilis t2 on(t2.TafsiliType=1 AND di.Tafsili2ID=t2.TafsiliID)
+	left join ACC_tafsilis t2 on(t2.TafsiliType=1 AND di.TafsiliID2=t2.TafsiliID)
 	where CycleID=:year 
 		AND CostID = " . $GharzolhasaneCostID . " 
 		AND (t1.ObjectID=:pid or t2.ObjectID=:pid) 

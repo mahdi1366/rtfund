@@ -20,8 +20,10 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("گروه حساب", "level1Desc");
 	$rpg->addColumn("حساب کل", "level2Desc");
 	$rpg->addColumn("حساب معین", "level3Desc");
-	$rpg->addColumn("گروه تفصیلی", "TafsiliTypeDesc");
+	//$rpg->addColumn("گروه تفصیلی", "TafsiliTypeDesc");
 	$rpg->addColumn("تفصیلی", "TafsiliDesc");
+	//$rpg->addColumn("گروه تفصیلی2", "TafsiliTypeDesc2");
+	$rpg->addColumn("تفصیلی2", "TafsiliDesc2");
 	$rpg->addColumn("تاریخ سند", "DocDate","dateRender");
 	$rpg->addColumn("توضیحات", "description");	
 	
@@ -146,6 +148,16 @@ if(isset($_REQUEST["show"]))
 			$where .= " AND di.TafsiliID = :taf";
 			$whereParam[":taf"] = $_REQUEST["TafsiliID"];
 		}
+		if(!empty($_REQUEST["TafsiliGroup2"]))
+		{
+			$where .= " AND di.TafsiliType2 = :ttype2";
+			$whereParam[":ttype2"] = $_REQUEST["TafsiliGroup2"];
+		}
+		if(!empty($_REQUEST["TafsiliID2"]))
+		{
+			$where .= " AND di.TafsiliID2 = :taf2";
+			$whereParam[":taf2"] = $_REQUEST["TafsiliID2"];
+		}
 	}	
 	
 	//.....................................
@@ -153,8 +165,10 @@ if(isset($_REQUEST["show"]))
 		concat('[ ' , b1.BlockCode , ' ] ', b1.BlockDesc) level1Desc,
 		concat('[ ' , b2.BlockCode , ' ] ', b2.BlockDesc) level2Desc,
 		concat('[ ' , b3.BlockCode , ' ] ', b3.BlockDesc) level3Desc,
-		InfoDesc TafsiliTypeDesc,
-		concat('[ ', t.TafsiliID, ' ] ',t.TafsiliDesc) TafsiliDesc
+		b.InfoDesc TafsiliTypeDesc,
+		t.TafsiliDesc,
+		bi2.InfoDesc TafsiliTypeDesc2,
+		t2.TafsiliDesc TafsiliDesc2
 		
 		from ACC_DocItems di join ACC_docs d using(DocID)
 			join ACC_CostCodes cc using(CostID)
@@ -163,6 +177,8 @@ if(isset($_REQUEST["show"]))
 			left join ACC_blocks b3 on(level3=b3.BlockID)
 			left join BaseInfo b on(TypeID=2 AND di.TafsiliType=InfoID)
 			left join ACC_tafsilis t using(TafsiliID)
+			left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)
+			left join ACC_tafsilis t2 on(di.TafsiliID2=t2.TafsiliID)
 	";
 	$where = "";
 	$whereParam = array();

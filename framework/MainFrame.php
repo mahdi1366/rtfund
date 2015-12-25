@@ -165,5 +165,14 @@ require_once 'MainFrame.js.php';
 			}, 700);
 		</script>
 
+		<div id="LoginExpire" style="display : none;">
+			<div style="color: red; height: 40px; width: 100%; z-index: 99999; position: fixed; 
+				 background-color: white; text-align: center; font-weight: bold;cursor:pointer"
+				 onclick="window.location='/framework/login.php'">
+				<br>زمان انتظار شما به پایان رسیده است لطفا مجدد وارد شوید</div>
+			<div style="position: fixed;top: 40;left: 0;height:100%;width:100%;z-index: 9999999;
+			background-color : #999;opacity: 0.7;filter: alpha(opacity=70);-moz-opacity: 0.7; /* mozilla */"></div>
+		</div>
+		
 	</body>
 </html>

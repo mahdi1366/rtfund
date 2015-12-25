@@ -63,7 +63,7 @@ function SelectAll(){
 		{
 			$value = $row["ParamValue"];
 			if($row["ParamType"] == "currencyfield")
-				$value = number_format($value);
+				$value = number_format((int)$value);
 			$temp[$i]["paramValues"] .= $row["ParamDesc"] . " : " . $value . "<br>";
 		}
 		if($temp[$i]["paramValues"] != "")
@@ -156,7 +156,7 @@ function DeleteDocument() {
 		echo Response::createObjectiveResponse(false, "");
 		die();
 	}
-	
+	PdoDataAccess::runquery("delete from DMS_DocParamValues where DocumentID=?", array($DocumentID));	
 	$result = DMS_documents::DeleteDocument($DocumentID);
 	unlink(getenv("DOCUMENT_ROOT") . "/storage/documents/". $obj->DocumentID . "." . $obj->FileType);
 	

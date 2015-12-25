@@ -70,12 +70,12 @@ $col->editor = "AccDocsObject.tafsiliCombo";
 $col->renderer = "function(v,p,r){return r.data.TafsiliDesc;}";
 $col->width = 150;
 
-$col = $dg->addColumn("گروه تفصیلی2", "Tafsili2Type");
+$col = $dg->addColumn("گروه تفصیلی2", "TafsiliType2");
 $col->editor = "AccDocsObject.tafsili2GroupCombo";
 $col->renderer = "function(v,p,r){return r.data.Tafsili2GroupDesc;}";
 $col->width = 100;
 
-$col = $dg->addColumn("تفصیلی2", "Tafsili2ID");
+$col = $dg->addColumn("تفصیلی2", "TafsiliID2");
 $col->editor = "AccDocsObject.tafsili2Combo";
 $col->renderer = "function(v,p,r){return r.data.Tafsili2Desc;}";
 $col->width = 150;

@@ -39,14 +39,13 @@ function FrameWorkClass()
 			{
 				if(response.responseText.trim() != "")
 				{
-					framework.centerPanel.tabBar.getEl().dom.innerHTML = "<div align=center style=width:100%;color:red;font-size:12px;font-weight:bold;>"+
-						"<br>شما در سیستم غیر فعال شده اید. لطفا مجدد وارد سیستم شوید...<br>&nbsp;</div>";
+					document.getElementById("LoginExpire").style.display = "";					
 					clearInterval(framework.ExpireInterval);
 				}
 			}
 		});
 		
-	}, 600000);
+	}, 11*60000); // in milisecond
 	
 	this.centerPanel = new Ext.TabPanel({
 		region: 'center',
@@ -130,7 +129,7 @@ function FrameWorkClass()
 								icon: '/framework/icons/access.gif',
 								text: 'تغییر رمز عبور',
 								handler : function(){
-									framework.OpenPage('../generalClasses/change_pass.php','تغییر رمز عبور');
+									framework.OpenPage('../framework/ChangePassword.php','تغییر رمز عبور');
 								}
 							},{
 								icon : "/framework/icons/exit.gif",

@@ -187,13 +187,13 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$itemObj->TafsiliID = $LoanPersonTafsili;
 	if($LoanMode == "Agent")
 	{
-		$itemObj->Tafsili2Type = TAFTYPE_PERSONS;
-		$itemObj->Tafsili2ID = $ReqPersonTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 	}
 	if($LoanMode == "Supporter")
 	{
-		$itemObj->Tafsili2Type = TAFTYPE_PERSONS;
-		$itemObj->Tafsili2ID = $SupporterTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $SupporterTafsili;
 	}
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
@@ -209,8 +209,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	if($TotalDelay > 0)
 	{
 		unset($itemObj->ItemID);
-		unset($itemObj->Tafsili2Type);
-		unset($itemObj->Tafsili2ID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_wage;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $TotalDelay;
@@ -232,8 +232,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		
 		unset($itemObj->ItemID);
 		$itemObj->details = "";
-		unset($itemObj->Tafsili2Type);
-		unset($itemObj->Tafsili2ID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_wage;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = round($amount);
@@ -248,8 +248,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		if($LoanMode == "Agent")
 		{
 			unset($itemObj->ItemID);
-			unset($itemObj->Tafsili2Type);
-			unset($itemObj->Tafsili2ID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
 			$itemObj->CostID = $CostCode_deposite;
 			$itemObj->DebtorAmount = round($amount);
 			$itemObj->CreditorAmount = 0;
@@ -287,8 +287,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	{
 		//---- کسر از سپرده -----
 		unset($itemObj->ItemID);
-		unset($itemObj->Tafsili2Type);
-		unset($itemObj->Tafsili2ID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_deposite;
 		$itemObj->DebtorAmount = $PartObj->PartAmount + $WageSum;
 		$itemObj->CreditorAmount = 0;
@@ -301,8 +301,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		}
 
 		unset($itemObj->ItemID);
-		unset($itemObj->Tafsili2Type);
-		unset($itemObj->Tafsili2ID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_pardakhtani;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $PartObj->PartAmount + $WageSum;
@@ -337,8 +337,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		foreach($dt as $row)
 		{
 			unset($itemObj->ItemID);
-			unset($itemObj->Tafsili2Type);
-			unset($itemObj->Tafsili2ID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
 			$itemObj->CostID = $CostCode_guaranteeAmount;
 			$itemObj->DebtorAmount = $row["ParamValue"];
 			$itemObj->CreditorAmount = 0;
@@ -360,8 +360,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType);
 			unset($itemObj->TafsiliID);
-			unset($itemObj->Tafsili2Type);
-			unset($itemObj->Tafsili2ID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
 			unset($itemObj->details);
 			$itemObj->CostID = $CostCode_guaranteeAmount2;
 			$itemObj->DebtorAmount = 0;
@@ -582,13 +582,13 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	$itemObj->TafsiliID = $LoanPersonTafsili;
 	if($LoanMode == "Agent")
 	{
-		$itemObj->Tafsili2Type = TAFTYPE_PERSONS;
-		$itemObj->Tafsili2ID = $ReqPersonTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 	}
 	if($LoanMode == "Supporter")
 	{
-		$itemObj->Tafsili2Type = TAFTYPE_PERSONS;
-		$itemObj->Tafsili2ID = $SupporterTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $SupporterTafsili;
 	}
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
@@ -604,8 +604,8 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	if($TotalDelay > 0)
 	{
 		unset($itemObj->ItemID);
-		unset($itemObj->Tafsili2Type);
-		unset($itemObj->Tafsili2ID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_wage;
 		$itemObj->DebtorAmount = $TotalDelay - $new_TotalDelay;
 		$itemObj->CreditorAmount = 0;
@@ -626,8 +626,8 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 			continue;
 		
 		unset($itemObj->ItemID);
-		unset($itemObj->Tafsili2Type);
-		unset($itemObj->Tafsili2ID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_wage;
 		$itemObj->DebtorAmount = $amount;
 		$itemObj->CreditorAmount = 0;
@@ -643,8 +643,8 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 		if($LoanMode == "Agent")
 		{
 			unset($itemObj->ItemID);
-			unset($itemObj->Tafsili2Type);
-			unset($itemObj->Tafsili2ID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
 			$itemObj->CostID = $CostCode_deposite;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $amount;
@@ -682,8 +682,8 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	{
 		//---- کسر از سپرده -----
 		unset($itemObj->ItemID);
-		unset($itemObj->Tafsili2Type);
-		unset($itemObj->Tafsili2ID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_deposite;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $PartObj->PartAmount + $WageSum - $PaidAmount ;
@@ -696,8 +696,8 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 		}
 
 		unset($itemObj->ItemID);
-		unset($itemObj->Tafsili2Type);
-		unset($itemObj->Tafsili2ID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_pardakhtani;
 		$itemObj->DebtorAmount = $PartObj->PartAmount + $WageSum - $PaidAmount;
 		$itemObj->CreditorAmount = 0;
@@ -784,13 +784,13 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 	$itemObj->TafsiliID = $LoanPersonTafsili;
 	if($LoanMode == "Agent")
 	{
-		$itemObj->Tafsili2Type = TAFTYPE_PERSONS;
-		$itemObj->Tafsili2ID = $ReqPersonTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 	}
 	if($LoanMode == "Supporter")
 	{
-		$itemObj->Tafsili2Type = TAFTYPE_PERSONS;
-		$itemObj->Tafsili2ID = $SupporterTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $SupporterTafsili;
 	}
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_INSTALLMENT_PAYMENT;
@@ -816,8 +816,8 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 	{
 		//---- اضافه به سپرده -----
 		unset($itemObj->ItemID);
-		unset($itemObj->Tafsili2Type);
-		unset($itemObj->Tafsili2ID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_deposite;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $InstallmentObj->PaidAmount;
@@ -827,8 +827,8 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 			return false;
 
 		unset($itemObj->ItemID);
-		unset($itemObj->Tafsili2Type);
-		unset($itemObj->Tafsili2ID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_pardakhtani;
 		$itemObj->DebtorAmount = $InstallmentObj->PaidAmount;
 		$itemObj->CreditorAmount = 0;

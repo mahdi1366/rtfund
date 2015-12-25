@@ -829,8 +829,8 @@ AccDocs.beforeRowEdit = function(editor,e){
 			
 		if(e.record.data.TafsiliType != null && e.record.data.TafsiliID == null)
 			AccDocsObject.itemGrid.columns.findObject("dataIndex","TafsiliID").getEditor().enable();
-		if(e.record.data.Tafsili2Type != null && e.record.data.Tafsili2ID == null)
-			AccDocsObject.itemGrid.columns.findObject("dataIndex","Tafsili2ID").getEditor().enable();
+		if(e.record.data.TafsiliType2 != null && e.record.data.TafsiliID2 == null)
+			AccDocsObject.itemGrid.columns.findObject("dataIndex","TafsiliID2").getEditor().enable();
 		return true;
 	}
 	

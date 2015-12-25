@@ -28,7 +28,7 @@ $temp = PdoDataAccess::runquery("
 			left join ACC_tafsilis t on(t.TafsiliID=di.TafsiliID)
 			
 		where di.DocID=?
-		group by if(DebtorAmount<>0,0,1),di.CostID,di.TafsiliID
+		/*group by if(DebtorAmount<>0,0,1),di.CostID,di.TafsiliID*/group by itemID
 		order by if(DebtorAmount<>0,0,1),cc.CostCode", 
 		
 		array($docID));

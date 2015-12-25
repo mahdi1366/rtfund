@@ -4,8 +4,10 @@
 //	Date		: 94.06
 //-----------------------------
 
-session_start();
-unset ($_SESSION["USER"]);
+require_once getenv("DOCUMENT_ROOT") . '/framework/session.php';
+session::sec_session_start();
+session::logout();
+
 ?>
 <script>
 	window.location = "login.php";

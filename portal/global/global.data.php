@@ -18,9 +18,6 @@ switch ($task)
 	case "SavePersonalInfo":
 		SavePersonalInfo();
 		
-	case "changePass":
-		changePass();
-		
 	case "AccDocFlow":
 		AccDocFlow();
 }
@@ -44,37 +41,6 @@ function SavePersonalInfo(){
 	die();
 }
 
-function changePass(){
-	
-	$dt = PdoDataAccess::runquery("select * from BSC_persons where PersonID=:p",
-			array(":p" => $_SESSION['USER']["PersonID"]));
-	if(count($dt) == 0)
-	{ 		
-		echo Response::createObjectiveResponse(false, "");
-		die();
-	}
-	
-	require_once getenv("DOCUMENT_ROOT") . '/framework/PasswordHash.php';
-	$hash_cost_log2 = 8;	
-	$hasher = new PasswordHash($hash_cost_log2, true);
-	if (!$hasher->CheckPassword($_POST["cur_pass"], $dt[0]["UserPass"])) {
-
-		echo Response::createObjectiveResponse(false, "CurPassError");
-		die();
-	}
-
-	PdoDataAccess::RUNQUERY("update BSC_persons set UserPass=? where PersonID=?",
-		array($hasher->HashPassword($_POST["new_pass"]), $_SESSION["USER"]["PersonID"]));
-								
-	if( ExceptionHandler::GetExceptionCount() != 0 )
-	{				
-		echo "CurPassError";
-		die();
-	}	
-	echo Response::createObjectiveResponse(true, "");
-	die();
-}
-
 function AccDocFlow(){
 	
 	$CostID = $_REQUEST["CostID"];
@@ -88,7 +54,7 @@ function AccDocFlow(){
 			di.details
 		from ACC_DocItems di join ACC_docs d using(DocID)
 		left join ACC_tafsilis t1 on(t1.TafsiliType=1 AND di.TafsiliID=t1.TafsiliID)
-		left join ACC_tafsilis t2 on(t2.TafsiliType=1 AND di.Tafsili2ID=t2.TafsiliID)
+		left join ACC_tafsilis t2 on(t2.TafsiliType=1 AND di.TafsiliID2=t2.TafsiliID)
 		where CycleID=:year AND CostID=:cid AND (t1.ObjectID=:pid or t2.ObjectID=:pid)
 			AND DocStatus in('CONFIRM','ARCHIVE')
 		order by DocDate

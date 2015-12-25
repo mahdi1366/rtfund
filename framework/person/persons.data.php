@@ -28,6 +28,9 @@ if(isset($_REQUEST["task"]))
 			
 		case "selectPosts":
 			selectPosts();
+			
+		case "changePass":
+			changePass();
 	}
 }
 
@@ -129,4 +132,33 @@ function selectPosts(){
 	die();
 }
 
+function changePass(){
+	
+	$dt = PdoDataAccess::runquery("select * from BSC_persons where PersonID=:p",
+			array(":p" => $_SESSION['USER']["PersonID"]));
+	if(count($dt) == 0)
+	{ 		
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	
+	$hash_cost_log2 = 8;	
+	$hasher = new PasswordHash($hash_cost_log2, true);
+	if (!$hasher->CheckPassword($_POST["cur_pass"], $dt[0]["UserPass"])) {
+
+		echo Response::createObjectiveResponse(false, "CurPassError");
+		die();
+	}
+
+	PdoDataAccess::RUNQUERY("update BSC_persons set UserPass=? where PersonID=?",
+		array($hasher->HashPassword($_POST["new_pass"]), $_SESSION["USER"]["PersonID"]));
+								
+	if( ExceptionHandler::GetExceptionCount() != 0 )
+	{				
+		echo Response::createObjectiveResponse(false, "CurPassError");
+		die();
+	}	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
 ?>

@@ -72,7 +72,7 @@ function ChangePass()
 					mask.show();
 
 					Ext.Ajax.request({
-						url: me.address_prefix + 'global.data.php' , 
+						url: '/framework/person/persons.data.php' , 
 						params: {
 							task: "changePass",
 							cur_pass : MD5(me.passform.getComponent("cur_pass").getValue()), 

@@ -2,7 +2,6 @@
 require_once getenv("DOCUMENT_ROOT") . '/framework/configurations.inc.php';
 
 set_include_path(get_include_path() . PATH_SEPARATOR . getenv("DOCUMENT_ROOT") . "/generalClasses");
-set_include_path(get_include_path() . PATH_SEPARATOR . getenv("DOCUMENT_ROOT") . "/generalUI/ext4");
 
 require_once 'PDODataAccess.class.php';
 
@@ -297,7 +296,26 @@ update ACC_DocItems set details = replace(replace(details,'ي','ی'),'ك','ک')
 
 ایجاد ردیف صندوق از مجموع هزینه ها 
 ********************************************************************************
+ALTER TABLE `rtfund`.`ACC_docs` MODIFY COLUMN `DocDate` VARCHAR(50) NOT NULL COMMENT 'تاریخ سند';
 
+insert into rtfund.ACC_docs(CycleID,BranchID,LocalNo,DocDate,RegDate,
+DocStatus,DocType,description,imp_AccDocNo)
+SELECT 1394,1,TempDocNo,DocDate,now(),'CONFIRM',2,comment,ACCDocNo FROM s94.tblAccDoc order by TempDocNo;
+*/
+/*$temp = PdoDataAccess::runquery("select * from ACC_docs where length(DocDate)=8");
+foreach($temp as $row)
+	PdoDataAccess::runquery("update ACC_docs set ".
+			" DocDate=" . ($row["DocDate"] == "" ? "null" : "'" .
+				DateModules::shamsi_to_miladi("13". $row["DocDate"],"-") . "'") . "
+			where DocID=" . $row["DocID"]);
+*/
+/*
+update ACC_Docs set description = replace(replace(description,'ي','ی'),'ك','ک');
+ALTER TABLE `rtfund`.`ACC_docs` MODIFY COLUMN `DocDate` DATE NOT NULL COMMENT 'تاریخ سند';
+
+********************************************************************************
+ */
+/* 
 update tblCoding set AccName = replace(replace(AccName,'ي','ی'),'ك','ک');
 update tblCoding set AccName= replace(AccName,'  ',' ');
  * 
@@ -317,7 +335,7 @@ case substr(AccCode,1,6)
   else null end
 from tblAccDocDetail join tblCoding using(AccCode)
 left join rtfund.ACC_tafsilis on(AccName like concat('%',TafsiliDesc, '%') )
-left join rtfund.ACC_CostCodes on(CostCode= substr(AccCode,1,6))
+left join rtfund.ACC_CostCodes c on(c.CostCode= substr(AccCode,1,6))
 where AccCode like '110%' AND length(AccCode) > 6
 group by AccCode;
  * 
@@ -326,12 +344,17 @@ insert into rtfund.imp_MapCodes
 select CostID,AccCode, TafsiliID , null
 from tblAccDocDetail join tblCoding using(AccCode)
 left join rtfund.ACC_tafsilis on(AccName like concat('%',TafsiliDesc, '%') )
-left join rtfund.ACC_CostCodes on(CostCode= substr(AccCode,1,6))
+left join rtfund.ACC_CostCodes c on(c.CostCode= substr(AccCode,1,6))
 where AccCode like '209%' AND length(AccCode) > 6
 group by AccCode;
  * 
  * 
- * 
+insert into rtfund.ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,Tafsili2Type,Tafsili2ID,
+  DebtorAmount,CreditorAmount,details)
+select DocID,CostID,tafsiliType,
+  TafsiliID,tafsiliType2,TafsiliID2,BedValue,BesValue,comment
+from tblAccDocDetail join rtfund.ACC_docs on(imp_AccDocNo=AccDocNo)
+join rtfund.imp_MapCodes using(AccCode)
  * 
  *  */
 

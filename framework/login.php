@@ -9,60 +9,26 @@ set_include_path(get_include_path() . PATH_SEPARATOR . getenv("DOCUMENT_ROOT") .
 require_once 'PDODataAccess.class.php';
 require_once 'PasswordHash.php';
 
-session_start();
-
-$return = "";
+require_once getenv("DOCUMENT_ROOT") . '/framework/session.php';
+session::sec_session_start();
 
 if(isset($_POST["UserName"]))
 {
-	
 	$user = $_POST["UserName"];
 	$pass = $_POST["md5Pass"];
 	
-	$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($user));
-	if(count($temp) == 0)
+	$result = session::login($user, $pass);			
+	if($result !== true)
 	{
-		echo "WrongUserName";
+		echo $result;
 		die();
 	}
-	else
-	{
-		// Base-2 logarithm of the iteration count used for password stretching
-		$hash_cost_log2 = 8;	
-		$hasher = new PasswordHash($hash_cost_log2, true);
-		if (!$hasher->CheckPassword($pass, $temp[0]["UserPass"])) {
-		
-			echo "WrongPassword";	
-			die();
-		}
-		else
-		{
-			if($temp[0]["IsActive"] == "NO")
-			{
-				echo '<meta http-equiv="content-type" content="text/html; charset=utf-8" />';
-				echo "<body dir=rtl><center><br><br><br><font style='font-family:b titr;'>";
-				echo "یوزر شما غیر فعال شده است. لطفا جهت پیگیری با صندوق تماس حاصل فرمایید.";
-				echo "</font></center></body>";
-				die();
-			} 
-		
-			$_SESSION['USER'] = $temp[0];
-			$_SESSION['USER']["fullname"] = $temp[0]["fname"] . " " . $temp[0]["lname"];
-			$_SESSION['USER']["framework"] = true;
-			$_SESSION['USER']["portal"] = false;
-			//..........................................................
-			if (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
-				if ( strlen($_SERVER['HTTP_X_FORWARDED_FOR']) > 15 )
-					$_SESSION['LIPAddress'] = substr($_SERVER['HTTP_X_FORWARDED_FOR'] , 0,strpos($_SERVER['HTTP_X_FORWARDED_FOR'],','));
-				else
-					$_SESSION['LIPAddress'] = ($_SERVER['HTTP_X_FORWARDED_FOR']);
-			else
-				$_SESSION['LIPAddress'] = $_SERVER['REMOTE_ADDR'];
-			//..........................................................
-			echo "true";
-			die();	
-		}
-	}
+	
+	$_SESSION['USER']["framework"] = true;
+	$_SESSION['USER']["portal"] = false;
+	
+	echo "true";
+	die();
 }
 
 ?>
@@ -297,6 +263,23 @@ if(isset($_POST["UserName"]))
 						document.getElementById("PasswordDiv").className = "wrong2";
 						document.getElementById('password').focus();
 					}	
+					if(error == "TooMuchAttempt")
+					{
+						document.getElementById("div_lock").style.display = "block";
+						document.getElementById("PasswordDiv").remove();
+						document.getElementById("UserNameDiv").remove();
+						document.getElementById("btn_enter").remove();
+						document.getElementById("div_forget").remove();
+					}
+					if(error == "InActiveUser")
+					{
+						document.getElementById("div_lock").style.display = "block";
+						document.getElementById("div_lock").innerHTML = "شناسه شما غیر فعال شده است. برای اطلاعات بیشتر با صندوق تماس حاصل فرمایید"
+						document.getElementById("PasswordDiv").remove();
+						document.getElementById("UserNameDiv").remove();
+						document.getElementById("btn_enter").remove();
+						document.getElementById("div_forget").remove();
+					}					
 				}
 			}
 			xmlhttp.open("POST","login.php",true);
@@ -330,12 +313,13 @@ if(isset($_POST["UserName"]))
 								<div style="font-size: 12px">جهت ورود به پرتال نام کاربری و کلمه عبور خود را وارد کنید.
 									درغیر اینصورت با زدن دکمه ثبت نام به پرتال وارد شوید.</div>
 								<br>
+								<div id="div_lock" style="display:none;color : red;font-size: 12px">به دلیل چندین تلاش ناموفق برای ورود به سیستم، امکان ورود به سیستم برای 15 دقیقه قفل خواهد شد.</div>
 								<div id="UserNameDiv"><input autocomplete="off" type="text" class="textfield" name="UserName" id="UserName" 
 									placeholder="کلمه کاربری ..." required="required" dir="ltr" /></div>
 								<div id="PasswordDiv"><input autocomplete="off" type="password" class="textfield" id="password" 
 									placeholder="رمز عبور ..." required="required" dir="ltr"/></div>
-								<button onclick="loginFN();" type="button" style="width:80px" class="btn  ">ورود</button>
-								<div class="forget">&nbsp;| رمز عبور را فراموش کرده ام </div>
+								<button id="btn_enter" onclick="loginFN();" type="button" style="width:80px" class="btn  ">ورود</button>
+								<div id="div_forget" class="forget">&nbsp;| رمز عبور را فراموش کرده ام </div>
 								<input type="hidden" id="md5Pass" name="md5Pass">
 							</form>
 						</div>										

@@ -10,7 +10,8 @@ require_once 'PDODataAccess.class.php';
 require_once 'DataAudit.class.php';
 require_once getenv("DOCUMENT_ROOT") . '/framework/PasswordHash.php';
 
-session_start();
+require_once getenv("DOCUMENT_ROOT") . '/framework/session.php';
+session::sec_session_start();
 
 $return = "";
 //------------- register ------------------
@@ -21,38 +22,9 @@ if(isset($_POST["email"]))
 	$user = $_POST["UserName"];
 	$pass = $_POST["md5Pass"];
 	
-	$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($user));
-	if(count($temp) > 0)
-	{
-		$return = "DuplicateUserName";
-	}
-	else
-	{
-		$hash_cost_log2 = 8;	
-		$hasher = new PasswordHash($hash_cost_log2, true);
-		
-		$obj = new BSC_persons();
-		PdoDataAccess::FillObjectByArray($obj, $_POST);
-		$obj->UserPass = $hasher->HashPassword($pass);
-		$obj->IsCustomer = "YES";
-		$obj->AddPerson();
-		
-		$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($user));
-		$_SESSION['USER'] = $temp[0];
-		$_SESSION['USER']["framework"] = true;
-		$_SESSION['USER']["portal"] = true;
-		//..........................................................
-		if (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
-			if ( strlen($_SERVER['HTTP_X_FORWARDED_FOR']) > 15 )
-				$_SESSION['LIPAddress'] = substr($_SERVER['HTTP_X_FORWARDED_FOR'] , 0,strpos($_SERVER['HTTP_X_FORWARDED_FOR'],','));
-			else
-				$_SESSION['LIPAddress'] = ($_SERVER['HTTP_X_FORWARDED_FOR']);
-		else
-			$_SESSION['LIPAddress'] = $_SERVER['REMOTE_ADDR'];
-		//..........................................................
+	$return = session::register($user, $pass);
+	if($return === true)
 		header("location: index.php");
-		
-	}
 }
 //------------- login ------------------
 else if(isset($_POST["UserName"]))
@@ -60,45 +32,16 @@ else if(isset($_POST["UserName"]))
 	$user = $_POST["UserName"];
 	$pass = $_POST["md5Pass"];
 	
-	$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($user));
-	if(count($temp) == 0)
+	$result = session::login($user, $pass);
+	if($result !== true)
 	{
-		$return = "WrongUserName";
+		$return = $result;
 	}
 	else
 	{
-		// Base-2 logarithm of the iteration count used for password stretching
-		$hash_cost_log2 = 8;	
-		$hasher = new PasswordHash($hash_cost_log2, true);
-		if (!$hasher->CheckPassword($pass, $temp[0]["UserPass"])) {
-		
-			$return = "WrongPassword";		
-		}
-		else
-		{
-			if($temp[0]["IsActive"] == "NO")
-			{
-				echo '<meta http-equiv="content-type" content="text/html; charset=utf-8" />';
-				echo "<body dir=rtl><center><br><br><br><font style='font-family:b titr;'>";
-				echo "یوزر شما غیر فعال شده است. لطفا جهت پیگیری با صندوق تماس حاصل فرمایید.";
-				echo "</font></center></body>";
-				die();
-			}
-			
-			$_SESSION['USER'] = $temp[0];
-			$_SESSION['USER']["framework"] = false;
-			$_SESSION['USER']["portal"] = true;
-			//..........................................................
-			if (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
-				if ( strlen($_SERVER['HTTP_X_FORWARDED_FOR']) > 15 )
-					$_SESSION['LIPAddress'] = substr($_SERVER['HTTP_X_FORWARDED_FOR'] , 0,strpos($_SERVER['HTTP_X_FORWARDED_FOR'],','));
-				else
-					$_SESSION['LIPAddress'] = ($_SERVER['HTTP_X_FORWARDED_FOR']);
-			else
-				$_SESSION['LIPAddress'] = $_SERVER['REMOTE_ADDR'];
-			//..........................................................
-			header("location: index.php");
-		}
+		$_SESSION['USER']["framework"] = false;
+		$_SESSION['USER']["portal"] = true;
+		header("location: index.php");
 	}
 }
 
@@ -206,9 +149,9 @@ else if(isset($_POST["UserName"]))
 		color : white;		
 	}
 	.mainDiv{
-		width : 500px;	
+		width : 533px;	
 		right : 35%;
-		top : 30%;
+		top : 35%;
 		position: absolute;
 
 	}
@@ -232,8 +175,21 @@ else if(isset($_POST["UserName"]))
 	}
 	.wrong::after {
 		color: #f5443b !important;
-		content: url("ext/cross.png");
+		content: "کلمه کاربری اشتباه است";
 		padding-right: 6px;
+		vertical-align: super;
+		font-size: 11px;
+	}
+	
+	.wrong2 input {
+		border: 1px solid #9e423e;
+	}
+	.wrong2::after {
+		color: #f5443b !important;
+		content: "رمز عبور اشتباه است";
+		padding-right: 6px;
+		vertical-align: super;
+		font-size: 11px;
 	}
 
 	.btn{

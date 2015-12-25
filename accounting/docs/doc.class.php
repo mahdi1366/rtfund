@@ -30,7 +30,7 @@ class ACC_docs extends PdoDataAccess {
 		
 		$query = "select sd.*, concat(fname,' ',lname) as regPerson
 			from ACC_docs sd
-			join BSC_persons p on(regPersonID=PersonID)";
+			left join BSC_persons p on(regPersonID=PersonID)";
 		
 		$query .= ($where != "") ? " where " . $where : "";
 		
@@ -217,8 +217,8 @@ class ACC_DocItems extends PdoDataAccess {
 	public $CostID;
 	public $TafsiliType;
 	public $TafsiliID;
-	public $Tafsili2Type;
-	public $Tafsili2ID;
+	public $TafsiliType2;
+	public $TafsiliID2;
 	public $DebtorAmount;
 	public $CreditorAmount;
 	public $details;
@@ -241,9 +241,9 @@ class ACC_DocItems extends PdoDataAccess {
 			left join ACC_blocks b2 on(cc.level2=b2.blockID)
 			left join ACC_blocks b3 on(cc.level3=b3.blockID)
 			left join BaseInfo bi on(TafsiliType=InfoID AND TypeID=2)
-			left join BaseInfo bi2 on(Tafsili2Type=bi2.InfoID AND bi2.TypeID=2)
+			left join BaseInfo bi2 on(TafsiliType2=bi2.InfoID AND bi2.TypeID=2)
 			left join ACC_tafsilis t on(t.TafsiliID=si.TafsiliID)
-			left join ACC_tafsilis t2 on(t2.TafsiliID=si.Tafsili2ID)
+			left join ACC_tafsilis t2 on(t2.TafsiliID=si.TafsiliID2)
 			";
 		$query .= ($where != "") ? " where " . $where : "";
 		return parent::runquery_fetchMode($query, $whereParam);

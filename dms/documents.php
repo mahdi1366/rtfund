@@ -25,7 +25,7 @@ switch($ObjectType)
 		$obj = new LON_requests($ObjectID);
 		if($_SESSION["USER"]["IsCustomer"] == "YES" && in_array($obj->StatusID, array("40","60")) )
 			$access = true;
-		if($_SESSION["USER"]["IsStaff"] == "YES" && $obj->StatusID == "50")
+		if($_SESSION["USER"]["IsStaff"] == "YES" /*&& $obj->StatusID == "50"*/)
 			$access = true;
 		break;
 }

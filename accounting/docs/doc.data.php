@@ -227,7 +227,7 @@ function regResid() {
 function copyDoc(){
 	
 	PdoDataAccess::runquery("insert into ACC_DocItems
-		SELECT :dst,ItemID,kolID,moinID,TafsiliID,tafsili2ID,DebtorAmount,CreditorAmount,details,locked FROM ACC_DocItems where DocID=:src",
+		SELECT :dst,ItemID,kolID,moinID,TafsiliID,TafsiliID2,DebtorAmount,CreditorAmount,details,locked FROM ACC_DocItems where DocID=:src",
 		array(":src" => $_POST["src_DocID"], ":dst" => $_POST["dst_DocID"]));
 	
 	echo PdoDataAccess::GetLatestQueryString();
@@ -255,9 +255,8 @@ function GetSearchCount() {
 					":b" => $_SESSION["accounting"]["BranchID"],
 					":n" => $_REQUEST['Number']);
 	
-	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
-    $temp = $dt->fetch();
-    echo Response::createObjectiveResponse(true, $temp[0]['CurrentPage']);
+	$dt = PdoDataAccess::runquery($query, $param);
+    echo Response::createObjectiveResponse(true, $dt[0]['CurrentPage']);
     die();
 }
 
@@ -277,7 +276,7 @@ function selectDocItems() {
 				$where .= " AND moinTitle like :tl";
 				$whereParam[":tl"] = "%" . $_GET["query"] . "%";
 				break;
-			case "tafsili2ID":
+			case "TafsiliID2":
 				$where .= " AND t2.tafsiliDesc like :tl";
 				$whereParam[":tl"] = "%" . $_GET["query"] . "%";
 				break;
@@ -323,10 +322,10 @@ function saveDocItem() {
 		$obj->TafsiliType = PDONULL;
 	if($obj->TafsiliID == "")
 		$obj->TafsiliID = PDONULL;
-	if($obj->Tafsili2Type == "")
-		$obj->Tafsili2Type = PDONULL;
-	if($obj->Tafsili2ID == "")
-		$obj->Tafsili2ID = PDONULL;
+	if($obj->TafsiliType2 == "")
+		$obj->TafsiliType2 = PDONULL;
+	if($obj->TafsiliID2 == "")
+		$obj->TafsiliID2 = PDONULL;
 	
 	if ($obj->ItemID == "0")
 		$return = $obj->Add();
