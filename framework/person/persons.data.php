@@ -102,6 +102,12 @@ function SavePerson(){
 		$obj->NationalID = PDONULL;
 	}
 	
+	$obj->IsAgent = !isset($_POST["IsAgent"]) ? "NO" : "YES";
+	$obj->IsCustomer = !isset($_POST["IsCustomer"]) ? "NO" : "YES";
+	$obj->IsStaff = !isset($_POST["IsStaff"]) ? "NO" : "YES";
+	$obj->IsShareholder = !isset($_POST["IsShareholder"]) ? "NO" : "YES";
+	$obj->IsSupporter = !isset($_POST["IsSupporter"]) ? "NO" : "YES";
+	
 	if($obj->PersonID > 0)
 		$result = $obj->EditPerson();
 	else 

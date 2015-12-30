@@ -57,7 +57,7 @@ function UserState()
 			anchor : "90%",
 			queryMode : 'local',
 			allowBlank : false,
-			value : "<?= $_SESSION["accounting"]["BranchID"] ?>",
+			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
 			displayField : "BranchName",
 			valueField : "BranchID",
 			name : "BranchID"
@@ -75,7 +75,7 @@ function UserState()
 			fieldLabel : "دوره",
 			queryMode : 'local',
 			anchor : "90%",
-			value : "<?= $_SESSION["accounting"]["CycleID"] ?>",
+			value : "<?= !isset($_SESSION["accounting"]["CycleID"]) ? "" : $_SESSION["accounting"]["CycleID"] ?>",
 			allowBlank : false,
 			displayField : "CycleDesc",
 			valueField : "CycleID",
