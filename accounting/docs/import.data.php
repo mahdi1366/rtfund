@@ -60,7 +60,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
-	$CostCode_pardakhtani = FindCostID("200");
+	$CostCode_pardakhtani = FindCostID("200-01");
 	$CostCode_guaranteeAmount = FindCostID("904-02");
 	$CostCode_guaranteeCount = FindCostID("904-01");
 	$CostCode_guaranteeAmount2 = FindCostID("905-02");
@@ -144,7 +144,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $curYear . "]");
 		return false;
 	}
-	$amountArr[$curYearTafsili] = $year1;
+	$amountArr[$curYearTafsili]["year"] = $curYear;
+	$amountArr[$curYearTafsili]["amount"] = $year1;
 	
 	if($year2 > 0)
 	{
@@ -154,7 +155,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . ($curYear+1) . "]");
 			return false;
 		}
-		$amountArr[$Year2Tafsili] = $year2;
+		$amountArr[$Year2Tafsili]["year"] = $curYear+1;
+		$amountArr[$Year2Tafsili]["amount"] = $year2;
 	}
 	if($year3 > 0)
 	{
@@ -163,8 +165,9 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		{
 			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . ($curYear+2) . "]");
 			return false;
-		}
-		$amountArr[$Year3Tafsili] = $year3;
+		}		
+		$amountArr[$Year3Tafsili]["year"] = $curYear+2;
+		$amountArr[$Year3Tafsili]["amount"] = $year3;
 	}
 	if($year4 > 0)
 	{
@@ -174,7 +177,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . ($curYear+3) . "]");
 			return false;
 		}
-		$amountArr[$Year4Tafsili] = $year4;
+		$amountArr[$Year4Tafsili]["year"] = $curYear+3;
+		$amountArr[$Year4Tafsili]["amount"] = $year4;
 	}
 	//----------------- add Doc items ------------------------
 		
@@ -225,9 +229,9 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	}	
 	//---- کارمزد-----
 	$WageSum = 0;
-	foreach($amountArr as $yearTafsili => $amount)
+	foreach($amountArr as $yearTafsili => $arr)
 	{
-		if($amount == 0 || $amount == "")
+		if($arr["amount"] == 0 || $arr["amount"] == "")
 			continue;
 		
 		unset($itemObj->ItemID);
@@ -236,7 +240,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_wage;
 		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = round($amount);
+		$itemObj->CreditorAmount = round($arr["amount"]);
 		$itemObj->TafsiliType = TAFTYPE_YEARS;
 		$itemObj->TafsiliID = $yearTafsili;
 		if(!$itemObj->Add($pdo))
@@ -251,8 +255,10 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
 			$itemObj->CostID = $CostCode_deposite;
-			$itemObj->DebtorAmount = round($amount);
+			$itemObj->DebtorAmount = round($arr["amount"]);
 			$itemObj->CreditorAmount = 0;
+			$itemObj->details = "بابت کارمزد سال " . $arr["year"] . 
+				$PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID; 
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $ReqPersonTafsili;
 			if(!$itemObj->Add($pdo))
@@ -276,7 +282,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
-	$itemObj->SourceID = $PartObj->PartID;
+	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID2 = $PartObj->PartID;
 	if(!$itemObj->Add($pdo))
 	{
 		ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "5"); 
@@ -292,6 +299,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$itemObj->CostID = $CostCode_deposite;
 		$itemObj->DebtorAmount = $PartObj->PartAmount + $WageSum;
 		$itemObj->CreditorAmount = 0;
+		$itemObj->details = "بابت پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
 		if(!$itemObj->Add($pdo))

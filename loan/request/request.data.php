@@ -101,12 +101,6 @@ function SaveLoanRequest(){
 	$obj->guarantees = implode(",", $obj->guarantees);
 	
 	//------------------------------------------------------
-	if($_SESSION["USER"]["IsCustomer"] == "YES")
-	{
-		if(!isset($obj->LoanPersonID))
-			$obj->LoanPersonID = $_SESSION["USER"]["PersonID"];
-		$obj->StatusID = 10;
-	}
 	if($_SESSION["USER"]["IsAgent"] == "YES")
 	{
 		if(isset($_POST["sending"]) &&  $_POST["sending"] == "true")
@@ -116,9 +110,15 @@ function SaveLoanRequest(){
 		
 		$obj->LoanID = Default_Agent_Loan;
 	}
-	if($_SESSION["USER"]["IsStaff"] == "YES")
+	else if($_SESSION["USER"]["IsStaff"] == "YES")
 	{
 		$obj->LoanID = Default_Agent_Loan;
+	}
+	else if($_SESSION["USER"]["IsCustomer"] == "YES")
+	{
+		if(!isset($obj->LoanPersonID))
+			$obj->LoanPersonID = $_SESSION["USER"]["PersonID"];
+		$obj->StatusID = 10;
 	}
 	//-
 	//------------------------------------------------------
@@ -131,18 +131,17 @@ function SaveLoanRequest(){
 		if($result)
 			ChangeStatus($obj->RequestID,$obj->StatusID, "", true);
 		
-		if($_SESSION["USER"]["IsCustomer"] == "YES" && $obj->LoanID > 0)
-		{
-			$loanObj = new LON_loans($obj->LoanID);
-			$PartObj = new LON_ReqParts();
-			PdoDataAccess::FillObjectByObject($loanObj, $PartObj);
-			$PartObj->RequestID = $obj->RequestID;
-			$PartObj->PartDesc = "مرحله اول";
-			$PartObj->FundWage = $loanObj->CustomerWage;
-			$PartObj->PartAmount = $obj->ReqAmount;
-			$PartObj->PartDate = PDONOW;
-			$PartObj->AddPart();
-		}
+		
+		$loanObj = new LON_loans($obj->LoanID);
+		$PartObj = new LON_ReqParts();
+		PdoDataAccess::FillObjectByObject($loanObj, $PartObj);
+		$PartObj->RequestID = $obj->RequestID;
+		$PartObj->PartDesc = "مرحله اول";
+		$PartObj->FundWage = $loanObj->CustomerWage;
+		$PartObj->PartAmount = $obj->ReqAmount;
+		$PartObj->PartDate = PDONOW;
+		$PartObj->AddPart();
+		
 	}
 	else
 	{

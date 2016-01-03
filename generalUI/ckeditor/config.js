@@ -4,11 +4,15 @@
  */
 
 CKEDITOR.editorConfig = function( config ) {
+	
 	config.language = 'fa';
-	config.uiColor = '#F7B42C';
-	config.height = 300;
+	//config.uiColor = '#F7B42C';
 	config.toolbarCanCollapse = false;
 	config.resize_enabled = false;
+	
+	config.font_defaultLabel = 'Tahoma';
+	config.fontSize_defaultLabel = '12px';
+	config.font_names = 'Tahoma;b nazanin;b titr';
 	
 	config.toolbarGroups = [
 		{ name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
@@ -27,7 +31,9 @@ CKEDITOR.editorConfig = function( config ) {
 		{ name: 'about', groups: [ 'about' ] }
 	];
 
-	config.removeButtons = 'Print,Find,Replace,Scayt,Form,Checkbox,Radio,TextField,Textarea,Select,Button,ImageButton,HiddenField,Link,Unlink,Anchor,Flash,Smiley,Iframe,Maximize,ShowBlocks,About,SelectAll,CreateDiv,Language,Styles';
+	config.removeButtons = 'Print,Find,Replace,Scayt,Form,Checkbox,Radio,TextField,Textarea,Select,'+
+		'Button,ImageButton,HiddenField,Link,Unlink,Anchor,Flash,Smiley,Iframe,Maximize,ShowBlocks,'+
+		'About,SelectAll,CreateDiv,Language,Styles,Save,Image,RemoveFormat';
 	
 	
 };

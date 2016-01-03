@@ -5533,9 +5533,9 @@ CREATE TABLE `BSC_persons` (
 
 /*!40000 ALTER TABLE `BSC_persons` DISABLE KEYS */;
 INSERT INTO `BSC_persons` (`PersonID`,`UserName`,`UserPass`,`IsReal`,`fname`,`lname`,`CompanyName`,`NationalID`,`EconomicID`,`PhoneNo`,`mobile`,`address`,`email`,`IsStaff`,`IsCustomer`,`IsShareholder`,`IsAgent`,`IsSupporter`,`IsActive`,`PostID`,`imp_CustomerCode`) VALUES 
- (1000,'admin','$P$BohiM.oxkR3cznS6rLOfvLLCilEusc0','YES','شبنم','جعفرخانی','','0943021723',NULL,NULL,NULL,'sdfsdf','jafarkhani_sh@yahoo.com','YES','NO','NO','NO','NO','YES',1,NULL),
- (1001,'park','$P$BxRr4XWjqcX8mcQp0wYFryxdiSllgF.','NO','','','پارک علم و فناوری خراسان',NULL,NULL,'35003333','','جاده قوچان ',NULL,'NO','YES','YES','YES','NO','YES',NULL,202),
- (1002,'um','$P$Bycap3x5ddHssUbkMErS3tBiQmf7OE1','NO','','','دانشگاه فردوسی مشهد',NULL,NULL,'8802000','','میدان آزادی دانشگاه فردوسی',NULL,'NO','YES','YES','YES','NO','YES',NULL,133),
+ (1000,'admin','$P$BDz7HxE0lS4tyNwzM29qMRa0xUoA8c.','YES','شبنم','جعفرخانی',NULL,'0943021723',NULL,NULL,NULL,'sdfsdf','jafarkhani_sh@yahoo.com','YES','NO','NO','NO','NO','YES',1,NULL),
+ (1001,'park','$P$BxRr4XWjqcX8mcQp0wYFryxdiSllgF.','NO','','','پارک علم و فناوری خراسان',NULL,NULL,'35003333','','جاده قوچان ',NULL,'NO','NO','YES','YES','NO','YES',NULL,202),
+ (1002,'um','$P$Bycap3x5ddHssUbkMErS3tBiQmf7OE1','NO','','','دانشگاه فردوسی مشهد',NULL,NULL,'8802000','','میدان آزادی دانشگاه فردوسی',NULL,'NO','NO','YES','YES','NO','YES',NULL,133),
  (1003,'shekoofaie','$P$Bycap3x5ddHssUbkMErS3tBiQmf7OE1','NO',NULL,NULL,'صندوق نوآوری و شکوفایی',NULL,NULL,NULL,NULL,NULL,NULL,'NO','NO','NO','NO','YES','YES',NULL,NULL),
  (1004,'ghoochan','$P$B0DJkog522gyIoHt71lfA5JK8tZAwy/','NO',NULL,NULL,'مجتمع فنی قوچان',NULL,NULL,NULL,NULL,NULL,NULL,'NO','NO','NO','YES','NO','YES',NULL,NULL),
  (1005,NULL,NULL,'YES','علی ','بهاری',NULL,NULL,NULL,'09159157131','','پیروزی 2 حق شناس 2/5 پ6',NULL,'NO','YES','NO','NO','NO','YES',NULL,104),
@@ -5779,7 +5779,16 @@ INSERT INTO `BSC_persons` (`PersonID`,`UserName`,`UserPass`,`IsReal`,`fname`,`ln
  (1245,NULL,NULL,'YES','مهدی ','فرخ',NULL,NULL,NULL,'6655630','09369488399','دانشگاه فردوسی-منابع طبیعی',NULL,'NO','YES','NO','NO','NO','YES',NULL,95),
  (1246,NULL,NULL,'NO',NULL,NULL,'مهدی سلطانی. شرکت توس ژن',NULL,NULL,'8798471','09154191695','مرکز رشد دانشگاه فردوسی مشهد',NULL,'NO','YES','NO','NO','NO','YES',NULL,96),
  (1247,NULL,NULL,'YES','مصطفی ','مظاهری',NULL,NULL,NULL,'0000','','دانشگاه فردوسی',NULL,'NO','YES','NO','NO','NO','YES',NULL,98),
- (1248,NULL,NULL,'YES','ابراهیم ','رضایی نیک',NULL,NULL,NULL,'09153102996','','موسسه اموزش عالس سجاد',NULL,'NO','YES','NO','NO','NO','YES',NULL,99);
+ (1248,NULL,NULL,'YES','ابراهیم ','رضایی نیک',NULL,NULL,NULL,'09153102996','','موسسه اموزش عالس سجاد',NULL,'NO','YES','NO','NO','NO','YES',NULL,99),
+ (1249,NULL,'$P$Bub/yw74TY.hWRwW3bqbinuBDkG65e.','YES',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'NO','YES','NO','NO','NO','YES',NULL,NULL),
+ (1250,NULL,'$P$BLcUiKwnCFZo7S1WfmYLqMLTB4SqMn0','YES',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'NO','YES','NO','NO','NO','YES',NULL,NULL),
+ (1251,NULL,'$P$B.wSIt7EMRik7jEcCe/8kqd8og/WgG.','YES',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'NO','YES','NO','NO','NO','YES',NULL,NULL),
+ (1252,NULL,'$P$B.FIv0jc6EDVEggnI.BWErkaWtKxbG1','YES',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'NO','YES','NO','NO','NO','YES',NULL,NULL),
+ (1253,NULL,'$P$BSpT/a96i20w5LrOw6JKG/HK/4Cn8t/','YES',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'NO','YES','NO','NO','NO','YES',NULL,NULL),
+ (1254,NULL,'$P$Bpk7.zNgZtBBuKgK6T6byxjzMWpe/D0','YES',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'NO','YES','NO','NO','NO','YES',NULL,NULL),
+ (1255,NULL,'$P$B9gFY5rkO4nDRg0afG2qBQOg6hqkyD.','YES',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'NO','YES','NO','NO','NO','YES',NULL,NULL),
+ (1256,NULL,'$P$BVYVOUEr2FboWL1cFaOvnhkxG9P8fC1','YES',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'NO','YES','NO','NO','NO','YES',NULL,NULL),
+ (1257,NULL,'$P$B2Z4Q9mqIsMhbBwxaewuRRMAboR2XI0','YES',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'NO','YES','NO','NO','NO','YES',NULL,NULL);
 /*!40000 ALTER TABLE `BSC_persons` ENABLE KEYS */;
 
 
@@ -5850,6 +5859,7 @@ CREATE TABLE `BaseInfo` (
 
 /*!40000 ALTER TABLE `BaseInfo` DISABLE KEYS */;
 INSERT INTO `BaseInfo` (`TypeID`,`InfoID`,`InfoDesc`,`param1`,`param2`) VALUES 
+ (8,0,'تصویر','0',NULL),
  (1,1,'وام های صندوق','0',NULL),
  (2,1,'اشخاص و شرکتها','0',NULL),
  (3,1,'حساب جاری','0',NULL),
@@ -5861,6 +5871,7 @@ INSERT INTO `BaseInfo` (`TypeID`,`InfoID`,`InfoDesc`,`param1`,`param2`) VALUES
  (9,1,'سند افتتاحیه','0',NULL),
  (10,1,'پرداخت وام','RequestID','PartID'),
  (11,1,'پرداخت مرحله وام','../../loan/request/RequestInfo.php','RequestID'),
+ (12,1,'جهت اطلاع','0',NULL),
  (2,2,'سال','0',NULL),
  (3,2,'حساب سپرده ','0',NULL),
  (4,2,'وصول شده','0',NULL),
@@ -5869,16 +5880,19 @@ INSERT INTO `BaseInfo` (`TypeID`,`InfoID`,`InfoDesc`,`param1`,`param2`) VALUES
  (8,2,'ضمانت بانکی','1',NULL),
  (9,2,'سند دستی','0',NULL),
  (10,2,'پرداخت قسط','0',NULL),
+ (12,2,'جهت اقدام مقتضی','0',NULL),
  (2,3,'بانک ها','0',NULL),
  (4,3,'مسدود','0',NULL),
  (6,3,'کسر از حقوق','0',NULL),
  (7,3,'مدارک شخص حقوقی','0',NULL),
  (8,3,'چک','1',NULL),
  (9,3,'سند اختتامیه','0',NULL),
+ (12,3,'جهت بررسی و اعلام نظر','0',NULL),
  (4,4,'برگشتي','0',NULL),
  (6,4,'پرداخت الکترونیک','0',NULL),
  (8,4,'سفته','1',NULL),
  (9,4,'سند پرداخت مرحله وام','RequestID','PartID'),
+ (12,4,'جهت امضا','0',NULL),
  (4,5,'گم شده','0',NULL),
  (6,5,'دفترچه اقساط','0',NULL),
  (8,5,'کسر از حقوق','1',NULL),
@@ -5945,7 +5959,8 @@ INSERT INTO `BaseTypes` (`TypeID`,`SystemID`,`TypeDesc`,`TableName`,`FieldName`,
  (8,7,'نوع مدرک','DMS_documents','DocType','NO'),
  (9,2,'نوع سند','ACC_docs','DocType','NO'),
  (10,2,'مرجع سند حسابداری','ACC_DocItems','SourceType','NO'),
- (11,4,'انواع آیتم گردش فرم','WFM_flows','ObjectType','NO');
+ (11,4,'انواع آیتم گردش فرم','WFM_flows','ObjectType','NO'),
+ (12,4,'نوع ارجاع نامه','OFC_send','SendType','NO');
 /*!40000 ALTER TABLE `BaseTypes` ENABLE KEYS */;
 
 
@@ -8271,7 +8286,9 @@ INSERT INTO `DMS_documents` (`DocumentID`,`DocDesc`,`DocType`,`ObjectType`,`Obje
  (642,'سفته',4,'loan',226,NULL,NULL,'YES',NULL,NULL,NULL,'NO',1400),
  (643,'سفته',4,'loan',226,NULL,NULL,'YES',NULL,NULL,NULL,'NO',1401),
  (644,'اساسنامه',41,'person',1001,'jpg',0xFFD8FFE000104A46494600010201006000600000FFE1302D4578696600004D4D002A00000008000D010E000200000010000000AA011200030000000100010000011A000500000001000000BA011B000500000001000000C2012800030000000100020000013100020000001C000000CA0132000200000014000000E6013B00020000001C000000FA829800020000001C000001169C9B000100000020000001329C9D00010000003800000152EA1C0007000007C40000018A87690004000000010000095000001194,'YES',1001,1000,NULL,'NO',NULL),
- (645,'-',3,'loan',225,'jpg',0xFFD8FFE000104A46494600010201006000600000FFE1302D4578696600004D4D002A00000008000D010E000200000010000000AA011200030000000100010000011A000500000001000000BA011B000500000001000000C2012800030000000100020000013100020000001C000000CA0132000200000014000000E6013B00020000001C000000FA829800020000001C000001169C9B000100000020000001329C9D00010000003800000152EA1C0007000007C40000018A87690004000000010000095000001194,'NOTSET',1000,NULL,NULL,'NO',NULL);
+ (645,'-',3,'loan',225,'jpg',0xFFD8FFE000104A46494600010201006000600000FFE1302D4578696600004D4D002A00000008000D010E000200000010000000AA011200030000000100010000011A000500000001000000BA011B000500000001000000C2012800030000000100020000013100020000001C000000CA0132000200000014000000E6013B00020000001C000000FA829800020000001C000001169C9B000100000020000001329C9D00010000003800000152EA1C0007000007C40000018A87690004000000010000095000001194,'NOTSET',1000,NULL,NULL,'NO',NULL),
+ (646,'یسبسی',0,'letter',8,'jpg',0xFFD8FFE000104A46494600010201006000600000FFE135E14578696600004D4D002A00000008000D010E000200000010000000AA011200030000000100010000011A000500000001000000BA011B000500000001000000C2012800030000000100020000013100020000001C000000CA0132000200000014000000E6013B00020000001C000000FA829800020000001C000001169C9B000100000020000001329C9D00010000003800000152EA1C0007000007C40000018A87690004000000010000095000001194,'NOTSET',1000,NULL,NULL,'NO',NULL),
+ (647,'صفحه 2',0,'letter',8,'jpg',0xFFD8FFE000104A46494600010201006000600000FFE1294F4578696600004D4D002A00000008000D010E000200000010000000AA011200030000000100010000011A000500000001000000BA011B000500000001000000C2012800030000000100020000013100020000001C000000CA0132000200000014000000E6013B00020000001C000000FA829800020000001C000001169C9B000100000020000001329C9D00010000003800000152EA1C0007000007C40000018A87690004000000010000095000001194,'NOTSET',1000,NULL,NULL,'NO',NULL);
 /*!40000 ALTER TABLE `DMS_documents` ENABLE KEYS */;
 
 
@@ -8316,7 +8333,7 @@ CREATE TABLE `DataAudit` (
   `ActionTime` datetime NOT NULL COMMENT 'زمان انجام عمل',
   `QueryString` varchar(2000) character set utf8 default NULL COMMENT 'query اجرا شده',
   PRIMARY KEY  (`DataAuditID`)
-) ENGINE=MyISAM AUTO_INCREMENT=2385 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
+) ENGINE=MyISAM AUTO_INCREMENT=2418 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
 
 --
 -- Dumping data for table `DataAudit`
@@ -8329,7 +8346,40 @@ INSERT INTO `DataAudit` (`DataAuditID`,`PersonID`,`TableName`,`MainObjectID`,`Su
  (2381,1000,'OFC_letters',2,NULL,'UPDATE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-29 14:55:57','update OFC_letters set LetterID=\'2\',LetterType=\'INNER\',LetterTitle=\'نامه تستی\',SubjectID=null,summary=\'---\',context=\'<p>به نام خدا</p>\n\n<p>با احترام</p>\n\n<hr />\n<p>شسیمن بسمینب شسنم نشمت بنمسیت بمنشت منبت نشستی منسیتشب منست</p>\n\n<p>با تشکر</p>\n\n<p>&nbsp;شسنمبت سنم</p>\n\' where  LetterID=\'2\''),
  (2382,1000,'OFC_letters',2,NULL,'UPDATE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-29 14:56:03','update OFC_letters set LetterID=\'2\',LetterType=\'INNER\',LetterTitle=\'نامه تستی\',SubjectID=null,summary=\'---\',context=\'<p>به نام خدا</p>\n\n<p>با احترام</p>\n\n<hr />\n<p>شسیمن بسمینب شسنم نشمت بنمسیت بمنشت منبت نشستی منسیتشب منست</p>\n\n<p>با تشکر</p>\n\n<p>&nbsp;شسنمبت سنمسیب سیب</p>\n\' where  LetterID=\'2\''),
  (2383,1000,'OFC_letters',1,NULL,'DELETE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-29 20:01:13','delete from OFC_letters where LetterID=\'1\' '),
- (2384,1000,'OFC_letters',2,NULL,'UPDATE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-29 20:08:37','update OFC_letters set LetterID=\'2\',LetterType=\'INNER\',LetterTitle=\'نامه تستی\',SubjectID=null,summary=\'---نیت مشنتیم\',context=null where  LetterID=\'2\'');
+ (2384,1000,'OFC_letters',2,NULL,'UPDATE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2015-12-29 20:08:37','update OFC_letters set LetterID=\'2\',LetterType=\'INNER\',LetterTitle=\'نامه تستی\',SubjectID=null,summary=\'---نیت مشنتیم\',context=null where  LetterID=\'2\''),
+ (2385,1001,'LON_requests',229,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-12-31 18:11:53','insert into LON_requests(RequestID,BranchID,LoanID,ReqPersonID,ReqDate,ReqAmount,StatusID,BorrowerDesc,BorrowerID,guarantees,AgentGuarantee) values (\'0\',\'1\',\'9\',\'1001\',now(),\'120000000\',\'1\',\'شرکت X\',\'56465465654\',\'3,4\',\'NO\')'),
+ (2386,1001,'LON_ReqParts',228,NULL,'ADD',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-12-31 18:11:54','insert into LON_ReqParts(RequestID,PartDesc,PartDate,PartAmount,InstallmentCount,IntervalType,PayInterval,DelayMonths,ForfeitPercent,CustomerWage,FundWage) values (\'229\',\'مرحله اول\',now(),\'120000000\',\'0\',\'MONTH\',\'0\',\'0\',\'0\',\'0\',\'0\')'),
+ (2387,1001,'LON_ReqParts',228,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-12-31 18:12:29','update LON_ReqParts set PartID=\'228\',RequestID=\'229\',PartDesc=\'مرحله اول\',PartDate=\'2015/12/31\',PartAmount=\'120000000\',InstallmentCount=\'24\',IntervalType=\'MONTH\',PayInterval=\'1\',DelayMonths=\'0\',ForfeitPercent=\'0\',CustomerWage=\'4\',FundWage=\'4\' where  PartID=\'228\''),
+ (2388,1001,'LON_requests',229,NULL,'UPDATE',1000,'http://rtfund/portal/index.php',NULL,'127.0.0.1','2015-12-31 18:12:36','update LON_requests set RequestID=\'229\',BranchID=\'1\',LoanID=\'9\',ReqAmount=\'120000000\',StatusID=\'10\',ReqDetails=null,BorrowerDesc=\'شرکت X\',BorrowerID=\'56465465654\',LoanPersonID=\'1001\',guarantees=\'3,4\',AgentGuarantee=\'NO\',DocumentDesc=null,SupportPersonID=null where  RequestID=\'229\''),
+ (2389,1000,'FRW_menus',59,NULL,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-03 17:04:34','insert into FRW_menus(SystemID,ParentID,MenuDesc,IsActive,ordering,icon) values (\'4\',\'29\',\'نامه های پیش نویس\',\'YES\',\'2\',\'letter/DraftLetters.php\')'),
+ (2390,1000,'FRW_menus',59,NULL,'UPDATE',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-03 17:04:43','update FRW_menus set SystemID=\'4\',MenuID=\'59\',MenuDesc=\'نامه های پیش نویس\',IsActive=\'YES\',ordering=\'2\',icon=null,MenuPath=\'letter/DraftLetters.php\' where MenuID=\'59\''),
+ (2391,1000,'FRW_menus',30,NULL,'UPDATE',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-03 17:04:49','update FRW_menus set SystemID=\'4\',MenuID=\'30\',MenuDesc=\'نامه های رسیده\',IsActive=\'YES\',ordering=\'3\',icon=null,MenuPath=\'letter/receive.php\' where MenuID=\'30\''),
+ (2392,1000,'FRW_menus',32,NULL,'UPDATE',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-03 17:04:55','update FRW_menus set SystemID=\'4\',MenuID=\'32\',MenuDesc=\'نامه های ارسالی\',IsActive=\'YES\',ordering=\'4\',icon=null,MenuPath=\'letter/send.php\' where MenuID=\'32\''),
+ (2393,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-03 17:05:10','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'31\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (2394,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-03 17:05:10','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'59\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (2395,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-03 17:05:10','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'30\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (2396,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-03 17:05:10','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'32\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (2397,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-03 17:05:10','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'53\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (2398,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-03 17:05:10','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'56\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (2399,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-03 17:05:10','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'38\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (2400,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-03 17:05:10','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'57\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (2401,1000,'OFC_letters',3,NULL,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 17:09:19','insert into OFC_letters(LetterType,LetterTitle,LetterDate,RegDate,PersonID,context) values (\'INNER\',\'سمبنت سمنیب\',now(),now(),\'1000\',\'<p>بیس نبسیمنب سیمنبت</p>\n\')'),
+ (2402,1000,'OFC_letters',2,NULL,'UPDATE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 17:20:35','update OFC_letters set LetterID=\'2\',LetterType=\'INNER\',LetterTitle=\'نامه تستی\',SubjectID=null,summary=\'---نیت مشنتیم\',context=\'<p>سی بی سبسی سیب</p>\n\' where  LetterID=\'2\''),
+ (2403,1000,'OFC_letters',2,NULL,'UPDATE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 17:22:59','update OFC_letters set LetterID=\'2\',LetterType=\'INNER\',LetterTitle=\'نامه تستی\',SubjectID=null,summary=\'---نیت مشنتیم\',context=\'<p><em><strong>منس مسینت بسمنتی بمسبنی</strong></em></p>\n\' where  LetterID=\'2\''),
+ (2404,1000,'OFC_letters',4,NULL,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 17:47:17','insert into OFC_letters(LetterType,LetterTitle,LetterDate,RegDate,PersonID,context) values (\'INNER\',\'نامه تشکر\',now(),now(),\'1000\',\'<p style=\"text-align:center\">به نام خدا</p>\n\n<p>با سلام</p>\n\n<p>لطفا اقدامات لازم را مبذول فرمایید</p>\n\n<p>با تشکر</p>\n\n<hr />\')'),
+ (2405,1000,'OFC_letters',4,NULL,'UPDATE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 17:47:26','update OFC_letters set LetterID=\'4\',LetterType=\'INNER\',LetterTitle=\'نامه تشکر\',SubjectID=null,summary=\'تشکر از ....\',context=\'<p style=\"text-align:center\">به نام خدا</p>\n\n<p>با سلام</p>\n\n<p>لطفا اقدامات لازم را مبذول فرمایید</p>\n\n<p>با تشکر</p>\n\n<hr />\' where  LetterID=\'4\''),
+ (2406,1000,'OFC_letters',4,NULL,'UPDATE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 17:52:20','update OFC_letters set LetterID=\'4\',LetterType=\'INNER\',LetterTitle=\'نامه تشکر\',SubjectID=null,summary=\'تشکر از ....\',context=\'<p style=\"text-align:center\">به نام خدا</p>\n\n<hr />\n<p>با سلام</p>\n\n<p>لطفا اقدامات لازم را مبذول فرمایید</p>\n\n<p>با تشکر</p>\n\n<hr />\' where  LetterID=\'4\''),
+ (2407,1000,'OFC_letters',3,NULL,'UPDATE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 17:52:41','update OFC_letters set LetterID=\'3\',LetterType=\'INNER\',LetterTitle=\'سمبنت سمنیب\',SubjectID=null,summary=null,context=\'<p>بیس<span style=\"font-family:b titr\"> نبسیمنب سیمنبت</span></p>\n\' where  LetterID=\'3\''),
+ (2408,1000,'OFC_letters',3,NULL,'DELETE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 17:54:50','delete from OFC_letters where LetterID=\'3\' '),
+ (2409,1000,'OFC_letters',5,NULL,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 21:43:53','insert into OFC_letters(LetterType,LetterTitle,LetterDate,RegDate,PersonID) values (\'INNER\',\'ewrwerwer\',now(),now(),\'1000\')'),
+ (2410,1000,'OFC_letters',6,NULL,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 22:02:11','insert into OFC_letters(LetterType,LetterTitle,LetterDate,RegDate,PersonID) values (\'INNER\',\'تست\',now(),now(),\'1000\')'),
+ (2411,1000,'OFC_letters',7,NULL,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 22:03:17','insert into OFC_letters(LetterType,LetterTitle,LetterDate,RegDate,PersonID) values (\'INNER\',\'تست\',now(),now(),\'1000\')'),
+ (2412,1000,'OFC_letters',8,NULL,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 22:05:17','insert into OFC_letters(LetterType,LetterTitle,LetterDate,RegDate,PersonID) values (\'INNER\',\'تست\',now(),now(),\'1000\')'),
+ (2413,1000,'OFC_letters',8,NULL,'UPDATE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 22:05:59','update OFC_letters set LetterID=\'8\',LetterType=\'INNER\',LetterTitle=\'تست\',SubjectID=null,summary=null,context=null where  LetterID=\'8\''),
+ (2414,1000,'OFC_letters',8,NULL,'UPDATE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 22:06:54','update OFC_letters set LetterID=\'8\',LetterType=\'INNER\',LetterTitle=\'تست\',SubjectID=null,summary=null,context=null where  LetterID=\'8\''),
+ (2415,1000,'DMS_documents',646,NULL,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 22:06:54','insert into DMS_documents(DocDesc,DocType,ObjectType,ObjectID,RegPersonID) values (\'یسبسی\',\'0\',\'letter\',\'8\',\'1000\')'),
+ (2416,1000,'OFC_letters',8,NULL,'UPDATE',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 23:07:35','update OFC_letters set LetterID=\'8\',LetterType=\'INNER\',LetterTitle=\'تست\',SubjectID=null,summary=null,context=null where  LetterID=\'8\''),
+ (2417,1000,'DMS_documents',647,NULL,'ADD',4,'http://rtfund/office/start.php?SystemID=4',NULL,'127.0.0.1','2016-01-03 23:07:36','insert into DMS_documents(DocDesc,DocType,ObjectType,ObjectID,RegPersonID) values (\'صفحه 2\',\'0\',\'letter\',\'8\',\'1000\')');
 /*!40000 ALTER TABLE `DataAudit` ENABLE KEYS */;
 
 
@@ -8441,7 +8491,8 @@ INSERT INTO `FGR_steps` (`StepID`,`FormID`,`ordering`,`StepTitle`,`PostID`,`Brea
 DROP TABLE IF EXISTS `FRW_LoginAttempts`;
 CREATE TABLE `FRW_LoginAttempts` (
   `PersonID` int(10) unsigned NOT NULL,
-  `AttemptTime` varchar(30) NOT NULL
+  `AttemptTime` varchar(30) NOT NULL,
+  PRIMARY KEY  (`PersonID`,`AttemptTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -8449,17 +8500,6 @@ CREATE TABLE `FRW_LoginAttempts` (
 --
 
 /*!40000 ALTER TABLE `FRW_LoginAttempts` DISABLE KEYS */;
-INSERT INTO `FRW_LoginAttempts` (`PersonID`,`AttemptTime`) VALUES 
- (1000,'1450951781'),
- (1000,'1450951785'),
- (1000,'1450951924'),
- (1000,'1450952173'),
- (1000,'1450953379'),
- (1001,'1450958928'),
- (1001,'1450959031'),
- (1001,'1450959225'),
- (1001,'1450959232'),
- (1001,'1450959253');
 /*!40000 ALTER TABLE `FRW_LoginAttempts` ENABLE KEYS */;
 
 
@@ -8517,7 +8557,8 @@ INSERT INTO `FRW_access` (`MenuID`,`PersonID`,`ViewFlag`,`AddFlag`,`EditFlag`,`R
  (53,1009,'YES','YES','YES','YES'),
  (54,1000,'YES','YES','YES','YES'),
  (56,1000,'YES','YES','YES','YES'),
- (57,1000,'YES','YES','YES','YES');
+ (57,1000,'YES','YES','YES','YES'),
+ (59,1000,'YES','YES','YES','YES');
 /*!40000 ALTER TABLE `FRW_access` ENABLE KEYS */;
 
 
@@ -8578,9 +8619,9 @@ INSERT INTO `FRW_menus` (`SystemID`,`MenuID`,`ParentID`,`MenuDesc`,`IsActive`,`o
  (2,27,19,'گزارش گردش حساب','YES',2,NULL,'report/flow.php','NO','NO','NO','NO','NO'),
  (2,28,19,'گزارش اسناد','YES',3,NULL,'report/docs.php','NO','NO','NO','NO','NO'),
  (4,29,0,'اطلاعات پایه','YES',1,NULL,NULL,'NO','NO','NO','NO','NO'),
- (4,30,29,'نامه های رسیده','YES',2,NULL,'letter/receive.php','NO','NO','NO','NO','NO'),
+ (4,30,29,'نامه های رسیده','YES',3,NULL,'letter/receive.php','NO','NO','NO','NO','NO'),
  (4,31,29,'ایجاد نامه','YES',1,NULL,'letter/newLetter.php','NO','NO','NO','NO','NO'),
- (4,32,29,'نامه های ارسالی','YES',3,NULL,'letter/send.php','NO','NO','NO','NO','NO'),
+ (4,32,29,'نامه های ارسالی','YES',4,NULL,'letter/send.php','NO','NO','NO','NO','NO'),
  (2,34,7,'اجزای حساب','YES',2,NULL,'baseinfo/blocks.php','NO','NO','NO','NO','NO'),
  (2,36,7,'حساب های بانکی','YES',5,NULL,'baseinfo/accounts.php','NO','NO','NO','NO','NO'),
  (4,37,0,'فرمساز','YES',4,NULL,NULL,'NO','NO','NO','NO','NO'),
@@ -8590,7 +8631,7 @@ INSERT INTO `FRW_menus` (`SystemID`,`MenuID`,`ParentID`,`MenuDesc`,`IsActive`,`o
  (1000,41,39,'درخواست وام','YES',1,'clone','../loan/request/CustomerNewRequest.php','YES','NO','NO','NO','NO'),
  (1000,42,39,'وام های دریافتی','YES',2,'list','../loan/request/MyRequests.php','YES','NO','NO','NO','YES'),
  (1000,43,39,'پرداخت اقساط','YES',3,'credit-card','../loan/request/installments.php','YES','NO','NO','NO','NO'),
- (1000,44,40,'مدیریت سهام','YES',1,'pie-chart','/','NO','YES','NO','NO','NO'),
+ (1000,44,40,'مدیریت سهام','YES',1,'pie-chart','empty.php','NO','YES','NO','NO','NO'),
  (6,45,13,'مدیریت ذینفعان','YES',2,'users.gif','../person/persons.php','NO','NO','NO','NO','NO'),
  (1000,46,0,'سرمایه گذار','YES',NULL,NULL,NULL,'NO','NO','NO','YES','NO'),
  (1000,47,46,'معرفی اخذ وام','YES',1,'share-square-o','../loan/request/RequestInfo.php','NO','NO','NO','YES','NO'),
@@ -8602,7 +8643,8 @@ INSERT INTO `FRW_menus` (`SystemID`,`MenuID`,`ParentID`,`MenuDesc`,`IsActive`,`o
  (1000,55,46,'اطلاعات سپرده','YES',1,'database','global/DepositeInfo.php','NO','NO','NO','YES','NO'),
  (4,56,52,'مدیریت فرم ها','YES',2,'manageForm.png','workflow/ManageForms.php','NO','NO','NO','NO','NO'),
  (4,57,37,'مدیریت گردش کار','YES',2,'flow.png','workflow/wfm.php','NO','NO','NO','NO','NO'),
- (1000,58,39,'اطلاعات قرض الحسنه','YES',4,NULL,'global/AccountInfo.php','YES','NO','NO','YES','NO');
+ (1000,58,39,'اطلاعات قرض الحسنه','YES',4,NULL,'global/AccountInfo.php','YES','NO','NO','YES','NO'),
+ (4,59,29,'نامه های پیش نویس','YES',2,NULL,'letter/DraftLetters.php','NO','NO','NO','NO','NO');
 /*!40000 ALTER TABLE `FRW_menus` ENABLE KEYS */;
 
 
@@ -8786,7 +8828,9 @@ CREATE TABLE `LON_ReqFlow` (
 INSERT INTO `LON_ReqFlow` (`FlowID`,`RequestID`,`PersonID`,`StatusID`,`ActDate`,`StepComment`) VALUES 
  (1,228,1000,70,'2015-12-19 12:59:37','[تغییر وضعیت]'),
  (3,228,1000,80,'2015-12-19 13:01:30','1'),
- (4,228,1000,80,'2015-12-19 13:03:10','1');
+ (4,228,1000,80,'2015-12-19 13:03:10','1'),
+ (5,229,1001,1,'2015-12-31 18:11:53',''),
+ (6,229,1001,10,'2015-12-31 18:12:36','');
 /*!40000 ALTER TABLE `LON_ReqFlow` ENABLE KEYS */;
 
 
@@ -9046,7 +9090,8 @@ INSERT INTO `LON_ReqParts` (`PartID`,`RequestID`,`PartDesc`,`PartDate`,`PartAmou
  (224,224,'مرحله اول','2015-10-13','2300000000',1,'MONTH',1,0,0,0,0,'YES'),
  (225,225,'مرحله اول','2015-10-13','7500000000',1,'MONTH',1,0,0,0,0,'YES'),
  (226,226,'مرحله اول','2015-10-29','30628465',9,'MONTH',1,3,0,5,5,'YES'),
- (227,228,'1','2015-12-14','10000000',1,'MONTH',1,0,0,0,0,'YES');
+ (227,228,'1','2015-12-14','10000000',1,'MONTH',1,0,0,0,0,'YES'),
+ (228,229,'مرحله اول','2015-12-31','120000000',24,'MONTH',1,0,0,4,4,'NO');
 /*!40000 ALTER TABLE `LON_ReqParts` ENABLE KEYS */;
 
 
@@ -11406,7 +11451,8 @@ INSERT INTO `LON_requests` (`RequestID`,`BranchID`,`LoanID`,`ReqPersonID`,`ReqDa
  (225,1,9,1003,'2015-10-13 00:00:00','7500000000',70,'',NULL,NULL,1121,NULL,'NO',NULL,1003,228),
  (226,1,9,1002,'2015-10-29 00:00:00','30628465',70,'',NULL,NULL,1123,NULL,'NO',NULL,NULL,229),
  (227,1,9,1000,'2015-12-04 18:04:05','145780000',70,NULL,NULL,NULL,1006,'1,2','NO',NULL,1003,NULL),
- (228,1,1,1120,'2015-12-11 21:15:27','10000000',70,NULL,NULL,NULL,1120,NULL,'NO',NULL,NULL,NULL);
+ (228,1,1,1120,'2015-12-11 21:15:27','10000000',70,NULL,NULL,NULL,1120,NULL,'NO',NULL,NULL,NULL),
+ (229,1,9,1001,'2015-12-31 18:11:53','120000000',10,NULL,'شرکت X','56465465654',1001,'3,4','NO',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `LON_requests` ENABLE KEYS */;
 
 
@@ -11435,7 +11481,12 @@ CREATE TABLE `OFC_letters` (
 
 /*!40000 ALTER TABLE `OFC_letters` DISABLE KEYS */;
 INSERT INTO `OFC_letters` (`LetterID`,`LetterType`,`LetterTitle`,`SubjectID`,`LetterDate`,`RegDate`,`PersonID`,`summary`,`context`,`LetterStatus`) VALUES 
- (2,'INNER','نامه تستی',NULL,'2015-12-29','2015-12-29 14:55:54',1000,'---نیت مشنتیم',NULL,'RAW');
+ (2,'INNER','نامه تستی',NULL,'2015-12-29','2015-12-29 14:55:54',1000,'---نیت مشنتیم',0x3C703E3C656D3E3C7374726F6E673ED985D986D8B320D985D8B3DB8CD986D8AA20D8A8D8B3D985D986D8AADB8C20D8A8D985D8B3D8A8D986DB8C3C2F7374726F6E673E3C2F656D3E3C2F703E0A,'RAW'),
+ (4,'INNER','نامه تشکر',NULL,'2016-01-03','2016-01-03 17:47:17',1000,'تشکر از ....',0x3C70207374796C653D22746578742D616C69676E3A63656E746572223ED8A8D98720D986D8A7D98520D8AED8AFD8A73C2F703E0A0A3C6872202F3E0A3C703ED8A8D8A720D8B3D984D8A7D9853C2F703E0A0A3C703ED984D8B7D981D8A720D8A7D982D8AFD8A7D985D8A7D8AA20D984D8A7D8B2D98520D8B1D8A720D985D8A8D8B0D988D98420D981D8B1D985D8A7DB8CDB8CD8AF3C2F703E0A0A3C703ED8A8D8A720D8AAD8B4DAA9D8B13C2F703E0A0A3C6872202F3E,'RAW'),
+ (5,'INNER','ewrwerwer',NULL,'2016-01-03','2016-01-03 21:43:53',1000,NULL,NULL,'RAW'),
+ (6,'INNER','تست',NULL,'2016-01-03','2016-01-03 22:02:11',1000,NULL,NULL,'RAW'),
+ (7,'INNER','تست',NULL,'2016-01-03','2016-01-03 22:03:17',1000,NULL,NULL,'RAW'),
+ (8,'INNER','تست',NULL,'2016-01-03','2016-01-03 22:05:17',1000,NULL,NULL,'RAW');
 /*!40000 ALTER TABLE `OFC_letters` ENABLE KEYS */;
 
 
@@ -11449,7 +11500,9 @@ CREATE TABLE `OFC_send` (
   `FromPersonID` int(10) unsigned NOT NULL,
   `ToPersonID` int(10) unsigned NOT NULL,
   `SendDate` datetime NOT NULL,
+  `SendType` smallint(5) unsigned NOT NULL,
   `SendComment` varchar(1000) NOT NULL,
+  `IsUrgent` enum('YES','NO') NOT NULL default 'NO',
   `IsSeen` enum('YES','NO') NOT NULL default 'NO',
   `IsDeleted` enum('YES','NO') NOT NULL default 'NO',
   PRIMARY KEY  (`LetterID`)

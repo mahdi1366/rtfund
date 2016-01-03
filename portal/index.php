@@ -114,12 +114,14 @@ for ($i = 0; $i < count($menus); $i++) {
 				<font style="font-family:tahoma;font-size:12px;font-weight:bold">تغییر رمز عبور</font>
 			</div>
 			<!----------------------------------------------------------------->
-			<div class="headerItems" style="color:#FF9F00">
+			<div class="headerItems" style="color:#FF9F00"
+				 onclick="portal.OpenPage('/portal/empty.php');">
 				<span class="fa fa-comments-o"></span><br>
 				<font style="font-family:tahoma;font-size:12px;font-weight:bold">پیام ها</font>
 			</div>
 			<!----------------------------------------------------------------->
-			<div class="headerItems" style="color:#35BC7A">
+			<div class="headerItems" style="color:#35BC7A"
+				 onclick="portal.OpenPage('/portal/empty.php');">
 				<span class="fa fa-pencil-square-o"></span><br>
 				<font style="font-family:tahoma;font-size:12px;font-weight:bold">نظر سنجی</font>
 			</div>

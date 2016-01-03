@@ -72,6 +72,8 @@ class session{
 				else
 					$_SESSION['LIPAddress'] = $_SERVER['REMOTE_ADDR'];
 				//..........................................................
+				PdoDataAccess::runquery("delete from FRW_LoginAttempts where PersonID=?",
+					array($temp[0]["PersonID"]));
 				return true;
 			}
 		}
@@ -158,6 +160,60 @@ class session{
 			return true;
 
 		}
+	}
+	
+	static function getEmail($userName, $coded = false){
+		
+		$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($userName));
+		
+		if(count($temp) == 0)
+		{
+			return "WrongUserName";
+		}
+		
+		$email = $temp[0]["email"];
+		if($email == "")
+			return "EmptyEmail";
+		
+		$arr = preg_split("/@/", $email);
+		
+		if($coded)
+			return $arr[0][0] . $arr[0][1] . "****" . $arr[0][strlen($arr[0])-2] . 
+				$arr[0][strlen($arr[0])-1] . "@" . $arr[1];
+		
+		return $email;
+	}
+
+	static function SendNewPass($userName){
+		
+		require_once 'email.php';
+		
+		$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($userName));
+		if(count($temp) == 0)
+		{
+			return "WrongUserName";
+		}
+		$PersonRecord = $temp[0];
+		$email = $PersonRecord["email"];
+		if($email == "")
+			return "EmptyEmail";
+		
+		$newPass = rand(111111, 999999);
+		
+		$hash_cost_log2 = 8;	
+		$hasher = new PasswordHash($hash_cost_log2, true);
+		PdoDataAccess::runquery("update BSC_persons set UserPass=? where PersonID=?", array(
+			$hasher->HashPassword(md5($newPass)), $PersonRecord["PersonID"]
+		)); 
+		
+		$subject = "تغییر رمز عبور";
+		$body = "کاربر گرامی <b>" . ($PersonRecord["IsReal"] ? $PersonRecord["fname"] . " " . 
+				$PersonRecord["lname"] : $PersonRecord["CompanyName"]) .
+			"</b><br><br>رمز عبور جدید شما  <b>" . $newPass . "</b> می باشد." . 
+			"<br> لطفا پس از ورود به پرتال نسبت به تغییر رمز عبور خود اقدام نمایید." . 
+			"<br><br> صندوق نوآوری و شکوفایی";
+		echo SendEmail($email, $subject, $body) ? "true" : "false";
+		die();
 	}
 }
 /*class session {

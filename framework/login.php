@@ -10,6 +10,7 @@ require_once 'PDODataAccess.class.php';
 require_once 'PasswordHash.php';
 
 require_once getenv("DOCUMENT_ROOT") . '/framework/session.php';
+
 session::sec_session_start();
 
 if(isset($_POST["UserName"]))
@@ -44,7 +45,7 @@ if(isset($_POST["UserName"]))
 		  font-family: tahoma;
 	  }
 	.headerDiv{
-		height: 180px;
+		height: 100px;
 		width : 100%;
 		background-color: #63d1d0;
 		border-bottom: 15px solid #368cbf;
@@ -55,7 +56,7 @@ if(isset($_POST["UserName"]))
 		bottom: 0;
 		font-family: tahoma;
 		font-size: 12px;
-		height : 100px;
+		height : 50px;
 		width : 100%;
 		color : white;		
 	}
@@ -298,7 +299,8 @@ if(isset($_POST["UserName"]))
 	<div id="ajax-loading"><div></div><span>در حال ورود به سیستم . . .</span></div>
 	  <center>
 		<div class="headerDiv" align="center">
-			<div style="width:800;right : 20%;position: absolute;" align="right"><br><br><img width="180px" src="../framework/icons/LoginLogo.png"></div>
+			<div style="width:800;right : 20%;position: absolute;" align="right">
+				<br><img width="100px" src="../framework/icons/LoginLogo.png"></div>
 		</div>
 		<div align="center">
 		<div class="mainDiv">
@@ -328,7 +330,7 @@ if(isset($_POST["UserName"]))
 			</table>
 		</div>
 		</div>
-		<div class="footerDiv"> <br><br>
+		<div class="footerDiv">
 <br>© کلیه حقوق این نرم افزار محفوظ است.</div>
 	</center>	  
   </body>

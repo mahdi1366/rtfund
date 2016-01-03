@@ -14,6 +14,14 @@ class sys_config{
 	 );
 }
 
+class smtp_config{
+	public static $server = "panther.mrservers.net";
+	public static $username = "admin@krrtf.ir";
+	public static $password = "Heag7j35Y2";
+	public static $FromAddress = "admin@krrtf.ir";
+}
+
+
 define("SoftwareName", "صندوق پژوهش و فناوری خراسان رضوی");
 
 define("Default_Agent_Loan", "9");
