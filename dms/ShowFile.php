@@ -5,12 +5,17 @@
 //-------------------------
 require_once 'header.inc.php';
 
-$DocumentID = $_REQUEST["DocumentID"];
-
-if($DocumentID == "" || $DocumentID == "null")
+if(empty($_REQUEST["DocumentID"]) || empty($_REQUEST["ObjectID"]))
 	die();
 
-$dt = PdoDataAccess::runquery("select FileType,FileContent from DMS_documents where DocumentID=?", array($DocumentID));
+$DocumentID = $_REQUEST["DocumentID"];
+$ObjectID = $_REQUEST["ObjectID"];
+
+$dt = PdoDataAccess::runquery("select FileType,FileContent from DMS_documents 
+	where DocumentID=? AND ObjectID=?", array($DocumentID, $ObjectID));
+
+if(count($dt) == 0)
+	die();
 
 header('Content-disposition: filename=file.' . $dt[0]["FileType"]);
 header('Content-type: jpg');

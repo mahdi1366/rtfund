@@ -68,7 +68,9 @@ Letter.prototype.LoadLetter = function(){
 						ev.editor.setData(record.data.context);
 						LetterObject.mask.hide();
 					}					
-				});				
+				});			
+				
+				me.letterPanel.down("[itemId=btn_send]").enable();
 			}
 		}
 	});
@@ -106,7 +108,12 @@ Letter.prototype.BuildForms = function(){
 				xtype : "radio",
 				boxLabel: 'نامه صادره',
 				name: 'LetterType',
-				inputValue: 'OUTER'
+				inputValue: 'OUTCOME'
+			},{
+				xtype : "radio",
+				boxLabel: 'نامه وارده',
+				name: 'LetterType',
+				inputValue: 'INCOME'
 			}]
 		},{
 			xtype : "textarea",
@@ -176,8 +183,9 @@ Letter.prototype.BuildForms = function(){
 				},new Ext.Panel({
 					frame: true,
 					width : 730,
-					height : 320,
-					style : "margin:10px",
+					height : 290,
+					autoScroll : true,
+					style : "margin:5px",
 					items : new Ext.view.View({		
 						itemId : "pagesView",
 						store: new Ext.data.SimpleStore({
@@ -186,18 +194,22 @@ Letter.prototype.BuildForms = function(){
 								url: this.address_prefix + 'letter.data.php?task=selectLetterPages',
 								reader: {root: 'rows',totalProperty: 'totalCount'}
 							},
-							fields : ['DocumentID','DocDesc']
+							fields : ['ObjectID','DocumentID','DocDesc']
 						}),
 						tpl: [
 							'<tpl for=".">',
-								'<div style="float: right;padding:5px;width:100px;margin:10px">',
-								'<div class="thumb"><img style="width:100px;height:100px" ',
-									'src="{url}" title="{DocumentTitle}"></div>',
-								'<div style="width:100%;text-align:center">{DocDesc}</div></div>',
+								'<div style="position:relative;float: right;padding:5px;width:100px;margin:5px">',
+								'<div class="thumb"><img style="width:100px;height:100px;cursor:pointer" ',
+									'src="/dms/ShowFile.php?DocumentID={DocumentID}&ObjectID={ObjectID}" ',
+									'title="{DocumentTitle}" onclick="LetterObject.ShowPage({DocumentID})"></div>',
+								'<div style="width:100%;text-align:center">{DocDesc}</div>',
+								'<div class="cross x-btn-default-small" style="cursor:pointer;float: right;position: absolute;top:8px;',
+									'height: 19px; width: 19px; margin: 4px;"',
+									' onclick="LetterObject.DeletePage({DocumentID})"></div>',
+								'</div>',
 							'</tpl>',
 							'<div class="x-clear"></div>'
 						],
-						trackOver: true,
 						overItemCls: 'x-item-over'
 					}) 
 				})]
@@ -208,6 +220,14 @@ Letter.prototype.BuildForms = function(){
 			iconCls : "save",
 			handler : function(){
 				LetterObject.SaveLetter();
+			}
+		},{
+			text : "ارجاع",
+			iconCls : "sendLetter",
+			itemId : "btn_send",
+			disabled : true,
+			handler : function(){
+				LetterObject.SendWindowShow();
 			}
 		}]
 	});
@@ -247,6 +267,7 @@ Letter.prototype.SaveLetter = function(){
 				LetterID : LetterObject.LetterID
 			};
 			LetterObject.letterPanel.down("[itemId=pagesView]").getStore().load();
+			me.letterPanel.down("[itemId=btn_send]").enable();
 		},
 		failure : function(){
 			mask.hide();
@@ -254,13 +275,74 @@ Letter.prototype.SaveLetter = function(){
 	});
 }
 
-</script>
-<script>
+Letter.prototype.ShowPage = function(DocumentID, ObjectID){
+	window.open("/dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID);	
+}
+
+Letter.prototype.DeletePage = function(DocumentID){
 	
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟",function(btn){
+		if(btn == "no")
+			return;
+		
+		mask = new Ext.LoadMask(LetterObject.letterPanel, {msg:'در حال ذخيره سازي...'});
+		mask.show();  
+
+		Ext.Ajax.request({
+			url: LetterObject.address_prefix + 'letter.data.php?task=DeletePage', 
+			method: "POST",
+			params : {
+				DocumentID : DocumentID,
+				ObjectID : LetterObject.LetterID
+			},
+
+			success : function(){
+				mask.hide();
+				LetterObject.letterPanel.down("[name=PageTitle]").setValue();
+				LetterObject.letterPanel.down("[itemId=pagesView]").getStore().load();
+			},
+			failure : function(){
+				mask.hide();
+			}
+		});
+	});
+}
+
+Letter.prototype.SendWindowShow = function(){
+	
+	if(!this.SendingWin)
+	{
+		this.SendingWin = new Ext.window.Window({
+			width : 500,
+			title : "ارجاع نامه",
+			height : 500,
+			modal : true,
+			bodyStyle : "background-color:white;",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "sending.php",
+				scripts : true
+			}
+		});
+		Ext.getCmp(this.TabID).add(this.SendingWin);
+	}
+
+	this.SendingWin.show();
+	this.SendingWin.center();
+	
+	this.SendingWin.loader.load({
+		scripts : true,
+		params : {
+			ExtTabID : this.SendingWin.getEl().id,
+			parent : "LetterObject.SendingWin",
+			parentTab : this.TabID,
+			LetterID : this.LetterID
+		}
+	});
+}
 
 
-
-	</script>
+</script>
 <center>
 	<br>
 	<div id="mainForm"></div>

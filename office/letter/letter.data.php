@@ -16,8 +16,8 @@ switch ($task) {
     case 'SelectDraftLetters':
         SelectDraftLetters();
 
-	case "SelectLetter":
-		SelectLetter();
+	case "SelectSendedLetters":
+		SelectSendedLetters();
 		
     case 'SaveLetter':
         SaveLetter();
@@ -27,6 +27,21 @@ switch ($task) {
 		
 	case "selectLetterPages":
 		selectLetterPages();
+		
+	case "DeletePage":
+		DeletePage();
+	
+	//.............................................
+		
+	case "selectSendTypes":
+		selectSendTypes();
+		
+	//.............................................
+		
+	case "SendLetter":
+		SendLetter();
+		
+	
 }
 
 function SelectDraftLetters() {
@@ -41,10 +56,22 @@ function SelectDraftLetters() {
     die();
 }
 
-function SelectLetter(){
+function SelectSendedLetters(){
 	
-	$dt = OFC_letters::GetAll("LetterID=?", array($_GET["LetterID"]));
-	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	$query = "select s.*,l.*, 
+		if(IsReal='YES',concat(fname, ' ', lname),CompanyName) ToPersonName 
+		from OFC_send s
+			join OFC_letters l using(LetterID)
+			join BSC_persons p on(s.ToPersonID=p.PersonID)
+		where FromPersonID=:fpid";
+	$param = array();
+	$param[":fpid"] = $_SESSION["USER"]["PersonID"];
+	
+	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
+	$cnt = $dt->rowCount();
+	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+	
+	echo dataReader::getJsonData($dt, $cnt, $_GET["callback"]);
 	die();
 }
 
@@ -114,10 +141,91 @@ function deleteLetter() {
 function selectLetterPages(){
 	
 	$letterID = !empty($_REQUEST["LetterID"]) ? $_REQUEST["LetterID"] : 0;
-	$dt = PdoDataAccess::runquery("select DocumentID, DocDesc from DMS_documents 
+	$dt = PdoDataAccess::runquery("select DocumentID, DocDesc, ObjectID from DMS_documents 
 		where ObjectType='letter' AND ObjectID=?", array($letterID));
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
+
+function DeletePage(){
+	
+	$DocumentID = $_POST["DocumentID"];
+	$ObjectID = $_POST["ObjectID"];
+	
+	$obj = new DMS_documents($DocumentID);
+	if($obj->ObjectID != $ObjectID)
+	{
+		echo Response::createObjectiveResponse (false, "");
+		die();
+	}
+	
+	$result = DMS_documents::DeleteDocument($DocumentID);
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function selectSendTypes(){
+	
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=12");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+//.............................................
+
+function SendLetter(){
+	
+	$LetterID = $_POST["LetterID"];
+	$toPersonArr = array();
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$arr = array_keys($_POST);
+	foreach($arr as $key)
+	{
+		if(strpos($key, "ToPersonID") === false)
+			continue;
+		
+		$toPersonID = $_POST[$key];
+		if(isset($toPersonArr[$toPersonID]) || $toPersonID*1 == 0)
+			continue;
+		$toPersonArr[$toPersonID] = true;
+		
+		
+		$index = preg_split("/_/", $key);
+		$index = $index[0];
+
+		$obj = new OFC_send();
+		$obj->LetterID = $LetterID;
+		$obj->FromPersonID = $_SESSION["USER"]["PersonID"];
+		$obj->ToPersonID = $toPersonID;
+		$obj->SendDate = PDONOW;
+		$obj->SendType = $_POST[$index . "_SendType"];
+		$obj->IsUrgent = $_POST[$index . "_IsUrgent"];
+		$obj->SendComment = $_POST[$index . "_SendComment"];
+		if(!$obj->AddSend($pdo))
+		{
+			$pdo->rollBack();
+			echo Response::createObjectiveResponse(false, "");
+			die();
+		}
+	}
+	
+	$letterObj = new OFC_letters($LetterID);
+	$letterObj->LetterStatus = "CONFIRM";
+	if(!$letterObj->EditLetter($pdo))
+	{
+		print_r(ExceptionHandler::PopAllExceptions());
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+		
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
 ?>

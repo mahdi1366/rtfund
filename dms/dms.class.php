@@ -36,8 +36,7 @@ class DMS_documents extends PdoDataAccess
 			where " . $where, $param);
 	}
 	
-	function AddDocument()
-	{
+	function AddDocument(){
 		$this->RegPersonID = $_SESSION["USER"]["PersonID"];
 		
 	 	if(!parent::insert("DMS_documents",$this))
@@ -52,8 +51,7 @@ class DMS_documents extends PdoDataAccess
 		return true;
 	}
 	
-	function EditDocument()
-	{
+	function EditDocument(){
 	 	if( parent::update("DMS_documents",$this," DocumentID=:l", array(":l" => $this->DocumentID)) === false )
 	 		return false;
 
