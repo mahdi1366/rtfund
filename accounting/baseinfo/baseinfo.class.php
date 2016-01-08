@@ -344,7 +344,7 @@ class ACC_banks extends PdoDataAccess {
     }
 
     public static function SelectBanks($where = '', $param = array()) {
-        $query = "select * from ACC_Banks ";
+        $query = "select * from ACC_banks ";
         if ($where != '')
             $query .= ' where ' . $where;
         $query .= ' order by BankID desc ';

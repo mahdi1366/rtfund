@@ -58,13 +58,15 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
+	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
-	$CostCode_pardakhtani = FindCostID("200-01");
+	$CostCode_pardakhtani = FindCostID("200-05");
 	$CostCode_guaranteeAmount = FindCostID("904-02");
 	$CostCode_guaranteeCount = FindCostID("904-01");
 	$CostCode_guaranteeAmount2 = FindCostID("905-02");
 	$CostCode_guaranteeCount2 = FindCostID("905-01");
+	$CostCode_todiee = FindCostID("200-03");
 	//------------------------------------------------
 	
 	$CycleID = substr(DateModules::miladi_to_shamsi($PartObj->PartDate), 0 , 4);
@@ -180,13 +182,30 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$amountArr[$Year4Tafsili]["year"] = $curYear+3;
 		$amountArr[$Year4Tafsili]["amount"] = $year4;
 	}
+	//------------ find the number step to pay ---------------
+	$FirstStep = true;
+	$dt = PdoDataAccess::runquery("select * from ACC_DocItems where SourceID=?", array($ReqObj->RequestID));
+	if(count($dt) > 0)
+	{
+		$FirstStep = false;
+		$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0)
+			from ACC_DocItems where CostID=? AND TafsiliID=?";
+		$param = array($CostCode_todiee);
+		if($LoanMode == "Agent")
+		{
+			$query .= " AND TafsiliID2=?";
+			$param[] = $ReqPersonTafsili;
+		}
+		$dt = PdoDataAccess::runquery($query, $param);
+		if($dt[0][0]*1 < $PartObj->PartAmount)
+		{
+			ExceptionHandler::PushException("حساب تودیعی این مشتری کمتر از مبلغ این مرحله از وام می باشد" . "1"); 
+			return false;
+		}
+	}
 	//----------------- add Doc items ------------------------
-		
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
-	$itemObj->CostID = $CostCode_Loan;
-	$itemObj->DebtorAmount = $PartObj->PartAmount;
-	$itemObj->CreditorAmount = 0;
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $LoanPersonTafsili;
 	if($LoanMode == "Agent")
@@ -203,12 +222,47 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
-	if(!$itemObj->Add($pdo))
-	{
-		ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "1"); 
-		return false;
-	}
 	
+	if($FirstStep)
+	{
+		unset($itemObj->ItemID);
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = $CostCode_Loan;
+		$itemObj->DebtorAmount = $ReqObj->ReqAmount;
+		$itemObj->CreditorAmount = 0;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "1"); 
+			return false;
+		}
+		
+		if($ReqObj->ReqAmount*1 != $PartObj->PartAmount*1)
+		{
+			unset($itemObj->ItemID);
+			$itemObj->DocID = $obj->DocID;
+			$itemObj->CostID = $CostCode_todiee;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $ReqObj->ReqAmount*1 - $PartObj->PartAmount*1;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "1"); 
+				return false;
+			}
+		}
+	}
+	else
+	{
+		unset($itemObj->ItemID);
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = $CostCode_todiee;
+		$itemObj->DebtorAmount = $PartObj->PartAmount*1;
+		$itemObj->CreditorAmount = 0;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "1"); 
+			return false;
+		}
+	}
 	//---- delay -----
 	if($TotalDelay > 0)
 	{
@@ -238,7 +292,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$itemObj->details = "";
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
-		$itemObj->CostID = $CostCode_wage;
+		$itemObj->CostID = $arr["year"] == $curYear ? $CostCode_wage : $CostCode_FutureWage;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = round($arr["amount"]);
 		$itemObj->TafsiliType = TAFTYPE_YEARS;
@@ -329,9 +383,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
 		where b.param1=1 AND ObjectType='loan' AND ObjectID=?", array($ReqObj->RequestID));
 	
-	if(count($dt) == 0)
+	if(count($dt) > 0)
 	{
-	
 		$dt = PdoDataAccess::runquery("
 			SELECT DocumentID, ParamValue, InfoDesc as DocTypeDesc
 				FROM DMS_DocParamValues
@@ -362,7 +415,33 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			}
 			$SumAmount += $row["ParamValue"]*1;
 		}
+		//---------------------------------------------------------		
+		$dt = PdoDataAccess::runquery("
+			SELECT InstallmentAmount,InstallmentID
+				FROM LON_installments
+				where PartID=? AND ChequeNo>0",	array($PartObj->PartID), $pdo);
 
+		$SumAmount = 0;
+		foreach($dt as $row)
+		{
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			$itemObj->CostID = $CostCode_guaranteeAmount;
+			$itemObj->DebtorAmount = $row["InstallmentAmount"];
+			$itemObj->CreditorAmount = 0;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $LoanPersonTafsili;
+			$itemObj->SourceType = DOCTYPE_DOCUMENT;
+			$itemObj->SourceID = $row["InstallmentID"];
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف سند"	. "8"); 
+				return false;
+			}
+			$SumAmount += $row["ParamValue"]*1;
+		}
+		//---------------------------------------------------------
 		if($SumAmount > 0)
 		{
 			unset($itemObj->ItemID);

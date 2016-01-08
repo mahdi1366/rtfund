@@ -120,7 +120,7 @@ $temp = PdoDataAccess::runquery("
 							"<b>" . $dt[$i]["AccountNo"] . "</b>" . " مورخ " . 
 							"<b>" . DateModules::miladi_to_shamsi($dt[$i]["CheckDate"]) . "</b>" . " به مبلغ " . 
 							"<b>" . number_format($dt[$i]["amount"]) . " ریال</b>" . " در وجه " .
-							"<b>" . $dt[$i]["reciever"] . " " . $dt[$i]["description"] . "</b>" . " صادر گردید." . 
+							"<b>" . $dt[$i]["TafsiliDesc"] . " بابت " . $dt[$i]["description"] . "</b>" . " صادر گردید." . 
 							"</td>";
 					echo '<td>امضاء تحویل گیرنده</td></tr>';
 				}
