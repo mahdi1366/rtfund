@@ -13,12 +13,20 @@ require_once '../../dms/dms.class.php';
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 
 switch ($task) {
+	
+	case "SelectLetter":
+		SelectLetter();
+		
     case 'SelectDraftLetters':
         SelectDraftLetters();
 
 	case "SelectSendedLetters":
 		SelectSendedLetters();
 		
+	case "SelectReceivedLetters":
+		SelectReceivedLetters();
+		
+	//.....................................
     case 'SaveLetter':
         SaveLetter();
 
@@ -44,6 +52,17 @@ switch ($task) {
 	
 }
 
+function SelectLetter() {
+
+    $where = "1=1";
+    $param = array();
+
+    $list = OFC_letters::GetAll($where, $param);
+
+    echo dataReader::getJsonData($list, count($list), $_GET['callback']);
+    die();
+}
+
 function SelectDraftLetters() {
 
     $where = "LetterStatus='RAW' AND PersonID=:pid";
@@ -54,6 +73,26 @@ function SelectDraftLetters() {
 
     echo dataReader::getJsonData($list, count($list), $_GET['callback']);
     die();
+}
+
+function SelectReceivedLetters(){
+	
+	$query = "select s.*,l.*, 
+		if(IsReal='YES',concat(fname, ' ', lname),CompanyName) FromPersonName 
+		from OFC_send s
+			join OFC_letters l using(LetterID)
+			join BSC_persons p on(s.FromPersonID=p.PersonID)
+			left join OFC_Send s2 on(s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
+		where s2.SendID is null AND s.ToPersonID=:tpid";
+	$param = array();
+	$param[":tpid"] = $_SESSION["USER"]["PersonID"];
+	
+	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
+	$cnt = $dt->rowCount();
+	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+	
+	echo dataReader::getJsonData($dt, $cnt, $_GET["callback"]);
+	die();
 }
 
 function SelectSendedLetters(){

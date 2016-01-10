@@ -15,7 +15,20 @@ WFM.prototype = {
 
 function WFM()
 {
-	
+	this.PersonCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			proxy:{
+				type: 'jsonp',
+				url: this.address_prefix + '../../framework/person/persons.data.php?task=selectPersons'+
+					'&UserType=IsStaff',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			fields :  ['PersonID','fullname']
+		}),
+		displayField: 'fullname',
+		valueField : "PersonID",
+		allowBlank : true
+	});
 }
 
 WFM.deleteRender = function(v,p,r)
@@ -244,12 +257,18 @@ WFM.prototype.DeleteStep = function()
 		  	method : "POST",
 		  	params : {
 		  		task : "DeleteStep",
-		  		FlowID : record.data.FlowID,
-				StepID : record.data.StepID
+		  		StepRowID : record.data.StepRowID
 		  	},
-		  	success : function()
+		  	success : function(response)
 		  	{
-		  		WFMObject.StepsGrid.getStore().load();
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					WFMObject.StepsGrid.getStore().load();
+				else if(result.data == "FlowRowExists")
+					Ext.MessageBox.alert("Error","آیتم هایی هستند که گردش آنها در این مرحله می باشید و قادر به حذف این مرحله نمی باشید");
+				else
+					Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+					
 		  	}
 		});
 	});

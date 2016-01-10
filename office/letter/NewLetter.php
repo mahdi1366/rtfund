@@ -313,9 +313,9 @@ Letter.prototype.SendWindowShow = function(){
 	if(!this.SendingWin)
 	{
 		this.SendingWin = new Ext.window.Window({
-			width : 500,
 			title : "ارجاع نامه",
-			height : 500,
+			width : 462,			
+			height : 435,
 			modal : true,
 			bodyStyle : "background-color:white;",
 			closeAction : "hide",
@@ -335,7 +335,12 @@ Letter.prototype.SendWindowShow = function(){
 		params : {
 			ExtTabID : this.SendingWin.getEl().id,
 			parent : "LetterObject.SendingWin",
-			parentTab : this.TabID,
+			AfterSendHandler : function(){
+				framework.CloseTab(LetterObject.TabID);
+				if(DraftLetterObject != "object")
+					DraftLetterObject.grid.getStore().load();
+			},
+			
 			LetterID : this.LetterID
 		}
 	});

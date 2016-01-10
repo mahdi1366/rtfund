@@ -16,7 +16,8 @@ SendLetter.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 	parent : <?= $_REQUEST["parent"] ?>,
-	parentTab : "<?= $_REQUEST["parentTab"] ?>",
+		
+	AfterSendHandler : <?= $_REQUEST["AfterSendHandler"] ?>,
 	
 	LetterID : <?= $LetterID?>,
 	index : 1,
@@ -142,9 +143,7 @@ SendLetter.prototype.SendingLetter = function(){
 		success: function(form,action){
 			mask.hide();
 			SendLetterObject.parent.hide();
-			framework.CloseTab(SendLetterObject.parentTab);
-			if(DraftLetterObject)
-				DraftLetterObject.grid.getStore().load();
+			eval("SendLetterObject.AfterSendHandler();");
 		}
 	});
 }

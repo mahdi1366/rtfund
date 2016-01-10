@@ -6,12 +6,13 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=SelectSendedLetters", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=SelectReceivedLetters", "grid_div");
 
 $dg->addColumn("", "LetterID", "", true);
+$dg->addColumn("", "IsSeen", "", true);
 
 $col = $dg->addColumn("<img src=/office/icons/LetterType.gif>", "LetterType", "");
-$col->renderer = "SendedLetter.LetterTypeRender";
+$col->renderer = "ReceivedLetter.LetterTypeRender";
 $col->width = 30;
 
 $col = $dg->addColumn("<img src=/office/icons/attach.gif>", "HasAttach", "");
@@ -24,7 +25,7 @@ $col->align = "center";
 
 $col = $dg->addColumn("موضوع نامه", "LetterTitle", "");
 
-$col = $dg->addColumn("گیرنده", "ToPersonName", "");
+$col = $dg->addColumn("فرستنده", "FromPersonName", "");
 $col->width = 150;
 
 $col = $dg->addColumn("شرح ارجاع", "SendComment", "");
@@ -35,7 +36,7 @@ $col = $dg->addColumn("تاریخ ارجاع", "SendDate", GridColumn::ColumnTyp
 $col->width = 80;
 
 $col = $dg->addColumn("عملیات", "");
-$col->renderer = "function(v,p,r){return SendedLetter.OperationRender(v,p,r);}";
+$col->renderer = "function(v,p,r){return ReceivedLetter.OperationRender(v,p,r);}";
 $col->width = 50;
 
 $dg->emptyTextOfHiddenColumns = true;
@@ -48,7 +49,7 @@ $grid = $dg->makeGrid_returnObjects();
 ?>
 <script>
 	
-SendedLetter.prototype = {
+ReceivedLetter.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
@@ -57,13 +58,25 @@ SendedLetter.prototype = {
 	}
 };
 
-function SendedLetter(){
+function ReceivedLetter(){
 	
 	this.grid = <?= $grid ?>;
-	this.grid.render(this.get("DivGrid"))
+	this.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.IsSeen == "NO")
+			return "yellowRow";
+		return "";
+	}
+	this.grid.on("itemdblclick", function(view, record){
+			
+		framework.OpenPage("/office/letter/LetterInfo.php", "مشخصات نامه", {LetterID : record.data.LetterID});
+
+	});
+
+	this.grid.render(this.get("DivGrid"));
 }
 
-SendedLetter.LetterTypeRender = function(v,p,r){
+ReceivedLetter.LetterTypeRender = function(v,p,r){
 	
 	if(v == 'INNER') 
 		return "<img data-qtip='نامه داخلی' src=/office/icons/inner.gif>";
@@ -73,61 +86,65 @@ SendedLetter.LetterTypeRender = function(v,p,r){
 		return "<img data-qtip='نامه صادره' src=/office/icons/outcome.gif>";
 }
 
-SendedLetterObject = new SendedLetter();
+ReceivedLetterObject = new ReceivedLetter();
 
-SendedLetter.OperationRender = function(v,p,r){
+ReceivedLetter.OperationRender = function(v,p,r){
 	
-	return "<div  title='عملیات' class='setting' onclick='SendedLetterObject.OperationMenu(event);' " +
+	return "<div  title='عملیات' class='setting' onclick='ReceivedLetterObject.OperationMenu(event);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-SendedLetter.prototype.OperationMenu = function(e){
+ReceivedLetter.prototype.OperationMenu = function(e){
 
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
-	
-	if(this.User == "Customer" && (record.data.StatusID == "40" || record.data.StatusID == "60"))
-	{
-		op_menu.add({text: 'تایید تکمیل مدارک',iconCls: 'tick', 
-		handler : function(){ return SendedLetterObject.ChangeStatus(50); }});
-	}	
-	if(this.User == "Customer" && record.data.StatusID == "60")
-	{
-		op_menu.add({text: "دلیل رد مدارک",iconCls: 'comment', 
-		handler : function(){ return SendedLetterObject.ShowComment(); }});
-	}	
-	
-	if(this.User == "Customer" && record.data.LoanID > 0 && record.data.StatusID == "10")
-	{
-		op_menu.add({text: 'اطلاعات وام',iconCls: 'info2', 
-		handler : function(){ return SendedLetterObject.EditRequest(false); }});
-	}
-	else
-		op_menu.add({text: 'اطلاعات وام',iconCls: 'info2',	
-		handler : function(){ return SendedLetterObject.EditRequest(true); }});
-	
-	
-	
-	op_menu.add({text: 'مدارک وام',iconCls: 'attach', 
-		handler : function(){ return SendedLetterObject.LoadAttaches(); }});
+		
+	op_menu.add({text: 'ارجاع نامه',iconCls: 'sendLetter', 
+		handler : function(){ return ReceivedLetterObject.SendLetter(); }});
 	
 	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
-		handler : function(){ return SendedLetterObject.ShowHistory(); }});
-	
-	if(record.data.StatusID == "1")
-	{
-		op_menu.add({text: 'ویرایش درخواست',iconCls: 'edit', 
-		handler : function(){ return SendedLetterObject.EditRequest(); }});
-	
-		op_menu.add({text: 'حذف درخواست',iconCls: 'remove',
-		handler : function(){ return SendedLetterObject.DeleteRequest(); }});
-	}
+		handler : function(){ return ReceivedLetterObject.ShowHistory(); }});
 	
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
-SendedLetter.prototype.ShowHistory = function(){
+ReceivedLetter.prototype.SendLetter = function(){
+	
+	if(!this.SendingWin)
+	{
+		this.SendingWin = new Ext.window.Window({
+			title : "ارجاع نامه",
+			width : 462,			
+			height : 435,
+			modal : true,
+			bodyStyle : "background-color:white;",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "sending.php",
+				scripts : true
+			}
+		});
+		Ext.getCmp(this.TabID).add(this.SendingWin);
+	}
+
+	this.SendingWin.show();
+	this.SendingWin.center();
+	
+	this.SendingWin.loader.load({
+		scripts : true,
+		params : {
+			ExtTabID : this.SendingWin.getEl().id,
+			parent : "ReceivedLetterObject.SendingWin",
+			AfterSendHandler : function(){
+				ReceivedLetterObject.grid.getStore().load();
+			},
+			LetterID : this.grid.getSelectionModel().getLastSelected().data.LetterID
+		}
+	});
+}
+
+ReceivedLetter.prototype.ShowHistory = function(){
 
 	if(!this.HistoryWin)
 	{
@@ -161,6 +178,7 @@ SendedLetter.prototype.ShowHistory = function(){
 		}
 	});
 }
+
 </script>
 <center>
 	<br>

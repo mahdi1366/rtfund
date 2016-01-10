@@ -104,7 +104,7 @@ class OFC_send extends PdoDataAccess{
 
     static function GetAll($where = "",$whereParam = array())
     {
-	    $query = "select * from OFC_send";
+	    $query = "select * from OFC_send ";
 	    $query .= ($where != "") ? " where " . $where : "";
 	    return parent::runquery($query, $whereParam);
     }

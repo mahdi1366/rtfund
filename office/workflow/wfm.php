@@ -48,27 +48,34 @@ $grid = $dg->makeGrid_returnObjects();
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "wfm.data.php?task=SelectSteps","");
 
+$dg->addColumn("","StepRowID","string", true);
 $dg->addColumn("","FlowID","string", true);
+$dg->addColumn("","fullname","string", true);
 
 $col = $dg->addColumn("مرحله","StepID","string");
-
+$col->width = 60;
 $col = $dg->addColumn("عنوان مرحله","StepDesc","string");
 $col->editor = ColumnEditor::TextField();
 
 $col = $dg->addColumn("پست مربوطه", "PostID", "string");
 $col->editor = ColumnEditor::ComboBox(
-		PdoDataAccess::runquery("select * from BSC_posts"), "PostID", "PostName");
-$col->width = 200;
+		PdoDataAccess::runquery("select * from BSC_posts"), "PostID", "PostName","","", true);
+$col->width = 170;
+
+$col = $dg->addColumn("شخص مربوطه", "PersonID", "string");
+$col->renderer = "function(v,p,r){return r.data.fullname;}";
+$col->editor = "WFMObject.PersonCombo";
+$col->width = 170;
 
 $col = $dg->addColumn("","","");
 $col->renderer = "WFM.upRender";
 $col->sortable = false;
-$col->width = 40;
+$col->width = 30;
 
 $col = $dg->addColumn("","","");
 $col->renderer = "WFM.downRender";
 $col->sortable = false;
-$col->width = 40;
+$col->width = 30;
 
 $col = $dg->addColumn("حذف","","");
 $col->renderer = "WFM.deleteStepRender";
@@ -89,6 +96,7 @@ $dg->autoExpandColumn = "StepDesc";
 $dg->editorGrid = true;
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;
+$dg->emptyTextOfHiddenColumns = true;
 $grid2 = $dg->makeGrid_returnObjects();
 
 ?>

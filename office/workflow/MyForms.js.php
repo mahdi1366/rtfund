@@ -94,7 +94,7 @@ MyForm.prototype.beforeChangeStatus = function(mode){
 		Ext.getCmp(this.TabID).add(this.commentWin);
 	}
 	this.commentWin.down("[itemId=btn_save]").setHandler(function(){
-		ManageRequestObject.ChangeStatus(mode, this.up('window').down("[name=ActionComment]").getValue());});
+		MyFormObject.ChangeStatus(mode, this.up('window').down("[name=ActionComment]").getValue());});
 	this.commentWin.show();
 	this.commentWin.center();
 }

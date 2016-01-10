@@ -116,7 +116,7 @@ function SetStatus(){
 
 function SelectSteps(){
 	
-	$dt = WFM_FlowSteps::GetAll("FlowID=? " . dataReader::makeOrder(), array($_GET["FlowID"]));
+	$dt = WFM_FlowSteps::GetAll("IsActive='YES' AND FlowID=? " . dataReader::makeOrder(), array($_GET["FlowID"]));
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -126,8 +126,8 @@ function SaveStep(){
 	$obj = new WFM_FlowSteps();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
-	if($obj->StepID > 0)
-		$result = $obj->EditFlowStep($obj->StepID);
+	if($obj->StepRowID > 0)
+		$result = $obj->EditFlowStep();
 	else
 	{
 		$dt = PdoDataAccess::runquery("select ifnull(max(StepID),0) from WFM_FlowSteps where FlowID=?", 
@@ -142,8 +142,8 @@ function SaveStep(){
 
 function DeleteStep(){
 	
-	$result = WFM_FlowSteps::RemoveFlowStep($_POST["FlowID"], $_POST["StepID"]);
-	echo Response::createObjectiveResponse($result, "");
+	$result = WFM_FlowSteps::RemoveFlowStep($_POST["StepRowID"]);	
+	echo Response::createObjectiveResponse($result, ExceptionHandler::popExceptionDescription());
 	die();
 }
 
@@ -192,27 +192,32 @@ function SelectAllForms(){
 	if(!empty($_GET["MyForms"]) && $_GET["MyForms"] == "true")
 	{
 		$dt = PdoDataAccess::runquery("select FlowID,StepID 
-			from WFM_FlowSteps s join BSC_persons p using(PostID)
-			where p.PersonID=" . $_SESSION["USER"]["PersonID"]);
+			from WFM_FlowSteps s 
+			left join BSC_persons p using(PostID)
+			where s.IsActive='YES' AND if(s.PersonID>0,s.PersonID=:pid,p.PersonID=:pid)",
+				array(":pid" => $_SESSION["USER"]["PersonID"]));
 		if(count($dt) == 0)
 		{
 			echo dataReader::getJsonData(array(), 0, $_GET["callback"]);
 			die();
 		}
-		$where .= " AND (";
+		$where .= " AND fr.IsEnded='NO' AND (";
 		foreach($dt as $row)
 		{
+			$preStep = $row["StepID"]*1-1;
+			$nextStep = $row["StepID"]*1+1;
+			
 			$where .= "(fr.FlowID=" . $row["FlowID"] .
-				" AND fr.StepID=" . ($row["StepID"]*1-1) . " AND ActionType='CONFIRM') OR 
+				" AND fs.StepID" . ($preStep == 0 ? " is null" : "=" . $preStep) . " AND ActionType='CONFIRM') OR 
 				(fr.FlowID=" . $row["FlowID"] . 
-				" AND fr.StepID=" . ($row["StepID"]*1+1) . " AND ActionType='REJECT') OR";
+				" AND fs.StepID=" . $nextStep . " AND ActionType='REJECT') OR";
 		}
 		$where = substr($where, 0, strlen($where)-2) . ")";
 	}
 	//--------------------------------------------------------
 	$query = "select fr.*,f.FlowDesc, 
 					b.InfoDesc ObjectTypeDesc,
-					ifnull(fs.StepDesc,'شروع گردش') StepDesc,
+					ifnull(fr.StepDesc,'شروع گردش') StepDesc,
 					if(p.IsReal='YES',concat(p.fname, ' ',p.lname),p.CompanyName) fullname,
 					$ObjectDesc ObjectDesc,
 					b.param1 url,
@@ -222,7 +227,7 @@ function SelectAllForms(){
 					using(RowID,FlowID,ObjectID)
 				join WFM_flows f using(FlowID)
 				join BaseInfo b on(b.TypeID=11 AND b.InfoID=f.ObjectType)
-				left join WFM_FlowSteps fs on(fr.FlowID=fs.FlowID and fs.StepID=fr.StepID)
+				left join WFM_FlowSteps fs on(fr.StepRowID=fs.StepRowID)
 				join BSC_persons p on(fr.PersonID=p.PersonID)
 				
 				left join LON_ReqParts lp on(fr.ObjectID=PartID)
@@ -243,16 +248,37 @@ function ChangeStatus(){
 	
 	$mode = $_REQUEST["mode"];
 	$SourceObj = new WFM_FlowRows($_POST["RowID"]);
-	
 	$newObj = new WFM_FlowRows();
 	$newObj->FlowID = $SourceObj->FlowID;
 	$newObj->ObjectID = $SourceObj->ObjectID;
 	$newObj->PersonID = $_SESSION["USER"]["PersonID"];
-	$newObj->StepID = $SourceObj->ActionType == "CONFIRM" ? $SourceObj->StepID+1 : $SourceObj->StepID-1;
 	$newObj->ActionType = $mode;
 	$newObj->ActionDate = PDONOW;
 	$newObj->ActionComment = $_POST["ActionComment"];
+	//.............................................
+	$StepID = $SourceObj->ActionType == "CONFIRM" ? $SourceObj->_StepID+1 : $SourceObj->_StepID-1;
+	$dt = PdoDataAccess::runquery("select StepRowID, StepDesc from WFM_FlowSteps 
+		where IsActive='YES' AND FlowID=? AND StepID=?" , array($newObj->FlowID, $StepID));
+	if(count($dt) == 0)
+	{
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	$newObj->StepRowID = $dt[0]["StepRowID"];	
+	$newObj->StepDesc = $dt[0]["StepDesc"];	
+	//.............................................
+	if($SourceObj->ActionType == "CONFIRM")
+	{
+		$dt = PdoDataAccess::runquery("select Max(StepID) maxStepID from WFM_FlowSteps 
+			where IsActive='YES' AND FlowID=? " , array($newObj->FlowID));
+		if($dt[0][0] == $StepID)
+			$newObj->IsEnded = "YES";
+	}
+	//.............................................
 	$result = $newObj->AddFlowRow();
+	
+	
+	
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }

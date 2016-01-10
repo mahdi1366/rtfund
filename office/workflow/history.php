@@ -4,7 +4,7 @@
 // create Date:	91.12
 //---------------------------
 include("../header.inc.php");
-require_once './wfm.class.php';
+require_once 'wfm.class.php';
 require_once inc_component;
 
 if(!empty($_REQUEST["RowID"]))
@@ -22,14 +22,15 @@ else
 	die();
 	 
 $query = "select fr.* ,fs.StepID,
-				ifnull(fs.StepDesc,'شروع گردش') StepDesc,
+				ifnull(fr.StepDesc,'شروع گردش') StepDesc,
 				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname
 			from WFM_FlowRows fr
-			left join WFM_FlowSteps fs on(fr.FlowID=fs.FlowID and fs.StepID=fr.StepID)
+			left join WFM_FlowSteps fs on(fr.StepRowID=fs.StepRowID)
 			join BSC_persons p on(fr.PersonID=p.PersonID)
 			where fr.FlowID=? AND fr.ObjectID=?
 			order by RowID";
 $Logs = PdoDataAccess::runquery($query, array($FlowID, $ObjectID));
+
 $tbl_content = "";
 
 if(count($Logs) == 0)
@@ -60,15 +61,17 @@ else
 	$query = "select StepDesc,po.PostName,
 				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname
 			from WFM_FlowSteps fs
-			join BSC_posts po using(PostID)
-			join BSC_persons p on(p.PostID=fs.PostID)			
-			where fs.FlowID=? AND fs.StepID=?";
+			left join BSC_posts po using(PostID)
+			left join BSC_persons p on(if(fs.PersonID>0,fs.PersonID=p.PersonID,po.PostID=p.PostID))
+			where fs.IsActive='YES' AND fs.FlowID=? AND fs.StepID=?";
 	$nextOne = PdoDataAccess::runquery($query, array($FlowID, $StepID));
+	
 	if(count($nextOne)>0)
 	{
 		$str = "";
 		foreach($nextOne as $row)
-			$str .= $row["fullname"] . " [ پست : " . $row["PostName"] . " ] و ";
+			$str .= $row["fullname"] . 
+				($row["PostName"] != "" ? " [ پست : " . $row["PostName"] . " ]" : "") . " و ";
 		$str = substr($str, 0, strlen($str)-3);
 		
 		$tbl_content .= "<tr style='background-color:#A9E8E8'>

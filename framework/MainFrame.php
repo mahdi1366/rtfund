@@ -134,7 +134,6 @@ $SystemName = $menus[0]["SysName"];
 		</div>
 
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/icons.css" />
-		<link rel="stylesheet" type="text/css" href="/framework/icons/icons.css" />
 		<script type="text/javascript" src="/generalUI/ext4/resources/ext-all.js"></script>
 
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-rtl.css" />

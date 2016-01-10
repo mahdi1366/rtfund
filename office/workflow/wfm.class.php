@@ -74,14 +74,20 @@ class WFM_flows extends PdoDataAccess {
 
 class WFM_FlowSteps extends PdoDataAccess {
 
+	public $StepRowID;
 	public $FlowID;
 	public $StepID;
 	public $StepDesc;
 	public $PostID;
+	public $PersonID;
+	public $IsActive;
 
 	static function GetAll($where = "", $whereParam = array()) {
 		
-		$query = "select * from WFM_FlowSteps join BSC_posts using(PostID)";
+		$query = "select fs.*,PostName,if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname 
+			from WFM_FlowSteps fs
+			left join BSC_posts using(PostID)
+			left join BSC_persons using(PersonID)";
 		$query .= ($where != "") ? " where " . $where : "";
 		
 		return parent::runquery($query, $whereParam);
@@ -93,9 +99,11 @@ class WFM_FlowSteps extends PdoDataAccess {
 			return false;
 		}
 
+		$this->StepRowID = parent::InsertID($pdo);
+		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->FlowID;
+		$daObj->MainObjectID = $this->StepRowID;
 		$daObj->SubObjectID = $this->StepID;
 		$daObj->TableName = "WFM_FlowSteps";
 		$daObj->execute($pdo);
@@ -103,15 +111,15 @@ class WFM_FlowSteps extends PdoDataAccess {
 		return true;
 	}
 
-	function EditFlowStep($oldStepID, $pdo = null) {
+	function EditFlowStep($pdo = null) {
 		
-		if (parent::update("WFM_FlowSteps", $this, " FlowID=:fid AND StepID=:sid", 
-				array(":fid" => $this->FlowID, ":sid" => $oldStepID), $pdo) === false)
+		if (parent::update("WFM_FlowSteps", $this, " StepRowID=:srid", 
+				array(":srid" => $this->StepRowID), $pdo) === false)
 			return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->MainObjectID = $this->FlowID;
+		$daObj->MainObjectID = $this->StepRowID;
 		$daObj->SubObjectID = $this->StepID;
 		$daObj->TableName = "WFM_FlowSteps";
 		$daObj->execute($pdo);
@@ -119,18 +127,29 @@ class WFM_FlowSteps extends PdoDataAccess {
 		return true;
 	}
 	
-	static function RemoveFlowStep($FlowID, $StepID){
+	static function RemoveFlowStep($StepRowID){
 		
-	 	if(!parent::delete("WFM_FlowSteps", " FlowID=? AND StepID=?", array($FlowID, $StepID)))
+		$info = PdoDataAccess::runquery("select * from WFM_FlowSteps where StepRowID=?", array($StepRowID));
+		
+		$dt = parent::runquery("select * from WFM_FlowRows
+			join ( select max(RowID) RowID,FlowID,ObjectID from WFM_FlowRows group by FlowID,ObjectID )t
+			using(RowID,FlowID,ObjectID)
+			where FlowID=? AND StepRowID=?",array($info[0]["FlowID"], $StepRowID));
+		if(count($dt) > 0)
+		{
+			ExceptionHandler::PushException("FlowRowExists");
 			return false;
+		}
 		
+		parent::runquery("update WFM_FlowSteps set IsActive='NO', StepID=-1 where StepRowID=?", array($StepRowID));
+	
 		PdoDataAccess::runquery("update WFM_FlowSteps set StepID=StepID-1 where StepID>? AND FlowID=?",
-			array($StepID, $FlowID));
+			array($info[0]["StepID"], $info[0]["FlowID"]));
 	 	
 	 	$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->MainObjectID = $FlowID;
-		$daObj->SubObjectID = $StepID;
+		$daObj->MainObjectID = $StepRowID;
+		$daObj->SubObjectID = $info[0]["StepID"];
 		$daObj->TableName = "WFM_FlowSteps";
 		$daObj->execute();
 		return true;
@@ -141,16 +160,23 @@ class WFM_FlowRows extends PdoDataAccess {
 
 	public $RowID;
 	public $FlowID;
-	public $StepID;
+	public $StepRowID;
 	public $ObjectID;
 	public $PersonID;
 	public $ActionDate;
 	public $ActionType;
 	public $ActionComment;
+	public $IsEnded;
+	public $StepDesc;
+	
+	public $_StepID;
 
 	function __construct($RowID = "") {
 		if($RowID != "")
-			parent::FillObject ($this, "select * from WFM_FlowRows where RowID=?", array($RowID));
+			parent::FillObject ($this, "select f.* ,StepID _StepID
+				from WFM_FlowRows f
+				left join WFM_FlowSteps using(StepRowID)
+				where RowID=?", array($RowID));
 	}
 	
 	static function GetAll($where = "", $whereParam = array()) {
@@ -200,9 +226,9 @@ class WFM_FlowRows extends PdoDataAccess {
 		
 		$obj = new WFM_FlowRows();
 		$obj->FlowID = $FlowID;
+		$obj->StepRowID = PDONULL;
 		$obj->ObjectID = $ObjectID;
-		$obj->PersonID = $_SESSION["USER"]["PersonID"];
-		$obj->StepID = 0;
+		$obj->PersonID = $_SESSION["USER"]["PersonID"];		
 		$obj->ActionDate = PDONOW;
 		$obj->ActionType = "CONFIRM";
 		return $obj->AddFlowRow();		
@@ -218,14 +244,13 @@ class WFM_FlowRows extends PdoDataAccess {
 	
 	static function IsFlowEnded($FlowID, $ObjectID){
 		
-		$dt = PdoDataAccess::runquery("select max(StepID) from WFM_FlowSteps where FlowID=?",
-			array($FlowID));
+		$dt = PdoDataAccess::runquery("select IsEnded from WFM_FlowRows 
+			where FlowID=? AND ObjectID=? AND ActionType='CONFIRM'
+			order by RowID desc", array($FlowID, $ObjectID));
 		
-		$dt = PdoDataAccess::runquery("select * from WFM_FlowRows "
-			. "where FlowID=? AND ObjectID=? AND StepID=? AND ActionType='CONFIRM'",
-			array($FlowID, $ObjectID, $dt[0][0]));
-		
-		return (count($dt) > 0);
+		if(count($dt) > 0 && $dt[0][0] == "YES")
+			return true;
+		return false;
 	}
 }
 
