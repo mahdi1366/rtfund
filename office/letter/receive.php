@@ -10,12 +10,13 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=Select
 
 $dg->addColumn("", "LetterID", "", true);
 $dg->addColumn("", "IsSeen", "", true);
+$dg->addColumn("", "SendID", "", true);
 
 $col = $dg->addColumn("<img src=/office/icons/LetterType.gif>", "LetterType", "");
 $col->renderer = "ReceivedLetter.LetterTypeRender";
 $col->width = 30;
 
-$col = $dg->addColumn("<img src=/office/icons/attach.gif>", "HasAttach", "");
+$col = $dg->addColumn("<img src=/office/icons/attach.gif>", "hasAttach", "");
 $col->renderer = "function(v,p,r){if(v == 'YES') return '<img src=/office/icons/attach.gif>';}";
 $col->width = 30;
 
@@ -69,7 +70,11 @@ function ReceivedLetter(){
 	}
 	this.grid.on("itemdblclick", function(view, record){
 			
-		framework.OpenPage("/office/letter/LetterInfo.php", "مشخصات نامه", {LetterID : record.data.LetterID});
+		framework.OpenPage("/office/letter/LetterInfo.php", "مشخصات نامه", 
+		{
+			LetterID : record.data.LetterID,
+			SendID : record.data.SendID
+		});
 
 	});
 

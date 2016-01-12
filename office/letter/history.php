@@ -90,7 +90,6 @@ LetterHistory.prototype = {
 };
 
 function LetterHistory(){
-	
 	this.tree = new Ext.tree.Panel({
 		renderTo : this.get('tree-div'),
 		frame: true,

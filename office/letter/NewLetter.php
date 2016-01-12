@@ -24,12 +24,7 @@ Letter.prototype = {
 };
 
 function Letter(){
-	 /*new ImageViewer({
-			renderTo : this.get("mainForm"),
-			width : 600,
-			height : 600,
-			src: '../xx.jpg'
-		});*/
+
 	this.BuildForms();
 	if(this.LetterID > 0)
 	{
@@ -71,6 +66,7 @@ Letter.prototype.LoadLetter = function(){
 				});			
 				
 				me.letterPanel.down("[itemId=btn_send]").enable();
+				me.letterPanel.down("[itemId=attach_tab]").enable();	
 			}
 		}
 	});
@@ -213,6 +209,28 @@ Letter.prototype.BuildForms = function(){
 						overItemCls: 'x-item-over'
 					}) 
 				})]
+			},{
+				title : "پیوست های نامه",
+				itemId : "attach_tab",
+				disabled : true,
+				loader : {
+					url : this.address_prefix + "attach.php",
+					method: "POST",
+					text: "در حال بار گذاری...",
+					scripts : true
+				},
+				listeners : {
+					activate : function(){
+						//if(this.loader.isLoaded)
+						//	return;
+						this.loader.load({
+							params : {
+								LetterID : LetterObject.LetterID,
+								ExtTabID : this.getEl().id
+							}
+						});
+					}
+				}
 			}]
 		}],
 		buttons :[{
@@ -261,13 +279,15 @@ Letter.prototype.SaveLetter = function(){
 		
 		success : function(form,action){
 			mask.hide();
-			LetterObject.LetterID = action.result.data;
-			LetterObject.letterPanel.down("[name=PageTitle]").setValue();
-			LetterObject.letterPanel.down("[itemId=pagesView]").getStore().proxy.extraParams = {
-				LetterID : LetterObject.LetterID
+			me = LetterObject;
+			me.LetterID = action.result.data;
+			me.letterPanel.down("[name=PageTitle]").setValue();
+			me.letterPanel.down("[itemId=pagesView]").getStore().proxy.extraParams = {
+				LetterID : me.LetterID
 			};
-			LetterObject.letterPanel.down("[itemId=pagesView]").getStore().load();
+			me.letterPanel.down("[itemId=pagesView]").getStore().load();
 			me.letterPanel.down("[itemId=btn_send]").enable();
+			me.letterPanel.down("[itemId=attach_tab]").enable();			
 		},
 		failure : function(){
 			mask.hide();

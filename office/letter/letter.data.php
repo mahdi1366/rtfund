@@ -78,14 +78,19 @@ function SelectDraftLetters() {
 function SelectReceivedLetters(){
 	
 	$query = "select s.*,l.*, 
-		if(IsReal='YES',concat(fname, ' ', lname),CompanyName) FromPersonName 
+			if(IsReal='YES',concat(fname, ' ', lname),CompanyName) FromPersonName,
+			if(count(DocumentID) > 0,'YES','NO') hasAttach
 		from OFC_send s
 			join OFC_letters l using(LetterID)
 			join BSC_persons p on(s.FromPersonID=p.PersonID)
+			join DMS_documents on(ObjectType='letter' AND ObjectID=s.LetterID)
 			left join OFC_Send s2 on(s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
-		where s2.SendID is null AND s.ToPersonID=:tpid";
+		where s2.SendID is null AND s.ToPersonID=:tpid
+		group by SendID";
 	$param = array();
 	$param[":tpid"] = $_SESSION["USER"]["PersonID"];
+	
+	$query .= dataReader::makeOrder();
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
 	$cnt = $dt->rowCount();
@@ -98,13 +103,19 @@ function SelectReceivedLetters(){
 function SelectSendedLetters(){
 	
 	$query = "select s.*,l.*, 
-		if(IsReal='YES',concat(fname, ' ', lname),CompanyName) ToPersonName 
+			if(IsReal='YES',concat(fname, ' ', lname),CompanyName) ToPersonName,
+			if(count(DocumentID) > 0,'YES','NO') hasAttach
 		from OFC_send s
 			join OFC_letters l using(LetterID)
 			join BSC_persons p on(s.ToPersonID=p.PersonID)
-		where FromPersonID=:fpid";
+			join DMS_documents on(ObjectType='letter' AND ObjectID=s.LetterID)
+		where FromPersonID=:fpid
+		group by SendID
+	";
 	$param = array();
 	$param[":fpid"] = $_SESSION["USER"]["PersonID"];
+
+	$query .= dataReader::makeOrder();
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
 	$cnt = $dt->rowCount();
@@ -113,6 +124,8 @@ function SelectSendedLetters(){
 	echo dataReader::getJsonData($dt, $cnt, $_GET["callback"]);
 	die();
 }
+
+//.............................................
 
 function SaveLetter() {
 

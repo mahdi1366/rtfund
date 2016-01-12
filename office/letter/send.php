@@ -14,7 +14,7 @@ $col = $dg->addColumn("<img src=/office/icons/LetterType.gif>", "LetterType", ""
 $col->renderer = "SendedLetter.LetterTypeRender";
 $col->width = 30;
 
-$col = $dg->addColumn("<img src=/office/icons/attach.gif>", "HasAttach", "");
+$col = $dg->addColumn("<img src=/office/icons/attach.gif>", "hasAttach", "");
 $col->renderer = "function(v,p,r){if(v == 'YES') return '<img src=/office/icons/attach.gif>';}";
 $col->width = 30;
 
@@ -60,6 +60,15 @@ SendedLetter.prototype = {
 function SendedLetter(){
 	
 	this.grid = <?= $grid ?>;
+	this.grid.on("itemdblclick", function(view, record){
+			
+		framework.OpenPage("/office/letter/LetterInfo.php", "مشخصات نامه", 
+		{
+			LetterID : record.data.LetterID,
+			SendID : record.data.SendID
+		});
+
+	});
 	this.grid.render(this.get("DivGrid"))
 }
 

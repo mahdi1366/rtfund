@@ -5,13 +5,19 @@
 //-----------------------------
 require_once '../header.inc.php';
 require_once 'letter.class.php';
+require_once '../../dms/dms.class.php';
 
 $LetterID = !empty($_POST["LetterID"]) ? $_POST["LetterID"] : "";
 if(empty($LetterID))
 	die();
 
 $LetterObj = new OFC_letters($LetterID);
+//..............................................................................
 
+if(!empty($_REQUEST["SendID"]))
+	OFC_send::UpdateIsSeen($_REQUEST["SendID"]);
+
+//..............................................................................
 $content = "<br><div style=margin-left:30px;float:left; >تاریخ نامه : " . 
 	DateModules::miladi_to_shamsi($LetterObj->LetterDate) . "<br> شماره نامه : " .
 	$LetterObj->LetterID . "</div><br><br>";
@@ -31,17 +37,22 @@ $dt = PdoDataAccess::runquery("
 foreach($dt as $row)
 {
 	if($row["FromPersonID"] != $LetterObj->PersonID)
-		break;
-	
+		break;	
 	$content .= $row["sex"] == "MALE" ? "جناب آقای " : "سرکار خانم ";
 	$content .= $row['ToPersonName'] . "<br>";
 }
 
 $content .= "<br> موضوع : " . $LetterObj->LetterTitle . "<br><br>";
-
 $content .= str_replace("\r\n", "", $LetterObj->context);
-
 $content .= "<br><br><div align=left style=width:80%><b>" . $dt[0]["FromPersonName"] . "</b></div>";
+//..............................................................................
+$imageslist = array();
+$images = DMS_documents::SelectAll("ObjectType='letter' AND ObjectID=?", array($LetterID));
+foreach($images as $img)
+	$imageslist[] = "'/dms/ShowFile.php?DocumentID=" . $img["DocumentID"] . 
+		"&ObjectID=" . $LetterID . "'";
+$imageslist = implode(",", $imageslist);
+//..............................................................................
 ?>
 
 <script>
@@ -51,6 +62,7 @@ LetterInfo.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 
 	LetterID : '<?= $LetterID ?>',
+	imagesList : [<?= $imageslist ?>],
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -67,12 +79,11 @@ function LetterInfo(){
 		width: 750,
 		height : 550,
 		defaults:{
-			autoHeight: true, 
+			height : 550,
 			autoWidth : true            
 		},
 		items:[{
 			title : "متن نامه",
-			height : 550,
 			items :[{
 				xtype : "container",
 				autoScroll: true,
@@ -82,8 +93,32 @@ function LetterInfo(){
 			
 		},{
 			title : "تصاویر نامه",
-			style : "padding:0 20px 0 20px"			
-		}]
+			items : new MultiImageViewer({
+				height : 525,
+				src: this.imagesList
+			})
+			
+		},{
+			title : "سابقه نامه",
+			loader : {
+				url : this.address_prefix + "history.php",
+				method: "POST",
+				text: "در حال بار گذاری...",
+				scripts : true
+			},
+			listeners : {
+				activate : function(){
+					if(this.loader.isLoaded)
+						return;
+					this.loader.load({
+						params : {
+							LetterID : LetterInfoObject.LetterID,
+							ExtTabID : this.getEl().id
+						}
+					});
+				}
+			}
+		},{}]
 	});	
 }
 

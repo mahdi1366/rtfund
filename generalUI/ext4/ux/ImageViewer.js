@@ -84,15 +84,14 @@ Ext.define('ImageViewer', {
                 overflow: 'hidden',
                 backgroundColor: '#f2f1f0',
                 padding: '10px',
-                cursor: 'move'
+                cursor: 'pointer'
             },
             items: {
                 xtype: 'image',
                 mode: 'element',
                 src: me.src,
-                style: {
-                    boxShadow: '0 0 5px 5px #888'
-                },
+                style: "transform-origin: top left;-webkit-transform-origin: top left;"+
+					"-ms-transform-origin: top left;box-shadow: 0 0 5px 5px #888;margin-bottom:10px",
                 listeners: {
                     render: function (image) {
                         image.el.dom.onload = function () {
@@ -102,7 +101,8 @@ Ext.define('ImageViewer', {
                             me.setOriginalImageHeight(image.el.dom.height);
                             me.setImageWidth(image.el.dom.width);
                             me.setImageHeight(image.el.dom.height);
-                            me.stretchOptimally();
+                            //me.stretchOptimally();
+							me.stretchHorizontally();
                         };
                     }
                 }
@@ -115,13 +115,6 @@ Ext.define('ImageViewer', {
     initEvents: function () {
         var me = this;
 
-        me.mon(me.getImageContainer().getEl(), {
-            mouseup: me.mouseup,
-            mousedown: me.mousedown,
-            mousemove: me.mousemove,
-            scope: me
-        });
-
         me.callParent();
     },
 
@@ -130,11 +123,9 @@ Ext.define('ImageViewer', {
             imageContainerWidth = me.getImageContainer().getWidth();
 
         me.setImageSize({
-            width: imageContainerWidth - 20,
+            width: imageContainerWidth - 40,
             height: me.getOriginalImageHeight() * (imageContainerWidth - 20) / me.getOriginalImageWidth()
         });
-
-        me.centerImage();
     },
 
     stretchVertically: function () {
@@ -145,8 +136,6 @@ Ext.define('ImageViewer', {
             width: me.getOriginalImageWidth() * (imageContainerHeight - 20) / me.getOriginalImageHeight(),
             height: imageContainerHeight - 40
         });
-
-        me.centerImage();
     },
 
     stretchOptimally: function () {
@@ -161,63 +150,15 @@ Ext.define('ImageViewer', {
         }
     },
 
-    centerImage: function () {
-        var me = this,
-            imageContainer = me.getImageContainer(),
-            adjustedImageSize = me.getAdjustedImageSize();
-
-        me.setMargins({
-            top: (imageContainer.getHeight() - adjustedImageSize.height - 20) / 2,
-            left: (imageContainer.getWidth() - adjustedImageSize.width - 20) / 2
-        });
-    },
-
-    mousedown: function (event) {
-        var me = this,
-            margins = me.getMargins();
-
-        event.stopEvent();
-
-        me.setClickX(event.getPageX());
-        me.setClickY(event.getPageY());
-        me.setLastMarginY(margins.top);
-        me.setLastMarginX(margins.left);
-
-        me.setIsMoving(true);
-    },
-
-    mousemove: function (event) {
-        var me = this;
-
-        if (me.getIsMoving()) {
-            me.setMargins({
-                top: me.getLastMarginY() - me.getClickY() + event.getPageY(),
-                left: me.getLastMarginX() - me.getClickX() + event.getPageX()
-            });
-        }
-    },
-
-    mouseup: function () {
-        var me = this;
-
-        if (me.getIsMoving()) {
-            me.setClickX(null);
-            me.setClickY(null);
-            me.setLastMarginX(null);
-            me.setLastMarginY(null);
-            me.setIsMoving(false);
-        }
-    },
-
     zoomOut: function (btn, event, opts) {
         var me = this,
             margins = me.getMargins(),
             adjustedImageSize = me.getAdjustedImageSize();
 
-        me.setMargins({
+        /*me.setMargins({
             top: margins.top + adjustedImageSize.height * 0.05,
             left: margins.left + adjustedImageSize.width * 0.05
-        });
+        });*/
 
         me.setImageSize({
             width: adjustedImageSize.width * 0.9,
@@ -232,10 +173,10 @@ Ext.define('ImageViewer', {
             margins = me.getMargins(),
             adjustedImageSize = me.getAdjustedImageSize();
 
-        me.setMargins({
+       /* me.setMargins({
             top: margins.top - adjustedImageSize.height * 0.05,
             left: margins.left - adjustedImageSize.width * 0.05
-        });
+        });*/
 
         me.setImageSize({
             width: adjustedImageSize.width * 1.1,
@@ -278,10 +219,18 @@ Ext.define('ImageViewer', {
             tmpOriginalWidth,
             transformStyle = 'rotate(' + me.getRotation() + 'deg)';
 
-        tmpOriginalWidth = me.getOriginalImageWidth();
+		var rotation = me.getRotation();
+		if(rotation == 90)
+			transformStyle += "translateY(0%)";
+		if(rotation == 180)
+			transformStyle += "translate(-100%,-100%)";
+		if(rotation == 270)
+			transformStyle += " translateX(-100%) translateY(-100%)";
+
+		tmpOriginalWidth = me.getOriginalImageWidth();
         me.setOriginalImageWidth(me.getOriginalImageHeight());
         me.setOriginalImageHeight(tmpOriginalWidth);
-
+		
         me.getImage().getEl().applyStyles({
             'transform': transformStyle,
             '-o-transform': transformStyle,
@@ -290,10 +239,11 @@ Ext.define('ImageViewer', {
             '-webkit-transform': transformStyle
         });
 
-        me.setMargins(me.getMargins());
+        //me.setMargins(me.getMargins());
     },
 
     setMargins: function (margins) {
+		
         var me = this,
             rotation = me.getRotation(),
             adjustedImageSize = me.getAdjustedImageSize(),
@@ -406,5 +356,104 @@ Ext.define('ImageViewer', {
 
     getImageContainer: function () {
         return this.query('#imagecontainer')[0];
+    }
+});
+
+
+Ext.define('MultiImageViewer', {
+    extend: 'ImageViewer',
+
+    requires: ['Ext.XTemplate'],
+
+    config: {
+        currentImage: 0,
+        length: 0,
+        sources: null
+    },
+
+    initComponent: function () {
+        var me = this;
+
+        me.setSources(me.src);
+        me.setLength(me.src.length);
+
+        me.currentImageTemplate = me.currentImageTemplate || 'مشاهده تصویر {i} از {total}';
+        me.currentImage = 0;
+        me.src = me.src[0];
+
+        me.on('beforerender', me.insertPageUI, me);
+
+        me.callParent();
+    },
+
+    insertPageUI: function () {
+        var me = this,
+            toolbar = this.down('toolbar');
+
+        toolbar.add([{
+            xtype: 'tbfill'
+        }, {
+            xtype: 'button',
+            icon: '/generalUI/ext4/resources/imageviewer/resultset_previous.png',
+            listeners: { click: me.previousImage, scope: me }
+        }, {
+            xtype: 'tbtext'
+        }, {
+            xtype: 'button',
+            icon: '/generalUI/ext4/resources/imageviewer/resultset_next.png',
+            listeners: { click: me.nextImage, scope: me }
+        }]);
+
+        me.updateImageText();
+    },
+
+    nextImage: function () {
+        var me = this,
+            index = this.getCurrentImage();
+
+        index += 1;
+
+        if (index === me.getLength()) {
+            index = 0;
+        }
+
+        me.setCurrentImage(index);
+        me.updateImageText();
+    },
+
+    previousImage: function () {
+        var me = this,
+            index = this.getCurrentImage();
+
+        index -= 1;
+
+        if (index < 0) {
+            index = me.getLength() - 1;
+        }
+
+        me.setCurrentImage(index);
+        me.updateImageText();
+    },
+
+    applyCurrentImage: function (index) {
+        var me = this;
+
+        me.getImage().el.dom.src = me.getSources()[index];
+
+        return index;
+    },
+
+    updateImageText: function () {
+        var me = this,
+            tpl = new Ext.XTemplate(me.currentImageTemplate);
+
+        me.down('toolbar').down('tbtext').setText(tpl.apply({
+            i: me.getCurrentImage() + 1,
+            total: me.getLength()
+        }));
+    },
+
+    _isCurrentImageInitialized: function () {
+        return true;
     }
 });

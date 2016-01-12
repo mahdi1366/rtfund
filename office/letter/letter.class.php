@@ -124,6 +124,27 @@ class OFC_send extends PdoDataAccess{
 		$daObj->execute($pdo);
 		return true;	
     }
+	
+	 function EditSend($pdo = null)
+    {
+	    if( parent::update("OFC_send", $this, "SendID=:s", array(":s" =>$this->SendID), $pdo) === false )
+		    return false;
+
+	    $daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_update;
+		$daObj->MainObjectID = $this->SendID;
+		$daObj->TableName = "OFC_send";
+		$daObj->execute($pdo);
+		return true;	
+    }
+	
+	static function UpdateIsSeen($SendID)
+	{
+		$obj = new OFC_send();
+		$obj->SendID = $SendID;
+		$obj->IsSeen = "YES";		
+		return $obj->EditSend();
+	}
 }
 
 ?>

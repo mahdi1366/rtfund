@@ -28,6 +28,7 @@ switch($ObjectType)
 		if($_SESSION["USER"]["IsStaff"] == "YES" /*&& $obj->StatusID == "50"*/)
 			$access = true;
 		break;
+		
 }
 //------------------------------------------------------
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "dms.data.php?" .
@@ -312,14 +313,14 @@ ManageDocument.FileRender = function(v,p,r){
 		return "";
 	
 	return "<div align='center' title='مشاهده فایل' class='attach' "+
-		"onclick='ManageDocument.ShowFile(" + r.data.DocumentID + ");' " +
+		"onclick='ManageDocument.ShowFile(" + r.data.DocumentID + "," + r.data.ObjectID + ");' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16;float:right'></div>";
 }
 
-ManageDocument.ShowFile = function(DocumentID){
+ManageDocument.ShowFile = function(DocumentID, ObjectID){
 	
-	window.open("../../dms/ShowFile.php?DocumentID=" + DocumentID);
+	window.open("../../dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID);
 }
 
 ManageDocument.OperationRender = function(v,p,r){
@@ -425,7 +426,10 @@ ManageDocument.prototype.SaveDocument = function(){
 					alert(action.result.data);
 			}
 		},
-		failure: function(){mask.hide();}
+		failure: function(form,action){
+			Ext.MessageBox.alert("Error",action.result.data);
+			mask.hide();
+		}
 	});
 }
 

@@ -108,7 +108,7 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 			emptyText : "نوع ارجاع",
 			displayField: 'InfoDesc',
 			valueField : "InfoID",
-			value : this.index > 1 ? this.mainPanel.down("[name=1_SendType]").getValue() : "",
+			value : this.index > 1 ? this.mainPanel.down("[name=1_SendType]").getValue() : "1"
 		},{
 			xtype : "combo",
 			name : this.index + "_IsUrgent",
