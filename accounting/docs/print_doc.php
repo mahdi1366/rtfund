@@ -11,11 +11,10 @@ $docID = $_GET["DocID"];
 $DocObject = new ACC_docs($docID);
 
 $temp = PdoDataAccess::runquery("
-	select	b1.BlockDesc level1Desc, 
-			b2.BlockDesc level2Desc, 
-			b3.BlockDesc level3Desc,
+	select	concat_ws(' - ',b1.BlockDesc, b2.BlockDesc, b3.BlockDesc) CostDesc,
 			b.InfoDesc TafsiliType,
 			t.TafsiliDesc,
+			di.details,
 			sum(DebtorAmount) DSUM, 
 			sum(CreditorAmount) CSUM
 		from ACC_DocItems di
@@ -40,21 +39,21 @@ $temp = PdoDataAccess::runquery("
 </style>
 <style>
 	.header td{background-color: #cccccc; font-weight: bold;size: 12px;}
-	td { font-family: tahoma; font-size: 12px; line-height: 18px; padding: 6px;}
+	td { font-family: tahoma; font-size: 12px; line-height: 18px; padding: 3px;}
 </style>
 <center>
 <div style="direction:rtl;width:95%;margin: 10px;">
 	<table style="width:100%">
 	<tr>
 	    <td width="25%">
-			<img src="/framework/icons/logo.jpg" style="width:120px" />
+			<img src="/framework/icons/logo.jpg" style="width:80px" />
 		</td>
-	    <td style="height: 80px;font-family: b titr;font-size:16px" align="center">
+	    <td style="height: 60px;font-family: b titr;font-size:16px" align="center">
 			<br>سند حسابداری
 	    </td>
 	    <td width="20%" align="center" >
 			شماره سند : 
-			<?= $DocObject->LocalNo ?><br><br>
+			<?= $DocObject->LocalNo ?><br>
 			تاریخ سند :
 			<?= DateModules::miladi_to_shamsi($DocObject->DocDate)?>
 	    </td>
@@ -63,18 +62,11 @@ $temp = PdoDataAccess::runquery("
 		<td colspan="3" align="center">
 			<table style="width:100%;border-collapse: collapse" border="1" cellspacing="0" cellpadding="2">
 				<tr class="header">
-					<td colspan="3" align="center" >کد حساب</td>
-					<td align="center" colspan="2" >تفصیلی</td>
-					<td align="center" colspan="2" >مبلغ</td>
-			</tr>
-			<tr class="header" style="">
-				<td align="center" >گروه</td>
-				<td align="center" >کل</td>
-				<td align="center" >معین</td>
-				<td align="center" >گروه تفصیلی</td>
-				<td align="center" >تفصیلی</td>
-				<td align="center" >بدهکار</td>
-				<td align="center" >بستانکار</td>
+					<td align="center" >کد حساب</td>
+					<td align="center" >شرح ردیف</td>
+					<td align="center" >تفصیلی</td>
+					<td align="center" >بدهکار</td>
+					<td align="center" >بستانکار</td>
 			</tr>
 				<? 
 				$DSUM = 0;
@@ -84,10 +76,8 @@ $temp = PdoDataAccess::runquery("
 					$DSUM += $temp[$i]["DSUM"];
 					$CSUM += $temp[$i]["CSUM"];
 					echo "<tr>
-							<td >" . $temp[$i]["level1Desc"] . "</td>
-							<td >" . $temp[$i]["level2Desc"] . "</td>
-							<td >" . $temp[$i]["level3Desc"] . "</td>
-							<td >" . $temp[$i]["TafsiliType"] . "</td>
+							<td >" . $temp[$i]["CostDesc"] . "</td>
+							<td >" . $temp[$i]["details"] . "</td>	
 							<td >" . $temp[$i]["TafsiliDesc"] . "</td>
 							<td >" . number_format($temp[$i]["DSUM"]) . "</td>
 							<td >" . number_format($temp[$i]["CSUM"]) . "</td>
@@ -96,15 +86,15 @@ $temp = PdoDataAccess::runquery("
 				
 				?>
 			<tr class="header">
-				<td colspan="5">جمع : 
+				<td colspan="3">جمع : 
 				<?= $CSUM != $DSUM ? "<span style=color:red>سند تراز نمی باشد</span>" : 
-					CurrencyModulesclass::CurrencyToString($CSUM) . "ریال" ?> </td>
+					CurrencyModulesclass::CurrencyToString($CSUM) . " ریال " ?> </td>
 				
 				<td><?= number_format($DSUM,0,'.',',') ?></td>
 				<td><?= number_format($CSUM,0,'.',',') ?></td>
 			</tr>
 			<tr>
-				<td colspan="7">
+				<td colspan="5">
 					شرح سند : <?= $DocObject->description?>
 				</td>
 			</tr>
@@ -122,7 +112,7 @@ $temp = PdoDataAccess::runquery("
 							"<b>" . number_format($dt[$i]["amount"]) . " ریال</b>" . " در وجه " .
 							"<b>" . $dt[$i]["TafsiliDesc"] . " بابت " . $dt[$i]["description"] . "</b>" . " صادر گردید." . 
 							"</td>";
-					echo '<td>امضاء تحویل گیرنده</td></tr>';
+					echo '<td width=200>امضاء تحویل گیرنده</td></tr>';
 				}
 			?>
 			</table>

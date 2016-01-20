@@ -37,6 +37,7 @@ $dg->addColumn("", "IsStarted","", true);
 $dg->addColumn("", "IsEnded","", true);
 $dg->addColumn("", "DocStatus","", true);
 $dg->addColumn("", "IsPartEnded","", true);
+$dg->addColumn("", "WageReturn","", true);
 $dg->addColumn("", "imp_VamCode","", true);
 
 $col = $dg->addColumn("عنوان مرحله", "PartDesc", "");

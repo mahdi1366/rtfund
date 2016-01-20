@@ -78,7 +78,7 @@ Letter.prototype.BuildForms = function(){
 		renderTo : this.get("mainForm"),
 		title : "مشخصات نامه",
 		frame : true,
-		height : 540,
+		height : 520,
 		layout : {
 			type : "table",
 			columns : 2
@@ -89,6 +89,12 @@ Letter.prototype.BuildForms = function(){
 		},
 		width: 780,
 		items : [{
+			xtype : "textfield",
+			name : "LetterTitle",
+			style : "margin-top:10px;margin-bottom:10px",
+			fieldLabel : "عنوان نامه",
+			allowBlank : false
+		},{
 			xtype :"container",
 			layout : "hbox",
 			items : [{
@@ -103,6 +109,7 @@ Letter.prototype.BuildForms = function(){
 			},{
 				xtype : "radio",
 				boxLabel: 'نامه صادره',
+				style : "margin-right : 20px",
 				name: 'LetterType',
 				inputValue: 'OUTCOME'
 			},{
@@ -111,33 +118,6 @@ Letter.prototype.BuildForms = function(){
 				name: 'LetterType',
 				inputValue: 'INCOME'
 			}]
-		},{
-			xtype : "textarea",
-			fieldLabel : "چکیده",
-			name : "summary",
-			width : 400,
-			rows : 3,
-			rowspan : 3
-		},{
-			xtype : "textfield",
-			name : "LetterTitle",
-			fieldLabel : "عنوان نامه",
-			allowBlank : false
-		},{
-			xtype : "combo",
-			store : new Ext.data.SimpleStore({
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + 'letter.data.php?task=selectSubjects',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				fields : ['InfoID','InfoDesc'],
-				autoLoad : true					
-			}),
-			fieldLabel : "موضوع نامه",
-			displayField : "InfoDesc",
-			valueField : "InfoID",
-			name : "SubjectID"
 		},{
 			xtype : "tabpanel",
 			colspan : 2,
@@ -221,8 +201,8 @@ Letter.prototype.BuildForms = function(){
 				},
 				listeners : {
 					activate : function(){
-						//if(this.loader.isLoaded)
-						//	return;
+						if(this.loader.isLoaded)
+							return;
 						this.loader.load({
 							params : {
 								LetterID : LetterObject.LetterID,
@@ -333,8 +313,7 @@ Letter.prototype.SendWindowShow = function(){
 	if(!this.SendingWin)
 	{
 		this.SendingWin = new Ext.window.Window({
-			title : "ارجاع نامه",
-			width : 462,			
+			width : 620,			
 			height : 435,
 			modal : true,
 			bodyStyle : "background-color:white;",
@@ -364,6 +343,7 @@ Letter.prototype.SendWindowShow = function(){
 			LetterID : this.LetterID
 		}
 	});
+	this.SaveLetter();
 }
 
 

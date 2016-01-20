@@ -396,13 +396,21 @@ RequestInfo.prototype.BuildForms = function(){
 					name: 'ForfeitPercent',
 					renderer : function(v){ return v + " %"}
 				},{
+					name : "WageReturn",
+					width : 200,
+					fieldLabel: 'پرداخت کارمزد',
+					renderer : function(v){
+						if(v == "CUSTOMER") return "هنگام پرداخت وام";
+						if(v == "AGENT") return 'سپرده سرمایه گذار';
+						if(v == "INSTALLMENT") return 'طی اقساط';
+					}
+				},{
 					fieldLabel: 'کارمزد مشتری',
 					name: 'CustomerWage'	,		
 					renderer : function(v){ return v + " %"}
 				},{
 					fieldLabel: 'سهم صندوق',
 					name: 'FundWage',
-					colspan : 2,
 					renderer : function(v){ return v + " %"}
 				},{
 					colspan : 3,
@@ -495,8 +503,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 					this.companyPanel.down("[itemId=cmp_save]").hide();
 				}
 				this.companyPanel.doLayout();
-				this.grid.down("[itemId=addPart]").hide();
-				//this.grid.down("[dataIndex=PartID]").hide();
+				this.grid.down("[itemId=addPart]").hide();				
 			}
 			else
 			{
@@ -592,7 +599,7 @@ RequestInfo.prototype.PartInfo = function(mode){
 	{
 		this.PartWin = new Ext.window.Window({
 			width : 500,
-			height : 230,
+			height : 300,
 			modal : true,
 			closeAction : 'hide',
 			title : "ایجاد مرحله جدید",
@@ -614,7 +621,7 @@ RequestInfo.prototype.PartInfo = function(mode){
 					name : "PartDesc",
 					fieldLabel : "عنوان مرحله",
 					colspan : 2,
-					width : 500
+					width : 450
 				},{
 					xtype : "currencyfield",
 					name : "PartAmount",
@@ -668,6 +675,28 @@ RequestInfo.prototype.PartInfo = function(mode){
 				},{
 					fieldLabel: 'کارمزد صندوق',
 					name: 'FundWage'
+				},{
+					xtype : "fieldset",
+					colspan :2,
+					width : 450,
+					style : "margin-right:10px",
+					items : [{
+						xtype : "radio",
+						checked : true,
+						boxLabel : "پرداخت کارمزد هنگام پرداخت وام",
+						name : "WageReturn",
+						inputValue : "CUSTOMER"
+					},{
+						xtype : "radio",
+						boxLabel : "پرداخت کارمزد از سپرده سرمایه گذار",
+						name : "WageReturn",
+						inputValue : "AGENT"
+					},{
+						xtype : "radio",
+						boxLabel : "پرداخت کارمزد طی اقساط",
+						name : "WageReturn",
+						inputValue : "INSTALLMENT"
+					}]
 				},{
 					xtype : "hidden",
 					name : "PartID"
@@ -891,11 +920,11 @@ RequestInfo.prototype.LoadInstallments = function(){
 		PartID : record.data.PartID
 	};
 	
-	if(record.data.IsPayed == "YES")
+	/*if(record.data.IsPayed == "YES")
 		this.InstallmentGrid.down("[itemId=cmp_computeInstallment]").hide();
 	else
 		this.InstallmentGrid.down("[itemId=cmp_computeInstallment]").show();
-	
+	*/
 	this.InstallmentGrid.getStore().load();
 	this.InstallmentsWin.show();
 	this.InstallmentsWin.center();

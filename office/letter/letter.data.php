@@ -49,6 +49,8 @@ switch ($task) {
 	case "SendLetter":
 		SendLetter();
 		
+	case "ReturnSend":
+		ReturnSend();	
 	
 }
 
@@ -56,20 +58,27 @@ function SelectLetter() {
 
     $where = "1=1";
     $param = array();
+	
+	if(isset($_REQUEST["LetterID"]))
+	{
+		$where .= " AND LetterID=:lid";
+		$param[":lid"] = $_REQUEST["LetterID"];
+	}
 
     $list = OFC_letters::GetAll($where, $param);
-
     echo dataReader::getJsonData($list, count($list), $_GET['callback']);
     die();
 }
 
 function SelectDraftLetters() {
 
-    $where = "LetterStatus='RAW' AND PersonID=:pid";
+    $query = "select * from OFC_letters
+		left join OFC_send using(LetterID) 
+		where SendID  is null AND PersonID=:pid";
     $param = array();
     $param[':pid'] = $_SESSION["USER"]["PersonID"];
 
-    $list = OFC_letters::GetAll($where, $param);
+    $list = PdoDataAccess::runquery($query, $param);
 
     echo dataReader::getJsonData($list, count($list), $_GET['callback']);
     die();
@@ -83,7 +92,7 @@ function SelectReceivedLetters(){
 		from OFC_send s
 			join OFC_letters l using(LetterID)
 			join BSC_persons p on(s.FromPersonID=p.PersonID)
-			join DMS_documents on(ObjectType='letter' AND ObjectID=s.LetterID)
+			left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
 			left join OFC_Send s2 on(s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
 		where s2.SendID is null AND s.ToPersonID=:tpid
 		group by SendID";
@@ -108,7 +117,7 @@ function SelectSendedLetters(){
 		from OFC_send s
 			join OFC_letters l using(LetterID)
 			join BSC_persons p on(s.ToPersonID=p.PersonID)
-			join DMS_documents on(ObjectType='letter' AND ObjectID=s.LetterID)
+			left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
 		where FromPersonID=:fpid
 		group by SendID
 	";
@@ -127,7 +136,7 @@ function SelectSendedLetters(){
 
 //.............................................
 
-function SaveLetter() {
+function SaveLetter($dieing = true) {
 
     $Letter = new OFC_letters();
     pdoDataAccess::FillObjectByArray($Letter, $_POST);
@@ -178,9 +187,13 @@ function SaveLetter() {
 
 	}	
 	
-    Response::createObjectiveResponse($res, $Letter->GetExceptionCount() != 0 ? 
+	if($dieing)
+	{
+		Response::createObjectiveResponse($res, $Letter->GetExceptionCount() != 0 ? 
 			$Letter->popExceptionDescription() : $Letter->LetterID);
-    die();
+		die();
+	}
+	return true;    
 }
 
 function deleteLetter() {
@@ -228,12 +241,21 @@ function selectSendTypes(){
 
 function SendLetter(){
 	
+	SaveLetter(false);
+	
 	$LetterID = $_POST["LetterID"];
 	$toPersonArr = array();
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
+	if(isset($_POST["SendID"]) && $_POST["SendID"]*1 > 0)
+	{
+		$obj = new OFC_send();
+		$obj->SendID = $_POST["SendID"];
+		$obj->IsSeen = "YES";
+		$obj->EditSend($pdo);
+	}
 	$arr = array_keys($_POST);
 	foreach($arr as $key)
 	{
@@ -243,8 +265,7 @@ function SendLetter(){
 		$toPersonID = $_POST[$key];
 		if(isset($toPersonArr[$toPersonID]) || $toPersonID*1 == 0)
 			continue;
-		$toPersonArr[$toPersonID] = true;
-		
+		$toPersonArr[$toPersonID] = true;		
 		
 		$index = preg_split("/_/", $key);
 		$index = $index[0];
@@ -265,18 +286,31 @@ function SendLetter(){
 		}
 	}
 	
-	$letterObj = new OFC_letters($LetterID);
-	$letterObj->LetterStatus = "CONFIRM";
-	if(!$letterObj->EditLetter($pdo))
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function ReturnSend(){
+	
+	$LetterID = $_POST["LetterID"];
+	$SendID = $_POST["SendID"];
+	
+	$obj = new OFC_send($SendID);
+	if($obj->LetterID <> $LetterID)
 	{
-		print_r(ExceptionHandler::PopAllExceptions());
-		$pdo->rollBack();
 		echo Response::createObjectiveResponse(false, "");
 		die();
 	}
-		
-	$pdo->commit();
-	echo Response::createObjectiveResponse(true, "");
+	
+	if($obj->IsSeen == "YES")
+	{
+		echo Response::createObjectiveResponse(false, "IsSeen");
+		die();
+	}
+	
+	$result = $obj->DeleteSend();
+	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 

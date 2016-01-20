@@ -18,9 +18,9 @@ if(!empty($_REQUEST["SendID"]))
 	OFC_send::UpdateIsSeen($_REQUEST["SendID"]);
 
 //..............................................................................
-$content = "<br><div style=margin-left:30px;float:left; >تاریخ نامه : " . 
-	DateModules::miladi_to_shamsi($LetterObj->LetterDate) . "<br> شماره نامه : " .
-	$LetterObj->LetterID . "</div><br><br>";
+$content = "<br><div style=margin-left:30px;float:left; >شماره نامه : " . 
+	$LetterObj->LetterID . "<br>تاریخ نامه : " . 
+	DateModules::miladi_to_shamsi($LetterObj->LetterDate) . "</div><br><br>";
 
 $content .= "<b>";
 $dt = PdoDataAccess::runquery("
@@ -42,7 +42,7 @@ foreach($dt as $row)
 	$content .= $row['ToPersonName'] . "<br>";
 }
 
-$content .= "<br> موضوع : " . $LetterObj->LetterTitle . "<br><br>";
+$content .= "<br> موضوع : " . $LetterObj->LetterTitle . "<br><br></b>";
 $content .= str_replace("\r\n", "", $LetterObj->context);
 $content .= "<br><br><div align=left style=width:80%><b>" . $dt[0]["FromPersonName"] . "</b></div>";
 //..............................................................................
@@ -54,7 +54,6 @@ foreach($images as $img)
 $imageslist = implode(",", $imageslist);
 //..............................................................................
 ?>
-
 <script>
 
 LetterInfo.prototype = {
@@ -76,10 +75,8 @@ function LetterInfo(){
 		activeTab: 0,
 		plain:true,
 		autoHeight : true,
-		width: 750,
-		height : 550,
+		width: 700,
 		defaults:{
-			height : 550,
 			autoWidth : true            
 		},
 		items:[{
@@ -88,16 +85,38 @@ function LetterInfo(){
 				xtype : "container",
 				autoScroll: true,
 				cls : "LetterContent",
-				html : "<?= $content ?>"
+				html : '<?= $content ?>'
+			}],
+			buttons : [{
+				text : "چاپ",
+				iconCls : "print",
+				handler : function(){ 
+					window.open( MyLetterObject.address_prefix + 
+						"PrintLetter.php?LetterID=" + <?= $LetterID ?>); 
+				}
 			}]
 			
 		},{
-			title : "تصاویر نامه",
-			items : new MultiImageViewer({
-				height : 525,
-				src: this.imagesList
-			})
-			
+			title : "پیوست های نامه",
+			loader : {
+				url : this.address_prefix + "attach.php",
+				method : "post",
+				text: "در حال بار گذاری...",
+				scripts : true
+			},
+			listeners : {
+				activate : function(){
+					if(this.loader.isLoaded)
+						return;
+					this.loader.load({
+						params : {
+							LetterID : LetterInfoObject.LetterID,
+							ExtTabID : this.getEl().id,
+							lock : "true"
+						}
+					});
+				}
+			}
 		},{
 			title : "سابقه نامه",
 			loader : {
@@ -118,8 +137,19 @@ function LetterInfo(){
 					});
 				}
 			}
-		},{}]
+		}]
 	});	
+	
+	if(this.imagesList.length > 0)
+		this.tabPanel.insert(1,{
+			title : "تصاویر نامه",
+			itemId : "tab_images",
+			items : new MultiImageViewer({
+				height : 525,
+				src: this.imagesList
+			})
+			
+		});
 }
 
 LetterInfoObject = new LetterInfo();
@@ -140,6 +170,12 @@ LetterInfoObject = new LetterInfo();
 		background: linear-gradient(right, #fff 50%, #eee); /* Standard syntax */
 		box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 4px 20px 0 rgba(0, 0, 0, 0.19);
 	} 
+	.LetterContent li {
+		list-style: inherit !important;
+	}
+	.LetterContent ol {
+		padding : 20px;
+	}
 </style>
 	<br>
 	<div style="margin-right : 20px" id="mainForm"></div>

@@ -9,6 +9,8 @@ if(empty($_POST["LetterID"]))
 	die();
 
 $LetterID = $_POST["LetterID"];
+
+$SendID = !empty($_POST["SendID"]) ? $_POST["SendID"] : "0";
 ?>
 <script>
 
@@ -20,6 +22,7 @@ SendLetter.prototype = {
 	AfterSendHandler : <?= $_REQUEST["AfterSendHandler"] ?>,
 	
 	LetterID : <?= $LetterID?>,
+	SendID : '<?= $SendID ?>',
 	index : 1,
 
 	get : function(elementID){
@@ -30,11 +33,9 @@ SendLetter.prototype = {
 function SendLetter(){
 	
 	this.mainPanel = new Ext.form.FormPanel({
-		renderTo : this.get("div_panel"),
 		frame : true,
-		height : 400,
+		height : 375,
 		autoScroll : true,
-		width : 450,
 		defaults : {
 			anchor : "100%",
 			style : "margin:3px"			
@@ -60,6 +61,41 @@ function SendLetter(){
 		}]
 	});
 	
+	this.tabPanel = new Ext.tab.Panel({
+		renderTo : this.get("div_panel"),
+		plain: true,
+		height : 400,
+		autoScroll : true,
+		width : 610,
+		
+		items : [{
+			title : "ارجاع نامه",
+			items : this.mainPanel
+		}, {
+			title : "درج پیوست",
+			hidden : this.SendID == 0 ? true : false,
+			loader : {
+				url : this.address_prefix + "attach.php",
+				method: "POST",
+				text: "در حال بار گذاری...",
+				scripts : true
+			},
+			listeners : {
+				activate : function(){
+					if(this.loader.isLoaded)
+						return;
+					this.loader.load({
+						params : {
+							LetterID : SendLetterObject.LetterID,
+							SendID : SendLetterObject.SendID,
+							ExtTabID : this.getEl().id
+						}
+					});
+				}
+			}
+		}]
+	});
+	
 	this.AddSendingFieldSet();
 }
 
@@ -70,6 +106,9 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 		layout : {
 			type : "table",
 			columns : 2
+		},
+		defaults : {
+			width : 200
 		},
 		items : [{
 			xtype : "combo",
@@ -91,7 +130,7 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 			name : this.index + "_SendComment",
 			value : this.index > 1 ? this.mainPanel.down("[name=1_SendComment]").getValue() : "",
 			rowspan : 3,
-			width : 230
+			width : 340
 		},{
 			xtype : "combo",
 			name : this.index + "_SendType",
@@ -138,7 +177,8 @@ SendLetter.prototype.SendingLetter = function(){
 		method: "POST",
 		params: {
 			task: "SendLetter",
-			LetterID : this.LetterID
+			LetterID : this.LetterID,
+			SendID : this.SendID
 		},
 		success: function(form,action){
 			mask.hide();

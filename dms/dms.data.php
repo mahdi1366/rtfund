@@ -51,6 +51,16 @@ function SelectAll(){
 		$where .= " AND ObjectID=:sid";
 		$param[":sid"] = $_REQUEST["ObjectID"];
 	}
+	if(!empty($_REQUEST["ObjectID2"]))
+	{
+		$where .= " AND ObjectID2=:oid2";
+		$param[":oid2"] = $_REQUEST["ObjectID2"];
+	}
+	if(isset($_REQUEST["checkRegPerson"]) && $_REQUEST["checkRegPerson"] == "true")
+	{
+		$where .= " AND RegPersonID=" . $_SESSION["USER"]["PersonID"];
+	}
+	
 	
 	$temp = DMS_documents::SelectAll($where, $param);
 	for($i=0; $i<count($temp); $i++)
@@ -91,6 +101,7 @@ function SaveDocument() {
 	$obj = new DMS_documents();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	$obj->ObjectID = $_POST["ObjectID"];
+	$obj->ObjectID2 = $_POST["ObjectID2"];
 	$obj->ObjectType = $_POST["ObjectType"];
 
 	if (empty($obj->DocumentID))

@@ -11,12 +11,16 @@ if(empty($_POST["LetterID"]))
 	die();
 
 $LetterID = $_POST["LetterID"];
+$SendID = !empty($_POST["SendID"]) ? $_POST["SendID"] : "0";
 
 $access = true;
+if(isset($_POST["lock"]) && $_POST["lock"] == "true")
+	$access = false;
 
 //------------------------------------------------------
 $dg = new sadaf_datagrid("dg", "../dms/dms.data.php?" .
-		"task=SelectAll&ObjectType=letter&ObjectID=" . $LetterID, "grid_div");
+		"task=SelectAll&ObjectType=letterAttach&ObjectID=" . $LetterID . 
+		($SendID > 0 ? "&checkRegPerson=true&ObjectID2=" . $SendID : ""), "grid_div");
 
 $dg->addColumn("", "DocumentID", "", true);
 $dg->addColumn("", "ObjectType", "", true);
@@ -30,10 +34,13 @@ $dg->addColumn("", "DocType", "", true);
 
 $col = $dg->addColumn("عنوان پیوست", "DocDesc", "");
 
+$col = $dg->addColumn("ثبت کننده", "regfullname", "");
+$col->width = 150;
+
 $col = $dg->addColumn("فایل", "FileType", "");
 $col->renderer = "function(v,p,r){return ManageDocument.FileRender(v,p,r)}";
 $col->align = "center";
-$col->width = 30;
+$col->width = 50;
 
 if($access)
 {
@@ -43,8 +50,8 @@ if($access)
 }
 
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 290;
-$dg->width = 690;
+$dg->height = 310;
+$dg->width = 600;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "DocTypeDesc";
@@ -59,6 +66,8 @@ ManageDocument.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 
 	LetterID : <?= $LetterID ?>,
+	SendID : <?= $SendID ?>,
+	access : <?= $access ? "true" : "false" ?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -66,48 +75,49 @@ ManageDocument.prototype = {
 };
 
 function ManageDocument(){
-	
-	this.formPanel = new Ext.form.Panel({
-		renderTo: this.get("MainForm"),      
-		width : 690,
-		style : "margin-top:10px",
-		bodyPadding: '8 10 8 10',
-		defaults :{
-			labelWidth : 70
-		},
-		frame: true,
-		layout : "hbox",
-		items : [{
-			xtype : "textfield",
-			allowBlank : false,
-			width : 300,
-			fieldLabel : "شرح پیوست",
-			name : "DocDesc"
-		},{
-			xtype : "filefield",
-			width : 230,
-			fieldLabel : "فایل مدرک",
-			name : "FileType",
-			style : "margin-right:20px"
-		},{
-			xtype : "button",
-			text : "ذخیره",
-			style : "border-width:1px;",
-			iconCls : "save",
-			handler : function(){ ManageDocumentObject.SaveDocument(); }
-		},{
-			xtype : "button",
-			text : "پاکن",
-			style : "border-width:1px;",
-			iconCls : "clear",
-			handler : function(){ ManageDocumentObject.formPanel.getForm().reset(); }
-			
-		},{
-			xtype : "hidden",
-			name : "DocumentID"
-		}]
-	});
+	if(this.access)
+	{
+		this.formPanel = new Ext.form.Panel({
+			renderTo: this.get("MainForm"),      
+			width : 600,
+			style : "margin-top:10px",
+			bodyPadding: '8 0 8 0',
+			defaults :{
+				labelWidth : 70
+			},
+			frame: true,
+			layout : "hbox",
+			items : [{
+				xtype : "textfield",
+				width : 250,
+				fieldLabel : "شرح پیوست",
+				name : "DocDesc"
+			},{
+				xtype : "filefield",
+				width : 200,
+				allowBlank : false,
+				fieldLabel : "فایل مدرک",
+				name : "FileType",
+				style : "margin-right:20px"
+			},{
+				xtype : "button",
+				text : "ذخیره",
+				style : "border-width:1px;",
+				iconCls : "save",
+				handler : function(){ ManageDocumentObject.SaveDocument(); }
+			},{
+				xtype : "button",
+				text : "پاکن",
+				style : "border-width:1px;",
+				iconCls : "clear",
+				handler : function(){ ManageDocumentObject.formPanel.getForm().reset(); }
 
+			},{
+				xtype : "hidden",
+				name : "DocumentID"
+			}]
+		});
+	}
 	this.grid = <?= $grid ?>;
 	this.grid.render(this.get("div_grid"));
 }
@@ -169,7 +179,8 @@ ManageDocument.prototype.SaveDocument = function(){
 			param1 : 0,
 			DocType : 0,
 			ObjectID : this.LetterID,
-			ObjectType : 'letter'
+			ObjectID2 : this.SendID,
+			ObjectType : 'letterAttach'
 		},
 		success: function(form,action){
 			mask.hide();
@@ -224,7 +235,5 @@ ManageDocument.prototype.DeleteDocument = function(){
 }
 
 </script>
-<center>
-	<div id="MainForm"></div>
-	<div id="div_grid"><div>
-</center>
+<div id="MainForm"></div>
+<div id="div_grid"><div>

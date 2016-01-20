@@ -9,13 +9,10 @@ class OFC_letters extends PdoDataAccess{
     public $LetterID;
 	public $LetterType;
 	public $LetterTitle;
-	public $SubjectID;
 	public $LetterDate;
 	public $RegDate;
 	public $PersonID;
-	public $summary;
 	public $context;
-	public $LetterStatus;
 
     function __construct($LetterID = "")
     {
@@ -125,7 +122,7 @@ class OFC_send extends PdoDataAccess{
 		return true;	
     }
 	
-	 function EditSend($pdo = null)
+	function EditSend($pdo = null)
     {
 	    if( parent::update("OFC_send", $this, "SendID=:s", array(":s" =>$this->SendID), $pdo) === false )
 		    return false;
@@ -138,10 +135,26 @@ class OFC_send extends PdoDataAccess{
 		return true;	
     }
 	
+	function DeleteSend($pdo = null)
+    {
+	    if( parent::delete("OFC_send", "SendID=?", array($this->SendID), $pdo) === false )
+		    return false;
+
+	    $daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_delete;
+		$daObj->MainObjectID = $this->SendID;
+		$daObj->TableName = "OFC_send";
+		$daObj->execute($pdo);
+		return true;	
+    }
+	
 	static function UpdateIsSeen($SendID)
 	{
-		$obj = new OFC_send();
-		$obj->SendID = $SendID;
+		$obj = new OFC_send($SendID);
+		
+		if($obj->ToPersonID != $_SESSION["USER"]["PersonID"])
+			return false;
+		
 		$obj->IsSeen = "YES";		
 		return $obj->EditSend();
 	}

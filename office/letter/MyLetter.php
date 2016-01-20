@@ -6,14 +6,24 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=SelectReceivedLetters", "grid_div");
+$mode = $_REQUEST["mode"];
+
+$task = "";
+if($mode == "receive")
+	$task = "SelectReceivedLetters";
+if($mode == "send")
+	$task = "SelectSendedLetters";
+
+if($task == "")
+	die();
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=" . $task, "grid_div");
 
 $dg->addColumn("", "LetterID", "", true);
 $dg->addColumn("", "IsSeen", "", true);
 $dg->addColumn("", "SendID", "", true);
 
 $col = $dg->addColumn("<img src=/office/icons/LetterType.gif>", "LetterType", "");
-$col->renderer = "ReceivedLetter.LetterTypeRender";
+$col->renderer = "MyLetter.LetterTypeRender";
 $col->width = 30;
 
 $col = $dg->addColumn("<img src=/office/icons/attach.gif>", "hasAttach", "");
@@ -26,19 +36,22 @@ $col->align = "center";
 
 $col = $dg->addColumn("موضوع نامه", "LetterTitle", "");
 
-$col = $dg->addColumn("فرستنده", "FromPersonName", "");
+if($mode == "receive")
+	$col = $dg->addColumn("فرستنده", "FromPersonName", "");
+else
+	$col = $dg->addColumn("گیرنده", "ToPersonName", "");
 $col->width = 150;
 
 $col = $dg->addColumn("شرح ارجاع", "SendComment", "");
-$col->ellipsis = 30;
+$col->ellipsis = 25;
 $col->width = 150;
 
 $col = $dg->addColumn("تاریخ ارجاع", "SendDate", GridColumn::ColumnType_date);
 $col->width = 80;
 
 $col = $dg->addColumn("عملیات", "");
-$col->renderer = "function(v,p,r){return ReceivedLetter.OperationRender(v,p,r);}";
-$col->width = 50;
+$col->renderer = "function(v,p,r){return MyLetter.OperationRender(v,p,r);}";
+$col->width = 80;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 420;
@@ -50,24 +63,28 @@ $grid = $dg->makeGrid_returnObjects();
 ?>
 <script>
 	
-ReceivedLetter.prototype = {
+MyLetter.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	mode : '<?= $mode ?>',
+		
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
 };
 
-function ReceivedLetter(){
+function MyLetter(){
 	
 	this.grid = <?= $grid ?>;
+	
 	this.grid.getView().getRowClass = function(record, index)
 	{
 		if(record.data.IsSeen == "NO")
 			return "yellowRow";
 		return "";
-	}
+	}	
+	
 	this.grid.on("itemdblclick", function(view, record){
 			
 		framework.OpenPage("/office/letter/LetterInfo.php", "مشخصات نامه", 
@@ -81,7 +98,7 @@ function ReceivedLetter(){
 	this.grid.render(this.get("DivGrid"));
 }
 
-ReceivedLetter.LetterTypeRender = function(v,p,r){
+MyLetter.LetterTypeRender = function(v,p,r){
 	
 	if(v == 'INNER') 
 		return "<img data-qtip='نامه داخلی' src=/office/icons/inner.gif>";
@@ -91,36 +108,35 @@ ReceivedLetter.LetterTypeRender = function(v,p,r){
 		return "<img data-qtip='نامه صادره' src=/office/icons/outcome.gif>";
 }
 
-ReceivedLetterObject = new ReceivedLetter();
+MyLetterObject = new MyLetter();
 
-ReceivedLetter.OperationRender = function(v,p,r){
+MyLetter.OperationRender = function(v,p,r){
 	
-	return "<div  title='عملیات' class='setting' onclick='ReceivedLetterObject.OperationMenu(event);' " +
+	return "<div  title='ارجاع نامه' class='sendLetter' "+
+		" onclick='MyLetterObject.SendLetter();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";
-}
-
-ReceivedLetter.prototype.OperationMenu = function(e){
-
-	record = this.grid.getSelectionModel().getLastSelected();
-	var op_menu = new Ext.menu.Menu();
+		"cursor:pointer;float:right;width:20px;height:16'></div>" + 
 		
-	op_menu.add({text: 'ارجاع نامه',iconCls: 'sendLetter', 
-		handler : function(){ return ReceivedLetterObject.SendLetter(); }});
-	
-	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
-		handler : function(){ return ReceivedLetterObject.ShowHistory(); }});
-	
-	op_menu.showAt(e.pageX-120, e.pageY);
+		(MyLetterObject.mode == "send" && r.data.IsSeen == "NO" ? 
+			"<div  title='برگشت' class='undo' " +
+			" onclick='MyLetterObject.ReturnLetter();' " +
+			"style='background-repeat:no-repeat;background-position:center;" +
+			"cursor:pointer;float:right;width:20px;height:16'></div>" : ""
+		) +
+		
+		"<div  title='سابقه' class='history' "+
+		" onclick='MyLetterObject.ShowHistory();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;float:right;width:20px;height:16'></div>";
 }
 
-ReceivedLetter.prototype.SendLetter = function(){
+MyLetter.prototype.SendLetter = function(){
 	
 	if(!this.SendingWin)
 	{
 		this.SendingWin = new Ext.window.Window({
 			title : "ارجاع نامه",
-			width : 462,			
+			width : 620,			
 			height : 435,
 			modal : true,
 			bodyStyle : "background-color:white;",
@@ -140,24 +156,54 @@ ReceivedLetter.prototype.SendLetter = function(){
 		scripts : true,
 		params : {
 			ExtTabID : this.SendingWin.getEl().id,
-			parent : "ReceivedLetterObject.SendingWin",
+			parent : "MyLetterObject.SendingWin",
 			AfterSendHandler : function(){
-				ReceivedLetterObject.grid.getStore().load();
+				MyLetterObject.grid.getStore().load();
 			},
-			LetterID : this.grid.getSelectionModel().getLastSelected().data.LetterID
+			LetterID : this.grid.getSelectionModel().getLastSelected().data.LetterID,
+			SendID : this.grid.getSelectionModel().getLastSelected().data.SendID
 		}
 	});
 }
 
-ReceivedLetter.prototype.ShowHistory = function(){
+MyLetter.prototype.ReturnLetter = function(){
+	
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg:'در حال ذخیره سازی ...'});
+	mask.show();
+	
+	Ext.Ajax.request({
+		url : this.address_prefix + "letter.data.php?task=ReturnSend",
+		method : "post",
+		params : {
+			SendID : this.grid.getSelectionModel().getLastSelected().data.SendID,
+			LetterID : this.grid.getSelectionModel().getLastSelected().data.LetterID
+		},
+		
+		success : function(response){
+			mask.hide();
+			result = Ext.decode(response.responseText);
+			if(result.success)
+				MyLetterObject.grid.getStore().load();
+			else
+			{	
+				if(result.data == "IsSeen")
+					Ext.MessageBox.alert("Error", "نامه توسط گیرنده دیده شده و قابل برگشت نمی باشد");
+				else
+					Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+			}
+		}
+	})
+}
+
+MyLetter.prototype.ShowHistory = function(){
 
 	if(!this.HistoryWin)
 	{
 		this.HistoryWin = new Ext.window.Window({
-			title: 'سابقه گردش درخواست',
+			title: 'سابقه گردش نامه',
 			modal : true,
 			autoScroll : true,
-			width: 700,
+			width: 710,
 			height : 500,
 			closeAction : "hide",
 			loader : {
@@ -174,6 +220,7 @@ ReceivedLetter.prototype.ShowHistory = function(){
 		});
 		Ext.getCmp(this.TabID).add(this.HistoryWin);
 	}
+	
 	this.HistoryWin.show();
 	this.HistoryWin.center();
 	this.HistoryWin.loader.load({
