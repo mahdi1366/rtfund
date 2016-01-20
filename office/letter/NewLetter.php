@@ -145,6 +145,7 @@ Letter.prototype.BuildForms = function(){
 						name : "PageFile"
 					},{
 						xtype : "button",
+						text : "اضافه تصویر",
 						iconCls : "add",
 						handler : function(){
 							if(this.up('panel').down("[name=PageTitle]").getValue() == "" || 
@@ -336,7 +337,7 @@ Letter.prototype.SendWindowShow = function(){
 			parent : "LetterObject.SendingWin",
 			AfterSendHandler : function(){
 				framework.CloseTab(LetterObject.TabID);
-				if(DraftLetterObject != "object")
+				if(DraftLetterObject)
 					DraftLetterObject.grid.getStore().load();
 			},
 			

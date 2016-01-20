@@ -108,7 +108,8 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 			columns : 2
 		},
 		defaults : {
-			width : 200
+			width : 200,
+			labelWidth : 60
 		},
 		items : [{
 			xtype : "combo",
@@ -121,7 +122,7 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 				},
 				fields :  ['PersonID','fullname']
 			}),
-			emptyText : "ارجاع به",
+			fieldLabel : "ارجاع به",
 			displayField: 'fullname',
 			valueField : "PersonID"				
 		},{
@@ -143,8 +144,8 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 				fields :  ['InfoID','InfoDesc'],
 				autoLoad : true
 			}),
+			fieldLabel : "نوع ارجاع",
 			queryMode : "local",
-			emptyText : "نوع ارجاع",
 			displayField: 'InfoDesc',
 			valueField : "InfoID",
 			value : this.index > 1 ? this.mainPanel.down("[name=1_SendType]").getValue() : "1"
@@ -159,7 +160,7 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 				]
 			}),  
 			value : this.index > 1 ? this.mainPanel.down("[name=1_IsUrgent]").getValue() : "NO",
-			emptyText : "فوریت",
+			fieldLabel : "فوریت",
 			displayField: 'title',
 			valueField : "id"	
 		}]
@@ -168,6 +169,9 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 }
 
 SendLetter.prototype.SendingLetter = function(){
+
+	if(this.mainPanel.down("[name=1_ToPersonID]").getValue() == null)
+		return;
 
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخیره سازی ...'});
 	mask.show();
