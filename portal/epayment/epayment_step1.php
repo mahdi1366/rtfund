@@ -24,7 +24,7 @@ if(empty($obj->InstallmentID))
 	die();
 }
 
-if($obj->StatusID == "100")
+if($obj->IsPaid == "YES")
 {
 	echo "پرداخت این قسط قبلا انجام گردیده است.";
 	die();

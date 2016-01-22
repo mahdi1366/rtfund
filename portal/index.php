@@ -63,17 +63,19 @@ for ($i = 0; $i < count($menus); $i++) {
 			var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
 			var portal;
 			setTimeout(function(){
-				Ext.onReady(function(){
-					Ext.QuickTips.init();
-					Ext.get('loading').remove();
-					Ext.get('loading-mask').fadeOut({
-						remove:true
+				try {
+					Ext.onReady(function(){
+						Ext.QuickTips.init();
+						Ext.get('loading').remove();
+						Ext.get('loading-mask').fadeOut({
+							remove:true
+						});
+						portal = new PortalClass();
+						portal.OpenPage("/portal/FirstPage.php");
+						PortalClass.SystemLoad();
 					});
-					portal = new PortalClass();
-					if(PortalClass.StartPage != "" && PortalClass.StartPage != undefined)
-						portal.OpenPage(PortalClass.StartPage, "صفحه اصلی");
-					PortalClass.SystemLoad();
-				});
+				}
+				catch(err){}
 			}, 700);
 		</script>
 	</head>

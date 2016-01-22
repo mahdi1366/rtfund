@@ -262,9 +262,24 @@ function AddCostCode() {
     $cc = new ACC_CostCodes();
     PdoDataAccess::FillObjectByArray($cc, $_POST);
 
-    $dt = ACC_CostCodes::SelectCost(" level1=? and level2=? and level3=? ", 
-		array($cc->level1, $cc->level2, $cc->level3));
-
+	$where = " level1=?";
+	$param = array($cc->level1);
+	if($cc->level2*1 > 0)
+	{
+		$where .= " AND level2=?";
+		$param[] = $cc->level2;
+	}
+	else
+		$where .= " AND level2 is null";
+	if($cc->level3*1 > 0)
+	{
+		$where .= " AND level3=?";
+		$param[] = $cc->level3;
+	}
+	else
+		$where .= " AND level3 is null";
+	
+    $dt = ACC_CostCodes::SelectCost($where, $param);
     if ($dt->rowCount() > 0) {
         Response::createObjectiveResponse(false, 'کد حساب تکراری است');
         die();

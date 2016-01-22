@@ -61,7 +61,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
-	$CostCode_pardakhtani = FindCostID("200-05");
+	$CostCode_commitment = FindCostID("200-05");
 	$CostCode_guaranteeAmount = FindCostID("904-02");
 	$CostCode_guaranteeCount = FindCostID("904-01");
 	$CostCode_guaranteeAmount2 = FindCostID("905-02");
@@ -189,8 +189,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	{
 		$FirstStep = false;
 		$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0)
-			from ACC_DocItems where CostID=? AND TafsiliID=?";
-		$param = array($CostCode_todiee, $LoanPersonTafsili);
+			from ACC_DocItems where CostID=? AND TafsiliID=? AND sourceID=?";
+		$param = array($CostCode_todiee, $LoanPersonTafsili, $ReqObj->RequestID);
 		if($LoanMode == "Agent")
 		{
 			$query .= " AND TafsiliID2=?";
@@ -390,11 +390,13 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
-		$itemObj->CostID = $CostCode_pardakhtani;
+		$itemObj->CostID = $CostCode_commitment;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $PartObj->PartAmount;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $ReqPersonTafsili;
+		$itemObj->TafsiliID = $LoanPersonTafsili;		
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 		$itemObj->Add($pdo);
 	}
 	//---------- ردیف های تضمین  ----------
@@ -500,23 +502,9 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	return true;
 }
 
-function ReturnPayPartDoc($partobj, $pdo){
+function ReturnPayPartDoc($DocID){
 	
-	/*@var $PartObj LON_ReqParts */
-	
-	$temp = PdoDataAccess::runquery("select DocID 
-		from ACC_DocItems join ACC_docs using(DocID) 
-		where SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND SourceID=? AND SourceID2=?", 
-		array($partobj->RequestID, $partobj->PartID), $pdo);
-	
-	if(count($temp) == 0)
-		return true;
-	
-	PdoDataAccess::runquery("delete from ACC_DocChecks where DocID=?", array($temp[0][0]), $pdo);
-	PdoDataAccess::runquery("delete from ACC_DocItems where DocID=?", array($temp[0][0]), $pdo);
-	PdoDataAccess::runquery("delete from ACC_docs where DocID=?", array($temp[0][0]), $pdo);
-	
-	return ExceptionHandler::GetExceptionCount() == 0;	
+	return ACC_docs::Remove($DocID);	
 }
 
 function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
@@ -532,7 +520,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
-	$CostCode_pardakhtani = FindCostID("200");
+	$CostCode_commitment = FindCostID("200");
 	$CostCode_guaranteeAmount = FindCostID("904-02");
 	$CostCode_guaranteeCount = FindCostID("904-01");
 	$CostCode_guaranteeAmount2 = FindCostID("905-02");
@@ -786,7 +774,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
-		$itemObj->CostID = $CostCode_pardakhtani;
+		$itemObj->CostID = $CostCode_commitment;
 		$itemObj->DebtorAmount = $PartObj->PartAmount + $WageSum - $PaidAmount;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
@@ -819,7 +807,7 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
-	$CostCode_pardakhtani = FindCostID("200");
+	$CostCode_commitment = FindCostID("200");
 	
 	//---------------- add doc header --------------------
 	$obj = new ACC_docs();
@@ -916,7 +904,7 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
-		$itemObj->CostID = $CostCode_pardakhtani;
+		$itemObj->CostID = $CostCode_commitment;
 		$itemObj->DebtorAmount = $InstallmentObj->PaidAmount;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;

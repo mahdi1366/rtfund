@@ -12,6 +12,7 @@ $DocObject = new ACC_docs($docID);
 
 $temp = PdoDataAccess::runquery("
 	select	concat_ws(' - ',b1.BlockDesc, b2.BlockDesc, b3.BlockDesc) CostDesc,
+			cc.CostCode,
 			b.InfoDesc TafsiliType,
 			t.TafsiliDesc,
 			di.details,
@@ -76,7 +77,7 @@ $temp = PdoDataAccess::runquery("
 					$DSUM += $temp[$i]["DSUM"];
 					$CSUM += $temp[$i]["CSUM"];
 					echo "<tr>
-							<td >" . $temp[$i]["CostDesc"] . "</td>
+							<td >" . "[ " . $temp[$i]["CostCode"] . " ] " . $temp[$i]["CostDesc"] . "</td>
 							<td >" . $temp[$i]["details"] . "</td>	
 							<td >" . $temp[$i]["TafsiliDesc"] . "</td>
 							<td >" . number_format($temp[$i]["DSUM"]) . "</td>

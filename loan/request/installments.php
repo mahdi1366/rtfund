@@ -6,26 +6,41 @@
 include('../header.inc.php');
 include_once inc_dataGrid;
 
+$framework = isset($_SESSION["USER"]["framework"]);
+$PartID = 0;
+if($framework)
+{
+	if(empty($_POST["PartID"]))
+		die();
+	$PartID = $_POST["PartID"];
+}	
+
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetPartInstallments","grid_div");
 
-$dg->addColumn("", "InstallmentID", "", true);
-$dg->addColumn("", "IsPaid", "", true);
+$dg->addColumn("", "InstallmentID","", true);
+$dg->addColumn("", "PartID","", true);
+$dg->addColumn("", "RequestID","", true);
+$dg->addColumn("", "InstallmentAmount","", true);
+$dg->addColumn("", "WageAmount","", true);
+$dg->addColumn("", "WagePercent","", true);
+$dg->addColumn("", "IsPaid","", true);
 $dg->addColumn("", "BankDesc", "", true);
 $dg->addColumn("", "ChequeBranch", "", true);
-$dg->addColumn("", "PaidTypeDesc", "", true);
-$dg->addColumn("", "PaidDate", "", true);
-$dg->addColumn("", "PaidAmount", "", true);
-$dg->addColumn("", "PaidRefNo", "", true);
+$dg->addColumn("", "PaidDate","", true);
+$dg->addColumn("", "PaidAmount","", true);
+$dg->addColumn("", "PaidTypeDesc","", true);
 $dg->addColumn("", "PaidBillNo", "", true);
+$dg->addColumn("", "PaidRefNo", "", true);
 
 $col = $dg->addColumn("سررسید", "InstallmentDate", GridColumn::ColumnType_date);
 $col->width = 80;
 
-$col = $dg->addColumn("شناسه واریز", "");
+$col = $dg->addColumn("شناسه پرداخت", "");
 $col->renderer = "Installment.PayCodeRender";
-$col->width = 90;
+$col->width = 100;
 
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
+$col->width = 90;
 
 $col = $dg->addColumn("مبلغ جریمه", "ForfeitAmount", GridColumn::ColumnType_money);
 $col->width = 80;
@@ -34,16 +49,37 @@ $col = $dg->addColumn("اطلاعات پرداخت", "PaidRefNo", "");
 $col->renderer = "function(v,p,r){ return Installment.InstallmentPaidInfo(v,p,r);}";
 
 $col = $dg->addColumn("شماره چک", "ChequeNo", "string");
-$col->renderer = "Installment.ChequeRender";
+if($framework)
+	$col->editor = ColumnEditor::NumberField(true);
 $col->width = 80;
 
-$col = $dg->addColumn("پرداخت", "");
-$col->renderer = "Installment.payRender";
-$col->align = "center";
-$col->width = 40;
+$col = $dg->addColumn("بانک", "ChequeBank", "");
+if($framework)
+	$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from ACC_banks"), 
+	"BankID", "BankDesc", "", "", true);
+$col->width = 70;
 
-$dg->height = 370;
-$dg->width = 750;
+$col = $dg->addColumn("شعبه", "ChequeBranch", "");
+if($framework)
+	$col->editor = ColumnEditor::TextField(true);
+$col->width = 90;
+
+if($framework)
+{
+	$dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", 
+			"function(){InstallmentObject.ComputeInstallments();}");
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SavePartPayment(store,record);}";
+}
+if(!$framework)
+{
+	$col = $dg->addColumn("پرداخت", "");
+	$col->renderer = "Installment.payRender";
+	$col->align = "center";
+	$col->width = 40;
+}
+$dg->height = 377;
+$dg->width = 755;
 $dg->emptyTextOfHiddenColumns = true;
 $dg->EnableSearch = false;
 $dg->HeaderMenu = false;
@@ -51,7 +87,7 @@ $dg->EnablePaging = false;
 $dg->DefaultSortField = "InstallmentDate";
 $dg->DefaultSortDir = "ASC";
 $dg->title = "جدول اقساط";
-$dg->autoExpandColumn = "InstallmentAmount";
+$dg->autoExpandColumn = "PaidRefNo";
 
 $grid = $dg->makeGrid_returnObjects();
 
@@ -61,8 +97,10 @@ $grid = $dg->makeGrid_returnObjects();
 Installment.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
-	GroupRecord : null,
-
+	
+	framework : <?= $framework ? "true" : "false" ?>,
+	PartID : <?= $PartID ?>,
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -71,6 +109,18 @@ Installment.prototype = {
 function Installment()
 {
 	this.grid = <?= $grid ?>;
+	if(this.framework)
+	{
+		this.grid.plugins[0].on("beforeedit", function(editor,e){
+			if(e.record.data.IsPaid == "YES")
+				return false;
+		});
+		
+		this.grid.getStore().proxy.extraParams = {PartID : this.PartID};
+		this.grid.render(this.get("div_grid"));
+		return;
+	}
+	
 	
 	this.PartPanel = new Ext.form.FieldSet({
 		title: "انتخاب وام",
@@ -88,9 +138,16 @@ function Installment()
 					url: this.address_prefix + 'request.data.php?task=selectMyParts',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['PartAmount','PartDesc',"RequestID","PartDate", "PartID"]
+				fields :  ['PartAmount','PartDesc',"RequestID","PartDate", "PartID",{
+					name : "fullTitle",
+					convert : function(value,record){
+						return "کد وام : " + record.data.RequestID + "  " + record.data.PartDesc + " به مبلغ " + 
+							Ext.util.Format.Money(record.data.PartAmount) + " مورخ " + 
+							MiladiToShamsi(record.data.PartDate);
+					}
+				}]
 			}),
-			displayField: 'RequestID',
+			displayField: 'fullTitle',
 			valueField : "PartID",
 			queryMode: "local",
 			width : 600,
@@ -102,12 +159,11 @@ function Installment()
 				'<td style="padding:7px">تاریخ پرداخت</td> </tr>',
 				'<tpl for=".">',
 					'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
-
 					'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">{PartDesc}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">',
 						'{[Ext.util.Format.Money(values.PartAmount)]}</td>',
-					'<td style="border-left:0;border-right:0" class="search-item">{PartDate}</td> </tr>',
+					'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.PartDate)]}</td> </tr>',
 				'</tpl>',
 				'</table>'
 			),
@@ -139,21 +195,9 @@ Installment.payRender = function(v,p,r){
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-Installment.ChequeRender = function(v,p,r){
-
-	
-	var qtip = "<table>"+
-			"<tr><td style=padding:3px>بانک :</td><td><b>" + r.data.BankDesc + "</b></td></tr>" +
-			"<tr><td style=padding:3px>شعبه :</td><td><b>" + r.data.ChequeBranch + "</b></td></tr>" +
-			"</table>";
-	if(v != null)
-		p.tdAttr = 'data-qtip=\"' + qtip + '\"';
-	return v;
-}
-
 Installment.PayCodeRender = function(v,p,r){
 
-	st = r.data.InstallmentID.toString().lpad("0", 11);
+	st = (r.data.RequestID + r.data.PartID).lpad("0", 11);
 	num = (st[0]*11) + (st[1]*10) + (st[2]*9) + (st[3]*1) + (st[4]*2) + (st[5]*3)
 		+ (st[6]*4) + (st[7]*5) + (st[8]*6) + (st[9]*7) + (st[10]*8);
 	remain = num % 99;
@@ -185,10 +229,65 @@ Installment.prototype.PayInstallment = function(){
 		record.data.InstallmentID + "&amount=" + (record.data.InstallmentAmount*1+record.data.ForfeitAmount*1));	
 }
 
+Installment.prototype.ComputeInstallments = function(){
 	
+	Ext.MessageBox.confirm("","در صورت محاسبه مجدد کلیه ردیف ها حذف و مجدد محاسبه و ایجاد می شوند <br>" + 
+		"آیا مایل به محاسبه مجدد می باشید؟",function(btn){
+		if(btn == "no")
+			return;
+		me = InstallmentObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(me.InstallmentsWin, {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "ComputeInstallments",
+				PartID : record.data.PartID
+			},
+			success: function(response){
+				mask.hide();
+				InstallmentObject.grid.getStore().load();
+			}
+		});
+	});
+	
+}
+
+Installment.prototype.SavePartPayment = function(store, record){
+
+	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		url: this.address_prefix +'request.data.php',
+		method: "POST",
+		params: {
+			task: "SavePartPayment",
+			record: Ext.encode(record.data)
+		},
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+
+			if(st.success)
+			{   
+				InstallmentObject.grid.getStore().load();
+			}
+			else
+			{
+				alert("خطا در اجرای عملیات");
+			}
+		},
+		failure: function(){}
+	});
+}
+
 </script>
 <center>
-	<br>
 	<div id="div_loans"></div>
 	<div id="div_grid"></div>
 </center>

@@ -44,8 +44,8 @@ $col->width = 50;
 $col->align = "center";
 
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 235;
-$dg->pageSize = 5;
+$dg->height = 500;
+$dg->pageSize = 15;
 $dg->width = 770;
 $dg->title = "درخواست های وام";
 $dg->DefaultSortField = "ReqDate";
@@ -54,6 +54,9 @@ $grid = $dg->makeGrid_returnObjects();
 ?>
 <script>
 ManageRequestObject.grid = <?= $grid ?>;
+ManageRequestObject.grid.on("itemdblclick", function(view, record){
+	framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", {RequestID : record.data.RequestID});
+});	
 ManageRequestObject.grid.render(ManageRequestObject.get("DivGrid"));
 </script>
 <center><br>

@@ -6,7 +6,7 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-if($_SESSION["USER"]["framework"])
+if(isset($_SESSION["USER"]["framework"]))
 	$User = "Staff";
 else
 {
@@ -20,6 +20,7 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=Selec
 
 $dg->addColumn("", "StatusID", "", true);
 $dg->addColumn("", "LoanID", "", true);
+$dg->addColumn("", "BorrowerDesc", "", true);
 
 $col = $dg->addColumn("پیگیری", "RequestID", "");
 $col->width = 50;
@@ -28,8 +29,10 @@ $col = $dg->addColumn("تاریخ درخواست", "ReqDate", GridColumn::Column
 $col->width = 110;
 
 if($_SESSION["USER"]["IsCustomer"] != "YES")
-	$col = $dg->addColumn("شرکت", "BorrowerDesc", "");
-
+{
+	$col = $dg->addColumn("شرکت", "LoanFullname", "");
+	$col->renderer = "function(v,p,r){return (v == null) ? r.data.BorrowerDesc : v}";
+}
 $col = $dg->addColumn("مبلغ درخواست", "ReqAmount", GridColumn::ColumnType_money);
 $col->width = 100;
 
@@ -38,16 +41,14 @@ $col = $dg->addColumn("وضعیت", "StatusDesc", "");
 
 $col = $dg->addColumn("عملیات", "");
 $col->renderer = "function(v,p,r){return MyRequest.OperationRender(v,p,r);}";
-$col->width = 50;
+$col->width = 120;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 420;
 $dg->width = 770;
-$dg->EnableSearch = false;
-$dg->EnablePaging = false;
 $dg->title = "درخواست ارسالی";
 $dg->DefaultSortField = "ReqDate";
-$dg->autoExpandColumn = $_SESSION["USER"]["IsCustomer"] == "YES" ? "StatusDesc" : "BorrowerDesc";
+$dg->autoExpandColumn = $_SESSION["USER"]["IsCustomer"] == "YES" ? "StatusDesc" : "LoanFullname";
 $grid = $dg->makeGrid_returnObjects();
 ?>
 <script>
@@ -71,11 +72,49 @@ function MyRequest(){
 
 MyRequestObject = new MyRequest();
 
-MyRequest.OperationRender = function(v,p,r){
+MyRequest.OperationRender = function(v,p,record){
+
+	var str = "";
 	
-	return "<div  title='عملیات' class='setting' onclick='MyRequestObject.OperationMenu(event);' " +
+	if(MyRequestObject.User == "Customer" && (record.data.StatusID == "40" || record.data.StatusID == "60"))
+	{
+		str += "<div  title='تایید تکمیل مدارک' class='tick' onclick='MyRequestObject.ChangeStatus(50);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";
+		"cursor:pointer;width:16px;height:16;float:right'></div>";
+	}	
+	if(MyRequestObject.User == "Customer" && record.data.StatusID == "60")
+	{
+		str += "<div  title='دلیل رد مدارک' class='comment' onclick='MyRequestObject.ShowComment();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16;float:right'></div>";
+	}		
+	if(MyRequestObject.User == "Customer" && record.data.LoanID > 0 && record.data.StatusID == "10")
+	{
+		str += "<div  title='اطلاعات وام' class='info2' onclick='MyRequestObject.EditRequest(false);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16;float:right'></div>";
+	}
+	else
+		str += "<div  title='اطلاعات وام' class='info2' onclick='MyRequestObject.EditRequest(true);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16;float:right'></div>";
+	
+	str += "<div  title='مدارک وام' class='attach' onclick='MyRequestObject.LoadAttaches();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16;float:right'></div>";
+	
+	str += "<div  title='سابقه درخواست' class='history' onclick='MyRequestObject.ShowHistory();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16;float:right'></div>";
+	
+	if(MyRequestObject.User == "Agent" && record.data.StatusID == "1")
+	{
+		str += "<div  title='حذف درخواست' class='remove' onclick='MyRequestObject.DeleteRequest();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16;float:right'></div>";
+	}
+	
+	return str;
 }
 
 MyRequest.prototype.OperationMenu = function(e){
@@ -126,18 +165,18 @@ MyRequest.prototype.OperationMenu = function(e){
 MyRequest.prototype.EditRequest = function(HavePart){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
-	if(this.User == "Agent")
-	{
+	//if(this.User == "Agent")
+	//{
 		portal.OpenPage("../loan/request/RequestInfo.php", {RequestID : record.data.RequestID});
 		return;
-	}
+	//}
 	if(this.User == "Customer")
 	{
 		if(!this.RequestInfoWin)
 		{
 			this.RequestInfoWin = new Ext.window.Window({
-				width : 800,
-				height : 460,
+				width : 820,
+				height : 480,
 				autoScroll : true,
 				modal : true,
 				bodyStyle : "background-color:white;padding-right:10px",

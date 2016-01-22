@@ -83,7 +83,7 @@ class LON_requests extends PdoDataAccess
 		if($obj->StatusID != "1")
 			return false;
 		
-		if( parent::delete("LON_reqParts"," RequestID=?", array($RequestID)) === false )
+		if( parent::delete("LON_ReqParts"," RequestID=?", array($RequestID)) === false )
 	 		return false;
 		
 		if( parent::delete("LON_requests"," RequestID=?", array($RequestID)) === false )
@@ -112,7 +112,6 @@ class LON_ReqParts extends PdoDataAccess
 	public $ForfeitPercent;
 	public $CustomerWage;
 	public $FundWage;
-	public $IsPayed;
 	public $WageReturn;
 	
 	function __construct($PartID = "") {
@@ -126,7 +125,7 @@ class LON_ReqParts extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select rp.*,r.StatusID, r.imp_VamCode
+			select rp.*,r.StatusID,r.LoanPersonID, r.imp_VamCode
 			from LON_ReqParts rp join LON_requests r using(RequestID)
 			where " . $where, $param);
 	}

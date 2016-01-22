@@ -122,7 +122,7 @@ function CostCode(){
 									if(action.result.success)
 									{
 										CostCodeObj.grid.getStore().load();
-										CostCodeObj.formPanel.hide();
+										//hCostCodeObj.formPanel.hide();
 									}
 									else
 									{

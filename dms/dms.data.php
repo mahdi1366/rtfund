@@ -101,7 +101,7 @@ function SaveDocument() {
 	$obj = new DMS_documents();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	$obj->ObjectID = $_POST["ObjectID"];
-	$obj->ObjectID2 = $_POST["ObjectID2"];
+	$obj->ObjectID2 = isset($_POST["ObjectID2"]) ? $_POST["ObjectID2"] : "0";
 	$obj->ObjectType = $_POST["ObjectType"];
 
 	if (empty($obj->DocumentID))

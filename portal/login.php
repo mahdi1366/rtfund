@@ -24,7 +24,10 @@ if(isset($_POST["email"]))
 	
 	$return = session::register($user, $pass);
 	if($return === true)
+	{
+		$result = session::login($user, $pass);
 		header("location: index.php");
+	}
 }
 //------------- login ------------------
 else if(isset($_POST["UserName"]))
@@ -40,7 +43,7 @@ else if(isset($_POST["UserName"]))
 	}
 	else
 	{
-		$_SESSION['USER']["framework"] = false;
+		unset($_SESSION['USER']["framework"]);
 		$_SESSION['USER']["portal"] = true;
 		header("location: index.php");
 		die();

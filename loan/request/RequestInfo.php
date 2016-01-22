@@ -9,7 +9,7 @@ require_once inc_dataGrid;
 
 $RequestID = !empty($_POST["RequestID"]) ? $_POST["RequestID"] : 0;
 
-if($_SESSION["USER"]["framework"])
+if(isset($_SESSION["USER"]["framework"]))
 	$User = "Staff";
 else
 {
@@ -32,13 +32,13 @@ $dg->addColumn("", "DelayMonths","", true);
 $dg->addColumn("", "ForfeitPercent","", true);
 $dg->addColumn("", "CustomerWage","", true);
 $dg->addColumn("", "FundWage","", true);
-$dg->addColumn("", "IsPayed","", true);
 $dg->addColumn("", "IsStarted","", true);
 $dg->addColumn("", "IsEnded","", true);
-$dg->addColumn("", "DocStatus","", true);
+$dg->addColumn("", "IsPaid","", true);
 $dg->addColumn("", "IsPartEnded","", true);
 $dg->addColumn("", "WageReturn","", true);
 $dg->addColumn("", "imp_VamCode","", true);
+
 
 $col = $dg->addColumn("عنوان مرحله", "PartDesc", "");
 $col->editor = ColumnEditor::TextField();
@@ -46,9 +46,9 @@ $col->sortable = false;
 
 $col = $dg->addColumn("", "PartID");
 $col->renderer = "RequestInfo.OperationRender";
-$col->width = 40;
+$col->width = 50;
 
-$dg->addButton("addPart", "ایجاد مرحله پرداخت", "add", "function(){RequestInfoObject.PartInfo('new');}");
+$dg->addButton("addPart", "ایجاد مرحله پرداخت", "add", "function(){RequestInfoObject.PartInfo(false);}");
 
 $dg->HeaderMenu = false;
 $dg->hideHeaders = true;
@@ -63,73 +63,11 @@ $dg->disableFooter = true;
 
 $grid = $dg->makeGrid_returnObjects();
 
-//......................................................
-
-$dg = new sadaf_datagrid("dg","/loan/request/request.data.php?task=GetPartInstallments", "grid_div");
-
-$dg->addColumn("", "InstallmentID","", true);
-$dg->addColumn("", "PartID","", true);
-$dg->addColumn("", "InstallmentAmount","", true);
-$dg->addColumn("", "WageAmount","", true);
-$dg->addColumn("", "WagePercent","", true);
-$dg->addColumn("", "IsPaid","", true);
-$dg->addColumn("", "IsPayed","", true);
-$dg->addColumn("", "PaidDate","", true);
-$dg->addColumn("", "PaidAmount","", true);
-$dg->addColumn("", "PaidTypeDesc","", true);
-$dg->addColumn("", "PaidBillNo", "", true);
-
-$col = $dg->addColumn("سررسید", "InstallmentDate", GridColumn::ColumnType_date);
-$col->editor = ColumnEditor::SHDateField();
-$col->width = 80; 
-
-$col = $dg->addColumn("شناسه واریز", "");
-$col->renderer = "function(v,p,r){ return RequestInfo.PayCodeRender(v,p,r);}";
-$col->width = 100;
-
-$col = $dg->addColumn("مبلغ", "InstallmentAmount", GridColumn::ColumnType_money);
-$col->width = 100; 
-
-$col = $dg->addColumn("مبلغ جریمه", "ForfeitAmount", GridColumn::ColumnType_money);
-$col->width = 80;
-
-$col = $dg->addColumn("شماره چک", "ChequeNo", "");
-$col->editor = ColumnEditor::NumberField(true);
-$col->width = 70;
-
-$col = $dg->addColumn("بانک", "ChequeBank", "");
-$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from ACC_banks"), 
-	"BankID", "BankDesc", "", "", true);
-$col->width = 70;
-
-$col = $dg->addColumn("شعبه", "ChequeBranch", "");
-$col->editor = ColumnEditor::TextField(true);
-$col->width = 90;
-
-$col = $dg->addColumn("اطلاعات پرداخت", "PaidRefNo", "");
-$col->renderer = "function(v,p,r){ return RequestInfo.InstallmentPaidInfo(v,p,r);}";
-
-$dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", "function(){RequestInfoObject.ComputeInstallments();}");
-
-$dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(store,record){return RequestInfoObject.SavePartPayment(store,record);}";
-
-$dg->emptyTextOfHiddenColumns = true;
-$dg->height = 460;
-$dg->width = 730;
-$dg->EnableSearch = false;
-$dg->EnablePaging = false;
-$dg->DefaultSortField = "InstallmentDate";
-$dg->autoExpandColumn = "PaidRefNo";
-$dg->DefaultSortDir = "ASC";
-$grid2 = $dg->makeGrid_returnObjects();
-
-//......................................................
-
 require_once 'RequestInfo.js.php';
 
+if(isset($_SESSION["USER"]["framework"]))
+	echo "<br>";
 ?>
-
 <style>
 	.summary {
 		border : 1px solid #b5b8c8;
@@ -146,7 +84,7 @@ require_once 'RequestInfo.js.php';
 	<div id="mainForm"></div>
 	<div id="PartForm"></div>
 	<div id="SendForm"></div>
-	<div id="summaryDIV">
+	<div id="summaryDIV" style="display:none">
 		<div style="float:right"><table style="width:190px" class="summary">
 			<tr>
 				<td style="width:70px;background-color: #dfe8f6;">مبلغ هر قسط</td>

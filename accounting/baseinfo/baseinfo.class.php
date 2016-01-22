@@ -110,7 +110,7 @@ class ACC_CostCodes extends PdoDataAccess {
         }
 
         $this->CostID = parent::InsertID($db);
-
+		
         $query = "update ACC_CostCodes c 
 			left join ACC_blocks b1 on(b1.levelID=1 AND b1.blockID=c.level1)
 			left join ACC_blocks b2 on(b2.levelID=2 AND b2.blockID=c.level2)
@@ -121,6 +121,15 @@ class ACC_CostCodes extends PdoDataAccess {
 			where CostID=?";
         $res = parent::runquery($query, array($this->CostID), $db);
         if ($res === false) {
+            if ($pdo == null)
+				$db->rollBack();
+            return false;
+        }
+		
+		$dt = PdoDataAccess::runquery("select * from ACC_CostCodes c1 
+			join ACC_CostCodes c2 on(c1.CostID<>c2.CostID AND c1.CostCode=c2.CostCode)
+			where c1.CostID=?", array($this->CostID), $db);
+		if (count($dt) > 0) {
             if ($pdo == null)
 				$db->rollBack();
             return false;

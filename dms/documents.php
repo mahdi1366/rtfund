@@ -77,7 +77,7 @@ if($access)
 	$dg->rowEditOkHandler = "function(){return ManageDocumentObject.SaveDocument();}";
 }
 
-if($_SESSION["USER"]["framework"])
+if(isset($_SESSION["USER"]["framework"]))
 {
 	$col = $dg->addColumn("تایید/رد", "", "");
 	$col->renderer = "function(v,p,r){return ManageDocument.ConfirmRender(v,p,r)}";
@@ -462,7 +462,7 @@ ManageDocument.prototype.DeleteDocument = function(){
 	});
 }
 
-<?if($_SESSION["USER"]["framework"]){?>
+<?if(isset($_SESSION["USER"]["framework"])){?>
 
 ManageDocument.ConfirmRender = function(v,p,r){
 	

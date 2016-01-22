@@ -5,6 +5,12 @@ set_include_path(get_include_path() . PATH_SEPARATOR . getenv("DOCUMENT_ROOT") .
 
 require_once 'PDODataAccess.class.php';
 
+/*
+SELECT * FROM information_schema.TABLE_CONSTRAINTS
+WHERE information_schema.TABLE_CONSTRAINTS.CONSTRAINT_TYPE = 'FOREIGN KEY'
+AND information_schema.TABLE_CONSTRAINTS.TABLE_SCHEMA = 'rtfund'
+;
+ */
 
 /*
  * SELECT CONCAT('DROP TABLE ', GROUP_CONCAT(table_name), ';') AS query
@@ -179,11 +185,11 @@ update LON_requests set reqDetails = replace(replace(reqDetails,'ي','ی'),'ك',
  * 
 ********************************************************************************
 insert into rtfund.LON_ReqParts(RequestID,PartDesc,PartDate,PartAmount,installmentCount,IntervalType,
-  PayInterval,DelayMonths,CustomerWage,FundWage,Ispayed)
+  PayInterval,DelayMonths,CustomerWage,FundWage)
 
-SELECT RequestID,'مرحله اول',ReqDate,ReqAmount,NoAghsat,'MONTH',1,DelayMonthCount,
+SELECT RequestID,'مرحله اول',ReqDate,ReqAmount,NoAghsat,'MONTH',1,ifnull(DelayMonthCount,0),
 BenefitPercent,
-BenefitPercent,'YES'
+BenefitPercent
 
 FROM tblVam
 join rtfund.LON_requests on(VamCode=imp_VamCode)
@@ -198,8 +204,8 @@ insert into rtfund.LON_installments(PartID,InstallmentDate,InstallmentAmount,Pai
     PaidDate,PaidAmount,
     PaidBillNo,IsPaid,ChequeNo,details,imp_SerialNo)
 
-SELECT RequestID,GhestDate,GhestValue,if(payValue>0,if(PaymentTypeCode=0,1,PaymentTypeCode),0),
-  if(payDate='__',null,PayDate),
+SELECT RequestID,concat('13',GhestDate),GhestValue,if(payValue>0,if(PaymentTypeCode=0,1,PaymentTypeCode),0),
+  if(payDate='__',null,concat('13',PayDate)),
   PayValue+delayValue,if(PaymentTypeCode<>9,FishNo,0),if(PayValue>0,'YES','NO'),
   if(PaymentTypeCode=9,FishNo,0),comment,serialNo
 FROM tblVamDetail
@@ -208,18 +214,18 @@ join rtfund.LON_requests on(VamCode=imp_VamCode)
 
  */
 /*
-$temp = PdoDataAccess::runquery("select * from LON_installments where length(InstallmentDate)=8");
+$temp = PdoDataAccess::runquery("select * from LON_installments where length(InstallmentDate)=10");
 foreach($temp as $row)
 	PdoDataAccess::runquery("update LON_installments set ".
 			" InstallmentDate=" . ($row["InstallmentDate"] == "" ? "null" : "'" .
-				DateModules::shamsi_to_miladi("13". $row["InstallmentDate"],"-") . "'") . ",
+				DateModules::shamsi_to_miladi($row["InstallmentDate"],"-") . "'") . ",
 			PaidDate= " . ($row["PaidDate"] == "" ? "null" : "'" .
-				DateModules::shamsi_to_miladi("13". $row["PaidDate"],"-") . "'") . "
+				DateModules::shamsi_to_miladi($row["PaidDate"],"-") . "'") . "
 			where InstallmentID=" . $row["InstallmentID"]);
-*/ 
+*/
 /*
-update LON_ReqParts join 
-	(select PartID,count(*) cnt from LON_installments group by PartID)t using(PartID)
+update rtfund.LON_ReqParts join 
+	(select PartID,count(*) cnt from rtfund.LON_installments group by PartID)t using(PartID)
 set InstallmentCount=cnt where InstallmentCount=0;
  
 ALTER TABLE `rtfund`.`LON_installments` MODIFY COLUMN `InstallmentDate` DATE NOT NULL COMMENT 'تاریخ سررسید',
@@ -227,7 +233,7 @@ ALTER TABLE `rtfund`.`LON_installments` MODIFY COLUMN `InstallmentDate` DATE NOT
 
 update rtfund.LON_installments set ChequeNo=null where ChequeNo=0;
 
-update LON_installments set details = replace(replace(details,'ي','ی'),'ك','ک')
+update rtfund.LON_installments set details = replace(replace(details,'ي','ی'),'ك','ک')
  * 
 ********************************************************************************
 insert into rtfund.DMS_Documents(DocDesc,DocType,ObjectType,ObjectID,IsConfirm,IsReturned,imp_DetailID)
@@ -257,10 +263,23 @@ select DocumentID,ParamID,
 end
 from rtfund.DMS_documents join Tbl_ZemanatCheckDetail z on(imp_DetailID=DetailID)
 join rtfund.DMS_DocParams using(DocType)
-where ParamID<>4
-
+where ParamID<>4;
  
-update DMS_DocParamValues set ParamValue = replace(replace(ParamValue,'ي','ی'),'ك','ک')
+update rtfund.DMS_DocParamValues set ParamValue = replace(replace(ParamValue,'ي','ی'),'ك','ک')
+********************************************************************************
+
+insert into imp_mergePersons 
+select p1.PersonID,p2.PersonID
+from BSC_persons p1
+join BSC_persons p2 on(p1.PersonID<>p2.PersonID)
+where concat_ws('',p1.fname,p1.lname,p1.CompanyName)= concat_ws('',p2.fname,p2.lname,p2.CompanyName);
+
+delete t from ACC_tafsilis t left join BSC_persons on(ObjectID=PersonID)
+where ObjectID>0 AND TafsiliType=1 AND PersonID is null
+
+
+
+
 
 ********************************************************************************
 insert into rtfund.ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,details,locked)

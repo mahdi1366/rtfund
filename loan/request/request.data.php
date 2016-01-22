@@ -30,8 +30,8 @@ switch ($task) {
 	case "DeleteRequest":
 		DeleteRequest();
 		
-	case "ChangeRequesrStatus":
-		ChangeRequesrStatus();
+	case "ChangeRequestStatus":
+		ChangeRequestStatus();
 	//-------------------------------------------
 	
 	case "GetRequestParts":
@@ -80,6 +80,9 @@ switch ($task) {
 		
 	case "SelectReadyToPayParts":
 		SelectReadyToPayParts();
+		
+	case "SelectNewAgentLoans":
+		SelectNewAgentLoans();
 		
 	case "selectRequestStatuses":
 		selectRequestStatuses();
@@ -161,8 +164,16 @@ function SelectMyRequests(){
 		$where = "r.ReqPersonID=" . $_SESSION["USER"]["PersonID"];
 	if($_SESSION["USER"]["IsCustomer"] == "YES")
 		$where = "r.LoanPersonID=" . $_SESSION["USER"]["PersonID"];
+	$param = array();
+	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
+        $field = $_REQUEST['fields'];
+		$field = $field == "ReqFullname" ? "concat_ws(' ',p1.fname,p1.lname,p1.CompanyName)" : $field;
+		$field = $field == "LoanFullname" ? "concat_ws(' ',p2.fname,p2.lname,p2.CompanyName)" : $field;
+        $where .= ' and ' . $field . ' like :fld';
+        $param[':fld'] = '%' . $_REQUEST['query'] . '%';
+    }
 	
-	$dt = LON_requests::SelectAll($where . dataReader::makeOrder());
+	$dt = LON_requests::SelectAll($where . dataReader::makeOrder(), $param);
 	$count = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	//print_r(ExceptionHandler::PopAllExceptions());
@@ -203,6 +214,7 @@ function SelectAllRequests(){
 	$where .= dataReader::makeOrder();
 	$dt = LON_requests::SelectAll($where, $param);
 	//print_r(ExceptionHandler::PopAllExceptions());
+	//echo PdoDataAccess::GetLatestQueryString();
 	$count = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);	
 	echo dataReader::getJsonData($dt, $count, $_GET["callback"]);
@@ -240,9 +252,11 @@ function ChangeStatus($RequestID, $StatusID, $StepComment = "", $LogOnly = false
 			$StatusID,
 			$StepComment
 		), $pdo);
+	
+	return ExceptionHandler::GetExceptionCount() == 0;
 }
 
-function ChangeRequesrStatus(){
+function ChangeRequestStatus(){
 	
 	$result = ChangeStatus($_POST["RequestID"],$_POST["StatusID"],$_POST["StepComment"]);
 	Response::createObjectiveResponse($result, "");
@@ -259,15 +273,17 @@ function GetRequestParts(){
 	}
 	
 	$RequestID = $_REQUEST["RequestID"];
-	
 	$dt = LON_ReqParts::SelectAll("RequestID=?", array($RequestID));
 	
+	$CostCode_commitment = 165; // 200-05
 	for($i=0; $i < count($dt);$i++)
 	{
-		$temp = PdoDataAccess::runquery("select DocStatus 
-			from ACC_DocItems join ACC_docs using(DocID) where SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND 
-			SourceID=? AND SourceID2=?", array($dt[$i]["RequestID"], $dt[$i]["PartID"]));
-		$dt[$i]["DocStatus"] = count($temp) == 0 ? "" : $temp[0]["DocStatus"];
+		$temp = PdoDataAccess::runquery("select ifnull(sum(CreditorAmount),0)
+			from ACC_DocItems join ACC_docs using(DocID) where 
+			 CostID=? AND SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND 
+			SourceID=? AND SourceID2=? AND DocStatus in('CONFIRM','ARCHIVE')", 
+			array($CostCode_commitment, $dt[$i]["RequestID"], $dt[$i]["PartID"]));
+		$dt[$i]["IsPaid"] = $temp[0][0] == $dt[$i]["PartAmount"] ? "YES" : "NO"; 		
 		
 		$dt[$i]["IsStarted"] = WFM_FlowRows::IsFlowStarted(1, $dt[$i]["PartID"]) ? "YES" : "NO";
 		$dt[$i]["IsEnded"] = WFM_FlowRows::IsFlowEnded(1, $dt[$i]["PartID"]) ? "YES" : "NO";
@@ -314,18 +330,21 @@ function FillParts(){
 
 function PayPart(){
 	
+	$PayAmount = $_POST["PayAmount"];
+	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
 	$PartID = $_POST["PartID"];
 	$partobj = new LON_ReqParts($PartID);
-	$partobj->IsPayed = "YES";
-	$partobj->EditPart($pdo);
-	ChangeStatus($partobj->RequestID, "80", $partobj->PartDesc, true, $pdo);
+
+	ChangeStatus($partobj->RequestID, "80", "پرداخت مبلغ " . number_format($PayAmount) . " از " . 
+			$partobj->PartDesc, true, $pdo);
 	
 	$ReqObj = new LON_requests($partobj->RequestID);
 	
 	require_once '../../accounting/docs/import.data.php';
+	$partobj->PartAmount = $PayAmount;
 	$result = RegisterPayPartDoc($ReqObj, $partobj, $pdo);
 	//print_r(ExceptionHandler::PopAllExceptions());
 	if(!$result)
@@ -341,37 +360,61 @@ function PayPart(){
 
 function ReturnPayPart(){
 	
-	$pdo = PdoDataAccess::getPdoObject();
-	$pdo->beginTransaction();
+	if(empty($_POST["PartID"]) || empty($_POST["DocID"]))
+	{
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
 	
 	$PartID = $_POST["PartID"];
 	$partobj = new LON_ReqParts($PartID);
+	$DocID = $_POST["DocID"];
+	
+	if(!($partobj->PartID >0 && $DocID > 0))
+	{
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
 	
 	//------------- check for Acc doc confirm -------------------
 	$temp = PdoDataAccess::runquery("select DocStatus 
 		from ACC_DocItems join ACC_docs using(DocID) where SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND 
-		SourceID=? AND SourceID2=?", array($partobj->RequestID, $partobj->PartID));
+		SourceID=? AND SourceID2=? AND DocID=?", 
+		array($partobj->RequestID, $partobj->PartID, $DocID));
+	if(count($temp) == 0)
+	{
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
 	if(count($temp) > 0 && $temp[0]["DocStatus"] != "RAW")
 	{
 		echo Response::createObjectiveResponse(false, "سند حسابداری این مرحله تایید شده است. و قادر به برگشت نمی باشید");
 		die();
-
+	}
+	//------- check for being first doc and there excists docs after -----------
+	$CostCode_todiee = 63; // 200-05
+	$temp = PdoDataAccess::runquery("select * from ACC_DocItems 
+		where CostID=? AND CreditorAmount>0 AND DocID=?",
+		array($CostCode_todiee, $DocID));
+	if(count($temp) > 0)
+	{
+		$dt = PdoDataAccess::runquery("select * from ACC_DocItems where CostID=? AND DebtorAmount>0 
+			AND SourceType=? AND SourceID2=?",
+			array($CostCode_todiee, DOCTYPE_LOAN_PAYMENT, $PartID));
+		if(count($dt) > 0)
+		{
+			echo Response::createObjectiveResponse(false, "به دلیل اینکه این سند اولین سند پرداخت می باشد و بعد از آن اسناد پرداخت دیگری صادر شده است" . 
+				" قادر به برگشت نمی باشید. <br> برای برگشت ابتدا کلیه اسناد بعدی را برگشت بزنید");
+			die();
+		}
 	}
 	//-----------------------------------------------------------
-	$partobj->IsPayed = "NO";
-	$partobj->EditPart($pdo);
-	ChangeStatus($partobj->RequestID, "90", $partobj->PartDesc, true, $pdo);
-	
 	require_once '../../accounting/docs/import.data.php';
-	$result = ReturnPayPartDoc($partobj, $pdo);
+	$result = ReturnPayPartDoc($DocID);
 	
-	if(!$result)
-	{
-		$pdo->rollBack();
-	}
-	else
-		$pdo->commit();
-	
+	if($result)
+		ChangeStatus($partobj->RequestID, "90", $partobj->PartDesc, true);
+		
 	echo Response::createObjectiveResponse($result, !$result ? PdoDataAccess::GetExceptionsToString() : "");
 	die();
 }
@@ -436,7 +479,6 @@ function EndPart(){
 	unset($newObj->PartID);
 	$newObj->PartDesc = $partobj->PartDesc . "[نسخه جدید]";
 	$newObj->PartDate = PDONOW;
-	$newObj->IsPayed = "NO";
 	$newObj->PartAmount = $RemainAmount;
 	$newObj->InstallmentCount = $remainInstallments;
 	if(!$newObj->AddPart($pdo))
@@ -651,6 +693,7 @@ function SelectReadyToPayParts(){
 			if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) LoanFullname
 			
 		from WFM_FlowRows 
+		join WFM_FlowSteps using(StepRowID)
 		join LON_ReqParts on(PartID=ObjectID)
 		join LON_requests r using(RequestID)
 		join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
@@ -663,6 +706,18 @@ function SelectReadyToPayParts(){
 	die();
 }
 
+function SelectNewAgentLoans(){
+	
+	$where = "StatusID=10";
+	 
+	$branches = FRW_access::GetAccessBranches();
+	$where .= " AND BranchID in(" . implode(",", $branches) . ")";
+	
+	$dt = LON_requests::SelectAll($where);
+
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
 
 function selectRequestStatuses(){
 	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=5");
