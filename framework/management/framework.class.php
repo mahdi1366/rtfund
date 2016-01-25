@@ -13,6 +13,13 @@ class FRW_systems extends PdoDataAccess {
 	public $SysIcon;
 	public $IsActive;
 
+	public function __construct($SystemID = "") {
+		if ($SystemID == "")
+			return;
+
+		parent::FillObject($this, "select * from FRW_systems where SystemID=?", array($SystemID));
+	}
+
 	static function GetAll($where  = "", $param = array()){
 	
 		return PdoDataAccess::runquery("select * from FRW_systems where 1=1" . $where , $param);

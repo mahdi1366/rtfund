@@ -33,7 +33,7 @@ CREATE TABLE `PLN_Elements` (
   `ElementTitle` varchar(200) CHARACTER SET utf8 NOT NULL,
   `ElementType` varchar(45) CHARACTER SET utf8 NOT NULL,
   PRIMARY KEY (`ElementID`)
-) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=83 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `PLN_Elements`
@@ -84,7 +84,45 @@ INSERT INTO `PLN_Elements` (`ElementID`,`ParentID`,`GroupID`,`ElementTitle`,`Ele
  (41,36,15,'ارزش سهام(میلیون ریال)','numberfield'),
  (42,36,15,'سابقه کاری مرتبط ( ماه)','numberfield'),
  (43,0,16,'','grid'),
- (44,43,16,'-','-');
+ (44,43,16,'نام و نام خانوادگی','-'),
+ (45,43,16,'سمت','textfield'),
+ (46,43,16,'تحصیلات','textfield'),
+ (47,43,16,'نوع قرارداد(تمام وقت/ پاره وقت)','checkbox'),
+ (48,43,16,'کد ملی','textfield'),
+ (49,43,16,'شماره بیمه','numberfield'),
+ (50,0,17,'','grid'),
+ (51,50,17,'بانک و شعبه/ صندوق يا ساير مراکز ارائه‌دهنده‌ تسهيلات','textfield'),
+ (52,50,17,'تسهيلات دريافتي(میلیون ريال)','currencyfield'),
+ (53,50,17,'سال دريافت','numberfield'),
+ (54,50,17,'نوع تسهيلات','textfield'),
+ (55,50,17,'نرخ سود','numberfield'),
+ (56,50,17,'نوع وثيقه','textfield'),
+ (57,50,17,'مبلغ هر قسط','currencyfield'),
+ (58,50,17,'اقساط بازپرداخت شده','numberfield'),
+ (59,50,17,'اقساط باقيمانده','numberfield'),
+ (60,50,17,'زمان تسويه حساب نهايي','shdatefield'),
+ (61,0,18,'','table'),
+ (62,61,18,'مجموع دارايي‌ها','currencyfield'),
+ (63,61,18,'مجموع بدهي‌ها','currencyfield'),
+ (64,61,18,'مجموع حقوق کارکنان شرکت','currencyfield'),
+ (65,61,18,'مانده‌ي وجه نقد در پايان سال','currencyfield'),
+ (66,61,18,'ميزان سود / زيان شرکت','currencyfield'),
+ (67,0,19,'','textarea'),
+ (68,0,20,'','textarea'),
+ (69,0,21,'','grid'),
+ (70,69,21,'لیست دارائیهای شرکت','textfield'),
+ (71,69,21,'ارزش دفتری','currencyfield'),
+ (72,69,21,'ارزش بازار فعلی','currencyfield'),
+ (73,0,9,'','grid'),
+ (74,73,9,'نوع مجوز','textfield'),
+ (75,73,9,'تاریخ دریافت','shdatefield'),
+ (76,73,9,'مدت اعتبار','numberfield'),
+ (77,73,9,'توضیحات','textfield'),
+ (78,0,10,'','grid'),
+ (79,78,10,'نام کالا','textfield'),
+ (80,78,10,'مقصد','checkbox'),
+ (81,78,10,'سال','numberfield'),
+ (82,78,10,'مبلغ( میلیون ریال)','currencyfield');
 /*!40000 ALTER TABLE `PLN_Elements` ENABLE KEYS */;
 
 

@@ -59,7 +59,9 @@ function SaveSystem(){
 	$obj = new FRW_systems();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
-	if($obj->SystemID > 0)
+	$obj2 = new FRW_systems($obj->SystemID);
+	
+	if($obj2->SystemID > 0)
 		$result = $obj->EditSystem();
 	else 
 		$result = $obj->AddSystem();
