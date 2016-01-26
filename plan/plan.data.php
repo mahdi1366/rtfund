@@ -14,6 +14,12 @@ switch ($task) {
 		
 	case "selectSubGroups":
 		selectSubGroups();
+		
+	case "SelectElements":
+		SelectElements();
+		
+	case "SelectElementData":
+		SelectElementData();
 	
 }
 
@@ -56,4 +62,18 @@ function selectSubGroups(){
 	die();
 }
 
+function SelectElements(){
+
+	$GroupID = $_REQUEST["GroupID"];
+	$dt = PdoDataAccess::runquery("select * from PLN_Elements where GroupID=? order by ParentID", array($GroupID));
+	
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SelectElementData(){
+	
+	echo dataReader::getJsonData(array(), 0, $_GET["callback"]);
+	die();
+}
 ?>

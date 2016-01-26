@@ -11,6 +11,8 @@ PlanInfo.prototype = {
 	PlanID : <?= $PlanID ?>,
 	RequestRecord : null,
 	User : '<?= $User ?>',
+	
+	GroupForms : new Array(),
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -37,7 +39,7 @@ function PlanInfo(){
 
 PlanInfo.prototype.BuildForms = function(){
 
-   this.PartsPanel =  new Ext.panel.Panel({
+   this.AccorPanel =  new Ext.panel.Panel({
 	   applyTo : this.get("mainForm"),
 		width: 780,
 		height : 700,
@@ -54,12 +56,127 @@ PlanInfo.prototype.BuildForms = function(){
 
 PlanInfoObject = new PlanInfo();
 
-PlanInfo.prototype.LoadElements = function(record){
+PlanInfo.prototype.LoadElements = function(record, season){
 
-  alert(record.data.text);
+	var frm = null;
+	eval("frm = this.GroupForms.elem_" + record.data.id);
+	if(frm == null)
+	{
+		this.store = new Ext.data.Store({
+			proxy:{
+				type: 'jsonp',
+				url: this.address_prefix + "plan.data.php?task=SelectElements&GroupID=" + record.data.id,
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			fields : ["ElementID", "ParentID", "GroupID", "ElementTitle", "ElementType", "properties"],
+			autoLoad : true,
+			listeners :{
+				load : function(){
+					PlanInfoObject.MakeElemForms(this , season);
+				}
+			}
+		});
+	} 
+	
 } 
 
+function merge(obj1,obj2){
+    var obj3 = {};
+    for (var attrname in obj1) { obj3[attrname] = obj1[attrname]; }
+    for (var attrname in obj2) { obj3[attrname] = obj2[attrname]; }
+    return obj3;
+}
 
+PlanInfo.prototype.MakeElemForms = function(store, season){
+
+	var parentEl = this.AccorPanel.down("[itemId=ParentElement_" + season + "]");
+	mask = new Ext.LoadMask(parentEl, {msg:'در حال بارگذاري...'});
+	mask.show();
+	parentEl.removeAll();
+	
+	for(i=0; i < store.getCount(); i++)
+	{
+		record = store.getAt(i);
+		switch(record.data.ElementType)
+		{
+			case "panel" : 
+				NewElement = {
+					xtype : "panel",
+					itemId : "element_" + record.data.ElementID,
+					style : "margin-bottom:4px"
+				};
+				break;
+			case "grid" :
+				
+				var group = record.data.ElementID;
+				var columns = new Array();
+				while(true)
+				{
+					i++;
+					var sub_record = store.getAt(i);
+					if(sub_record == null || sub_record.data.ParentID != group)
+					{
+						i--;
+						break;
+					}
+					NewColumn = {
+						menuDisabled : true,
+						sortable : false,
+						text : sub_record.data.ElementTitle,
+						dataIndex : "element_" + sub_record.data.ElementID
+					};
+					eval("NewColumn = merge(NewColumn,{" + sub_record.data.properties + "});");
+					columns.push(NewColumn);
+				}
+				
+				NewElement = {
+					xtype : "grid",
+					viewConfig: {
+						stripeRows: true,
+						enableTextSelection: true
+					},
+					tbar : [{
+						text : "ایجاد ردیف",
+						iconCls : "add"
+					}],
+					scroll: 'vertical', 
+					itemId : "element_" + record.data.ElementID,
+					store : new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: this.address_prefix + "plan.data.php?task=SelectElementData&ElementID=" + record.data.ElementID,
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields : ["ElementID", "ParentID", "GroupID", "ElementTitle", "ElementType", "properties"],
+						autoLoad : true
+					}),
+					columns: columns
+				};
+				break;
+			default : 
+				NewElement = {
+					xtype : record.data.ElementType,
+					fieldLabel : record.data.ElementTitle,
+					itemId : "element_" + record.data.ElementID
+				};
+		}
+		
+		eval("NewElement = merge(NewElement,{" + record.data.properties + "});");
+		
+		if(record.data.ParentID == 0)
+			parentEl.add(NewElement);
+		else
+		{
+			var parent = this.AccorPanel.down("[itemId=element_" + record.data.ParentID + "]");
+			if(parent.xtype == "grid")
+				parent.columns.add(NewElement);
+			else
+				parent.add(NewElement);
+		}
+	}
+	
+	mask.hide();
+}
 
 
 
@@ -208,7 +325,6 @@ PlanInfo.prototype.OperationMenu = function(e){
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
-
 PlanInfo.prototype.CustomizeForm = function(record){
 	
 	if(this.User == "Staff")
@@ -351,8 +467,6 @@ PlanInfo.prototype.CustomizeForm = function(record){
 		}
 	}
 }
-
-
 
 PlanInfo.prototype.SaveRequest = function(mode){
 

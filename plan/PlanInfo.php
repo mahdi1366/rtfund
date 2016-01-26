@@ -41,8 +41,15 @@ function MakeForms(){
 					height : 100,
 					width : 780,
 					listeners : {
-						itemdblclick : function(v,record){if(!record.data.leaf) return; PlanInfoObject.LoadElements(record);}
+						itemdblclick : function(v,record){if(!record.data.leaf) return; PlanInfoObject.LoadElements(record," . $season["GroupID"] . ");}
 					}
+				}),
+				new Ext.panel.Panel({
+					itemId : 'ParentElement_" . $season["GroupID"] . "',
+					bodyStyle : 'padding:4px;',
+					height : 460,
+					border : false,
+					autoScroll : true
 				})
 			]},";
 	}
@@ -50,7 +57,6 @@ function MakeForms(){
 	return substr($items, 0, strlen($items)-1);
 }
 //------------------------------------------------------------------------------
-
 
 require_once 'PlanInfo.js.php';
 
