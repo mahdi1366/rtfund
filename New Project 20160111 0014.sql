@@ -5516,7 +5516,7 @@ CREATE TABLE `BSC_branches` (
 
 /*!40000 ALTER TABLE `BSC_branches` DISABLE KEYS */;
 INSERT INTO `BSC_branches` (`BranchID`,`BranchName`,`IsActive`) VALUES 
- (1,'شعبه مرکزی','YES'),
+ (1,'شعبه مرکزی-','YES'),
  (2,'شعبه بجنورد','YES'),
  (3,'ششششششششش','NO');
 /*!40000 ALTER TABLE `BSC_branches` ENABLE KEYS */;
@@ -8376,7 +8376,7 @@ CREATE TABLE `DataAudit` (
   `ActionTime` datetime NOT NULL COMMENT 'زمان انجام عمل',
   `QueryString` varchar(2000) CHARACTER SET utf8 DEFAULT NULL COMMENT 'query اجرا شده',
   PRIMARY KEY (`DataAuditID`)
-) ENGINE=MyISAM AUTO_INCREMENT=3149 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
+) ENGINE=MyISAM AUTO_INCREMENT=3172 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
 
 --
 -- Dumping data for table `DataAudit`
@@ -9157,7 +9157,30 @@ INSERT INTO `DataAudit` (`DataAuditID`,`PersonID`,`TableName`,`MainObjectID`,`Su
  (3145,1000,'FRW_systems',9,NULL,'UPDATE',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-25 09:50:11','update FRW_systems set SystemID=\'9\',SysName=\'سیستم نظارت و ارزیابی\',SysPath=\'plan\',SysIcon=\'plan.gif\',IsActive=\'YES\' where SystemID=\'9\''),
  (3146,1000,'FRW_menus',61,NULL,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-25 09:50:32','insert into FRW_menus(SystemID,ParentID,MenuDesc,ordering) values (\'9\',\'0\',\'اطلاعات پایه\',\'1\')'),
  (3147,1000,'FRW_menus',62,NULL,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-25 09:51:16','insert into FRW_menus(SystemID,ParentID,MenuDesc,IsActive,ordering,icon,MenuPath) values (\'9\',\'61\',\'فرم نظارت\',\'YES\',\'1\',\'plan.png\',\'PlanInfo.php\')'),
- (3148,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-25 09:51:28','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'62\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')');
+ (3148,1000,'FRW_access',0,1000,'ADD',1,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-25 09:51:28','insert into FRW_access(MenuID,PersonID,ViewFlag,AddFlag,EditFlag,RemoveFlag) values (\'62\',\'1000\',\'YES\',\'YES\',\'YES\',\'YES\')'),
+ (3149,1000,'BSC_branches',1,NULL,'UPDATE',9,'http://rtfund/framework/start.php?SystemID=1',NULL,'127.0.0.1','2016-01-27 10:18:42','update BSC_branches set BranchID=\'1\',BranchName=\'شعبه مرکزی-\',IsActive=\'YES\' where  BranchID=\'1\''),
+ (3150,1000,'PLN_PlanItems',1,NULL,'ADD',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:15:34','insert into PLN_PlanItems(PlanID,ElementID,ElementValue) values (\'1\',\'28\',\'<?xml version=\"1.0\"?>\n<root><element_29>dsfsdfds</element_29><element_30></element_30><element_31></element_31><element_32/><element_33></element_33><element_34></element_34><element_35/></root>\n\')'),
+ (3151,1000,'PLN_PlanItems',1,NULL,'UPDATE',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:31:59','update PLN_PlanItems set RowID=\'1\',PlanID=\'1\',ElementID=\'28\',ElementValue=\'<?xml version=\"1.0\"?>\n<root><element_29>dsfsdfds</element_29><element_30>www</element_30><element_31></element_31><element_32/><element_33></element_33><element_34></element_34><element_35/></root>\n\' where  RowID=\'1\''),
+ (3152,1000,'PLN_PlanItems',1,NULL,'UPDATE',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:32:05','update PLN_PlanItems set RowID=\'1\',PlanID=\'1\',ElementID=\'28\',ElementValue=\'<?xml version=\"1.0\"?>\n<root><element_29>&#x633;&#x645;&#x646;&#x6CC;&#x628;&#x62A;&#x633;&#x645;&#x646;&#x6CC;&#x62A;</element_29><element_30> &#x645;&#x633;&#x6CC;&#x646;&#x628;&#x633;</element_30><element_31></element_31><element_32/><element_33></element_33><element_34></element_34><element_35/></root>\n\' where  RowID=\'1\''),
+ (3153,1000,'PLN_PlanItems',1,NULL,'UPDATE',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:32:14','update PLN_PlanItems set RowID=\'1\',PlanID=\'1\',ElementID=\'28\',ElementValue=\'<?xml version=\"1.0\"?>\n<root><element_29>&#x633;&#x645;&#x646;&#x6CC;&#x628;&#x62A;&#x633;&#x645;&#x646;&#x6CC;&#x62A;</element_29><element_30> &#x645;&#x633;&#x6CC;&#x646;&#x628;&#x633;</element_30><element_31>4242342344</element_31><element_32>1394-11-13</element_32><element_33></element_33><element_34></element_34><element_35/></root>\n\' where  RowID=\'1\''),
+ (3154,1000,'PLN_PlanItems',1,NULL,'UPDATE',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:32:18','update PLN_PlanItems set RowID=\'1\',PlanID=\'1\',ElementID=\'28\',ElementValue=\'<?xml version=\"1.0\"?>\n<root><element_29>&#x633;&#x645;&#x646;&#x6CC;&#x628;&#x62A;&#x633;&#x645;&#x646;&#x6CC;&#x62A;</element_29><element_30> &#x645;&#x633;&#x6CC;&#x646;&#x628;&#x633;</element_30><element_31>4242342344</element_31><element_32>1394-11-13</element_32><element_33></element_33><element_34></element_34><element_35>2</element_35></root>\n\' where  RowID=\'1\''),
+ (3155,1000,'PLN_PlanItems',1,NULL,'UPDATE',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:32:25','update PLN_PlanItems set RowID=\'1\',PlanID=\'1\',ElementID=\'28\',ElementValue=\'<?xml version=\"1.0\"?>\n<root><element_29>&#x633;&#x645;&#x646;&#x6CC;&#x628;&#x62A;&#x633;&#x645;&#x646;&#x6CC;&#x62A;</element_29><element_30> &#x645;&#x633;&#x6CC;&#x646;&#x628;&#x633;</element_30><element_31>4242342344</element_31><element_32>1394-11-13</element_32><element_33>&#x633;&#x6CC;&#x628;</element_33><element_34>&#x633;&#x6CC;&#x628;&#x633;&#x6CC;&#x628;</element_34><element_35>2</element_35></root>\n\' where  RowID=\'1\''),
+ (3156,1000,'PLN_PlanItems',2,NULL,'ADD',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:34:08','insert into PLN_PlanItems(PlanID,ElementID,ElementValue) values (\'1\',\'28\',\'<?xml version=\"1.0\"?>\n<root><element_29>&#x646;&#x633;&#x62A;&#x6CC;&#x627; &#x62A;&#x644;&#x62A;&#x627;</element_29><element_30>&#x62A;&#x627;&#x644;&#x627;&#x644;&#x6CC;</element_30><element_31>4875398457</element_31><element_32>1362-03-25</element_32><element_33>&#x6CC;&#x633;&#x628;</element_33><element_34></element_34><element_35/></root>\n\')'),
+ (3157,1000,'PLN_PlanItems',2,NULL,'DELETE',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:52:05','delete from PLN_PlanItems where  RowID=\'2\''),
+ (3158,1000,'PLN_PlanItems',1,NULL,'DELETE',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:52:11','delete from PLN_PlanItems where  RowID=\'1\''),
+ (3159,1000,'PLN_PlanItems',3,NULL,'ADD',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:53:08','insert into PLN_PlanItems(PlanID,ElementID,ElementValue) values (\'1\',\'28\',\'<?xml version=\"1.0\"?>\n<root><element_29>asdasd</element_29><element_30></element_30><element_31></element_31><element_32/><element_33></element_33><element_34></element_34><element_35/></root>\n\')'),
+ (3160,1000,'PLN_PlanItems',4,NULL,'ADD',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:53:11','insert into PLN_PlanItems(PlanID,ElementID,ElementValue) values (\'1\',\'28\',\'<?xml version=\"1.0\"?>\n<root><element_29>asdawqeq</element_29><element_30></element_30><element_31></element_31><element_32/><element_33></element_33><element_34></element_34><element_35/></root>\n\')'),
+ (3161,1000,'PLN_PlanItems',5,NULL,'ADD',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:53:14','insert into PLN_PlanItems(PlanID,ElementID,ElementValue) values (\'1\',\'28\',\'<?xml version=\"1.0\"?>\n<root><element_29>cvbvcb</element_29><element_30></element_30><element_31></element_31><element_32/><element_33></element_33><element_34></element_34><element_35/></root>\n\')'),
+ (3162,1000,'PLN_PlanItems',6,NULL,'ADD',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:53:19','insert into PLN_PlanItems(PlanID,ElementID,ElementValue) values (\'1\',\'28\',\'<?xml version=\"1.0\"?>\n<root><element_29>mbnmbnmb</element_29><element_30></element_30><element_31></element_31><element_32/><element_33></element_33><element_34></element_34><element_35/></root>\n\')'),
+ (3163,1000,'PLN_PlanItems',5,NULL,'DELETE',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:53:23','delete from PLN_PlanItems where  RowID=\'5\''),
+ (3164,1000,'PLN_PlanItems',4,NULL,'DELETE',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:53:26','delete from PLN_PlanItems where  RowID=\'4\''),
+ (3165,1000,'PLN_PlanItems',6,NULL,'UPDATE',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:53:41','update PLN_PlanItems set RowID=\'6\',PlanID=\'1\',ElementID=\'28\',ElementValue=\'<?xml version=\"1.0\"?>\n<root><element_29>mbnmbnmb</element_29><element_30>sASs</element_30><element_31></element_31><element_32/><element_33></element_33><element_34></element_34><element_35/></root>\n\' where  RowID=\'6\''),
+ (3166,1000,'PLN_PlanItems',7,NULL,'ADD',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 11:54:08','insert into PLN_PlanItems(PlanID,ElementID,ElementValue) values (\'1\',\'36\',\'<?xml version=\"1.0\"?>\n<root><element_37>asdajhwuqe</element_37><element_38>uiy aisu</element_38><element_39>234823749238</element_39><element_40>2.5</element_40><element_41>100000000000</element_41><element_42/></root>\n\')'),
+ (3167,1000,'PLN_PlanItems',8,NULL,'ADD',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 14:18:19','insert into PLN_PlanItems(PlanID,ElementID,ElementValue) values (\'1\',\'36\',\'<?xml version=\"1.0\"?>\n<root><element_37>sdfljsdlfkj</element_37><element_38>slkfjs jfksdl k</element_38><element_39>234234223</element_39><element_40>58.5</element_40><element_41>2000</element_41><element_42>5</element_42></root>\n\')'),
+ (3168,1000,'PLN_PlanItems',9,NULL,'ADD',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 14:20:33','insert into PLN_PlanItems(PlanID,ElementID,ElementValue) values (\'1\',\'78\',\'<?xml version=\"1.0\"?>\n<root><element_79>fhfghgfh</element_79><element_80></element_80><element_81>93</element_81><element_82>10254455</element_82></root>\n\')'),
+ (3169,1000,'PLN_PlanItems',9,NULL,'UPDATE',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 14:20:42','update PLN_PlanItems set RowID=\'9\',PlanID=\'1\',ElementID=\'78\',ElementValue=\'<?xml version=\"1.0\"?>\n<root><element_79>fhfghgfh</element_79><element_80></element_80><element_81>93</element_81><element_82>10254455</element_82></root>\n\' where  RowID=\'9\''),
+ (3170,1000,'PLN_PlanItems',9,NULL,'DELETE',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 14:20:46','delete from PLN_PlanItems where  RowID=\'9\''),
+ (3171,1000,'PLN_PlanItems',10,NULL,'ADD',9,'http://rtfund/plan/start.php?SystemID=9',NULL,'127.0.0.1','2016-01-27 14:24:24','insert into PLN_PlanItems(PlanID,ElementID,ElementValue) values (\'1\',\'43\',\'<?xml version=\"1.0\"?>\n<root><element_44> &#x633;&#x634;&#x6CC;&#x634;&#x633; &#x6CC;&#x634; &#x633;&#x6CC;&#x634;&#x633;</element_44><element_45> &#x634;&#x6CC;&#x634;&#x633;&#x6CC;</element_45><element_46>&#x634;&#x633; &#x6CC;&#x634;&#x633; </element_46><element_47>&#x634; &#x633;&#x6CC;</element_47><element_48>345435</element_48><element_49>42342234234</element_49></root>\n\')');
 /*!40000 ALTER TABLE `DataAudit` ENABLE KEYS */;
 
 
@@ -12471,6 +12494,7 @@ CREATE TABLE `PLN_Elements` (
   `ElementTitle` varchar(200) CHARACTER SET utf8 NOT NULL,
   `ElementType` varchar(45) CHARACTER SET utf8 NOT NULL,
   `properties` varchar(1000) CHARACTER SET utf8 NOT NULL DEFAULT '',
+  `EditorProperties` varchar(200) NOT NULL,
   PRIMARY KEY (`ElementID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=83 DEFAULT CHARSET=latin1;
 
@@ -12479,90 +12503,117 @@ CREATE TABLE `PLN_Elements` (
 --
 
 /*!40000 ALTER TABLE `PLN_Elements` DISABLE KEYS */;
-INSERT INTO `PLN_Elements` (`ElementID`,`ParentID`,`GroupID`,`ElementTitle`,`ElementType`,`properties`) VALUES 
- (1,0,6,'','panel','defaults : {labelWidth:200},layout:\'column\',columns : 2'),
- (2,1,6,'نام شرکت','textfield',''),
- (3,1,6,'نوع شخصیت حقوقی','textfield',''),
- (4,1,6,'محل ثبت','textfield',''),
- (5,1,6,'شناسه ملی','textfield',''),
- (6,1,6,'تاریخ تاسیس','shdatefield',''),
- (7,1,6,'دارندگان حق امضا','textfield',''),
- (8,1,6,'سرمایه اولیه(میلیون ریال)','currencyfield','hideTrigger:true'),
- (9,1,6,'سرمایه فعلی(میلیون ریال)','currencyfield','hideTrigger:true'),
- (10,1,6,'موضوع فعالیت(مطابق با اساسنامه)','textfield',''),
- (11,1,6,'نام و نام خانوادگی نماینده ارتباطی شرکت','textfield',''),
- (12,1,6,'تلفن ثابت و تلفن همراه','textfield',''),
- (13,1,6,'پست الکترونیکی','textfield',''),
- (14,1,6,'آدرس کنونی','textfield',''),
- (15,1,6,'وب سایت','textfield',''),
- (16,0,6,'','panel','defaults : {labelWidth:200},layout:\'column\',columns : 2'),
- (17,16,6,'نوع شرکت دانش بنیان','checkbox',''),
- (18,16,6,'شرکت جزو %20 پارک می باشد؟','checkbox',''),
- (19,16,6,'تاریخ دانش بنیان شدن','shdatefield',''),
- (20,16,6,'مدت اعتبار دانش بنیان بودن (سال)','numberfield','hideTrigger:true'),
- (21,16,6,'نام محصول','textfield',''),
- (22,16,6,'دسته اصلی','textfield',''),
- (23,16,6,'زیر دسته اول','textfield',''),
- (24,16,6,'زیر دسته دوم','textfield',''),
- (25,16,6,'زیر دسته سوم','textfield',''),
- (26,16,6,'زیر دسته چهارم','textfield',''),
- (27,16,6,'درخواست متقاضی از صندوق نوآوری و شکوفایی','textarea','colspan:2,width : 710'),
- (28,0,14,'','grid','height : 450'),
- (29,28,14,'نام و نام خانوادگی','textfield','width:150'),
- (30,28,14,'سمت','textfield',''),
- (31,28,14,'کدملی','textfield',''),
- (32,28,14,'تاریخ تولد','shdatefield','width:100'),
- (33,28,14,'نام پدر','textfield','width:100'),
- (34,28,14,'تحصیلات(رشته و مدرک)','textfield','flex:1'),
- (35,28,14,'سابقه کاری(ماه)','numberfield','width:60'),
- (36,0,15,'','grid','height : 450'),
- (37,36,15,'نام و نام خانوادگی','textfield','flex:1'),
- (38,36,15,'نوع شخصیت','textfield','width:100'),
- (39,36,15,'کد ملی / شناسه ملی','textfield','width:120'),
- (40,36,15,'درصد سهام','numberfield','width:100,align:\'center\''),
- (41,36,15,'ارزش سهام(میلیون ریال)','numberfield','width:120,align:\'center\''),
- (42,36,15,'سابقه کاری مرتبط (ماه)','numberfield','width:100,align:\'center\''),
- (43,0,16,'','grid','height : 450'),
- (44,43,16,'نام و نام خانوادگی','-','flex:1'),
- (45,43,16,'سمت','textfield','width:130'),
- (46,43,16,'تحصیلات','textfield','width:130'),
- (47,43,16,'نوع قرارداد(تمام وقت/ پاره وقت)','checkbox','width:100'),
- (48,43,16,'کد ملی','textfield','width:100'),
- (49,43,16,'شماره بیمه','numberfield','width:110'),
- (50,0,17,'','grid','height : 450'),
- (51,50,17,'بانک و شعبه/ صندوق يا ساير مراکز ارائه‌دهنده‌ تسهيلات','textfield','flex:1'),
- (52,50,17,'تسهيلات دريافتي(میلیون ريال)','currencyfield','width:110'),
- (53,50,17,'سال دريافت','numberfield','width:40'),
- (54,50,17,'نوع تسهيلات','textfield','width:80'),
- (55,50,17,'نرخ سود','numberfield','width:40'),
- (56,50,17,'نوع وثيقه','textfield','width:80'),
- (57,50,17,'مبلغ هر قسط','currencyfield','width:90'),
- (58,50,17,'اقساط بازپرداخت شده','numberfield','width:50'),
- (59,50,17,'اقساط باقيمانده','numberfield','width:50'),
- (60,50,17,'زمان تسويه حساب نهايي','shdatefield','width:70'),
- (61,0,18,'','panel','defaults:{labelWidth:210}'),
- (62,61,18,'مجموع دارايي‌ها','currencyfield','hideTrigger:true'),
- (63,61,18,'مجموع بدهي‌ها','currencyfield','hideTrigger:true'),
- (64,61,18,'مجموع حقوق کارکنان شرکت','currencyfield','hideTrigger:true'),
- (65,61,18,'مانده‌ي وجه نقد در پايان سال','currencyfield','hideTrigger:true'),
- (66,61,18,'ميزان سود / زيان شرکت','currencyfield','hideTrigger:true'),
- (67,0,19,'','textarea','width:700,height:400'),
- (68,0,20,'','textarea','width:700,height:400'),
- (69,0,21,'','grid','height : 450'),
- (70,69,21,'لیست دارائیهای شرکت','textfield','flex:1'),
- (71,69,21,'ارزش دفتری','currencyfield','width:150'),
- (72,69,21,'ارزش بازار فعلی','currencyfield','width:150'),
- (73,0,9,'','grid',''),
- (74,73,9,'نوع مجوز','textfield',''),
- (75,73,9,'تاریخ دریافت','shdatefield',''),
- (76,73,9,'مدت اعتبار','numberfield',''),
- (77,73,9,'توضیحات','textfield',''),
- (78,0,10,'','grid',''),
- (79,78,10,'نام کالا','textfield',''),
- (80,78,10,'مقصد','checkbox',''),
- (81,78,10,'سال','numberfield',''),
- (82,78,10,'مبلغ( میلیون ریال)','currencyfield','');
+INSERT INTO `PLN_Elements` (`ElementID`,`ParentID`,`GroupID`,`ElementTitle`,`ElementType`,`properties`,`EditorProperties`) VALUES 
+ (1,0,6,'','panel','defaults : {labelWidth:200},layout:\'column\',columns : 2',''),
+ (2,1,6,'نام شرکت','textfield','',''),
+ (3,1,6,'نوع شخصیت حقوقی','textfield','',''),
+ (4,1,6,'محل ثبت','textfield','',''),
+ (5,1,6,'شناسه ملی','textfield','',''),
+ (6,1,6,'تاریخ تاسیس','shdatefield','',''),
+ (7,1,6,'دارندگان حق امضا','textfield','',''),
+ (8,1,6,'سرمایه اولیه(میلیون ریال)','currencyfield','hideTrigger:true',''),
+ (9,1,6,'سرمایه فعلی(میلیون ریال)','currencyfield','hideTrigger:true',''),
+ (10,1,6,'موضوع فعالیت(مطابق با اساسنامه)','textfield','',''),
+ (11,1,6,'نام و نام خانوادگی نماینده ارتباطی شرکت','textfield','',''),
+ (12,1,6,'تلفن ثابت و تلفن همراه','textfield','',''),
+ (13,1,6,'پست الکترونیکی','textfield','',''),
+ (14,1,6,'آدرس کنونی','textfield','',''),
+ (15,1,6,'وب سایت','textfield','',''),
+ (16,0,6,'','panel','defaults : {labelWidth:200},layout:\'column\',columns : 2',''),
+ (17,16,6,'نوع شرکت دانش بنیان','checkbox','',''),
+ (18,16,6,'شرکت جزو %20 پارک می باشد؟','checkbox','',''),
+ (19,16,6,'تاریخ دانش بنیان شدن','shdatefield','',''),
+ (20,16,6,'مدت اعتبار دانش بنیان بودن (سال)','numberfield','hideTrigger:true',''),
+ (21,16,6,'نام محصول','textfield','',''),
+ (22,16,6,'دسته اصلی','textfield','',''),
+ (23,16,6,'زیر دسته اول','textfield','',''),
+ (24,16,6,'زیر دسته دوم','textfield','',''),
+ (25,16,6,'زیر دسته سوم','textfield','',''),
+ (26,16,6,'زیر دسته چهارم','textfield','',''),
+ (27,16,6,'درخواست متقاضی از صندوق نوآوری و شکوفایی','textarea','colspan:2,width : 710',''),
+ (28,0,14,'','grid','height : 450',''),
+ (29,28,14,'نام و نام خانوادگی','textfield','width:150',''),
+ (30,28,14,'سمت','textfield','',''),
+ (31,28,14,'کدملی','textfield','','regex: /^\\d{10}$/,maskRe: /[\\d\\-]/'),
+ (32,28,14,'تاریخ تولد','shdatefield','width:100',''),
+ (33,28,14,'نام پدر','textfield','width:100',''),
+ (34,28,14,'تحصیلات(رشته و مدرک)','textfield','flex:1',''),
+ (35,28,14,'سابقه کاری(ماه)','numberfield','width:60','hideTrigger:true'),
+ (36,0,15,'','grid','height : 450',''),
+ (37,36,15,'نام و نام خانوادگی','textfield','flex:1',''),
+ (38,36,15,'نوع شخصیت','textfield','width:100',''),
+ (39,36,15,'کد ملی / شناسه ملی','textfield','width:120','maskRe: /[\\d\\-]/'),
+ (40,36,15,'درصد سهام','numberfield','width:80,align:\'center\'','hideTrigger:true'),
+ (41,36,15,'ارزش سهام(میلیون ریال)','currencyfield','width:120,align:\'center\',renderer : Ext.util.Format.Money','hideTrigger:true'),
+ (42,36,15,'سابقه کاری مرتبط (ماه)','numberfield','width:100,align:\'center\'','hideTrigger:true'),
+ (43,0,16,'','grid','height : 450',''),
+ (44,43,16,'نام و نام خانوادگی','textfield','flex:1',''),
+ (45,43,16,'سمت','textfield','width:130',''),
+ (46,43,16,'تحصیلات','textfield','width:130',''),
+ (47,43,16,'نوع قرارداد(تمام وقت/ پاره وقت)','textfield','width:100',''),
+ (48,43,16,'کد ملی','textfield','width:100','maskRe: /[\\d\\-]/'),
+ (49,43,16,'شماره بیمه','numberfield','width:110','hideTrigger:true'),
+ (50,0,17,'','grid','height : 450',''),
+ (51,50,17,'بانک و شعبه/ صندوق يا ساير مراکز ارائه‌دهنده‌ تسهيلات','textfield','flex:1',''),
+ (52,50,17,'تسهيلات دريافتي(میلیون ريال)','currencyfield','width:110','hideTrigger:true'),
+ (53,50,17,'سال دريافت','numberfield','width:40','hideTrigger:true'),
+ (54,50,17,'نوع تسهيلات','textfield','width:80',''),
+ (55,50,17,'نرخ سود','numberfield','width:40',''),
+ (56,50,17,'نوع وثيقه','textfield','width:80',''),
+ (57,50,17,'مبلغ هر قسط','currencyfield','width:90',''),
+ (58,50,17,'اقساط بازپرداخت شده','numberfield','width:50',''),
+ (59,50,17,'اقساط باقيمانده','numberfield','width:50',''),
+ (60,50,17,'زمان تسويه حساب نهايي','shdatefield','width:70',''),
+ (61,0,18,'','panel','defaults:{labelWidth:210}',''),
+ (62,61,18,'مجموع دارايي‌ها','currencyfield','hideTrigger:true',''),
+ (63,61,18,'مجموع بدهي‌ها','currencyfield','hideTrigger:true',''),
+ (64,61,18,'مجموع حقوق کارکنان شرکت','currencyfield','hideTrigger:true',''),
+ (65,61,18,'مانده‌ي وجه نقد در پايان سال','currencyfield','hideTrigger:true',''),
+ (66,61,18,'ميزان سود / زيان شرکت','currencyfield','hideTrigger:true',''),
+ (67,0,19,'','textarea','width:700,height:400',''),
+ (68,0,20,'','textarea','width:700,height:400',''),
+ (69,0,21,'','grid','height : 450',''),
+ (70,69,21,'لیست دارائیهای شرکت','textfield','flex:1',''),
+ (71,69,21,'ارزش دفتری','currencyfield','width:150',''),
+ (72,69,21,'ارزش بازار فعلی','currencyfield','width:150',''),
+ (73,0,9,'','grid','',''),
+ (74,73,9,'نوع مجوز','textfield','',''),
+ (75,73,9,'تاریخ دریافت','shdatefield','',''),
+ (76,73,9,'مدت اعتبار','numberfield','',''),
+ (77,73,9,'توضیحات','textfield','',''),
+ (78,0,10,'','grid','',''),
+ (79,78,10,'نام کالا','textfield','',''),
+ (80,78,10,'مقصد','checkbox','',''),
+ (81,78,10,'سال','numberfield','',''),
+ (82,78,10,'مبلغ( میلیون ریال)','currencyfield','','');
 /*!40000 ALTER TABLE `PLN_Elements` ENABLE KEYS */;
+
+
+--
+-- Definition of table `PLN_PlanItems`
+--
+
+DROP TABLE IF EXISTS `PLN_PlanItems`;
+CREATE TABLE `PLN_PlanItems` (
+  `RowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `PlanID` int(10) unsigned NOT NULL,
+  `ElementID` int(10) unsigned NOT NULL,
+  `ElementValue` text NOT NULL,
+  PRIMARY KEY (`RowID`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `PLN_PlanItems`
+--
+
+/*!40000 ALTER TABLE `PLN_PlanItems` DISABLE KEYS */;
+INSERT INTO `PLN_PlanItems` (`RowID`,`PlanID`,`ElementID`,`ElementValue`) VALUES 
+ (3,1,28,'<?xml version=\"1.0\"?>\n<root><element_29>asdasd</element_29><element_30></element_30><element_31></element_31><element_32/><element_33></element_33><element_34></element_34><element_35/></root>\n'),
+ (6,1,28,'<?xml version=\"1.0\"?>\n<root><element_29>mbnmbnmb</element_29><element_30>sASs</element_30><element_31></element_31><element_32/><element_33></element_33><element_34></element_34><element_35/></root>\n'),
+ (7,1,36,'<?xml version=\"1.0\"?>\n<root><element_37>asdajhwuqe</element_37><element_38>uiy aisu</element_38><element_39>234823749238</element_39><element_40>2.5</element_40><element_41>100000000000</element_41><element_42/></root>\n'),
+ (8,1,36,'<?xml version=\"1.0\"?>\n<root><element_37>sdfljsdlfkj</element_37><element_38>slkfjs jfksdl k</element_38><element_39>234234223</element_39><element_40>58.5</element_40><element_41>2000</element_41><element_42>5</element_42></root>\n'),
+ (10,1,43,'<?xml version=\"1.0\"?>\n<root><element_44> &#x633;&#x634;&#x6CC;&#x634;&#x633; &#x6CC;&#x634; &#x633;&#x6CC;&#x634;&#x633;</element_44><element_45> &#x634;&#x6CC;&#x634;&#x633;&#x6CC;</element_45><element_46>&#x634;&#x633; &#x6CC;&#x634;&#x633; </element_46><element_47>&#x634; &#x633;&#x6CC;</element_47><element_48>345435</element_48><element_49>42342234234</element_49></root>\n');
+/*!40000 ALTER TABLE `PLN_PlanItems` ENABLE KEYS */;
 
 
 --
@@ -12670,6 +12721,29 @@ INSERT INTO `PLN_groups` (`GroupID`,`ParentID`,`GroupDesc`) VALUES
  (85,5,'تحلیل قابلیت و اهلیت شرکت و طرح برای جذب، استفاده و بازپرداخت منابع مالی'),
  (86,5,'پیشنهادات و نظریه کارشناسی');
 /*!40000 ALTER TABLE `PLN_groups` ENABLE KEYS */;
+
+
+--
+-- Definition of table `PLN_plans`
+--
+
+DROP TABLE IF EXISTS `PLN_plans`;
+CREATE TABLE `PLN_plans` (
+  `PlanID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `PersonID` int(10) unsigned NOT NULL,
+  `RegDate` datetime NOT NULL,
+  `StatusID` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`PlanID`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `PLN_plans`
+--
+
+/*!40000 ALTER TABLE `PLN_plans` DISABLE KEYS */;
+INSERT INTO `PLN_plans` (`PlanID`,`PersonID`,`RegDate`,`StatusID`) VALUES 
+ (1,1000,'2016-01-05 00:00:00',0);
+/*!40000 ALTER TABLE `PLN_plans` ENABLE KEYS */;
 
 
 --

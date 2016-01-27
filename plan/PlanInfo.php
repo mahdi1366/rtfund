@@ -7,7 +7,8 @@
 require_once 'header.inc.php';
 require_once inc_dataGrid;
 
-$PlanID = !empty($_POST["PlanID"]) ? $_POST["PlanID"] : 0;
+//$PlanID = !empty($_POST["PlanID"]) ? $_POST["PlanID"] : 0;
+$PlanID = 1;
 
 if(isset($_SESSION["USER"]["framework"]))
 	$User = "Staff";

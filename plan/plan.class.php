@@ -4,239 +4,132 @@
 // create Date: 94.06
 //---------------------------
 
-class LON_requests extends PdoDataAccess
+class PLN_plans extends PdoDataAccess
 {
-	public $RequestID;
-	public $BranchID;
-	public $LoanID;
-	public $ReqPersonID;
+	public $PlanID;
+	public $PersonID;
 	public $ReqDate;
-	public $ReqAmount;
 	public $StatusID;
-	public $ReqDetails;
-	public $BorrowerDesc;
-	public $BorrowerID;
-	public $LoanPersonID;
-	public $guarantees;
-	public $AgentGuarantee;
-	public $DocumentDesc;	
-	public $SupportPersonID;
 	
-	function __construct($RequestID = "") {
+	function __construct($PlanID = "") {
 		
-		if($RequestID != "")
-			PdoDataAccess::FillObject ($this, "select * from LON_requests where RequestID=?", array($RequestID));
+		if($PlanID != "")
+			PdoDataAccess::FillObject ($this, "select * from PLN_plans where PlanID=?", array($PlanID));
 	}
 	
 	static function SelectAll($where = "", $param = array()){
 		
-		return PdoDataAccess::runquery_fetchMode("
-			select r.*,l.*,
-				if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) ReqFullname,
-				if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) LoanFullname,
-				case when p1.IsCustomer='YES' then 'Customer'
-					 when p1.IsAgent='YES' then 'Agent'
-					 when p1.IsStaff='YES' then 'Staff'
-				end ReqPersonRole,
-				bi.InfoDesc StatusDesc,
-				BranchName
-			from LON_requests r
-			left join LON_loans l using(LoanID)
-			join BSC_branches using(BranchID)
-			join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
-			join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
-			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
-			where " . $where, $param);
+		return PdoDataAccess::runquery("select * from PLN_plans where " . $where, $param);
 	}
 	
-	function AddRequest($pdo = null){
+	function AddPlan($pdo = null){
+		
 		$this->ReqDate = PDONOW;
 		
-	 	if(!parent::insert("LON_requests",$this, $pdo))
+	 	if(!parent::insert("PLN_plans",$this, $pdo))
 			return false;
-		$this->RequestID = parent::InsertID($pdo);
+		$this->PlanID = parent::InsertID($pdo);
 		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->RequestID;
-		$daObj->TableName = "LON_requests";
+		$daObj->MainObjectID = $this->PlanID;
+		$daObj->TableName = "PLN_plans";
 		$daObj->execute($pdo);
 		return true;
 	}
 	
-	function EditRequest($pdo = null){
+	function EditPlan($pdo = null){
 		
-	 	if( parent::update("LON_requests",$this," RequestID=:l", array(":l" => $this->RequestID), $pdo) === false )
+	 	if( parent::update("PLN_plans",$this," PlanID=:l", array(":l" => $this->PlanID), $pdo) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->MainObjectID = $this->RequestID;
-		$daObj->TableName = "LON_requests";
+		$daObj->MainObjectID = $this->PlanID;
+		$daObj->TableName = "PLN_plans";
 		$daObj->execute($pdo);
 	 	return true;
     }
 	
-	static function DeleteRequest($RequestID){
+	static function DeletePlan($PlanID){
 		
-		$obj = new LON_requests($RequestID);
+		$obj = new LON_requests($PlanID);
 		if($obj->StatusID != "1")
 			return false;
 		
-		if( parent::delete("LON_ReqParts"," RequestID=?", array($RequestID)) === false )
+		if( parent::delete("PLN_PlanItems"," PlanID=?", array($PlanID)) === false )
 	 		return false;
 		
-		if( parent::delete("LON_requests"," RequestID=?", array($RequestID)) === false )
+		if( parent::delete("PLN_plans"," PlanID=?", array($PlanID)) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->MainObjectID = $RequestID;
-		$daObj->TableName = "LON_requests";
+		$daObj->MainObjectID = $PlanID;
+		$daObj->TableName = "PLN_plans";
 		$daObj->execute();
 	 	return true;
 	}
 }
 
-class LON_ReqParts extends PdoDataAccess
+class PLN_PlanItems extends PdoDataAccess
 {
-	public $PartID;
-	public $RequestID;
-	public $PartDesc;
-	public $PartDate;
-	public $PartAmount;
-	public $InstallmentCount;
-	public $IntervalType;
-	public $PayInterval;
-	public $DelayMonths;
-	public $ForfeitPercent;
-	public $CustomerWage;
-	public $FundWage;
-	public $WageReturn;
+	public $RowID;
+	public $PlanID;
+	public $ElementID;
+	public $ElementValue;
 	
-	function __construct($PartID = "") {
+	function __construct($RowID = "") {
 		
-		$this->DT_PartDate = DataMember::CreateDMA(DataMember::DT_DATE);
-		
-		if($PartID != "")
-			PdoDataAccess::FillObject ($this, "select * from LON_ReqParts where PartID=?", array($PartID));
+		if($RowID != "")
+			PdoDataAccess::FillObject ($this, "select * from PLN_PlanItems where RowID=?", array($RowID));
 	}
 	
 	static function SelectAll($where = "", $param = array()){
 		
-		return PdoDataAccess::runquery("
-			select rp.*,r.StatusID,r.LoanPersonID, r.imp_VamCode
-			from LON_ReqParts rp join LON_requests r using(RequestID)
-			where " . $where, $param);
+		return PdoDataAccess::runquery("select * from PLN_PlanItems	where " . $where, $param);
 	}
 	
-	function AddPart($pdo = null){
+	function AddItem($pdo = null){
 		
-		if (!parent::insert("LON_ReqParts", $this, $pdo)) {
+		if (!parent::insert("PLN_PlanItems", $this, $pdo)) {
 			return false;
 		}
-		$this->PartID = parent::InsertID($pdo);
+		$this->RowID = parent::InsertID($pdo);
 		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->PartID;
-		$daObj->TableName = "LON_ReqParts";
+		$daObj->MainObjectID = $this->RowID;
+		$daObj->TableName = "PLN_PlanItems";
 		$daObj->execute($pdo);
 		return true;
 	}
 	
-	function EditPart($pdo = null){
+	function EditItem($pdo = null){
 		
-	 	if( parent::update("LON_ReqParts",$this," PartID=:l", array(":l" => $this->PartID), $pdo) === false )
+	 	if( parent::update("PLN_PlanItems",$this," RowID=:l", array(":l" => $this->RowID), $pdo) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->MainObjectID = $this->PartID;
-		$daObj->TableName = "LON_ReqParts";
+		$daObj->MainObjectID = $this->RowID;
+		$daObj->TableName = "PLN_PlanItems";
 		$daObj->execute($pdo);
 	 	return true;
     }
 	
-	static function DeletePart($PartID){
+	static function DeleteItem($RowID){
 		
-		if( parent::delete("LON_ReqParts"," PartID=?", array($PartID)) === false )
+		if( parent::delete("PLN_PlanItems"," RowID=?", array($RowID)) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->MainObjectID = $PartID;
-		$daObj->TableName = "LON_ReqParts";
+		$daObj->MainObjectID = $RowID;
+		$daObj->TableName = "PLN_PlanItems";
 		$daObj->execute();
 	 	return true;
 	}
-}
-
-class LON_installments extends PdoDataAccess
-{
-	public $InstallmentID;
-	public $PartID;
-	public $InstallmentDate;
-	public $InstallmentAmount;
-	
-	public $PaidDate;
-	public $PaidAmount;
-	public $PaidRefNo;
-	
-	public $IsPaid;
-	public $PaidType;
-	
-	public $ChequeNo;
-	public $ChequeBank;
-	public $ChequeBranch;
-			
-	function __construct($InstallmentID = "") {
-		
-		$this->DT_InstallmentDate = DataMember::CreateDMA(DataMember::DT_DATE);
-		$this->DT_PaidDate = DataMember::CreateDMA(DataMember::DT_DATE);
-		
-		if($InstallmentID != "")
-			PdoDataAccess::FillObject ($this, "select * from LON_installments where InstallmentID=?", array($InstallmentID));
-	}
-	
-	static function SelectAll($where = "", $param = array()){
-		
-		return PdoDataAccess::runquery("
-			select p.*,rp.*,b.BankDesc, bi.InfoDesc PaidTypeDesc
-			from LON_installments p
-			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PaidType)
-			join LON_ReqParts rp using(PartID)
-			left join ACC_banks b on(ChequeBank=BankID)
-			where " . $where, $param);
-	}
-	
-	function AddInstallment(){
-		
-	 	if(!parent::insert("LON_installments",$this))
-	 		return false;
-
-		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->InstallmentID;
-		$daObj->TableName = "LON_installments";
-		$daObj->execute();
-	 	return true;
-    }
-	
-	function EditInstallment($pdo = null){
-		
-	 	if( parent::update("LON_installments",$this," InstallmentID=:l", 
-				array(":l" => $this->InstallmentID), $pdo) === false )
-	 		return false;
-
-		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->MainObjectID = $this->InstallmentID;
-		$daObj->TableName = "LON_installments";
-		$daObj->execute($pdo);
-	 	return true;
-    }
-	
 }
 
 ?>

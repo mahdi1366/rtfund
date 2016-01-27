@@ -18,9 +18,14 @@ switch ($task) {
 	case "SelectElements":
 		SelectElements();
 		
-	case "SelectElementData":
-		SelectElementData();
-	
+	case "SelectPlanItems":
+		SelectPlanItems();
+		
+	case "SavePlanItems":
+		SavePlanItems();
+		
+	case "DeletePlanItem":
+		DeletePlanItem();
 }
 
 function selectSubGroups(){
@@ -71,9 +76,68 @@ function SelectElements(){
 	die();
 }
 
-function SelectElementData(){
+function SelectPlanItems(){
 	
-	echo dataReader::getJsonData(array(), 0, $_GET["callback"]);
+	$PlanID = $_REQUEST["PlanID"];
+	$ElementID = $_REQUEST["ElementID"];
+	
+	$dt = PLN_PlanItems::SelectAll("PlanID=? AND ElementID=?", array($PlanID, $ElementID));
+	for($i=0; $i < count($dt); $i++)
+	{
+		$p = xml_parser_create();
+		xml_parse_into_struct($p, $dt[$i]["ElementValue"], $vals);
+		xml_parser_free($p);
+		
+		foreach($vals as $element)
+		{
+			if(strpos($element["tag"],"ELEMENT_") !== false)
+				$dt[$i][strtolower($element["tag"]) ] = empty($element["value"]) ? "" : $element["value"];
+		}		
+		unset($dt[$i]["ElementValue"]);
+	}	
+		
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
+
+function SavePlanItems(){
+	
+	$st = stripslashes(stripslashes($_POST["record"]));
+	$data = json_decode($st);
+	
+	$obj = new PLN_PlanItems();
+	$obj->RowID = $data->RowID;
+	$obj->PlanID = $data->PlanID;
+	$obj->ElementID = $data->ElementID;
+	
+	$xml = new SimpleXMLElement('<root/>');
+	$elems = array_keys(get_object_vars($data));
+	foreach($elems as $el)
+	{
+		if(strpos($el, "element_") === false)
+			continue;
+		$xml->addChild($el, $data->$el);
+	}
+	
+	$obj->ElementValue = $xml->asXML();
+	
+	if($obj->RowID > 0)
+		$result = $obj->EditItem();
+	else
+		$result = $obj->AddItem();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeletePlanItem(){
+	
+	$RowID = $_POST["RowID"];
+	
+	$result = PLN_PlanItems::DeleteItem($RowID);
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
 ?>

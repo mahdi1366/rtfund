@@ -12,7 +12,7 @@ PlanInfo.prototype = {
 	RequestRecord : null,
 	User : '<?= $User ?>',
 	
-	GroupForms : new Array(),
+	GroupForms : {},
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -58,25 +58,39 @@ PlanInfoObject = new PlanInfo();
 
 PlanInfo.prototype.LoadElements = function(record, season){
 
+	var parentEl = this.AccorPanel.down("[itemId=ParentElement_" + season + "]");
+	parentEl.items.each(function(item){item.hide();});
+	
+	mask = new Ext.LoadMask(parentEl, {msg:'در حال بارگذاري...'});
+	mask.show();
+	
 	var frm = null;
 	eval("frm = this.GroupForms.elem_" + record.data.id);
 	if(frm == null)
 	{
+		eval("this.GroupForms.elem_" + record.data.id + " = new Array();");
 		this.store = new Ext.data.Store({
 			proxy:{
 				type: 'jsonp',
 				url: this.address_prefix + "plan.data.php?task=SelectElements&GroupID=" + record.data.id,
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
-			fields : ["ElementID", "ParentID", "GroupID", "ElementTitle", "ElementType", "properties"],
+			fields : ["ElementID", "ParentID", "GroupID", "ElementTitle", "ElementType", "properties", "EditorProperties"],
 			autoLoad : true,
 			listeners :{
 				load : function(){
 					PlanInfoObject.MakeElemForms(this , season);
+					mask.hide();
 				}
 			}
 		});
-	} 
+	}
+	else
+	{
+		for(i=0; i<frm.length; i++)
+			parentEl.down("[itemId=" + frm[i] + "]").show();
+		mask.hide();
+	}
 	
 } 
 
@@ -90,11 +104,8 @@ function merge(obj1,obj2){
 PlanInfo.prototype.MakeElemForms = function(store, season){
 
 	var parentEl = this.AccorPanel.down("[itemId=ParentElement_" + season + "]");
-	mask = new Ext.LoadMask(parentEl, {msg:'در حال بارگذاري...'});
-	mask.show();
-	parentEl.removeAll();
 	
-	for(i=0; i < store.getCount(); i++)
+	for(var i=0; i < store.getCount(); i++)
 	{
 		record = store.getAt(i);
 		switch(record.data.ElementType)
@@ -106,27 +117,35 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 					style : "margin-bottom:4px"
 				};
 				break;
+			//..................................................................
 			case "grid" :
 				
-				var group = record.data.ElementID;
-				var columns = new Array();
+				var fields = new Array();
+				var columns = [ {dataIndex : "RowID",hidden : true},
+								{dataIndex : "PlanID",hidden : true},
+								{dataIndex : "ElementID",hidden : true}];
 				while(true)
 				{
 					i++;
 					var sub_record = store.getAt(i);
-					if(sub_record == null || sub_record.data.ParentID != group)
+					if(sub_record == null || sub_record.data.ParentID != record.data.ElementID)
 					{
 						i--;
 						break;
 					}
+					var editor = {xtype : sub_record.data.ElementType};
+					eval("editor = merge(editor,{" + sub_record.data.EditorProperties + "});");
+					
 					NewColumn = {
 						menuDisabled : true,
 						sortable : false,
 						text : sub_record.data.ElementTitle,
-						dataIndex : "element_" + sub_record.data.ElementID
+						dataIndex : "element_" + sub_record.data.ElementID,
+						editor : editor
 					};
 					eval("NewColumn = merge(NewColumn,{" + sub_record.data.properties + "});");
 					columns.push(NewColumn);
+					fields.push("element_" + sub_record.data.ElementID);
 				}
 				
 				NewElement = {
@@ -137,22 +156,99 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 					},
 					tbar : [{
 						text : "ایجاد ردیف",
-						iconCls : "add"
+						iconCls : "add",
+						handler : function(){
+							var grid = this.up('grid');
+							var modelClass = grid.getStore().model;
+							var record = new modelClass({
+								RowID : null,
+								PlanID : PlanInfoObject.PlanID,
+								ElementID : grid.getStore().proxy.extraParams.ElementID
+							});
+							grid.plugins[0].cancelEdit();
+							grid.getStore().insert(0, record);
+							grid.plugins[0].startEdit(0, 0);
+						}
+					},'-',{
+						text : "ویرایش ردیف",
+						iconCls : "edit",
+						handler : function(){
+							var grid = this.up('grid');
+							var record = grid.getSelectionModel().getLastSelected();
+							if(record == null)
+							{
+								Ext.MessageBox.alert("","ابتدا ردیف مورد نظر را انتخاب کنید");
+								return;
+							}
+							grid.plugins[0].startEdit(grid.getStore().indexOf(record),0);
+						}
+					},'-',{
+						text : "حذف ردیف",
+						iconCls : "remove",
+						handler : function(){
+							var grid = this.up('grid');
+							var record = grid.getSelectionModel().getLastSelected();
+							if(record == null)
+							{
+								Ext.MessageBox.alert("","ابتدا ردیف مورد نظر را انتخاب کنید");
+								return;
+							}
+							var mask = new Ext.LoadMask(parentEl, {msg:'در حال ذخيره سازي...'});
+							mask.show();    
+							Ext.Ajax.request({
+								url:  PlanInfoObject.address_prefix + 'plan.data.php?task=DeletePlanItem',
+								params:{
+									RowID : record.data.RowID
+								},
+								method: 'POST',
+								success: function(response,option){
+									mask.hide();
+									grid.getStore().load();
+								},
+								failure: function(){}
+							});
+						}
 					}],
+					selType : 'rowmodel',
+					plugins : [new Ext.grid.plugin.RowEditing()],
 					scroll: 'vertical', 
 					itemId : "element_" + record.data.ElementID,
 					store : new Ext.data.Store({
 						proxy:{
 							type: 'jsonp',
-							url: this.address_prefix + "plan.data.php?task=SelectElementData&ElementID=" + record.data.ElementID,
-							reader: {root: 'rows',totalProperty: 'totalCount'}
+							url: this.address_prefix + "plan.data.php?task=SelectPlanItems",
+							reader: {root: 'rows',totalProperty: 'totalCount'},
+							extraParams : {
+								PlanID : this.PlanID,
+								ElementID : record.data.ElementID
+							}							
 						},
-						fields : ["ElementID", "ParentID", "GroupID", "ElementTitle", "ElementType", "properties"],
-						autoLoad : true
+						fields : ["RowID", "PlanID", "ElementID"].concat(fields),
+						autoLoad : true,
+						listeners : {
+							update : function(store,record){
+								mask = new Ext.LoadMask(parentEl, {msg:'در حال ذخيره سازي...'});
+								mask.show();    
+								Ext.Ajax.request({
+									url:  PlanInfoObject.address_prefix + 'plan.data.php?task=SavePlanItems',
+									params:{
+										record : Ext.encode(record.data)
+									},
+									method: 'POST',
+									success: function(response,option){
+										mask.hide();
+										store.load();
+									},
+									failure: function(){}
+								});
+								return true;
+							}
+						}
 					}),
 					columns: columns
 				};
 				break;
+			//..................................................................
 			default : 
 				NewElement = {
 					xtype : record.data.ElementType,
@@ -164,19 +260,18 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 		eval("NewElement = merge(NewElement,{" + record.data.properties + "});");
 		
 		if(record.data.ParentID == 0)
+		{
+			eval("PlanInfoObject.GroupForms.elem_" + record.data.GroupID + ".push('element_" + record.data.ElementID + "');");
 			parentEl.add(NewElement);
+		}
 		else
 		{
 			var parent = this.AccorPanel.down("[itemId=element_" + record.data.ParentID + "]");
-			if(parent.xtype == "grid")
-				parent.columns.add(NewElement);
-			else
-				parent.add(NewElement);
+			parent.add(NewElement);
 		}
 	}
-	
-	mask.hide();
 }
+
 
 
 
