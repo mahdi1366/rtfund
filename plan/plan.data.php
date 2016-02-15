@@ -69,8 +69,45 @@ function selectSubGroups(){
 
 function SelectElements(){
 
+	$PlanID = $_REQUEST["PlanID"];
 	$GroupID = $_REQUEST["GroupID"];
-	$dt = PdoDataAccess::runquery("select * from PLN_Elements where GroupID=? order by ParentID", array($GroupID));
+	$dt = PdoDataAccess::runquery("select e.* from PLN_Elements e
+		where GroupID=? order by ElementID", array($GroupID));
+	
+	$planValues = array();
+	for($i=0; $i < count($dt); $i++)
+	{
+		if($dt[$i]["ElementType"] == "grid")
+			continue;
+		if($dt[$i]["ElementType"] == "panel")
+		{
+			$temp = PLN_PlanItems::SelectAll("PlanID=? AND ElementID=?", array($PlanID, $dt[$i]["ElementID"]));
+			if(count($temp) == 0)
+				continue;
+			$p = xml_parser_create();
+			xml_parse_into_struct($p, $temp[0]["ElementValue"], $vals);
+			xml_parser_free($p);
+			$planValues[ $dt[$i]["ElementID"] ] = $vals;
+		}
+		else
+		{
+			if(!isset($planValues[ $dt[$i]["ParentID"] ]))
+			{
+				$dt[$i]["ElementValue"] = "";
+				break;
+			}
+			
+			$vals = $planValues[ $dt[$i]["ParentID"] ];
+			foreach($vals as $element)
+			{
+				if($element["tag"] == "ELEMENT_" . $dt[$i]["ElementID"])
+				{
+					$dt[$i]["ElementValue"] = empty($element["value"]) ? "" : $element["value"];
+					break;
+				}
+			}
+		}
+	}
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
@@ -102,24 +139,46 @@ function SelectPlanItems(){
 
 function SavePlanItems(){
 	
-	$st = stripslashes(stripslashes($_POST["record"]));
-	$data = json_decode($st);
-	
 	$obj = new PLN_PlanItems();
-	$obj->RowID = $data->RowID;
-	$obj->PlanID = $data->PlanID;
-	$obj->ElementID = $data->ElementID;
 	
-	$xml = new SimpleXMLElement('<root/>');
-	$elems = array_keys(get_object_vars($data));
-	foreach($elems as $el)
+	if(isset($_POST["record"]))
 	{
-		if(strpos($el, "element_") === false)
-			continue;
-		$xml->addChild($el, $data->$el);
-	}
+		$st = stripslashes(stripslashes($_POST["record"]));
+		$data = json_decode($st);
 	
-	$obj->ElementValue = $xml->asXML();
+		$obj->RowID = $data->RowID;
+		$obj->PlanID = $data->PlanID;
+		$obj->ElementID = $data->ElementID;
+
+		$xml = new SimpleXMLElement('<root/>');
+		$elems = array_keys(get_object_vars($data));
+		foreach($elems as $el)
+		{
+			if(strpos($el, "element_") === false)
+				continue;
+			$xml->addChild($el, $data->$el);
+		}
+		$obj->ElementValue = $xml->asXML();
+	}
+	else
+	{
+		$obj->PlanID = $_POST["PlanID"];
+		$obj->ElementID = $_POST["ElementID"];
+		
+		$dt = PdoDataAccess::runquery("select RowID from PLN_PlanItems where PlanID=? AND ElementID=?",
+			array($obj->PlanID, $obj->ElementID));
+		if(count($dt)>0)
+			$obj->RowID = $dt[0]["RowID"];		
+		
+		$xml = new SimpleXMLElement('<root/>');
+		foreach($_POST as $key => $value)
+		{
+			if(strpos($key, "element_") === false)
+				continue;
+			$xml->addChild($key, $value);
+		}
+		$obj->ElementValue = $xml->asXML();
+	}
 	
 	if($obj->RowID > 0)
 		$result = $obj->EditItem();

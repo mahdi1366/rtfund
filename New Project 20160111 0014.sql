@@ -12821,7 +12821,7 @@ CREATE TABLE `WFM_FlowSteps` (
   `PostID` int(10) unsigned DEFAULT NULL,
   `PersonID` int(10) unsigned DEFAULT NULL,
   `IsActive` enum('YES','NO') NOT NULL,
-  PRIMARY KEY (`StepRowID`) USING BTREE
+  PRIMARY KEY (`StepRowID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
 
 --

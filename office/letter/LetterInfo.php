@@ -88,6 +88,19 @@ function LetterInfo(){
 				html : '<?= $content ?>'
 			}],
 			buttons : [{
+				text : "بایگانی",
+				iconCls : "archive",
+				handler : function(){
+					LetterInfoObject.ArchiveWindowShow();
+				}
+			},{
+				text : "ارجاع",
+				iconCls : "sendLetter",
+				itemId : "btn_send",
+				handler : function(){
+					LetterInfoObject.SendWindowShow();
+				}
+			},{
 				text : "چاپ",
 				iconCls : "print",
 				handler : function(){ 
@@ -153,6 +166,74 @@ function LetterInfo(){
 }
 
 LetterInfoObject = new LetterInfo();
+
+LetterInfo.prototype.SendWindowShow = function(){
+	
+	if(!this.SendingWin)
+	{
+		this.SendingWin = new Ext.window.Window({
+			width : 620,			
+			height : 435,
+			modal : true,
+			bodyStyle : "background-color:white;",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "sending.php",
+				scripts : true
+			}
+		});
+		Ext.getCmp(this.TabID).add(this.SendingWin);
+	}
+
+	this.SendingWin.show();
+	this.SendingWin.center();
+	
+	this.SendingWin.loader.load({
+		scripts : true,
+		params : {
+			ExtTabID : this.SendingWin.getEl().id,
+			parent : "LetterInfoObject.SendingWin",
+			AfterSendHandler : function(){
+				framework.CloseTab(LetterInfoObject.TabID);
+			},
+			
+			LetterID : this.LetterID
+		}
+	});
+}
+
+LetterInfo.prototype.ArchiveWindowShow = function(){
+	
+	if(!this.ArchiveWin)
+	{
+		this.ArchiveWin = new Ext.window.Window({
+			width : 412,			
+			height : 535,
+			modal : true,
+			bodyStyle : "background-color:white;",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "archive.php?mode=adding",
+				scripts : true
+			}
+		});
+		Ext.getCmp(this.TabID).add(this.ArchiveWin);
+	}
+
+	this.ArchiveWin.show();
+	this.ArchiveWin.center();
+	
+	this.ArchiveWin.loader.load({
+		scripts : true,
+		params : {
+			ExtTabID : this.ArchiveWin.getEl().id,
+			parent : "LetterInfoObject.ArchiveWin",			
+			LetterID : this.LetterID
+		}
+	});
+}
+
+
 
 </script>
 <style>

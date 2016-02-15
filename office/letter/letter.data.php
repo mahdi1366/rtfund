@@ -26,6 +26,9 @@ switch ($task) {
 	case "SelectReceivedLetters":
 		SelectReceivedLetters();
 		
+	case "SelectArchiveLetters":
+		SelectArchiveLetters();
+		
 	//.....................................
     case 'SaveLetter':
         SaveLetter();
@@ -51,6 +54,23 @@ switch ($task) {
 		
 	case "ReturnSend":
 		ReturnSend();	
+		
+	//...............................................
+		
+	case "SelectArchiveNodes":
+		SelectArchiveNodes();
+		
+	case "SaveFolder":
+		SaveFolder();
+		
+	case "DeleteFolder":
+		DeleteFolder();
+		
+	case "AddLetterToFolder":
+		AddLetterToFolder();
+		
+	case "RemoveLetterFromFolder":
+		RemoveLetterFromFolder();
 	
 }
 
@@ -72,36 +92,14 @@ function SelectLetter() {
 
 function SelectDraftLetters() {
 
-    $query = "select * from OFC_letters
-		left join OFC_send using(LetterID) 
-		where SendID  is null AND PersonID=:pid";
-    $param = array();
-    $param[':pid'] = $_SESSION["USER"]["PersonID"];
-
-    $list = PdoDataAccess::runquery($query, $param);
-
+    $list = OFC_letters::SelectDraftLetters();
     echo dataReader::getJsonData($list, count($list), $_GET['callback']);
     die();
 }
 
 function SelectReceivedLetters(){
 	
-	$query = "select s.*,l.*, 
-			if(IsReal='YES',concat(fname, ' ', lname),CompanyName) FromPersonName,
-			if(count(DocumentID) > 0,'YES','NO') hasAttach
-		from OFC_send s
-			join OFC_letters l using(LetterID)
-			join BSC_persons p on(s.FromPersonID=p.PersonID)
-			left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
-			left join OFC_Send s2 on(s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
-		where s2.SendID is null AND s.ToPersonID=:tpid
-		group by SendID";
-	$param = array();
-	$param[":tpid"] = $_SESSION["USER"]["PersonID"];
-	
-	$query .= dataReader::makeOrder();
-	
-	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
+	$dt = OFC_letters::SelectReceivedLetters();
 	$cnt = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	
@@ -111,26 +109,40 @@ function SelectReceivedLetters(){
 
 function SelectSendedLetters(){
 	
-	$query = "select s.*,l.*, 
-			if(IsReal='YES',concat(fname, ' ', lname),CompanyName) ToPersonName,
-			if(count(DocumentID) > 0,'YES','NO') hasAttach
-		from OFC_send s
-			join OFC_letters l using(LetterID)
-			join BSC_persons p on(s.ToPersonID=p.PersonID)
-			left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
-		where FromPersonID=:fpid
-		group by SendID
-	";
-	$param = array();
-	$param[":fpid"] = $_SESSION["USER"]["PersonID"];
-
-	$query .= dataReader::makeOrder();
-	
-	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
+	$dt = OFC_letters::SelectSendedLetters();
 	$cnt = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	
 	echo dataReader::getJsonData($dt, $cnt, $_GET["callback"]);
+	die();
+}
+
+function SelectArchiveLetters(){
+	
+	$FolderID = isset($_REQUEST["FolderID"]) ? $_REQUEST["FolderID"] : "";
+	if(empty($FolderID))
+	{
+		echo dataReader::getJsonData(array(), 0, $_GET["callback"]);
+		die();
+	}
+	$query = "select l.*,a.FolderID,if(count(DocumentID) > 0,'YES','NO') hasAttach
+
+			from OFC_ArchiveItems a
+				join OFC_letters l using(LetterID)
+				left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=l.LetterID)				
+			where FolderID=:fid";
+	
+	$param = array(":fid" => $FolderID);
+	
+	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
+        $field = $_REQUEST['fields'];
+        $query .= ' and ' . $field . ' like :f';
+        $param[':f'] = '%' . $_REQUEST['query'] . '%';
+    }
+	
+	$query .= " group by LetterID";
+	$dt = PdoDataAccess::runquery($query, $param);
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
 
@@ -311,6 +323,97 @@ function ReturnSend(){
 	
 	$result = $obj->DeleteSend();
 	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//.............................................
+
+function SelectArchiveNodes(){
+
+	$dt = PdoDataAccess::runquery("
+		SELECT 
+			ParentID,FolderID id,FolderName as text,'true' as leaf, f.*
+		FROM OFC_archive f
+		where PersonID=?
+		order by ParentID,FolderName", array($_SESSION["USER"]["PersonID"]));
+
+    $returnArray = array();
+    $refArray = array();
+
+    foreach ($dt as $row) {
+        if ($row["ParentID"] == 0) {
+            $returnArray[] = $row;
+            $refArray[$row["id"]] = &$returnArray[count($returnArray) - 1];
+            continue;
+        }
+
+        $parentNode = &$refArray[$row["ParentID"]];
+
+        if (!isset($parentNode["children"])) {
+            $parentNode["children"] = array();
+            $parentNode["leaf"] = "false";
+        }
+        $lastIndex = count($parentNode["children"]);
+        $parentNode["children"][$lastIndex] = $row;
+        $refArray[$row["id"]] = &$parentNode["children"][$lastIndex];
+    }
+
+    $str = json_encode($returnArray);
+
+    $str = str_replace('"children"', 'children', $str);
+    $str = str_replace('"leaf"', 'leaf', $str);
+    $str = str_replace('"text"', 'text', $str);
+    $str = str_replace('"id"', 'id', $str);
+    $str = str_replace('"true"', 'true', $str);
+    $str = str_replace('"false"', 'false', $str);
+
+    echo $str;
+    die();
+}
+
+function SaveFolder(){
+	
+	$obj = new OFC_archive();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	$obj->PersonID = $_SESSION["USER"]["PersonID"];
+	$obj->ParentID = $obj->ParentID == "src" ? "0" : $obj->ParentID;		
+	
+	if(empty($obj->FolderID))
+		$result = $obj->AddFolder();
+	else
+		$result = $obj->EditFolder();
+	
+	echo Response::createObjectiveResponse($result, $result ? $obj->FolderID : "");
+	die();
+}
+
+function DeleteFolder(){
+	
+	$FolderID = $_POST["FolderID"];
+	$result = OFC_archive::DeleteFolder($FolderID);
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function AddLetterToFolder(){
+	
+	$LetterID = $_POST["LetterID"];
+	$FolderID = $_POST["FolderID"];
+	
+	PdoDataAccess::runquery("insert into OFC_ArchiveItems values(?,?)", array($FolderID, $LetterID));
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function RemoveLetterFromFolder(){
+	
+	$LetterID = $_POST["LetterID"];
+	$FolderID = $_POST["FolderID"];
+	
+	PdoDataAccess::runquery("delete from OFC_ArchiveItems where FolderID=? AND LetterID=?",
+		array($FolderID, $LetterID));
+
+	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
 	die();
 }
 

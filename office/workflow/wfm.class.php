@@ -252,6 +252,51 @@ class WFM_FlowRows extends PdoDataAccess {
 			return true;
 		return false;
 	}
+	
+	static function SelectReceivedForms($where="", $params = array()){
+		
+		$dt = PdoDataAccess::runquery("select FlowID,StepID 
+			from WFM_FlowSteps s 
+			left join BSC_persons p using(PostID)
+			where s.IsActive='YES' AND if(s.PersonID>0,s.PersonID=:pid,p.PersonID=:pid)",
+				array(":pid" => $_SESSION["USER"]["PersonID"]));
+		if(count($dt) == 0)
+			return array();
+
+		$where .= " AND fr.IsEnded='NO' AND (";
+		foreach($dt as $row)
+		{
+			$preStep = $row["StepID"]*1-1;
+			$nextStep = $row["StepID"]*1+1;
+
+			$where .= "(fr.FlowID=" . $row["FlowID"] .
+				" AND fs.StepID" . ($preStep == 0 ? " is null" : "=" . $preStep) . 
+				" AND ActionType='CONFIRM') OR (fr.FlowID=" . $row["FlowID"] . 
+				" AND fs.StepID=" . $nextStep . " AND ActionType='REJECT') OR";
+		}
+		$where = substr($where, 0, strlen($where)-2) . ")";
+		//--------------------------------------------------------
+		$query = "select fr.*,f.FlowDesc, 
+						b.InfoDesc ObjectTypeDesc,
+						ifnull(fr.StepDesc,'شروع گردش') StepDesc,
+						if(p.IsReal='YES',concat(p.fname, ' ',p.lname),p.CompanyName) fullname,
+						b.param1 url,
+						b.param2 parameter
+					from WFM_FlowRows fr
+					join ( select max(RowID) RowID,FlowID,ObjectID from WFM_FlowRows group by FlowID,ObjectID )t
+						using(RowID,FlowID,ObjectID)
+					join WFM_flows f using(FlowID)
+					join BaseInfo b on(b.TypeID=11 AND b.InfoID=f.ObjectType)
+					left join WFM_FlowSteps fs on(fr.StepRowID=fs.StepRowID)
+					join BSC_persons p on(fr.PersonID=p.PersonID)
+
+					left join LON_ReqParts lp on(fr.ObjectID=PartID)
+					left join LON_requests lr on(lp.RequestID=lr.RequestID)
+					left join BSC_persons pp on(lr.LoanPersonID=pp.PersonID)
+
+					where 1=1 " . $where . dataReader::makeOrder();
+		return PdoDataAccess::runquery_fetchMode($query, $params);
+	}
 }
 
 ?>

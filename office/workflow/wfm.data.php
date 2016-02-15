@@ -208,8 +208,8 @@ function SelectAllForms(){
 			$nextStep = $row["StepID"]*1+1;
 			
 			$where .= "(fr.FlowID=" . $row["FlowID"] .
-				" AND fs.StepID" . ($preStep == 0 ? " is null" : "=" . $preStep) . " AND ActionType='CONFIRM') OR 
-				(fr.FlowID=" . $row["FlowID"] . 
+				" AND fs.StepID" . ($preStep == 0 ? " is null" : "=" . $preStep) . 
+				" AND ActionType='CONFIRM') OR (fr.FlowID=" . $row["FlowID"] . 
 				" AND fs.StepID=" . $nextStep . " AND ActionType='REJECT') OR";
 		}
 		$where = substr($where, 0, strlen($where)-2) . ")";
@@ -275,9 +275,7 @@ function ChangeStatus(){
 			$newObj->IsEnded = "YES";
 	}
 	//.............................................
-	$result = $newObj->AddFlowRow();
-	
-	
+	$result = $newObj->AddFlowRow();	
 	
 	echo Response::createObjectiveResponse($result, "");
 	die();

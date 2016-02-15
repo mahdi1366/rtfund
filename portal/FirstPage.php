@@ -11,8 +11,17 @@ $IsShareholder = $_SESSION["USER"]["IsShareholder"] == "YES";
 $IsAgent = $_SESSION["USER"]["IsAgent"] == "YES";
 $IsSupporter = $_SESSION["USER"]["IsSupporter"] == "YES";
 
-$loansText = "هنوز وامی به نام شما به صندوق معرفی نشده است";
-
+$dt = PdoDataAccess::runquery("select * from LON_requests 
+	where StatusID<70 AND LoanPersonID=? 
+	AND (ReqPersonID<>LoanPersonID or SupportPersonID>0)",
+	array($_SESSION["USER"]["PersonID"]));
+if(count($dt) == 0)
+	$loansText = "هنوز وامی به نام شما به صندوق معرفی نشده است";
+else
+	$loansText = "وامی به مبلغ " . number_format($dt[0]["ReqAmount"]) . " به نام شما تعریف شده است. ".
+		"<br>برای مشاهده جزئیات " . "<a javascript:StartPageObject.OpenLoan(" . 
+		$dt[0]["RequestID"] . ")>" . "اینجا" . 
+		"</a> کلیک کنید.";
 ?>
 <script>
 
@@ -45,6 +54,10 @@ function StartPage(){
 }
 
 StartPageObject = new StartPage();
+
+StartPage.prototype.OpenLoan = function(RequestID){
+portal.OpenPage("/loan/request/RequestInfo.php", {RequestID : RequestID});
+}
 
 </script>
 <center><br>

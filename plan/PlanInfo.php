@@ -34,7 +34,8 @@ function MakeForms(){
 					store: new Ext.data.TreeStore({
 						proxy: {
 							type: 'ajax',
-							url: this.address_prefix + 'plan.data.php?task=selectSubGroups&ParentID=" . $season["GroupID"] . "'
+							url: this.address_prefix + 
+								'plan.data.php?task=selectSubGroups&ParentID=" . $season["GroupID"] . "'
 						}					
 					}),
 					root: {id: 'src'},
@@ -42,7 +43,9 @@ function MakeForms(){
 					height : 100,
 					width : 780,
 					listeners : {
-						itemdblclick : function(v,record){if(!record.data.leaf) return; PlanInfoObject.LoadElements(record," . $season["GroupID"] . ");}
+						itemdblclick : function(v,record){
+							if(!record.data.leaf) return; 
+							PlanInfoObject.LoadElements(record," . $season["GroupID"] . ");}
 					}
 				}),
 				new Ext.panel.Panel({
@@ -64,8 +67,15 @@ require_once 'PlanInfo.js.php';
 if(isset($_SESSION["USER"]["framework"]))
 	echo "<br>";
 ?>
+<style>
+	.desc{
+		text-align: justify;
+		line-height: 20px;
+		margin:0 10 0 10;
+	}
+</style>
 <center>
 	<div align="right" style="width:780px"> 
-		<div id="mainForm"></div>
+		<form id="mainForm"></form>
 	</div>
 </center>

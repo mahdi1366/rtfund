@@ -65,17 +65,22 @@ PlanInfo.prototype.LoadElements = function(record, season){
 	mask.show();
 	
 	var frm = null;
-	eval("frm = this.GroupForms.elem_" + record.data.id);
+	//eval("frm = this.GroupForms.elem_" + record.data.id);
 	if(frm == null)
 	{
 		eval("this.GroupForms.elem_" + record.data.id + " = new Array();");
 		this.store = new Ext.data.Store({
 			proxy:{
 				type: 'jsonp',
-				url: this.address_prefix + "plan.data.php?task=SelectElements&GroupID=" + record.data.id,
+				extraParams : {
+					GroupID : record.data.id,
+					PlanID : this.PlanID
+				},
+				url: this.address_prefix + "plan.data.php?task=SelectElements",
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
-			fields : ["ElementID", "ParentID", "GroupID", "ElementTitle", "ElementType", "properties", "EditorProperties"],
+			fields : ["ElementID", "ParentID", "GroupID", "ElementTitle", "ElementType", 
+				"properties", "EditorProperties", "ElementValue", "values"],
 			autoLoad : true,
 			listeners :{
 				load : function(){
@@ -100,7 +105,7 @@ function merge(obj1,obj2){
     for (var attrname in obj2) { obj3[attrname] = obj2[attrname]; }
     return obj3;
 }
-
+var aaa;
 PlanInfo.prototype.MakeElemForms = function(store, season){
 
 	var parentEl = this.AccorPanel.down("[itemId=ParentElement_" + season + "]");
@@ -112,9 +117,30 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 		{
 			case "panel" : 
 				NewElement = {
-					xtype : "panel",
+					xtype : "form",
+					frame : true,
 					itemId : "element_" + record.data.ElementID,
-					style : "margin-bottom:4px"
+					style : "margin-bottom:4px",
+					buttons : [{
+						text : "ذخیره",
+						iconCls : "save",
+						handler : function(){
+							mask = new Ext.LoadMask(parentEl, {msg:'در حال ذخيره سازي...'});
+							mask.show();    
+							this.up('form').getForm().submit({
+								url:  PlanInfoObject.address_prefix + 'plan.data.php?task=SavePlanItems',
+								method: 'POST',
+								params : {
+									PlanID : PlanInfoObject.PlanID,
+									ElementID : this.up('form').itemId.split("_")[1]
+								},
+								success: function(form,result){
+									mask.hide();
+								},
+								failure: function(){}
+							});
+						}
+					}]
 				};
 				break;
 			//..................................................................
@@ -134,6 +160,19 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 						break;
 					}
 					var editor = {xtype : sub_record.data.ElementType};
+					if(sub_record.data.ElementType == "combo")
+					{
+						arr = sub_record.data.values.split("#");
+						data = [];
+						for(j=0;j<arr.length;j++)
+							data.push([ arr[j] ]);
+						editor.store = new Ext.data.SimpleStore({
+							fields : ['value'],
+							data : data
+						});
+						editor.displayField = "value";
+						editor.valueField = "value";
+					}
 					eval("editor = merge(editor,{" + sub_record.data.EditorProperties + "});");
 					
 					NewColumn = {
@@ -141,13 +180,19 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 						sortable : false,
 						text : sub_record.data.ElementTitle,
 						dataIndex : "element_" + sub_record.data.ElementID,
-						editor : editor
+						editor : editor						
 					};
+					if(sub_record.data.ElementType == "currencyfield")
+						NewColumn.renderer = Ext.util.Format.Money;
+					if(sub_record.data.ElementType == "currencyfield" || 
+						sub_record.data.ElementType == "numberfield")
+						NewColumn.editor.hideTrigger = "true";
+					
+					
 					eval("NewColumn = merge(NewColumn,{" + sub_record.data.properties + "});");
 					columns.push(NewColumn);
 					fields.push("element_" + sub_record.data.ElementID);
 				}
-				
 				NewElement = {
 					xtype : "grid",
 					viewConfig: {
@@ -193,19 +238,24 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 								Ext.MessageBox.alert("","ابتدا ردیف مورد نظر را انتخاب کنید");
 								return;
 							}
-							var mask = new Ext.LoadMask(parentEl, {msg:'در حال ذخيره سازي...'});
-							mask.show();    
-							Ext.Ajax.request({
-								url:  PlanInfoObject.address_prefix + 'plan.data.php?task=DeletePlanItem',
-								params:{
-									RowID : record.data.RowID
-								},
-								method: 'POST',
-								success: function(response,option){
-									mask.hide();
-									grid.getStore().load();
-								},
-								failure: function(){}
+							
+							Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟",function(btn){
+								if(btn == "no")
+									return;
+								var mask = new Ext.LoadMask(parentEl, {msg:'در حال ذخيره سازي...'});
+								mask.show();    
+								Ext.Ajax.request({
+									url:  PlanInfoObject.address_prefix + 'plan.data.php?task=DeletePlanItem',
+									params:{
+										RowID : record.data.RowID
+									},
+									method: 'POST',
+									success: function(response,option){
+										mask.hide();
+										grid.getStore().load();
+									},
+									failure: function(){}
+								});
 							});
 						}
 					}],
@@ -249,11 +299,39 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 				};
 				break;
 			//..................................................................
+			case "radio" :
+				var items = new Array();
+				values = record.data.values.split('#');
+				for(j=0;j<values.length;j++)
+					items.push({
+						boxLabel : values[j],
+						name : "element_" + record.data.ElementID,
+						inputValue : j,
+						checked : record.data.ElementValue == j ? true : false
+					});
+				NewElement = {
+					xtype : "radiogroup",
+					fieldLabel : record.data.ElementTitle,
+					itemId : "element_" + record.data.ElementID,
+					items : items,					
+					columns: values.length
+				};
+				break;
+			case "displayfield":
+				NewElement = {
+					xtype : record.data.ElementType,
+					fieldLabel : record.data.ElementTitle,
+					value : record.data.values.replace(/\n/g,"<br>"),
+					fieldCls : "desc"
+				};
+				break;				
 			default : 
 				NewElement = {
 					xtype : record.data.ElementType,
 					fieldLabel : record.data.ElementTitle,
-					itemId : "element_" + record.data.ElementID
+					itemId : "element_" + record.data.ElementID,
+					name : "element_" + record.data.ElementID,
+					value : record.data.ElementValue
 				};
 		}
 		

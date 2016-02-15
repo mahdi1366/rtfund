@@ -14,8 +14,7 @@ class OFC_letters extends PdoDataAccess{
 	public $PersonID;
 	public $context;
 
-    function __construct($LetterID = "")
-    {
+    function __construct($LetterID = ""){
 		$this->DT_LetterDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_RegDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
@@ -23,15 +22,13 @@ class OFC_letters extends PdoDataAccess{
 			parent::FillObject($this, "select * from OFC_letters where LetterID=?", array($LetterID));
     }
 
-    static function GetAll($where = "",$whereParam = array())
-    {
+    static function GetAll($where = "",$whereParam = array()){
 	    $query = "select * from OFC_letters";
 	    $query .= ($where != "") ? " where " . $where : "";
 	    return parent::runquery($query, $whereParam);
     }
 	
-    function AddLetter()
-    {
+    function AddLetter(){
 	    if( parent::insert("OFC_letters", $this) === false )
 		    return false;
 
@@ -45,8 +42,7 @@ class OFC_letters extends PdoDataAccess{
 		return true;	
     }
 
-    function EditLetter($pdo = null)
-    {
+    function EditLetter($pdo = null){
 	    $whereParams = array();
 	    $whereParams[":kid"] = $this->LetterID;
 
@@ -61,8 +57,7 @@ class OFC_letters extends PdoDataAccess{
 		return true;	
     }
 
-    static function RemoveLetter($LetterID)
-    {
+    static function RemoveLetter($LetterID){
 	    $result = parent::delete("OFC_letters", "LetterID=:kid ",
 		    array(":kid" => $LetterID));
 
@@ -76,6 +71,53 @@ class OFC_letters extends PdoDataAccess{
 		$daObj->execute();
 		return true;	
     }
+	
+	static function SelectReceivedLetters($where = "", $param = array()){
+		
+		$query = "select s.*,l.*, 
+				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) FromPersonName,
+				if(count(DocumentID) > 0,'YES','NO') hasAttach
+			from OFC_send s
+				join OFC_letters l using(LetterID)
+				join BSC_persons p on(s.FromPersonID=p.PersonID)
+				left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
+				left join OFC_Send s2 on(s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
+			where s2.SendID is null AND s.ToPersonID=:tpid " . $where . "
+			group by SendID";
+		$param[":tpid"] = $_SESSION["USER"]["PersonID"];
+		
+		$query .= dataReader::makeOrder();
+		return PdoDataAccess::runquery_fetchMode($query, $param);
+	}
+	
+	static function SelectDraftLetters($where = "", $param = array()){
+		
+		$query = "select * from OFC_letters
+			left join OFC_send using(LetterID) 
+			where SendID  is null AND PersonID=:pid " . $where;
+		$param[':pid'] = $_SESSION["USER"]["PersonID"];
+
+		$query .= dataReader::makeOrder();
+		return PdoDataAccess::runquery($query, $param);
+	}
+	
+	static function SelectSendedLetters($where = "", $param = array()){
+		
+		$query = "select s.*,l.*, 
+				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) ToPersonName,
+				if(count(DocumentID) > 0,'YES','NO') hasAttach
+			from OFC_send s
+				join OFC_letters l using(LetterID)
+				join BSC_persons p on(s.ToPersonID=p.PersonID)
+				left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
+			where FromPersonID=:fpid " . $where . "
+			group by SendID
+		";
+		$param[":fpid"] = $_SESSION["USER"]["PersonID"];
+		$query .= dataReader::makeOrder();
+
+		return PdoDataAccess::runquery_fetchMode($query, $param);
+	}
 }
 
 class OFC_send extends PdoDataAccess{
@@ -91,23 +133,20 @@ class OFC_send extends PdoDataAccess{
 	public $IsSeen;
 	public $IsDeleted;
 
-    function __construct($SendID = "")
-    {
+    function __construct($SendID = ""){
 		$this->DT_SendDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($SendID != "")
 			parent::FillObject($this, "select * from OFC_send where SendID=?", array($SendID));
     }
 
-    static function GetAll($where = "",$whereParam = array())
-    {
+    static function GetAll($where = "",$whereParam = array()){
 	    $query = "select * from OFC_send ";
 	    $query .= ($where != "") ? " where " . $where : "";
 	    return parent::runquery($query, $whereParam);
     }
 	
-    function AddSend($pdo = null)
-    {
+    function AddSend($pdo = null){
 	    if( parent::insert("OFC_send", $this, $pdo) === false )
 		    return false;
 
@@ -122,8 +161,7 @@ class OFC_send extends PdoDataAccess{
 		return true;	
     }
 	
-	function EditSend($pdo = null)
-    {
+	function EditSend($pdo = null){
 	    if( parent::update("OFC_send", $this, "SendID=:s", array(":s" =>$this->SendID), $pdo) === false )
 		    return false;
 
@@ -135,8 +173,7 @@ class OFC_send extends PdoDataAccess{
 		return true;	
     }
 	
-	function DeleteSend($pdo = null)
-    {
+	function DeleteSend($pdo = null){
 	    if( parent::delete("OFC_send", "SendID=?", array($this->SendID), $pdo) === false )
 		    return false;
 
@@ -148,8 +185,7 @@ class OFC_send extends PdoDataAccess{
 		return true;	
     }
 	
-	static function UpdateIsSeen($SendID)
-	{
+	static function UpdateIsSeen($SendID){
 		$obj = new OFC_send($SendID);
 		
 		if($obj->ToPersonID != $_SESSION["USER"]["PersonID"])
@@ -160,4 +196,66 @@ class OFC_send extends PdoDataAccess{
 	}
 }
 
+class OFC_archive extends PdoDataAccess{
+	
+	public $FolderID;
+    public $ParentID;
+	public $FolderName;
+	public $PersonID;
+
+    static function GetAll($where = "",$whereParam = array()){
+	    $query = "select * from OFC_send ";
+	    $query .= ($where != "") ? " where " . $where : "";
+	    return parent::runquery($query, $whereParam);
+    }
+	
+    function AddFolder($pdo = null){
+	    if( parent::insert("OFC_archive", $this, $pdo) === false )
+		    return false;
+
+	    $this->FolderID = parent::InsertID($pdo);
+
+	    $daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->FolderID;
+		$daObj->TableName = "OFC_archive";
+		$daObj->execute($pdo);
+		return true;	
+    }
+	
+	function EditFolder($pdo = null){
+	    if( parent::update("OFC_archive", $this, "FolderID=:s", array(":s" =>$this->FolderID), $pdo) === false )
+		    return false;
+
+	    $daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_update;
+		$daObj->MainObjectID = $this->FolderID;
+		$daObj->TableName = "OFC_archive";
+		$daObj->execute($pdo);
+		return true;	
+    }
+	
+	static function DeleteFolder($FolderID){
+		
+		PdoDataAccess::runquery("delete from OFC_ArchiveItems where FolderID=?", array($FolderID));
+		
+	    if( parent::delete("OFC_archive", "FolderID=?", array($FolderID)) === false )
+		    return false;
+
+	    $daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_delete;
+		$daObj->MainObjectID = $FolderID;
+		$daObj->TableName = "OFC_archive";
+		$daObj->execute();
+		return true;	
+    }
+	
+	static function IsEmpty($FolderID){
+		
+		$dt = PdoDataAccess::runquery_fetchMode("select * from OFC_ArchiveItems where FolderID=?",
+			array($FolderID));
+		
+		return $dt->rowCount() > 0;
+	}
+}
 ?>
