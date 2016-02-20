@@ -20,7 +20,7 @@ form{
 	line-height:20px;	
 }*/
 a:link {
-	color: #ffffff;
+	/*color: #ffffff;*/
 	text-decoration: none;
 }
 a:visited {
@@ -134,7 +134,7 @@ a:active {
 	width:100%;
     color:#408080;
 	vertical-align: middle;
-    font-family:Arial, 'Times New Roman',Times, serif;
+    font-family:Tahoma;
 }
 .menuItem:hover{
 	color : Highlight;

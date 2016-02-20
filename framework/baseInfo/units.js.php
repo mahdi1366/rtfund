@@ -271,6 +271,8 @@ Unit.prototype.BeforeSavePost = function(mode)
 				buttons :[{
 					text : "ذخیره",
 					handler : function(){
+						mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
+						mask.show();
 						UnitObject.postWin.down('form').getForm().submit({
 							clientValidation: true,
 							url: UnitObject.address_prefix + 'baseInfo.data.php?task=SavePost',
@@ -283,8 +285,8 @@ Unit.prototype.BeforeSavePost = function(mode)
 
 								if(mode == "new")
 								{
-									ParentID = UnitObject.postWin.down('form').getComponent("UnitID").getValue();
-									Parent = UnitObject.tree.getRootNode().findChild("id",ParentID,true);
+									UnitID = UnitObject.postWin.down('form').getComponent("UnitID").getValue();
+									Parent = UnitObject.tree.getRootNode().findChild("id",UnitID,true);
 									Parent.set('leaf', false);
 									Parent.appendChild({
 										id : action.result.data,
@@ -294,7 +296,7 @@ Unit.prototype.BeforeSavePost = function(mode)
 									});  
 									Parent.expand();
 								}
-								else
+			 					else
 								{
 									node = UnitObject.tree.getRootNode().findChild("id", PostID, true);
 									node.set('text', UnitObject.postWin.down('form').getComponent("PostName").getValue());
@@ -302,9 +304,7 @@ Unit.prototype.BeforeSavePost = function(mode)
 
 								UnitObject.postWin.down('form').getForm().reset();
 								UnitObject.postWin.hide();
-
 								mask.hide();
-
 							},
 							failure : function(form,action)
 							{
@@ -333,9 +333,9 @@ Unit.prototype.BeforeSavePost = function(mode)
 	
 	if(mode == "edit")
 	{
-		this.infoWin.down('form').getComponent("PostID").setValue(record.data.id);
-		this.infoWin.down('form').getComponent("UnitName").setValue(record.data.text);
-		this.infoWin.down('form').getComponent("UnitID").setValue(record.data.parentId);
+		this.postWin.down('form').getComponent("PostID").setValue(record.data.id);
+		this.postWin.down('form').getComponent("PostName").setValue(record.data.text);
+		this.postWin.down('form').getComponent("UnitID").setValue(record.data.parentId);
 	}
 }
 

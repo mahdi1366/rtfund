@@ -66,10 +66,10 @@ for ($i = 0; $i < count($menus); $i++) {
 				try {
 					Ext.onReady(function(){
 						Ext.QuickTips.init();
-						Ext.get('loading').remove();
-						Ext.get('loading-mask').fadeOut({
+						//Ext.get('loading').remove();
+						/*Ext.get('loading-mask').fadeOut({
 							remove:true
-						});
+						});*/
 						portal = new PortalClass();
 						portal.OpenPage("/portal/FirstPage.php");
 						PortalClass.SystemLoad();
@@ -80,11 +80,6 @@ for ($i = 0; $i < count($menus); $i++) {
 		</script>
 	</head>
 <body dir=rtl>
-	<div id="loading-mask"></div>
-	<div id="loading">
-		<div class="loading-indicator">در حال بارگذاری سیستم . . .
-			<img src="/generalUI/ext4/resources/themes/icons/loading-balls.gif" style="margin-right:8px;" align="absmiddle"/></div>
-	</div>
 	<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/icons.css" />
 	<script type="text/javascript" src="/generalUI/ext4/resources/ext-all.js"></script>
 	<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-rtl.css" />
@@ -135,6 +130,7 @@ for ($i = 0; $i < count($menus); $i++) {
 			</div>
 		</div>
      <div class="main">
+			
           <div id="mainPortalFrame" class="mainFrame" ></div>
           <div class="menu" >
                <?= $menuStr?>

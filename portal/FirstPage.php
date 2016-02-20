@@ -18,10 +18,11 @@ $dt = PdoDataAccess::runquery("select * from LON_requests
 if(count($dt) == 0)
 	$loansText = "هنوز وامی به نام شما به صندوق معرفی نشده است";
 else
-	$loansText = "وامی به مبلغ " . number_format($dt[0]["ReqAmount"]) . " به نام شما تعریف شده است. ".
-		"<br>برای مشاهده جزئیات " . "<a javascript:StartPageObject.OpenLoan(" . 
-		$dt[0]["RequestID"] . ")>" . "اینجا" . 
-		"</a> کلیک کنید.";
+	$loansText = "<a class='menuItem blueText' style='text-align:center;font-size:12px' ".
+		"href='javascript:StartPageObject.OpenLoan(" . 
+		$dt[0]["RequestID"] . ")'>" . "وامی به مبلغ " . 
+		number_format($dt[0]["ReqAmount"]) . " به نام شما تعریف شده است. [ مشاهده جزئیات ]".
+		"</a> برای پیگیری های بعدی می توانید از منوی وام های دریافتی وضعیت وام خود را پیگیری کنید";
 ?>
 <script>
 
@@ -56,7 +57,8 @@ function StartPage(){
 StartPageObject = new StartPage();
 
 StartPage.prototype.OpenLoan = function(RequestID){
-portal.OpenPage("/loan/request/RequestInfo.php", {RequestID : RequestID});
+
+	portal.OpenPage("/loan/request/RequestInfo.php", {RequestID : RequestID});
 }
 
 </script>

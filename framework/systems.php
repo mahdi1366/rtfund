@@ -29,6 +29,7 @@ $_SESSION['USER']["RecentSystems"] = array();
 		<style>
 			body{
 				margin: 0;
+				background-image: url("icons/1.jpg");
 			}
 			
 			.headerDiv{
@@ -39,7 +40,7 @@ $_SESSION['USER']["RecentSystems"] = array();
 			}
 			
 			.menus{
-				width : 1000px;	
+				width : 900px;	
 				margin-bottom: 20px;
 			}
 			
@@ -50,48 +51,45 @@ $_SESSION['USER']["RecentSystems"] = array();
 			}
 			
 			.system {
-				float : right;
-				width: 300px;
-				margin-bottom: 20px;
-				margin-left: 20px;
+				background-color: rgba(255, 255, 255, 0.51);
+				border: 2px solid #aaa;
+				border-radius: 15px;
+				box-shadow: 2px 4px 13px #333;
+				cursor: pointer;
+				float: right;
 				font-family: tahoma;
 				font-size: 12px;
-				border : medium none rgba(255, 255, 255, 0.2);
-				box-shadow: 2px 2px 5px #c1c1c1;
-				height : 200px;
-				border-radius: 15px;
-				cursor : pointer;
+				height: 180px;
+				margin-bottom: 20px;
+				margin-left: 20px;
+				width: 200px;
 			}
 			
 			.SystemIcon {
-				background-color: #f2f2f2;
-				border-radius: 0 15px 15px 0;
-				width : 100px;
-				text-align: center;
-				padding-top: 50px;
-				text-overflow: ellipsis;
-				vertical-align: middle;	
-				height : 150px;
-				float: right;
-				overflow: hidden;
+				
 				background-position: center center;
 				background-repeat: no-repeat;
+				height: 90px;
+				overflow: hidden;
+				padding-top: 50px;
+				text-align: center;
+				text-overflow: ellipsis;
+				vertical-align: middle;
+				width: 100%;
 			}
 			
 			.SystemDesc {
-				line-height: 19px;
-				margin: 10px;
-				height : 150px;
-				padding-right : 4px;
+				background-color: white;
+				border-radius: 0 0 15px 15px;
+				height: 24px;
 				overflow: hidden;
+				padding-top: 15px;
+				text-align: center;
 			}
 			
 			.systemTitle {
-				padding-bottom: 10px;
-				border-bottom : 1px solid #a07eb0;
 				font-weight: bold;
 				color : #67426d;
-				width : 185px;
 			}			
 						
 			.footerDiv{
@@ -106,11 +104,6 @@ $_SESSION['USER']["RecentSystems"] = array();
 	</head>
 	<body DIR=RTL style="margin:0">
 		<center>
-		<div class="headerDiv" align="center">
-			<div style="width:800;right : 20%;position: absolute;" align="right">
-				<br><img width="150px" src="../framework/icons/LoginLogo.png"></div>
-		</div>
-		
 			<div class="menus" align="right">
 			<?php
 
@@ -124,22 +117,19 @@ $_SESSION['USER']["RecentSystems"] = array();
 			else
 			{
 				for ($i = 0; $i < count($systems); $i++) {
-					if ($i % 3 == 0)
+					if ($i % 4 == 0)
 						echo $i == 0 ? '<div class="systemRow">' : '</div><div class="systemRow">';
 
 					echo "
 						<div class=system onclick=\"OpenSystem('" . $systems[$i]["SystemID"] . "','" . $systems[$i]["SysPath"] . "')\" >" .
 							"<div class=SystemIcon style=background-image:url('icons/SysIcons/" . $systems[$i]["SysPath"]  . ".png')></div>" . 
-							"<div class=SystemDesc><div class=SystemTitle>" . $systems[$i]["SysName"] . "</div><br>" . $systems[$i]["menuNames"] . "</p>" .  "</div></div>";
+							"<div class=SystemDesc><div class=SystemTitle>" . $systems[$i]["SysName"] . "</div></div></div>";
 				}
-				if (count($systems) % 3 != 0)
+				if (count($systems) % 4 != 0)
 					echo "</div>";
 			}
 			?>
-
 			</div>
-			<div class="footerDiv"> <br>
-				<br>© کلیه حقوق این نرم افزار محفوظ است.</div>
 		</center>
 </body>
 </html>

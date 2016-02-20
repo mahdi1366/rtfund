@@ -144,16 +144,14 @@ function SavePost()
 	
 	$obj = new BSC_posts();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
-
+	$obj->PostID = $obj->PostID != "" ? substr($obj->PostID, 2) : 0; 
+	
 	if($obj->PostID > 0)
-	{
-		$obj->PostID = substr($obj->PostID, 2);
 		$res = $obj->EditPost();
-	}
 	else
 		$res = $obj->AddPost();
 
-	//print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions()); 
 	echo Response::createObjectiveResponse($res, $obj->PostID);
 	die();
 }
