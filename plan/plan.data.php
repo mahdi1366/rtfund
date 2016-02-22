@@ -12,8 +12,8 @@ include_once 'plan.class.php';
 $task = $_REQUEST["task"];
 switch ($task) {
 		
-	case "selectSubGroups":
-		selectSubGroups();
+	case "selectGroups":
+		selectGroups();
 		
 	case "SelectElements":
 		SelectElements();
@@ -28,18 +28,20 @@ switch ($task) {
 		DeletePlanItem();
 }
 
-function selectSubGroups(){
+function selectGroups(){
 	
-	$ParentID = $_GET["ParentID"];
+	//$ParentID = $_GET["ParentID"];
 	
-	$nodes = PdoDataAccess::runquery("
-			select p4.ParentID, p4.GroupID id, p4.GroupDesc text , 'true' leaf , 'false' expanded, '' iconCls
-			from PLN_groups  p4
-				left join PLN_groups p3 on(p4.ParentID=p3.GroupID)  
-				left join PLN_groups p2 on(p3.ParentID=p2.GroupID)
-				left join PLN_groups p1 on(p2.ParentID=p1.GroupID)
-				
-			where (p4.ParentID=:p or p3.ParentID=:p or p2.ParentID=:p or p1.ParentID=:p)", array(":p" => $ParentID));
+	$nodes = PdoDataAccess::runquery("select g.ParentID, g.GroupID id, g.GroupDesc text , 'true' leaf ,
+		'javascript:void(0)' href, 'false' expanded, '' iconCls , if(count(pi.RowID)>0, 'filled', '') cls
+		
+		FROM PLN_groups g
+		left join PLN_Elements e on(e.ParentID=0 AND g.GroupID=e.GroupID)
+		left join PLN_PlanItems pi on(pi.PlanID=1 AND e.ElementID=pi.ElementID)
+
+		group by g.GroupID
+		
+	");
 		
 	$returnArr = array(); 
 	$refArr = array();
@@ -58,9 +60,12 @@ function selectSubGroups(){
 		if (!isset($parentNode["children"])) {
 			$parentNode["children"] = array();
 			$parentNode["leaf"] = "false";
+			unset($parentNode["href"]);
 		}
 		$lastIndex = count($parentNode["children"]);
 		$parentNode["children"][$lastIndex] = $node;
+		
+		$refArr[ $node["id"] ] = &$parentNode["children"][$lastIndex];
 	}
 
 	echo json_encode($returnArr);

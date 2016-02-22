@@ -20,47 +20,6 @@ else
 		$User = "Customer";
 }
 //------------------------------------------------------------------------------
-$items = MakeForms();
-
-function MakeForms(){
-	
-	$items = "";
-	$data = PdoDataAccess::runquery("select * from PLN_groups where ParentID=0");
-	foreach($data as $season)
-	{
-		$items .= "{title : '" . $season["GroupDesc"] . "',
-			items :[
-				new Ext.tree.Panel({
-					store: new Ext.data.TreeStore({
-						proxy: {
-							type: 'ajax',
-							url: this.address_prefix + 
-								'plan.data.php?task=selectSubGroups&ParentID=" . $season["GroupID"] . "'
-						}					
-					}),
-					root: {id: 'src'},
-					rootVisible: false,
-					height : 100,
-					width : 780,
-					listeners : {
-						itemdblclick : function(v,record){
-							if(!record.data.leaf) return; 
-							PlanInfoObject.LoadElements(record," . $season["GroupID"] . ");}
-					}
-				}),
-				new Ext.panel.Panel({
-					itemId : 'ParentElement_" . $season["GroupID"] . "',
-					bodyStyle : 'padding:4px;',
-					height : 460,
-					border : false,
-					autoScroll : true
-				})
-			]},";
-	}
-	
-	return substr($items, 0, strlen($items)-1);
-}
-//------------------------------------------------------------------------------
 
 require_once 'PlanInfo.js.php';
 
@@ -72,6 +31,9 @@ if(isset($_SESSION["USER"]["framework"]))
 		text-align: justify;
 		line-height: 20px;
 		margin:0 10 0 10;
+	}
+	.filled {
+		font-weight: bold !important;
 	}
 </style>
 <center>

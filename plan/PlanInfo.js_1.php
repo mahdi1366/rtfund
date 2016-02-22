@@ -39,41 +39,18 @@ function PlanInfo(){
 
 PlanInfo.prototype.BuildForms = function(){
 
-	this.tree = new Ext.tree.Panel({
-		store: new Ext.data.TreeStore({
-			proxy: {
-				type: 'ajax',
-				url: this.address_prefix + 'plan.data.php?task=selectGroups'
-			}					
-		}),
-		root: {id: 'src'},
-		rootVisible: false,
-		autoScroll : true,
-		width : 798,
-		height : 120,
-		listeners : {
-			itemclick : function(v,record){
-				if(!record.data.leaf) return; 
-				PlanInfoObject.LoadElements(record);
-			},
-			itemcontextmenu : function(view, record, item, index, e){
-				PlanInfo.ShowMenu(view, record, item, index, e);
-			}
-		}
-	});
-	
-	this.itemsPanel = new Ext.panel.Panel({
-		bodyStyle : 'padding:4px;',
-		height : 478,
-		width: 798,
-		autoScroll : true
-	});
-
-   this.MainPanel =  new Ext.panel.Panel({
-		applyTo : this.get("mainForm"),
-		width: 800,
+   this.AccorPanel =  new Ext.panel.Panel({
+	   applyTo : this.get("mainForm"),
+		width: 780,
 		height : 600,
-		items : [this.tree,this.itemsPanel]
+		fill: true,	  
+		defaults : {
+			overflowY : 'auto',
+			layout: 'fit',
+			xtype : "panel"
+		},
+		layout : "accordion",
+		items: [<?= $items ?>]
 	});	
 } 
 
@@ -81,7 +58,7 @@ PlanInfoObject = new PlanInfo();
 
 PlanInfo.prototype.LoadElements = function(record, season){
 
-	var parentEl = this.itemsPanel;
+	var parentEl = this.AccorPanel.down("[itemId=ParentElement_" + season + "]");
 	parentEl.items.each(function(item){item.hide();});
 	
 	mask = new Ext.LoadMask(parentEl, {msg:'در حال بارگذاري...'});
@@ -131,7 +108,7 @@ function merge(obj1,obj2){
 
 PlanInfo.prototype.MakeElemForms = function(store, season){
 
-	var parentEl = this.itemsPanel;
+	var parentEl = this.AccorPanel.down("[itemId=ParentElement_" + season + "]");
 	
 	for(var i=0; i < store.getCount(); i++)
 	{
@@ -367,7 +344,7 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 		}
 		else
 		{
-			var parent = this.itemsPanel.down("[itemId=element_" + record.data.ParentID + "]");
+			var parent = this.AccorPanel.down("[itemId=element_" + record.data.ParentID + "]");
 			parent.add(NewElement);
 		}
 	}
