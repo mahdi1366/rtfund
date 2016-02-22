@@ -30,6 +30,7 @@ switch ($task) {
 
 function selectGroups(){
 	
+	$filled = !isset($_REQUEST["filled"]) ? "" : $_REQUEST["filled"];
 	//$ParentID = $_GET["ParentID"];
 	
 	$nodes = PdoDataAccess::runquery("select g.ParentID, g.GroupID id, g.GroupDesc text , 'true' leaf ,
@@ -38,9 +39,9 @@ function selectGroups(){
 		FROM PLN_groups g
 		left join PLN_Elements e on(e.ParentID=0 AND g.GroupID=e.GroupID)
 		left join PLN_PlanItems pi on(pi.PlanID=1 AND e.ElementID=pi.ElementID)
-
-		group by g.GroupID
 		
+		group by g.GroupID
+		" . ($filled == "true" ? " having count(pi.RowID)>0 " : "") . "
 	");
 		
 	$returnArr = array(); 

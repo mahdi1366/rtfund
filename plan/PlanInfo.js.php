@@ -57,7 +57,7 @@ PlanInfo.prototype.BuildForms = function(){
 				PlanInfoObject.LoadElements(record);
 			},
 			itemcontextmenu : function(view, record, item, index, e){
-				PlanInfo.ShowMenu(view, record, item, index, e);
+				PlanInfoObject.ShowMenu(view, record, item, index, e);
 			}
 		}
 	});
@@ -73,7 +73,20 @@ PlanInfo.prototype.BuildForms = function(){
 		applyTo : this.get("mainForm"),
 		width: 800,
 		height : 600,
-		items : [this.tree,this.itemsPanel]
+		items : [this.tree,this.itemsPanel],
+		tbar : [{
+			text : "مشاهده ردیف های دارای اطلاعات",
+			iconCls : "list",
+			enableToggle : true,
+			handler : function(){
+				PlanInfoObject.itemsPanel.items.each(function(item){item.hide();});
+				PlanInfoObject.tree.getStore().load({
+					params : {
+						filled : this.pressed ? "true" : "false"
+					}
+				});
+			}
+		}]
 	});	
 } 
 
@@ -158,6 +171,8 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 									ElementID : this.up('form').itemId.split("_")[1]
 								},
 								success: function(form,result){
+									record = PlanInfoObject.tree.getSelectionModel().getSelection()[0];
+									record.set("cls","filled");
 									mask.hide();
 								},
 								failure: function(){}
@@ -373,7 +388,7 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 	}
 }
 
-PlanInfo.ShowMenu = function(view, record, item, index, e)
+PlanInfo.prototype.ShowMenu = function(view, record, item, index, e)
 {
 	e.stopEvent();
 	e.preventDefault();
@@ -385,15 +400,89 @@ PlanInfo.ShowMenu = function(view, record, item, index, e)
 		return;
 	
 	this.Menu.add({
-		text: 'ویرایش گروه',
-		iconCls: 'edit',
-		handler : function(){CostGroupObject.EditGroup();}
+		text: 'تایید اطلاعات',
+		iconCls: 'tick',
+		handler : function(){PlanInfoObject.BeforeSurveyGroup('CONFIRM');}
+	},{
+		text: 'رد اطلاعات',
+		iconCls: 'cross',
+		handler : function(){PlanInfoObject.BeforeSurveyGroup('REJECT');}
 	});
 	
 	var coords = e.getXY();
 	this.Menu.showAt([coords[0]-120, coords[1]]);
 }
 
+PlanInfo.prototype.BeforeSurveyGroup = function(mode){
+	
+	if(mode == "CONFIRM")
+	{
+		Ext.MessageBox.confirm("","آیا مایل به تایید می باشید؟", function(btn){
+			if(btn == "no")
+				return;
+			
+			PlanInfoObject.SurveyGroup(mode, "");
+		});
+		return;
+	}
+	if(!this.commentWin)
+	{
+		this.commentWin = new Ext.window.Window({
+			width : 412,
+			height : 198,
+			modal : true,
+			title : "توضیحات رد اطلاعات",
+			bodyStyle : "background-color:white",
+			items : [{
+				xtype : "textarea",
+				width : 400,
+				rows : 8,
+				name : "ActDesc"
+			}],
+			closeAction : "hide",
+			buttons : [{
+				text : "رد اطلاعات",				
+				iconCls : "cross",
+				itemId : "btn_reject"
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.commentWin);
+	}
+	this.commentWin.down("[itemId=btn_reject]").setHandler(function(){
+		PlanInfoObject.SurveyGroup('REJECT', 
+			this.up('window').down("[name=ActDesc]").getValue());});
+	this.commentWin.show();
+	this.commentWin.center();
+}
+
+PlanInfo.prototype.SurveyGroup = function(mode, ActDesc){
+	
+	mask = new Ext.LoadMask(this.itemPanel, {msg:'در حال بارگذاري...'});
+	mask.show();
+	
+	Ext.Ajax.request({
+		methos : "post",
+		url : this.address_prefix + "request.data.php",
+		params : {
+			task : "ChangeRequestStatus",
+			PlanID : this.PlanID,
+			mode : mode,
+			ActDesc : ActDesc
+		},
+		
+		success : function(){
+			
+			PlanInfoObject.LoadPlanInfo();
+			if(PlanInfoObject.commentWin)
+				PlanInfoObject.commentWin.hide();
+		}
+	});
+}
 
 
 
