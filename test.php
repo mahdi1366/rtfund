@@ -39,14 +39,6 @@ die();
 	
 	print_r($result);
 ?>
-DROP TABLE IF EXISTS `rtfund`.`PLN_PlanSurvey`;
-CREATE TABLE  `rtfund`.`PLN_PlanSurvey` (
-  `RowID` int(10) unsigned NOT NULL auto_increment,
-  `PlanID` int(10) unsigned NOT NULL,
-  `GroupID` int(10) unsigned NOT NULL,
-  `ActDate` datetime NOT NULL,
-  `ActType` enum('CONFIRM','REJECT') NOT NULL,
-  `ActDesc` varchar(500) NOT NULL,
-  `ActPersonID` int(10) unsigned NOT NULL,
-  PRIMARY KEY  (`RowID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ALTER TABLE `rtfund`.`PLN_plans` ADD COLUMN `PlanDesc` VARCHAR(500) NOT NULL AFTER `PlanID`;
+
+'' default ActDesc

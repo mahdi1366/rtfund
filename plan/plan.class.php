@@ -7,8 +7,9 @@
 class PLN_plans extends PdoDataAccess
 {
 	public $PlanID;
+	public $PlanDesc;
 	public $PersonID;
-	public $ReqDate;
+	public $RegDate;
 	public $StatusID;
 	
 	function __construct($PlanID = "") {
@@ -19,7 +20,12 @@ class PLN_plans extends PdoDataAccess
 	
 	static function SelectAll($where = "", $param = array()){
 		
-		return PdoDataAccess::runquery("select * from PLN_plans where " . $where, $param);
+		return PdoDataAccess::runquery_fetchMode("
+			select p.* ,if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) ReqFullname, InfoDesc StatusDesc
+			from PLN_plans p
+			join BSC_persons p1 using(PersonID)
+			join BaseInfo on(typeID=13 AND InfoID=StatusID)
+			where " . $where, $param);
 	}
 	
 	function AddPlan($pdo = null){
@@ -132,4 +138,66 @@ class PLN_PlanItems extends PdoDataAccess
 	}
 }
 
+class PLN_PlanSurvey extends PdoDataAccess
+{
+	public $RowID;
+	public $PlanID;
+	public $GroupID;
+	public $ActDate;
+	public $ActType;
+	public $ActDesc;
+	public $ActPersonID;
+			
+	function __construct($RowID = "") {
+		
+		if($RowID != "")
+			PdoDataAccess::FillObject ($this, "select * from PLN_PlanSurvey where RowID=?", array($RowID));
+	}
+	
+	static function SelectAll($where = "", $param = array()){
+		
+		return PdoDataAccess::runquery("select * from PLN_PlanSurvey where " . $where, $param);
+	}
+	
+	function AddRow($pdo = null){
+		
+		if (!parent::insert("PLN_PlanSurvey", $this, $pdo)) {
+			return false;
+		}
+		$this->RowID = parent::InsertID($pdo);
+		
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->RowID;
+		$daObj->TableName = "PLN_PlanSurvey";
+		$daObj->execute($pdo);
+		return true;
+	}
+	
+	function EditRow($pdo = null){
+		
+	 	if( parent::update("PLN_PlanSurvey",$this," RowID=:l", array(":l" => $this->RowID), $pdo) === false )
+	 		return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_update;
+		$daObj->MainObjectID = $this->RowID;
+		$daObj->TableName = "PLN_PlanSurvey";
+		$daObj->execute($pdo);
+	 	return true;
+    }
+	
+	static function DeleteRow($RowID){
+		
+		if( parent::delete("PLN_PlanSurvey"," RowID=?", array($RowID)) === false )
+	 		return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_delete;
+		$daObj->MainObjectID = $RowID;
+		$daObj->TableName = "PLN_PlanSurvey";
+		$daObj->execute();
+	 	return true;
+	}
+}
 ?>

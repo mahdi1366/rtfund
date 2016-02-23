@@ -26,6 +26,16 @@ switch ($task) {
 		
 	case "DeletePlanItem":
 		DeletePlanItem();
+		
+	//....................
+		
+	case "SurveyGroup":
+		SurveyGroup();
+		
+	//...................
+		
+	case "SelectAllPlans":
+		SelectAllPlans();
 }
 
 function selectGroups(){
@@ -204,5 +214,57 @@ function DeletePlanItem(){
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
+
+//............................................
+
+function SurveyGroup(){
+	
+	$PlanID = $_POST["PlanID"];
+	$GroupID = $_POST["GroupID"];
+	$mode = $_POST["mode"];
+	$ActDesc = $_POST["ActDesc"];
+	
+	$obj = new PLN_PlanSurvey();
+	$obj->PlanID = $PlanID;
+	$obj->GroupID = $GroupID;
+	$obj->ActType = $mode;
+	$obj->ActDate = PDONOW;
+	$obj->ActDesc = $ActDesc;
+	$obj->ActPersonID = $_SESSION["USER"]["PersonID"];
+	
+	$result = $obj->AddRow();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//............................................
+
+function SelectAllPlans(){
+	
+	$param = array();
+	$where = "1=1 ";
+	if(!empty($_REQUEST["PlanID"]))
+	{
+		$where .= " AND PlanID=:pid";
+		$param[":pid"] = $_REQUEST["PlanID"];
+	}
+	
+	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
+        $field = $_REQUEST['fields'];
+		$field = $field == "ReqFullname" ? "concat_ws(' ',p1.fname,p1.lname,p1.CompanyName)" : $field;
+        $where .= ' and ' . $field . ' like :fld';
+        $param[':fld'] = '%' . $_REQUEST['query'] . '%';
+    }
+	
+	$where .= dataReader::makeOrder();
+	$dt = PLN_plans::SelectAll($where, $param);
+	//print_r(ExceptionHandler::PopAllExceptions());
+	//echo PdoDataAccess::GetLatestQueryString();
+	$count = $dt->rowCount();
+	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);	
+	echo dataReader::getJsonData($dt, $count, $_GET["callback"]);
+	die();
+}
+
 
 ?>

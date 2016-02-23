@@ -77,6 +77,7 @@ PlanInfo.prototype.BuildForms = function(){
 		tbar : [{
 			text : "مشاهده ردیف های دارای اطلاعات",
 			iconCls : "list",
+			itemId : "btn_filled",
 			enableToggle : true,
 			handler : function(){
 				PlanInfoObject.itemsPanel.items.each(function(item){item.hide();});
@@ -402,18 +403,18 @@ PlanInfo.prototype.ShowMenu = function(view, record, item, index, e)
 	this.Menu.add({
 		text: 'تایید اطلاعات',
 		iconCls: 'tick',
-		handler : function(){PlanInfoObject.BeforeSurveyGroup('CONFIRM');}
+		handler : function(){PlanInfoObject.BeforeSurveyGroup('CONFIRM', record);}
 	},{
 		text: 'رد اطلاعات',
 		iconCls: 'cross',
-		handler : function(){PlanInfoObject.BeforeSurveyGroup('REJECT');}
+		handler : function(){PlanInfoObject.BeforeSurveyGroup('REJECT', record);}
 	});
 	
 	var coords = e.getXY();
 	this.Menu.showAt([coords[0]-120, coords[1]]);
 }
 
-PlanInfo.prototype.BeforeSurveyGroup = function(mode){
+PlanInfo.prototype.BeforeSurveyGroup = function(mode, record){
 	
 	if(mode == "CONFIRM")
 	{
@@ -421,7 +422,7 @@ PlanInfo.prototype.BeforeSurveyGroup = function(mode){
 			if(btn == "no")
 				return;
 			
-			PlanInfoObject.SurveyGroup(mode, "");
+			PlanInfoObject.SurveyGroup(mode, "", record);
 		});
 		return;
 	}
@@ -454,35 +455,45 @@ PlanInfo.prototype.BeforeSurveyGroup = function(mode){
 		Ext.getCmp(this.TabID).add(this.commentWin);
 	}
 	this.commentWin.down("[itemId=btn_reject]").setHandler(function(){
-		PlanInfoObject.SurveyGroup('REJECT', 
-			this.up('window').down("[name=ActDesc]").getValue());});
+		PlanInfoObject.SurveyGroup('REJECT', this.up('window').down("[name=ActDesc]").getValue(), record);
+	});
 	this.commentWin.show();
 	this.commentWin.center();
 }
 
-PlanInfo.prototype.SurveyGroup = function(mode, ActDesc){
+PlanInfo.prototype.SurveyGroup = function(mode, ActDesc, record){
 	
-	mask = new Ext.LoadMask(this.itemPanel, {msg:'در حال بارگذاري...'});
+	mask = new Ext.LoadMask(this.itemsPanel, {msg:'در حال بارگذاري...'});
 	mask.show();
 	
 	Ext.Ajax.request({
 		methos : "post",
-		url : this.address_prefix + "request.data.php",
+		url : this.address_prefix + "plan.data.php",
 		params : {
-			task : "ChangeRequestStatus",
+			task : "SurveyGroup",
 			PlanID : this.PlanID,
+			GroupID : record.data.id,
 			mode : mode,
 			ActDesc : ActDesc
 		},
 		
 		success : function(){
 			
-			PlanInfoObject.LoadPlanInfo();
 			if(PlanInfoObject.commentWin)
 				PlanInfoObject.commentWin.hide();
+			PlanInfoObject.itemsPanel.items.each(function(item){item.hide();});
+			var btn = PlanInfoObject.MainPanel.down("[itemId=btn_filled]");
+			PlanInfoObject.tree.getStore().load({
+				params : {
+					filled : btn.pressed ? "true" : "false"
+				}
+			});
+			mask.hide();
 		}
 	});
 }
+
+
 
 
 
