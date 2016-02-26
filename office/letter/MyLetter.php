@@ -20,6 +20,7 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=" . $t
 
 $dg->addColumn("", "LetterID", "", true);
 $dg->addColumn("", "IsSeen", "", true);
+$dg->addColumn("", "IsDeleted", "", true);
 $dg->addColumn("", "SendID", "", true);
 
 $col = $dg->addColumn("<img src=/office/icons/LetterType.gif>", "LetterType", "");
@@ -53,6 +54,9 @@ $col = $dg->addColumn("عملیات", "");
 $col->renderer = "function(v,p,r){return MyLetter.OperationRender(v,p,r);}";
 $col->width = 80;
 
+if($mode == "receive")
+	$dg->addObject("this.deletedBtnObj");
+
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 420;
 $dg->width = 770;
@@ -76,12 +80,26 @@ MyLetter.prototype = {
 
 function MyLetter(){
 	
+	this.deletedBtnObj = Ext.button.Button({
+		xtype: "button",
+		text : "مشاهده نامه های حذف شده", 
+		iconCls : "list",
+		enableToggle : true,
+		handler : function(){
+			me = MyLetterObject;
+			me.grid.getStore().proxy.extraParams["deleted"] = this.pressed ? "true" : "false";
+			me.grid.getStore().load();
+		}
+	});
+	
 	this.grid = <?= $grid ?>;
 	
 	this.grid.getView().getRowClass = function(record, index)
 	{
 		if(record.data.IsSeen == "NO")
 			return "yellowRow";
+		if(record.data.IsDeleted == "YES")
+			return "pinkRow";
 		return "";
 	}	
 	
@@ -127,7 +145,20 @@ MyLetter.OperationRender = function(v,p,r){
 		"<div  title='سابقه' class='history' "+
 		" onclick='MyLetterObject.ShowHistory();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;float:right;width:20px;height:16'></div>";
+		"cursor:pointer;float:right;width:20px;height:16'></div>" +
+		
+		(MyLetterObject.mode == "receive" && r.data.IsDeleted == "NO" ? 
+			"<div  title='حذف از کارتابل' class='remove' " +
+			" onclick='MyLetterObject.DeleteSend(0);' " +
+			"style='background-repeat:no-repeat;background-position:center;" +
+			"cursor:pointer;float:right;width:20px;height:16'></div>" : ""
+		) +
+		(MyLetterObject.mode == "receive" && r.data.IsDeleted == "YES" ? 
+			"<div  title='اضافه به کارتابل' class='add' " +
+			" onclick='MyLetterObject.DeleteSend(1);' " +
+			"style='background-repeat:no-repeat;background-position:center;" +
+			"cursor:pointer;float:right;width:20px;height:16'></div>" : ""
+		) ;
 }
 
 MyLetter.prototype.SendLetter = function(){
@@ -175,6 +206,36 @@ MyLetter.prototype.ReturnLetter = function(){
 		url : this.address_prefix + "letter.data.php?task=ReturnSend",
 		method : "post",
 		params : {
+			SendID : this.grid.getSelectionModel().getLastSelected().data.SendID,
+			LetterID : this.grid.getSelectionModel().getLastSelected().data.LetterID
+		},
+		
+		success : function(response){
+			mask.hide();
+			result = Ext.decode(response.responseText);
+			if(result.success)
+				MyLetterObject.grid.getStore().load();
+			else
+			{	
+				if(result.data == "IsSeen")
+					Ext.MessageBox.alert("Error", "نامه توسط گیرنده دیده شده و قابل برگشت نمی باشد");
+				else
+					Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+			}
+		}
+	})
+}
+
+MyLetter.prototype.DeleteSend = function(mode){
+	
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg:'در حال ذخیره سازی ...'});
+	mask.show();
+	
+	Ext.Ajax.request({
+		url : this.address_prefix + "letter.data.php?task=DeleteSend",
+		method : "post",
+		params : {
+			mode : mode,
 			SendID : this.grid.getSelectionModel().getLastSelected().data.SendID,
 			LetterID : this.grid.getSelectionModel().getLastSelected().data.LetterID
 		},

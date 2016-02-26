@@ -26,10 +26,12 @@ $col->width = 150;
 $col = $dg->addColumn("وضعیت", "StatusDesc", "");
 $col->width = 100;
 
-$col = $dg->addColumn('عملیات', '', 'string');
-$col->renderer = "ManagePlan.OperationRender";
+$col = $dg->addColumn('سابقه', '', 'string');
+$col->renderer = "ManagePlan.HistoryRender";
 $col->width = 50;
 $col->align = "center";
+
+$dg->addObject('ManagePlanObject.AllPlansObj');
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 500;
@@ -45,6 +47,14 @@ ManagePlanObject.grid = <?= $grid ?>;
 ManagePlanObject.grid.on("itemdblclick", function(view, record){
 	framework.OpenPage("../plan/PlanInfo.php", "جداول اطلاعاتی طرح", {PlanID : record.data.PlanID});
 });	
+ManagePlanObject.grid.getView().getRowClass = function(record, index)
+{
+	if(record.data.StatusID == "3")
+		return "pinkRow";
+	
+	return "";
+}
+
 ManagePlanObject.grid.render(ManagePlanObject.get("DivGrid"));
 </script>
 <center><br>

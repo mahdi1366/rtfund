@@ -58,9 +58,20 @@ class session{
 					return "InActiveUser";
 				} 
 
-				$_SESSION['USER'] = $temp[0];
+				//..............................................................
+				
+				$_SESSION['USER']["PersonID"] = $temp[0]["PersonID"];
+				$_SESSION['USER']["IsActive"] = $temp[0]["IsActive"];
+				$_SESSION['USER']["UserName"] = $temp[0]["UserName"];
+				$_SESSION['USER']["IsCustomer"] = $temp[0]["IsCustomer"];
+				$_SESSION['USER']["IsAgent"] = $temp[0]["IsAgent"];
+				$_SESSION['USER']["IsStaff"] = $temp[0]["IsStaff"];
+				$_SESSION['USER']["IsSupporter"] = $temp[0]["IsSupporter"];
+				$_SESSION['USER']["IsShareholder"] = $temp[0]["IsShareholder"];
 				$_SESSION['USER']["fullname"] = $temp[0]["fname"] . " " . $temp[0]["lname"];
 
+				//..............................................................
+				
 				$_SESSION['login_string'] = hash('sha512', $temp[0]["UserPass"] . $_SERVER['HTTP_USER_AGENT']);
 				$_SESSION['last_activity'] = time();
 				//..........................................................

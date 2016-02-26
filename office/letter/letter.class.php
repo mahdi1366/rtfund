@@ -13,6 +13,9 @@ class OFC_letters extends PdoDataAccess{
 	public $RegDate;
 	public $PersonID;
 	public $context;
+	public $organization;
+	public $SignerPersonID;
+	public $IsSigned;
 
     function __construct($LetterID = ""){
 		$this->DT_LetterDate = DataMember::CreateDMA(DataMember::DT_DATE);
@@ -26,6 +29,28 @@ class OFC_letters extends PdoDataAccess{
 	    $query = "select * from OFC_letters";
 	    $query .= ($where != "") ? " where " . $where : "";
 	    return parent::runquery($query, $whereParam);
+    }
+	
+	static function FullSelect($where = "",$whereParam = array()){
+		
+	    $query = "select l.* , s.SendDate,s.SendComment,
+				concat(p1.fname,' ',p1.lname) RegName,
+				concat(p2.fname,' ',p2.lname) sender,
+				concat(p3.fname,' ',p3.lname) receiver,
+				concat(p4.fname,' ',p4.lname) signer
+			from OFC_letters l 
+			join OFC_send s using(LetterID)
+			join BSC_persons p1 on(l.PersonID=p1.PersonID)
+			join BSC_persons p2 on(s.FromPersonID=p2.PersonID)
+			join BSC_persons p3 on(s.ToPersonID=p3.PersonID)
+			left join BSC_persons p4 on(l.SignerPersonID=p4.PersonID)
+			left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
+		";
+	    $query .= ($where != "") ? " where " . $where : "";
+		
+		$query .= " group by s.SendID";
+		
+	    return parent::runquery_fetchMode($query, $whereParam);
     }
 	
     function AddLetter(){
@@ -73,7 +98,7 @@ class OFC_letters extends PdoDataAccess{
     }
 	
 	static function SelectReceivedLetters($where = "", $param = array()){
-		
+		 
 		$query = "select s.*,l.*, 
 				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) FromPersonName,
 				if(count(DocumentID) > 0,'YES','NO') hasAttach
@@ -81,8 +106,8 @@ class OFC_letters extends PdoDataAccess{
 				join OFC_letters l using(LetterID)
 				join BSC_persons p on(s.FromPersonID=p.PersonID)
 				left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
-				left join OFC_Send s2 on(s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
-			where s2.SendID is null AND s.ToPersonID=:tpid " . $where . "
+				/*left join OFC_send s2 on(s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)*/
+			where /*s2.SendID is null AND*/ s.ToPersonID=:tpid " . $where . "
 			group by SendID";
 		$param[":tpid"] = $_SESSION["USER"]["PersonID"];
 		

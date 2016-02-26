@@ -15,8 +15,8 @@ $NewReceived = $dt->rowCount();
 $dt = OFC_letters::SelectDraftLetters();
 $DraftCount = count($dt);
 
-$dt = WFM_FlowRows::SelectReceivedForms();
-$ReceiveForms = $dt->rowCount();
+$dt = WFM_FlowRows::SelectReceivedForms(); 
+$ReceiveForms = is_array($dt) ? count($dt) : $dt->rowCount();
 ?>
 <script>
 

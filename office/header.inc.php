@@ -17,8 +17,16 @@ require_once getenv("DOCUMENT_ROOT") . '/framework/session.php';
 session::sec_session_start();
 if(!session::checkLogin())
 {
-	echo "<script>window.location='/framework/login.php';</script>";
+	if(isset($_REQUEST["portal"]))
+		echo "<script>window.location='/portal/login.php';</script>";
+	else
+		echo "<script>window.location='/framework/login.php';</script>";
 	die();
+}
+
+function data_uri($content, $mime) {
+    $base64 = base64_encode($content);
+    return ('data:' . $mime . ';base64,' . $base64);
 }
 
 $address_prefix = getenv("DOCUMENT_ROOT");

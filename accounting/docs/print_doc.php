@@ -7,7 +7,7 @@ require_once '../header.inc.php';
 require_once 'doc.class.php';
 require_once inc_CurrencyModule;
 
-$docID = $_GET["DocID"];
+$docID = $_REQUEST["DocID"];
 $DocObject = new ACC_docs($docID);
 
 $temp = PdoDataAccess::runquery("
@@ -40,11 +40,11 @@ $temp = PdoDataAccess::runquery("
 </style>
 <style>
 	.header td{background-color: #cccccc; font-weight: bold;size: 12px;}
-	td { font-family: tahoma; font-size: 12px; line-height: 18px; padding: 3px;}
+	.reportTbl td { font-family: tahoma; font-size: 12px; line-height: 18px; padding: 3px;}
 </style>
 <center>
 <div style="direction:rtl;width:95%;margin: 10px;">
-	<table style="width:100%">
+	<table class="reportTbl" style="width:100%">
 	<tr>
 	    <td width="25%">
 			<img src="/framework/icons/logo.jpg" style="width:80px" />

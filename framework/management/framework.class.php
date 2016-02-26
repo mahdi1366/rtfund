@@ -176,7 +176,7 @@ class FRW_access extends PdoDataAccess {
 				)
 			)
 			
-			where m.ParentID>0 AND m.IsActive='YES' AND m.SystemID=?
+			where m.ParentID>0 AND a.IsActive='YES' AND m.IsActive='YES' AND m.SystemID=?
 			order by g.ordering,m.ordering", array($SystemID));
 	}
 

@@ -1,0 +1,57 @@
+/* 
+-----------------------------
+Programmer	: Jafarkhani
+Date		: 91.12
+-----------------------------
+*/
+
+.mainHeader {
+	border-collapse: collapse;
+	border-top: 1px solid #888;
+	border-left: 1px solid #888;
+	border-right: 1px solid #888;
+	width : 100%;
+	font-family:b Nazanin;
+	
+	font-size:13px;
+}
+.mainHeader td{
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+.main { 
+	border-collapse: collapse;
+	font-family: b nazanin;
+	font-size: 13px;
+	width: 100%;
+	border: 1px solid black;
+}
+
+.main td{
+	height: 21px;
+	border: 1px solid #888;
+        font-size: 14px;
+}
+
+.header{
+	background-color: #CEE4FF;
+	/*text-align: center;*/
+	font-weight: bold;
+	font-size: 11px;
+}
+
+.footer{
+	background-color: #FFF8C6;
+	font-weight: bold;
+	font-size: 13px;
+}
+.signs{
+	font-family: b nazanin;
+    font-size: 14px;
+}
+
+@media print {
+	.noprint{display:none;}
+}
+.pageBreak {page-break-after:always;height:1px;}

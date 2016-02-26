@@ -26,11 +26,17 @@ if(isset($_REQUEST["task"]))
 		case "selectPersons":
 			selectPersons();
 			
+		case "selectPendingPersons":
+			selectPendingPersons();
+			
 		case "selectPosts":
 			selectPosts();
 			
 		case "changePass":
 			changePass();
+			
+		case "ConfirmPersons":
+			ConfirmPersons();
 	}
 }
 
@@ -75,6 +81,14 @@ function selectPersons(){
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
+	die();
+}
+
+function selectPendingPersons(){
+	
+	$temp = BSC_persons::SelectAll("IsActive='PENDING'");
+	$no = $temp->rowCount();
+	echo dataReader::getJsonData($temp->fetchAll(), $no, $_GET["callback"]);
 	die();
 }
 
@@ -133,7 +147,7 @@ function ResetPass(){
 
 function selectPosts(){
 	
-	$temp = PdoDataAccess::runquery("select * from BSC_posts");
+	$temp = PdoDataAccess::runquery("select * from BSC_posts where IsActive='YES'");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -167,4 +181,18 @@ function changePass(){
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
+
+function ConfirmPersons(){
+	
+	$PersonID = $_POST["PersonID"];
+	$mode = $_POST["mode"];
+	
+	$obj = new BSC_persons($PersonID);
+	$obj->IsActive = $mode == "1" ? "YES" : "NO";
+	$obj->EditPerson();
+	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
 ?>

@@ -55,7 +55,7 @@ $col->width = 150;
 
 $col = $dg->addColumn("عنوان مدرک ارسالی", "DocDesc", "");
 
-$col = $dg->addColumn("فایل", "FileType", "");
+$col = $dg->addColumn("فایل", "HaveFile", "");
 $col->renderer = "function(v,p,r){return ManageDocument.FileRender(v,p,r)}";
 $col->align = "center";
 $col->width = 30;
@@ -100,6 +100,8 @@ ManageDocument.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	pageIndex : 1,
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -241,19 +243,60 @@ function ManageDocument(){
 			displayField : "InfoDesc"
 		},{
 			xtype : "textfield",
-			allowBlank : false,
+			width : 564,
 			fieldLabel : "شرح مدرک",
+			colspan : 2,
 			name : "DocDesc"
-		},{
-			xtype : "filefield",
-			fieldLabel : "فایل مدرک",
-			name : "FileType"
 		},{
 			xtype : "fieldset",
 			colspan : 2,
+			title : "اطلاعات مدرک",
 			itemId : "ParamsFS",
 			layout : "column",
 			columns : 2
+		},{
+			xtype : "fieldset",
+			title : "فایل های مدرک",
+			layout : "column",
+			columns : 2,
+			colspan : 2,
+			items:[{
+				xtype : "displayfield",
+				hideTrigger : true,
+				labelWidth : 50,
+				width : 80,
+				fieldCls : "blueText",
+				value : "صفحه [ 1 ]"
+			},{
+				xtype : "filefield",
+				width : 450,
+				fieldLabel : "فایل مدرک",
+				name : "FileType_1"
+			},{
+				xtype : "button",
+				text : "اضافه صفحه",
+				colspan : 2,
+				iconCls : "add",
+				handler : function(){
+					me = ManageDocumentObject;
+					me.pageIndex++;
+					fs = this.up("fieldset");
+					fs.insert(fs.items.length-1, [{
+						xtype : "displayfield",
+						hideTrigger : true,
+						labelWidth : 50,
+						width : 80,
+						fieldCls : "blueText",
+						value : "صفحه [ " + me.pageIndex + " ]"
+					},{
+						xtype : "filefield",
+						width : 450,
+						fieldLabel : "فایل مدرک",
+						name : "FileType_" + me.pageIndex
+					}]);
+					
+				}
+			}]
 		},{
 			xtype : "hidden",
 			name : "DocumentID"
@@ -309,7 +352,7 @@ ManageDocumentObject = new ManageDocument();
 
 ManageDocument.FileRender = function(v,p,r){
 	
-	if(v == "" || v == null)
+	if(v == "false")
 		return "";
 	
 	return "<div align='center' title='مشاهده فایل' class='attach' "+
@@ -564,7 +607,6 @@ ManageDocument.prototype.ConfirmDocument = function(mode){
 
 <?}?>
 </script>
-<br>
 <center>
 	<div id="MainForm"></div>
 </center>

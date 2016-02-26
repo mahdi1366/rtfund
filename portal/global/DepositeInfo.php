@@ -7,8 +7,8 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-$ShortDepositeCostID = 66;
-$LongDepositeCostID = 119 ;
+$COSTID_ShortDeposite = 66;
+$COSTID_LongDeposite = 119 ;
 
 $CurYear = substr(DateModules::shNow(),0,4);
 
@@ -17,7 +17,7 @@ $temp = PdoDataAccess::runquery("
 	from ACC_DocItems di join ACC_docs d using(DocID)
 	left join ACC_tafsilis t1 on(t1.TafsiliType=1 AND di.TafsiliID=t1.TafsiliID)
 	left join ACC_tafsilis t2 on(t2.TafsiliType=1 AND di.TafsiliID2=t2.TafsiliID)
-	where CycleID=:year AND CostID in($ShortDepositeCostID,$LongDepositeCostID) 
+	where CycleID=:year AND CostID in($COSTID_ShortDeposite,$COSTID_LongDeposite) 
 		AND (t1.ObjectID=:pid or t2.ObjectID=:pid) 
 		AND DocStatus in('CONFIRM','ARCHIVE')
 	group by CostID
@@ -28,8 +28,8 @@ $ShortDeposite = 0;
 $LongDeposite = 0;
 for($i=0; $i < count($temp); $i++)
 {
-	$ShortDeposite = $temp[$i]["CostID"] == $ShortDepositeCostID ? $temp[$i]["amount"] : $ShortDeposite;
-	$LongDeposite = $temp[$i]["CostID"] == $LongDepositeCostID ? $temp[$i]["amount"] : $LongDeposite;
+	$ShortDeposite = $temp[$i]["CostID"] == $COSTID_ShortDeposite ? $temp[$i]["amount"] : $ShortDeposite;
+	$LongDeposite = $temp[$i]["CostID"] == $COSTID_LongDeposite ? $temp[$i]["amount"] : $LongDeposite;
 }
 
 //------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ function DepositeInfo()
 				renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
 			},{
 				xtype : "button",
-				handler : function(){ DepositeInfoObject.DepositeFlow(<?= $ShortDepositeCostID ?>) },
+				handler : function(){ DepositeInfoObject.DepositeFlow(<?= $COSTID_ShortDeposite ?>) },
 				text : "[ ریز گردش ]",
 				iconCls : "list",
 				style : "margin-right:50px;border:1px solid #ccc"
@@ -119,7 +119,7 @@ function DepositeInfo()
 				renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
 			},{
 				xtype : "button",
-				handler : function(){ DepositeInfoObject.DepositeFlow(<?= $LongDepositeCostID ?>) },
+				handler : function(){ DepositeInfoObject.DepositeFlow(<?= $COSTID_LongDeposite ?>) },
 				text : "[ ریز گردش ]",
 				iconCls : "list",
 				style : "margin-right:50px;border:1px solid #ccc;"	

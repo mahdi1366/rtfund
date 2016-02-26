@@ -17,6 +17,9 @@ switch ($task) {
 	case "SelectLetter":
 		SelectLetter();
 		
+	case "SelectAllLetter":
+		SelectAllLetter();
+		
     case 'SelectDraftLetters':
         SelectDraftLetters();
 
@@ -55,6 +58,12 @@ switch ($task) {
 	case "ReturnSend":
 		ReturnSend();	
 		
+	case "SignLetter":
+		SignLetter();
+		
+	case "DeleteSend":
+		DeleteSend();
+		
 	//...............................................
 		
 	case "SelectArchiveNodes":
@@ -90,6 +99,65 @@ function SelectLetter() {
     die();
 }
 
+function SelectAllLetter(){
+	
+	$where = "1=1";
+    $param = array();
+	
+	foreach($_POST as $field => $value)
+	{
+		if(empty($value) || strpos($field, "inputEl") !== false)
+			continue;
+
+		switch($field)
+		{
+			case "LetterTitle":		
+			case "organization":
+			case "SendComment":
+			case "context":	
+				$where .= " AND " . $field . " like :" . $field;
+				$param[":" . $field] = "%" . $value . "%";
+				break;
+			
+			case "FromSendDate":
+				$where .= " AND SendDate >= :" . $field;
+				$param[":" . $field] = DateModules::shamsi_to_miladi($value, "-");
+				break;
+			case "FromLetterDate":
+				$where .= " AND LetterDate >= :" . $field;
+				$param[":" . $field] = DateModules::shamsi_to_miladi($value, "-");
+				break;				
+			case "ToSendDate":
+				$where .= " AND SendDate <= :" . $field;
+				$param[":" . $field] = DateModules::shamsi_to_miladi($value, "-");
+				break;
+			case "ToLetterDate":
+				$where .= " AND LetterDate <= :" . $field;
+				$param[":" . $field] = DateModules::shamsi_to_miladi($value, "-");
+				break;	
+			
+			case "PersonID":
+				$where .= " AND l.PersonID = :" . $field;
+				$param[":" . $field] = $value;
+				break;
+			
+			default:
+				$where .= " AND " . $field . " = :" . $field;
+				$param[":" . $field] = $value;
+		}
+		
+	}
+	//echo $where;
+    $list = OFC_letters::FullSelect($where, $param);
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
+	
+	$no = $list->rowCount();
+	$list = PdoDataAccess::fetchAll($list, $_GET["start"], $_GET["limit"]);
+    echo dataReader::getJsonData($list, count($list), $_GET['callback']);
+    die();
+}
+
 function SelectDraftLetters() {
 
     $list = OFC_letters::SelectDraftLetters();
@@ -99,7 +167,12 @@ function SelectDraftLetters() {
 
 function SelectReceivedLetters(){
 	
-	$dt = OFC_letters::SelectReceivedLetters();
+	$where = " AND IsDeleted='NO'";
+	
+	if(isset($_REQUEST["deleted"]) && $_REQUEST["deleted"] == "true")
+		$where = " AND IsDeleted='YES'";
+	
+	$dt = OFC_letters::SelectReceivedLetters($where);
 	$cnt = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	
@@ -162,41 +235,44 @@ function SaveLetter($dieing = true) {
     else
         $res = $Letter->EditLetter();
 
-	if(!empty($_POST["PageTitle"]))
+	if(!empty($_FILES["PageFile"]["tmp_name"]))
 	{
-		if(!empty($_FILES["PageFile"]["tmp_name"]))
+		$st = preg_split("/\./", $_FILES ['PageFile']['name']);
+		$extension = strtolower($st [count($st) - 1]);
+		if (in_array($extension, array("jpg", "jpeg", "gif", "png", "pdf")) === false) 
 		{
-			$st = preg_split("/\./", $_FILES ['PageFile']['name']);
-			$extension = strtolower($st [count($st) - 1]);
-			if (in_array($extension, array("jpg", "jpeg", "gif", "png", "pdf")) === false) 
-			{
-				Response::createObjectiveResponse(false, "فرمت فایل ارسالی نامعتبر است");
-				die();
-			}
-		}	
-		//..............................................
-
-		$obj = new DMS_documents();
-		$obj->DocType = 0;
-		$obj->ObjectType = "letter";		
-		$obj->ObjectID = $Letter->LetterID;
-		$obj->DocDesc = $_POST["PageTitle"];
-		$obj->AddDocument();
+			Response::createObjectiveResponse(false, "فرمت فایل ارسالی نامعتبر است");
+			die();
+		}
+		
+		$dt = DMS_documents::SelectAll("ObjectType='letter' AND ObjectID=?", array($Letter->LetterID));
+		if(count($dt) == 0)
+		{
+			$obj = new DMS_documents();
+			$obj->DocType = 0;
+			$obj->ObjectType = "letter";		
+			$obj->ObjectID = $Letter->LetterID;
+			$obj->AddDocument();
+			$DocumentID = $obj->DocumentID;
+		}
+		else
+			$DocumentID = $dt[0]["DocumentID"];
 		
 		//..............................................
 
-		$fp = fopen(getenv("DOCUMENT_ROOT") . "/storage/documents/". $obj->DocumentID . "." . $extension, "w");
-		fwrite($fp, substr(fread(fopen($_FILES['PageFile']['tmp_name'], 'r'), $_FILES ['PageFile']['size']),200) );
+		$obj2 = new DMS_DocFiles();
+		$obj2->DocumentID = $DocumentID;
+		$obj2->PageNo = PdoDataAccess::GetLastID("DMS_DocFiles", "PageNo", 
+			"DocumentID=?", array($DocumentID)) + 1;
+		$obj2->FileType = $extension;
+		$obj2->FileContent = substr(fread(fopen($_FILES['PageFile']['tmp_name'], 'r'), 
+				$_FILES ['PageFile']['size']), 0, 200);
+		$obj2->AddPage();
+
+		$fp = fopen(getenv("DOCUMENT_ROOT") . "/storage/documents/". $obj2->RowID . "." . $extension, "w");
+		fwrite($fp, substr(fread(fopen($_FILES['PageFile']['tmp_name'], 'r'), 
+				$_FILES ['PageFile']['size']),200) );
 		fclose($fp);
-		$obj->FileContent = substr(fread(fopen($_FILES['PageFile']['tmp_name'], 'r'), $_FILES ['PageFile']['size']), 0, 200);
-
-		$db = PdoDataAccess::getPdoObject();
-		$stmt = $db->prepare("update DMS_documents set FileType = :ft, FileContent = :data where DocumentID=:did");
-		$stmt->bindParam(":did", $obj->DocumentID);
-		$stmt->bindParam(":ft", $extension);
-		$stmt->bindParam(":data", $obj->FileContent, PDO::PARAM_LOB);
-		$stmt->execute();
-
 	}	
 	
 	if($dieing)
@@ -218,7 +294,8 @@ function deleteLetter() {
 function selectLetterPages(){
 	
 	$letterID = !empty($_REQUEST["LetterID"]) ? $_REQUEST["LetterID"] : 0;
-	$dt = PdoDataAccess::runquery("select DocumentID, DocDesc, ObjectID from DMS_documents 
+	$dt = PdoDataAccess::runquery("select RowID, DocumentID, DocDesc, ObjectID 
+		from DMS_DocFiles join DMS_documents using(DocumentID)
 		where ObjectType='letter' AND ObjectID=?", array($letterID));
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
@@ -229,6 +306,7 @@ function DeletePage(){
 	
 	$DocumentID = $_POST["DocumentID"];
 	$ObjectID = $_POST["ObjectID"];
+	$RowID = $_POST["RowID"];
 	
 	$obj = new DMS_documents($DocumentID);
 	if($obj->ObjectID != $ObjectID)
@@ -237,7 +315,14 @@ function DeletePage(){
 		die();
 	}
 	
-	$result = DMS_documents::DeleteDocument($DocumentID);
+	$result = DMS_DocFiles::DeletePage($RowID);
+	
+	$dt = DMS_DocFiles::SelectAll("DocumentID=?", array($DocumentID));
+	if(count($dt) == 0)
+	{
+		$result = DMS_documents::DeleteDocument($DocumentID);
+	}
+	
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
@@ -246,6 +331,21 @@ function selectSendTypes(){
 	
 	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=12");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SignLetter(){
+	
+	$LetterID = $_POST["LetterID"];
+	
+	$obj = new OFC_letters($LetterID);
+	if($obj->SignerPersonID == $_SESSION["USER"]["PersonID"])
+	{
+		$obj->IsSigned = "YES";
+		$obj->EditLetter();
+	}
+	
+	echo Response::createObjectiveResponse(true, "");
 	die();
 }
 
@@ -323,6 +423,21 @@ function ReturnSend(){
 	
 	$result = $obj->DeleteSend();
 	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteSend(){
+	
+	$mode = $_POST["mode"];
+	$LetterID = $_POST["LetterID"];
+	$SendID = $_POST["SendID"];
+	$obj = new OFC_send($SendID);	
+	if($obj->ToPersonID == $_SESSION["USER"]["PersonID"])
+	{
+		$obj->IsDeleted = $mode == "1" ? "NO" : "YES";
+		$obj->EditSend();
+	}	
+	echo Response::createObjectiveResponse(true, "");
 	die();
 }
 

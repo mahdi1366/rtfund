@@ -59,36 +59,14 @@ for ($i = 0; $i < count($menus); $i++) {
 		<link rel="stylesheet" type="text/css" href="ext/portal.css" />
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/Loading.css" />
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-all.css" />
-		<script>
-			var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
-			var portal;
-			setTimeout(function(){
-				try {
-					Ext.onReady(function(){
-						Ext.QuickTips.init();
-						//Ext.get('loading').remove();
-						/*Ext.get('loading-mask').fadeOut({
-							remove:true
-						});*/
-						portal = new PortalClass();
-						portal.OpenPage("/portal/FirstPage.php");
-						PortalClass.SystemLoad();
-					});
-				}
-				catch(err){}
-			}, 700);
-		</script>
 	</head>
 <body dir=rtl>
-	<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/icons.css" />
-	<script type="text/javascript" src="/generalUI/ext4/resources/ext-all.js"></script>
-	<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-rtl.css" />
-	<script type="text/javascript" src="/generalUI/ext4/resources/ext-extend.js"></script>
-	<script type="text/javascript" src="/generalUI/ext4/ux/grid/SearchField.js"></script>
-	<script type="text/javascript" src="/generalUI/ext4/ux/CurrencyField.js"></script>
-	<script type="text/javascript" src="/generalUI/ext4/ux/grid/ExtraBar.js"></script>
-
-	<? require_once 'ext/index.js.php'; ?>
+	<!--<div id="loading-mask"></div>
+	<div id="loading">
+		<div class="loading-indicator">در حال بارگذاری سیستم . . .
+			<img src="/generalUI/ext4/resources/themes/icons/loading-balls.gif" style="margin-right:8px;" align="absmiddle"/></div>
+	</div>-->
+	
 	<center>
 		<div class="header">
 			<a href='' target='_blank' title=''>
@@ -137,15 +115,42 @@ for ($i = 0; $i < count($menus); $i++) {
           </div>
      </div>
 		 <table class ="example_3">
-			 <td width="32%" style="background-color:#35bc7a;"></td>
-			 <td width="2%"></td>
-			 <td width="32%" style="background-color:#f86924;"></td>
-			 <td width="2%"></td>
-			 <td width="32%" style="background-color:#ff9f00;"></td>
+			 <td width="33%" style="background-color:#35bc7a;"></td>
+			 <td width="12px"></td>
+			 <td width="33%" style="background-color:#f86924;"></td>
+			 <td width="12px"></td>
+			 <td width="" style="background-color:#ff9f00;"></td>
 		 </table>
      <div class="footer">
      </div>
      <div class="copyright" align=center></div>          
   </center>
+	<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/icons.css" />
+	<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-rtl.css" />
+	<script type="text/javascript" src="/generalUI/ext4/resources/ext-all.js"></script>
+	<script type="text/javascript" src="/generalUI/ext4/resources/ext-extend.js"></script>
+	<script type="text/javascript" src="/generalUI/ext4/ux/grid/SearchField.js"></script>
+	<script type="text/javascript" src="/generalUI/ext4/ux/CurrencyField.js"></script>
+	<script type="text/javascript" src="/generalUI/ext4/ux/grid/ExtraBar.js"></script>
+	<script>
+			var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
+			var portal;
+			setTimeout(function(){
+				try {
+					Ext.onReady(function(){
+						Ext.QuickTips.init();
+						/*Ext.get('loading').remove();
+						Ext.get('loading-mask').fadeOut({
+							remove:true
+						});*/
+						portal = new PortalClass();
+						portal.OpenPage("/portal/FirstPage.php");
+						PortalClass.SystemLoad();
+					});
+				}
+				catch(err){}
+			}, 700);
+		</script>
+	<? require_once 'ext/index.js.php'; ?>
 </body>
 </html>

@@ -68,6 +68,9 @@ switch ($task) {
 		
 	case "ComputeDoc": 
 		ComputeDoc();
+	
+	case "ComputeShareProfit":
+		ComputeShareProfit();
 }
 
 function selectDocs() {
@@ -147,7 +150,7 @@ function confirm() {
 	if($status == "RAW")
 	{
 		$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems where DocID=? 
-			AND CostID in(".ShortDepositeCostID.",".LongDepositeCostID.") ", array($_POST["DocID"]));
+			AND CostID in(".COSTID_ShortDeposite.",".COSTID_LongDeposite.") ", array($_POST["DocID"]));
 		if(count($dt) > 0)
 		{
 			$dt = PdoDataAccess::runquery("select LocalNo from ACC_docs where 
@@ -333,8 +336,7 @@ function saveDocItem() {
 		$return = $obj->Edit();
 
 	if (!$return) {
-		echo "false";
-		print_r(ExceptionHandler::PopAllExceptions());
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
 	echo Response::createObjectiveResponse(true, "");
@@ -725,7 +727,12 @@ function ComputeDoc(){
 		case "DepositeProfit":
 			ComputeDepositeProfit();
 			break;
+		
+		case "ShareProfit":
+			ComputeShareProfit();
+			break;
 	}
 }
+
 
 ?>

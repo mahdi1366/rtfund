@@ -8,3 +8,6 @@ require_once (getenv("DOCUMENT_ROOT") . '/framework/MainFrame.php');
 
 
 ?>
+<script>
+FrameWorkClass.StartPage = "/framework/FirstPage.php";
+</script>

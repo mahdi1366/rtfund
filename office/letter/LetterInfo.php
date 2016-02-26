@@ -5,11 +5,14 @@
 //-----------------------------
 require_once '../header.inc.php';
 require_once 'letter.class.php';
+require_once inc_dataReader;
 require_once '../../dms/dms.class.php';
 
 $LetterID = !empty($_POST["LetterID"]) ? $_POST["LetterID"] : "";
 if(empty($LetterID))
 	die();
+
+$ForView = isset($_POST["ForView"]) && $_POST["ForView"] == "true" ? true : false;
 
 $LetterObj = new OFC_letters($LetterID);
 //..............................................................................
@@ -18,41 +21,84 @@ if(!empty($_REQUEST["SendID"]))
 	OFC_send::UpdateIsSeen($_REQUEST["SendID"]);
 
 //..............................................................................
+$letterYear = substr(DateModules::miladi_to_shamsi($LetterObj->LetterDate),0,4);
+
 $content = "<br><div style=margin-left:30px;float:left; >شماره نامه : " . 
-	$LetterObj->LetterID . "<br>تاریخ نامه : " . 
+	"<span dir=ltr>" . $letterYear . "-" . $LetterObj->LetterID . "</span><br>تاریخ نامه : " . 
 	DateModules::miladi_to_shamsi($LetterObj->LetterDate) . "</div><br><br>";
 
-$content .= "<b>";
+$content .= "<b><br><div align=center>بسمه تعالی</div><br>";
 $dt = PdoDataAccess::runquery("
-	select  p1.sex,FromPersonID,
-		if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) FromPersonName ,
-		if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) ToPersonName 
+	select  p1.sex,FromPersonID,p3.PersonSign signer, p1.PersonSign regSign,
+		if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) RegPersonName ,
+		if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) ToPersonName ,
+		concat(p3.fname, ' ', p3.lname) SignPersonName 
 	from OFC_send s
 		join OFC_letters l using(LetterID)
-		join BSC_persons p1 on(s.FromPersonID=p1.PersonID)
+		join BSC_persons p1 on(l.PersonID=p1.PersonID)
 		join BSC_persons p2 on(s.ToPersonID=p2.PersonID)
+		left join BSC_persons p3 on(l.SignerPersonID=p3.PersonID)
 	where LetterID=? 
 	order by SendID
 	", array($LetterID));
-foreach($dt as $row)
-{
-	if($row["FromPersonID"] != $LetterObj->PersonID)
-		break;	
-	$content .= $row["sex"] == "MALE" ? "جناب آقای " : "سرکار خانم ";
-	$content .= $row['ToPersonName'] . "<br>";
-}
 
-$content .= "<br> موضوع : " . $LetterObj->LetterTitle . "<br><br></b>";
-$content .= str_replace("\r\n", "", $LetterObj->context);
-$content .= "<br><br><div align=left style=width:80%><b>" . $dt[0]["FromPersonName"] . "</b></div>";
+if($LetterObj->LetterType == "INNER")
+{
+	foreach($dt as $row)
+	{
+		if($row["FromPersonID"] != $LetterObj->PersonID)
+			break;	
+		$content .= $row["sex"] == "MALE" ? "جناب آقای " : "سرکار خانم ";
+		$content .= $row['ToPersonName'] . "<br>";
+	}
+	
+	$content .= "<br> موضوع : " . $LetterObj->LetterTitle . "<br><br></b>";
+	$content .= str_replace("\r\n", "", $LetterObj->context);
+	
+	$sign = $dt[0]["regSign"] != "" ? "background-image:url(\"" .
+			data_uri($dt[0]["regSign"],'image/jpeg') . "\")" : "";
+	
+	$content .= "<div class=signDiv style=" . $sign . "><b>" . 
+			$dt[0]["RegPersonName"] . "</b></div>";
+}
+if($LetterObj->LetterType == "OUTCOME")
+{
+	$content .= $LetterObj->organization . "<br>" ;
+	$content .= "<br> موضوع : " . $LetterObj->LetterTitle . "<br><br></b>";
+	$content .= str_replace("\r\n", "", $LetterObj->context);
+	
+	$sign = $LetterObj->IsSigned == "YES" && $dt[0]["signer"] != "" ? 
+			"background-image:url(\"" . data_uri($dt[0]["signer"],'image/jpeg') . "\")" : "";
+	
+	$content .= "<div class=signDiv style=" . $sign . "><b>" . 
+			$dt[0]["SignPersonName"] . "</b></div>";
+	
+	
+}
 //..............................................................................
 $imageslist = array();
-$images = DMS_documents::SelectAll("ObjectType='letter' AND ObjectID=?", array($LetterID));
-foreach($images as $img)
-	$imageslist[] = "'/dms/ShowFile.php?DocumentID=" . $img["DocumentID"] . 
-		"&ObjectID=" . $LetterID . "'";
+$doc = DMS_documents::SelectAll("ObjectType='letter' AND ObjectID=?", array($LetterID));
+if(count($doc) > 0)
+{
+	$images = DMS_DocFiles::selectAll("DocumentID=?", array($doc[0]["DocumentID"]));
+	foreach($images as $img)
+		$imageslist[] = "'/dms/ShowFile.php?RowID=" . $img["RowID"] . "&DocumentID=" . $img["DocumentID"] . 
+			"&ObjectID=" . $LetterID . "'";
+}
 $imageslist = implode(",", $imageslist);
 //..............................................................................
+$editable = false;
+if($LetterObj->LetterType == "OUTCOME" && $LetterObj->IsSigned == "NO")
+{
+	$dt = OFC_letters::SelectReceivedLetters(" AND l.LetterID=:lid", array(":lid"=>$LetterID));
+	if($dt->rowCount()>0)
+		$editable = true;
+}
+$signing = false;
+if($LetterObj->LetterType == "OUTCOME" && 
+	$LetterObj->IsSigned == "NO" && 
+	$LetterObj->SignerPersonID == $_SESSION["USER"]["PersonID"])
+	$signing = true;
 ?>
 <script>
 
@@ -70,6 +116,48 @@ LetterInfo.prototype = {
 
 function LetterInfo(){
 	
+	buttons = new Array();
+	<? if($editable){?>
+		buttons.push({text : "ویرایش",
+			iconCls : "edit",
+			itemId : "btn_edit",
+			handler : function(){
+				LetterInfoObject.EditLetter();
+			}
+		});
+		buttons.push({
+			text : "امضاء نامه",
+			iconCls : "sign",
+			handler : function(){
+				LetterInfoObject.SignLetter();
+			}
+		});
+	<?} if(!$ForView){?>
+		buttons.push({
+			text : "ارجاع",
+			iconCls : "sendLetter",
+			itemId : "btn_send",
+			handler : function(){
+				LetterInfoObject.SendWindowShow();
+			}
+		});
+		buttons.push({
+			text : "بایگانی",
+			iconCls : "archive",
+			handler : function(){
+				LetterInfoObject.ArchiveWindowShow();
+			}
+		});
+	<?}?>	
+	buttons.push({
+		text : "چاپ",
+		iconCls : "print",
+		handler : function(){ 
+			window.open( LetterInfoObject.address_prefix + 
+				"PrintLetter.php?LetterID=" + <?= $LetterID ?>); 
+		}
+	});
+	
 	this.tabPanel = new Ext.TabPanel({
 		renderTo: this.get("mainForm"),
 		activeTab: 0,
@@ -81,33 +169,14 @@ function LetterInfo(){
 		},
 		items:[{
 			title : "متن نامه",
+			itemId : "tab_letter",
 			items :[{
 				xtype : "container",
 				autoScroll: true,
 				cls : "LetterContent",
 				html : '<?= $content ?>'
 			}],
-			buttons : [{
-				text : "بایگانی",
-				iconCls : "archive",
-				handler : function(){
-					LetterInfoObject.ArchiveWindowShow();
-				}
-			},{
-				text : "ارجاع",
-				iconCls : "sendLetter",
-				itemId : "btn_send",
-				handler : function(){
-					LetterInfoObject.SendWindowShow();
-				}
-			},{
-				text : "چاپ",
-				iconCls : "print",
-				handler : function(){ 
-					window.open( MyLetterObject.address_prefix + 
-						"PrintLetter.php?LetterID=" + <?= $LetterID ?>); 
-				}
-			}]
+			buttons : buttons
 			
 		},{
 			title : "پیوست های نامه",
@@ -233,6 +302,39 @@ LetterInfo.prototype.ArchiveWindowShow = function(){
 	});
 }
 
+LetterInfo.prototype.EditLetter = function(){
+	
+	framework.CloseTab(this.TabID);
+	framework.OpenPage(this.address_prefix + "NewLetter.php", "ویرایش نامه", {LetterID : this.LetterID});
+}
+
+LetterInfo.prototype.SignLetter = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به امضا می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		me = LetterInfoObject;
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخيره سازي...'});
+		mask.show();  
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'letter.data.php?task=SignLetter' , 
+			method: "POST",
+			params : {
+				LetterID : me.LetterID
+			},
+
+			success : function(response){
+				mask.hide();
+				Ext.getCmp(LetterInfoObject.TabID).loader.load();
+			},
+			failure : function(){
+				mask.hide();
+			}
+		});
+	})
+	
+}
 
 
 </script>
@@ -253,10 +355,19 @@ LetterInfo.prototype.ArchiveWindowShow = function(){
 	} 
 	.LetterContent li {
 		list-style: inherit !important;
+		margin-right: 40px;
 	}
 	.LetterContent ol {
 		padding : 20px;
 	}
+	.signDiv {
+			height: 200px;
+			float : left;
+			background-repeat: no-repeat; 
+			width: 200px; 
+			text-align: center; 
+			padding-top: 60px;
+		}
 </style>
 	<br>
 	<div style="margin-right : 20px" id="mainForm"></div>

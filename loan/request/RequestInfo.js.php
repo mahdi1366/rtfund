@@ -1058,7 +1058,8 @@ RequestInfo.prototype.LoanDocuments = function(ObjectType){
 			width : 720,
 			height : 440,
 			modal : true,
-			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
+			autoScroll:true,
+			bodyStyle : "background-color:white;padding: 4px 4px 4px 4px",
 			closeAction : "hide",
 			loader : {
 				url : "../../dms/documents.php",

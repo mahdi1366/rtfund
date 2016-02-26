@@ -900,7 +900,7 @@ AccDocs.prototype.SaveItem = function(store,record)
 			}
 			else
 			{
-				alert(st.data);
+				Ext.MessageBox.alert("Error",st.data);
 			}
 		},
 		failure: function(){}

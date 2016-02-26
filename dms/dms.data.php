@@ -34,6 +34,14 @@ switch ($task) {
 		
 	case "selectParamValues":
 		selectParamValues();
+		
+	//.......................................
+	
+	case "SaveDocType":
+		SaveDocType();
+		
+	case "DeleteDocType":
+		DeleteDocType();
 }
 
 function SelectAll(){
@@ -86,16 +94,19 @@ function SelectAll(){
 
 function SaveDocument() {
 
-	if(!empty($_FILES["FileType"]["tmp_name"]))
+	foreach($_FILES as $file)
 	{
-		$st = preg_split("/\./", $_FILES ['FileType']['name']);
-		$extension = strtolower($st [count($st) - 1]);
-		if (in_array($extension, array("jpg", "jpeg", "gif", "png", "pdf")) === false) 
+		if(!empty($file["tmp_name"]))
 		{
-			Response::createObjectiveResponse(false, "فرمت فایل ارسالی نامعتبر است");
-			die();
+			$st = preg_split("/\./", $file["name"]);
+			$extension = strtolower($st [count($st) - 1]);
+			if (in_array($extension, array("jpg", "jpeg", "gif", "png", "pdf")) === false) 
+			{
+				Response::createObjectiveResponse(false, "فرمت فایل ارسالی نامعتبر است");
+				die();
+			}
 		}
-	}	
+	}
 	//..............................................
 	
 	$obj = new DMS_documents();
@@ -136,22 +147,24 @@ function SaveDocument() {
 		}
 	}
 	//----------------------------------------
-	
-	if(!empty($_FILES["FileType"]["tmp_name"]))
+	foreach($_FILES as $name => $file)
 	{
-	
-		$fp = fopen(getenv("DOCUMENT_ROOT") . "/storage/documents/". $obj->DocumentID . "." . $extension, "w");
-		fwrite($fp, substr(fread(fopen($_FILES['FileType']['tmp_name'], 'r'), $_FILES ['FileType']['size']),200) );
+		if(empty($file["tmp_name"]))
+			continue;
+		
+		$obj2 = new DMS_DocFiles();
+		$obj2->DocumentID = $obj->DocumentID;
+		$obj2->PageNo = str_replace("FileType_", "", $name);
+		$obj2->PageNo = $obj2->PageNo*1 == 0 ? 1 : $obj2->PageNo;
+		$obj2->FileType = $extension;
+		$obj2->FileContent = substr(fread(fopen($file['tmp_name'], 'r'), $file['size']), 0, 200);
+		$obj2->AddPage();
+		
+		$fp = fopen(getenv("DOCUMENT_ROOT") . "/storage/documents/". $obj2->RowID . "." . $extension, "w");
+		fwrite($fp, substr(fread(fopen($file['tmp_name'], 'r'), $file['size']),200) );
 		fclose($fp);
-		$obj->FileContent = substr(fread(fopen($_FILES['FileType']['tmp_name'], 'r'), $_FILES ['FileType']['size']), 0, 200);
-
-		$db = PdoDataAccess::getPdoObject();
-		$stmt = $db->prepare("update DMS_documents set FileType = :ft, FileContent = :data where DocumentID=:did");
-		$stmt->bindParam(":did", $obj->DocumentID);
-		$stmt->bindParam(":ft", $extension);
-		$stmt->bindParam(":data", $obj->FileContent, PDO::PARAM_LOB);
-		$stmt->execute();
 	}
+	
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();
@@ -191,7 +204,7 @@ function ConfirmDocument(){
 
 function selectDocTypeGroups(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=7");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=7 AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -199,7 +212,8 @@ function selectDocTypeGroups(){
 function selectDocTypes(){
 	
 	$groupID = $_REQUEST["GroupID"];
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=8 AND param1=?", array($groupID));
+	$dt = PdoDataAccess::runquery("select * from BaseInfo 
+		where typeID=8 AND IsActive='YES' AND param1=?", array($groupID));
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -218,4 +232,42 @@ function selectParamValues(){
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
+
+//.................................................
+
+function SaveDocType(){
+	
+	$st = stripslashes(stripslashes($_POST["record"]));
+	$data = json_decode($st);
+
+	if($data->InfoID*1 == 0)
+	{
+		$pdo = PdoDataAccess::getPdoObject();
+		$pdo->beginTransaction();
+	
+		$data->InfoID = PdoDataAccess::GetLastID("BaseInfo", "InfoID", "TypeID=?", array($data->TypeID), $pdo);
+		$data->InfoID = $data->InfoID*1 + 1;
+		
+		PdoDataAccess::runquery("insert into BaseInfo(TypeID,InfoID,InfoDesc,param1) values(?,?,?,?)",
+			array($data->TypeID, $data->InfoID, $data->InfoDesc, $data->param1), $pdo);
+		
+		$pdo->commit();
+	}
+	else
+		PdoDataAccess::runquery("update BaseInfo set InfoDesc=? where TypeID=? AND InfoID=?",
+			array($data->InfoDesc, $data->TypeID, $data->InfoID));	
+
+	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
+	die();
+}
+
+function DeleteDocType(){
+	
+	PdoDataAccess::runquery("update BaseInfo set IsActive='NO' 
+		where TypeID=? AND InfoID=?",array($_REQUEST["TypeID"], $_REQUEST["InfoID"]));
+
+	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
+	die();
+}
+
 ?>

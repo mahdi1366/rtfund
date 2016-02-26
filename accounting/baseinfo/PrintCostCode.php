@@ -5,7 +5,7 @@
 //--------------------------
 require_once '../header.inc.php';
 require_once 'baseinfo.class.php';
-require_once '../global/Manage_Report.class.php';
+require_once '../global/ManageReport.class.php';
 require_once inc_reportGenerator;
 
 Manage_Report::BeginReport();

@@ -11,18 +11,23 @@ $IsShareholder = $_SESSION["USER"]["IsShareholder"] == "YES";
 $IsAgent = $_SESSION["USER"]["IsAgent"] == "YES";
 $IsSupporter = $_SESSION["USER"]["IsSupporter"] == "YES";
 
-$dt = PdoDataAccess::runquery("select * from LON_requests 
-	where StatusID<70 AND LoanPersonID=? 
-	AND (ReqPersonID<>LoanPersonID or SupportPersonID>0)",
-	array($_SESSION["USER"]["PersonID"]));
-if(count($dt) == 0)
-	$loansText = "هنوز وامی به نام شما به صندوق معرفی نشده است";
-else
-	$loansText = "<a class='menuItem blueText' style='text-align:center;font-size:12px' ".
-		"href='javascript:StartPageObject.OpenLoan(" . 
-		$dt[0]["RequestID"] . ")'>" . "وامی به مبلغ " . 
-		number_format($dt[0]["ReqAmount"]) . " به نام شما تعریف شده است. [ مشاهده جزئیات ]".
-		"</a> برای پیگیری های بعدی می توانید از منوی وام های دریافتی وضعیت وام خود را پیگیری کنید";
+$loansText = "";
+
+if($IsCustomer)
+{
+	$dt = PdoDataAccess::runquery("select * from LON_requests 
+		where StatusID<70 AND LoanPersonID=? 
+		AND (ReqPersonID<>LoanPersonID or SupportPersonID>0)",
+		array($_SESSION["USER"]["PersonID"]));
+	if(count($dt) == 0)
+		$loansText = "هنوز وامی به نام شما به صندوق معرفی نشده است";
+	else
+		$loansText = "<a class='menuItem blueText' style='text-align:center;font-size:12px' ".
+			"href='javascript:StartPageObject.OpenLoan(" . 
+			$dt[0]["RequestID"] . ")'>" . "وامی به مبلغ " . 
+			number_format($dt[0]["ReqAmount"]) . " به نام شما تعریف شده است. [ مشاهده جزئیات ]".
+			"</a> برای پیگیری های بعدی می توانید از منوی وام های دریافتی وضعیت وام خود را پیگیری کنید";
+}
 ?>
 <script>
 
@@ -63,7 +68,14 @@ StartPage.prototype.OpenLoan = function(RequestID){
 
 </script>
 <center><br>
-	<div class="blueText">کاربر گرامی <br> به پرتال جامع <?= SoftwareName ?> خوش آمدید. </div>
+	<div class="blueText">کاربر گرامی <br> به پرتال جامع <?= SoftwareName ?> خوش آمدید. 
+		<?
+			if($_SESSION["USER"]["IsActive"] == "PENDING")
+			{
+				echo "<br><br>" . "امکانات پرتال زمانی برای شما فعال خواهد گردید که ثبت نام شما توسط صندوق تایید گردد.";
+			}
+		?>
+	</div>	
 	<br>
 	<div id="div_loans"></div>
 </center>

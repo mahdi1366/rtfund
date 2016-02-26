@@ -53,6 +53,20 @@ switch ($task)
 		
 	case "DeleteBranchAccess":
 		DeleteBranchAccess();
+		
+	//------------------------------
+		
+	case "SelectBaseTypes":
+		SelectBaseTypes();
+		
+	case "SelectBaseInfo":
+		SelectBaseInfo();
+		
+	case "SaveBaseInfo":
+		SaveBaseInfo();
+		
+	case "DeleteBaseInfo":
+		DeleteBaseInfo();
 }
 
 function SaveUnit()
@@ -219,4 +233,57 @@ function DeleteBranchAccess(){
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
+
+//---------------------------------
+function SelectBaseTypes(){
+	
+	$temp = PdoDataAccess::runquery("select * from BaseTypes where editable='YES'");
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
+function SelectBaseInfo(){
+	
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where typeID=? AND IsActive='YES'",
+		array($_REQUEST["TypeID"]));
+
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
+function SaveBaseInfo(){
+	
+	$st = stripslashes(stripslashes($_POST["record"]));
+	$data = json_decode($st);
+
+	if($data->InfoID*1 == 0)
+	{
+		$pdo = PdoDataAccess::getPdoObject();
+		$pdo->beginTransaction();
+	
+		$data->InfoID = PdoDataAccess::GetLastID("BaseInfo", "InfoID", "TypeID=?", array($data->TypeID), $pdo);
+		$data->InfoID = $data->InfoID*1 + 1;
+		
+		PdoDataAccess::runquery("insert into BaseInfo(TypeID,InfoID,InfoDesc) values(?,?,?)",
+			array($data->TypeID, $data->InfoID, $data->InfoDesc), $pdo);
+		
+		$pdo->commit();
+	}
+	else
+		PdoDataAccess::runquery("update BaseInfo set InfoDesc=? where typeID=? AND InfoID=?",
+			array($data->InfoDesc, $data->TypeID, $data->InfoID));	
+
+	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
+	die();
+}
+
+function DeleteBaseInfo(){
+	
+	PdoDataAccess::runquery("update BaseInfo set IsActive='NO' 
+		where TypeID=? AND InfoID=?",array($_REQUEST["TypeID"], $_REQUEST["InfoID"]));
+
+	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
+	die();
+}
+
 ?>

@@ -37,7 +37,7 @@ $col = $dg->addColumn("عنوان پیوست", "DocDesc", "");
 $col = $dg->addColumn("ثبت کننده", "regfullname", "");
 $col->width = 150;
 
-$col = $dg->addColumn("فایل", "FileType", "");
+$col = $dg->addColumn("فایل", "HaveFile", "");
 $col->renderer = "function(v,p,r){return ManageDocument.FileRender(v,p,r)}";
 $col->align = "center";
 $col->width = 50;
@@ -126,7 +126,7 @@ ManageDocumentObject = new ManageDocument();
 
 ManageDocument.FileRender = function(v,p,r){
 	
-	if(v == "" || v == null)
+	if(v == "false")
 		return "";
 	
 	return "<div align='center' title='مشاهده فایل' class='attach' "+

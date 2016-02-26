@@ -938,7 +938,7 @@ function ComputeDepositeProfit(){
 	//----------- check for all docs confirm --------------
 	$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
 		join ACC_DocItems using(DocID)
-		where DocID>=? AND CostID in(" . ShortDepositeCostID . "," . LongDepositeCostID . ")
+		where DocID>=? AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
 		AND DocStatus not in('CONFIRM','ARCHIVE')", array($LatestComputeDocID));
 	if(count($dt) > 0 && $dt[0][0] != "")
 	{
@@ -950,22 +950,22 @@ function ComputeDepositeProfit(){
 	$dt = PdoDataAccess::runquery("select * from ACC_cycles where CycleID=" . 
 			$_SESSION["accounting"]["CycleID"]);
 	$DepositePercents = array(
-		ShortDepositeCostID => $dt[0]["ShortDepositPercent"],
-		LongDepositeCostID  => $dt[0]["LongDepositPercent"]
+		COSTID_ShortDeposite => $dt[0]["ShortDepositPercent"],
+		COSTID_LongDeposite  => $dt[0]["LongDepositPercent"]
 	);
 	
 	//------------ get sum of deposites ----------------
 	$dt = PdoDataAccess::runquery("select TafsiliID,CostID,sum(CreditorAmount-DebtorAmount) amount
 		from ACC_DocItems join ACC_docs using(DocID)
 		where DocID<=? 
-			AND CostID in(" . ShortDepositeCostID . "," . LongDepositeCostID . ")
+			AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
 			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 			AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
 		group by TafsiliID,CostID", 
 		array($LatestComputeDocID));
 	$DepositeAmount = array(
-		ShortDepositeCostID => array(),
-		LongDepositeCostID => array()
+		COSTID_ShortDeposite => array(),
+		COSTID_LongDeposite => array()
 	);
 	
 	foreach($dt as $row)
@@ -978,7 +978,7 @@ function ComputeDepositeProfit(){
 		select CostID,TafsiliID,DocDate,CreditorAmount-DebtorAmount amount
 		from ACC_DocItems 
 			join ACC_docs using(DocID)
-		where CostID in(" . ShortDepositeCostID . "," . LongDepositeCostID . ")
+		where CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
 			AND DocID > ?
 			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 			AND BranchID=" . $_SESSION["accounting"]["BranchID"], array($LatestComputeDocID));
@@ -1006,27 +1006,27 @@ function ComputeDepositeProfit(){
 		$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $row["DocDate"];	
 	}
 	
-	foreach($DepositeAmount[ ShortDepositeCostID ] as $tafsili => &$row)
+	foreach($DepositeAmount[ COSTID_ShortDeposite ] as $tafsili => &$row)
 	{
 		$days = DateModules::GDateMinusGDate(DateModules::Now(), $row["lastDate"]);
-		$amount = $row["amount"] * $days * $DepositePercents[ ShortDepositeCostID ]/(100*30.5);
+		$amount = $row["amount"] * $days * $DepositePercents[ COSTID_ShortDeposite ]/(100*30.5);
 
 		if(!isset($row["profit"]))
 			$row["profit"] = 0;
 		$row["profit"] += $amount;
 		
-		//echo $tafsili ."@" . $DepositeAmount[ ShortDepositeCostID ][ $tafsili ]["profit"] . "\n";
+		//echo $tafsili ."@" . $DepositeAmount[ COSTID_ShortDeposite ][ $tafsili ]["profit"] . "\n";
 	}
-	foreach($DepositeAmount[ LongDepositeCostID ] as $tafsili => &$row)
+	foreach($DepositeAmount[ COSTID_LongDeposite ] as $tafsili => &$row)
 	{
 		$days = DateModules::GDateMinusGDate(DateModules::Now(), $row["lastDate"]);
-		$amount = $row["amount"] * $days * $DepositePercents[ LongDepositeCostID ]/(100*30.5);
+		$amount = $row["amount"] * $days * $DepositePercents[ COSTID_LongDeposite ]/(100*30.5);
 
 		if(!isset($row["profit"]))
 			$row["profit"] = 0;
 		$row["profit"] += $amount;
 		
-		//echo $tafsili ."@" . $DepositeAmount[ ShortDepositeCostID ][ $tafsili ]["profit"] . "\n";
+		//echo $tafsili ."@" . $DepositeAmount[ COSTID_ShortDeposite ][ $tafsili ]["profit"] . "\n";
 	}
 	
 	$pdo = PdoDataAccess::getPdoObject();
@@ -1076,7 +1076,7 @@ function ComputeDepositeProfit(){
 	
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
-	$itemObj->CostID = FundCostID;
+	$itemObj->CostID = COSTID_Fund;
 	$itemObj->DebtorAmount= $sumAmount;
 	$itemObj->CreditorAmount = 0;
 	$itemObj->locked = "YES";
@@ -1089,6 +1089,99 @@ function ComputeDepositeProfit(){
 	
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
+	die();	
+}
+
+//---------------------------------------------------------------
+
+function ComputeShareProfit(){
+	
+	//----------- check for all docs confirm --------------
+	/*$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
+		join ACC_DocItems using(DocID)
+		where CostID =" . COSTID_share . "
+		AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+		AND DocStatus not in('CONFIRM','ARCHIVE')");
+	if(count($dt) > 0 && $dt[0][0] != "")
+	{
+		echo Response::createObjectiveResponse(false, "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند و قادر به صدور سند سود سهام نمی باشید.");
+		die();
+	}
+	*/
+
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+
+	//--------------- add doc header ------------------
+	$obj = new ACC_docs();
+	$obj->RegDate = PDONOW;
+	$obj->regPersonID = $_SESSION['USER']["PersonID"];
+	$obj->DocDate = PDONOW;
+	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
+	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
+	$obj->DocType = DOCTYPE_SHARE_PROFIT;
+	$obj->description = "محاسبه سود سهام سهامداران";
+
+	if(!$obj->Add($pdo))
+	{
+		echo Response::createObjectiveResponse(false, "خطا در ایجاد سند");
+		die();
+	}
+	//------------ compute profits ----------------
+	$TotalProfit = $_POST["TotalProfit"];
+	
+	$dt = PdoDataAccess::runquery("select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
+		from ACC_DocItems join ACC_docs using(DocID)
+		where CostID=" . COSTID_share . "
+			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "			
+		group by TafsiliID
+		order by amount");
+	
+	$TotalShares = 0;
+	foreach($dt as $row)
+		$TotalShares += $row["amount"];
+	
+	$sumProfits = 0;
+	for($i=0; $i<count($dt);$i++)
+	{
+		$row = $dt[$i];
+		$profit = ceil(($row["amount"]*1/$TotalShares)*$TotalProfit);
+		$sumProfits += $profit;
+		
+		if($i == count($dt)-1)
+			$profit += $TotalProfit - $sumProfits;
+			
+		$itemObj = new ACC_DocItems();
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = COSTID_ShareProfit;
+		$itemObj->CreditorAmount = $profit;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $row["TafsiliID"];
+		$itemObj->locked = "YES";
+		$itemObj->SourceType = DOCTYPE_SHARE_PROFIT;
+		if(!$itemObj->Add($pdo))
+		{
+			echo Response::createObjectiveResponse(false, "خطا در ایجاد ردیف سند");
+			die();
+		}
+	}
+	//---------------------- add fund row ----------------
+	/*
+	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $obj->DocID;
+	$itemObj->CostID = COSTID_Fund;
+	$itemObj->DebtorAmount= $sumAmount;
+	$itemObj->CreditorAmount = 0;
+	$itemObj->locked = "YES";
+	$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
+	if(!$itemObj->Add($pdo))
+	{
+		return false;
+	}*/
+		
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, $obj->DocID);
 	die();	
 }
 

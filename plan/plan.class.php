@@ -30,7 +30,7 @@ class PLN_plans extends PdoDataAccess
 	
 	function AddPlan($pdo = null){
 		
-		$this->ReqDate = PDONOW;
+		$this->RegDate = PDONOW;
 		
 	 	if(!parent::insert("PLN_plans",$this, $pdo))
 			return false;
@@ -76,6 +76,29 @@ class PLN_plans extends PdoDataAccess
 		$daObj->execute();
 	 	return true;
 	}
+
+	static function ChangeStatus($PlanID, $StatusID, $ActDesc = "", $LogOnly = false, $pdo = null){
+	
+		if(!$LogOnly)
+		{
+			$obj = new PLN_plans();
+			$obj->PlanID = $PlanID;
+			$obj->StatusID = $StatusID;
+			if(!$obj->EditPlan($pdo))
+				return false;
+		}
+		
+		$obj2 = new PLN_PlanSurvey();
+		$obj2->PlanID = $PlanID;
+		$obj2->ActDate = PDONOW;
+		$obj2->ActDesc = $ActDesc;
+		$obj2->StatusID = $StatusID;
+		$obj2->ActPersonID = $_SESSION["USER"]["PersonID"];
+		$obj2->AddRow($pdo);
+
+		return ExceptionHandler::GetExceptionCount() == 0;
+	}
+	
 }
 
 class PLN_PlanItems extends PdoDataAccess
@@ -146,6 +169,7 @@ class PLN_PlanSurvey extends PdoDataAccess
 	public $ActDate;
 	public $ActType;
 	public $ActDesc;
+	public $StatusID;
 	public $ActPersonID;
 			
 	function __construct($RowID = "") {

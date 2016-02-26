@@ -43,7 +43,8 @@ Letter.prototype.LoadLetter = function(){
 			url: this.address_prefix + "letter.data.php?task=SelectLetter&LetterID=" + this.LetterID,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["LetterID","LetterType","LetterTitle","SubjectID","summary","context"],
+		fields : ["LetterID","LetterType","LetterTitle","SubjectID","summary","context", 
+			"SignerPersonID", "organization"],
 		autoLoad : true,
 		listeners : {
 			load : function(){
@@ -84,28 +85,29 @@ Letter.prototype.BuildForms = function(){
 			columns : 2
 		},
 		defaults : {
-			labelWidth : 60,
+			labelWidth : 90,
 			width : 350
 		},
 		width: 780,
 		items : [{
-			xtype : "textfield",
-			name : "LetterTitle",
-			style : "margin-top:10px;margin-bottom:10px",
-			fieldLabel : "عنوان نامه",
-			allowBlank : false
-		},{
 			xtype :"container",
 			layout : "hbox",
 			items : [{
 				xtype : "radio",
-				fieldLabel : "نوع نامه",
 				labelWidth : 60,
 				boxLabel: 'نامه داخلی',
 				name: 'LetterType',
 				style : "margin-right : 20px",
 				checked : true,
-				inputValue: 'INNER'
+				inputValue: 'INNER',
+				listeners : {
+					change : function(){
+						if(this.checked)
+							this.up('form').down("[name=organization]").disable();
+						else
+							this.up('form').down("[name=organization]").enable();
+					}
+				}
 			},{
 				xtype : "radio",
 				boxLabel: 'نامه صادره',
@@ -119,6 +121,33 @@ Letter.prototype.BuildForms = function(){
 				inputValue: 'INCOME'
 			}]
 		},{
+			xtype : "textfield",
+			name : "LetterTitle",
+			fieldLabel : "عنوان نامه",
+			allowBlank : false
+		},{
+			xtype : "textfield",
+			name : "organization",
+			fieldLabel : "فرستنده/گیرنده",
+			disabled : true,
+			allowBlank : true
+		},{
+			xtype : "combo",
+			name : "SignerPersonID",
+			store: new Ext.data.Store({
+				proxy:{
+					type: 'jsonp',
+					url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields :  ['PersonID','fullname'],
+				autoLoad : true
+			}),
+			fieldLabel : "امضا کننده",
+			queryMode : "local",
+			displayField: 'fullname',
+			valueField : "PersonID"
+		},{
 			xtype : "tabpanel",
 			colspan : 2,
 			plain: true,
@@ -131,11 +160,6 @@ Letter.prototype.BuildForms = function(){
 				title : "نامه تصویری",
 				style : "margin-top:10px",
 				items : [{
-					xtype : "textfield",
-					fieldLabel : "عنوان صفحه",
-					name : "PageTitle",
-					width : 300
-				},{
 					xtype : "container",
 					layout : "hbox",
 					items : [{
@@ -148,10 +172,9 @@ Letter.prototype.BuildForms = function(){
 						text : "اضافه تصویر",
 						iconCls : "add",
 						handler : function(){
-							if(this.up('panel').down("[name=PageTitle]").getValue() == "" || 
-								this.up('panel').down("[name=PageFile]").getValue() == "")
+							if(this.up('panel').down("[name=PageFile]").getValue() == "")
 							{
-								Ext.MessageBox.alert("","ورود عنوان صفحه و فایل الزامی است");
+								Ext.MessageBox.alert("","ورود فایل صفحه الزامی است");
 								return;
 							}
 							LetterObject.SaveLetter();
@@ -171,18 +194,18 @@ Letter.prototype.BuildForms = function(){
 								url: this.address_prefix + 'letter.data.php?task=selectLetterPages',
 								reader: {root: 'rows',totalProperty: 'totalCount'}
 							},
-							fields : ['ObjectID','DocumentID','DocDesc']
+							fields : ['RowID','ObjectID','DocumentID','DocDesc']
 						}),
 						tpl: [
 							'<tpl for=".">',
 								'<div style="position:relative;float: right;padding:5px;width:100px;margin:5px">',
 								'<div class="thumb"><img style="width:100px;height:100px;cursor:pointer" ',
-									'src="/dms/ShowFile.php?DocumentID={DocumentID}&ObjectID={ObjectID}" ',
+									'src="/dms/ShowFile.php?RowID={RowID}&DocumentID={DocumentID}&ObjectID={ObjectID}" ',
 									'title="{DocumentTitle}" onclick="LetterObject.ShowPage({DocumentID})"></div>',
 								'<div style="width:100%;text-align:center">{DocDesc}</div>',
 								'<div class="cross x-btn-default-small" style="cursor:pointer;float: right;position: absolute;top:8px;',
 									'height: 19px; width: 19px; margin: 4px;"',
-									' onclick="LetterObject.DeletePage({DocumentID})"></div>',
+									' onclick="LetterObject.DeletePage({DocumentID},{RowID})"></div>',
 								'</div>',
 							'</tpl>',
 							'<div class="x-clear"></div>'
@@ -238,7 +261,7 @@ Letter.prototype.BuildForms = function(){
 	CKEDITOR.config.height = 270;
 	CKEDITOR.config.autoGrow_minHeight = 200;
 	
-	CKEDITOR.document.getById( 'Div_context' );
+	CKEDITOR.document.getById( 'Div_context' ); 
 	CKEDITOR.replace( 'Div_context' );	
 }
 
@@ -262,13 +285,13 @@ Letter.prototype.SaveLetter = function(){
 			mask.hide();
 			me = LetterObject;
 			me.LetterID = action.result.data;
-			me.letterPanel.down("[name=PageTitle]").setValue();
 			me.letterPanel.down("[itemId=pagesView]").getStore().proxy.extraParams = {
 				LetterID : me.LetterID
 			};
 			me.letterPanel.down("[itemId=pagesView]").getStore().load();
 			me.letterPanel.down("[itemId=btn_send]").enable();
-			me.letterPanel.down("[itemId=attach_tab]").enable();			
+			me.letterPanel.down("[itemId=attach_tab]").enable();	
+			
 		},
 		failure : function(){
 			mask.hide();
@@ -280,7 +303,7 @@ Letter.prototype.ShowPage = function(DocumentID, ObjectID){
 	window.open("/dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID);	
 }
 
-Letter.prototype.DeletePage = function(DocumentID){
+Letter.prototype.DeletePage = function(DocumentID, RowID){
 	
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟",function(btn){
 		if(btn == "no")
@@ -294,12 +317,12 @@ Letter.prototype.DeletePage = function(DocumentID){
 			method: "POST",
 			params : {
 				DocumentID : DocumentID,
+				RowID : RowID,
 				ObjectID : LetterObject.LetterID
 			},
 
 			success : function(){
 				mask.hide();
-				LetterObject.letterPanel.down("[name=PageTitle]").setValue();
 				LetterObject.letterPanel.down("[itemId=pagesView]").getStore().load();
 			},
 			failure : function(){
@@ -337,7 +360,7 @@ Letter.prototype.SendWindowShow = function(){
 			parent : "LetterObject.SendingWin",
 			AfterSendHandler : function(){
 				framework.CloseTab(LetterObject.TabID);
-				if(DraftLetterObject)
+				if(typeof DraftLetterObject == "object")
 					DraftLetterObject.grid.getStore().load();
 			},
 			

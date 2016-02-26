@@ -24,7 +24,7 @@ function PortalClass()
 {
 	this.mainPanel = new Ext.Panel({
 		border : 0,
-		height : 428,
+		height : 535,
 		autoScroll : true,
 		renderTo : document.getElementById("mainPortalFrame"),
 		loader : {}
@@ -44,7 +44,8 @@ PortalClass.prototype.OpenPage = function(itemURL, params)
 	
 	var id = this.mainPanel.getEl().dom.id;
 	params.ExtTabID = id;
-
+	params.portal = 1;
+	
 	this.mainPanel.loader.load({
 		url: itemURL,
 		method: "POST",

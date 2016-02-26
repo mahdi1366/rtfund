@@ -6,10 +6,14 @@
 
 require_once 'header.inc.php';
 require_once inc_dataGrid;
+require_once 'plan.class.php';
 
-//$PlanID = !empty($_POST["PlanID"]) ? $_POST["PlanID"] : 0;
-$PlanID = 1;
+if(empty($_REQUEST["PlanID"]))
+	die();
 
+$PlanID = $_REQUEST["PlanID"];
+$PlanObj = new PLN_plans($PlanID);
+//-----------------------------------------------------
 if(isset($_SESSION["USER"]["framework"]))
 	$User = "Staff";
 else
@@ -19,8 +23,17 @@ else
 	else if($_SESSION["USER"]["IsCustomer"] == "YES")
 		$User = "Customer";
 }
-//------------------------------------------------------------------------------
+//-----------------------------------------------------
+$readOnly = true;
+if($_SESSION["USER"]["IsCustomer"] == "YES" && 
+		$PlanObj->PersonID == $_SESSION["USER"]["PersonID"] &&
+		($PlanObj->StatusID == "1" || $PlanObj->StatusID == "5"))
+	$readOnly = false;
 
+//if(isset($_SESSION["USER"]["framework"]) && $PlanObj->StatusID == "2")
+	//$readOnly = false;
+
+//-----------------------------------------------------
 require_once 'PlanInfo.js.php';
 
 if(isset($_SESSION["USER"]["framework"]))
@@ -35,9 +48,15 @@ if(isset($_SESSION["USER"]["framework"]))
 	.filled {
 		font-weight: bold !important;
 	}
+	.reject a {
+		color : red !important;
+	}
+	.confirm a {
+		color : green !important;
+	}
 </style>
 <center>
-	<div align="right" style="width:780px"> 
+	<div align="right" style="width:760px"> 
 		<form id="mainForm"></form>
 	</div>
 </center>

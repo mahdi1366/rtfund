@@ -250,13 +250,14 @@ class ReportGenerator {
 
 		// row number ---------------------------
 		if ($this->rowNumber)
-			echo "<td align = '$this->header_alignment' style='padding:2px' border='$this->border' height='21px'><font
+			echo "<td align = 'center' style='padding:2px' border='$this->border' height='21px'><font
 				color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;ردیف</b></font></th>";
 		//---------------------------------------
 		// Draw Header
 		$field_count = count($this->columns);
 		for ($i = 0; $i < $field_count; $i++) {
-			echo "<td align = '$this->header_alignment' style='padding:2px' border='$this->border' height='21px'><font
+			echo "<td align = '" . ($this->columns[$i]->align == "" ? $this->header_alignment : $this->columns[$i]->align). 
+					"' style='padding:2px' border='$this->border' height='21px'><font
 					color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;" . $this->columns[$i]->header . "</b></font></td>";
 
 			if ($this->columns[$i]->HaveSum != -1)
@@ -364,7 +365,7 @@ class ReportGenerator {
 		// row number ----------------------------
 		if ($this->rowNumber) {
 			echo "<td height=21px style='padding:2px;direction:" . $this->columns[0]->direction . "' 
-						border='$this->border' align='" . $this->columns[0]->align . "'>
+						border='$this->border' align='center'>
 				<font color = '$this->body_textcolor' style='font-size:11px'>&nbsp;";
 			echo ($index + 1) . "</font></td>";
 		}

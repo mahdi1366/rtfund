@@ -4529,9 +4529,7 @@ Ext.define('Ext.ux.RowExpander', {
                 getRowBodyContents: function(data) {
                     return rowBodyTpl.applyTemplate(data);
                 }
-            },{
-                ftype: 'rowwrap'
-            }];
+            },{ftype: 'rowwrap'}];
 
         if (grid.features) {
             grid.features = features.concat(grid.features);

@@ -251,6 +251,16 @@ class ACC_DocItems extends PdoDataAccess {
 
 	function Add($pdo = null) {
 		
+		if($this->CostID == COSTID_share)
+		{
+			$amount = $this->CreditorAmount > 0 ? $this->CreditorAmount : $this->DebtorAmount;
+			if($amount*1 % ShareBaseAmount != 0)
+			{
+				ExceptionHandler::PushException("مبلغ سرفصل حساب سهام باید مضربی از " . ShareBaseAmount . " باشد");
+				return false;
+			}
+		}
+		
 		if (!parent::insert("ACC_DocItems", $this, $pdo))
 			return false;
 		

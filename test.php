@@ -39,6 +39,3 @@ die();
 	
 	print_r($result);
 ?>
-ALTER TABLE `rtfund`.`PLN_plans` ADD COLUMN `PlanDesc` VARCHAR(500) NOT NULL AFTER `PlanID`;
-
-'' default ActDesc
