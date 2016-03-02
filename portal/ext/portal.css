@@ -1,5 +1,5 @@
 @import url("font-awesome.min.css");
-@font-face{font-family:'IranNastaliq';src:url('IranNastaliq.ttf');font-weight:normal;font-style:normal}
+@import url("/generalUI/fonts/fonts.css");
 
 body{
       padding:0px;
