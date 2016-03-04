@@ -585,8 +585,18 @@ function ComputeInstallments(){
 	
 	$obj = new LON_ReqParts($_REQUEST["PartID"]);
 	
-	PdoDataAccess::runquery("delete from LON_installments where PartID=?", array($obj->PartID));
+	PdoDataAccess::runquery("delete from LON_installments where PartID=? AND IsPaid='NO'", array($obj->PartID));
 	
+	//-----------------------------------------------
+	
+	$dt = PdoDataAccess::runquery("select ifnull(sum(InstallmentAmount),0) amount 
+		from LON_installments where PartID=? AND IsPaid='YES'", array($obj->PartID));
+	if($obj->PartAmount*1 <= $dt[0]["amount"])
+	{
+		echo Response::createObjectiveResponse(true, "");
+		die();
+	}
+	//-----------------------------------------------
 	$YearMonths = 12;
 	if($obj->IntervalType == "DAY")
 		$YearMonths = floor(365/$obj->PayInterval);

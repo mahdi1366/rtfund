@@ -157,6 +157,7 @@ class OFC_send extends PdoDataAccess{
 	public $IsUrgent;
 	public $IsSeen;
 	public $IsDeleted;
+	public $IsCopy;
 
     function __construct($SendID = ""){
 		$this->DT_SendDate = DataMember::CreateDMA(DataMember::DT_DATE);
@@ -227,12 +228,6 @@ class OFC_archive extends PdoDataAccess{
     public $ParentID;
 	public $FolderName;
 	public $PersonID;
-
-    static function GetAll($where = "",$whereParam = array()){
-	    $query = "select * from OFC_send ";
-	    $query .= ($where != "") ? " where " . $where : "";
-	    return parent::runquery($query, $whereParam);
-    }
 	
     function AddFolder($pdo = null){
 	    if( parent::insert("OFC_archive", $this, $pdo) === false )

@@ -235,10 +235,10 @@ Installment.prototype.ComputeInstallments = function(){
 		"آیا مایل به محاسبه مجدد می باشید؟",function(btn){
 		if(btn == "no")
 			return;
+		
 		me = InstallmentObject;
-		var record = me.grid.getSelectionModel().getLastSelected();
 	
-		mask = new Ext.LoadMask(me.InstallmentsWin, {msg:'در حال ذخیره سازی ...'});
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
 		mask.show();
 
 		Ext.Ajax.request({
@@ -246,7 +246,7 @@ Installment.prototype.ComputeInstallments = function(){
 			method: "POST",
 			params: {
 				task: "ComputeInstallments",
-				PartID : record.data.PartID
+				PartID : me.PartID
 			},
 			success: function(response){
 				mask.hide();

@@ -39,3 +39,67 @@ die();
 	
 	print_r($result);
 ?>
+ALTER TABLE `krrtfir_rtfund`.`BSC_persons` ADD COLUMN `RegNo` INTEGER UNSIGNED NOT NULL AFTER `IsGovermental`,
+ ADD COLUMN `RegDate` DATE NOT NULL AFTER `RegNo`,
+ ADD COLUMN `RegPlace` VARCHAR(500) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER `RegDate`,
+ ADD COLUMN `CompanyType` SMALLINT UNSIGNED NOT NULL AFTER `RegPlace`,
+ ADD COLUMN `DomainID` INTEGER UNSIGNED NOT NULL AFTER `CompanyType`,
+ ADD COLUMN `AccountNo` DECIMAL(20) NOT NULL AFTER `DomainID`,
+ ADD COLUMN `WebSite` VARCHAR(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER `AccountNo`;
+
+ 
+ CREATE TABLE `krrtfir_rtfund`.`BSC_ActDomain` (
+  `DomainID` INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+  `ParentID` INTEGER UNSIGNED NOT NULL,
+  `DomainDesc` VARCHAR(500) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `IsActive` ENUM('YES','NO') NOT NULL DEFAULT 'YES',
+  PRIMARY KEY (`DomainID`)
+)
+ENGINE = InnoDB;
+
+
+ALTER TABLE `krrtfir_rtfund`.`BSC_persons` MODIFY COLUMN `RegNo` INTEGER UNSIGNED,
+ MODIFY COLUMN `RegDate` DATE,
+ MODIFY COLUMN `RegPlace` VARCHAR(500) CHARACTER SET utf8 COLLATE utf8_general_ci,
+ MODIFY COLUMN `CompanyType` SMALLINT(5) UNSIGNED,
+ MODIFY COLUMN `DomainID` INTEGER UNSIGNED,
+ MODIFY COLUMN `AccountNo` DECIMAL(20,0),
+ MODIFY COLUMN `WebSite` VARCHAR(100) CHARACTER SET utf8 COLLATE utf8_general_ci;
+
+addd menu
+
+
+ALTER TABLE `krrtfir_rtfund`.`BSC_persons` ADD COLUMN `FatherName` VARCHAR(200) CHARACTER SET utf8 COLLATE utf8_general_ci AFTER `WebSite`,
+ ADD COLUMN `ShNo` INTEGER UNSIGNED AFTER `FatherName`;
+
+ 
+
+CREATE TABLE  `krrtfir_rtfund`.`BSC_OrgSigners` (
+  `RowID` int(10) unsigned NOT NULL auto_increment,
+  `PersonID` int(10) unsigned NOT NULL,
+  `fullname` varchar(500) NOT NULL,
+  `sex` enum('MALE','FEMALE') NOT NULL default 'MALE',
+  `NationalID` varchar(10) NOT NULL default '',
+  `telephone` varchar(20) NOT NULL default '',
+  `mobile` varchar(11) NOT NULL default '',
+  `PostDesc` varchar(500) NOT NULL default '',
+  `detail` varchar(500) NOT NULL default '',
+  PRIMARY KEY  USING BTREE (`RowID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE  `krrtfir_rtfund`.`BSC_licenses` (
+  `LicenseID` int(10) unsigned NOT NULL auto_increment,
+  `PersonID` int(10) unsigned NOT NULL,
+  `title` varchar(1000) NOT NULL,
+  `LicenseNo` varchar(100) default NULL,
+  `ExpDate` date default NULL,
+  PRIMARY KEY  (`LicenseID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+ALTER TABLE `krrtfir_rtfund`.`DMS_documents` MODIFY COLUMN `DocDesc` VARCHAR(200) 
+CHARACTER SET utf8 COLLATE utf8_general_ci COMMENT 'توضیحات کلی';
+
+ALTER TABLE `krrtfir_rtfund`.`BSC_licenses` ADD COLUMN `IsConfirm` 
+ENUM('YES','NO') NOT NULL DEFAULT 'NO' AFTER `ExpDate`;

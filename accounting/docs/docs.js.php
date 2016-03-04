@@ -798,7 +798,7 @@ AccDocs.prototype.showDetail = function(record)
 	if(!this.itemGrid.rendered)
 		this.itemGrid.render(this.get("div_detail_dg"));
 	else
-		this.itemGrid.getStore().load();
+		this.itemGrid.getStore().loadPage(1);
 }
 
 AccDocs.beforeRowEdit = function(editor,e){

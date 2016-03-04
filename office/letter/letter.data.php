@@ -389,7 +389,9 @@ function SendLetter(){
 		$obj->SendDate = PDONOW;
 		$obj->SendType = $_POST[$index . "_SendType"];
 		$obj->IsUrgent = $_POST[$index . "_IsUrgent"];
+		$obj->IsCopy = isset($_POST[$index . "_IsCopy"]) ? "YES" : "NO";
 		$obj->SendComment = $_POST[$index . "_SendComment"];
+		$obj->SendComment = $obj->SendComment == "شرح ارجاع" ? "" : $obj->SendComment;
 		if(!$obj->AddSend($pdo))
 		{
 			$pdo->rollBack();

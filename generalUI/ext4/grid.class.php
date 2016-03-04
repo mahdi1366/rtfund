@@ -702,7 +702,8 @@ class sadaf_datagrid
 						case "ellipsis":
 							if($tempArr[$tempKeyArr[$j]] > 0){
 								$str .= "renderer: function(v,p){
-									p.tdAttr = 'data-qtip=\"' + v + '\"';
+									p.tdAttr = 'data-qtip=\"' +
+									(v != null ? v.replace(/\\n/g, \"<br>\") : v ) + '\"';
 									return Ext.util.Format.ellipsis(v," . $tempArr[$tempKeyArr[$j]] . ",false);}, ";
 							}
 							break;

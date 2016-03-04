@@ -177,7 +177,7 @@ left join tblZemanatTypeTaavon using(ZemanatTypeCode)
 foreach($temp as $row)
 	PdoDataAccess::runquery("update LON_requests set ReqDate='" . 
 			DateModules::shamsi_to_miladi($row["ReqDate"],"-") . "' where RequestID=" . $row["RequestID"]);
- */
+*/
 /*
 ALTER TABLE `rtfund`.`LON_requests` MODIFY COLUMN `ReqDate` DATETIME NOT NULL COMMENT 'تاریخ درخواست';
  
@@ -196,6 +196,8 @@ join rtfund.LON_requests on(VamCode=imp_VamCode)
 join tblVamType using(VamTypeCode)
 join rtfund.BSC_persons on(GirandehCode=imp_CustomerCode)
 left join tblZemanatTypeTaavon using(ZemanatTypeCode)
+ * 
+ update LON_ReqParts set PartID=RequestID
 ********************************************************************************
 ALTER TABLE `rtfund`.`LON_installments` MODIFY COLUMN `InstallmentDate` VARCHAR(20) NOT NULL COMMENT 'تاریخ سررسید',
  MODIFY COLUMN `PaidDate` VARCHAR(20) DEFAULT NULL COMMENT 'تاریخ پرداخت';
@@ -234,6 +236,14 @@ ALTER TABLE `rtfund`.`LON_installments` MODIFY COLUMN `InstallmentDate` DATE NOT
 update rtfund.LON_installments set ChequeNo=null where ChequeNo=0;
 
 update rtfund.LON_installments set details = replace(replace(details,'ي','ی'),'ك','ک')
+ * 
+ * 
+delete l2 from LON_installments l1
+join LON_installments l2 on(l1.InstallmentID<l2.InstallmentID
+AND l1.IsPaid=l2.IsPaid AND l1.PartID=l2.PartID AND
+l1.InstallmentDate=l2.InstallmentDate AND
+l1.InstallmentAmount = l2.InstallmentAmount)
+where l1.IsPaid='NO' ;
  * 
 ********************************************************************************
 insert into rtfund.DMS_Documents(DocDesc,DocType,ObjectType,ObjectID,IsConfirm,IsReturned,imp_DetailID)
@@ -276,6 +286,22 @@ where concat_ws('',p1.fname,p1.lname,p1.CompanyName)= concat_ws('',p2.fname,p2.l
 
 delete t from ACC_tafsilis t left join BSC_persons on(ObjectID=PersonID)
 where ObjectID>0 AND TafsiliType=1 AND PersonID is null
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

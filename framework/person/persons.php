@@ -28,46 +28,34 @@ $dg->addColumn("","address","string", true);
 $dg->addColumn("","IsActive","string", true);
 
 $col = $dg->addColumn("نام و نام خانوادگی","fullname","string");
-$col->sortable = false;
 
 $col = $dg->addColumn("نام كاربري","UserName","string");
-$col->sortable = false;
 $col->width = 120;
 
 $col = $dg->addColumn("<font style=font-size:10px>کاربر</font>","IsStaff","string");
 $col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
-$col->sortable = false;
 $col->align = "center";
 $col->width = 35;
 
 $col = $dg->addColumn("<font style=font-size:10px>مشتری</font>","IsCustomer","string");
 $col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
-$col->sortable = false;
 $col->align = "center";
 $col->width = 35;
 
 $col = $dg->addColumn("<font style=font-size:10px>سهامدار</font>","IsShareholder","string");
 $col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
-$col->sortable = false;
 $col->align = "center";
 $col->width = 35;
 
 $col = $dg->addColumn("<font style=font-size:10px>سرمایه گذار</font>","IsAgent","string");
 $col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
-$col->sortable = false;
 $col->align = "center";
 $col->width = 35;
 
 $col = $dg->addColumn("<font style=font-size:10px>حامی</font>","IsSupporter","string");
 $col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
-$col->sortable = false;
 $col->align = "center";
 $col->width = 35;
-
-$col = $dg->addColumn("","","");
-$col->renderer = "Person.DocumentRender";
-$col->sortable = false;
-$col->width = 40;
 
 if($accessObj->AddFlag)
 {
@@ -93,7 +81,8 @@ if($accessObj->RemoveFlag)
 $dg->height = 500;
 $dg->pageSize = 15;
 $dg->width = 750;
-$dg->DefaultSortField = "fullname";
+$dg->DefaultSortField = "IsActive";
+$dg->DefaultSortDir = "ASC";
 $dg->autoExpandColumn = "fullname";
 $dg->emptyTextOfHiddenColumns = true;
 $grid = $dg->makeGrid_returnObjects();
@@ -111,8 +100,18 @@ PersonObject.grid.getView().getRowClass = function(record)
 {
 	if(record.data.IsActive == "NO")
 		return "pinkRow";
+	if(record.data.IsActive == "PENDING")
+		return "yellowRow";
 	return "";
 }
+PersonObject.grid.on("itemdblclick", function(view, record){
+			
+		framework.OpenPage("/framework/person/PersonInfo.php", "اطلاعات ذینفع", 
+		{
+			PersonID : record.data.PersonID
+		});
+
+	});
 PersonObject.grid.render(PersonObject.get("div_grid_user"));
 
 </script>

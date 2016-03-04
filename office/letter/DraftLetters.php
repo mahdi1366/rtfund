@@ -20,9 +20,9 @@ $col->width = 90;
 
 $col = $dg->addColumn("عنوان نامه", "LetterTitle");
 
-$col = $dg->addColumn("عملیات", "");
+$col = $dg->addColumn("حذف", "");
 $col->renderer = "function(v,p,r){return DraftLetter.OperationRender(v,p,r);}";
-$col->width = 60;
+$col->width = 50;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 420;
@@ -50,6 +50,13 @@ DraftLetter.prototype = {
 function DraftLetter(){
 	
 	this.grid = <?= $grid?>;
+	
+	this.grid.on("itemdblclick", function(view, record){
+			
+		framework.OpenPage(DraftLetterObject.address_prefix + 
+			"NewLetter.php", "ایجاد نامه", {LetterID : record.data.LetterID});
+	});
+	
 	this.grid.render(this.get("div_grid"));
 }
 
@@ -78,12 +85,7 @@ DraftLetter.prototype.LoadDraftLetter = function(){
 
 DraftLetter.OperationRender = function(v,p,r){
 	
-	return "<div align='center' title='ویرایش' class='edit' "+
-		"onclick='DraftLetterObject.EditLetter();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"float:right;cursor:pointer;width:20px;height:16'></div>" +
-	
-		"<div align='center' title='حذف' class='remove' "+
+	return "<div align='center' title='حذف' class='remove' "+
 		"onclick='DraftLetterObject.DeleteLetter();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"float:right;cursor:pointer;width:16px;height:16'></div>";
@@ -119,12 +121,6 @@ DraftLetter.prototype.DeleteLetter = function(){
 			}
 		});
 	});
-}
-
-DraftLetter.prototype.EditLetter = function(){
-
-	record = this.grid.getSelectionModel().getLastSelected();
-	framework.OpenPage(this.address_prefix + "NewLetter.php", "ایجاد نامه", {LetterID : record.data.LetterID});
 }
 
 </script>

@@ -114,17 +114,6 @@ function Person()
 			fieldLabel : "کلمه کاربری",
 			name : "UserName"
 		},{
-			xtype : "textarea",
-			fieldLabel: 'آدرس',
-			width : 360,
-			rowspan : 3,
-			name: 'address'
-		},{
-			xtype : "textfield",
-			maskRe: /[\d\-]/,
-			fieldLabel: 'شماره تلفن',
-			name: 'PhoneNo'
-		},{
 			xtype : "textfield",
 			maskRe: /[\d\-]/,
 			fieldLabel: 'تلفن همراه',
@@ -208,13 +197,6 @@ Person.deleteRender = function(v,p,r)
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-Person.DocumentRender = function(v,p,r)
-{
-	return "<div align='center' title='مشاهده مدارک' class='attach' onclick='PersonObject.ShowDocuments();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";
-}
-
 Person.editRender = function(v,p,r)
 {
 	if(r.data.IsActive == "NO")
@@ -283,14 +265,14 @@ Person.prototype.saveData = function()
 		
 		success : function(form,action){
 			mask.hide();
-			if(action.result.success)
-				PersonObject.grid.getStore().load();
-			else
-				alert("عملیات مورد نظر با شکست مواجه شد.");
-
+			PersonObject.grid.getStore().load();
 			PersonObject.InfoPanel.hide();
 		},
-		failure : function(){
+		failure : function(form,action){
+			if(action.result.data == "")
+				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد.");
+			else
+				Ext.MessageBox.alert("",action.result.data);
 			mask.hide();
 		}
 	});
@@ -333,43 +315,6 @@ Person.prototype.ResetPass = function()
 			failure: function(){}
 		});
 		
-	});
-}
-
-Person.prototype.ShowDocuments = function(){
-	
-	if(!this.documentWin)
-	{
-		this.documentWin = new Ext.window.Window({
-			width : 720,
-			height : 440,
-			modal : true,
-			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
-			closeAction : "hide",
-			loader : {
-				url : "../dms/documents.php",
-				scripts : true
-			},
-			buttons :[{
-				text : "بازگشت",
-				iconCls : "undo",
-				handler : function(){this.up('window').hide();}
-			}]
-		});
-		Ext.getCmp(this.TabID).add(this.documentWin);
-	}
-
-	this.documentWin.show();
-	this.documentWin.center();
-	
-	var record = this.grid.getSelectionModel().getLastSelected();
-	this.documentWin.loader.load({
-		scripts : true,
-		params : {
-			ExtTabID : this.documentWin.getEl().id,
-			ObjectType : "person",
-			ObjectID : record.data.PersonID
-		}
 	});
 }
 

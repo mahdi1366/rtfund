@@ -100,7 +100,7 @@ function SaveDocument() {
 		{
 			$st = preg_split("/\./", $file["name"]);
 			$extension = strtolower($st [count($st) - 1]);
-			if (in_array($extension, array("jpg", "jpeg", "gif", "png", "pdf")) === false) 
+			if (in_array($extension, array("jpg", "jpeg", "gif", "png", "pdf", "xls")) === false) 
 			{
 				Response::createObjectiveResponse(false, "فرمت فایل ارسالی نامعتبر است");
 				die();
@@ -131,6 +131,7 @@ function SaveDocument() {
 	}
 	if(!$result)
 	{
+		//print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse($result, "");
 		die();
 	}
@@ -158,6 +159,13 @@ function SaveDocument() {
 		$obj2->PageNo = $obj2->PageNo*1 == 0 ? 1 : $obj2->PageNo;
 		$obj2->FileType = $extension;
 		$obj2->FileContent = substr(fread(fopen($file['tmp_name'], 'r'), $file['size']), 0, 200);
+		
+		$dt = PdoDataAccess::runquery("select RowID from DMS_DocFiles where DocumentID=? AND PageNo=?",
+			array($obj2->DocumentID, $obj2->PageNo));
+		
+		foreach($dt as $row)
+			DMS_DocFiles::DeletePage($row["RowID"]);
+				
 		$obj2->AddPage();
 		
 		$fp = fopen(getenv("DOCUMENT_ROOT") . "/storage/documents/". $obj2->RowID . "." . $extension, "w");
@@ -182,7 +190,10 @@ function DeleteDocument() {
 	}
 	PdoDataAccess::runquery("delete from DMS_DocParamValues where DocumentID=?", array($DocumentID));	
 	$result = DMS_documents::DeleteDocument($DocumentID);
-	unlink(getenv("DOCUMENT_ROOT") . "/storage/documents/". $obj->DocumentID . "." . $obj->FileType);
+	
+	$dt = PdoDataAccess::runquery("select RowID from DMS_DocFiles where DocumentID=?", array($DocumentID));
+	foreach($dt as $row)
+		DMS_DocFiles::DeletePage($row["RowID"]);
 	
 	echo Response::createObjectiveResponse($result, "");
 	die();

@@ -78,7 +78,7 @@ for ($i = 0; $i < count($menus); $i++) {
 			</a>
 			<!----------------------------------------------------------------->
 			<div class="headerItems" style="color:#1E8BC3;" 
-				 onclick="portal.OpenPage('/portal/global/PersonalInfo.php');">
+				 onclick="portal.OpenPage('/framework/person/PersonInfo.php');">
 				<span class="fa fa-user"></span><br>
 				<font style="font-family:tahoma;font-size:12px;font-weight:bold">اطلاعات شخصی</font>
 			</div>

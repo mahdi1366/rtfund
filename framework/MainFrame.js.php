@@ -45,7 +45,7 @@ function FrameWorkClass()
 			}
 		});
 		
-	}, 11*60000); // in milisecond
+	}, 11*6000); // in milisecond
 	
 	this.centerPanel = new Ext.TabPanel({
 		region: 'center',

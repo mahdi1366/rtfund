@@ -15,15 +15,18 @@ $letterYear = substr(DateModules::miladi_to_shamsi($LetterObj->LetterDate),0,4);
 //..............................................................................
 $content = "<b><span style=font-size:11px>";
 $dt = PdoDataAccess::runquery("
-	select  p1.sex,FromPersonID,p3.PersonSign signer, p1.PersonSign regSign,
+	select  p2.sex,FromPersonID,p3.PersonSign signer, p1.PersonSign regSign,
 		if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) RegPersonName ,
 		if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) ToPersonName ,
-		concat(p3.fname, ' ', p3.lname) SignPersonName 
+		concat(p3.fname, ' ', p3.lname) SignPersonName ,
+		po.PostName,
+		s.IsCopy
 	from OFC_send s
 		join OFC_letters l using(LetterID)
 		join BSC_persons p1 on(l.PersonID=p1.PersonID)
 		join BSC_persons p2 on(s.ToPersonID=p2.PersonID)
 		left join BSC_persons p3 on(l.SignerPersonID=p3.PersonID)
+		left join BSC_posts po on(p3.PostID=po.PostID)
 	where LetterID=? 
 	order by SendID
 	", array($LetterID));
@@ -31,8 +34,8 @@ if($LetterObj->LetterType == "INNER")
 {
 	foreach($dt as $row)
 	{
-		if($row["FromPersonID"] != $LetterObj->PersonID)
-			break;	
+		if($row["FromPersonID"] != $LetterObj->PersonID || $row["IsCopy"] == "YES")
+			continue;	
 		$content .= $row["sex"] == "MALE" ? "جناب آقای " : "سرکار خانم ";
 		$content .= $row['ToPersonName'] . "<br>";
 	}
@@ -46,8 +49,8 @@ if($LetterObj->LetterType == "INNER")
 	else
 		$sign = "";
 	
-	$content .= "<div class=signDiv style=\"" . $sign . "\"><b>" . 
-			$dt[0]["RegPersonName"] . "</b></div>";
+	$content .= "<table width=100%><tr><td><div class=signDiv style=\"" . $sign . "\"><b>" . 
+			$dt[0]["RegPersonName"] . "<br>" . $dt[0]["PostName"] . "</b></div></td></tr></table>";
 }
 if($LetterObj->LetterType == "OUTCOME")
 {
@@ -60,10 +63,15 @@ if($LetterObj->LetterType == "OUTCOME")
 			data_uri($dt[0]["signer"],'image/jpeg') . "')" : "";
 	else
 		$sign = "";
-	$content .= "<div class=signDiv style=\"" . $sign . "\"><b>" . 
-			$dt[0]["SignPersonName"] . "</b></div>";
-	
-	
+	$content .= "<table width=100%><tr><td><div class=signDiv style=\"" . $sign . "\"><b>" . 
+			$dt[0]["SignPersonName"] . "<br>" . $dt[0]["PostName"] . "</b></div></td></tr></table>";
+}
+foreach($dt as $row)
+{
+	if($row["FromPersonID"] != $LetterObj->PersonID || $row["IsCopy"] == "NO")
+		continue;	
+	$content .= "<b>" . "رونوشت : " . ($row["sex"] == "MALE" ? "جناب آقای " : "سرکار خانم ") . 
+			$row['ToPersonName'] . "<br></b>";
 }
 ?>
 <html>
@@ -148,7 +156,7 @@ if($LetterObj->LetterType == "OUTCOME")
 							<br>
 							<b>شعبه دانشگاه فردوسی مشهد : </b>پردیس، درب غربی( ورودی شهید باهنر ) 
 							<b>تلفن : 38837392 - فکس : 38837392</b>
-							<br>سایت : <b>www.krfn.ir</b>
+							<br>سایت : <b>www.krrtf.ir</b>
 							<br>ایمیل : <b>krfn.ir@gmail.com</b>
 						</td>
 					</tr>

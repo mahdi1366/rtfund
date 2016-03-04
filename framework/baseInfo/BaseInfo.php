@@ -10,7 +10,7 @@ include_once inc_dataGrid;
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "baseinfo.data.php?task=SelectBaseInfo", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "baseInfo.data.php?task=SelectBaseInfo", "grid_div");
 
 $dg->addColumn("", "TypeID", "", true);
 
@@ -92,7 +92,7 @@ function BaseInfo(){
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({
 				proxy: {type: 'jsonp',
-					url: this.address_prefix + 'baseinfo.data.php?task=SelectBaseTypes',
+					url: this.address_prefix + 'baseInfo.data.php?task=SelectBaseTypes',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				autoLoad : true,
@@ -150,7 +150,7 @@ BaseInfo.prototype.SaveBaseInfo = function(index){
 	mask.show();
 
 	Ext.Ajax.request({
-		url: this.address_prefix +'baseinfo.data.php',
+		url: this.address_prefix +'baseInfo.data.php',
 		method: "POST",
 		params: {
 			task: "SaveBaseInfo",
@@ -189,7 +189,7 @@ BaseInfo.prototype.DeleteBaseInfo = function(){
 		mask.show();
 
 		Ext.Ajax.request({
-			url: me.address_prefix + 'baseinfo.data.php',
+			url: me.address_prefix + 'baseInfo.data.php',
 			params:{
 				task: "DeleteBaseInfo",
 				TypeID : record.data.TypeID,

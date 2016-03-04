@@ -24,6 +24,7 @@ define("COSTID_LongDeposite", "119");
 define("COSTID_Fund", "1");
 define("COSTID_share", "166");
 define("COSTID_ShareProfit", "167");
+define("COSTID_Commitment", "63");
 
 define("ShareBaseAmount", "1100000");
 ?>

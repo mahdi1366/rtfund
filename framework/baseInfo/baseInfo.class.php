@@ -187,5 +187,52 @@ class BSC_branches extends PdoDataAccess
 	}
 }
 
+class BSC_ActDomain extends PdoDataAccess{
+	
+	public $DomainID;
+    public $ParentID;
+	public $DomainDesc;
+	public $PersonID;
+	
+    function AddDomain($pdo = null){
+	    if( parent::insert("BSC_ActDomain", $this, $pdo) === false )
+		    return false;
+
+	    $this->DomainID = parent::InsertID($pdo);
+
+	    $daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->DomainID;
+		$daObj->TableName = "BSC_ActDomain";
+		$daObj->execute($pdo);
+		return true;	
+    }
+	
+	function EditDomain($pdo = null){
+	    if( parent::update("BSC_ActDomain", $this, "DomainID=:s", array(":s" =>$this->DomainID), $pdo) === false )
+		    return false;
+
+	    $daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_update;
+		$daObj->MainObjectID = $this->DomainID;
+		$daObj->TableName = "BSC_ActDomain";
+		$daObj->execute($pdo);
+		return true;	
+    }
+	
+	static function DeleteDomain($DomainID){
+		
+	    if( parent::delete("BSC_ActDomain", "DomainID=?", array($DomainID)) === false )
+		    return false;
+
+	    $daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_delete;
+		$daObj->MainObjectID = $DomainID;
+		$daObj->TableName = "BSC_ActDomain";
+		$daObj->execute();
+		return true;	
+    }
+	
+}
 
 ?>

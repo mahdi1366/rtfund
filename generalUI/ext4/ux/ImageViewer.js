@@ -42,37 +42,37 @@ Ext.define('ImageViewer', {
             items: [{
                 xtype: 'button',
                 tooltip: me.tooltips.stretchHorizontally,
-                icon: '/generalUI/ext4/resources/imageviewer/stretch_horizontally.png',
+                icon: '/generalUI/ext4/resources/ImageViewer/stretch_horizontally.png',
                 listeners: { click: me.stretchHorizontally, scope: me }
             }, {
                 xtype: 'button',
                 tooltip: me.tooltips.stretchVertically,
-                icon: '/generalUI/ext4/resources/imageviewer/stretch_vertically.png',
+                icon: '/generalUI/ext4/resources/ImageViewer/stretch_vertically.png',
                 listeners: { click: me.stretchVertically, scope: me }
             }, {
                 xtype: 'button',
                 tooltip: me.tooltips.stretchOptimally,
-                icon: '/generalUI/ext4/resources/imageviewer/stretch_optimally.png',
+                icon: '/generalUI/ext4/resources/ImageViewer/stretch_optimally.png',
                 listeners: { click: me.stretchOptimally, scope: me }
             }, {
                 xtype: 'button',
                 tooltip: me.tooltips.zoomIn,
-                icon: '/generalUI/ext4/resources/imageviewer/zoom_in.png',
+                icon: '/generalUI/ext4/resources/ImageViewer/zoom_in.png',
                 listeners: { click: me.zoomIn, scope: me }
             }, {
                 xtype: 'button',
                 tooltip: me.tooltips.zoomOut,
-                icon: '/generalUI/ext4/resources/imageviewer/zoom_out.png',
+                icon: '/generalUI/ext4/resources/ImageViewer/zoom_out.png',
                 listeners: { click: me.zoomOut, scope: me }
             }, {
                 xtype: 'button',
                 tooltip: me.tooltips.rotateClockwise,
-                icon: '/generalUI/ext4/resources/imageviewer/arrow_rotate_clockwise.png',
+                icon: '/generalUI/ext4/resources/ImageViewer/arrow_rotate_clockwise.png',
                 listeners: { click: me.rotateClockwise, scope: me }
             }, {
                 xtype: 'button',
                 tooltip: me.tooltips.rotateAntiClockwise,
-                icon: '/generalUI/ext4/resources/imageviewer/arrow_rotate_anticlockwise.png',
+                icon: '/generalUI/ext4/resources/ImageViewer/arrow_rotate_anticlockwise.png',
                 listeners: { click: me.rotateAntiClockwise, scope: me }
             }]
         }, {
@@ -394,13 +394,13 @@ Ext.define('MultiImageViewer', {
             xtype: 'tbfill'
         }, {
             xtype: 'button',
-            icon: '/generalUI/ext4/resources/imageviewer/resultset_previous.png',
+            icon: '/generalUI/ext4/resources/ImageViewer/resultset_previous.png',
             listeners: { click: me.previousImage, scope: me }
         }, {
             xtype: 'tbtext'
         }, {
             xtype: 'button',
-            icon: '/generalUI/ext4/resources/imageviewer/resultset_next.png',
+            icon: '/generalUI/ext4/resources/ImageViewer/resultset_next.png',
             listeners: { click: me.nextImage, scope: me }
         }]);
 

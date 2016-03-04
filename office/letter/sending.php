@@ -130,7 +130,8 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 			emptyText : "شرح ارجاع",
 			name : this.index + "_SendComment",
 			value : this.index > 1 ? this.mainPanel.down("[name=1_SendComment]").getValue() : "",
-			rowspan : 3,
+			rowspan : 4,
+			rows : 6,
 			width : 340
 		},{
 			xtype : "combo",
@@ -163,6 +164,12 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 			fieldLabel : "فوریت",
 			displayField: 'title',
 			valueField : "id"	
+		},{
+			xtype : "checkbox",
+			fieldLabel : "رونوشت",
+			disabled : this.index == 1 ? true : false,
+			name : this.index + "_IsCopy",
+			checked: this.index > 1 ? this.mainPanel.down("[name=1_IsCopy]").checked : false
 		}]
 	});
 	this.index++;

@@ -89,7 +89,11 @@ class DMS_DocFiles extends PdoDataAccess
 	public $FileType;
 	public $FileContent;
 			
-	function __construct(){}	
+	function __construct($RowID = ""){
+		
+		if($RowID != "")
+			PdoDataAccess::FillObject ($this, "select * from DMS_DocFiles where RowID=?", array($RowID));
+	}	
 	
 	static function SelectAll($where = "", $param = array()){
 		
@@ -122,9 +126,13 @@ class DMS_DocFiles extends PdoDataAccess
 	
 	static function DeletePage($RowID){
 		
+		$obj = new DMS_DocFiles($RowID);
+		
 		if( parent::delete("DMS_DocFiles"," RowID=?", array($RowID)) === false )
 	 		return false;
 
+		unlink(getenv("DOCUMENT_ROOT") . "/storage/documents/". $RowID . "." . $obj->FileType);
+		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
 		$daObj->MainObjectID = $RowID;

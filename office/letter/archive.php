@@ -311,7 +311,7 @@ LetterArchive.prototype.DeleteFolder = function(){
 LetterArchive.prototype.AddLetterToFolder = function(){
 
 	var record = this.tree.getSelectionModel().getSelection()[0];
-	if(record == null)
+	if(record == null || record.data.id == "src")
 	{
 		Ext.MessageBox.alert("","پوشه مورد نظر خود را انتخاب کنید");
 		return;

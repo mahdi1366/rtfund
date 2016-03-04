@@ -5,16 +5,16 @@
 //---------------------------
 include("../header.inc.php");
 require_once 'request.class.php';
+require_once "../../accounting/definitions.inc.php";
 
 if(empty($_POST["PartID"]))
 	die();
 
 $PartID = $_POST["PartID"];
-define("DOCTYPE_LOAN_PAYMENT", 4);
 
 $PartObj = new LON_ReqParts($PartID);
 
-$CostCode_commitment = 165; // 200-05
+$CostCode_commitment = COSTID_Commitment;
 $dt = PdoDataAccess::runquery("
 		select DocID,LocalNo,sum(CreditorAmount) amount,PartAmount,DocStatus
 		from ACC_DocItems 

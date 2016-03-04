@@ -67,6 +67,18 @@ switch ($task)
 		
 	case "DeleteBaseInfo":
 		DeleteBaseInfo();
+		
+	//...............................................
+		
+	case "SelectDomainNodes":
+		SelectDomainNodes();
+		
+	case "SaveDomain":
+		SaveDomain();
+		
+	case "DeleteDomain":
+		DeleteDomain();
+		
 }
 
 function SaveUnit()
@@ -283,6 +295,64 @@ function DeleteBaseInfo(){
 		where TypeID=? AND InfoID=?",array($_REQUEST["TypeID"], $_REQUEST["InfoID"]));
 
 	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
+	die();
+}
+
+//.............................................
+
+function SelectDomainNodes(){
+
+	$dt = PdoDataAccess::runquery("
+		SELECT 
+			ParentID,DomainID id,DomainDesc as text,'true' as leaf, 'javascript:void(0)' href,d.*
+		FROM BSC_ActDomain d order by ParentID,DomainDesc");
+
+    $returnArray = array();
+    $refArray = array();
+
+    foreach ($dt as $row) {
+        if ($row["ParentID"] == 0) {
+            $returnArray[] = $row;
+            $refArray[$row["id"]] = &$returnArray[count($returnArray) - 1];
+            continue;
+        }
+
+        $parentNode = &$refArray[$row["ParentID"]];
+
+        if (!isset($parentNode["children"])) {
+            $parentNode["children"] = array();
+            $parentNode["leaf"] = "false";
+			$parentNode["href"] = "";
+        }
+        $lastIndex = count($parentNode["children"]);
+        $parentNode["children"][$lastIndex] = $row;
+        $refArray[$row["id"]] = &$parentNode["children"][$lastIndex];
+    }
+
+	echo json_encode($returnArray);
+	die();
+}
+
+function SaveDomain(){
+	
+	$obj = new BSC_ActDomain();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	$obj->ParentID = $obj->ParentID == "src" ? "0" : $obj->ParentID;		
+	
+	if(empty($obj->DomainID))
+		$result = $obj->AddDomain();
+	else
+		$result = $obj->EditDomain();
+
+	echo Response::createObjectiveResponse($result, $result ? $obj->DomainID : "");
+	die();
+}
+
+function DeleteDomain(){
+	
+	$DomainID = $_POST["DomainID"];
+	$result = BSC_ActDomain::DeleteDomain($DomainID);
+	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
