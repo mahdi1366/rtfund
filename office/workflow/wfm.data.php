@@ -90,25 +90,27 @@ function DeleteFlow(){
 
 function selectFlowSteps(){
 	
-	$dt = PdoDataAccess::runquery("select * from WFM_FlowSteps where FlowID=?", array($_GET["FlowID"]));
+	$dt = PdoDataAccess::runquery("select * from WFM_FlowSteps 
+		where IsActive='YES' AND FlowID=?", array($_GET["FlowID"]));
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
 
 function SetStatus(){
 	
-	$mode = $_REQUEST["mode"];
 	$SourceObj = new WFM_FlowRows($_POST["RowID"]);
 	
 	$newObj = new WFM_FlowRows();
 	$newObj->FlowID = $SourceObj->FlowID;
 	$newObj->ObjectID = $SourceObj->ObjectID;
 	$newObj->PersonID = $_SESSION["USER"]["PersonID"];
-	$newObj->StepID = $_POST["StepID"];
+	$newObj->StepRowID = $_POST["StepID"];
 	$newObj->ActionType = "CONFIRM";
 	$newObj->ActionDate = PDONOW;
 	$newObj->ActionComment = $_POST["ActionComment"];
+	$newObj->StepDesc = 
 	$result = $newObj->AddFlowRow();
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
@@ -256,7 +258,11 @@ function ChangeStatus(){
 	$newObj->ActionDate = PDONOW;
 	$newObj->ActionComment = $_POST["ActionComment"];
 	//.............................................
-	$StepID = $SourceObj->ActionType == "CONFIRM" ? $SourceObj->_StepID+1 : $SourceObj->_StepID-1;
+	if(isset($_POST["StepID"]))
+		$StepID = $_POST["StepID"];
+	else 
+		$StepID = $SourceObj->ActionType == "CONFIRM" ? $SourceObj->_StepID+1 : $SourceObj->_StepID-1;
+	
 	$dt = PdoDataAccess::runquery("select StepRowID, StepDesc from WFM_FlowSteps 
 		where IsActive='YES' AND FlowID=? AND StepID=?" , array($newObj->FlowID, $StepID));
 	if(count($dt) == 0)

@@ -17,9 +17,9 @@ if(isset($_REQUEST["show"]))
 	}	
 	
 	$rpg->addColumn("شماره سند", "LocalNo");
-	$rpg->addColumn("گروه حساب", "level1Desc");
-	$rpg->addColumn("حساب کل", "level2Desc");
-	$rpg->addColumn("حساب معین", "level3Desc");
+	$rpg->addColumn("حساب کل", "level1Desc");
+	$rpg->addColumn("حساب معین", "level2Desc");
+	$rpg->addColumn("حساب جزء معین", "level3Desc");
 	//$rpg->addColumn("گروه تفصیلی", "TafsiliTypeDesc");
 	$rpg->addColumn("تفصیلی", "TafsiliDesc");
 	//$rpg->addColumn("گروه تفصیلی2", "TafsiliTypeDesc2");
@@ -29,7 +29,32 @@ if(isset($_REQUEST["show"]))
 	
 	function MakeWhere(&$where, &$whereParam){
 		
-		if(!empty($_POST["from_level1"]) || !empty($_POST["to_Level1"]))
+		if(!empty($_POST["level1"]))
+		{
+			$where .= " AND b1.BlockCode = :bf1";
+			$whereParam[":bf1"] = $_POST["level1"];
+		}
+		if(!empty($_POST["level2"]))
+		{
+			$where .= " AND b1.BlockCode = :bf2";
+			$whereParam[":bf2"] = $_POST["level2"];
+		}
+		if(!empty($_POST["level3"]))
+		{
+			$where .= " AND b1.BlockCode = :bf3";
+			$whereParam[":bf3"] = $_POST["level3"];
+		}
+		if(!empty($_POST["TafsiliID"]))
+		{
+			$where .= " AND (di.TafsiliID = :tid OR di.TafsiliID2=:tid)";
+			$whereParam[":tid"] = $_POST["TafsiliID"];
+		}
+		if(!empty($_POST["TafsiliType"]))
+		{
+			$where .= " AND (di.TafsiliType = :tt OR di.TafsiliType2 = :tt) ";
+			$whereParam[":tt"] = $_POST["TafsiliType"];
+		}
+		/*if(!empty($_POST["from_level1"]) || !empty($_POST["to_Level1"]))
 		{
 			if(!empty($_POST["from_level1"]))
 			{
@@ -94,7 +119,7 @@ if(isset($_REQUEST["show"]))
 				$where .= " AND di.TafsiliID <= :tt";
 				$whereParam[":tt"] = $_POST["to_TafsiliID"];
 			}
-		}
+		}*/
 
 		if(!empty($_REQUEST["fromDate"]))
 		{
@@ -105,58 +130,6 @@ if(isset($_REQUEST["show"]))
 		{
 			$where .= " AND d.docDate <= :q2 ";
 			$whereParam[":q2"] = DateModules::shamsi_to_miladi($_REQUEST["toDate"], "-");
-		}
-
-		//.....................................
-		if(isset($_REQUEST["level1"]))
-		{
-			if(empty($_REQUEST["level1"]))
-				$where .= " AND cc.level1 is null";
-			else
-			{
-				$where .= " AND cc.level1 = :l1";
-				$whereParam[":l1"] = $_REQUEST["level1"];
-			}
-		}
-		if(isset($_REQUEST["level2"]))
-		{
-			if(empty($_REQUEST["level2"]))
-				$where .= " AND cc.level2 is null";
-			else
-			{
-				$where .= " AND cc.level2 = :l2";
-				$whereParam[":l2"] = $_REQUEST["level2"];
-			}
-		}
-		if(isset($_REQUEST["level3"]))
-		{
-			if(empty($_REQUEST["level3"]))
-				$where .= " AND cc.level3 is null";
-			else
-			{
-				$where .= " AND cc.level3 = :l3";
-				$whereParam[":l3"] = $_REQUEST["level3"];
-			}
-		}
-		if(!empty($_REQUEST["TafsiliGroup"]))
-		{
-			$where .= " AND di.TafsiliType = :ttype";
-			$whereParam[":ttype"] = $_REQUEST["TafsiliGroup"];
-		}
-		if(!empty($_REQUEST["TafsiliID"]))
-		{
-			$where .= " AND di.TafsiliID = :taf";
-			$whereParam[":taf"] = $_REQUEST["TafsiliID"];
-		}
-		if(!empty($_REQUEST["TafsiliGroup2"]))
-		{
-			$where .= " AND di.TafsiliType2 = :ttype2";
-			$whereParam[":ttype2"] = $_REQUEST["TafsiliGroup2"];
-		}
-		if(!empty($_REQUEST["TafsiliID2"]))
-		{
-			$where .= " AND di.TafsiliID2 = :taf2";
-			$whereParam[":taf2"] = $_REQUEST["TafsiliID2"];
 		}
 	}	
 	
@@ -268,10 +241,10 @@ function AccReport_flow()
 		items :[{
 			xtype : "combo",
 			displayField : "BlockDesc",
-			fieldLabel : "گروه حساب از",
+			fieldLabel : "کل",
 			valueField : "BlockCode",
-			itemId : "cmp_from_level1",
-			hiddenName : "from_level1",
+			itemId : "cmp_level1",
+			hiddenName : "level1",
 			store : new Ext.data.Store({
 				fields:["BlockID","BlockCode","BlockDesc"],
 				proxy: {
@@ -285,27 +258,10 @@ function AccReport_flow()
 		},{
 			xtype : "combo",
 			displayField : "BlockDesc",
-			fieldLabel : "تا",
+			fieldLabel : "معین",
 			valueField : "BlockCode",
-			itemId : "cmp_to_level1",
-			hiddenName : "to_level1",
-			store : new Ext.data.Store({
-				fields:["BlockID","BlockCode","BlockDesc"],
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=1',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				autoLoad : true
-			}),
-			tpl: this.blockTpl
-		},{
-			xtype : "combo",
-			displayField : "BlockDesc",
-			fieldLabel : "حساب کل از",
-			valueField : "BlockCode",
-			itemId : "cmp_from_level2",
-			hiddenName : "from_level2",
+			itemId : "cmp_level2",
+			hiddenName : "level2",
 			store : new Ext.data.Store({
 				fields:["BlockID","BlockCode","BlockDesc"],
 				proxy: {
@@ -319,44 +275,10 @@ function AccReport_flow()
 		},{
 			xtype : "combo",
 			displayField : "BlockDesc",
-			fieldLabel : "تا",
+			fieldLabel : "جزء معین",
 			valueField : "BlockCode",
-			itemId : "cmp_to_level2",
-			hiddenName : "to_level2",
-			store : new Ext.data.Store({
-				fields:["BlockID","BlockCode","BlockDesc"],
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=2',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				autoLoad : true
-			}),
-			tpl: this.blockTpl
-		},{
-			xtype : "combo",
-			displayField : "BlockDesc",
-			fieldLabel : "حساب معین از",
-			valueField : "BlockCode",
-			itemId : "cmp_from_level3",
-			hiddenName : "from_level3",
-			store : new Ext.data.Store({
-				fields:["BlockID","BlockCode","BlockDesc"],
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=3',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				autoLoad : true
-			}),
-			tpl: this.blockTpl
-		},{
-			xtype : "combo",
-			displayField : "BlockDesc",
-			fieldLabel : "تا",
-			valueField : "BlockCode",
-			itemId : "cmp_to_level3",
-			hiddenName : "to_level3",
+			itemId : "cmp_level3",
+			hiddenName : "level3",
 			store : new Ext.data.Store({
 				fields:["BlockID","BlockCode","BlockDesc"],
 				proxy: {
@@ -408,7 +330,7 @@ function AccReport_flow()
 		},{
 			xtype : "shdatefield",
 			name : "fromDate",
-			fieldLabel : "از تاریخ"
+			fieldLabel : "تاریخ سند از"
 		},{
 			xtype : "shdatefield",
 			name : "toDate",

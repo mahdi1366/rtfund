@@ -1,7 +1,7 @@
 <?php
 //-------------------------
 // programmer:	Jafarkhani
-// Create Date:	94.08
+// Create Date:	94.12
 //-------------------------
 include('../header.inc.php');
 include_once inc_dataGrid;
@@ -15,56 +15,55 @@ if($framework)
 	$PartID = $_POST["PartID"];
 }	
 
-$dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetPartInstallments","grid_div");
+$dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetPartPays","grid_div");
 
-$dg->addColumn("", "InstallmentID","", true);
+$dg->addColumn("", "payID","", true);
 $dg->addColumn("", "PartID","", true);
-$dg->addColumn("", "RequestID","", true);
-$dg->addColumn("", "InstallmentAmount","", true);
 $dg->addColumn("", "BankDesc", "", true);
 $dg->addColumn("", "ChequeBranch", "", true);
+$dg->addColumn("", "PayDate","", true);
+$dg->addColumn("", "PayAmount","", true);
+$dg->addColumn("", "PayTypeDesc","", true);
+$dg->addColumn("", "PayBillNo", "", true);
+$dg->addColumn("", "PayRefNo", "", true);
 
-$col = $dg->addColumn("سررسید", "InstallmentDate", GridColumn::ColumnType_date);
+$col = $dg->addColumn("نحوه پرداخت", "");
+$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from BaseInfo where typeID=6"), 
+		"IfoID", "InfoDesc");
+$col->width = 100;
+
+$col = $dg->addColumn("تاریخ", "PayDate", GridColumn::ColumnType_date);
 $col->width = 80;
 
-$col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مبلغ پرداخت", "PayAmount", GridColumn::ColumnType_money);
 $col->width = 90;
 
-$col = $dg->addColumn("مبلغ جریمه", "ForfeitAmount", GridColumn::ColumnType_money);
-$col->width = 80;
+$col = $dg->addColumn("شناسه پیگیری", "PayRefNo");
 
-$col = $dg->addColumn("اطلاعات پرداخت", "PaidRefNo", "");
-$col->renderer = "function(v,p,r){ return Installment.InstallmentPaidInfo(v,p,r);}";
+$col = $dg->addColumn("شماره فیش", "PayBillNo");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 100;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo", "string");
-if($framework)
-	$col->editor = ColumnEditor::NumberField(true);
+$col->editor = ColumnEditor::NumberField(true);
 $col->width = 80;
 
 $col = $dg->addColumn("بانک", "ChequeBank", "");
-if($framework)
-	$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from ACC_banks"), 
+$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from ACC_banks"), 
 	"BankID", "BankDesc", "", "", true);
 $col->width = 70;
 
 $col = $dg->addColumn("شعبه", "ChequeBranch", "");
-if($framework)
-	$col->editor = ColumnEditor::TextField(true);
+$col->editor = ColumnEditor::TextField(true);
 $col->width = 90;
 
 if($framework)
 {
-	$dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", 
-			"function(){InstallmentObject.ComputeInstallments();}");
 	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SavePartPayment(store,record);}";
-}
-if(!$framework)
-{
-	$col = $dg->addColumn("پرداخت", "");
-	$col->renderer = "Installment.payRender";
-	$col->align = "center";
-	$col->width = 40;
+	$dg->rowEditOkHandler = "function(store,record){return LoanPayObject.SavePartPayment(store,record);}";
+	
+	$dg->addButton = true;
+	$dg->addHandler = "function(){LoanPayObject.AddPay();}";
 }
 $dg->height = 377;
 $dg->width = 755;
@@ -72,17 +71,16 @@ $dg->emptyTextOfHiddenColumns = true;
 $dg->EnableSearch = false;
 $dg->HeaderMenu = false;
 $dg->EnablePaging = false;
-$dg->DefaultSortField = "InstallmentDate";
+$dg->DefaultSortField = "PayDate";
 $dg->DefaultSortDir = "ASC";
-$dg->title = "جدول اقساط";
-$dg->autoExpandColumn = "PaidRefNo";
+$dg->autoExpandColumn = "PayRefNo";
 
 $grid = $dg->makeGrid_returnObjects();
 
 ?>
 <script type="text/javascript">
 
-Installment.prototype = {
+LoanPay.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 	
@@ -94,13 +92,13 @@ Installment.prototype = {
 	}
 };
 
-function Installment()
+function LoanPay()
 {
 	this.grid = <?= $grid ?>;
 	if(this.framework)
 	{
 		this.grid.plugins[0].on("beforeedit", function(editor,e){
-			if(e.record.data.IsPaid == "YES")
+			if(e.record.data.PayRefNo*1 > 0)
 				return false;
 		});
 		
@@ -158,15 +156,15 @@ function Installment()
 			itemId : "PartID",
 			listeners :{
 				select : function(){
-					InstallmentObject.grid.getStore().proxy.extraParams = {
+					LoanPayObject.grid.getStore().proxy.extraParams = {
 						PartID : this.getValue()
 					};
-					if(InstallmentObject.grid.rendered)
-						InstallmentObject.grid.getStore().load();
+					if(LoanPayObject.grid.rendered)
+						LoanPayObject.grid.getStore().load();
 					else
-						InstallmentObject.grid.render(InstallmentObject.get("div_grid"));
+						LoanPayObject.grid.render(LoanPayObject.get("div_grid"));
 
-					InstallmentObject.PartPanel.collapse();
+					LoanPayObject.PartPanel.collapse();
 				}
 			}
 		}]
@@ -174,72 +172,9 @@ function Installment()
 	
 }
 
-Installment.payRender = function(v,p,r){
-
-	if(r.data.IsPaid == "YES")
-		return "";
-	return  "<div  title='پرداخت قسط' class='epay' onclick='InstallmentObject.PayInstallment();' " +
-		"style='float:left;background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";
-}
-
-Installment.PayCodeRender = function(v,p,r){
-
-	st = (r.data.RequestID + r.data.PartID).lpad("0", 11);
-	num = (st[0]*11) + (st[1]*10) + (st[2]*9) + (st[3]*1) + (st[4]*2) + (st[5]*3)
-		+ (st[6]*4) + (st[7]*5) + (st[8]*6) + (st[9]*7) + (st[10]*8);
-	remain = num % 99;
+var LoanPayObject = new LoanPay();
 	
-	return st + remain.toString().lpad("0", 2);
-}
-
-Installment.InstallmentPaidInfo = function(v,p,r){
-	
-	if(r.data.IsPaid == "NO")
-		return "";
-	
-	
-}
-
-var InstallmentObject = new Installment();
-	
-Installment.prototype.PayInstallment = function(){
-	
-	var record = this.grid.getSelectionModel().getLastSelected();
-	
-	window.open(this.address_prefix + "../../portal/epayment/epayment_step1.php?InstallmentID=" + 
-		record.data.InstallmentID + "&amount=" + (record.data.InstallmentAmount*1+record.data.ForfeitAmount*1));	
-}
-
-Installment.prototype.ComputeInstallments = function(){
-	
-	Ext.MessageBox.confirm("","در صورت محاسبه مجدد کلیه ردیف ها حذف و مجدد محاسبه و ایجاد می شوند <br>" + 
-		"آیا مایل به محاسبه مجدد می باشید؟",function(btn){
-		if(btn == "no")
-			return;
-		
-		me = InstallmentObject;
-	
-		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
-		mask.show();
-
-		Ext.Ajax.request({
-			url: me.address_prefix +'request.data.php',
-			method: "POST",
-			params: {
-				task: "ComputeInstallments",
-				PartID : me.PartID
-			},
-			success: function(response){
-				mask.hide();
-				InstallmentObject.grid.getStore().load();
-			}
-		});
-	});
-	
-}
-
-Installment.prototype.SavePartPayment = function(store, record){
+LoanPay.prototype.SavePartPayment = function(store, record){
 
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
@@ -248,7 +183,7 @@ Installment.prototype.SavePartPayment = function(store, record){
 		url: this.address_prefix +'request.data.php',
 		method: "POST",
 		params: {
-			task: "SavePartPayment",
+			task: "SavePartPay",
 			record: Ext.encode(record.data)
 		},
 		success: function(response){
@@ -257,7 +192,7 @@ Installment.prototype.SavePartPayment = function(store, record){
 
 			if(st.success)
 			{   
-				InstallmentObject.grid.getStore().load();
+				LoanPayObject.grid.getStore().load();
 			}
 			else
 			{
@@ -267,6 +202,20 @@ Installment.prototype.SavePartPayment = function(store, record){
 		failure: function(){}
 	});
 }
+
+LoanPay.prototype.AddPay = function(){
+
+	var modelClass = this.grid.getStore().model;
+	var record = new modelClass({
+		PayID: null,
+		PartID : this.PartID
+	});
+
+	this.grid.plugins[0].cancelEdit();
+	this.grid.getStore().insert(0, record);
+	this.grid.plugins[0].startEdit(0, 0);
+}
+
 
 </script>
 <center>

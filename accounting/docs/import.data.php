@@ -113,8 +113,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 	if($PersonObj->IsAgent == "YES")
 		$LoanMode = "Agent";
-	if($PersonObj->IsStaff == "YES" && $ReqObj->SupportPersonID > 0)
-		$LoanMode = "Supporter";
+	//if($PersonObj->IsStaff == "YES" && $ReqObj->SupportPersonID > 0)
+	//	$LoanMode = "Supporter";
 	else if($PersonObj->IsCustomer == "YES")
 		$LoanMode = "Customer";
 	
@@ -127,7 +127,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			return false;
 		}
 	}
-	if($LoanMode == "Supporter")
+	/*if($LoanMode == "Supporter")
 	{
 		$SupporterTafsili = FindTafsiliID($ReqObj->SupportPersonID, TAFTYPE_PERSONS);
 		if(!$SupporterTafsili)
@@ -135,7 +135,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->SupportPersonID . "]");
 			return false;
 		}
-	}
+	}*/
 	$amountArr = array();
 	$curYearTafsili = FindTafsiliID($curYear, TAFTYPE_YEARS);
 	if(!$curYear)
@@ -214,11 +214,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 	}
-	if($LoanMode == "Supporter")
+	/*if($LoanMode == "Supporter")
 	{
 		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID2 = $SupporterTafsili;
-	}
+	}*/
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
@@ -585,8 +585,8 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 	if($PersonObj->IsAgent == "YES")
 		$LoanMode = "Agent";
-	if($PersonObj->IsStaff == "YES" && $ReqObj->SupportPersonID > 0)
-		$LoanMode = "Supporter";
+	/*if($PersonObj->IsStaff == "YES" && $ReqObj->SupportPersonID > 0)
+		$LoanMode = "Supporter";*/
 	if($PersonObj->IsCustomer == "YES")
 		$LoanMode = "Customer";
 	
@@ -599,7 +599,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 			return false;
 		}
 	}
-	if($LoanMode == "Supporter")
+	/*if($LoanMode == "Supporter")
 	{
 		$SupporterTafsili = FindTafsiliID($ReqObj->SupportPersonID, TAFTYPE_PERSONS);
 		if(!$SupporterTafsili)
@@ -607,7 +607,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->SupportPersonID . "]");
 			return false;
 		}
-	}
+	}*/
 	$amountArr = array();
 	$curYearTafsili = FindTafsiliID($curYear, TAFTYPE_YEARS);
 	if(!$curYear)
@@ -661,11 +661,11 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 	}
-	if($LoanMode == "Supporter")
+	/*if($LoanMode == "Supporter")
 	{
 		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID2 = $SupporterTafsili;
-	}
+	}*/
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
@@ -835,8 +835,8 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 	if($PersonObj->IsAgent == "YES")
 		$LoanMode = "Agent";
-	if($PersonObj->IsStaff == "YES" && $ReqObj->SupportPersonID > 0)
-		$LoanMode = "Supporter";
+	/*if($PersonObj->IsStaff == "YES" && $ReqObj->SupportPersonID > 0)
+		$LoanMode = "Supporter";*/
 	if($PersonObj->IsCustomer == "YES")
 		$LoanMode = "Customer";
 	
@@ -860,11 +860,11 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 	}
-	if($LoanMode == "Supporter")
+	/*if($LoanMode == "Supporter")
 	{
 		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID2 = $SupporterTafsili;
-	}
+	}*/
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_INSTALLMENT_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;

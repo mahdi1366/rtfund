@@ -31,11 +31,8 @@ ManageForm.prototype.OperationMenu = function(e){
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
 	
-	if('<?= $_SESSION["USER"]["UserName"] ?>' == 'admin')
-	{
-		op_menu.add({text: 'تغییر وضعیت',iconCls: 'refresh', 
-		handler : function(){ return ManageFormObject.SetStatus(record); }});
-	}
+	op_menu.add({text: 'تغییر وضعیت',iconCls: 'refresh', 
+	handler : function(){ return ManageFormObject.SetStatus(record); }});
 	
 	op_menu.add({text: 'اطلاعات آیتم',iconCls: 'info2', 
 		handler : function(){ return ManageFormObject.FormInfo(); }});
@@ -162,7 +159,8 @@ ManageForm.prototype.SetStatus = function(record){
 					methos : "post",
 					url : ManageFormObject.address_prefix + "wfm.data.php",
 					params : {
-						task : "SetStatus",
+						task : "ChangeStatus",
+						mode : "CONFIRM",
 						StepID : StepID,
 						RowID : record.data.RowID,
 						ActionComment : "[تغییر وضعیت]" + comment

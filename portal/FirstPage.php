@@ -17,7 +17,7 @@ if($IsCustomer)
 {
 	$dt = PdoDataAccess::runquery("select * from LON_requests 
 		where StatusID<70 AND LoanPersonID=? 
-		AND (ReqPersonID<>LoanPersonID or SupportPersonID>0)",
+		AND (ReqPersonID<>LoanPersonID)",
 		array($_SESSION["USER"]["PersonID"]));
 	if(count($dt) == 0)
 		$loansText = "هنوز وامی به نام شما به صندوق معرفی نشده است";

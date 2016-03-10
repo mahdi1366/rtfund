@@ -15,9 +15,9 @@ if(isset($_REQUEST["show"]))
 function showReport(){
 	
 	$levelsDescArr = array(
-		"l1" => "گروه حساب",
-		"l2" => "کل",
-		"l3" => "معین",
+		"l1" => "کل",
+		"l2" => "معین",
+		"l3" => "جزء معین",
 		"l4" => "گروه تفصیلی",
 		"l5" => "گروه تفصیلی",
 		"l6" => "تفصیلی",
@@ -56,11 +56,11 @@ function showReport(){
 	";
 			
 	if($level >= "l1")
-		$rpg->addColumn("گروه حساب", "level1Desc",$level =="l1" ? "levelRender" : "");
+		$rpg->addColumn("کل", "level1Desc",$level =="l1" ? "levelRender" : "");
 	if($level >= "l2")
-		$rpg->addColumn("حساب کل", "level2Desc", $level =="l2" ? "levelRender" : "");
+		$rpg->addColumn("معین", "level2Desc", $level =="l2" ? "levelRender" : "");
 	if($level >= "l3")
-		$rpg->addColumn("حساب معین", "level3Desc", $level =="l3" ? "levelRender" : "");
+		$rpg->addColumn("جزء معین", "level3Desc", $level =="l3" ? "levelRender" : "");
 	if($level == "l4" || $level == "l6")
 		$rpg->addColumn("گروه تفصیلی", "TafsiliTypeDesc", $level =="l4" ? "levelRender" : "");
 	if($level == "l4" || $level == "l7")
@@ -384,13 +384,13 @@ function AccReport_taraz()
 		width : 770,
 		items :[{
 			xtype : "displayfield",
-			fieldLabel : "گروه حساب"
+			fieldLabel : "کل"
 		},{
 			xtype : "displayfield",
-			fieldLabel : "حساب کل"
+			fieldLabel : "معین"
 		},{
 			xtype : "displayfield",
-			fieldLabel : "حساب معین"
+			fieldLabel : "جزء معین"
 		},{
 			xtype : "container",
 			html : "&nbsp;",

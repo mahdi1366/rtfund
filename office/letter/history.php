@@ -22,8 +22,8 @@ function GetTreeNodes(){
 		select PersonID,
 			if(IsReal='YES',concat(fname, ' ', lname),CompanyName) text, 
 			'true' as leaf, 'true' expanded,'user' iconCls,
-			RegDate
-		from OFC_letters join BSC_persons p using(PersonID) where LetterID=?", array($LetterID));
+			l.RegDate
+		from OFC_letters l join BSC_persons p using(PersonID) where LetterID=?", array($LetterID));
 	
 	$index = 1;
 	$returnArray = array();

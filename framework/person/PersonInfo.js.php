@@ -486,8 +486,6 @@ PersonInfo.prototype.SaveData = function() {
 		success : function(form,result){
 			mask.hide();
 			Ext.MessageBox.alert("","اطلاعات با موفقیت ذخیره شد");
-			if(typeof PersonObject == "object")
-				PersonObject.grid.getStore().load();
 		},
 		failure : function(){
 			mask.hide();

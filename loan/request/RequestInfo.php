@@ -40,7 +40,7 @@ $dg->addColumn("", "WageReturn","", true);
 $dg->addColumn("", "imp_VamCode","", true);
 
 
-$col = $dg->addColumn("عنوان مرحله", "PartDesc", "");
+$col = $dg->addColumn("عنوان فاز", "PartDesc", "");
 $col->editor = ColumnEditor::TextField();
 $col->sortable = false;
 
@@ -48,7 +48,7 @@ $col = $dg->addColumn("", "PartID");
 $col->renderer = "RequestInfo.OperationRender";
 $col->width = 50;
 
-$dg->addButton("addPart", "ایجاد مرحله پرداخت", "add", "function(){RequestInfoObject.PartInfo(false);}");
+$dg->addButton("addPart", "ایجاد فاز قرارداد", "add", "function(){RequestInfoObject.PartInfo(false);}");
 
 $dg->HeaderMenu = false;
 $dg->hideHeaders = true;

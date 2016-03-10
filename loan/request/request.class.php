@@ -20,7 +20,6 @@ class LON_requests extends PdoDataAccess
 	public $guarantees;
 	public $AgentGuarantee;
 	public $DocumentDesc;	
-	public $SupportPersonID;
 	
 	function __construct($RequestID = "") {
 		
@@ -202,9 +201,8 @@ class LON_installments extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select p.*,rp.*,b.BankDesc, bi.InfoDesc PaidTypeDesc
+			select p.*,rp.*,b.BankDesc
 			from LON_installments p
-			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PaidType)
 			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
 			where " . $where, $param);
@@ -233,6 +231,67 @@ class LON_installments extends PdoDataAccess
 		$daObj->ActionType = DataAudit::Action_update;
 		$daObj->MainObjectID = $this->InstallmentID;
 		$daObj->TableName = "LON_installments";
+		$daObj->execute($pdo);
+	 	return true;
+    }
+}
+
+class LON_pays extends PdoDataAccess
+{
+	public $PayID;
+	public $PartID;
+	public $PayType;
+	public $PayDate;
+	public $PayAmount;
+	public $PayRefNo;
+	public $PayBillNo;
+	public $ChequeNo;
+	public $ChequeBank;
+	public $ChequeBranch;
+	public $details;
+			
+	function __construct($PayID = "") {
+		
+		$this->DT_PayDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
+		if($PayID != "")
+			PdoDataAccess::FillObject ($this, "select * from LON_pays where PayID=?", array($PayID));
+	}
+	
+	static function SelectAll($where = "", $param = array()){
+		
+		return PdoDataAccess::runquery("
+			select p.*,rp.*,b.BankDesc, bi.InfoDesc PayTypeDesc
+			from LON_pays p
+			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
+			join LON_ReqParts rp using(PartID)
+			left join ACC_banks b on(ChequeBank=BankID)
+			where " . $where, $param);
+	}
+	
+	function AddPay(){
+		
+	 	if(!parent::insert("LON_pays",$this))
+	 		return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->PayID;
+		$daObj->TableName = "LON_pays";
+		$daObj->execute();
+	 	return true;
+    }
+	
+	function EditPay($pdo = null){
+		
+	 	if( parent::update("LON_pays",$this," PayID=:l", 
+				array(":l" => $this->PayID), $pdo) === false )
+	 		return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_update;
+		$daObj->MainObjectID = $this->PayID;
+		$daObj->TableName = "LON_pays";
 		$daObj->execute($pdo);
 	 	return true;
     }

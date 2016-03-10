@@ -72,7 +72,7 @@ if(isset($_REQUEST["task"]))
 
 function selectPersons(){
 	
-	$where = "IsActive in ('YES','PENDING')";
+	$where = "p.IsActive in ('YES','PENDING')";
 	$param = array();
 	
 	if(!empty($_REQUEST["UserType"]))
@@ -84,6 +84,15 @@ function selectPersons(){
 			case "IsStaff":		$where .= " AND IsStaff='YES'";break;
 			case "IsSupporter":	$where .= " AND IsSupporter='YES'";break;
 		}
+	}
+	
+	if(!empty($_REQUEST["UserTypes"]))
+	{
+		$arr = preg_split("/,/", $_REQUEST["UserTypes"]);
+		$where .= " AND ( 1=0 ";
+		foreach($arr as $r)
+			$where .= " OR $r='YES'";
+		$where .= ")";
 	}
 	
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) 
@@ -108,7 +117,6 @@ function selectPersons(){
 	}
 	
 	$temp = BSC_persons::SelectAll($where . dataReader::makeOrder(), $param);
-	//echo PdoDataAccess::GetLatestQueryString();
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);

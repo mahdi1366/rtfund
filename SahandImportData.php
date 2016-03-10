@@ -244,9 +244,13 @@ AND l1.IsPaid=l2.IsPaid AND l1.PartID=l2.PartID AND
 l1.InstallmentDate=l2.InstallmentDate AND
 l1.InstallmentAmount = l2.InstallmentAmount)
 where l1.IsPaid='NO' ;
+
+insert into LON_pays(PartID,PayType,PayAmount,PayDate,PayBillNo,ChequeNo,ChequeBank,ChequeBranch,details)
+select PartID,PaidType,PaidAmount,PaidDate,PaidBillNo,ChequeNo,ChequeBank,ChequeBranch,details
+from LON_installments where IsPaid='YES'
  * 
 ********************************************************************************
-insert into rtfund.DMS_Documents(DocDesc,DocType,ObjectType,ObjectID,IsConfirm,IsReturned,imp_DetailID)
+	insert into rtfund.DMS_Documents(DocDesc,DocType,ObjectType,ObjectID,IsConfirm,IsReturned,imp_DetailID)
 
 SELECT if(BankName like '%دفتر%' or BankName like '%صندوق%' or BankName like '%وث%' or
         BankName like '%ملک%' , concat(BankName,' - ',CheckNumber), BankName),

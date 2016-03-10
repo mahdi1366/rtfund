@@ -3379,7 +3379,7 @@ Ext.override(Ext.form.field.Time, {
     maxText : "زمان وارد شده باید برابر یا کمتر از {0} باشد",
     invalidText : "{0} زمان معتبری نمی باشد"
 }); 
-Ext.override(Ext.view.AbstractView, {loadingText: 'در حال بارگزاری ...'});
+Ext.override(Ext.view.AbstractView, {loadingText: 'در حال بارگذاری ...'});
 Ext.override(Ext.grid.Lockable, {
 	unlockText: 'بدون قفل',
     lockText: 'قفل'
@@ -3467,7 +3467,7 @@ Ext.override(Ext.grid.RowEditor, {
 		btnEl.setRight(right);
     }
 });
-Ext.override(Ext.view.AbstractView, {loadingText: 'در حال بارگزاری ...'});
+Ext.override(Ext.view.AbstractView, {loadingText: 'در حال بارگذاری ...'});
 Ext.override(Ext.grid.plugin.DragDrop, {dragText : '{0} ردیف انتخاب شده {1}'});
 Ext.override(Ext.tree.plugin.TreeViewDragDrop, {dragText : '{0} گره انتخاب شده{1}'});
 Ext.override(Ext.picker.Date,{

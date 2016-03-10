@@ -61,7 +61,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 		},
 		fields : ["RequestID","BranchID","BranchName","ReqPersonID","ReqPersonRole","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
-					"guarantees","AgentGuarantee","StatusID","DocumentDesc","SupportPersonID"],
+					"guarantees","AgentGuarantee","StatusID","DocumentDesc"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -150,6 +150,9 @@ RequestInfo.prototype.OperationMenu = function(e){
 	{
 		op_menu.add({text: 'اقساط',iconCls: 'list',
 		handler : function(){ return RequestInfoObject.LoadInstallments(); }});
+	
+		op_menu.add({text: 'پرداخت ها',iconCls: 'epay',
+		handler : function(){ return RequestInfoObject.LoadPays(); }});
 
 		op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
@@ -179,7 +182,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 		handler : function(){ return RequestInfoObject.PayInfo(); }});
 	
 		if(record.data.IsPaid == "YES")
-			op_menu.add({text: 'اتمام مرحله و ایجاد مرحله جدید',iconCls: "app",
+			op_menu.add({text: 'اتمام فاز و ایجاد فاز جدید',iconCls: "app",
 			handler : function(){ return RequestInfoObject.EndPart(); }});
 	}		
 	
@@ -297,17 +300,17 @@ RequestInfo.prototype.BuildForms = function(){
 				proxy: {
 					type: 'jsonp',
 					url: this.address_prefix + '../../framework/person/persons.data.php?' +
-						"task=selectPersons&UserType=IsSupporter",
+						"task=selectPersons&UserTypes=IsAgent,IsSupporter",
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields : ['PersonID','fullname'],
-				autoLoad : true					
+				fields : ['PersonID','fullname']
 			}),
 			fieldLabel : "معرفی کننده",
+			pageSize : 25,
 			displayField : "fullname",
 			valueField : "PersonID",
-			name : "SupportPersonID",
-			itemId : "cmp_Supporter"
+			name : "ReqPersonID",
+			itemId : "cmp_requester"
 		},{
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({
@@ -547,7 +550,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		
 		if(record == null)
 		{
-			this.companyPanel.down("[itemId=cmp_Supporter]").show();
+			this.companyPanel.down("[itemId=cmp_requester]").show();
 			this.companyPanel.down("[name=ReqFullname]").hide();
 			this.companyPanel.down("[name=BorrowerDesc]").hide();
 			this.companyPanel.down("[name=BorrowerID]").hide();
@@ -597,7 +600,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 					this.companyPanel.down("[itemId=cmp_save]").hide();
 				}
 				this.companyPanel.doLayout();
-				this.grid.down("[itemId=addPart]").hide();				
+				//this.grid.down("[itemId=addPart]").hide();				
 			}
 			else
 			{
@@ -610,7 +613,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			
 			if(record.data.ReqPersonRole == "Staff")
 			{
-				this.companyPanel.down("[itemId=cmp_Supporter]").show();
+				this.companyPanel.down("[itemId=cmp_requester]").show();
 				this.companyPanel.down("[name=ReqFullname]").hide();
 				this.companyPanel.down("[name=BorrowerDesc]").hide();
 				this.companyPanel.down("[name=BorrowerID]").hide();
@@ -618,7 +621,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		}	
 		if(this.User == "Customer")
 		{
-			this.companyPanel.down("[itemId=cmp_Supporter]").show();
+			this.companyPanel.down("[itemId=cmp_requester]").show();
 			this.companyPanel.down("[name=LoanPersonID]").hide();
 			this.companyPanel.down("[name=BorrowerDesc]").hide();
 			this.companyPanel.down("[name=BorrowerID]").hide();
@@ -653,10 +656,10 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		this.companyPanel.down("[itemId=cmp_PersonDocuments]").show();
 		this.companyPanel.down("[itemId=cmp_history]").show();
 		
-		if('<?= $_SESSION["USER"]["UserName"] ?>' == 'admin')
-		{
+		//if('<?= $_SESSION["USER"]["UserName"] ?>' == 'admin')
+		//{
 			this.companyPanel.down("[itemId=cmp_changeStatus]").show();
-		}
+		//}
 		if(record.data.StatusID == "1" && record.data.ReqPersonRole == "Staff")
 		{
 			this.companyPanel.down("[itemId=cmp_confirm30]").show();
@@ -738,7 +741,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 			height : 300,
 			modal : true,
 			closeAction : 'hide',
-			title : "ایجاد مرحله جدید",
+			title : "ایجاد فاز جدید",
 			items : new Ext.form.Panel({
 				layout : {
 					type : "table",
@@ -755,7 +758,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 				items :[{
 					xtype : "textfield",
 					name : "PartDesc",
-					fieldLabel : "عنوان مرحله",
+					fieldLabel : "عنوان فاز",
 					colspan : 2,
 					width : 450
 				},{
@@ -1221,7 +1224,7 @@ RequestInfo.prototype.LoadInstallments = function(){
 	var record = this.grid.getSelectionModel().getLastSelected();
 	if(!record)
 	{
-		Ext.MessageBox.alert("","ابتدا مرحله مورد نظر خود را انتخاب کنید");
+		Ext.MessageBox.alert("","ابتدا فاز مورد نظر خود را انتخاب کنید");
 		return;
 	}
 	
@@ -1255,6 +1258,46 @@ RequestInfo.prototype.LoadInstallments = function(){
 	this.InstallmentsWin.show();
 	this.InstallmentsWin.center();
 }
+
+RequestInfo.prototype.LoadPays = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+	{
+		Ext.MessageBox.alert("","ابتدا فاز مورد نظر خود را انتخاب کنید");
+		return;
+	}
+	
+	if(!this.PayWin)
+	{
+		this.PayWin = new Ext.window.Window({
+			width : 770,
+			title : "لیست پرداخت ها",
+			height : 410,
+			modal : true,
+			loader : {
+				url : this.address_prefix + "pays.php",
+				method : "post",
+				scripts : true
+			},
+			closeAction : "hide"
+		});
+		
+		Ext.getCmp(this.TabID).add(this.PayWin);
+	}
+	this.PayWin.show();
+	this.PayWin.center();
+	
+	this.PayWin.loader.load({
+		params : {
+			ExtTabID : this.PayWin.getEl().id,
+			PartID : record.data.PartID
+		}
+	});
+	
+	this.PayWin.show();
+	this.PayWin.center();
+}
 //.........................................................
 
 RequestInfo.prototype.PayInfo = function(){
@@ -1263,7 +1306,7 @@ RequestInfo.prototype.PayInfo = function(){
 	{
 		this.PayInfoWin = new Ext.window.Window({
 			width : 400,
-			height : 600,
+			height : 500,
 			autoScroll : true,
 			modal : true,
 			title : "مبلغ پرداخت",
@@ -1359,7 +1402,7 @@ RequestInfo.prototype.PayPart = function(MaxAvailablePayAmount){
 
 RequestInfo.prototype.ReturnPayPart = function(DocID){
 	
-	Ext.MessageBox.confirm("","آیا مایل به برگشت پرداخت این مرحله از وام می باشید؟",function(btn){
+	Ext.MessageBox.confirm("","آیا مایل به برگشت پرداخت این فاز از وام می باشید؟",function(btn){
 		
 		if(btn == "no")
 			return;
@@ -1403,7 +1446,7 @@ RequestInfo.prototype.ReturnPayPart = function(DocID){
 
 RequestInfo.prototype.EndPart = function(){
 	
-	Ext.MessageBox.confirm("","آیا مایل به اتمام این مرحله از وام می باشید؟" 
+	Ext.MessageBox.confirm("","آیا مایل به اتمام این فاز از وام می باشید؟" 
 		+ "<br>توجه : تغییرات اعمال شده قابل برگشت نمی باشد." 
 		+ "<br>فقط زمانی این کار را انجام دهید که از انجام آن مطمئن هستید" , function(btn){
 				
@@ -1440,7 +1483,7 @@ RequestInfo.prototype.EndPart = function(){
 
 RequestInfo.prototype.StartFlow = function(){
 	
-	Ext.MessageBox.confirm("","آیا مایل به شروع گردش تایید پرداخت مرحله می باشید؟",function(btn){
+	Ext.MessageBox.confirm("","آیا مایل به شروع گردش تایید پرداخت فاز می باشید؟",function(btn){
 		
 		if(btn == "no")
 			return;

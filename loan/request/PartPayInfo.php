@@ -23,7 +23,17 @@ $dt = PdoDataAccess::runquery("
 		where CostID=? AND SourceID2=? AND SourceType=?
 		group by DocID",
 	array($CostCode_commitment, $PartID, DOCTYPE_LOAN_PAYMENT));
-
+if(count($dt) == 0)
+{
+	$dt = PdoDataAccess::runquery("
+		select DocID,LocalNo,sum(CreditorAmount) amount,PartAmount,DocStatus
+		from ACC_DocItems 
+			join ACC_docs using(DocID)
+			join LON_ReqParts on(PartID = SourceID2)
+		where CostID=? AND SourceID2=? AND SourceType=?
+		group by DocID",
+	array(2, $PartID, DOCTYPE_LOAN_PAYMENT));
+}
 $tbl_content = "";
 foreach($dt as $row)
 {
@@ -49,6 +59,8 @@ $temp = PdoDataAccess::runquery("select ifnull(sum(CreditorAmount-DebtorAmount),
 	array($CostCode_commitment, DOCTYPE_LOAN_PAYMENT, $PartID));
 
 $MaxAvailablePayAmount = $PartObj->PartAmount*1 - $temp[0][0];		
+if(count($dt) > 0 && $temp[0][0] == 0)
+	$MaxAvailablePayAmount = 0;
 $tbl_content .= "<tr><td>مبلغ قابل پرداخت :</td><td class=blueText>" . number_format($MaxAvailablePayAmount) . "</td></tr>";
 $tbl_content .= ($MaxAvailablePayAmount > 0) ? "<tr><td colspan=2 align=center><button class=x-btn ".
 	"onclick=RequestInfoObject.PayPart(" . $MaxAvailablePayAmount . ")>پرداخت</button></td></tr>" : "";
