@@ -28,13 +28,12 @@ $col = $dg->addColumn("سررسید", "InstallmentDate", GridColumn::ColumnType_
 $col->width = 80;
 
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
-$col->width = 90;
 
-$col = $dg->addColumn("مبلغ جریمه", "ForfeitAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مبلغ جریمه", "TotalForfeit", GridColumn::ColumnType_money);
 $col->width = 80;
 
-$col = $dg->addColumn("اطلاعات پرداخت", "PaidRefNo", "");
-$col->renderer = "function(v,p,r){ return Installment.InstallmentPaidInfo(v,p,r);}";
+$col = $dg->addColumn("مانده", "TotalRemainder", GridColumn::ColumnType_money);
+$col->width = 80;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo", "string");
 if($framework)
@@ -58,6 +57,11 @@ if($framework)
 			"function(){InstallmentObject.ComputeInstallments();}");
 	$dg->enableRowEdit = true;
 	$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SavePartPayment(store,record);}";
+	
+	$dg->addButton("cmp_report", "گزارش پرداخت", "report", 
+			"function(){InstallmentObject.PayReport();}");
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SavePartPayment(store,record);}";
 }
 if(!$framework)
 {
@@ -75,7 +79,7 @@ $dg->EnablePaging = false;
 $dg->DefaultSortField = "InstallmentDate";
 $dg->DefaultSortDir = "ASC";
 $dg->title = "جدول اقساط";
-$dg->autoExpandColumn = "PaidRefNo";
+$dg->autoExpandColumn = "InstallmentAmount";
 
 $grid = $dg->makeGrid_returnObjects();
 
@@ -267,6 +271,13 @@ Installment.prototype.SavePartPayment = function(store, record){
 		failure: function(){}
 	});
 }
+
+Installment.prototype.PayReport = function(){
+
+	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&PartID=" + this.PartID);
+}
+
+
 
 </script>
 <center>

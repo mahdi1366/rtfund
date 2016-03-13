@@ -17,25 +17,21 @@ if($framework)
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetPartPays","grid_div");
 
-$dg->addColumn("", "payID","", true);
+$dg->addColumn("", "PayID","", true);
 $dg->addColumn("", "PartID","", true);
-$dg->addColumn("", "BankDesc", "", true);
-$dg->addColumn("", "ChequeBranch", "", true);
-$dg->addColumn("", "PayDate","", true);
-$dg->addColumn("", "PayAmount","", true);
 $dg->addColumn("", "PayTypeDesc","", true);
-$dg->addColumn("", "PayBillNo", "", true);
-$dg->addColumn("", "PayRefNo", "", true);
 
-$col = $dg->addColumn("نحوه پرداخت", "");
+$col = $dg->addColumn("نحوه پرداخت", "PayType");
 $col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from BaseInfo where typeID=6"), 
-		"IfoID", "InfoDesc");
+		"InfoID", "InfoDesc");
 $col->width = 100;
 
 $col = $dg->addColumn("تاریخ", "PayDate", GridColumn::ColumnType_date);
+$col->editor = ColumnEditor::SHDateField();
 $col->width = 80;
 
 $col = $dg->addColumn("مبلغ پرداخت", "PayAmount", GridColumn::ColumnType_money);
+$col->editor = ColumnEditor::CurrencyField();
 $col->width = 90;
 
 $col = $dg->addColumn("شناسه پیگیری", "PayRefNo");
@@ -64,6 +60,11 @@ if($framework)
 	
 	$dg->addButton = true;
 	$dg->addHandler = "function(){LoanPayObject.AddPay();}";
+	
+	$col = $dg->addColumn("حذف", "");
+	$col->sortable = false;
+	$col->renderer = "function(v,p,r){return LoanPay.DeleteRender(v,p,r);}";
+	$col->width = 50;
 }
 $dg->height = 377;
 $dg->width = 755;
@@ -98,7 +99,7 @@ function LoanPay()
 	if(this.framework)
 	{
 		this.grid.plugins[0].on("beforeedit", function(editor,e){
-			if(e.record.data.PayRefNo*1 > 0)
+			if(e.record.data.PayRefNo != null)
 				return false;
 		});
 		
@@ -172,6 +173,17 @@ function LoanPay()
 	
 }
 
+LoanPay.DeleteRender = function(v,p,r){
+	
+	if(r.data.PayRefNo != null &&  r.data.PayRefNo != "")
+		return "";
+	
+	return "<div align='center' title='حذف' class='remove' "+
+		"onclick='LoanPayObject.DeletePay();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
 var LoanPayObject = new LoanPay();
 	
 LoanPay.prototype.SavePartPayment = function(store, record){
@@ -216,6 +228,34 @@ LoanPay.prototype.AddPay = function(){
 	this.grid.plugins[0].startEdit(0, 0);
 }
 
+LoanPay.prototype.DeletePay = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = LoanPayObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'request.data.php',
+			params:{
+				task: "DeletePay",
+				PayID : record.data.PayID
+			},
+			method: 'POST',
+
+			success: function(response,option){
+				mask.hide();
+				LoanPayObject.grid.getStore().load();
+			},
+			failure: function(){}
+		});
+	});
+}
 
 </script>
 <center>

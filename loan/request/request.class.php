@@ -273,6 +273,8 @@ class LON_pays extends PdoDataAccess
 		
 	 	if(!parent::insert("LON_pays",$this))
 	 		return false;
+		
+		$this->PayID = parent::InsertID();
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
@@ -296,6 +298,18 @@ class LON_pays extends PdoDataAccess
 	 	return true;
     }
 	
+	static function DeletePay($PayID){
+		
+		if( parent::delete("LON_pays"," PayID=?", array($PayID)) === false )
+	 		return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_delete;
+		$daObj->MainObjectID = $PayID;
+		$daObj->TableName = "LON_pays";
+		$daObj->execute();
+	 	return true;
+	}
 }
 
 ?>

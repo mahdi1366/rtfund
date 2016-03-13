@@ -982,7 +982,10 @@ RequestInfo.prototype.LoadSummary = function(record){
 		
 		var val = ((((F9-BeforeMonths)*(F9-BeforeMonths+1))-
 			(F9-BeforeMonths-curMonths)*(F9-BeforeMonths-curMonths+1)))/(F9*(F9+1))*TotalWage;
-		return Ext.util.Format.Money(Math.round(val));
+		
+		val = Math.round(val);
+		val = val < 0 ? 0 : val;
+		return Ext.util.Format.Money(val);
 	}
 
 	YearMonths = 12;

@@ -189,6 +189,9 @@ class DateModules
 	 */
 	static function GDateMinusGDate($gdate1, $gdate2) 
 	{
+		$gdate1 = substr($gdate1,0,10);
+		$gdate2 = substr($gdate2,0,10);
+		
         $gdate_array1 = preg_split('/[\-\/]/',$gdate1);
 		$gdate_array2 = preg_split('/[\-\/]/',$gdate2);
 		$dist1 = 1970 - $gdate_array1[0];

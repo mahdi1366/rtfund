@@ -12,7 +12,7 @@ require_once '../loan/loan.class.php';
 require_once "../../office/workflow/wfm.class.php";
 require_once '../../accounting/definitions.inc.php';
 
-$task = $_REQUEST["task"];
+$task = isset($_REQUEST["task"]) ? $_REQUEST["task"] : "";
 switch ($task) {
 		
 	case "SaveLoanRequest":
@@ -74,6 +74,9 @@ switch ($task) {
 		GetLastFundComment();
 		
 	//-----------------------------------------------
+	
+	case "selectParts":
+		selectParts();
 		
 	case "selectMyParts":
 		selectMyParts();
@@ -93,6 +96,9 @@ switch ($task) {
 		
 	case "SavePartPay":
 		SavePartPay();
+		
+	case "DeletePay":
+		DeletePay();
 }
 //....................
 function PMT($CustomerWage, $InstallmentCount, $PartAmount, $YearMonths) {  
@@ -575,22 +581,10 @@ function StartFlow(){
 
 function GetPartInstallments(){
 	
-	$dt = LON_installments::SelectAll("PartID=? " . dataReader::makeOrder() , array($_REQUEST["PartID"]));
+	$PartID = $_REQUEST["PartID"];
 	
-	$pays = LON_pays::
-	
-	for($i=0; $i < count($dt); $i++)
-	{
-		
-		
-		
-		
-		$dt[$i]["ForfeitAmount"] = 0;
-		if ($dt[$i]["InstallmentDate"] < DateModules::Now()) {
-			$forfeitDays = DateModules::GDateMinusGDate(DateModules::Now(),$dt[$i]["InstallmentDate"]);
-			$dt[$i]["ForfeitAmount"] = $dt[$i]["InstallmentAmount"]*$dt[$i]["ForfeitPercent"]*$forfeitDays/36000;
-		}
-	}
+	$dt = LON_installments::SelectAll("PartID=? " . dataReader::makeOrder() , array($PartID));
+	ComputePayments($PartID, $dt);
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -685,6 +679,26 @@ function GetLastFundComment(){
 
 //-------------------------------------------------
 
+function selectParts(){
+	
+	$params = array();
+	$query = "select p.*, concat_ws(' ',fname,lname,CompanyName) loanFullname
+		from LON_ReqParts p
+		join LON_requests using(RequestID)
+		join BSC_persons on(LoanPersonID=PersonID)
+		where 1=1";
+	if(!empty($_REQUEST["query"]))
+	{
+		$query .= " AND concat_ws(' ',fname,lname,CompanyName) like :f";
+		$params[":f"] = "%" . $_REQUEST["query"] . "%";
+	}
+	$query .= " Group by p.PartID";
+	
+	$dt = PdoDataAccess::runquery($query, $params);
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
 function selectMyParts(){
 	
 	$query = "select * 
@@ -758,10 +772,124 @@ function SavePartPay(){
 		$result = $obj->EditPay();
 	else
 		$result = $obj->AddPay();
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
+function DeletePay(){
+	
+	$res = LON_pays::DeletePay($_POST["PayID"]);
+	echo Response::createObjectiveResponse($res, "");
+	die();
+}
 
+function ComputePayments($PartID, &$installments){
+	
+	$returnArr = array();
+	$pays = PdoDataAccess::runquery("
+		select p.PayDate, sum(PayAmount) PayAmount
+			from LON_pays p
+			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
+			join LON_ReqParts rp using(PartID)
+			left join ACC_banks b on(ChequeBank=BankID)
+			where PartID=?
+			group by PayDate" , array($PartID));
+	$PayRecord = count($pays) == 0 ? null : $pays[0];
+	$payIndex = 1;
+	$recentForfeit = 0;
+	for($i=0; $i < count($installments); $i++)
+	{
+		$installments[$i]["ForfeitAmount"] = 0;
+		$installments[$i]["TotalForfeit"] = 0;
+		$installments[$i]["ForfeitDays"] = 0;
+		$installments[$i]["remainder"] = 0;
+		$installments[$i]["PayAmount"] = 0;
+		$installments[$i]["PayDate"] = '';
+		$installments[$i]["TotalRemainder"] = 0;
+		if($PayRecord == null)
+		{
+			$ToDate = DateModules::Now();
+			$amount = $installments[$i]["InstallmentAmount"];
+			if ($installments[$i]["InstallmentDate"] < $ToDate) {
+				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$installments[$i]["InstallmentDate"]);
+				$installments[$i]["ForfeitDays"] = $forfeitDays;
+				$installments[$i]["ForfeitAmount"] = round($amount*$installments[$i]["ForfeitPercent"]*$forfeitDays/36000);
+				$installments[$i]["TotalForfeit"] += $installments[$i]["ForfeitAmount"];
+				$installments[$i]["TotalRemainder"] = $amount + $installments[$i]["ForfeitAmount"] ;
+			}
+			else
+			{
+				$installments[$i]["ForfeitDays"] = 0;
+				$installments[$i]["ForfeitAmount"] = 0;
+				$installments[$i]["TotalForfeit"] += 0;
+				$installments[$i]["TotalRemainder"] = $amount;
+			}
+			$returnArr[] = $installments[$i];
+			continue;
+		}
+		
+		$remainder = $installments[$i]["InstallmentAmount"];
+		$StartDate = $installments[$i]["InstallmentDate"];
+
+		while(true)
+		{
+			$ToDate = $PayRecord == null ? DateModules::Now() : $PayRecord["PayDate"];
+			if($PayRecord != null)
+			{
+				$installments[$i]["PayAmount"] = $PayRecord["PayAmount"]*1 + $recentForfeit;
+				$installments[$i]["PayDate"] = $PayRecord["PayDate"];
+			}
+			else
+			{
+				$installments[$i]["PayAmount"] = 0;
+				$installments[$i]["PayDate"] = DateModules::Now();
+			}
+			if ($StartDate < $ToDate) {
+				
+				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
+				$recentForfeit = round($remainder*$installments[$i]["ForfeitPercent"]*$forfeitDays/36000);
+				$installments[$i]["ForfeitDays"] = $forfeitDays;
+				$installments[$i]["ForfeitAmount"] = $recentForfeit;
+				$installments[$i]["TotalForfeit"] += $installments[$i]["ForfeitAmount"];
+			}		
+			
+			if($PayRecord == null)
+			{
+				$installments[$i]["TotalRemainder"] += $recentForfeit;
+				$installments[$i]["remainder"] = $remainder;
+				$returnArr[] = $installments[$i];
+				break;
+			}
+			
+			if($remainder < $PayRecord["PayAmount"]*1)
+			{
+				$PayRecord["PayAmount"] = $PayRecord["PayAmount"]*1 - $remainder - $recentForfeit;
+				if($PayRecord["PayAmount"] == 0)
+				{
+					$StartDate = $PayRecord["PayDate"];
+					$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
+				}
+				break;
+			}
+			$remainder = $remainder - $PayRecord["PayAmount"]*1;
+			$StartDate = $PayRecord["PayDate"];
+			
+			$installments[$i]["TotalRemainder"] = $remainder + $recentForfeit;
+			$installments[$i]["remainder"] = $remainder;
+			
+			$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
+			
+			if($PayRecord != null)
+			{
+				$PayRecord["PayAmount"] = $PayRecord["PayAmount"]*1 - $recentForfeit;
+			}
+			$returnArr[] = $installments[$i];
+		}
+	}
+	
+	return $returnArr;
+}
 
 ?>
