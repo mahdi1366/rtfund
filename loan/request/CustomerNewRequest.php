@@ -304,12 +304,25 @@ NewLoanRequestObject = new NewLoanRequest();
 
 NewLoanRequest.prototype.LoadSummary = function(record){
 
-	function PMT(F8, F9, F7, YearMonths) {  
+	function PMT(F8, F9, F7, YearMonths, PayInterval) {  
+		
+		if(F8 == 0)
+			return F7/F9;
+		
+		if(PayInterval == 0)
+			return F7;
+		
 		F8 = F8/(YearMonths*100);
 		F7 = -F7;
 		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
 	} 
-	function ComputeWage(F7, F8, F9, YearMonths){
+	function ComputeWage(F7, F8, F9, YearMonths, PayInterval){
+		
+		if(PayInterval == 0)
+			return 0;
+		
+		if(F8 == 0)
+			return 0;
 		
 		return (((F7*F8/YearMonths*( Math.pow((1+(F8/YearMonths)),F9)))/
 			((Math.pow((1+(F8/YearMonths)),F9))-1))*F9)-F7;
@@ -324,8 +337,10 @@ NewLoanRequest.prototype.LoadSummary = function(record){
 	if(record.data.IntervalType == "DAY")
 		YearMonths = Math.floor(365/record.data.PayInterval);
 
-	FirstPay = roundUp(PMT(record.data.CustomerWage,record.data.InstallmentCount, record.data.MaxAmount, YearMonths),-3);
-	TotalWage = Math.round(ComputeWage(record.data.MaxAmount, record.data.CustomerWage/100, record.data.InstallmentCount, YearMonths));
+	FirstPay = roundUp(PMT(record.data.CustomerWage,record.data.InstallmentCount, 
+		record.data.MaxAmount, YearMonths, record.data.PayInterval),-3);
+	TotalWage = Math.round(ComputeWage(record.data.MaxAmount, record.data.CustomerWage/100, 
+		record.data.InstallmentCount, YearMonths, record.data.PayInterval));
 
 	TotalDelay = Math.round(record.data.MaxAmount*record.data.CustomerWage*record.data.DelayMonths/1200);
 	LastPay = record.data.MaxAmount*1 + TotalWage - FirstPay*(record.data.InstallmentCount-1);

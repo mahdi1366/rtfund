@@ -112,6 +112,7 @@ class LON_ReqParts extends PdoDataAccess
 	public $CustomerWage;
 	public $FundWage;
 	public $WageReturn;
+	public $PayCompute;
 	
 	function __construct($PartID = "") {
 		

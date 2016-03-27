@@ -29,7 +29,7 @@ $col->width = 80;
 
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
 
-$col = $dg->addColumn("مبلغ جریمه", "TotalForfeit", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مبلغ جریمه", "ForfeitAmount", GridColumn::ColumnType_money);
 $col->width = 80;
 
 $col = $dg->addColumn("مانده", "TotalRemainder", GridColumn::ColumnType_money);

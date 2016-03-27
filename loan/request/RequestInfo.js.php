@@ -606,8 +606,11 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			{
 				if(record.data.StatusID == "70")
 				{
-					this.companyPanel.getEl().readonly();
-					this.companyPanel.down("[itemId=cmp_save]").hide();
+					if(record.data.imp_VamCode*1 == null || record.data.imp_VamCode == "")
+					{
+						this.companyPanel.getEl().readonly();
+						this.companyPanel.down("[itemId=cmp_save]").hide();
+					}					
 				}
 			}
 			
@@ -738,7 +741,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 	{
 		this.PartWin = new Ext.window.Window({
 			width : 500,
-			height : 300,
+			height : 400,
 			modal : true,
 			closeAction : 'hide',
 			title : "ایجاد فاز جدید",
@@ -839,6 +842,23 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						inputValue : "CUSTOMER"
 					}]
 				},{
+					xtype : "fieldset",
+					colspan :2,
+					width : 450,
+					style : "margin-right:10px",
+					items : [{
+						xtype : "radio",
+						boxLabel : "محاسبه  پرداخت بر اساس اول جریمه سپس قسط",
+						name : "PayCompute",
+						inputValue : "forfeit",
+						checked : true
+					},{
+						xtype : "radio",
+						boxLabel : "محاسبه پرداخت بر اساس اول اصل مبلغ قسط سپس جرایم",
+						name : "PayCompute",
+						inputValue : "installment"
+					}]
+				},{
 					xtype : "hidden",
 					name : "PartID"
 				}]				
@@ -936,16 +956,25 @@ RequestInfo.prototype.DeletePart = function(){
 
 RequestInfo.prototype.LoadSummary = function(record){
 
-	function PMT(F8, F9, F7, YearMonths) {  
+	function PMT(F8, F9, F7, YearMonths, PayInterval) {  
 		
 		if(F8 == 0)
 			return F7/F9;
+		
+		if(PayInterval == 0)
+			return F7;
 				
 		F8 = F8/(YearMonths*100);
 		F7 = -F7;
 		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
 	} 
-	function ComputeWage(F7, F8, F9, YearMonths){
+	function ComputeWage(F7, F8, F9, YearMonths, PayInterval){
+		
+		if(PayInterval == 0)
+			return 0;
+		
+		if(F8 == 0)
+			return 0;
 		
 		return (((F7*F8/YearMonths*( Math.pow((1+(F8/YearMonths)),F9)))/
 			((Math.pow((1+(F8/YearMonths)),F9))-1))*F9)-F7;
@@ -991,18 +1020,27 @@ RequestInfo.prototype.LoadSummary = function(record){
 	YearMonths = 12;
 	if(record.data.IntervalType == "DAY")
 		YearMonths = Math.floor(365/record.data.PayInterval);
-
-	FirstPay = roundUp(PMT(record.data.CustomerWage,record.data.InstallmentCount, 
-		record.data.PartAmount, YearMonths),-3);
+	
 	TotalWage = Math.round(ComputeWage(record.data.PartAmount, record.data.CustomerWage/100, 
-		record.data.InstallmentCount, YearMonths));
+		record.data.InstallmentCount, YearMonths, record.data.PayInterval));
+		
+	if(record.data.WageReturn == "CUSTOMER")
+		FirstPay = roundUp(PMT(0,record.data.InstallmentCount, 
+			record.data.PartAmount, YearMonths, record.data.PayInterval),-3);	
+	else
+		FirstPay = roundUp(PMT(record.data.CustomerWage,record.data.InstallmentCount, 
+			record.data.PartAmount, YearMonths, record.data.PayInterval),-3);	
+			
 	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
 	FundWage = Math.round((record.data.FundWage/record.data.CustomerWage)*TotalWage);
 	FundWage = !isInt(FundWage) ? 0 : FundWage;
 	AgentWage = TotalWage - FundWage;
 	
 	TotalDelay = Math.round(record.data.PartAmount*record.data.CustomerWage*record.data.DelayMonths/1200);
-	LastPay = record.data.PartAmount*1 + TotalWage - FirstPay*(record.data.InstallmentCount-1);
+	if(record.data.WageReturn == "CUSTOMER")
+		LastPay = record.data.PartAmount*1 - FirstPay*(record.data.InstallmentCount-1);
+	else
+		LastPay = record.data.PartAmount*1 + TotalWage - FirstPay*(record.data.InstallmentCount-1);
 	
 	if(record.data.InstallmentCount == 1)
 		LastPay = 0;
@@ -1010,7 +1048,8 @@ RequestInfo.prototype.LoadSummary = function(record){
 	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay);
 	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay);
 	this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(TotalDelay);
-	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - TotalDelay);	
+	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
+		TotalDelay - (record.data.WageReturn == "CUSTOMER" ? TotalWage : 0));	
 	
 	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage);	
 	this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(FundWage);	

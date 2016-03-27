@@ -99,7 +99,7 @@ function LoanPay()
 	if(this.framework)
 	{
 		this.grid.plugins[0].on("beforeedit", function(editor,e){
-			if(e.record.data.PayRefNo != null)
+			if(e.record.data.PayRefNo != null && e.record.data.PayRefNo != "")
 				return false;
 		});
 		

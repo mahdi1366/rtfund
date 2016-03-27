@@ -275,10 +275,30 @@ class DateModules
 	
 	static function AddToJDate($jdate, $dayplus=0, $monthplus=0, $yearplus=0) 
     {
-		$gdate = self::shamsi_to_miladi($jdate);
-	    $gdate_array = preg_split('/[\-\/]/',$gdate);
-	    $gtime = mktime(0, 0, 0, $gdate_array[1]+$monthplus, $gdate_array[2]+$dayplus, $gdate_array[0]+$yearplus);
-	    return self::miladi_to_shamsi(date("Y-m-d",$gtime));
+		$dayplus = $dayplus*1;	
+		$monthplus = $monthplus*1;
+		$yearplus = $yearplus*1;
+
+		if($dayplus > 0)
+		{
+			$gdate = self::shamsi_to_miladi($jdate);
+			$gdate_array = preg_split('/[\-\/]/',$gdate);
+			$gtime = mktime(0, 0, 0, $gdate_array[1], $gdate_array[2]+$dayplus, $gdate_array[0]);
+			$jdate = self::miladi_to_shamsi(date("Y-m-d",$gtime));
+		}
+		
+		$arr = preg_split('/[\-\/]/',$jdate);
+		
+		$year = $arr[0]*1 + floor(($arr[1]*1 + $monthplus) / 12) + $yearplus;
+		$monthplus = ($arr[1]*1 + $monthplus)%12;
+		if($monthplus == 0)
+		{
+			$year--;
+			$monthplus = 12;
+		}
+		$dayplus = $arr[2];
+
+		return $year . "-" . $monthplus . "-" . $dayplus;
 	}
 
 	/**
