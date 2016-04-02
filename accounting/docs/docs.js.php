@@ -29,7 +29,7 @@ function AccDocs()
 	
 	this.CostCombo = new Ext.form.ComboBox({
 		store: new Ext.data.Store({
-			fields:["CostID","CostCode","CostDesc"],
+			fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2"],
 			proxy: {
 				type: 'jsonp',
 				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectCostCode',
@@ -38,12 +38,19 @@ function AccDocs()
 		}),
 		emptyText:'انتخاب کد حساب ....',
 		typeAhead: false,
-		//queryMode : "local",
 		valueField : "CostID",
 		displayField : "CostDesc",
 		listConfig: {
 			loadingText: 'در حال جستجو...',
 			emptyText: 'فاقد اطلاعات'
+		},
+		listeners :{
+			select : function(combo,records){
+				if(records[0].data.TafsiliType != null)
+					AccDocsObject.tafsiliGroupCombo.setValue(records[0].data.TafsiliType);
+				if(records[0].data.TafsiliType2 != null)
+					AccDocsObject.tafsili2GroupCombo.setValue(records[0].data.TafsiliType2);
+			}
 		}
 	});
 	

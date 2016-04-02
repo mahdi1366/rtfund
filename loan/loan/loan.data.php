@@ -67,6 +67,9 @@ function GetAllLoans() {
 	$where = "1=1";
 	$whereParam = array();
 	
+	if(isset($_GET["IsCustomer"]))
+		$where .= " AND IsCustomer=true";
+	
 	if(!empty($_GET["GroupID"]))
 	{
 		$where .= " AND GroupID=:g";
@@ -97,6 +100,8 @@ function SaveLoan() {
 	$obj = new LON_loans();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 
+	$obj->IsCustomer = isset($_POST["IsCustomer"]) ? "YES" : "NO";
+	
 	if (empty($_POST["LoanID"]))
 		$result = $obj->AddLoan();
 	else

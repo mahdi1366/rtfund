@@ -7,7 +7,9 @@
 require_once '../header.inc.php';
 require_once getenv("DOCUMENT_ROOT") . '/accounting/definitions.inc.php';
 require_once getenv("DOCUMENT_ROOT") . '/framework/person/persons.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/loan/loan/loan.class.php';
 require_once 'doc.class.php';
+
 require_once inc_dataReader;
 require_once inc_response;
 
@@ -110,12 +112,13 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $pdo){
 	}
 	
 	$LoanMode = "";
-	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
-	if($PersonObj->IsAgent == "YES")
-		$LoanMode = "Agent";
-	//if($PersonObj->IsStaff == "YES" && $ReqObj->SupportPersonID > 0)
-	//	$LoanMode = "Supporter";
-	else if($PersonObj->IsCustomer == "YES")
+	if(!empty($ReqObj->ReqPersonID))
+	{
+		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+		if($PersonObj->IsAgent == "YES")
+			$LoanMode = "Agent";
+	}
+	else
 		$LoanMode = "Customer";
 	
 	if($LoanMode == "Agent")
@@ -582,12 +585,13 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	}
 	
 	$LoanMode = "";
-	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
-	if($PersonObj->IsAgent == "YES")
-		$LoanMode = "Agent";
-	/*if($PersonObj->IsStaff == "YES" && $ReqObj->SupportPersonID > 0)
-		$LoanMode = "Supporter";*/
-	if($PersonObj->IsCustomer == "YES")
+	if(!empty($ReqObj->ReqPersonID))
+	{
+		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+		if($PersonObj->IsAgent == "YES")
+			$LoanMode = "Agent";
+	}
+	else
 		$LoanMode = "Customer";
 	
 	if($LoanMode == "Agent")
@@ -793,13 +797,13 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	return true;
 }
 
-function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
+function RegisterCustomerPayDoc($PayObj, $pdo){
 	
-	/*@var $InstallmentObj LON_installments */
+	/*@var $PayObj LON_pays */
 	
 	$CycleID = substr(DateModules::shNow(), 0 , 4);
 	
-	$PartObj = new LON_ReqParts($InstallmentObj->PartID);
+	$PartObj = new LON_ReqParts($PayObj->PartID);
 	$ReqObj = new LON_requests($PartObj->RequestID);
 	
 	//------------- get CostCodes --------------------
@@ -817,8 +821,7 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 	$obj->CycleID = $CycleID;
 	$obj->BranchID = $ReqObj->BranchID;
 	$obj->DocType = DOCTYPE_INSTALLMENT_PAYMENT;
-	$obj->description = "پرداخت قسط " . $InstallmentObj->InstallmentDate . " " . 
-			$PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
+	$obj->description = "پرداخت قسط " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
 	
 	if(!$obj->Add($pdo))
 		return false;
@@ -832,12 +835,13 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 	}
 	
 	$LoanMode = "";
-	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
-	if($PersonObj->IsAgent == "YES")
-		$LoanMode = "Agent";
-	/*if($PersonObj->IsStaff == "YES" && $ReqObj->SupportPersonID > 0)
-		$LoanMode = "Supporter";*/
-	if($PersonObj->IsCustomer == "YES")
+	if(!empty($ReqObj->ReqPersonID))
+	{
+		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+		if($PersonObj->IsAgent == "YES")
+			$LoanMode = "Agent";
+	}
+	else
 		$LoanMode = "Customer";
 	
 	if($LoanMode == "Agent")
@@ -868,13 +872,13 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_INSTALLMENT_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
-	$itemObj->SourceID2 = $InstallmentObj->InstallmentID;
+	$itemObj->SourceID2 = $PayObj->PayID;
 	
 	//-------- loan ----------
 	$itemObj->DocID = $obj->DocID;
 	$itemObj->CostID = $CostCode_Loan;
 	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = $InstallmentObj->PaidAmount;
+	$itemObj->CreditorAmount = $PayObj->PayAmount;
 	$itemObj->Add($pdo);	
 	
 	// ---- bank ----
@@ -882,7 +886,7 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 	unset($itemObj->TafsiliType2);
 	unset($itemObj->TafsiliID2);
 	$itemObj->CostID = $CostCode_bank;
-	$itemObj->DebtorAmount= $InstallmentObj->PaidAmount;
+	$itemObj->DebtorAmount= $PayObj->PayAmount;
 	$itemObj->CreditorAmount = 0;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	$itemObj->Add($pdo);
@@ -895,7 +899,7 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_deposite;
 		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $InstallmentObj->PaidAmount;
+		$itemObj->CreditorAmount = $PayObj->PayAmount;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
 		if(!$itemObj->Add($pdo))
@@ -905,7 +909,7 @@ function RegisterPayInstallmentDoc($InstallmentObj, $pdo){
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_commitment;
-		$itemObj->DebtorAmount = $InstallmentObj->PaidAmount;
+		$itemObj->DebtorAmount = $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;

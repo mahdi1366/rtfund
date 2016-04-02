@@ -11,6 +11,7 @@ RequestInfo.prototype = {
 	RequestID : <?= $RequestID ?>,
 	RequestRecord : null,
 	User : '<?= $User ?>',
+	ReadOnly : <?= $ReadOnly ? "true" : "false" ?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -59,7 +60,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 			url: this.address_prefix + "request.data.php?task=SelectAllRequests&RequestID=" + this.RequestID,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["RequestID","BranchID","BranchName","ReqPersonID","ReqPersonRole","ReqFullname","LoanPersonID",
+		fields : ["RequestID","BranchID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
 					"guarantees","AgentGuarantee","StatusID","DocumentDesc"],
 		autoLoad : true,
@@ -292,7 +293,7 @@ RequestInfo.prototype.BuildForms = function(){
 			fieldCls : "blueText",
 			name : "ReqFullname",
 			style : "margin-bottom:10px",
-			fieldLabel : "درخواست کننده"
+			fieldLabel : "معرفی کننده"
 		},{
 			xtype : "combo",
 			hidden : true,
@@ -588,7 +589,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		}	
 		if(this.User == "Staff")
 		{
-			if(record.data.ReqPersonRole == "Agent")
+			if(record.data.ReqPersonID != null)
 			{
 				if(record.data.StatusID == "10")
 				{
@@ -612,15 +613,11 @@ RequestInfo.prototype.CustomizeForm = function(record){
 						this.companyPanel.down("[itemId=cmp_save]").hide();
 					}					
 				}
-			}
-			
-			if(record.data.ReqPersonRole == "Staff")
-			{
 				this.companyPanel.down("[itemId=cmp_requester]").show();
 				this.companyPanel.down("[name=ReqFullname]").hide();
 				this.companyPanel.down("[name=BorrowerDesc]").hide();
 				this.companyPanel.down("[name=BorrowerID]").hide();
-			}
+			}			
 		}	
 		if(this.User == "Customer")
 		{
@@ -630,8 +627,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.companyPanel.down("[name=BorrowerID]").hide();
 			this.companyPanel.down("[name=ReqDetails]").hide();
 			this.companyPanel.down("[itemId=cmp_save]").hide();
-			if(record.data.ReqPersonRole == "Staff")
-				this.companyPanel.down("[name=AgentGuarantee]").hide();
+			this.companyPanel.down("[name=AgentGuarantee]").hide();
 			
 			this.companyPanel.getEl().readonly();
 			
@@ -652,6 +648,9 @@ RequestInfo.prototype.CustomizeForm = function(record){
 	this.companyPanel.down("[itemId=cmp_returnFromCustomer]").hide();
 	this.companyPanel.down("[itemId=cmp_confirm70]").hide();
 	this.companyPanel.down("[itemId=cmp_reject60]").hide();
+	this.companyPanel.down("[itemId=cmp_changeStatus]").hide();
+	if(this.ReadOnly)
+		return;
 	
 	if(record != null && this.User == "Staff")
 	{
@@ -663,7 +662,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		//{
 			this.companyPanel.down("[itemId=cmp_changeStatus]").show();
 		//}
-		if(record.data.StatusID == "1" && record.data.ReqPersonRole == "Staff")
+		if(record.data.StatusID == "1")
 		{
 			this.companyPanel.down("[itemId=cmp_confirm30]").show();
 		}
@@ -1313,7 +1312,7 @@ RequestInfo.prototype.LoadPays = function(){
 	if(!this.PayWin)
 	{
 		this.PayWin = new Ext.window.Window({
-			width : 770,
+			width : 870,
 			title : "لیست پرداخت ها",
 			height : 410,
 			modal : true,

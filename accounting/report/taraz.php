@@ -19,7 +19,7 @@ function showReport(){
 		"l2" => "معین",
 		"l3" => "جزء معین",
 		"l4" => "گروه تفصیلی",
-		"l5" => "گروه تفصیلی",
+		"l5" => "گروه تفصیلی2",
 		"l6" => "تفصیلی",
 		"l7" => "تفصیلی2"
 		);
@@ -116,8 +116,10 @@ function showReport(){
 				"&level3=" . $row["level3"] . 
 				"&TafsiliType=" . $row["TafsiliType"] . 
 				"&TafsiliID=" . $row["TafsiliID"] .
-				(!empty($_POST["fromDate"]) ? "&fromDate=" . $_POST["fromDate"] : "") . 
-				(!empty($_POST["toDate"]) ? "&toDate=" . $_POST["toDate"] : "") .
+				(!empty($_REQUEST["fromDate"]) ? "&fromDate=" . $_REQUEST["fromDate"] : "") . 
+				(!empty($_REQUEST["toDate"]) ? "&toDate=" . $_REQUEST["toDate"] : "") .
+				(!empty($_REQUEST["fromLocalNo"]) ? "&fromLocalNo=" . $_REQUEST["fromLocalNo"] : "") . 
+				(!empty($_REQUEST["toLocalNo"]) ? "&toLocalNo=" . $_REQUEST["toLocalNo"] : "") .
 				"');\" href=javascript:void(0)>" . $value . "</a>";
 	}
 	function showDocs2($row, $value){
@@ -217,7 +219,16 @@ function showReport(){
 			$where .= " AND di.TafsiliID2=:tid2";
 			$whereParam[":tid2"] = $_POST["TafsiliID2"];
 		}
-		
+		if(!empty($_REQUEST["fromLocalNo"]))
+		{
+			$where .= " AND d.LocalNo >= :lo1 ";
+			$whereParam[":lo1"] = $_REQUEST["fromLocalNo"];
+		}
+		if(!empty($_REQUEST["toLocalNo"]))
+		{
+			$where .= " AND d.LocalNo <= :lo2 ";
+			$whereParam[":lo2"] = $_REQUEST["toLocalNo"];
+		}
 		if(!empty($_POST["fromDate"]))
 		{
 			$where .= " AND d.DocDate >= :q1 ";
@@ -322,8 +333,12 @@ function showReport(){
 		}
 	</script>
 <form id="subForm" method="POST" target="_blank">
-	<input type="hidden" name="fromDate" id="fromDate" value="<?= $_POST["fromDate"] ?>">
-	<input type="hidden" name="toDate" id="toDate" value="<?= isset($_POST["toDate"]) ? $_POST["toDate"] : ""?>">
+	
+	<input type="hidden" name="fromDate" value="<?= !empty($_REQUEST["fromDate"]) ? $_REQUEST["fromDate"] : "" ?>">
+	<input type="hidden" name="toDate" value="<?= !empty($_REQUEST["toDate"]) ? $_REQUEST["toDate"] : "" ?>">
+	<input type="hidden" name="fromLocalNo" value="<?= !empty($_REQUEST["fromLocalNo"]) ? $_REQUEST["fromLocalNo"] : "" ?>">
+	<input type="hidden" name="toLocalNo" value="<?= !empty($_REQUEST["toLocalNo"]) ? $_REQUEST["toLocalNo"] : "" ?>">
+	
 	<input type="hidden" name="level1s" id="level1s" value="<?= $_POST["level1s"] ?>">
 	<input type="hidden" name="level2s" id="level2s" value="<?= $_POST["level2s"] ?>">
 	<input type="hidden" name="level3s" id="level3s" value="<?= $_POST["level3s"] ?>">
@@ -571,9 +586,25 @@ function AccReport_taraz()
 				}
 			})
 		},{
-			xtype : "shdatefield",
-			name : "fromDate",
-			fieldLabel : "از تاریخ"
+			xtype : "container",
+			rowspan : 4,
+			layout : "column",
+			columns : 2,
+			items :[{
+				xtype : "container",
+				style : "margin-left:10px",
+				html :  "<div align=center>تراز بر اساس </div><hr>" +
+						"<input type='radio' name='level' value='l1' checked> کل <br>" + 
+						"<input type='radio' name='level' value='l2' > معین  <br>" + 
+						"<input type='radio' name='level' value='l3' > جزء معین <br>" + 
+						"<input type='radio' name='level' value='l6' > تفصیلی  <br>" + 
+						"<input type='radio' name='level' value='l7' >&nbsp; تفصیلی2"			
+			}/*,{
+				xtype : "container",
+				html :  "نوع تراز <hr>" +
+					"<input type='radio' name='col' id='2col' value='2' checked> دو ستونی <br>" + 
+					"<input type='radio' name='col' id='4col' value='4' >&nbsp; چهار ستونی"			
+			}*/]
 		},{
 			xtype : "combo",
 			displayField : "InfoDesc",
@@ -615,21 +646,24 @@ function AccReport_taraz()
 				}
 			})
 		},{
+			xtype : "numberfield",
+			hideTrigger : true,
+			name : "fromLocalNo",
+			fieldLabel : "از سند شماره"
+		},{
+			xtype : "numberfield",
+			hideTrigger : true,
+			name : "toLocalNo",
+			fieldLabel : "تا سند شماره"
+		},{
+			xtype : "shdatefield",
+			name : "fromDate",
+			fieldLabel : "از تاریخ"
+		},{
 			xtype : "shdatefield",
 			name : "toDate",
 			fieldLabel : "تا تاریخ"
-		}/*,{
-			xtype : "container",
-			html : "<input type='radio' name='col' id='2col' value='2' checked> دو ستونی &nbsp;&nbsp;&nbsp;" + 
-				"<input type='radio' name='col' id='4col' value='4' >&nbsp; چهار ستونی"			
-		},{
-			xtype : "container",
-			fieldLabel : "تراز بر اساس",
-			html :  "<input type='radio' name='level' value='kol' checked> کل  &nbsp;&nbsp;&nbsp;" + 
-					"<input type='radio' name='level' value='moin' > معین  &nbsp;&nbsp;&nbsp;" + 
-					"<input type='radio' name='level' value='tafsili' > تفصیلی  &nbsp;&nbsp;&nbsp;" + 
-					"<input type='radio' name='level' value='tafsili2' >&nbsp; تفصیلی2"			
-		}*/],
+		}],
 		buttons : [{
 			text : "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),
@@ -664,7 +698,6 @@ AccReport_tarazObj = new AccReport_taraz();
 	<center><br>
 		<div id="main" ></div>
 	</center>
-	<input type="hidden" name="excel" id="excel">
 	<input type="hidden" name="level1s" id="level1s">
 	<input type="hidden" name="level2s" id="level2s">
 	<input type="hidden" name="level3s" id="level3s">

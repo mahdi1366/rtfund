@@ -8,6 +8,7 @@ require_once '../header.inc.php';
 require_once inc_dataGrid;
 
 $RequestID = !empty($_POST["RequestID"]) ? $_POST["RequestID"] : 0;
+$ReadOnly = isset($_REQUEST["ReadOnly"]) && $_REQUEST["ReadOnly"] == "true" ? true : false;
 
 if(isset($_SESSION["USER"]["framework"]))
 	$User = "Staff";
@@ -44,11 +45,15 @@ $col = $dg->addColumn("عنوان فاز", "PartDesc", "");
 $col->editor = ColumnEditor::TextField();
 $col->sortable = false;
 
-$col = $dg->addColumn("", "PartID");
-$col->renderer = "RequestInfo.OperationRender";
-$col->width = 50;
 
-$dg->addButton("addPart", "ایجاد فاز قرارداد", "add", "function(){RequestInfoObject.PartInfo(false);}");
+if(!$ReadOnly)
+{
+	$dg->addButton("addPart", "ایجاد فاز قرارداد", "add", "function(){RequestInfoObject.PartInfo(false);}");
+	
+	$col = $dg->addColumn("", "PartID");
+	$col->renderer = "RequestInfo.OperationRender";
+	$col->width = 50;	
+}
 
 $dg->HeaderMenu = false;
 $dg->hideHeaders = true;

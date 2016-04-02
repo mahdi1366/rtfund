@@ -18,9 +18,10 @@ $Essence = array(array('val' => 'DEBTOR', 'name' => 'بدهکار'),
     array('val' => 'NONE', 'name' => 'هیچکدام'));
 
 $temp = array(
-	array("LevelID" => 1, "LevelTitle" => "حساب کل", "HasEssence" => false),
-	array("LevelID" => 2, "LevelTitle" => "حساب معین", "HasEssence" => true),
-	array("LevelID" => 3, "LevelTitle" => "حساب جزء معین", "HasEssence" => false)
+	array("LevelID" => 0, "LevelTitle" => "گروه حساب", "HasEssence" => false, "HasGroup" => false),
+	array("LevelID" => 1, "LevelTitle" => "حساب کل", "HasEssence" => true, "HasGroup" => true),
+	array("LevelID" => 2, "LevelTitle" => "حساب معین", "HasEssence" => false, "HasGroup" => false),
+	array("LevelID" => 3, "LevelTitle" => "حساب جزء معین", "HasEssence" => false, "HasGroup" => false)
 );
 for ($i = 0; $i < count($temp); $i++) {
     $levelID = $temp[$i]['LevelID'];
@@ -39,8 +40,16 @@ for ($i = 0; $i < count($temp); $i++) {
 
     $col = $BlockGrid->addColumn('شرح', "BlockDesc");
     $col->editor = ColumnEditor::TextField();
-
-    if ($temp[$i]["HasEssence"]) {
+	
+	if ($temp[$i]["HasGroup"]) {
+        $col = $BlockGrid->addColumn('گروه حساب', "GroupID");
+        $col->width = 150;
+		if($accessObj->AddFlag || $accessObj->EditFlag)
+			$groups = PdoDataAccess::runquery ("select * from ACC_blocks where levelID=0");
+			$col->editor = ColumnEditor::ComboBox($groups, 'BlockID', 'BlockDesc');
+    }
+	
+	if ($temp[$i]["HasEssence"]) {
         $col = $BlockGrid->addColumn('ماهیت', "essence");
         $col->width = 150;
 		if($accessObj->AddFlag || $accessObj->EditFlag)
@@ -61,7 +70,7 @@ for ($i = 0; $i < count($temp); $i++) {
 		$col->renderer = "function(v,p,r){return BlockObj.RemoveBlock(" . $i . ",r);}";
 		$col->width = 50;
 	}
-    $BlockGrid->width = 500;
+    $BlockGrid->width = 700;
     $BlockGrid->title = $levelTitle;
     $BlockGrid->autoExpandColumn = "BlockDesc";
     $BlockGrid->pageSize = 15;

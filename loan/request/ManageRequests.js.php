@@ -47,7 +47,7 @@ ManageRequest.prototype.OperationMenu = function(e){
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
 	
-	if(record.data.StatusID == "1" && record.data.ReqPersonRole == "Staff")
+	if(record.data.StatusID == "1")
 	{
 		op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
 		handler : function(){ return ManageRequestObject.deleteRequest(); }});
@@ -161,7 +161,6 @@ ManageRequest.prototype.deleteRequest = function(){
 				ManageRequestObject.grid.getStore().load();
 				if(ManageRequestObject.commentWin)
 					ManageRequestObject.commentWin.hide();
-				ManageRequestObject.LoanInfoPanel.hide();
 			}
 		});
 	});

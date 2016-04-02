@@ -11,6 +11,7 @@ class ACC_blocks extends PdoDataAccess{
 	public $BlockCode;
 	public $BlockDesc;
 	public $essence;
+	public $GroupID;
 
     function __construct($BlockID = "")
     {
@@ -84,6 +85,8 @@ class ACC_CostCodes extends PdoDataAccess {
     public $level3;
     public $IsActive;
     public $CostCode;
+	public $TafsiliType;
+	public $TafsiliType2;
 
     function __construct($CstID = '') {
 
@@ -100,8 +103,8 @@ class ACC_CostCodes extends PdoDataAccess {
         } else {
             $db = $pdo;
         }
+		
         $res = parent::insert("ACC_CostCodes", $this, $db);
-
         if ($res === false) {
 			
 			if ($pdo == null)
@@ -115,9 +118,7 @@ class ACC_CostCodes extends PdoDataAccess {
 			left join ACC_blocks b1 on(b1.levelID=1 AND b1.blockID=c.level1)
 			left join ACC_blocks b2 on(b2.levelID=2 AND b2.blockID=c.level2)
 			left join ACC_blocks b3 on(b3.levelID=3 AND b3.blockID=c.level3)
-			set c.CostCode=concat(ifnull(b1.blockCode,''),
-								ifnull(concat('-',b2.BlockCode),''),
-								ifnull(concat('-',b3.BlockCode),'') )
+			set c.CostCode=concat_ws('-', b1.blockCode,b2.BlockCode,b3.BlockCode)
 			where CostID=?";
         $res = parent::runquery($query, array($this->CostID), $db);
         if ($res === false) {
@@ -127,14 +128,17 @@ class ACC_CostCodes extends PdoDataAccess {
         }
 		
 		$dt = PdoDataAccess::runquery("select * from ACC_CostCodes c1 
-			join ACC_CostCodes c2 on(c1.CostID<>c2.CostID AND c1.CostCode=c2.CostCode)
-			where c1.CostID=?", array($this->CostID), $db);
+			join ACC_CostCodes c2 on(c2.IsActive='YES' AND c1.CostID<>c2.CostID AND c1.CostCode=c2.CostCode)
+			where c1.CostID=? ", array($this->CostID), $db);
+		
 		if (count($dt) > 0) {
+			
             if ($pdo == null)
 				$db->rollBack();
+			parent::PushException("کد حساب تکراری است");
             return false;
         }
-
+		
         $auditObj = new DataAudit();
         $auditObj->ActionType = DataAudit::Action_add;
         $auditObj->MainObjectID = $this->CostID;
@@ -147,12 +151,78 @@ class ACC_CostCodes extends PdoDataAccess {
         return true;
     }
 
-    function DeleteCost() {
+	function UpdateCost($pdo = null) {
 
-        $res = parent::delete("ACC_CostCodes", 'CostID=:CstId', array(':CstId' => $this->CostID));
+        if ($pdo == null) {
+            $db = parent::getPdoObject();
+            $db->beginTransaction();
+        } else {
+            $db = $pdo;
+        }
+		$dt = parent::runquery("select * from ACC_DocItems where CostID=?", array($this->CostID));
+		if(count($dt) > 0)
+		{
+			$this->DeleteCost($db);
+			unset($this->CostID);
+			$result = $this->InsertCost($db);
+			if($result)
+				$db->commit();
+			return $result;
+		}
+		
+		$dt = PdoDataAccess::runquery("select c2.* from ACC_CostCodes c1 
+			join ACC_CostCodes c2 on(c2.IsActive='YES' AND c1.CostID<>c2.CostID AND c1.CostCode=c2.CostCode)
+			where c1.CostID=?", array($this->CostID), $db);
+		if (count($dt) > 0) {
+			
+            if ($pdo == null)
+				$db->rollBack();
+			parent::PushException("کد حساب تکراری است");
+            return false;
+        }
+		
+        $res = parent::update("ACC_CostCodes", $this,"CostID=:c", array(":c" => $this->CostID), $db);
 
         if ($res === false) {
-            parent::runquery("update ACC_CostCodes set IsActive='NO' where CostID=:CstId", array(':CstId' => $this->CostID));
+			
+			if ($pdo == null)
+				$db->rollBack();
+            return false;
+        }
+
+        $query = "update ACC_CostCodes c 
+			left join ACC_blocks b1 on(b1.levelID=1 AND b1.blockID=c.level1)
+			left join ACC_blocks b2 on(b2.levelID=2 AND b2.blockID=c.level2)
+			left join ACC_blocks b3 on(b3.levelID=3 AND b3.blockID=c.level3)
+			set c.CostCode=concat_ws('-', b1.blockCode,b2.BlockCode,b3.BlockCode)
+			where CostID=?";
+        $res = parent::runquery($query, array($this->CostID), $db);
+        if ($res === false) {
+            if ($pdo == null)
+				$db->rollBack();
+            return false;
+        }
+		
+        $auditObj = new DataAudit();
+        $auditObj->ActionType = DataAudit::Action_update;
+        $auditObj->MainObjectID = $this->CostID;
+        $auditObj->TableName = "ACC_CostCodes";
+        $auditObj->execute($db);
+
+        if ($pdo == null)
+            $db->commit();
+
+        return true;
+    }
+	
+    function DeleteCost($pdo = null) {
+
+        $res = parent::delete("ACC_CostCodes", 'CostID=:CstId', array(':CstId' => $this->CostID),$pdo);
+
+        if ($res === false) {
+			parent::PopAllExceptions();
+            parent::runquery("update ACC_CostCodes set IsActive='NO' where CostID=:CstId", 
+					array(':CstId' => $this->CostID), $pdo);
             return false;
         }
 
@@ -160,21 +230,29 @@ class ACC_CostCodes extends PdoDataAccess {
         $auditObj->ActionType = DataAudit::Action_delete;
         $auditObj->MainObjectID = $this->CostID;
         $auditObj->TableName = "ACC_CostCodes";
-        $auditObj->execute();
+        $auditObj->execute($pdo);
 
         return true;
     }
 
     static function SelectCost($where = '', $param = array()) {
 
-        $query = "select cc.*,b1.BlockDesc LevelTitle1,b2.BlockDesc LevelTitle2,
+        $query = "select cc.*,
+					b0.BlockDesc LevelTitle0,
+					b1.BlockDesc LevelTitle1,
+					b2.BlockDesc LevelTitle2,
                     b3.BlockDesc LevelTitle3,
-                    concat_ws('-',b1.blockdesc,b2.blockdesc,b3.blockdesc) as CostDesc
+                    concat_ws('-',b1.blockdesc,b2.blockdesc,b3.blockdesc) as CostDesc,
+					bf1.InfoDesc TafsiliTypeDesc,
+					bf2.InfoDesc TafsiliTypeDesc2
+					
                     from ACC_CostCodes as cc
-                    left join ACC_blocks b1 on(b1.BlockID=cc.Level1)
+					left join ACC_blocks b1 on(b1.BlockID=cc.Level1)
+					left join ACC_blocks b0 on(b1.GroupID=b0.BlockID)
                     left join ACC_blocks b2 on(b2.BlockID=cc.Level2)
                     left join ACC_blocks b3 on(b3.BlockID=cc.Level3)
-                    ";
+					left join BaseInfo bf1 on(bf1.TypeID=2 AND cc.TafsiliType=bf1.InfoID)
+					left join BaseInfo bf2 on(bf2.TypeID=2 AND cc.TafsiliType2=bf2.InfoID)";
         if ($where != '')
             $query .= ' where ' . $where;
 
@@ -434,11 +512,13 @@ class ACC_accounts extends PdoDataAccess {
 
     static function DeleteAccount($AccountID) {
 
-		if(!parent::delete("ACC_accounts", "AccountID=?", array($AccountID)))
-				parent::runquery("update ACC_accounts set IsActive='NO' where AccountID=?", array($AccountID));
+		parent::runquery("update ACC_accounts set IsActive='NO' where AccountID=?", array($AccountID));
 
-        if (ExceptionHandler::GetExceptionCount() <> 0)
+		if (ExceptionHandler::GetExceptionCount() <> 0)
             return false;
+		
+		parent::runquery("update ACC_tafsilis set IsActive='NO' where TafsiliType=3 
+			AND ObjectID=?", array($AccountID));
 
         $daObj = new DataAudit();
         $daObj->ActionType = DataAudit::Action_delete;

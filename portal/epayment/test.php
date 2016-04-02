@@ -8,7 +8,7 @@ require_once('../../libtejarat/nusoap.php');
 require_once '../../loan/request/request.class.php';
 require_once '../../accounting/docs/import.data.php';
 
-ini_set("display_errors", "Off");
+ini_set("display_errors", "On");
 
 function ShowStatus($ErrorCode) {
 	switch ($ErrorCode) {
@@ -66,57 +66,50 @@ if (!isset($_REQUEST["resultCode"])) {
 }
 else if ($_REQUEST["resultCode"] == 100) {
 
-	$InstallmentID = $_REQUEST["paymentId"];
+	$PartID = $_REQUEST["paymentId"];
+	$totalAmount = 1000;
 
-	$obj = new LON_installments($InstallmentID);
-	if (!($obj->InstallmentID > 0)) {
-		$result = "چنين پرداختي در سيستم دانشگاه ثبت نشده است";
-	}
-	else
-	{
-		$totalAmount = 1000;
+	if ($totalAmount > 0) {
+		$result = "پرداخت الكترونيكي شما به درستي انجام گرفت. شماره رسيد بانكي زير براي شما صادر گرديده است: </p>";
+		$result .= "<table width=80% align=center border=1 cellspacing=0 cellpadding=5 dir=rtl>
+			<tr>
+				<td>مبلغ پرداختي: </td>
+				<td><b>" . number_format($totalAmount) . "</b> ریال  </td>
+			</tr>
+			<tr>
+				<td> شماره پیگیری: </td>
+				<td dir=ltr align=right><b>" . $_REQUEST['referenceId'] . "</b></td>
+			</tr>
+		</table>";
 
+		$obj = new LON_pays();
+		$obj->PartID = $PartID;
+		$obj->PayType = 4;
+		$obj->PayAmount = $totalAmount;
+		$obj->PayDate = PDONOW;
+		$obj->PayRefNo = $_REQUEST['referenceId'];
 		
-		if ($totalAmount > 0) {
-			$result = "پرداخت الكترونيكي شما به درستي انجام گرفت. شماره رسيد بانكي زير براي شما صادر گرديده است: </p>";
-			$result .= "<table width=80% align=center border=1 cellspacing=0 cellpadding=5 dir=rtl>
-				<tr>
-					<td>مبلغ پرداختي: </td>
-					<td><b>" . number_format($totalAmount) . "</b> ریال  </td>
-				</tr>
-				<tr>
-					<td> شماره پیگیری: </td>
-					<td dir=ltr align=right><b>" . $_REQUEST['referenceId'] . "</b></td>
-				</tr>
-			</table>";
+		$pdo = PdoDataAccess::getPdoObject();
+		$pdo->beginTransaction();
 
-			$obj->StatusID = "100";
-			$obj->PaidAmount = $totalAmount;
-			$obj->PaidDate = PDONOW;
-			$obj->PaidRefNo = $_REQUEST['referenceId'];
-					
-			$pdo = PdoDataAccess::getPdoObject();
-			$pdo->beginTransaction();
-			
-			$error = false;
-			if(!$obj->EditInstallment($pdo))
+		$error = false;
+		if(!$obj->AddPay($pdo))
+			$error = true;
+		if(!$error)
+			if(!RegisterCustomerPayDoc($obj, $pdo))
 				$error = true;
-			if(!$error)
-				if(!RegisterPayInstallmentDoc($obj, $pdo))
-					$error = true;
-			if($error)
-			{
-				print_r(ExceptionHandler::PopAllExceptions());
-				$pdo->rollBack();
-				$result .= "<br> عملیات پرداخت قسط در نرم افزار صندوق به درستی ثبت نگردید. " . 
-						"<br> جهت اعمال آن با صندوق تماس بگیرید." ;
-			}
-			else
-				$pdo->commit();
+		if($error)
+		{
+			print_r(ExceptionHandler::PopAllExceptions());
+			$pdo->rollBack();
+			$result .= "<br> عملیات پرداخت قسط در نرم افزار صندوق به درستی ثبت نگردید. " . 
+					"<br> جهت اعمال آن با صندوق تماس بگیرید." ;
 		}
 		else
-			ShowStatus($totalAmount);
+			$pdo->commit();
 	}
+	else
+		ShowStatus($totalAmount);
 }
 else 
 {
@@ -154,7 +147,9 @@ else
 				<?= $result ?>
 				<br>&nbsp;
 			</div>
-			<br><button style="" onclick="window.opener.location.reload(); window.close()">بازگشت به پرتال خدمات دانشگاه فردوسی مشهد</button>
+			<br><button style="" onclick="window.opener.location.reload(); window.close()">
+				بازگشت به پرتال   <?= SoftwareName ?>
+			</button>
 			<br>&nbsp;
 		</div>
 	</center>

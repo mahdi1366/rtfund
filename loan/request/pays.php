@@ -35,6 +35,7 @@ $col->editor = ColumnEditor::CurrencyField();
 $col->width = 90;
 
 $col = $dg->addColumn("شناسه پیگیری", "PayRefNo");
+$col->width = 100;
 
 $col = $dg->addColumn("شماره فیش", "PayBillNo");
 $col->editor = ColumnEditor::TextField(true);
@@ -53,6 +54,9 @@ $col = $dg->addColumn("شعبه", "ChequeBranch", "");
 $col->editor = ColumnEditor::TextField(true);
 $col->width = 90;
 
+$col = $dg->addColumn("توضیحات", "details", "");
+$col->editor = ColumnEditor::TextField(true);
+
 if($framework)
 {
 	$dg->enableRowEdit = true;
@@ -67,14 +71,14 @@ if($framework)
 	$col->width = 50;
 }
 $dg->height = 377;
-$dg->width = 755;
+$dg->width = 855;
 $dg->emptyTextOfHiddenColumns = true;
 $dg->EnableSearch = false;
 $dg->HeaderMenu = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "PayDate";
 $dg->DefaultSortDir = "ASC";
-$dg->autoExpandColumn = "PayRefNo";
+$dg->autoExpandColumn = "details";
 
 $grid = $dg->makeGrid_returnObjects();
 

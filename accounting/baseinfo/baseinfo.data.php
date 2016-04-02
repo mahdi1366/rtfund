@@ -33,8 +33,8 @@ switch ($task) {
 	case "SelectCostCode":
 		SelectCostCode();
 		
-	case 'AddCostCode':
-        AddCostCode();
+	case 'SaveCostCode':
+        SaveCostCode();
 		
 	case "DeleteCostCode":
 		DeleteCostCode();
@@ -126,6 +126,12 @@ function SelectBlocks() {
 	{
 		$where .= " AND ( BlockDesc like :qu or BlockCode like :qu)";
 		$param[':qu'] = '%' . $_REQUEST['query'] . '%';
+	}
+	
+	if(!empty($_REQUEST['BlockID']))
+	{
+		$where .= " AND BlockID=:b";
+		$param[':b'] = $_REQUEST['BlockID'];
 	}
 	
     $where .= " order by BlockCode*1";
@@ -257,12 +263,12 @@ function SelectCostCode() {
     die();
 }
 
-function AddCostCode() {
+function SaveCostCode() {
 
     $cc = new ACC_CostCodes();
     PdoDataAccess::FillObjectByArray($cc, $_POST);
 
-	$where = " level1=?";
+	$where = " cc.IsActive='YES' AND level1=?";
 	$param = array($cc->level1);
 	if($cc->level2*1 > 0)
 	{
@@ -278,11 +284,16 @@ function AddCostCode() {
 	}
 	else
 		$where .= " AND level3 is null";
-	
+		
     $dt = ACC_CostCodes::SelectCost($where, $param);
+	
     if ($dt->rowCount() > 0) {
-        Response::createObjectiveResponse(false, 'کد حساب تکراری است');
-        die();
+		$record = $dt->fetch();
+		if($record["CostID"] != $cc->CostID)
+		{
+			Response::createObjectiveResponse(false, 'کد حساب تکراری است');
+			die();
+		}        
     }
     if ($cc->CostID == '')
         $res = $cc->InsertCost();

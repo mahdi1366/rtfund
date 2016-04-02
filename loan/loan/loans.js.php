@@ -191,6 +191,10 @@ Loan.prototype.LoanInfo = function(mode)
 					maxValue  : 100,
 					hideTrigger : true
 				},{
+					xtype : "checkbox",
+					boxLabel : "قابل درخواست برای مشتریان",
+					name : "IsCustomer"
+				},{
 					xtype : "hidden",
 					name : "LoanID"
 				}],		
@@ -241,6 +245,8 @@ Loan.prototype.LoanInfo = function(mode)
 	{
 		var record = this.grid.getSelectionModel().getLastSelected();
 		this.formPanel.getForm().loadRecord(record);
+		this.formPanel.down("[name=IsCustomer]").setValue(record.data.IsCustomer == "YES");
+		
 	}
 	
 	this.formPanel.show();

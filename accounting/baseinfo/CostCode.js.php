@@ -8,6 +8,8 @@ CostCode.prototype={
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : "<?= $js_prefix_address ?>",
 
+	levelCount : 3,
+
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -20,7 +22,7 @@ function CostCode(){
 		name : "CostID"
 	});
 	this.levelTitles = new Array("حساب کل","معین","جزءمعین");
-	for(var i=0; i < 3; i++)
+	for(var i=0; i < this.levelCount; i++)
 	{
 		levelCombos.push({
 			xtype : "container",
@@ -63,6 +65,45 @@ function CostCode(){
 				}]
 		});
 	}
+	
+	levelCombos.push({
+		xtype : "combo",
+		store: new Ext.data.Store({
+			fields:["InfoID","InfoDesc"],
+			proxy: {
+				type: 'jsonp',
+				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			autoLoad : true
+		}),
+		name : "TafsiliType",
+		fieldLabel : "گروه تفصیلی",
+		typeAhead: false,
+		style : "margin-left : 50px",
+		queryMode : "local",
+		valueField : "InfoID",
+		displayField : "InfoDesc"
+	});
+	levelCombos.push({
+		xtype : "combo",
+		store: new Ext.data.Store({
+			fields:["InfoID","InfoDesc"],
+			proxy: {
+				type: 'jsonp',
+				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			autoLoad : true
+		}),
+		typeAhead: false,
+		name : "TafsiliType2",
+		fieldLabel : "گروه تفصیلی2",
+		queryMode : "local",
+		style : "margin-left : 50px",
+		valueField : "InfoID",
+		displayField : "InfoDesc"
+	});
 
 	this.formPanel = new Ext.form.Panel({
 		applyTo: this.get("mainform"),
@@ -102,10 +143,13 @@ function CostCode(){
 						handler: function(){
 
 							//.......... check completion of each pre level ..........
-							for(var i=0; i < 3; i++)
+							mask = new Ext.LoadMask(CostCodeObj.formPanel, {msg:'در حال ذخيره سازي...'});
+							mask.show();
+							
+							for(var i=0; i < CostCodeObj.levelCount; i++)
 							{
 								if(CostCodeObj.formPanel.down('[name=level' + (i+1) + "]").getValue() == null)
-									if(i+2 <= 3 && CostCodeObj.formPanel.down('[name=level' + (i+2) + "]").getValue() != null)
+									if(i+2 <= CostCodeObj.levelCount && CostCodeObj.formPanel.down('[name=level' + (i+2) + "]").getValue() != null)
 								{
 									alert("تکمیل " + CostCodeObj.levelTitles[i] + " با توجه به انتخاب " + 
 										CostCodeObj.levelTitles[i+1] + " الزامی است");
@@ -114,24 +158,19 @@ function CostCode(){
 							}
 
 							CostCodeObj.formPanel.getForm().submit({
-								url:  CostCodeObj.address_prefix + 'baseinfo.data.php?task=AddCostCode',
+								url:  CostCodeObj.address_prefix + 'baseinfo.data.php?task=SaveCostCode',
 								method : "POST",
 								clientValidation : true,
 
 								success : function(form,action){
-									if(action.result.success)
-									{
-										CostCodeObj.grid.getStore().load();
-										//hCostCodeObj.formPanel.hide();
-									}
-									else
-									{
-										alert(action.result.data);
-									}
+									CostCodeObj.grid.getStore().load();
+									CostCodeObj.formPanel.hide();
+									mask.hide();
 								}
 								,
 								failure : function(form,action){                                  
 									alert(action.result.data);
+									mask.hide();
 								}
 							});								
 						}
@@ -149,15 +188,55 @@ function CostCode(){
 	this.afterLoad();
 }
 
-CostCode.prototype.AddCost = function(){
+CostCode.prototype.BeforeSaveCost = function(EditMode){
 
 	this.formPanel.getForm().reset();
 	this.formPanel.show();
+	
+	if(EditMode)
+	{
+		mask = new Ext.LoadMask(this.formPanel, {msg:'در حال ذخيره سازي...'});
+		mask.show();
+		var record = this.grid.getSelectionModel().getLastSelected();
+		this.formPanel.down("[name=CostID]").setValue(record.data.CostID);
+		this.formPanel.down("[name=TafsiliType]").setValue(record.data.TafsiliType);
+		this.formPanel.down("[name=TafsiliType2]").setValue(record.data.TafsiliType2);
+		
+		for(var i=0; i < CostCodeObj.levelCount; i++)
+		{
+			if(record.get("level" + (i+1)) == null)
+				continue;
+			eval("R"+(i+1)+" = this.formPanel.down('[name=level"+(i+1)+"]').getStore().load({ " +
+				"params : {BlockID : record.data.level"+(i+1)+"}, " +
+				"callback : function(records){"+
+					"CostCodeObj.formPanel.down('[name=level"+(i+1)+"]').select(records[0]);}" +
+			"});");			
+		}
+		LoadStr = "1==1";
+		for(var i=0; i < CostCodeObj.levelCount; i++)
+			LoadStr += " || !R"+(i+1)+".isLoading()";
+		
+		var t = setInterval(function(){
+			eval("cond = " + LoadStr);
+			if(cond)
+			{
+				clearInterval(t);
+				mask.hide();
+			}
+		}, 1000);
+	}	
 }
 
 CostCode.RemoveCost = function(value,p,record){
 	
 	return  "<div  title='حذف اطلاعات' class='remove' onclick='CostCodeObj.RemoveCosts();' " +
+		"style='float:left;background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:50%;height:16'></div>";	
+}
+
+CostCode.EditCost = function(value,p,record){
+	
+	return  "<div  title='ویرایش اطلاعات' class='edit' onclick='CostCodeObj.BeforeSaveCost(true);' " +
 		"style='float:left;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:50%;height:16'></div>";	
 }
@@ -204,7 +283,7 @@ CostCode.prototype.AddNewBlock = function(btn){
 	var levelID = btn.itemId.replace("btn_level_", "");
 
 	this.BlockWindow = new Ext.window.Window({
-		width : 300,
+		width : this.levelCount00,
 		modal : true,
 		title : "ایجاد جزء حساب",
 		closeAction : "hide",

@@ -22,7 +22,7 @@ $col->width = 110;
 $col = $dg->addColumn("مبلغ درخواست", "ReqAmount", GridColumn::ColumnType_money);
 $col->width = 100;
 
-$col = $dg->addColumn("درخواست کننده", "ReqFullname");
+$col = $dg->addColumn("معرفی کننده", "ReqFullname");
 
 $col = $dg->addColumn("گیرنده وام", "LoanFullname");
 $col->renderer = "function(v,p,r){return v == '' || v == null ? r.data.BorrowerDesc : v;}";
@@ -55,7 +55,7 @@ $col->width = 100;
 $col = $dg->addColumn("مبلغ ", "PartAmount", GridColumn::ColumnType_money);
 $col->width = 100;
 
-$col = $dg->addColumn("درخواست کننده", "ReqFullname");
+$col = $dg->addColumn("معرفی کننده", "ReqFullname");
 $col->width = 190;
 
 $col = $dg->addColumn("گیرنده وام", "LoanFullname");

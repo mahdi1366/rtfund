@@ -70,7 +70,8 @@ ManageForm.prototype.FormInfo = function(){
 	var record = this.grid.getSelectionModel().getLastSelected();
 	
 	eval("param = {ExtTabID : '" + this.FormInfoWindow.getEl().id + "'," + 
-					record.data.parameter + " : '" + record.data.ObjectID + "'}");
+					record.data.parameter + " : '" + record.data.ObjectID + "'," +
+					"ReadOnly : true}");
 	
 	this.FormInfoWindow.loader.load({
 		url : record.data.url,

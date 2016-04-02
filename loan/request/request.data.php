@@ -175,8 +175,10 @@ function SaveLoanRequest(){
 	$obj->guarantees = implode(",", $obj->guarantees);
 	
 	//------------------------------------------------------
-	if($_SESSION["USER"]["IsAgent"] == "YES")
+	if($_SESSION["USER"]["IsAgent"] == "YES" || $_SESSION["USER"]["IsSupporter"] == "YES")
 	{
+		$obj->ReqPersonID = $_SESSION["USER"]["PersonID"];
+		
 		if(isset($_POST["sending"]) &&  $_POST["sending"] == "true")
 			$obj->StatusID = 10;
 		else
@@ -188,7 +190,7 @@ function SaveLoanRequest(){
 	{
 		$obj->LoanID = Default_Agent_Loan;
 		if(empty($obj->RequestID) && isset($_SESSION["USER"]["framework"]))
-			$obj->StatusID = 10;
+			$obj->StatusID = 1;
 	}
 	else if($_SESSION["USER"]["IsCustomer"] == "YES")
 	{
@@ -199,13 +201,10 @@ function SaveLoanRequest(){
 	//------------------------------------------------------
 	if(empty($obj->RequestID))
 	{
-		$obj->ReqPersonID = !empty($_POST["ReqPersonID"]) ? $_POST["ReqPersonID"] :
-				$_SESSION["USER"]["PersonID"];
 		$obj->AgentGuarantee = isset($_POST["AgentGuarantee"]) ? "YES" : "NO";
 		$result = $obj->AddRequest();
 		if($result)
 			ChangeStatus($obj->RequestID,$obj->StatusID, "", true);
-		
 		
 		$loanObj = new LON_loans($obj->LoanID);
 		$PartObj = new LON_ReqParts();
@@ -215,8 +214,7 @@ function SaveLoanRequest(){
 		$PartObj->FundWage = $loanObj->CustomerWage;
 		$PartObj->PartAmount = $obj->ReqAmount;
 		$PartObj->PartDate = PDONOW;
-		$PartObj->AddPart();
-		
+		$PartObj->AddPart();		
 	}
 	else
 	{
@@ -226,8 +224,6 @@ function SaveLoanRequest(){
 	}
 	
 	//print_r(ExceptionHandler::PopAllExceptions());
-	
-	
 	echo Response::createObjectiveResponse($result, $obj->RequestID);
 	die();
 }
@@ -583,7 +579,13 @@ function GetPartInstallments(){
 	
 	$dt = LON_installments::SelectAll("PartID=? " . dataReader::makeOrder() , array($PartID));
 	ComputePayments($PartID, $dt);
-	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	
+	$currentPay = 0;
+	foreach($dt as $row)
+		if($row["InstallmentDate"] < DateModules::Now() && $row["TotalRemainder"]*1 > 0)
+			$currentPay += $row["TotalRemainder"]*1;
+	
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"], $currentPay);
 	die();
 }
 
@@ -732,7 +734,7 @@ function SelectReadyToPayParts(){
 		join WFM_FlowSteps using(StepRowID)
 		join LON_ReqParts on(PartID=ObjectID)
 		join LON_requests r using(RequestID)
-		join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
+		left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 		left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 		left join ACC_DocItems di on(SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND SourceID=RequestID AND SourceID2=PartID)
 		where FlowID=1 AND StepID=? AND ActionType='CONFIRM' AND di.ItemID is null",

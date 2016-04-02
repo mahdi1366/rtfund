@@ -8,7 +8,7 @@ require_once '../header.inc.php';
 require_once 'request.class.php';
 require_once inc_dataGrid;
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "../../loan/loan/loan.data.php?task=GetAllLoans", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "../../loan/loan/loan.data.php?task=GetAllLoans&IsCustomer=true", "grid_div");
 
 $dg->addColumn("کد وام", "LoanID", "", true);
 $dg->addColumn("", "GroupID", "", true);
@@ -24,7 +24,7 @@ $dg->addColumn("","CustomerWage", "", true);
 $col = $dg->addColumn("عنوان وام", "LoanDesc", "");
 $col->sortable = false;
 
-$dg->addObject("this.LoanGroups");
+//$dg->addObject("this.LoanGroups");
 
 $dg->HeaderMenu = false;
 $dg->hideHeaders = true;
@@ -58,7 +58,7 @@ NewLoanRequest.prototype = {
 
 function NewLoanRequest()
 {
-	this.LoanGroups = new Ext.form.ComboBox({
+	/*this.LoanGroups = new Ext.form.ComboBox({
 		store : new Ext.data.SimpleStore({
 			proxy: {type: 'jsonp',
 				url: this.address_prefix + '../../loan/loan/loan.data.php?task=SelectLoanGroups',
@@ -86,7 +86,7 @@ function NewLoanRequest()
 				me.grid.getStore().load();
 			}
 		}
-	});
+	});*/
 	
 	this.grid = <?= $grid ?>;
 	this.grid.on("itemclick", function(){
@@ -100,10 +100,10 @@ function NewLoanRequest()
 			(record.data.IntervalType == "DAY" ? "روز" : "ماه"));
 	});
 	
-	this.grid.getStore().on("beforeload", function(){
+	/*this.grid.getStore().on("beforeload", function(){
 		if(this.proxy.extraParams.GroupID == null)
 			return false;
-	});
+	});*/
 	
 	this.mainPanel = new Ext.form.FormPanel({
 		renderTo : this.get("mainForm"),

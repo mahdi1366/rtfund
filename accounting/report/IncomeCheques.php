@@ -6,6 +6,7 @@
 
 require_once '../header.inc.php';
 require_once inc_dataGrid;
+require_once inc_dataReader;
 
 if(!empty($_REQUEST["task"]))
 {
@@ -17,7 +18,7 @@ if(!empty($_REQUEST["task"]))
 		join BSC_persons on(LoanPersonID=PersonID)
 		
 		where ChequeNo>0
-	";
+	" . dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
@@ -27,34 +28,37 @@ if(!empty($_REQUEST["task"]))
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "IncomeCheques.php?task=selectChecks", "grid_div");
 
-$col = $dg->addColumn("", "InstallmentID", "");
-$col->width = 90;
+$col = $dg->addColumn("", "InstallmentID", "", true);
 
 $col = $dg->addColumn("وام گیرنده", "fullname", "");
 
-$col = $dg->addColumn("تاریخ وام", "ReqDate", GridColumn::ColumnType_date);
-$col->width = 110;
+$col = $dg->addColumn("تاریخ وام", "PartDate", GridColumn::ColumnType_date);
+$col->width = 80;
 
-$col = $dg->addColumn("مبلغ", "PartAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مبلغ فاز وام", "PartAmount", GridColumn::ColumnType_money);
 $col->width = 100;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo");
-$col->width = 100;
+$col->width = 80;
 
 $col = $dg->addColumn("تاریخ چک", "InstallmentDate", GridColumn::ColumnType_date);
-$col->width = 100;
+$col->width = 80;
+
+$col = $dg->addColumn("مبلغ چک", "InstallmentAmount", GridColumn::ColumnType_money);
+$col->width = 80;
 
 $col = $dg->addColumn("بانک", "ChequeBank");
 $col->width = 100;
 
-$col = $dg->addColumn("بانک", "ChequeBranch");
+$col = $dg->addColumn("شعبه", "ChequeBranch");
 $col->width = 100;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 600;
 $dg->width = 770;
 $dg->title = "چک های وصول نشده";
-$dg->DefaultSortField = "ReqDate";
+$dg->DefaultSortField = "InstallmentDate";
+$dg->DefaultSortDir = "Desc";
 $dg->autoExpandColumn = "fullname";
 $grid = $dg->makeGrid_returnObjects();
 

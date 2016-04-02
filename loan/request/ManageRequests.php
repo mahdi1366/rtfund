@@ -15,7 +15,7 @@ $dg->addColumn("", "BranchID", "", true);
 $dg->addColumn("", "BorrowerDesc", "", true);
 $dg->addColumn("", "BorrowerID", "", true);
 $dg->addColumn("", "LoanPersonID", "", true);
-$dg->addColumn("", "ReqPersonRole", "", true);
+$dg->addColumn("", "ReqPersonID", "", true);
 
 $col = $dg->addColumn("شماره", "RequestID", "");
 $col->width = 50;
@@ -29,7 +29,7 @@ $col->width = 110;
 $col = $dg->addColumn("مبلغ درخواست", "ReqAmount", GridColumn::ColumnType_money);
 $col->width = 100;
 
-$col = $dg->addColumn("درخواست کننده", "ReqFullname");
+$col = $dg->addColumn("معرفی کننده", "ReqFullname");
 $col->width = 100;
 
 $col = $dg->addColumn("گیرنده وام", "LoanFullname");

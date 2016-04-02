@@ -66,90 +66,86 @@ if (!isset($_POST["resultCode"])) {
 }
 else if ($_POST["resultCode"] == 100) {
 
-	$InstallmentID = $_POST["paymentId"];
+	$ns = 'http://tejarat/paymentGateway/definitions';
+	$wsdl2 = "https://kica.shaparak.ir/epay/services";
+	$soapclient = new nusoap_client($wsdl2, '', 'lb1.um.ac.ir', '81');
+	$parameters = array(
+		'merchantId' => $MerchantID,
+		'referenceNumber' => $_POST['referenceId']);
 
-	$obj = new LON_installments($InstallmentID);
-	if (!($obj->InstallmentID > 0)) {
-		$result = "چنين پرداختي در سيستم دانشگاه ثبت نشده است";
-	}
-	else
-	{
-		$ns = 'http://tejarat/paymentGateway/definitions';
-		$wsdl2 = "https://kica.shaparak.ir/epay/services";
-		$soapclient = new nusoap_client($wsdl2, '', 'lb1.um.ac.ir', '81');
-		$parameters = array(
-			'merchantId' => $MerchantID,
-			'referenceNumber' => $_POST['referenceId']);
+	echo $totalAmount = $soapclient->call('verifyRequest', $parameters, $ns);
+	//	echo $soapclient->request;
+	//	echo '<br><br>';
+	//	echo $soapclient->response;
+	//	echo '<br><br>';
 
-		echo $totalAmount = $soapclient->call('verifyRequest', $parameters, $ns);
-		//	echo $soapclient->request;
-		//	echo '<br><br>';
-		//	echo $soapclient->response;
-		//	echo '<br><br>';
+	if ($soapclient->fault) {
+		echo '<h2>Fault (Expect - The request contains an invalid SOAP body)</h2><pre>';
+		print_r($totalAmount);
+		echo '</pre>';
+	} 
+	//	echo $soapclient->request;
+	//	echo '<br><br>';
+	//	echo $soapclient->response;
+	//	echo '<br><br>';
+	//	print_r($totalAmount);
 
-		if ($soapclient->fault) {
-			echo '<h2>Fault (Expect - The request contains an invalid SOAP body)</h2><pre>';
-			print_r($totalAmount);
-			echo '</pre>';
-		} 
-		//	echo $soapclient->request;
-		//	echo '<br><br>';
-		//	echo $soapclient->response;
-		//	echo '<br><br>';
-		//	print_r($totalAmount);
+	$x = $soapclient->response;
+	//	echo $x;
 
-		$x = $soapclient->response;
-		//	echo $x;
+	$starttag = stripos($x, '<verifyresponse xmlns="http://tejarat/paymentGateway/definitions">');
+	$endtag = stripos($x, '</verifyresponse>');
 
-		$starttag = stripos($x, '<verifyresponse xmlns="http://tejarat/paymentGateway/definitions">');
-		$endtag = stripos($x, '</verifyresponse>');
+	$endofstarttag = $starttag + strlen('<verifyresponse xmlns="http://tejarat/paymentGateway/definitions">') - 1;
+	$lenresponse = $endtag - $endofstarttag - 1;
 
-		$endofstarttag = $starttag + strlen('<verifyresponse xmlns="http://tejarat/paymentGateway/definitions">') - 1;
-		$lenresponse = $endtag - $endofstarttag - 1;
+	$result = substr($x, $endofstarttag + 1, $lenresponse);
+	$totalAmount = $result;
+	$totalAmount = intval($totalAmount);
 
-		$result = substr($x, $endofstarttag + 1, $lenresponse);
-		$totalAmount = $result;
-		$totalAmount = intval($totalAmount);
+	if ($totalAmount > 0) {
+		$result = "پرداخت الكترونيكي شما به درستي انجام گرفت. شماره رسيد بانكي زير براي شما صادر گرديده است: </p>";
+		$result .= "<table width=80% align=center border=1 cellspacing=0 cellpadding=5 dir=rtl>
+			<tr>
+				<td>مبلغ پرداختي: </td>
+				<td><b>" . number_format($totalAmount) . "</b> ریال  </td>
+			</tr>
+			<tr>
+				<td> شماره پیگیری: </td>
+				<td dir=ltr align=right><b>" . $_POST['referenceId'] . "</b></td>
+			</tr>
+		</table>";
 
-		if ($totalAmount > 0) {
-			$result = "پرداخت الكترونيكي شما به درستي انجام گرفت. شماره رسيد بانكي زير براي شما صادر گرديده است: </p>";
-			$result .= "<table width=80% align=center border=1 cellspacing=0 cellpadding=5 dir=rtl>
-				<tr>
-					<td>مبلغ پرداختي: </td>
-					<td><b>" . number_format($totalAmount) . "</b> ریال  </td>
-				</tr>
-				<tr>
-					<td> شماره پیگیری: </td>
-					<td dir=ltr align=right><b>" . $_POST['referenceId'] . "</b></td>
-				</tr>
-			</table>";
+		$PartID = $_REQUEST["paymentId"];
+	
+		$obj = new LON_pays();
+		$obj->PartID = $PartID;
+		$obj->PayType = 4;
+		$obj->PayAmount = $totalAmount;
+		$obj->PayDate = PDONOW;
+		$obj->PayRefNo = $_REQUEST['referenceId'];
+		
+		$pdo = PdoDataAccess::getPdoObject();
+		$pdo->beginTransaction();
 
-			$obj->StatusID = "100";
-			$obj->PaidAmount = $totalAmount;
-			$obj->PaidDate = PDONOW;
-			$obj->PaidRefNo = $_POST['referenceId'];
-					
-			$pdo = PdoDataAccess::getPdoObject();
-			$pdo->beginTransaction();
-			
-			$error = false;
-			if(!$obj->EditInstallment($pdo))
+		$error = false;
+		if(!$obj->AddPay($pdo))
+			$error = true;
+		if(!$error)
+			if(!RegisterCustomerPayDoc($obj, $pdo))
 				$error = true;
-			if(!$error)
-				if(!RegisterPayInstallmentDoc($obj, $pdo))
-					$error = true;
-			if($error)
-			{
-				$pdo->rollBack();
-				$result .= "<br> عملیات پرداخت قسط در نرم افزار صندوق به درستی ثبت نگردید. <br>" . 
-						" جهت اعمال آن با صندوق تماس بگیرید.";
-			}
-			else
-				$pdo->commit();
+		if($error)
+		{
+			$pdo->rollBack();
+			$result .= "<br> عملیات پرداخت قسط در نرم افزار صندوق به درستی ثبت نگردید. " . 
+					"<br> جهت اعمال آن با صندوق تماس بگیرید." ;
 		}
 		else
-			ShowStatus($totalAmount);
+			$pdo->commit();
 	}
+	else
+		ShowStatus($totalAmount);
+	
 }
 else 
 {
@@ -187,7 +183,9 @@ else
 				<?= $result ?>
 				<br>&nbsp;
 			</div>
-			<br><button style="" onclick="window.opener.location.reload(); window.close()">بازگشت به پرتال خدمات دانشگاه فردوسی مشهد</button>
+			<br><button style="" onclick="window.opener.location.reload(); window.close()">
+				بازگشت به پرتال   <?= SoftwareName ?>
+			</button>
 			<br>&nbsp;
 		</div>
 	</center>

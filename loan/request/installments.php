@@ -33,7 +33,7 @@ $col = $dg->addColumn("مبلغ جریمه", "ForfeitAmount", GridColumn::Column
 $col->width = 80;
 
 $col = $dg->addColumn("مانده", "TotalRemainder", GridColumn::ColumnType_money);
-$col->width = 80;
+$col->width = 120;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo", "string");
 if($framework)
@@ -63,13 +63,7 @@ if($framework)
 	$dg->enableRowEdit = true;
 	$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SavePartPayment(store,record);}";
 }
-if(!$framework)
-{
-	$col = $dg->addColumn("پرداخت", "");
-	$col->renderer = "Installment.payRender";
-	$col->align = "center";
-	$col->width = 40;
-}
+
 $dg->height = 377;
 $dg->width = 755;
 $dg->emptyTextOfHiddenColumns = true;
@@ -112,8 +106,7 @@ function Installment()
 		this.grid.render(this.get("div_grid"));
 		return;
 	}
-	
-	
+		
 	this.PartPanel = new Ext.form.FieldSet({
 		title: "انتخاب وام",
 		width: 700,
@@ -171,11 +164,49 @@ function Installment()
 						InstallmentObject.grid.render(InstallmentObject.get("div_grid"));
 
 					InstallmentObject.PartPanel.collapse();
+					
+					InstallmentObject.PayPanel.show();
+					InstallmentObject.PayPanel.down("[itemId=PayCode]").setValue(
+						InstallmentObject.PayCodeRender());
+					
+					
 				}
 			}
 		}]
 	});
 	
+	this.PayPanel = new Ext.form.FieldSet({
+		title: "انتخاب وام",
+		hidden : true,
+		layout : "column",
+		columns : 2,
+		width: 500,
+		renderTo : this.get("div_paying"),
+		frame: true,
+		items : [{
+			xtype : "displayfield",
+			fieldCls : "blueText",
+			itemId : "PayCode",
+			fieldLabel : "شناسه پرداخت"
+		},{
+			xtype : "currencyfield",
+			hideTrigger : true,
+			width: 300,
+			fieldLabel : "مبلغ قابل پرداخت",
+			itemId : "PayAmount"
+		},{
+			xtype : "button",
+			border : true,
+			text : "پرداخت الکترونیک",
+			iconCls : "epay",
+			handler : function(){ InstallmentObject.PayInstallment(); }
+		}]
+	});
+	
+	this.grid.getStore().on("load", function(store){
+		var r = store.getProxy().getReader().jsonData;
+		InstallmentObject.PayPanel.down("[itemId=PayAmount]").setValue(r.message);
+	});
 }
 
 Installment.payRender = function(v,p,r){
@@ -187,9 +218,13 @@ Installment.payRender = function(v,p,r){
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-Installment.PayCodeRender = function(v,p,r){
+var InstallmentObject = new Installment();
 
-	st = (r.data.RequestID + r.data.PartID).lpad("0", 11);
+Installment.prototype.PayCodeRender = function(){
+
+	PartID = this.PartPanel.down("[itemId=PartID]").getValue();
+
+	st = PartID.lpad("0", 11);
 	num = (st[0]*11) + (st[1]*10) + (st[2]*9) + (st[3]*1) + (st[4]*2) + (st[5]*3)
 		+ (st[6]*4) + (st[7]*5) + (st[8]*6) + (st[9]*7) + (st[10]*8);
 	remain = num % 99;
@@ -197,22 +232,16 @@ Installment.PayCodeRender = function(v,p,r){
 	return st + remain.toString().lpad("0", 2);
 }
 
-Installment.InstallmentPaidInfo = function(v,p,r){
-	
-	if(r.data.IsPaid == "NO")
-		return "";
-	
-	
-}
-
-var InstallmentObject = new Installment();
-	
 Installment.prototype.PayInstallment = function(){
 	
-	var record = this.grid.getSelectionModel().getLastSelected();
+	PartID = this.PartPanel.down("[itemId=PartID]").getValue();
+	PayAmount = this.PayPanel.down("[itemId=PayAmount]").getValue();
 	
-	window.open(this.address_prefix + "../../portal/epayment/epayment_step1.php?InstallmentID=" + 
-		record.data.InstallmentID + "&amount=" + (record.data.InstallmentAmount*1+record.data.ForfeitAmount*1));	
+	if(PayAmount == "")
+		return;
+
+	window.open(this.address_prefix + "../../portal/epayment/epayment_step1.php?PartID=" + 
+		PartID + "&amount=" + PayAmount);	
 }
 
 Installment.prototype.ComputeInstallments = function(){
@@ -282,5 +311,6 @@ Installment.prototype.PayReport = function(){
 </script>
 <center>
 	<div id="div_loans"></div>
-	<div id="div_grid"></div>
+	<div id="div_paying"></div>	
+	<div id="div_grid"></div>	
 </center>

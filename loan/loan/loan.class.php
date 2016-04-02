@@ -17,6 +17,7 @@ class LON_loans extends PdoDataAccess
 	public $ForfeitPercent;
 	public $CustomerWage;
 	public $BlockID;
+	public $IsCustomer;
 	
 	public $_BlockCode;
 			

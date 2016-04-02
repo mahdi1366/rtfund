@@ -16,43 +16,63 @@ if(isset($_REQUEST["show"]))
 		return DateModules::miladi_to_shamsi($val);
 	}	
 	
-	$rpg->addColumn("شماره سند", "LocalNo");
+	function PrintDocRender($row, $val){
+		
+		return "<a target=_blank href='../docs/print_doc.php?DocID=" . $row["DocID"] . "'>" . $val . "</a>";
+	}
+	
+	$rpg->addColumn("شماره سند", "LocalNo", "PrintDocRender");
+	$rpg->addColumn("گروه حساب", "level0Desc");
 	$rpg->addColumn("حساب کل", "level1Desc");
 	$rpg->addColumn("حساب معین", "level2Desc");
 	$rpg->addColumn("حساب جزء معین", "level3Desc");
-	//$rpg->addColumn("گروه تفصیلی", "TafsiliTypeDesc");
 	$rpg->addColumn("تفصیلی", "TafsiliDesc");
-	//$rpg->addColumn("گروه تفصیلی2", "TafsiliTypeDesc2");
 	$rpg->addColumn("تفصیلی2", "TafsiliDesc2");
 	$rpg->addColumn("تاریخ سند", "DocDate","dateRender");
 	$rpg->addColumn("توضیحات", "description");	
 	
 	function MakeWhere(&$where, &$whereParam){
 		
-		if(!empty($_POST["level1"]))
+		if(!empty($_REQUEST["GroupID"]))
 		{
-			$where .= " AND b1.BlockCode = :bf1";
-			$whereParam[":bf1"] = $_POST["level1"];
+			$where .= " AND b1.GroupID = :gid";
+			$whereParam[":gid"] = $_REQUEST["GroupID"];
 		}
-		if(!empty($_POST["level2"]))
+		
+		if(!empty($_REQUEST["level1"]))
 		{
-			$where .= " AND b1.BlockCode = :bf2";
-			$whereParam[":bf2"] = $_POST["level2"];
+			$where .= " AND b1.BlockID = :bf1";
+			$whereParam[":bf1"] = $_REQUEST["level1"];
 		}
-		if(!empty($_POST["level3"]))
+		if(!empty($_REQUEST["level2"]))
 		{
-			$where .= " AND b1.BlockCode = :bf3";
-			$whereParam[":bf3"] = $_POST["level3"];
+			$where .= " AND b2.BlockID = :bf2";
+			$whereParam[":bf2"] = $_REQUEST["level2"];
 		}
-		if(!empty($_POST["TafsiliID"]))
+		if(!empty($_REQUEST["level3"]))
 		{
-			$where .= " AND (di.TafsiliID = :tid OR di.TafsiliID2=:tid)";
-			$whereParam[":tid"] = $_POST["TafsiliID"];
+			$where .= " AND b3.BlockID = :bf3";
+			$whereParam[":bf3"] = $_REQUEST["level3"];
 		}
-		if(!empty($_POST["TafsiliType"]))
+		if(!empty($_REQUEST["TafsiliID"]))
 		{
-			$where .= " AND (di.TafsiliType = :tt OR di.TafsiliType2 = :tt) ";
-			$whereParam[":tt"] = $_POST["TafsiliType"];
+			$where .= " AND di.TafsiliID = :tid ";
+			$whereParam[":tid"] = $_REQUEST["TafsiliID"];
+		}
+		if(!empty($_REQUEST["TafsiliType"]))
+		{
+			$where .= " AND di.TafsiliType = :tt ";
+			$whereParam[":tt"] = $_REQUEST["TafsiliType"];
+		}
+		if(!empty($_REQUEST["TafsiliID2"]))
+		{
+			$where .= " AND di.TafsiliID2 = :tid";
+			$whereParam[":tid"] = $_REQUEST["TafsiliID2"];
+		}
+		if(!empty($_REQUEST["TafsiliType2"]))
+		{
+			$where .= " AND di.TafsiliType2 = :tt ";
+			$whereParam[":tt"] = $_REQUEST["TafsiliType2"];
 		}
 		/*if(!empty($_POST["from_level1"]) || !empty($_POST["to_Level1"]))
 		{
@@ -120,7 +140,16 @@ if(isset($_REQUEST["show"]))
 				$whereParam[":tt"] = $_POST["to_TafsiliID"];
 			}
 		}*/
-
+		if(!empty($_REQUEST["fromLocalNo"]))
+		{
+			$where .= " AND d.LocalNo >= :lo1 ";
+			$whereParam[":lo1"] = $_REQUEST["fromLocalNo"];
+		}
+		if(!empty($_REQUEST["toLocalNo"]))
+		{
+			$where .= " AND d.LocalNo <= :lo2 ";
+			$whereParam[":lo2"] = $_REQUEST["toLocalNo"];
+		}
 		if(!empty($_REQUEST["fromDate"]))
 		{
 			$where .= " AND d.docDate >= :q1 ";
@@ -135,6 +164,7 @@ if(isset($_REQUEST["show"]))
 	
 	//.....................................
 	$query = "select d.*,di.DebtorAmount,CreditorAmount,
+		concat('[ ' , b0.BlockCode , ' ] ', b0.BlockDesc) level0Desc,
 		concat('[ ' , b1.BlockCode , ' ] ', b1.BlockDesc) level1Desc,
 		concat('[ ' , b2.BlockCode , ' ] ', b2.BlockDesc) level2Desc,
 		concat('[ ' , b3.BlockCode , ' ] ', b3.BlockDesc) level3Desc,
@@ -146,6 +176,7 @@ if(isset($_REQUEST["show"]))
 		from ACC_DocItems di join ACC_docs d using(DocID)
 			join ACC_CostCodes cc using(CostID)
 			join ACC_blocks b1 on(level1=b1.BlockID)
+			join ACC_blocks b0 on(b1.GroupID=b0.BlockID)
 			left join ACC_blocks b2 on(level2=b2.BlockID)
 			left join ACC_blocks b3 on(level3=b3.BlockID)
 			left join BaseInfo b on(TypeID=2 AND di.TafsiliType=InfoID)
@@ -169,6 +200,21 @@ if(isset($_REQUEST["show"]))
 	$col->EnableSummary();
 	$col = $rpg->addColumn("مبلغ بستانکار", "CreditorAmount", "moneyRender");
 	$col->EnableSummary();
+	
+	function bdremainRender($row){
+		$v = $row["DebtorAmount"] - $row["CreditorAmount"];
+		return $v < 0 ? 0 : number_format($v);
+	}
+	
+	function bsremainRender($row){
+		$v = $row["CreditorAmount"] - $row["DebtorAmount"];
+		return $v < 0 ? 0 : number_format($v);
+	}
+	
+	$col = $rpg->addColumn("مانده بدهکار", "DebtorAmount", "bdremainRender");
+	$col->EnableSummary(true);
+	$col = $rpg->addColumn("مانده بستانکار", "CreditorAmount", "bsremainRender");
+	$col->EnableSummary(true);
 	
 	$rpg->mysql_resource = $dataTable;
 	if(!$rpg->excel)
@@ -241,6 +287,23 @@ function AccReport_flow()
 		items :[{
 			xtype : "combo",
 			displayField : "BlockDesc",
+			fieldLabel : "گروه حساب",
+			valueField : "BlockID",
+			itemId : "cmp_level0",
+			hiddenName : "GroupID",
+			store : new Ext.data.Store({
+				fields:["BlockID","BlockCode","BlockDesc"],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=0',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				autoLoad : true
+			}),
+			tpl: this.blockTpl
+		},{
+			xtype : "combo",
+			displayField : "BlockDesc",
 			fieldLabel : "کل",
 			valueField : "BlockCode",
 			itemId : "cmp_level1",
@@ -308,6 +371,7 @@ function AccReport_flow()
 				select : function(combo,records){
 					el = AccReport_flowObj.formPanel.down("[itemId=cmp_tafsiliID]");
 					el.setValue();
+					el.enable();
 					el.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
 					el.getStore().load();
 				}
@@ -316,6 +380,7 @@ function AccReport_flow()
 			xtype : "combo",
 			displayField : "TafsiliDesc",
 			fieldLabel : "تفصیلی",
+			disabled : true,
 			valueField : "TafsiliID",
 			itemId : "cmp_tafsiliID",
 			hiddenName : "TafsiliID",
@@ -327,6 +392,56 @@ function AccReport_flow()
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				}
 			})
+		},{
+			xtype : "combo",
+			displayField : "InfoDesc",
+			fieldLabel : "گروه تفصیلی2",
+			valueField : "InfoID",
+			hiddenName : "TafsiliGroup2",
+			store : new Ext.data.Store({
+				fields:['InfoID','InfoDesc'],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				autoLoad : true
+			}),
+			listeners : {
+				select : function(combo,records){
+					el = AccReport_flowObj.formPanel.down("[itemId=cmp_tafsiliID2]");
+					el.setValue();
+					el.enable();
+					el.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
+					el.getStore().load();
+				}
+			}
+		},{
+			xtype : "combo",
+			displayField : "TafsiliDesc",
+			fieldLabel : "تفصیلی",
+			disabled : true,
+			valueField : "TafsiliID",
+			itemId : "cmp_tafsiliID2",
+			hiddenName : "TafsiliID2",
+			store : new Ext.data.Store({
+				fields:["TafsiliID","TafsiliDesc"],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				}
+			})
+		},{
+			xtype : "numberfield",
+			hideTrigger : true,
+			name : "fromLocalNo",
+			fieldLabel : "از سند شماره"
+		},{
+			xtype : "numberfield",
+			hideTrigger : true,
+			name : "toLocalNo",
+			fieldLabel : "تا سند شماره"
 		},{
 			xtype : "shdatefield",
 			name : "fromDate",
