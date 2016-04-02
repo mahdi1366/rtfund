@@ -25,7 +25,7 @@ if(isset($_REQUEST["show"]))
 	}	
 	
 	function amountRender($row, $val){
-		return number_format($val);
+		return "<span dir=ltr>" . number_format($val) . "</span>";
 	}
 	
 	$col = $rpg->addColumn("تاریخ قسط", "InstallmentDate","dateRender");

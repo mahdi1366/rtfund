@@ -808,7 +808,8 @@ function ComputePayments($PartID, &$installments){
 			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
 			where PartID=?
-			group by PayDate" , array($PartID));
+			group by PayDate 
+			order by PayDate" , array($PartID));
 	$PayRecord = count($pays) == 0 ? null : $pays[0];
 	$payIndex = 1;
 	$Forfeit = 0;
@@ -879,7 +880,7 @@ function ComputePayments($PartID, &$installments){
 				$Forfeit = $Forfeit - $PayRecord["PayAmount"]*1;
 				$installments[$i]["TotalRemainder"] = $remainder + $Forfeit;
 				$installments[$i]["remainder"] = $remainder;
-				$StartDate = $PayRecord["PayDate"];
+				$StartDate = max($PayRecord["PayDate"],$installments[$i]["InstallmentDate"]);
 				$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
 				$returnArr[] = $installments[$i];
 				continue;
@@ -893,14 +894,26 @@ function ComputePayments($PartID, &$installments){
 				$PayRecord["PayAmount"] = $PayRecord["PayAmount"]*1 - $remainder;
 				if($PayRecord["PayAmount"] == 0)
 				{
-					$StartDate = $PayRecord["PayDate"];
+					$StartDate = max($PayRecord["PayDate"],$installments[$i]["InstallmentDate"]);
 					$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
 				}
+				if($i == count($installments)-1)	
+				{
+					$installments[$i]["TotalRemainder"] = -1*$PayRecord["PayAmount"];
+					$installments[$i]["remainder"] = -1*$PayRecord["PayAmount"];
+				}
+				else
+				{
+					$installments[$i]["TotalRemainder"] = 0;
+					$installments[$i]["remainder"] = 0;
+				}
+				
+				$returnArr[] = $installments[$i];
 				break;
 			}
 						
 			$remainder = $remainder - $PayRecord["PayAmount"]*1;
-			$StartDate = $PayRecord["PayDate"];
+			$StartDate = max($PayRecord["PayDate"],$installments[$i]["InstallmentDate"]);
 			
 			$installments[$i]["TotalRemainder"] = $remainder;
 			$installments[$i]["remainder"] = $remainder;
@@ -998,9 +1011,16 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 				}
 				$Forfeit = $Forfeit - $PayRecord["PayAmount"];
 				$Forfeit = $Forfeit < 0 ? 0 : $Forfeit;
-				$installments[$i]["TotalRemainder"] = $Forfeit;
-				$installments[$i]["ForfeitAmount"] = $Forfeit;
-				$installments[$i]["remainder"] = 0;
+				if($i == count($installments)-1)	
+				{
+					$installments[$i]["TotalRemainder"] = -1*$PayRecord["PayAmount"] + $Forfeit;
+					$installments[$i]["remainder"] = -1*$PayRecord["PayAmount"] + $Forfeit;
+				}
+				else
+				{
+					$installments[$i]["TotalRemainder"] = $Forfeit;
+					$installments[$i]["remainder"] = $Forfeit;
+				}
 				$returnArr[] = $installments[$i];
 				
 				if($Forfeit > 0)

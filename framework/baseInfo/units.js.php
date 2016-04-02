@@ -271,7 +271,7 @@ Unit.prototype.BeforeSavePost = function(mode)
 				buttons :[{
 					text : "ذخیره",
 					handler : function(){
-						mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
+						mask = new Ext.LoadMask(Ext.getCmp(UnitObject.TabID), {msg:'در حال ذخيره سازي...'});
 						mask.show();
 						UnitObject.postWin.down('form').getForm().submit({
 							clientValidation: true,
