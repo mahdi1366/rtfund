@@ -39,6 +39,7 @@ $dg->addColumn("", "IsPaid","", true);
 $dg->addColumn("", "IsPartEnded","", true);
 $dg->addColumn("", "WageReturn","", true);
 $dg->addColumn("", "imp_VamCode","", true);
+$dg->addColumn("", "LoanID","", true);
 
 
 $col = $dg->addColumn("عنوان فاز", "PartDesc", "");

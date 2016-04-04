@@ -252,4 +252,70 @@ class FRW_access extends PdoDataAccess {
 	
 }
 
+class FRW_tasks extends PdoDataAccess {
+
+	public $TaskID;
+	public $SystemID;
+	public $RegPersonID;
+	public $CreateDate;
+	public $title;
+	public $details;
+	public $TaskStatus;
+	public $DoneDate;
+	public $DoneDesc;
+
+	public function __construct($SystemID = "") {
+		if ($SystemID == "")
+			return;
+
+		parent::FillObject($this, "select * from FRW_systems where SystemID=?", array($SystemID));
+	}
+
+	function AddTask() {
+
+		$result = PdoDataAccess::insert("FRW_tasks", $this);
+		if ($result === false)
+			return false;
+
+		$this->TaskID = parent::InsertID();
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->TaskID;
+		$daObj->TableName = "FRW_tasks";
+		$daObj->execute();
+		return true;
+	}
+
+	function EditTask() {
+		
+		$result = PdoDataAccess::update("FRW_tasks", $this, "TaskID=:pid", array(":pid" => $this->TaskID));
+		if ($result === false)
+			return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_update;
+		$daObj->MainObjectID = $this->TaskID;
+		$daObj->TableName = "FRW_tasks";
+		$daObj->execute();
+		return true;
+	}
+
+	static public function DeleteTask($TaskID) {
+		
+		$result = PdoDataAccess::delete("FRW_tasks", "TaskID=?", array($TaskID));
+		if ($result === false)
+			return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_delete;
+		$daObj->MainObjectID = $TaskID;
+		$daObj->TableName = "FRW_tasks";
+		$daObj->execute();
+		return true;
+	}
+
+
+}
+
 ?>

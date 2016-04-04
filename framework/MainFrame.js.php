@@ -132,6 +132,12 @@ function FrameWorkClass()
 									framework.OpenPage('../framework/ChangePassword.php','تغییر رمز عبور');
 								}
 							},{
+								icon: '/framework/icons/task.jpg',
+								text: 'درخواست پشتیبانی',
+								handler : function(){
+									framework.OpenPage('../framework/ManageRequests.php','درخواست پشتیبانی');
+								}
+							},{
 								icon : "/framework/icons/exit.gif",
 								text : "خروج",
 								handler : function(){

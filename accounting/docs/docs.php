@@ -31,7 +31,7 @@ $dg->addButton('HeaderBtn', 'عملیات', 'list', 'function(e){ return AccDocs
 $dg->title = "سند های حسابداری";
 $dg->width = 780;
 $dg->DefaultSortField = "DocID";
-$dg->DefaultSortDir = "ASC";
+$dg->DefaultSortDir = "DESC";
 $dg->autoExpandColumn = "DocID";
 $dg->emptyTextOfHiddenColumns = true;
 $dg->hideHeaders = true;
@@ -109,7 +109,7 @@ if($accessObj->AddFlag)
 $dg->enableRowEdit = true ;
 $dg->rowEditOkHandler = "function(v,p,r){ return AccDocsObject.SaveItem(v,p,r);}";
 
-$dg->DefaultSortField = "DebtorAmount";
+$dg->DefaultSortField = "ItemID";
 $dg->autoExpandColumn = "CostID";
 $dg->DefaultSortDir = "DESC";
 $dg->emptyTextOfHiddenColumns = true;

@@ -240,8 +240,8 @@ class ACC_DocItems extends PdoDataAccess {
 			left join ACC_blocks b1 on(cc.level1=b1.blockID)
 			left join ACC_blocks b2 on(cc.level2=b2.blockID)
 			left join ACC_blocks b3 on(cc.level3=b3.blockID)
-			left join BaseInfo bi on(TafsiliType=InfoID AND TypeID=2)
-			left join BaseInfo bi2 on(TafsiliType2=bi2.InfoID AND bi2.TypeID=2)
+			left join BaseInfo bi on(si.TafsiliType=InfoID AND TypeID=2)
+			left join BaseInfo bi2 on(si.TafsiliType2=bi2.InfoID AND bi2.TypeID=2)
 			left join ACC_tafsilis t on(t.TafsiliID=si.TafsiliID)
 			left join ACC_tafsilis t2 on(t2.TafsiliID=si.TafsiliID2)
 			";

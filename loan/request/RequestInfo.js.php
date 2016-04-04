@@ -103,10 +103,22 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 							me.companyPanel.down("[name=LoanPersonID]").setValue(this.getAt(0).data.PersonID);
 						}
 					});
-				}			
+				}	
+				var R2 = false;
+				if(record.data.ReqPersonID > 0)
+				{
+					R2 = me.companyPanel.down("[name=ReqPersonID]").getStore().load({
+						params : {
+							PersonID : record.data.ReqPersonID
+						},
+						callback : function(){
+							me.companyPanel.down("[name=ReqPersonID]").setValue(this.getAt(0).data.PersonID);
+						}
+					});
+				}				
 				//..........................................................
 				var t = setInterval(function(){
-					if(!R1 || !R1.isLoading())
+					if((!R1 || !R1.isLoading()) && (!R2 || !R2.isLoading()))
 					{
 						clearInterval(t);
 						me.CustomizeForm(record);
@@ -204,13 +216,7 @@ RequestInfo.prototype.BuildForms = function(){
 			title : "مراحل پرداخت وام",
 			layout : "column",
 			columns : 2,
-			items :[/*{
-				xtype : "container",
-				colspan : 2,
-				width : 750,
-				cls : "blueText",
-				html : "برای مشاهده جزئیات هر مرحله روی عنوان مرحله کلیک کنید" + "<hr>"
-			},*/this.grid,{
+			items :[this.grid,{
 				xtype : "container",
 				style : "margin-right:10px",
 				layout : {
@@ -289,14 +295,7 @@ RequestInfo.prototype.BuildForms = function(){
 			labelWidth : 130
 		},
 		items : [{
-			xtype : "displayfield",
-			fieldCls : "blueText",
-			name : "ReqFullname",
-			style : "margin-bottom:10px",
-			fieldLabel : "معرفی کننده"
-		},{
 			xtype : "combo",
-			hidden : true,
 			store : new Ext.data.SimpleStore({
 				proxy: {
 					type: 'jsonp',
@@ -336,6 +335,23 @@ RequestInfo.prototype.BuildForms = function(){
 			xtype : "textfield",
 			name : "BorrowerID",
 			fieldLabel : "کد ملی / کد اقتصادی"
+		},{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../loan/loan.data.php?task=GetAllLoans',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['LoanID','LoanDesc'],
+				autoLoad : true					
+			}),
+			fieldLabel : "نوع وام",
+			queryMode : 'local',
+			allowBlank : false,
+			displayField : "LoanDesc",
+			valueField : "LoanID",
+			name : "LoanID"
 		},{
 			xtype : "currencyfield",
 			name : "ReqAmount",
@@ -548,11 +564,11 @@ RequestInfo.prototype.CustomizeForm = function(record){
 	if(this.User == "Staff")
 	{
 		this.companyPanel.down("[itemId=cmp_saveAndSend]").hide();
+		//this.companyPanel.down("[itemId=cmp_requester]").show();
 		
 		if(record == null)
 		{
-			this.companyPanel.down("[itemId=cmp_requester]").show();
-			this.companyPanel.down("[name=ReqFullname]").hide();
+			//this.companyPanel.down("[name=ReqFullname]").hide();
 			this.companyPanel.down("[name=BorrowerDesc]").hide();
 			this.companyPanel.down("[name=BorrowerID]").hide();
 			this.companyPanel.down("[name=AgentGuarantee]").hide();
@@ -569,7 +585,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.companyPanel.down("[itemId=cmp_saveAndSend]").show();
 		}		
 		
-		this.companyPanel.down("[name=ReqFullname]").hide();		
+		//this.companyPanel.down("[name=ReqFullname]").hide();		
 		this.companyPanel.down("[name=BranchID]").setValue(1);
 		this.companyPanel.down("[name=BranchID]").hide();	
 		this.companyPanel.down("[name=LoanPersonID]").hide();
@@ -613,15 +629,15 @@ RequestInfo.prototype.CustomizeForm = function(record){
 						this.companyPanel.down("[itemId=cmp_save]").hide();
 					}					
 				}
-				this.companyPanel.down("[itemId=cmp_requester]").show();
-				this.companyPanel.down("[name=ReqFullname]").hide();
+				//this.companyPanel.down("[itemId=cmp_requester]").show();
+				//this.companyPanel.down("[name=ReqFullname]").hide();
 				this.companyPanel.down("[name=BorrowerDesc]").hide();
 				this.companyPanel.down("[name=BorrowerID]").hide();
 			}			
 		}	
 		if(this.User == "Customer")
 		{
-			this.companyPanel.down("[itemId=cmp_requester]").show();
+			//this.companyPanel.down("[itemId=cmp_requester]").show();
 			this.companyPanel.down("[name=LoanPersonID]").hide();
 			this.companyPanel.down("[name=BorrowerDesc]").hide();
 			this.companyPanel.down("[name=BorrowerID]").hide();

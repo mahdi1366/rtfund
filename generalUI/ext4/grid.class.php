@@ -667,7 +667,9 @@ class sadaf_datagrid
 							if($tempArr[$tempKeyArr[$j]] == GridColumn::ColumnType_date)
 							{
 								$this->dateColumns[] = $this->columns[$i]->dataIndex;
-								$str .= "renderer: function(v){if(v == '' || v == null)return ''; return MiladiToShamsi(v.toString().substring(0,10),'Y/m/d');}, ";
+								$str .= "renderer: function(v){if(v == '' || v == null)return ''; ".
+										"return MiladiToShamsi(v.toString().substring(0,10),'Y/m/d') + ".
+										" (v.toString().length>11 ? ' ' + v.toString().substring(11) : '' ) ;}, ";
 							}
 							if($tempArr[$tempKeyArr[$j]] == GridColumn::ColumnType_money)
 							{
