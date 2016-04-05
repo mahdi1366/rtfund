@@ -431,7 +431,7 @@ class PdoDataAccess extends ExceptionHandler
 			else if($st === PDONOW)
 			{
 				$flds .= $KeyArr[$i] . ",";
-				$values .= "now(),";
+				$values .= PDONOW . ",";
 			}else
 			{
 				$flds .= $KeyArr[$i] . ",";
@@ -518,7 +518,7 @@ class PdoDataAccess extends ExceptionHandler
 			}
 			else if($st === PDONOW)
 			{
-				$flds .= $KeyArr[$i] . "=now(),";
+				$flds .= $KeyArr[$i] . "=" . PDONOW . ",";
 			}
 			else 
 			{
@@ -613,7 +613,7 @@ class PdoDataAccess extends ExceptionHandler
 			}
 			else if($st === PDONOW)
 			{
-				$flds2 .= $KeyArr[$i] . "=now(),";
+				$flds2 .= $KeyArr[$i] . "=" . PDONOW . ",";
 			}
 			else
 			{
@@ -763,7 +763,7 @@ class PdoDataAccess extends ExceptionHandler
 			}
 			else if($st === PDONOW)
 			{
-				$where .= " AND " . $KeyArr[$i] . "=now()";
+				$where .= " AND " . $KeyArr[$i] . "=" . PDONOW;
 			}
 			else 
 			{

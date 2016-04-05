@@ -21,10 +21,10 @@ $col = $dg->addColumn("شماره", "RequestID", "");
 $col->width = 50;
 
 $col = $dg->addColumn("شعبه", "BranchName", "");
-$col->width = 80;
+$col->width = 100;
 
 $col = $dg->addColumn("تاریخ درخواست", "ReqDate", GridColumn::ColumnType_date);
-$col->width = 110;
+$col->width = 120;
 
 $col = $dg->addColumn("مبلغ درخواست", "ReqAmount", GridColumn::ColumnType_money);
 $col->width = 100;
@@ -46,7 +46,7 @@ $col->align = "center";
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 500;
 $dg->pageSize = 15;
-$dg->width = 770;
+$dg->width = 800;
 $dg->title = "درخواست های وام";
 $dg->DefaultSortField = "ReqDate";
 $dg->autoExpandColumn = "LoanFullname";

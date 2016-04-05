@@ -29,7 +29,12 @@ function AccDocs()
 	
 	this.CostCombo = new Ext.form.ComboBox({
 		store: new Ext.data.Store({
-			fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2"],
+			fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+				name : "fullDesc",
+				convert : function(value,record){
+					return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+				}				
+			}],
 			proxy: {
 				type: 'jsonp',
 				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectCostCode',
@@ -39,7 +44,7 @@ function AccDocs()
 		emptyText:'انتخاب کد حساب ....',
 		typeAhead: false,
 		valueField : "CostID",
-		displayField : "CostDesc",
+		displayField : "fullDesc",
 		listConfig: {
 			loadingText: 'در حال جستجو...',
 			emptyText: 'فاقد اطلاعات'
@@ -80,7 +85,12 @@ function AccDocs()
 	
 	this.tafsiliCombo = new Ext.form.ComboBox({
 		store: new Ext.data.Store({
-			fields:["TafsiliID","TafsiliDesc"],
+			fields:["TafsiliID","TafsiliDesc",{
+				name : "fullDesc",
+				convert : function(v,r){
+					return "[" + r.data.TafsiliID + "]" + r.data.TafsiliDesc;
+				}
+			}],
 			proxy: {
 				type: 'jsonp',
 				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
@@ -102,7 +112,7 @@ function AccDocs()
 		typeAhead: false,
 		pageSize : 10,
 		valueField : "TafsiliID",
-		displayField : "TafsiliDesc"
+		displayField : "fullDesc"
 	});
 	
 	this.tafsili2GroupCombo = new Ext.form.ComboBox({
@@ -131,7 +141,12 @@ function AccDocs()
 	
 	this.tafsili2Combo = new Ext.form.ComboBox({
 		store: new Ext.data.Store({
-			fields:["TafsiliID","TafsiliDesc"],
+			fields:["TafsiliID","TafsiliDesc",{
+				name : "fullDesc",
+				convert : function(v,r){
+					return "[" + r.data.TafsiliID + "]" + r.data.TafsiliDesc;
+				}
+			}],
 			proxy: {
 				type: 'jsonp',
 				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
@@ -153,7 +168,7 @@ function AccDocs()
 		typeAhead: false,
 		pageSize : 10,
 		valueField : "TafsiliID",
-		displayField : "TafsiliDesc"
+		displayField : "fullDesc"
 	});
 	
 	this.checkTafsiliCombo = new Ext.form.ComboBox({

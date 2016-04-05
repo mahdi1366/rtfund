@@ -58,8 +58,6 @@ function saveTask(){
 	
 	$obj = new FRW_tasks();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
-	$obj->RegPersonID = $_SESSION["USER"]["PersonID"];
-	$obj->CreateDate = PDONOW;
 	
 	if(isset($_POST["DoneDesc"]))
 		$obj->DoneDate = PDONOW;
@@ -67,7 +65,11 @@ function saveTask(){
 	if($obj->TaskID != "")
 		$result = $obj->EditTask();
 	else
+	{
+		$obj->RegPersonID = $_SESSION["USER"]["PersonID"];
+		$obj->CreateDate = PDONOW;
 		$result = $obj->AddTask();
+	}
 	
 	Response::createObjectiveResponse($result, "");
 	die();
@@ -262,6 +264,8 @@ function TaskRequest()
 					alert("انتخاب سیستم الزامی است");
 					return;
 				}
+				mask = new Ext.LoadMask(Ext.getCmp(TaskRequestObj.TabID), {msg:'در حال حذف...'});
+				mask.show();
 				this.up('form').getForm().submit({
 					clientValidation: true,
 					url: TaskRequestObj.address_prefix + 'ManageRequests.php?task=saveTask',
@@ -269,9 +273,11 @@ function TaskRequest()
 					success : function(form,action){
 						TaskRequestObj.grid.getStore().load();
 						TaskRequestObj.formPanel.getForm().reset();
+						mask.hide();
 					},
 					failure : function(form,action)
 					{
+						mask.hide();
 					}
 				});
 			}

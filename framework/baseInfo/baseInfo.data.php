@@ -193,7 +193,7 @@ function DeletePost()
 //---------------------------------
 
 function SelectBranches(){
-	$temp = PdoDataAccess::runquery("select * from BSC_branches where IsActive='YES'");
+	$temp = PdoDataAccess::runquery("select * from BSC_branches");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }

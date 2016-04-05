@@ -29,4 +29,15 @@ $address_prefix = getenv("DOCUMENT_ROOT");
 $js_prefix_address = implode("/" , 
 		array_splice(preg_split('/\//', $_SERVER["SCRIPT_NAME"]),0,
 		count(preg_split('/\//', $_SERVER["SCRIPT_NAME"]))-1)) . "/";
+
+$branches = FRW_access::GetAccessBranches();
+if(count($branches) == 0)
+{
+	echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" >';
+	echo "<h3><br><br><span style=font-family:tahoma;font-size:15px><center>شما به هیچ شعبه ایی دسترسی ندارید".
+			"<br>لطفا با مسئول سیستم تماس بگیرید<br><br>".
+			"<a href='/framework/systems.php'>بازگشت</a></center></span></h3>";
+	die();
+}
+
 ?>

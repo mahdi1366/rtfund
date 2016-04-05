@@ -203,7 +203,7 @@ class DateModules
 		}
 		$gtime1 = mktime(0, 0, 0, $gdate_array1[1], $gdate_array1[2], $gdate_array1[0] + $diff_years);
 		$gtime2 = mktime(0, 0, 0, $gdate_array2[1], $gdate_array2[2], $gdate_array2[0] + $diff_years);
-		return ($gtime1 - $gtime2) / 86400; //number of days
+		return round(($gtime1 - $gtime2) / 86400); //number of days
 	}
 
 	/**

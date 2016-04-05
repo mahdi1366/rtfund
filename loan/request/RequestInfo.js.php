@@ -60,9 +60,9 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 			url: this.address_prefix + "request.data.php?task=SelectAllRequests&RequestID=" + this.RequestID,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["RequestID","BranchID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
+		fields : ["RequestID","BranchID","LoanID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
-					"guarantees","AgentGuarantee","StatusID","DocumentDesc"],
+					"guarantees","AgentGuarantee","StatusID","DocumentDesc","imp_VamCode"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -81,6 +81,9 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 				record = this.getAt(0);
 				me.RequestRecord = record;
 				me.companyPanel.loadRecord(record);
+				//..........................................................
+				oldInfo = record.data.imp_VamCode != null ? "شماره وام سیستم قدیم : " + record.data.imp_VamCode : "";
+				me.companyPanel.down("[itemId=oldInfo]").update(oldInfo);
 				//..........................................................
 				if(record.data.AgentGuarantee == "YES")
 					me.companyPanel.down("[name=AgentGuarantee]").setValue(true);
@@ -296,6 +299,7 @@ RequestInfo.prototype.BuildForms = function(){
 		},
 		items : [{
 			xtype : "combo",
+			hidden : true,
 			store : new Ext.data.SimpleStore({
 				proxy: {
 					type: 'jsonp',
@@ -348,6 +352,7 @@ RequestInfo.prototype.BuildForms = function(){
 			}),
 			fieldLabel : "نوع وام",
 			queryMode : 'local',
+			hidden : true,
 			allowBlank : false,
 			displayField : "LoanDesc",
 			valueField : "LoanID",
@@ -376,6 +381,11 @@ RequestInfo.prototype.BuildForms = function(){
 			displayField : "BranchName",
 			valueField : "BranchID",
 			name : "BranchID"
+		},{
+			xtype : "container",
+			itemId : "oldInfo",
+			width : 300,
+			cls : "blueText"
 		},{
 			xtype : "fieldset",
 			title : "تضمین",
@@ -564,11 +574,11 @@ RequestInfo.prototype.CustomizeForm = function(record){
 	if(this.User == "Staff")
 	{
 		this.companyPanel.down("[itemId=cmp_saveAndSend]").hide();
-		//this.companyPanel.down("[itemId=cmp_requester]").show();
+		this.companyPanel.down("[itemId=cmp_requester]").show();
+		this.companyPanel.down("[name=LoanID]").show();		
 		
 		if(record == null)
 		{
-			//this.companyPanel.down("[name=ReqFullname]").hide();
 			this.companyPanel.down("[name=BorrowerDesc]").hide();
 			this.companyPanel.down("[name=BorrowerID]").hide();
 			this.companyPanel.down("[name=AgentGuarantee]").hide();
@@ -605,35 +615,20 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		}	
 		if(this.User == "Staff")
 		{
-			if(record.data.ReqPersonID != null)
+			if(record.data.StatusID == "70")
 			{
-				if(record.data.StatusID == "10")
-				{
-					this.companyPanel.getEl().readonly(new Array("LoanPersonID","DocumentDesc"));
-				}
-				else
+				if(record.data.imp_VamCode*1 == null || record.data.imp_VamCode == "")
 				{
 					this.companyPanel.getEl().readonly();
 					this.companyPanel.down("[itemId=cmp_save]").hide();
-				}
-				this.companyPanel.doLayout();
-				//this.grid.down("[itemId=addPart]").hide();				
+				}					
 			}
-			else
+			if(record.data.ReqPersonID == null)
 			{
-				if(record.data.StatusID == "70")
-				{
-					if(record.data.imp_VamCode*1 == null || record.data.imp_VamCode == "")
-					{
-						this.companyPanel.getEl().readonly();
-						this.companyPanel.down("[itemId=cmp_save]").hide();
-					}					
-				}
-				//this.companyPanel.down("[itemId=cmp_requester]").show();
-				//this.companyPanel.down("[name=ReqFullname]").hide();
 				this.companyPanel.down("[name=BorrowerDesc]").hide();
 				this.companyPanel.down("[name=BorrowerID]").hide();
-			}			
+			}
+			
 		}	
 		if(this.User == "Customer")
 		{

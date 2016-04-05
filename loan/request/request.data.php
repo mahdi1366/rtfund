@@ -752,7 +752,6 @@ function SelectNewAgentLoans(){
 	$where .= " AND BranchID in(" . implode(",", $branches) . ")";
 	
 	$dt = LON_requests::SelectAll($where);
-
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
 }
@@ -1004,42 +1003,17 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 			if($remainder <= $PayRecord["PayAmount"]*1)
 			{
 				$PayRecord["PayAmount"] = $PayRecord["PayAmount"]*1 - $remainder;
+				$remainder = 0;
+								
+				$installments[$i]["TotalRemainder"] = $Forfeit;
+				$installments[$i]["remainder"] = 0;
+				
 				if($PayRecord["PayAmount"] == 0)
 				{
 					$StartDate = $PayRecord["PayDate"];
 					$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
-				}
-				$Forfeit = $Forfeit - $PayRecord["PayAmount"];
-				$Forfeit = $Forfeit < 0 ? 0 : $Forfeit;
-				if($i == count($installments)-1)	
-				{
-					$installments[$i]["TotalRemainder"] = -1*$PayRecord["PayAmount"] + $Forfeit;
-					$installments[$i]["remainder"] = -1*$PayRecord["PayAmount"] + $Forfeit;
-				}
-				else
-				{
-					$installments[$i]["TotalRemainder"] = $Forfeit;
-					$installments[$i]["remainder"] = $Forfeit;
-				}
+				}	
 				$returnArr[] = $installments[$i];
-				
-				if($Forfeit > 0)
-				{
-					while(true)
-					{
-						$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
-						if($PayRecord == null)
-							break;
-						$installments[$i]["PayAmount"] = $PayRecord["PayAmount"];
-						$installments[$i]["PayDate"] = $PayRecord["PayDate"];
-						$Forfeit = $Forfeit - $PayRecord["PayAmount"]*1;
-						$installments[$i]["ForfeitDays"] = 0;	
-						$installments[$i]["TotalRemainder"] = $Forfeit;
-						$installments[$i]["ForfeitAmount"] = $Forfeit;
-						$installments[$i]["remainder"] = 0;
-						$returnArr[] = $installments[$i];
-					}
-				}
 				
 				break;
 			}
@@ -1052,6 +1026,27 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 			
 			$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
 			$returnArr[] = $installments[$i];
+		}
+	}
+	
+	if($Forfeit > 0)
+	{
+		while(true)
+		{
+			$installments[$i]["InstallmentDate"] = "---";
+			$installments[$i]["InstallmentAmount"] = 0;
+			$installments[$i]["PayAmount"] = $PayRecord["PayAmount"];
+			$installments[$i]["PayDate"] = $PayRecord["PayDate"];
+			$Forfeit = $Forfeit - $PayRecord["PayAmount"]*1;
+			$installments[$i]["ForfeitDays"] = 0;	
+			$installments[$i]["TotalRemainder"] = $Forfeit;
+			$installments[$i]["ForfeitAmount"] = $Forfeit;
+			$installments[$i]["remainder"] = 0;
+			$returnArr[] = $installments[$i];
+			
+			$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
+			if($PayRecord == null)
+				break;
 		}
 	}
 	

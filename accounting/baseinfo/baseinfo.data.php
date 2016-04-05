@@ -348,11 +348,12 @@ function DeleteGroup(){
 }
 
 function GetAllTafsilis() {
+	
 	$where = " IsActive='YES' AND TafsiliType=:g";
 	$whereParam = array();
 	$whereParam[":g"] = $_GET["TafsiliType"];
 	
-	$field = isset($_GET ["fields"]) ? $_GET ["fields"] : "TafsiliDesc";
+	$field = isset($_GET ["fields"]) ? $_GET ["fields"] : "concat(TafsiliID, TafsiliDesc)";
 	if (isset($_GET ["query"]) && $_GET ["query"] != "") {
 		$where .= " AND " . $field . " LIKE :qry ";
 		$whereParam[":qry"] = "%" . $_GET["query"] . "%";

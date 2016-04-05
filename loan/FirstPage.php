@@ -7,6 +7,8 @@
 require_once 'header.inc.php';
 require_once inc_dataGrid;
 
+
+
 $dg = new sadaf_datagrid("dg", $js_prefix_address . 
 		"request/request.data.php?task=SelectNewAgentLoans", "grid_div");
 

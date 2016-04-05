@@ -42,7 +42,7 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg->addColumn("تعداد روز تاخیر", "ForfeitDays");
 	$col = $rpg->addColumn("جریمه", "ForfeitAmount","amountRender");
-	$col->EnableSummary();
+	//$col->EnableSummary();
 	
 	$rpg->addColumn("مانده قسط", "remainder","amountRender");
 	$rpg->addColumn("مانده کل", "TotalRemainder","amountRender");
@@ -58,6 +58,17 @@ if(isset($_REQUEST["show"]))
 		. DateModules::shNow() . "<br>";
 	
 	echo "</td></tr></table>";
+	
+	?>
+	<table style="border:2px groove #9BB1CD;border-collapse:collapse;width:100%">
+		<tr>
+			<td>وام گیرنده : </td>
+			<td></td>
+			
+		</tr>
+	</table>	
+	<?
+	
 	$rpg->generateReport();
 	die();
 }
