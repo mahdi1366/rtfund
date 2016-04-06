@@ -67,6 +67,11 @@ if(isset($_REQUEST["task"]))
 			
 		case "ConfirmLicense":
 			ConfirmLicense();
+			
+		//---------------------------------
+			
+		case "selectCities":
+			selectCities();
 	}
 }
 
@@ -179,7 +184,7 @@ function ResetPass(){
 
 function selectPosts(){
 	
-	$temp = PdoDataAccess::runquery("select * from BSC_posts ");
+	$temp = PdoDataAccess::runquery("select * from BSC_posts order by PostName");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -229,7 +234,7 @@ function ConfirmPersons(){
 
 function selectCompanyTypes(){
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where typeID=14 ");
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where typeID=14 order by InfoDesc");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -296,7 +301,7 @@ function SaveLicense(){
 		$obj->PersonID = $_SESSION["USER"]["PersonID"];
 	
 	$obj->IsConfirm = "NOTSET";
-	
+		
 	if($obj->LicenseID > 0)
 		$result = $obj->EditLicense();
 	else 
@@ -324,7 +329,17 @@ function ConfirmLicense(){
 	$obj->RejectDesc = $_POST["RejectDesc"];
 	
 	$result = $obj->EditLicense();
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//............................................................
+
+function selectCities(){
+	
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where typeID=15 order by InfoDesc");
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
 

@@ -171,7 +171,6 @@ Menu.prototype.EditMenu = function(e, GroupID)
 	e.stopImmediatePropagation();	
 }
 
-
 Menu.prototype.SaveGroup = function()
 {
 	var mask = new Ext.LoadMask(this.grid,{msg: 'تغییر اطلاعات ...'});

@@ -8,9 +8,6 @@ require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 require_once '../request/request.data.php';
 
-//echo DateModules::GDateMinusGDate(DateModules::shamsi_to_miladi("1393-03-12"),
-//		DateModules::shamsi_to_miladi("1392-12-29"));
-
 if(isset($_REQUEST["show"]))
 {
 	$PartID = $_REQUEST["PartID"];
@@ -28,12 +25,16 @@ if(isset($_REQUEST["show"]))
 		return "<span dir=ltr>" . number_format($val) . "</span>";
 	}
 	
+	$col = $rpg->addColumn("", "InstallmentID");
+	$col->hidden = true;
+	
 	$col = $rpg->addColumn("تاریخ قسط", "InstallmentDate","dateRender");
+	$col->rowspanByFields = array("InstallmentID");
 	$col->rowspaning = true;
 	
 	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount","amountRender");
 	$col->rowspaning = true;
-	$col->rowspanByFields = array("InstallmentDate");
+	$col->rowspanByFields = array("InstallmentID");
 	
 	$rpg->addColumn("تاریخ پرداخت", "PayDate","dateRender");
 	
@@ -47,6 +48,9 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("مانده قسط", "remainder","amountRender");
 	$rpg->addColumn("مانده کل", "TotalRemainder","amountRender");
 	
+	$rpg->page_size = 20;
+	$rpg->paging = true;
+	
 	$rpg->mysql_resource = $returnArr;
 	echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
 	echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
@@ -59,12 +63,17 @@ if(isset($_REQUEST["show"]))
 	
 	echo "</td></tr></table>";
 	
+	$partObj = new LON_ReqParts($PartID);
+	$ReqObj = new LON_requests($partObj->RequestID);
+	
 	?>
-	<table style="border:2px groove #9BB1CD;border-collapse:collapse;width:100%">
+	<table style="border:2px groove #9BB1CD;border-collapse:collapse;width:100%;font-family: tahoma;font-size: 12px;line-height: 20px;">
 		<tr>
-			<td>وام گیرنده : </td>
-			<td></td>
-			
+			<td style="padding-right: 10px">وام گیرنده : <b><?= $ReqObj->_LoanPersonFullname ?></b>
+				<br>مبلغ وام : <b><?= number_format($ReqObj->ReqAmount) ?></b>
+				<br>مبلغ فاز : <b><?= number_format($partObj->PartAmount) ?></b>
+			<br>تاریخ پرداخت : <b><?= DateModules::miladi_to_shamsi($partObj->PartDate) ?></b>
+			</td>
 		</tr>
 	</table>	
 	<?
@@ -125,9 +134,10 @@ function LoanReport_payments()
 							Ext.util.Format.Money(record.data.PartAmount) + " مورخ " + 
 							MiladiToShamsi(record.data.PartDate);
 					}
-				}]
+				}]				
 			}),
 			displayField: 'fullTitle',
+			pageSize : 10,
 			valueField : "PartID",
 			hiddenName : "PartID",
 			width : 600,

@@ -256,6 +256,10 @@ class ReportGenerator {
 		// Draw Header
 		$field_count = count($this->columns);
 		for ($i = 0; $i < $field_count; $i++) {
+			
+			if($this->columns[$i]->hidden)
+				continue;
+			
 			echo "<td align = '" . ($this->columns[$i]->align == "" ? $this->header_alignment : $this->columns[$i]->align). 
 					"' style='padding:2px' border='$this->border' height='21px'><font
 					color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;" . $this->columns[$i]->header . "</b></font></td>";
@@ -378,6 +382,7 @@ class ReportGenerator {
 			
 			echo "<td height=21px id='col_" . $this->columns[$i]->field . "_" . ($index + 1) .  "' 
 				style='padding:2px;direction:" . $this->columns[$i]->direction . ";" . $this->columns[$i]->style . 
+					($this->columns[$i]->hidden ? ";display:none;" : "") .  
 					"' border='$this->border' align='" . $this->columns[$i]->align . "'>
 				<font color = '$this->body_textcolor' style='font-size:11px'>&nbsp;";
 
@@ -429,7 +434,7 @@ class ReportGenerator {
 
 				$this->pageRecordCounter = 0;
 
-				echo "<div style='page-break-after: always;'>&nbsp;</div>";
+				echo "<div style='page-break-after: always;'>&nbsp;</div><br>";
 
 				$this->drawHeader(true);
 			}
@@ -443,6 +448,10 @@ class ReportGenerator {
 				echo "<td style='padding:2px;color:$this->body_textcolor'></td>";
 
 			for ($i = 0; $i < count($this->columns); $i++) {
+				
+				if($this->columns[$i]->hidden)
+					continue;
+				
 				if ($this->columns[$i]->HaveSum != -1) {
 					echo "<td id='sum_" . $this->columns[$i]->field . "' height=21px style='font-size:11px;font-weight:bold;direction:" . 
 							($this->changeNumCellDirection ? "ltr" : "rtl") . ";
@@ -559,6 +568,7 @@ class ReportColumn {
 	public $rowspaning = false;
 	public $rowspanByFields = array();
 	
+	public $hidden = false;
 	public $style = "";
 
 	public function ReportColumn($header, $field, $renderFunction, $renderParams) {

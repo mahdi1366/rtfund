@@ -38,19 +38,18 @@ if(isset($_SESSION["USER"]["framework"]))
 	$col->renderer = "function(v,p,r){return License.ConfirmRender(v,p,r)}";
 	$col->width = 60;
 }
-else
-{
-	$col = $dg->addColumn("حذف","","");
-	$col->renderer = "License.deleteRender";
-	$col->sortable = false;
-	$col->width = 40;
-	
-	$dg->addButton = true;
-	$dg->addHandler = "function(){LicenseObject.Adding();}";
 
-	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(v,p,r){return LicenseObject.saveData(v,p,r);}";
-}
+$col = $dg->addColumn("حذف","","");
+$col->renderer = "License.deleteRender";
+$col->sortable = false;
+$col->width = 40;
+
+$dg->addButton = true;
+$dg->addHandler = "function(){LicenseObject.Adding();}";
+
+$dg->enableRowEdit = true;
+$dg->rowEditOkHandler = "function(v,p,r){return LicenseObject.saveData(v,p,r);}";
+
 
 $dg->height = 350;
 $dg->width = 730;

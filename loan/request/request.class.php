@@ -21,10 +21,18 @@ class LON_requests extends PdoDataAccess
 	public $AgentGuarantee;
 	public $DocumentDesc;	
 	
+	public $_LoanDesc;
+	public $_LoanPersonFullname;
+	
 	function __construct($RequestID = "") {
 		
 		if($RequestID != "")
-			PdoDataAccess::FillObject ($this, "select * from LON_requests where RequestID=?", array($RequestID));
+			PdoDataAccess::FillObject ($this, "
+				select r.* , concat_ws(' ',fname,lname,CompanyName) _LoanPersonFullname, LoanDesc _LoanDesc
+					from LON_requests r 
+					join BSC_persons on(PersonID=LoanPersonID)
+					join LON_loans using(LoanID)
+				where RequestID=?", array($RequestID));
 	}
 	
 	static function SelectAll($where = "", $param = array()){

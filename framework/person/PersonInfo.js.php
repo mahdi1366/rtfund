@@ -72,7 +72,7 @@ function PersonInfo()
 			autoWidth : true            
 		},
 		items:[{
-			title : "اطلاعات شخصی",
+			title : "اطلاعات پایه",
 			itemId : "tab_info"
 		},{
 			title : "مدارک",
@@ -238,7 +238,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			regex: /^\d{10}$/,
 			maskRe: /[\d\-]/,
 			allowBlank : false,
-			fieldLabel: 'کد ملی',
+			fieldLabel: 'شناسه ملی',
 			beforeLabelTextTpl: required,
 			name: 'NationalID'
 		},{
@@ -312,18 +312,34 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			xtype : "textfield",
 			regex: /^\d{11}$/,
 			maskRe: /[\d\-]/,
-			fieldLabel: 'تلفن همراه',
+			fieldLabel: 'تلفن دورنگار',
 			name: 'mobile'
 		},{
-			xtype : "textarea",
-			fieldLabel: 'آدرس',
-			name: 'address',
-			rowspan : 3
+			xtype : "combo",
+			fieldLabel : "شهر",
+			name : "CityID",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + 'persons.data.php?task=selectCities',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['InfoID','InfoDesc'],
+				autoLoad : true					
+			}),
+			displayField : "InfoDesc",
+			valueField : "InfoID"
 		},{
 			xtype : "textfield",
 			fieldLabel: 'وب سایت',
 			name: 'WebSite',
 			fieldStyle : "direction:ltr"
+		},{
+			xtype : "textarea",
+			fieldLabel: 'آدرس',
+			rows : 2,
+			name: 'address',
+			rowspan : 2
 		},{
 			xtype : "textfield",
 			vtype : "email",
@@ -342,74 +358,6 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			colspan : 2
 		}];
 	
-	<?if(!isset($_SESSION["USER"]["portal"])){?>
-	items.push({
-		xtype : "fieldset",
-		title : "اطلاعات کاربری",
-		colspan : 2,
-		width : 700,
-		layout : {
-			type : "table",
-			columns : 2
-		},
-		items : [{
-			xtype : "textfield",
-			width : 340,
-			fieldLabel : "کلمه کاربری",
-			fieldStyle : "direction:ltr",
-			name : "UserName"	
-		},{
-			xtype : "combo",
-			width : 340,
-			store : new Ext.data.SimpleStore({
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + 'persons.data.php?task=selectPosts',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				fields : ['PostID','PostName'],
-				autoLoad : true					
-			}),
-			name : "PostID",
-			displayField : "PostName",
-			valueField : "PostID",
-			queryMode : "local",
-			fieldLabel : "پست سازمانی"	
-		},{
-			xtype : "container",
-			colspan : 2,
-			layout : "hbox",
-			defaults : {style : "margin-right : 20px"},
-			items :[{
-				xtype : "checkbox",
-                boxLabel: 'کاربر صندوق',
-                name: 'IsStaff',
-                inputValue: 'YES'
-			},{
-				xtype : "checkbox",
-                boxLabel: 'مشتری',
-                name: 'IsCustomer',
-                inputValue: 'YES'
-			},{
-				xtype : "checkbox",
-                boxLabel: 'سهامدار',
-                name: 'IsShareholder',
-                inputValue: 'YES'
-			},{
-				xtype : "checkbox",
-                boxLabel: 'سرمایه گذار',
-                name: 'IsAgent',
-                inputValue: 'YES'
-			},{
-				xtype : "checkbox",
-                boxLabel: 'حامی',
-                name: 'IsSupporter',
-                inputValue: 'YES'
-			}]
-		}]
-	});
-	<?}?>
-
 	this.mainPanel = new Ext.form.FormPanel({
 		width: 750,
 		frame : true,

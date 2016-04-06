@@ -7,10 +7,8 @@
 require_once 'header.inc.php';
 require_once inc_dataGrid;
 
-
-
 $dg = new sadaf_datagrid("dg", $js_prefix_address . 
-		"request/request.data.php?task=SelectNewAgentLoans", "grid_div");
+		"request/request.data.php?task=SelectReceivedRequests", "grid_div");
 
 $col = $dg->addColumn("شماره وام", "RequestID", "");
 $col->width = 90;
@@ -34,13 +32,14 @@ $dg->emptyTextOfHiddenColumns = true;
 $dg->EnablePaging = false;
 $dg->height = 200;
 $dg->width = 770;
-$dg->title = "معرفی نامه های جدید وام";
+$dg->title = "درخواست های رسیده";
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;
 $dg->disableFooter = true;
 $dg->DefaultSortField = "ReqDate";
 $dg->autoExpandColumn = "ReqFullname";
 $grid1 = $dg->makeGrid_returnObjects();
+
 //---------------------------------------------
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "request/request.data.php?task=SelectReadyToPayParts", "grid_div");
 

@@ -28,6 +28,7 @@ class BSC_persons extends PdoDataAccess
 	public $IsGovermental;
 	public $FatherName;
 	public $ShNo;
+	public $CityID;
 	
 	public $IsCustomer;
 	public $IsShareholder;
@@ -150,7 +151,7 @@ class BSC_OrgSigners extends PdoDataAccess{
 	public $telephone;
 	public $mobile;
 	public $PostDesc;
-	public $detail;
+	public $email;
 
     static function GetAll($where = "",$whereParam = array()){
 	    $query = "select * from BSC_OrgSigners ";

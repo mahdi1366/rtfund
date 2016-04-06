@@ -77,7 +77,7 @@ function Person()
 				width : 180
 			},{
 				xtype : "textfield",
-				fieldLabel : "کد کلی",
+				fieldLabel : "کد ملی",
 				regex: /^\d{10}$/,
 				maskRe: /[\d\-]/,
 				name : "NationalID"
@@ -97,10 +97,10 @@ function Person()
 				width : 360
 			},{
 				xtype : "textfield",
-				fieldLabel : "کد اقتصادی",
+				fieldLabel : "شناسه ملی",
 				regex: /^\d{10}$/,
 				maskRe: /[\d\-]/,
-				name : "EconomicID"
+				name : "NationalID"
 			}]
 		},{
 			xtype : "textfield",
@@ -142,7 +142,7 @@ function Person()
 			defaults : {style : "margin-right : 20px"},
 			items :[{
 				xtype : "checkbox",
-                boxLabel: 'کاربر صندوق',
+                boxLabel: 'پرسنل صندوق',
                 name: 'IsStaff',
                 inputValue: 'YES'
 			},{

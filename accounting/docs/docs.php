@@ -56,7 +56,7 @@ $dg->addColumn("", "locked", "", true);
 
 $col = $dg->addColumn("ردیف","ItemID","", true);
 
-$col = $dg->addColumn("کد حساب", "CostID");
+$col = $dg->addColumn("سرفصل حساب", "CostID");
 $col->editor = "AccDocsObject.CostCombo";
 $col->renderer = "function(v,p,r){return r.data.CostDesc;}";
 

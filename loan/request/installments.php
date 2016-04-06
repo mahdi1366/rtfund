@@ -306,8 +306,6 @@ Installment.prototype.PayReport = function(){
 	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&PartID=" + this.PartID);
 }
 
-
-
 </script>
 <center>
 	<div id="div_loans"></div>

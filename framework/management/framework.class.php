@@ -211,8 +211,6 @@ class FRW_access extends PdoDataAccess {
 		if ($result === false)
 			return false;
 
-		$this->MenuID = parent::InsertID();
-
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->MainObjectID = $this->MenuID;

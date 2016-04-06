@@ -16,7 +16,7 @@ $dg->addColumn("","PersonID","string", true);
 
 $col = $dg->addColumn("سمت","PostDesc","string");
 $col->editor = ColumnEditor::TextField();
-$col->width = 150;
+$col->width = 100;
 
 $col = $dg->addColumn("نام و نام خانوادگی ","fullname","string");
 $col->editor = ColumnEditor::TextField();
@@ -39,20 +39,20 @@ $col = $dg->addColumn("موبایل","mobile","string");
 $col->editor = ColumnEditor::NumberField();
 $col->width = 100;
 
-if(!isset($_SESSION["USER"]["framework"]))
-{
-	$col = $dg->addColumn("حذف","","");
-	$col->renderer = "OrgSigner.deleteRender";
-	$col->sortable = false;
-	$col->width = 40;
-	
-	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(v,p,r){return OrgSignerObject.saveData(v,p,r);}";
+$col = $dg->addColumn("ایمیل","email","string");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 100;
 
-	$dg->addButton = true;
-	$dg->addHandler = "function(){OrgSignerObject.Adding();}";
+$col = $dg->addColumn("حذف","","");
+$col->renderer = "OrgSigner.deleteRender";
+$col->sortable = false;
+$col->width = 40;
 
-}
+$dg->enableRowEdit = true;
+$dg->rowEditOkHandler = "function(v,p,r){return OrgSignerObject.saveData(v,p,r);}";
+
+$dg->addButton = true;
+$dg->addHandler = "function(){OrgSignerObject.Adding();}";
 
 $dg->height = 350;
 $dg->width = 730;

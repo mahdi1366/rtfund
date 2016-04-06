@@ -45,6 +45,11 @@ if(isset($_REQUEST["task"]))
 
 		case "ResetPass":
 			ResetPass();
+			
+		//------------------
+			
+		case "selectDataAudits":
+			selectDataAudits();
 	}
 }
 
@@ -187,6 +192,46 @@ function ResetPass(){
 	
 	$result = BSC_persons::ResetPass($_POST["PersonID"]);
 	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//--------------------------------------------------
+
+function selectDataAudits(){
+
+	$query = "select 
+			SysName,
+			concat_ws(' ',fname,lname,CompanyName) fullname , 
+			MainObjectID , 
+			SubObjectID, 
+			ActionType , 
+			ActionTime, 
+			table_comment
+			
+		from DataAudit d
+		join FRW_systems using(SystemID)
+		join BSC_persons using(PersonID)
+		join information_schema.TABLES on(Table_schema = 'krrtfir_rtfund' AND Table_name=d.TableName)
+		
+		where 1=1";
+	$param = array();
+	
+	//------------------------------------------------------
+
+	if(!empty($_POST["PersonID"]))
+	{
+		$query .= " AND d.PersonID=:p";
+		$param[":p"] = $_POST["PersonID"];
+	}
+	//------------------------------------------------------
+	
+	$temp = PdoDataAccess::runquery_fetchMode($query . dataReader::makeOrder(), $param);
+	
+	print_r(ExceptionHandler::PopAllExceptions());
+	
+	$cnt = $temp->rowCount();
+	$temp = PdoDataAccess::fetchAll($temp, $_REQUEST["start"], $_REQUEST["limit"]);
+	echo dataReader::getJsonData($temp, $cnt, $_GET["callback"]);
 	die();
 }
 

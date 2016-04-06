@@ -389,7 +389,7 @@ AccDocs.docRender = function(v,p,record)
 {
 	return "<table class='docInfo' width=100%>"+
 		"<tr>"+
-			"<td width=10%>کد سند : </td>" +
+			"<td width=10%>شماره برگه : </td>" +
 			"<td width=25% class='blueText'>" + record.data.LocalNo + "</td>" +
 			"<td width=17%>ثبت کننده سند : </td>" +
 			"<td class='blueText'>" + record.data.regPerson + "</td>" +

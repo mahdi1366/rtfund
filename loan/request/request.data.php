@@ -84,8 +84,8 @@ switch ($task) {
 	case "SelectReadyToPayParts":
 		SelectReadyToPayParts();
 		
-	case "SelectNewAgentLoans":
-		SelectNewAgentLoans();
+	case "SelectReceivedRequests":
+		SelectReceivedRequests();
 		
 	case "selectRequestStatuses":
 		selectRequestStatuses();
@@ -99,6 +99,11 @@ switch ($task) {
 		
 	case "DeletePay":
 		DeletePay();
+		
+	//-----------------------------------------------
+		
+	case "GetDelayedInstallments":
+		GetDelayedInstallments();
 }
 //....................
 function PMT($CustomerWage, $InstallmentCount, $PartAmount, $YearMonths, $PayInterval) {  
@@ -703,8 +708,15 @@ function selectParts(){
 	}
 	$query .= " Group by p.PartID";
 	
-	$dt = PdoDataAccess::runquery($query, $params);
-	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	$dt = PdoDataAccess::runquery_fetchMode($query, $params);
+	$cnt = $dt->rowCount();
+	
+	if(!empty($_REQUEST["limit"]))
+		$dt = PdoDataAccess::fetchAll($dt, $_REQUEST["start"], $_REQUEST["limit"]);
+	else
+		$dt = $dt->fetchAll();
+	
+	echo dataReader::getJsonData($dt, $cnt, $_GET["callback"]);
 	die();
 }
 
@@ -744,9 +756,9 @@ function SelectReadyToPayParts(){
 	die();
 }
 
-function SelectNewAgentLoans(){
+function SelectReceivedRequests(){
 	
-	$where = "StatusID=10";
+	$where = "StatusID in (10,50)";
 	 
 	$branches = FRW_access::GetAccessBranches();
 	$where .= " AND BranchID in(" . implode(",", $branches) . ")";
@@ -956,6 +968,7 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$installments[$i]["InstallmentDate"]);
 				$installments[$i]["ForfeitDays"] = $forfeitDays;
 				$installments[$i]["ForfeitAmount"] = round($amount*$installments[$i]["ForfeitPercent"]*$forfeitDays/36500);
+				$installments[$i]["remainder"] = $amount;
 				$installments[$i]["TotalRemainder"] = $amount + $installments[$i]["ForfeitAmount"] ;
 			}
 			else
@@ -1053,5 +1066,47 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 	return $returnArr;
 }
 
+//------------------------------------------------
+
+function GetDelayedInstallments(){
+	
+	$query = "select PartID,concat_ws(' ',fname,lname,CompanyName) LoanPersonName
+			from LON_installments p
+			join LON_ReqParts rp using(PartID)
+			join LON_requests using(RequestID)
+			join BSC_persons on(LoanPersonID=PersonID)
+			
+			where InstallmentDate<now() AND IsEnded='NO'
+			group by PartID";
+	$dt = PdoDataAccess::runquery_fetchMode($query);
+	
+	$result = array();
+	while($row = $dt->fetch())
+	{
+		$temp = LON_installments::SelectAll("PartID=?" , array($row["PartID"]));
+		$returnArr = ComputePayments($row["PartID"], $temp);
+		
+		foreach($returnArr as $row2)
+			if(isset($row2["InstallmentID"]) && $row2["InstallmentID"]*1 > 0)
+			{
+				if(count($result) > 0 && $result[ count($result)-1 ]["InstallmentID"] == $row2["InstallmentID"])
+				{
+					if($row2["remainder"]*1 == 0)
+						array_pop ($result);
+					else
+						$result[ count($result)-1 ]["remainder"] = $row2["remainder"];
+				}
+				else if($row2["remainder"]*1 > 0)
+				{
+					$row2["LoanPersonName"] = $row["LoanPersonName"];
+					$result[] = $row2;
+				}
+			}
+	}
+	
+	//echo PdoDataAccess::GetLatestQueryString();
+	echo dataReader::getJsonData($result, count($result), $_GET["callback"]);
+	die();
+}
 
 ?>
