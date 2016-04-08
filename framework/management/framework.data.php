@@ -223,11 +223,27 @@ function selectDataAudits(){
 		$query .= " AND d.PersonID=:p";
 		$param[":p"] = $_POST["PersonID"];
 	}
+	if(!empty($_POST["SystemID"]))
+	{
+		$query .= " AND d.SystemID=:s";
+		$param[":s"] = $_POST["SystemID"];
+	}
+	if(!empty($_POST["StartDate"]))
+	{
+		$query .= " AND d.ActionTime>:sd";
+		$param[":sd"] = DateModules::shamsi_to_miladi($_POST["StartDate"],"-") . " 00:00:00";
+	}
+	if(!empty($_POST["EndDate"]))
+	{
+		$query .= " AND d.ActionTime<:ed";
+		$param[":ed"] =DateModules::shamsi_to_miladi($_POST["EndDate"],"-") . " 23:59:59";
+	}
 	//------------------------------------------------------
 	
 	$temp = PdoDataAccess::runquery_fetchMode($query . dataReader::makeOrder(), $param);
 	
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
+	//echo PdoDataAccess::GetLatestQueryString();
 	
 	$cnt = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_REQUEST["start"], $_REQUEST["limit"]);

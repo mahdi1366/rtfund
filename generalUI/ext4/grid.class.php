@@ -324,7 +324,7 @@ class sadaf_datagrid
 				$grid .= "{listeners : {beforeedit: function(editor,e){";
 				for($k=0; $k < count($this->dateColumns); $k++)
 					$grid .= "e.record.data." . $this->dateColumns[$k] . " =
-						MiladiToShamsi(e.record.data." . $this->dateColumns[$k] . ");";
+						MiladiToShamsi(e.record.data." . $this->dateColumns[$k] . ".substr(0,10) );";
 				$grid .= "}}}";
 			}
 			$grid .=  "),";
@@ -451,170 +451,6 @@ class sadaf_datagrid
         //***************************************************
 		return $grid;
 	}
-	
-	private function CreateBufferGrid()
-	{
-		$fields = "";
-		for ($i=0; $i < count($this->columns); $i++)
-			if(is_object($this->columns[$i]))
-				$fields .= "{name: '" . $this->columns[$i]->dataIndex . "'" . 
-					($this->columns[$i]->type == GridColumn::ColumnType_int ||
-					 $this->columns[$i]->type == GridColumn::ColumnType_money ? ",type : 'int'" : "") . "},";
-		$fields = substr($fields, 0, strlen($fields) - 1);
-		//**********************************************************************
-		$store = "Ext.create('Ext.data.Store', {
-				id : Ext.id(),
-				buffered : true,
-				fields:[" . $fields . "]," .
-				(($this->EnableGrouping && $this->DefaultGroupField != "") ?
-				"groupField:'" . $this->DefaultGroupField . "',remoteGroup: true," : "") .
-				"remoteSort: true," .
-				($this->enableRowEdit ? "listeners : {update : " . $this->rowEditOkHandler . "}," : "") .
-				"proxy: {
-					type: 'jsonp',
-					url: '" . $this->Url . "',
-					form : '" . $this->formID . "',
-					reader: {
-						root: 'rows',
-						totalProperty: 'totalCount',
-						messageProperty : 'message'
-					}
-				},
-				sorters: [{
-					property: '" . $this->DefaultSortField . "',
-					direction: '" . $this->DefaultSortDir . "'
-				}]
-			})";
-		
-		//************************************************
-		$grid = "new Ext.grid.GridPanel({
-			 columns: [" .
-				($this->EnableRowNumber ? "new Ext.grid.RowNumberer()," : "") .
-				$this->setExtColumnModel() . "],
-						
-			store: " . $store . ",
-			scroll: '" . $this->scroll . "', 
-
-			title:'" . $this->title . "'," .
-			"hideHeaders: " . ($this->hideHeaders ? "true," : "false,") .
-			($this->width == "" ? "autoWidth:true," : "width: " . $this->width . ",") .
-			($this->height == "" ? "autoHeight:true," : "height: " . $this->height . ",") .
-			" viewConfig: {
-				stripeRows: true,
-				enableTextSelection: true
-			},listeners :{" .
-				($this->rowSelectHandler ? "select: " . $this->rowSelectHandler : "") .
-			"}
-			,plugins : [";
-		if($this->enableRowEdit)
-		{
-			$grid .= "new Ext.grid.plugin.RowEditing(";
-			if(count($this->dateColumns) != 0)
-			{
-				$grid .= "{listeners : {beforeedit: function(editor,e){";
-				for($k=0; $k < count($this->dateColumns); $k++)
-					$grid .= "e.record.data." . $this->dateColumns[$k] . " =
-						MiladiToShamsi(e.record.data." . $this->dateColumns[$k] . ");";
-				$grid .= "}}}";
-			}
-			$grid .=  "),";
-		}
-				$grid .= ($this->EnableSearch) ?	 "new Ext.ux.grid.Search({mode:'remote'})," : "";
-				//$grid .= ($this->EnableSummaryRow) ? "new Ext.ux.grid.GridSummary()," : "";
-				$grid .= (count($this->plugins) != 0) ? implode(",", $this->plugins) . "," : "";
-
-				$grid = $grid[strlen($grid)-1] != "[" ? substr($grid,0,strlen($grid)-1) : $grid;
-			$grid .= "]";
-
-		$grid .= $this->EnableSummaryRow ? ",features: [{ftype: 'summary'}]" : "";
-		
-		if($this->collapsible)
-			$grid .= ",collapsible : true,titleCollapse:true,collapsed:" . ($this->collapsed ? "true" : "false");
-		if($this->disableSelection)
-			$grid .= ",disableSelection: true";
-			
-		$grid .= $this->multipleSelectRow ? ",multiSelect: true" : ",multiSelect: false";
-		
-		
-		if(!$this->disableFooter)
-		{	
-			$grid .=  ",bbar: new Ext.ExtraBar({
-			        	store: Ext.getCmp(Ext.id),
-			            displayInfo: true			            
-			       		})";
-		}	
-		$grid .= ",tbar:[";
-		$grid .= ($this->optionButton) ?
-					"'-',{
-						text: '" . $this->optionText . "',
-						tooltip:'" . $this->optionTooltip . "',
-						iconCls: 'option',
-						handler: " . $this->optionHandler . "}," : "";
-
-		$grid .= ($this->addButton) ?
-					"'-',{
-						text: 'ايجاد',
-						tooltip:'ايجاد ركورد جديد',
-						iconCls: 'add',
-						handler: " . $this->addHandler . "}," : "";
-
-		$grid .= ($this->deleteButton) ?
-					"'-',{
-						text: 'حذف',
-						tooltip: 'حذف رديفهاي انتخابي',
-						iconCls:'remove',
-						handler: " . $this->deleteHandler . "}," : "" ;
-
-		for($i=0; $i < count($this->buttons); $i++)
-			$grid .= "'-'," . $this->buttons[$i] . ",";
-		$grid = ($grid[strlen($grid)-1] == ",") ? substr($grid,0,strlen($grid)-1) : $grid;
-		$grid .= "]";
-
-		if ($this->EnableGrouping)
-		{
-			$grid .= ",features : [
-				Ext.create('Ext.grid.feature.Grouping',{
-					groupHeaderTpl: " .
-						($this->groupHeaderTpl != "" ? "'" . $this->groupHeaderTpl . "'" :
-														"'{name} ({[values.rows.length]} رکورد)'") .
-					",startCollapsed: " . ($this->startCollapsed ? "true" : "false") .
-			"})" .
-			($this->EnableSummaryRow ? ",{ftype: 'summary'}" : "")
-			. "]";
-			
-		}
-		if($this->CurrencyStringRowDataIndex != "")
-		{
-			$grid .= "
-				,dockedItems : [{
-					xtype : 'toolbar',
-					dock : 'bottom',
-					style : 'padding-right : 5px; text-align: right;'
-				}]";
-		}
-
-		$grid .= ",listeners : {
-			afterrender : function(){";
-				
-		if($this->CurrencyStringRowDataIndex != "")
-			$grid .= "this.getStore().on('load',Ext.bind(function(){
-					var value = this.getStore().sum('".$this->CurrencyStringRowDataIndex."');
-					this.getDockedItems('toolbar[dock=\"bottom\"]')[0].update(
-						'<b> جمع :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-						+ Ext.util.Format.Money(value) + '</b>&nbsp;<br><br>' + CurrencyToString(value) + '<br>&nbsp;');
-				},this));";
-		
-		$grid .= "},
-			beforerender : function(){
-				var ExtraToolbar = this.getDockedItems('extrabar');
-				if(ExtraToolbar.length > 0)
-					ExtraToolbar[0].bind(this.getStore());
-				}			
-			}
-		})";
-        //***************************************************
-		return $grid;
-	}
 	//-------------------------------------------------------------------------
 	private function setExtColumnModel()
 	{
@@ -664,12 +500,15 @@ class sadaf_datagrid
 							if($tempArr[$tempKeyArr[$j]] != GridColumn::ColumnType_money)
 								$str .= "type: '" . $tempArr[$tempKeyArr[$j]] . "',";
 							
-							if($tempArr[$tempKeyArr[$j]] == GridColumn::ColumnType_date)
+							if($tempArr[$tempKeyArr[$j]] == GridColumn::ColumnType_date || 
+								$tempArr[$tempKeyArr[$j]] == GridColumn::ColumnType_datetime)
 							{
 								$this->dateColumns[] = $this->columns[$i]->dataIndex;
 								$str .= "renderer: function(v){if(v == '' || v == null)return ''; ".
-										"return MiladiToShamsi(v.toString().substring(0,10),'Y/m/d') + ".
-										" (v.toString().length>11 ? ' ' + v.toString().substring(11) : '' ) ;}, ";
+										"return MiladiToShamsi(v.toString().substring(0,10),'Y/m/d') " .
+										($tempArr[$tempKeyArr[$j]] == GridColumn::ColumnType_datetime ? 
+										" + (v.toString().length>11 ? ' ' + v.toString().substring(11) : '')" : "").
+										" ;}, ";
 							}
 							if($tempArr[$tempKeyArr[$j]] == GridColumn::ColumnType_money)
 							{
@@ -759,6 +598,7 @@ class GridColumn
 	public $sortable ; //Boolean
 	
 	const ColumnType_date = "datecolumn";
+	const ColumnType_datetime = "datetimecolumn";
 	const ColumnType_boolean = "booleancolumn";
 	const ColumnType_string = "string";
 	const ColumnType_int = "numbercolumn";

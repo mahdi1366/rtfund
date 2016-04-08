@@ -122,23 +122,23 @@ function FrameWorkClass()
 						floating: false,
 						items: [
 							{
-								icon : "/framework/icons/systems.gif",
+								icon : "/generalUI/ext4/resources/themes/icons/systems.gif",
 								text: 'انتخاب سیستم',
 								menu : [<?= $sysArray ?>]
 							},{
-								icon: '/framework/icons/access.gif',
+								icon: '/generalUI/ext4/resources/themes/icons/access.gif',
 								text: 'تغییر رمز عبور',
 								handler : function(){
 									framework.OpenPage('../framework/ChangePassword.php','تغییر رمز عبور');
 								}
 							},{
-								icon: '/framework/icons/task.jpg',
+								icon: '/generalUI/ext4/resources/themes/icons/task.jpg',
 								text: 'درخواست پشتیبانی',
 								handler : function(){
 									framework.OpenPage('../framework/ManageRequests.php','درخواست پشتیبانی');
 								}
 							},{
-								icon : "/framework/icons/exit.gif",
+								icon : "/generalUI/ext4/resources/themes/icons/exit.gif",
 								text : "خروج",
 								handler : function(){
 									framework.logout();

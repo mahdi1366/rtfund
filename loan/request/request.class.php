@@ -20,6 +20,7 @@ class LON_requests extends PdoDataAccess
 	public $guarantees;
 	public $AgentGuarantee;
 	public $DocumentDesc;	
+	public $IsEnded;
 	
 	public $_LoanDesc;
 	public $_LoanPersonFullname;
@@ -117,10 +118,12 @@ class LON_ReqParts extends PdoDataAccess
 	public $FundWage;
 	public $WageReturn;
 	public $PayCompute;
+	public $MaxFundWage;
 	
 	function __construct($PartID = "") {
 		
 		$this->DT_PartDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_MaxFundWage = DataMember::CreateDMA(DataMember::DT_INT, 0);
 		
 		if($PartID != "")
 			PdoDataAccess::FillObject ($this, "select * from LON_ReqParts where PartID=?", array($PartID));
@@ -254,13 +257,18 @@ class LON_pays extends PdoDataAccess
 	public $ChequeBank;
 	public $ChequeBranch;
 	public $details;
+	
+	public $_RequestID;
 			
 	function __construct($PayID = "") {
 		
 		$this->DT_PayDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($PayID != "")
-			PdoDataAccess::FillObject ($this, "select * from LON_pays where PayID=?", array($PayID));
+			PdoDataAccess::FillObject ($this, "
+				select p.*,RequestID _RequestID 
+				from LON_pays p join LON_ReqParts using(PartID) 
+				where PayID=?", array($PayID));
 	}
 	
 	static function SelectAll($where = "", $param = array()){
@@ -274,18 +282,18 @@ class LON_pays extends PdoDataAccess
 			where " . $where, $param);
 	}
 	
-	function AddPay(){
+	function AddPay($pdo = null){
 		
-	 	if(!parent::insert("LON_pays",$this))
+	 	if(!parent::insert("LON_pays",$this, $pdo))
 	 		return false;
 		
-		$this->PayID = parent::InsertID();
+		$this->PayID = parent::InsertID($pdo);
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->MainObjectID = $this->PayID;
 		$daObj->TableName = "LON_pays";
-		$daObj->execute();
+		$daObj->execute($pdo);
 	 	return true;
     }
 	
@@ -303,16 +311,16 @@ class LON_pays extends PdoDataAccess
 	 	return true;
     }
 	
-	static function DeletePay($PayID){
+	static function DeletePay($PayID, $pdo = null){
 		
-		if( parent::delete("LON_pays"," PayID=?", array($PayID)) === false )
+		if( parent::delete("LON_pays"," PayID=?", array($PayID), $pdo) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
 		$daObj->MainObjectID = $PayID;
 		$daObj->TableName = "LON_pays";
-		$daObj->execute();
+		$daObj->execute($pdo);
 	 	return true;
 	}
 }

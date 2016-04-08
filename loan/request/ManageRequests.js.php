@@ -15,15 +15,43 @@ ManageRequest.prototype = {
 
 function ManageRequest(){
 	
-	/*this.LoanInfoPanel = new Ext.panel.Panel({
-		renderTo : this.get("LoanInfo"),
-		border : 0,
-		hidden : true,
-		loader : {
-			url : this.address_prefix + "RequestInfo.php",
-			scripts : true
+	this.FilterObj = Ext.button.Button({
+		text: 'فیلتر لیست',
+		iconCls: 'list',
+		menu: {
+			xtype: 'menu',
+			plain: true,
+			showSeparator : true,
+			items: [{
+				text: "کلیه درخواست ها",
+				checked: true,
+				group: 'filter',
+				handler : function(){
+					me = ManageRequestObject;
+					me.grid.getStore().proxy.extraParams["IsEnded"] = "";
+					me.grid.getStore().loadPage(1);
+				}
+			},{
+				text: "درخواست های جاری",
+				group: 'filter',
+				checked: true,
+				handler : function(){
+					me = ManageRequestObject;
+					me.grid.getStore().proxy.extraParams["IsEnded"] = "NO";
+					me.grid.getStore().loadPage(1);
+				}
+			},{
+				text: "درخواست های خاتمه یافته",
+				group: 'filter',
+				checked: true,
+				handler : function(){
+					me = ManageRequestObject;
+					me.grid.getStore().proxy.extraParams["IsEnded"] = "YES";
+					me.grid.getStore().loadPage(1);
+				}
+			}]
 		}
-	});*/
+	});
 }
 
 ManageRequestObject = new ManageRequest();

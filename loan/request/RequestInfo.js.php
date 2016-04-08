@@ -62,7 +62,8 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 		},
 		fields : ["RequestID","BranchID","LoanID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
-					"guarantees","AgentGuarantee","StatusID","DocumentDesc","imp_VamCode"],
+					"guarantees","AgentGuarantee","StatusID","DocumentDesc","imp_VamCode","IsEnded",
+					"MaxFundWage"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -84,6 +85,11 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 				//..........................................................
 				oldInfo = record.data.imp_VamCode != null ? "شماره وام سیستم قدیم : " + record.data.imp_VamCode : "";
 				me.companyPanel.down("[itemId=oldInfo]").update(oldInfo);
+				//..........................................................
+				if(record.data.IsEnded == "YES")
+				{
+					me.grid.down("[itemId=addPart]").hide();
+				}
 				//..........................................................
 				if(record.data.AgentGuarantee == "YES")
 					me.companyPanel.down("[name=AgentGuarantee]").setValue(true);
@@ -161,22 +167,24 @@ RequestInfo.prototype.OperationMenu = function(e){
 	ReqRecord = this.store.getAt(0);
 	
 	var op_menu = new Ext.menu.Menu();
-
+op_menu.add({text: 'پرداخت',iconCls: 'epay',
+		handler : function(){ return RequestInfoObject.PayInfo(); }});
 	if(record.data.imp_VamCode*1 > 0)
 	{
 		op_menu.add({text: 'اقساط',iconCls: 'list',
 		handler : function(){ return RequestInfoObject.LoadInstallments(); }});
 	
-		op_menu.add({text: 'پرداخت ها',iconCls: 'epay',
+		op_menu.add({text: 'پرداخت های مشتری',iconCls: 'list',
 		handler : function(){ return RequestInfoObject.LoadPays(); }});
-
-		op_menu.add({text: 'ویرایش',iconCls: 'edit', 
+		
+		if(this.RequestRecord.data.IsEnded == "NO")
+			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
 		
 		op_menu.showAt(e.pageX-120, e.pageY);
 		return;
 	}
-	if(record.data.IsStarted == "NO")
+	if(record.data.IsStarted == "NO" && this.RequestRecord.data.IsEnded == "NO")
 	{
 		if(record.data.StatusID == "70")
 			op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
@@ -197,7 +205,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 		op_menu.add({text: 'پرداخت',iconCls: 'epay',
 		handler : function(){ return RequestInfoObject.PayInfo(); }});
 	
-		if(record.data.IsPaid == "YES")
+		if(record.data.IsPaid == "YES" && this.RequestRecord.data.IsEnded == "NO")
 			op_menu.add({text: 'اتمام فاز و ایجاد فاز جدید',iconCls: "app",
 			handler : function(){ return RequestInfoObject.EndPart(); }});
 	}		
@@ -544,6 +552,18 @@ RequestInfo.prototype.BuildForms = function(){
 			iconCls : "cross",
 			itemId : "cmp_reject60",
 			handler : function(){ RequestInfoObject.beforeChangeStatus(60); }
+		},{
+			text : 'خاتمه وام',
+			hidden : true,
+			iconCls : "finish",
+			itemId : "cmp_end",
+			handler : function(){ RequestInfoObject.EndRequest(); }
+		},{
+			text : "برگشت خاتمه وام",
+			hidden : true,
+			iconCls : "undo",
+			itemId : "cmp_undoend",
+			handler : function(){ RequestInfoObject.ReturnEndRequest(); }
 		}]
 	});
 		
@@ -615,20 +635,27 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		}	
 		if(this.User == "Staff")
 		{
-			if(record.data.StatusID == "70")
+			if(record.data.IsEnded == "YES")
 			{
-				if(record.data.imp_VamCode*1 == null || record.data.imp_VamCode == "")
+				this.companyPanel.getEl().readonly();
+				this.companyPanel.down("[itemId=cmp_save]").hide();
+			}
+			else
+			{
+				if(record.data.StatusID == "70")
 				{
-					this.companyPanel.getEl().readonly();
-					this.companyPanel.down("[itemId=cmp_save]").hide();
-				}					
-			}
-			if(record.data.ReqPersonID == null)
-			{
-				this.companyPanel.down("[name=BorrowerDesc]").hide();
-				this.companyPanel.down("[name=BorrowerID]").hide();
-			}
-			
+					if(record.data.imp_VamCode*1 == null || record.data.imp_VamCode == "")
+					{
+						this.companyPanel.getEl().readonly();
+						this.companyPanel.down("[itemId=cmp_save]").hide();
+					}					
+				}
+				if(record.data.ReqPersonID == null)
+				{
+					this.companyPanel.down("[name=BorrowerDesc]").hide();
+					this.companyPanel.down("[name=BorrowerID]").hide();
+				}
+			}			
 		}	
 		if(this.User == "Customer")
 		{
@@ -660,15 +687,27 @@ RequestInfo.prototype.CustomizeForm = function(record){
 	this.companyPanel.down("[itemId=cmp_confirm70]").hide();
 	this.companyPanel.down("[itemId=cmp_reject60]").hide();
 	this.companyPanel.down("[itemId=cmp_changeStatus]").hide();
-	if(this.ReadOnly)
-		return;
+	this.companyPanel.down("[itemId=cmp_end]").hide();
+	this.companyPanel.down("[itemId=cmp_undoend]").hide();
 	
 	if(record != null && this.User == "Staff")
 	{
 		this.companyPanel.down("[itemId=cmp_LoanDocuments]").show();
 		this.companyPanel.down("[itemId=cmp_PersonDocuments]").show();
 		this.companyPanel.down("[itemId=cmp_history]").show();
-		
+	}
+	
+	if(this.ReadOnly)
+		return;
+	
+	if(record.data.IsEnded == "YES")
+	{
+		this.companyPanel.down("[itemId=cmp_undoend]").show();
+		return;
+	}		
+	
+	if(record != null && this.User == "Staff")
+	{
 		//if('<?= $_SESSION["USER"]["UserName"] ?>' == 'admin')
 		//{
 			this.companyPanel.down("[itemId=cmp_changeStatus]").show();
@@ -694,6 +733,10 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		{
 			this.companyPanel.down("[itemId=cmp_confirm70]").show();
 			this.companyPanel.down("[itemId=cmp_reject60]").show();
+		}
+		if(record.data.IsEnded == "NO" && record.data.StatusID == "70")
+		{
+			this.companyPanel.down("[itemId=cmp_end]").show();
 		}
 	}
 }
@@ -751,7 +794,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 	{
 		this.PartWin = new Ext.window.Window({
 			width : 500,
-			height : 400,
+			height : 500,
 			modal : true,
 			closeAction : 'hide',
 			title : "ایجاد فاز جدید",
@@ -831,6 +874,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					name: 'FundWage'
 				},{
 					xtype : "fieldset",
+					title : "نحوه دریافت کارمزد",
 					colspan :2,
 					width : 450,
 					style : "margin-right:10px",
@@ -867,6 +911,21 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						boxLabel : "محاسبه پرداخت بر اساس اول اصل مبلغ قسط سپس جرایم",
 						name : "PayCompute",
 						inputValue : "installment"
+					}]
+				},{
+					xtype : "fieldset",
+					colspan :2,
+					width : 450,
+					style : "margin-right:10px",
+					items : [{
+						xtype : "currencyfield",
+						hideTrigger : true,
+						labelWidth : 120,
+						fieldLabel : "سقف کارمزد صندوق",
+						name : "MaxFundWage"
+					},{
+						xtype : "container",
+						html : "این کارمزد بر اساس نحوه دریافت کارمزد محاسبه می گردد."
 					}]
 				},{
 					xtype : "hidden",
@@ -911,6 +970,13 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 }
 
 RequestInfo.prototype.SavePart = function(){
+
+	if(this.PartWin.down('[name=MaxFundWage]').getValue()*1 > 0 && 
+		this.PartWin.down('[name=FundWage]').getValue()*1 > 0 )
+	{
+		Ext.MessageBox.alert("Error","در صورتی که سقف کارمزد صندوق را تعیین می کنید باید کارمزد صندوق را صفر نمایید");
+		return;
+	}
 
 	mask = new Ext.LoadMask(this.PartWin, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
@@ -1054,6 +1120,28 @@ RequestInfo.prototype.LoadSummary = function(record){
 	
 	if(record.data.InstallmentCount == 1)
 		LastPay = 0;
+	
+	if(record.data.MaxFundWage*1 > 0)
+	{
+		tmp = record.data.WageReturn == "INSTALLMENT" ? 
+			Math.round(record.data.MaxFundWage*1/record.data.InstallmentCount) : 0;
+		
+		this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay + tmp);
+		this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay + tmp);
+		this.get("SUM_Delay").innerHTML = 0;
+		this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount 
+			 - (record.data.WageReturn == "CUSTOMER" ? TotalWage + record.data.MaxFundWage*1 : 0));	
+
+		this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage + record.data.MaxFundWage*1);	
+		this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.MaxFundWage);	
+		this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
+
+		this.get("SUM_Wage_1Year").innerHTML = 0;
+		this.get("SUM_Wage_2Year").innerHTML = 0;
+		this.get("SUM_Wage_3Year").innerHTML = 0;
+		this.get("SUM_Wage_4Year").innerHTML = 0;
+		return;
+	}
 	
 	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay);
 	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay);
@@ -1269,6 +1357,98 @@ RequestInfo.prototype.SetStatus = function(){
 	this.setStatusWin.center();
 }
 
+RequestInfo.prototype.EndRequest = function(){
+	
+	this.mask.show();
+	
+	Ext.Ajax.request({
+		methos : "post",
+		url : this.address_prefix + "request.data.php",
+		params : {
+			task : "GetRequestTotalRemainder",
+			RequestID : this.RequestID
+		},
+
+		success : function(response){
+			result = Ext.decode(response.responseText);
+			Ext.MessageBox.confirm("","مبلغ باقیمانده وام " + 
+				Ext.util.Format.Money(result.data) + " ریال می باشد" +
+				"<br>آیا مایل به خاتمه وام و صدور سند خاتمه می باشید؟", function(btn){
+				
+				if(btn == "no")
+				{
+					RequestInfoObject.mask.hide();
+					return;
+				}	
+
+				me = RequestInfoObject;
+				me.mask.show();
+
+				Ext.Ajax.request({
+					methos : "post",
+					url : me.address_prefix + "request.data.php",
+					params : {
+						task : "EndRequest",
+						RequestID : me.RequestID
+					},
+
+					success : function(response){
+						result = Ext.decode(response.responseText);
+						if(result.success)
+						{
+							Ext.MessageBox.alert("","سند مربوطه با موفقیت صادر گردید");
+							RequestInfoObject.LoadRequestInfo();					
+						}	
+						else if(result.data == "")
+							Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+						else
+							Ext.MessageBox.alert("",result.data);
+
+					}
+				});
+			});			
+
+		}
+	});
+	
+	
+}
+
+RequestInfo.prototype.ReturnEndRequest = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به برگشت خاتمه وام و ابطال سند خاتمه می باشید؟", function(btn){
+				
+		if(btn == "no")
+			return;
+
+		me = RequestInfoObject;
+		me.mask.show();
+
+		Ext.Ajax.request({
+			methos : "post",
+			url : me.address_prefix + "request.data.php",
+			params : {
+				task : "ReturnEndRequest",
+				RequestID : me.RequestID
+			},
+
+			success : function(response){
+				result = Ext.decode(response.responseText);
+				if(result.success)
+				{
+					Ext.MessageBox.alert("","سند مربوطه با موفقیت باطل گردید");
+					RequestInfoObject.LoadRequestInfo();					
+				}	
+				else if(result.data == "")
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+				else
+					Ext.MessageBox.alert("",result.data);
+
+				RequestInfoObject.mask.hide();
+			}
+		});
+	});			
+}
 //.........................................................
 
 RequestInfo.prototype.LoadInstallments = function(){

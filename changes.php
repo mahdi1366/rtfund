@@ -1,16 +1,16 @@
 <?php
 
 /*
- ALTER TABLE `krrtfir_rtfund`.`LON_requests`
-MODIFY COLUMN `ReqPersonID` INTEGER UNSIGNED COMMENT 'معرفی کننده ';
 
-update LON_requests set ReqPersonID=null where ReqPersonID=LoanPersonID;
-
-ALTER TABLE `krrtfir_rtfund`.`LON_loans`
-ADD COLUMN `IsCustomer` ENUM('YES','NO') NOT NULL DEFAULT 'NO' AFTER `BlockID`;
-
-
-
-ALTER TABLE `krrtfir_rtfund`.`DataAudit` MODIFY COLUMN `TableName` VARCHAR(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'نام جدول';
-*/
+5, 101, 'خاتمه یافته', '', '', ''
+ * 
+update LON_requests set StatusID=101 where IsEnded='YES'
+ * 
+ * delete FROM LON_installments where InstallmentAmount=0
+ * 
+ * 
+ * ALTER TABLE `krrtfir_rtfund`.`LON_ReqParts` ADD COLUMN `MaxFundWage` DECIMAL(13) 
+ * NOT NULL DEFAULT 0 COMMENT 'حداکثر کارمزد صندوق' AFTER `PayCompute`;
+ * 
+ */
 ?>

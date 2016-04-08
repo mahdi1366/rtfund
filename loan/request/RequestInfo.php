@@ -40,6 +40,7 @@ $dg->addColumn("", "IsPartEnded","", true);
 $dg->addColumn("", "WageReturn","", true);
 $dg->addColumn("", "imp_VamCode","", true);
 $dg->addColumn("", "PayCompute","", true);
+$dg->addColumn("", "MaxFundWage","", true);
 
 $col = $dg->addColumn("عنوان فاز", "PartDesc", "");
 $col->editor = ColumnEditor::TextField();

@@ -23,7 +23,7 @@ if(!session::checkLogin())
 	else
 		echo "<script>window.location='/framework/login.php';</script>";
 	die();
-}
+} 
 
 $address_prefix = getenv("DOCUMENT_ROOT");
 $js_prefix_address = implode("/" , 

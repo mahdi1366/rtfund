@@ -963,9 +963,9 @@ class PdoDataAccess extends ExceptionHandler
 		}
 		//...................................
 		$defaultValue = DataMember::GetDefaultValue($checkDT);
-		if(!isset($value))
+		if(empty($value))
 		{
-			if($defaultValue != null)
+			if($defaultValue !== null)
 				$value = $defaultValue;
 			else
 				return $value;

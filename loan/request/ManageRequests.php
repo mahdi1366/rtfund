@@ -16,6 +16,7 @@ $dg->addColumn("", "BorrowerDesc", "", true);
 $dg->addColumn("", "BorrowerID", "", true);
 $dg->addColumn("", "LoanPersonID", "", true);
 $dg->addColumn("", "ReqPersonID", "", true);
+$dg->addColumn("", "IsEnded", "", true);
 
 $col = $dg->addColumn("شماره", "RequestID", "");
 $col->width = 50;
@@ -43,6 +44,8 @@ $col->renderer = "ManageRequest.OperationRender";
 $col->width = 50;
 $col->align = "center";
 
+$dg->addObject("ManageRequestObject.FilterObj");
+
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 500;
 $dg->pageSize = 15;
@@ -57,6 +60,13 @@ ManageRequestObject.grid = <?= $grid ?>;
 ManageRequestObject.grid.on("itemdblclick", function(view, record){
 	framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", {RequestID : record.data.RequestID});
 });	
+ManageRequestObject.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.IsEnded == "YES")
+			return "greenRow";
+		return "";
+	}	
+	
 ManageRequestObject.grid.render(ManageRequestObject.get("DivGrid"));
 </script>
 <center><br>

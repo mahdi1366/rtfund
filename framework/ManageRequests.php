@@ -100,14 +100,14 @@ $col->width = 110;
 $col = $dgh->addColumn("عنوان", "title");
 $col->renderer = "function(v,p,r){ return TaskRequestObj.DescRender(v,p,r);}";
 
-$col = $dgh->addColumn("زمان ایجاد", "CreateDate", GridColumn::ColumnType_date);
+$col = $dgh->addColumn("زمان ایجاد", "CreateDate", GridColumn::ColumnType_datetime);
 $col->width = 120;
 
 $col = $dgh->addColumn("وضعیت", "TaskStatus");
 $col->renderer = "function(v,p,r){ return TaskRequestObj.StatusRender(v,p,r);}";
 $col->width = 90;
 
-$col = $dgh->addColumn("زمان اقدام", "DoneDate", GridColumn::ColumnType_date);
+$col = $dgh->addColumn("زمان اقدام", "DoneDate", GridColumn::ColumnType_datetime);
 $col->width = 120;
 
 $col = $dgh->addColumn("عملیات", "");

@@ -20,8 +20,6 @@ function Menu()
 		title: "انتخاب سیستم",
 		width: 500,
 		renderTo : this.get("div_systems"),
-		collapsible : true,
-		collapsed : false,
 		frame: true,
 		items : [{
 			xtype : "combo",
@@ -48,8 +46,6 @@ function Menu()
 						MenuObject.grid.getStore().load();
 					else
 						MenuObject.grid.render(MenuObject.get("div_grid"));
-
-					MenuObject.SystemPanel.collapse();
 				}
 			}
 		}]

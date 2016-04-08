@@ -38,7 +38,8 @@ for ($i = 0; $i < count($menus); $i++) {
 	}
 
 	$icon = $menus[$i]['icon'];
-	$icon = (!$icon) ? "/framework/icons/star.gif" : "/framework/icons/$icon";
+	$icon = (!$icon) ? "/generalUI/ext4/resources/themes/icons/star.gif" : 
+		"/generalUI/ext4/resources/themes/icons/$icon";
 
 	$link_path = "/" . $menus[$i]['SysPath'] . "/" . $menus[$i]['MenuPath'];
 	$param = "{";

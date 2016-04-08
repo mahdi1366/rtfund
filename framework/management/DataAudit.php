@@ -17,7 +17,7 @@ $col->width = 150;
 $col = $dg->addColumn("جدول مربوطه","table_comment","string");
 $col->width = 120;
 
-$col = $dg->addColumn("تاریخ عملیات","ActionTime",  GridColumn::ColumnType_date);
+$col = $dg->addColumn("تاریخ عملیات","ActionTime",  GridColumn::ColumnType_datetime);
 $col->width = 120;
 
 $col = $dg->addColumn("عملیات","ActionType", "");
@@ -98,6 +98,7 @@ function DataAudit()
 			}),
 			displayField: 'SysName',
 			valueField : "SystemID",
+			hiddenName : "SystemID",
 			queryMode: "local",
 			fieldLabel : "سیستم"
 		},{
@@ -116,7 +117,7 @@ function DataAudit()
 				if(!DataAuditObject.grid.rendered)
 					DataAuditObject.grid.render(DataAuditObject.get("div_grid"));
 				else
-					DataAuditObject.grid.getStore().load();
+					DataAuditObject.grid.getStore().loadPage(1);
 			}
 		}]
 	});

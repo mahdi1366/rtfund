@@ -101,7 +101,7 @@ $grid2 = $dg->makeGrid_returnObjects();
 
 ?>
 <style type="text/css">
-.step{background-image:url('/framework/icons/step.png') !important;}
+.step{background-image:url('/generalUI/ext4/resources/themes/icons/step.png') !important;}
 </style>
 <script>
 

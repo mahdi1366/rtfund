@@ -144,60 +144,61 @@ class ACC_docs extends PdoDataAccess {
 		return true;
 	}
 
-	static function Remove($DocID) {
+	static function Remove($DocID, $pdo = null) {
 		
-		$temp = parent::runquery("select * from ACC_docs where DocID=?", array($DocID));
+		$temp = parent::runquery("select * from ACC_docs join ACC_cycles using(CycleID)
+			where DocID=?", array($DocID));
 		if (count($temp) == 0)
 			return false;
 
-		if ($temp[0]["DocStatus"] == "RAW") {
-			
-			$pdo = parent::getPdoObject();
-			$pdo->beginTransaction();
-			
-			$result = parent::delete("ACC_DocChecks", "DocID=?", array($DocID), $pdo);
-			if ($result === false)
-			{
-				$pdo->rollBack();
-				return false;
-			}
-			
-			$result = parent::delete("ACC_DocItems", "DocID=?", array($DocID), $pdo);
-			if ($result === false)
-			{
-				$pdo->rollBack();
-				return false;
-			}
-
-			$result = parent::delete("ACC_docs", "DocID=?", array($DocID), $pdo);
-			if ($result === false)
-			{
-				$pdo->rollBack();
-				return false;
-			}
-
-			$daObj = new DataAudit();
-			$daObj->ActionType = DataAudit::Action_delete;
-			$daObj->MainObjectID = $DocID;
-			$daObj->TableName = "ACC_docs";
-			$daObj->execute($pdo);
-
-			$pdo->commit();
-			return true;
+		if($temp[0]["DocStatus"] != "RAW")
+		{
+			ExceptionHandler::PushException("سند مربوطه تایید شده و قابل حذف نمی باشد");
+			return false;
+		}
+		if($temp[0]["IsClosed"] == "YES")
+		{
+			ExceptionHandler::PushException("دوره مربوطه بسته شده و سند قابل حذف نمی باشد.");
+			return false;
+		}
+		
+		if($pdo == null)
+		{
+			$pdo2 = parent::getPdoObject();
+			$pdo2->beginTransaction();
+		}
+		else
+			$pdo2 = $pdo;
+		$result = parent::delete("ACC_DocChecks", "DocID=?", array($DocID), $pdo2);
+		if ($result === false)
+		{
+			$pdo2->rollBack();
+			return false;
 		}
 
-		$result = parent::runquery("update ACC_docs set DocStatus='DELETED'
-				where DocID=:did ", array(":did" => $DocID));
-
+		$result = parent::delete("ACC_DocItems", "DocID=?", array($DocID), $pdo2);
 		if ($result === false)
+		{
+			$pdo2->rollBack();
 			return false;
+		}
+
+		$result = parent::delete("ACC_docs", "DocID=?", array($DocID), $pdo2);
+		if ($result === false)
+		{
+			$pdo2->rollBack();
+			return false;
+		}
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
 		$daObj->MainObjectID = $DocID;
 		$daObj->TableName = "ACC_docs";
-		$daObj->execute();
-		return true;
+		$daObj->execute($pdo2);
+
+		if($pdo == null)
+			$pdo2->commit();
+		return true;	
 	}
 	
 	static function GetLastLocalNo(){

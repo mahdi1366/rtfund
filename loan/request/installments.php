@@ -4,15 +4,23 @@
 // Create Date:	94.08
 //-------------------------
 include('../header.inc.php');
+require_once 'request.class.php';
 include_once inc_dataGrid;
 
 $framework = isset($_SESSION["USER"]["framework"]);
 $PartID = 0;
+$editable = false;
 if($framework)
 {
 	if(empty($_POST["PartID"]))
 		die();
 	$PartID = $_POST["PartID"];
+	
+	$obj = new LON_ReqParts($PartID);
+	$ReqObj = new LON_requests($obj->RequestID);
+	
+	if($ReqObj->IsEnded == "NO")
+		$editable = true;
 }	
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetPartInstallments","grid_div");
@@ -36,32 +44,38 @@ $col = $dg->addColumn("مانده", "TotalRemainder", GridColumn::ColumnType_mon
 $col->width = 120;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo", "string");
-if($framework)
+if($editable)
 	$col->editor = ColumnEditor::NumberField(true);
 $col->width = 80;
 
-$col = $dg->addColumn("بانک", "ChequeBank", "");
-if($framework)
+
+if($editable)
+{
+	$col = $dg->addColumn("بانک", "ChequeBank", "");
 	$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from ACC_banks"), 
 	"BankID", "BankDesc", "", "", true);
+}
+else
+	$col = $dg->addColumn("بانک", "BankDesc", "");
 $col->width = 70;
 
 $col = $dg->addColumn("شعبه", "ChequeBranch", "");
-if($framework)
+if($editable)
 	$col->editor = ColumnEditor::TextField(true);
 $col->width = 90;
 
-if($framework)
+if($editable)
 {
 	$dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", 
 			"function(){InstallmentObject.ComputeInstallments();}");
 	$dg->enableRowEdit = true;
 	$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SavePartPayment(store,record);}";
-	
+}
+
+if($framework)
+{
 	$dg->addButton("cmp_report", "گزارش پرداخت", "report", 
 			"function(){InstallmentObject.PayReport();}");
-	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SavePartPayment(store,record);}";
 }
 
 $dg->height = 377;
@@ -97,10 +111,11 @@ function Installment()
 	this.grid = <?= $grid ?>;
 	if(this.framework)
 	{
-		this.grid.plugins[0].on("beforeedit", function(editor,e){
-			if(e.record.data.IsPaid == "YES")
-				return false;
-		});
+		if(this.grid.plugins[0])
+			this.grid.plugins[0].on("beforeedit", function(editor,e){
+				if(e.record.data.IsPaid == "YES")
+					return false;
+			});
 		
 		this.grid.getStore().proxy.extraParams = {PartID : this.PartID};
 		this.grid.render(this.get("div_grid"));
@@ -117,10 +132,9 @@ function Installment()
 		items : [{
 			xtype : "combo",
 			store: new Ext.data.Store({
-				autoLoad : true,
 				proxy:{
 					type: 'jsonp',
-					url: this.address_prefix + 'request.data.php?task=selectMyParts',
+					url: this.address_prefix + 'request.data.php?task=selectParts',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields :  ['PartAmount','PartDesc',"RequestID","PartDate", "PartID",{
@@ -134,7 +148,6 @@ function Installment()
 			}),
 			displayField: 'fullTitle',
 			valueField : "PartID",
-			queryMode: "local",
 			width : 600,
 			tpl: new Ext.XTemplate(
 				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
