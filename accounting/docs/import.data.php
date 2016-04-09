@@ -319,7 +319,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 			$itemObj->Add($pdo);
 		}
 	}	
-	//---- کارمزد-----
+	//------------------------ کارمزد---------------------
 	
 	foreach($amountArr as $yearTafsili => $arr)
 	{
@@ -356,29 +356,49 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 		}
 	}
 	
-	if($PartObj->WageReturn != "AGENT" && $PartObj->FundWage*1 > $PartObj->CustomerWage)
+	if($PartObj->MaxFundWage > 0)
 	{
 		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_deposite;
-		$itemObj->DebtorAmount = $WageSum - $WageSum*$PartObj->CustomerWage/$MaxWage;
-		$itemObj->CreditorAmount = 0;
-		$itemObj->details = "بابت اختلاف کارمزد " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
-		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $ReqPersonTafsili;
+		$itemObj->details = "";
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		$itemObj->CostID = $CostCode_wage;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $PartObj->MaxFundWage;
+		$itemObj->TafsiliType = TAFTYPE_YEARS;
+		$itemObj->TafsiliID = $yearTafsili;
 		$itemObj->Add($pdo);
+	}
+	
+	if($PartObj->WageReturn != "AGENT" && $PartObj->FundWage*1 > $PartObj->CustomerWage)
+	{
+		if($WageSum - $WageSum*$PartObj->CustomerWage/$MaxWage > 0)
+		{
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_deposite;
+			$itemObj->DebtorAmount = $WageSum - $WageSum*$PartObj->CustomerWage/$MaxWage;
+			$itemObj->CreditorAmount = 0;
+			$itemObj->details = "بابت اختلاف کارمزد " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $ReqPersonTafsili;
+			$itemObj->Add($pdo);
+		}
 	}
 	if($PartObj->WageReturn != "AGENT" && $PartObj->FundWage*1 < $PartObj->CustomerWage)
 	{
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_deposite;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $WageSum - $WageSum*$PartObj->FundWage/$MaxWage;
-		$itemObj->details = "بابت سهم کارمزد " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
-		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $ReqPersonTafsili;
-		$itemObj->Add($pdo);
+		if($WageSum - $WageSum*$PartObj->FundWage/$MaxWage > 0)
+		{
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_deposite;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $WageSum - $WageSum*$PartObj->FundWage/$MaxWage;
+			$itemObj->details = "بابت سهم کارمزد " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $ReqPersonTafsili;
+			$itemObj->Add($pdo);
+		}
 	}
-	// ---- bank ----
+	// ----------------------------- bank --------------------------------
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
 	$itemObj->CostID = $CostCode_bank;

@@ -167,8 +167,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 	ReqRecord = this.store.getAt(0);
 	
 	var op_menu = new Ext.menu.Menu();
-op_menu.add({text: 'پرداخت',iconCls: 'epay',
-		handler : function(){ return RequestInfoObject.PayInfo(); }});
+
 	if(record.data.imp_VamCode*1 > 0)
 	{
 		op_menu.add({text: 'اقساط',iconCls: 'list',

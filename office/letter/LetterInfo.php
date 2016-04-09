@@ -66,7 +66,7 @@ if($LetterObj->LetterType == "INNER")
 }
 if($LetterObj->LetterType == "OUTCOME")
 {
-	$content .= $LetterObj->organization . "<br>" ;
+	$content .= $LetterObj->OrgPost . " " . $LetterObj->organization . "<br>" ;
 	$content .= "<br> موضوع : " . $LetterObj->LetterTitle . "<br><br></b>";
 	$content .= str_replace("\r\n", "", $LetterObj->context);
 	

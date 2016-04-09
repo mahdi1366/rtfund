@@ -44,7 +44,7 @@ Letter.prototype.LoadLetter = function(){
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
 		fields : ["LetterID","LetterType","LetterTitle","SubjectID","summary","context", 
-			"SignerPersonID", "organization"],
+			"SignerPersonID", "organization","OrgPost"],
 		autoLoad : true,
 		listeners : {
 			load : function(){
@@ -103,9 +103,15 @@ Letter.prototype.BuildForms = function(){
 				listeners : {
 					change : function(){
 						if(this.checked)
+						{
 							this.up('form').down("[name=organization]").disable();
+							this.up('form').down("[name=OrgPost]").disable();
+						}	
 						else
+						{
 							this.up('form').down("[name=organization]").enable();
+							this.up('form').down("[name=OrgPost]").enable();
+						}
 					}
 				}
 			},{
@@ -147,6 +153,13 @@ Letter.prototype.BuildForms = function(){
 			queryMode : "local",
 			displayField: 'fullname',
 			valueField : "PersonID"
+		},{
+			xtype : "textfield",
+			name : "OrgPost",
+			fieldLabel : "پست مربوطه",
+			disabled : true,
+			allowBlank : true,
+			colspan  :2
 		},{
 			xtype : "tabpanel",
 			colspan : 2,
