@@ -486,8 +486,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 	{
 		//---------------------------------------------------------		
 		$dt = PdoDataAccess::runquery("
-			SELECT InstallmentAmount,InstallmentID
-				FROM LON_installments
+			SELECT PayAmount,PayID
+				FROM LON_pays
 				where PartID=? AND ChequeNo>0",	array($PartObj->PartID), $pdo);
 
 		foreach($dt as $row)
@@ -496,12 +496,12 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
 			$itemObj->CostID = $CostCode_guaranteeAmount;
-			$itemObj->DebtorAmount = $row["InstallmentAmount"];
+			$itemObj->DebtorAmount = $row["PayAmount"];
 			$itemObj->CreditorAmount = 0;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $LoanPersonTafsili;
 			$itemObj->SourceType = DOCTYPE_DOCUMENT;
-			$itemObj->SourceID = $row["InstallmentID"];
+			$itemObj->SourceID = $row["PayID"];
 			$itemObj->Add($pdo);
 			
 			$SumAmount += $row["ParamValue"]*1;
@@ -966,7 +966,7 @@ function RegisterCustomerPayDoc($PayObj, $pdo){
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
 		
-	return $obj->DocID;
+	return true;
 }
 
 function ReturnCustomerPayDoc($PayObj, $pdo){
@@ -1062,8 +1062,8 @@ function RegisterEndRequestDoc($ReqObj, $pdo){
 		}
 		//---------------------------------------------------------		
 		$dt2 = PdoDataAccess::runquery("
-			SELECT InstallmentAmount,InstallmentID
-				FROM LON_installments join LON_ReqParts using(PartID)
+			SELECT PayAmount,PayID
+				FROM LON_pays join LON_ReqParts using(PartID)
 				where RequestID=? AND ChequeNo>0",	array($ReqObj->RequestID), $pdo);
 
 		foreach($dt2 as $row)
@@ -1073,11 +1073,11 @@ function RegisterEndRequestDoc($ReqObj, $pdo){
 			unset($itemObj->TafsiliID2);
 			$itemObj->CostID = $CostCode_guaranteeAmount;
 			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $row["InstallmentAmount"];
+			$itemObj->CreditorAmount = $row["PayAmount"];
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $LoanPersonTafsili;
 			$itemObj->SourceType = DOCTYPE_DOCUMENT;
-			$itemObj->SourceID = $row["InstallmentID"];
+			$itemObj->SourceID = $row["PayID"];
 			$itemObj->Add($pdo);
 			
 			$SumAmount += $row["ParamValue"]*1;

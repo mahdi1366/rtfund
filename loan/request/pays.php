@@ -41,17 +41,17 @@ if($editable)
 else
 	$col = $dg->addColumn("نحوه پرداخت", "PayTypeDesc");
 	
-$col->width = 100;
+$col->width = 80;
 
 $col = $dg->addColumn("تاریخ", "PayDate", GridColumn::ColumnType_date);
 if($editable)
 	$col->editor = ColumnEditor::SHDateField();
-$col->width = 80;
+$col->width = 70;
 
 $col = $dg->addColumn("مبلغ پرداخت", "PayAmount", GridColumn::ColumnType_money);
 if($editable)
 	$col->editor = ColumnEditor::CurrencyField();
-$col->width = 90;
+$col->width = 80;
 
 $col = $dg->addColumn("شناسه پیگیری", "PayRefNo");
 $col->width = 100;
@@ -59,7 +59,7 @@ $col->width = 100;
 $col = $dg->addColumn("شماره فیش", "PayBillNo");
 if($editable)
 	$col->editor = ColumnEditor::TextField(true);
-$col->width = 100;
+$col->width = 80;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo", "string");
 $col->editor = ColumnEditor::NumberField(true);
@@ -78,9 +78,21 @@ $col->width = 70;
 $col = $dg->addColumn("شعبه", "ChequeBranch", "");
 if($editable)
 	$col->editor = ColumnEditor::TextField(true);
-$col->width = 90;
+$col->width = 80;
+
+if($editable)
+{
+	$col = $dg->addColumn("وضعیت چک", "ChequeStatus", "");
+	$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from BaseInfo where typeID=16"), 
+	"InfoID", "InfoDesc", "", "", true);
+}
+else
+	$col = $dg->addColumn("وضعیت چک", "ChequeStatusDesc", "");
+$col->width = 80;
+
 
 $col = $dg->addColumn("توضیحات", "details", "");
+//$col->ellipsis = 30;
 if($editable)
 	$col->editor = ColumnEditor::TextField(true);
 
@@ -94,7 +106,7 @@ if($editable)
 	$col = $dg->addColumn("حذف", "");
 	$col->sortable = false;
 	$col->renderer = "function(v,p,r){return LoanPay.DeleteRender(v,p,r);}";
-	$col->width = 50;
+	$col->width = 35;
 }
 if($framework)
 {
@@ -133,18 +145,26 @@ LoanPay.prototype = {
 function LoanPay()
 {
 	this.grid = <?= $grid ?>;
+	this.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.ChequeNo*1>0 && record.data.ChequeStatus != "2")
+			return "yellowRow";
+		return "";
+	}	
+
 	if(this.grid.plugins[0] != undefined)
 		this.grid.plugins[0].on("beforeedit", function(editor,e){
 			
-			if(e.record.data.PayID != null)
+			if(LoanPayObject.PartRecord != null && LoanPayObject.PartRecord.data.IsEnded == "YES")
 				return false;
 			
-			if(e.record.data.PayRefNo != null && e.record.data.PayRefNo != "")
-				return false;
-			if(LoanPayObject.PartRecord != null && LoanPayObject.PartRecord.data.IsEnded == "YES")
-			{
-				return false;
-			}
+			if(e.record.data.PayID == null)
+				return true;
+			
+			if(e.record.data.ChequeNo != null && e.record.data.ChequeStatus != "2")
+				return true;
+			
+			return false;			
 		});
 		
 	if(this.PartID > 0)
@@ -214,14 +234,14 @@ function LoanPay()
 					if(records[0].data.IsEnded == "YES")
 					{
 						me.grid.down("[itemId=AddBtn]").hide();
-						me.grid.columns[12].hide();
+						me.grid.columns[13].hide();
 						me.get("DiVEnded").style.display = "block";
 					}
 					else
 					{
 						me.grid.down("[itemId=AddBtn]").show();
 						me.get("DiVEnded").style.display = "none";
-						me.grid.columns[12].show();
+						me.grid.columns[13].show();
 					}
 					
 					me.PartRecord = records[0];
@@ -265,7 +285,10 @@ LoanPay.prototype.SavePartPayment = function(store, record){
 			if(st.success)
 			{   
 				LoanPayObject.grid.getStore().load();
-				Ext.MessageBox.alert("","برگه حسابداری مربوطه صادر گردید");
+				if(record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
+					Ext.MessageBox.alert("","برگه حسابداری هنگام وصول چک صادر می شود");
+				else
+					Ext.MessageBox.alert("","برگه حسابداری مربوطه صادر گردید");
 			}
 			else
 			{

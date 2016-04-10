@@ -43,27 +43,6 @@ $col->width = 80;
 $col = $dg->addColumn("مانده", "TotalRemainder", GridColumn::ColumnType_money);
 $col->width = 120;
 
-$col = $dg->addColumn("شماره چک", "ChequeNo", "string");
-if($editable)
-	$col->editor = ColumnEditor::NumberField(true);
-$col->width = 80;
-
-
-if($editable)
-{
-	$col = $dg->addColumn("بانک", "ChequeBank", "");
-	$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from ACC_banks"), 
-	"BankID", "BankDesc", "", "", true);
-}
-else
-	$col = $dg->addColumn("بانک", "BankDesc", "");
-$col->width = 70;
-
-$col = $dg->addColumn("شعبه", "ChequeBranch", "");
-if($editable)
-	$col->editor = ColumnEditor::TextField(true);
-$col->width = 90;
-
 if($editable)
 {
 	$dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", 

@@ -19,94 +19,8 @@ switch ($task) {
     case 'SaveBlockData':
         SaveBlockData($level);
 
-    case 'DeleteBlock':
-        deleteBlock();
-
-    case 'SelectLevelBlocks':
-        SelectLevelBlocks();
-
-    case "getLastID":
-        getLastID();
-		
-	//------------------------------
-		
-	case "SelectCostCode":
-		SelectCostCode();
-		
-	case 'SaveCostCode':
-        SaveCostCode();
-		
-	case "DeleteCostCode":
-		DeleteCostCode();
-		
-	//-------------------------------
-		
-	case "AddGroup":
-		AddGroup();
-			
-	case "SelectTafsiliGroups":
-		SelectTafsiliGroups();
-
-	case "DeleteGroup":
-		DeleteGroup();
-
-	case "GetAllTafsilis":
-		GetAllTafsilis();
-
-	case "SaveTafsili":
-		SaveTafsili();
-
-	case "DeleteTafsili":
-		DeleteTafsili();
-		
-	//--------------------------------
-		
-	case 'GetBankData':
-		GetBankData();
-		break;
-	case 'SaveBankData':
-		SaveBankData();
-		break;
-	case 'DeleteBank':
-		DeleteBank();
-		break;
-	
-	//---------------------------------
-	
-	case 'SelectAccounts':
-        SelectAccounts();
-        break;
-    case 'SaveAccount':
-        SaveAccount();
-        break;
-    case 'DeleteAccount':
-        DeleteAccount();
-        break;
-    case 'Getbranches':
-        getbranches();
-    case 'CopySetting':
-        CopySetting();
-    case 'SelectAccountSpecs':
-        SelectAccountSpecs();
-		
-	//---------------------------------
-		
-	case 'SelectCheques':
-		SelectCheques();
-		break;
-	case 'SaveCheque':
-		SaveCheque();
-		break;
-	case 'DeleteCheque':
-		deleteCheque();
-		break;
-        case 'EnableCheque':
-		EnableCheque();
-		break;    
-	case 'Getaccounts':
-		getaccounts();
-		
-	//------------------------------------
+    default : 
+		eval($task. "();");
 
 }
 
@@ -598,5 +512,14 @@ function EnableChequeBook() {
 	die();
 }
 
+//----------------------------------------------
+
+function SelectChequeStatuses() {
+	
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=16");
+
+	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
+	die();
+}
 
 ?>

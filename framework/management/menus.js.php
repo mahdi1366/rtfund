@@ -145,6 +145,7 @@ Menu.deleteRender = function(v,p,r)
 
 Menu.prototype.AddMenu = function(e, GroupID, GroupSystemID)
 {
+	this.MenuWin.down('form').getForm().reset();
 	this.MenuWin.down("[name=ParentID]").setValue(GroupID);
 	this.MenuWin.down("[name=SystemID]").setValue(GroupSystemID);
 	this.MenuWin.show();

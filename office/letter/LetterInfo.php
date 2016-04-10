@@ -62,7 +62,7 @@ if($LetterObj->LetterType == "INNER")
 			data_uri($dt[0]["regSign"],'image/jpeg') . "\")" : "";
 	
 	$content .= "<table width=100%><tr><td><div class=signDiv style=" . $sign . "><b>" . 
-			$dt[0]["RegPersonName"] . "<br>" . $dt[0]["PostName"] . "</b></div></td></tr></table>";
+			$dt[0]["RegPersonName"] . "</b><br><br>" . $dt[0]["PostName"] . "</div></td></tr></table>";
 }
 if($LetterObj->LetterType == "OUTCOME")
 {
@@ -74,7 +74,7 @@ if($LetterObj->LetterType == "OUTCOME")
 			"background-image:url(\"" . data_uri($dt[0]["signer"],'image/jpeg') . "\")" : "";
 	
 	$content .= "<table width=100%><tr><td><div class=signDiv style=" . $sign . "><b>" . 
-			$dt[0]["SignPersonName"] . "<br>" . $dt[0]["PostName"] . "</b></div></td></tr></table>";
+			$dt[0]["SignPersonName"] . "</b><br><br>" . $dt[0]["PostName"] . "</div></td></tr></table>";
 }
 foreach($dt as $row)
 {

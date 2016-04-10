@@ -185,17 +185,6 @@ class LON_installments extends PdoDataAccess
 	public $PartID;
 	public $InstallmentDate;
 	public $InstallmentAmount;
-	
-	public $PaidDate;
-	public $PaidAmount;
-	public $PaidRefNo;
-	
-	public $IsPaid;
-	public $PaidType;
-	
-	public $ChequeNo;
-	public $ChequeBank;
-	public $ChequeBranch;
 			
 	function __construct($InstallmentID = "") {
 		
@@ -209,10 +198,9 @@ class LON_installments extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select p.*,rp.*,b.BankDesc
+			select p.*,rp.*
 			from LON_installments p
 			join LON_ReqParts rp using(PartID)
-			left join ACC_banks b on(ChequeBank=BankID)
 			where " . $where, $param);
 	}
 	
@@ -256,6 +244,7 @@ class LON_pays extends PdoDataAccess
 	public $ChequeNo;
 	public $ChequeBank;
 	public $ChequeBranch;
+	public $ChequeStatus;
 	public $details;
 	
 	public $_RequestID;
@@ -274,11 +263,16 @@ class LON_pays extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select p.*,rp.*,b.BankDesc, bi.InfoDesc PayTypeDesc
+			select p.*,rp.*,
+				b.BankDesc, 
+				bi.InfoDesc PayTypeDesc, 
+				bi2.InfoDesc ChequeStatusDesc
 			from LON_pays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
+			left join BaseInfo bi2 on(bi2.TypeID=16 AND bi2.InfoID=p.ChequeStatus)
+			
 			where " . $where, $param);
 	}
 	

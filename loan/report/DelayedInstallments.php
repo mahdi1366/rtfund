@@ -28,15 +28,6 @@ $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::Column
 $col = $dg->addColumn("مانده", "remainder", GridColumn::ColumnType_money);
 $col->width = 100;
 
-$col = $dg->addColumn("شماره چک", "ChequeNo", "string");
-$col->width = 80;
-
-$col = $dg->addColumn("بانک", "ChequeBank", "");
-$col->width = 70;
-
-$col = $dg->addColumn("شعبه", "ChequeBranch", "");
-$col->width = 90;
-
 $dg->addButton("", "گزارش پرداخت", "report", "function(){LoanReport_DelayedInstallmentsObj.PayReport();}");
 
 $dg->height = 377;

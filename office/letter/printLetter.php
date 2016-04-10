@@ -13,9 +13,9 @@ if(empty($LetterID))
 $LetterObj = new OFC_letters($LetterID);
 $letterYear = substr(DateModules::miladi_to_shamsi($LetterObj->LetterDate),0,4);
 //..............................................................................
-$content = "<b><span style=font-size:11px>";
+$content = "<b><span style=font-size:11pt;font-family:BTitr>";
 $dt = PdoDataAccess::runquery("
-	select  p2.sex,FromPersonID,p3.PersonSign signer, p1.PersonSign regSign,
+	select  p2.sex,FromPersonID,p3.PersonSign signer,p1.PersonSign regSign,
 		if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) RegPersonName ,
 		if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) ToPersonName ,
 		concat(p3.fname, ' ', p3.lname) SignPersonName ,
@@ -50,7 +50,7 @@ if($LetterObj->LetterType == "INNER")
 		$sign = "";
 	
 	$content .= "<table width=100%><tr><td><div class=signDiv style=\"" . $sign . "\"><b>" . 
-			$dt[0]["RegPersonName"] . "<br>" . $dt[0]["PostName"] . "</b></div></td></tr></table>";
+			$dt[0]["RegPersonName"] . "</b><br><br>" . $dt[0]["PostName"] . "</div></td></tr></table>";
 }
 if($LetterObj->LetterType == "OUTCOME")
 {
@@ -64,7 +64,7 @@ if($LetterObj->LetterType == "OUTCOME")
 	else
 		$sign = "";
 	$content .= "<table width=100%><tr><td><div class=signDiv style=\"" . $sign . "\"><b>" . 
-			$dt[0]["SignPersonName"] . "<br>" . $dt[0]["PostName"] . "</b></div></td></tr></table>";
+			$dt[0]["SignPersonName"] . "</b><br><br>" . $dt[0]["PostName"] . "</div></td></tr></table>";
 }
 foreach($dt as $row)
 {
@@ -76,24 +76,27 @@ foreach($dt as $row)
 ?>
 <html>
 	<meta content='text/html; charset=utf-8' http-equiv='Content-Type'/>
+	<link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" />
 	<style media="print">
 		.noPrint {display:none;}
 	</style>
 	<style>
 		.header td{background-color: #cccccc; font-weight: bold;size: 12px;}
-		td { font-family: tahoma; font-size: 12px; line-height: 20px; padding: 3px;}
+		td { font-family: BNazanin; font-size: 12pt; line-height: 20px; padding: 3px;}
 		.signDiv {
 			height: 140px;
 			float : left;
+			font-size:11pt;
+			font-family:BTitr;
 			background-repeat: no-repeat; 
-			width: 200px; 
+			width: 200px; 			
 			text-align: center; 
 			padding-top: 60px;
 		}
 	</style>	
 	<body dir="rtl">
 		<center>
-			<div class="noPrint" style="width:500px;font-family: tahoma; font-size: 12px;">
+			<div class="noPrint" style="width:500px;font-family: BNazanin; font-size: 12pt;">
 				<form method="post" id="mainForm">
 					<input onchange="document.forms.mainForm.submit()" name="sign" 
 						   <?= isset($_POST["sign"]) ? "checked" : "" ?>

@@ -13,64 +13,8 @@ $task = isset($_POST ["task"]) ? $_POST ["task"] : (isset($_GET ["task"]) ? $_GE
 
 switch ($task) {
 	
-	case "selectDocs":
-		selectDocs();
-
-	case "GetLastLocalNo":
-		GetLastLocalNo();
-		
-	case "saveDoc":
-		saveDoc();
-
-	case "removeDoc":
-		removeDoc();
-	
-	case "confirm":
-		confirm();
-		
-	case "archive":
-		archive();
-		
-	case "GetSearchCount":
-		GetSearchCount();
-	//..............................
-
-	case "selectDocItems":
-		selectDocItems();
-
-	case "saveDocItem":
-		saveDocItem();
-
-	case "removeDocItem":
-		removeDocItem();
-
-	//...........................
-
-	case "selectChecks":
-		selectChecks();
-
-	case "saveChecks":
-		saveChecks();
-
-	case "removeChecks":
-		removeChecks();
-		
-	case "RegisterCheck":
-		RegisterCheck();
-
-	//............................
-		
-	case "RegisterEndDoc":
-		RegisterEndDoc();
-		
-	case "RegisterStartDoc":
-		RegisterStartDoc();
-		
-	case "ComputeDoc": 
-		ComputeDoc();
-	
-	case "ComputeShareProfit":
-		ComputeShareProfit();
+	default : 
+		eval($task. "();");
 }
 
 function selectDocs() {

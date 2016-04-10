@@ -38,7 +38,7 @@ function GetTreeNodes(){
 	$nodes = PdoDataAccess::runquery("
 		select FromPersonID ,ToPersonID, SendDate,
 			concat(if(IsReal='YES',concat(fname, ' ', lname),CompanyName),' - ',InfoDesc) text, 
-			concat('توضیحات ارجاع : <b>' ,SendComment, '</b>') qtip,
+			concat('<b>توضیحات ارجاع : </b>' ,replace(SendComment,'\n','<br>')) qtip,
 			'true' as leaf, 'true' expanded,'user' iconCls
 		from OFC_send 
 			join BSC_persons p on(ToPersonID=PersonID) 

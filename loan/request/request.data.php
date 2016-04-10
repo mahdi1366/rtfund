@@ -16,104 +16,8 @@ require_once '../../accounting/docs/import.data.php';
 $task = isset($_REQUEST["task"]) ? $_REQUEST["task"] : "";
 switch ($task) {
 		
-	case "SaveLoanRequest":
-		SaveLoanRequest();
-		
-	case "SelectMyRequests":
-		SelectMyRequests();
-		
-	case "SelectAllRequests":
-		SelectAllRequests();
-		
-	case "Selectguarantees":
-		Selectguarantees();
-		
-	case "DeleteRequest":
-		DeleteRequest();
-		
-	case "ChangeRequestStatus":
-		ChangeRequestStatus();
-	//-------------------------------------------
-	
-	case "GetRequestParts":
-		GetRequestParts();
-		
-	case "SavePart":
-		SavePart();
-		
-	case "DeletePart":
-		DeletePart();
-		
-	case "FillParts":
-		FillParts();
-		
-	//----------------------------------------------
-		
-	case "GetPartInstallments":
-		GetPartInstallments();
-		
-	case "ComputeInstallments":
-		ComputeInstallments();
-		
-	case "SavePartPayment":
-		SavePartPayment();
-		
-	case "PayPart":
-		PayPart();
-		
-	case "ReturnPayPart":
-		ReturnPayPart();
-		
-	case "EndPart":
-		EndPart();
-		
-	case "StartFlow":
-		StartFlow();
-		
-	case "GetRequestTotalRemainder":
-		GetRequestTotalRemainder();
-		
-	case "EndRequest":
-		EndRequest();
-		
-	case "ReturnEndRequest":
-		ReturnEndRequest();
-	//----------------------------------------------
-		
-	case "GetLastFundComment":
-		GetLastFundComment();
-		
-	//-----------------------------------------------
-	
-	case "selectParts":
-		selectParts();
-		
-	case "SelectReadyToPayParts":
-		SelectReadyToPayParts();
-		
-	case "SelectReceivedRequests":
-		SelectReceivedRequests();
-		
-	case "selectRequestStatuses":
-		selectRequestStatuses();
-		
-	//-----------------------------------------------
-	case "GetPartPays":
-		GetPartPays();
-		
-	case "SavePartPay":
-		SavePartPay();
-		
-	case "DeletePay":
-		DeletePay();
-		
-	//-----------------------------------------------
-		
-	case "GetDelayedInstallments":
-		GetDelayedInstallments();
-		
-	case "GetEndedRequests":
-		GetEndedRequests();
+	default : 
+		eval($task. "();");
 }
 //....................
 function PMT($CustomerWage, $InstallmentCount, $PartAmount, $YearMonths, $PayInterval) {  
@@ -872,24 +776,29 @@ function SavePartPay(){
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	$result = $obj->AddPay($pdo);
+	if(empty($obj->PartID))
+		$result = $obj->AddPay($pdo);
+	else
+		$result = $obj->EditPay($pdo);
+	
 	if(!$result)
 	{
 		$pdo->rollback();
 		echo Response::createObjectiveResponse(false, "خطا در ثبت ردیف پرداخت");
 		die();
 	}
-	$DocID = RegisterCustomerPayDoc($obj, $pdo);
-	if(!$DocID)
+	if(empty($obj->ChequeNo) || $obj->ChequeStatus == "2")
 	{
-		$pdo->rollback();
-		//print_r(ExceptionHandler::PopAllExceptions());
-		echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
-		die();
+		if(!RegisterCustomerPayDoc($obj, $pdo))
+		{
+			$pdo->rollback();
+			//print_r(ExceptionHandler::PopAllExceptions());
+			echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
+			die();
+		}
 	}
-	
 	$pdo->commit();
-	echo Response::createObjectiveResponse(true, $DocID);
+	echo Response::createObjectiveResponse(true, "");
 	die();
 }
 
@@ -931,7 +840,7 @@ function ComputePayments($PartID, &$installments){
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
-			where PartID=?
+			where PartID=? AND if(p.ChequeNo<>'',p.ChequeStatus=2,1=1)
 			group by PayDate 
 			order by PayDate" , array($PartID));
 	$PayRecord = count($pays) == 0 ? null : $pays[0];
@@ -1060,7 +969,7 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
-			where PartID=?
+			where PartID=? AND if(p.ChequeNo<>'',p.ChequeStatus=2,1=1)
 			group by PayDate" , array($PartID));
 	$PayRecord = count($pays) == 0 ? null : $pays[0];
 	$payIndex = 1;
