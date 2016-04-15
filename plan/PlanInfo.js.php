@@ -9,11 +9,10 @@ PlanInfo.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 
 	PlanID : <?= $PlanID ?>,
-	RequestRecord : null,
+	PlanRecord : null,
 	User : '<?= $User ?>',
 	portal : <?= isset($_REQUEST["portal"]) ? "true" : "false" ?>,
 	readOnly : <?= $readOnly ? "true" : "false" ?>,
-	StatusID : <?= $PlanObj->StatusID ?>,
 	
 	GroupForms : {},
 
@@ -23,6 +22,13 @@ PlanInfo.prototype = {
 };
 
 function PlanInfo(){
+
+	this.PlanRecord = {
+		PlanID : <?= $PlanID ?>,
+		StatusID : <?= $PlanObj->StatusID ?>,
+		PersonID : <?= $PlanObj->PersonID ?>
+	};
+	//--------------------------------------------------------------------------
 	
 	this.tree = new Ext.tree.Panel({
 		store: new Ext.data.TreeStore({
@@ -60,7 +66,7 @@ function PlanInfo(){
 		height : this.portal ? 530 : 600,
 		items : [this.tree,this.itemsPanel],
 		tbar : [{
-			text : "مشاهده ردیف های دارای اطلاعات",
+			text : "ردیف های دارای اطلاعات",
 			iconCls : "list",
 			itemId : "btn_filled",
 			enableToggle : true,
@@ -72,41 +78,68 @@ function PlanInfo(){
 					}
 				});
 			}
+		},'-',{
+			text : "عملیات",
+			iconCls: 'setting',
+			menu: {
+				itemId : "Operation",
+				xtype: 'menu',
+				plain: true,
+				showSeparator : true,
+				items : [{
+					text : 'مدارک درخواست دهنده',
+					iconCls : "attach",
+					handler : function(){ PlanInfoObject.LoanDocuments('person'); }
+				},{
+					text : 'مدارک ضمیمه طرح',
+					iconCls : "attach",
+					itemId : "cmp_LoanDocuments",
+					handler : function(){ PlanInfoObject.LoanDocuments('plan'); }
+				}]
+			}
+		},'-',{
+			text : "چاپ طرح",
+			iconCls : "print",
+			handler : function(){
+				window.open(PlanInfoObject.address_prefix + "printPlan.php?PlanID=" + PlanInfoObject.PlanID);
+			}
 		}]
 	});	
 	
+	this.menu = this.MainPanel.getDockedItems()[0].down("[itemId=Operation]");
+	
 	if(this.User == "Customer" && !this.readOnly)
 	{
-		this.MainPanel.getDockedItems()[0].add(['-',{
+		this.menu.add({
 			text : "ارسال طرح جهت ارزیابی",
 			iconCls : "send",
 			handler : function(){
 				PlanInfoObject.BeforeSendPlan(2);
 			}
-		}]);
+		});
 	}
 	if(this.User == "Staff")
 	{
-		if( new Array(1,3,5).indexOf(this.StatusID*1) != -1)
+		if( new Array(1,3,5).indexOf(this.PlanRecord.StatusID*1) != -1)
 			return;
 			
-		if(this.StatusID == "2")
+		if(this.PlanRecord.StatusID == "2")
 		{
-			this.MainPanel.getDockedItems()[0].add(['-',{
+			this.menu.add({
 				text : "تایید اولیه طرح و شروع گردش داخلی",
 				iconCls : "send",
 				handler : function(){
 					PlanInfoObject.BeforeSendPlan(4);
 				}
-			}]);
+			});
 		}
-		this.MainPanel.getDockedItems()[0].add(['-',{
+		this.menu.add([{
 			text : "برگشت به مشتری جهت انجام اصلاحات",
 			iconCls : "undo",
 			handler : function(){
 				PlanInfoObject.BeforeSendPlan(5);
 			}
-		},'-',{
+		},{
 			text : "رد طرح",
 			iconCls : "cross",
 			handler : function(){
@@ -682,6 +715,43 @@ PlanInfo.prototype.ShowHistory = function(record){
 		params : {
 			PlanID : this.PlanID,
 			GroupID : record.data.id
+		}
+	});
+}
+
+PlanInfo.prototype.LoanDocuments = function(ObjectType){
+
+	if(!this.documentWin)
+	{
+		this.documentWin = new Ext.window.Window({
+			width : 720,
+			height : 440,
+			modal : true,
+			autoScroll:true,
+			bodyStyle : "background-color:white;padding: 4px 4px 4px 4px",
+			closeAction : "hide",
+			loader : {
+				url : "../dms/documents.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.documentWin);
+	}
+
+	this.documentWin.show();
+	this.documentWin.center();
+	
+	this.documentWin.loader.load({
+		scripts : true,
+		params : {
+			ExtTabID : this.documentWin.getEl().id,
+			ObjectType : ObjectType,
+			ObjectID : ObjectType == "plan" ? this.PlanID : this.PlanRecord.PersonID
 		}
 	});
 }
