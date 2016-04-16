@@ -126,7 +126,10 @@ class ReportGenerator {
 			die("<center><span style='font-size:11px;font-family:tahoma;'>" . "گزارش مورد نظر فاقد اطلاعات می باشد." . "</span></center>");
 
 		if ($this->excel)
+		{
 			$this->ExcelGeneration();
+			die();
+		}
 
 		//........................ draw header .......................
 		
@@ -224,7 +227,6 @@ class ReportGenerator {
 	}
 
 	function drawHeader($reportTitle) {
-		
 		
 		echo "<table id='page_" . $this->pageCount . "' width='$this->width' style='font-family:tahoma;border-collapse: collapse'  border='$this->border'
 				cellspacing='$this->cellspace' cellpadding='$this->cellpad'>";
@@ -369,7 +371,7 @@ class ReportGenerator {
 		// row number ----------------------------
 		if ($this->rowNumber) {
 			echo "<td height=21px style='padding:2px;direction:" . $this->columns[0]->direction . "' 
-						border='$this->border' align='center'>
+						border='$this->border' align='" . $this->columns[0]->align . "'>
 				<font color = '$this->body_textcolor' style='font-size:11px'>&nbsp;";
 			echo ($index + 1) . "</font></td>";
 		}
