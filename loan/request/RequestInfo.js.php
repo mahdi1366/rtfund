@@ -63,7 +63,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 		fields : ["RequestID","BranchID","LoanID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
 					"guarantees","AgentGuarantee","StatusID","DocumentDesc","imp_VamCode","IsEnded",
-					"MaxFundWage"],
+					"MaxFundWage","SubAgentID"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -152,11 +152,11 @@ RequestInfo.OperationRender = function(v,p,record){
 		{
 			return "<div  title='ویرایش' class='edit' onclick='RequestInfoObject.PartInfo(true);' " +
 			"style='background-repeat:no-repeat;background-position:center;" +
-			"cursor:pointer;width:16px;float:right;height:16'></div>" + 
+			"cursor:pointer;width:16px;float:right;height:16'></div>"/* + 
 			
 			"<div  title='حذف' class='remove' onclick='RequestInfoObject.DeletePart();' " +
 			"style='background-repeat:no-repeat;background-position:center;" +
-			"cursor:pointer;width:16px;float:right;height:16'></div>";
+			"cursor:pointer;width:16px;float:right;height:16'></div>";*/
 		}
 	}		
 }
@@ -321,7 +321,32 @@ RequestInfo.prototype.BuildForms = function(){
 			displayField : "fullname",
 			valueField : "PersonID",
 			name : "ReqPersonID",
-			itemId : "cmp_requester"
+			itemId : "cmp_requester",
+			listeners :{
+				select : function(record){
+					el = RequestInfoObject.companyPanel.down("[itemId=cmp_subAgent]");
+					el.getStore().proxy.extraParams["PersonID"] = this.getValue();
+					el.getStore().load();
+				}
+			}
+		},{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../../framework/person/persons.data.php?' +
+						"task=selectSubAgents",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['SubID','SubDesc'],
+				autoLoad : true
+			}),
+			fieldLabel : "زیر واحد سرمایه گذار",
+			queryMode : "local",
+			displayField : "SubDesc",
+			valueField : "SubID",
+			name : "SubAgentID",
+			itemId : "cmp_subAgent"
 		},{
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({
@@ -339,14 +364,6 @@ RequestInfo.prototype.BuildForms = function(){
 			valueField : "PersonID",
 			name : "LoanPersonID"
 		},{
-			xtype : "textfield",
-			name : "BorrowerDesc",
-			fieldLabel : "فرد حقیقی / حقوقی"
-		},{
-			xtype : "textfield",
-			name : "BorrowerID",
-			fieldLabel : "کد ملی / کد اقتصادی"
-		},{
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({
 				proxy: {
@@ -363,6 +380,14 @@ RequestInfo.prototype.BuildForms = function(){
 			displayField : "LoanDesc",
 			valueField : "LoanID",
 			name : "LoanID"
+		},{
+			xtype : "textfield",
+			name : "BorrowerDesc",
+			fieldLabel : "فرد حقیقی / حقوقی"
+		},{
+			xtype : "textfield",
+			name : "BorrowerID",
+			fieldLabel : "کد ملی / کد اقتصادی"
 		},{
 			xtype : "currencyfield",
 			name : "ReqAmount",
@@ -628,7 +653,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.companyPanel.getEl().readonly();
 			this.companyPanel.down("[itemId=cmp_save]").hide();
 			this.companyPanel.down("[itemId=cmp_saveAndSend]").hide();
-			this.grid.down("[itemId=addPart]").hide();
+			//this.grid.down("[itemId=addPart]").hide();
 			this.grid.down("[dataIndex=PartID]").hide();
 		}	
 		if(this.User == "Staff")
@@ -875,6 +900,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					name: 'FundWage'
 				},{
 					xtype : "fieldset",
+					itemId : "fs_WageCompute",
 					title : "نحوه دریافت کارمزد",
 					colspan :2,
 					width : 450,
@@ -901,6 +927,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					colspan :2,
 					width : 450,
 					style : "margin-right:10px",
+					itemId : "fs_PayCompute",
 					items : [{
 						xtype : "radio",
 						boxLabel : "محاسبه  پرداخت بر اساس اول جریمه سپس قسط",
@@ -918,6 +945,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					colspan :2,
 					width : 450,
 					style : "margin-right:10px",
+					itemId : "fs_MaxFundWage",
 					items : [{
 						xtype : "currencyfield",
 						hideTrigger : true,
@@ -951,8 +979,11 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 		if(this.User == "Agent")
 		{
 			this.PartWin.down("[name=PartDate]").hide();
+			this.PartWin.down("[itemId=fs_WageCompute]").hide();
+			this.PartWin.down("[itemId=fs_PayCompute]").hide();
+			this.PartWin.down("[itemId=fs_MaxFundWage]").hide();
 			this.PartWin.down("[name=PartAmount]").colspan = 2;
-			
+			this.PartWin.setHeight(250);
 		}
 	}
 	

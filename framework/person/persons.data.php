@@ -14,64 +14,8 @@ if(isset($_REQUEST["task"]))
 {
 	switch ($_REQUEST["task"])
 	{
-		case "SavePerson":
-			SavePerson();
-			
-		case "DeletePerson":
-			DeletePerson();
-			
-		case "ResetPass":
-			ResetPass();
-			
-		case "selectPersons":
-			selectPersons();
-			
-		case "selectPendingPersons":
-			selectPendingPersons();
-			
-		case "selectPosts":
-			selectPosts();
-			
-		case "changePass":
-			changePass();
-			
-		case "ConfirmPersons":
-			ConfirmPersons();
-			
-		//--------------------------------
-			
-		case "selectCompanyTypes":
-			selectCompanyTypes();
-			
-		//--------------------------------
-			
-		case "SelectSigners":
-			SelectSigners();
-
-		case "SaveSigner":
-			SaveSigner();
-
-		case "DeleteSigner":
-			DeleteSigner();
-			
-		//--------------------------------
-			
-		case "SelectLicenses":
-			SelectLicenses();
-
-		case "SaveLicense":
-			SaveLicense();
-
-		case "DeleteLicense":
-			DeleteLicense();
-			
-		case "ConfirmLicense":
-			ConfirmLicense();
-			
-		//---------------------------------
-			
-		case "selectCities":
-			selectCities();
+		default : 
+			eval($_REQUEST["task"] . "();");
 	}
 }
 
@@ -343,5 +287,11 @@ function selectCities(){
 	die();
 }
 
-
+function selectSubAgents(){
+	
+	$PersonID = isset($_REQUEST["PersonID"]) ? $_REQUEST["PersonID"] : $_SESSION["USER"]["PersonID"];
+	$temp = PdoDataAccess::runquery("select * from BSC_SubAgents where PersonID=?", array($PersonID));
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
 ?>

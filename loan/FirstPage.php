@@ -10,6 +10,9 @@ require_once inc_dataGrid;
 $dg = new sadaf_datagrid("dg", $js_prefix_address . 
 		"request/request.data.php?task=SelectReceivedRequests", "grid_div");
 
+$dg->addColumn("", "BorrowerDesc", "", true);
+
+
 $col = $dg->addColumn("شماره وام", "RequestID", "");
 $col->width = 90;
 
@@ -35,13 +38,14 @@ $dg->width = 770;
 $dg->title = "درخواست های رسیده";
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;
-$dg->disableFooter = true;
 $dg->DefaultSortField = "ReqDate";
 $dg->autoExpandColumn = "ReqFullname";
 $grid1 = $dg->makeGrid_returnObjects();
 
 //---------------------------------------------
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "request/request.data.php?task=SelectReadyToPayParts", "grid_div");
+
+$dg->addColumn("", "BorrowerDesc", "", true);
 
 $col = $dg->addColumn("شماره وام", "RequestID", "");
 $col->width = 70;
@@ -69,7 +73,6 @@ $dg->width = 770;
 $dg->title = "درخواست های وام آماده پرداخت";
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;
-$dg->disableFooter = true;
 $dg->DefaultSortField = "PartDate";
 $dg->autoExpandColumn = "LoanFullname";
 $grid2 = $dg->makeGrid_returnObjects();

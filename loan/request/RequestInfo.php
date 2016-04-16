@@ -49,7 +49,8 @@ $col->sortable = false;
 
 if(!$ReadOnly)
 {
-	$dg->addButton("addPart", "ایجاد فاز قرارداد", "add", "function(){RequestInfoObject.PartInfo(false);}");
+	if($User == "Staff")
+		$dg->addButton("addPart", "ایجاد فاز قرارداد", "add", "function(){RequestInfoObject.PartInfo(false);}");
 	
 	$col = $dg->addColumn("", "PartID");
 	$col->renderer = "RequestInfo.OperationRender";

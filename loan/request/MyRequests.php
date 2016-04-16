@@ -30,8 +30,8 @@ $col->width = 110;
 
 if($_SESSION["USER"]["IsCustomer"] != "YES")
 {
-	$col = $dg->addColumn("شرکت", "LoanFullname", "");
-	$col->renderer = "function(v,p,r){return (v == null) ? r.data.BorrowerDesc : v}";
+	$col = $dg->addColumn("متقاضی", "LoanFullname", "");
+	$col->renderer = "function(v,p,r){return (v == '' || v == null) ? r.data.BorrowerDesc : v}";
 }
 $col = $dg->addColumn("مبلغ درخواست", "ReqAmount", GridColumn::ColumnType_money);
 $col->width = 100;

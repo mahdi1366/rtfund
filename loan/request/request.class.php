@@ -21,6 +21,7 @@ class LON_requests extends PdoDataAccess
 	public $AgentGuarantee;
 	public $DocumentDesc;	
 	public $IsEnded;
+	public $SubAgentID;
 	
 	public $_LoanDesc;
 	public $_LoanPersonFullname;
@@ -40,8 +41,8 @@ class LON_requests extends PdoDataAccess
 		
 		return PdoDataAccess::runquery_fetchMode("
 			select r.*,l.*,
-				if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) ReqFullname,
-				if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) LoanFullname,
+				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
+				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
 				bi.InfoDesc StatusDesc,
 				BranchName
 			from LON_requests r

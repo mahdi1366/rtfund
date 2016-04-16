@@ -14,10 +14,13 @@ require_once '../../accounting/definitions.inc.php';
 require_once '../../accounting/docs/import.data.php';
 
 $task = isset($_REQUEST["task"]) ? $_REQUEST["task"] : "";
-switch ($task) {
-		
-	default : 
-		eval($task. "();");
+if(!empty($task))
+{
+	switch ($task) {
+
+		default : 
+			eval($task. "();");
+	}
 }
 //....................
 function PMT($CustomerWage, $InstallmentCount, $PartAmount, $YearMonths, $PayInterval) {  
@@ -96,7 +99,7 @@ function SaveLoanRequest(){
 	//------------------------------------------------------
 	if($_SESSION["USER"]["IsAgent"] == "YES" || $_SESSION["USER"]["IsSupporter"] == "YES")
 	{
-		if(!isset($_POST["ReqPersonID"]))
+		if(empty($_POST["ReqPersonID"]))
 			$obj->ReqPersonID = $_SESSION["USER"]["PersonID"];
 		
 		if(isset($_POST["sending"]) &&  $_POST["sending"] == "true")
@@ -1030,7 +1033,7 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 			
 			if($PayRecord == null)
 			{
-				$installments[$i]["TotalRemainder"] += $Forfeit;
+				$installments[$i]["TotalRemainder"] += round($remainder*$installments[$i]["ForfeitPercent"]*$forfeitDays/36500);
 				$installments[$i]["remainder"] = $remainder;
 				$returnArr[] = $installments[$i];
 				break;
@@ -1069,17 +1072,19 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 	{
 		while(true)
 		{
-			$installments[$i]["InstallmentDate"] = "---";
-			$installments[$i]["InstallmentAmount"] = 0;
-			$installments[$i]["PayAmount"] = $PayRecord["PayAmount"];
-			$installments[$i]["PayDate"] = $PayRecord["PayDate"];
-			$Forfeit = $Forfeit - $PayRecord["PayAmount"]*1;
-			$installments[$i]["ForfeitDays"] = 0;	
-			$installments[$i]["TotalRemainder"] = $Forfeit;
-			$installments[$i]["ForfeitAmount"] = $Forfeit;
-			$installments[$i]["remainder"] = 0;
-			$returnArr[] = $installments[$i];
-			
+			if($PayRecord["PayAmount"] > 0)
+			{
+				$installments[$i]["InstallmentDate"] = "---";
+				$installments[$i]["InstallmentAmount"] = 0;
+				$installments[$i]["PayAmount"] = $PayRecord["PayAmount"];
+				$installments[$i]["PayDate"] = $PayRecord["PayDate"];
+				$Forfeit = $Forfeit - $PayRecord["PayAmount"]*1;
+				$installments[$i]["ForfeitDays"] = 0;	
+				$installments[$i]["TotalRemainder"] = $Forfeit;
+				$installments[$i]["ForfeitAmount"] = $Forfeit;
+				$installments[$i]["remainder"] = 0;
+				$returnArr[] = $installments[$i];
+			}
 			$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
 			if($PayRecord == null)
 				break;
