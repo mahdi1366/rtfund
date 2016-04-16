@@ -31,8 +31,8 @@ class LON_requests extends PdoDataAccess
 			PdoDataAccess::FillObject ($this, "
 				select r.* , concat_ws(' ',fname,lname,CompanyName) _LoanPersonFullname, LoanDesc _LoanDesc
 					from LON_requests r 
-					join BSC_persons on(PersonID=LoanPersonID)
-					join LON_loans using(LoanID)
+					left join BSC_persons on(PersonID=LoanPersonID)
+					left join LON_loans using(LoanID)
 				where RequestID=?", array($RequestID));
 	}
 	
@@ -85,13 +85,21 @@ class LON_requests extends PdoDataAccess
 		
 		$obj = new LON_requests($RequestID);
 		if($obj->StatusID != "1")
+		{
+			ExceptionHandler::PushException("درخواست در حال گردش قابل حذف نمی باشد");
 			return false;
+		}
 		
 		if( parent::delete("LON_ReqParts"," RequestID=?", array($RequestID)) === false )
+		{
+			ExceptionHandler::PushException("خطا در حذف مرحله");
 	 		return false;
-		
+		}
 		if( parent::delete("LON_requests"," RequestID=?", array($RequestID)) === false )
-	 		return false;
+	 	{
+			ExceptionHandler::PushException("خطا در حذف درخواست");
+			return false;
+		}
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;

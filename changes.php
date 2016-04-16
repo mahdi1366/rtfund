@@ -2,8 +2,12 @@
 
 /*
 
+insert into BaseTypes values(17, 14, 'گروه شیفت', 'ATN_shifts', 'GroupID', 'YES');
 
+insert into BaseInfo values(17, 1, 'شیفت های تمام وقت', '', '', ''),
+(17, 2, 'شیفت های پاره وقت', '', '', '');
 
+ALTER TABLE `krrtfir_rtfund`.`LON_loans` ADD COLUMN `IsActive` ENUM('YES','NO') NOT NULL DEFAULT 'YES' AFTER `IsCustomer`;
 
 
 

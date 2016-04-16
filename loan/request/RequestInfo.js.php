@@ -360,7 +360,6 @@ RequestInfo.prototype.BuildForms = function(){
 			fieldLabel : "نوع وام",
 			queryMode : 'local',
 			hidden : true,
-			allowBlank : false,
 			displayField : "LoanDesc",
 			valueField : "LoanID",
 			name : "LoanID"
@@ -697,6 +696,9 @@ RequestInfo.prototype.CustomizeForm = function(record){
 	}
 	
 	if(this.ReadOnly)
+		return;
+	
+	if(record == null)
 		return;
 	
 	if(record.data.IsEnded == "YES")

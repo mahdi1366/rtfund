@@ -184,11 +184,17 @@ ManageRequest.prototype.deleteRequest = function(){
 				RequestID : record.data.RequestID
 			},
 
-			success : function(){
+			success : function(response){
+				result = Ext.decode(response.responseText);
 				mask.hide();
-				ManageRequestObject.grid.getStore().load();
-				if(ManageRequestObject.commentWin)
-					ManageRequestObject.commentWin.hide();
+				if(result.success)
+				{
+					ManageRequestObject.grid.getStore().load();
+					if(ManageRequestObject.commentWin)
+						ManageRequestObject.commentWin.hide();
+				}
+				else
+					Ext.MessageBox.alert("Error",result.data);
 			}
 		});
 	});
