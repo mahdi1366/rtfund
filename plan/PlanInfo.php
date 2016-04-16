@@ -30,8 +30,8 @@ if($_SESSION["USER"]["IsCustomer"] == "YES" &&
 		($PlanObj->StatusID == "1" || $PlanObj->StatusID == "5"))
 	$readOnly = false;
 
-//if(isset($_SESSION["USER"]["framework"]) && $PlanObj->StatusID == "2")
-	//$readOnly = false;
+if(isset($_SESSION["USER"]["framework"]) && $PlanObj->StatusID == "2")
+	$readOnly = false;
 
 //-----------------------------------------------------
 require_once 'PlanInfo.js.php';

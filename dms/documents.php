@@ -28,6 +28,14 @@ switch($ObjectType)
 		if($_SESSION["USER"]["IsStaff"] == "YES" /*&& $obj->StatusID == "50"*/)
 			$access = true;
 		break;
+	case "plan":
+		require_once '../plan/plan.class.php';
+		$obj = new PLN_plans($ObjectID);
+		if($_SESSION["USER"]["IsCustomer"] == "YES" && in_array($obj->StatusID, array("1","5")) )
+			$access = true;
+		if($_SESSION["USER"]["IsStaff"] == "YES")
+			$access = true;
+		break;
 		
 }
 //------------------------------------------------------
@@ -421,6 +429,7 @@ ManageDocument.prototype.ShowComment = function(){
 ManageDocument.prototype.AddDocument = function(){
 	
 	this.formPanel.show();
+	this.formPanel.getForm().reset();
 	this.formPanel.getComponent("ParamsFS").removeAll();
 	this.grid.hide();
 }

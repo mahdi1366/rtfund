@@ -13,7 +13,8 @@ $ObjectID = $_REQUEST["ObjectID"];
 
 $query = "select RowID,PageNo,FileType,FileContent 
 	from DMS_DocFiles df join DMS_documents using(DocumentID)
-	where df.DocumentID=? AND ObjectID=?" . (!empty($_REQUEST["RowID"]) ? " AND RowID=?" : "");
+	where df.DocumentID=? AND ObjectID=?" . (!empty($_REQUEST["RowID"]) ? " AND RowID=?" : "")."
+	order by PageNo";
 $params = array($DocumentID, $ObjectID);
 if(!empty($_REQUEST["RowID"]))
 	$params[] = $_REQUEST["RowID"];

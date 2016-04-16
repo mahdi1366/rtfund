@@ -24,7 +24,7 @@ $temp = PdoDataAccess::runquery("
 			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
 			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
-			left join BaseInfo b on(TafsiliType=InfoID AND TypeID=2)
+			left join BaseInfo b on(di.TafsiliType=InfoID AND TypeID=2)
 			left join ACC_tafsilis t on(t.TafsiliID=di.TafsiliID)
 			
 		where di.DocID=?

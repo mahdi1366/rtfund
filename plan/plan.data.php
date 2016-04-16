@@ -12,39 +12,8 @@ include_once 'plan.class.php';
 $task = $_REQUEST["task"];
 switch ($task) {
 		
-	case "selectGroups":
-		selectGroups();
-		
-	case "SelectElements":
-		SelectElements();
-		
-	case "SelectPlanItems":
-		SelectPlanItems();
-		
-	case "SavePlanItems":
-		SavePlanItems();
-		
-	case "DeletePlanItem":
-		DeletePlanItem();
-		
-	//....................
-		
-	case "SurveyGroup":
-		SurveyGroup();
-		
-	//...................
-		
-	case "SelectAllPlans":
-		SelectAllPlans();
-		
-	case "SelectMyPlans":
-		SelectMyPlans();
-		
-	case "SaveNewPlan":
-		SaveNewPlan();
-		
-	case "ChangeStatus":
-		ChangeStatus();
+	default : 
+		eval($task. "();");
 }
 
 function selectGroups(){
@@ -348,7 +317,7 @@ function ChangeStatus(){
 	$StatusID = $_POST["StatusID"];
 	$ActDesc = $_POST["ActDesc"];
 	
-	if($_SESSION["USER"]["IsCustomer"] == "YES")
+	if($_SESSION["USER"]["IsCustomer"] == "YES" && isset($_SESSION["USER"]["portal"]))
 		$StatusID = 2;
 	
 	if(isset($_SESSION["USER"]["framework"]) && $StatusID == "4")
