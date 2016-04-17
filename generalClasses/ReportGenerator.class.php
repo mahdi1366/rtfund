@@ -59,7 +59,8 @@ class ReportGenerator {
 	public $groupPerPage = false;
 	
 	public $showPageOfPage = false;
-	public $changeNumCellDirection = true;
+	
+	public $VerticalSumColumn = array();
 	
 	public function ReportGenerator() {
 		$this->border = "1";
@@ -379,19 +380,20 @@ class ReportGenerator {
 		for ($i = 0; $i < count($this->columns); $i++) {
 			//Now Draw Data
 			
-			if(!$this->changeNumCellDirection)
-				$this->columns[$i]->direction = "rtl";
+			$this->columns[$i]->direction = "rtl";
 			
 			echo "<td height=21px id='col_" . $this->columns[$i]->field . "_" . ($index + 1) .  "' 
 				style='padding:2px;direction:" . $this->columns[$i]->direction . ";" . $this->columns[$i]->style . 
-					($this->columns[$i]->hidden ? ";display:none;" : "") .  
+					($this->columns[$i]->hidden ? ";display:none;" : "") . 
+					(strpos($this->columns[$i]->field,"VerticalSum_") !== false ? "background-color:" . $this->summaryRow_color : "") .
 					"' border='$this->border' align='" . $this->columns[$i]->align . "'>
 				<font color = '$this->body_textcolor' style='font-size:11px'>&nbsp;";
 
 			$val = "";
 			if (!empty($this->columns[$i]->renderFunction)) {
 				eval("\$val = " . $this->columns[$i]->renderFunction . "(\$row,\$row[\$this->columns[\$i]->field],\$this->columns[\$i]->renderParams);");
-			} else {
+			}
+			else if(strpos($this->columns[$i]->field, "VerticalSum_") === false) {
 				$val = $row[$this->columns[$i]->field];
 			}
 
@@ -444,6 +446,7 @@ class ReportGenerator {
 	}
 
 	function DrawSummaryRow() {
+		
 		if ($this->EnableSumRow) {
 			echo "<tr align = '$this->body_alignment' bgcolor = '$this->summaryRow_color'>";
 			if ($this->rowNumber)
@@ -455,8 +458,7 @@ class ReportGenerator {
 					continue;
 				
 				if ($this->columns[$i]->HaveSum != -1) {
-					echo "<td id='sum_" . $this->columns[$i]->field . "' height=21px style='font-size:11px;font-weight:bold;direction:" . 
-							($this->changeNumCellDirection ? "ltr" : "rtl") . ";
+					echo "<td id='sum_" . $this->columns[$i]->field . "' height=21px style='font-size:11px;font-weight:bold;direction:ltr;
 						padding:2px;color:$this->body_textcolor' border='$this->border' align='" . $this->columns[$i]->align . "'>";
 
 					//---------- SumRender -----------
@@ -466,11 +468,10 @@ class ReportGenerator {
 					} else {
 						$val = $this->columns[$i]->HaveSum;
 					}
-
-					if (is_float($val))
-						echo number_format($val, 2);
-					else if (is_int($val))
+					if (is_int($val))
 						echo number_format($val, 0);
+					else if (is_float($val))
+						echo number_format($val, 2);					 
 					else
 						echo $val;
 					//-------------------------------
@@ -500,55 +501,131 @@ class ReportGenerator {
 		for ($i = 0; $i < $field_count; $i++) {
 			if($this->columns[$i]->rowspaning)
 			{
-				echo "
-					//----------------------------------------------------------
-					var elems = document.getElementsByTagName('td');
-					var cnt = 0;
-					var value = null;
-					var firstElem = null;
-					var groupValues = {
-					" . 
-					implode(" : null,", $this->columns[$i]->rowspanByFields) . (count($this->columns[$i]->rowspanByFields)>0 ? " : null" : "") .
-					"
-					}
-					
-					for(i=0; i<elems.length; i++)
-						if(elems[i].id.indexOf('" . $this->columns[$i]->field . "') != -1)
-						{
-							var RowIndex = elems[i].id.replace('col_" . $this->columns[$i]->field . "_','');
-							if (RowIndex != parseInt(RowIndex))
-								continue;
-							if(elems[i].innerHTML == value && elems[i].parentNode.parentNode.parentNode.id == firstElem.parentNode.parentNode.parentNode.id
-							";
-					foreach($this->columns[$i]->rowspanByFields as $field)
-						echo " && groupValues." . $field . " == " . "document.getElementById('col_" . $field . "_' + RowIndex).innerHTML";
-					
-					echo	"
-							)
-							{
-								cnt++;
-								elems[i].style.display = 'none';
-							}
-							else
-							{
-								if(firstElem)
-									firstElem.rowSpan = cnt;
-								
-								firstElem = elems[i];
-								cnt=1;
-								value = elems[i].innerHTML;
-								";
-								foreach($this->columns[$i]->rowspanByFields as $field)
-									echo "groupValues." . $field . " = document.getElementById('col_" . $field . "_' + RowIndex).innerHTML;";
-					echo"
-							}
+				if(strpos($this->columns[$i]->field,"VerticalSum_") === false)
+				{
+					echo "
+						//----------------------------------------------------------
+						var elems = document.getElementsByTagName('td');
+						var cnt = 0;
+						var value = null;
+						var firstElem = null;
+						var groupValues = {
+						" . 
+						implode(" : null,", $this->columns[$i]->rowspanByFields) . (count($this->columns[$i]->rowspanByFields)>0 ? " : null" : "") .
+						"
 						}
-					if(firstElem)
-						firstElem.rowSpan = cnt;
-				";
+
+						for(i=0; i<elems.length; i++)
+							if(elems[i].id.indexOf('" . $this->columns[$i]->field . "') != -1)
+							{
+								var RowIndex = elems[i].id.replace('col_" . $this->columns[$i]->field . "_','');
+								if (RowIndex != parseInt(RowIndex))
+									continue;
+								if(elems[i].innerHTML == value && elems[i].parentNode.parentNode.parentNode.id == firstElem.parentNode.parentNode.parentNode.id
+								";
+						foreach($this->columns[$i]->rowspanByFields as $field)
+							echo " && groupValues." . $field . " == " . "document.getElementById('col_" . $field . "_' + RowIndex).innerHTML";
+
+						echo	"
+								)
+								{
+									cnt++;
+									elems[i].style.display = 'none';
+								}
+								else
+								{
+									if(firstElem)
+										firstElem.rowSpan = cnt;
+
+									firstElem = elems[i];
+									cnt=1;
+									value = elems[i].innerHTML;
+									";
+									foreach($this->columns[$i]->rowspanByFields as $field)
+										echo "groupValues." . $field . " = document.getElementById('col_" . $field . "_' + RowIndex).innerHTML;";
+						echo"
+								}
+							}
+						if(firstElem)
+							firstElem.rowSpan = cnt;
+					";
+				}
+				else
+				{
+					$amountField = preg_split('/_/', $this->columns[$i]->field);
+					$amountField = $amountField[2];
+					echo "
+						//----------------------------------------------------------
+						var elems = document.getElementsByTagName('td');
+						var cnt = 0;
+						var value = 0;
+						var firstElem = null;
+						var groupValues = {
+						" . 
+						implode(" : null,", $this->columns[$i]->rowspanByFields) . (count($this->columns[$i]->rowspanByFields)>0 ? " : null" : "") .
+						"
+						}
+
+						for(i=0; i<elems.length; i++)
+							if(elems[i].id.indexOf('" . $this->columns[$i]->field . "') != -1)
+							{
+								var RowIndex = elems[i].id.replace('col_" . $this->columns[$i]->field . "_','');
+								if (RowIndex != parseInt(RowIndex))
+									continue;
+								if(1==1 ";
+								foreach($this->columns[$i]->rowspanByFields as $field)
+									echo " && groupValues." . $field . " == " . "document.getElementById('col_" . $field . "_' + RowIndex).innerHTML";
+
+						echo	"
+								)
+								{
+									cnt++;
+									value += document.getElementById('col_" . $amountField . "_' + RowIndex).childNodes[1].childNodes[0].data.replace(/,/g,'')*1;
+									elems[i].style.display = 'none';
+								}
+								else
+								{
+									if(firstElem)
+									{
+										firstElem.rowSpan = cnt;
+										formatter = Intl.NumberFormat();
+										firstElem.innerHTML = formatter.format(value);
+									}
+									firstElem = elems[i];
+									value = document.getElementById('col_" . $amountField . "_' + RowIndex).childNodes[1].childNodes[0].data.replace(/,/g,'')*1;
+									cnt=1;									
+									";
+									foreach($this->columns[$i]->rowspanByFields as $field)
+										echo "groupValues." . $field . " = document.getElementById('col_" . $field . "_' + RowIndex).innerHTML;";
+						echo"
+								}
+							}
+						if(firstElem)
+						{
+							firstElem.rowSpan = cnt;
+							formatter = Intl.NumberFormat();
+							firstElem.innerHTML = formatter.format(value);
+						}
+					";
+				}
+				
 			}
 		}
 		echo "</script>";
+	}
+	
+	function AddVerticalSumColumn($fieldsArray, $amountField){
+		
+		$index = 0;
+		foreach($this->columns as $col)
+			if(strpos($col->field, "VerticalSum_") !== false)
+				$index++;
+		
+		$obj = new ReportColumn("", "VerticalSum_" . $index . "_" . $amountField);
+		$obj->rowspaning = true;
+		$obj->rowspanByFields = $fieldsArray;
+		$this->columns[] = $obj;
+		return $obj;
 	}
 }
 
@@ -573,7 +650,7 @@ class ReportColumn {
 	public $hidden = false;
 	public $style = "";
 
-	public function ReportColumn($header, $field, $renderFunction, $renderParams) {
+	public function ReportColumn($header, $field, $renderFunction = "", $renderParams = "") {
 		$this->header = $header;
 		$this->field = $field;
 		$this->renderFunction = $renderFunction;

@@ -114,6 +114,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 					});
 				}	
 				var R2 = false;
+				var R3 = false;
 				if(record.data.ReqPersonID > 0)
 				{
 					R2 = me.companyPanel.down("[name=ReqPersonID]").getStore().load({
@@ -124,10 +125,19 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 							me.companyPanel.down("[name=ReqPersonID]").setValue(this.getAt(0).data.PersonID);
 						}
 					});
+					
+					R3 = me.companyPanel.down("[itemId=cmp_subAgent]").getStore().load({
+						params : {
+							PersonID : record.data.ReqPersonID
+						},
+						callback : function(){
+							me.companyPanel.down("[itemId=cmp_subAgent]").setValue(this.getAt(0).data.record.data.SubAgentID);
+						}
+					});					
 				}				
 				//..........................................................
 				var t = setInterval(function(){
-					if((!R1 || !R1.isLoading()) && (!R2 || !R2.isLoading()))
+					if((!R1 || !R1.isLoading()) && (!R2 || !R2.isLoading()) && (!R3 || !R3.isLoading()))
 					{
 						clearInterval(t);
 						me.CustomizeForm(record);
@@ -338,8 +348,7 @@ RequestInfo.prototype.BuildForms = function(){
 						"task=selectSubAgents",
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields : ['SubID','SubDesc'],
-				autoLoad : true
+				fields : ['SubID','SubDesc']
 			}),
 			fieldLabel : "زیر واحد سرمایه گذار",
 			queryMode : "local",

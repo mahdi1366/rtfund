@@ -152,7 +152,7 @@ function Shift(){
 					ShiftObject.DeleteGroup(this.up('form').down('[name=GroupID]').getValue());
 				}
 			},{
-				text: "لیست وام ها",
+				text: "لیست شیفت ها",
 				iconCls: "refresh",
 				handler: function(){ ShiftObject.LoadShifts(); }
 			}]
@@ -160,6 +160,20 @@ function Shift(){
 }
 
 var ShiftObject = new Shift();	
+
+Tafsili.prototype.AddTafsili = function(){
+
+	var modelClass = this.grid.getStore().model;
+	var record = new modelClass({
+		TafsiliID: null,
+		TafsiliType : this.groupPnl.down("[name=TafsiliType]").getValue(),
+		TafsiliCode: null
+	});
+
+	this.grid.plugins[0].cancelEdit();
+	this.grid.getStore().insert(0, record);
+	this.grid.plugins[0].startEdit(0, 0);
+}
 
 Shift.prototype.LoadShifts = function(){
 
