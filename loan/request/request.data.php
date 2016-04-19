@@ -779,7 +779,7 @@ function SavePartPay(){
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	if(empty($obj->PartID))
+	if(empty($obj->PayID))
 		$result = $obj->AddPay($pdo);
 	else
 		$result = $obj->EditPay($pdo);

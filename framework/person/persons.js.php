@@ -98,7 +98,7 @@ function Person()
 			},{
 				xtype : "textfield",
 				fieldLabel : "شناسه ملی",
-				regex: /^\d{10}$/,
+				regex: /^\d{11}$/,
 				maskRe: /[\d\-]/,
 				name : "NationalID"
 			}]
