@@ -4,14 +4,14 @@
 //	Date		: 94.08
 //-----------------------------
 
-require_once '../../header.inc.php';
-require_once '../../global/CNTconfig.class.php';
-require_once '../js/NewContract.js.php';
+require_once '../header.inc.php';
+require_once '../global/CNTconfig.class.php';
+require_once 'NewContract.js.php';
 
-if (isset($_REQUEST['CntId'])) {
+if (isset($_REQUEST['CntID'])) {
     ?>
     <script type="text/javascript">
-        NewContractObj.ResultPanel.getComponent('CntId').setValue(<?= $_REQUEST['CntId'] ?>);
+        NewContractObj.ResultPanel.getComponent('CntID').setValue(<?= $_REQUEST['CntID'] ?>);
         NewContractObj.LoadContractItems();
     </script>
     <?php

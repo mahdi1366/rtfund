@@ -1,29 +1,26 @@
 <?php
 require_once '../header.inc.php';
 require_once '../global/CNTconfig.class.php';
-require_once '../contract/class/contract.class.php';
-require_once '../contract/class/ContractItems.class.php';
-require_once '../contract/class/templates.class.php';
-require_once '../contract/class/TemplateItems.class.php';
+require_once 'contract.class.php';
+require_once '../templates/templates.class.php';
 
-//
-$CntObj = new CNT_contracts($_REQUEST['CntId']);
-//
+$CntObj = new CNT_contracts($_REQUEST['CntID']);
+
 $temp = CNT_TemplateItems::Get();
 $TplItems = PdoDataAccess::fetchAll($temp, 0, $temp->rowCount());
 $TplItemsStore = array();
 foreach ($TplItems as $it) {
-    $TplItemsStore[$it['TplItemId']] = $it['TplItemType'];
+    $TplItemsStore[$it['TplItemID']] = $it['TplItemType'];
 }
 //
-$obj = new CNT_templates($CntObj->TplId);
+$obj = new CNT_templates($CntObj->TemplateID);
 $TplContent = $obj->TplContent;
 $res = explode(CNTconfig::TplItemSeperator, $TplContent);
 //
-$CntItems = CNT_ContractItems::GetContractItems($CntObj->CntId);
+$CntItems = CNT_ContractItems::GetContractItems($CntObj->CntID);
 $ValuesStore = array();
 foreach ($CntItems as $it) {
-    $ValuesStore[$it['TplItemId']] = $it['ItemValue'];
+    $ValuesStore[$it['TplItemID']] = $it['ItemValue'];
 }
 //
 if (substr($TplContent, 0, 3) == CNTconfig::TplItemSeperator) {
@@ -37,7 +34,7 @@ for ($i = 0; $i < count($res); $i++) {
         switch ($res[$i]) {
             case 1:
                 // TODO : array in CNTConfig bashad
-                $st .= $CntObj->SupplierId;
+                $st .= $CntObj->SupplierID;
                 break;
             case 2:
                 $st .= $CntObj->Supervisor;

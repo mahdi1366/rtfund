@@ -30,23 +30,22 @@
             items: [{
                     xtype: 'textfield',
                     fieldLabel: 'توضیحات',
-                    itemId: 'description',
+                    itemID: 'description',
                     width: 400,
                 }, {
                     xtype: 'combo',
                     fieldLabel: 'انتخاب الگو',
-                    itemId: 'SelectTemplateTplCombo',
+                    itemID: 'SelectTemplateTplCombo',
                     store: new Ext.data.Store({
-                        pageSize: 10,
                         proxy: {
                             type: 'jsonp',
-                            url: this.address_prefix + '../data/templates.data.php?task=SelectTemplates',
+                            url: this.address_prefix + '../templates/templates.data.php?task=SelectTemplates',
                             reader: {root: 'rows', totalProperty: 'totalCount'}
                         },
-                        fields: ['TplId', 'TplTitle', 'TplContent']
+                        fields: ['TemplateID', 'TplTitle', 'TplContent']
                     }),
                     displayField: 'TplTitle',
-                    valueField: "TplId",
+                    valueField: "TemplateID",
                     typeAhead: false,
                     listConfig: {
                         loadingText: 'در حال جستجو...',
@@ -58,7 +57,7 @@
                     listeners: {
                         select: function (combo, records) {
                             this.collapse();
-                            NewContractObj.ShowTplItemsForm(records[0].data.TplId);
+                            NewContractObj.ShowTplItemsForm(records[0].data.TemplateID);
                         }
                     }
                 }]
@@ -76,11 +75,11 @@
             frame: true,
             items: [{
                     xtype: "hidden",
-                    itemId: "CntId",
+                    itemID: "CntID",
                     value: 0
                 }, {
                     xtype: "container",
-                    itemId: "result",
+                    itemID: "result",
                     anchor: "90%"
                 }],
             buttons: [{
@@ -108,11 +107,11 @@
             NewContractObj.PrintAfterSave = 0;
         }
         Ext.Ajax.request({
-            url: NewContractObj.address_prefix + '../data/contract.data.php?task=SaveContract',
+            url: NewContractObj.address_prefix + 'contract.data.php?task=SaveContract',
             params: {
-                TplId: NewContractObj.MainForm.getComponent('SelectTemplateTplCombo').getValue(),
+                TemplateID: NewContractObj.MainForm.getComponent('SelectTemplateTplCombo').getValue(),
                 description: NewContractObj.MainForm.getComponent('description').getValue(),
-                CntId: NewContractObj.ResultPanel.getComponent('CntId').getValue()
+                CntID: NewContractObj.ResultPanel.getComponent('CntID').getValue()
             },
             form: NewContractObj.get(TplContentForm),
             method: 'POST',
@@ -122,11 +121,11 @@
                     Ext.MessageBox.alert('', 'خطا در اجرای عملیات');
                     return;
                 }
-                NewContractObj.ResultPanel.getComponent('CntId').setValue(sd.data);
+                NewContractObj.ResultPanel.getComponent('CntID').setValue(sd.data);
                 if (NewContractObj.PrintAfterSave > 0) {
-                    var CntId = NewContractObj.ResultPanel.getComponent('CntId').getValue();
-                    window.open(this.address_prefix + '../../print/contract.php?CntId=' + CntId);
-                    //framework.OpenPage(NewContractObj.address_prefix + '../../print/contract.php?CntId=' + CntId,'');
+                    var CntID = NewContractObj.ResultPanel.getComponent('CntID').getValue();
+                    window.open(this.address_prefix + '../../print/contract.php?CntID=' + CntID);
+                    //framework.OpenPage(NewContractObj.address_prefix + '../../print/contract.php?CntID=' + CntID,'');
                 } else {
                     Ext.MessageBox.alert('', 'با موفقیت ذخیره شد');
                 }
@@ -135,10 +134,10 @@
     }
 
     NewContract.prototype.TplItemsStore = new Ext.data.Store({
-        fields: ['TplItemId', 'TplItemName', 'TplItemType'],
+        fields: ['TplItemID', 'TplItemName', 'TplItemType'],
         proxy: {
             type: 'jsonp',
-            url: NewContractObj.address_prefix + "../data/templates.data.php?task=selectTemplateItems&All=true",
+            url: NewContractObj.address_prefix + "../templates/templates.data.php?task=selectTemplateItems&All=true",
             reader: {
                 root: 'rows',
                 totalProperty: 'totalCount'
@@ -146,7 +145,7 @@
         }
     });
 
-    NewContract.prototype.MakeTplItemsForm = function (TplId, ValuesStore) {
+    NewContract.prototype.MakeTplItemsForm = function (TemplateID, ValuesStore) {
         if (arguments.length > 1)
             NewContractObj.LoadValues = 1;
         else
@@ -154,9 +153,9 @@
         this.TplItemsStore.load({
             callback: function () {
                 Ext.Ajax.request({
-                    url: NewContractObj.address_prefix + '../data/templates.data.php?task=GetTplContent',
+                    url: NewContractObj.address_prefix + '../templates/templates.data.php?task=GetTplContent',
                     params: {
-                        TplId: TplId
+                        TemplateID: TemplateID
                     },
                     method: 'POST',
                     success: function (response) {
@@ -176,7 +175,7 @@
                         for (var i = 0; i < res.length; i++) {
                             if (i % 2 != 0) {
                                 var field = '';
-                                var num = NewContractObj.TplItemsStore.find('TplItemId', res[i]);
+                                var num = NewContractObj.TplItemsStore.find('TplItemID', res[i]);
 
                                 var fieldname = NewContractObj.TplItemsStore.getAt(num).data.TplItemName;
                                 switch (NewContractObj.TplItemsStore.getAt(num).data.TplItemType) {
@@ -186,7 +185,7 @@
                                          break;*/
                                     case 'textfield':
                                         if (NewContractObj.LoadValues > 0) {
-                                            var num = ValuesStore.find('TplItemId', res[i]);
+                                            var num = ValuesStore.find('TplItemID', res[i]);
                                             field = "<input type='text' value='" + ValuesStore.getAt(num).data.ItemValue + "' name = 'TplItem_" + res[i] + "'></input>";
                                         } else {
                                             field = "<input type='text' name = 'TplItem_" + /*counter++ +"_"*/ +res[i] + "'></input>";
@@ -195,7 +194,7 @@
                                         break;
                                     case 'shdatefield':
                                         if (NewContractObj.LoadValues > 0) {
-                                            var num = ValuesStore.find('TplItemId', res[i]);
+                                            var num = ValuesStore.find('TplItemID', res[i]);
                                             var MiladiDate = ValuesStore.getAt(num).data.ItemValue;
                                             var ShamsiDateItems = MiladiToShamsi(MiladiDate).split('/');
                                             field = "<input type='text' size='2' value='" + ShamsiDateItems[2] + "' name='TplItem_" + res[i] + "_DAY' maxlength='3'>" +
@@ -232,18 +231,18 @@
                          for (var i = 0; i < res.length; i++) {
                          if (i % 2 != 0) {
                          var field = '';
-                         var num = NewContractObj.TplItemsStore.find('TplItemId', res[i]);
+                         var num = NewContractObj.TplItemsStore.find('TplItemID', res[i]);
                          var fieldname = NewContractObj.TplItemsStore.getAt(num).data.TplItemName;
                          switch (NewContractObj.TplItemsStore.getAt(num).data.TplItemType) {
                          case 'numberfield':
-                         NewContractObj.MainForm.down('[itemId=CntContent]').add({
+                         NewContractObj.MainForm.down('[itemID=CntContent]').add({
                          xtype: 'numberfield',
                          width: 150,
                          name: 'TplItem_' + counter
                          });
                          break;
                          case 'shdatefield':
-                         NewContractObj.MainForm.down('[itemId=CntContent]').add({
+                         NewContractObj.MainForm.down('[itemID=CntContent]').add({
                          xtype: 'shdatefield',
                          width: 150,
                          name: 'TplItem_' + counter
@@ -251,7 +250,7 @@
                          counter++;
                          break;
                          case 'textfield':
-                         NewContractObj.MainForm.down('[itemId=CntContent]').add({
+                         NewContractObj.MainForm.down('[itemID=CntContent]').add({
                          xtype: 'textfield',
                          width: 200,
                          name: 'TplItem_' + counter
@@ -259,7 +258,7 @@
                          break;
                          }
                          } else {
-                         NewContractObj.MainForm.down('[itemId=CntContent]').add({
+                         NewContractObj.MainForm.down('[itemID=CntContent]').add({
                          xtype: 'container',
                          width: 100,
                          html: res[i]
@@ -276,7 +275,7 @@
         })
     }
 
-    NewContract.prototype.ShowTplItemsForm = function (TplId, ValuesStore) {
+    NewContract.prototype.ShowTplItemsForm = function (TemplateID, ValuesStore) {
         if (arguments.length > 1)
             NewContractObj.LoadValues = 1;
         else
@@ -285,9 +284,9 @@
         this.TplItemsStore.load({
             callback: function () {                
                 Ext.Ajax.request({
-                    url: NewContractObj.address_prefix + '../data/templates.data.php?task=GetTplContent',
+                    url: NewContractObj.address_prefix + '../templates/templates.data.php?task=GetTplContent',
                     params: {
-                        TplId: TplId
+                        TemplateID: TemplateID
                     },
                     method: 'POST',
                     success: function (response) {
@@ -309,19 +308,19 @@
                         for (var i = 0; i < res.length; i++) {
                             if (i % 2 != 0) {
                                 var field = '';
-                                var num = NewContractObj.TplItemsStore.find('TplItemId', res[i]);
+                                var num = NewContractObj.TplItemsStore.find('TplItemID', res[i]);
                                 var fieldname = NewContractObj.TplItemsStore.getAt(num).data.TplItemName;
 
                                 var TheTplItemType = NewContractObj.TplItemsStore.getAt(num).data.TplItemType;
                                 NewContractObj.ResultPanel.add({
                                     xtype: TheTplItemType,
-                                    itemId: 'TplItem_' + res[i],
+                                    itemID: 'TplItem_' + res[i],
                                     name: 'TplItem_' + res[i],
                                     fieldLabel : fieldname,
                                     hideTrigger : TheTplItemType == 'numberfield' ? true : false
                                 });
                                 if (NewContractObj.LoadValues > 0) {
-                                    var num = ValuesStore.find('TplItemId', res[i]);                                    
+                                    var num = ValuesStore.find('TplItemID', res[i]);                                    
                                     if (ValuesStore.getAt(num)){
                                         switch(TheTplItemType){
                                             case "shdatefield" :
@@ -408,30 +407,31 @@
 
 
     NewContract.prototype.LoadContractItems = function () {
+	
         if (!this.ContractItemsStore) {
             this.ContractItemsStore = new Ext.data.Store({
                 proxy: {
                     type: 'jsonp',
-                    url: this.address_prefix + '../data/contract.data.php?task=GetContractItems',
+                    url: this.address_prefix + 'contract.data.php?task=GetContractItems',
                     reader: {root: 'rows', totalProperty: 'totalCount'}
                 },
-                fields: ['CntItemId', 'CntId', 'TplItemId', 'ItemValue']
+                fields: ['CntItemID', 'CntID', 'TplItemID', 'ItemValue']
             })
         }
         this.MainForm.getComponent('SelectTemplateTplCombo').getStore().load({
-            params: {TplId: '<?= $_REQUEST['TplId'] ?>'},
+            /*params: {TemplateID: '< ?= $_REQUEST['TemplateID'] ?>'},*/
             callback: function (records) {
-                NewContractObj.MainForm.getComponent('SelectTemplateTplCombo').setValue(NewContractObj.MainForm.getComponent('SelectTemplateTplCombo').getStore().getAt(0).data.TplId);
+                NewContractObj.MainForm.getComponent('SelectTemplateTplCombo').setValue(NewContractObj.MainForm.getComponent('SelectTemplateTplCombo').getStore().getAt(0).data.TemplateID);
             }
         });
 
         // TODO : load value to desciption         //description
         this.ContractItemsStore.load({
             params: {
-                CntId: NewContractObj.ResultPanel.getComponent('CntId').getValue()
+                CntID: NewContractObj.ResultPanel.getComponent('CntID').getValue()
             },
             callback: function () {
-                NewContractObj.ShowTplItemsForm('<?= $_REQUEST['TplId'] ?>', NewContractObj.ContractItemsStore);
+                //NewContractObj.ShowTplItemsForm('< ?= $_REQUEST['TemplateID'] ?>', NewContractObj.ContractItemsStore);
             }
         });
     }

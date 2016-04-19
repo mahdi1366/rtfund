@@ -47,7 +47,8 @@ class BSC_persons extends PdoDataAccess
 	
 	static function SelectAll($where = "", $param = array()){
 		
-		return PdoDataAccess::runquery_fetchMode("select p.*, '' UserPass,
+		return PdoDataAccess::runquery_fetchMode("select 
+			p.PersonID, '' UserPass,
 			if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname, DomainDesc
 			from BSC_persons p
 				left join BSC_posts using(PostID)
@@ -55,6 +56,14 @@ class BSC_persons extends PdoDataAccess
 			where " . $where, $param);
 	}
 	
+	static function MinSelect($where = "", $param = array()){
+		
+		return PdoDataAccess::runquery_fetchMode("
+			select p.PersonID, concat_ws(' ',fname,lname,CompanyName) fullname
+			from BSC_persons p
+			where " . $where, $param);
+	}
+		
 	function AddPerson()
 	{
 		$dt = PdoDataAccess::runquery("select * 

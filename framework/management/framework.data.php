@@ -9,49 +9,8 @@ require_once '../person/persons.class.php';
 include_once inc_dataReader;
 require_once inc_response;
 
-if(isset($_REQUEST["task"]))
-{
-	switch ($_REQUEST["task"])
-	{
-		case "selectSystems":
-			selectSystems();
-			
-		case "SaveSystem":
-			SaveSystem();
-			
-		//------------------	
-			
-		case "GellMenus":
-			GellMenus();
-		
-		case "SaveMenu":
-			SaveMenu();
-
-		case "DeleteMenu":
-			DeleteMenu();
-
-		//-----------------
-
-		case "selectAccess":
-			selectAccess();
-			
-		case "selectPersons":
-			selectPersons();
-			
-		case "SavePersonAccess":
-			SavePersonAccess();
-			
-		//------------------
-
-		case "ResetPass":
-			ResetPass();
-			
-		//------------------
-			
-		case "selectDataAudits":
-			selectDataAudits();
-	}
-}
+if(!empty($_REQUEST["task"]))
+	$_REQUEST["task"]();
 
 function selectSystems(){
 	$temp = PdoDataAccess::runquery("select * from FRW_systems");
@@ -158,6 +117,7 @@ function SavePersonAccess(){
 		if(!$obj->AddAccess())
 		{
 			$pdo->rollBack();	
+			//print_r(ExceptionHandler::PopAllExceptions());
 			echo Response::createObjectiveResponse(false, "");
 			die();
 		}
@@ -181,8 +141,9 @@ function selectPersons(){
 		$param[":p"] = "%" . $_REQUEST["query"] . "%";
 	}
 	
-	$temp = BSC_persons::SelectAll($where, $param);
-	$no = count($temp);
+	$temp = BSC_persons::MinSelect($where, $param);
+	$no = $temp->rowCount();
+	//$temp = $temp->fetchAll();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
 	die();

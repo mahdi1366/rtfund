@@ -1,21 +1,20 @@
 <?php
 //-----------------------------
 //	Programmer	: Fatemipour
-//	Date		: 94.10
+//	Date		: 94.08
 //-----------------------------
-ini_set("display_errors", "On");
+require_once '../header.inc.php';
+require_once '../global/CNTconfig.class.php';
+require_once 'MyContracts.js.php';
+require_once inc_dataGrid;
 
-require_once '../../header.inc.php';
-require_once '../../global/CNTconfig.class.php';
-require_once '../js/ManageContracts.js.php';
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "contract.data.php?task=SelectMyContracts", "div_dg");
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "../data/contract.data.php?task=SelectContracts", "div_dg");
-
-$dg->addColumn("شماره قرارداد", "CntId");
-$dg->addColumn("الگو", "TplTitle");
+$dg->addColumn("شماره قرارداد", "CntID");
+$dg->addColumn(" الگو", "TplTitle");
 $dg->addColumn("", "RegPersonID", "", true);
 $dg->addColumn("", "RegDate", "", true);
-$dg->addColumn("", "TplId", "", true);
+$dg->addColumn("", "TemplateID", "", true);
 $dg->addColumn("توضیحات", "description");
 $dg->addColumn("", "PenaltyAmount", "", true);
 $col = $dg->addColumn("وضعیت", "StatusCode");
@@ -25,11 +24,12 @@ $col->renderer = "function(v,p,record){
         if(record.data.StatusCode == ". CNTconfig::ContractStatus_Confirmed .") return ' تایید واحد قراردادها';
         ;}";
 
-$col = $dg->addColumn("", "TplId");
-$col->renderer = "ManageContractsObj.OperationRender";
+
+$col = $dg->addColumn("", "TemplateID");
+$col->renderer = "MyContractsObj.OperationRender";
 $col->width = 30;
 
-$dg->title = "لیست قراردادها";
+$dg->title = "لیست قرارداد ها";
 $dg->DefaultSortField = "RegDate";
 $dg->DefaultSortDir = "desc";
 $dg->autoExpandColumn = "description";
@@ -39,9 +39,9 @@ $dg->pageSize = 10;
 $grid = $dg->makeGrid_returnObjects();
 ?>
 <script>
-    ManageContractsObj = new ManageContracts();
-    ManageContractsObj.grid = <?= $grid ?>;
-    ManageContractsObj.grid.render(ManageContractsObj.get("div_dg"));
+    MyContractsObj = new MyContracts();
+    MyContractsObj.grid = <?= $grid ?>;
+    MyContractsObj.grid.render(MyContractsObj.get("div_dg"));
 </script>
 <br>
 <center>

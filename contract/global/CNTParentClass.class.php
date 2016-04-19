@@ -20,7 +20,10 @@ abstract class CNTParentClass extends PdoDataAccess {
     public function Add($pdo = null) {
 
         if (!parent::insert(static::TableName, $this, $pdo))
-            throw new Exception(self::ERR_Add);
+		{
+			ExceptionHandler::PushException(self::ERR_Add);
+			return false;
+		}
         //return false;            
 
         $this->{static::TableKey} = parent::InsertID($pdo);
@@ -34,10 +37,12 @@ abstract class CNTParentClass extends PdoDataAccess {
     }
 
     public function Edit($pdo = null) {
-        if (parent::update(static::TableName, $this, static::TableKey . " =:id ", array(":id" => $this->{static::TableKey}), $pdo) === false) {
-            throw new Exception(self::ERR_Edit);
-            //return false;
-        }
+        if (parent::update(static::TableName, $this, static::TableKey . 
+			" =:id ", array(":id" => $this->{static::TableKey}), $pdo) === false) 
+		{
+			ExceptionHandler::PushException(self::ERR_Edit);
+			return false;
+		}
 
         $daObj = new DataAudit();
         $daObj->ActionType = DataAudit::Action_update;
@@ -49,10 +54,14 @@ abstract class CNTParentClass extends PdoDataAccess {
     }
 
     public function Remove($pdo = null) {
-        if (!parent::delete(static::TableName, static::TableKey . "=:id", array(":id" => $this->{static::TableKey}), $pdo))
-            throw new Exception(self::ERR_Remove);
-            //return false;
-
+		
+        if (!parent::delete(static::TableName, 
+				static::TableKey . "=:id", array(":id" => $this->{static::TableKey}), $pdo))
+        {
+			ExceptionHandler::PushException(self::ERR_Remove);
+			return false;
+		}
+		
         $daObj = new DataAudit();
         $daObj->ActionType = DataAudit::Action_delete;
         $daObj->MainObjectID = $this->{static::TableKey};

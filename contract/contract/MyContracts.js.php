@@ -31,35 +31,35 @@
         if (record.data.StatusCode == this.ContractStatus_Raw) {
             op_menu.add({text: ' ویرایش', iconCls: 'edit',
                 handler: function () {
-                    MyContractsObj.Edit(record.data.CntId, record.data.TplId);
+                    MyContractsObj.Edit(record.data.CntID, record.data.TemplateID);
                 }});
             op_menu.add({text: ' ارسال', iconCls: 'send',
                 handler: function () {
-                    MyContractsObj.Send(record.data.CntId, record.data.TplId);
+                    MyContractsObj.Send(record.data.CntID, record.data.TemplateID);
                 }});
         }
 
         op_menu.add({text: ' چاپ', iconCls: 'print',
             handler: function () {
-                window.open(this.address_prefix + '../../print/contract.php?CntId=' + record.data.CntId);
+                window.open(this.address_prefix + '../../print/contract.php?CntID=' + record.data.CntID);
             }});
 
         op_menu.showAt(e.pageX - 120, e.pageY);
     }
 
-    MyContracts.prototype.Edit = function (CntId, TplId)
+    MyContracts.prototype.Edit = function (CntID, TemplateID)
     {
-        framework.OpenPage(MyContractsObj.address_prefix + 'NewContract.php?CntId=' + CntId + '&TplId=' + TplId, 'ویرایش قرارداد');
+        framework.OpenPage(MyContractsObj.address_prefix + 'NewContract.php?CntID=' + CntID + '&TemplateID=' + TemplateID, 'ویرایش قرارداد');
     }
 
-    MyContracts.prototype.Send = function (CntId, TplId)
+    MyContracts.prototype.Send = function (CntID, TemplateID)
     {
         Ext.Ajax.request({
             url: MyContractsObj.address_prefix + "../data/contract.data.php",
             method: "POST",
             params: {
                 task: 'Send',
-                CntId : CntId
+                CntID : CntID
             },
             success: function (response) {
                 var sd = Ext.decode(response.responseText);

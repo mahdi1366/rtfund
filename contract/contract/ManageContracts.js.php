@@ -4,7 +4,7 @@
     //	Date		: 94.08
     //-----------------------------
 
-    ReceivedContracts.prototype = {
+    ManageContracts.prototype = {
         TabID: '<?= $_REQUEST["ExtTabID"] ?>',
         address_prefix: "<?= $js_prefix_address ?>",
         ContractStatus_Raw: <?= CNTconfig::ContractStatus_Raw ?>,
@@ -12,17 +12,18 @@
             return findChild(this.TabID, elementID);
         }
     }
-    function ReceivedContracts() {
+    
+	function ManageContracts() {
 
     }
 
-    ReceivedContracts.prototype.OperationRender = function () {
-        return  "<div title='عملیات' class='setting' onclick='ReceivedContractsObj.OperationMenu(event);' " +
+    ManageContracts.prototype.OperationRender = function () {
+        return  "<div title='عملیات' class='setting' onclick='ManageContractsObj.OperationMenu(event);' " +
                 "style='background-repeat:no-repeat;background-position:center;" +
                 "cursor:pointer;height:16'></div>";
     }
 
-    ReceivedContracts.prototype.OperationMenu = function (e)
+    ManageContracts.prototype.OperationMenu = function (e)
     {
         var record = this.grid.getSelectionModel().getLastSelected();
         var op_menu = new Ext.menu.Menu();
@@ -30,55 +31,30 @@
         if (record.data.StatusCode == this.ContractStatus_Raw) {
             op_menu.add({text: ' ویرایش', iconCls: 'edit',
                 handler: function () {
-                    ReceivedContractsObj.Edit(record.data.CntId, record.data.TplId);
+                    ManageContractsObj.Edit(record.data.CntID, record.data.TemplateID);
                 }});
         }
 
-        op_menu.add({text: ' پیوست مدارک', iconCls: 'list',
-            handler: function () {
-                ReceivedContractsObj.UploadDocs(false);
-            }});
-
-        op_menu.add({text: ' تایید', iconCls: 'tick',
-            handler: function () {
-                ReceivedContractsObj.ConfirmContract(record.data.CntId);
-            }});
-
         op_menu.add({text: ' چاپ', iconCls: 'print',
             handler: function () {
-                window.open(this.address_prefix + '../../print/contract.php?CntId=' + record.data.CntId);
+                window.open(ManageContractsObj.address_prefix + 'PrintContract.php?CntID=' + record.data.CntID);
             }});
-
+         
+        op_menu.add({text: ' پیوست مدارک', iconCls: 'list',
+            handler: function () {
+                ManageContractsObj.UploadDocs(false);
+            }});
+        
         op_menu.showAt(e.pageX - 120, e.pageY);
     }
 
-    ReceivedContracts.prototype.Edit = function (CntId, TplId)
-    {
-        framework.OpenPage(ReceivedContractsObj.address_prefix + 'NewContract.php?CntId=' + CntId + '&TplId=' + TplId, 'ویرایش قرارداد');
+    ManageContracts.prototype.Edit = function (CntID, TemplateID)
+    {        
+        framework.OpenPage(ManageContractsObj.address_prefix + 'NewContract.php?CntID=' + CntID + '&TemplateID=' + TemplateID, 'ویرایش قرارداد');
     }
 
-    ReceivedContracts.prototype.ConfirmContract = function (CntId)
-    {
-        Ext.Ajax.request({
-            url: ReceivedContractsObj.address_prefix + '../data/contract.data.php?task=ConfirmRecContract',
-            params: {
-                CntId: CntId
-            },
-            method: 'POST',
-            success: function (res) {
-                var sd = Ext.decode(res.responseText);
-                if (!sd.success) {
-                    Ext.MessageBox.alert('', sd.data);
-                    return;
-                }
-                ReceivedContractsObj.grid.getStore().load();
-            }
-        });
-    }
-
-
-    ReceivedContracts.prototype.UploadDocs = function (readOnly) {
-        CntId = ReceivedContractsObj.grid.getSelectionModel().getLastSelected().data.CntId;
+    ManageContracts.prototype.UploadDocs = function (readOnly) {
+        CntID = ManageContractsObj.grid.getSelectionModel().getLastSelected().data.CntID;
         if (!this.UploadDocsWin)
         {
             this.UploadDocsWin = new Ext.window.Window({
@@ -106,11 +82,16 @@
         this.UploadDocsWin.center();
         this.UploadDocsWin.loader.load({
             params: {
-                parentObj: "ReceivedContractsObj.UploadDocsWin",
+                parentObj: "ManageContractsObj.UploadDocsWin",                
                 readOnly: readOnly ? "true" : "false",
-                ObjectType: 'CONTRACT', ObjectID: CntId
+                ObjectType : 'CONTRACT' , ObjectID : CntID                
             }
         });
+    }
+
+	ManageContracts.prototype.AddContract = function () {
+	
+        framework.OpenPage(this.address_prefix + "NewContract.php", "ثبت قرارداد");
     }
 
 

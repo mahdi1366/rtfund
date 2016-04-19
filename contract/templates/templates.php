@@ -6,60 +6,75 @@
 ini_set("display_errors", "On");
 
 require_once '../header.inc.php';
-require_once 'templates.js.php';
 require_once inc_dataGrid;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "templates.data.php?task=SelectTemplates", "div_dg");
 
-$dg->addColumn("شماره الگو", "TplId");
-$dg->addColumn("عنوان", "TplTitle");
+$dg->addColumn("شماره الگو", "TemplateID");
+$dg->addColumn("عنوان", "TemplateTitle");
 $dg->addColumn("", "StatusDesc", "", true);
-$dg->addColumn("", "TplContent", "", true);
+$dg->addColumn("", "TemplateContent", "", true);
 $col = $dg->addColumn("وضعیت", "StatusCode");
 $col->renderer = "function(v,p,record){return record.data.StatusDesc;} ";
 $dg->addColumn("", "ExpireDate", "", true);
-$col = $dg->addColumn("", "TplId");
+$col = $dg->addColumn("", "TemplateID");
 $col->renderer = "function(v,p,r) {return  \"<div class='setting' title='عملیات ' onClick='TemplatesObject.OperationMenu(event);'  \" +
             \"style='background-repeat:no-repeat;background-position:center;\" +
             \"cursor:pointer;height:16'></div>\";}";
 $col->width = 40;
 
-$dg->addButton("", " ثبت الگوی جدید", "add", "function(){TemplatesObject.ShowNewTplForm();}");
-$dg->addButton("", " مدیریت آیتم ها", "add", "function(){TemplatesObject.ShowMngTplItemsForm();}");
+$dg->addButton("", " ثبت الگوی جدید", "add", "function(){TemplatesObject.ShowNewTemplateForm();}");
+$dg->addButton("", " مدیریت آیتم ها", "add", "function(){TemplatesObject.ShowMngTemplateItemsForm();}");
 
 $dg->title = "لیست الگوهای قرارداد";
-$dg->DefaultSortField = "TplId";
+$dg->DefaultSortField = "TemplateID";
 $dg->emptyTextOfHiddenColumns = true;
 $dg->DefaultSortDir = "desc";
-$dg->autoExpandColumn = "TplTitle";
+$dg->autoExpandColumn = "TemplateTitle";
 $dg->width = 780;
+$dg->height = 400;
 $dg->pageSize = 15;
 
 $grid = $dg->makeGrid_returnObjects();
 ?>
 <script>
+	
+	Templates.prototype = {
+        TabID: '<?= $_REQUEST["ExtTabID"] ?>',
+        address_prefix: "<?= $js_prefix_address ?>",
+		
+        get: function (elementID) {
+            return findChild(this.TabID, elementID);
+        }
+    };
+    
+	function Templates() {
+		
+		this.grid = <?= $grid ?>;
+		this.grid.render(this.get("div_dg"));
+	
+	}
+	
     TemplatesObject = new Templates();
-    TemplatesObject.grid = <?= $grid ?>;
-    TemplatesObject.grid.render(TemplatesObject.get("div_dg"));
-
-    Templates.prototype.ShowNewTplForm = function () {
+	
+    Templates.prototype.ShowNewTemplateForm = function () {
         framework.OpenPage(this.address_prefix + "NewTemplate.php", "ثبت الگوی قرارداد");
     }
 
-    Templates.prototype.ShowMngTplItemsForm = function () {
-        framework.OpenPage(this.address_prefix + "ManageTplItems.php", "مدیریت آیتمهای الگو");
+    Templates.prototype.ShowMngTemplateItemsForm = function () {
+        framework.OpenPage(this.address_prefix + "ManageTemplateItems.php", "مدیریت آیتمهای الگو");
     }
 
     Templates.prototype.EditItem = function () {
         framework.OpenPage(this.address_prefix + "NewTemplate.php", "  ویرایش الگوی قرارداد",
-                {TplId: TemplatesObject.grid.getSelectionModel().getLastSelected().data.TplId});
+                {TemplateID: TemplatesObject.grid.getSelectionModel().getLastSelected().data.TemplateID});
     }
 
-Templates.prototype.RemoveItem = function () {
+	Templates.prototype.RemoveItem = function () {
          Ext.Ajax.request({
-            url: TemplatesObject.address_prefix + '../data/templates.data.php?task=deleteTpl',
+            url: TemplatesObject.address_prefix + 'templates.data.php?task=deleteTemplate',
             params: {                
-                TplId: TemplatesObject.grid.getSelectionModel().getLastSelected().data.TplId            
+                TemplateID: TemplatesObject.grid.getSelectionModel().getLastSelected().data.TemplateID            
             },
             method: 'POST',
             success: function (res) {
@@ -79,8 +94,7 @@ Templates.prototype.RemoveItem = function () {
         });
     }
 
-
-Templates.prototype.OperationMenu = function (e)
+	Templates.prototype.OperationMenu = function (e)
     {
         var record = this.grid.getSelectionModel().getLastSelected();
         var op_menu = new Ext.menu.Menu();
