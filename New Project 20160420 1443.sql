@@ -1,7 +1,7 @@
 -- MySQL Administrator dump 1.4
 --
 -- ------------------------------------------------------
--- Server version	5.0.27-community-nt
+-- Server version	5.5.20
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -27,16 +27,16 @@ USE krrtfir_rtfund;
 
 DROP TABLE IF EXISTS `ACC_CostCodes`;
 CREATE TABLE `ACC_CostCodes` (
-  `CostID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد ردیف',
-  `level1` int(10) unsigned default NULL COMMENT 'سطح 2',
-  `level2` int(10) unsigned default NULL COMMENT 'سطح 3',
-  `level3` int(10) unsigned default NULL COMMENT 'سطح 4',
-  `IsActive` enum('YES','NO') NOT NULL default 'YES',
-  `CostCode` varchar(45) default NULL COMMENT 'کد حساب',
-  `TafsiliType` smallint(5) unsigned default NULL,
-  `TafsiliType2` smallint(5) unsigned default NULL,
-  PRIMARY KEY  (`CostID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='کدهای حساب';
+  `CostID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد ردیف',
+  `level1` int(10) unsigned DEFAULT NULL COMMENT 'سطح 2',
+  `level2` int(10) unsigned DEFAULT NULL COMMENT 'سطح 3',
+  `level3` int(10) unsigned DEFAULT NULL COMMENT 'سطح 4',
+  `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
+  `CostCode` varchar(45) DEFAULT NULL COMMENT 'کد حساب',
+  `TafsiliType` smallint(5) unsigned DEFAULT NULL,
+  `TafsiliType2` smallint(5) unsigned DEFAULT NULL,
+  PRIMARY KEY (`CostID`)
+) ENGINE=InnoDB AUTO_INCREMENT=184 DEFAULT CHARSET=utf8 COMMENT='کدهای حساب';
 
 --
 -- Dumping data for table `ACC_CostCodes`
@@ -172,20 +172,20 @@ INSERT INTO `ACC_CostCodes` (`CostID`,`level1`,`level2`,`level3`,`IsActive`,`Cos
 DROP TABLE IF EXISTS `ACC_DocChecks`;
 CREATE TABLE `ACC_DocChecks` (
   `DocID` int(10) unsigned NOT NULL COMMENT 'کد سند',
-  `CheckID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد چک',
-  `AccountID` int(10) unsigned default NULL COMMENT 'کد حساب',
-  `CheckNo` int(10) unsigned default NULL COMMENT 'شماره چک',
+  `CheckID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد چک',
+  `AccountID` int(10) unsigned DEFAULT NULL COMMENT 'کد حساب',
+  `CheckNo` int(10) unsigned DEFAULT NULL COMMENT 'شماره چک',
   `CheckDate` date NOT NULL COMMENT 'تاریخ چک',
   `amount` decimal(15,0) NOT NULL COMMENT 'مبلغ',
-  `CheckStatus` smallint(5) unsigned NOT NULL default '1' COMMENT 'وضعیت چک',
-  `description` varchar(500) default NULL COMMENT 'توضیحات',
-  `TafsiliID` int(10) unsigned default NULL,
-  PRIMARY KEY  (`CheckID`),
+  `CheckStatus` smallint(5) unsigned NOT NULL DEFAULT '1' COMMENT 'وضعیت چک',
+  `description` varchar(500) DEFAULT NULL COMMENT 'توضیحات',
+  `TafsiliID` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`CheckID`),
   KEY `FK_ACC_DocChecks_1` (`AccountID`),
   KEY `FK_ACC_DocChecks_2` (`DocID`),
   CONSTRAINT `FK_ACC_DocChecks_1` FOREIGN KEY (`AccountID`) REFERENCES `acc_accounts` (`AccountID`),
   CONSTRAINT `FK_ACC_DocChecks_2` FOREIGN KEY (`DocID`) REFERENCES `acc_docs` (`DocID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='چک های سند';
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 COMMENT='چک های سند';
 
 --
 -- Dumping data for table `ACC_DocChecks`
@@ -205,27 +205,27 @@ INSERT INTO `ACC_DocChecks` (`DocID`,`CheckID`,`AccountID`,`CheckNo`,`CheckDate`
 DROP TABLE IF EXISTS `ACC_DocItems`;
 CREATE TABLE `ACC_DocItems` (
   `DocID` int(10) unsigned NOT NULL COMMENT 'کد سند',
-  `ItemID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد ردیف',
+  `ItemID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد ردیف',
   `CostID` int(10) unsigned NOT NULL COMMENT 'کد حساب',
-  `TafsiliType` smallint(5) unsigned default NULL,
-  `TafsiliID` int(10) unsigned default NULL COMMENT 'کد تفصیلی',
-  `TafsiliType2` smallint(5) unsigned default NULL,
-  `TafsiliID2` int(10) unsigned default NULL,
-  `DebtorAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ بدهکار',
-  `CreditorAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ بستانکار',
-  `details` varchar(500) default NULL COMMENT 'جزئیات',
-  `locked` enum('YES','NO') NOT NULL default 'NO' COMMENT 'قفل بودن ردیف',
-  `SourceType` varchar(50) default NULL,
-  `SourceID` int(10) unsigned default NULL,
-  `SourceID2` int(10) unsigned default NULL,
-  PRIMARY KEY  (`ItemID`),
+  `TafsiliType` smallint(5) unsigned DEFAULT NULL,
+  `TafsiliID` int(10) unsigned DEFAULT NULL COMMENT 'کد تفصیلی',
+  `TafsiliType2` smallint(5) unsigned DEFAULT NULL,
+  `TafsiliID2` int(10) unsigned DEFAULT NULL,
+  `DebtorAmount` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'مبلغ بدهکار',
+  `CreditorAmount` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'مبلغ بستانکار',
+  `details` varchar(500) DEFAULT NULL COMMENT 'جزئیات',
+  `locked` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'قفل بودن ردیف',
+  `SourceType` varchar(50) DEFAULT NULL,
+  `SourceID` int(10) unsigned DEFAULT NULL,
+  `SourceID2` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`ItemID`),
   KEY `FK_ACC_DocItems_1` (`DocID`),
   KEY `FK_ACC_DocItems_2` (`CostID`),
   KEY `FK_ACC_DocItems_3` (`TafsiliID`),
   CONSTRAINT `FK_ACC_DocItems_1` FOREIGN KEY (`DocID`) REFERENCES `acc_docs` (`DocID`),
   CONSTRAINT `FK_ACC_DocItems_2` FOREIGN KEY (`CostID`) REFERENCES `acc_costcodes` (`CostID`),
   CONSTRAINT `FK_ACC_DocItems_3` FOREIGN KEY (`TafsiliID`) REFERENCES `acc_tafsilis` (`TafsiliID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='ردیف های برگه';
+) ENGINE=InnoDB AUTO_INCREMENT=778 DEFAULT CHARSET=utf8 COMMENT='ردیف های برگه';
 
 --
 -- Dumping data for table `ACC_DocItems`
@@ -842,7 +842,7 @@ CREATE TABLE `ACC_UserState` (
   `PersonID` int(10) unsigned NOT NULL,
   `BranchID` smallint(5) unsigned NOT NULL,
   `CycleID` smallint(5) unsigned NOT NULL,
-  PRIMARY KEY  (`PersonID`)
+  PRIMARY KEY (`PersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -865,18 +865,18 @@ INSERT INTO `ACC_UserState` (`PersonID`,`BranchID`,`CycleID`) VALUES
 
 DROP TABLE IF EXISTS `ACC_accounts`;
 CREATE TABLE `ACC_accounts` (
-  `AccountID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد حساب',
+  `AccountID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد حساب',
   `BankID` int(10) unsigned NOT NULL COMMENT 'کد بانک',
   `BranchID` int(10) unsigned NOT NULL COMMENT 'کد شعبه',
   `AccountDesc` varchar(500) NOT NULL COMMENT 'عنوان حساب',
   `IsActive` enum('YES','NO') NOT NULL,
   `AccountNo` varchar(500) NOT NULL COMMENT 'شماره حساب',
   `AccountType` int(10) unsigned NOT NULL COMMENT 'نوع حساب',
-  `TafsiliID` int(10) unsigned default NULL,
-  PRIMARY KEY  (`AccountID`),
+  `TafsiliID` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`AccountID`),
   KEY `FK_ACC_accounts_1` (`BankID`),
   CONSTRAINT `FK_ACC_accounts_1` FOREIGN KEY (`BankID`) REFERENCES `acc_banks` (`BankID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='حساب های بانکی';
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='حساب های بانکی';
 
 --
 -- Dumping data for table `ACC_accounts`
@@ -895,11 +895,11 @@ INSERT INTO `ACC_accounts` (`AccountID`,`BankID`,`BranchID`,`AccountDesc`,`IsAct
 
 DROP TABLE IF EXISTS `ACC_banks`;
 CREATE TABLE `ACC_banks` (
-  `BankID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد بانک',
+  `BankID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد بانک',
   `BankDesc` varchar(500) NOT NULL COMMENT 'عنوان بانک',
-  `IsAvtive` enum('YES','NO') NOT NULL default 'YES',
-  PRIMARY KEY  (`BankID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `IsAvtive` enum('YES','NO') NOT NULL DEFAULT 'YES',
+  PRIMARY KEY (`BankID`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `ACC_banks`
@@ -926,16 +926,16 @@ INSERT INTO `ACC_banks` (`BankID`,`BankDesc`,`IsAvtive`) VALUES
 
 DROP TABLE IF EXISTS `ACC_blocks`;
 CREATE TABLE `ACC_blocks` (
-  `BlockID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد بلاک',
+  `BlockID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد بلاک',
   `LevelID` smallint(5) unsigned NOT NULL,
   `BlockCode` varchar(10) NOT NULL COMMENT 'کد سطح',
   `BlockDesc` varchar(500) NOT NULL COMMENT 'عنوان بلاک',
-  `essence` enum('DEBTOR','CREDITOR','NONE') NOT NULL default 'NONE' COMMENT 'ماهیت',
+  `essence` enum('DEBTOR','CREDITOR','NONE') NOT NULL DEFAULT 'NONE' COMMENT 'ماهیت',
   `IsActive` enum('YES','NO') NOT NULL,
-  `AccCode` varchar(50) default NULL,
-  `GroupID` int(10) unsigned default NULL,
-  PRIMARY KEY  (`BlockID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='اجزا سرفصل حساب';
+  `AccCode` varchar(50) DEFAULT NULL,
+  `GroupID` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`BlockID`)
+) ENGINE=InnoDB AUTO_INCREMENT=140 DEFAULT CHARSET=utf8 COMMENT='اجزا سرفصل حساب';
 
 --
 -- Dumping data for table `ACC_blocks`
@@ -1072,13 +1072,13 @@ INSERT INTO `ACC_blocks` (`BlockID`,`LevelID`,`BlockCode`,`BlockDesc`,`essence`,
 
 DROP TABLE IF EXISTS `ACC_cheques`;
 CREATE TABLE `ACC_cheques` (
-  `ChequeID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد دسته چک',
+  `ChequeID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد دسته چک',
   `AccountID` int(10) unsigned NOT NULL COMMENT 'کد حساب',
   `SerialNo` varchar(100) NOT NULL COMMENT 'شماره سریال',
   `MinNo` decimal(10,0) NOT NULL COMMENT 'از شماره',
   `MaxNo` decimal(10,0) NOT NULL COMMENT 'تا شماره',
   `IsActive` enum('YES','NO') NOT NULL,
-  PRIMARY KEY  (`ChequeID`),
+  PRIMARY KEY (`ChequeID`),
   KEY `FK_ACC_cheques_1` (`AccountID`),
   CONSTRAINT `FK_ACC_cheques_1` FOREIGN KEY (`AccountID`) REFERENCES `acc_accounts` (`AccountID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -1097,14 +1097,14 @@ CREATE TABLE `ACC_cheques` (
 
 DROP TABLE IF EXISTS `ACC_cycles`;
 CREATE TABLE `ACC_cycles` (
-  `CycleID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد دوره ',
+  `CycleID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد دوره ',
   `CycleDesc` varchar(500) NOT NULL,
   `CycleYear` smallint(5) unsigned NOT NULL COMMENT 'سال',
-  `IsClosed` enum('YES','NO') NOT NULL default 'NO' COMMENT 'بسته است؟',
-  `ShortDepositPercent` smallint(5) unsigned NOT NULL default '0',
-  `LongDepositPercent` smallint(5) unsigned NOT NULL default '0',
-  PRIMARY KEY  (`CycleID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `IsClosed` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'بسته است؟',
+  `ShortDepositPercent` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `LongDepositPercent` smallint(5) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`CycleID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1396 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `ACC_cycles`
@@ -1123,18 +1123,18 @@ INSERT INTO `ACC_cycles` (`CycleID`,`CycleDesc`,`CycleYear`,`IsClosed`,`ShortDep
 
 DROP TABLE IF EXISTS `ACC_docs`;
 CREATE TABLE `ACC_docs` (
-  `DocID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد سند',
+  `DocID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد سند',
   `CycleID` int(10) unsigned NOT NULL COMMENT 'کد دوره',
   `BranchID` int(10) unsigned NOT NULL COMMENT 'کد شعبه',
   `LocalNo` smallint(5) unsigned NOT NULL,
   `DocDate` date NOT NULL COMMENT 'تاریخ سند',
   `RegDate` date NOT NULL COMMENT 'تاریخ ثبت سند',
-  `DocStatus` enum('RAW','CONFIRM','ARCHIVE') NOT NULL default 'RAW' COMMENT 'وضعیت برگه',
-  `DocType` smallint(5) unsigned NOT NULL default '2' COMMENT 'نوع برگه',
-  `description` varchar(500) default NULL COMMENT 'توضیحات',
-  `RegPersonID` int(10) unsigned default NULL COMMENT 'ثبت کننده',
-  PRIMARY KEY  (`DocID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='برگه های حسابداری';
+  `DocStatus` enum('RAW','CONFIRM','ARCHIVE') NOT NULL DEFAULT 'RAW' COMMENT 'وضعیت برگه',
+  `DocType` smallint(5) unsigned NOT NULL DEFAULT '2' COMMENT 'نوع برگه',
+  `description` varchar(500) DEFAULT NULL COMMENT 'توضیحات',
+  `RegPersonID` int(10) unsigned DEFAULT NULL COMMENT 'ثبت کننده',
+  PRIMARY KEY (`DocID`)
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8 COMMENT='برگه های حسابداری';
 
 --
 -- Dumping data for table `ACC_docs`
@@ -1160,14 +1160,14 @@ INSERT INTO `ACC_docs` (`DocID`,`CycleID`,`BranchID`,`LocalNo`,`DocDate`,`RegDat
 
 DROP TABLE IF EXISTS `ACC_tafsilis`;
 CREATE TABLE `ACC_tafsilis` (
-  `TafsiliID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد تفصیلی',
-  `TafsiliCode` varchar(100) default NULL COMMENT 'کد تفصیلی',
+  `TafsiliID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد تفصیلی',
+  `TafsiliCode` varchar(100) DEFAULT NULL COMMENT 'کد تفصیلی',
   `TafsiliType` int(10) unsigned NOT NULL COMMENT 'نوع تفصیلی',
   `TafsiliDesc` varchar(500) NOT NULL COMMENT 'عنوان',
-  `IsActive` enum('YES','NO') NOT NULL default 'YES',
-  `ObjectID` int(10) unsigned default NULL,
-  PRIMARY KEY  (`TafsiliID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='تفصیلی ها';
+  `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
+  `ObjectID` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`TafsiliID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1873 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='تفصیلی ها';
 
 --
 -- Dumping data for table `ACC_tafsilis`
@@ -1943,13 +1943,13 @@ INSERT INTO `ACC_tafsilis` (`TafsiliID`,`TafsiliCode`,`TafsiliType`,`TafsiliDesc
 
 DROP TABLE IF EXISTS `ATN_PersonShifts`;
 CREATE TABLE `ATN_PersonShifts` (
-  `RowID` int(10) unsigned NOT NULL auto_increment,
+  `RowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `PersonID` int(10) unsigned NOT NULL,
   `ShiftID` int(10) unsigned NOT NULL,
   `FromDate` date NOT NULL,
   `ToDate` date NOT NULL,
   `IsActive` enum('YES','NO') NOT NULL,
-  PRIMARY KEY  (`RowID`)
+  PRIMARY KEY (`RowID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='شیفت های پرسنل';
 
 --
@@ -1966,12 +1966,12 @@ CREATE TABLE `ATN_PersonShifts` (
 
 DROP TABLE IF EXISTS `ATN_shifts`;
 CREATE TABLE `ATN_shifts` (
-  `ShiftID` int(10) unsigned NOT NULL auto_increment,
+  `ShiftID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `title` varchar(500) NOT NULL,
   `FromTime` time NOT NULL,
   `ToTime` time NOT NULL,
   `IsActive` enum('YES','NO') NOT NULL,
-  PRIMARY KEY  (`ShiftID`)
+  PRIMARY KEY (`ShiftID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='شیفت های کاری';
 
 --
@@ -1988,13 +1988,13 @@ CREATE TABLE `ATN_shifts` (
 
 DROP TABLE IF EXISTS `ATN_traffic`;
 CREATE TABLE `ATN_traffic` (
-  `TrafficID` int(10) unsigned NOT NULL auto_increment,
+  `TrafficID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `PersonID` int(10) unsigned NOT NULL,
   `TrafficDate` date NOT NULL,
   `TrafficTime` time NOT NULL,
-  `IsSystemic` enum('YES','NO') NOT NULL default 'YES',
-  `IsActive` enum('YES','NO') NOT NULL default 'YES',
-  PRIMARY KEY  (`TrafficID`)
+  `IsSystemic` enum('YES','NO') NOT NULL DEFAULT 'YES',
+  `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
+  PRIMARY KEY (`TrafficID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='تردد پرسنل';
 
 --
@@ -2011,12 +2011,12 @@ CREATE TABLE `ATN_traffic` (
 
 DROP TABLE IF EXISTS `BSC_ActDomain`;
 CREATE TABLE `BSC_ActDomain` (
-  `DomainID` int(10) unsigned NOT NULL auto_increment,
+  `DomainID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `ParentID` int(10) unsigned NOT NULL,
   `DomainDesc` varchar(500) NOT NULL,
-  `IsActive` enum('YES','NO') NOT NULL default 'YES',
-  PRIMARY KEY  (`DomainID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='حوزه های فعالیت';
+  `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
+  PRIMARY KEY (`DomainID`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COMMENT='حوزه های فعالیت';
 
 --
 -- Dumping data for table `BSC_ActDomain`
@@ -2034,11 +2034,11 @@ INSERT INTO `BSC_ActDomain` (`DomainID`,`ParentID`,`DomainDesc`,`IsActive`) VALU
 
 DROP TABLE IF EXISTS `BSC_BranchAccess`;
 CREATE TABLE `BSC_BranchAccess` (
-  `PersonID` int(10) unsigned NOT NULL auto_increment,
+  `PersonID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `BranchID` int(10) unsigned NOT NULL,
   `IsCurrent` enum('YES','NO') NOT NULL,
-  PRIMARY KEY  (`PersonID`,`BranchID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`PersonID`,`BranchID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1955 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `BSC_BranchAccess`
@@ -2074,17 +2074,17 @@ INSERT INTO `BSC_BranchAccess` (`PersonID`,`BranchID`,`IsCurrent`) VALUES
 
 DROP TABLE IF EXISTS `BSC_OrgSigners`;
 CREATE TABLE `BSC_OrgSigners` (
-  `RowID` int(10) unsigned NOT NULL auto_increment,
+  `RowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `PersonID` int(10) unsigned NOT NULL,
   `fullname` varchar(500) NOT NULL,
-  `sex` enum('MALE','FEMALE') NOT NULL default 'MALE',
-  `NationalID` varchar(10) NOT NULL default '',
-  `telephone` varchar(20) NOT NULL default '',
-  `mobile` varchar(11) NOT NULL default '',
-  `PostDesc` varchar(500) NOT NULL default '',
+  `sex` enum('MALE','FEMALE') NOT NULL DEFAULT 'MALE',
+  `NationalID` varchar(10) NOT NULL DEFAULT '',
+  `telephone` varchar(20) NOT NULL DEFAULT '',
+  `mobile` varchar(11) NOT NULL DEFAULT '',
+  `PostDesc` varchar(500) NOT NULL DEFAULT '',
   `email` varchar(200) NOT NULL,
-  PRIMARY KEY  (`RowID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='صاحبین امضا';
+  PRIMARY KEY (`RowID`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='صاحبین امضا';
 
 --
 -- Dumping data for table `BSC_OrgSigners`
@@ -2103,11 +2103,11 @@ INSERT INTO `BSC_OrgSigners` (`RowID`,`PersonID`,`fullname`,`sex`,`NationalID`,`
 
 DROP TABLE IF EXISTS `BSC_SubAgents`;
 CREATE TABLE `BSC_SubAgents` (
-  `SubID` int(10) unsigned NOT NULL auto_increment,
+  `SubID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `PersonID` int(10) unsigned NOT NULL,
-  `SubDesc` varchar(1000) character set utf8 NOT NULL,
-  PRIMARY KEY  (`SubID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='زیر واحد های سرمایه گذار';
+  `SubDesc` varchar(1000) CHARACTER SET utf8 NOT NULL,
+  PRIMARY KEY (`SubID`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='زیر واحد های سرمایه گذار';
 
 --
 -- Dumping data for table `BSC_SubAgents`
@@ -2135,11 +2135,11 @@ INSERT INTO `BSC_SubAgents` (`SubID`,`PersonID`,`SubDesc`) VALUES
 
 DROP TABLE IF EXISTS `BSC_branches`;
 CREATE TABLE `BSC_branches` (
-  `BranchID` int(10) unsigned NOT NULL auto_increment,
-  `BranchName` varchar(500) character set utf8 NOT NULL,
+  `BranchID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `BranchName` varchar(500) CHARACTER SET utf8 NOT NULL,
   `IsActive` enum('YES','NO') NOT NULL,
-  PRIMARY KEY  (`BranchID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='شعبه ها';
+  PRIMARY KEY (`BranchID`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1 COMMENT='شعبه ها';
 
 --
 -- Dumping data for table `BSC_branches`
@@ -2160,15 +2160,15 @@ INSERT INTO `BSC_branches` (`BranchID`,`BranchName`,`IsActive`) VALUES
 
 DROP TABLE IF EXISTS `BSC_licenses`;
 CREATE TABLE `BSC_licenses` (
-  `LicenseID` int(10) unsigned NOT NULL auto_increment,
+  `LicenseID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `PersonID` int(10) unsigned NOT NULL,
   `title` varchar(1000) NOT NULL,
-  `LicenseNo` varchar(100) default NULL,
-  `ExpDate` date default NULL,
-  `IsConfirm` enum('NOTSET','YES','NO') NOT NULL default 'NOTSET',
-  `ConfirmPersonID` int(10) unsigned default NULL,
-  `RejectDesc` varchar(1000) default NULL,
-  PRIMARY KEY  (`LicenseID`)
+  `LicenseNo` varchar(100) DEFAULT NULL,
+  `ExpDate` date DEFAULT NULL,
+  `IsConfirm` enum('NOTSET','YES','NO') NOT NULL DEFAULT 'NOTSET',
+  `ConfirmPersonID` int(10) unsigned DEFAULT NULL,
+  `RejectDesc` varchar(1000) DEFAULT NULL,
+  PRIMARY KEY (`LicenseID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='مجوز ها';
 
 --
@@ -2185,42 +2185,42 @@ CREATE TABLE `BSC_licenses` (
 
 DROP TABLE IF EXISTS `BSC_persons`;
 CREATE TABLE `BSC_persons` (
-  `PersonID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد فرد',
-  `UserName` varchar(100) default NULL COMMENT 'کلمه کاربری',
-  `UserPass` varchar(60) default NULL COMMENT 'رمز عبور',
+  `PersonID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد فرد',
+  `UserName` varchar(100) DEFAULT NULL COMMENT 'کلمه کاربری',
+  `UserPass` varchar(60) DEFAULT NULL COMMENT 'رمز عبور',
   `IsReal` enum('YES','NO') NOT NULL COMMENT 'حقیقی است؟',
-  `fname` varchar(500) default NULL COMMENT 'عنوان',
-  `lname` varchar(200) default NULL,
-  `sex` enum('MALE','FEMALE') NOT NULL default 'MALE',
-  `CompanyName` varchar(200) default NULL,
-  `NationalID` varchar(10) default NULL COMMENT 'کد ملی',
-  `EconomicID` varchar(10) default NULL COMMENT 'کد اقتصادی',
-  `PhoneNo` varchar(45) default NULL COMMENT 'تلفن',
-  `mobile` varchar(45) default NULL COMMENT 'موبایل',
-  `address` varchar(500) default NULL COMMENT 'آدرس',
-  `email` varchar(100) default NULL,
-  `IsStaff` enum('YES','NO') NOT NULL default 'NO',
-  `IsCustomer` enum('YES','NO') character set latin1 NOT NULL default 'YES' COMMENT 'مشتری',
-  `IsShareholder` enum('YES','NO') NOT NULL default 'NO' COMMENT 'سهامدار',
-  `IsAgent` enum('YES','NO') NOT NULL default 'NO' COMMENT 'عامل',
-  `IsSupporter` enum('YES','NO') NOT NULL default 'NO' COMMENT 'حامی',
-  `IsActive` enum('PENDING','YES','NO') NOT NULL default 'PENDING',
-  `PostID` int(10) unsigned default NULL,
-  `imp_CustomerCode` int(10) unsigned default NULL,
+  `fname` varchar(500) DEFAULT NULL COMMENT 'عنوان',
+  `lname` varchar(200) DEFAULT NULL,
+  `sex` enum('MALE','FEMALE') NOT NULL DEFAULT 'MALE',
+  `CompanyName` varchar(200) DEFAULT NULL,
+  `NationalID` varchar(10) DEFAULT NULL COMMENT 'کد ملی',
+  `EconomicID` varchar(10) DEFAULT NULL COMMENT 'کد اقتصادی',
+  `PhoneNo` varchar(45) DEFAULT NULL COMMENT 'تلفن',
+  `mobile` varchar(45) DEFAULT NULL COMMENT 'موبایل',
+  `address` varchar(500) DEFAULT NULL COMMENT 'آدرس',
+  `email` varchar(100) DEFAULT NULL,
+  `IsStaff` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  `IsCustomer` enum('YES','NO') CHARACTER SET latin1 NOT NULL DEFAULT 'YES' COMMENT 'مشتری',
+  `IsShareholder` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'سهامدار',
+  `IsAgent` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'عامل',
+  `IsSupporter` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'حامی',
+  `IsActive` enum('PENDING','YES','NO') NOT NULL DEFAULT 'PENDING',
+  `PostID` int(10) unsigned DEFAULT NULL,
+  `imp_CustomerCode` int(10) unsigned DEFAULT NULL,
   `PersonSign` blob,
-  `IsGovermental` enum('YES','NO') NOT NULL default 'NO',
-  `RegNo` int(10) unsigned default NULL,
-  `RegDate` date default NULL,
-  `RegPlace` varchar(500) default NULL,
-  `CompanyType` smallint(5) unsigned default NULL,
-  `DomainID` int(10) unsigned default NULL,
-  `AccountNo` decimal(20,0) default NULL,
-  `WebSite` varchar(100) default NULL,
-  `FatherName` varchar(200) default NULL,
-  `ShNo` int(10) unsigned default NULL,
+  `IsGovermental` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  `RegNo` int(10) unsigned DEFAULT NULL,
+  `RegDate` date DEFAULT NULL,
+  `RegPlace` varchar(500) DEFAULT NULL,
+  `CompanyType` smallint(5) unsigned DEFAULT NULL,
+  `DomainID` int(10) unsigned DEFAULT NULL,
+  `AccountNo` decimal(20,0) DEFAULT NULL,
+  `WebSite` varchar(100) DEFAULT NULL,
+  `FatherName` varchar(200) DEFAULT NULL,
+  `ShNo` int(10) unsigned DEFAULT NULL,
   `SignPic` blob,
-  PRIMARY KEY  (`PersonID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='ذینفعان';
+  PRIMARY KEY (`PersonID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1962 DEFAULT CHARSET=utf8 COMMENT='ذینفعان';
 
 --
 -- Dumping data for table `BSC_persons`
@@ -3025,11 +3025,11 @@ INSERT INTO `BSC_persons` (`PersonID`,`UserName`,`UserPass`,`IsReal`,`fname`,`ln
 
 DROP TABLE IF EXISTS `BSC_posts`;
 CREATE TABLE `BSC_posts` (
-  `PostID` int(10) unsigned NOT NULL auto_increment,
+  `PostID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `UnitID` int(10) unsigned NOT NULL,
   `PostName` varchar(500) NOT NULL,
-  PRIMARY KEY  (`PostID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='پست هاي سازماني';
+  PRIMARY KEY (`PostID`)
+) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8 COMMENT='پست هاي سازماني';
 
 --
 -- Dumping data for table `BSC_posts`
@@ -3052,11 +3052,11 @@ INSERT INTO `BSC_posts` (`PostID`,`UnitID`,`PostName`) VALUES
 
 DROP TABLE IF EXISTS `BSC_units`;
 CREATE TABLE `BSC_units` (
-  `UnitID` int(10) unsigned NOT NULL auto_increment,
-  `ParentID` int(10) unsigned default NULL,
-  `UnitName` varchar(500) character set utf8 NOT NULL,
-  PRIMARY KEY  (`UnitID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='واحدهای سازمانی';
+  `UnitID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `ParentID` int(10) unsigned DEFAULT NULL,
+  `UnitName` varchar(500) CHARACTER SET utf8 NOT NULL,
+  PRIMARY KEY (`UnitID`)
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=latin1 COMMENT='واحدهای سازمانی';
 
 --
 -- Dumping data for table `BSC_units`
@@ -3087,10 +3087,10 @@ CREATE TABLE `BaseInfo` (
   `TypeID` int(10) unsigned NOT NULL COMMENT 'کد نوع',
   `InfoID` int(10) unsigned NOT NULL COMMENT 'کد آیتم',
   `InfoDesc` varchar(500) NOT NULL COMMENT 'عنوان',
-  `param1` varchar(100) default '0',
-  `param2` varchar(45) default NULL,
-  `IsActive` enum('YES','NO') NOT NULL default 'YES',
-  PRIMARY KEY  (`InfoID`,`TypeID`)
+  `param1` varchar(100) DEFAULT '0',
+  `param2` varchar(45) DEFAULT NULL,
+  `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
+  PRIMARY KEY (`InfoID`,`TypeID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -3507,14 +3507,14 @@ INSERT INTO `BaseInfo` (`TypeID`,`InfoID`,`InfoDesc`,`param1`,`param2`,`IsActive
 
 DROP TABLE IF EXISTS `BaseTypes`;
 CREATE TABLE `BaseTypes` (
-  `TypeID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد نوع',
+  `TypeID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد نوع',
   `SystemID` int(10) unsigned NOT NULL,
-  `TypeDesc` varchar(500) default NULL COMMENT 'عنوان',
-  `TableName` varchar(100) default NULL COMMENT 'نام جدول',
-  `FieldName` varchar(100) default NULL COMMENT 'نام فیلد',
+  `TypeDesc` varchar(500) DEFAULT NULL COMMENT 'عنوان',
+  `TableName` varchar(100) DEFAULT NULL COMMENT 'نام جدول',
+  `FieldName` varchar(100) DEFAULT NULL COMMENT 'نام فیلد',
   `editable` enum('YES','NO') NOT NULL,
-  PRIMARY KEY  (`TypeID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`TypeID`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `BaseTypes`
@@ -3547,22 +3547,25 @@ INSERT INTO `BaseTypes` (`TypeID`,`SystemID`,`TypeDesc`,`TableName`,`FieldName`,
 
 DROP TABLE IF EXISTS `CNT_ContractItems`;
 CREATE TABLE `CNT_ContractItems` (
-  `CntItemId` int(10) unsigned NOT NULL auto_increment,
-  `CntId` int(10) unsigned NOT NULL,
-  `TplItemId` int(10) unsigned NOT NULL,
+  `ContractItemID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `ContractID` int(10) unsigned NOT NULL,
+  `TemplateItemID` int(10) unsigned NOT NULL,
   `ItemValue` blob NOT NULL,
-  PRIMARY KEY  (`CntItemId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='آیتم های قرارداد';
+  PRIMARY KEY (`ContractItemID`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='آیتم های قرارداد';
 
 --
 -- Dumping data for table `CNT_ContractItems`
 --
 
 /*!40000 ALTER TABLE `CNT_ContractItems` DISABLE KEYS */;
-INSERT INTO `CNT_ContractItems` (`CntItemId`,`CntId`,`TplItemId`,`ItemValue`) VALUES 
- (3,3,1,0x323031362F30342F3139),
- (4,3,3,0x343538303030303030),
- (5,3,4,0xD8B3DB8CD8A820D8B3DB8CD8A8);
+INSERT INTO `CNT_ContractItems` (`ContractItemID`,`ContractID`,`TemplateItemID`,`ItemValue`) VALUES 
+ (12,10,5,0x3534383734),
+ (13,10,6,0x323031362F30332F3230),
+ (14,10,7,0x39393939),
+ (18,11,103,0x31323334),
+ (19,11,104,0x323031362F30352F3031),
+ (20,11,3,0xD8B4D8B1DAA9D8AA20D981D984D8A7D986DB8C);
 /*!40000 ALTER TABLE `CNT_ContractItems` ENABLE KEYS */;
 
 
@@ -3572,22 +3575,31 @@ INSERT INTO `CNT_ContractItems` (`CntItemId`,`CntId`,`TplItemId`,`ItemValue`) VA
 
 DROP TABLE IF EXISTS `CNT_TemplateItems`;
 CREATE TABLE `CNT_TemplateItems` (
-  `TemplateItemID` int(10) unsigned NOT NULL auto_increment,
-  `TemplateID` int(10) unsigned NOT NULL,
-  `ItemName` varchar(500) collate utf8_bin NOT NULL,
-  `ItemType` varchar(100) collate utf8_bin NOT NULL,
-  PRIMARY KEY  USING BTREE (`TemplateItemID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='آیتم های قرارداد';
+  `TemplateItemID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `ItemName` varchar(500) COLLATE utf8_bin NOT NULL,
+  `ItemType` varchar(100) COLLATE utf8_bin NOT NULL,
+  PRIMARY KEY (`TemplateItemID`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='آیتم های قرارداد';
 
 --
 -- Dumping data for table `CNT_TemplateItems`
 --
 
 /*!40000 ALTER TABLE `CNT_TemplateItems` DISABLE KEYS */;
-INSERT INTO `CNT_TemplateItems` (`TemplateItemID`,`TemplateID`,`ItemName`,`ItemType`) VALUES 
- (1,0,0xD8AAD8A7D8B1DB8CD8AE20D982D8B1D8A7D8B1D8AFD8A7D8AF,0x7368646174656669656C64),
- (3,0,0xD985D8A8D984D8BA20D982D8B1D8A7D8B1D8AFD8A7D8AF,0x6E756D6265726669656C64),
- (4,0,0xD8AAD8B9D987D8AFD8A7D8AA20D985D8B4D8AAD8B1DB8C,0x746578746669656C64);
+INSERT INTO `CNT_TemplateItems` (`TemplateItemID`,`ItemName`,`ItemType`) VALUES 
+ (1,0xD8AAD8A7D8B1DB8CD8AE20D8B4D8B1D988D8B9,0x7368646174656669656C64),
+ (2,0xD8AAD8A7D8B1DB8CD8AE20D9BED8A7DB8CD8A7D986,0x7368646174656669656C64),
+ (3,0xD8B7D8B1D98120D982D8B1D8A7D8B1D8AFD8A7D8AF,0x746578746669656C64),
+ (100,0xD8AAD8A7D8B1DB8CD8AE20D982D8B1D8A7D8B1D8AFD8A7D8AF,0x7368646174656669656C64),
+ (101,0xD985D8A8D984D8BA20D8AAD8B9D987D8AF,0x63757272656E63796669656C64),
+ (102,0xD8AAD8B9D987D8AFD8A7D8AA20D985D8B4D8AAD8B1DB8C,0x746578746669656C64),
+ (103,0xD8B4D985D8A7D8B1D98720D986D8A7D985D98720D985D8B9D8B1D981DB8C20DAA9D986D986D8AFD987,0x746578746669656C64),
+ (104,0xD8AAD8A7D8B1DB8CD8AE20D986D8A7D985D98720D985D8B9D8B1D981DB8C20DAA9D986D986D8AFD987,0x7368646174656669656C64),
+ (105,0xD8B4D985D8A7D8B1D98720D982D8B1D8A7D8B1D8AFD8A7D8AF20D985D8B4D8A7D8B1DAA9D8AA20D985D8AFD986DB8C,0x746578746669656C64),
+ (106,0xD8AAD8A7D8B1DB8CD8AE20D982D8B1D8A7D8B1D8AFD8A7D8AF20D985D8B4D8A7D8B1DAA9D8AA20D985D8AFD986DB8C,0x7368646174656669656C64),
+ (107,0xD8B3D987D98520D8A7D984D8B4D8B1DAA9D98720D8B5D986D8AFD988D98220,0x63757272656E63796669656C64),
+ (108,0xD985D8A8D984D8BA20D982D8B3D8B7,0x63757272656E63796669656C64),
+ (109,0xD8AAD8B9D8AFD8A7D8AF20D982D8B3D8B7,0x6E756D6265726669656C64);
 /*!40000 ALTER TABLE `CNT_TemplateItems` ENABLE KEYS */;
 
 
@@ -3597,27 +3609,24 @@ INSERT INTO `CNT_TemplateItems` (`TemplateItemID`,`TemplateID`,`ItemName`,`ItemT
 
 DROP TABLE IF EXISTS `CNT_contracts`;
 CREATE TABLE `CNT_contracts` (
-  `CntId` int(10) unsigned NOT NULL auto_increment,
-  `TplId` int(10) unsigned NOT NULL,
+  `ContractID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `TemplateID` int(10) unsigned NOT NULL,
   `RegPersonID` int(10) unsigned NOT NULL,
   `RegDate` datetime NOT NULL,
-  `description` varchar(1000) collate utf8_bin NOT NULL,
-  `StatusCode` smallint(5) unsigned NOT NULL,
-  `SupplierId` smallint(5) unsigned default NULL,
-  `Supervisor` varchar(1000) collate utf8_bin default NULL,
-  `StartDate` date default NULL,
-  `EndDate` date default NULL,
-  `price` decimal(13,0) default NULL,
-  PRIMARY KEY  (`CntId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='قراردادها';
+  `description` varchar(1000) COLLATE utf8_bin DEFAULT NULL,
+  `StartDate` date DEFAULT NULL,
+  `EndDate` date DEFAULT NULL,
+  `PersonID` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`ContractID`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='قراردادها';
 
 --
 -- Dumping data for table `CNT_contracts`
 --
 
 /*!40000 ALTER TABLE `CNT_contracts` DISABLE KEYS */;
-INSERT INTO `CNT_contracts` (`CntId`,`TplId`,`RegPersonID`,`RegDate`,`description`,`StatusCode`,`SupplierId`,`Supervisor`,`StartDate`,`EndDate`,`price`) VALUES 
- (3,1,1000,'2016-04-20 03:08:17',0xD8B4DB8C20D8B4D8B3DB8C,10,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO `CNT_contracts` (`ContractID`,`TemplateID`,`RegPersonID`,`RegDate`,`description`,`StartDate`,`EndDate`,`PersonID`) VALUES 
+ (11,4,1000,'2016-04-20 22:41:43',NULL,'2016-04-20','2018-04-21',1001);
 /*!40000 ALTER TABLE `CNT_contracts` ENABLE KEYS */;
 
 
@@ -3627,12 +3636,12 @@ INSERT INTO `CNT_contracts` (`CntId`,`TplId`,`RegPersonID`,`RegDate`,`descriptio
 
 DROP TABLE IF EXISTS `CNT_templates`;
 CREATE TABLE `CNT_templates` (
-  `TemplateID` int(10) unsigned NOT NULL auto_increment,
-  `TemplateTitle` varchar(400) collate utf8_bin default NULL,
+  `TemplateID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `TemplateTitle` varchar(400) COLLATE utf8_bin DEFAULT NULL,
   `TemplateContent` blob,
-  `IsActive` enum('YES','NO') collate utf8_bin NOT NULL default 'YES',
-  PRIMARY KEY  USING BTREE (`TemplateID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='الگوهای قرارداد';
+  `IsActive` enum('YES','NO') COLLATE utf8_bin NOT NULL DEFAULT 'YES',
+  PRIMARY KEY (`TemplateID`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='الگوهای قرارداد';
 
 --
 -- Dumping data for table `CNT_templates`
@@ -3640,8 +3649,7 @@ CREATE TABLE `CNT_templates` (
 
 /*!40000 ALTER TABLE `CNT_templates` DISABLE KEYS */;
 INSERT INTO `CNT_templates` (`TemplateID`,`TemplateTitle`,`TemplateContent`,`IsActive`) VALUES 
- (1,0xD982D8B1D8A7D8B1D8AFD8A7D8AF20D8AAD8B3D987DB8CD984D8A7D8AA20D8B1D8B4D8AF,0x3C703E266E6273703BD8B3DB8C20D8B4D8B3DB8C3C2F703E0A0A3C703E266E6273703B233123266E6273703B3C2F703E0A0A3C703ED8B4D8B320D985DB8CD986D8AA20D8B3D985DB8CD986D8AA20D8B4D985D8B3DB8C266E6273703B233323266E6273703B3C2F703E0A0A3C703E266E6273703BD985D8B3D986DB8CD8AA20D8B4D8B3D986D985DB8CD8AA20D8B4D986D985D8B3DB8C20266E6273703B233423266E6273703B3C2F703E0A,0x594553),
- (2,NULL,NULL,0x594553);
+ (4,0xD8B6D985D8A7D986D8AA20D986D8A7D985D98720D9BEDB8CD8B420D9BED8B1D8AFD8A7D8AED8AA,0x3C70207374796C653D22746578742D616C69676E3A2063656E7465723B223E3C7370616E207374796C653D22666F6E742D73697A653A31387078223E3C7370616E207374796C653D22666F6E742D66616D696C793A622074697472223E3C7374726F6E673ED8BADB8CD980D980D980D980D8B1D982D8A7D8A8D98420D8A7D986D8AAD980D982D8A7D9843C2F7374726F6E673E3C2F7370616E3E3C2F7370616E3E3C2F703E0A0A3C70206469723D2252544C223E3C7370616E207374796C653D22666F6E742D73697A653A31347078223E3C7370616E207374796C653D22666F6E742D66616D696C793A62206E617A616E696E223E3C7374726F6E673ED986D8B8D8B120D8A8D98720D8A7DB8CD986DAA9D98720D8B7D8A8D98220D982D8B1D8A7D8B1D8AFD8A7D8AF20D8B4D985D8A7D8B1D987266E6273703B266E6273703B2331303323266E6273703B266E6273703B20D985D988D8B1D8AE266E6273703B266E6273703B2331303423266E6273703B266E6273703B20D985D986D8B9D982D8AFD98720D8A8DB8CD98620D8B3D8A7D8B2D985D8A7D986266E6273703B266E6273703B233323266E6273703B20D98820D8B4D8B1DAA9D8AA202E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E20D982D8B1D8A7D8B120D8A7D8B3D8AA20D985D8A8D984D8BA202E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E30D8B1DB8CD8A7D984202820D8A8D8ADD8B1D988D981202E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E20266E6273703BD8B1DB8CD8A7D984202920D8A8D8B9D986D988D8A7D98620D9BEDB8CD8B420D9BED8B1D8AFD8A7D8AED8AA20D8A8D98720D8B4D8B1DAA9D8AA202E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E20D9BED8B1D8AFD8A7D8AED8AA20DAAFD8B1D8AFD8AFD88C20D8A7DB8CD98620D8B5D986D8AFD988D98220D985D8AAD8B9D987D8AF20D8A7D8B3D8AA20D987D8B120D985D8A8D984D8BADB8C20D8B1D8A720D8AAD8A720D985DB8CD8B2D8A7D986202E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E3020D8B1DB8CD8A7D984202820D8A8D8ADD8B1D988D981202E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E20D8B1DB8CD8A7D984202920DAA9D98720D8A7D8B220D8B7D8B1D98120266E6273703BD8B3D8A7D8B2D985D8A7D986202E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2ED8B7D8B1D8A7D8ADDB8C202E2E2E2E2E2E2E2E2E2E2E2E2E2E20D985D8B7D8A7D984D8A8D98720D8B4D988D8AF20D8A8D98720D985D8ADD8B620D8AFD8B1DB8CD8A7D981D8AA20D8A7D988D984DB8CD98620D8AAD982D8A7D8B6D8A7D986D8A7D985D98720DAA9D8AAD8A8DB8C20D98820D8A8D8AFD988D98620D8A7DB8CD986DAA9D98720D8A7D8ADD8AADB8CD8A7D8AC20D8A8D98720D8B5D8AFD988D8B120D8A7D8B8D987D8A7D8B120D986D8A7D985D98720DB8CD8A720D8A7D982D8AFD8A7D985DB8C20D8A7D8B220D985D8ACD8B1D8A7DB8C20D8A7D8AFD8A7D8B1DB8C20D88C20D982D8B6D8A7DB8CDB8C20D98820DB8CD8A720D985D982D8A7D98520D8AFDB8CDAAFD8B1DB8C20D98820DB8CD8A720D8B0DAA9D8B120D8B9D984D8AADB8C20D8AFD8A7D8B4D8AAD98720D8A8D8A7D8B4D8AF2E20D985D8A8D984D8BA20D985D988D8B1D8AF20D8AFD8B1D8AED988D8A7D8B3D8AA202E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E20D8B1D8A720D8AFD8B120D988D8ACD98720DB8CD8A720D8ADD988D8A7D984D98720DAA9D8B1D8AF20D8B3D8A7D8B2D985D8A7D986266E6273703B202E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E20D8A8D9BED8B1D8AFD8A7D8B2D8AF2E3C2F7374726F6E673E3C2F7370616E3E3C2F7370616E3E3C2F703E0A0A3C70206469723D2252544C223E3C7370616E207374796C653D22666F6E742D73697A653A31347078223E3C7370616E207374796C653D22666F6E742D66616D696C793A62206E617A616E696E223E3C7374726F6E673ED8A7DB8CD98620D8B6D985D8A7D986D8AA20D986D8A7D985D98720D8AAD8A720D8A2D8AED8B120D8B3D8A7D8B9D8AA20D8A7D8AFD8A7D8B1DB8C20D8B1D988D8B22E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2F2E2E2E2E2E2E2E2E2E2E2E2E2E2F31332E2E2E2E2E2E2E2E2E2E2E2E2E28D8A8D8ADD8B1D988D981202E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E202E2E2E2E2E2E2E2E2E2E2E2E2920D985D8B9D8AAD8A8D8B120D8A8D988D8AFD98720D98820D8A8D986D8A720D8A8D98720D8AFD8B1D8AED988D8A7D8B3D8AA20D8B3D8A7D8B2D985D8A7D986266E6273703B202E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E20D8A8D8B1D8A7DB8C20D985D8AFD8AADB8C20DAA9D98720D8AFD8B1D8AED988D8A7D8B3D8AA20D8B4D988D8AF20D982D8A7D8A8D98420D8AAD985D8AFDB8CD8AF20D8AED988D8A7D987D8AF20D8A8D988D8AF20D98820D8AFD8B120D8B5D988D8B1D8AADB8C20DAA9D98720D8B5D986D8AFD988D98220D986D8AAD988D8A7D986D8AF20D98820DB8CD8A720D986D8AED988D8A7D987D8AF20D985D8AFD8AA20D8B6D985D8A7D986D8AA20D986D8A7D985D98720D8B1D8A720D8AAD985D8AFDB8CD8AF20D986D985D8A7DB8CD8AF20D98820DB8CD8A720D8B4D8B1DAA9D8AA2E2E2E2E2E2E2E2E2E2E2E2E2E202E2E2E2E2E2E2E2E2E2E2E20266E6273703BD985D988D8ACD8A8D8A7D8AA20D8AAD985D8AFDB8CD8AF20D8B1D8A720D982D8A8D98420D8A7D8B220D8A7D986D982D8B6D8A7DB8C20D985D8AFD8AA20D981D988D98220D986D8B2D8AF20D8B5D986D8AFD988D98220D981D8B1D8A7D987D98520D986D8B3D8A7D8B2D8AF20D98820D8B5D986D8AFD988D98220D8B1D8A720D8ADD8A7D8B6D8B120D8A8D98720D8AAD985D8AFDB8CD8AF20D986D986D985D8A7DB8CD8AF20D8B5D986D8AFD988D98220D8AFD8B120D8A7DB8CD986D8B5D988D8B1D8AA20D985D8AAD8B9D987D8AF20D8A7D8B3D8AA20D8A8D8AFD988D98620D8A7DB8CD986DAA9D98720D8A7D8ADD8AADB8CD8A7D8AC20D8A8D98720D985D8B7D8A7D984D8A8D98720D985D8ACD8AFD8AF20D8A8D8A7D8B4D8AF20D985D8A8D984D8BA20D985D8B1D982D988D98520D981D988D98220D8B1D8A720D8AFD8B120D988D8ACD98720DB8CD8A720D8ADD988D8A7D984D98720DAA9D8B1D8AF20D8B3D8A7D8B2D985D8A7D986266E6273703B202E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E2E266E6273703B20D9BED8B1D8AFD8A7D8AED8AA20DAA9D986D8AF2E3C2F7374726F6E673E3C2F7370616E3E3C2F7370616E3E3C2F703E0A0A3C70206469723D2252544C223E266E6273703B3C2F703E0A0A3C703E3C7370616E207374796C653D22666F6E742D73697A653A31347078223E3C7370616E207374796C653D22666F6E742D66616D696C793A62206E617A616E696E223E3C7374726F6E673ED8B5D986D8AFD988D98220D9BEDA98D988D987D8B420D98820D981D986D8A7D988D8B1DB8C20D8AED8B1D8A7D8B3D8A7D98620D8B1D8B6D988DB8C3C2F7374726F6E673E3C2F7370616E3E3C2F7370616E3E3C2F703E0A0A3C703E3C7370616E207374796C653D22666F6E742D73697A653A31347078223E3C7370616E207374796C653D22666F6E742D66616D696C793A62206E617A616E696E223E3C7374726F6E673E266E6273703B266E6273703B266E6273703B20266E6273703BD986D8A7DB8CD8A820D8B1D8A6DB8CD8B320D987DB8CD8A6D8AA20D985D8AFDB8CD8B1D987266E6273703B20266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703BD985D8AFDB8CD8B1D8B9D8A7D985D984266E6273703B266E6273703B203C2F7374726F6E673E3C2F7370616E3E3C2F7370616E3E3C2F703E0A0A3C703E3C7370616E207374796C653D22666F6E742D73697A653A31347078223E3C7370616E207374796C653D22666F6E742D66616D696C793A62206E617A616E696E223E3C7374726F6E673ED8AFDAA9D8AAD8B1D8B3DB8CD8AFD985D987D8AFDB8C20D985DB8CD8B1D8B2D8A7D8A8D8A7D8A8D8A7D8A6DB8C266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B20266E6273703B266E6273703B266E6273703B266E6273703B266E6273703B266E6273703BD985D987D8AFDB8C20D985D8B1D988DB8C20266E6273703B3C2F7374726F6E673E3C2F7370616E3E3C2F7370616E3E3C2F703E0A,0x594553);
 /*!40000 ALTER TABLE `CNT_templates` ENABLE KEYS */;
 
 
@@ -3651,13 +3659,13 @@ INSERT INTO `CNT_templates` (`TemplateID`,`TemplateTitle`,`TemplateContent`,`IsA
 
 DROP TABLE IF EXISTS `DMS_DocFiles`;
 CREATE TABLE `DMS_DocFiles` (
-  `RowID` int(10) unsigned NOT NULL auto_increment,
+  `RowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `DocumentID` int(10) unsigned NOT NULL,
-  `PageNo` smallint(5) unsigned NOT NULL default '1',
-  `FileType` varchar(20) default NULL,
+  `PageNo` smallint(5) unsigned NOT NULL DEFAULT '1',
+  `FileType` varchar(20) DEFAULT NULL,
   `FileContent` tinyblob,
-  PRIMARY KEY  (`RowID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='فایل اسناد الکترونیک';
+  PRIMARY KEY (`RowID`)
+) ENGINE=InnoDB AUTO_INCREMENT=87 DEFAULT CHARSET=utf8 COMMENT='فایل اسناد الکترونیک';
 
 --
 -- Dumping data for table `DMS_DocFiles`
@@ -3748,7 +3756,7 @@ CREATE TABLE `DMS_DocParamValues` (
   `DocumentID` int(10) unsigned NOT NULL,
   `ParamID` int(10) unsigned NOT NULL,
   `ParamValue` varchar(500) NOT NULL,
-  PRIMARY KEY  (`DocumentID`,`ParamID`),
+  PRIMARY KEY (`DocumentID`,`ParamID`),
   CONSTRAINT `FK_DMS_DocParamValues_1` FOREIGN KEY (`DocumentID`) REFERENCES `dms_documents` (`DocumentID`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -9028,12 +9036,12 @@ INSERT INTO `DMS_DocParamValues` (`DocumentID`,`ParamID`,`ParamValue`) VALUES
 
 DROP TABLE IF EXISTS `DMS_DocParams`;
 CREATE TABLE `DMS_DocParams` (
-  `ParamID` int(10) unsigned NOT NULL auto_increment,
+  `ParamID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `DocType` int(10) unsigned NOT NULL,
   `ParamDesc` varchar(45) NOT NULL,
   `ParamType` varchar(45) NOT NULL,
-  PRIMARY KEY  (`ParamID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`ParamID`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `DMS_DocParams`
@@ -9060,20 +9068,20 @@ INSERT INTO `DMS_DocParams` (`ParamID`,`DocType`,`ParamDesc`,`ParamType`) VALUES
 
 DROP TABLE IF EXISTS `DMS_documents`;
 CREATE TABLE `DMS_documents` (
-  `DocumentID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد سند',
-  `DocDesc` varchar(200) default NULL COMMENT 'توضیحات کلی',
+  `DocumentID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد سند',
+  `DocDesc` varchar(200) DEFAULT NULL COMMENT 'توضیحات کلی',
   `DocType` int(10) unsigned NOT NULL COMMENT 'نوع سند',
-  `ObjectType` varchar(50) default NULL COMMENT 'نوع آبجکت',
-  `ObjectID` int(10) unsigned default NULL COMMENT 'کد آبجکت',
-  `ObjectID2` int(10) unsigned NOT NULL default '0',
-  `IsConfirm` enum('NOTSET','YES','NO') NOT NULL default 'NOTSET' COMMENT 'برابر اصل',
-  `RegPersonID` int(10) unsigned default NULL,
-  `ConfirmPersonID` int(10) unsigned default NULL COMMENT 'فرد تایید کننده',
-  `RejectDesc` varchar(2000) default NULL,
-  `IsReturned` enum('YES','NO') NOT NULL default 'NO' COMMENT 'برگشت به مشتری',
-  `imp_DetailID` int(10) unsigned default NULL,
-  PRIMARY KEY  (`DocumentID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='اسناد الکترونیک';
+  `ObjectType` varchar(50) DEFAULT NULL COMMENT 'نوع آبجکت',
+  `ObjectID` int(10) unsigned DEFAULT NULL COMMENT 'کد آبجکت',
+  `ObjectID2` int(10) unsigned NOT NULL DEFAULT '0',
+  `IsConfirm` enum('NOTSET','YES','NO') NOT NULL DEFAULT 'NOTSET' COMMENT 'برابر اصل',
+  `RegPersonID` int(10) unsigned DEFAULT NULL,
+  `ConfirmPersonID` int(10) unsigned DEFAULT NULL COMMENT 'فرد تایید کننده',
+  `RejectDesc` varchar(2000) DEFAULT NULL,
+  `IsReturned` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'برگشت به مشتری',
+  `imp_DetailID` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`DocumentID`)
+) ENGINE=InnoDB AUTO_INCREMENT=2064 DEFAULT CHARSET=utf8 COMMENT='اسناد الکترونیک';
 
 --
 -- Dumping data for table `DMS_documents`
@@ -11152,12 +11160,12 @@ INSERT INTO `DMS_documents` (`DocumentID`,`DocDesc`,`DocType`,`ObjectType`,`Obje
 
 DROP TABLE IF EXISTS `DMS_packages`;
 CREATE TABLE `DMS_packages` (
-  `PackageID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد بسته',
-  `PackDesc` varchar(500) character set utf8 NOT NULL COMMENT 'عتوان',
-  `ObjectType` varchar(50) character set utf8 default NULL COMMENT 'نوع آبجکت',
-  `ObjectID` int(10) unsigned default NULL COMMENT 'کد آبجکت',
-  `description` varchar(1000) character set utf8 default NULL COMMENT 'توضیحات',
-  PRIMARY KEY  (`PackageID`)
+  `PackageID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد بسته',
+  `PackDesc` varchar(500) CHARACTER SET utf8 NOT NULL COMMENT 'عتوان',
+  `ObjectType` varchar(50) CHARACTER SET utf8 DEFAULT NULL COMMENT 'نوع آبجکت',
+  `ObjectID` int(10) unsigned DEFAULT NULL COMMENT 'کد آبجکت',
+  `description` varchar(1000) CHARACTER SET utf8 DEFAULT NULL COMMENT 'توضیحات',
+  PRIMARY KEY (`PackageID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -11174,20 +11182,20 @@ CREATE TABLE `DMS_packages` (
 
 DROP TABLE IF EXISTS `DataAudit`;
 CREATE TABLE `DataAudit` (
-  `DataAuditID` int(10) unsigned NOT NULL auto_increment,
+  `DataAuditID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `PersonID` int(11) NOT NULL COMMENT 'کد شخصی عمل کننده',
-  `TableName` varchar(100) character set utf8 NOT NULL COMMENT 'نام جدول',
+  `TableName` varchar(100) CHARACTER SET utf8 NOT NULL COMMENT 'نام جدول',
   `MainObjectID` int(11) NOT NULL COMMENT 'کد داده اصلی دستکاری شده',
-  `SubObjectID` int(11) default NULL COMMENT 'کد داده فرعی دستکاری شده',
-  `ActionType` enum('ADD','DELETE','UPDATE','VIEW','SEARCH','SEND','RETURN','CONFIRM','REJECT','OTHER') character set utf8 default NULL COMMENT 'نوع عمل',
+  `SubObjectID` int(11) DEFAULT NULL COMMENT 'کد داده فرعی دستکاری شده',
+  `ActionType` enum('ADD','DELETE','UPDATE','VIEW','SEARCH','SEND','RETURN','CONFIRM','REJECT','OTHER') CHARACTER SET utf8 DEFAULT NULL COMMENT 'نوع عمل',
   `SystemID` int(11) NOT NULL COMMENT 'کد سیستم جاری',
-  `PageName` varchar(100) collate utf8_persian_ci NOT NULL COMMENT 'نام صفحه ای این دستکاری توسط آن انجام شده',
-  `description` varchar(200) collate utf8_persian_ci default NULL COMMENT 'توضیحات بیشتر',
-  `IPAddress` varchar(100) collate utf8_persian_ci NOT NULL COMMENT 'آدرس آی پی کامپیوتر عمل کننده',
+  `PageName` varchar(100) COLLATE utf8_persian_ci NOT NULL COMMENT 'نام صفحه ای این دستکاری توسط آن انجام شده',
+  `description` varchar(200) COLLATE utf8_persian_ci DEFAULT NULL COMMENT 'توضیحات بیشتر',
+  `IPAddress` varchar(100) COLLATE utf8_persian_ci NOT NULL COMMENT 'آدرس آی پی کامپیوتر عمل کننده',
   `ActionTime` datetime NOT NULL COMMENT 'زمان انجام عمل',
-  `QueryString` varchar(2000) character set utf8 default NULL COMMENT 'query اجرا شده',
-  PRIMARY KEY  (`DataAuditID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
+  `QueryString` varchar(2000) CHARACTER SET utf8 DEFAULT NULL COMMENT 'query اجرا شده',
+  PRIMARY KEY (`DataAuditID`)
+) ENGINE=InnoDB AUTO_INCREMENT=6213 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci COMMENT='اطلاعات ممیزی ';
 
 --
 -- Dumping data for table `DataAudit`
@@ -17373,7 +17381,37 @@ INSERT INTO `DataAudit` (`DataAuditID`,`PersonID`,`TableName`,`MainObjectID`,`Su
  (6169,1000,'CNT_ContractItems',4,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 03:08:17','insert into CNT_ContractItems(CntId,TplItemId,ItemValue) values (\'3\',\'3\',\'458000000\')'),
  (6170,1000,'CNT_ContractItems',5,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 03:08:17','insert into CNT_ContractItems(CntId,TplItemId,ItemValue) values (\'3\',\'4\',\'سیب سیب\')'),
  (6171,1000,'CNT_contracts',3,NULL,'UPDATE',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 03:08:17','update CNT_contracts set CntId=\'3\',TplId=\'1\',RegPersonID=\'1000\',RegDate=ADDTIME(now(), \'08:30:00\') ,description=\'شی شسی\',StatusCode=\'10\' where CntId =\'3\' '),
- (6172,1000,'CNT_templates',2,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 04:19:15','insert into CNT_templates() values ()');
+ (6172,1000,'CNT_templates',2,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 04:19:15','insert into CNT_templates() values ()'),
+ (6173,1000,'CNT_TemplateItems',5,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 17:40:14','insert into CNT_TemplateItems(TemplateItemID,ItemName,ItemType) values (\'0\',\'شماره نامه معرفی کننده\',\'textfield\')'),
+ (6174,1000,'CNT_TemplateItems',6,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 17:40:29','insert into CNT_TemplateItems(TemplateItemID,ItemName,ItemType) values (\'0\',\'تاریخ نامه معرفی کننده\',\'shdatefield\')'),
+ (6175,1000,'CNT_TemplateItems',7,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 17:40:59','insert into CNT_TemplateItems(TemplateItemID,ItemName,ItemType) values (\'0\',\'شماره قرارداد مشارکت مدنی\',\'textfield\')'),
+ (6176,1000,'CNT_TemplateItems',8,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 17:41:15','insert into CNT_TemplateItems(TemplateItemID,ItemName,ItemType) values (\'0\',\'تاریخ قرارداد مشارکت مدنی\',\'shdatefield\')'),
+ (6177,1000,'CNT_TemplateItems',9,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 17:41:36','insert into CNT_TemplateItems(TemplateItemID,ItemName,ItemType) values (\'0\',\'سهم الشرکه صندوق \',\'currencyfield\')'),
+ (6178,1000,'CNT_TemplateItems',3,NULL,'UPDATE',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 17:41:48','update CNT_TemplateItems set TemplateItemID=\'3\',ItemName=\'مبلغ تعهد\',ItemType=\'numberfield\' where TemplateItemID =\'3\' '),
+ (6179,1000,'CNT_TemplateItems',3,NULL,'UPDATE',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 17:41:56','update CNT_TemplateItems set TemplateItemID=\'3\',ItemName=\'مبلغ تعهد\',ItemType=\'currencyfield\' where TemplateItemID =\'3\' '),
+ (6180,1000,'CNT_TemplateItems',10,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 17:44:49','insert into CNT_TemplateItems(TemplateItemID,ItemName,ItemType) values (\'0\',\'مبلغ قسط\',\'currencyfield\')'),
+ (6181,1000,'CNT_TemplateItems',11,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 17:47:26','insert into CNT_TemplateItems(TemplateItemID,ItemName,ItemType) values (\'0\',\'تعداد قسط\',\'numberfield\')'),
+ (6182,1000,'CNT_templates',2,NULL,'DELETE',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 18:06:08','delete from CNT_templates where TemplateID=\'2\''),
+ (6193,1000,'CNT_contracts',10,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 21:34:02','insert into CNT_contracts(TemplateID,RegPersonID,RegDate,PersonID,StartDate,EndDate) values (\'3\',\'1000\',ADDTIME(now(), \'08:30:00\') ,\'1001\',\'1395/02/01\',\'1398/02/01\')'),
+ (6194,1000,'CNT_ContractItems',10,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 21:34:02','insert into CNT_ContractItems(ContractID,TemplateItemID,ItemValue) values (\'10\',\'5\',\'54874\')'),
+ (6195,1000,'CNT_ContractItems',11,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 21:34:02','insert into CNT_ContractItems(ContractID,TemplateItemID,ItemValue) values (\'10\',\'6\',\'2016/03/20\')'),
+ (6196,1000,'CNT_contracts',10,NULL,'UPDATE',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 21:34:15','update CNT_contracts set ContractID=\'10\',TemplateID=\'3\',description=null,PersonID=\'1001\',StartDate=\'1395/02/01\',EndDate=\'1398/02/01\' where ContractID =\'10\' '),
+ (6197,1000,'CNT_ContractItems',12,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 21:34:15','insert into CNT_ContractItems(ContractID,TemplateItemID,ItemValue) values (\'10\',\'5\',\'54874\')'),
+ (6198,1000,'CNT_ContractItems',13,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 21:34:15','insert into CNT_ContractItems(ContractID,TemplateItemID,ItemValue) values (\'10\',\'6\',\'2016/03/20\')'),
+ (6199,1000,'CNT_ContractItems',14,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 21:34:15','insert into CNT_ContractItems(ContractID,TemplateItemID,ItemValue) values (\'10\',\'7\',\'9999\')'),
+ (6200,1000,'CNT_contracts',10,NULL,'DELETE',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 22:04:17','delete from CNT_contracts where ContractID=\'10\''),
+ (6201,1000,'CNT_contracts',3,NULL,'DELETE',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 22:10:10','delete from CNT_contracts where ContractID=\'3\''),
+ (6202,1000,'CNT_templates',3,NULL,'DELETE',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 22:37:43','delete from CNT_templates where TemplateID=\'3\''),
+ (6203,1000,'CNT_templates',1,NULL,'DELETE',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 22:37:44','delete from CNT_templates where TemplateID=\'1\''),
+ (6204,1000,'CNT_templates',4,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 22:37:54','insert into CNT_templates() values ()'),
+ (6205,1000,'CNT_contracts',11,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 22:41:43','insert into CNT_contracts(TemplateID,RegPersonID,RegDate,PersonID,StartDate,EndDate) values (\'4\',\'1000\',ADDTIME(now(), \'08:30:00\') ,\'1001\',\'2016/04/20\',\'2018/04/21\')'),
+ (6206,1000,'CNT_ContractItems',15,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 22:41:43','insert into CNT_ContractItems(ContractID,TemplateItemID,ItemValue) values (\'11\',\'103\',\'1234\')'),
+ (6207,1000,'CNT_ContractItems',16,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 22:41:43','insert into CNT_ContractItems(ContractID,TemplateItemID,ItemValue) values (\'11\',\'104\',\'2016/05/01\')'),
+ (6208,1000,'CNT_ContractItems',17,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 22:41:43','insert into CNT_ContractItems(ContractID,TemplateItemID,ItemValue) values (\'11\',\'3\',\'شرکت فلانی\')'),
+ (6209,1000,'CNT_contracts',11,NULL,'UPDATE',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 22:41:46','update CNT_contracts set ContractID=\'11\',TemplateID=\'4\',description=null,PersonID=\'1001\',StartDate=\'2016/04/20\',EndDate=\'2018/04/21\' where ContractID =\'11\' '),
+ (6210,1000,'CNT_ContractItems',18,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 22:41:46','insert into CNT_ContractItems(ContractID,TemplateItemID,ItemValue) values (\'11\',\'103\',\'1234\')'),
+ (6211,1000,'CNT_ContractItems',19,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 22:41:46','insert into CNT_ContractItems(ContractID,TemplateItemID,ItemValue) values (\'11\',\'104\',\'2016/05/01\')'),
+ (6212,1000,'CNT_ContractItems',20,NULL,'ADD',12,'http://rtfund/contract/start.php?SystemID=12',NULL,'127.0.0.1','2016-04-20 22:41:46','insert into CNT_ContractItems(ContractID,TemplateItemID,ItemValue) values (\'11\',\'3\',\'شرکت فلانی\')');
 /*!40000 ALTER TABLE `DataAudit` ENABLE KEYS */;
 
 
@@ -17383,16 +17421,16 @@ INSERT INTO `DataAudit` (`DataAuditID`,`PersonID`,`TableName`,`MainObjectID`,`Su
 
 DROP TABLE IF EXISTS `FGR_FormElements`;
 CREATE TABLE `FGR_FormElements` (
-  `ElementID` int(10) unsigned NOT NULL auto_increment,
+  `ElementID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `FormID` int(10) unsigned NOT NULL,
-  `ElTitle` varchar(45) character set utf8 NOT NULL,
+  `ElTitle` varchar(45) CHARACTER SET utf8 NOT NULL,
   `ElType` varchar(45) NOT NULL,
-  `ElValue` varchar(45) default NULL,
-  `RefField` varchar(45) default NULL,
-  `TypeID` int(10) unsigned default NULL,
+  `ElValue` varchar(45) DEFAULT NULL,
+  `RefField` varchar(45) DEFAULT NULL,
+  `TypeID` int(10) unsigned DEFAULT NULL,
   `ordering` varchar(45) NOT NULL,
-  `width` varchar(45) default NULL,
-  PRIMARY KEY  (`ElementID`)
+  `width` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`ElementID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -17411,7 +17449,7 @@ DROP TABLE IF EXISTS `FGR_StepElements`;
 CREATE TABLE `FGR_StepElements` (
   `StepID` int(10) unsigned NOT NULL,
   `ElementID` int(10) unsigned NOT NULL,
-  PRIMARY KEY  (`StepID`,`ElementID`)
+  PRIMARY KEY (`StepID`,`ElementID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -17428,11 +17466,11 @@ CREATE TABLE `FGR_StepElements` (
 
 DROP TABLE IF EXISTS `FGR_forms`;
 CREATE TABLE `FGR_forms` (
-  `FormID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد فرم',
+  `FormID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد فرم',
   `FormName` varchar(500) NOT NULL COMMENT 'عنوان فرم',
-  `reference` varchar(45) default NULL COMMENT 'آیتم',
-  `FileInclude` enum('YES','NO') default 'NO',
-  PRIMARY KEY  (`FormID`)
+  `reference` varchar(45) DEFAULT NULL COMMENT 'آیتم',
+  `FileInclude` enum('YES','NO') DEFAULT 'NO',
+  PRIMARY KEY (`FormID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -17449,13 +17487,13 @@ CREATE TABLE `FGR_forms` (
 
 DROP TABLE IF EXISTS `FGR_steps`;
 CREATE TABLE `FGR_steps` (
-  `StepID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد مرحله',
+  `StepID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد مرحله',
   `FormID` int(10) unsigned NOT NULL COMMENT 'کد فرم',
   `ordering` smallint(5) unsigned NOT NULL COMMENT 'ترتیب',
   `StepTitle` varchar(200) NOT NULL COMMENT 'عنوان مرحله',
   `PostID` int(10) unsigned NOT NULL COMMENT 'پست',
   `BreakDuration` smallint(5) unsigned NOT NULL COMMENT 'مهلت به روز',
-  PRIMARY KEY  (`StepID`),
+  PRIMARY KEY (`StepID`),
   KEY `FK_FGR_steps_1` (`FormID`),
   CONSTRAINT `FK_FGR_steps_1` FOREIGN KEY (`FormID`) REFERENCES `fgr_forms` (`FormID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -17476,7 +17514,7 @@ DROP TABLE IF EXISTS `FRW_LoginAttempts`;
 CREATE TABLE `FRW_LoginAttempts` (
   `PersonID` int(10) unsigned NOT NULL,
   `AttemptTime` varchar(30) NOT NULL,
-  PRIMARY KEY  (`PersonID`,`AttemptTime`)
+  PRIMARY KEY (`PersonID`,`AttemptTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -17499,11 +17537,11 @@ DROP TABLE IF EXISTS `FRW_access`;
 CREATE TABLE `FRW_access` (
   `MenuID` int(11) NOT NULL,
   `PersonID` int(11) NOT NULL,
-  `ViewFlag` enum('YES','NO') default 'NO',
-  `AddFlag` enum('YES','NO') default 'NO',
-  `EditFlag` enum('YES','NO') default 'NO',
-  `RemoveFlag` enum('YES','NO') default 'NO',
-  PRIMARY KEY  (`MenuID`,`PersonID`)
+  `ViewFlag` enum('YES','NO') DEFAULT 'NO',
+  `AddFlag` enum('YES','NO') DEFAULT 'NO',
+  `EditFlag` enum('YES','NO') DEFAULT 'NO',
+  `RemoveFlag` enum('YES','NO') DEFAULT 'NO',
+  PRIMARY KEY (`MenuID`,`PersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='دسترسی ها';
 
 --
@@ -17955,20 +17993,20 @@ INSERT INTO `FRW_access` (`MenuID`,`PersonID`,`ViewFlag`,`AddFlag`,`EditFlag`,`R
 DROP TABLE IF EXISTS `FRW_menus`;
 CREATE TABLE `FRW_menus` (
   `SystemID` int(10) unsigned NOT NULL,
-  `MenuID` int(11) NOT NULL auto_increment,
-  `ParentID` int(10) unsigned default NULL,
+  `MenuID` int(11) NOT NULL AUTO_INCREMENT,
+  `ParentID` int(10) unsigned DEFAULT NULL,
   `MenuDesc` varchar(500) NOT NULL,
-  `IsActive` enum('YES','NO') NOT NULL default 'YES',
-  `ordering` smallint(5) unsigned default NULL,
-  `icon` varchar(200) default NULL,
-  `MenuPath` varchar(500) default NULL,
-  `IsCustomer` enum('YES','NO') NOT NULL default 'NO',
-  `IsShareholder` enum('YES','NO') NOT NULL default 'NO',
-  `IsStaff` enum('YES','NO') NOT NULL default 'NO',
-  `IsAgent` enum('YES','NO') NOT NULL default 'NO',
-  `IsSupporter` enum('YES','NO') NOT NULL default 'NO',
-  PRIMARY KEY  (`MenuID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='مدیریت منوها';
+  `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
+  `ordering` smallint(5) unsigned DEFAULT NULL,
+  `icon` varchar(200) DEFAULT NULL,
+  `MenuPath` varchar(500) DEFAULT NULL,
+  `IsCustomer` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  `IsShareholder` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  `IsStaff` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  `IsAgent` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  `IsSupporter` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  PRIMARY KEY (`MenuID`)
+) ENGINE=InnoDB AUTO_INCREMENT=93 DEFAULT CHARSET=utf8 COMMENT='مدیریت منوها';
 
 --
 -- Dumping data for table `FRW_menus`
@@ -18066,13 +18104,13 @@ INSERT INTO `FRW_menus` (`SystemID`,`MenuID`,`ParentID`,`MenuDesc`,`IsActive`,`o
 
 DROP TABLE IF EXISTS `FRW_systems`;
 CREATE TABLE `FRW_systems` (
-  `SystemID` int(10) unsigned NOT NULL auto_increment,
-  `SysName` varchar(500) character set utf8 collate utf8_persian_ci NOT NULL,
+  `SystemID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `SysName` varchar(500) CHARACTER SET utf8 COLLATE utf8_persian_ci NOT NULL,
   `SysPath` varchar(500) NOT NULL,
-  `IsActive` enum('YES','NO') NOT NULL default 'YES',
+  `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
   `SysIcon` varchar(500) NOT NULL,
-  PRIMARY KEY  (`SystemID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`SystemID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `FRW_systems`
@@ -18099,17 +18137,17 @@ INSERT INTO `FRW_systems` (`SystemID`,`SysName`,`SysPath`,`IsActive`,`SysIcon`) 
 
 DROP TABLE IF EXISTS `FRW_tasks`;
 CREATE TABLE `FRW_tasks` (
-  `TaskID` int(10) unsigned NOT NULL auto_increment,
+  `TaskID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `SystemID` int(10) unsigned NOT NULL,
   `RegPersonID` int(10) unsigned NOT NULL,
   `CreateDate` datetime NOT NULL,
-  `title` varchar(1000) collate utf8_bin NOT NULL default '',
-  `details` text collate utf8_bin NOT NULL,
-  `TaskStatus` enum('RAW','DONE','RESPONSE') collate utf8_bin NOT NULL default 'RAW',
-  `DoneDate` datetime default NULL,
-  `DoneDesc` text collate utf8_bin,
-  PRIMARY KEY  (`TaskID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='درخواست پشتیبانی';
+  `title` varchar(1000) COLLATE utf8_bin NOT NULL DEFAULT '',
+  `details` text COLLATE utf8_bin NOT NULL,
+  `TaskStatus` enum('RAW','DONE','RESPONSE') COLLATE utf8_bin NOT NULL DEFAULT 'RAW',
+  `DoneDate` datetime DEFAULT NULL,
+  `DoneDesc` text COLLATE utf8_bin,
+  PRIMARY KEY (`TaskID`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='درخواست پشتیبانی';
 
 --
 -- Dumping data for table `FRW_tasks`
@@ -18131,11 +18169,11 @@ INSERT INTO `FRW_tasks` (`TaskID`,`SystemID`,`RegPersonID`,`CreateDate`,`title`,
 
 DROP TABLE IF EXISTS `FRW_units`;
 CREATE TABLE `FRW_units` (
-  `UnitID` int(10) unsigned NOT NULL auto_increment,
-  `ParentID` int(10) unsigned default NULL,
-  `UnitName` varchar(500) character set utf8 NOT NULL,
-  PRIMARY KEY  (`UnitID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='واحدهای سازمانی';
+  `UnitID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `ParentID` int(10) unsigned DEFAULT NULL,
+  `UnitName` varchar(500) CHARACTER SET utf8 NOT NULL,
+  PRIMARY KEY (`UnitID`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1 COMMENT='واحدهای سازمانی';
 
 --
 -- Dumping data for table `FRW_units`
@@ -18155,14 +18193,14 @@ INSERT INTO `FRW_units` (`UnitID`,`ParentID`,`UnitName`) VALUES
 
 DROP TABLE IF EXISTS `LON_ReqFlow`;
 CREATE TABLE `LON_ReqFlow` (
-  `FlowID` int(10) unsigned NOT NULL auto_increment,
+  `FlowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `RequestID` int(10) unsigned NOT NULL,
   `PersonID` int(10) unsigned NOT NULL,
   `StatusID` smallint(5) unsigned NOT NULL,
   `ActDate` datetime NOT NULL,
-  `StepComment` varchar(500) character set utf8 default NULL,
-  PRIMARY KEY  (`FlowID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `StepComment` varchar(500) CHARACTER SET utf8 DEFAULT NULL,
+  PRIMARY KEY (`FlowID`)
+) ENGINE=InnoDB AUTO_INCREMENT=158 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `LON_ReqFlow`
@@ -18189,25 +18227,25 @@ INSERT INTO `LON_ReqFlow` (`FlowID`,`RequestID`,`PersonID`,`StatusID`,`ActDate`,
 
 DROP TABLE IF EXISTS `LON_ReqParts`;
 CREATE TABLE `LON_ReqParts` (
-  `PartID` int(10) unsigned NOT NULL auto_increment,
+  `PartID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `RequestID` int(10) unsigned NOT NULL,
   `PartDesc` varchar(200) NOT NULL,
   `PartDate` date NOT NULL,
   `PartAmount` decimal(15,0) NOT NULL,
-  `InstallmentCount` smallint(5) unsigned NOT NULL default '1',
-  `IntervalType` enum('MONTH','DAY') NOT NULL default 'MONTH',
-  `PayInterval` smallint(5) unsigned NOT NULL default '1',
-  `DelayMonths` smallint(5) unsigned NOT NULL default '0',
-  `ForfeitPercent` smallint(5) unsigned NOT NULL default '0',
-  `CustomerWage` float NOT NULL default '0',
-  `FundWage` float NOT NULL default '0',
-  `WageReturn` enum('CUSTOMER','AGENT','INSTALLMENT') NOT NULL default 'INSTALLMENT',
-  `PayCompute` enum('forfeit','installment') NOT NULL default 'forfeit',
-  `MaxFundWage` decimal(13,0) NOT NULL default '0' COMMENT 'حداکثر کارمزد صندوق',
-  PRIMARY KEY  (`PartID`),
+  `InstallmentCount` smallint(5) unsigned NOT NULL DEFAULT '1',
+  `IntervalType` enum('MONTH','DAY') NOT NULL DEFAULT 'MONTH',
+  `PayInterval` smallint(5) unsigned NOT NULL DEFAULT '1',
+  `DelayMonths` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `ForfeitPercent` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `CustomerWage` float NOT NULL DEFAULT '0',
+  `FundWage` float NOT NULL DEFAULT '0',
+  `WageReturn` enum('CUSTOMER','AGENT','INSTALLMENT') NOT NULL DEFAULT 'INSTALLMENT',
+  `PayCompute` enum('forfeit','installment') NOT NULL DEFAULT 'forfeit',
+  `MaxFundWage` decimal(13,0) NOT NULL DEFAULT '0' COMMENT 'حداکثر کارمزد صندوق',
+  PRIMARY KEY (`PartID`),
   KEY `FK_LON_ReqParts_1` (`RequestID`),
   CONSTRAINT `FK_LON_ReqParts_1` FOREIGN KEY (`RequestID`) REFERENCES `lon_requests` (`RequestID`) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='فاز وام';
+) ENGINE=InnoDB AUTO_INCREMENT=1079 DEFAULT CHARSET=utf8 COMMENT='فاز وام';
 
 --
 -- Dumping data for table `LON_ReqParts`
@@ -19299,15 +19337,15 @@ INSERT INTO `LON_ReqParts` (`PartID`,`RequestID`,`PartDesc`,`PartDate`,`PartAmou
 
 DROP TABLE IF EXISTS `LON_installments`;
 CREATE TABLE `LON_installments` (
-  `InstallmentID` int(10) unsigned NOT NULL auto_increment COMMENT 'ردیف پرداخت',
+  `InstallmentID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'ردیف پرداخت',
   `PartID` int(10) unsigned NOT NULL COMMENT 'کد مرحله وام',
   `InstallmentDate` date NOT NULL COMMENT 'تاریخ سررسید',
   `InstallmentAmount` decimal(15,0) NOT NULL COMMENT 'مبلغ خالص',
-  `imp_SerialNo` int(10) unsigned default NULL,
-  PRIMARY KEY  (`InstallmentID`),
+  `imp_SerialNo` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`InstallmentID`),
   KEY `FK_LON_installments_1` (`PartID`),
   CONSTRAINT `FK_LON_installments_1` FOREIGN KEY (`PartID`) REFERENCES `lon_reqparts` (`PartID`) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='اقساط وام';
+) ENGINE=InnoDB AUTO_INCREMENT=10513 DEFAULT CHARSET=utf8 COMMENT='اقساط وام';
 
 --
 -- Dumping data for table `LON_installments`
@@ -26475,20 +26513,20 @@ INSERT INTO `LON_installments` (`InstallmentID`,`PartID`,`InstallmentDate`,`Inst
 
 DROP TABLE IF EXISTS `LON_loans`;
 CREATE TABLE `LON_loans` (
-  `LoanID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد وام',
+  `LoanID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد وام',
   `GroupID` int(10) unsigned NOT NULL COMMENT 'کد گروه وام',
   `LoanDesc` varchar(500) NOT NULL COMMENT 'عنوان وام',
-  `MaxAmount` decimal(15,0) NOT NULL default '0' COMMENT 'سقف مبلغ',
-  `InstallmentCount` smallint(5) unsigned NOT NULL default '0' COMMENT 'تعداد اقساط',
+  `MaxAmount` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'سقف مبلغ',
+  `InstallmentCount` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT 'تعداد اقساط',
   `IntervalType` enum('MONTH','DAY') NOT NULL,
-  `PayInterval` smallint(5) unsigned NOT NULL default '0' COMMENT 'فاصله اقساط',
-  `DelayMonths` smallint(5) unsigned NOT NULL default '0' COMMENT 'زمان تنفس به ماه',
-  `ForfeitPercent` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ قسط اول',
-  `CustomerWage` smallint(5) unsigned NOT NULL default '0' COMMENT 'درصد جریمه',
-  `BlockID` int(10) unsigned default NULL,
-  `IsCustomer` enum('YES','NO') NOT NULL default 'NO',
-  PRIMARY KEY  (`LoanID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='انواع وام';
+  `PayInterval` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT 'فاصله اقساط',
+  `DelayMonths` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT 'زمان تنفس به ماه',
+  `ForfeitPercent` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'مبلغ قسط اول',
+  `CustomerWage` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT 'درصد جریمه',
+  `BlockID` int(10) unsigned DEFAULT NULL,
+  `IsCustomer` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  PRIMARY KEY (`LoanID`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8 COMMENT='انواع وام';
 
 --
 -- Dumping data for table `LON_loans`
@@ -26519,20 +26557,20 @@ INSERT INTO `LON_loans` (`LoanID`,`GroupID`,`LoanDesc`,`MaxAmount`,`InstallmentC
 
 DROP TABLE IF EXISTS `LON_pays`;
 CREATE TABLE `LON_pays` (
-  `PayID` int(10) unsigned NOT NULL auto_increment,
+  `PayID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `PartID` int(10) unsigned NOT NULL,
   `PayType` smallint(5) unsigned NOT NULL,
   `PayAmount` decimal(13,0) NOT NULL,
   `PayDate` datetime NOT NULL,
-  `PayRefNo` varchar(100) default NULL,
-  `PayBillNo` varchar(100) default NULL,
-  `ChequeNo` decimal(10,0) default NULL,
-  `ChequeBank` varchar(100) default NULL,
-  `ChequeBranch` varchar(100) default NULL,
-  `ChequeStatus` smallint(5) unsigned default '0',
-  `details` varchar(500) default NULL,
-  PRIMARY KEY  (`PayID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='پرداخت هاي وام';
+  `PayRefNo` varchar(100) DEFAULT NULL,
+  `PayBillNo` varchar(100) DEFAULT NULL,
+  `ChequeNo` decimal(10,0) DEFAULT NULL,
+  `ChequeBank` varchar(100) DEFAULT NULL,
+  `ChequeBranch` varchar(100) DEFAULT NULL,
+  `ChequeStatus` smallint(5) unsigned DEFAULT '0',
+  `details` varchar(500) DEFAULT NULL,
+  PRIMARY KEY (`PayID`)
+) ENGINE=InnoDB AUTO_INCREMENT=5595 DEFAULT CHARSET=utf8 COMMENT='پرداخت هاي وام';
 
 --
 -- Dumping data for table `LON_pays`
@@ -32146,26 +32184,26 @@ INSERT INTO `LON_pays` (`PayID`,`PartID`,`PayType`,`PayAmount`,`PayDate`,`PayRef
 
 DROP TABLE IF EXISTS `LON_requests`;
 CREATE TABLE `LON_requests` (
-  `RequestID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد درخواست',
-  `BranchID` int(10) unsigned default NULL,
-  `LoanID` int(10) unsigned default NULL COMMENT 'کد وام',
-  `ReqPersonID` int(10) unsigned default NULL COMMENT 'معرفی کننده ',
+  `RequestID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد درخواست',
+  `BranchID` int(10) unsigned DEFAULT NULL,
+  `LoanID` int(10) unsigned DEFAULT NULL COMMENT 'کد وام',
+  `ReqPersonID` int(10) unsigned DEFAULT NULL COMMENT 'معرفی کننده ',
   `ReqDate` datetime NOT NULL COMMENT 'تاریخ درخواست',
-  `ReqAmount` decimal(15,0) NOT NULL default '0' COMMENT 'مبلغ درخواست',
-  `StatusID` int(10) unsigned NOT NULL default '1' COMMENT 'وضعیت',
-  `ReqDetails` varchar(4000) default NULL,
-  `BorrowerDesc` varchar(5000) default NULL COMMENT 'شرکت معرفی شده',
-  `BorrowerID` varchar(20) default NULL COMMENT 'کد اقتصادی',
-  `LoanPersonID` int(10) unsigned NOT NULL default '0' COMMENT 'وام گیرنده',
-  `guarantees` varchar(20) default NULL COMMENT 'تضمین وام',
-  `AgentGuarantee` enum('YES','NO') NOT NULL default 'NO' COMMENT 'با ضمانت عامل',
-  `DocumentDesc` varchar(2000) default NULL COMMENT 'توضیحات مدارک',
-  `SupportPersonID` int(10) unsigned default NULL COMMENT 'حامی',
-  `IsEnded` enum('YES','NO') character set utf8 collate utf8_bin NOT NULL default 'NO',
-  `imp_VamCode` int(10) unsigned default NULL,
-  `SubAgentID` int(10) unsigned default NULL,
-  PRIMARY KEY  (`RequestID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='درخواست وام';
+  `ReqAmount` decimal(15,0) NOT NULL DEFAULT '0' COMMENT 'مبلغ درخواست',
+  `StatusID` int(10) unsigned NOT NULL DEFAULT '1' COMMENT 'وضعیت',
+  `ReqDetails` varchar(4000) DEFAULT NULL,
+  `BorrowerDesc` varchar(5000) DEFAULT NULL COMMENT 'شرکت معرفی شده',
+  `BorrowerID` varchar(20) DEFAULT NULL COMMENT 'کد اقتصادی',
+  `LoanPersonID` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'وام گیرنده',
+  `guarantees` varchar(20) DEFAULT NULL COMMENT 'تضمین وام',
+  `AgentGuarantee` enum('YES','NO') NOT NULL DEFAULT 'NO' COMMENT 'با ضمانت عامل',
+  `DocumentDesc` varchar(2000) DEFAULT NULL COMMENT 'توضیحات مدارک',
+  `SupportPersonID` int(10) unsigned DEFAULT NULL COMMENT 'حامی',
+  `IsEnded` enum('YES','NO') CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT 'NO',
+  `imp_VamCode` int(10) unsigned DEFAULT NULL,
+  `SubAgentID` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`RequestID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1076 DEFAULT CHARSET=utf8 COMMENT='درخواست وام';
 
 --
 -- Dumping data for table `LON_requests`
@@ -33259,7 +33297,7 @@ DROP TABLE IF EXISTS `OFC_ArchiveItems`;
 CREATE TABLE `OFC_ArchiveItems` (
   `FolderID` int(10) unsigned NOT NULL,
   `LetterID` int(10) unsigned NOT NULL,
-  PRIMARY KEY  (`FolderID`,`LetterID`)
+  PRIMARY KEY (`FolderID`,`LetterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -33282,12 +33320,12 @@ INSERT INTO `OFC_ArchiveItems` (`FolderID`,`LetterID`) VALUES
 
 DROP TABLE IF EXISTS `OFC_archive`;
 CREATE TABLE `OFC_archive` (
-  `FolderID` int(10) unsigned NOT NULL auto_increment,
+  `FolderID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `ParentID` int(10) unsigned NOT NULL,
-  `FolderName` varchar(200) character set utf8 NOT NULL,
+  `FolderName` varchar(200) CHARACTER SET utf8 NOT NULL,
   `PersonID` int(10) unsigned NOT NULL,
-  PRIMARY KEY  (`FolderID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='بایگانی نامه';
+  PRIMARY KEY (`FolderID`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1 COMMENT='بایگانی نامه';
 
 --
 -- Dumping data for table `OFC_archive`
@@ -33310,18 +33348,18 @@ INSERT INTO `OFC_archive` (`FolderID`,`ParentID`,`FolderName`,`PersonID`) VALUES
 
 DROP TABLE IF EXISTS `OFC_letters`;
 CREATE TABLE `OFC_letters` (
-  `LetterID` int(10) unsigned NOT NULL auto_increment COMMENT 'کد نامه',
-  `LetterType` enum('INCOME','OUTCOME','INNER') character set utf8 NOT NULL default 'INNER' COMMENT 'نوع نامه داخلی صادره',
-  `LetterTitle` varchar(500) character set utf8 NOT NULL COMMENT 'عنوان نامه',
+  `LetterID` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'کد نامه',
+  `LetterType` enum('INCOME','OUTCOME','INNER') CHARACTER SET utf8 NOT NULL DEFAULT 'INNER' COMMENT 'نوع نامه داخلی صادره',
+  `LetterTitle` varchar(500) CHARACTER SET utf8 NOT NULL COMMENT 'عنوان نامه',
   `LetterDate` date NOT NULL COMMENT 'تاریخ نامه',
   `RegDate` datetime NOT NULL COMMENT 'تاریخ ثبت نامه',
   `PersonID` int(10) unsigned NOT NULL COMMENT 'ثبت کننده',
   `context` blob COMMENT 'متن نامه',
-  `organization` varchar(500) character set utf8 default NULL COMMENT 'گیرنده یا فرستنده خارجی',
-  `SignerPersonID` int(10) unsigned default NULL,
-  `IsSigned` enum('YES','NO') character set utf8 NOT NULL default 'NO',
-  PRIMARY KEY  (`LetterID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='نامه ها';
+  `organization` varchar(500) CHARACTER SET utf8 DEFAULT NULL COMMENT 'گیرنده یا فرستنده خارجی',
+  `SignerPersonID` int(10) unsigned DEFAULT NULL,
+  `IsSigned` enum('YES','NO') CHARACTER SET utf8 NOT NULL DEFAULT 'NO',
+  PRIMARY KEY (`LetterID`)
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=latin1 COMMENT='نامه ها';
 
 --
 -- Dumping data for table `OFC_letters`
@@ -33362,19 +33400,19 @@ INSERT INTO `OFC_letters` (`LetterID`,`LetterType`,`LetterTitle`,`LetterDate`,`R
 
 DROP TABLE IF EXISTS `OFC_send`;
 CREATE TABLE `OFC_send` (
-  `SendID` int(10) unsigned NOT NULL auto_increment,
+  `SendID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `LetterID` int(10) unsigned NOT NULL,
   `FromPersonID` int(10) unsigned NOT NULL,
   `ToPersonID` int(10) unsigned NOT NULL,
   `SendDate` datetime NOT NULL,
   `SendType` smallint(5) unsigned NOT NULL,
-  `SendComment` varchar(1000) character set utf8 NOT NULL,
-  `IsUrgent` enum('YES','NO') character set utf8 NOT NULL default 'NO',
-  `IsSeen` enum('YES','NO') character set utf8 NOT NULL default 'NO',
-  `IsDeleted` enum('YES','NO') NOT NULL default 'NO',
-  `IsCopy` enum('YES','NO') NOT NULL default 'NO',
-  PRIMARY KEY  (`SendID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='ارجاع نامه';
+  `SendComment` varchar(1000) CHARACTER SET utf8 NOT NULL,
+  `IsUrgent` enum('YES','NO') CHARACTER SET utf8 NOT NULL DEFAULT 'NO',
+  `IsSeen` enum('YES','NO') CHARACTER SET utf8 NOT NULL DEFAULT 'NO',
+  `IsDeleted` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  `IsCopy` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  PRIMARY KEY (`SendID`)
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=latin1 COMMENT='ارجاع نامه';
 
 --
 -- Dumping data for table `OFC_send`
@@ -33432,16 +33470,16 @@ INSERT INTO `OFC_send` (`SendID`,`LetterID`,`FromPersonID`,`ToPersonID`,`SendDat
 
 DROP TABLE IF EXISTS `PLN_Elements`;
 CREATE TABLE `PLN_Elements` (
-  `ElementID` int(10) unsigned NOT NULL auto_increment,
+  `ElementID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `ParentID` int(10) unsigned NOT NULL,
   `GroupID` int(10) unsigned NOT NULL,
-  `ElementTitle` varchar(200) character set utf8 NOT NULL default '',
-  `ElementType` varchar(45) character set utf8 NOT NULL default '',
-  `properties` varchar(1000) character set utf8 NOT NULL default '',
-  `EditorProperties` varchar(200) character set utf8 NOT NULL default '',
-  `values` text character set utf8,
-  PRIMARY KEY  (`ElementID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `ElementTitle` varchar(200) CHARACTER SET utf8 NOT NULL DEFAULT '',
+  `ElementType` varchar(45) CHARACTER SET utf8 NOT NULL DEFAULT '',
+  `properties` varchar(1000) CHARACTER SET utf8 NOT NULL DEFAULT '',
+  `EditorProperties` varchar(200) CHARACTER SET utf8 NOT NULL DEFAULT '',
+  `values` text CHARACTER SET utf8,
+  PRIMARY KEY (`ElementID`)
+) ENGINE=InnoDB AUTO_INCREMENT=293 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `PLN_Elements`
@@ -33724,12 +33762,12 @@ INSERT INTO `PLN_Elements` (`ElementID`,`ParentID`,`GroupID`,`ElementTitle`,`Ele
 
 DROP TABLE IF EXISTS `PLN_PlanItems`;
 CREATE TABLE `PLN_PlanItems` (
-  `RowID` int(10) unsigned NOT NULL auto_increment,
+  `RowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `PlanID` int(10) unsigned NOT NULL,
   `ElementID` int(10) unsigned NOT NULL,
   `ElementValue` text NOT NULL,
-  PRIMARY KEY  (`RowID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='اجزا طرح';
+  PRIMARY KEY (`RowID`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8 COMMENT='اجزا طرح';
 
 --
 -- Dumping data for table `PLN_PlanItems`
@@ -33759,16 +33797,16 @@ INSERT INTO `PLN_PlanItems` (`RowID`,`PlanID`,`ElementID`,`ElementValue`) VALUES
 
 DROP TABLE IF EXISTS `PLN_PlanSurvey`;
 CREATE TABLE `PLN_PlanSurvey` (
-  `RowID` int(10) unsigned NOT NULL auto_increment,
+  `RowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `PlanID` int(10) unsigned NOT NULL,
-  `GroupID` int(10) unsigned NOT NULL default '0',
+  `GroupID` int(10) unsigned NOT NULL DEFAULT '0',
   `ActDate` datetime NOT NULL,
-  `ActType` enum('CONFIRM','REJECT') NOT NULL default 'CONFIRM',
-  `ActDesc` varchar(500) NOT NULL default '',
+  `ActType` enum('CONFIRM','REJECT') NOT NULL DEFAULT 'CONFIRM',
+  `ActDesc` varchar(500) NOT NULL DEFAULT '',
   `ActPersonID` int(10) unsigned NOT NULL,
-  `StatusID` int(10) unsigned NOT NULL default '0',
-  PRIMARY KEY  (`RowID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='بررسی طرح';
+  `StatusID` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`RowID`)
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8 COMMENT='بررسی طرح';
 
 --
 -- Dumping data for table `PLN_PlanSurvey`
@@ -33804,11 +33842,11 @@ INSERT INTO `PLN_PlanSurvey` (`RowID`,`PlanID`,`GroupID`,`ActDate`,`ActType`,`Ac
 
 DROP TABLE IF EXISTS `PLN_groups`;
 CREATE TABLE `PLN_groups` (
-  `GroupID` int(10) unsigned NOT NULL auto_increment,
+  `GroupID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `ParentID` int(10) unsigned NOT NULL,
-  `GroupDesc` varchar(1000) character set utf8 NOT NULL,
-  PRIMARY KEY  (`GroupID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `GroupDesc` varchar(1000) CHARACTER SET utf8 NOT NULL,
+  PRIMARY KEY (`GroupID`)
+) ENGINE=InnoDB AUTO_INCREMENT=87 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `PLN_groups`
@@ -33910,13 +33948,13 @@ INSERT INTO `PLN_groups` (`GroupID`,`ParentID`,`GroupDesc`) VALUES
 
 DROP TABLE IF EXISTS `PLN_plans`;
 CREATE TABLE `PLN_plans` (
-  `PlanID` int(10) unsigned NOT NULL auto_increment,
+  `PlanID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `PlanDesc` varchar(500) NOT NULL,
   `PersonID` int(10) unsigned NOT NULL,
   `RegDate` datetime NOT NULL,
   `StatusID` int(10) unsigned NOT NULL,
-  PRIMARY KEY  (`PlanID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='طرح ها';
+  PRIMARY KEY (`PlanID`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COMMENT='طرح ها';
 
 --
 -- Dumping data for table `PLN_plans`
@@ -33938,11 +33976,11 @@ INSERT INTO `PLN_plans` (`PlanID`,`PlanDesc`,`PersonID`,`RegDate`,`StatusID`) VA
 
 DROP TABLE IF EXISTS `TABLE 62`;
 CREATE TABLE `TABLE 62` (
-  `COL 1` bigint(10) default NULL,
-  `COL 2` varchar(97) default NULL,
-  `COL 3` int(3) default NULL,
-  `id` int(10) unsigned NOT NULL auto_increment,
-  PRIMARY KEY  (`id`)
+  `COL 1` bigint(10) DEFAULT NULL,
+  `COL 2` varchar(97) DEFAULT NULL,
+  `COL 3` int(3) DEFAULT NULL,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=460 DEFAULT CHARSET=utf8;
 
 --
@@ -34423,7 +34461,7 @@ CREATE TABLE `USR_sessions` (
   `LoginTime` datetime NOT NULL,
   `data` text NOT NULL,
   `SessionKey` varchar(128) NOT NULL,
-  PRIMARY KEY  (`PersonID`)
+  PRIMARY KEY (`PersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -34440,17 +34478,17 @@ CREATE TABLE `USR_sessions` (
 
 DROP TABLE IF EXISTS `WFM_FlowRows`;
 CREATE TABLE `WFM_FlowRows` (
-  `RowID` int(10) unsigned NOT NULL auto_increment,
+  `RowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `FlowID` int(10) unsigned NOT NULL,
-  `StepRowID` int(10) unsigned default NULL,
+  `StepRowID` int(10) unsigned DEFAULT NULL,
   `ObjectID` int(10) unsigned NOT NULL,
   `PersonID` int(10) unsigned NOT NULL,
   `ActionDate` datetime NOT NULL,
   `ActionType` enum('CONFIRM','REJECT') NOT NULL,
-  `ActionComment` varchar(500) default NULL,
-  `IsEnded` enum('YES','NO') NOT NULL default 'NO',
-  `StepDesc` varchar(200) default NULL,
-  PRIMARY KEY  (`RowID`)
+  `ActionComment` varchar(500) DEFAULT NULL,
+  `IsEnded` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  `StepDesc` varchar(200) DEFAULT NULL,
+  PRIMARY KEY (`RowID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -34467,15 +34505,15 @@ CREATE TABLE `WFM_FlowRows` (
 
 DROP TABLE IF EXISTS `WFM_FlowSteps`;
 CREATE TABLE `WFM_FlowSteps` (
-  `StepRowID` int(10) unsigned NOT NULL auto_increment,
+  `StepRowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `FlowID` int(10) unsigned NOT NULL,
   `StepID` int(11) NOT NULL,
   `StepDesc` varchar(45) NOT NULL,
-  `PostID` int(10) unsigned default NULL,
-  `PersonID` int(10) unsigned default NULL,
+  `PostID` int(10) unsigned DEFAULT NULL,
+  `PersonID` int(10) unsigned DEFAULT NULL,
   `IsActive` enum('YES','NO') NOT NULL,
-  PRIMARY KEY  (`StepRowID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='مراحل گردش';
+  PRIMARY KEY (`StepRowID`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COMMENT='مراحل گردش';
 
 --
 -- Dumping data for table `WFM_FlowSteps`
@@ -34498,11 +34536,11 @@ INSERT INTO `WFM_FlowSteps` (`StepRowID`,`FlowID`,`StepID`,`StepDesc`,`PostID`,`
 
 DROP TABLE IF EXISTS `WFM_RequestElements`;
 CREATE TABLE `WFM_RequestElements` (
-  `RowID` int(10) unsigned NOT NULL auto_increment,
+  `RowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `RequestID` int(10) unsigned NOT NULL,
   `ElementID` int(10) unsigned NOT NULL,
   `ElementValue` varchar(5000) NOT NULL,
-  PRIMARY KEY  (`RowID`)
+  PRIMARY KEY (`RowID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -34519,13 +34557,13 @@ CREATE TABLE `WFM_RequestElements` (
 
 DROP TABLE IF EXISTS `WFM_flows`;
 CREATE TABLE `WFM_flows` (
-  `FlowID` int(10) unsigned NOT NULL auto_increment,
+  `FlowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `ObjectType` smallint(5) unsigned NOT NULL,
   `FlowDesc` varchar(50) NOT NULL,
-  `IsSystemic` enum('YES','NO') NOT NULL default 'NO',
-  PRIMARY KEY  (`FlowID`),
+  `IsSystemic` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  PRIMARY KEY (`FlowID`),
   UNIQUE KEY `Index_2` (`ObjectType`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `WFM_flows`
@@ -34543,12 +34581,12 @@ INSERT INTO `WFM_flows` (`FlowID`,`ObjectType`,`FlowDesc`,`IsSystemic`) VALUES
 
 DROP TABLE IF EXISTS `WFM_requests`;
 CREATE TABLE `WFM_requests` (
-  `RequetID` int(10) unsigned NOT NULL auto_increment,
+  `RequetID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `FormID` int(10) unsigned NOT NULL,
   `RequestNo` int(10) unsigned NOT NULL,
   `RegPersonID` int(10) unsigned NOT NULL,
   `RegDate` datetime NOT NULL,
-  PRIMARY KEY  (`RequetID`)
+  PRIMARY KEY (`RequetID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --

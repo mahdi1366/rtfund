@@ -24,9 +24,9 @@ abstract class CNTParentClass extends PdoDataAccess {
 			ExceptionHandler::PushException(self::ERR_Add);
 			return false;
 		}
-        //return false;            
 
         $this->{static::TableKey} = parent::InsertID($pdo);
+		
         $daObj = new DataAudit();
         $daObj->ActionType = DataAudit::Action_add;
         $daObj->MainObjectID = $this->{static::TableKey};

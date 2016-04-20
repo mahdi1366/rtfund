@@ -27,11 +27,14 @@ function SelectTemplates() {
 }
 
 function selectTemplateItems() {
+	
     $temp = CNT_TemplateItems::Get();
-    if (isset($_REQUEST['All']) && $_REQUEST['All'] == 'true') {
+    if (isset($_REQUEST['All']) && $_REQUEST['All'] == 'true')
+	{
         $res = PdoDataAccess::fetchAll($temp, 0, $temp->rowCount());
     } else
         $res = PdoDataAccess::fetchAll($temp, $_GET['start'], $_GET['limit']);
+	
     echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
     die();
 }
@@ -61,7 +64,6 @@ function SaveTemplate() {
 		$obj->TemplateID = $_POST['TemplateID'];
 		$result = $obj->Edit($pdo);
 	} else {
-		$obj->StatusCode = CNTconfig::TemplateStatus_Raw;
 		$result = $obj->Add($pdo);
 	}
 	
@@ -102,8 +104,10 @@ function saveTemplateItem() {
 }
 
 function GetTemplateContent() {
+	
     $obj = new CNT_templates($_POST['TemplateID']);
-    echo Response::createObjectiveResponse(true, $obj->TemplateContent);
+    //echo Response::createObjectiveResponse(true, $obj->TemplateContent);
+	echo $obj->TemplateContent;
     die();
 }
 
@@ -114,6 +118,7 @@ function GetTemplateTitle() {
 }
 
 function GetTemplateContentToEdit() {
+	
     $obj = new CNT_templates($_POST['TemplateID']);
     $content = $obj->TemplateContent;
     $RevContent = '';
@@ -129,7 +134,8 @@ function GetTemplateContentToEdit() {
             $RevContent .= $val;
         }
     }
-    echo Response::createObjectiveResponse(true, $RevContent);
+    //echo Response::createObjectiveResponse(true, $RevContent);
+	echo $RevContent;
     die();
 }
 
@@ -155,20 +161,22 @@ function deleteTemplateItem() {
 function deleteTemplate() {
     $pdo = PdoDataAccess::getPdoObject();
     $pdo->beginTransaction();
-    try {
-        $obj = new CNT_templates($_POST['TemplateID']);
-        $obj->Remove();
-        //
-        $pdo->commit();
-        echo Response::createObjectiveResponse(true, '');
-        die();
-    } catch (Exception $e) {
-        $pdo->rollBack();
-        //print_r(ExceptionHandler::PopAllExceptions());
-        //echo PdoDataAccess::GetLatestQueryString();
-        echo Response::createObjectiveResponse(false, $e->getMessage());
-        die();
-    }
+	
+	$obj = new CNT_templates($_POST['TemplateID']);
+	$result = $obj->Remove();
+	
+	if(!$result)
+	{
+		$pdo->rollBack();
+		//print_r(ExceptionHandler::PopAllExceptions());
+		//echo PdoDataAccess::GetLatestQueryString();
+		echo Response::createObjectiveResponse(false, $e->getMessage());
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, '');
+	die();
 }
 
 //------------------------------------------------------------------------------

@@ -34,81 +34,63 @@ function SelectContracts() {
 }
 
 function SaveContract() {
-    $pdo = PdoDataAccess::getPdoObject();
+   
+	$pdo = PdoDataAccess::getPdoObject();
     $pdo->beginTransaction();
-	/* creating the contract */
-	if ($_POST['CntID'] > 0) {
-		$mode = 'edit';
-		$CntID = $_POST['CntID'];
-	} else {
-		$mode = 'new';
-		$CntID = '';
-	}
-	$CntObj = new CNT_contracts($CntID);
-	$CntObj->TemplateID = $_POST['TemplateID'];
-	$CntObj->description = $_POST['description'];
-	$CntObj->StatusCode = CNTconfig::ContractStatus_Raw; // anyway it is being edited so it is raw
-	if ($mode == 'new') {
+	
+	$CntObj = new CNT_contracts();
+	PdoDataAccess::FillObjectByArray($CntObj, $_POST);
+	
+	if ($_POST["ContractID"] == "")
+	{
 		$CntObj->RegPersonID = $_SESSION['USER']["PersonID"];
 		$CntObj->RegDate = PDONOW;
-		$CntObj->Add($pdo);
-	} else
-		$CntObj->Edit($pdo);
-
-	/* removing values of contract items */
-	CNT_ContractItems::RemoveAll($CntObj->CntID, $pdo);
-
-	/* Adding the values of Contract items */
-	foreach ($_POST as $PostData => $val) {
-		if (!(substr($PostData, 0, 8) == "TplItem_")) {
-			continue;
-		}
-		$items = explode('_', $PostData);
-		$TplItemID = $items[1];
-		switch ($TplItemID) {
-			/*case 1:
-				// TODO : array in CNTConfig bashad
-				$CntObj->SupplierID = $val;
-				break;
-			case 2:
-				$CntObj->Supervisor = $val;
-				break;
-			case 3:
-				$CntObj->StartDate = DateModules::shamsi_to_miladi($val);
-				break;
-			case 4:
-				$CntObj->EndDate = DateModules::shamsi_to_miladi($val);
-				break;*/
-			case 5:
-				$CntObj->price = $val;
-				break;
-			default:
-				$CntItemsObj = new CNT_ContractItems();
-				$CntItemsObj->CntID = $CntObj->CntID;
-				$CntItemsObj->TplItemID = $TplItemID;
-				$TplItemObj = new CNT_TemplateItems($CntItemsObj->TplItemID);
-				switch ($TplItemObj->TplItemType) {
-					case "numberfield":
-					case 'textfield':
-						$CntItemsObj->ItemValue = $val;
-						break;
-					case 'shdatefield':
-						$CntItemsObj->ItemValue = DateModules::shamsi_to_miladi($val);
-						break;
-					default :
-						echo Response::createObjectiveResponse(false, '');
-						die();
-				}
-				$CntItemsObj->Add($pdo);
-				break;
-		}
-	}
-	if($CntObj->CntID != "")
-		$res = $CntObj->Edit($pdo);
+		$result = $CntObj->Add($pdo);
+	} 
 	else
-		$res = $CntObj->Add($pdo);
+	{
+		$result = $CntObj->Edit($pdo);
+		/* removing values of contract items */
+		CNT_ContractItems::RemoveAll($CntObj->ContractID, $pdo);
+	}
 
-	if(!$res)
+	if(!$result)
+	{
+		$pdo->rollBack();
+        print_r(ExceptionHandler::PopAllExceptions());
+        //echo PdoDataAccess::GetLatestQueryString();
+        echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+        die();
+	}	
+	
+	/* Adding the values of Contract items */
+	foreach ($_POST as $PostData => $val) 
+	{
+		if(empty($val))
+			continue;
+		
+		if (!(substr($PostData, 0, 8) == "TplItem_"))
+			continue;
+		
+		$items = explode('_', $PostData);
+		$TemplateItemID = $items[1];
+		
+		$CntItemsObj = new CNT_ContractItems();
+		$CntItemsObj->ContractID = $CntObj->ContractID;
+		$CntItemsObj->TemplateItemID = $TemplateItemID;
+		
+		$TplItemObj = new CNT_TemplateItems($CntItemsObj->TemplateItemID);
+		switch ($TplItemObj->ItemType) {
+			case 'shdatefield':
+				$CntItemsObj->ItemValue = DateModules::shamsi_to_miladi($val);
+				break;
+			default :
+				$CntItemsObj->ItemValue = $val;
+		}
+		$result = $CntItemsObj->Add($pdo);
+	}
+	
+	if(!$result)
 	{
 		$pdo->rollBack();
         print_r(ExceptionHandler::PopAllExceptions());
@@ -118,14 +100,36 @@ function SaveContract() {
 	}
 	
 	$pdo->commit();
-	echo Response::createObjectiveResponse(true, $CntObj->CntID);
+	echo Response::createObjectiveResponse(true, $CntObj->ContractID);
 	die();
 }
 
 function GetContractItems() {
-    $res = CNT_ContractItems::GetContractItems($_REQUEST['CntID']);
+    $res = CNT_ContractItems::GetContractItems($_REQUEST['ContractID']);
     echo dataReader::getJsonData($res, count($res), $_GET["callback"]);
     die();
+}
+
+function DeleteContract(){
+	
+	$pdo = PdoDataAccess::getPdoObject();
+    $pdo->beginTransaction();
+	
+	$obj = new CNT_contracts($_POST['ContractID']);
+	$result = CNT_ContractItems::RemoveAll($obj->ContractID, $pdo);
+	$result = $obj->Remove();
+	if(!$result)
+	{
+		$pdo->rollBack();
+		//print_r(ExceptionHandler::PopAllExceptions());
+		//echo PdoDataAccess::GetLatestQueryString();
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, '');
+	die();
+	
 }
 
 function SelectReceivedContracts() {
@@ -140,7 +144,7 @@ function Send() {
     $pdo = PdoDataAccess::getPdoObject();
     $pdo->beginTransaction();
     try {
-        $obj = new CNT_contracts($_REQUEST['CntID']);
+        $obj = new CNT_contracts($_REQUEST['ContractID']);
         $obj->StatusCode = CNTconfig::ContractStatus_Sent;
         $obj->Edit($pdo);
         //
@@ -160,7 +164,7 @@ function ConfirmRecContract() {
     $pdo = PdoDataAccess::getPdoObject();
     $pdo->beginTransaction();
     try {
-        $obj = new CNT_contracts($_REQUEST['CntID']);
+        $obj = new CNT_contracts($_REQUEST['ContractID']);
         $obj->StatusCode = CNTconfig::ContractStatus_Confirmed;
         $obj->Edit($pdo);
         //

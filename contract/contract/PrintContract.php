@@ -1,52 +1,48 @@
 <?php
+//-----------------------------
+//	Programmer	: Fatemipour
+//	Date		: 94.08
+//-----------------------------
 require_once '../header.inc.php';
 require_once '../global/CNTconfig.class.php';
 require_once 'contract.class.php';
 require_once '../templates/templates.class.php';
 
-$CntObj = new CNT_contracts($_REQUEST['CntID']);
+$CntObj = new CNT_contracts($_REQUEST['ContractID']);
 
 $temp = CNT_TemplateItems::Get();
-$TplItems = PdoDataAccess::fetchAll($temp, 0, $temp->rowCount());
+$TplItems = $temp->fetchAll();
+
 $TplItemsStore = array();
 foreach ($TplItems as $it) {
-    $TplItemsStore[$it['TplItemID']] = $it['TplItemType'];
+    $TplItemsStore[$it['TemplateItemID']] = $it['ItemType'];
 }
-//
+
 $obj = new CNT_templates($CntObj->TemplateID);
-$TplContent = $obj->TplContent;
+$TplContent = $obj->TemplateContent;
 $res = explode(CNTconfig::TplItemSeperator, $TplContent);
-//
-$CntItems = CNT_ContractItems::GetContractItems($CntObj->CntID);
+
+$CntItems = CNT_ContractItems::GetContractItems($CntObj->ContractID);
 $ValuesStore = array();
 foreach ($CntItems as $it) {
-    $ValuesStore[$it['TplItemID']] = $it['ItemValue'];
+    $ValuesStore[$it['TemplateItemID']] = $it['ItemValue'];
 }
-//
+
 if (substr($TplContent, 0, 3) == CNTconfig::TplItemSeperator) {
     $res = array_merge(array(''), $res);
 }
-$counter = 0;
 $st = '';
-
 for ($i = 0; $i < count($res); $i++) {
     if ($i % 2 != 0) {
         switch ($res[$i]) {
             case 1:
-                // TODO : array in CNTConfig bashad
-                $st .= $CntObj->SupplierID;
-                break;
-            case 2:
-                $st .= $CntObj->Supervisor;
-                break;
-            case 3:
                 $st .= DateModules::miladi_to_shamsi($CntObj->StartDate);
                 break;
-            case 4:
+            case 2:
                 $st .= DateModules::miladi_to_shamsi($CntObj->EndDate);
                 break;
-            case 5:
-                $st .= $CntObj->price;
+            case 3:
+                $st .= $CntObj->_PersonName;
                 break;
 
             default :
@@ -69,11 +65,12 @@ for ($i = 0; $i < count($res); $i++) {
 ?>
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>	
+	<link rel="stylesheet" type="text/css" href="../../generalUI/fonts/fonts.css">
     <style media="print">
         .noPrint {display:none;}
     </style>
     <style type="text/css">
-        body {font-family: tahoma;font-size: 10pt;}
+        body {font-family: bnazanin;font-size: 10pt;}
         td	 {padding: 4px 30px 10px 30px;font-size: 11pt; text-indent : 20px; text-align: justify; line-height : 2;}
     </style>
 </head>
@@ -81,15 +78,18 @@ for ($i = 0; $i < count($res); $i++) {
 <body dir="rtl">
     <br><br>
     <table style='border:2px dashed #AAAAAA;border-collapse:collapse;width:21cm' align='center'><tr>
-            <td width=60px style='padding:10px 0px 0px 0px !important;'><img src='../img/fum.jpg'></td>
+            <td width=200px style='padding:10px 0px 0px 0px !important;'><img style="width:150px" src='../../framework/icons/logo.jpg'></td>
             <td align='center' style='font-family:b titr;font-size:15px;text-align:center !important;'>
                 <b><?php
-                    echo $obj->TplTitle;
+                    echo $obj->TemplateTitle;
                     echo '<br>';
                     echo $CntObj->description;
                     ?></b>
             </td>
-            <td width=60px style='padding:10px 0px 0px 0px !important;'></td>
+            <td width=200px style='padding:10px 0px 0px 0px !important;'>
+				شماره قرارداد : <?= $CntObj->ContractID ?><br>
+				تاریخ ثبت قرارداد :  <?= DateModules::miladi_to_shamsi($CntObj->RegDate) ?>
+			</td>
         </tr>
 
         <?php

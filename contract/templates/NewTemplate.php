@@ -29,17 +29,16 @@ $col->sortable = false;
 $col->renderer = "function(v,p,r){return NewTemplate.deleteRender(v,p,r);}";
 $col->width = 50;
 
-$dg->addButton("", " ایجاد", "add", "function(){ManageTemplateItemsObj.AddTemplateItem();}");
+$dg->addButton("", " ایجاد", "add", "function(){NewTemplateObj.AddTemplateItem();}");
 
-$dg->title = "لیست الگوهای قرارداد";
 $dg->DefaultSortField = "TemplateItemID";
 $dg->DefaultSortDir = "desc";
 $dg->autoExpandColumn = "ItemName";
 $dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(v,p,r){ return ManageTemplateItemsObj.SaveItem(v,p,r);}";
+$dg->rowEditOkHandler = "function(v,p,r){ return NewTemplateObj.SaveItem(v,p,r);}";
 
-$dg->width = 780;
-$dg->height = 500;
+$dg->width = 590;
+$dg->height = 460;
 $dg->pageSize = 20;
 
 $grid = $dg->makeGrid_returnObjects();
@@ -115,15 +114,10 @@ NewTemplate.prototype.LoadTemplate = function(){
 						method: "POST",
 						params: {
 							task: 'GetTemplateContentToEdit',                 
-							TemplateID: NewTemplateObj.formPanel.getComponent('TemplateID').getValue()
+							TemplateID: NewTemplateObj.TemplateID
 						},
 						success: function (response) {
-							var sd = Ext.decode(response.responseText);
-							if (sd.success) {
-								ev.editor.setData(sd.data);
-							} else {
-								Ext.MessageBox.alert('خطا', sd.data);
-							}
+							ev.editor.setData(response.responseText);
 							NewTemplateObj.mask.hide();
 						}
 					});
@@ -140,7 +134,8 @@ NewTemplate.prototype.BuildForms = function(){
 	this.formPanel = new Ext.form.Panel({
 		renderTo: this.get('NewTemplateDIV'),
 		width: 960,
-		height : 480,
+		height : 550,
+		title : "اطلاعات الگو",
 		frame: true,
 		fieldDefaults: {
 			labelWidth: 80
@@ -152,7 +147,9 @@ NewTemplate.prototype.BuildForms = function(){
 		items: [{
 				xtype: 'textfield',
 				fieldLabel: 'عنوان الگو',
-				itemID: 'TemplateTitle'
+				width: 450,
+				name : "TemplateTitle",
+				itemId: 'TemplateTitle'
 			}, {
 				xtype: 'combo',
 				fieldLabel: 'اضافه آیتم',
@@ -190,6 +187,7 @@ NewTemplate.prototype.BuildForms = function(){
 				html : "<div id=NewTemplateEditor></div>"
 			},{
 				xtype: 'hidden',
+				name : "TemplateID",
 				itemId: 'TemplateID'
 			}],
 		buttons: [{
@@ -203,8 +201,8 @@ NewTemplate.prototype.BuildForms = function(){
 		CKEDITOR.tools.enableHtml5Elements( document );
 
 	CKEDITOR.config.width = 'auto';
-	CKEDITOR.config.height = 270;
-	CKEDITOR.config.autoGrow_minHeight = 200;
+	CKEDITOR.config.height = 350;
+	CKEDITOR.config.autoGrow_minHeight = 350;
 	CKEDITOR.replace('NewTemplateEditor');
 }
 
@@ -220,13 +218,14 @@ NewTemplate.prototype.SaveTemplate = function(){
 		params: {
 			task: 'SaveTemplate',
 			TemplateContent: CKEDITOR.instances.NewTemplateEditor.getData(), 
-			TemplateTitle: NewTemplateObj.formPanel.getComponent('TemplateTitle').getValue(),
-			TemplateID: NewTemplateObj.formPanel.getComponent('TemplateID').getValue()
+			TemplateTitle: this.formPanel.getComponent('TemplateTitle').getValue(),
+			TemplateID: this.formPanel.getComponent('TemplateID').getValue()
 		},
 		success: function (response) {
 			mask.hide();
 			var sd = Ext.decode(response.responseText);
-			if (sd.success) {
+			if (sd.success) 
+			{
 				NewTemplateObj.formPanel.getComponent('TemplateID').setValue(sd.data);
 				Ext.MessageBox.alert('', 'با موفقیت ذخیره شد');
 			} else {
@@ -244,9 +243,9 @@ NewTemplate.prototype.ManageItems = function(){
 	if(!this.itemWin)
 	{
 		this.itemWin = new Ext.window.Window({
-			width : 610,
+			width : 600,
 			title : "آیتم های الگو",
-			height : 460,
+			height : 520,
 			modal : true,
 			closeAction : "hide",
 			items : [this.grid],
@@ -274,7 +273,8 @@ NewTemplate.prototype.AddTemplateItem = function () {
 	this.grid.plugins[0].cancelEdit();
 	this.grid.getStore().insert(0, record);
 	this.grid.plugins[0].startEdit(0, 0);
-	this.ItemTypeCombo.focus();
+	//this.ItemTypeCombo.focus();
+	this.grid.columns[1].getEditor().focus();
 }
 
 NewTemplate.prototype.SaveItem = function (store, record) {
@@ -292,7 +292,7 @@ NewTemplate.prototype.SaveItem = function (store, record) {
 			var st = Ext.decode(response.responseText);
 			if (st.success)
 			{
-				ManageTemplateItemsObj.grid.getStore().load();
+				NewTemplateObj.grid.getStore().load();
 			}
 			else
 			{
@@ -306,7 +306,7 @@ NewTemplate.prototype.SaveItem = function (store, record) {
 }
 
 NewTemplate.deleteRender = function(){
-	return  "<div title='حذف اطلاعات' class='remove' onclick='ManageTemplateItemsObj.removeItem();' " +
+	return  "<div title='حذف اطلاعات' class='remove' onclick='NewTemplateObj.removeItem();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;height:16'></div>";
 };
@@ -317,7 +317,7 @@ NewTemplate.prototype.removeItem = function(){
 		if(btn == "no")
 			return;
 
-		me = ManageTemplateItemsObj;
+		me = NewTemplateObj;
 		mask = new Ext.LoadMask(me.grid, {msg: 'در حال ذخیره سازی ...'});
 		mask.show();
 		Ext.Ajax.request({
@@ -332,7 +332,7 @@ NewTemplate.prototype.removeItem = function(){
 				var st = Ext.decode(response.responseText);
 				if(st.success)
 				{
-					ManageTemplateItemsObj.grid.getStore().load();
+					NewTemplateObj.grid.getStore().load();
 				}
 				else
 				{

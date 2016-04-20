@@ -18,6 +18,7 @@
     }
 
     ManageContracts.prototype.OperationRender = function () {
+		
         return  "<div title='عملیات' class='setting' onclick='ManageContractsObj.OperationMenu(event);' " +
                 "style='background-repeat:no-repeat;background-position:center;" +
                 "cursor:pointer;height:16'></div>";
@@ -28,16 +29,19 @@
         var record = this.grid.getSelectionModel().getLastSelected();
         var op_menu = new Ext.menu.Menu();
 
-        if (record.data.StatusCode == this.ContractStatus_Raw) {
-            op_menu.add({text: ' ویرایش', iconCls: 'edit',
+        op_menu.add({text: ' ویرایش', iconCls: 'edit',
                 handler: function () {
-                    ManageContractsObj.Edit(record.data.CntID, record.data.TemplateID);
+                    ManageContractsObj.Edit(record.data.ContractID, record.data.TemplateID);
                 }});
-        }
-
+			
+		op_menu.add({text: ' حذف', iconCls: 'remove',
+			handler: function () {
+				ManageContractsObj.RemoveContract(record.data.ContractID);
+			}});
+        
         op_menu.add({text: ' چاپ', iconCls: 'print',
             handler: function () {
-                window.open(ManageContractsObj.address_prefix + 'PrintContract.php?CntID=' + record.data.CntID);
+                window.open(ManageContractsObj.address_prefix + 'PrintContract.php?ContractID=' + record.data.ContractID);
             }});
          
         op_menu.add({text: ' پیوست مدارک', iconCls: 'list',
@@ -48,51 +52,40 @@
         op_menu.showAt(e.pageX - 120, e.pageY);
     }
 
-    ManageContracts.prototype.Edit = function (CntID, TemplateID)
+    ManageContracts.prototype.Edit = function (ContractID, TemplateID)
     {        
-        framework.OpenPage(ManageContractsObj.address_prefix + 'NewContract.php?CntID=' + CntID + '&TemplateID=' + TemplateID, 'ویرایش قرارداد');
+        framework.OpenPage(this.address_prefix + 'NewContract.php?ContractID=' + ContractID + '&TemplateID=' + TemplateID, 'ویرایش قرارداد');
     }
 
-    ManageContracts.prototype.UploadDocs = function (readOnly) {
-        CntID = ManageContractsObj.grid.getSelectionModel().getLastSelected().data.CntID;
-        if (!this.UploadDocsWin)
-        {
-            this.UploadDocsWin = new Ext.window.Window({
-                title: 'پیوست مدارک',
-                modal: true,
-                autoScroll: true,
-                width: 662,
-                height: 450,
-                closeAction: "hide",
-                loader: {
-                    url: this.address_prefix + "../ui/documents.php",
-                    scripts: true
-                },
-                buttons: [{
-                        text: "بازگشت",
-                        iconCls: "undo",
-                        handler: function () {
-                            this.up('window').hide();
-                        }
-                    }]
-            });
-            Ext.getCmp(this.TabID).add(this.UploadDocsWin);
-        }
-        this.UploadDocsWin.show();
-        this.UploadDocsWin.center();
-        this.UploadDocsWin.loader.load({
-            params: {
-                parentObj: "ManageContractsObj.UploadDocsWin",                
-                readOnly: readOnly ? "true" : "false",
-                ObjectType : 'CONTRACT' , ObjectID : CntID                
-            }
-        });
-    }
-
-	ManageContracts.prototype.AddContract = function () {
+    ManageContracts.prototype.AddContract = function () {
 	
         framework.OpenPage(this.address_prefix + "NewContract.php", "ثبت قرارداد");
     }
 
+	ManageContracts.prototype.RemoveContract = function () {
+		
+		mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخيره سازي...'});
+		mask.show();
+		
+		Ext.Ajax.request({
+		url: this.address_prefix + 'contract.data.php?task=DeleteContract',
+		params: {                
+			ContractID: this.grid.getSelectionModel().getLastSelected().data.ContractID            
+		},
+		method: 'POST',
+		success: function (res) {
+			mask.hide();
+			var sd = Ext.decode(res.responseText);
+			if (!sd.success) {
+				if (sd.data != '')
+					Ext.MessageBox.alert('', sd.data); 
+				else
+					Ext.MessageBox.alert('', 'خطا در اجرای عملیات');
+				return;
+			}
+			ManageContractsObj.grid.getStore().load();
+		}
+	});
+	}
 
 </script>

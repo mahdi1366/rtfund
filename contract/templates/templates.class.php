@@ -60,7 +60,6 @@ class CNT_TemplateItems extends CNTParentClass {
     const TableKey = "TemplateItemID";
 
     public $TemplateItemID;  
-	public $TemplateID;
     public $ItemName;
     public $ItemType;
     

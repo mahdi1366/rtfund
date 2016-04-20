@@ -10,13 +10,29 @@ require_once inc_dataGrid;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "contract.data.php?task=SelectContracts", "div_dg");
 
-$dg->addColumn("شماره قرارداد", "CntID");
-$dg->addColumn("الگو", "TplTitle");
-$dg->addColumn("", "RegPersonID", "", true);
-$dg->addColumn("", "RegDate", "", true);
 $dg->addColumn("", "TemplateID", "", true);
-$dg->addColumn("توضیحات", "description");
-$dg->addColumn("", "PenaltyAmount", "", true);
+
+$col = $dg->addColumn("شماره قرارداد", "ContractID");
+$col->align = "center";
+
+$col = $dg->addColumn("الگو", "TemplateTitle");
+$col->width = 150;
+
+$dg->addColumn("", "RegPersonID", "", true);
+
+$col = $dg->addColumn("تاریخ ثبت", "RegDate", GridColumn::ColumnType_date);
+$col->width = 80;
+
+$col = $dg->addColumn("تاریخ شروع", "StartDate", GridColumn::ColumnType_date);
+$col->width = 80;
+
+$col = $dg->addColumn("تاریخ پایان", "EndDate", GridColumn::ColumnType_date);
+$col->width = 80;
+
+$col = $dg->addColumn("توضیحات", "description");
+$col->ellipsis = 60;
+
+
 $col = $dg->addColumn("وضعیت", "StatusCode");
 $col->renderer = "function(v,p,record){
         if(record.data.StatusCode == ".CNTconfig::ContractStatus_Raw.") return 'خام';
