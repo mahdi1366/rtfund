@@ -4,9 +4,8 @@
 //	Programmer	: Fatemipour
 //	Date		: 94.08
 //-----------------------------
-require_once '../global/CNTParentClass.class.php';
 
-class CNT_templates extends CNTParentClass {
+class CNT_templates extends OperationClass {
 
     const TableName = "CNT_templates";
     const TableKey = "TemplateID";
@@ -30,6 +29,12 @@ class CNT_templates extends CNTParentClass {
         return parent::Remove($pdo);
     }    
     
+	static public function Get($where = "", $param = array()){
+		
+		return PdoDataAccess::runquery_fetchMode("select TemplateID, TemplateTitle from " . static::TableName .
+			" where 1=1 " . $where, $param);
+	}
+	
     /* متنی که برای یک الگوی تمپلیت توسط کاربر نوشته شده است،
      *  نشانه گزاری هایش را تصحیح میکند 
      *  */
@@ -54,12 +59,13 @@ class CNT_templates extends CNTParentClass {
 
 }
 
-class CNT_TemplateItems extends CNTParentClass {
+class CNT_TemplateItems extends OperationClass {
     
     const TableName = "CNT_TemplateItems";
     const TableKey = "TemplateItemID";
 
-    public $TemplateItemID;  
+    public $TemplateItemID; 
+	public $TemplateID;
     public $ItemName;
     public $ItemType;
     

@@ -448,7 +448,9 @@ MiladiToShamsi = function (date, format) {
     if (arguments.length == 1) {
         format = "Y/m/d";
     }
-    
+    if(date.length > 10)
+		date = date.substr(0,10);
+		
     if (!date || date == "" || date == "0000-00-00" || date == "0000/00/00") return "";
 
     if(date.toString().substr(2,1) == '/' || date.toString().substr(2,1) == '-' )

@@ -15,6 +15,8 @@ else
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "templates.data.php?task=selectTemplateItems", "div_dg");
 
+$dg->addColumn("", "TemplateID", "", true);
+
 $col = $dg->addColumn("شماره ", "TemplateItemID");
 $col->width = 50;
 
@@ -47,7 +49,7 @@ $grid = $dg->makeGrid_returnObjects();
 <br>
 <center>
     <div id="NewTemplateDIV"></div>    
-    <div id='NewTemplateEditorDIV'>
+    <div id='TemplateEditorDIV'>
     </div>
 </center>
 <script type='text/javascript'>
@@ -84,22 +86,27 @@ function NewTemplate() {
 	});
 
 	this.grid = <?= $grid ?>;
-
+	this.grid.plugins[0].on("beforeedit", function(editor,e){
+		if(e.record.data.TemplateID == "0")
+			return false;
+	});
+	
 	this.BuildForms();
 	this.mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال بارگذاری...'});
 	this.mask.show();
 	this.LoadTemplate();
 }
-
+var aaaaa;
 NewTemplate.prototype.LoadTemplate = function(){
 		
 	this.store = new Ext.data.Store({
 		proxy : {
 			type: 'jsonp',
-			url: this.address_prefix + "templates.data.php?task=SelectTemplates&TemplateID=" + this.TemplateID,
+			url: this.address_prefix + "templates.data.php?task=SelectTemplates"+
+				"&EditContent=true&TemplateID=" + this.TemplateID,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["TemplateID","TemplateTitle"],
+		fields : ["TemplateID","TemplateTitle", "content"],
 		autoLoad : true,
 		listeners : {
 			load : function(){
@@ -107,23 +114,9 @@ NewTemplate.prototype.LoadTemplate = function(){
 				//..........................................................
 				record = this.getAt(0);
 				me.formPanel.loadRecord(record);
-				
-				CKEDITOR.on('instanceReady', function (ev) {
-					Ext.Ajax.request({
-						url: NewTemplateObj.address_prefix + "templates.data.php",
-						method: "POST",
-						params: {
-							task: 'GetTemplateContentToEdit',                 
-							TemplateID: NewTemplateObj.TemplateID
-						},
-						success: function (response) {
-							ev.editor.setData(response.responseText);
-							NewTemplateObj.mask.hide();
-						}
-					});
-
-					ev.editor.focus();
-				});
+				aaaaa = record.data.content;
+				CKEDITOR.instances.TemplateEditor.setData(record.data.content);
+				NewTemplateObj.mask.hide();
 			}
 		}
 	});
@@ -154,21 +147,22 @@ NewTemplate.prototype.BuildForms = function(){
 				xtype: 'combo',
 				fieldLabel: 'اضافه آیتم',
 				store: new Ext.data.Store({
-					pageSize: 10,
 					proxy: {
 						type: 'jsonp',
-						url: this.address_prefix + 'templates.data.php?task=selectTemplateItems',
+						url: this.address_prefix + 'templates.data.php?task=selectTemplateItems'+
+							'&TemplateID=' + this.TemplateID,
 						reader: {root: 'rows', totalProperty: 'totalCount'}
 					},
 					fields: ['TemplateItemID', 'ItemName', 'ItemType']
 				}),
 				displayField: 'ItemName',
 				valueField: "TemplateItemID",
+				itemId : "TemplateItemID",
 				width: 400,
 				listeners: {
 					select: function (combo, records) {
 						this.collapse();
-						CKEDITOR.instances.NewTemplateEditor.insertText(' ' + 
+						CKEDITOR.instances.TemplateEditor.insertText(' ' + 
 							NewTemplateObj.TplItemSeperator + 
 							records[0].data.TemplateItemID + '--' + 
 							records[0].data.ItemName + NewTemplateObj.TplItemSeperator + ' ');
@@ -184,7 +178,7 @@ NewTemplate.prototype.BuildForms = function(){
 			},{
 				xtype : "container",
 				colspan : 3,
-				html : "<div id=NewTemplateEditor></div>"
+				html : "<div id=TemplateEditor></div>"
 			},{
 				xtype: 'hidden',
 				name : "TemplateID",
@@ -203,7 +197,8 @@ NewTemplate.prototype.BuildForms = function(){
 	CKEDITOR.config.width = 'auto';
 	CKEDITOR.config.height = 350;
 	CKEDITOR.config.autoGrow_minHeight = 350;
-	CKEDITOR.replace('NewTemplateEditor');
+	CKEDITOR.replace('TemplateEditor');
+	CKEDITOR.add;
 }
 
 NewTemplateObj = new NewTemplate();
@@ -217,7 +212,7 @@ NewTemplate.prototype.SaveTemplate = function(){
 		method: "POST",
 		params: {
 			task: 'SaveTemplate',
-			TemplateContent: CKEDITOR.instances.NewTemplateEditor.getData(), 
+			TemplateContent: CKEDITOR.instances.TemplateEditor.getData(), 
 			TemplateTitle: this.formPanel.getComponent('TemplateTitle').getValue(),
 			TemplateID: this.formPanel.getComponent('TemplateID').getValue()
 		},
@@ -268,7 +263,8 @@ NewTemplate.prototype.AddTemplateItem = function () {
 
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
-		TemplateItemID: 0
+		TemplateItemID: 0,
+		TemplateID : this.TemplateID
 	});
 	this.grid.plugins[0].cancelEdit();
 	this.grid.getStore().insert(0, record);
@@ -293,6 +289,7 @@ NewTemplate.prototype.SaveItem = function (store, record) {
 			if (st.success)
 			{
 				NewTemplateObj.grid.getStore().load();
+				NewTemplateObj.formPanel.down("[itemId=TemplateItemID]").getStore().load();
 			}
 			else
 			{
@@ -305,7 +302,9 @@ NewTemplate.prototype.SaveItem = function (store, record) {
 	});
 }
 
-NewTemplate.deleteRender = function(){
+NewTemplate.deleteRender = function(v,p,r){
+	if(r.data.TemplateID == "0")
+			return "";
 	return  "<div title='حذف اطلاعات' class='remove' onclick='NewTemplateObj.removeItem();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;height:16'></div>";

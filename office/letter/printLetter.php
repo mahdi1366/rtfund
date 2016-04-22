@@ -93,6 +93,10 @@ foreach($dt as $row)
 			text-align: center; 
 			padding-top: 60px;
 		}
+		table { page-break-inside:auto }
+		tr    { /*page-break-inside:avoid;*/ page-break-after:auto }
+		thead { display:table-header-group }
+		tfoot { display:table-footer-group }
 	</style>	
 	<body dir="rtl">
 		<center>
@@ -108,7 +112,8 @@ foreach($dt as $row)
 			</div>
 			<? if(isset($_POST["sarbarg"])){ ?>
 				<div style="width:800px;height:1100px;">
-				<table style="width:100%;height:100%">
+				<table style="width:19cm;height:100%">
+					<thead>
 					<tr style="height:150px">
 						<td align="center">
 						</td>
@@ -119,6 +124,7 @@ foreach($dt as $row)
 							<b><?= DateModules::miladi_to_shamsi($LetterObj->LetterDate) ?></b>
 						</td>
 					</tr>
+					</thead>
 					<tr>
 						<td colspan="3" style="padding-right:50px;padding-left: 50px;vertical-align: top;">
 							<br><br>
@@ -130,7 +136,8 @@ foreach($dt as $row)
 			</div>
 			<?}else{?>
 				<div>
-				<table style="width:100%;height:100%">
+				<table style="width:19cm;height:100%">
+					<thead>
 					<tr style="height:150px">
 						<td align="center" style="width:200px;">
 							<img  src="/framework/icons/logo.jpg" style="width:150px">
@@ -143,6 +150,7 @@ foreach($dt as $row)
 							تاریخ نامه : <b><?= DateModules::miladi_to_shamsi($LetterObj->LetterDate) ?></b>
 						</td>
 					</tr>
+					</thead>
 					<tr>
 						<td colspan="3" style="padding-right:50px;padding-left: 50px;vertical-align: top;">
 							<br><br>
@@ -150,6 +158,7 @@ foreach($dt as $row)
 							<br>
 						</td>
 					</tr>
+					<tfoot>
 					<tr style="height:150px;">
 						<td colspan="3" style="padding-right:30px;padding-left: 30px;">
 							<hr>
@@ -163,6 +172,7 @@ foreach($dt as $row)
 							<br>ایمیل : <b>krfn.ir@gmail.com</b>
 						</td>
 					</tr>
+					</tfoot>
 				</table>
 			</div>
 			<?}?>

@@ -69,6 +69,12 @@ class DMS_documents extends PdoDataAccess
 	
 	static function DeleteDocument($DocumentID){
 		
+		if(!DMS_DocFiles::DeletePage("", $DocumentID))
+		{
+			ExceptionHandler::PushException("خطا در حذف صفحات پیوست");
+			return false;
+		}
+		
 		if( parent::delete("DMS_documents"," DocumentID=?", array($DocumentID)) === false )
 	 		return false;
 
@@ -78,6 +84,18 @@ class DMS_documents extends PdoDataAccess
 		$daObj->TableName = "DMS_documents";
 		$daObj->execute();
 	 	return true;
+	}
+	
+	static function DeleteAllDocument($ObjectID, $ObjectType){
+		
+		$dt = PdoDataAccess::runquery("select DocumentID from DMS_documents 
+			where ObjectID=? AND ObjectType=?", 
+			array($ObjectID, $ObjectType));
+		
+		foreach($dt as $row)			
+			self::DeleteDocument($row["DocumentID"]);
+
+		return ExceptionHandler::GetExceptionCount() == 0;
 	}
 }
 
@@ -124,21 +142,33 @@ class DMS_DocFiles extends PdoDataAccess
 		return true;
 	}
 	
-	static function DeletePage($RowID){
+	static function DeletePage($RowID = "", $DocumentID = ""){
 		
-		$obj = new DMS_DocFiles($RowID);
-		
-		if( parent::delete("DMS_DocFiles"," RowID=?", array($RowID)) === false )
-	 		return false;
+		if($RowID != "")
+		{
+			$obj = new DMS_DocFiles($RowID);
 
-		unlink(getenv("DOCUMENT_ROOT") . "/storage/documents/". $RowID . "." . $obj->FileType);
-		
-		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->MainObjectID = $RowID;
-		$daObj->TableName = "DMS_DocFiles";
-		$daObj->execute();
-	 	return true;
+			if( parent::delete("DMS_DocFiles"," RowID=?", array($RowID)) === false )
+				return false;
+
+			unlink(getenv("DOCUMENT_ROOT") . "/storage/documents/". $RowID . "." . $obj->FileType);
+
+			$daObj = new DataAudit();
+			$daObj->ActionType = DataAudit::Action_delete;
+			$daObj->MainObjectID = $RowID;
+			$daObj->TableName = "DMS_DocFiles";
+			$daObj->execute();
+			return true;
+		}
+		if($DocumentID != "")
+		{
+			$dt = PdoDataAccess::runquery("select RowID from DMS_DocFiles where DocumentID=?", 
+				array($DocumentID));
+			foreach($dt as $row)
+				self::DeletePage($row["RowID"]);
+			
+			return ExceptionHandler::GetExceptionCount() == 0;
+		}
 	}
 }
 

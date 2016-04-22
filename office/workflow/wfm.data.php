@@ -9,44 +9,8 @@ require_once inc_dataReader;
 require_once inc_response;
 
 $task = isset($_POST["task"]) ? $_POST["task"] : (isset($_GET["task"]) ? $_GET["task"] : "");
-
-switch ($task)
-{
-	case "SelectAllFlows":
-		SelectAllFlows();
-	
-	case "SaveFlow":
-		SaveFlow();
-		
-	case "DeleteFlow":
-		DeleteFlow();
-		
-	case "selectFlowSteps":
-		selectFlowSteps();
-		
-	case "SetStatus":
-		SetStatus();
-	//............................
-		
-	case "SelectSteps":
-		SelectSteps();
-		
-	case "SaveStep":
-		SaveStep();
-		
-	case "DeleteStep":
-		DeleteStep();
-		
-	case "MoveStep":
-		MoveStep();
-	//............................
-	
-	case "SelectAllForms":
-		SelectAllForms();
-		
-	case "ChangeStatus":
-		ChangeStatus();
-}
+if(!empty($task))
+	$task();
 
 function SelectAllFlows(){
 	
@@ -282,6 +246,16 @@ function ChangeStatus(){
 	}
 	//.............................................
 	$result = $newObj->AddFlowRow();	
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function StartFlow(){
+	
+	$FlowID = $_REQUEST["FlowID"];
+	$ObjectID = $_REQUEST["ObjectID"];
+	$result = WFM_FlowRows::StartFlow($FlowID, $ObjectID);
 	
 	echo Response::createObjectiveResponse($result, "");
 	die();

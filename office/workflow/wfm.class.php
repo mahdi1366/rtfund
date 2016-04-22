@@ -253,6 +253,19 @@ class WFM_FlowRows extends PdoDataAccess {
 		return false;
 	}
 	
+	static function GetFlowInfo($FlowID, $ObjectID){
+		
+		$dt = PdoDataAccess::runquery("select * from WFM_FlowRows 
+			where FlowID=? AND ObjectID=? AND ActionType='CONFIRM'
+			order by RowID desc limit 1", array($FlowID, $ObjectID));
+		
+		return array(
+			"IsStarted" => count($dt) > 0 ? true : false,
+			"IsEnded" => count($dt) > 0 && $dt[0]["IsEnded"] == "YES" ? true : false,
+			"StepDesc" => count($dt) > 0 ? ($dt[0]["StepDesc"] == "" ? "شروع گردش" : $dt[0]["StepDesc"]) : "خام"
+		);
+	}
+	
 	static function SelectReceivedForms($where="", $params = array()){
 		
 		$dt = PdoDataAccess::runquery("select FlowID,StepID 

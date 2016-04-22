@@ -3,10 +3,12 @@
 //	Programmer	: Fatemipour
 //	Date		: 94.08
 //-----------------------------
+
 require_once '../header.inc.php';
 require_once 'contract.class.php';
 require_once '../templates/templates.class.php';
 require_once '../global/CNTconfig.class.php';
+require_once '../../office/workflow/wfm.class.php';
 
 require_once inc_dataReader;
 require_once inc_response;
@@ -16,19 +18,30 @@ $task = isset($_REQUEST ["task"]) ? $_REQUEST ["task"] : "";
 if(!empty($task))
 	$task();
 
-
-function SelectMyContracts() {
-	
-    $temp = CNT_contracts::Get();
-    $res = PdoDataAccess::fetchAll($temp, $_GET['start'], $_GET['limit']);
-    echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
-    die();
-}
-
 function SelectContracts() {
 	
-    $temp = CNT_contracts::Get();
-    $res = PdoDataAccess::fetchAll($temp, $_GET['start'], $_GET['limit']);
+	$where = "";
+	$params = array();
+	
+	if(!empty($_REQUEST["ContractID"]))
+	{
+		$where .= " AND ContractID=:c";
+		$params[":c"] = $_REQUEST["ContractID"];
+	}
+	
+	$where .= dataReader::makeOrder();
+	
+    $temp = CNT_contracts::Get(isset($_REQUEST["content"]), $where, $params);
+	$res = PdoDataAccess::fetchAll($temp, $_GET['start'], $_GET['limit']);
+	
+	for($i=0; $i < count($res);$i++)
+	{
+		$arr = WFM_FlowRows::GetFlowInfo(2, $res[$i]["ContractID"]);
+		$res[$i]["IsStarted"] = $arr["IsStarted"] ? "YES" : "NO";
+		$res[$i]["IsEnded"] = $arr["IsEnded"] ? "YES" : "NO";
+		$res[$i]["StepDesc"] = $arr["StepDesc"];
+	}
+	
     echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
     die();
 }
@@ -132,52 +145,12 @@ function DeleteContract(){
 	
 }
 
-function SelectReceivedContracts() {
-    $temp = CNT_contracts::Get(" AND c.StatusCode = " . CNTconfig::ContractStatus_Sent);
-    print_r(ExceptionHandler::PopAllExceptions());
-    $res = PdoDataAccess::fetchAll($temp, $_GET['start'], $_GET['limit']);
-    echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
-    die();
+function SelectContractTypes() {
+   
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=18");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
 }
 
-function Send() {
-    $pdo = PdoDataAccess::getPdoObject();
-    $pdo->beginTransaction();
-    try {
-        $obj = new CNT_contracts($_REQUEST['ContractID']);
-        $obj->StatusCode = CNTconfig::ContractStatus_Sent;
-        $obj->Edit($pdo);
-        //
-        $pdo->commit();
-        echo Response::createObjectiveResponse(true, '');
-        die();
-    } catch (Exception $e) {
-        $pdo->rollBack();
-        //print_r(ExceptionHandler::PopAllExceptions());
-        //echo PdoDataAccess::GetLatestQueryString();
-        echo Response::createObjectiveResponse(false, $e->getMessage());
-        die();
-    }
-}
-
-function ConfirmRecContract() {
-    $pdo = PdoDataAccess::getPdoObject();
-    $pdo->beginTransaction();
-    try {
-        $obj = new CNT_contracts($_REQUEST['ContractID']);
-        $obj->StatusCode = CNTconfig::ContractStatus_Confirmed;
-        $obj->Edit($pdo);
-        //
-        $pdo->commit();
-        echo Response::createObjectiveResponse(true, '');
-        die();
-    } catch (Exception $e) {
-        $pdo->rollBack();
-        //print_r(ExceptionHandler::PopAllExceptions());
-        //echo PdoDataAccess::GetLatestQueryString();
-        echo Response::createObjectiveResponse(false, $e->getMessage());
-        die();
-    }
-}
 ?>
 

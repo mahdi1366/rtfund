@@ -2,9 +2,10 @@
 
 /*
 
+typeID=18
 
-
-
+insert into BaseInfo values(11, 2, 'قرارداد', '../../contract/contract/PrintContract.php', 'ContractID', 'YES')
+insert into WFM_flows values(2, 2, 'گردش قرارداد', 'YES')
 
 
 

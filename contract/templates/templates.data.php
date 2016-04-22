@@ -22,18 +22,31 @@ function SelectTemplates() {
     }
     $temp = CNT_templates::Get($where, $whereParams);
     $res = PdoDataAccess::fetchAll($temp, $_GET['start'], $_GET['limit']);
+	
+	if(!empty($_REQUEST['TemplateID']) && isset($_REQUEST["EditContent"]))
+	{
+		$obj = new CNT_templates($_REQUEST['TemplateID']);
+		$content = $obj->TemplateContent;
+		$res[0]["content"] = PrepareContentToEdit($content);
+	}
+	
     echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
     die();
 }
 
 function selectTemplateItems() {
 	
-    $temp = CNT_TemplateItems::Get();
-    if (isset($_REQUEST['All']) && $_REQUEST['All'] == 'true')
+	$where = "";
+	$params = array();
+	
+	if(!empty($_REQUEST["TemplateID"]))
 	{
-        $res = PdoDataAccess::fetchAll($temp, 0, $temp->rowCount());
-    } else
-        $res = PdoDataAccess::fetchAll($temp, $_GET['start'], $_GET['limit']);
+		$where .= " AND TemplateID in(0,:t)";
+		$params[":t"] = $_REQUEST["TemplateID"];
+	}
+	
+    $temp = CNT_TemplateItems::Get($where . " order by TemplateItemID", $params);
+    $res = $temp->fetchAll();
 	
     echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
     die();
@@ -81,6 +94,7 @@ function SaveTemplate() {
 }
 
 function saveTemplateItem() {
+	
     $pdo = PdoDataAccess::getPdoObject();
     $pdo->beginTransaction();
     try {
@@ -114,28 +128,6 @@ function GetTemplateContent() {
 function GetTemplateTitle() {
     $obj = new CNT_templates($_POST['TemplateID']);
     echo Response::createObjectiveResponse(true, $obj->TemplateTitle);
-    die();
-}
-
-function GetTemplateContentToEdit() {
-	
-    $obj = new CNT_templates($_POST['TemplateID']);
-    $content = $obj->TemplateContent;
-    $RevContent = '';
-    $arr = explode(CNTconfig::TplItemSeperator, $content);
-    for ($i = 0; $i < count($arr); $i++) {
-        $val = $arr[$i];
-        if (is_numeric($val)) {
-            $obj = new CNT_TemplateItems($val);
-            $RevContent .= CNTconfig::TplItemSeperator . $val . '--' . $obj->ItemName . CNTconfig::TplItemSeperator;
-
-            unset($obj);
-        } else {
-            $RevContent .= $val;
-        }
-    }
-    //echo Response::createObjectiveResponse(true, $RevContent);
-	echo $RevContent;
     die();
 }
 
@@ -177,6 +169,27 @@ function deleteTemplate() {
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, '');
 	die();
+}
+
+function PrepareContentToEdit($content){
+	
+	$dt = CNT_TemplateItems::Get();
+	$ItemsArr = array();
+	foreach($dt as $item)
+		$ItemsArr[ $item["TemplateItemID"] ] = $item["ItemName"];
+		
+	$RevContent = '';
+    $arr = explode(CNTconfig::TplItemSeperator, $content);
+    for ($i = 0; $i < count($arr); $i++) {
+        $TemplateItemID = $arr[$i];
+        if (is_numeric($TemplateItemID)) {
+            $RevContent .= CNTconfig::TplItemSeperator . 
+				$TemplateItemID . '--' . $ItemsArr[$TemplateItemID] . CNTconfig::TplItemSeperator;
+        } else {
+            $RevContent .= $TemplateItemID;
+        }
+    }
+	return $RevContent;
 }
 
 //------------------------------------------------------------------------------

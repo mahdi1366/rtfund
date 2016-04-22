@@ -36,6 +36,12 @@ switch($ObjectType)
 		if($_SESSION["USER"]["IsStaff"] == "YES")
 			$access = true;
 		break;
+	case "contract":
+		require_once '../contract/contract/contract.class.php';
+		$obj = new CNT_contracts($ObjectID);
+		if($_SESSION["USER"]["IsStaff"] == "YES")
+			$access = true;
+		break;
 		
 }
 //------------------------------------------------------

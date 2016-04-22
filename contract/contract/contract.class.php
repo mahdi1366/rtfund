@@ -3,9 +3,10 @@
 //	Programmer	: Fatemipour
 //	Date		: 94.08
 //-----------------------------
-require_once '../global/CNTParentClass.class.php';
 
-class CNT_contracts extends CNTParentClass {
+require_once getenv("DOCUMENT_ROOT") . '/dms/dms.class.php';
+
+class CNT_contracts extends OperationClass {
 
     const TableName = "CNT_contracts";
     const TableKey = "ContractID";
@@ -16,8 +17,13 @@ class CNT_contracts extends CNTParentClass {
     public $RegDate;
     public $description;
     public $PersonID;
+	public $PersonID2;
     public $StartDate;
     public $EndDate;
+	public $content;
+	public $ContractType;
+	public $LoanRequestID;
+	public $ContractAmount;
 
 	public $_TemplateTitle;
 	public $_PersonName;
@@ -38,16 +44,57 @@ class CNT_contracts extends CNTParentClass {
         }
     }
 
-    public static function Get($where = '', $whereParams = array()) {
+    public static function Get($content = false, $where = '', $whereParams = array()) {
 		
-        return parent::runquery_fetchMode("select c.* ,  t.TemplateTitle 
-                                  from CNT_contracts c 
-                                  join CNT_templates t using(TemplateID) 
-                                  where 1=1 " . $where, $whereParams);
+        return parent::runquery_fetchMode("
+			select c.ContractID,
+				c.TemplateID,
+				c.RegPersonID,
+				c.RegDate,
+				c.description,
+				c.PersonID,
+				c.PersonID2,
+				c.StartDate,
+				c.EndDate," .
+				($content ? "c.content," : "") .
+				"c.ContractType,
+				c.LoanRequestID,
+				c.ContractAmount,
+				t.TemplateTitle ,
+				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) PersonFullname,
+				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) PersonFullname2,
+				p1.NationalID,
+				p1.address,
+				p1.mobile,
+				r.RequestID,
+				r.ReqAmount,
+				rp.InstallmentCount,
+				rp.CustomerWage
+			
+			from CNT_contracts c 
+			join CNT_templates t using(TemplateID) 
+			left join LON_requests r on(LoanRequestID=RequestID)
+			left join LON_ReqParts rp on(rp.RequestID=r.RequestID)
+			left join BSC_persons p1 on(c.PersonID=p1.PersonID)
+			left join BSC_persons p2 on(c.PersonID2=p2.PersonID)
+			
+			where 1=1 
+			group by ContractID" . $where, $whereParams);
     }
+	
+	public function Remove()
+	{
+		if(!DMS_documents::DeleteAllDocument($this->ContractID, "contract"))
+		{
+			ExceptionHandler::PushException("خطا در حذف مدارک");
+	 		return false;
+		}
+		
+		return parent::Remove();
+	}
 }
 
-class CNT_ContractItems extends CNTParentClass {
+class CNT_ContractItems extends OperationClass {
 
     const TableName = "CNT_ContractItems";
     const TableKey = "ContractItemID";
@@ -130,7 +177,7 @@ class CNT_ContractFlows extends PdoDataAccess {
     }                
 }
 
-class CNT_ContractPayments extends CNTParentClass {
+class CNT_ContractPayments extends OperationClass {
     
     const TableName = "CNT_ContractPayments";
     const TableKey = "PayID";

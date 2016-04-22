@@ -16,11 +16,7 @@ require_once '../../accounting/docs/import.data.php';
 $task = isset($_REQUEST["task"]) ? $_REQUEST["task"] : "";
 if(!empty($task))
 {
-	switch ($task) {
-
-		default : 
-			eval($task. "();");
-	}
+	$task();
 }
 //....................
 function PMT($CustomerWage, $InstallmentCount, $PartAmount, $YearMonths, $PayInterval) {  

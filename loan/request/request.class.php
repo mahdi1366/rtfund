@@ -4,6 +4,8 @@
 // create Date: 94.06
 //---------------------------
 
+require_once getenv("DOCUMENT_ROOT") . '/dms/dms.class.php';
+
 class LON_requests extends PdoDataAccess
 {
 	public $RequestID;
@@ -90,6 +92,12 @@ class LON_requests extends PdoDataAccess
 			ExceptionHandler::PushException("درخواست در حال گردش قابل حذف نمی باشد");
 			return false;
 		}
+		
+		if(!DMS_documents::DeleteAllDocument($RequestID, "loan"))
+		{
+			ExceptionHandler::PushException("خطا در حذف مدارک");
+	 		return false;
+		}		
 		
 		if( parent::delete("LON_ReqParts"," RequestID=?", array($RequestID)) === false )
 		{

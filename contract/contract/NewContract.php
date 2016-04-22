@@ -33,7 +33,7 @@ function NewContract() {
 		frame: true,
 		bodyPadding: 5,
 		width: 800,
-		title : "اطلاعات کلی قرارداد",
+		autoHeight : true,
 		fieldDefaults: {
 			labelWidth: 100
 		},
@@ -44,6 +44,7 @@ function NewContract() {
 		},
 		items: [{
 			xtype: 'combo',
+			colspan : 2,
 			fieldLabel: 'انتخاب الگو',
 			itemId: 'TemplateID',
 			store: new Ext.data.Store({
@@ -70,7 +71,68 @@ function NewContract() {
 			listeners: {
 				select: function (combo, records) {
 					this.collapse();
-					NewContractObj.ShowTplItemsForm(records[0].data.TemplateID);
+					NewContractObj.ShowTplItemsForm(records[0].data.TemplateID, false);
+				}
+			}
+		},{
+			xtype : "combo",
+			width : 740,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../../loan/request/request.data.php?task=SelectAllRequests',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ["LoanPersonID",'LoanFullname','ReqAmount',"RequestID","ReqDate", {
+					name : "fullTitle",
+					convert : function(value,record){
+						return "[ " + record.data.RequestID + " ]" + record.data.LoanFullname  + " به مبلغ " + 
+							Ext.util.Format.Money(record.data.ReqAmount) + " مورخ " + 
+							MiladiToShamsi(record.data.ReqDate);
+					}
+				}]
+			}),
+			fieldLabel : "وام",
+			displayField : "fullTitle",
+			pageSize : 20,
+			allowBlank : false,
+			valueField : "RequestID",
+			name : "LoanRequestID",
+			itemId : "LoanRequestID",
+			colspan : 2,
+			tpl: new Ext.XTemplate(
+				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
+				'<td style="padding:7px">کد وام</td>',
+				'<td style="padding:7px">وام گیرنده</td>',
+				'<td style="padding:7px">مبلغ وام</td>',
+				'<td style="padding:7px">تاریخ درخواست</td> </tr>',
+				'<tpl for=".">',
+					'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
+					'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">{LoanFullname}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">',
+						'{[Ext.util.Format.Money(values.ReqAmount)]}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">',
+						'{[MiladiToShamsi(values.ReqDate)]}</td> </tr>',
+				'</tpl>',
+				'</table>'
+			),
+			listeners : {
+				select : function(combo, records){
+					me = NewContractObj;
+					me.MainForm.getComponent("PersonID").getStore().load({
+						params : {PersonID: records[0].data.LoanPersonID},
+						callback : function(){
+							if(this.getCount() > 0)
+								me.MainForm.getComponent("PersonID").setValue(this.getAt(0).data.PersonID);
+						}
+					});
+					me.MainForm.getComponent("ContractAmount").setValue(records[0].data.ReqAmount);
+					me.MainForm.getComponent("ContractType").setValue("1");
+					
+					me.MainForm.getComponent("PersonID").readOnly = true;
+					me.MainForm.getComponent("ContractAmount").readOnly = true;
+					me.MainForm.getComponent("ContractType").readOnly = true;
 				}
 			}
 		},{
@@ -83,7 +145,7 @@ function NewContract() {
 				},
 				fields : ['PersonID','fullname']
 			}),
-			fieldLabel : "مشتری",
+			fieldLabel : "طرف قرارداد اول",
 			displayField : "fullname",
 			pageSize : 20,
 			width: 350,
@@ -91,6 +153,49 @@ function NewContract() {
 			valueField : "PersonID",
 			name : "PersonID",
 			itemId : "PersonID"
+		},{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../../framework/person/persons.data.php?task=selectPersons',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['PersonID','fullname']
+			}),
+			fieldLabel : "طرف قرارداد دوم",
+			displayField : "fullname",
+			pageSize : 20,
+			width: 350,
+			valueField : "PersonID",
+			name : "PersonID2",
+			itemId : "PersonID2"
+		},{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + 'contract.data.php?task=SelectContractTypes',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['InfoID','InfoDesc'],
+				autoLoad : true
+			}),
+			fieldLabel : "نوع قرارداد",
+			displayField : "InfoDesc",
+			width: 350,
+			queryMode : "local",
+			allowBlank : false,
+			valueField : "InfoID",
+			name : "ContractType",
+			itemId : "ContractType"
+		},{
+			xtype : "currencyfield",
+			fieldLabel: 'مبلغ قرارداد',
+			name : "ContractAmount",
+			itemId: 'ContractAmount',
+			hideTrigger : true,
+			allowBlank : false
 		},{
 			xtype : "shdatefield",
 			fieldLabel: 'تاریخ شروع',
@@ -132,6 +237,12 @@ function NewContract() {
 			name : "ContractID"
 		}],
 		buttons: [{
+			text : 'مدارک وام',
+			iconCls : "attach",
+			itemId : "cmp_ContractDocuments",
+			disabled : true,
+			handler : function(){ NewContractObj.ContractDocuments('contract'); }
+		},'->',{
 			text: "  ذخیره",
 			handler: function () {
 				NewContractObj.SaveContract(false);
@@ -146,29 +257,47 @@ function NewContract() {
 		}]
 	});
 	
-	this.TplItemsStore = new Ext.data.Store({
-		fields: ['TemplateItemID', 'ItemName', 'ItemType'],
-		proxy: {
-			type: 'jsonp',
-			url: this.address_prefix + "../templates/templates.data.php?task=selectTemplateItems&All=true",
-			reader: {
-				root: 'rows',
-				totalProperty: 'totalCount'
-			}
-		},
-		autoLoad : true
-	});
+	if ( CKEDITOR.env.ie && CKEDITOR.env.version < 9 )
+		CKEDITOR.tools.enableHtml5Elements( document );
+
+	CKEDITOR.config.width = 790;
+	CKEDITOR.config.height = 200;
+	CKEDITOR.config.autoGrow_minHeight = 200;
+	CKEDITOR.replace('ContractEditor');
+	CKEDITOR.add;
 	
-	this.ContractStore = new Ext.data.Store({
-		fields: ['ContractID', "TemplateID", 'description', 'StartDate', "EndDate", "PersonID"],
+	this.TplItemsStore = new Ext.data.Store({
+		fields: ['TemplateItemID',"TemplateID", 'ItemName', 'ItemType'],
 		proxy: {
 			type: 'jsonp',
-			url: this.address_prefix + "contract.data.php?task=SelectContracts",
+			url: this.address_prefix + "../templates/templates.data.php?task=selectTemplateItems",
 			reader: {
 				root: 'rows',
 				totalProperty: 'totalCount'
 			}
 		}
+	});
+	
+	this.ContractStore = new Ext.data.Store({
+		fields: ['ContractID', "TemplateID", 'description', 'StartDate', "EndDate", "PersonID",
+			"content"],
+		proxy: {
+			type: 'jsonp',
+			url: this.address_prefix + "contract.data.php?task=SelectContracts&content=true",
+			reader: {
+				root: 'rows',
+				totalProperty: 'totalCount'
+			}
+		}
+	});
+	
+	this.ContractItemsStore = new Ext.data.Store({
+		proxy: {
+			type: 'jsonp',
+			url: this.address_prefix + 'contract.data.php?task=GetContractItems',
+			reader: {root: 'rows', totalProperty: 'totalCount'}
+		},
+		fields: ['ContractItemID', 'ContractID', 'TemplateItemID', 'ItemValue']
 	});
 	
 	if(this.ContractID > 0)
@@ -189,6 +318,12 @@ NewContract.prototype.LoadContract = function(){
 			me = NewContractObj;
 			record = this.getAt(0);
 			
+			me.TplItemsStore.load({
+				params : {TemplateID : record.data.TemplateID}
+			});
+			
+			me.MainForm.down("[itemId=cmp_ContractDocuments]").enable();
+			
 			record.data.StartDate = MiladiToShamsi(record.data.StartDate);
 			record.data.EndDate = MiladiToShamsi(record.data.EndDate);
 			
@@ -199,8 +334,17 @@ NewContract.prototype.LoadContract = function(){
 					params :{PersonID : record.data.PersonID}
 				});
 			
-			me.ShowTplItemsForm(record.data.TemplateID);			
-			mask1.hide();
+			me.ContractItemsStore.load({
+				params: {ContractID: record.data.ContractID},
+				callback : function(){
+					me.ShowTplItemsForm(record.data.TemplateID, true);			
+					mask1.hide();
+				}
+			});	
+			
+			
+			
+			CKEDITOR.instances.ContractEditor.setData(record.data.content);
 		}
 	});
 }
@@ -219,6 +363,9 @@ NewContract.prototype.SaveContract = function (print) {
 		
 		url: this.address_prefix + 'contract.data.php?task=SaveContract',
 		method: 'POST',
+		params : {
+			content : CKEDITOR.instances.ContractEditor.getData()
+		},
 		
 		success: function (form,action) {
 			mask.hide();
@@ -239,18 +386,18 @@ NewContract.prototype.SaveContract = function (print) {
 	});
 }
 
-NewContract.prototype.ShowTplItemsForm = function (TemplateID) {
+NewContract.prototype.ShowTplItemsForm = function (TemplateID, LoadValues) {
 
-	if (arguments.length > 1)
-		NewContractObj.LoadValues = 1;
-	else
-		NewContractObj.LoadValues = 0;
-	
 	this.MainForm.getComponent("templateItems").removeAll();
 
 	mask = new Ext.LoadMask(this.MainForm.getComponent("templateItems"), {msg:'در حال ذخيره سازي...'});
 	mask.show();
-	          
+	  
+	if(this.TplItemsStore.getCount() == 0)
+		this.TplItemsStore.load({
+			params : {TemplateID : TemplateID}
+		});
+			  
 	Ext.Ajax.request({
 		url: NewContractObj.address_prefix + '../templates/templates.data.php?task=GetTemplateContent',
 		params: {
@@ -260,6 +407,9 @@ NewContract.prototype.ShowTplItemsForm = function (TemplateID) {
 		success: function (response) {
 			me = NewContractObj;
 			var TplContent = response.responseText;
+			if(me.ContractID == "" || me.ContractID == 0)
+				CKEDITOR.instances.ContractEditor.setData(TplContent);
+			
 			var regex = new RegExp(me.TplItemSeperator);
 			var res = TplContent.split(regex);
 
@@ -272,6 +422,10 @@ NewContract.prototype.ShowTplItemsForm = function (TemplateID) {
 			{
 				if (i % 2 != 0) {
 					var num = me.TplItemsStore.find('TemplateItemID', res[i]);
+					
+					if(me.TplItemsStore.getAt(num).data.TemplateID == "0")
+						continue;
+					
 					var fieldname = me.TplItemsStore.getAt(num).data.ItemName;
 
 					var TheTplItemType = me.TplItemsStore.getAt(num).data.ItemType;
@@ -282,16 +436,19 @@ NewContract.prototype.ShowTplItemsForm = function (TemplateID) {
 						fieldLabel : fieldname,
 						hideTrigger : TheTplItemType == 'numberfield' || TheTplItemType == 'currencyfield' ? true : false
 					});
-					if (me.LoadValues > 0) {
-						var num = ValuesStore.find('TemplateItemID', res[i]);                                    
-						if (ValuesStore.getAt(num)){
+					if (LoadValues > 0) {
+						var num = me.ContractItemsStore.find('TemplateItemID', res[i]);                                    
+						if (me.ContractItemsStore.getAt(num)){
 							switch(TheTplItemType){
 								case "shdatefield" :
-									me.ResultPanel.getComponent("templateItems").getComponent('TplItem_' + res[i]).setValue(
-										MiladiToShamsi(ValuesStore.getAt(num).data.ItemValue));
+									me.MainForm.getComponent("templateItems").
+										getComponent('TplItem_' + res[i]).setValue(
+											MiladiToShamsi(me.ContractItemsStore.getAt(num).data.ItemValue));
 									break;
 								default : 
-									me.ResultPanel.getComponent("templateItems").getComponent('TplItem_' + res[i]).setValue(ValuesStore.getAt(num).data.ItemValue);                                    
+									me.MainForm.getComponent("templateItems").
+										getComponent('TplItem_' + res[i]).setValue(
+											me.ContractItemsStore.getAt(num).data.ItemValue);                                    
 							}
 						}
 					}                                
@@ -315,50 +472,45 @@ NewContract.prototype.getShdatefield = function (fieldname, ren) {
 	);
 };
 
-NewContract.prototype.getShdatefieldBtn = function (fieldname, ren) {
-	var b = Ext.create('Ext.Button', {
-		text: 'Click me',
-		iconCls: 'add',
-		renderTo: NewContractObj.get(ren),
-		handler: function () {
-			alert('You clicked the button!');
+NewContract.prototype.ContractDocuments = function(ObjectType){
+
+	if(!this.documentWin)
+	{
+		this.documentWin = new Ext.window.Window({
+			width : 720,
+			height : 440,
+			modal : true,
+			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
+			closeAction : "hide",
+			loader : {
+				url : "../../dms/documents.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.documentWin);
+	}
+
+	this.documentWin.show();
+	this.documentWin.center();
+
+	this.documentWin.loader.load({
+		scripts : true,
+		params : {
+			ExtTabID : this.documentWin.getEl().id,
+			ObjectType : ObjectType,
+			ObjectID : this.ContractID
 		}
 	});
-	returnb;
-};
-
-NewContract.prototype.LoadContractItems = function () {
-	
-        if (!this.ContractItemsStore) {
-            this.ContractItemsStore = new Ext.data.Store({
-                proxy: {
-                    type: 'jsonp',
-                    url: this.address_prefix + 'contract.data.php?task=GetContractItems',
-                    reader: {root: 'rows', totalProperty: 'totalCount'}
-                },
-                fields: ['ContractItemID', 'ContractID', 'TemplateItemID', 'ItemValue']
-            })
-        }
-        this.MainForm.getComponent('TemplateID').getStore().load({
-            callback: function (records) {
-                NewContractObj.MainForm.getComponent('TemplateID').setValue(
-					NewContractObj.MainForm.getComponent('TemplateID').getStore().getAt(0).data.TemplateID);
-            }
-        });
-
-        this.ContractItemsStore.load({
-            params: {
-                ContractID: NewContractObj.ResultPanel.getComponent('ContractID').getValue()
-            },
-            callback: function () {
-            }
-        });
-    }
+}
 </script>
 <br>
 <center>
     <div id="SelectTplComboDIV"></div>
-    <form id="TplContentForm">
-        <div id="TplContentDIV"></div>
-    </form>
+    <div id="ContractEditor"></div>
 </center>
+<br>

@@ -10,17 +10,18 @@ require_once '../templates/templates.class.php';
 
 $CntObj = new CNT_contracts($_REQUEST['ContractID']);
 
-$temp = CNT_TemplateItems::Get();
+$ContractRecord = CNT_contracts::Get(false, " AND ContractID=?", array($CntObj->ContractID));
+$ContractRecord = $ContractRecord->fetch();
+
+$temp = CNT_TemplateItems::Get(" AND TemplateID in(0,?)", array($CntObj->TemplateID));
 $TplItems = $temp->fetchAll();
 
 $TplItemsStore = array();
 foreach ($TplItems as $it) {
-    $TplItemsStore[$it['TemplateItemID']] = $it['ItemType'];
+    $TplItemsStore[$it['TemplateItemID']] = $it;
 }
 
-$obj = new CNT_templates($CntObj->TemplateID);
-$TplContent = $obj->TemplateContent;
-$res = explode(CNTconfig::TplItemSeperator, $TplContent);
+$res = explode(CNTconfig::TplItemSeperator, $CntObj->content);
 
 $CntItems = CNT_ContractItems::GetContractItems($CntObj->ContractID);
 $ValuesStore = array();
@@ -28,36 +29,30 @@ foreach ($CntItems as $it) {
     $ValuesStore[$it['TemplateItemID']] = $it['ItemValue'];
 }
 
-if (substr($TplContent, 0, 3) == CNTconfig::TplItemSeperator) {
+if (substr($CntObj->content, 0, 3) == CNTconfig::TplItemSeperator) {
     $res = array_merge(array(''), $res);
 }
 $st = '';
 for ($i = 0; $i < count($res); $i++) {
     if ($i % 2 != 0) {
-        switch ($res[$i]) {
-            case 1:
-                $st .= DateModules::miladi_to_shamsi($CntObj->StartDate);
-                break;
-            case 2:
-                $st .= DateModules::miladi_to_shamsi($CntObj->EndDate);
-                break;
-            case 3:
-                $st .= $CntObj->_PersonName;
-                break;
-
-            default :
-                switch ($TplItemsStore[$res[$i]]) {
-                    case 'numberfield':
-                        $st .= (string) $ValuesStore[$res[$i]];
-                        break;
-                    case 'textfield':
-                        $st .= $ValuesStore[$res[$i]];
-                        break;
-                    case 'shdatefield':
-                        $st .= DateModules::miladi_to_shamsi($ValuesStore[$res[$i]]);
-                        break;
-                }
-        }
+		if(!isset($ValuesStore[$res[$i]]))
+		{
+			 $st .= $ContractRecord [ $TplItemsStore[ $res[$i] ]["FieldName"] ];
+		}
+		else
+		{
+			switch ($TplItemsStore[$res[$i]]["ItemType"]) {
+				case 'numberfield':
+					$st .= (string) $ValuesStore[$res[$i]];
+					break;
+				case 'textfield':
+					$st .= $ValuesStore[$res[$i]];
+					break;
+				case 'shdatefield':
+					$st .= DateModules::miladi_to_shamsi($ValuesStore[$res[$i]]);
+					break;
+			}
+		}
     } else {
         $st .= $res[$i];
     }
@@ -70,31 +65,58 @@ for ($i = 0; $i < count($res); $i++) {
         .noPrint {display:none;}
     </style>
     <style type="text/css">
-        body {font-family: bnazanin;font-size: 10pt;}
-        td	 {padding: 4px 30px 10px 30px;font-size: 11pt; text-indent : 20px; text-align: justify; line-height : 2;}
-    </style>
+        body {font-family: bnazanin;font-size: 10pt;margin: 20px}
+        td	 {
+			padding: 4px 30px 10px 30px;
+			font-size: 11pt; 
+			/*text-indent : 20px; */
+			text-align: justify; 
+			line-height : 2;}
+		table { page-break-inside:auto }
+		tr    { /*page-break-inside:avoid;*/ page-break-after:auto }
+		thead { display:table-header-group }
+		tfoot { display:table-footer-group }
+	</style>
 </head>
 
 <body dir="rtl">
-    <br><br>
-    <table style='border:2px dashed #AAAAAA;border-collapse:collapse;width:21cm' align='center'><tr>
-            <td width=200px style='padding:10px 0px 0px 0px !important;'><img style="width:150px" src='../../framework/icons/logo.jpg'></td>
-            <td align='center' style='font-family:b titr;font-size:15px;text-align:center !important;'>
-                <b><?php
-                    echo $obj->TemplateTitle;
-                    echo '<br>';
-                    echo $CntObj->description;
-                    ?></b>
-            </td>
-            <td width=200px style='padding:10px 0px 0px 0px !important;'>
-				شماره قرارداد : <?= $CntObj->ContractID ?><br>
-				تاریخ ثبت قرارداد :  <?= DateModules::miladi_to_shamsi($CntObj->RegDate) ?>
+    <table style='border:2px dashed #AAAAAA;border-collapse:collapse;width:19cm;height:100%' align='center'>
+		<thead>
+			<tr style="margin-top:40px">
+				<td width=180px style='text-indent : 0;padding:0; '>
+					<img style="width:150px" src='../../framework/icons/logo.jpg'></td>
+				<td align='center' style='font-family:BTitr;font-size:18px;text-align:center !important;'>
+					<b><?php
+						echo $CntObj->_TemplateTitle;
+						echo '<br>';
+						echo $CntObj->description;
+						?></b>
+				</td>
+				<td width=180px style='text-align:center;text-indent : 0;padding:0'>
+					شماره قرارداد : <?= $CntObj->ContractID ?><br>
+					تاریخ ثبت قرارداد :  <?= DateModules::miladi_to_shamsi($CntObj->RegDate) ?>
+				</td>
+			</tr>
+		</thead>
+		<tfoot>
+			<tr>
+				<td colspan="3" style="padding:0;height:150px;padding-right:20px;padding-left: 20px;">
+					<hr>
+					<b>نشانی :</b><br>
+					<b>شعبه پارک علم و فناوری خراسان : </b> مشهد، کیلومتر 12 جاده قوچان، روبروی شیر پگاه
+					<b> تلفن : 5003441 - فکس : 5003409 </b>
+					<br>
+					<b>شعبه دانشگاه فردوسی مشهد : </b>پردیس، درب غربی( ورودی شهید باهنر ) 
+					<b>تلفن : 38837392 - فکس : 38837392</b>
+					<br>سایت : <b>www.krrtf.ir</b>
+					<br>ایمیل : <b>krfn.ir@gmail.com</b>
+				</td>
+			</tr>
+		</tfoot>
+		<tr>
+			<td colspan="3" style="vertical-align: top">
+				<?= $st ?>
 			</td>
-        </tr>
-
-        <?php
-        echo "<tr><td colspan=3>";
-        echo $st;
-        echo "</td></tr></table>";
-        die();
-        ?>
+		</tr>
+	</table>
+</body>
