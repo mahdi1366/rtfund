@@ -120,8 +120,8 @@ foreach($dt as $row)
 						<td align="center">
 						</td>
 						<td style="width:146px;line-height: 32px; vertical-align:top; padding-top:33px">
-							 <b><span dir=ltr><?= $letterYear . "-" . $LetterObj->LetterID ?></span></b><br>
-							<b><?= DateModules::miladi_to_shamsi($LetterObj->LetterDate) ?></b>
+							 <b><span dir=ltr><?= $letterYear . "-" . $LetterObj->LetterID ?></span></b>
+							 <br><b><?= DateModules::miladi_to_shamsi($LetterObj->LetterDate) ?></b>
 						</td>
 					</tr>
 					</thead>
@@ -146,8 +146,11 @@ foreach($dt as $row)
 							<b>بسمه تعالی</b>
 						</td>
 						<td style="width:200px;line-height: 25px;">
-							شماره نامه : <b>  <?= "<span dir=ltr>" . $letterYear . "-" . $LetterObj->LetterID."</span>" ?></b><br>
-							تاریخ نامه : <b><?= DateModules::miladi_to_shamsi($LetterObj->LetterDate) ?></b>
+						شماره نامه : <b>  <?= "<span dir=ltr>" . $letterYear . "-" . $LetterObj->LetterID."</span>" ?></b>
+						<br>تاریخ نامه : <b><?= DateModules::miladi_to_shamsi($LetterObj->LetterDate) ?></b>
+						<?if($LetterObj->LetterType == "INCOME"){?> 
+						<br>شماره نامه وارده : <b><?= $LetterObj->InnerLetterNo ?></b>
+							<?}?>
 						</td>
 					</tr>
 					</thead>

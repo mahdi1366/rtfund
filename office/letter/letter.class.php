@@ -17,6 +17,7 @@ class OFC_letters extends PdoDataAccess{
 	public $OrgPost;
 	public $SignerPersonID;
 	public $IsSigned;
+	public $InnerLetterNo;
 
     function __construct($LetterID = ""){
 		$this->DT_LetterDate = DataMember::CreateDMA(DataMember::DT_DATE);

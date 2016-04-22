@@ -24,8 +24,13 @@ if(!empty($_REQUEST["SendID"]))
 $letterYear = substr(DateModules::miladi_to_shamsi($LetterObj->LetterDate),0,4);
 
 $content = "<br><div style=margin-left:30px;float:left; >شماره نامه : " . 
-	"<span dir=ltr>" . $letterYear . "-" . $LetterObj->LetterID . "</span><br>تاریخ نامه : " . 
-	DateModules::miladi_to_shamsi($LetterObj->LetterDate) . "</div><br><br>";
+	"<span dir=ltr>" . $letterYear . "-" . $LetterObj->LetterID . "</span>". 
+	"<br>تاریخ نامه : " . DateModules::miladi_to_shamsi($LetterObj->LetterDate);
+
+if($LetterObj->LetterType == "INCOME")
+	$content .= "<br>شماره نامه وارده : " . $LetterObj->InnerLetterNo;
+
+$content .= "</div><br><br>";
 
 $content .= "<b><br><div align=center>بسمه تعالی</div><br>";
 $dt = PdoDataAccess::runquery("

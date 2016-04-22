@@ -9,6 +9,10 @@ insert into WFM_flows values(2, 2, 'گردش قرارداد', 'YES')
 
 
 
+ALTER TABLE `krrtfir_rtfund`.`OFC_letters` ADD COLUMN `InnerLetterNo` VARCHAR(45) AFTER `IsSigned`;
+ALTER TABLE `krrtfir_rtfund`.`OFC_send` MODIFY COLUMN `SendComment` VARCHAR(1000) CHARACTER SET utf8 COLLATE utf8_general_ci;
+
+
 
 CREATE TABLE  `krrtfir_rtfund`.`ATN_traffic` (
   `TrafficID` int(10) unsigned NOT NULL AUTO_INCREMENT,

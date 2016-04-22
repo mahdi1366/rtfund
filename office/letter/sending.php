@@ -195,6 +195,10 @@ SendLetter.prototype.SendingLetter = function(){
 			mask.hide();
 			SendLetterObject.parent.hide();
 			eval("SendLetterObject.AfterSendHandler();");
+		},
+		failure : function(){
+			mask.hide();
+			Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
 		}
 	});
 }

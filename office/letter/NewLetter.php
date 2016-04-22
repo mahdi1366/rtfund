@@ -44,7 +44,7 @@ Letter.prototype.LoadLetter = function(){
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
 		fields : ["LetterID","LetterType","LetterTitle","SubjectID","summary","context", 
-			"SignerPersonID", "organization","OrgPost"],
+			"SignerPersonID", "organization","OrgPost","InnerLetterNo"],
 		autoLoad : true,
 		listeners : {
 			load : function(){
@@ -124,7 +124,21 @@ Letter.prototype.BuildForms = function(){
 				xtype : "radio",
 				boxLabel: 'نامه وارده',
 				name: 'LetterType',
-				inputValue: 'INCOME'
+				inputValue: 'INCOME',
+				listeners : {
+					change : function(){
+						if(this.checked)
+							this.up('form').down("[name=InnerLetterNo]").enable();
+						else
+							this.up('form').down("[name=InnerLetterNo]").disable();
+					}
+				}				
+			},{
+				xtype : "textfield",
+				labelWidth : 40,
+				fieldLabel : "شماره",
+				name : "InnerLetterNo",
+				disabled : true
 			}]
 		},{
 			xtype : "textfield",
