@@ -48,7 +48,7 @@ class BSC_persons extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery_fetchMode("select 
-			p.PersonID, '' UserPass,
+			p.*, '' UserPass,
 			if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname, DomainDesc
 			from BSC_persons p
 				left join BSC_posts using(PostID)

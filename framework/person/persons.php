@@ -81,7 +81,7 @@ if($accessObj->RemoveFlag)
 $dg->height = 500;
 $dg->pageSize = 15;
 $dg->width = 750;
-$dg->DefaultSortField = "IsActive";
+$dg->DefaultSortField = "fullname";
 $dg->DefaultSortDir = "ASC";
 $dg->autoExpandColumn = "fullname";
 $dg->emptyTextOfHiddenColumns = true;

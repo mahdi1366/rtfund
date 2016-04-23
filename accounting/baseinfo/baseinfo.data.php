@@ -350,7 +350,7 @@ function DeleteBank() {
 
 function SelectAccounts() {
 	
-    $where = "IsActive='YES' AND BranchID=" . $_SESSION["accounting"]["BranchID"];
+    $where = "IsActive='YES' ";
 	$param = array();
     
 	$field = false;

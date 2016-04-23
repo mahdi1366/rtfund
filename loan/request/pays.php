@@ -99,7 +99,7 @@ if($editable)
 if($editable)
 {
 	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(store,record){return LoanPayObject.SavePartPayment(store,record);}";
+	$dg->rowEditOkHandler = "function(store,record){return LoanPayObject.BeforeSave(store,record);}";
 	
 	$dg->addButton("AddBtn", "ایجاد ردیف پرداخت", "add", "function(){LoanPayObject.AddPay();}");
 	
@@ -266,7 +266,54 @@ LoanPay.DeleteRender = function(v,p,r){
 
 var LoanPayObject = new LoanPay();
 	
-LoanPay.prototype.SavePartPayment = function(store, record){
+LoanPay.prototype.BeforeSave = function(store, record){
+	
+	if(!this.BankWin)
+	{
+		this.BankWin = new Ext.window.Window({
+			width : 200,
+			height : 100,
+			modal : true,
+			closeAction : "hide",
+			items : [{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["TafsiliID","TafsiliDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=3',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}),
+				emptyText:'انتخاب بانک ...',
+				typeAhead: false,
+				pageSize : 10,
+				valueField : "TafsiliID",
+				itemId : "TafsiliID",
+				displayField : "TafsiliDesc"
+			}],
+			buttons :[{
+				text : "ذخیره",
+				iconCls : "save",
+				itemId : "btn_save"
+			},{
+				text : "انصراف",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide(); LoanPayObject.grid.getStore().load();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.BankWin);
+	}
+	
+	if(record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
+	
+	this.BankWin.show();
+	this.BankWin.down("[itemId=btn_save]").setHandler(function(){ 
+		LoanPayObject.BankWin.hide();
+		LoanPayObject.SavePartPayment(LoanPayObject.BankWin.down("[itemId=TafsiliID]").getValue(), record); });
+}
+	
+LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
@@ -276,6 +323,7 @@ LoanPay.prototype.SavePartPayment = function(store, record){
 		method: "POST",
 		params: {
 			task: "SavePartPay",
+			BankTafsili : BankTafsili,
 			record: Ext.encode(record.data)
 		},
 		success: function(response){

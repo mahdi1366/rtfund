@@ -231,7 +231,7 @@ function DeleteRequest(){
 	die();
 }
 
-function ChangeStatus($RequestID, $StatusID, $StepComment = "", $LogOnly = false, $pdo = null){
+function ChangeStatus($RequestID, $StatusID, $StepComment = "", $LogOnly = false, $pdo = null, $UpdateOnly = false){
 	
 	if(!$LogOnly)
 	{
@@ -241,18 +241,28 @@ function ChangeStatus($RequestID, $StatusID, $StepComment = "", $LogOnly = false
 		if(!$obj->EditRequest($pdo))
 			return false;
 	}
-	PdoDataAccess::runquery("insert into LON_ReqFlow(RequestID,PersonID,StatusID,ActDate,StepComment) 
+	if(!$UpdateOnly)
+	{
+		PdoDataAccess::runquery("insert into LON_ReqFlow(RequestID,PersonID,StatusID,ActDate,StepComment) 
 		values(?,?,?,now(),?)", array(
 			$RequestID,
 			$_SESSION["USER"]["PersonID"],
 			$StatusID,
 			$StepComment
 		), $pdo);
-	
+	}
 	return ExceptionHandler::GetExceptionCount() == 0;
 }
 
 function ChangeRequestStatus(){
+	
+	if($_POST["StatusID"] == "11")
+	{
+		$result = ChangeStatus($_POST["RequestID"],$_POST["StatusID"],$_POST["StepComment"], true);
+		$result = ChangeStatus($_POST["RequestID"],1,$_POST["StepComment"], false, null, true);
+		Response::createObjectiveResponse($result, "");
+		die();
+	}
 	
 	$result = ChangeStatus($_POST["RequestID"],$_POST["StatusID"],$_POST["StepComment"]);
 	Response::createObjectiveResponse($result, "");

@@ -113,53 +113,14 @@ MyRequest.OperationRender = function(v,p,record){
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;height:16;float:right'></div>";
 	}
+	if(MyRequestObject.User == "Agent" && record.data.StatusID == "10")
+	{
+		str += "<div  title='برگشت درخواست' class='return' onclick='MyRequestObject.ChangeStatus(11);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16;float:right'></div>";
+	}
 	
 	return str;
-}
-
-MyRequest.prototype.OperationMenu = function(e){
-
-	record = this.grid.getSelectionModel().getLastSelected();
-	var op_menu = new Ext.menu.Menu();
-	
-	if(this.User == "Customer" && (record.data.StatusID == "40" || record.data.StatusID == "60"))
-	{
-		op_menu.add({text: 'تایید تکمیل مدارک',iconCls: 'tick', 
-		handler : function(){ return MyRequestObject.ChangeStatus(50); }});
-	}	
-	if(this.User == "Customer" && record.data.StatusID == "60")
-	{
-		op_menu.add({text: "دلیل رد مدارک",iconCls: 'comment', 
-		handler : function(){ return MyRequestObject.ShowComment(); }});
-	}	
-	
-	if(this.User == "Customer" && record.data.LoanID > 0 && record.data.StatusID == "10")
-	{
-		op_menu.add({text: 'اطلاعات وام',iconCls: 'info2', 
-		handler : function(){ return MyRequestObject.EditRequest(false); }});
-	}
-	else
-		op_menu.add({text: 'اطلاعات وام',iconCls: 'info2',	
-		handler : function(){ return MyRequestObject.EditRequest(true); }});
-	
-	
-	
-	op_menu.add({text: 'مدارک وام',iconCls: 'attach', 
-		handler : function(){ return MyRequestObject.LoadAttaches(); }});
-	
-	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
-		handler : function(){ return MyRequestObject.ShowHistory(); }});
-	
-	if(record.data.StatusID == "1")
-	{
-		op_menu.add({text: 'ویرایش درخواست',iconCls: 'edit', 
-		handler : function(){ return MyRequestObject.EditRequest(); }});
-	
-		op_menu.add({text: 'حذف درخواست',iconCls: 'remove',
-		handler : function(){ return MyRequestObject.DeleteRequest(); }});
-	}
-	
-	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
 MyRequest.prototype.EditRequest = function(HavePart){
@@ -277,8 +238,12 @@ MyRequest.prototype.LoadAttaches = function(){
 
 MyRequest.prototype.ChangeStatus = function(StatusID){
 	
-	Ext.MessageBox.confirm("","پس از تایید دیگر قادر به تغییر در اطلاعات نمی باشید<br>" +
-		"آیا مایل به تایید می باشید؟",function(btn){
+	message = "پس از تایید دیگر قادر به تغییر در اطلاعات نمی باشید<br>" +"آیا مایل به تایید می باشید؟";
+	
+	if(StatusID == 11)
+		message = "آیا مایل به برگشت درخواست می باشید?";
+	
+	Ext.MessageBox.confirm("",message, function(btn){
 		if(btn == "no")
 			return;
 		
@@ -292,7 +257,7 @@ MyRequest.prototype.ChangeStatus = function(StatusID){
 			methos : "post",
 			url : me.address_prefix + "request.data.php",
 			params : {
-				task : "ChangeRequesrStatus",
+				task : "ChangeRequestStatus",
 				RequestID : record.data.RequestID,
 				StatusID : StatusID,
 				desc : ""

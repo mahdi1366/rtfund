@@ -109,7 +109,8 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 							PersonID : record.data.LoanPersonID
 						},
 						callback : function(){
-							me.companyPanel.down("[name=LoanPersonID]").setValue(this.getAt(0).data.PersonID);
+							if(this.getCount() > 0)
+								me.companyPanel.down("[name=LoanPersonID]").setValue(this.getAt(0).data.PersonID);
 						}
 					});
 				}	
@@ -122,7 +123,8 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 							PersonID : record.data.ReqPersonID
 						},
 						callback : function(){
-							me.companyPanel.down("[name=ReqPersonID]").setValue(this.getAt(0).data.PersonID);
+							if(this.getCount() > 0)
+								me.companyPanel.down("[name=ReqPersonID]").setValue(this.getAt(0).data.PersonID);
 						}
 					});
 					
@@ -131,7 +133,8 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 							PersonID : record.data.ReqPersonID
 						},
 						callback : function(){
-							me.companyPanel.down("[itemId=cmp_subAgent]").setValue(this.getAt(0).data.record.data.SubAgentID);
+							if(this.getCount() > 0)
+								me.companyPanel.down("[itemId=cmp_subAgent]").setValue(this.getAt(0).data.SubAgentID);
 						}
 					});					
 				}				
