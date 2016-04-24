@@ -342,9 +342,9 @@ NewContract.prototype.LoadContract = function(){
 				}
 			});	
 			
-			
-			
-			CKEDITOR.instances.ContractEditor.setData(record.data.content);
+			CKEDITOR.instances.ContractEditor.on('instanceReady', function( ev ) {
+				ev.editor.setData(record.data.content);
+			});
 		}
 	});
 }

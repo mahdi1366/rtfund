@@ -22,9 +22,10 @@ class CNT_templates extends OperationClass {
     public function Remove($pdo = null){
         $res = parent::runquery("select count(*) from CNT_contracts where TemplateID = ? limit 1",
 				array($this->TemplateID),$pdo);
-        if ($res[0]['count(*)']>0){
-            throw new Exception(self::UsedTemplate);
-            //parent::PushException("used");            return false;
+        if ($res[0]['count(*)']>0)
+		{
+			parent::runquery("update " . static::TableName . " set IsActive='NO' where TemplateID=?", array($this->TemplateID));
+			return ExceptionHandler::GetExceptionCount() == 0;
         }
         return parent::Remove($pdo);
     }    

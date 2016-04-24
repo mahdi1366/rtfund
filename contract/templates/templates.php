@@ -75,27 +75,40 @@ Templates.prototype.EditItem = function () {
 }
 
 Templates.prototype.RemoveItem = function () {
+	
+	Ext.MessageBox.confirm("","آیا مایل به حذف الگو می باشید؟", function(btn){
+		
+		if(brn == "no")
+			return;
+		
+		me = TemplatesObject;
+		mask = new Ext.LoadMask(TemplatesObject.grid, {msg:'در حال حذف...'});
+		mask.show();
+	
 		Ext.Ajax.request({
-		url: TemplatesObject.address_prefix + 'templates.data.php?task=deleteTemplate',
-		params: {                
-			TemplateID: TemplatesObject.grid.getSelectionModel().getLastSelected().data.TemplateID            
-		},
-		method: 'POST',
-		success: function (res) {
-			var sd = Ext.decode(res.responseText);
-			if (!sd.success) {
-				if (sd.data != '')
-					if (sd.data=='used')
-						Ext.MessageBox.alert('', 'الگو استفاده شده است و قابل حذف نیست'); 
+			url: me.address_prefix + 'templates.data.php?task=deleteTemplate',
+			params: {                
+				TemplateID: me.grid.getSelectionModel().getLastSelected().data.TemplateID            
+			},
+			method: 'POST',
+			success: function (res) {
+				mask.hide();
+				var sd = Ext.decode(res.responseText);
+				if (!sd.success) {
+					if (sd.data != '')
+						if (sd.data=='used')
+							Ext.MessageBox.alert('', 'الگو استفاده شده است و قابل حذف نیست'); 
+						else
+							Ext.MessageBox.alert('', sd.data); 
 					else
-						Ext.MessageBox.alert('', sd.data); 
-				else
-					Ext.MessageBox.alert('', 'خطا در اجرای عملیات');
-				return;
+						Ext.MessageBox.alert('', 'خطا در اجرای عملیات');
+					return;
+				}
+				TemplatesObject.grid.getStore().load();
 			}
-			TemplatesObject.grid.getStore().load();
-		}
+		});
 	});
+		
 }
 
 </script>

@@ -13,7 +13,7 @@ if (!empty($_REQUEST['TemplateID']))
 else
     $TemplateID = GetEmptyTemplateID();
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "templates.data.php?task=selectTemplateItems", "div_dg");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "templates.data.php?task=selectTemplateItems&NotGlobal=true", "div_dg");
 
 $dg->addColumn("", "TemplateID", "", true);
 
@@ -96,7 +96,7 @@ function NewTemplate() {
 	this.mask.show();
 	this.LoadTemplate();
 }
-var aaaaa;
+
 NewTemplate.prototype.LoadTemplate = function(){
 		
 	this.store = new Ext.data.Store({
@@ -114,9 +114,12 @@ NewTemplate.prototype.LoadTemplate = function(){
 				//..........................................................
 				record = this.getAt(0);
 				me.formPanel.loadRecord(record);
-				aaaaa = record.data.content;
-				CKEDITOR.instances.TemplateEditor.setData(record.data.content);
-				NewTemplateObj.mask.hide();
+				
+				CKEDITOR.instances.TemplateEditor.on('instanceReady', function( ev ) {
+					ev.editor.setData(record.data.content);
+					NewTemplateObj.mask.hide();
+										
+				});			
 			}
 		}
 	});
@@ -153,12 +156,23 @@ NewTemplate.prototype.BuildForms = function(){
 							'&TemplateID=' + this.TemplateID,
 						reader: {root: 'rows', totalProperty: 'totalCount'}
 					},
-					fields: ['TemplateItemID', 'ItemName', 'ItemType']
+					fields: ['TemplateItemID', "TemplateID", 'ItemName', 'ItemType'],
+					pageSize : 10
 				}),
 				displayField: 'ItemName',
+				pageSize : 10,
 				valueField: "TemplateItemID",
 				itemId : "TemplateItemID",
 				width: 400,
+				tpl : new Ext.XTemplate(
+					'<tpl for=".">',
+						'<tpl if="TemplateID == 0">',
+							'<div class="x-boundlist-item" style="background-color:#fcfcb6">{ItemName}</div>',
+						'<tpl else>',
+							'<div class="x-boundlist-item">{ItemName}</div>',
+						'</tpl>',						
+					'</tpl>'
+				),
 				listeners: {
 					select: function (combo, records) {
 						this.collapse();

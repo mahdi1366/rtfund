@@ -14,7 +14,8 @@ if(!empty($_REQUEST["task"]))
       $_REQUEST["task"]();
 
 function SelectTemplates() {
-    $where = '';
+    $where = " AND IsActive='YES'";
+	
     $whereParams = array();
     if (!empty($_REQUEST['TemplateID'])) {
         $where = " AND TemplateID = :TemplateID";
@@ -45,8 +46,20 @@ function selectTemplateItems() {
 		$params[":t"] = $_REQUEST["TemplateID"];
 	}
 	
+	if(!empty($_GET["query"]))
+	{
+		$field = empty($_GET["field"]) ? "" : $_GET["field"];
+	}
+	
+	if(!empty($_REQUEST["NotGlobal"]))
+		$where .= " AND TemplateID >0";
+	
     $temp = CNT_TemplateItems::Get($where . " order by TemplateItemID", $params);
-    $res = $temp->fetchAll();
+	
+	if(!empty($_REQUEST["limit"]))
+		$res = PdoDataAccess::fetchAll ($temp, $_GET["start"], $_GET["limit"]);
+	else
+		$res = $temp->fetchAll();
 	
     echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
     die();

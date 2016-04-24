@@ -666,7 +666,7 @@ function ComputeInstallments(){
 	die();
 }
 
-function SavePartPayment(){
+function SaveInstallment(){
 	
 	$obj = new LON_installments();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
@@ -798,7 +798,7 @@ function SavePartPay(){
 	}
 	if(empty($obj->ChequeNo) || $obj->ChequeStatus == "2")
 	{
-		if(!RegisterCustomerPayDoc($obj, $pdo))
+		if(!RegisterCustomerPayDoc($obj, $_POST["BankTafsili"],  $pdo))
 		{
 			$pdo->rollback();
 			//print_r(ExceptionHandler::PopAllExceptions());

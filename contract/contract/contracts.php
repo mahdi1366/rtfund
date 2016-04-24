@@ -14,7 +14,7 @@ $dg->addColumn("", "TemplateID", "", true);
 $dg->addColumn("", "IsStarted", "", true);
 $dg->addColumn("", "IsEnded", "", true);
 $dg->addColumn("", "RegDate", "", true);
-
+$dg->addColumn("", "StatusID", "", true);
 
 $col = $dg->addColumn("شماره قرارداد", "ContractID");
 $col->align = "center";
@@ -34,7 +34,9 @@ $col->width = 80;
 $col = $dg->addColumn("طرف قرارداد", "PersonFullname");
 $col->ellipsis = 60;
 
-$col = $dg->addColumn("وضعیت", "StepDesc");
+$col = $dg->addColumn("وضعیت تایید", "StepDesc");
+
+$col = $dg->addColumn("وضعیت", "StatusDesc");
 
 $col = $dg->addColumn("", "TemplateID");
 $col->renderer = "ManageContractsObj.OperationRender";
@@ -59,6 +61,13 @@ $grid = $dg->makeGrid_returnObjects();
 	{
 		if(record.data.IsEnded == "YES")
 			return "greenRow";
+		
+		if(record.data.StatusID == "2")
+			return "pinkRow";
+		
+		if(record.data.StatusID == "3")
+			return "violetRow";
+		
 		return "";
 	}	
     ManageContractsObj.grid.render(ManageContractsObj.get("div_dg"));

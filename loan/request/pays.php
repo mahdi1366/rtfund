@@ -306,6 +306,10 @@ LoanPay.prototype.BeforeSave = function(store, record){
 	}
 	
 	if(record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
+	{
+		LoanPayObject.SavePartPayment("", record);
+		return;
+	}
 	
 	this.BankWin.show();
 	this.BankWin.down("[itemId=btn_save]").setHandler(function(){ 

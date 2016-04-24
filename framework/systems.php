@@ -122,7 +122,7 @@ $_SESSION['USER']["RecentSystems"] = array();
 
 					echo "
 						<div class=system onclick=\"OpenSystem('" . $systems[$i]["SystemID"] . "','" . $systems[$i]["SysPath"] . "')\" >" .
-							"<div class=SystemIcon style=background-image:url('icons/SysIcons/" . $systems[$i]["SysPath"]  . ".png')></div>" . 
+							"<div class=SystemIcon style=background-image:url('icons/SysIcons/" . $systems[$i]["SysIcon"]  . "')></div>" . 
 							"<div class=SystemDesc><div class=SystemTitle>" . $systems[$i]["SysName"] . "</div></div></div>";
 				}
 				if (count($systems) % 4 != 0)

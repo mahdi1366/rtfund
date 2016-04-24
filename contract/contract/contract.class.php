@@ -24,6 +24,7 @@ class CNT_contracts extends OperationClass {
 	public $ContractType;
 	public $LoanRequestID;
 	public $ContractAmount;
+	public $StatusID;
 
 	public $_TemplateTitle;
 	public $_PersonName;
@@ -55,7 +56,9 @@ class CNT_contracts extends OperationClass {
 				c.PersonID,
 				c.PersonID2,
 				c.StartDate,
-				c.EndDate," .
+				c.EndDate,
+				c.StatusID,
+				bf.InfoDesc StatusDesc," .
 				($content ? "c.content," : "") .
 				"c.ContractType,
 				c.LoanRequestID,
@@ -73,6 +76,7 @@ class CNT_contracts extends OperationClass {
 			
 			from CNT_contracts c 
 			join CNT_templates t using(TemplateID) 
+			join BaseInfo bf on(TypeID=19 AND StatusID=InfoID)
 			left join LON_requests r on(LoanRequestID=RequestID)
 			left join LON_ReqParts rp on(rp.RequestID=r.RequestID)
 			left join BSC_persons p1 on(c.PersonID=p1.PersonID)

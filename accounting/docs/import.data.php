@@ -840,7 +840,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	return true;
 }
 
-function RegisterCustomerPayDoc($PayObj, $pdo){
+function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 	
 	/*@var $PayObj LON_pays */
 	
@@ -908,11 +908,6 @@ function RegisterCustomerPayDoc($PayObj, $pdo){
 		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 	}
-	/*if($LoanMode == "Supporter")
-	{
-		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID2 = $SupporterTafsili;
-	}*/
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_INSTALLMENT_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
@@ -934,6 +929,8 @@ function RegisterCustomerPayDoc($PayObj, $pdo){
 	$itemObj->DebtorAmount= $PayObj->PayAmount;
 	$itemObj->CreditorAmount = 0;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
+	if($BankTafsili != "")
+		$itemObj->TafsiliID = $BankTafsili;
 	$itemObj->Add($pdo);
 	
 	if($LoanMode == "Agent")

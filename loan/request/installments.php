@@ -48,7 +48,7 @@ if($editable)
 	$dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", 
 			"function(){InstallmentObject.ComputeInstallments();}");
 	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SavePartPayment(store,record);}";
+	$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SaveInstallment(store,record);}";
 }
 
 if($framework)
@@ -264,7 +264,7 @@ Installment.prototype.ComputeInstallments = function(){
 	
 }
 
-Installment.prototype.SavePartPayment = function(store, record){
+Installment.prototype.SaveInstallment = function(store, record){
 
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
@@ -273,7 +273,7 @@ Installment.prototype.SavePartPayment = function(store, record){
 		url: this.address_prefix +'request.data.php',
 		method: "POST",
 		params: {
-			task: "SavePartPayment",
+			task: "SaveInstallment",
 			record: Ext.encode(record.data)
 		},
 		success: function(response){
