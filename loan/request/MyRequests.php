@@ -211,7 +211,7 @@ MyRequest.prototype.LoadAttaches = function(){
 			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
 			closeAction : "hide",
 			loader : {
-				url : "../../dms/documents.php",
+				url : "../../office/dms/documents.php",
 				scripts : true
 			},
 			buttons :[{

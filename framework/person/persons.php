@@ -11,7 +11,7 @@ require_once 'persons.js.php';
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
-$dg = new sadaf_datagrid("dg",$js_prefix_address . "persons.data.php?task=selectPersons", "div_grid_persons");
+$dg = new sadaf_datagrid("dg",$js_prefix_address . "persons.data.php?task=selectPersons&full=true", "div_grid_persons");
 
 $dg->addColumn("","PersonID","string", true);
 $dg->addColumn("","IsReal","string", true);
@@ -53,6 +53,11 @@ $col->align = "center";
 $col->width = 35;
 
 $col = $dg->addColumn("<font style=font-size:10px>حامی</font>","IsSupporter","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>کارشناس</font>","IsExpert","string");
 $col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
 $col->align = "center";
 $col->width = 35;

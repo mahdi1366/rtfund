@@ -4,22 +4,23 @@
 //	Date		: 1394.12
 //-----------------------------
 
-require_once 'header.inc.php';
+require_once '../header.inc.php';
 require_once inc_dataGrid;
 require_once 'plan.class.php';
 
-$dt = PLN_plans::SelectAll("PersonID=? AND StatusID<>100", array($_SESSION["USER"]["PersonID"]));
+$dt = PLN_plans::SelectAll("p.PersonID=? AND p.StepID<>" . STEPID_END, array($_SESSION["USER"]["PersonID"]));
 $dt = $dt->fetchAll();
-$Mode = count($dt) == 0 ? "new" : ($dt[0]["StatusID"] == "1" ? "edit" : "list");
+$Mode = count($dt) == 0 ? "new" : ($dt[0]["StepID"] == STEPID_RAW ? "edit" : "list");
 
 $PlanID = $Mode == "new" ? "0" : $dt[0]["PlanID"];
 $PlanDesc = $Mode == "new" ? "" : $dt[0]["PlanDesc"];
+$LoanID = $Mode == "new" ? "" : $dt[0]["LoanID"];
 
 //.............................................
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "plan.data.php?task=SelectMyPlans", "grid_div");
 
-$dg->addColumn("", "StatusID", "", true);
+$dg->addColumn("", "StepID", "", true);
 
 $col = $dg->addColumn("شماره درخواست", "PlanID", "");
 $col->width = 100;
@@ -30,7 +31,7 @@ $col = $dg->addColumn("عنوان طرح", "PlanDesc", "");
 $col = $dg->addColumn("تاریخ درخواست", "RegDate", GridColumn::ColumnType_date);
 $col->width = 110;
 
-$col = $dg->addColumn("وضعیت", "StatusDesc", "");
+$col = $dg->addColumn("وضعیت", "StepDesc", "");
 $col->width = 120;
 
 $col = $dg->addColumn('عملیات', '', 'string');
@@ -60,6 +61,7 @@ NewPlan.prototype = {
 
 	PlanID : <?= $PlanID ?>,
 	PlanDesc : '<?= $PlanDesc ?>',
+	LoanID : '<?= $LoanID ?>',
 	Mode : '<?= $Mode ?>',
 	
 	get : function(elementID){
@@ -74,6 +76,7 @@ function NewPlan(){
 		this.planFS = new Ext.form.FieldSet({
 			title : "ثبت طرح جدید",
 			width : 700,
+			layout : "vbox",
 			renderTo : this.get("div_plan"),
 			items : [{
 				xtype : "textfield",
@@ -81,6 +84,23 @@ function NewPlan(){
 				name : "PlanDesc",
 				width : 600,
 				value : this.PlanDesc
+			},{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../loan/loan.data.php?task=GetAllLoans&IsPlan=true',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields : ['LoanID','LoanDesc'],
+					autoLoad : true					
+				}),
+				fieldLabel : "وام درخواستی",
+				queryMode : 'local',
+				displayField : "LoanDesc",
+				valueField : "LoanID",
+				name : "LoanID",
+				value : this.LoanID
 			},{
 				xtype : "button",
 				text : this.PlanID == 0 ? "ثبت طرح و تکمیل جداول اطلاعاتی" : "ویرایش جداول اطلاعاتی",
@@ -97,7 +117,7 @@ function NewPlan(){
 	this.grid = <?= $grid ?>;
 	this.grid.getView().getRowClass = function(record, index)
 	{
-		if(record.data.StatusID == "3")
+		if(record.data.StepID == <?= STEPID_REJECT ?>)
 			return "pinkRow";
 
 		return "";
@@ -134,14 +154,15 @@ NewPlan.prototype.SaveNewPlan = function(){
 		params : {
 			task : "SaveNewPlan",
 			PlanID : this.PlanID,
-			PlanDesc : this.planFS.down("[name=PlanDesc]").getValue()
+			PlanDesc : this.planFS.down("[name=PlanDesc]").getValue(),
+			LoanID : this.planFS.down("[name=LoanID]").getValue()
 		},
 
 		success : function(response){
 			mask.hide();
 			result = Ext.decode(response.responseText);
 			if(result.success)
-				portal.OpenPage("../plan/PlanInfo.php", {PlanID : result.data});
+				portal.OpenPage("/loan/plan/PlanInfo.php", {PlanID : result.data});
 			else
 				Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
 		}
@@ -152,7 +173,7 @@ NewPlan.prototype.SaveNewPlan = function(){
 NewPlan.prototype.ShowPlanInfo = function(){
 	
 	record = this.grid.getSelectionModel().getLastSelected();
-	portal.OpenPage("../plan/PlanInfo.php", {PlanID : record.data.PlanID});
+	portal.OpenPage("/loan/plan/PlanInfo.php", {PlanID : record.data.PlanID});
 }
 
 NewPlan.prototype.ShowHistory = function(){

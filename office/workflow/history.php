@@ -1,10 +1,10 @@
 <?php
 //---------------------------
 // programmer:	Jafarkhani
-// create Date:	91.12
+// create Date:	94.12
 //---------------------------
-include("../header.inc.php");
-require_once 'wfm.class.php';
+require_once getenv("DOCUMENT_ROOT") . "/office/header.inc.php";
+require_once getenv("DOCUMENT_ROOT") . "/office/workflow/wfm.class.php";
 require_once inc_component;
 
 if(!empty($_REQUEST["RowID"]))
@@ -21,9 +21,9 @@ else if(!empty($_REQUEST["FlowID"]) && !empty($_REQUEST["ObjectID"]))
 else
 	die();
 	 
-$query = "select fr.* ,fs.StepID,
-				ifnull(fr.StepDesc,'شروع گردش') StepDesc,
-				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname
+$query = "select fr.* ,fs.StepID, fs.IsOuter,
+				ifnull(fr.StepDesc, ifnull(fs.StepDesc,'شروع گردش')) StepDesc,
+				concat_ws(' ',fname, lname,CompanyName) fullname
 			from WFM_FlowRows fr
 			left join WFM_FlowSteps fs on(fr.StepRowID=fs.StepRowID)
 			join BSC_persons p on(fr.PersonID=p.PersonID)
@@ -44,10 +44,16 @@ else
 		$backgroundColor = ($i%2 == 1 ? "style='background-color:#efefef'" : "");
 		$backgroundColor = $Logs[$i]["ActionType"] == "REJECT" ? "style='background-color:#ffccd1'" : $backgroundColor;
 		
+		$StepDesc = $Logs[$i]["StepDesc"];
+		if($Logs[$i]["ActionType"] == "CONFIRM")
+			$StepDesc = "تایید " . $StepDesc;
+		else if($Logs[$i]["ActionType"] == "REJECT")
+			$StepDesc = "رد " . $StepDesc;
+			
+		
 		$tbl_content .= "<tr " . $backgroundColor . ">
 			<td width=250px>[" . ($i+1) . "]". ($i+1<10 ? "&nbsp;" : "") . "&nbsp;
-				<img align='top' src='/generalUI/ext4/resources/themes/icons/user_comment.gif'>&nbsp;" .
-				($Logs[$i]["ActionType"] == "CONFIRM" ? "تایید" : "رد") . " مرحله " . $Logs[$i]["StepDesc"] . " </td>
+				<img align='top' src='/generalUI/ext4/resources/themes/icons/user_comment.gif'>&nbsp;" . $StepDesc . " </td>
 			<td  width=150px>" . $Logs[$i]["fullname"] . "</td>
 			<td width=110px>" . substr($Logs[$i]["ActionDate"], 11) . " " . 
 								DateModules::miladi_to_shamsi($Logs[$i]["ActionDate"]) . "</td>
@@ -57,33 +63,37 @@ else
 		</tr>";
 	}
 	//------------------------ get next one ------------------------------------
-	$StepID = ($Logs[$i-1]["StepID"] == "" ? 0 : $Logs[$i-1]["StepID"]) + 1;
-	$query = "select StepDesc,po.PostName,
-				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname
-			from WFM_FlowSteps fs
-			left join BSC_posts po using(PostID)
-			left join BSC_persons p on(if(fs.PersonID>0,fs.PersonID=p.PersonID,po.PostID=p.PostID))
-			where fs.IsActive='YES' AND fs.FlowID=? AND fs.StepID=?";
-	$nextOne = PdoDataAccess::runquery($query, array($FlowID, $StepID));
 	
-	if(count($nextOne)>0)
+	if($Logs[$i-1]["StepRowID"] == "" || $Logs[$i-1]["IsOuter"] == "NO")
 	{
-		$str = "";
-		foreach($nextOne as $row)
-			$str .= $row["fullname"] . 
-				($row["PostName"] != "" ? " [ پست : " . $row["PostName"] . " ]" : "") . " و ";
-		$str = substr($str, 0, strlen($str)-3);
-		
-		$tbl_content .= "<tr style='background-color:#A9E8E8'>
-				<td colspan=4 align=center>در حال حاضر فرم در مرحله <b>" . 
-				$nextOne[0]["StepDesc"] . "</b>  در کارتابل <b>" . $str . "</b> می باشد.</td>
-			</tr>";
-	}
-	else
-	{
-		$tbl_content .= "<tr style='background-color:#A9E8E8'>
-			<td colspan=4 align=center><b>گردش فرم پایان یافته است.</b></td>
-			<tr>";
+		$StepID = ($Logs[$i-1]["StepID"] == "" ? 0 : $Logs[$i-1]["StepID"]) + 1;
+		$query = "select StepDesc,po.PostName,
+					concat_ws(' ',fname, lname,CompanyName) fullname
+				from WFM_FlowSteps fs
+				left join BSC_posts po using(PostID)
+				left join BSC_persons p on(if(fs.PersonID>0,fs.PersonID=p.PersonID,po.PostID=p.PostID))
+				where fs.IsActive='YES' AND fs.FlowID=? AND fs.StepID=?";
+		$nextOne = PdoDataAccess::runquery($query, array($FlowID, $StepID));
+
+		if(count($nextOne)>0)
+		{
+			$str = "";
+			foreach($nextOne as $row)
+				$str .= $row["fullname"] . 
+					($row["PostName"] != "" ? " [ پست : " . $row["PostName"] . " ]" : "") . " و ";
+			$str = substr($str, 0, strlen($str)-3);
+
+			$tbl_content .= "<tr style='background-color:#A9E8E8'>
+					<td colspan=4 align=center>در حال حاضر فرم در مرحله <b>" . 
+					$nextOne[0]["StepDesc"] . "</b>  در کارتابل <b>" . $str . "</b> می باشد.</td>
+				</tr>";
+		}
+		else
+		{
+			$tbl_content .= "<tr style='background-color:#A9E8E8'>
+				<td colspan=4 align=center><b>گردش فرم پایان یافته است.</b></td>
+				<tr>";
+		}
 	}
 }
 ?>

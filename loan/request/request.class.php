@@ -4,7 +4,7 @@
 // create Date: 94.06
 //---------------------------
 
-require_once getenv("DOCUMENT_ROOT") . '/dms/dms.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/office/dms/dms.class.php';
 
 class LON_requests extends PdoDataAccess
 {

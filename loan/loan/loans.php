@@ -19,6 +19,7 @@ $dg->addColumn("درصد دیرکرد", "ForfeitPercent", "", true);
 $dg->addColumn("", "CustomerWage", "", true);
 $dg->addColumn("", "IntervalType", "", true);
 $dg->addColumn("", "IsCustomer", "", true);
+$dg->addColumn("", "IsPlan", "", true);
 
 $col = $dg->addColumn("عنوان وام", "LoanDesc", "");
 

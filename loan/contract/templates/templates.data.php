@@ -4,9 +4,8 @@
 //	Date		: 94.08
 //-----------------------------
 
-require_once '../header.inc.php';
+require_once '../../header.inc.php';
 require_once 'templates.class.php';
-require_once '../global/CNTconfig.class.php';
 require_once inc_dataReader;
 require_once inc_response;
 

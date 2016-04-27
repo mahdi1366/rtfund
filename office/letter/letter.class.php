@@ -102,7 +102,7 @@ class OFC_letters extends PdoDataAccess{
 	static function SelectReceivedLetters($where = "", $param = array()){
 		 
 		$query = "select s.*,l.*, 
-				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) FromPersonName,
+				concat_ws(' ',fname, lname,CompanyName) FromPersonName,
 				if(count(DocumentID) > 0,'YES','NO') hasAttach
 			from OFC_send s
 				join OFC_letters l using(LetterID)
@@ -131,7 +131,7 @@ class OFC_letters extends PdoDataAccess{
 	static function SelectSendedLetters($where = "", $param = array()){
 		
 		$query = "select s.*,l.*, 
-				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) ToPersonName,
+				concat_ws(' ',fname, lname,CompanyName) ToPersonName,
 				if(count(DocumentID) > 0,'YES','NO') hasAttach
 			from OFC_send s
 				join OFC_letters l using(LetterID)

@@ -6,7 +6,7 @@
 require_once '../header.inc.php';
 require_once 'letter.class.php';
 require_once inc_dataReader;
-require_once '../../dms/dms.class.php';
+require_once '../dms/dms.class.php';
 
 $LetterID = !empty($_POST["LetterID"]) ? $_POST["LetterID"] : "";
 if(empty($LetterID))
@@ -95,7 +95,7 @@ if(count($doc) > 0)
 {
 	$images = DMS_DocFiles::selectAll("DocumentID=?", array($doc[0]["DocumentID"]));
 	foreach($images as $img)
-		$imageslist[] = "'/dms/ShowFile.php?RowID=" . $img["RowID"] . "&DocumentID=" . $img["DocumentID"] . 
+		$imageslist[] = "'/office/dms/ShowFile.php?RowID=" . $img["RowID"] . "&DocumentID=" . $img["DocumentID"] . 
 			"&ObjectID=" . $LetterID . "'";
 }
 $imageslist = implode(",", $imageslist);

@@ -4,11 +4,10 @@
 //	Date		: 94.08
 //-----------------------------
 
-require_once '../header.inc.php';
+require_once '../../header.inc.php';
 require_once 'contract.class.php';
 require_once '../templates/templates.class.php';
-require_once '../global/CNTconfig.class.php';
-require_once '../../office/workflow/wfm.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/office/workflow/wfm.class.php';
 
 require_once inc_dataReader;
 require_once inc_response;
@@ -29,9 +28,7 @@ function SelectContracts() {
 		$params[":c"] = $_REQUEST["ContractID"];
 	}
 	
-	$where .= dataReader::makeOrder();
-	
-    $temp = CNT_contracts::Get(isset($_REQUEST["content"]), $where, $params);
+    $temp = CNT_contracts::Get(isset($_REQUEST["content"]), $where, $params, dataReader::makeOrder());
 	$res = PdoDataAccess::fetchAll($temp, $_GET['start'], $_GET['limit']);
 	
 	for($i=0; $i < count($res);$i++)

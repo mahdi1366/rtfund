@@ -84,7 +84,7 @@ class WFM_FlowSteps extends PdoDataAccess {
 
 	static function GetAll($where = "", $whereParam = array()) {
 		
-		$query = "select fs.*,PostName,if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname 
+		$query = "select fs.*,PostName,concat_ws(' ',fname, lname,CompanyName) fullname 
 			from WFM_FlowSteps fs
 			left join BSC_posts using(PostID)
 			left join BSC_persons using(PersonID)";
@@ -182,7 +182,7 @@ class WFM_FlowRows extends PdoDataAccess {
 	static function GetAll($where = "", $whereParam = array()) {
 		
 		$query = "select sd.*, 
-			if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname
+			concat_ws(' ',fname, lname,CompanyName) fullname
 			from WFM_FlowRows sd
 			join BSC_persons p using(PersonID)";
 		
@@ -208,6 +208,37 @@ class WFM_FlowRows extends PdoDataAccess {
 		return true;
 	}
 
+	static function AddOuterFlow($FlowID, $ObjectID, $StepID, $Comment = "", $pdo = null){
+		
+		$dt = parent::runquery("select StepRowID from WFM_FlowSteps where FlowID=? AND StepID=?", 
+			array($FlowID, $StepID));
+		
+		if(count($dt) == 0)
+			return false;
+		
+		$obj = new self();
+		$obj->FlowID = $FlowID;
+		$obj->StepRowID = $dt[0]["StepRowID"];
+		$obj->ObjectID = $ObjectID;
+		$obj->PersonID = $_SESSION["USER"]["PersonID"];
+		$obj->ActionType = "DONE";
+		$obj->ActionDate = PDONOW;
+		$obj->ActionComment = $Comment;
+		return $obj->AddFlowRow($pdo);
+	}
+	
+	static function EndObjectFlow($FlowID, $ObjectID, $pdo = null){
+		
+		switch($FlowID*1)
+		{
+			case 3 : 
+				$EndStepID = 105; 
+				PdoDataAccess::runquery("update PLN_plans set StepID=? where PlanID=?", array($EndStepID, $ObjectID), $pdo);
+				return ExceptionHandler::GetExceptionCount() == 0;
+		}
+	}
+	
+	
 	function EditFlowRow($pdo = null) {
 		
 		if (parent::update("WFM_FlowRows", $this, " RowID=:did", array(":did" => $this->RowID), $pdo) === false)
@@ -310,6 +341,8 @@ class WFM_FlowRows extends PdoDataAccess {
 					where 1=1 " . $where . dataReader::makeOrder();
 		return PdoDataAccess::runquery_fetchMode($query, $params);
 	}
+	
+	
 }
 
 ?>

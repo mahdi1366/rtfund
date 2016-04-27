@@ -35,6 +35,7 @@ class BSC_persons extends PdoDataAccess
 	public $IsAgent;
 	public $IsSupporter;
 	public $IsStaff;
+	public $IsExpert;
 	
 	public $IsActive;
 	public $PostID;
@@ -48,8 +49,8 @@ class BSC_persons extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery_fetchMode("select 
-			p.*, '' UserPass,
-			if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname, DomainDesc
+			p.*, '' UserPass, '' PersonSign,
+			concat_ws(' ',fname, lname,CompanyName) fullname, DomainDesc
 			from BSC_persons p
 				left join BSC_posts using(PostID)
 				left join BSC_ActDomain using(DomainID)

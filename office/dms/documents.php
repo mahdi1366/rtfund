@@ -21,7 +21,7 @@ switch($ObjectType)
 			$access = true;
 		break;
 	case "loan":
-		require_once '../loan/request/request.class.php';
+		require_once '../../loan/request/request.class.php';
 		$obj = new LON_requests($ObjectID);
 		if($_SESSION["USER"]["IsCustomer"] == "YES" && in_array($obj->StatusID, array("40","60")) )
 			$access = true;
@@ -29,15 +29,19 @@ switch($ObjectType)
 			$access = true;
 		break;
 	case "plan":
-		require_once '../plan/plan.class.php';
+		require_once '../../loan/plan/plan.class.php';
+		require_once '../../loan/plan/PLNconfig.inc.php';
 		$obj = new PLN_plans($ObjectID);
-		if($_SESSION["USER"]["IsCustomer"] == "YES" && in_array($obj->StatusID, array("1","5")) )
+		if($_SESSION["USER"]["IsCustomer"] == "YES" && $_SESSION["USER"]["PersonID"] == $obj->PersonID 
+				&& in_array($obj->StepID, array(STEPID_RAW,STEPID_RETURN_TO_CUSTOMER)) )
+			$access = true;
+		if($_SESSION["USER"]["IsExpert"] == "YES")
 			$access = true;
 		if($_SESSION["USER"]["IsStaff"] == "YES")
 			$access = true;
 		break;
 	case "contract":
-		require_once '../contract/contract/contract.class.php';
+		require_once '../../loan/contract/contract/contract.class.php';
 		$obj = new CNT_contracts($ObjectID);
 		if($_SESSION["USER"]["IsStaff"] == "YES")
 			$access = true;
@@ -377,7 +381,7 @@ ManageDocument.FileRender = function(v,p,r){
 
 ManageDocument.ShowFile = function(DocumentID, ObjectID){
 	
-	window.open("../../dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID);
+	window.open("/office/dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID);
 }
 
 ManageDocument.OperationRender = function(v,p,r){
@@ -590,7 +594,7 @@ ManageDocument.prototype.ConfirmDocument = function(mode){
 	mask.show();
 
 	Ext.Ajax.request({
-		url: this.address_prefix +'../../dms/dms.data.php',
+		url: this.address_prefix +'dms.data.php',
 		method: "POST",
 		params: {
 			task: "ConfirmDocument",

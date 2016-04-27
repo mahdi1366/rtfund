@@ -4,7 +4,7 @@
 //	Date		: 94.08
 //-----------------------------
 
-require_once getenv("DOCUMENT_ROOT") . '/dms/dms.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/office/dms/dms.class.php';
 
 class CNT_contracts extends OperationClass {
 
@@ -45,7 +45,7 @@ class CNT_contracts extends OperationClass {
         }
     }
 
-    public static function Get($content = false, $where = '', $whereParams = array()) {
+    public static function Get($content = false, $where = '', $whereParams = array(), $order = "") {
 		
         return parent::runquery_fetchMode("
 			select c.ContractID,
@@ -82,8 +82,7 @@ class CNT_contracts extends OperationClass {
 			left join BSC_persons p1 on(c.PersonID=p1.PersonID)
 			left join BSC_persons p2 on(c.PersonID2=p2.PersonID)
 			
-			where 1=1 
-			group by ContractID" . $where, $whereParams);
+			where 1=1 " . $where . " group by ContractID " . $order, $whereParams);
     }
 	
 	public function Remove()

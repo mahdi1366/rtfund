@@ -4,7 +4,7 @@
 //	Date		: 1395.01
 //-----------------------------
 
-require_once 'header.inc.php';
+require_once '../header.inc.php';
 require_once inc_dataGrid;
 require_once 'plan.class.php';
 
@@ -12,7 +12,6 @@ if(empty($_REQUEST["PlanID"]))
 	die();
 
 $PlanID = $_REQUEST["PlanID"];
-$PlanObj = new PLN_plans($PlanID);
 //-----------------------------------------------------
 if(isset($_SESSION["USER"]["framework"]))
 	$User = "Staff";
@@ -83,11 +82,11 @@ foreach($groups as $group)
 	
 	$dt = PdoDataAccess::runquery("select e.*,p.ElementValue
 		from PLN_Elements e
-		left join PLN_PlanItems p on(PlanID=1 AND p.ElementID=e.ElementID)
+		left join PLN_PlanItems p on(PlanID=? AND p.ElementID=e.ElementID)
 		
-		where GroupID=? AND ParentID=0 		
+		where GroupID=? AND ParentID=0 
 		group by ElementID
-		order by ElementID", array($GroupID));
+		order by ElementID", array($PlanID, $GroupID));
 	
 	for($i=0; $i < count($dt); $i++)
 	{
@@ -156,7 +155,7 @@ function printForm($ParentID, $ElementValue){
 			echo "<div class=form>" . $element["values"] . "</div>";
 			continue;
 		}
-		if($planValues[ $element["ElementID"] ] == "")
+		if(empty($planValues[ $element["ElementID"] ]))
 			continue;
 		if($element["ElementType"] == "textarea")
 		{

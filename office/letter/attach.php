@@ -18,7 +18,7 @@ if(isset($_POST["lock"]) && $_POST["lock"] == "true")
 	$access = false;
 
 //------------------------------------------------------
-$dg = new sadaf_datagrid("dg", "../dms/dms.data.php?" .
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "../dms/dms.data.php?" .
 		"task=SelectAll&ObjectType=letterAttach&ObjectID=" . $LetterID . 
 		($SendID > 0 ? "&checkRegPerson=true&ObjectID2=" . $SendID : ""), "grid_div");
 
@@ -137,7 +137,7 @@ ManageDocument.FileRender = function(v,p,r){
 
 ManageDocument.ShowFile = function(DocumentID, ObjectID){
 	
-	window.open("../../dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID);
+	window.open("../dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID);
 }
 
 ManageDocument.OperationRender = function(v,p,r){
@@ -171,7 +171,7 @@ ManageDocument.prototype.SaveDocument = function(){
 
 	this.formPanel.getForm().submit({
 		clientValidation: true,
-		url: '../dms/dms.data.php',
+		url: this.address_prefix +  '../dms/dms.data.php',
 		method: "POST",
 		isUpload : true,
 		params: {
@@ -218,7 +218,7 @@ ManageDocument.prototype.DeleteDocument = function(){
 		mask.show();
 
 		Ext.Ajax.request({
-			url: '../dms/dms.data.php',
+			url: this.address_prefix + '../dms/dms.data.php',
 			params:{
 				task: "DeleteDocument",
 				DocumentID : record.data.DocumentID

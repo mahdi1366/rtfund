@@ -20,7 +20,7 @@ function GetTreeNodes(){
 	
 	$creator = PdoDataAccess::runquery("
 		select PersonID,
-			if(IsReal='YES',concat(fname, ' ', lname),CompanyName) text, 
+			concat_ws(' ',fname, lname,CompanyName) text, 
 			'true' as leaf, 'true' expanded,'user' iconCls,
 			l.RegDate
 		from OFC_letters l join BSC_persons p using(PersonID) where LetterID=?", array($LetterID));
@@ -37,7 +37,7 @@ function GetTreeNodes(){
 	
 	$nodes = PdoDataAccess::runquery("
 		select FromPersonID ,ToPersonID, SendDate,
-			concat(if(IsReal='YES',concat(fname, ' ', lname),CompanyName),' - ',InfoDesc) text, 
+			concat_ws(' ',fname, lname,CompanyName),' - ',InfoDesc) text, 
 			concat('<b>توضیحات ارجاع : </b>' ,replace(SendComment,'\n','<br>')) qtip,
 			'true' as leaf, 'true' expanded,'user' iconCls
 		from OFC_send 

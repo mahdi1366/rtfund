@@ -82,7 +82,7 @@ function SetStatus(){
 
 function SelectSteps(){
 	
-	$dt = WFM_FlowSteps::GetAll("IsActive='YES' AND FlowID=? " . dataReader::makeOrder(), array($_GET["FlowID"]));
+	$dt = WFM_FlowSteps::GetAll("fs.IsActive='YES' AND fs.IsOuter='NO' AND FlowID=? " . dataReader::makeOrder(), array($_GET["FlowID"]));
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -96,7 +96,7 @@ function SaveStep(){
 		$result = $obj->EditFlowStep();
 	else
 	{
-		$dt = PdoDataAccess::runquery("select ifnull(max(StepID),0) from WFM_FlowSteps where FlowID=?", 
+		$dt = PdoDataAccess::runquery("select ifnull(max(StepID),0) from WFM_FlowSteps where FlowID=? AND IsActive='YES' AND IsOuter='NO'", 
 				array($obj->FlowID));
 		$obj->StepID = $dt[0][0]*1 + 1;
 		
@@ -120,14 +120,14 @@ function MoveStep(){
 	$direction = $_POST["direction"] == "-1" ? -1 : 1;
 	$revdirection = $direction == "-1" ? "+1" : "-1";
 	
-	PdoDataAccess::runquery("update WFM_FlowSteps set StepID=1000 where FlowID=? AND StepID=?",
+	PdoDataAccess::runquery("update WFM_FlowSteps set StepID=1000 where FlowID=? AND StepID=? AND IsOuter='NO' AND IsActive='YES'",
 			array($FlowID, $StepID));
 	
 	
-	PdoDataAccess::runquery("update WFM_FlowSteps set StepID=StepID $revdirection where FlowID=? AND StepID=?",
+	PdoDataAccess::runquery("update WFM_FlowSteps set StepID=StepID $revdirection where FlowID=? AND StepID=? AND IsOuter='NO' AND IsActive='YES'",
 			array($FlowID, $StepID + $direction));
 	
-	PdoDataAccess::runquery("update WFM_FlowSteps set StepID=? where FlowID=? AND StepID=1000",
+	PdoDataAccess::runquery("update WFM_FlowSteps set StepID=? where FlowID=? AND StepID=1000 AND IsOuter='NO' AND IsActive='YES'",
 			array($StepID + $direction, $FlowID));
 	
 	echo Response::createObjectiveResponse(true, "");
@@ -212,6 +212,9 @@ function SelectAllForms(){
 
 function ChangeStatus(){
 	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
 	$mode = $_REQUEST["mode"];
 	$SourceObj = new WFM_FlowRows($_POST["RowID"]);
 	$newObj = new WFM_FlowRows();
@@ -240,13 +243,30 @@ function ChangeStatus(){
 	if($SourceObj->ActionType == "CONFIRM")
 	{
 		$dt = PdoDataAccess::runquery("select Max(StepID) maxStepID from WFM_FlowSteps 
-			where IsActive='YES' AND FlowID=? " , array($newObj->FlowID));
+			where IsActive='YES' AND FlowID=? AND IsOuter='NO'" , array($newObj->FlowID));
 		if($dt[0][0] == $StepID)
 			$newObj->IsEnded = "YES";
 	}
 	//.............................................
-	$result = $newObj->AddFlowRow();	
+	$result = $newObj->AddFlowRow($pdo);	
+	if(!$result)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse($result, "");
+		die();
+	}
 	
+	if($newObj->IsEnded == "YES")
+		$result = WFM_FlowRows::EndObjectFlow($newObj->FlowID, $newObj->ObjectID, $pdo);
+
+	if(!$result)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse($result, "");
+		die();
+	}
+	
+	$pdo->commit();
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }

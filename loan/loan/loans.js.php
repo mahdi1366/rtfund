@@ -195,6 +195,10 @@ Loan.prototype.LoanInfo = function(mode)
 					boxLabel : "قابل درخواست برای مشتریان",
 					name : "IsCustomer"
 				},{
+					xtype : "checkbox",
+					boxLabel : "قابل درخواست برای طرح",
+					name : "IsPlan"
+				},{
 					xtype : "hidden",
 					name : "LoanID"
 				}],		
@@ -246,7 +250,7 @@ Loan.prototype.LoanInfo = function(mode)
 		var record = this.grid.getSelectionModel().getLastSelected();
 		this.formPanel.getForm().loadRecord(record);
 		this.formPanel.down("[name=IsCustomer]").setValue(record.data.IsCustomer == "YES");
-		
+		this.formPanel.down("[name=IsPlan]").setValue(record.data.IsPlan == "YES");
 	}
 	
 	this.formPanel.show();

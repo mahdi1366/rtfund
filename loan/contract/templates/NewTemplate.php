@@ -3,8 +3,7 @@
 //	Programmer	: Fatemipour
 //	Date		: 94.08
 //-----------------------------
-require_once '../header.inc.php';
-require_once '../global/CNTconfig.class.php';
+require_once '../../header.inc.php';
 require_once 'templates.data.php';
 require_once inc_dataGrid;
 
@@ -92,13 +91,14 @@ function NewTemplate() {
 	});
 	
 	this.BuildForms();
-	this.mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال بارگذاری...'});
-	this.mask.show();
 	this.LoadTemplate();
 }
 
 NewTemplate.prototype.LoadTemplate = function(){
 		
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال بارگذاری...'});
+	mask.show();
+	
 	this.store = new Ext.data.Store({
 		proxy : {
 			type: 'jsonp',
@@ -117,9 +117,9 @@ NewTemplate.prototype.LoadTemplate = function(){
 				
 				CKEDITOR.instances.TemplateEditor.on('instanceReady', function( ev ) {
 					ev.editor.setData(record.data.content);
-					NewTemplateObj.mask.hide();
-										
+					mask.hide();										
 				});			
+				mask.hide();
 			}
 		}
 	});

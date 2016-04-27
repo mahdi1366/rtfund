@@ -35,13 +35,13 @@ function PersonInfo()
 	this.store = new Ext.data.Store({
 		proxy:{
 			type: 'jsonp',
-			url: this.address_prefix + "persons.data.php?task=selectPersons&PersonID=" + this.PersonID ,
+			url: this.address_prefix + "persons.data.php?task=selectPersons&full=true&PersonID=" + this.PersonID ,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
 		fields : ["IsReal","fname","lname","CompanyName","UserName","NationalID",
 			"EconomicID","PhoneNo","mobile","address","email","RegNo","RegDate","RegPlace",
 			"CompanyType","AccountNo","DomainID","WebSite","IsGovermental","DomainDesc",
-		"FatherName","ShNo","PostID","IsStaff","IsCustomer","IsSupporter","IsShareholder","IsAgent"],
+		"FatherName","ShNo","PostID","IsStaff","IsCustomer","IsSupporter","IsShareholder","IsAgent","IsExpert"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -79,7 +79,7 @@ function PersonInfo()
 			style : "padding:0 20px 0 20px",		
 			itemId : "cmp_documents",						
 			loader : {
-				url : "../../dms/documents.php",
+				url : "../../office/dms/documents.php",
 				scripts : true
 			},
 			listeners :{

@@ -7,7 +7,7 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "../../dms/dms.data.php?task=SelectAll&ObjectType=Person&ObjectID=" .
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "../../office/dms/dms.data.php?task=SelectAll&ObjectType=Person&ObjectID=" .
 		$_SESSION["USER"]["PersonID"] , "grid_div");
 
 $dg->addColumn("", "DocumentID", "", true);
@@ -210,7 +210,7 @@ function PersonalInfo()
 			style : "padding:0 20px 0 20px",		
 			itemId : "cmp_documents",						
 			loader : {
-				url : "../../dms/documents.php",
+				url : "../../office/dms/documents.php",
 				scripts : true
 			},
 			listeners :{

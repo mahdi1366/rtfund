@@ -3,8 +3,7 @@
 //	Programmer	: Fatemipour
 //	Date		: 94.08
 //-----------------------------
-require_once '../header.inc.php';
-require_once '../global/CNTconfig.class.php';
+require_once '../../header.inc.php';
 require_once 'contract.class.php';
 require_once '../templates/templates.class.php';
 
@@ -84,7 +83,7 @@ for ($i = 0; $i < count($res); $i++) {
 		<thead>
 			<tr style="margin-top:40px">
 				<td width=180px style='text-indent : 0;padding:0; '>
-					<img style="width:150px" src='../../framework/icons/logo.jpg'></td>
+					<img style="width:150px" src='/framework/icons/logo.jpg'></td>
 				<td align='center' style='font-family:BTitr;font-size:18px;text-align:center !important;'>
 					<b><?php
 						echo $CntObj->_TemplateTitle;

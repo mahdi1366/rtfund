@@ -8,7 +8,7 @@ require_once inc_component;
 $RequestID = $_POST["RequestID"];
 
 $query = "select f.*,
-				if(IsReal='YES',concat(fname, ' ', lname),CompanyName) fullname , 
+				concat_ws(' ',fname, lname,CompanyName) fullname , 
 				b.InfoDesc StatusDesc
 			from LON_ReqFlow f 
 				join BaseInfo b on (b.InfoID = f.StatusID AND TypeID=5) 

@@ -37,10 +37,11 @@
 .history		{background-image:url('/generalUI/ext4/resources/themes/icons/history.gif') !important;}
 .warning		{background-image:url('/generalUI/ext4/resources/themes/icons/warning.gif') !important;}
 .user			{background-image:url('/generalUI/ext4/resources/themes/icons/user.gif') !important;}
-.user_edit      	{background-image:url('/generalUI/ext4/resources/themes/icons/user_edit.gif') !important;}
-.user_add       	{background-image:url('/generalUI/ext4/resources/themes/icons/user_add.gif') !important;}
+.user_edit     	{background-image:url('/generalUI/ext4/resources/themes/icons/user_edit.gif') !important;}
+.user_add      	{background-image:url('/generalUI/ext4/resources/themes/icons/user_add.gif') !important;}
 .user_delete	{background-image:url('/generalUI/ext4/resources/themes/icons/user_delete.gif') !important;}
-.loading        	{background-image:url('/generalUI/ext4/resources/themes/icons/loading.gif') !important;}
+.user_comment	{background-image:url('/generalUI/ext4/resources/themes/icons/user_comment.gif') !important;}
+.loading        {background-image:url('/generalUI/ext4/resources/themes/icons/loading.gif') !important;}
 .tick			{background-image:url('/generalUI/ext4/resources/themes/icons/tick.gif') !important;}
 .copy			{background-image:url('/generalUI/ext4/resources/themes/icons/copy.gif') !important;}
 .not_pay		{background-image:url('/generalUI/resources/images/icons/not_pay.gif') !important;}

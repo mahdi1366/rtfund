@@ -105,7 +105,7 @@ ManageContracts.prototype.ContractDocuments = function(ObjectType){
 			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
 			closeAction : "hide",
 			loader : {
-				url : "../../dms/documents.php",
+				url : "/office/dms/documents.php",
 				scripts : true
 			},
 			buttons :[{
@@ -145,7 +145,7 @@ ManageContracts.prototype.StartFlow = function(){
 		mask.show();
 
 		Ext.Ajax.request({
-			url: me.address_prefix +'../../office/workflow/wfm.data.php',
+			url: '/office/workflow/wfm.data.php',
 			method: "POST",
 			params: {
 				task: "StartFlow",
@@ -172,7 +172,7 @@ ManageContracts.prototype.ShowHistory = function(){
 			height : 500,
 			closeAction : "hide",
 			loader : {
-				url : this.address_prefix + "../../office/workflow/history.php",
+				url : "/office/workflow/history.php",
 				scripts : true
 			},
 			buttons : [{

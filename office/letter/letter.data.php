@@ -8,7 +8,7 @@ require_once '../header.inc.php';
 require_once(inc_response);
 require_once inc_dataReader;
 require_once 'letter.class.php';
-require_once '../../dms/dms.class.php';
+require_once '../dms/dms.class.php';
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 

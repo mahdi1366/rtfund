@@ -704,7 +704,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			
 			this.companyPanel.getEl().readonly();
 			
-			this.grid.down("[itemId=addPart]").hide();
+			//this.grid.down("[itemId=addPart]").hide();
 			this.grid.down("[dataIndex=PartID]").hide();	
 			this.companyPanel.down("[itemId=cmp_saveAndSend]").hide();
 			this.PartsPanel.down("[name=FundWage]").getEl().dom.style.display = "none";
@@ -1249,7 +1249,7 @@ RequestInfo.prototype.LoanDocuments = function(ObjectType){
 			bodyStyle : "background-color:white;padding: 4px 4px 4px 4px",
 			closeAction : "hide",
 			loader : {
-				url : "../../dms/documents.php",
+				url : "../../office/dms/documents.php",
 				scripts : true
 			},
 			buttons :[{

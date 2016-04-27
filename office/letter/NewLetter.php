@@ -227,7 +227,7 @@ Letter.prototype.BuildForms = function(){
 							'<tpl for=".">',
 								'<div style="position:relative;float: right;padding:5px;width:100px;margin:5px">',
 								'<div class="thumb"><img style="width:100px;height:100px;cursor:pointer" ',
-									'src="/dms/ShowFile.php?RowID={RowID}&DocumentID={DocumentID}&ObjectID={ObjectID}" ',
+									'src="/office/dms/ShowFile.php?RowID={RowID}&DocumentID={DocumentID}&ObjectID={ObjectID}" ',
 									'title="{DocumentTitle}" onclick="LetterObject.ShowPage({DocumentID})"></div>',
 								'<div style="width:100%;text-align:center">{DocDesc}</div>',
 								'<div class="cross x-btn-default-small" style="cursor:pointer;float: right;position: absolute;top:8px;',
@@ -327,7 +327,7 @@ Letter.prototype.SaveLetter = function(){
 }
 
 Letter.prototype.ShowPage = function(DocumentID, ObjectID){
-	window.open("/dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID);	
+	window.open("/office/dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID);	
 }
 
 Letter.prototype.DeletePage = function(DocumentID, RowID){

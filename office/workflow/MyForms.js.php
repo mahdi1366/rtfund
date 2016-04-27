@@ -116,8 +116,15 @@ MyForm.prototype.ChangeStatus = function(mode, ActionComment){
 			ActionComment : ActionComment
 		},
 		
-		success : function(){
+		success : function(response){
 			mask.hide();
+			
+			result = Ext.decode(response.responseText);
+			if(!result.success)
+			{
+				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+			}
+			
 			MyFormObject.grid.getStore().load();
 			if(MyFormObject.commentWin)
 				MyFormObject.commentWin.hide();
@@ -151,7 +158,7 @@ MyForm.prototype.FormInfo = function(){
 	this.FormInfoWindow.show();	
 	var record = this.grid.getSelectionModel().getLastSelected();
 	
-	eval("param = {ExtTabID : '" + this.FormInfoWindow.getEl().id + "'," + 
+	eval("param = {ExtTabID : '" + this.FormInfoWindow.getEl().id + "',ReadOnly : true," + 
 					record.data.parameter + " : '" + record.data.ObjectID + "'}");
 	
 	this.FormInfoWindow.loader.load({
@@ -195,7 +202,7 @@ MyForm.prototype.LoanDocuments = function(ObjectType){
 			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
 			closeAction : "hide",
 			loader : {
-				url : "../../dms/documents.php",
+				url : "../../office/dms/documents.php",
 				scripts : true
 			},
 			buttons :[{

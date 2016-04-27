@@ -32,6 +32,7 @@ function selectPersons(){
 			case "IsCustomer":	$where .= " AND IsCustomer='YES'";break;
 			case "IsStaff":		$where .= " AND IsStaff='YES'";break;
 			case "IsSupporter":	$where .= " AND IsSupporter='YES'";break;
+			case "IsExpert":	$where .= " AND IsExpert='YES'";break;
 		}
 	}
 	
@@ -65,9 +66,13 @@ function selectPersons(){
 		$param[":p"] = "%" . $_REQUEST["query"] . "%";
 	}
 	
-	$temp = BSC_persons::SelectAll($where . dataReader::makeOrder(), $param);
+	if(!empty($_REQUEST["full"]))
+		$temp = BSC_persons::SelectAll($where . dataReader::makeOrder(), $param);
+	else
+		$temp = BSC_persons::MinSelect($where . dataReader::makeOrder(), $param);
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
+	
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
 	die();
 }
@@ -102,6 +107,7 @@ function SavePerson(){
 		$obj->IsStaff = !isset($_POST["IsStaff"]) ? "NO" : "YES";
 		$obj->IsShareholder = !isset($_POST["IsShareholder"]) ? "NO" : "YES";
 		$obj->IsSupporter = !isset($_POST["IsSupporter"]) ? "NO" : "YES";
+		$obj->IsExpert = !isset($_POST["IsExpert"]) ? "NO" : "YES";
 	}
 	if($obj->PersonID > 0)
 		$result = $obj->EditPerson();

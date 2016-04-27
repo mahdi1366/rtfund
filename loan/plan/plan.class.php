@@ -4,13 +4,18 @@
 // create Date: 94.06
 //---------------------------
 
+require_once getenv("DOCUMENT_ROOT") . '/office/workflow/wfm.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/office/dms/dms.class.php';
+
 class PLN_plans extends PdoDataAccess
 {
 	public $PlanID;
 	public $PlanDesc;
+	public $LoanID;
 	public $PersonID;
 	public $RegDate;
-	public $StatusID;
+	public $StepID;
+	public $SupportPersonID;
 	
 	function __construct($PlanID = "") {
 		
@@ -18,14 +23,15 @@ class PLN_plans extends PdoDataAccess
 			PdoDataAccess::FillObject ($this, "select * from PLN_plans where PlanID=?", array($PlanID));
 	}
 	
-	static function SelectAll($where = "", $param = array()){
+	static function SelectAll($where = "", $param = array(), $order= ""){
 		
 		return PdoDataAccess::runquery_fetchMode("
-			select p.* ,if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) ReqFullname, InfoDesc StatusDesc
+			select p.* ,if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) ReqFullname, StepDesc
 			from PLN_plans p
 			join BSC_persons p1 using(PersonID)
-			join BaseInfo on(typeID=13 AND InfoID=StatusID)
-			where " . $where, $param);
+			left join WFM_FlowSteps fs on(FlowID=" . FLOWID . " AND p.StepID=fs.StepID)
+			left join PLN_experts e on(p.PlanID=e.PlanID)
+			where " . $where . " group by p.PlanID " . $order, $param);
 	}
 	
 	function AddPlan($pdo = null){
@@ -60,8 +66,14 @@ class PLN_plans extends PdoDataAccess
 	static function DeletePlan($PlanID){
 		
 		$obj = new LON_requests($PlanID);
-		if($obj->StatusID != "1")
+		if($obj->StepID != STEPID_RAW)
 			return false;
+		
+		if(!DMS_documents::DeleteAllDocument($this->PlanID, "plan"))
+		{
+			ExceptionHandler::PushException("خطا در حذف مدارک");
+	 		return false;
+		}
 		
 		if( parent::delete("PLN_PlanItems"," PlanID=?", array($PlanID)) === false )
 	 		return false;
@@ -77,26 +89,18 @@ class PLN_plans extends PdoDataAccess
 	 	return true;
 	}
 
-	static function ChangeStatus($PlanID, $StatusID, $ActDesc = "", $LogOnly = false, $pdo = null){
+	static function ChangeStatus($PlanID, $StepID, $ActDesc = "", $LogOnly = false, $pdo = null){
 	
 		if(!$LogOnly)
 		{
 			$obj = new PLN_plans();
 			$obj->PlanID = $PlanID;
-			$obj->StatusID = $StatusID;
+			$obj->StepID = $StepID;
 			if(!$obj->EditPlan($pdo))
 				return false;
 		}
 		
-		$obj2 = new PLN_PlanSurvey();
-		$obj2->PlanID = $PlanID;
-		$obj2->ActDate = PDONOW;
-		$obj2->ActDesc = $ActDesc;
-		$obj2->StatusID = $StatusID;
-		$obj2->ActPersonID = $_SESSION["USER"]["PersonID"];
-		$obj2->AddRow($pdo);
-
-		return ExceptionHandler::GetExceptionCount() == 0;
+		return WFM_FlowRows::AddOuterFlow(FLOWID, $PlanID, $StepID, $ActDesc, $pdo);
 	}
 	
 }
@@ -169,7 +173,6 @@ class PLN_PlanSurvey extends PdoDataAccess
 	public $ActDate;
 	public $ActType;
 	public $ActDesc;
-	public $StatusID;
 	public $ActPersonID;
 			
 	function __construct($RowID = "") {
@@ -224,4 +227,38 @@ class PLN_PlanSurvey extends PdoDataAccess
 	 	return true;
 	}
 }
+
+class PLN_experts extends OperationClass {
+
+    const TableName = "PLN_experts";
+    const TableKey = "RowID";
+
+    public $RowID;
+	public $PlanID;
+    public $PersonID;
+    public $RegDate;
+    public $SendDesc;
+    public $DoneDesc;
+	public $StatusDesc;
+    public $EndDate;
+    public $DoneDate;
+	
+    function __construct($id = ""){
+        
+		$this->DT_RegDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_EndDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_DoneDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
+        parent::__construct($id);
+    }
+
+    public static function Get($where = '', $whereParams = array()) {
+		
+        return parent::runquery_fetchMode("
+			select e.*, concat_ws(' ',fname, lname,CompanyName) fullname
+			from PLN_experts e
+			left join BSC_persons p1 using(PersonID) where 1=1 " . $where, $whereParams);
+    }
+}
+
 ?>

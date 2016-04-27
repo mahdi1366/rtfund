@@ -5,7 +5,7 @@
 //-----------------------------
 ini_set("display_errors", "On");
 
-require_once '../header.inc.php';
+require_once '../../header.inc.php';
 require_once inc_dataGrid;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "templates.data.php?task=SelectTemplates", "div_dg");
@@ -78,7 +78,7 @@ Templates.prototype.RemoveItem = function () {
 	
 	Ext.MessageBox.confirm("","آیا مایل به حذف الگو می باشید؟", function(btn){
 		
-		if(brn == "no")
+		if(btn == "no")
 			return;
 		
 		me = TemplatesObject;

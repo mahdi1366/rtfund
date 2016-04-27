@@ -165,6 +165,11 @@ function Person()
                 boxLabel: 'حامی',
                 name: 'IsSupporter',
                 inputValue: 'YES'
+			},{
+				xtype : "checkbox",
+                boxLabel: 'کارشناس',
+                name: 'IsExpert',
+                inputValue: 'YES'
 			}]
 		},{
 			xtype : "hidden",

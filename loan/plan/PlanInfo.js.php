@@ -25,11 +25,92 @@ function PlanInfo(){
 
 	this.PlanRecord = {
 		PlanID : <?= $PlanID ?>,
-		StatusID : <?= $PlanObj->StatusID ?>,
-		PersonID : <?= $PlanObj->PersonID ?>
+		StepID : <?= $PlanObj->StepID ?>,
+		PersonID : <?= $PlanObj->PersonID ?>,
+		PlanDesc : '<?= $PlanObj->PlanDesc ?>',
+		LoanID : '<?= $PlanObj->LoanID ?>',
+		SupportPersonID : '<?= $PlanObj->SupportPersonID ?>',
+		ExpertStatus : '<?= $ExpertStatusDesc ?>'
 	};
 	//--------------------------------------------------------------------------
-	
+	if(!this.portal)
+	{
+		this.planFS = new Ext.form.FieldSet({
+			title : "اطلاعات طرح",
+			width : 758,
+			layout : {
+				type : "table",
+				columns : 2
+			},			
+			renderTo : this.get("div_plan"),
+			items : [{
+				xtype : "textfield",
+				fieldLabel : "عنوان طرح",
+				name : "PlanDesc",
+				width : 400,
+				value : this.PlanRecord.PlanDesc
+			},{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../loan/loan.data.php?task=GetAllLoans&IsPlan=true',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields : ['LoanID','LoanDesc'],
+					autoLoad : true					
+				}),
+				fieldLabel : "وام درخواستی",
+				queryMode : 'local',
+				displayField : "LoanDesc",
+				valueField : "LoanID",
+				name : "LoanID",
+				value : this.PlanRecord.LoanID
+			},{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					proxy: {
+						type: 'jsonp',
+						url: '/framework/person/persons.data.php?task=selectPersons&UserTypes=IsAgent,IsSupporter',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields : ['PersonID','fullname'],
+					autoLoad : true
+				}),
+				fieldLabel : "حامی طرح",
+				displayField : "fullname",
+				valueField : "PersonID",
+				name : "SupportPersonID",
+				value : this.PlanRecord.SupportPersonID,
+				width : 400
+			},{
+				xtype : "button",
+				text : "ذخیره",
+				itemId : "btn_save",
+				style : "float:left",
+				width : 80,
+				iconCls : "save",
+				handler : function(){ PlanInfoObject.SavePlan(); }
+			},{
+				xtype : "hidden",
+				name : "PlanID",
+				value : this.PlanID
+			}]
+		});
+		
+		if(this.readOnly)
+		{
+			var R1 = this.planFS.down("[name=SupportPersonID]").getStore();
+			var t = setInterval(function(){
+				if(!R1 || !R1.isLoading()) 
+				{
+					clearInterval(t);
+					PlanInfoObject.planFS.getEl().readonly();
+					PlanInfoObject.planFS.down("[itemId=btn_save]").disable();
+				}
+			}, 1000);		
+		}
+	}
 	this.tree = new Ext.tree.Panel({
 		store: new Ext.data.TreeStore({
 			proxy: {
@@ -89,12 +170,12 @@ function PlanInfo(){
 				items : [{
 					text : 'مدارک درخواست دهنده',
 					iconCls : "attach",
-					handler : function(){ PlanInfoObject.LoanDocuments('person'); }
+					handler : function(){ PlanInfoObject.PlanDocuments('person'); }
 				},{
 					text : 'مدارک ضمیمه طرح',
 					iconCls : "attach",
-					itemId : "cmp_LoanDocuments",
-					handler : function(){ PlanInfoObject.LoanDocuments('plan'); }
+					itemId : "cmp_PlanDocuments",
+					handler : function(){ PlanInfoObject.PlanDocuments('plan'); }
 				}]
 			}
 		},'-',{
@@ -114,22 +195,22 @@ function PlanInfo(){
 			text : "ارسال طرح جهت ارزیابی",
 			iconCls : "send",
 			handler : function(){
-				PlanInfoObject.BeforeSendPlan(2);
+				PlanInfoObject.BeforeSendPlan(<?= STEPID_CUSTOMER_SEND ?>);
 			}
 		});
 	}
-	if(this.User == "Staff")
+	if(this.User == "Staff" && !this.readOnly)
 	{
-		if( new Array(1,3,5).indexOf(this.PlanRecord.StatusID*1) != -1)
+		if( new Array(<?= STEPID_RAW ?>,<?= STEPID_REJECT ?>,<?= STEPID_RETURN_TO_CUSTOMER ?>).indexOf(this.PlanRecord.StepID*1) != -1)
 			return;
 			
-		if(this.PlanRecord.StatusID == "2")
+		if(this.PlanRecord.StepID == "<?= STEPID_CUSTOMER_SEND ?>")
 		{
 			this.menu.add({
 				text : "تایید اولیه طرح و شروع گردش داخلی",
 				iconCls : "send",
 				handler : function(){
-					PlanInfoObject.BeforeSendPlan(4);
+					PlanInfoObject.BeforeSendPlan(<?= STEPID_CONFIRM ?>);
 				}
 			});
 		}
@@ -137,19 +218,79 @@ function PlanInfo(){
 			text : "برگشت به مشتری جهت انجام اصلاحات",
 			iconCls : "undo",
 			handler : function(){
-				PlanInfoObject.BeforeSendPlan(5);
+				PlanInfoObject.BeforeSendPlan(<?= STEPID_RETURN_TO_CUSTOMER ?>);
 			}
 		},{
 			text : "رد طرح",
 			iconCls : "cross",
 			handler : function(){
-				PlanInfoObject.BeforeSendPlan(3);
+				PlanInfoObject.BeforeSendPlan(<?= STEPID_REJECT ?>);
 			}
 		}]);
+	}
+	
+	if(this.User == "Staff")
+	{
+		if(this.PlanRecord.StepID == "<?= STEPID_ENDFLOW ?>")
+		{
+			this.menu.add({
+				text : "کارشناسی طرح",
+				iconCls : "user_comment",
+				handler : function(){
+					PlanInfoObject.experts();
+				}
+			});
+		}
+		if( new Array(<?= STEPID_ENDFLOW ?>,<?= STEPID_SEND_EXPERT ?>,<?= STEPID_SUPPORTER_REJECT ?>).indexOf(this.PlanRecord.StepID*1) != -1)
+		{
+			this.menu.add({
+				text : "ارسال به حامی طرح",
+				iconCls : "tick",
+				handler : function(){
+					PlanInfoObject.BeforeSendPlan(<?= STEPID_SEND_SUPPORTER ?>);
+				}
+			});
+		}
+	}
+	if(this.User == "Expert" && this.PlanRecord.ExpertStatus != "SEND")
+	{
+		this.MainPanel.getDockedItems("[dock=top]")[0].add('-',{
+			text : "تایید کارشناسی طرح",
+			iconCls : "send",
+			handler : function(){
+				PlanInfoObject.SendExpert();
+			}
+		});
 	}
 }
 
 PlanInfoObject = new PlanInfo();
+
+PlanInfo.prototype.SavePlan = function(){
+
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
+	mask.show();  
+
+	Ext.Ajax.request({
+		methos : "post",
+		url : this.address_prefix + "plan.data.php",
+		params : {
+			task : "SaveNewPlan",
+			PlanID : this.PlanRecord.PlanID,
+			PlanDesc : this.planFS.down("[name=PlanDesc]").getValue(),
+			LoanID : this.planFS.down("[name=LoanID]").getValue(),
+			SupportPersonID : this.planFS.down("[name=SupportPersonID]").getValue()
+		},
+
+		success : function(response){
+			mask.hide();
+			result = Ext.decode(response.responseText);
+			if(!result.success)
+				Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+		}
+	});
+		
+}
 
 PlanInfo.prototype.LoadElements = function(record, season){
 
@@ -459,7 +600,7 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 PlanInfo.prototype.ShowMenu = function(view, record, item, index, e)
 {
 	if(this.User == "Customer")
-		retirn;
+		return;
 	e.stopEvent();
 	e.preventDefault();
 	view.select(index);
@@ -566,25 +707,25 @@ PlanInfo.prototype.SurveyGroup = function(mode, ActDesc, record){
 	});
 }
 
-PlanInfo.prototype.BeforeSendPlan = function(StatusID){
+PlanInfo.prototype.BeforeSendPlan = function(StepID){
 	
-	if(StatusID == "2")
+	if(StepID == <?= STEPID_CUSTOMER_SEND ?> || StepID == <?= STEPID_SEND_SUPPORTER ?>)
 	{
 		Ext.MessageBox.confirm("", "پس از ارسال طرح دیگر قادر به ویرایش طرح نمی باشید.<br>آیا مایل به ارسال می باشید؟", 
 		function(btn){
 			if(btn == "no")
 				return;
-			PlanInfoObject.SendPlan(StatusID, "");
+			PlanInfoObject.SendPlan(StepID, "");
 		});
 		return;
 	}
-	if(StatusID == "4")
+	if(StepID == "<?= STEPID_CONFIRM ?>")
 	{
 		Ext.MessageBox.confirm("", "آیا مایل به تایید می باشید؟", 
 		function(btn){
 			if(btn == "no")
 				return;
-			PlanInfoObject.SendPlan(StatusID, "");
+			PlanInfoObject.SendPlan(StepID, "");
 		});
 		return;
 	}
@@ -623,25 +764,25 @@ PlanInfo.prototype.BeforeSendPlan = function(StatusID){
 		
 		Ext.getCmp(this.TabID).add(this.commentWin2);
 	}
-	if(StatusID == "3")
+	if(StepID == "<?= STEPID_REJECT ?>")
 	{
 		this.commentWin2.down("[itemId=btn_reject]").show();
 		this.commentWin2.down("[itemId=btn_reject]").setHandler(function(){
-			PlanInfoObject.SendPlan(StatusID, this.up('window').down("[name=ActDesc]").getValue());
+			PlanInfoObject.SendPlan(StepID, this.up('window').down("[name=ActDesc]").getValue());
 		});
 	}
-	if(StatusID == "5")
+	if(StepID == "<?= STEPID_RETURN_TO_CUSTOMER ?>")
 	{
 		this.commentWin2.down("[itemId=btn_return]").show();
 		this.commentWin2.down("[itemId=btn_return]").setHandler(function(){
-			PlanInfoObject.SendPlan(StatusID, this.up('window').down("[name=ActDesc]").getValue());
+			PlanInfoObject.SendPlan(StepID, this.up('window').down("[name=ActDesc]").getValue());
 		});
 	}
 	this.commentWin2.show();
 	this.commentWin2.center();
 }
 
-PlanInfo.prototype.SendPlan = function(StatusID, ActDesc){
+PlanInfo.prototype.SendPlan = function(StepID, ActDesc){
 	
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال بارگذاري...'});
 	mask.show();
@@ -652,7 +793,7 @@ PlanInfo.prototype.SendPlan = function(StatusID, ActDesc){
 		params : {
 			task : "ChangeStatus",
 			PlanID : this.PlanID,
-			StatusID : StatusID,
+			StepID : StepID,
 			ActDesc : ActDesc
 		},
 
@@ -665,7 +806,7 @@ PlanInfo.prototype.SendPlan = function(StatusID, ActDesc){
 			if(result.success)
 			{
 				if(PlanInfoObject.portal)
-					portal.OpenPage("../plan/NewPlan.php");
+					portal.OpenPage("/loan/plan/NewPlan.php");
 				else
 				{
 					framework.CloseTab(PlanInfoObject.TabID);
@@ -719,7 +860,7 @@ PlanInfo.prototype.ShowHistory = function(record){
 	});
 }
 
-PlanInfo.prototype.LoanDocuments = function(ObjectType){
+PlanInfo.prototype.PlanDocuments = function(ObjectType){
 
 	if(!this.documentWin)
 	{
@@ -731,7 +872,7 @@ PlanInfo.prototype.LoanDocuments = function(ObjectType){
 			bodyStyle : "background-color:white;padding: 4px 4px 4px 4px",
 			closeAction : "hide",
 			loader : {
-				url : "../dms/documents.php",
+				url : "/office/dms/documents.php",
 				scripts : true
 			},
 			buttons :[{
@@ -754,6 +895,123 @@ PlanInfo.prototype.LoanDocuments = function(ObjectType){
 			ObjectID : ObjectType == "plan" ? this.PlanID : this.PlanRecord.PersonID
 		}
 	});
+}
+
+PlanInfo.prototype.experts = function(){
+
+	if(!this.ExpertsWin)
+	{
+		this.ExpertsWin = new Ext.window.Window({
+			title: 'کارشناسی طرح',
+			modal : true,
+			autoScroll : true,
+			width: 900,
+			height : 600,
+			bodyStyle : "background-color:white",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "PlanExperts.php",
+				params :{
+					PlanID : this.PlanID
+				},
+				scripts : true
+			},
+			buttons : [{
+				text : "reload",
+				handler : function(){
+						this.up('window').loader.load({
+							params : {
+								ExtTabID : PlanInfoObject.ExpertsWin.getEl().id
+							}
+						});
+					}
+			},{
+					text : "بازگشت",
+					iconCls : "undo",
+					handler : function(){
+						this.up('window').hide();
+					}
+				}]
+		});
+		Ext.getCmp(this.TabID).add(this.ExpertsWin);
+	}
+	this.ExpertsWin.show();
+	this.ExpertsWin.center();
+	this.ExpertsWin.loader.load({
+		params : {
+			ExtTabID : this.ExpertsWin.getEl().id
+		}
+	});
+}
+
+PlanInfo.prototype.SendExpert = function(){
+	
+	if(!this.commentWin3)
+	{
+		this.commentWin3 = new Ext.window.Window({
+			width : 412,
+			height : 198,
+			modal : true,
+			title : "توضیحات",
+			bodyStyle : "background-color:white",
+			items : [{
+				xtype : "textarea",
+				width : 400,
+				rows : 8,
+				name : "DoneDesc"
+			}],
+			closeAction : "hide",
+			buttons : [{
+				text : "ارسال",				
+				iconCls : "send",
+				handler : function(){
+					me = PlanInfoObject;
+					mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال بارگذاري...'});
+					mask.show();
+
+					Ext.Ajax.request({
+						methos : "post",
+						url : "/loan/plan/plan.data.php",
+						params : {
+							task : "SendExpert",
+							PlanID : me.PlanID,
+							DoneDesc : me.commentWin3.down("[name=DoneDesc]").getValue()
+						},
+
+						success : function(response){
+							mask.hide();
+							result = Ext.decode(response.responseText);
+							if(result.success)
+							{
+								PlanInfoObject.commentWin3.hide();
+								if(PlanInfoObject.portal)
+									portal.OpenPage("/loan/plan/ManagePlans.php");					
+							}
+							else
+							{
+								if(result.data != "")
+									Ext.MessageBox.alert("Error", result.data);
+								else
+									Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+							}
+						}
+					});
+				}
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.commentWin3);
+	}
+	Ext.MessageBox.confirm("","بعد از تایید کارشناسی دیگر قادر به انجام عملیات روی طرح نمی باشید. آیا مایل به تایید می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		PlanInfoObject.commentWin3.show();
+	})	
 }
 
 </script>

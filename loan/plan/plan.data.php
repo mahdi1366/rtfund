@@ -4,7 +4,7 @@
 // create Date: 94.06
 //-------------------------
 
-include_once('header.inc.php');
+include_once('../header.inc.php');
 include_once inc_dataReader;
 include_once inc_response;
 include_once 'plan.class.php';
@@ -239,9 +239,24 @@ function SelectAllPlans(){
 		$param[":pid"] = $_REQUEST["PlanID"];
 	}
 	
-	if(!isset($_REQUEST["AllPlans"]) || $_REQUEST["AllPlans"] == "false")
-		$where .= " AND StatusID in(2)";
-	
+	if(isset($_SESSION["USER"]["portal"]))
+	{
+		if($_SESSION["USER"]["IsExpert"] == "YES")
+		{
+			$where .= " AND e.PersonID=:ep AND e.StatusDesc<>'SEND' ";
+			$param[":ep"] = $_SESSION["USER"]["PersonID"];
+		}
+		if($_SESSION["USER"]["IsSupporter"] == "YES")
+		{
+			$where .= " AND SupportPersonID=:sp AND p.StepID=" . STEPID_SEND_SUPPORTER;
+			$param[":sp"] = $_SESSION["USER"]["PersonID"];
+		}
+	}
+	else
+	{
+		if(!isset($_REQUEST["AllPlans"]) || $_REQUEST["AllPlans"] == "false")
+			$where .= " AND p.StepID in(" . STEPID_CUSTOMER_SEND . "," . STEPID_ENDFLOW . ")";
+	}
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
 		$field = $field == "ReqFullname" ? "concat_ws(' ',p1.fname,p1.lname,p1.CompanyName)" : $field;
@@ -249,8 +264,7 @@ function SelectAllPlans(){
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
 	
-	$where .= dataReader::makeOrder();
-	$dt = PLN_plans::SelectAll($where, $param);
+	$dt = PLN_plans::SelectAll($where, $param, dataReader::makeOrder());
 	//print_r(ExceptionHandler::PopAllExceptions());
 	//echo PdoDataAccess::GetLatestQueryString();
 	$count = $dt->rowCount();
@@ -262,11 +276,11 @@ function SelectAllPlans(){
 function SelectMyPlans(){
 	
 	$param = array($_SESSION["USER"]["PersonID"]);
-	$where = "PersonID=?";
+	$where = "p.PersonID=?";
 	
 	$where .= dataReader::makeOrder();
 	$dt = PLN_plans::SelectAll($where, $param);
-	//print_r(ExceptionHandler::PopAllExceptions());
+	print_r(ExceptionHandler::PopAllExceptions());
 	//echo PdoDataAccess::GetLatestQueryString();
 	$count = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);	
@@ -277,16 +291,15 @@ function SelectMyPlans(){
 function SaveNewPlan(){
 	
 	$PlanID = $_POST["PlanID"];
-	$PlanDesc = $_POST["PlanDesc"];
 	
 	$obj = new PLN_plans();
-	$obj->PlanDesc = $PlanDesc;
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
 	if($PlanID*1 == 0)
 	{
 		$obj->PersonID = $_SESSION["USER"]["PersonID"];
 		$obj->RegDate = PDONOW;
-		$obj->StatusID = 1;
+		$obj->StepID = STEPID_RAW;
 		$result = $obj->AddPlan();
 		
 		PLN_plans::ChangeStatus($obj->PlanID, 1, "", true);
@@ -314,13 +327,13 @@ function ChangeStatus(){
 		die();
 	}	
 	//---------------------------------------------------------------------
-	$StatusID = $_POST["StatusID"];
+	$StepID = $_POST["StepID"];
 	$ActDesc = $_POST["ActDesc"];
 	
 	if($_SESSION["USER"]["IsCustomer"] == "YES" && isset($_SESSION["USER"]["portal"]))
-		$StatusID = 2;
+		$StepID = STEPID_CUSTOMER_SEND;
 	
-	if(isset($_SESSION["USER"]["framework"]) && $StatusID == "4")
+	if(isset($_SESSION["USER"]["framework"]) && $StepID == STEPID_CONFIRM)
 	{
 		$dt = PdoDataAccess::runquery("
 			select p.GroupID,ActType from PLN_PlanSurvey p,
@@ -335,10 +348,73 @@ function ChangeStatus(){
 		}
 	}
 
-	$result = PLN_plans::ChangeStatus($obj->PlanID, $StatusID, $ActDesc);
+	$result = PLN_plans::ChangeStatus($obj->PlanID, $StepID, $ActDesc);
+	
+	if($StepID == STEPID_CONFIRM)
+	{
+		$result = WFM_FlowRows::StartFlow(FLOWID, $obj->PlanID);
+	}
 	
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
+//............................................
+
+function GetPlanExperts(){
+	
+	$temp = PLN_experts::Get("AND PlanID=?", array($_REQUEST["PlanID"]));
+	
+	print_r(ExceptionHandler::PopAllExceptions());
+	$res = $temp->fetchAll();
+	echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SavePlanExpert(){
+	
+	$obj = new PLN_experts();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	if(empty($obj->RowID))
+	{
+		$obj->RegDate = PDONOW;
+		$result = $obj->Add();
+	}
+	else
+	{
+		$result = $obj->Edit();
+	}
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();
+}
+
+function DeletePlanExpert(){
+	
+	$obj = new PLN_experts();
+	$obj->RowID = $_POST["RowID"];
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();	
+}
+
+function SendExpert(){
+	
+	$dt = PLN_experts::Get(" AND PlanID=? AND PersonID=?", array($_POST["PlanID"], $_SESSION["USER"]["PersonID"]));
+	if($dt->rowCount() == 0)
+	{
+		echo Response::createObjectiveResponse(false, "دسترسی غیر مجاز");
+		die();
+	}
+	$dt = $dt->fetch();
+	
+	$obj = new PLN_experts($dt["RowID"]);
+	$obj->DoneDesc = $_POST["DoneDesc"];
+	$obj->DoneDate = PDONOW;
+	$obj->StatusDesc = "SEND";
+	$result = $obj->Edit();
+	
+	Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();
+}
 ?>

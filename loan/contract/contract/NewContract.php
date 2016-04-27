@@ -4,8 +4,7 @@
 //	Date		: 94.08
 //-----------------------------
 
-require_once '../header.inc.php';
-require_once '../global/CNTconfig.class.php';
+require_once '../../header.inc.php';
 
 if (!empty($_REQUEST['ContractID'])) 
 	$ContractID = $_REQUEST['ContractID'];
@@ -71,7 +70,16 @@ function NewContract() {
 			listeners: {
 				select: function (combo, records) {
 					this.collapse();
-					NewContractObj.ShowTplItemsForm(records[0].data.TemplateID, false);
+					masktpl = new Ext.LoadMask(NewContractObj.MainForm, {msg:'در حال ذخيره سازي...'});
+					masktpl.show();
+					NewContractObj.TplItemsStore.load({
+						params : {TemplateID : records[0].data.TemplateID},
+						callback : function(){
+							NewContractObj.ShowTplItemsForm(records[0].data.TemplateID, false);
+							masktpl.hide();
+						}
+					});
+					
 				}
 			}
 		},{
@@ -80,7 +88,7 @@ function NewContract() {
 			store : new Ext.data.SimpleStore({
 				proxy: {
 					type: 'jsonp',
-					url: this.address_prefix + '../../loan/request/request.data.php?task=SelectAllRequests',
+					url: this.address_prefix + '../../request/request.data.php?task=SelectAllRequests',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields : ["LoanPersonID",'LoanFullname','ReqAmount',"RequestID","ReqDate", {
@@ -140,7 +148,7 @@ function NewContract() {
 			store : new Ext.data.SimpleStore({
 				proxy: {
 					type: 'jsonp',
-					url: this.address_prefix + '../../framework/person/persons.data.php?task=selectPersons',
+					url: '/framework/person/persons.data.php?task=selectPersons',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields : ['PersonID','fullname']
@@ -158,7 +166,7 @@ function NewContract() {
 			store : new Ext.data.SimpleStore({
 				proxy: {
 					type: 'jsonp',
-					url: this.address_prefix + '../../framework/person/persons.data.php?task=selectPersons',
+					url: '/framework/person/persons.data.php?task=selectPersons',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields : ['PersonID','fullname']
@@ -279,8 +287,8 @@ function NewContract() {
 	});
 	
 	this.ContractStore = new Ext.data.Store({
-		fields: ['ContractID', "TemplateID", 'description', 'StartDate', "EndDate", "PersonID",
-			"content"],
+		fields: ['ContractID', "TemplateID", 'description', 'StartDate', "EndDate","PersonID","ContractType",
+			"PersonID2","LoanRequestID","content","ContractAmount"],
 		proxy: {
 			type: 'jsonp',
 			url: this.address_prefix + "contract.data.php?task=SelectContracts&content=true",
@@ -317,7 +325,7 @@ NewContract.prototype.LoadContract = function(){
 			
 			me = NewContractObj;
 			record = this.getAt(0);
-			
+		
 			me.TplItemsStore.load({
 				params : {TemplateID : record.data.TemplateID}
 			});
@@ -329,9 +337,18 @@ NewContract.prototype.LoadContract = function(){
 			
 			me.MainForm.loadRecord(record);
 			
+			if(record.data.LoanRequestID != null)
+				me.MainForm.getComponent("LoanRequestID").getStore().load({
+					params :{RequestID : record.data.LoanRequestID}
+				});
+			
 			if(record.data.PersonID != null)
 				me.MainForm.getComponent("PersonID").getStore().load({
 					params :{PersonID : record.data.PersonID}
+				});
+			if(record.data.PersonID2 != null)
+				me.MainForm.getComponent("PersonID2").getStore().load({
+					params :{PersonID : record.data.PersonID2}
 				});
 			
 			me.ContractItemsStore.load({
@@ -393,11 +410,6 @@ NewContract.prototype.ShowTplItemsForm = function (TemplateID, LoadValues) {
 	mask = new Ext.LoadMask(this.MainForm.getComponent("templateItems"), {msg:'در حال ذخيره سازي...'});
 	mask.show();
 	  
-	if(this.TplItemsStore.getCount() == 0)
-		this.TplItemsStore.load({
-			params : {TemplateID : TemplateID}
-		});
-			  
 	Ext.Ajax.request({
 		url: NewContractObj.address_prefix + '../templates/templates.data.php?task=GetTemplateContent',
 		params: {
@@ -422,7 +434,7 @@ NewContract.prototype.ShowTplItemsForm = function (TemplateID, LoadValues) {
 			{
 				if (i % 2 != 0) {
 					var num = me.TplItemsStore.find('TemplateItemID', res[i]);
-					
+				
 					if(me.TplItemsStore.getAt(num).data.TemplateID == "0")
 						continue;
 					
@@ -483,7 +495,7 @@ NewContract.prototype.ContractDocuments = function(ObjectType){
 			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
 			closeAction : "hide",
 			loader : {
-				url : "../../dms/documents.php",
+				url : "/office/dms/documents.php",
 				scripts : true
 			},
 			buttons :[{

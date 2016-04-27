@@ -23,7 +23,7 @@ if(empty($PersonID))
 	die();
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . 
-		"../../dms/dms.data.php?task=SelectAll&ObjectType=Person&ObjectID=" . $PersonID , "grid_div");
+		"../../office/dms/dms.data.php?task=SelectAll&ObjectType=Person&ObjectID=" . $PersonID , "grid_div");
 
 $dg->addColumn("", "DocumentID", "", true);
 $dg->addColumn("", "ObjectType", "", true);

@@ -37,6 +37,13 @@ ManagePlan.prototype.ManagePlan = function(){
 	}
 }
 
+ManagePlan.PlanInfoRender = function(value, p, record){
+	
+	return "<div  title='اطلاعات طرح' class='info' onclick='ManagePlanObject.ShowPlanInfo();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
 ManagePlan.HistoryRender = function(value, p, record){
 	
 	return "<div  title='سابقه' class='history' onclick='ManagePlanObject.ShowHistory();' " +
@@ -87,6 +94,13 @@ ManagePlan.prototype.ShowHistory = function(){
 			PlanID : this.grid.getSelectionModel().getLastSelected().data.PlanID
 		}
 	});
+}
+
+ManagePlan.prototype.ShowPlanInfo = function(){
+
+	var record = this.grid.getSelectionModel().getLastSelected();
+	portal.OpenPage("../loan/plan/PlanInfo.php", {PlanID : record.data.PlanID});
+	return;
 }
 
 </script>
