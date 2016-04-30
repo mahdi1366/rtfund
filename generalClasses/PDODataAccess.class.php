@@ -980,6 +980,9 @@ class PdoDataAccess extends ExceptionHandler
 				if($value != PDONOW)
 					$value = DateModules::shamsi_to_miladi($value);
 				break;
+			case DataMember::DT_TIME :
+				if(strlen($value) > 8)
+					$value = substr($value, strlen($value)-8);
 		}
 
 		return $value;

@@ -761,7 +761,7 @@ class ColumnEditor
 	
 	static function TimeField($allowBlank = false, $itemId = "")
 	{
-		$st = "new Ext.form.TimeField({format : 'H:i',allowBlank: ";
+		$st = "new Ext.form.TimeField({format : 'H:i:s',allowBlank: ";
 		$st .= ($allowBlank) ? "true" : "false";
 		$st .= ($itemId != "") ? ",itemId : '$itemId'" : "";
 		$st .= "})";

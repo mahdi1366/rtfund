@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // Create Date:	95.01
 //-------------------------
-include('../header.inc.php');
+include('../../header.inc.php');
 include_once inc_dataGrid;
 
 //................  GET ACCESS  .....................
@@ -12,7 +12,6 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "Shift.data.php?task=GetAllShifts", "grid_div");
 
 $dg->addColumn("", "ShiftID", "", true);
-$dg->addColumn("", "GroupID", "", true);
 $dg->addColumn("", "IsActive", "", true);
 
 $col = $dg->addColumn("عنوان شیفت", "title", "");
@@ -32,11 +31,10 @@ $col->align = "center";
 if($accessObj->AddFlag)
 {
 	$dg->addButton = true;
-	$dg->addHandler = "function(){ShiftObject.ShiftInfo('new');}";
+	$dg->addHandler = "function(){ShiftObject.AddShift();}";
 	
 	$dg->enableRowEdit = true;
 	$dg->rowEditOkHandler = "function(){return ShiftObject.SaveShift();}";
-
 }
 $dg->title = "لیست شیفت ها";
 $dg->height = 500;
@@ -81,152 +79,21 @@ Shift.OperationRender = function(v,p,r)
 function Shift(){
 	
 	this.grid = <?= $grid ?>;
-	
-	this.groupPnl = new Ext.form.Panel({
-		renderTo: this.get("div_selectGroup"),
-		title: "انتخاب گروه",
-		width: 400,
-		collapsible : true,
-		collapsed : false,
-		frame: true,
-		bodyCfg: {style: "background-color:white"},
-		items : [{
-				xtype : "combo",
-				store : new Ext.data.SimpleStore({
-					proxy: {type: 'jsonp',
-						url: this.address_prefix + 'Shift.data.php?task=SelectShiftGroups',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					autoLoad : true,
-					fields : ['InfoID','InfoDesc']
-				}),
-				valueField : "InfoID",
-				queryMode : "local",
-				name : "GroupID",
-				displayField : "InfoDesc",
-				fieldLabel : "انتخاب گروه"
-			},{
-				xtype : "fieldset",
-				collapsible: true,
-				collapsed : true,
-				title : "ایجاد گروه جدید",
-				width : 350,
-				style : "background-color: #F2FCFF",
-				items : [{
-						xtype : "textfield",
-						name : "GroupDesc",
-						fieldLabel : "عنوان گروه"
-					},{
-						xtype : "button",
-						text: "ایجاد گروه",
-						handler: function(){
-
-							var mask = new Ext.LoadMask(this.up('form'),{msg: 'تغییر اطلاعات ...'});
-							mask.show();
-
-							Ext.Ajax.request({
-								method : "POST",
-								url: ShiftObject.address_prefix + "Shift.data.php",
-								params: {
-									task: "AddGroup",
-									GroupDesc: this.up('form').down("[name=GroupDesc]").getValue()
-								},
-								success: function(response){
-									mask.hide();
-									ShiftObject.groupPnl.down("[name=GroupID]").getStore().load({
-										callback : function(){
-											ShiftObject.groupPnl.down("[name=GroupID]").setValue(
-												this.getAt(this.getCount()-1));
-											ShiftObject.LoadShifts();
-										}});
-									ShiftObject.groupPnl.down('fieldset').collapse();
-								}
-							});
-						}
-					}]
-			}],
-		buttons:[{
-				text : "حذف گروه",
-				iconCls : "remove",
-				handler : function(){
-					ShiftObject.DeleteGroup(this.up('form').down('[name=GroupID]').getValue());
-				}
-			},{
-				text: "لیست شیفت ها",
-				iconCls: "refresh",
-				handler: function(){ ShiftObject.LoadShifts(); }
-			}]
-	});	
+	this.grid.render(this.get("grid_div"));
 }
 
 var ShiftObject = new Shift();	
 
-Tafsili.prototype.AddTafsili = function(){
+Shift.prototype.AddShift = function(){
 
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
-		TafsiliID: null,
-		TafsiliType : this.groupPnl.down("[name=TafsiliType]").getValue(),
-		TafsiliCode: null
+		ShiftID	: null
 	});
 
 	this.grid.plugins[0].cancelEdit();
 	this.grid.getStore().insert(0, record);
 	this.grid.plugins[0].startEdit(0, 0);
-}
-
-Shift.prototype.LoadShifts = function(){
-
-	ShiftObject.GroupID = this.groupPnl.down('[name=GroupID]').getValue();
-
-	ShiftObject.grid.getStore().proxy.extraParams.GroupID = ShiftObject.GroupID;
-
-	if(ShiftObject.grid.rendered)
-		ShiftObject.grid.getStore().load();
-	else
-		ShiftObject.grid.render(ShiftObject.get("grid_div"));
-	
-	ShiftObject.grid.show();
-	ShiftObject.groupPnl.collapse();
-}
-
-Shift.prototype.DeleteGroup = function(GroupID)
-{
-	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
-		if(btn == "no")
-			return;
-		
-		me = ShiftObject;
-		
-		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
-		mask.show();
-
-		Ext.Ajax.request({
-			url: me.address_prefix + 'Shift.data.php',
-			params:{
-				task: "DeleteGroup",
-				GroupID : GroupID
-			},
-			method: 'POST',
-
-			success: function(response,option){
-				mask.hide();
-				sd = Ext.decode(response.responseText);
-
-				if(sd.success)
-				{
-					ShiftObject.groupPnl.down('[name=GroupID]').setValue();
-					ShiftObject.groupPnl.down('[name=GroupID]').getStore().load();
-					ShiftObject.grid.hide();
-				}	
-				else
-				{
-					Ext.MessageBox.alert("Error","در این گروه وام تعریف شده و قادر به حذف آن نمی باشید");
-				}
-			},
-			failure: function(){}
-		});
-	});
 }
 
 Shift.prototype.DeleteShift = function()
@@ -269,8 +136,7 @@ Shift.prototype.SaveShift = function(){
 		method: "POST",
 		params: {
 			task: "SaveShift",
-			record: Ext.encode(record.data),
-			GroupID : ShiftObject.groupPnl.down("[name=GroupID]").getValue()
+			record: Ext.encode(record.data)
 		},
 		success: function(response){
 			mask.hide();

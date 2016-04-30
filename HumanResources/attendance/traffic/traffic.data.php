@@ -1,7 +1,7 @@
 <?php
 //-------------------------
 // programmer:	Jafarkhani
-// create Date: 95.01
+// create Date: 95.02
 //-------------------------
 include_once('../../header.inc.php');
 include_once inc_dataReader;

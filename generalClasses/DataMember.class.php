@@ -21,6 +21,7 @@ class DataMember{
 	const DT_DATE = 14;
 	const DT_NATIONAL_ID =15;
 	const DT_TEL = 16;
+	const DT_TIME = 17;
 	
 	public static function CreateDMA($DataType, $defaultValue = null, $NotNull = false)
 	{
