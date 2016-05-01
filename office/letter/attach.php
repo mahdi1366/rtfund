@@ -137,7 +137,7 @@ ManageDocument.FileRender = function(v,p,r){
 
 ManageDocument.ShowFile = function(DocumentID, ObjectID){
 	
-	window.open("../dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID);
+	window.open("/office/dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID);
 }
 
 ManageDocument.OperationRender = function(v,p,r){
@@ -218,7 +218,7 @@ ManageDocument.prototype.DeleteDocument = function(){
 		mask.show();
 
 		Ext.Ajax.request({
-			url: this.address_prefix + '../dms/dms.data.php',
+			url: me.address_prefix + '../dms/dms.data.php',
 			params:{
 				task: "DeleteDocument",
 				DocumentID : record.data.DocumentID

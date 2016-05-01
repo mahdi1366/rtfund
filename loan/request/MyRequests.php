@@ -76,48 +76,48 @@ MyRequest.OperationRender = function(v,p,record){
 
 	var str = "";
 	
-	if(MyRequestObject.User == "Customer" && (record.data.StatusID == "40" || record.data.StatusID == "60"))
+	/*if(MyRequestObject.User == "Customer" && (record.data.StatusID == "40" || record.data.StatusID == "60"))
 	{
 		str += "<div  title='تایید تکمیل مدارک' class='tick' onclick='MyRequestObject.ChangeStatus(50);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;height:16;float:right'></div>";
-	}	
+	}*/	
 	if(MyRequestObject.User == "Customer" && record.data.StatusID == "60")
 	{
 		str += "<div  title='دلیل رد مدارک' class='comment' onclick='MyRequestObject.ShowComment();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right'></div>";
+		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
 	}		
 	if(MyRequestObject.User == "Customer" && record.data.LoanID > 0 && record.data.StatusID == "10")
 	{
 		str += "<div  title='اطلاعات وام' class='info2' onclick='MyRequestObject.EditRequest(false);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right'></div>";
+		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
 	}
 	else
 		str += "<div  title='اطلاعات وام' class='info2' onclick='MyRequestObject.EditRequest(true);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right'></div>";
+		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
 	
-	str += "<div  title='مدارک وام' class='attach' onclick='MyRequestObject.LoadAttaches();' " +
+	/*str += "<div title='مدارک وام' class='attach' onclick='MyRequestObject.LoadAttaches();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right'></div>";
+		"cursor:pointer;width:16px;height:16;float:right'></div>";*/
 	
-	str += "<div  title='سابقه درخواست' class='history' onclick='MyRequestObject.ShowHistory();' " +
+	/*str += "<div  title='سابقه درخواست' class='history' onclick='MyRequestObject.ShowHistory();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right'></div>";
+		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";*/
 	
 	if(MyRequestObject.User == "Agent" && record.data.StatusID == "1")
 	{
 		str += "<div  title='حذف درخواست' class='remove' onclick='MyRequestObject.DeleteRequest();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right'></div>";
+		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
 	}
 	if(MyRequestObject.User == "Agent" && record.data.StatusID == "10")
 	{
 		str += "<div  title='برگشت درخواست' class='return' onclick='MyRequestObject.ChangeStatus(11);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right'></div>";
+		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
 	}
 	
 	return str;

@@ -5,11 +5,22 @@ set_include_path(get_include_path() . PATH_SEPARATOR . getenv("DOCUMENT_ROOT") .
 
 require_once 'PDODataAccess.class.php';
 
+$date =  mktime(0, 0, 0, 3, 17, 2018);
+$date = date("Y-m-d",$date);
+
+for($i=0; $i < 200; $i++)
+{
+	PdoDataAccess::runquery("insert into jdate values(?,?)", array($date, 
+		DateModules::miladi_to_shamsi($date)));
+	
+	$gdate_array = preg_split('/[\-\/]/',$date);
+	$date = mktime(0, 0, 0, $gdate_array[1], $gdate_array[2]+1, $gdate_array[0]);
+	$date = date("Y-m-d",$date);
+}
 /*
 SELECT * FROM information_schema.TABLE_CONSTRAINTS
 WHERE information_schema.TABLE_CONSTRAINTS.CONSTRAINT_TYPE = 'FOREIGN KEY'
-AND information_schema.TABLE_CONSTRAINTS.TABLE_SCHEMA = 'rtfund'
-;
+AND information_schema.TABLE_CONSTRAINTS.TABLE_SCHEMA = 'rtfund';
  */
 
 /*

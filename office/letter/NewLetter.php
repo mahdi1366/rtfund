@@ -136,6 +136,7 @@ Letter.prototype.BuildForms = function(){
 			},{
 				xtype : "textfield",
 				labelWidth : 40,
+				width : 118,
 				fieldLabel : "شماره",
 				name : "InnerLetterNo",
 				disabled : true

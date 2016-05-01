@@ -534,6 +534,12 @@ RequestInfo.prototype.BuildForms = function(){
 			itemId : "cmp_history",
 			handler : function(){ RequestInfoObject.ShowHistory(); }
 		},'->',{
+			text : 'تایید ارسال مدارک',
+			hidden : true,
+			iconCls : "tick",
+			itemId : "cmp_confirm50",
+			handler : function(){ RequestInfoObject.beforeChangeStatus(50); }
+		},{
 			xtype : "button",
 			itemId : "cmp_save",
 			iconCls : "save",
@@ -724,8 +730,9 @@ RequestInfo.prototype.CustomizeForm = function(record){
 	this.companyPanel.down("[itemId=cmp_changeStatus]").hide();
 	this.companyPanel.down("[itemId=cmp_end]").hide();
 	this.companyPanel.down("[itemId=cmp_undoend]").hide();
+	this.companyPanel.down("[itemId=cmp_confirm50]").hide();
 	
-	if(record != null && this.User == "Staff")
+	if(record != null)
 	{
 		this.companyPanel.down("[itemId=cmp_LoanDocuments]").show();
 		this.companyPanel.down("[itemId=cmp_PersonDocuments]").show();
@@ -737,6 +744,13 @@ RequestInfo.prototype.CustomizeForm = function(record){
 	
 	if(record == null)
 		return;
+	
+	if(this.User == "Customer")
+	{
+		if(record.data.StatusID == "40" || record.data.StatusID == "60")
+			this.companyPanel.down("[itemId=cmp_confirm50]").show();
+		return;
+	}
 	
 	if(record.data.IsEnded == "YES")
 	{
@@ -1278,7 +1292,11 @@ RequestInfo.prototype.beforeChangeStatus = function(StatusID){
 	
 	if(new Array(20,60).indexOf(StatusID) == -1)
 	{
-		Ext.MessageBox.confirm("","آیا مایل به تایید می باشید؟", function(btn){
+		message = "آیا مایل به تایید می باشید؟";
+		if(StatusID == "50")
+			message = "پس از تایید دیگر قادر به تغییر در اطلاعات نمی باشید<br>" +"آیا مایل به تایید می باشید؟";
+	
+		Ext.MessageBox.confirm("",message, function(btn){
 			if(btn == "no")
 				return;
 			
@@ -1337,6 +1355,8 @@ RequestInfo.prototype.ChangeStatus = function(StatusID, StepComment){
 		
 		success : function(){
 			
+			if(StatusID == 50)
+				Ext.MessageBox.alert("","مدارک شما به صندوق پژوهش و فناوری ارسال گردید");
 			RequestInfoObject.LoadRequestInfo();
 			if(RequestInfoObject.commentWin)
 				RequestInfoObject.commentWin.hide();

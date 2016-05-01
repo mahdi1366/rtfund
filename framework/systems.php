@@ -40,7 +40,7 @@ $_SESSION['USER']["RecentSystems"] = array();
 			}
 			
 			.menus{
-				width : 900px;	
+				width : 700px;	
 				margin-bottom: 20px;
 			}
 			
@@ -117,7 +117,7 @@ $_SESSION['USER']["RecentSystems"] = array();
 			else
 			{
 				for ($i = 0; $i < count($systems); $i++) {
-					if ($i % 4 == 0)
+					if ($i % 3 == 0)
 						echo $i == 0 ? '<div class="systemRow">' : '</div><div class="systemRow">';
 
 					echo "
@@ -125,7 +125,7 @@ $_SESSION['USER']["RecentSystems"] = array();
 							"<div class=SystemIcon style=background-image:url('icons/SysIcons/" . $systems[$i]["SysIcon"]  . "')></div>" . 
 							"<div class=SystemDesc><div class=SystemTitle>" . $systems[$i]["SysName"] . "</div></div></div>";
 				}
-				if (count($systems) % 4 != 0)
+				if (count($systems) % 3 != 0)
 					echo "</div>";
 			}
 			?>

@@ -3,21 +3,17 @@
 /*
 
 
-ALTER TABLE `krrtfir_rtfund`.`LON_loans` ADD COLUMN `IsPlan` ENUM('YES','NO') NOT NULL DEFAULT 'NO' AFTER `IsCustomer`;
-ALTER TABLE `krrtfir_rtfund`.`PLN_plans` ADD COLUMN `LoanID` INTEGER UNSIGNED NOT NULL AFTER `PlanDesc`;
-ALTER TABLE `krrtfir_rtfund`.`PLN_plans` MODIFY COLUMN `LoanID` INTEGER UNSIGNED DEFAULT NULL;
-ALTER TABLE `krrtfir_rtfund`.`PLN_plans` ADD COLUMN `SupportPersonID` INTEGER UNSIGNED AFTER `StatusID`;
-ALTER TABLE `krrtfir_rtfund`.`WFM_FlowSteps` ADD COLUMN `IsOuter` ENUM('YES','NO') NOT NULL DEFAULT 'NO' AFTER `IsActive`;
-insert into BaseInfo values(11, 3, 'طرح', '../plan/PlanInfo.php', 'PlanID', 'YES')
-ALTER TABLE `krrtfir_rtfund`.`PLN_plans` CHANGE COLUMN `StatusID` `StepID` INTEGER UNSIGNED NOT NULL DEFAULT 101;
-ALTER TABLE `krrtfir_rtfund`.`WFM_FlowRows` MODIFY COLUMN `ActionType` ENUM('CONFIRM','REJECT','DONE');
-ALTER TABLE `krrtfir_rtfund`.`PLN_PlanSurvey` DROP COLUMN `StatusID`;
-ALTER TABLE `krrtfir_rtfund`.`BSC_persons` ADD COLUMN `IsExpert` ENUM('YES','NO') NOT NULL DEFAULT 'NO' AFTER `IsSupporter`;
-ALTER TABLE `krrtfir_rtfund`.`FRW_menus` MODIFY COLUMN `IsSupporter` ENUM('YES','NO') NOT NULL DEFAULT 'NO',
- ADD COLUMN `IsExpert` ENUM('YES','NO') NOT NULL DEFAULT 'NO' AFTER `IsSupporter`;
 
-CREATE TABLE  `krrtfir_rtfund`.`PLN_experts` 
- * 
+
+
+
+
+
+
+
+
+
+ 
  * 
  * 
  * 
