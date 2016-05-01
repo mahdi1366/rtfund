@@ -110,6 +110,12 @@ class DateModules
 		return date("Y-m-d");
 	}
 	
+	static function NowTime()
+	{
+		date_default_timezone_set("Asia/Tehran"); 
+		return date("H:i:s");
+	}
+	
 	static function NowDateTime()
 	{
 		return date ("Y-m-d H:i:s");

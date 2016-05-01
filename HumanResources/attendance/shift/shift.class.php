@@ -123,9 +123,4 @@ class ATN_PersonShifts extends OperationClass
 	}
 }
 
-class ATN_traffic extends OperationClass
-{
-	
-}
-
 ?>

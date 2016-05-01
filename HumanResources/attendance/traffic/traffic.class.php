@@ -10,6 +10,12 @@ class ATN_traffic extends OperationClass
 	const TableKey = "TrafficID";
 	
 	public $TrafficID;
+	public $PersonID;
+	public $TrafficDate;
+	public $TrafficTime;
+	public $IsSystemic;
+	public $IsActive;
+	
 	
 }
 

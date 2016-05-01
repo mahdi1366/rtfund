@@ -149,9 +149,9 @@ Shift.prototype.SaveShift = function(){
 			else
 			{
 				if(st.data == "")
-					alert("خطا در اجرای عملیات");
+					Ext.MessageBox.alert("","خطا در اجرای عملیات");
 				else
-					alert(st.data);
+					Ext.MessageBox.alert("",st.data);
 			}
 		},
 		failure: function(){}
