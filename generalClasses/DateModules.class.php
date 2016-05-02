@@ -18,6 +18,16 @@ class DateModules
 		"Thursday" => "6",
 		"Friday" => "7"
 	);
+	
+	static $JWeekDays = array(
+		"1" => "دوشنبه",
+		"2" => "سه شنبه",
+		"3" => "چهارشنبه",
+		"4" => "پنجشنبه",
+		"5" => "جمعه",
+		"6" => "شنبه",
+		"7" => "یکشنبه",
+	);
 	/**
 	 * @param Y-m-d $date
 	 * @return Y-m-d $date
@@ -408,9 +418,9 @@ class DateModules
 		return false;
 	}
 	
-	static function GetWeekDay($date)
+	static function GetWeekDay($date, $format = "l")
 	{
-		return date_format(new DateTime(self::shamsi_to_miladi($date)), "l");
+		return date_format(new DateTime(self::shamsi_to_miladi($date)), $format);
 	}
 	
 	static function DateToString($SHdate)
@@ -587,6 +597,7 @@ class DateModules
 
         return ($year2-$year1)*12 + ($month2-$month1);
     }		
+	
 }
 
 ?>

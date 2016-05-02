@@ -43,9 +43,8 @@ $dg->addColumn("", "PayCompute","", true);
 $dg->addColumn("", "MaxFundWage","", true);
 
 $col = $dg->addColumn("عنوان فاز", "PartDesc", "");
-$col->editor = ColumnEditor::TextField();
+$col->renderer = "function(v,p,r){return RequestInfo.TitleRender(v,p,r);}";
 $col->sortable = false;
-
 
 if(!$ReadOnly)
 {

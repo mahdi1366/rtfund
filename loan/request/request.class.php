@@ -202,6 +202,7 @@ class LON_installments extends PdoDataAccess
 	public $PartID;
 	public $InstallmentDate;
 	public $InstallmentAmount;
+	public $IsDelayed;
 			
 	function __construct($InstallmentID = "") {
 		
@@ -221,16 +222,18 @@ class LON_installments extends PdoDataAccess
 			where " . $where, $param);
 	}
 	
-	function AddInstallment(){
+	function AddInstallment($pdo = null){
 		
-	 	if(!parent::insert("LON_installments",$this))
+	 	if(!parent::insert("LON_installments",$this, $pdo))
 	 		return false;
 
+		$this->InstallmentID = parent::InsertID($pdo);
+		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->MainObjectID = $this->InstallmentID;
 		$daObj->TableName = "LON_installments";
-		$daObj->execute();
+		$daObj->execute($pdo);
 	 	return true;
     }
 	

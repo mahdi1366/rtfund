@@ -293,7 +293,18 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 		$itemObj->TafsiliType = TAFTYPE_YEARS;
 		$itemObj->details = "کارمزد دوره تنفس";
 		$itemObj->TafsiliID = $curYearTafsili;
-		$itemObj->Add($pdo);
+		
+		if($curYearTafsili == "")
+		{
+			ExceptionHandler::PushException("تفصیلی مربوط به سال" . $curYear . " یافت نشد");
+			return false;
+		}		
+		if(!$itemObj->Add($pdo))
+		{
+			print_r(ExceptionHandler::PopAllExceptions());
+			ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+			return false;
+		}
 		
 		if($PartObj->WageReturn != "AGENT" && $PartObj->FundWage*1 > $PartObj->CustomerWage)
 		{
@@ -304,7 +315,12 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 			$itemObj->details = "بابت اختلاف کارمزد تنفس " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $ReqPersonTafsili;
-			$itemObj->Add($pdo);
+			if(!$itemObj->Add($pdo))
+			{
+				print_r(ExceptionHandler::PopAllExceptions());
+				ExceptionHandler::PushException("خطا در ایجاد ردیف اختلاف کارمزد تنفس");
+				return false;
+			}
 		}
 		
 		if($PartObj->FundWage*1 < $PartObj->CustomerWage*1)
@@ -316,7 +332,12 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->details = "بابت سهم کارمزد تنفس " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
 			$itemObj->TafsiliID = $ReqPersonTafsili;
-			$itemObj->Add($pdo);
+			if(!$itemObj->Add($pdo))
+			{
+				print_r(ExceptionHandler::PopAllExceptions());
+				ExceptionHandler::PushException("خطا در ایجاد ردیف سهم کارمزد تنفس");
+				return false;
+			}
 		}
 	}	
 	//------------------------ کارمزد---------------------

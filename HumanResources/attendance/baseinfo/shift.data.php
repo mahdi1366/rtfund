@@ -111,4 +111,7 @@ function DeletePersonShift(){
 	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
 	die();
 }
+
+function CreateCalendar(){}
+
 ?>

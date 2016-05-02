@@ -5,7 +5,7 @@
 //-----------------------------
 
 require_once '../../header.inc.php';
-require_once 'traffic.class.php';
+require_once '../traffic/traffic.class.php';
 require_once inc_reportGenerator;
 
 if(isset($_REQUEST["showReport"]))
@@ -45,9 +45,12 @@ function ShowReport(){
 	
 	die();
 }
+
+$r = rand(1,1000);
 ?>
+<script type="text/javascript" src="/generalUI/ext4/ux/calendar.js?v=<?= $r ?>"></script>
 <script>
-TraceTraffic.prototype = {
+Calandar.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
@@ -58,35 +61,16 @@ TraceTraffic.prototype = {
 	}
 }
 
-function TraceTraffic()
+function Calandar()
 {
 	this.mainPanel = new Ext.form.Panel({
 		renderTo : this.get("main"),
 		frame : true,
 		autoHeight : true,
-		layout : {
-			type : "table",
-			columns :4
-		},
 		bodyStyle : "text-align:right;padding:5px",
-		title : "گزارش تردد",
+		title : "تنظیم تقویم کاری",
 		width : 800,
 		items :[{
-			xtype : "combo",
-			width : 300,
-			fieldLabel : "انتخاب فرد",
-			store: new Ext.data.Store({
-				proxy:{
-					type: 'jsonp',
-					url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				fields :  ['PersonID','fullname']
-			}),
-			displayField: 'fullname',
-			valueField : "PersonID",
-			hiddenName : "PersonID"
-		},{
 			xtype : "combo",
 			store: YearStore,   
 			labelWidth : 30,
@@ -95,62 +79,41 @@ function TraceTraffic()
 			displayField: 'title',
 			valueField : "id",
 			hiddenName : "year",
-			value : '<?= substr(DateModules::shNow(),0,4) ?>'
-		},{
-			xtype : "combo",
-			store: MonthStore,   
-			labelWidth : 30,
-			width : 120,
-			fieldLabel : "ماه",
-			displayField: 'title',
-			valueField : "id",
-			hiddenName : "month"
-		},{
-			xtype : "button",
-			border : true,
-			style : "margin-right:20px",
-			text : "مشاهده گزارش",
-			iconCls : "report",
-			handler : function(){ TraceTrafficObj.LoadReport(); }
-		},{
-			xtype : "container",
-			html : "<hr>",
-			width : 790,
-			colspan : 4
-		},{
-			xtype : "container",
-			colspan : 4,
-			width : 790,
-			itemId : "div_report"
+			listeners : {
+				select : function(){ CalandarObj.LoadReport(); }
+			}			
 		}]
+	});
+	
+}
+
+Calandar.prototype.LoadReport = function(){
+
+	this.calendar = new Ext.calendar({
+		title : "تقویم کاری",
+		width : 800,
+		height : 500,
+		StartDate : new Ext.SHDate(<?= substr(DateModules::shNow(),0,4) ?>, 1, 1),
+		renderTo : this.get("calendar"),
+		layout : {
+			type : "table",
+			columns : 7
+		},
+		defaults :{
+			width : 100,
+			height : 100
+		}
 	});
 }
 
-TraceTraffic.prototype.LoadReport = function(){
-	
-	mask = new Ext.LoadMask(this.mainPanel,{msg:'در حال ذخیره سازی ...'});
-	mask.show();
 
-	Ext.Ajax.request({
-		url: this.address_prefix +'TraceTraffic.php?showReport=true',
-		method: "POST",
-		form : this.get("mainForm"),
-
-		success: function(response){
-			mask.hide();
-			TraceTrafficObj.mainPanel.getComponent("div_report").update(response.responseText);
-		},
-		failure: function(){}
-	});	
-
-}
-
-TraceTrafficObj = new TraceTraffic();
+CalandarObj = new Calandar();
 
 
 </script>
 <form id="mainForm">
 	<center><br>
 		<div id="main" ></div><br>
+		<div id="calendar" ></div><br>
 	</center>
 </form>

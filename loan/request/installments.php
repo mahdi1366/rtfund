@@ -33,6 +33,7 @@ $dg->addColumn("", "BankDesc", "", true);
 $dg->addColumn("", "ChequeBranch", "", true);
 
 $col = $dg->addColumn("سررسید", "InstallmentDate", GridColumn::ColumnType_date);
+$col->editor = ColumnEditor::SHDateField();
 $col->width = 80;
 
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
@@ -43,12 +44,18 @@ $col->width = 80;
 $col = $dg->addColumn("مانده", "TotalRemainder", GridColumn::ColumnType_money);
 $col->width = 120;
 
+$col = $dg->addColumn("وضعیت تمدید", "IsDelayed");
+$col->renderer = "function(v,p,r){ return v == 'YES' ? 'تمدید شده' : '';}";
+$col->width = 120;
+
 if($editable)
 {
 	$dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", 
 			"function(){InstallmentObject.ComputeInstallments();}");
 	$dg->enableRowEdit = true;
 	$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SaveInstallment(store,record);}";
+	
+	$dg->addButton("", "تمدید اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
 }
 
 if($framework)
@@ -92,9 +99,20 @@ function Installment()
 	{
 		if(this.grid.plugins[0])
 			this.grid.plugins[0].on("beforeedit", function(editor,e){
-				if(e.record.data.IsPaid == "YES")
+				
+				if(e.record.data.IsDelayed == "YES")
+					return false;
+				if(e.rowIdx == e.grid.getStore().getCount()-1)
 					return false;
 			});
+		
+		this.grid.getView().getRowClass = function(record, index)
+		{
+			if(record.data.IsDelayed == "YES")
+				return "yellowRow";
+
+			return "";
+		}
 		
 		this.grid.getStore().proxy.extraParams = {PartID : this.PartID};
 		this.grid.render(this.get("div_grid"));
@@ -296,6 +314,76 @@ Installment.prototype.SaveInstallment = function(store, record){
 Installment.prototype.PayReport = function(){
 
 	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&PartID=" + this.PartID);
+}
+
+Installment.prototype.DelayInstallments = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+	{
+		Ext.MessageBox.alert("","قسطی که بعد از آن مایل به تمدید می باشید را انتخاب کنید");
+		return;
+	}
+	
+	if(!this.delayWin)
+	{
+		this.delayWin = new Ext.window.Window({
+			width : 160,
+			height : 85,
+			modal : true,
+			title : "تعداد ماه تمدید",
+			bodyStyle : "background-color:white",
+			items : [{
+				xtype : "numberfield",
+				name : "monthCount",
+				hideTrigger : true
+			}],
+			closeAction : "hide",
+			buttons : [{
+				text : "اعمال",				
+				iconCls : "save",
+				itemId : "btn_save",
+				handler : function(){
+					
+					me = InstallmentObject;
+					var record = me.grid.getSelectionModel().getLastSelected();
+					if(!record)
+					{
+						Ext.MessageBox.alert("","قسطی که بعد از آن مایل به تمدید می باشید را انتخاب کنید");
+						return;
+					}
+
+					mask = new Ext.LoadMask(me.delayWin, {msg:'در حال ذخیره سازی ...'});
+					mask.show();
+
+					Ext.Ajax.request({
+						url: me.address_prefix +'request.data.php',
+						method: "POST",
+						params: {
+							task: "DelayInstallments",
+							PartID : record.data.PartID,
+							InstallmentID : record.data.InstallmentID,
+							months : me.delayWin.down("[name=monthCount]").getValue()						
+						},
+						success: function(response){
+							mask.hide();
+							result = Ext.decode(response.responseText);
+							if(!result.success)
+								Ext.MessageBox.alert("", result.data);	
+							
+							InstallmentObject.delayWin.hide();
+							InstallmentObject.grid.getStore().load();
+						}
+					});
+				}				
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.delayWin);
+	}
+	
+	this.delayWin.show();
+	this.delayWin.center();
 }
 
 </script>

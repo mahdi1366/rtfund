@@ -63,6 +63,7 @@
 .lock			{background-image:url('/generalUI/ext4/resources/themes/icons/lock.gif') !important;}
 .unlock			{background-image:url('/generalUI/ext4/resources/themes/icons/unlock.gif') !important;}
 .finish			{background-image:url('/generalUI/ext4/resources/themes/icons/finish.png') !important;}
+.delay			{background-image:url('/generalUI/ext4/resources/themes/icons/delay.png') !important;}
 
 .pinkRow .x-grid-cell,.pinkRow .x-grid-rowwrap-div {background-color: #FFB8C9; }
 .greenRow .x-grid-cell,.greenRow .x-grid-rowwrap-div {background-color: #D0F7E2; }

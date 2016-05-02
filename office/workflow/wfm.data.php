@@ -234,7 +234,7 @@ function ChangeStatus(){
 		where IsActive='YES' AND FlowID=? AND StepID=?" , array($newObj->FlowID, $StepID));
 	if(count($dt) == 0)
 	{
-		echo Response::createObjectiveResponse(false, "");
+		echo Response::createObjectiveResponse(false, "1");
 		die();
 	}
 	$newObj->StepRowID = $dt[0]["StepRowID"];	
@@ -252,7 +252,7 @@ function ChangeStatus(){
 	if(!$result)
 	{
 		$pdo->rollBack();
-		echo Response::createObjectiveResponse($result, "");
+		echo Response::createObjectiveResponse($result, "2");
 		die();
 	}
 	
@@ -262,7 +262,7 @@ function ChangeStatus(){
 	if(!$result)
 	{
 		$pdo->rollBack();
-		echo Response::createObjectiveResponse($result, "");
+		echo Response::createObjectiveResponse($result, "3");
 		die();
 	}
 	

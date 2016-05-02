@@ -22,10 +22,38 @@ CREATE TABLE  `krrtfir_rtfund`.`PLN_experts`
  * 
  * 
  * 
+ * DROP TABLE IF EXISTS `krrtfir_rtfund`.`ATN_calendar`;
+CREATE TABLE  `krrtfir_rtfund`.`ATN_calendar` (
+  `RowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `CalYear` smallint(5) unsigned NOT NULL,
+  `CalDay` date NOT NULL,
+  `WeekDay` smallint(5) unsigned NOT NULL,
+  `IsHoliday` enum('YES','NO') COLLATE utf8_bin NOT NULL DEFAULT 'NO',
+  PRIMARY KEY (`RowID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+ * 
+ * DROP TABLE IF EXISTS `krrtfir_rtfund`.`ATN_PersonShifts`;
+CREATE TABLE  `krrtfir_rtfund`.`ATN_PersonShifts` (
+  `RowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `PersonID` int(10) unsigned NOT NULL,
+  `ShiftID` int(10) unsigned NOT NULL,
+  `FromDate` date NOT NULL,
+  `ToDate` date NOT NULL DEFAULT '0000-00-00',
+  PRIMARY KEY (`RowID`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1 COMMENT='شیفت های پرسنل';
+ * 
+ * DROP TABLE IF EXISTS `krrtfir_rtfund`.`ATN_shifts`;
+CREATE TABLE  `krrtfir_rtfund`.`ATN_shifts` (
+  `ShiftID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(500) CHARACTER SET utf8 NOT NULL,
+  `FromTime` time NOT NULL,
+  `ToTime` time NOT NULL,
+  `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
+  PRIMARY KEY (`ShiftID`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1 COMMENT='شیفت های کاری';
  * 
  * 
- * 
-
+DROP TABLE IF EXISTS `krrtfir_rtfund`.`ATN_traffic`;
 CREATE TABLE  `krrtfir_rtfund`.`ATN_traffic` (
   `TrafficID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `PersonID` int(10) unsigned NOT NULL,
@@ -34,29 +62,7 @@ CREATE TABLE  `krrtfir_rtfund`.`ATN_traffic` (
   `IsSystemic` enum('YES','NO') NOT NULL DEFAULT 'YES',
   `IsActive` enum('YES','NO') NOT NULL DEFAULT 'YES',
   PRIMARY KEY (`TrafficID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='تردد پرسنل';
-	
-CREATE TABLE  `krrtfir_rtfund`.`ATN_shifts` (
-  `ShiftID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `title` varchar(500) NOT NULL,
-  `FromTime` time NOT NULL,
-  `ToTime` time NOT NULL,
-  `IsActive` enum('YES','NO') NOT NULL,
-  PRIMARY KEY (`ShiftID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='شیفت های کاری';
-	
-CREATE TABLE  `krrtfir_rtfund`.`ATN_PersonShifts` (
-  `RowID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `PersonID` int(10) unsigned NOT NULL,
-  `ShiftID` int(10) unsigned NOT NULL,
-  `FromDate` date NOT NULL,
-  `ToDate` date NOT NULL,
-  `IsActive` enum('YES','NO') NOT NULL,
-  PRIMARY KEY (`RowID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='شیفت های پرسنل';
- * 
- * 
- * 
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1 COMMENT='تردد پرسنل';
 
  * 
  */
