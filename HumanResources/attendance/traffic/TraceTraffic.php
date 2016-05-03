@@ -18,28 +18,44 @@ function ShowReport(){
 	$StartDate = DateModules::shamsi_to_miladi($_POST["year"] . "-" . $_POST["month"] . "-01", "-");
 	$EndDate = DateModules::shamsi_to_miladi($_POST["year"] . "-" . $_POST["month"] ."-" . DateModules::DaysOfMonth($_POST["year"] ,$_POST["month"]), "-");
 	
-	$days = DateModules::DaysOfMonth($_POST["year"] ,$_POST["month"]);
 	$dt = ATN_traffic::Get(" AND PersonID=? AND TrafficDate>= ? AND TrafficDate <= ? order by TrafficDate", 
 		array($_SESSION["USER"]["PersonID"], $StartDate, $EndDate));
 	
+	$dt = $dt->fetchAll();
+	
 	$returnArr = array();
-	for($i=0; $i < $days; $i++)
+	while($StartDate < $EndDate)
 	{
-		
+		if(count($dt)>0 && $StartDate == $dt[0]["TrafficDate"])
+			break;
+		$returnArr[] = array("TrafficDate" => $StartDate);
+		$StartDate = DateModules::AddToGDate($StartDate, 1);
 	}
 	
+	$returnArr = array_merge($returnArr, $dt);
+	$StartDate = count($dt) > 0 ? $dt[ count($dt)-1 ]["TrafficDate"] : $StartDate;
 	
-	
+	while($StartDate < $EndDate)
+	{
+		$returnArr[] = array("TrafficDate" => $StartDate);
+		$StartDate = DateModules::AddToGDate($StartDate, 1);
+	}
+		
 	function DayRender($row, $value){
 		
 		return DateModules::$JWeekDays[ DateModules::GetWeekDay($value, "N") ];
 	}
+	function DateRender($row, $value){
+		
+		return DateModules::miladi_to_shamsi($value);
+	}
 	
 	$rpg = new ReportGenerator();
 	$rpg->rowNumber = false;
-	$rpg->mysql_resource = $dt;
+	$rpg->mysql_resource = $returnArr;
 	
 	$rpg->addColumn("روز", "TrafficDate", "DayRender");
+	$rpg->addColumn("تاریخ", "TrafficDate", "DateRender");
 	
 	$rpg->generateReport();
 	

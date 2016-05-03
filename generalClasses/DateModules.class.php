@@ -7,7 +7,7 @@
 class DateModules
 {
 	static private $g_days_in_month = array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31); 
-	static private $j_days_in_month = array(31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29);
+	static $j_days_in_month = array(31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29);
 	
 	static $WeekDays = array(
 		"Saturday" => "1", 
