@@ -10,7 +10,7 @@ class ATN_shifts extends OperationClass
 	const TableKey = "ShiftID";
 	
 	public $ShiftID;
-	public $title;
+	public $ShiftTitle;
 	public $FromTime;
 	public $ToTime;
 	public $IsActive;
@@ -41,6 +41,7 @@ class ATN_PersonShifts extends OperationClass
 	public $ShiftID;
 	public $FromDate;
 	public $ToDate;
+	public $IsActive;
 			
 	function __construct($RowID = "") {
 		
@@ -52,7 +53,7 @@ class ATN_PersonShifts extends OperationClass
 	
 	static function Get($where = '', $whereParams = array(), $order = "") {
 		
-		$query = "select ps.*,concat_ws(' ',fname,lname,CompanyName) fullname , s.title ShiftTitle
+		$query = "select ps.*,concat_ws(' ',fname,lname,CompanyName) fullname , s.ShiftTitle
 			from ATN_PersonShifts ps 
 			join BSC_persons p using(PersonID) 
 			join ATN_shifts s using(ShiftID) 
@@ -64,10 +65,10 @@ class ATN_PersonShifts extends OperationClass
 	function DatesAreValid(){
 		
 		$dt = PdoDataAccess::runquery("select * from ATN_PersonShifts
-			where PersonID=:p AND ShiftID=:s 
+			where PersonID=:p 
 			AND ( (:f between FromDate AND if(ToDate='0000-00-00','4000-00-00',ToDate) )
 				OR (:t between FromDate AND if(ToDate='0000-00-00','4000-00-00',ToDate) ) ) AND RowID <> :r",
-				array(":p" => $this->PersonID, ":s" => $this->ShiftID, ":r" => $this->RowID,
+				array(":p" => $this->PersonID, ":r" => $this->RowID,
 					":f" => DateModules::shamsi_to_miladi($this->FromDate), 
 					":t" => DateModules::shamsi_to_miladi($this->ToDate)));
 		if(count($dt) > 0)
@@ -75,7 +76,7 @@ class ATN_PersonShifts extends OperationClass
 			ExceptionHandler::PushException("شیفت انتخاب شده دارای تداخل زمانی میباشد");
 			return false;
 		}	
-		$ShiftObj = new ATN_shifts($this->ShiftID);
+		/*$ShiftObj = new ATN_shifts($this->ShiftID);
 		
 		$dt = PdoDataAccess::runquery("select * from ATN_PersonShifts join ATN_shifts using(ShiftID)
 			where PersonID=:p 
@@ -91,7 +92,7 @@ class ATN_PersonShifts extends OperationClass
 		{
 			ExceptionHandler::PushException("شیفت های این فرد با یکدیگر دارای تداخل ساعتی می باشند");;
 			return false;
-		}		
+		}		*/
 		
 		return true;
 	}
@@ -119,7 +120,8 @@ class ATN_PersonShifts extends OperationClass
 			where PersonID=:p AND t.ShiftID <>
 		";*/
 		
-		return parent::Remove($pdo);
+		$this->IsActive = "NO";
+		return $this->Edit($pdo);
 	}
 }
 

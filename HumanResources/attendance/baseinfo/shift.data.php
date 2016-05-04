@@ -72,7 +72,7 @@ function GetAllPersonShifts(){
 	
 	$field = isset($_GET ["fields"]) ? $_GET ["fields"] : "";
 	$field = $field == "PersonID" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;
-	$field = $field == "ShiftID" ? "s.title" : $field;
+	$field = $field == "ShiftID" ? "s.ShiftTitle" : $field;
 	
 	if (isset($_GET ["query"]) && $_GET ["query"] != "") {
 		$where .= " AND " . $field . " LIKE :qry ";

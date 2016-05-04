@@ -18,7 +18,7 @@ function ShowReport(){
 	$StartDate = DateModules::shamsi_to_miladi($_POST["year"] . "-" . $_POST["month"] . "-01", "-");
 	$EndDate = DateModules::shamsi_to_miladi($_POST["year"] . "-" . $_POST["month"] ."-" . DateModules::DaysOfMonth($_POST["year"] ,$_POST["month"]), "-");
 	
-	$dt = ATN_traffic::Get(" AND PersonID=? AND TrafficDate>= ? AND TrafficDate <= ? order by TrafficDate", 
+	$dt = ATN_traffic::Get(" AND t.PersonID=? AND TrafficDate>= ? AND TrafficDate <= ? order by TrafficDate", 
 		array($_SESSION["USER"]["PersonID"], $StartDate, $EndDate));
 	
 	$dt = $dt->fetchAll();
@@ -28,16 +28,17 @@ function ShowReport(){
 	{
 		if(count($dt)>0 && $StartDate == $dt[0]["TrafficDate"])
 			break;
-		$returnArr[] = array("TrafficDate" => $StartDate);
+		$returnArr[] = array("TrafficID" => "", "TrafficDate" => $StartDate , "ShiftTitle" => "", "TrafficTime" => "");;
 		$StartDate = DateModules::AddToGDate($StartDate, 1);
 	}
 	
 	$returnArr = array_merge($returnArr, $dt);
 	$StartDate = count($dt) > 0 ? $dt[ count($dt)-1 ]["TrafficDate"] : $StartDate;
+	$StartDate = DateModules::AddToGDate($StartDate, 1);
 	
-	while($StartDate < $EndDate)
+	while($StartDate <= $EndDate)
 	{
-		$returnArr[] = array("TrafficDate" => $StartDate);
+		$returnArr[] = array("TrafficID" => "", "TrafficDate" => $StartDate , "ShiftTitle" => "", "TrafficTime" => "");;
 		$StartDate = DateModules::AddToGDate($StartDate, 1);
 	}
 		
@@ -50,15 +51,52 @@ function ShowReport(){
 		return DateModules::miladi_to_shamsi($value);
 	}
 	
-	$rpg = new ReportGenerator();
-	$rpg->rowNumber = false;
-	$rpg->mysql_resource = $returnArr;
-	
-	$rpg->addColumn("روز", "TrafficDate", "DayRender");
-	$rpg->addColumn("تاریخ", "TrafficDate", "DateRender");
-	
-	$rpg->generateReport();
-	
+	$returnStr = "";
+	for($i=0; $i < count($returnArr); $i++)
+	{
+		$returnStr .= "<tr>
+			<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
+			<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
+			<td>" . $returnArr[$i]["ShiftTitle"] . "</td>
+			<td>";
+		
+		$index = 1;
+		$totalAttend = 0;
+		$currentDay = $returnArr[$i]["TrafficDate"];
+		while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
+		{
+			$returnStr .= $returnArr[$i]["TrafficTime"];
+			$returnStr .= $index % 2 == 0 ? "<br>" : " - ";
+			
+			if($index % 2 == 0)
+			{
+				$totalAttend += $returnArr[$i]["TrafficTime"] - $returnArr[$i-1]["TrafficTime"];
+			}
+				
+			$index++;
+			$i++;
+		}
+		$i--;
+		$returnStr .= "</td><td>" . $totalAttend;
+		
+		$returnStr .= "</td></tr>";
+	}
+?>
+<style>
+	.reportTbl td {padding:4px;}
+	.reportTbl th {padding:4px;text-align: center; background-color: #efefef; font-weight: bold}
+</style>
+<table class="reportTbl" width="100%" border="1">
+	<tr class="blueText">
+		<th>روز</th>
+		<th>تاریخ</th>
+		<th>شیفت</th>
+		<th>ورود/خروج</th>
+		<th>حضور</th>
+	</tr>
+	<?= $returnStr ?>
+</table>
+<?	
 	die();
 }
 ?>
@@ -131,12 +169,12 @@ function TraceTraffic()
 		},{
 			xtype : "container",
 			html : "<hr>",
-			width : 790,
+			width : 780,
 			colspan : 4
 		},{
 			xtype : "container",
 			colspan : 4,
-			width : 790,
+			width : 780,
 			itemId : "div_report"
 		}]
 	});

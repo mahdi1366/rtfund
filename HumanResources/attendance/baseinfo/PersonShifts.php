@@ -105,9 +105,9 @@ function PersonShift(){
 				url: this.address_prefix + 'shift.data.php?task=GetAllShifts',
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
-			fields :  ['ShiftID','title']
+			fields :  ['ShiftID','ShiftTitle']
 		}),
-		displayField: 'title',
+		displayField: 'ShiftTitle',
 		valueField : "ShiftID",
 		name : "ShiftID"
 	});

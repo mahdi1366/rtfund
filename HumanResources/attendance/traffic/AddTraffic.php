@@ -7,10 +7,10 @@ include('../../header.inc.php');
 include_once inc_dataGrid;
 require_once 'traffic.class.php';
 
-$dt = ATN_traffic::Get(" AND PersonID=? AND TrafficDate=?", 
+$dt = ATN_traffic::Get(" AND t.PersonID=? AND TrafficDate=?", 
 	array($_SESSION["USER"]["PersonID"], DateModules::Now() ));
 
-$even = count($dt) == 0 ? true : count($dt) % 2 == 0;
+$even = $dt->rowCount() == 0 ? true : $dt->rowCount() % 2 == 0;
 
 ?>
 <style>

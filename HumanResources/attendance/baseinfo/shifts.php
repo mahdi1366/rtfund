@@ -14,7 +14,7 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "Shift.data.php?task=GetAllS
 $dg->addColumn("", "ShiftID", "", true);
 $dg->addColumn("", "IsActive", "", true);
 
-$col = $dg->addColumn("عنوان شیفت", "title", "");
+$col = $dg->addColumn("عنوان شیفت", "ShiftTitle", "");
 $col->editor = ColumnEditor::TextField();
 
 
