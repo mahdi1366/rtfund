@@ -174,6 +174,22 @@ RequestInfo.OperationRender = function(v,p,record){
 	}		
 }
 
+RequestInfo.TitleRender = function(v,p,record){
+	
+	PartID = record.data.PartID;
+
+	st = PartID.lpad("0", 11);
+	num = (st[0]*11) + (st[1]*10) + (st[2]*9) + (st[3]*1) + (st[4]*2) + (st[5]*3)
+		+ (st[6]*4) + (st[7]*5) + (st[8]*6) + (st[9]*7) + (st[10]*8);
+	remain = num % 99;
+	
+	code = st + remain.toString().lpad("0", 2);
+	
+	p.tdAttr = "data-qtip='شماره پیگیری : " + code + "'";
+	
+	return v;
+}
+
 RequestInfo.prototype.OperationMenu = function(e){
 
 	record = this.grid.getSelectionModel().getLastSelected();
@@ -188,7 +204,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 	
 		op_menu.add({text: 'پرداخت های مشتری',iconCls: 'list',
 		handler : function(){ return RequestInfoObject.LoadPays(); }});
-		
+	
 		if(this.RequestRecord.data.IsEnded == "NO")
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});

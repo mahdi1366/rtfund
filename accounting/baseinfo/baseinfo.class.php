@@ -448,6 +448,7 @@ class ACC_accounts extends PdoDataAccess {
 	public $AccountNo;
     public $AccountType;
     public $IsActive;
+	public $shaba;
 
 	public $_BankDesc;
 	
@@ -470,8 +471,25 @@ class ACC_accounts extends PdoDataAccess {
         return $res;
     }
 
+	public function AccountNoValidity(){
+		
+		$dt = parent::runquery("select * from ACC_accounts where AccountNo=? AND AccountID<>?", 
+			array($this->AccountNo, $this->AccountID));
+		
+		if(count($dt) > 0)
+		{
+			ExceptionHandler::PushException("کد حساب تکراری است");
+			return false;
+		}
+		
+		return true;
+	}
+	
     function InsertAccount() {
 
+		if(!$this->AccountNoValidity())
+			return false;
+		
 		$this->BranchID = $_SESSION["accounting"]["BranchID"];
         
 		if (!parent::insert("ACC_accounts", $this))
@@ -497,10 +515,32 @@ class ACC_accounts extends PdoDataAccess {
     }
 
     function UpdateAccount() {
+		
+		if(!$this->AccountNoValidity())
+			return false;
 
         if (!parent::update("ACC_accounts", $this, 'AccountID=:ACId', array(':ACId' => $this->AccountID)))
             return false;
 
+		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where ObjectID=? AND TafsiliType=3", array($this->AccountID));
+		if(count($dt) == 0)
+		{
+			$obj = new ACC_tafsilis();
+			$obj->ObjectID = $this->AccountID;
+			$obj->TafsiliCode = $this->AccountNo;
+			$obj->TafsiliDesc = $this->AccountDesc;
+			$obj->TafsiliType = "3";
+			$obj->AddTafsili();
+		}
+		else
+		{
+			$obj = new ACC_tafsilis($dt[0]["TafsiliID"]);
+			$obj->TafsiliCode = $this->AccountNo;
+			$obj->TafsiliDesc = $this->AccountDesc;
+			$obj->EditTafsili();
+		}
+		
+		
         $daObj = new DataAudit();
         $daObj->ActionType = DataAudit::Action_update;
         $daObj->MainObjectID = $this->AccountID;

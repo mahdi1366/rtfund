@@ -66,6 +66,10 @@ $col = $dg_accounts->addColumn("شماره حساب",'AccountNo','string');
 $col->editor = ColumnEditor::TextField();
 $col->width = 120;
 
+$col = $dg_accounts->addColumn("شماره شبا",'shaba','string');
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 180;
+
 $col = $dg_accounts->addColumn("نوع حساب",'AccountType');
 $col->width = 80;
 $col->renderer = 'function(v,p,r){return AccountObj.TypeHesab(v,p,r);}';

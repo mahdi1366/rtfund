@@ -676,6 +676,62 @@ function SaveInstallment(){
 	die();
 }
 
+function DelayInstallments(){
+	
+	$PartID = $_POST["PartID"];
+	$InstallmentID = $_POST["InstallmentID"];
+	$months = $_POST["months"];
+	
+	$PartObj = new LON_ReqParts($PartID);
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$dt = LON_installments::SelectAll("PartID=? AND InstallmentID>=?", array($PartID, $InstallmentID));
+	for($i=0; $i<count($dt); $i++)
+	{
+		$obj = new LON_installments();
+		$obj->InstallmentID = $dt[$i]["InstallmentID"];
+		$obj->IsDelayed = "YES";
+		if(!$obj->EditInstallment($pdo))
+		{
+			$pdo->rollBack ();
+			echo Response::createObjectiveResponse(false, "1");
+			die();
+		}
+		//...........................................
+		
+		$obj = new LON_installments();
+		$obj->PartID = $dt[$i]["PartID"];
+		$obj->InstallmentDate = DateModules::shamsi_to_miladi(
+				DateModules::AddToJDate(DateModules::miladi_to_shamsi($dt[$i]["InstallmentDate"]), 0, $months));
+		
+		$days = DateModules::GDateMinusGDate($obj->InstallmentDate, $dt[$i]["InstallmentDate"]);
+		
+		$extraWage = round($dt[$i]["InstallmentAmount"]*$PartObj->CustomerWage*$days/36500);
+		
+		$obj->InstallmentAmount = $dt[$i]["InstallmentAmount"]*1 + $extraWage;
+		if(!$obj->AddInstallment($pdo))
+		{
+			$pdo->rollBack ();
+			echo Response::createObjectiveResponse(false, "2");
+			die();
+		}
+	}
+	
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		$pdo->rollBack ();
+		
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();	
+}
 //-------------------------------------------------
 
 function GetLastFundComment(){
@@ -857,6 +913,9 @@ function ComputePayments($PartID, &$installments){
 	$Forfeit = 0;
 	for($i=0; $i < count($installments); $i++)
 	{
+		if($installments[$i]["IsDelayed"] == "YES")
+			continue;
+		
 		$installments[$i]["ForfeitAmount"] = 0;
 		$installments[$i]["ForfeitDays"] = 0;
 		$installments[$i]["remainder"] = 0;
@@ -985,6 +1044,9 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 	$Forfeit = 0;
 	for($i=0; $i < count($installments); $i++)
 	{
+		if($installments[$i]["IsDelayed"] == "YES")
+			continue;
+		
 		$installments[$i]["ForfeitAmount"] = 0;
 		$installments[$i]["ForfeitDays"] = 0;
 		$installments[$i]["remainder"] = 0;

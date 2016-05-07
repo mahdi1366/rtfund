@@ -236,6 +236,8 @@ class WFM_FlowRows extends PdoDataAccess {
 				PdoDataAccess::runquery("update PLN_plans set StepID=? where PlanID=?", array($EndStepID, $ObjectID), $pdo);
 				return ExceptionHandler::GetExceptionCount() == 0;
 		}
+		
+		return true;
 	}
 	
 	

@@ -1,0 +1,126 @@
+.x-shcalendar {background-color: white;position: relative; }/* line 8, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar a {  -moz-outline: 0 none;  outline: 0 none;  color: #15428b;  text-decoration: none;  border-width: 0; }
+
+
+/* line 25, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar-header {border: 1px solid #1b376c;position: relative;height: 26px;background-image: none;background-color: #23427c;background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #264888), color-stop(100%, #1f3a6c));background-image: -webkit-linear-gradient(top, #264888, #1f3a6c);background-image: -moz-linear-gradient(top, #264888, #1f3a6c);background-image: -o-linear-gradient(top, #264888, #1f3a6c);background-image: -ms-linear-gradient(top, #264888, #1f3a6c);background-image: linear-gradient(top, #264888, #1f3a6c); }
+
+/* line 38, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar-prev,
+.x-shcalendar-next {position: absolute;top: 5px;width: 18px; }/* line 44, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar-prev a,.x-shcalendar-next a {  display: block;  width: 16px;  height: 16px;  background-position: top;  background-repeat: no-repeat;  cursor: pointer;  text-decoration: none !important;  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);  opacity: 0.7; }  /* line 59, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */  
+.x-shcalendar-prev a:hover,  .x-shcalendar-next a:hover {    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);    opacity: 1; }
+
+/* line 65, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar-next {right: 5px; }/* line 68, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar-next a {  background-image: url('../../resources/themes/images/default/shared/right-btn.gif'); }
+
+/* line 73, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar-prev {left: 5px; }/* line 76, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar-prev a {  background-image: url('../../resources/themes/images/default/shared/left-btn.gif'); }
+
+/* line 82, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-item-disabled .x-shcalendar-prev a:hover,
+.x-item-disabled .x-shcalendar-next a:hover {filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=60);opacity: 0.6; }
+
+/* line 86, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar-month {padding-top: 3px; }/* line 99, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar-month .x-btn,.x-shcalendar-month button,.x-shcalendar-month .x-btn-tc,.x-shcalendar-month 
+.x-btn-tl,.x-shcalendar-month .x-btn-tr,.x-shcalendar-month .x-btn-mc,.x-shcalendar-month .x-btn-ml,
+.x-shcalendar-month .x-btn-mr,.x-shcalendar-month .x-btn-bc,.x-shcalendar-month .x-btn-bl,.x-shcalendar-month .x-btn-br 
+{  background: transparent !important;  border-width: 0 !important; }
+.x-shcalendar-month span {  color: #fff !important; }
+.x-shcalendar-month .x-btn-split-right {  background: no-repeat right center !important;  background-image: url('../../resources/themes/images/default/button/s-arrow-light.gif');  padding-right: 12px; }
+
+/* line 116, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar-next {text-align: right; }
+
+/* line 120, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar-month {text-align: center; }/* line 124, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar-month button {  color: white !important; }
+
+/* line 130, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+table.x-shcalendar-inner { height: 100%;width: 100%;table-layout: fixed; }
+table.x-shcalendar-inner th {  width: 25px;  height: 30px;  padding: 0;  color: #233d6d;  font: normal 12px tahoma, arial, verdana, sans-serif;  text-align: center;  
+		border-bottom: 1px solid #b2d1f5;  background-image: none;  background-color: #dfecfb;  
+		background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #edf4fd), color-stop(100%, #cde1f9));  
+		background-image: -webkit-linear-gradient(top, #edf4fd, #cde1f9);  background-image: -moz-linear-gradient(top, #edf4fd, #cde1f9);  
+		background-image: -o-linear-gradient(top, #edf4fd, #cde1f9);  background-image: -ms-linear-gradient(top, #edf4fd, #cde1f9);  
+		background-image: linear-gradient(top, #edf4fd, #cde1f9);  cursor: default; }  
+table.x-shcalendar-inner th span {    display: block;    padding-right: 7px; } 
+table.x-shcalendar-inner tr { border: 1px solid #ddd; }
+table.x-shcalendar-inner td {  border: 1px solid;  border-color: #ddd;  text-align: right;  padding: 2px; vertical-align: top}
+table.x-shcalendar-inner a { height: 100%; padding-right: 4px;  display: block;  zoom: 1;  font: normal 11px tahoma, arial, verdana, sans-serif;  color: black;  text-decoration: none;  text-align: right; }
+table.x-shcalendar-inner .x-shcalendar-active {  cursor: pointer;  color: black; }
+table.x-shcalendar-inner .x-shcalendar-selected a {  background: repeat-x left top;  background-color: #dae5f3;  border: 1px solid #8db2e3; }
+table.x-shcalendar-inner .x-shcalendar-selected span {  font-weight: bold; }
+
+table.x-shcalendar-inner .x-shcalendar-today a {  border: 1px solid;  border-color: darkred; }
+td.x-shcalendar-today { background-color: lightyellow}
+table.x-shcalendar-inner .x-shcalendar-prevday a,table.x-shcalendar-inner .x-shcalendar-nextday a {  text-decoration: none !important;  color: #aaa; }
+td.x-shcalendar-prevday {background-color : #f6f6f6}
+table.x-shcalendar-inner a:hover,table.x-shcalendar-inner .x-shcalendar-disabled a:hover {  text-decoration: none !important;  color: #000;  background-color: #ddecfe; }
+table.x-shcalendar-inner .x-shcalendar-disabled a {  cursor: default;  background-color: #eee;  color: #bbb; }
+
+/* line 235, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar-footer,
+.x-monthpicker-buttons {position: relative;border-top: 1px solid #b2d1f5;border-left: 1px solid #ddd;border-right: 1px solid #ddd;border-bottom: 1px solid #ddd;background-image: none;background-color: #dfecfb;background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #dee8f5), color-stop(49%, #d1dff0), color-stop(51%, #c7d8ed), color-stop(100%, #cbdaee));background-image: -webkit-linear-gradient(top, #dee8f5, #d1dff0 49%, #c7d8ed 51%, #cbdaee);background-image: -moz-linear-gradient(top, #dee8f5, #d1dff0 49%, #c7d8ed 51%, #cbdaee);background-image: -o-linear-gradient(top, #dee8f5, #d1dff0 49%, #c7d8ed 51%, #cbdaee);background-image: -ms-linear-gradient(top, #dee8f5, #d1dff0 49%, #c7d8ed 51%, #cbdaee);background-image: linear-gradient(top, #dee8f5, #d1dff0 49%, #c7d8ed 51%, #cbdaee);text-align: center; }/* line 248, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */.x-shcalendar-footer .x-btn,.x-monthpicker-buttons .x-btn {  position: relative;  margin: 4px; }
+
+/* line 254, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-item-disabled .x-shcalendar-inner a:hover {background: none; }
+
+/* line 259, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-shcalendar .x-monthpicker {position: absolute;left: 0;top: 0; }
+
+/* line 266, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-monthpicker {border: 1px solid #1b376c;background-color: white; }
+
+/* line 272, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-monthpicker-months,
+.x-monthpicker-years {float: left;height: 167px;width: 88px; }
+
+/* line 279, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-monthpicker-item {float: left;margin: 4px 0 5px 0;font: normal 11px tahoma, arial, verdana, sans-serif;text-align: center;vertical-align: middle;height: 18px;width: 43px;border: 0 none; }/* line 293, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */.x-monthpicker-item a {  display: block;  margin: 0 5px 0 5px;  text-decoration: none;  color: #15428b;  border: 1px solid white;  line-height: 17px; }  /* line 306, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */  .x-monthpicker-item a:hover {    background-color: #ddecfe; }  /* line 310, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */  .x-monthpicker-item a.x-monthpicker-selected {    background-color: #dfecfb;    border: 1px solid #8db2e3; }
+
+/* line 317, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-monthpicker-months {border-right: 1px solid #1b376c;width: 87px; }
+
+/* line 322, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-monthpicker-years .x-monthpicker-item {width: 44px; }
+
+/* line 326, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-monthpicker-yearnav {height: 28px; }/* line 329, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */.x-monthpicker-yearnav button {  background-image: url('../../resources/themes/images/default/tools/tool-sprites.gif');  height: 15px;  width: 15px;  padding: 0;  margin: 6px 12px 5px 15px;  border: 0;  outline: 0 none; }  /* line 337, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */  .x-monthpicker-yearnav button::-moz-focus-inner {    border: 0;    padding: 0; }
+
+/* line 344, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-monthpicker-yearnav-next {background-position: 0 -120px; }
+
+/* line 348, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-monthpicker-yearnav-next-over {cursor: pointer;cursor: hand;background-position: -15px -120px; }
+
+/* line 354, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-monthpicker-yearnav-prev {background-position: 0 -105px; }
+
+/* line 358, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-monthpicker-yearnav-prev-over {cursor: pointer;cursor: hand;background-position: -15px -105px; }
+
+/* line 365, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-monthpicker-small .x-monthpicker-item {margin: 2px 0 2px 0; }
+/* line 369, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-monthpicker-small .x-monthpicker-yearnav {height: 23px; }
+/* line 373, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-monthpicker-small .x-monthpicker-months, .x-monthpicker-small .x-monthpicker-years {height: 136px; }
+
+/* line 383, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-quirks .x-ie7 .x-monthpicker-buttons .x-btn,
+.x-quirks .x-ie8 .x-monthpicker-buttons .x-btn {margin-top: 2px; }
+/* line 389, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-quirks .x-monthpicker-small .x-monthpicker-yearnav button {margin-top: 3px;margin-bottom: 3px; }
+
+/* line 395, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-ie6 .x-monthpicker-small .x-monthpicker-yearnav button {margin-top: 3px;margin-bottom: 3px; }
+
+/* line 405, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-nlg .x-shcalendar-header {background-image: url('../../resources/themes/images/default/shcalendar/shcalendar-header-bg.gif');background-repeat: repeat-x;background-position: top left; }
+/* line 414, ../themes/stylesheets/ext4/default/widgets/_shcalendar.scss */
+.x-nlg .x-shcalendar-footer,
+.x-nlg .x-monthpicker-buttons {background-image: url('../../resources/themes/images/default/shcalendar/shcalendar-footer-bg.gif');background-repeat: repeat-x;background-position: top left; }
