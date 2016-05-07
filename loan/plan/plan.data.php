@@ -278,8 +278,7 @@ function SelectMyPlans(){
 	$param = array($_SESSION["USER"]["PersonID"]);
 	$where = "p.PersonID=?";
 	
-	$where .= dataReader::makeOrder();
-	$dt = PLN_plans::SelectAll($where, $param);
+	$dt = PLN_plans::SelectAll($where, $param, dataReader::makeOrder());
 	print_r(ExceptionHandler::PopAllExceptions());
 	//echo PdoDataAccess::GetLatestQueryString();
 	$count = $dt->rowCount();
