@@ -77,14 +77,21 @@ function ShowReport(){
 			$i++;
 		}
 		$i--;
-		$returnStr .= "</td><td>" . $totalAttend;
-		
-		$returnStr .= "</td></tr>";
+		$returnStr .= "</td><td>" . $totalAttend . "</td>
+			<td class=extra></td>
+			<td class=off></td>
+			<td></td>
+			<td class=sub></td>
+			<td class=sub></td>
+			</tr>";
 	}
 ?>
 <style>
 	.reportTbl td {padding:4px;}
 	.reportTbl th {padding:4px;text-align: center; background-color: #efefef; font-weight: bold}
+	.reportTbl .extra { background-color: #D0F7E2}
+	.reportTbl .off { background-color: #D7BAFF}
+	.reportTbl .sub { background-color: #FFcfdd}
 </style>
 <table class="reportTbl" width="100%" border="1">
 	<tr class="blueText">
@@ -93,6 +100,11 @@ function ShowReport(){
 		<th>شیفت</th>
 		<th>ورود/خروج</th>
 		<th>حضور</th>
+		<th class="extra">اضافه کار</th>
+		<th class="off" >مرخصی</th>
+		<th>ماموریت</th>
+		<th class=sub>تاخیر</th>
+		<th class=sub>تعجیل</th>
 	</tr>
 	<?= $returnStr ?>
 </table>
