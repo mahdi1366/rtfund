@@ -28,7 +28,7 @@ if($framework)
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetPartPays","grid_div");
 
-$dg->addColumn("", "PayID","", true);
+$dg->addColumn("", "BackPayID","", true);
 $dg->addColumn("", "PartID","", true);
 $dg->addColumn("", "PayTypeDesc","", true);
 
@@ -158,7 +158,7 @@ function LoanPay()
 			if(LoanPayObject.PartRecord != null && LoanPayObject.PartRecord.data.IsEnded == "YES")
 				return false;
 			
-			if(e.record.data.PayID == null)
+			if(e.record.data.BackPayID == null)
 				return true;
 			
 			if(e.record.data.ChequeNo != null && e.record.data.ChequeStatus != "2")
@@ -360,7 +360,7 @@ LoanPay.prototype.AddPay = function(){
 	}
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
-		PayID: null,
+		BackPayID: null,
 		PartID : this.PartID
 	});
 
@@ -385,7 +385,7 @@ LoanPay.prototype.DeletePay = function(){
 			url: me.address_prefix + 'request.data.php',
 			params:{
 				task: "DeletePay",
-				PayID : record.data.PayID
+				BackPayID : record.data.BackPayID
 			},
 			method: 'POST',
 

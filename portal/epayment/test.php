@@ -82,7 +82,7 @@ else if ($_REQUEST["resultCode"] == 100) {
 			</tr>
 		</table>";
 
-		$obj = new LON_pays();
+		$obj = new LON_BackPays();
 		$obj->PartID = $PartID;
 		$obj->PayType = 4;
 		$obj->PayAmount = $totalAmount;

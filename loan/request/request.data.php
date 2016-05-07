@@ -334,98 +334,6 @@ function FillParts(){
 	
 }
 
-function PayPart(){
-	
-	$PayAmount = $_POST["PayAmount"];
-	
-	$pdo = PdoDataAccess::getPdoObject();
-	$pdo->beginTransaction();
-	
-	$PartID = $_POST["PartID"];
-	$partobj = new LON_ReqParts($PartID);
-
-	ChangeStatus($partobj->RequestID, "80", "پرداخت مبلغ " . number_format($PayAmount) . " از " . 
-			$partobj->PartDesc, true, $pdo);
-	
-	$ReqObj = new LON_requests($partobj->RequestID);
-	
-	if($partobj->MaxFundWage*1 > 0)
-		$partobj->MaxFundWage = round($partobj->MaxFundWage*$PayAmount/$partobj->PartAmount);
-	
-	$result = RegisterPayPartDoc($ReqObj, $partobj, $PayAmount*1, $pdo);
-	//print_r(ExceptionHandler::PopAllExceptions());
-	if(!$result)
-	{
-		$pdo->rollBack();
-	}
-	else
-		$pdo->commit();
-	
-	echo Response::createObjectiveResponse($result, !$result ? PdoDataAccess::GetExceptionsToString() : "");
-	die();
-}
-
-function ReturnPayPart(){
-	
-	if(empty($_POST["PartID"]) || empty($_POST["DocID"]))
-	{
-		echo Response::createObjectiveResponse(false, "کد سند یا کد فاز نامعتبر");
-		die();
-	}
-	
-	$PartID = $_POST["PartID"];
-	$partobj = new LON_ReqParts($PartID);
-	$DocID = $_POST["DocID"];
-	
-	if(!($partobj->PartID >0 && $DocID > 0))
-	{
-		echo Response::createObjectiveResponse(false, "فاز مربوطه یافت نشد");
-		die();
-	}
-	
-	//------------- check for Acc doc confirm -------------------
-	$temp = PdoDataAccess::runquery("select DocStatus 
-		from ACC_DocItems join ACC_docs using(DocID) where SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND 
-		SourceID=? AND SourceID2=? AND DocID=?", 
-		array($partobj->RequestID, $partobj->PartID, $DocID));
-	if(count($temp) == 0)
-	{
-		echo Response::createObjectiveResponse(false, "سند مربوطه یافت نشد");
-		die();
-	}
-	if(count($temp) > 0 && $temp[0]["DocStatus"] != "RAW")
-	{
-		echo Response::createObjectiveResponse(false, "سند حسابداری این فاز تایید شده است. و قادر به برگشت نمی باشید");
-		die();
-	}
-	//------- check for being first doc and there excists docs after -----------
-	$CostCode_todiee = COSTID_Todiee;
-	$temp = PdoDataAccess::runquery("select * from ACC_DocItems 
-		where CostID=? AND CreditorAmount>0 AND DocID=?",
-		array($CostCode_todiee, $DocID));
-	if(count($temp) > 0)
-	{
-		$dt = PdoDataAccess::runquery("select * from ACC_DocItems where CostID=? AND DebtorAmount>0 
-			AND SourceType=? AND SourceID2=?",
-			array($CostCode_todiee, DOCTYPE_LOAN_PAYMENT, $PartID));
-		if(count($dt) > 0)
-		{
-			echo Response::createObjectiveResponse(false, "به دلیل اینکه این سند اولین سند پرداخت می باشد و بعد از آن اسناد پرداخت دیگری صادر شده است" . 
-				" قادر به برگشت نمی باشید. <br> برای برگشت ابتدا کلیه اسناد بعدی را برگشت بزنید");
-			die();
-		}
-	}
-	//-----------------------------------------------------------
-	$result = ReturnPayPartDoc($DocID);
-	
-	if($result)
-		ChangeStatus($partobj->RequestID, "90", $partobj->PartDesc, true);
-		
-	//print_r(ExceptionHandler::PopAllExceptions());
-	echo Response::createObjectiveResponse($result, !$result ? PdoDataAccess::GetExceptionsToString() : "");
-	die();
-}
-
 function EndPart(){
 	
 	$PartID = $_POST["PartID"];
@@ -828,20 +736,20 @@ function selectRequestStatuses(){
 
 function GetPartPays(){
 	
-	$dt = LON_pays::SelectAll("PartID=? " . dataReader::makeOrder() , array($_REQUEST["PartID"]));
+	$dt = LON_BackPays::SelectAll("PartID=? " . dataReader::makeOrder() , array($_REQUEST["PartID"]));
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
 
 function SavePartPay(){
 	
-	$obj = new LON_pays();
+	$obj = new LON_BackPays();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	if(empty($obj->PayID))
+	if(empty($obj->BackPayID))
 		$result = $obj->AddPay($pdo);
 	else
 		$result = $obj->EditPay($pdo);
@@ -872,7 +780,7 @@ function DeletePay(){
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	$PayObj = new LON_pays($_POST["PayID"]);
+	$PayObj = new LON_BackPays($_POST["BackPayID"]);
 	if(!ReturnCustomerPayDoc($PayObj, $pdo))
 	{
 		$pdo->rollBack();
@@ -881,7 +789,7 @@ function DeletePay(){
 		die();
 	}
 	
-	if(!LON_pays::DeletePay($_POST["PayID"], $pdo))
+	if(!LON_BackPays::DeletePay($_POST["BackPayID"], $pdo))
 	{
 		$pdo->rollBack();
 		echo Response::createObjectiveResponse(false, "خطا در حذف ردیف پرداخت");
@@ -901,7 +809,7 @@ function ComputePayments($PartID, &$installments){
 	$returnArr = array();
 	$pays = PdoDataAccess::runquery("
 		select p.PayDate, sum(PayAmount) PayAmount
-			from LON_pays p
+			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
@@ -1033,7 +941,7 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 	$returnArr = array();
 	$pays = PdoDataAccess::runquery("
 		select p.PayDate, sum(PayAmount) PayAmount
-			from LON_pays p
+			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
@@ -1254,4 +1162,155 @@ function GetEndedRequests(){
 	echo dataReader::getJsonData($result, $cnt, $_GET["callback"]);
 	die();
 }
+
+//-------------------------------------------------
+
+function GetPartPayments(){
+	
+	$dt = LON_payments::Get(" AND PartID=? " . dataReader::makeOrder() , array($_REQUEST["PartID"]));
+	print_r(ExceptionHandler::PopAllExceptions());
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SavePartPayment(){
+	
+	$obj = new LON_payments();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if($obj->PayID > 0)
+		$result = $obj->Edit();
+	else
+		$result = $obj->Add();
+	
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();
+}
+
+function DeletePayment(){
+	
+	$obj = new LON_payments($_POST["PayID"]);
+	$result = $obj->Remove();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function RegPayPartDoc(){
+	
+	$PayID = $_POST["PayID"];
+	$PayObj = new LON_payments($PayID);
+	
+	//---------- check for previous payments docs registered --------------
+	$dt = LON_payments::Get(" AND PartID=? AND PayDate<? AND DocID=0",
+			array($PayObj->PartID, $PayObj->PayDate));
+	if($dt->rowCount() > 0)
+	{
+		echo Response::createObjectiveResponse(false, "تا سند مراحل قبلی پرداخت صادر نشود قادر به صدور سند این مرحله نمی باشید");
+		die();	
+	}
+	//---------------------------------------------------------------------
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$partobj = new LON_ReqParts($PayObj->PartID);
+	$ReqObj = new LON_requests($partobj->RequestID);
+
+	ChangeStatus($PayObj->_RequestID, "80", "پرداخت مبلغ " . number_format($PayObj->PayAmount), true, $pdo);
+	
+	if($partobj->MaxFundWage*1 > 0)
+		$partobj->MaxFundWage = round($partobj->MaxFundWage*$PayObj->PayAmount/$partobj->PartAmount);
+	
+	$result = RegisterPayPartDoc($ReqObj, $partobj, $PayObj, $_POST["BankTafsili"], $pdo);
+	
+	if(!$result)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
+		die();	
+	}
+	
+	$PayObj->DocID = $result;
+	if(!$PayObj->Edit($pdo))
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
+		die();
+	}
+	
+	$pdo->commit();
+	
+	echo Response::createObjectiveResponse(true,"");
+	die();
+}
+
+function RetPayPartDoc(){
+	
+	if(empty($_POST["PayID"]))
+	{
+		echo Response::createObjectiveResponse(false, "درخواست نامعتبر");
+		die();
+	}
+	$PayID = $_POST["PayID"];
+	$PayObj = new LON_payments($PayID);
+		
+	//------------- check for Acc doc confirm -------------------
+	$temp = PdoDataAccess::runquery("select DocStatus 
+		from ACC_DocItems join ACC_docs using(DocID) where SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND 
+		DocID=?", array($PayObj->DocID));
+	if(count($temp) == 0)
+	{
+		echo Response::createObjectiveResponse(false, "سند مربوطه یافت نشد");
+		die();
+	}
+	if(count($temp) > 0 && $temp[0]["DocStatus"] != "RAW")
+	{
+		echo Response::createObjectiveResponse(false, "سند حسابداری این فاز تایید شده است. و قادر به برگشت نمی باشید");
+		die();
+	}
+	//------- check for being first doc and there excists docs after -----------
+	$CostCode_todiee = COSTID_Todiee;
+	$temp = PdoDataAccess::runquery("select * from ACC_DocItems 
+		where CostID=? AND CreditorAmount>0 AND DocID=?",
+		array($CostCode_todiee, $PayObj->DocID));
+	if(count($temp) > 0)
+	{
+		$dt = PdoDataAccess::runquery("select * from ACC_DocItems where CostID=? AND DebtorAmount>0 
+			AND SourceType=? AND SourceID2=?",
+			array($CostCode_todiee, DOCTYPE_LOAN_PAYMENT, $PayObj->PartID));
+		if(count($dt) > 0)
+		{
+			echo Response::createObjectiveResponse(false, "به دلیل اینکه این سند اولین سند پرداخت می باشد و بعد از آن اسناد پرداخت دیگری صادر شده است" . 
+				" قادر به برگشت نمی باشید. <br> برای برگشت ابتدا کلیه اسناد بعدی را برگشت بزنید");
+			die();
+		}
+	}
+	//-----------------------------------------------------------
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	if(!ReturnPayPartDoc($PayObj->DocID, $pdo))
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
+		die();
+	}
+
+	$PayObj->DocID = 0;
+	if(!$PayObj->Edit($pdo))
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
+		die();
+	}
+	
+	ChangeStatus($PayObj->_RequestID, "90", "", true, $pdo);
+		
+	$pdo->commit();
+	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
 ?>

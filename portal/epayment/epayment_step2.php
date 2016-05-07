@@ -118,7 +118,7 @@ else if ($_POST["resultCode"] == 100) {
 
 		$PartID = $_REQUEST["paymentId"];
 	
-		$obj = new LON_pays();
+		$obj = new LON_BackPays();
 		$obj->PartID = $PartID;
 		$obj->PayType = 4;
 		$obj->PayAmount = $totalAmount;
@@ -137,57 +137,4 @@ else if ($_POST["resultCode"] == 100) {
 		if($error)
 		{
 			$pdo->rollBack();
-			$result .= "<br> عملیات پرداخت قسط در نرم افزار صندوق به درستی ثبت نگردید. " . 
-					"<br> جهت اعمال آن با صندوق تماس بگیرید." ;
-		}
-		else
-			$pdo->commit();
-	}
-	else
-		ShowStatus($totalAmount);
-	
-}
-else 
-{
-	$result = ShowStatus($_POST["resultCode"]) . "<br>";
-	
-	if (isset($_POST['referenceId'])) {
-		$result .= '<p align=center><font face=tahoma size=3>';
-		$result .= 'کد پیگیری:' . $_POST['referenceId'];
-		$result .= '</font></p>';
-	}
-}
-?>
-<html>
-	<head>
-		<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>	
-		<style>
-			body{
-				font-family: tahoma;
-				font-size: 12px;
-				font-weight: bold;
-			}
-			button{
-				font-family: tahoma;
-				font-size: 12px;
-			}
-		</style>
-	</head>	
-	<body dir="rtl">
-	<center>
-		<br>
-		<br>
-		<div style="width: 500px; border: 1px solid #99BBE8; background-color: #DFE9F6; padding:5px;border-radius: 4px; height: 220px;">
-			<div style="background-color: white; width: 500px; height:80%">
-				<br>
-				<?= $result ?>
-				<br>&nbsp;
-			</div>
-			<br><button style="" onclick="window.opener.location.reload(); window.close()">
-				بازگشت به پرتال   <?= SoftwareName ?>
-			</button>
-			<br>&nbsp;
-		</div>
-	</center>
-</body>
-</html>
+			$result .= "<br> عملیات پرداخت قسط د

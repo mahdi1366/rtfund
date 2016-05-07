@@ -32,12 +32,13 @@ function FindTafsiliID($TafsiliCode, $TafsiliType){
 
 //---------------------------------------------------------------
 
-function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
+function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 		
 	require_once '../../loan/request/request.data.php';
 	
 	/*@var $ReqObj LON_requests */
 	/*@var $PartObj LON_ReqParts */
+	/*@var $PayObj LON_payments */
 	
 	$PartObj->MaxFundWage = $PartObj->MaxFundWage*1;
 	
@@ -73,7 +74,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 	$CostCode_todiee = FindCostID("200-03");
 	//------------------------------------------------
 	
-	$CycleID = substr(DateModules::miladi_to_shamsi($PartObj->PartDate), 0 , 4);
+	$CycleID = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0 , 4);
 	
 	//---------------- add doc header --------------------
 	$obj = new ACC_docs();
@@ -91,7 +92,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 		ExceptionHandler::PushException("خطا در ایجاد سند");
 		return false;
 	}
-	
+	$PayAmount = $PayObj->PayAmount;
 	//--------------------------------------------------------
 	$MaxWage = max($PartObj->CustomerWage*1 , $PartObj->FundWage);
 	$YearMonths = ($PartObj->IntervalType == "DAY") ? floor(365/$PartObj->PayInterval) : 12;
@@ -114,7 +115,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 		$year4 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 4, $YearMonths);
 	}
 	$TotalDelay = round($PayAmount*$MaxWage*$PartObj->DelayMonths/1200);
-	$curYear = substr(DateModules::miladi_to_shamsi($PartObj->PartDate), 0, 4)*1;
+	$curYear = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0, 4)*1;
 	
 	//------------------ find tafsilis ---------------
 	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
@@ -230,6 +231,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
+	$itemObj->SourceID3 = $PayObj->PayID;
 	
 	if($FirstStep)
 	{
@@ -432,10 +434,12 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 			($PartObj->WageReturn == "CUSTOMER" ? $WageSum*$PartObj->CustomerWage/$MaxWage : 0);
 	$itemObj->CreditorAmount = $BankItemAmount;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
+	$itemObj->TafsiliID = $BankTafsili;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
+	$itemObj->SourceID3 = $PayObj->PayID;
 	$itemObj->Add($pdo);
 	
 	if($LoanMode == "Agent")
@@ -470,6 +474,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 		join BaseInfo b on(InfoID=DocType AND TypeID=8)
 		join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
 		where b.param1=1 AND ObjectType='loan' AND ObjectID=?", array($ReqObj->RequestID));
+	$SumAmount = 0;
+	$countAmount = 0;
 	
 	if(count($dt) == 0)
 	{
@@ -481,9 +487,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 				join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
 			where b.param1=1 AND paramType='currencyfield' AND ObjectType='loan' AND ObjectID=?",
 			array($ReqObj->RequestID), $pdo);
-
-		$SumAmount = 0;
-		$countAmount = 0;
+		
 		foreach($dt as $row)
 		{
 			unset($itemObj->ItemID);
@@ -507,8 +511,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 	{
 		//---------------------------------------------------------		
 		$dt = PdoDataAccess::runquery("
-			SELECT PayAmount,PayID
-				FROM LON_pays
+			SELECT PayAmount,BackPayID
+				FROM LON_BackPays
 				where PartID=? AND ChequeNo>0",	array($PartObj->PartID), $pdo);
 
 		foreach($dt as $row)
@@ -522,7 +526,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $LoanPersonTafsili;
 			$itemObj->SourceType = DOCTYPE_DOCUMENT;
-			$itemObj->SourceID = $row["PayID"];
+			$itemObj->SourceID = $row["BackPayID"];
 			$itemObj->Add($pdo);
 			
 			$SumAmount += $row["ParamValue"]*1;
@@ -559,7 +563,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 	//------ ایجاد چک ------
 	$chequeObj = new ACC_DocChecks();
 	$chequeObj->DocID = $obj->DocID;
-	$chequeObj->CheckDate = $PartObj->PartDate;
+	$chequeObj->CheckDate = $PayObj->PayDate;
 	$chequeObj->amount = $BankItemAmount;
 	$chequeObj->TafsiliID = $LoanPersonTafsili;
 	$chequeObj->description = " پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
@@ -570,12 +574,12 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayAmount, $pdo){
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
 	
-	return true;
+	return $obj->DocID;
 }
 
-function ReturnPayPartDoc($DocID){
+function ReturnPayPartDoc($DocID, $pdo){
 	
-	return ACC_docs::Remove($DocID);	
+	return ACC_docs::Remove($DocID, $pdo);	
 }
 
 function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
@@ -863,7 +867,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 
 function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 	
-	/*@var $PayObj LON_pays */
+	/*@var $PayObj LON_BackPays */
 	
 	$CycleID = substr(DateModules::shNow(), 0 , 4);
 	
@@ -932,7 +936,7 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_INSTALLMENT_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
-	$itemObj->SourceID2 = $PayObj->PayID;
+	$itemObj->SourceID2 = $PayObj->BackPayID;
 	
 	//-------- loan ----------
 	$itemObj->DocID = $obj->DocID;
@@ -989,11 +993,11 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 
 function ReturnCustomerPayDoc($PayObj, $pdo){
 	
-	/*@var $PayObj LON_pays */
+	/*@var $PayObj LON_BackPays */
 	
 	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
 		where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID=? AND SourceID2=?",
-		array($PayObj->_RequestID, $PayObj->PayID), $pdo);
+		array($PayObj->_RequestID, $PayObj->BackPayID), $pdo);
 	if(count($dt) == 0)
 		return true;
 	
@@ -1080,8 +1084,8 @@ function RegisterEndRequestDoc($ReqObj, $pdo){
 		}
 		//---------------------------------------------------------		
 		$dt2 = PdoDataAccess::runquery("
-			SELECT PayAmount,PayID
-				FROM LON_pays join LON_ReqParts using(PartID)
+			SELECT PayAmount,BackPayID
+				FROM LON_BackPays join LON_ReqParts using(PartID)
 				where RequestID=? AND ChequeNo>0",	array($ReqObj->RequestID), $pdo);
 
 		foreach($dt2 as $row)
@@ -1095,7 +1099,7 @@ function RegisterEndRequestDoc($ReqObj, $pdo){
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $LoanPersonTafsili;
 			$itemObj->SourceType = DOCTYPE_DOCUMENT;
-			$itemObj->SourceID = $row["PayID"];
+			$itemObj->SourceID = $row["BackPayID"];
 			$itemObj->Add($pdo);
 			
 			$SumAmount += $row["ParamValue"]*1;

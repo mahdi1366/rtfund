@@ -18,7 +18,7 @@ function ShowReport(){
 	$StartDate = DateModules::shamsi_to_miladi($_POST["year"] . "-" . $_POST["month"] . "-01", "-");
 	$EndDate = DateModules::shamsi_to_miladi($_POST["year"] . "-" . $_POST["month"] ."-" . DateModules::DaysOfMonth($_POST["year"] ,$_POST["month"]), "-");
 	
-	$dt = ATN_traffic::Get(" AND t.PersonID=? AND TrafficDate>= ? AND TrafficDate <= ? order by TrafficDate", 
+	$dt = ATN_traffic::Get(" AND t.PersonID=? AND TrafficDate>= ? AND TrafficDate <= ? order by TrafficDate,TrafficTime", 
 		array($_SESSION["USER"]["PersonID"], $StartDate, $EndDate));
 	
 	$dt = $dt->fetchAll();

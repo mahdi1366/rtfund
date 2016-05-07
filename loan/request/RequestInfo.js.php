@@ -205,6 +205,9 @@ RequestInfo.prototype.OperationMenu = function(e){
 		op_menu.add({text: 'پرداخت های مشتری',iconCls: 'list',
 		handler : function(){ return RequestInfoObject.LoadPays(); }});
 	
+		op_menu.add({text: 'مراحل پرداخت',iconCls: 'epay',
+		handler : function(){ return RequestInfoObject.Payments(); }});
+	
 		if(this.RequestRecord.data.IsEnded == "NO")
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
@@ -1566,9 +1569,6 @@ RequestInfo.prototype.LoadInstallments = function(){
 			PartID : record.data.PartID
 		}
 	});
-	
-	this.InstallmentsWin.show();
-	this.InstallmentsWin.center();
 }
 
 RequestInfo.prototype.LoadPays = function(){
@@ -1588,7 +1588,7 @@ RequestInfo.prototype.LoadPays = function(){
 			height : 410,
 			modal : true,
 			loader : {
-				url : this.address_prefix + "pays.php",
+				url : this.address_prefix + "BackPays.php",
 				method : "post",
 				scripts : true
 			},
@@ -1643,116 +1643,6 @@ RequestInfo.prototype.PayInfo = function(){
 		params : {
 			PartID : this.grid.getSelectionModel().getLastSelected().data.PartID
 		}
-	});
-}
-
-RequestInfo.prototype.PayPart = function(MaxAvailablePayAmount){
-	
-	if(!this.PayWin)
-	{
-		this.PayWin = new Ext.window.Window({
-			width : 202,
-			modal : true,
-			title : "مبلغ پرداخت",
-			bodyStyle : "padding-top:4px;background-color:white",
-			items : [{
-				xtype : "currencyfield",
-				hideTrigger : true,
-				width : 190,
-				name : "PayAmount"
-			}],
-			closeAction : "hide",
-			buttons : [{
-				text : "پرداخت",				
-				iconCls : "epay",
-				handler : function(){
-					me = RequestInfoObject;
-					var record = me.grid.getSelectionModel().getLastSelected();
-
-					mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
-					mask.show();
-
-					Ext.Ajax.request({
-						url: me.address_prefix +'request.data.php',
-						method: "POST",
-						params: {
-							task: "PayPart",
-							PartID : record.data.PartID,
-							PayAmount : me.PayWin.down("[name=PayAmount]").getValue()						
-						},
-						success: function(response){
-
-							result = Ext.decode(response.responseText);
-							if(!result.success)
-								Ext.MessageBox.alert("", result.data);
-							
-							RequestInfoObject.PayWin.hide();
-							RequestInfoObject.PayInfoWin.loader.load({
-								params : {
-									PartID : RequestInfoObject.grid.getSelectionModel().getLastSelected().data.PartID
-								},
-								callback : function(){mask.hide();}
-							});
-						}
-					});
-				}
-			},{
-				text : "بازگشت",
-				iconCls : "undo",
-				handler : function(){this.up('window').hide();}
-			}]
-		});
-		
-		Ext.getCmp(this.TabID).add(this.PayWin);
-	}
-	
-	this.PayWin.show();
-	this.PayWin.center();
-	this.PayWin.down("[name=PayAmount]").setValue(MaxAvailablePayAmount);
-	this.PayWin.down("[name=PayAmount]").setMaxValue(MaxAvailablePayAmount);
-}
-
-RequestInfo.prototype.ReturnPayPart = function(DocID){
-	
-	Ext.MessageBox.confirm("","آیا مایل به برگشت پرداخت این فاز از وام می باشید؟",function(btn){
-		
-		if(btn == "no")
-			return;
-		
-		me = RequestInfoObject;
-		var record = me.grid.getSelectionModel().getLastSelected();
-	
-		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
-		mask.show();
-
-		Ext.Ajax.request({
-			url: me.address_prefix +'request.data.php',
-			method: "POST",
-			params: {
-				task: "ReturnPayPart",
-				PartID : record.data.PartID,
-				DocID : DocID
-			},
-			success: function(response){
-				
-				result = Ext.decode(response.responseText);
-				if(!result.success)
-				{
-					if(result.data == "")
-						Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
-					else
-						Ext.MessageBox.alert("", result.data);
-					mask.hide();
-					return;
-				}				
-				RequestInfoObject.PayInfoWin.loader.load({
-					params : {
-						PartID : RequestInfoObject.grid.getSelectionModel().getLastSelected().data.PartID
-					},
-					callback : function(){mask.hide();}
-				});
-			}
-		});
 	});
 }
 
@@ -1852,6 +1742,36 @@ RequestInfo.prototype.ShowPartHistory = function(){
 		params : {
 			FlowID : 1,
 			ObjectID : this.grid.getSelectionModel().getLastSelected().data.PartID
+		}
+	});
+}
+
+RequestInfo.prototype.Payments = function(){
+	
+	if(!this.PaymentWin)
+	{
+		this.PaymentWin = new Ext.window.Window({
+			width : 422,
+			title : "مراحل پرداخت",
+			height : 305,
+			modal : true,
+			loader : {
+				url : this.address_prefix + "payments.php",
+				method : "post",
+				scripts : true
+			},
+			closeAction : "hide"
+		});
+		
+		Ext.getCmp(this.TabID).add(this.PaymentWin);
+	}
+	this.PaymentWin.show();
+	this.PaymentWin.center();
+	
+	this.PaymentWin.loader.load({
+		params : {
+			ExtTabID : this.PaymentWin.getEl().id,
+			PartID : record.data.PartID
 		}
 	});
 }

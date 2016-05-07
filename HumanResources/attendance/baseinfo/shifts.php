@@ -9,7 +9,7 @@ include_once inc_dataGrid;
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "Shift.data.php?task=GetAllShifts", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "shift.data.php?task=GetAllShifts", "grid_div");
 
 $dg->addColumn("", "ShiftID", "", true);
 $dg->addColumn("", "IsActive", "", true);

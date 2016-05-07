@@ -6,7 +6,7 @@
 include_once('../../header.inc.php');
 include_once inc_dataReader;
 include_once inc_response;
-include_once 'Shift.class.php';
+include_once 'shift.class.php';
 
 $task = $_REQUEST["task"];
 switch ($task) {

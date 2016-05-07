@@ -256,7 +256,7 @@ l1.InstallmentDate=l2.InstallmentDate AND
 l1.InstallmentAmount = l2.InstallmentAmount)
 where l1.IsPaid='NO' ;
 
-insert into LON_pays(PartID,PayType,PayAmount,PayDate,PayBillNo,ChequeNo,ChequeBank,ChequeBranch,details)
+insert into LON_BackPays(PartID,PayType,PayAmount,PayDate,PayBillNo,ChequeNo,ChequeBank,ChequeBranch,details)
 select PartID,PaidType,PaidAmount,PaidDate,PaidBillNo,ChequeNo,ChequeBank,ChequeBranch,details
 from LON_installments where IsPaid='YES'
  * 

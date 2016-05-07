@@ -20,7 +20,7 @@ function ShowReport(){
 			PartDate,
 			b.BankDesc, 
 			bi2.InfoDesc ChequeStatusDesc
-		from LON_pays p 
+		from LON_BackPays p 
 		join Lon_ReqParts using(PartID)
 		join LON_requests using(RequestID)
 		join BSC_persons on(LoanPersonID=PersonID)
@@ -87,7 +87,7 @@ function ShowReport(){
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "IncomeCheques.php?task=selectChecks", "grid_div");
 
-$col = $dg->addColumn("", "PayID", "", true);
+$col = $dg->addColumn("", "BackPayID", "", true);
 
 $col = $dg->addColumn("وام گیرنده", "fullname", "");
 

@@ -227,6 +227,7 @@ class ACC_DocItems extends PdoDataAccess {
 	public $SourceType;
 	public $SourceID;
 	public $SourceID2;
+	public $SourceID3;
 	
 	function __construct() {
 	}

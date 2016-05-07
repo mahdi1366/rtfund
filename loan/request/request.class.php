@@ -252,9 +252,9 @@ class LON_installments extends PdoDataAccess
     }
 }
 
-class LON_pays extends PdoDataAccess
+class LON_BackPays extends PdoDataAccess
 {
-	public $PayID;
+	public $BackPayID;
 	public $PartID;
 	public $PayType;
 	public $PayDate;
@@ -269,15 +269,15 @@ class LON_pays extends PdoDataAccess
 	
 	public $_RequestID;
 			
-	function __construct($PayID = "") {
+	function __construct($BackPayID = "") {
 		
 		$this->DT_PayDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
-		if($PayID != "")
+		if($BackPayID != "")
 			PdoDataAccess::FillObject ($this, "
 				select p.*,RequestID _RequestID 
-				from LON_pays p join LON_ReqParts using(PartID) 
-				where PayID=?", array($PayID));
+				from LON_BackPays p join LON_ReqParts using(PartID) 
+				where BackPayID=?", array($BackPayID));
 	}
 	
 	static function SelectAll($where = "", $param = array()){
@@ -287,7 +287,7 @@ class LON_pays extends PdoDataAccess
 				b.BankDesc, 
 				bi.InfoDesc PayTypeDesc, 
 				bi2.InfoDesc ChequeStatusDesc
-			from LON_pays p
+			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
@@ -298,44 +298,107 @@ class LON_pays extends PdoDataAccess
 	
 	function AddPay($pdo = null){
 		
-	 	if(!parent::insert("LON_pays",$this, $pdo))
+	 	if(!parent::insert("LON_BackPays",$this, $pdo))
 	 		return false;
 		
-		$this->PayID = parent::InsertID($pdo);
+		$this->BackPayID = parent::InsertID($pdo);
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->PayID;
-		$daObj->TableName = "LON_pays";
+		$daObj->MainObjectID = $this->BackPayID;
+		$daObj->TableName = "LON_BackPays";
 		$daObj->execute($pdo);
 	 	return true;
     }
 	
 	function EditPay($pdo = null){
 		
-	 	if( parent::update("LON_pays",$this," PayID=:l", 
-				array(":l" => $this->PayID), $pdo) === false )
+	 	if( parent::update("LON_BackPays",$this," BackPayID=:l", 
+				array(":l" => $this->BackPayID), $pdo) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->MainObjectID = $this->PayID;
-		$daObj->TableName = "LON_pays";
+		$daObj->MainObjectID = $this->BackPayID;
+		$daObj->TableName = "LON_BackPays";
 		$daObj->execute($pdo);
 	 	return true;
     }
 	
-	static function DeletePay($PayID, $pdo = null){
+	static function DeletePay($BackPayID, $pdo = null){
 		
-		if( parent::delete("LON_pays"," PayID=?", array($PayID), $pdo) === false )
+		if( parent::delete("LON_BackPays"," BackPayID=?", array($BackPayID), $pdo) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->MainObjectID = $PayID;
-		$daObj->TableName = "LON_pays";
+		$daObj->MainObjectID = $BackPayID;
+		$daObj->TableName = "LON_BackPays";
 		$daObj->execute($pdo);
 	 	return true;
+	}
+}
+
+class LON_payments extends OperationClass
+{
+	const TableName = "LON_payments";
+	const TableKey = "PayID";
+
+	public $PayID;
+	public $PartID;
+	public $PayType;
+	public $PayDate;
+	public $PayAmount;
+	public $DocID;
+	
+	public $_RequestID;
+			
+	function __construct($PayID = "") {
+		
+		$this->DT_PayDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
+		if($PayID != "")
+			parent::FillObject ($this, "select p.*,RequestID _RequestID 
+				from LON_payments p join LON_ReqParts using(PartID) where payID=?", array($PayID));
+	}
+	
+	static function Get($where = '', $whereParams = array()) {
+		
+		return parent::runquery_fetchMode("select p.*,c.LocalNo,c.DocStatus 
+			from LON_payments p
+			left join ACC_docs c using(DocID) where 1=1 " . $where, $whereParams);
+	}
+	
+	function CheckPartAmount(){
+		
+		$dt = parent::runquery("select ifnull(sum(PayAmount),0) from LON_payments 
+			where PartID=? AND PayID<>?", array($this->PartID, $this->PayID));
+		
+		$PartObj = new LON_ReqParts($this->PartID);
+		
+		if($dt[0][0]*1 + $this->PayAmount*1 > $PartObj->PartAmount*1)
+		{
+			ExceptionHandler::PushException("مبالغ وارد شده از سقف مبلغ فاز تجاوز می کند");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	function Add($pdo = null) {
+		
+		if(!$this->CheckPartAmount())
+			return false;
+		
+		return parent::Add($pdo);
+	}
+	
+	function Edit($pdo = null) {
+		
+		if(!$this->CheckPartAmount())
+			return false;
+		
+		return parent::Edit($pdo);
 	}
 }
 
