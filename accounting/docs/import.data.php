@@ -879,7 +879,7 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
-	$CostCode_commitment = FindCostID("200");
+	$CostCode_commitment = FindCostID("200-01");
 	
 	//---------------- add doc header --------------------
 	$obj = new ACC_docs();
@@ -893,7 +893,11 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 		$ReqObj->_LoanPersonFullname;
 	
 	if(!$obj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ایجاد سند");
 		return false;
+	}
+	
 	
 	//------------------ find tafsilis ---------------
 	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
@@ -943,8 +947,11 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 	$itemObj->CostID = $CostCode_Loan;
 	$itemObj->DebtorAmount = 0;
 	$itemObj->CreditorAmount = $PayObj->PayAmount;
-	$itemObj->Add($pdo);	
-	
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ایجاد سند");
+		return false;
+	}
 	// ---- bank ----
 	unset($itemObj->ItemID);
 	unset($itemObj->TafsiliType2);
@@ -956,7 +963,11 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	if($BankTafsili != "")
 		$itemObj->TafsiliID = $BankTafsili;
-	$itemObj->Add($pdo);
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ایجاد سند");
+		return false;
+	}
 	
 	if($LoanMode == "Agent")
 	{
@@ -970,7 +981,10 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
 		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد سند");
 			return false;
+		}
 
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType2);
@@ -981,7 +995,10 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
 		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد سند");
 			return false;
+		}
 	}
 	
 	//---------------------------------------------------------
