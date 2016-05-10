@@ -233,8 +233,8 @@ RequestInfo.prototype.OperationMenu = function(e){
 		op_menu.add({text: 'اقساط',iconCls: 'list',
 		handler : function(){ return RequestInfoObject.LoadInstallments(); }});
 
-		op_menu.add({text: 'پرداخت',iconCls: 'epay',
-		handler : function(){ return RequestInfoObject.PayInfo(); }});
+		op_menu.add({text: 'مراحل پرداخت',iconCls: 'epay',
+		handler : function(){ return RequestInfoObject.Payments(); }});
 	
 		if(record.data.IsPaid == "YES" && this.RequestRecord.data.IsEnded == "NO")
 			op_menu.add({text: 'اتمام فاز و ایجاد فاز جدید',iconCls: "app",

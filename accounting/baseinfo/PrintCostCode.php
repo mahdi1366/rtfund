@@ -16,9 +16,10 @@ $dataTable = ACC_CostCodes::SelectCost(" 1=1 order by Costcode");
 $rpg = new ReportGenerator();
 
 $rpg->addColumn("کد حساب", "CostCode");
-$rpg->addColumn("گروه حساب", "LevelTitle1");
-$rpg->addColumn("حساب کل", "LevelTitle2");
-$rpg->addColumn("معین", "LevelTitle3");
+$rpg->addColumn("گروه حساب", "LevelTitle0");
+$rpg->addColumn("حساب کل", "LevelTitle1");
+$rpg->addColumn("معین", "LevelTitle2");
+$rpg->addColumn("جزء معین", "LevelTitle3");
 
 $rpg->mysql_resource = $dataTable;
 $rpg->generateReport();

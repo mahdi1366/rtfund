@@ -8,3 +8,5 @@ if(typeof DraftLetterObject == "object") ...
 	'</tpl>',
 --------------------------------------------------------------------------------
 p.tdAttr = "data-qtip='text'"
+--------------------------------------------------------------------------------
+{name : "fullDesc",	convert : function(value,record){} }

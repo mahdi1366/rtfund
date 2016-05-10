@@ -175,7 +175,7 @@ PartPayment.prototype.DeletePayment = function(){
 			success: function(response,option){
 				result = Ext.decode(response.responseText);
 				if(result.success)
-					LoanPayObject.grid.getStore().load();
+					PartPaymentObject.grid.getStore().load();
 				else if(result.data == "")
 					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
 				else

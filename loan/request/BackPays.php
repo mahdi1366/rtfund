@@ -271,14 +271,17 @@ LoanPay.prototype.BeforeSave = function(store, record){
 	if(!this.BankWin)
 	{
 		this.BankWin = new Ext.window.Window({
-			width : 200,
-			height : 100,
+			width : 400,
+			height : 85,
 			modal : true,
 			closeAction : "hide",
 			items : [{
 				xtype : "combo",
 				store: new Ext.data.Store({
-					fields:["TafsiliID","TafsiliDesc"],
+					fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
+						name : "title",
+						convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
+					}],
 					proxy: {
 						type: 'jsonp',
 						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=3',
@@ -288,9 +291,10 @@ LoanPay.prototype.BeforeSave = function(store, record){
 				emptyText:'انتخاب بانک ...',
 				typeAhead: false,
 				pageSize : 10,
+				width : 385,
 				valueField : "TafsiliID",
 				itemId : "TafsiliID",
-				displayField : "TafsiliDesc"
+				displayField : "title"
 			}],
 			buttons :[{
 				text : "ذخیره",

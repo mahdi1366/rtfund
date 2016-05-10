@@ -10,22 +10,42 @@ require_once inc_dataReader;
 require_once 'baseinfo.class.php';
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
-$level = isset($_REQUEST['level']) ? $_REQUEST['level'] : '';
-
-switch ($task) {
-    case 'SelectBlocks':
-        SelectBlocks($level);
-
-    case 'SaveBlockData':
-        SaveBlockData($level);
-
-    default : 
-		eval($task. "();");
-
-}
+if(!empty($task))
+	$task();
 
 function SelectBlocks() {
 
+	if(!empty($_REQUEST["PreLevel"]))
+	{
+		$level = $_REQUEST['level'];
+		$query = "select b$level.* from ACC_CostCodes 
+			join ACC_blocks b1 on(b1.BlockID=level1)
+			left join ACC_blocks b2 on(b2.BlockID=level2)
+			left join ACC_blocks b3 on(b3.BlockID=level3)
+		
+		where b$level.BlockID is not null AND b" . ($level*1 - 1) . ".BlockID=:b";
+		$param = array(":b" => $_REQUEST["PreLevel"]);
+		
+		if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
+			$field = $_REQUEST['fields'];
+			$query .= ' and ' . $field . ' like :' . $field;
+			$param[':' . $field] = '%' . $_REQUEST['query'] . '%';
+		}
+		$query .= " group by b$level.BlockID";
+		
+		$list = PdoDataAccess::runquery_fetchMode($query, $param);
+		$count = $list->rowCount();
+
+		if (isset($_GET["start"]))
+			$list = PdoDataAccess::fetchAll($list, $_GET["start"], $_GET["limit"]);
+		else
+			$list = $list->fetchAll();
+
+		echo dataReader::getJsonData($list, $count, $_GET['callback']);
+		die();
+	}
+	
+	
     $where = "IsActive='YES' AND LevelID=:LevelID";
     $param = array();
     $param[':LevelID'] = $_REQUEST['level'];

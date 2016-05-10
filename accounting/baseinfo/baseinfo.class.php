@@ -21,7 +21,7 @@ class ACC_blocks extends PdoDataAccess{
 
     static function GetAll($where = "",$whereParam = array())
     {
-	    $query = "select * from ACC_blocks";
+	    $query = "select b.* from ACC_blocks b";
 	    $query .= ($where != "") ? " where " . $where : "";
 	    return parent::runquery_fetchMode($query, $whereParam);
     }

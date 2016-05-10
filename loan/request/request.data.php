@@ -1072,7 +1072,7 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 
 //------------------------------------------------
 
-function GetDelayedInstallments(){
+function GetDelayedInstallments($returnData = false){
 	
 	$query = "select PartID,concat_ws(' ',fname,lname,CompanyName) LoanPersonName
 			from LON_installments p
@@ -1082,6 +1082,8 @@ function GetDelayedInstallments(){
 			
 			where InstallmentDate<now() AND IsEnded='NO'
 			group by PartID";
+	$query .= dataReader::makeOrder();
+	
 	$dt = PdoDataAccess::runquery_fetchMode($query);
 	
 	$result = array();
@@ -1108,7 +1110,8 @@ function GetDelayedInstallments(){
 			}
 	}
 	
-	//echo PdoDataAccess::GetLatestQueryString();
+	if($returnData)
+		return $result;
 	
 	$cnt = count($result);
 	$result = array_slice($result, $_REQUEST["start"], $_REQUEST["limit"]);

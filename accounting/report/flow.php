@@ -224,8 +224,11 @@ if(isset($_REQUEST["show"]))
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>
-					گزارش گردش حساب ها
-				</td>
+					گزارش گردش حساب ها 
+					 <br> ".
+				 $_SESSION["accounting"]["BranchName"]. "<br>" . "دوره سال " .
+				$_SESSION["accounting"]["CycleID"] .
+				"</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
 			. DateModules::shNow() . "<br>";
 		if(!empty($_POST["fromDate"]))
@@ -281,7 +284,8 @@ function AccReport_flow()
 		bodyStyle : "text-align:right;padding:5px",
 		title : "گزارش گردش حساب ها",
 		defaults : {
-			labelWidth :100
+			labelWidth :100,
+			width : 270
 		},
 		width : 600,
 		items :[{
@@ -317,13 +321,24 @@ function AccReport_flow()
 				},
 				autoLoad : true
 			}),
-			tpl: this.blockTpl
+			tpl: this.blockTpl,
+			PageSize : 20,
+			listeners : {
+				select : function(combo,records){
+					AccReport_flowObj.formPanel.down("[hiddenName=level2]").getStore().load({
+						params : {
+							PreLevel : records[0].data.BlockID
+						}
+					});
+				}
+			}
 		},{
 			xtype : "combo",
 			displayField : "BlockDesc",
 			fieldLabel : "معین",
 			valueField : "BlockCode",
 			itemId : "cmp_level2",
+			queryMode : "local",
 			hiddenName : "level2",
 			store : new Ext.data.Store({
 				fields:["BlockID","BlockCode","BlockDesc"],
@@ -334,13 +349,23 @@ function AccReport_flow()
 				},
 				autoLoad : true
 			}),
-			tpl: this.blockTpl
+			tpl: this.blockTpl,
+			listeners : {
+				select : function(combo,records){
+					AccReport_flowObj.formPanel.down("[hiddenName=level3]").getStore().load({
+						params : {
+							PreLevel : records[0].data.BlockID
+						}
+					});
+				}
+			}
 		},{
 			xtype : "combo",
 			displayField : "BlockDesc",
 			fieldLabel : "جزء معین",
 			valueField : "BlockCode",
 			itemId : "cmp_level3",
+			queryMode : "local",
 			hiddenName : "level3",
 			store : new Ext.data.Store({
 				fields:["BlockID","BlockCode","BlockDesc"],
