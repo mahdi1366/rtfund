@@ -33,7 +33,7 @@ $col->width = 120;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->EnablePaging = false;
-$dg->height = 200;
+$dg->height = 150;
 $dg->width = 770;
 $dg->title = "درخواست های رسیده";
 $dg->EnablePaging = false;
@@ -68,7 +68,7 @@ $col->renderer = "function(v,p,r){return v == '' || v == null ? r.data.BorrowerD
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->EnablePaging = false;
-$dg->height = 200;
+$dg->height = 150;
 $dg->width = 770;
 $dg->title = "درخواست های وام آماده پرداخت";
 $dg->EnablePaging = false;
@@ -76,6 +76,40 @@ $dg->EnableSearch = false;
 $dg->DefaultSortField = "PartDate";
 $dg->autoExpandColumn = "LoanFullname";
 $grid2 = $dg->makeGrid_returnObjects();
+
+//---------------------------------------------
+$dg = new sadaf_datagrid("dg", $js_prefix_address . 
+		"request/request.data.php?task=SelectAllMessages&MsgStatus=RAW", "grid_div");
+
+$dg->addColumn("", "BorrowerDesc", "", true);
+
+$col = $dg->addColumn("شماره وام", "RequestID", "");
+$col->width = 70;
+$col->align = "center";
+
+$col = $dg->addColumn("گیرنده وام", "LoanFullname");
+$col->renderer = "function(v,p,r){return v == '' || v == null ? r.data.BorrowerDesc : v;}";
+$col->width = 150;
+
+$col = $dg->addColumn("فرستنده پیام", "RegPersonName", "");
+$col->width = 150;
+
+$col = $dg->addColumn("زمان ایجاد", "CreateDate", GridColumn::ColumnType_datetime);
+$col->width = 120;
+
+$col = $dg->addColumn("شرح", "details");
+$col->ellipsis = 50;
+
+$dg->emptyTextOfHiddenColumns = true;
+$dg->EnablePaging = false;
+$dg->height = 150;
+$dg->width = 770;
+$dg->title = "پیام های ارسالی از معرفی کنندگان وام";
+$dg->EnablePaging = false;
+$dg->EnableSearch = false;
+$dg->DefaultSortField = "CreateDate";
+$dg->autoExpandColumn = "details";
+$grid3 = $dg->makeGrid_returnObjects();
 ?>
 <script>
 
@@ -92,21 +126,32 @@ function StartPage(){
 	
 	this.grid1 = <?= $grid1 ?>;
 	this.grid1.on("itemdblclick", function(view, record){
-		framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", {RequestID : record.data.RequestID});
+		framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", 
+		{RequestID : record.data.RequestID});
 	});	
 	this.grid1.render(this.get("DivGrid1"));
 	//.......................................................
 	this.grid2 = <?= $grid2 ?>;
 	this.grid2.on("itemdblclick", function(view, record){
-		framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", {RequestID : record.data.RequestID});
+		framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", 
+		{RequestID : record.data.RequestID});
 	});	
 	this.grid2.render(this.get("DivGrid2"));
+	//.......................................................
+	this.grid3 = <?= $grid3 ?>;
+	this.grid3.on("itemdblclick", function(view, record){
+		framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", 
+		{RequestID : record.data.RequestID});
+	});	
+	this.grid3.render(this.get("DivGrid3"));
 }
 
 StartPageObject = new StartPage();
 
 </script>
 <center><br>
+	<div id="DivGrid3"></div><br>
 	<div id="DivGrid1"></div><br>
 	<div id="DivGrid2"></div>
+	
 </center>

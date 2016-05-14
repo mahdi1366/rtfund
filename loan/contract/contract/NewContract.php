@@ -103,7 +103,6 @@ function NewContract() {
 			fieldLabel : "وام",
 			displayField : "fullTitle",
 			pageSize : 20,
-			allowBlank : false,
 			valueField : "RequestID",
 			name : "LoanRequestID",
 			itemId : "LoanRequestID",

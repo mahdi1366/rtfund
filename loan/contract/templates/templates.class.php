@@ -27,6 +27,9 @@ class CNT_templates extends OperationClass {
 			parent::runquery("update " . static::TableName . " set IsActive='NO' where TemplateID=?", array($this->TemplateID));
 			return ExceptionHandler::GetExceptionCount() == 0;
         }
+		
+		parent::runquery("delete from CNT_TemplateItems where TemplateID=?", array($this->TemplateID), $pdo);
+		
         return parent::Remove($pdo);
     }    
     

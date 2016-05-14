@@ -68,5 +68,9 @@ LoanReport_EndedRequests.prototype.PayReport = function(){
 
 </script>
 <center><br>
+	در گرید زیر وام هایی لیست شده اند که کلیه اقساط و بدهی آنها توسط مشتری پرداخت گردیده است.
+	لذا آماده خاتمه و برگشت تضمین های مشتری می باشند.
+	<br>
+	<br>
 	<div id="divGrid" ></div>
 </center>

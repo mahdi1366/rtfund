@@ -204,5 +204,21 @@ function PrepareContentToEdit($content){
 	return $RevContent;
 }
 
+function CopyTemplate(){
+	
+	$TemplateID = $_POST["TemplateID"];
+	
+	$obj = new CNT_templates($TemplateID);
+	$obj->TemplateTitle .= " (کپی)";
+	unset($obj->TemplateID);
+	$obj->Add();
+	
+	PdoDataAccess::runquery("insert into CNT_TemplateItems(TemplateID,ItemName,ItemType)
+		select :copy,ItemName,ItemType from CNT_TemplateItems where TemplateID=:src",
+			array(":src" => $TemplateID, ":copy" => $obj->TemplateID));
+	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
 //------------------------------------------------------------------------------
 ?>

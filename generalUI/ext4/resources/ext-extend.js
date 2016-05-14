@@ -1752,7 +1752,102 @@ Ext.define('Ext.picker.SHDate', {
     getActive: function(){
         return this.activeDate || this.value;
     },
-    
+    runAnimation: function(isHide){
+        var picker = this.monthPicker,
+            options = {
+                duration: 200,
+                callback: function(){
+                    if (isHide) {
+                        picker.hide();
+                    } else {
+                        picker.show();
+                    }
+                }
+            };
+
+        if (isHide) {
+            picker.el.slideOut('t', options);
+        } else {
+            picker.el.slideIn('t', options);
+        }
+    },
+    hideMonthPicker : function(animate){
+        var me = this,
+            picker = me.monthPicker;
+
+        if (picker) {
+            if (me.shouldAnimate(animate)) {
+                me.runAnimation(true);
+            } else {
+                picker.hide();
+            }
+        }
+        return me;
+    },
+    showMonthPicker : function(animate){
+        var me = this,
+            picker;
+        
+        if (me.rendered && !me.disabled) {
+            picker = me.createMonthPicker();
+            picker.setValue(me.getActive());
+            picker.setSize(me.getSize());
+            picker.setPosition(-1, -1);
+            if (me.shouldAnimate(animate)) {
+                me.runAnimation(false);
+            } else {
+                picker.show();
+            }
+        }
+        return me;
+    },
+    shouldAnimate: function(animate){
+        return Ext.isDefined(animate) ? animate : !this.disableAnim;
+    },
+    createMonthPicker: function(){
+        var me = this,
+            picker = me.monthPicker;
+
+        if (!picker) {
+            me.monthPicker = picker = new Ext.picker.SHMonth({
+                renderTo: me.el,
+                floating: true,
+                shadow: false,
+                small: me.showToday === false,
+                listeners: {
+                    scope: me,
+                    cancelclick: me.onCancelClick,
+                    okclick: me.onOkClick,
+                    yeardblclick: me.onOkClick,
+                    monthdblclick: me.onOkClick
+                }
+            });
+            if (!me.disableAnim) {
+                
+                picker.el.setStyle('display', 'none');
+            }
+            me.on('beforehide', Ext.Function.bind(me.hideMonthPicker, me, [false]));
+        }
+        return picker;
+    },
+    onOkClick: function(picker, value){
+        var me = this,
+            month = value[0],
+            year = value[1],
+            date = new Ext.SHDate(year, month, me.getActive().getDate());
+
+        if (date.getMonth() !== month) {
+            
+            date = Ext.SHDate.getLastDateOfMonth(new Ext.SHDate(year, month, 1));
+        }
+        me.update(date);
+        me.hideMonthPicker();
+    },
+    onCancelClick: function(){
+        
+        this.selectedUpdate(this.activeDate);
+        this.hideMonthPicker();
+    },
     showPrevMonth : function(e){
         return this.update(this.activeDate.add(Ext.SHDate.MONTH, -1));
     },

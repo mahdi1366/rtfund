@@ -75,13 +75,7 @@ MyRequestObject = new MyRequest();
 MyRequest.OperationRender = function(v,p,record){
 
 	var str = "";
-	
-	/*if(MyRequestObject.User == "Customer" && (record.data.StatusID == "40" || record.data.StatusID == "60"))
-	{
-		str += "<div  title='تایید تکمیل مدارک' class='tick' onclick='MyRequestObject.ChangeStatus(50);' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right'></div>";
-	}*/	
+		
 	if(MyRequestObject.User == "Customer" && record.data.StatusID == "60")
 	{
 		str += "<div  title='دلیل رد مدارک' class='comment' onclick='MyRequestObject.ShowComment();' " +
@@ -99,20 +93,17 @@ MyRequest.OperationRender = function(v,p,record){
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
 	
-	/*str += "<div title='مدارک وام' class='attach' onclick='MyRequestObject.LoadAttaches();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right'></div>";*/
-	
-	/*str += "<div  title='سابقه درخواست' class='history' onclick='MyRequestObject.ShowHistory();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";*/
-	
 	if(MyRequestObject.User == "Agent" && record.data.StatusID == "1")
 	{
 		str += "<div  title='حذف درخواست' class='remove' onclick='MyRequestObject.DeleteRequest();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
 	}
+	else
+		str += "<div  title='ارسال پیغام' class='comment' onclick='MyRequestObject.ShowMessages();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
+	
 	if(MyRequestObject.User == "Agent" && record.data.StatusID == "10")
 	{
 		str += "<div  title='برگشت درخواست' class='return' onclick='MyRequestObject.ChangeStatus(11);' " +
@@ -342,6 +333,41 @@ MyRequest.prototype.ShowHistory = function(){
 		}
 	});
 }
+
+MyRequest.prototype.ShowMessages = function(){
+
+	if(!this.messagesWin)
+	{
+		this.messagesWin = new Ext.window.Window({
+			width : 713,
+			title : "پیام های وام",
+			height : 435,
+			modal : true,
+			loader : {
+				url : this.address_prefix + "messages.php",
+				method : "post",
+				scripts : true
+			},
+			closeAction : "hide"
+		});
+		
+		Ext.getCmp(this.TabID).add(this.messagesWin);
+	}
+	this.messagesWin.show();
+	this.messagesWin.center();
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+	this.messagesWin.loader.load({
+		params : {
+			ExtTabID : this.messagesWin.getEl().id,
+			RequestID : record.data.RequestID
+		}
+	});
+}
+
+
+
 </script>
 <center>
 	<div id="DivGrid"></div>

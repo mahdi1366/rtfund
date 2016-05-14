@@ -323,8 +323,14 @@ class sadaf_datagrid
 			{
 				$grid .= "{listeners : {beforeedit: function(editor,e){";
 				for($k=0; $k < count($this->dateColumns); $k++)
-					$grid .= "e.record.data." . $this->dateColumns[$k] . " =
-						MiladiToShamsi(e.record.data." . $this->dateColumns[$k] . ".substr(0,10) );";
+					$grid .= "
+					if(e.grid.columns.findObject('dataIndex','DoneDate').getEditor().xtype != 'displayfield' &&
+						e.record.data." . $this->dateColumns[$k] . " != null)
+					{
+						e.record.data." . $this->dateColumns[$k] . " =
+						MiladiToShamsi(e.record.data." . $this->dateColumns[$k] . ".substr(0,10) );
+					}		
+					";
 				$grid .= "}}}";
 			}
 			$grid .=  "),";

@@ -8,14 +8,25 @@ require_once '../header.inc.php';
 require_once inc_dataGrid;
 require_once 'plan.class.php';
 
-$dt = PLN_plans::SelectAll("p.PersonID=? AND p.StepID<>" . STEPID_END, array($_SESSION["USER"]["PersonID"]));
-$dt = $dt->fetchAll();
-$Mode = count($dt) == 0 ? "new" : ($dt[0]["StepID"] == STEPID_RAW ? "edit" : "list");
+$framework = isset($_SESSION["USER"]["framework"]);
 
-$PlanID = $Mode == "new" ? "0" : $dt[0]["PlanID"];
-$PlanDesc = $Mode == "new" ? "" : $dt[0]["PlanDesc"];
-$LoanID = $Mode == "new" ? "" : $dt[0]["LoanID"];
+if(!$framework)
+{
+	$dt = PLN_plans::SelectAll("p.PersonID=? AND p.StepID<>" . STEPID_END, array($_SESSION["USER"]["PersonID"]));
+	$dt = $dt->fetchAll();
+	$Mode = count($dt) == 0 ? "new" : ($dt[0]["StepID"] == STEPID_RAW ? "edit" : "list");
 
+	$PlanID = $Mode == "new" ? "0" : $dt[0]["PlanID"];
+	$PlanDesc = $Mode == "new" ? "" : $dt[0]["PlanDesc"];
+	$LoanID = $Mode == "new" ? "" : $dt[0]["LoanID"];
+}
+else
+{
+	$PlanID = 0;
+	$PlanDesc = '';
+	$LoanID = 0;
+	$Mode = "new";
+}
 //.............................................
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "plan.data.php?task=SelectMyPlans", "grid_div");
@@ -64,6 +75,8 @@ NewPlan.prototype = {
 	LoanID : '<?= $LoanID ?>',
 	Mode : '<?= $Mode ?>',
 	
+	framework : <?= isset($_SESSION["USER"]["framework"]) ? "true" : "false" ?>,
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -79,6 +92,24 @@ function NewPlan(){
 			layout : "vbox",
 			renderTo : this.get("div_plan"),
 			items : [{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../../framework/person/persons.data.php?' +
+							"task=selectPersons&UserType=IsCustomer",
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields : ['PersonID','fullname']
+				}),
+				fieldLabel : "مشتری",
+				displayField : "fullname",
+				pageSize : 20,
+				width : 400,
+				hidden : true,
+				valueField : "PersonID",
+				name : "PersonID"
+			},{
 				xtype : "textfield",
 				fieldLabel : "عنوان طرح",
 				name : "PlanDesc",
@@ -99,6 +130,7 @@ function NewPlan(){
 				queryMode : 'local',
 				displayField : "LoanDesc",
 				valueField : "LoanID",
+				hidden : true,
 				name : "LoanID",
 				value : this.LoanID
 			},{
@@ -114,15 +146,25 @@ function NewPlan(){
 		});
 	}
 	
-	this.grid = <?= $grid ?>;
-	this.grid.getView().getRowClass = function(record, index)
+	if(this.framework)
 	{
-		if(record.data.StepID == <?= STEPID_REJECT ?>)
-			return "pinkRow";
-
-		return "";
+		this.planFS.down("[name=PersonID]").show();
+		this.planFS.down("[name=LoanID]").show();
 	}
-	this.grid.render(this.get("div_grid"));
+	else
+	{
+		this.grid = <?= $grid ?>;
+		this.grid.getView().getRowClass = function(record, index)
+		{
+			if(record.data.StepID == <?= STEPID_REJECT ?>)
+				return "pinkRow";
+
+			return "";
+		}
+		this.grid.render(this.get("div_grid"));
+	}
+	
+	
 	
 }
 
@@ -155,14 +197,23 @@ NewPlan.prototype.SaveNewPlan = function(){
 			task : "SaveNewPlan",
 			PlanID : this.PlanID,
 			PlanDesc : this.planFS.down("[name=PlanDesc]").getValue(),
-			LoanID : this.planFS.down("[name=LoanID]").getValue()
+			LoanID : this.planFS.down("[name=LoanID]").getValue(),
+			PersonID : this.framework ? this.planFS.down("[name=PersonID]").getValue() : ""
 		},
 
 		success : function(response){
 			mask.hide();
 			result = Ext.decode(response.responseText);
 			if(result.success)
-				portal.OpenPage("/loan/plan/PlanInfo.php", {PlanID : result.data});
+			{
+				if(NewPlanObject.framework)
+				{
+					framework.CloseTab(NewPlanObject.TabID);
+					framework.OpenPage("/loan/plan/PlanInfo.php", "جداول اطلاعاتی طرح", {PlanID : result.data});
+				}	
+				else
+					portal.OpenPage("/loan/plan/PlanInfo.php", {PlanID : result.data});
+			}
 			else
 				Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
 		}

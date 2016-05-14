@@ -8,6 +8,7 @@ include_once('../header.inc.php');
 include_once inc_dataReader;
 include_once inc_response;
 include_once 'plan.class.php';
+include_once 'elements.class.php';
 
 $task = $_REQUEST["task"];
 switch ($task) {
@@ -15,6 +16,33 @@ switch ($task) {
 	default : 
 		eval($task. "();");
 }
+
+function SaveGroup(){
+	
+	$obj = new PLN_groups();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	if($obj->GroupID*1 > 0)
+		$reslt = $obj->Edit();
+	else
+		$reslt = $obj->Add();
+	
+	//print_r(ExceptionHandler::PopAllExceptions());	
+	echo Response::createObjectiveResponse($reslt, "");
+	die();
+}
+
+function DeleteGroup(){
+	
+	$obj = new PLN_groups($_POST["GroupID"]);
+	$reslt = $obj->Remove();
+	
+	//print_r(ExceptionHandler::PopAllExceptions());	
+	echo Response::createObjectiveResponse($reslt, "");
+	die();
+}
+
+//............................................
 
 function selectGroups(){
 	
@@ -296,12 +324,15 @@ function SaveNewPlan(){
 	
 	if($PlanID*1 == 0)
 	{
-		$obj->PersonID = $_SESSION["USER"]["PersonID"];
+		if(isset($_SESSION["USER"]["framework"]))
+			$obj->PersonID = $_POST["PersonID"];
+		else
+			$obj->PersonID = $_SESSION["USER"]["PersonID"];		
 		$obj->RegDate = PDONOW;
-		$obj->StepID = STEPID_RAW;
+		$obj->StepID = !isset($_SESSION["USER"]["framework"]) ? STEPID_RAW : STEPID_CUSTOMER_SEND;
 		$result = $obj->AddPlan();
 		
-		PLN_plans::ChangeStatus($obj->PlanID, 1, "", true);
+		PLN_plans::ChangeStatus($obj->PlanID, $obj->StepID , "", true);
 	}
 	else
 	{

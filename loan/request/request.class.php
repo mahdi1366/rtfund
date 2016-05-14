@@ -24,6 +24,7 @@ class LON_requests extends PdoDataAccess
 	public $DocumentDesc;	
 	public $IsEnded;
 	public $SubAgentID;
+	public $IsFree;
 	
 	public $_LoanDesc;
 	public $_LoanPersonFullname;
@@ -402,4 +403,33 @@ class LON_payments extends OperationClass
 	}
 }
 
+class LON_messages extends OperationClass {
+
+	const TableName = "LON_messages";
+	const TableKey = "MessageID";
+	
+	public $MessageID;
+	public $RequestID;
+	public $RegPersonID;
+	public $CreateDate;
+	public $details;
+	public $MsgStatus;
+	public $DoneDate;
+	public $DoneDesc;
+	
+	static function Get($where = '', $whereParams = array(), $order = "order by CreateDate desc") {
+		
+		return PdoDataAccess::runquery_fetchMode("
+		select	m.* , r.BorrowerDesc,
+				concat_ws(' ',p.fname,p.lname,p.CompanyName) RegPersonName,
+				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname
+				
+		from LON_messages m
+		join BSC_persons p on(RegPersonID = PersonID)
+		join LON_requests r using(RequestID)
+		left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
+		
+		where 1=1 " . $where . " " . $order, $whereParams);	
+	}
+}
 ?>

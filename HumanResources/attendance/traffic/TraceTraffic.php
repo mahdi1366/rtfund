@@ -8,6 +8,8 @@ require_once '../../header.inc.php';
 require_once 'traffic.class.php';
 require_once inc_reportGenerator;
 
+$admin = isset($_POST["admin"]) ? true : false;
+
 if(isset($_REQUEST["showReport"]))
 {
 	ShowReport();
@@ -18,8 +20,11 @@ function ShowReport(){
 	$StartDate = DateModules::shamsi_to_miladi($_POST["year"] . "-" . $_POST["month"] . "-01", "-");
 	$EndDate = DateModules::shamsi_to_miladi($_POST["year"] . "-" . $_POST["month"] ."-" . DateModules::DaysOfMonth($_POST["year"] ,$_POST["month"]), "-");
 	
+	$PersonID = $_SESSION["USER"]["PersonID"];
+	$PersonID = !empty($_POST["PersonID"]) ? $_POST["PersonID"] : $PersonID;
+	
 	$dt = ATN_traffic::Get(" AND t.PersonID=? AND TrafficDate>= ? AND TrafficDate <= ? order by TrafficDate,TrafficTime", 
-		array($_SESSION["USER"]["PersonID"], $StartDate, $EndDate));
+		array($PersonID, $StartDate, $EndDate));
 	
 	$dt = $dt->fetchAll();
 	
@@ -130,59 +135,60 @@ function TraceTraffic()
 		renderTo : this.get("main"),
 		frame : true,
 		autoHeight : true,
-		layout : {
-			type : "table",
-			columns :4
-		},
 		bodyStyle : "text-align:right;padding:5px",
 		title : "گزارش تردد",
 		width : 800,
 		items :[{
-			xtype : "combo",
-			width : 300,
-			fieldLabel : "انتخاب فرد",
-			store: new Ext.data.Store({
-				proxy:{
-					type: 'jsonp',
-					url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				fields :  ['PersonID','fullname']
-			}),
-			displayField: 'fullname',
-			valueField : "PersonID",
-			hiddenName : "PersonID"
-		},{
-			xtype : "combo",
-			store: YearStore,   
-			labelWidth : 30,
-			width : 120,
-			fieldLabel : "سال",
-			displayField: 'title',
-			valueField : "id",
-			hiddenName : "year",
-			value : '<?= substr(DateModules::shNow(),0,4) ?>'
-		},{
-			xtype : "combo",
-			store: MonthStore,   
-			labelWidth : 30,
-			width : 120,
-			fieldLabel : "ماه",
-			displayField: 'title',
-			valueField : "id",
-			hiddenName : "month"
-		},{
-			xtype : "button",
-			border : true,
-			style : "margin-right:20px",
-			text : "مشاهده گزارش",
-			iconCls : "report",
-			handler : function(){ TraceTrafficObj.LoadReport(); }
+			xtype : "container",
+			layout : "hbox",
+			items :[{
+				xtype : "combo",
+				width : 300,
+				fieldLabel : "انتخاب فرد",
+				store: new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ['PersonID','fullname']
+				}),
+				displayField: 'fullname',
+				hidden : <?= $admin ? "false" : "true" ?>,
+				valueField : "PersonID",
+				hiddenName : "PersonID"
+			},{
+				xtype : "combo",
+				store: YearStore,   
+				labelWidth : 30,
+				width : 120,
+				fieldLabel : "سال",
+				displayField: 'title',
+				valueField : "id",
+				hiddenName : "year",
+				value : '<?= substr(DateModules::shNow(),0,4) ?>'
+			},{
+				xtype : "combo",
+				store: MonthStore,   
+				labelWidth : 30,
+				width : 120,
+				fieldLabel : "ماه",
+				displayField: 'title',
+				valueField : "id",
+				hiddenName : "month",
+				value : '<?= substr(DateModules::shNow(),5,2)*1 ?>'
+			},{
+				xtype : "button",
+				border : true,
+				style : "margin-right:20px",
+				text : "مشاهده گزارش",
+				iconCls : "report",
+				handler : function(){ TraceTrafficObj.LoadReport(); }
+			}]
 		},{
 			xtype : "container",
 			html : "<hr>",
-			width : 780,
-			colspan : 4
+			width : 780
 		},{
 			xtype : "container",
 			colspan : 4,
@@ -190,6 +196,7 @@ function TraceTraffic()
 			itemId : "div_report"
 		}]
 	});
+	
 }
 
 TraceTraffic.prototype.LoadReport = function(){

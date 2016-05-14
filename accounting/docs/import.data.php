@@ -407,7 +407,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 			$itemObj->Add($pdo);
 		}
 	}
-	if($PartObj->WageReturn != "AGENT" && $PartObj->FundWage*1 < $PartObj->CustomerWage)
+	/*if($PartObj->WageReturn != "AGENT" && $PartObj->FundWage*1 < $PartObj->CustomerWage)
 	{
 		if($WageSum - $WageSum*$PartObj->FundWage/$MaxWage > 0)
 		{
@@ -420,7 +420,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 			$itemObj->TafsiliID = $ReqPersonTafsili;
 			$itemObj->Add($pdo);
 		}
-	}
+	}*/
 	// ----------------------------- bank --------------------------------
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;

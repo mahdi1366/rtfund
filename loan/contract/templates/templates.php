@@ -20,6 +20,7 @@ $col->renderer = "function(v,p,r){return Templates.OperationRender(v,p,r);}";
 $col->width = 40;
 
 $dg->addButton("", "ایجاد الگوی جدید", "add", "function(){TemplatesObject.ShowNewTemplateForm();}");
+$dg->addButton("", "کپی الگو", "copy", "function(){TemplatesObject.copyTemplate();}");
 
 $dg->title = "لیست الگوهای قرارداد";
 $dg->DefaultSortField = "TemplateID";
@@ -104,6 +105,39 @@ Templates.prototype.RemoveItem = function () {
 						Ext.MessageBox.alert('', 'خطا در اجرای عملیات');
 					return;
 				}
+				TemplatesObject.grid.getStore().load();
+			}
+		});
+	});
+		
+}
+
+Templates.prototype.copyTemplate = function () {
+	
+	record = this.grid.getSelectionModel().getLastSelected();
+	if(record == null)
+	{
+		Ext.MessageBox.alert("","ابتدا الگوی مورد نظر را خود را انتخاب کنید");
+		return;
+	}
+	
+	Ext.MessageBox.confirm("","آیا مایل به ایجاد کپی از الگو می باشید؟", function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		me = TemplatesObject;
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال حذف...'});
+		mask.show();
+	
+		Ext.Ajax.request({
+			url: me.address_prefix + 'templates.data.php?task=CopyTemplate',
+			params: {                
+				TemplateID: me.grid.getSelectionModel().getLastSelected().data.TemplateID            
+			},
+			method: 'POST',
+			success: function (res) {
+				mask.hide();
 				TemplatesObject.grid.getStore().load();
 			}
 		});

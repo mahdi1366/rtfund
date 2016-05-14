@@ -61,7 +61,7 @@ $dg->hideHeaders = true;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 150;
-$dg->width = 170;
+$dg->width = 150;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "MaxAmount";

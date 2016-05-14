@@ -93,7 +93,8 @@ function SaveLoanRequest(){
 	$obj->guarantees = implode(",", $obj->guarantees);
 	
 	//------------------------------------------------------
-	if($_SESSION["USER"]["IsAgent"] == "YES" || $_SESSION["USER"]["IsSupporter"] == "YES")
+	if(isset($_SESSION["USER"]["portal"]) && 
+		($_SESSION["USER"]["IsAgent"] == "YES" || $_SESSION["USER"]["IsSupporter"] == "YES"))
 	{
 		if(empty($_POST["ReqPersonID"]))
 			$obj->ReqPersonID = $_SESSION["USER"]["PersonID"];
@@ -108,6 +109,8 @@ function SaveLoanRequest(){
 	else if($_SESSION["USER"]["IsStaff"] == "YES")
 	{
 		$obj->LoanID = Default_Agent_Loan;
+		$obj->IsFree = isset($_POST["IsFree"]) ? "YES" : "NO";	
+		
 		if(empty($obj->RequestID) && isset($_SESSION["USER"]["framework"]))
 			$obj->StatusID = 1;
 	}
@@ -1316,4 +1319,69 @@ function RetPayPartDoc(){
 	die();
 }
 
+//-------------------------------------------------
+
+function SelectAllMessages(){
+	
+	$where = "";
+	$param = array();
+	
+	if(!empty($_REQUEST["RequestID"]))
+	{
+		$where .= " AND RequestID=?";
+		$param[] = $_REQUEST["RequestID"];
+	}
+	
+	if(!empty($_REQUEST["MsgStatus"]))
+	{
+		$where .= " AND MsgStatus=?";
+		$param[] = $_REQUEST["MsgStatus"];
+	}
+	$res = LON_messages::Get($where, $param, dataReader::makeOrder());
+	print_r(ExceptionHandler::PopAllExceptions());
+	$cnt = $res->rowCount();
+	$res = PdoDataAccess::fetchAll($res, $_GET["start"], $_GET["limit"]);
+	echo dataReader::getJsonData($res, $cnt, $_GET["callback"]);
+	die();
+}
+
+function saveMessage(){
+	
+	$obj = new LON_messages();
+	
+	if(isset($_POST["record"]))
+		PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	else
+	{
+		PdoDataAccess::FillObjectByArray($obj, $_POST);
+		$obj->MsgStatus = "DONE";
+	}
+	
+	if(isset($_POST["DoneDesc"]))
+		$obj->DoneDate = PDONOW;
+	
+	if($obj->MessageID != "")
+		$result = $obj->Edit();
+	else
+	{
+		$obj->RegPersonID = $_SESSION["USER"]["PersonID"];
+		$obj->CreateDate = PDONOW;
+		$result = $obj->Add();
+	}
+	print_r(ExceptionHandler::PopAllExceptions());
+	Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function removeMessage(){
+	
+	$obj = new LON_messages($_POST["MessageID"]);
+	if($obj->MsgStatus == "RAW")
+		$result = $obj->Remove();
+	else
+		$result = false;
+	
+	Response::createObjectiveResponse($result, "");
+	die();
+}
 ?>
