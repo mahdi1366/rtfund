@@ -1028,7 +1028,7 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 				
 				if($PayRecord["PayAmount"] == 0)
 				{
-					$StartDate = $PayRecord["PayDate"];
+					$StartDate = max($PayRecord["PayDate"],$installments[$i]["InstallmentDate"]);
 					$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
 				}	
 				$returnArr[] = $installments[$i];
@@ -1037,7 +1037,7 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 			}
 						
 			$remainder = $remainder - $PayRecord["PayAmount"]*1;
-			$StartDate = $PayRecord["PayDate"];
+			$StartDate = max($PayRecord["PayDate"],$installments[$i]["InstallmentDate"]);
 			
 			$installments[$i]["TotalRemainder"] = $remainder + $Forfeit;
 			$installments[$i]["remainder"] = $remainder;

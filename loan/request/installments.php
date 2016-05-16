@@ -28,7 +28,6 @@ $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetPar
 $dg->addColumn("", "InstallmentID","", true);
 $dg->addColumn("", "PartID","", true);
 $dg->addColumn("", "RequestID","", true);
-$dg->addColumn("", "InstallmentAmount","", true);
 $dg->addColumn("", "BankDesc", "", true);
 $dg->addColumn("", "ChequeBranch", "", true);
 
@@ -37,6 +36,7 @@ $col->editor = ColumnEditor::SHDateField();
 $col->width = 80;
 
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
+$col->editor = ColumnEditor::CurrencyField();
 
 $col = $dg->addColumn("مبلغ جریمه", "ForfeitAmount", GridColumn::ColumnType_money);
 $col->width = 80;
