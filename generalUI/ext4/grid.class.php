@@ -324,7 +324,7 @@ class sadaf_datagrid
 				$grid .= "{listeners : {beforeedit: function(editor,e){";
 				for($k=0; $k < count($this->dateColumns); $k++)
 					$grid .= "
-					if(e.grid.columns.findObject('dataIndex','DoneDate').getEditor().xtype != 'displayfield' &&
+					if(e.grid.columns.findObject('dataIndex','" . $this->dateColumns[$k] . "').getEditor().xtype != 'displayfield' &&
 						e.record.data." . $this->dateColumns[$k] . " != null)
 					{
 						e.record.data." . $this->dateColumns[$k] . " =

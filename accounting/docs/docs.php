@@ -111,7 +111,7 @@ $dg->rowEditOkHandler = "function(v,p,r){ return AccDocsObject.SaveItem(v,p,r);}
 
 $dg->DefaultSortField = "ItemID";
 $dg->autoExpandColumn = "CostID";
-$dg->DefaultSortDir = "DESC";
+$dg->DefaultSortDir = "ASC";
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 320;
 $itemsgrid = $dg->makeGrid_returnObjects();

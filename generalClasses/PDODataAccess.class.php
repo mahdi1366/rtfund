@@ -103,6 +103,7 @@ class PdoDataAccess extends ExceptionHandler
 		for($i=0; $i < count($keys); $i++)
 			if(isset($record[$keys[$i]]))
 			{
+				$record[$keys[$i]] = preg_replace('/\'/', "\\'", $record[$keys[$i]]);
 				if($record[$keys[$i]] == "NULL")
 					eval("\$obj->" . $keys[$i] . " = null;");
 				else 

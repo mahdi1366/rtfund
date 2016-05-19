@@ -76,7 +76,7 @@ function PartPayment()
 {
 	this.grid = <?= $grid ?>;
 	this.grid.plugins[0].on("beforeedit", function(editor,e){
-		if(e.record.data.DocID != "0")
+		if(e.record.data.DocID*1 > 0)
 			return false;
 		return true;
 	});

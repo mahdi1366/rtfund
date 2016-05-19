@@ -13,6 +13,15 @@ class PLN_groups extends OperationClass
 	public $GroupID;
 	public $ParentID;
 	public $GroupDesc;
+	
+	function Remove($pdo = null) {
+		
+		$dt = parent::runquery("select * from PLN_Elements where GroupID=?", array($this->GroupID));
+		if(count($dt) > 0)
+			return false;
+		
+		parent::Remove($pdo);
+	}
 }
 
 class PLN_Elements extends OperationClass
@@ -27,7 +36,14 @@ class PLN_Elements extends OperationClass
 	public $ElementType;
 	public $properties;
 	public $EditorProperties;
-	public $values;
+	public $ElementValues;
+	public $IsActive;
+	
+	function Remove($pdo = null) {
+		
+		$this->IsActive = "NO";
+		return $this->Edit($pdo);
+	}
 }
 
 ?>

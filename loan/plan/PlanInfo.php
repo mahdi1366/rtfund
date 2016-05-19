@@ -81,4 +81,5 @@ if(isset($_SESSION["USER"]["framework"]))
 		<div id="div_plan"></div>
 		<form id="mainForm"></form>
 	</div>
+	<br>
 </center>

@@ -18,23 +18,27 @@ $dg->addColumn("", "LoanPersonID", "", true);
 $dg->addColumn("", "ReqPersonID", "", true);
 $dg->addColumn("", "IsEnded", "", true);
 
+$col = $dg->addColumn("گیرنده وام", "LoanFullname");
+$col->renderer = "function(v,p,r){return v == '' || v == null ? '<span style=color:red>' + r.data.BorrowerDesc + '</span>' : v;}";
+
+$col = $dg->addColumn("<span style=font-size:8px>شناسه پرداخت</span>", "RequestID", "");
+$col->renderer = "LoanRFID";
+$col->width = 70;
+
 $col = $dg->addColumn("شماره", "RequestID", "");
 $col->width = 50;
 
 $col = $dg->addColumn("شعبه", "BranchName", "");
 $col->width = 100;
 
-$col = $dg->addColumn("تاریخ درخواست", "ReqDate", GridColumn::ColumnType_date);
-$col->width = 120;
+$col = $dg->addColumn("تاریخ", "ReqDate", GridColumn::ColumnType_date);
+$col->width = 80;
 
 $col = $dg->addColumn("مبلغ درخواست", "ReqAmount", GridColumn::ColumnType_money);
 $col->width = 100;
 
 $col = $dg->addColumn("معرفی کننده", "ReqFullname");
 $col->width = 100;
-
-$col = $dg->addColumn("گیرنده وام", "LoanFullname");
-$col->renderer = "function(v,p,r){return v == '' || v == null ? '<span style=color:red>' + r.data.BorrowerDesc + '</span>' : v;}";
 
 $col = $dg->addColumn("وضعیت", "StatusDesc", "");
 $col->width = 100;

@@ -2,6 +2,18 @@
 
 /*
 
+ALTER TABLE `krrtfir_rtfund`.`PLN_Elements` CHANGE COLUMN `values` `ElementValues` 
+TEXT CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL;
+ * 
+ * 
+ALTER TABLE `krrtfir_rtfund`.`PLN_Elements` MODIFY COLUMN `properties` VARCHAR(1000) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '';
+ALTER TABLE `krrtfir_rtfund`.`PLN_Elements` MODIFY COLUMN `EditorProperties` VARCHAR(200) CHARACTER SET utf8 COLLATE utf8_general_ci;
+
+ALTER TABLE `krrtfir_rtfund`.`PLN_Elements` ADD COLUMN `IsActive` ENUM('YES','NO') NOT NULL DEFAULT 'YES' AFTER `ElementValues`;
+
+ALTER TABLE `krrtfir_rtfund`.`BSC_persons` ADD COLUMN `ShareNo` INTEGER UNSIGNED AFTER `ShNo`;
+
+ * add DelayReturn
 
 
  * 

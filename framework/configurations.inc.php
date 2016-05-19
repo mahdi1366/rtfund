@@ -23,6 +23,9 @@ class smtp_config{
 
 
 define("SoftwareName", "صندوق پژوهش و فناوری خراسان رضوی");
+define("OWNER_NATIONALID", "10380491265");
+define("OWNER_REGCODE", "33943");
+define("OWNER_REGDATE", "1387/06/28");
 
 define("Default_Agent_Loan", "9");
 ?>

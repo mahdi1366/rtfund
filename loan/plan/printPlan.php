@@ -124,7 +124,14 @@ function printGrid($PlanID, $ParentID){
 				$rowValues[ substr($element["tag"],8) ] = empty($element["value"]) ? "" : $element["value"];
 			
 		foreach($columns as $col)
-			echo "<td class=values>" . $rowValues[ $col["ElementID"] ] . "</td>";
+		{
+			echo "<td class=values>";
+			if($col["ElementType"] == "currencyfield")
+				echo number_format($rowValues[ $col["ElementID"] ]);
+			else
+				echo $rowValues[ $col["ElementID"] ];
+			echo "</td>";
+		}
 		echo "</tr>";	
 	}
 	
@@ -152,7 +159,7 @@ function printForm($ParentID, $ElementValue){
 	{
 		if($element["ElementType"] == "displayfield")
 		{
-			echo "<div class=form>" . $element["values"] . "</div>";
+			echo "<div class=form>" . $element["ElementValues"] . "</div>";
 			continue;
 		}
 		if(empty($planValues[ $element["ElementID"] ]))
@@ -174,7 +181,12 @@ function printForm($ParentID, $ElementValue){
 			echo "<td class=titles>" . $element["ElementTitle"] . "</td>";
 			$colspan = 2;
 		}
-		echo "<td class=values colspan=$colspan>" . $planValues[ $element["ElementID"] ] . "</td>";
+		echo "<td class=values colspan=$colspan>";
+		if($element["ElementType"] == "currencyfield")
+			echo number_format($planValues[ $element["ElementID"] ]);
+		else
+			echo $planValues[ $element["ElementID"] ];
+		echo "</td>";
 		
 		if($index % 2 != 0)
 			echo "</tr>";

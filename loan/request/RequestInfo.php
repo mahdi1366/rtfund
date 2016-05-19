@@ -38,12 +38,12 @@ $dg->addColumn("", "IsEnded","", true);
 $dg->addColumn("", "IsPaid","", true);
 $dg->addColumn("", "IsPartEnded","", true);
 $dg->addColumn("", "WageReturn","", true);
+$dg->addColumn("", "DelayReturn","", true);
 $dg->addColumn("", "imp_VamCode","", true);
 $dg->addColumn("", "PayCompute","", true);
 $dg->addColumn("", "MaxFundWage","", true);
 
 $col = $dg->addColumn("عنوان فاز", "PartDesc", "");
-$col->renderer = "function(v,p,r){return RequestInfo.TitleRender(v,p,r);}";
 $col->sortable = false;
 
 if(!$ReadOnly)

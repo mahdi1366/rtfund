@@ -529,9 +529,22 @@ function ComputeInstallments(){
 		$obj->CustomerWage = 0;
 	}
 	
-	$allPay = roundUp( PMT($obj->CustomerWage, $obj->InstallmentCount, 
-			$obj->PartAmount, $YearMonths, $obj->PayInterval), -3);
-	$LastPay = $obj->PartAmount*1 + $TotalWage - $allPay*($obj->InstallmentCount-1);
+	$allPay = PMT($obj->CustomerWage, $obj->InstallmentCount, 
+			$obj->PartAmount, $YearMonths, $obj->PayInterval);
+	
+	$TotalDelay = round($obj->PartAmount*$obj->CustomerWage*$obj->DelayMonths/1200);
+	if($obj->DelayReturn == "INSTALLMENT")
+		$allPay += $TotalDelay/$obj->InstallmentCount*1;
+	
+	if($obj->InstallmentCount*1 > 1)
+		$allPay = roundUp($allPay,-3);
+	else
+		$allPay = round($allPay);
+	
+	$returnAmount = $obj->PartAmount*1;	
+	$returnAmount += $obj->WageReturn != "CUSTOMER" ? $TotalWage : 0;
+	$returnAmount += $obj->DelayReturn != "CUSTOMER" ? $TotalDelay : 0;
+	$LastPay = $returnAmount - $allPay*($obj->InstallmentCount*1-1);
 
 	$jdate = DateModules::miladi_to_shamsi($obj->PartDate);
 	$jdate = DateModules::AddToJDate($jdate, 1, $obj->DelayMonths);

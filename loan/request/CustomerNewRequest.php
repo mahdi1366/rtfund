@@ -311,7 +311,7 @@ NewLoanRequest.prototype.LoadSummary = function(record){
 		
 		if(PayInterval == 0)
 			return F7;
-		
+				
 		F8 = F8/(YearMonths*100);
 		F7 = -F7;
 		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
@@ -336,18 +336,66 @@ NewLoanRequest.prototype.LoadSummary = function(record){
 	YearMonths = 12;
 	if(record.data.IntervalType == "DAY")
 		YearMonths = Math.floor(365/record.data.PayInterval);
-
-	FirstPay = roundUp(PMT(record.data.CustomerWage,record.data.InstallmentCount, 
-		record.data.MaxAmount, YearMonths, record.data.PayInterval),-3);
-	TotalWage = Math.round(ComputeWage(record.data.MaxAmount, record.data.CustomerWage/100, 
+	
+	TotalWage = Math.round(ComputeWage(record.data.PartAmount, record.data.CustomerWage/100, 
 		record.data.InstallmentCount, YearMonths, record.data.PayInterval));
+		
+	if(record.data.WageReturn == "CUSTOMER")
+		FirstPay = PMT(0,record.data.InstallmentCount, 
+			record.data.PartAmount, YearMonths, record.data.PayInterval);	
+	else
+		FirstPay = PMT(record.data.CustomerWage,record.data.InstallmentCount, 
+			record.data.PartAmount, YearMonths, record.data.PayInterval);	
+			
+	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
+	FundWage = Math.round((record.data.FundWage/record.data.CustomerWage)*TotalWage);
+	FundWage = !isInt(FundWage) ? 0 : FundWage;
+	AgentWage = TotalWage - FundWage;
+	
+	TotalDelay = Math.round(record.data.PartAmount*record.data.CustomerWage*record.data.DelayMonths/1200);
+	if(record.data.DelayReturn == "INSTALLMENT")
+		FirstPay += TotalDelay/record.data.InstallmentCount;
+	if(record.data.InstallmentCount > 1)
+		FirstPay = roundUp(FirstPay,-3);
+	else
+		FirstPay = Math.round(FirstPay);
+	
+	returnAmount = record.data.PartAmount*1
+	returnAmount += record.data.WageReturn != "CUSTOMER" ? TotalWage : 0;
+	returnAmount += record.data.DelayReturn != "CUSTOMER" ? TotalDelay : 0;		
+	LastPay = returnAmount - FirstPay*(record.data.InstallmentCount-1);
+	
+	if(record.data.InstallmentCount == 1)
+		LastPay = 0;
+	if(record.data.MaxFundWage*1 > 0)
+	{
+		tmp = record.data.WageReturn == "INSTALLMENT" ? 
+			Math.round(record.data.MaxFundWage*1/record.data.InstallmentCount) : 0;
+		
+		this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay + tmp);
+		this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay + tmp);
+		this.get("SUM_Delay").innerHTML = 0;
+		this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount 
+			 - (record.data.WageReturn == "CUSTOMER" ? TotalWage + record.data.MaxFundWage*1 : 0));	
 
-	TotalDelay = Math.round(record.data.MaxAmount*record.data.CustomerWage*record.data.DelayMonths/1200);
-	LastPay = record.data.MaxAmount*1 + TotalWage - FirstPay*(record.data.InstallmentCount-1);
+		this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage + record.data.MaxFundWage*1);	
+		this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.MaxFundWage);	
+		this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
+
+		this.get("SUM_Wage_1Year").innerHTML = 0;
+		this.get("SUM_Wage_2Year").innerHTML = 0;
+		this.get("SUM_Wage_3Year").innerHTML = 0;
+		this.get("SUM_Wage_4Year").innerHTML = 0;
+		return;
+	}
 	
 	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay);
+	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay);
 	this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(TotalDelay);
-	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.MaxAmount - TotalDelay);	
+	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
+		(record.data.WageReturn == "CUSTOMER" ? TotalDelay : 0) - 
+		(record.data.WageReturn == "CUSTOMER" ? TotalWage : 0));	
+	
 	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage);	
 
 }

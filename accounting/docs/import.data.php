@@ -242,7 +242,10 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 				$amount += $WageSum + $PartObj->MaxFundWage*1;
 			else
 				$amount += $WageSum*$PartObj->CustomerWage/$MaxWage;
-		}  			
+		}
+		
+		if($PartObj->DelayReturn == "INSTALLMENT")
+			$amount += $TotalDelay;
 		
 		unset($itemObj->ItemID);
 		$itemObj->DocID = $obj->DocID;
@@ -284,7 +287,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 		$itemObj->Add($pdo);
 	}
 	//---- delay -----
-	if($TotalDelay > 0 && $PartObj->MaxFundWage*1 == 0)
+	if($TotalDelay > 0 && $PartObj->MaxFundWage*1 == 0 && $PartObj->DelayReturn == "CUSTOMER")
 	{
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType2);
@@ -430,7 +433,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 		$BankItemAmount = $PayAmount - 
 			($PartObj->WageReturn == "CUSTOMER" ? $PartObj->MaxFundWage + $WageSum : 0);
 	else
-		$BankItemAmount = $PayAmount - $TotalDelay*$PartObj->CustomerWage/$MaxWage - 
+		$BankItemAmount = $PayAmount - 
+			($PartObj->DelayReturn == "CUSTOMER" ? $TotalDelay*$PartObj->CustomerWage/$MaxWage : 0) - 
 			($PartObj->WageReturn == "CUSTOMER" ? $WageSum*$PartObj->CustomerWage/$MaxWage : 0);
 	$itemObj->CreditorAmount = $BankItemAmount;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;

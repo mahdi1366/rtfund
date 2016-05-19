@@ -164,7 +164,7 @@ function Installment()
 			),
 			itemId : "PartID",
 			listeners :{
-				select : function(){
+				select : function(combo,records){
 					InstallmentObject.grid.getStore().proxy.extraParams = {
 						PartID : this.getValue()
 					};
@@ -177,7 +177,7 @@ function Installment()
 					
 					InstallmentObject.PayPanel.show();
 					InstallmentObject.PayPanel.down("[itemId=PayCode]").setValue(
-						InstallmentObject.PayCodeRender());
+						LoanRFID(records[0].data.RequestID));
 					
 					
 				}
@@ -386,6 +386,16 @@ Installment.prototype.DelayInstallments = function(){
 	this.delayWin.center();
 }
 
+function LoanRFID(RequestID)
+{
+	st = RequestID.lpad("0", 7);
+	SUM = st[0]*1 + st[1]*2 + st[2]*3 + st[3]*4 + st[4]*5 + st[5]*6 + st[6]*7;
+	remain = SUM % 11;
+	remain = remain == 10 ? 0 : remain;
+	
+	code = st + remain;
+	return code;
+}
 </script>
 <center>
 	<div id="div_loans"></div>

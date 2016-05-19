@@ -3,15 +3,89 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 1395.02
 //-----------------------------
-
 require_once '../header.inc.php';
+require_once inc_dataGrid;
+
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "plan.data.php?task=selectGroupElements&ParentID=0", "grid_div");
+
+$dg->addColumn("", "GroupID", "", true);
+$dg->addColumn("", "ParentID", "", true);
+$dg->addColumn("", "ElementID", "", true);
+
+$col = $dg->addColumn("نوع آیتم" . 
+	'<span style="float:right;width:16px;height: 16px;margin:2px;cursor:pointer" class=add '.
+	'onclick=PlanElementsObject.AddHElement()></span>', "ElementType", "");
+$col->renderer = "PlanElements.ElementTypeRender";
+$col->width = 100;
+$col->sortable = false;
+
+$col = $dg->addColumn("مشخصات", "properties", "");
+$col->width = 300;
+
+$col = $dg->addColumn("مقادیر", "ElementValues", "");
+$col->ellipsis = 70;
+
+$col = $dg->addColumn("", "", "");
+$col->renderer = "PlanElements.HOperationRender";
+$col->width = 50;
+
+$dg->emptyTextOfHiddenColumns = true;
+$dg->height = 150;
+$dg->width = 780;
+$dg->HeaderMenu = false;
+$dg->DefaultSortField = "ElementID";
+$dg->autoExpandColumn = "ElementValues";
+$dg->EnablePaging = false;
+$dg->EnableSearch = false;
+$grid1 = $dg->makeGrid_returnObjects();
+
+//..............................................................................
+
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "plan.data.php?task=selectGroupElements", "grid_div");
+
+$dg->addColumn("", "GroupID", "", true);
+$dg->addColumn("", "ParentID", "", true);
+$dg->addColumn("", "ElementID", "", true);
+
+$col = $dg->addColumn("عنوان آیتم". 
+	'<span style="float:right;width:16px;height: 16px;margin:2px;cursor:pointer" class=add '.
+	'onclick=PlanElementsObject.AddDElement()></span>', "ElementTitle", "");
+$col->width = 200;
+$col->sortable = false;
+
+$col = $dg->addColumn("نوع آیتم", "ElementType", "");
+$col->renderer = "PlanElements.ElementTypeRender";
+$col->width = 100;
+
+$col = $dg->addColumn("مشخصات ادیتور", "EditorProperties", "");
+$col->width = 150;
+$col->ellipsis = 20;
+
+$col = $dg->addColumn("مشخصات", "properties", "");
+$col->width = 150;
+$col->ellipsis = 20;
+
+$col = $dg->addColumn("مقادیر", "ElementValues", "");
+$col->ellipsis = 50;
+
+$col = $dg->addColumn("", "", "");
+$col->renderer = "PlanElements.DOperationRender";
+$col->width = 50;
+
+$dg->emptyTextOfHiddenColumns = true;
+$dg->height = 300;
+$dg->width = 780;
+$dg->DefaultSortField = "ElementID";
+$dg->autoExpandColumn = "ElementValues";
+$dg->EnablePaging = false;
+$dg->HeaderMenu = false;
+$dg->EnableSearch = false;
+
+$grid2 = $dg->makeGrid_returnObjects();
+
 ?>
 <script>
-//-----------------------------
-//	Programmer	: SH.Jafarkhani
-//	Date		: 1395.02
-//-----------------------------
-	
+
 PlanElements.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
@@ -23,6 +97,20 @@ PlanElements.prototype = {
 
 function PlanElements(){
 
+	this.HGrid = <?= $grid1 ?>;
+	this.HGrid.on("itemdblclick", function(view, record){
+		PlanElementsObject.DGrid.getStore().proxy.extraParams.GroupID = record.data.GroupID;
+		PlanElementsObject.DGrid.getStore().proxy.extraParams.ParentID = record.data.ElementID;
+		
+		if(PlanElementsObject.DGrid.rendered)
+			PlanElementsObject.DGrid.getStore().load();
+		else
+			PlanElementsObject.DGrid.render(PlanElementsObject.get("DIV_DGrid"));
+		PlanElementsObject.DGrid.show();
+	});	
+	//this.ShowElements(6);
+	this.DGrid = <?= $grid2 ?>;
+	
 	this.tree = new Ext.tree.Panel({
 		renderTo : this.get("div_tree"),
 		store: new Ext.data.TreeStore({
@@ -36,8 +124,12 @@ function PlanElements(){
 		width : 780,
 		height : 200,
 		listeners : {
-				itemcontextmenu : function(view, record, item, index, e){
-					PlanElementsObject.ShowMenu(view, record, item, index, e);
+			itemclick : function(v,record){
+				if(!record.data.leaf) return; 
+				PlanElementsObject.ShowElements(record.data.id);
+			},
+			itemcontextmenu : function(view, record, item, index, e){
+				PlanElementsObject.ShowMenu(view, record, item, index, e);
 			}
 		}
 	});	
@@ -80,9 +172,166 @@ function PlanElements(){
 				}]
 		})
 	});
+	//................................................................
+	
+	this.HFormWin = new Ext.window.Window({
+		width : 500,
+		height : 250,
+		modal : true,
+		closeAction : "hide",
+		items : new Ext.FormPanel({
+			items : [{
+				xtype : "combo",
+				store: new Ext.data.SimpleStore({
+					fields:["id","title"],
+					data : [
+						["panel", "فرم اطلاعاتی"],
+						["grid", "جدول اطلاعاتی"],
+						["displayfield", "متن توضیحی"]
+					]
+				}),
+				fieldLabel : "نوع آیتم",
+				valueField : "id",
+				displayField : "title",
+				name : "ElementType",
+				listeners : {
+					select : function(combo,records){
+						if(records[0].data.id == "displayfield")
+							PlanElementsObject.HFormWin.down("[name=ElementValues]").enable();
+						else
+							PlanElementsObject.HFormWin.down("[name=ElementValues]").disable();
+					}
+				}
+			},{
+				xtype : "textarea",
+				fieldLabel : "مشخصات",
+				name : "properties",
+				width : 480,
+				fieldStyle : "direction:ltr"
+			},{
+				xtype : "textarea",
+				fieldLabel : "مقادیر",
+				name : "ElementValues",
+				width : 480,
+				disabled : true
+			},{
+				xtype : "hidden",
+				name : "GroupID"
+			},{
+				xtype : "hidden",
+				name : "ElementID"
+			},{
+				xtype : "hidden",
+				name : "ParentID",
+				value : 0
+			}]
+		}),
+		buttons :[{
+			text : "ذخیره",
+			iconCls : "save",
+			handler : function(){
+				PlanElementsObject.SaveElement( PlanElementsObject.HFormWin, PlanElementsObject.HGrid);
+			} 
+		},{
+			text : "انصراف",
+			iconCls : "undo",
+			handler : function(){this.up('window').hide();}
+		}]
+	});
+	Ext.getCmp(this.TabID).add(this.HFormWin);
+	
+	//................................................................
+	this.DFormWin = new Ext.window.Window({
+		width : 500,
+		height : 390,
+		modal : true,
+		closeAction : "hide",
+		items : new Ext.FormPanel({
+			items : [{
+				xtype : "combo",
+				store: new Ext.data.SimpleStore({
+					fields:["id","title"],
+					data : [
+						["displayfield","متن نمایشی"],
+						["textfield","متن کوتاه"],
+						["shdatefield","تاریخ شمسی"],
+						["datefield","تاریخ میلادی"],
+						["currencyfield","مبلغ"],
+						["radio","گزینه ای"],
+						["numberfield","عدد"],
+						["textarea","متن بلند"],	
+						["displayfield","متن نمایشی"],
+						["combo","انتخابی"]		
+					]
+				}),
+				fieldLabel : "نوع آیتم",
+				valueField : "id",
+				displayField : "title",
+				name : "ElementType",
+				listeners : {
+					select : function(combo,records){
+						if( records[0].data.id == "radio" || 
+							records[0].data.id == "displayfield" || 
+							records[0].data.id == "combo")
+							PlanElementsObject.DFormWin.down("[name=ElementValues]").enable();
+						else
+							PlanElementsObject.DFormWin.down("[name=ElementValues]").disable();
+					}
+				}
+			},{
+				xtype : "textfield",
+				fieldLabel : "عنوان آیتم",
+				name : "ElementTitle",
+				width : 480
+			},{
+				xtype : "textarea",
+				fieldLabel : "مشخصات ادیتور",
+				name : "EditorProperties",
+				width : 480,
+				fieldStyle : "direction:ltr"
+			},{
+				xtype : "textarea",
+				fieldLabel : "مشخصات",
+				name : "properties",
+				width : 480,
+				fieldStyle : "direction:ltr"
+			},{
+				xtype : "displayfield",
+				fieldCls : "blueText",
+				style : "margin-bottom:10px",
+				value: "مقادیر مربوطه برای نوع آیتم انتخابی و گزینه ای را با جدا کننده # به ترتیب وارد کنید"
+			},{
+				xtype : "textarea",
+				fieldLabel : "مقادیر",
+				name : "ElementValues",
+				width : 480,
+				disabled : true
+			},{
+				xtype : "hidden",
+				name : "GroupID"
+			},{
+				xtype : "hidden",
+				name : "ElementID"
+			},{
+				xtype : "hidden",
+				name : "ParentID",
+				value : 0
+			}]
+		}),
+		buttons :[{
+			text : "ذخیره",
+			iconCls : "save",
+			handler : function(){
+				PlanElementsObject.SaveElement( PlanElementsObject.DFormWin, PlanElementsObject.DGrid);
+			} 
+		},{
+			text : "انصراف",
+			iconCls : "undo",
+			handler : function(){this.up('window').hide();}
+		}]
+	});
+	Ext.getCmp(this.TabID).add(this.DFormWin);
 }
-
-PlanElementsObject = new PlanElements();
 
 PlanElements.prototype.ShowMenu = function(view, record, item, index, e)
 {
@@ -228,7 +477,156 @@ PlanElements.prototype.DeleteGroup = function()
 	});
 }
 
+//.......................................................
+
+PlanElements.ElementTypeRender = function(v,p,r){
+
+	switch(v)
+	{
+		case "panel" : return "فرم اطلاعاتی";
+		case "grid" : return "جدول اطلاعاتی";
+		case "displayfield" : return "متن نمایشی";
+		case "textfield" : return "متن کوتاه";
+		case "shdatefield" : return "تاریخ شمسی";
+		case "datefield" : return "تاریخ میلادی";
+		case "currencyfield" : return "مبلغ";
+		case "radio" : return "گزینه ای";
+		case "numberfield" : return "عدد";
+		case "textarea" : return "متن بلند";	
+		case "displayfield" : return "متن نمایشی";
+		case "combo" : return "انتخابی";			
+	}
+}
+
+PlanElements.HOperationRender = function(v,p,r){
+	
+	return "<div align='center' title='ویرایش' class='edit' "+
+		"onclick='PlanElementsObject.EditElement(PlanElementsObject.HFormWin, PlanElementsObject.HGrid);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;float:right;width:16px;height:16'></div>" +
+	
+	"<div align='center' title='حذف' class='remove' "+
+		"onclick='PlanElementsObject.DeleteElement(PlanElementsObject.HGrid);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;float:right;width:16px;height:16'></div>";
+}
+
+PlanElements.DOperationRender = function(v,p,r){
+	
+	return "<div align='center' title='ویرایش' class='edit' "+
+		"onclick='PlanElementsObject.EditElement(PlanElementsObject.DFormWin, PlanElementsObject.DGrid);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;float:right;width:16px;height:16'></div>" +
+	
+	"<div align='center' title='حذف' class='remove' "+
+		"onclick='PlanElementsObject.DeleteElement(PlanElementsObject.DGrid);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;float:right;width:16px;height:16'></div>";
+}
+
+PlanElements.prototype.ShowElements = function(GroupID)
+{
+	this.HGrid.getStore().proxy.extraParams.GroupID = GroupID;
+	if(this.HGrid.rendered)
+		this.HGrid.getStore().load();
+	else
+		this.HGrid.render(this.get("DIV_HGrid"));
+	
+	this.DGrid.hide();
+}
+
+PlanElements.prototype.AddHElement = function()
+{
+	this.HFormWin.down('form').getForm().reset();
+	this.HFormWin.down("[name=ElementValues]").disable();
+	this.HFormWin.down('[name=GroupID]').setValue(this.HGrid.getStore().proxy.extraParams.GroupID);
+	this.HFormWin.show();	
+}
+
+PlanElements.prototype.AddDElement = function()
+{
+	this.DFormWin.down('form').getForm().reset();
+	this.DFormWin.down("[name=ElementValues]").disable();
+	this.DFormWin.down('[name=GroupID]').setValue(this.DGrid.getStore().proxy.extraParams.GroupID);
+	this.DFormWin.down('[name=ParentID]').setValue(this.DGrid.getStore().proxy.extraParams.ParentID);
+	this.DFormWin.show();	
+}
+
+PlanElements.prototype.EditElement = function(win, grid)
+{
+	var record = grid.getSelectionModel().getLastSelected();
+	win.down('form').loadRecord(record);
+	
+	if(record.data.ElementType == "radio"|| 
+		record.data.ElementType == "displayfield" || 
+		record.data.ElementType == "combo")
+		win.down("[name=ElementValues]").enable();
+	else
+		win.down("[name=ElementValues]").disable();
+	
+	win.show();
+}
+
+PlanElements.prototype.SaveElement = function(window, grid)
+{
+	mask = new Ext.LoadMask(window, {msg:'در حال ذخیره سازی...'});
+	mask.show();
+	window.down('form').submit({
+		url: this.address_prefix + 'plan.data.php?task=SaveElement',
+		method : "POST",
+
+		success : function(form,action){      
+			mask.hide();
+			window.hide();
+			grid.getStore().load();
+		},
+		failure : function(){
+			mask.hide();
+			Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+		}
+	});
+}
+
+PlanElements.prototype.DeleteElement = function(grid)
+{
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		var record = grid.getSelectionModel().getLastSelected();
+		mask = new Ext.LoadMask(grid, {msg:'در حال حذف...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url : PlanElementsObject.address_prefix + "plan.data.php?task=DeleteElement",
+			method : "POST",
+			params : {
+				ElementID : record.data.ElementID
+			},
+
+			success : function(response){
+				var result = Ext.decode(response.responseText);
+				mask.hide();
+				if(result.success)
+					grid.getStore().load();
+				else if(result.data != "")
+					Ext.MessageBox.alert("Error", result.data);
+				else
+					Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد.");
+			}
+		});
+		
+	});
+	
+}
+
+PlanElementsObject = new PlanElements();
+
 </script>
 <center><br>
 	<div id="div_tree"></div>
+	<br>
+	<div id="DIV_HGrid"></div>
+	<div id="DIV_DGrid"></div>
+	
 </center>

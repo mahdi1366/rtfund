@@ -22,6 +22,15 @@ function SaveGroup(){
 	$obj = new PLN_groups();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
+	//------- check for having form/grid ------
+	$dt = PLN_Elements::Get(" AND GroupID=?", array($obj->ParentID));
+	if($dt->rowCount() > 0)
+	{
+		echo Response::createObjectiveResponse(false, "آیتم انتخابی شامل جدول اطلاعاتی می باشد");
+		die();
+	}
+	//-----------------------------------------
+	
 	if($obj->GroupID*1 > 0)
 		$reslt = $obj->Edit();
 	else
@@ -39,6 +48,46 @@ function DeleteGroup(){
 	
 	//print_r(ExceptionHandler::PopAllExceptions());	
 	echo Response::createObjectiveResponse($reslt, "");
+	die();
+}
+
+function selectGroupElements(){
+	
+	$dt = PLN_Elements::Get(" AND IsActive='YES' AND GroupID=? AND ParentID=?", 
+		array($_REQUEST["GroupID"], $_REQUEST["ParentID"]));
+	$dt = $dt->fetchAll();
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SaveElement(){
+	
+	$obj = new PLN_Elements();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	if(empty($obj->properties))
+		$obj->properties = " ";
+	
+	if(empty($obj->EditorProperties))
+		$obj->EditorProperties = " ";
+	
+	if($obj->ElementID*1 > 0)
+		$result = $obj->Edit();
+	else
+		$result = $obj->Add();
+	
+	//print_r(ExceptionHandler::PopAllExceptions());	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteElement(){
+	
+	$obj = new PLN_Elements();
+	$obj->ElementID = $_POST["ElementID"];
+	$result = $obj->Remove();
+	
+	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
@@ -106,7 +155,7 @@ function SelectElements(){
 	$PlanID = $_REQUEST["PlanID"];
 	$GroupID = $_REQUEST["GroupID"];
 	$dt = PdoDataAccess::runquery("select e.* from PLN_Elements e
-		where GroupID=? order by ElementID", array($GroupID));
+		where IsActive='YES' AND GroupID=? order by ElementID", array($GroupID));
 	
 	$planValues = array();
 	for($i=0; $i < count($dt); $i++)
@@ -190,7 +239,15 @@ function SavePlanItems(){
 		{
 			if(strpos($el, "element_") === false)
 				continue;
-			$xml->addChild($el, $data->$el);
+			$str = $data->$el;
+			
+			if(strlen($str) > 10 && substr($str,10) == "T00:00:00")
+				$str = substr($str,0,10);	
+			
+			if(strlen($str) == 10 && $str[4] == "-" && $str[7] == "-")
+				$str = preg_replace('/\-/', "/", $str);
+			
+			$xml->addChild($el, $str);
 		}
 		$obj->ElementValue = $xml->asXML();
 	}

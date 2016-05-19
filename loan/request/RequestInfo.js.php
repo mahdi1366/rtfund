@@ -172,29 +172,13 @@ RequestInfo.OperationRender = function(v,p,record){
 	}
 }
 
-RequestInfo.TitleRender = function(v,p,record){
-	
-	PartID = record.data.PartID;
-
-	st = PartID.lpad("0", 11);
-	num = (st[0]*11) + (st[1]*10) + (st[2]*9) + (st[3]*1) + (st[4]*2) + (st[5]*3)
-		+ (st[6]*4) + (st[7]*5) + (st[8]*6) + (st[9]*7) + (st[10]*8);
-	remain = num % 99;
-	
-	code = st + remain.toString().lpad("0", 2);
-	
-	p.tdAttr = "data-qtip='شماره پیگیری : " + code + "'";
-	
-	return v;
-}
-
 RequestInfo.prototype.OperationMenu = function(e){
 
 	record = this.grid.getSelectionModel().getLastSelected();
 	ReqRecord = this.store.getAt(0);
 	
 	var op_menu = new Ext.menu.Menu();
-
+	
 	if(record.data.imp_VamCode*1 > 0)
 	{
 		op_menu.add({text: 'اقساط',iconCls: 'list',
@@ -974,8 +958,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					xtype : "fieldset",
 					itemId : "fs_WageCompute",
 					title : "نحوه دریافت کارمزد",
-					colspan :2,
-					width : 450,
+					width : 240,
 					style : "margin-right:10px",
 					items : [{
 						xtype : "radio",
@@ -983,16 +966,34 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						name : "WageReturn",
 						inputValue : "INSTALLMENT",
 						checked : true
-					},{
+					}/*,{
 						xtype : "radio",
 						boxLabel : "پرداخت کارمزد از سپرده سرمایه گذار",
 						name : "WageReturn",
 						inputValue : "AGENT"
-					},{
+					}*/,{
 						xtype : "radio",						
 						boxLabel : "پرداخت کارمزد هنگام پرداخت وام",
 						name : "WageReturn",
 						inputValue : "CUSTOMER"
+					}]
+				},{
+					xtype : "fieldset",
+					itemId : "fs_DelayCompute",
+					title : "نحوه دریافت تنفس",
+					width : 200,
+					style : "margin-right:10px",
+					items : [{
+						xtype : "radio",						
+						boxLabel : "هنگام پرداخت وام",
+						name : "DelayReturn",
+						inputValue : "CUSTOMER",
+						checked : true
+					},{
+						xtype : "radio",
+						boxLabel : "طی اقساط",
+						name : "DelayReturn",
+						inputValue : "INSTALLMENT"
 					}]
 				},{
 					xtype : "fieldset",
@@ -1052,6 +1053,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 		{
 			this.PartWin.down("[name=PartDate]").hide();
 			this.PartWin.down("[itemId=fs_WageCompute]").hide();
+			this.PartWin.down("[itemId=fs_DelayCompute]").hide();
 			this.PartWin.down("[itemId=fs_PayCompute]").hide();
 			this.PartWin.down("[itemId=fs_MaxFundWage]").hide();
 			this.PartWin.down("[name=PartAmount]").colspan = 2;
@@ -1205,11 +1207,11 @@ RequestInfo.prototype.LoadSummary = function(record){
 		record.data.InstallmentCount, YearMonths, record.data.PayInterval));
 		
 	if(record.data.WageReturn == "CUSTOMER")
-		FirstPay = roundUp(PMT(0,record.data.InstallmentCount, 
-			record.data.PartAmount, YearMonths, record.data.PayInterval),-3);	
+		FirstPay = PMT(0,record.data.InstallmentCount, 
+			record.data.PartAmount, YearMonths, record.data.PayInterval);	
 	else
-		FirstPay = roundUp(PMT(record.data.CustomerWage,record.data.InstallmentCount, 
-			record.data.PartAmount, YearMonths, record.data.PayInterval),-3);	
+		FirstPay = PMT(record.data.CustomerWage,record.data.InstallmentCount, 
+			record.data.PartAmount, YearMonths, record.data.PayInterval);	
 			
 	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
 	FundWage = Math.round((record.data.FundWage/record.data.CustomerWage)*TotalWage);
@@ -1217,14 +1219,21 @@ RequestInfo.prototype.LoadSummary = function(record){
 	AgentWage = TotalWage - FundWage;
 	
 	TotalDelay = Math.round(record.data.PartAmount*record.data.CustomerWage*record.data.DelayMonths/1200);
-	if(record.data.WageReturn == "CUSTOMER")
-		LastPay = record.data.PartAmount*1 - FirstPay*(record.data.InstallmentCount-1);
+	if(record.data.DelayReturn == "INSTALLMENT")
+		FirstPay += TotalDelay/record.data.InstallmentCount;
+	
+	if(record.data.InstallmentCount > 1)
+		FirstPay = roundUp(FirstPay,-3);
 	else
-		LastPay = record.data.PartAmount*1 + TotalWage - FirstPay*(record.data.InstallmentCount-1);
+		FirstPay = Math.round(FirstPay);
+	
+	returnAmount = record.data.PartAmount*1;
+	returnAmount += record.data.WageReturn != "CUSTOMER" ? TotalWage : 0;
+	returnAmount += record.data.DelayReturn != "CUSTOMER" ? TotalDelay : 0;
+	LastPay = returnAmount - FirstPay*(record.data.InstallmentCount-1);
 	
 	if(record.data.InstallmentCount == 1)
 		LastPay = 0;
-	
 	if(record.data.MaxFundWage*1 > 0)
 	{
 		tmp = record.data.WageReturn == "INSTALLMENT" ? 
@@ -1251,7 +1260,8 @@ RequestInfo.prototype.LoadSummary = function(record){
 	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay);
 	this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(TotalDelay);
 	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
-		TotalDelay - (record.data.WageReturn == "CUSTOMER" ? TotalWage : 0));	
+		(record.data.WageReturn == "CUSTOMER" ? TotalDelay : 0) - 
+		(record.data.WageReturn == "CUSTOMER" ? TotalWage : 0));	
 	
 	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage);	
 	this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(FundWage);	

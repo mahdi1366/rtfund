@@ -136,7 +136,7 @@ function PlanInfo(){
 	
 	this.itemsPanel = new Ext.panel.Panel({
 		bodyStyle : 'padding:4px;',
-		height : this.portal ? 381 : 478,
+		height : this.portal ? 381 : 470,
 		width: 758,
 		autoScroll : true
 	});
@@ -144,7 +144,7 @@ function PlanInfo(){
    this.MainPanel =  new Ext.panel.Panel({
 		applyTo : this.get("mainForm"),
 		width: 760,
-		height : this.portal ? 530 : 600,
+		height : this.portal ? 530 : 618,
 		items : [this.tree,this.itemsPanel],
 		tbar : [{
 			text : "ردیف های دارای اطلاعات",
@@ -316,7 +316,7 @@ PlanInfo.prototype.LoadElements = function(record, season){
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
 			fields : ["ElementID", "ParentID", "GroupID", "ElementTitle", "ElementType", 
-				"properties", "EditorProperties", "ElementValue", "values"],
+				"properties", "EditorProperties", "ElementValue", "ElementValues"],
 			autoLoad : true,
 			listeners :{
 				load : function(){
@@ -399,9 +399,11 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 						break;
 					}
 					var editor = {xtype : sub_record.data.ElementType};
+					if(sub_record.data.ElementType == "datefield")
+						editor.format = "Y/m/d";
 					if(sub_record.data.ElementType == "combo")
 					{
-						arr = sub_record.data.values.split("#");
+						arr = sub_record.data.ElementValues.split("#");
 						data = [];
 						for(j=0;j<arr.length;j++)
 							data.push([ arr[j] ]);
@@ -416,7 +418,7 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 					
 					NewColumn = {
 						menuDisabled : true,
-						sortable : false,
+						sortable : false,						
 						text : sub_record.data.ElementTitle,
 						dataIndex : "element_" + sub_record.data.ElementID,
 						editor : editor						
@@ -546,10 +548,10 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 			case "radio" :
 				record.data.ElementValue = record.data.ElementValue== "" ? -1 : record.data.ElementValue;
 				var items = new Array();
-				values = record.data.values.split('#');
-				for(j=0;j<values.length;j++)
+				ElementValues = record.data.ElementValues.split('#');
+				for(j=0;j<ElementValues.length;j++)
 					items.push({
-						boxLabel : values[j],
+						boxLabel : ElementValues[j],
 						name : "element_" + record.data.ElementID,
 						inputValue : j,
 						readOnly : this.readOnly,
@@ -560,17 +562,50 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 					fieldLabel : record.data.ElementTitle,
 					itemId : "element_" + record.data.ElementID,
 					items : items,					
-					columns: values.length
+					columns: ElementValues.length
+				};
+				break;
+			case "combo":
+				arr = record.data.ElementValues.split("#");
+				data = [];
+				for(j=0;j<arr.length;j++)
+					data.push([ arr[j] ]);
+				NewElement = {
+					xtype : record.data.ElementType,
+					store : new Ext.data.SimpleStore({
+						fields : ['value'],
+						data : data
+					}),
+					readOnly : this.readOnly,
+					valueField : "value",
+					displayField : "value",
+					fieldLabel : record.data.ElementTitle,
+					itemId : "element_" + record.data.ElementID,
+					name : "element_" + record.data.ElementID,
+					value : record.data.ElementValue
 				};
 				break;
 			case "displayfield":
 				NewElement = {
 					xtype : record.data.ElementType,
 					fieldLabel : record.data.ElementTitle,
-					value : record.data.values.replace(/\n/g,"<br>"),
+					itemId : "element_" + record.data.ElementID,
+					value : record.data.ElementValues.replace(/\n/g,"<br>"),
 					fieldCls : "desc"
 				};
-				break;				
+				break;		
+			case "currencyfield":
+			case "numberfield":
+				NewElement = {
+					xtype : record.data.ElementType,
+					readOnly : this.readOnly,
+					fieldLabel : record.data.ElementTitle,
+					itemId : "element_" + record.data.ElementID,
+					name : "element_" + record.data.ElementID,
+					value : record.data.ElementValue,
+					hideTrigger : true
+				};
+				break;		
 			default : 
 				NewElement = {
 					xtype : record.data.ElementType,

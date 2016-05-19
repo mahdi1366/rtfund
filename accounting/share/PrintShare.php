@@ -15,7 +15,24 @@ if(isset($_REQUEST["print"]))
 	if($TafsiliID != "")
 		$param[] = $TafsiliID;
 	
+	//-------------- total ------------------
+	$query = "select sum(CreditorAmount-DebtorAmount) amount, 
+		round(sum(CreditorAmount-DebtorAmount) /" . ShareBaseAmount . ") shareCount
+				
+	from ACC_DocItems 
+		join ACC_docs using(DocID)
+		where CostID=" . COSTID_share . " AND CycleID=" . $_SESSION["accounting"]["CycleID"];
+	$sumRecord = PdoDataAccess::runquery($query, $param);
+	if(count($sumRecord) == 0)
+	{
+		echo "<center><h2>" . "فاقد اطلاعات" . "</h2></center>";
+		die();
+	}
+	$sumRecord = $sumRecord[0];
+	//------------------------------------------
+	
 	$query = "select sum(CreditorAmount-DebtorAmount) amount, TafsiliDesc ,
+			ShareNo,
 		round(sum(CreditorAmount-DebtorAmount) /" . ShareBaseAmount . ") shareCount
 				
 	from ACC_DocItems 
@@ -29,27 +46,84 @@ if(isset($_REQUEST["print"]))
 	$query .= " order by amount desc";
 	$dataTable = PdoDataAccess::runquery($query, $param);
 	
-	echo Manage_Report::BeginReport();
-	echo "<style>
+	if(count($dataTable) == 0)
+	{
+		echo "<center><h2>" . "فاقد اطلاعات" . "</h2></center>";
+		die();
+	}
+	
+?>
+<html>
+	<head>
+		<META http-equiv=Content-Type content="text/html; charset=UTF-8" >
+		<link rel="stylesheet" type="text/css" href="/GeneralUI/fonts/fonts.css" /></head>
+		<style>
 		.page {
-			padding : 200px
+			width: 245mm;
+			height: 160mm;
+			border : 1px solid black;
+			margin : 2cm 2cm 0 2cm;
 		}
 		td {
-			font-family:b titr;
-			font-size:20px;
+			font-family: IranNastaliq;
+			font-size: 28px;
 		}
-		</style>";
+		</style>
+	</head>
+	<body dir="rtl">
+<?
 	for($i=0; $i<count($dataTable);$i++)
 	{
 		echo "<div class=page><table width=100%>
-			<tr><td align=center>" . $dataTable[$i]["TafsiliDesc"] . "</td></tr>
-			<tr><td align=center>" . CurrencyModulesclass::CurrencyToString($dataTable[$i]["amount"]) . "</td><tr>
+			<tr><td width=160px><img style=width:120px src=/framework/icons/logo.jpg /></td>
+				<td align=center style='font-size:30px !important'>بسمه تعالی
+				<br>برگ سهام " . SoftwareName . "(سهامی خاص)" . "</td>
+				<td width=160px style='font-family:bnazanin;font-size: 16px;'>شناسه ملی : " . OWNER_NATIONALID . "
+					<br>شماره ثبت : " . OWNER_REGCODE . "
+					<br>تاریخ ثبت : " . OWNER_REGDATE . "
+				</td>
+			</tr>
+			<tr>
+				<td colspan=3 align=center style='padding: 20 0 20 0'>سرمایه ثبت شده : " . 
+					CurrencyModulesclass::CurrencyToString($sumRecord["amount"]) . " ریال که تماما پرداخت گردیده است
+					<br>منقسم به " . CurrencyModulesclass::CurrencyToString($sumRecord["shareCount"]) . " سهم " . 
+					CurrencyModulesclass::CurrencyToString(ShareBaseAmount) . " ریالی
+				</td>
+			</tr>
+			<tr>
+				<td colspan=3 align=center style='text-align: justify;padding: 0 5 0 5'>
+				بدینوسیله گواهی می شود تعداد
+				<b> " . $dataTable[$i]["shareCount"] . " </b>
+				سهم با نام از مجموع 
+				" . $sumRecord["shareCount"] . " ( " . 
+				CurrencyModulesclass::CurrencyToString($sumRecord["shareCount"]) . " ) 
+				سهم 
+				" . SoftwareName . " به ارزش اسمی هر سهم 
+				" . CurrencyModulesclass::CurrencyToString(ShareBaseAmount) . " ریال و به ارزش 
+				<b>" . CurrencyModulesclass::CurrencyToString($dataTable[$i]["amount"]) . "</b>
+				ریال، به عنوان سهام عادی و با نام متعلق به 
+				<b>" . $dataTable[$i]["TafsiliDesc"] . "</b>
+				می باشد و سهام مذکور در دفتر ثبت سهام تحت شماره
+				<b> " . $dataTable[$i]["ShareNo"] . " </b>
+				ثبت گردیده است.
+				<br><br>
+				</td>
+			</tr>
+			<tr>
+				<td align=center>مهر صندوق</td>
+				<td align=center>دکتر جواد بهارآرا <br> رئیس هیئت مدیره</td>
+				<td align=center>مهدی مروی <br> مدیر عامل</td>
+			</tr>
 		</table></div>";
+		
+		echo "<div style='width:285mm;font-family:bnazanin;font-size:12px'>
+			<center>با صدور این برگ اوراق صادره قبلی باطل اعلام می گردد.( تاریخ صدرو : " .
+			DateModules::shNow(). " )</center>";
 		
 		if($i != count($dataTable)-1)
 			echo Manage_Report::PageBreak();
 	}
-	echo "</center></body>";
+	echo "</center></body></html>";
 	die();
 }
 
@@ -81,35 +155,25 @@ function PrintShare()
 				fields:["TafsiliID","TafsiliDesc"],
 				proxy: {
 					type: 'jsonp',
-					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+					url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=1',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				listeners : {
-					beforeload : function(store){
-						if(!store.proxy.extraParams.TafsiliType)
-						{
-							group = AccDocsObject.tafsiliGroupCombo.getValue();
-							if(group == "")
-								return false;
-							this.proxy.extraParams["TafsiliType"] = group;
-						}
-					}
 				}
 			}),
 			emptyText:'انتخاب تفصیلی ...',
 			typeAhead: false,
 			pageSize : 10,
-			itemId : "TafsiliID",
 			valueField : "TafsiliID",
-			displayField : "TafsiliDesc"
+			itemId : "TafsiliID",
+			displayField : "TafsiliDesc"			
 		}],
 		buttons : [{
 			text : "چاپ برگه سهام",
 			iconCls : "print",
 			handler : function()
 			{
-				window.open(PrintShareObj.address_prefix + "PrintShare.php?print=true&TafsiliID=" + 
-					PrintShareObj.mainPanel.down("[itemId=TafsiliID]").getValue());
+				str = PrintShareObj.mainPanel.down("[itemId=TafsiliID]").getValue() != null ?
+					"&TafsiliID=" + PrintShareObj.mainPanel.down("[itemId=TafsiliID]").getValue() : "";
+				window.open(PrintShareObj.address_prefix + "PrintShare.php?print=true" + str);
 			}
 		}]
 	});
