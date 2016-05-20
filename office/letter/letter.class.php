@@ -18,10 +18,14 @@ class OFC_letters extends PdoDataAccess{
 	public $SignerPersonID;
 	public $IsSigned;
 	public $InnerLetterNo;
+	public $InnerLetterDate;
+	public $OuterCopies;
+	public $RefLetterID;
 
     function __construct($LetterID = ""){
 		$this->DT_LetterDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_RegDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_InnerLetterDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($LetterID != "")
 			parent::FillObject($this, "select * from OFC_letters where LetterID=?", array($LetterID));

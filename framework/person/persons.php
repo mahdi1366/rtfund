@@ -26,6 +26,7 @@ $dg->addColumn("","mobile","string", true);
 $dg->addColumn("","email","string", true);
 $dg->addColumn("","address","string", true);
 $dg->addColumn("","IsActive","string", true);
+$dg->addColumn("","ShareNo","string", true);
 
 $col = $dg->addColumn("نام و نام خانوادگی","fullname","string");
 

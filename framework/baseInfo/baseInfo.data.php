@@ -9,77 +9,8 @@ require_once inc_response;
 require_once inc_dataReader;
 
 $task = isset($_POST["task"]) ? $_POST["task"] : (isset($_GET["task"]) ? $_GET["task"] : "");
-
-switch ($task)
-{
-	case "SaveUnit":
-		SaveUnit();
-		
-	case "DeleteUnit":
-		DeleteUnit();
-		
-	case "MoveUnit":
-		MoveUnit();
-		
-	case "GetTreeNodes":
-		GetTreeNodes();
-		
-	//--------------------------- 
-		
-	case "SavePost":
-		SavePost();
-		
-	case "DeletePost":
-		DeletePost();
-		
-	//---------------------------
-		
-	case "SelectBranches":
-		SelectBranches();
-		
-	case "SaveBranch":
-		SaveBranch();
-		
-	case "DeleteBranch":
-		DeleteBranch();
-		
-	//----------------------------
-		
-	case "SelectUserBranches":
-		SelectUserBranches();
-		
-	case "SaveBranchAccess":
-		SaveBranchAccess();
-		
-	case "DeleteBranchAccess":
-		DeleteBranchAccess();
-		
-	//------------------------------
-		
-	case "SelectBaseTypes":
-		SelectBaseTypes();
-		
-	case "SelectBaseInfo":
-		SelectBaseInfo();
-		
-	case "SaveBaseInfo":
-		SaveBaseInfo();
-		
-	case "DeleteBaseInfo":
-		DeleteBaseInfo();
-		
-	//...............................................
-		
-	case "SelectDomainNodes":
-		SelectDomainNodes();
-		
-	case "SaveDomain":
-		SaveDomain();
-		
-	case "DeleteDomain":
-		DeleteDomain();
-		
-}
+if(!empty($task))
+	$task();
 
 function SaveUnit()
 {
@@ -246,6 +177,14 @@ function DeleteBranchAccess(){
 	die();
 }
 
+function GetAccessBranches(){
+	
+	$branches = FRW_access::GetAccessBranches();
+	$dt = PdoDataAccess::runquery("select * from BSC_branches where BranchID in(" .
+		implode(",", $branches) . ")");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
 //---------------------------------
 function SelectBaseTypes(){
 	

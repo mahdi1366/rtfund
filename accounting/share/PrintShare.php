@@ -58,10 +58,12 @@ if(isset($_REQUEST["print"]))
 		<META http-equiv=Content-Type content="text/html; charset=UTF-8" >
 		<link rel="stylesheet" type="text/css" href="/GeneralUI/fonts/fonts.css" /></head>
 		<style>
+		@media print {
+			.pageBreak {page-break-before:always;height:1px;}
+		}
 		.page {
 			width: 245mm;
 			height: 160mm;
-			border : 1px solid black;
 			margin : 2cm 2cm 0 2cm;
 		}
 		td {
@@ -84,7 +86,7 @@ if(isset($_REQUEST["print"]))
 				</td>
 			</tr>
 			<tr>
-				<td colspan=3 align=center style='padding: 20 0 20 0'>سرمایه ثبت شده : " . 
+				<td colspan=3 align=center style='font-weight:bold;padding: 20 0 20 0'>سرمایه ثبت شده : " . 
 					CurrencyModulesclass::CurrencyToString($sumRecord["amount"]) . " ریال که تماما پرداخت گردیده است
 					<br>منقسم به " . CurrencyModulesclass::CurrencyToString($sumRecord["shareCount"]) . " سهم " . 
 					CurrencyModulesclass::CurrencyToString(ShareBaseAmount) . " ریالی
@@ -116,9 +118,9 @@ if(isset($_REQUEST["print"]))
 			</tr>
 		</table></div>";
 		
-		echo "<div style='width:285mm;font-family:bnazanin;font-size:12px'>
+		echo "<div style='width:285mm;font-family:bnazanin;font-size:14px'>
 			<center>با صدور این برگ اوراق صادره قبلی باطل اعلام می گردد.( تاریخ صدرو : " .
-			DateModules::shNow(). " )</center>";
+			DateModules::shNow(). " )</center></div>";
 		
 		if($i != count($dataTable)-1)
 			echo Manage_Report::PageBreak();

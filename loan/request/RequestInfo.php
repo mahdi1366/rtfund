@@ -60,8 +60,8 @@ $dg->HeaderMenu = false;
 $dg->hideHeaders = true;
 
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 150;
-$dg->width = 150;
+$dg->height = 180;
+$dg->width = 120;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "MaxAmount";
@@ -91,7 +91,7 @@ if(isset($_SESSION["USER"]["framework"]))
 	<div id="PartForm"></div>
 	<div id="SendForm"></div>
 	<div id="summaryDIV" style="display:none">
-		<div style="float:right"><table style="width:190px" class="summary">
+		<div style="float:right"><table style="width:200px" class="summary">
 			<tr>
 				<td style="width:70px;background-color: #dfe8f6;">مبلغ هر قسط</td>
 				<td style="background-color: #dfe8f6;">سود دوره تنفس</td>
@@ -109,7 +109,7 @@ if(isset($_SESSION["USER"]["framework"]))
 				<td><div id="SUM_NetAmount" class="blueText">&nbsp;</div></td>
 			</tr>			
 		</table></div>
-		<div style="float:right"><table style="width:180px" class="summary">
+		<div style="float:right"><table style="width:190px" class="summary">
 			<tr>
 				<td style="width:90px;direction:rtl;background-color: #dfe8f6;">کارمزد وام</td>
 				<td><div id="SUM_TotalWage" class="blueText">&nbsp;</div></td>
@@ -123,7 +123,7 @@ if(isset($_SESSION["USER"]["framework"]))
 				<td><div id="SUM_AgentWage" class="blueText">&nbsp;</div></td>
 			</tr>
 		</table></div>
-		<div style="float:right"><table  style="width:170px" class="summary">
+		<div style="float:right"><table  style="width:190px" class="summary">
 			<tr>
 				<td style="direction:rtl;width:85px;background-color: #dfe8f6;">کارمزد سال اول</td>
 				<td><div id="SUM_Wage_1Year" class="blueText">&nbsp;</div></td>

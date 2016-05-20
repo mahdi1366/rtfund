@@ -108,7 +108,6 @@ function PlanElements(){
 			PlanElementsObject.DGrid.render(PlanElementsObject.get("DIV_DGrid"));
 		PlanElementsObject.DGrid.show();
 	});	
-	//this.ShowElements(6);
 	this.DGrid = <?= $grid2 ?>;
 	
 	this.tree = new Ext.tree.Panel({

@@ -11,77 +11,8 @@ require_once 'letter.class.php';
 require_once '../dms/dms.class.php';
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
-
-switch ($task) {
-	
-	case "SelectLetter":
-		SelectLetter();
-		
-	case "SelectAllLetter":
-		SelectAllLetter();
-		
-    case 'SelectDraftLetters':
-        SelectDraftLetters();
-
-	case "SelectSendedLetters":
-		SelectSendedLetters();
-		
-	case "SelectReceivedLetters":
-		SelectReceivedLetters();
-		
-	case "SelectArchiveLetters":
-		SelectArchiveLetters();
-		
-	//.....................................
-    case 'SaveLetter':
-        SaveLetter();
-
-    case 'DeleteLetter':
-        deleteLetter();
-		
-	case "selectLetterPages":
-		selectLetterPages();
-		
-	case "DeletePage":
-		DeletePage();
-	
-	//.............................................
-		
-	case "selectSendTypes":
-		selectSendTypes();
-		
-	//.............................................
-		
-	case "SendLetter":
-		SendLetter();
-		
-	case "ReturnSend":
-		ReturnSend();	
-		
-	case "SignLetter":
-		SignLetter();
-		
-	case "DeleteSend":
-		DeleteSend();
-		
-	//...............................................
-		
-	case "SelectArchiveNodes":
-		SelectArchiveNodes();
-		
-	case "SaveFolder":
-		SaveFolder();
-		
-	case "DeleteFolder":
-		DeleteFolder();
-		
-	case "AddLetterToFolder":
-		AddLetterToFolder();
-		
-	case "RemoveLetterFromFolder":
-		RemoveLetterFromFolder();
-	
-}
+if(!empty($task))
+	$task();
 
 function SelectLetter() {
 
@@ -226,6 +157,16 @@ function SaveLetter($dieing = true) {
     $Letter = new OFC_letters();
     pdoDataAccess::FillObjectByArray($Letter, $_POST);
 
+	if($Letter->RefLetterID != "")
+	{
+		$obj = new OFC_letters($Letter->RefLetterID);
+		if(empty($obj->LetterID))
+		{
+			Response::createObjectiveResponse(false, "شماره نامه عطف قابل بازیابی نمی باشد");
+			die();
+		}
+	}
+	
     if ($Letter->LetterID == '') {
 		$Letter->PersonID = $_SESSION["USER"]["PersonID"];
 		$Letter->LetterDate = PDONOW;

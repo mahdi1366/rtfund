@@ -37,6 +37,8 @@ class BSC_persons extends PdoDataAccess
 	public $IsStaff;
 	public $IsExpert;
 	
+	public $ShareNo;
+	
 	public $IsActive;
 	public $PostID;
 			
@@ -97,13 +99,16 @@ class BSC_persons extends PdoDataAccess
 	
 	function EditPerson()
 	{
-		$dt = PdoDataAccess::runquery("select * 
-			from BSC_persons where PersonID<>? AND UserName=?", array($this->PersonID, $this->UserName));
-		if(count($dt) > 0)
+		if($this->UserName != "")
 		{
-			ExceptionHandler::PushException("شناسه وارد شده تکراری است");
-			return false;
-		}
+			$dt = PdoDataAccess::runquery("select * 
+				from BSC_persons where PersonID<>? AND UserName=?", array($this->PersonID, $this->UserName));
+			if(count($dt) > 0)
+			{
+				ExceptionHandler::PushException("شناسه وارد شده تکراری است");
+				return false;
+			}
+		}		
 		
 	 	if( parent::update("BSC_persons",$this," PersonID=:l", array(":l" => $this->PersonID)) === false )
 	 		return false;

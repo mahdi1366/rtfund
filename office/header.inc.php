@@ -14,6 +14,8 @@ require_once 'classconfig.inc.php';
 require_once 'DataAudit.class.php';
 
 require_once getenv("DOCUMENT_ROOT") . '/framework/session.php';
+require_once getenv("DOCUMENT_ROOT") . '/framework/management/framework.class.php';
+
 session::sec_session_start();
 if(!session::checkLogin())
 {

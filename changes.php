@@ -2,21 +2,25 @@
 
 /*
 
-ALTER TABLE `krrtfir_rtfund`.`PLN_Elements` CHANGE COLUMN `values` `ElementValues` 
-TEXT CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL;
+ * 
+
  * 
  * 
-ALTER TABLE `krrtfir_rtfund`.`PLN_Elements` MODIFY COLUMN `properties` VARCHAR(1000) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '';
-ALTER TABLE `krrtfir_rtfund`.`PLN_Elements` MODIFY COLUMN `EditorProperties` VARCHAR(200) CHARACTER SET utf8 COLLATE utf8_general_ci;
 
-ALTER TABLE `krrtfir_rtfund`.`PLN_Elements` ADD COLUMN `IsActive` ENUM('YES','NO') NOT NULL DEFAULT 'YES' AFTER `ElementValues`;
+insert into DMS_packages(BranchID,PackNo,PersonID)
+select BranchID,@i:=@i+1,LoanPersonID from
+(select BranchID,LoanPersonID
+from LON_requests
+where LoanPersonID > 0
+group by LoanPersonID,BranchID
+order by RequestID)t1,(select @i:=0)t2
+;
 
-ALTER TABLE `krrtfir_rtfund`.`BSC_persons` ADD COLUMN `ShareNo` INTEGER UNSIGNED AFTER `ShNo`;
+insert into DMS_PackageItems(PackageID,ObjectType,ObjectID)
+select PackageID,1,RequestID from LON_requests r
+join DMS_packages p on(p.BranchID=r.BranchID AND r.LoanPersonID=p.PersonID)
+where LoanPersonID > 0
 
- * add DelayReturn
-
-
- * 
  */
 
 require_once "framework/header.inc.php";

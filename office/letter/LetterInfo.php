@@ -28,8 +28,19 @@ $content = "<br><div style=margin-left:30px;float:left; >شماره نامه : "
 	"<br>تاریخ نامه : " . DateModules::miladi_to_shamsi($LetterObj->LetterDate);
 
 if($LetterObj->LetterType == "INCOME")
+{
 	$content .= "<br>شماره نامه وارده : " . $LetterObj->InnerLetterNo;
+	$content .= "<br>تاریخ نامه وارده : " . DateModules::miladi_to_shamsi($LetterObj->InnerLetterDate);
+}
 
+if($LetterObj->RefLetterID != "")
+{
+	$refObj = new OFC_letters($LetterObj->RefLetterID);
+	$RefletterYear = substr(DateModules::miladi_to_shamsi($refObj->LetterDate),0,4);
+	$content .= "<br>عطف به نامه : <a href=javascript:void(0) onclick=LetterInfo.OpenRefLetter(" . 
+		$LetterObj->RefLetterID . ")>".
+		"<span dir=ltr>" . $RefletterYear . "-" . $LetterObj->RefLetterID. "</span></a>";
+}
 $content .= "</div><br><br>";
 
 $content .= "<b><br><div align=center>بسمه تعالی</div><br>";
@@ -88,6 +99,13 @@ foreach($dt as $row)
 	$content .= "<b> رونوشت : " . ($row["sex"] == "MALE" ? "جناب آقای " : "سرکار خانم ") . 
 			$row['ToPersonName'] . "<br></b>";
 }
+
+if($LetterObj->OuterCopies != "")
+{
+	$LetterObj->OuterCopies = str_replace("\r\n", " , ", $LetterObj->OuterCopies);
+	$content .= "<br><b> رونوشت خارج از سازمان : " . $LetterObj->OuterCopies . "</b><br>";
+}
+
 //..............................................................................
 $imageslist = array();
 $doc = DMS_documents::SelectAll("ObjectType='letter' AND ObjectID=?", array($LetterID));
@@ -349,6 +367,11 @@ LetterInfo.prototype.SignLetter = function(){
 	
 }
 
+LetterInfo.OpenRefLetter = function(LetterID){
+	framework.OpenPage("/office/letter/LetterInfo.php", "مشخصات نامه", {
+		LetterID : LetterID
+	});
+}
 
 </script>
 <style>

@@ -63,7 +63,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 		fields : ["RequestID","BranchID","LoanID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
 					"guarantees","AgentGuarantee","StatusID","DocumentDesc","IsFree",
-					"imp_GirandehCode","imp_VamCode","IsEnded","MaxFundWage","SubAgentID"],
+					"imp_GirandehCode","imp_VamCode","IsEnded","SubAgentID"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -241,6 +241,7 @@ RequestInfo.prototype.BuildForms = function(){
 			columns : 2,
 			items :[this.grid,{
 				xtype : "container",
+				width: 580,
 				style : "margin-right:5px",
 				layout : {
 					type : "table",
@@ -249,15 +250,14 @@ RequestInfo.prototype.BuildForms = function(){
 				defaults : {
 					xtype : "displayfield",
 					hideTrigger : true,
-					width : 170,
-					labelWidth : 80,
+					width : 200,
+					labelWidth : 90,
 					style : "margin-bottom:5px",
 					fieldCls : "blueText"
 				},
 				items : [{
 					fieldLabel: 'مبلغ پرداخت',
 					name: 'PartAmount',
-					width : 200,
 					renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
 				},{
 					fieldLabel: 'تاریخ پرداخت',
@@ -279,7 +279,6 @@ RequestInfo.prototype.BuildForms = function(){
 					renderer : function(v){ return v + " %"}
 				},{
 					name : "WageReturn",
-					width : 200,
 					fieldLabel: 'پرداخت کارمزد',
 					renderer : function(v){
 						if(v == "CUSTOMER") return "هنگام پرداخت وام";
@@ -295,9 +294,28 @@ RequestInfo.prototype.BuildForms = function(){
 					name: 'FundWage',
 					renderer : function(v){ return v + " %"}
 				},{
+					name : "DelayReturn",
+					fieldLabel: 'پرداخت تنفس',
+					renderer : function(v){
+						if(v == "CUSTOMER") return "هنگام پرداخت وام";
+						if(v == "INSTALLMENT") return 'طی اقساط';
+					}
+				},{
+					name : "PayCompute",
+					fieldLabel: 'محاسبه پرداخت',
+					renderer : function(v){
+						if(v == "forfeit") return "ابتدا کسر جریمه";
+						if(v == "installment") return 'ابتدا کسر قسط';
+					}
+				},{
+					name : "MaxFundWage",
+					labelWidth : 110,
+					fieldLabel: 'سقف کارمزد صندوق',
+					renderer : function(v){ return Ext.util.Format.Money(v)	}
+				},{
 					colspan : 3,
 					xtype : "container",
-					width : 540,
+					width : 580,
 					contentEl : this.get("summaryDIV")
 				}]
 			}]
@@ -1138,6 +1156,10 @@ RequestInfo.prototype.DeletePart = function(){
 
 RequestInfo.prototype.LoadSummary = function(record){
 
+	if(this.RequestRecord.data.ReqPersonID == "1003")
+		return this.LoadSummarySHRTFUND(record, null);
+
+
 	function PMT(F8, F9, F7, YearMonths, PayInterval) {  
 		
 		if(F8 == 0)
@@ -1260,7 +1282,170 @@ RequestInfo.prototype.LoadSummary = function(record){
 	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay);
 	this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(TotalDelay);
 	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
-		(record.data.WageReturn == "CUSTOMER" ? TotalDelay : 0) - 
+		(record.data.DelayReturn == "CUSTOMER" ? TotalDelay : 0) - 
+		(record.data.WageReturn == "CUSTOMER" ? TotalWage : 0));	
+	
+	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage);	
+	this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(FundWage);	
+	this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
+	
+	this.get("SUM_Wage_1Year").innerHTML = YearWageCompute(record, TotalWage, 1, YearMonths);
+	this.get("SUM_Wage_2Year").innerHTML = YearWageCompute(record, TotalWage, 2, YearMonths);
+	this.get("SUM_Wage_3Year").innerHTML = YearWageCompute(record, TotalWage, 3, YearMonths);
+	this.get("SUM_Wage_4Year").innerHTML = YearWageCompute(record, TotalWage, 4, YearMonths);
+}
+
+RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
+
+	if(paymentStore == null)
+	{
+		this.PayStore = new Ext.data.Store({
+			proxy:{
+				type: 'jsonp',
+				url: this.address_prefix + "request.data.php?task=GetPartPayments&PartID=" + record.data.PartID,
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			fields : ["PayDate", "PayAmount"],
+			autoLoad : true,
+			listeners :{
+				load : function(){
+					RequestInfoObject.LoadSummarySHRTFUND(record, this);
+				}
+			}
+		});
+		return;
+	}
+	
+	for(i=0; i < paymentStore.getCount(); i++)
+	{
+		
+	}
+	
+	
+
+	function PMT(F8, F9, F7, YearMonths, PayInterval) {  
+		
+		if(F8 == 0)
+			return F7/F9;
+		
+		if(PayInterval == 0)
+			return F7;
+				
+		F8 = F8/(YearMonths*100);
+		F7 = -F7;
+		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
+	} 
+	function ComputeWage(F7, F8, F9, YearMonths, PayInterval){
+		
+		if(PayInterval == 0)
+			return 0;
+		
+		if(F8 == 0)
+			return 0;
+		
+		return (((F7*F8/YearMonths*( Math.pow((1+(F8/YearMonths)),F9)))/
+			((Math.pow((1+(F8/YearMonths)),F9))-1))*F9)-F7;
+	}
+	function roundUp(number, digits)
+	{
+		var factor = Math.pow(10,digits);
+		return Math.ceil(number*factor) / factor;
+	}
+	function YearWageCompute(record,TotalWage,yearNo, YearMonths){
+		
+		PayMonth = MiladiToShamsi(record.data.PartDate).split('/')[1]*1;
+		PayMonth = PayMonth*YearMonths/12;
+		
+		FirstYearInstallmentCount = YearMonths - PayMonth;
+		MidYearInstallmentCount = Math.floor((record.data.InstallmentCount-FirstYearInstallmentCount) / YearMonths);
+		LastYeatInstallmentCount = (record.data.InstallmentCount-FirstYearInstallmentCount) % YearMonths;
+		
+		if(yearNo > MidYearInstallmentCount+2)
+			return 0;
+		
+		F9 = record.data.InstallmentCount*1;
+		var BeforeMonths = 0
+		if(yearNo == 2)
+			BeforeMonths = FirstYearInstallmentCount;
+		else if(yearNo > 2)
+			BeforeMonths = FirstYearInstallmentCount + (yearNo-2)*YearMonths;
+		
+		var curMonths = FirstYearInstallmentCount;
+		if(yearNo > 1 && yearNo <= MidYearInstallmentCount+1)
+			curMonths = YearMonths;
+		else if(yearNo > MidYearInstallmentCount+1)
+			curMonths = LastYeatInstallmentCount;
+		
+		var val = ((((F9-BeforeMonths)*(F9-BeforeMonths+1))-
+			(F9-BeforeMonths-curMonths)*(F9-BeforeMonths-curMonths+1)))/(F9*(F9+1))*TotalWage;
+		
+		val = Math.round(val);
+		val = val < 0 ? 0 : val;
+		return Ext.util.Format.Money(val);
+	}
+
+	YearMonths = 12;
+	if(record.data.IntervalType == "DAY")
+		YearMonths = Math.floor(365/record.data.PayInterval);
+	
+	TotalWage = Math.round(ComputeWage(record.data.PartAmount, record.data.CustomerWage/100, 
+		record.data.InstallmentCount, YearMonths, record.data.PayInterval));
+		
+	if(record.data.WageReturn == "CUSTOMER")
+		FirstPay = PMT(0,record.data.InstallmentCount, 
+			record.data.PartAmount, YearMonths, record.data.PayInterval);	
+	else
+		FirstPay = PMT(record.data.CustomerWage,record.data.InstallmentCount, 
+			record.data.PartAmount, YearMonths, record.data.PayInterval);	
+			
+	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
+	FundWage = Math.round((record.data.FundWage/record.data.CustomerWage)*TotalWage);
+	FundWage = !isInt(FundWage) ? 0 : FundWage;
+	AgentWage = TotalWage - FundWage;
+	
+	TotalDelay = Math.round(record.data.PartAmount*record.data.CustomerWage*record.data.DelayMonths/1200);
+	if(record.data.DelayReturn == "INSTALLMENT")
+		FirstPay += TotalDelay/record.data.InstallmentCount;
+	
+	if(record.data.InstallmentCount > 1)
+		FirstPay = roundUp(FirstPay,-3);
+	else
+		FirstPay = Math.round(FirstPay);
+	
+	returnAmount = record.data.PartAmount*1;
+	returnAmount += record.data.WageReturn != "CUSTOMER" ? TotalWage : 0;
+	returnAmount += record.data.DelayReturn != "CUSTOMER" ? TotalDelay : 0;
+	LastPay = returnAmount - FirstPay*(record.data.InstallmentCount-1);
+	
+	if(record.data.InstallmentCount == 1)
+		LastPay = 0;
+	if(record.data.MaxFundWage*1 > 0)
+	{
+		tmp = record.data.WageReturn == "INSTALLMENT" ? 
+			Math.round(record.data.MaxFundWage*1/record.data.InstallmentCount) : 0;
+		
+		this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay + tmp);
+		this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay + tmp);
+		this.get("SUM_Delay").innerHTML = 0;
+		this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount 
+			 - (record.data.WageReturn == "CUSTOMER" ? TotalWage + record.data.MaxFundWage*1 : 0));	
+
+		this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage + record.data.MaxFundWage*1);	
+		this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.MaxFundWage);	
+		this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
+
+		this.get("SUM_Wage_1Year").innerHTML = 0;
+		this.get("SUM_Wage_2Year").innerHTML = 0;
+		this.get("SUM_Wage_3Year").innerHTML = 0;
+		this.get("SUM_Wage_4Year").innerHTML = 0;
+		return;
+	}
+	
+	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay);
+	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay);
+	this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(TotalDelay);
+	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
+		(record.data.DelayReturn == "CUSTOMER" ? TotalDelay : 0) - 
 		(record.data.WageReturn == "CUSTOMER" ? TotalWage : 0));	
 	
 	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage);	

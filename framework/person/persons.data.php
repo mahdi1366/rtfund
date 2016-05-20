@@ -176,9 +176,10 @@ function ConfirmPersons(){
 	
 	$obj = new BSC_persons($PersonID);
 	$obj->IsActive = $mode == "1" ? "YES" : "NO";
-	$obj->EditPerson();
+	$result = $obj->EditPerson();
 	
-	echo Response::createObjectiveResponse(true, "");
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 

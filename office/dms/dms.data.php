@@ -9,40 +9,8 @@ include_once inc_response;
 require_once 'dms.class.php';
 
 $task = $_REQUEST["task"];
-switch ($task) {
-
-	case "SelectAll":
-		SelectAll();
-
-	case "SaveDocument":
-		SaveDocument();
-
-	case "DeleteDocument":
-		DeleteDocument();	
-
-	case "ConfirmDocument":
-		ConfirmDocument();
-		
-	case "selectDocTypeGroups":
-		selectDocTypeGroups();
-		
-	case "selectDocTypes":
-		selectDocTypes();
-		
-	case "selectAllParams":
-		selectAllParams();
-		
-	case "selectParamValues":
-		selectParamValues();
-		
-	//.......................................
-	
-	case "SaveDocType":
-		SaveDocType();
-		
-	case "DeleteDocType":
-		DeleteDocType();
-}
+if(!empty($task))
+	$task();
 
 function SelectAll(){
 	
@@ -278,6 +246,169 @@ function DeleteDocType(){
 		where TypeID=? AND InfoID=?",array($_REQUEST["TypeID"], $_REQUEST["InfoID"]));
 
 	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
+	die();
+}
+
+//.................................................
+
+function selectPackages(){
+	
+	$where = " AND BranchID=?";
+	$param = array($_REQUEST["BranchID"]);
+	
+	if(!empty($_GET["fields"]))
+	{
+		$field = $_GET["fields"];
+		$field = $field == "PersonID" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;
+		
+		$where .= " AND " . $field . " like ?";
+		$param[] = "%" . $_GET["query"] . "%";
+	}
+	
+	$dt = DMS_packages::Get($where . dataReader::makeOrder(), $param);
+	$list = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+	
+	echo dataReader::getJsonData($list, $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SavePackage(){
+	
+	$obj = new DMS_packages();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if(empty($obj->PackNo))
+		$obj->PackNo = DMS_packages::GetPackNo ($obj->BranchID);
+	
+	if(!$obj->PackNoIsValid())
+	{
+		echo Response::createObjectiveResponse(false, "شماره پرونده در شعبه مربوطه تکراری است");
+		die();
+	}
+	
+	if($obj->PackageID*1 > 0)
+		$result = $obj->Edit();
+	else
+		$result = $obj->Add();
+	
+	//print_r(ExceptionHandler::PopAllExceptions());	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+	
+}
+
+function DeletePackage(){
+	
+	$obj = new DMS_packages();
+	$obj->PackageID = $_POST["PackageID"];
+	$result = $obj->Remove();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//.................................................
+
+function selectPackageItems(){
+	
+	$temp = DMS_PackageItems::Get(" AND PackageID=?", array($_REQUEST["PackageID"]));
+	$temp = $temp->fetchAll();
+	
+	for($i=0; $i<count($temp); $i++)
+	{
+		$temp[$i]["paramValues"] = "";
+		
+		$dt = PdoDataAccess::runquery("select * from DMS_DocParamValues join DMS_DocParams using(ParamID)
+			where DocumentID=?", array($temp[$i]["DocumentID"]));
+		foreach($dt as $row)
+		{
+			$value = $row["ParamValue"];
+			if($row["ParamType"] == "currencyfield")
+				$value = number_format((int)$value);
+			$temp[$i]["paramValues"] .= $row["ParamDesc"] . " : " . $value . "<br>";
+		}
+		if($temp[$i]["paramValues"] != "")
+			$temp[$i]["paramValues"] = substr($temp[$i]["paramValues"], 0 , strlen($temp[$i]["paramValues"])-4);
+	}
+	
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
+function selectObjectTypes(){
+	
+	$list = PdoDataAccess::runquery("select * from BaseInfo where typeID=11");
+	
+	echo dataReader::getJsonData($list, count($list), $_GET["callback"]);
+	die();
+}
+
+function SavePackageItem(){
+	
+	$obj = new DMS_PackageItems();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	$dt = PdoDataAccess::runquery("select PackageID,PackNo 
+		from DMS_PackageItems join DMS_packages using(PackageID) where ObjectType=? AND ObjectID=?",
+		array($obj->ObjectType, $obj->ObjectID));
+	if(count($dt) > 0)
+	{
+		if($dt[0]["PackageID"] == $obj->PackageID)
+		{
+			echo Response::createObjectiveResponse(false, "آیتم مربوطه قبلا به این پرونده اضافه شده است");
+			die();
+		}
+		
+		echo Response::createObjectiveResponse(false, "آیتم مربوطه قبلا به پرونده شماره " .
+				$dt[0]["PackNo"] . " اضافه شده است");
+		die();
+	}
+	
+	switch ($obj->ObjectType)
+	{
+		case "1" : // loan
+			require_once '../../loan/request/request.class.php';
+			$sourceObj = new LON_requests($obj->ObjectID);
+			if(empty($sourceObj->RequestID))
+			{
+				echo Response::createObjectiveResponse(false, "شماره آیتم مورد نظر معتبر نمی باشد");
+				die();
+			}
+			break;
+		case "2" : // contract
+			require_once '../../loan/contract/contract/contract.class.php';
+			$sourceObj = new CNT_contracts($obj->ObjectID);
+			if(empty($sourceObj->ContractID))
+			{
+				echo Response::createObjectiveResponse(false, "شماره آیتم مورد نظر معتبر نمی باشد");
+				die();
+			}
+			break;
+		case "3" : // plan
+			require_once '../../loan/plan/plan.class.php';
+			$sourceObj = new PLN_plans($obj->ObjectID);
+			if(empty($sourceObj->PlanID))
+			{
+				echo Response::createObjectiveResponse(false, "شماره آیتم مورد نظر معتبر نمی باشد");
+				die();
+			}
+			break;
+	}
+	
+	$result = $obj->Add();
+	
+	//print_r(ExceptionHandler::PopAllExceptions());	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeletePackageItem(){
+	
+	$obj = new DMS_PackageItems();
+	$obj->RowID = $_POST["RowID"];
+	$result = $obj->Remove();
+	
+	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 

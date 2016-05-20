@@ -135,6 +135,14 @@ function Person()
 			queryMode : "local",
 			fieldLabel : "پست سازمانی"			
 		},{
+			xtype : "numberfield",
+			name : "ShareNo",
+			colspan : 2,
+			hideTrigger : true,
+			labelWidth : 100,
+			width : 235,
+			fieldLabel : "شماره دفتر سهام"
+		},{
 			xtype : "fieldset",
 			colspan : 2,
 			title : "نوع ذینفع",

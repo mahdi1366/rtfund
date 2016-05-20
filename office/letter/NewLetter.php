@@ -44,7 +44,7 @@ Letter.prototype.LoadLetter = function(){
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
 		fields : ["LetterID","LetterType","LetterTitle","SubjectID","summary","context", 
-			"SignerPersonID", "organization","OrgPost","InnerLetterNo"],
+			"SignerPersonID", "organization","OrgPost","InnerLetterNo","InnerLetterDate","OuterCopies"],
 		autoLoad : true,
 		listeners : {
 			load : function(){
@@ -128,18 +128,18 @@ Letter.prototype.BuildForms = function(){
 				listeners : {
 					change : function(){
 						if(this.checked)
+						{
 							this.up('form').down("[name=InnerLetterNo]").enable();
+							this.up('form').down("[name=InnerLetterDate]").enable();							
+						}
 						else
+						{
 							this.up('form').down("[name=InnerLetterNo]").disable();
+							this.up('form').down("[name=InnerLetterDate]").disable();
+						}
+							
 					}
 				}				
-			},{
-				xtype : "textfield",
-				labelWidth : 40,
-				width : 118,
-				fieldLabel : "شماره",
-				name : "InnerLetterNo",
-				disabled : true
 			}]
 		},{
 			xtype : "textfield",
@@ -147,11 +147,23 @@ Letter.prototype.BuildForms = function(){
 			fieldLabel : "عنوان نامه",
 			allowBlank : false
 		},{
-			xtype : "textfield",
-			name : "organization",
-			fieldLabel : "فرستنده/گیرنده",
-			disabled : true,
-			allowBlank : true
+			xtype : "container",
+			layout : "hbox",
+			items :[{
+				xtype : "textfield",
+				labelWidth : 90,
+				width : 180,
+				fieldLabel : "شماره",
+				name : "InnerLetterNo",
+				disabled : true
+			},{
+				xtype : "shdatefield",
+				labelWidth : 40,
+				width : 170,
+				fieldLabel : "تاریخ",
+				name : "InnerLetterDate",
+				disabled : true
+			}]
 		},{
 			xtype : "combo",
 			name : "SignerPersonID",
@@ -170,11 +182,28 @@ Letter.prototype.BuildForms = function(){
 			valueField : "PersonID"
 		},{
 			xtype : "textfield",
+			name : "organization",
+			fieldLabel : "فرستنده/گیرنده",
+			disabled : true,
+			allowBlank : true
+		},{
+			xtype : "textfield",
+			name : "OuterCopies",
+			fieldLabel : "رونوشت به خارج از سازمان",
+			allowBlank : true
+		},{
+			xtype : "textfield",
 			name : "OrgPost",
 			fieldLabel : "پست مربوطه",
 			disabled : true,
-			allowBlank : true,
-			colspan  :2
+			allowBlank : true			
+		},{
+			xtype : "numberfield",
+			name : "RefLetterID",
+			fieldLabel : "عطف به نامه",
+			hideTrigger : true,
+			width : 200,
+			allowBlank : true
 		},{
 			xtype : "tabpanel",
 			colspan : 2,
@@ -286,8 +315,8 @@ Letter.prototype.BuildForms = function(){
 		CKEDITOR.tools.enableHtml5Elements( document );
 
 	CKEDITOR.config.width = 'auto';
-	CKEDITOR.config.height = 270;
-	CKEDITOR.config.autoGrow_minHeight = 200;
+	CKEDITOR.config.height = 220;
+	CKEDITOR.config.autoGrow_minHeight = 170;
 	
 	CKEDITOR.document.getById( 'Div_context' ); 
 	CKEDITOR.replace( 'Div_context' );	
@@ -321,8 +350,9 @@ Letter.prototype.SaveLetter = function(){
 			me.letterPanel.down("[itemId=attach_tab]").enable();	
 			
 		},
-		failure : function(){
+		failure : function(form,action){
 			mask.hide();
+			Ext.MessageBox.alert("Error", action.result.data);
 		}
 	});
 }

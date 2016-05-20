@@ -11,6 +11,7 @@ if(empty($LetterID))
 	die();
 
 $LetterObj = new OFC_letters($LetterID);
+
 $letterYear = substr(DateModules::miladi_to_shamsi($LetterObj->LetterDate),0,4);
 //..............................................................................
 $content = "<b><span style=font-size:11pt;font-family:BTitr>";
@@ -72,6 +73,12 @@ foreach($dt as $row)
 		continue;	
 	$content .= "<b>" . "رونوشت : " . ($row["sex"] == "MALE" ? "جناب آقای " : "سرکار خانم ") . 
 			$row['ToPersonName'] . "<br></b>";
+}
+
+if($LetterObj->OuterCopies != "")
+{
+	$LetterObj->OuterCopies = str_replace("\r\n", " , ", $LetterObj->OuterCopies);
+	$content .= "<br><b> رونوشت به : " . $LetterObj->OuterCopies . "</b><br>";
 }
 ?>
 <html>
@@ -150,7 +157,16 @@ foreach($dt as $row)
 						<br>تاریخ نامه : <b><?= DateModules::miladi_to_shamsi($LetterObj->LetterDate) ?></b>
 						<?if($LetterObj->LetterType == "INCOME"){?> 
 						<br>شماره نامه وارده : <b><?= $LetterObj->InnerLetterNo ?></b>
-							<?}?>
+						<br>تاریخ نامه وارده : <b><?= DateModules::miladi_to_shamsi($LetterObj->InnerLetterDate)?></b>
+						<?}?>
+						<?if($LetterObj->RefLetterID != ""){
+							$refObj = new OFC_letters($LetterObj->RefLetterID);
+							$RefletterYear = substr(DateModules::miladi_to_shamsi($refObj->LetterDate),0,4);
+							echo "<br>عطف به نامه : <b><span dir=ltr>" . 
+								$RefletterYear . "-" . $LetterObj->RefLetterID. "</span></b>";
+						}
+						?>
+						
 						</td>
 					</tr>
 					</thead>
