@@ -597,13 +597,14 @@ function ComputeInstallmentsShekoofa($partObj = null){
 	if(!$partObj)
 		$partObj = new LON_ReqParts($_REQUEST["PartID"]);
 	
-	$payments = LON_payments::Get(" AND PartID=?", array($partObj->PartID));
-	
+	$payments = LON_payments::Get(" AND PartID=? order by PayDate", array($partObj->PartID));
+	$payments = $payments->fetchAll();
 	//--------------- total pay months -------------
 	$firstPay = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
 	$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
-	$paymentPeriod = DateModules::GetDiffInMonth($LastPay, $firstPay);
+	$paymentPeriod = DateModules::GetDiffInMonth($firstPay, $LastPay);
 	//----------------------------------------------
+	$totalWage = 0;
 	$wages = array();
 	foreach($payments as $row)
 	{
@@ -611,64 +612,36 @@ function ComputeInstallmentsShekoofa($partObj = null){
 		$wageindex = count($wages)-1;
 		for($i=0; $i < $partObj->InstallmentCount; $i++)
 		{
+			$monthplus = $paymentPeriod + $partObj->DelayMonths*1 + ($i+1)*$partObj->PayInterval*1;
 			
-			$monthplus = $paymentPeriod + $partObj->DelayMonths*1 + $partObj->PayInterval*1;
-			
-			$installmentDate = DateModules::miladi_to_shamsi($row["payDate"]);
+			$installmentDate = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
 			$installmentDate = DateModules::AddToJDate($installmentDate, 0, $monthplus);
+			$installmentDate = DateModules::shamsi_to_miladi($installmentDate);
 			
-			$jdiff = DateModules::GDateMinusGDate($installmentDate, $row["payDate"]);
-			$wage = ($row["PayAmount"]/$partObj->InstallmentCount)*$jdiff*$partObj->CustomerWage/36500;
+			$jdiff = DateModules::GDateMinusGDate($installmentDate, $row["PayDate"]);
+			
+			$wage = round(($row["PayAmount"]/$partObj->InstallmentCount)*$jdiff*$partObj->CustomerWage/36500);
 			$wages[$wageindex][] = $wage;
+			$totalWage += $wage;
 		}
 	}
-	
-	
-	$YearMonths = 12;
-	if($obj->IntervalType == "DAY")
-		$YearMonths = floor(365/$obj->PayInterval);
-	
-	$TotalWage = round(ComputeWage($obj->PartAmount, $obj->CustomerWage/100, 
-			$obj->InstallmentCount, $YearMonths, $obj->PayInterval));
-	
-	if($obj->WageReturn == "CUSTOMER")
-	{
-		$TotalWage = 0;
-		$obj->CustomerWage = 0;
-	}
-	
-	$allPay = PMT($obj->CustomerWage, $obj->InstallmentCount, 
-			$obj->PartAmount, $YearMonths, $obj->PayInterval);
-	
-	$TotalDelay = round($obj->PartAmount*$obj->CustomerWage*$obj->DelayMonths/1200);
-	if($obj->DelayReturn == "INSTALLMENT")
-		$allPay += $TotalDelay/$obj->InstallmentCount*1;
-	
-	if($obj->InstallmentCount*1 > 1)
-		$allPay = roundUp($allPay,-3);
-	else
-		$allPay = round($allPay);
-	
-	$returnAmount = $obj->PartAmount*1;	
-	$returnAmount += $obj->WageReturn != "CUSTOMER" ? $TotalWage : 0;
-	$returnAmount += $obj->DelayReturn != "CUSTOMER" ? $TotalDelay : 0;
-	$LastPay = $returnAmount - $allPay*($obj->InstallmentCount*1-1);
-
-	$jdate = DateModules::miladi_to_shamsi($obj->PartDate);
-	$jdate = DateModules::AddToJDate($jdate, 1, $obj->DelayMonths);
-	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	for($i=0; $i < $obj->InstallmentCount-1; $i++)
+	for($i=0; $i < $partObj->InstallmentCount; $i++)
 	{
+		$monthplus = $paymentPeriod + $partObj->DelayMonths*1 + ($i+1)*$partObj->PayInterval*1;
+			
+		$installmentDate = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
+		$installmentDate = DateModules::AddToJDate($installmentDate, 0, $monthplus);
+		$installmentDate = DateModules::shamsi_to_miladi($installmentDate);
+			
 		$obj2 = new LON_installments();
 		
-		$obj2->InstallmentDate = DateModules::AddToJDate($jdate, 
-			$obj->IntervalType == "DAY" ? $obj->PayInterval*($i+1) : 0, 
-			$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
-		$obj2->PartID = $obj->PartID;
-		$obj2->InstallmentAmount = $allPay;
+		$obj2->InstallmentDate = $installmentDate;
+		$obj2->PartID = $partObj->PartID;
+		$obj2->InstallmentAmount = round($partObj->PartAmount/$partObj->InstallmentCount) + 
+				round($totalWage/$partObj->InstallmentCount);
 		
 		if(!$obj2->AddInstallment($pdo))
 		{
@@ -676,21 +649,6 @@ function ComputeInstallmentsShekoofa($partObj = null){
 			echo Response::createObjectiveResponse(false, "");
 			die();
 		}
-	}
-	
-	$obj2 = new LON_installments();
-		
-	$obj2->InstallmentDate = DateModules::AddToJDate($jdate, 
-		$obj->IntervalType == "DAY" ? $obj->PayInterval*($obj->InstallmentCount) : 0, 
-		$obj->IntervalType == "MONTH" ? $obj->PayInterval*($obj->InstallmentCount) : 0);
-	$obj2->PartID = $obj->PartID;
-	$obj2->InstallmentAmount = $LastPay;
-
-	if(!$obj2->AddInstallment($pdo))
-	{
-		$pdo->rollBack();
-		echo Response::createObjectiveResponse(false, "");
-		die();
 	}
 	
 	$pdo->commit();

@@ -32,10 +32,6 @@ function RequestInfo(){
 		RequestInfoObject.PartsPanel.down("[name=PayInterval]").setValue(record.data.PayInterval + " " + 
 			(record.data.IntervalType == "DAY" ? "روز" : "ماه"));
 	});
-	this.grid.getStore().on("load", function(){
-		if(this.getCount() > 0)
-			RequestInfoObject.grid.getSelectionModel().select(0);
-	});
 	
 	if(this.RequestID > 0)
 		this.grid.getStore().proxy.extraParams = { RequestID : this.RequestID };
@@ -77,11 +73,14 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 					me.grid.getStore().load();
 					me.mask.hide();
 					return;
-				}				
+				}			
 				//..........................................................
 				record = this.getAt(0);
 				me.RequestRecord = record;
 				me.companyPanel.loadRecord(record);
+				//..........................................................
+				if(me.grid.getStore().getCount() > 0)
+					me.grid.getSelectionModel().select(0);
 				//..........................................................
 				oldInfo = record.data.imp_VamCode != null ? "شماره وام سیستم قدیم : " + 
 					record.data.imp_VamCode + "[پرونده : " + record.data.imp_GirandehCode + "]" : "";
@@ -1156,7 +1155,7 @@ RequestInfo.prototype.DeletePart = function(){
 
 RequestInfo.prototype.LoadSummary = function(record){
 
-	if(this.RequestRecord.data.ReqPersonID == "1003")
+	if(this.RequestRecord.data.ReqPersonID == "<?= SHEKOOFAI ?>")
 		return this.LoadSummarySHRTFUND(record, null);
 
 
@@ -1299,7 +1298,7 @@ RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
 
 	if(paymentStore == null)
 	{
-		this.PayStore = new Ext.data.Store({
+		this.paymentStore = new Ext.data.Store({
 			proxy:{
 				type: 'jsonp',
 				url: this.address_prefix + "request.data.php?task=GetPartPayments&PartID=" + record.data.PartID,
@@ -1316,146 +1315,74 @@ RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
 		return;
 	}
 	
-	for(i=0; i < paymentStore.getCount(); i++)
-	{
-		
-	}
-	
-	
+	function GetDiffInMonth(jdate1, jdate2)
+    {
+        year1 = jdate1.substr(0,4);
+        month1 = jdate1.substr(5,2);
 
-	function PMT(F8, F9, F7, YearMonths, PayInterval) {  
-		
-		if(F8 == 0)
-			return F7/F9;
-		
-		if(PayInterval == 0)
-			return F7;
-				
-		F8 = F8/(YearMonths*100);
-		F7 = -F7;
-		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
-	} 
-	function ComputeWage(F7, F8, F9, YearMonths, PayInterval){
-		
-		if(PayInterval == 0)
-			return 0;
-		
-		if(F8 == 0)
-			return 0;
-		
-		return (((F7*F8/YearMonths*( Math.pow((1+(F8/YearMonths)),F9)))/
-			((Math.pow((1+(F8/YearMonths)),F9))-1))*F9)-F7;
-	}
-	function roundUp(number, digits)
-	{
-		var factor = Math.pow(10,digits);
-		return Math.ceil(number*factor) / factor;
-	}
-	function YearWageCompute(record,TotalWage,yearNo, YearMonths){
-		
-		PayMonth = MiladiToShamsi(record.data.PartDate).split('/')[1]*1;
-		PayMonth = PayMonth*YearMonths/12;
-		
-		FirstYearInstallmentCount = YearMonths - PayMonth;
-		MidYearInstallmentCount = Math.floor((record.data.InstallmentCount-FirstYearInstallmentCount) / YearMonths);
-		LastYeatInstallmentCount = (record.data.InstallmentCount-FirstYearInstallmentCount) % YearMonths;
-		
-		if(yearNo > MidYearInstallmentCount+2)
-			return 0;
-		
-		F9 = record.data.InstallmentCount*1;
-		var BeforeMonths = 0
-		if(yearNo == 2)
-			BeforeMonths = FirstYearInstallmentCount;
-		else if(yearNo > 2)
-			BeforeMonths = FirstYearInstallmentCount + (yearNo-2)*YearMonths;
-		
-		var curMonths = FirstYearInstallmentCount;
-		if(yearNo > 1 && yearNo <= MidYearInstallmentCount+1)
-			curMonths = YearMonths;
-		else if(yearNo > MidYearInstallmentCount+1)
-			curMonths = LastYeatInstallmentCount;
-		
-		var val = ((((F9-BeforeMonths)*(F9-BeforeMonths+1))-
-			(F9-BeforeMonths-curMonths)*(F9-BeforeMonths-curMonths+1)))/(F9*(F9+1))*TotalWage;
-		
-		val = Math.round(val);
-		val = val < 0 ? 0 : val;
-		return Ext.util.Format.Money(val);
-	}
+		year2 = jdate2.substr(0,4);
+        month2 = jdate2.substr(5,2);
 
-	YearMonths = 12;
-	if(record.data.IntervalType == "DAY")
-		YearMonths = Math.floor(365/record.data.PayInterval);
-	
-	TotalWage = Math.round(ComputeWage(record.data.PartAmount, record.data.CustomerWage/100, 
-		record.data.InstallmentCount, YearMonths, record.data.PayInterval));
+        return (year2-year1)*12 + (month2-month1);
+    }		
+	function AddToJDate(jdate, monthplus) 
+    {
+		monthplus = monthplus*1;
+		arr = jdate.split(/[\-\/]/);
 		
-	if(record.data.WageReturn == "CUSTOMER")
-		FirstPay = PMT(0,record.data.InstallmentCount, 
-			record.data.PartAmount, YearMonths, record.data.PayInterval);	
-	else
-		FirstPay = PMT(record.data.CustomerWage,record.data.InstallmentCount, 
-			record.data.PartAmount, YearMonths, record.data.PayInterval);	
+		year = arr[0]*1 + Math.floor((arr[1]*1 + monthplus) / 12);
+		monthplus = (arr[1]*1 + monthplus)%12;
+		if(monthplus == 0)
+		{
+			year--;
+			monthplus = 12;
+		}
+		dayplus = arr[2];
+
+		return year + "-" + monthplus.toString().lpad("0", 2) + "-" + dayplus.lpad("0", 2);
+	}
+	function GDateMinusGDate(date1, date2){
+		
+		var date1 = new Date(date1);
+		var date2 = new Date(date2);
+		var timeDiff = Math.abs(date2.getTime() - date1.getTime());
+		var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
+		return diffDays
+	}
+	//--------------- total pay months -------------
+	firstPay = MiladiToShamsi(this.paymentStore.getAt(0).data.PayDate);
+	LastPay = MiladiToShamsi(this.paymentStore.getAt(this.paymentStore.getCount()-1).data.PayDate);
+	paymentPeriod = GetDiffInMonth(firstPay, LastPay);
+	//----------------------------------------------
+	totalWage = 0;
+	wages = new Array();
+	for(j=0; j<this.paymentStore.getCount(); j++)
+	{
+		wages.push(new Array());
+		wageindex = wages.length-1;
+		for(i=0; i < record.data.InstallmentCount; i++)
+		{
+			monthplus = paymentPeriod + record.data.DelayMonths*1 + (i+1)*record.data.PayInterval*1;
 			
-	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
-	FundWage = Math.round((record.data.FundWage/record.data.CustomerWage)*TotalWage);
-	FundWage = !isInt(FundWage) ? 0 : FundWage;
-	AgentWage = TotalWage - FundWage;
-	
-	TotalDelay = Math.round(record.data.PartAmount*record.data.CustomerWage*record.data.DelayMonths/1200);
-	if(record.data.DelayReturn == "INSTALLMENT")
-		FirstPay += TotalDelay/record.data.InstallmentCount;
-	
-	if(record.data.InstallmentCount > 1)
-		FirstPay = roundUp(FirstPay,-3);
-	else
-		FirstPay = Math.round(FirstPay);
-	
-	returnAmount = record.data.PartAmount*1;
-	returnAmount += record.data.WageReturn != "CUSTOMER" ? TotalWage : 0;
-	returnAmount += record.data.DelayReturn != "CUSTOMER" ? TotalDelay : 0;
-	LastPay = returnAmount - FirstPay*(record.data.InstallmentCount-1);
-	
-	if(record.data.InstallmentCount == 1)
-		LastPay = 0;
-	if(record.data.MaxFundWage*1 > 0)
-	{
-		tmp = record.data.WageReturn == "INSTALLMENT" ? 
-			Math.round(record.data.MaxFundWage*1/record.data.InstallmentCount) : 0;
-		
-		this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay + tmp);
-		this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay + tmp);
-		this.get("SUM_Delay").innerHTML = 0;
-		this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount 
-			 - (record.data.WageReturn == "CUSTOMER" ? TotalWage + record.data.MaxFundWage*1 : 0));	
-
-		this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage + record.data.MaxFundWage*1);	
-		this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.MaxFundWage);	
-		this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
-
-		this.get("SUM_Wage_1Year").innerHTML = 0;
-		this.get("SUM_Wage_2Year").innerHTML = 0;
-		this.get("SUM_Wage_3Year").innerHTML = 0;
-		this.get("SUM_Wage_4Year").innerHTML = 0;
-		return;
+			installmentDate = MiladiToShamsi(this.paymentStore.getAt(0).data.PayDate);
+			installmentDate = AddToJDate(installmentDate, monthplus);
+			installmentDate = ShamsiToMiladi(installmentDate);
+			
+			jdiff = GDateMinusGDate(installmentDate, this.paymentStore.getAt(j).data.PayDate);
+			
+			wage = Math.round((this.paymentStore.getAt(j).data.PayAmount/record.data.InstallmentCount)*
+				jdiff*record.data.CustomerWage/36500);
+			wages[wageindex].push(wage);
+			totalWage += wage;
+		}
 	}
-	
-	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay);
-	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay);
-	this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(TotalDelay);
-	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
-		(record.data.DelayReturn == "CUSTOMER" ? TotalDelay : 0) - 
-		(record.data.WageReturn == "CUSTOMER" ? TotalWage : 0));	
-	
-	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage);	
-	this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(FundWage);	
-	this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
-	
-	this.get("SUM_Wage_1Year").innerHTML = YearWageCompute(record, TotalWage, 1, YearMonths);
-	this.get("SUM_Wage_2Year").innerHTML = YearWageCompute(record, TotalWage, 2, YearMonths);
-	this.get("SUM_Wage_3Year").innerHTML = YearWageCompute(record, TotalWage, 3, YearMonths);
-	this.get("SUM_Wage_4Year").innerHTML = YearWageCompute(record, TotalWage, 4, YearMonths);
+	InstallmentAmount = Math.round(record.data.PartAmount/record.data.InstallmentCount) + 
+				Math.round(totalWage/record.data.InstallmentCount);
+			
+	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(InstallmentAmount);
+	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(InstallmentAmount);
+	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(totalWage);	
+	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount);	
 }
 
 RequestInfo.prototype.ShowHistory = function(){
