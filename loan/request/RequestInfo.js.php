@@ -1158,7 +1158,6 @@ RequestInfo.prototype.LoadSummary = function(record){
 	if(this.RequestRecord.data.ReqPersonID == "<?= SHEKOOFAI ?>")
 		return this.LoadSummarySHRTFUND(record, null);
 
-
 	function PMT(F8, F9, F7, YearMonths, PayInterval) {  
 		
 		if(F8 == 0)
@@ -1166,15 +1165,26 @@ RequestInfo.prototype.LoadSummary = function(record){
 		
 		if(PayInterval == 0)
 			return F7;
-				
+		
 		F8 = F8/(YearMonths*100);
 		F7 = -F7;
 		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
 	} 
+	
+	function ComputeInstallmentAmount(TotalAmount,IstallmentCount,PayInterval){
+		
+		if(PayInterval == 0)
+			return TotalAmount;
+		
+		return TotalAmount/IstallmentCount;
+	}
 	function ComputeWage(F7, F8, F9, YearMonths, PayInterval){
 		
 		if(PayInterval == 0)
 			return 0;
+		
+		if(PayInterval*1 > 0)
+			F9 = F9*PayInterval;
 		
 		if(F8 == 0)
 			return 0;
@@ -1227,34 +1237,28 @@ RequestInfo.prototype.LoadSummary = function(record){
 	TotalWage = Math.round(ComputeWage(record.data.PartAmount, record.data.CustomerWage/100, 
 		record.data.InstallmentCount, YearMonths, record.data.PayInterval));
 		
-	if(record.data.WageReturn == "CUSTOMER")
-		FirstPay = PMT(0,record.data.InstallmentCount, 
-			record.data.PartAmount, YearMonths, record.data.PayInterval);	
-	else
-		FirstPay = PMT(record.data.CustomerWage,record.data.InstallmentCount, 
-			record.data.PartAmount, YearMonths, record.data.PayInterval);	
-			
 	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
 	FundWage = Math.round((record.data.FundWage/record.data.CustomerWage)*TotalWage);
 	FundWage = !isInt(FundWage) ? 0 : FundWage;
 	AgentWage = TotalWage - FundWage;
 	
 	TotalDelay = Math.round(record.data.PartAmount*record.data.CustomerWage*record.data.DelayMonths/1200);
-	if(record.data.DelayReturn == "INSTALLMENT")
-		FirstPay += TotalDelay/record.data.InstallmentCount;
+	
+	//-------------------------- installments -----------------------------
+	TotalAmount = record.data.PartAmount*1;
+	TotalAmount += (record.data.WageReturn == "CUSTOMER") ? 0 : TotalWage;
+	TotalAmount += (record.data.DelayReturn == "CUSTOMER") ? 0 : TotalDelay;	
+	FirstPay = ComputeInstallmentAmount(TotalAmount,record.data.InstallmentCount, record.data.PayInterval);
 	
 	if(record.data.InstallmentCount > 1)
 		FirstPay = roundUp(FirstPay,-3);
 	else
 		FirstPay = Math.round(FirstPay);
+	LastPay = TotalAmount - FirstPay*(record.data.InstallmentCount-1);
 	
-	returnAmount = record.data.PartAmount*1;
-	returnAmount += record.data.WageReturn != "CUSTOMER" ? TotalWage : 0;
-	returnAmount += record.data.DelayReturn != "CUSTOMER" ? TotalDelay : 0;
-	LastPay = returnAmount - FirstPay*(record.data.InstallmentCount-1);
-	
-	if(record.data.InstallmentCount == 1)
-		LastPay = 0;
+	if(record.data.DelayReturn == "INSTALLMENT")
+		FirstPay += TotalDelay/record.data.InstallmentCount;
+	//---------------------------------------------------------------------
 	if(record.data.MaxFundWage*1 > 0)
 	{
 		tmp = record.data.WageReturn == "INSTALLMENT" ? 

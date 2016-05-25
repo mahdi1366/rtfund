@@ -31,10 +31,21 @@ function PMT($CustomerWage, $InstallmentCount, $PartAmount, $YearMonths, $PayInt
 	$PartAmount = -$PartAmount;
 	return $CustomerWage * $PartAmount * pow((1 + $CustomerWage), $InstallmentCount) / (1 - pow((1 + $CustomerWage), $InstallmentCount)); 
 } 
+function ComputeInstallmentAmount($TotalAmount,$IstallmentCount,$PayInterval){
+		
+	if($PayInterval == 0)
+		return $TotalAmount;
+
+	return $TotalAmount/$IstallmentCount;
+}
+
 function ComputeWage($PartAmount, $CustomerWagePercent, $InstallmentCount, $YearMonths, $PayInterval){
 	
 	if($PayInterval == 0)
 		return 0;
+	
+	if($PayInterval*1 > 0)
+		$InstallmentCount = $InstallmentCount*$PayInterval;
 	
 	if($CustomerWagePercent == 0)
 		return 0;
@@ -530,24 +541,27 @@ function ComputeInstallments(){
 		$TotalWage = 0;
 		$obj->CustomerWage = 0;
 	}
-	
-	$allPay = PMT($obj->CustomerWage, $obj->InstallmentCount, 
-			$obj->PartAmount, $YearMonths, $obj->PayInterval);
-	
+		
 	$TotalDelay = round($obj->PartAmount*$obj->CustomerWage*$obj->DelayMonths/1200);
-	if($obj->DelayReturn == "INSTALLMENT")
-		$allPay += $TotalDelay/$obj->InstallmentCount*1;
 	
-	if($obj->InstallmentCount*1 > 1)
+	//-------------------------- installments -----------------------------
+	$TotalAmount = $obj->PartAmount*1;
+	$TotalAmount += ($obj->WageReturn == "CUSTOMER") ? 0 : $TotalWage;
+	$TotalAmount += ($obj->DelayReturn == "CUSTOMER") ? 0 : $TotalDelay;	
+	$allPay = ComputeInstallmentAmount($TotalAmount,$obj->InstallmentCount, $obj->PayInterval);
+	
+	if($obj->InstallmentCount > 1)
 		$allPay = roundUp($allPay,-3);
 	else
 		$allPay = round($allPay);
 	
-	$returnAmount = $obj->PartAmount*1;	
-	$returnAmount += $obj->WageReturn != "CUSTOMER" ? $TotalWage : 0;
-	$returnAmount += $obj->DelayReturn != "CUSTOMER" ? $TotalDelay : 0;
-	$LastPay = $returnAmount - $allPay*($obj->InstallmentCount*1-1);
-
+	if($obj->DelayReturn == "INSTALLMENT")
+		$allPay += $TotalDelay/$obj->InstallmentCount*1;
+	
+	$LastPay = $TotalAmount - $allPay*($obj->InstallmentCount-1);
+	
+	//---------------------------------------------------------------------
+	
 	$jdate = DateModules::miladi_to_shamsi($obj->PartDate);
 	$jdate = DateModules::AddToJDate($jdate, 1, $obj->DelayMonths);
 	

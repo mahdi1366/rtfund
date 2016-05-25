@@ -119,6 +119,7 @@ NewTemplate.prototype.LoadTemplate = function(){
 					ev.editor.setData(record.data.content);
 					mask.hide();										
 				});			
+				CKEDITOR.instances.TemplateEditor.setData(record.data.content);
 				mask.hide();
 			}
 		}
