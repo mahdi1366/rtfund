@@ -112,7 +112,7 @@ class sadaf_datagrid
 	public $groupHeaderTpl;
 	
 	
-	public $EnableSummaryRow;
+	public $EnableSummaryRow = false;
 	/**
 	 * Default value is true
 	 *
@@ -192,9 +192,6 @@ class sadaf_datagrid
 		$this->EnableGrouping = false;
 		$this->DefaultGroupField = "";
 		$this->groupHeaderTpl = "";
-		
-		$this->EnableSummaryRow = false;
-		
 		
 		$this->collapsed = true;
 		$this->collapsible = false;
@@ -336,7 +333,6 @@ class sadaf_datagrid
 			$grid .=  "),";
 		}
 				$grid .= ($this->EnableSearch) ?	 "new Ext.ux.grid.Search({mode:'remote'})," : "";
-				//$grid .= ($this->EnableSummaryRow) ? "new Ext.ux.grid.GridSummary()," : "";
 				$grid .= (count($this->plugins) != 0) ? implode(",", $this->plugins) . "," : "";
 
 				$grid = $grid[strlen($grid)-1] != "[" ? substr($grid,0,strlen($grid)-1) : $grid;
@@ -642,6 +638,11 @@ class GridColumn
 	const SummeryType_max = "max";
 	const SummeryType_average = "average";
 	public $summaryType;
+	
+	/**
+	 * parameters : value, summaryData, dataIndex
+	 * @var type 
+	 */
 	public $summaryRenderer;
 	
 	public $dblclick;

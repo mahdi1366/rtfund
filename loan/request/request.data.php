@@ -788,7 +788,7 @@ function selectParts(){
 
 function SelectReadyToPayParts(){
 	
-	$dt = PdoDataAccess::runquery("select max(StepID) from WFM_FlowSteps where FlowID=1");
+	$dt = PdoDataAccess::runquery("select max(StepID) from WFM_FlowSteps where FlowID=1 AND IsActive='YES'");
 
 	$dt = PdoDataAccess::runquery("
 		select RequestID,PartAmount,PartDesc,PartDate,
@@ -802,7 +802,8 @@ function SelectReadyToPayParts(){
 		left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 		left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 		left join ACC_DocItems di on(SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND SourceID=RequestID AND SourceID2=PartID)
-		where fr.FlowID=1 AND StepID=? AND ActionType='CONFIRM' AND di.ItemID is null",
+		where fr.FlowID=1 AND StepID=? AND ActionType='CONFIRM' AND di.ItemID is null 
+		group by RequestID",
 		array($dt[0][0]));
 
 	//print_r(ExceptionHandler::PopAllExceptions());

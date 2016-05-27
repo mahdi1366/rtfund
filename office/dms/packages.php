@@ -44,9 +44,14 @@ $col->sortable = false;
 $col->renderer = "function(v,p,r){return Package.itemsRender(v,p,r);}";
 $col->width = 30;
 
+$col = $dg->addColumn("", "");
+$col->sortable = false;
+$col->renderer = "function(v,p,r){return Package.reportRender(v,p,r);}";
+$col->width = 30;			
+
 $dg->title = "لیست پرونده ها";
 $dg->height = 500;
-$dg->width = 350;
+$dg->width = 380;
 $dg->DefaultSortField = "PackNo";
 $dg->DefaultSortDir = "ASC";
 $dg->autoExpandColumn = "PersonID";
@@ -327,6 +332,15 @@ Package.itemsRender = function(v,p,r)
 
 }
 
+Package.reportRender = function(v,p,r)
+{
+	return "<div align='center' title='گزارش حساب پس انداز' class='report' "+
+		"onclick='PackageObject.SavingShow();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+
+}
+
 Package.prototype.DeletePackage = function()
 {
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
@@ -368,6 +382,40 @@ Package.prototype.LoadItems = function()
 	else
 		this.itemGrid.render(this.get("grid2_div"));
 	this.itemGrid.show();
+}
+
+Package.prototype.SavingShow = function(){
+	
+	if(!this.SavingWin)
+	{
+		this.SavingWin = new Ext.window.Window({
+			width : 790,
+			height : 540,
+			modal : true,
+			closeAction : "hide",
+			loader : {
+				url : "/accounting/saving/saving.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.SavingWin);
+	}
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.SavingWin.show();	
+	this.SavingWin.center();
+	this.SavingWin.loader.load({
+		params : {
+			reportOnly : true,
+			ExtTabID : this.SavingWin.getEl().id,
+			PersonID : record.data.PersonID
+		}
+	});
 }
 
 //.................................................
