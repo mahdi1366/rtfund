@@ -156,7 +156,6 @@ function NewContract() {
 			displayField : "fullname",
 			pageSize : 20,
 			width: 350,
-			allowBlank : false,
 			valueField : "PersonID",
 			name : "PersonID",
 			itemId : "PersonID"
@@ -201,8 +200,7 @@ function NewContract() {
 			fieldLabel: 'مبلغ قرارداد',
 			name : "ContractAmount",
 			itemId: 'ContractAmount',
-			hideTrigger : true,
-			allowBlank : false
+			hideTrigger : true
 		},{
 			xtype : "shdatefield",
 			fieldLabel: 'تاریخ شروع',
@@ -421,6 +419,38 @@ NewContract.prototype.ShowTplItemsForm = function (TemplateID, LoadValues) {
 			if(me.ContractID == "" || me.ContractID == 0)
 				CKEDITOR.instances.ContractEditor.setData(TplContent);
 			
+			for(i=0; i<me.TplItemsStore.getCount(); i++)
+			{
+				record = me.TplItemsStore.getAt(i);
+				if(record.data.ItemType == "")
+					continue;
+				me.MainForm.getComponent("templateItems").add({
+					xtype: record.data.ItemType,
+					itemId: 'TplItem_' + record.data.TemplateItemID,
+					name: 'TplItem_' + record.data.TemplateItemID,
+					fieldLabel : record.data.ItemName,
+					hideTrigger : record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield' ? true : false
+				});
+				if (LoadValues > 0) {
+					var num = me.ContractItemsStore.find('TemplateItemID', record.data.TemplateItemID);                                    
+					if (me.ContractItemsStore.getAt(num)){
+						switch(TheTplItemType){
+							case "shdatefield" :
+								me.MainForm.getComponent("templateItems").
+									getComponent('TplItem_' + record.data.TemplateItemID).setValue(
+										MiladiToShamsi(me.ContractItemsStore.getAt(num).data.ItemValue));
+								break;
+							default : 
+								me.MainForm.getComponent("templateItems").
+									getComponent('TplItem_' + record.data.TemplateItemID).setValue(
+										me.ContractItemsStore.getAt(num).data.ItemValue);                                    
+						}
+					}
+				}            
+			}
+			mask.hide();
+			return;
+			/*
 			var regex = new RegExp(me.TplItemSeperator);
 			var res = TplContent.split(regex);
 
@@ -434,7 +464,7 @@ NewContract.prototype.ShowTplItemsForm = function (TemplateID, LoadValues) {
 				if (i % 2 != 0) {
 					var num = me.TplItemsStore.find('TemplateItemID', res[i]);
 				
-					if(me.TplItemsStore.getAt(num).data.TemplateID == "0")
+					if(!me.TplItemsStore.getAt(num) || me.TplItemsStore.getAt(num).data.TemplateID == "0")
 						continue;
 					
 					var fieldname = me.TplItemsStore.getAt(num).data.ItemName;
@@ -464,8 +494,8 @@ NewContract.prototype.ShowTplItemsForm = function (TemplateID, LoadValues) {
 						}
 					}                                
 				} 
-			}    
-			mask.hide();                    
+			}    */
+			            
 		},
 		failure: function () {
 		}

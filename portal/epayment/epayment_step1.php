@@ -20,7 +20,9 @@ if($PartID == "")
 $amount = $_REQUEST["amount"];
 //$amount = 1000;
 $url = "http://rtfund/portal/epayment/epayment_step2.php";
-die();
+
+if($_SESSION["USER"]["UserName"] != "9155338872")
+	die();
 ?>
 <form method=post name=f1 id=f1 action='https://kica.shaparak.ir/epay/info'>
 	<input type=hidden name=merchantId value='<?= $MerchantID ?>'>

@@ -1158,6 +1158,7 @@ RequestInfo.prototype.LoadSummary = function(record){
 	if(this.RequestRecord.data.ReqPersonID == "<?= SHEKOOFAI ?>")
 		return this.LoadSummarySHRTFUND(record, null);
 
+
 	function PMT(F8, F9, F7, YearMonths, PayInterval) {  
 		
 		if(F8 == 0)
