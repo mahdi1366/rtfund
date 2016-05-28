@@ -226,6 +226,8 @@ function NewContract() {
 			title : "جزئیات قرارداد",
 			itemId: "templateItems",
 			width : 780,
+			maxHeight : 300,
+			autoScroll: true,
 			colspan : 2,
 			layout: {
 				type: 'table',                
@@ -280,7 +282,8 @@ function NewContract() {
 				root: 'rows',
 				totalProperty: 'totalCount'
 			}
-		}
+		},
+		pageSize: 500
 	});
 	
 	this.ContractStore = new Ext.data.Store({
