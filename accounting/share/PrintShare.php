@@ -56,7 +56,7 @@ if(isset($_REQUEST["print"]))
 <html>
 	<head>
 		<META http-equiv=Content-Type content="text/html; charset=UTF-8" >
-		<link rel="stylesheet" type="text/css" href="/GeneralUI/fonts/fonts.css" /></head>
+		<link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" /></head>
 		<style>
 		@media print {
 			.pageBreak {page-break-before:always;height:1px;}
@@ -80,7 +80,7 @@ if(isset($_REQUEST["print"]))
 			<tr><td width=160px><img style=width:120px src=/framework/icons/logo.jpg /></td>
 				<td align=center style='font-size:30px !important'>بسمه تعالی
 				<br>برگ سهام " . SoftwareName . "(سهامی خاص)" . "</td>
-				<td width=160px style='font-family:bnazanin;font-size: 16px;'>شناسه ملی : " . OWNER_NATIONALID . "
+				<td width=160px style='font-family:Homa;font-size: 12px;'>شناسه ملی : " . OWNER_NATIONALID . "
 					<br>شماره ثبت : " . OWNER_REGCODE . "
 					<br>تاریخ ثبت : " . OWNER_REGDATE . "
 				</td>
@@ -113,12 +113,12 @@ if(isset($_REQUEST["print"]))
 			</tr>
 			<tr>
 				<td align=center>مهر صندوق</td>
-				<td align=center>دکتر جواد بهارآرا <br> رئیس هیئت مدیره</td>
 				<td align=center>مهدی مروی <br> مدیر عامل</td>
+				<td align=center>دکتر جواد بهارآرا <br> رئیس هیئت مدیره</td>
 			</tr>
 		</table></div>";
 		
-		echo "<div style='width:285mm;font-family:bnazanin;font-size:14px'>
+		echo "<div style='width:285mm;font-family:Homa;font-size:12px'>
 			<center>با صدور این برگ اوراق صادره قبلی باطل اعلام می گردد.( تاریخ صدرو : " .
 			DateModules::shNow(). " )</center></div>";
 		

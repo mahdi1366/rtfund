@@ -69,12 +69,15 @@ class BSC_persons extends PdoDataAccess
 		
 	function AddPerson()
 	{
-		$dt = PdoDataAccess::runquery("select * 
-			from BSC_persons where UserName=?", array($this->UserName));
-		if(count($dt) > 0)
+		if(!empty($this->UserName))
 		{
-			ExceptionHandler::PushException("شناسه وارد شده تکراری است");
-			return false;
+			$dt = PdoDataAccess::runquery("select * 
+				from BSC_persons where UserName=?", array($this->UserName));
+			if(count($dt) > 0)
+			{
+				ExceptionHandler::PushException("شناسه وارد شده تکراری است");
+				return false;
+			}
 		}
 		
 	 	if(!parent::insert("BSC_persons",$this))
