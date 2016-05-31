@@ -283,7 +283,7 @@ function DeleteGroup(){
 
 function GetAllTafsilis() {
 	
-	$where = " IsActive='YES' AND TafsiliType=:g";
+	$where = " t.IsActive='YES' AND t.TafsiliType=:g";
 	$whereParam = array();
 	$whereParam[":g"] = $_GET["TafsiliType"];
 	
@@ -292,9 +292,14 @@ function GetAllTafsilis() {
 		$where .= " AND " . $field . " LIKE :qry ";
 		$whereParam[":qry"] = "%" . $_GET["query"] . "%";
 	}
+	
+	if(!empty($_REQUEST["Shareholder"]))
+	{
+		$where .= " AND p.IsShareholder='YES' ";
+	}
 
-	$temp = ACC_tafsilis::SelectAll($where, $whereParam);
-	print_r(ExceptionHandler::PopAllExceptions());
+	$temp = ACC_tafsilis::SelectAll($where . dataReader::makeOrder(), $whereParam);
+	
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 

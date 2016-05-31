@@ -95,31 +95,31 @@ if(isset($_REQUEST["print"]))
 			<tr>
 				<td colspan=3 align=center style='text-align: justify;padding: 0 5 0 5'>
 				بدینوسیله گواهی می شود تعداد
-				<b> " . $dataTable[$i]["shareCount"] . " </b>
+				<b><u> " . $dataTable[$i]["shareCount"] . " </u></b>( " . CurrencyModulesclass::CurrencyToString($dataTable[$i]["shareCount"]) . " ) 
 				سهم با نام از مجموع 
-				" . $sumRecord["shareCount"] . " ( " . 
+				<b><u>" . $sumRecord["shareCount"] . "</u></b> ( " . 
 				CurrencyModulesclass::CurrencyToString($sumRecord["shareCount"]) . " ) 
 				سهم 
-				" . SoftwareName . " به ارزش اسمی هر سهم 
-				" . CurrencyModulesclass::CurrencyToString(ShareBaseAmount) . " ریال و به ارزش 
-				<b>" . CurrencyModulesclass::CurrencyToString($dataTable[$i]["amount"]) . "</b>
+				" . SoftwareName . " به ارزش اسمی هر سهم " . 
+				"<b><u>" . number_format(ShareBaseAmount) . "</u></b> ( " . CurrencyModulesclass::CurrencyToString(ShareBaseAmount) . " ) ریال و به ارزش 
+				<b><u>" . number_format($dataTable[$i]["amount"]) . "</u></b> ( " . CurrencyModulesclass::CurrencyToString($dataTable[$i]["amount"]) . " ) 
 				ریال، به عنوان سهام عادی و با نام متعلق به 
 				<b>" . $dataTable[$i]["TafsiliDesc"] . "</b>
 				می باشد و سهام مذکور در دفتر ثبت سهام تحت شماره
-				<b> " . $dataTable[$i]["ShareNo"] . " </b>
+				<b><u> &nbsp;&nbsp;" . $dataTable[$i]["ShareNo"] . "</u></b> &nbsp;( " . CurrencyModulesclass::CurrencyToString($dataTable[$i]["ShareNo"]) . " ) &nbsp;&nbsp; 
 				ثبت گردیده است.
-				<br><br>
+				<br>
 				</td>
 			</tr>
 			<tr>
+				<td style=padding-right:40px align=center>مهدی مروی <br> مدیر عامل</td>
 				<td align=center>مهر صندوق</td>
-				<td align=center>مهدی مروی <br> مدیر عامل</td>
-				<td align=center>دکتر جواد بهارآرا <br> رئیس هیئت مدیره</td>
+				<td style=padding-left:40px align=center>دکتر جواد بهارآرا <br> رئیس هیئت مدیره</td>
 			</tr>
 		</table></div>";
 		
 		echo "<div style='width:285mm;font-family:Homa;font-size:12px'>
-			<center>با صدور این برگ اوراق صادره قبلی باطل اعلام می گردد.( تاریخ صدرو : " .
+			<center>با صدور این برگ اوراق صادره قبلی باطل اعلام می گردد.( تاریخ صدور : " .
 			DateModules::shNow(). " )</center></div>";
 		
 		if($i != count($dataTable)-1)
@@ -157,7 +157,7 @@ function PrintShare()
 				fields:["TafsiliID","TafsiliDesc"],
 				proxy: {
 					type: 'jsonp',
-					url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=1',
+					url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=1&Shareholder=true',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				}
 			}),
@@ -182,7 +182,6 @@ function PrintShare()
 }
 
 PrintShareObj = new PrintShare();
-
 
 </script>
 <form id="mainForm">
