@@ -31,7 +31,27 @@ function AddTraffic(){
 
 function GetMyRequests(){
 	
-	$dt = ATN_requests::Get(" AND PersonID=?", array($_SESSION["USER"]["PersonID"]));
+	$dt = ATN_requests::Get(" AND PersonID=?" . dataReader::makeOrder(), 
+		array($_SESSION["USER"]["PersonID"]));
+	$result = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+	
+	echo dataReader::getJsonData($result, $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function GetAllRequests(){
+	
+	$where = "";
+	$param = array();
+	
+	if(!empty($_REQUEST["fields"]) && !empty($_GET["query"]))
+	{
+		$field = $_REQUEST["fields"] == "fullname" ? "concat(fname,' ',lname)" : $_REQUEST["fields"];
+		$where .= " AND	" . $field . " like :q";
+		$param[":q"] = "%" . $_GET["query"] . "%";
+	}
+	
+	$dt = ATN_requests::Get($where . dataReader::makeOrder(), $param);
 	$result = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	
 	echo dataReader::getJsonData($result, $dt->rowCount(), $_GET["callback"]);
@@ -138,6 +158,29 @@ function selectMeans(){
 	die();
 }
 
+function ChangeStatus(){
+	
+	$obj = new ATN_requests($_POST["RequestID"]);
+	$obj->ReqStatus = $_POST["mode"];
+	$obj->SurveyPersonID = $_SESSION["USER"]["PersonID"];
+	$obj->SurveyDate = PDONOW;
+	
+	$result = $obj->Edit();
+	
+	if($obj->ReqType == "CORRECT")
+	{
+		$obj2 = new ATN_traffic();
+		$obj2->IsSystemic = "NO";
+		$obj2->RequestID = $obj->RequestID;
+		$obj2->PersonID = $obj->PersonID;
+		$obj2->TrafficDate = $obj->FromDate;
+		$obj2->TrafficTime = $obj->StartTime;
+		$result = $obj2->Add();
+	}
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 
 
 ?>

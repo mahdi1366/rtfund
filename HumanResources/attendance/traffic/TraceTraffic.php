@@ -28,13 +28,20 @@ function ShowReport(){
 		order by TrafficDate,TrafficTime", 
 		array($PersonID, $StartDate, $EndDate));
 	$dt = $dt->fetchAll();
-	
 	//........................ create days array ..................
+	
+	$index = 0;
 	$returnArr = array();
-	while($StartDate < $EndDate)
+	while($StartDate <= $EndDate)
 	{
-		if(count($dt)>0 && $StartDate == $dt[0]["TrafficDate"])
-			break;
+		if($index < count($dt) && $StartDate == $dt[$index]["TrafficDate"])
+		{
+			while($index < count($dt) && $StartDate == $dt[$index]["TrafficDate"])
+				$returnArr[] = $dt[$index++];
+			
+			$StartDate = DateModules::AddToGDate($StartDate, 1);	
+			continue;
+		}
 		
 		$shiftRecord = ATN_PersonShifts::GetShiftOfDate($PersonID, $StartDate);
 
@@ -46,23 +53,6 @@ function ShowReport(){
 			"TrafficTime" => "");
 		$StartDate = DateModules::AddToGDate($StartDate, 1);
 	}
-	
-	$returnArr = array_merge($returnArr, $dt);
-	$StartDate = count($dt) > 0 ? $dt[ count($dt)-1 ]["TrafficDate"] : $StartDate;
-	$StartDate = DateModules::AddToGDate($StartDate, 1);
-	
-	while($StartDate <= $EndDate)
-	{
-		$shiftRecord = ATN_PersonShifts::GetShiftOfDate($PersonID, $StartDate);
-		
-		$returnArr[] = array("TrafficID" => "", 
-			"TrafficDate" => $StartDate , 
-			"ShiftTitle" => $shiftRecord["ShiftTitle"], 
-			"FromTime" => $shiftRecord["FromTime"], 
-			"ToTime" => $shiftRecord["ToTime"], 
-			"TrafficTime" => "");;
-		$StartDate = DateModules::AddToGDate($StartDate, 1);
-	}	
 	//...........................................................
 		
 	function ShowTime($arr){
@@ -78,7 +68,7 @@ function ShowReport(){
 		$requests = PdoDataAccess::runquery("
 			select t.*, InfoDesc OffTypeDesc from ATN_requests t
 				left join BaseInfo on(TypeID=20 AND InfoID=OffType)
-			where PersonID=:p AND FromDate <= :td 
+			where ReqStatus=2 AND PersonID=:p AND FromDate <= :td 
 				AND if(ToDate is not null, ToDate >= :td, 1=1)
 			order by ToDate desc,StartTime asc
 		", array(
@@ -125,6 +115,8 @@ function ShowReport(){
 		$Absence = ($returnArr[$i]["TrafficTime"] != "") ? 0 :
 			strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["FromTime"]);
 		
+		$Off = 0;	
+		$mission = 0;
 		$index = 1;
 		$totalAttend = 0;
 		$currentDay = $returnArr[$i]["TrafficDate"];
@@ -137,8 +129,49 @@ function ShowReport(){
 			{
 				$totalAttend += strtotime($returnArr[$i]["TrafficTime"]) - 
 				strtotime($returnArr[$i-1]["TrafficTime"]);
-			}
+			}				
+			else if($index != 1)
+			{
+				$requests = PdoDataAccess::runquery("
+					select t.* from ATN_requests t
+					where PersonID=? AND FromDate = ? AND ToDate is null AND
+						StartTime < ? AND EndTime > ? AND ReqStatus=2 
+					order by StartTime
+				", array( 
+					$PersonID, 
+					$returnArr[$i]["TrafficDate"],
+					$returnArr[$i]["TrafficTime"],
+					$returnArr[$i-1]["TrafficTime"]));
 				
+				if(count($requests) > 0)
+				{
+					$startDiff = strtotime($requests[0]["StartTime"]) - strtotime($returnArr[$i-1]["TrafficTime"]);
+					if($startDiff > Valid_Traffic_diff)
+					{
+						$Absence += $startDiff - Valid_Traffic_diff;
+						$startOff = strtotime($requests[0]["StartTime"]) - Valid_Traffic_diff;						
+					}
+					else
+						$startOff = strtotime($returnArr[$i-1]["TrafficTime"]);
+
+					$endDiff = strtotime($returnArr[$i]["TrafficTime"]) - strtotime($requests[0]["EndTime"]);
+					if($endDiff > Valid_Traffic_diff)
+					{
+						$Absence += $endDiff - Valid_Traffic_diff;
+						$endOff = strtotime($requests[0]["EndTime"]) - Valid_Traffic_diff;						
+					}
+					else
+						$endOff = strtotime($returnArr[$i]["TrafficTime"]);
+					
+					if($requests[0]["ReqType"] == "OFF")
+						$Off += $endOff - $startOff;
+					else
+						$mission += $endOff - $startOff;
+				}
+				else
+					$Absence += strtotime($returnArr[$i]["TrafficTime"]) - 
+						strtotime($returnArr[$i-1]["TrafficTime"]);
+			}
 			$index++;
 			$i++;
 		}
@@ -150,7 +183,7 @@ function ShowReport(){
 				$lastAbsence = strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["TrafficTime"]);
 
 		$ShiftDuration = strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["FromTime"]);
-		$extra = ($totalAttend > $ShiftDuration) ? $totalAttend - $ShiftDuration : 0;
+		$extra = ($totalAttend+$mission > $ShiftDuration) ? $totalAttend + $mission - $ShiftDuration  : 0;
 		
 		$Absence = $Absence + $firstAbsence + $lastAbsence;
 		$totalAttend = TimeModules::SecondsToTime($totalAttend);
@@ -158,11 +191,14 @@ function ShowReport(){
 		$lastAbsence = TimeModules::SecondsToTime($lastAbsence);
 		$Absence = TimeModules::SecondsToTime($Absence);
 		$extra = TimeModules::SecondsToTime($extra);
+		$Off = TimeModules::SecondsToTime($Off);
+		$mission = TimeModules::SecondsToTime($mission);
+		
 		
 		$returnStr .= "</td><td class=attend>" . ShowTime($totalAttend) . "</td>
 			<td class=extra>" . ShowTime($extra) . "</td>
-			<td class=off></td>
-			<td></td>
+			<td class=off>" . ShowTime($Off) . "</td>
+			<td>" . ShowTime($mission) . "</td>
 			<td class=sub>" . ShowTime($firstAbsence) . "</td>
 			<td class=sub>" . ShowTime($lastAbsence) . "</td>
 			<td class=sub>" . ShowTime($Absence) . "</td>
