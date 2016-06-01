@@ -600,4 +600,44 @@ class DateModules
 	
 }
 
+class TimeModules {
+	
+	static function CurrentTime() {
+        return date('H:i:s');
+    }
+	
+	/**
+	 *
+	 * @param type $time1
+	 * @param type $time2
+	 * @return array(hours, minutes, seconds)
+	 */
+	static function TimeDiff($time1, $time2) {
+       $t1 = strtotime($time1);
+	   $t2 = strtotime($time2);
+	   
+	   $seconds = $t2 - $t1;
+	   return SecondsToTime($seconds);
+    }
+	
+	/**
+	 *
+	 * @param type $seconds 
+	 * @return array(hours, minutes, seconds)
+	 */
+	static function SecondsToTime($seconds){
+		
+		$hours = floor($seconds / 3600);
+	   
+		$seconds = $seconds - $hours*3600;
+		$minutes = floor( $seconds / 60);
+	   
+		$seconds = $seconds - $minutes*60;
+		return array(str_pad($hours, 2, "0", STR_PAD_LEFT), 
+			str_pad($minutes, 2, "0", STR_PAD_LEFT), 
+			str_pad($seconds, 2, "0", STR_PAD_LEFT));
+	}
+
+
+}
 ?>

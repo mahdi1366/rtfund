@@ -6,6 +6,7 @@
 
 require_once '../../header.inc.php';
 require_once 'traffic.class.php';
+require_once '../baseinfo/shift.class.php';
 require_once inc_reportGenerator;
 
 $admin = isset($_POST["admin"]) ? true : false;
@@ -23,17 +24,26 @@ function ShowReport(){
 	$PersonID = $_SESSION["USER"]["PersonID"];
 	$PersonID = !empty($_POST["PersonID"]) ? $_POST["PersonID"] : $PersonID;
 	
-	$dt = ATN_traffic::Get(" AND t.PersonID=? AND TrafficDate>= ? AND TrafficDate <= ? order by TrafficDate,TrafficTime", 
+	$dt = ATN_traffic::Get(" AND t.PersonID=? AND TrafficDate>= ? AND TrafficDate <= ? 
+		order by TrafficDate,TrafficTime", 
 		array($PersonID, $StartDate, $EndDate));
-	
 	$dt = $dt->fetchAll();
 	
+	//........................ create days array ..................
 	$returnArr = array();
 	while($StartDate < $EndDate)
 	{
 		if(count($dt)>0 && $StartDate == $dt[0]["TrafficDate"])
 			break;
-		$returnArr[] = array("TrafficID" => "", "TrafficDate" => $StartDate , "ShiftTitle" => "", "TrafficTime" => "");;
+		
+		$shiftRecord = ATN_PersonShifts::GetShiftOfDate($PersonID, $StartDate);
+
+		$returnArr[] = array("TrafficID" => "", 
+			"TrafficDate" => $StartDate , 
+			"ShiftTitle" => $shiftRecord["ShiftTitle"], 
+			"FromTime" => $shiftRecord["FromTime"], 
+			"ToTime" => $shiftRecord["ToTime"], 
+			"TrafficTime" => "");
 		$StartDate = DateModules::AddToGDate($StartDate, 1);
 	}
 	
@@ -43,60 +53,129 @@ function ShowReport(){
 	
 	while($StartDate <= $EndDate)
 	{
-		$returnArr[] = array("TrafficID" => "", "TrafficDate" => $StartDate , "ShiftTitle" => "", "TrafficTime" => "");;
+		$shiftRecord = ATN_PersonShifts::GetShiftOfDate($PersonID, $StartDate);
+		
+		$returnArr[] = array("TrafficID" => "", 
+			"TrafficDate" => $StartDate , 
+			"ShiftTitle" => $shiftRecord["ShiftTitle"], 
+			"FromTime" => $shiftRecord["FromTime"], 
+			"ToTime" => $shiftRecord["ToTime"], 
+			"TrafficTime" => "");;
 		$StartDate = DateModules::AddToGDate($StartDate, 1);
-	}
+	}	
+	//...........................................................
 		
-	function DayRender($row, $value){
+	function ShowTime($arr){
 		
-		return DateModules::$JWeekDays[ DateModules::GetWeekDay($value, "N") ];
-	}
-	function DateRender($row, $value){
-		
-		return DateModules::miladi_to_shamsi($value);
+		if($arr[0] == "00" && $arr[1] == "00")
+			return "";
+		return $arr[0] . ":" . $arr[1];
 	}
 	
 	$returnStr = "";
 	for($i=0; $i < count($returnArr); $i++)
 	{
+		$requests = PdoDataAccess::runquery("
+			select t.*, InfoDesc OffTypeDesc from ATN_requests t
+				left join BaseInfo on(TypeID=20 AND InfoID=OffType)
+			where PersonID=:p AND FromDate <= :td 
+				AND if(ToDate is not null, ToDate >= :td, 1=1)
+			order by ToDate desc,StartTime asc
+		", array(
+			":p" => $PersonID,
+			":td" => $returnArr[$i]["TrafficDate"]
+		));
+		
+		//........... Daily off and mission ...................
+		if(count($requests) > 0)
+		{
+			if($requests[0]["ToDate"] != "")
+			{
+				if($requests[0]["ReqType"] == "OFF")
+				{
+					$returnStr .= 
+						"<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
+						<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
+						<td colspan=8> مرخصی " . $requests[0]["OffTypeDesc"] . "<td></tr>";
+					continue;
+				}
+				if($requests[0]["ReqType"] == "MISSION")
+				{
+					$returnStr .= 
+						"<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
+						<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
+						<td colspan=8> ماموریت " . $requests[0]["MissionSubject"] . "<td></tr>";
+					continue;
+				}
+			}
+		}
+		//....................................................
+		
 		$returnStr .= "<tr>
 			<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
 			<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
 			<td>" . $returnArr[$i]["ShiftTitle"] . "</td>
 			<td>";
 		
+		$firstAbsence = 0;
+		if($returnArr[$i]["TrafficTime"] != "" && 
+			strtotime($returnArr[$i]["TrafficTime"]) > strtotime($returnArr[$i]["FromTime"]))
+				$firstAbsence = strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i]["FromTime"]);
+		
+		$Absence = ($returnArr[$i]["TrafficTime"] != "") ? 0 :
+			strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["FromTime"]);
+		
 		$index = 1;
 		$totalAttend = 0;
 		$currentDay = $returnArr[$i]["TrafficDate"];
 		while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
 		{
-			$returnStr .= $returnArr[$i]["TrafficTime"];
+			$returnStr .= substr($returnArr[$i]["TrafficTime"],0,5);
 			$returnStr .= $index % 2 == 0 ? "<br>" : " - ";
 			
 			if($index % 2 == 0)
 			{
-				$totalAttend += $returnArr[$i]["TrafficTime"] - $returnArr[$i-1]["TrafficTime"];
+				$totalAttend += strtotime($returnArr[$i]["TrafficTime"]) - 
+				strtotime($returnArr[$i-1]["TrafficTime"]);
 			}
 				
 			$index++;
 			$i++;
 		}
 		$i--;
-		$returnStr .= "</td><td>" . $totalAttend . "</td>
-			<td class=extra></td>
+		
+		$lastAbsence = 0;
+		if($returnArr[$i]["TrafficTime"] != "" && 
+			strtotime($returnArr[$i]["TrafficTime"]) < strtotime($returnArr[$i]["ToTime"]))
+				$lastAbsence = strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["TrafficTime"]);
+
+		$ShiftDuration = strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["FromTime"]);
+		$extra = ($totalAttend > $ShiftDuration) ? $totalAttend - $ShiftDuration : 0;
+		
+		$Absence = $Absence + $firstAbsence + $lastAbsence;
+		$totalAttend = TimeModules::SecondsToTime($totalAttend);
+		$firstAbsence = TimeModules::SecondsToTime($firstAbsence);
+		$lastAbsence = TimeModules::SecondsToTime($lastAbsence);
+		$Absence = TimeModules::SecondsToTime($Absence);
+		$extra = TimeModules::SecondsToTime($extra);
+		
+		$returnStr .= "</td><td class=attend>" . ShowTime($totalAttend) . "</td>
+			<td class=extra>" . ShowTime($extra) . "</td>
 			<td class=off></td>
 			<td></td>
-			<td class=sub></td>
-			<td class=sub></td>
+			<td class=sub>" . ShowTime($firstAbsence) . "</td>
+			<td class=sub>" . ShowTime($lastAbsence) . "</td>
+			<td class=sub>" . ShowTime($Absence) . "</td>
 			</tr>";
 	}
 ?>
 <style>
 	.reportTbl td {padding:4px;}
 	.reportTbl th {padding:4px;text-align: center; background-color: #efefef; font-weight: bold}
-	.reportTbl .extra { background-color: #D0F7E2}
-	.reportTbl .off { background-color: #D7BAFF}
-	.reportTbl .sub { background-color: #FFcfdd}
+	.reportTbl .attend { text-align:center}
+	.reportTbl .extra { background-color: #D0F7E2; text-align:center}
+	.reportTbl .off { background-color: #D7BAFF; text-align:center}
+	.reportTbl .sub { background-color: #FFcfdd; text-align:center}
 </style>
 <table class="reportTbl" width="100%" border="1">
 	<tr class="blueText">
@@ -110,6 +189,7 @@ function ShowReport(){
 		<th>ماموریت</th>
 		<th class=sub>تاخیر</th>
 		<th class=sub>تعجیل</th>
+		<th class=sub>غیبت</th>
 	</tr>
 	<?= $returnStr ?>
 </table>

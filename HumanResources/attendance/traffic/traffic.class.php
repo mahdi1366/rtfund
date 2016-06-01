@@ -18,19 +18,22 @@ class ATN_traffic extends OperationClass
 	
 	static function Get($where = '', $whereParams = array()) {
 		
-		$query = "select t.*,s.ShiftTitle from ATN_traffic t
+		$query = "select t.*,s.ShiftTitle , s.FromTime,s.ToTime
+			
+			from ATN_traffic t
 			join ATN_PersonShifts ps on(ps.IsActive='YES' AND t.PersonID=ps.PersonID AND TrafficDate between FromDate AND ToDate)
 			join ATN_shifts s on(ps.ShiftID=s.ShiftID)
 			where 1=1 " . $where;
 		
 		return parent::runquery_fetchMode($query, $whereParams);		
 	}
+	
 }
 
 
-class ATN_TrafficRequest extends OperationClass
+class ATN_requests extends OperationClass
 {
-	const TableName = "ATN_TrafficRequest";
+	const TableName = "ATN_requests";
 	const TableKey = "RequestID";
 	
 	public $RequestID;

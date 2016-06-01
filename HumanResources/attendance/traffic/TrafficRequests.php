@@ -87,6 +87,10 @@ function TrafficReq(){
 		layout : "column",
 		columns :2,
 		items: [{
+			xtype : "container",
+			width : 500,
+			style : "text-align:right",
+			items :[{
 				xtype:'combo',
 				store : new Ext.data.SimpleStore({
 					fields : ["id","title"],
@@ -101,7 +105,6 @@ function TrafficReq(){
 				valueField : "id",
 				displayField : "title",
 				allowBlank : false,
-				colspan : 2,
 				listeners :{
 					select : function(combo,records){
 						
@@ -125,6 +128,7 @@ function TrafficReq(){
 						}
 					}
 				}
+			}]
 			},{
 				xtype:'shdatefield',
 				fieldLabel: 'تاریخ مورد نظر',

@@ -31,7 +31,7 @@ function AddTraffic(){
 
 function GetMyRequests(){
 	
-	$dt = ATN_TrafficRequest::Get(" AND PersonID=?", array($_SESSION["USER"]["PersonID"]));
+	$dt = ATN_requests::Get(" AND PersonID=?", array($_SESSION["USER"]["PersonID"]));
 	$result = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	
 	echo dataReader::getJsonData($result, $dt->rowCount(), $_GET["callback"]);
@@ -40,7 +40,7 @@ function GetMyRequests(){
 
 function SaveRequest(){
 	
-	$obj = new ATN_TrafficRequest();
+	$obj = new ATN_requests();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
 	if($obj->ReqType != "CORRECT")
@@ -48,7 +48,7 @@ function SaveRequest(){
 		if(!empty($obj->ToDate))
 		{
 			$dt = PdoDataAccess::runquery("
-				select * from ATN_TrafficRequest 
+				select * from ATN_requests 
 				where PersonID=:p AND RequestID<>:r 
 				AND ( (FromDate<=:f AND ToDate>=:f) OR (FromDate<=:t AND ToDate>=:t) )
 			", array(
@@ -66,7 +66,7 @@ function SaveRequest(){
 		else
 		{
 			$dt = PdoDataAccess::runquery("
-				select * from ATN_TrafficRequest 
+				select * from ATN_requests 
 				where PersonID=:p AND RequestID<>:r 
 				AND (
 						(FromDate<=:f AND ToDate>=:f) OR 
@@ -109,7 +109,7 @@ function SaveRequest(){
 
 function DeleteRequest(){
 	
-	$obj = new ATN_TrafficRequest($_POST["RequestID"]);
+	$obj = new ATN_requests($_POST["RequestID"]);
 
 	if($obj->ReqStatus != "1")
 	{
