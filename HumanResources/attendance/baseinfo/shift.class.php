@@ -123,6 +123,18 @@ class ATN_PersonShifts extends OperationClass
 		$this->IsActive = "NO";
 		return $this->Edit($pdo);
 	}
+
+	static function GetShiftOfDate($PersonID, $date){
+		
+		$query = "select s.*			
+			from ATN_PersonShifts ps
+			join ATN_shifts s on(ps.ShiftID=s.ShiftID)
+			where ps.IsActive='YES' AND ps.PersonID=? AND ? between FromDate AND ToDate";
+		
+		$dt = parent::runquery($query, array($PersonID, $date));
+		return count($dt) > 0 ? $dt[0] : null;
+	}
+	
 }
 
 ?>

@@ -448,6 +448,9 @@ MiladiToShamsi = function (date, format) {
     if (arguments.length == 1) {
         format = "Y/m/d";
     }
+	
+	if (!date || date == "" || date == "0000-00-00") return "";
+	
     if(date.length > 10)
 		date = date.substr(0,10);
 		
@@ -488,6 +491,7 @@ MiladiToShamsi = function (date, format) {
 }
 
 ShamsiToMiladi = function (date, format) {
+	
     if (arguments.length == 1) format = "Y/m/d";
     if (!date || date == "" || date == "0000-00-00") return "";
 
