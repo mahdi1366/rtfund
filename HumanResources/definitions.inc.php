@@ -5,4 +5,6 @@
 //-----------------------------
 
 define("Valid_Traffic_diff", "1800");
+define("FridayIsHoliday" , true);
+define("ThursdayIsHoliday" , false);
 ?>

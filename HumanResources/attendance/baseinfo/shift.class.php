@@ -137,4 +137,21 @@ class ATN_PersonShifts extends OperationClass
 	
 }
 
+class ATN_holidays extends OperationClass
+{
+	const TableName = "ATN_holidays";
+	const TableKey = "HolidayID";
+	
+	public $HolidayID;
+	public $TheDate;
+	public $details;
+	
+	function __construct($id = '') {
+		
+		$this->DT_TheDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
+		parent::__construct($id);
+	}
+}
+
 ?>

@@ -442,7 +442,7 @@ TrafficReq.prototype.DeleteRequest = function()
 TrafficReq.prototype.PrintMission = function()
 {
 	var record = this.grid.getSelectionModel().getLastSelected();
-	window.open(this.address_prefix + "PrintMission.php?RequestID=" + record.data.RequesID);
+	window.open(this.address_prefix + "PrintMission.php?RequestID=" + record.data.RequestID);
 }
 
 var TrafficReqObject = new TrafficReq();	

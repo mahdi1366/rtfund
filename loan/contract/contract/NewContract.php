@@ -226,7 +226,7 @@ function NewContract() {
 			title : "جزئیات قرارداد",
 			itemId: "templateItems",
 			width : 780,
-			maxHeight : 300,
+			maxHeight : 200,
 			autoScroll: true,
 			colspan : 2,
 			layout: {
@@ -271,7 +271,6 @@ function NewContract() {
 	CKEDITOR.config.height = 200;
 	CKEDITOR.config.autoGrow_minHeight = 200;
 	CKEDITOR.replace('ContractEditor');
-	CKEDITOR.add;
 	
 	this.TplItemsStore = new Ext.data.Store({
 		fields: ['TemplateItemID',"TemplateID", 'ItemName', 'ItemType'],
@@ -359,9 +358,10 @@ NewContract.prototype.LoadContract = function(){
 				}
 			});	
 			
-			CKEDITOR.instances.ContractEditor.on('instanceReady', function( ev ) {
-				ev.editor.setData(record.data.content);
-			});
+			//CKEDITOR.instances.ContractEditor.on('instanceReady', function( ev ) {
+			//	ev.editor.setData(record.data.content);
+			//});
+			CKEDITOR.instances.ContractEditor.setData(record.data.content);
 		}
 	});
 }
@@ -437,7 +437,7 @@ NewContract.prototype.ShowTplItemsForm = function (TemplateID, LoadValues) {
 				if (LoadValues > 0) {
 					var num = me.ContractItemsStore.find('TemplateItemID', record.data.TemplateItemID);                                    
 					if (me.ContractItemsStore.getAt(num)){
-						switch(TheTplItemType){
+						switch(record.data.ItemType){
 							case "shdatefield" :
 								me.MainForm.getComponent("templateItems").
 									getComponent('TplItem_' + record.data.TemplateItemID).setValue(
@@ -452,53 +452,7 @@ NewContract.prototype.ShowTplItemsForm = function (TemplateID, LoadValues) {
 				}            
 			}
 			mask.hide();
-			return;
-			/*
-			var regex = new RegExp(me.TplItemSeperator);
-			var res = TplContent.split(regex);
-
-			if (TplContent.substring(0, 3) !== me.TplItemSeperator) {
-				var temp = [];
-				res = temp.concat(res);
-			}
-
-			for (var i = 0; i < res.length; i++)
-			{
-				if (i % 2 != 0) {
-					var num = me.TplItemsStore.find('TemplateItemID', res[i]);
-				
-					if(!me.TplItemsStore.getAt(num) || me.TplItemsStore.getAt(num).data.TemplateID == "0")
-						continue;
-					
-					var fieldname = me.TplItemsStore.getAt(num).data.ItemName;
-
-					var TheTplItemType = me.TplItemsStore.getAt(num).data.ItemType;
-					me.MainForm.getComponent("templateItems").add({
-						xtype: TheTplItemType,
-						itemId: 'TplItem_' + res[i],
-						name: 'TplItem_' + res[i],
-						fieldLabel : fieldname,
-						hideTrigger : TheTplItemType == 'numberfield' || TheTplItemType == 'currencyfield' ? true : false
-					});
-					if (LoadValues > 0) {
-						var num = me.ContractItemsStore.find('TemplateItemID', res[i]);                                    
-						if (me.ContractItemsStore.getAt(num)){
-							switch(TheTplItemType){
-								case "shdatefield" :
-									me.MainForm.getComponent("templateItems").
-										getComponent('TplItem_' + res[i]).setValue(
-											MiladiToShamsi(me.ContractItemsStore.getAt(num).data.ItemValue));
-									break;
-								default : 
-									me.MainForm.getComponent("templateItems").
-										getComponent('TplItem_' + res[i]).setValue(
-											me.ContractItemsStore.getAt(num).data.ItemValue);                                    
-							}
-						}
-					}                                
-				} 
-			}    */
-			            
+			return;			            
 		},
 		failure: function () {
 		}

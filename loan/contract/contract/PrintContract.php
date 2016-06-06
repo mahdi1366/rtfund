@@ -34,11 +34,7 @@ if (substr($CntObj->content, 0, 3) == CNTconfig::TplItemSeperator) {
 $st = '';
 for ($i = 0; $i < count($res); $i++) {
     if ($i % 2 != 0) {
-		if(!isset($ValuesStore[$res[$i]]))
-		{
-			 $st .= $ContractRecord [ $TplItemsStore[ $res[$i] ]["FieldName"] ];
-		}
-		else
+		if(isset($ValuesStore[$res[$i]]))
 		{
 			switch ($TplItemsStore[$res[$i]]["ItemType"]) {
 				case 'numberfield':
@@ -51,6 +47,10 @@ for ($i = 0; $i < count($res); $i++) {
 					$st .= DateModules::miladi_to_shamsi($ValuesStore[$res[$i]]);
 					break;
 			}
+		}
+		else if(isset($TplItemsStore[ $res[$i] ]["FieldName"]))
+		{
+			 $st .= $ContractRecord [ $TplItemsStore[ $res[$i] ]["FieldName"] ];
 		}
     } else {
         $st .= $res[$i];

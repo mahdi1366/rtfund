@@ -112,6 +112,55 @@ function DeletePersonShift(){
 	die();
 }
 
-function CreateCalendar(){}
+//..................................
+
+function GetAllHolidays() {
+	
+	$where = "";
+	$whereParam = array();
+	
+	if(!empty($_REQUEST["Year"]))
+	{
+		$year = $_REQUEST["Year"];
+		$StartDate = DateModules::shamsi_to_miladi($year. "-01-01", "-");
+		$EndDate = DateModules::shamsi_to_miladi($year . "-12-" . 
+			DateModules::DaysOfMonth($year ,12), "-");
+		
+		$where .= " AND TheDate between ? AND ?";
+		$whereParam[] = $StartDate;
+		$whereParam[] = $EndDate;	
+	}
+	
+	$temp = ATN_holidays::Get($where . dataReader::makeOrder(), $whereParam);
+
+	echo dataReader::getJsonData($temp->fetchAll(), $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveHoliday() {
+
+	$obj = new ATN_holidays();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+
+	if ($obj->HolidayID == "")
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteHoliday() {
+	
+	$obj = new ATN_holidays();
+	$obj->HolidayID = $_POST["HolidayID"];
+	$result = $obj->Remove();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
 
 ?>

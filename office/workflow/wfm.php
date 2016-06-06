@@ -59,7 +59,10 @@ $col->editor = ColumnEditor::TextField();
 
 $col = $dg->addColumn("پست مربوطه", "PostID", "string");
 $col->editor = ColumnEditor::ComboBox(
-		PdoDataAccess::runquery("select * from BSC_posts"), "PostID", "PostName","","", true);
+array_merge(
+	array(array("PostID"=>"-100", "PostName" => "ذینفع")), 
+	PdoDataAccess::runquery("select * from BSC_posts where IsActive='YES'")), 
+		"PostID", "PostName","","", true);
 $col->width = 170;
 
 $col = $dg->addColumn("شخص مربوطه", "PersonID", "string");

@@ -235,4 +235,17 @@ class BSC_ActDomain extends PdoDataAccess{
 	
 }
 
+class BSC_setting extends OperationClass
+{
+	const TableName = "BSC_setting";
+	const TableKey = "ParamID";
+	
+	public $ParamID;
+	public $SystemID;
+	public $ParamTitle;
+	public $ParamValues;
+	public $ParamDesc;
+	public $ParamValue;
+}
+
 ?>

@@ -16,10 +16,17 @@ $dg->addColumn("", "MissionSubject", "", true);
 $dg->addColumn("", "MissionStay", "", true);
 $dg->addColumn("", "GoMean", "", true);
 $dg->addColumn("", "ReturnMean", "", true);
+$dg->addColumn("", "GoMeanDesc", "", true);
+$dg->addColumn("", "ReturnMeanDesc", "", true);
 $dg->addColumn("", "OffType", "", true);
 $dg->addColumn("", "OffPersonID", "", true);
+$dg->addColumn("", "OffTypeDesc", "", true);
+$dg->addColumn("", "OffFullname", "", true);
+$dg->addColumn("", "SurveyFullname", "", true);
+$dg->addColumn("", "SurveyDate", "", true);
 
 $col = $dg->addColumn("درخواست کننده", "fullname");
+$col->renderer = "SurveyRequests.ReqRender";
 $col->width = 120;
 
 $col = $dg->addColumn("تاریخ درخواست", "ReqDate", GridColumn::ColumnType_datetime);
@@ -51,7 +58,6 @@ $col->width = 60;
 
 $dg->height = 500;
 $dg->width = 750;
-$dg->EnablePaging = false;
 $dg->autoExpandColumn = "details";
 $dg->DefaultSortField = "ReqDate";
 $dg->emptyTextOfHiddenColumns = true;
@@ -59,6 +65,11 @@ $dg->emptyTextOfHiddenColumns = true;
 $grid = $dg->makeGrid_returnObjects();
 
 ?>
+<style>
+	.infoTbl td{
+		padding : 4px;
+	}
+</style>
 <center>
     <form id="mainForm">
 		<div id="newDiv"></div> <br>
@@ -293,6 +304,20 @@ SurveyRequests.OperationRender = function(v,p,r)
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;float:left;height:16'></div>";
 	}	
+	if(r.data.ReqType == "MISSION" && r.data.ToDate)
+		return "<div align='center' title='چاپ حکم ماموریت' class='print' "+
+		"onclick='SurveyRequestsObject.PrintMission();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;float:right;height:16'></div>";
+}
+
+SurveyRequests.ReqRender = function(v,p,r)
+{
+	if(r.data.SurveyFullname)
+		p.tdAttr = "data-qtip='<table class=infoTbl>"+
+		"<tr><td>تایید کننده : </td><td><b>" + r.data.SurveyFullname + "</b></td></tr>" +
+		"<tr><td>تاریخ تایید : </td><td><b>" + MiladiToShamsi(r.data.SurveyDate) + "</b></td></tr></table>'";
+	return v;
 }
 
 SurveyRequests.prototype.ChangeStatus = function(mode){
@@ -336,9 +361,37 @@ SurveyRequests.ReqTypeRender = function(v,p,r){
 	switch(v)
 	{
 		case "CORRECT" :	return "فراموشی";
-		case "OFF" :		return "مرخصی";
-		case "MISSION" :	return "ماموریت";
+		case "OFF" :		
+			p.tdAttr = "data-qtip='<table class=infoTbl>"+
+				"<tr><td>نوع مرخصی : </td><td><b>" + r.data.OffTypeDesc + "</b></td></tr>" +
+				"<tr><td>جایگزین : </td><td><b>" + 
+					(!r.data.OffFullname ? "-" : r.data.OffFullname) + "</b>" + 
+				"</td></tr></table>'";
+			return "مرخصی";
+			
+		case "MISSION" :
+			p.tdAttr = "data-qtip='<table class=infoTbl>"+
+				"<tr><td>محل ماموریت :</td><td><b>" + 
+					(!r.data.MissionPlace ? "-" : r.data.MissionPlace) + "</b></td></tr>"+
+				"<tr><td>موضوع ماموریت :</td><td><b>" + 
+					(!r.data.MissionSubject ? "-" : r.data.MissionSubject ) + "</b></td></tr>"+
+				"<tr><td>محل اقامت :</td><td><b>" + 
+					(!r.data.MissionStay ? "-" : r.data.MissionStay) + "</b></td></tr>"+
+				"<tr><td>وسیله رفت :</td><td><b>" + 
+					(!r.data.GoMeanDesc ? "-" : r.data.MissionStay) + "</b></td></tr>"+
+				"<tr><td>وسیله برگشت :</td><td><b>" + 
+					(!r.data.ReturnMeanDesc ? "-" : r.data.ReturnMeanDesc) + "</b></td></tr>"+
+				"</table>'";	
+			return "ماموریت";
 	}
+	
+	
+}
+
+SurveyRequests.prototype.PrintMission = function()
+{
+	var record = this.grid.getSelectionModel().getLastSelected();
+	window.open(this.address_prefix + "PrintMission.php?RequestID=" + record.data.RequestID);
 }
 
 var SurveyRequestsObject = new SurveyRequests();	

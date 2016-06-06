@@ -70,7 +70,7 @@ Shift.prototype = {
 Shift.OperationRender = function(v,p,r)
 {
 	if(ShiftObject.RemoveAccess)	
-		return "<div align='center' title='حذف وام' class='remove' "+
+		return "<div align='center' title='حذف' class='remove' "+
 		"onclick='ShiftObject.DeleteShift();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
