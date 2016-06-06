@@ -416,11 +416,7 @@ Letter.prototype.SendWindowShow = function(){
 		params : {
 			ExtTabID : this.SendingWin.getEl().id,
 			parent : "LetterObject.SendingWin",
-			AfterSendHandler : function(){
-				framework.CloseTab(LetterObject.TabID);
-				if(typeof DraftLetterObject == "object")
-					DraftLetterObject.grid.getStore().load();
-			},
+			AfterSendHandler : "LetterObject.AfterSend" ,
 			
 			LetterID : this.LetterID
 		}
@@ -428,6 +424,11 @@ Letter.prototype.SendWindowShow = function(){
 	this.SaveLetter();
 }
 
+Letter.prototype.AfterSend = function(){
+	framework.CloseTab(LetterObject.TabID);
+		if(typeof DraftLetterObject == "object")
+			DraftLetterObject.grid.getStore().load();
+}
 
 </script>
 <center>

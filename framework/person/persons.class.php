@@ -115,6 +115,27 @@ class BSC_persons extends PdoDataAccess
 		
 	 	if( parent::update("BSC_persons",$this," PersonID=:l", array(":l" => $this->PersonID)) === false )
 	 		return false;
+		
+		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where ObjectID=? AND TafsiliType=1", array($this->PersonID));
+		require_once '../../accounting/baseinfo/baseinfo.class.php';
+		if(count($dt) == 0)
+		{
+			$obj = new ACC_tafsilis();
+			$obj->ObjectID = $this->PersonID;
+			$obj->TafsiliCode = $this->PersonID;
+			$obj->TafsiliDesc = $this->IsReal == "YES" ? $this->fname . " " . $this->lname : $this->CompanyName;
+			$obj->TafsiliType = "1";
+			$obj->AddTafsili();
+		}
+		else
+		{
+			$obj = new ACC_tafsilis($dt[0]["TafsiliID"]);
+			$obj->TafsiliCode = $this->PersonID;
+			$obj->TafsiliDesc = $this->IsReal == "YES" ? $this->fname . " " . $this->lname : $this->CompanyName;
+			$obj->EditTafsili();
+		}
+		
+		
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;

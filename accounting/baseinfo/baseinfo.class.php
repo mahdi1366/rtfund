@@ -316,8 +316,9 @@ class ACC_tafsilis extends PdoDataAccess{
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery_fetchMode(
-			"select t.*
-				from ACC_tafsilis t
+			"select t.* from ACC_tafsilis t
+				left join BSC_persons p on(t.TafsiliType=1 AND t.ObjectID=p.PersonID)
+
 				where " . $where, $param);
 	}
 	
