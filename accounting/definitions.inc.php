@@ -21,6 +21,7 @@ define("DOCTYPE_SAVING_OUT", "12");
 define("TAFTYPE_PERSONS", "1");
 define("TAFTYPE_YEARS", "2");
 define("TAFTYPE_BANKS", "3");
+define("TAFTYPE_SUBAGENT", "4");
 
 define("COSTID_ShortDeposite", "66");
 define("COSTID_Todiee", "63");

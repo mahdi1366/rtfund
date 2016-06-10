@@ -188,9 +188,7 @@ MyLetter.prototype.SendLetter = function(){
 		params : {
 			ExtTabID : this.SendingWin.getEl().id,
 			parent : "MyLetterObject.SendingWin",
-			AfterSendHandler : function(){
-				MyLetterObject.grid.getStore().load();
-			},
+			AfterSendHandler : "MyLetterObject.AfterSend",
 			LetterID : this.grid.getSelectionModel().getLastSelected().data.LetterID,
 			SendID : this.grid.getSelectionModel().getLastSelected().data.SendID
 		}
@@ -290,6 +288,11 @@ MyLetter.prototype.ShowHistory = function(){
 			LetterID : this.grid.getSelectionModel().getLastSelected().data.LetterID
 		}
 	});
+}
+
+MyLetter.prototype.AfterSend = function(){
+
+	this.grid.getStore().load();
 }
 
 </script>

@@ -31,7 +31,7 @@ function AddTraffic(){
 
 function GetMyRequests(){
 	
-	$dt = ATN_requests::Get(" AND PersonID=?" . dataReader::makeOrder(), 
+	$dt = ATN_requests::Get(" AND t.PersonID=?" . dataReader::makeOrder(), 
 		array($_SESSION["USER"]["PersonID"]));
 	$result = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	

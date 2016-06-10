@@ -2,23 +2,12 @@
 
 /*
 
-typeID 20
+ALTER TABLE `krrtfir_rtfund`.`LON_requests` MODIFY COLUMN `imp_GirandehCode` INTEGER;
 
-ALTER TABLE `krrtfir_rtfund`.`ATN_traffic` ADD COLUMN `RequestID` INTEGER UNSIGNED AFTER `IsActive`;
 
 BSC_setting
- * ATN_holidays
- * 
-
-ALTER TABLE `krrtfir_rtfund`.`WFM_FlowSteps` ADD COLUMN `customer` INTEGER UNSIGNED NOT NULL AFTER `IsOuter`;
-ALTER TABLE `krrtfir_rtfund`.`WFM_FlowSteps` MODIFY COLUMN `customer` INTEGER UNSIGNED;
-
-ALTER TABLE `krrtfir_rtfund`.`BSC_posts` ADD COLUMN `IsActive` ENUM('YES','NO') NOT NULL DEFAULT 'YES' AFTER `PostName`;
-
-ALTER TABLE `krrtfir_rtfund`.`WFM_FlowSteps` MODIFY COLUMN `PostID` INTEGER DEFAULT NULL;
-
- * 
- * 
+ 
+ 
 
 insert into DMS_packages(BranchID,PackNo,PersonID)
 select BranchID,@i:=@i+1,LoanPersonID from

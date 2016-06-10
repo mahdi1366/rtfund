@@ -143,6 +143,16 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
 			return false;
 		}
+		$SubAgetnTafsili = "";
+		if(!empty($ReqObj->SubAgentID))
+		{
+			$SubAgetnTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
+			if(!$SubAgetnTafsili)
+			{
+				ExceptionHandler::PushException("تفصیلی زیر واحد سرمایه گذار یافت نشد.[" . $ReqObj->SubAgentID . "]");
+				return false;
+			}
+		}
 	}
 	$amountArr = array();
 	$curYearTafsili = FindTafsiliID($curYear, TAFTYPE_YEARS);
@@ -208,7 +218,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 		if($dt[0][0]*1 < $PayAmount)
 		{
 			ExceptionHandler::PushException("حساب تودیعی این مشتری"
-					. number_format($dt[0][0]) . " ریال می باشد که کمتر از مبلغ این مرحله از وام می باشد");
+					. number_format($dt[0][0]) . " ریال می باشد که کمتر از مبلغ این مرحله از پرداخت وام می باشد");
 			return false;
 		}
 	}
@@ -320,6 +330,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 			$itemObj->details = "بابت اختلاف کارمزد تنفس " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $ReqPersonTafsili;
+			if($SubAgetnTafsili != "")
+			{
+				$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
+				$itemObj->TafsiliID2 = $SubAgetnTafsili;
+			}
 			if(!$itemObj->Add($pdo))
 			{
 				print_r(ExceptionHandler::PopAllExceptions());
@@ -337,6 +352,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->details = "بابت سهم کارمزد تنفس " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
 			$itemObj->TafsiliID = $ReqPersonTafsili;
+			if($SubAgetnTafsili != "")
+			{
+				$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
+				$itemObj->TafsiliID2 = $SubAgetnTafsili;
+			}
 			if(!$itemObj->Add($pdo))
 			{
 				print_r(ExceptionHandler::PopAllExceptions());
@@ -378,6 +398,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 				$PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID; 
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $ReqPersonTafsili;
+			if($SubAgetnTafsili != "")
+			{
+				$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
+				$itemObj->TafsiliID2 = $SubAgetnTafsili;
+			}
 			$itemObj->Add($pdo);
 		}
 	}
@@ -407,6 +432,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 			$itemObj->details = "بابت اختلاف کارمزد " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $ReqPersonTafsili;
+			if($SubAgetnTafsili != "")
+			{
+				$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
+				$itemObj->TafsiliID2 = $SubAgetnTafsili;
+			}
 			$itemObj->Add($pdo);
 		}
 	}
@@ -421,6 +451,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 			$itemObj->details = "بابت سهم کارمزد " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $ReqPersonTafsili;
+			if($SubAgetnTafsili != "")
+			{
+				$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
+				$itemObj->TafsiliID2 = $SubAgetnTafsili;
+			}
 			$itemObj->Add($pdo);
 		}
 	}*/
@@ -458,6 +493,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 		$itemObj->details = "بابت پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
+		if($SubAgetnTafsili != "")
+		{
+			$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
+			$itemObj->TafsiliID2 = $SubAgetnTafsili;
+		}
 		$itemObj->Add($pdo);
 
 		unset($itemObj->ItemID);
@@ -674,6 +714,16 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
 			return false;
 		}
+		$SubAgetnTafsili = "";
+		if(!empty($ReqObj->SubAgentID))
+		{
+			$SubAgetnTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
+			if(!$SubAgetnTafsili)
+			{
+				ExceptionHandler::PushException("تفصیلی زیر واحد سرمایه گذار یافت نشد.[" . $ReqObj->SubAgentID . "]");
+				return false;
+			}
+		}
 	}
 	/*if($LoanMode == "Supporter")
 	{
@@ -802,6 +852,11 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 			$itemObj->CreditorAmount = $amount;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $ReqPersonTafsili;
+			if($SubAgetnTafsili != "")
+			{
+				$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
+				$itemObj->TafsiliID2 = $SubAgetnTafsili;
+			}
 			if(!$itemObj->Add($pdo))
 			{
 				ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
@@ -841,6 +896,11 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 		$itemObj->CreditorAmount = $PartObj->PartAmount + $WageSum - $PaidAmount ;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
+		if($SubAgetnTafsili != "")
+		{
+			$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
+			$itemObj->TafsiliID2 = $SubAgetnTafsili;
+		}
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
@@ -855,6 +915,11 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
+		if($SubAgetnTafsili != "")
+		{
+			$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
+			$itemObj->TafsiliID2 = $SubAgetnTafsili;
+		}
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد ردیف سند");
@@ -929,6 +994,16 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
 			return false;
 		}
+		$SubAgetnTafsili = "";
+		if(!empty($ReqObj->SubAgentID))
+		{
+			$SubAgetnTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
+			if(!$SubAgetnTafsili)
+			{
+				ExceptionHandler::PushException("تفصیلی زیر واحد سرمایه گذار یافت نشد.[" . $ReqObj->SubAgentID . "]");
+				return false;
+			}
+		}
 	}
 	//----------------- add Doc items ------------------------
 		
@@ -984,6 +1059,11 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 		$itemObj->CreditorAmount = $PayObj->PayAmount;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
+		if($SubAgetnTafsili != "")
+		{
+			$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
+			$itemObj->TafsiliID2 = $SubAgetnTafsili;
+		}
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد سند");
@@ -998,6 +1078,11 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
+		if($SubAgetnTafsili != "")
+		{
+			$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
+			$itemObj->TafsiliID2 = $SubAgetnTafsili;
+		}
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد سند");

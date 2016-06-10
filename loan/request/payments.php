@@ -141,7 +141,6 @@ PartPayment.prototype.SavePartPayment = function(record){
 		success: function(response){
 			mask.hide();
 			var st = Ext.decode(response.responseText);
-			PartPaymentObject.grid.getStore().load();
 			if(!st.success)
 			{
 				if(st.data == "")
@@ -149,6 +148,8 @@ PartPayment.prototype.SavePartPayment = function(record){
 				else
 					Ext.MessageBox.alert("Error",st.data);
 			}
+			else
+				PartPaymentObject.grid.getStore().load();
 		},
 		failure: function(){}
 	});

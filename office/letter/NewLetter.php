@@ -416,8 +416,7 @@ Letter.prototype.SendWindowShow = function(){
 		params : {
 			ExtTabID : this.SendingWin.getEl().id,
 			parent : "LetterObject.SendingWin",
-			AfterSendHandler : "LetterObject.AfterSend" ,
-			
+			AfterSendHandler : "LetterObject.AfterSend" ,			
 			LetterID : this.LetterID
 		}
 	});
@@ -425,6 +424,7 @@ Letter.prototype.SendWindowShow = function(){
 }
 
 Letter.prototype.AfterSend = function(){
+	
 	framework.CloseTab(LetterObject.TabID);
 		if(typeof DraftLetterObject == "object")
 			DraftLetterObject.grid.getStore().load();

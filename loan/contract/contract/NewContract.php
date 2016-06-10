@@ -273,7 +273,7 @@ function NewContract() {
 	CKEDITOR.replace('ContractEditor');
 	
 	this.TplItemsStore = new Ext.data.Store({
-		fields: ['TemplateItemID',"TemplateID", 'ItemName', 'ItemType'],
+		fields: ['TemplateItemID',"TemplateID", 'ItemName', 'ItemType', "ComboValues"],
 		proxy: {
 			type: 'jsonp',
 			url: this.address_prefix + "../templates/templates.data.php?task=selectTemplateItems",
@@ -427,13 +427,38 @@ NewContract.prototype.ShowTplItemsForm = function (TemplateID, LoadValues) {
 				record = me.TplItemsStore.getAt(i);
 				if(record.data.ItemType == "")
 					continue;
-				me.MainForm.getComponent("templateItems").add({
-					xtype: record.data.ItemType,
-					itemId: 'TplItem_' + record.data.TemplateItemID,
-					name: 'TplItem_' + record.data.TemplateItemID,
-					fieldLabel : record.data.ItemName,
-					hideTrigger : record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield' ? true : false
-				});
+				
+				if(record.data.ItemType == "combo")
+				{
+					arr = record.data.ComboValues.split("#");
+					data = [];
+					for(j=0;j<arr.length;j++)
+						data.push([ arr[j] ]);
+					
+					me.MainForm.getComponent("templateItems").add({
+						store : new Ext.data.SimpleStore({
+							fields : ['value'],
+							data : data
+						}),
+						xtype: record.data.ItemType,
+						valueField : "value",
+						displayField : "value",
+						itemId: 'TplItem_' + record.data.TemplateItemID,
+						name: 'TplItem_' + record.data.TemplateItemID,
+						fieldLabel : record.data.ItemName
+					});
+				}
+				else
+				{
+					me.MainForm.getComponent("templateItems").add({
+						xtype: record.data.ItemType,
+						itemId: 'TplItem_' + record.data.TemplateItemID,
+						name: 'TplItem_' + record.data.TemplateItemID,
+						fieldLabel : record.data.ItemName,
+						hideTrigger : record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield' ? true : false
+					});
+				}
+				
 				if (LoadValues > 0) {
 					var num = me.ContractItemsStore.find('TemplateItemID', record.data.TemplateItemID);                                    
 					if (me.ContractItemsStore.getAt(num)){

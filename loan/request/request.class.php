@@ -151,7 +151,7 @@ class LON_ReqParts extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select rp.*,r.StatusID,r.LoanPersonID, r.imp_VamCode
+			select rp.*,r.StatusID,r.LoanPersonID,r.ReqPersonID, r.imp_VamCode
 			from LON_ReqParts rp join LON_requests r using(RequestID)
 			where " . $where, $param);
 	}

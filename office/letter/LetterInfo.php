@@ -293,10 +293,7 @@ LetterInfo.prototype.SendWindowShow = function(){
 		params : {
 			ExtTabID : this.SendingWin.getEl().id,
 			parent : "LetterInfoObject.SendingWin",
-			AfterSendHandler : function(){
-				framework.CloseTab(LetterInfoObject.TabID);
-			},
-			
+			AfterSendHandler : "LetterInfoObject.AfterSend" ,			
 			LetterID : this.LetterID
 		}
 	});
@@ -371,6 +368,11 @@ LetterInfo.OpenRefLetter = function(LetterID){
 	framework.OpenPage("/office/letter/LetterInfo.php", "مشخصات نامه", {
 		LetterID : LetterID
 	});
+}
+
+LetterInfo.prototype.AfterSend = function(){
+	
+	framework.CloseTab(LetterInfoObject.TabID);
 }
 
 </script>
