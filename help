@@ -10,3 +10,8 @@ if(typeof DraftLetterObject == "object") ...
 p.tdAttr = "data-qtip='text'"
 --------------------------------------------------------------------------------
 {name : "fullDesc",	convert : function(value,record){} }
+--------------------------------------------------------------------------------
+store.getProxy().getReader().jsonData.message;
+--------------------------------------------------------------------------------
+xtype : "displayfield",
+renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}

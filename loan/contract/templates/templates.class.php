@@ -72,6 +72,7 @@ class CNT_TemplateItems extends OperationClass {
 	public $TemplateID;
     public $ItemName;
     public $ItemType;
+	public $ComboValues;
     
     public function __construct($id = ""){       
         parent::__construct($id) ;       

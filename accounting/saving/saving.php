@@ -120,7 +120,7 @@ function Saving()
 	//.......................................................
 		
 	this.PartPanel = new Ext.form.FieldSet({
-		title: "انتخاب وام",
+		title: "انتخاب فرد",
 		width: 500,
 		renderTo : this.get("div_form"),
 		frame: true,

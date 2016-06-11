@@ -37,15 +37,11 @@ for ($i = 0; $i < count($res); $i++) {
 		if(isset($ValuesStore[$res[$i]]))
 		{
 			switch ($TplItemsStore[$res[$i]]["ItemType"]) {
-				case 'numberfield':
-					$st .= (string) $ValuesStore[$res[$i]];
-					break;
-				case 'textfield':
-					$st .= $ValuesStore[$res[$i]];
-					break;
 				case 'shdatefield':
 					$st .= DateModules::miladi_to_shamsi($ValuesStore[$res[$i]]);
 					break;
+				default : 
+					$st .= $ValuesStore[$res[$i]];
 			}
 		}
 		else if(isset($TplItemsStore[ $res[$i] ]["FieldName"]))
@@ -59,7 +55,7 @@ for ($i = 0; $i < count($res); $i++) {
 ?>
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>	
-	<link rel="stylesheet" type="text/css" href="../../generalUI/fonts/fonts.css">
+	<link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css">
     <style media="print">
         .noPrint {display:none;}
     </style>

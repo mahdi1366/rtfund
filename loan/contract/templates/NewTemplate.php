@@ -25,6 +25,10 @@ $col->editor = ColumnEditor::TextField();
 $col = $dg->addColumn("نوع", "ItemType");
 $col->editor = "this.ItemTypeCombo";
 
+$col = $dg->addColumn("مقادیر لیست", "ComboValues");
+$col->editor = ColumnEditor::TextField();
+$col->width = 100;
+
 $col = $dg->addColumn("حذف", "TemplateItemID", "string");
 $col->sortable = false;
 $col->renderer = "function(v,p,r){return NewTemplate.deleteRender(v,p,r);}";
@@ -74,7 +78,8 @@ function NewTemplate() {
 				{"id": "currencyfield", "name": "مبلغ"},
 				{"id": "textfield", "name": "متن کوتاه"},
 				{"id": "textarea", "name": "متن بلند"},
-				{"id": "shdatefield", "name": "تاریخ"}
+				{"id": "shdatefield", "name": "تاریخ"},
+				{"id": "combo", "name": "لیستی"}
 			]
 		}),
 		emptyText: 'انتخاب ...',
@@ -88,6 +93,14 @@ function NewTemplate() {
 	this.grid.plugins[0].on("beforeedit", function(editor,e){
 		if(e.record.data.TemplateID == "0")
 			return false;
+	});
+	this.grid.addDocked({
+		xtype : "toolbar", 
+		dock : "bottom", 
+		items :[{
+			xtype : "container",
+			html : "توجه : لطفا مقادیر مختلف لیست را با # جدا کنید"
+		}]
 	});
 	
 	this.BuildForms();

@@ -24,6 +24,10 @@ function RequestInfo(){
 	this.mask.show();
 	
 	this.grid = <?= $grid ?>;
+	this.grid.getStore().on("load", function(){
+		if(this.getCount() > 0)
+			RequestInfoObject.grid.getSelectionModel().select(0);
+	});
 	this.grid.on("select", function(){
 		record = RequestInfoObject.grid.getSelectionModel().getLastSelected();
 		RequestInfoObject.PartsPanel.loadRecord(record);
@@ -66,7 +70,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 				
 				me = RequestInfoObject;
 				
-				if(me.RequestRecord != null)
+				if(me.RequestRecord != null && me.RequestRecord.RequestID == me.RequestID)
 				{
 					me.RequestRecord = this.getAt(0);
 					me.CustomizeForm(me.RequestRecord);
@@ -78,9 +82,6 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 				record = this.getAt(0);
 				me.RequestRecord = record;
 				me.companyPanel.loadRecord(record);
-				//..........................................................
-				if(me.grid.getStore().getCount() > 0)
-					me.grid.getSelectionModel().select(0);
 				//..........................................................
 				oldInfo = record.data.imp_VamCode != null ? "شماره وام سیستم قدیم : " + 
 					record.data.imp_VamCode + "[پرونده : " + record.data.imp_GirandehCode + "]" : "";
@@ -133,8 +134,6 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 							PersonID : record.data.ReqPersonID
 						},
 						callback : function(){
-							if(this.getCount() > 0)
-								me.companyPanel.down("[itemId=cmp_subAgent]").setValue(this.getAt(0).data.SubAgentID);
 						}
 					});					
 				}				
@@ -1155,7 +1154,7 @@ RequestInfo.prototype.DeletePart = function(){
 
 RequestInfo.prototype.LoadSummary = function(record){
 
-	if(this.RequestRecord.data.ReqPersonID == "<?= SHEKOOFAI ?>")
+	if(record.data.ReqPersonID == "<?= SHEKOOFAI ?>")
 		return this.LoadSummarySHRTFUND(record, null);
 
 
