@@ -158,12 +158,14 @@ Menu.prototype.EditMenu = function(e, GroupID)
 	{
 		this.grid.down("[itemId=GroupDesc]").setValue();
 		this.grid.down("[itemId=GroupOrder]").setValue();
+		this.grid.down("[itemId=GroupIcon]").setValue();
 		this.grid.down("[itemId=GroupID]").setValue();
 		return;
 	}
 	record = this.grid.getStore().getAt(this.grid.getStore().find("GroupID", GroupID));
 	this.grid.down("[itemId=GroupDesc]").setValue(record.data.GroupDesc);
 	this.grid.down("[itemId=GroupOrder]").setValue(record.data.GroupOrder);
+	this.grid.down("[itemId=GroupIcon]").setValue(record.data.GroupIcon);
 	this.grid.down("[itemId=GroupID]").setValue(GroupID);
 	e.stopImmediatePropagation();	
 }
@@ -181,7 +183,8 @@ Menu.prototype.SaveGroup = function()
 			ParentID : 0,
 			MenuID :  this.grid.down("[itemId=GroupID]").getValue(),
 			MenuDesc : this.grid.down("[itemId=GroupDesc]").getValue(),
-			ordering : this.grid.down("[itemId=GroupOrder]").getValue()
+			ordering : this.grid.down("[itemId=GroupOrder]").getValue(),
+			icon : this.grid.down("[itemId=GroupIcon]").getValue()
 		},
 
 		success : function(response)
@@ -191,6 +194,7 @@ Menu.prototype.SaveGroup = function()
 			MenuObject.grid.down("[itemId=GroupDesc]").setValue();
 			MenuObject.grid.down("[itemId=GroupID]").setValue();
 			MenuObject.grid.down("[itemId=GroupOrder]").setValue();
+			MenuObject.grid.down("[itemId=GroupIcon]").setValue();
 		}
 	});
 }

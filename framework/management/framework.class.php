@@ -78,14 +78,17 @@ class FRW_Menus extends PdoDataAccess {
 	static function GetAllMenus($SystemID) {
 		$query = "
 			select * from (
-				select g.MenuID as GroupID,g.MenuDesc GroupDesc, g.ordering GroupOrder,g.SystemID GroupSystemID, m.*
+				select g.MenuID as GroupID,g.MenuDesc GroupDesc, g.ordering GroupOrder,
+					g.icon GroupIcon,
+					g.SystemID GroupSystemID, m.*
 				from FRW_menus g 
 				left join FRW_menus m on(g.MenuID=m.ParentID)
 				where g.parentID=0 AND m.MenuID is null AND g.SystemID=:s
 
 				union all
 
-				select g.MenuID as GroupID, g.MenuDesc GroupDesc,g.ordering GroupOrder,g.SystemID GroupSystemID, m.*
+				select g.MenuID as GroupID, g.MenuDesc GroupDesc,g.ordering GroupOrder,
+					g.icon GroupIcon,g.SystemID GroupSystemID, m.*
 				from FRW_menus m
 				join FRW_menus g on(m.ParentID=g.MenuID)
 				where m.ParentID>0 AND m.SystemID=:s 
@@ -149,7 +152,7 @@ class FRW_access extends PdoDataAccess {
 	static function getAccessMenus($SystemID) {
 		
 		return parent::runquery("
-			select g.MenuID GroupID, g.MenuDesc GroupDesc, m.*, s.*
+			select g.MenuID GroupID, g.MenuDesc GroupDesc, g.icon GroupIcon, m.*, s.*
 			from FRW_menus m 
 			join FRW_menus g on(m.ParentID=g.MenuID)
 			join FRW_systems s on(m.SystemID=s.SystemID)

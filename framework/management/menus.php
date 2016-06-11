@@ -16,6 +16,7 @@ $dg->addColumn("", "MenuID", "", true);
 $dg->addColumn("", "SystemID", "", true);
 $dg->addColumn("", "GroupSystemID", "", true);
 $dg->addColumn("", "GroupOrder", "", true);
+$dg->addColumn("", "GroupIcon", "", true);
 
 $dg->EnableGrouping = true;
 $dg->DefaultGroupField = "GroupID";
@@ -25,7 +26,8 @@ $dg->groupHeaderTpl = " <table class=infoTbl width=100% >" .
 				"style=background-repeat:no-repeat;background-position:center;cursor:pointer;width:100%;height:16></div></td>" .
 			"<td width=20px><div title=ویرایش onclick=MenuObject.EditMenu(event,{[values.rows[0].data.GroupID]}); class=edit " .
 				"style=background-repeat:no-repeat;background-position:center;cursor:pointer;width:100%;height:16></div></td>" .
-			"<td>منوی اصلی : <span class=blueText>{[values.rows[0].data.GroupDesc]} [ ترتیب : {[values.rows[0].data.GroupOrder]} ]</span>".
+			"<td>منوی اصلی : <span class=blueText>{[values.rows[0].data.GroupDesc]} [ ترتیب : {[values.rows[0].data.GroupOrder]} ] " .
+			"[ icon : {[values.rows[0].data.GroupIcon]} ]</span>".
 		"</td><td  width=20px>" .
 			"<div title=حذف onclick=MenuObject.DeleteMenu({[values.rows[0].data.GroupID]},event); class=remove " .
 				"style=background-repeat:no-repeat;background-position:center;cursor:pointer;width:100%;height:16></div>" . 
@@ -62,9 +64,11 @@ $col->align = "center";
 
 $dg->addObject('
 	{text : "عنوان منوی اصلی : "},
-	{xtype: "textfield",itemId: "GroupDesc",width: 200, enableKeyEvents: true},
-	{text : "ترتیب : "},
+	{xtype: "textfield",itemId: "GroupDesc",width: 120, enableKeyEvents: true},
+	{xtype: "displayfield",text : "ترتیب : "},
 	{xtype: "textfield",itemId: "GroupOrder",width: 100, enableKeyEvents: true},
+	{xtype: "displayfield",text : "آیکون : "},
+	{xtype: "textfield",itemId: "GroupIcon",width: 100, enableKeyEvents: true},
 	{xtype: "hidden",itemId: "GroupID", enableKeyEvents: true},
 	{text : "", handler : function(){ MenuObject.EditMenu(null,null);}, iconCls: "clear"},
 	{text : "ذخیره منوی اصلی", handler : function(){ MenuObject.SaveGroup();}, iconCls: "save"}');

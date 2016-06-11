@@ -12,11 +12,11 @@ $menuStr = "";
 
 foreach($systems as $sysRow)
 {
-	$menuStr .= "{text: '" . $sysRow["SysName"] . "'";
+	$menuStr .= "{text: '" . $sysRow["SysName"] . "',scale: 'medium',icon : 'icons/app.png'";
 	
 	$menus = FRW_access::getAccessMenus($sysRow["SystemID"]);
 	if(count($menus) > 0)
-		$menuStr .= ",menu : {plain: true,xtype : 'menu',items:[";
+		$menuStr .= ",menu : {xtype : 'menu',items:[";
 	
 	//........................................................
 	$groupArr = array();
@@ -29,12 +29,16 @@ foreach($systems as $sysRow)
 				$menuStr = substr($menuStr, 0, strlen($menuStr) - 1);
 				$menuStr .= "]},";
 			}
-			$menuStr .= "{text : '" . $row["GroupDesc"] . "', menu :[";
+			$icon = $row['GroupIcon'];
+			$icon = (!$icon) ? "/generalUI/ext4/resources/themes/icons/star.gif" : 
+				"/generalUI/ext4/resources/themes/icons/$icon";
+			$menuStr .= "{text : '" . $row["GroupDesc"] . "', icon: '" . $icon . "', menu :[";
 			$groupArr[$row["GroupID"] ] = true;
 		}
 		
 		$icon = $row['icon'];
-		$icon = (!$icon) ? "/generalUI/ext4/resources/themes/icons/star.gif" : "/generalUI/ext4/resources/themes/icons/$icon";
+		$icon = (!$icon) ? "/generalUI/ext4/resources/themes/icons/star.gif" : 
+			"/generalUI/ext4/resources/themes/icons/$icon";
 		$link_path = "/" .$row['SysPath'] . "/" . $row['MenuPath'];
 		//--------- extract params --------------
 		$param = "{";
@@ -96,6 +100,7 @@ if ($menuStr != "") {
 		</div>
 
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/icons.css" />
+		<link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" />
 		<script type="text/javascript" src="/generalUI/ext4/resources/ext-all.js"></script>
 
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-rtl.css" />
@@ -136,8 +141,6 @@ if ($menuStr != "") {
 
 	function FrameWorkClass()
 	{
-		//this.items = new Array(< ?= $menuStr ?>);
-
 		this.ExpireInterval = setInterval(function(){
 
 			Ext.Ajax.request({
@@ -177,9 +180,16 @@ if ($menuStr != "") {
 				xtype : 'panel',
 				border : false,
 				layout: 'fit',
-				style : "margin-bottom:10px",
-				html : "<br><?= SoftwareName ?><hr>",
-				bbar : [<?= $menuStr ?>]
+				contentEl : document.getElementById("framework_banner"),
+				bbar : [<?= $menuStr ?>, '->', {
+					xtype : "button",
+					icon : "icons/home.png",
+					scale: 'medium'					
+				},{
+					xtype : "button",
+					icon : "icons/exit.png",
+					scale: 'medium'					
+				}]
 				
 			}]
 		});
@@ -188,11 +198,11 @@ if ($menuStr != "") {
 		
 		this.EastPanel = new Ext.panel.Panel({
 			region: 'east',
-			split: true,
 			collapsible: true,			  
-			width: 185,
-			minSize: 185,
-			maxSize: 200,
+			width: 180,
+			minSize: 180,
+			maxSize: 180,
+			resizable : false,
 			fill: true,	  
 			bodyStyle : "text-align:center",
 			defaults : {
@@ -201,13 +211,18 @@ if ($menuStr != "") {
 			items : [
 			{
 				xtype : "container",
-				width : 185,
-				contentEl : document.getElementById("clock")
+				width: 183,
+				html : '<canvas id=canvas width=90px height=90px></canvas>'
 			},
-			new Ext.picker.SHDate(),
+			new Ext.picker.SHDate({
+				border : false
+			}),
 			{
-				xtype : "fieldset",
-				contentEl : document.getElementById("clock")
+				xtype : "container",
+				contentEl : document.getElementById("framework_UserDiv")
+			},{
+				xtype : "container",
+				contentEl : document.getElementById("framework_taskDiv")				
 			}]
 		});
 		
@@ -220,13 +235,8 @@ if ($menuStr != "") {
 		});
 		
 		//----------------------------------------------------------
-		
-		this.canvas = document.getElementById("canvas");
-		this.ctx = this.canvas.getContext("2d");
-		this.radius = this.canvas.height / 2;
-		this.ctx.translate(this.radius, this.radius);
-		this.radius = this.radius * 0.90;
-		setInterval(this.drawClock, 1000);
+				
+		setInterval(this.showClock, 1000);
 	}
 
 	FrameWorkClass.prototype.OpenPage = function(itemURL, itemTitle, params)
@@ -340,82 +350,148 @@ if ($menuStr != "") {
 	FrameWorkClass.SystemLoad = function(){};
 	
 	//..........................................................................
+	
+	FrameWorkClass.prototype.showClock = function() {
 
-	FrameWorkClass.prototype.drawClock = function() {
-		
-		framework.drawFace(framework.ctx, framework.radius);
-		framework.drawNumbers(framework.ctx, framework.radius);
-		framework.drawTime(framework.ctx, framework.radius);
-	}
+            // DEFINE CANVAS AND ITS CONTEXT.
+            var canvas = document.getElementById('canvas');
+            var ctx = canvas.getContext('2d');
 
-	FrameWorkClass.prototype.drawFace = function(ctx, radius) {
-		var grad;
-		ctx.beginPath();
-		ctx.arc(0, 0, radius, 0, 2*Math.PI);
-		ctx.fillStyle = 'white';
-		ctx.fill();
-		grad = ctx.createRadialGradient(0,0,radius*0.95, 0,0,radius*1.05);
-		grad.addColorStop(0, 'white');
-		grad.addColorStop(0, '#333');
-		grad.addColorStop(0.5, 'white');
-		grad.addColorStop(1, '#333');
-		ctx.strokeStyle = grad;
-		ctx.lineWidth = radius*0.1;
-		ctx.stroke();
-		ctx.beginPath();
-		ctx.arc(0, 0, radius*0.1, 0, 2*Math.PI);
-		ctx.fillStyle = '#333';
-		ctx.fill();
-	}
+            var date = new Date;
+            var angle;
+            var secHandLength = 30;
 
-	FrameWorkClass.prototype.drawNumbers = function(ctx, radius) {
-	var ang;
-	var num;
-	ctx.font = radius*0.15 + "px arial";
-	ctx.textBaseline="middle";
-	ctx.textAlign="center";
-	for(num = 1; num < 13; num++){
-		ang = num * Math.PI / 6;
-		ctx.rotate(ang);
-		ctx.translate(0, -radius*0.85);
-		ctx.rotate(-ang);
-		ctx.fillText(num.toString(), 0, 0);
-		ctx.rotate(ang);
-		ctx.translate(0, radius*0.85);
-		ctx.rotate(-ang);
-	}
-	}
+            // CLEAR EVERYTHING ON THE CANVAS. RE-DRAW NEW ELEMENTS EVERY SECOND.
+            ctx.clearRect(0, 0, canvas.width, canvas.height);        
 
-	FrameWorkClass.prototype.drawTime = function(ctx, radius){
-		var now = new Date();
-		var hour = now.getHours();
-		var minute = now.getMinutes();
-		var second = now.getSeconds();
-		//hour
-		hour=hour%12;
-		hour=(hour*Math.PI/6)+
-		(minute*Math.PI/(6*60))+
-		(second*Math.PI/(360*60));
-		this.drawHand(ctx, hour, radius*0.5, radius*0.07);
-		//minute
-		minute=(minute*Math.PI/30)+(second*Math.PI/(30*60));
-		this.drawHand(ctx, minute, radius*0.8, radius*0.07);
-		// second
-		second=(second*Math.PI/30);
-		this.drawHand(ctx, second, radius*0.9, radius*0.02);
-	}
+            OUTER_DIAL1();
+            OUTER_DIAL2();
+            CENTER_DIAL();
+            MARK_THE_HOURS();
+            MARK_THE_SECONDS();
 
-	FrameWorkClass.prototype.drawHand = function(ctx, pos, length, width) {
-		ctx.beginPath();
-		ctx.lineWidth = width;
-		ctx.lineCap = "round";
-		ctx.moveTo(0,0);
-		ctx.rotate(pos);
-		ctx.lineTo(0, -length);
-		ctx.stroke();
-		ctx.rotate(-pos);
-	}
+            SHOW_SECONDS();
+            SHOW_MINUTES();
+            SHOW_HOURS();
 
+            function OUTER_DIAL1() {
+                ctx.beginPath();
+                ctx.arc(canvas.width / 2, canvas.height / 2, secHandLength + 10, 0, Math.PI * 2);
+                ctx.strokeStyle = '#92949C';
+                ctx.stroke();
+            }
+            function OUTER_DIAL2() {
+                ctx.beginPath();
+                ctx.arc(canvas.width / 2, canvas.height / 2, secHandLength + 7, 0, Math.PI * 2);
+                ctx.strokeStyle = '#929BAC';
+                ctx.stroke();
+            }
+            function CENTER_DIAL() {
+                ctx.beginPath();
+                ctx.arc(canvas.width / 2, canvas.height / 2, 2, 0, Math.PI * 2);
+                ctx.lineWidth = 3;
+                ctx.fillStyle = '#353535';
+                ctx.strokeStyle = '#0C3D4A';
+                ctx.stroke();
+            }
+
+            function MARK_THE_HOURS() {
+
+                for (var i = 0; i < 12; i++) {
+                    angle = (i - 3) * (Math.PI * 2) / 12;       // THE ANGLE TO MARK.
+                    ctx.lineWidth = 1;            // HAND WIDTH.
+                    ctx.beginPath();
+
+                    var x1 = (canvas.width / 2) + Math.cos(angle) * (secHandLength);
+                    var y1 = (canvas.height / 2) + Math.sin(angle) * (secHandLength);
+                    var x2 = (canvas.width / 2) + Math.cos(angle) * (secHandLength - (secHandLength / 7));
+                    var y2 = (canvas.height / 2) + Math.sin(angle) * (secHandLength - (secHandLength / 7));
+
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+
+                    ctx.strokeStyle = '#466B76';
+                    ctx.stroke();
+                }
+            }
+
+            function MARK_THE_SECONDS() {
+
+                for (var i = 0; i < 60; i++) {
+                    angle = (i - 3) * (Math.PI * 2) / 60;       // THE ANGLE TO MARK.
+                    ctx.lineWidth = 1;            // HAND WIDTH.
+                    ctx.beginPath();
+
+                    var x1 = (canvas.width / 2) + Math.cos(angle) * (secHandLength);
+                    var y1 = (canvas.height / 2) + Math.sin(angle) * (secHandLength);
+                    var x2 = (canvas.width / 2) + Math.cos(angle) * (secHandLength - (secHandLength / 30));
+                    var y2 = (canvas.height / 2) + Math.sin(angle) * (secHandLength - (secHandLength / 30));
+
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+
+                    ctx.strokeStyle = '#C4D1D5';
+                    ctx.stroke();
+                }
+            }
+
+            function SHOW_SECONDS() {
+
+                var sec = date.getSeconds();
+                angle = ((Math.PI * 2) * (sec / 60)) - ((Math.PI * 2) / 4);
+                ctx.lineWidth = 0.5;              // HAND WIDTH.
+
+                ctx.beginPath();
+                // START FROM CENTER OF THE CLOCK.
+                ctx.moveTo(canvas.width / 2, canvas.height / 2);   
+                // DRAW THE LENGTH.
+                ctx.lineTo((canvas.width / 2 + Math.cos(angle) * secHandLength),
+                    canvas.height / 2 + Math.sin(angle) * secHandLength);
+
+                // DRAW THE TAIL OF THE SECONDS HAND.
+                ctx.moveTo(canvas.width / 2, canvas.height / 2);    // START FROM CENTER.
+                // DRAW THE LENGTH.
+                ctx.lineTo((canvas.width / 2 - Math.cos(angle) * 20),
+                    canvas.height / 2 - Math.sin(angle) * 20);
+
+                ctx.strokeStyle = '#586A73';        // COLOR OF THE HAND.
+                ctx.stroke();
+            }
+
+            function SHOW_MINUTES() {
+
+                var min = date.getMinutes();
+                angle = ((Math.PI * 2) * (min / 60)) - ((Math.PI * 2) / 4);
+                ctx.lineWidth = 1.5;              // HAND WIDTH.
+
+                ctx.beginPath();
+                ctx.moveTo(canvas.width / 2, canvas.height / 2);  // START FROM CENTER.
+                // DRAW THE LENGTH.
+                ctx.lineTo((canvas.width / 2 + Math.cos(angle) * secHandLength / 1.1),      
+                    canvas.height / 2 + Math.sin(angle) * secHandLength / 1.1);
+
+                ctx.strokeStyle = '#999';  // COLOR OF THE HAND.
+                ctx.stroke();
+            }
+
+            function SHOW_HOURS() {
+
+                var hour = date.getHours();
+                var min = date.getMinutes();
+                angle = ((Math.PI * 2) * ((hour * 5 + (min / 60) * 5) / 60)) - ((Math.PI * 2) / 4);
+                ctx.lineWidth = 1.5;              // HAND WIDTH.
+
+                ctx.beginPath();
+                ctx.moveTo(canvas.width / 2, canvas.height / 2);     // START FROM CENTER.
+                // DRAW THE LENGTH.
+                ctx.lineTo((canvas.width / 2 + Math.cos(angle) * secHandLength / 1.5),      
+                    canvas.height / 2 + Math.sin(angle) * secHandLength / 1.5);
+
+                ctx.strokeStyle = '#000';   // COLOR OF THE HAND.
+                ctx.stroke();
+            }
+        }
+    
 </script>
 	</script>
 
@@ -443,7 +519,24 @@ if ($menuStr != "") {
 			<div style="position: fixed;top: 40;left: 0;height:100%;width:100%;z-index: 9999999;
 			background-color : #999;opacity: 0.7;filter: alpha(opacity=70);-moz-opacity: 0.7; /* mozilla */"></div>
 		</div>
-	
-	<div id="clock"><canvas id="canvas" width="130" height="130"></canvas></div>
+		<!--------------------------------------------------------------------->
+		<div id="framework_banner" style="font-family:IranNastaliq; font-size: 30px;
+			 text-shadow: 2px 2px 4px #888;margin-right:10px">
+			<?= SoftwareName ?>
+		</div>
+		<!--------------------------------------------------------------------->
+		<div style="line-height: 21px; text-align: right; margin: 2px; border-radius: 15px; border: 1px solid rgb(13, 218, 178);" 
+			 id="framework_UserDiv" class="blueText">
+		<img style="width: 35px; float: right; vertical-align: middle; margin-top: 3px;" src="icons/user.png">
+			<?= $_SESSION['USER']["fullname"] ?>
+			<br> شناسه : <?= $_SESSION['USER']["UserName"]?>
+		</div>
+		<!--------------------------------------------------------------------->
+		<div class="blueText" id="framework_taskDiv" style="cursor: pointer;
+			 border-radius: 15px; border: 1px solid rgb(13, 218, 178);
+			 height: 35px; line-height: 33px; margin: 2px; text-align: right;">
+			<img src="icons/comment.png" style="margin: 3px; float: right; width: 30px;">
+			درخواست پشتیبانی
+		</div>
 	</body>
 </html>

@@ -1518,8 +1518,8 @@ Ext.define('Ext.picker.SHDate', {
             }
         }
     ],
-    todayText : 'Today',
-    todayTip : '{0} (Spacebar)',
+    todayText : 'امروز',
+    todayTip : '',
     minText : 'This date is before the minimum date',
     maxText : 'This date is after the maximum date',
     disabledDaysText : 'Disabled',
