@@ -5346,3 +5346,51 @@ Ext.apply(Ext.data.Model.prototype,{
 });
 
 
+//***********************************************************
+//********** grid group select record bug fix ***************
+//***********************************************************
+Ext.override(Ext.data.Store, {
+
+  fireEvent: function(eventName, store) {
+    if(store && store.isStore && eventName === "datachanged") {
+      this.sortGroupedStore();
+    }
+    
+    return this.callParent(arguments);
+  },
+  sortGroupedStore: function() {
+    if (this.isGrouped()) {
+
+
+      var me = this,
+          collection = me.data,
+          items = [],
+          keys = [],
+          groups, length, children, lengthChildren,
+          i, j;
+
+
+      groups = me.getGroups();
+      length = groups.length;
+
+
+      for (i = 0; i < length; i++) {
+        children = groups[i].children;
+        lengthChildren = children.length;
+
+
+        for (j = 0; j < lengthChildren; j++) {
+          items.push(children[j]);
+          keys.push(children[j].internalId);
+        }
+      }
+
+
+      collection.items = items;
+      collection.keys = keys;
+
+
+      collection.fireEvent('sort', collection, items, keys);
+    }
+  }
+});  

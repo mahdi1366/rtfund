@@ -7,103 +7,68 @@ include('header.inc.php');
 require_once 'management/framework.class.php';
 
 $systems = FRW_access::getAccessSystems();
-/*
-$menus = FRW_access::getAccessMenus($_REQUEST["SystemID"]);
 
-$groupArr = array();
 $menuStr = "";
 
-for ($i = 0; $i < count($menus); $i++) {
+foreach($systems as $sysRow)
+{
+	$menuStr .= "{text: '" . $sysRow["SysName"] . "'";
 	
-	if (!isset($groupArr[ $menus[$i]["GroupID"] ] )) {
-		if ($i > 0) {
-			$menuStr = substr($menuStr, 0, strlen($menuStr) - 1);
-			$menuStr .= "]}]},";
+	$menus = FRW_access::getAccessMenus($sysRow["SystemID"]);
+	if(count($menus) > 0)
+		$menuStr .= ",menu : {plain: true,xtype : 'menu',items:[";
+	
+	//........................................................
+	$groupArr = array();
+	foreach($menus as $row)
+	{
+		if (!isset($groupArr[ $row["GroupID"] ] )) 
+		{
+			if(count($groupArr) > 0)
+			{
+				$menuStr = substr($menuStr, 0, strlen($menuStr) - 1);
+				$menuStr .= "]},";
+			}
+			$menuStr .= "{text : '" . $row["GroupDesc"] . "', menu :[";
+			$groupArr[$row["GroupID"] ] = true;
 		}
-		$menuStr .= "{
-			xtype : 'panel',
-			layout: 'fit',
-			title: '" . $menus[$i]["GroupDesc"] . "',
-			items :[{
-				xtype : 'menu',
-				floating: false,
-				bodyStyle : 'background-color:white !important;',
-				items :[";
 		
-		$groupArr[ $menus[$i]["GroupID"] ] = true;
+		$icon = $row['icon'];
+		$icon = (!$icon) ? "/generalUI/ext4/resources/themes/icons/star.gif" : "/generalUI/ext4/resources/themes/icons/$icon";
+		$link_path = "/" .$row['SysPath'] . "/" . $row['MenuPath'];
+		//--------- extract params --------------
+		$param = "{";
+		$param .= "MenuID : " . $row['MenuID'] . ",";
+		if (strpos($link_path, "?") !== false) {
+			$arr = preg_split('/\?/', $link_path);
+			$link_path = $arr[0];
+			$arr = preg_split('/\&/', $arr[1]);
+			for ($k = 0; $k < count($arr); $k++)
+				$param .= str_replace("=", ":'", $arr[$k]) . "',";
+		}
+		$param = substr($param, 0, strlen($param) - 1);
+		$param .= "}";
+		//---------------------------------------		
+
+		$menuStr .= "{
+			text: '" . $row["MenuDesc"] . "',
+			handler: function(){
+				framework.OpenPage('" . $link_path . "','" . $row["MenuDesc"] . "'," . $param . ");
+			},
+			icon: '" . $icon . "'
+		},";
 	}
-
-	$icon = $menus[$i]['icon'];
-	$icon = (!$icon) ? "/generalUI/ext4/resources/themes/icons/star.gif" : 
-		"/generalUI/ext4/resources/themes/icons/$icon";
-
-	$link_path = "/" . $menus[$i]['SysPath'] . "/" . $menus[$i]['MenuPath'];
-	$param = "{";
-	$param .= "MenuID : " . $menus[$i]['MenuID'] . ",";
-
-	//--------- extract params --------------
-	if (strpos($link_path, "?") !== false) {
-		$arr = preg_split('/\?/', $link_path);
-		$link_path = $arr[0];
-		$arr = preg_split('/\&/', $arr[1]);
-		for ($k = 0; $k < count($arr); $k++)
-			$param .= str_replace("=", ":'", $arr[$k]) . "',";
-	}
-	$param = substr($param, 0, strlen($param) - 1);
-	//---------------------------------------
-	$param .= "}";
-
-	$menuStr .= "{
-		text: '" . $menus[$i]["MenuDesc"] . "',
-		handler: function(){
-			framework.OpenPage('" . $link_path . "','" . $menus[$i]["MenuDesc"] . "'," . $param . ");
-		},
-		icon: '" . $icon . "'
-	},";
+	$menuStr .= "]}";
+	//........................................................
+	if(count($menus) > 0)
+		$menuStr .= "]}";
+	
+	$menuStr .= "},'-',";
 }
-
 if ($menuStr != "") {
 	$menuStr = substr($menuStr, 0, strlen($menuStr) - 1);
-	$menuStr .= "]}]}";
-}
-//------------------------------------------------------------------------------
-$sysArray = "";
-$sysArray1 = "";
-$sysArray2 = "";
-$syslist = FRW_access::getAccessSystems();
-if (count($syslist) > 1) {
-	for ($i = 0; $i < count($syslist); $i++) {
-		if (isset($_SESSION['USER']["RecentSystems"][$syslist[$i]['SystemID']])) {
-			$sysArray1 .= "
-				{
-					text: '<span style=color:#2D5696 ><b>" . $syslist[$i]['SysName'] . "</b></span>',
-					icon: '/generalUI/ext4/resources/themes/icons/arrow-left.gif',
-					handler: function(){
-						window.location = '/" . $syslist[$i]['SysPath']  . "/start.php?SystemID=" . $syslist[$i]['SystemID'] . "';
-					}
-				},";
-		}
-		else
-			$sysArray2 .= "
-				{
-					text: '" . $syslist[$i]['SysName'] . "',
-					icon: '/generalUI/ext4/resources/themes/icons/arrow-left.gif',
-					handler: function(){
-						window.location = '/" . $syslist[$i]['SysPath']  . "/start.php?SystemID=" . $syslist[$i]['SystemID'] . "';
-					}
-				},";
-	}
-	
-	$sysArray = $sysArray1 . "'-'," . substr($sysArray2, 0, strlen($sysArray2) - 1);
 }
 
-if(count($menus) == 0)
-{
-	echo "<script>window.location='/framework/login.php';</script>";
-	die();
-}
-
-$SystemName = $menus[0]["SysName"];*/
 ?>
 <html>
 	<head>
@@ -191,6 +156,8 @@ $SystemName = $menus[0]["SysName"];*/
 
 		}, 5*60000); // in milisecond
 
+		//----------------------------------------------------------
+		
 		this.centerPanel = new Ext.TabPanel({
 			region: 'center',
 			enableTabScroll : true,
@@ -201,56 +168,65 @@ $SystemName = $menus[0]["SysName"];*/
 			tabWidth: 'auto'
 		});
 		
+		//----------------------------------------------------------
+		
 		this.northPanel = new Ext.panel.Panel({
 			region: 'north',
-			//split: true,
-			height: 200,
-			//minSize: 200,
-			//maxSize: 200,
-			collapsible: true,	
-			layout:'accordion',
 			fill: true,	  
+			items : [{
+				xtype : 'panel',
+				border : false,
+				layout: 'fit',
+				style : "margin-bottom:10px",
+				html : "<br><?= SoftwareName ?><hr>",
+				bbar : [<?= $menuStr ?>]
+				
+			}]
+		});
+		
+		//----------------------------------------------------------
+		
+		this.EastPanel = new Ext.panel.Panel({
+			region: 'east',
+			split: true,
+			collapsible: true,			  
+			width: 185,
+			minSize: 185,
+			maxSize: 200,
+			fill: true,	  
+			bodyStyle : "text-align:center",
 			defaults : {
 				hideCollapseTool : true
 			},
-				
-			items : [{
-				xtype : 'panel',
-				layout: 'fit',
-				title: 'اطلاعات پایه',
-				items :[{
-					xtype : 'menu',
-					//layout : "hbox",
-					floating: false,
-					bodyStyle : 'background-color:white !important;',
-					items :[
-						{text: 'انواع وام'},
-						{text: 'مدیریت ذینفعان'},
-						{text: 'مدیریت ذینفعان'},
-						{text: 'مدیریت ذینفعان'},
-						{text: 'مدیریت ذینفعان'},
-						{text: 'مدیریت ذینفعان'},
-						{text: 'مدیریت ذینفعان'},
-						{text: 'مدیریت ذینفعان'},
-						{text: 'مدیریت ذینفعان'},
-						{text: 'مدیریت ذینفعان'},
-						{text: 'مدیریت ذینفعان'}
-					]
-				}]
+			items : [
+			{
+				xtype : "container",
+				width : 185,
+				contentEl : document.getElementById("clock")
+			},
+			new Ext.picker.SHDate(),
+			{
+				xtype : "fieldset",
+				contentEl : document.getElementById("clock")
 			}]
 		});
-
+		
+		//----------------------------------------------------------
+		
 		this.view = new Ext.Viewport({
 			layout: 'border',
 			renderTo : document.body,
-			items: [this.northPanel,
-			 
-			//------------------------------------------------------------------
-			this.centerPanel
-			//------------------------------------------------------------------
-				
-			]
+			items: [this.northPanel,this.centerPanel,this.EastPanel]
 		});
+		
+		//----------------------------------------------------------
+		
+		this.canvas = document.getElementById("canvas");
+		this.ctx = this.canvas.getContext("2d");
+		this.radius = this.canvas.height / 2;
+		this.ctx.translate(this.radius, this.radius);
+		this.radius = this.radius * 0.90;
+		setInterval(this.drawClock, 1000);
 	}
 
 	FrameWorkClass.prototype.OpenPage = function(itemURL, itemTitle, params)
@@ -363,6 +339,84 @@ $SystemName = $menus[0]["SysName"];*/
 
 	FrameWorkClass.SystemLoad = function(){};
 	
+	//..........................................................................
+
+	FrameWorkClass.prototype.drawClock = function() {
+		
+		framework.drawFace(framework.ctx, framework.radius);
+		framework.drawNumbers(framework.ctx, framework.radius);
+		framework.drawTime(framework.ctx, framework.radius);
+	}
+
+	FrameWorkClass.prototype.drawFace = function(ctx, radius) {
+		var grad;
+		ctx.beginPath();
+		ctx.arc(0, 0, radius, 0, 2*Math.PI);
+		ctx.fillStyle = 'white';
+		ctx.fill();
+		grad = ctx.createRadialGradient(0,0,radius*0.95, 0,0,radius*1.05);
+		grad.addColorStop(0, 'white');
+		grad.addColorStop(0, '#333');
+		grad.addColorStop(0.5, 'white');
+		grad.addColorStop(1, '#333');
+		ctx.strokeStyle = grad;
+		ctx.lineWidth = radius*0.1;
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(0, 0, radius*0.1, 0, 2*Math.PI);
+		ctx.fillStyle = '#333';
+		ctx.fill();
+	}
+
+	FrameWorkClass.prototype.drawNumbers = function(ctx, radius) {
+	var ang;
+	var num;
+	ctx.font = radius*0.15 + "px arial";
+	ctx.textBaseline="middle";
+	ctx.textAlign="center";
+	for(num = 1; num < 13; num++){
+		ang = num * Math.PI / 6;
+		ctx.rotate(ang);
+		ctx.translate(0, -radius*0.85);
+		ctx.rotate(-ang);
+		ctx.fillText(num.toString(), 0, 0);
+		ctx.rotate(ang);
+		ctx.translate(0, radius*0.85);
+		ctx.rotate(-ang);
+	}
+	}
+
+	FrameWorkClass.prototype.drawTime = function(ctx, radius){
+		var now = new Date();
+		var hour = now.getHours();
+		var minute = now.getMinutes();
+		var second = now.getSeconds();
+		//hour
+		hour=hour%12;
+		hour=(hour*Math.PI/6)+
+		(minute*Math.PI/(6*60))+
+		(second*Math.PI/(360*60));
+		this.drawHand(ctx, hour, radius*0.5, radius*0.07);
+		//minute
+		minute=(minute*Math.PI/30)+(second*Math.PI/(30*60));
+		this.drawHand(ctx, minute, radius*0.8, radius*0.07);
+		// second
+		second=(second*Math.PI/30);
+		this.drawHand(ctx, second, radius*0.9, radius*0.02);
+	}
+
+	FrameWorkClass.prototype.drawHand = function(ctx, pos, length, width) {
+		ctx.beginPath();
+		ctx.lineWidth = width;
+		ctx.lineCap = "round";
+		ctx.moveTo(0,0);
+		ctx.rotate(pos);
+		ctx.lineTo(0, -length);
+		ctx.stroke();
+		ctx.rotate(-pos);
+	}
+
+</script>
 	</script>
 
 	<script>
@@ -389,6 +443,7 @@ $SystemName = $menus[0]["SysName"];*/
 			<div style="position: fixed;top: 40;left: 0;height:100%;width:100%;z-index: 9999999;
 			background-color : #999;opacity: 0.7;filter: alpha(opacity=70);-moz-opacity: 0.7; /* mozilla */"></div>
 		</div>
-		
+	
+	<div id="clock"><canvas id="canvas" width="130" height="130"></canvas></div>
 	</body>
 </html>
