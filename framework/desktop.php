@@ -204,7 +204,7 @@ if ($menuStr != "") {
 			maxSize: 180,
 			resizable : false,
 			fill: true,	  
-			bodyStyle : "text-align:center",
+			bodyStyle : "background-color: #fdfdfd;background-image: url(http://www.transparenttextures.com/patterns/subtle-grey.png);text-align:center",
 			defaults : {
 				hideCollapseTool : true
 			},
@@ -520,8 +520,8 @@ if ($menuStr != "") {
 			background-color : #999;opacity: 0.7;filter: alpha(opacity=70);-moz-opacity: 0.7; /* mozilla */"></div>
 		</div>
 		<!--------------------------------------------------------------------->
-		<div id="framework_banner" style="font-family:IranNastaliq; font-size: 30px;
-			 text-shadow: 2px 2px 4px #888;margin-right:10px">
+		<div id="framework_banner" style="font-family:IranNastaliq; font-size: 30px;color:white;
+			 text-shadow: 2px 2px 4px white;padding-right:10px;background: linear-gradient(to bottom right, #001635, #02a2cc);">
 			<?= SoftwareName ?>
 		</div>
 		<!--------------------------------------------------------------------->
