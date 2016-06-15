@@ -16,7 +16,7 @@ foreach($systems as $sysRow)
 	
 	$menus = FRW_access::getAccessMenus($sysRow["SystemID"]);
 	if(count($menus) > 0)
-		$menuStr .= ",menu : {xtype : 'menu',items:[";
+		$menuStr .= ",menu : {xtype : 'menu',bodyStyle: 'background:white !important;',items:[";
 	
 	//........................................................
 	$groupArr = array();
@@ -27,12 +27,12 @@ foreach($systems as $sysRow)
 			if(count($groupArr) > 0)
 			{
 				$menuStr = substr($menuStr, 0, strlen($menuStr) - 1);
-				$menuStr .= "]},";
+				$menuStr .= "]}},";
 			}
 			$icon = $row['GroupIcon'];
 			$icon = (!$icon) ? "/generalUI/ext4/resources/themes/icons/star.gif" : 
 				"/generalUI/ext4/resources/themes/icons/$icon";
-			$menuStr .= "{text : '" . $row["GroupDesc"] . "', icon: '" . $icon . "', menu :[";
+			$menuStr .= "{text : '" . $row["GroupDesc"] . "', icon: '" . $icon . "', menu :{bodyStyle: 'background:white !important;',items:[";
 			$groupArr[$row["GroupID"] ] = true;
 		}
 		
@@ -62,7 +62,7 @@ foreach($systems as $sysRow)
 			icon: '" . $icon . "'
 		},";
 	}
-	$menuStr .= "]}";
+	$menuStr .= "]}}";
 	//........................................................
 	if(count($menus) > 0)
 		$menuStr .= "]}";
@@ -112,6 +112,45 @@ if ($menuStr != "") {
 		<script type="text/javascript" src="/generalUI/ext4/ux/CurrencyField.js"></script>
 		<script type="text/javascript" src="/generalUI/ext4/ux/grid/ExtraBar.js"></script>
 		<script type="text/javascript" src="/generalUI/ext4/ux/grid/gridprinter/Printer.js"></script>
+	<style>
+		.infoBox {
+			background: linear-gradient(to top, #b1d352, #93bc3c);
+			border-radius: 20px; 
+			color : white;
+			cursor: pointer;
+			line-height: 22px; 
+			margin: 2px; 
+			text-align: right;
+			vertical-align: middle;
+		}
+		.UserInfoBox{
+			background-color: #f5b846;
+			border-radius: 20px; 
+			color : white;
+			line-height: 22px; 
+			margin: 9px 0 0 9px;
+			text-align: right;
+			vertical-align: middle;
+			font-family: tahoma;
+			font-size: 11px;
+			float: left;
+			width : 200px;
+		}
+		
+		.menuCls span {
+			color:white !important;font-weight:bold !important;
+		}
+		.overCls {
+			background-color: #72dbfc;
+		}
+		.x-btn-pressedCls {
+			background-color: #72dbfc;
+		}
+		
+		.menuItems {
+			padding: 10px !important;
+		}
+	</style>
 	<script type="text/javascript">
 	//-----------------------------
 	//	Programmer	: SH.Jafarkhani
@@ -180,17 +219,35 @@ if ($menuStr != "") {
 				xtype : 'panel',
 				border : false,
 				layout: 'fit',
-				contentEl : document.getElementById("framework_banner"),
-				bbar : [<?= $menuStr ?>, '->', {
-					xtype : "button",
-					icon : "icons/home.png",
-					scale: 'medium'					
-				},{
-					xtype : "button",
-					icon : "icons/exit.png",
-					scale: 'medium'					
-				}]
-				
+				height : 100,
+				html : "<div style='background-color: #fdfdfd;background-image: url(http://www.transparenttextures.com/patterns/subtle-grey.png);" +
+					"font-family:IranNastaliq; font-size: 35px;color : #5883af;text-shadow: 2px 2px 4px #85ab38;padding-right:10px;height:100%' >" + 
+					"<?= SoftwareName ?>"+
+					"<div class='blueText UserInfoBox'>" + 
+						"<img style='width: 35px; float: right; vertical-align: middle; margin-top: 3px;' src=icons/user.png>" +
+						"<?= $_SESSION['USER']["fullname"] ?><br> شناسه : <?= $_SESSION['USER']["UserName"]?>" + 
+					"</div>" +
+					"</div>",
+				bbar : {
+					xtype : "toolbar",
+					style : "background: linear-gradient(to bottom , #159fcd, #1e8cb0);",
+					defaults :{
+						cls : "x-btn menuCls",
+						overCls : "overCls",
+						pressedCls : "pressedCls",
+						focusCls : "overCls",
+						menuActiveCls : "pressedCls"
+					},
+					items :[<?= $menuStr ?>, '->', {
+						xtype : "button",						
+						icon : "icons/home.png",
+						scale: 'medium'					
+					},{
+						xtype : "button",
+						icon : "icons/exit.png",
+						scale: 'medium'					
+					}]
+				}
 			}]
 		});
 		
@@ -216,11 +273,7 @@ if ($menuStr != "") {
 			},
 			new Ext.picker.SHDate({
 				border : false
-			}),
-			{
-				xtype : "container",
-				contentEl : document.getElementById("framework_UserDiv")
-			},{
+			}),{
 				xtype : "container",
 				contentEl : document.getElementById("framework_taskDiv")				
 			}]
@@ -491,26 +544,22 @@ if ($menuStr != "") {
                 ctx.stroke();
             }
         }
-    
-</script>
-	</script>
 
-	<script>
-		var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
-		Ext.QuickTips.init();
-		var framework;
-		setTimeout(function(){
-			Ext.get('loading').remove();
-			Ext.get('loading-mask').fadeOut({
-				remove:true
-			});
-			framework = new FrameWorkClass();
-			if(FrameWorkClass.StartPage != "" && FrameWorkClass.StartPage != undefined)
-				framework.OpenPage(FrameWorkClass.StartPage, "صفحه اصلی");
-			FrameWorkClass.SystemLoad();
-		}, 7);
+	var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
+	Ext.QuickTips.init();
+	var framework;
+	setTimeout(function(){
+		Ext.get('loading').remove();
+		Ext.get('loading-mask').fadeOut({
+			remove:true
+		});
+		framework = new FrameWorkClass();
+		if(FrameWorkClass.StartPage != "" && FrameWorkClass.StartPage != undefined)
+			framework.OpenPage(FrameWorkClass.StartPage, "صفحه اصلی");
+		FrameWorkClass.SystemLoad();
+	}, 7);
 	</script>
-
+	
 		<div id="LoginExpire" style="display : none;">
 			<div style="color: red; height: 40px; width: 100%; z-index: 99999; position: fixed; 
 				 background-color: white; text-align: center; font-weight: bold;cursor:pointer"
@@ -520,23 +569,12 @@ if ($menuStr != "") {
 			background-color : #999;opacity: 0.7;filter: alpha(opacity=70);-moz-opacity: 0.7; /* mozilla */"></div>
 		</div>
 		<!--------------------------------------------------------------------->
-		<div id="framework_banner" style="font-family:IranNastaliq; font-size: 30px;color:white;
-			 text-shadow: 2px 2px 4px white;padding-right:10px;background: linear-gradient(to bottom right, #001635, #02a2cc);">
-			<?= SoftwareName ?>
-		</div>
+		
 		<!--------------------------------------------------------------------->
-		<div style="line-height: 21px; text-align: right; margin: 2px; border-radius: 15px; border: 1px solid rgb(13, 218, 178);" 
-			 id="framework_UserDiv" class="blueText">
-		<img style="width: 35px; float: right; vertical-align: middle; margin-top: 3px;" src="icons/user.png">
-			<?= $_SESSION['USER']["fullname"] ?>
-			<br> شناسه : <?= $_SESSION['USER']["UserName"]?>
-		</div>
-		<!--------------------------------------------------------------------->
-		<div class="blueText" id="framework_taskDiv" style="cursor: pointer;
-			 border-radius: 15px; border: 1px solid rgb(13, 218, 178);
-			 height: 35px; line-height: 33px; margin: 2px; text-align: right;">
+		<div class="blueText infoBox" id="framework_taskDiv" style="height: 35px;" 
+			 onclick="framework.OpenPage('../framework/ManageRequests.php','درخواست پشتیبانی')">
 			<img src="icons/comment.png" style="margin: 3px; float: right; width: 30px;">
-			درخواست پشتیبانی
+			<div style="padding-top:6px">درخواست پشتیبانی</div>
 		</div>
 	</body>
 </html>
