@@ -54,9 +54,12 @@ StartPage.prototype = {
 
 function StartPage(){
 	
-	this.grid1 = <?= $grid1 ?>;
-	this.grid1.render(this.get("DivGrid1"));
+	//this.grid1 = < ?= $grid1 ?>;
+	//this.grid1.render(this.get("DivGrid1"));
 	
+	new Ext.panel.Panel({
+		
+	});
 }
 
 StartPage.OperationRender = function(){
@@ -114,7 +117,18 @@ StartPage.prototype.ConfirmPerson = function(mode){
 }
 
 </script>
-<center><br>
+<center>
+	<table>
+		<tr>
+			<td><div id=""></div></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+		</tr>
+	</table>
+	<br>
 	<div id="DivGrid1"></div><br>
 	<div id="DivGrid2"></div>
 </center>

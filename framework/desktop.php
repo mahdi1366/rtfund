@@ -554,8 +554,7 @@ if ($menuStr != "") {
 			remove:true
 		});
 		framework = new FrameWorkClass();
-		if(FrameWorkClass.StartPage != "" && FrameWorkClass.StartPage != undefined)
-			framework.OpenPage(FrameWorkClass.StartPage, "صفحه اصلی");
+		framework.OpenPage("FirstPage.php", "صفحه اصلی");
 		FrameWorkClass.SystemLoad();
 	}, 7);
 	</script>
