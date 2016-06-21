@@ -26,7 +26,7 @@ $col = $dg->addColumn("نام كاربري","UserName","string");
 $col->width = 150;
 
 $col = $dg->addColumn("","","");
-$col->renderer = "StartPage.OperationRender";
+$col->renderer = "FrameworkFirstPage.OperationRender";
 $col->sortable = false;
 $col->width = 50;
 
@@ -43,7 +43,7 @@ $grid1 = $dg->makeGrid_returnObjects();
 ?>
 <script>
 
-StartPage.prototype = {
+FrameworkFirstPage.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
@@ -52,35 +52,35 @@ StartPage.prototype = {
 	}
 };
 
-function StartPage(){
+function FrameworkFirstPage(){
 	
 	this.grid1 = <?= $grid1 ?>;
-	this.grid1.render(this.get("DivGrid1"));
+	this.grid1.render(this.get("div_user_grid"));
 	
 }
 
-StartPage.OperationRender = function(){
+FrameworkFirstPage.OperationRender = function(){
 	
 	return "<div align='center' title='تایید مشتری' class='tick' "+
-		"onclick='StartPageObject.ConfirmPerson(1);' " +
+		"onclick='FrameworkFirstPageObject.ConfirmPerson(1);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;float:right;width:16px;height:16'></div>" +
 		
 	"<div align='center' title='حذف مشتری' class='cross' "+
-		"onclick='StartPageObject.ConfirmPerson(0);' " +
+		"onclick='FrameworkFirstPageObject.ConfirmPerson(0);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;float:right;width:16px;height:16'></div>";
 }
 
-StartPageObject = new StartPage();
+FrameworkFirstPageObject = new FrameworkFirstPage();
 
-StartPage.prototype.ConfirmPerson = function(mode){
+FrameworkFirstPage.prototype.ConfirmPerson = function(mode){
 	
 	message = mode == 1 ? "آیا مایل به تایید می باشید؟" : "آیا مایل به حذف مشتری می باشید؟";
 	Ext.MessageBox.confirm("",message, function(btn){
 		if(btn == "no")
 			return;
-		me = StartPageObject;
+		me = FrameworkFirstPageObject;
 		record = me.grid1.getSelectionModel().getLastSelected();
 	
 		mask = new Ext.LoadMask(me.grid1,{msg:'در حال ذخیره سازی ...'});
@@ -99,7 +99,7 @@ StartPage.prototype.ConfirmPerson = function(mode){
 				var st = Ext.decode(response.responseText);
 
 				if(st.success)
-					StartPageObject.grid1.getStore().load();
+					FrameworkFirstPageObject.grid1.getStore().load();
 				else
 				{
 					if(st.data == "")
@@ -115,6 +115,5 @@ StartPage.prototype.ConfirmPerson = function(mode){
 
 </script>
 <center><br>
-	<div id="DivGrid1"></div><br>
-	<div id="DivGrid2"></div>
+	<div id="div_user_grid"></div>
 </center>

@@ -13,6 +13,23 @@ $menuStr = "";
 foreach($systems as $sysRow)
 {
 	$menuStr .= "{text: '" . $sysRow["SysName"] . "',scale: 'medium',icon : 'icons/app.png'";
+
+	if($sysRow["SystemID"] == "2")
+	{
+		$dt = PdoDataAccess::runquery("
+			select * from ACC_UserState 
+				join BSC_branches using(BranchID)
+				join ACC_cycles using(CycleID)
+			where PersonID=?", array($_SESSION["USER"]["PersonID"]));
+
+		if(count($dt) > 0)
+		{
+			$_SESSION["accounting"]["BranchID"] = $dt[0]["BranchID"];
+			$_SESSION["accounting"]["CycleID"] = $dt[0]["CycleID"];
+			$_SESSION["accounting"]["CycleYear"] = $dt[0]["CycleYear"];
+			$_SESSION["accounting"]["BranchName"] = $dt[0]["BranchName"];
+		}
+	}
 	
 	$menus = FRW_access::getAccessMenus($sysRow["SystemID"]);
 	if(count($menus) > 0)
@@ -136,6 +153,17 @@ if ($menuStr != "") {
 			float: left;
 			width : 200px;
 		}
+		.accinfoBox {
+			background: linear-gradient(to top, #72dbfc, #159fcd);
+			border-radius: 20px; 
+			color : white;
+			cursor: pointer;
+			padding-right:4px;
+			line-height: 22px; 
+			margin: 2px; 
+			text-align: right;
+			vertical-align: middle;
+		}
 		
 		.menuCls span {
 			color:white !important;font-weight:bold !important;
@@ -241,11 +269,13 @@ if ($menuStr != "") {
 					items :[<?= $menuStr ?>, '->', {
 						xtype : "button",						
 						icon : "icons/home.png",
-						scale: 'medium'					
+						scale: 'medium',
+						handler : function(){framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");}
 					},{
 						xtype : "button",
 						icon : "icons/exit.png",
-						scale: 'medium'					
+						scale: 'medium',
+						handler : function(){framework.OpenPage("/framework/logout.php");}
 					}]
 				}
 			}]
@@ -276,6 +306,9 @@ if ($menuStr != "") {
 			}),{
 				xtype : "container",
 				contentEl : document.getElementById("framework_taskDiv")				
+			},{
+				xtype : "container",
+				contentEl : document.getElementById("framework_accDiv")
 			}]
 		});
 		
@@ -400,8 +433,6 @@ if ($menuStr != "") {
 		return "/" + list2.join("/");
 	}
 
-	FrameWorkClass.SystemLoad = function(){};
-	
 	//..........................................................................
 	
 	FrameWorkClass.prototype.showClock = function() {
@@ -554,9 +585,8 @@ if ($menuStr != "") {
 			remove:true
 		});
 		framework = new FrameWorkClass();
-		if(FrameWorkClass.StartPage != "" && FrameWorkClass.StartPage != undefined)
-			framework.OpenPage(FrameWorkClass.StartPage, "صفحه اصلی");
-		FrameWorkClass.SystemLoad();
+		//if(FrameWorkClass.StartPage != "" && FrameWorkClass.StartPage != undefined)
+		framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
 	}, 7);
 	</script>
 	
@@ -569,12 +599,18 @@ if ($menuStr != "") {
 			background-color : #999;opacity: 0.7;filter: alpha(opacity=70);-moz-opacity: 0.7; /* mozilla */"></div>
 		</div>
 		<!--------------------------------------------------------------------->
-		
-		<!--------------------------------------------------------------------->
 		<div class="blueText infoBox" id="framework_taskDiv" style="height: 35px;" 
 			 onclick="framework.OpenPage('../framework/ManageRequests.php','درخواست پشتیبانی')">
 			<img src="icons/comment.png" style="margin: 3px; float: right; width: 30px;">
 			<div style="padding-top:6px">درخواست پشتیبانی</div>
 		</div>
+		<!--------------------------------------------------------------------->
+		<div class="blueText accinfoBox" id="framework_accDiv" style="height: 80px;" 
+			 onclick="framework.OpenPage('../accounting/global/UserState.php','تعیین شعبه و دوره')">
+			<div style="padding-top:6px">دوره مالی : <?= $_SESSION["accounting"]["CycleYear"]?> 
+				<br>شعبه : <?= $_SESSION["accounting"]["BranchName"]?>
+			</div>
+		</div>
+		<!--------------------------------------------------------------------->
 	</body>
 </html>

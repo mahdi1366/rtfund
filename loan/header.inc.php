@@ -25,10 +25,6 @@ if(!session::checkLogin())
 	die();
 } 
 
-require_once 'plan/PLNconfig.inc.php';
-require_once 'contract/CNTconfig.class.php';
-
-
 $address_prefix = getenv("DOCUMENT_ROOT");
 $js_prefix_address = implode("/" , 
 		array_splice(preg_split('/\//', $_SERVER["SCRIPT_NAME"]),0,
