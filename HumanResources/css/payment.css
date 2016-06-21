@@ -1,0 +1,71 @@
+﻿/*---------------------------
+// programmer:	mahdipour
+// create Date:	90.10
+//---------------------------*/
+
+td.payment_report_label_noborder {
+			padding-left: 2;
+			padding-right: 2;
+			vertical-align: top;
+			font-family: B Nazanin,Tahoma,Arial;
+			font-size: small;
+			font-weight: bold
+		}
+
+	td.payment_report_data_custom_noborder {
+		padding-left: 0;
+		padding-right: 2px;
+		padding-top: 0;
+		padding-bottom: 0;
+		border-top: 1px none #024656;
+		border-right: 1px solid #024656;
+		border-bottom: 1px none #024656;
+		border-left: 1px solid #024656;
+		vertical-align: top;
+		font-family: B Nazanin,Tahoma,Arial;
+		font-size: small;
+		font-weight: normal;
+	}
+
+	td.payment_report_header {
+		color: #000000;
+		border: 1px solid #024656;
+		padding-left: 2;
+		padding-right: 2;
+		vertical-align: top;
+		font-family: B Nazanin,Tahoma,Arial;
+		font-size: small;
+		font-weight: bold
+
+	}
+
+	td.payment_report_data {
+		color: #000000;
+		border: 1px solid #024656;
+		padding-left: 2;
+		padding-right: 2;
+		vertical-align: top;
+		font-family: B Nazanin,Tahoma,Arial;
+		font-size: small;
+		font-weight: normal
+	}
+
+	td.payment_report_label {
+		color: #000000;
+		border: 1px solid #024656;
+		padding-left: 2;
+		padding-right: 2;
+		vertical-align: top;
+		font-family: B Nazanin,Tahoma,Arial;
+		font-size: small;
+		font-weight: bold
+	}
+
+	td.payment_report_data_noborder {
+		padding-left: 2;
+		padding-right: 2;
+		vertical-align: top;
+		font-family: B Nazanin,Tahoma,Arial;
+		font-size: small;
+		font-weight: normal
+	}

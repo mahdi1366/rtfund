@@ -1,0 +1,27 @@
+<?php
+
+//include_once (dirname(basename(__FILE__))."../smscenter/Classes/SMSUtils.class.php");	       
+/**
+ * ارسال پیغام sms
+ *
+ * @param unknown_type $personType نوع فرد گیرنده پیام const 'STUDENT' or 'PERSONEL' or 'OTHER'
+ * @param unknown_type $personid شماره PersonID (برای دانشجوهم personID وارد شود)
+ * @param unknown_type $mobile شماره موبایل
+ * @param unknown_type $massage متن پیغام
+ * @param unknown_type $datetimeSend تاریخ و ساعت ارسال به میلادی مثال :2009-11-09 11:47:00
+ * @param unknown_type $SysCode کد سیستم
+ * @param unknown_type $facilityid کد امکان ارسال کننده 
+ * @param unknown_type $priory اولویت (اولویت ارسال عددی بین ۱-۱۰ می باشد و هر چه کوچکتر یعنی اولویت بیشتر)
+ */
+function SendSystemSMS($personType, $personid, $mobile, $massage, $datetimeSend, $SysCode, $facilityid = 0, $priory = 1, $userID = "SYSTEM") {
+    //SMSUtils::SendSystemSMS($personType, $personid, $mobile, $massage, $datetimeSend, $SysCode, $facilityid, $priory, $userID);
+    //echo "test sms";
+    $mysql = dbclass::getInstance("172.20.20.46", "smsuser", "sms20#pswd", "smscenter");
+
+
+    $srtquery = " insert into SMSOutbox (SMSStatus,Mobile,PersonType,PersonID,Priority,SendDateTime,SysCode,UserID,Message,FacilityID,IPAddress) "
+            . "  values ('Wait','$mobile','$personType','$personid','$priory','$datetimeSend','" . $SysCode . "','" . $userID . "','$massage','$facilityid','0') ";
+    $mysql->Execute($srtquery);
+}
+
+?>

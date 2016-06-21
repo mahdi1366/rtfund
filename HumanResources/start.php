@@ -1,4 +1,17 @@
 <?php
+<<<<<<< HEAD
+	require_once (getenv("DOCUMENT_ROOT") . '/framework/MainFrame.php');
+	require_once inc_dataReader;	
+?>
+<script>
+	//Ext.QuickTips.init();
+	//Ext.namespace('BasisData');
+	var personStore = <?= dataReader::MakeStoreObject($js_prefix_address . "personal/persons/data/person.data.php?task=searchPerson&newPersons=true"
+                          ,"'PersonID','pfname','plname','unit_name','person_type','staff_id','personTypeName'") ?>;
+	
+</script>
+<div style="display:none"><?= $_SESSION["UserID"]?></div>
+=======
 //-----------------------------
 //	Programmer	: SH.Jafarkhani
 //	Date		: 94.06
@@ -47,3 +60,4 @@ var YearStore = new Ext.data.SimpleStore({
 });
 
 </script>
+>>>>>>> branch 'master' of https://github.com/jafarkhani/rtfund.git

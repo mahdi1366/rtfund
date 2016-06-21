@@ -1,0 +1,29 @@
+/*---------------------------
+// programmer:	jafarkhani
+// create Date:	90.04
+//---------------------------*/
+
+@media print {
+	.noprint{display:none;}
+}
+.pageBreak {page-break-after:always;height:1px;}
+
+.reportGenerator {
+	border-collapse: collapse;
+	border: 1px solid black;
+	font-family: tahoma;
+	font-size: 8pt;
+	text-align: center;
+	width: 98%;
+	padding: 2px;
+}
+
+.reportGenerator .header {
+	color: white;
+	font-weight: bold;
+}
+
+.reportGenerator td {
+	border: 1px solid #555555;
+	height: 20px;
+}

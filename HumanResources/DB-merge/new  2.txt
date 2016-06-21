@@ -1,0 +1,959 @@
+CREATE TABLE  `banks` (
+  `bank_id` smallint(6) NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `branch_code` int(11) DEFAULT NULL,
+  `type` smallint(1) DEFAULT NULL,
+  PRIMARY KEY (`bank_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2010 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+insert into banks select * from tmp_hrms.banks;
+-- --------------------------------------------------------
+CREATE TABLE  `Basic_Type` (
+  `TypeID` int(11) NOT NULL AUTO_INCREMENT,
+  `Title` varchar(45) COLLATE utf8_persian_ci NOT NULL DEFAULT '0',
+  `FieldName` varchar(45) COLLATE utf8_persian_ci DEFAULT NULL,
+  PRIMARY KEY (`TypeID`)
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+insert into Basic_Type select * from hrmstotal.Basic_Type;
+-- --------------------------------------------------------
+CREATE TABLE  `Basic_Info` (
+  `TypeID` int(10) unsigned NOT NULL,
+  `InfoID` int(10) unsigned NOT NULL,
+  `Title` varchar(200) COLLATE utf8_persian_ci NOT NULL,
+  `MasterID` int(11) NOT NULL DEFAULT 0,
+  `MasterType` int(10) unsigned NOT NULL DEFAULT 0,
+  PRIMARY KEY (`TypeID`,`InfoID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+insert into Basic_Info select * from hrmstotal.Basic_Info;
+-- --------------------------------------------------------
+CREATE TABLE  `countries` (
+  `country_id` smallint(6) NOT NULL AUTO_INCREMENT,
+  `ptitle` varchar(50) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `etitle` varchar(50) COLLATE utf8_persian_ci DEFAULT NULL,
+  PRIMARY KEY (`country_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1152 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+insert into countries select * from tmp_hrms.countries;
+-- --------------------------------------------------------
+CREATE TABLE  `states` (
+  `state_id` smallint(6) NOT NULL AUTO_INCREMENT,
+  `ptitle` varchar(100) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `etitle` varchar(100) COLLATE utf8_persian_ci DEFAULT NULL,
+  PRIMARY KEY (`state_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into states select * from tmp_hrms.states;
+-- --------------------------------------------------------
+CREATE TABLE `cities` (
+  `city_id` smallint(6) NOT NULL AUTO_INCREMENT,
+  `state_id` smallint(6) NOT NULL,
+  `ptitle` varchar(100) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `etitle` varchar(100) COLLATE utf8_persian_ci DEFAULT NULL,
+  PRIMARY KEY (`city_id`),
+  KEY `FK_CITIES__STATES` (`state_id`),
+  CONSTRAINT `FK_CITIES__STATES` FOREIGN KEY (`state_id`) REFERENCES `states` (`state_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=381 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+insert into cities select * from tmp_hrms.cities;
+-- --------------------------------------------------------
+CREATE TABLE  `cost_centers` (
+  `title` varchar(50) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `cost_center_id` smallint(6) NOT NULL AUTO_INCREMENT,
+  `daily_work_place_no` varchar(20) COLLATE utf8_persian_ci DEFAULT NULL,
+  `detective_name` varchar(100) COLLATE utf8_persian_ci DEFAULT NULL,
+  `employer_name` varchar(50) COLLATE utf8_persian_ci DEFAULT NULL,
+  `detective_address` varchar(255) COLLATE utf8_persian_ci DEFAULT NULL,
+  `collective_security_branch` varchar(50) COLLATE utf8_persian_ci DEFAULT NULL,
+  PRIMARY KEY (`cost_center_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=91 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+insert into cost_centers select * from tmp_hrms_sherkati.cost_centers;
+insert into cost_centers(title,cost_center_id) select c.title,c.cost_center_id from tmp_hrms.cost_centers as c on duplicate key UPDATE title=c.title;
+
+-- --------------------------------------------------------
+CREATE TABLE  `job_category` (
+  `jcid` smallint(6) NOT NULL AUTO_INCREMENT,
+  `title` varchar(50) COLLATE utf8_persian_ci DEFAULT NULL,
+  PRIMARY KEY (`jcid`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+insert into job_category select * from tmp_hrms.job_category;
+-- --------------------------------------------------------
+CREATE TABLE  `job_subcategory` (
+  `jcid` smallint(6) NOT NULL,
+  `jsid` smallint(6) NOT NULL,
+  `title` varchar(50) COLLATE utf8_persian_ci DEFAULT NULL,
+  PRIMARY KEY (`jcid`,`jsid`),
+  CONSTRAINT `FK_JSUB_CAT__JOB_CATEGORY` FOREIGN KEY (`jcid`) REFERENCES `job_category` (`jcid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+insert into job_subcategory select * from tmp_hrms.job_subcategory;
+-- --------------------------------------------------------
+CREATE TABLE  `job_fields` (
+  `jfid` int(11) NOT NULL,
+  `jcid` smallint(6) NOT NULL,
+  `jsid` smallint(6) NOT NULL,
+  `grade` smallint(6) NOT NULL DEFAULT '0',
+  `start_group` smallint(6) NOT NULL DEFAULT '0',
+  `title` varchar(50) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `conditions` text COLLATE utf8_persian_ci,
+  `duties` text COLLATE utf8_persian_ci,
+  `educ_research` tinyint(1) DEFAULT '0',
+  `job_type` smallint(5) unsigned NOT NULL DEFAULT '1',
+  `job_level` smallint(6) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`jfid`),
+  KEY `FK_JOB_FIELDS__JOB_SUBCATEGORY` (`jcid`,`jsid`),
+  CONSTRAINT `FK_JFIELDS__JOB_CATEGORY` FOREIGN KEY (`jcid`) REFERENCES `job_category` (`jcid`),
+  CONSTRAINT `FK_JOB_FIELDS__JOB_SUBCATEGORY` FOREIGN KEY (`jcid`, `jsid`) REFERENCES `job_subcategory` (`jcid`, `jsid`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+insert into job_fields select * from tmp_hrms.job_fields;
+
+-- --------------------------------------------------------
+CREATE TABLE  `org_new_units` (
+  `ouid` smallint(6) NOT NULL AUTO_INCREMENT,
+  `org_unit_type` smallint(6) DEFAULT '0',
+  `ptitle` varchar(100) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `etitle` varchar(100) COLLATE utf8_persian_ci DEFAULT NULL,
+  `daily_work_place_no` varchar(20) COLLATE utf8_persian_ci DEFAULT NULL,
+  `contract_work_place_no` varchar(20) COLLATE utf8_persian_ci DEFAULT NULL,
+  `state_id` smallint(6) DEFAULT '0',
+  `ctid` int(11) DEFAULT '0',
+  `tcid` smallint(4) DEFAULT '0',
+  `ccid` smallint(4) DEFAULT '0',
+  `detective_name` varchar(100) COLLATE utf8_persian_ci DEFAULT NULL,
+  `employer_name` varchar(50) COLLATE utf8_persian_ci DEFAULT NULL,
+  `detective_address` varchar(255) COLLATE utf8_persian_ci DEFAULT NULL,
+  `collective_security_branch` varchar(50) COLLATE utf8_persian_ci DEFAULT NULL,
+  `parent_path` varchar(255) COLLATE utf8_persian_ci DEFAULT NULL,
+  `parent_ouid` smallint(6) DEFAULT NULL,
+  `manager_post_id` bigint(20) DEFAULT NULL,
+  `unicef_code` smallint(6) DEFAULT '0',
+  `ouid_old` int(11) DEFAULT NULL,
+  `sub_ouid_old` int(11) DEFAULT NULL,
+  `RegDate` date DEFAULT NULL COMMENT ' «—ÌŒ À» ',
+  `UnitType` smallint(5) unsigned DEFAULT NULL COMMENT '‰Ê⁄ Ê«Õœ',
+  `LevelType` smallint(5) unsigned DEFAULT NULL COMMENT '‰Ê⁄ ”ÿÕ',
+  PRIMARY KEY (`ouid`),
+  KEY `manager_post_id` (`manager_post_id`),
+  KEY `parent_ouid` (`parent_ouid`)
+) ENGINE=InnoDB AUTO_INCREMENT=565 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+insert into org_new_units select * from tmp_hrms.org_new_units;
+-- --------------------------------------------------------
+CREATE TABLE  `persons` (
+  `PersonID` int(11) NOT NULL auto_increment,
+  `pfname` varchar(30) collate utf8_persian_ci default NULL COMMENT '‰«„',
+  `plname` varchar(30) collate utf8_persian_ci default NULL COMMENT '‰«„ Œ«‰Ê«œêÌ',
+  `efname` varchar(30) collate utf8_persian_ci default NULL COMMENT '‰«„ «‰ê·Ì”Ì',
+  `elname` varchar(30) collate utf8_persian_ci default NULL COMMENT '‰«„ Œ«‰Ê«œêÌ «‰ê·Ì”Ì',
+  `father_name` varchar(30) collate utf8_persian_ci default NULL COMMENT '‰«„ Åœ—',
+  `idcard_no` varchar(30) collate utf8_persian_ci default NULL COMMENT '‘„«—Â ‘‰«”‰«„Â',
+  `birth_date` date default NULL COMMENT ' «—ÌŒ  Ê·œ',
+  `birth_city_id` smallint(6) default NULL COMMENT '‘Â— „Õ·  Ê·œ - ò·Ìœ »Â ÃœÊ· cities',
+  `birth_place` varchar(30) collate utf8_persian_ci default NULL COMMENT '„Õ·  Ê·œ',
+  `issue_date` date default NULL,
+  `issue_city_id` smallint(6) default NULL COMMENT '‘Â— ’œÊ— ‘‰«”‰«„Â - ò·Ìœ »Â ÃœÊ· cities',
+  `issue_place` varchar(30) collate utf8_persian_ci default NULL COMMENT '„Õ· ’œÊ— ‘‰«”‰«„Â',
+  `country_id` smallint(6) default NULL COMMENT 'òœ ò‘Ê— - ò·Ìœ »Â ÃœÊ· countries',
+  `national_code` varchar(30) collate utf8_persian_ci default NULL COMMENT 'òœ „·Ì',
+  `sex` smallint(6) default NULL COMMENT 'Ã‰”Ì ',
+  `marital_status` smallint(6) default NULL COMMENT 'Ê÷⁄Ì   «Â·',
+  `locality_type` smallint(1) default NULL COMMENT '»Ê„Ìø',
+  `address1` varchar(255) collate utf8_persian_ci default NULL COMMENT '¬œ—”',
+  `postal_code1` varchar(10) collate utf8_persian_ci default NULL COMMENT 'òœ Å” Ì',
+  `home_phone1` varchar(14) collate utf8_persian_ci default NULL COMMENT ' ·›‰ „‰“·',
+  `address2` varchar(255) collate utf8_persian_ci default NULL COMMENT '¬œ—” ?',
+  `postal_code2` varchar(10) collate utf8_persian_ci default NULL COMMENT 'òœ Å” Ì ?',
+  `home_phone2` varchar(14) collate utf8_persian_ci default NULL COMMENT ' ·›‰ „‰“· ?',
+  `work_phone` varchar(14) collate utf8_persian_ci default NULL COMMENT ' ·›‰ „Õ· ò«—',
+  `work_int_phone` varchar(14) collate utf8_persian_ci default NULL COMMENT '‘„«—Â œ«Œ·Ì',
+  `mobile_phone` varchar(14) collate utf8_persian_ci default NULL COMMENT ' ·›‰ Â„—«Â',
+  `religion` smallint(6) default NULL COMMENT 'œÌ‰',
+  `subreligion` smallint(6) default NULL COMMENT '„–Â»',
+  `nationality` smallint(6) default NULL COMMENT '„·Ì ',
+  `insure_no` varchar(20) collate utf8_persian_ci default NULL COMMENT '‘„«—Â »Ì„Â',
+  `military_status` smallint(1) default NULL COMMENT 'Ê÷⁄Ì  ”—»«“Ì',
+  `military_type` smallint(1) default NULL COMMENT '‰Ê⁄ Œœ„  ‰Ÿ«„ ÊŸÌ›Â',
+  `military_from_date` date default NULL COMMENT ' «—ÌŒ ‘—Ê⁄ ”—»«“Ì',
+  `military_to_date` date default NULL COMMENT ' «—ÌŒ Å«Ì«‰ ”—»«“Ì',
+  `military_duration` smallint(2) default NULL COMMENT 'ÿÊ· „œ  ”—»«“Ì',
+  `military_comment` varchar(255) collate utf8_persian_ci default NULL COMMENT ' Ê÷ÌÕ œ— „Ê—œ ‰Ÿ«„ ÊŸÌ›Â',
+  `email` varchar(50) collate utf8_persian_ci default NULL COMMENT 'Å”  «·ò —Ê‰Ìò',
+  `family_protector` tinyint(1) default NULL COMMENT '”—Å—”  Œ«‰Ê«— «” ø',
+  `role_student` smallint(1) default NULL COMMENT '‰ﬁ‘ œ«‰‘ÃÊ',
+  `role_staff` smallint(1) default NULL COMMENT '‰ﬁ‘ ò«—„‰œ',
+  `role_part_time_teacher` smallint(1) default NULL COMMENT '‰ﬁ‘ «” «œ Å«—Â Êﬁ ',
+  `role_burse` smallint(1) default NULL COMMENT '‰ﬁ‘ »Ê—”ÌÂ',
+  `role_other` smallint(1) default NULL COMMENT '‰ﬁ‘ „ ›—ﬁÂ',
+  `birth_state_id` smallint(6) default NULL COMMENT '«” «‰ „Õ·  Ê·œ - ò·Ìœ »Â ÃœÊ· states',
+  `issue_state_id` smallint(6) default NULL COMMENT '«” «‰ „Õ· ’œÊ— ‘‰«”‰«„Â - ò·Ìœ »Â ÃœÊ· states',
+  `HomePage` varchar(100) collate utf8_persian_ci default NULL COMMENT '¬œ—” ’›ÕÂ Œ«‰êÌ',
+  `person_type` smallint(6) default NULL COMMENT '‰Ê⁄ «” Œœ«„',
+  `idcard_serial` varchar(15) collate utf8_persian_ci default NULL COMMENT '‘„«—Â ”—Ì«· ‘‰«”‰«„Â',
+  `military_duration_day` smallint(2) default NULL COMMENT 'ÿÊ· „œ  ”—»«“Ì (—Ê“)',
+  `comment` varchar(255) collate utf8_persian_ci default NULL COMMENT ' Ê÷ÌÕ« ',
+  PRIMARY KEY  (`PersonID`),
+  KEY `national_code` (`national_code`),
+  KEY `FK_PERSONS__CITIES` (`birth_city_id`),
+  KEY `FK_PERSONS__STATES__1` (`birth_state_id`),
+  KEY `FK_PERSONS__STATES__2` (`issue_state_id`),
+  KEY `FK_PERSONS__CITIES__2` (`issue_city_id`),
+  KEY `FK_PERSONS__COUNTRIES` (`country_id`),
+  CONSTRAINT `FK_PERSONS__CITIES` FOREIGN KEY (`birth_city_id`) REFERENCES `cities` (`city_id`),
+  CONSTRAINT `FK_PERSONS__CITIES__2` FOREIGN KEY (`issue_city_id`) REFERENCES `cities` (`city_id`),
+  CONSTRAINT `FK_PERSONS__COUNTRIES` FOREIGN KEY (`country_id`) REFERENCES `countries` (`country_id`),
+  CONSTRAINT `FK_PERSONS__STATES__1` FOREIGN KEY (`birth_state_id`) REFERENCES `states` (`state_id`),
+  CONSTRAINT `FK_PERSONS__STATES__2` FOREIGN KEY (`issue_state_id`) REFERENCES `states` (`state_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=401367015 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+insert into persons select * from tmp_hrms.persons;
+
+-- --------------------------------------------------------
+DROP TABLE IF EXISTS `tmp_hrms`.`staff`;
+CREATE TABLE  `staff` (
+  `staff_id` int(11) NOT NULL COMMENT '‘„«—Â ‘‰«”«ÌÌ',
+  `PersonID` int(11) NOT NULL COMMENT '‘‰«”Â ‘Œ’',
+  `personel_no` varchar(15) collate utf8_persian_ci default NULL COMMENT '‘„«—Â „” Œœ„',
+  `person_type` smallint(6) unsigned NOT NULL default '0' COMMENT '‰Ê⁄ ‘Œ’ 1 - ÂÌ«  ⁄·„Ì 2 - ò«—„‰œ 3 - —Ê“„“œ »Ì„Â «Ì 4 - »Ê—”ÌÂ 5 - ﬁ—«—œ«œ Ìò”«·Â 6 - ﬁ—«—œ«œ „⁄Ì‰ 10 - »«“‰‘” Â',
+  `bank_id` smallint(6) default NULL COMMENT 'òœ »«‰ò',
+  `account_no` varchar(20) collate utf8_persian_ci default NULL COMMENT '‘„«—Â Õ”«»',
+  `last_writ_id` int(11) default NULL COMMENT '‘„«—Â ¬Œ—Ì‰ Õò„ ‘Œ’',
+  `last_writ_ver` smallint(2) default NULL COMMENT '‰ê«—‘ ¬Œ—Ì‰ Õò„ ‘Œ’',
+  `last_retired_pay` date default NULL COMMENT '¬Œ—Ì‰  «—ÌŒ Å—œ«Œ  ò”Ê— »«“‰‘” êÌ',
+  `barcode` varchar(12) collate utf8_persian_ci default NULL COMMENT '»«— òœ',
+  `work_start_date` date default NULL COMMENT ' «—ÌŒ ‘—Ê⁄ »Â ò«—',
+  `card_no` smallint(6) default NULL COMMENT '‘„«—Â ò«—  ‘‰«”«ÌÌ',
+  `tafsili_id` int(11) default NULL COMMENT 'òœ  ›’Ì·Ì',
+  `UnitCode` int(11) unsigned default NULL COMMENT 'òœ Ê«Õœ „Õ· Œœ„ ',
+  `FacCode` smallint(5) unsigned COMMENT 'òœ œ«‰‘òœÂ ',
+  `EduGrpCode` int(11) unsigned default NULL COMMENT 'òœ ê—ÊÂ ¬„Ê“‘Ì',
+  `ProCode` int(11) unsigned default NULL COMMENT 'òœ «” «œ',
+  `DutyUnit` int(11) default NULL COMMENT 'Ê«Õœ „ÊŸ›',
+  `extra_work_coef` decimal(5,2) default NULL COMMENT '÷—Ì» «÷«›Â ò«—',
+  `sum_paied_pension` decimal(15,0) NOT NULL default '0' COMMENT '„ﬁ——Ì Å—œ«Œ  ‘œÂ',
+  `retired_date` date default NULL COMMENT ' «—ÌŒ »«“‰‘” êÌ',
+  `retired_state` smallint(6) default NULL COMMENT 'Ê÷⁄Ì  »«“‰‘” êÌ',
+  `job_id` int(11) default NULL COMMENT 'òœ ‘€·',
+  `post_id` bigint(20) default NULL COMMENT 'òœ Å” ',
+  `ouid` smallint(6) default NULL COMMENT 'òœ Ê«Õœ ”«“„«‰Ì',
+  PRIMARY KEY  (`staff_id`),
+  KEY `PersonID` (`PersonID`),
+  KEY `last_writ_id` (`last_writ_id`,`last_writ_ver`),
+  KEY `idx_procode` (`ProCode`),
+  KEY `FK_STAFF__BANKS` (`bank_id`),
+  CONSTRAINT `FK_STAFF__BANKS` FOREIGN KEY (`bank_id`) REFERENCES `banks` (`bank_id`),
+  CONSTRAINT `FK_STAFF__PERSONS` FOREIGN KEY (`PersonID`) REFERENCES `persons` (`PersonID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into staff
+select staff_id,PersonID,personel_no,person_type,bank_id,account_no,last_writ_id,last_writ_ver,last_retired_pay,barcode,work_start_date,card_no,
+tafsili_id,UnitCode,FacCode,EduGrpCode,ProCode,DutyUnit,extra_work_coef,sum_paied_pension,retired_date,retired_state,job_id,post_id,ouid from tmp_hrms.staff;
+
+insert into staff
+select s.staff_id,s.PersonID,s.personel_no,s.person_type,s.bank_id,s.account_no,s.last_writ_id,s.last_writ_ver,s.last_retired_pay,s.barcode,s.work_start_date,s.card_no,
+s.tafsili_id,s.UnitCode,s.FacCode,s.EduGrpCode,s.ProCode,s.DutyUnit,s.extra_work_coef,s.sum_paied_pension,s.retired_date,s.retired_state,
+s.job_id,s.post_id,s.ouid
+from tmp_hrms_sherkati.staff as s join tmp_hrms.persons as p using(PersonID);
+-- --------------------------------------------------------
+CREATE TABLE  `staff_groups` (
+  `staff_group_id` smallint(6) NOT NULL auto_increment,
+  `title` varchar(50) collate utf8_persian_ci NOT NULL default '',
+  PRIMARY KEY  (`staff_group_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into staff_groups select * from tmp_hrms.staff_groups;
+insert into staff_groups select * from tmp_hrms_sherkati.staff_groups;
+
+-- --------------------------------------------------------
+CREATE TABLE  `position` (
+  `post_id` bigint(20) NOT NULL DEFAULT '0',
+  `ouid` smallint(6) NOT NULL DEFAULT '0',
+  `post_rowno` smallint(6) NOT NULL DEFAULT '0',
+  `post_no` varchar(10) COLLATE utf8_persian_ci DEFAULT '0',
+  `post_type` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `title` varchar(100) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `included` tinyint(1) DEFAULT '0',
+  `jfid` int(11) DEFAULT NULL,
+  `validity_start` date DEFAULT '0000-00-00',
+  `validity_end` date DEFAULT NULL,
+  `description` varchar(255) COLLATE utf8_persian_ci DEFAULT NULL,
+  `parent_post_id` bigint(20) DEFAULT NULL,
+  `parent_path` varchar(255) COLLATE utf8_persian_ci DEFAULT NULL,
+  `is_dummy_post` smallint(6) NOT NULL DEFAULT '0',
+  `staff_id` int(11) unsigned DEFAULT NULL,
+  `person_type` smallint(6) unsigned DEFAULT NULL,
+  `RegDate` date DEFAULT NULL COMMENT ' «—ÌŒ À» ',
+  `RoleID` int DEFAULT 0 COMMENT 'òœ ”„  «“ domain',
+  PRIMARY KEY (`post_id`),
+  KEY `ouid` (`ouid`),
+  KEY `ouid_2` (`ouid`),
+  KEY `parent_post_id` (`parent_post_id`),
+  KEY `staff_id` (`staff_id`,`person_type`),
+  KEY `person_type` (`person_type`,`staff_id`),
+  KEY `jfid` (`jfid`),
+  CONSTRAINT `jfid` FOREIGN KEY (`jfid`) REFERENCES `job_fields` (`jfid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into position select * from tmp_hrms.position;
+insert into position select p.*,'0000-00-00',0 from tmp_hrms_sherkati.position as p join job_fields using(jfid) ;
+-- --------------------------------------------------------
+
+CREATE TABLE  `person_dependents` (
+  `PersonID` int(11) NOT NULL,
+  `row_no` smallint(6) NOT NULL,
+  `dependency` smallint(1) NOT NULL DEFAULT '0',
+  `fname` varchar(30) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `lname` varchar(30) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `birth_date` date NOT NULL DEFAULT '0000-00-00',
+  `idcard_no` varchar(30) COLLATE utf8_persian_ci DEFAULT NULL,
+  `idcard_location` varchar(30) COLLATE utf8_persian_ci DEFAULT NULL,
+  `father_name` varchar(30) COLLATE utf8_persian_ci DEFAULT NULL,
+  `marriage_date` date DEFAULT NULL,
+  `separation_date` date DEFAULT NULL,
+  `insure_no` varchar(20) COLLATE utf8_persian_ci DEFAULT NULL,
+  `comments` varchar(255) COLLATE utf8_persian_ci DEFAULT NULL,
+  `dep_person_id` int(10) unsigned DEFAULT NULL COMMENT '‘„«—Â ‘‰«”Â „ÊŸ›Ì‰',
+  `is_heir` smallint(1) NOT NULL DEFAULT '0' COMMENT 'Ê«—À «” ø',
+  PRIMARY KEY (`PersonID`,`row_no`),
+  CONSTRAINT `FK_PERSON_DEPENDENTS__PERSONS` FOREIGN KEY (`PersonID`) REFERENCES `persons` (`PersonID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into person_dependents select pd.* from tmp_hrms.person_dependents as pd join tmp_hrms.persons using(PersonID);
+-- --------------------------------------------------------
+
+CREATE TABLE  `person_dependent_supports` (
+  `PersonID` int(11) NOT NULL,
+  `master_row_no` smallint(6) NOT NULL,
+  `row_no` smallint(6) NOT NULL,
+  `from_date` date NOT NULL,
+  `to_date` date DEFAULT NULL,
+  `support_cause` smallint(1) NOT NULL DEFAULT '0',
+  `insure_type` smallint(1) unsigned DEFAULT NULL,
+  `status` smallint(6) DEFAULT '1',
+  `calc_year_from` smallint(6) DEFAULT NULL,
+  `calc_year_to` smallint(6) DEFAULT NULL,
+  `calc_month_from` smallint(6) DEFAULT NULL,
+  `calc_month_to` smallint(6) DEFAULT NULL,
+  `dana_include` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`PersonID`,`master_row_no`,`row_no`),
+  CONSTRAINT `FK_PREON_DEP_SUPPORTS__PERSON_DEP` FOREIGN KEY (`PersonID`, `master_row_no`) REFERENCES `person_dependents` (`PersonID`, `row_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into person_dependent_supports select * from tmp_hrms.person_dependent_supports;
+-- --------------------------------------------------------
+CREATE TABLE  `person_devotions` (
+  `PersonID` int(11) NOT NULL,
+  `devotion_row` smallint(6) NOT NULL,
+  `devotion_type` smallint(1) default NULL,
+  `personel_relation` smallint(1) default NULL,
+  `enlisted` smallint(1) default NULL,
+  `amount` smallint(6) NOT NULL default '0',
+  `from_date` date default NULL,
+  `to_date` date default NULL,
+  `continous` smallint(1) default NULL,
+  `war_place` varchar(30) collate utf8_persian_ci default NULL,
+  `letter_no` varchar(20) collate utf8_persian_ci default NULL,
+  `letter_date` date default NULL,
+  `comments` varchar(255) collate utf8_persian_ci default NULL,
+  `duration_include_paied_retired_fraction` smallint(6) default '0' COMMENT '„œ  ﬁ«»· ﬁ»Ê· »«“‰‘” êÌ òÂ ò”Ê— ¬‰  Å—œ«Œ  ‘œÂ',
+  PRIMARY KEY  (`PersonID`,`devotion_row`),
+  CONSTRAINT `FK_PERSON_DEVOTIONS__PERSONS` FOREIGN KEY (`PersonID`) REFERENCES `persons` (`PersonID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into person_devotions select * from tmp_hrms.person_devotions;
+-- --------------------------------------------------------
+CREATE TABLE  `person_employments` (
+  `PersonID` int(11) NOT NULL,
+  `row_no` smallint(6) NOT NULL,
+  `from_date` date NOT NULL DEFAULT '0000-00-00',
+  `to_date` date NOT NULL DEFAULT '0000-00-00',
+  `organization` varchar(30) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `unit` varchar(30) COLLATE utf8_persian_ci DEFAULT NULL,
+  `org_type` smallint(1) NOT NULL DEFAULT '0',
+  `person_type` smallint(6) NOT NULL DEFAULT '0',
+  `emp_state` tinyint(3) unsigned DEFAULT '0',
+  `emp_mode` smallint(6) NOT NULL DEFAULT '0',
+  `title` varchar(50) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `unemp_cause` smallint(6) NOT NULL DEFAULT '0',
+  `duration_year` smallint(6) NOT NULL DEFAULT '0',
+  `duration_month` smallint(6) NOT NULL DEFAULT '0',
+  `duration_day` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `retired_duration_year` smallint(6) NOT NULL DEFAULT '0',
+  `retired_duration_month` smallint(6) NOT NULL DEFAULT '0',
+  `retired_duration_day` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `group_duration_year` smallint(6) NOT NULL DEFAULT '0',
+  `group_duration_month` smallint(6) NOT NULL DEFAULT '0',
+  `group_duration_day` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `comments` varchar(255) COLLATE utf8_persian_ci DEFAULT NULL,
+  PRIMARY KEY (`PersonID`,`row_no`),
+  CONSTRAINT `FK_PERSON_EMPLOYMENTS__PERSONS` FOREIGN KEY (`PersonID`) REFERENCES `persons` (`PersonID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into person_employments select * from tmp_hrms.person_employments;
+
+-- --------------------------------------------------------
+
+CREATE TABLE  `study_fields` (
+  `sfid` smallint(6) NOT NULL AUTO_INCREMENT,
+  `ptitle` varchar(100) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  PRIMARY KEY (`sfid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into study_fields select * from tmp_hrms.study_fields;
+-- --------------------------------------------------------
+
+CREATE TABLE  `study_branchs` (
+  `sfid` smallint(6) NOT NULL,
+  `sbid` smallint(6) NOT NULL,
+  `ptitle` varchar(100) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `etitle` varchar(100) COLLATE utf8_persian_ci DEFAULT NULL,
+  PRIMARY KEY (`sfid`,`sbid`),
+  CONSTRAINT `FK_STUDY_BRANCHS__STUDY_FIELDS` FOREIGN KEY (`sfid`) REFERENCES `study_fields` (`sfid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into study_branchs select * from tmp_hrms.study_branchs;
+-- --------------------------------------------------------
+CREATE TABLE  `universities` (
+  `country_id` smallint(6) NOT NULL default '0',
+  `university_id` smallint(6) NOT NULL default '0',
+  `university_category` smallint(6) default '0',
+  `ptitle` varchar(100) collate utf8_persian_ci NOT NULL default '',
+  `etitle` varchar(100) collate utf8_persian_ci default NULL,
+  PRIMARY KEY  (`country_id`,`university_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into universities select * from tmp_hrms.universities;
+insert into universities select * from tmp_hrms_sherkati.universities on duplicate key
+	update universities.country_id=tmp_hrms_sherkati.universities.country_id;
+
+-- --------------------------------------------------------
+
+CREATE TABLE  `person_educations` (
+  `PersonID` int(11) NOT NULL,
+  `row_no` smallint(6) NOT NULL,
+  `education_level` smallint(1) NOT NULL DEFAULT '0',
+  `sfid` smallint(6) DEFAULT NULL,
+  `sbid` smallint(6) DEFAULT NULL,
+  `doc_date` date DEFAULT '0000-00-00',
+  `country_id` smallint(6) DEFAULT NULL,
+  `university_id` smallint(6) DEFAULT NULL,
+  `grade` decimal(5,2) DEFAULT NULL,
+  `thesis_ptitle` varchar(100) COLLATE utf8_persian_ci DEFAULT NULL,
+  `thesis_etitle` varchar(100) COLLATE utf8_persian_ci DEFAULT NULL,
+  `burse` tinyint(1) DEFAULT '0',
+  `certificated` smallint(6) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`PersonID`,`row_no`),
+  KEY `university_id` (`university_id`),
+  KEY `FK_PERSON_EDU__STUDY_BRANCHES` (`sfid`,`sbid`),
+  KEY `FK_PERSON_EDU__UNIVERSITIES` (`country_id`,`university_id`),
+  CONSTRAINT `FK_PERSON_EDUCATIONS__COUNTRIES` FOREIGN KEY (`country_id`) REFERENCES `countries` (`country_id`),
+  CONSTRAINT `FK_PERSON_EDUCATIONS__PERSONS` FOREIGN KEY (`PersonID`) REFERENCES `persons` (`PersonID`),
+  CONSTRAINT `FK_PERSON_EDU__STUDY_BRANCHES` FOREIGN KEY (`sfid`, `sbid`) REFERENCES `study_branchs` (`sfid`, `sbid`),
+  CONSTRAINT `FK_PERSON_EDU__STUDY_FIELDS` FOREIGN KEY (`sfid`) REFERENCES `study_fields` (`sfid`),
+  CONSTRAINT `FK_PERSON_EDU__UNIVERSITIES` FOREIGN KEY (`country_id`, `university_id`) REFERENCES `universities` (`country_id`, `university_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into person_educations select * from tmp_hrms.person_educations;
+
+insert into study_branchs
+	select pe.sfid,pe.sbid,'-','-' from tmp_hrms_sherkati.person_educations pe left join study_branchs s on(s.sfid=pe.sfid and s.sbid=pe.sbid)
+	where pe.sfid is not null and pe.sbid is not null and s.sfid is null
+	group by pe.sfid,pe.sbid;
+	
+insert into person_educations
+	select pe.* from tmp_hrms_sherkati.person_educations as pe join tmp_hrms.persons p using(PersonID)
+	left join person_educations hpe on(hpe.PersonID=pe.PersonID and pe.row_no=hpe.row_no)
+	where hpe.PersonID is null;
+-- --------------------------------------------------------
+CREATE TABLE  `person_misc_docs` (
+  `PersonID` int(11) NOT NULL,
+  `row_no` smallint(6) NOT NULL,
+  `doc_no` varchar(10) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `doc_date` date NOT NULL DEFAULT '0000-00-00',
+  `title` varchar(100) COLLATE utf8_persian_ci NOT NULL DEFAULT '',
+  `attachments` text COLLATE utf8_persian_ci,
+  PRIMARY KEY (`PersonID`,`row_no`),
+  CONSTRAINT `FK_PERSON_MISC_DOCS__PERSONS` FOREIGN KEY (`PersonID`) REFERENCES `persons` (`PersonID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into person_misc_docs select * from tmp_hrms.person_misc_docs;
+insert into person_misc_docs select * from tmp_hrms_sherkati.person_misc_docs;
+
+-- --------------------------------------------------------
+CREATE TABLE  `writ_types` (
+  `person_type` smallint(6) NOT NULL default '0',
+  `writ_type_id` smallint(6) NOT NULL,
+  `title` varchar(100) collate utf8_persian_ci NOT NULL default '',
+  PRIMARY KEY  (`person_type`,`writ_type_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into writ_types select * from tmp_hrms.writ_types;
+
+-- --------------------------------------------------------
+
+CREATE TABLE `writ_subtypes` (
+  `person_type` smallint(6) NOT NULL default '0',
+  `writ_type_id` smallint(6) NOT NULL,
+  `writ_subtype_id` smallint(6) NOT NULL,
+  `title` varchar(50) collate utf8_persian_ci NOT NULL default '',
+  `description` text collate utf8_persian_ci,
+  `emp_state` tinyint(3) unsigned default NULL,
+  `emp_mode` smallint(6) default NULL,
+  `worktime_type` smallint(1) default NULL,
+  `edit_fields` tinyint(1) NOT NULL default '0',
+  `time_limited` tinyint(1) NOT NULL default '0',
+  `req_staff_signature` tinyint(1) NOT NULL default '0',
+  `automatic` tinyint(1) NOT NULL default '0',
+  `salary_pay_proc` tinyint(3) unsigned default '0',
+  `items_effect` tinyint(3) unsigned default '0',
+  `post_effect` tinyint(3) unsigned default '0',
+  `annual_effect` tinyint(3) unsigned default NULL,
+  `remember_distance` tinyint(4) default NULL,
+  `remember_message` varchar(50) collate utf8_persian_ci default NULL,
+  `print_title` varchar(50) collate utf8_persian_ci NOT NULL default '',
+  `comments` text collate utf8_persian_ci,
+  `show_in_summary_doc` smallint(6) NOT NULL default '0',
+  `force_writ_issue` smallint(6) default NULL,
+  PRIMARY KEY  (`person_type`,`writ_type_id`,`writ_subtype_id`),
+  CONSTRAINT `FK_WRIT_SUBTYPES__WRIT_TYPES` FOREIGN KEY (`person_type`, `writ_type_id`) REFERENCES `writ_types` (`person_type`, `writ_type_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into writ_subtypes select * from tmp_hrms.writ_subtypes;
+
+-- --------------------------------------------------------
+CREATE TABLE  `salary_item_types` (
+  `salary_item_type_id` smallint(6) NOT NULL,
+  `person_type` smallint(6) NOT NULL default '0',
+  `user_defined` tinyint(1) NOT NULL default '0',
+  `effect_type` tinyint(3) unsigned NOT NULL default '0',
+  `full_title` char(50) collate utf8_persian_ci NOT NULL default '',
+  `print_title` char(50) collate utf8_persian_ci NOT NULL default '',
+  `compute_place` tinyint(3) unsigned NOT NULL default '0',
+  `insure_include` tinyint(1) NOT NULL default '0',
+  `tax_include` tinyint(1) NOT NULL default '0',
+  `retired_include` tinyint(1) NOT NULL default '0',
+  `user_data_entry` tinyint(1) NOT NULL default '0',
+  `salary_compute_type` tinyint(3) unsigned NOT NULL default '0',
+  `work_time_unit` tinyint(4) default NULL,
+  `multiplicand` tinyint(3) unsigned default NULL,
+  `function_name` char(100) collate utf8_persian_ci default NULL,
+  `param1_title` char(50) collate utf8_persian_ci default NULL,
+  `param1_input` smallint(1) NOT NULL default '0',
+  `param2_title` char(50) collate utf8_persian_ci default NULL,
+  `param2_input` smallint(1) NOT NULL default '0',
+  `param3_title` char(50) collate utf8_persian_ci default NULL,
+  `param3_input` smallint(1) NOT NULL default '0',
+  `param4_title` varchar(50) collate utf8_persian_ci default NULL,
+  `param4_input` smallint(5) unsigned NOT NULL,
+  `remember_distance` tinyint(4) default NULL,
+  `remember_message` char(50) collate utf8_persian_ci default NULL,
+  `print_order` smallint(1) default NULL,
+  `validity_start_date` date NOT NULL default '0000-00-00',
+  `validity_end_date` date default NULL,
+  `total_id` int(11) default NULL,
+  `ledger_id` int(11) default NULL,
+  `tafsili_id` int(11) default NULL,
+  `tafsili2_id` int(11) default NULL,
+  `available_for` smallint(6) NOT NULL default '5',
+  `backpay_include` smallint(6) NOT NULL default '0',
+  `month_length_effect` smallint(6) NOT NULL default '0',
+  `pension_include` tinyint(1) NOT NULL default '0',
+  `credit_topic` smallint(6) NOT NULL default '1',
+  `editable_value` smallint(5) unsigned NOT NULL default '0',
+  `param5_title` char(50) collate utf8_persian_ci default NULL,
+  `param5_input` smallint(1) NOT NULL default '0',
+  `param6_title` char(50) collate utf8_persian_ci default NULL,
+  `param6_input` smallint(1) NOT NULL default '0',
+  `param7_title` char(50) collate utf8_persian_ci default NULL,
+  `param7_input` smallint(1) NOT NULL default '0',
+  `ret_function_name` char(100) collate utf8_persian_ci default NULL,
+  PRIMARY KEY  (`salary_item_type_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into salary_item_types select * from tmp_hrms.salary_item_types;
+-- --------------------------------------------------------
+CREATE TABLE `jobs` (
+  `job_id` smallint(6) NOT NULL auto_increment,
+  `title` varchar(50) collate utf8_persian_ci NOT NULL default '',
+  `job_group` smallint(6) NOT NULL default '0',
+  `conditions` text collate utf8_persian_ci,
+  `duties` text collate utf8_persian_ci,
+  PRIMARY KEY  (`job_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5012 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into jobs select * from tmp_hrms.jobs;
+insert into jobs select * from tmp_hrms_sherkati.jobs on duplicate key update jobs.job_id=tmp_hrms_sherkati.jobs.job_id;
+
+-- --------------------------------------------------------
+CREATE TABLE  `writs` (
+  `writ_id` int(11) NOT NULL COMMENT '‘„«—Â Õò„',
+  `writ_ver` smallint(6) NOT NULL COMMENT '‰ê«—‘ Õò„',
+  `corrective` tinyint(1) NOT NULL default '0' COMMENT 'Õò„ «’·«ÕÌ «” ø',
+  `corrective_writ_id` int(11) default NULL COMMENT '‘„«—Â Õò„ «’·«ÕÌ',
+  `corrective_writ_ver` smallint(6) default NULL COMMENT '‰ê«—‘ Õò„ «’·«ÕÌ',
+  `corrective_date` date default NULL COMMENT ' «—ÌŒ «’·«Õ',
+  `staff_id` int(15) NOT NULL COMMENT '‘„«—Â ‘‰«”«ÌÌ',
+  `post_id` bigint(20) default NULL COMMENT 'òœ Å” ',
+  `job_id` smallint(6) default NULL COMMENT 'òœ ‘€·',
+  `cost_center_id` smallint(6) default NULL COMMENT 'òœ „—ò“ Â“Ì‰Â',
+  `ouid` smallint(6) default NULL COMMENT 'Ê«Õœ «’·Ì „Õ· Œœ„ ',
+  `sub_ouid` smallint(6) default NULL COMMENT 'Ê«Õœ ›—⁄Ì „Õ· Œœ„ ',
+  `writ_type_id` smallint(6) NOT NULL COMMENT 'òœ ‰Ê⁄ «’·Ì Õò„',
+  `writ_subtype_id` smallint(6) NOT NULL COMMENT 'òœ ‰Ê⁄ ›—⁄Ì Õò„',
+  `person_type` smallint(6) NOT NULL default '0' COMMENT '‰Ê⁄ ‘Œ’ 1 - ÂÌ«  ⁄·„Ì 2 - ò«—„‰œ 3 - —Ê“„“œ »Ì„Â «Ì 4 - »Ê—”ÌÂ 5 - ﬁ—«—œ«œ Ìò”«·Â 6 - ﬁ—«—œ«œ „⁄Ì‰ 10 - »«“‰‘” Â',
+  `emp_state` tinyint(3) unsigned NOT NULL default '0' COMMENT 'Õ«·  «” Œœ«„Ì',
+  `emp_mode` smallint(6) NOT NULL default '0' COMMENT 'Ê÷⁄Ì  «” Œœ«„Ì',
+  `worktime_type` smallint(1) NOT NULL default '0' COMMENT '‰Ê⁄ “„«‰ ò«—Ì',
+  `ref_letter_no` varchar(10) collate utf8_persian_ci default NULL COMMENT '‘„«—Â ‰«„Â „—Ã⁄',
+  `ref_letter_date` date default NULL COMMENT ' «—ÌŒ ‰«„Â „—Ã⁄',
+  `send_letter_no` varchar(10) collate utf8_persian_ci default NULL COMMENT '‘„«—Â ‰«„Â œ»Ì—Œ«‰Â',
+  `send_letter_date` date default NULL COMMENT ' «—ÌŒ ‰«„Â œ»Ì—Œ«‰Â',
+  `issue_date` date NOT NULL default '0000-00-00' COMMENT ' «—ÌŒ ’œÊ—',
+  `execute_date` date NOT NULL default '0000-00-00' COMMENT ' «—ÌŒ «Ã—«',
+  `pay_date` date NOT NULL default '0000-00-00' COMMENT ' «—ÌŒ Å—œ«Œ ',
+  `contract_start_date` date default NULL COMMENT ' «—ÌŒ ‘—Ê⁄ ﬁ—«—œ«œ',
+  `contract_end_date` date default NULL COMMENT ' «—ÌŒ Å«Ì«‰ ﬁ—«—œ«œ',
+  `education_level` smallint(1) NOT NULL default '0' COMMENT '„œ—ò  Õ’Ì·Ì',
+  `science_level` smallint(6) default NULL COMMENT '„— »Â ⁄·„Ì',
+  `cur_group` smallint(6) default NULL COMMENT 'ê—ÊÂ',
+  `base` smallint(6) default NULL COMMENT 'Å«ÌÂ',
+  `description` text collate utf8_persian_ci COMMENT '‘—Õ Õò„',
+  `children_count` smallint(6) NOT NULL default '0' COMMENT ' ⁄œ«œ ›—“‰œ«‰',
+  `included_children_count` smallint(6) NOT NULL default '0' COMMENT ' ⁄œ«œ ›—“‰œ«‰ „‘„Ê· Õﬁ «Ê·«œ',
+  `marital_status` smallint(6) default NULL COMMENT 'Ê÷⁄Ì   «Â· ',
+  `family_responsible` tinyint(1) NOT NULL default '0' COMMENT '”—Å—”  Œ«‰Ê«—ø',
+  `onduty_year` smallint(4) NOT NULL default '0' COMMENT '„œ  Œœ„  (”«·)',
+  `onduty_day` smallint(2) NOT NULL default '0' COMMENT '„œ  Œœ„  (—Ê“)',
+  `onduty_month` smallint(2) NOT NULL default '0' COMMENT '„œ  Œœ„  („«Â)',
+  `military_type` smallint(1) NOT NULL default '0' COMMENT 'Ê÷⁄Ì  Œœ„  ÊŸÌ›Â ',
+  `sbid` smallint(6) default NULL COMMENT 'òœ —‘ Â  Õ’Ì·Ì',
+  `sfid` smallint(6) default NULL COMMENT 'òœ ê—«Ì‘  Õ’Ì·Ì',
+  `annual_effect` smallint(1) default NULL COMMENT '«À— ”‰Ê« Ì',
+  `military_status` smallint(1) NOT NULL default '0' COMMENT 'Ê÷⁄Ì  Œœ„  ÊŸÌ›Â',
+  `joined_professor` tinyint(1) NOT NULL default '0' COMMENT '«” «œ „Â„«‰',
+  `joined_professor_comment` varchar(50) collate utf8_persian_ci default NULL COMMENT ' Ê÷ÌÕ«  «” «œ „Â„«‰',
+  `automatic` tinyint(1) NOT NULL default '0' COMMENT '’œÊ— ŒÊœò«—ø',
+  `history_only` tinyint(1) default '0' COMMENT '›ﬁÿ À»  ”«»ﬁÂ',
+  `warning_date` date default NULL COMMENT ' «—ÌŒ Â‘œ«—',
+  `warning_message` varchar(50) collate utf8_persian_ci default NULL COMMENT 'ÅÌ«„ Â‘œ«—',
+  `work_city_id` smallint(6) default NULL COMMENT '‘Â— „Õ· Œœ„ ',
+  `salary_pay_proc` smallint(2) default NULL COMMENT '—Ê«· Å—œ«Œ  ÕﬁÊﬁ ',
+  `work_state_id` smallint(6) default NULL COMMENT '«” «‰ „Õ· Œœ„ ',
+  `remembered` smallint(1) default NULL COMMENT 'Ì«œ¬Ê—Ì ‘œø',
+  `notes` text collate utf8_persian_ci COMMENT ' Ê÷ÌÕ« ',
+  `state` smallint(2) NOT NULL default '1' COMMENT 'Ê÷⁄Ì  Õò„ 1 - œ—ò«—ê“Ì‰Ì 2 - Ê÷⁄Ì  „Ì«‰Ì 3 - œ— ÕﬁÊﬁ ',
+  `writ_signature_post_title` varchar(50) collate utf8_persian_ci default NULL COMMENT '⁄‰Ê«‰ Å”  «„÷« ò‰‰œ Â Õò„',
+  `writ_signature_post_owner` varchar(50) collate utf8_persian_ci default NULL COMMENT 'œ«—‰œÂ Å”  «„÷« ò‰‰œÂ Õò„',
+  `dont_transfer` smallint(6) default '0' COMMENT '»Â ÕﬁÊﬁ „‰ ﬁ· ‘Êœø',
+  `correct_completed` smallint(6) NOT NULL default '0' COMMENT '«’·«Õ  ò„Ì· ‘œÂ «” ø',
+  `hortative_group` smallint(6) NOT NULL default '0' COMMENT 'ê—ÊÂ  ‘ÊÌﬁÌ',
+  `ouid_old` int(11) default NULL COMMENT 'òœ ﬁ»·Ì Ê«Õœ „Õ· Œœ„  «’·Ì',
+  `sub_ouid_old` int(11) default NULL COMMENT 'òœ ﬁ»·Ì Ê«Õœ ›—⁄Ì „Õ· Œœ„ ',
+  `related_onduty_year` smallint(4) NOT NULL default '0' COMMENT '”‰Ê«  Œœ„  „—»Êÿ Ê „‘«»Â (”«·)',
+  `related_onduty_month` smallint(2) NOT NULL default '0' COMMENT '”‰Ê«  Œœ„  „—»Êÿ Ê „‘«»Â („«Â)',
+  `related_onduty_day` smallint(2) NOT NULL default '0' COMMENT '”‰Ê«  Œœ„  „—»Êÿ Ê „‘«»Â (—Ê“)',
+  `writ_transfer_date` datetime default NULL COMMENT ' «—ÌŒ «‰ ﬁ«· Õò„ »Â ÕﬁÊﬁ ',
+  `writ_recieve_date` datetime default NULL,
+  PRIMARY KEY  (`writ_id`,`writ_ver`, `staff_id`),
+  KEY `ouid` (`ouid`,`sub_ouid`),
+  KEY `staff_id` (`staff_id`),
+  KEY `writ_type_id` (`person_type`,`writ_type_id`,`writ_subtype_id`),
+  KEY `post_id` (`post_id`),
+  KEY `FK_WRITS__CITIES` (`work_city_id`),
+  KEY `FK_WRITS__COST_CENTERS` (`cost_center_id`),
+  KEY `FK_WRITS__JOBS` (`job_id`),
+  KEY `FK_WRITS__STATES` (`work_state_id`),
+  KEY `FK_WRITS__STUDEY_BRANCHS` (`sfid`,`sbid`),
+  CONSTRAINT `FK_WRITS__CITIES` FOREIGN KEY (`work_city_id`) REFERENCES `cities` (`city_id`),
+  CONSTRAINT `FK_WRITS__COST_CENTERS` FOREIGN KEY (`cost_center_id`) REFERENCES `cost_centers` (`cost_center_id`),
+  CONSTRAINT `FK_WRITS__JOBS` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`),
+  CONSTRAINT `FK_WRITS__ORG_UNITS` FOREIGN KEY (`ouid`) REFERENCES `org_new_units` (`ouid`),
+  CONSTRAINT `FK_WRITS__POSITION` FOREIGN KEY (`post_id`) REFERENCES `position` (`post_id`),
+  CONSTRAINT `FK_WRITS__STAFF` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`),
+  CONSTRAINT `FK_WRITS__STATES` FOREIGN KEY (`work_state_id`) REFERENCES `states` (`state_id`),
+  CONSTRAINT `FK_WRITS__STUDEY_BRANCHS` FOREIGN KEY (`sfid`, `sbid`) REFERENCES `study_branchs` (`sfid`, `sbid`),
+  CONSTRAINT `FK_WRITS__STUDY_FIELDS` FOREIGN KEY (`sfid`) REFERENCES `study_fields` (`sfid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into writs select * from tmp_hrms.writs;
+insert into writs select w.writ_id,w.writ_ver,w.corrective,w.corrective_writ_id,w.corrective_writ_ver,w.corrective_date,w.staff_id,
+  p.post_id,w.job_id,w.cost_center_id,w.ouid,w.sub_ouid,w.writ_type_id,w.writ_subtype_id,w.person_type,w.emp_state,w.emp_mode,w.worktime_type,w.ref_letter_no,
+  w.ref_letter_date,w.send_letter_no,w.send_letter_date,w.issue_date,w.execute_date,w.pay_date,w.contract_start_date,w.contract_end_date,w.education_level,
+  w.science_level,w.cur_group,w.base,w.description,w.children_count,w.included_children_count,w.marital_status,w.family_responsible,w.onduty_year,w.onduty_day,
+  w.onduty_month,w.military_type,
+  b.sbid,b.sfid,
+  w.annual_effect,w.military_status,w.joined_professor,w.joined_professor_comment,w.automatic,w.history_only,w.warning_date,w.warning_message,w.work_city_id,
+  w.salary_pay_proc,w.work_state_id,w.remembered,w.notes,w.state,w.writ_signature_post_title,w.writ_signature_post_owner,w.dont_transfer,w.correct_completed,
+  w.hortative_group,w.ouid_old,w.sub_ouid_old,w.related_onduty_year,w.related_onduty_month,w.related_onduty_day,w.writ_transfer_date,w.writ_recieve_date
+   from tmp_hrms_sherkati.writs as w
+  left join tmp_hrms.study_branchs as b on(w.sfid=b.sfid and w.sbid=b.sbid)
+  left join position as p on(w.post_id=p.post_id);
+
+-- --------------------------------------------------------
+CREATE TABLE  `writ_salary_items` (
+  `writ_id` int(11) NOT NULL,
+  `writ_ver` smallint(6) NOT NULL,
+  `staff_id` int(11) NOT NULL default '0',
+  `salary_item_type_id` smallint(6) NOT NULL,
+  `param1` varchar(100) collate utf8_persian_ci default NULL,
+  `param2` varchar(255) collate utf8_persian_ci default NULL,
+  `param3` decimal(10,3) default NULL,
+  `param4` varchar(255) collate utf8_persian_ci default NULL,
+  `value` decimal(15,0) NOT NULL default '0',
+  `automatic` tinyint(1) NOT NULL default '0',
+  `remember_date` date default NULL,
+  `remember_message` varchar(50) collate utf8_persian_ci default NULL,
+  `remembered` smallint(1) default NULL,
+  `total_id` int(11) default NULL,
+  `ledger_id` int(11) default NULL,
+  `tafsili_id` int(11) default NULL,
+  `tafsili2_id` int(11) default NULL,
+  `must_pay` smallint(1) default '1',
+  `base_value` decimal(15,0) default '0',
+  `edit_reason` varchar(100) collate utf8_persian_ci default NULL,
+  `param5` decimal(10,2) default NULL,
+  `param6` decimal(10,2) default NULL,
+  `param7` varchar(255) collate utf8_persian_ci default NULL,
+  PRIMARY KEY  (`writ_id`,`writ_ver`,`salary_item_type_id`,`staff_id`),
+  KEY `salary_item_type_id` (`salary_item_type_id`),
+  KEY `writ_id` (`writ_id`,`writ_ver`),
+  CONSTRAINT `FK_WRIT_SALARY_ITEMS__WRITS` FOREIGN KEY (`writ_id`, `writ_ver`, `staff_id`) REFERENCES `writs` (`writ_id`, `writ_ver`, `staff_id`),
+  CONSTRAINT `FK_WRIT_SAL_ITEMS__SAL_ITEM_TYPES` FOREIGN KEY (`salary_item_type_id`) REFERENCES `salary_item_types` (`salary_item_type_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci ROW_FORMAT=DYNAMIC;
+
+insert into writ_salary_items select s.writ_id,s.writ_ver,w.staff_id,s.salary_item_type_id,s.param1,s.param2,s.param3,s.param4,s.value,s.automatic,
+s.remember_date,s.remember_message,s.remembered,s.total_id,s.ledger_id,s.tafsili_id,s.tafsili2_id,s.must_pay,
+s.base_value,s.edit_reason,s.param5,s.param6,s.param7 
+from tmp_hrms.writ_salary_items as s join writs as w on(s.writ_id=w.writ_id and s.writ_ver=w.writ_ver and s.staff_id=w.staff_id);
+
+insert into writ_salary_items select s.writ_id,s.writ_ver,w.staff_id,s.salary_item_type_id,s.param1,s.param2,s.param3,s.param4,s.value,s.automatic,
+s.remember_date,s.remember_message,s.remembered,s.total_id,s.ledger_id,s.tafsili_id,s.tafsili2_id,s.must_pay,
+s.base_value,s.edit_reason,s.param5,s.param6,s.param7 
+from tmp_hrms_sherkati.writ_salary_items as s join writs as w on(s.writ_id=w.writ_id and s.writ_ver=w.writ_ver and s.staff_id=w.staff_id);
+
+-- --------------------------------------------------------
+CREATE TABLE  `payments` (
+  `staff_id` int(11) NOT NULL,
+  `pay_year` smallint(4) NOT NULL DEFAULT '0',
+  `pay_month` smallint(2) NOT NULL DEFAULT '0',
+  `writ_id` int(11) DEFAULT NULL,
+  `writ_ver` smallint(6) DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `payment_type` smallint(1) NOT NULL DEFAULT '0',
+  `message` varchar(255) COLLATE utf8_persian_ci DEFAULT NULL,
+  `bank_id` smallint(6) DEFAULT NULL,
+  `account_no` varchar(20) COLLATE utf8_persian_ci DEFAULT NULL,
+  `state` smallint(6) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`staff_id`,`pay_year`,`pay_month`,`payment_type`),
+  KEY `FK_PAYMENTS__BANKS` (`bank_id`),
+  CONSTRAINT `FK_PAYMENTS__BANKS` FOREIGN KEY (`bank_id`) REFERENCES `banks` (`bank_id`),
+  CONSTRAINT `FK_PAYMENTS__STAFF` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into payments select * from tmp_hrms.payments;
+insert into payments select p.* from tmp_hrms_sherkati.payments as p join staff as s using(staff_id);
+-- --------------------------------------------------------
+CREATE TABLE  `payment_writs` (
+  `pay_writ_id` int(11) NOT NULL AUTO_INCREMENT,
+  `writ_id` int(11) NOT NULL,
+  `writ_ver` smallint(6) NOT NULL,
+  `staff_id` int(11) NOT NULL,
+  `pay_year` smallint(4) NOT NULL DEFAULT '0',
+  `pay_month` smallint(2) NOT NULL DEFAULT '0',
+  `payment_type` smallint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`pay_writ_id`),
+  UNIQUE KEY `unique_key` (`writ_id`,`writ_ver`,`staff_id`,`pay_year`,`pay_month`,`payment_type`),
+  KEY `writ_id` (`writ_id`,`writ_ver`),
+  KEY `staff_id` (`staff_id`),
+  KEY `FK_PAYMENT_WRITS__PAYMENTS` (`staff_id`,`pay_year`,`pay_month`,`payment_type`),
+  CONSTRAINT `FK_PAYMENT_WRITS__PAYMENTS` FOREIGN KEY (`staff_id`, `pay_year`, `pay_month`, `payment_type`) REFERENCES `payments` (`staff_id`, `pay_year`, `pay_month`, `payment_type`),
+  CONSTRAINT `FK_PAYMENT_WRITS__STAFF` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`),
+  CONSTRAINT `FK_PAYMENT_WRITS__WRITS` FOREIGN KEY (`writ_id`, `writ_ver`,`staff_id`) REFERENCES `writs` (`writ_id`, `writ_ver`,`staff_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into payment_writs(writ_id,writ_ver,staff_id,pay_year,pay_month,payment_type)
+  select p.writ_id,p.writ_ver,p.staff_id,p.pay_year,p.pay_month,p.payment_type from tmp_hrms.payment_writs as p
+  join staff using(staff_id)
+  join writs as w on(w.writ_id=p.writ_id and w.writ_ver=p.writ_ver and w.staff_id=p.staff_id);
+  
+insert into payment_writs(writ_id,writ_ver,staff_id,pay_year,pay_month,payment_type)
+  select p.writ_id,p.writ_ver,p.staff_id,p.pay_year,p.pay_month,p.payment_type from tmp_hrms_sherkati.payment_writs as p
+  join staff using(staff_id)
+  join writs as w on(w.writ_id=p.writ_id and w.writ_ver=p.writ_ver and w.staff_id=p.staff_id);
+-- --------------------------------------------------------
+
+CREATE TABLE  `salary_params` (
+  `param_id` int(11) NOT NULL auto_increment,
+  `hr_type` smallint(6) NOT NULL,
+  `param_type` smallint(4) unsigned NOT NULL default '0',
+  `from_date` date NOT NULL default '0000-00-00',
+  `to_date` date NOT NULL default '0000-00-00',
+  `dim1_id` smallint(6) default NULL,
+  `dim2_id` smallint(6) default NULL,
+  `dim3_id` smallint(6) default NULL,
+  `value` decimal(15,2) NOT NULL default '0.00',
+  `used` smallint(1) default NULL,
+  PRIMARY KEY  (`param_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+insert into salary_params(hr_type,param_type,from_date,to_date,dim1_id,dim2_id,dim3_id
+,value,used) select 1,param_type,from_date,to_date,dim1_id,dim2_id,dim3_id
+,value,used from tmp_hrms.salary_params;
+
+insert into salary_params(hr_type,param_type,from_date,to_date,dim1_id,dim2_id,dim3_id
+,value,used) select 2,param_type,from_date,to_date,dim1_id,dim2_id,dim3_id
+,value,used from tmp_hrms_sherkati.salary_params;
+
+-- ------------------------------------------------------------
+
+CREATE TABLE  `hrmstotal`.`staff_group_members` (
+  `staff_group_id` smallint(6) NOT NULL,
+  `staff_id` int(11) NOT NULL,
+  PRIMARY KEY  (`staff_group_id`,`staff_id`),
+  KEY `FK_STAFF_GROUP_MEMBERS__STAFF` (`staff_id`),
+  CONSTRAINT `FK_STAFF_GROUP_MEMBERS__STAFF` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`),
+  CONSTRAINT `FK_STF_GROUP_MEMBERS__STAFF_GROUPS` FOREIGN KEY (`staff_group_id`) REFERENCES `staff_groups` (`staff_group_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci;
+
+-- ------------------------------------------------------------
+
+CREATE TABLE  `hrmstotal`.`evaluation_lists` (
+  `list_id` int(11) NOT NULL auto_increment,
+  `list_date` date NOT NULL default '0000-00-00',
+  `ouid` smallint(6) NOT NULL,
+  `doc_state` smallint(1) default NULL,
+  PRIMARY KEY  (`list_id`),
+  KEY `FK_EVAL_LIST__ORG_UNITS` (`ouid`),
+  CONSTRAINT `fk_evlist_orgunits` FOREIGN KEY (`ouid`) REFERENCES `org_new_units` (`ouid`)
+) ENGINE=InnoDB AUTO_INCREMENT=371 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci
+
+CREATE TABLE  `hrmstotal`.`evaluation_list_items` (
+  `list_id` int(11) NOT NULL auto_increment,
+  `staff_id` int(11) NOT NULL,
+  `functional_score` decimal(4,2) default NULL,
+  `job_behaviour_score` decimal(4,2) default NULL,
+  `social_behaviour_score` decimal(4,2) default NULL,
+  `annual_coef` decimal(5,2) default NULL,
+  `high_job_coef` decimal(5,2) default NULL,
+  `comments` varchar(255) collate utf8_persian_ci default NULL,
+  `scores_sum` decimal(4,2) default NULL,
+  PRIMARY KEY  (`list_id`,`staff_id`),
+  KEY `FK_EVALUATION_LIST_ITEMS__STAFF` (`staff_id`),
+  CONSTRAINT `FK_EVALUATION_LIST_ITEMS__STAFF` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`),
+  CONSTRAINT `FK_EVAL_LIST_ITEMS__EVAL_LISTS` FOREIGN KEY (`list_id`) REFERENCES `evaluation_lists` (`list_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=370 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci
+
+insert into hrmstotal.evaluation_lists select * from tmp_hrms.evaluation_lists;
+insert into hrmstotal.evaluation_list_items select * from tmp_hrms.evaluation_list_items;
+
+insert into hrmstotal.evaluation_lists select list_id+370,list_date,if(o.ouid is null,1,e.ouid) ,doc_state 
+from tmp_hrms_sherkati.evaluation_lists e left join hrmstotal.org_new_units o using(ouid);
+
+insert into hrmstotal.evaluation_list_items select list_id+370,staff_id,functional_score,job_behaviour_score,social_behaviour_score
+	,annual_coef,high_job_coef,comments,scores_sum from tmp_hrms_sherkati.evaluation_list_items;
+
+-- ------------------------------------------------------------
+
+CREATE TABLE  `hrmstotal`.`mobilization_lists` (
+  `list_id` int(11) NOT NULL,
+  `list_date` date NOT NULL default '0000-00-00',
+  `ouid` smallint(6) NOT NULL,
+  `doc_state` smallint(1) default NULL,
+  PRIMARY KEY  (`list_id`),
+  KEY `FK_MOBILIZATION_LISTS__ORG_UNITS` (`ouid`),
+  CONSTRAINT `FK_MOBILIZATION_LISTS__ORG_UNITS` FOREIGN KEY (`ouid`) REFERENCES `org_new_units` (`ouid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci
+
+CREATE TABLE  `hrmstotal`.`mobilization_list_items` (
+  `list_id` int(11) NOT NULL,
+  `staff_id` int(11) NOT NULL,
+  `mobilization_coef` decimal(5,2) default NULL,
+  `comments` varchar(255) collate utf8_persian_ci default NULL,
+  PRIMARY KEY  (`list_id`,`staff_id`),
+  KEY `FK_MOBILIZATION_LIST_ITEMS__STAFF` (`staff_id`),
+  CONSTRAINT `FK_MOBILIZATION_LIST_ITEMS__STAFF` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`),
+  CONSTRAINT `FK_MOB_LIST_ITEMS__MOBILIZATION_LISTS` FOREIGN KEY (`list_id`) REFERENCES `mobilization_lists` (`list_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci
+
+insert into hrmstotal.mobilization_lists select * from tmp_hrms.mobilization_lists;
+insert into hrmstotal.mobilization_list_items select * from tmp_hrms.mobilization_list_items;
+
+-- ------------------------------------------------------------
+
+CREATE TABLE  `hrmstotal`.`payment_runs` (
+  `run_id` int(11) NOT NULL auto_increment,
+  `time_stamp` int(11) NOT NULL default '0',
+  `uname` varchar(25) collate utf8_persian_ci NOT NULL default '',
+  PRIMARY KEY  (`run_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=295 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci
+
+-- ------------------------------------------------------------
+
+CREATE TABLE  `hrmstotal`.`payment_items` (
+  `row_id` int(11) NOT NULL auto_increment,
+  `pay_year` smallint(6) NOT NULL default '0',
+  `pay_month` smallint(6) NOT NULL default '0',
+  `staff_id` int(11) NOT NULL default '0',
+  `salary_item_type_id` smallint(4) NOT NULL default '0',
+  `pay_value` decimal(15,0) NOT NULL default '0',
+  `get_value` decimal(15,0) NOT NULL default '0',
+  `param1` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `param2` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `param3` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `param4` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `param5` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `param6` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `cost_center_id` smallint(4) NOT NULL default '0',
+  `payment_type` smallint(1) NOT NULL default '0',
+  `debt_total_id` int(11) default NULL,
+  `debt_ledger_id` int(11) default NULL,
+  `debt_tafsili_id` int(11) default NULL,
+  `debt_tafsili2_id` int(11) default NULL,
+  `cred_total_id` int(11) default NULL,
+  `cred_ledger_id` int(11) default NULL,
+  `cred_tafsili_id` int(11) default NULL,
+  `cred_tafsili2_id` int(11) default NULL,
+  `diff_get_value` decimal(15,0) default '0',
+  `diff_pay_value` decimal(15,0) default '0',
+  `diff_param1` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `diff_param2` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `diff_param3` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `diff_param4` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `diff_param5` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `diff_param6` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `diff_value_coef` smallint(6) NOT NULL default '1',
+  `param7` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `diff_param7` varchar(30) collate utf8_persian_ci NOT NULL default '0',
+  `diff_param1_coef` smallint(6) NOT NULL default '1',
+  `diff_param2_coef` smallint(6) NOT NULL default '1',
+  `diff_param3_coef` smallint(6) NOT NULL default '1',
+  `diff_param4_coef` smallint(6) NOT NULL default '1',
+  `diff_param5_coef` smallint(6) NOT NULL default '1',
+  `diff_param6_coef` smallint(6) NOT NULL default '1',
+  `diff_param7_coef` smallint(6) NOT NULL default '1',
+  `param8` varchar(30) collate utf8_persian_ci default NULL,
+  `param9` varchar(30) collate utf8_persian_ci default NULL,
+  `diff_param8` varchar(30) collate utf8_persian_ci default NULL,
+  `diff_param9` varchar(30) collate utf8_persian_ci default NULL,
+  `diff_param8_coef` smallint(6) default NULL,
+  `diff_param9_coef` smallint(6) default NULL,
+  PRIMARY KEY  (`row_id`),
+  KEY `salary_item_type_id` (`salary_item_type_id`),
+  KEY `pay_year` (`pay_year`,`pay_month`),
+  KEY `staff_id` (`staff_id`,`payment_type`),
+  KEY `pay_year_2` (`pay_year`,`pay_month`,`staff_id`,`payment_type`),
+  KEY `cost_center_id` (`cost_center_id`),
+  KEY `FK_PAYMENT_ITEMS__PAYMENTS` (`staff_id`,`pay_year`,`pay_month`,`payment_type`),
+  CONSTRAINT `FK_PAYMENT_ITEMS__COST_CENTERS` FOREIGN KEY (`cost_center_id`) REFERENCES `cost_centers` (`cost_center_id`),
+  CONSTRAINT `FK_PAYMENT_ITEMS__PAYMENTS` FOREIGN KEY (`staff_id`, `pay_year`, `pay_month`, `payment_type`) REFERENCES `payments` (`staff_id`, `pay_year`, `pay_month`, `payment_type`),
+  CONSTRAINT `FK_PAYMENT_ITEMS__SAL_ITEM_TYPES` FOREIGN KEY (`salary_item_type_id`) REFERENCES `salary_item_types` (`salary_item_type_id`),
+  CONSTRAINT `FK_PAYMENT_ITEMS__STAFF` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=14345240 DEFAULT CHARSET=utf8 COLLATE=utf8_persian_ci
+
+insert into hrmstotal.payment_items select * from tmp_hrms.payment_items;
+-- ------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+

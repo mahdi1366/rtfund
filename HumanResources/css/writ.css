@@ -1,0 +1,53 @@
+/*---------------------------
+// programmer:	jafarkhani
+// create Date:	90.03
+//---------------------------*/
+
+@media print {
+	.noprint{display:none;}
+}
+
+body {font-family: 'B nazanin',nazanin;}
+
+font {font-family: 'B nazanin',nazanin,Lotus,Tahoma,Arial; font-weight: bold;}
+.titr { font-family: 'B titr', titr!important;}
+.report_header {font-family: 'B Nazanin',nazanin,Zar,Lotus,Tahoma,Arial; font-weight: bold;font-size: 11px;}
+.pageBreak {page-break-after:always;height:1px;}
+
+
+/* professors  */
+table.big_report {width: 695px; background-color:#EDEFFF; border-collapse:collapse;}
+table.big_report .report_header {font-size: medium;}
+table.big_report td {vertical-align:top; font-size: 13px;padding-top: 8px; padding-bottom: 8px; padding-left: 2px; padding-right: 2px; vertical-align: top; border: 1px solid;}
+table.big_report td font {font-size: 12px;}
+table.big_report .money{font-size:13px}
+
+table.big_corrective {width: 695px; background-color:#EDEFFF; border-collapse:collapse;}
+table.big_corrective .report_header {font-size: medium;}
+table.big_corrective td {vertical-align:top; font-size: 13px;padding-top: 2px; padding-bottom: 2px; padding-left: 2px; padding-right: 2px; vertical-align: top; border: 1px solid;}
+table.big_corrective td font {font-size: 12px;}
+table.big_corrective .money{font-size:13px}
+
+/* employee ceremonious and contractual worker */
+table.report {width: 500px; border-collapse:collapse;}
+table.report td{vertical-align:top;font-size: 10px;padding-right:2px;border-bottom:1px solid black;border-left:1px solid black;border-right:1px solid black;}
+table.report td table{width:100%;border-collapse:collapse;}
+table.report td table td{border-left:0;padding:0; padding-right:2px}
+table.report .report_header {font-size: 11px;}
+table.report span{font-weight:bold; font-size: 9px;}
+table.report .money{font-size:11px; font-weight: bold;}
+
+
+
+table.reportItem {border-collapse: collapse; border:0}
+table.reportItem td{border: 0;border-bottom: 1px solid black;padding-right:2px}
+table.reportItem .report_data{font-weight:normal}
+table.reportItem .endItem{border: 0;}
+
+
+
+
+
+
+
+
