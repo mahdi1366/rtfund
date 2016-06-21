@@ -47,7 +47,10 @@ $grid = $dg->makeGrid_returnObjects();
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "doc.data.php?task=selectDocItems","div_detail_dg");
 
 $dg->addColumn("","DocID","",true);
-$dg->addColumn("","CostDesc","",true);
+$dg->addColumn("","CostID","",true);
+$dg->addColumn("","CostCode","",true);
+$dg->addColumn("","TafsiliType","",true);
+$dg->addColumn("","TafsiliType2","",true);
 $dg->addColumn("","TafsiliDesc","",true);
 $dg->addColumn("","TafsiliGroupDesc","",true);
 $dg->addColumn("","Tafsili2Desc","",true);
@@ -56,49 +59,50 @@ $dg->addColumn("", "locked", "", true);
 
 $col = $dg->addColumn("ردیف","ItemID","", true);
 
-$col = $dg->addColumn("سرفصل حساب", "CostID");
-$col->editor = "AccDocsObject.CostCombo";
-$col->renderer = "function(v,p,r){return r.data.CostDesc;}";
+$col = $dg->addColumn("سرفصل حساب", "CostDesc");
+$col->renderer = "function(v,p,r){return '[' + r.data.CostCode + '] ' + v;}";
 
-$col = $dg->addColumn("گروه تفصیلی", "TafsiliType");
+/*$col = $dg->addColumn("گروه تفصیلی", "TafsiliType");
 $col->editor = "AccDocsObject.tafsiliGroupCombo";
 $col->renderer = "function(v,p,r){return r.data.TafsiliGroupDesc;}";
-$col->width = 100;
+$col->width = 100;*/
 
 $col = $dg->addColumn("تفصیلی", "TafsiliID");
-$col->editor = "AccDocsObject.tafsiliCombo";
-$col->renderer = "function(v,p,r){return r.data.TafsiliDesc;}";
+//$col->editor = "AccDocsObject.tafsiliCombo";
+$col->renderer = "function(v,p,r){p.tdAttr = \"data-qtip='\" + r.data.TafsiliGroupDesc + \"'\";".
+		"return r.data.TafsiliDesc;}";
 $col->width = 150;
 
-$col = $dg->addColumn("گروه تفصیلی2", "TafsiliType2");
+/*$col = $dg->addColumn("گروه تفصیلی2", "TafsiliType2");
 $col->editor = "AccDocsObject.tafsili2GroupCombo";
 $col->renderer = "function(v,p,r){return r.data.Tafsili2GroupDesc;}";
-$col->width = 100;
+$col->width = 100;*/
 
 $col = $dg->addColumn("تفصیلی2", "TafsiliID2");
-$col->editor = "AccDocsObject.tafsili2Combo";
-$col->renderer = "function(v,p,r){return r.data.Tafsili2Desc;}";
+//$col->editor = "AccDocsObject.tafsili2Combo";
+$col->renderer = "function(v,p,r){p.tdAttr = \"data-qtip='\" + r.data.Tafsili2GroupDesc + \"'\";".
+		"return r.data.Tafsili2Desc;}";
 $col->width = 150;
 
 $col = $dg->addColumn("بدهکار", "DebtorAmount", GridColumn::ColumnType_money);
-$col->editor = ColumnEditor::CurrencyField(true, "cmp_DebtorAmount");
+//$col->editor = ColumnEditor::CurrencyField(true, "cmp_DebtorAmount");
 $col->width = 90;
 
 $col = $dg->addColumn("بستانکار", "CreditorAmount", GridColumn::ColumnType_money);
-$col->editor = ColumnEditor::CurrencyField(true, "cmp_CreditorAmount");
+//$col->editor = ColumnEditor::CurrencyField(true, "cmp_CreditorAmount");
 $col->width = 90;
 
 $col = $dg->addColumn("جزئیات", "details");
-$col->editor = ColumnEditor::TextField(true, "cmp_details");
-$col->width = 120;
-$col->ellipsis = 100;
+//$col->editor = ColumnEditor::TextField(true, "cmp_details");
+$col->width = 180;
+$col->ellipsis = 50;
 
 if($accessObj->RemoveFlag)
 {
     $col = $dg->addColumn("", "", "string");
     $col->sortable = false;
     $col->renderer = "AccDocs.deleteitemRender";
-    $col->width = 30;	
+    $col->width = 50;	
 }
 
 if($accessObj->AddFlag)
@@ -106,11 +110,11 @@ if($accessObj->AddFlag)
 	$dg->addButton("", "ایجاد ردیف سند", "add", "function(v,p,r){ return AccDocsObject.AddItem(v,p,r);}");
 }
 
-$dg->enableRowEdit = true ;
-$dg->rowEditOkHandler = "function(v,p,r){ return AccDocsObject.SaveItem(v,p,r);}";
+//$dg->enableRowEdit = true ;
+//$dg->rowEditOkHandler = "function(store,record){ return AccDocsObject.SaveItem(store,record);}";
 
 $dg->DefaultSortField = "ItemID";
-$dg->autoExpandColumn = "CostID";
+$dg->autoExpandColumn = "CostDesc";
 $dg->DefaultSortDir = "ASC";
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 320;
@@ -227,7 +231,7 @@ bars[1].hide();
 
 //...................................................
 AccDocsObject.itemGrid = <?= $itemsgrid ?>;
-AccDocsObject.itemGrid.plugins[0].on("beforeedit", AccDocs.beforeRowEdit);
+//AccDocsObject.itemGrid.plugins[0].on("beforeedit", AccDocs.beforeRowEdit);
 AccDocsObject.itemGrid.getView().getRowClass = function(record, index)
 {
 	if(record.data.locked == "YES")

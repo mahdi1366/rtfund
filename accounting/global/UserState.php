@@ -47,7 +47,7 @@ function UserState()
 			store : new Ext.data.SimpleStore({
 				proxy: {
 					type: 'jsonp',
-					url: "global/domain.data.php?task=GetAccessBranches",
+					url: "/accounting/global/domain.data.php?task=GetAccessBranches",
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields : ['BranchID','BranchName'],
@@ -66,7 +66,7 @@ function UserState()
 			store : new Ext.data.SimpleStore({
 				proxy: {
 					type: 'jsonp',
-					url: "global/domain.data.php?task=SelectCycles",
+					url: "/accounting/global/domain.data.php?task=SelectCycles",
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields : ['CycleID','CycleDesc'],

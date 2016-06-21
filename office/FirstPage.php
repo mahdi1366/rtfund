@@ -30,14 +30,7 @@ StartPage.prototype = {
 };
 
 function StartPage(){
-	
-	new Ext.panel.Panel({
-		frame : true,
-		title : "خلاصه کارتابل",
-		width : 600,
-		applyTo : this.get("div_summary"),
-		contentEl : this.get("div_content")
-	});
+		
 }
 
 StartPageObject = new StartPage();
@@ -60,7 +53,7 @@ StartPage.prototype.OpenPage = function(mode){
 </style>
 <center><br>
 	<div id="div_summary" align="right">
-		<table id="div_content" align="right" style="width:85%;margin : 20 40 20 0">
+		<table id="div_content" align="right" style="width:85%;margin : 10 10 10 0">
 			<tr>
 				<td><img src="/office/icons/summary.png" style="width:30px;vertical-align: middle;">
 					نامه های رسیده جدید : 

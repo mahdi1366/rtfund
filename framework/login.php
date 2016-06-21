@@ -252,7 +252,7 @@ if(isset($_POST["UserName"]))
 						document.getElementById('UserName').value == "";
 						document.getElementById('password').value == "";
 						document.getElementById('md5Pass').value == "";
-						window.location = "systems.php";
+						window.location = "desktop.php";
 						return;
 					}
 					error = xmlhttp.responseText;

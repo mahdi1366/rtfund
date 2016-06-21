@@ -71,9 +71,11 @@ function saveDoc() {
 		die();
 	}
 
-	$dt = PdoDataAccess::runquery("select count(*) from ACC_docs where DocID<? AND CycleID=" . 
-			$_SESSION["accounting"]["CycleID"], array($obj->DocID));
-	echo Response::createObjectiveResponse(true, $dt[0][0] + 1);
+	/*$dt = PdoDataAccess::runquery("select count(*) from ACC_docs where DocID<? 
+		AND CycleID=" . $_SESSION["accounting"]["CycleID"] . 
+		" AND BranchID=" . $_SESSION["accounting"]["BranchID"] , array($obj->DocID));
+	echo Response::createObjectiveResponse(true, $dt[0][0] + 1);*/
+	echo Response::createObjectiveResponse(true, "");
 	die();
 }
 
@@ -263,7 +265,7 @@ function selectDocItems() {
 function saveDocItem() {
 
 	$obj = new ACC_DocItems();
-	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
 
 	if($obj->TafsiliType == "")
 		$obj->TafsiliType = PDONULL;
@@ -274,7 +276,7 @@ function saveDocItem() {
 	if($obj->TafsiliID2 == "")
 		$obj->TafsiliID2 = PDONULL;
 	
-	if ($obj->ItemID == "0")
+	if ($obj->ItemID == "")
 		$return = $obj->Add();
 	else
 		$return = $obj->Edit();

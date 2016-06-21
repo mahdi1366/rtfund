@@ -447,4 +447,103 @@ tblWareCustomers
 tblVam
 tblVamDetail
  */
+
+
+
+/*
+ 
+ * insert into krrtfir_rtfund.ACC_docs(CycleID,BranchID,LocalNo,DocDate,regDate,DocStatus,description,RegPersonID,imp_AccDocNo)
+
+SELECT 1395,3,TempDocNo,gdate,now(),'RAW',Comment,1000,AccDocNo FROM tblAccDoc
+JOIN krrtfir_rtfund.jdate on(jdate=concat(13,DocDate))
+left join tblDocType using(DocTypeCode)
+
+where AccDocNo > 11611
+
+order by tempDocNo;
+
+
+insert into krrtfir_rtfund.ACC_docs(CycleID,BranchID,LocalNo,DocDate,regDate,DocStatus,description,RegPersonID,imp_AccDocNo)
+
+SELECT 1395,3,TempDocNo,gdate,now(),'RAW',Comment,1000,AccDocNo FROM tblAccDoc
+JOIN krrtfir_rtfund.jdate on(jdate=concat(13,DocDate))
+left join tblDocType using(DocTypeCode)
+
+where AccDocNo > 12849
+
+order by tempDocNo;
+ * 
+ * 
+ * 
+ * 
+insert into krrtfir_rtfund.ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,
+TafsiliType2,TafsiliID2,
+DebtorAmount,CreditorAmount,details)
+
+SELECT DocID,c2.CostID,tc.TafsiliType,tc.TafsiliID,tc.TT2,tc.TID2,BedValue,BesValue,Comment
+
+
+FROM tblAccDocDetail d
+join tblCoding tc using(AccCode)
+join krrtfir_rtfund.ACC_docs on(BranchID=3 and imp_AccDocNo=AccDocNo)
+
+left join krrtfir_rtfund.ACC_CostCodes c2 on(c2.IsActive='YES'
+  AND tc.CostCode=c2.CostCode)
+
+left join krrtfir_rtfund.ACC_blocks b1 on(c2.level1=b1.BlockID)
+left join krrtfir_rtfund.ACC_blocks b2 on(c2.level2=b2.BlockID)
+left join krrtfir_rtfund.ACC_blocks b3 on(c2.level3=b3.BlockID)
+
+where AccDocNo>11611 and statusCode=1
+
+order by AccDocNo,Row
+ * 
+ * 
+ * 
+ * 
+ * update tblCoding
+set CostCode='110-26', TT2=1 , TID2=1003 where CostCode='110-27';
+
+SELECT AccCode,AccName,CostCode,TafsiliType,TafsiliID,TT2,TID2
+FROM tblCoding where deleted=0 ;
+AND ACCName like '%پارک%';
+
+update tblAccDocDetail set AccCode='905-01' where AccCode='905-1';
+
+
+select AccN,t.TafsiliType,t.TafsiliID,t2.TafsiliDesc
+from tblCoding t
+
+left join krrtfir_rtfund.ACC_tafsilis t2 on(AccN like concat('%',t2.TafsiliDesc,'%')
+or t2.TafsiliDesc like concat('%',AccN,'%')
+)
+
+where AccCode like '208-%'
+;
+update tblCoding
+set AccN = replace(AccN, 'حساب پس انداز-عادی-','')
+where AccCode like '209-%';
+
+
+update tblCoding t
+join krrtfir_rtfund.ACC_tafsilis t2 on(AccN like concat('%',t2.TafsiliDesc,'%')
+or t2.TafsiliDesc like concat('%',AccN,'%'))
+set t.TafsiliType=1 , t.TafsiliID=t2.TafsiliID
+where AccCode like '208-%'
+ * 
+ * 
+ * 
+ * 
+ * select CostCode,b1.blockDesc,b2.BlockDesc,b3.BlockDesc
+
+from krrtfir_rtfund.ACC_CostCodes c
+
+join krrtfir_rtfund.ACC_blocks b1 on(level1=b1.BlockID)
+left join krrtfir_rtfund.ACC_blocks b2 on(level2=b2.BlockID)
+left join krrtfir_rtfund.ACC_blocks b3 on(level3=b3.BlockID)
+
+where c.IsActive='YES'
+order by CostCode
+ * 
+ */
 ?>

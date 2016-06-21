@@ -234,7 +234,7 @@ class ACC_DocItems extends PdoDataAccess {
 
 	static function GetAll($where = "", $whereParam = array()) {
 		
-		$query = "select si.*,concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc) CostDesc,
+		$query = "select si.*,cc.CostCode,concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc) CostDesc,
 			t.TafsiliDesc,bi.InfoDesc TafsiliGroupDesc,
 			t2.TafsiliDesc as Tafsili2Desc,bi2.InfoDesc Tafsili2GroupDesc
 		from ACC_DocItems si
