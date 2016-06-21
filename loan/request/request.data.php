@@ -4,7 +4,7 @@
 // create Date: 94.06
 //-------------------------
 
-include_once('../header.inc.php');
+require_once('../header.inc.php');
 include_once inc_dataReader;
 include_once inc_response;
 include_once 'request.class.php';
@@ -786,7 +786,7 @@ function selectParts(){
 	die();
 }
 
-function SelectReadyToPayParts(){
+function SelectReadyToPayParts($returnCount = false){
 	
 	$dt = PdoDataAccess::runquery("select max(StepID) from WFM_FlowSteps where FlowID=1 AND IsActive='YES'");
 
@@ -805,13 +805,16 @@ function SelectReadyToPayParts(){
 		where fr.FlowID=1 AND StepID=? AND ActionType='CONFIRM' AND di.ItemID is null 
 		group by RequestID",
 		array($dt[0][0]));
+	
+	if($returnCount)
+		return count($dt);
 
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
 
-function SelectReceivedRequests(){
+function SelectReceivedRequests($returnCount = false){
 	
 	$where = "StatusID in (10,50)";
 	 
@@ -819,6 +822,10 @@ function SelectReceivedRequests(){
 	$where .= " AND BranchID in(" . implode(",", $branches) . ")";
 	
 	$dt = LON_requests::SelectAll($where);
+	
+	if($returnCount)
+		return $dt->rowCount();
+	
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
 }
@@ -1415,7 +1422,7 @@ function RetPayPartDoc(){
 
 //-------------------------------------------------
 
-function SelectAllMessages(){
+function SelectAllMessages($returnCount = false){
 	
 	$where = "";
 	$param = array();
@@ -1432,6 +1439,10 @@ function SelectAllMessages(){
 		$param[] = $_REQUEST["MsgStatus"];
 	}
 	$res = LON_messages::Get($where, $param, dataReader::makeOrder());
+	
+	if($returnCount)
+		return $res->rowCount();
+	
 	print_r(ExceptionHandler::PopAllExceptions());
 	$cnt = $res->rowCount();
 	$res = PdoDataAccess::fetchAll($res, $_GET["start"], $_GET["limit"]);

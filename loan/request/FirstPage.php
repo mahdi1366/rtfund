@@ -4,14 +4,12 @@
 //	Date		: 1394.07
 //-----------------------------
 
-require_once 'header.inc.php';
+require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . 
-		"request/request.data.php?task=SelectReceivedRequests", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectReceivedRequests", "grid_div");
 
 $dg->addColumn("", "BorrowerDesc", "", true);
-
 
 $col = $dg->addColumn("شماره وام", "RequestID", "");
 $col->width = 90;
@@ -40,10 +38,10 @@ $dg->EnablePaging = false;
 $dg->EnableSearch = false;
 $dg->DefaultSortField = "ReqDate";
 $dg->autoExpandColumn = "ReqFullname";
-$grid1 = $dg->makeGrid_returnObjects();
+$grid_rec = $dg->makeGrid_returnObjects();
 
 //---------------------------------------------
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "request/request.data.php?task=SelectReadyToPayParts", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectReadyToPayParts", "grid_div");
 
 $dg->addColumn("", "BorrowerDesc", "", true);
 
@@ -75,11 +73,10 @@ $dg->EnablePaging = false;
 $dg->EnableSearch = false;
 $dg->DefaultSortField = "PartDate";
 $dg->autoExpandColumn = "LoanFullname";
-$grid2 = $dg->makeGrid_returnObjects();
+$grid_pay = $dg->makeGrid_returnObjects();
 
 //---------------------------------------------
-$dg = new sadaf_datagrid("dg", $js_prefix_address . 
-		"request/request.data.php?task=SelectAllMessages&MsgStatus=RAW", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectAllMessages&MsgStatus=RAW", "grid_div");
 
 $dg->addColumn("", "BorrowerDesc", "", true);
 
@@ -109,7 +106,16 @@ $dg->EnablePaging = false;
 $dg->EnableSearch = false;
 $dg->DefaultSortField = "CreateDate";
 $dg->autoExpandColumn = "details";
-$grid3 = $dg->makeGrid_returnObjects();
+$grid_msg = $dg->makeGrid_returnObjects();
+
+//------------------------------------------------------------------------------
+
+require_once 'request.data.php';
+
+$receivedCount = SelectReceivedRequests(true);
+$_REQUEST["MsgStatus"] = "RAW";
+$messagesCount = SelectAllMessages(true);
+$readyToPayCount = SelectReadyToPayParts(true);
 ?>
 <script>
 
@@ -124,34 +130,60 @@ StartPage.prototype = {
 
 function StartPage(){
 	
-	this.grid1 = <?= $grid1 ?>;
-	this.grid1.on("itemdblclick", function(view, record){
+	this.grid_rec = <?= $grid_rec ?>;
+	this.grid_rec.on("itemdblclick", function(view, record){
 		framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", 
 		{RequestID : record.data.RequestID});
 	});	
-	this.grid1.render(this.get("DivGrid1"));
 	//.......................................................
-	this.grid2 = <?= $grid2 ?>;
-	this.grid2.on("itemdblclick", function(view, record){
+	this.grid_pay = <?= $grid_pay ?>;
+	this.grid_pay.on("itemdblclick", function(view, record){
 		framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", 
 		{RequestID : record.data.RequestID});
 	});	
-	this.grid2.render(this.get("DivGrid2"));
 	//.......................................................
-	this.grid3 = <?= $grid3 ?>;
-	this.grid3.on("itemdblclick", function(view, record){
+	this.grid_msg = <?= $grid_msg ?>;
+	this.grid_msg.on("itemdblclick", function(view, record){
 		framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", 
 		{RequestID : record.data.RequestID});
 	});	
-	this.grid3.render(this.get("DivGrid3"));
+	
 }
 
 StartPageObject = new StartPage();
 
+StartPage.ShowGrid = function(gridName){
+	
+	eval("grid = StartPageObject." + gridName + " ;");
+	if(!grid.rendered)
+		grid.render(StartPageObject.get("div_" + gridName));
+}
+
 </script>
 <center><br>
-	<div id="DivGrid3"></div><br>
-	<div id="DivGrid1"></div><br>
-	<div id="DivGrid2"></div>
-	
+	<div id="div_summary" align="right">
+		<table id="div_content" align="right" style="width:85%;margin : 10 10 10 0">
+			<tr>
+				<td><img src="/generalUI/ext4/resources/themes/icons/comment.png" style="width:24px;vertical-align: middle;">
+					پیام های ارسالی از معرفی کنندگان وام
+					<a href="javascript:StartPage.ShowGrid('grid_msg')">( <?= $messagesCount ?> )</a>
+					<div id="div_grid_msg"></div>
+				</td>
+			</tr>
+			<tr>
+				<td><img src="/generalUI/ext4/resources/themes/icons/epay.png" style="width:24px;vertical-align: middle;">
+					درخواست های وام آماده پرداخت
+					<a href="javascript:StartPage.ShowGrid('grid_pay')">( <?= $readyToPayCount ?> )</a>
+					<div id="div_grid_pay"></div>
+				</td>
+			</tr>			
+			<tr>
+				<td><img src="/generalUI/ext4/resources/themes/icons/receive.png" style="width:24px;vertical-align: middle;">
+					  درخواست های رسیده جدید
+					<a href="javascript:StartPage.ShowGrid('grid_rec')">( <?= $receivedCount ?> )</a>	
+					<div id="div_grid_rec"></div>
+				</td>
+			</tr>
+		</table>
+	</div>
 </center>

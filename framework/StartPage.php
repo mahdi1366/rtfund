@@ -21,12 +21,12 @@ $col = $dg->addColumn("نام كاربري","UserName","string");
 $col->width = 150;
 
 $col = $dg->addColumn("","","");
-$col->renderer = "FrameworkFirstPage.OperationRender";
+$col->renderer = "StartPage.OperationRender";
 $col->sortable = false;
 $col->width = 50;
 
 $dg->height = 190;
-$dg->width = 500;
+$dg->width = 480;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "PersonID";
@@ -76,23 +76,76 @@ function StartPage(){
 	new Ext.panel.Panel({
 		renderTo : this.get("panel3"),
 		title : "تسهیلات",
-        width: 820,
+        width: 810,
 		autoScroll : true,
-        height: 200,
+		frame : true,
+		autoHeight : true,
         layout: 'fit',
         loader : {
-			url : "../loan/FirstPage.php",
+			url : "../loan/request/FirstPage.php",
 			params : {
 				ExtTabID : this.TabID
 			},
 			scripts : true,
 			autoLoad : true
 		}
-    }).show();
+    });
 	
 }
 
 StartPageObject = new StartPage();
+
+StartPage.OperationRender = function(){
+	
+	return "<div align='center' title='تایید مشتری' class='tick' "+
+		"onclick='StartPageObject.ConfirmPerson(1);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;float:right;width:16px;height:16'></div>" +
+		
+	"<div align='center' title='حذف مشتری' class='cross' "+
+		"onclick='StartPageObject.ConfirmPerson(0);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;float:right;width:16px;height:16'></div>";
+}
+
+StartPage.prototype.ConfirmPerson = function(mode){
+	
+	message = mode == 1 ? "آیا مایل به تایید می باشید؟" : "آیا مایل به حذف مشتری می باشید؟";
+	Ext.MessageBox.confirm("",message, function(btn){
+		if(btn == "no")
+			return;
+		me = StartPageObject;
+		record = me.grid1.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(me.grid1,{msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'person/persons.data.php',
+			method: "POST",
+			params: {
+				task: "ConfirmPersons",
+				PersonID : record.data.PersonID,
+				mode : mode
+			},
+			success: function(response){
+				mask.hide();
+				var st = Ext.decode(response.responseText);
+
+				if(st.success)
+					StartPageObject.grid1.getStore().load();
+				else
+				{
+					if(st.data == "")
+						alert("خطا در اجرای عملیات");
+					else
+						alert(st.data);
+				}
+			},
+			failure: function(){}
+		});
+	})	
+}
 
 </script>
 <table style="margin:10px">

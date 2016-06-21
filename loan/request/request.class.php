@@ -51,7 +51,7 @@ class LON_requests extends PdoDataAccess
 			from LON_requests r
 			left join LON_loans l using(LoanID)
 			join BSC_branches using(BranchID)
-			join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
+			left join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 			where " . $where, $param);

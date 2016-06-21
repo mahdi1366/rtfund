@@ -73,7 +73,7 @@ function SendLetter(){
 			items : this.mainPanel
 		}, {
 			title : "درج پیوست",
-			hidden : this.SendID == 0 ? true : false,
+			//hidden : this.SendID == 0 ? true : false,
 			loader : {
 				url : this.address_prefix + "attach.php",
 				method: "POST",
