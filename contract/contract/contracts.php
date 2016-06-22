@@ -3,7 +3,7 @@
 //	Programmer	: Fatemipour
 //	Date		: 94.10
 //-----------------------------
-require_once '../../header.inc.php';
+require_once '../header.inc.php';
 require_once 'contracts.js.php';
 require_once inc_dataGrid;
 

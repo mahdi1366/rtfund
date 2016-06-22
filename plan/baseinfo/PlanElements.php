@@ -6,7 +6,7 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "plan.data.php?task=selectGroupElements&ParentID=0", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "elements.data.php?task=selectGroupElements&ParentID=0", "grid_div");
 
 $dg->addColumn("", "GroupID", "", true);
 $dg->addColumn("", "ParentID", "", true);
@@ -41,7 +41,7 @@ $grid1 = $dg->makeGrid_returnObjects();
 
 //..............................................................................
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "plan.data.php?task=selectGroupElements", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "elements.data.php?task=selectGroupElements", "grid_div");
 
 $dg->addColumn("", "GroupID", "", true);
 $dg->addColumn("", "ParentID", "", true);
@@ -115,7 +115,7 @@ function PlanElements(){
 		store: new Ext.data.TreeStore({
 			proxy: {
 				type: 'ajax',
-				url: this.address_prefix + 'plan.data.php?task=selectGroups&PlanID=0'
+				url: this.address_prefix + 'elements.data.php?task=selectGroups&PlanID=0'
 			}					
 		}),
 		root: {id: 'src', text : "سرفصل های اطلاعات"},
@@ -394,7 +394,7 @@ PlanElements.prototype.SaveGroup = function(){
 
 	this.infoWin.down('form').getForm().submit({
 		clientValidation: true,
-		url: this.address_prefix + 'plan.data.php?task=SaveGroup',
+		url: this.address_prefix + 'elements.data.php?task=SaveGroup',
 		method : "POST",
 		
 		success : function(form,action){                
@@ -454,7 +454,7 @@ PlanElements.prototype.DeleteGroup = function()
 	mask = new Ext.LoadMask(this.tree, {msg:'در حال ذخيره سازي...'});
 	mask.show();
 	Ext.Ajax.request({
-		url : this.address_prefix + 'plan.data.php?task=DeleteGroup',
+		url : this.address_prefix + 'elements.data.php?task=DeleteGroup',
 		method : 'POST',
 		params :{
 			GroupID : record.data.id
@@ -571,7 +571,7 @@ PlanElements.prototype.SaveElement = function(window, grid)
 	mask = new Ext.LoadMask(window, {msg:'در حال ذخیره سازی...'});
 	mask.show();
 	window.down('form').submit({
-		url: this.address_prefix + 'plan.data.php?task=SaveElement',
+		url: this.address_prefix + 'elements.data.php?task=SaveElement',
 		method : "POST",
 
 		success : function(form,action){      
@@ -597,7 +597,7 @@ PlanElements.prototype.DeleteElement = function(grid)
 		mask.show();
 
 		Ext.Ajax.request({
-			url : PlanElementsObject.address_prefix + "plan.data.php?task=DeleteElement",
+			url : PlanElementsObject.address_prefix + "elements.data.php?task=DeleteElement",
 			method : "POST",
 			params : {
 				ElementID : record.data.ElementID

@@ -385,7 +385,7 @@ function SavePackageItem(){
 			}
 			break;
 		case "3" : // plan
-			require_once '../../loan/plan/plan.class.php';
+			require_once '../../plan/plan/plan.class.php';
 			$sourceObj = new PLN_plans($obj->ObjectID);
 			if(empty($sourceObj->PlanID))
 			{

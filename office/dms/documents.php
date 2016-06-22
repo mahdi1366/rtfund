@@ -29,8 +29,8 @@ switch($ObjectType)
 			$access = true;
 		break;
 	case "plan":
-		require_once '../../loan/plan/plan.class.php';
-		require_once '../../loan/plan/PLNconfig.inc.php';
+		require_once '../../plan/plan/plan.class.php';
+		require_once '../../plan/PLNconfig.inc.php';
 		$obj = new PLN_plans($ObjectID);
 		if($_SESSION["USER"]["IsCustomer"] == "YES" && $_SESSION["USER"]["PersonID"] == $obj->PersonID 
 				&& in_array($obj->StepID, array(STEPID_RAW,STEPID_RETURN_TO_CUSTOMER)) )

@@ -8,7 +8,6 @@ include_once('../header.inc.php');
 include_once inc_dataReader;
 include_once inc_response;
 include_once 'plan.class.php';
-include_once 'elements.class.php';
 
 $task = $_REQUEST["task"];
 switch ($task) {
@@ -16,82 +15,6 @@ switch ($task) {
 	default : 
 		eval($task. "();");
 }
-
-function SaveGroup(){
-	
-	$obj = new PLN_groups();
-	PdoDataAccess::FillObjectByArray($obj, $_POST);
-	
-	//------- check for having form/grid ------
-	$dt = PLN_Elements::Get(" AND GroupID=?", array($obj->ParentID));
-	if($dt->rowCount() > 0)
-	{
-		echo Response::createObjectiveResponse(false, "آیتم انتخابی شامل جدول اطلاعاتی می باشد");
-		die();
-	}
-	//-----------------------------------------
-	
-	if($obj->GroupID*1 > 0)
-		$reslt = $obj->Edit();
-	else
-		$reslt = $obj->Add();
-	
-	//print_r(ExceptionHandler::PopAllExceptions());	
-	echo Response::createObjectiveResponse($reslt, "");
-	die();
-}
-
-function DeleteGroup(){
-	
-	$obj = new PLN_groups($_POST["GroupID"]);
-	$reslt = $obj->Remove();
-	
-	//print_r(ExceptionHandler::PopAllExceptions());	
-	echo Response::createObjectiveResponse($reslt, "");
-	die();
-}
-
-function selectGroupElements(){
-	
-	$dt = PLN_Elements::Get(" AND IsActive='YES' AND GroupID=? AND ParentID=?", 
-		array($_REQUEST["GroupID"], $_REQUEST["ParentID"]));
-	$dt = $dt->fetchAll();
-	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
-	die();
-}
-
-function SaveElement(){
-	
-	$obj = new PLN_Elements();
-	PdoDataAccess::FillObjectByArray($obj, $_POST);
-	
-	if(empty($obj->properties))
-		$obj->properties = " ";
-	
-	if(empty($obj->EditorProperties))
-		$obj->EditorProperties = " ";
-	
-	if($obj->ElementID*1 > 0)
-		$result = $obj->Edit();
-	else
-		$result = $obj->Add();
-	
-	//print_r(ExceptionHandler::PopAllExceptions());	
-	echo Response::createObjectiveResponse($result, "");
-	die();
-}
-
-function DeleteElement(){
-	
-	$obj = new PLN_Elements();
-	$obj->ElementID = $_POST["ElementID"];
-	$result = $obj->Remove();
-	
-	echo Response::createObjectiveResponse($result, "");
-	die();
-}
-
-//............................................
 
 function selectGroups(){
 	

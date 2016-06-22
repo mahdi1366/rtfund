@@ -54,7 +54,7 @@ function PlanInfo(){
 				store : new Ext.data.SimpleStore({
 					proxy: {
 						type: 'jsonp',
-						url: this.address_prefix + '../loan/loan.data.php?task=GetAllLoans&IsPlan=true',
+						url: this.address_prefix + '../../loan/loan/loan.data.php?task=GetAllLoans&IsPlan=true',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
 					fields : ['LoanID','LoanDesc'],
@@ -841,7 +841,7 @@ PlanInfo.prototype.SendPlan = function(StepID, ActDesc){
 			if(result.success)
 			{
 				if(PlanInfoObject.portal)
-					portal.OpenPage("/loan/plan/NewPlan.php");
+					portal.OpenPage("/plan/plan/NewPlan.php");
 				else
 				{
 					framework.CloseTab(PlanInfoObject.TabID);
@@ -1006,7 +1006,7 @@ PlanInfo.prototype.SendExpert = function(){
 
 					Ext.Ajax.request({
 						methos : "post",
-						url : "/loan/plan/plan.data.php",
+						url : "/plan/plan/plan.data.php",
 						params : {
 							task : "SendExpert",
 							PlanID : me.PlanID,
@@ -1020,7 +1020,7 @@ PlanInfo.prototype.SendExpert = function(){
 							{
 								PlanInfoObject.commentWin3.hide();
 								if(PlanInfoObject.portal)
-									portal.OpenPage("/loan/plan/ManagePlans.php");					
+									portal.OpenPage("/plan/plan/ManagePlans.php");					
 							}
 							else
 							{

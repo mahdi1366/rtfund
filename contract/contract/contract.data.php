@@ -4,7 +4,7 @@
 //	Date		: 94.08
 //-----------------------------
 
-require_once '../../header.inc.php';
+require_once '../header.inc.php';
 require_once 'contract.class.php';
 require_once '../templates/templates.class.php';
 require_once getenv("DOCUMENT_ROOT") . '/office/workflow/wfm.class.php';

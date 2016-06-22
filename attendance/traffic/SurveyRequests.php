@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // Create Date:	95.03
 //-------------------------
-include('../../header.inc.php');
+include('../header.inc.php');
 include_once inc_dataGrid;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "traffic.data.php?task=GetAllRequests", "grid_div");

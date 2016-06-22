@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // create Date: 95.01
 //-------------------------
-include_once('../../header.inc.php');
+include_once('../header.inc.php');
 include_once inc_dataReader;
 include_once inc_response;
 include_once 'shift.class.php';

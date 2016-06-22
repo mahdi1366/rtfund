@@ -30,6 +30,8 @@ $js_prefix_address = implode("/" ,
 		array_splice(preg_split('/\//', $_SERVER["SCRIPT_NAME"]),0,
 		count(preg_split('/\//', $_SERVER["SCRIPT_NAME"]))-1)) . "/";
 
+require_once 'definitions.inc.php';
+
 if(isset($_REQUEST["framework"]))
 {
 	$branches = FRW_access::GetAccessBranches();

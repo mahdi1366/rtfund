@@ -99,7 +99,7 @@ ManagePlan.prototype.ShowHistory = function(){
 ManagePlan.prototype.ShowPlanInfo = function(){
 
 	var record = this.grid.getSelectionModel().getLastSelected();
-	portal.OpenPage("../loan/plan/PlanInfo.php", {PlanID : record.data.PlanID});
+	portal.OpenPage("../plan/plan/PlanInfo.php", {PlanID : record.data.PlanID});
 	return;
 }
 

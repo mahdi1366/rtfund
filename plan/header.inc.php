@@ -25,8 +25,7 @@ if(!session::checkLogin())
 	die();
 } 
 
-require_once 'plan/PLNconfig.inc.php';
-require_once 'contract/CNTconfig.class.php';
+require_once 'PLNconfig.inc.php';
 
 
 $address_prefix = getenv("DOCUMENT_ROOT");

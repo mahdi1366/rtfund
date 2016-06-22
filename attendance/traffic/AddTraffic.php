@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // Create Date:	95.01
 //-------------------------
-include('../../header.inc.php');
+include('../header.inc.php');
 include_once inc_dataGrid;
 require_once 'traffic.class.php';
 

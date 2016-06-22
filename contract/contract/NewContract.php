@@ -4,7 +4,7 @@
 //	Date		: 94.08
 //-----------------------------
 
-require_once '../../header.inc.php';
+require_once '../header.inc.php';
 
 if (!empty($_REQUEST['ContractID'])) 
 	$ContractID = $_REQUEST['ContractID'];
@@ -88,7 +88,7 @@ function NewContract() {
 			store : new Ext.data.SimpleStore({
 				proxy: {
 					type: 'jsonp',
-					url: this.address_prefix + '../../request/request.data.php?task=SelectAllRequests',
+					url: this.address_prefix + '../../loan/request/request.data.php?task=SelectAllRequests',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields : ["LoanPersonID",'LoanFullname','ReqAmount',"RequestID","ReqDate", {

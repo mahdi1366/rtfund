@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // Create Date:	95.03
 //-------------------------
-include('../../header.inc.php');
+include('../header.inc.php');
 require_once "traffic.class.php";
 
 if(empty($_REQUEST["RequestID"]))

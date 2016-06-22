@@ -56,7 +56,7 @@ $grid = $dg->makeGrid_returnObjects();
 ManagePlanObject.grid = <?= $grid ?>;
 <? if(!$portal){ ?>
 	ManagePlanObject.grid.on("itemdblclick", function(view, record){
-		framework.OpenPage("/loan/plan/PlanInfo.php", "جداول اطلاعاتی طرح", {PlanID : record.data.PlanID});
+		framework.OpenPage("/plan/plan/PlanInfo.php", "جداول اطلاعاتی طرح", {PlanID : record.data.PlanID});
 	});	
 <? } ?>
 ManagePlanObject.grid.getView().getRowClass = function(record, index)

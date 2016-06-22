@@ -4,7 +4,7 @@
 //	Date		: 95.02
 //-----------------------------
 
-require_once '../../header.inc.php';
+require_once '../header.inc.php';
 require_once 'traffic.class.php';
 require_once '../baseinfo/shift.class.php';
 require_once inc_reportGenerator;

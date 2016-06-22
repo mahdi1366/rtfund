@@ -120,7 +120,7 @@ function NewPlan(){
 				store : new Ext.data.SimpleStore({
 					proxy: {
 						type: 'jsonp',
-						url: this.address_prefix + '../loan/loan.data.php?task=GetAllLoans&IsPlan=true',
+						url: this.address_prefix + '../../loan/loan/loan.data.php?task=GetAllLoans&IsPlan=true',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
 					fields : ['LoanID','LoanDesc'],
@@ -209,10 +209,10 @@ NewPlan.prototype.SaveNewPlan = function(){
 				if(NewPlanObject.framework)
 				{
 					framework.CloseTab(NewPlanObject.TabID);
-					framework.OpenPage("/loan/plan/PlanInfo.php", "جداول اطلاعاتی طرح", {PlanID : result.data});
+					framework.OpenPage("/plan/plan/PlanInfo.php", "جداول اطلاعاتی طرح", {PlanID : result.data});
 				}	
 				else
-					portal.OpenPage("/loan/plan/PlanInfo.php", {PlanID : result.data});
+					portal.OpenPage("/plan/plan/PlanInfo.php", {PlanID : result.data});
 			}
 			else
 				Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
@@ -224,7 +224,7 @@ NewPlan.prototype.SaveNewPlan = function(){
 NewPlan.prototype.ShowPlanInfo = function(){
 	
 	record = this.grid.getSelectionModel().getLastSelected();
-	portal.OpenPage("/loan/plan/PlanInfo.php", {PlanID : record.data.PlanID});
+	portal.OpenPage("/plan/plan/PlanInfo.php", {PlanID : record.data.PlanID});
 }
 
 NewPlan.prototype.ShowHistory = function(){
