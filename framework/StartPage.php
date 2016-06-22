@@ -12,7 +12,6 @@ $dg = new sadaf_datagrid("dg",$js_prefix_address . "person/persons.data.php?task
 $dg->addColumn("","PersonID","string", true);
 
 $col = $dg->addColumn("نام و نام خانوادگی","fullname","string");
-$col->width = 200;
 
 $col = $dg->addColumn("موبایل","mobile","string");
 $col->width = 100;
@@ -21,7 +20,7 @@ $col = $dg->addColumn("نام كاربري","UserName","string");
 $col->width = 150;
 
 $col = $dg->addColumn("","","");
-$col->renderer = "StartPage.OperationRender";
+$col->renderer = "FrameworkStartPage.OperationRender";
 $col->sortable = false;
 $col->width = 50;
 
@@ -31,14 +30,14 @@ $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "PersonID";
 $dg->title = "کاربران جدیدی که ثبت نام کرده اند";
-$dg->autoExpandColumn = "address";
+$dg->autoExpandColumn = "fullname";
 $dg->emptyTextOfHiddenColumns = true;
 $grid1 = $dg->makeGrid_returnObjects();
 
 ?>
 <script>
 
-StartPage.prototype = {
+FrameworkStartPage.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
@@ -47,7 +46,7 @@ StartPage.prototype = {
 	}
 };
 
-function StartPage(){
+function FrameworkStartPage(){
 	
 	 new Ext.panel.Panel({
 		renderTo : this.get("panel1"),
@@ -93,28 +92,26 @@ function StartPage(){
 	
 }
 
-StartPageObject = new StartPage();
-
-StartPage.OperationRender = function(){
+FrameworkStartPage.OperationRender = function(){
 	
 	return "<div align='center' title='تایید مشتری' class='tick' "+
-		"onclick='StartPageObject.ConfirmPerson(1);' " +
+		"onclick='FrameworkStartPageObject.ConfirmPerson(1);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;float:right;width:16px;height:16'></div>" +
 		
 	"<div align='center' title='حذف مشتری' class='cross' "+
-		"onclick='StartPageObject.ConfirmPerson(0);' " +
+		"onclick='FrameworkStartPageObject.ConfirmPerson(0);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;float:right;width:16px;height:16'></div>";
+		"cursor:pointer;float:left;width:16px;height:16'></div>";
 }
 
-StartPage.prototype.ConfirmPerson = function(mode){
+FrameworkStartPage.prototype.ConfirmPerson = function(mode){
 	
 	message = mode == 1 ? "آیا مایل به تایید می باشید؟" : "آیا مایل به حذف مشتری می باشید؟";
 	Ext.MessageBox.confirm("",message, function(btn){
 		if(btn == "no")
 			return;
-		me = StartPageObject;
+		me = FrameworkStartPageObject;
 		record = me.grid1.getSelectionModel().getLastSelected();
 	
 		mask = new Ext.LoadMask(me.grid1,{msg:'در حال ذخیره سازی ...'});
@@ -133,7 +130,7 @@ StartPage.prototype.ConfirmPerson = function(mode){
 				var st = Ext.decode(response.responseText);
 
 				if(st.success)
-					StartPageObject.grid1.getStore().load();
+					FrameworkStartPageObject.grid1.getStore().load();
 				else
 				{
 					if(st.data == "")
@@ -146,6 +143,8 @@ StartPage.prototype.ConfirmPerson = function(mode){
 		});
 	})	
 }
+
+FrameworkStartPageObject = new FrameworkStartPage();
 
 </script>
 <table style="margin:10px">

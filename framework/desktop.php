@@ -580,6 +580,21 @@ if ($menuStr != "") {
             }
         }
 
+	//..........................................................................
+	
+	function LoanRFID(RequestID)
+	{
+		st = RequestID.lpad("0", 7);
+		SUM = st[0]*1 + st[1]*2 + st[2]*3 + st[3]*4 + st[4]*5 + st[5]*6 + st[6]*7;
+		remain = SUM % 11;
+		remain = remain == 10 ? 0 : remain;
+
+		code = st + remain;
+		return code;
+	}
+	
+	//..........................................................................
+		
 	var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
 	Ext.QuickTips.init();
 	var framework;

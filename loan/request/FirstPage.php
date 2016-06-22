@@ -119,7 +119,7 @@ $readyToPayCount = SelectReadyToPayParts(true);
 ?>
 <script>
 
-StartPage.prototype = {
+LoanStartPage.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
@@ -128,7 +128,7 @@ StartPage.prototype = {
 	}
 };
 
-function StartPage(){
+function LoanStartPage(){
 	
 	this.grid_rec = <?= $grid_rec ?>;
 	this.grid_rec.on("itemdblclick", function(view, record){
@@ -150,13 +150,13 @@ function StartPage(){
 	
 }
 
-StartPageObject = new StartPage();
+LoanStartPageObject = new LoanStartPage();
 
-StartPage.ShowGrid = function(gridName){
+LoanStartPage.ShowGrid = function(gridName){
 	
-	eval("grid = StartPageObject." + gridName + " ;");
+	eval("grid = LoanStartPageObject." + gridName + " ;");
 	if(!grid.rendered)
-		grid.render(StartPageObject.get("div_" + gridName));
+		grid.render(LoanStartPageObject.get("div_" + gridName));
 }
 
 </script>
@@ -166,21 +166,21 @@ StartPage.ShowGrid = function(gridName){
 			<tr>
 				<td><img src="/generalUI/ext4/resources/themes/icons/comment.png" style="width:24px;vertical-align: middle;">
 					پیام های ارسالی از معرفی کنندگان وام
-					<a href="javascript:StartPage.ShowGrid('grid_msg')">( <?= $messagesCount ?> )</a>
+					<a href="javascript:LoanStartPage.ShowGrid('grid_msg')">( <?= $messagesCount ?> )</a>
 					<div id="div_grid_msg"></div>
 				</td>
 			</tr>
 			<tr>
 				<td><img src="/generalUI/ext4/resources/themes/icons/epay.png" style="width:24px;vertical-align: middle;">
 					درخواست های وام آماده پرداخت
-					<a href="javascript:StartPage.ShowGrid('grid_pay')">( <?= $readyToPayCount ?> )</a>
+					<a href="javascript:LoanStartPage.ShowGrid('grid_pay')">( <?= $readyToPayCount ?> )</a>
 					<div id="div_grid_pay"></div>
 				</td>
 			</tr>			
 			<tr>
 				<td><img src="/generalUI/ext4/resources/themes/icons/receive.png" style="width:24px;vertical-align: middle;">
 					  درخواست های رسیده جدید
-					<a href="javascript:StartPage.ShowGrid('grid_rec')">( <?= $receivedCount ?> )</a>	
+					<a href="javascript:LoanStartPage.ShowGrid('grid_rec')">( <?= $receivedCount ?> )</a>	
 					<div id="div_grid_rec"></div>
 				</td>
 			</tr>

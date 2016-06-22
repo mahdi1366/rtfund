@@ -20,7 +20,7 @@ $ReceiveForms = is_array($dt) ? count($dt) : $dt->rowCount();
 ?>
 <script>
 
-StartPage.prototype = {
+OfficeStartPage.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
@@ -29,13 +29,13 @@ StartPage.prototype = {
 	}
 };
 
-function StartPage(){
+function OfficeStartPage(){
 		
 }
 
-StartPageObject = new StartPage();
+OfficeStartPageObject = new OfficeStartPage();
 
-StartPage.prototype.OpenPage = function(mode){
+OfficeStartPage.prototype.OpenPage = function(mode){
 	
 	if(mode == "receive")
 		framework.OpenPage("/office/letter/MyLetter.php","نامه های رسیده", {mode : mode});
@@ -57,13 +57,13 @@ StartPage.prototype.OpenPage = function(mode){
 			<tr>
 				<td><img src="/office/icons/summary.png" style="width:30px;vertical-align: middle;">
 					نامه های رسیده جدید : 
-					<a href="javascript:StartPageObject.OpenPage('receive')">( <?= $NewReceived ?> )</a>
+					<a href="javascript:OfficeStartPageObject.OpenPage('receive')">( <?= $NewReceived ?> )</a>
 				</td>
 			</tr>
 			<tr>
 				<td><img src="/office/icons/summary.png" style="width:30px;vertical-align: middle;">
 					نامه های پیش نویس : 
-					<a href="javascript:StartPageObject.OpenPage('draft')">( <?= $DraftCount ?> )</a>
+					<a href="javascript:OfficeStartPageObject.OpenPage('draft')">( <?= $DraftCount ?> )</a>
 				</td>
 			</tr>
 			<tr>
@@ -72,7 +72,7 @@ StartPage.prototype.OpenPage = function(mode){
 			<tr>
 				<td><img src="/office/icons/form.png" style="width:30px;vertical-align: middle;">
 					فرم های منتظر تایید :
-					<a href="javascript:StartPageObject.OpenPage('form')">( <?= $ReceiveForms ?> )</a>					
+					<a href="javascript:OfficeStartPageObject.OpenPage('form')">( <?= $ReceiveForms ?> )</a>					
 				</td>
 			</tr>
 		</table>
