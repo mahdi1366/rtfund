@@ -2,10 +2,17 @@
 
 /*
 
-ALTER TABLE `krrtfir_rtfund`.`LON_requests` MODIFY COLUMN `imp_GirandehCode` INTEGER;
+BSC_ExpertDomain
+ * add menu of expertDomain
+ * 
+ ALTER TABLE `krrtfir_rtfund`.`ACC_DocChecks` RENAME TO `krrtfir_rtfund`.`ACC_DocCheques`;
+
+ALTER TABLE `krrtfir_rtfund`.`ACC_DocCheques` CHANGE COLUMN `CheckID` `ChequeID` INTEGER UNSIGNED NOT NULL DEFAULT NULL AUTO_INCREMENT COMMENT 'کد چک',
+ DROP PRIMARY KEY,
+ ADD PRIMARY KEY  USING BTREE(`ChequeID`);
 
 
-BSC_setting
+ * ATN_PersonExpertDomain
  
  
 

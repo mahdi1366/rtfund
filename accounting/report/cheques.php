@@ -9,17 +9,19 @@ require_once "ReportGenerator.class.php";
 
 if(isset($_REQUEST["show"]))
 {
-	$dt = PdoDataAccess::runquery("select * from cycles where cycleID=" . $_SESSION["CYCLE"]);
-	$Year = $dt[0]["year"];
+	$Year = $_SESSION["accounting"]["CycleYear"];
 	$query = "
-	select c.*,d.docDate,a.*,b.title as checkTitle,t.tafsiliTitle,bankTitle
-		from acc_checks c 
-		join acc_docs d using(docID)
-		join acc_accounts a using(accountID)
-		join banks bb using(bankID)
-		join basic_info b on(b.typeID=3 AND b.infoID=checkStatus)
-		left join acc_tafsilis t using(tafsiliID)
-	where checkDate >= '" . DateModules::shamsi_to_miladi($Year . "-01-01", "-") . "'";
+	select c.*,d.docDate,a.*,b.InfoDesc as checkTitle,t.tafsiliDesc,bankDesc
+
+	from ACC_DocCheques c
+	left join ACC_tafsilis t using(tafsiliID)
+	join ACC_docs d using(DocID)
+	join ACC_accounts a using(AccountID)
+	join ACC_banks bb using(BankID)
+	join BaseInfo b on(b.typeID=3 AND b.infoID=CheckStatus)
+	
+	where d.DocStatus != 'RAW' AND d.CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+				AND d.BranchID=" . $_SESSION["accounting"]["BranchID"];
 
 	$whereParam = array();
 	if(!empty($_POST["fromDate"]))
@@ -67,8 +69,6 @@ if(isset($_REQUEST["show"]))
 		$query .= " AND c.tafsiliID = :taf ";
 		$whereParam[":taf"] = $_POST["tafsiliID"];
 	}
-	
-	
 	$query .= " order by checkDate";
 
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
@@ -149,7 +149,7 @@ AccReport_checks.prototype.showReport = function(btn, e)
 	this.form = this.get("mainForm")
 	this.form.target = "_blank";
 	this.form.method = "POST";
-	this.form.action =  this.address_prefix + "checks.php?show=true";
+	this.form.action =  this.address_prefix + "cheques.php?show=true";
 	this.form.submit();
 	this.get("excel").value = "";
 	return;
@@ -186,38 +186,51 @@ function AccReport_checks()
 			xtype : "shdatefield",
 			name : "l_toDate",
 			fieldLabel : "تا تاریخ"
-		},
-		/*<? $data = PdoDataAccess::runquery("select * from basic_info where TypeID=3");?>*/
-		{
+		},{
 			xtype : "combo",
-			store : Ext.data.Store({
-				fields : ['<?= implode("','",array_keys($data[0]))?>'],
-				data : <?= json_encode($data) ?>
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + "../baseinfo/baseinfo.data.php?task=SelectChequeStatuses",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['InfoID','InfoDesc'],
+				autoLoad : true
 			}),
-			displayField : 'title',
+			displayField : 'InfoDesc',
 			valueField : 'infoID',
 			hiddenName : "checkStatus",
 			inputId : "statusName",
 			fieldLabel : "وضعیت چک"
 		},
-		/*<? $data = PdoDataAccess::runquery("select * from banks");?>*/
 		{
 			xtype : "combo",
-			store : Ext.data.Store({
-				fields : ['<?= implode("','",array_keys($data[0]))?>'],
-				data : <?= json_encode($data) ?>
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?' +
+						"task=GetBankData",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BankID','BankDesc'],
+				autoLoad : true
 			}),
-			displayField : 'bankTitle',
+			displayField : 'BankDesc',
 			valueField : 'bankID',
 			hiddenName : "bankID",
 			fieldLabel : "نام بانک"
 		},
-		/*<? $data = PdoDataAccess::runquery("select * from acc_accounts");?>*/
 		{
 			xtype : "combo",
-			store : Ext.data.Store({
-				fields : ['<?= implode("','",array_keys($data[0]))?>'],
-				data : <?= json_encode($data) ?>
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?' +
+						"task=SelectAccounts",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BankID','BankDesc'],
+				autoLoad : true
 			}),
 			displayField : 'accountTitle',
 			valueField : 'accountID',

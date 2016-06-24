@@ -42,11 +42,28 @@ function GellMenus(){
 	die();
 }
 
+function selectMenuGroups(){
+	
+	$dt = PdoDataAccess::runquery("
+		select g.MenuID GroupID,g.MenuDesc
+		from FRW_menus g
+		where g.parentID=0 AND g.SystemID=?",array($_REQUEST["SystemID"]));
+	
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
 function SaveMenu(){
 	if(isset($_POST["record"]))
 	{
 		$obj = new FRW_Menus();
 		PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+		
+		$st = stripslashes(stripslashes($_POST["record"]));
+		$data = json_decode($st);
+		
+		$obj->ParentID = $data->GroupID;
+		
 		$res = $obj->EditMenu();
 	}
 	else

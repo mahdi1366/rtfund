@@ -102,7 +102,7 @@ $temp = PdoDataAccess::runquery("
 			</table>
 			<table style="width:100%;border-collapse: collapse" border="1" cellspacing="0" cellpadding="2">
 			<?
-				$dt = ACC_DocChecks::GetAll("DocID=?", array($docID));
+				$dt = ACC_DocCheques::GetAll("DocID=?", array($docID));
 				for($i=0; $i < count($dt); $i++)
 				{
 					echo "<tr style='height:60px;vertical-align:middle'>

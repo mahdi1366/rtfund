@@ -187,7 +187,7 @@ if(isset($_REQUEST["show"]))
 	$where = "";
 	$whereParam = array();
 	MakeWhere($where, $whereParam);
-	$query .= " where d.CycleID=" . $_SESSION["accounting"]["CycleID"]
+	$query .= " where d.DocStatus != 'RAW' AND d.CycleID=" . $_SESSION["accounting"]["CycleID"]
 			. " AND BranchID=" . $_SESSION["accounting"]["BranchID"] . $where;
 
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);

@@ -247,6 +247,7 @@ function showReport(){
 	MakeWhere($where, $whereParam);
 	
 	$query = $select . $from . " where 
+		d.DocStatus != 'RAW'  AND
 		d.CycleID=" . $_SESSION["accounting"]["CycleID"] . " AND 
 		d.BranchID= " . $_SESSION["accounting"]["BranchID"] . $where;
 	$query .= $group != "" ? " group by " . $group : "";

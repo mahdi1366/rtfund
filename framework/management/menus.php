@@ -10,7 +10,6 @@ require_once 'menus.js.php';
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "framework.data.php?task=GellMenus","grid_div","mainForm");
 
-$dg->addColumn("", "GroupID", "", true);
 $dg->addColumn("", "GroupDesc", "", true);
 $dg->addColumn("", "MenuID", "", true);
 $dg->addColumn("", "SystemID", "", true);
@@ -33,6 +32,12 @@ $dg->groupHeaderTpl = " <table class=infoTbl width=100% >" .
 				"style=background-repeat:no-repeat;background-position:center;cursor:pointer;width:100%;height:16></div>" . 
 		"</td></tr>" .        
         "</table>";
+
+
+$col = $dg->addColumn("گروه", "GroupID", "string");
+$col->renderer = "function(v,p,r){return r.data.GroupDesc}";
+$col->editor = "MenuObject.GroupCombo";
+$col->sortable = false;
 
 $col = $dg->addColumn("عنوان", "MenuDesc", "string");
 $col->editor = ColumnEditor::TextField();
@@ -81,7 +86,7 @@ $col->width = 55;
 $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(store,record,option){ MenuObject.SaveMenu(store,record,option);}";
 
-$dg->height = 700;
+$dg->height = 500;
 $dg->width = 750;
 $dg->emptyTextOfHiddenColumns = true;
 $dg->EnableSearch = false;

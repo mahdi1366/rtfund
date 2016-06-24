@@ -120,13 +120,14 @@ $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 320;
 $itemsgrid = $dg->makeGrid_returnObjects();
 //---------------------------------------------------
-$dgh = new sadaf_datagrid("dg",$js_prefix_address."doc.data.php?task=selectChecks","div_dg");
+$dgh = new sadaf_datagrid("dg",$js_prefix_address."doc.data.php?task=selectCheques","div_dg");
 
 $dgh->addColumn("","DocID","",true);
 $dgh->addColumn("","AccountDesc","",true);
 $dgh->addColumn("","TafsiliDesc","",true);
+$dgh->addColumn("","StatusTitle","",true);
 
-$col = $dgh->addColumn("کد","CheckID","",true);
+$col = $dgh->addColumn("کد","ChequeID","",true);
 $col->width = 50;
 
 $col = $dgh->addColumn("حساب", "AccountID");
@@ -153,8 +154,10 @@ $col->editor = "AccDocsObject.checkTafsiliCombo";
 $col = $dgh->addColumn("بابت", "description");
 $col->editor = ColumnEditor::TextField(true);
 
-$col = $dgh->addColumn("وضعیت", "StatusTitle");
-$col->width = 60;
+$col = $dgh->addColumn("وضعیت", "CheckStatus");
+$col->editor = "AccDocsObject.ChequeStatusCombo";
+$col->renderer = "function(v,p,r){return r.data.StatusTitle}";
+$col->width = 80;
 
 if($accessObj->RemoveFlag)
 {
@@ -179,7 +182,7 @@ $dgh->addColumn("", "PrintPage1","",true);
 $dgh->addColumn("", "PrintPage2","",true);
 
 $dgh->width = 780;
-$dgh->DefaultSortField = "CheckID";
+$dgh->DefaultSortField = "ChequeID";
 $dgh->autoExpandColumn = "description";
 $dgh->emptyTextOfHiddenColumns = true;
 $dgh->DefaultSortDir = "ASC";
@@ -212,8 +215,8 @@ pagingToolbar.add([{
 	value: '',
 	hideTrigger: true,
 	size:5,
-	fieldLabel:'شماره برگه',
-	labelWidth:60,
+	fieldLabel:'شماره سند',
+	labelWidth:65,
 	width:120
 },{
 	xtype : "button",
@@ -243,7 +246,7 @@ AccDocsObject.itemGrid.getView().getRowClass = function(record, index)
 AccDocsObject.checkGrid = <?= $checksgrid ?>;
 AccDocsObject.checkGrid.plugins[0].on("beforeedit", AccDocs.beforeCheckEdit);
 AccDocsObject.checkGrid.plugins[0].on("beforeedit", function(editor,e){
-	if(!e.record.data.CheckID)
+	if(!e.record.data.ChequeID)
 		return AccDocsObject.AddAccess;
 	return AccDocsObject.EditAccess;
 });

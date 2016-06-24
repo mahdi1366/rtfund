@@ -46,7 +46,7 @@ function SelectAll(){
 		join BSC_persons on(RegPersonID = PersonID)
 		join FRW_systems using(SystemID)
 		
-		where $where order by TaskStatus,CreateDate desc");	
+		where $where order by FIELD(TaskStatus,'RAW') desc,CreateDate desc");	
 	$cnt = $res->rowCount();
 	$res = PdoDataAccess::fetchAll($res, $_GET["start"], $_GET["limit"]);
 	echo dataReader::getJsonData($res, $cnt, $_GET["callback"]);
@@ -130,7 +130,7 @@ $dgh->width = 850;
 $dgh->DefaultSortField = "CreateDate";
 $dgh->autoExpandColumn = "title";
 $dgh->DefaultSortDir = "DESC";
-$dgh->height = 600;
+$dgh->height = 450;
 $dgh->emptyTextOfHiddenColumns = true;
 $dgh->EnableSearch = false;
 $dgh->pageSize = 15;

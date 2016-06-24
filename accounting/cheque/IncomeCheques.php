@@ -8,84 +8,7 @@ require_once '../header.inc.php';
 require_once inc_dataGrid;
 require_once inc_dataReader;
 
-if(!empty($_REQUEST["task"]))
-	ShowReport();
-
-function ShowReport(){
-	
-	$param = array();
-	$query = "select p.* , 
-			concat_ws(' ',fname,lname,CompanyName) fullname,
-			PartAmount,
-			PartDate,
-			b.BankDesc, 
-			bi2.InfoDesc ChequeStatusDesc
-		from LON_BackPays p 
-		join Lon_ReqParts using(PartID)
-		join LON_requests using(RequestID)
-		join BSC_persons on(LoanPersonID=PersonID)
-		left join ACC_banks b on(ChequeBank=BankID)
-		left join BaseInfo bi2 on(bi2.TypeID=16 AND bi2.InfoID=p.ChequeStatus)
-		
-		where ChequeNo>0";
-	
-	//.........................................................
-	if(!empty($_POST["FromNo"]))
-	{
-		$query .= " AND ChequeNo >= :cfn";
-		$param[":cfn"] = $_POST["FromNo"];
-	}
-	if(!empty($_POST["ToNo"]))
-	{
-		$query .= " AND ChequeNo <= :ctn";
-		$param[":ctn"] = $_POST["ToNo"];
-	}
-	if(!empty($_POST["FromDate"]))
-	{
-		$query .= " AND PayDate >= :fd";
-		$param[":fd"] = DateModules::shamsi_to_miladi($_POST["FromDate"], "-");
-	}
-	if(!empty($_POST["ToDate"]))
-	{
-		$query .= " AND PayDate <= :td";
-		$param[":td"] = DateModules::shamsi_to_miladi($_POST["ToDate"], "-");
-	}
-	if(!empty($_POST["FromAmount"]))
-	{
-		$query .= " AND PayAmount >= :fa";
-		$param[":fa"] = preg_replace('/,/', "", $_POST["FromAmount"]);
-	}
-	if(!empty($_POST["ToAmount"]))
-	{
-		$query .= " AND PayAmount <= :ta";
-		$param[":ta"] = preg_replace('/,/', "", $_POST["ToAmount"]);
-	}
-	if(!empty($_POST["ChequeBank"]))
-	{
-		$query .= " AND ChequeBank = :cb";
-		$param[":cb"] = $_POST["ChequeBank"];
-	}
-	if(!empty($_POST["ChequeBranch"]))
-	{
-		$query .= " AND ChequeBranch like :cb";
-		$param[":cb"] = "%" . $_POST["ChequeBranch"] . "%";
-	}
-	if(!empty($_POST["ChequeStatus"]))
-	{
-		$query .= " AND ChequeStatus = :cst";
-		$param[":cst"] = $_POST["ChequeStatus"];
-	}
-	//.........................................................
-	
-	$query .= dataReader::makeOrder();
-	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
-	$no = $temp->rowCount();
-	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
-	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
-	die();
-}
-
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "IncomeCheques.php?task=selectChecks", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "cheques.data.php?task=selectIncomeCheques", "grid_div");
 
 $col = $dg->addColumn("", "BackPayID", "", true);
 
@@ -106,7 +29,7 @@ $col->width = 80;
 $col = $dg->addColumn("مبلغ چک", "PayAmount", GridColumn::ColumnType_money);
 $col->width = 80;
 
-$col = $dg->addColumn("بانک", "ChequeBank");
+$col = $dg->addColumn("بانک", "BankDesc");
 $col->width = 100;
 
 $col = $dg->addColumn("شعبه", "ChequeBranch");
@@ -203,7 +126,7 @@ function IncomeCheque(){
 				proxy: {
 					type: 'jsonp',
 					url: this.address_prefix + '../baseinfo/baseinfo.data.php?' +
-						"task=SelectChequeStatuses",
+						"task=SelectIncomeChequeStatuses",
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields : ['InfoID','InfoDesc'],
@@ -250,10 +173,6 @@ function IncomeCheque(){
 
 IncomeChequeObject = new IncomeCheque();
 
-IncomeCheque.prototype.FilterGrid = function(item){
-	alert(item);
-	
-}
 
 </script>
 <center>

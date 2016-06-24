@@ -208,7 +208,11 @@ function LoanPay()
 				'<td style="padding:7px">مبلغ وام</td>',
 				'<td style="padding:7px">تاریخ پرداخت</td> </tr>',
 				'<tpl for=".">',
-					'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
+					'<tpl if="IsEnded == \'YES\'">',
+						'<tr class="x-boundlist-item pinkRow" style="border-left:0;border-right:0">',
+					'<tpl else>',
+						'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
+					'</tpl>',
 					'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">{PartDesc}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">{loanFullname}</td>',
@@ -342,9 +346,9 @@ LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 			{   
 				LoanPayObject.grid.getStore().load();
 				if(record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
-					Ext.MessageBox.alert("","برگه حسابداری هنگام وصول چک صادر می شود");
+					Ext.MessageBox.alert("","سند حسابداری هنگام وصول چک صادر می شود");
 				else
-					Ext.MessageBox.alert("","برگه حسابداری مربوطه صادر گردید");
+					Ext.MessageBox.alert("","سند حسابداری مربوطه صادر گردید");
 			}
 			else
 			{

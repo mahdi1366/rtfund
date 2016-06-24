@@ -7,7 +7,9 @@
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 
-$query = "select sum(CreditorAmount-DebtorAmount) amount, TafsiliDesc ,
+$query = "select sum(CreditorAmount-DebtorAmount) amount, 
+				ShareNo,
+				TafsiliDesc,
 				IsGovermental,
 				round(sum(CreditorAmount-DebtorAmount) /" . ShareBaseAmount . ") shareCount
 				
@@ -45,6 +47,7 @@ $rpg = new ReportGenerator();
 $rpg->excel = !empty($_POST["excel"]);
 
 $rpg->addColumn("سهامدار", "TafsiliDesc");
+$rpg->addColumn("شماره دفتر", "ShareNo");
 
 $rpg->addColumn("بخش دولتی/خصوصی", "IsGovermental", "IsGovermentalRender");
 

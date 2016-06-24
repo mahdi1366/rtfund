@@ -31,7 +31,7 @@ $col->align = "center";
 
 if(isset($_SESSION["USER"]["framework"]))
 {
-	$col = $dg->addColumn("شماره برگه حسابداری", "LocalNo");
+	$col = $dg->addColumn("شماره سند حسابداری", "LocalNo");
 	$col->align = "center";
 	$col->renderer = "function(v,p,r){return PartPayment.DocRender(v,p,r);}";
 	$col->width = 120;

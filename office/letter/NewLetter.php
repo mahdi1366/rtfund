@@ -86,7 +86,7 @@ Letter.prototype.BuildForms = function(){
 		},
 		defaults : {
 			labelWidth : 90,
-			width : 350
+			width : 370
 		},
 		width: 780,
 		items : [{
@@ -142,10 +142,24 @@ Letter.prototype.BuildForms = function(){
 				}				
 			}]
 		},{
-			xtype : "textfield",
-			name : "LetterTitle",
-			fieldLabel : "عنوان نامه",
-			allowBlank : false
+			xtype : "container",
+			layout : "hbox",
+			items : [{
+				xtype : "textfield",
+				name : "LetterTitle",
+				labelWidth : 90,
+				width : 240,
+				fieldLabel : "عنوان نامه",
+				allowBlank : false
+			},{
+				xtype : "numberfield",
+				name : "RefLetterID",
+				fieldLabel : "عطف به",
+				hideTrigger : true,
+				labelWidth : 50,
+				width : 130,
+				allowBlank : true
+			}]
 		},{
 			xtype : "container",
 			layout : "hbox",
@@ -187,9 +201,11 @@ Letter.prototype.BuildForms = function(){
 			disabled : true,
 			allowBlank : true
 		},{
-			xtype : "textfield",
+			xtype : "textarea",
 			name : "OuterCopies",
 			fieldLabel : "رونوشت به خارج از سازمان",
+			rows : 2,
+			rowspan :2,			
 			allowBlank : true
 		},{
 			xtype : "textfield",
@@ -197,13 +213,6 @@ Letter.prototype.BuildForms = function(){
 			fieldLabel : "پست مربوطه",
 			disabled : true,
 			allowBlank : true			
-		},{
-			xtype : "numberfield",
-			name : "RefLetterID",
-			fieldLabel : "عطف به نامه",
-			hideTrigger : true,
-			width : 200,
-			allowBlank : true
 		},{
 			xtype : "tabpanel",
 			colspan : 2,

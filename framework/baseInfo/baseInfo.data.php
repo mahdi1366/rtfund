@@ -12,8 +12,7 @@ $task = isset($_POST["task"]) ? $_POST["task"] : (isset($_GET["task"]) ? $_GET["
 if(!empty($task))
 	$task();
 
-function SaveUnit()
-{
+function SaveUnit(){
 	$obj = new BSC_units();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 
@@ -31,15 +30,13 @@ function SaveUnit()
 	die();
 }
 
-function DeleteUnit()
-{
+function DeleteUnit(){
 	$res = BSC_units::RemoveUnit($_POST["UnitID"]);
 	echo Response::createObjectiveResponse($res,"");
 	die();
 }
 
-function GetTreeNodes()
-{
+function GetTreeNodes(){
 	$nodes = PdoDataAccess::runquery("
 		select UnitID as id,UnitName as text, 
 		case when ParentID is null then 0 else ParentID end ParentID, 'true' as leaf
@@ -96,8 +93,7 @@ function GetTreeNodes()
 
 //---------------------------------
 
-function SavePost()
-{
+function SavePost(){
 	
 	$obj = new BSC_posts();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
@@ -113,8 +109,7 @@ function SavePost()
 	die();
 }
 
-function DeletePost()
-{
+function DeletePost(){
 	$PostID = substr($_POST["PostID"], 2);
 	$res = BSC_posts::RemovePost($PostID);
 	echo Response::createObjectiveResponse($res,"");
@@ -185,7 +180,9 @@ function GetAccessBranches(){
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
+
 //---------------------------------
+
 function SelectBaseTypes(){
 	
 	$temp = PdoDataAccess::runquery("select * from BaseTypes where editable='YES'");
@@ -294,5 +291,122 @@ function DeleteDomain(){
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
+
+//.............................................
+
+function SelectExpertDomainNodes(){
+
+	$dt = PdoDataAccess::runquery("
+		SELECT 
+			ParentID,DomainID id,DomainDesc as text,'true' as leaf, 'javascript:void(0)' href,d.*
+		FROM BSC_ExpertDomain d order by ParentID,DomainDesc");
+
+    $returnArray = array();
+    $refArray = array();
+
+    foreach ($dt as $row) {
+        if ($row["ParentID"] == 0) {
+            $returnArray[] = $row;
+            $refArray[$row["id"]] = &$returnArray[count($returnArray) - 1];
+            continue;
+        }
+
+        $parentNode = &$refArray[$row["ParentID"]];
+
+        if (!isset($parentNode["children"])) {
+            $parentNode["children"] = array();
+            $parentNode["leaf"] = "false";
+			$parentNode["href"] = "";
+        }
+        $lastIndex = count($parentNode["children"]);
+        $parentNode["children"][$lastIndex] = $row;
+        $refArray[$row["id"]] = &$parentNode["children"][$lastIndex];
+    }
+
+	echo json_encode($returnArray);
+	die();
+}
+
+function SaveExpertDomain(){
+	
+	$obj = new BSC_ExpertDomain();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	$obj->ParentID = $obj->ParentID == "src" ? "0" : $obj->ParentID;		
+	
+	if(empty($obj->DomainID))
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+
+	echo Response::createObjectiveResponse($result, $result ? $obj->DomainID : "");
+	die();
+}
+
+function DeleteExpertDomain(){
+	
+	$obj = new BSC_ExpertDomain();
+	$obj->DomainID = $_POST["DomainID"];
+	
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function SelectPersonExpertDomains(){
+	
+	$query = "select RowID,PersonID,DomainID,
+		concat_ws(' ',fname,lname,CompanyName) fullname,DomainDesc
+		
+		from BSC_PersonExpertDomain 
+		join BSC_ExpertDomain using(DomainID)
+		join BSC_persons using(PersonID)
+		
+		where 1=1";
+	$param = array();
+	
+	if(!empty($_REQUEST["fields"]) && !empty($_REQUEST["query"]))
+	{
+		if($_REQUEST["fields"] == "PersonID")
+		{
+			$query .= " AND concat_ws(' ',fname,lname,CompanyName) like :fl";
+			$param[":fl"] = "%" . $_REQUEST["query"] . "%";
+		}
+		else
+		{
+			$query .= " AND DomainDesc like :d";
+			$param[":d"] = "%" . $_REQUEST["query"] . "%";
+		}
+	}	
+	
+	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
+	$result = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
+	
+	echo dataReader::getJsonData($result, $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SavePersonExpertDomain(){
+	
+	$obj = new BSC_PersonExpertDomain();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	$result = $obj->Add();
+	//print_r(ExceptionHandler::PopAllExceptions());	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeletePersonExpertDomain(){
+	
+	$obj = new BSC_PersonExpertDomain();
+	$obj->RowID = $_POST["RowID"];
+	
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//.............................................
+
 
 ?>

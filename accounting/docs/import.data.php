@@ -54,7 +54,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 
 		if(count($dt) > 0)
 		{
-			echo Response::createObjectiveResponse(false, "شماره برگه وارد شده موجود می باشد");
+			echo Response::createObjectiveResponse(false, "شماره سند وارد شده موجود می باشد");
 			die();
 		}
 	}*/
@@ -605,7 +605,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 	}
 	
 	//------ ایجاد چک ------
-	$chequeObj = new ACC_DocChecks();
+	$chequeObj = new ACC_DocCheques();
 	$chequeObj->DocID = $obj->DocID;
 	$chequeObj->CheckDate = $PayObj->PayDate;
 	$chequeObj->amount = $BankItemAmount;
@@ -1423,7 +1423,7 @@ function ComputeDepositeProfit(){
 	
 	
 	$pdo->commit();
-	echo Response::createObjectiveResponse(true, "");
+	echo Response::createObjectiveResponse(true, $obj->LocalNo);
 	die();	
 }
 

@@ -325,12 +325,14 @@ TrafficReq.prototype.SaveRequest = function(){
 				Ext.MessageBox.alert("","ورود ساعت مربوطه الزامی است");
 				return;
 			}
+			break;
 		case "OFF":
 			if(this.formPanel.down("[name=OffType]").getValue() == null)
 			{
 				Ext.MessageBox.alert("","انتخاب نوع مرخصی الزامی است");
 				return;
 			}
+			break;
 		case "MISSION":
 			if(this.formPanel.down("[name=ToDate]").getValue() == null)
 			{

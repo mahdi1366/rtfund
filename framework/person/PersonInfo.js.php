@@ -390,7 +390,7 @@ PersonInfo.prototype.ActDomainLOV = function(record){
 			autoScroll : true,
 			width : 420,
 			height : 420,
-			title : "مانده اعتبار",
+			title : "حوزه فعالیت",
 			closeAction : "hide",
 			loader : {
 				url : this.address_prefix + "../baseInfo/ActDomain.php?mode=adding",

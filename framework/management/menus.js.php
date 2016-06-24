@@ -46,9 +46,28 @@ function Menu()
 						MenuObject.grid.getStore().load();
 					else
 						MenuObject.grid.render(MenuObject.get("div_grid"));
+					
+					MenuObject.GroupCombo.getStore().proxy.extraParams = {
+						SystemID : this.getValue()
+					};
+					MenuObject.GroupCombo.getStore().load();
 				}
 			}
 		}]
+	});
+	
+	this.GroupCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			proxy:{
+				type: 'jsonp',
+				url: this.address_prefix + 'framework.data.php?task=selectMenuGroups',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			fields :  ['GroupID','MenuDesc']
+		}),
+		displayField: 'MenuDesc',
+		valueField : "GroupID",
+		queryMode: "local"
 	});
 	
 	this.MenuWin = new Ext.window.Window({

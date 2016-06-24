@@ -39,7 +39,7 @@ function Unit(){
 		iconCls : "print",
 		text : "چاپ",
 		handler : function(){
-			Ext.ux.Printer.print(GoodObject.tree);
+			Ext.ux.Printer.print(UnitObject.tree);
 		}
 	});
 

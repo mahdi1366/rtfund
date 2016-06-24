@@ -275,7 +275,7 @@ Saving.prototype.SaveOperation = function(){
 			{   
 				SavingObject.grid.getStore().load();
 				SavingObject.mainWin.hide();
-				Ext.MessageBox.alert("","برگه حسابداری مربوطه صادر گردید");
+				Ext.MessageBox.alert("","سند حسابداری مربوطه صادر گردید");
 			}
 			else
 			{

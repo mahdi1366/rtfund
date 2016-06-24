@@ -16,11 +16,21 @@ if(isset($_REQUEST["show"]))
 			from ACC_docs d
 			join ACC_DocItems di using(docID)
 			join BSC_persons p on(RegPersonID=PersonID)
-			where d.CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+			where d.DocStatus != 'RAW' AND d.CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 				AND d.BranchID=" . $_SESSION["accounting"]["BranchID"];
 	
 	$whereParam = array();
 	
+	if(!empty($_POST["FromLocalNo"]))
+	{
+		$query .= " AND d.LocalNo >= :td ";
+		$whereParam[":td"] = $_POST["FromLocalNo"];
+	}
+	if(!empty($_POST["ToLocalNo"]))
+	{
+		$query .= " AND d.LocalNo <= :fd ";
+		$whereParam[":fd"] = $_POST["ToLocalNo"];
+	}
 	if(!empty($_POST["fromDate"]))
 	{
 		$query .= " AND d.DocDate >= :q1 ";
@@ -154,6 +164,16 @@ function AccReport_docs()
 		},
 		width : 600,
 		items :[{
+			xtype : "numberfield",
+			name : "FromLocalNo",
+			hideTrigger : true,
+			fieldLabel : "از شماره سند"
+		},{
+			xtype : "numberfield",
+			name : "ToLocalNo",
+			hideTrigger : true,
+			fieldLabel : "تا شماره سند"
+		},{
 			xtype : "shdatefield",
 			name : "fromDate",
 			fieldLabel : "تاریخ سند از"

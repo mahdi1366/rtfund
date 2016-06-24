@@ -67,7 +67,7 @@ class ACC_docs extends PdoDataAccess {
 			
 			if(count($dt) > 0 && strcmp($DocDate,$dt[0]["DocDate"]) > 0)
 			{
-				ExceptionHandler::PushException("تاریخ برگه باید از برگه های بعدی کوچکتر باشد.");
+				ExceptionHandler::PushException("تاریخ سند باید از اسناد بعدی کوچکتر باشد.");
 				return false;
 			}
 			//..................................................	
@@ -80,7 +80,7 @@ class ACC_docs extends PdoDataAccess {
 					$this->DocDate = $dt[0]["DocDate"];
 				else
 				{
-					ExceptionHandler::PushException("تاریخ برگه باید از برگه های قبلی بزرگتر باشد.");
+					ExceptionHandler::PushException("تاریخ سند باید از اسناد قبلی بزرگتر باشد.");
 					return false;
 				}
 			}
@@ -169,7 +169,7 @@ class ACC_docs extends PdoDataAccess {
 		}
 		else
 			$pdo2 = $pdo;
-		$result = parent::delete("ACC_DocChecks", "DocID=?", array($DocID), $pdo2);
+		$result = parent::delete("ACC_DocCheques", "DocID=?", array($DocID), $pdo2);
 		if ($result === false)
 		{
 			$pdo2->rollBack();
@@ -305,8 +305,8 @@ class ACC_DocItems extends PdoDataAccess {
 	}
 }
 
-class ACC_DocChecks extends PdoDataAccess {
-    public $CheckID;
+class ACC_DocCheques extends PdoDataAccess {
+    public $ChequeID;
     public $DocID;
 	public $CheckNo;
 	public $AccountID;
@@ -324,7 +324,7 @@ class ACC_DocChecks extends PdoDataAccess {
     static function GetAll($where = "",$whereParam = array())
     {
 	    $query = "select c.*,a.*,b.infoDesc as StatusTitle, bk.BankDesc, t.TafsiliDesc
-					from ACC_DocChecks c
+					from ACC_DocCheques c
 					left join ACC_accounts a using(AccountID)
 					left join ACC_banks bk on(a.BankID=bk.BankID)
 					left join ACC_tafsilis t on(TafsiliType=" . TAFTYPE_PERSONS . " AND t.TafsiliID=c.TafsiliID)
@@ -336,15 +336,15 @@ class ACC_DocChecks extends PdoDataAccess {
 
     function Add()
     {
-	    if( parent::insert("ACC_DocChecks", $this) === false )
+	    if( parent::insert("ACC_DocCheques", $this) === false )
 		    return false;
 
-	    $this->CheckID = parent::InsertID();
+	    $this->ChequeID = parent::InsertID();
 
 	    $daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->CheckID;
-		$daObj->TableName = "ACC_DocChecks";
+		$daObj->MainObjectID = $this->ChequeID;
+		$daObj->TableName = "ACC_DocCheques";
 		$daObj->execute();
 		return true;
     }
@@ -352,31 +352,31 @@ class ACC_DocChecks extends PdoDataAccess {
     function Edit()
     {
 	    $whereParams = array();
-	    $whereParams[":kid"] = $this->CheckID;
+	    $whereParams[":kid"] = $this->ChequeID;
 
-	    if( parent::update("ACC_DocChecks",$this," CheckID=:kid", $whereParams) === false )
+	    if( parent::update("ACC_DocCheques",$this," ChequeID=:kid", $whereParams) === false )
 		    return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->MainObjectID = $this->CheckID;
-		$daObj->TableName = "ACC_DocChecks";
+		$daObj->MainObjectID = $this->ChequeID;
+		$daObj->TableName = "ACC_DocCheques";
 		$daObj->execute();
 		return true;
     }
 
-    static function Remove($CheckID)
+    static function Remove($ChequeID)
     {
-	    $result = parent::delete("ACC_DocChecks", "CheckID=:kid ",
-		    array(":kid" => $CheckID));
+	    $result = parent::delete("ACC_DocCheques", "ChequeID=:kid ",
+		    array(":kid" => $ChequeID));
 
 	    if($result === false)
 		    return false;
 
 	    $daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->MainObjectID = $CheckID;
-		$daObj->TableName = "ACC_DocChecks";
+		$daObj->MainObjectID = $ChequeID;
+		$daObj->TableName = "ACC_DocCheques";
 		$daObj->execute();
 		return true;
     }

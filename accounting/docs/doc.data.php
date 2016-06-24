@@ -105,7 +105,7 @@ function confirm() {
 				AND DocType=" . DOCTYPE_DEPOSIT_PROFIT, array($_POST["DocID"]));
 			if(count($dt) > 0)
 			{
-				echo Response::createObjectiveResponse(false, "سند سپرده با شماره " . $dt[0][0] . " بر اساس این برگه صادر شده و قادر به برگشت این برگه نمی باشید.");
+				echo Response::createObjectiveResponse(false, "سند سپرده با شماره " . $dt[0][0] . " بر اساس این سند صادر شده و قادر به برگشت این سند نمی باشید.");
 				die();						
 			}
 		}
@@ -298,7 +298,7 @@ function removeDocItem() {
 
 //............................
 
-function selectChecks() {
+function selectCheques() {
 	$where = "1=1";
 	$whereParam = array();
 	if (isset($_REQUEST["DocID"])) {
@@ -342,19 +342,19 @@ function selectChecks() {
 
 	$where .= dataReader::makeOrder();
 
-	$temp = ACC_DocChecks::GetAll($where, $whereParam);
+	$temp = ACC_DocCheques::GetAll($where, $whereParam);
 	$no = count($temp);
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
 	die();
 }
 
 function saveChecks() {
-	$obj = new ACC_DocChecks();
+	$obj = new ACC_DocCheques();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
 	//..........................................
-	$query = "select * from ACC_DocChecks where CheckNo=? AND AccountID=?";
-	$query .=!empty($obj->CheckID) ? " AND CheckID<>" . $obj->CheckID : "";
+	$query = "select * from ACC_DocCheques where CheckNo=? AND AccountID=?";
+	$query .=!empty($obj->ChequeID) ? " AND ChequeID<>" . $obj->ChequeID : "";
 
 	$dt = PdoDataAccess::runquery($query, array($obj->CheckNo, $obj->AccountID));
 	if (count($dt) > 0) {
@@ -362,7 +362,7 @@ function saveChecks() {
 		die();
 	}
 	//..........................................
-	if (empty($obj->CheckID))
+	if (empty($obj->ChequeID))
 	{
 		unset($obj->CheckStatus);
 		$return = $obj->Add();
@@ -380,14 +380,14 @@ function saveChecks() {
 }
 
 function removeChecks() {
-	$result = ACC_DocChecks::Remove($_POST["CheckID"]);
+	$result = ACC_DocCheques::Remove($_POST["ChequeID"]);
 	echo $result ? "true" : "conflict";
 	die();
 }
 
 function RegisterCheck() {
 	
-	PdoDataAccess::runquery("update ACC_DocChecks set CheckStatus=1 where CheckID=?", array($_POST["CheckID"]));
+	PdoDataAccess::runquery("update ACC_DocCheques set CheckStatus=1 where ChequeID=?", array($_POST["ChequeID"]));
 	echo Response::createObjectiveResponse(PdoDataAccess::AffectedRows() == 0 ? false : true, "");
 	die();
 }
@@ -439,7 +439,7 @@ function UpdateChecks(){
 		//............... add debtor rows to doc ...........................
 		if($_POST["DocID"] != "")
 		{
-			$dt = PdoDataAccess::runquery("select * from ACC_DocChecks 
+			$dt = PdoDataAccess::runquery("select * from ACC_DocCheques 
 				where CheckStatus in(1,2) AND AccountID=? AND CheckNo=?", array($AccountID,$CheckNo));
 			if(count($dt) > 0)
 			{
@@ -455,7 +455,7 @@ function UpdateChecks(){
 		}		
 		//..................................................................
 
-		PdoDataAccess::runquery("update ACC_DocChecks set CheckStatus=3 where AccountID=? AND CheckNo=?", array($AccountID,$CheckNo));
+		PdoDataAccess::runquery("update ACC_DocCheques set CheckStatus=3 where AccountID=? AND CheckNo=?", array($AccountID,$CheckNo));
 		if(PdoDataAccess::AffectedRows() > 0)
 			$result .= "شماره چک : " . $CheckNo . " [ تعداد ردیف به روز شده : " . PdoDataAccess::AffectedRows() . "]<br>";
 			
@@ -478,7 +478,7 @@ function UpdateChecks(){
 		{
 			echo $row[4] . "*********";
 			$CheckNo = substr($row[4], 4);
-			PdoDataAccess::runquery("update ACC_DocChecks set CheckStatus=2 where AccountID=? AND CheckNo=?", array($AccountID,(int)$CheckNo));
+			PdoDataAccess::runquery("update ACC_DocCheques set CheckStatus=2 where AccountID=? AND CheckNo=?", array($AccountID,(int)$CheckNo));
 
 			if(PdoDataAccess::AffectedRows() > 0)
 				$result .= "شماره چک : " . $CheckNo . " [ تعداد ردیف به روز شده : " . PdoDataAccess::AffectedRows() . "]<br>";
@@ -514,7 +514,7 @@ function RegisterEndDoc(){
 
 		if(count($dt) > 0)
 		{
-			echo Response::createObjectiveResponse(false, "شماره برگه وارد شده موجود می باشد");
+			echo Response::createObjectiveResponse(false, "شماره سند وارد شده موجود می باشد");
 			die();
 		}
 	}
@@ -596,7 +596,7 @@ function RegisterStartDoc(){
 
 		if(count($dt) > 0)
 		{
-			echo Response::createObjectiveResponse(false, "شماره برگه وارد شده موجود می باشد");
+			echo Response::createObjectiveResponse(false, "شماره سند وارد شده موجود می باشد");
 			die();
 		}
 	}

@@ -12,7 +12,7 @@ $menuStr = "";
 
 foreach($systems as $sysRow)
 {
-	$menuStr .= "{text: '" . $sysRow["SysName"] . "',scale: 'medium',icon : 'icons/app.png'";
+	$menuStr .= "{text: '" . $sysRow["SysName"] . "',arrowCls:'none',icon : 'icons/app.png'";
 
 	if($sysRow["SystemID"] == "2")
 	{
@@ -129,6 +129,7 @@ if ($menuStr != "") {
 		<script type="text/javascript" src="/generalUI/ext4/ux/CurrencyField.js"></script>
 		<script type="text/javascript" src="/generalUI/ext4/ux/grid/ExtraBar.js"></script>
 		<script type="text/javascript" src="/generalUI/ext4/ux/grid/gridprinter/Printer.js"></script>
+		<script type="text/javascript" src="/generalUI/ext4/ux/Printer/Printer-all.js"></script>
 		<script src="/generalUI/ckeditor/ckeditor.js"></script>
 		<script src="/generalUI/ext4/ux/ImageViewer.js"></script>
 		<link rel="stylesheet" type="text/css" href="/office/icons/icons.css" />
@@ -182,6 +183,7 @@ if ($menuStr != "") {
 		.menuItems {
 			padding: 10px !important;
 		}
+		
 	</style>
 	<script type="text/javascript">
 	//-----------------------------
@@ -262,6 +264,7 @@ if ($menuStr != "") {
 					"</div>",
 				bbar : {
 					xtype : "toolbar",
+					docked: 'bottom',
 					style : "background: linear-gradient(to bottom , #159fcd, #1e8cb0);",
 					defaults :{
 						cls : "x-btn menuCls",

@@ -235,6 +235,27 @@ class BSC_ActDomain extends PdoDataAccess{
 	
 }
 
+class BSC_ExpertDomain extends OperationClass{
+	
+	const TableName = "BSC_ExpertDomain";
+	const TableKey = "DomainID";
+	
+	public $DomainID;
+    public $ParentID;
+	public $DomainDesc;
+	public $PersonID;
+}
+
+class BSC_PersonExpertDomain extends OperationClass{
+	
+	const TableName = "BSC_PersonExpertDomain";
+	const TableKey = "RowID";
+	
+	public $RowID;
+	public $PersonID;
+	public $DomainID;
+}
+
 class BSC_setting extends OperationClass
 {
 	const TableName = "BSC_setting";

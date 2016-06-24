@@ -62,6 +62,23 @@ function AccDocs()
 		displayField : "AccountDesc"
 	});
 	
+	this.ChequeStatusCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			autoLoad : true,
+			proxy:{
+				type: 'jsonp',
+				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectChequeStatuses',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			fields :  ['InfoID','InfoDesc']
+		}),
+		displayField: 'InfoDesc',
+		valueField : "InfoID",
+		queryMode: "local"
+	});
+
+	//--------------------------------------------------------------------------
+	
 	this.mainTab = new Ext.TabPanel({
         renderTo: this.get("div_tab"),
         activeTab: 0,		
@@ -143,25 +160,22 @@ AccDocs.prototype.operationhMenu = function(e){
 	{
 		if(this.AddAccess)
         {
-			op_menu.add({text: 'اضافه برگه',iconCls: 'add', 
+			op_menu.add({text: 'ایجاد سند',iconCls: 'add', 
 				handler : function(){ return AccDocsObject.AddDoc(); }})
-			
-			op_menu.add({text: 'محاسبه سود سپرده',iconCls: 'copy', 
-				handler : function(){ return AccDocsObject.ComputeDoc('DepositeProfit'); }})
 		}
 
 		if(record != null && record.data.DocStatus == "RAW")
 		{
 			if(this.EditAccess)
 			{
-				op_menu.add({text: 'ویرایش برگه',iconCls: 'edit', 
+				op_menu.add({text: 'ویرایش سند',iconCls: 'edit', 
 					handler : function(){ return AccDocsObject.EditDoc(); } });
 				
-				op_menu.add({text: 'تایید برگه',iconCls: 'tick', 
+				op_menu.add({text: 'تایید سند',iconCls: 'tick', 
 					handler : function(){ return AccDocsObject.confirmDoc(); } });
 			}
-			if(this.RemoveAccess)
-				op_menu.add({text: 'حذف برگه',iconCls: 'remove', 
+			if(this.RemoveAccess && this.grid.getStore().currentPage == "1")
+				op_menu.add({text: 'حذف سند',iconCls: 'remove', 
 					handler : function(){ return AccDocsObject.RemoveDoc(); } });
 		}
 		if(record != null && record.data.DocStatus == "CONFIRM" && this.EditAccess)
@@ -174,7 +188,7 @@ AccDocs.prototype.operationhMenu = function(e){
 		}
 	}
     if(record != null)           
-		op_menu.add({text: 'چاپ برگه',iconCls: 'print', 
+		op_menu.add({text: 'چاپ سند',iconCls: 'print', 
 			handler : function(){ return AccDocsObject.PrintDoc(); } });
 
 	op_menu.showAt([e.getEl().getX()-60, e.getEl().getY()+20]);
@@ -457,7 +471,7 @@ AccDocs.docRender = function(v,p,record)
 {
 	return "<table class='docInfo' width=100%>"+
 		"<tr>"+
-			"<td width=10%>شماره برگه : </td>" +
+			"<td width=10%>شماره سند : </td>" +
 			"<td width=25% class='blueText'>" + record.data.LocalNo + "</td>" +
 			"<td width=17%>ثبت کننده سند : </td>" +
 			"<td class='blueText'>" + record.data.regPerson + "</td>" +
@@ -725,43 +739,6 @@ AccDocs.prototype.SearchDoc = function(){
 
 }    
 
-AccDocs.prototype.ComputeDoc = function(ComputeType)
-{
-	switch(ComputeType)
-	{
-		case "DepositeProfit":
-			msg = "آیا مایل به محاسبه و صدور سند سود سپرده های کوتاه مدت و بلند مدت می باشید؟";
-			break;
-	}
-	Ext.MessageBox.confirm("", msg, function(btn){
-		if(btn == "no")
-			return;
-		
-		me = AccDocsObject;
-		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال تایید سند ...'});
-		mask.show();
-
-		Ext.Ajax.request({
-			url: me.address_prefix + 'doc.data.php?task=ComputeDoc',
-			params:{
-				ComputeType : ComputeType
-			},
-			method: 'POST',
-
-			success: function(response){
-				result = Ext.decode(response.responseText);
-				mask.hide();
-				if(result.success)
-					AccDocsObject.grid.getStore().loadPage(AccDocsObject.grid.getStore().totalCount+1);
-				else
-					Ext.MessageBox.alert("Error", 
-						result.data == "" ? "عملیات مورد نظر با شکست مواجه شد" : result.data);
-			},
-			failure: function(){}
-		});
-	});
-}
-
 //.........................................................
 
 AccDocs.prototype.check_deleteRender = function()
@@ -780,7 +757,7 @@ AccDocs.prototype.check_Add = function()
 		return;
 	var modelClass = this.checkGrid.getStore().model;
 	var record = new modelClass({
-		CheckID: "",
+		ChequeID: "",
 		DocID : this.grid.getStore().getAt(0).data.DocID
 	});
 	this.checkGrid.plugins[0].cancelEdit();
@@ -837,7 +814,7 @@ AccDocs.prototype.check_remove = function()
 		Ext.Ajax.request({
 			url: me.address_prefix + 'doc.data.php?task=removeChecks',
 			params:{
-				CheckID: record.data.CheckID
+				ChequeID: record.data.ChequeID
 			},
 			method: 'POST',
 
