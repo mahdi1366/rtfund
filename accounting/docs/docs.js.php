@@ -183,7 +183,7 @@ AccDocs.prototype.operationhMenu = function(e){
 			op_menu.add({text: 'برگشت از تایید',iconCls: 'undo', 
 				handler : function(){ return AccDocsObject.UndoConfirmDoc(); } });
 			
-			op_menu.add({text: 'بایگانی',iconCls: 'archive', 
+			op_menu.add({text: 'قطعی کردن سند',iconCls: 'archive', 
 				handler : function(){ return AccDocsObject.archiveDoc(); } });
 		}
 	}
@@ -690,7 +690,7 @@ AccDocs.prototype.archiveDoc = function()
 {
 	var record = this.grid.getStore().getAt(0);
 
-	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال بایگانی سند ...'});
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال قطعی کردن سند ...'});
 	mask.show();
 
 	Ext.Ajax.request({

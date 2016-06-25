@@ -418,13 +418,19 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 					
 					NewColumn = {
 						menuDisabled : true,
-						sortable : false,						
+						sortable : false,	
 						text : sub_record.data.ElementTitle,
 						dataIndex : "element_" + sub_record.data.ElementID,
 						editor : editor						
 					};
 					if(sub_record.data.ElementType == "currencyfield")
+					{
+						NewColumn.type = "numbercolumn";
 						NewColumn.renderer = Ext.util.Format.Money;
+						NewColumn.summaryType = "sum";
+						NewColumn.summaryRenderer = Ext.util.Format.Money;
+						
+					}	
 					if(sub_record.data.ElementType == "currencyfield" || 
 						sub_record.data.ElementType == "numberfield")
 						NewColumn.editor.hideTrigger = "true";
@@ -432,10 +438,14 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 					
 					eval("NewColumn = merge(NewColumn,{" + sub_record.data.properties + "});");
 					columns.push(NewColumn);
-					fields.push("element_" + sub_record.data.ElementID);
+					if(sub_record.data.ElementType == "currencyfield")
+						fields.push({name : "element_" + sub_record.data.ElementID, type : "int"});
+					else
+						fields.push("element_" + sub_record.data.ElementID);
 				}
 				NewElement = {
 					xtype : "grid",
+					features: [{ftype: 'summary'}],
 					viewConfig: {
 						stripeRows: true,
 						enableTextSelection: true
