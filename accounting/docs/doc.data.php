@@ -198,7 +198,7 @@ function GetSearchCount() {
     
 	$query = "select count(*) as CurrentPage 
 		from ACC_docs dh
-		where BranchID=:b AND CycleID=:c AND LocalNo < :n ";
+		where BranchID=:b AND CycleID=:c AND LocalNo > :n ";
 	
     $param = array(":c" => $_SESSION["accounting"]["CycleID"], 
 					":b" => $_SESSION["accounting"]["BranchID"],

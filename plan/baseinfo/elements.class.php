@@ -13,6 +13,9 @@ class PLN_groups extends OperationClass
 	public $GroupID;
 	public $ParentID;
 	public $GroupDesc;
+	public $ScopeID;
+	public $CustomerRelated;
+	public $IsMandatory;
 	
 	function Remove($pdo = null) {
 		

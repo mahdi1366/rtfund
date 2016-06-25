@@ -21,6 +21,18 @@ function selectGroups(){
 	$filled = !isset($_REQUEST["filled"]) ? "" : $_REQUEST["filled"];
 	$PlanID = $_REQUEST["PlanID"];
 	
+	$where = "";
+	$params = array(":p" => $PlanID);
+	
+	$planObj = new PLN_plans($PlanID);
+	if(isset($_SESSION["USER"]["portal"]) && $_SESSION["USER"]["PersonID"] == $planObj->PersonID)
+		$where .= " AND g.CustomerRelated='YES'";
+	if(!empty($_REQUEST["ScopeID"]))
+	{
+		$where .= " AND if(e.GroupID>0,g.ScopeID=:sc,1=1)";
+		$params[":sc"] = $_REQUEST["ScopeID"];
+	}
+	
 	$nodes = PdoDataAccess::runquery("select g.ParentID, g.GroupID id, g.GroupDesc text , 'true' leaf ,
 		'javascript:void(0)' href, 'false' expanded, '' iconCls , 
 		concat(if(count(pi.RowID)>0, 'filled ', ''), 
@@ -40,9 +52,10 @@ function selectGroups(){
 			where PlanID=:p AND p.RowID =t.RowID AND p.GroupID=t.GroupID
 			group by GroupID
 		)t on(g.GroupID=t.GroupID)
+		where 1=1 $where
 		group by g.GroupID
 		" . ($filled == "true" ? " having count(pi.RowID)>0 " : "") . "
-	", array(":p" => $PlanID));
+	", $params);
 		
 	$returnArr = array(); 
 	$refArr = array();
@@ -68,7 +81,16 @@ function selectGroups(){
 		
 		$refArr[ $node["id"] ] = &$parentNode["children"][$lastIndex];
 	}
-
+	//print_r($returnArr);
+	for($i=0; $i < count($returnArr); $i++)
+	{
+		if(!isset($returnArr[$i]["children"]))
+		{
+			array_splice($returnArr, $i, 1);
+			$i--;
+		}
+	}
+	///print_r($returnArr);die();
 	echo json_encode($returnArr);
 	die();
 }
@@ -326,9 +348,11 @@ function SaveNewPlan(){
 
 function ChangeStatus(){
 	
+	$StepID = $_POST["StepID"];
+	$ActDesc = $_POST["ActDesc"];
 	$PlanID = $_REQUEST["PlanID"];
 	$obj = new PLN_plans($PlanID);
-
+	
 	//-------------------- control valid operation -----------------------
 	if($_SESSION["USER"]["IsCustomer"] == "YES" && isset($_SESSION["USER"]["portal"]) && 
 		$obj->PersonID != $_SESSION["USER"]["PersonID"])
@@ -336,9 +360,30 @@ function ChangeStatus(){
 		Response::createObjectiveResponse(false, "");
 		die();
 	}	
-	//---------------------------------------------------------------------
-	$StepID = $_POST["StepID"];
-	$ActDesc = $_POST["ActDesc"];
+	//--------------- check filling Mandatory groups ---------------------
+	if($obj->PersonID == $_SESSION["USER"]["PersonID"] && $StepID == STEPID_CUSTOMER_SEND)
+	{
+		$dt = PdoDataAccess::runquery("
+			SELECT concat_ws(' / ',g1.GroupDesc,g2.GroupDesc,g3.GroupDesc ,g.GroupDesc)  
+			FROM PLN_groups g
+			left join PLN_groups g3 on(g3.GroupID=g.ParentID)
+			left join PLN_groups g2 on(g2.GroupID=g3.ParentID)
+			left join PLN_groups g1 on(g1.GroupID=g2.ParentID)
+			
+			join PLN_Elements e on(g.GroupID=e.GroupID)
+			left join PLN_PlanItems pe on(pe.PlanID=? AND pe.ElementID=e.ElementID)
+			where g.IsMandatory='YES' AND e.ParentID=0 AND pe.PlanID is null", array($PlanID));
+		if(count($dt) > 0)
+		{
+			$msg = array();
+			foreach($dt as $row)
+				$msg[] = $row[0];
+			Response::createObjectiveResponse(false, "جهت ارسال طرح تکمیل بخش های زیر الزامی است <br>" . 
+				implode("<br>", $msg));
+			die();
+		}
+	}
+	//--------------------------------------------------------------------
 	
 	if($_SESSION["USER"]["IsCustomer"] == "YES" && isset($_SESSION["USER"]["portal"]))
 		$StepID = STEPID_CUSTOMER_SEND;

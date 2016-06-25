@@ -15,6 +15,9 @@ PlanInfo.prototype = {
 	readOnly : <?= $readOnly ? "true" : "false" ?>,
 	
 	GroupForms : {},
+	Scopes : <?= common_component::PHPArray_to_JSArray(
+		PdoDataAccess::runquery("select InfoID,InfoDesc 
+			from BaseInfo where typeID=21"), "InfoDesac", "InfoID") ?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -111,28 +114,37 @@ function PlanInfo(){
 			}, 1000);		
 		}
 	}
-	this.tree = new Ext.tree.Panel({
-		store: new Ext.data.TreeStore({
-			proxy: {
-				type: 'ajax',
-				url: this.address_prefix + 'plan.data.php?task=selectGroups&PlanID=' + this.PlanID
-			}					
-		}),
-		root: {id: 'src'},
-		rootVisible: false,
-		autoScroll : true,
-		width : 758,
-		height : 120,
-		listeners : {
-			itemclick : function(v,record){
-				if(!record.data.leaf) return; 
-				PlanInfoObject.LoadElements(record);
-			},
-			itemcontextmenu : function(view, record, item, index, e){
-				PlanInfoObject.ShowMenu(view, record, item, index, e);
-			}
-		}
-	});
+	
+	this.TabPanel = new Ext.TabPanel();
+	for(i=0; i < this.Scopes.length; i++)
+	{
+		this.TabPanel.add({
+			title : "حوزه " + this.Scopes[i].InfoDesc,
+			items : new Ext.tree.Panel({
+				store: new Ext.data.TreeStore({
+					proxy: {
+						type: 'ajax',
+						url: this.address_prefix + 'plan.data.php?task=selectGroups&PlanID=' + this.PlanID +
+							"&ScopeID=" + this.Scopes[i].id
+					}					
+				}),
+				root: {id: 'src'},
+				rootVisible: false,
+				autoScroll : true,
+				width : 758,
+				height : 120,
+				listeners : {
+					itemclick : function(v,record){
+						if(!record.data.leaf) return; 
+						PlanInfoObject.LoadElements(record);
+					},
+					itemcontextmenu : function(view, record, item, index, e){
+						PlanInfoObject.ShowMenu(view, record, item, index, e);
+					}
+				}
+			})
+		});
+	}
 	
 	this.itemsPanel = new Ext.panel.Panel({
 		bodyStyle : 'padding:4px;',
@@ -145,7 +157,7 @@ function PlanInfo(){
 		applyTo : this.get("mainForm"),
 		width: 760,
 		height : this.portal ? 530 : 618,
-		items : [this.tree,this.itemsPanel],
+		items : [this.TabPanel,this.itemsPanel],
 		tbar : [{
 			text : "ردیف های دارای اطلاعات",
 			iconCls : "list",
@@ -153,7 +165,7 @@ function PlanInfo(){
 			enableToggle : true,
 			handler : function(){
 				PlanInfoObject.itemsPanel.items.each(function(item){item.hide();});
-				PlanInfoObject.tree.getStore().load({
+				PlanInfoObject.TabPanel.getActiveTab().down('treepanel').getStore().load({
 					params : {
 						filled : this.pressed ? "true" : "false"
 					}
@@ -366,7 +378,7 @@ PlanInfo.prototype.MakeElemForms = function(store, season){
 								ElementID : this.up('form').itemId.split("_")[1]
 							},
 							success: function(form,result){
-								record = PlanInfoObject.tree.getSelectionModel().getSelection()[0];
+								record = PlanInfoObject.TabPanel.getActiveTab().down('treepanel').getSelectionModel().getSelection()[0];
 								record.set("cls","filled");
 								mask.hide();
 							},
@@ -742,7 +754,7 @@ PlanInfo.prototype.SurveyGroup = function(mode, ActDesc, record){
 				PlanInfoObject.commentWin.hide();
 			PlanInfoObject.itemsPanel.items.each(function(item){item.hide();});
 			var btn = PlanInfoObject.MainPanel.down("[itemId=btn_filled]");
-			PlanInfoObject.tree.getStore().load({
+			PlanInfoObject.TabPanel.getActiveTab().down('treepanel').getStore().load({
 				params : {
 					filled : btn.pressed ? "true" : "false"
 				}

@@ -1,20 +1,11 @@
 <?php
 
 /*
-
-BSC_ExpertDomain
- * add menu of expertDomain
- * 
- ALTER TABLE `krrtfir_rtfund`.`ACC_DocChecks` RENAME TO `krrtfir_rtfund`.`ACC_DocCheques`;
-
-ALTER TABLE `krrtfir_rtfund`.`ACC_DocCheques` CHANGE COLUMN `CheckID` `ChequeID` INTEGER UNSIGNED NOT NULL DEFAULT NULL AUTO_INCREMENT COMMENT 'کد چک',
- DROP PRIMARY KEY,
- ADD PRIMARY KEY  USING BTREE(`ChequeID`);
+ALTER TABLE `krrtfir_rtfund`.`PLN_groups` ADD COLUMN `ScopeID` INTEGER UNSIGNED NOT NULL DEFAULT 1 AFTER `GroupDesc`,
+ ADD COLUMN `CustomerRelated` ENUM('YES','NO') NOT NULL DEFAULT 'YES' AFTER `ScopeID`,
+ ADD COLUMN `IsMandatory` ENUM('YES','NO') NOT NULL DEFAULT 'NO' AFTER `CustomerRelated`;
 
 
- * ATN_PersonExpertDomain
- 
- 
 
 insert into DMS_packages(BranchID,PackNo,PersonID)
 select BranchID,@i:=@i+1,LoanPersonID from

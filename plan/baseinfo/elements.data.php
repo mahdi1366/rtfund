@@ -16,11 +16,21 @@ switch ($task) {
 		eval($task. "();");
 }
 
+function SelectScopes(){
+	
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=21");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
 function SaveGroup(){
 	
 	$obj = new PLN_groups();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
+	$obj->CustomerRelated = isset($_POST["CustomerRelated"]) ? "YES" : "NO";
+	$obj->IsMandatory = isset($_POST["IsMandatory"]) ? "YES" : "NO";
+		
 	//------- check for having form/grid ------
 	$dt = PLN_Elements::Get(" AND GroupID=?", array($obj->ParentID));
 	if($dt->rowCount() > 0)
@@ -104,7 +114,7 @@ function selectGroups(){
 							   when 'CONFIRM' then 'confirm'
 							   else '' end
 		) cls,
-		ifnull(ActDesc,'') qtip
+		ifnull(ActDesc,'') qtip, g.ScopeID, g.CustomerRelated , g.IsMandatory
 		
 		FROM PLN_groups g
 		left join PLN_Elements e on(e.ParentID=0 AND g.GroupID=e.GroupID)

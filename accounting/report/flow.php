@@ -187,9 +187,13 @@ if(isset($_REQUEST["show"]))
 	$where = "";
 	$whereParam = array();
 	MakeWhere($where, $whereParam);
-	$query .= " where d.DocStatus != 'RAW' AND d.CycleID=" . $_SESSION["accounting"]["CycleID"]
+	$query .= " where d.CycleID=" . $_SESSION["accounting"]["CycleID"]
 			. " AND BranchID=" . $_SESSION["accounting"]["BranchID"] . $where;
 
+	if(!isset($_REQUEST["InclueRaw"]))
+		$query .= " AND d.DocStatus != 'RAW' ";
+	
+	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 
 	function moneyRender($row, $val) {
@@ -309,7 +313,7 @@ function AccReport_flow()
 			xtype : "combo",
 			displayField : "BlockDesc",
 			fieldLabel : "کل",
-			valueField : "BlockCode",
+			valueField : "BlockID",
 			itemId : "cmp_level1",
 			hiddenName : "level1",
 			store : new Ext.data.Store({
@@ -336,7 +340,7 @@ function AccReport_flow()
 			xtype : "combo",
 			displayField : "BlockDesc",
 			fieldLabel : "معین",
-			valueField : "BlockCode",
+			valueField : "BlockID",
 			itemId : "cmp_level2",
 			queryMode : "local",
 			hiddenName : "level2",
@@ -363,7 +367,7 @@ function AccReport_flow()
 			xtype : "combo",
 			displayField : "BlockDesc",
 			fieldLabel : "جزء معین",
-			valueField : "BlockCode",
+			valueField : "BlockID",
 			itemId : "cmp_level3",
 			queryMode : "local",
 			hiddenName : "level3",
@@ -475,6 +479,10 @@ function AccReport_flow()
 			xtype : "shdatefield",
 			name : "toDate",
 			fieldLabel : "تا تاریخ"
+		},{
+			xtype : "container",
+			colspan : 2,
+			html : "<input type=checkbox name=InclueRaw> گزارش شامل اسناد پیش نویس نیز باشد"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",

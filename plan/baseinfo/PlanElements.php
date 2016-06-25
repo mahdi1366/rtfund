@@ -150,6 +150,33 @@ function PlanElements(){
 					fieldLabel : "عنوان",
 					anchor : "100%"
 				},{
+					xtype : "combo",
+					store: new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: this.address_prefix + 'elements.data.php?task=SelectScopes',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields :  ['InfoID',"InfoDesc"],
+						autoLoad : true
+					}),
+					displayField: 'InfoDesc',
+					valueField : "InfoID",
+					itemId : "ScopeID",
+					queryMode : "local",
+					name : "ScopeID",
+					fieldLabel : "حوزه طرح"
+				},{
+					xtype : "checkbox",
+					itemId : "CustomerRelated",
+					boxLabel : "پر کردن این بخش به عهده مشتری می باشد",
+					name : "CustomerRelated"
+				},{
+					xtype : "checkbox",
+					itemId : "IsMandatory",
+					boxLabel : "پر کردن این بخش توسط مشتری الزامی است",
+					name : "IsMandatory"
+				},{
 					xtype : "hidden",
 					name : "GroupID",
 					itemId : "GroupID"
@@ -382,6 +409,10 @@ PlanElements.prototype.BeforeSaveGroup = function(mode)
 		this.infoWin.down('form').getComponent("GroupID").setValue(record.data.id);
 		this.infoWin.down('form').getComponent("GroupDesc").setValue(record.data.text);
 		this.infoWin.down('form').getComponent("ParentID").setValue(record.data.parentId);
+		
+		this.infoWin.down('form').getComponent("ScopeID").setValue(record.raw.ScopeID);
+		this.infoWin.down('form').getComponent("CustomerRelated").setValue(record.raw.CustomerRelated == "YES");
+		this.infoWin.down('form').getComponent("IsMandatory").setValue(record.raw.IsMandatory == "YES");		
 	}
 	else
 		this.infoWin.down('form').getComponent("ParentID").setValue(record.data.id == "src" ? 0 : record.data.id);
@@ -421,6 +452,10 @@ PlanElements.prototype.SaveGroup = function(){
 			{
 				node = PlanElementsObject.tree.getRootNode().findChild("id", GroupID, true);
 				node.set('text', PlanElementsObject.infoWin.down('form').getComponent("GroupDesc").getValue());
+				form = PlanElementsObject.infoWin.down('form');
+				node.raw.ScopeID = form.getComponent("ScopeID").getValue();
+				node.raw.CustomerRelated = form.getComponent("CustomerRelated").checked ? "YES" : "NO";
+				node.raw.IsMandatory = form.getComponent("IsMandatory").checked ? "YES" : "NO";
 			}
 
 			PlanElementsObject.infoWin.down('form').getForm().reset();
