@@ -19,6 +19,8 @@ switch ($task) {
 function selectGroups(){
 	
 	$filled = !isset($_REQUEST["filled"]) ? "" : $_REQUEST["filled"];
+	$filled = $filled == "true" ? true : false;
+	
 	$PlanID = $_REQUEST["PlanID"];
 	
 	$where = "";
@@ -26,24 +28,43 @@ function selectGroups(){
 	
 	$planObj = new PLN_plans($PlanID);
 	if(isset($_SESSION["USER"]["portal"]) && $_SESSION["USER"]["PersonID"] == $planObj->PersonID)
-		$where .= " AND g.CustomerRelated='YES'";
+		$where .= " AND g4.CustomerRelated='YES'";
 	if(!empty($_REQUEST["ScopeID"]))
 	{
-		$where .= " AND if(e.GroupID>0,g.ScopeID=:sc,1=1)";
+		$where .= " AND g4.ScopeID=:sc";
 		$params[":sc"] = $_REQUEST["ScopeID"];
 	}
 	
-	$nodes = PdoDataAccess::runquery("select g.ParentID, g.GroupID id, g.GroupDesc text , 'true' leaf ,
-		'javascript:void(0)' href, 'false' expanded, '' iconCls , 
-		concat(if(count(pi.RowID)>0, 'filled ', ''), 
+	$nodes = PdoDataAccess::runquery("select 
+			g4.ParentID,
+			g4.GroupID id, 
+			g4.GroupDesc text , 
+			'true' leaf ,
+			'javascript:void(0)' href, 
+			'false' expanded, 
+			'' iconCls , 
+			concat(if(count(pi.RowID)>0, 'filled ', ''), 
 				case t.ActType when 'REJECT' then 'reject'
-							   when 'CONFIRM' then 'confirm'
-							   else '' end
-		) cls,
-		ifnull(ActDesc,'') qtip
+						   when 'CONFIRM' then 'confirm'
+						   else '' end
+			) cls,
+			ifnull(ActDesc,'') qtip,
+			g3.GroupID g3,
+			g3.GroupDesc g3Desc,
+			g2.GroupID g2,
+			g2.GroupDesc g2Desc,
+			g1.GroupID g1,
+			g1.GroupDesc g1Desc,
+			g0.GroupID g0,
+			g0.GroupDesc g0Desc
 		
-		FROM PLN_groups g
-		left join PLN_Elements e on(e.ParentID=0 AND g.GroupID=e.GroupID)
+		FROM PLN_groups g4
+			join PLN_Elements e on(e.ParentID=0 AND g4.GroupID=e.GroupID)
+			left join PLN_groups g3 on(g4.ParentID=g3.GroupID)
+			left join PLN_groups g2 on(g3.ParentID=g2.GroupID)
+			left join PLN_groups g1 on(g2.ParentID=g1.GroupID)
+			left join PLN_groups g0 on(g1.ParentID=g0.GroupID)			
+			
 		left join PLN_PlanItems pi on(pi.PlanID=:p AND e.ElementID=pi.ElementID)
 		left join (
 			select p.GroupID,ActType,ActDesc from PLN_PlanSurvey p,
@@ -51,10 +72,10 @@ function selectGroups(){
 				group by GroupID)t
 			where PlanID=:p AND p.RowID =t.RowID AND p.GroupID=t.GroupID
 			group by GroupID
-		)t on(g.GroupID=t.GroupID)
+		)t on(g4.GroupID=t.GroupID)
 		where 1=1 $where
-		group by g.GroupID
-		" . ($filled == "true" ? " having count(pi.RowID)>0 " : "") . "
+		group by g4.GroupID
+		" . ($filled ? " having count(pi.RowID)>0 " : "") . "
 	", $params);
 		
 	$returnArr = array(); 
@@ -62,15 +83,88 @@ function selectGroups(){
 	
 	foreach($nodes as $node)
 	{
-		$parentNode = &$refArr[$node["ParentID"]];
-		if(!isset($parentNode))
+		if(!empty($node["g0"]) && !isset($refArr[$node["g0"]]))
 		{
-			$node["text"] = "[ " . (count($returnArr)+1) . " ] " . $node["text"];
-			$returnArr[] = $node;
-			$refArr[ $node["id"] ] = &$returnArr[ count($returnArr)-1 ];
-			continue;
+			$returnArr[] = array(
+				"id" => $node["g0"],
+				"text" => $node["g0Desc"],
+				"leaf" => "false",
+				"expanded" => $filled ? "true" : "false"
+			);
+			$refArr[ $node["g0"] ] = &$returnArr[ count($returnArr)-1 ];
 		}
-
+		if(!empty($node["g1"]) && !isset($refArr[$node["g1"]]))
+		{
+			$newnode = array(
+				"id" => $node["g1"],
+				"text" => $node["g1Desc"],
+				"leaf" => "false",
+				"expanded" => $filled ? "true" : "false"
+			);
+			if(!empty($node["g0"]))
+			{
+				$parentNode = &$refArr[$node["g0"]];
+				if (!isset($parentNode["children"])) 
+					$parentNode["children"] = array();
+				$lastIndex = count($parentNode["children"]);
+				$parentNode["children"][$lastIndex] = $newnode;
+				$refArr[ $node["g1"] ] = &$parentNode["children"][$lastIndex];
+			}
+			else
+			{
+				$returnArr[] = $newnode;
+				$refArr[ $node["g1"] ] = &$returnArr[ count($returnArr)-1 ];
+			}
+		}
+		if(!empty($node["g2"]) && !isset($refArr[$node["g2"]]))
+		{
+			$newnode = array(
+				"id" => $node["g2"],
+				"text" => $node["g2Desc"],
+				"leaf" => "false",
+				"expanded" => $filled ? "true" : "false"
+			);
+			if(!empty($node["g1"]))
+			{
+				$parentNode = &$refArr[$node["g1"]];
+				if (!isset($parentNode["children"])) 
+					$parentNode["children"] = array();
+				$lastIndex = count($parentNode["children"]);
+				$parentNode["children"][$lastIndex] = $newnode;
+				$refArr[ $node["g2"] ] = &$parentNode["children"][$lastIndex];
+			}
+			else
+			{
+				$returnArr[] = $newnode;
+				$refArr[ $node["g2"] ] = &$returnArr[ count($returnArr)-1 ];
+			}
+		}
+		if(!empty($node["g3"]) && !isset($refArr[$node["g3"]]))
+		{
+			$newnode = array(
+				"id" => $node["g3"],
+				"text" => $node["g3Desc"],
+				"leaf" => "false",
+				"expanded" => $filled ? "true" : "false"
+			);
+			if(!empty($node["g2"]))
+			{
+				$parentNode = &$refArr[$node["g2"]];
+				if (!isset($parentNode["children"])) 
+					$parentNode["children"] = array();
+				$lastIndex = count($parentNode["children"]);
+				$parentNode["children"][$lastIndex] = $newnode;
+				$refArr[ $node["g3"] ] = &$parentNode["children"][$lastIndex];
+			}
+			else
+			{
+				$returnArr[] = $newnode;
+				$refArr[ $node["g3"] ] = &$returnArr[ count($returnArr)-1 ];
+			}
+		}
+		//................................................................
+			
+		$parentNode = &$refArr[$node["ParentID"]];
 		if (!isset($parentNode["children"])) {
 			$parentNode["children"] = array();
 			$parentNode["leaf"] = "false";
@@ -285,7 +379,7 @@ function SelectAllPlans(){
 	else
 	{
 		if(!isset($_REQUEST["AllPlans"]) || $_REQUEST["AllPlans"] == "false")
-			$where .= " AND p.StepID in(" . STEPID_CUSTOMER_SEND . "," . STEPID_ENDFLOW . ")";
+			$where .= " AND p.StepID in(" . STEPID_CUSTOMER_SEND /*. "," . STEPID_ENDFLOW*/ . ")";
 	}
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
@@ -405,10 +499,10 @@ function ChangeStatus(){
 
 	$result = PLN_plans::ChangeStatus($obj->PlanID, $StepID, $ActDesc);
 	
-	if($StepID == STEPID_CONFIRM)
+	/*if($StepID == STEPID_CONFIRM)
 	{
 		$result = WFM_FlowRows::StartFlow(FLOWID, $obj->PlanID);
-	}
+	}*/
 	
 	echo Response::createObjectiveResponse($result, "");
 	die();

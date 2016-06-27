@@ -145,6 +145,7 @@ function PlanInfo(){
 			})
 		});
 	}
+	this.TabPanel.setActiveTab(0);
 	
 	this.itemsPanel = new Ext.panel.Panel({
 		bodyStyle : 'padding:4px;',
@@ -219,7 +220,7 @@ function PlanInfo(){
 		if(this.PlanRecord.StepID == "<?= STEPID_CUSTOMER_SEND ?>")
 		{
 			this.menu.add({
-				text : "تایید اولیه طرح و شروع گردش داخلی",
+				text : "تایید اولیه طرح",
 				iconCls : "send",
 				handler : function(){
 					PlanInfoObject.BeforeSendPlan(<?= STEPID_CONFIRM ?>);
@@ -243,8 +244,8 @@ function PlanInfo(){
 	
 	if(this.User == "Staff")
 	{
-		if(this.PlanRecord.StepID == "<?= STEPID_ENDFLOW ?>")
-		{
+		//if(this.PlanRecord.StepID == "< ?= STEPID_ENDFLOW ?>")
+		//{
 			this.menu.add({
 				text : "کارشناسی طرح",
 				iconCls : "user_comment",
@@ -252,8 +253,9 @@ function PlanInfo(){
 					PlanInfoObject.experts();
 				}
 			});
-		}
-		if( new Array(<?= STEPID_ENDFLOW ?>,<?= STEPID_SEND_EXPERT ?>,<?= STEPID_SUPPORTER_REJECT ?>).indexOf(this.PlanRecord.StepID*1) != -1)
+		//}
+		if( new Array(/*< ?= STEPID_ENDFLOW ?>,*/<?= STEPID_SEND_EXPERT ?>,
+			<?= STEPID_SUPPORTER_REJECT ?>).indexOf(this.PlanRecord.StepID*1) != -1)
 		{
 			this.menu.add({
 				text : "ارسال به حامی طرح",

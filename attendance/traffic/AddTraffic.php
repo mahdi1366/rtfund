@@ -12,19 +12,22 @@ $dt = ATN_traffic::Get(" AND t.PersonID=? AND TrafficDate=?",
 
 $even = $dt->rowCount() == 0 ? true : $dt->rowCount() % 2 == 0;
 
+$StartPageFormat = isset($_REQUEST["StartPage"]) ? true : false;
 ?>
 <style>
 	.start {
 		background-image: url('/HumanResources/icons/start.png');
 		background-position: center center !important;
-		height: 128px !important;
-		width: 128px !important;
+		background-size: 70px 70px;
+		height: 80px !important;
+		width: 80px !important;
 	}
 	.stop {
 		background-image: url('/HumanResources/icons/stop.png');
 		background-position: center center !important;
-		height: 128px !important;
-		width: 128px !important;
+		background-size: 70px 70px;
+		height: 80px !important;
+		width: 80px !important;
 	}
 </style>
 <script>
@@ -34,6 +37,7 @@ AddTraffic.prototype = {
 	address_prefix : '<?= $js_prefix_address ?>',
 
 	even : <?= $even ? "true" : "false" ?>,
+	StartPageFormat : <?= $StartPageFormat ? "true" : "false" ?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -44,8 +48,8 @@ function AddTraffic(){
 	
 	this.StartWork = new Ext.button.Button({
 		text : "شروع کار",
-		width : 133,
-		height : 133,
+		width : 80,
+		height : 80,
 		disabled : !this.even,
 		iconCls : "start",
 		renderTo : this.get("StartWork"),
@@ -54,8 +58,8 @@ function AddTraffic(){
 	
 	this.StopWork = new Ext.button.Button({
 		text : "پایان کار",
-		width : 133,
-		height : 133,
+		width : 80,
+		height : 80,
 		disabled : this.even,
 		iconCls : "stop",
 		renderTo : this.get("StopWork"),
@@ -106,6 +110,13 @@ AddTraffic.prototype.AddRow = function(){
 var AddTrafficObj = new AddTraffic();
 
 </script>
+<?if($StartPageFormat){?>
+<center>
+	<div id="StartWork"></div>
+	
+	<div id="StopWork"></div>			
+</center>
+<?}else{?>
 <center>
 	<br><br><br><br>
 	<table width="500">
@@ -119,3 +130,4 @@ var AddTrafficObj = new AddTraffic();
 		</tr>
 	</table>
 </center>
+<?}?>

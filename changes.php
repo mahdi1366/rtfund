@@ -1,9 +1,6 @@
 <?php
 
 /*
-ALTER TABLE `krrtfir_rtfund`.`PLN_groups` ADD COLUMN `ScopeID` INTEGER UNSIGNED NOT NULL DEFAULT 1 AFTER `GroupDesc`,
- ADD COLUMN `CustomerRelated` ENUM('YES','NO') NOT NULL DEFAULT 'YES' AFTER `ScopeID`,
- ADD COLUMN `IsMandatory` ENUM('YES','NO') NOT NULL DEFAULT 'NO' AFTER `CustomerRelated`;
 
 
 

@@ -616,7 +616,7 @@ function ComputeInstallmentsShekoofa($partObj = null){
 	//--------------- total pay months -------------
 	$firstPay = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
 	$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
-	$paymentPeriod = DateModules::GetDiffInMonth($firstPay, $LastPay)+1;
+	$paymentPeriod = DateModules::GetDiffInMonth($firstPay, $LastPay);
 	//----------------------------------------------
 	$totalWage = 0;
 	$wages = array();

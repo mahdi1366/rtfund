@@ -1,4 +1,4 @@
-<?php
+	<?php
 //-----------------------------
 //	Programmer	: SH.Jafarkhani
 //	Date		: 94.06
@@ -88,7 +88,7 @@ function UserState()
 			handler: function() {
 				
 				this.up('form').submit({
-					url: 'global/UserState.php?SaveUserState=true' , 
+					url: UserStateObject.address_prefix + 'UserState.php?SaveUserState=true' , 
 					method: "POST",
 					
 					success : function()

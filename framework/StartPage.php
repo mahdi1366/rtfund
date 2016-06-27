@@ -17,7 +17,7 @@ $col = $dg->addColumn("موبایل","mobile","string");
 $col->width = 100;
 
 $col = $dg->addColumn("نام كاربري","UserName","string");
-$col->width = 150;
+$col->width = 120;
 
 $col = $dg->addColumn("","","");
 $col->renderer = "FrameworkStartPage.OperationRender";
@@ -25,7 +25,7 @@ $col->sortable = false;
 $col->width = 50;
 
 $dg->height = 190;
-$dg->width = 480;
+$dg->width = 450;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "PersonID";
@@ -51,7 +51,7 @@ function FrameworkStartPage(){
 	 new Ext.panel.Panel({
 		renderTo : this.get("panel1"),
 		title : "اتوماسیون اداری",
-        width: 300,
+        width: 220,
         height: 200,
 		frame : true,
         layout: 'fit',
@@ -74,8 +74,25 @@ function FrameworkStartPage(){
 	
 	new Ext.panel.Panel({
 		renderTo : this.get("panel3"),
+		title : "ثبت ورود و خروج",
+        width: 100,
+        height: 200,
+		frame : true,
+        layout: 'fit',
+        loader : {
+			url : "../attendance/traffic/AddTraffic.php?StartPage=true",
+			params : {
+				ExtTabID : this.TabID
+			},
+			scripts : true,
+			autoLoad : true
+		}
+    });
+	
+	new Ext.panel.Panel({
+		renderTo : this.get("panel4"),
 		title : "تسهیلات",
-        width: 810,
+        width: 800,
 		autoScroll : true,
 		frame : true,
 		autoHeight : true,
@@ -150,13 +167,15 @@ FrameworkStartPageObject = new FrameworkStartPage();
 <table style="margin:10px">
 	<tr>
 		<td><div id="panel1"></div></td>
-		<td width="20px"></td>
+		<td width="10px"></td>
+		<td><div id="panel3"></div></td>
+		<td width="10px"></td>
 		<td><div id="panel2"></div></td>
 	</tr>
 	<tr>
-		<td colspan="3">&nbsp;</td>
+		<td colspan="5">&nbsp;</td>
 	</tr>
 	<tr>
-		<td id="panel3" colspan="3"></td>
+		<td id="panel4" colspan="5"></td>
 	</tr>
 </table>
