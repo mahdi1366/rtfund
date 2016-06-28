@@ -21,6 +21,8 @@ if(!session::checkLogin())
 	die();
 }
 
+define("SYSTEMID", 1000);
+
 $address_prefix = getenv("DOCUMENT_ROOT");
 $js_prefix_address = implode("/" , 
 		array_splice(preg_split('/\//', $_SERVER["SCRIPT_NAME"]),0,

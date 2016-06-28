@@ -26,6 +26,7 @@ if(!session::checkLogin())
 } 
 
 require_once 'CNTconfig.class.php';
+define("SYSTEMID", 12);
 
 $address_prefix = getenv("DOCUMENT_ROOT");
 $js_prefix_address = implode("/" , 

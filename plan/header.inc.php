@@ -26,7 +26,7 @@ if(!session::checkLogin())
 } 
 
 require_once 'PLNconfig.inc.php';
-
+define("SYSTEMID", 9);
 
 $address_prefix = getenv("DOCUMENT_ROOT");
 $js_prefix_address = implode("/" , 

@@ -361,14 +361,34 @@ SurveyRequests.ReqTypeRender = function(v,p,r){
 	switch(v)
 	{
 		case "CORRECT" :	return "فراموشی";
+		case "DayOFF" :		
+			p.tdAttr = "data-qtip='<table class=infoTbl>"+
+				"<tr><td>نوع مرخصی : </td><td><b>" + r.data.OffTypeDesc + "</b></td></tr>" +
+				"<tr><td>جایگزین : </td><td><b>" + 
+					(!r.data.OffFullname ? "-" : r.data.OffFullname) + "</b>" + 
+				"</td></tr></table>'";
+			return "مرخصی روزانه";
 		case "OFF" :		
 			p.tdAttr = "data-qtip='<table class=infoTbl>"+
 				"<tr><td>نوع مرخصی : </td><td><b>" + r.data.OffTypeDesc + "</b></td></tr>" +
 				"<tr><td>جایگزین : </td><td><b>" + 
 					(!r.data.OffFullname ? "-" : r.data.OffFullname) + "</b>" + 
 				"</td></tr></table>'";
-			return "مرخصی";
-			
+			return "مرخصی ساعتی";
+		case "DayMISSION" :	
+			p.tdAttr = "data-qtip='<table class=infoTbl>"+
+				"<tr><td>محل ماموریت :</td><td><b>" + 
+					(!r.data.MissionPlace ? "-" : r.data.MissionPlace) + "</b></td></tr>"+
+				"<tr><td>موضوع ماموریت :</td><td><b>" + 
+					(!r.data.MissionSubject ? "-" : r.data.MissionSubject ) + "</b></td></tr>"+
+				"<tr><td>محل اقامت :</td><td><b>" + 
+					(!r.data.MissionStay ? "-" : r.data.MissionStay) + "</b></td></tr>"+
+				"<tr><td>وسیله رفت :</td><td><b>" + 
+					(!r.data.GoMeanDesc ? "-" : r.data.MissionStay) + "</b></td></tr>"+
+				"<tr><td>وسیله برگشت :</td><td><b>" + 
+					(!r.data.ReturnMeanDesc ? "-" : r.data.ReturnMeanDesc) + "</b></td></tr>"+
+				"</table>'";	
+			return "ماموریت روزانه";	
 		case "MISSION" :
 			p.tdAttr = "data-qtip='<table class=infoTbl>"+
 				"<tr><td>محل ماموریت :</td><td><b>" + 
@@ -382,7 +402,7 @@ SurveyRequests.ReqTypeRender = function(v,p,r){
 				"<tr><td>وسیله برگشت :</td><td><b>" + 
 					(!r.data.ReturnMeanDesc ? "-" : r.data.ReturnMeanDesc) + "</b></td></tr>"+
 				"</table>'";	
-			return "ماموریت";
+			return "ماموریت ساعتی";
 	}
 	
 	

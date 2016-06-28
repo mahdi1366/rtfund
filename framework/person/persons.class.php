@@ -67,8 +67,7 @@ class BSC_persons extends PdoDataAccess
 			where " . $where, $param);
 	}
 		
-	function AddPerson()
-	{
+	function AddPerson(){
 		if(!empty($this->UserName))
 		{
 			$dt = PdoDataAccess::runquery("select * 
@@ -84,6 +83,12 @@ class BSC_persons extends PdoDataAccess
 			return false;
 		$this->PersonID = parent::InsertID();
 		
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->PersonID;
+		$daObj->TableName = "BSC_persons";
+		$daObj->execute();
+		
 		require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
 		$obj = new ACC_tafsilis();
 		$obj->ObjectID = $this->PersonID;
@@ -92,16 +97,10 @@ class BSC_persons extends PdoDataAccess
 		$obj->TafsiliType = "1";
 		$obj->AddTafsili();
 		
-		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->PersonID;
-		$daObj->TableName = "BSC_persons";
-		$daObj->execute();
 		return true;
 	}
 	
-	function EditPerson()
-	{
+	function EditPerson(){
 		if($this->UserName != "")
 		{
 			$dt = PdoDataAccess::runquery("select * 
@@ -115,6 +114,12 @@ class BSC_persons extends PdoDataAccess
 		
 	 	if( parent::update("BSC_persons",$this," PersonID=:l", array(":l" => $this->PersonID)) === false )
 	 		return false;
+		
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_update;
+		$daObj->MainObjectID = $this->PersonID;
+		$daObj->TableName = "BSC_persons";
+		$daObj->execute();
 		
 		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where ObjectID=? AND TafsiliType=1", array($this->PersonID));
 		require_once '../../accounting/baseinfo/baseinfo.class.php';
@@ -135,13 +140,6 @@ class BSC_persons extends PdoDataAccess
 			$obj->EditTafsili();
 		}
 		
-		
-
-		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->MainObjectID = $this->PersonID;
-		$daObj->TableName = "BSC_persons";
-		$daObj->execute();
 	 	return true;
     }
 	

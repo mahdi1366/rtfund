@@ -857,6 +857,7 @@ class PdoDataAccess extends ExceptionHandler
 
 	private static function LogQueryToDB()
 	{
+		return;
 		$PDO_Obj = self::getPdoObject();
 		$statement = self::$statements[$PDO_Obj->getAttribute(PDO::ATTR_CONNECTION_STATUS)];
 		

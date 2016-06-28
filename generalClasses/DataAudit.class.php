@@ -49,7 +49,7 @@ class DataAudit
   		$this->DataAuditID = PDONULL;
   		$this->PersonID = isset($_SESSION["USER"]["PersonID"]) ? $_SESSION["USER"]["PersonID"] : "";
   		
-  		$this->SystemID = "0";//isset($_SESSION["SystemID"]) ? $_SESSION["SystemID"] : "";
+  		$this->SystemID = SYSTEMID;
   		$this->PageName = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : $_SERVER['SCRIPT_FILENAME'];
   		$this->IPAddress = $_SESSION['LIPAddress'];
   		

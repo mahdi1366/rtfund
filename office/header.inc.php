@@ -26,6 +26,8 @@ if(!session::checkLogin())
 	die();
 }
 
+define("SYSTEMID", 4);
+
 function data_uri($content, $mime) {
     $base64 = base64_encode($content);
     return ('data:' . $mime . ';base64,' . $base64);

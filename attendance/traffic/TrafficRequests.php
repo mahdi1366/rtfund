@@ -97,8 +97,10 @@ function TrafficReq(){
 					fields : ["id","title"],
 					data : [
 						[ "CORRECT", "فراموشی" ],
-						[ "OFF", "مرخصی" ],
-						[ "MISSION", "ماموریت" ]
+						[ "DayOFF", "مرخصی روزانه" ],
+						[ "OFF", "مرخصی ساعتی" ],
+						[ "DayMISSION", "ماموریت روزانه" ],
+						[ "MISSION", "ماموریت ساعتی" ]
 					]
 				}),
 				fieldLabel: 'نوع درخواست',
@@ -108,25 +110,7 @@ function TrafficReq(){
 				allowBlank : false,
 				listeners :{
 					select : function(combo,records){
-						
-						TrafficReqObject.formPanel.down("[itemId=fs_mission]").hide();
-						TrafficReqObject.formPanel.down("[itemId=fs_off]").hide();
-						
-						if(records[0].data.id == "CORRECT")
-						{
-							TrafficReqObject.formPanel.down("[name=ToDate]").disable();
-							TrafficReqObject.formPanel.down("[name=EndTime]").disable();
-						}
-						else
-						{
-							TrafficReqObject.formPanel.down("[name=ToDate]").enable();
-							TrafficReqObject.formPanel.down("[name=EndTime]").enable();
-							
-							if(records[0].data.id == "MISSION")
-								TrafficReqObject.formPanel.down("[itemId=fs_mission]").show();
-							else
-								TrafficReqObject.formPanel.down("[itemId=fs_off]").show();
-						}
+						TrafficReqObject.SetFormElems(records[0].data.id);
 					}
 				}
 			}]
@@ -277,11 +261,53 @@ function TrafficReq(){
 	});
 }
 
-TrafficReq.prototype.BeforeAddRequest = function(mode)
-{
+TrafficReq.prototype.SetFormElems = function(ReqType){
+
 	this.formPanel.down("[itemId=fs_mission]").hide();
 	this.formPanel.down("[itemId=fs_off]").hide();
-	
+
+	this.formPanel.down("[name=ToDate]").enable();
+	this.formPanel.down("[name=StartTime]").enable();
+	this.formPanel.down("[name=EndTime]").enable();
+
+	if(ReqType == "CORRECT")
+	{
+		this.formPanel.down("[name=ToDate]").disable();
+		this.formPanel.down("[name=EndTime]").disable();
+	}
+	if(ReqType == "DayOFF")
+	{
+		this.formPanel.down("[name=OffType]").enable();
+		this.formPanel.down("[name=StartTime]").disable();
+		this.formPanel.down("[name=EndTime]").disable();
+		this.formPanel.down("[itemId=fs_off]").show();
+		this.formPanel.down("[name=StartTime]").setValue();
+		this.formPanel.down("[name=EndTime]").setValue();
+	}
+	if(ReqType == "OFF")
+	{
+		this.formPanel.down("[name=OffType]").setValue("2");
+		this.formPanel.down("[name=OffType]").disable();
+		this.formPanel.down("[name=ToDate]").disable();
+		this.formPanel.down("[itemId=fs_off]").show();
+	}
+	if(ReqType == "DayMISSION")
+	{
+		this.formPanel.down("[name=StartTime]").disable();
+		this.formPanel.down("[name=EndTime]").disable();
+		this.formPanel.down("[itemId=fs_mission]").show();
+		this.formPanel.down("[name=StartTime]").setValue();
+		this.formPanel.down("[name=EndTime]").setValue();
+	}
+	if(ReqType == "MISSION")
+	{
+		this.formPanel.down("[name=ToDate]").disable();
+		this.formPanel.down("[itemId=fs_mission]").show();
+	}
+}
+
+TrafficReq.prototype.BeforeAddRequest = function(mode)
+{
 	this.formPanel.getForm().reset();
 	if(mode == "edit")
 	{
@@ -290,26 +316,12 @@ TrafficReq.prototype.BeforeAddRequest = function(mode)
 		this.formPanel.down("[name=FromDate]").setValue(MiladiToShamsi(record.data.FromDate));
 		this.formPanel.down("[name=ToDate]").setValue(MiladiToShamsi(record.data.ToDate));
 		
-		if(record.data.ReqType == "CORRECT")
-		{
-			this.formPanel.down("[name=ToDate]").disable();
-			this.formPanel.down("[name=EndTime]").disable();
-		}
-		else
-		{
-			this.formPanel.down("[name=ToDate]").enable();
-			this.formPanel.down("[name=EndTime]").enable();
-			
-			if(record.data.ReqType == "MISSION")
-				this.formPanel.down("[itemId=fs_mission]").show();
-			else
-			{
-				this.formPanel.down("[itemId=fs_off]").show();
-				this.formPanel.down("[name=OffPersonID]").getStore().load({
+		this.SetFormElems(record.data.ReqType);
+		
+		if(record.data.ReqType == "OFF" || record.data.ReqType == "DayOFF")
+			this.formPanel.down("[name=OffPersonID]").getStore().load({
 					params : { PersonID : record.data.OffPersonID}
 				});
-			}				
-		}
 	}
 	this.formPanel.show();
 }
@@ -326,35 +338,33 @@ TrafficReq.prototype.SaveRequest = function(){
 				return;
 			}
 			break;
-		case "OFF":
-			if(this.formPanel.down("[name=OffType]").getValue() == null)
+		case "DayOFF":
+		case "DayMISSION":
+			if(ReqType == "DayOFF" && this.formPanel.down("[name=OffType]").getValue() == null)
 			{
 				Ext.MessageBox.alert("","انتخاب نوع مرخصی الزامی است");
 				return;
 			}
-			break;
-		case "MISSION":
 			if(this.formPanel.down("[name=ToDate]").getValue() == null)
 			{
-				if(this.formPanel.down("[name=StartTime]").getValue() == null ||
-					this.formPanel.down("[name=StartTime]").getValue() == null)
-				{
-					Ext.MessageBox.alert("","ورود بازه زمانی مرخصی/ماموریت ساعتی الزامی است");
-					return;
-				}
+				Ext.MessageBox.alert("","ورود تاریخ انتها الزامی است");
+				return;
 			}
-			else
+			if(this.formPanel.down("[name=ToDate]").getValue().format("Y-m-d") < 
+				this.formPanel.down("[name=FromDate]").getValue().format("Y-m-d"))
 			{
-				if(this.formPanel.down("[name=ToDate]").getValue().format("Y-m-d") < 
-					this.formPanel.down("[name=FromDate]").getValue().format("Y-m-d"))
-				{
-					Ext.MessageBox.alert("","تاریخ انتها نمی تواند کمتر از تاریخ ابتدا باشد");
-					return;
-				}
-				
-				this.formPanel.down("[name=StartTime]").setValue();
-				this.formPanel.down("[name=EndTime]").setValue();
-			}		
+				Ext.MessageBox.alert("","تاریخ انتها نمی تواند کمتر از تاریخ ابتدا باشد");
+				return;
+			}
+			break;
+		case "OFF":
+		case "MISSION":
+			if(this.formPanel.down("[name=StartTime]").getValue() == null ||
+				this.formPanel.down("[name=EndTime]").getValue() == null)
+			{
+				Ext.MessageBox.alert("","ورود بازه زمانی مرخصی/ماموریت ساعتی الزامی است");
+				return;
+			}	
 	}
 	
 	mask = new Ext.LoadMask(this.formPanel, {msg:'در حال ذخیره سازی ...'});
@@ -395,7 +405,7 @@ TrafficReq.OperationRender = function(v,p,r)
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;float:left;height:16'></div>";
 	}	
-	if(r.data.ReqStatus == "2" && r.data.ReqType == "MISSION")
+	if(r.data.ReqStatus == "2" && r.data.ReqType == "DayMISSION")
 		return "<div align='center' title='چاپ حکم ماموریت' class='print' "+
 		"onclick='TrafficReqObject.PrintMission();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
@@ -407,8 +417,10 @@ TrafficReq.ReqTypeRender = function(v,p,r){
 	switch(v)
 	{
 		case "CORRECT" :	return "فراموشی";
-		case "OFF" :		return "مرخصی";
-		case "MISSION" :	return "ماموریت";
+		case "DayOFF" :		return "مرخصی روزانه";
+		case "OFF" :		return "مرخصی ساعتی";
+		case "DayMISSION" :	return "ماموریت روزانه";
+		case "MISSION" :	return "ماموریت ساعتی";
 	}
 }
 

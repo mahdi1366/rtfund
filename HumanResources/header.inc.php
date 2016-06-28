@@ -22,6 +22,9 @@ if(!session::checkLogin())
 	echo "<script>window.location='/framework/login.php';</script>";
 	die();
 }
+
+define("SYSTEMID", 10);
+
 $address_prefix = getenv("DOCUMENT_ROOT");
 
 	require_once $address_prefix . "/HumanResources/global/domain.class.php";

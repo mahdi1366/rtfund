@@ -8,8 +8,6 @@ require_once $address_prefix . '/framework/management/framework.class.php';
 
 $SystemID = 1000; // portal
 
-$_SESSION["SystemID"] = $SystemID;
-
 $menus = FRW_access::getPortalMenus($SystemID);
 $groupArr = array();
 $menuStr = "";

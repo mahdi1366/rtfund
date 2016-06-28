@@ -66,7 +66,8 @@ function ShowReport(){
 	}
 	
 	$returnStr = "";
-	$SUM = array("absence" => 0,
+	$SUM = array(
+		"absence" => 0,
 		"attend"=> 0,
 		"firstAbsence" => 0,
 		"lastAbsence" => 0,
@@ -111,26 +112,33 @@ function ShowReport(){
 		
 		if(count($requests) > 0)
 		{
-			if($requests[0]["ToDate"] != "")
+			if($requests[0]["ReqType"] == "DayOFF")
 			{
-				if($requests[0]["ReqType"] == "OFF")
-				{
-					$returnStr .= 
-						"<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
-						<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
-						<td colspan=8> مرخصی " . $requests[0]["OffTypeDesc"] . "<td></tr>";
-					$SUM["DailyOff_" . $requests[0]["OffType"] ]++;
-					continue;
-				}
-				if($requests[0]["ReqType"] == "MISSION")
-				{
-					$returnStr .= 
-						"<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
-						<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
-						<td colspan=8> ماموریت " . $requests[0]["MissionSubject"] . "<td></tr>";
-					$SUM["DailyMission"]++;
-					continue;
-				}
+				$returnStr .= 
+					"<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
+					<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
+					<td colspan=8> مرخصی " . $requests[0]["OffTypeDesc"] . "<td></tr>";
+				$SUM["DailyOff_" . $requests[0]["OffType"] ]++;
+				
+				$currentDay = $returnArr[$i]["TrafficDate"];
+				while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
+					$i++;
+				$i--;
+				continue;
+			}
+			if($requests[0]["ReqType"] == "DayMISSION")
+			{
+				$returnStr .= 
+					"<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
+					<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
+					<td colspan=8> ماموریت " . $requests[0]["MissionSubject"] . "<td></tr>";
+				$SUM["DailyMission"]++;
+				
+				$currentDay = $returnArr[$i]["TrafficDate"];
+				while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
+					$i++;
+				$i--;
+				continue;
 			}
 		}
 		//....................................................
