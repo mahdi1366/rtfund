@@ -27,7 +27,7 @@ else
 <META http-equiv=Content-Type content="text/html; charset=UTF-8" >
 <link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" />
 <style>
-	body{font-family: BNazanin;font-size:12pt;}
+	body{font-family: Nazanin;font-size:12pt;}
 	.level1{font-weight: bold;}
 	.level2{font-weight: bold;}
 	.level3{font-weight: bold;padding-right:20px;}

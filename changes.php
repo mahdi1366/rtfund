@@ -2,8 +2,6 @@
 
 /*
 
-
-
 insert into DMS_packages(BranchID,PackNo,PersonID)
 select BranchID,@i:=@i+1,LoanPersonID from
 (select BranchID,LoanPersonID

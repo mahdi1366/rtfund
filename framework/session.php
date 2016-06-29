@@ -90,6 +90,7 @@ class session{
 			//..........................................................
 			PdoDataAccess::runquery("delete from FRW_LoginAttempts where PersonID=?",
 				array($temp[0]["PersonID"]));
+			
 			return true;
 			
 		}

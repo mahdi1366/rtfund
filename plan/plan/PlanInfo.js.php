@@ -15,9 +15,7 @@ PlanInfo.prototype = {
 	readOnly : <?= $readOnly ? "true" : "false" ?>,
 	
 	GroupForms : {},
-	Scopes : <?= common_component::PHPArray_to_JSArray(
-		PdoDataAccess::runquery("select InfoID,InfoDesc 
-			from BaseInfo where typeID=21"), "InfoDesac", "InfoID") ?>,
+	Scopes : <?= common_component::PHPArray_to_JSArray($scopes, "InfoDesac", "InfoID") ?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -101,7 +99,7 @@ function PlanInfo(){
 			}]
 		});
 		
-		if(this.readOnly)
+		if(this.readOnly || this.User != "Admin")
 		{
 			var R1 = this.planFS.down("[name=SupportPersonID]").getStore();
 			var t = setInterval(function(){
@@ -212,7 +210,7 @@ function PlanInfo(){
 			}
 		});
 	}
-	if(this.User == "Staff" && !this.readOnly)
+	if(this.User == "Admin" && !this.readOnly)
 	{
 		if( new Array(<?= STEPID_RAW ?>,<?= STEPID_REJECT ?>,<?= STEPID_RETURN_TO_CUSTOMER ?>).indexOf(this.PlanRecord.StepID*1) != -1)
 			return;
@@ -242,7 +240,7 @@ function PlanInfo(){
 		}]);
 	}
 	
-	if(this.User == "Staff")
+	if(this.User == "Admin")
 	{
 		//if(this.PlanRecord.StepID == "< ?= STEPID_ENDFLOW ?>")
 		//{
@@ -254,17 +252,14 @@ function PlanInfo(){
 				}
 			});
 		//}
-		if( new Array(/*< ?= STEPID_ENDFLOW ?>,*/<?= STEPID_SEND_EXPERT ?>,
-			<?= STEPID_SUPPORTER_REJECT ?>).indexOf(this.PlanRecord.StepID*1) != -1)
-		{
-			this.menu.add({
-				text : "ارسال به حامی طرح",
-				iconCls : "tick",
-				handler : function(){
-					PlanInfoObject.BeforeSendPlan(<?= STEPID_SEND_SUPPORTER ?>);
-				}
-			});
-		}
+		this.menu.add({
+			text : "ارسال به حامی طرح",
+			iconCls : "tick",
+			handler : function(){
+				PlanInfoObject.BeforeSendPlan(<?= STEPID_SEND_SUPPORTER ?>);
+			}
+		});
+		
 	}
 	if(this.User == "Expert" && this.PlanRecord.ExpertStatus != "SEND")
 	{
@@ -975,7 +970,7 @@ PlanInfo.prototype.experts = function(){
 				},
 				scripts : true
 			},
-			buttons : [{
+			buttons : [/*{
 				text : "reload",
 				handler : function(){
 						this.up('window').loader.load({
@@ -984,7 +979,7 @@ PlanInfo.prototype.experts = function(){
 							}
 						});
 					}
-			},{
+			},*/{
 					text : "بازگشت",
 					iconCls : "undo",
 					handler : function(){
@@ -1044,7 +1039,14 @@ PlanInfo.prototype.SendExpert = function(){
 							{
 								PlanInfoObject.commentWin3.hide();
 								if(PlanInfoObject.portal)
-									portal.OpenPage("/plan/plan/ManagePlans.php");					
+									portal.OpenPage("/plan/plan/ManagePlans.php");	
+								else
+								{
+									framework.CloseTab(PlanInfoObject.TabID);
+									if(ManagePlanObject.grid.isVisible())
+										ManagePlanObject.grid.getStore().load();
+								}
+								
 							}
 							else
 							{

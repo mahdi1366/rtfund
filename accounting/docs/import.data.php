@@ -1009,6 +1009,7 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 		
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
+	$itemObj->details = "پرداخت قسط وام شماره " . $ReqObj->RequestID ;
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $LoanPersonTafsili;
 	if($LoanMode == "Agent")

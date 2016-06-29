@@ -190,6 +190,14 @@ function selectCompanyTypes(){
 	die();
 }
 
+function ResetAttempt(){
+	
+	PdoDataAccess::runquery("delete from FRW_LoginAttempts where PersonID=?",
+		array($_POST["PersonID"]));
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
 //............................................................
 
 function SelectSigners(){
@@ -301,4 +309,6 @@ function selectSubAgents(){
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
+
+
 ?>

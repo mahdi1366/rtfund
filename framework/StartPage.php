@@ -5,7 +5,27 @@
 //-----------------------------
 
 require_once 'header.inc.php';
+require_once 'management/framework.class.php';
 require_once inc_dataGrid;
+
+//....................................................
+
+$frameworkAccess = false;
+$LoanAccess = false;
+$PlanAccess = false;
+
+$systems = FRW_access::getAccessSystems();
+foreach($systems as $row)
+{
+	switch($row["SystemID"])
+	{
+		case SYSTEMID_framework: $frameworkAccess = true; break;
+		case SYSTEMID_loan: $LoanAccess = true; break;
+		case SYSTEMID_plan: $PlanAccess = true; break;
+	}
+}
+
+//....................................................
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "person/persons.data.php?task=selectPendingPersons");
 
@@ -65,12 +85,14 @@ function FrameworkStartPage(){
 		}
     });
 	
+	<?if($frameworkAccess){?>
 	this.grid1 = <?= $grid1 ?>;
 	new Ext.panel.Panel({
 		renderTo : this.get("panel2"),
 		items : this.grid1,
 		frame : true
 	});
+	<?}?>
 	
 	new Ext.panel.Panel({
 		renderTo : this.get("panel3"),
@@ -88,7 +110,7 @@ function FrameworkStartPage(){
 			autoLoad : true
 		}
     });
-	
+	<?if($LoanAccess){?>
 	new Ext.panel.Panel({
 		renderTo : this.get("panel4"),
 		title : "تسهیلات",
@@ -106,7 +128,27 @@ function FrameworkStartPage(){
 			autoLoad : true
 		}
     });
-	
+	<?}?>
+		
+	<?if($PlanAccess){?>
+	new Ext.panel.Panel({
+		renderTo : this.get("panel5"),
+        width: 800,
+		title : "هشدارهای مربوط به کارشناسی طرح ها",
+		autoScroll : true,
+		frame : true,
+		autoHeight : true,
+        layout: 'fit',
+        loader : {
+			url : "../plan/FirstPage.php",
+			params : {
+				ExtTabID : this.TabID
+			},
+			scripts : true,
+			autoLoad : true
+		}
+    });
+	<?}?>
 }
 
 FrameworkStartPage.OperationRender = function(){
@@ -177,5 +219,11 @@ FrameworkStartPageObject = new FrameworkStartPage();
 	</tr>
 	<tr>
 		<td id="panel4" colspan="5"></td>
+	</tr>
+	<tr>
+		<td colspan="5">&nbsp;</td>
+	</tr>
+	<tr>
+		<td id="panel5" colspan="5"></td>
 	</tr>
 </table>

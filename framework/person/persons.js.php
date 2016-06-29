@@ -184,6 +184,12 @@ function Person()
 			name : "PersonID"
 		}],
 		buttons :[{
+			text : "ریست تلاش های ناموفق ورود به سیستم",
+			disabled : true,
+			itemId : "ResetAttemptBTN",
+			iconCls : "refresh",
+			handler : function(){ PersonObject.ResetAttempt(); }
+		},{
 			text : "ریست رمز عبور",
 			disabled : true,
 			itemId : "ResetPassBTN",
@@ -232,6 +238,7 @@ Person.prototype.Adding = function()
 {
 	this.InfoPanel.getForm().reset();
 	this.InfoPanel.down("[itemId=ResetPassBTN]").disable();
+	this.InfoPanel.down("[itemId=ResetAttemptBTN]").disable();
 	this.InfoPanel.show();	
 }
 
@@ -240,6 +247,7 @@ Person.prototype.Editing = function()
 	var record = this.grid.getSelectionModel().getLastSelected();
 	this.InfoPanel.loadRecord(record);
 	this.InfoPanel.down("[itemId=ResetPassBTN]").enable();
+	this.InfoPanel.down("[itemId=ResetAttemptBTN]").enable();
 	this.InfoPanel.show();	
 }
 
@@ -318,6 +326,46 @@ Person.prototype.ResetPass = function()
 				if(st.success)
 				{
 					Ext.MessageBox.alert("Warning","رمز عبور به 123456 تغییر یافت");
+					PersonObject.grid.getStore().load();
+				}
+				else
+				{
+					alert(st.data);
+				}
+			},
+			failure: function(){}
+		});
+		
+	});
+}
+
+Person.prototype.ResetAttempt = function()
+{
+	Ext.MessageBox.confirm("","آیا مایل به ریست تلاش های ناموفق ورود به سیستم می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = PersonObject;
+		
+		PersonID = me.InfoPanel.down("[name=PersonID]").getValue();
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			params: {
+				task: 'ResetAttempt',
+				PersonID : PersonID
+			},
+			url: me.address_prefix +'persons.data.php',
+			method: 'POST',
+
+			success: function(response){
+				mask.hide();
+				var st = Ext.decode(response.responseText);
+				if(st.success)
+				{
+					Ext.MessageBox.alert("Warning","عملیات با موفقیت انجام شد");
 					PersonObject.grid.getStore().load();
 				}
 				else

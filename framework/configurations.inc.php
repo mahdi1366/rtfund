@@ -27,4 +27,15 @@ define("OWNER_REGCODE", "33943");
 define("OWNER_REGDATE", "1387/06/24");
 
 define("Default_Agent_Loan", "9");
+
+define("SYSTEMID_framework", 1);
+define("SYSTEMID_accounting", 2);
+define("SYSTEMID_office", 4);
+define("SYSTEMID_loan", 6);
+define("SYSTEMID_dms", 7);
+define("SYSTEMID_plan", 9);
+define("SYSTEMID_hrms", 10);
+define("SYSTEMID_attendance", 11);
+define("SYSTEMID_contract", 12);
+define("SYSTEMID_portal", 1000);
 ?>

@@ -27,8 +27,11 @@ $col = $dg->addColumn("تاریخ ارسال", "RegDate", GridColumn::ColumnType
 $col->width = 80;
 
 $col = $dg->addColumn("توضیحات ارسالی", "SendDesc");
-$col->width = 200;
+$col->width = 150;
 $col->ellipsis = 50;
+
+$col = $dg->addColumn("حوزه", "ScopeDesc");
+$col->width = 70;
 
 $col = $dg->addColumn("مهلت", "EndDate", GridColumn::ColumnType_date);
 $col->width = 80;
@@ -37,7 +40,7 @@ $col = $dg->addColumn("تاریخ دریافت", "DoneDate", GridColumn::ColumnT
 $col->width = 80;
 
 $col = $dg->addColumn("توضیحات دریافتی", "DoneDesc");
-$col->width = 200;
+$col->width = 150;
 $col->ellipsis = 50;
 
 $col = $dg->addColumn("وضعیت", "StatusDesc", "");
@@ -125,7 +128,7 @@ PlanExpert.prototype.PlanExpertInfo = function(mode)
 				store : new Ext.data.SimpleStore({
 					proxy: {
 						type: 'jsonp',
-						url: '/framework/person/persons.data.php?task=selectPersons&UserTypes=IsExpert',
+						url: '/framework/person/persons.data.php?task=selectPersons&UserTypes=IsExpert,IsStaff',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
 					fields : ['PersonID','fullname'],
@@ -137,9 +140,27 @@ PlanExpert.prototype.PlanExpertInfo = function(mode)
 				name : "PersonID",
 				width : 300
 			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/elements.data.php?task=SelectScopes',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ['InfoID',"InfoDesc"],
+					autoLoad : true
+				}),
+				displayField: 'InfoDesc',
+				valueField : "InfoID",
+				itemId : "ScopeID",
+				queryMode : "local",
+				name : "ScopeID",
+				fieldLabel : "حوزه طرح"
+			},{
 				xtype:'shdatefield',
 				fieldLabel: "مهلت اقدام",
-				name: 'EndDate'
+				name: 'EndDate',
+				colspan : 2
 			},{
 				xtype:'textarea',
 				colspan : 2,

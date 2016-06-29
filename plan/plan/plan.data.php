@@ -8,6 +8,7 @@ include_once('../header.inc.php');
 include_once inc_dataReader;
 include_once inc_response;
 include_once 'plan.class.php';
+include_once '../baseinfo/elements.class.php';
 
 $task = $_REQUEST["task"];
 switch ($task) {
@@ -41,7 +42,7 @@ function selectGroups(){
 			g4.GroupDesc text , 
 			'true' leaf ,
 			'javascript:void(0)' href, 
-			'false' expanded, 
+			'true' expanded, 
 			'' iconCls , 
 			concat(if(count(pi.RowID)>0, 'filled ', ''), 
 				case t.ActType when 'REJECT' then 'reject'
@@ -89,7 +90,7 @@ function selectGroups(){
 				"id" => $node["g0"],
 				"text" => $node["g0Desc"],
 				"leaf" => "false",
-				"expanded" => $filled ? "true" : "false"
+				"expanded" => "true"
 			);
 			$refArr[ $node["g0"] ] = &$returnArr[ count($returnArr)-1 ];
 		}
@@ -99,7 +100,7 @@ function selectGroups(){
 				"id" => $node["g1"],
 				"text" => $node["g1Desc"],
 				"leaf" => "false",
-				"expanded" => $filled ? "true" : "false"
+				"expanded" => "true"
 			);
 			if(!empty($node["g0"]))
 			{
@@ -122,7 +123,7 @@ function selectGroups(){
 				"id" => $node["g2"],
 				"text" => $node["g2Desc"],
 				"leaf" => "false",
-				"expanded" => $filled ? "true" : "false"
+				"expanded" => "true"
 			);
 			if(!empty($node["g1"]))
 			{
@@ -145,7 +146,7 @@ function selectGroups(){
 				"id" => $node["g3"],
 				"text" => $node["g3Desc"],
 				"leaf" => "false",
-				"expanded" => $filled ? "true" : "false"
+				"expanded" => "true"
 			);
 			if(!empty($node["g2"]))
 			{
@@ -315,6 +316,16 @@ function SavePlanItems(){
 	else
 		$result = $obj->AddItem();
 	
+	$elemObj = new PLN_Elements($obj->ElementID);
+	
+	$obj2 = new PLN_PlanSurvey();
+	$obj2->PlanID = $obj->PlanID;
+	$obj2->GroupID = $elemObj->GroupID;
+	$obj2->ActType = "EDIT";
+	$obj2->ActDate = PDONOW;
+	$obj2->ActPersonID = $_SESSION["USER"]["PersonID"];
+	$result = $obj2->AddRow();
+
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
@@ -375,6 +386,11 @@ function SelectAllPlans(){
 			$where .= " AND SupportPersonID=:sp AND p.StepID=" . STEPID_SEND_SUPPORTER;
 			$param[":sp"] = $_SESSION["USER"]["PersonID"];
 		}
+	}
+	else if(isset($_REQUEST["expert"]))
+	{
+		$where .= " AND e.PersonID=:ep AND e.StatusDesc<>'SEND' ";
+		$param[":ep"] = $_SESSION["USER"]["PersonID"];
 	}
 	else
 	{
@@ -508,6 +524,13 @@ function ChangeStatus(){
 	die();
 }
 
+function GetExpertsSummary(){
+	
+	$dt = PLN_experts::Get(" AND (IsSeen='NO' AND StatusDesc='SEND') or (StatusDesc='RAW' AND EndDate<=now())
+		order by RegDate desc");
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
 //............................................
 
 function GetPlanExperts(){
@@ -564,6 +587,17 @@ function SendExpert(){
 	$result = $obj->Edit();
 	
 	Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();
+}
+
+function SeeExpert(){
+	
+	$obj = new PLN_experts();
+	$obj->RowID = $_POST["RowID"];
+	$obj->IsSeen = "YES";
+	$obj->Edit();
+	
+	Response::createObjectiveResponse(true,"");
 	die();
 }
 ?>

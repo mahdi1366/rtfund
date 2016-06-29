@@ -34,7 +34,6 @@ foreach($systems as $sysRow)
 	$menus = FRW_access::getAccessMenus($sysRow["SystemID"]);
 	if(count($menus) > 0)
 		$menuStr .= ",menu : {xtype : 'menu',bodyStyle: 'background:white !important;',items:[";
-	
 	//........................................................
 	$groupArr = array();
 	foreach($menus as $row)
