@@ -32,6 +32,7 @@ define("COSTID_share", "166");
 define("COSTID_ShareProfit", "167");
 define("COSTID_Commitment", "165");
 define("COSTID_saving", "65");
+define("COSTID_current", "202");
 
 define("ShareBaseAmount", "1100000");
 ?>

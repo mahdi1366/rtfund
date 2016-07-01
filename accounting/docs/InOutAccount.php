@@ -20,7 +20,7 @@ if(!empty($_REQUEST["reportOnly"]))
 		die();
 }
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "saving.data.php?task=GetSavingFlow" . 
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "doc.data.php?task=GetAccountFlow" .
 		($reportOnly ? "&PersonID=" .$PersonID : ""  ), "grid_div");
 
 $col = $dg->addColumn("کد سند", "DocID","");
@@ -47,10 +47,12 @@ $col->summaryType = GridColumn::SummeryType_sum;
 $col->summaryRenderer = "function(v){return Ext.util.Format.Money(v);}";
 $col->align = "center";
 
+$dg->addObject("this.BaseCostCombo");
+
 if(!$reportOnly)
 {
-	$dg->addButton("", "واریز وجه", "arrow_down", "function(){SavingObject.BeforeOperation(1);}");
-	$dg->addButton("", "برداشت وجه", "arrow_up", "function(){SavingObject.BeforeOperation(-1);}");
+	$dg->addButton("", "واریز وجه", "arrow_down", "function(){InOutAccountObject.BeforeOperation(1);}");
+	$dg->addButton("", "برداشت وجه", "arrow_up", "function(){InOutAccountObject.BeforeOperation(-1);}");
 }
 $dg->EnableSummaryRow = true;
 
@@ -67,7 +69,7 @@ $grid = $dg->makeGrid_returnObjects();
 ?>
 <script type="text/javascript">
 
-Saving.prototype = {
+InOutAccount.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 	
@@ -76,9 +78,35 @@ Saving.prototype = {
 	}
 };
 
-function Saving()
+function InOutAccount()
 {
+	this.BaseCostCombo = new Ext.form.ComboBox({
+		itemId : "BaseCostID",
+		pageSize : 20,
+		store: new Ext.data.SimpleStore({
+			fields : ['id','title'],
+			data : [ 
+				['<?= COSTID_saving ?>', 'حساب پس انداز'],
+				['<?= COSTID_ShortDeposite ?>', 'سپرده کوتاه مدت'],
+				['<?= COSTID_LongDeposite ?>', 'سپرده بلند مدت'],
+				['<?= COSTID_current ?>', 'حساب جاری']
+			]
+		}),
+		displayField: 'title',
+		value : "<?= COSTID_saving ?>",
+		valueField : "id",
+		listeners :{
+			select : function(combo,records){
+				me = InOutAccountObject;
+
+				me.grid.getStore().proxy.extraParams.BaseCostID = this.getValue();
+				me.grid.getStore().load();
+			}
+		}
+	});
 	this.grid = <?= $grid ?>;
+	this.grid.getStore().proxy.extraParams.BaseCostID = "<?= COSTID_saving ?>";
+	
 	this.grid.getView().getRowClass = function(record, index)
 	{
 		if(record.data.DocStatus ==  "CONFIRM")
@@ -102,12 +130,12 @@ function Saving()
 		}]
 	});
 	this.grid.getStore().on("load", function(){
-		summaryObject = SavingObject.grid.features.findObject("ftype", "summary");
-		DebtorCol = SavingObject.grid.columns.findObject("dataIndex", "DebtorAmount").id;
-		CreditorCol = SavingObject.grid.columns.findObject("dataIndex", "CreditorAmount").id;
+		summaryObject = InOutAccountObject.grid.features.findObject("ftype", "summary");
+		DebtorCol = InOutAccountObject.grid.columns.findObject("dataIndex", "DebtorAmount").id;
+		CreditorCol = InOutAccountObject.grid.columns.findObject("dataIndex", "CreditorAmount").id;
 		
 		remaindar = summaryObject.summaryData[CreditorCol]*1 - summaryObject.summaryData[DebtorCol]*1;
-		SavingObject.grid.down("[itemId=remaindar]").setValue( Ext.util.Format.Money(remaindar) );
+		InOutAccountObject.grid.down("[itemId=remaindar]").setValue( Ext.util.Format.Money(remaindar) );
 	});
 		
 	if(<?= !$reportOnly ? "false" : "true" ?>)
@@ -132,25 +160,18 @@ function Saving()
 			store: new Ext.data.Store({
 				proxy:{
 					type: 'jsonp',
-					url: this.address_prefix + 'saving.data.php?task=selectPersons',
+					url: this.address_prefix + '../../framework/person/persons.data.php?task=selectPersons',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['PackNo','PersonID','fullname', {
-					name : "title",
-					convert : function(v,r){
-						return "[ " + r.data.PackNo + " ] " + r.data.fullname;
-					}
-				}]
+				fields :  ['PersonID','fullname']
 			}),
-			displayField: 'title',
+			displayField: 'fullname',
 			valueField : "PersonID",
 			listeners :{
 				select : function(combo,records){
-					me = SavingObject;
+					me = InOutAccountObject;
 					
-					me.grid.getStore().proxy.extraParams = {
-						PersonID : this.getValue()
-					};
+					me.grid.getStore().proxy.extraParams.PersonID = this.getValue();
 					if(me.grid.rendered)
 						me.grid.getStore().load();
 					else
@@ -162,9 +183,9 @@ function Saving()
 	
 }
 
-var SavingObject = new Saving();
+var InOutAccountObject = new InOutAccount();
 	
-Saving.prototype.BeforeOperation = function(mode){
+InOutAccount.prototype.BeforeOperation = function(mode){
 	
 	if(!this.mainWin)
 	{
@@ -231,7 +252,7 @@ Saving.prototype.BeforeOperation = function(mode){
 				text : "ذخیره",
 				iconCls : "save",
 				itemId : "btn_save",
-				handler : function(){ SavingObject.SaveOperation(); }
+				handler : function(){ InOutAccountObject.SaveOperation(); }
 			},{
 				text : "انصراف",
 				iconCls : "undo",
@@ -251,17 +272,18 @@ Saving.prototype.BeforeOperation = function(mode){
 	this.mainWin.center();
 }
 	
-Saving.prototype.SaveOperation = function(){
+InOutAccount.prototype.SaveOperation = function(){
 
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 
 	Ext.Ajax.request({
-		url: this.address_prefix +'saving.data.php',
+		url: this.address_prefix +'doc.data.php',
 		method: "POST",
 		params: {
-			task: "RegisterDoc",
+			task: "RegisterInOutAccountDoc",
 			mode : this.mode,
+			BaseCostID : this.grid.down("[itemId=BaseCostID]").getValue(),
 			PersonID : this.grid.getStore().proxy.extraParams.PersonID,
 			CostID : this.mainWin.down("[name=CostID]").getValue(),
 			TafsiliID: this.mainWin.down("[name=TafsiliID]").getValue(),
@@ -273,8 +295,8 @@ Saving.prototype.SaveOperation = function(){
 
 			if(st.success)
 			{   
-				SavingObject.grid.getStore().load();
-				SavingObject.mainWin.hide();
+				InOutAccountObject.grid.getStore().load();
+				InOutAccountObject.mainWin.hide();
 				Ext.MessageBox.alert("","سند حسابداری مربوطه صادر گردید");
 			}
 			else
