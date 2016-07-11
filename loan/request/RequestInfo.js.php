@@ -209,6 +209,10 @@ RequestInfo.prototype.OperationMenu = function(e){
 	}	
 	if(record.data.IsEnded == "YES")
 	{
+		if(this.RequestRecord.data.IsEnded == "NO")
+			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
+			handler : function(){ return RequestInfoObject.PartInfo(true); }});
+	
 		op_menu.add({text: 'اقساط',iconCls: 'list',
 		handler : function(){ return RequestInfoObject.LoadInstallments(); }});
 

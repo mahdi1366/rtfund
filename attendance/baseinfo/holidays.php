@@ -78,7 +78,7 @@ function Holiday(){
 	
 	this.YearFieldSet = new Ext.form.FieldSet({
 		title: "انتخاب سال",
-		width: 300,
+		width: 400,
 		renderTo : this.get("div_Years"),
 		frame: true,
 		items : [{
@@ -100,11 +100,52 @@ function Holiday(){
 					me.grid.getStore().load();
 				}
 			}
+		},{
+			xtype : "form",
+			title : "ورود اطلاعات از طریق فایل excel",
+			itemId : "excelForm",
+			collapsed : true,
+			collapsible : true,
+			frame : true,
+			items : [{
+				xtype : "container",
+				html : "فایل اکسل باید شامل دو ستون باشد <br> ستون اول تاریخ شمسی( فرمت : 1394/02/08 ) و ستون دوم توضیحات"
+					+ "<br>&nbsp;"
+			},{
+				xtype : "filefield",
+				name : "attach",
+				width : 300
+			}],
+			buttons :[{
+				text : "انتقال از فایل excel",
+				iconCls : "excel",
+				handler : function(){
+					
+					mask = new Ext.LoadMask(HolidayObject.grid, {msg:'در حال انتقال ...'});
+					mask.show();
+					
+					HolidayObject.YearFieldSet.down("[itemId=excelForm]").getForm().submit({
+						url : HolidayObject.address_prefix + "shift.data.php?task=ImportHolidaysFromExcel",
+						method : "post",
+						isUpload : true,
+
+						success : function(){
+							mask.hide();
+							HolidayObject.grid.getStore().load();							
+						},
+						
+						failure: function(){
+							mask.hide();
+							HolidayObject.grid.getStore().load();							
+						}
+					});
+				}	
+			}]
 		}]
 	});
 	
 	this.grid.getStore().proxy.extraParams.Year = this.YearFieldSet.down("[name=year]").getValue();
-	this.grid.render(this.get("grid_div"));		
+	this.grid.render(this.get("grid_div"));	
 }
 
 var HolidayObject = new Holiday();	

@@ -162,5 +162,25 @@ function DeleteHoliday() {
 	die();
 }
 
+function ImportHolidaysFromExcel(){
+	
+	require_once inc_phpExcelReader;
 
+	$data = new Spreadsheet_Excel_Reader();
+	$data->setOutputEncoding('utf-8');
+	$data->setRowColOffset(0);
+	$data->read($_FILES["attach"]["tmp_name"]);
+
+	for ($i = 0; $i < $data->sheets[0]['numRows']; $i++) 
+	{
+		$row = $data->sheets[0]['cells'][$i];
+		
+		$obj = new ATN_holidays();
+		$obj->TheDate = DateModules::shamsi_to_miladi($row[0]);
+		$obj->details = $row[1];
+		$result = $obj->Add();
+	}
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 ?>

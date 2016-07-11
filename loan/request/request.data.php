@@ -87,6 +87,32 @@ function YearWageCompute($PartObj, $TotalWage, $yearNo, $YearMonths){
 		($F9-$BeforeMonths-$curMonths)*($F9-$BeforeMonths-$curMonths+1)))/($F9*($F9+1))*$TotalWage;
 	return $val;
 }
+function YearDelayCompute($PartObj, $PayAmount, $yearNo){
+		
+	$YearMonths = 12;
+	$PayMonth = preg_split('/\//',DateModules::miladi_to_shamsi($PartObj->PartDate));
+	$PayMonth = $PayMonth[1]*1;
+	
+	$FirstYearCount = $YearMonths - $PayMonth;
+	$MidYearCount = floor(($PartObj->DelayMonths-$FirstYearCount) / $YearMonths);
+	$LastYeatCount = ($PartObj->InstallmentCount-$FirstYearCount) % $YearMonths;
+
+	if($yearNo > $MidYearCount+2)
+		return 0;
+
+	$BeforeMonths = 0;
+	if($yearNo >= 2)
+		$BeforeMonths = $FirstYearCount + ($yearNo-2)*$YearMonths;
+
+	$curMonths = $FirstYearCount;
+	if($yearNo > 1 && $yearNo <= $MidYearCount+1)
+		$curMonths = $YearMonths;
+	else if($yearNo > $MidYearCount+1)
+		$curMonths = $LastYeatCount;
+
+	$val = round($PayAmount*$PartObj->FundWage*$curMonths/1200);
+	return $val;
+}
 //....................
 
 function SaveLoanRequest(){
