@@ -90,6 +90,13 @@ SurveyRequests.prototype = {
 function SurveyRequests(){
 	
 	this.grid = <?= $grid ?>;
+	this.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.ReqStatus == "3")
+			return "pinkRow";
+		return "";
+	}	
+
 	this.grid.render(this.get("grid_div"));
 	
 	this.formPanel = new Ext.form.Panel({
@@ -304,7 +311,7 @@ SurveyRequests.OperationRender = function(v,p,r)
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;float:left;height:16'></div>";
 	}	
-	if(r.data.ReqType == "MISSION" && r.data.ToDate)
+	if(r.data.ReqStatus == "2" && r.data.ReqType == "MISSION" && r.data.ToDate)
 		return "<div align='center' title='چاپ حکم ماموریت' class='print' "+
 		"onclick='SurveyRequestsObject.PrintMission();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +

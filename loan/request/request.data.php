@@ -39,7 +39,7 @@ function ComputeInstallmentAmount($TotalAmount,$IstallmentCount,$PayInterval){
 	return $TotalAmount/$IstallmentCount;
 }
 
-function ComputeWage($PartAmount, $CustomerWagePercent, $InstallmentCount, $YearMonths, $PayInterval){
+function ComputeWage($PartAmount, $CustomerWagePercent, $InstallmentCount, $PayInterval){
 	
 	if($PayInterval == 0)
 		return 0;
@@ -50,15 +50,60 @@ function ComputeWage($PartAmount, $CustomerWagePercent, $InstallmentCount, $Year
 	if($CustomerWagePercent == 0)
 		return 0;
 	
-	return ((($PartAmount*$CustomerWagePercent/$YearMonths*( pow((1+($CustomerWagePercent/$YearMonths)),$InstallmentCount)))/
-		((pow((1+($CustomerWagePercent/$YearMonths)),$InstallmentCount))-1))*$InstallmentCount)-$PartAmount;
+	return ((($PartAmount*$CustomerWagePercent/12*( pow((1+($CustomerWagePercent/12)),$InstallmentCount)))/
+		((pow((1+($CustomerWagePercent/12)),$InstallmentCount))-1))*$InstallmentCount)-$PartAmount;
 }
 function roundUp($number, $digits){
 	$factor = pow(10,$digits);
 	return ceil($number*$factor) / $factor;
 }
-function YearWageCompute($PartObj, $TotalWage, $yearNo, $YearMonths){
+function YearWageCompute($PartObj, $TotalWage, $YearMonths){
+
+	$startDate = DateModules::miladi_to_shamsi($PartObj->PartDate);
+	$startDate = DateModules::AddToJDate($startDate, 0, $PartObj->DelayMonths); 
+	$startDate = preg_split('/[\-\/]/',$startDate);
+	$PayMonth = $startDate[1]*1;
+	
+	$FirstYearInstallmentCount = floor((12 - $PayMonth)/(12/$YearMonths));
+	$MidYearInstallmentCount = floor(($PartObj->InstallmentCount-$FirstYearInstallmentCount) / $YearMonths);
+	$LastYeatInstallmentCount = ($PartObj->InstallmentCount-$FirstYearInstallmentCount) % $YearMonths;
+	$F9 = $PartObj->InstallmentCount*(12/$YearMonths);
+	
+	$yearNo = 1;
+	$StartYear = $startDate[0]*1;
+	$returnArr = array();
+	while(true)
+	{
+		if($yearNo > $MidYearInstallmentCount+2)
+			break;
 		
+		$BeforeMonths = 0;
+		if($yearNo == 2)
+			$BeforeMonths = $FirstYearInstallmentCount;
+		else if($yearNo > 2)
+			$BeforeMonths = $FirstYearInstallmentCount + ($yearNo-2)*$YearMonths;
+
+		$curMonths = $FirstYearInstallmentCount;
+		if($yearNo > 1 && $yearNo <= $MidYearInstallmentCount+1)
+			$curMonths = $YearMonths;
+		else if($yearNo > $MidYearInstallmentCount+1)
+			$curMonths = $LastYeatInstallmentCount;
+		
+		$BeforeMonths = $BeforeMonths*(12/$YearMonths);
+		$curMonths = $curMonths*(12/$YearMonths);
+
+		$val = (((($F9-$BeforeMonths)*($F9-$BeforeMonths+1))-
+			($F9-$BeforeMonths-$curMonths)*($F9-$BeforeMonths-$curMonths+1)))/($F9*($F9+1))*$TotalWage;
+
+		$returnArr[ $StartYear ] = $val;
+		$StartYear++;
+		$yearNo++;
+	}
+	
+	return $returnArr;
+	
+	
+	//---------------------------- old
 	$PayMonth = preg_split('/\//',DateModules::miladi_to_shamsi($PartObj->PartDate));
 	$PayMonth = $PayMonth[1]*1;
 	$PayMonth = $PayMonth*$YearMonths/12;
@@ -87,30 +132,27 @@ function YearWageCompute($PartObj, $TotalWage, $yearNo, $YearMonths){
 		($F9-$BeforeMonths-$curMonths)*($F9-$BeforeMonths-$curMonths+1)))/($F9*($F9+1))*$TotalWage;
 	return $val;
 }
-function YearDelayCompute($PartObj, $PayAmount, $yearNo){
-		
+function YearDelayCompute($PartObj, $PayAmount, $wage, $yearNo){
+	
+	/*@var $PartObj LON_ReqParts */
+	
 	$YearMonths = 12;
 	$PayMonth = preg_split('/\//',DateModules::miladi_to_shamsi($PartObj->PartDate));
 	$PayMonth = $PayMonth[1]*1;
 	
-	$FirstYearCount = $YearMonths - $PayMonth;
+	$FirstYearCount = min($YearMonths - $PayMonth, $PartObj->DelayMonths);
 	$MidYearCount = floor(($PartObj->DelayMonths-$FirstYearCount) / $YearMonths);
-	$LastYeatCount = ($PartObj->InstallmentCount-$FirstYearCount) % $YearMonths;
+	$LastYeatCount = ($PartObj->DelayMonths-$FirstYearCount) % $YearMonths;
 
 	if($yearNo > $MidYearCount+2)
 		return 0;
-
-	$BeforeMonths = 0;
-	if($yearNo >= 2)
-		$BeforeMonths = $FirstYearCount + ($yearNo-2)*$YearMonths;
-
+	
 	$curMonths = $FirstYearCount;
 	if($yearNo > 1 && $yearNo <= $MidYearCount+1)
 		$curMonths = $YearMonths;
 	else if($yearNo > $MidYearCount+1)
 		$curMonths = $LastYeatCount;
-
-	$val = round($PayAmount*$PartObj->FundWage*$curMonths/1200);
+	$val = round($PayAmount*$wage*$curMonths/1200);
 	return $val;
 }
 //....................
@@ -888,6 +930,12 @@ function SavePartPay(){
 	{
 		$pdo->rollback();
 		echo Response::createObjectiveResponse(false, "خطا در ثبت ردیف پرداخت");
+		die();
+	}
+	if($_REQUEST["RegisterDoc"] == "0")
+	{
+		$pdo->commit();
+		echo Response::createObjectiveResponse(true, "");
 		die();
 	}
 	if(empty($obj->ChequeNo) || $obj->ChequeStatus == "2")

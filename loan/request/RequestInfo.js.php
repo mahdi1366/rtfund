@@ -315,6 +315,21 @@ RequestInfo.prototype.BuildForms = function(){
 					fieldLabel: 'سقف کارمزد صندوق',
 					renderer : function(v){ return Ext.util.Format.Money(v)	}
 				},{
+					name : "AgentReturn",
+					fieldLabel: 'کارمزد سرمایه گذار',
+					renderer : function(v){
+						if(v == "CUSTOMER") return "هنگام پرداخت وام";
+						if(v == "INSTALLMENT") return 'طی اقساط';
+					}
+				},{
+					name : "AgentDelayReturn",
+					fieldLabel: 'تنفس سرمایه گذار',
+					colspan : 2,
+					renderer : function(v){
+						if(v == "CUSTOMER") return "هنگام پرداخت وام";
+						if(v == "INSTALLMENT") return 'طی اقساط';
+					}
+				},{
 					colspan : 3,
 					xtype : "container",
 					width : 580,
@@ -896,10 +911,10 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 	{
 		this.PartWin = new Ext.window.Window({
 			width : 500,
-			height : 500,
+			height : 530,
 			modal : true,
 			closeAction : 'hide',
-			title : "ایجاد فاز جدید",
+			title : "مشخصات فاز",
 			items : new Ext.form.Panel({
 				layout : {
 					type : "table",
@@ -977,7 +992,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 				},{
 					xtype : "fieldset",
 					itemId : "fs_WageCompute",
-					title : "نحوه دریافت کارمزد",
+					title : "نحوه دریافت کارمزد صندوق",
 					width : 240,
 					style : "margin-right:10px",
 					items : [{
@@ -986,12 +1001,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						name : "WageReturn",
 						inputValue : "INSTALLMENT",
 						checked : true
-					}/*,{
-						xtype : "radio",
-						boxLabel : "پرداخت کارمزد از سپرده سرمایه گذار",
-						name : "WageReturn",
-						inputValue : "AGENT"
-					}*/,{
+					},{
 						xtype : "radio",						
 						boxLabel : "پرداخت کارمزد هنگام پرداخت وام",
 						name : "WageReturn",
@@ -1000,7 +1010,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 				},{
 					xtype : "fieldset",
 					itemId : "fs_DelayCompute",
-					title : "نحوه دریافت تنفس",
+					title : "نحوه دریافت تنفس صندوق",
 					width : 200,
 					style : "margin-right:10px",
 					items : [{
@@ -1013,6 +1023,42 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						xtype : "radio",
 						boxLabel : "طی اقساط",
 						name : "DelayReturn",
+						inputValue : "INSTALLMENT"
+					}]
+				},{
+					xtype : "fieldset",
+					itemId : "fs_AgentWageCompute",
+					title : "نحوه دریافت کارمزد سرمایه گذار",
+					width : 240,
+					style : "margin-right:10px",
+					items : [{
+						xtype : "radio",
+						boxLabel : "پرداخت کارمزد طی اقساط",
+						name : "AgentReturn",
+						inputValue : "INSTALLMENT",
+						checked : true
+					},{
+						xtype : "radio",						
+						boxLabel : "پرداخت کارمزد هنگام پرداخت وام",
+						name : "AgentReturn",
+						inputValue : "CUSTOMER"
+					}]
+				},{
+					xtype : "fieldset",
+					itemId : "fs_AgentDelayCompute",
+					title : "نحوه دریافت تنفس سرمایه گذار",
+					width : 200,
+					style : "margin-right:10px",
+					items : [{
+						xtype : "radio",						
+						boxLabel : "هنگام پرداخت وام",
+						name : "AgentDelayReturn",
+						inputValue : "CUSTOMER",
+						checked : true
+					},{
+						xtype : "radio",
+						boxLabel : "طی اقساط",
+						name : "AgentDelayReturn",
 						inputValue : "INSTALLMENT"
 					}]
 				},{
@@ -1073,7 +1119,9 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 		{
 			this.PartWin.down("[name=PartDate]").hide();
 			this.PartWin.down("[itemId=fs_WageCompute]").hide();
+			this.PartWin.down("[itemId=fs_AgentWageCompute]").hide();
 			this.PartWin.down("[itemId=fs_DelayCompute]").hide();
+			this.PartWin.down("[itemId=fs_AgentDelayCompute]").hide();
 			this.PartWin.down("[itemId=fs_PayCompute]").hide();
 			this.PartWin.down("[itemId=fs_MaxFundWage]").hide();
 			this.PartWin.down("[name=PartAmount]").colspan = 2;
@@ -1249,19 +1297,39 @@ RequestInfo.prototype.LoadSummary = function(record){
 	TotalDelay = Math.round(record.data.PartAmount*record.data.CustomerWage*record.data.DelayMonths/1200);
 	
 	//-------------------------- installments -----------------------------
-	TotalAmount = record.data.PartAmount*1;
-	TotalAmount += (record.data.WageReturn == "CUSTOMER") ? 0 : TotalWage;
-	TotalAmount += (record.data.DelayReturn == "CUSTOMER") ? 0 : TotalDelay;	
+	MaxWage = Math.max(record.data.CustomerWage, record.data.FundWage);
+	CustomerFactor =	MaxWage == 0 ? 0 : record.data.CustomerWage/MaxWage;
+	FundFactor =		MaxWage == 0 ? 0 : record.data.FundWage/MaxWage;
+	AgentFactor =		MaxWage == 0 ? 0 : (record.data.CustomerWage-record.data.FundWage)/MaxWage;
+	
+	var extraAmount = 0;
+	if(record.data.WageReturn == "INSTALLMENT")
+	{
+		if(record.data.MaxFundWage*1 > 0)
+			extraAmount += record.data.MaxFundWage;
+		else if(record.data.CustomerWage > record.data.FundWage)
+			extraAmount += Math.round(TotalWage*FundFactor);
+		else
+			extraAmount += Math.round(TotalWage*CustomerFactor);		
+	}		
+	if(record.data.AgentReturn == "INSTALLMENT" && record.data.CustomerWage>record.data.FundWage)
+		extraAmount += Math.round(TotalWage*AgentFactor);
+
+	if(record.data.DelayReturn == "INSTALLMENT")
+		extraAmount += TotalDelay*(record.data.FundWage/record.data.CustomerWage);
+	if(record.data.AgentDelayReturn == "INSTALLMENT" && record.data.CustomerWage>record.data.FundWage)
+		extraAmount += TotalDelay*((record.data.CustomerWage-record.data.FundWage)/record.data.CustomerWage);
+	
+	TotalAmount = record.data.PartAmount*1 + extraAmount;
+	
 	FirstPay = ComputeInstallmentAmount(TotalAmount,record.data.InstallmentCount, record.data.PayInterval);
 	
 	if(record.data.InstallmentCount > 1)
 		FirstPay = roundUp(FirstPay,-3);
 	else
 		FirstPay = Math.round(FirstPay);
-	LastPay = TotalAmount - FirstPay*(record.data.InstallmentCount-1);
-	
-	if(record.data.DelayReturn == "INSTALLMENT")
-		FirstPay += TotalDelay/record.data.InstallmentCount;
+	LastPay = Math.round(TotalAmount - FirstPay*(record.data.InstallmentCount-1));
+
 	//---------------------------------------------------------------------
 	if(record.data.MaxFundWage*1 > 0)
 	{

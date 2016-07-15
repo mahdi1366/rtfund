@@ -77,6 +77,12 @@ TrafficReq.prototype = {
 function TrafficReq(){
 	
 	this.grid = <?= $grid ?>;
+	this.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.ReqStatus == "3")
+			return "pinkRow";
+		return "";
+	}	
 	this.grid.render(this.get("grid_div"));
 	
 	this.formPanel = new Ext.form.Panel({

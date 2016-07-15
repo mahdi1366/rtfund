@@ -30,7 +30,7 @@ $dg->addButton('HeaderBtn', 'عملیات', 'list', 'function(e){ return AccDocs
 
 $dg->title = "سند های حسابداری";
 $dg->width = 780;
-$dg->DefaultSortField = "DocID";
+$dg->DefaultSortField = "LocalNo";
 $dg->DefaultSortDir = "DESC";
 $dg->autoExpandColumn = "DocID";
 $dg->emptyTextOfHiddenColumns = true;

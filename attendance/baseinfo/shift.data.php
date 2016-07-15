@@ -79,7 +79,7 @@ function GetAllPersonShifts(){
 		$param[":qry"] = "%" . $_GET["query"] . "%";
 	}
 	
-	$temp = ATN_PersonShifts::Get($where, $param, dataReader::makeOrder() . ",FromDate desc");
+	$temp = ATN_PersonShifts::Get($where, $param, dataReader::makeOrder() . ",FromDate asc");
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 

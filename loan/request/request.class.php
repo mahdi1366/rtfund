@@ -138,6 +138,8 @@ class LON_ReqParts extends PdoDataAccess
 	public $PayCompute;
 	public $MaxFundWage;
 	public $DelayReturn;
+	public $AgentReturn;
+	public $AgentDelayReturn;
 	
 	function __construct($PartID = "") {
 		
