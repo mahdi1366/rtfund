@@ -92,6 +92,51 @@ function SavePersonShift(){
 	$obj = new ATN_PersonShifts();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 
+	//............. cut shifts .....................
+	$FromDate = DateModules::shamsi_to_miladi($obj->FromDate, "-");
+	$ToDate = DateModules::shamsi_to_miladi($obj->ToDate, "-");
+	
+	$dt = PdoDataAccess::runquery("select * from ATN_PersonShifts 
+		where PersonID=? AND FromDate>? AND FromDate<?", 
+			array($obj->PersonID, $FromDate, $ToDate));
+	if(count($dt) > 0)
+	{
+		$obj2 = new ATN_PersonShifts();
+		$obj2->RowID = $dt[0]["RowID"];
+		$obj2->FromDate = DateModules::AddToGDate($ToDate, 1);
+		$obj2->Edit();
+	}
+	//-------------------
+	$dt = PdoDataAccess::runquery("select * from ATN_PersonShifts 
+		where PersonID=? AND FromDate<? AND ToDate>?", 
+			array($obj->PersonID, $FromDate, $ToDate));
+	if(count($dt) > 0)
+	{
+		$obj2 = new ATN_PersonShifts();
+		$obj2->RowID = $dt[0]["RowID"];
+		$obj2->ToDate = DateModules::AddToGDate($FromDate, -1);
+		$obj2->Edit();
+		
+		$obj2 = new ATN_PersonShifts();
+		$obj2->ShiftID = $dt[0]["ShiftID"];
+		$obj2->PersonID = $obj->PersonID;
+		$obj2->FromDate = DateModules::AddToGDate($ToDate, 1);
+		$obj2->ToDate = $dt[0]["ToDate"];
+		$obj2->Add();
+	}
+	//-------------------
+	$dt = PdoDataAccess::runquery("select * from ATN_PersonShifts 
+		where PersonID=? AND ToDate>? AND ToDate<?", 
+			array($obj->PersonID, $FromDate, $ToDate));
+	if(count($dt) > 0)
+	{
+		$obj2 = new ATN_PersonShifts();
+		$obj2->RowID = $dt[0]["RowID"];
+		$obj2->ToDate = DateModules::AddToGDate($FromDate, -1);
+		$obj2->Edit();
+	}
+	//...............................................
+	
 	if ($obj->RowID == "")
 		$result = $obj->Add();
 	else
@@ -105,6 +150,13 @@ function SavePersonShift(){
 function DeletePersonShift(){
 	
 	$obj = new ATN_PersonShifts($_POST["RowID"]);
+	
+	if($obj->FromDate < DateModules::Now())
+	{
+		echo Response::createObjectiveResponse(false, "این ردیف در تردد استفاده شده و قابل حذف نمی باشد");
+		die();
+	}
+	
 	$result = $obj->Remove();
 	
 	//print_r(ExceptionHandler::PopAllExceptions());	

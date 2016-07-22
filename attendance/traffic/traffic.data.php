@@ -51,6 +51,11 @@ function GetAllRequests(){
 		$param[":q"] = "%" . $_GET["query"] . "%";
 	}
 	
+	if(isset($_REQUEST["AllReqs"]) && $_REQUEST["AllReqs"] == "false")
+	{
+		$where .= " AND IsArchive='NO'";
+	}	
+	
 	$dt = ATN_requests::Get($where . dataReader::makeOrder(), $param);
 	$result = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	
@@ -164,6 +169,7 @@ function ChangeStatus(){
 	$obj->ReqStatus = $_POST["mode"];
 	$obj->SurveyPersonID = $_SESSION["USER"]["PersonID"];
 	$obj->SurveyDate = PDONOW;
+	$obj->SurveyDesc = $_POST["SurveyDesc"];
 	
 	$result = $obj->Edit();
 	
@@ -182,5 +188,13 @@ function ChangeStatus(){
 	die();
 }
 
+function ArchiveRequest(){
+	
+	$obj = new ATN_requests($_POST["RequestID"]);
+	$obj->IsArchive = "YES";
+	$result = $obj->Edit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 
 ?>

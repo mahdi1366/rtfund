@@ -24,6 +24,8 @@ $dg->addColumn("", "OffTypeDesc", "", true);
 $dg->addColumn("", "OffFullname", "", true);
 $dg->addColumn("", "SurveyFullname", "", true);
 $dg->addColumn("", "SurveyDate", "", true);
+$dg->addColumn("", "SurveyDesc", "", true);
+$dg->addColumn("", "IsArchive", "", true);
 
 $col = $dg->addColumn("درخواست کننده", "fullname");
 $col->renderer = "SurveyRequests.ReqRender";
@@ -55,6 +57,10 @@ $col = $dg->addColumn("عملیات", "");
 $col->sortable = false;
 $col->renderer = "function(v,p,r){return SurveyRequests.OperationRender(v,p,r);}";
 $col->width = 60;
+
+$dg->addButton("", "بایگانی درخواست", "archive", "function(){return SurveyRequestsObject.ArchiveRequest();}");
+
+$dg->addObject('this.AllReqsObj');
 
 $dg->height = 500;
 $dg->width = 750;
@@ -89,11 +95,26 @@ SurveyRequests.prototype = {
 
 function SurveyRequests(){
 	
+	this.AllReqsObj = Ext.button.Button({
+		xtype: "button",
+		text : "مشاهده همه درخواست ها", 
+		iconCls : "list",
+		enableToggle : true,
+		handler : function(){
+			me = SurveyRequestsObject;
+			me.grid.getStore().proxy.extraParams["AllReqs"] = this.pressed ? "true" : "false";
+			me.grid.getStore().load();
+		}
+	});
+	
 	this.grid = <?= $grid ?>;
+	this.grid.getStore().proxy.extraParams["AllReqs"] = "false";
 	this.grid.getView().getRowClass = function(record, index)
 	{
 		if(record.data.ReqStatus == "3")
 			return "pinkRow";
+		if(record.data.IsArchive == "YES")
+			return "yellowRow";
 		return "";
 	}	
 
@@ -307,7 +328,7 @@ SurveyRequests.OperationRender = function(v,p,r)
 		"cursor:pointer;width:16px;float:right;height:16'></div>&nbsp;&nbsp;&nbsp;&nbsp;" +
 	
 		"<div align='center' title='رد' class='cross' "+
-		"onclick='SurveyRequestsObject.ChangeStatus(3);' " +
+		"onclick='SurveyRequestsObject.beforeChangeStatus(3);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;float:left;height:16'></div>";
 	}	
@@ -316,6 +337,8 @@ SurveyRequests.OperationRender = function(v,p,r)
 		"onclick='SurveyRequestsObject.PrintMission();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;float:right;height:16'></div>";
+	if(r.data.ReqStatus == "3")
+		p.tdAttr = "data-qtip='دلیل رد درخواست : <b>" + r.data.SurveyDesc + "</b>'";
 }
 
 SurveyRequests.ReqRender = function(v,p,r)
@@ -327,7 +350,49 @@ SurveyRequests.ReqRender = function(v,p,r)
 	return v;
 }
 
-SurveyRequests.prototype.ChangeStatus = function(mode){
+SurveyRequests.prototype.beforeChangeStatus = function(mode){
+	
+	if(mode == 2)
+	{
+		this.ChangeStatus(mode, "");
+		return;
+	}
+	
+	if(!this.commentWin)
+	{
+		this.commentWin = new Ext.window.Window({
+			width : 412,
+			height : 198,
+			modal : true,
+			title : "دلیل رد درخواست",
+			bodyStyle : "background-color:white",
+			items : [{
+				xtype : "textarea",
+				width : 400,
+				rows : 8,
+				name : "comment"
+			}],
+			closeAction : "hide",
+			buttons : [{
+				text : "رد درخواست",				
+				iconCls : "cross",
+				itemId : "btn_reject"
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.commentWin);
+	}
+	this.commentWin.down("[itemId=btn_reject]").setHandler(function(){
+		SurveyRequestsObject.ChangeStatus(mode, this.up('window').down("[name=comment]").getValue());});
+	this.commentWin.show();
+	this.commentWin.center();
+}
+
+SurveyRequests.prototype.ChangeStatus = function(mode, comment){
 	
 	actionDesc = mode == 2 ? "تایید" : "رد";
 	Ext.MessageBox.confirm("","آیا مایل به " + actionDesc + " می باشید؟", function(btn){
@@ -345,12 +410,15 @@ SurveyRequests.prototype.ChangeStatus = function(mode){
 			url : me.address_prefix + 'traffic.data.php?task=ChangeStatus',
 			params : {
 				RequestID : record.data.RequestID,
-				mode : mode
+				mode : mode,
+				SurveyDesc : comment
 			},
 			method : "POST",
 
 			success : function(response){
 				mask.hide();
+				if(SurveyRequestsObject.commentWin)
+					SurveyRequestsObject.commentWin.hide();
 				result = Ext.decode(response.responseText);
 				
 				if(result.success)
@@ -358,8 +426,7 @@ SurveyRequests.prototype.ChangeStatus = function(mode){
 				else
 					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد.");
 			}
-		});
-		
+		});		
 	});
 }
 
@@ -419,6 +486,47 @@ SurveyRequests.prototype.PrintMission = function()
 {
 	var record = this.grid.getSelectionModel().getLastSelected();
 	window.open(this.address_prefix + "PrintMission.php?RequestID=" + record.data.RequestID);
+}
+
+SurveyRequests.prototype.ArchiveRequest = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+	{
+		Ext.MessageBox.alert("", "ابتدا ردیف مورد نظر را انتخاب کنید");
+		return;
+	}
+	if(record.data.ReqStatus == "1")
+	{
+		Ext.MessageBox.alert("", "هنوز اقدامی روی این درخواست صورت نگرفته و قادر به بایگانی آن نمی باشید");
+		return;
+	}
+	
+	actionDesc = "آیا مایل به بایگانی این درخواست می باشید؟"
+	Ext.MessageBox.confirm("",actionDesc, function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		me = SurveyRequestsObject;
+		mask = new Ext.LoadMask(me.formPanel, {msg:'در حال بایگانی ...'});
+		mask.show();
+		
+		var record = me.grid.getSelectionModel().getLastSelected();
+
+		Ext.Ajax.request({
+			url : me.address_prefix + 'traffic.data.php?task=ArchiveRequest',
+			params : {
+				RequestID : record.data.RequestID				
+			},
+			method : "POST",
+
+			success : function(response){
+				mask.hide();
+				SurveyRequestsObject.grid.getStore().load();
+			}
+		});		
+	});
 }
 
 var SurveyRequestsObject = new SurveyRequests();	

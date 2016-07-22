@@ -58,6 +58,9 @@ class ATN_requests extends OperationClass
 	
 	public $SurveyPersonID;
 	public $SurveyDate;
+	public $SurveyDesc;
+	
+	public $IsArchive;
 	
 	public $_fullname;
 	public $_GoMeanDesc;

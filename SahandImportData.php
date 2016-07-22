@@ -18,6 +18,29 @@ for($i=0; $i < 200; $i++)
 	$date = date("Y-m-d",$date);
 }
 /*
+insert into ACC_docs(CycleID,LocalNO,BranchID,DocDate,RegDate,DocStatus)
+
+SELECT substr(`col 5`,1,4),`col 10`,4,gdate,now(),'ARCHIVE'
+
+FROM TABLE121Park
+join DMS_packages d on(`col 1`=packNo AND d.BranchID=4)
+join ACC_tafsilis on(TafsiliType=1 AND ObjectID=PersonID)
+join jdate on(`col 5`=jdate)
+
+group by gdate;
+
+insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,details)
+
+SELECT DocID,66,1,TafsiliID,`col 6`,`col 7`,`col 8`
+
+FROM TABLE121Park
+join DMS_packages d on(`col 1`=packNo AND d.BranchID=4)
+join ACC_tafsilis on(TafsiliType=1 AND ObjectID=PersonID)
+join jdate on(`col 5`=jdate)
+join ACC_docs dc on(dc.branchID=4 AND dc.DocDate=gdate)
+
+ */
+/*
 SELECT * FROM information_schema.TABLE_CONSTRAINTS
 WHERE information_schema.TABLE_CONSTRAINTS.CONSTRAINT_TYPE = 'FOREIGN KEY'
 AND information_schema.TABLE_CONSTRAINTS.TABLE_SCHEMA = 'rtfund';

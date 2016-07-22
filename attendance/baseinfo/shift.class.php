@@ -14,11 +14,15 @@ class ATN_shifts extends OperationClass
 	public $FromTime;
 	public $ToTime;
 	public $IsActive;
+	public $ExceptFromTime;
+	public $ExceptToTime;
 			
 	function __construct($ShiftID = "") {
 		
 		$this->DT_FromTime = DataMember::CreateDMA(DataMember::DT_TIME);
 		$this->DT_ToTime = DataMember::CreateDMA(DataMember::DT_TIME);
+		$this->DT_ExceptFromTime = DataMember::CreateDMA(DataMember::DT_TIME);
+		$this->DT_ExceptToTime = DataMember::CreateDMA(DataMember::DT_TIME);
 		
 		if($ShiftID != "")
 			PdoDataAccess::FillObject ($this, "select *	from ATN_shifts where ShiftID=?", array($ShiftID));
@@ -66,11 +70,10 @@ class ATN_PersonShifts extends OperationClass
 		
 		$dt = PdoDataAccess::runquery("select * from ATN_PersonShifts
 			where PersonID=:p 
-			AND ( (:f between FromDate AND if(ToDate='0000-00-00','4000-00-00',ToDate) )
-				OR (:t between FromDate AND if(ToDate='0000-00-00','4000-00-00',ToDate) ) ) AND RowID <> :r",
+			AND ( :f between FromDate AND ToDate OR :t between FromDate AND ToDate ) AND RowID <> :r",
 				array(":p" => $this->PersonID, ":r" => $this->RowID,
-					":f" => DateModules::shamsi_to_miladi($this->FromDate), 
-					":t" => DateModules::shamsi_to_miladi($this->ToDate)));
+					":f" => DateModules::shamsi_to_miladi($this->FromDate, "-"), 
+					":t" => DateModules::shamsi_to_miladi($this->ToDate, "-")));
 		if(count($dt) > 0)
 		{
 			ExceptionHandler::PushException("شیفت انتخاب شده دارای تداخل زمانی میباشد");
@@ -111,19 +114,6 @@ class ATN_PersonShifts extends OperationClass
 		return parent::Edit($pdo);
 	}
 	
-	function Remove($pdo = null) {
-		
-		/*$query = "
-			select * from ATN_traffic t 
-				join ATN_PersonShifts ps on(t.PersonID=ps.PersonID AND t.TrafficDate between ps.FromDate AND ps.ToDate)
-				join ATN_shifts t on(t.PersonID=ps.PersonID AND ps.ShiftID=t.ShiftID AND t.TrafficTime between ps.FromTime AND ps.ToTime )
-			where PersonID=:p AND t.ShiftID <>
-		";*/
-		
-		$this->IsActive = "NO";
-		return $this->Edit($pdo);
-	}
-
 	static function GetShiftOfDate($PersonID, $date){
 		
 		$query = "select s.*			

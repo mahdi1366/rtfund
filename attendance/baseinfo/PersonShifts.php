@@ -50,8 +50,6 @@ if($accessObj->RemoveFlag)
 	$col->width = 40;
 }
 
-$dg->addButton("", "کپی شیفت های یک فرد برای فرد دیگر", "copy", "function(){PersonShiftObject.CopyShifts()}");
-
 $dg->title = "شیفت کاری پرسنل";
 $dg->height = 500;
 $dg->width = 750;
@@ -188,6 +186,9 @@ PersonShift.prototype.DeletePersonShift = function()
 
 			success: function(response,option){
 				mask.hide();
+				result = Ext.decode(response.responseText);
+				if(!result.success)
+					Ext.MessageBox.alert("Error", result.data);
 				PersonShiftObject.grid.getStore().load();
 			},
 			failure: function(){}

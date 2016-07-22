@@ -17,7 +17,6 @@ $dg->addColumn("", "IsActive", "", true);
 $col = $dg->addColumn("عنوان شیفت", "ShiftTitle", "");
 $col->editor = ColumnEditor::TextField();
 
-
 $col = $dg->addColumn("از ساعت", "FromTime");
 $col->editor = ColumnEditor::TimeField();
 $col->width = 80;
@@ -27,6 +26,17 @@ $col = $dg->addColumn("تا ساعت", "ToTime");
 $col->editor = ColumnEditor::TimeField();
 $col->width = 80;
 $col->align = "center";
+
+$col = $dg->addColumn("ساعت شروع پنجشنبه ها", "ExceptFromTime");
+$col->editor = ColumnEditor::TimeField();
+$col->width = 80;
+$col->align = "center";
+
+$col = $dg->addColumn("ساعت پایان پنجشنبه ها", "ExceptToTime");
+$col->editor = ColumnEditor::TimeField();
+$col->width = 80;
+$col->align = "center";
+
 
 if($accessObj->AddFlag)
 {
