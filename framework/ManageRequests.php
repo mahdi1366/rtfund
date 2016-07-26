@@ -46,7 +46,7 @@ function SelectAll(){
 		join BSC_persons on(RegPersonID = PersonID)
 		join FRW_systems using(SystemID)
 		
-		where $where order by FIELD(TaskStatus,'RAW') desc,CreateDate desc");	
+		where $where order by FIELD(TaskStatus,'RAW') desc,ifnull(DoneDate,CreateDate) desc");	
 	$cnt = $res->rowCount();
 	$res = PdoDataAccess::fetchAll($res, $_GET["start"], $_GET["limit"]);
 	echo dataReader::getJsonData($res, $cnt, $_GET["callback"]);

@@ -242,6 +242,8 @@ class PLN_experts extends OperationClass {
 	public $StatusDesc;
     public $EndDate;
     public $DoneDate;
+	public $ScopeID;
+	public $IsSeen;
 	
     function __construct($id = ""){
         
@@ -255,8 +257,10 @@ class PLN_experts extends OperationClass {
     public static function Get($where = '', $whereParams = array()) {
 		
         return parent::runquery_fetchMode("
-			select e.*, concat_ws(' ',fname, lname,CompanyName) fullname
+			select e.*, concat_ws(' ',fname, lname,CompanyName) fullname,
+				InfoDesc ScopeDesc
 			from PLN_experts e
+			join BaseInfo bf on(TypeID=21 AND InfoID=ScopeID)
 			left join BSC_persons p1 using(PersonID) where 1=1 " . $where, $whereParams);
     }
 }

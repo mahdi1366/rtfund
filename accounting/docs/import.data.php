@@ -42,27 +42,12 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 	
 	$PartObj->MaxFundWage = $PartObj->MaxFundWage*1;
 	
-	/*$LocalNo = $_POST["LocalNo"];
-	if($LocalNo != "")
-	{
-		$dt = PdoDataAccess::runquery("select * from ACC_docs 
-			where BranchID=? AND CycleID=? AND LocalNo=?" , 
-
-			array($_SESSION["accounting"]["BranchID"], 
-				$_SESSION["accounting"]["CycleID"], 
-				$LocalNo));
-
-		if(count($dt) > 0)
-		{
-			echo Response::createObjectiveResponse(false, "شماره سند وارد شده موجود می باشد");
-			die();
-		}
-	}*/
-	
 	//------------- get CostCodes --------------------
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
+	$CostCode_agent_wage = FindCostID("750" . "-52");
+	$CostCode_agent_FutureWage = FindCostID("760" . "-52");
 	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
@@ -95,28 +80,43 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 	$PayAmount = $PayObj->PayAmount;
 	//--------------------------------------------------------
 	$MaxWage = max($PartObj->CustomerWage*1 , $PartObj->FundWage);
-	$YearMonths = ($PartObj->IntervalType == "DAY") ? floor(365/$PartObj->PayInterval) : 12;
-	$TotalWage = round(ComputeWage($PayAmount, $MaxWage/100, $PartObj->InstallmentCount, 
-		$YearMonths, $PartObj->PayInterval));	
-	$FundFactor = $MaxWage == 0 ? 0 : $PartObj->FundWage/$MaxWage;
+	$YearMonths = ($PartObj->IntervalType == "DAY") ? floor(365/$PartObj->PayInterval) : 12/$PartObj->PayInterval;
+	$TotalWage = round(ComputeWage($PayAmount, $MaxWage/100, $PartObj->InstallmentCount, $PartObj->PayInterval));	
 	
-	if($PartObj->MaxFundWage*1 > 0 && $PartObj->WageReturn == "INSTALLMENT")
+	$CustomerFactor =	$MaxWage == 0 ? 0 : $PartObj->CustomerWage/$MaxWage;
+	$FundFactor =		$MaxWage == 0 ? 0 : $PartObj->FundWage/$MaxWage;
+	$AgentFactor =		$MaxWage == 0 ? 0 : ($PartObj->CustomerWage-$PartObj->FundWage)/$MaxWage;
+	
+	///...........................................................
+	$years = YearWageCompute($PartObj, $TotalWage*1, $YearMonths);
+	if($PartObj->MaxFundWage*1 > 0)
 	{
-		$year1 = $FundFactor*YearWageCompute($PartObj, $PartObj->MaxFundWage*1, 1, $YearMonths);
-		$year2 = $FundFactor*YearWageCompute($PartObj, $PartObj->MaxFundWage*1, 2, $YearMonths);
-		$year3 = $FundFactor*YearWageCompute($PartObj, $PartObj->MaxFundWage*1, 3, $YearMonths);
-		$year4 = $FundFactor*YearWageCompute($PartObj, $PartObj->MaxFundWage*1, 4, $YearMonths);
-	}
+		if($PartObj->WageReturn == "INSTALLMENT")
+			$FundYears = YearWageCompute($PartObj, $PartObj->MaxFundWage*1, $YearMonths);
+		else 
+		{
+			$FundYears = array();
+			foreach($years as $year => $amount)
+				$FundYears[$year] = 0;
+		}
+	}	
 	else
-	{	
-		$year1 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 1, $YearMonths);
-		$year2 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 2, $YearMonths);
-		$year3 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 3, $YearMonths);
-		$year4 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 4, $YearMonths);
-	}
-	$TotalDelay = round($PayAmount*$MaxWage*$PartObj->DelayMonths/1200);
-	$curYear = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0, 4)*1;
+	{
+		$FundYears = array();
+		foreach($years as $year => $amount)
+			$FundYears[$year] = round($FundFactor*$amount);
+	}	
+	$AgentYears = array();
+		foreach($years as $year => $amount)
+			$AgentYears[$year] = round($amount - $FundYears[$year]);
+	///...........................................................
 	
+	$CustomerDelay = round($PayAmount*$PartObj->CustomerWage*$PartObj->DelayMonths/1200);
+	$FundDelay = round($PayAmount*$PartObj->FundWage*$PartObj->DelayMonths/1200);
+	$AgentDelay = round($PayAmount*($PartObj->CustomerWage - $PartObj->FundWage)*$PartObj->DelayMonths/1200);
+	
+	$curYear = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0, 4)*1;
+	$CurYearTafsili = FindTafsiliID($curYear, TAFTYPE_YEARS);
 	//------------------ find tafsilis ---------------
 	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
 	if(!$LoanPersonTafsili)
@@ -143,63 +143,17 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
 			return false;
 		}
-		$SubAgetnTafsili = "";
+		$SubAgentTafsili = "";
 		if(!empty($ReqObj->SubAgentID))
 		{
-			$SubAgetnTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
-			if(!$SubAgetnTafsili)
+			$SubAgentTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
+			if(!$SubAgentTafsili)
 			{
 				ExceptionHandler::PushException("تفصیلی زیر واحد سرمایه گذار یافت نشد.[" . $ReqObj->SubAgentID . "]");
 				return false;
 			}
 		}
-	}
-	$amountArr = array();
-	$curYearTafsili = FindTafsiliID($curYear, TAFTYPE_YEARS);
-	if(!$curYear)
-	{
-		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $curYear . "]");
-		return false;
-	}
-	$amountArr[$curYearTafsili]["year"] = $curYear;
-	$amountArr[$curYearTafsili]["amount"] = $year1;
-	
-	if($year2 > 0)
-	{
-		$Year2Tafsili = FindTafsiliID($curYear+1, TAFTYPE_YEARS);
-		if(!$Year2Tafsili)
-		{
-			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . ($curYear+1) . "]");
-			return false;
-		}
-		$amountArr[$Year2Tafsili]["year"] = $curYear+1;
-		$amountArr[$Year2Tafsili]["amount"] = $year2;
-	}
-	if($year3 > 0)
-	{
-		$Year3Tafsili = FindTafsiliID($curYear+2, TAFTYPE_YEARS);
-		if(!$Year3Tafsili)
-		{
-			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . ($curYear+2) . "]");
-			return false;
-		}		
-		$amountArr[$Year3Tafsili]["year"] = $curYear+2;
-		$amountArr[$Year3Tafsili]["amount"] = $year3;
-	}
-	if($year4 > 0)
-	{
-		$Year4Tafsili = FindTafsiliID($curYear+3, TAFTYPE_YEARS);
-		if(!$Year4Tafsili)
-		{
-			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . ($curYear+3) . "]");
-			return false;
-		}
-		$amountArr[$Year4Tafsili]["year"] = $curYear+3;
-		$amountArr[$Year4Tafsili]["amount"] = $year4;
-	}
-	$WageSum = 0;
-	foreach($amountArr as $row)
-		$WageSum += round($row["amount"]);
+	}	
 	//------------ find the number step to pay ---------------
 	$FirstStep = true;
 	$dt = PdoDataAccess::runquery("select * from ACC_DocItems where SourceID=?", array($ReqObj->RequestID));
@@ -232,30 +186,35 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 	}
-	/*if($LoanMode == "Supporter")
-	{
-		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID2 = $SupporterTafsili;
-	}*/
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
 	$itemObj->SourceID3 = $PayObj->PayID;
 	
+	$extraAmount = 0;
+	if($PartObj->WageReturn == "INSTALLMENT")
+	{
+		if($PartObj->MaxFundWage*1 > 0)
+			$extraAmount += $PartObj->MaxFundWage;
+		else if($PartObj->CustomerWage > $PartObj->FundWage)
+			$extraAmount += round($TotalWage*$FundFactor);
+		else
+			$extraAmount += round($TotalWage*$CustomerFactor);
+		
+	}
+		
+	if($PartObj->AgentReturn == "INSTALLMENT" && $PartObj->CustomerWage>$PartObj->FundWage)
+		$extraAmount += round($TotalWage*$AgentFactor);
+
+	if($PartObj->DelayReturn == "INSTALLMENT")
+		$extraAmount += $CustomerDelay*($PartObj->FundWage/$PartObj->CustomerWage);
+	if($AgentDelay > 0 && $PartObj->AgentDelayReturn == "INSTALLMENT")
+		$extraAmount += $CustomerDelay*(($PartObj->CustomerWage-$PartObj->FundWage)/$PartObj->CustomerWage);
+		
 	if($FirstStep)
 	{
-		$amount = $PartObj->PartAmount;
-		if($PartObj->WageReturn == "INSTALLMENT")
-		{
-			if($PartObj->MaxFundWage*1 > 0)
-				$amount += $WageSum + $PartObj->MaxFundWage*1;
-			else
-				$amount += $WageSum*$PartObj->CustomerWage/$MaxWage;
-		}
-		
-		if($PartObj->DelayReturn == "INSTALLMENT")
-			$amount += $TotalDelay;
+		$amount = $PartObj->PartAmount + $extraAmount;	
 		
 		unset($itemObj->ItemID);
 		$itemObj->DocID = $obj->DocID;
@@ -276,15 +235,12 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 	}
 	else
 	{
-		if($PartObj->WageReturn == "INSTALLMENT")
+		if($extraAmount > 0)
 		{
 			unset($itemObj->ItemID);
 			$itemObj->DocID = $obj->DocID;
 			$itemObj->CostID = $CostCode_Loan;
-			if($PartObj->MaxFundWage*1 > 0)
-				$itemObj->DebtorAmount = $WageSum + $PartObj->MaxFundWage*1;
-			else
-				$itemObj->DebtorAmount = $WageSum*$PartObj->CustomerWage/$MaxWage;
+			$itemObj->DebtorAmount = $extraAmount;
 			$itemObj->CreditorAmount = 0;
 			$itemObj->Add($pdo);
 		}
@@ -296,181 +252,199 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 		$itemObj->CreditorAmount = 0;
 		$itemObj->Add($pdo);
 	}
-	//---- delay -----
-	if($TotalDelay > 0 && $PartObj->MaxFundWage*1 == 0 && $PartObj->DelayReturn == "CUSTOMER")
+	//------------------------ delay -------------------------------
+	if($PartObj->MaxFundWage == 0 && $FundDelay > 0)
 	{
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		$itemObj->CostID = $CostCode_wage;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $TotalDelay*$PartObj->FundWage/$MaxWage;
-		$itemObj->TafsiliType = TAFTYPE_YEARS;
-		$itemObj->details = "کارمزد دوره تنفس";
-		$itemObj->TafsiliID = $curYearTafsili;
-		
-		if($curYearTafsili == "")
+		$index = 0;
+		while(true)
 		{
-			ExceptionHandler::PushException("تفصیلی مربوط به سال" . $curYear . " یافت نشد");
-			return false;
-		}		
-		if(!$itemObj->Add($pdo))
-		{
-			print_r(ExceptionHandler::PopAllExceptions());
-			ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
-			return false;
-		}
-		
-		if($PartObj->WageReturn != "AGENT" && $PartObj->FundWage*1 > $PartObj->CustomerWage)
-		{
-			unset($itemObj->ItemID);
-			$itemObj->CostID = $CostCode_deposite;
-			$itemObj->DebtorAmount = $TotalDelay - $TotalDelay*$PartObj->CustomerWage/$MaxWage;
-			$itemObj->CreditorAmount = 0;
-			$itemObj->details = "بابت اختلاف کارمزد تنفس " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
-			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $ReqPersonTafsili;
-			if($SubAgetnTafsili != "")
-			{
-				$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
-				$itemObj->TafsiliID2 = $SubAgetnTafsili;
-			}
-			if(!$itemObj->Add($pdo))
-			{
-				print_r(ExceptionHandler::PopAllExceptions());
-				ExceptionHandler::PushException("خطا در ایجاد ردیف اختلاف کارمزد تنفس");
-				return false;
-			}
-		}
-		
-		if($PartObj->FundWage*1 < $PartObj->CustomerWage*1)
-		{
-			unset($itemObj->ItemID);
-			$itemObj->CostID = $CostCode_deposite;
-			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $TotalDelay - $TotalDelay*$PartObj->FundWage/$MaxWage;
-			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->details = "بابت سهم کارمزد تنفس " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
-			$itemObj->TafsiliID = $ReqPersonTafsili;
-			if($SubAgetnTafsili != "")
-			{
-				$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
-				$itemObj->TafsiliID2 = $SubAgetnTafsili;
-			}
-			if(!$itemObj->Add($pdo))
-			{
-				print_r(ExceptionHandler::PopAllExceptions());
-				ExceptionHandler::PushException("خطا در ایجاد ردیف سهم کارمزد تنفس");
-				return false;
-			}
-		}
-	}	
-	//------------------------ کارمزد---------------------
-	
-	foreach($amountArr as $yearTafsili => $arr)
-	{
-		if($arr["amount"] == 0 || $arr["amount"] == "")
-			continue;
-		
-		unset($itemObj->ItemID);
-		$itemObj->details = "";
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		$itemObj->CostID = $arr["year"] == $curYear ? $CostCode_wage : $CostCode_FutureWage;
-		$itemObj->DebtorAmount = 0;
-		if($PartObj->MaxFundWage > 0)
-			$itemObj->CreditorAmount = round($arr["amount"]);
-		else
-			$itemObj->CreditorAmount = round($arr["amount"]*$PartObj->FundWage/$MaxWage);
-		$itemObj->TafsiliType = TAFTYPE_YEARS;
-		$itemObj->TafsiliID = $yearTafsili;
-		$itemObj->Add($pdo);
-		
-		if($LoanMode == "Agent" && $PartObj->WageReturn == "AGENT")
-		{
+			$FundYearAmount = YearDelayCompute($PartObj, $PayAmount, $PartObj->FundWage, $index+1);
+			$CustomerYearAmount = YearDelayCompute($PartObj, $PayAmount, $PartObj->CustomerWage, $index+1);
+			$AgentYearAmount = $FundYearAmount > $CustomerYearAmount ? $FundYearAmount - $CustomerYearAmount : 0;
+			
+			if($FundYearAmount == 0)
+				break;
+
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
-			$itemObj->CostID = $CostCode_deposite;
-			$itemObj->DebtorAmount = round($arr["amount"]*$PartObj->FundWage/$MaxWage);
-			$itemObj->CreditorAmount = 0;
-			$itemObj->details = "بابت کارمزد سال " . $arr["year"] . 
-				$PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID; 
-			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $ReqPersonTafsili;
-			if($SubAgetnTafsili != "")
+			$itemObj->CostID = $index == 0 ? $CostCode_wage : $CostCode_FutureWage;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $FundYearAmount;
+			$itemObj->TafsiliType = TAFTYPE_YEARS;
+			$itemObj->details = "کارمزد دوره تنفس وام شماره " . $ReqObj->RequestID;
+			$itemObj->TafsiliID = $index == 0 ? $CurYearTafsili : FindTafsiliID($curYear+$index, TAFTYPE_YEARS);
+			if($itemObj->TafsiliID == "")
 			{
-				$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
-				$itemObj->TafsiliID2 = $SubAgetnTafsili;
+				ExceptionHandler::PushException("تفصیلی مربوط به سال" . ($curYear+$index) . " یافت نشد");
+				return false;
+			}		
+			if(!$itemObj->Add($pdo))
+			{
+				//print_r(ExceptionHandler::PopAllExceptions());
+				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+				return false;
 			}
-			$itemObj->Add($pdo);
+
+			if($AgentYearAmount > 0)
+			{
+				unset($itemObj->ItemID);
+				$itemObj->CostID = $index == 0 ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
+				$itemObj->TafsiliType = TAFTYPE_YEARS;
+				$itemObj->TafsiliID = $index == 0 ? $CurYearTafsili : $itemObj->TafsiliID;
+				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+				$itemObj->TafsiliID2 = $ReqPersonTafsili;
+				$itemObj->DebtorAmount = $AgentYearAmount;
+				$itemObj->CreditorAmount = 0;
+				$itemObj->details = "اختلاف کارمزد تنفس وام شماره " . $ReqObj->RequestID;
+				if(!$itemObj->Add($pdo))
+				{
+					ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+					return false;
+				}
+			}
+			$index++;
 		}
 	}
-	
-	if($PartObj->MaxFundWage > 0)
+	//---------- agent delay ------------	
+	if($AgentDelay > 0)
+	{
+		$index = 0;
+		while(true)
+		{
+			$AgentYearAmount = YearDelayCompute($PartObj, $PayAmount, $PartObj->CustomerWage-$PartObj->FundWage,$index+1);
+			
+			if($AgentYearAmount == 0)
+				break;
+
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $index == 0 ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
+			$itemObj->TafsiliType = TAFTYPE_YEARS;
+			$itemObj->TafsiliID = $index == 0 ? $CurYearTafsili : FindTafsiliID($curYear+$index, TAFTYPE_YEARS);
+			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $AgentYearAmount;
+			$itemObj->details = "سهم کارمزد تنفس وام شماره " . $ReqObj->RequestID;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+				return false;
+			}
+			$index++;
+		}
+	}
+	//------------------------ کارمزد---------------------	
+	if($PartObj->MaxFundWage > 0 && $PartObj->WageReturn == "CUSTOMER")
 	{
 		unset($itemObj->ItemID);
-		$itemObj->details = "";
+		$itemObj->details = "کارمزد وام شماره " . $ReqObj->RequestID;
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_wage;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $PartObj->MaxFundWage;
 		$itemObj->TafsiliType = TAFTYPE_YEARS;
-		$itemObj->TafsiliID = $yearTafsili;
+		$itemObj->TafsiliID = $YearTafsili;
 		$itemObj->Add($pdo);
 	}
-	
-	if($PartObj->WageReturn != "AGENT" && $PartObj->FundWage*1 > $PartObj->CustomerWage)
+	else
 	{
-		if($WageSum - $WageSum*$PartObj->CustomerWage/$MaxWage > 0)
-		{
-			unset($itemObj->ItemID);
-			$itemObj->CostID = $CostCode_deposite;
-			$itemObj->DebtorAmount = $WageSum - $WageSum*$PartObj->CustomerWage/$MaxWage;
-			$itemObj->CreditorAmount = 0;
-			$itemObj->details = "بابت اختلاف کارمزد " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
-			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $ReqPersonTafsili;
-			if($SubAgetnTafsili != "")
+		foreach($FundYears as $Year => $amount)
+		{	
+			if($amount == 0)
+				continue;
+			$YearTafsili = FindTafsiliID($Year, TAFTYPE_YEARS);
+			if(!$YearTafsili)
 			{
-				$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
-				$itemObj->TafsiliID2 = $SubAgetnTafsili;
+				ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $Year . "]");
+				return false;
 			}
+			unset($itemObj->ItemID);
+			$itemObj->details = "کارمزد وام شماره " . $ReqObj->RequestID;
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			$itemObj->CostID = $Year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $amount;
+			$itemObj->TafsiliType = TAFTYPE_YEARS;
+			$itemObj->TafsiliID = $YearTafsili;
+			$itemObj->Add($pdo);
+			
+			if($PartObj->FundWage*1 > $PartObj->CustomerWage)
+			{
+				unset($itemObj->ItemID);
+				$itemObj->details = "اختلاف کارمزد وام شماره " . $ReqObj->RequestID;
+				unset($itemObj->TafsiliType2);
+				unset($itemObj->TafsiliID2);
+				$itemObj->CostID = $Year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
+				$itemObj->DebtorAmount = $amount*$AgentFactor;
+				$itemObj->CreditorAmount = 0;
+				$itemObj->TafsiliType = TAFTYPE_YEARS;
+				$itemObj->TafsiliID = $YearTafsili;
+				$itemObj->Add($pdo);
+			}
+		}
+	}
+	if($PartObj->AgentReturn == "INSTALLMENT")
+	{
+		foreach($AgentYears as $Year => $amount)
+		{
+			if($amount == 0)
+				continue;
+			$YearTafsili = FindTafsiliID($Year, TAFTYPE_YEARS);
+			if(!$YearTafsili)
+			{
+				ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $Year . "]");
+				return false;
+			}
+			unset($itemObj->ItemID);
+			$itemObj->details = "سهم کارمزد وام شماره " . $ReqObj->RequestID;
+			$itemObj->CostID = $Year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $amount;
+			$itemObj->TafsiliType = TAFTYPE_YEARS;
+			$itemObj->TafsiliID = $YearTafsili;
+			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID2 = $ReqPersonTafsili;
 			$itemObj->Add($pdo);
 		}
 	}
-	/*if($PartObj->WageReturn != "AGENT" && $PartObj->FundWage*1 < $PartObj->CustomerWage)
+	if($PartObj->AgentReturn == "CUSTOMER" && $PartObj->CustomerWage > $PartObj->FundWage)
 	{
-		if($WageSum - $WageSum*$PartObj->FundWage/$MaxWage > 0)
-		{
-			unset($itemObj->ItemID);
-			$itemObj->CostID = $CostCode_deposite;
-			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $WageSum - $WageSum*$PartObj->FundWage/$MaxWage;
-			$itemObj->details = "بابت سهم کارمزد " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
-			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $ReqPersonTafsili;
-			if($SubAgetnTafsili != "")
-			{
-				$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
-				$itemObj->TafsiliID2 = $SubAgetnTafsili;
-			}
-			$itemObj->Add($pdo);
-		}
-	}*/
+		unset($itemObj->ItemID);
+		$itemObj->details = "سهم کارمزد وام شماره " . $ReqObj->RequestID;
+		$itemObj->CostID = $CostCode_deposite;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $TotalWage*$AgentFactor;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $ReqPersonTafsili;
+		$itemObj->Add($pdo);
+	}
 	// ----------------------------- bank --------------------------------
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
 	$itemObj->CostID = $CostCode_bank;
 	$itemObj->DebtorAmount = 0;
-	if($PartObj->MaxFundWage > 0)
-		$BankItemAmount = $PayAmount - 
-			($PartObj->WageReturn == "CUSTOMER" ? $PartObj->MaxFundWage + $WageSum : 0);
-	else
-		$BankItemAmount = $PayAmount - 
-			($PartObj->DelayReturn == "CUSTOMER" ? $TotalDelay*$PartObj->CustomerWage/$MaxWage : 0) - 
-			($PartObj->WageReturn == "CUSTOMER" ? $WageSum*$PartObj->CustomerWage/$MaxWage : 0);
+	
+	$BankItemAmount = $PayAmount;
+	if($PartObj->WageReturn == "CUSTOMER")
+	{
+		if($PartObj->MaxFundWage > 0)
+			$BankItemAmount -= $PartObj->MaxFundWage;
+		else if($PartObj->CustomerWage > $PartObj->FundWage)
+			$BankItemAmount -= $TotalWage*$FundFactor;
+		else
+			$BankItemAmount -= $TotalWage*$CustomerFactor;
+	}
+	if($PartObj->AgentReturn == "CUSTOMER" && $PartObj->CustomerWage > $PartObj->FundWage)
+		$BankItemAmount -= $TotalWage*$AgentFactor;
+	
+	if($PartObj->DelayReturn == "CUSTOMER")
+		$BankItemAmount -= $FundDelay;
+	if($PartObj->AgentDelayReturn == "CUSTOMER")
+		$BankItemAmount -= $AgentDelay;
+
 	$itemObj->CreditorAmount = $BankItemAmount;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	$itemObj->TafsiliID = $BankTafsili;
@@ -493,10 +467,10 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 		$itemObj->details = "بابت پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
-		if($SubAgetnTafsili != "")
+		if($SubAgentTafsili != "")
 		{
 			$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
-			$itemObj->TafsiliID2 = $SubAgetnTafsili;
+			$itemObj->TafsiliID2 = $SubAgentTafsili;
 		}
 		$itemObj->Add($pdo);
 
@@ -714,11 +688,11 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
 			return false;
 		}
-		$SubAgetnTafsili = "";
+		$SubAgentTafsili = "";
 		if(!empty($ReqObj->SubAgentID))
 		{
-			$SubAgetnTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
-			if(!$SubAgetnTafsili)
+			$SubAgentTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
+			if(!$SubAgentTafsili)
 			{
 				ExceptionHandler::PushException("تفصیلی زیر واحد سرمایه گذار یافت نشد.[" . $ReqObj->SubAgentID . "]");
 				return false;
@@ -852,10 +826,10 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 			$itemObj->CreditorAmount = $amount;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $ReqPersonTafsili;
-			if($SubAgetnTafsili != "")
+			if($SubAgentTafsili != "")
 			{
 				$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
-				$itemObj->TafsiliID2 = $SubAgetnTafsili;
+				$itemObj->TafsiliID2 = $SubAgentTafsili;
 			}
 			if(!$itemObj->Add($pdo))
 			{
@@ -896,10 +870,10 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 		$itemObj->CreditorAmount = $PartObj->PartAmount + $WageSum - $PaidAmount ;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
-		if($SubAgetnTafsili != "")
+		if($SubAgentTafsili != "")
 		{
 			$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
-			$itemObj->TafsiliID2 = $SubAgetnTafsili;
+			$itemObj->TafsiliID2 = $SubAgentTafsili;
 		}
 		if(!$itemObj->Add($pdo))
 		{
@@ -915,10 +889,10 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
-		if($SubAgetnTafsili != "")
+		if($SubAgentTafsili != "")
 		{
 			$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
-			$itemObj->TafsiliID2 = $SubAgetnTafsili;
+			$itemObj->TafsiliID2 = $SubAgentTafsili;
 		}
 		if(!$itemObj->Add($pdo))
 		{
@@ -994,11 +968,11 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
 			return false;
 		}
-		$SubAgetnTafsili = "";
+		$SubAgentTafsili = "";
 		if(!empty($ReqObj->SubAgentID))
 		{
-			$SubAgetnTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
-			if(!$SubAgetnTafsili)
+			$SubAgentTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
+			if(!$SubAgentTafsili)
 			{
 				ExceptionHandler::PushException("تفصیلی زیر واحد سرمایه گذار یافت نشد.[" . $ReqObj->SubAgentID . "]");
 				return false;
@@ -1009,6 +983,7 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 		
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
+	$itemObj->details = "پرداخت قسط وام شماره " . $ReqObj->RequestID ;
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $LoanPersonTafsili;
 	if($LoanMode == "Agent")
@@ -1059,10 +1034,10 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 		$itemObj->CreditorAmount = $PayObj->PayAmount;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
-		if($SubAgetnTafsili != "")
+		if($SubAgentTafsili != "")
 		{
 			$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
-			$itemObj->TafsiliID2 = $SubAgetnTafsili;
+			$itemObj->TafsiliID2 = $SubAgentTafsili;
 		}
 		if(!$itemObj->Add($pdo))
 		{
@@ -1078,10 +1053,10 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
-		if($SubAgetnTafsili != "")
+		if($SubAgentTafsili != "")
 		{
 			$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
-			$itemObj->TafsiliID2 = $SubAgetnTafsili;
+			$itemObj->TafsiliID2 = $SubAgentTafsili;
 		}
 		if(!$itemObj->Add($pdo))
 		{

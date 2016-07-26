@@ -276,7 +276,7 @@ LoanPay.prototype.BeforeSave = function(store, record){
 	{
 		this.BankWin = new Ext.window.Window({
 			width : 400,
-			height : 85,
+			height : 120,//85,
 			modal : true,
 			closeAction : "hide",
 			items : [{
@@ -299,6 +299,10 @@ LoanPay.prototype.BeforeSave = function(store, record){
 				valueField : "TafsiliID",
 				itemId : "TafsiliID",
 				displayField : "title"
+			},{
+				xtype : "checkbox",
+				boxLabel : "سند صادر شود",
+				name : "RegisterDoc"
 			}],
 			buttons :[{
 				text : "ذخیره",
@@ -336,7 +340,8 @@ LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 		params: {
 			task: "SavePartPay",
 			BankTafsili : BankTafsili,
-			record: Ext.encode(record.data)
+			record: Ext.encode(record.data),
+			RegisterDoc : this.BankWin.down("[name=RegisterDoc]").checked ? "1" : "0"
 		},
 		success: function(response){
 			mask.hide();
@@ -347,7 +352,7 @@ LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 				LoanPayObject.grid.getStore().load();
 				if(record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
 					Ext.MessageBox.alert("","سند حسابداری هنگام وصول چک صادر می شود");
-				else
+				else if(LoanPayObject.BankWin.down("[name=RegisterDoc]").checked)
 					Ext.MessageBox.alert("","سند حسابداری مربوطه صادر گردید");
 			}
 			else

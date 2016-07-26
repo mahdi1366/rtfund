@@ -9,7 +9,7 @@ include_once inc_dataGrid;
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "baseinfo.data.php?task=SelectPersonExpertDomains", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "baseInfo.data.php?task=SelectPersonExpertDomains", "grid_div");
 
 $dg->addColumn("", "RowID", "", true);
 $dg->addColumn("", "fullname", "", true);
@@ -155,7 +155,7 @@ PersonExpertDomain.prototype.SavePersonExpertDomain = function(store,resord){
 	mask.show();
 
 	Ext.Ajax.request({
-		url: this.address_prefix +'baseinfo.data.php',
+		url: this.address_prefix +'baseInfo.data.php',
 		method: "POST",
 		params: {
 			task: "SavePersonExpertDomain",
@@ -193,7 +193,7 @@ PersonExpertDomain.prototype.DeletePersonExpertDomain = function()
 		mask.show();
 
 		Ext.Ajax.request({
-			url: me.address_prefix + 'baseinfo.data.php',
+			url: me.address_prefix + 'baseInfo.data.php',
 			params:{
 				task: "DeletePersonExpertDomain",
 				RowID : record.data.RowID

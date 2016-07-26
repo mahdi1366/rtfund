@@ -157,6 +157,10 @@ LoanStartPage.ShowGrid = function(gridName){
 	eval("grid = LoanStartPageObject." + gridName + " ;");
 	if(!grid.rendered)
 		grid.render(LoanStartPageObject.get("div_" + gridName));
+	else if(grid.isVisible())
+		grid.hide();
+	else
+		grid.show();
 }
 
 </script>

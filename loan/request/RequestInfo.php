@@ -43,6 +43,8 @@ $dg->addColumn("", "imp_VamCode","", true);
 $dg->addColumn("", "PayCompute","", true);
 $dg->addColumn("", "MaxFundWage","", true);
 $dg->addColumn("", "ReqPersonID","", true);
+$dg->addColumn("", "AgentReturn","", true);
+$dg->addColumn("", "AgentDelayReturn","", true);
 
 $col = $dg->addColumn("عنوان فاز", "PartDesc", "");
 $col->sortable = false;

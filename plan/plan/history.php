@@ -33,7 +33,12 @@ if(!empty($_POST["GroupID"]))
 				<td width=250px>[" . ($i+1) . "]". ($i+1<10 ? "&nbsp;" : "") . "&nbsp;
 					<img align='top' src='/generalUI/ext4/resources/themes/icons/user_comment.gif'>&nbsp;";
 
-			$tbl_content .= ($Logs[$i]["ActType"] == "CONFIRM" ? "تایید اطلاعات" : "رد اطلاعات");
+			if($Logs[$i]["ActType"] == "CONFIRM")
+				$tbl_content .= "تایید اطلاعات";
+			if($Logs[$i]["ActType"] == "REJECT")
+				$tbl_content .= "رد اطلاعات";
+			if($Logs[$i]["ActType"] == "EDIT")
+				$tbl_content .= "ویرایش اطلاعات";
 
 			$tbl_content .= "</td>
 				<td  width=150px>" . $Logs[$i]["fullname"] . "</td>

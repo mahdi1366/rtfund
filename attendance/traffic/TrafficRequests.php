@@ -18,6 +18,7 @@ $dg->addColumn("", "GoMean", "", true);
 $dg->addColumn("", "ReturnMean", "", true);
 $dg->addColumn("", "OffType", "", true);
 $dg->addColumn("", "OffPersonID", "", true);
+$dg->addColumn("", "SurveyDesc", "", true);
 
 $col = $dg->addColumn("تاریخ درخواست", "ReqDate", GridColumn::ColumnType_datetime);
 $col->width = 120;
@@ -77,6 +78,12 @@ TrafficReq.prototype = {
 function TrafficReq(){
 	
 	this.grid = <?= $grid ?>;
+	this.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.ReqStatus == "3")
+			return "pinkRow";
+		return "";
+	}	
 	this.grid.render(this.get("grid_div"));
 	
 	this.formPanel = new Ext.form.Panel({
@@ -408,6 +415,12 @@ TrafficReq.OperationRender = function(v,p,r)
 	if(r.data.ReqStatus == "2" && r.data.ReqType == "DayMISSION")
 		return "<div align='center' title='چاپ حکم ماموریت' class='print' "+
 		"onclick='TrafficReqObject.PrintMission();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;float:right;height:16'></div>";
+	
+	if(r.data.ReqStatus == "3")
+		return "<div align='center' class='comment' "+
+		"data-qtip='دلیل رد درخواست : <b>" + r.data.SurveyDesc + "</b>' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;float:right;height:16'></div>";
 }

@@ -49,6 +49,7 @@ if($accessObj->RemoveFlag)
 	$col->renderer = "function(v,p,r){return PersonShift.OperationRender(v,p,r);}";
 	$col->width = 40;
 }
+
 $dg->title = "شیفت کاری پرسنل";
 $dg->height = 500;
 $dg->width = 750;
@@ -164,6 +165,38 @@ PersonShift.prototype.SavePersonShift = function(){
 }
 
 PersonShift.prototype.DeletePersonShift = function()
+{
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = PersonShiftObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'shift.data.php',
+			params:{
+				task: "DeletePersonShift",
+				RowID : record.data.RowID
+			},
+			method: 'POST',
+
+			success: function(response,option){
+				mask.hide();
+				result = Ext.decode(response.responseText);
+				if(!result.success)
+					Ext.MessageBox.alert("Error", result.data);
+				PersonShiftObject.grid.getStore().load();
+			},
+			failure: function(){}
+		});
+	});
+}
+
+PersonShift.prototype.CopyShifts = function()
 {
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
 		if(btn == "no")

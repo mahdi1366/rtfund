@@ -9,8 +9,10 @@ require_once inc_dataGrid;
 require_once 'ManagePlans.js.php';
 
 $portal = isset($_SESSION["USER"]["portal"]) ? true : false;
+$expert = isset($_REQUEST["expert"]) ? true : false;
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "plan.data.php?task=SelectAllPlans", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "plan.data.php?task=SelectAllPlans" . 
+		($expert ? "&expert=true" : ""), "grid_div");
 
 $dg->addColumn("", "StepID", "", true);
 
@@ -28,9 +30,9 @@ $col->width = 150;
 $col = $dg->addColumn("وضعیت", "StepDesc", "");
 $col->width = 100;
 
-if(!$portal)
+if(!$portal && !$expert)
 	$dg->addObject('ManagePlanObject.AllPlansObj');
-else
+else if($portal)
 {
 	$col = $dg->addColumn('طرح', '', 'string');
 	$col->renderer = "ManagePlan.PlanInfoRender";

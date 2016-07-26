@@ -27,10 +27,38 @@ function ShowReport(){
 	$PersonID = $_SESSION["USER"]["PersonID"];
 	$PersonID = !empty($_POST["PersonID"]) ? $_POST["PersonID"] : $PersonID;
 	
-	$dt = ATN_traffic::Get(" AND t.PersonID=? AND TrafficDate>= ? AND TrafficDate <= ? 
-		order by TrafficDate,TrafficTime", 
-		array($PersonID, $StartDate, $EndDate));
-	$dt = $dt->fetchAll();
+	
+	$query = "select * from (
+		
+			select 'normal' RecordType,'' ReqType, TrafficDate,TrafficTime,s.ShiftTitle,s.FromTime,s.ToTime
+				,ExceptFromTime,ExceptToTime
+			from ATN_traffic t
+			left join ATN_PersonShifts ps on(ps.IsActive='YES' AND t.PersonID=ps.PersonID AND TrafficDate between FromDate AND ToDate)
+			left join ATN_shifts s on(ps.ShiftID=s.ShiftID)
+			where t.PersonID=:p AND TrafficDate>= :sd AND TrafficDate <= :ed 
+			
+			union All
+			
+			select 'start' RecordType,t.ReqType, t.FromDate,StartTime,s.ShiftTitle,s.FromTime,s.ToTime
+				,ExceptFromTime,ExceptToTime
+			from ATN_requests t
+			left join ATN_PersonShifts ps on(ps.IsActive='YES' AND t.PersonID=ps.PersonID AND t.FromDate between ps.FromDate AND ps.ToDate)
+			left join ATN_shifts s on(ps.ShiftID=s.ShiftID)
+			where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 
+			
+			union all
+			
+			select 'end' RecordType,t.ReqType, t.FromDate,EndTime,s.ShiftTitle,s.FromTime,s.ToTime
+				,ExceptFromTime,ExceptToTime
+			from ATN_requests t
+			left join ATN_PersonShifts ps on(ps.IsActive='YES' AND t.PersonID=ps.PersonID AND t.FromDate between ps.FromDate AND ps.ToDate)
+			left join ATN_shifts s on(ps.ShiftID=s.ShiftID)
+			where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 
+		)t2
+		order by  TrafficDate,TrafficTime";
+	$dt = PdoDataAccess::runquery($query, array(":p" => $PersonID, ":sd" => $StartDate, ":ed" => $EndDate));
+//print_r(ExceptionHandler::PopAllExceptions());
+//print_r($dt);
 	//........................ create days array ..................
 	
 	$index = 0;
@@ -48,13 +76,37 @@ function ShowReport(){
 		
 		$shiftRecord = ATN_PersonShifts::GetShiftOfDate($PersonID, $StartDate);
 
-		$returnArr[] = array("TrafficID" => "", 
+		$returnArr[] = array(
+			"RecordType" => "normal",
+			"TrafficID" => "", 
 			"TrafficDate" => $StartDate , 
 			"ShiftTitle" => $shiftRecord["ShiftTitle"], 
 			"FromTime" => $shiftRecord["FromTime"], 
 			"ToTime" => $shiftRecord["ToTime"], 
+			"ExceptFromTime" => $shiftRecord["ExceptFromTime"], 
+			"ExceptToTime" => $shiftRecord["ExceptToTime"], 
 			"TrafficTime" => "");
 		$StartDate = DateModules::AddToGDate($StartDate, 1);
+	}
+	//------------ holidays ------------------
+	for($i=0; $i<count($returnArr); $i++)
+	{
+		$holiday = false;
+		$holidayTitle = "تعطیل";
+		if(FridayIsHoliday && DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") == "5")
+			$holiday = true;
+		if(ThursdayIsHoliday && DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") == "4")
+			$holiday = true;
+
+		if($holidayRecord && $holidayRecord["TheDate"] == $returnArr[$i]["TrafficDate"])
+		{
+			$holidayTitle .= $holidayRecord["details"] != "" ? "(" . $holidayRecord["details"] . ")" : "";
+			$holiday = true;
+			$holidayRecord = $holidays->fetch();
+		}
+		
+		$returnArr[$i]["holiday"] = $holiday;
+		$returnArr[$i]["holidayTitle"] = $holidayTitle;
 	}
 	//...........................................................
 		
@@ -83,70 +135,64 @@ function ShowReport(){
 	
 	for($i=0; $i < count($returnArr); $i++)
 	{
-		//------------ holidays ------------------
-		$holiday = false;
-		$holidayTitle = "تعطیل";
-		if(FridayIsHoliday && DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") == "5")
-			$holiday = true;
-		if(ThursdayIsHoliday && DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") == "4")
-			$holiday = true;
-		
-		if($holidayRecord && $holidayRecord["TheDate"] == $returnArr[$i]["TrafficDate"])
+		if(!$returnArr[$i]["holiday"])
 		{
-			$holidayTitle .= $holidayRecord["details"] != "" ? "(" . $holidayRecord["details"] . ")" : "";
-			$holiday = true;
-			$holidayRecord = $holidays->fetch();
+			//........... Daily off and mission ...................
+			$requests = PdoDataAccess::runquery("
+				select t.*, InfoDesc OffTypeDesc from ATN_requests t
+					left join BaseInfo on(TypeID=20 AND InfoID=OffType)
+				where ReqStatus=2 AND PersonID=:p AND FromDate <= :td 
+					AND if(ToDate is not null, ToDate >= :td, 1=1)
+				order by ToDate desc,StartTime asc
+			", array(
+				":p" => $PersonID,
+				":td" => $returnArr[$i]["TrafficDate"]
+			));
+
+			if(count($requests) > 0)
+			{
+				if($requests[0]["ReqType"] == "DayOFF")
+				{
+					$returnStr .= 
+						"<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
+						<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
+						<td colspan=8> مرخصی " . $requests[0]["OffTypeDesc"] . "<td></tr>";
+					$SUM["DailyOff_" . $requests[0]["OffType"] ]++;
+
+					$currentDay = $returnArr[$i]["TrafficDate"];
+					while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
+						$i++;
+					$i--;
+					continue;
+				}
+				if($requests[0]["ReqType"] == "DayMISSION")
+				{
+					$returnStr .= 
+						"<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
+						<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
+						<td colspan=8> ماموریت " . $requests[0]["MissionSubject"] . "<td></tr>";
+					$SUM["DailyMission"]++;
+
+					$currentDay = $returnArr[$i]["TrafficDate"];
+					while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
+						$i++;
+					$i--;
+					continue;
+				}
+			}
 		}
-		
-		//........... Daily off and mission ...................
-		$requests = PdoDataAccess::runquery("
-			select t.*, InfoDesc OffTypeDesc from ATN_requests t
-				left join BaseInfo on(TypeID=20 AND InfoID=OffType)
-			where ReqStatus=2 AND PersonID=:p AND FromDate <= :td 
-				AND if(ToDate is not null, ToDate >= :td, 1=1)
-			order by ToDate desc,StartTime asc
-		", array(
-			":p" => $PersonID,
-			":td" => $returnArr[$i]["TrafficDate"]
-		));
-		
-		if(count($requests) > 0)
+		//....................................................
+		if( DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "l") == "Thursday")
 		{
-			if($requests[0]["ReqType"] == "DayOFF")
-			{
-				$returnStr .= 
-					"<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
-					<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
-					<td colspan=8> مرخصی " . $requests[0]["OffTypeDesc"] . "<td></tr>";
-				$SUM["DailyOff_" . $requests[0]["OffType"] ]++;
-				
-				$currentDay = $returnArr[$i]["TrafficDate"];
-				while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
-					$i++;
-				$i--;
-				continue;
-			}
-			if($requests[0]["ReqType"] == "DayMISSION")
-			{
-				$returnStr .= 
-					"<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
-					<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
-					<td colspan=8> ماموریت " . $requests[0]["MissionSubject"] . "<td></tr>";
-				$SUM["DailyMission"]++;
-				
-				$currentDay = $returnArr[$i]["TrafficDate"];
-				while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
-					$i++;
-				$i--;
-				continue;
-			}
+			$returnArr[$i]["FromTime"] = $returnArr[$i]["ExceptFromTime"];
+			$returnArr[$i]["ToTime"] = $returnArr[$i]["ExceptToTime"];
 		}
 		//....................................................
 		
 		$returnStr .= "<tr>
 			<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
 			<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
-			<td>" . ($holiday ? $holidayTitle : $returnArr[$i]["ShiftTitle"]) . "</td>
+			<td>" . ($returnArr[$i]["holiday"] ? $returnArr[$i]["holidayTitle"] : $returnArr[$i]["ShiftTitle"]) . "</td>
 			<td>";
 		
 		$firstAbsence = 0;
@@ -160,6 +206,8 @@ function ShowReport(){
 				$firstAbsence = strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i]["FromTime"]);
 
 		$currentDay = $returnArr[$i]["TrafficDate"];
+		$startOff = 0;
+		$endOff = 0;
 		while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
 		{
 			$returnStr .= substr($returnArr[$i]["TrafficTime"],0,5);
@@ -167,42 +215,44 @@ function ShowReport(){
 			
 			if($index % 2 == 0)
 			{
-				$totalAttend += strtotime($returnArr[$i]["TrafficTime"]) - 
-				strtotime($returnArr[$i-1]["TrafficTime"]);
-			}				
-			else if($index != 1)
+				$totalAttend += strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i-1]["TrafficTime"]);
+			}	
+			
+			if($returnArr[$i]["RecordType"] != "normal")
 			{
-				$requests = PdoDataAccess::runquery("
-					select t.* from ATN_requests t
-					where PersonID=? AND FromDate = ? AND ToDate is null AND
-						StartTime < ? AND EndTime > ? AND ReqStatus=2 
-					order by StartTime
-				", array( 
-					$PersonID, 
-					$returnArr[$i]["TrafficDate"],
-					$returnArr[$i]["TrafficTime"],
-					$returnArr[$i-1]["TrafficTime"]));
-				
-				if(count($requests) > 0)
+				if($i>0 && $returnArr[$i-1]["TrafficDate"] == $currentDay && $returnArr[$i]["RecordType"] == "start")
 				{
-					$startDiff = strtotime($requests[0]["StartTime"]) - strtotime($returnArr[$i-1]["TrafficTime"]);
+					if($i == 0 || $returnArr[$i-1]["TrafficDate"] != $currentDay)
+						$startDiff = 0;
+					else
+						$startDiff = strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i-1]["TrafficTime"]);
+					
 					if($startDiff > Valid_Traffic_diff)
-						$startOff = strtotime($requests[0]["StartTime"]) - Valid_Traffic_diff;						
+						$startOff = strtotime($returnArr[$i]["TrafficTime"]) - Valid_Traffic_diff;						
 					else
 						$startOff = strtotime($returnArr[$i-1]["TrafficTime"]);
-
-					$endDiff = strtotime($returnArr[$i]["TrafficTime"]) - strtotime($requests[0]["EndTime"]);
+				}
+				if( ($i==0 || $returnArr[$i-1]["TrafficDate"] != $currentDay) && $returnArr[$i]["RecordType"] == "start")
+				{
+					$startOff = strtotime($returnArr[$i]["TrafficTime"]);
+				}
+				if($returnArr[$i]["RecordType"] == "end")
+				{
+					if($i == count($returnArr)-1 || $returnArr[$i+1]["TrafficDate"] != $currentDay)
+						$endDiff = 0;
+					else
+						$endDiff = strtotime($returnArr[$i+1]["TrafficTime"]) - strtotime($returnArr[$i]["TrafficTime"]);
+					
 					if($endDiff > Valid_Traffic_diff)
-						$endOff = strtotime($requests[0]["EndTime"]) - Valid_Traffic_diff;						
+						$endOff = strtotime($returnArr[$i]["TrafficTime"]) - Valid_Traffic_diff;						
 					else
 						$endOff = strtotime($returnArr[$i]["TrafficTime"]);
 					
-					if($requests[0]["ReqType"] == "OFF")
+					if($returnArr[$i]["ReqType"] == "OFF")
 						$Off += $endOff - $startOff;
 					else
 						$mission += $endOff - $startOff;
-				}
-				
+				}				
 			}
 			$index++;
 			$i++;
@@ -215,11 +265,11 @@ function ShowReport(){
 				$lastAbsence = strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["TrafficTime"]);
 
 		$ShiftDuration = strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["FromTime"]);
-		$extra = ($totalAttend+$mission > $ShiftDuration) ? $totalAttend + $mission - $ShiftDuration  : 0;
+		$extra = ($totalAttend > $ShiftDuration) ? $totalAttend - $ShiftDuration  : 0;
 		
 		$Absence = $totalAttend < $ShiftDuration ? $ShiftDuration - $totalAttend : 0;
 		
-		if($holiday)
+		if($returnArr[$i]["holiday"])
 		{
 			$extra = $totalAttend + $mission;
 			$lastAbsence = 0;

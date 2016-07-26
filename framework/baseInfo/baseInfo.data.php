@@ -354,10 +354,10 @@ function DeleteExpertDomain(){
 
 function SelectPersonExpertDomains(){
 	
-	$query = "select RowID,PersonID,DomainID,
+	$query = "select RowID,PersonID,d.DomainID,
 		concat_ws(' ',fname,lname,CompanyName) fullname,DomainDesc
 		
-		from BSC_PersonExpertDomain 
+		from BSC_PersonExpertDomain d
 		join BSC_ExpertDomain using(DomainID)
 		join BSC_persons using(PersonID)
 		
