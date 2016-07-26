@@ -191,8 +191,9 @@ class manage_subtracts extends PdoDataAccess
 				
 							where param1 in($stypes) $WhrMonth AND s.IsFinished=0 AND  st.person_type in (1,2,3,5)  $where
 							group by s.subtract_id", $param);
-						
-			
+							
+		/*	echo PdoDataAccess::GetLatestQueryString() ; 								 
+			die() ;*/
 			//	parent::runquery("ALTER TABLE tmp_SubtractReceiptSummary ADD INDEX Index_1(subtract_id)");
 				
 		$query = "

@@ -6,13 +6,14 @@
 //---------------------------
 
 require_once  $address_prefix . "/HumanResources/organization/positions/post.class.php" ; 
-require_once '../../../salary/salary_params/class/salary_params.class.php';
-require_once '../../../baseInfo/class/salary_item_types.class.php';
-require_once 'writ.class.php';
-require_once "../../persons/class/devotion.class.php";
-require_once "../../persons/class/education.class.php";
-require_once "../../../baseInfo/class/city.class.php";
-
+require_once $address_prefix .'/HumanResources/salary/salary_params/class/salary_params.class.php';
+require_once $address_prefix .'/HumanResources/baseInfo/class/salary_item_types.class.php';
+//require_once $address_prefix .'/HumanResources/personal/writs/writ.class.php';
+require_once $address_prefix ."/HumanResources/personal/persons/class/devotion.class.php";
+require_once $address_prefix ."/HumanResources/personal/persons/class/education.class.php";
+require_once $address_prefix ."/HumanResources/baseInfo/class/city.class.php"; 
+ 
+ 
 define("MONTH_DAY_COUNT", 30);
 
 class manage_writ_item extends PdoDataAccess {
@@ -38,31 +39,24 @@ class manage_writ_item extends PdoDataAccess {
 	public $param7;
 
 	private function OnBeforeInsert() {
+						
 		$query = "select    w.writ_id,
                             w.writ_ver,
                             w.execute_date,
                             w.staff_id,
                             s.personID,
-                            w.person_type,
-                            w.science_level,
-                            w.hortative_group,
+                            w.person_type,                           
                             w.cur_group,
                             w.education_level,
                             w.onduty_year,
                             w.onduty_month,
-                            w.onduty_day,
-                            w.related_onduty_year,
-                            w.related_onduty_month,
-                            w.related_onduty_day,
+                            w.onduty_day,                           
                             w.family_responsible,
                             w.included_children_count,
                             w.post_id,
 							j.job_group,
                             w.emp_mode,
-                            w.emp_state,
-                            w.work_city_id,
-                            w.work_state_id,
-                            w.base,
+                            w.emp_state,       
 							w.job_id,
 							w.marital_status,
                             p.PersonID,
@@ -79,24 +73,20 @@ class manage_writ_item extends PdoDataAccess {
                             sit.user_data_entry,
                             sit.editable_value,
 			    s.work_start_date ,
-			    bf.MasterID master_education_level,
-			    w.grade,
+			    bf.param1 master_education_level,			    
 			    sit.person_type as sp_person_type
 
 				from HRM_writs w
 					inner join HRM_staff s on s.staff_id = w.staff_id
 					inner join HRM_persons p on p.personid = s.personid and p.person_type = s.person_type 
 					join BaseInfo bf on(bf.TypeID=56 AND bf.InfoID=w.education_level)
-					left join HRM_jobs j on(j.job_id=w.job_id),
-					salary_item_types sit
+					left join HRM_jobs j on(j.job_id=w.job_id),HRM_salary_item_types sit
 
 				where w.writ_id = " . $this->writ_id . " and w.writ_ver = " . $this->writ_ver . " and w.staff_id =" . $this->staff_id . " and
 					  sit.salary_item_type_id = " . $this->salary_item_type_id;
 
 
 		$baseInfo = parent::runquery($query);
-		
-
 			
 		if (count($baseInfo) == 0)
 			return true;
@@ -121,6 +111,8 @@ class manage_writ_item extends PdoDataAccess {
 				$this->value = $value;
 			}
 		}
+		
+
 
 		return true;
 	}
@@ -184,8 +176,8 @@ class manage_writ_item extends PdoDataAccess {
                           s.param3_input,
                           s.full_title ,
 						  wsi.must_pay
-                     from writ_salary_items wsi
-                             INNER JOIN salary_item_types s ON (wsi.salary_item_type_id = s.salary_item_type_id )  
+                     from HRM_writ_salary_items wsi
+                             INNER JOIN HRM_salary_item_types s ON (wsi.salary_item_type_id = s.salary_item_type_id )  
                                                               
                      where 1=1  
 			          ";
@@ -193,6 +185,7 @@ class manage_writ_item extends PdoDataAccess {
 		$query .= " order by s.print_order";
 
 		$temp = parent::runquery($query, $whereParam);
+
 
 		return $temp;
 	}
@@ -238,12 +231,17 @@ class manage_writ_item extends PdoDataAccess {
 
 	function replaceWritItem() {
 		$return = $this->OnBeforeUpdate();
+
 		if (!$return) {
 			parent::PushException("ویرایش با شکست مواجه شد .");
 			return false;
 		}
+		if(empty($this->remember_date))
+			$this->remember_date = '0000-00-00' ; 
+		
 		parent::replace("HRM_writ_salary_items", $this);
-
+					
+		
 		$obj = new DataAudit();
 		$obj->MainObjectID = $this->writ_id . '-' . $this->writ_ver;
 		$obj->SubObjectID = $this->salary_item_type_id;
@@ -322,10 +320,11 @@ class manage_writ_item extends PdoDataAccess {
 	 * 
 	 */
 	public static function compute_writ_items($writ_id, $writ_ver, $staff_id, $reComputeFlag = false) {
-	    	    	    	    
+	  
 		//__________________________________________
 		//کنترل معتبر بودن کد و نسخه حکم
 		$curWrit = new manage_writ($writ_id, $writ_ver, $staff_id);
+				
 		if (empty($curWrit->writ_id)) {
 			parent::PushException(WRIT_NOT_FOUND);
 			return false;
@@ -336,6 +335,7 @@ class manage_writ_item extends PdoDataAccess {
 	
 			if (!$reComputeFlag) {
 				
+				
 				//__________________________________________
 				//first delete all current rows
 				parent::runquery(" delete from HRM_writ_salary_items
@@ -344,7 +344,8 @@ class manage_writ_item extends PdoDataAccess {
 				//__________________________________________
 				//copy all of prior writ items to this writ
 				$prior_writ_Obj = $curWrit->get_prior_writ("","","2013-02-19");
- 						
+				
+					
 				if (!empty($prior_writ_Obj->writ_id)) { 
 					
 										
@@ -410,14 +411,12 @@ class manage_writ_item extends PdoDataAccess {
 				
 				
 			}
- 
-		
-
+ 		
 			/*if (!manage_writ::is_auto_writ($curWrit->execute_date, $curWrit->person_type))
 				return true; */ 
 
 			$WsiObj = new manage_writ_item();
- 
+						 			 
 			$return = $WsiObj->compute_automatic_writ_salary_items($curWrit);
 		
 			if ($return === false) {			
@@ -630,7 +629,7 @@ $WsiObj = new manage_writ_item();
 	 * @param manage_writ $cur_writ
 	 */
 	function compute_automatic_writ_salary_items($cur_writ,$t="") {
-
+		
 		$query = "  select * from HRM_salary_item_types
 					WHERE person_type in ( 3 ) AND  				     
 
@@ -638,12 +637,12 @@ $WsiObj = new manage_writ_item();
 					      salary_compute_type = " . SALARY_COMPUTE_TYPE_FUNCTION . " AND 
 					      user_data_entry = " . AUTOMATIC . " AND
 					      validity_start_date <= '" . $cur_writ->execute_date . "' AND 
-					     (validity_end_date >= '" . $cur_writ->execute_date . "' OR validity_end_date IS NULL OR validity_end_date ='0000-00-00' )
+					     (validity_end_date >= '" . $cur_writ->execute_date . "' OR 
+						  validity_end_date IS NULL OR validity_end_date ='0000-00-00' )
 					ORDER BY ComputeOrder "; 
-
-		//$salary_items_DT = parent::runquery($query);
+	
 		$salary_items_DT = parent::runquery_fetchMode($query);	
-	  		
+	  				
 		for ($i = 0; $i < $salary_items_DT->rowCount(); $i++) {
 		    
 			$salary_items_row = $salary_items_DT->fetch();
@@ -708,7 +707,7 @@ $WsiObj = new manage_writ_item();
                 		sit.salary_item_type_id = " . $salary_items_row["salary_item_type_id"];
 
 			$dt = parent::runquery_fetchMode($query);		
-
+						
 			if ($dt->rowCount() > 0)
 				$wsi_record = $dt->fetch();
 		
@@ -722,14 +721,14 @@ $WsiObj = new manage_writ_item();
 			$this->automatic = 1;
 
 
-			$this->remember_date = PDONULL;
+			$this->remember_date = '0000-00-00';
 			$this->remember_message = $salary_items_row['remember_message'];
 
 			$function_name = $salary_items_row['function_name'];	
 				
-
+	
 			$this->value = manage_writ_item::$function_name($wsi_record);
-			
+							
 			if ($this->value === false){				
 				
 				return false;
@@ -744,7 +743,7 @@ $WsiObj = new manage_writ_item();
 			$this->param6 = $wsi_record["param6"];
 			$this->param7 = $wsi_record["param7"];
 
-			if ($this->value > 0) {
+			if ($this->value > 0) { 
 				$this->replaceWritItem();
 			}
 			else
@@ -6315,6 +6314,7 @@ if ($writ_rec['execute_date'] > '2015-03-20') {
 		$job_group = $writ_rec['job_group'];
 
 		$group1_annual_rate = manage_salary_params::get_salaryParam_value("", $writ_rec["person_type"], SPT_GROUP1_ANNUAL_RATE, $writ_rec['execute_date']);
+				
 		if ($group1_annual_rate < 0) {
 			parent::PushException(UNKNOWN_GROUP1_ANNUAL_RATE);
 			return false;
@@ -6327,11 +6327,13 @@ if ($writ_rec['execute_date'] > '2015-03-20') {
 			parent::PushException(UNKNOWN_JOB_SALARY);
 			return false;
 		}
-
+		
+		$this->param3 = 365 ;
+		
 		$annual_salary = ($this->param3 / 365) * $group1_annual_rate;
 		$this->param1 = $job_group;
 		$this->param2 = $job_salary;
-		
+						
 		if ($writ_rec['execute_date'] >= '2012-03-20') {
 			$month_duration = 30;
 		}

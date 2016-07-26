@@ -57,7 +57,9 @@ class manage_person extends PdoDataAccess
 	public $comment;
 	public $military_duration_day ; 
 	public $OtherPerson ; 
-	
+	public $picture ;
+
+
 
 	function __construct($PersonID = "", $staff_id = "")
 	{
@@ -122,17 +124,19 @@ class manage_person extends PdoDataAccess
 				from HRM_persons  p
 						inner join HRM_staff  s on(s.PersonID=p.PersonID $ptJoin )
 						left join HRM_org_new_units  o on(o.ouid=s.ouid)						
-				where (1=1) ";
-		
+				where (1=1) ";		
 		             
         $query .= ($where != "") ? " AND " . $where : "";
             
+		parent::runquery($query,$whereParam);
 	
-        return parent::runquery($query,$whereParam);
+	return parent::runquery($query,$whereParam);
 	}
 	 
 	static function GetAllPersons($where, $whereParam, $fetchMode = false)
 	{
+		
+		
 	 	$query = " select   p.* ,
                                     s.staff_id ,s.FacCode , s.EduGrpCode , s.ProCode , s.ResearchGrpCode , 
                                     s.last_person_type , 
@@ -161,7 +165,7 @@ class manage_person extends PdoDataAccess
                              left join HRM_cities c1 on(p.birth_city_id  = c1.city_id)
                              left join HRM_cities c2 on(p.issue_city_id  = c2.city_id)
                              left join BaseInfo bi1 on(bi1.InfoID = p.military_type and bi1.TypeID = 53)
-                             left join BaseInfo bi2 on(bi2.InfoID = p.marital_status and bi2.TypeID = 52)                                    
+                             left join BaseInfo bi2 on(bi2.InfoID = p.marital_status and bi2.TypeID = 71)                                    
                              join HRM_staff as s on(s.person_type= p.person_type and s.PersonID=p.PersonID)  
                              left join HRM_writs w 
                                                 on (s.last_writ_id = w.writ_id and 
@@ -175,7 +179,7 @@ class manage_person extends PdoDataAccess
 					";
 				
                 $query .= ($where != "") ? " AND " . $where : "";
-			
+				
 		if(!$fetchMode)
 			return parent::runquery($query,$whereParam);
 		else
@@ -228,7 +232,7 @@ class manage_person extends PdoDataAccess
 			return true; 
   }
 
-	function AddPerson($staffObject)
+	function AddPerson($staffObject,$pic="")
 	{
 			
 		$pdo = PdoDataAccess::getPdoObject();
@@ -249,7 +253,7 @@ class manage_person extends PdoDataAccess
 				$this->military_duration_day = $dd ; 			
 				
 			}
-					 	
+			
 			if(parent::insert("HRM_persons",$this,$pdo) ===  false)
 			{                          
                                 parent::PushException(ER_PERSON_DONT_SAVE);
@@ -368,8 +372,8 @@ class manage_person extends PdoDataAccess
 	 }
 	 
 	 static function GetPersonPicture($PersonID)
-	 {
-	 	$query = " SELECT picture FROM photos WHERE PersonID = :PID";
+	 {		
+	 	$query = " SELECT picture FROM HRM_persons WHERE PersonID = :PID";
 	 	$whereParam = array(":PID"=> $PersonID);
 	 	$temp = parent::runquery($query,$whereParam);
 	 				

@@ -644,8 +644,26 @@ if ($menuStr != "") {
 		["1404", "1404"]
 	]
 });
+
+var personStore = new Ext.data.Store({
+	pageSize: 10,
+	model:  Ext.define(Ext.id(), {
+		extend: 'Ext.data.Model',
+		fields:['PersonID','pfname','plname','unit_name','person_type','staff_id','personTypeName']
+	}),
+	remoteSort: true,
+	proxy:{
+		type: 'jsonp',
+		url: "/HumanResources/personal/persons/data/person.data.php?task=searchPerson&newPersons=true",
+		reader: {
+			root: 'rows',
+			totalProperty: 'totalCount'
+		}
+	}
+});
+					  
 	</script>
-	
+	<script type="text/javascript" src="/HumanResources/global/LOV/LOV.js?v=1"></script>		
 		<div id="LoginExpire" style="display : none;">
 			<div style="color: red; height: 40px; width: 100%; z-index: 99999; position: fixed; 
 				 background-color: white; text-align: center; font-weight: bold;cursor:pointer"

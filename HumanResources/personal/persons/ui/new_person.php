@@ -81,7 +81,7 @@ require_once '../js/new_person.js.php';
 	<br>            
 	<div id="mainTab"  style="width:1000px;" >
 		<div id="div_PInfo" class="x-hide-display">
-			<form id="personInfoForm">
+			<form id="personInfoForm" enctype='multipart/form-data'>
 				<div class="panel" style="width:950px;">
 					<input type='hidden' id='PersonID' name='PersonID' value="<?= $personID ?>">
 					<table width="640px">
@@ -134,7 +134,15 @@ require_once '../js/new_person.js.php';
 								   value="<?= $obj->idcard_no?>" >
 							</td>
 						</tr>
-
+						<tr>
+			<td>
+			<input type="hidden" name="MAX_FILE_SIZE" value="50000" /> 
+			 مسیر فایل عکس: 
+			</td>
+			<td>
+				<input type="file" name="ProfPhoto" />
+			</td>
+		</tr>
 						<tr>
 							<td width="25%">
 							سريال شناسنامه :

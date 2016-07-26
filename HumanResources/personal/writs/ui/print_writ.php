@@ -15,7 +15,8 @@ require_once '../../persons/class/education.class.php';
 require_once '../../persons/class/devotion.class.php';
 require_once '../class/writ_item.class.php';
 require_once inc_manage_unit;
-require_once inc_QueryHelper;
+require_once $address_prefix . "/HumanResources/global/report/QueryHelper.php" ; 
+
 
 $transcript_no = isset($_REQUEST["transcript_no"]) ? $_REQUEST["transcript_no"] : "0";
 global $equal_payment_system_gdate;
@@ -28,9 +29,9 @@ function writ_print_list($transcript_no, $last_writ_flag)
 
 	$title = $transcript_no == "all" ? 'wts.title transcripts_title,wts.transcript_id , tbl1.mtid,' : "";
 	$writ_transcripts_join = $transcript_no == "all" ? '
-			LEFT OUTER JOIN writ_transcripts wts ON(w.person_type = wts.person_type AND w.emp_state = wts.emp_state)
+			LEFT OUTER JOIN HRM_writ_transcripts wts ON(w.person_type = wts.person_type AND w.emp_state = wts.emp_state)
 			LEFT OUTER JOIN (select max(transcript_id) mtid ,person_type , emp_state
-							 from writ_transcripts group by person_type , emp_state) tbl1
+							 from HRM_writ_transcripts group by person_type , emp_state) tbl1
 				ON(tbl1.person_type = w.person_type AND tbl1.emp_state = w.emp_state)' : "";
 	$order = $transcript_no == "all" ? '    wts.transcript_id ASC' : "";
 
@@ -139,36 +140,36 @@ function writ_print_list($transcript_no, $last_writ_flag)
 				ba.TashvighiValue T_base ";
 
    $query .= " from staff s
-			 INNER JOIN writs w ON (" . $staff_onclause . ")
+			 INNER JOIN HRM_writs w ON (" . $staff_onclause . ")
 
-			 LEFT OUTER JOIN writ_subtypes wst
+			 LEFT OUTER JOIN HRM_writ_subtypes wst
 				  ON ((w.person_type = wst.person_type) AND (w.writ_type_id = wst.writ_type_id) AND (w.writ_subtype_id=wst.writ_subtype_id))
-			 LEFT OUTER JOIN writ_types wt
+			 LEFT OUTER JOIN HRM_writ_types wt
 				  ON ((w.person_type = wt.person_type) AND (w.writ_type_id = wt.writ_type_id))
-			 LEFT OUTER JOIN person_educations pe1
+			 LEFT OUTER JOIN HRM_person_educations pe1
 				  ON ((w.education_level = pe1.education_level) AND (w.sfid = pe1.sfid) AND (w.sbid = pe1.sbid) AND (pe1.PersonID = s.PersonID))
-			 LEFT OUTER JOIN countries c ON (pe1.country_id = c.country_id)
-			 LEFT OUTER JOIN universities u ON ((pe1.university_id = u.university_id) AND (pe1.country_id = u.country_id))
-			 LEFT OUTER JOIN study_fields sf ON ((w.sfid = sf.sfid))
-			 LEFT OUTER JOIN study_branchs sbs ON ((w.sfid = sbs.sfid)AND(w.sbid=sbs.sbid))
-			 LEFT OUTER JOIN persons p ON (s.PersonID = p.PersonID)
-			 LEFT OUTER JOIN cities cw ON ((w.work_city_id = cw.city_id) AND (w.work_state_id = cw.state_id))
+			 LEFT OUTER JOIN HRM_countries c ON (pe1.country_id = c.country_id)
+			 LEFT OUTER JOIN HRM_universities u ON ((pe1.university_id = u.university_id) AND (pe1.country_id = u.country_id))
+			 LEFT OUTER JOIN HRM_study_fields sf ON ((w.sfid = sf.sfid))
+			 LEFT OUTER JOIN HRM_study_branchs sbs ON ((w.sfid = sbs.sfid)AND(w.sbid=sbs.sbid))
+			 LEFT OUTER JOIN HRM_persons p ON (s.PersonID = p.PersonID)
+			 LEFT OUTER JOIN HRM_cities cw ON ((w.work_city_id = cw.city_id) AND (w.work_state_id = cw.state_id))
 			 " . $writ_transcripts_join . "
-			 LEFT OUTER JOIN states sw ON (cw.state_id=sw.state_id)
-			 LEFT OUTER JOIN cities cb ON ((p.birth_city_id = cb.city_id) AND (p.birth_state_id = cb.state_id))
-			 LEFT OUTER JOIN cities ci ON ((p.issue_city_id=ci.city_id) AND (p.issue_state_id = ci.state_id))
-			 LEFT OUTER JOIN states si ON (ci.state_id=si.state_id)
-			 LEFT OUTER JOIN position po ON (w.post_id = po.post_id)
-			 LEFT OUTER JOIN org_new_units psubunit ON (psubunit.ouid = po.ouid)
-			 LEFT OUTER JOIN org_new_units punit ON (punit.ouid = psubunit.parent_ouid)
-			 LEFT OUTER JOIN job_fields jf ON (po.jfid = jf.jfid)
-			 LEFT OUTER JOIN job_subcategory jsc ON ((jf.jsid = jsc.jsid) AND (jf.jcid=jsc.jcid))
-			 LEFT OUTER JOIN job_category jc ON (jsc.jcid = jc.jcid)
-			 LEFT OUTER JOIN org_new_units o ON (w.ouid = o.ouid)
-			 LEFT OUTER JOIN org_new_units parentu ON (parentu.ouid = o.parent_ouid)
-			 LEFT OUTER JOIN jobs j ON (w.job_id = j.job_id) 
+			 LEFT OUTER JOIN HRM_states sw ON (cw.state_id=sw.state_id)
+			 LEFT OUTER JOIN HRM_cities cb ON ((p.birth_city_id = cb.city_id) AND (p.birth_state_id = cb.state_id))
+			 LEFT OUTER JOIN HRM_cities ci ON ((p.issue_city_id=ci.city_id) AND (p.issue_state_id = ci.state_id))
+			 LEFT OUTER JOIN HRM_states si ON (ci.state_id=si.state_id)
+			 LEFT OUTER JOIN HRM_position po ON (w.post_id = po.post_id)
+			 LEFT OUTER JOIN HRM_org_new_units psubunit ON (psubunit.ouid = po.ouid)
+			 LEFT OUTER JOIN HRM_org_new_units punit ON (punit.ouid = psubunit.parent_ouid)
+			 LEFT OUTER JOIN HRM_job_fields jf ON (po.jfid = jf.jfid)
+			 LEFT OUTER JOIN HRM_job_subcategory jsc ON ((jf.jsid = jsc.jsid) AND (jf.jcid=jsc.jcid))
+			 LEFT OUTER JOIN HRM_job_category jc ON (jsc.jcid = jc.jcid)
+			 LEFT OUTER JOIN HRM_org_new_units o ON (w.ouid = o.ouid)
+			 LEFT OUTER JOIN HRM_org_new_units parentu ON (parentu.ouid = o.parent_ouid)
+			 LEFT OUTER JOIN HRM_jobs j ON (w.job_id = j.job_id) 
 			 
-			 LEFT OUTER JOIN writ_salary_items wsi ON w.writ_id = wsi.writ_id AND 
+			 LEFT OUTER JOIN HRM_writ_salary_items wsi ON w.writ_id = wsi.writ_id AND 
 								w.writ_ver = wsi.writ_ver AND w.staff_id = wsi.staff_id AND wsi.salary_item_type_id = 10364 
 								
 			 LEFT OUTER JOIN (select    PersonID , sum(if(ba.BaseType in (6,2,20,21,22,23,24,25,26,27) and ba.BaseStatus = 'NORMAL' ,ba.BaseValue,0))  TashvighiValue ,
@@ -180,16 +181,15 @@ function writ_print_list($transcript_no, $last_writ_flag)
 							  group by PersonID) ba 
 							  ON ba.PersonID = s.PersonID " .
 
-			QueryHelper::makeBasicInfoJoin(BINFTYPE_marital_status, "msts", "w.marital_status") .
-			QueryHelper::makeBasicInfoJoin(BINFTYPE_education_level, "edulv", "w.education_level") .
-			QueryHelper::makeBasicInfoJoin(BINFTYPE_military_type, "miltype", "p.military_type") .
-			QueryHelper::makeBasicInfoJoin(BINFTYPE_science_level, "sinclv", "w.science_level") .
-			QueryHelper::makeBasicInfoJoin(BINFTYPE_emp_state, "empstt", "w.emp_state") .
-			QueryHelper::makeBasicInfoJoin(BINFTYPE_worktime_type, "worktime", "w.worktime_type") .
-			QueryHelper::makeBasicInfoJoin(BINFTYPE_post_type, "posttype", "po.post_type");
+			QueryHelper::makeBasicInfoJoin(15, "msts", "w.marital_status") .
+			QueryHelper::makeBasicInfoJoin(6, "edulv", "w.education_level") .
+			QueryHelper::makeBasicInfoJoin(10, "miltype", "p.military_type") .
+			QueryHelper::makeBasicInfoJoin(8, "sinclv", "w.science_level") .
+			QueryHelper::makeBasicInfoJoin(3, "empstt", "w.emp_state") .
+			QueryHelper::makeBasicInfoJoin(14, "worktime", "w.worktime_type") .
+			QueryHelper::makeBasicInfoJoin(27, "posttype", "po.post_type");
 
 	$where = "1=1";
-
 
 	$whereParam = array();
 
@@ -226,7 +226,7 @@ if( $_REQUEST['transcript_no'] == "all") {
     $query .= " where " . $where;
 	$query .= " order by p.plname , p.pfname " ; 
 	$dt = PdoDataAccess::runquery_fetchMode($query, $whereParam);
-
+echo PdoDataAccess::GetLatestQueryString(); die();
 	return $dt;
 	
 }

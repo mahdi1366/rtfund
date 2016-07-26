@@ -24,15 +24,19 @@ class manage_person_education extends PdoDataAccess
 	function AddEducation()
 	{
 	 	$this->row_no = (manage_person_education::LastID($this->PersonID)+1);	
-	 	if( parent::insert("person_educations", $this) === false )
+		
+	 	if( parent::insert("HRM_person_educations", $this) === false ){
+		print_r(ExceptionHandler::PopAllExceptions()); 
+		die();
 			return false;
+		}
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->RelatedPersonType = 3;
 		$daObj->RelatedPersonID = $this->PersonID;
 		$daObj->MainObjectID = $this->row_no;
-		$daObj->TableName = "person_educations";
+		$daObj->TableName = "HRM_person_educations";
 		$daObj->execute();
 
 		return true;	
@@ -112,7 +116,7 @@ class manage_person_education extends PdoDataAccess
 	 	$whereParam = array();
 	 	$whereParam[":PD"] = $PersonID;
 	 	
-	 	return parent::GetLastID("person_educations","row_no","PersonID=:PD",$whereParam);
+	 	return parent::GetLastID("HRM_person_educations","row_no","PersonID=:PD",$whereParam);
 	 }
 	 
 	static function RemoveEducation($personID, $row_no)

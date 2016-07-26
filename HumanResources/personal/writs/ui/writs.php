@@ -38,10 +38,10 @@ $col->width = 60;
 
 $col = $dg->addColumn("شماره اصلاح", "corrective_writ_id", "int");
 $col->width = 70;
-
+/*
 $col = $dg->addColumn("مبلغ", "sumValue", "int");
 $col->width = 80;
-
+*/
 $col = $dg->addColumn("عملیات", "", "string");
 $col->renderer = "function(v,p,r){return WritList.opRender(v,p,r);}";
 $col->width = 50;

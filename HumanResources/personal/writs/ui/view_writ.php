@@ -18,7 +18,6 @@ $temp = PdoDataAccess::runquery("select writ_id, writ_ver, staff_id, execute_dat
 $jsArr = "";
 $currentWritIndex = 0;
 
-
 for($i=0; $i < count($temp); $i++)
 {
 	if($writ_id == $temp[$i]["writ_id"] && $writ_ver == $temp[$i]["writ_ver"])

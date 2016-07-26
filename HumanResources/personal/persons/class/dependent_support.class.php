@@ -82,11 +82,11 @@ class manage_dependent_support extends PdoDataAccess
 		
 		$pdo->beginTransaction();
 
-		$this->row_no = parent::GetLastID("person_dependent_supports", "row_no", "PersonID=:pid and master_row_no=:mrno", array(
+		$this->row_no = parent::GetLastID("HRM_person_dependent_supports", "row_no", "PersonID=:pid and master_row_no=:mrno", array(
 			":pid" => $this->PersonID,
 			":mrno" => $this->master_row_no
 		)) + 1;
-		$result = parent::insert("person_dependent_supports", $this);
+		$result = parent::insert("HRM_person_dependent_supports", $this);
 		if($result === false)
 		{
 			$pdo->rollBack();
@@ -98,9 +98,9 @@ class manage_dependent_support extends PdoDataAccess
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->RelatedPersonID = $this->PersonID;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->RelatedPersonType = 3 ;
 		$daObj->MainObjectID = $this->row_no;
-		$daObj->TableName = "person_dependent_supports";
+		$daObj->TableName = "HRM_person_dependent_supports";
 		$daObj->execute();
 
 		$pdo->commit();
