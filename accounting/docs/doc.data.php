@@ -242,12 +242,16 @@ function selectDocItems() {
 				$where .= " AND CreditorAmount = :tl";
 				$whereParam[":tl"] = $_GET["query"];
 				break;
+			case "CostDesc":
+				$where .= " AND (cc.CostCode like :cd or concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc) like :cd)";
+				$whereParam[":cd"] = "%" . $_GET["query"] . "%";
+				break;
 		}
 	}
 	$where .= dataReader::makeOrder();
 
 	$temp = ACC_DocItems::GetAll($where, $whereParam);
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	//..........................................................................

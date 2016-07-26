@@ -54,10 +54,15 @@ if(isset($_REQUEST["show"]))
 			$where .= " AND b3.BlockID = :bf3";
 			$whereParam[":bf3"] = $_REQUEST["level3"];
 		}
-		if(!empty($_REQUEST["TafsiliID"]))
+		if(isset($_REQUEST["TafsiliID"]))
 		{
-			$where .= " AND di.TafsiliID = :tid ";
-			$whereParam[":tid"] = $_REQUEST["TafsiliID"];
+			if($_REQUEST["TafsiliID"] == "")
+				$where .= " AND (di.TafsiliID=0 OR di.TafsiliID is null)";
+			else
+			{
+				$where .= " AND di.TafsiliID = :tid ";
+				$whereParam[":tid"] = $_REQUEST["TafsiliID"];
+			}
 		}
 		if(!empty($_REQUEST["TafsiliType"]))
 		{
@@ -190,12 +195,12 @@ if(isset($_REQUEST["show"]))
 	$query .= " where d.CycleID=" . $_SESSION["accounting"]["CycleID"]
 			. " AND BranchID=" . $_SESSION["accounting"]["BranchID"] . $where;
 
-	if(!isset($_REQUEST["InclueRaw"]))
+	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.DocStatus != 'RAW' ";
 	
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
-
+	
 	function moneyRender($row, $val) {
 		return number_format($val);
 	}
@@ -224,6 +229,8 @@ if(isset($_REQUEST["show"]))
 	if(!$rpg->excel)
 	{
 		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
+		if($_SESSION["USER"]["UserName"] == "admin")
+			echo PdoDataAccess::GetLatestQueryString ();
 		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
@@ -482,7 +489,7 @@ function AccReport_flow()
 		},{
 			xtype : "container",
 			colspan : 2,
-			html : "<input type=checkbox name=InclueRaw> گزارش شامل اسناد پیش نویس نیز باشد"
+			html : "<input type=checkbox name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",
