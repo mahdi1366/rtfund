@@ -3,7 +3,7 @@
 // programmer:	Mahdipour
 // create Date: 94.11
 //---------------------------
-
+$address_prefix = getenv("DOCUMENT_ROOT");
 require_once  $address_prefix . "/HumanResources/personal/writs/class/writ_item.class.php";
 require_once 'writ_subtype.class.php';
 require_once $address_prefix . '/HumanResources/personal/staff/class/staff.class.php';

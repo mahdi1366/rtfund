@@ -1,13 +1,13 @@
 <?php
 //---------------------------
 // programmer:	b.Mahdipour
-// Date:		92.11
+// Date:		94.11
 //---------------------------
 require_once '../../../header.inc.php';
 require_once inc_dataReader;
 require_once inc_manage_unit;
 ini_set("display_errors","On");
-$drp_personTypes = manage_domains::DRP_PersonType("PTyp", "", "width:90");
+
 $drp_month = manage_domains::DRP_months("tax_n_m");
 
 require_once '../js/payment_process.js.php';
@@ -18,18 +18,7 @@ require_once '../js/payment_process.js.php';
 		<br>
 		<div id="issuePayment_DIV" style="width: 750px">
 			<table id="issuePayment_TBL" style="width: 100%">
-				<tr>
-					<td width="20%">واحد محل خدمت :</td>
-					<td width="30%"><input type="text" id="ouid" name="ouid"></td>
-					<td width="20%"></td>
-					<td width="30%"></td>
-				</tr>
-				<tr>
-					<td>نوع افراد :</td>
-					<td><?= $drp_personTypes ?></td>
-					<td></td>
-					<td></td>
-				</tr>
+							
 				<tr>
 					<td>شماره شناسایی از :</td>
 					<td><input type="text" name="from_staff_id" id="from_staff_id"></td>
@@ -41,16 +30,10 @@ require_once '../js/payment_process.js.php';
 					<td><input type="text" name="start_date" id="start_date"></td>
 					<td>تا تاریخ :</td>
 					<td><input type="text" name="end_date" id="end_date"></td>
-				</tr>
-				<tr>
-					<td>از کد مرکز هزینه :</td>
-					<td><input type="text" name="from_cost_center_id" id="from_cost_center_id" class="x-form-text x-form-field"></td>
-					<td>تا :</td>
-					<td><input type="text" name="to_cost_center_id" id="to_cost_center_id" class="x-form-text x-form-field"></td>
-				</tr>
+				</tr>				
 				<tr>
 					<td>شروع تعديل ماليات از سال:</td>
-					<td><input type="text" name="tax_normalized_year" id="tax_normalized_year" class="x-form-text x-form-field" value="1394"></td>
+					<td><input type="text" name="tax_normalized_year" id="tax_normalized_year" class="x-form-text x-form-field" value="1395"></td>
 					<td>شروع تعديل ماليات از ماه:</td>
 					<td><?= $drp_month ?></td>
 				</tr>
@@ -64,13 +47,7 @@ require_once '../js/payment_process.js.php';
 						تعديل ماليات انجام شود؟
 					</td>
 				</tr>
-				<tr>
-					<td colspan="4" >
-						<input type="checkbox" name="ExtraWork" id="ExtraWork" value ="1"  > 
-						محاسبه اضافه کار ؟	
-					</td>
-				</tr>
-								
+												
 				<tr>
 					<td colspan="4" style="height:21px">
 					<input type="checkbox" name="negative_fiche" id="negative_fiche" value ="1"  >

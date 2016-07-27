@@ -114,17 +114,17 @@ class manage_payment_calculation extends PdoDataAccess
 	/*پردازش مربوط به احکام که حلقه اصلي محاسبه است*/
 	public function run()
 	{ 		
-					//echo "----"; die(); 
+		
 		if(!$this->prologue()) 
-			return false;		
-
+			return false;			
+		
 		$this->monitor(8);
 				
 		$this->moveto_curStaff($this->staff_rs,'STF'); 
 	
 		/* پيماش recordset احکام*/
 		while ($this->writRowID <= $this->writRowCount ) {
-							
+										
 			$temp_array[$this->writRow['salary_item_type_id']] = $this->writRow;			
 			$pre_writ_date = $this->writRow['execute_date'];
 
@@ -208,10 +208,10 @@ class manage_payment_calculation extends PdoDataAccess
 					'param1' => "'".$fields['param1']."'",
 					'param2' => "'".$fields['param2']."'",
 					'param3' => "'".$fields['param3']."'",
-					'param4' => $computed_time_slice ,
-					'cost_center_id' => $this->staffRow['cost_center_id'],
+					'param4' => $computed_time_slice ,				
 					'payment_type' => NORMAL );
 				}
+								
 				//محاسبه مجموع حقوق مشول بازنشستگي در آخرين حکم ماه جاري
 				$this->add_to_last_writ_sum_retired_include($fields,$key,$fields['pay_value']);
 
@@ -219,13 +219,13 @@ class manage_payment_calculation extends PdoDataAccess
 			}
 		
 			$temp_array = array();
-						
+					
 			if( $this->writRow['staff_id'] == $this->cur_staff_id ) { //حکم بعدي متعلق به همين شخص است
 				continue;
 			}
 				
 			$success_check = $this->control();
- 
+				
 			if( count($this->payment_items) == 0) { //احکام فرد هيچ قلم حقوقي نداشته اند		
 					
 				$this->initForNextStaff();
@@ -233,22 +233,18 @@ class manage_payment_calculation extends PdoDataAccess
 			}
 	 	
 			//شرح وضعيت : در اين نقطه بايستي تمام اقلام حکمي cur_staff در payment_items قرار گرفته باشد
-			//if($this->ExtraWork != 1 ){
-				$this->process_subtract();
-			//}
+	//$this->process_subtract();
+		
 			//شرح وضعيت : در اين نقطه بايستي تمام اقلام مربوط به وام و کسورو مزاياي ثابت cur_staff محاسبه شده باشد
 
-			$this->process_pay_get_lists();
+	//$this->process_pay_get_lists();
 			// شرح وضعيت : در اين نقطه بايستي تمام اقلام مربوط به کشيک ، حق التدريس ، ماموريت ، اضافه
 			//کار و کسور و مزاياي موردي فرد cur_staff محاسبه و دز payment_items قرار گرفته باشند
 			
 				//فراخواني تابع محاسبه بيمه تامين اجتماعي
 			$this->process_insure();
-			
-			//پردازش مربوط به بيمه خدمات درماني
-			$this->process_service_insure(); 
-			
-			if($this->__YEAR > 1391 ) {
+		
+		
 				$this->sum_tax_include = $this->sum_tax_include - ((isset($this->payment_items[SIT_STAFF_REMEDY_SERVICES_INSURE]['get_value']) ? $this->payment_items[SIT_STAFF_REMEDY_SERVICES_INSURE]['get_value'] : 0 ) +
 										 (isset($this->payment_items[SIT_PROFESSOR_REMEDY_SERVICES_INSURE]['get_value']) ? $this->payment_items[SIT_PROFESSOR_REMEDY_SERVICES_INSURE]['get_value'] : 0 ) + 
 										 (isset($this->payment_items[SIT_AGE_AND_ACCIDENT_INSURE_1]['get_value']) ? $this->payment_items[SIT_AGE_AND_ACCIDENT_INSURE_1]['get_value'] : 0 ) +
@@ -259,22 +255,15 @@ class manage_payment_calculation extends PdoDataAccess
 										 (isset($this->payment_items[9964]['get_value']) ? $this->payment_items[9964]['get_value'] : 0 ) + 
 										 (isset($this->payment_items[9998]['get_value']) ? $this->payment_items[9998]['get_value'] : 0) )  ; 
 			
-			}
-				
+						
 			//پردازش مربوط به ماليات
 			if($this->__CALC_NORMALIZE_TAX == 1) {		
 					
 				$this->process_tax_normalize(); 
 			}else{			
 				$this->process_tax(); 
-			}
+			}			
 			
-			//پردازش مربوط به مقرري ماه اول
-			$this->process_pension();
- 
-			//فراخواني تابع محاسبه بازنشتگي
-			$this->process_retire();
-
 			//فراخواني تابع رير جهت مواردي غير از موارد هميشگي است که معمولا بنا بر نياز مشتري بايد نوشته شوند
 			$this->process_custom();
 
@@ -289,9 +278,8 @@ class manage_payment_calculation extends PdoDataAccess
 			
 			
 		} //end of writ while
-		
-		$this->epilogue(); 
-		//$this->submit();  
+ 
+		$this->epilogue(); 						
 		$this->unregister_run();  
 		$this->statistics();
 	
@@ -525,6 +513,7 @@ $Remainder = $this->subRow['receipt'] ;
 		if( !$this->validate_salary_item_id($this->acc_info[$key]['validity_start_date'], $this->acc_info[$key]['validity_end_date']) ) {
 			return ;
 		}
+		
 		/* بيمه تامين اجتماعي از هر فردي که در شرط زير صدق نمي کند کم خواهد شد*/
 		if ( $this->staffRow['insure_include'] != 1  ) {
 			return;
@@ -575,8 +564,7 @@ $Remainder = $this->subRow['receipt'] ;
 		'get_value' => $value,
 		'param1' => $param1,
 		'param2' => $param2,
-		'param3' => $param3,
-		'cost_center_id' => $this->staffRow['cost_center_id'],
+		'param3' => $param3,		
 		'payment_type' => NORMAL );
 	}
 	
@@ -1166,15 +1154,10 @@ $Remainder = $this->subRow['receipt'] ;
 		//چون سال مالي مبتني بر سال شمسي فرض شده است سال شروع backpay با سال شروع حقوق يکي است
 		
 		$whr = "" ; 
-		if( $this->ExtraWork == 1 )
-		{			
-			$whr = " pit.pay_month <= ".$this->__MONTH." AND " ; 
-			
-		}
-		
-		parent::runquery('TRUNCATE temp_done_payments');
+									
+		parent::runquery('TRUNCATE HRM_temp_done_payments');
 		parent::runquery('                       
-					    insert into temp_done_payments
+					    insert into HRM_temp_done_payments
                         SELECT pit.staff_id,
                                pit.salary_item_type_id,
                                sit.effect_type,
@@ -1235,31 +1218,25 @@ $Remainder = $this->subRow['receipt'] ;
                        ELSE 0
                        END) sum_param9_done
 
-                       FROM  limit_staff ls
-                                  INNER JOIN  payment_items pit
+                       FROM  HRM_limit_staff ls
+                                  INNER JOIN  HRM_payment_items pit
                                           ON(ls.staff_id = pit.staff_id)
-                                  INNER JOIN salary_item_types sit
+                                  INNER JOIN HRM_salary_item_types sit
                                   		  ON(pit.salary_item_type_id = sit.salary_item_type_id AND sit.backpay_include = 1)
                       								  
 					  WHERE pit.pay_month >= '.$this->__BACKPAY_BEGIN_FROM.' AND
-                                  pit.pay_year='.$this->__YEAR.' AND
-									   '.$whr.'
-								(pit.payment_type in( '.NORMAL_PAYMENT.',3)
-                                  OR ('.$this->__YEAR.'=1388 AND pit.pay_month = 3 AND pit.payment_type =13 ) 
-                                  ) AND  if((pit.payment_type = 3 and '.$this->__YEAR.'=1393  ), ( pit.pay_month > 1 ) ,(1=1) )
-								  
-								  
+							pit.pay_year='.$this->__YEAR.' AND
+							'.$whr.'
+							pit.payment_type in( '.NORMAL_PAYMENT.')
+                                  
                        GROUP BY pit.staff_id,
                                 pit.salary_item_type_id,
 								sit.effect_type;
                 ') ; 
-	/*echo PdoDataAccess::GetLatestQueryString() ;
-echo "---------------<br>" ; 	*/
-		//parent::runquery(' ALTER TABLE temp_done_payments ADD INDEX(staff_id,salary_item_type_id); ') ; 
-		//parent::runquery(' DROP TABLE IF EXISTS temp_must_payments;') ; 
-		parent::runquery('TRUNCATE temp_must_payments');
+	
+		parent::runquery('TRUNCATE HRM_temp_must_payments');
 		parent::runquery(' /*CREATE  TABLE temp_must_payments  AS*/
-								insert into temp_must_payments
+								insert into HRM_temp_must_payments
 								SELECT pit.staff_id,
 									pit.salary_item_type_id,
 									sit.effect_type,
@@ -1302,16 +1279,14 @@ echo "---------------<br>" ; 	*/
 									ELSE 0
 									END) sum_param9_must
 
-							FROM back_payment_items pit
-									INNER JOIN salary_item_types sit
+							FROM HRM_back_payment_items pit
+									INNER JOIN HRM_salary_item_types sit
 											ON(pit.salary_item_type_id = sit.salary_item_type_id AND sit.backpay_include = 1)
 
 							GROUP BY pit.staff_id,
 									 pit.salary_item_type_id,
 									 sit.effect_type;') ; 
-		//parent::runquery('ALTER TABLE temp_must_payments ADD INDEX(staff_id,salary_item_type_id);') ; 
-/*echo PdoDataAccess::GetLatestQueryString() ;
-echo "---------------<br>" ; 	*/
+		
 		$this->diff_rs = parent::runquery_fetchMode('
                         (SELECT
                                 bpit.staff_id staff_id,
@@ -1373,8 +1348,8 @@ echo "---------------<br>" ; 	*/
                                 ELSE bpit.sum_param9_must - pit.sum_param9_done
                                 END param9_diff
 
-                        FROM temp_must_payments bpit
-                             LEFT OUTER JOIN temp_done_payments pit
+                        FROM HRM_temp_must_payments bpit
+                             LEFT OUTER JOIN HRM_temp_done_payments pit
                                   ON(bpit.staff_id = pit.staff_id AND bpit.salary_item_type_id = pit.salary_item_type_id)
                         WHERE  bpit.sum_get_value_must <> pit.sum_get_value_done  OR
                                bpit.sum_pay_value_must <> pit.sum_pay_value_done OR
@@ -1449,8 +1424,8 @@ echo "---------------<br>" ; 	*/
                                 WHEN pit.sum_param9_done IS NULL THEN bpit.sum_param9_must
                                 ELSE bpit.sum_param9_must - pit.sum_param9_done
                                 END param9_diff
-                        FROM temp_done_payments pit
-                             LEFT OUTER JOIN temp_must_payments bpit
+                        FROM HRM_temp_done_payments pit
+                             LEFT OUTER JOIN HRM_temp_must_payments bpit
                                   ON(bpit.staff_id = pit.staff_id AND bpit.salary_item_type_id = pit.salary_item_type_id)
                         WHERE  bpit.sum_get_value_must <> pit.sum_get_value_done  OR
                                bpit.sum_pay_value_must <> pit.sum_pay_value_done OR
@@ -1468,9 +1443,7 @@ echo "---------------<br>" ; 	*/
 
                         ORDER BY staff_id,salary_item_type_id
                 ') ; 
-/*echo PdoDataAccess::GetLatestQueryString() ;
-echo "---------- -----" ; die() ;  */
-
+		
 		$this->diffRowCount = $this->diff_rs->rowCount();
 		$this->diffRow = $this->diff_rs->fetch() ;
 		$this->diffRowID++ ; 
@@ -1478,8 +1451,7 @@ echo "---------- -----" ; die() ;  */
 	}
 		
 	/*نوشتن اطلاعات آرايه ها در فايل*/
-	private function save_to_DataBase() {
-		
+	private function save_to_DataBase() {		
 		
 		//نوشتن آرايه paymnet_items در فايل
 		ob_start();
@@ -1495,43 +1467,7 @@ echo "---------- -----" ; die() ;  */
 				$pay_row['salary_item_type_id']!=SIT_STAFF_RETIRED )
 				continue;
 				
-			if($this->ExtraWork == 1 && $this->last_month == $this->__MONTH )  
-			{
-				if($pay_row['salary_item_type_id'] != 146 && $pay_row['salary_item_type_id'] != 147 &&
-				   $pay_row['salary_item_type_id'] != 148 && $pay_row['salary_item_type_id'] != 747 && 
-				   $pay_row['salary_item_type_id'] != 145 && $pay_row['salary_item_type_id'] != 744 && 
-				   $pay_row['salary_item_type_id'] != 144 && $pay_row['salary_item_type_id'] != 39 &&
-				   $pay_row['salary_item_type_id'] != 752 && $pay_row['salary_item_type_id'] != 639 && 
-				   $pay_row['salary_item_type_id'] != 152 ) 
-					continue;
-				
-				$this->moveto_curStaff($this->salary_sql_rs,'MSLY'); 
-				
-				if($pay_row['salary_item_type_id'] == 146 || $pay_row['salary_item_type_id'] == 147 ||
-				   $pay_row['salary_item_type_id'] == 148 || $pay_row['salary_item_type_id'] == 747){				
-					
-					$pay_row['get_value'] = $pay_row['get_value'] - $this->MsalaryRow['Ma'] ;
-					$pay_row['diff_get_value'] = (isset($pay_row['diff_get_value']) ? ($pay_row['diff_get_value'] - $this->MsalaryRow['diffMa']) : 0 )  ; 				
-					
-				}
-				
-				if($pay_row['salary_item_type_id'] == 145 || $pay_row['salary_item_type_id'] == 744 || 
-				   $pay_row['salary_item_type_id'] ==144 ){					
-										
-					if($this->staffRow['person_type'] != HR_PROFESSOR  && $this->staffRow['Over25'] == 1  && $this->extra_pay_value != 0 && 
-					  ( ($this->__YEAR == 1392 && $this->__MONTH >= 8) || $this->__YEAR > 1392  ) )
-					{		
-						$pay_row['get_value'] = $pay_row['get_value'] - $this->MsalaryRow['TBIns'] ;
-						$pay_row['diff_get_value'] = $pay_row['diff_get_value'] - $this->MsalaryRow['diffTBIns'] ; 				
-					}
-					else
-						continue;
-				}
-				
-				$pay_row['payment_type'] = 3 ; 
-				
-			}	
-			else $pay_row['payment_type'] = 1 ;
+			$pay_row['payment_type'] = 1 ;
 				
 			if(empty($pay_row['pay_value']))                     $pay_row['pay_value'] = 0;
 			if(empty($pay_row['get_value']))                     $pay_row['get_value'] = 0;
@@ -1596,15 +1532,11 @@ echo "---------- -----" ; die() ;  */
 		/*خطا : حقوق فرد منفي شده است لذا ساير قسمتها براي او انجام نمي شود*/
 		if($pure_pay < 0 && !$this->backpay) {
 			
-			if(!$this->__CALC_NEGATIVE_FICHE && $this->ExtraWork != 1) {								
+			if(!$this->__CALC_NEGATIVE_FICHE ) {								
 				$this->log('FAIL','حقوق اين شخص به مبلغ '.CurrencyModulesclass::toCurrency($pure_pay*(-1),'CURRENCY').' منفي شده است.');
 				ob_clean();
 				return ;
-			}
-			elseif(!$this->__CALC_NEGATIVE_FICHE && $this->ExtraWork == 1)
-			{
-				return ;
-			}
+			}			
 			else {
 				$this->log('FAIL','حقوق اين شخص به مبلغ '.CurrencyModulesclass::toCurrency($pure_pay*(-1),'CURRENCY').' منفي شده است.(فيش اين فرد از بخش چاپ فيش در دسترس است، لطفا پس از انجام كنترلهاي لازم فيشهاي منفي را ابطال كنيد)');
 			}
@@ -1724,26 +1656,16 @@ if($this->backpay)
 	
 	/*خاتمه اجراي محاسبه حقوق و بسته شدن فايلها و record sets*/
 	private function epilogue() {
-		$this->monitor(9);
+		$this->monitor(9);	
 		
-		//fclose($this->payment_items_file_h);		
 		if(!$this->backpay) {									
-			//fclose($this->payment_file_h);
-			//fclose($this->subtract_file_h);
-			//fclose($this->subtract_flow_file_h);
-			//fclose($this->payment_writs_file_h);			
+		
 			fwrite($this->fail_log_file_h, '</table></cenetr></body></html>');
 			fwrite($this->success_log_file_h, '</table></cenetr></body></html>');
 			fclose($this->fail_log_file_h);
 			fclose($this->success_log_file_h);
-
-			//chmod(HR_TemlDirPath.'payment_file.txt',0777);
-			//chmod(HR_TemlDirPath.'payment_items_file.txt',0777);
-			//chmod(HR_TemlDirPath.'payment_writs_file.txt',0777);
-			//chmod(HR_TemlDirPath.'subtract_file.txt',0777);
-			//chmod(HR_TemlDirPath.'subtract_flow_file.txt',0777);
-			chmod('../../../HRProcess/fail_log.php',0777);
-			chmod('../../../HRProcess/success_log.php',0777);		
+			chmod('../../../tempDir/fail_log.php',0777);
+			chmod('../../../tempDir/success_log.php',0777);		
 		}
 	}
 	
@@ -1857,36 +1779,40 @@ if($this->backpay)
 	//........................ در این تابع جدول back_payment_items..................
 	private function empty_back_tables()
 	{
-		parent::runquery("TRUNCATE back_payment_items") ; 
+		parent::runquery("TRUNCATE HRM_back_payment_items") ; 
 		return;		
 	}
 //............................................................. محاسبه حقوق با انجام فرآیند back Pay...............................................
 		
 	public function run_back()
-	{
+	{			
 		//در اين تابع فرض براين است که سال مالي با سال شمسي مطابقت دارد
 		$this->empty_back_tables() ; 
-		
+	
 		$this->last_month = $this->__MONTH;
 		$this->last_month_end = $this->month_end;
 
 		$this->backpay_recurrence = 0;
+				
 		//محاسبه حقوق ماههاي قبلي
 		for ($i = $this->__BACKPAY_BEGIN_FROM; $i<$this->last_month; $i++) {
+			
 			$this->backpay_recurrence++;
 			$this->backpay = true;			
 			$this->month_start = DateModules::shamsi_to_miladi($this->__YEAR."/".$i."/01") ; 					
 			$this->month_end = DateModules::shamsi_to_miladi($this->__YEAR."/".$i."/".DateModules::DaysOfMonth($this->__YEAR,$i)) ;			 			
 			$this->__MONTH = $i;
 			$this->__MONTH_LENGTH = DateModules::DaysOfMonth($this->__YEAR,$i) ; 					
+								
 			if(!$this->run()) {			
 				return false;
 			}						
-			//$this->submit_back();
+			
 		}
-
+    
 		$this->exe_difference_sql();
 
+		
 		//محاسبه حقوق همين ماه
 		$this->backpay_recurrence++;
 		$this->backpay = false;
@@ -1902,6 +1828,7 @@ if($this->backpay)
 	//مقداردهي اوليه متغيرهاي کلاس
 	private function prologue()
 	{
+			
 		if($this->backpay_recurrence > 0)
 			$this->expire_time = 300; //مدت زمان بر حسب ثانيه
 		else
@@ -1909,7 +1836,7 @@ if($this->backpay)
 	
 		if(!$this->check_to_run())
 			return false;  
-	
+		
 		$this->salary_params = array(); //يک آرايه جهت نگهداري پارامترهاي حقوقي
 		$this->tax_tables = array(); //يک ارايه جهت نگهداري جداول مالياتي
 		$this->acc_info = array();
@@ -1935,64 +1862,27 @@ if($this->backpay)
 		if($this->backpay_recurrence <= 1)
 		{
 			$this->staff_writs = array();
-			$this->exe_limit_staff(); 			
-			if($this->ExtraWork != 1 ){
+			$this->exe_limit_staff(); 				
+					
 				//  به روز رسانی وامهایی که فاقد اعتبار هستند ...........................
-				manage_subtracts::GetRemainder("","","", true ,$this->last_month , $this->__YEAR); 	
-
-
-				manage_subtracts::UpdateExpireLoan();   
-				
-		//		echo  "****************"; die() ; 
-			}
-			/*if($_SESSION['UserID'] == 'jafarkhani') 
-			{
-				echo PdoDataAccess::GetLatestQueryString(); 	
-				echo  "****************"; die() ; 
-			}*/
+			//	manage_subtracts::GetRemainder("","","", true ,$this->last_month , $this->__YEAR); 	
+			//	manage_subtracts::UpdateExpireLoan();   				
+			
 		}
-
-		$this->exe_writ_sql();	 	
-		$this->exe_pension(); 	
+				
+		$this->exe_writ_sql();	 		
+		
 		$this->exe_param_sql(); 		
-		$this->exe_paygetlist_sql(); 
-		$this->exe_staff_sql();	
+		//$this->exe_paygetlist_sql(); 
+		$this->exe_staff_sql();
 		
-		//if($this->ExtraWork != 1 ){
-			$this->exe_subtract_sql(); 
-		//}
-		
+		//$this->exe_subtract_sql(); 
+				
 		$this->exe_tax_sql(); 
 		$this->exe_tax_history(); 
 		$this->exe_taxtable_sql(); 
-		$this->exe_acc_info();  
-		$this->exe_service_insure_sql(); 
-		
-		if($this->ExtraWork == 1 && $this->last_month == $this->__MONTH )  
-		{
-			
-			$this->salary_sql_rs = parent::runquery_fetchMode('																
-							SELECT ls.staff_id , pit1.get_value Ma  , pit1.diff_get_value  diffMa ,
-												 pit2.get_value TBIns , pit2.diff_get_value diffTBIns
-
-											FROM limit_staff ls LEFT JOIN payment_items pit1
-																	ON ls.staff_id = pit1.staff_id AND pit1.payment_type = 1 AND
-																		pit1.pay_year = '.$this->__YEAR.' AND pit1.pay_month = '.$this->__MONTH.' AND
-																		pit1.salary_item_type_id in (146,147,148,747)
-
-																LEFT JOIN payment_items pit2
-																	ON ls.staff_id = pit2.staff_id AND pit2.payment_type = 1 AND
-																		pit2.pay_year = '.$this->__YEAR.' AND pit2.pay_month = '.$this->__MONTH.' AND
-																		pit2.salary_item_type_id in (145,744,144)
-							');			
+		$this->exe_acc_info();  				
 							
-			$this->MsalaryRowCount = $this->salary_sql_rs->rowCount();
-			$this->MsalaryRow = $this->salary_sql_rs->fetch(); 
-			$this->MsalaryRowID++ ; 
-			
-		}
-		
-						
 		$this->writRowCount = $this->writ_sql_rs->rowCount();
 		$this->writRow = $this->writ_sql_rs->fetch(); 
 		$this->writRowID++ ; 
@@ -2004,18 +1894,13 @@ if($this->backpay)
 		$this->staffRow = $this->staff_rs->fetch(); 
 		$this->staffRowID++ ;
 		
-		$this->pgRowCount = $this->pay_get_list_rs->rowCount();
+		/*$this->pgRowCount = $this->pay_get_list_rs->rowCount();
 		$this->PGLRow =  $this->pay_get_list_rs->fetch() ; 				
-		$this->PGLRowID++ ; 
-		 
-		//if($this->ExtraWork != 1 ){ 
-			$this->subRowCount = $this->subtracts_rs->rowCount();
-			$this->subRow = $this->subtracts_rs->fetch() ; 
-			$this->subRowID++ ; 
-		//}
-		$this->insureRowCount = $this->service_insure_rs->rowCount();
-		$this->insureRow = $this->service_insure_rs->fetch() ;
-		$this->insureRowID++ ; 
+		$this->PGLRowID++ ; */	 
+		
+		/*$this->subRowCount = $this->subtracts_rs->rowCount();
+		$this->subRow = $this->subtracts_rs->fetch() ; 
+		$this->subRowID++ ; 	*/		
 	
 		if(!$this->backpay) { 
 			$this->taxRowCount = $this->tax_rs->rowCount();
@@ -2026,27 +1911,19 @@ if($this->backpay)
 			$this->taxHisRow = $this->tax_history_rs->fetch() ;
 			$this->taxHisRowID++ ; 
 		}
-		$this->pensionRowCount = $this->pension_rs->rowCount();
-		$this->pensionRow = $this->pension_rs->fetch() ;
-		$this->pensionRowID++ ; 
-		
-		
-		//$this->payment_items_file_h = fopen(HR_TemlDirPath.'payment_items_file.txt','w+'); //اقلامي که بايد در payment_items درج شوند
-			
+				
 
 		if($this->backpay_recurrence == 1 || !$this->backpay) {
 			$this->monitor(7); 
-			//$this->payment_file_h = fopen(HR_TemlDirPath.'payment_file.txt','w+'); //اقلامي که بايد در payment درج شوند
-			//$this->subtract_file_h = fopen(HR_TemlDirPath.'subtract_file.txt','w+'); // اقلامي که بايد در person_subtracts بروزرساني شوند
-			//$this->subtract_flow_file_h = fopen(HR_TemlDirPath.'subtract_flow_file.txt','w+'); //اقلامي که بايد در person_flow درج شوند
-			$this->fail_log_file_h = fopen('../../../HRProcess/fail_log.php','w+');
-			$this->success_log_file_h = fopen('../../../HRProcess/success_log.php','w+');
+			
+			$this->fail_log_file_h = fopen('../../../tempDir/fail_log.php','w+');
+			$this->success_log_file_h = fopen('../../../tempDir/success_log.php','w+');
 
 			$this->fail_counter = 1;
 			$this->success_counter = 1;
 			$this->writ_logs_file_header(); 
 		}
-
+		
 		//فقط يكبار چه در حالت  backpay و چه در غير از آن حالت
 		if($this->backpay_recurrence <= 1 ) {
 			//$this->payment_writs_file_h = fopen(HR_TemlDirPath.'payment_writs_file.txt','w+'); //اقلامي که بايد در payment_writs درج شوند
@@ -2094,21 +1971,17 @@ if($this->backpay)
 	
 	//استخراج تعداد روزهاي کارکرد در صورتي که براي اين staff درج شده باشد
 	private function set_work_sheet() {
-				
-		if($this->staffRow['person_type'] != HR_WORKER && $this->staffRow['person_type'] != HR_CONTRACT ) {
-			$this->__MONTH_LENGTH = 30;//اين عدد از طرف دانشگاه تعيين شده است
-		}
-			
+		
 		$work_sheet = $this->__MONTH_LENGTH;
 
-		$this->moveto_curStaff($this->pay_get_list_rs ,'PGL');
+	/*	$this->moveto_curStaff($this->pay_get_list_rs ,'PGL');
 		
 		if( $this->PGLRow['staff_id'] == $this->cur_staff_id && $this->PGLRow['list_type'] == WORK_SHEET_LIST) {
 			$work_sheet = $this->PGLRow['approved_amount'];		
 			$this->PGLRow = $this->pay_get_list_rs->fetch(); 
 			$this->PGLRowID++ ; 
 		}
-	
+	*/
 		$this->cur_work_sheet = $work_sheet; 
 	}
 	
@@ -2446,18 +2319,15 @@ if($this->backpay)
 		if($this->backpay) {
 			return true ;
 		}
-		if($this->staffRow['pstaff_id'] > 0 && 	$this->ExtraWork != 1 ) { //قبلا فيش براي فرد صادر شده است
+		if($this->staffRow['pstaff_id'] > 0 ) { //قبلا فيش براي فرد صادر شده است
+			
 			$this->log('FAIL' ,'قبلا براي اين شخص محاسبه حقوق انجام شده است.');
 			$this->payment_items = null;
 			return false ;
 		}
-		if( empty($this->staffRow['cost_center_id'])) { //فرد مرکز هزينه ندارد
-			$this->log('FAIL' ,'براي اين شخص مرکز هزينه تعيين نشده است.');
-			$this->payment_items = null;
-			$this->staff_writs[$this->cur_staff_id] = array();
-			return false ;
-		}
-		if(empty($this->staffRow['si_staff'])){			
+		
+		if(empty($this->staffRow['si_staff'])){		
+			
 			$this->log('FAIL' ,'سوابق مشموليت براي اين شخص ثبت نشده است .');
 			$this->payment_items = null;
 			$this->staff_writs[$this->cur_staff_id] = array();
@@ -2493,18 +2363,18 @@ if($this->backpay)
 	/*بررسي امکان محاسبه حقوق و نمايش خطا در صورت وجود پروسه همزمان*/
 	private function check_to_run()
 	{
-		 
+return true ; 
 		if($this->backpay_recurrence > 1)
 			return true;
 
-		$tmp_rs = parent::runquery('SELECT * FROM payment_runs WHERE time_stamp >= :expireDate',
+		$tmp_rs = parent::runquery('SELECT * FROM HRM_payment_runs WHERE time_stamp >= :expireDate',
 				                    array(":expireDate" => time()-$this->expire_time));
  
 		 
 		 //هيچ اجراي فعالي وجود ندارد
 		if(count($tmp_rs) == 0)
 		{			
-			parent::runquery('INSERT INTO payment_runs(time_stamp,uname) VALUES(?,?)',
+			parent::runquery('INSERT INTO HRM_payment_runs(time_stamp,uname) VALUES(?,?)',
 					  		  array(time(), $_SESSION["UserID"]));
 
 			$this->run_id = parent::InsertID();
@@ -2522,94 +2392,73 @@ if($this->backpay)
 	{
 		if($this->backpay)
 			return;
-		parent::runquery('DELETE FROM payment_runs WHERE run_id = ?', array($this->run_id));
+		parent::runquery('DELETE FROM HRM_payment_runs WHERE run_id = ?', array($this->run_id));
 	}
 
 	/* اجراي query مربوط به ساخت جدول limit_staff که با توجه به شرط ماژول تنظيمات ساخته مي شود*/
 	private function exe_limit_staff()
 	{
 				
-		parent::runquery('TRUNCATE limit_staff');
-	
-		if($this->ExtraWork != 1 ) {
-		
+		parent::runquery('TRUNCATE HRM_limit_staff');
+				
 			parent::runquery('
-							 insert into limit_staff
+							 insert into HRM_limit_staff
 								SELECT s.staff_id  , s.personID , s.person_type 
-								FROM persons p
-									INNER JOIN staff s ON(s.personID=p.PersonID AND s.person_type=p.person_type)
-									INNER JOIN writs w ON(s.last_writ_id = w.writ_id AND s.last_writ_ver = w.writ_ver AND
-														  w.staff_id=s.staff_id AND w.person_type=s.person_type)
-									INNER JOIN org_new_units o ON(w.ouid = o.ouid)
-								WHERE p.person_type NOT IN(' . HR_RETIRED . ') AND  								
-									  s.last_cost_center_id in(' . manage_access::getValidCostCenters() . ') AND  ' . $this->__WHERE , $this->__WHEREPARAM ); 
-	    }		
-		else {
-						
-			parent::runquery('
-							 insert into limit_staff
-							 SELECT distinct pgli.staff_id staff_id , s.personID , s.person_type 
-								FROM pay_get_lists pgl
-										INNER JOIN pay_get_list_items pgli
-											ON(pgl.list_id = pgli.list_id AND pgl.list_date >= \''.$this->month_start.'\' AND
-											   pgl.list_date <= \''.$this->last_month_end.'\' AND doc_state = \''.CENTER_CONFIRM.'\')
-										INNER JOIN staff s 
-											ON pgli.staff_id = s. staff_id
-										INNER JOIN writs w
-											ON(s.last_writ_id = w.writ_id AND s.last_writ_ver = w.writ_ver AND s.staff_id = w.staff_id )
-										INNER JOIN org_new_units o
-											ON w.ouid = o.ouid 
-										INNER JOIN persons p
-											ON p.personid = s.personid
-												   
-							  WHERE    pgli.approved_amount > 0  AND s.person_type IN('.HR_PROFESSOR.','.HR_EMPLOYEE.','.HR_WORKER.') AND '.$this->__WHERE , $this->__WHEREPARAM ) ;
-									  
-		}
-								  
-								
-					
+								FROM HRM_persons p
+									INNER JOIN HRM_staff s ON(s.personID=p.PersonID AND s.person_type=p.person_type)
+									INNER JOIN HRM_writs w ON(s.last_writ_id = w.writ_id AND s.last_writ_ver = w.writ_ver AND
+														      w.staff_id=s.staff_id AND w.person_type=s.person_type)
+									
+								WHERE p.person_type IN(3) AND  ' . $this->__WHERE , $this->__WHEREPARAM ); 		
+			
+	    			
 	}
 
 	/* اجراي query استخراج احکام تاثيرگذار در حکم */
 	private function exe_writ_sql()
-	{
+	{		
+				
 		$this->monitor(0);	
-		parent::runquery('TRUNCATE smed');	
-		parent::runquery('TRUNCATE mwv');
+				
+		parent::runquery('TRUNCATE HRM_smed');	
+		parent::runquery('TRUNCATE HRM_mwv');
  		
 		parent::runquery("
-                        insert into smed 
+                        insert into HRM_smed 
                         SELECT w.staff_id,
                                SUBSTRING_INDEX(SUBSTRING(max(CONCAT(w.execute_date,w.writ_id,'.',w.writ_ver)),11),'.',1) writ_id,
 							   SUBSTRING_INDEX(max(CONCAT(w.execute_date,w.writ_id,'.',w.writ_ver)),'.',-1) writ_ver
-                        FROM writs w
-                                 INNER JOIN limit_staff ls ON(w.staff_id = ls.staff_id)
+                        FROM HRM_writs w
+                                 INNER JOIN HRM_limit_staff ls ON(w.staff_id = ls.staff_id)
 								 
                         WHERE w.execute_date <= '" . $this->month_start . "' AND
-                                  w.pay_date <= '" . $this->last_month_end . "' AND
-                                  w.state = " . WRIT_SALARY . " AND
-                                  w.history_only = 0
+							  w.pay_date <= '" . $this->last_month_end . "' AND
+							/*w.state = " . WRIT_SALARY . " AND*/
+							  w.history_only = 0
                         GROUP BY w.staff_id;
                 ");		
 
+
 		parent::runquery("						
-						insert into mwv
+						insert into HRM_mwv
                         SELECT  w.staff_id,
 								w.writ_id,
 								MAX(w.writ_ver) writ_ver
 
-                        FROM writs w
-							INNER JOIN limit_staff ls
+                        FROM HRM_writs w
+							INNER JOIN HRM_limit_staff ls
 								ON(w.staff_id = ls.staff_id)
 
                         WHERE w.execute_date <= '" . $this->month_end . "' AND
                               w.execute_date > '" . $this->month_start . "' AND
                               w.pay_date <= '" . $this->last_month_end . "' AND
-                              w.history_only = 0 AND
-                              w.state = " . WRIT_SALARY . "
+                              w.history_only = 0 /*AND
+                              w.state = " . WRIT_SALARY . "*/
 								  
                         GROUP BY w.staff_id, w.writ_id"
                 );
+		
+		
 
 		/*
 		 اقلام آخرین حکم افراد
@@ -2633,14 +2482,14 @@ if($this->backpay)
                            sit.pension_include,                       	   
                            sit.month_length_effect
 
-                        FROM limit_staff ls
-							INNER JOIN smed sm ON(ls.staff_id = sm.staff_id)
-                            INNER JOIN writs w ON(w.writ_id = sm.writ_id AND w.writ_ver = sm.writ_ver AND w.staff_id=sm.staff_id)
-                            LEFT OUTER JOIN writ_salary_items wsi ON(w.writ_id = wsi.writ_id AND w.writ_ver = wsi.writ_ver AND 
+                        FROM HRM_limit_staff ls
+							INNER JOIN HRM_smed sm ON(ls.staff_id = sm.staff_id)
+                            INNER JOIN HRM_writs w ON(w.writ_id = sm.writ_id AND w.writ_ver = sm.writ_ver AND w.staff_id=sm.staff_id)
+                            LEFT OUTER JOIN HRM_writ_salary_items wsi ON(w.writ_id = wsi.writ_id AND w.writ_ver = wsi.writ_ver AND 
 							                                         w.staff_id = wsi.staff_id AND wsi.must_pay = ' . MUST_PAY_YES . ')
-                            LEFT OUTER JOIN salary_item_types sit ON(wsi.salary_item_type_id = sit.salary_item_type_id)
+                            LEFT OUTER JOIN HRM_salary_item_types sit ON(wsi.salary_item_type_id = sit.salary_item_type_id)
 
-                        WHERE w.state = '.WRIT_SALARY.')
+                        WHERE (1=1)  /* and w.state = '.WRIT_SALARY.' */ )
 
                         UNION ALL
 						
@@ -2659,18 +2508,18 @@ if($this->backpay)
                            sit.retired_include,
                            sit.pension_include,                       	   
                            sit.month_length_effect
-                        FROM mwv
-                             INNER JOIN writs w ON(mwv.writ_id = w.writ_id AND mwv.writ_ver = w.writ_ver AND mwv.staff_id=w.staff_id)
-                             INNER JOIN limit_staff ls ON(w.staff_id = ls.staff_id)
-                             LEFT OUTER JOIN writ_salary_items wsi ON(w.writ_id = wsi.writ_id AND w.writ_ver = wsi.writ_ver
+                        FROM HRM_mwv mwv
+                             INNER JOIN HRM_writs w ON(mwv.writ_id = w.writ_id AND mwv.writ_ver = w.writ_ver AND mwv.staff_id=w.staff_id)
+                             INNER JOIN HRM_limit_staff ls ON(w.staff_id = ls.staff_id)
+                             LEFT OUTER JOIN HRM_writ_salary_items wsi ON(w.writ_id = wsi.writ_id AND w.writ_ver = wsi.writ_ver
 									AND wsi.staff_id=w.staff_id AND wsi.must_pay = ' . MUST_PAY_YES . ')
-                             LEFT OUTER JOIN salary_item_types sit ON(wsi.salary_item_type_id = sit.salary_item_type_id)
+                             LEFT OUTER JOIN HRM_salary_item_types sit ON(wsi.salary_item_type_id = sit.salary_item_type_id)
 
-                        WHERE w.state = ' . WRIT_SALARY . ')
+                        WHERE (1=1) /* and w.state = ' . WRIT_SALARY . '*/)
 							
                         ORDER BY staff_id,execute_date,writ_id,writ_ver
                 ');			
-				
+							
 								 
 	}
 
@@ -2709,7 +2558,7 @@ if($this->backpay)
 
 		$run_pic = HR_ImagePath . 'run.gif';
 		$done_pic = HR_ImagePath . 'done.gif';
-		
+	
 		$txt ='<td colspan="2"><font face="Tahoma" size="2">';
 		for($i = 0; $i<$curStep; $i++) 
 			$txt .= '<p><img border="0" src="' . $done_pic . '" width="15" height="14">&nbsp;' . $step_array[$i] . '</p>';
@@ -2722,110 +2571,12 @@ if($this->backpay)
 		$txt .= '</font></td>';
 
 		//ايجاد فايل pay_calc_monitor جهت مانيتور کردن محاسبه حقوق
-		$fh = fopen('../../../HRProcess/pay_calc_monitor_file.html','w+');
-		
+		$fh = fopen('../../../tempDir/pay_calc_monitor_file.html','w+');
+			
 		fwrite($fh, $head . $txt . $end );
 		fclose($fh);
 	}
-
-	/*اجراي query مربوط به استخراج حداکثر حقوق مشمول بازنشستگي که مقرري به آن تعلق مي گيرد*/
-	private function exe_pension()
-	{
-		$this->monitor(1);
-		
-		//parent::runquery('DROP TABLE IF EXISTS temp_pension');
-		parent::runquery('TRUNCATE temp_pension');
-		
-		if($this->__YEAR > '1390' || ( $this->__YEAR == '1390' && $this->__MONTH > '6' ) ){ 
-			
-			//parent::runquery('DROP TABLE IF EXISTS temp_pension_last_year');
-			//parent::runquery('DROP TABLE IF EXISTS temp_pension_last_year2');	
-			parent::runquery('TRUNCATE temp_pension_last_year');
-			parent::runquery('TRUNCATE temp_pension_last_year2');
-			
-			parent::runquery('/*CREATE  TABLE temp_pension_last_year   AS */
-								insert into temp_pension_last_year
-								select max(pit.pay_month) pay_month , pit.staff_id
-								from limit_staff ls left join payment_items pit
-									on ( ls.staff_id = pit.staff_id and  pit.payment_type = 1  )
-
-								where pit.pay_year = '.(($this->__YEAR) - 1 ).' and
-									pit.salary_item_type_id in (34,36 , 10264 , 10267) and ls.person_type in (1,2)
-								group by  pit.staff_id'); 
-			
-			parent::runquery('/*CREATE  TABLE temp_pension_last_year2   AS */
-								insert into temp_pension_last_year2
-								select max(pit.pay_month) pay_month , pit.staff_id
-										from limit_staff ls left join payment_items pit
-													on ( ls.staff_id = pit.staff_id and  pit.payment_type = 1  )
-
-								where pit.pay_year = '.(($this->__YEAR) - 1 ).' and pit.pay_month != 12 and 
-									  pit.salary_item_type_id in (34,36 , 10264 , 10267) and ls.person_type in (1,2)
-								group by  pit.staff_id') ; 
-			
-			$unionTbl = ' UNION ALL
-						( select  pit.staff_id , sum(pit.pay_value) pv
-								from  temp_pension_last_year tp inner join payment_items pit
-												on (tp.staff_id = pit.staff_id AND
-													pit.payment_type = 1  AND
-													tp.pay_month = pit.pay_month AND
-													pit.pay_year = '.(($this->__YEAR) - 1 ).' AND
-													pit.salary_item_type_id in (34,36 ,10264 , 10267) )
-						  group by pit.staff_id )
-														 
-						  UNION ALL
-						( select  pit.staff_id , sum(pit.pay_value) pv
-										from  temp_pension_last_year2 tp inner join payment_items pit
-														on (tp.staff_id = pit.staff_id AND
-															pit.payment_type = 1  AND
-															tp.pay_month = pit.pay_month AND
-															pit.pay_year = '.(($this->__YEAR) - 1 ).' AND
-															pit.salary_item_type_id in (34,36 ,10264 , 10267) )
-						 group by pit.staff_id )' ; 
-			
-		}
-			
-			
-		parent::runquery('
-						/*CREATE  TABLE temp_pension   AS*/
-						 insert into temp_pension
-						(SELECT ls.staff_id,MAX(pit.param4 * 1) AS mpension
-
-						FROM limit_staff ls
-							LEFT OUTER JOIN payment_items pit ON(ls.staff_id = pit.staff_id AND pit.payment_type ='.NORMAL_PAYMENT.')
-
-						WHERE ls.person_type in (1,2) and ( ( (pit.pay_year = '.$this->__YEAR.' AND pit.pay_month < '.$this->__MONTH.') OR
-								  (pit.pay_year < '.$this->__YEAR.') )	AND
-								  (pit.salary_item_type_id IN('.SIT_STAFF_RETIRED.',
-															  '.SIT_PROFESSOR_RETIRED.',
-															  '.SIT_WORKER_RETIRED.') ) ) OR
-							  pit.staff_id IS NULL
-
-						GROUP BY ls.staff_id)
-
-						UNION ALL
-						
-						(SELECT ls.staff_id,MAX(pit.param4 * 1) AS mpension
-
-						FROM limit_staff ls
-								 LEFT OUTER JOIN back_payment_items pit
-										 ON(ls.staff_id = pit.staff_id AND pit.payment_type = '.NORMAL_PAYMENT.')
-						WHERE ls.person_type in (1,2) and ( (pit.pay_year = '.$this->__YEAR.' AND pit.pay_month <= '.$this->__MONTH.') 	AND
-							    (pit.salary_item_type_id IN('.SIT_STAFF_RETIRED.',
-														    '.SIT_PROFESSOR_RETIRED.',
-														    '.SIT_WORKER_RETIRED.') ) ) OR
-							     pit.staff_id IS NULL
-
-						GROUP BY ls.staff_id)'. $unionTbl );
-		
-		
-
-		$this->pension_rs = parent::runquery_fetchMode('SELECT staff_id,MAX(mpension) max_sum_pension
-														FROM temp_pension
-														GROUP BY staff_id'); 
-				
-	}
-
+	
 	/*اجراي query ليست پرارمترهاي حقوقي و انتقال آنها به يک آرايه */
 	private function exe_param_sql()
 	{
@@ -2840,7 +2591,7 @@ if($this->backpay)
                             dim3_id,
                             value
 
-                        FROM salary_params
+                        FROM HRM_salary_params
 
                         WHERE from_date <= '" . $this->month_end . "' AND to_date >= '" . $this->month_end . "'");
 
@@ -2907,39 +2658,39 @@ if($this->backpay)
 	{
 		parent::runquery("SET NAMES 'utf8'");
 	
-		parent::runquery('TRUNCATE dvt');
+		parent::runquery('TRUNCATE HRM_dvt');
 		parent::runquery('                        
-						insert into dvt
+						insert into HRM_dvt
                         SELECT PersonID,
                                MAX(CASE devotion_type WHEN '.FREEDOM_DEVOTION.' THEN amount ELSE 0 END) freedman,
                                MAX(CASE devotion_type WHEN '.SACRIFICE_DEVOTION.' THEN amount ELSE 0 END) sacrifice
 
-                        FROM person_devotions
+                        FROM HRM_person_devotions
 
                         WHERE personel_relation = '.OWN.' AND (devotion_type = '.FREEDOM_DEVOTION.' OR devotion_type = '.SACRIFICE_DEVOTION.')
 
                         GROUP BY PersonID;
                 ');
 		
-		parent::runquery('TRUNCATE temp_last_writs');
+		parent::runquery('TRUNCATE HRM_temp_last_writs');
 		
 		parent::runquery("                        
-						insert into temp_last_writs
+						insert into HRM_temp_last_writs
 						SELECT w.staff_id,
 						       SUBSTR(MAX(CONCAT(w.execute_date,w.writ_id)),11) max_writ_id,
 						       SUBSTRING_INDEX(MAX(CONCAT(w.execute_date,w.writ_id,'.',w.writ_ver)),'.',-1) max_writ_ver
-						FROM limit_staff ls
-						     INNER JOIN writs w ON(ls.staff_id = w.staff_id)
+						FROM HRM_limit_staff ls
+						     INNER JOIN HRM_writs w ON(ls.staff_id = w.staff_id)
 						WHERE w.execute_date <= '".$this->month_end."' AND
 						      w.pay_date <= '".$this->last_month_end."' AND
-						      w.history_only = 0 AND
-						      w.state = ".WRIT_SALARY."
+						      w.history_only = 0 /*AND
+						      w.state = ".WRIT_SALARY." */ 
 						GROUP BY staff_id ");
 			
-		parent::runquery('TRUNCATE temp_dev_child');
-		parent::runquery(' insert into temp_dev_child
+		parent::runquery('TRUNCATE HRM_temp_dev_child');
+		parent::runquery(' insert into HRM_temp_dev_child
 		                        SELECT PersonID 	                             
-		                        FROM person_devotions		
+		                        FROM HRM_person_devotions		
 		                        WHERE personel_relation in ('.DAUGHTER.','.BOY.' ) AND 
 		                             (devotion_type = '.BEHOLDER_FAMILY_DEVOTION.' )
 		
@@ -2961,8 +2712,7 @@ if($this->backpay)
 																s.sum_paied_pension,
 																s.Over25 ,
 																d.freedman,
-																d.sacrifice,
-																w.cost_center_id,
+																d.sacrifice,																
 																w.ouid,
 																w.emp_state,
 																w.salary_pay_proc,
@@ -2971,24 +2721,24 @@ if($this->backpay)
 																p.staff_id pstaff_id,
 																CONCAT(per.plname,' ',per.pfname) name
 
-                        FROM limit_staff ls
-                                 INNER JOIN staff s
+                        FROM HRM_limit_staff ls
+                                 INNER JOIN HRM_staff s
                                  	ON(s.staff_id = ls.staff_id)
-						         LEFT OUTER JOIN staff_include_history si
+						         LEFT OUTER JOIN HRM_staff_include_history si
 						            ON(s.staff_id = si.staff_id AND si.start_date <= '".$this->month_end."' AND 
 									(si.end_date IS NULL OR si.end_date = '0000-00-00' OR  
 									 si.end_date >= '".$this->month_end."' OR si.end_date > '".$this->month_start."' ) )										 
-                      			 INNER JOIN persons per
+                      			 INNER JOIN HRM_persons per
                        				ON(s.PersonID = per.PersonID)
-                       			 INNER JOIN temp_last_writs tlw
+                       			 INNER JOIN HRM_temp_last_writs tlw
                        			 	ON(s.staff_id = tlw.staff_id)
-                             	 INNER JOIN writs w
+                             	 INNER JOIN HRM_writs w
                                     ON(tlw.max_writ_id = w.writ_id AND tlw.max_writ_ver = w.writ_ver AND tlw.staff_id = w.staff_id )
-                                 LEFT OUTER JOIN dvt d
+                                 LEFT OUTER JOIN HRM_dvt d
                                     ON(s.PersonID = d.PersonID)
-                                 LEFT OUTER JOIN   temp_dev_child tdc
+                                 LEFT OUTER JOIN   HRM_temp_dev_child tdc
                                  	ON( s.PersonID = tdc.PersonID )    
-                                 LEFT OUTER JOIN payments p
+                                 LEFT OUTER JOIN HRM_payments p
                                     ON(w.staff_id = p.staff_id AND p.pay_year = ".$this->__YEAR." AND p.pay_month=".$this->__MONTH." AND p.payment_type = ".NORMAL_PAYMENT.")
                         ORDER BY s.staff_id ") ; 		
 			
@@ -3084,16 +2834,11 @@ if($this->backpay)
 		}
 		$TaxWhere = " "	 ;	
 		if($this->backpay_recurrence > 1) {
-			$source_table = 'back_payment_items';
+			$source_table = 'HRM_back_payment_items';
 		}
 		else 
 		{
-			$source_table =  'payment_items';
-			
-			 
-			if($this->ExtraWork == 1 ) {			
-				$TaxWhere = " AND  pit.pay_month != ".$this->__MONTH ; 			
-			}			
+			$source_table =  'HRM_payment_items';					
 		}
 		
 			$this->tax_rs = parent::runquery_fetchMode("
@@ -3104,17 +2849,17 @@ if($this->backpay)
 								    if(pit3.diff_get_value is null , 0 , (pit3.diff_get_value * pit3.diff_value_coef)) ) sum_tax,
                                 SUM(pit.param1 + pit.diff_param1) sum_tax_include
 								
-                        FROM limit_staff ls
+                        FROM HRM_limit_staff ls
                                  INNER JOIN ".$source_table." pit
                                          ON(pit.staff_id = ls.staff_id)
-                                 LEFT OUTER JOIN payment_items pit2
+                                 LEFT OUTER JOIN HRM_payment_items pit2
                                         ON(pit2.staff_id = pit.staff_id AND 
                                            pit2.pay_year = pit.pay_year AND
                                            pit2.pay_month = pit.pay_month AND
                                            pit2.payment_type = ".NORMAL_PAYMENT." AND
                                            pit2.salary_item_type_id = pit.salary_item_type_id)
 										   
-							     LEFT OUTER JOIN payment_items pit3
+							     LEFT OUTER JOIN HRM_payment_items pit3
                                         ON(pit3.staff_id = pit.staff_id AND 
                                            pit3.pay_year = pit.pay_year AND
                                            pit3.pay_month = pit.pay_month AND
@@ -3128,51 +2873,7 @@ if($this->backpay)
                                                              ".SIT_WORKER_TAX.",
 															 ".SIT5_STAFF_TAX.") ".$TaxWhere."
                         GROUP BY pit.staff_id
-                        ");	
-						
-						
-											
-			
-		/*}
-		else {
-			$source_table = 'payment_items';
-			$this->tax_rs = parent::runquery_fetchMode("
-                        SELECT
-                              pit.staff_id staff_id,
-                                SUM(pit2.get_value + (pit2.diff_get_value * pit2.diff_value_coef)) sum_tax,
-                                tbl1.total_tax  sum_tax_include
-
-                        FROM limit_staff ls
-                                 INNER JOIN ".$source_table." pit
-                                         ON(pit.staff_id = ls.staff_id)
-                                 LEFT OUTER JOIN payment_items pit2
-                                        ON(pit2.staff_id = pit.staff_id AND 
-                                           pit2.pay_year = pit.pay_year AND
-                                           pit2.pay_month = pit.pay_month AND
-                                           pit2.payment_type = ".NORMAL_PAYMENT." AND
-                                           pit2.salary_item_type_id = pit.salary_item_type_id)
-
-                                  LEFT OUTER JOIN (select sum(pay_value + diff_pay_value) total_tax , pit.staff_id
-											              from payment_items pit left join salary_item_types sit
-											                                    on pit.salary_item_type_id = sit.salary_item_type_id
-											                  where sit.effect_type = 1 and 
-											                        sit.tax_include = 1 and 
-											                        pit.pay_year >= ".$this->__START_NORMALIZE_TAX_YEAR."  AND
-											                        pit.pay_month >= ".$this->__START_NORMALIZE_TAX_MONTH." AND
-											                        pit.payment_type = 1
-											
-											                   group by pit.staff_id) tbl1 ON tbl1.staff_id = pit.staff_id          
-
-                        WHERE pit.pay_year >= ".$this->__START_NORMALIZE_TAX_YEAR." AND
-                                  pit.pay_month >= ".$this->__START_NORMALIZE_TAX_MONTH." AND
-                                  pit.salary_item_type_id IN(".SIT_PROFESSOR_TAX.",
-                                                             ".SIT_STAFF_TAX.",
-                                                             ".SIT_WORKER_TAX.")
-                        GROUP BY pit.staff_id
-                        ");
-		}*/
-					
-
+                        ");					
 	}
 	
 	/* اجراي query مربوط به استخراج سابقه مالياتي*/
@@ -3189,17 +2890,17 @@ if($this->backpay)
 		}
 				
 		$this->tax_history_rs = parent::runquery_fetchMode("
-								SELECT sth.staff_id,
-									   sth.start_date,
-								       sth.end_date,
-								       sth.tax_table_type_id,
-								       sth.payed_tax_value
-								FROM limit_staff ls
-								      INNER JOIN staff_tax_history sth
-								            ON(ls.staff_id = sth.staff_id)
-								WHERE ".$w."
-								ORDER BY sth.staff_id,sth.start_date			
-								");	
+													SELECT sth.staff_id,
+														sth.start_date,
+														sth.end_date,
+														sth.tax_table_type_id,
+														sth.payed_tax_value
+													FROM HRM_limit_staff ls
+														INNER JOIN HRM_staff_tax_history sth
+																ON(ls.staff_id = sth.staff_id)
+													WHERE ".$w."
+													ORDER BY sth.staff_id,sth.start_date			
+													");	
 		
 		
 	}
@@ -3221,10 +2922,11 @@ if($this->backpay)
                                titem.to_value,
                                titem.coeficient
 
-                        FROM tax_table_types ttype
-                             INNER JOIN tax_tables ttable
-                                   ON(ttype.tax_table_type_id = ttable.tax_table_type_id AND from_date <= '".$this->month_end."' AND to_date >= '".$this->month_start."')
-                             INNER JOIN tax_table_items titem
+                        FROM HRM_tax_table_types ttype
+                             INNER JOIN HRM_tax_tables ttable
+                                   ON(ttype.tax_table_type_id = ttable.tax_table_type_id AND 
+								      from_date <= '".$this->month_end."' AND to_date >= '".$this->month_start."')
+                             INNER JOIN HRM_tax_table_items titem
                                    ON(ttable.tax_table_id = titem.tax_table_id)
 
                         ORDER BY ttype.person_type,ttype.tax_table_type_id,ttable.from_date,titem.from_value
@@ -3252,7 +2954,7 @@ if($this->backpay)
 								sit.validity_start_date,
 								sit.validity_end_date
 								
-                        FROM salary_item_types sit
+                        FROM HRM_salary_item_types sit
                         WHERE
                              sit.salary_item_type_id IN (".SIT_PROFESSOR_COLLECTIVE_SECURITY_INSURE.",
 														 ".SIT_STAFF_COLLECTIVE_SECURITY_INSURE.",
@@ -3283,123 +2985,6 @@ if($this->backpay)
 		
 	}
 	
-	/* اجراي query مربوط به بيمه خدمات درماني و برگشت بيمه جانبازان */
-	function exe_service_insure_sql() {
-		$this->monitor(6);
-		
-		if(!$this->backpay){
-			
-			//parent::runquery(" DROP TABLE IF EXISTS mpds ");
-			parent::runquery('TRUNCATE mpds');
-			parent::runquery("  /*CREATE  TABLE mpds  AS*/
-								insert into mpds
-								SELECT pds.PersonID,
-									pds.master_row_no,
-									MAX(pds.from_date) from_date ,
-									SUBSTR(MAX(CONCAT(pds.from_date,pds.row_no)),11) row_no
-								FROM person_dependent_supports pds
-								WHERE pds.from_date <= '".$this->month_end."' AND(pds.to_date >= '".$this->month_start."' OR 
-									  pds.to_date IS NULL OR pds.to_date = '0000-00-00' ) AND 
-									 (pds.status = ".DELETE_IN_EMPLOYEES." OR pds.status = ".IN_SALARY.") 
-								GROUP BY pds.PersonID,pds.master_row_no;");
-			
-			$this->service_insure_rs = parent::runquery_fetchMode(" SELECT pds.PersonID ,
-																	s.staff_id,
-																	COUNT( CASE pds.insure_type
-																			WHEN ".NORMAL." THEN 1
-																			END) normal,
-																	COUNT( CASE pds.insure_type
-																			WHEN ".NORMAL." AND pd.dependency IN(".OWN.") THEN 1
-																			END) own_normal,          
-																	COUNT( CASE pds.insure_type
-																			WHEN ".NORMAL2." THEN 5
-																			END) normal2,
-																	COUNT( CASE pds.insure_type
-																			WHEN ".FIRST_SURPLUS." THEN 2
-																			END) extra1,
-																	COUNT( CASE pds.insure_type
-																			WHEN ".SECOND_SURPLUS." THEN 3
-																			END) extra2,
-																	COUNT( CASE
-																		WHEN pds.insure_type = ".NORMAL." AND pd.dependency IN(".OWN.",".FATHER.",".MOTHER.",".WIFE.",".BOY.",".DAUGHTER.") THEN 1
-																		END)ret_normal,
-																	COUNT( CASE
-																		WHEN pds.insure_type = ".NORMAL2." AND pd.dependency IN(".OWN.",".FATHER.",".MOTHER.",".WIFE.",".BOY.",".DAUGHTER.") THEN 5
-																		END)ret_normal2,
-																	COUNT( CASE
-																		WHEN pds.insure_type = ".FIRST_SURPLUS." AND pd.dependency IN(".OWN.",".FATHER.",".MOTHER.",".WIFE.",".BOY.",".DAUGHTER.") THEN 2
-																		END)ret_extra1,
-																	COUNT( CASE
-																		WHEN pds.insure_type = ".SECOND_SURPLUS." AND pd.dependency IN(".OWN.",".FATHER.",".MOTHER.",".WIFE.",".BOY.",".DAUGHTER.") THEN 3
-																		END)ret_extra2,	                                   
-																		sit.validity_start_date,
-																		sit.validity_end_date
-
-																FROM mpds mp
-																	INNER JOIN person_dependent_supports pds
-																		ON(mp.PersonID = pds.PersonID AND mp.master_row_no = pds.master_row_no AND mp.row_no = pds.row_no)
-																	INNER JOIN person_dependents pd
-																		ON(pd.PersonID = pds.PersonID AND pd.row_no = pds.master_row_no)
-															INNER JOIN staff s
-																ON(pds.PersonID = s.PersonID)
-															INNER JOIN limit_staff ls
-																	ON(s.staff_id = ls.staff_id)
-															INNER JOIN salary_item_types sit
-																ON((sit.salary_item_type_id = ".SIT_PROFESSOR_REMEDY_SERVICES_INSURE." AND s.person_type = ".HR_PROFESSOR.") OR
-																	(sit.salary_item_type_id = ".SIT_STAFF_REMEDY_SERVICES_INSURE." AND s.person_type = ".HR_EMPLOYEE."))
-
-																GROUP BY s.staff_id,
-																				pds.PersonID,	                                        
-																			sit.validity_start_date,
-																			sit.validity_end_date");
-			
-		}
-		else
-		{
-			$this->service_insure_rs = parent::runquery_fetchMode(" SELECT 
-															p.PersonID ,
-															s.staff_id,	                        	   
-															IFNULL(pi.param1,0) normal,
-															IFNULL(pi.param8,0) normal2,
-															IFNULL(pi.param2,0) extra1,
-															IFNULL(pi.param3,0) extra2,
-															IFNULL(pi.param7,0) own_normal , 
-															IFNULL(pi2.param1,0) ret_normal,
-															IFNULL(pi2.param8,0) ret_normal2,
-															IFNULL(pi2.param2,0) ret_extra1,
-															IFNULL(pi2.param3,0) ret_extra2,															
-															null validity_start_date,
-															null validity_end_date
-														FROM staff s
-														INNER JOIN persons p  
-															ON(p.PersonID = s.PersonID)
-														INNER JOIN limit_staff ls
-															ON(s.staff_id = ls.staff_id)
-														LEFT OUTER JOIN payment_items pi
-															ON 
-																pi.staff_id = s.staff_id 
-																AND pi.pay_year = ".$this->__YEAR." 
-																AND pi.pay_month = ".$this->__MONTH."	
-																AND (
-																	(pi.salary_item_type_id = ".SIT_PROFESSOR_REMEDY_SERVICES_INSURE." AND s.person_type = ".HR_PROFESSOR.") OR
-																	(pi.salary_item_type_id = ".SIT_STAFF_REMEDY_SERVICES_INSURE." AND s.person_type = ".HR_EMPLOYEE.")
-																)
-	                        LEFT OUTER JOIN payment_items pi2
-								   ON 
-								   	 pi2.staff_id = s.staff_id 
-								   	 AND pi2.pay_year = ".$this->__YEAR." 
-								   	 AND pi2.pay_month = ".$this->__MONTH."
-								     AND (pi2.salary_item_type_id = ".RETURN_FIRST_MONTH_MOGHARARY.") ") ; 
-			
-			
-		} 
-
-/*if($_SESSION['UserID'] == 'jafarkhani' && $this->__MONTH == 11  ) 
-		{
-			echo PdoDataAccess::GetLatestQueryString(); die();
-			
-		}*/
-	}
 	///.................................................................... توابع مربوط به پرداخت های متفرقه ..............................
 	
 	//محاسبه قلم حقوقي برگشت حق بيمه جانبازان کارمند

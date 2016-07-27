@@ -1,7 +1,7 @@
 <script type="text/javascript">
 //---------------------------
 // programmer:	b.Mahdipour
-// create Date:	92.11
+// create Date:	94.11
 //---------------------------
 <?
 ini_set("display_errors","On");
@@ -10,8 +10,7 @@ ini_set("display_errors","On");
 PaymentProcess.prototype = {
 
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
-	address_prefix : "<?= $js_prefix_address?>",
-    FacilID : <?= $_REQUEST["FacilID"]?>,
+	address_prefix : "<?= $js_prefix_address?>",    
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -75,7 +74,7 @@ function PaymentProcess(){
 			width : 700,
 			itemId : "resultPnl",
 			loader : {
-				url : "/HumanResources/HRProcess/pay_calc_monitor_file.html",
+				url : "/HumanResources/tempDir/pay_calc_monitor_file.html",
 				scripts: true
 			}
 		},{
@@ -146,21 +145,15 @@ PaymentProcess.prototype.IssuePayment = function(btn){
 			{					
 				clearInterval(PaymentProcessObject.loadChain);
 				PaymentProcessObject.get("result").style.display = "none";		
-				alert(sd.data);							
-			//	PaymentProcessObject.get("resultPanel").innerHTML = "<br>" + cnt[0];
-				/*PaymentProcessObject.get("img_loading").style.display = "none";
-				var cnt = sd.data.split("_");
-				PaymentProcessObject.get("resultPanel").innerHTML = "<br>" + "<a href='<?=HR_TemlDirPath?>success_log.php' target='_blank' >"+
-					"<img src=<?=HR_ImagePath?>success.gif > " + cnt[0] + " موفق'" + "</a>"; */
+				alert(sd.data);									
 		
 			}
-			else {				
-							
+			else {								
 				var cnt = sd.data.split("_");
 				PaymentProcessObject.get("img_loading").style.display = "none";		
 				PaymentProcessObject.resultPanel.down("[itemId=resultSt]").update(
-					"<br>" + "<a href='/HumanResources/HRProcess/success_log.php' target='_blank' >" +
-					"<img src=<?=HR_ImagePath?>success.gif > " + (cnt[0]-1 ) + " موفق " + "</a> &nbsp;&nbsp;" + "<a href='/HumanResources/HRProcess/fail_log.php' target='_blank' >" +
+					"<br>" + "<a href='/HumanResources/tempDir/success_log.php' target='_blank' >" +
+					"<img src=<?=HR_ImagePath?>success.gif > " + (cnt[0]-1 ) + " موفق " + "</a> &nbsp;&nbsp;" + "<a href='/HumanResources/tempDir/fail_log.php' target='_blank' >" +
 					"<img src=<?=HR_ImagePath?>fail.gif > " + (cnt[1]-1) + " شکست  " );  				
 			}
 		},

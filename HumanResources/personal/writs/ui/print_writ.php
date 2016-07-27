@@ -3,14 +3,8 @@
 // programmer:	jafarkhani
 // create Date:	90.03
 //---------------------------
-if($_GET['transcript_no']!='pooya'){
-    
-    require_once '../../../header.inc.php'; 
-}
-else {
-    
-    require_once '../../../pooyaheader.inc.php'; 
-}
+require_once '../../../header.inc.php'; 
+
 require_once '../../persons/class/education.class.php';
 require_once '../../persons/class/devotion.class.php';
 require_once '../class/writ_item.class.php';
@@ -194,7 +188,7 @@ function writ_print_list($transcript_no, $last_writ_flag)
 	$whereParam = array();
 
 	require_once '../data/writ.data.php';
-
+echo "****"; die();
 	MakeAdvanceSearchWhere($where, $whereParam);
 		
 	if (!empty($_REQUEST["writ_id"]) && !empty($_REQUEST["writ_ver"]) && !empty($_REQUEST["staff_id"]))

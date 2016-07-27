@@ -10,7 +10,7 @@ require_once '../class/person.class.php';
 require_once '../../staff/class/staff.class.php'; 
 //require_once '../../../baseInfo/class/bases.class.php';
 //require_once '../../staff/class/staff_detasils.php';
-//require_once '../../staff/class/staff_include_history.class.php';
+require_once '../../staff/class/staff_include_history.class.php';
 //require_once '../../../salary/payment/class/payments.class.php';
 
 require_once(inc_response); 

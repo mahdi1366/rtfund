@@ -4,7 +4,7 @@
 // programmer:	Mahdipour
 // create Date:	94.11
 //---------------------------
-
+$address_prefix = getenv("DOCUMENT_ROOT");
 require_once  $address_prefix . "/HumanResources/organization/positions/post.class.php" ; 
 require_once $address_prefix .'/HumanResources/salary/salary_params/class/salary_params.class.php';
 require_once $address_prefix .'/HumanResources/baseInfo/class/salary_item_types.class.php';

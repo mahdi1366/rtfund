@@ -13,10 +13,6 @@ require_once '../js/confirmation.js.php';
 		<br>
 		<span>
 			<div id="mainpanel"></div>
-		</span>
-		<br><br>
-		<span>
-			<div id="docpanel"></div>
-		</span>
+		</span>				
     </center>    
 </form>

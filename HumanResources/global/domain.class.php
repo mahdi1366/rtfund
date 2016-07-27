@@ -354,14 +354,9 @@ class manage_domains
         return PdoDataAccess::runquery($query);
     }
     public static function GETALL_Payment_Type()
-    {    ///echo "sdsd"  ; die();
-         $query = " select * from Basic_Info where TypeID= 50 and InfoID in (".manage_access::getValidPayments().")";
+    {    
+         $query = " select * from BaseInfo where TypeID = 72 ";	
 		
-		/* if($_SESSION['UserID'] == 'darvish-re' || $_SESSION['UserID'] == 'jafarkhani' ) 
-		 {
-			$query = " select * from Basic_Info where TypeID= 50  AND InfoID = 9 " ; 
-		 }*/
-			
          return PdoDataAccess::runquery($query);        
     }
 	public static function DRP_Marital_Status($dropdownName, $selectedID = "", $extraRow = "",$style="")

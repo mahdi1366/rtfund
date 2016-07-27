@@ -1,7 +1,7 @@
 <?php
 //---------------------------
-// programmer:	Sh.jafarkhani
-// Date:		92.11
+// programmer:	b.mahdipour
+// Date:		94.11
 //---------------------------
 require_once '../../../header.inc.php';
 require_once '../class/payment_calculation.class.php';
@@ -9,7 +9,6 @@ require_once '../class/payments.class.php';
 require_once '../class/payment_cancel.class.php';
 require_once '../../../baseInfo/class/salary_item_report.class.php';
 require_once '../class/arrear_pay_calculation.class.php';
-//require_once getenv("DOCUMENT_ROOT") . "/CommitmentAccount/import/HrmsProcesses.class.php" ; 
 
 require_once inc_QueryHelper;
 require_once(inc_response);
@@ -46,12 +45,7 @@ switch ($task) {
 }
 
 function ProcessPayment() {
-
-//$_POST["end_date"] = '1393/07/30' ; 
-//$_POST["start_date"] = '1393/07/01' ;
-//$_POST["from_staff_id"] = 211895 ; // exe_staff_sql 
-//$_POST["to_staff_id"] = 211895 ;  //250020 ; //  ; 
-//$_POST["PTyp"] = 2 ; 
+		
 	
 	$paymentCalcObj = new manage_payment_calculation();
 
@@ -64,24 +58,13 @@ function ProcessPayment() {
 	$paymentCalcObj->__CALC_NEGATIVE_FICHE = isset($_POST['negative_fiche']) ? "1" : "0";
 	$paymentCalcObj->month_start = DateModules::shamsi_to_miladi($_POST["start_date"]);
 	$paymentCalcObj->month_end = DateModules::shamsi_to_miladi($_POST["end_date"]);
-	$paymentCalcObj->__MONTH_LENGTH = ceil(DateModules::GDateMinusGDate($paymentCalcObj->month_end, $paymentCalcObj->month_start) + 1);
-	$paymentCalcObj->ExtraWork = (isset($_POST["ExtraWork"]) && $_POST["ExtraWork"] == 1 ) ? 1 : 0 ; 
+	$paymentCalcObj->__MONTH_LENGTH = ceil(DateModules::GDateMinusGDate($paymentCalcObj->month_end, $paymentCalcObj->month_start) + 1);	
 	$paymentCalcObj->__MSG = $_POST["message"];
 		
 	// <editor-fold defaultstate="collapsed" desc="Create Where" >
 	$where = "1=1";
 	$whereParam = array();
-	
-	if (!empty($_POST["PTyp"])) {
-				
-		if( $_POST["PTyp"] == 101 )
-			$where .= " AND p.person_type in ( 2,3,5 ) "; 
-			
-		elseif ( $_POST["PTyp"] == 100 )  
-			$where .= " AND p.person_type in ( 1,2,3,5 ) " ;
-		else 
-			$where .= " AND p.person_type in (".$_POST["PTyp"].")" ; 
-	}
+		
 	if (!empty($_POST["from_staff_id"])) {
 		$where .= " AND s.staff_id >= :fsid";
 		$whereParam[":fsid"] = $_POST["from_staff_id"];
@@ -90,26 +73,12 @@ function ProcessPayment() {
 		$where .= " AND s.staff_id <= :tsid";
 		$whereParam[":tsid"] = $_POST["to_staff_id"];
 	}
-	if (!empty($_POST["from_cost_center_id"])) {
-		$where .= " AND w.cost_center_id >= :fccid";
-		$whereParam[":fccid"] = $_POST["from_cost_center_id"];
-	}
-	if (!empty($_POST["to_cost_center_id"])) {
-		$where .= " AND w.cost_center_id <= :tccid";
-		$whereParam[":tccid"] = $_POST["to_cost_center_id"];
-	}
-	if(!isset($_POST["ouid"]))
-	{
-		$result = QueryHelper::MK_org_units($_POST["ouid"], true);
-		$where .= " AND " . $result["where"];
-		$whereParams = array_merge($whereParam, $result["param"]);
-	}
 	
 	// </editor-fold>
 
 	$paymentCalcObj->__WHERE = $where;
 	$paymentCalcObj->__WHEREPARAM = $whereParam;
-	
+							
 	if (isset($_POST["compute_backpay"]))
 		$res = $paymentCalcObj->run_back();
 	else 
@@ -121,7 +90,7 @@ function ProcessPayment() {
 		die(); 	
 	}
 	else
-	{
+	{		
 		echo Response::createObjectiveResponse(true, $paymentCalcObj->success_counter . "_" . $paymentCalcObj->fail_counter);
 		die(); 	
 	}

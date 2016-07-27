@@ -28,7 +28,7 @@ function Cancle()
                           ]
                              });
                              
-	 var pTypeStore =  <?= dataReader::MakeStoreObject_Data(manage_domains::GETALL_Payment_Type(),"'InfoID','Title'")?> ; 
+	 var pTypeStore =  <?= dataReader::MakeStoreObject_Data(manage_domains::GETALL_Payment_Type(),"'InfoID','InfoDesc'")?> ; 
 	 this.formPanel = new Ext.form.Panel({
 			applyTo: this.get("mainpanel"),
 			layout: {
@@ -68,26 +68,8 @@ function Cancle()
                                             inputId:"payment_type",
                                             valueField: 'InfoID',
                                             value :"1" ,
-                                            displayField: 'Title'
-                                         },                                        
-                                         {
-                                            xtype : "combo",                                                 
-                                            name:"PersonType",
-                                            fieldLabel : "نوع فرد",
-                                            store: types,                                            
-                                            valueField: 'val',
-                                            displayField: 'title',
-											validator : function(value){
-												if(CancleObject.formPanel.down('[name=SID]').getValue() != "" ){
-													return true ; 
-												} 
-												if (value == "" ) {
-													return false ;
-												}
-												
-												return true ; 
-											}
-                                         },
+                                            displayField: 'InfoDesc'
+                                         },  
 										 {											
 											xtype : "trigger",
 											name : "SID",
@@ -103,42 +85,6 @@ function Cancle()
 											} ,											
 											width:200,
 											triggerCls:'x-form-search-trigger'
-										},
-										{
-											xtype: 'fieldset',
-											title : "مراکز هزینه",
-											colspan : 3,		
-											style:'background-color:#DFEAF7;font-size:10px',					
-											width : 700,						
-											fieldLabel: 'Auto Layout',
-											itemId : "chkgroup",
-											collapsible: true,
-											collapsed: true,
-											layout : {
-												type : "table",
-												columns : 4,
-												tableAttrs : {
-													width : "100%",
-													align : "center"
-												},
-												tdAttrs : {							
-													align:'right',
-													width : "۱6%"
-												}
-											},
-											items : [{
-												xtype : "checkbox",
-												boxLabel : "همه",
-												checked : true,
-												listeners : {
-													change : function(){
-														val = this.getValue();
-														CancleObject.formPanel.down("[itemId=chkgroup]").items.each(function(elem){
-															elem.setValue(val);
-														});														
-													}
-												}
-											}]
 										}
                                        ] , 
                                         buttons : [{

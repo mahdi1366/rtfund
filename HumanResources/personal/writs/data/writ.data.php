@@ -4,7 +4,11 @@
 // create Date:	88.06.17
 //---------------------------
 ini_set("display_errors","On") ; 
+$address_prefix = getenv("DOCUMENT_ROOT");
+echo $address_prefix."1111";
+
 require_once '../../../header.inc.php'; 
+echo $address_prefix."2222";
 
 require_once '../class/writ.class.php'; 
 require_once '../../staff/class/staff.class.php';
