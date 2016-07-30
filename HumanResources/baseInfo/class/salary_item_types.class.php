@@ -34,10 +34,7 @@ class manage_salary_item_type extends PdoDataAccess
 	public $print_order;
 	public $validity_start_date;
 	public $validity_end_date;
-	public $total_id;
-	public $ledger_id;
-	public $tafsili_id;
-	public $tafsili2_id;
+	
 	public $available_for;
 	public $backpay_include;
 	public $month_length_effect;
@@ -50,8 +47,7 @@ class manage_salary_item_type extends PdoDataAccess
 	public $param6_input;
 	public $param7_title;
 	public $param7_input;
-	public $CostID;
-	public $CostType;
+	
 
 
 	function __construct($salary_item_type_id = "")
@@ -178,8 +174,9 @@ if(validity_end_date is null or validity_end_date = '0000-00-00' or validity_end
 
 	function AddSalaryItem()
 	{
+				
 	 	$this->salary_item_type_id = ($this->LastID()+1);
-	 	$return = parent::insert("salary_item_types",$this);
+	 	$return = parent::insert("HRM_salary_item_types",$this);
 
 	 	if($return === false)
 			return false;
@@ -187,7 +184,7 @@ if(validity_end_date is null or validity_end_date = '0000-00-00' or validity_end
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->MainObjectID = $this->salary_item_type_id;
-		$daObj->TableName = "salary_item_types";
+		$daObj->TableName = "HRM_salary_item_types";
 		$daObj->execute();
 
 		return true;
@@ -199,7 +196,7 @@ if(validity_end_date is null or validity_end_date = '0000-00-00' or validity_end
 	 	$whereParams[":sid"] = $this->salary_item_type_id;
 
                    
-	 	$result = parent::update("salary_item_types",$this," salary_item_type_id=:sid", $whereParams);
+	 	$result = parent::update("HRM_salary_item_types",$this," salary_item_type_id=:sid", $whereParams);
 
         if(!$result)
 			return false;
@@ -215,7 +212,7 @@ if(validity_end_date is null or validity_end_date = '0000-00-00' or validity_end
 
 	function LastID()
 	{
-		return PdoDataAccess::GetLastID("salary_item_types", "salary_item_type_id");
+		return PdoDataAccess::GetLastID("HRM_salary_item_types", "salary_item_type_id");
 	}
 
 	static function Remove($salary_item_type_id)

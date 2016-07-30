@@ -10,7 +10,7 @@ require_once inc_dataGrid;
 require_once '../js/writ_type.js.php';
 
 $dg = new sadaf_datagrid("WGrid", $js_prefix_address . "../data/writ_type.data.php?task=SelectWritTypes", "ItemResDIV");
-//$col= $dg->addColumn(" ", "valid","int",true);
+$col= $dg->addColumn(" ", "writ_subtype_id","int",true);
 
 $col= $dg->addColumn("کد ","writ_type_id","int");
 $col->width = 50;
@@ -22,35 +22,13 @@ $col = $dg->addColumn("عنوان اصلی حکم", "writTitle", "string");
 $col->width = 150;
 
 $col = $dg->addColumn("عنوان فرعی حکم", "writSubTitle", "string");
-//$col->ellipsis = 200 ; 
 
-/*$col = $dg->addColumn("اثر", "effectTitle", "string");
-$col->width = 90;
-
-$col = $dg->addColumn("بیمه", "insure_include_title", "string");
-$col->width = 50;
-
-$col = $dg->addColumn("مالیات", "tax_include_title", "string");
-$col->width = 50;
-
-$col = $dg->addColumn("بازنشستگی", "retired_include_title", "string");
-$col->width = 70;
-
-$col = $dg->addColumn("مقرری", "pension_include_title", "string");
-$col->width = 50;
-
-$col = $dg->addColumn("غیرخودکار", "user_data_entry_title", "string");
-$col->width = 60;
-
-$col = $dg->addColumn("نوع محاسبه", "salary_compute_type_title", "string");
-$col->width = 100;
-*/
 $col = $dg->addColumn("عملیات", "", "string");
 $col->renderer = "function(v,p,r){return SalaryItemType.opRender(v,p,r);}";
 $col->width = 50;
 
 	$dg->addButton = true;
-	$dg->addHandler = "function(){SalaryItemTypeObject.AddSit();}";
+	$dg->addHandler = "function(){SalaryItemTypeObject.AddWrt();}";
 
 $dg->pageSize = "15";
 $dg->width = 650;

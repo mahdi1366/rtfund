@@ -11,9 +11,4 @@
                                                         <td width="10%" align="center" bgcolor="#3F5F96"><font color="#FFFFFF"><b>شماره شناسايي</b></font></td>                                                       
                                                         <td width="25%" align="center" bgcolor="#3F5F96"><font color="#FFFFFF"><b>نام خانوادگي و نام</b></font></td>
                                                         <td width="30%" align="center" bgcolor="#3F5F96" ><font color="#FFFFFF"><b>خطا</b></font></td>
-                                                </tr><tr>
-						<td bgcolor="#F5F5F5">1</td>
-						<td bgcolor="#F5F5F5">205</td>                                                
-						<td bgcolor="#F5F5F5">سیدموسوی سیدمسعود</td>
-						<td bgcolor="#F5F5F5">براي اين شخص مرکز هزينه تعيين نشده است.</td>
-					</tr></table></cenetr></body></html>
+                                                </tr>

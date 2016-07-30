@@ -188,7 +188,7 @@ FrameworkStartPage.prototype.ConfirmPerson = function(mode){
 				mask.hide();
 				var st = Ext.decode(response.responseText);
 
-				if(st.success)
+				if(st.success)					
 					FrameworkStartPageObject.grid1.getStore().load();
 				else
 				{

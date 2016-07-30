@@ -45,6 +45,7 @@ $address_prefix = getenv("DOCUMENT_ROOT");
 
 define("HR_ImagePath", "/HumanResources/img/");
 define("HR_TemlDirPath", "/HumanResources/tempDir/");
+define("inc_QueryHelper", $address_prefix . "/HumanResources/global/report/QueryHelper.php");
 
 $js_prefix_address = implode("/" , 
 		array_splice(preg_split('/\//', $_SERVER["SCRIPT_NAME"]),0,

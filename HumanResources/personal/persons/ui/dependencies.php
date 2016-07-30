@@ -77,12 +77,12 @@ $col = $dgh->addColumn("ردیف","row_no", "string");
 $col->width = 100;
 
 $col = $dgh->addColumn("دلیل کفالت", "support_cause", GridColumn::ColumnType_string);
-$col->editor = ColumnEditor::ComboBox(manage_domains::GETALL_SupporCause(), "InfoID", "Title");
+$col->editor = ColumnEditor::ComboBox(manage_domains::GETALL_SupporCause(), "InfoID", "InfoDesc");
 $col->width = 120;
 $dgh->addColumn("", "support_cause", "", true);
 
 $col = $dgh->addColumn("نوع بیمه", "insure_type", "string");
-//$col->editor = ColumnEditor::ComboBox(manage_domains::GETALL_InsureType(), "InfoID", "Title");
+$col->editor = ColumnEditor::ComboBox(manage_domains::GETALL_InsureType(), "InfoID", "InfoDesc");
 $dgh->addColumn("", "insure_type", "", true);
 
 $col = $dgh->addColumn("از تاریخ", "from_date", GridColumn::ColumnType_date);

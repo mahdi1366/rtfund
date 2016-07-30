@@ -10,7 +10,7 @@ require_once '../class/person.class.php';
 require_once '../../staff/class/staff.class.php'; 
 //require_once '../../../baseInfo/class/bases.class.php';
 //require_once '../../staff/class/staff_detasils.php';
-//require_once '../../staff/class/staff_include_history.class.php';
+require_once '../../staff/class/staff_include_history.class.php';
 //require_once '../../../salary/payment/class/payments.class.php';
 
 require_once(inc_response); 
@@ -231,7 +231,7 @@ function searchPerson() {
 	}
 
 	$temp = manage_person::SelectPerson($where, $whereParam, $include_new_persons, $show_All_history);
-  
+ 
 	$no = count($temp);
 	$temp = array_slice($temp, $_GET["start"], $_GET["limit"]);
  
@@ -265,8 +265,58 @@ function saveData() {
 			Response::createObjectiveResponse(false, " این فرد قبلا در سیستم ثبت شده است. ");
 			die();
 		}
-	}
+	}	
+		
+	//..........................................................................	
+	if (trim($_FILES['ProfPhoto']['name']) == '' ) 
+		{   
+			//$message=' نام فایل خالی است ';
+			$PhotoSwitch = false;
+		}
+		elseif ( $_FILES['ProfPhoto']['error'] != 0 )
+			$message=' خطا در ارسال فایل' . $_FILES['ProfPhoto']['error'];
+		elseif 	($_FILES['ProfPhoto']['size'] > $_POST['MAX_FILE_SIZE'] )
+			$message=' طول فایل بیش از 50 کیلو بایت است ';
+		
+       elseif(in_array(strtolower(end(explode(".", $_FILES['ProfPhoto']['name']))),array("jpg","jpeg")) !=1) {
+            $message= "فرمت عکس قابل قبول نمی باشد.";
+       } 
+	   				
+		else
+		{ 		
 			
+			$_size = $_FILES['ProfPhoto']['size'];
+			$_name = $_FILES['ProfPhoto']['tmp_name'];
+			$data = addslashes((fread(fopen($_name, 'r' ),$_size)));
+			$PhotoQuery = "";
+				
+			/*
+			//اگر استاد قبلا عکس داشته است
+			$Photosql = pdodb::getInstance("","","","photo","");
+		
+			if (count($img_res) > 0){
+			  $PhotoQuery = "UPDATE photo.StaffPhotos SET picture='$data' WHERE PersonID=".$img_res[0]['PersonID'];
+			  $auditmessage = 'بروز رسانی عکس';
+			}
+			else{
+			  $PhotoQuery = "INSERT INTO photo.StaffPhotos (PersonID, picture) VALUES ($HrmsPersonID, '$data')";
+			  $auditmessage = 'اضافه کردن عکس';
+			}
+			$Photo_res = $Photosql->ExecuteBinary($PhotoQuery);
+	                $Photosql->audit($auditmessage);
+			//Added by Bagheri (2013-Oct-23) -- pass is here temporary.
+			$oaPhotoQuery = "UPDATE officeas.uni_pic SET picture='$data' WHERE uid='".$UserID."'";
+	        $oamysql = pdodb::getInstance("172.20.20.36", "picuser", "sp#U12_oA", "officeas");
+			$oamysql->ExecuteBinary($oaPhotoQuery);
+			$auditmessage = 'ﺏﺭﻭﺯ ﺮﺳﺎﻧی ﻉکﺱ اتوماسیون';
+			$Photosql->audit($auditmessage);
+			//End of Bagheri.
+			$PhotoSwitch =true;
+			 */
+			
+		}
+	
+	//..........................................................................		
 	if (empty($_POST["PersonID"])) {	
 	
 		$staffObject = new manage_staff();
@@ -280,7 +330,15 @@ function saveData() {
 			
 		}
 			
-		$return = $obj->AddPerson($staffObject);		
+		$return = $obj->AddPerson($staffObject);	
+		
+		if($return === TRUE) 
+		{		
+		
+			$qry = " update HRM_persons set picture = '$data' where PersonID = ".$obj->PersonID ; 
+			if(PdoDataAccess::runquery($qry) === false)		
+			$return	= false ;			  
+		}
 					
 	} else {
 						
@@ -299,7 +357,8 @@ function saveData() {
 		$staffObject->EditStaff(); 	
 		
 		
-	} 
+	} 	
+		
 	echo $return ? Response::createObjectiveResponse(true, $obj->PersonID) :
 			Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString("\n"));
 	die();

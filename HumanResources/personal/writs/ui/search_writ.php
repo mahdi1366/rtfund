@@ -15,38 +15,34 @@ $dg = new sadaf_datagrid("searchWritGrid", $js_prefix_address . "../data/writ.da
 $col= $dg->addColumn("شماره پرسنلی","PersonID","int",true);
 
 $col = $dg->addColumn("شماره حکم", "writ_id", "int");
-$col->width = 50;
+$col->width = 70;
 
 $col = $dg->addColumn("<span style=\"font-size:8px\">نگارش حکم</span>", "writ_ver", "int");
-$col->width = 30;
+$col->width = 70;
 
 $col = $dg->addColumn("نام ونام خانوادگی", "fullname", "string");
-$col->width = 60;
-
-$col = $dg->addColumn("شماره شناسایی", "staff_id", "string");
-$col->width = 60;
-
-$col = $dg->addColumn("واحد محل خدمت", "parentTitle", "string");
 $col->width = 100;
+
+$col = $dg->addColumn(" شناسایی", "staff_id", "string");
+$col->width = 80;
+
 
 $col = $dg->addColumn("نوع حکم", "wt_title", "string");
 
-$col = $dg->addColumn("وضعیت استخدامی", "emp_state_title", "string");
-$col->width = 50;
 
 $col = $dg->addColumn("تاریخ اجرا", "execute_date", "string");
 $col->renderer = "function(v){return MiladiToShamsi(v);}";
-$col->width = 70;
+$col->width = 80;
    
 
-$col = $dg->addColumn("فقط ثبت سابقه؟", "history_only_title", "string");
-$col->width = 40;
+$col = $dg->addColumn("  سابقه؟", "history_only_title", "string");
+$col->width = 50;
 
 $col = $dg->addColumn("<span style=\"font-size:8px\">اصلاحی</span>", "corrective_title", "string");
-$col->width = 40;
+$col->width = 50;
 
 $col = $dg->addColumn("شماره اصلاح", "corrective_writ_id", "int");
-$col->width = 50;
+$col->width = 80;
 
 $col = $dg->addColumn("مبلغ", "sumValue", "int");
 $col->width = 80;

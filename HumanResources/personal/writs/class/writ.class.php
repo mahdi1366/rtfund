@@ -3,14 +3,14 @@
 // programmer:	Mahdipour
 // create Date: 94.11
 //---------------------------
-
-require_once 'writ_item.class.php';
+$address_prefix = getenv("DOCUMENT_ROOT");
+require_once  $address_prefix . "/HumanResources/personal/writs/class/writ_item.class.php";
 require_once 'writ_subtype.class.php';
-require_once '../../staff/class/staff.class.php';
-//require_once '../../professors/class/prof.class.php';
-require_once '../../../organization/positions/post.class.php';
-require_once '../../persons/class/dependent.class.php';
-require_once '../../persons/class/person.class.php';
+require_once $address_prefix . '/HumanResources/personal/staff/class/staff.class.php';
+require_once $address_prefix . '/HumanResources/organization/positions/post.class.php';
+require_once $address_prefix . '/HumanResources/personal/persons/class/dependent.class.php';
+require_once $address_prefix . '/HumanResources/personal/persons/class/person.class.php';
+
 
 class manage_writ extends PdoDataAccess
 {
@@ -1412,6 +1412,8 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 	 */
 	public function check_corrective_state()
 	{
+		
+		
 		if($this->corrective)
 			return 'CORRECTING';
 
@@ -1429,8 +1431,8 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 			               w.corrective_writ_id ,
 			               w.corrective_writ_ver
 
-					FROM staff s
-						LEFT OUTER JOIN writs w ON (w.staff_id = s.staff_id)
+					FROM HRM_staff s
+						LEFT OUTER JOIN HRM_writs w ON (w.staff_id = s.staff_id)
 
 			        WHERE s.staff_id = " . $this->staff_id . " AND
 							(writ_id<>" . $this->writ_id . " OR writ_ver<>" . $this->writ_ver . ")AND
@@ -1568,9 +1570,9 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 									 $contract_end_date=NULL,
                                                                          $indiv=NULL)
 	{		
-		                
+						                
         //-------------------------------------------new--------------------------
-                          
+                       
 		if($issue_date != NULL )
 		{
 					
@@ -2009,8 +2011,8 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 	static function is_first_writ($writ_id, $writ_ver, $staff_id)
 	{
 		$query = " SELECT COUNT(*) rcount
-		           FROM writs w1
-						 INNER JOIN writs w2 ON(w1.staff_id = w2.staff_id)
+		           FROM HRM_writs w1
+						 INNER JOIN HRM_writs w2 ON(w1.staff_id = w2.staff_id)
 				   WHERE w1.writ_id=:wid AND
 				         w1.writ_ver=:wver AND
 				         w1.staff_id=:stid AND
@@ -2258,7 +2260,8 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 	}
 
 	static function GetAllWrits($where = "",$whereParam = array())
-	{         
+	{  
+			
        /* $staff_group_join = "";
 		if(!empty($_REQUEST['staff_group_id']))
 		{
@@ -2275,6 +2278,8 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 		} */
 		if(isset($_REQUEST['last_writ_view']) && (empty($_REQUEST['to_execute_date']) || 
                          $_REQUEST['to_execute_date']=='0000-00-00' )) {
+			
+			
 		   
 			$query = " SELECT w.*,
                           bi1.Title corrective_title ,
@@ -2332,6 +2337,7 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 		}
                 else if(isset($_REQUEST['last_writ_view']) && (!empty($_REQUEST['to_execute_date']) && $_REQUEST['to_execute_date']!='0000-00-00')) {
                    
+						   
                     $whereW = " AND w.execute_date >= '".DateModules::shamsi_to_miladi($_REQUEST['from_execute_date'])."'" ; 
                     $whereW .= " AND w.execute_date <= '".DateModules::shamsi_to_miladi($_REQUEST['to_execute_date'])."'" ;                     
                     
@@ -2404,8 +2410,7 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 						AND s.person_type in(" . manage_access::getValidPersonTypes() . ") $whr ";
                 } 
 		else {  
-			
-			
+						   
 		    $query = " SELECT w.*, w.ouid sub_ouid ,
 	                          bi1.InfoDesc corrective_title ,
 			                  bi2.InfoDesc history_only_title ,	                          
@@ -2434,15 +2439,12 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 	                          j.title job_title ,
 	                          j.job_group ,
 	                         
-							  (w.cur_group - jf.start_group) + 1 job_category , temp.sumValue
+							  (w.cur_group - jf.start_group) + 1 job_category 
 
 			           FROM HRM_persons p
 	                        JOIN HRM_staff s ON(p.personid = s.personid)	                        
 	                        INNER JOIN HRM_writs w ON (s.staff_id = w.staff_id )
-                            LEFT JOIN HRM_sum_items_writs temp
-                                            ON   temp.writ_id = w.writ_id and
-                                                 temp.writ_ver = w.writ_ver and
-                                                 temp.staff_id = w.staff_id
+                         
 	                        LEFT JOIN BaseInfo bi1 ON ( bi1.InfoID = w.corrective  AND bi1.TypeID = 57)
 	                        LEFT JOIN BaseInfo bi2 ON ( bi2.InfoID = w.history_only  AND bi2.TypeID = 57)	                       
 	                        LEFT JOIN BaseInfo bi4 ON (bi4.InfoID = w.emp_state AND bi4.TypeID = 58)
@@ -2696,7 +2698,7 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 
 		  	$temp = PdoDataAccess::runquery($query, array(":wid" => $writ_id, ":wver" => $writ_ver , ":stid" => $staff_id));
 
-
+echo PdoDataAccess::GetLatestQueryString(); die();
 
 		    $Gexecute_date = $temp[0]["execute_date"];
 			$person_type = $temp[0]["person_type"];
@@ -2958,7 +2960,7 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 	function writ_has_new_version()
 	{
 		$DT = parent::runquery("
-				SELECT writ_id FROM writs
+				SELECT writ_id FROM HRM_writs
 				WHERE writ_id=? AND writ_ver>? AND staff_id=?",array($this->writ_id, $this->writ_ver, $this->staff_id));
 		return count($DT) == 0 ? false : true;
 	}

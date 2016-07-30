@@ -364,7 +364,10 @@ function Person()
 		format: 'Y/m/d'
 	});
     
-
+	this.IncludeHistoryGrid = <?= $includeHistoryGrid?>;
+	this.IncludeHistoryGrid.render(this.get("includeHistoryGRID"));
+	this.sid = <?= $SummeryInfo[0]["staff_id"] ?>;
+	this.person_type = '<?= $SummeryInfo[0]["person_type_title"]  ?>' ;
 }
 
 var PersonObject = new Person();
@@ -562,6 +565,39 @@ Person.prototype.opDelRender = function(store,record,op)
 			"cursor:pointer;width:50%;height:16'></div>";
 }
 
+Person.prototype.SaveHistory = function(store,record,op)
+{
+	mask = new Ext.LoadMask(Ext.getCmp(PersonObject.TabID), {msg:'در حال ذخيره سازي...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		url: PersonObject.address_prefix + '../data/person.data.php?task=saveIncludeHistory',
+		params:{
+			record: Ext.encode(record.data) ,
+			Q0 : <?= $personID?>
+		},
+		method: 'POST',
+
+		success: function(response,op){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+
+			if(st.success == true )
+			{
+				alert("ذخیره سازی با موفقیت انجام شد.");
+				PersonObject.IncludeHistoryGrid.getStore().load();
+				return;
+			}
+			else
+			{
+				alert(st.data);
+			}
+
+		},
+		failure: function(){}
+	});
+}
+
 Person.prototype.AddIncludeHistory = function()
 { 
 
@@ -571,10 +607,7 @@ Person.prototype.AddIncludeHistory = function()
 		start_date : null ,
 		end_date : null ,
 		insure_include : null ,
-		service_include : null ,
-		retired_include : null ,
-		tax_include : null ,
-		pension_include : null 
+		tax_include : null	
 
 	});
     

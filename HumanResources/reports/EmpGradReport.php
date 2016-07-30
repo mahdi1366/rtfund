@@ -13,7 +13,7 @@ require_once 'EmpGradReport.js.php';
 function duty_year_month_day($staff_id = "", $personID = "", $toDate) {
     if ($staff_id == "" && $personID = "") {
         PdoDataAccess::PushException("يکي از دو پارامتر staff_id و PersonID بايد فرستاده شود");
-        return false;
+        return false;                
     }
     $query = "select w.execute_date,
 						w.contract_start_date ,
@@ -77,6 +77,8 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
         $EvlEndDate = DateModules::shamsi_to_miladi($arr[0]."/06/31");
     elseif($arr[1] > 6 && $arr[1] <= 12 )
          $EvlEndDate = DateModules::shamsi_to_miladi($arr[0]."/12/29");
+
+    $EvlStartDate = DateModules::shamsi_to_miladi($arr[0]."/01/01");
      
 //..........................................................
     $query = " select s.staff_id ,  bi.MasterID , w.grade , case w.grade
@@ -85,7 +87,7 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
 							when 3 then ' ارشد'
 							when 4 then ' خبره'
 							when 5 then ' عالي'
-					  end gradeTitle , w.education_level , w.onduty_year, po.SupervisionKind
+					  end gradeTitle , w.education_level , w.onduty_year, po.SupervisionKind , s.UnitCode
 
 					from staff s inner join (SELECT  w.staff_id,
         SUBSTRING_INDEX(SUBSTRING(max(CONCAT(w.execute_date,w.writ_id,'.',w.writ_ver)),11),'.',1) writ_id,
@@ -93,7 +95,7 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
 
 						FROM writs w
 
-						WHERE w.staff_id = " . $_POST['staff_id'] . " and execute_date <= '" . $EndDate . "' ) wr
+						WHERE  emp_mode <> 13  and corrective = 0 and w.staff_id = " . $_POST['staff_id'] . " and execute_date <= '" . $EndDate . "' ) wr
 										on s.staff_id = wr.staff_id
                inner join writs w
                     on wr.staff_id = w.staff_id and
@@ -106,7 +108,6 @@ inner join position po
 
 			   where s.staff_id = " . $_POST['staff_id'];
     $res1 = PdoDataAccess::runquery($query);
-
 
     $query = " select t1.staff_id , st.PersonID ,bi.MasterID , wr.execute_date , pe.grade Moadel , pe.university_id
 				from (
@@ -147,6 +148,38 @@ inner join position po
     // مدت سنوات تجربی
     $ValDuty = manage_salary_params::get_salaryParam_value("", 101, 65, $EndDate, ($res1[0]['grade'] + 1), $res2[0]['MasterID']);
 
+if(empty($ValDuty))
+{
+	
+	  $query = " select t1.staff_id , st.PersonID ,bi.MasterID , wr.execute_date , pe.grade Moadel , pe.university_id
+				from (
+						SELECT  w.staff_id,
+								SUBSTRING_INDEX(SUBSTRING(min(CONCAT(w.execute_date,w.writ_id,'.',w.writ_ver)),11),'.',1) writ_id,
+								SUBSTRING_INDEX(min(CONCAT(w.execute_date,w.writ_id,'.',w.writ_ver)),'.',-1) writ_ver
+
+						FROM writs w
+								INNER JOIN staff ls ON(w.staff_id = ls.staff_id)
+inner join Basic_Info bi2 on bi2.TypeID = 6 and bi2.InfoID = w.education_level 
+
+						WHERE bi2.MasterID = ".($res2[0]['MasterID']+1)." and /*w.history_only = 0 and*/ w.grade = " . $res1[0]['grade'] . " and  w.staff_id = " . $_POST['staff_id'] . "
+  ) t1
+
+						inner join writs wr on t1.staff_id = wr.staff_id and t1.writ_id = wr.writ_id and  t1.writ_ver = wr.writ_ver
+						inner join Basic_Info bi
+											on bi.TypeID = 6 and bi.InfoID = wr.education_level 
+											
+						inner join staff st 
+											on st.staff_id = t1.staff_id						
+						inner join person_educations pe  
+											on st.PersonID = pe.PersonID AND pe.education_level =  wr.education_level 
+									where bi.MasterID = ".($res2[0]['MasterID']+1) ;
+
+    $res2 = PdoDataAccess::runquery($query);
+
+	$ValDuty = manage_salary_params::get_salaryParam_value("", 101, 65, $EndDate, ($res1[0]['grade'] + 1), $res2[0]['MasterID']);
+	
+}
+
 
     $totalYear = $onduty_year;
     if ($onduty_year >= $ValDuty) {
@@ -186,6 +219,28 @@ if($Condition1 == 0 ) {
      }
 elseif($Condition1 == 1 ) 
     $ConTitle = " " ;
+
+//..................................... چنانچه فرد ایثارگر باشد بایستی از امتیازات یک مقطع بالاتر برخوردار شود.......................
+$qry = " select *
+            from bases
+                where BaseType in(3,4) AND
+                      BaseStatus = 'NORMAL' AND  BaseValue > 0
+		      PersonID = " .$res2[0]['PersonID'] ; 
+
+$res17 =  PdoDataAccess::runquery($qry);
+$Madrak2= "" ; 
+if( count($res17) > 0 )
+{    
+    $Madrak2 = $Madrak + 1; 
+
+    $LastMadrak = ($LastMadrak == 2) ? ($LastMadrak + 1) : $LastMadrak ;
+  
+}
+else 
+{
+    $Madrak2= $Madrak ; 
+}
+
     //............................ بررسی امتیازات سوابق تحصیلی فرد ...............................	
     //.................... مشخص کردن اینکه شغل مرتبط است یا خیر ؟ .. و امتیاز مدرک تحصیلی..........................
     //................... ارتقاء به مهارتی....................
@@ -203,8 +258,10 @@ elseif($Condition1 == 1 )
         $RelatedScroe = 15;
         $EducLevelScore = 60;
     }
+
     //...................... ارتقاء به رتبه 3 .................
     if ($LastMadrak == 3 && $res1[0]['grade'] == 2) {
+         
         $RelatedScroe = 9;
         $EducLevelScore = 34;
     } elseif ($LastMadrak == 4 && $res1[0]['grade'] == 2) {
@@ -502,13 +559,30 @@ elseif($Condition1 == 1 )
     //..........................سوابق اجرایی...................................
     //................................ارزشیابی کارکنان .................................
 
+$CrrentYear = 1394 ;
+
+    $qry = " select distinct p.personid , s.UnitCode
+                from persons p  inner join staff s
+                                            on p.personid = s.personid and p.person_type = s.person_type
+                                inner join writs w
+                                            on w.staff_id = s.staff_id
+
+             where w.execute_date >= '".$EvlStartDate."' and w.execute_date <= '".$EvlEndDate."' and 
+                   emp_mode in ( 2 , 4  ) and p.person_type = 2 and p.personID = ".$res2[0]['PersonID'] ; 
+    
+    $resException = PdoDataAccess::runquery($qry);
+ 
+
     $qry = " SELECT g2j(max(FromDate)) mdf
 		FROM ease.SEVL_EvlPeriods 
                    WHERE ToDate <= '".$EvlEndDate."'";
     $res6 = PdoDataAccess::runquery($qry);
 
     $MaxDate = substr($res6[0]['mdf'], 0, 4);
-    $MaxDate = 1393;
+     
+    $strat_date = DateModules::shamsi_to_miladi($MaxDate . "/01/01");
+    $end_date = DateModules::shamsi_to_miladi($MaxDate . "/12/29");
+    $count = 3 ;
     if ($MaxDate == 1393) {
         $strat_date = DateModules::shamsi_to_miladi($MaxDate . "/01/01");
         $end_date = DateModules::shamsi_to_miladi($MaxDate . "/12/29");
@@ -519,75 +593,155 @@ elseif($Condition1 == 1 )
 
     for ($t = 0; $t < $count; $t++) {
         $qry = " SELECT
-					s.PersonID,
-					if(s.ProtestScore != 0.000,
-						s.ProtestScore,
-						s.TotalScore) as score,
+				 	 s.PersonID,
+                       round(AVG(if(s.ProtestScore != 0.000,
+						            s.ProtestScore,
+						            s.TotalScore)) + sum(document),2) as score,
 					p.FromDate,
 					p.ToDate
 				FROM
 					ease.SEVL_Reports s
-						left join
-					/*ease.SEVL_ItemScore e ON (e.PersonID = s.PersonID)
-						left join*/
+						left join					
 					ease.SEVL_EvlPeriods p ON (s.EvlPeriodID = p.EvlPeriodID)
 				where
 					p.FromDate >= '" . $strat_date . "'
 						and p.ToDate <= '" . $end_date . "'
 						and s.PersonID = " . $res2[0]['PersonID'] . "
 
-				group by  s.PersonID ";
+				group by  s.PersonID , substr(g2j(p.ToDate),1,4) ";
+        
+    if( !empty($resException[0]['personid']) && $resException[0]['personid'] > 0 )
+    {
+        /* $qry = " SELECT  AVG(if(s.ProtestScore != 0.000,
+						s.ProtestScore,
+						s.TotalScore) ) as score
+                  FROM
+                    ease.SEVL_Reports s
+                        left join
+                    ease.SEVL_EvlPeriods p ON (s.EvlPeriodID = p.EvlPeriodID)
 
-        $resES = PdoDataAccess::runquery($qry);
-if($_SESSION['UserID'] == 'jafarkhani' ) 
-{
+                    inner join staff st on st.PersonID = s.PersonID
 
-//echo PdoDataAccess::GetLatestQueryString(); die();
-}
-        if (($MaxDate) == 1393) {
+                    WHERE
+                         p.FromDate >= '" . $strat_date . "' AND
+                         p.ToDate <= '" . $end_date . "' AND st.UnitCode = ".$resException[0]['UnitCode']  ; */
+
+            $qry = " SELECT AVG(score) score
+
+			from (
+
+				SELECT   round(AVG(if(s.ProtestScore != 0.000,
+				s.ProtestScore,
+				s.TotalScore)) + sum(document),2) as score
+				FROM
+				ease.SEVL_Reports s
+				left join
+				ease.SEVL_EvlPeriods p ON (s.EvlPeriodID = p.EvlPeriodID)
+
+				inner join staff st on st.PersonID = s.PersonID
+
+				WHERE
+					p.FromDate >= '" . $strat_date . "' AND
+					p.ToDate <= '" . $end_date . "' AND st.UnitCode = ".$resException[0]['UnitCode']."
+
+				group by  s.PersonID , substr(g2j(p.ToDate),1,4)
+
+				) t1 
+		"  ; 
+
+      
+    }
+
+       $resES = PdoDataAccess::runquery($qry);
+//echo PdoDataAccess::GetLatestQueryString()."---<br>"; 
+
+  //........................چنانچه فرد امتیاز نداشته باشد بایستی میانگین واحد برای آن در نظر گرفته شود......................
+     
+        if($resES[0]['score'] == 0 && ($CrrentYear - $t) > 1392 ) {
+           
+            /*$qry = " SELECT  AVG(if(s.ProtestScore != 0.000,
+                                                    s.ProtestScore,
+                                                    s.TotalScore)) as score
+                    FROM
+                        ease.SEVL_Reports s
+                            left join
+                        ease.SEVL_EvlPeriods p ON (s.EvlPeriodID = p.EvlPeriodID)
+
+                        inner join staff st on st.PersonID = s.PersonID
+
+                        WHERE
+                            p.FromDate >= '" . $strat_date . "' AND
+                            p.ToDate <= '" . $end_date . "' AND st.UnitCode = ".$res1[0]['UnitCode']  ;*/
+
+                       $qry = " SELECT AVG(score) score
+
+						from (
+
+							SELECT   round(AVG(if(s.ProtestScore != 0.000,
+							s.ProtestScore,
+							s.TotalScore)) + sum(document),2) as score
+							FROM
+							ease.SEVL_Reports s
+							left join
+							ease.SEVL_EvlPeriods p ON (s.EvlPeriodID = p.EvlPeriodID)
+
+							inner join staff st on st.PersonID = s.PersonID
+
+							WHERE
+								p.FromDate >= '" . $strat_date . "' AND
+								p.ToDate <= '" . $end_date . "' AND st.UnitCode = ".$res1[0]['UnitCode']."
+
+							group by  s.PersonID , substr(g2j(p.ToDate),1,4)
+
+							) t1 
+					"  ;  
+           
+            $resES = PdoDataAccess::runquery($qry);
+        }
+        //..............................................
+
+
+       /* if (($MaxDate) == 1393) {
             $Eval93 = $resES[0]['score'];
             continue;
-        }
+        }*/
+
 
         $evalScore += ($resES[0]['score'] == NULL ) ? 0 : $resES[0]['score'];
 
-        if (($CrrentYear - $t) < 1393)
-            $evalScore += $Eval93;
+if (($CrrentYear - $t) == 1393)
+ $Eval93 = $resES[0]['score'] ; 
 
-        $strat_date = DateModules::shamsi_to_miladi(($CrrentYear - $t) . "/01/01");
-        $end_date = DateModules::shamsi_to_miladi(($CrrentYear - $t) . "/12/29");
+if(($CrrentYear - $t) == 1392)
+$evalScore += $Eval93;
+
+       /* if (($CrrentYear - $t) < 1394)
+            $evalScore += $Eval93;*/
+
+
+        $strat_date = DateModules::shamsi_to_miladi(($CrrentYear - $t -1) . "/01/01");
+        $end_date = DateModules::shamsi_to_miladi(($CrrentYear - $t -1 ) . "/12/29");
     }
-
 
     if ($MaxDate == 1393) {
         $MinEval = $Eval93;
     } else {
-        $MinEval = round($evalScore / 3);
-        $MinEval = round($resES[0]['score']);
+
+        $MinEval = round(($evalScore / 3));
+        //$MinEval = round($resES[0]['score']);
+    }
+            
+if( $res2[0]['PersonID'] == 201199 )
+    {
+     $MinEval = 98.66 ;    
     }
 
 
-//..................................... چنانچه فرد ایثارگر باشد بایستی از امتیازات یک مقطع بالاتر برخوردار شود.......................
-$qry = " select *
-            from bases
-                where BaseType in(3,4) AND
-                      BaseStatus = 'NORMAL' AND  BaseValue > 0
-		      PersonID = " .$res2[0]['PersonID'] ; 
-
-$res17 = PdoDataAccess::GetLatestQueryString(); 
-$Madrak2= "" ; 
-if( count($res17) > 0 )
-{    
-    $Madrak2 = $Madrak + 1 ; 
-    
-}
-else 
-{
-    $Madrak2= $Madrak ; 
-}
-
 //....................................................................
+/*if($_SESSION['UserID'] == 'jafarkhani' ){
 
+echo $Madrak2.'***'.$MinEval ; die();
+}*/
     if ($Madrak2 == 1 && $MinEval >= 70)
         $EvalScore = $onduty_year * 5;
 
@@ -618,6 +772,7 @@ else
             $EvalScore = $onduty_year * 5;
     }
     elseif ($Madrak2 == 5) {
+
         if ($MinEval >= 83)
             $EvalScore = $onduty_year * 16;
         elseif ($MinEval >= 80 && $MinEval < 83)
@@ -735,20 +890,26 @@ else
 
     //....................... دوره های آموزشی.....................
 
-    $qry = "select r.PersonID,sum(p.hours) as TotalHours
-			from ease.SED_registeration r
-						inner join  ease.SED_presentation  p on (r.p_id=p.p_id and r.group_id=p.group_id )
+    $qry = " select
+				tbl.PersonID,SUM(tbl.hours) as TotalHours
+			 from
+				(
+				select
+					(p.hours) as hours,r.PersonID
+				from
+					ease.SED_registeration r
+				inner join ease.SED_presentation p ON (r.p_id = p.p_id
+					and r.group_id = p.group_id)
+				where r.PersonID = " . $res2[0]['PersonID'] . " and r.state<>1 and p.from_date
+				between '1922-03-22' and '" . $EndDate . "' and r.status_hrms = 'YES' and r.state = 2
+				group by r.PersonID , p.p_id , p.group_id
 
-			where  PersonID=" . $res2[0]['PersonID'] . " and r.state<>1 and p.from_date between '1922-03-22' and '" . $EndDate . "' and 
-           r.status_hrms = 'YES' and r.state = 2
+				) as tbl
 
-			group by r.PersonID
-
+			group by tbl.PersonID
 			";
 
     $res7 = PdoDataAccess::runquery($qry);
-
-//echo PdoDataAccess::GetLatestQueryString(); echo "----<br>" ; 
 
     $qry = " select pt.PersonID,sum(p.hours) as TotalHours
 			FROM ease.SED_presentation p
@@ -759,8 +920,10 @@ else
 			group by pt.PersonID
 				";
     $res8 = PdoDataAccess::runquery($qry);
-//echo PdoDataAccess::GetLatestQueryString(); echo "----<br>" ; die();
+
     $TrainScore = round(($res7[0]['TotalHours'] + $res8[0]['TotalHours'] ) / 10);
+ $TrainScore2 = round(($res7[0]['TotalHours'] + $res8[0]['TotalHours'] ));
+
     //.......................میزان تسلط به نرم افزار ها ....................................
 
     $qry = " select r.PersonID,sum(if(SWType = 1 ,p.hours,0) ) as val1 ,sum(if(SWType = 2 ,p.hours,0) ) as val2
@@ -1030,7 +1193,7 @@ if( $_SESSION['UserID'] == 'jafarkhani' )
     $resDoc = PdoDataAccess::runquery($qry);
 
     $DocScore = $resDoc[0]['TotalTajrobiyat'] * 5;
-    
+  
      
     //................. مستندات قبل از سال 93 ......................
     $qry = " select score from ResearchAct where ActType = 1 and  PersonID = ".$res2[0]['PersonID'] ; 
@@ -1041,6 +1204,11 @@ if( $_SESSION['UserID'] == 'jafarkhani' )
         $DocScore += $resRA2[0]['score'] ; 
     }
     
+if($res2[0]['PersonID'] == 200852 ) 		
+	{
+		$DocScore = 30 ; 		
+	}
+
     //............................................. گزارشات تخصصی داوطلبانه ..............
 
     $qry = " SELECT
@@ -1060,6 +1228,7 @@ if( $_SESSION['UserID'] == 'jafarkhani' )
 
     $resTechRep = PdoDataAccess::runquery($qry);
     $TechRepScore = $resTechRep[0]['TotalDastavard'] * 4;
+
 
     //.........................................نشان لیاقت.................................
 
@@ -1157,13 +1326,14 @@ if( $_SESSION['UserID'] == 'jafarkhani' )
 					where PersonID = " . $res2[0]['PersonID'] . " 
 					LIMIT 1 ";
  
-    if($res2[0]['PersonID'] = 201199) 
+    if( !empty($resException[0]['personid']) && $resException[0]['personid'] > 0 )
     {
-        $qry = "  select AVG(BehaviorScore) bhAVG
+        $qry = "  select AVG(BehaviorScore) BehaviorScore
 				from ease.SEVL_Reports sr
                     inner join staff s on sr.personid = s.personid
 
-					where s.UnitCode = 62 ";
+					where s.UnitCode = ".$resException[0]['UnitCode'] ;
+
     }
 
     $res15 = PdoDataAccess::runquery($qry);
@@ -1197,7 +1367,7 @@ if( $_SESSION['UserID'] == 'jafarkhani' )
 				where
 					fi.IndicatorID in (7,16) AND p.personID = " . $res2[0]['PersonID'];
 
-    if($res2[0]['PersonID'] == 201199) 
+     if( !empty($resException[0]['personid']) && $resException[0]['personid'] > 0 )
     {
         $qry = "   SELECT
 					f.EvlFormID,
@@ -1217,7 +1387,7 @@ if( $_SESSION['UserID'] == 'jafarkhani' )
 					hrmstotal.persons p ON (p.PersonID = f.PersonID)
                                          inner join staff s on p.personid = s.personid
 				where
-					fi.IndicatorID in (7,16) AND s.UnitCode = 62 " ; 
+					fi.IndicatorID in (7,16) AND s.UnitCode = ".$resException[0]['UnitCode'] ; 
     }
     
     $res11 = PdoDataAccess::runquery($qry);
@@ -1288,7 +1458,7 @@ if( $_SESSION['UserID'] == 'jafarkhani' )
 				where
 					fi.IndicatorID in (15) AND p.personID = " . $res2[0]['PersonID'];
 
-    if($res2[0]['PersonID'] == 201199) 
+    if( !empty($resException[0]['personid']) && $resException[0]['personid'] > 0 )
     { 
          $qry = "   SELECT
 					f.EvlFormID,
@@ -1308,7 +1478,7 @@ if( $_SESSION['UserID'] == 'jafarkhani' )
 					hrmstotal.persons p ON (p.PersonID = f.PersonID)
                                 inner join staff s on p.personid = s.personid
 				where
-					fi.IndicatorID in (15) AND s.UnitCode = 62 " ; 
+					fi.IndicatorID in (15) AND s.UnitCode = ".$resException[0]['UnitCode'] ; 
     }
     
     $res11 = PdoDataAccess::runquery($qry);
@@ -1351,13 +1521,13 @@ if( $_SESSION['UserID'] == 'jafarkhani' )
     //............................ خدمات برجسته ................................
     $qry = " SELECT BaseValue
 				FROM bases
-				 WHERE BaseType = 27 and PersonID = " . $res2[0]['PersonID'] . " and ExecuteDate <= '".$EndDate."' ";
+				 WHERE BaseType = 27 and PersonID = " . $res2[0]['PersonID'] . " and ExecuteDate <= '".$EndDate."' AND  BaseStatus ='NORMAL' ";
     $res14 = PdoDataAccess::runquery($qry);
     $Item_12 = 0;
     $Item_12 = $res14[0]['BaseValue'] * 11;
 if($_SESSION['UserID'] == 'jafarkhani' ) 
 {
-// echo  PdoDataAccess::GetLatestQueryString()."---"; die();
+ //echo  PdoDataAccess::GetLatestQueryString()."---"; die();
 }
     //.............................................................................
     $Item_9 = 0  ; // احصا فرآیند ها و روشهای انجام کار........
@@ -1369,6 +1539,10 @@ if($_SESSION['UserID'] == 'jafarkhani' )
         $Item_9 = $resRA1[0]['score'];     
     } 
     
+if($res2[0]['PersonID'] == 200852 ) 		
+	{
+		$Item_9 = 30 ; 		
+	}
     
     $Item_7 = $inventionScore; // ثبت اختراع و کارهای بدیع هنری .........
     //.................... ماکزیمم امتیازات ......................
@@ -1704,7 +1878,7 @@ $totalSug = ( $totalSug > 56 ) ? 56 :  $totalSug ;
                 </tr>
                 <tr>
                     <td><font style="font-family:tahoma;font-weight: bold;font-size:8pt"> 
-                        دوره آموزشی : &nbsp;</font> <?= $res7[0]['TotalHours'] ?> &nbsp;
+                        دوره آموزشی : &nbsp;</font> <?=$TrainScore2?> &nbsp;
                         ساعت
                     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
                     <font style="font-family:tahoma;font-weight: bold;font-size:8pt"> 

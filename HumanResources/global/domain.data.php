@@ -101,6 +101,7 @@ function searchWritTypes()
 	{
 		$dt[] = array(array("writ_type_id" => $_REQUEST["extraRowID"], "title" => $_REQUEST["extraRowText"], "person_type" => ""));
 	}
+	$_REQUEST["person_type"] = (empty($_REQUEST["person_type"]) ? 3  : $_REQUEST["person_type"] ) ; 
 	$dt = array_merge($dt, PdoDataAccess::runquery("
 			select writ_type_id,title,person_type
 			from HRM_writ_types

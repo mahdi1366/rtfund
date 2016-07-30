@@ -61,35 +61,25 @@ class manage_staff_include_history extends PdoDataAccess
 	{
 		$query = "	select	p.personid ,
 							include_history_id,
-							s.staff_id ,bi.title person_type,
+							s.staff_id ,							
 							start_date,
-							end_date, insure_include ,
+							end_date, 
+							insure_include ,
 							case insure_include
 									when 1 then 'می باشد'
 									when 0 then 'نمی باشد'
-							end insure_include_title , service_include , 
-							case service_include
-									when 1 then 'می باشد'
-									when 0 then 'نمی باشد'
-							end service_include_title , retired_include ,
-							case retired_include
-									when 1 then 'می باشد'
-									when 0.5 then 'نیمه می باشد'
-									when 0 then 'نمی باشد'
-							end retired_include_title , 
+							end insure_include_title , 							 
 							case tax_include
 									when 1 then 'می باشد'
 									when 0 then 'نمی باشد'
-							end tax_include_title , tax_include ,
-							case pension_include
-									when 1 then 'می باشد'
-									when 0 then 'نمی باشد'
-							end pension_include_title ,pension_include 
+							end tax_include_title , 
+							tax_include 							
 							   
-					from staff_include_history sih inner join staff s
-															on sih.staff_id = s.staff_id
-															inner join persons p on p.personid = s.personid
-												     inner join Basic_Info bi on bi.typeid = 16 and bi.infoid =  s.person_type
+					from HRM_staff_include_history sih 
+								inner join HRM_staff s
+										on sih.staff_id = s.staff_id
+								inner join HRM_persons p on p.personid = s.personid
+								
 					where p.personid  = ". $personid ;
 
 		$temp = PdoDataAccess::runquery($query);
@@ -100,11 +90,10 @@ class manage_staff_include_history extends PdoDataAccess
 
 	function Add($PID)
 	{
-
 		if(!$this->date_overlap($PID))			
 			return false ;			
 
-		$result = parent::insert("staff_include_history", $this);
+		$result = parent::insert("HRM_staff_include_history", $this);
 
 		if($result === false)
 		{ 
@@ -114,8 +103,8 @@ class manage_staff_include_history extends PdoDataAccess
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->RelatedPersonID= $this->staff_id;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
-		$daObj->TableName = "staff_include_history";
+		$daObj->RelatedPersonType = 3 ;
+		$daObj->TableName = "HRM_staff_include_history";
 		$daObj->execute();
 
 		return true ;

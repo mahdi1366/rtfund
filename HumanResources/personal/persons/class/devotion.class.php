@@ -3,7 +3,6 @@
 // programmer:	Mahdipour
 // create Date:	88.06.17
 //---------------------------
-
 class manage_person_devotion extends PdoDataAccess
 {
 	public $PersonID;

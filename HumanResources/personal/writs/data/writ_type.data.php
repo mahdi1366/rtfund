@@ -33,19 +33,21 @@ switch ( $task)
 
 function WritTypeSave()
 {
-	if(empty($_POST["id"]))
+		
+	if(empty($_POST["wstid"]))
 	{
 
-        $wtid = PdoDataAccess::GetLastID("writ_types", "writ_type_id", " person_type=:PT", array(":PT" => $_POST['pt']));
+        $wtid = PdoDataAccess::GetLastID("HRM_writ_subtypes", "writ_subtype_id", " person_type=:PT", array(":PT" => $_POST['pt']));
         $wtid++ ; 
-		$query = "insert into writ_types(person_type,writ_type_id,title)
-                                values('" . $_POST["pt"] . "',".$wtid.",'".  $_POST["title"] ."')";
+		$query = "insert into HRM_writ_subtypes(person_type,writ_type_id,writ_subtype_id,title,print_title,description,
+			emp_state , emp_mode , worktime_type)
+                                values('" . $_POST["pt"] . "',1,".$wtid.",'".  $_POST["title"] ."','".$_POST["print_title"]."','',0,0,0)";
 		PdoDataAccess::runquery($query);
-		
+	
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->MainObjectID = $_POST['pt']."-".$wtid;
-		$daObj->TableName = "writ_types";
+		$daObj->TableName = "HRM_writ_types";
 		$daObj->execute();
 
 		echo Response::createObjectiveResponse("true", $_POST['pt']."-".$wtid);
@@ -124,7 +126,8 @@ function WritSubTypeDelete()
 function SelectWritTypes()
 {
 	
-	$query = " SELECT  wt.writ_type_id , wt.person_type , wt.title writTitle , wst.title writSubTitle , 'قراردادی' PTitle
+	$query = " SELECT  wt.writ_type_id , wt.person_type , wt.title writTitle , wst.title writSubTitle , 'قراردادی' PTitle ,
+		wst.writ_subtype_id
 				FROM HRM_writ_types wt
 							INNER JOIN HRM_writ_subtypes wst 
 								ON wt.person_type = wst.person_type and wt.writ_type_id  = wst.writ_type_id
