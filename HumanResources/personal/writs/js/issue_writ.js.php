@@ -112,7 +112,6 @@ function IssueWrit(){
 		,listeners : {
 			Select: function(combo, records){
 				var record = records[0];
-
 				IssueWritObject.writTypeCombo.reset();
 				IssueWritObject.store1.load({
 					params : {person_type : record.data.person_type}

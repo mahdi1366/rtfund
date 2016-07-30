@@ -36,7 +36,7 @@ if( !empty($_REQUEST["WID"]) )
 	if(count($FullWrt) == 0)
 	   $FullWrt = NULL;
 }
- 
+
 //............................................
 if($objWrt->corrective && $objWrt->history_only !=0)
   	$is_new_corrective = true ;
@@ -51,8 +51,9 @@ else
 {
 	$objPerson = new manage_person($_REQUEST["PID"]);
 }
-$fullInfo = manage_person::GetAllPersons("p.PersonID=:pid",array(":pid"=> $objPerson->PersonID));
 
+$fullInfo = manage_person::GetAllPersons("p.PersonID=:pid",array(":pid"=> $objPerson->PersonID));
+ 
 //............................................
 if(isset($_REQUEST["ExeDate"]))
 	$exedate = $_REQUEST["ExeDate"];
@@ -69,7 +70,7 @@ $state = manage_writ::get_writ_state($_REQUEST["WID"] , $writver, $_REQUEST["STI
  
 if($state == WRIT_PERSONAL)
 { 
-  
+ 
 	if(($objWrt->check_corrective_state() == 'NOT_CORRECTING') || $objWrt->writ_has_new_version())
    	{
         ExceptionHandler::PushException('اين حکم در صدور حکم اصلاحي استفاده شده است و امکان تغيير آن وجود ندارد',
@@ -97,8 +98,9 @@ else
  //...................................
 
 //echo PdoDataAccess::GetLatestQueryString(); die();
- print_r(ExceptionHandler::PopAllExceptions()); die();
+ 
 $is_auto_writ = manage_writ::is_auto_writ($exedate,$objWrt->person_type ,$writ_id,$writver,$staff_id);
+
 if(manage_writ::is_first_writ($writ_id,$writver, $staff_id))
 {  
 	$is_new_writ = false ;
@@ -176,15 +178,13 @@ if(!$is_new_corrective)
 
 	if(!$readOnly)
 	{
-		if($item_accessObj->FullDeleteAccess())
-		{
+		
 			$dg->deleteButton = true;
 			$dg->deleteHandler = "function(){WritFormObject.DeleteItem();}";
-		}
-		if($item_accessObj->FullUpdateAccess()){
+		
 			$dg->addButton("", "ویرایش", "edit", "function(){WritFormObject.EditItem('');}");
 			$dg->addButton("", "عدم پرداخت کلیه قلم ها ", "not_pay", "function(){WritFormObject.DontPayItem();}");
-			}
+			
 	}
     else {
         $dg->addButton("", "مشاهده", "view", "function(){WritFormObject.EditItem('view');}");
@@ -351,7 +351,7 @@ WritForm.prototype.afterLoad = function()
 
 WritFormObject = new WritForm(ViewWritObject);
 
-<?if(!$objWrt->corrective && !$readOnly && $item_accessObj->InsertAccess()){?>
+<?if(!$objWrt->corrective && !$readOnly ){?>
 	WritFormObject.InsertWSI.show();
 <?}
 
@@ -602,23 +602,7 @@ WritFormObject = new WritForm(ViewWritObject);
 			<td>شهر :</td>
 			<td><input type="text" id="city"></td>
 		</tr>
-		<?}?>
-		<? if($FullWrt[0]['execute_date'] >= '2013-02-19' && $FullWrt[0]['person_type'] != 1 ) {?>
-		<tr>
-		    <td>پایه سنواتی :</td>
-		    <td>
-                        <input type="text" name="dutyBase" style="width:50px" 
-                               class="x-form-text x-form-field" id="dutyBase" 
-                               value="<?=  ($objWrt->base == 0 || $objWrt->base == NULL ) ? 1 : $objWrt->base ?>"></td>		   	
-		    <td>پایه تشویقی :</td>
-		    <td class="blueText"><?= $FullWrt[0]['TashvighiValue'] ?></td>
-		</tr>
-		<tr>
-		    <td>پایه ایثارگری :</td> 
-		    <td class="blueText" colspan="3"><?= $FullWrt[0]['IsarValue'] ?></td>
-		     
-		</tr>
-		<? } ?>		
+		<?}?>		
 		<tr>
 			<td>سنوات خدمت :</td>
 			<td><input type="text" style="width:50px" id="onduty_year" name="onduty_year" value="<?= $objWrt->onduty_year?>" class="x-form-text x-form-field"> سال

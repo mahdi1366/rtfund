@@ -50,6 +50,7 @@ class BSC_persons extends PdoDataAccess
 	
 	static function SelectAll($where = "", $param = array()){
 		
+				
 		return PdoDataAccess::runquery_fetchMode("select 
 			p.*, '' UserPass, '' PersonSign,
 			concat_ws(' ',fname, lname,CompanyName) fullname, DomainDesc

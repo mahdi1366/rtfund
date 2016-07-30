@@ -36,6 +36,7 @@ GroupIssueWrit.prototype.makeCombos = function()
 				})
 			}
 		}
+		
 	});
 	this.personTypeCombo.setValue();
 
@@ -48,7 +49,8 @@ GroupIssueWrit.prototype.makeCombos = function()
 				root: 'rows',
 				totalProperty: 'totalCount'
 			}
-		}
+		},
+		autoLoad:true
 	});
 	this.store2 = new Ext.data.Store({
 		fields : ["writ_type_id","writ_subtype_id","title"],

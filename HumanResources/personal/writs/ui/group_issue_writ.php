@@ -18,14 +18,7 @@ require_once '../js/group_issue_writ.js.php';
 <br>
 <div>
 	<div id="newWrit_DIV" style="width: 750px">
-		<table id="newWrit_TBL" style="width: 100%">
-			
-            <tr>
-                <td>واحد محل خدمت :</td>
-                <td colspan="3">
-                <input type="text" id="ouid" name="ouid">
-                </td>
-            </tr>
+		<table id="newWrit_TBL" style="width: 100%">		            
 			<tr>
 				<td colspan="4">
 					<div id="FS_empState">

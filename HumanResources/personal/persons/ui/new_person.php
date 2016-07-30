@@ -37,7 +37,52 @@ else
 $drp_issue_countries = manage_domains::DRP_Countries("country_id","",$obj->country_id,"","70");
 $drp_nationality = manage_domains::DRP_Countries("nationality","",$obj->nationality,"","157");
 $drp_banks = manage_domains::DRP_banks("bank_id",$staffInfo->bank_id,"width:150 px","-");
-        
+     
+	$dg = new sadaf_datagrid("includeHistory",$js_prefix_address . "../../staff/data/staff_include_history.data.php?task=selectIncludeHistory&PID=".$personID  ,
+							 "includeHistoryGRID");
+	
+	$dg->addColumn("", "include_history_id","",true);
+	$dg->addColumn("", "personid","",true);
+
+	$col = $dg->addColumn("شماره شناسایی", "staff_id","int");
+	$col->width = 140;
+
+	
+	$col = $dg->addColumn("تاريخ شروع", "start_date", GridColumn::ColumnType_date);
+	$col->editor = ColumnEditor::SHDateField();
+	$col->width = 120;
+	
+	$col = $dg->addColumn("تاريخ پايان", "end_date", GridColumn::ColumnType_date);
+	$col->editor = ColumnEditor::SHDateField(true);
+	$col->width = 120;
+	
+	$col = $dg->addColumn("بيمه تامين اجتماعي", "insure_include", GridColumn::ColumnType_string);
+	$col->editor = ColumnEditor::ComboBox(manage_domains::DRP_Is_Valid(), "value", "caption"); 
+	$col->width = 120;
+
+	$col = $dg->addColumn("ماليات", "tax_include", "string");
+	$col->editor = ColumnEditor::ComboBox(manage_domains::DRP_Is_Valid(), "value", "caption");
+	$col->width = 80;
+	
+	$dg->width = 630;
+    $dg->height = 200;
+	$dg->EnableSearch = false ;
+	$dg->EnablePaging = false ;
+	$dg->DefaultSortField = "include_history_id";
+	$dg->title = "سابقه مشمولیت";    
+    
+	$col = $dg->addColumn("حذف", "", "string");
+	$col->renderer = " function(v,p,r){ return PersonObject.opDelRender(v,p,r); }";
+	$col->width = 40;
+
+	$dg->addButton = true;
+	$dg->addHandler = "function(v,p,r){ return PersonObject.AddIncludeHistory(v,p,r);}";
+
+	$dg->enableRowEdit = true ;
+	$dg->rowEditOkHandler = "function(v,p,r){ return PersonObject.SaveHistory(v,p,r);}";
+    
+	$includeHistoryGrid = $dg->makeGrid_returnObjects();
+	
 require_once '../js/new_person.js.php';
         
 ?>
@@ -81,7 +126,7 @@ require_once '../js/new_person.js.php';
 	<br>            
 	<div id="mainTab"  style="width:1000px;" >
 		<div id="div_PInfo" class="x-hide-display">
-			<form id="personInfoForm">
+			<form id="personInfoForm" enctype='multipart/form-data'>
 				<div class="panel" style="width:950px;">
 					<input type='hidden' id='PersonID' name='PersonID' value="<?= $personID ?>">
 					<table width="640px">
@@ -134,7 +179,15 @@ require_once '../js/new_person.js.php';
 								   value="<?= $obj->idcard_no?>" >
 							</td>
 						</tr>
-
+						<tr>
+			<td>
+			<input type="hidden" name="MAX_FILE_SIZE" value="50000" /> 
+			 مسیر فایل عکس: 
+			</td>
+			<td>
+				<input type="file" name="ProfPhoto" />
+			</td>
+		</tr>
 						<tr>
 							<td width="25%">
 							سريال شناسنامه :
@@ -398,7 +451,11 @@ require_once '../js/new_person.js.php';
 					</table>
 				</div>
 			</form>
-						
+			
+			<br>
+				
+				<div id="includeHistoryGRID"></div>
+				
 		</div>
 	</div>
 </div>

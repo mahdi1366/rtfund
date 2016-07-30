@@ -31,7 +31,7 @@ $dg->addButton('HeaderBtn', 'عملیات', 'list', 'function(e){ return AccDocs
 $dg->title = "سند های حسابداری";
 $dg->width = 780;
 $dg->DefaultSortField = "LocalNo";
-$dg->DefaultSortDir = "DESC";
+$dg->DefaultSortDir = "ASC";
 $dg->autoExpandColumn = "DocID";
 $dg->emptyTextOfHiddenColumns = true;
 $dg->hideHeaders = true;
@@ -191,6 +191,15 @@ $dgh->EnableSearch = false;
 $dgh->EnablePaging = false;
 
 $checksgrid = $dgh->makeGrid_returnObjects();
+
+//-----------------------------------------
+
+$whereParam = array(":cid" => $_SESSION["accounting"]["CycleID"], 
+					":b" => $_SESSION["accounting"]["BranchID"]);
+$dt = PdoDataAccess::runquery("select ifnull(count(*),0) from ACC_docs where CycleID=:cid AND BranchID=:b", $whereParam);
+
+$docsCount = $dt[0][0];
+
 ?>
 <script>
 AccDocsObject.grid = <?= $grid ?>;
@@ -209,6 +218,14 @@ pagingToolbar.dock = "top";
 pagingToolbar.down("[itemId=inputItem]").hide();
 pagingToolbar.down("[itemId=displayItem]").hide();
 
+pagingToolbar.dock = "top";
+pagingToolbar.down("[itemId=last]").setTooltip('آخرین سند');
+pagingToolbar.down("[itemId=next]").setTooltip('سند بعدی');
+pagingToolbar.down("[itemId=prev]").setTooltip('سند قبلی');
+pagingToolbar.down("[itemId=first]").setTooltip('اولین سند');
+pagingToolbar.down("[itemId=refresh]").setTooltip('بارگزاری مجدد');
+pagingToolbar.afterPageText = "اسناد";
+
 pagingToolbar.add([{
 	xtype : "numberfield", 
 	itemId : "Number",
@@ -217,7 +234,15 @@ pagingToolbar.add([{
 	size:5,
 	fieldLabel:'شماره سند',
 	labelWidth:65,
-	width:120
+	width:120,
+	listeners: {
+		specialkey: function(field, e){
+			// e.HOME, e.END, e.PAGE_UP, e.PAGE_DOWN,
+			// e.TAB, e.ESC, arrow keys: e.LEFT, e.RIGHT, e.UP, e.DOWN
+			if (e.getKey() == e.ENTER) 
+				AccDocsObject.SearchDoc()
+		}
+	}
 },{
 	xtype : "button",
 	iconCls : "search",
@@ -225,8 +250,10 @@ pagingToolbar.add([{
 		return AccDocsObject.SearchDoc();}
 }]);
 
-AccDocsObject.grid.getStore().on("load", AccDocsObject.afterHeaderLoad);			
+AccDocsObject.grid.getStore().on("load", AccDocsObject.afterHeaderLoad);	
+AccDocsObject.grid.getStore().currentPage = <?= $docsCount ?>;
 AccDocsObject.grid.render(AccDocsObject.get("div_dg"));
+//AccDocsObject.grid.getStore().loadPage(<?= $docsCount ?>);
 
 bars = AccDocsObject.grid.getDockedItems();
 bars[2].add(bars[1].items.items);

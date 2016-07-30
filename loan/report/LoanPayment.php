@@ -42,11 +42,14 @@ if(isset($_REQUEST["show"]))
 	$col->EnableSummary();
 	
 	$rpg->addColumn("تعداد روز تاخیر", "ForfeitDays");
-	$col = $rpg->addColumn("جریمه", "ForfeitAmount","amountRender");
+	$col = $rpg->addColumn("جریمه", "CurForfeitAmount","amountRender");
+	
+	$col = $rpg->addColumn("جریمه کل", "ForfeitAmount","amountRender");
 	//$col->EnableSummary();
 	
 	$rpg->addColumn("مانده قسط", "remainder","amountRender");
 	$rpg->addColumn("مانده کل", "TotalRemainder","amountRender");
+	
 	
 	$rpg->page_size = 20;
 	$rpg->paging = true;

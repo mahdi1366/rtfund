@@ -191,7 +191,7 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 	{
 		this.mainWin = new Ext.window.Window({
 			width : 400,
-			height : 150,
+			height : 180,
 			bodyStyle : "background-color:white",
 			modal : true,
 			closeAction : "hide",
@@ -215,11 +215,39 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 				listeners : {
 					select : function(combo,records){
 						if(records[0].data.CostID == "<?= COSTID_Bank ?>")
+						{
 							this.up('window').down("[name=TafsiliID]").enable();
+							this.up('window').down("[name=TafsiliID2]").enable();
+						}	
 						else
+						{
 							this.up('window').down("[name=TafsiliID]").disable();
+							this.up('window').down("[name=TafsiliID2]").disable();
+						}
+							
 					}
 				}
+			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
+						name : "title",
+						convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
+					}],
+					proxy: {
+						type: 'jsonp',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=6',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}),
+				emptyText:'انتخاب بانک ...',
+				typeAhead: false,
+				disabled : true,
+				width : 380,
+				fieldLabel : "تفصیلی بانک",
+				valueField : "TafsiliID",
+				name : "TafsiliID",
+				displayField : "title"
 			},{
 				xtype : "combo",
 				store: new Ext.data.Store({
@@ -233,13 +261,13 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					}
 				}),
-				emptyText:'انتخاب بانک ...',
+				emptyText:'انتخاب حساب ...',
 				typeAhead: false,
 				disabled : true,
 				width : 380,
 				fieldLabel : "تفصیلی بانک",
 				valueField : "TafsiliID",
-				name : "TafsiliID",
+				name : "TafsiliID2",
 				displayField : "title"
 			},{
 				xtype : "currencyfield",
@@ -287,6 +315,7 @@ InOutAccount.prototype.SaveOperation = function(){
 			PersonID : this.grid.getStore().proxy.extraParams.PersonID,
 			CostID : this.mainWin.down("[name=CostID]").getValue(),
 			TafsiliID: this.mainWin.down("[name=TafsiliID]").getValue(),
+			TafsiliID2: this.mainWin.down("[name=TafsiliID2]").getValue(),
 			amount: this.mainWin.down("[name=amount]").getValue()
 		},
 		success: function(response){

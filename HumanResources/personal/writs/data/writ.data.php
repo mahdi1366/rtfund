@@ -4,13 +4,19 @@
 // create Date:	88.06.17
 //---------------------------
 ini_set("display_errors","On") ; 
+$address_prefix = getenv("DOCUMENT_ROOT");
+echo $address_prefix."1111";
+
 require_once '../../../header.inc.php'; 
+echo $address_prefix."2222";
 
 require_once '../class/writ.class.php'; 
 require_once '../../staff/class/staff.class.php';
+
+
 require_once inc_response; 
 require_once inc_dataReader; 
- 
+
 require_once '../class/group_writ_log.class.php'; 
 
 $task = isset ( $_POST ["task"] ) ? $_POST ["task"] : (isset ( $_GET ["task"] ) ? $_GET ["task"] : "");
@@ -612,16 +618,8 @@ function IssueWrit()
 {
 	//-----------------------------------------
 	
-	$_POST["issue_date"] = '1395/01/25';
-	$_POST["staff_id"] =  1; 
-	$_POST["writ_type_id"] =1;
-	$_POST["writ_subtype_id"] = 1;
-	$_POST["execute_date"] = '1395/01/01';
-	$_POST['person_type'] = 3 ; 
-	$_POST["history_only"] = 0;	
-	$_POST["contract_start_date"] =  '1395/01/01';
-	$_POST["contract_end_date"] = '1395/12/29';
-	
+	$_POST["issue_date"] = ( empty($_POST["issue_date"]) ? '0000-00-00' : DateModules::shNow() ) ; 	
+	$_POST["history_only"] = ( empty($_POST["history_only"]) ? 0 : $_POST["history_only"] ) ;		
 			
 	//------------------------------------------
 	
@@ -640,7 +638,7 @@ function IssueWrit()
 		Response::createObjectiveResponse(false, ExceptionHandler::ConvertExceptionsToJsObject());
 		die();
 	}
-		
+
 	//......................................
 
 	$ret2 = manage_writ_item::compute_writ_items($ret->writ_id, $ret->writ_ver , $ret->staff_id);
@@ -838,8 +836,6 @@ inner join persons p on s.personid = p.personid
  
     $staff_dt = PdoDataAccess::runquery_fetchMode($sql, $whereParams);
 
-echo PdoDataAccess::GetLatestQueryString() ;
-echo "****" ; die();
 	unset($sql);
 	unset($where);
 	unset($whereParams);

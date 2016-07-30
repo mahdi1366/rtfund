@@ -120,6 +120,7 @@ function showReport(){
 				(!empty($_REQUEST["toDate"]) ? "&toDate=" . $_REQUEST["toDate"] : "") .
 				(!empty($_REQUEST["fromLocalNo"]) ? "&fromLocalNo=" . $_REQUEST["fromLocalNo"] : "") . 
 				(!empty($_REQUEST["toLocalNo"]) ? "&toLocalNo=" . $_REQUEST["toLocalNo"] : "") .
+				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
 				"');\" href=javascript:void(0)>" . $value . "</a>";
 	}
 	function showDocs2($row, $value){
@@ -138,6 +139,10 @@ function showReport(){
 	
 	function MakeWhere(&$where, &$whereParam){
 
+		if(!isset($_REQUEST["IncludeRaw"]))
+		{
+			$where .= " AND d.DocStatus != 'RAW'";
+		}
 		if(isset($_REQUEST["level1"]))
 		{
 			if($_REQUEST["level1"] == "")
@@ -247,7 +252,6 @@ function showReport(){
 	MakeWhere($where, $whereParam);
 	
 	$query = $select . $from . " where 
-		d.DocStatus != 'RAW'  AND
 		d.CycleID=" . $_SESSION["accounting"]["CycleID"] . " AND 
 		d.BranchID= " . $_SESSION["accounting"]["BranchID"] . $where;
 	$query .= $group != "" ? " group by " . $group : "";
@@ -255,6 +259,7 @@ function showReport(){
 	$query .= " order by b1.BlockCode,b2.BlockCode,b3.BlockCode";
 
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
+	
 	//..........................................................................
 		
 	function dateRender($row, $val){
@@ -289,6 +294,8 @@ function showReport(){
 	if(!$rpg->excel)
 	{
 		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
+		if($_SESSION["USER"]["UserName"] == "admin")
+			echo PdoDataAccess::GetLatestQueryString ();
 		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
@@ -666,6 +673,9 @@ function AccReport_taraz()
 			xtype : "shdatefield",
 			name : "toDate",
 			fieldLabel : "تا تاریخ"
+		},{
+			xtype : "container",
+			html : "<input type=checkbox name=IncludeRaw > گزارش شامل اسناد خام نیز باشد."
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",

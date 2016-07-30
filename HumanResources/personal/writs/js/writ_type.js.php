@@ -28,12 +28,16 @@ function SalaryItemType()
 		style: "padding-right:10px",
         loader:{
             url: this.address_prefix + "new_writ_type.php",
+			params : {
+			wtid : 1,
+			pt : 3
+			},			
             scripts: true			
         },
         buttons : [{
 					text : "ذخیره",
 					iconCls : "save",
-					handler : function(){SalaryItemTypeObject.saveSalaryItem();}
+					handler : function(){SalaryItemTypeObject.saveWritType();}
                     },
                     {
                         text : "انصراف",
@@ -71,19 +75,22 @@ SalaryItemType.prototype.editInfo = function()
 	this.newItemPanel.loader.load({
 		url: this.address_prefix + "new_writ_type.php",
 		params : {
-			SIT : record.data.salary_item_type_id
+			wstid : record.data.writ_subtype_id,
+			pt:3,
+			wtid:1
+			
 		},
 		scripts: true
 	});
 }	
 
-SalaryItemType.prototype.AddSit = function()
+SalaryItemType.prototype.AddWrt = function()
 {
 	this.newItemPanel.show();
 	this.newItemPanel.loader.load();
 }	
 
-SalaryItemType.prototype.saveSalaryItem = function()
+SalaryItemType.prototype.saveWritType = function()
 {
 	if(!this.ValidateSitForm())
 		return;
@@ -92,9 +99,10 @@ SalaryItemType.prototype.saveSalaryItem = function()
 	mask.show();
 
 	Ext.Ajax.request({
-		url: this.address_prefix + '../data/salary_item_type.data.php?task=saveSIT',
+		url: this.address_prefix + '../data/writ_type.data.php?task=WritTypeSave',
 		params:{
-			salary_item_type_id: this.salary_item_type_id
+			pt:3,
+			WID:1
 		},
 		method: 'POST',
 		form: this.form,

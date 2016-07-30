@@ -286,18 +286,26 @@ class LON_BackPays extends PdoDataAccess
 	
 	static function SelectAll($where = "", $param = array()){
 		
+		$temp = preg_split("/order by/", $where);
+		$where = $temp[0];
+		$order = count($temp) > 1 ? " order by " . $temp[1] : "";
+		
 		return PdoDataAccess::runquery("
 			select p.*,rp.*,
 				b.BankDesc, 
 				bi.InfoDesc PayTypeDesc, 
-				bi2.InfoDesc ChequeStatusDesc
+				bi2.InfoDesc ChequeStatusDesc,
+				d.LocalNo
 			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
 			left join BaseInfo bi2 on(bi2.TypeID=16 AND bi2.InfoID=p.ChequeStatus)
 			
-			where " . $where, $param);
+			left join ACC_DocItems di on(SourceID=RequestID AND SourceID2=BackPayID AND SourceType=5)
+			left join ACC_docs d on(di.DocID=d.DocID)
+			
+			where " . $where . " group by BackPayID " . $order, $param);
 	}
 	
 	function AddPay($pdo = null){

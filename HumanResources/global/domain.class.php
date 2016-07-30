@@ -216,7 +216,7 @@ class manage_domains
      
 	public static function DRP_Dependencies($dropdownName, $selectedID = "", $extraRow = "",$style="")
 	{
-		$query = "select * from BaseInfo where TypeID=54";
+		$query = "select * from BaseInfo where TypeID=54 ";
 		
 		$obj = new DROPDOWN();
 
@@ -272,7 +272,7 @@ class manage_domains
 	}
     public static function GETALL_State()
     {
-        $query = "select * from states ";
+        $query = "select * from HRM_states ";
         return PdoDataAccess::runquery($query);
     }
     public static function DRP_Science_Level($dropdownName, $selectedID = "", $extraRow = "",$style="")
@@ -340,7 +340,7 @@ class manage_domains
 	}
     public static function GETALL_Educ_Level()
     {
-        $query = "select * from Basic_Info where TypeID=35 ";
+        $query = "select * from BaseInfo where TypeID=56 ";
         return PdoDataAccess::runquery($query);
     }   
      public static function GETALL_Grade()
@@ -354,14 +354,9 @@ class manage_domains
         return PdoDataAccess::runquery($query);
     }
     public static function GETALL_Payment_Type()
-    {    ///echo "sdsd"  ; die();
-         $query = " select * from Basic_Info where TypeID= 50 and InfoID in (".manage_access::getValidPayments().")";
+    {    
+         $query = " select * from BaseInfo where TypeID = 72 ";	
 		
-		/* if($_SESSION['UserID'] == 'darvish-re' || $_SESSION['UserID'] == 'jafarkhani' ) 
-		 {
-			$query = " select * from Basic_Info where TypeID= 50  AND InfoID = 9 " ; 
-		 }*/
-			
          return PdoDataAccess::runquery($query);        
     }
 	public static function DRP_Marital_Status($dropdownName, $selectedID = "", $extraRow = "",$style="")
@@ -385,7 +380,7 @@ class manage_domains
 	}
     public static function GETALL_Marital_Status()
     {
-        $query = "select * from Basic_Info where TypeID=15 ";
+        $query = "select * from BaseInfo where TypeID=71 ";
         return PdoDataAccess::runquery($query);
     }
 	public static function DRP_WorkTimeType($dropdownName, $selectedID = "", $extraRow = "",$style="")
@@ -449,10 +444,10 @@ class manage_domains
 	{
 		$obj = new CHECKBOXLIST();
 		
-		$obj->datasource = PdoDataAccess::runquery("select * from Basic_Info where TypeID=3");
+		$obj->datasource = PdoDataAccess::runquery("select * from BaseInfo where TypeID=58");
 		$obj->idfield = $checkboxPrefix . "%InfoID%";
 		$obj->valuefield = $checkboxPrefix . "%InfoID%";
-		$obj->textfield = "%Title%";
+		$obj->textfield = "%InfoDesc%";
 		$obj->columnCount = $columnCount;
 		$obj->Allchecked = true;
 		$obj->EnableCheckAllButton = $enableAllCheck;
@@ -584,7 +579,7 @@ class manage_domains
 	}
 	public static function DRP_SalaryPayProc($dropdownName, $selectedID = "", $style="", $className = "")
 	{
-		$query = "select * from Basic_Info where TypeID = 12 ";
+		$query = "select * from BaseInfo where TypeID = 59 ";
 		
 		$obj = new DROPDOWN();
 
@@ -592,7 +587,7 @@ class manage_domains
 		
 		$obj->datasource = $temp;
 		$obj->valuefield = "%InfoID%";
-		$obj->textfield = "%Title%";
+		$obj->textfield = "%InfoDesc%";
 		$obj->Style = 'class="' . $className . ' x-form-text x-form-field" style="'.$style.'"';
 		$obj->id = $dropdownName;
 		
@@ -601,7 +596,7 @@ class manage_domains
 	}
 	public static function DRP_Annual_Effect($dropdownName, $selectedID = "", $style="", $className = "")
 	{
-		$query = "select * from Basic_Info where TypeID = 13 ";
+		$query = "select * from BaseInfo where TypeID = 60 ";
 		
 		$obj = new DROPDOWN();
 
@@ -609,7 +604,7 @@ class manage_domains
 		
 		$obj->datasource = $temp;
 		$obj->valuefield = "%InfoID%";
-		$obj->textfield = "%Title%";
+		$obj->textfield = "%InfoDesc%";
 		$obj->Style = 'class="' . $className . ' x-form-text x-form-field" style="'.$style.'"';
 		$obj->id = $dropdownName;
 		
@@ -1054,7 +1049,7 @@ class manage_domains
 	}	
 	public static function DRP_EducLevel($dropdownName, $selectedID = "", $style="")
 	{
-		$query = "select * from Basic_Info where TypeID = 6 ";
+		$query = "select * from BaseInfo where TypeID = 56 ";
 		
 		$obj = new DROPDOWN();
 
@@ -1062,7 +1057,7 @@ class manage_domains
 		
 		$obj->datasource = $temp;
 		$obj->valuefield = "%InfoID%";
-		$obj->textfield = "%Title%";
+		$obj->textfield = "%InfoDesc%";
 		$obj->Style = 'class="x-form-text x-form-field" style="'.$style.'"';
 		$obj->id = $dropdownName;
 
@@ -1237,12 +1232,12 @@ class manage_domains
 	}
 	public static function GETALL_SupporCause()
 	{
-		$query = "select * from Basic_Info where TypeID = 29";
+		$query = "select * from BaseInfo where TypeID = 63 ";
 		return PdoDataAccess::runquery($query);
 	}
 	public static function GETALL_InsureType()
 	{
-		$query = "select * from Basic_Info where TypeID = 30";
+		$query = "select * from BaseInfo where TypeID = 55 ";
 		return PdoDataAccess::runquery($query);
 	}
     public static function GETALL_PersonType($extraRow = "")

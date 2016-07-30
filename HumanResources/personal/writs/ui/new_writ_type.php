@@ -33,148 +33,9 @@ $drp_annual_effect_wst = manage_domains::DRP_ANN_EFF_WST("annual_effect", $obj->
 
 ?>
 
-<script language="JavaScript">
-	SalaryItemType.prototype.afterNewItemLoad = function()
-	{
-		this.SystemTitle = "1";		
-		this.salary_item_type_id = '<?= !empty($_POST["SIT"]) ? $_POST["SIT"] : "" ?>';		
-			
-		this.Mode = this.salary_item_type_id == "" ? "new" : "edit";
-			
-		this.validity_start_date = new Ext.form.SHDateField({
-			applyTo: this.get('validity_start_date'),
-			format: 'Y/m/d'
-		});
-
-		this.validity_end_date = new Ext.form.SHDateField({
-			applyTo: this.get('validity_end_date'),
-			format: 'Y/m/d'
-		});
-
-        this.store1 = new Ext.data.Store({
-                                            fields : ["InfoID","InfoDesc"],
-                                            proxy : {
-                                                type: 'jsonp',
-                                                url : this.address_prefix + "../../global/domain.data.php?task=searchComputetype",
-                                                reader: {
-                                                    root: 'rows',
-                                                    totalProperty: 'totalCount'
-                                                }
-                                            },
-                                            autoLoad:true
-                                        });
-
-
-        this.store2 = new Ext.data.Store({
-                                                fields : ["InfoID","param1","InfoDesc"],
-                                                proxy : {
-                                                    type: 'jsonp',
-                                                    url : this.address_prefix + "../../global/domain.data.php?task=searchMultiplicand",
-                                                    reader: {
-                                                        root: 'rows',
-                                                        totalProperty: 'totalCount'
-                                                    }
-                                                }
-                                            });
-
-
-	this.computeTypCombo = new Ext.form.field.ComboBox({
-		store : this.store1,
-		width : 180,
-		typeAhead: false,
-		queryMode : "local",
-		displayField : "InfoDesc",
-		valueField : "InfoID",
-		hiddenName : "salary_compute_type",
-		applyTo : this.get("salary_compute_type"),
-		listeners : {
-			select : function(combo, records){  
-				SalaryItemTypeObject.MultiplicandCombo.reset();
-				SalaryItemTypeObject.store2.load({
-					params : { MasterID: records[0].data.InfoID}
-				})
-			}
-		}
-	});
-
-	this.MultiplicandCombo = new Ext.form.field.ComboBox({
-		store : this.store2,
-		width : 150,
-		typeAhead: false,
-		queryMode : "local",
-		displayField : "InfoDesc",
-		valueField : "InfoID",
-		hiddenName : "multiplicand",
-		applyTo : this.get("multiplicand")
-	});
-
-    this.store1.load({
-        callback:function(){
-            SalaryItemTypeObject.computeTypCombo.setValue("<?= $obj->salary_compute_type ?>");
-            SalaryItemTypeObject.store2.load({
-                params:{MasterID:SalaryItemTypeObject.computeTypCombo.getValue()},
-                callback:function(){
-                    SalaryItemTypeObject.MultiplicandCombo.setValue("<?= $obj->multiplicand ?>");
-                }
-            });
-        }
-    });
-	
-	
- 
-    if(this.disabled)
-    {       
-        this.validity_start_date.disable();
-        this.validity_end_date.disable();
-        this.computeTypCombo.disable();
-        this.MultiplicandCombo.disable(); 
-		  
-		  Ext.get(this.get("person_type")).disable();
-		  Ext.get(this.get("effect_type")).disable();
-		  Ext.get(this.get("available_for")).disable();
-		  Ext.get(this.get("full_title")).disable();
-		  Ext.get(this.get("print_title")).disable();
-		  Ext.get(this.get("print_order")).disable();		  
-		  Ext.get(this.get("user_data_entry")).disable();
-		  Ext.get(this.get("backpay_include")).disable();
-		  Ext.get(this.get("editable_value")).disable();
-		  Ext.get(this.get("param1_title")).disable();
-		  Ext.get(this.get("param1_input")).disable();
-		  Ext.get(this.get("param2_title")).disable();
-		  Ext.get(this.get("param2_input")).disable();
-		  Ext.get(this.get("param3_title")).disable();
-		  Ext.get(this.get("param3_input")).disable();
-		  Ext.get(this.get("param4_title")).disable();
-		  Ext.get(this.get("param4_input")).disable();
-		  Ext.get(this.get("param5_title")).disable();
-		  Ext.get(this.get("param5_input")).disable();
-		  Ext.get(this.get("param6_title")).disable();
-		  Ext.get(this.get("param6_input")).disable();
-		  Ext.get(this.get("param7_title")).disable();
-		  Ext.get(this.get("param7_input")).disable();  
-		  Ext.get(this.get("remember_distance")).disable();
-		  Ext.get(this.get("remember_message")).disable();
-		  
-        Ext.get(this.get("insure_include")).enable();
-        Ext.get(this.get("tax_include")).enable();
-        Ext.get(this.get("retired_include")).enable();
-        Ext.get(this.get("pension_include")).enable();
-        Ext.get(this.get("credit_topic")).enable();
-		Ext.get(this.get("CostType1")).enable();
-		Ext.get(this.get("CostType2")).enable();
-	
-    }
-	
-	
-	
-	}
-
-     SalaryItemTypeObject.afterNewItemLoad();
-</script>
 	
         <input type="hidden" name="person_type" id="person_type" value="<?= $_POST["pt"] ?>"/>
-		<input type="hidden" name="writ_type_id" id="writ_type_id" value="<?= $_POST["wtid"] ?>"/>
-		<input type="hidden" name="WT_title" id="WT_title" value="<?= $_POST["WT_title"] ?>" >
+		<input type="hidden" name="writ_type_id" id="writ_type_id" value="<?= $_POST["wtid"] ?>"/>		
 		<input type="hidden" name="writ_subtype_id" id="writ_subtype_id" value="<?= isset($_POST["wstid"]) ? $_POST["wstid"] : "" ?>"/>
 		<table width="100%">
 	<tr>
@@ -200,15 +61,7 @@ $drp_annual_effect_wst = manage_domains::DRP_ANN_EFF_WST("annual_effect", $obj->
 		<td width="20%">زمان کاري :</td>
 		<td width="80%" colspan="3" ><?= $drp_WTT ?></td>
 	</tr>
-	<tr>
-		<td width="20%">
-		محدوديت زماني ؟
-		</td>
-		<td width="80%"  colspan="3" >
-		<input type="checkbox" value="1" id="time_limited"  name="time_limited" 
-			class="x-form-text x-form-field" style="width: 10px" <?= ($obj->time_limited == "1") ? "checked" : ""?> >
-		</td>
-	</tr>
+	
     <tr>
         <td colspan="4">
         <font color=green>گزينه محدوديت زماني براي احكامي استفاده مي شود كه ثبت تاريخ شروع و خاتمه قرارداد در آنها اجباري مي باشد .</font>

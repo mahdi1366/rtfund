@@ -197,7 +197,7 @@ PartPayment.prototype.BeforeRegDoc = function(){
 	{
 		this.BankWin = new Ext.window.Window({
 			width : 300,
-			height : 84,
+			height : 120,
 			modal : true,
 			closeAction : "hide",
 			items : [{
@@ -206,7 +206,7 @@ PartPayment.prototype.BeforeRegDoc = function(){
 					fields:["TafsiliID","TafsiliDesc"],
 					proxy: {
 						type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=3',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=6',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					}
 				}),
@@ -216,6 +216,23 @@ PartPayment.prototype.BeforeRegDoc = function(){
 				pageSize : 10,
 				valueField : "TafsiliID",
 				itemId : "TafsiliID",
+				displayField : "TafsiliDesc"
+			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["TafsiliID","TafsiliDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=3',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}),
+				emptyText:'انتخاب حساب ...',
+				width : 287,
+				typeAhead: false,
+				pageSize : 10,
+				valueField : "TafsiliID",
+				itemId : "TafsiliID2",
 				displayField : "TafsiliDesc"
 			}],
 			buttons :[{
@@ -250,7 +267,8 @@ PartPayment.prototype.RegPayPartDoc = function(){
 		params: {
 			task: "RegPayPartDoc",
 			PayID : record.data.PayID,
-			BankTafsili : this.BankWin.down("[itemId=TafsiliID]").getValue()
+			BankTafsili : this.BankWin.down("[itemId=TafsiliID]").getValue(),
+			AccountTafsili : this.BankWin.down("[itemId=TafsiliID2]").getValue()
 		},
 		success: function(response){
 

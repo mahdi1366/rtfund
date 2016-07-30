@@ -109,9 +109,8 @@ function saveEducData(){
            $obj->country_id = PDONULL ;  
 
 	if(empty($_POST["row_no"]))
-	{
-		$return = $obj->AddEducation();
-		
+	{		
+		$return = $obj->AddEducation();		
 	}
 	else 
 	{ 

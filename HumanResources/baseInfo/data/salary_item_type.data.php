@@ -132,8 +132,8 @@ function savesalaryItem() {
 		$obj = new manage_salary_item_type();
 	}
 
-	PdoDataAccess::FillObjectByArray($obj, $_POST);
-	if( HRSystem == PersonalSystem ) {
+		PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
 	    $obj->user_data_entry = (isset($_POST['user_data_entry'])) ? $_POST['user_data_entry'] : 0;
 	    $obj->editable_value = (isset($_POST['editable_value'])) ? $_POST['editable_value'] : 0;
 	    $obj->param1_input = (isset($_POST['param1_input'])) ? $_POST['param1_input'] : 0;
@@ -142,16 +142,12 @@ function savesalaryItem() {
 	    $obj->param4_input = (isset($_POST['param4_input'])) ? $_POST['param4_input'] : 0;
 	    $obj->param5_input = (isset($_POST['param5_input'])) ? $_POST['param5_input'] : 0;
 	    $obj->param6_input = (isset($_POST['param6_input'])) ? $_POST['param6_input'] : 0;
-	    $obj->param7_input = (isset($_POST['param7_input'])) ? $_POST['param7_input'] : 0;
-	}
-        if( HRSystem == SalarySystem ) {
+	    $obj->param7_input = (isset($_POST['param7_input'])) ? $_POST['param7_input'] : 0;      
 	    
 	    $obj->insure_include = (isset($_POST['insure_include'])) ? $_POST['insure_include'] : 0;
 	    $obj->tax_include = (isset($_POST['tax_include'])) ? $_POST['tax_include'] : 0;
 	    $obj->retired_include = (isset($_POST['retired_include'])) ? $_POST['retired_include'] : 0;
-	    $obj->pension_include = (isset($_POST['pension_include'])) ? $_POST['pension_include'] : 0; 
-	    
-	    }
+	    $obj->pension_include = (isset($_POST['pension_include'])) ? $_POST['pension_include'] : 0;    	  
 
  
 	if (empty($_POST["salary_item_type_id"])) {

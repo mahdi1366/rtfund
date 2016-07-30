@@ -1,10 +1,11 @@
 <?php
 //---------------------------
 // programmer:	Mahdipour
-// create Date:	89.07.04
+// create Date:	94.12
 //---------------------------
 require_once("../../../header.inc.php");
 require_once ("../class/person.class.php");
+
 
 	$Image = manage_person::GetPersonPicture($_GET["PersonID"]);
 	
