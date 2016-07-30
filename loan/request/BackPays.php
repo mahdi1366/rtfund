@@ -31,6 +31,7 @@ $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetPar
 $dg->addColumn("", "BackPayID","", true);
 $dg->addColumn("", "PartID","", true);
 $dg->addColumn("", "PayTypeDesc","", true);
+$dg->addColumn("", "LocalNo","", true);
 
 if($editable)
 {
@@ -99,9 +100,15 @@ if($editable)
 if($editable)
 {
 	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(store,record){return LoanPayObject.BeforeSave(store,record);}";
+	//$dg->rowEditOkHandler = "function(store,record){return LoanPayObject.BeforeSave(store,record);}";
+	$dg->rowEditOkHandler = "function(store,record){return LoanPayObject.SavePartPayment('',record);}";
 	
 	$dg->addButton("AddBtn", "ایجاد ردیف پرداخت", "add", "function(){LoanPayObject.AddPay();}");
+	
+	$col = $dg->addColumn("صدور سند", "");
+	$col->sortable = false;
+	$col->renderer = "function(v,p,r){return LoanPay.RegDocRender(v,p,r);}";
+	$col->width = 35;
 	
 	$col = $dg->addColumn("حذف", "");
 	$col->sortable = false;
@@ -268,10 +275,22 @@ LoanPay.DeleteRender = function(v,p,r){
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
+LoanPay.RegDocRender = function(v,p,r){
+	
+	if(r.data.LocalNo == null)
+		return "<div align='center' title='صدور سند' class='send' "+
+		"onclick='LoanPayObject.BeforeSave();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+	else
+		return r.data.LocalNo;
+}
+
 var LoanPayObject = new LoanPay();
 	
 LoanPay.prototype.BeforeSave = function(store, record){
 	
+	record =  this.grid.getSelectionModel().getLastSelected(); //delete
 	if(!this.BankWin)
 	{
 		this.BankWin = new Ext.window.Window({
@@ -288,7 +307,7 @@ LoanPay.prototype.BeforeSave = function(store, record){
 					}],
 					proxy: {
 						type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=3',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=6',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					}
 				}),
@@ -300,9 +319,25 @@ LoanPay.prototype.BeforeSave = function(store, record){
 				itemId : "TafsiliID",
 				displayField : "title"
 			},{
-				xtype : "checkbox",
-				boxLabel : "سند صادر شود",
-				name : "RegisterDoc"
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
+						name : "title",
+						convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
+					}],
+					proxy: {
+						type: 'jsonp',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=3',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}),
+				emptyText:'انتخاب حساب ...',
+				typeAhead: false,
+				pageSize : 10,
+				width : 385,
+				valueField : "TafsiliID",
+				itemId : "TafsiliID2",
+				displayField : "title"
 			}],
 			buttons :[{
 				text : "ذخیره",
@@ -326,7 +361,9 @@ LoanPay.prototype.BeforeSave = function(store, record){
 	this.BankWin.show();
 	this.BankWin.down("[itemId=btn_save]").setHandler(function(){ 
 		LoanPayObject.BankWin.hide();
-		LoanPayObject.SavePartPayment(LoanPayObject.BankWin.down("[itemId=TafsiliID]").getValue(), record); });
+		//LoanPayObject.SavePartPayment(LoanPayObject.BankWin.down("[itemId=TafsiliID]").getValue(), record); 
+		LoanPayObject.RegisterDoc(LoanPayObject.BankWin.down("[itemId=TafsiliID]").getValue(),LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getValue(), record); 
+	});
 }
 	
 LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
@@ -339,9 +376,9 @@ LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 		method: "POST",
 		params: {
 			task: "SavePartPay",
-			BankTafsili : BankTafsili,
+			//BankTafsili : BankTafsili,
 			record: Ext.encode(record.data),
-			RegisterDoc : this.BankWin.down("[name=RegisterDoc]").checked ? "1" : "0"
+			RegisterDoc : "0"
 		},
 		success: function(response){
 			mask.hide();
@@ -352,8 +389,43 @@ LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 				LoanPayObject.grid.getStore().load();
 				if(record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
 					Ext.MessageBox.alert("","سند حسابداری هنگام وصول چک صادر می شود");
-				else if(LoanPayObject.BankWin.down("[name=RegisterDoc]").checked)
+				else if(LoanPayObject.BankWin && LoanPayObject.BankWin.down("[name=RegisterDoc]").checked)
 					Ext.MessageBox.alert("","سند حسابداری مربوطه صادر گردید");
+			}
+			else
+			{
+				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+			}
+		},
+		failure: function(){}
+	});
+}
+
+LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, record){
+
+	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		url: this.address_prefix +'request.data.php',
+		method: "POST",
+		params: {
+			task: "SavePartPay",
+			BankTafsili : BankTafsili,
+			AccountTafsili : AccountTafsili,
+			record: Ext.encode(record.data),
+			RegisterDoc : "1"
+		},
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+
+			if(st.success)
+			{   
+				LoanPayObject.grid.getStore().load();
+				if(record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
+					Ext.MessageBox.alert("","سند حسابداری هنگام وصول چک صادر می شود");
+				Ext.MessageBox.alert("","سند حسابداری مربوطه صادر گردید");
 			}
 			else
 			{
@@ -371,10 +443,16 @@ LoanPay.prototype.AddPay = function(){
 		Ext.MessageBox.alert("","این وام خاتمه یافته است");
 		return;
 	}
+	
+	defaultAmount = 0;
+	if(this.grid.getStore().totalCount > 0)
+		defaultAmount = this.grid.getStore().getAt(0).data.PayAmount;
+	
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
 		BackPayID: null,
-		PartID : this.PartID
+		PartID : this.PartID,
+		PayAmount : defaultAmount
 	});
 
 	this.grid.plugins[0].cancelEdit();

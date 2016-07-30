@@ -185,7 +185,7 @@ function SaveLoanRequest(){
 		
 		$obj->LoanID = Default_Agent_Loan;
 	}
-	else if($_SESSION["USER"]["IsStaff"] == "YES")
+	else if($_SESSION["USER"]["IsStaff"] == "YES" && empty($obj->RequestID))
 	{
 		$obj->LoanID = Default_Agent_Loan;
 		$obj->IsFree = isset($_POST["IsFree"]) ? "YES" : "NO";	
@@ -910,6 +910,7 @@ function selectRequestStatuses(){
 function GetPartPays(){
 	
 	$dt = LON_BackPays::SelectAll("PartID=? " . dataReader::makeOrder() , array($_REQUEST["PartID"]));
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -941,7 +942,7 @@ function SavePartPay(){
 	}
 	if(empty($obj->ChequeNo) || $obj->ChequeStatus == "2")
 	{
-		if(!RegisterCustomerPayDoc($obj, $_POST["BankTafsili"],  $pdo))
+		if(!RegisterCustomerPayDoc($obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo))
 		{
 			$pdo->rollback();
 			//print_r(ExceptionHandler::PopAllExceptions());
@@ -962,8 +963,8 @@ function DeletePay(){
 	$PayObj = new LON_BackPays($_POST["BackPayID"]);
 	if(!ReturnCustomerPayDoc($PayObj, $pdo))
 	{
-		$pdo->rollBack();
 		//print_r(ExceptionHandler::PopAllExceptions());
+		//$pdo->rollBack();		
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
@@ -1139,7 +1140,7 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 	{
 		if($installments[$i]["IsDelayed"] == "YES")
 			continue;
-		
+		$forfeitDays = 0;
 		$installments[$i]["CurForfeitAmount"] = 0;
 		$installments[$i]["ForfeitAmount"] = 0;
 		$installments[$i]["ForfeitDays"] = 0;
@@ -1187,6 +1188,7 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 				$installments[$i]["PayAmount"] = 0;
 				$installments[$i]["PayDate"] = DateModules::Now();
 			}
+			
 			if ($StartDate < $ToDate) {
 				
 				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
@@ -1416,7 +1418,7 @@ function RegPayPartDoc(){
 	if($partobj->MaxFundWage*1 > 0)
 		$partobj->MaxFundWage = round($partobj->MaxFundWage*$PayObj->PayAmount/$partobj->PartAmount);
 	
-	$result = RegisterPayPartDoc($ReqObj, $partobj, $PayObj, $_POST["BankTafsili"], $pdo);
+	$result = RegisterPayPartDoc($ReqObj, $partobj, $PayObj, $_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo);
 	
 	if(!$result)
 	{

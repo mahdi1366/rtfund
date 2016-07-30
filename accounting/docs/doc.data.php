@@ -199,7 +199,7 @@ function GetSearchCount() {
     
 	$query = "select count(*) as CurrentPage 
 		from ACC_docs dh
-		where BranchID=:b AND CycleID=:c AND LocalNo > :n ";
+		where BranchID=:b AND CycleID=:c AND LocalNo < :n ";
 	
     $param = array(":c" => $_SESSION["accounting"]["CycleID"], 
 					":b" => $_SESSION["accounting"]["BranchID"],
@@ -793,6 +793,8 @@ function RegisterInOutAccountDoc() {
 	{
 		$itemObj->TafsiliType = TAFTYPE_BANKS;
 		$itemObj->TafsiliID = $_POST["TafsiliID"];
+		$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
+		$itemObj->TafsiliID2 = $_POST["TafsiliID2"];
 	}
 	if(!$itemObj->Add($pdo))
 	{

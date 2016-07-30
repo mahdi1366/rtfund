@@ -32,7 +32,7 @@ function FindTafsiliID($TafsiliCode, $TafsiliType){
 
 //---------------------------------------------------------------
 
-function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
+function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo){
 		
 	require_once '../../loan/request/request.data.php';
 	
@@ -448,6 +448,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $pdo){
 	$itemObj->CreditorAmount = $BankItemAmount;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	$itemObj->TafsiliID = $BankTafsili;
+	$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
+	$itemObj->TafsiliID = $AccountTafsili;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
@@ -908,14 +910,22 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	return true;
 }
 
-function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
+function RegisterCustomerPayDoc($PayObj, $BankTafsili, $AccountTafsili,  $pdo){
 	
 	/*@var $PayObj LON_BackPays */
-	
-	$CycleID = substr(DateModules::shNow(), 0 , 4);
-	
 	$PartObj = new LON_ReqParts($PayObj->PartID);
 	$ReqObj = new LON_requests($PartObj->RequestID);
+	
+	$dt = PdoDataAccess::runquery("select * from ACC_DocItems where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " 
+		AND SourceID=? AND SourceID2=?" , array($ReqObj->RequestID, $PayObj->BackPayID));
+	if(count($dt) > 0)
+	{
+		ExceptionHandler::PushException("سند این ردیف پرداخت قبلا صادر شده است");
+		return false;
+	}
+	$CycleID = substr(DateModules::shNow(), 0 , 4);
+	
+	
 	
 	//------------- get CostCodes --------------------
 	$LoanObj = new LON_loans($ReqObj->LoanID);
@@ -1017,6 +1027,9 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $pdo){
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	if($BankTafsili != "")
 		$itemObj->TafsiliID = $BankTafsili;
+	$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
+	if($AccountTafsili != "")
+		$itemObj->TafsiliID2 = $AccountTafsili;
 	if(!$itemObj->Add($pdo))
 	{
 		ExceptionHandler::PushException("خطا در ایجاد سند");

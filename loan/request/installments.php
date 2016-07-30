@@ -58,11 +58,9 @@ if($editable)
 	$dg->addButton("", "تمدید اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
 }
 
-if($framework)
-{
-	$dg->addButton("cmp_report", "گزارش پرداخت", "report", 
+$dg->addButton("cmp_report", "گزارش پرداخت", "report", 
 			"function(){InstallmentObject.PayReport();}");
-}
+
 
 $dg->height = 377;
 $dg->width = 755;
@@ -174,6 +172,8 @@ function Installment()
 						InstallmentObject.grid.render(InstallmentObject.get("div_grid"));
 
 					InstallmentObject.PartPanel.collapse();
+					
+					InstallmentObject.PartID = this.getValue();
 					
 					InstallmentObject.PayPanel.show();
 					InstallmentObject.PayPanel.down("[itemId=PayCode]").setValue(

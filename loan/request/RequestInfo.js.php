@@ -87,7 +87,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 					record.data.imp_VamCode + "[پرونده : " + record.data.imp_GirandehCode + "]" : "";
 				me.companyPanel.down("[itemId=oldInfo]").update(oldInfo);
 				//..........................................................
-				if(record.data.IsEnded == "YES")
+				if(record.data.IsEnded == "YES" && me.grid.down("[itemId=addPart]"))
 				{
 					me.grid.down("[itemId=addPart]").hide();
 				}
