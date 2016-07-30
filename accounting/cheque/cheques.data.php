@@ -23,7 +23,7 @@ function selectIncomeCheques() {
 			b.BankDesc, 
 			bi2.InfoDesc ChequeStatusDesc
 		from LON_BackPays p 
-		join Lon_ReqParts using(PartID)
+		join LON_ReqParts using(PartID)
 		join LON_requests using(RequestID)
 		join BSC_persons on(LoanPersonID=PersonID)
 		left join ACC_banks b on(ChequeBank=BankID)
@@ -81,6 +81,7 @@ function selectIncomeCheques() {
 	
 	$query .= dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
+	print_r(ExceptionHandler::PopAllExceptions());
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
