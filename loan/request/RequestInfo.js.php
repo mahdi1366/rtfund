@@ -219,6 +219,9 @@ RequestInfo.prototype.OperationMenu = function(e){
 		op_menu.add({text: 'مراحل پرداخت',iconCls: 'epay',
 		handler : function(){ return RequestInfoObject.Payments(); }});
 	
+		op_menu.add({text: 'پرداخت های مشتری',iconCls: 'list',
+		handler : function(){ return RequestInfoObject.LoadPays(); }});
+	
 		if(record.data.IsPaid == "YES" && this.RequestRecord.data.IsEnded == "NO")
 			op_menu.add({text: 'اتمام فاز و ایجاد فاز جدید',iconCls: "app",
 			handler : function(){ return RequestInfoObject.EndPart(); }});
