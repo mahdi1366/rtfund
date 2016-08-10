@@ -89,6 +89,7 @@ function PersonInfo()
 					this.loader.load({
 						scripts : true,
 						params : {
+							ObjectID : PersonInfoObject.PersonID,
 							ExtTabID : this.id,
 							ObjectType : "person"
 						}
