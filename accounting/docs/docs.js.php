@@ -542,9 +542,11 @@ AccDocs.prototype.SaveDoc = function(){
 
 		success : function(form,action){
 			AccDocsObject.docWin.hide();
-			//AccDocsObject.grid.plugins[0].field.setValue('');
 			AccDocsObject.grid.getStore().proxy.extraParams["query"] = "";
-			AccDocsObject.grid.getStore().loadPage(1);
+			if(AccDocsObject.docWin.down("[name=DocID]").getValue() != "")
+				AccDocsObject.grid.getStore().load();
+			else
+				AccDocsObject.grid.getStore().loadPage(AccDocsObject.grid.getStore().totalCount+1);
 		},
 		failure : function(form,action)
 		{

@@ -8,19 +8,27 @@ require_once '../header.inc.php';
 require_once 'traffic.class.php';
 require_once '../baseinfo/shift.class.php';
 require_once inc_reportGenerator;
+require_once inc_dataGrid;
 
 $admin = isset($_POST["admin"]) ? true : false;
 
 if(isset($_REQUEST["showReport"]))
 {
-	ShowReport();
+	ShowReport($admin);
 }
 
-function ShowReport(){
-
-	$StartDate = DateModules::shamsi_to_miladi($_POST["year"] . "-" . $_POST["month"] . "-01", "-");
-	$EndDate = DateModules::shamsi_to_miladi($_POST["year"] . "-" . $_POST["month"] ."-" . DateModules::DaysOfMonth($_POST["year"] ,$_POST["month"]), "-");
+function ShowReport($admin){
 	
+	if($_POST["FromDate"] == "")
+	{
+		$StartDate = DateModules::shamsi_to_miladi($_POST["year"] . "-" . $_POST["month"] . "-01", "-");
+		$EndDate = DateModules::shamsi_to_miladi($_POST["year"] . "-" . $_POST["month"] ."-" . DateModules::DaysOfMonth($_POST["year"] ,$_POST["month"]), "-");
+	}
+	else
+	{
+		$StartDate = DateModules::shamsi_to_miladi($_POST["FromDate"], "-");
+		$EndDate = DateModules::shamsi_to_miladi($_POST["ToDate"], "-");
+	}
 	$holidays = ATN_holidays::Get(" AND TheDate between ? AND ? order by TheDate", array($StartDate, $EndDate));
 	$holidayRecord = $holidays->fetch();
 	
@@ -35,7 +43,7 @@ function ShowReport(){
 			from ATN_traffic t
 			left join ATN_PersonShifts ps on(ps.IsActive='YES' AND t.PersonID=ps.PersonID AND TrafficDate between FromDate AND ToDate)
 			left join ATN_shifts s on(ps.ShiftID=s.ShiftID)
-			where t.PersonID=:p AND TrafficDate>= :sd AND TrafficDate <= :ed 
+			where t.IsActive='YES' AND t.PersonID=:p AND TrafficDate>= :sd AND TrafficDate <= :ed 
 			
 			union All
 			
@@ -44,7 +52,7 @@ function ShowReport(){
 			from ATN_requests t
 			left join ATN_PersonShifts ps on(ps.IsActive='YES' AND t.PersonID=ps.PersonID AND t.FromDate between ps.FromDate AND ps.ToDate)
 			left join ATN_shifts s on(ps.ShiftID=s.ShiftID)
-			where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 
+			where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 AND t.FromDate>= :sd
 			
 			union all
 			
@@ -53,11 +61,16 @@ function ShowReport(){
 			from ATN_requests t
 			left join ATN_PersonShifts ps on(ps.IsActive='YES' AND t.PersonID=ps.PersonID AND t.FromDate between ps.FromDate AND ps.ToDate)
 			left join ATN_shifts s on(ps.ShiftID=s.ShiftID)
-			where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 
+			where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 AND t.FromDate>= :sd
+				AND EndTime is not null
 		)t2
 		order by  TrafficDate,TrafficTime";
 	$dt = PdoDataAccess::runquery($query, array(":p" => $PersonID, ":sd" => $StartDate, ":ed" => $EndDate));
-//print_r(ExceptionHandler::PopAllExceptions());
+if($_SESSION["USER"]["UserName"] == "admin")
+{
+print_r(ExceptionHandler::PopAllExceptions());
+echo PdoDataAccess::GetLatestQueryString();
+}
 //print_r($dt);
 	//........................ create days array ..................
 	
@@ -190,9 +203,16 @@ function ShowReport(){
 		//....................................................
 		
 		$returnStr .= "<tr>
-			<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>
-			<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>
-			<td>" . ($returnArr[$i]["holiday"] ? $returnArr[$i]["holidayTitle"] : $returnArr[$i]["ShiftTitle"]) . "</td>
+			<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>";
+		
+		if($admin)
+			$returnStr .= "<td><a class=link onclick=TraceTrafficObj.TrafficList('" . 
+				$returnArr[$i]["TrafficDate"] . "')>" . 
+				DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</a></td>";
+		else
+			$returnStr .= "<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>";
+		
+		$returnStr .= "<td>" . ($returnArr[$i]["holiday"] ? $returnArr[$i]["holidayTitle"] : $returnArr[$i]["ShiftTitle"]) . "</td>
 			<td>";
 		
 		$firstAbsence = 0;
@@ -322,7 +342,7 @@ function ShowReport(){
 		<th>روز</th>
 		<th>تاریخ</th>
 		<th>شیفت</th>
-		<th>ورود/خروج</th>
+		<th style=width:70px>ورود/خروج</th>
 		<th>حضور</th>
 		<th class="extra">اضافه کار</th>
 		<th class="off" >مرخصی</th>
@@ -367,13 +387,40 @@ function ShowReport(){
 <?	
 	die();
 }
+
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "traffic.data.php?task=SelectDayTraffics", "grid_div");
+
+$dg->addColumn("", "TrafficID", "", true);
+$dg->addColumn("", "IsActive", "", true);
+
+$col = $dg->addColumn("تاریخ", "TrafficDate", GridColumn::ColumnType_date);
+$col->width = 120;
+
+$col = $dg->addColumn("ساعت", "TrafficTime");
+$col->width = 120;
+
+$col = $dg->addColumn("حذف", "");
+$col->sortable = false;
+$col->renderer = "function(v,p,r){return TraceTraffic.DeleteRender(v,p,r);}";
+$col->width = 60;
+
+$dg->height = 230;
+$dg->width = 300;
+$dg->EnablePaging = false;
+$dg->EnableSearch = false;
+$dg->autoExpandColumn = "TrafficTime";
+$dg->DefaultSortField = "TrafficTime";
+$dg->emptyTextOfHiddenColumns = true;
+
+$grid = $dg->makeGrid_returnObjects();
+
 ?>
 <script>
 TraceTraffic.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
-	DocID : "",
+	admin : <?= $admin ? "true" : "false" ?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -382,6 +429,14 @@ TraceTraffic.prototype = {
 
 function TraceTraffic()
 {
+	this.grid = <?= $grid ?>;
+	this.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.IsActive == "NO")
+			return "pinkRow";
+	}	
+
+	
 	this.mainPanel = new Ext.form.Panel({
 		renderTo : this.get("main"),
 		frame : true,
@@ -391,7 +446,8 @@ function TraceTraffic()
 		width : 800,
 		items :[{
 			xtype : "container",
-			layout : "hbox",
+			layout : "column",
+			columns : 4,
 			items :[{
 				xtype : "combo",
 				width : 300,
@@ -405,7 +461,7 @@ function TraceTraffic()
 					fields :  ['PersonID','fullname']
 				}),
 				displayField: 'fullname',
-				hidden : <?= $admin ? "false" : "true" ?>,
+				hidden : !this.admin,
 				valueField : "PersonID",
 				hiddenName : "PersonID"
 			},{
@@ -435,6 +491,16 @@ function TraceTraffic()
 				text : "مشاهده گزارش",
 				iconCls : "report",
 				handler : function(){ TraceTrafficObj.LoadReport(); }
+			},{
+				xtype : "shdatefield",
+				name : "FromDate",
+				hidden : !this.admin,
+				fieldLabel : "از تاریخ"
+			},{
+				xtype : "shdatefield",
+				name : "ToDate",
+				hidden : !this.admin,
+				fieldLabel : "تا تاریخ"
 			}]
 		},{
 			xtype : "container",
@@ -471,8 +537,82 @@ TraceTraffic.prototype.LoadReport = function(){
 
 TraceTrafficObj = new TraceTraffic();
 
+TraceTraffic.DeleteRender = function(v,p,r)
+{
+	if(r.data.IsActive == "YES")
+		return "<div align='center' title='حذف' class='remove' "+
+		"onclick='TraceTrafficObj.DeleteTraffic();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;float:left;height:16'></div>";
+}
+
+TraceTraffic.prototype.TrafficList = function(TrafficDate){
+	
+	this.grid.getStore().proxy.extraParams.TrafficDate = TrafficDate;
+	this.grid.getStore().proxy.extraParams.PersonID = this.mainPanel.down("[hiddenName=PersonID]").getValue();
+	if(!this.TraffficWin)
+	{
+		this.TraffficWin = new Ext.window.Window({
+			width : 310,
+			height : 290,
+			modal : true,
+			bodyStyle : "background-color:white",
+			items : this.grid,
+			closeAction : "hide",
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.TraffficWin);
+	}
+	else
+		this.grid.getStore().load();
+	
+	this.TraffficWin.show();
+	this.TraffficWin.center();
+
+}
+
+TraceTraffic.prototype.DeleteTraffic = function()
+{
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = TraceTrafficObj;
+		var record = me.grid.getSelectionModel().getLastSelected();
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'traffic.data.php',
+			params:{
+				task: "DeleteTraffic",
+				TrafficID : record.data.TrafficID
+			},
+			method: 'POST',
+
+			success: function(response,option){
+				mask.hide();
+				TraceTrafficObj.grid.getStore().load();
+				TraceTrafficObj.LoadReport();
+			},
+			failure: function(){}
+		});
+	});
+}
 
 </script>
+<style>
+	.link{
+		cursor: pointer;
+		color : blue;
+	}
+</style>
 <form id="mainForm">
 	<center><br>
 		<div id="main" ></div><br>

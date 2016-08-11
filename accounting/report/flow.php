@@ -57,7 +57,10 @@ if(isset($_REQUEST["show"]))
 		if(isset($_REQUEST["TafsiliID"]))
 		{
 			if($_REQUEST["TafsiliID"] == "")
-				$where .= " AND (di.TafsiliID=0 OR di.TafsiliID is null)";
+			{
+				if(isset($_REQUEST["taraz"]))
+					$where .= " AND (di.TafsiliID=0 OR di.TafsiliID is null)";
+			}
 			else
 			{
 				$where .= " AND di.TafsiliID = :tid ";
@@ -306,6 +309,7 @@ function AccReport_flow()
 			valueField : "BlockID",
 			itemId : "cmp_level0",
 			hiddenName : "GroupID",
+			queryMode : 'local',
 			store : new Ext.data.Store({
 				fields:["BlockID","BlockCode","BlockDesc"],
 				proxy: {
@@ -330,7 +334,8 @@ function AccReport_flow()
 					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=1',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				autoLoad : true
+				autoLoad : true,
+				PageSize : 20
 			}),
 			tpl: this.blockTpl,
 			PageSize : 20,
@@ -394,6 +399,7 @@ function AccReport_flow()
 			fieldLabel : "گروه تفصیلی",
 			valueField : "InfoID",
 			hiddenName : "TafsiliGroup",
+			queryMode : 'local',
 			store : new Ext.data.Store({
 				fields:['InfoID','InfoDesc'],
 				proxy: {
@@ -434,6 +440,7 @@ function AccReport_flow()
 			fieldLabel : "گروه تفصیلی2",
 			valueField : "InfoID",
 			hiddenName : "TafsiliGroup2",
+			queryMode : 'local',
 			store : new Ext.data.Store({
 				fields:['InfoID','InfoDesc'],
 				proxy: {

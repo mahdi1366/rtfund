@@ -253,7 +253,6 @@ pagingToolbar.add([{
 AccDocsObject.grid.getStore().on("load", AccDocsObject.afterHeaderLoad);	
 AccDocsObject.grid.getStore().currentPage = <?= $docsCount ?>;
 AccDocsObject.grid.render(AccDocsObject.get("div_dg"));
-//AccDocsObject.grid.getStore().loadPage(<?= $docsCount ?>);
 
 bars = AccDocsObject.grid.getDockedItems();
 bars[2].add(bars[1].items.items);

@@ -127,7 +127,7 @@ function showReport(){
 		if($value == "")
 			$value = "-----";
 		
-		return "<a onclick=\"window.open('flow.php?show=true".
+		return "<a onclick=\"window.open('flow.php?taraz=true&show=true".
 				"&level1=" . $row["level1"] . 
 				"&level2=" . $row["level2"] . 
 				"&level3=" . $row["level3"] . 
