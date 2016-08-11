@@ -16,7 +16,7 @@ if(isset($_REQUEST["show"]))
 			from ACC_docs d
 			join ACC_DocItems di using(docID)
 			join BSC_persons p on(RegPersonID=PersonID)
-			where d.DocStatus != 'RAW' AND d.CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+			where d.CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 				AND d.BranchID=" . $_SESSION["accounting"]["BranchID"];
 	
 	$whereParam = array();
@@ -76,6 +76,10 @@ if(isset($_REQUEST["show"]))
 		$query .= " AND d.description like :q9 ";
 		$whereParam[":q9"] = '%' . $_POST["description"] . "%";
 	}
+	
+	if(!isset($_REQUEST["IncludeRaw"]))
+		$query .= " AND d.DocStatus != 'RAW' ";
+	
 	$query .= " group by DocID order by DocID";
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 
@@ -212,7 +216,13 @@ function AccReport_docs()
 		},{
 			xtype : "textfield",
 			name : "description",
+			colspan : 2,
+			width : 500,
 			fieldLabel : "شرح سند"
+		},{
+			xtype : "container",
+			colspan : 2,
+			html : "<input type=checkbox name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",

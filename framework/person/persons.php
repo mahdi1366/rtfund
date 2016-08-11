@@ -13,7 +13,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "persons.data.php?task=selectPersons&full=true", "div_grid_persons");
 
-$dg->addColumn("","PersonID","string", true);
+$dg->addColumn("PID","PersonID","string");
 $dg->addColumn("","IsReal","string", true);
 $dg->addColumn("","PostID","string", true);
 $dg->addColumn("","fname","string", true);
