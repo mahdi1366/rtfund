@@ -392,6 +392,7 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "traffic.data.php?task=Selec
 
 $dg->addColumn("", "TrafficID", "", true);
 $dg->addColumn("", "IsActive", "", true);
+$dg->addColumn("", "ReqType", "", true);
 
 $col = $dg->addColumn("تاریخ", "TrafficDate", GridColumn::ColumnType_date);
 $col->width = 120;
@@ -539,7 +540,11 @@ TraceTrafficObj = new TraceTraffic();
 
 TraceTraffic.DeleteRender = function(v,p,r)
 {
-	if(r.data.IsActive == "YES" && TrafficID != null)
+	if(r.data.TrafficID == null)
+	{
+		return r.data.ReqType == "MISSION" ? "ماموریت"  : "مرخصی";
+	}
+	if(r.data.IsActive == "YES" )
 		return "<div align='center' title='حذف' class='remove' "+
 		"onclick='TraceTrafficObj.DeleteTraffic();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +

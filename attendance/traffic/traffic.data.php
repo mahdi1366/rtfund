@@ -203,23 +203,23 @@ function SelectDayTraffics(){
 	$dt = PdoDataAccess::runquery("
 		select * from (
 
-			select TrafficID,TrafficDate,TrafficTime,IsActive 
+			select '' ReqType, TrafficID,TrafficDate,TrafficTime,IsActive 
 			from ATN_traffic where PersonID=:p AND TrafficDate=:d
 
 			union all
 
-			select null,t.FromDate,StartTime,'YES'
+			select t.ReqType,null,t.FromDate,StartTime,'YES'
 			from ATN_requests t
 			where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 AND t.FromDate=:d
 
 			union all
 
-			select null,t.FromDate,EndTime,'YES'
+			select t.ReqType,null,t.FromDate,EndTime,'YES'
 			from ATN_requests t
 			where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 AND t.FromDate=:d AND EndTime is not null
 		)t 
 		order by TrafficTime",
-		array($_GET["PersonID"], $_GET["TrafficDate"]));
+		array(":p" => $_GET["PersonID"], ":d" => $_GET["TrafficDate"]));
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
