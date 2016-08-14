@@ -1000,7 +1000,7 @@ class PdoDataAccess extends ExceptionHandler
 
 }
 
-/*abstract class OperationClass extends PdoDataAccess {
+abstract class OperationClass extends PdoDataAccess {
 
     const ERR_Add = 'خطا در ذخیره اطلاعات';
     const ERR_Edit = 'خطا در ویرایش اطلاعات';
@@ -1071,5 +1071,5 @@ class PdoDataAccess extends ExceptionHandler
         return parent::runquery_fetchMode("select * from " . static::TableName . " where 1=1 " . $where, $whereParams);
     }
 
-}*/
+}
 ?>

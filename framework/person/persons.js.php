@@ -30,7 +30,6 @@ function Person()
 		items : [{
 			xtype :"container",
 			layout : "hbox",
-			colspan : 2,
 			items : [{
 				xtype : "radio",
 				boxLabel: 'شخص حقیقی',
@@ -59,6 +58,13 @@ function Person()
 				inputValue: 'NO'
 			}]
 		},{
+			xtype : "textfield",
+			labelWidth : 120,
+			fieldLabel : "کد ملی/ شناسه ملی",
+			//regex: /^\d{10}$/,
+			maskRe: /[\d\-]/,
+			name : "NationalID"
+		},{
 			xtype : "fieldset",
 			title : "اطلاعات شخص حقیقی",
 			colspan : 2,
@@ -75,12 +81,6 @@ function Person()
 				fieldLabel : "نام خانوادگی",
 				name : "lname",
 				width : 180
-			},{
-				xtype : "textfield",
-				fieldLabel : "کد ملی",
-				regex: /^\d{10}$/,
-				maskRe: /[\d\-]/,
-				name : "NationalID"
 			}]
 		},{
 			xtype : "fieldset",
@@ -95,12 +95,6 @@ function Person()
 				fieldLabel : "نام شرکت",
 				name : "CompanyName",
 				width : 360
-			},{
-				xtype : "textfield",
-				fieldLabel : "شناسه ملی",
-				regex: /^\d{11}$/,
-				maskRe: /[\d\-]/,
-				name : "NationalID"
 			}]
 		},{
 			xtype : "textfield",
@@ -366,6 +360,46 @@ Person.prototype.ResetAttempt = function()
 				if(st.success)
 				{
 					Ext.MessageBox.alert("Warning","عملیات با موفقیت انجام شد");
+					PersonObject.grid.getStore().load();
+				}
+				else
+				{
+					alert(st.data);
+				}
+			},
+			failure: function(){}
+		});
+		
+	});
+}
+
+Person.prototype.Confirm = function()
+{
+	var record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+		return;
+	Ext.MessageBox.confirm("","آیا مایل به تایید می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = PersonObject;
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			params: {
+				task: 'ConfirmPerson',
+				PersonID : record.data.PersonID
+			},
+			url: me.address_prefix +'persons.data.php',
+			method: 'POST',
+
+			success: function(response){
+				mask.hide();
+				var st = Ext.decode(response.responseText);
+				if(st.success)
+				{
 					PersonObject.grid.getStore().load();
 				}
 				else

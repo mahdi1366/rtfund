@@ -80,7 +80,10 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$PayAmount = $PayObj->PayAmount;
 	//--------------------------------------------------------
 	$MaxWage = max($PartObj->CustomerWage*1 , $PartObj->FundWage);
-	$YearMonths = ($PartObj->IntervalType == "DAY") ? floor(365/$PartObj->PayInterval) : 12/$PartObj->PayInterval;
+	if($PartObj->PayInterval > 0)
+		$YearMonths = ($PartObj->IntervalType == "DAY" ) ? floor(365/$PartObj->PayInterval) : 12/$PartObj->PayInterval;
+	else
+		$YearMonths = 12;
 	$TotalWage = round(ComputeWage($PayAmount, $MaxWage/100, $PartObj->InstallmentCount, $PartObj->PayInterval));	
 	
 	$CustomerFactor =	$MaxWage == 0 ? 0 : $PartObj->CustomerWage/$MaxWage;

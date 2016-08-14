@@ -45,6 +45,8 @@ $dg->addColumn("", "MaxFundWage","", true);
 $dg->addColumn("", "ReqPersonID","", true);
 $dg->addColumn("", "AgentReturn","", true);
 $dg->addColumn("", "AgentDelayReturn","", true);
+$dg->addColumn("", "IsDocRegister","", true);
+
 
 $col = $dg->addColumn("عنوان فاز", "PartDesc", "");
 $col->sortable = false;

@@ -27,6 +27,7 @@ $dg->addColumn("","email","string", true);
 $dg->addColumn("","address","string", true);
 $dg->addColumn("","IsActive","string", true);
 $dg->addColumn("","ShareNo","string", true);
+$dg->addColumn("","IsConfirm","string", true);
 
 $col = $dg->addColumn("نام و نام خانوادگی","fullname","string");
 
@@ -84,6 +85,8 @@ if($accessObj->RemoveFlag)
 	$col->width = 40;
 }
 
+$dg->addButton("", "تایید", "tick", "function(){PersonObject.Confirm();}");
+
 $dg->height = 500;
 $dg->pageSize = 15;
 $dg->width = 750;
@@ -108,6 +111,8 @@ PersonObject.grid.getView().getRowClass = function(record)
 		return "pinkRow";
 	if(record.data.IsActive == "PENDING")
 		return "yellowRow";
+	if(record.data.IsConfirm == "YES")
+		return "greenRow";
 	return "";
 }
 PersonObject.grid.on("itemdblclick", function(view, record){

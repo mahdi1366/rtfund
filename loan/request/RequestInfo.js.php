@@ -195,7 +195,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 		op_menu.showAt(e.pageX-120, e.pageY);
 		return;
 	}
-	if(record.data.IsStarted == "NO" && this.RequestRecord.data.IsEnded == "NO")
+	if(record.data.IsStarted == "NO" && record.data.IsEnded == "NO")
 	{
 		if(record.data.StatusID == "70")
 			op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
@@ -209,7 +209,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 	}	
 	if(record.data.IsEnded == "YES")
 	{
-		if(this.RequestRecord.data.IsEnded == "NO")
+		if(record.data.IsDocRegister == "NO" && record.data.IsEnded == "NO")
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
 	
@@ -219,7 +219,10 @@ RequestInfo.prototype.OperationMenu = function(e){
 		op_menu.add({text: 'مراحل پرداخت',iconCls: 'epay',
 		handler : function(){ return RequestInfoObject.Payments(); }});
 	
-		if(record.data.IsPaid == "YES" && this.RequestRecord.data.IsEnded == "NO")
+		op_menu.add({text: 'پرداخت های مشتری',iconCls: 'list',
+		handler : function(){ return RequestInfoObject.LoadPays(); }});
+	
+		if(record.data.IsPaid == "YES" && record.data.IsEnded == "NO")
 			op_menu.add({text: 'اتمام فاز و ایجاد فاز جدید',iconCls: "app",
 			handler : function(){ return RequestInfoObject.EndPart(); }});
 	}		

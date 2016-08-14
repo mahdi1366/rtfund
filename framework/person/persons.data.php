@@ -310,5 +310,13 @@ function selectSubAgents(){
 	die();
 }
 
-
+function ConfirmPerson(){
+	
+	$PersonID = $_POST["PersonID"];
+	
+	PdoDataAccess::runquery("update BSC_persons set IsConfirm='YES' where PersonID=?", array($PersonID));
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
 ?>

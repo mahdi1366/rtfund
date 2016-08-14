@@ -17,6 +17,7 @@ $dg->addColumn("", "BorrowerID", "", true);
 $dg->addColumn("", "LoanPersonID", "", true);
 $dg->addColumn("", "ReqPersonID", "", true);
 $dg->addColumn("", "IsEnded", "", true);
+$dg->addColumn("","IsConfirm","string", true);
 
 $col = $dg->addColumn("گیرنده وام", "LoanFullname");
 $col->renderer = "function(v,p,r){return v == '' || v == null ? '<span style=color:red>' + r.data.BorrowerDesc + '</span>' : v;}";
@@ -50,6 +51,9 @@ $col->align = "center";
 
 $dg->addObject("ManageRequestObject.FilterObj");
 
+$dg->addButton("", "تایید", "tick", "function(){ManageRequestObject.Confirm();}");
+
+
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 500;
 $dg->pageSize = 15;
@@ -68,6 +72,8 @@ ManageRequestObject.grid.getView().getRowClass = function(record, index)
 	{
 		if(record.data.IsEnded == "YES")
 			return "greenRow";
+		if(record.data.IsConfirm == "YES")
+			return "violetRow";
 		return "";
 	}	
 	

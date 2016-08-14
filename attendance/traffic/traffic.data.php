@@ -46,7 +46,7 @@ function GetAllRequests(){
 	
 	if(!empty($_REQUEST["fields"]) && !empty($_GET["query"]))
 	{
-		$field = $_REQUEST["fields"] == "fullname" ? "concat(fname,' ',lname)" : $_REQUEST["fields"];
+		$field = $_REQUEST["fields"] == "fullname" ? "concat(p1.fname,' ',p1.lname)" : $_REQUEST["fields"];
 		$where .= " AND	" . $field . " like :q";
 		$param[":q"] = "%" . $_GET["query"] . "%";
 	}
@@ -57,6 +57,7 @@ function GetAllRequests(){
 	}	
 	
 	$dt = ATN_requests::Get($where . dataReader::makeOrder(), $param);
+	//print_r(ExceptionHandler::PopAllExceptions());	
 	$result = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	
 	echo dataReader::getJsonData($result, $dt->rowCount(), $_GET["callback"]);
@@ -197,4 +198,39 @@ function ArchiveRequest(){
 	die();
 }
 
+function SelectDayTraffics(){
+	
+	$dt = PdoDataAccess::runquery("
+		select * from (
+
+			select TrafficID,TrafficDate,TrafficTime,IsActive 
+			from ATN_traffic where PersonID=:p AND TrafficDate=:d
+
+			union all
+
+			select null,t.FromDate,StartTime,'YES'
+			from ATN_requests t
+			where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 AND t.FromDate=:d
+
+			union all
+
+			select null,t.FromDate,EndTime,'YES'
+			from ATN_requests t
+			where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 AND t.FromDate=:d AND EndTime is not null
+		)t 
+		order by TrafficTime",
+		array($_GET["PersonID"], $_GET["TrafficDate"]));
+	
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function DeleteTraffic(){
+	
+	$TrafficID = $_POST["TrafficID"];
+	PdoDataAccess::runquery("update ATN_traffic set IsActive='NO' where TrafficID=?",
+		array($TrafficID));
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
 ?>
