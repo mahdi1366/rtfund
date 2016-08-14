@@ -191,9 +191,14 @@ if(isset($_REQUEST["show"]))
 	";
 	$where = "";
 	$whereParam = array();
+	
+	if(!empty($_POST["BranchID"]))
+	{
+		$where .= " AND BranchID=:b";
+		$whereParam[":b"] = $_POST["BranchID"];
+	}	
 	MakeWhere($where, $whereParam);
-	$query .= " where d.CycleID=" . $_SESSION["accounting"]["CycleID"]
-			. " AND BranchID=" . $_SESSION["accounting"]["BranchID"] . $where;
+	$query .= " where d.CycleID=" . $_SESSION["accounting"]["CycleID"] . $where;
 
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.DocStatus != 'RAW' ";
@@ -220,9 +225,17 @@ if(isset($_REQUEST["show"]))
 		return $v < 0 ? 0 : number_format($v);
 	}
 	
+	function TotalRemainRender($row){
+		$v = $row["CreditorAmount"] - $row["DebtorAmount"];
+		return number_format($v);
+	}
+	
 	$col = $rpg->addColumn("مانده بدهکار", "DebtorAmount", "bdremainRender");
 	$col->EnableSummary(true);
 	$col = $rpg->addColumn("مانده بستانکار", "CreditorAmount", "bsremainRender");
+	$col->EnableSummary(true);
+	
+	$col = $rpg->addColumn("مانده ", "CreditorAmount", "TotalRemainRender");
 	$col->EnableSummary(true);
 	
 	$rpg->mysql_resource = $dataTable;
@@ -300,6 +313,25 @@ function AccReport_flow()
 		},
 		width : 600,
 		items :[{
+			xtype : "combo",
+			colspan : 2,
+			width : 400,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: "/accounting/global/domain.data.php?task=GetAccessBranches",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BranchID','BranchName'],
+				autoLoad : true					
+			}),
+			fieldLabel : "شعبه",
+			queryMode : 'local',
+			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
+			displayField : "BranchName",
+			valueField : "BranchID",
+			hiddenName : "BranchID"
+		},{
 			xtype : "combo",
 			displayField : "BlockDesc",
 			fieldLabel : "گروه حساب",

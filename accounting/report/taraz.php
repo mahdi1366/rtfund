@@ -249,11 +249,16 @@ function showReport(){
 	$where = "";
 	$whereParam = array();
 	
+	if(!empty($_POST["BranchID"]))
+	{
+		$where .= " AND d.BranchID=:b";
+		$whereParam[":b"] = $_POST["BranchID"];
+	}	
+	
 	MakeWhere($where, $whereParam);
 	
 	$query = $select . $from . " where 
-		d.CycleID=" . $_SESSION["accounting"]["CycleID"] . " AND 
-		d.BranchID= " . $_SESSION["accounting"]["BranchID"] . $where;
+		d.CycleID=" . $_SESSION["accounting"]["CycleID"] . $where;
 	$query .= $group != "" ? " group by " . $group : "";
 		
 	$query .= " order by b1.BlockCode,b2.BlockCode,b3.BlockCode";
@@ -408,6 +413,25 @@ function AccReport_taraz()
 		},
 		width : 770,
 		items :[{
+			xtype : "combo",
+			colspan : 3,
+			width : 400,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: "/accounting/global/domain.data.php?task=GetAccessBranches",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BranchID','BranchName'],
+				autoLoad : true					
+			}),
+			fieldLabel : "شعبه",
+			queryMode : 'local',
+			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
+			displayField : "BranchName",
+			valueField : "BranchID",
+			hiddenName : "BranchID"
+		},{
 			xtype : "displayfield",
 			fieldLabel : "کل"
 		},{
