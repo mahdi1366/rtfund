@@ -1018,9 +1018,11 @@ function ComputePayments($PartID, &$installments){
 			if ($installments[$i]["InstallmentDate"] < $ToDate) {
 				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$installments[$i]["InstallmentDate"]);
 				$installments[$i]["ForfeitDays"] = $forfeitDays;
-				$installments[$i]["ForfeitAmount"] = round($amount*$installments[$i]["ForfeitPercent"]*$forfeitDays/36500);
-				$installments[$i]["CurForfeitAmount"] = $installments[$i]["ForfeitAmount"];
-				$installments[$i]["TotalRemainder"] = $amount + $installments[$i]["ForfeitAmount"] ;
+				$CurForfeit = round($amount*$installments[$i]["ForfeitPercent"]*$forfeitDays/36500);
+				$Forfeit += $CurForfeit;
+				$installments[$i]["ForfeitAmount"] = $Forfeit;
+				$installments[$i]["CurForfeitAmount"] = $CurForfeit;
+				$installments[$i]["TotalRemainder"] = $amount + $Forfeit;
 				$installments[$i]["remainder"] = $amount;
 			}
 			else
@@ -1156,10 +1158,12 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 			if ($installments[$i]["InstallmentDate"] < $ToDate) {
 				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$installments[$i]["InstallmentDate"]);
 				$installments[$i]["ForfeitDays"] = $forfeitDays;
-				$installments[$i]["ForfeitAmount"] = round($amount*$installments[$i]["ForfeitPercent"]*$forfeitDays/36500);
-				$installments[$i]["CurForfeitAmount"] = $installments[$i]["ForfeitAmount"];
+				$CurForfeit = round($amount*$installments[$i]["ForfeitPercent"]*$forfeitDays/36500);
+				$Forfeit += $CurForfeit;
+				$installments[$i]["ForfeitAmount"] = $Forfeit;
+				$installments[$i]["CurForfeitAmount"] = $CurForfeit;
 				$installments[$i]["remainder"] = $amount;
-				$installments[$i]["TotalRemainder"] = $amount + $installments[$i]["ForfeitAmount"] ;
+				$installments[$i]["TotalRemainder"] = $amount + $Forfeit ;
 			}
 			else
 			{
