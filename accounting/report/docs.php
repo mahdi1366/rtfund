@@ -16,10 +16,15 @@ if(isset($_REQUEST["show"]))
 			from ACC_docs d
 			join ACC_DocItems di using(docID)
 			join BSC_persons p on(RegPersonID=PersonID)
-			where d.CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-				AND d.BranchID=" . $_SESSION["accounting"]["BranchID"];
+			where d.CycleID=" . $_SESSION["accounting"]["CycleID"];
 	
 	$whereParam = array();
+	
+	if(!empty($_POST["BranchID"]))
+	{
+		$query .= " AND BranchID=:b";
+		$whereParam[":b"] = $_POST["BranchID"];
+	}	
 	
 	if(!empty($_POST["FromLocalNo"]))
 	{
@@ -90,7 +95,12 @@ if(isset($_REQUEST["show"]))
 		return DateModules::miladi_to_shamsi($val);
 	}	
 	
-	$rpg->addColumn("شماره سند", "LocalNo");
+	function PrintDocRender($row, $val){
+		
+		return "<a target=_blank href='../docs/print_doc.php?DocID=" . $row["DocID"] . "'>" . $val . "</a>";
+	}
+	
+	$rpg->addColumn("شماره سند", "LocalNo","PrintDocRender");
 	$rpg->addColumn("تاریخ سند", "DocDate","dateRender");
 	$rpg->addColumn("تاریخ ثبت سند", "RegDate","dateRender");
 	$rpg->addColumn("ثبت کننده سند", "regPerson");
@@ -168,6 +178,25 @@ function AccReport_docs()
 		},
 		width : 600,
 		items :[{
+			xtype : "combo",
+			colspan : 2,
+			width : 400,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: "/accounting/global/domain.data.php?task=GetAccessBranches",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BranchID','BranchName'],
+				autoLoad : true					
+			}),
+			fieldLabel : "شعبه",
+			queryMode : 'local',
+			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
+			displayField : "BranchName",
+			valueField : "BranchID",
+			hiddenName : "BranchID"
+		},{
 			xtype : "numberfield",
 			name : "FromLocalNo",
 			hideTrigger : true,

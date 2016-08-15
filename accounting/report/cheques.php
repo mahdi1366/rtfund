@@ -20,10 +20,15 @@ if(isset($_REQUEST["show"]))
 	join ACC_banks bb using(BankID)
 	join BaseInfo b on(b.typeID=3 AND b.infoID=CheckStatus)
 	
-	where d.DocStatus != 'RAW' AND d.CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-				AND d.BranchID=" . $_SESSION["accounting"]["BranchID"];
+	where d.DocStatus != 'RAW' AND d.CycleID=" . $_SESSION["accounting"]["CycleID"];
 
 	$whereParam = array();
+	
+	if(!empty($_POST["BranchID"]))
+	{
+		$query .= " AND BranchID=:b";
+		$whereParam[":b"] = $_POST["BranchID"];
+	}		
 	if(!empty($_POST["fromDate"]))
 	{
 		$query .= " AND substring(d.docDate,1,10) >= :q1 ";
@@ -171,6 +176,25 @@ function AccReport_checks()
 		},
 		width : 700,
 		items :[{
+			xtype : "combo",
+			colspan : 2,
+			width : 400,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: "/accounting/global/domain.data.php?task=GetAccessBranches",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BranchID','BranchName'],
+				autoLoad : true					
+			}),
+			fieldLabel : "شعبه",
+			queryMode : 'local',
+			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
+			displayField : "BranchName",
+			valueField : "BranchID",
+			hiddenName : "BranchID"
+		},{
 			xtype : "shdatefield",
 			name : "fromDate",
 			fieldLabel : "سند از تاریخ"

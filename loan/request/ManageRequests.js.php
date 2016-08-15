@@ -202,5 +202,44 @@ ManageRequest.prototype.deleteRequest = function(){
 	
 }
 
+ManageRequest.prototype.Confirm = function()
+{
+	var record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+		return;
+	Ext.MessageBox.confirm("","آیا مایل به تایید می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = ManageRequestObject;
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			params: {
+				task: 'ConfirmRequest',
+				RequestID : record.data.RequestID
+			},
+			url: me.address_prefix +'request.data.php',
+			method: 'POST',
+
+			success: function(response){
+				mask.hide();
+				var st = Ext.decode(response.responseText);
+				if(st.success)
+				{
+					ManageRequestObject.grid.getStore().load();
+				}
+				else
+				{
+					alert(st.data);
+				}
+			},
+			failure: function(){}
+		});
+		
+	});
+}
 
 </script>

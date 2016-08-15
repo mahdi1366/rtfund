@@ -373,6 +373,13 @@ function GetRequestParts(){
 			array($CostCode_commitment, $dt[$i]["RequestID"], $dt[$i]["PartID"]));
 		$dt[$i]["IsPaid"] = $temp[0][0] == $dt[$i]["PartAmount"] ? "YES" : "NO"; 		
 		
+		$temp = PdoDataAccess::runquery("select count(*)
+			from ACC_DocItems join ACC_docs using(DocID) where 
+			 CostID=? AND SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND SourceID=? AND SourceID2=? ", 
+			array($CostCode_commitment, $dt[$i]["RequestID"], $dt[$i]["PartID"]));
+		$dt[$i]["IsDocRegister"] = $temp[0][0]*1 > 0 ? "YES" : "NO"; 	
+		
+		
 		$dt[$i]["IsStarted"] = WFM_FlowRows::IsFlowStarted(1, $dt[$i]["PartID"]) ? "YES" : "NO";
 		$dt[$i]["IsEnded"] = WFM_FlowRows::IsFlowEnded(1, $dt[$i]["PartID"]) ? "YES" : "NO";
 		
@@ -1396,7 +1403,7 @@ function DeletePayment(){
 	die();
 }
 
-function RegPayPartDoc(){
+function RegPayPartDoc($ReturnMode = false, $pdo = null){
 	
 	$PayID = $_POST["PayID"];
 	$PayObj = new LON_payments($PayID);
@@ -1410,10 +1417,11 @@ function RegPayPartDoc(){
 		die();	
 	}
 	//---------------------------------------------------------------------
-	
-	$pdo = PdoDataAccess::getPdoObject();
-	$pdo->beginTransaction();
-	
+	if($pdo == null)
+	{
+		$pdo = PdoDataAccess::getPdoObject();
+		$pdo->beginTransaction();
+	}
 	$partobj = new LON_ReqParts($PayObj->PartID);
 	$ReqObj = new LON_requests($partobj->RequestID);
 
@@ -1439,13 +1447,46 @@ function RegPayPartDoc(){
 		die();
 	}
 	
+	if($ReturnMode)
+		return true;
+	
 	$pdo->commit();
+	echo Response::createObjectiveResponse(true,"");
+	die();
+}
+
+function editPayPartDoc(){
+	
+	$PayID = $_POST["PayID"];
+	$PayObj = new LON_payments($PayID);
+	
+	$DocObj = new ACC_docs($PayObj->DocID);
+	if($DocObj->DocStatus != "RAW")
+	{
+		echo Response::createObjectiveResponse(false,"سند تایید شده و قابل ویرایش نمی باشد");
+		die();
+	}
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+		
+	RetPayPartDoc(true, $pdo);
+	RegPayPartDoc(true, $pdo);
+	
+	$PayObj = new LON_payments($PayID);
+	$NewDocObj = new ACC_docs($PayObj->DocID);
+	
+	$NewDocObj->LocalNo = $DocObj->LocalNo;
+	$NewDocObj->DocDate = $DocObj->DocDate;
+	$NewDocObj->Edit($pdo);
+	
+	$pdo->commit();			
 	
 	echo Response::createObjectiveResponse(true,"");
 	die();
 }
 
-function RetPayPartDoc(){
+function RetPayPartDoc($ReturnMode = false, $pdo = null){
 	
 	if(empty($_POST["PayID"]))
 	{
@@ -1487,8 +1528,11 @@ function RetPayPartDoc(){
 		}
 	}
 	//-----------------------------------------------------------
-	$pdo = PdoDataAccess::getPdoObject();
-	$pdo->beginTransaction();
+	if($pdo == null)
+	{
+		$pdo = PdoDataAccess::getPdoObject();
+		$pdo->beginTransaction();
+	}
 	
 	if(!ReturnPayPartDoc($PayObj->DocID, $pdo))
 	{
@@ -1506,8 +1550,11 @@ function RetPayPartDoc(){
 	}
 	
 	ChangeStatus($PayObj->_RequestID, "90", "", true, $pdo);
-		
-	$pdo->commit();
+	
+	if($ReturnMode)
+		return true;
+	
+	$pdo->commit();	
 	
 	echo Response::createObjectiveResponse(true, "");
 	die();
@@ -1582,4 +1629,15 @@ function removeMessage(){
 	Response::createObjectiveResponse($result, "");
 	die();
 }
+
+function ConfirmRequest(){
+	
+	$RequestID = $_POST["RequestID"];
+	
+	PdoDataAccess::runquery("update LON_requests set IsConfirm='YES' where RequestID=?", array($RequestID));
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
 ?>

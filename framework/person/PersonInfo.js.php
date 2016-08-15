@@ -236,7 +236,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			colspan : 2
 		},{
 			xtype : "textfield",
-			regex: /^\d{11}$/,
+			//regex: /^\d{11}$/,
 			maskRe: /[\d\-]/,
 			allowBlank : false,
 			fieldLabel: 'شناسه ملی',

@@ -98,14 +98,21 @@ PartPayment.DocRender = function(v,p,r){
 	{
 		st = v;
 		if(r.data.DocStatus == "RAW")
+		{
 			st += "<div align='center' title='برگشت سند' class='undo' "+
 				"onclick='PartPaymentObject.ReturnPayPartDoc();' " +
 				"style='float:left;background-repeat:no-repeat;background-position:center;" +
 				"cursor:pointer;width:16px;height:16'></div>";
+			
+			st += "&nbsp;&nbsp;&nbsp;<div align='center' title='اصلاح سند' class='edit' "+
+				"onclick='PartPaymentObject.BeforeRegDoc(2);' " +
+				"style='float:left;background-repeat:no-repeat;background-position:center;" +
+				"cursor:pointer;width:16px;height:16'></div>";
+		}
 		return st;
 	}
 	return "<div align='center' title='صدور سند' class='send' "+
-		"onclick='PartPaymentObject.BeforeRegDoc();' " +
+		"onclick='PartPaymentObject.BeforeRegDoc(1);' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
@@ -191,7 +198,7 @@ PartPayment.prototype.DeletePayment = function(){
 	});
 }
 
-PartPayment.prototype.BeforeRegDoc = function(){
+PartPayment.prototype.BeforeRegDoc = function(mode){
 	
 	if(!this.BankWin)
 	{
@@ -252,9 +259,12 @@ PartPayment.prototype.BeforeRegDoc = function(){
 	}
 	
 	this.BankWin.show();
+	this.BankWin.down("[itemId=btn_save]").setHandler(function(){
+		PartPaymentObject.RegPayPartDoc(mode == "1" ? "RegPayPartDoc" : "editPayPartDoc");
+	});
 }
 
-PartPayment.prototype.RegPayPartDoc = function(){
+PartPayment.prototype.RegPayPartDoc = function(task){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
 
@@ -265,7 +275,7 @@ PartPayment.prototype.RegPayPartDoc = function(){
 		url: this.address_prefix +'request.data.php',
 		method: "POST",
 		params: {
-			task: "RegPayPartDoc",
+			task: task,
 			PayID : record.data.PayID,
 			BankTafsili : this.BankWin.down("[itemId=TafsiliID]").getValue(),
 			AccountTafsili : this.BankWin.down("[itemId=TafsiliID2]").getValue()

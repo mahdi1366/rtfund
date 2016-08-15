@@ -10,7 +10,7 @@ require_once '../baseinfo/shift.class.php';
 require_once inc_reportGenerator;
 require_once inc_dataGrid;
 
-$admin = isset($_POST["admin"]) ? true : false;
+$admin = isset($_REQUEST["admin"]) ? true : false;
 
 if(isset($_REQUEST["showReport"]))
 {
@@ -66,12 +66,12 @@ function ShowReport($admin){
 		)t2
 		order by  TrafficDate,TrafficTime";
 	$dt = PdoDataAccess::runquery($query, array(":p" => $PersonID, ":sd" => $StartDate, ":ed" => $EndDate));
-if($_SESSION["USER"]["UserName"] == "admin")
-{
-print_r(ExceptionHandler::PopAllExceptions());
-echo PdoDataAccess::GetLatestQueryString();
-}
-//print_r($dt);
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+	print_r(ExceptionHandler::PopAllExceptions());
+	echo PdoDataAccess::GetLatestQueryString();
+	}
+	//print_r($dt);
 	//........................ create days array ..................
 	
 	$index = 0;
@@ -392,6 +392,7 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "traffic.data.php?task=Selec
 
 $dg->addColumn("", "TrafficID", "", true);
 $dg->addColumn("", "IsActive", "", true);
+$dg->addColumn("", "ReqType", "", true);
 
 $col = $dg->addColumn("تاریخ", "TrafficDate", GridColumn::ColumnType_date);
 $col->width = 120;
@@ -522,7 +523,7 @@ TraceTraffic.prototype.LoadReport = function(){
 	mask.show();
 
 	Ext.Ajax.request({
-		url: this.address_prefix +'TraceTraffic.php?showReport=true',
+		url: this.address_prefix +'TraceTraffic.php?showReport=true<?= $admin ? "&admin=true" : "" ?>',
 		method: "POST",
 		form : this.get("mainForm"),
 
@@ -539,7 +540,11 @@ TraceTrafficObj = new TraceTraffic();
 
 TraceTraffic.DeleteRender = function(v,p,r)
 {
-	if(r.data.IsActive == "YES")
+	if(r.data.TrafficID == null)
+	{
+		return r.data.ReqType == "MISSION" ? "ماموریت"  : "مرخصی";
+	}
+	if(r.data.IsActive == "YES" )
 		return "<div align='center' title='حذف' class='remove' "+
 		"onclick='TraceTrafficObj.DeleteTraffic();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +

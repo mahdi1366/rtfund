@@ -18,7 +18,7 @@ if($PartID == "")
 }
 
 $amount = $_REQUEST["amount"];
-//$amount = 1000;
+$MerchantID = 301328;
 $url = "http://rtfund/portal/epayment/epayment_step2.php";
 
 if($_SESSION["USER"]["UserName"] != "9155338872")
