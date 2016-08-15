@@ -245,15 +245,15 @@ class manage_payment_calculation extends PdoDataAccess
 			$this->process_insure();
 		
 		
-			$this->sum_tax_include = $this->sum_tax_include - ((isset($this->payment_items[SIT_STAFF_REMEDY_SERVICES_INSURE]['get_value']) ? $this->payment_items[SIT_STAFF_REMEDY_SERVICES_INSURE]['get_value'] : 0 ) +
-										(isset($this->payment_items[SIT_PROFESSOR_REMEDY_SERVICES_INSURE]['get_value']) ? $this->payment_items[SIT_PROFESSOR_REMEDY_SERVICES_INSURE]['get_value'] : 0 ) + 
-										(isset($this->payment_items[SIT_AGE_AND_ACCIDENT_INSURE_1]['get_value']) ? $this->payment_items[SIT_AGE_AND_ACCIDENT_INSURE_1]['get_value'] : 0 ) +
-										(isset($this->payment_items[SIT_AGE_AND_ACCIDENT_INSURE_2]['get_value']) ? $this->payment_items[SIT_AGE_AND_ACCIDENT_INSURE_2]['get_value'] : 0 ) + 
-										(isset($this->payment_items[9994]['get_value']) ? $this->payment_items[9994]['get_value'] : 0 ) + 
-										(isset($this->payment_items[10149]['get_value']) ? $this->payment_items[10149]['get_value'] : 0 ) + 
-										(isset($this->payment_items[IRAN_INSURE]['get_value']) ? $this->payment_items[IRAN_INSURE]['get_value'] : 0 ) +
-										(isset($this->payment_items[9964]['get_value']) ? $this->payment_items[9964]['get_value'] : 0 ) + 
-										(isset($this->payment_items[9998]['get_value']) ? $this->payment_items[9998]['get_value'] : 0) )  ; 
+				$this->sum_tax_include = $this->sum_tax_include - ((isset($this->payment_items[SIT_STAFF_REMEDY_SERVICES_INSURE]['get_value']) ? $this->payment_items[SIT_STAFF_REMEDY_SERVICES_INSURE]['get_value'] : 0 ) +
+										 (isset($this->payment_items[SIT_PROFESSOR_REMEDY_SERVICES_INSURE]['get_value']) ? $this->payment_items[SIT_PROFESSOR_REMEDY_SERVICES_INSURE]['get_value'] : 0 ) + 
+										 (isset($this->payment_items[SIT_AGE_AND_ACCIDENT_INSURE_1]['get_value']) ? $this->payment_items[SIT_AGE_AND_ACCIDENT_INSURE_1]['get_value'] : 0 ) +
+										 (isset($this->payment_items[SIT_AGE_AND_ACCIDENT_INSURE_2]['get_value']) ? $this->payment_items[SIT_AGE_AND_ACCIDENT_INSURE_2]['get_value'] : 0 ) + 
+										 (isset($this->payment_items[9994]['get_value']) ? $this->payment_items[9994]['get_value'] : 0 ) + 
+										 (isset($this->payment_items[10149]['get_value']) ? $this->payment_items[10149]['get_value'] : 0 ) + 
+										 (isset($this->payment_items[IRAN_INSURE]['get_value']) ? $this->payment_items[IRAN_INSURE]['get_value'] : 0 ) +
+										 (isset($this->payment_items[9964]['get_value']) ? $this->payment_items[9964]['get_value'] : 0 ) + 
+										 (isset($this->payment_items[9998]['get_value']) ? $this->payment_items[9998]['get_value'] : 0) )  ; 
 			
 						
 			//پردازش مربوط به ماليات
