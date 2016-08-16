@@ -209,7 +209,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 	}	
 	if(record.data.IsEnded == "YES")
 	{
-		if(record.data.IsDocRegister == "NO" && record.data.IsEnded == "NO")
+		if(record.data.IsDocRegister == "NO")
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
 	
@@ -1433,6 +1433,10 @@ RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
 	LastPay = MiladiToShamsi(this.paymentStore.getAt(this.paymentStore.getCount()-1).data.PayDate);
 	paymentPeriod = GetDiffInMonth(firstPay, LastPay);
 	//----------------------------------------------
+	
+	if(record.data.WageReturn == "CUSTOMER")
+		record.data.CustomerWage = 0;
+	
 	totalWage = 0;
 	wages = new Array();
 	for(j=0; j<this.paymentStore.getCount(); j++)

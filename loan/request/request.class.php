@@ -295,7 +295,8 @@ class LON_BackPays extends PdoDataAccess
 				b.BankDesc, 
 				bi.InfoDesc PayTypeDesc, 
 				bi2.InfoDesc ChequeStatusDesc,
-				d.LocalNo
+				d.LocalNo,
+				d.DocStatus
 			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			join LON_ReqParts rp using(PartID)

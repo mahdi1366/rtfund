@@ -32,7 +32,7 @@ $dg->addColumn("", "BackPayID","", true);
 $dg->addColumn("", "PartID","", true);
 $dg->addColumn("", "PayTypeDesc","", true);
 $dg->addColumn("", "LocalNo","", true);
-
+$dg->addColumn("", "DocStatus","", true);
 if($editable)
 {
 	$col = $dg->addColumn("نحوه پرداخت", "PayType");
@@ -279,7 +279,12 @@ LoanPay.RegDocRender = function(v,p,r){
 	
 	if(r.data.LocalNo == null)
 		return "<div align='center' title='صدور سند' class='send' "+
-		"onclick='LoanPayObject.BeforeSave();' " +
+		"onclick='LoanPayObject.BeforeSave(1);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+	else if(r.data.DocStatus == "RAW")
+		return r.data.LocalNo + "<div align='center' title='ویرایش سند' class='edit' "+
+		"onclick='LoanPayObject.BeforeSave(2);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 	else
@@ -288,14 +293,14 @@ LoanPay.RegDocRender = function(v,p,r){
 
 var LoanPayObject = new LoanPay();
 	
-LoanPay.prototype.BeforeSave = function(store, record){
+LoanPay.prototype.BeforeSave = function(mode){
 	
-	record =  this.grid.getSelectionModel().getLastSelected(); //delete
+	record =  this.grid.getSelectionModel().getLastSelected(); 
 	if(!this.BankWin)
 	{
 		this.BankWin = new Ext.window.Window({
 			width : 400,
-			height : 120,//85,
+			height : 120,
 			modal : true,
 			closeAction : "hide",
 			items : [{
@@ -361,8 +366,9 @@ LoanPay.prototype.BeforeSave = function(store, record){
 	this.BankWin.show();
 	this.BankWin.down("[itemId=btn_save]").setHandler(function(){ 
 		LoanPayObject.BankWin.hide();
-		//LoanPayObject.SavePartPayment(LoanPayObject.BankWin.down("[itemId=TafsiliID]").getValue(), record); 
-		LoanPayObject.RegisterDoc(LoanPayObject.BankWin.down("[itemId=TafsiliID]").getValue(),LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getValue(), record); 
+		LoanPayObject.RegisterDoc(
+			LoanPayObject.BankWin.down("[itemId=TafsiliID]").getValue(),
+			LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getValue(), record, mode); 
 	});
 }
 	
@@ -401,7 +407,7 @@ LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 	});
 }
 
-LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, record){
+LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, record, mode){
 
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
@@ -410,7 +416,7 @@ LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, record){
 		url: this.address_prefix +'request.data.php',
 		method: "POST",
 		params: {
-			task: "SavePartPay",
+			task: mode == 1 ? "SavePartPay" : "EditPartPayDoc",
 			BankTafsili : BankTafsili,
 			AccountTafsili : AccountTafsili,
 			record: Ext.encode(record.data),
@@ -429,7 +435,10 @@ LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, record){
 			}
 			else
 			{
-				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+				if(st.data == "")
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+				else
+					Ext.MessageBox.alert("",st.data);
 			}
 		},
 		failure: function(){}

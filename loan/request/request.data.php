@@ -375,7 +375,8 @@ function GetRequestParts(){
 		
 		$temp = PdoDataAccess::runquery("select count(*)
 			from ACC_DocItems join ACC_docs using(DocID) where 
-			 CostID=? AND SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND SourceID=? AND SourceID2=? ", 
+			 CostID=? AND DocStatus in('CONFIRM','ARCHIVE') 
+				AND SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND SourceID=? AND SourceID2=? ", 
 			array($CostCode_commitment, $dt[$i]["RequestID"], $dt[$i]["PartID"]));
 		$dt[$i]["IsDocRegister"] = $temp[0][0]*1 > 0 ? "YES" : "NO"; 	
 		
@@ -687,6 +688,9 @@ function ComputeInstallmentsShekoofa($partObj = null){
 	if(!$partObj)
 		$partObj = new LON_ReqParts($_REQUEST["PartID"]);
 	
+	if($partObj->WageReturn == "CUSTOMER")
+		$partObj->CustomerWage =$partObj->FundWage = 0;
+	
 	$payments = LON_payments::Get(" AND PartID=? order by PayDate", array($partObj->PartID));
 	$payments = $payments->fetchAll();
 	//--------------- total pay months -------------
@@ -982,6 +986,57 @@ function DeletePay(){
 		echo Response::createObjectiveResponse(false, "خطا در حذف ردیف پرداخت");
 		die();
 	}
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function EditPartPayDoc(){
+	
+	$PayObj = new LON_BackPays();
+	PdoDataAccess::FillObjectByJsonData($PayObj, $_POST["record"]);
+	$PayObj = new LON_BackPays($PayObj->BackPayID);
+	
+	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
+		where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " 
+		AND SourceID=? AND SourceID2=?" , array($PayObj->_RequestID, $PayObj->BackPayID));
+	echo PdoDataAccess::GetLatestQueryString();
+	if(count($dt) == 0)
+	{
+		echo Response::createObjectiveResponse(false, "سند مربوطه یافت نشد");
+		die();
+	}
+	$DocObj = new ACC_docs($dt[0]["DocID"]);
+			
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	if(!ReturnCustomerPayDoc($PayObj, $pdo))
+	{
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	if(!RegisterCustomerPayDoc($PayObj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo))
+	{
+		$pdo->rollback();
+		echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
+		die();
+	}
+	
+	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
+		where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " 
+		AND SourceID=? AND SourceID2=?" , array($PayObj->_RequestID, $PayObj->BackPayID), $pdo);
+	$NewDocObj = new ACC_docs($dt[0]["DocID"]);
+	
+	$NewDocObj->LocalNo = $DocObj->LocalNo;
+	$NewDocObj->DocDate = $DocObj->DocDate;
+	if(!$NewDocObj->Edit($pdo))
+	{
+		$pdo->rollback();
+		echo Response::createObjectiveResponse(false, "خطا در ویرایش سند");
+		die();
+	}
+	
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
 	die();
@@ -1375,7 +1430,6 @@ function GetEndedRequests(){
 function GetPartPayments(){
 	
 	$dt = LON_payments::Get(" AND PartID=? " . dataReader::makeOrder() , array($_REQUEST["PartID"]));
-	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
 }
