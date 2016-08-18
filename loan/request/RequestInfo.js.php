@@ -209,7 +209,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 	}	
 	if(record.data.IsEnded == "YES")
 	{
-		if(record.data.IsDocRegister == "NO")
+		if(record.data.IsDocRegister == "NO" && this.RequestRecord.data.IsEnded == "NO")
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
 	
@@ -272,9 +272,20 @@ RequestInfo.prototype.BuildForms = function(){
 					fieldLabel: 'فاصله اقساط',
 					name: 'PayInterval'
 				},{
-					fieldLabel: 'مدت تنفس',
-					name: 'DelayMonths',
-					renderer : function(v){ return v + " ماه"}
+					xtype : "container",
+					layout : "hbox",
+					items : [{
+						xtype : "displayfield",
+						fieldLabel: 'مدت تنفس',
+						fieldCls : "blueText",
+						name: 'DelayMonths',
+						renderer : function(v){ return v + " ماه"}
+					},{
+						xtype : "displayfield",
+						fieldCls : "blueText",
+						name: 'DelayDays',
+						renderer : function(v){ return v + " روز"}
+					}]					
 				},{
 					fieldLabel: 'تعداد اقساط',
 					name: 'InstallmentCount'
@@ -977,9 +988,24 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						name : "IntervalType"
 					}]
 				},{
-					fieldLabel: 'مدت تنفس',
-					name: 'DelayMonths',
-					afterSubTpl : "ماه"
+					xtype : "container",
+					width : 300,
+					layout : "hbox",
+					items : [{
+						xtype : "numberfield",
+						labelWidth : 90,
+						width: 150,
+						hideTrigger : true,
+						fieldLabel: 'مدت تنفس',
+						name: 'DelayMonths',
+						afterSubTpl : "ماه"
+					},{
+						xtype : "numberfield",
+						hideTrigger : true,
+						width: 50,
+						name: 'DelayDays',
+						afterSubTpl : "روز"
+					}]
 				},{
 					fieldLabel: 'تعداد اقساط',
 					name: 'InstallmentCount'
@@ -1212,7 +1238,6 @@ RequestInfo.prototype.LoadSummary = function(record){
 	if(record.data.ReqPersonID == "<?= SHEKOOFAI ?>")
 		return this.LoadSummarySHRTFUND(record, null);
 
-
 	function PMT(F8, F9, F7, YearMonths, PayInterval) {  
 		
 		if(F8 == 0)
@@ -1285,6 +1310,8 @@ RequestInfo.prototype.LoadSummary = function(record){
 		return Ext.util.Format.Money(val);
 	}
 
+	DelayDuration = record.data.DelayMonths*1 + (record.data.DelayDays*1/30);
+
 	YearMonths = 12;
 	if(record.data.IntervalType == "DAY")
 		YearMonths = Math.floor(365/record.data.PayInterval);
@@ -1297,7 +1324,7 @@ RequestInfo.prototype.LoadSummary = function(record){
 	FundWage = !isInt(FundWage) ? 0 : FundWage;
 	AgentWage = TotalWage - FundWage;
 	
-	TotalDelay = Math.round(record.data.PartAmount*record.data.CustomerWage*record.data.DelayMonths/1200);
+	TotalDelay = Math.round(record.data.PartAmount*record.data.CustomerWage*DelayDuration/1200);
 	
 	//-------------------------- installments -----------------------------
 	MaxWage = Math.max(record.data.CustomerWage, record.data.FundWage);
@@ -1433,10 +1460,6 @@ RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
 	LastPay = MiladiToShamsi(this.paymentStore.getAt(this.paymentStore.getCount()-1).data.PayDate);
 	paymentPeriod = GetDiffInMonth(firstPay, LastPay);
 	//----------------------------------------------
-	
-	if(record.data.WageReturn == "CUSTOMER")
-		record.data.CustomerWage = 0;
-	
 	totalWage = 0;
 	wages = new Array();
 	for(j=0; j<this.paymentStore.getCount(); j++)

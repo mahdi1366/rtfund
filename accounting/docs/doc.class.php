@@ -14,22 +14,27 @@ class ACC_docs extends PdoDataAccess {
 	public $RegDate;
 	public $DocStatus;
 	public $DocType;
+	public $SubjectID;
 	public $description;
 	public $regPersonID;
 		
-	function __construct($DocID = "") {
+	function __construct($DocID = "",$pdo = null) {
 		
 		$this->DT_DocDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_RegDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($DocID != "")
-			parent::FillObject ($this, "select * from ACC_docs where DocID=?", array($DocID));
+			parent::FillObject ($this, "select * from ACC_docs where DocID=?", array($DocID), $pdo);
 	}
 
 	static function GetAll($where = "", $whereParam = array()) {
 		
-		$query = "select sd.*, concat(fname,' ',lname) as regPerson
+		$query = "select sd.*, concat(fname,' ',lname) as regPerson, 
+				b.InfoDesc SubjectDesc,b2.InfoDesc DocTypeDesc
+			
 			from ACC_docs sd
+			left join BaseInfo b on(b.TypeID=73 AND b.InfoID=SubjectID)
+			left join BaseInfo b2 on(b2.TypeID=9 AND b2.InfoID=DocType)
 			left join BSC_persons p on(regPersonID=PersonID)";
 		
 		$query .= ($where != "") ? " where " . $where : "";

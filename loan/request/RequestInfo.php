@@ -30,6 +30,7 @@ $dg->addColumn("", "InstallmentCount","", true);
 $dg->addColumn("", "IntervalType","", true);
 $dg->addColumn("", "PayInterval","", true);
 $dg->addColumn("", "DelayMonths","", true);
+$dg->addColumn("", "DelayDays","", true);
 $dg->addColumn("", "ForfeitPercent","", true);
 $dg->addColumn("", "CustomerWage","", true);
 $dg->addColumn("", "FundWage","", true);

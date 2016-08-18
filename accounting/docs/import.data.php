@@ -114,9 +114,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$AgentYears[$year] = round($amount - $FundYears[$year]);
 	///...........................................................
 	
-	$CustomerDelay = round($PayAmount*$PartObj->CustomerWage*$PartObj->DelayMonths/1200);
-	$FundDelay = round($PayAmount*$PartObj->FundWage*$PartObj->DelayMonths/1200);
-	$AgentDelay = round($PayAmount*($PartObj->CustomerWage - $PartObj->FundWage)*$PartObj->DelayMonths/1200);
+	$DelayDuration = $PartObj->DelayMonths*1 + $PartObj->DelayDays*1/30;
+		
+	$CustomerDelay = round($PayAmount*$PartObj->CustomerWage*$DelayDuration/1200);
+	$FundDelay = round($PayAmount*$PartObj->FundWage*$DelayDuration/1200);
+	$AgentDelay = round($PayAmount*($PartObj->CustomerWage - $PartObj->FundWage)*$DelayDuration/1200);
 	
 	$curYear = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0, 4)*1;
 	$CurYearTafsili = FindTafsiliID($curYear, TAFTYPE_YEARS);
@@ -640,7 +642,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	}
 	
 	//--------------------------------------------------------
-	
+	$DelayDuration = $PartObj->DelayMonths*1 + $PartObj->DelayDays*1/30;
 	$YearMonths = 12;
 	if($PartObj->IntervalType == "DAY")
 		$YearMonths = floor(365/$PartObj->PayInterval);
@@ -653,7 +655,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	$year3 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 3, $YearMonths);
 	$year4 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 4, $YearMonths);
 	
-	$TotalDelay = round($PartObj->PartAmount*$PartObj->CustomerWage*$PartObj->DelayMonths/1200);
+	$TotalDelay = round($PartObj->PartAmount*$PartObj->CustomerWage*$DelayDuration/1200);
 	$curYear = substr(DateModules::miladi_to_shamsi($PartObj->PartDate), 0, 4)*1;
 	
 	//--------------------- compute for new Amount ---------------------
@@ -665,7 +667,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	$new_year3 = $FundFactor*YearWageCompute($PartObj, $new_TotalWage, 3, $YearMonths);
 	$new_year4 = $FundFactor*YearWageCompute($PartObj, $new_TotalWage, 4, $YearMonths);
 	
-	$new_TotalDelay = round($PaidAmount*$PartObj->CustomerWage*$PartObj->DelayMonths/1200);
+	$new_TotalDelay = round($PaidAmount*$PartObj->CustomerWage*$DelayDuration/1200);
 	
 	//------------------ find tafsilis ---------------
 	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
@@ -913,22 +915,24 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	return true;
 }
 
-function RegisterCustomerPayDoc($PayObj, $BankTafsili, $AccountTafsili,  $pdo){
+function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,  $pdo){
 	
 	/*@var $PayObj LON_BackPays */
 	$PartObj = new LON_ReqParts($PayObj->PartID);
 	$ReqObj = new LON_requests($PartObj->RequestID);
 	
-	$dt = PdoDataAccess::runquery("select * from ACC_DocItems where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " 
-		AND SourceID=? AND SourceID2=?" , array($ReqObj->RequestID, $PayObj->BackPayID));
-	if(count($dt) > 0)
+	if($DocObj == null)
 	{
-		ExceptionHandler::PushException("سند این ردیف پرداخت قبلا صادر شده است");
-		return false;
+		$dt = PdoDataAccess::runquery("select * from ACC_DocItems where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " 
+			AND SourceID=? AND SourceID2=?" , array($ReqObj->RequestID, $PayObj->BackPayID));
+		if(count($dt) > 0)
+		{
+			ExceptionHandler::PushException("سند این ردیف پرداخت قبلا صادر شده است");
+			return false;
+		}
 	}
+	
 	$CycleID = substr(DateModules::shNow(), 0 , 4);
-	
-	
 	
 	//------------- get CostCodes --------------------
 	$LoanObj = new LON_loans($ReqObj->LoanID);
@@ -938,22 +942,26 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $AccountTafsili,  $pdo){
 	$CostCode_commitment = FindCostID("200-01");
 	
 	//---------------- add doc header --------------------
-	$obj = new ACC_docs();
-	$obj->RegDate = PDONOW;
-	$obj->regPersonID = $_SESSION['USER']["PersonID"];
-	$obj->DocDate = PDONOW;
-	$obj->CycleID = $CycleID;
-	$obj->BranchID = $ReqObj->BranchID;
-	$obj->DocType = DOCTYPE_INSTALLMENT_PAYMENT;
-	$obj->description = "پرداخت قسط " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID . " به نام " .
-		$ReqObj->_LoanPersonFullname;
-	
-	if(!$obj->Add($pdo))
+	if($DocObj == null)
 	{
-		ExceptionHandler::PushException("خطا در ایجاد سند");
-		return false;
+		$obj = new ACC_docs();
+		$obj->RegDate = PDONOW;
+		$obj->regPersonID = $_SESSION['USER']["PersonID"];
+		$obj->DocDate = PDONOW;
+		$obj->CycleID = $CycleID;
+		$obj->BranchID = $ReqObj->BranchID;
+		$obj->DocType = DOCTYPE_INSTALLMENT_PAYMENT;
+		$obj->description = "پرداخت قسط " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID . " به نام " .
+			$ReqObj->_LoanPersonFullname;
+
+		if(!$obj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد سند");
+			return false;
+		}
 	}
-	
+	else
+		$obj = $DocObj;
 	
 	//------------------ find tafsilis ---------------
 	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
@@ -1088,7 +1096,7 @@ function RegisterCustomerPayDoc($PayObj, $BankTafsili, $AccountTafsili,  $pdo){
 	return true;
 }
 
-function ReturnCustomerPayDoc($PayObj, $pdo){
+function ReturnCustomerPayDoc($PayObj, $pdo, $EditMode = false){
 	
 	/*@var $PayObj LON_BackPays */
 	
@@ -1097,6 +1105,14 @@ function ReturnCustomerPayDoc($PayObj, $pdo){
 		array($PayObj->_RequestID, $PayObj->BackPayID), $pdo);
 	if(count($dt) == 0)
 		return true;
+	
+	if($EditMode)
+	{
+		PdoDataAccess::runquery("delete from ACC_DocItems 
+			where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID=? AND SourceID2=?",
+			array($PayObj->_RequestID, $PayObj->BackPayID), $pdo);
+		return true;
+	}
 	
 	return ACC_docs::Remove($dt[0][0], $pdo);
 }

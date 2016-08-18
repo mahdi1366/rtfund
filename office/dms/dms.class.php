@@ -75,6 +75,12 @@ class DMS_documents extends PdoDataAccess
 			return false;
 		}
 		
+		if(!PdoDataAccess::delete("DMS_DocParamValues","DocumentID=?", array($DocumentID)))
+		{
+			ExceptionHandler::PushException("خطا در حذف پارامترهای پیوست");
+			return false;
+		}
+		
 		if( parent::delete("DMS_documents"," DocumentID=?", array($DocumentID)) === false )
 	 		return false;
 

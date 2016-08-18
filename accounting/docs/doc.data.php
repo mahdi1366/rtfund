@@ -807,5 +807,11 @@ function RegisterInOutAccountDoc() {
 	die();
 }
 
+function GetSubjects(){
+	
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=73");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
 
 ?>

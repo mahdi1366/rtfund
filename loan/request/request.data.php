@@ -60,13 +60,17 @@ function roundUp($number, $digits){
 function YearWageCompute($PartObj, $TotalWage, $YearMonths){
 
 	$startDate = DateModules::miladi_to_shamsi($PartObj->PartDate);
-	$startDate = DateModules::AddToJDate($startDate, 0, $PartObj->DelayMonths); 
+	$startDate = DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths); 
 	$startDate = preg_split('/[\-\/]/',$startDate);
 	$PayMonth = $startDate[1]*1;
 	
 	$FirstYearInstallmentCount = floor((12 - $PayMonth)/(12/$YearMonths));
+	$FirstYearInstallmentCount = $PartObj->InstallmentCount < $FirstYearInstallmentCount ? 
+			$FirstYearInstallmentCount - $PartObj->InstallmentCount : $FirstYearInstallmentCount;
 	$MidYearInstallmentCount = floor(($PartObj->InstallmentCount-$FirstYearInstallmentCount) / $YearMonths);
+	$MidYearInstallmentCount = $MidYearInstallmentCount < 0 ? 0 : $MidYearInstallmentCount;
 	$LastYeatInstallmentCount = ($PartObj->InstallmentCount-$FirstYearInstallmentCount) % $YearMonths;
+	$LastYeatInstallmentCount = $LastYeatInstallmentCount < 0 ? 0 : $LastYeatInstallmentCount;
 	$F9 = $PartObj->InstallmentCount*(12/$YearMonths);
 	
 	$yearNo = 1;
@@ -151,7 +155,10 @@ function YearDelayCompute($PartObj, $PayAmount, $wage, $yearNo){
 	if($yearNo > 1 && $yearNo <= $MidYearCount+1)
 		$curMonths = $YearMonths;
 	else if($yearNo > $MidYearCount+1)
+	{
 		$curMonths = $LastYeatCount;
+		$curMonths = $curMonths*1 + $PartObj->DelayDays*1/30;
+	}
 	$val = round($PayAmount*$wage*$curMonths/1200);
 	return $val;
 }
@@ -170,35 +177,34 @@ function SaveLoanRequest(){
 		if(strpos($index, "guarantee") !== false)
 			$obj->guarantees[] = str_replace("guarantee_", "", $index);
 	$obj->guarantees = implode(",", $obj->guarantees);
-	
+	$obj->IsFree = isset($_POST["IsFree"]) ? "YES" : "NO";	
 	//------------------------------------------------------
-	if(isset($_SESSION["USER"]["portal"]) && 
-		($_SESSION["USER"]["IsAgent"] == "YES" || $_SESSION["USER"]["IsSupporter"] == "YES"))
+	if(isset($_SESSION["USER"]["portal"]))
 	{
-		if(empty($_POST["ReqPersonID"]))
+		if($_SESSION["USER"]["IsAgent"] == "YES" || $_SESSION["USER"]["IsSupporter"] == "YES")
+		{
 			$obj->ReqPersonID = $_SESSION["USER"]["PersonID"];
-		
-		if(isset($_POST["sending"]) &&  $_POST["sending"] == "true")
+			
+			if(isset($_POST["sending"]) &&  $_POST["sending"] == "true")
+				$obj->StatusID = 10;
+			else
+				$obj->StatusID = 1;
+
+			$obj->LoanID = Default_Agent_Loan;
+		}
+		if($_SESSION["USER"]["IsCustomer"] == "YES")
+		{
+			if(!isset($obj->LoanPersonID))
+				$obj->LoanPersonID = $_SESSION["USER"]["PersonID"];
 			$obj->StatusID = 10;
-		else
-			$obj->StatusID = 1;
-		
-		$obj->LoanID = Default_Agent_Loan;
+		}
 	}
-	else if($_SESSION["USER"]["IsStaff"] == "YES" && empty($obj->RequestID))
+	else if(empty($obj->RequestID))
 	{
 		$obj->LoanID = Default_Agent_Loan;
-		$obj->IsFree = isset($_POST["IsFree"]) ? "YES" : "NO";	
-		
-		if(empty($obj->RequestID) && isset($_SESSION["USER"]["framework"]))
-			$obj->StatusID = 1;
+		$obj->StatusID = 1;
 	}
-	else if($_SESSION["USER"]["IsCustomer"] == "YES")
-	{
-		if(!isset($obj->LoanPersonID))
-			$obj->LoanPersonID = $_SESSION["USER"]["PersonID"];
-		$obj->StatusID = 10;
-	}
+	
 	//------------------------------------------------------
 	if(empty($obj->RequestID))
 	{
@@ -309,6 +315,7 @@ function Selectguarantees(){
 function DeleteRequest(){
 	
 	$res = LON_requests::DeleteRequest($_POST["RequestID"]);
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($res, !$res ? ExceptionHandler::GetExceptionsToString() : "");
 	die();
 }
@@ -375,8 +382,7 @@ function GetRequestParts(){
 		
 		$temp = PdoDataAccess::runquery("select count(*)
 			from ACC_DocItems join ACC_docs using(DocID) where 
-			 CostID=? AND DocStatus in('CONFIRM','ARCHIVE') 
-				AND SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND SourceID=? AND SourceID2=? ", 
+			 CostID=? AND SourceType=" . DOCTYPE_LOAN_PAYMENT . "  AND DocStatus in('CONFIRM','ARCHIVE') AND SourceID=? AND SourceID2=? ", 
 			array($CostCode_commitment, $dt[$i]["RequestID"], $dt[$i]["PartID"]));
 		$dt[$i]["IsDocRegister"] = $temp[0][0]*1 > 0 ? "YES" : "NO"; 	
 		
@@ -404,7 +410,7 @@ function SavePart(){
 
 	if(!$result)
 	{
-		print_r(ExceptionHandler::PopAllExceptions());
+		//print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse(false, "خطا در ثبت فاز");
 		die();
 	}
@@ -616,8 +622,8 @@ function ComputeInstallments(){
 		$TotalWage = 0;
 		$obj->CustomerWage = 0;
 	}
-		
-	$TotalDelay = round($obj->PartAmount*$obj->CustomerWage*$obj->DelayMonths/1200);
+	$DelayDuration = $PartObj->DelayMonths*1 + $PartObj->DelayDays*1/30;
+	$TotalDelay = round($obj->PartAmount*$obj->CustomerWage*$DelayDuration/1200);
 	
 	//-------------------------- installments -----------------------------
 	
@@ -640,7 +646,7 @@ function ComputeInstallments(){
 	//---------------------------------------------------------------------
 	
 	$jdate = DateModules::miladi_to_shamsi($obj->PartDate);
-	$jdate = DateModules::AddToJDate($jdate, 1, $obj->DelayMonths);
+	$jdate = DateModules::AddToJDate($jdate, 1+$obj->DelayDays, $obj->DelayMonths);
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
@@ -687,9 +693,6 @@ function ComputeInstallmentsShekoofa($partObj = null){
 	
 	if(!$partObj)
 		$partObj = new LON_ReqParts($_REQUEST["PartID"]);
-	
-	if($partObj->WageReturn == "CUSTOMER")
-		$partObj->CustomerWage =$partObj->FundWage = 0;
 	
 	$payments = LON_payments::Get(" AND PartID=? order by PayDate", array($partObj->PartID));
 	$payments = $payments->fetchAll();
@@ -840,19 +843,25 @@ function GetLastFundComment(){
 function selectParts(){
 	
 	$params = array();
-	$query = "select p.*,r.IsEnded, concat_ws(' ',fname,lname,CompanyName) loanFullname
+	$query = "select p.*,r.IsEnded, concat_ws(' ',fname,lname,CompanyName) loanFullname,
+				i.InstallmentAmount
 		from LON_ReqParts p
 		join LON_requests r using(RequestID)
 		join BSC_persons on(LoanPersonID=PersonID)
+		join LON_installments i on(i.PartID=p.PartID)
+		
 		where 1=1";
 	if(!empty($_REQUEST["query"]))
 	{
-		$query .= " AND concat_ws(' ',fname,lname,CompanyName) like :f";
+		$query .= " AND ( concat_ws(' ',fname,lname,CompanyName) like :f or RequestID = :f1)";
 		$params[":f"] = "%" . $_REQUEST["query"] . "%";
+		$params[":f1"] = $_REQUEST["query"] ;
 	}
 	
 	if(isset($_SESSION["USER"]["portal"]))
 		$query .= " AND LoanPersonID=" . $_SESSION["USER"]["PersonID"];
+	
+	$query .= " group by RequestID";
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $params);
 	$cnt = $dt->rowCount();
@@ -921,7 +930,7 @@ function selectRequestStatuses(){
 function GetPartPays(){
 	
 	$dt = LON_BackPays::SelectAll("PartID=? " . dataReader::makeOrder() , array($_REQUEST["PartID"]));
-	//print_r(ExceptionHandler::PopAllExceptions());
+	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -953,7 +962,7 @@ function SavePartPay(){
 	}
 	if(empty($obj->ChequeNo) || $obj->ChequeStatus == "2")
 	{
-		if(!RegisterCustomerPayDoc($obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo))
+		if(!RegisterCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo))
 		{
 			$pdo->rollback();
 			//print_r(ExceptionHandler::PopAllExceptions());
@@ -986,57 +995,6 @@ function DeletePay(){
 		echo Response::createObjectiveResponse(false, "خطا در حذف ردیف پرداخت");
 		die();
 	}
-	$pdo->commit();
-	echo Response::createObjectiveResponse(true, "");
-	die();
-}
-
-function EditPartPayDoc(){
-	
-	$PayObj = new LON_BackPays();
-	PdoDataAccess::FillObjectByJsonData($PayObj, $_POST["record"]);
-	$PayObj = new LON_BackPays($PayObj->BackPayID);
-	
-	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
-		where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " 
-		AND SourceID=? AND SourceID2=?" , array($PayObj->_RequestID, $PayObj->BackPayID));
-	echo PdoDataAccess::GetLatestQueryString();
-	if(count($dt) == 0)
-	{
-		echo Response::createObjectiveResponse(false, "سند مربوطه یافت نشد");
-		die();
-	}
-	$DocObj = new ACC_docs($dt[0]["DocID"]);
-			
-	$pdo = PdoDataAccess::getPdoObject();
-	$pdo->beginTransaction();
-	
-	if(!ReturnCustomerPayDoc($PayObj, $pdo))
-	{
-		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
-		die();
-	}
-	if(!RegisterCustomerPayDoc($PayObj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo))
-	{
-		$pdo->rollback();
-		echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
-		die();
-	}
-	
-	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
-		where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " 
-		AND SourceID=? AND SourceID2=?" , array($PayObj->_RequestID, $PayObj->BackPayID), $pdo);
-	$NewDocObj = new ACC_docs($dt[0]["DocID"]);
-	
-	$NewDocObj->LocalNo = $DocObj->LocalNo;
-	$NewDocObj->DocDate = $DocObj->DocDate;
-	if(!$NewDocObj->Edit($pdo))
-	{
-		$pdo->rollback();
-		echo Response::createObjectiveResponse(false, "خطا در ویرایش سند");
-		die();
-	}
-	
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
 	die();
@@ -1329,6 +1287,77 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 	return $returnArr;
 }
 
+function EditPartPayDoc(){
+	
+	$obj = new LON_BackPays($_POST["BackPayID"]);
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$DocID = LON_BackPays::GetAccDoc($obj->BackPayID);
+	if($DocID == 0)
+	{
+		echo Response::createObjectiveResponse(false, "سند مربوطه یافت نشد");
+		die();
+	}
+	$DocObj = new ACC_docs($DocID);
+	if(!ReturnCustomerPayDoc($obj, $pdo, true))
+	{
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	if(!RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo))
+	{
+		$pdo->rollback();
+		echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function GroupSavePay(){
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$parts = json_decode($_POST["parts"]);
+	
+	$FirstPay = true;
+	$DocObj = null;
+	foreach($parts as $partStr)
+	{
+		$arr = preg_split("/_/", $partStr);
+		$PartID = $arr[0];
+		$PayAmount = $arr[1];
+
+		$obj = new LON_BackPays();
+		PdoDataAccess::FillObjectByArray($obj, $_POST);
+		$obj->PartID = $PartID;
+		$obj->PayAmount = $PayAmount;
+		$obj->AddPay($pdo);
+		
+		if(!RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo))
+		{
+			$pdo->rollback();
+			print_r(ExceptionHandler::PopAllExceptions());
+			echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
+			die();
+		}
+		if($FirstPay)
+		{
+			$DocID = LON_BackPays::GetAccDoc($obj->BackPayID, $pdo);
+			$DocObj = new ACC_docs($DocID, $pdo);
+			$FirstPay = false;			
+		}
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
 //------------------------------------------------
 
 function GetDelayedInstallments($returnData = false){
@@ -1430,6 +1459,7 @@ function GetEndedRequests(){
 function GetPartPayments(){
 	
 	$dt = LON_payments::Get(" AND PartID=? " . dataReader::makeOrder() , array($_REQUEST["PartID"]));
+	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
 }
@@ -1693,5 +1723,29 @@ function ConfirmRequest(){
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
+
+//-------------------------------------------------
+
+function GetChequeStatuses(){
+	
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=6");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function GetPayTypes(){
+	
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=6");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function GetBanks(){
+	
+	$dt = PdoDataAccess::runquery("select * from ACC_banks");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
 
 ?>

@@ -131,6 +131,7 @@ class LON_ReqParts extends PdoDataAccess
 	public $IntervalType;
 	public $PayInterval;
 	public $DelayMonths;
+	public $DelayDays;
 	public $ForfeitPercent;
 	public $CustomerWage;
 	public $FundWage;
@@ -349,6 +350,18 @@ class LON_BackPays extends PdoDataAccess
 		$daObj->TableName = "LON_BackPays";
 		$daObj->execute($pdo);
 	 	return true;
+	}
+	
+	static function GetAccDoc($BackPayID, $pdo = null){
+		
+		$obj = new LON_BackPays($BackPayID);
+		
+		$dt = PdoDataAccess::runquery("
+			select DocID from ACC_DocItems where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " 
+			AND SourceID=? AND SourceID2=?" , array($obj->_RequestID, $obj->BackPayID), $pdo);
+		if(count($dt) == 0)
+			return 0;
+		return $dt[0][0];
 	}
 }
 
