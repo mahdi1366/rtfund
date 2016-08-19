@@ -1556,4 +1556,10 @@ function ComputeShareProfit(){
 	die();	
 }
 
+//---------------------------------------------------------------
+
+function RegisterWarrantyDoc(){
+	
+	
+}
 ?>

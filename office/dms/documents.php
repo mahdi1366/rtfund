@@ -41,12 +41,21 @@ switch($ObjectType)
 			$access = true;
 		break;
 	case "contract":
-		require_once '../../loan/contract/contract/contract.class.php';
+		require_once '../../contract/contract/contract.class.php';
 		$obj = new CNT_contracts($ObjectID);
 		if($_SESSION["USER"]["IsStaff"] == "YES")
 			$access = true;
 		break;
-		
+	case "warrenty":
+		require_once '../../loan/warrenty/request.class.php';
+		require_once '../../loan/warrenty/config.inc.php';
+		$obj = new WAR_requests($ObjectID);
+		if($_SESSION["USER"]["IsStaff"] == "YES")
+			$access = true;
+		if($_SESSION["USER"]["IsCustomer"] == "YES" && $_SESSION["USER"]["PersonID"] == $obj->PersonID 
+				&& in_array($obj->StatusID, array(STEPID_RAW,STEPID_RETURN_TO_CUSTOMER)) )
+			$access = true;
+		break;
 }
 //------------------------------------------------------
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "dms.data.php?" .

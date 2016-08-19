@@ -56,13 +56,6 @@ function ManageRequest(){
 
 ManageRequestObject = new ManageRequest();
 
-ManageRequest.prototype.ManageRequest = function(){
-	if(this.get("new_pass").value != this.get("new_pass2").value)
-	{
-		return;
-	}
-}
-
 ManageRequest.OperationRender = function(value, p, record){
 	
 	return "<div  title='عملیات' class='setting' onclick='ManageRequestObject.OperationMenu(event);' " +
