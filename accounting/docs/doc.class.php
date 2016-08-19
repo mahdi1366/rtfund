@@ -281,16 +281,16 @@ class ACC_DocItems extends PdoDataAccess {
 		return true;
 	}
 
-	function Edit() {
+	function Edit($pdo = null) {
 		if (!parent::update("ACC_DocItems", $this, "ItemID=:rid", 
-				array(":rid" => $this->ItemID)))
+				array(":rid" => $this->ItemID),$pdo))
 			return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
 		$daObj->MainObjectID = $this->ItemID;
 		$daObj->TableName = "ACC_DocItems";
-		$daObj->execute();
+		$daObj->execute($pdo);
 		return true;
 	}
 

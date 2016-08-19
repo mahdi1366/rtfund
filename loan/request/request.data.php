@@ -39,7 +39,7 @@ function ComputeInstallmentAmount($TotalAmount,$IstallmentCount,$PayInterval){
 	return $TotalAmount/$IstallmentCount;
 }
 
-function ComputeWage($PartAmount, $CustomerWagePercent, $InstallmentCount, $PayInterval){
+function ComputeWage($PartAmount, $CustomerWagePercent, $InstallmentCount, $YearMonths, $PayInterval){
 	
 	if($PayInterval == 0)
 		return 0;
@@ -50,8 +50,9 @@ function ComputeWage($PartAmount, $CustomerWagePercent, $InstallmentCount, $PayI
 	if($CustomerWagePercent == 0)
 		return 0;
 	
-	return ((($PartAmount*$CustomerWagePercent/12*( pow((1+($CustomerWagePercent/12)),$InstallmentCount)))/
-		((pow((1+($CustomerWagePercent/12)),$InstallmentCount))-1))*$InstallmentCount)-$PartAmount;
+	return ((($PartAmount*$CustomerWagePercent/$YearMonths*
+		( pow((1+($CustomerWagePercent/$YearMonths)),$InstallmentCount)))/
+		((pow((1+($CustomerWagePercent/$YearMonths)),$InstallmentCount))-1))*$InstallmentCount)-$PartAmount;
 }
 function roundUp($number, $digits){
 	$factor = pow(10,$digits);
@@ -59,6 +60,41 @@ function roundUp($number, $digits){
 }
 function YearWageCompute($PartObj, $TotalWage, $YearMonths){
 
+	/*@var $PartObj LON_ReqParts */
+	
+	$startDate = DateModules::miladi_to_shamsi($PartObj->PartDate);
+	$startDate = DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths); 
+	$endDate = DateModules::AddToJDate($startDate, 
+			$PartObj->IntervalType == "DAY" ? $PartObj->PayInterval*$PartObj->InstallmentCount : 0, 
+			$PartObj->IntervalType == "MONTH" ? $PartObj->PayInterval*$PartObj->InstallmentCount : 0);
+	
+	$arr = preg_split('/[\-\/]/',$startDate);
+	$StartYear = $arr[0]*1;
+	
+	$totalDays = 0;
+	$yearDays = array();
+	while(DateModules::CompareDate($startDate, $endDate) < 0){
+		
+		$arr = preg_split('/[\-\/]/',$startDate);
+		$LastDayOfYear = DateModules::lastJDateOfYear($arr[0]);
+		if(DateModules::CompareDate($LastDayOfYear, $endDate) > 0)
+			$LastDayOfYear = $endDate;
+		
+		$yearDays[$StartYear] = DateModules::JDateMinusJDate($LastDayOfYear, $startDate)+1;
+		$totalDays += $yearDays[$StartYear];
+		$StartYear++;
+		$startDate = DateModules::AddToJDate($LastDayOfYear, 1);
+	}
+	$sum = 0;
+	foreach($yearDays as $year => $days)
+	{
+		$yearDays[$year] = round(($days/$totalDays)*$TotalWage);
+		$sum += $yearDays[$year];
+	}
+	if($sum <> $TotalWage)
+		$yearDays[$year] += $TotalWage-$sum;
+	return $yearDays;
+	
 	$startDate = DateModules::miladi_to_shamsi($PartObj->PartDate);
 	$startDate = DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths); 
 	$startDate = preg_split('/[\-\/]/',$startDate);
@@ -105,38 +141,44 @@ function YearWageCompute($PartObj, $TotalWage, $YearMonths){
 	}
 	
 	return $returnArr;
-	
-	
-	//---------------------------- old
-	$PayMonth = preg_split('/\//',DateModules::miladi_to_shamsi($PartObj->PartDate));
-	$PayMonth = $PayMonth[1]*1;
-	$PayMonth = $PayMonth*$YearMonths/12;
-	
-	$FirstYearInstallmentCount = $YearMonths - $PayMonth;
-	$MidYearInstallmentCount = floor(($PartObj->InstallmentCount-$FirstYearInstallmentCount) / $YearMonths);
-	$LastYeatInstallmentCount = ($PartObj->InstallmentCount-$FirstYearInstallmentCount) % $YearMonths;
-
-	if($yearNo > $MidYearInstallmentCount+2)
-		return 0;
-
-	$F9 = $PartObj->InstallmentCount*1;
-	$BeforeMonths = 0;
-	if($yearNo == 2)
-		$BeforeMonths = $FirstYearInstallmentCount;
-	else if($yearNo > 2)
-		$BeforeMonths = $FirstYearInstallmentCount + ($yearNo-2)*$YearMonths;
-
-	$curMonths = $FirstYearInstallmentCount;
-	if($yearNo > 1 && $yearNo <= $MidYearInstallmentCount+1)
-		$curMonths = $YearMonths;
-	else if($yearNo > $MidYearInstallmentCount+1)
-		$curMonths = $LastYeatInstallmentCount;
-
-	$val = (((($F9-$BeforeMonths)*($F9-$BeforeMonths+1))-
-		($F9-$BeforeMonths-$curMonths)*($F9-$BeforeMonths-$curMonths+1)))/($F9*($F9+1))*$TotalWage;
-	return $val;
 }
-function YearDelayCompute($PartObj, $PayAmount, $wage, $yearNo){
+function YearDelayCompute($PartObj, $PayDate, $PayAmount, $wage){
+	
+	$startDate = DateModules::miladi_to_shamsi($PayDate);
+	$endDate = DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths); 
+
+	$arr = preg_split('/[\-\/]/',$startDate);
+	$StartYear = $arr[0]*1;
+	
+	$totalDays = 0;
+	$yearDays = array();
+	while(DateModules::CompareDate($startDate, $endDate) < 0){
+		
+		$arr = preg_split('/[\-\/]/',$startDate);
+		$LastDayOfYear = DateModules::lastJDateOfYear($arr[0]);
+		if(DateModules::CompareDate($LastDayOfYear, $endDate) > 0)
+			$LastDayOfYear = $endDate;
+		
+		$yearDays[$StartYear] = DateModules::JDateMinusJDate($LastDayOfYear, $startDate)+1;
+		$totalDays += $yearDays[$StartYear];
+		$StartYear++;
+		$startDate = DateModules::AddToJDate($LastDayOfYear, 1);
+	}
+	
+	$DelayDuration = DateModules::JDateMinusJDate(
+		DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths), $startDate)+1;
+	$TotalDelayAmount = round($PayAmount*$wage*$DelayDuration/36500);
+
+	$sum = 0;
+	foreach($yearDays as $year => $days)
+	{
+		$yearDays[$year] = round($PayAmount*$wage*$yearDays[$year]/36500);
+		$sum += $yearDays[$year];
+	}
+	if($sum <> $TotalDelayAmount)
+		$yearDays[$year] += $TotalDelayAmount-$sum;
+	
+	return $yearDays;
 	
 	/*@var $PartObj LON_ReqParts */
 	
@@ -357,6 +399,7 @@ function ChangeRequestStatus(){
 	Response::createObjectiveResponse($result, "");
 	die();
 }
+
 //------------------------------------------------
 
 function GetRequestParts(){
@@ -584,6 +627,7 @@ function ReturnEndRequest(){
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
+
 //------------------------------------------------
 
 function GetPartInstallments(){
@@ -615,15 +659,19 @@ function ComputeInstallments(){
 	if($obj->IntervalType == "DAY")
 		$YearMonths = floor(365/$obj->PayInterval);
 	
-	$TotalWage = round(ComputeWage($obj->PartAmount, $obj->CustomerWage/100, $obj->InstallmentCount, $obj->PayInterval));
+	$TotalWage = round(ComputeWage($obj->PartAmount, $obj->CustomerWage/100, 
+			$obj->InstallmentCount, $YearMonths, $obj->PayInterval));
 	
 	if($obj->WageReturn == "CUSTOMER")
 	{
 		$TotalWage = 0;
 		$obj->CustomerWage = 0;
 	}
-	$DelayDuration = $PartObj->DelayMonths*1 + $PartObj->DelayDays*1/30;
-	$TotalDelay = round($obj->PartAmount*$obj->CustomerWage*$DelayDuration/1200);
+	$startDate = DateModules::miladi_to_shamsi($obj->PartDate);
+	$DelayDuration = DateModules::JDateMinusJDate(
+		DateModules::AddToJDate($startDate, $obj->DelayDays, $obj->DelayMonths), $startDate)+1;
+	//$DelayDuration = $PartObj->DelayMonths*1 + $PartObj->DelayDays*1/30;
+	$TotalDelay = round($obj->PartAmount*$obj->CustomerWage*$DelayDuration/36500);
 	
 	//-------------------------- installments -----------------------------
 	
@@ -819,6 +867,7 @@ function DelayInstallments(){
 	echo Response::createObjectiveResponse(true, "");
 	die();	
 }
+
 //-------------------------------------------------
 
 function GetLastFundComment(){
@@ -1358,6 +1407,7 @@ function GroupSavePay(){
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
+
 //------------------------------------------------
 
 function GetDelayedInstallments($returnData = false){
@@ -1746,6 +1796,5 @@ function GetBanks(){
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
-
 
 ?>
