@@ -25,6 +25,7 @@ class LON_requests extends PdoDataAccess
 	public $IsEnded;
 	public $SubAgentID;
 	public $IsFree;
+	public $imp_VamCode;
 	
 	public $_LoanDesc;
 	public $_LoanPersonFullname;
@@ -296,7 +297,8 @@ class LON_BackPays extends PdoDataAccess
 				b.BankDesc, 
 				bi.InfoDesc PayTypeDesc, 
 				bi2.InfoDesc ChequeStatusDesc,
-				d.LocalNo
+				d.LocalNo,
+				d.DocStatus
 			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			join LON_ReqParts rp using(PartID)
@@ -349,6 +351,18 @@ class LON_BackPays extends PdoDataAccess
 		$daObj->TableName = "LON_BackPays";
 		$daObj->execute($pdo);
 	 	return true;
+	}
+	
+	static function GetAccDoc($BackPayID, $pdo = null){
+		
+		$obj = new LON_BackPays($BackPayID);
+		
+		$dt = PdoDataAccess::runquery("
+			select DocID from ACC_DocItems where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " 
+			AND SourceID=? AND SourceID2=?" , array($obj->_RequestID, $obj->BackPayID), $pdo);
+		if(count($dt) == 0)
+			return 0;
+		return $dt[0][0];
 	}
 }
 

@@ -32,7 +32,7 @@ $dg->addColumn("", "BackPayID","", true);
 $dg->addColumn("", "PartID","", true);
 $dg->addColumn("", "PayTypeDesc","", true);
 $dg->addColumn("", "LocalNo","", true);
-
+$dg->addColumn("", "DocStatus","", true);
 if($editable)
 {
 	$col = $dg->addColumn("نحوه پرداخت", "PayType");
@@ -144,6 +144,8 @@ LoanPay.prototype = {
 	PartID : <?= $PartID ?>,
 	PartRecord : null,
 	
+	GroupPays : new Array(),
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -194,7 +196,8 @@ function LoanPay()
 					url: this.address_prefix + 'request.data.php?task=selectParts',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['PartAmount',"IsEnded",'PartDesc',"RequestID","PartDate", "PartID","loanFullname",{
+				fields :  ['PartAmount',"IsEnded",'PartDesc',"RequestID","PartDate", 
+					"PartID","loanFullname","InstallmentAmount",{
 					name : "fullTitle",
 					convert : function(value,record){
 						return "کد وام : " + record.data.RequestID + "  " + record.data.PartDesc + " به مبلغ " + 
@@ -213,7 +216,9 @@ function LoanPay()
 				'<td style="padding:7px">فاز وام</td>',
 				'<td style="padding:7px">وام گیرنده</td>',
 				'<td style="padding:7px">مبلغ وام</td>',
-				'<td style="padding:7px">تاریخ پرداخت</td> </tr>',
+				'<td style="padding:7px">تاریخ پرداخت</td>',
+				'<td style="padding:7px"></td>',
+				'</tr>',
 				'<tpl for=".">',
 					'<tpl if="IsEnded == \'YES\'">',
 						'<tr class="x-boundlist-item pinkRow" style="border-left:0;border-right:0">',
@@ -225,7 +230,16 @@ function LoanPay()
 					'<td style="border-left:0;border-right:0" class="search-item">{loanFullname}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">',
 						'{[Ext.util.Format.Money(values.PartAmount)]}</td>',
-					'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.PartDate)]}</td> </tr>',
+					'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.PartDate)]}</td>',
+					'<tpl if="IsEnded == \'NO\'">',
+						'<td class="search-item"><div align=center title="اضافه به پرداخت گروهی" class=add ',
+							'onclick=LoanPayObject.AddToGroupPay(event,{RequestID},{PartID},{InstallmentAmount}); ',
+							'style=background-repeat:no-repeat;',
+							'background-position:center;cursor:pointer;width:20px;height:16></div></td>',
+					'<tpl else>',
+						'<td class="search-item"></td>',
+					'</tpl>',
+				' </tr>',
 				'</tpl>',
 				'</table>'
 			),
@@ -259,6 +273,12 @@ function LoanPay()
 					me.PartID = records[0].data.PartID;
 				}
 			}
+		},{
+			xtype : "button",
+			border : true,
+			text : "پرداخت گروهی اقساط",
+			iconCls : "list",
+			handler : function(){ LoanPayObject.BeforeSaveGroupPay(); }
 		}]
 	});
 	
@@ -279,7 +299,12 @@ LoanPay.RegDocRender = function(v,p,r){
 	
 	if(r.data.LocalNo == null)
 		return "<div align='center' title='صدور سند' class='send' "+
-		"onclick='LoanPayObject.BeforeSave();' " +
+		"onclick='LoanPayObject.BeforeSave(1);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+	else if(r.data.DocStatus == "RAW")
+		return r.data.LocalNo + "<div align='center' title='ویرایش سند' class='edit' "+
+		"onclick='LoanPayObject.BeforeSave(2);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 	else
@@ -288,14 +313,14 @@ LoanPay.RegDocRender = function(v,p,r){
 
 var LoanPayObject = new LoanPay();
 	
-LoanPay.prototype.BeforeSave = function(store, record){
+LoanPay.prototype.BeforeSave = function(mode){
 	
-	record =  this.grid.getSelectionModel().getLastSelected(); //delete
+	record =  this.grid.getSelectionModel().getLastSelected(); 
 	if(!this.BankWin)
 	{
 		this.BankWin = new Ext.window.Window({
 			width : 400,
-			height : 120,//85,
+			height : 120,
 			modal : true,
 			closeAction : "hide",
 			items : [{
@@ -352,7 +377,7 @@ LoanPay.prototype.BeforeSave = function(store, record){
 		Ext.getCmp(this.TabID).add(this.BankWin);
 	}
 	
-	if(record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
+	if(record && record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
 	{
 		LoanPayObject.SavePartPayment("", record);
 		return;
@@ -361,8 +386,9 @@ LoanPay.prototype.BeforeSave = function(store, record){
 	this.BankWin.show();
 	this.BankWin.down("[itemId=btn_save]").setHandler(function(){ 
 		LoanPayObject.BankWin.hide();
-		//LoanPayObject.SavePartPayment(LoanPayObject.BankWin.down("[itemId=TafsiliID]").getValue(), record); 
-		LoanPayObject.RegisterDoc(LoanPayObject.BankWin.down("[itemId=TafsiliID]").getValue(),LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getValue(), record); 
+		LoanPayObject.RegisterDoc(
+			LoanPayObject.BankWin.down("[itemId=TafsiliID]").getValue(),
+			LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getValue(), record, mode); 
 	});
 }
 	
@@ -401,21 +427,40 @@ LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 	});
 }
 
-LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, record){
+LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, record, mode){
 
-	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
+	mask = new Ext.LoadMask(this.BankWin, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
+	
+	switch(mode){
+		case 1 : task = "SavePartPay"; break;
+		case 2 : task = "EditPartPayDoc"; break;
+		case 3 : task = "GroupSavePay"; break;
+	}
+	params = {
+			task: task,
+			BankTafsili : BankTafsili,
+			AccountTafsili : AccountTafsili,
+			RegisterDoc : "1"
+		};
+		
+	if(mode == 3)
+	{
+		params.parts = Ext.encode(this.GroupPays);
+		params = mergeObjects(params, this.groupWin.down('form').getForm().getValues());
+	}
+	else if(mode == 2)
+	{
+		params.BackPayID = record.data.BackPayID;
+	}
+	else
+		params.record = Ext.encode(record.data);
 
 	Ext.Ajax.request({
 		url: this.address_prefix +'request.data.php',
 		method: "POST",
-		params: {
-			task: "SavePartPay",
-			BankTafsili : BankTafsili,
-			AccountTafsili : AccountTafsili,
-			record: Ext.encode(record.data),
-			RegisterDoc : "1"
-		},
+		params: params,
+		
 		success: function(response){
 			mask.hide();
 			var st = Ext.decode(response.responseText);
@@ -423,13 +468,24 @@ LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, record){
 			if(st.success)
 			{   
 				LoanPayObject.grid.getStore().load();
-				if(record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
+				if(record && record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
 					Ext.MessageBox.alert("","سند حسابداری هنگام وصول چک صادر می شود");
-				Ext.MessageBox.alert("","سند حسابداری مربوطه صادر گردید");
+				if(mode == 1)
+					Ext.MessageBox.alert("","سند حسابداری مربوطه صادر گردید");
+				else if(mode == 2)
+					Ext.MessageBox.alert("","سند حسابداری مربوطه ویرایش گردید");
+				else
+				{
+					LoanPayObject.groupWin.hide();
+					Ext.MessageBox.alert("","سند گروهی صادر گردید");
+				}
 			}
 			else
 			{
-				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+				if(st.data == "")
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+				else
+					Ext.MessageBox.alert("",st.data);
 			}
 		},
 		failure: function(){}
@@ -444,7 +500,7 @@ LoanPay.prototype.AddPay = function(){
 		return;
 	}
 	
-	defaultAmount = 0;
+	defaultAmount = 0;alert(this.grid.getStore().totalCount);
 	if(this.grid.getStore().totalCount > 0)
 		defaultAmount = this.grid.getStore().getAt(0).data.PayAmount;
 	
@@ -500,6 +556,140 @@ LoanPay.prototype.PayReport = function(){
 
 	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&PartID=" + this.PartID);
 }
+
+LoanPay.prototype.AddToGroupPay = function(e ,RequestID, PartID, InstallmentAmount){
+
+	if(!this.groupAmountWin)
+	{
+		this.groupAmountWin = new Ext.window.Window({
+			width : 300,
+			height : 100,
+			modal : true,
+			title : "نحوه پرداخت",
+			bodyStyle : "background-color:white",
+			items : [{
+				xtype : "currencyfield",
+				hideTrigger : true,
+				fieldLabel : "مبلغ پرداخت"
+			}],
+			closeAction : "hide",
+			buttons : [{
+				text : "اضافه به پرداخت گروهی",				
+				iconCls : "add",
+				itemId : "btn_add"	
+			}]
+
+		});
+	}
+	this.groupAmountWin.down('currencyfield').setValue(InstallmentAmount);
+	this.groupAmountWin.down("[itemId=btn_add]").setHandler(function(){
+		amount = this.up('window').down('currencyfield').getValue();
+		LoanPayObject.GroupPays.push(PartID + "_" + amount);
+		LoanPayObject.groupAmountWin.hide();
+	})
+	this.groupAmountWin.show();
+	this.groupAmountWin.center();
+	e.stopImmediatePropagation();	
+}
+
+LoanPay.prototype.BeforeSaveGroupPay = function(){
+
+	if(this.GroupPays.length == 0)
+	{
+		Ext.MessageBox.alert("","تا کنون وامی به پرداخت گروهی اضافه نشده است");
+		return;
+	}
+	if(!this.groupWin)
+	{
+		this.groupWin = new Ext.window.Window({
+			width : 300,
+			height : 250,
+			modal : true,
+			title : "نحوه پرداخت",
+			bodyStyle : "background-color:white",
+			items : new Ext.form.Panel({
+				items : [{
+					xtype : "combo",
+					store : new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: this.address_prefix + 'request.data.php?task=GetPayTypes',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields :  ["InfoID", "InfoDesc"]
+					}),
+					displayField: 'InfoDesc',
+					valueField : "InfoID",
+					name : "PayType",
+					allowBlank : false,
+					fieldLabel : "نوع پرداخت"
+				},{
+					xtype : "shdatefield",
+					name : "PayDate",
+					allowBlank : false,
+					fieldLabel : "تاریخ پرداخت"
+				},{
+					xtype : "textfield",
+					name : "PayBillNo",
+					fieldLabel : "شماره فیش"
+				},{
+					xtype : "numberfield",
+					name : "ChequeNo",
+					hideTrigger : true,
+					fieldLabel : "شماره چک"
+				},{
+					xtype : "combo",
+					store : new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: this.address_prefix + 'request.data.php?task=GetBanks',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields :  ["BankID", "BankDesc"]
+					}),
+					displayField: 'BankDesc',
+					valueField : "BankID",
+					name : "ChequeBank",
+					fieldLabel : "بانک"
+				},{
+					xtype : "textfield",
+					name : "ChequeBranch",
+					fieldLabel : "شعبه"
+				},{
+					xtype : "combo",
+					store : new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: this.address_prefix + 'request.data.php?task=GetChequeStatuses',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields :  ["InfoID", "InfoDesc"]
+					}),
+					displayField: 'InfoDesc',
+					valueField : "InfoID",
+					name : "ChequeStatus",
+					fieldLabel : "وضعیت چک"
+				}]
+			}),
+			closeAction : "hide",
+			buttons : [{
+				text : "صدور گروهی اقساط",				
+				iconCls : "save",
+				itemId : "btn_save",
+				handler : function(){
+					if(!this.up('window').down('form').getForm().isValid())
+						return;
+					LoanPayObject.BeforeSave(3);
+				}		
+			}]
+
+		});
+	}
+	this.groupWin.show();
+	this.groupWin.center();
+}
+
+
 
 </script>
 <center>

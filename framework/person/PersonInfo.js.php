@@ -38,7 +38,7 @@ function PersonInfo()
 			url: this.address_prefix + "persons.data.php?task=selectPersons&full=true&PersonID=" + this.PersonID ,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["IsReal","fname","lname","CompanyName","UserName","NationalID",
+		fields : ["IsReal","fname","lname","CompanyName","UserName","NationalID","CityID",
 			"EconomicID","PhoneNo","mobile","address","email","RegNo","RegDate","RegPlace",
 			"CompanyType","AccountNo","DomainID","WebSite","IsGovermental","DomainDesc",
 		"FatherName","ShNo","PostID","IsStaff","IsCustomer","IsSupporter","IsShareholder","IsAgent","IsExpert"],
@@ -329,6 +329,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 				autoLoad : true					
 			}),
 			displayField : "InfoDesc",
+			queryMode : 'local',
 			valueField : "InfoID"
 		},{
 			xtype : "textfield",

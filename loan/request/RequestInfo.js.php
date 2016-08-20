@@ -484,6 +484,12 @@ RequestInfo.prototype.BuildForms = function(){
 			xtype : "container",
 			itemId : "oldInfo",
 			width : 300,
+			items : [{
+				xtype : "numberfield",
+				name : "imp_VamCode",
+				hideTrigger : true,
+				fieldLabel : "شماره وام قدیم"
+			}],
 			cls : "blueText"
 		},{
 			xtype : "fieldset",

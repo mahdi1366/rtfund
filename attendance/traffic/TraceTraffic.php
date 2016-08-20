@@ -230,6 +230,13 @@ function ShowReport($admin){
 		$endOff = 0;
 		while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
 		{
+			//....................................................
+			if( DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "l") == "Thursday")
+			{
+				$returnArr[$i]["FromTime"] = $returnArr[$i]["ExceptFromTime"];
+				$returnArr[$i]["ToTime"] = $returnArr[$i]["ExceptToTime"];
+			}
+			//....................................................
 			$returnStr .= substr($returnArr[$i]["TrafficTime"],0,5);
 			$returnStr .= $index % 2 == 0 ? "<br>" : " - ";
 			

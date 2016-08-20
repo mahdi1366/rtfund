@@ -228,18 +228,16 @@ if(isset($_REQUEST["show"]))
 		return $v < 0 ? 0 : number_format($v);
 	}
 	
+	global $sum;
+	$sum = 0;
 	function TotalRemainRender($row){
-		$v = $row["CreditorAmount"] - $row["DebtorAmount"];
-		return number_format($v);
+		global $sum;
+		$sum += $row["CreditorAmount"] - $row["DebtorAmount"];
+		return number_format($sum);
 	}
 	
-	$col = $rpg->addColumn("مانده بدهکار", "DebtorAmount", "bdremainRender");
-	$col->EnableSummary(true);
-	$col = $rpg->addColumn("مانده بستانکار", "CreditorAmount", "bsremainRender");
-	$col->EnableSummary(true);
-	
-	$col = $rpg->addColumn("مانده ", "CreditorAmount", "TotalRemainRender");
-	$col->EnableSummary(true);
+	$col = $rpg->addColumn("مانده حساب", "CreditorAmount", "TotalRemainRender");
+	//$col->EnableSummary(true);
 	
 	$rpg->mysql_resource = $dataTable;
 	if(!$rpg->excel)

@@ -22,6 +22,9 @@ $dg->addColumn("توضیحات","description","",true);
 $dg->addColumn("کد سند","LocalNo","",true);
 $dg->addColumn("نوع سند","DocType","",true);
 $dg->addColumn("ثبت کننده سند","regPerson","",true);
+$dg->addColumn("","SubjectDesc","",true);
+$dg->addColumn("","SubjectID","",true);
+$dg->addColumn("","DocTypeDesc","",true);
 
 $col = $dg->addColumn("اطلاعات سند","DocID");
 $col->renderer = "AccDocs.docRender";

@@ -221,6 +221,19 @@ class DateModules
 		$gtime2 = mktime(0, 0, 0, $gdate_array2[1], $gdate_array2[2], $gdate_array2[0] + $diff_years);
 		return round(($gtime1 - $gtime2) / 86400); //number of days
 	}
+	
+	/**
+	 * @param y-m-d $gdate1
+	 * @param y-m-d $gdate2
+	 */
+	static function JDateMinusJDate($jdate1, $jdate2) 
+	{
+		$gdate1 = self::shamsi_to_miladi($jdate1);
+		$gdate2 = self::shamsi_to_miladi($jdate2);
+		
+		return self::GDateMinusGDate($gdate1, $gdate2);
+	}
+
 
 	/**
 	 * تبديل روز ماه سال به روز
@@ -581,6 +594,12 @@ class DateModules
 			}
 		}
 		return $month_length;
+	}	  
+
+	static function lastJDateOfYear($jyear, $delimiter = "/"){
+		
+		$day = self::DaysOfMonth($jyear, 12);
+		return $jyear . $delimiter . "12" . $delimiter . $day;
 	}	  
 
 	static function CurrentTime() {

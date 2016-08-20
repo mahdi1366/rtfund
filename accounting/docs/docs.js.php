@@ -223,10 +223,24 @@ AccDocs.prototype.makeInfoWindow = function()
 					xtype : "shdatefield",
 					format: 'Y/m/d',
 					width : 60,
+					value : "<?= DateModules::shNow() ?>",
 					fieldLabel: "تاریخ سند",
 					name : "DocDate"
-				},
-				{
+				},{
+					xtype : "combo",
+					store : new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: this.address_prefix + 'doc.data.php?task=GetSubjects',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields :  ["InfoID", "InfoDesc"]
+					}),
+					displayField: 'InfoDesc',
+					valueField : "InfoID",
+					name : "SubjectID",
+					fieldLabel : "موضوع سند"
+				},{
 					xtype : "textarea",
 					fieldLabel: "توضیحات",
 					name : "description"
@@ -469,22 +483,19 @@ var AccDocsObject = new AccDocs();
 
 AccDocs.docRender = function(v,p,record)
 {
+	SubjectDesc = record.data.SubjectDesc == null ? "" : record.data.SubjectDesc;
+	description = record.data.description == null ? "" : record.data.description;
+	
 	return "<table class='docInfo' width=100%>"+
 		"<tr>"+
-			"<td width=10%>شماره سند : </td>" +
-			"<td width=25% class='blueText'>" + record.data.LocalNo + "</td>" +
-			"<td width=17%>ثبت کننده سند : </td>" +
-			"<td class='blueText'>" + record.data.regPerson + "</td>" +
+			"<td width=25%>شماره سند : <span class='blueText'>" + record.data.LocalNo + "</td>" +
+			"<td width=25%>ثبت کننده سند : <span class='blueText'>" + record.data.regPerson + "</td>" +
+			"<td width=25%>تاریخ سند : <span class='blueText'>" + MiladiToShamsi(record.data.DocDate) + "</td>" +
+			"<td width=25%>نوع سند : <span class='blueText'>" + record.data.DocTypeDesc + "</td>" +
 		"</tr>" + 
-		"<tr>"+
-			"<td>تاریخ سند : </td>" +
-			"<td class='blueText'>" + MiladiToShamsi(record.data.DocDate) + "</td>" +
-			"<td>تاریخ ثبت سند : </td>" +
-			"<td class='blueText'>" + MiladiToShamsi(record.data.RegDate) + "</td>" +
-		"</tr>" + 
-		"<tr>" +
-			"<td>توضیحات : </td>" +
-			"<td class='blueText' colspan=3>" + (record.data.description == null ? "" : record.data.description) + "</td>" +
+		"<tr>" +			
+			"<td>موضوع : <span class='blueText'>" + SubjectDesc + "</td>" +
+			"<td colspan=3>توضیحات : <span class='blueText' colspan=5>" + description + "</td>" +
 		"</tr>" +
 		"</table>";
 }
