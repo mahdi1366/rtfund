@@ -131,6 +131,7 @@ class LON_ReqParts extends PdoDataAccess
 	public $IntervalType;
 	public $PayInterval;
 	public $DelayMonths;
+	public $DelayDays;
 	public $ForfeitPercent;
 	public $CustomerWage;
 	public $FundWage;

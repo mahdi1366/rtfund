@@ -114,9 +114,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$AgentYears[$year] = round($amount - $FundYears[$year]);
 	///...........................................................
 	
-	$CustomerDelay = round($PayAmount*$PartObj->CustomerWage*$PartObj->DelayMonths/1200);
-	$FundDelay = round($PayAmount*$PartObj->FundWage*$PartObj->DelayMonths/1200);
-	$AgentDelay = round($PayAmount*($PartObj->CustomerWage - $PartObj->FundWage)*$PartObj->DelayMonths/1200);
+	$DelayDuration = $PartObj->DelayMonths*1 + $PartObj->DelayDays*1/30;
+		
+	$CustomerDelay = round($PayAmount*$PartObj->CustomerWage*$DelayDuration/1200);
+	$FundDelay = round($PayAmount*$PartObj->FundWage*$DelayDuration/1200);
+	$AgentDelay = round($PayAmount*($PartObj->CustomerWage - $PartObj->FundWage)*$DelayDuration/1200);
 	
 	$curYear = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0, 4)*1;
 	$CurYearTafsili = FindTafsiliID($curYear, TAFTYPE_YEARS);
@@ -640,7 +642,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	}
 	
 	//--------------------------------------------------------
-	
+	$DelayDuration = $PartObj->DelayMonths*1 + $PartObj->DelayDays*1/30;
 	$YearMonths = 12;
 	if($PartObj->IntervalType == "DAY")
 		$YearMonths = floor(365/$PartObj->PayInterval);
@@ -653,7 +655,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	$year3 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 3, $YearMonths);
 	$year4 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 4, $YearMonths);
 	
-	$TotalDelay = round($PartObj->PartAmount*$PartObj->CustomerWage*$PartObj->DelayMonths/1200);
+	$TotalDelay = round($PartObj->PartAmount*$PartObj->CustomerWage*$DelayDuration/1200);
 	$curYear = substr(DateModules::miladi_to_shamsi($PartObj->PartDate), 0, 4)*1;
 	
 	//--------------------- compute for new Amount ---------------------
@@ -665,7 +667,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	$new_year3 = $FundFactor*YearWageCompute($PartObj, $new_TotalWage, 3, $YearMonths);
 	$new_year4 = $FundFactor*YearWageCompute($PartObj, $new_TotalWage, 4, $YearMonths);
 	
-	$new_TotalDelay = round($PaidAmount*$PartObj->CustomerWage*$PartObj->DelayMonths/1200);
+	$new_TotalDelay = round($PaidAmount*$PartObj->CustomerWage*$DelayDuration/1200);
 	
 	//------------------ find tafsilis ---------------
 	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);

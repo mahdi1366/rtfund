@@ -60,13 +60,17 @@ function roundUp($number, $digits){
 function YearWageCompute($PartObj, $TotalWage, $YearMonths){
 
 	$startDate = DateModules::miladi_to_shamsi($PartObj->PartDate);
-	$startDate = DateModules::AddToJDate($startDate, 0, $PartObj->DelayMonths); 
+	$startDate = DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths); 
 	$startDate = preg_split('/[\-\/]/',$startDate);
 	$PayMonth = $startDate[1]*1;
 	
 	$FirstYearInstallmentCount = floor((12 - $PayMonth)/(12/$YearMonths));
+	$FirstYearInstallmentCount = $PartObj->InstallmentCount < $FirstYearInstallmentCount ? 
+			$FirstYearInstallmentCount - $PartObj->InstallmentCount : $FirstYearInstallmentCount;
 	$MidYearInstallmentCount = floor(($PartObj->InstallmentCount-$FirstYearInstallmentCount) / $YearMonths);
+	$MidYearInstallmentCount = $MidYearInstallmentCount < 0 ? 0 : $MidYearInstallmentCount;
 	$LastYeatInstallmentCount = ($PartObj->InstallmentCount-$FirstYearInstallmentCount) % $YearMonths;
+	$LastYeatInstallmentCount = $LastYeatInstallmentCount < 0 ? 0 : $LastYeatInstallmentCount;
 	$F9 = $PartObj->InstallmentCount*(12/$YearMonths);
 	
 	$yearNo = 1;
@@ -151,7 +155,10 @@ function YearDelayCompute($PartObj, $PayAmount, $wage, $yearNo){
 	if($yearNo > 1 && $yearNo <= $MidYearCount+1)
 		$curMonths = $YearMonths;
 	else if($yearNo > $MidYearCount+1)
+	{
 		$curMonths = $LastYeatCount;
+		$curMonths = $curMonths*1 + $PartObj->DelayDays*1/30;
+	}
 	$val = round($PayAmount*$wage*$curMonths/1200);
 	return $val;
 }
@@ -375,7 +382,7 @@ function GetRequestParts(){
 		
 		$temp = PdoDataAccess::runquery("select count(*)
 			from ACC_DocItems join ACC_docs using(DocID) where 
-			 CostID=? AND SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND SourceID=? AND SourceID2=? ", 
+			 CostID=? AND SourceType=" . DOCTYPE_LOAN_PAYMENT . "  AND DocStatus in('CONFIRM','ARCHIVE') AND SourceID=? AND SourceID2=? ", 
 			array($CostCode_commitment, $dt[$i]["RequestID"], $dt[$i]["PartID"]));
 		$dt[$i]["IsDocRegister"] = $temp[0][0]*1 > 0 ? "YES" : "NO"; 	
 		
@@ -615,8 +622,8 @@ function ComputeInstallments(){
 		$TotalWage = 0;
 		$obj->CustomerWage = 0;
 	}
-		
-	$TotalDelay = round($obj->PartAmount*$obj->CustomerWage*$obj->DelayMonths/1200);
+	$DelayDuration = $PartObj->DelayMonths*1 + $PartObj->DelayDays*1/30;
+	$TotalDelay = round($obj->PartAmount*$obj->CustomerWage*$DelayDuration/1200);
 	
 	//-------------------------- installments -----------------------------
 	
@@ -639,7 +646,7 @@ function ComputeInstallments(){
 	//---------------------------------------------------------------------
 	
 	$jdate = DateModules::miladi_to_shamsi($obj->PartDate);
-	$jdate = DateModules::AddToJDate($jdate, 1, $obj->DelayMonths);
+	$jdate = DateModules::AddToJDate($jdate, 1+$obj->DelayDays, $obj->DelayMonths);
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
