@@ -131,11 +131,15 @@ function Person()
 		},{
 			xtype : "numberfield",
 			name : "ShareNo",
-			colspan : 2,
 			hideTrigger : true,
 			labelWidth : 100,
 			width : 235,
 			fieldLabel : "شماره دفتر سهام"
+		},{
+			xtype : "numberfield",
+			name : "SmsNo",
+			hideTrigger : true,
+			fieldLabel : "شماره دریافت پیامک"
 		},{
 			xtype : "fieldset",
 			colspan : 2,

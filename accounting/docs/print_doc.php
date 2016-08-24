@@ -15,9 +15,11 @@ $temp = PdoDataAccess::runquery("
 			cc.CostCode,
 			b.InfoDesc TafsiliType,
 			t.TafsiliDesc,
+			t2.TafsiliDesc TafsiliDesc2,
 			di.details,
 			sum(DebtorAmount) DSUM, 
 			sum(CreditorAmount) CSUM
+			
 		from ACC_DocItems di
 			join ACC_docs d using(docID)
 			join ACC_CostCodes cc using(CostID)
@@ -26,6 +28,7 @@ $temp = PdoDataAccess::runquery("
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
 			left join BaseInfo b on(di.TafsiliType=InfoID AND TypeID=2)
 			left join ACC_tafsilis t on(t.TafsiliID=di.TafsiliID)
+			left join ACC_tafsilis t2 on(t2.TafsiliID=di.TafsiliID2)
 			
 		where di.DocID=?
 		/*group by if(DebtorAmount<>0,0,1),di.CostID,di.TafsiliID*/group by itemID
@@ -66,6 +69,7 @@ $temp = PdoDataAccess::runquery("
 					<td align="center" >کد حساب</td>
 					<td align="center" >شرح ردیف</td>
 					<td align="center" >تفصیلی</td>
+					<td align="center" >تفصیلی2</td>
 					<td align="center" >بدهکار</td>
 					<td align="center" >بستانکار</td>
 			</tr>
@@ -80,6 +84,7 @@ $temp = PdoDataAccess::runquery("
 							<td >" . "[ " . $temp[$i]["CostCode"] . " ] " . $temp[$i]["CostDesc"] . "</td>
 							<td >" . $temp[$i]["details"] . "</td>	
 							<td >" . $temp[$i]["TafsiliDesc"] . "</td>
+							<td >" . $temp[$i]["TafsiliDesc2"] . "</td>
 							<td >" . number_format($temp[$i]["DSUM"]) . "</td>
 							<td >" . number_format($temp[$i]["CSUM"]) . "</td>
 						</tr>";					

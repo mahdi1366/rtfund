@@ -229,14 +229,20 @@ CostCode.prototype.BeforeSaveCost = function(EditMode){
 
 CostCode.RemoveCost = function(value,p,record){
 	
-	return  "<div  title='حذف اطلاعات' class='remove' onclick='CostCodeObj.RemoveCosts();' " +
+	if(record.data.IsActive == "YES")
+		return  "<div  title='حذف اطلاعات' class='remove' onclick='CostCodeObj.RemoveCosts();' " +
+		"style='float:left;background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:50%;height:16'></div>";	
+	else
+		return  "<div  title='فعال سازی اطلاعات' class='undo' onclick='CostCodeObj.ActiveCost();' " +
 		"style='float:left;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:50%;height:16'></div>";	
 }
 
 CostCode.EditCost = function(value,p,record){
 	
-	return  "<div  title='ویرایش اطلاعات' class='edit' onclick='CostCodeObj.BeforeSaveCost(true);' " +
+	if(record.data.IsActive == "YES")
+		return  "<div  title='ویرایش اطلاعات' class='edit' onclick='CostCodeObj.BeforeSaveCost(true);' " +
 		"style='float:left;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:50%;height:16'></div>";	
 }
@@ -373,5 +379,41 @@ CostCode.prototype.AddNewBlock = function(btn){
 	Ext.getCmp(this.TabID).add(this.BlockWindow);
 	this.BlockWindow.show();
 }
+
+CostCode.prototype.ActiveCost = function(){
+
+	Ext.MessageBox.confirm("","آیا مایل به فعال شدن مجدد کد حساب می باشید؟",function(btn){
+		if(btn == "no")
+			return;
+		
+		me = CostCodeObj;
+		var record = me.grid.getSelectionModel().getLastSelected();
+
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخيره سازي...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			params: {
+				task: 'ActiveCostCode',
+				CostID: record.data.CostID
+			},
+			url:  me.address_prefix +'baseinfo.data.php',
+			method: 'POST',
+			success: function(response){
+				mask.hide();
+				var result = Ext.decode(response.responseText);
+				if(result.success)
+					CostCodeObj.grid.getStore().load();
+				else if(result.data != "")
+					Ext.MessageBox.alert("",result.data);
+				else
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه گردید");
+					
+			},
+			failure: function(){}
+		});
+	});
+}
+
 
 </script>

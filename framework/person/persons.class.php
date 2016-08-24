@@ -29,6 +29,7 @@ class BSC_persons extends PdoDataAccess
 	public $FatherName;
 	public $ShNo;
 	public $CityID;
+	public $SmsNo;
 	
 	public $IsCustomer;
 	public $IsShareholder;

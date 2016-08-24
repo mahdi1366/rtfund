@@ -1,10 +1,20 @@
 <?php
-
+//-------------------------
+// programmer:	Jafarkhani
+// Create Date:	93.06
+//-------------------------
+require_once("../header.inc.php");
 include_once('enpayment.php');
-$resNum =1000;
-$redirectUrl ="test.php";
-$amount =1000;
 
+if(empty($_REQUEST["PartID"]))
+{
+	echo "دسترسی نامعتبر است.";
+	die();
+}
+$resNum = $_REQUEST["PartID"];
+$redirectUrl = "http://portal.krrtf.ir/portal/epayment/epayment_step2.php";
+$amount = $_REQUEST["amount"];
+$_SESSION["USER"]["SHAPARAK_AMOUNT"] = $amount;
 
 /////////////////state1
 
@@ -18,15 +28,12 @@ $params['redirectUrl'] = $redirectUrl;
 
 $getPurchaseParamsToSign = $payment-> getPurchaseParamsToSign($params);
 
-
 $getPurchaseParamsToSign =  $getPurchaseParamsToSign['return'];
 $uniqueId =  $getPurchaseParamsToSign['uniqueId'];
 $dataToSign = $getPurchaseParamsToSign['dataToSign'];
 
-
 ///////////////////////state2
 
-echo $dataToSign;
 $fm = fopen("msg.txt", "w");
 fwrite($fm, $dataToSign);
 fclose($fm);
@@ -35,9 +42,9 @@ $fs = fopen("signed.txt", "w");
 fwrite($fs, "test");
 fclose($fs);
 
-//
-openssl_pkcs7_sign(realpath("msg.txt"), realpath("signed.txt"), "d:/webserver/rtfund/portal/epayment/test.pem",
-    array("d:/webserver/rtfund/portal/epayment/test.pem", "73012051"),
+openssl_pkcs7_sign(realpath("msg.txt"), realpath("signed.txt"), 
+	 'file://'.realpath("/home/krrtfir/public_html/portal/epayment/certificate/Sandogh.pem"),
+    array('file://'.realpath("/home/krrtfir/public_html/portal/epayment/certificate/Sandogh.pem"), "73012051"),
     array(),PKCS7_NOSIGS
     );
 
@@ -50,6 +57,7 @@ $parts1 = explode("\n\n", $string, 2);
 $signature = $parts1[0];
 
 ///////////////////////state3
+
 $login = $payment->login(username,password);
 $login = $login['return'];
 
@@ -60,16 +68,11 @@ $params['amount']= $amount ;
 $params['uniqueId']= $uniqueId ;
 $params['redirectUrl'] = $redirectUrl ;
 
-
 $generateSignedPurchaseToken = $payment-> generateSignedPurchaseToken($params);
 $generateSignedPurchaseToken = $generateSignedPurchaseToken['return'];
 $generateSignedPurchaseToken = $generateSignedPurchaseToken['token']; 
 
-
 ?>
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">  
 <link href="Styles/Mystyle.css" rel="stylesheet" type="text/css" />
@@ -77,13 +80,9 @@ $generateSignedPurchaseToken = $generateSignedPurchaseToken['token'];
 </head>
 
 <body>
-
     <form id="form1" action="https://pna.shaparak.ir/CardServices/tokenController" method="post">
-
            <label>Token:</label><input type="text" id="token" name="token" value="<?php echo $generateSignedPurchaseToken ?>" />
-         
            <label>language:</label><input type="text" id="language" name="language" value="fa" size="5px"/>
-            
-           <input type="submit" id="btnPymnt" value="payment" name="btnPymnt"/>
     </form>
+	<script>document.getElementById('form1').submit();</script>
 </body>

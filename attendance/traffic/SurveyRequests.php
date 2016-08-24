@@ -332,11 +332,20 @@ SurveyRequests.OperationRender = function(v,p,r)
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;float:left;height:16'></div>";
 	}	
-	if(r.data.ReqStatus == "2" && r.data.ReqType == "MISSION" && r.data.ToDate)
-		return "<div align='center' title='چاپ حکم ماموریت' class='print' "+
-		"onclick='SurveyRequestsObject.PrintMission();' " +
+	if(r.data.ReqStatus == "2")
+	{
+		st = "<div align='center' title='رد' class='cross' "+
+		"onclick='SurveyRequestsObject.beforeChangeStatus(3);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;float:right;height:16'></div>";
+		"cursor:pointer;width:16px;float:left;height:16'></div>";
+		
+		if(r.data.ReqType == "MISSION" && r.data.ToDate)
+			st += "<div align='center' title='چاپ حکم ماموریت' class='print' "+
+			"onclick='SurveyRequestsObject.PrintMission();' " +
+			"style='background-repeat:no-repeat;background-position:center;" +
+			"cursor:pointer;width:16px;float:right;height:16'></div>";
+		return st;
+	}
 	if(r.data.ReqStatus == "3")
 		p.tdAttr = "data-qtip='دلیل رد درخواست : <b>" + r.data.SurveyDesc + "</b>'";
 }

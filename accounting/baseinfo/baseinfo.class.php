@@ -215,6 +215,26 @@ class ACC_CostCodes extends PdoDataAccess {
         return true;
     }
 	
+	function ActiveCode(){
+		
+		$dt = PdoDataAccess::runquery("select c2.* from ACC_CostCodes c1 
+			join ACC_CostCodes c2 on(c2.IsActive='YES' AND c1.CostID<>c2.CostID AND c1.CostCode=c2.CostCode)
+			where c1.CostID=?", array($this->CostID));
+		if (count($dt) > 0) {
+			parent::PushException("کد حساب تکراری است");
+            return false;
+        }
+		$this->IsActive = "YES";
+		if(!parent::update("ACC_CostCodes", $this,"CostID=:c", array(":c" => $this->CostID)))
+			return false;
+
+		$auditObj = new DataAudit();
+        $auditObj->ActionType = DataAudit::Action_update;
+        $auditObj->MainObjectID = $this->CostID;
+        $auditObj->TableName = "ACC_CostCodes";
+        $auditObj->execute();
+	}
+	
     function DeleteCost($pdo = null) {
 
         $res = parent::delete("ACC_CostCodes", 'CostID=:CstId', array(':CstId' => $this->CostID),$pdo);

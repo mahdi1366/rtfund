@@ -41,7 +41,8 @@ function PersonInfo()
 		fields : ["IsReal","fname","lname","CompanyName","UserName","NationalID","CityID",
 			"EconomicID","PhoneNo","mobile","address","email","RegNo","RegDate","RegPlace",
 			"CompanyType","AccountNo","DomainID","WebSite","IsGovermental","DomainDesc",
-		"FatherName","ShNo","PostID","IsStaff","IsCustomer","IsSupporter","IsShareholder","IsAgent","IsExpert"],
+			"FatherName","ShNo","PostID","IsStaff","IsCustomer","IsSupporter","IsShareholder",
+			"IsAgent","IsExpert", "SmsNo"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -354,6 +355,11 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			fieldStyle : "direction:ltr",
 			name: 'AccountNo',
 			hideTrigger : true
+		},{
+			xtype : "numberfield",
+			name : "SmsNo",
+			hideTrigger : true,
+			fieldLabel : "شماره دریافت پیامک"
 		},{
 			xtype : "hidden",
 			name : "DomainID",

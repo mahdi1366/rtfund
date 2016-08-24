@@ -228,6 +228,7 @@ function ShowReport($admin){
 		$currentDay = $returnArr[$i]["TrafficDate"];
 		$startOff = 0;
 		$endOff = 0;
+		$extra = 0;
 		while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
 		{
 			//....................................................
@@ -243,6 +244,14 @@ function ShowReport($admin){
 			if($index % 2 == 0)
 			{
 				$totalAttend += strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i-1]["TrafficTime"]);
+				
+				if(strtotime($returnArr[$i]["TrafficTime"]) > strtotime($returnArr[$i]["ToTime"]))
+				{
+					if(strtotime($returnArr[$i-1]["TrafficTime"]) > strtotime($returnArr[$i]["ToTime"]))
+						$extra += strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i-1]["TrafficTime"]);
+					else
+						$extra += strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i-1]["ToTime"]);
+				}
 			}	
 			
 			if($returnArr[$i]["RecordType"] != "normal")
@@ -292,7 +301,7 @@ function ShowReport($admin){
 				$lastAbsence = strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["TrafficTime"]);
 
 		$ShiftDuration = strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["FromTime"]);
-		$extra = ($totalAttend > $ShiftDuration) ? $totalAttend - $ShiftDuration  : 0;
+		//$extra = ($totalAttend > $ShiftDuration) ? $totalAttend - $ShiftDuration  : 0;
 		
 		$Absence = $totalAttend < $ShiftDuration ? $ShiftDuration - $totalAttend : 0;
 		

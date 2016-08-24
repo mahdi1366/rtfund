@@ -146,7 +146,7 @@ function SelectCostCode() {
 
     $param = array();
 
-    $where = "cc.IsActive='YES' ";
+    $where = isset($_REQUEST["All"]) ? "1=1" : "cc.IsActive='YES' ";
 
     if (!empty($_REQUEST['query'])) {
         if (isset($_REQUEST['fields'])) {
@@ -247,6 +247,15 @@ function DeleteCostCode() {
     die();
 }
 
+function ActiveCostCode(){
+	
+	$cc = new ACC_CostCodes();
+	$cc->CostID = $_POST['CostID'];
+    $res = $cc->ActiveCode();
+    Response::createObjectiveResponse($res, $cc->popExceptionDescription());
+
+    die();
+}
 //-------------------------------------------
 
 function AddGroup(){

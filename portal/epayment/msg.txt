@@ -1,0 +1,1 @@
+"PurchaseInfoDto":{"amount":"1000","resNum":"122","redirectUrl":"http://rtfund/portal/epayment/epayment_step2.php"}ee167fb0-56d4-4d82-83d4-3e52f1bb83b8

@@ -166,6 +166,7 @@ function SaveLetter($dieing = true) {
 			die();
 		}
 	}
+	$Letter->RefShow = isset($Letter->RefShow) ? "YES" : "NO";
 	
     if ($Letter->LetterID == '') {
 		$Letter->PersonID = $_SESSION["USER"]["PersonID"];
