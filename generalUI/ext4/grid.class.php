@@ -785,10 +785,10 @@ class ColumnEditor
 		return $st;
 	}
 
-    static function CheckField($itemId = "")
+    static function CheckField($itemId = "", $inputValue = "1")
 	{
 		$st = " new Ext.form.Checkbox({
-                    inputValue: 1";
+                    inputValue: '$inputValue'";
 		$st .= ($itemId != "") ? ",itemId : '$itemId'" : "";
         $st .= "})";
 		return $st;

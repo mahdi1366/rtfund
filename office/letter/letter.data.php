@@ -71,7 +71,10 @@ function SelectAllLetter(){
 				$where .= " AND l.PersonID = :" . $field;
 				$param[":" . $field] = $value;
 				break;
-			
+			case "Customer":	
+				$where .= " AND lc.PersonID = :" . $field;
+				$param[":" . $field] = $value;
+				break;
 			default:
 				$where .= " AND " . $field . " = :" . $field;
 				$param[":" . $field] = $value;
@@ -82,10 +85,11 @@ function SelectAllLetter(){
     $list = OFC_letters::FullSelect($where, $param);
 	
 	//print_r(ExceptionHandler::PopAllExceptions());
+	//echo PdoDataAccess::GetLatestQueryString();
 	
 	$no = $list->rowCount();
 	$list = PdoDataAccess::fetchAll($list, $_GET["start"], $_GET["limit"]);
-    echo dataReader::getJsonData($list, count($list), $_GET['callback']);
+    echo dataReader::getJsonData($list, $no, $_GET['callback']);
     die();
 }
 
@@ -476,4 +480,41 @@ function RemoveLetterFromFolder(){
 	die();
 }
 
+//.............................................
+
+function GetLetterCustomerss(){
+
+	$dt = PdoDataAccess::runquery("
+		select RowID,LetterID,IsHide,o.PersonID,concat_ws(' ',CompanyName,fname,lname) fullname 
+		from OFC_LetterCustomers o join BSC_persons using(PersonID)
+		where LetterID=?", array($_REQUEST["LetterID"]));
+	
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SaveLetterCustomer(){
+	
+	$obj = new OFC_LetterCustomers();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	$obj->IsHide = $obj->IsHide ? "YES" : "NO";
+	
+	if($obj->RowID == "")
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteLetterCustomer(){
+	
+	$obj = new OFC_LetterCustomers($_POST["RowID"]);
+	$result = $obj->Remove();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 ?>
