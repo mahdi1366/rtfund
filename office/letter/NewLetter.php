@@ -68,6 +68,7 @@ Letter.prototype.LoadLetter = function(){
 				
 				me.letterPanel.down("[itemId=btn_send]").enable();
 				me.letterPanel.down("[itemId=attach_tab]").enable();	
+				me.letterPanel.down("[itemId=customer_tab]").enable();	
 			}
 		}
 	});
@@ -301,6 +302,28 @@ Letter.prototype.BuildForms = function(){
 						});
 					}
 				}
+			},{
+				title : "ذینفعان نامه",
+				itemId : "customer_tab",
+				disabled : true,
+				loader : {
+					url : this.address_prefix + "LetterCustomers.php",
+					method: "POST",
+					text: "در حال بار گذاری...",
+					scripts : true
+				},
+				listeners : {
+					activate : function(){
+						if(this.loader.isLoaded)
+							return;
+						this.loader.load({
+							params : {
+								LetterID : LetterObject.LetterID,
+								ExtTabID : this.getEl().id
+							}
+						});
+					}
+				}
 			}]
 		}],
 		buttons :[{
@@ -356,7 +379,8 @@ Letter.prototype.SaveLetter = function(){
 			};
 			me.letterPanel.down("[itemId=pagesView]").getStore().load();
 			me.letterPanel.down("[itemId=btn_send]").enable();
-			me.letterPanel.down("[itemId=attach_tab]").enable();	
+			me.letterPanel.down("[itemId=attach_tab]").enable();
+			me.letterPanel.down("[itemId=customer_tab]").enable();
 			
 		},
 		failure : function(form,action){

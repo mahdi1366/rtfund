@@ -250,6 +250,27 @@ function LetterInfo(){
 					});
 				}
 			}
+		},{
+			title : "ذینفعان نامه",
+			loader : {
+				url : this.address_prefix + "LetterCustomers.php",
+				method: "POST",
+				text: "در حال بار گذاری...",
+				scripts : true
+			},
+			listeners : {
+				activate : function(){
+					if(this.loader.isLoaded)
+						return;
+					this.loader.load({
+						params : {
+							LetterID : LetterInfoObject.LetterID,
+							ExtTabID : this.getEl().id,
+							editable : "false"
+						}
+					});
+				}
+			}
 		}]
 	});	
 	

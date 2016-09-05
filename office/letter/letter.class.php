@@ -51,6 +51,7 @@ class OFC_letters extends PdoDataAccess{
 			join BSC_persons p3 on(s.ToPersonID=p3.PersonID)
 			left join BSC_persons p4 on(l.SignerPersonID=p4.PersonID)
 			left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
+			left join OFC_LetterCustomers lc on(l.LetterID=lc.LetterID)
 		";
 	    $query .= ($where != "") ? " where " . $where : "";
 		
@@ -283,5 +284,16 @@ class OFC_archive extends PdoDataAccess{
 		
 		return $dt->rowCount() > 0;
 	}
+}
+
+class OFC_LetterCustomers extends OperationClass{
+	
+	const TableName = "OFC_LetterCustomers";
+	const TableKey = "RowID";
+	
+	public $RowID;
+	public $LetterID;
+	public $PersonID;
+	public $IsHide;
 }
 ?>

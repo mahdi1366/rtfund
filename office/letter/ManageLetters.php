@@ -210,7 +210,28 @@ function ManageLetter(){
 		},{
 			xtype : "textfield",
 			name : "context",
+			colspan : 3,
+			width : 520,
 			fieldLabel : "متن نامه"
+		},{
+			xtype : "combo",
+			fieldLabel : "ذینفع",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../../framework/person/persons.data.php?' +
+						"task=selectPersons&UserType=IsCustomer",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['PersonID','fullname']
+			}),
+			displayField : "fullname",
+			pageSize : 20,
+			colspan : 2,
+			width : 520,
+			hiddenName : "Customer",
+			allowBlank : false,
+			valueField : "PersonID"
 		}],
 		buttons : [{
 			text:'جستجو',
