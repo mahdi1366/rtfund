@@ -113,11 +113,13 @@ for ($i = 0; $i < count($menus); $i++) {
           </div>
      </div>
 		 <table class ="example_3">
-			 <td width="33%" style="background-color:#35bc7a;">---
-				 <img id='nbpewmcswmcsnbpedrft' style='cursor:pointer' 
-					  onclick='window.open("http://trustseal.enamad.ir/Verify.aspx?id=28821&p=wkynaqgwaqgwwkynnbpd", 
-						  "Popup","toolbar=no, location=no, statusbar=no, menubar=no, scrollbars=1, resizable=0, width=580, height=600, top=30")' alt='' 
-						  src='http://trustseal.enamad.ir/logo.aspx?id=28821&p=qesgukaqukaqqesglznb'/>
+			 <td width="33%" style="background-color:#35bc7a;">
+				<img id='nbpewmcswmcsnbpedrft' style='cursor:pointer' 
+onclick='window.open("http://trustseal.enamad.ir/Verify.aspx?id=28821&p=wkynaqgwaqgwwkynnbpd", "Popup",
+	"toolbar=no, location=no, statusbar=no, menubar=no, scrollbars=1, resizable=0, width=580, height=600, top=30")' 
+	alt='' src='http://trustseal.enamad.ir/logo.aspx?id=28821&p=qesgukaqukaqqesglznb'/>
+
+
 
 			 </td>
 			 <td width="12px"></td>

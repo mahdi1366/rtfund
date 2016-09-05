@@ -1,0 +1,123 @@
+<style>
+.claculator_box {
+    background-color: #aaa;
+    border-radius: 10px;
+	direction: ltr;
+    width: 180px;
+	height: 195px;
+}
+.claculator_display {
+    height: 39px;
+    width: 100%;
+}
+.claculator_display input {
+    border-radius: 7px;
+    font-size: 15px;
+	direction: ltr;
+    height: 31px;
+    margin: 5px;
+    text-align: left;
+    width: 93%;
+	background: #fff url("/generalUI/ext4/resources/themes/images/default/form/text-bg.gif") repeat-x scroll 0 0;
+    border: 1px solid #b5b8c8;
+    padding: 1px 3px;
+	box-sizing: border-box;
+}
+.claculator_keys {
+    width: 95%;
+}
+.claculator_keys td {
+    height: 30px;
+    text-align: center;
+}
+
+.claculator_button {
+	background-color: #fff;
+    background-image: -moz-linear-gradient(center top , #fff, #f9f9f9 48%, #e2e2e2 52%, #e7e7e7);
+    border-color: #d1d1d1;
+    border-radius: 3px;
+    border-style: solid;
+    border-width: 1px;
+    padding: 2px;
+    border-radius: 8px;
+    cursor: pointer;
+    height: 90%;
+    width: 90%;
+}
+</style>
+<script>
+	function c(val)
+	{
+		document.getElementById("calculator_input").value=val;
+		document.getElementById("calculator_input").focus();
+	}
+	function v(val)
+	{
+		document.getElementById("calculator_input").value+=val;
+		document.getElementById("calculator_input").focus();
+	}
+	function e() 
+	{ 
+		try 
+		{ 
+			c(eval(document.getElementById("calculator_input").value)) 
+			document.getElementById("calculator_input").focus();
+		} 
+		catch(e) 
+		{
+			c('Error') 
+			document.getElementById("calculator_input").focus();
+		} 
+	}  
+	function key_detect_calc(id,evt)
+	{
+		if(evt.keyCode==13)
+        {
+			e();
+        }
+        else if(evt.keyCode==46)
+        {
+			c("");
+        }
+        else if(evt.keyCode==27)
+        {
+			c("");
+        }
+        return true;
+	}
+	document.getElementById("calculator_input").focus();
+</script>
+<div class="claculator_box" align="center">
+	<div class="claculator_display">
+		<input type="text" onkeydown="javascript:key_detect_calc('calc',event);"
+		size="18" id="calculator_input"></div>
+	<table class="claculator_keys">
+		<tr>
+			<td width="25%"><input type="button" class="claculator_button pink" value="C" onclick='c("")'></td>
+			<td width="25%"><input type="button" class="claculator_button blue" value="/" onclick='v("/")'></td>
+			<td width="25%"><input type="button" class="claculator_button blue" value="*" onclick='v("*")'></td>
+			<td width="25%"><input type="button" class="claculator_button blue" value="-" onclick='v("-")'></td>
+		</tr>
+		<tr>
+			<td><input type="button" class="claculator_button " value="7" onclick='v("7")'></td>
+			<td><input type="button" class="claculator_button " value="8" onclick='v("8")'></td>
+			<td><input type="button" class="claculator_button " value="9" onclick='v("9")'></td>
+			<td rowspan="2" style="height:60px"><input type="button" class="claculator_button blue" value="+" onclick='v("+")'></td>
+		</tr>
+		<tr>
+			<td><input type="button" class="claculator_button " value="4" onclick='v("4")'></td>
+			<td><input type="button" class="claculator_button " value="5" onclick='v("5")'></td>
+			<td><input type="button" class="claculator_button " value="6" onclick='v("6")'></td>
+		</tr>
+		<tr>
+			<td><input type="button" class="claculator_button " value="1" onclick='v("1")'></td>
+			<td><input type="button" class="claculator_button " value="2" onclick='v("2")'></td>
+			<td><input type="button" class="claculator_button " value="3" onclick='v("3")'></td>
+			<td rowspan="2" style="height:60px"><input type="button" class="claculator_button orange" value="=" onclick='e()'></td>		
+		</tr>
+		<tr>
+			<td colspan="2"><input type="button" class="claculator_button " value="0" onclick='v("0")'></td>
+			<td><input type="button" class="claculator_button " value="." onclick='v(".")'></td>
+		</tr>
+	</table>
+</div>

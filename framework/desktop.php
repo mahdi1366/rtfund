@@ -183,6 +183,15 @@ if ($menuStr != "") {
 			padding: 10px !important;
 		}
 		
+		.framework-comment{
+			background-image:url('icons/comment.png') !important;
+			background-size: 30px 30px;
+		}
+		.framework-Calculator{
+			background-image:url('icons/Calculator.png') !important;
+			background-size: 30px 30px;
+		}
+		
 	</style>
 	<script type="text/javascript">
 	//-----------------------------
@@ -311,10 +320,33 @@ if ($menuStr != "") {
 				border : false
 			}),{
 				xtype : "container",
-				contentEl : document.getElementById("framework_taskDiv")				
+				layout : "hbox",
+				items : [{
+					xtype : "button",
+					tooltip : "درخواست پشتیبانی",
+					scale: 'large',
+					iconCls : "framework-comment",
+					style : "margin: 3px; height:35px",
+					handler : function(){
+						framework.OpenPage('../framework/ManageRequests.php','درخواست پشتیبانی');
+					}	
+				},{
+					xtype : "button",
+					tooltip : "ماشین حساب",
+					scale: 'large',
+					iconCls : "framework-Calculator",
+					style : "margin: 3px;height:35px",
+					handler : function(){
+						framework.OpenClaculator();
+					}	
+				}]
+				
 			},{
 				xtype : "container",
 				contentEl : document.getElementById("framework_accDiv")
+			},{
+				xtype : "container",
+				contentEl : document.getElementById("framework_calculatorDiv")
 			}]
 		});
 		
@@ -596,6 +628,28 @@ if ($menuStr != "") {
 	}
 	
 	//..........................................................................
+	FrameWorkClass.prototype.OpenClaculator = function(){
+		
+		if(!this.CalcWin)
+		{
+			this.CalcWin = new Ext.window.Window({
+				width : 190,
+				renderTo : document.body,
+				height : 230,
+				loader : {
+					url : "/generalUI/calculator/calculator.html",
+					method : "post",
+					scripts : true,
+					autoLoad : true
+				},
+				closeAction : "hide"
+			});
+
+		}
+		this.CalcWin.show();
+		this.CalcWin.loader.load();
+	}
+	//..........................................................................
 		
 	var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
 	Ext.QuickTips.init();
@@ -670,12 +724,6 @@ var personStore = new Ext.data.Store({
 				<br>زمان انتظار شما به پایان رسیده است لطفا مجدد وارد شوید</div>
 			<div style="position: fixed;top: 40;left: 0;height:100%;width:100%;z-index: 9999999;
 			background-color : #999;opacity: 0.7;filter: alpha(opacity=70);-moz-opacity: 0.7; /* mozilla */"></div>
-		</div>
-		<!--------------------------------------------------------------------->
-		<div class="blueText infoBox" id="framework_taskDiv" style="height: 35px;" 
-			 onclick="framework.OpenPage('../framework/ManageRequests.php','درخواست پشتیبانی')">
-			<img src="icons/comment.png" style="margin: 3px; float: right; width: 30px;">
-			<div style="padding-top:6px">درخواست پشتیبانی</div>
 		</div>
 		<!--------------------------------------------------------------------->
 		<div class="blueText accinfoBox" id="framework_accDiv" style="height: 80px;" 

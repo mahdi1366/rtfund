@@ -1468,7 +1468,7 @@ function ComputeDepositeProfit(){
 function ComputeShareProfit(){
 	
 	//----------- check for all docs confirm --------------
-	/*$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
+	$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
 		join ACC_DocItems using(DocID)
 		where CostID =" . COSTID_share . "
 		AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
@@ -1478,8 +1478,7 @@ function ComputeShareProfit(){
 		echo Response::createObjectiveResponse(false, "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند و قادر به صدور سند سود سهام نمی باشید.");
 		die();
 	}
-	*/
-
+	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 
