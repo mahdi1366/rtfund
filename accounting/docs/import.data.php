@@ -30,6 +30,45 @@ function FindTafsiliID($TafsiliCode, $TafsiliType){
 	return count($dt) == 0? false : $dt[0]["TafsiliID"];
 }
 
+/**
+ *
+ * @param jdate $startDate
+ * @param jdate $endDate
+ * @param type $amount
+ * @return type 
+ */
+function SplitYears($startDate, $endDate, $TotalAmount){
+	
+	$arr = preg_split('/[\-\/]/',$startDate);
+	$StartYear = $arr[0]*1;
+	
+	$totalDays = 0;
+	$yearDays = array();
+	$newStartDate = $startDate;
+	while(DateModules::CompareDate($newStartDate, $endDate) < 0){
+		
+		$arr = preg_split('/[\-\/]/',$newStartDate);
+		$LastDayOfYear = DateModules::lastJDateOfYear($arr[0]);
+		if(DateModules::CompareDate($LastDayOfYear, $endDate) > 0)
+			$LastDayOfYear = $endDate;
+		
+		$yearDays[$StartYear] = DateModules::JDateMinusJDate($LastDayOfYear, $newStartDate)+1;
+		$totalDays += $yearDays[$StartYear];
+		$StartYear++;
+		$newStartDate = DateModules::AddToJDate($LastDayOfYear, 1);
+	}
+	$TotalDays = DateModules::JDateMinusJDate($endDate, $startDate)+1;
+	$sum = 0;
+	foreach($yearDays as $year => $days)
+	{
+		$yearDays[$year] = round(($days/$TotalDays)*$TotalAmount);
+		$sum += $yearDays[$year];
+	}
+	if($sum <> $TotalAmount)
+		$yearDays[$year] += $TotalAmount-$sum;
+	
+	return $yearDays;
+}
 //---------------------------------------------------------------
 
 function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo){
@@ -1557,8 +1596,249 @@ function ComputeShareProfit(){
 
 //---------------------------------------------------------------
 
-function RegisterWarrantyDoc(){
+function RegisterWarrantyDoc($ReqObj, $WageCost,$BankTafsili, $AccountTafsili, $DocID, $pdo){
 	
+	/*@var $ReqObj WAR_requests */
 	
+	//------------- get CostCodes --------------------
+	$CostCode_warrenty = FindCostID("300");
+	$CostCode_warrenty_commitment = FindCostID("700");
+	$CostCode_wage = FindCostID("750-07");
+	$CostCode_FutureWage = FindCostID("760-07");
+	$CostCode_fund = FindCostID("100");
+	$CostCode_pasandaz = FindCostID("209-10");
+	$CostCode_guaranteeAmount = FindCostID("904-02");
+	$CostCode_guaranteeCount = FindCostID("904-01");
+	$CostCode_guaranteeAmount2 = FindCostID("905-02");
+	$CostCode_guaranteeCount2 = FindCostID("905-01");
+	//------------------------------------------------
+	$CycleID = substr(DateModules::miladi_to_shamsi($ReqObj->StartDate), 0 , 4);
+	$BranchID = "1";
+	//------------------ find tafsilis ---------------
+	$PersonTafsili = FindTafsiliID($ReqObj->PersonID, TAFTYPE_PERSONS);
+	if(!$PersonTafsili)
+	{
+		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->PersonID . "]");
+		return false;
+	}
+	
+	//------------------- compute wage ------------------
+	$days = DateModules::GDateMinusGDate($ReqObj->EndDate,$ReqObj->StartDate);
+	$TotalWage = round($days*$ReqObj->amount*$ReqObj->wage/36500);	
+	
+	$years = SplitYears(DateModules::miladi_to_shamsi($ReqObj->StartDate), 
+		DateModules::miladi_to_shamsi($ReqObj->EndDate), $TotalWage);
+	
+	//--------------- check pasandaz remaindar -----------------
+	
+	$dt = PdoDataAccess::runquery("select sum(CreditorAmount-DebtorAmount) remain
+		from ACC_DocItems join ACC_docs using(DocID) where CycleID=? AND CostID=?
+			AND TafsiliType=? AND TafsiliID=?", array(
+				$CycleID,
+				$CostCode_pasandaz,
+				TAFTYPE_PERSONS,
+				$PersonTafsili
+			));
+	if($dt[0][0]*1 < $ReqObj->amount*0.1)
+	{
+		ExceptionHandler::PushException("مانده حساب پس انداز مشتری کمتر از 10% مبلغ ضمانت نامه می باشد");
+		return false;
+	}
+	if($WageCost == "209-10" && $dt[0][0]*1 < ($ReqObj->amount*0.1 + $TotalWage))
+	{
+		ExceptionHandler::PushException("مانده حساب پس انداز مشتری کمتر از مبلغ کارمزد می باشد");
+		return false;
+	}
+	//---------------- add doc header --------------------
+	if($DocID == null)
+	{
+		$DocObj = new ACC_docs();
+		$DocObj->RegDate = PDONOW;
+		$DocObj->regPersonID = $_SESSION['USER']["PersonID"];
+		$DocObj->DocDate = PDONOW;
+		$DocObj->CycleID = $CycleID;
+		$DocObj->BranchID = $BranchID;
+		$DocObj->DocType = DOCTYPE_WARRENTY;
+		$DocObj->description = "ضمانت نامه شماره " . $ReqObj->RequestID . " به نام " . $ReqObj->_fullname;
+
+		if(!$DocObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد سند");
+			return false;
+		}
+	}
+	else
+		$DocObj = new ACC_docs($DocID);
+	//----------------- add Doc items ------------------------
+	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $DocObj->DocID;
+	$itemObj->TafsiliType = TAFTYPE_PERSONS;
+	$itemObj->TafsiliID = $PersonTafsili;
+	$itemObj->SourceType = DOCTYPE_WARRENTY;
+	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID2 = $ReqObj->ReqVersion;
+	$itemObj->locked = "YES";
+	
+	$itemObj->CostID = $CostCode_warrenty;
+	$itemObj->DebtorAmount = $ReqObj->amount;
+	$itemObj->CreditorAmount = 0;
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ثبت ردیف ضمانت نامه");
+		return false;
+	}
+	
+	unset($itemObj->ItemID);
+	$itemObj->CostID = $CostCode_warrenty_commitment;
+	$itemObj->DebtorAmount = 0;
+	$itemObj->CreditorAmount = $ReqObj->amount;
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ثبت ردیف تعهد ضمانت نامه");
+		return false;
+	}
+	
+	unset($itemObj->ItemID);
+	$itemObj->CostID = $CostCode_pasandaz;
+	$itemObj->DebtorAmount = $ReqObj->amount*0.1;
+	$itemObj->CreditorAmount = 0;
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ثبت ردیف تعهد ضمانت نامه");
+		return false;
+	}
+	
+	unset($itemObj->ItemID);
+	$itemObj->CostID = $CostCode_fund;
+	$itemObj->DebtorAmount = 0;
+	$itemObj->CreditorAmount = $ReqObj->amount*0.1;
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ثبت ردیف تعهد ضمانت نامه");
+		return false;
+	}
+	//------------------- compute wage -----------------------
+	$curYear = substr(DateModules::miladi_to_shamsi($ReqObj->StartDate), 0, 4)*1;
+	foreach($years as $Year => $amount)
+	{	
+		if($amount == 0)
+			continue;
+		$YearTafsili = FindTafsiliID($Year, TAFTYPE_YEARS);
+		if(!$YearTafsili)
+		{
+			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $Year . "]");
+			return false;
+		}
+		unset($itemObj->ItemID);
+		$itemObj->details = "کارمزد ضمانت نامه شماره " . $ReqObj->RequestID;
+		$itemObj->CostID = $Year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $amount;
+		$itemObj->TafsiliType = TAFTYPE_YEARS;
+		$itemObj->TafsiliID = $YearTafsili;
+		$itemObj->Add($pdo);
+	}
+	
+	// ----------------------------- bank --------------------------------
+
+	unset($itemObj->ItemID);
+	unset($itemObj->TafsiliType);
+	unset($itemObj->TafsiliID);
+	$itemObj->details = "بابت کارمزد ضمانت نامه شماره " . $ReqObj->RequestID;
+	$itemObj->CostID = FindCostID($WageCost);
+	$itemObj->DebtorAmount = $TotalWage;
+	$itemObj->CreditorAmount = 0;
+	
+	if($WageCost == "101")
+	{
+		$itemObj->TafsiliType = TAFTYPE_BANKS;
+		if($BankTafsili != "")
+			$itemObj->TafsiliID = $BankTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
+		if($AccountTafsili != "")
+			$itemObj->TafsiliID2 = $AccountTafsili;
+	}
+	$itemObj->Add($pdo);
+	
+	//---------- ردیف های تضمین  ----------
+
+	$SumAmount = 0;
+	$countAmount = 0;	
+	$dt = PdoDataAccess::runquery("
+		SELECT DocumentID, ParamValue, InfoDesc as DocTypeDesc
+			FROM DMS_DocParamValues
+			join DMS_DocParams using(ParamID)
+			join DMS_documents d using(DocumentID)
+			join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
+			left join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
+		where ItemID is null AND b.param1=1 AND 
+			paramType='currencyfield' AND ObjectType='warrenty' AND ObjectID=?",array($ReqObj->RequestID), $pdo);
+
+	foreach($dt as $row)
+	{
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_guaranteeAmount;
+		$itemObj->DebtorAmount = $row["ParamValue"];
+		$itemObj->CreditorAmount = 0;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $PersonTafsili;
+		$itemObj->SourceType = DOCTYPE_DOCUMENT;
+		$itemObj->SourceID = $row["DocumentID"];
+		$itemObj->details = $row["DocTypeDesc"];
+		$itemObj->Add($pdo);
+
+		$SumAmount += $row["ParamValue"]*1;
+		$countAmount++;
+	}
+	if($SumAmount > 0)
+	{
+		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType);
+		unset($itemObj->TafsiliID);
+		unset($itemObj->details);
+		$itemObj->CostID = $CostCode_guaranteeAmount2;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $SumAmount;	
+		$itemObj->Add($pdo);
+
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_guaranteeCount;
+		$itemObj->DebtorAmount = $countAmount;
+		$itemObj->CreditorAmount = 0;	
+		$itemObj->Add($pdo);
+
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_guaranteeCount2;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $countAmount;
+		$itemObj->Add($pdo);
+	}
+	
+	if(ExceptionHandler::GetExceptionCount() > 0)
+		return false;
+	
+	return $DocObj->DocID;
 }
+
+function ReturnWarrantyDoc($ReqObj, $pdo, $EditMode = false){
+	
+	/*@var $PayObj WAR_requests */
+	
+	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
+		where SourceType=" . DOCTYPE_WARRENTY . " AND SourceID=? AND SourceID2=?",
+		array($ReqObj->RequestID, $ReqObj->ReqVersion), $pdo);
+	if(count($dt) == 0)
+		return true;
+	
+	if($EditMode)
+	{
+		PdoDataAccess::runquery("delete from ACC_DocItems 
+			where SourceType=" . DOCTYPE_WARRENTY . " AND SourceID=? AND SourceID2=?",
+			array($ReqObj->RequestID, $ReqObj->ReqVersion), $pdo);
+		return true;
+	}
+	
+	return ACC_docs::Remove($dt[0][0], $pdo);
+}
+
 ?>

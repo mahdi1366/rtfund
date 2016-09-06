@@ -179,30 +179,6 @@ function YearDelayCompute($PartObj, $PayDate, $PayAmount, $wage){
 		$yearDays[$year] += $TotalDelayAmount-$sum;
 	
 	return $yearDays;
-	
-	/*@var $PartObj LON_ReqParts */
-	
-	$YearMonths = 12;
-	$PayMonth = preg_split('/\//',DateModules::miladi_to_shamsi($PartObj->PartDate));
-	$PayMonth = $PayMonth[1]*1;
-	
-	$FirstYearCount = min($YearMonths - $PayMonth, $PartObj->DelayMonths);
-	$MidYearCount = floor(($PartObj->DelayMonths-$FirstYearCount) / $YearMonths);
-	$LastYeatCount = ($PartObj->DelayMonths-$FirstYearCount) % $YearMonths;
-
-	if($yearNo > $MidYearCount+2)
-		return 0;
-	
-	$curMonths = $FirstYearCount;
-	if($yearNo > 1 && $yearNo <= $MidYearCount+1)
-		$curMonths = $YearMonths;
-	else if($yearNo > $MidYearCount+1)
-	{
-		$curMonths = $LastYeatCount;
-		$curMonths = $curMonths*1 + $PartObj->DelayDays*1/30;
-	}
-	$val = round($PayAmount*$wage*$curMonths/1200);
-	return $val;
 }
 //....................
 

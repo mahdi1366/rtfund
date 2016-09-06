@@ -23,7 +23,7 @@ function WarrentyRequest(){
 			plain: true,
 			showSeparator : true,
 			items: [{
-				text: "کلیه درخواست ها",
+				text: "کلیه ضمانتنامه ها",
 				checked: true,
 				group: 'filter',
 				handler : function(){
@@ -32,7 +32,7 @@ function WarrentyRequest(){
 					me.grid.getStore().loadPage(1);
 				}
 			},{
-				text: "درخواست های جاری",
+				text: "ضمانتنامه های جاری",
 				group: 'filter',
 				checked: true,
 				handler : function(){
@@ -41,7 +41,7 @@ function WarrentyRequest(){
 					me.grid.getStore().loadPage(1);
 				}
 			},{
-				text: "درخواست های خاتمه یافته",
+				text: "ضمانتنامه های خاتمه یافته",
 				group: 'filter',
 				checked: true,
 				handler : function(){
@@ -54,8 +54,12 @@ function WarrentyRequest(){
 	});
 	
 	this.MainPanel = new Ext.form.Panel({
-		width : 400,
+		width : 650,
 		hidden : true,
+		layout : {
+			type : "table",
+			columns : 2
+		},		
 		applyTo : this.get("RequestInfo"),
 		defaults : {
 			width : 300
@@ -69,7 +73,8 @@ function WarrentyRequest(){
 					url: this.address_prefix + 'request.data.php?task=GetWarrentyTypes',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ["InfoID", "InfoDesc"]
+				fields :  ["InfoID", "InfoDesc"],
+				autoLoad : true
 			}),
 			displayField: 'InfoDesc',
 			valueField : "InfoID",
@@ -105,6 +110,34 @@ function WarrentyRequest(){
 			allowBlank : false,
 			fieldLabel : "مبلغ ضمانت نامه"
 		},{
+			xtype : "shdatefield",
+			name : "StartDate",
+			allowBlank : false,
+			fieldLabel : "تاریخ شروع"
+		},{
+			xtype : "shdatefield",
+			name : "EndDate",
+			allowBlank : false,
+			fieldLabel : "تاریخ پایان"
+		},{
+			xtype : "textfield",
+			allowBlank : false,
+			fieldLabel : "شماره نامه معرفی",
+			name : "LetterNo"
+		},{
+			xtype : "shdatefield",
+			allowBlank : false,
+			fieldLabel : "تاریخ نامه معرفی",
+			name : "LetterDate"
+		},{
+			xtype : "numberfield",
+			allowBlank : false,
+			fieldLabel : "کارمزد",
+			name : "wage",
+			width : 150,
+			afterSubTpl : "%",
+			hideTrigger : true
+		},{
 			xtype : "hidden",
 			name : "RequestID"
 		}],
@@ -120,7 +153,13 @@ function WarrentyRequest(){
 	});
 }
 
-WarrentyRequestObject = new WarrentyRequest();
+WarrentyRequest.OrgRender = function(v,p,r){
+	
+	str = "شماره نامه معرفی : <b>" + r.data.LetterNo + "</b>"+
+		"<br>تاریخ نامه معرفی : <b>" + MiladiToShamsi(r.data.LetterDate) + "</b>";
+	p.tdAttr = "data-qtip='" + str + "'";
+	return v;
+}
 
 WarrentyRequest.OperationRender = function(value, p, record){
 	
@@ -129,21 +168,44 @@ WarrentyRequest.OperationRender = function(value, p, record){
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
+WarrentyRequestObject = new WarrentyRequest();
+
 WarrentyRequest.prototype.OperationMenu = function(e){
 
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
 	
-	if(record.data.StatusID == "1")
+	if(record.data.StatusID == "<?= WAR_STEPID_RAW ?>")
 	{
+		op_menu.add({text: 'ویرایش درخواست',iconCls: 'edit', 
+		handler : function(){ return WarrentyRequestObject.editRequest(); }});
+	
 		op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
 		handler : function(){ return WarrentyRequestObject.deleteRequest(); }});
+	
+		op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
+			handler : function(){ return WarrentyRequestObject.StartFlow(); }});
 	}
 	
-	op_menu.add({text: 'دوره های زمانی ضمانت نامه',iconCls: 'delay', 
-		handler : function(){ return WarrentyRequestObject.WarrentyPeriods(); }});
+	if(record.data.StatusID == "<?= WAR_STEPID_CONFIRM ?>")
+	{
+		if(record.data.DocID == "" || record.data.DocID == null)
+			op_menu.add({text: 'صدور سند',iconCls: 'send',
+			handler : function(){ return WarrentyRequestObject.BeforeRegDoc(1); }});
+		else if(record.data.DocStatus == "RAW")
+		{
+			op_menu.add({text: 'اصلاح سند',iconCls: 'edit',
+			handler : function(){ return WarrentyRequestObject.BeforeRegDoc(2); }});
+		
+			op_menu.add({text: 'برگشت سند',iconCls: 'undo',
+			handler : function(){ return WarrentyRequestObject.ReturnWarrentyDoc(); }})
+		}
+		
+		op_menu.add({text: 'چاپ ضمانت نامه',iconCls: 'print',
+			handler : function(){ return WarrentyRequestObject.Print(); }});
+	}
 	
-	op_menu.add({text: 'مدارک تضمین',iconCls: 'attach', 
+	op_menu.add({text: 'مدارک ضمانت نامه',iconCls: 'attach', 
 		handler : function(){ return WarrentyRequestObject.WarrentyDocuments('warrenty'); }});
 
 	op_menu.add({text: 'مدارک تضمین خواه',iconCls: 'attach', 
@@ -159,6 +221,26 @@ WarrentyRequest.prototype.AddNew = function(){
 	
 	this.MainPanel.show();
 	this.MainPanel.getForm().reset();
+}
+
+WarrentyRequest.prototype.editRequest = function(){
+	
+	record = this.grid.getSelectionModel().getLastSelected();
+	this.MainPanel.show();
+	mask = new Ext.LoadMask(this.MainPanel, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+	
+	this.MainPanel.loadRecord(record);
+	this.MainPanel.down("[name=PersonID]").getStore().load({
+		params : {
+			PersonID : record.data.PersonID
+		},
+		callback : function(){
+			mask.hide();	
+			if(this.getCount() > 0)
+				WarrentyRequestObject.MainPanel.down("[name=PersonID]").setValue(this.getAt(0).data.PersonID);
+		}
+	});
 }
 
 WarrentyRequest.prototype.SaveRequest = function(){
@@ -179,7 +261,7 @@ WarrentyRequest.prototype.SaveRequest = function(){
 		success: function(form,action){
 			mask.hide();
 			WarrentyRequestObject.grid.getStore().load();
-			WarrentyRequest.MainPanel.hide();
+			WarrentyRequestObject.MainPanel.hide();
 		},
 		failure: function(){
 			mask.hide();
@@ -221,6 +303,34 @@ WarrentyRequest.prototype.WarrentyDocuments = function(ObjectType){
 			ObjectType : ObjectType,
 			ObjectID : record.data.RequestID
 		}
+	});
+}
+
+WarrentyRequest.prototype.StartFlow = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به شروع گردش ضمانت نامه می باشید؟",function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		me = WarrentyRequestObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "StartFlow",
+				RequestID : record.data.RequestID
+			},
+			success: function(response){
+				mask.hide();
+				WarrentyRequestObject.grid.getStore().load();
+			}
+		});
 	});
 }
 
@@ -334,6 +444,181 @@ WarrentyRequest.prototype.WarrentyPeriods = function(){
 			RequestID : record.data.RequestID
 		}
 	});
+}
+
+WarrentyRequest.prototype.BeforeRegDoc = function(mode){
+	
+	if(!this.BankWin)
+	{
+		this.BankWin = new Ext.window.Window({
+			width : 300,
+			height : 150,
+			title : "نحوه پرداخت کارمزد",
+			modal : true,
+			closeAction : "hide",
+			items : [{
+				xtype : "combo",
+				width : 287,
+				store: new Ext.data.SimpleStore({
+					fields:["CostID","CostCode","CostDesc",{
+						name : "title",
+						convert : function(v,r){ return "[ " + r.data.CostCode + " ] " + r.data.CostDesc;}
+					}],
+					data : [
+						["100", "100" , "صندوق"],
+						["101", "101", "بانک"],
+						["209-10", "209-10", "حساب پس انداز"]
+					]
+				}),
+				value : "100",
+				valueField : "CostID",
+				emptyText:'انتخاب کد حساب ...',
+				itemId : "CostCode",
+				displayField : "title",
+				listeners : {
+					select : function(combo,records){
+						if(records[0].data.CostID == "101")
+						{
+							this.up('window').down("[itemId=TafsiliID]").enable();
+							this.up('window').down("[itemId=TafsiliID2]").enable();
+						}	
+						else
+						{
+							this.up('window').down("[itemId=TafsiliID]").disable();
+							this.up('window').down("[itemId=TafsiliID2]").disable();
+						}
+							
+					}
+				}
+			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["TafsiliID","TafsiliDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=6',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}),
+				emptyText:'انتخاب بانک ...',
+				width : 287,
+				typeAhead: false,
+				pageSize : 10,
+				valueField : "TafsiliID",
+				itemId : "TafsiliID",
+				displayField : "TafsiliDesc"
+			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["TafsiliID","TafsiliDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=3',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}),
+				emptyText:'انتخاب حساب ...',
+				width : 287,
+				typeAhead: false,
+				pageSize : 10,
+				valueField : "TafsiliID",
+				itemId : "TafsiliID2",
+				displayField : "TafsiliDesc"
+			}],
+			buttons :[{
+				text : "ذخیره",
+				iconCls : "save",
+				itemId : "btn_save",
+				handler : function(){
+					WarrentyPeriodObject.RegWarrentyDoc();
+				}
+			},{
+				text : "انصراف",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.BankWin);
+	}
+	
+	this.BankWin.show();
+	this.BankWin.down("[itemId=btn_save]").setHandler(function(){
+		WarrentyRequestObject.RegWarrentyDoc(mode == "1" ? "RegWarrentyDoc" : "editWarrentyDoc");
+	});
+}
+
+WarrentyRequest.prototype.RegWarrentyDoc = function(task){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+
+	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		url: this.address_prefix +'request.data.php',
+		method: "POST",
+		params: {
+			task: task,
+			RequestID : record.data.RequestID,
+			CostCode : this.BankWin.down("[itemId=CostCode]").getValue(),
+			BankTafsili : this.BankWin.down("[itemId=TafsiliID]").getValue(),
+			AccountTafsili : this.BankWin.down("[itemId=TafsiliID2]").getValue()
+		},
+		success: function(response){
+
+			result = Ext.decode(response.responseText);
+			mask.hide();
+			if(!result.success)
+				Ext.MessageBox.alert("Error", result.data);
+			
+			WarrentyRequestObject.BankWin.hide();
+			WarrentyRequestObject.grid.getStore().load();
+		}
+	});				
+}
+
+WarrentyRequest.prototype.ReturnWarrentyDoc = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به برگشت سند می باشید؟",function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		me = WarrentyRequestObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "ReturnWarrentyDoc",
+				RequestID : record.data.RequestID
+			},
+			success: function(response){
+				
+				result = Ext.decode(response.responseText);
+				mask.hide();
+				if(!result.success)
+				{
+					if(result.data == "")
+						Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("", result.data);
+					return;
+				}				
+				WarrentyRequestObject.grid.getStore().load();
+			}
+		});
+	});
+}
+
+WarrentyRequest.prototype.Print = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	window.open(this.address_prefix + "PrintWarrenty.php?RequestID=" + record.data.RequestID);
 }
 
 </script>

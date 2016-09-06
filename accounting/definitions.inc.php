@@ -16,6 +16,7 @@ define("DOCTYPE_INSTALLMENT_CHEQUE", "9");
 define("DOCTYPE_SHARE_PROFIT", "10");
 define("DOCTYPE_SAVING_IN", "11");
 define("DOCTYPE_SAVING_OUT", "12");
+define("DOCTYPE_WARRENTY", "13");
 
 
 define("TAFTYPE_PERSONS", "1");

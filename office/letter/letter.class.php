@@ -3,7 +3,7 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 94.10
 //-----------------------------
-
+ 
 class OFC_letters extends PdoDataAccess{
 	
     public $LetterID;
@@ -21,8 +21,6 @@ class OFC_letters extends PdoDataAccess{
 	public $InnerLetterDate;
 	public $OuterCopies;
 	public $RefLetterID;
-	public $RefPersonID;
-	public $RefShow;
 
     function __construct($LetterID = ""){
 		$this->DT_LetterDate = DataMember::CreateDMA(DataMember::DT_DATE);

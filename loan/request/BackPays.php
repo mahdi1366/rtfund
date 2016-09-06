@@ -60,11 +60,11 @@ $col->width = 100;
 $col = $dg->addColumn("شماره فیش", "PayBillNo");
 if($editable)
 	$col->editor = ColumnEditor::TextField(true);
-$col->width = 80;
+$col->width = 60;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo", "string");
 $col->editor = ColumnEditor::NumberField(true);
-$col->width = 80;
+$col->width = 60;
 
 if($editable)
 {
@@ -74,12 +74,12 @@ if($editable)
 }
 else
 	$col = $dg->addColumn("بانک", "BankDesc", "");
-$col->width = 70;
+$col->width = 60;
 
 $col = $dg->addColumn("شعبه", "ChequeBranch", "");
 if($editable)
 	$col->editor = ColumnEditor::TextField(true);
-$col->width = 80;
+$col->width = 60;
 
 if($editable)
 {
@@ -105,10 +105,10 @@ if($editable)
 	
 	$dg->addButton("AddBtn", "ایجاد ردیف پرداخت", "add", "function(){LoanPayObject.AddPay();}");
 	
-	$col = $dg->addColumn("صدور سند", "");
+	$col = $dg->addColumn("سند", "");
 	$col->sortable = false;
 	$col->renderer = "function(v,p,r){return LoanPay.RegDocRender(v,p,r);}";
-	$col->width = 35;
+	$col->width = 40;
 	
 	$col = $dg->addColumn("حذف", "");
 	$col->sortable = false;
@@ -302,7 +302,7 @@ LoanPay.RegDocRender = function(v,p,r){
 		"onclick='LoanPayObject.BeforeSave(1);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
-	else if(r.data.DocStatus == "RAW")
+	else if(r.data.DocStatus == "RAW" && r.data.PayType != "4")
 		return r.data.LocalNo + "<div align='center' title='ویرایش سند' class='edit' "+
 		"onclick='LoanPayObject.BeforeSave(2);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +

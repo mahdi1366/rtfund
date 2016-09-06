@@ -96,7 +96,8 @@ public function tokenPurchaseVerifyTransaction($params)
 	
 	$result = $client->call('tokenPurchaseVerifyTransaction', $params);
 	if ($client->fault) {
-				echo '<h2>Fault (Expect - The request contains an invalid SOAP body)</h2><pre>'; print_r($result); echo '</pre>';
+				echo '<h2>Fault (Expect - The request contains an invalid SOAP body)</h2><pre>'; 
+				print_r($result); echo '</pre>';
 		} else {
 				$err = $client->getError();
 				if ($err) {
@@ -106,7 +107,6 @@ public function tokenPurchaseVerifyTransaction($params)
 				}
 		}
 				
-		print_r($result);
      return $result;
 
 }

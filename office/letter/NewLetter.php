@@ -53,10 +53,6 @@ Letter.prototype.LoadLetter = function(){
 				record = this.getAt(0);
 				me.letterPanel.loadRecord(record);
 				
-				me.letterPanel.down("[name=RefPersonID]").getStore().load({
-					params : {PersonID: record.data.RefPersonID}
-				});
-				
 				me.letterPanel.down("[itemId=pagesView]").getStore().proxy.extraParams = {
 					LetterID : record.data.LetterID
 				};
@@ -218,34 +214,6 @@ Letter.prototype.BuildForms = function(){
 			fieldLabel : "پست مربوطه",
 			disabled : true,
 			allowBlank : true			
-		},{
-			xtype : "fieldset",
-			title : "ذینفع",
-			colspan : 2,
-			layout : "hbox",
-			width : 750,
-			items :[{
-				xtype : "combo",
-				store : new Ext.data.SimpleStore({
-					proxy: {
-						type: 'jsonp',
-						url: this.address_prefix + '../../framework/person/persons.data.php?' +
-							"task=selectPersons",
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					fields : ['PersonID','fullname']
-				}),
-				displayField : "fullname",
-				pageSize : 20,
-				width : 500,
-				valueField : "PersonID",
-				name : "RefPersonID"
-			},{
-				xtype : "checkbox",
-				boxLabel : "قابل مشاهده برای ذینفع",
-				inputValue : "YES",
-				name : "RefShow"
-			}]
 		},{
 			xtype : "tabpanel",
 			colspan : 2,

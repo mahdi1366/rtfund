@@ -24,55 +24,22 @@ function SaveRequest(){
 	
 	$obj = new WAR_requests();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	$obj->StatusID = WAR_STEPID_RAW;
 	
-	//------------------------------------------------------
-	if(isset($_SESSION["USER"]["portal"]))
-	{
-		$obj->PersonID = $_SESSION["USER"]["PersonID"];
-		$obj->StatusID = 102;
-	}
-	else if(empty($obj->RequestID))
-	{
-		$obj->StatusID = 102;
-	}
-	
-	//------------------------------------------------------
 	if(empty($obj->RequestID))
 	{
 		$obj->ReqDate = PDONOW;
 		$result = $obj->Add();
 		if($result)
-			ChangeStatus($obj->RequestID,$obj->StatusID, "", true);
+			WAR_requests::ChangeStatus($obj->RequestID, $obj->StatusID, "", true);
 	}
 	else
 	{
 		$result = $obj->Edit();
-		if($result)
-			ChangeStatus($obj->RequestID,$obj->StatusID, "", true);
 	}
 	
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, $obj->RequestID);
-	die();
-}
-
-function SelectMyRequests(){
-	
-	if($_SESSION["USER"]["IsCustomer"] == "YES")
-		$where = "r.PersonID=" . $_SESSION["USER"]["PersonID"];
-	$param = array();
-	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
-        $field = $_REQUEST['fields'];
-		$field = $field == "fullname" ? "concat_ws(' ',p1.fname,p1.lname,p1.CompanyName)" : $field;
-        $where .= ' and ' . $field . ' like :fld';
-        $param[':fld'] = '%' . $_REQUEST['query'] . '%';
-    }
-	
-	$dt = WAR_requests::Get($where . dataReader::makeOrder(), $param);
-	$count = $dt->rowCount();
-	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
-	//print_r(ExceptionHandler::PopAllExceptions());
-	echo dataReader::getJsonData($dt, $count, $_GET["callback"]);
 	die();
 }
 
@@ -89,7 +56,7 @@ function SelectAllRequests(){
 	
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
-		$field = $field == "fullname" ? "concat_ws(' ',p1.fname,p1.lname,p1.CompanyName)" : $field;
+		$field = $field == "fullname" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;
         $where .= ' and ' . $field . ' like :fld';
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
@@ -101,53 +68,113 @@ function SelectAllRequests(){
 		$param[":e"] = $_REQUEST["IsEnded"];
 	}
 	
-	$where .= dataReader::makeOrder();
-	$dt = WAR_requests::SelectAll($where, $param);
+	$dt = WAR_requests::SelectAll($where, $param, dataReader::makeOrder());
 	//print_r(ExceptionHandler::PopAllExceptions());
 	//echo PdoDataAccess::GetLatestQueryString();
 	$count = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);	
+	
 	echo dataReader::getJsonData($dt, $count, $_GET["callback"]);
 	die();
 }
 
 function DeleteRequest(){
 	
-	$res = WAR_requests::Remove($_POST["RequestID"]);
-	//print_r(ExceptionHandler::PopAllExceptions());
-	echo Response::createObjectiveResponse($res, !$res ? ExceptionHandler::GetExceptionsToString() : "");
-	die();
-}
-
-function ChangeStatus($RequestID, $StatusID, $ActDesc = "", $LogOnly = false, $pdo = null){
+	$obj = new WAR_requests($_POST["RequestID"]);
 	
-	if(!$LogOnly)
+	if($obj->StatusID != WAR_STEPID_RAW)
 	{
-		$obj = new WAR_requests();
-		$obj->RequestID = $RequestID;
-		$obj->StatusID = $StatusID;
-		if(!$obj->Edit($pdo))
-			return false;
+		echo Response::createObjectiveResponse(false, "فرم دارای گردش بوده و قابل حذف نمی باشد");
+		die();
+	}
+	
+	if(!$obj->Remove())
+	{
+		echo Response::createObjectiveResponse(false, "خطا در حذف ضمانت نامه");
+		die();
 	}
 
-	return WFM_FlowRows::AddOuterFlow(FLOWID, $RequestID, $StatusID, $ActDesc = "", $pdo);
-}
-
-function ChangeRequestStatus(){
-	
-	$result = ChangeStatus($_POST["RequestID"],$_POST["StatusID"],$_POST["StepComment"]);
-	Response::createObjectiveResponse($result, "");
+	echo Response::createObjectiveResponse(true, "");
 	die();
 }
 
+function StartFlow(){
+	
+	$RequestID = $_REQUEST["RequestID"];
+	$result = WFM_FlowRows::StartFlow(FLOWID, $RequestID);
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function RegWarrentyDoc(){
+	
+	$ReqObj = new WAR_requests($_POST["RequestID"]);
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$DocID = RegisterWarrantyDoc($ReqObj, $_POST["CostCode"],
+		$_POST["BankTafsili"],$_POST["AccountTafsili"], null, $pdo);
+	if(!$DocID)
+	{
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function editWarrentyDoc(){
+
+	$ReqObj = new WAR_requests($_POST["RequestID"]);
+	
+	$DocID = $ReqObj->GetAccDoc();
+	if($DocID == 0)
+	{
+		echo Response::createObjectiveResponse(true, "");
+		die();
+	}
+	
+	//...............................................
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	ReturnWarrantyDoc($ReqObj, $pdo, true);
+	
+	$DocID = RegisterWarrantyDoc($ReqObj, $_POST["CostCode"],
+		$_POST["BankTafsili"],$_POST["AccountTafsili"], $DocID, $pdo);
+	if(!$DocID)
+	{
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function ReturnWarrentyDoc(){
+	
+	$ReqObj = new WAR_requests($_POST["RequestID"]);
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	$result = ReturnWarrantyDoc($ReqObj, $pdo);
+	if($result)
+		$pdo->commit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 //------------------------------------------------
 
 function GetRequestPeriods(){
 	
 	$RequestID = $_REQUEST["RequestID"];
-	$temp = WAR_periods::Get(" AND RequestID=?", array($RequestID));
-	//print_r(ExceptionHandler::PopAllExceptions());
-	$temp = $temp->fetchAll();
+	$temp = PdoDataAccess::runquery("select p.*,DocID,LocalNo  from WAR_periods p
+		left join ACC_DocItems on(SourceType='" . DOCTYPE_WARRENTY . "' AND SourceID=RequestID)
+		left join ACC_docs using(DocID)	
+		where RequestID=?", array($RequestID));
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();	
 }
@@ -165,18 +192,14 @@ function SavePeriod(){
 	else
 		$result = $obj->Edit($pdo);
 	
+	//print_r(ExceptionHandler::PopAllExceptions());
 	if(!$result)
 	{
 		$pdo->rollback();
 		echo Response::createObjectiveResponse(false, "خطا در ثبت ردیف ");
 		die();
 	}
-	if(!RegisterWarrantyDoc(null, $obj, $_POST["AccountTafsili"],  $pdo))
-	{
-		$pdo->rollback();
-		echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
-		die();
-	}
+
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
 	die();
@@ -187,16 +210,9 @@ function DeletePeriod(){
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	$PayObj = new WAR_periods($_POST["RowID"]);
-	if(!ReturnWarrantyDoc($PayObj, $pdo))
-	{
-		//print_r(ExceptionHandler::PopAllExceptions());
-		//$pdo->rollBack();		
-		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
-		die();
-	}
-	
-	if(!WAR_periods::Remove($_POST["RowID"], $pdo))
+	$Obj = new WAR_periods($_POST["PeriodID"]);
+		
+	if(!$Obj->Remove())
 	{
 		$pdo->rollBack();
 		echo Response::createObjectiveResponse(false, "خطا در حذف ردیف ");

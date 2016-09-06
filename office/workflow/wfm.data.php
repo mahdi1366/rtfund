@@ -60,7 +60,7 @@ function selectFlowSteps(){
 	die();
 }
 
-function SetStatus(){
+/*function SetStatus(){
 	
 	$SourceObj = new WFM_FlowRows($_POST["RowID"]);
 	
@@ -72,12 +72,12 @@ function SetStatus(){
 	$newObj->ActionType = "CONFIRM";
 	$newObj->ActionDate = PDONOW;
 	$newObj->ActionComment = $_POST["ActionComment"];
-	$newObj->StepDesc = 
+	//$newObj->StepDesc = 
 	$result = $newObj->AddFlowRow();
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();
-}
+}*/
 //............................
 
 function SelectSteps(){
@@ -120,14 +120,20 @@ function MoveStep(){
 	$direction = $_POST["direction"] == "-1" ? -1 : 1;
 	$revdirection = $direction == "-1" ? "+1" : "-1";
 	
-	PdoDataAccess::runquery("update WFM_FlowSteps set StepID=1000 where FlowID=? AND StepID=? AND IsOuter='NO' AND IsActive='YES'",
+	PdoDataAccess::runquery("update WFM_FlowSteps 
+		set StepID=1000 
+		where FlowID=? AND StepID=? AND IsOuter='NO' AND IsActive='YES'",
 			array($FlowID, $StepID));
 	
 	
-	PdoDataAccess::runquery("update WFM_FlowSteps set StepID=StepID $revdirection where FlowID=? AND StepID=? AND IsOuter='NO' AND IsActive='YES'",
+	PdoDataAccess::runquery("update WFM_FlowSteps 
+			set StepID=StepID $revdirection 
+			where FlowID=? AND StepID=? AND IsOuter='NO' AND IsActive='YES'",
 			array($FlowID, $StepID + $direction));
 	
-	PdoDataAccess::runquery("update WFM_FlowSteps set StepID=? where FlowID=? AND StepID=1000 AND IsOuter='NO' AND IsActive='YES'",
+	PdoDataAccess::runquery("update WFM_FlowSteps 
+		set StepID=? w
+		here FlowID=? AND StepID=1000 AND IsOuter='NO' AND IsActive='YES'",
 			array($StepID + $direction, $FlowID));
 	
 	echo Response::createObjectiveResponse(true, "");
@@ -142,9 +148,12 @@ function SelectAllForms(){
 	$param = array();
 
 	$ObjectDesc = 
-		"case f.ObjectType 
+		"case f.FlowID 
 			when 1 then concat_ws(' ',lp.PartDesc,'وام شماره',lp.RequestID,'به مبلغ',
 				PartAmount,'مربوط به',if(pp.IsReal='YES',concat(pp.fname, ' ', pp.lname),pp.CompanyName))
+				
+			when 4 then concat_ws(' ','ضمانت نامه', wp.CompanyName,wp.fname,wp.lname, 'به مبلغ ',wr.amount)
+			
 		end";
 	
 	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
@@ -196,9 +205,13 @@ function SelectAllForms(){
 				left join WFM_FlowSteps fs on(fr.StepRowID=fs.StepRowID)
 				join BSC_persons p on(fr.PersonID=p.PersonID)
 				
-				left join LON_ReqParts lp on(fr.ObjectID=PartID)
+				left join LON_ReqParts lp on(fr.FlowID=1 AND fr.ObjectID=PartID)
 				left join LON_requests lr on(lp.RequestID=lr.RequestID)
 				left join BSC_persons pp on(lr.LoanPersonID=pp.PersonID)
+	
+				left join WAR_requests wr on(fr.FlowID=4 AND wr.RequestID=fr.ObjectID)
+				left join BaseInfo bf on(bf.TypeID=74 AND bf.InfoID=wr.TypeID)
+				left join BSC_persons wp on(wp.PersonID=wr.PersonID)
 
 				where " . $where . dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
@@ -248,7 +261,7 @@ function ChangeStatus(){
 			$newObj->IsEnded = "YES";
 	}
 	//.............................................
-	$result = $newObj->AddFlowRow($pdo);	
+	$result = $newObj->AddFlowRow($StepID, $pdo);	
 	if(!$result)
 	{
 		$pdo->rollBack();

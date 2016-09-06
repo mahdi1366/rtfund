@@ -441,7 +441,8 @@ class DateModules
 		$year = substr($SHdate, 1, 3);
 		$month = substr($SHdate, 5, 2);
 		$day = substr($SHdate, 8, 2);
-		return self::Convert3Digit($day, true) . self::GetMonthName((int)$month) . " ماه هزار و " . self::Convert3Digit($year);
+		return self::Convert3Digit($day, true) . self::GetMonthName((int)$month) . " ماه هزار و " . 
+				self::Convert3Digit($year);
 	}
 	
 	private static function Convert3Digit($digit, $tail = false)

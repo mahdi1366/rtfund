@@ -50,12 +50,9 @@ $dt = PdoDataAccess::runquery("
 		if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) ToPersonName ,
 		concat(p3.fname, ' ', p3.lname) SignPersonName ,
 		po.PostName,
-		s.IsCopy,
-		concat_ws(' ',p4.fname, p4.lname,p4.CompanyName) RefName,
-		RefShow
+		s.IsCopy
 	from OFC_send s
 		join OFC_letters l using(LetterID)
-		left join BSC_persons p4 on(l.RefPersonID=p4.PersonID)
 		join BSC_persons p1 on(l.PersonID=p1.PersonID)
 		join BSC_persons p2 on(s.ToPersonID=p2.PersonID)
 		left join BSC_persons p3 on(l.SignerPersonID=p3.PersonID)
@@ -107,12 +104,6 @@ if($LetterObj->OuterCopies != "")
 {
 	$LetterObj->OuterCopies = str_replace("\r\n", " , ", $LetterObj->OuterCopies);
 	$content .= "<br><b> رونوشت خارج از سازمان : " . $LetterObj->OuterCopies . "</b><br>";
-}
-if($LetterObj->RefPersonID != "")
-{
-	$content .= "<B><br>ذینفع مربوطه : </b>" . $dt[0]["RefName"];
-	$content .= $dt[0]["RefShow"] == "YES" ? "(قابل مشاهده برای ذینفع)" : "(غیر قابل مشاهده برای ذینفع)";
-	$content .= "<br><br>";
 }
 //..............................................................................
 $imageslist = array();

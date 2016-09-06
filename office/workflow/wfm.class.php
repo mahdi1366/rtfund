@@ -132,7 +132,8 @@ class WFM_FlowSteps extends PdoDataAccess {
 		$info = PdoDataAccess::runquery("select * from WFM_FlowSteps where StepRowID=?", array($StepRowID));
 		
 		$dt = parent::runquery("select * from WFM_FlowRows
-			join ( select max(RowID) RowID,FlowID,ObjectID from WFM_FlowRows group by FlowID,ObjectID )t
+			join ( select max(RowID) RowID,FlowID,ObjectID 
+					from WFM_FlowRows group by FlowID,ObjectID )t
 			using(RowID,FlowID,ObjectID)
 			where FlowID=? AND StepRowID=?",array($info[0]["FlowID"], $StepRowID));
 		if(count($dt) > 0)
@@ -143,7 +144,8 @@ class WFM_FlowSteps extends PdoDataAccess {
 		
 		parent::runquery("update WFM_FlowSteps set IsActive='NO', StepID=-1 where StepRowID=?", array($StepRowID));
 	
-		PdoDataAccess::runquery("update WFM_FlowSteps set StepID=StepID-1 where StepID>? AND FlowID=?",
+		PdoDataAccess::runquery("update WFM_FlowSteps set StepID=StepID-1 
+			where IsOuter='NO' AND StepID>? AND FlowID=?",
 			array($info[0]["StepID"], $info[0]["FlowID"]));
 	 	
 	 	$daObj = new DataAudit();
@@ -191,12 +193,24 @@ class WFM_FlowRows extends PdoDataAccess {
 		return parent::runquery_fetchMode($query, $whereParam);
 	}
 
-	function AddFlowRow($pdo = null) {
+	function UpdateSourceStatus($StepID){
+		
+		switch($this->FlowID)
+		{
+			case "4":
+				PdoDataAccess::runquery("update WAR_requests set StatusID=? where RequestID=?",
+					array($StepID, $this->ObjectID ));
+		}
+	}
+	
+	function AddFlowRow($StepID, $pdo = null) {
 		
 		if (!parent::insert("WFM_FlowRows", $this, $pdo)) {
 			return false;
 		}
 
+		$this->UpdateSourceStatus($StepID);
+		
 		$this->RowID = parent::InsertID($pdo);
 
 		$daObj = new DataAudit();
@@ -205,6 +219,7 @@ class WFM_FlowRows extends PdoDataAccess {
 		$daObj->TableName = "WFM_FlowRows";
 		$daObj->execute($pdo);
 
+		
 		return true;
 	}
 
@@ -224,7 +239,7 @@ class WFM_FlowRows extends PdoDataAccess {
 		$obj->ActionType = "DONE";
 		$obj->ActionDate = PDONOW;
 		$obj->ActionComment = $Comment;
-		return $obj->AddFlowRow($pdo);
+		return $obj->AddFlowRow($StepID, $pdo);
 	}
 	
 	static function EndObjectFlow($FlowID, $ObjectID, $pdo = null){
@@ -233,7 +248,13 @@ class WFM_FlowRows extends PdoDataAccess {
 		{
 			case 3 : 
 				$EndStepID = 105; 
-				PdoDataAccess::runquery("update PLN_plans set StepID=? where PlanID=?", array($EndStepID, $ObjectID), $pdo);
+				PdoDataAccess::runquery("update PLN_plans set StepID=? where PlanID=?", 
+					array($EndStepID, $ObjectID), $pdo);
+				return ExceptionHandler::GetExceptionCount() == 0;
+			case 4 : 
+				$EndStepID = 110; 
+				PdoDataAccess::runquery("update WAR_requests set StatusID=? where RequestID=?", 
+					array($EndStepID, $ObjectID), $pdo);
 				return ExceptionHandler::GetExceptionCount() == 0;
 		}
 		
@@ -264,7 +285,7 @@ class WFM_FlowRows extends PdoDataAccess {
 		$obj->PersonID = $_SESSION["USER"]["PersonID"];		
 		$obj->ActionDate = PDONOW;
 		$obj->ActionType = "CONFIRM";
-		return $obj->AddFlowRow();		
+		return $obj->AddFlowRow(0);		
 	}
 	
 	static function IsFlowStarted($FlowID, $ObjectID){
