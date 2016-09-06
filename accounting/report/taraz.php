@@ -110,7 +110,7 @@ function showReport(){
 		if($value == "")
 			$value = "-----";
 		
-		return "<a onclick=\"window.open('flow.php?show=true".
+		return "<a onclick=\"window.open('flow.php?show=true&taraz=true".
 				"&level1=" . $row["level1"] . 
 				"&level2=" . $row["level2"] . 
 				"&level3=" . $row["level3"] . 
@@ -127,13 +127,14 @@ function showReport(){
 		if($value == "")
 			$value = "-----";
 		
-		return "<a onclick=\"window.open('flow.php?taraz=true&show=true".
+		return "<a onclick=\"window.open('flow.php?taraz=true&show=true&taraz=true".
 				"&level1=" . $row["level1"] . 
 				"&level2=" . $row["level2"] . 
 				"&level3=" . $row["level3"] . 
 				"&TafsiliID2=" . $row["TafsiliID2"] .
 				(!empty($_POST["fromDate"]) ? "&fromDate=" . $_POST["fromDate"] : "") . 
 				(!empty($_POST["toDate"]) ? "&toDate=" . $_POST["toDate"] : "") .
+				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
 				"');\" href=javascript:void(0)>" . $value . "</a>";
 	}
 	

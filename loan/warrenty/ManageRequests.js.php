@@ -231,6 +231,11 @@ WarrentyRequest.prototype.editRequest = function(){
 	mask.show();
 	
 	this.MainPanel.loadRecord(record);
+	
+	this.MainPanel.down("[name=StartDate]").setValue(MiladiToShamsi(record.data.StartDate) );
+	this.MainPanel.down("[name=EndDate]").setValue(MiladiToShamsi(record.data.EndDate) );
+	this.MainPanel.down("[name=LetterDate]").setValue(MiladiToShamsi(record.data.LetterDate) );
+	
 	this.MainPanel.down("[name=PersonID]").getStore().load({
 		params : {
 			PersonID : record.data.PersonID
