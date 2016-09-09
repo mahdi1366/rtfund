@@ -6,7 +6,7 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-$dgh = new sadaf_datagrid("dgh1",$js_prefix_address."baseInfo.data.php?task=SelectACCRoles","div_dg");
+$dgh = new sadaf_datagrid("dgh1",$js_prefix_address."baseinfo.data.php?task=SelectACCRoles","div_dg");
 
 $dgh->addColumn("","RowID",'string',true);
 $dgh->addColumn("","fullname",'string',true);
@@ -71,7 +71,7 @@ function AccountRole()
 	this.RoleCombo = new Ext.form.ComboBox({
 		store :  new Ext.data.Store({
 			proxy: {type: 'jsonp',
-				url: this.address_prefix + 'baseInfo.data.php?task=SelectRoles',
+				url: this.address_prefix + 'baseinfo.data.php?task=SelectRoles',
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
 			fields:['InfoID','InfoDesc'],
@@ -102,7 +102,7 @@ AccountRole.Save = function(store,record,op)
 	mask.show();    
 	
 	Ext.Ajax.request({
-		url:  AccountRoleObject.address_prefix + 'baseInfo.data.php?task=SaveRole',
+		url:  AccountRoleObject.address_prefix + 'baseinfo.data.php?task=SaveRole',
 		params:{
 			PersonID : record.data.PersonID,
 			RoleID : record.data.RoleID
@@ -143,7 +143,7 @@ AccountRole.prototype.DeleteAccess = function()
 		mask.show();
 		
 		Ext.Ajax.request({
-			url: me.address_prefix + 'baseInfo.data.php?task=DeleteRole',
+			url: me.address_prefix + 'baseinfo.data.php?task=DeleteRole',
 			params:{
 				RowID : record.data.RowID
 			},
