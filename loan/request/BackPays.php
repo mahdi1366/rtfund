@@ -145,6 +145,7 @@ LoanPay.prototype = {
 	PartRecord : null,
 	
 	GroupPays : new Array(),
+	GroupPaysTitles : new Array(),
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -233,7 +234,8 @@ function LoanPay()
 					'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.PartDate)]}</td>',
 					'<tpl if="IsEnded == \'NO\'">',
 						'<td class="search-item"><div align=center title="اضافه به پرداخت گروهی" class=add ',
-							'onclick=LoanPayObject.AddToGroupPay(event,{RequestID},{PartID},{InstallmentAmount}); ',
+							'onclick="LoanPayObject.AddToGroupPay(event,\'{loanFullname}\',',
+							'{PartID},{InstallmentAmount});" ',
 							'style=background-repeat:no-repeat;',
 							'background-position:center;cursor:pointer;width:20px;height:16></div></td>',
 					'<tpl else>',
@@ -557,7 +559,7 @@ LoanPay.prototype.PayReport = function(){
 	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&PartID=" + this.PartID);
 }
 
-LoanPay.prototype.AddToGroupPay = function(e ,RequestID, PartID, InstallmentAmount){
+LoanPay.prototype.AddToGroupPay = function(e ,loanFullname, PartID, InstallmentAmount){
 
 	if(!this.groupAmountWin)
 	{
@@ -585,6 +587,7 @@ LoanPay.prototype.AddToGroupPay = function(e ,RequestID, PartID, InstallmentAmou
 	this.groupAmountWin.down("[itemId=btn_add]").setHandler(function(){
 		amount = this.up('window').down('currencyfield').getValue();
 		LoanPayObject.GroupPays.push(PartID + "_" + amount);
+		LoanPayObject.GroupPaysTitles.push(loanFullname);
 		LoanPayObject.groupAmountWin.hide();
 	})
 	this.groupAmountWin.show();
@@ -603,7 +606,7 @@ LoanPay.prototype.BeforeSaveGroupPay = function(){
 	{
 		this.groupWin = new Ext.window.Window({
 			width : 300,
-			height : 250,
+			height : 370,
 			modal : true,
 			title : "نحوه پرداخت",
 			bodyStyle : "background-color:white",
@@ -669,6 +672,28 @@ LoanPay.prototype.BeforeSaveGroupPay = function(){
 					valueField : "InfoID",
 					name : "ChequeStatus",
 					fieldLabel : "وضعیت چک"
+				},{
+					xtype : "multiselect",
+					itemId : "GroupList",
+					store : this.GroupPaysTitles,
+					height : 100
+				},{
+					xtype : "button",
+					text : "حذف از لیست",
+					iconCls : "cross",
+					handler : function(){
+						
+						me = LoanPayObject;
+						el = me.groupWin.down("[itemId=GroupList]");
+						index = el.getStore().indexOf(el.getSelected()[0]);
+						if(index >= 0)
+						{
+							me.GroupPays.splice(index,1);
+							me.GroupPaysTitles.splice(index,1);
+							el.clearValue();
+							el.bindStore(me.GroupPaysTitles);
+						}
+					}
 				}]
 			}),
 			closeAction : "hide",
@@ -681,10 +706,17 @@ LoanPay.prototype.BeforeSaveGroupPay = function(){
 						return;
 					LoanPayObject.BeforeSave(3);
 				}		
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){
+					this.up('window').hide();
+				}
 			}]
 
 		});
 	}
+	this.groupWin.down("[itemId=GroupList]").bindStore(this.GroupPaysTitles);
 	this.groupWin.show();
 	this.groupWin.center();
 }

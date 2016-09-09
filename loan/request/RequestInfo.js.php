@@ -899,6 +899,7 @@ RequestInfo.prototype.SaveRequest = function(mode){
 			me = RequestInfoObject;
 			
 			me.RequestID = action.result.data;
+			
 			me.grid.getStore().proxy.extraParams = {RequestID: me.RequestID};
 			me.grid.getStore().load();
 			
@@ -918,9 +919,12 @@ RequestInfo.prototype.SaveRequest = function(mode){
 					update('شماره پیگیری درخواست : ' + me.RequestID);
 			}
 		},
-		failure : function(){
+		failure : function(form,action){
 			mask.hide();
-			//Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+			if(action.result.data == "")
+				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+			else
+				Ext.MessageBox.alert("Error",action.result.data);
 		}
 	});
 }

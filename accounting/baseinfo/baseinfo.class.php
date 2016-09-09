@@ -695,6 +695,24 @@ class ACC_cheques extends PdoDataAccess {
 			return true;
 		return false;
 	}
+}
+
+class ACC_roles extends OperationClass {
+
+	const TableName = "ACC_roles";
+	const TableKey = "RowID";
+	
+	public $RowID;
+	public $RoleID;
+	public $PersonID;
+	
+	static function GetUserRole($PersonID){
+		
+		$dt = PdoDataAccess::runquery("select * from ACC_roles where PersonID=? order by RoleID desc",
+			array($PersonID));
+		
+		return count($dt) == 0 ? "" : $dt[0]["RoleID"];
+	}
 
 }
 ?>

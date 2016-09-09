@@ -37,4 +37,7 @@ define("COSTID_saving", "65");
 define("COSTID_current", "202");
 
 define("ShareBaseAmount", "1100000");
+
+define("ACCROLE_EXPERT", "1");
+define("ACCROLE_MANAGER", "2");
 ?>

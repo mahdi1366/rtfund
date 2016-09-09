@@ -49,6 +49,24 @@ function ManageRequest(){
 					me.grid.getStore().proxy.extraParams["IsEnded"] = "YES";
 					me.grid.getStore().loadPage(1);
 				}
+			},{
+				text: "درخواست های تایید شده",
+				group: 'filter',
+				checked: true,
+				handler : function(){
+					me = ManageRequestObject;
+					me.grid.getStore().proxy.extraParams["IsConfirm"] = "YES";
+					me.grid.getStore().loadPage(1);
+				}
+			},{
+				text: "درخواست های تایید نشده",
+				group: 'filter',
+				checked: true,
+				handler : function(){
+					me = ManageRequestObject;
+					me.grid.getStore().proxy.extraParams["IsConfirm"] = "NO";
+					me.grid.getStore().loadPage(1);
+				}
 			}]
 		}
 	});

@@ -13,6 +13,7 @@ AccDocs.prototype = {
 	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
 
 	CycleIsOpen : true,
+	Role : "<?= $Role ?>",
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -171,7 +172,8 @@ AccDocs.prototype.operationhMenu = function(e){
 				op_menu.add({text: 'ویرایش سند',iconCls: 'edit', 
 					handler : function(){ return AccDocsObject.EditDoc(); } });
 				
-				op_menu.add({text: 'تایید سند',iconCls: 'tick', 
+				if(this.Role == "<?= ACCROLE_MANAGER ?>")
+					op_menu.add({text: 'تایید سند',iconCls: 'tick', 
 					handler : function(){ return AccDocsObject.confirmDoc(); } });
 			}
 			if(this.RemoveAccess && this.grid.getStore().currentPage == this.grid.getStore().totalCount)
@@ -180,11 +182,14 @@ AccDocs.prototype.operationhMenu = function(e){
 		}
 		if(record != null && record.data.DocStatus == "CONFIRM" && this.EditAccess)
 		{
-			op_menu.add({text: 'برگشت از تایید',iconCls: 'undo', 
+			if(this.Role == "<?= ACCROLE_MANAGER ?>")
+			{
+				op_menu.add({text: 'برگشت از تایید',iconCls: 'undo', 
 				handler : function(){ return AccDocsObject.UndoConfirmDoc(); } });
 			
-			op_menu.add({text: 'قطعی کردن سند',iconCls: 'archive', 
+				op_menu.add({text: 'قطعی کردن سند',iconCls: 'archive', 
 				handler : function(){ return AccDocsObject.archiveDoc(); } });
+			}
 		}
 	}
     if(record != null)           

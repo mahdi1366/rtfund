@@ -983,7 +983,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	return true;
 }
 
-function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,  $pdo){
+function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo, $grouping=false){
 	
 	/*@var $PayObj LON_BackPays */
 	$PartObj = new LON_ReqParts($PayObj->PartID);
@@ -1019,8 +1019,11 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 		$obj->CycleID = $CycleID;
 		$obj->BranchID = $ReqObj->BranchID;
 		$obj->DocType = DOCTYPE_INSTALLMENT_PAYMENT;
-		$obj->description = "پرداخت قسط " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID . " به نام " .
-			$ReqObj->_LoanPersonFullname;
+		if($grouping)
+			$obj->description = "پرداخت گروهی اقساط";
+		else
+			$obj->description = "پرداخت قسط " . $PartObj->PartDesc . " وام شماره " . 
+				$ReqObj->RequestID . " به نام " . $ReqObj->_LoanPersonFullname;
 
 		if(!$obj->Add($pdo))
 		{

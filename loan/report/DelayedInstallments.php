@@ -65,7 +65,6 @@ $dg->addButton("", "گزارش پرداخت", "report", "function(){LoanReport_D
 $dg->height = 377;
 $dg->width = 850;
 $dg->emptyTextOfHiddenColumns = true;
-$dg->EnableSearch = false;
 
 $dg->addButton("", "چاپ", "print", "LoanReport_DelayedInstallments.print");
 

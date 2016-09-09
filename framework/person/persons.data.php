@@ -66,6 +66,12 @@ function selectPersons(){
 		$param[":p"] = "%" . $_REQUEST["query"] . "%";
 	}
 	
+	if(!empty($_REQUEST["IsConfirm"]))
+	{
+		$where .= " AND IsConfirm = :e "; 
+		$param[":e"] = $_REQUEST["IsConfirm"];
+	}
+	
 	if(!empty($_REQUEST["full"]))
 		$temp = BSC_persons::SelectAll($where . dataReader::makeOrder(), $param);
 	else
@@ -128,7 +134,7 @@ function DeletePerson(){
 function ResetPass(){
 	
 	$result = BSC_persons::ResetPass($_POST["PersonID"]);
-	echo Response::createObjectiveResponse($result, "");
+	echo Response::createObjectiveResponse(true, $result);
 	die();
 }
 

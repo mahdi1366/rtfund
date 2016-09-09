@@ -160,9 +160,15 @@ class BSC_persons extends PdoDataAccess
 	
 	static public function ResetPass($PersonID) {
 		
+		$defaultPass = "123456";
+		
+		$obj = new BSC_persons($PersonID);
+		if($obj->NationalID != "")
+			$defaultPass = $obj->NationalID;
+		
 		$hash_cost_log2 = 8;	
 		$hasher = new PasswordHash($hash_cost_log2, true);
-		$newPass = $hasher->HashPassword(md5("123456"));
+		$newPass = $hasher->HashPassword(md5($defaultPass));
 		
 		$result = PdoDataAccess::runquery("update BSC_persons set UserPass=? where PersonID=?", 
 			array($newPass, $PersonID));
@@ -175,7 +181,8 @@ class BSC_persons extends PdoDataAccess
 		$daObj->description = "پاک کردن پسورد";
 		$daObj->TableName = "BSC_persons";
 		$daObj->execute();
-		return true;
+		
+		return $defaultPass;
 	}
 }
 

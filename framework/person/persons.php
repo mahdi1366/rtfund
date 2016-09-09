@@ -65,6 +65,8 @@ $col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
 $col->align = "center";
 $col->width = 35;
 
+$dg->addObject("PersonObject.FilterObj");
+
 if($accessObj->AddFlag)
 {
 	$dg->addButton = true;

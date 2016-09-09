@@ -564,4 +564,41 @@ function SelectChequeStatuses() {
 	die();
 }
 
+//---------------------------------------------
+function SelectACCRoles(){
+	
+	$temp = PdoDataAccess::runquery("select RowID,
+			PersonID,concat_ws(' ',CompanyName,fname,lname) fullname,
+			RoleID,InfoDesc RoleDesc
+		from ACC_roles 
+			join BSC_persons using(PersonID)
+			join BaseInfo on(TypeID=75 AND InfoID=RoleID)");
+	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
+	die();
+}
+
+function SelectRoles() {
+	
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=75");
+	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
+	die();
+}
+
+function SaveRole(){
+	
+	$obj = new ACC_roles();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	$obj->Add();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function DeleteRole(){
+	
+	$obj = new ACC_roles($_POST["RowID"]);
+	$obj->Remove();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
 ?>

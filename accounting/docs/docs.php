@@ -9,6 +9,15 @@ require_once inc_dataGrid;
 
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+
+require_once '../baseinfo/baseinfo.class.php';
+$Role = ACC_roles::GetUserRole($_SESSION["USER"]["PersonID"]);
+if($Role == "")
+{
+	echo "<center class=blueText><br><b>سمت شما برای مدیریت اسناد حسابداری تعریف نشده است.
+		لطفا با مسئول سیستم تماس بگیرید</b>";
+	die();
+}
 //...................................................
 require_once 'docs.js.php';
 

@@ -58,8 +58,47 @@ class LON_requests extends PdoDataAccess
 			where " . $where, $param);
 	}
 	
+	function CheckForDuplicate(){
+		if(!empty($this->RequestID))
+		{
+			$dt = PdoDataAccess::runquery("
+			select r2.RequestID from LON_requests r1
+				join LON_requests r2 on(r1.RequestID<>r2.RequestID 
+					AND substr(r1.ReqDate,1,10)=substr(r2.ReqDate,1,10) AND r1.ReqAmount=r2.ReqAmount 
+					AND (r1.LoanPersonID=r2.LoanPersonID OR r1.BorrowerID=r2.BorrowerID OR
+							r1.BorrowerDesc=r2.BorrowerDesc) )
+			where r1.RequestID=?",array($this->RequestID));
+
+			if(count($dt) > 0)
+			{
+				ExceptionHandler::PushException("در این تاریخ و با این مبلغ وام دیگری با شماره" .
+					$dt[0][0]. " ثبت شده است ");
+				return false;
+			}
+		}
+		else
+		{
+			$dt = PdoDataAccess::runquery("
+			select r2.RequestID from LON_requests r2 
+			where substr(r2.ReqDate,1,10)=substr(now(),1,10) 
+				AND r2.ReqAmount=?
+				AND (r2.LoanPersonID=? OR r2.BorrowerID=? OR r2.BorrowerDesc=?)",
+				array($this->ReqAmount, $this->LoanPersonID, $this->BorrowerID, $this->BorrowerDesc));
+			if(count($dt) > 0)
+			{
+				ExceptionHandler::PushException("در این تاریخ و با این مبلغ وام دیگری با شماره" .
+					$dt[0][0]. " ثبت شده است ");
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	function AddRequest($pdo = null){
 		$this->ReqDate = PDONOW;
+		
+		if(!$this->CheckForDuplicate())
+			return false;
 		
 	 	if(!parent::insert("LON_requests",$this, $pdo))
 			return false;
@@ -74,6 +113,9 @@ class LON_requests extends PdoDataAccess
 	}
 	
 	function EditRequest($pdo = null){
+		
+		if(!$this->CheckForDuplicate())
+			return false;
 		
 	 	if( parent::update("LON_requests",$this," RequestID=:l", array(":l" => $this->RequestID), $pdo) === false )
 	 		return false;
