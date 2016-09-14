@@ -58,19 +58,27 @@ for ($i = 0; $i < count($res); $i++) {
 	<link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css">
     <style media="print">
         .noPrint {display:none;}
+		@page  
+		{ 
+			size: auto;   /* auto is the initial value */ 
+
+			/* this affects the margin in the printer settings */ 
+			margin: 10mm 0mm 10mm 0mm;  
+		} 
     </style>
     <style type="text/css">
-        body {font-family: bnazanin;font-size: 10pt;margin: 20px}
+        body {font-family: nazanin;font-size: 10pt;margin: 20px}
         td	 {
 			padding: 4px 30px 10px 30px;
 			font-size: 11pt; 
 			/*text-indent : 20px; */
 			text-align: justify; 
 			line-height : 2;}
-		table { page-break-inside:auto }
+		table { page-break-inside:auto; }
 		tr    { /*page-break-inside:avoid;*/ page-break-after:auto }
 		thead { display:table-header-group }
-		tfoot { display:table-footer-group }
+		tfoot { display:table-footer-group;  }
+		
 	</style>
 </head>
 
@@ -80,7 +88,7 @@ for ($i = 0; $i < count($res); $i++) {
 			<tr style="margin-top:40px">
 				<td width=180px style='text-indent : 0;padding:0; '>
 					<img style="width:150px" src='/framework/icons/logo.jpg'></td>
-				<td align='center' style='font-family:BTitr;font-size:18px;text-align:center !important;'>
+				<td align='center' style='font-family:Titr;font-size:18px;text-align:center !important;'>
 					<b><?php
 						echo $CntObj->_TemplateTitle;
 						echo '<br>';
@@ -88,11 +96,16 @@ for ($i = 0; $i < count($res); $i++) {
 						?></b>
 				</td>
 				<td width=180px style='text-align:center;text-indent : 0;padding:0'>
-					شماره قرارداد : <?= $CntObj->ContractID ?><br>
-					تاریخ ثبت قرارداد :  <?= DateModules::miladi_to_shamsi($CntObj->RegDate) ?>
+					شماره قرارداد :  . . . . . . . .<br>
+					تاریخ ثبت قرارداد :  <?= DateModules::shNow() ?>
 				</td>
 			</tr>
 		</thead>
+		<tr>
+			<td colspan="3" style="vertical-align: top">
+				<?= $st ?>
+			</td>
+		</tr>
 		<tfoot>
 			<tr>
 				<td colspan="3" style="padding:0;height:150px;padding-right:20px;padding-left: 20px;">
@@ -108,10 +121,5 @@ for ($i = 0; $i < count($res); $i++) {
 				</td>
 			</tr>
 		</tfoot>
-		<tr>
-			<td colspan="3" style="vertical-align: top">
-				<?= $st ?>
-			</td>
-		</tr>
 	</table>
 </body>
