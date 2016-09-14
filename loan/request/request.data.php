@@ -222,15 +222,17 @@ function SaveLoanRequest(){
 		$obj->LoanID = Default_Agent_Loan;
 		$obj->StatusID = 1;
 	}
-	
-	//------------------------------------------------------
 	if(empty($obj->RequestID))
 	{
 		$obj->AgentGuarantee = isset($_POST["AgentGuarantee"]) ? "YES" : "NO";
 		$result = $obj->AddRequest();
 		if($result)
 			ChangeStatus($obj->RequestID,$obj->StatusID, "", true);
-		
+		else
+		{
+			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+			die();
+		}
 		$loanObj = new LON_loans($obj->LoanID);
 		$PartObj = new LON_ReqParts();
 		PdoDataAccess::FillObjectByObject($loanObj, $PartObj);
@@ -246,8 +248,13 @@ function SaveLoanRequest(){
 		$result = $obj->EditRequest();
 		if($result)
 			ChangeStatus($obj->RequestID,$obj->StatusID, "", true);
+		else
+		{
+			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+			die();
+		}
 	}
-	
+
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, $obj->RequestID);
 	die();
@@ -306,16 +313,20 @@ function SelectAllRequests(){
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
 	
-	
 	if(!empty($_REQUEST["IsEnded"]))
 	{
 		$where .= " AND IsEnded = :e "; 
 		$param[":e"] = $_REQUEST["IsEnded"];
 	}
+	if(!empty($_REQUEST["IsConfirm"]))
+	{
+		$where .= " AND r.IsConfirm = :e "; 
+		$param[":e"] = $_REQUEST["IsConfirm"];
+	}
 	
 	$where .= dataReader::makeOrder();
 	$dt = LON_requests::SelectAll($where, $param);
-	//print_r(ExceptionHandler::PopAllExceptions());
+	print_r(ExceptionHandler::PopAllExceptions());
 	//echo PdoDataAccess::GetLatestQueryString();
 	$count = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);	
@@ -1382,7 +1393,7 @@ function GroupSavePay(){
 		$obj->PayAmount = $PayAmount;
 		$obj->AddPay($pdo);
 		
-		if(!RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo))
+		if(!RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, true))
 		{
 			$pdo->rollback();
 			print_r(ExceptionHandler::PopAllExceptions());
@@ -1412,16 +1423,24 @@ function GetDelayedInstallments($returnData = false){
 			join LON_requests using(RequestID)
 			join BSC_persons on(LoanPersonID=PersonID)
 			
-			where InstallmentDate<now() AND IsEnded='NO'
-			group by PartID";
-	$query .= dataReader::makeOrder();
+			where InstallmentDate<now() AND IsEnded='NO'";
+	$param = array();
+	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
+        $field = $_REQUEST['fields'];
+		$field = $field == "LoanPersonName" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;
+        $query .= ' and ' . $field . ' like :fld';
+        $param[':fld'] = '%' . $_REQUEST['query'] . '%';
+    }
 	
-	$dt = PdoDataAccess::runquery_fetchMode($query);
+	$query .= " group by PartID
+			order by InstallmentDate desc";
+	
+	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
 	
 	$result = array();
 	while($row = $dt->fetch())
 	{
-		$temp = LON_installments::SelectAll("PartID=?" , array($row["PartID"]));
+		$temp = LON_installments::SelectAll("PartID=? && InstallmentDate<now()" , array($row["PartID"]));
 		$returnArr = ComputePayments($row["PartID"], $temp);
 		
 		foreach($returnArr as $row2)

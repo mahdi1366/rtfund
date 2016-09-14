@@ -1,5 +1,28 @@
 <?php
+/*
+ ACC_roles
+ insert into BaseTypes
+ ALTER TABLE `krrtfir_rtfund`.`LON_requests` MODIFY COLUMN `imp_GirandehCode` INTEGER;
 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+select SysName, TypeDesc, InfoID, InfoDesc
+from BaseInfo join BaseTypes using(TypeID)
+join FRW_systems using(SystemID)
+order by SystemID, TypeID, InfoID
+ * 
+ * 
+ */
 /*
 
 insert into DMS_packages(BranchID,PackNo,PersonID)

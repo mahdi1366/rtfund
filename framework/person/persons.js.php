@@ -14,7 +14,44 @@ Person.prototype = {
 };
 
 function Person()
-{	
+{
+	this.FilterObj = Ext.button.Button({
+		text: 'فیلتر لیست',
+		iconCls: 'list',
+		menu: {
+			xtype: 'menu',
+			plain: true,
+			showSeparator : true,
+			items: [{
+				text: "همه افراد",
+				group: 'filter',
+				checked: true,
+				handler : function(){
+					me = PersonObject;
+					me.grid.getStore().proxy.extraParams["IsConfirm"] = "";
+					me.grid.getStore().loadPage(1);
+				}
+			},{
+				text: "افراد تایید شده",
+				group: 'filter',
+				checked: true,
+				handler : function(){
+					me = PersonObject;
+					me.grid.getStore().proxy.extraParams["IsConfirm"] = "YES";
+					me.grid.getStore().loadPage(1);
+				}
+			},{
+				text: "افراد تایید نشده",
+				group: 'filter',
+				checked: true,
+				handler : function(){
+					me = PersonObject;
+					me.grid.getStore().proxy.extraParams["IsConfirm"] = "NO";
+					me.grid.getStore().loadPage(1);
+				}
+			}]
+		}
+	});	
 	this.InfoPanel = new Ext.form.FormPanel({
 		renderTo : this.get("div_info"),
 		frame: true,
@@ -323,7 +360,7 @@ Person.prototype.ResetPass = function()
 				var st = Ext.decode(response.responseText);
 				if(st.success)
 				{
-					Ext.MessageBox.alert("Warning","رمز عبور به 123456 تغییر یافت");
+					Ext.MessageBox.alert("Warning","رمز عبور به "+st.data+" تغییر یافت");
 					PersonObject.grid.getStore().load();
 				}
 				else

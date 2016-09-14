@@ -92,7 +92,7 @@ $temp = PdoDataAccess::runquery("
 				
 				?>
 			<tr class="header">
-				<td colspan="3">جمع : 
+				<td colspan="4">جمع : 
 				<?= $CSUM != $DSUM ? "<span style=color:red>سند تراز نمی باشد</span>" : 
 					CurrencyModulesclass::CurrencyToString($CSUM) . " ریال " ?> </td>
 				

@@ -67,8 +67,8 @@ for ($i = 0; $i < count($menus); $i++) {
 	
 	<center>
 		<div class="header">
-			<a href='' target='_blank' title=''>
-				<div class="headerLogo" onclick="window.open('http://krrtf.ir/')">
+			<a href='http://krrtf.ir/' target='_blank' title='' >
+				<div class="headerLogo">
 				<?= SoftwareName?>
 				<br><br>
 				<div align=left style="width:90%;font-family:tahoma;font-size:12px;font-weight:bold">ورود به سایت</div>

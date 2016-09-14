@@ -999,7 +999,10 @@ class PdoDataAccess extends ExceptionHandler
         }
 
 }
-
+/**
+ * const TableName = "";
+ * const TableKey = ""; 
+ */
 abstract class OperationClass extends PdoDataAccess {
 
     const ERR_Add = 'خطا در ذخیره اطلاعات';

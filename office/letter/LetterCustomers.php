@@ -11,6 +11,7 @@ if(empty($LetterID))
 	die();
 
 $editable = isset($_REQUEST["editable"]) && $_REQUEST["editable"] == "false" ? false : true;
+$editable = true;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=GetLetterCustomerss&LetterID=" . $LetterID, "grid_div");
 

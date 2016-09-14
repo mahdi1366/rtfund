@@ -72,10 +72,18 @@ if(isset($_REQUEST["show"]))
 			$where .= " AND di.TafsiliType = :tt ";
 			$whereParam[":tt"] = $_REQUEST["TafsiliType"];
 		}
-		if(!empty($_REQUEST["TafsiliID2"]))
+		if(isset($_REQUEST["TafsiliID2"]))
 		{
-			$where .= " AND di.TafsiliID2 = :tid";
-			$whereParam[":tid"] = $_REQUEST["TafsiliID2"];
+			if($_REQUEST["TafsiliID2"] == "")
+			{
+				if(isset($_REQUEST["taraz"]))
+					$where .= " AND (di.TafsiliID2=0 OR di.TafsiliID2 is null)";
+			}
+			else
+			{
+				$where .= " AND di.TafsiliID2 = :tid ";
+				$whereParam[":tid"] = $_REQUEST["TafsiliID2"];
+			}
 		}
 		if(!empty($_REQUEST["TafsiliType2"]))
 		{
