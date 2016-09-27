@@ -340,6 +340,13 @@ function DeletePlanItem(){
 	die();
 }
 
+function selectRequestStatuses(){
+	
+	$dt = PdoDataAccess::runquery("select * from WFM_FlowSteps where IsOuter='YES' AND FlowID=" . FLOWID );
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
 //............................................
 
 function SurveyGroup(){
@@ -600,4 +607,40 @@ function SeeExpert(){
 	Response::createObjectiveResponse(true,"");
 	die();
 }
+
+//............................................
+
+function GetPlanEvents(){
+	
+	$temp = PLN_PlanEvents::Get("AND PlanID=?", array($_REQUEST["PlanID"]));
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
+	$res = $temp->fetchAll();
+	echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SavePlanEvents(){
+	
+	$obj = new PLN_PlanEvents();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if(empty($obj->EventID))
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+	
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();
+}
+
+function DeletePlanEvents(){
+	
+	$obj = new PLN_PlanEvents();
+	$obj->EventID = $_POST["EventID"];
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();	
+}
+
 ?>

@@ -1,1 +1,1 @@
-"PurchaseInfoDto":{"amount":"1000","resNum":"122","redirectUrl":"http://rtfund/portal/epayment/epayment_step2.php"}ee167fb0-56d4-4d82-83d4-3e52f1bb83b8
+"PurchaseInfoDto":{"amount":"4199","resNum":"1150","redirectUrl":"http://portal.krrtf.ir/portal/epayment/epayment_step2.php"}76488b02-f55d-4503-bcfe-c0141461da67

@@ -11,6 +11,7 @@ require_once inc_dataReader;
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "cheques.data.php?task=selectIncomeCheques", "grid_div");
 
 $col = $dg->addColumn("", "BackPayID", "", true);
+$dg->addColumn("", "ChequeStatus", "", true);
 
 $col = $dg->addColumn("وام گیرنده", "fullname", "");
 
@@ -37,6 +38,8 @@ $col->width = 100;
 
 $col = $dg->addColumn("وضعیت چک", "ChequeStatusDesc", "");
 $col->width = 80;
+
+$dg->addButton("", "تغییر وضعیت چک", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 400;
@@ -65,7 +68,7 @@ function IncomeCheque(){
 		renderTo : this.get("div_form"),
 		width : 600,
 		frame : true,
-		title : "تنظیمات گزارش",
+		title : "فیلتر لیست",
 		layout : {
 			type : "table",
 			columns : 2			
@@ -125,7 +128,7 @@ function IncomeCheque(){
 			store : new Ext.data.SimpleStore({
 				proxy: {
 					type: 'jsonp',
-					url: this.address_prefix + '../baseinfo/baseinfo.data.php?' +
+					url: this.address_prefix + 'cheques.data.php?' +
 						"task=SelectIncomeChequeStatuses",
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
@@ -173,6 +176,90 @@ function IncomeCheque(){
 
 IncomeChequeObject = new IncomeCheque();
 
+IncomeCheque.prototype.beforeChangeStatus = function(StatusID){
+	
+	if(!this.commentWin)
+	{
+		this.commentWin = new Ext.window.Window({
+			width : 414,
+			height : 85,
+			modal : true,
+			bodyStyle : "background-color:white",
+			items : [{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: this.address_prefix + 'cheques.data.php?task=selectValidChequeStatuses',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ['InfoID',"InfoDesc"]
+				}),
+				queryMode : "local",
+				displayField: 'InfoDesc',
+				valueField : "InfoID",
+				width : 400,
+				name : "DstID"
+			}],
+			closeAction : "hide",
+			buttons : [{
+				text : "تغییر وضعیت",				
+				iconCls : "refresh",
+				itemId : "btn_save"
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.commentWin);
+	}
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+	this.commentWin.down("[name=DstID]").setValue();
+	this.commentWin.down("[name=DstID]").getStore().proxy.extraParams.SrcID = record.data.ChequeStatus;
+	this.commentWin.down("[name=DstID]").getStore().load();
+	
+	this.commentWin.down("[itemId=btn_save]").setHandler(function(){
+		IncomeChequeObject.ChangeStatus(record.data.BackPayID, 
+			this.up('window').down("[name=DstID]").getValue());});
+		
+	this.commentWin.show();
+	this.commentWin.center();
+}
+
+IncomeCheque.prototype.ChangeStatus = function(BackPayID, StatusID){
+	
+	if(StatusID == null || StatusID == "")
+		return;
+	
+	mask = new Ext.LoadMask(this.grid, {msg:'در حال تغییر وضعیت ...'});
+	mask.show();
+	
+	Ext.Ajax.request({
+		methos : "post",
+		url : this.address_prefix + "cheques.data.php",
+		params : {
+			task : "ChangeChequeStatus",
+			BackPayID : BackPayID,
+			StatusID : StatusID
+		},
+		
+		success : function(response){
+			mask.hide();
+			IncomeChequeObject.commentWin.hide();
+			
+			result = Ext.decode(response.responseText);
+			if(result.success)
+				IncomeChequeObject.grid.getStore().load();
+			else
+				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد;")
+			
+			
+		}
+	});
+}
 
 </script>
 <center>

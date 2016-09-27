@@ -176,6 +176,7 @@ class LON_ReqParts extends PdoDataAccess
 	public $DelayMonths;
 	public $DelayDays;
 	public $ForfeitPercent;
+	public $DelayPercent;
 	public $CustomerWage;
 	public $FundWage;
 	public $WageReturn;
@@ -314,6 +315,7 @@ class LON_BackPays extends PdoDataAccess
 	public $ChequeBranch;
 	public $ChequeStatus;
 	public $details;
+	public $IsGroup;
 	
 	public $_RequestID;
 			

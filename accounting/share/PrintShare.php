@@ -51,7 +51,6 @@ if(isset($_REQUEST["print"]))
 		echo "<center><h2>" . "فاقد اطلاعات" . "</h2></center>";
 		die();
 	}
-	
 ?>
 <html>
 	<head>
@@ -77,19 +76,25 @@ if(isset($_REQUEST["print"]))
 	for($i=0; $i<count($dataTable);$i++)
 	{
 		echo "<div class=page><table width=100%>
-			<tr><td width=160px><img style=width:120px src=/framework/icons/logo.jpg /></td>
+			<tr>
+				<td width=160px  style='vertical-align: top'>
+					<img style=width:120px src=/framework/icons/logo.jpg />
+				</td>
 				<td align=center style='font-size:30px !important'>بسمه تعالی
-				<br>برگ سهام " . SoftwareName . "(سهامی خاص)" . "</td>
-				<td width=160px style='font-family:Homa;font-size: 12px;'>شناسه ملی : " . OWNER_NATIONALID . "
+					<br>برگ سهام " . SoftwareName . "(سهامی خاص)" . "
+					<span style=font-size:28px!important;><B><br>سرمایه ثبت شده : " . 
+						CurrencyModulesclass::CurrencyToString($sumRecord["amount"]) . " ریال که تماما پرداخت گردیده است
+						<br>منقسم به " . CurrencyModulesclass::CurrencyToString($sumRecord["shareCount"]) . " سهم " . 
+						CurrencyModulesclass::CurrencyToString(ShareBaseAmount) . " ریالی
+					</b><br><br>
+					</span>
+				</td>
+				<td width=160px style='font-family:Homa;font-size: 12px;vertical-align: top'>شناسه ملی : " . OWNER_NATIONALID . "
 					<br>شماره ثبت : " . OWNER_REGCODE . "
 					<br>تاریخ ثبت : " . OWNER_REGDATE . "
-				</td>
-			</tr>
-			<tr>
-				<td colspan=3 align=center style='font-weight:bold;padding: 20 0 20 0'>سرمایه ثبت شده : " . 
-					CurrencyModulesclass::CurrencyToString($sumRecord["amount"]) . " ریال که تماما پرداخت گردیده است
-					<br>منقسم به " . CurrencyModulesclass::CurrencyToString($sumRecord["shareCount"]) . " سهم " . 
-					CurrencyModulesclass::CurrencyToString(ShareBaseAmount) . " ریالی
+					<br><img src='/generalClasses/phpqrcode/showQRcode.php?value=" .
+						$dataTable[$i]["TafsiliDesc"] . " با سهام " . 
+						number_format($dataTable[$i]["amount"]) . " ریال' >
 				</td>
 			</tr>
 			<tr>
@@ -108,11 +113,11 @@ if(isset($_REQUEST["print"]))
 				می باشد و سهام مذکور در دفتر ثبت سهام تحت شماره
 				<b><u> &nbsp;&nbsp;" . $dataTable[$i]["ShareNo"] . "</u></b> &nbsp;( " . CurrencyModulesclass::CurrencyToString($dataTable[$i]["ShareNo"]) . " ) &nbsp;&nbsp; 
 				ثبت گردیده است.
-				<br>
+				<br><br>
 				</td>
 			</tr>
 			<tr>
-				<td style=padding-right:40px align=center>مهدی مروی <br> مدیر عامل</td>
+				<td style=padding-right:40px align=center>رسول عبدالهی<br> مدیر عامل</td>
 				<td align=center>مهر صندوق</td>
 				<td style=padding-left:40px align=center>دکتر جواد بهارآرا <br> رئیس هیئت مدیره</td>
 			</tr>

@@ -422,6 +422,49 @@ j_days_in_month = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
 
 var DateModule = {};
 
+DateModule.AddToGDate = function(gdate, dayplus, monthplus, yearplus){
+	yearplus = yearplus == null ? 0 : yearplus*1;
+	monthplus = monthplus == null ? 0 : monthplus*1;
+	dayplus = dayplus == null ? 0 : dayplus*1;
+	gdate_array = gdate.toString().split(/[\-\/]/);
+	
+	year = gdate_array[0]*1+yearplus;
+	month = gdate_array[1]*1+monthplus;
+	day = gdate_array[2]*1+dayplus;
+	
+	gdate = new Date(month.toString() + "/" + day.toString() + "/" + year.toString() + " 1:0");
+	return gdate.getFullYear() + "/" +(gdate.getMonth()+1) + "/" + gdate.getDate();
+}
+DateModule.AddToJDate = function(jdate, dayplus, monthplus, yearplus){
+	
+	gdate = ShamsiToMiladi(jdate);
+	gdate = DateModule.AddToGDate(gdate, dayplus, monthplus, yearplus);
+	return MiladiToShamsi(gdate);
+}
+DateModule.GDateMinusGDate = function(date1, date2){
+		
+	var date1 = new Date(date1 + " 1:0");
+	var date2 = new Date(date2 + " 1:0");
+	var timeDiff = Math.abs(date2.getTime() - date1.getTime());
+	var diffDays = Math.round(timeDiff / (1000 * 3600 * 24)); 
+	return diffDays;
+}
+DateModule.JDateMinusJDate = function(jdate1, jdate2){
+	
+	gdate1 = ShamsiToMiladi(jdate1);
+	gdate2 = ShamsiToMiladi(jdate2);
+	
+	return DateModule.GDateMinusGDate(gdate1,gdate2);
+}
+DateModule.GetDiffInMonth = function(jdate1, jdate2){
+	year1 = jdate1.substr(0,4);
+	month1 = jdate1.substr(5,2);
+
+	year2 = jdate2.substr(0,4);
+	month2 = jdate2.substr(5,2);
+
+	return (year2-year1)*12 + (month2-month1);
+}		
 DateModule.IsDateGreater = function (DateValue1, DateValue2) {
     var DaysDiff;
     Date1 = new Date(DateValue1);
@@ -449,6 +492,31 @@ DateModule.IsDateEqual = function (DateValue1, DateValue2) {
     else
     return false;
 };
+DateModule.DaysOfMonth = function(jyear,jmonth){
+	month_length = 0;
+		if(jmonth <= 6 ) {
+			month_length =  31;
+		}
+		else {
+			month_length =  30;
+			if(jmonth == 12 && !DateModule.YearIsLeap(jyear)) {
+				month_length = 29;
+			}
+		}
+		return month_length;
+}
+DateModule.YearIsLeap = function(jyear){
+	if (((jyear-22) % 33 == 0) || (( ((jyear-22)%33) % 32 != 0) && (( (jyear-22)%33 % 4 == 0))))
+		return true;
+	  return  false;
+}
+DateModule.lastJDateOfYear = function(jyear, delimiter){
+	
+	delimiter = (delimiter == null) ? "/" : delimiter;
+	day = DateModule.DaysOfMonth(jyear, 12).toString();
+	return jyear + delimiter + "12" + delimiter + day;
+}
+
 
 MiladiToShamsi = function (date, format) {
     
@@ -463,34 +531,19 @@ MiladiToShamsi = function (date, format) {
 		
     if (!date || date == "" || date == "0000-00-00" || date == "0000/00/00") return "";
 
-    if(date.toString().substr(2,1) == '/' || date.toString().substr(2,1) == '-' )
-    {
-        var tmpyear = date.toString().substr(6,4) ;
-        var tmpmonth = date.toString().substr(3,2) ;
-        var tmpday = date.toString().substr(0,2) ;
-
-        date = tmpyear +"/"+ tmpmonth +"/"+ tmpday ;
+	arr = date.toString().split(/[\-\/]/);
+    
+	var tmpyear = arr[0];
+	var tmpmonth = arr[1];
+	var tmpday = arr[2];
         
-    }
-        
-	if(date.toString().substr(0,4) < 1500)
+	if(tmpyear*1 < 1500 || tmpyear.substr(0,2) == "13")
 		return date;
 
-	if (date.day) {
-        var dd = date.year;
-        dd += (date.month < 10) ? "/0" + date.month : "/" + date.month;
-        dd += (date.day < 10) ? "/0" + date.day : "/" + date.day;
-        date = dd;
-    }
-    if (date.toString().substring(0, 2) == "13") return date;
     try {
         var dateFormat = (date.indexOf('/') != -1) ? "Y/m/d" : "Y-m-d";
-        var date1 = Ext.Date.parseDate(date, dateFormat);
-		//--------------------- jafarkhani -------------------
-		if(date1.getDate() < date.substr(8,2)*1)
-			date1 = Ext.Date.add(date1, Ext.Date.DAY, 1);
-		//----------------------------------------------------
-        date1 = GtoJ(date1);
+        var date1 = new Date(tmpmonth + '/' + tmpday + '/' + tmpyear + " 1:0");
+		date1 = GtoJ(date1);
 		return date1.format(format);
     } catch (e) {
         return "";
@@ -588,7 +641,7 @@ JtoG = function (date) {
     g_day_no -= this.g_days_in_month[i] + (i == 1 && leap);
     gm = i + 1;
     gd = g_day_no + 1;
-    var returnDate = new Date(gy, gm - 1, gd);
+    var returnDate = new Date(gy, gm - 1, gd, 1, 0);
 	//----------------- jafarkhani ----------------
 	/*if(returnDate.getDate() != gd) 
 		returnDate = returnDate.add("d",1);*/
@@ -1073,6 +1126,7 @@ Ext.SHDate.prototype.add = function (interval, value) {
 Ext.SHDate.prototype.clone = function () {
     return new Ext.SHDate(this.year, this.month, this.day);
 };
+
 
 Ext.SHDate.daysInMonth = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
 Ext.SHDate.monthNames = ["فرردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
@@ -2098,588 +2152,6 @@ Ext.define('Ext.picker.SHDate', {
         }
     }
 });
-
-Ext.define('Ext.SHCalendar', {
-    extend: 'Ext.Component',
-    requires: [
-        'Ext.XTemplate',
-        'Ext.button.Button',
-        'Ext.button.Split',
-        'Ext.util.ClickRepeater',
-        'Ext.util.KeyNav',
-        'Ext.EventObject',
-        'Ext.fx.Manager',
-        'Ext.picker.SHMonth'
-    ],
-    alias: 'widget.shcalendar',
-    alternateClassName: 'Ext.SHCalendar',
-
-    childEls: [
-        'inner', 'eventEl', 'prevEl', 'nextEl', 'middleBtnEl', 'footerEl'
-    ],
-
-    renderTpl: [
-        '<div id="{id}-inner">',
-            '<div role="presentation" class="{baseCls}-header">',
-                '<div class="{baseCls}-prev"><a id="{id}-prevEl" href="#" role="button" title="{prevText}"></a></div>',
-                '<div class="{baseCls}-month" id="{id}-middleBtnEl"></div>',
-                '<div class="{baseCls}-next"><a id="{id}-nextEl" href="#" role="button" title="{nextText}"></a></div>',
-            '</div>',
-            '<table id="{id}-eventEl" class="{baseCls}-inner" cellspacing="0" role="presentation">',
-                '<thead role="presentation"><tr role="presentation">',
-                    '<tpl for="dayNames">',
-                        '<th role="columnheader" title="{.}"><span>{.:this.firstInitial}</span></th>',
-                    '</tpl>',
-                '</tr></thead>',
-                '<tbody role="presentation"><tr role="presentation">',
-                    '<tpl for="days">',
-                        '{#:this.isEndOfWeek}',
-                        '<td role="gridcell" id="{[Ext.id()]}">',
-                            '<a role="presentation" href="#" hidefocus="on" class="{parent.baseCls}-date" tabIndex="1">',
-                                '<em role="presentation"><span role="presentation"></span></em>',
-                            '</a>',
-                        '</td>',
-                    '</tpl>',
-                '</tr></tbody>',
-            '</table>',
-            '<tpl if="showToday">',
-                '<div id="{id}-footerEl" role="presentation" class="{baseCls}-footer"></div>',
-            '</tpl>',
-        '</div>',
-        {
-            firstInitial: function(value) {
-                return value.substr(0,1);
-            },
-            isEndOfWeek: function(value) {
-                
-                
-                value--;
-                var end = value % 7 === 0 && value !== 0;
-                return end ? '</tr><tr role="row">' : '';
-            },
-            longDay: function(value){
-                return value.format(this.longDayFormat);
-            }
-        }
-    ],
-    todayTip : '{0} (Spacebar)',
-    minText : 'This date is before the minimum date',
-    maxText : 'This date is after the maximum date',
-    disabledDaysText : 'Disabled',
-    disabledDatesText : 'Disabled',
-    nextText : 'Next Month (Control+Right)',
-    prevText : 'Previous Month (Control+Left)',
-    monthYearText : 'Choose a month (Control+Up/Down to move years)',
-    startDay : 0,
-    showToday : true,
-    disableAnim: false,
-    baseCls: Ext.baseCSSPrefix + 'shcalendar',
-	todayText : 'امروز',
-    longDayFormat: 'F d, Y',
-    focusOnShow: false,
-    focusOnSelect: true,
-	StartDate : new Ext.SHDate(),
-    width: 800,
-	height : 600,
-    initHour: 12, 
-    numDays: 42,
-    
-    initComponent : function() {
-        var me = this;
-
-        me.selectedCls = me.baseCls + '-selected';
-        me.disabledCellCls = me.baseCls + '-disabled';
-        me.prevCls = me.baseCls + '-prevday';
-        me.activeCls = me.baseCls + '-active';
-        me.nextCls = me.baseCls + '-prevday';
-        me.todayCls = me.baseCls + '-today';
-        Ext.SHDate.dayNames = Ext.SHDate.dayNames.slice(me.startDay).concat(Ext.SHDate.dayNames.slice(0, me.startDay));
-        this.callParent();
-
-        me.value = this.StartDate;
-
-        me.addEvents(
-            
-            'select'
-        );
-
-        me.initDisabledDays();
-    },
-    beforeRender: function () {
-        
-        var me = this,
-            days = new Array(me.numDays);
-
-        me.callParent();
-
-        Ext.applyIf(me, {
-            renderData: {}
-        });
-		
-		me.dayNames = Ext.SHDate.dayNames;
-
-        Ext.apply(me.renderData, {
-            dayNames: me.dayNames,
-            value: me.value,
-            showToday: me.showToday,
-            prevText: me.prevText,
-            nextText: me.nextText,
-            days: days
-        });
-        me.getTpl('renderTpl').longDayFormat = me.longDayFormat;
-    },
-    onRender : function(container, position){
-        var me = this,
-            today = new Ext.SHDate().format(me.format);
-
-        me.callParent(arguments);
-
-        me.el.unselectable();
-
-        me.cells = me.eventEl.select('tbody td');
-        me.textNodes = me.eventEl.query('tbody td span');
-
-        me.monthBtn = new Ext.button.Split({
-            ownerCt: me,
-            ownerLayout: me.componentLayout,
-            text: '',
-            tooltip: me.monthYearText,
-            renderTo: me.middleBtnEl
-        });
-        me.todayBtn = new Ext.button.Button({
-            renderTo: me.footerEl,
-            text: Ext.String.format(me.todayText, today),
-            tooltip: Ext.String.format(me.todayTip, today),
-            handler: me.selectToday,
-            scope: me
-        });
-    },
-    initEvents: function(){
-        var me = this,
-            eDate = Ext.SHDate,
-            day = eDate.DAY;
-
-        this.callParent();
-
-        me.prevRepeater = new Ext.util.ClickRepeater(me.prevEl, {
-            handler: me.showPrevMonth,
-            scope: me,
-            preventDefault: true,
-            stopDefault: true
-        });
-
-        me.nextRepeater = new Ext.util.ClickRepeater(me.nextEl, {
-            handler: me.showNextMonth,
-            scope: me,
-            preventDefault:true,
-            stopDefault:true
-        });
-
-        me.keyNav = new Ext.util.KeyNav(me.eventEl, Ext.apply({
-            scope: me,
-            left : function(e){
-                if(e.ctrlKey){
-                    me.showPrevMonth();
-                }else{
-                    me.update(me.activeDate.add(day, -1));
-                }
-            },
-
-            right : function(e){
-                if(e.ctrlKey){
-                    me.showNextMonth();
-                }else{
-                    me.update(me.activeDate.add(day, 1));
-                }
-            },
-
-            up : function(e){
-                if(e.ctrlKey){
-                    me.showNextYear();
-                }else{
-                    me.update(me.activeDate.add(day, -7));
-                }
-            },
-
-            down : function(e){
-                if(e.ctrlKey){
-                    me.showPrevYear();
-                }else{
-                    me.update(me.activeDate.add(day, 7));
-                }
-            },
-            pageUp : me.showNextMonth,
-            pageDown : me.showPrevMonth,
-            enter : function(e){
-                e.stopPropagation();
-                return true;
-            }
-        }, me.keyNavConfig));
-
-        if(me.showToday){
-            me.todayKeyListener = me.eventEl.addKeyListener(Ext.EventObject.SPACE, me.selectToday,  me);
-        }
-        //me.mon(me.eventEl, 'mousewheel', me.handleMouseWheel, me);
-        me.mon(me.eventEl, 'click', me.handleDateClick,  me, {delegate: 'a.' + me.baseCls + '-date'});
-        me.update(me.value);
-    },
-    initDisabledDays : function(){
-        var me = this,
-            dd = me.disabledDates,
-            re = '(?:',
-            len;
-
-        if(!me.disabledDatesRE && dd){
-                len = dd.length - 1;
-
-            Ext.each(dd, function(d, i){
-                re += Ext.isSHDate(d) ? '^' + Ext.String.escapeRegex(d.dateFormat(me.format)) + '$' : dd[i];
-                if(i != len){
-                    re += '|';
-                }
-            }, me);
-            me.disabledDatesRE = new RegExp(re + ')');
-        }
-    },
-    setDisabledDates : function(dd){
-        var me = this;
-
-        if(Ext.isArray(dd)){
-            me.disabledDates = dd;
-            me.disabledDatesRE = null;
-        }else{
-            me.disabledDatesRE = dd;
-        }
-        me.initDisabledDays();
-        me.update(me.value, true);
-        return me;
-    },
-    setDisabledDays : function(dd){
-        this.disabledDays = dd;
-        return this.update(this.value, true);
-    },
-    setMinDate : function(dt){
-        this.minDate = dt;
-        return this.update(this.value, true);
-    },
-    setMaxDate : function(dt){
-        this.maxDate = dt;
-        return this.update(this.value, true);
-    },
-    setValue : function(value){
-        this.value = Ext.SHDate.clearTime(value,true);
-        return this.update(this.value);
-    },
-    getValue : function(){
-        return this.value;
-    },
-    focus : function(){
-        this.update(this.activeDate);
-    },
-    onEnable: function(){
-        this.callParent();
-        this.setDisabledStatus(false);
-        this.update(this.activeDate);
-
-    },
-    onDisable : function(){
-        this.callParent();
-        this.setDisabledStatus(true);
-    },
-    setDisabledStatus : function(disabled){
-        var me = this;
-
-        me.keyNav.setDisabled(disabled);
-        me.prevRepeater.setDisabled(disabled);
-        me.nextRepeater.setDisabled(disabled);
-        if (me.showToday) {
-            me.todayKeyListener.setDisabled(disabled);
-            me.todayBtn.setDisabled(disabled);
-        }
-    },
-    getActive: function(){
-        return this.activeDate || this.value;
-    },
-    runAnimation: function(isHide){
-        var picker = this.monthPicker,
-            options = {
-                duration: 200,
-                callback: function(){
-                    if (isHide) {
-                        picker.hide();
-                    } else {
-                        picker.show();
-                    }
-                }
-            };
-
-        if (isHide) {
-            picker.el.slideOut('t', options);
-        } else {
-            picker.el.slideIn('t', options);
-        }
-    },
-    shouldAnimate: function(animate){
-        return Ext.isDefined(animate) ? animate : !this.disableAnim;
-    },
-    onOkClick: function(picker, value){
-        var me = this,
-            month = value[0],
-            year = value[1],
-            date = new Ext.SHDate(year, month, me.getActive().getDate());
-
-        if (date.getMonth() !== month) {
-            
-            date = Ext.SHDate.getLastDateOfMonth(new Ext.SHDate(year, month, 1));
-        }
-        me.update(date);
-        me.hideMonthPicker();
-    },
-    onCancelClick: function(){
-        
-        this.selectedUpdate(this.activeDate);
-        this.hideMonthPicker();
-    },
-    showPrevMonth : function(e){
-        return this.update(this.activeDate.add(Ext.SHDate.MONTH, -1));
-    },
-    showNextMonth : function(e){
-        return this.update(this.activeDate.add(Ext.SHDate.MONTH, 1));
-    },
-    showPrevYear : function(){
-        this.update(this.activeDate.add(Ext.SHDate.YEAR, -1));
-    },
-    showNextYear : function(){
-        this.update(this.activeDate.add(Ext.SHDate.YEAR, 1));
-    },
-    handleMouseWheel : function(e){
-        e.stopEvent();
-        if(!this.disabled){
-            var delta = e.getWheelDelta();
-            if(delta > 0){
-                this.showPrevMonth();
-            } else if(delta < 0){
-                this.showNextMonth();
-            }
-        }
-    },
-    handleDateClick : function(e, t){
-        var me = this,
-            handler = me.handler;
-
-        e.stopEvent();
-        if(!me.disabled && t.dateValue && !Ext.fly(t.parentNode).hasCls(me.disabledCellCls)){
-            me.cancelFocus = me.focusOnSelect === false;
-            me.setValue(new Ext.SHDate(t.dateValue));
-            delete me.cancelFocus;
-            me.fireEvent('select', me, me.value);
-            if (handler) {
-                handler.call(me.scope || me, me, me.value);
-            }
-            
-            
-            
-            
-            me.onSelect();
-        }
-    },
-    onSelect: function() {
-        if (this.hideOnSelect) {
-             this.hide();
-         }
-    },
-    selectToday : function(){
-        var me = this,
-            btn = me.todayBtn,
-            handler = me.handler;
-
-        if(btn && !btn.disabled){
-            me.setValue(Ext.SHDate.clearTime(new Ext.SHDate()));
-            me.fireEvent('select', me, me.value);
-            if (handler) {
-                handler.call(me.scope || me, me, me.value);
-            }
-            me.onSelect();
-        }
-        return me;
-    },
-    selectedUpdate: function(date){
-        var me = this,
-            t = date.getTime(),
-            cells = me.cells,
-            cls = me.selectedCls;
-
-        cells.removeCls(cls);
-        cells.each(function(c){
-            if (c.dom.firstChild.dateValue == t) {
-                me.fireEvent('highlightitem', me, c);
-                c.addCls(cls);
-                if(me.isVisible() && !me.cancelFocus){
-                    Ext.fly(c.dom.firstChild).focus(50);
-                }
-                return false;
-            }
-        }, this);
-    },
-    fullUpdate: function(date){
-        var me = this,
-            cells = me.cells.elements,
-            textNodes = me.textNodes,
-            disabledCls = me.disabledCellCls,
-            eDate = Ext.SHDate,
-            i = 0,
-            extraDays = 0,
-            visible = me.isVisible(),
-            //------- jafarkhani -----------
-			//sel = +date.clearTime(true).get,
-			sel = Ext.SHDate.clearTime(date,true).getTime(),
-            //today = +new Ext.SHDate().clearTime(),
-			today = Ext.SHDate.clearTime(new Ext.SHDate()).getTime(),
-            min = me.minDate ? Ext.SHDate.clearTime(me.minDate,true) : Number.NEGATIVE_INFINITY,
-            max = me.maxDate ? Ext.SHDate.clearTime(me.maxDate,true) : Number.POSITIVE_INFINITY,
-            ddMatch = me.disabledDatesRE,
-            ddText = me.disabledDatesText,
-            ddays = me.disabledDays ? me.disabledDays.join('') : false,
-            ddaysText = me.disabledDaysText,
-            format = me.format,
-            days = date.getDaysInMonth(),
-            firstOfMonth = Ext.SHDate.getFirstDateOfMonth(date),
-            startingPos = firstOfMonth.getDay() - me.startDay,
-            previousMonth = date.add(eDate.MONTH, -1),
-            longDayFormat = me.longDayFormat,
-            prevStart,
-            current,
-            disableToday,
-            tempDate,
-            setCellClass,
-            html,
-            cls,
-            formatValue,
-            value;
-
-        if (startingPos < 0) {
-            startingPos += 7;
-        }
-
-        days += startingPos;
-        prevStart = previousMonth.getDaysInMonth() - startingPos;
-        current = new Ext.SHDate(previousMonth.getFullYear(), previousMonth.getMonth(), prevStart, me.initHour);
-
-        if (me.showToday) {
-            tempDate = Ext.SHDate.clearTime(new Ext.SHDate());
-            disableToday = (tempDate < min || tempDate > max ||
-                (ddMatch && format && ddMatch.test(tempDate.dateFormat(format))) ||
-                (ddays && ddays.indexOf(tempDate.getDay()) != -1));
-
-            if (!me.disabled) {
-                me.todayBtn.setDisabled(disableToday);
-                me.todayKeyListener.setDisabled(disableToday);
-            }
-        }
-
-        setCellClass = function(cell){
-			//----------- jafarkhani -----------
-            //value = +current.clearTime(true);
-			value = Ext.SHDate.clearTime(current,true).getTime();
-            cell.title = current.format(longDayFormat);
-            
-            cell.firstChild.dateValue = value;
-            if(value == today){
-                cell.className += ' ' + me.todayCls;
-                cell.title = me.todayText;
-            }
-            if(value == sel){
-                cell.className += ' ' + me.selectedCls;
-                me.fireEvent('highlightitem', me, cell);
-                if (visible && me.floating) {
-                    Ext.fly(cell.firstChild).focus(50);
-                }
-            }
-            
-            if(value < min) {
-                cell.className = disabledCls;
-                cell.title = me.minText;
-                return;
-            }
-            if(value > max) {
-                cell.className = disabledCls;
-                cell.title = me.maxText;
-                return;
-            }
-            if(ddays){
-                if(ddays.indexOf(current.getDay()) != -1){
-                    cell.title = ddaysText;
-                    cell.className = disabledCls;
-                }
-            }
-            if(ddMatch && format){
-                formatValue = current.dateFormat(format);
-                if(ddMatch.test(formatValue)){
-                    cell.title = ddText.replace('%0', formatValue);
-                    cell.className = disabledCls;
-                }
-            }
-        };
-
-        for(; i < me.numDays; ++i) {
-            if (i < startingPos) {
-                html = (++prevStart);
-                cls = me.prevCls;
-            } else if (i >= days) {
-                html = (++extraDays);
-                cls = me.nextCls;
-            } else {
-                html = i - startingPos + 1;
-                cls = me.activeCls;
-            }
-            textNodes[i].innerHTML = html;
-            cells[i].className = cls;
-            current.setDate(current.getDate() + 1);
-            setCellClass(cells[i]);
-        }
-
-        me.monthBtn.setText(Ext.SHDate.monthNames[date.getMonth()] + ' ' + date.getFullYear());
-    },
-    update : function(date, forceRefresh){
-        var me = this,
-            active = me.activeDate;
-
-        if (me.rendered) {
-            me.activeDate = date;
-            if(!forceRefresh && active && me.el && active.getMonth() == date.getMonth() && active.getFullYear() == date.getFullYear()){
-                me.selectedUpdate(date, active);
-            } else {
-                me.fullUpdate(date, active);
-            }
-        }
-        return me;
-    },
-    beforeDestroy : function() {
-        var me = this;
-
-        if (me.rendered) {
-            Ext.destroy(
-                me.todayKeyListener,
-                me.keyNav,
-                me.monthPicker,
-                me.monthBtn,
-                me.nextRepeater,
-                me.prevRepeater,
-                me.todayBtn
-            );
-            delete me.textNodes;
-            delete me.cells.elements;
-        }
-        me.callParent();
-    },
-    onShow: function() {
-        this.callParent(arguments);
-        if (this.focusOnShow) {
-            this.focus();
-        }
-    }
-});
-
 
 Ext.define('Ext.form.field.SHDate', {
     extend:'Ext.form.field.Picker',

@@ -402,7 +402,7 @@ LetterInfo.prototype.AfterSend = function(){
 		margin:10px; 
 		height : 500;
 		font-size : 11px;
-		line-height: 20px;
+		line-height: 30px;
 		border: 1px solid #bbb;
 		border-radius: 10px;
 		background: -webkit-linear-gradient(left, #fff 50%, #eee); /* For Safari 5.1 to 6.0 */

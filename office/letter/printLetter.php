@@ -14,7 +14,7 @@ $LetterObj = new OFC_letters($LetterID);
 
 $letterYear = substr(DateModules::miladi_to_shamsi($LetterObj->LetterDate),0,4);
 //..............................................................................
-$content = "<b><span style=font-size:11pt;font-family:BTitr>";
+$content = "<b><span style=font-size:11pt;font-family:Titr>";
 $dt = PdoDataAccess::runquery("
 	select  p2.sex,FromPersonID,p3.PersonSign signer,p1.PersonSign regSign,
 		if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) RegPersonName ,
@@ -51,7 +51,7 @@ if($LetterObj->LetterType == "INNER")
 		$sign = "";
 	
 	$content .= "<table width=100%><tr><td><div class=signDiv style=\"" . $sign . "\"><b>" . 
-			$dt[0]["RegPersonName"] . "</b><br><br>" . $dt[0]["PostName"] . "</div></td></tr></table>";
+			$dt[0]["RegPersonName"] . "</b><br>" . $dt[0]["PostName"] . "</div></td></tr></table>";
 }
 if($LetterObj->LetterType == "OUTCOME")
 {
@@ -89,12 +89,12 @@ if($LetterObj->OuterCopies != "")
 	</style>
 	<style>
 		.header td{background-color: #cccccc; font-weight: bold;size: 12px;}
-		td { font-family: BNazanin; font-size: 12pt; line-height: 20px; padding: 3px;}
+		td { font-family: Nazanin; font-size: 12pt; line-height: 30px; padding: 3px;}
 		.signDiv {
 			height: 140px;
 			float : left;
 			font-size:11pt;
-			font-family:BTitr;
+			font-family:Titr;
 			background-repeat: no-repeat; 
 			width: 200px; 			
 			text-align: center; 
@@ -107,7 +107,7 @@ if($LetterObj->OuterCopies != "")
 	</style>	
 	<body dir="rtl">
 		<center>
-			<div class="noPrint" style="width:500px;font-family: BNazanin; font-size: 12pt;">
+			<div class="noPrint" style="width:500px;font-family: Nazanin; font-size: 12pt;">
 				<form method="post" id="mainForm">
 					<input onchange="document.forms.mainForm.submit()" name="sign" 
 						   <?= isset($_POST["sign"]) ? "checked" : "" ?>

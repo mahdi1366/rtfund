@@ -176,24 +176,15 @@ class ACC_docs extends PdoDataAccess {
 			$pdo2 = $pdo;
 		$result = parent::delete("ACC_DocCheques", "DocID=?", array($DocID), $pdo2);
 		if ($result === false)
-		{
-			$pdo2->rollBack();
 			return false;
-		}
 
 		$result = parent::delete("ACC_DocItems", "DocID=?", array($DocID), $pdo2);
 		if ($result === false)
-		{
-			$pdo2->rollBack();
 			return false;
-		}
 
 		$result = parent::delete("ACC_docs", "DocID=?", array($DocID), $pdo2);
 		if ($result === false)
-		{
-			$pdo2->rollBack();
 			return false;
-		}
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;

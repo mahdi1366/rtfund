@@ -265,4 +265,22 @@ class PLN_experts extends OperationClass {
     }
 }
 
+class PLN_PlanEvents extends OperationClass {
+
+    const TableName = "PLN_PlanEvents";
+    const TableKey = "EventID";
+
+    public $EventID;
+	public $PlanID;
+    public $EventTitle;
+    public $EventDate;
+	
+    function __construct($id = ""){
+        
+		$this->DT_EventDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
+        parent::__construct($id);
+    }
+
+}
 ?>

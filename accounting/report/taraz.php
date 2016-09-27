@@ -41,7 +41,9 @@ function showReport(){
 		t.TafsiliDesc TafsiliDesc,
 		bi2.InfoDesc TafsiliTypeDesc2,
 		t2.TafsiliDesc TafsiliDesc2,
-		cc.level1,cc.level2,cc.level3,di.TafsiliType,di.TafsiliType2,di.TafsiliID,di.TafsiliID2
+		cc.level1,cc.level2,cc.level3,di.TafsiliType,di.TafsiliType2,di.TafsiliID,di.TafsiliID2,
+		t.StartCycleDebtor,
+		t.StartCycleCreditor
 		";
 	$from = " from ACC_DocItems di 
 				join ACC_docs d using(DocID)
@@ -53,6 +55,13 @@ function showReport(){
 				left join ACC_tafsilis t using(TafsiliID)
 				left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)
 				left join ACC_tafsilis t2 on(t2.TafsiliID=di.TafsiliID2)
+				
+				left join (
+					select CycleID,CostID,sum(DebtorAmount) StartCycleDebtor, sum(CreditorAmount) StartCycleCreditor
+					from ACC_DocItems join ACC_docs using(DocID)
+					where DocType=1
+					group by CostID
+				)t on(d.CycleID=t.CycleID AND di.CostID=t.CostID)
 	";
 			
 	if($level >= "l1")
@@ -291,6 +300,12 @@ function showReport(){
 	$col = $rpg->addColumn("بستانکار", "bsAmount", "moneyRender");
 	$col->EnableSummary();
 
+	$col = $rpg->addColumn("مانده بدهکار اول دوره", "StartCycleDebtor", "moneyRender");
+	$col->EnableSummary(true);
+	
+	$col = $rpg->addColumn("مانده بستانکار اول دوره", "StartCycleCreditor", "moneyRender");
+	$col->EnableSummary(true);
+	
 	$col = $rpg->addColumn("مانده بدهکار", "bdAmount", "bdremainRender");
 	$col->EnableSummary(true);
 	
@@ -300,8 +315,6 @@ function showReport(){
 	if(!$rpg->excel)
 	{
 		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
-		if($_SESSION["USER"]["UserName"] == "admin")
-			echo PdoDataAccess::GetLatestQueryString ();
 		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>

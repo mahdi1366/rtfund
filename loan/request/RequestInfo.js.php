@@ -294,13 +294,9 @@ RequestInfo.prototype.BuildForms = function(){
 					name: 'ForfeitPercent',
 					renderer : function(v){ return v + " %"}
 				},{
-					name : "WageReturn",
-					fieldLabel: 'پرداخت کارمزد',
-					renderer : function(v){
-						if(v == "CUSTOMER") return "هنگام پرداخت وام";
-						if(v == "AGENT") return 'سپرده سرمایه گذار';
-						if(v == "INSTALLMENT") return 'طی اقساط';
-					}
+					fieldLabel: 'کارمزد تنفس',
+					name: 'DelayPercent',
+					renderer : function(v){ return v + " %"}
 				},{
 					fieldLabel: 'کارمزد مشتری',
 					name: 'CustomerWage'	,		
@@ -310,10 +306,11 @@ RequestInfo.prototype.BuildForms = function(){
 					name: 'FundWage',
 					renderer : function(v){ return v + " %"}
 				},{
-					name : "DelayReturn",
-					fieldLabel: 'پرداخت تنفس',
+					name : "WageReturn",
+					fieldLabel: 'پرداخت کارمزد',
 					renderer : function(v){
 						if(v == "CUSTOMER") return "هنگام پرداخت وام";
+						if(v == "AGENT") return 'سپرده سرمایه گذار';
 						if(v == "INSTALLMENT") return 'طی اقساط';
 					}
 				},{
@@ -338,7 +335,13 @@ RequestInfo.prototype.BuildForms = function(){
 				},{
 					name : "AgentDelayReturn",
 					fieldLabel: 'تنفس سرمایه گذار',
-					colspan : 2,
+					renderer : function(v){
+						if(v == "CUSTOMER") return "هنگام پرداخت وام";
+						if(v == "INSTALLMENT") return 'طی اقساط';
+					}
+				},{
+					name : "DelayReturn",
+					fieldLabel: 'پرداخت تنفس',
 					renderer : function(v){
 						if(v == "CUSTOMER") return "هنگام پرداخت وام";
 						if(v == "INSTALLMENT") return 'طی اقساط';
@@ -1029,6 +1032,10 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					fieldLabel: 'کارمزد صندوق',
 					name: 'FundWage'
 				},{
+					fieldLabel: 'کارمزد تنفس',
+					name: 'DelayPercent',
+					colspan:2
+				},{
 					xtype : "fieldset",
 					itemId : "fs_WageCompute",
 					title : "نحوه دریافت کارمزد صندوق",
@@ -1243,6 +1250,42 @@ RequestInfo.prototype.DeletePart = function(){
 	});
 }
 
+RequestInfo.prototype.SplitYears = function(startDate, endDate, TotalAmount){
+	
+	arr = startDate.split(/[\-\/]/);
+	StartYear = arr[0]*1;
+	
+	totalDays = 0;
+	yearDays = new Array();
+	newStartDate = startDate;
+	while(DateModule.IsDateGreater(endDate,newStartDate)){
+		arr = newStartDate.split(/[\-\/]/);
+		LastDayOfYear = DateModule.lastJDateOfYear(arr[0]);
+		if(DateModule.IsDateGreater(LastDayOfYear, endDate))
+			LastDayOfYear = endDate;
+		
+		thedays = DateModule.JDateMinusJDate(LastDayOfYear, newStartDate)+1;
+		yearDays.push({
+			year : StartYear, 
+			days : thedays
+		});
+		totalDays += thedays;
+		StartYear++;
+		newStartDate = DateModule.AddToJDate(LastDayOfYear, 1);
+	}
+	TotalDays = DateModule.JDateMinusJDate(endDate, startDate)+1;
+	sum = 0;
+	for(i=0; i<yearDays.length; i++)
+	{
+		yearDays[i].amount = Math.round((yearDays[i].days/TotalDays)*TotalAmount);
+		sum += yearDays[i].amount;
+	}
+	if(sum != TotalAmount)
+		yearDays[i-1].amount += TotalAmount-sum;
+	
+	return yearDays;
+}
+
 RequestInfo.prototype.LoadSummary = function(record){
 
 	if(record.data.ReqPersonID == "<?= SHEKOOFAI ?>")
@@ -1287,41 +1330,64 @@ RequestInfo.prototype.LoadSummary = function(record){
 		var factor = Math.pow(10,digits);
 		return Math.ceil(number*factor) / factor;
 	}
-	function YearWageCompute(record,TotalWage,yearNo, YearMonths){
+	function YearWageCompute(record,TotalWage,YearMonths){
 		
-		PayMonth = MiladiToShamsi(record.data.PartDate).split('/')[1]*1;
+		startDate = MiladiToShamsi(record.data.PartDate);
+		startDate = DateModule.AddToJDate(startDate, record.data.DelayDays, record.data.DelayMonths);
+		startDate = startDate.split(/[\-\/]/);
+		PayMonth = startDate[1];
 		PayMonth = PayMonth*YearMonths/12;
 		
-		FirstYearInstallmentCount = YearMonths - PayMonth;
-		MidYearInstallmentCount = Math.floor((record.data.InstallmentCount-FirstYearInstallmentCount) / YearMonths);
+		FirstYearInstallmentCount = Math.floor((12 - PayMonth)/(12/YearMonths));
+		FirstYearInstallmentCount = record.data.InstallmentCount*1 < FirstYearInstallmentCount ? 
+			FirstYearInstallmentCount - record.data.InstallmentCount*1 : FirstYearInstallmentCount;
+		MidYearInstallmentCount = Math.floor((record.data.InstallmentCount*1-FirstYearInstallmentCount) / YearMonths);
+		MidYearInstallmentCount = MidYearInstallmentCount < 0 ? 0 : MidYearInstallmentCount;
 		LastYeatInstallmentCount = (record.data.InstallmentCount-FirstYearInstallmentCount) % YearMonths;
-		
-		if(yearNo > MidYearInstallmentCount+2)
-			return 0;
-		
-		F9 = record.data.InstallmentCount*1;
-		var BeforeMonths = 0
-		if(yearNo == 2)
-			BeforeMonths = FirstYearInstallmentCount;
-		else if(yearNo > 2)
-			BeforeMonths = FirstYearInstallmentCount + (yearNo-2)*YearMonths;
-		
-		var curMonths = FirstYearInstallmentCount;
-		if(yearNo > 1 && yearNo <= MidYearInstallmentCount+1)
-			curMonths = YearMonths;
-		else if(yearNo > MidYearInstallmentCount+1)
-			curMonths = LastYeatInstallmentCount;
-		
-		var val = ((((F9-BeforeMonths)*(F9-BeforeMonths+1))-
-			(F9-BeforeMonths-curMonths)*(F9-BeforeMonths-curMonths+1)))/(F9*(F9+1))*TotalWage;
-		
-		val = Math.round(val);
-		val = val < 0 ? 0 : val;
-		return Ext.util.Format.Money(val);
+		LastYeatInstallmentCount = LastYeatInstallmentCount < 0 ? 0 : LastYeatInstallmentCount;
+		F9 = record.data.InstallmentCount*(12/YearMonths);
+
+		yearNo = 1;
+		StartYear = startDate[0]*1;
+		returnArr = new Array();
+		while(true)
+		{
+			if(yearNo > MidYearInstallmentCount+2)
+				break;
+
+			BeforeMonths = 0;
+			if(yearNo == 2)
+				BeforeMonths = FirstYearInstallmentCount;
+			else if(yearNo > 2)
+				BeforeMonths = FirstYearInstallmentCount + (yearNo-2)*YearMonths;
+
+			curMonths = FirstYearInstallmentCount;
+			if(yearNo > 1 && yearNo <= MidYearInstallmentCount+1)
+				curMonths = YearMonths;
+			else if(yearNo > MidYearInstallmentCount+1)
+				curMonths = LastYeatInstallmentCount;
+
+			BeforeMonths = BeforeMonths*(12/YearMonths);
+			curMonths = curMonths*(12/YearMonths);
+
+			val = ((((F9-BeforeMonths)*(F9-BeforeMonths+1))-
+				(F9-BeforeMonths-curMonths)*(F9-BeforeMonths-curMonths+1)))/(F9*(F9+1))*TotalWage;
+
+			returnArr.push({
+				year : StartYear,
+				amount : Ext.util.Format.Money(Math.round(val))
+			});
+			StartYear++;
+			yearNo++;
+		}
+	
+		return returnArr;
 	}
-
+	
 	DelayDuration = record.data.DelayMonths*1 + (record.data.DelayDays*1/30);
-
+	DelayDuration = DateModule.GDateMinusGDate(
+		DateModule.AddToGDate(record.data.PartDate, record.data.DelayDays*1, record.data.DelayMonths*1), 
+		record.data.PartDate);
 	YearMonths = 12;
 	if(record.data.IntervalType == "DAY")
 		YearMonths = Math.floor(365/record.data.PayInterval);
@@ -1334,7 +1400,7 @@ RequestInfo.prototype.LoadSummary = function(record){
 	FundWage = !isInt(FundWage) ? 0 : FundWage;
 	AgentWage = TotalWage - FundWage;
 	
-	TotalDelay = Math.round(record.data.PartAmount*record.data.CustomerWage*DelayDuration/1200);
+	TotalDelay = Math.round(record.data.PartAmount*record.data.DelayPercent*DelayDuration/36500);
 	
 	//-------------------------- installments -----------------------------
 	MaxWage = Math.max(record.data.CustomerWage, record.data.FundWage);
@@ -1356,9 +1422,9 @@ RequestInfo.prototype.LoadSummary = function(record){
 		extraAmount += Math.round(TotalWage*AgentFactor);
 
 	if(record.data.DelayReturn == "INSTALLMENT")
-		extraAmount += TotalDelay*(record.data.FundWage/record.data.CustomerWage);
-	if(record.data.AgentDelayReturn == "INSTALLMENT" && record.data.CustomerWage>record.data.FundWage)
-		extraAmount += TotalDelay*((record.data.CustomerWage-record.data.FundWage)/record.data.CustomerWage);
+		extraAmount += TotalDelay*(record.data.FundWage/record.data.DelayPercent);
+	if(record.data.AgentDelayReturn == "INSTALLMENT" && record.data.DelayPercent>record.data.FundWage)
+		extraAmount += TotalDelay*((record.data.DelayPercent-record.data.FundWage)/record.data.DelayPercent);
 	
 	TotalAmount = record.data.PartAmount*1 + extraAmount;
 	
@@ -1404,10 +1470,12 @@ RequestInfo.prototype.LoadSummary = function(record){
 	this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(FundWage);	
 	this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
 	
-	this.get("SUM_Wage_1Year").innerHTML = YearWageCompute(record, TotalWage, 1, YearMonths);
-	this.get("SUM_Wage_2Year").innerHTML = YearWageCompute(record, TotalWage, 2, YearMonths);
-	this.get("SUM_Wage_3Year").innerHTML = YearWageCompute(record, TotalWage, 3, YearMonths);
-	this.get("SUM_Wage_4Year").innerHTML = YearWageCompute(record, TotalWage, 4, YearMonths);
+	returnArr = YearWageCompute(record, TotalWage, YearMonths);
+	
+	this.get("SUM_Wage_1Year").innerHTML = returnArr[0] ? returnArr[0].amount : 0;
+	this.get("SUM_Wage_2Year").innerHTML = returnArr[1] ? returnArr[1].amount : 0;
+	this.get("SUM_Wage_3Year").innerHTML = returnArr[2] ? returnArr[2].amount : 0;
+	this.get("SUM_Wage_4Year").innerHTML = returnArr[3] ? returnArr[3].amount : 0;
 }
 
 RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
@@ -1431,44 +1499,10 @@ RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
 		return;
 	}
 	
-	function GetDiffInMonth(jdate1, jdate2)
-    {
-        year1 = jdate1.substr(0,4);
-        month1 = jdate1.substr(5,2);
-
-		year2 = jdate2.substr(0,4);
-        month2 = jdate2.substr(5,2);
-
-        return (year2-year1)*12 + (month2-month1);
-    }		
-	function AddToJDate(jdate, monthplus) 
-    {
-		monthplus = monthplus*1;
-		arr = jdate.split(/[\-\/]/);
-		
-		year = arr[0]*1 + Math.floor((arr[1]*1 + monthplus) / 12);
-		monthplus = (arr[1]*1 + monthplus)%12;
-		if(monthplus == 0)
-		{
-			year--;
-			monthplus = 12;
-		}
-		dayplus = arr[2];
-
-		return year + "-" + monthplus.toString().lpad("0", 2) + "-" + dayplus.lpad("0", 2);
-	}
-	function GDateMinusGDate(date1, date2){
-		
-		var date1 = new Date(date1);
-		var date2 = new Date(date2);
-		var timeDiff = Math.abs(date2.getTime() - date1.getTime());
-		var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
-		return diffDays
-	}
 	//--------------- total pay months -------------
 	firstPay = MiladiToShamsi(this.paymentStore.getAt(0).data.PayDate);
 	LastPay = MiladiToShamsi(this.paymentStore.getAt(this.paymentStore.getCount()-1).data.PayDate);
-	paymentPeriod = GetDiffInMonth(firstPay, LastPay);
+	paymentPeriod = DateModule.GetDiffInMonth(firstPay, LastPay);
 	//----------------------------------------------
 	totalWage = 0;
 	wages = new Array();
@@ -1481,14 +1515,16 @@ RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
 			monthplus = paymentPeriod + record.data.DelayMonths*1 + (i+1)*record.data.PayInterval*1;
 			
 			installmentDate = MiladiToShamsi(this.paymentStore.getAt(0).data.PayDate);
-			installmentDate = AddToJDate(installmentDate, monthplus);
+			installmentDate = DateModule.AddToJDate(installmentDate, 0, monthplus);
 			installmentDate = ShamsiToMiladi(installmentDate);
 			
-			jdiff = GDateMinusGDate(installmentDate, this.paymentStore.getAt(j).data.PayDate);
+			jdiff = DateModule.GDateMinusGDate(installmentDate, this.paymentStore.getAt(j).data.PayDate);
 			
 			wage = Math.round((this.paymentStore.getAt(j).data.PayAmount/record.data.InstallmentCount)*
 				jdiff*record.data.CustomerWage/36500);
 			wages[wageindex].push(wage);
+			if(i == 3 && j == 1)
+				alert(installmentDate + "\n" + this.paymentStore.getAt(j).data.PayDate + "\n" + jdiff);
 			totalWage += wage;
 		}
 	}

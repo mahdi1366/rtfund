@@ -200,6 +200,18 @@ function PlanInfo(){
 	
 	this.menu = this.MainPanel.getDockedItems()[0].down("[itemId=Operation]");
 	
+	if(this.User == "Admin")
+	{
+		this.menu.add({
+			text : "تغییر وضعیت",
+			iconCls : "refresh",
+			handler : function(){
+				PlanInfoObject.SetStatus();
+			}
+		});
+		
+	}
+	
 	if(this.User == "Customer" && !this.readOnly)
 	{
 		this.menu.add({
@@ -257,6 +269,13 @@ function PlanInfo(){
 			iconCls : "tick",
 			handler : function(){
 				PlanInfoObject.BeforeSendPlan(<?= STEPID_SEND_SUPPORTER ?>);
+			}
+		});
+		this.menu.add({
+			text : "رویدادهای مرتبط با طرح",
+			iconCls : "task",
+			handler : function(){
+				PlanInfoObject.EventsShow();
 			}
 		});
 		
@@ -1073,6 +1092,101 @@ PlanInfo.prototype.SendExpert = function(){
 		
 		PlanInfoObject.commentWin3.show();
 	})	
+}
+
+PlanInfo.prototype.SetStatus = function(){
+	
+	if(!this.setStatusWin)
+	{
+		this.setStatusWin = new Ext.window.Window({
+			width : 412,
+			height : 198,
+			modal : true,
+			title : "تغییر وضعیت",
+			defaults : {width : 380},
+			bodyStyle : "background-color:white",
+			items : [{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + "plan.data.php?task=selectRequestStatuses",
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields : ['StepID','StepDesc'],
+					autoLoad : true					
+				}),
+				fieldLabel : "وضعیت جدید",
+				queryMode : 'local',
+				allowBlank : false,
+				displayField : "StepDesc",
+				valueField : "StepID",
+				itemId : "StepID"
+			},{
+				xtype : "textarea",
+				itemId : "comment",
+				fieldLabel : "توضیحات"
+			}],
+			closeAction : "hide",
+			buttons : [{
+				text : "تغییر وضعیت",				
+				iconCls : "save",
+				itemId : "btn_save",
+				handler : function(){
+					status = this.up('window').getComponent("StepID").getValue();
+					comment = this.up('window').getComponent("comment").getValue();
+					PlanInfoObject.SendPlan(status, "[تغییر وضعیت]" + comment);
+					this.up('window').hide();
+				}
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.setStatusWin);
+	}
+	this.setStatusWin.show();
+	this.setStatusWin.center();
+}
+
+PlanInfo.prototype.EventsShow = function(){
+
+	if(!this.EventsWin)
+	{
+		this.EventsWin = new Ext.window.Window({
+			title: 'رویدادهای مرتبط با طرح',
+			modal : true,
+			autoScroll : true,
+			width: 600,
+			height : 400,
+			bodyStyle : "background-color:white",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "events.php",
+				params :{
+					PlanID : this.PlanID
+				},
+				scripts : true
+			},
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){
+					this.up('window').hide();
+				}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.EventsWin);
+	}
+	this.EventsWin.show();
+	this.EventsWin.center();
+	this.EventsWin.loader.load({
+		params : {
+			ExtTabID : this.EventsWin.getEl().id
+		}
+	});
 }
 
 </script>

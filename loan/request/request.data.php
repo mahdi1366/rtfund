@@ -64,39 +64,6 @@ function YearWageCompute($PartObj, $TotalWage, $YearMonths){
 	
 	$startDate = DateModules::miladi_to_shamsi($PartObj->PartDate);
 	$startDate = DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths); 
-	$endDate = DateModules::AddToJDate($startDate, 
-			$PartObj->IntervalType == "DAY" ? $PartObj->PayInterval*$PartObj->InstallmentCount : 0, 
-			$PartObj->IntervalType == "MONTH" ? $PartObj->PayInterval*$PartObj->InstallmentCount : 0);
-	
-	$arr = preg_split('/[\-\/]/',$startDate);
-	$StartYear = $arr[0]*1;
-	
-	$totalDays = 0;
-	$yearDays = array();
-	while(DateModules::CompareDate($startDate, $endDate) < 0){
-		
-		$arr = preg_split('/[\-\/]/',$startDate);
-		$LastDayOfYear = DateModules::lastJDateOfYear($arr[0]);
-		if(DateModules::CompareDate($LastDayOfYear, $endDate) > 0)
-			$LastDayOfYear = $endDate;
-		
-		$yearDays[$StartYear] = DateModules::JDateMinusJDate($LastDayOfYear, $startDate)+1;
-		$totalDays += $yearDays[$StartYear];
-		$StartYear++;
-		$startDate = DateModules::AddToJDate($LastDayOfYear, 1);
-	}
-	$sum = 0;
-	foreach($yearDays as $year => $days)
-	{
-		$yearDays[$year] = round(($days/$totalDays)*$TotalWage);
-		$sum += $yearDays[$year];
-	}
-	if($sum <> $TotalWage)
-		$yearDays[$year] += $TotalWage-$sum;
-	return $yearDays;
-	
-	$startDate = DateModules::miladi_to_shamsi($PartObj->PartDate);
-	$startDate = DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths); 
 	$startDate = preg_split('/[\-\/]/',$startDate);
 	$PayMonth = $startDate[1]*1;
 	
@@ -152,17 +119,18 @@ function YearDelayCompute($PartObj, $PayDate, $PayAmount, $wage){
 	
 	$totalDays = 0;
 	$yearDays = array();
-	while(DateModules::CompareDate($startDate, $endDate) < 0){
+	$newStartDate = $startDate;
+	while(DateModules::CompareDate($newStartDate, $endDate) < 0){
 		
-		$arr = preg_split('/[\-\/]/',$startDate);
+		$arr = preg_split('/[\-\/]/',$newStartDate);
 		$LastDayOfYear = DateModules::lastJDateOfYear($arr[0]);
 		if(DateModules::CompareDate($LastDayOfYear, $endDate) > 0)
 			$LastDayOfYear = $endDate;
 		
-		$yearDays[$StartYear] = DateModules::JDateMinusJDate($LastDayOfYear, $startDate)+1;
+		$yearDays[$StartYear] = DateModules::JDateMinusJDate($LastDayOfYear, $newStartDate)+1;
 		$totalDays += $yearDays[$StartYear];
 		$StartYear++;
-		$startDate = DateModules::AddToJDate($LastDayOfYear, 1);
+		$newStartDate = DateModules::AddToJDate($LastDayOfYear, 1);
 	}
 	
 	$DelayDuration = DateModules::JDateMinusJDate(
@@ -658,7 +626,7 @@ function ComputeInstallments(){
 	$DelayDuration = DateModules::JDateMinusJDate(
 		DateModules::AddToJDate($startDate, $obj->DelayDays, $obj->DelayMonths), $startDate)+1;
 	//$DelayDuration = $PartObj->DelayMonths*1 + $PartObj->DelayDays*1/30;
-	$TotalDelay = round($obj->PartAmount*$obj->CustomerWage*$DelayDuration/36500);
+	$TotalDelay = round($obj->PartAmount*$obj->DelayPercent*$DelayDuration/36500);
 	
 	//-------------------------- installments -----------------------------
 	
@@ -724,10 +692,7 @@ function ComputeInstallments(){
 	die();
 }
 
-function ComputeInstallmentsShekoofa($partObj = null){
-	
-	if(!$partObj)
-		$partObj = new LON_ReqParts($_REQUEST["PartID"]);
+function ComputeWageOfSHekoofa($partObj){
 	
 	$payments = LON_payments::Get(" AND PartID=? order by PayDate", array($partObj->PartID));
 	$payments = $payments->fetchAll();
@@ -757,6 +722,24 @@ function ComputeInstallmentsShekoofa($partObj = null){
 			$totalWage += $wage;
 		}
 	}
+	
+	return $totalWage;
+}
+
+function ComputeInstallmentsShekoofa($partObj = null){
+	
+	if(!$partObj)
+		$partObj = new LON_ReqParts($_REQUEST["PartID"]);
+	
+	$payments = LON_payments::Get(" AND PartID=? order by PayDate", array($partObj->PartID));
+	$payments = $payments->fetchAll();
+	//--------------- total pay months -------------
+	$firstPay = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
+	$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
+	$paymentPeriod = DateModules::GetDiffInMonth($firstPay, $LastPay);
+	//----------------------------------------------	
+	$totalWage = ComputeWageOfSHekoofa($partObj);
+	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
@@ -971,10 +954,13 @@ function GetPartPays(){
 	die();
 }
 
-function SavePartPay(){
+function SaveBackPay(){
 	
 	$obj = new LON_BackPays();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if($obj->PayType == "9")
+		$obj->ChequeStatus = 1;
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
@@ -1391,6 +1377,7 @@ function GroupSavePay(){
 		PdoDataAccess::FillObjectByArray($obj, $_POST);
 		$obj->PartID = $PartID;
 		$obj->PayAmount = $PayAmount;
+		$obj->IsGroup = "YES";
 		$obj->AddPay($pdo);
 		
 		if(!RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, true))
@@ -1577,7 +1564,12 @@ function RegPayPartDoc($ReturnMode = false, $pdo = null){
 	if($partobj->MaxFundWage*1 > 0)
 		$partobj->MaxFundWage = round($partobj->MaxFundWage*$PayObj->PayAmount/$partobj->PartAmount);
 	
-	$result = RegisterPayPartDoc($ReqObj, $partobj, $PayObj, $_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo);
+	if($ReqObj->ReqPersonID == "1003")
+		$result = RegisterSHRTFUNDPayPartDoc($ReqObj, $partobj, $PayObj, 
+				$_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo);
+	else
+		$result = RegisterPayPartDoc($ReqObj, $partobj, $PayObj, 
+				$_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo);
 	
 	if(!$result)
 	{
@@ -1619,7 +1611,7 @@ function editPayPartDoc(){
 		
 	RetPayPartDoc(true, $pdo);
 	RegPayPartDoc(true, $pdo);
-	
+
 	$PayObj = new LON_payments($PayID);
 	$NewDocObj = new ACC_docs($PayObj->DocID);
 	
@@ -1683,6 +1675,8 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 	
 	if(!ReturnPayPartDoc($PayObj->DocID, $pdo))
 	{
+		if($ReturnMode)
+			return false;
 		$pdo->rollBack();
 		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
 		die();
@@ -1691,6 +1685,8 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 	$PayObj->DocID = 0;
 	if(!$PayObj->Edit($pdo))
 	{
+		if($ReturnMode)
+			return false;
 		$pdo->rollBack();
 		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
 		die();
@@ -1791,7 +1787,7 @@ function ConfirmRequest(){
 
 function GetChequeStatuses(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=6");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=16");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
