@@ -59,14 +59,16 @@ class LON_requests extends PdoDataAccess
 	}
 	
 	function CheckForDuplicate(){
+		
 		if(!empty($this->RequestID))
 		{
 			$dt = PdoDataAccess::runquery("
 			select r2.RequestID from LON_requests r1
 				join LON_requests r2 on(r1.RequestID<>r2.RequestID 
 					AND substr(r1.ReqDate,1,10)=substr(r2.ReqDate,1,10) AND r1.ReqAmount=r2.ReqAmount 
-					AND (r1.LoanPersonID=r2.LoanPersonID OR r1.BorrowerID=r2.BorrowerID OR
-							r1.BorrowerDesc=r2.BorrowerDesc) )
+					AND (if(r1.LoanPersonID>0,r1.LoanPersonID=r2.LoanPersonID,1=0) 
+						OR if(r1.BorrowerID<>'',r1.BorrowerID=r2.BorrowerID,1=0) 
+						OR if(r1.BorrowerDesc<>'',r1.BorrowerDesc=r2.BorrowerDesc,1=0) ) )
 			where r1.RequestID=?",array($this->RequestID));
 
 			if(count($dt) > 0)
