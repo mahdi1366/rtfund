@@ -436,7 +436,7 @@ LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, record, mo
 	mask.show();
 	
 	switch(mode){
-		case 1 : task = "SavePartPay"; break;
+		case 1 : task = "SaveBackPay"; break;
 		case 2 : task = "EditPartPayDoc"; break;
 		case 3 : task = "GroupSavePay"; break;
 	}

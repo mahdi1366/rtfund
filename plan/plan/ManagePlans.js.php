@@ -51,6 +51,14 @@ ManagePlan.HistoryRender = function(value, p, record){
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
+ManagePlan.DeleteRender = function(value, p, record){
+	
+	if(record.data.StepID == "<?= STEPID_RAW ?>")
+		return "<div  title='حذف' class='remove' onclick='ManagePlanObject.DeletePlan();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
 ManagePlan.prototype.OperationMenu = function(e){
 
 	record = this.grid.getSelectionModel().getLastSelected();
@@ -102,5 +110,42 @@ ManagePlan.prototype.ShowPlanInfo = function(){
 	portal.OpenPage("../plan/plan/PlanInfo.php", {PlanID : record.data.PlanID});
 	return;
 }
+
+ManagePlan.prototype.DeletePlan = function(){
+
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = ManagePlanObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+		
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال حذف ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'plan.data.php',
+			params:{
+				task: "DeletePlan",
+				PlanID : record.data.PlanID
+			},
+			method: 'POST',
+
+			success: function(response,option){
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					ManagePlanObject.grid.getStore().load();
+				else if(result.data == "")
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+				else
+					Ext.MessageBox.alert("",result.data);
+				mask.hide();
+				
+			},
+			failure: function(){}
+		});
+	});
+}
+
 
 </script>
