@@ -8,6 +8,7 @@ require_once '../header.inc.php';
 require_once(inc_response);
 require_once inc_dataReader;
 require_once '../docs/doc.class.php';
+require_once "../../loan/request/request.class.php";
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 if(!empty($task))
@@ -15,7 +16,7 @@ if(!empty($task))
 
 function selectIncomeCheques() {
 
-		$param = array();
+	$param = array();
 	$query = "select p.* , 
 			concat_ws(' ',fname,lname,CompanyName) fullname,
 			PartAmount,
@@ -27,7 +28,7 @@ function selectIncomeCheques() {
 		join LON_requests using(RequestID)
 		join BSC_persons on(LoanPersonID=PersonID)
 		left join ACC_banks b on(ChequeBank=BankID)
-		left join BaseInfo bi2 on(bi2.TypeID=16 AND bi2.InfoID=p.ChequeStatus)
+		left join BaseInfo bi2 on(bi2.TypeID=4 AND bi2.InfoID=p.ChequeStatus)
 		
 		where ChequeNo>0";
 	
@@ -88,8 +89,8 @@ function selectIncomeCheques() {
 	die();
 }
 
-function selectOutcomeCheques()
-{
+function selectOutcomeCheques(){
+	
 	$query = "
 		select c.*,d.LocalNo,d.DocDate,a.*,b.InfoDesc as StatusDesc,t.TafsiliDesc,bankDesc
 
@@ -184,5 +185,59 @@ function selectOutcomeCheques()
 	die();
 }
 
+function SelectIncomeChequeStatuses() {
+	
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4");
+
+	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
+	die();
+}
+
+function SelectChequeStatuses(){
+	
+	$dt = PdoDataAccess::runquery("select * from ACC_ChequeStatuses");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SaveChequeStatus(){
+	
+	PdoDataAccess::runquery("insert into ACC_ChequeStatuses(SrcID,DstID) values(?,?)", 
+		array($_POST["SrcID"],$_POST["DstID"]));
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function DeleteChequeStatuses(){
+	
+	PdoDataAccess::runquery("delete from ACC_ChequeStatuses where RowID=?", 
+		array($_POST["RowID"]));
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function selectValidChequeStatuses(){
+	
+	$SrcID = $_REQUEST["SrcID"];
+	$temp = PdoDataAccess::runquery("
+		select InfoID,InfoDesc 
+		from baseInfo join ACC_ChequeStatuses on(SrcID=? AND DstID=InfoID)
+		where typeID=4", array($SrcID));
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
+function ChangeChequeStatus(){
+	
+	$BackPayID = $_POST["BackPayID"];
+	$Status = $_POST["StatusID"];
+	
+	$obj = new LON_BackPays($BackPayID);
+	$obj->ChequeStatus = $Status;
+	$result = $obj->EditPay();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 
 ?>

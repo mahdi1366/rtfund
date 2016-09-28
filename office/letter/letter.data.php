@@ -100,14 +100,34 @@ function SelectDraftLetters() {
     die();
 }
 
+function ReceivedSummary(){
+	
+	$temp = PdoDataAccess::runquery("
+		select SendType,InfoDesc SendTypeDesc, count(*) totalCnt, sum(if(IsSeen='NO',1,0)) newCnt
+		from OFC_send s
+			join BaseInfo on(TypeID=12 AND SendType=InfoID)
+		where  IsDeleted='NO' AND s.ToPersonID=" . $_SESSION["USER"]["PersonID"] . "
+		group by SendType");		
+	
+	return $temp;
+}
+
 function SelectReceivedLetters(){
 	
 	$where = " AND IsDeleted='NO'";
+	$param = array();
 	
 	if(isset($_REQUEST["deleted"]) && $_REQUEST["deleted"] == "true")
 		$where = " AND IsDeleted='YES'";
 	
-	$dt = OFC_letters::SelectReceivedLetters($where);
+	if(!empty($_REQUEST["SendType"]))
+	{
+		$where .= " AND SendType=:st";
+		$param[":st"] = $_REQUEST["SendType"];
+	}
+	
+	$dt = OFC_letters::SelectReceivedLetters($where, $param);
+	//echo PdoDataAccess::GetLatestQueryString();
 	$cnt = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	

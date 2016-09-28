@@ -77,6 +77,12 @@ if(isset($_REQUEST["show"]))
 				<br>مبلغ فاز : <b><?= number_format($partObj->PartAmount) ?></b>
 			<br>تاریخ پرداخت : <b><?= DateModules::miladi_to_shamsi($partObj->PartDate) ?></b>
 			</td>
+			<td> فاصله اقساط : <b><?= $partObj->PayInterval . ($partObj->IntervalType == "DAY" ? "روز" : "ماه") ?></b>
+				<br> مدت تنفس : <b><?= $partObj->DelayMonths ?> ماه و 
+						<?= $partObj->DelayDays ?> روز </b>
+				<br> کارمزد : <b><?= $partObj->CustomerWage ?> % </b>
+				<br> درصد دیرکرد : <b><?= $partObj->ForfeitPercent ?> % </b>
+			</td>
 			<td style="font-family: nazanin; font-size: 18px; font-weight: bold">
 				مانده قابل پرداخت :  <?= number_format($returnArr[count($returnArr)-1]["TotalRemainder"]) ?>  ريال
 			</td>

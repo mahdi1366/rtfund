@@ -33,6 +33,8 @@ $dg->addColumn("", "PartID","", true);
 $dg->addColumn("", "PayTypeDesc","", true);
 $dg->addColumn("", "LocalNo","", true);
 $dg->addColumn("", "DocStatus","", true);
+$dg->addColumn("", "ChequeStatus","", true);
+
 if($editable)
 {
 	$col = $dg->addColumn("نحوه پرداخت", "PayType");
@@ -81,14 +83,7 @@ if($editable)
 	$col->editor = ColumnEditor::TextField(true);
 $col->width = 60;
 
-if($editable)
-{
-	$col = $dg->addColumn("وضعیت چک", "ChequeStatus", "");
-	$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from BaseInfo where typeID=16"), 
-	"InfoID", "InfoDesc", "", "", true);
-}
-else
-	$col = $dg->addColumn("وضعیت چک", "ChequeStatusDesc", "");
+$col = $dg->addColumn("وضعیت چک", "ChequeStatusDesc", "");
 $col->width = 80;
 
 
@@ -171,7 +166,7 @@ function LoanPay()
 			if(e.record.data.BackPayID == null)
 				return true;
 			
-			if(e.record.data.ChequeNo != null && e.record.data.ChequeStatus != "2")
+			if(e.record.data.PayType == "9" && e.record.data.ChequeStatus == "1")
 				return true;
 			
 			return false;			
@@ -291,6 +286,9 @@ LoanPay.DeleteRender = function(v,p,r){
 	if(r.data.PayRefNo != null &&  r.data.PayRefNo != "")
 		return "";
 	
+	if(r.data.PayType == "9" && r.data.ChequeStatus != "1")
+		return "";
+	
 	return "<div align='center' title='حذف' class='remove' "+
 		"onclick='LoanPayObject.DeletePay();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
@@ -298,6 +296,9 @@ LoanPay.DeleteRender = function(v,p,r){
 }
 
 LoanPay.RegDocRender = function(v,p,r){
+	
+	if(r.data.PayType == "9")
+		return "";
 	
 	if(r.data.LocalNo == null)
 		return "<div align='center' title='صدور سند' class='send' "+
@@ -403,7 +404,7 @@ LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 		url: this.address_prefix +'request.data.php',
 		method: "POST",
 		params: {
-			task: "SavePartPay",
+			task: "SaveBackPay",
 			//BankTafsili : BankTafsili,
 			record: Ext.encode(record.data),
 			RegisterDoc : "0"
@@ -502,7 +503,7 @@ LoanPay.prototype.AddPay = function(){
 		return;
 	}
 	
-	defaultAmount = 0;alert(this.grid.getStore().totalCount);
+	defaultAmount = 0;
 	if(this.grid.getStore().totalCount > 0)
 		defaultAmount = this.grid.getStore().getAt(0).data.PayAmount;
 	

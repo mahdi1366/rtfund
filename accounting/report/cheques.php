@@ -114,17 +114,13 @@ if(isset($_REQUEST["show"]))
 	{
 		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
-				<td width=60px><img src='../img/logo3.png'></td>
+				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='font-family:b titr;font-size:15px'>اعتماد شما سرلوحه خدمت ماست<br>
 					گزارش چک ها
 					";
 		if(!empty($_POST["l_fromDate"]))
 		{
 			echo "<br>سررسید چک ها از تاریخ : " . $_POST["l_fromDate"] . ($_POST["l_toDate"] != "" ? " - " . $_POST["l_toDate"] : "");
-		}
-		if(!empty($_POST["checkStatus"]))
-		{
-			echo "<br>وضعیت : " . $_POST["statusName"];
 		}
 		echo	"</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 

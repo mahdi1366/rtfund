@@ -1,4 +1,12 @@
 <?php
+
+phpinfo();
+die();
+ include('generalClasses/phpqrcode/qrlib.php');
+    
+    // outputs image directly into browser, as PNG stream
+    QRcode::png('شبنم جعفرخانی با مبلغ سهام : 458،000،000');
+	die();
 /*
  ACC_roles
  insert into BaseTypes

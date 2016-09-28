@@ -38,6 +38,20 @@ else
 </style>
 <body dir="rtl">
 <?
+//--------------------- events --------------------
+$dt = PdoDataAccess::runquery("select * from PLN_PlanEvents where PlanID=? order by EventDate", array($PlanID));
+echo "<center><table class=form border=1>
+	<tr>
+		<td align=center colspan=2 class=titles>رویدادهای مرتبط با طرح</td>
+	</tr>";
+foreach($dt as $row)
+{
+	echo "<tr><td >" . $row["EventTitle"] . "</td><td align=center>" . 
+			DateModules::miladi_to_shamsi($row["EventDate"]) . "</td></tr>";
+}
+echo "</table>";
+//-------------------------------------------------
+
 $query = "
 		select 
 			ifnull(g2.GroupDesc,g1.GroupDesc) level1,
@@ -127,10 +141,7 @@ function printGrid($PlanID, $ParentID){
 		{
 			echo "<td class=values>";
 			if($col["ElementType"] == "currencyfield")
-			{
-				$rowValues[ $col["ElementID"] ] = empty($rowValues[ $col["ElementID"] ]) ? 0 : $rowValues[ $col["ElementID"] ];
 				echo number_format($rowValues[ $col["ElementID"] ]);
-			}
 			else
 				echo $rowValues[ $col["ElementID"] ];
 			echo "</td>";
@@ -169,7 +180,7 @@ function printForm($ParentID, $ElementValue){
 			continue;
 		if($element["ElementType"] == "textarea")
 		{
-			echo "<div class=form>" . nl2br(str_replace(' ', '&nbsp;', $planValues[ $element["ElementID"] ]), true) . "</div>";
+			echo "<div class=form>" . $planValues[ $element["ElementID"] ] . "</div>";
 			break;
 		}
 		if($index == 0)
@@ -186,10 +197,7 @@ function printForm($ParentID, $ElementValue){
 		}
 		echo "<td class=values colspan=$colspan>";
 		if($element["ElementType"] == "currencyfield")
-		{
-			$planValues[ $element["ElementID"] ] = empty($planValues[ $element["ElementID"] ]) ? 0 : $planValues[ $element["ElementID"] ];
 			echo number_format($planValues[ $element["ElementID"] ]);
-		}
 		else
 			echo $planValues[ $element["ElementID"] ];
 		echo "</td>";

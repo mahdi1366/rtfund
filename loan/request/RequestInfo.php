@@ -47,6 +47,7 @@ $dg->addColumn("", "ReqPersonID","", true);
 $dg->addColumn("", "AgentReturn","", true);
 $dg->addColumn("", "AgentDelayReturn","", true);
 $dg->addColumn("", "IsDocRegister","", true);
+$dg->addColumn("", "DelayPercent","", true);
 
 
 $col = $dg->addColumn("عنوان فاز", "PartDesc", "");

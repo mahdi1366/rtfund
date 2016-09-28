@@ -548,14 +548,6 @@ function EnableChequeBook() {
 
 //----------------------------------------------
 
-function SelectIncomeChequeStatuses() {
-	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=16");
-
-	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
-	die();
-}
-
 function SelectChequeStatuses() {
 	
 	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4");

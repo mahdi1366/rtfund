@@ -158,11 +158,9 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$startDate = DateModules::miladi_to_shamsi($PayObj->PayDate);
 	$DelayDuration = DateModules::JDateMinusJDate(
 		DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths), $startDate)+1;
-		
-	$CustomerDelay = round($PayAmount*$PartObj->CustomerWage*$DelayDuration/36500);
+	$CustomerDelay = round($PayAmount*$PartObj->DelayPercent*$DelayDuration/36500);
 	$FundDelay = round($PayAmount*$PartObj->FundWage*$DelayDuration/36500);
-	$AgentDelay = round($PayAmount*($PartObj->CustomerWage - $PartObj->FundWage)*$DelayDuration/36500);
-	
+	$AgentDelay = round($PayAmount*($PartObj->DelayPercent - $PartObj->FundWage)*$DelayDuration/36500);
 	$curYear = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0, 4)*1;
 	$CurYearTafsili = FindTafsiliID($curYear, TAFTYPE_YEARS);
 	//------------------ find tafsilis ---------------
@@ -256,9 +254,9 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$extraAmount += round($TotalWage*$AgentFactor);
 
 	if($PartObj->DelayReturn == "INSTALLMENT")
-		$extraAmount += $CustomerDelay*($PartObj->FundWage/$PartObj->CustomerWage);
+		$extraAmount += $CustomerDelay*($PartObj->FundWage/$PartObj->DelayPercent);
 	if($AgentDelay > 0 && $PartObj->AgentDelayReturn == "INSTALLMENT")
-		$extraAmount += $CustomerDelay*(($PartObj->CustomerWage-$PartObj->FundWage)/$PartObj->CustomerWage);
+		$extraAmount += $CustomerDelay*(($PartObj->DelayPercent-$PartObj->FundWage)/$PartObj->DelayPercent);
 		
 	if($FirstStep)
 	{
@@ -306,7 +304,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	if($PartObj->MaxFundWage == 0 && $FundDelay > 0)
 	{
 		$FundYearDelays = YearDelayCompute($PartObj, $PayObj->PayDate, $PayAmount, $PartObj->FundWage);
-		$CustomerYearDelays = YearDelayCompute($PartObj, $PayObj->PayDate, $PayAmount, $PartObj->CustomerWage);
+		$CustomerYearDelays = YearDelayCompute($PartObj, $PayObj->PayDate, $PayAmount, $PartObj->DelayPercent);
 			
 		$index = 0;
 		while(true)
@@ -363,7 +361,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	if($AgentDelay > 0)
 	{
 		$AgentYearDelays = YearDelayCompute($PartObj, $PayObj->PayDate, $PayAmount, 
-				$PartObj->CustomerWage-$PartObj->FundWage);			
+				$PartObj->DelayPercent-$PartObj->FundWage);			
 		$index = 0;
 		while(true)
 		{
@@ -665,6 +663,346 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	return $obj->DocID;
 }
 
+function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo){
+		
+	require_once '../../loan/request/request.data.php';
+	
+	/*@var $ReqObj LON_requests */
+	/*@var $PartObj LON_ReqParts */
+	/*@var $PayObj LON_payments */
+	
+	//------------- get CostCodes --------------------
+	$LoanObj = new LON_loans($ReqObj->LoanID);
+	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
+	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
+	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
+	$CostCode_bank = FindCostID("101");
+	$CostCode_guaranteeAmount = FindCostID("904-02");
+	$CostCode_guaranteeCount = FindCostID("904-01");
+	$CostCode_guaranteeAmount2 = FindCostID("905-02");
+	$CostCode_guaranteeCount2 = FindCostID("905-01");
+	$CostCode_todiee = FindCostID("200-03");
+	//------------------------------------------------
+	
+	$CycleID = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0 , 4);
+	
+	//---------------- add doc header --------------------
+	$obj = new ACC_docs();
+	$obj->RegDate = PDONOW;
+	$obj->regPersonID = $_SESSION['USER']["PersonID"];
+	$obj->DocDate = PDONOW;
+	$obj->CycleID = $CycleID;
+	$obj->BranchID = $ReqObj->BranchID;
+	$obj->DocType = DOCTYPE_LOAN_PAYMENT;
+	$obj->description = "پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID . " به نام " . 
+		$ReqObj->_LoanPersonFullname;
+	
+	if(!$obj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ایجاد سند");
+		return false;
+	}
+	$PayAmount = $PayObj->PayAmount;
+	//--------------------------------------------------------
+	$payments = LON_payments::Get(" AND PartID=? order by PayDate", array($PartObj->PartID));
+	$payments = $payments->fetchAll();
+	//--------------- total pay months -------------
+	$firstPay = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
+	$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
+	$EndDate = DateModules::AddToJDate($LastPay, 0, $PartObj->DelayMonths*1 + 
+			$PartObj->PayInterval*$PartObj->InstallmentCount);
+			
+	$TotalWage = ComputeWageOfSHekoofa($PartObj);
+	$years = SplitYears($firstPay, $EndDate, $TotalWage);
+	
+	//------------------ nfind tafsilis ---------------
+	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
+	if(!$LoanPersonTafsili)
+	{
+		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->LoanPersonID . "]");
+		return false;
+	}
+	
+	$LoanMode = "";
+	if(!empty($ReqObj->ReqPersonID))
+	{
+		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+		if($PersonObj->IsAgent == "YES")
+			$LoanMode = "Agent";
+	}
+	else
+		$LoanMode = "Customer";
+	
+	if($LoanMode == "Agent")
+	{
+		$ReqPersonTafsili = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+		if(!$ReqPersonTafsili)
+		{
+			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
+			return false;
+		}
+		$SubAgentTafsili = "";
+		if(!empty($ReqObj->SubAgentID))
+		{
+			$SubAgentTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
+			if(!$SubAgentTafsili)
+			{
+				ExceptionHandler::PushException("تفصیلی زیر واحد سرمایه گذار یافت نشد.[" . $ReqObj->SubAgentID . "]");
+				return false;
+			}
+		}
+	}	
+	//------------ find the number step to pay ---------------
+	$FirstStep = true;
+	$dt = PdoDataAccess::runquery("select * from ACC_DocItems where SourceID=?", array($ReqObj->RequestID));
+	if(count($dt) > 0)
+	{
+		$FirstStep = false;
+		$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0)
+			from ACC_DocItems where CostID=? AND TafsiliID=? AND sourceID=?";
+		$param = array($CostCode_todiee, $LoanPersonTafsili, $ReqObj->RequestID);
+		if($LoanMode == "Agent")
+		{
+			$query .= " AND TafsiliID2=?";
+			$param[] = $ReqPersonTafsili;
+		}
+		$dt = PdoDataAccess::runquery($query, $param);
+		if($dt[0][0]*1 < $PayAmount)
+		{
+			print_r(ExceptionHandler::PopAllExceptions());
+			ExceptionHandler::PushException("حساب تودیعی این مشتری"
+					. number_format($dt[0][0]) . " ریال می باشد که کمتر از مبلغ این مرحله از پرداخت وام می باشد");
+			return false;
+		}
+	}
+	//----------------- add Doc items ------------------------
+	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $obj->DocID;
+	$itemObj->TafsiliType = TAFTYPE_PERSONS;
+	$itemObj->TafsiliID = $LoanPersonTafsili;
+	if($LoanMode == "Agent")
+	{
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
+	}
+	$itemObj->locked = "YES";
+	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
+	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID2 = $PartObj->PartID;
+	$itemObj->SourceID3 = $PayObj->PayID;
+	
+	$extraAmount = 0;
+	if($PartObj->WageReturn == "INSTALLMENT")
+		$extraAmount += round($TotalWage);		
+		
+	if($FirstStep)
+	{
+		$amount = $PartObj->PartAmount + $extraAmount;	
+		
+		unset($itemObj->ItemID);
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = $CostCode_Loan;
+		$itemObj->DebtorAmount = $amount;
+		$itemObj->CreditorAmount = 0;
+		$itemObj->Add($pdo);
+		$LoanRow = clone $itemObj;
+		
+		if($PartObj->PartAmount != $PayAmount)
+		{
+			unset($itemObj->ItemID);
+			$itemObj->DocID = $obj->DocID;
+			$itemObj->CostID = $CostCode_todiee;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $PartObj->PartAmount*1 - $PayAmount;
+			$itemObj->Add($pdo);
+		}
+	}
+	else
+	{
+		if($extraAmount > 0)
+		{
+			unset($itemObj->ItemID);
+			$itemObj->DocID = $obj->DocID;
+			$itemObj->CostID = $CostCode_Loan;
+			$itemObj->DebtorAmount = $extraAmount;
+			$itemObj->CreditorAmount = 0;
+			$itemObj->Add($pdo);
+			$LoanRow = clone $itemObj;
+		}
+		
+		unset($itemObj->ItemID);
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = $CostCode_todiee;
+		$itemObj->DebtorAmount = $PayAmount;
+		$itemObj->CreditorAmount = 0;
+		$itemObj->Add($pdo);
+	}
+	//------------------------ wage ---------------------	
+	$curYear = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0, 4)*1;
+	foreach($years as $Year => $amount)
+	{	
+		if($amount == 0)
+			continue;
+		$YearTafsili = FindTafsiliID($Year, TAFTYPE_YEARS);
+		if(!$YearTafsili)
+		{
+			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $Year . "]");
+			return false;
+		}
+		unset($itemObj->ItemID);
+		$itemObj->details = "کارمزد وام شماره " . $ReqObj->RequestID;
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		$itemObj->CostID = $Year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $amount;
+		$itemObj->TafsiliType = TAFTYPE_YEARS;
+		$itemObj->TafsiliID = $YearTafsili;
+		$itemObj->Add($pdo);
+	}
+	// ----------------------------- bank --------------------------------
+	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $obj->DocID;
+	$itemObj->CostID = $CostCode_bank;
+	$itemObj->DebtorAmount = 0;
+	
+	$BankItemAmount = $PayAmount;
+
+	$itemObj->CreditorAmount = $BankItemAmount;
+	$itemObj->TafsiliType = TAFTYPE_BANKS;
+	$itemObj->TafsiliID = $BankTafsili;
+	$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
+	$itemObj->TafsiliID = $AccountTafsili;
+	$itemObj->locked = "YES";
+	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
+	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID2 = $PartObj->PartID;
+	$itemObj->SourceID3 = $PayObj->PayID;
+	$itemObj->Add($pdo);
+	$BankRow = clone $itemObj;
+	
+	//---------- ردیف های تضمین  ----------
+	
+	$dt = PdoDataAccess::runquery("select * from DMS_documents 
+		join BaseInfo b on(InfoID=DocType AND TypeID=8)
+		join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
+		where b.param1=1 AND ObjectType='loan' AND ObjectID=?", array($ReqObj->RequestID));
+	$SumAmount = 0;
+	$countAmount = 0;
+	
+	if(count($dt) == 0)
+	{
+		$dt = PdoDataAccess::runquery("
+			SELECT DocumentID, ParamValue, InfoDesc as DocTypeDesc
+				FROM DMS_DocParamValues
+				join DMS_DocParams using(ParamID)
+				join DMS_documents d using(DocumentID)
+				join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
+			where b.param1=1 AND paramType='currencyfield' AND ObjectType='loan' AND ObjectID=?",
+			array($ReqObj->RequestID), $pdo);
+		
+		foreach($dt as $row)
+		{
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			$itemObj->CostID = $CostCode_guaranteeAmount;
+			$itemObj->DebtorAmount = $row["ParamValue"];
+			$itemObj->CreditorAmount = 0;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $LoanPersonTafsili;
+			$itemObj->SourceType = DOCTYPE_DOCUMENT;
+			$itemObj->SourceID = $row["DocumentID"];
+			$itemObj->details = $row["DocTypeDesc"];
+			$itemObj->Add($pdo);
+			
+			$SumAmount += $row["ParamValue"]*1;
+			$countAmount++;
+		}
+	}
+	if($FirstStep)
+	{
+		//---------------------------------------------------------		
+		$dt = PdoDataAccess::runquery("
+			SELECT PayAmount,BackPayID
+				FROM LON_BackPays
+				where PartID=? AND PayType=9",array($PartObj->PartID), $pdo);
+
+		foreach($dt as $row)
+		{
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			$itemObj->CostID = $CostCode_guaranteeAmount;
+			$itemObj->DebtorAmount = $row["PayAmount"];
+			$itemObj->CreditorAmount = 0;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $LoanPersonTafsili;
+			$itemObj->SourceType = DOCTYPE_DOCUMENT;
+			$itemObj->SourceID = $row["BackPayID"];
+			$itemObj->Add($pdo);
+			
+			$SumAmount += $row["ParamValue"]*1;
+			$countAmount++;
+		}
+	}
+		//---------------------------------------------------------
+	if($SumAmount > 0)
+	{
+		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType);
+		unset($itemObj->TafsiliID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		unset($itemObj->details);
+		$itemObj->CostID = $CostCode_guaranteeAmount2;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $SumAmount;	
+		$itemObj->Add($pdo);
+
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_guaranteeCount;
+		$itemObj->DebtorAmount = $countAmount;
+		$itemObj->CreditorAmount = 0;	
+		$itemObj->Add($pdo);
+
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_guaranteeCount2;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $countAmount;
+		$itemObj->Add($pdo);
+	}
+	
+	//------ ایجاد چک ------
+	$chequeObj = new ACC_DocCheques();
+	$chequeObj->DocID = $obj->DocID;
+	$chequeObj->CheckDate = $PayObj->PayDate;
+	$chequeObj->amount = $BankItemAmount;
+	$chequeObj->TafsiliID = $LoanPersonTafsili;
+	$chequeObj->description = " پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
+	$chequeObj->Add($pdo);
+	
+	//---------------------------------------------------------
+	$dt = PdoDataAccess::runquery("select sum(DebtorAmount) dsum, sum(CreditorAmount) csum
+		from ACC_DocItems where DocID=?", array($obj->DocID), $pdo);
+	if($dt[0]["dsum"] > $dt[0]["csum"])
+	{
+		$BankRow->CreditorAmount += $dt[0]["dsum"] - $dt[0]["csum"];
+		$BankRow->Edit($pdo);
+	}
+	else if($dt[0]["csum"] > $dt[0]["dsum"])
+	{
+		$LoanRow->DebtorAmount += $dt[0]["csum"] - $dt[0]["dsum"];
+		$LoanRow->Edit($pdo);
+	}
+	//---------------------------------------------------------
+	
+	if(ExceptionHandler::GetExceptionCount() > 0)
+		return false;
+	
+	return $obj->DocID;
+}
+
 function ReturnPayPartDoc($DocID, $pdo){
 	
 	return ACC_docs::Remove($DocID, $pdo);	
@@ -722,7 +1060,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	$year3 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 3, $YearMonths);
 	$year4 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 4, $YearMonths);
 	
-	$TotalDelay = round($PartObj->PartAmount*$PartObj->CustomerWage*$DelayDuration/36500);
+	$TotalDelay = round($PartObj->PartAmount*$PartObj->DelayPercent*$DelayDuration/36500);
 	$curYear = substr(DateModules::miladi_to_shamsi($PartObj->PartDate), 0, 4)*1;
 	
 	//--------------------- compute for new Amount ---------------------
@@ -735,7 +1073,7 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	$new_year3 = $FundFactor*YearWageCompute($PartObj, $new_TotalWage, 3, $YearMonths);
 	$new_year4 = $FundFactor*YearWageCompute($PartObj, $new_TotalWage, 4, $YearMonths);
 	
-	$new_TotalDelay = round($PaidAmount*$PartObj->CustomerWage*$DelayDuration/36500);
+	$new_TotalDelay = round($PaidAmount*$PartObj->DelayPercent*$DelayDuration/36500);
 	
 	//------------------ find tafsilis ---------------
 	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
