@@ -135,12 +135,16 @@ function YearDelayCompute($PartObj, $PayDate, $PayAmount, $wage){
 	
 	$DelayDuration = DateModules::JDateMinusJDate(
 		DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths), $startDate)+1;
-	$TotalDelayAmount = round($PayAmount*$wage*$DelayDuration/36500);
+	if($PartObj->DelayDays*1 == 0)
+		$TotalDelayAmount = round($PayAmount*$wage*$PartObj->DelayMonth/1200);
+	else
+		$TotalDelayAmount = round($PayAmount*$wage*$DelayDuration/36500);
 
 	$sum = 0;
 	foreach($yearDays as $year => $days)
 	{
-		$yearDays[$year] = round($PayAmount*$wage*$yearDays[$year]/36500);
+		//$yearDays[$year] = round($PayAmount*$wage*$yearDays[$year]/36500);
+		$yearDays[$year] = round($days*$TotalDelayAmount/$totalDays);
 		$sum += $yearDays[$year];
 	}
 	if($sum <> $TotalDelayAmount)
