@@ -501,7 +501,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	$itemObj->TafsiliID = $BankTafsili;
 	$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-	$itemObj->TafsiliID = $AccountTafsili;
+	$itemObj->TafsiliID2 = $AccountTafsili;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
@@ -872,7 +872,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	$itemObj->TafsiliID = $BankTafsili;
 	$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-	$itemObj->TafsiliID = $AccountTafsili;
+	$itemObj->TafsiliID2 = $AccountTafsili;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;

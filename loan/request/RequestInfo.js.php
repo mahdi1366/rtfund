@@ -1385,9 +1385,10 @@ RequestInfo.prototype.LoadSummary = function(record){
 	}
 	
 	DelayDuration = record.data.DelayMonths*1 + (record.data.DelayDays*1/30);
-	DelayDuration = DateModule.GDateMinusGDate(
+	/*DelayDuration = DateModule.GDateMinusGDate(
 		DateModule.AddToGDate(record.data.PartDate, record.data.DelayDays*1, record.data.DelayMonths*1), 
-		record.data.PartDate);
+		record.data.PartDate);*/
+		
 	YearMonths = 12;
 	if(record.data.IntervalType == "DAY")
 		YearMonths = Math.floor(365/record.data.PayInterval);
@@ -1400,7 +1401,7 @@ RequestInfo.prototype.LoadSummary = function(record){
 	FundWage = !isInt(FundWage) ? 0 : FundWage;
 	AgentWage = TotalWage - FundWage;
 	
-	TotalDelay = Math.round(record.data.PartAmount*record.data.DelayPercent*DelayDuration/36500);
+	TotalDelay = Math.round(record.data.PartAmount*record.data.DelayPercent*DelayDuration/1200);
 	
 	//-------------------------- installments -----------------------------
 	MaxWage = Math.max(record.data.CustomerWage, record.data.FundWage);

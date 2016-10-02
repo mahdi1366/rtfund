@@ -203,10 +203,10 @@ if(isset($_REQUEST["show"]))
 	$where = "";
 	$whereParam = array();
 	
-	if(!empty($_POST["BranchID"]))
+	if(!empty($_REQUEST["BranchID"]))
 	{
 		$where .= " AND BranchID=:b";
-		$whereParam[":b"] = $_POST["BranchID"];
+		$whereParam[":b"] = $_REQUEST["BranchID"];
 	}	
 	MakeWhere($where, $whereParam);
 	$query .= " where d.CycleID=" . $_SESSION["accounting"]["CycleID"] . $where;
@@ -214,6 +214,7 @@ if(isset($_REQUEST["show"]))
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.DocStatus != 'RAW' ";
 	
+	$query .= " order by d.DocDate";
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	
