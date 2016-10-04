@@ -12,6 +12,7 @@ require_once '../loan/loan.class.php';
 require_once "../../office/workflow/wfm.class.php";
 require_once '../../accounting/definitions.inc.php';
 require_once '../../accounting/docs/import.data.php';
+require_once '../../framework/person/persons.class.php';
 
 $task = isset($_REQUEST["task"]) ? $_REQUEST["task"] : "";
 if(!empty($task))
@@ -1003,7 +1004,8 @@ function SaveBackPay(){
 	{
 		$PartObj = new LON_ReqParts($obj->PartID);
 		$ReqObj = new LON_requests($PartObj->RequestID);
-		if($ReqObj->ReqPersonID == "1003")
+		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+		if($PersonObj->IsSupporter)
 			$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
 		else
 			$result = RegisterCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
@@ -1371,7 +1373,8 @@ function EditPartPayDoc(){
 	}
 	
 	$ReqObj = new LON_requests($obj->_RequestID);
-	if($ReqObj->ReqPersonID == "1003")
+	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+	if($PersonObj->IsSupporter)
 		$result = RegisterSHRTFUNDCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
 	else
 		$result = RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
@@ -1412,7 +1415,8 @@ function GroupSavePay(){
 		
 		$PartObj = new LON_ReqParts($PartID);
 		$ReqObj = new LON_requests($PartObj->RequestID);
-		if($ReqObj->ReqPersonID == "1003")
+		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+		if($PersonObj->IsSupporter)
 			$result = RegisterSHRTFUNDCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, true);
 		else
 			$result = RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, true);

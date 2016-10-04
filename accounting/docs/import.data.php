@@ -1321,7 +1321,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
-	$CostCode_commitment = FindCostID("200-01");
+	$CostCode_commitment = FindCostID("660-" . $LoanObj->_BlockCode);
 	
 	//---------------- add doc header --------------------
 	if($DocObj == null)
@@ -1518,11 +1518,9 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $Account
 	//------------- get CostCodes --------------------
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
-	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
-	$CostCode_varizi = FindCostID("721");
-	$CostCode_pardakhti = FindCostID("734");
-	$CostCode_commitment = FindCostID("200-01");
+	$CostCode_varizi = FindCostID("721-".$LoanObj->_BlockCode."-52");
+	$CostCode_pardakhti = FindCostID("721-".$LoanObj->_BlockCode."-51");
 	
 	//---------------- add doc header --------------------
 	if($DocObj == null)

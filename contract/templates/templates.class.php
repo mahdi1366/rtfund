@@ -71,7 +71,6 @@ class CNT_TemplateItems extends OperationClass {
     public $TemplateItemID; 
 	public $TemplateID;
     public $ItemName;
-	public $FieldName;
     public $ItemType;
 	public $ComboValues;
     
