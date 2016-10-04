@@ -605,14 +605,16 @@ function GetPartInstallments(){
 	die();
 }
 
-function ComputeInstallments(){
+function ComputeInstallments($PartID = "", $returnMode = false){
 	
-	$obj = new LON_ReqParts($_REQUEST["PartID"]);
+	$PartID = empty($PartID) ? $_REQUEST["PartID"] : $PartID;
+	
+	$obj = new LON_ReqParts($PartID);
 	PdoDataAccess::runquery("delete from LON_installments where PartID=? ", array($obj->PartID));
 	//-----------------------------------------------
 	$obj2 = new LON_requests($obj->RequestID);
 	if($obj2->ReqPersonID == SHEKOOFAI)
-		return ComputeInstallmentsShekoofa($obj);
+		return ComputeInstallmentsShekoofa($obj, $returnMode);
 	//-----------------------------------------------
 	$YearMonths = 12;
 	if($obj->IntervalType == "DAY")
@@ -692,6 +694,10 @@ function ComputeInstallments(){
 	}
 	
 	$pdo->commit();
+	
+	if($returnMode)
+		return true;
+	
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
@@ -730,13 +736,16 @@ function ComputeWageOfSHekoofa($partObj){
 	return $totalWage;
 }
 
-function ComputeInstallmentsShekoofa($partObj = null){
+function ComputeInstallmentsShekoofa($partObj = null, $returnMode = false){
 	
 	if(!$partObj)
 		$partObj = new LON_ReqParts($_REQUEST["PartID"]);
 	
 	$payments = LON_payments::Get(" AND PartID=? order by PayDate", array($partObj->PartID));
 	$payments = $payments->fetchAll();
+	
+	if(count($payments) == 0)
+		return true;
 	//--------------- total pay months -------------
 	$firstPay = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
 	$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
@@ -771,6 +780,10 @@ function ComputeInstallmentsShekoofa($partObj = null){
 	}
 	
 	$pdo->commit();
+	
+	if($returnMode)
+		return true;
+	
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
@@ -988,7 +1001,13 @@ function SaveBackPay(){
 	}
 	if(empty($obj->ChequeNo) || $obj->ChequeStatus == "2")
 	{
-		if(!RegisterCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo))
+		$PartObj = new LON_ReqParts($obj->PartID);
+		$ReqObj = new LON_requests($PartObj->RequestID);
+		if($ReqObj->ReqPersonID == "1003")
+			$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
+		else
+			$result = RegisterCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
+		if(!$result)
 		{
 			$pdo->rollback();
 			//print_r(ExceptionHandler::PopAllExceptions());
@@ -1350,7 +1369,14 @@ function EditPartPayDoc(){
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
-	if(!RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo))
+	
+	$ReqObj = new LON_requests($obj->_RequestID);
+	if($ReqObj->ReqPersonID == "1003")
+		$result = RegisterSHRTFUNDCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
+	else
+		$result = RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
+	
+	if(!$result)
 	{
 		$pdo->rollback();
 		echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
@@ -1384,7 +1410,13 @@ function GroupSavePay(){
 		$obj->IsGroup = "YES";
 		$obj->AddPay($pdo);
 		
-		if(!RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, true))
+		$PartObj = new LON_ReqParts($PartID);
+		$ReqObj = new LON_requests($PartObj->RequestID);
+		if($ReqObj->ReqPersonID == "1003")
+			$result = RegisterSHRTFUNDCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, true);
+		else
+			$result = RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, true);
+		if(!$result)
 		{
 			$pdo->rollback();
 			print_r(ExceptionHandler::PopAllExceptions());

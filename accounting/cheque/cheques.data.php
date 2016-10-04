@@ -221,7 +221,7 @@ function selectValidChequeStatuses(){
 	$SrcID = $_REQUEST["SrcID"];
 	$temp = PdoDataAccess::runquery("
 		select InfoID,InfoDesc 
-		from baseInfo join ACC_ChequeStatuses on(SrcID=? AND DstID=InfoID)
+		from BaseInfo join ACC_ChequeStatuses on(SrcID=? AND DstID=InfoID)
 		where typeID=4", array($SrcID));
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
