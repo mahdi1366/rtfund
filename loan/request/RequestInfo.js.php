@@ -1400,7 +1400,10 @@ RequestInfo.prototype.LoadSummary = function(record){
 	FundWage = !isInt(FundWage) ? 0 : FundWage;
 	AgentWage = TotalWage - FundWage;
 	
-	TotalDelay = Math.round(record.data.PartAmount*record.data.DelayPercent*DelayDuration/36500);
+	if(record.data.DelayDays*1 > 0)
+		TotalDelay = Math.round(record.data.PartAmount*record.data.DelayPercent*DelayDuration/36500);
+	else
+		TotalDelay = Math.round(record.data.PartAmount*record.data.DelayPercent*record.data.DelayMonths/1200);
 	
 	//-------------------------- installments -----------------------------
 	MaxWage = Math.max(record.data.CustomerWage, record.data.FundWage);
@@ -1523,8 +1526,6 @@ RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
 			wage = Math.round((this.paymentStore.getAt(j).data.PayAmount/record.data.InstallmentCount)*
 				jdiff*record.data.CustomerWage/36500);
 			wages[wageindex].push(wage);
-			if(i == 3 && j == 1)
-				alert(installmentDate + "\n" + this.paymentStore.getAt(j).data.PayDate + "\n" + jdiff);
 			totalWage += wage;
 		}
 	}

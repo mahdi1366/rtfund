@@ -22,7 +22,8 @@ $col->editor = ColumnEditor::SHDateField();
 $col = $dg->addColumn("آیتم ها","","");
 $col->renderer = "VOT_Form.ItemsRender";
 $col->sortable = false;
-$col->width = 50;
+$col->align = "center";
+$col->width = 60;
 
 $col = $dg->addColumn("نمایش","","");
 $col->renderer = "VOT_Form.previewRender";

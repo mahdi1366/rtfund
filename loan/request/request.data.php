@@ -116,7 +116,7 @@ function YearDelayCompute($PartObj, $PayDate, $PayAmount, $wage){
 
 	$arr = preg_split('/[\-\/]/',$startDate);
 	$StartYear = $arr[0]*1;
-	
+	  
 	$totalDays = 0;
 	$yearDays = array();
 	$newStartDate = $startDate;
@@ -136,7 +136,7 @@ function YearDelayCompute($PartObj, $PayDate, $PayAmount, $wage){
 	$DelayDuration = DateModules::JDateMinusJDate(
 		DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths), $startDate)+1;
 	if($PartObj->DelayDays*1 == 0)
-		$TotalDelayAmount = round($PayAmount*$wage*$PartObj->DelayMonth/1200);
+		$TotalDelayAmount = round($PayAmount*$wage*$PartObj->DelayMonths/1200);
 	else
 		$TotalDelayAmount = round($PayAmount*$wage*$DelayDuration/36500);
 

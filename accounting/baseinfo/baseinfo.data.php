@@ -19,7 +19,7 @@ function SelectBlocks() {
 	{
 		$level = $_REQUEST['level'];
 		$query = "select b$level.* from ACC_CostCodes 
-			join ACC_blocks b1 on(b1.BlockID=level1)
+			 join ACC_blocks b1 on(b1.BlockID=level1)
 			left join ACC_blocks b2 on(b2.BlockID=level2)
 			left join ACC_blocks b3 on(b3.BlockID=level3)
 		
@@ -38,7 +38,7 @@ function SelectBlocks() {
 
 		if (isset($_GET["start"]))
 			$list = PdoDataAccess::fetchAll($list, $_GET["start"], $_GET["limit"]);
-		else
+		else  
 			$list = $list->fetchAll();
 
 		echo dataReader::getJsonData($list, $count, $_GET['callback']);
@@ -73,7 +73,7 @@ function SelectBlocks() {
     $list = ACC_blocks::GetAll($where, $param);
     $count = $list->rowCount();
 
-    if (isset($_GET["start"]))
+    if (isset($_GET["start"]) && !isset($_GET["All"]))
         $list = PdoDataAccess::fetchAll($list, $_GET["start"], $_GET["limit"]);
     else
         $list = $list->fetchAll();

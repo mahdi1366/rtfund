@@ -39,7 +39,6 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("تاریخ پرداخت", "PayDate","dateRender");
 	
 	$col = $rpg->addColumn("مبلغ پرداخت", "PayAmount","amountRender");
-	$col->EnableSummary();
 	
 	$rpg->addColumn("تعداد روز تاخیر", "ForfeitDays");
 	$col = $rpg->addColumn("جریمه", "CurForfeitAmount","amountRender");

@@ -473,7 +473,7 @@ function AccReport_taraz()
 				
 				proxy: {
 					type: 'jsonp',
-					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=1',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&All=true&level=1',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				autoLoad : true

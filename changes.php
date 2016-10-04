@@ -1,5 +1,14 @@
 <?php
 
+require_once 'loan/request/request.data.php';
+$dt = PdoDataAccess::runquery("select PartID from LON_ReqParts");
+foreach($dt as $row)
+{
+	$_REQUEST[""] = $row["PartID"];
+	ComputeInstallments();
+}
+
+
 phpinfo();
 die();
  include('generalClasses/phpqrcode/qrlib.php');

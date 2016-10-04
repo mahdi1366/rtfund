@@ -55,7 +55,7 @@ VOT_Form.ItemsRender = function(v,p,r)
 {
 	return "<div align='center' title='آیتم ها' class='list' onclick='VOT_FormObject.ShowItems();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";
+		"cursor:pointer;width:16px;height:16'></div>";
 }
 
 VOT_Form.prototype.Adding = function()
