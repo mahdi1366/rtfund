@@ -432,7 +432,7 @@ DateModule.AddToGDate = function(gdate, dayplus, monthplus, yearplus){
 	month = gdate_array[1]*1+monthplus;
 	day = gdate_array[2]*1+dayplus;
 	
-	gdate = new Date(month.toString() + "/" + day.toString() + "/" + year.toString() + " 1:0");
+	gdate = new Date(year, month-1, day, 1);
 	return gdate.getFullYear() + "/" +(gdate.getMonth()+1) + "/" + gdate.getDate();
 }
 DateModule.AddToJDate = function(jdate, dayplus, monthplus, yearplus){
@@ -542,7 +542,8 @@ MiladiToShamsi = function (date, format) {
 
     try {
         var dateFormat = (date.indexOf('/') != -1) ? "Y/m/d" : "Y-m-d";
-        var date1 = new Date(tmpmonth + '/' + tmpday + '/' + tmpyear + " 1:0");
+        //var date1 = new Date(tmpmonth + '/' + tmpday + '/' + tmpyear + " 1:0");
+		var date1 = new Date(tmpyear, tmpmonth-1, tmpday, 1);
 		date1 = GtoJ(date1);
 		return date1.format(format);
     } catch (e) {

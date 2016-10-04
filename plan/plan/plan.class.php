@@ -65,11 +65,11 @@ class PLN_plans extends PdoDataAccess
 	
 	static function DeletePlan($PlanID){
 		
-		$obj = new LON_requests($PlanID);
+		$obj = new PLN_plans($PlanID);
 		if($obj->StepID != STEPID_RAW)
 			return false;
 		
-		if(!DMS_documents::DeleteAllDocument($this->PlanID, "plan"))
+		if(!DMS_documents::DeleteAllDocument($obj->PlanID, "plan"))
 		{
 			ExceptionHandler::PushException("خطا در حذف مدارک");
 	 		return false;

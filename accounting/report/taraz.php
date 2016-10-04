@@ -129,6 +129,7 @@ function showReport(){
 				(!empty($_REQUEST["toDate"]) ? "&toDate=" . $_REQUEST["toDate"] : "") .
 				(!empty($_REQUEST["fromLocalNo"]) ? "&fromLocalNo=" . $_REQUEST["fromLocalNo"] : "") . 
 				(!empty($_REQUEST["toLocalNo"]) ? "&toLocalNo=" . $_REQUEST["toLocalNo"] : "") .
+				(!empty($_REQUEST["BranchID"]) ? "&BranchID=" . $_REQUEST["BranchID"] : "") .
 				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
 				"');\" href=javascript:void(0)>" . $value . "</a>";
 	}
@@ -143,6 +144,7 @@ function showReport(){
 				"&TafsiliID2=" . $row["TafsiliID2"] .
 				(!empty($_POST["fromDate"]) ? "&fromDate=" . $_POST["fromDate"] : "") . 
 				(!empty($_POST["toDate"]) ? "&toDate=" . $_POST["toDate"] : "") .
+				(!empty($_REQUEST["BranchID"]) ? "&BranchID=" . $_REQUEST["BranchID"] : "") .
 				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
 				"');\" href=javascript:void(0)>" . $value . "</a>";
 	}
@@ -368,6 +370,7 @@ function showReport(){
 	<input type="hidden" name="fromLocalNo" value="<?= !empty($_REQUEST["fromLocalNo"]) ? $_REQUEST["fromLocalNo"] : "" ?>">
 	<input type="hidden" name="toLocalNo" value="<?= !empty($_REQUEST["toLocalNo"]) ? $_REQUEST["toLocalNo"] : "" ?>">
 	<input type="hidden" name="IncludeRaw" value="<?= !empty($_REQUEST["IncludeRaw"]) ? $_REQUEST["IncludeRaw"] : "" ?>">
+	<input type="hidden" name="BranchID" value="<?= !empty($_REQUEST["BranchID"]) ? $_REQUEST["BranchID"] : "" ?>">
 	
 	<input type="hidden" name="level1s" id="level1s" value="<?= $_POST["level1s"] ?>">
 	<input type="hidden" name="level2s" id="level2s" value="<?= $_POST["level2s"] ?>">

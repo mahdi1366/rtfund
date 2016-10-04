@@ -463,6 +463,13 @@ function SaveNewPlan(){
 	die();	
 }
 
+function DeletePlan(){
+	
+	$result = PLN_plans::DeletePlan($_POST["PlanID"]);
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();	
+}
+
 function ChangeStatus(){
 	
 	$StepID = $_POST["StepID"];

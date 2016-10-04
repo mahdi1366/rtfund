@@ -1388,6 +1388,7 @@ RequestInfo.prototype.LoadSummary = function(record){
 	DelayDuration = DateModule.GDateMinusGDate(
 		DateModule.AddToGDate(record.data.PartDate, record.data.DelayDays*1, record.data.DelayMonths*1), 
 		record.data.PartDate);
+		
 	YearMonths = 12;
 	if(record.data.IntervalType == "DAY")
 		YearMonths = Math.floor(365/record.data.PayInterval);

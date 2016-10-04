@@ -31,7 +31,14 @@ $col = $dg->addColumn("وضعیت", "StepDesc", "");
 $col->width = 100;
 
 if(!$portal && !$expert)
+{
 	$dg->addObject('ManagePlanObject.AllPlansObj');
+	
+	$col = $dg->addColumn('حذف', '', 'string');
+	$col->renderer = "ManagePlan.DeleteRender";
+	$col->width = 40;
+	$col->align = "center";
+}
 else if($portal)
 {
 	$col = $dg->addColumn('طرح', '', 'string');

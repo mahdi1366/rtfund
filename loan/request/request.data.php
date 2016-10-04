@@ -1408,14 +1408,17 @@ function GroupSavePay(){
 
 function GetDelayedInstallments($returnData = false){
 	
+	$ToDate = DateModules::shamsi_to_miladi($_REQUEST["ToDate"]);
+	
 	$query = "select PartID,concat_ws(' ',fname,lname,CompanyName) LoanPersonName
 			from LON_installments p
 			join LON_ReqParts rp using(PartID)
 			join LON_requests using(RequestID)
 			join BSC_persons on(LoanPersonID=PersonID)
 			
-			where InstallmentDate<now() AND IsEnded='NO'";
-	$param = array();
+			where InstallmentDate<:todate AND IsEnded='NO'";
+	$param = array(":todate" => $ToDate);
+	
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
 		$field = $field == "LoanPersonName" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;

@@ -85,7 +85,7 @@ if(isset($_REQUEST["show"]))
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.DocStatus != 'RAW' ";
 	
-	$query .= " group by DocID order by DocID";
+	$query .= " group by DocID order by DocDate";
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 
 	$rpg = new ReportGenerator();

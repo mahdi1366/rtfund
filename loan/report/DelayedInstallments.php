@@ -89,7 +89,29 @@ LoanReport_DelayedInstallments.prototype = {
 
 function LoanReport_DelayedInstallments()
 {
+	this.DateFS = new Ext.form.FieldSet({
+		width : 400,
+		renderTo : this.get("divPanel"),
+		items : [{
+			xtype : "shdatefield",
+			itemId : "ToDate",
+			labelWidth : 110,
+			fieldLabel : "اقساط معوق تا تاریخ",
+			value : "<?= DateModules::shNow() ?>"
+		},{
+			xtype : "button",
+			iconCls : "refresh",
+			text : "بارگذاری گزارش",
+			handler : function(){
+				me = LoanReport_DelayedInstallmentsObj;
+				me.grid.getStore().proxy.extraParams.ToDate = me.DateFS.down("[itemId=ToDate]").getRawValue();
+				me.grid.getStore().loadPage(1);
+			}
+		}]
+	});
+	
 	this.grid = <?= $grid ?>;
+	this.grid.getStore().proxy.extraParams.ToDate = this.DateFS.down("[itemId=ToDate]").getRawValue();
 	this.grid.on("itemdblclick", function(view, record){
 		framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", {RequestID : record.data.RequestID});
 	});
@@ -109,5 +131,7 @@ LoanReport_DelayedInstallments.print = function(){
 LoanReport_DelayedInstallmentsObj = new LoanReport_DelayedInstallments();
 </script>
 <center><br>
+	<div id="divPanel"></div>
+	<br>
 	<div id="divGrid" ></div>
 </center>

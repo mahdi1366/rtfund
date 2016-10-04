@@ -26,8 +26,11 @@ $col = $dg->addColumn("نوع", "ItemType");
 $col->editor = "this.ItemTypeCombo";
 
 $col = $dg->addColumn("مقادیر لیست", "ComboValues");
-$col->editor = ColumnEditor::TextField();
+$col->editor = ColumnEditor::TextField(true);
 $col->width = 100;
+
+$col = $dg->addColumn("فیلد اطلاعاتی", "FieldName");
+$col->editor = ColumnEditor::TextField(true);
 
 $col = $dg->addColumn("حذف", "TemplateItemID", "string");
 $col->sortable = false;
