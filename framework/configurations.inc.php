@@ -21,7 +21,7 @@ class smtp_config{
 	public static $FromAddress = "admin@krrtf.ir";
 }
 
-define("SoftwareName", "صندوق پژوهش و فناوری خراسان رضوی");
+define("SoftwareName", "صندوق غیر دولتی پژوهش و فناوری خراسان رضوی");
 define("OWNER_NATIONALID", "10380491265");
 define("OWNER_REGCODE", "33943");
 define("OWNER_REGDATE", "1387/06/24");

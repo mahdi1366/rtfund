@@ -32,7 +32,7 @@ if(isset($_REQUEST["print"]))
 	//------------------------------------------
 	
 	$query = "select sum(CreditorAmount-DebtorAmount) amount, TafsiliDesc ,
-			ShareNo,
+			ShareNo,PersonID,
 		round(sum(CreditorAmount-DebtorAmount) /" . ShareBaseAmount . ") shareCount
 				
 	from ACC_DocItems 
@@ -92,9 +92,9 @@ if(isset($_REQUEST["print"]))
 				<td width=160px style='font-family:Homa;font-size: 12px;vertical-align: top'>شناسه ملی : " . OWNER_NATIONALID . "
 					<br>شماره ثبت : " . OWNER_REGCODE . "
 					<br>تاریخ ثبت : " . OWNER_REGDATE . "
-					<br><img src='/generalClasses/phpqrcode/showQRcode.php?value=" .
-						$dataTable[$i]["TafsiliDesc"] . " با سهام " . 
-						number_format($dataTable[$i]["amount"]) . " ریال' >
+					<br><img src='/generalClasses/phpqrcode/showQRcode.php?value=سهام " . SoftwareName . 
+						" %0D شناسه ملی : 10380491265 %0D سهامدار : " . $dataTable[$i]["TafsiliDesc"] . "%0D ارزش سهام : " . 
+						number_format($dataTable[$i]["amount"]) . " ریال " . " %0D شماره سریال: " . $dataTable[$i]["PersonID"] . "' >
 				</td>
 			</tr>
 			<tr>
@@ -106,7 +106,7 @@ if(isset($_REQUEST["print"]))
 				CurrencyModulesclass::CurrencyToString($sumRecord["shareCount"]) . " ) 
 				سهم 
 				" . SoftwareName . " به ارزش اسمی هر سهم " . 
-				"<b><u>" . number_format(ShareBaseAmount) . "</u></b> ( " . CurrencyModulesclass::CurrencyToString(ShareBaseAmount) . " ) ریال و به ارزش 
+				"<b><u>" . number_format(ShareBaseAmount) . "</u></b> ( " . CurrencyModulesclass::CurrencyToString(ShareBaseAmount) . " ) ریال و مجموعا به ارزش 
 				<b><u>" . number_format($dataTable[$i]["amount"]) . "</u></b> ( " . CurrencyModulesclass::CurrencyToString($dataTable[$i]["amount"]) . " ) 
 				ریال، به عنوان سهام عادی و با نام متعلق به 
 				<b>" . $dataTable[$i]["TafsiliDesc"] . "</b>
