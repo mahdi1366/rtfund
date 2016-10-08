@@ -169,6 +169,9 @@ function LoanPay()
 			if(e.record.data.PayType == "9" && e.record.data.ChequeStatus == "1")
 				return true;
 			
+			if(e.record.data.DocStatus == "RAW")
+				return true;
+			
 			return false;			
 		});
 		

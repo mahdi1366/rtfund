@@ -727,7 +727,7 @@ var personStore = new Ext.data.Store({
 		</div>
 		<!--------------------------------------------------------------------->
 		<div class="blueText accinfoBox" id="framework_accDiv" style="height: 80px;" 
-			 onclick="framework.OpenPage('../accounting/global/UserState.php','تعیین شعبه و دوره')">
+			 onclick="framework.OpenPage('../accounting/baseinfo/UserState.php','تعیین شعبه و دوره')">
 			<div style="padding-top:6px">دوره مالی : <?= $_SESSION["accounting"]["CycleYear"]?> 
 				<br>شعبه : <?= $_SESSION["accounting"]["BranchName"]?>
 			</div>

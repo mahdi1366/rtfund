@@ -1,10 +1,11 @@
-	<?php
+<?php
 //-----------------------------
 //	Programmer	: SH.Jafarkhani
 //	Date		: 94.06
 //-----------------------------
 
 include_once '../header.inc.php';
+
 require_once inc_dataReader;
 require_once inc_response;
 

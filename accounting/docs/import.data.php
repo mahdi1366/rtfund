@@ -517,7 +517,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_deposite;
-		$itemObj->DebtorAmount = $PayAmount;
+		$itemObj->DebtorAmount = $PayAmount + $TotalWage*$FundFactor;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->details = "بابت پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
@@ -534,7 +534,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_commitment;
 		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $PayAmount;
+		$itemObj->CreditorAmount = $PayAmount + $TotalWage*$FundFactor;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $LoanPersonTafsili;		
 		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
@@ -1519,7 +1519,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $Account
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_bank = FindCostID("101");
-	$CostCode_varizi = FindCostID("721-".$LoanObj->_BlockCode."-52");
+	$CostCode_varizi = FindCostID("721");
 	$CostCode_pardakhti = FindCostID("721-".$LoanObj->_BlockCode."-51");
 	
 	//---------------- add doc header --------------------

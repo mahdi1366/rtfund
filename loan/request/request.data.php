@@ -588,7 +588,7 @@ function ReturnEndRequest(){
 	die();
 }
 
-//------------------------------------------------
+//--------------------------------------------------
 
 function GetPartInstallments(){
 	
@@ -1005,7 +1005,7 @@ function SaveBackPay(){
 		$PartObj = new LON_ReqParts($obj->PartID);
 		$ReqObj = new LON_requests($PartObj->RequestID);
 		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
-		if($PersonObj->IsSupporter)
+		if($PersonObj->IsSupporter == "YES")
 			$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
 		else
 			$result = RegisterCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
@@ -1374,7 +1374,7 @@ function EditPartPayDoc(){
 	
 	$ReqObj = new LON_requests($obj->_RequestID);
 	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
-	if($PersonObj->IsSupporter)
+	if($PersonObj->IsSupporter == "YES")
 		$result = RegisterSHRTFUNDCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
 	else
 		$result = RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
@@ -1416,7 +1416,7 @@ function GroupSavePay(){
 		$PartObj = new LON_ReqParts($PartID);
 		$ReqObj = new LON_requests($PartObj->RequestID);
 		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
-		if($PersonObj->IsSupporter)
+		if($PersonObj->IsSupporter == "YES")
 			$result = RegisterSHRTFUNDCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, true);
 		else
 			$result = RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, true);
