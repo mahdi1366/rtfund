@@ -90,7 +90,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
-	$CostCode_commitment = FindCostID("200-05");
+	$CostCode_commitment = FindCostID("660-" . $LoanObj->_BlockCode);
 	$CostCode_guaranteeAmount = FindCostID("904-02");
 	$CostCode_guaranteeCount = FindCostID("904-01");
 	$CostCode_guaranteeAmount2 = FindCostID("905-02");
@@ -325,6 +325,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$itemObj->TafsiliType = TAFTYPE_YEARS;
 			$itemObj->details = "کارمزد دوره تنفس وام شماره " . $ReqObj->RequestID;
 			$itemObj->TafsiliID = $index == 0 ? $CurYearTafsili : FindTafsiliID($curYear+$index, TAFTYPE_YEARS);
+			if($LoanMode == "Agent")
+			{
+				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+				$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			}
 			if($itemObj->TafsiliID == "")
 			{
 				ExceptionHandler::PushException("تفصیلی مربوط به سال" . ($curYear+$index) . " یافت نشد");
@@ -398,6 +403,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$itemObj->CreditorAmount = $PartObj->MaxFundWage;
 		$itemObj->TafsiliType = TAFTYPE_YEARS;
 		$itemObj->TafsiliID = $YearTafsili;
+		if($LoanMode == "Agent")
+		{
+			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID2 = $ReqPersonTafsili;
+		}
 		$itemObj->Add($pdo);
 	}
 	else
@@ -414,13 +424,16 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			}
 			unset($itemObj->ItemID);
 			$itemObj->details = "کارمزد وام شماره " . $ReqObj->RequestID;
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
 			$itemObj->CostID = $Year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $amount;
 			$itemObj->TafsiliType = TAFTYPE_YEARS;
 			$itemObj->TafsiliID = $YearTafsili;
+			if($LoanMode == "Agent")
+			{
+				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+				$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			}
 			$itemObj->Add($pdo);
 			
 			if($PartObj->FundWage*1 > $PartObj->CustomerWage)
@@ -434,6 +447,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 				$itemObj->CreditorAmount = 0;
 				$itemObj->TafsiliType = TAFTYPE_YEARS;
 				$itemObj->TafsiliID = $YearTafsili;
+				if($LoanMode == "Agent")
+				{
+					$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+					$itemObj->TafsiliID2 = $ReqPersonTafsili;
+				}
 				$itemObj->Add($pdo);
 			}
 		}
@@ -471,6 +489,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$itemObj->CreditorAmount = $TotalWage*$AgentFactor;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
+		if($LoanMode == "Agent")
+		{
+			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID2 = $ReqPersonTafsili;
+		}
 		$itemObj->Add($pdo);
 	}
 	// ----------------------------- bank --------------------------------
@@ -536,9 +559,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $PayAmount + $TotalWage*$FundFactor;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $LoanPersonTafsili;		
-		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID2 = $ReqPersonTafsili;
+		$itemObj->TafsiliID = $ReqPersonTafsili;
 		$itemObj->Add($pdo);
 	}
 	//---------- ردیف های تضمین  ----------
@@ -674,8 +695,8 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	//------------- get CostCodes --------------------
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
-	$CostCode_varizi = FindCostID("721");
-	$CostCode_pardakhti = FindCostID("734");
+	$CostCode_varizi = FindCostID("721-01-52");
+	$CostCode_pardakhti = FindCostID("721-01-51");
 	$CostCode_bank = FindCostID("101");
 	$CostCode_guaranteeAmount = FindCostID("904-02");
 	$CostCode_guaranteeCount = FindCostID("904-01");
@@ -1519,8 +1540,8 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $Account
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_bank = FindCostID("101");
-	$CostCode_varizi = FindCostID("721");
-	$CostCode_pardakhti = FindCostID("721-".$LoanObj->_BlockCode."-51");
+	$CostCode_varizi = FindCostID("721-01-52");
+	$CostCode_pardakhti = FindCostID("721-01-51");
 	
 	//---------------- add doc header --------------------
 	if($DocObj == null)
@@ -1555,33 +1576,20 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $Account
 		return false;
 	}
 	
-	$LoanMode = "";
-	if(!empty($ReqObj->ReqPersonID))
+	$ReqPersonTafsili = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+	if(!$ReqPersonTafsili)
 	{
-		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
-		if($PersonObj->IsAgent == "YES")
-			$LoanMode = "Agent";
+		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
+		return false;
 	}
-	else
-		$LoanMode = "Customer";
-	
-	if($LoanMode == "Agent")
+	$SubAgentTafsili = "";
+	if(!empty($ReqObj->SubAgentID))
 	{
-		$ReqPersonTafsili = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
-		if(!$ReqPersonTafsili)
+		$SubAgentTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
+		if(!$SubAgentTafsili)
 		{
-			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
+			ExceptionHandler::PushException("تفصیلی زیر واحد سرمایه گذار یافت نشد.[" . $ReqObj->SubAgentID . "]");
 			return false;
-		}
-		$SubAgentTafsili = "";
-		if(!empty($ReqObj->SubAgentID))
-		{
-			$SubAgentTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
-			if(!$SubAgentTafsili)
-			{
-				ExceptionHandler::PushException("تفصیلی زیر واحد سرمایه گذار یافت نشد.[" . $ReqObj->SubAgentID . "]");
-				return false;
-			}
 		}
 	}
 	
@@ -1592,11 +1600,8 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $Account
 	$itemObj->details = "پرداخت قسط وام شماره " . $ReqObj->RequestID ;
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $LoanPersonTafsili;
-	if($LoanMode == "Agent")
-	{
-		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID2 = $ReqPersonTafsili;
-	}
+	$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+	$itemObj->TafsiliID2 = $ReqPersonTafsili;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_INSTALLMENT_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
