@@ -9,6 +9,7 @@ require_once(inc_response);
 require_once inc_dataReader;
 require_once '../docs/doc.class.php';
 require_once "../../loan/request/request.class.php";
+require_once "../docs/import.data.php";
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 if(!empty($task))
@@ -232,10 +233,30 @@ function ChangeChequeStatus(){
 	$BackPayID = $_POST["BackPayID"];
 	$Status = $_POST["StatusID"];
 	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
 	$obj = new LON_BackPays($BackPayID);
 	$obj->ChequeStatus = $Status;
-	$result = $obj->EditPay();
+	$result = $obj->EditPay($pdo);
 	
+	if($Status == "3")
+	{
+		$PartObj = new LON_ReqParts($obj->PartID);
+		$ReqObj = new LON_requests($PartObj->RequestID);
+		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+		if($PersonObj->IsSupporter == "YES")
+			$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
+		else
+			$result = RegisterCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
+		if(!$result)
+		{
+			$pdo->rollback();
+			echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
+			die();
+		}
+	}
+	$pdo->commit();
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }

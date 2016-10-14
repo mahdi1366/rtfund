@@ -222,14 +222,85 @@ IncomeCheque.prototype.beforeChangeStatus = function(StatusID){
 	this.commentWin.down("[name=DstID]").getStore().load();
 	
 	this.commentWin.down("[itemId=btn_save]").setHandler(function(){
-		IncomeChequeObject.ChangeStatus(record.data.BackPayID, 
-			this.up('window').down("[name=DstID]").getValue());});
+		status = this.up('window').down("[name=DstID]").getValue();
+		if(status == "3")
+			IncomeChequeObject.AccountInfoWin(record.data.BackPayID, status);
+		else
+			IncomeChequeObject.ChangeStatus(record.data.BackPayID, status);
+	});
 		
 	this.commentWin.show();
 	this.commentWin.center();
 }
 
-IncomeCheque.prototype.ChangeStatus = function(BackPayID, StatusID){
+IncomeCheque.prototype.AccountInfoWin = function(BackPayID, StatusID){
+	
+	if(!this.BankWin)
+	{
+		this.BankWin = new Ext.window.Window({
+			width : 400,
+			height : 120,
+			modal : true,
+			closeAction : "hide",
+			items : [{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
+						name : "title",
+						convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
+					}],
+					proxy: {
+						type: 'jsonp',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=6',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}),
+				emptyText:'انتخاب بانک ...',
+				typeAhead: false,
+				pageSize : 10,
+				width : 385,
+				valueField : "TafsiliID",
+				itemId : "TafsiliID",
+				displayField : "title"
+			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
+						name : "title",
+						convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
+					}],
+					proxy: {
+						type: 'jsonp',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=3',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}),
+				emptyText:'انتخاب حساب ...',
+				typeAhead: false,
+				pageSize : 10,
+				width : 385,
+				valueField : "TafsiliID",
+				itemId : "TafsiliID2",
+				displayField : "title"
+			}],
+			buttons :[{
+				text : "ذخیره",
+				iconCls : "save",
+				itemId : "btn_save"
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.BankWin);
+	}
+	this.BankWin.show();
+	this.BankWin.down("[itemId=btn_save]").setHandler(function(){ 
+		IncomeChequeObject.BankWin.hide();
+		IncomeChequeObject.ChangeStatus(BackPayID, StatusID,
+			IncomeChequeObject.BankWin.down("[itemId=TafsiliID]").getValue(),
+			IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").getValue()); 
+	});
+}
+
+IncomeCheque.prototype.ChangeStatus = function(BackPayID, StatusID, BankTafsili, AccountTafsili){
 	
 	if(StatusID == null || StatusID == "")
 		return;
@@ -243,7 +314,9 @@ IncomeCheque.prototype.ChangeStatus = function(BackPayID, StatusID){
 		params : {
 			task : "ChangeChequeStatus",
 			BackPayID : BackPayID,
-			StatusID : StatusID
+			StatusID : StatusID,
+			BankTafsili : BankTafsili,
+			AccountTafsili : AccountTafsili
 		},
 		
 		success : function(response){

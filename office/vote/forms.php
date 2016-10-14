@@ -18,12 +18,47 @@ $col->editor = ColumnEditor::SHDateField();
 $col = $dg->addColumn("تاریخ پایان","EndDate",  GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
 
+$col = $dg->addColumn("<font style=font-size:10px>کاربر</font>","IsStaff","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>مشتری</font>","IsCustomer","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>سهامدار</font>","IsShareholder","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>سرمایه گذار</font>","IsAgent","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>حامی</font>","IsSupporter","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>کارشناس</font>","IsExpert","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
 
 $col = $dg->addColumn("آیتم ها","","");
 $col->renderer = "VOT_Form.ItemsRender";
 $col->sortable = false;
 $col->align = "center";
-$col->width = 60;
+$col->width = 40;
 
 $col = $dg->addColumn("نمایش","","");
 $col->renderer = "VOT_Form.previewRender";
@@ -42,7 +77,7 @@ $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(v,p,r){return VOT_FormObject.saveData(v,p,r);}";
 
 $dg->height = 350;
-$dg->width = 600;
+$dg->width = 700;
 $dg->DefaultSortField = "FormID";
 $dg->autoExpandColumn = "FormTitle";
 $dg->editorGrid = true;

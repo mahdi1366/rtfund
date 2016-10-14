@@ -388,7 +388,6 @@ class ACC_tafsilis extends PdoDataAccess{
 class ACC_banks extends PdoDataAccess {
 
     public $BankID;
-	public $BranchID;
     public $BankDesc;
 	public $IsActive;
 
@@ -401,7 +400,6 @@ class ACC_banks extends PdoDataAccess {
 	
     function InsertBank() {
 
-		$this->BranchID = $_SESSION["accounting"]["BranchID"];
         $res = parent::insert("ACC_banks", $this);
         if ($res === false) 
             return false;
@@ -463,7 +461,6 @@ class ACC_banks extends PdoDataAccess {
 class ACC_accounts extends PdoDataAccess {
 
     public $AccountID;
-	public $BranchID;
     public $BankID;
     public $AccountDesc;
 	public $AccountNo;
@@ -511,8 +508,6 @@ class ACC_accounts extends PdoDataAccess {
 		if(!$this->AccountNoValidity())
 			return false;
 		
-		$this->BranchID = $_SESSION["accounting"]["BranchID"];
-        
 		if (!parent::insert("ACC_accounts", $this))
             return false;
 

@@ -27,6 +27,13 @@ function SaveForm(){
 	$obj = new VOT_forms();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
+	$obj->IsStaff = $obj->IsStaff ? "YES" : "NO";
+	$obj->IsCustomer = $obj->IsCustomer ? "YES" : "NO";
+	$obj->IsShareholder = $obj->IsShareholder ? "YES" : "NO";
+	$obj->IsSupporter = $obj->IsSupporter ? "YES" : "NO";
+	$obj->IsExpert = $obj->IsExpert ? "YES" : "NO";
+	$obj->IsAgent = $obj->IsAgent ? "YES" : "NO";
+	
 	if($obj->FormID > 0)
 		$result = $obj->Edit();
 	else
@@ -56,7 +63,7 @@ function selectFormItems(){
 
 function SelectItems(){
 	
-	$dt = VOT_FormItems::Get(" AND FormID=? " . dataReader::makeOrder(), array($_GET["FormID"]));
+	$dt = VOT_FormItems::Get(" AND FormID=? order by ordering", array($_GET["FormID"]));
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
 }
@@ -111,5 +118,142 @@ function MoveItem(){
 	die();
 }
 
+//----------------------------------
+
+function SelectMyFilledForms(){
+	
+	$dt = PdoDataAccess::runquery("select * from VOT_FilledForms join VOT_forms using(FormID) 
+		where PersonID=" . $_SESSION["USER"]["PersonID"]);
+	
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SelectNewVoteForms(){
+	
+	$dt = PdoDataAccess::runquery("select f.* from VOT_forms f
+		left join VOT_FilledForms ff on(ff.FormID=f.FormID AND ff.PersonID=:pid)
+		join BSC_persons p on(p.PersonID=:pid AND (f.IsStaff=p.IsStaff OR f.IsCustomer=p.IsCustomer OR
+			f.IsShareholder=p.IsShareholder OR f.IsAgent=p.IsAgent OR f.IsSupporter=p.IsSupporter OR 
+			f.IsExpert=p.IsExpert))
+		where ff.FormID is null", array(":pid" => $_SESSION["USER"]["PersonID"]));
+	
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SaveFilledForm(){
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	PdoDataAccess::runquery("insert into VOT_FilledForms values(?,?," . PDONOW . ")",array(
+		$_POST["FormID"],
+		$_SESSION["USER"]["PersonID"]
+	), $pdo);
+	
+	$arr = array_keys($_POST);
+	for($i=0; $i < count($arr); $i++)
+	{
+		if(strpos($arr[$i], "elem_") === false)
+			continue;
+		
+		$ItemID = str_replace("elem_", "", $arr[$i]);
+		$value = $_POST[ $arr[$i] ];
+		
+		PdoDataAccess::runquery("insert into VOT_FilledItems values(?,?,?,?)",
+			array(
+				$_POST["FormID"],
+				$_SESSION["USER"]["PersonID"],
+				$ItemID,
+				$value
+			), $pdo);
+	}
+	
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		$pdo->rollBack();
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function FilledItemsValues(){
+	
+	if(isset($_SESSION["USER"]["framework"]) && !empty($_REQUEST["PersonID"]))
+		$PersonID = $_REQUEST["PersonID"];
+	else
+		$PersonID = $_SESSION["USER"]["PersonID"];
+		
+	$dt = PdoDataAccess::runquery("select * 
+		from VOT_FormItems f 
+		left join VOT_FilledItems i on(f.ItemID=i.ItemID AND i.PersonID=?)
+		where f.FormID=? order by ordering", array($PersonID,$_GET["FormID"]));
+	
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SelectFilledForms(){
+	
+	$dt = PdoDataAccess::runquery("select f.*, concat_ws(' ',fname,lname,CompanyName) fullname 
+		from VOT_FilledForms f join VOT_forms using(FormID) 
+			join BSC_persons using(PersonID)
+		where FormID=?", array($_GET["FormID"]));
+	
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+//-------------------------------------
+
+function SelectChart1Data(){
+	
+	$FormID = $_GET["FormID"];
+	$dt = PdoDataAccess::runquery("select ItemID,ItemTitle,ItemValues,ItemValue,count(*) cnt
+		from VOT_FilledItems f join VOT_FormItems using(ItemID)
+			join BSC_persons using(PersonID)
+		
+		where FormID=? AND ItemValues<>'' AND locate('#',ItemValues) >0
+		
+		group by ItemID,ItemValue", array($FormID));
+	
+	$ReturnDate = array();
+	$currentItemID = 0;
+	$valuesArr = array();
+	$factor = 0;
+	$total = 0;
+	$totalCount = 0;
+	for($i=0; $i< count($dt); $i++)
+	{
+		$row = $dt[$i];
+		
+		if($currentItemID != $row["ItemID"])
+		{
+			$currentItemID = $row["ItemID"];
+			$valuesArr = preg_split('/#/', $row["ItemValues"]);
+			$factor = 100/(count($valuesArr)-1);
+			$total = 0;
+			$totalCount = 0;
+		}
+		
+		$total += 100 - array_search($row["ItemValue"], $valuesArr)*$factor;
+		$totalCount++;
+		
+		if($i+1 == count($dt) || $dt[$i+1]["ItemID"] != $currentItemID)
+		{
+			$ReturnDate[] = array("ItemTitle" => $row["ItemTitle"], "mid" => round($total/$totalCount));
+		}		
+	}
+	
+	echo dataReader::getJsonData($ReturnDate, count($ReturnDate), $_GET["callback"]);
+	die();
+	
+}
 
 ?>

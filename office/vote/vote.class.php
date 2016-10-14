@@ -13,7 +13,14 @@ class VOT_forms extends OperationClass{
 	public $FormTitle;
 	public $StartDate;
 	public $EndDate;
-	
+	public $IsStaff;
+	public $IsCustomer;
+	public $IsShareholder;
+	public $IsSupporter;
+	public $IsExpert;
+	public $IsAgent;
+
+
 	function __construct($FormID = '') {
 		
 		$this->DT_StartDate = DataMember::CreateDMA(DataMember::DT_DATE);

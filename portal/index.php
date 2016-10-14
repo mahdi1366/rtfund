@@ -94,7 +94,7 @@ for ($i = 0; $i < count($menus); $i++) {
 			</div>
 			<!----------------------------------------------------------------->
 			<div class="headerItems" style="color:#35BC7A"
-				 onclick="portal.OpenPage('/portal/empty.php');">
+				 onclick="portal.OpenPage('/portal/global/VoteForms.php');">
 				<span class="fa fa-pencil-square-o"></span><br>
 				<font style="font-family:tahoma;font-size:12px;font-weight:bold">نظر سنجی</font>
 			</div>

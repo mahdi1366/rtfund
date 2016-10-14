@@ -367,7 +367,7 @@ function SaveBankData() {
 	else
 		$res = $bnk->UpdateBank();
 	
-	Response::createResponse($res, '');
+	Response::createObjectiveResponse($res, '');
 	die();
 }
 

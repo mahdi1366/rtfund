@@ -58,13 +58,14 @@ Letter.prototype.LoadLetter = function(){
 				};
 				me.letterPanel.down("[itemId=pagesView]").getStore().load();
 				
-				CKEDITOR.on('instanceReady', function( ev ) {
-					if(LetterObject.LetterID > 0)
-					{
+				if(LetterObject.LetterID > 0)
+				{
+					CKEDITOR.instances.LetterEditor.on('instanceReady', function( ev ) {
 						ev.editor.setData(record.data.context);
-						LetterObject.mask.hide();
-					}					
-				});			
+					});			
+					CKEDITOR.instances.LetterEditor.setData(record.data.context);
+					LetterObject.mask.hide();
+				}					
 				
 				me.letterPanel.down("[itemId=btn_send]").enable();
 				me.letterPanel.down("[itemId=attach_tab]").enable();	
@@ -222,7 +223,7 @@ Letter.prototype.BuildForms = function(){
 			width : 760,
 			items :[{
 				title : "نامه تایپی",
-				html : "<div id='Div_context'></div>"
+				html : "<div id='LetterEditor'></div>"
 			},{
 				title : "نامه تصویری",
 				style : "margin-top:10px",
@@ -349,9 +350,8 @@ Letter.prototype.BuildForms = function(){
 	CKEDITOR.config.width = 'auto';
 	CKEDITOR.config.height = 220;
 	CKEDITOR.config.autoGrow_minHeight = 170;
-	
-	CKEDITOR.document.getById( 'Div_context' ); 
-	CKEDITOR.replace( 'Div_context' );	
+	CKEDITOR.replace('LetterEditor');	
+	CKEDITOR.add;
 }
 
 LetterObject = new Letter();
@@ -360,14 +360,14 @@ Letter.prototype.SaveLetter = function(){
 
 	mask = new Ext.LoadMask(this.letterPanel, {msg:'در حال ذخيره سازي...'});
 	mask.show();  
-	
+	   
 	this.letterPanel.getForm().submit({
 		clientValidation: true,
 		url: this.address_prefix + 'letter.data.php?task=SaveLetter' , 
 		method: "POST",
 		params : {
 			LetterID : this.LetterID,
-			context : CKEDITOR.instances.Div_context.getData()
+			context : CKEDITOR.instances.LetterEditor.getData()
 		},
 		
 		success : function(form,action){

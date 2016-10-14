@@ -56,7 +56,7 @@ $dt = PdoDataAccess::runquery("
 		join BSC_persons p1 on(l.PersonID=p1.PersonID)
 		join BSC_persons p2 on(s.ToPersonID=p2.PersonID)
 		left join BSC_persons p3 on(l.SignerPersonID=p3.PersonID)
-		left join BSC_posts po on(p3.PostID=po.PostID)
+		left join BSC_posts po on(l.SignPostID=po.PostID)
 	where LetterID=? 
 	order by SendID
 	", array($LetterID));

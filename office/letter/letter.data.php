@@ -9,6 +9,7 @@ require_once(inc_response);
 require_once inc_dataReader;
 require_once 'letter.class.php';
 require_once '../dms/dms.class.php';
+require_once '../../framework/person/persons.class.php';
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 if(!empty($task))
@@ -305,13 +306,17 @@ function SignLetter(){
 	$LetterID = $_POST["LetterID"];
 	
 	$obj = new OFC_letters($LetterID);
+	$result = false;
 	if($obj->SignerPersonID == $_SESSION["USER"]["PersonID"])
 	{
+		$PersonObj = new BSC_persons($obj->SignerPersonID);
+		
 		$obj->IsSigned = "YES";
-		$obj->EditLetter();
+		$obj->SignPostID = $PersonObj->PostID;
+		$result = $obj->EditLetter();
 	}
 	
-	echo Response::createObjectiveResponse(true, "");
+	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 

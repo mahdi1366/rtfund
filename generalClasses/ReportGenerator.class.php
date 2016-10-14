@@ -192,10 +192,10 @@ class ReportGenerator {
 
 				for ($i = 0; $i < count($this->columns); $i++) {
 					$val = "";
-					/* if(!empty($this->columns[$i]->renderFunction))
+					 if(!empty($this->columns[$i]->renderFunction))
 						eval("\$val = " . $this->columns[$i]->renderFunction . "(\$row,\$row[\$this->columns[\$i]->field]);");
-						else */
-					$val = $row[$this->columns[$i]->field];
+					else 
+						$val = $row[$this->columns[$i]->field];
 
 					$worksheet->write($index + 1, $i + ($this->rowNumber ? 1 : 0), $val);
 				}
@@ -229,7 +229,20 @@ class ReportGenerator {
 
 	function drawHeader($reportTitle) {
 		
-		echo "<table id='page_" . $this->pageCount . "' width='$this->width' style='font-family:tahoma;border-collapse: collapse'  border='$this->border'
+		$field_count = count($this->columns);
+		
+		$GroupHeaderFlag = false;
+		for ($i = 0; $i < $field_count; $i++) {
+			if(!empty($this->columns[$i]->GroupHeader))
+			{
+				$GroupHeaderFlag = true;
+				break;
+			}
+		}
+		//..............................................
+		
+		echo "<table id='page_" . $this->pageCount . "' width='$this->width' 
+				style='font-family:tahoma;border-collapse: collapse'  border='$this->border'
 				cellspacing='$this->cellspace' cellpadding='$this->cellpad'>";
 		
 		if($reportTitle)
@@ -253,24 +266,71 @@ class ReportGenerator {
 
 		// row number ---------------------------
 		if ($this->rowNumber)
-			echo "<td align = 'center' style='padding:2px' border='$this->border' height='21px'><font
+			echo "<td " . ($GroupHeaderFlag ? "rowspan=2" : "") . 
+				" align='center' style='padding:2px' border='$this->border' height='21px'><font
 				color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;ردیف</b></font></th>";
 		//---------------------------------------
 		// Draw Header
-		$field_count = count($this->columns);
+		
+		$secondRow = "";
+		$currentGroup = "";
 		for ($i = 0; $i < $field_count; $i++) {
 			
 			if($this->columns[$i]->hidden)
 				continue;
 			
-			echo "<td align = '" . ($this->columns[$i]->align == "" ? $this->header_alignment : $this->columns[$i]->align). 
-					"' style='padding:2px' border='$this->border' height='21px'><font
-					color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;" . $this->columns[$i]->header . "</b></font></td>";
+			if($GroupHeaderFlag)
+			{
+				$rowspan = !empty($this->columns[$i]->GroupHeader) ? "" : "rowspan=2";
+				if($rowspan == "")
+				{
+					if($currentGroup != $this->columns[$i]->GroupHeader)
+					{
+						$index = 0;
+						$currentGroup = $this->columns[$i]->GroupHeader;
+						while($i+$index < $field_count)
+						{
+							if($this->columns[$i+$index]->GroupHeader == $currentGroup)
+								$index++;
+							else
+								break;
+						}
+						$colspan = "colspan=" . $index;
 
+						echo "<td $colspan align='center' 
+						style='padding:2px' border='$this->border' height='21px'><font
+						color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;" . 
+						$this->columns[$i]->GroupHeader . "</b></font></td>";
+					}
+					$secondRow .= "<td align='center' 
+						style='padding:2px' border='$this->border' height='21px'><font
+						color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;" . 
+						$this->columns[$i]->header . "</b></font></td>";
+				}
+				else
+				{
+					echo "<td $rowspan align='" . ($this->columns[$i]->align == "" ? $this->header_alignment : 
+						$this->columns[$i]->align). 
+						"' style='padding:2px' border='$this->border' height='21px'><font
+						color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;" . 
+						$this->columns[$i]->header . "</b></font></td>";
+				}
+			}
+			else
+			{
+				echo "<td align='" . ($this->columns[$i]->align == "" ? $this->header_alignment : 
+						$this->columns[$i]->align). 
+						"' style='padding:2px' border='$this->border' height='21px'><font
+						color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;" . 
+						$this->columns[$i]->header . "</b></font></td>";
+			}
+			
 			if ($this->columns[$i]->HaveSum != -1)
 				$this->EnableSumRow = true;
 		}
 		echo "</tr>";
+		if($secondRow != "")
+			echo "<tr bgcolor = '$this->header_color'>" . $secondRow . "</tr>";
 		
 		$this->pageRecordCounter++;
 		$this->pageRecordCounter++;
@@ -632,6 +692,7 @@ class ReportGenerator {
 class ReportColumn {
 
 	public $header;
+	public $GroupHeader = "";
 	public $field;
 	
 	public $renderFunction;

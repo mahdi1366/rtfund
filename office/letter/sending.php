@@ -21,7 +21,7 @@ SendLetter.prototype = {
 		
 	AfterSendHandler : <?= $_REQUEST["AfterSendHandler"] ?>,
 	
-	LetterID : <?= $LetterID?>,
+	LetterID : <?= $LetterID ?>,
 	SendID : '<?= $SendID ?>',
 	index : 1,
 

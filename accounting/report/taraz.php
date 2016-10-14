@@ -297,21 +297,25 @@ function showReport(){
 		return $v < 0 ? 0 : number_format($v);
 	}
 	
+	$col = $rpg->addColumn("بدهکار", "StartCycleDebtor", "moneyRender");
+	$col->GroupHeader = "حساب ابتدای دوره";
+	$col->EnableSummary(true);
+	$col = $rpg->addColumn("بستانکار", "StartCycleCreditor", "moneyRender");
+	$col->GroupHeader = "حساب ابتدای دوره";
+	$col->EnableSummary(true);
+	
 	$col = $rpg->addColumn("بدهکار", "bdAmount" , "moneyRender");
+	$col->GroupHeader = "گردش طی دوره";
 	$col->EnableSummary();
 	$col = $rpg->addColumn("بستانکار", "bsAmount", "moneyRender");
+	$col->GroupHeader = "گردش طی دوره";
 	$col->EnableSummary();
 
-	$col = $rpg->addColumn("مانده بدهکار اول دوره", "StartCycleDebtor", "moneyRender");
-	$col->EnableSummary(true);
-	
-	$col = $rpg->addColumn("مانده بستانکار اول دوره", "StartCycleCreditor", "moneyRender");
-	$col->EnableSummary(true);
-	
 	$col = $rpg->addColumn("مانده بدهکار", "bdAmount", "bdremainRender");
+	$col->GroupHeader = "مانده پایان دوره";
 	$col->EnableSummary(true);
-	
 	$col = $rpg->addColumn("مانده بستانکار", "bsAmount", "bsremainRender");
+	$col->GroupHeader = "مانده پایان دوره";
 	$col->EnableSummary(true);
 
 	if(!$rpg->excel)

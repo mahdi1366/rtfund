@@ -120,7 +120,7 @@ function NewPlan(){
 				store : new Ext.data.SimpleStore({
 					proxy: {
 						type: 'jsonp',
-						url: this.address_prefix + '../../loan/loan/loan.data.php?task=GetAllLoans&IsPlan=true',
+						url: this.address_prefix + '../../loan/loan/loan.data.php?task=GetAllLoans',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
 					fields : ['LoanID','LoanDesc'],

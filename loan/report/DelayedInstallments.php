@@ -57,7 +57,7 @@ $col->width = 80;
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
 $col->width = 150;
 
-$col = $dg->addColumn("مانده", "remainder", GridColumn::ColumnType_money);
+$col = $dg->addColumn("قابل پرداخت", "remainder", GridColumn::ColumnType_money);
 $col->width = 100;
 
 $dg->addButton("", "گزارش پرداخت", "report", "function(){LoanReport_DelayedInstallmentsObj.PayReport();}");

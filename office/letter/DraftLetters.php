@@ -55,6 +55,7 @@ function DraftLetter(){
 			
 		framework.OpenPage(DraftLetterObject.address_prefix + 
 			"NewLetter.php", "ایجاد نامه", {LetterID : record.data.LetterID});
+		framework.CloseTab(DraftLetterObject.TabID);
 	});
 	
 	this.grid.render(this.get("div_grid"));

@@ -41,7 +41,7 @@ if(isset($_REQUEST["show"]))
 	$col = $rpg->addColumn("مبلغ پرداخت", "PayAmount","amountRender");
 	
 	$rpg->addColumn("تعداد روز تاخیر", "ForfeitDays");
-	$col = $rpg->addColumn("جریمه", "CurForfeitAmount","amountRender");
+	$col = $rpg->addColumn("مبلغ تاخیر", "CurForfeitAmount","amountRender");
 	
 	$col = $rpg->addColumn("جریمه کل", "ForfeitAmount","amountRender");
 	//$col->EnableSummary();
@@ -79,7 +79,8 @@ if(isset($_REQUEST["show"]))
 			<td> فاصله اقساط : <b><?= $partObj->PayInterval . ($partObj->IntervalType == "DAY" ? "روز" : "ماه") ?></b>
 				<br> مدت تنفس : <b><?= $partObj->DelayMonths ?> ماه و 
 						<?= $partObj->DelayDays ?> روز </b>
-				<br> کارمزد : <b><?= $partObj->CustomerWage ?> % </b>
+				<br> کارمزد وام: <b><?= $partObj->CustomerWage ?> % </b> کارمزد تنفس : 
+					<b><?= $partObj->DelayPercent ?> % </b>
 				<br> درصد دیرکرد : <b><?= $partObj->ForfeitPercent ?> % </b>
 			</td>
 			<td style="font-family: nazanin; font-size: 18px; font-weight: bold">

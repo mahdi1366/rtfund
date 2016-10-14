@@ -92,7 +92,7 @@ if(isset($_REQUEST["print"]))
 				<td width=160px style='font-family:Homa;font-size: 12px;vertical-align: top'>شناسه ملی : " . OWNER_NATIONALID . "
 					<br>شماره ثبت : " . OWNER_REGCODE . "
 					<br>تاریخ ثبت : " . OWNER_REGDATE . "
-					<br><img src='/generalClasses/phpqrcode/showQRcode.php?value=سهام " . SoftwareName . 
+					<br><img width=120 src='/generalClasses/phpqrcode/showQRcode.php?value=سهام " . SoftwareName . 
 						" %0D شناسه ملی : 10380491265 %0D سهامدار : " . $dataTable[$i]["TafsiliDesc"] . "%0D ارزش سهام : " . 
 						number_format($dataTable[$i]["amount"]) . " ریال " . " %0D شماره سریال: " . $dataTable[$i]["PersonID"] . "' >
 				</td>
@@ -106,9 +106,9 @@ if(isset($_REQUEST["print"]))
 				CurrencyModulesclass::CurrencyToString($sumRecord["shareCount"]) . " ) 
 				سهم 
 				" . SoftwareName . " به ارزش اسمی هر سهم " . 
-				"<b><u>" . number_format(ShareBaseAmount) . "</u></b> ( " . CurrencyModulesclass::CurrencyToString(ShareBaseAmount) . " ) ریال و مجموعا به ارزش 
-				<b><u>" . number_format($dataTable[$i]["amount"]) . "</u></b> ( " . CurrencyModulesclass::CurrencyToString($dataTable[$i]["amount"]) . " ) 
-				ریال، به عنوان سهام عادی و با نام متعلق به 
+				"<b><u>" . number_format(ShareBaseAmount) . "</u></b> ریال ( " . CurrencyModulesclass::CurrencyToString(ShareBaseAmount) . " ریال ) و مجموعا به ارزش 
+				<b><u>" . number_format($dataTable[$i]["amount"]) . "</u></b> ریال ( " . CurrencyModulesclass::CurrencyToString($dataTable[$i]["amount"]) . " ریال ) 
+ به عنوان سهام عادی و با نام متعلق به 
 				<b>" . $dataTable[$i]["TafsiliDesc"] . "</b>
 				می باشد و سهام مذکور در دفتر ثبت سهام تحت شماره
 				<b><u> &nbsp;&nbsp;" . $dataTable[$i]["ShareNo"] . "</u></b> &nbsp;( " . CurrencyModulesclass::CurrencyToString($dataTable[$i]["ShareNo"]) . " ) &nbsp;&nbsp; 

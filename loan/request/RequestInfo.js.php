@@ -1384,7 +1384,6 @@ RequestInfo.prototype.LoadSummary = function(record){
 		return returnArr;
 	}
 	
-	DelayDuration = record.data.DelayMonths*1 + (record.data.DelayDays*1/30);
 	DelayDuration = DateModule.GDateMinusGDate(
 		DateModule.AddToGDate(record.data.PartDate, record.data.DelayDays*1, record.data.DelayMonths*1), 
 		record.data.PartDate);

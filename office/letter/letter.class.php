@@ -16,6 +16,7 @@ class OFC_letters extends PdoDataAccess{
 	public $organization;
 	public $OrgPost;
 	public $SignerPersonID;
+	public $SignPostID;
 	public $IsSigned;
 	public $InnerLetterNo;
 	public $InnerLetterDate;

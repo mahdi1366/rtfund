@@ -172,9 +172,6 @@ VOT_Form.prototype.PreviewForm = function(){
 				type : "table",
 				columns : 2
 			},
-			defaults : {
-				width : 650
-			},
 			autoScroll : true,
 			bodyStyle : "background-color:white",
 			modal : true,
@@ -188,7 +185,7 @@ VOT_Form.prototype.PreviewForm = function(){
 		Ext.getCmp(this.TabID).add(this.PreviewWin);
 		
 		this.ItemsStore = new Ext.data.Store({
-			fields: ['ItemType',"ItemTitle", 'ItemValues'],
+			fields: ['ItemID','ItemType',"ItemTitle", 'ItemValues'],
 			proxy: {
 				type: 'jsonp',
 				url: this.address_prefix + "vote.data.php?task=SelectItems",
@@ -237,30 +234,39 @@ VOT_Form.prototype.PreviewForm = function(){
 				{
 					VOT_FormObject.PreviewWin.add({
 						xtype : "displayfield",
-						value : record.data.ItemTitle,
-						width : 400
+						value : record.data.ItemTitle
 					});
 					var items = new Array();
 					arr = record.data.ItemValues.split("#");
 					for(j=0; j<arr.length; j++)
 						items.push({
 							boxLabel : arr[j],
-							width : 50
+							name : "radio_" + record.data.ItemID,
+							width : 100
 						});
 					VOT_FormObject.PreviewWin.add({
 						xtype : "radiogroup",
-						items : items,		
-						width : 200
+						items : items
 					});
 				}
 				else
 				{
+					if(record.data.ItemType == "textarea")
+					{
+						VOT_FormObject.PreviewWin.add({
+							xtype : "displayfield",
+							value : record.data.ItemTitle,
+							colspan : 2,
+							width : 650
+						});
+					}
 					VOT_FormObject.PreviewWin.add({
 						xtype: record.data.ItemType,
 						fieldLabel : record.data.ItemName,
 						hideTrigger : record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield' ? true : false,
 						value : record.data.ItemValues,
-						colspan : 2
+						colspan : 2,
+						width : 650
 					});
 				}
 			}
