@@ -581,29 +581,39 @@ RequestInfo.prototype.BuildForms = function(){
 			items : this.PartsPanel
 		}],
 		buttons :[{
-			text : 'مدارک وام',
-			hidden : true,
-			iconCls : "attach",
-			itemId : "cmp_LoanDocuments",
-			handler : function(){ RequestInfoObject.LoanDocuments('loan'); }
-		},{
-			text : 'مدارک وام گیرنده',
-			hidden : true,
-			iconCls : "attach",
-			itemId : "cmp_PersonDocuments",
-			handler : function(){ RequestInfoObject.LoanDocuments('person'); }
-		},{
-			text : 'سابقه',
-			iconCls : "history",
-			hidden : true,
-			itemId : "cmp_history",
-			handler : function(){ RequestInfoObject.ShowHistory(); }
-		},{
-			text : 'پیام ها',
-			iconCls : "comment",
-			hidden : true,
-			itemId : "cmp_comment",
-			handler : function(){ RequestInfoObject.ShowMessages(); }
+			text : "پیوست ها",
+			iconCls : "setting",
+			menu : [{
+				text : 'مدارک وام',
+				hidden : true,
+				iconCls : "attach",
+				itemId : "cmp_LoanDocuments",
+				handler : function(){ RequestInfoObject.LoanDocuments('loan'); }	
+			},{
+				text : 'مدارک وام گیرنده',
+				hidden : true,
+				iconCls : "attach",
+				itemId : "cmp_PersonDocuments",
+				handler : function(){ RequestInfoObject.LoanDocuments('person'); }
+			},{
+				text : 'سابقه',
+				iconCls : "history",
+				hidden : true,
+				itemId : "cmp_history",
+				handler : function(){ RequestInfoObject.ShowHistory(); }
+			},{
+				text : 'پیام ها',
+				iconCls : "comment",
+				hidden : true,
+				itemId : "cmp_comment",
+				handler : function(){ RequestInfoObject.ShowMessages(); }
+			},{
+				text : 'رویدادها',
+				iconCls : "task",
+				hidden : true,
+				itemId : "cmp_events",
+				handler : function(){ RequestInfoObject.ShowEvents(); }
+			}]
 		},'->',{
 			text : 'ویرایش شرایط پرداخت',
 			hidden : true,
@@ -825,6 +835,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		this.companyPanel.down("[itemId=cmp_PersonDocuments]").show();
 		this.companyPanel.down("[itemId=cmp_history]").show();
 		this.companyPanel.down("[itemId=cmp_comment]").show();
+		this.companyPanel.down("[itemId=cmp_events]").show();
 	}
 	
 	if(this.ReadOnly)
@@ -1562,14 +1573,19 @@ RequestInfo.prototype.ShowHistory = function(){
 				}]
 		});
 		Ext.getCmp(this.TabID).add(this.HistoryWin);
+		
+		this.HistoryWin.show();
+		this.HistoryWin.center();
+		this.HistoryWin.loader.load({
+			params : {
+				RequestID : this.RequestID
+			}
+		});
+		return;
 	}
+	
 	this.HistoryWin.show();
 	this.HistoryWin.center();
-	this.HistoryWin.loader.load({
-		params : {
-			RequestID : this.RequestID
-		}
-	});
 }
 
 RequestInfo.prototype.LoanDocuments = function(ObjectType){
@@ -2099,15 +2115,60 @@ RequestInfo.prototype.ShowMessages = function(){
 		});
 		
 		Ext.getCmp(this.TabID).add(this.messagesWin);
+		
+		this.messagesWin.show();
+		this.messagesWin.center();
+
+		this.messagesWin.loader.load({
+			params : {
+				ExtTabID : this.messagesWin.getEl().id,
+				RequestID : this.RequestID
+			}
+		});
+		return;
 	}
 	this.messagesWin.show();
 	this.messagesWin.center();
-	
-	this.messagesWin.loader.load({
-		params : {
-			ExtTabID : this.messagesWin.getEl().id,
-			RequestID : this.RequestID
-		}
-	});
 }
+
+RequestInfo.prototype.ShowEvents = function(){
+
+	if(!this.EventsWin)
+	{
+		this.EventsWin = new Ext.window.Window({
+			title: 'رویدادهای مرتبط با طرح',
+			modal : true,
+			autoScroll : true,
+			width: 600,
+			height : 400,
+			bodyStyle : "background-color:white",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "events.php",
+				scripts : true
+			},
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){
+					this.up('window').hide();
+				}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.EventsWin);
+		this.EventsWin.show();
+		this.EventsWin.center();	
+		this.EventsWin.loader.load({
+			params : {
+				ExtTabID : this.EventsWin.getEl().id,
+				RequestID : this.RequestID
+			}
+		});
+		return;
+	}
+	this.EventsWin.show();
+	this.EventsWin.center();	
+}
+
+
 </script>

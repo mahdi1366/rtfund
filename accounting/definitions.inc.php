@@ -4,6 +4,7 @@
 //	Date		: 94.07
 //-----------------------------
 
+//................. TypeID = 9 .....................
 define("DOCTYPE_STARTCYCLE", "1");
 define("DOCTYPE_NORMAL", "2");
 define("DOCTYPE_ENDCYCLE", "3");
@@ -17,6 +18,7 @@ define("DOCTYPE_SHARE_PROFIT", "10");
 define("DOCTYPE_SAVING_IN", "11");
 define("DOCTYPE_SAVING_OUT", "12");
 define("DOCTYPE_WARRENTY", "13");
+define("DOCTYPE_EQUALCHECKS", "14");
 
 
 define("TAFTYPE_PERSONS", "1");

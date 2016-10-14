@@ -922,15 +922,18 @@ PlanInfo.prototype.ShowHistory = function(record){
 				}]
 		});
 		Ext.getCmp(this.TabID).add(this.HistoryWin);
+		this.HistoryWin.show();
+		this.HistoryWin.center();
+		this.HistoryWin.loader.load({
+			params : {
+				PlanID : this.PlanID,
+				GroupID : record.data.id
+			}
+		});
+		return;
 	}
 	this.HistoryWin.show();
 	this.HistoryWin.center();
-	this.HistoryWin.loader.load({
-		params : {
-			PlanID : this.PlanID,
-			GroupID : record.data.id
-		}
-	});
 }
 
 PlanInfo.prototype.PlanDocuments = function(ObjectType){
@@ -1179,14 +1182,18 @@ PlanInfo.prototype.EventsShow = function(){
 			}]
 		});
 		Ext.getCmp(this.TabID).add(this.EventsWin);
+		
+		this.EventsWin.show();
+		this.EventsWin.center();
+		this.EventsWin.loader.load({
+			params : {
+				ExtTabID : this.EventsWin.getEl().id
+			}
+		});
+		return;
 	}
 	this.EventsWin.show();
 	this.EventsWin.center();
-	this.EventsWin.loader.load({
-		params : {
-			ExtTabID : this.EventsWin.getEl().id
-		}
-	});
 }
 
 </script>

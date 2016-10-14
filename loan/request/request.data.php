@@ -1849,4 +1849,38 @@ function GetBanks(){
 	die();
 }
 
+//............................................
+
+function GetEvents(){
+	
+	$temp = LON_events::Get("AND RequestID=?", array($_REQUEST["RequestID"]));
+	print_r(ExceptionHandler::PopAllExceptions());
+	$res = $temp->fetchAll();
+	echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveEvents(){
+	
+	$obj = new LON_events();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if(empty($obj->EventID))
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+	
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();
+}
+
+function DeleteEvents(){
+	
+	$obj = new LON_events();
+	$obj->EventID = $_POST["EventID"];
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();	
+}
+
 ?>

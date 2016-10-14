@@ -504,4 +504,23 @@ class LON_messages extends OperationClass {
 		where 1=1 " . $where . " " . $order, $whereParams);	
 	}
 }
+
+class LON_events extends OperationClass {
+
+    const TableName = "LON_events";
+    const TableKey = "EventID";
+
+    public $EventID;
+	public $RequestID;
+    public $EventTitle;
+    public $EventDate;
+	
+    function __construct($id = ""){
+        
+		$this->DT_EventDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
+        parent::__construct($id);
+    }
+
+}
 ?>

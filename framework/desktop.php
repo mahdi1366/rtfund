@@ -32,6 +32,8 @@ foreach($systems as $sysRow)
 	}
 	
 	$menus = FRW_access::getAccessMenus($sysRow["SystemID"]);
+	if($sysRow["SystemID"] == "2")
+		echo PdoDataAccess::GetLatestQueryString ();
 	if(count($menus) > 0)
 		$menuStr .= ",menu : {xtype : 'menu',bodyStyle: 'background:white !important;',items:[";
 	//........................................................
