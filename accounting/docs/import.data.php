@@ -44,7 +44,6 @@ function SplitYears($startDate, $endDate, $TotalAmount){
 	if(substr($endDate,0,1) == 2)
 		$endDate = DateModules::miladi_to_shamsi ($endDate);
 	
-	
 	$arr = preg_split('/[\-\/]/',$startDate);
 	$StartYear = $arr[0]*1;
 	
@@ -69,7 +68,10 @@ function SplitYears($startDate, $endDate, $TotalAmount){
 	{
 		$yearDays[$year] = round(($days/$TotalDays)*$TotalAmount);
 		$sum += $yearDays[$year];
+		
+		//echo  $year . " " . $days . " " . $yearDays[$year] . "\n";
 	}
+	
 	if($sum <> $TotalAmount)
 		$yearDays[$year] += $TotalAmount-$sum;
 	
@@ -163,8 +165,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	//$DelayDuration = $PartObj->DelayMonths*1 + $PartObj->DelayDays*1/30;
 	$startDate = DateModules::miladi_to_shamsi($PayObj->PayDate);
 	$endDelayDate = DateModules::AddToGDate($PayObj->PayDate, $PartObj->DelayDays*1, $PartObj->DelayMonths*1);
-	$DelayDuration = DateModules::JDateMinusJDate(
-		DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths), $startDate)+1;
+	$DelayDuration = DateModules::GDateMinusGDate($endDelayDate, $PayObj->PayDate)+1;
 	if($PartObj->DelayDays*1 > 0)
 	{
 		$CustomerDelay = round($PayAmount*$PartObj->DelayPercent*$DelayDuration/36500);
@@ -319,7 +320,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	//------------------------ delay -------------------------------
 	if($PartObj->MaxFundWage == 0 && $FundDelay > 0)
 	{
-		$CustomerYearDelays = SplitYears($PayObj->PayDate, $endDelayDate, $FundDelay);
+		$CustomerYearDelays = SplitYears($PayObj->PayDate, $endDelayDate, $CustomerDelay);
 		//$CustomerYearDelays = YearDelayCompute($PartObj, $PayObj->PayDate, $PayAmount, $PartObj->DelayPercent);
 			 
 		$index = 0;
@@ -1060,8 +1061,8 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	//--------------------------------------------------------
 	//$DelayDuration = $PartObj->DelayMonths*1 + $PartObj->DelayDays*1/30;
 	$startDate = DateModules::miladi_to_shamsi($PartObj->PartDate);
-	$DelayDuration = DateModules::JDateMinusJDate(
-		DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths), $startDate)+1;
+	$DelayDuration = DateModules::GDateMinusGDate(
+		DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths), $PartObj->PartDate)+1;
 	
 	$YearMonths = 12;
 	if($PartObj->IntervalType == "DAY")
