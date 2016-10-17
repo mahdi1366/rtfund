@@ -39,6 +39,12 @@ function FindTafsiliID($TafsiliCode, $TafsiliType){
  */
 function SplitYears($startDate, $endDate, $TotalAmount){
 	
+	if(substr($startDate,0,1) == 2)
+		$startDate = DateModules::miladi_to_shamsi ($startDate);
+	if(substr($endDate,0,1) == 2)
+		$endDate = DateModules::miladi_to_shamsi ($endDate);
+	
+	
 	$arr = preg_split('/[\-\/]/',$startDate);
 	$StartYear = $arr[0]*1;
 	
@@ -156,11 +162,21 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	
 	//$DelayDuration = $PartObj->DelayMonths*1 + $PartObj->DelayDays*1/30;
 	$startDate = DateModules::miladi_to_shamsi($PayObj->PayDate);
+	$endDelayDate = DateModules::AddToGDate($PayObj->PayDate, $PartObj->DelayDays*1, $PartObj->DelayMonths*1);
 	$DelayDuration = DateModules::JDateMinusJDate(
 		DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths), $startDate)+1;
-	$CustomerDelay = round($PayAmount*$PartObj->DelayPercent*$DelayDuration/36500);
-	$FundDelay = round($PayAmount*$PartObj->FundWage*$DelayDuration/36500);
-	$AgentDelay = round($PayAmount*($PartObj->DelayPercent - $PartObj->FundWage)*$DelayDuration/36500);
+	if($PartObj->DelayDays*1 > 0)
+	{
+		$CustomerDelay = round($PayAmount*$PartObj->DelayPercent*$DelayDuration/36500);
+		$FundDelay = round($PayAmount*$PartObj->FundWage*$DelayDuration/36500);
+		$AgentDelay = round($PayAmount*($PartObj->DelayPercent - $PartObj->FundWage)*$DelayDuration/36500);
+	}
+	else
+	{
+		$CustomerDelay = round($PayAmount*$PartObj->DelayPercent*$PartObj->DelayMonths/1200);
+		$FundDelay = round($PayAmount*$PartObj->FundWage*$PartObj->DelayMonths/1200);
+		$AgentDelay = round($PayAmount*($PartObj->DelayPercent - $PartObj->FundWage)*$PartObj->DelayMonths/1200);
+	}
 	$curYear = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0, 4)*1;
 	$CurYearTafsili = FindTafsiliID($curYear, TAFTYPE_YEARS);
 	//------------------ find tafsilis ---------------
@@ -303,15 +319,15 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	//------------------------ delay -------------------------------
 	if($PartObj->MaxFundWage == 0 && $FundDelay > 0)
 	{
-		$FundYearDelays = YearDelayCompute($PartObj, $PayObj->PayDate, $PayAmount, $PartObj->FundWage);
-		$CustomerYearDelays = YearDelayCompute($PartObj, $PayObj->PayDate, $PayAmount, $PartObj->DelayPercent);
+		$CustomerYearDelays = SplitYears($PayObj->PayDate, $endDelayDate, $FundDelay);
+		//$CustomerYearDelays = YearDelayCompute($PartObj, $PayObj->PayDate, $PayAmount, $PartObj->DelayPercent);
 			 
 		$index = 0;
-		while(true)
+		foreach($CustomerYearDelays as $year => $value)
 		{
-			$FundYearAmount = isset($FundYearDelays[$curYear+$index]) ? $FundYearDelays[$curYear+$index] : 0;
-			$CustomerYearAmount = isset($CustomerYearDelays[$curYear+$index]) ? $CustomerYearDelays[$curYear+$index] : 0;
-			$AgentYearAmount = $FundYearAmount > $CustomerYearAmount ? $FundYearAmount - $CustomerYearAmount : 0;
+			$FundYearAmount = ($PartObj->FundWage/$PartObj->DelayPercent)*$value;
+			$AgentYearAmount = $PartObj->CustomerWage*1 > $PartObj->FundWage ?
+				(($PartObj->CustomerWage*1-$PartObj->FundWage*1)/$PartObj->DelayPercent*1)*$value : 0;
 			
 			if($FundYearAmount == 0)
 				break;
@@ -319,12 +335,12 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
-			$itemObj->CostID = $index == 0 ? $CostCode_wage : $CostCode_FutureWage;
+			$itemObj->CostID = $year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $FundYearAmount;
 			$itemObj->TafsiliType = TAFTYPE_YEARS;
 			$itemObj->details = "کارمزد دوره تنفس وام شماره " . $ReqObj->RequestID;
-			$itemObj->TafsiliID = $index == 0 ? $CurYearTafsili : FindTafsiliID($curYear+$index, TAFTYPE_YEARS);
+			$itemObj->TafsiliID = FindTafsiliID($year, TAFTYPE_YEARS);
 			if($LoanMode == "Agent")
 			{
 				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
@@ -345,9 +361,9 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			if($AgentYearAmount > 0)
 			{
 				unset($itemObj->ItemID);
-				$itemObj->CostID = $index == 0 ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
+				$itemObj->CostID = $year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
 				$itemObj->TafsiliType = TAFTYPE_YEARS;
-				$itemObj->TafsiliID = $index == 0 ? $CurYearTafsili : $itemObj->TafsiliID;
+				$itemObj->TafsiliID = $year == $curYear ? $CurYearTafsili : $itemObj->TafsiliID;
 				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 				$itemObj->TafsiliID2 = $ReqPersonTafsili;
 				$itemObj->DebtorAmount = $AgentYearAmount;
@@ -365,8 +381,9 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	//---------- agent delay ------------	
 	if($AgentDelay > 0)
 	{
-		$AgentYearDelays = YearDelayCompute($PartObj, $PayObj->PayDate, $PayAmount, 
-				$PartObj->DelayPercent-$PartObj->FundWage);			
+		$AgentYearDelays = SplitYears($PayObj->PayDate, $endDelayDate, $AgentDelay);
+		//$AgentYearDelays = YearDelayCompute($PartObj, $PayObj->PayDate, $PayAmount, 
+		//		$PartObj->DelayPercent-$PartObj->FundWage);			
 		$index = 0;
 		while(true)
 		{
@@ -424,6 +441,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			}
 			unset($itemObj->ItemID);
 			$itemObj->details = "کارمزد وام شماره " . $ReqObj->RequestID;
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
 			$itemObj->CostID = $Year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $amount;
@@ -1056,7 +1075,11 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	$year3 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 3, $YearMonths);
 	$year4 = $FundFactor*YearWageCompute($PartObj, $TotalWage, 4, $YearMonths);
 	
-	$TotalDelay = round($PartObj->PartAmount*$PartObj->DelayPercent*$DelayDuration/36500);
+	if($PartObj->DelayDays*1 > 0)
+		$TotalDelay = round($PartObj->PartAmount*$PartObj->DelayPercent*$DelayDuration/36500);
+	else
+		$TotalDelay = round($PartObj->PartAmount*$PartObj->DelayPercent*$PartObj->DelayMonths/1200);
+	
 	$curYear = substr(DateModules::miladi_to_shamsi($PartObj->PartDate), 0, 4)*1;
 	
 	//--------------------- compute for new Amount ---------------------
@@ -1341,6 +1364,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
+	$CostCode_fund = FindCostID("100");
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
 	$CostCode_commitment = FindCostID("660-" . $LoanObj->_BlockCode);
 	
@@ -1496,7 +1520,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 	unset($itemObj->TafsiliType2);
 	unset($itemObj->TafsiliID2);
 	unset($itemObj->TafsiliID);
-	$itemObj->CostID = $CostCode_bank;
+	$itemObj->CostID = $PayObj->PayType == "3" ? $CostCode_fund : $CostCode_bank;
 	$itemObj->DebtorAmount= $PayObj->PayAmount;
 	$itemObj->CreditorAmount = 0;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
