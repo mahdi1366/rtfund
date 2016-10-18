@@ -1467,6 +1467,8 @@ function GetDelayedInstallments($returnData = false){
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
 	
+	$ForfeitDays = !empty($_REQUEST["minDays"]) ? $_REQUEST["minDays"]*1 : 0;
+	
 	$result = array();
 	while($row = $dt->fetch())
 	{
@@ -1476,12 +1478,18 @@ function GetDelayedInstallments($returnData = false){
 		foreach($returnArr as $row2)
 			if(isset($row2["InstallmentID"]) && $row2["InstallmentID"]*1 > 0)
 			{
+				if($ForfeitDays > 0 && $row2["ForfeitDays"]*1 < $ForfeitDays)
+					continue;
+				
 				if(count($result) > 0 && $result[ count($result)-1 ]["InstallmentID"] == $row2["InstallmentID"])
 				{
-					if($row2["remainder"]*1 == 0)
-						array_pop ($result);
-					else
-						$result[ count($result)-1 ]["remainder"] = $row2["remainder"];
+					if($ForfeitDays == 0)
+					{
+						if($row2["remainder"]*1 == 0)
+							array_pop ($result);
+						else
+							$result[ count($result)-1 ]["remainder"] = $row2["remainder"];
+					}
 				}
 				else if($row2["remainder"]*1 > 0)
 				{
@@ -1847,6 +1855,40 @@ function GetBanks(){
 	$dt = PdoDataAccess::runquery("select * from ACC_banks");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
+}
+
+//............................................
+
+function GetEvents(){
+	
+	$temp = LON_events::Get("AND RequestID=?", array($_REQUEST["RequestID"]));
+	print_r(ExceptionHandler::PopAllExceptions());
+	$res = $temp->fetchAll();
+	echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveEvents(){
+	
+	$obj = new LON_events();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if(empty($obj->EventID))
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+	
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();
+}
+
+function DeleteEvents(){
+	
+	$obj = new LON_events();
+	$obj->EventID = $_POST["EventID"];
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();	
 }
 
 ?>

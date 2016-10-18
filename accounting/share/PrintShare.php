@@ -8,6 +8,8 @@ require_once '../header.inc.php';
 require_once '../global/ManageReport.class.php';
 require_once inc_CurrencyModule;
 
+$portal = isset($_SESSION["USER"]["portal"]) ? true : false;
+
 if(isset($_REQUEST["print"]))
 {
 	$TafsiliID = !empty($_REQUEST["TafsiliID"]) ? $_REQUEST["TafsiliID"] : "";
