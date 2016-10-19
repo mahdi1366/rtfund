@@ -54,6 +54,9 @@ $col = $dg->addColumn("وام گیرنده", "LoanPersonName");
 $col = $dg->addColumn("سررسید", "InstallmentDate", GridColumn::ColumnType_date);
 $col->width = 80;
 
+$col = $dg->addColumn("تاخیر", "ForfeitDays", GridColumn::ColumnType_date);
+$col->width = 80;
+
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
 $col->width = 150;
 
@@ -99,12 +102,19 @@ function LoanReport_DelayedInstallments()
 			fieldLabel : "اقساط معوق تا تاریخ",
 			value : "<?= DateModules::shNow() ?>"
 		},{
+			xtype : "numberfield",
+			itemId : "minDays",
+			labelWidth : 110,
+			fieldLabel : "حداقل روز تاخیر در پرداخت قسط",
+			hideTrigger : true
+		},{
 			xtype : "button",
 			iconCls : "refresh",
 			text : "بارگذاری گزارش",
 			handler : function(){
 				me = LoanReport_DelayedInstallmentsObj;
 				me.grid.getStore().proxy.extraParams.ToDate = me.DateFS.down("[itemId=ToDate]").getRawValue();
+				me.grid.getStore().proxy.extraParams.minDays = me.DateFS.down("[itemId=minDays]").getRawValue();
 				me.grid.getStore().loadPage(1);
 			}
 		}]

@@ -235,7 +235,7 @@ class DateModules
 		$gdate2 = date_create($gdate2);
 		
 		$diff = date_diff($gdate2, $gdate1, true);
-		return $diff->y * 365.25 + $diff->m * 30 + $diff->d ;
+		//return $diff->y * 365.25 + $diff->m * 30 + $diff->d ;
 		
 		return self::GDateMinusGDate($gdate1, $gdate2);
 	}

@@ -1467,6 +1467,8 @@ function GetDelayedInstallments($returnData = false){
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
 	
+	$ForfeitDays = !empty($_REQUEST["minDays"]) ? $_REQUEST["minDays"]*1 : 0;
+	
 	$result = array();
 	while($row = $dt->fetch())
 	{
@@ -1476,12 +1478,18 @@ function GetDelayedInstallments($returnData = false){
 		foreach($returnArr as $row2)
 			if(isset($row2["InstallmentID"]) && $row2["InstallmentID"]*1 > 0)
 			{
+				if($ForfeitDays > 0 && $row2["ForfeitDays"]*1 < $ForfeitDays)
+					continue;
+				
 				if(count($result) > 0 && $result[ count($result)-1 ]["InstallmentID"] == $row2["InstallmentID"])
 				{
-					if($row2["remainder"]*1 == 0)
-						array_pop ($result);
-					else
-						$result[ count($result)-1 ]["remainder"] = $row2["remainder"];
+					if($ForfeitDays == 0)
+					{
+						if($row2["remainder"]*1 == 0)
+							array_pop ($result);
+						else
+							$result[ count($result)-1 ]["remainder"] = $row2["remainder"];
+					}
 				}
 				else if($row2["remainder"]*1 > 0)
 				{

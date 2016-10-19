@@ -1,0 +1,235 @@
+<?xml version="1.0" ?>
+<xs:schema targetNamespace="http://www.irica.com/ECE/1383-12/SendSchema" xmlns:irecetns="http://www.irica.com/ECE/1383-12/SendSchema"
+	xmlns="http://www.irica.com/ECE/1383-12/SendSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	elementFormDefault="qualified" attributeFormDefault="qualified" version="1.01">
+	<xs:element name="Letter">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Protocol" nillable="false" minOccurs="1" maxOccurs="1">
+					<xs:complexType>
+						<xs:attribute name="Name" type="xs:string" use="required" form="unqualified" />
+						<xs:attribute name="Version" type="xs:string" use="required" form="unqualified" />
+						<xs:anyAttribute namespace="##any" processContents="skip" />
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Software" nillable="false" maxOccurs="1" minOccurs="1">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="SoftwareDeveloper" type="xs:string" use="required" form="unqualified" />
+								<xs:attribute name="Version" type="xs:string" use="optional" form="unqualified" />
+								<xs:attribute name="GUID" type="xs:string" use="required" form="unqualified" />
+								<xs:anyAttribute namespace="##any" processContents="skip" />
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Sender" nillable="false" maxOccurs="1" minOccurs="1">
+					<xs:complexType>
+						<xs:attribute name="Organization" type="xs:string" use="required" form="unqualified" />
+						<xs:attribute name="Department" type="xs:string" use="optional" form="unqualified" />
+						<xs:attribute name="Position" type="xs:string" use="optional" form="unqualified" />
+						<xs:attribute name="Name" type="xs:string" use="optional" form="unqualified" />
+						<xs:attribute name="Code" type="xs:string" use="required" form="unqualified" />
+						<xs:anyAttribute namespace="##any" processContents="skip" />
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Receiver" nillable="false" minOccurs="1" maxOccurs="1">
+					<xs:complexType>
+						<xs:attribute name="Organization" type="xs:string" use="required" form="unqualified" />
+						<xs:attribute name="Department" type="xs:string" use="optional" form="unqualified" />
+						<xs:attribute name="Position" type="xs:string" use="optional" form="unqualified" />
+						<xs:attribute name="Name" type="xs:string" use="optional" form="unqualified" />
+						<xs:attribute name="Code" type="xs:string" use="required" form="unqualified" />
+						<xs:attribute name="ReceiveType" type="irecetns:ReceiveType" use="required" form="unqualified" />
+						<xs:anyAttribute namespace="##any" processContents="skip" />
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="OtherReceivers" nillable="false" minOccurs="0" maxOccurs="1">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="OtherReceiver" nillable="false" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:attribute name="Organization" type="xs:string" use="required" form="unqualified" />
+									<xs:attribute name="Department" type="xs:string" use="optional" form="unqualified" />
+									<xs:attribute name="Position" type="xs:string" use="optional" form="unqualified" />
+									<xs:attribute name="Name" type="xs:string" use="optional" form="unqualified" />
+									<xs:attribute name="Code" type="xs:string" use="required" form="unqualified" />
+									<xs:attribute name="ReceiveType" type="irecetns:ReceiveType" use="required" form="unqualified" />
+									<xs:anyAttribute namespace="##any" processContents="skip" />
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="LetterNo" nillable="false" maxOccurs="1" minOccurs="1">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:anyAttribute namespace="##any" processContents="skip" />
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="LetterDateTime" nillable="false" maxOccurs="1" minOccurs="1">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:dateTime">
+								<xs:attribute name="ShowAs" type="irecetns:DateType" use="required" form="unqualified" />
+								<xs:anyAttribute namespace="##any" processContents="skip" />
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="RelatedLetters" minOccurs="0" maxOccurs="1" nillable="false">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="RelatedLetter" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:all>
+										<xs:element name="RelationType" nillable="false" maxOccurs="1" minOccurs="1">
+											<xs:complexType>
+												<xs:attribute name="Name" type="xs:string" use="required" form="unqualified" />
+												<xs:attribute name="Code" type="xs:string" use="required" form="unqualified" />
+												<xs:anyAttribute namespace="##any" processContents="skip" />
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="RelatedLetterNo" nillable="false" maxOccurs="1" minOccurs="1">
+											<xs:complexType>
+												<xs:simpleContent>
+													<xs:extension base="xs:string">
+														<xs:anyAttribute namespace="##any" processContents="skip" />
+													</xs:extension>
+												</xs:simpleContent>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="RelatedLetterDateTime" nillable="false" maxOccurs="1" minOccurs="1">
+											<xs:complexType>
+												<xs:simpleContent>
+													<xs:extension base="xs:dateTime">
+														<xs:attribute name="ShowAs" type="irecetns:DateType" use="required" form="unqualified" />
+														<xs:anyAttribute namespace="##any" processContents="skip" />
+													</xs:extension>
+												</xs:simpleContent>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="RelatedLetterSender" nillable="false" maxOccurs="1" minOccurs="1">
+											<xs:complexType>
+												<xs:attribute name="Organization" type="xs:string" use="required" form="unqualified" />
+												<xs:attribute name="Department" type="xs:string" use="optional" form="unqualified" />
+												<xs:attribute name="Position" type="xs:string" use="optional" form="unqualified" />
+												<xs:attribute name="Name" type="xs:string" use="optional" form="unqualified" />
+												<xs:attribute name="Code" type="xs:string" use="required" form="unqualified" />
+												<xs:anyAttribute namespace="##any" processContents="skip" />
+											</xs:complexType>
+										</xs:element>
+									</xs:all>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Subject" minOccurs="0" maxOccurs="1" nillable="true">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:anyAttribute namespace="##any" processContents="skip" />
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Priority" nillable="false" maxOccurs="1" minOccurs="1">
+					<xs:complexType>
+						<xs:attribute name="Name" type="xs:string" use="required" form="unqualified" />
+						<xs:attribute name="Code" type="xs:string" use="required" form="unqualified" />
+						<xs:anyAttribute namespace="##any" processContents="skip" />
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Classification" nillable="false" maxOccurs="1" minOccurs="1">
+					<xs:complexType>
+						<xs:attribute name="Name" type="xs:string" use="required" form="unqualified" />
+						<xs:attribute name="Code" type="xs:string" use="required" form="unqualified" />
+						<xs:anyAttribute namespace="##any" processContents="skip" />
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Keywords" nillable="false" minOccurs="0" maxOccurs="1">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Keyword" nillable="false" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:string">
+											<xs:anyAttribute namespace="##any" processContents="skip" />
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Origins" nillable="false" minOccurs="1" maxOccurs="1">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Origin" nillable="false" maxOccurs="unbounded" minOccurs="1">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:base64Binary">
+											<xs:attribute name="ContentType" type="irecetns:FileType" use="required" form="unqualified" />
+											<xs:attribute name="Extension" type="xs:string" use="optional" form="unqualified" />
+											<xs:attribute name="Description" type="xs:string" use="optional" form="unqualified" />
+											<xs:anyAttribute namespace="##any" processContents="skip" />
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Attachments" minOccurs="0" maxOccurs="1" nillable="false">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Attachment" nillable="true" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:base64Binary">
+											<xs:attribute name="ContentType" type="xs:string" use="required" form="unqualified" />
+											<xs:attribute name="Extension" type="xs:string" use="optional" form="unqualified" />
+											<xs:attribute name="Description" type="xs:string" use="optional" form="unqualified" />
+											<xs:anyAttribute namespace="##any" processContents="skip" />
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:simpleType name="FileType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="image/jpeg" />
+			<xs:enumeration value="image/tiff" />
+			<xs:enumeration value="image/gif" />
+			<xs:enumeration value="image/png" />
+			<xs:enumeration value="application/msword" />
+			<xs:enumeration value="application/pdf" />
+			<xs:enumeration value="text/plain" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DateType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="gregorian" />
+			<xs:enumeration value="jalali" />
+			<xs:enumeration value="hijri" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ReceiveType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Origin" />
+			<xs:enumeration value="Copy" />
+			<xs:enumeration value="Refer" />
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>
