@@ -123,7 +123,7 @@ class BSC_persons extends PdoDataAccess
 		$daObj->execute();
 		
 		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where ObjectID=? AND TafsiliType=1", array($this->PersonID));
-		require_once '../../accounting/baseinfo/baseinfo.class.php';
+		require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
 		if(count($dt) == 0)
 		{
 			$obj = new ACC_tafsilis();

@@ -39,10 +39,20 @@ function merging($main,$sub){
 		echo "update PLN_experts : " . PdoDataAccess::AffectedRows() . "<br>";
 		PdoDataAccess::runquery("update PLN_plans set PersonID=? where PersonID=?", array($PersonID1, $PersonID2));
 		echo "update PLN_plans : " . PdoDataAccess::AffectedRows() . "<br>";
+		PdoDataAccess::runquery("update DataAudit set PersonID=? where PersonID=?", array($PersonID1, $PersonID2));
+		echo "update DataAudit : " . PdoDataAccess::AffectedRows() . "<br>";
 		
 		PdoDataAccess::runquery("update DMS_documents set ObjectID=? where ObjectType='person' AND ObjectID=?", array($PersonID1, $PersonID2));
 		echo "update DMS_documents : " . PdoDataAccess::AffectedRows() . "<br>";
 		
+		require_once 'framework/person/persons.class.php';
+		$obj = new BSC_persons($PersonID1);
+		$obj2 = new BSC_persons($PersonID2);
+		PdoDataAccess::FillObjectByObject($obj, $obj2);
+		$obj->PersonID = $PersonID1;
+		$result = $obj->EditPerson();
+		echo "copy persons properties : " . ($result ? "true" : "false") . "<br>";
+				
 		PdoDataAccess::runquery("delete from BSC_persons where PersonID=?", array($PersonID2));
 			echo "delete BSC_persons : " . PdoDataAccess::AffectedRows() . "<br>";
 

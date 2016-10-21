@@ -326,7 +326,7 @@ LoanPay.prototype.BeforeSave = function(mode){
 	{
 		this.BankWin = new Ext.window.Window({
 			width : 400,
-			height : 120,
+			height : 220,
 			modal : true,
 			closeAction : "hide",
 			items : [{
@@ -369,6 +369,29 @@ LoanPay.prototype.BeforeSave = function(mode){
 				valueField : "TafsiliID",
 				itemId : "TafsiliID2",
 				displayField : "title"
+			},{
+				xtype : "checkbox",
+				boxLabel : "از حساب مرکز",
+				itemId : "CenterAccount",
+				inputValue : "1"
+			},{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../../framework/baseInfo/baseInfo.data.php?' +
+							"task=SelectBranches",
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields : ['BranchID','BranchName'],
+					autoLoad : true					
+				}),
+				fieldLabel : "شعبه واسط ",
+				queryMode : 'local',
+				width : 385,
+				displayField : "BranchName",
+				valueField : "BranchID",
+				itemId : "BranchID"
 			}],
 			buttons :[{
 				text : "ذخیره",
@@ -394,7 +417,10 @@ LoanPay.prototype.BeforeSave = function(mode){
 		LoanPayObject.BankWin.hide();
 		LoanPayObject.RegisterDoc(
 			LoanPayObject.BankWin.down("[itemId=TafsiliID]").getValue(),
-			LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getValue(), record, mode); 
+			LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getValue(),
+			LoanPayObject.BankWin.down("[itemId=CenterAccount]").getValue(),
+			LoanPayObject.BankWin.down("[itemId=BranchID]").getValue(),
+			record, mode); 
 	});
 }
 	
@@ -433,7 +459,7 @@ LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 	});
 }
 
-LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, record, mode){
+LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, CenterAccount, BranchID, record, mode){
 
 	mask = new Ext.LoadMask(this.BankWin, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
@@ -447,6 +473,8 @@ LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, record, mo
 			task: task,
 			BankTafsili : BankTafsili,
 			AccountTafsili : AccountTafsili,
+			CenterAccount : CenterAccount,
+			BranchID : BranchID,
 			RegisterDoc : "1"
 		};
 		
@@ -662,20 +690,6 @@ LoanPay.prototype.BeforeSaveGroupPay = function(){
 					xtype : "textfield",
 					name : "ChequeBranch",
 					fieldLabel : "شعبه"
-				},{
-					xtype : "combo",
-					store : new Ext.data.Store({
-						proxy:{
-							type: 'jsonp',
-							url: this.address_prefix + 'request.data.php?task=GetChequeStatuses',
-							reader: {root: 'rows',totalProperty: 'totalCount'}
-						},
-						fields :  ["InfoID", "InfoDesc"]
-					}),
-					displayField: 'InfoDesc',
-					valueField : "InfoID",
-					name : "ChequeStatus",
-					fieldLabel : "وضعیت چک"
 				},{
 					xtype : "multiselect",
 					itemId : "GroupList",

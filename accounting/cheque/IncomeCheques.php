@@ -39,6 +39,9 @@ $col->width = 100;
 $col = $dg->addColumn("وضعیت چک", "ChequeStatusDesc", "");
 $col->width = 80;
 
+$col = $dg->addColumn("اسناد", "docs", "");
+$col->width = 80;
+
 $dg->addButton("", "تغییر وضعیت چک", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
 
 $dg->emptyTextOfHiddenColumns = true;

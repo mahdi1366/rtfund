@@ -231,10 +231,10 @@ class DateModules
 		$gdate1 = self::shamsi_to_miladi($jdate1);
 		$gdate2 = self::shamsi_to_miladi($jdate2);
 		
-		$gdate1 = date_create($gdate1);
-		$gdate2 = date_create($gdate2);
+		//$gdate1 = date_create($gdate1);
+		//$gdate2 = date_create($gdate2);
 		
-		$diff = date_diff($gdate2, $gdate1, true);
+		//$diff = date_diff($gdate2, $gdate1, true);
 		//return $diff->y * 365.25 + $diff->m * 30 + $diff->d ;
 		
 		return self::GDateMinusGDate($gdate1, $gdate2);

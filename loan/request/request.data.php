@@ -8,7 +8,7 @@ require_once('../header.inc.php');
 include_once inc_dataReader;
 include_once inc_response;
 include_once 'request.class.php';
-require_once '../loan/loan.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/loan/loan/loan.class.php';
 require_once "../../office/workflow/wfm.class.php";
 require_once '../../accounting/definitions.inc.php';
 require_once '../../accounting/docs/import.data.php';
@@ -1006,9 +1006,13 @@ function SaveBackPay(){
 		$ReqObj = new LON_requests($PartObj->RequestID);
 		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 		if($PersonObj->IsSupporter == "YES")
-			$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
+			$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, 
+				$_POST["BankTafsili"], $_POST["AccountTafsili"], 
+				$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
 		else
-			$result = RegisterCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
+			$result = RegisterCustomerPayDoc(null, $obj, 
+				$_POST["BankTafsili"], $_POST["AccountTafsili"],
+				$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
 		if(!$result)
 		{
 			$pdo->rollback();
@@ -1060,7 +1064,7 @@ function ComputePayments($PartID, &$installments){
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
-			where PartID=? AND if(p.ChequeNo<>'',p.ChequeStatus=2,1=1)
+			where PartID=? AND if(p.ChequeNo<>'',p.ChequeStatus=3,1=1)
 			group by PayDate 
 			order by PayDate" , array($PartID));
 	$PayRecord = count($pays) == 0 ? null : $pays[0];
@@ -1207,7 +1211,7 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
-			where PartID=? AND if(p.ChequeNo<>'',p.ChequeStatus=2,1=1)
+			where PartID=? AND if(p.ChequeNo<>'',p.ChequeStatus=3,1=1)
 			group by PayDate" , array($PartID));
 	$PayRecord = count($pays) == 0 ? null : $pays[0];
 	$payIndex = 1;

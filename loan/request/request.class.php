@@ -514,6 +514,7 @@ class LON_events extends OperationClass {
 	public $RequestID;
     public $EventTitle;
     public $EventDate;
+	public $LetterID;
 	
     function __construct($id = ""){
         

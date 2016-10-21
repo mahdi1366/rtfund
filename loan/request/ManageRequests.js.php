@@ -8,6 +8,10 @@ ManageRequest.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -88,8 +92,9 @@ ManageRequest.prototype.OperationMenu = function(e){
 	
 	if(record.data.StatusID == "1")
 	{
-		op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
-		handler : function(){ return ManageRequestObject.deleteRequest(); }});
+		if(this.RemoveAccess)
+			op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
+			handler : function(){ return ManageRequestObject.deleteRequest(); }});
 	}
 	
 	op_menu.add({text: 'مدارک وام',iconCls: 'attach', 
@@ -100,6 +105,9 @@ ManageRequest.prototype.OperationMenu = function(e){
 	
 	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
 		handler : function(){ return ManageRequestObject.ShowHistory(); }});
+	
+	op_menu.add({text: 'رویدادها',iconCls: 'task', 
+		handler : function(){ return ManageRequestObject.ShowEvents(); }});
 	
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
@@ -250,6 +258,43 @@ ManageRequest.prototype.Confirm = function()
 			failure: function(){}
 		});
 		
+	});
+}
+
+ManageRequest.prototype.ShowEvents = function(){
+
+	if(!this.EventsWin)
+	{
+		this.EventsWin = new Ext.window.Window({
+			title: 'رویدادهای مرتبط با طرح',
+			modal : true,
+			autoScroll : true,
+			width: 600,
+			height : 400,
+			bodyStyle : "background-color:white",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "events.php",
+				scripts : true
+			},
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){
+					this.up('window').hide();
+				}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.EventsWin);
+	}
+	this.EventsWin.show();
+	this.EventsWin.center();	
+	record = this.grid.getSelectionModel().getLastSelected();
+	this.EventsWin.loader.load({
+		params : {
+			ExtTabID : this.EventsWin.getEl().id,
+			RequestID : record.data.RequestID
+		}
 	});
 }
 

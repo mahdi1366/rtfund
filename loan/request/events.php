@@ -21,6 +21,11 @@ $col = $dg->addColumn("تاریخ رویداد", "EventDate", GridColumn::Column
 $col->editor = ColumnEditor::SHDateField();
 $col->width = 100;
 
+$col = $dg->addColumn("شماره نامه", "LetterID");
+$col->renderer = "LoanEvent.LetterRender";
+$col->editor = ColumnEditor::NumberField();
+$col->width = 100;
+
 $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(store,record){return LoanEventObject.SaveEvent(record);}";
 
@@ -77,8 +82,11 @@ LoanEvent.DeleteRender = function(v,p,r){
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-var LoanEventObject = new LoanEvent();
+LoanEvent.LetterRender = function(v,p,r){
 	
+	return "<a onclick='LoanEventObject.OpenLetter(" + v + ")' href=javascript:void(1) >" + v + "</a>";
+}
+		
 LoanEvent.prototype.SaveEvent = function(record){
 
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
@@ -157,6 +165,16 @@ LoanEvent.prototype.DeleteEvent = function(){
 		});
 	});
 }
+
+LoanEvent.prototype.OpenLetter = function(LetterID){
+	
+	framework.OpenPage("/office/letter/LetterInfo.php", "مشخصات نامه", 
+	{
+		LetterID : LetterID
+	});
+}
+
+var LoanEventObject = new LoanEvent();
 
 </script>
 <center>

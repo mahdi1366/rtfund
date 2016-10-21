@@ -8,6 +8,10 @@ RequestInfo.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+
 	RequestID : <?= $RequestID ?>,
 	RequestRecord : null,
 	User : '<?= $User ?>',
@@ -794,7 +798,8 @@ RequestInfo.prototype.CustomizeForm = function(record){
 					this.companyPanel.down("[name=BorrowerDesc]").hide();
 					this.companyPanel.down("[name=BorrowerID]").hide();
 				}
-			}			
+			}		
+			this.companyPanel.down("[itemId=cmp_events]").show();
 		}	
 		if(this.User == "Customer")
 		{
@@ -804,7 +809,8 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.companyPanel.down("[name=ReqDetails]").hide();
 			this.companyPanel.down("[itemId=cmp_save]").hide();
 			this.companyPanel.down("[name=AgentGuarantee]").hide();
-			
+			this.companyPanel.down("[itemId=cmp_events]").hide();
+						
 			this.companyPanel.getEl().readonly();
 			
 			//this.grid.down("[itemId=addPart]").hide();
@@ -835,11 +841,13 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		this.companyPanel.down("[itemId=cmp_PersonDocuments]").show();
 		this.companyPanel.down("[itemId=cmp_history]").show();
 		this.companyPanel.down("[itemId=cmp_comment]").show();
-		this.companyPanel.down("[itemId=cmp_events]").show();
 	}
 	
-	if(this.ReadOnly)
+	if(this.ReadOnly || !this.EditAccess)
+	{
+		this.companyPanel.down("[itemId=cmp_save]").hide();
 		return;
+	}
 	
 	if(record == null)
 		return;
@@ -1512,7 +1520,8 @@ RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
 		});
 		return;
 	}
-	
+	if(this.paymentStore.totalCount == 0)
+		return;
 	//--------------- total pay months -------------
 	firstPay = MiladiToShamsi(this.paymentStore.getAt(0).data.PayDate);
 	LastPay = MiladiToShamsi(this.paymentStore.getAt(this.paymentStore.getCount()-1).data.PayDate);

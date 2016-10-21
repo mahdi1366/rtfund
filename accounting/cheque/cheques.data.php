@@ -23,14 +23,20 @@ function selectIncomeCheques() {
 			PartAmount,
 			PartDate,
 			b.BankDesc, 
-			bi2.InfoDesc ChequeStatusDesc
+			bi2.InfoDesc ChequeStatusDesc,
+			t.docs
 		from LON_BackPays p 
 		join LON_ReqParts using(PartID)
 		join LON_requests using(RequestID)
 		join BSC_persons on(LoanPersonID=PersonID)
 		left join ACC_banks b on(ChequeBank=BankID)
 		left join BaseInfo bi2 on(bi2.TypeID=4 AND bi2.InfoID=p.ChequeStatus)
-		
+		left join (
+			select SourceID, group_concat(distinct LocalNo) docs
+			from ACC_DocItems join ACC_docs using(DocID)
+			where SourceType='" . DOCTYPE_DOCUMENT . "' 
+			group by SourceID
+		)t on(BackPayID=t.SourceID)
 		where ChequeNo>0";
 	
 	//.........................................................

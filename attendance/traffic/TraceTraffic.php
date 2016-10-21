@@ -66,11 +66,11 @@ function ShowReport($admin){
 		)t2
 		order by  TrafficDate,TrafficTime";
 	$dt = PdoDataAccess::runquery($query, array(":p" => $PersonID, ":sd" => $StartDate, ":ed" => $EndDate));
-	if($_SESSION["USER"]["UserName"] == "admin")
+	/*if($_SESSION["USER"]["UserName"] == "admin")
 	{
 	print_r(ExceptionHandler::PopAllExceptions());
 	echo PdoDataAccess::GetLatestQueryString();
-	}
+	}*/
 	//print_r($dt);
 	//........................ create days array ..................
 	
@@ -220,15 +220,24 @@ function ShowReport($admin){
 		$mission = 0;
 		$index = 1;
 		$totalAttend = 0;
-		
-		if($returnArr[$i]["TrafficTime"] != "" && 
-			strtotime($returnArr[$i]["TrafficTime"]) > strtotime($returnArr[$i]["FromTime"]))
-				$firstAbsence = strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i]["FromTime"]);
-
 		$currentDay = $returnArr[$i]["TrafficDate"];
 		$startOff = 0;
 		$endOff = 0;
 		$extra = 0;
+		
+		if($returnArr[$i]["TrafficTime"] != "")
+		{
+			if(strtotime($returnArr[$i]["TrafficTime"]) > strtotime($returnArr[$i]["FromTime"]))
+				$firstAbsence = strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i]["FromTime"]);
+			else
+			{
+				if(strtotime($returnArr[$i+1]["TrafficTime"]) < strtotime($returnArr[$i]["FromTime"]))
+					$extra += strtotime($returnArr[$i+1]["TrafficTime"]) - strtotime($returnArr[$i]["TrafficTime"]);
+				else
+					$extra += strtotime($returnArr[$i]["FromTime"]) - strtotime($returnArr[$i]["TrafficTime"]);
+			}
+		}
+		
 		while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
 		{
 			//....................................................
@@ -307,7 +316,7 @@ function ShowReport($admin){
 		
 		if($returnArr[$i]["holiday"])
 		{
-			$extra = $totalAttend + $mission;
+			$extra = $totalAttend;
 			$lastAbsence = 0;
 			$firstAbsence = 0;
 			$Absence = 0;

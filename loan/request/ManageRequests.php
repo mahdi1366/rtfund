@@ -6,6 +6,10 @@
 
 require_once '../header.inc.php';
 require_once inc_dataGrid;
+
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
 require_once 'ManageRequests.js.php';
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectAllRequests", "grid_div");
@@ -66,7 +70,11 @@ $grid = $dg->makeGrid_returnObjects();
 <script>
 ManageRequestObject.grid = <?= $grid ?>;
 ManageRequestObject.grid.on("itemdblclick", function(view, record){
-	framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", {RequestID : record.data.RequestID});
+	framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", 
+	{
+		RequestID : record.data.RequestID,
+		MenuID : '<?= $_POST["MenuID"] ?>'
+	});
 });	
 ManageRequestObject.grid.getView().getRowClass = function(record, index)
 	{
