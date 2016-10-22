@@ -10,6 +10,12 @@ require_once inc_dataGrid;
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
+if(!empty($_SESSION["USER"]["portal"]))
+{
+	$accessObj->AddFlag = true;
+	$accessObj->EditFlag = true;
+	$accessObj->RemoveFlag = true;
+}
 
 $RequestID = !empty($_POST["RequestID"]) ? $_POST["RequestID"] : 0;
 $ReadOnly = isset($_REQUEST["ReadOnly"]) && $_REQUEST["ReadOnly"] == "true" ? true : false;
