@@ -43,7 +43,7 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("تعداد روز تاخیر", "ForfeitDays");
 	$col = $rpg->addColumn("مبلغ تاخیر", "CurForfeitAmount","amountRender");
 	
-	$col = $rpg->addColumn("جریمه کل", "ForfeitAmount","amountRender");
+	$col = $rpg->addColumn("تاخیر کل", "ForfeitAmount","amountRender");
 	//$col->EnableSummary();
 	
 	$rpg->addColumn("مانده قسط", "remainder","amountRender");
