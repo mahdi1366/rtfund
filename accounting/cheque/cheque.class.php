@@ -11,7 +11,10 @@ class ACC_OuterCheques extends OperationClass{
 	
 	public $OuterChequeID;
 	public $CostID;
+	public $TafsiliID;
 	public $ChequeNo;
+	public $ChequeDate;
+	public $ChequeAmount;
 	public $ChequeBank;
 	public $ChequeBranch;
 	public $ChequeStatus;

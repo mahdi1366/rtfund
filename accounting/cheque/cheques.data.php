@@ -10,6 +10,7 @@ require_once inc_dataReader;
 require_once '../docs/doc.class.php';
 require_once "../../loan/request/request.class.php";
 require_once "../docs/import.data.php";
+require_once 'cheque.class.php';
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 if(!empty($task))
@@ -18,11 +19,15 @@ if(!empty($task))
 function selectIncomeCheques() {
 
 	$param = array();
-	$query = "select p.* , 
+	$query = "select * from (
+		select p.BackPayID , 0 OuterChequeID,
 			concat_ws(' ',fname,lname,CompanyName) fullname,
-			PartAmount,
-			PartDate,
+			ChequeNo,
+			'وام' CostDesc,
+			p.PayDate ChequeDate,
+			PayAmount ChequeAmount,
 			b.BankDesc, 
+			ChequeStatus,
 			bi2.InfoDesc ChequeStatusDesc,
 			t.docs
 		from LON_BackPays p 
@@ -37,7 +42,38 @@ function selectIncomeCheques() {
 			where SourceType='" . DOCTYPE_DOCUMENT . "' 
 			group by SourceID
 		)t on(BackPayID=t.SourceID)
-		where ChequeNo>0";
+		where ChequeNo>0
+		
+		UNION ALL
+		
+		select 0 BackPayID, OuterChequeID , 
+			TafsiliDesc fullname,
+			ChequeNo,
+			concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc) CostDesc,
+			ChequeDate,
+			ChequeAmount,
+			b.BankDesc, 
+			ChequeStatus,
+			bi2.InfoDesc ChequeStatusDesc,
+			t.docs
+		from ACC_OuterCheques 
+		join ACC_tafsilis using(TafsiliID)
+		join ACC_CostCodes cc using(CostID)
+		left join ACC_blocks b1 on(cc.level1=b1.BlockID)
+		left join ACC_blocks b2 on(cc.level2=b2.BlockID)
+		left join ACC_blocks b3 on(cc.level3=b3.BlockID)
+		
+		left join ACC_banks b on(ChequeBank=BankID)
+		left join BaseInfo bi2 on(bi2.TypeID=4 AND bi2.InfoID=ChequeStatus)
+		left join (
+			select SourceID, group_concat(distinct LocalNo) docs
+			from ACC_DocItems join ACC_docs using(DocID)
+			where SourceType='" . DOCTYPE_OUTERCHEQUE . "' 
+			group by SourceID
+		)t on(OuterChequeID=t.SourceID)
+		where ChequeNo>0
+	)t
+	where 1=1";
 	
 	//.........................................................
 	if(!empty($_POST["FromNo"]))
@@ -52,22 +88,22 @@ function selectIncomeCheques() {
 	}
 	if(!empty($_POST["FromDate"]))
 	{
-		$query .= " AND PayDate >= :fd";
+		$query .= " AND ChequeDate >= :fd";
 		$param[":fd"] = DateModules::shamsi_to_miladi($_POST["FromDate"], "-");
 	}
 	if(!empty($_POST["ToDate"]))
 	{
-		$query .= " AND PayDate <= :td";
+		$query .= " AND ChequeDate <= :td";
 		$param[":td"] = DateModules::shamsi_to_miladi($_POST["ToDate"], "-");
 	}
 	if(!empty($_POST["FromAmount"]))
 	{
-		$query .= " AND PayAmount >= :fa";
+		$query .= " AND ChequeAmount >= :fa";
 		$param[":fa"] = preg_replace('/,/', "", $_POST["FromAmount"]);
 	}
 	if(!empty($_POST["ToAmount"]))
 	{
-		$query .= " AND PayAmount <= :ta";
+		$query .= " AND ChequeAmount <= :ta";
 		$param[":ta"] = preg_replace('/,/', "", $_POST["ToAmount"]);
 	}
 	if(!empty($_POST["ChequeBank"]))
@@ -265,6 +301,21 @@ function ChangeChequeStatus(){
 		}
 	}
 	$pdo->commit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//...........................................
+
+function SaveOuterCheque(){
+	
+	$obj = new ACC_OuterCheques();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	$obj->ChequeStatus = 
+	
+	$result = $obj->Add();
+	print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }

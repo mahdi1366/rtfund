@@ -568,6 +568,7 @@ function SelectChequeStatuses() {
 }
 
 //---------------------------------------------
+
 function SelectACCRoles(){
 	
 	$temp = PdoDataAccess::runquery("select RowID,
@@ -604,4 +605,14 @@ function DeleteRole(){
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
+
+//---------------------------------------------
+
+function GetBanks(){
+	
+	$dt = PdoDataAccess::runquery("select * from ACC_banks");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
 ?>
