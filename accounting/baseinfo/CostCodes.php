@@ -20,6 +20,7 @@ $dg_cost->addcolumn('','level2',"",true);
 $dg_cost->addcolumn('','level3',"",true);
 $dg_cost->addcolumn('','TafsiliType',"",true);
 $dg_cost->addcolumn('','TafsiliType2',"",true);
+$dg_cost->addcolumn('','IsBlockable',"",true);
 
 $col = $dg_cost->addcolumn('گروه حساب','LevelTitle0');
 $col->width = 120;

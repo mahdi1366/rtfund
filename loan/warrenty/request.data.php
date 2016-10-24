@@ -20,7 +20,7 @@ if(!empty($task))
 	$task();
 }
 
-function SaveRequest(){
+function SaveWarrentyRequest(){
 	
 	$obj = new WAR_requests();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
@@ -29,6 +29,7 @@ function SaveRequest(){
 	if(empty($obj->RequestID))
 	{
 		$obj->ReqDate = PDONOW;
+		$obj->RequestID = WAR_requests::LastID();
 		$result = $obj->Add();
 		if($result)
 			WAR_requests::ChangeStatus($obj->RequestID, $obj->StatusID, "", true);
@@ -43,7 +44,7 @@ function SaveRequest(){
 	die();
 }
 
-function SelectAllRequests(){
+function SelectAllWarrentyRequests(){
 	
 	$param = array();
 	$where = "1=1 ";
@@ -78,7 +79,7 @@ function SelectAllRequests(){
 	die();
 }
 
-function DeleteRequest(){
+function DeleteWarrentyRequest(){
 	
 	$obj = new WAR_requests($_POST["RequestID"]);
 	
@@ -98,7 +99,7 @@ function DeleteRequest(){
 	die();
 }
 
-function StartFlow(){
+function StartWarrentyFlow(){
 	
 	$RequestID = $_REQUEST["RequestID"];
 	$result = WFM_FlowRows::StartFlow(FLOWID, $RequestID);
@@ -114,7 +115,7 @@ function RegWarrentyDoc(){
 	$pdo->beginTransaction();
 	
 	$DocID = RegisterWarrantyDoc($ReqObj, $_POST["CostCode"],
-		$_POST["BankTafsili"],$_POST["AccountTafsili"], null, $pdo);
+		$_POST["BankTafsili"],$_POST["AccountTafsili"],$_POST["Block_CostID"], null, $pdo);
 	if(!$DocID)
 	{
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
@@ -144,7 +145,7 @@ function editWarrentyDoc(){
 	ReturnWarrantyDoc($ReqObj, $pdo, true);
 	
 	$DocID = RegisterWarrantyDoc($ReqObj, $_POST["CostCode"],
-		$_POST["BankTafsili"],$_POST["AccountTafsili"], $DocID, $pdo);
+		$_POST["BankTafsili"],$_POST["AccountTafsili"], $_POST["Block_CostID"], $DocID, $pdo);
 	if(!$DocID)
 	{
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());

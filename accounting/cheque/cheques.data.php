@@ -252,13 +252,15 @@ function ChangeChequeStatus(){
 		$ReqObj = new LON_requests($PartObj->RequestID);
 		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 		if($PersonObj->IsSupporter == "YES")
-			$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
+			$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $_POST["BankTafsili"], 
+					$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
 		else
-			$result = RegisterCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
+			$result = RegisterCustomerPayDoc(null, $obj, $_POST["BankTafsili"], 
+					$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
 		if(!$result)
 		{
 			$pdo->rollback();
-			echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
+			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 			die();
 		}
 	}

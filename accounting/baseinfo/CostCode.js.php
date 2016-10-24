@@ -84,8 +84,7 @@ function CostCode(){
 		queryMode : "local",
 		valueField : "InfoID",
 		displayField : "InfoDesc"
-	});
-	levelCombos.push({
+	},{
 		xtype : "combo",
 		store: new Ext.data.Store({
 			fields:["InfoID","InfoDesc"],
@@ -103,6 +102,11 @@ function CostCode(){
 		style : "margin-left : 50px",
 		valueField : "InfoID",
 		displayField : "InfoDesc"
+	},{
+		xtype : "checkbox",
+		inputValue : "YES",
+		boxLabel : "این حساب قابل بلوکه شدن است",
+		name : "IsBlockable"
 	});
 
 	this.formPanel = new Ext.form.Panel({
@@ -201,6 +205,7 @@ CostCode.prototype.BeforeSaveCost = function(EditMode){
 		this.formPanel.down("[name=CostID]").setValue(record.data.CostID);
 		this.formPanel.down("[name=TafsiliType]").setValue(record.data.TafsiliType);
 		this.formPanel.down("[name=TafsiliType2]").setValue(record.data.TafsiliType2);
+		this.formPanel.down("[name=IsBlockable]").setValue(record.data.IsBlockable =="YES" ? true : false);
 		
 		for(var i=0; i < CostCodeObj.levelCount; i++)
 		{

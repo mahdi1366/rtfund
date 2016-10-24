@@ -197,10 +197,21 @@ function SelectCostCode() {
     die();
 }
 
+function SelectBlockableCostCode() {
+
+    $where = "IsBlockable='YES'";
+    $list = ACC_CostCodes::SelectCost($where);
+    echo dataReader::getJsonData($list->fetchAll(), $list->RowCount(), $_GET['callback']);
+    die();
+}
+
 function SaveCostCode() {
 
     $cc = new ACC_CostCodes();
     PdoDataAccess::FillObjectByArray($cc, $_POST);
+	
+	if(empty($_POST["IsBlockable"]))
+		$cc->IsBlockable = "NO";
 
 	$where = " cc.IsActive='YES' AND level1=?";
 	$param = array($cc->level1);

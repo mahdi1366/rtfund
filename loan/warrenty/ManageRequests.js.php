@@ -138,6 +138,11 @@ function WarrentyRequest(){
 			afterSubTpl : "%",
 			hideTrigger : true
 		},{
+			xtype : "checkbox",
+			boxLabel : "مبلغ ضمانت نامه از حساب سپرده فرد بلوکه شود",
+			name : "IsBlock",
+			inputValue : 'YES'
+		},{
 			xtype : "hidden",
 			name : "RequestID"
 		}],
@@ -261,7 +266,7 @@ WarrentyRequest.prototype.SaveRequest = function(){
 		url: this.address_prefix +'request.data.php',
 		method: "POST",
 		params: {
-			task: "SaveRequest"
+			task: "SaveWarrentyRequest"
 		},
 		success: function(form,action){
 			mask.hide();
@@ -328,7 +333,7 @@ WarrentyRequest.prototype.StartFlow = function(){
 			url: me.address_prefix +'request.data.php',
 			method: "POST",
 			params: {
-				task: "StartFlow",
+				task: "StartWarrentyFlow",
 				RequestID : record.data.RequestID
 			},
 			success: function(response){
@@ -389,7 +394,7 @@ WarrentyRequest.prototype.deleteRequest = function(){
 			methos : "post",
 			url : me.address_prefix + "request.data.php",
 			params : {
-				task : "DeleteRequest",
+				task : "DeleteWarrentyRequest",
 				RequestID : record.data.RequestID
 			},
 
@@ -457,7 +462,7 @@ WarrentyRequest.prototype.BeforeRegDoc = function(mode){
 	{
 		this.BankWin = new Ext.window.Window({
 			width : 300,
-			height : 150,
+			height : 180,
 			title : "نحوه پرداخت کارمزد",
 			modal : true,
 			closeAction : "hide",
@@ -529,6 +534,36 @@ WarrentyRequest.prototype.BeforeRegDoc = function(mode){
 				valueField : "TafsiliID",
 				itemId : "TafsiliID2",
 				displayField : "TafsiliDesc"
+			},{
+				xtype : "container",
+				html : "<hr>"
+			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["CostID","CostCode", "CostDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=SelectBlockableCostCode',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}),
+				tpl: new Ext.XTemplate(
+					'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct">',
+					'<td height="23px">کد حساب</td>',
+					'<td>عنوان حساب</td></tr>',
+					'<tpl for=".">',
+					'<tr class="x-boundlist-item" style="border-left:0;border-right:0;">',
+					'<td style="border-left:0;border-right:0" class="search-item">{CostCode}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">{CostDesc}</td></tr>',
+					'</tpl>',
+					'</table>'),
+				emptyText:'حساب مورد نظر جهت بلوکه ...',
+				width : 287,
+				typeAhead: false,
+				pageSize : 10,
+				valueField : "CostID",
+				itemId : "Block_CostID",
+				displayField : "CostCode"
 			}],
 			buttons :[{
 				text : "ذخیره",
@@ -547,6 +582,13 @@ WarrentyRequest.prototype.BeforeRegDoc = function(mode){
 	}
 	
 	this.BankWin.show();
+	//..........................................
+	var record = this.grid.getSelectionModel().getLastSelected();
+	if(record.data.IsBlock == "YES")
+		this.BankWin.down("[itemId=Block_CostID]").show();
+	else
+		this.BankWin.down("[itemId=Block_CostID]").hide();
+	//..........................................	
 	this.BankWin.down("[itemId=btn_save]").setHandler(function(){
 		WarrentyRequestObject.RegWarrentyDoc(mode == "1" ? "RegWarrentyDoc" : "editWarrentyDoc");
 	});
@@ -567,7 +609,8 @@ WarrentyRequest.prototype.RegWarrentyDoc = function(task){
 			RequestID : record.data.RequestID,
 			CostCode : this.BankWin.down("[itemId=CostCode]").getValue(),
 			BankTafsili : this.BankWin.down("[itemId=TafsiliID]").getValue(),
-			AccountTafsili : this.BankWin.down("[itemId=TafsiliID2]").getValue()
+			AccountTafsili : this.BankWin.down("[itemId=TafsiliID2]").getValue(),
+			Block_CostID : this.BankWin.down("[itemId=Block_CostID]").getValue()
 		},
 		success: function(response){
 

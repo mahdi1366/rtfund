@@ -116,17 +116,22 @@ function InOutAccount()
 	this.grid.addDocked({
 		xtype : "toolbar",
 		dock:'bottom', 
+		layout : "vbox",
 		items : ['->',{
 			xtype : "displayfield",
-			width : 120,
+			itemId : "remaindar",
 			fieldCls : "blueText",
-			value : "مانده حساب پس انداز : "
+			fieldLabel : "مانده حساب : "
 		},{
 			xtype : "displayfield",
-			itemId : "remaindar",
-			width : 120,
+			itemId : "bllocked",
 			fieldCls : "blueText",
-			style : "direction:ltr"
+			fieldLabel : "مبلغ بلوکه شده : "
+		},{
+			xtype : "displayfield",
+			itemId : "freeAmount",
+			fieldCls : "blueText",
+			fieldLabel : "مبلغ قابل برداشت :"
 		}]
 	});
 	this.grid.getStore().on("load", function(){
@@ -136,6 +141,12 @@ function InOutAccount()
 		
 		remaindar = summaryObject.summaryData[CreditorCol]*1 - summaryObject.summaryData[DebtorCol]*1;
 		InOutAccountObject.grid.down("[itemId=remaindar]").setValue( Ext.util.Format.Money(remaindar) );
+		
+		var r = this.getProxy().getReader().jsonData;
+		BlockedAmount = r.message;
+		InOutAccountObject.grid.down("[itemId=bllocked]").setValue( Ext.util.Format.Money(BlockedAmount) );
+		free = remaindar - BlockedAmount*1;
+		InOutAccountObject.grid.down("[itemId=freeAmount]").setValue( Ext.util.Format.Money(free) );
 	});
 		
 	if(<?= !$reportOnly ? "false" : "true" ?>)

@@ -461,6 +461,12 @@ LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 
 LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, CenterAccount, BranchID, record, mode){
 
+	if(CenterAccount == true && BranchID == null)
+	{
+		Ext.MessageBox.alert("Error","برای ثبت حساب مرکز انتخاب شعبه واسط الزامی است");
+		return;
+	}
+	
 	mask = new Ext.LoadMask(this.BankWin, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 	

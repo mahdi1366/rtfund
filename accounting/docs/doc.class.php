@@ -247,7 +247,34 @@ class ACC_DocItems extends PdoDataAccess {
 		return parent::runquery_fetchMode($query, $whereParam);
 	}
 
+	function BlockTrigger($pdo = null){
+		
+		$BlockedAmount = ACC_CostBlocks::GetBlockAmount($this->CostID,$this->TafsiliType, $this->TafsiliID, $pdo);
+		
+		if($BlockedAmount > 0)
+		{
+			$temp = PdoDataAccess::runquery("select ifnull(sum(CreditorAmount-DebtorAmount),0) remain
+				from ACC_DocItems join ACC_docs using(DocID)
+				where CycleID=? AND CostID=? AND TafsiliType=? AND TafsiliID=? AND ItemID<>?", array(
+				$_SESSION["accounting"]["CycleID"], $this->CostID,$this->TafsiliType, $this->TafsiliID,
+				$this->ItemID), $pdo);
+			
+			if($temp[0][0]*1 - $BlockedAmount < $this->DebtorAmount*1)
+			{
+				ExceptionHandler::PushException("مبلغ وارد شده بیشتر از مبلغ قابل برداشت می باشد " . 
+					"<br>مبلغ قابل برداشت : " . ($temp[0][0]*1 - $BlockedAmount) );
+				return false;
+			}
+		}
+		
+		return true;
+		
+	}
+		
 	function Add($pdo = null) {
+		
+		if(!self::BlockTrigger($pdo))
+			return false;
 		
 		if($this->CostID == COSTID_share)
 		{
@@ -273,6 +300,10 @@ class ACC_DocItems extends PdoDataAccess {
 	}
 
 	function Edit($pdo = null) {
+		
+		if(!self::BlockTrigger($pdo))
+			return false;
+		
 		if (!parent::update("ACC_DocItems", $this, "ItemID=:rid", 
 				array(":rid" => $this->ItemID),$pdo))
 			return false;
@@ -302,6 +333,7 @@ class ACC_DocItems extends PdoDataAccess {
 }
 
 class ACC_DocCheques extends PdoDataAccess {
+	
     public $ChequeID;
     public $DocID;
 	public $CheckNo;
@@ -376,6 +408,56 @@ class ACC_DocCheques extends PdoDataAccess {
 		$daObj->execute();
 		return true;
     }
+}
+
+class ACC_CostBlocks extends OperationClass{
+	
+	const TableName = "ACC_CostBlocks";
+	const TableKey = "BlockID";
+	
+	public $BlockID;
+	public $CostID;
+	public $TafsiliType;
+	public $TafsiliID;
+	public $BlockAmount;
+	public $IsActive;
+	public $IsLock;
+	public $details;
+	public $SourceType;
+	public $SourceID;
+	
+	static function Get($where = "", $param = array()){
+		
+		$query = "
+			SELECT cb.*,
+				cc.CostCode,
+				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc) CostDesc,
+				bf1.InfoDesc TafsiliTypeDesc,
+				TafsiliDesc
+			
+			FROM ACC_CostBlocks cb
+
+			join ACC_CostCodes cc using(CostID)
+			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
+			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
+			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
+
+			join BaseInfo bf1 on(bf1.TypeID=2 AND bf1.InfoID=cb.TafsiliType)
+			join ACC_tafsilis using(TafsiliID)
+		";
+		
+		return parent::runquery_fetchMode($query, $param);
+	}
+	
+	static function GetBlockAmount($CostID,$TafsiliType,$TafsiliID, $pdo = null)
+	{
+		$dt = PdoDataAccess::runquery("select ifnull(sum(BlockAmount),0) BlockAmount 
+			from ACC_CostBlocks 
+			where CostID=? AND TafsiliType=? AND TafsiliID=? AND IsActive='YES'", array(
+				$CostID,$TafsiliType,$TafsiliID), $pdo);
+		return $dt[0][0]*1;
+	}
+
 }
 
 ?>

@@ -8,9 +8,9 @@ require_once '../header.inc.php';
 require_once getenv("DOCUMENT_ROOT") . '/accounting/definitions.inc.php';
 require_once getenv("DOCUMENT_ROOT") . '/framework/person/persons.class.php';
 require_once getenv("DOCUMENT_ROOT") . '/loan/loan/loan.class.php';
-require_once getenv("DOCUMENT_ROOT") . '/loan/request/request.data.php';
-require_once 'doc.class.php';
-	
+require_once getenv("DOCUMENT_ROOT") . '/loan/request/compute.inc.php';
+require_once getenv("DOCUMENT_ROOT") . '/accounting/docs/doc.class.php';
+
 require_once inc_dataReader;
 require_once inc_response;
 
@@ -1521,7 +1521,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 		return false;
 	}*/
 	// -------------- bank ---------------
-	if($CenterAccount)
+	if($CenterAccount == "true")
 	{
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
@@ -1610,30 +1610,33 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 	}
 
 	//---------------------------------------------------------
-	unset($itemObj->ItemID);
-	unset($itemObj->TafsiliType2);
-	unset($itemObj->TafsiliID2);
-	$itemObj->DocID = $obj->DocID;
-	$itemObj->CostID = $CostCode_guaranteeAmount;
-	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = $PayObj->PayAmount;
-	$itemObj->TafsiliType = TAFTYPE_PERSONS;
-	$itemObj->TafsiliID = $LoanPersonTafsili;
-	$itemObj->SourceType = DOCTYPE_DOCUMENT;
-	$itemObj->SourceID = $PayObj->BackPayID;
-	$itemObj->details = "چک شماره " . $PayObj->ChequeNo . " مربوط به وام شماره " . $ReqObj->RequestID;
-	$itemObj->Add($pdo);
+	if($PayObj->PayType == "9")
+	{
+		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = $CostCode_guaranteeAmount;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $PayObj->PayAmount;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $LoanPersonTafsili;
+		$itemObj->SourceType = DOCTYPE_DOCUMENT;
+		$itemObj->SourceID = $PayObj->BackPayID;
+		$itemObj->details = "چک شماره " . $PayObj->ChequeNo . " مربوط به وام شماره " . $ReqObj->RequestID;
+		$itemObj->Add($pdo);
 
-	unset($itemObj->ItemID);
-	unset($itemObj->TafsiliType);
-	unset($itemObj->TafsiliID);
-	unset($itemObj->TafsiliType2);
-	unset($itemObj->TafsiliID2);
-	unset($itemObj->details);
-	$itemObj->CostID = $CostCode_guaranteeAmount2;
-	$itemObj->DebtorAmount = $PayObj->PayAmount;
-	$itemObj->CreditorAmount = 0;	
-	$itemObj->Add($pdo);
+		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType);
+		unset($itemObj->TafsiliID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		unset($itemObj->details);
+		$itemObj->CostID = $CostCode_guaranteeAmount2;
+		$itemObj->DebtorAmount = $PayObj->PayAmount;
+		$itemObj->CreditorAmount = 0;	
+		$itemObj->Add($pdo);
+	}
 	//---------------------------------------------------------
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
@@ -1776,7 +1779,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $Account
 	}
 
 	// -------------- bank ---------------
-		if($CenterAccount)
+	if($CenterAccount == "true")
 	{
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
@@ -1863,7 +1866,34 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $Account
 			return false;
 		}
 	}
+	//---------------------------------------------------------
+	if($PayObj->PayType == "9")
+	{
+		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = $CostCode_guaranteeAmount;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $PayObj->PayAmount;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $LoanPersonTafsili;
+		$itemObj->SourceType = DOCTYPE_DOCUMENT;
+		$itemObj->SourceID = $PayObj->BackPayID;
+		$itemObj->details = "چک شماره " . $PayObj->ChequeNo . " مربوط به وام شماره " . $ReqObj->RequestID;
+		$itemObj->Add($pdo);
 
+		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType);
+		unset($itemObj->TafsiliID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		unset($itemObj->details);
+		$itemObj->CostID = $CostCode_guaranteeAmount2;
+		$itemObj->DebtorAmount = $PayObj->PayAmount;
+		$itemObj->CreditorAmount = 0;	
+		$itemObj->Add($pdo);
+	}
 	//---------------------------------------------------------
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
@@ -1886,6 +1916,9 @@ function ReturnCustomerPayDoc($PayObj, $pdo, $EditMode = false){
 		PdoDataAccess::runquery("delete from ACC_DocItems 
 			where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID=? AND SourceID2=?",
 			array($PayObj->_RequestID, $PayObj->BackPayID), $pdo);
+		PdoDataAccess::runquery("delete from ACC_DocItems 
+			where SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=?",
+			array($PayObj->BackPayID), $pdo);
 		return true;
 	}
 	
@@ -2303,7 +2336,7 @@ function ComputeShareProfit(){
 
 //---------------------------------------------------------------
 
-function RegisterWarrantyDoc($ReqObj, $WageCost,$BankTafsili, $AccountTafsili, $DocID, $pdo){
+function RegisterWarrantyDoc($ReqObj, $WageCost,$BankTafsili, $AccountTafsili,$Block_CostID, $DocID, $pdo){
 	
 	/*@var $ReqObj WAR_requests */
 	
@@ -2356,6 +2389,30 @@ function RegisterWarrantyDoc($ReqObj, $WageCost,$BankTafsili, $AccountTafsili, $
 		ExceptionHandler::PushException("مانده حساب پس انداز مشتری کمتر از مبلغ کارمزد می باشد");
 		return false;
 	}
+	if($ReqObj->IsBlock == "YES")
+	{
+		if($Block_CostID != "" && $Block_CostID != $CostCode_pasandaz)
+		{
+			$dt = PdoDataAccess::runquery("select sum(CreditorAmount-DebtorAmount) remain
+			from ACC_DocItems join ACC_docs using(DocID) where CycleID=? AND CostID=?
+				AND TafsiliType=? AND TafsiliID=?", array(
+					$CycleID,
+					$Block_CostID,
+					TAFTYPE_PERSONS,
+					$PersonTafsili
+				));
+		}
+		$amount = $ReqObj->amount*1;
+		if($WageCost == "209-10")
+			$amount += $ReqObj->amount*0.1 + $TotalWage;
+		
+		if($dt[0][0]*1 < $amount)
+		{
+			ExceptionHandler::PushException("مانده حساب انتخابی جهت بلوکه کمتر از مبلغ ضمانت نامه می باشد");
+			return false;
+		}
+	}
+	
 	//---------------- add doc header --------------------
 	if($DocID == null)
 	{
@@ -2444,6 +2501,26 @@ function RegisterWarrantyDoc($ReqObj, $WageCost,$BankTafsili, $AccountTafsili, $
 		$itemObj->TafsiliType = TAFTYPE_YEARS;
 		$itemObj->TafsiliID = $YearTafsili;
 		$itemObj->Add($pdo);
+	}
+	
+	//---------------------------- block Cost ----------------------------
+	if($ReqObj->IsBlock == "YES")
+	{
+		$blockObj = new ACC_CostBlocks();
+		$blockObj->CostID = !empty($Block_CostID) ? $Block_CostID : $CostCode_pasandaz;
+		$blockObj->TafsiliType = TAFTYPE_PERSONS;
+		$blockObj->TafsiliID = $PersonTafsili;
+		$blockObj->BlockAmount = $ReqObj->amount;
+		$blockObj->IsLock = "YES";
+		$blockObj->SourceType = DOCTYPE_WARRENTY;
+		$blockObj->SourceID = $ReqObj->RequestID;
+		$blockObj->details = "بابت ضمانت نامه شماره " . $ReqObj->RequestID;
+		if(!$blockObj->Add())
+		{
+			print_r(ExceptionHandler::PopAllExceptions());
+			ExceptionHandler::PushException("خطا در بلوکه کردن حساب پس انداز");
+			return false;
+		}
 	}
 	
 	// ----------------------------- bank --------------------------------
@@ -2536,6 +2613,10 @@ function ReturnWarrantyDoc($ReqObj, $pdo, $EditMode = false){
 		array($ReqObj->RequestID, $ReqObj->ReqVersion), $pdo);
 	if(count($dt) == 0)
 		return true;
+	
+	PdoDataAccess::runquery("delete from ACC_CostBlocks 
+			where SourceType=" . DOCTYPE_WARRENTY . " AND SourceID=?",
+			array($ReqObj->RequestID), $pdo);
 	
 	if($EditMode)
 	{

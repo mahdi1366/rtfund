@@ -242,7 +242,7 @@ IncomeCheque.prototype.AccountInfoWin = function(BackPayID, StatusID){
 	{
 		this.BankWin = new Ext.window.Window({
 			width : 400,
-			height : 120,
+			height : 220,
 			modal : true,
 			closeAction : "hide",
 			items : [{
@@ -285,6 +285,29 @@ IncomeCheque.prototype.AccountInfoWin = function(BackPayID, StatusID){
 				valueField : "TafsiliID",
 				itemId : "TafsiliID2",
 				displayField : "title"
+			},{
+				xtype : "checkbox",
+				boxLabel : "از حساب مرکز",
+				itemId : "CenterAccount",
+				inputValue : "1"
+			},{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../../framework/baseInfo/baseInfo.data.php?' +
+							"task=SelectBranches",
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields : ['BranchID','BranchName'],
+					autoLoad : true					
+				}),
+				fieldLabel : "شعبه واسط ",
+				queryMode : 'local',
+				width : 385,
+				displayField : "BranchName",
+				valueField : "BranchID",
+				itemId : "BranchID"
 			}],
 			buttons :[{
 				text : "ذخیره",
@@ -299,11 +322,19 @@ IncomeCheque.prototype.AccountInfoWin = function(BackPayID, StatusID){
 		IncomeChequeObject.BankWin.hide();
 		IncomeChequeObject.ChangeStatus(BackPayID, StatusID,
 			IncomeChequeObject.BankWin.down("[itemId=TafsiliID]").getValue(),
-			IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").getValue()); 
+			IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").getValue(),
+			IncomeChequeObject.BankWin.down("[itemId=CenterAccount]").getValue(),
+			IncomeChequeObject.BankWin.down("[itemId=BranchID]").getValue()); 
 	});
 }
 
-IncomeCheque.prototype.ChangeStatus = function(BackPayID, StatusID, BankTafsili, AccountTafsili){
+IncomeCheque.prototype.ChangeStatus = function(BackPayID, StatusID, BankTafsili, AccountTafsili,
+	CenterAccount, BranchID){
+	if(CenterAccount == true && BranchID == null)
+	{
+		Ext.MessageBox.alert("Error","برای ثبت حساب مرکز انتخاب شعبه واسط الزامی است");
+		return;
+	}
 	
 	if(StatusID == null || StatusID == "")
 		return;
@@ -319,7 +350,9 @@ IncomeCheque.prototype.ChangeStatus = function(BackPayID, StatusID, BankTafsili,
 			BackPayID : BackPayID,
 			StatusID : StatusID,
 			BankTafsili : BankTafsili,
-			AccountTafsili : AccountTafsili
+			AccountTafsili : AccountTafsili,
+			CenterAccount : CenterAccount,
+			BranchID : BranchID
 		},
 		
 		success : function(response){
@@ -329,8 +362,10 @@ IncomeCheque.prototype.ChangeStatus = function(BackPayID, StatusID, BankTafsili,
 			result = Ext.decode(response.responseText);
 			if(result.success)
 				IncomeChequeObject.grid.getStore().load();
+			else if(result.data != "")
+				Ext.MessageBox.alert("",result.data);
 			else
-				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد;")
+				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
 			
 			
 		}

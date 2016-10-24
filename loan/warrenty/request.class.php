@@ -24,6 +24,7 @@ class WAR_requests extends OperationClass
 	public $LetterDate;
 	public $StatusID;
 	public $ReqVersion;
+	public $IsBlock;
 	
 	public $_fullname;
 	public $_TypeDesc;
@@ -48,7 +49,7 @@ class WAR_requests extends OperationClass
 		
 		return PdoDataAccess::runquery_fetchMode("
 			select r.* , concat_ws(' ',fname,lname,CompanyName) fullname, sp.StepDesc,
-				bf.InfoDesc TypeDesc,d.DocID, d.DocStatus 
+				bf.InfoDesc TypeDesc,d.DocID,d.LocalNo, d.DocStatus 
 			from WAR_requests r 
 				left join BSC_persons using(PersonID)
 				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)

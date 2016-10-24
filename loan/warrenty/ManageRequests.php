@@ -9,7 +9,7 @@ require_once 'config.inc.php';
 require_once inc_dataGrid;
 require_once 'ManageRequests.js.php';
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectAllRequests", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectAllWarrentyRequests", "grid_div");
 
 $dg->addColumn("", "StatusID", "", true);
 $dg->addColumn("", "PersonID", "", true);
@@ -19,6 +19,7 @@ $dg->addColumn("", "LetterNo", "", true);
 $dg->addColumn("", "LetterDate", "", true);
 $dg->addColumn("", "DocID", "", true);
 $dg->addColumn("", "DocStatus", "", true);
+$dg->addColumn("", "IsBlock", "", true);
 
 $col = $dg->addColumn("نوع", "TypeDesc");
 $col->width = 80;
@@ -47,6 +48,9 @@ $col->align = "center";
 
 $col = $dg->addColumn("وضعیت", "StepDesc", "");
 $col->width = 80;
+
+$col = $dg->addColumn("سند", "LocalNo", "");
+$col->width = 40;
 
 $col = $dg->addColumn('عملیات', '', 'string');
 $col->renderer = "WarrentyRequest.OperationRender";

@@ -1016,6 +1016,10 @@ abstract class OperationClass extends PdoDataAccess {
         }
     }
 
+	public static function LastID($pdo = null) {
+		return PdoDataAccess::GetLastID(static::TableName, static::TableKey, "", array(), $pdo)+1;
+	}
+	
     public function Add($pdo = null) {
 
         if (!parent::insert(static::TableName, $this, $pdo))

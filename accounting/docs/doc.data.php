@@ -7,6 +7,7 @@
 require_once '../header.inc.php';
 require_once 'doc.class.php';
 require_once 'import.data.php';
+require_once '../baseinfo/baseinfo.class.php';
 require_once inc_dataReader;
 require_once inc_response;
 
@@ -710,7 +711,15 @@ function GetAccountFlow() {
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
-	echo dataReader::getJsonData($temp, $no, $_GET ["callback"]);
+	
+	//------------------------------------------------
+	$dt = ACC_tafsilis::SelectAll("PersonID=?", array($_REQUEST["PersonID"]));
+	$dt = $dt->fetch();
+	$tafsiliID = $dt["TafsiliID"];
+	$BlockedAmount = ACC_CostBlocks::GetBlockAmount($CostID,TAFTYPE_PERSONS, $tafsiliID);
+	//------------------------------------------------
+	
+	echo dataReader::getJsonData($temp, $no, $_GET ["callback"],$BlockedAmount);
 	die();
 }
 
@@ -725,7 +734,7 @@ function RegisterInOutAccountDoc() {
 			join ACC_docs d using(DocID)
 			join ACC_tafsilis t on(di.TafsiliID=t.TafsiliID)
 			join BSC_persons p on(t.ObjectID=p.PersonID)
-		where d.CycleID=:c AND d.BranchID=:b AND 
+		where d.CycleID=:c /*AND d.BranchID=:b*/ AND 
 			di.CostID=:cost AND di.TafsiliType = :t AND p.PersonID=:p";
 		$param = array(
 			":c" => $_SESSION["accounting"]["CycleID"],
@@ -736,6 +745,7 @@ function RegisterInOutAccountDoc() {
 		);
 		
 		$dt = PdoDataAccess::runquery($query, $param);
+		//echo PdoDataAccess::GetLatestQueryString();
 		if($_POST["amount"] > $dt[0][0]*1)
 		{
 			echo Response::createObjectiveResponse(false,"مبلغ وارد شده بیشتر از مانده حساب می باشد");
@@ -780,7 +790,7 @@ function RegisterInOutAccountDoc() {
 	$itemObj->TafsiliID = $PersonTafsili;
 	if(!$itemObj->Add($pdo))
 	{
-		echo Response::createObjectiveResponse(false,"خطا در ایجاد ردیف سند");
+		echo Response::createObjectiveResponse(false,  ExceptionHandler::GetExceptionsToString());
 		die();
 	}
 	
@@ -798,7 +808,7 @@ function RegisterInOutAccountDoc() {
 	}
 	if(!$itemObj->Add($pdo))
 	{
-		echo Response::createObjectiveResponse(false,"خطا در ایجاد ردیف سند");
+		echo Response::createObjectiveResponse(false,  ExceptionHandler::GetExceptionsToString());
 		die();
 	}
 	
@@ -814,4 +824,14 @@ function GetSubjects(){
 	die();
 }
 
+//.................................
+
+function GetAllCostBlocks(){
+	
+	$temp = ACC_CostBlocks::Get();
+	$dt = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
+	
+	echo dataReader::getJsonData($dt, $temp->rowCount(), $_GET["callback"]);
+	die();
+}
 ?>

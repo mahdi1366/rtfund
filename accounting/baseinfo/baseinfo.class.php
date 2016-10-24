@@ -87,6 +87,7 @@ class ACC_CostCodes extends PdoDataAccess {
     public $CostCode;
 	public $TafsiliType;
 	public $TafsiliType2;
+	public $IsBlockable;
 
     function __construct($CstID = '') {
 
@@ -160,7 +161,9 @@ class ACC_CostCodes extends PdoDataAccess {
             $db = $pdo;
         }
 		$dt = parent::runquery("select * from ACC_DocItems where CostID=?", array($this->CostID));
-		if(count($dt) > 0)
+		$obj = new ACC_CostCodes($this->CostID);
+		if(count($dt) > 0 && 
+			($this->level1 != $obj->level1 ||$this->level2 != $obj->level2 || $this->level3 != $obj->level3))
 		{
 			$this->DeleteCost($db);
 			unset($this->CostID);
