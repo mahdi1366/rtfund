@@ -925,7 +925,7 @@ function ComputePayments($PartID, &$installments){
 	
 	$returnArr = array();
 	$pays = PdoDataAccess::runquery("
-		select p.PayDate, sum(PayAmount) PayAmount
+		select p.PayDate, sum(PayAmount) PayAmount, sum(PayAmount) FixPayAmount
 			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			join LON_ReqParts rp using(PartID)
@@ -945,7 +945,9 @@ function ComputePayments($PartID, &$installments){
 		$installments[$i]["ForfeitAmount"] = 0;
 		$installments[$i]["ForfeitDays"] = 0;
 		$installments[$i]["remainder"] = 0;
+		$installments[$i]["FixPayAmount"] = 0;
 		$installments[$i]["PayAmount"] = 0;
+		$installments[$i]["UsedPayAmount"] = 0;
 		$installments[$i]["PayDate"] = '';
 		
 		if($PayRecord == null)
@@ -980,7 +982,7 @@ function ComputePayments($PartID, &$installments){
 		}
 		else
 			$installments[$i]["TotalRemainder"] = 0;
-		
+
 		$remainder = $installments[$i]["InstallmentAmount"];
 		$StartDate = $installments[$i]["InstallmentDate"];
 
@@ -991,11 +993,13 @@ function ComputePayments($PartID, &$installments){
 			$ToDate = $PayRecord == null ? DateModules::Now() : $PayRecord["PayDate"];
 			if($PayRecord != null)
 			{
+				$installments[$i]["FixPayAmount"] = $PayRecord["FixPayAmount"]*1;
 				$installments[$i]["PayAmount"] = $PayRecord["PayAmount"]*1;
 				$installments[$i]["PayDate"] = $PayRecord["PayDate"];
 			}
 			else
 			{
+				$installments[$i]["FixPayAmount"] = 0;
 				$installments[$i]["PayAmount"] = 0;
 				$installments[$i]["PayDate"] = DateModules::Now();
 			}
@@ -1029,11 +1033,13 @@ function ComputePayments($PartID, &$installments){
 			}
 			
 			$PayRecord["PayAmount"] = $PayRecord["PayAmount"]*1 - $Forfeit;
+			$installments[$i]["UsedPayAmount"] += $Forfeit;
 			$Forfeit = 0;			
 			
 			if($remainder < $PayRecord["PayAmount"]*1)
 			{
 				$PayRecord["PayAmount"] = $PayRecord["PayAmount"]*1 - $remainder;
+				$installments[$i]["UsedPayAmount"] += $remainder;
 				if($PayRecord["PayAmount"] == 0)
 				{
 					$StartDate = max($PayRecord["PayDate"],$installments[$i]["InstallmentDate"]);
@@ -1072,7 +1078,7 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 	
 	$returnArr = array();
 	$pays = PdoDataAccess::runquery("
-		select p.PayDate, sum(PayAmount) PayAmount
+		select p.PayDate, sum(PayAmount) PayAmount, sum(PayAmount) FixPayAmount
 			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			join LON_ReqParts rp using(PartID)
@@ -1091,7 +1097,9 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 		$installments[$i]["ForfeitAmount"] = 0;
 		$installments[$i]["ForfeitDays"] = 0;
 		$installments[$i]["remainder"] = 0;
+		$installments[$i]["FixPayAmount"] = 0;
 		$installments[$i]["PayAmount"] = 0;
+		$installments[$i]["UsedPayAmount"] = 0;
 		$installments[$i]["PayDate"] = '';
 		
 		if($PayRecord == null)
@@ -1137,12 +1145,16 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 			$ToDate = $PayRecord == null ? DateModules::Now() : $PayRecord["PayDate"];
 			if($PayRecord != null)
 			{
+				$installments[$i]["FixPayAmount"] = $PayRecord["FixPayAmount"]*1;
 				$installments[$i]["PayAmount"] = $PayRecord["PayAmount"]*1;
+				$installments[$i]["UsedPayAmount"] = $PayRecord["PayAmount"]*1;
 				$installments[$i]["PayDate"] = $PayRecord["PayDate"];
 			}
 			else
 			{
+				$installments[$i]["FixPayAmount"] = 0;
 				$installments[$i]["PayAmount"] = 0;
+				$installments[$i]["UsedPayAmount"] = 0;
 				$installments[$i]["PayDate"] = DateModules::Now();
 			}
 			$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
@@ -1167,6 +1179,7 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 			if($remainder <= $PayRecord["PayAmount"]*1)
 			{
 				$PayRecord["PayAmount"] = $PayRecord["PayAmount"]*1 - $remainder;
+				$installments[$i]["UsedPayAmount"] = $remainder;
 				$remainder = 0;
 								
 				$installments[$i]["TotalRemainder"] = $Forfeit;
@@ -1203,7 +1216,9 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 			{
 				$installments[$i]["InstallmentDate"] = "---";
 				$installments[$i]["InstallmentAmount"] = 0;
+				$installments[$i]["FixPayAmount"] = $PayRecord["FixPayAmount"];
 				$installments[$i]["PayAmount"] = $PayRecord["PayAmount"];
+				$installments[$i]["UsedPayAmount"] = $PayRecord["PayAmount"];
 				$installments[$i]["PayDate"] = $PayRecord["PayDate"];
 				$Forfeit = $Forfeit - $PayRecord["PayAmount"]*1;
 				$installments[$i]["ForfeitDays"] = 0;	
