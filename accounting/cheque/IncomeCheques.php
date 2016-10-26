@@ -17,7 +17,7 @@ $dg->addColumn("", "ChequeStatus", "", true);
 $col = $dg->addColumn("صاحب چک", "fullname", "");
 
 $col = $dg->addColumn("حساب", "CostDesc");
-$col->width = 70;
+$col->width = 100;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo");
 $col->width = 70;
@@ -25,14 +25,14 @@ $col->width = 70;
 $col = $dg->addColumn("تاریخ چک", "ChequeDate", GridColumn::ColumnType_date);
 $col->width = 80;
 
-$col = $dg->addColumn("مبلغ چک", "PayAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مبلغ چک", "ChequeAmount", GridColumn::ColumnType_money);
 $col->width = 80;
 
 $col = $dg->addColumn("بانک", "BankDesc");
-$col->width = 100;
+$col->width = 60;
 
 $col = $dg->addColumn("شعبه", "ChequeBranch");
-$col->width = 100;
+$col->width = 70;
 
 $col = $dg->addColumn("وضعیت چک", "ChequeStatusDesc", "");
 $col->width = 80;
@@ -70,6 +70,8 @@ function IncomeCheque(){
 		renderTo : this.get("div_form"),
 		width : 600,
 		frame : true,
+		collapsible : true,
+		collapsed : true,
 		title : "فیلتر لیست",
 		layout : {
 			type : "table",
@@ -147,10 +149,7 @@ function IncomeCheque(){
 			text : "جستجو",
 			iconCls : "search",
 			handler : function(){
-				if(!IncomeChequeObject.grid.rendered)
-					IncomeChequeObject.grid.render(IncomeChequeObject.get("div_grid"));
-				else
-					IncomeChequeObject.grid.getStore().loadPage(1);
+				IncomeChequeObject.grid.getStore().loadPage(1);
 			}
 		},{
 			text : "پاک کردن فرم",
@@ -173,12 +172,12 @@ function IncomeCheque(){
 		
 	this.grid = <?= $grid ?>;
 	this.grid.getStore().proxy.form = this.get("MainForm");
-	//this.grid.render(this.get("div_grid"));
+	this.grid.render(this.get("div_grid"));
 }
 
 IncomeChequeObject = new IncomeCheque();
 
-IncomeCheque.prototype.beforeChangeStatus = function(StatusID){
+IncomeCheque.prototype.beforeChangeStatus = function(){
 	
 	if(!this.commentWin)
 	{
@@ -226,16 +225,16 @@ IncomeCheque.prototype.beforeChangeStatus = function(StatusID){
 	this.commentWin.down("[itemId=btn_save]").setHandler(function(){
 		status = this.up('window').down("[name=DstID]").getValue();
 		if(status == "3")
-			IncomeChequeObject.AccountInfoWin(record.data.BackPayID, status);
+			IncomeChequeObject.AccountInfoWin();
 		else
-			IncomeChequeObject.ChangeStatus(record.data.BackPayID, status);
+			IncomeChequeObject.ChangeStatus();
 	});
 		
 	this.commentWin.show();
 	this.commentWin.center();
 }
 
-IncomeCheque.prototype.AccountInfoWin = function(BackPayID, StatusID){
+IncomeCheque.prototype.AccountInfoWin = function(){
 	
 	if(!this.BankWin)
 	{
@@ -311,7 +310,8 @@ IncomeCheque.prototype.AccountInfoWin = function(BackPayID, StatusID){
 			buttons :[{
 				text : "ذخیره",
 				iconCls : "save",
-				itemId : "btn_save"
+				itemId : "btn_save",
+				handler : function(){IncomeChequeObject.ChangeStatus();}
 			}]
 		});
 		Ext.getCmp(this.TabID).add(this.BankWin);
@@ -319,16 +319,20 @@ IncomeCheque.prototype.AccountInfoWin = function(BackPayID, StatusID){
 	this.BankWin.show();
 	this.BankWin.down("[itemId=btn_save]").setHandler(function(){ 
 		IncomeChequeObject.BankWin.hide();
-		IncomeChequeObject.ChangeStatus(BackPayID, StatusID,
-			IncomeChequeObject.BankWin.down("[itemId=TafsiliID]").getValue(),
-			IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").getValue(),
-			IncomeChequeObject.BankWin.down("[itemId=CenterAccount]").getValue(),
-			IncomeChequeObject.BankWin.down("[itemId=BranchID]").getValue()); 
+		IncomeChequeObject.ChangeStatus(); 
 	});
 }
 
-IncomeCheque.prototype.ChangeStatus = function(BackPayID, StatusID, BankTafsili, AccountTafsili,
-	CenterAccount, BranchID){
+IncomeCheque.prototype.ChangeStatus = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	StatusID = this.commentWin.down("[name=DstID]").getValue();
+	
+	BankTafsili = StatusID == "3" ? IncomeChequeObject.BankWin.down("[itemId=TafsiliID]").getValue() : "";
+	TafsiliID2 = StatusID == "3" ? IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").getValue() : "";
+	CenterAccount = StatusID == "3" ? IncomeChequeObject.BankWin.down("[itemId=CenterAccount]").getValue() : "";
+	BranchID = StatusID == "3" ? IncomeChequeObject.BankWin.down("[itemId=BranchID]").getValue() : "";
+		
 	if(CenterAccount == true && BranchID == null)
 	{
 		Ext.MessageBox.alert("Error","برای ثبت حساب مرکز انتخاب شعبه واسط الزامی است");
@@ -346,7 +350,8 @@ IncomeCheque.prototype.ChangeStatus = function(BackPayID, StatusID, BankTafsili,
 		url : this.address_prefix + "cheques.data.php",
 		params : {
 			task : "ChangeChequeStatus",
-			BackPayID : BackPayID,
+			BackPayID : record.data.BackPayID,
+			OuterChequeID : record.data.OuterChequeID,
 			StatusID : StatusID,
 			BankTafsili : BankTafsili,
 			AccountTafsili : AccountTafsili,
@@ -416,6 +421,9 @@ IncomeCheque.prototype.AddOuterCheque = function(){
 								combo.setValue();
 								combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType;
 								combo.getStore().load();
+								
+								IncomeChequeObject.OuterChequeWin.
+									down("[name=TafsiliType]").setValue(records[0].data.TafsiliType);
 							}
 						}
 					}
@@ -471,6 +479,9 @@ IncomeCheque.prototype.AddOuterCheque = function(){
 					xtype : "textfield",
 					name : "ChequeBranch",
 					fieldLabel : "شعبه"
+				},{
+					xtype : "hidden",
+					name : "TafsiliType"
 				}]
 			}),
 			buttons :[{

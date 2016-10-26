@@ -57,7 +57,7 @@ function selectIncomeCheques() {
 			bi2.InfoDesc ChequeStatusDesc,
 			t.docs
 		from ACC_OuterCheques 
-		join ACC_tafsilis using(TafsiliID)
+		left join ACC_tafsilis using(TafsiliID)
 		join ACC_CostCodes cc using(CostID)
 		left join ACC_blocks b1 on(cc.level1=b1.BlockID)
 		left join ACC_blocks b2 on(cc.level2=b2.BlockID)
@@ -71,7 +71,7 @@ function selectIncomeCheques() {
 			where SourceType='" . DOCTYPE_OUTERCHEQUE . "' 
 			group by SourceID
 		)t on(OuterChequeID=t.SourceID)
-		where ChequeNo>0
+		
 	)t
 	where 1=1";
 	
@@ -125,7 +125,10 @@ function selectIncomeCheques() {
 	
 	$query .= dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
-	print_r(ExceptionHandler::PopAllExceptions());
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
+	//echo PdoDataAccess::GetLatestQueryString();
+	
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
@@ -273,33 +276,56 @@ function selectValidChequeStatuses(){
 function ChangeChequeStatus(){
 	
 	$BackPayID = $_POST["BackPayID"];
+	$OuterChequeID = $_POST["OuterChequeID"];
 	$Status = $_POST["StatusID"];
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	$obj = new LON_BackPays($BackPayID);
-	$obj->ChequeStatus = $Status;
-	$result = $obj->EditPay($pdo);
-	
-	if($Status == "3")
+	if($BackPayID*1 > 0)
 	{
-		$PartObj = new LON_ReqParts($obj->PartID);
-		$ReqObj = new LON_requests($PartObj->RequestID);
-		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
-		if($PersonObj->IsSupporter == "YES")
-			$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $_POST["BankTafsili"], 
-					$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
-		else
-			$result = RegisterCustomerPayDoc(null, $obj, $_POST["BankTafsili"], 
-					$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
-		if(!$result)
+		$obj = new LON_BackPays($BackPayID);
+		$obj->ChequeStatus = $Status;
+		$result = $obj->EditPay($pdo);
+
+		if($Status == OUERCHEQUE_VOSUL)
 		{
-			$pdo->rollback();
-			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
-			die();
+			$PartObj = new LON_ReqParts($obj->PartID);
+			$ReqObj = new LON_requests($PartObj->RequestID);
+			$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+			if($PersonObj->IsSupporter == "YES")
+				$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $_POST["BankTafsili"], 
+						$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
+			else
+				$result = RegisterCustomerPayDoc(null, $obj, $_POST["BankTafsili"], 
+						$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
+			if(!$result)
+			{
+				$pdo->rollback();
+				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+				die();
+			}
 		}
 	}
+	else
+	{
+		$obj = new ACC_OuterCheques($OuterChequeID);
+		$obj->ChequeStatus = $Status;
+		$result = $obj->Edit($pdo);
+
+		if($Status == OUERCHEQUE_VOSUL)
+		{
+			$result = RegisterOuterCheque(null, $obj, $_POST["BankTafsili"], 
+				$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
+			if(!$result)
+			{
+				$pdo->rollback();
+				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+				die();
+			}
+		}
+	}
+	
 	$pdo->commit();
 	echo Response::createObjectiveResponse($result, "");
 	die();
@@ -312,10 +338,26 @@ function SaveOuterCheque(){
 	$obj = new ACC_OuterCheques();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
-	$obj->ChequeStatus = OUERCHEQUE_NOTVOSUL;
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
 	
-	$result = $obj->Add();
-	echo Response::createObjectiveResponse($result, "");
+	$obj->ChequeStatus = OUERCHEQUE_NOTVOSUL;
+	if(!$obj->Add($pdo))
+	{
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	
+	ACC_OuterCheques::AddToHistory(0, $obj->OuterChequeID, $obj->ChequeStatus, $pdo);
+	
+	if(!RegisterOuterCheque($obj, 0,0,0,0, $pdo))
+	{
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
 	die();
 }
 

@@ -11,6 +11,7 @@ class ACC_OuterCheques extends OperationClass{
 	
 	public $OuterChequeID;
 	public $CostID;
+	public $TafsiliType;
 	public $TafsiliID;
 	public $ChequeNo;
 	public $ChequeDate;
@@ -18,6 +19,12 @@ class ACC_OuterCheques extends OperationClass{
 	public $ChequeBank;
 	public $ChequeBranch;
 	public $ChequeStatus;
+	
+	function __construct($id = '') {
+		
+		$this->DT_ChequeDate = DataMember::CreateDMA(DataMember::DT_DATE);		
+		parent::__construct($id);
+	}
 	
 	static function Get($where = "", $param = array()){
 		
@@ -46,6 +53,17 @@ class ACC_OuterCheques extends OperationClass{
 		";
 		
 		return parent::runquery_fetchMode($query, $param);
+	}
+	
+	static function AddToHistory($BackPayID, $OuterChequeID, $status, $pdo = null){
+		
+		PdoDataAccess::runquery("insert into ACC_ChequeHistory(BackPayID,OuterChequeID,StatusID,PersonID,ATS)
+			values(?,?,?,?,now())", array(
+				$BackPayID,
+				$OuterChequeID,
+				$status,
+				$_SESSION["USER"]["PersonID"]
+			),$pdo);
 	}
 }
 
