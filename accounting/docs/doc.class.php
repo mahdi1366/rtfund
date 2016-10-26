@@ -249,6 +249,8 @@ class ACC_DocItems extends PdoDataAccess {
 
 	function BlockTrigger($pdo = null){
 		
+		if(!isset($this->TafsiliType) || !isset($this->TafsiliID))
+			return true;
 		$BlockedAmount = ACC_CostBlocks::GetBlockAmount($this->CostID,$this->TafsiliType, $this->TafsiliID, $pdo);
 		
 		if($BlockedAmount > 0)

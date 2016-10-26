@@ -36,9 +36,16 @@ if(isset($_REQUEST["show"]))
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("InstallmentID");
 	
-	$rpg->addColumn("تاریخ پرداخت", "PayDate","dateRender");
+	$col = $rpg->addColumn("تاریخ پرداخت", "PayDate","dateRender");
+	$col->rowspaning = true;
 	
-	$col = $rpg->addColumn("مبلغ پرداخت", "PayAmount","amountRender");
+	$col = $rpg->addColumn("مبلغ پرداخت", "FixPayAmount","amountRender");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("PayDate");
+	
+	$col = $rpg->addColumn("قابل برداشت", "PayAmount","amountRender");
+	
+	$col = $rpg->addColumn("برداشت شده", "UsedPayAmount","amountRender");
 	
 	$rpg->addColumn("تعداد روز تاخیر", "ForfeitDays");
 	$col = $rpg->addColumn("مبلغ تاخیر", "CurForfeitAmount","amountRender");
@@ -50,8 +57,8 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("مانده کل", "TotalRemainder","amountRender");
 	
 	
-	$rpg->page_size = 20;
-	$rpg->paging = true;
+	//$rpg->page_size = 20;
+	//$rpg->paging = true;
 	
 	$rpg->mysql_resource = $returnArr;
 	echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';

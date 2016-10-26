@@ -1588,25 +1588,41 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 	}
 	else
 	{
+		$CostID = "";
+		switch($PayObj->PayType)
+		{
+			case "5":
+				$CostID = $CostCode_commitment; 
+				$itemObj->details = "برگشت تودیعی وام " . $ReqObj->RequestID . " به حساب وام";
+				break;
+			case "3":
+				$CostID = $CostCode_fund; break;
+			default:
+				$CostID = $CostCode_bank;
+		}
+		
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
-		$itemObj->CostID = $PayObj->PayType == "3" ? $CostCode_fund : $CostCode_bank;
+		$itemObj->CostID = $CostID;
 		$itemObj->DebtorAmount= $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;
-		$itemObj->TafsiliType = TAFTYPE_BANKS;
-		if($BankTafsili != "")
-			$itemObj->TafsiliID = $BankTafsili;
-		$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-		if($AccountTafsili != "")
-			$itemObj->TafsiliID2 = $AccountTafsili;
+		if($CostID == $CostCode_bank)
+		{
+			$itemObj->TafsiliType = TAFTYPE_BANKS;
+			if($BankTafsili != "")
+				$itemObj->TafsiliID = $BankTafsili;
+			$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
+			if($AccountTafsili != "")
+				$itemObj->TafsiliID2 = $AccountTafsili;
+		}
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد سند");
 			return false;
-		}
+		}		
 	}
 
 	//---------------------------------------------------------
