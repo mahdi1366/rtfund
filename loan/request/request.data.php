@@ -460,15 +460,15 @@ function GetPartInstallments(){
 	
 	$PartID = $_REQUEST["PartID"];
 	
-	$dt = LON_installments::SelectAll("PartID=? " . dataReader::makeOrder() , array($PartID));
-	ComputePayments($PartID, $dt);
+	$temp = LON_installments::SelectAll("PartID=? " . dataReader::makeOrder() , array($PartID));
+	$dt = ComputePayments($PartID, $dt);
 	
 	$currentPay = 0;
 	foreach($dt as $row)
 		if($row["InstallmentDate"] < DateModules::Now() && $row["TotalRemainder"]*1 > 0)
 			$currentPay += $row["TotalRemainder"]*1;
 	
-	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"], $currentPay);
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"], $currentPay);
 	die();
 }
 
