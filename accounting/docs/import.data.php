@@ -2118,6 +2118,7 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 	}
 	//----------------- add Doc items ------------------------
 	$itemObj = new ACC_DocItems();
+	$itemObj->locked = "YES";
 	if($OuterObj->ChequeStatus == OUERCHEQUE_NOTVOSUL)
 	{
 		$itemObj->DocID = $obj->DocID;
@@ -2155,108 +2156,110 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $OuterObj->ChequeAmount;
 		$itemObj->Add($pdo);
-	}
 	
-	// -------------- bank ---------------
-	if($CenterAccount == "true")
-	{
+	
+		// -------------- bank ---------------
+		if($CenterAccount == "true")
+		{
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			unset($itemObj->TafsiliID);
+			$itemObj->CostID = $CostCode_centerAccount;
+			$itemObj->DebtorAmount= $OuterObj->ChequeAmount;
+			$itemObj->CreditorAmount = 0;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد سند");
+				return false;
+			}
+
+			$Secobj = new ACC_docs();
+			$Secobj->RegDate = PDONOW;
+			$Secobj->regPersonID = $_SESSION['USER']["PersonID"];
+			$Secobj->DocDate = PDONOW;
+			$Secobj->CycleID = $CycleID;
+			$Secobj->BranchID = $BranchID;
+			$Secobj->DocType = DOCTYPE_OUTERCHEQUE;
+			if(!$Secobj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد سند");
+				return false;
+			}
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			unset($itemObj->TafsiliID);
+			$itemObj->DocID = $Secobj->DocID;
+			$itemObj->CostID = $CostCode_centerAccount;
+			$itemObj->DebtorAmount= 0;
+			$itemObj->CreditorAmount = $OuterObj->ChequeAmount;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد سند");
+				return false;
+			}
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			unset($itemObj->TafsiliID);
+			$itemObj->CostID = $CostCode_bank;
+			$itemObj->DebtorAmount= $OuterObj->ChequeAmount;
+			$itemObj->CreditorAmount = 0;
+			$itemObj->TafsiliType = TAFTYPE_BANKS;
+			if($BankTafsili != "")
+				$itemObj->TafsiliID = $BankTafsili;
+			$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
+			if($AccountTafsili != "")
+				$itemObj->TafsiliID2 = $AccountTafsili;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد سند");
+				return false;
+			}
+		}
+		else
+		{
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			unset($itemObj->TafsiliID);
+			$itemObj->CostID = $CostCode_bank;
+			$itemObj->DebtorAmount= $OuterObj->ChequeAmount;
+			$itemObj->CreditorAmount = 0;
+			$itemObj->TafsiliType = TAFTYPE_BANKS;
+			if($BankTafsili != "")
+				$itemObj->TafsiliID = $BankTafsili;
+			$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
+			if($AccountTafsili != "")
+				$itemObj->TafsiliID2 = $AccountTafsili;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد سند");
+				return false;
+			}
+		}
+
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
-		$itemObj->CostID = $CostCode_centerAccount;
-		$itemObj->DebtorAmount= $OuterObj->ChequeAmount;
-		$itemObj->CreditorAmount = 0;
-		if(!$itemObj->Add($pdo))
-		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
-			return false;
-		}
-		
-		$Secobj = new ACC_docs();
-		$Secobj->RegDate = PDONOW;
-		$Secobj->regPersonID = $_SESSION['USER']["PersonID"];
-		$Secobj->DocDate = PDONOW;
-		$Secobj->CycleID = $CycleID;
-		$Secobj->BranchID = $BranchID;
-		$Secobj->DocType = DOCTYPE_OUTERCHEQUE;
-		if(!$Secobj->Add($pdo))
-		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
-			return false;
-		}
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		unset($itemObj->TafsiliID);
-		$itemObj->DocID = $Secobj->DocID;
-		$itemObj->CostID = $CostCode_centerAccount;
-		$itemObj->DebtorAmount= 0;
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = $OuterObj->CostID;
+		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $OuterObj->ChequeAmount;
+		$itemObj->TafsiliType = $OuterObj->TafsiliType;
+		$itemObj->TafsiliID = $OuterObj->TafsiliID;
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد سند");
 			return false;
 		}
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		unset($itemObj->TafsiliID);
-		$itemObj->CostID = $CostCode_bank;
-		$itemObj->DebtorAmount= $OuterObj->ChequeAmount;
-		$itemObj->CreditorAmount = 0;
-		$itemObj->TafsiliType = TAFTYPE_BANKS;
-		if($BankTafsili != "")
-			$itemObj->TafsiliID = $BankTafsili;
-		$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-		if($AccountTafsili != "")
-			$itemObj->TafsiliID2 = $AccountTafsili;
-		if(!$itemObj->Add($pdo))
-		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
-			return false;
-		}
-	}
-	else
-	{
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		unset($itemObj->TafsiliID);
-		$itemObj->CostID = $CostCode_bank;
-		$itemObj->DebtorAmount= $OuterObj->ChequeAmount;
-		$itemObj->CreditorAmount = 0;
-		$itemObj->TafsiliType = TAFTYPE_BANKS;
-		if($BankTafsili != "")
-			$itemObj->TafsiliID = $BankTafsili;
-		$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-		if($AccountTafsili != "")
-			$itemObj->TafsiliID2 = $AccountTafsili;
-		if(!$itemObj->Add($pdo))
-		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
-			return false;
-		}
-	}
-	
-	unset($itemObj->ItemID);
-	unset($itemObj->TafsiliType);
-	unset($itemObj->TafsiliType2);
-	unset($itemObj->TafsiliID2);
-	unset($itemObj->TafsiliID);
-	$itemObj->CostID = $OuterObj->CostID;
-	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = $OuterObj->ChequeAmount;
-	$itemObj->TafsiliType = $OuterObj->TafsiliType;
-	$itemObj->TafsiliID = $OuterObj->TafsiliID;
-	if(!$itemObj->Add($pdo))
-	{
-		ExceptionHandler::PushException("خطا در ایجاد سند");
-		return false;
 	}
 	//---------------------------------------------------------
 	if(ExceptionHandler::GetExceptionCount() > 0)

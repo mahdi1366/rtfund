@@ -329,7 +329,7 @@ IncomeCheque.prototype.ChangeStatus = function(){
 	StatusID = this.commentWin.down("[name=DstID]").getValue();
 	
 	BankTafsili = StatusID == "3" ? IncomeChequeObject.BankWin.down("[itemId=TafsiliID]").getValue() : "";
-	TafsiliID2 = StatusID == "3" ? IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").getValue() : "";
+	AccountTafsili = StatusID == "3" ? IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").getValue() : "";
 	CenterAccount = StatusID == "3" ? IncomeChequeObject.BankWin.down("[itemId=CenterAccount]").getValue() : "";
 	BranchID = StatusID == "3" ? IncomeChequeObject.BankWin.down("[itemId=BranchID]").getValue() : "";
 		

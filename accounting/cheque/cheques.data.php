@@ -315,7 +315,7 @@ function ChangeChequeStatus(){
 
 		if($Status == OUERCHEQUE_VOSUL)
 		{
-			$result = RegisterOuterCheque(null, $obj, $_POST["BankTafsili"], 
+			$result = RegisterOuterCheque($obj, $_POST["BankTafsili"], 
 				$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
 			if(!$result)
 			{
