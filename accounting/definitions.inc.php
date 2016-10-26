@@ -43,4 +43,8 @@ define("ShareBaseAmount", "1100000");
 
 define("ACCROLE_EXPERT", "1");
 define("ACCROLE_MANAGER", "2");
+
+define("OUERCHEQUE_NOTVOSUL", "1");
+define("OUERCHEQUE_VOSUL", "3");
+
 ?>

@@ -312,10 +312,9 @@ function SaveOuterCheque(){
 	$obj = new ACC_OuterCheques();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
-	$obj->ChequeStatus = 
+	$obj->ChequeStatus = OUERCHEQUE_NOTVOSUL;
 	
 	$result = $obj->Add();
-	print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
