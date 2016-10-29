@@ -326,6 +326,8 @@ function ChangeChequeStatus(){
 		}
 	}
 	
+	ACC_OuterCheques::AddToHistory($BackPayID, $OuterChequeID, $Status, $pdo);
+	
 	$pdo->commit();
 	echo Response::createObjectiveResponse($result, "");
 	die();

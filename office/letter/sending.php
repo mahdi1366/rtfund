@@ -108,8 +108,8 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 			columns : 2
 		},
 		defaults : {
-			width : 200,
-			labelWidth : 60
+			width : 270,
+			labelWidth : 100
 		},
 		items : [{
 			xtype : "combo",
@@ -130,9 +130,9 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 			emptyText : "شرح ارجاع",
 			name : this.index + "_SendComment",
 			value : this.index > 1 ? this.mainPanel.down("[name=1_SendComment]").getValue() : "",
-			rowspan : 4,
-			rows : 6,
-			width : 340
+			rowspan : 6,
+			rows : 10,
+			width : 300
 		},{
 			xtype : "combo",
 			name : this.index + "_SendType",
@@ -164,6 +164,14 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 			fieldLabel : "فوریت",
 			displayField: 'title',
 			valueField : "id"	
+		},{
+			xtype : "shdatefield",
+			name : this.index + "_ResponseTimeout",
+			fieldLabel : "مهلت پاسخ"			
+		},{
+			xtype : "shdatefield",
+			name : this.index + "_FollowUpDate",
+			fieldLabel : "تاریخ پیگیری"
 		},{
 			xtype : "checkbox",
 			fieldLabel : "رونوشت",

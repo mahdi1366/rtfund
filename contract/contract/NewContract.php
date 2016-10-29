@@ -425,7 +425,7 @@ NewContract.prototype.ShowTplItemsForm = function (TemplateID, LoadValues) {
 			for(i=0; i<me.TplItemsStore.getCount(); i++)
 			{
 				record = me.TplItemsStore.getAt(i);
-				if(record.data.ItemType == "")
+				if(record.data.ItemType == "" || record.data.TemplateID == "0")
 					continue;
 				
 				if(record.data.ItemType == "combo")

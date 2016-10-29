@@ -1,10 +1,8 @@
 <?php
-//-----------------------------
-//	Programmer	: SH.Jafarkhani
-//	Date		: 95.05
-//-----------------------------
 
 require_once '../header.inc.php';
+require_once "../request/request.class.php";
+require_once "../request/request.data.php";
 require_once "ReportGenerator.class.php";
 
 if(isset($_REQUEST["show"]))
@@ -61,7 +59,10 @@ if(isset($_REQUEST["show"]))
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
 				bi.InfoDesc StatusDesc,
-				BranchName
+				BranchName,
+				TotalPayAmount,
+				TotalInstallmentAmount
+				
 			from LON_requests r
 			join LON_ReqParts p using(RequestID)
 			left join LON_loans l using(LoanID)
@@ -69,20 +70,42 @@ if(isset($_REQUEST["show"]))
 			left join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
+			left join (
+				select PartID,sum(PayAmount) TotalPayAmount from LON_BackPays
+				group by PartID			
+			)t1 on(p.PartID=t1.PartID)
+			left join (
+				select PartID,sum(InstallmentAmount) TotalInstallmentAmount 
+				from LON_installments
+				group by PartID			
+			)t2 on(p.PartID=t2.PartID)
 			where 1=1 " . $where . " group by r.RequestID";
 	
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
+	for($i=0; $i< count($dataTable); $i++)
+	{
+		$dt = LON_installments::SelectAll("PartID=?" , array($dataTable[$i]["PartID"]));
+		$returnArr = ComputePayments($dataTable[$i]["PartID"], $dt);
+		
+		$dataTable[$i]["remainder"] = count($returnArr)>0 ?
+			$returnArr[ count($returnArr) -1 ]["TotalRemainder"] : 0;
+	}
 	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
 	$rpg->mysql_resource = $dataTable;
 	
+	function endedRender($row,$value){
+		return ($value == "YES") ? "خاتمه" : "جاری";
+	}
+	
 	$rpg->addColumn("شماره وام", "RequestID");
+	$rpg->addColumn("نوع وام", "LoanDesc");
+	$rpg->addColumn("معرفی کننده", "ReqFullname");
 	$rpg->addColumn("تاریخ درخواست", "ReqDate", "dateRender");
 	$rpg->addColumn("مبلغ درخواست", "ReqAmount", "moneyRender");
 	$rpg->addColumn("مشتری", "LoanFullname");
-	$rpg->addColumn("معرف", "ReqFullname");
 	$rpg->addColumn("شعبه", "BranchName");
 	$rpg->addColumn("تاریخ پرداخت", "PartDate", "dateRender");
 	$rpg->addColumn("مبلغ پرداخت", "PartAmount", "moneyRender");
@@ -91,6 +114,11 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("کارمزد مشتری", "CustomerWage");
 	$rpg->addColumn("کارمزد صندوق", "FundWage");
 	$rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
+	$rpg->addColumn("شماره قدیم", "imp_VamCode");
+	$rpg->addColumn("جاری/خاتمه", "IsEnded", "endedRender");
+	$rpg->addColumn("قابل پرداخت مشتری", "TotalInstallmentAmount", "moneyRender");
+	$rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount", "moneyRender");
+	$rpg->addColumn("مانده قابل پرداخت", "remainder", "moneyRender");
 	
 	if(!$rpg->excel)
 	{

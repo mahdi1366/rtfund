@@ -64,11 +64,23 @@ class CNT_contracts extends OperationClass {
 				c.LoanRequestID,
 				c.ContractAmount,
 				t.TemplateTitle ,
+
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) PersonFullname,
-				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) PersonFullname2,
 				p1.NationalID,
 				p1.address,
 				p1.mobile,
+				p1.WebSite,
+				p1.email,
+				bfp1.InfoDesc CompanyTypeDesc,
+				
+				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) PersonFullname2,
+				p2.NationalID NationalID2,
+				p2.address address2,
+				p2.mobile mobile2,
+				p2.WebSite WebSite2,
+				p2.email email2,
+				bfp2.InfoDesc CompanyTypeDesc2,
+
 				r.RequestID,
 				r.ReqAmount,
 				rp.InstallmentCount,
@@ -80,7 +92,9 @@ class CNT_contracts extends OperationClass {
 			left join LON_requests r on(LoanRequestID=RequestID)
 			left join LON_ReqParts rp on(rp.RequestID=r.RequestID)
 			left join BSC_persons p1 on(c.PersonID=p1.PersonID)
+			left join BaseInfo bfp1 on(bfp1.TypeID=14 AND p1.CompanyType=bfp1.InfoID)
 			left join BSC_persons p2 on(c.PersonID2=p2.PersonID)
+			left join BaseInfo bfp2 on(bfp2.TypeID=14 AND p2.CompanyType=bfp2.InfoID)
 			
 			where 1=1 " . $where . " group by ContractID " . $order, $whereParams);
     }

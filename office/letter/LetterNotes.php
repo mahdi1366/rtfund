@@ -10,55 +10,50 @@ $LetterID = $_REQUEST["LetterID"];
 if(empty($LetterID))
 	die();
 
-$editable = isset($_REQUEST["editable"]) && $_REQUEST["editable"] == "false" ? false : true;
 $editable = true;
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=GetLetterCustomerss&LetterID=" . $LetterID, "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=GetLetterNotes&LetterID=" . $LetterID, "grid_div");
 
-$dg->addColumn("", "RowID","", true);
-$dg->addColumn("", "fullname","", true);
+$dg->addColumn("", "NoteID","", true);
 $dg->addColumn("", "LetterID","", true);
 
-$col = $dg->addColumn("مشتری", "PersonID");
-$col->renderer = "function(v,p,r){return r.data.fullname;}";
-$col->editor = "this.PersonCombo";
-
-$col = $dg->addColumn("عنوان نامه", "LetterTitle");
-$col->editor = ColumnEditor::TextField(true);
+$col = $dg->addColumn("عنوان یادداشت", "NoteTitle");
+$col->editor = ColumnEditor::TextField();
 $col->width = 200;
 
-$col = $dg->addColumn("مخفی", "IsHide");
-$col->editor = ColumnEditor::CheckField("","YES");
-$col->renderer = "function(v,p,r){return v == 'YES' ? '<span style=color:green;font-weight:bold >√</span>' : ''}";
-$col->width = 50;
-$col->align = "center";
+$col = $dg->addColumn("شرح", "NoteDesc");
+$col->editor = ColumnEditor::TextField();
+
+$col = $dg->addColumn("یادآوری", "ReminderDate", GridColumn::ColumnType_date);
+$col->editor = ColumnEditor::SHDateField(true);
+$col->width = 110;
 
 if($editable)
 {
 	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(store,record){return LetterCustomersObject.SaveLetterCustomers(record);}";
+	$dg->rowEditOkHandler = "function(store,record){return LetterNoteObject.SaveLetterNote(record);}";
 
-	$dg->addButton("AddBtn", "اضافه ذینفع", "add", "function(){LetterCustomersObject.Add();}");
+	$dg->addButton("AddBtn", "ایجاد یادداشت جدید", "add", "function(){LetterNoteObject.Add();}");
 
 	$col = $dg->addColumn("حذف", "");
 	$col->sortable = false;
-	$col->renderer = "function(v,p,r){return LetterCustomers.DeleteRender(v,p,r);}";
+	$col->renderer = "function(v,p,r){return LetterNote.DeleteRender(v,p,r);}";
 	$col->width = 35;
 }
-$dg->autoExpandColumn = "PersonID";
+$dg->autoExpandColumn = "NoteDesc";
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 410;
 $dg->width = 750;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
-$dg->DefaultSortField = "PayDate";
+$dg->DefaultSortField = "NoteDesc";
 $dg->DefaultSortDir = "ASC";
 
 $grid = $dg->makeGrid_returnObjects();
 
 ?>
 <script>
-LetterCustomers.prototype = {
+LetterNote.prototype = {
 	TabID : "<?= $_REQUEST["ExtTabID"] ?>",
 	address_prefix : "<?= $js_prefix_address?>",
 
@@ -70,56 +65,34 @@ LetterCustomers.prototype = {
 	}
 };
 
-function LetterCustomers()
+function LetterNote()
 {
-	this.PersonCombo = new Ext.form.ComboBox({
-		store : new Ext.data.SimpleStore({
-			proxy: {
-				type: 'jsonp',
-				url: this.address_prefix + '../../framework/person/persons.data.php?' +
-					"task=selectPersons&UserType=IsCustomer",
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			},
-			fields : ['PersonID','fullname']
-		}),
-		displayField : "fullname",
-		pageSize : 20,
-		itemId : "Customer",
-		allowBlank : false,
-		valueField : "PersonID"
-	});
-	
 	this.grid = <?= $grid ?>;
-	if(this.editable)
-		this.grid.plugins[0].on("beforeedit", function(editor,e){
-
-			editor = LetterCustomersObject.grid.plugins[0].getEditor();
-
-			if(e.record.data.PersonID*1 > 0)
-				editor.down("[itemId=Customer]").disable();
-			else
-				editor.down("[itemId=Customer]").enable();
-			return true;
-		});
+	this.grid.getView().getRowClass = function(record)
+	{
+		if(record.data.IsSeen == "NO")
+			return "yellowRow";
+		return "";
+	}
 	this.grid.render(this.get("div_grid"));
 	
 }
 
-LetterCustomers.DeleteRender = function(v,p,r){
+LetterNote.DeleteRender = function(v,p,r){
 	
 	return "<div align='center' title='حذف' class='remove' "+
-		"onclick='LetterCustomersObject.Delete();' " +
+		"onclick='LetterNoteObject.Delete();' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:18px;height:16'></div>";
 }
 
-LetterCustomersObject = new LetterCustomers();
+LetterNoteObject = new LetterNote();
 	
-LetterCustomers.prototype.Add = function(){
+LetterNote.prototype.Add = function(){
 
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
-		PersonID: null,
+		NoteID : null,
 		LetterID : this.LetterID
 	});
 
@@ -128,7 +101,7 @@ LetterCustomers.prototype.Add = function(){
 	this.grid.plugins[0].startEdit(0, 0);
 }
 	
-LetterCustomers.prototype.SaveLetterCustomers = function(record){
+LetterNote.prototype.SaveLetterNote = function(record){
 
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
@@ -137,7 +110,7 @@ LetterCustomers.prototype.SaveLetterCustomers = function(record){
 		url: this.address_prefix +'letter.data.php',
 		method: "POST",
 		params: {
-			task: "SaveLetterCustomer",
+			task: "SaveLetterNote",
 			record: Ext.encode(record.data)
 		},
 		success: function(response){
@@ -151,19 +124,19 @@ LetterCustomers.prototype.SaveLetterCustomers = function(record){
 					Ext.MessageBox.alert("Error",st.data);
 			}
 			else
-				LetterCustomersObject.grid.getStore().load();
+				LetterNoteObject.grid.getStore().load();
 		},
 		failure: function(){}
 	});
 }
 
-LetterCustomers.prototype.Delete = function(){
+LetterNote.prototype.Delete = function(){
 	
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
 		if(btn == "no")
 			return;
 		
-		me = LetterCustomersObject;
+		me = LetterNoteObject;
 		var record = me.grid.getSelectionModel().getLastSelected();
 		
 		mask = new Ext.LoadMask(me.grid, {msg:'در حال حذف ...'});
@@ -172,15 +145,15 @@ LetterCustomers.prototype.Delete = function(){
 		Ext.Ajax.request({
 			url: me.address_prefix + 'letter.data.php',
 			params:{
-				task: "DeleteLetterCustomer",
-				RowID : record.data.RowID
+				task: "DeleteLetterNote",
+				NoteID : record.data.NoteID
 			},
 			method: 'POST',
 
 			success: function(response,option){
 				result = Ext.decode(response.responseText);
 				if(result.success)
-					LetterCustomersObject.grid.getStore().load();
+					LetterNoteObject.grid.getStore().load();
 				else if(result.data == "")
 					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
 				else

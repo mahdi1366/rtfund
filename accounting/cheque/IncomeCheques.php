@@ -169,7 +169,7 @@ function IncomeCheque(){
 		e.stopEvent();
 		return false;
 	});
-		
+		 
 	this.grid = <?= $grid ?>;
 	this.grid.getStore().proxy.form = this.get("MainForm");
 	this.grid.render(this.get("div_grid"));

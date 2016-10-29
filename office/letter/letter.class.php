@@ -22,6 +22,9 @@ class OFC_letters extends PdoDataAccess{
 	public $InnerLetterDate;
 	public $OuterCopies;
 	public $RefLetterID;
+	public $OuterSendType;
+	public $AccessType;
+	public $keywords;
 
     function __construct($LetterID = ""){
 		$this->DT_LetterDate = DataMember::CreateDMA(DataMember::DT_DATE);
@@ -109,13 +112,15 @@ class OFC_letters extends PdoDataAccess{
 		 
 		$query = "select s.*,l.*, 
 				concat_ws(' ',fname, lname,CompanyName) FromPersonName,
-				if(count(DocumentID) > 0,'YES','NO') hasAttach
+				if(count(DocumentID) > 0,'YES','NO') hasAttach,
+				substr(s.SendDate,1,10) _SendDate
+				
 			from OFC_send s
 				join OFC_letters l using(LetterID)
 				join BSC_persons p on(s.FromPersonID=p.PersonID)
 				left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
-				/*left join OFC_send s2 on(s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)*/
-			where /*s2.SendID is null AND*/ s.ToPersonID=:tpid " . $where . "
+				left join OFC_send s2 on(s2.LetterID=s.LetterID AND s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
+			where s2.SendID is null AND s.ToPersonID=:tpid " . $where . "
 			group by SendID";
 		$param[":tpid"] = $_SESSION["USER"]["PersonID"];
 		
@@ -138,7 +143,8 @@ class OFC_letters extends PdoDataAccess{
 		
 		$query = "select s.*,l.*, 
 				concat_ws(' ',fname, lname,CompanyName) ToPersonName,
-				if(count(DocumentID) > 0,'YES','NO') hasAttach
+				if(count(DocumentID) > 0,'YES','NO') hasAttach,
+				substr(s.SendDate,1,10) _SendDate
 			from OFC_send s
 				join OFC_letters l using(LetterID)
 				join BSC_persons p on(s.ToPersonID=p.PersonID)
@@ -166,9 +172,14 @@ class OFC_send extends PdoDataAccess{
 	public $IsSeen;
 	public $IsDeleted;
 	public $IsCopy;
+	public $ResponseTimeout;
+	public $FollowUpDate;
 
     function __construct($SendID = ""){
+		
 		$this->DT_SendDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_ResponseTimeout = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_FollowUpDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($SendID != "")
 			parent::FillObject($this, "select * from OFC_send where SendID=?", array($SendID));
@@ -296,5 +307,42 @@ class OFC_LetterCustomers extends OperationClass{
 	public $LetterID;
 	public $PersonID;
 	public $IsHide;
+	public $LetterTitle;
+}
+
+class OFC_templates extends OperationClass{
+	
+	const TableName = "OFC_templates";
+	const TableKey = "TemplateID";
+	
+	public $TemplateID;
+	public $TemplateTitle;
+	public $context;
+}
+
+class OFC_LetterNotes extends OperationClass{
+	
+	const TableName = "OFC_LetterNotes";
+	const TableKey = "NoteID";
+	
+	public $NoteID;
+	public $LetterID;
+	public $PersonID;
+	public $NoteTitle;
+	public $NoteDesc;
+	public $ReminderDate;
+	public $IsSeen;
+	
+	public function __construct($id = '') {
+		
+		$this->DT_ReminderDate = DataMember::CreateDMA(DataMember::DT_DATE);		
+		parent::__construct($id);
+	}
+	
+	public static function GetRemindNotes(){
+		
+		return self::Get(" AND PersonID=? AND now()>= ReminderDate AND IsSeen='NO'", 
+			array($_SESSION["USER"]["PersonID"]));
+	}
 }
 ?>

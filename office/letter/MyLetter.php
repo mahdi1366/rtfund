@@ -30,6 +30,9 @@ $dg->addColumn("", "LetterID", "", true);
 $dg->addColumn("", "IsSeen", "", true);
 $dg->addColumn("", "IsDeleted", "", true);
 $dg->addColumn("", "SendID", "", true);
+$dg->addColumn("", "_SendDate", "", true);
+$dg->addColumn("", "ResponseTimeout", "", true);
+
 $dg->addColumn("", "SendComment", "", true);
 
 $col = $dg->addColumn("<img src=/office/icons/LetterType.gif>", "LetterType", "");
@@ -45,15 +48,12 @@ $col->width = 60;
 $col->align = "center";
 
 $col = $dg->addColumn("موضوع نامه", "LetterTitle", "");
-
+$col->renderer = "MyLetter.TitleRender";
 if($mode == "receive")
 	$col = $dg->addColumn("فرستنده", "FromPersonName", "");
 else
 	$col = $dg->addColumn("گیرنده", "ToPersonName", "");
 $col->width = 150;
-
-$col = $dg->addColumn("تاریخ ارجاع", "SendDate", GridColumn::ColumnType_date);
-$col->width = 80;
 
 $col = $dg->addColumn("عملیات", "");
 $col->renderer = "function(v,p,r){return MyLetter.OperationRender(v,p,r);}";
@@ -62,13 +62,20 @@ $col->width = 80;
 if($mode == "receive")
 	$dg->addObject("this.deletedBtnObj");
 
+$dg->EnableGrouping = true;
+$dg->DefaultGroupField = "_SendDate";
+if($mode == "send")
+	$dg->groupHeaderTpl = "تاریخ ارسال : {[MiladiToShamsi(values.rows[0].data._SendDate)]}";
+else
+	$dg->groupHeaderTpl = "تاریخ دریافت : {[MiladiToShamsi(values.rows[0].data._SendDate)]}";
+
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 420;
-$dg->width = 660;
-$dg->title = "نامه های ارسالی";
-$dg->DefaultSortField = "SendDate";
+$dg->height = 490;
+$dg->width = 640;
+$dg->title = $mode == "send" ? "نامه های ارسالی" : "نامه های دریافتی";
+$dg->DefaultSortField = "_SendDate";
 $dg->autoExpandColumn = "LetterTitle";
-$grid = $dg->makeGrid_returnObjects();
+$grid = $dg->makeGrid_returnObjects();	
 ?>
 <script>
 	
@@ -83,7 +90,7 @@ MyLetter.prototype = {
 		return findChild(this.TabID, elementID);
 	}
 };
-var ButtonItems;
+
 function MyLetter(){
 	
 	this.deletedBtnObj = Ext.button.Button({
@@ -152,14 +159,15 @@ function MyLetter(){
 		renderTo : this.get("DivPanel"),
 		//border : false,
 		layout : "column",
-		height : 420,
+		height : 500,
 		columns : 2,
 		style : " ",
 		width : 800,
 		items : [{
 			xtype : "container",
-			width : 130,
-			height: 420,
+			width : 150,
+			autoScroll : true,
+			height: 500,
 			style : "border-left : 1px solid #99bce8;margin-left:5px",
 			layout : "vbox",
 			itemId : "cmp_buttons",
@@ -178,6 +186,13 @@ MyLetter.LetterTypeRender = function(v,p,r){
 		return "<img data-qtip='نامه وارده' src=/office/icons/income.gif>";
 	if(v == 'OUTCOME') 
 		return "<img data-qtip='نامه صادره' src=/office/icons/outcome.gif>";
+}
+
+MyLetter.TitleRender = function(v,p,r){
+	
+	if(r.data.ResponseTimeout != "0000-00-00" && r.data.ResponseTimeout != null)
+		v += "<br>مهلت پاسخ : " + MiladiToShamsi(r.data.ResponseTimeout);
+	return v;
 }
 
 MyLetterObject = new MyLetter();
@@ -351,4 +366,4 @@ MyLetter.prototype.AfterSend = function(){
 
 </script>
 	<br>
-	<div id="DivPanel" style="margin-right:15px;"></div>
+	<div id="DivPanel" style="margin-right:8px;"></div>

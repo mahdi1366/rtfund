@@ -17,6 +17,7 @@ Letter.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 
 	LetterID : '<?= $LetterID ?>',
+	LoadEditor : false,
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -43,8 +44,9 @@ Letter.prototype.LoadLetter = function(){
 			url: this.address_prefix + "letter.data.php?task=SelectLetter&LetterID=" + this.LetterID,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["LetterID","LetterType","LetterTitle","SubjectID","summary","context","RefPersonID","RefShow",
-			"SignerPersonID", "organization","OrgPost","InnerLetterNo","InnerLetterDate","OuterCopies"],
+		fields : ["LetterID","LetterType","LetterTitle","SubjectID","summary","context",
+			"keywords","AccessType","OuterSendType","SignerPersonID", "organization",
+			"OrgPost","InnerLetterNo","InnerLetterDate","OuterCopies"],
 		autoLoad : true,
 		listeners : {
 			load : function(){
@@ -53,23 +55,17 @@ Letter.prototype.LoadLetter = function(){
 				record = this.getAt(0);
 				me.letterPanel.loadRecord(record);
 				
-				me.letterPanel.down("[itemId=pagesView]").getStore().proxy.extraParams = {
+				me.TabPanel.down("[itemId=pagesView]").getStore().proxy.extraParams = {
 					LetterID : record.data.LetterID
 				};
-				me.letterPanel.down("[itemId=pagesView]").getStore().load();
+				me.TabPanel.down("[itemId=pagesView]").getStore().load();
+							
+				LetterObject.mask.hide();
 				
-				if(LetterObject.LetterID > 0)
-				{
-					CKEDITOR.instances.LetterEditor.on('instanceReady', function( ev ) {
-						ev.editor.setData(record.data.context);
-					});			
-					CKEDITOR.instances.LetterEditor.setData(record.data.context);
-					LetterObject.mask.hide();
-				}					
-				
-				me.letterPanel.down("[itemId=btn_send]").enable();
-				me.letterPanel.down("[itemId=attach_tab]").enable();	
-				me.letterPanel.down("[itemId=customer_tab]").enable();	
+				me.TabPanel.down("[itemId=btn_send]").enable();
+				me.TabPanel.down("[itemId=attach_tab]").enable();	
+				me.TabPanel.down("[itemId=customer_tab]").enable();	
+				me.TabPanel.down("[itemId=notes_tab]").enable();					
 			}
 		}
 	});
@@ -77,255 +73,370 @@ Letter.prototype.LoadLetter = function(){
 
 Letter.prototype.BuildForms = function(){
 	
-	this.letterPanel = new Ext.form.FormPanel({
+	this.TabPanel = new Ext.TabPanel({
 		renderTo : this.get("mainForm"),
-		title : "مشخصات نامه",
-		frame : true,
-		height : 520,
-		layout : {
-			type : "table",
-			columns : 2
-		},
-		defaults : {
-			labelWidth : 90,
-			width : 370
-		},
-		width: 780,
-		items : [{
-			xtype :"container",
-			layout : "hbox",
-			items : [{
-				xtype : "radio",
-				labelWidth : 60,
-				boxLabel: 'نامه داخلی',
-				name: 'LetterType',
-				style : "margin-right : 20px",
-				checked : true,
-				inputValue: 'INNER',
-				listeners : {
-					change : function(){
-						if(this.checked)
-						{
-							this.up('form').down("[name=organization]").disable();
-							this.up('form').down("[name=OrgPost]").disable();
-						}	
-						else
-						{
-							this.up('form').down("[name=organization]").enable();
-							this.up('form').down("[name=OrgPost]").enable();
-						}
-					}
-				}
-			},{
-				xtype : "radio",
-				boxLabel: 'نامه صادره',
-				style : "margin-right : 20px",
-				name: 'LetterType',
-				inputValue: 'OUTCOME'
-			},{
-				xtype : "radio",
-				boxLabel: 'نامه وارده',
-				name: 'LetterType',
-				inputValue: 'INCOME',
-				listeners : {
-					change : function(){
-						if(this.checked)
-						{
-							this.up('form').down("[name=InnerLetterNo]").enable();
-							this.up('form').down("[name=InnerLetterDate]").enable();							
-						}
-						else
-						{
-							this.up('form').down("[name=InnerLetterNo]").disable();
-							this.up('form').down("[name=InnerLetterDate]").disable();
-						}
-							
-					}
-				}				
-			}]
-		},{
-			xtype : "container",
-			layout : "hbox",
-			items : [{
-				xtype : "textfield",
-				name : "LetterTitle",
-				labelWidth : 90,
-				width : 240,
-				fieldLabel : "عنوان نامه",
-				allowBlank : false
-			},{
-				xtype : "numberfield",
-				name : "RefLetterID",
-				fieldLabel : "عطف به",
-				hideTrigger : true,
-				labelWidth : 50,
-				width : 130,
-				allowBlank : true
-			}]
-		},{
-			xtype : "container",
-			layout : "hbox",
-			items :[{
-				xtype : "textfield",
-				labelWidth : 90,
-				width : 180,
-				fieldLabel : "شماره",
-				name : "InnerLetterNo",
-				disabled : true
-			},{
-				xtype : "shdatefield",
-				labelWidth : 40,
-				width : 170,
-				fieldLabel : "تاریخ",
-				name : "InnerLetterDate",
-				disabled : true
-			}]
-		},{
-			xtype : "combo",
-			name : "SignerPersonID",
-			store: new Ext.data.Store({
-				proxy:{
-					type: 'jsonp',
-					url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
+		width : 780,
+		height : 500,
+		frame: true,
+		items :[{
+			title : "اطلاعات نامه",
+			items : this.letterPanel = new Ext.form.Panel({
+				border : false,
+				layout : {
+					type : "table",
+					columns : 2
 				},
-				fields :  ['PersonID','fullname'],
-				autoLoad : true
-			}),
-			fieldLabel : "امضا کننده",
-			queryMode : "local",
-			displayField: 'fullname',
-			valueField : "PersonID"
-		},{
-			xtype : "textfield",
-			name : "organization",
-			fieldLabel : "فرستنده/گیرنده",
-			disabled : true,
-			allowBlank : true
-		},{
-			xtype : "textarea",
-			name : "OuterCopies",
-			fieldLabel : "رونوشت به خارج از سازمان",
-			rows : 2,
-			rowspan :2,			
-			allowBlank : true
-		},{
-			xtype : "textfield",
-			name : "OrgPost",
-			fieldLabel : "پست مربوطه",
-			disabled : true,
-			allowBlank : true			
-		},{
-			xtype : "tabpanel",
-			colspan : 2,
-			plain: true,
-			height : 400,
-			width : 760,
-			items :[{
-				title : "نامه تایپی",
-				html : "<div id='LetterEditor'></div>"
-			},{
-				title : "نامه تصویری",
-				style : "margin-top:10px",
+				defaults : {
+					labelWidth : 110,
+					width : 370
+				},
+				width: 780,
 				items : [{
+					xtype :"container",
+					layout : "hbox",
+					items : [{
+						xtype : "radio",
+						labelWidth : 60,
+						boxLabel: 'نامه داخلی',
+						name: 'LetterType',
+						style : "margin-right : 20px",
+						checked : true,
+						inputValue: 'INNER',
+						listeners : {
+							change : function(){
+								if(this.checked)
+								{
+									this.up('form').down("[name=organization]").disable();
+									this.up('form').down("[name=OuterSendType]").disable();
+									this.up('form').down("[name=OrgPost]").disable();
+								}	
+								else
+								{
+									this.up('form').down("[name=organization]").enable();
+									this.up('form').down("[name=OuterSendType]").enable();
+									this.up('form').down("[name=OrgPost]").enable();
+								}
+							}
+						}
+					},{
+						xtype : "radio",
+						boxLabel: 'نامه صادره',
+						style : "margin-right : 20px",
+						name: 'LetterType',
+						inputValue: 'OUTCOME'
+					},{
+						xtype : "radio",
+						boxLabel: 'نامه وارده',
+						name: 'LetterType',
+						inputValue: 'INCOME',
+						listeners : {
+							change : function(){
+								if(this.checked)
+								{
+									this.up('form').down("[name=InnerLetterNo]").enable();
+									this.up('form').down("[name=InnerLetterDate]").enable();							
+								}
+								else
+								{
+									this.up('form').down("[name=InnerLetterNo]").disable();
+									this.up('form').down("[name=InnerLetterDate]").disable();
+								}
+
+							}
+						}				
+					}]
+				},{
 					xtype : "container",
 					layout : "hbox",
 					items : [{
-						xtype : "filefield",
-						width : 300,
-						fieldLabel : "انتخاب تصویر",
-						name : "PageFile"
+						xtype : "textfield",
+						name : "LetterTitle",
+						labelWidth : 110,
+						width : 240,
+						fieldLabel : "عنوان نامه",
+						allowBlank : false
 					},{
-						xtype : "button",
-						text : "اضافه تصویر",
-						iconCls : "add",
-						handler : function(){
-							if(this.up('panel').down("[name=PageFile]").getValue() == "")
-							{
-								Ext.MessageBox.alert("","ورود فایل صفحه الزامی است");
-								return;
-							}
-							LetterObject.SaveLetter();
-						}
+						xtype : "numberfield",
+						name : "RefLetterID",
+						fieldLabel : "عطف به",
+						hideTrigger : true,
+						labelWidth : 50,
+						width : 130,
+						allowBlank : true
 					}]
-				},new Ext.Panel({
-					frame: true,
-					width : 730,
-					height : 290,
-					autoScroll : true,
-					style : "margin:5px",
-					items : new Ext.view.View({		
-						itemId : "pagesView",
-						store: new Ext.data.SimpleStore({
-							proxy: {
-								type: 'jsonp',
-								url: this.address_prefix + 'letter.data.php?task=selectLetterPages',
-								reader: {root: 'rows',totalProperty: 'totalCount'}
-							},
-							fields : ['RowID','ObjectID','DocumentID','DocDesc']
-						}),
-						tpl: [
-							'<tpl for=".">',
-								'<div style="position:relative;float: right;padding:5px;width:100px;margin:5px">',
-								'<div class="thumb"><img style="width:100px;height:100px;cursor:pointer" ',
-									'src="/office/dms/ShowFile.php?RowID={RowID}&DocumentID={DocumentID}&ObjectID={ObjectID}" ',
-									'title="{DocumentTitle}" onclick="LetterObject.ShowPage({DocumentID})"></div>',
-								'<div style="width:100%;text-align:center">{DocDesc}</div>',
-								'<div class="cross x-btn-default-small" style="cursor:pointer;float: right;position: absolute;top:8px;',
-									'height: 19px; width: 19px; margin: 4px;"',
-									' onclick="LetterObject.DeletePage({DocumentID},{RowID})"></div>',
-								'</div>',
-							'</tpl>',
-							'<div class="x-clear"></div>'
-						],
-						overItemCls: 'x-item-over'
-					}) 
-				})]
-			},{
-				title : "پیوست های نامه",
-				itemId : "attach_tab",
-				disabled : true,
-				loader : {
-					url : this.address_prefix + "attach.php",
-					method: "POST",
-					text: "در حال بار گذاری...",
-					scripts : true
-				},
-				listeners : {
-					activate : function(){
-						if(this.loader.isLoaded)
-							return;
-						this.loader.load({
-							params : {
-								LetterID : LetterObject.LetterID,
-								ExtTabID : this.getEl().id
-							}
-						});
+				},{
+					xtype : "container",
+					layout : "hbox",
+					items :[{
+						xtype : "textfield",
+						labelWidth : 110,
+						width : 180,
+						fieldLabel : "شماره",
+						name : "InnerLetterNo",
+						disabled : true
+					},{
+						xtype : "shdatefield",
+						labelWidth : 40,
+						width : 170,
+						fieldLabel : "تاریخ",
+						name : "InnerLetterDate",
+						disabled : true
+					}]
+				},{
+					xtype : "combo",
+					name : "SignerPersonID",
+					store: new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields :  ['PersonID','fullname'],
+						autoLoad : true
+					}),
+					fieldLabel : "امضا کننده",
+					queryMode : "local",
+					displayField: 'fullname',
+					valueField : "PersonID"
+				},{
+					xtype : "textfield",
+					name : "organization",
+					fieldLabel : "فرستنده/گیرنده",
+					disabled : true,
+					allowBlank : true
+				},{
+					xtype : "textarea",
+					name : "OuterCopies",
+					fieldLabel : "رونوشت به خارج از سازمان",
+					rows : 2,
+					rowspan :2,			
+					allowBlank : true
+				},{
+					xtype : "textfield",
+					name : "OrgPost",
+					fieldLabel : "پست مربوطه",
+					disabled : true,
+					allowBlank : true			
+				},{
+					xtype : "combo",
+					disabled : true,
+					fieldLabel : "شیوه دریافت/ارسال",
+					store: new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: this.address_prefix + 'letter.data.php?task=selectOuterSendType',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields :  ['InfoID',"InfoDesc"],
+						autoLoad : true
+					}),
+					queryMode : "local",
+					name : "OuterSendType",
+					displayField: 'InfoDesc',
+					valueField : "InfoID"
+				},{
+					xtype : "combo",
+					fieldLabel : "دسترسی نامه",
+					store: new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: this.address_prefix + 'letter.data.php?task=selectAccessType',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields :  ['InfoID',"InfoDesc"],
+						autoLoad : true
+					}),
+					queryMode : "local",
+					name : "AccessType",
+					displayField: 'InfoDesc',
+					valueField : "InfoID"
+				},{
+					xtype : "textfield",
+					name : "keywords",
+					colspan : 2,
+					width : 740,
+					fieldLabel : "<span>" + "کلید واژه" + "</span><button class='x-btn help' "+
+						"style='border:0;background-color:white' data-qtip='برای جداسازی از # استفاده کنید'>"
+				}]
+			})
+		},{
+			title : "متن نامه",
+			height : 450,
+			items :[{
+				xtype : "combo",
+				fieldLabel : "انتخاب متن از الگوها",
+				store: new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: this.address_prefix + 'letter.data.php?task=SelectTemplates',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ['TemplateTitle',"context"],
+					autoLoad : true
+				}),
+				queryMode : "local",
+				labelWidth : 130,
+				displayField: 'TemplateTitle',
+				valueField : "TemplateTitle",
+				listeners :{
+					select : function(store,records){
+						CKEDITOR.instances.LetterEditor.setData(records[0].data.context);
 					}
 				}
 			},{
-				title : "ذینفعان نامه",
-				itemId : "customer_tab",
-				disabled : true,
-				loader : {
-					url : this.address_prefix + "LetterCustomers.php",
-					method: "POST",
-					text: "در حال بار گذاری...",
-					scripts : true
-				},
-				listeners : {
-					activate : function(){
-						if(this.loader.isLoaded)
-							return;
-						this.loader.load({
-							params : {
-								LetterID : LetterObject.LetterID,
-								ExtTabID : this.getEl().id
-							}
-						});
-					}
+				xtype : "container",
+				html : "<div id='LetterEditor'></div>"
+			}],			
+			listeners : {
+				activate : function(){
+					if(!LetterObject.LoadEditor)
+					{
+						LetterObject.LoadEditor = true;
+						if ( CKEDITOR.env.ie && CKEDITOR.env.version < 9 )
+							CKEDITOR.tools.enableHtml5Elements( document );
+
+						CKEDITOR.config.width = 'auto';
+						CKEDITOR.config.height = 300;
+						CKEDITOR.config.autoGrow_minHeight = 170;
+						CKEDITOR.replace('LetterEditor');	
+						CKEDITOR.add;
+						
+						if(LetterObject.LetterID > 0)
+						{
+							record = LetterObject.store.getAt(0);
+							CKEDITOR.instances.LetterEditor.on('instanceReady', function( ev ) {
+								ev.editor.setData(record.data.context);
+							});			
+							CKEDITOR.instances.LetterEditor.setData(record.data.context);
+
+						}	
+						LetterObject.TabPanel.down("[itemId=AddToTemplates]").enable();
+					}					
 				}
-			}]
+			}
+		},{
+			title : "تصاویر نامه",
+			style : "margin-top:10px",
+			items : [{
+				xtype : "container",
+				layout : "hbox",
+				items : [{
+					xtype : "filefield",
+					width : 300,
+					fieldLabel : "انتخاب تصویر",
+					name : "PageFile"
+				},{
+					xtype : "button",
+					text : "اضافه تصویر",
+					iconCls : "add",
+					handler : function(){
+						if(this.up('panel').down("[name=PageFile]").getValue() == "")
+						{
+							Ext.MessageBox.alert("","ورود فایل صفحه الزامی است");
+							return;
+						}
+						LetterObject.SaveLetter();
+					}
+				}]
+			},new Ext.Panel({
+				frame: true,
+				width : 730,
+				height : 380,
+				autoScroll : true,
+				style : "margin:5px",
+				items : new Ext.view.View({		
+					itemId : "pagesView",
+					store: new Ext.data.SimpleStore({
+						proxy: {
+							type: 'jsonp',
+							url: this.address_prefix + 'letter.data.php?task=selectLetterPages',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields : ['RowID','ObjectID','DocumentID','DocDesc']
+					}),
+					tpl: [
+						'<tpl for=".">',
+							'<div style="position:relative;float: right;padding:5px;width:100px;margin:5px">',
+							'<div class="thumb"><img style="width:100px;height:100px;cursor:pointer" ',
+								'src="/office/dms/ShowFile.php?RowID={RowID}&DocumentID={DocumentID}&ObjectID={ObjectID}" ',
+								'title="{DocumentTitle}" onclick="LetterObject.ShowPage({DocumentID})"></div>',
+							'<div style="width:100%;text-align:center">{DocDesc}</div>',
+							'<div class="cross x-btn-default-small" style="cursor:pointer;float: right;position: absolute;top:8px;',
+								'height: 19px; width: 19px; margin: 4px;"',
+								' onclick="LetterObject.DeletePage({DocumentID},{RowID})"></div>',
+							'</div>',
+						'</tpl>',
+						'<div class="x-clear"></div>'
+					],
+					overItemCls: 'x-item-over'
+				}) 
+			})]
+		},{
+			title : "پیوست های نامه",
+			itemId : "attach_tab",
+			disabled : true,
+			loader : {
+				url : this.address_prefix + "attach.php",
+				method: "POST",
+				text: "در حال بار گذاری...",
+				scripts : true
+			},
+			listeners : {
+				activate : function(){
+					if(this.loader.isLoaded)
+						return;
+					this.loader.load({
+						params : {
+							LetterID : LetterObject.LetterID,
+							ExtTabID : this.getEl().id
+						}
+					});
+				}
+			}
+		},{
+			title : "ذینفعان نامه",
+			itemId : "customer_tab",
+			disabled : true,
+			loader : {
+				url : this.address_prefix + "LetterCustomers.php",
+				method: "POST",
+				text: "در حال بار گذاری...",
+				scripts : true
+			},
+			listeners : {
+				activate : function(){
+					if(this.loader.isLoaded)
+						return;
+					this.loader.load({
+						params : {
+							LetterID : LetterObject.LetterID,
+							ExtTabID : this.getEl().id
+						}
+					});
+				}
+			}
+		},{
+			title : "یادداشت های نامه",
+			itemId : "notes_tab",
+			disabled : true,
+			loader : {
+				url : this.address_prefix + "LetterNotes.php",
+				method: "POST",
+				text: "در حال بار گذاری...",
+				scripts : true
+			},
+			listeners : {
+				activate : function(){
+					if(this.loader.isLoaded)
+						return;
+					this.loader.load({
+						params : {
+							LetterID : LetterObject.LetterID,
+							ExtTabID : this.getEl().id
+						}
+					});
+				}
+			}
 		}],
 		buttons :[{
 			text : "ذخیره",
@@ -333,6 +444,12 @@ Letter.prototype.BuildForms = function(){
 			handler : function(){
 				LetterObject.SaveLetter();
 			}
+		},{
+			text : "اضافه متن نامه به الگوها",
+			iconCls : "add",
+			itemId : "AddToTemplates",
+			disabled : true,
+			handler : function(){ LetterObject.AddToTemplates() }
 		},{
 			text : "ارجاع",
 			iconCls : "sendLetter",
@@ -343,22 +460,15 @@ Letter.prototype.BuildForms = function(){
 			}
 		}]
 	});
-	
-	if ( CKEDITOR.env.ie && CKEDITOR.env.version < 9 )
-		CKEDITOR.tools.enableHtml5Elements( document );
-
-	CKEDITOR.config.width = 'auto';
-	CKEDITOR.config.height = 220;
-	CKEDITOR.config.autoGrow_minHeight = 170;
-	CKEDITOR.replace('LetterEditor');	
-	CKEDITOR.add;
 }
 
 LetterObject = new Letter();
 
 Letter.prototype.SaveLetter = function(){
 
-	mask = new Ext.LoadMask(this.letterPanel, {msg:'در حال ذخيره سازي...'});
+	if(!CKEDITOR.instances.LetterEditor)
+		return;
+	mask = new Ext.LoadMask(this.TabPanel, {msg:'در حال ذخيره سازي...'});
 	mask.show();  
 	   
 	this.letterPanel.getForm().submit({
@@ -374,14 +484,14 @@ Letter.prototype.SaveLetter = function(){
 			mask.hide();
 			me = LetterObject;
 			me.LetterID = action.result.data;
-			me.letterPanel.down("[itemId=pagesView]").getStore().proxy.extraParams = {
+			me.TabPanel.down("[itemId=pagesView]").getStore().proxy.extraParams = {
 				LetterID : me.LetterID
 			};
-			me.letterPanel.down("[itemId=pagesView]").getStore().load();
-			me.letterPanel.down("[itemId=btn_send]").enable();
-			me.letterPanel.down("[itemId=attach_tab]").enable();
-			me.letterPanel.down("[itemId=customer_tab]").enable();
-			
+			me.TabPanel.down("[itemId=pagesView]").getStore().load();
+			me.TabPanel.down("[itemId=btn_send]").enable();
+			me.TabPanel.down("[itemId=attach_tab]").enable();
+			me.TabPanel.down("[itemId=customer_tab]").enable();
+			me.TabPanel.down("[itemId=notes_tab]").enable();			
 		},
 		failure : function(form,action){
 			mask.hide();
@@ -400,7 +510,7 @@ Letter.prototype.DeletePage = function(DocumentID, RowID){
 		if(btn == "no")
 			return;
 		
-		mask = new Ext.LoadMask(LetterObject.letterPanel, {msg:'در حال ذخيره سازي...'});
+		mask = new Ext.LoadMask(LetterObject.Ta, {msg:'در حال ذخيره سازي...'});
 		mask.show();  
 
 		Ext.Ajax.request({
@@ -414,7 +524,7 @@ Letter.prototype.DeletePage = function(DocumentID, RowID){
 
 			success : function(){
 				mask.hide();
-				LetterObject.letterPanel.down("[itemId=pagesView]").getStore().load();
+				LetterObject.TabPanel.down("[itemId=pagesView]").getStore().load();
 			},
 			failure : function(){
 				mask.hide();
@@ -461,6 +571,49 @@ Letter.prototype.AfterSend = function(){
 	framework.CloseTab(LetterObject.TabID);
 		if(typeof DraftLetterObject == "object")
 			DraftLetterObject.grid.getStore().load();
+}
+
+Letter.prototype.AddToTemplates = function(){
+	
+	if(!this.TemplatesWin)
+	{
+		this.TemplatesWin = new Ext.window.Window({
+			width : 500,			
+			height : 100,
+			modal : true,
+			bodyStyle : "background-color:white;",
+			closeAction : "hide",
+			items : [{
+				xtype : "textfield",
+				name : "TemplateTitle",
+				emptyText : "عنوان الگو ...",
+				width : 480
+			}],
+			buttons :[{
+				text : "اضافه به الگو",
+				iconCls  : "add",
+				handler : function(){
+					if(LetterObject.TemplatesWin.down("[name=TemplateTitle]").getValue() == "")
+						return;
+					Ext.Ajax.request({
+						url : LetterObject.address_prefix + "letter.data.php?task=AddToTemplates",
+						method : "post",
+						params :{
+							context : CKEDITOR.instances.LetterEditor.getData(),
+							TemplateTitle : LetterObject.TemplatesWin.down("[name=TemplateTitle]").getValue()
+						},
+						success : function(){
+							LetterObject.TemplatesWin.hide();
+						}
+					});
+				}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.TemplatesWin);
+	}
+
+	this.TemplatesWin.show();
+	this.TemplatesWin.center();
 }
 
 </script>

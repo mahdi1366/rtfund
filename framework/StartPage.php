@@ -110,6 +110,25 @@ function FrameworkStartPage(){
 			autoLoad : true
 		}
     });
+	
+	new Ext.panel.Panel({
+		renderTo : this.get("panelNotes"),
+		title : "یادآوری ها",
+        width: 800,
+		autoScroll : true,
+		frame : true,
+		autoHeight : true,
+        layout: 'fit',
+        loader : {
+			url : "../office/notes.php",
+			params : {
+				ExtTabID : this.TabID
+			},
+			scripts : true,
+			autoLoad : true
+		}
+    });
+	
 	<?if($LoanAccess){?>
 	new Ext.panel.Panel({
 		renderTo : this.get("panel4"),
@@ -215,10 +234,10 @@ FrameworkStartPageObject = new FrameworkStartPage();
 		<td><div id="panel2"></div></td>
 	</tr>
 	<tr>
-		<td colspan="5">&nbsp;</td>
+		<td id="panelNotes" colspan="5">&nbsp;</td>
 	</tr>
 	<tr>
-		<td id="panel4" colspan="5"></td>
+		<td id="panel4" colspan="5">&nbsp;</td>
 	</tr>
 	<tr>
 		<td colspan="5">&nbsp;</td>

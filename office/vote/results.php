@@ -139,7 +139,8 @@ function VoteResult()
                 type: 'Numeric',
                 position: 'left',
                 fields: ['data'],
-                maximum: 100
+                maximum: 100,minimum : 0
+
             }, {
                 type: 'Category',
                 position: 'bottom',
@@ -173,9 +174,9 @@ function VoteResult()
 				tips: {
                   trackMouse: true,
                   width: 250,
-                  height: 28,
+                  autoHeight: true,
                   renderer: function(storeItem, item) {
-                    this.setTitle(storeItem.get('ItemTitle') + ' ' + storeItem.get('data'));
+                    this.setTitle(storeItem.get('ItemTitle') + ' [ ' + storeItem.get('data') + ' % ]');
                   }
                 }
             }]

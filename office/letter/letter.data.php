@@ -104,26 +104,27 @@ function SelectDraftLetters() {
 function ReceivedSummary(){
 	
 	$temp = PdoDataAccess::runquery("
-		select SendType,InfoDesc SendTypeDesc, count(*) totalCnt, sum(if(IsSeen='NO',1,0)) newCnt
+		select s.SendType,InfoDesc SendTypeDesc, count(*) totalCnt, sum(if(s.IsSeen='NO',1,0)) newCnt
 		from OFC_send s
 			join BaseInfo on(TypeID=12 AND SendType=InfoID)
-		where  IsDeleted='NO' AND s.ToPersonID=" . $_SESSION["USER"]["PersonID"] . "
-		group by SendType");		
+			left join OFC_send s2 on(s2.LetterID=s.LetterID AND s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
+		where s2.SendID is null AND s.IsDeleted='NO' AND s.ToPersonID=" . $_SESSION["USER"]["PersonID"] . "
+		group by s.SendType");		
 	
 	return $temp;
 }
 
 function SelectReceivedLetters(){
 	
-	$where = " AND IsDeleted='NO'";
+	$where = " AND s.IsDeleted='NO'";
 	$param = array();
 	
 	if(isset($_REQUEST["deleted"]) && $_REQUEST["deleted"] == "true")
-		$where = " AND IsDeleted='YES'";
+		$where = " AND s.IsDeleted='YES'";
 	
 	if(!empty($_REQUEST["SendType"]))
 	{
-		$where .= " AND SendType=:st";
+		$where .= " AND s.SendType=:st";
 		$param[":st"] = $_REQUEST["SendType"];
 	}
 	
@@ -139,6 +140,7 @@ function SelectReceivedLetters(){
 function SelectSendedLetters(){
 	
 	$dt = OFC_letters::SelectSendedLetters();
+	//print_r(ExceptionHandler::PopAllExceptions());
 	$cnt = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	
@@ -175,6 +177,19 @@ function SelectArchiveLetters(){
 	die();
 }
 
+function selectOuterSendType(){
+	
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=76");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function selectAccessType(){
+	
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=77");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
 //.............................................
 
 function SaveLetter($dieing = true) {
@@ -191,8 +206,6 @@ function SaveLetter($dieing = true) {
 			die();
 		}
 	}
-	$Letter->RefShow = isset($Letter->RefShow) ? "YES" : "NO";
-	
     if ($Letter->LetterID == '') {
 		$Letter->PersonID = $_SESSION["USER"]["PersonID"];
 		$Letter->LetterDate = PDONOW;
@@ -359,6 +372,8 @@ function SendLetter(){
 		$obj->ToPersonID = $toPersonID;
 		$obj->SendDate = PDONOW;
 		$obj->SendType = $_POST[$index . "_SendType"];
+		$obj->ResponseTimeout = $_POST[$index . "_ResponseTimeout"];
+		$obj->FollowUpDate = $_POST[$index . "_FollowUpDate"];
 		$obj->IsUrgent = $_POST[$index . "_IsUrgent"];
 		$obj->IsCopy = isset($_POST[$index . "_IsCopy"]) ? "YES" : "NO";
 		$obj->SendComment = $_POST[$index . "_SendComment"];
@@ -510,7 +525,7 @@ function RemoveLetterFromFolder(){
 function GetLetterCustomerss(){
 
 	$dt = PdoDataAccess::runquery("
-		select RowID,LetterID,IsHide,o.PersonID,concat_ws(' ',CompanyName,fname,lname) fullname 
+		select RowID,LetterID,IsHide,LetterTitle,o.PersonID,concat_ws(' ',CompanyName,fname,lname) fullname 
 		from OFC_LetterCustomers o join BSC_persons using(PersonID)
 		where LetterID=?", array($_REQUEST["LetterID"]));
 	
@@ -539,6 +554,95 @@ function DeleteLetterCustomer(){
 	$obj = new OFC_LetterCustomers($_POST["RowID"]);
 	$result = $obj->Remove();
 	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//.............................................
+
+function GetLetterNotes(){
+
+	$dt = OFC_LetterNotes::Get(" AND LetterID=? AND PersonID=?", 
+		array($_REQUEST["LetterID"], $_SESSION["USER"]["PersonID"]));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function GetRemindNotes(){
+
+	$dt = OFC_LetterNotes::GetRemindNotes();
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SeeNote(){
+	
+	$obj = new OFC_LetterNotes();
+	$obj->NoteID = $_POST["NoteID"];
+	$obj->IsSeen = "YES";
+	$result = $obj->Edit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function SaveLetterNote(){
+	
+	$obj = new OFC_LetterNotes();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	$obj->PersonID = $_SESSION["USER"]["PersonID"];
+	
+	if($obj->NoteID == "")
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteLetterNote(){
+	
+	$obj = new OFC_LetterNotes($_POST["NoteID"]);
+	$result = $obj->Remove();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//.............................................
+
+function SelectTemplates(){
+
+	$temp = OFC_templates::Get();
+	echo dataReader::getJsonData($temp->fetchAll(), $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function AddToTemplates(){
+	
+	$obj = new OFC_templates();
+	$obj->FillObjectByArray($obj, $_POST);
+	
+	$result = $obj->Add();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function SaveTemplates(){
+	
+	$obj = new OFC_templates();
+	$obj->FillObjectByArray($obj, $_POST);
+	
+	$result = $obj->Edit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteTemplate(){
+	
+	$obj = new OFC_templates($_POST["TemplateID"]);
+	$result = $obj->Remove();
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }

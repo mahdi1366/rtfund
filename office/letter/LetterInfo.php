@@ -12,6 +12,13 @@ $LetterID = !empty($_POST["LetterID"]) ? $_POST["LetterID"] : "";
 if(empty($LetterID))
 	die();
 
+$dt = OFC_send::GetAll("LetterID=?", array($LetterID));
+if(count($dt) == 0)
+{
+	require_once 'NewLetter.php';
+	die();
+}
+
 $ForView = isset($_POST["ForView"]) && $_POST["ForView"] == "true" ? true : false;
 
 $LetterObj = new OFC_letters($LetterID);
@@ -154,14 +161,14 @@ function LetterInfo(){
 			handler : function(){
 				LetterInfoObject.EditLetter();
 			}
-		});
+		},'-');
 		buttons.push({
 			text : "امضاء نامه",
 			iconCls : "sign",
 			handler : function(){
 				LetterInfoObject.SignLetter();
 			}
-		});
+		},'-');
 	<?} if(!$ForView){?>
 		buttons.push({
 			text : "ارجاع",
@@ -170,14 +177,14 @@ function LetterInfo(){
 			handler : function(){
 				LetterInfoObject.SendWindowShow();
 			}
-		});
+		},'-');
 		buttons.push({
 			text : "بایگانی",
 			iconCls : "archive",
 			handler : function(){
 				LetterInfoObject.ArchiveWindowShow();
 			}
-		});
+		},'-');
 	<?}?>	
 	buttons.push({
 		text : "چاپ",
@@ -186,28 +193,31 @@ function LetterInfo(){
 			window.open( LetterInfoObject.address_prefix + 
 				"PrintLetter.php?LetterID=" + <?= $LetterID ?>); 
 		}
-	});
+	},'-');
 	
 	this.tabPanel = new Ext.TabPanel({
 		renderTo: this.get("mainForm"),
 		activeTab: 0,
 		plain:true,
+		height : 490,
 		autoHeight : true,
-		width: 700,
+		width: 800,
 		defaults:{
 			autoWidth : true            
 		},
 		items:[{
 			title : "متن نامه",
+			tbar : {
+				items :buttons
+			},
 			itemId : "tab_letter",
 			items :[{
 				xtype : "container",
+				height : 400,
 				autoScroll: true,
 				cls : "LetterContent",
 				html : '<?= $content ?>'
-			}],
-			buttons : buttons
-			
+			}]			
 		},{
 			title : "پیوست های نامه",
 			loader : {
@@ -266,6 +276,26 @@ function LetterInfo(){
 							LetterID : LetterInfoObject.LetterID,
 							ExtTabID : this.getEl().id,
 							editable : "false"
+						}
+					});
+				}
+			}
+		},{
+			title : "یادداشت های نامه",
+			loader : {
+				url : this.address_prefix + "LetterNotes.php",
+				method: "POST",
+				text: "در حال بار گذاری...",
+				scripts : true
+			},
+			listeners : {
+				activate : function(){
+					if(this.loader.isLoaded)
+						return;
+					this.loader.load({
+						params : {
+							LetterID : LetterInfoObject.LetterID,
+							ExtTabID : this.getEl().id
 						}
 					});
 				}
@@ -428,4 +458,4 @@ LetterInfo.prototype.AfterSend = function(){
 		}
 </style>
 	<br>
-	<div style="margin-right : 20px" id="mainForm"></div>
+	<div style="margin-right : 8px" id="mainForm"></div>

@@ -219,7 +219,7 @@ function SelectChart1Data(){
 		from VOT_FilledItems f join VOT_FormItems using(ItemID)
 			join BSC_persons using(PersonID)
 		
-		where FormID=? AND ItemValues<>'' AND locate('#',ItemValues) >0
+		where f.FormID=? AND ItemValues<>'' AND locate('#',ItemValues) >0
 		
 		group by ItemID,ItemValue", array($FormID));
 	
