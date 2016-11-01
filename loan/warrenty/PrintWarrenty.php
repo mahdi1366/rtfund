@@ -78,22 +78,22 @@ if($ReqObj->StatusID != WAR_STEPID_CONFIRM && empty($_POST["ReadOnly"]))
 						و بر طبق قرارداد منعقده بین <?= $ReqObj->organization ?>
 						و <?= $ReqObj->_fullname ?>
 						قرار است مبلغ <?= number_format($ReqObj->amount) ?>ریال 
-						( بحروف <?= CurrencyModulesclass::CurrencyToString($ReqObj->amount) ?> ریال )
+						( <?= CurrencyModulesclass::CurrencyToString($ReqObj->amount) ?> ریال )
 						بعنوان <?= $ReqObj->_TypeDesc ?>
 						به <?= $ReqObj->_fullname ?>
 						پرداخت گردد. این صندوق متعهد است هر مبلغی را تا میزان 
 						<?= number_format($ReqObj->amount) ?>ریال 
-						( بحروف <?= CurrencyModulesclass::CurrencyToString($ReqObj->amount) ?> ریال )
+						( <?= CurrencyModulesclass::CurrencyToString($ReqObj->amount) ?> ریال )
 						که از طرف سازمان <?= $ReqObj->organization ?>
 						مطالبه شود به محض دریافت اولین تقاضانامه کتبی و بدون اینکه احتیاج به صدور 
-						اضهارنامه یا اقدامی از مجرای اداری، قضایی ویا مقام دیگری و یا ذکر علتی داشته باشد،
+						اظهارنامه یا اقدامی از مجرای اداری، قضایی ویا مقام دیگری و یا ذکر علتی داشته باشد،
 						مبلغ مورد درخواست <?= $ReqObj->_fullname ?>
 						را در وجه یا حواله کرد <?= $ReqObj->organization ?>
 						بپردازد.
 						<br>
 						این ضمانت نامه تا آخر ساعت اداری روز 
 						<?= DateModules::miladi_to_shamsi($ReqObj->EndDate) ?>
-						( بحروف <?= DateModules::DateToString(DateModules::miladi_to_shamsi($ReqObj->EndDate)) ?>)
+						( <?= DateModules::DateToString(DateModules::miladi_to_shamsi($ReqObj->EndDate)) ?>)
 							معتبر بوده و بنا به درخواست <?= $ReqObj->organization ?>
 							برای مدتی که درخواست شود قابل تمدید خواهد بود و در صورتی که صندوق نتواند
 							و یا نخواهد مدت ضمانت نامه را تمدید نماید و یا 
@@ -104,13 +104,13 @@ if($ReqObj->StatusID != WAR_STEPID_CONFIRM && empty($_POST["ReadOnly"]))
 							<?= $ReqObj->organization ?>
 							پرداخت کند.
 						</div>
-						<br><br><br>
+						<br><br><br><br><br><br><br>
 						<div style="width:300px; float:left; font-family: titr" align="center">
 							صندوق پژوهش و فناوری خراسان رضوی
 							<br>
 							مدیر عامل 
 							<br>
-							دکتر حیدری
+							رسول عبدالهی
 						</div>
 					</td>
 				</tr>

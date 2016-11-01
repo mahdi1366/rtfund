@@ -95,8 +95,7 @@ if($editable)
 if($editable)
 {
 	$dg->enableRowEdit = true;
-	//$dg->rowEditOkHandler = "function(store,record){return LoanPayObject.BeforeSave(store,record);}";
-	$dg->rowEditOkHandler = "function(store,record){return LoanPayObject.SavePartPayment('',record);}";
+	$dg->rowEditOkHandler = "function(store,record){return LoanPayObject.SaveBackPay(record);}";
 	
 	$dg->addButton("AddBtn", "ایجاد ردیف پرداخت", "add", "function(){LoanPayObject.AddPay();}");
 	
@@ -305,12 +304,12 @@ LoanPay.RegDocRender = function(v,p,r){
 	
 	if(r.data.LocalNo == null)
 		return "<div align='center' title='صدور سند' class='send' "+
-		"onclick='LoanPayObject.BeforeSave(1);' " +
+		"onclick='LoanPayObject.BeforeRegisterDoc(1);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 	else if(r.data.DocStatus == "RAW" && r.data.PayType != "4")
 		return r.data.LocalNo + "<div align='center' title='ویرایش سند' class='edit' "+
-		"onclick='LoanPayObject.BeforeSave(2);' " +
+		"onclick='LoanPayObject.BeforeRegisterDoc(2);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 	else
@@ -319,79 +318,173 @@ LoanPay.RegDocRender = function(v,p,r){
 
 var LoanPayObject = new LoanPay();
 	
-LoanPay.prototype.BeforeSave = function(mode){
+LoanPay.prototype.BeforeRegisterDoc = function(mode){
 	
-	record =  this.grid.getSelectionModel().getLastSelected(); 
 	if(!this.BankWin)
 	{
 		this.BankWin = new Ext.window.Window({
 			width : 400,
-			height : 220,
+			height : 350,
+			bodyStyle : "background-color:white",
 			modal : true,
 			closeAction : "hide",
 			items : [{
-				xtype : "combo",
-				store: new Ext.data.Store({
-					fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
-						name : "title",
-						convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
-					}],
-					proxy: {
-						type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=6',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
+				xtype : "form",
+				border : false,
+				items :[{
+					xtype : "combo",
+					width : 385,
+					fieldLabel : "حساب مربوطه",
+					colspan : 2,
+					store: new Ext.data.Store({
+						fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+							name : "fullDesc",
+							convert : function(value,record){
+								return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+							}				
+						}],
+						proxy: {
+							type: 'jsonp',
+							url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						}
+					}),
+					typeAhead: false,
+					name : "CostID",
+					valueField : "CostID",
+					displayField : "fullDesc",
+					listeners : {
+						select : function(combo,records){
+							if(records[0].data.TafsiliType != null)
+							{
+								LoanPayObject.BankWin.down("[itemId=TafsiliID]").setValue();
+								LoanPayObject.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
+								LoanPayObject.BankWin.down("[itemId=TafsiliID]").getStore().load();
+							}
+							if(records[0].data.TafsiliType2 != null)
+							{
+								LoanPayObject.BankWin.down("[itemId=TafsiliID2]").setValue();
+								LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType2;
+								LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getStore().load();
+							}
+						}
 					}
-				}),
-				emptyText:'انتخاب بانک ...',
-				typeAhead: false,
-				pageSize : 10,
-				width : 385,
-				valueField : "TafsiliID",
-				itemId : "TafsiliID",
-				displayField : "title"
-			},{
-				xtype : "combo",
-				store: new Ext.data.Store({
-					fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
-						name : "title",
-						convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
-					}],
-					proxy: {
-						type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=3',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					}
-				}),
-				emptyText:'انتخاب حساب ...',
-				typeAhead: false,
-				pageSize : 10,
-				width : 385,
-				valueField : "TafsiliID",
-				itemId : "TafsiliID2",
-				displayField : "title"
-			},{
-				xtype : "checkbox",
-				boxLabel : "از حساب مرکز",
-				itemId : "CenterAccount",
-				inputValue : "1"
-			},{
-				xtype : "combo",
-				store : new Ext.data.SimpleStore({
-					proxy: {
-						type: 'jsonp',
-						url: this.address_prefix + '../../framework/baseInfo/baseInfo.data.php?' +
-							"task=SelectBranches",
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					fields : ['BranchID','BranchName'],
-					autoLoad : true					
-				}),
-				fieldLabel : "شعبه واسط ",
-				queryMode : 'local',
-				width : 385,
-				displayField : "BranchName",
-				valueField : "BranchID",
-				itemId : "BranchID"
+				},{
+					xtype : "combo",
+					store: new Ext.data.Store({
+						fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
+							name : "title",
+							convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
+						}],
+						proxy: {
+							type: 'jsonp',
+							url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						}
+					}),
+					emptyText:'انتخاب تفصیلی1 ...',
+					typeAhead: false,
+					pageSize : 10,
+					width : 385,
+					valueField : "TafsiliID",
+					itemId : "TafsiliID",
+					name : "TafsiliID",
+					displayField : "title"
+				},{
+					xtype : "combo",
+					store: new Ext.data.Store({
+						fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
+							name : "title",
+							convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
+						}],
+						proxy: {
+							type: 'jsonp',
+							url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						}
+					}),
+					emptyText:'انتخاب تفصیلی2 ...',
+					typeAhead: false,
+					pageSize : 10,
+					width : 385,
+					valueField : "TafsiliID",
+					itemId : "TafsiliID2",
+					name : "TafsiliID2",
+					displayField : "title"
+				},{
+					xtype : "fieldset",
+					width : 365,
+					title : "حساب مرکز",
+					items :[{
+						xtype : "checkbox",
+						boxLabel : "از حساب مرکز",
+						name : "CenterAccount",
+						itemId : "CenterAccount",
+						inputValue : "1"
+					},{
+						xtype : "combo",
+						store : new Ext.data.SimpleStore({
+							proxy: {
+								type: 'jsonp',
+								url: this.address_prefix + '../../framework/baseInfo/baseInfo.data.php?' +
+									"task=SelectBranches",
+								reader: {root: 'rows',totalProperty: 'totalCount'}
+							},
+							fields : ['BranchID','BranchName'],
+							autoLoad : true					
+						}),
+						fieldLabel : "شعبه واسط ",
+						queryMode : 'local',
+						displayField : "BranchName",
+						valueField : "BranchID",
+						itemId : "BranchID",
+						name : "BranchID"
+					},{
+						xtype : "combo",
+						width : 385,
+						fieldLabel : "حساب شعبه اصلی",
+						colspan : 2,
+						store: new Ext.data.Store({
+							fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+								name : "fullDesc",
+								convert : function(value,record){
+									return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+								}				
+							}],
+							proxy: {
+								type: 'jsonp',
+								url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
+								reader: {root: 'rows',totalProperty: 'totalCount'}
+							}
+						}),
+						typeAhead: false,
+						name : "FirstCostID",
+						valueField : "CostID",
+						displayField : "fullDesc"
+					},{
+						xtype : "combo",
+						width : 385,
+						fieldLabel : "حساب شعبه واسط",
+						colspan : 2,
+						store: new Ext.data.Store({
+							fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+								name : "fullDesc",
+								convert : function(value,record){
+									return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+								}				
+							}],
+							proxy: {
+								type: 'jsonp',
+								url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
+								reader: {root: 'rows',totalProperty: 'totalCount'}
+							}
+						}),
+						typeAhead: false,
+						name : "SecondCostID",
+						valueField : "CostID",
+						displayField : "fullDesc"
+					}]
+				}]
 			}],
 			buttons :[{
 				text : "ذخیره",
@@ -406,25 +499,21 @@ LoanPay.prototype.BeforeSave = function(mode){
 		Ext.getCmp(this.TabID).add(this.BankWin);
 	}
 	
+	record =  this.grid.getSelectionModel().getLastSelected(); 
 	if(record && record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
 	{
-		LoanPayObject.SavePartPayment("", record);
+		LoanPayObject.SaveBackPay(record);
 		return;
 	}
 	
 	this.BankWin.show();
 	this.BankWin.down("[itemId=btn_save]").setHandler(function(){ 
 		LoanPayObject.BankWin.hide();
-		LoanPayObject.RegisterDoc(
-			LoanPayObject.BankWin.down("[itemId=TafsiliID]").getValue(),
-			LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getValue(),
-			LoanPayObject.BankWin.down("[itemId=CenterAccount]").getValue(),
-			LoanPayObject.BankWin.down("[itemId=BranchID]").getValue(),
-			record, mode); 
+		LoanPayObject.RegisterDoc(mode); 
 	});
 }
 	
-LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
+LoanPay.prototype.SaveBackPay = function(record){
 
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
@@ -434,9 +523,7 @@ LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 		method: "POST",
 		params: {
 			task: "SaveBackPay",
-			//BankTafsili : BankTafsili,
-			record: Ext.encode(record.data),
-			RegisterDoc : "0"
+			record: Ext.encode(record.data)
 		},
 		success: function(response){
 			mask.hide();
@@ -445,10 +532,6 @@ LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 			if(st.success)
 			{   
 				LoanPayObject.grid.getStore().load();
-				if(record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
-					Ext.MessageBox.alert("","سند حسابداری هنگام وصول چک صادر می شود");
-				else if(LoanPayObject.BankWin && LoanPayObject.BankWin.down("[name=RegisterDoc]").checked)
-					Ext.MessageBox.alert("","سند حسابداری مربوطه صادر گردید");
 			}
 			else
 			{
@@ -459,43 +542,31 @@ LoanPay.prototype.SavePartPayment = function(BankTafsili, record){
 	});
 }
 
-LoanPay.prototype.RegisterDoc = function(BankTafsili, AccountTafsili, CenterAccount, BranchID, record, mode){
-
-	if(CenterAccount == true && BranchID == null)
-	{
-		Ext.MessageBox.alert("Error","برای ثبت حساب مرکز انتخاب شعبه واسط الزامی است");
-		return;
-	}
+LoanPay.prototype.RegisterDoc = function(mode){
+	
+	record =  this.grid.getSelectionModel().getLastSelected(); 
 	
 	mask = new Ext.LoadMask(this.BankWin, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 	
 	switch(mode){
-		case 1 : task = "SaveBackPay"; break;
-		case 2 : task = "EditPartPayDoc"; break;
+		case 1 : task = "RegisterBackPayDoc"; break;
+		case 2 : task = "EditBackPayDoc"; break;
 		case 3 : task = "GroupSavePay"; break;
 	}
+	
 	params = {
-			task: task,
-			BankTafsili : BankTafsili,
-			AccountTafsili : AccountTafsili,
-			CenterAccount : CenterAccount,
-			BranchID : BranchID,
-			RegisterDoc : "1"
-		};
+		task: task,
+		BackPayID : record.data.BackPayID
+	};
+	params = mergeObjects(params, this.BankWin.down('form').getForm().getValues());
 		
 	if(mode == 3)
 	{
 		params.parts = Ext.encode(this.GroupPays);
 		params = mergeObjects(params, this.groupWin.down('form').getForm().getValues());
 	}
-	else if(mode == 2)
-	{
-		params.BackPayID = record.data.BackPayID;
-	}
-	else
-		params.record = Ext.encode(record.data);
-
+	
 	Ext.Ajax.request({
 		url: this.address_prefix +'request.data.php',
 		method: "POST",
@@ -728,7 +799,7 @@ LoanPay.prototype.BeforeSaveGroupPay = function(){
 				handler : function(){
 					if(!this.up('window').down('form').getForm().isValid())
 						return;
-					LoanPayObject.BeforeSave(3);
+					LoanPayObject.BeforeRegisterDoc(3);
 				}		
 			},{
 				text : "بازگشت",

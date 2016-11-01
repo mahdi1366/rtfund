@@ -860,33 +860,7 @@ function SaveBackPay(){
 		echo Response::createObjectiveResponse(false, "خطا در ثبت ردیف پرداخت");
 		die();
 	}
-	if($_REQUEST["RegisterDoc"] == "0")
-	{
-		$pdo->commit();
-		echo Response::createObjectiveResponse(true, "");
-		die();
-	}
-	if(empty($obj->ChequeNo) || $obj->ChequeStatus == "2")
-	{
-		$PartObj = new LON_ReqParts($obj->PartID);
-		$ReqObj = new LON_requests($PartObj->RequestID);
-		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
-		if($PersonObj->IsSupporter == "YES")
-			$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, 
-				$_POST["BankTafsili"], $_POST["AccountTafsili"], 
-				$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
-		else
-			$result = RegisterCustomerPayDoc(null, $obj, 
-				$_POST["BankTafsili"], $_POST["AccountTafsili"],
-				$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
-		if(!$result)
-		{
-			$pdo->rollback();
-			//print_r(ExceptionHandler::PopAllExceptions());
-			echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
-			die();
-		}
-	}
+	
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
 	die();
@@ -1237,7 +1211,48 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 	return $returnArr;
 }
 
-function EditPartPayDoc(){
+function RegisterBackPayDoc(){
+	
+	$obj = new LON_BackPays($_POST["BackPayID"]);
+	$PartObj = new LON_ReqParts($obj->PartID);
+	$ReqObj = new LON_requests($PartObj->RequestID);
+	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	if($PersonObj->IsSupporter == "YES")
+		$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, 
+			$_POST["CostID"], 
+			$_POST["TafsiliID"], 
+			$_POST["TafsiliID2"], 
+			isset($_POST["CenterAccount"]) ? true : false,
+			$_POST["BranchID"],
+			$_POST["FirstCostID"],
+			$_POST["SecondCostID"], $pdo);
+	else
+		$result = RegisterCustomerPayDoc(null, $obj, 
+			$_POST["CostID"], 
+			$_POST["TafsiliID"], 
+			$_POST["TafsiliID2"], 
+			isset($_POST["CenterAccount"]) ? true : false,
+			$_POST["BranchID"],
+			$_POST["FirstCostID"],
+			$_POST["SecondCostID"], $pdo);
+	if(!$result)
+	{
+		$pdo->rollback();
+		//print_r(ExceptionHandler::PopAllExceptions());
+		echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function EditBackPayDoc(){
 	
 	$obj = new LON_BackPays($_POST["BackPayID"]);
 	
@@ -1260,11 +1275,23 @@ function EditPartPayDoc(){
 	$ReqObj = new LON_requests($obj->_RequestID);
 	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 	if($PersonObj->IsSupporter == "YES")
-		$result = RegisterSHRTFUNDCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], 
-			$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
+		$result = RegisterSHRTFUNDCustomerPayDoc($DocObj, $obj, 
+				$_POST["CostID"], 
+				$_POST["TafsiliID"], 
+				$_POST["TafsiliID2"], 
+				isset($_POST["CenterAccount"]) ? true : false,
+				$_POST["BranchID"],
+				$_POST["FirstCostID"],
+				$_POST["SecondCostID"], $pdo);
 	else
-		$result = RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], 
-			$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
+		$result = RegisterCustomerPayDoc($DocObj, $obj, 
+				$_POST["CostID"], 
+				$_POST["TafsiliID"], 
+				$_POST["TafsiliID2"], 
+				isset($_POST["CenterAccount"]) ? true : false,
+				$_POST["BranchID"],
+				$_POST["FirstCostID"],
+				$_POST["SecondCostID"], $pdo);
 	
 	if(!$result)
 	{
@@ -1304,11 +1331,23 @@ function GroupSavePay(){
 		$ReqObj = new LON_requests($PartObj->RequestID);
 		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 		if($PersonObj->IsSupporter == "YES")
-			$result = RegisterSHRTFUNDCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], 
-				$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo, true);
+			$result = RegisterSHRTFUNDCustomerPayDoc($DocObj, $obj, 
+				$_POST["CostID"], 
+				$_POST["TafsiliID"], 
+				$_POST["TafsiliID2"], 
+				isset($_POST["CenterAccount"]) ? true : false,
+				$_POST["BranchID"],
+				$_POST["FirstCostID"],
+				$_POST["SecondCostID"], $pdo, true);
 		else
-			$result = RegisterCustomerPayDoc($DocObj, $obj, $_POST["BankTafsili"], 
-				$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo, true);
+			$result = RegisterCustomerPayDoc($DocObj, 
+				$_POST["CostID"], 
+				$_POST["TafsiliID"], 
+				$_POST["TafsiliID2"], 
+				isset($_POST["CenterAccount"]) ? true : false,
+				$_POST["BranchID"],
+				$_POST["FirstCostID"],
+				$_POST["SecondCostID"], $pdo, true);
 		if(!$result)
 		{
 			$pdo->rollback();

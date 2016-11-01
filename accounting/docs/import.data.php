@@ -10,6 +10,7 @@ require_once getenv("DOCUMENT_ROOT") . '/framework/person/persons.class.php';
 require_once getenv("DOCUMENT_ROOT") . '/loan/loan/loan.class.php';
 require_once getenv("DOCUMENT_ROOT") . '/loan/request/compute.inc.php';
 require_once getenv("DOCUMENT_ROOT") . '/accounting/docs/doc.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
 
 require_once inc_dataReader;
 require_once inc_response;
@@ -1340,8 +1341,8 @@ function EndPartDoc($ReqObj, $PartObj, $PaidAmount, $installmentCount, $pdo){
 	return true;
 }
 
-function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili, 
-		$CenterAccount, $BranchID, $pdo, $grouping=false){
+function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliID2, 
+		$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo, $grouping=false){
 	
 	/*@var $PayObj LON_BackPays */
 	$PartObj = new LON_ReqParts($PayObj->PartID);
@@ -1366,6 +1367,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
 	$CostCode_centerAccount = FindCostID("499");
+	$CostCode_UmAccount = FindCostID("900");
 	$CostCode_fund = FindCostID("100");
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
 	$CostCode_commitment = FindCostID("660-" . $LoanObj->_BlockCode);
@@ -1521,14 +1523,14 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 		return false;
 	}*/
 	// -------------- bank ---------------
-	if($CenterAccount == "true")
+	if($CenterAccount)
 	{
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
-		$itemObj->CostID = $CostCode_centerAccount;
+		$itemObj->CostID = $FirstCostID;
 		$itemObj->DebtorAmount= $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;
 		if(!$itemObj->Add($pdo))
@@ -1545,7 +1547,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 		$Secobj->BranchID = $BranchID;
 		$Secobj->DocType = DOCTYPE_INSTALLMENT_PAYMENT;
 		$Secobj->description = "پرداخت قسط " . $PartObj->PartDesc . " وام شماره " . 
-				$ReqObj->RequestID . " به نام " . $ReqObj->_LoanPersonFullname;
+			$ReqObj->RequestID . " به نام " . $ReqObj->_LoanPersonFullname;
 
 		if(!$Secobj->Add($pdo))
 		{
@@ -1558,7 +1560,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
 		$itemObj->DocID = $Secobj->DocID;
-		$itemObj->CostID = $CostCode_centerAccount;
+		$itemObj->CostID = $SecondCostID;
 		$itemObj->DebtorAmount= 0;
 		$itemObj->CreditorAmount = $PayObj->PayAmount;
 		if(!$itemObj->Add($pdo))
@@ -1566,29 +1568,31 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 			ExceptionHandler::PushException("خطا در ایجاد سند");
 			return false;
 		}
+		
+		$CostObj = new ACC_CostCodes($CostID);
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
-		$itemObj->CostID = $PayObj->PayType == "3" ? $CostCode_fund : $CostCode_bank;
+		$itemObj->CostID = $CostID;
 		$itemObj->DebtorAmount= $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;
-		$itemObj->TafsiliType = TAFTYPE_BANKS;
-		if($BankTafsili != "")
-			$itemObj->TafsiliID = $BankTafsili;
-		$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-		if($AccountTafsili != "")
-			$itemObj->TafsiliID2 = $AccountTafsili;
+		$itemObj->TafsiliType = $CostObj->TafsiliType;
+		if($TafsiliID != "")
+			$itemObj->TafsiliID = $TafsiliID;
+		$itemObj->TafsiliType2 = $CostObj->TafsiliType2;
+		if($TafsiliID2 != "")
+			$itemObj->TafsiliID2 = $TafsiliID2;
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد سند");
 			return false;
-		}
+		}		
 	}
 	else
 	{
-		$CostID = "";
+		/*$CostID = "";
 		switch($PayObj->PayType)
 		{
 			case "5":
@@ -1599,8 +1603,9 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 				$CostID = $CostCode_fund; break;
 			default:
 				$CostID = $CostCode_bank;
-		}
+		}*/
 		
+		$CostObj = new ACC_CostCodes($CostID);
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliType2);
@@ -1609,15 +1614,13 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 		$itemObj->CostID = $CostID;
 		$itemObj->DebtorAmount= $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;
-		if($CostID == $CostCode_bank)
-		{
-			$itemObj->TafsiliType = TAFTYPE_BANKS;
-			if($BankTafsili != "")
-				$itemObj->TafsiliID = $BankTafsili;
-			$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-			if($AccountTafsili != "")
-				$itemObj->TafsiliID2 = $AccountTafsili;
-		}
+		$itemObj->TafsiliType = $CostObj->TafsiliType;
+		if($TafsiliID != "")
+			$itemObj->TafsiliID = $TafsiliID;
+		$itemObj->TafsiliType2 = $CostObj->TafsiliType2;
+		if($TafsiliID2 != "")
+			$itemObj->TafsiliID2 = $TafsiliID2;
+
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد سند");
@@ -1660,8 +1663,8 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili,
 	return true;
 }
 
-function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $AccountTafsili, 
-		$CenterAccount,$BranchID, $pdo, $grouping=false){
+function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliID2, 
+		$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo, $grouping=false){
 	
 	/*@var $PayObj LON_BackPays */
 	$PartObj = new LON_ReqParts($PayObj->PartID);
@@ -1795,14 +1798,14 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $Account
 	}
 
 	// -------------- bank ---------------
-	if($CenterAccount == "true")
+	if($CenterAccount)
 	{
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
-		$itemObj->CostID = $CostCode_centerAccount;
+		$itemObj->CostID = $FirstCostID;
 		$itemObj->DebtorAmount= $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;
 		if(!$itemObj->Add($pdo))
@@ -1832,7 +1835,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $Account
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
 		$itemObj->DocID = $Secobj->DocID;
-		$itemObj->CostID = $CostCode_centerAccount;
+		$itemObj->CostID = $SecondCostID;
 		$itemObj->DebtorAmount= 0;
 		$itemObj->CreditorAmount = $PayObj->PayAmount;
 		if(!$itemObj->Add($pdo))
@@ -1840,20 +1843,22 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $Account
 			ExceptionHandler::PushException("خطا در ایجاد سند");
 			return false;
 		}
+		
+		$CostObj = new ACC_CostCodes($CostID);
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
-		$itemObj->CostID = $PayObj->PayType == "3" ? $CostCode_fund : $CostCode_bank;
+		$itemObj->CostID = $CostID;
 		$itemObj->DebtorAmount= $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;
-		$itemObj->TafsiliType = TAFTYPE_BANKS;
-		if($BankTafsili != "")
-			$itemObj->TafsiliID = $BankTafsili;
-		$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-		if($AccountTafsili != "")
-			$itemObj->TafsiliID2 = $AccountTafsili;
+		$itemObj->TafsiliType = $CostObj->TafsiliType;
+		if($TafsiliID != "")
+			$itemObj->TafsiliID = $TafsiliID;
+		$itemObj->TafsiliType2 = $CostObj->TafsiliType2;
+		if($TafsiliID2 != "")
+			$itemObj->TafsiliID2 = $TafsiliID2;
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد سند");
@@ -1862,6 +1867,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $Account
 	}
 	else
 	{
+		$CostObj = new ACC_CostCodes($CostID);
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliType2);
@@ -1870,12 +1876,12 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $BankTafsili, $Account
 		$itemObj->CostID = $PayObj->PayType == "3" ? $CostCode_fund : $CostCode_bank;
 		$itemObj->DebtorAmount= $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;
-		$itemObj->TafsiliType = TAFTYPE_BANKS;
-		if($BankTafsili != "")
-			$itemObj->TafsiliID = $BankTafsili;
-		$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-		if($AccountTafsili != "")
-			$itemObj->TafsiliID2 = $AccountTafsili;
+		$itemObj->TafsiliType = $CostObj->TafsiliType;
+		if($TafsiliID != "")
+			$itemObj->TafsiliID = $TafsiliID;
+		$itemObj->TafsiliType2 = $CostObj->TafsiliType2;
+		if($TafsiliID2 != "")
+			$itemObj->TafsiliID2 = $TafsiliID2;
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد سند");
@@ -2576,7 +2582,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost,$BankTafsili, $AccountTafsili,$B
 				TAFTYPE_PERSONS,
 				$PersonTafsili
 			));
-	if($dt[0][0]*1 < $ReqObj->amount*0.1)
+	if($WageCost == "209-10" && $dt[0][0]*1 < $ReqObj->amount*0.1)
 	{
 		ExceptionHandler::PushException("مانده حساب پس انداز مشتری کمتر از 10% مبلغ ضمانت نامه می باشد");
 		return false;
