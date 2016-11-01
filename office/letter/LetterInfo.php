@@ -216,7 +216,10 @@ function LetterInfo(){
 				height : 400,
 				autoScroll: true,
 				cls : "LetterContent",
-				html : '<?= $content ?>'
+				loader : {
+					url : this.address_prefix + "LetterContent.php?LetterID=<?= $LetterID ?>",
+					autoLoad : true
+				}				
 			}]			
 		},{
 			title : "پیوست های نامه",

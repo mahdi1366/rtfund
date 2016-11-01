@@ -64,6 +64,7 @@ Letter.prototype.LoadLetter = function(){
 				
 				me.TabPanel.down("[itemId=btn_send]").enable();
 				me.TabPanel.down("[itemId=attach_tab]").enable();	
+				me.TabPanel.down("[itemId=LetterPices]").enable();
 				me.TabPanel.down("[itemId=customer_tab]").enable();	
 				me.TabPanel.down("[itemId=notes_tab]").enable();					
 			}
@@ -316,9 +317,13 @@ Letter.prototype.BuildForms = function(){
 			}
 		},{
 			title : "تصاویر نامه",
+			itemId : "LetterPices",
 			style : "margin-top:10px",
+			disabled : true,
 			items : [{
-				xtype : "container",
+				xtype : "form",
+				border : false,
+				itemId : "LetterPicsPanel",
 				layout : "hbox",
 				items : [{
 					xtype : "filefield",
@@ -328,6 +333,7 @@ Letter.prototype.BuildForms = function(){
 				},{
 					xtype : "button",
 					text : "اضافه تصویر",
+					border : true,
 					iconCls : "add",
 					handler : function(){
 						if(this.up('panel').down("[name=PageFile]").getValue() == "")
@@ -335,7 +341,7 @@ Letter.prototype.BuildForms = function(){
 							Ext.MessageBox.alert("","ورود فایل صفحه الزامی است");
 							return;
 						}
-						LetterObject.SaveLetter();
+						LetterObject.SaveLetter(true);
 					}
 				}]
 			},new Ext.Panel({
@@ -359,8 +365,7 @@ Letter.prototype.BuildForms = function(){
 							'<div style="position:relative;float: right;padding:5px;width:100px;margin:5px">',
 							'<div class="thumb"><img style="width:100px;height:100px;cursor:pointer" ',
 								'src="/office/dms/ShowFile.php?RowID={RowID}&DocumentID={DocumentID}&ObjectID={ObjectID}" ',
-								'title="{DocumentTitle}" onclick="LetterObject.ShowPage({DocumentID})"></div>',
-							'<div style="width:100%;text-align:center">{DocDesc}</div>',
+								'title="{DocumentTitle}" onclick="LetterObject.ShowPage({DocumentID},{ObjectID})"></div>',
 							'<div class="cross x-btn-default-small" style="cursor:pointer;float: right;position: absolute;top:8px;',
 								'height: 19px; width: 19px; margin: 4px;"',
 								' onclick="LetterObject.DeletePage({DocumentID},{RowID})"></div>',
@@ -442,7 +447,7 @@ Letter.prototype.BuildForms = function(){
 			text : "ذخیره",
 			iconCls : "save",
 			handler : function(){
-				LetterObject.SaveLetter();
+				LetterObject.SaveLetter(false);
 			}
 		},{
 			text : "اضافه متن نامه به الگوها",
@@ -464,21 +469,26 @@ Letter.prototype.BuildForms = function(){
 
 LetterObject = new Letter();
 
-Letter.prototype.SaveLetter = function(){
+Letter.prototype.SaveLetter = function(SendFile){
 
-	if(!CKEDITOR.instances.LetterEditor)
-		return;
 	mask = new Ext.LoadMask(this.TabPanel, {msg:'در حال ذخيره سازي...'});
 	mask.show();  
-	   
-	this.letterPanel.getForm().submit({
+	
+	params = {LetterID : this.LetterID};
+	if(CKEDITOR.instances.LetterEditor)
+		params.context = CKEDITOR.instances.LetterEditor.getData();
+	
+	if(SendFile)
+	   form = this.TabPanel.down("[itemId=LetterPicsPanel]").getForm();
+   else
+	   form = this.letterPanel.getForm();
+   
+	form.submit({
 		clientValidation: true,
 		url: this.address_prefix + 'letter.data.php?task=SaveLetter' , 
+		isUpload : true,
 		method: "POST",
-		params : {
-			LetterID : this.LetterID,
-			context : CKEDITOR.instances.LetterEditor.getData()
-		},
+		params : params,
 		
 		success : function(form,action){
 			mask.hide();
@@ -490,6 +500,7 @@ Letter.prototype.SaveLetter = function(){
 			me.TabPanel.down("[itemId=pagesView]").getStore().load();
 			me.TabPanel.down("[itemId=btn_send]").enable();
 			me.TabPanel.down("[itemId=attach_tab]").enable();
+			me.TabPanel.down("[itemId=LetterPices]").enable();			
 			me.TabPanel.down("[itemId=customer_tab]").enable();
 			me.TabPanel.down("[itemId=notes_tab]").enable();			
 		},
@@ -510,7 +521,7 @@ Letter.prototype.DeletePage = function(DocumentID, RowID){
 		if(btn == "no")
 			return;
 		
-		mask = new Ext.LoadMask(LetterObject.Ta, {msg:'در حال ذخيره سازي...'});
+		mask = new Ext.LoadMask(LetterObject.TabPanel, {msg:'در حال حذف...'});
 		mask.show();  
 
 		Ext.Ajax.request({
@@ -563,7 +574,7 @@ Letter.prototype.SendWindowShow = function(){
 			LetterID : this.LetterID
 		}
 	});
-	this.SaveLetter();
+	this.SaveLetter(false);
 }
 
 Letter.prototype.AfterSend = function(){

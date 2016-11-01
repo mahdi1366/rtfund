@@ -2045,7 +2045,7 @@ function RegisterEndRequestDoc($ReqObj, $pdo){
 			$itemObj->SourceID = $row["BackPayID"];
 			$itemObj->Add($pdo);
 			
-			$SumAmount += $row["ParamValue"]*1;
+			$SumAmount += $row["PayAmount"]*1;
 		}
 		//---------------------------------------------------------
 		if($SumAmount > 0)
@@ -2556,7 +2556,6 @@ function RegisterWarrantyDoc($ReqObj, $WageCost,$BankTafsili, $AccountTafsili,$B
 	$CostCode_guaranteeCount2 = FindCostID("905-01");
 	//------------------------------------------------
 	$CycleID = substr(DateModules::miladi_to_shamsi($ReqObj->StartDate), 0 , 4);
-	$BranchID = "1";
 	//------------------ find tafsilis ---------------
 	$PersonTafsili = FindTafsiliID($ReqObj->PersonID, TAFTYPE_PERSONS);
 	if(!$PersonTafsili)
@@ -2576,11 +2575,12 @@ function RegisterWarrantyDoc($ReqObj, $WageCost,$BankTafsili, $AccountTafsili,$B
 	
 	$dt = PdoDataAccess::runquery("select sum(CreditorAmount-DebtorAmount) remain
 		from ACC_DocItems join ACC_docs using(DocID) where CycleID=? AND CostID=?
-			AND TafsiliType=? AND TafsiliID=?", array(
+			AND TafsiliType=? AND TafsiliID=? AND BranchID=?", array(
 				$CycleID,
 				$CostCode_pasandaz,
 				TAFTYPE_PERSONS,
-				$PersonTafsili
+				$PersonTafsili,
+				$ReqObj->BranchID
 			));
 	if($WageCost == "209-10" && $dt[0][0]*1 < $ReqObj->amount*0.1)
 	{
@@ -2598,11 +2598,12 @@ function RegisterWarrantyDoc($ReqObj, $WageCost,$BankTafsili, $AccountTafsili,$B
 		{
 			$dt = PdoDataAccess::runquery("select sum(CreditorAmount-DebtorAmount) remain
 			from ACC_DocItems join ACC_docs using(DocID) where CycleID=? AND CostID=?
-				AND TafsiliType=? AND TafsiliID=?", array(
+				AND TafsiliType=? AND TafsiliID=? AND BranchID=?", array(
 					$CycleID,
 					$Block_CostID,
 					TAFTYPE_PERSONS,
-					$PersonTafsili
+					$PersonTafsili,
+					$ReqObj->BranchID
 				));
 		}
 		$amount = $ReqObj->amount*1;
@@ -2624,7 +2625,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost,$BankTafsili, $AccountTafsili,$B
 		$DocObj->regPersonID = $_SESSION['USER']["PersonID"];
 		$DocObj->DocDate = PDONOW;
 		$DocObj->CycleID = $CycleID;
-		$DocObj->BranchID = $BranchID;
+		$DocObj->BranchID = $ReqObj->BranchID;
 		$DocObj->DocType = DOCTYPE_WARRENTY;
 		$DocObj->description = "ضمانت نامه شماره " . $ReqObj->RequestID . " به نام " . $ReqObj->_fullname;
 

@@ -190,7 +190,8 @@ MyLetter.LetterTypeRender = function(v,p,r){
 
 MyLetter.TitleRender = function(v,p,r){
 	
-	if(r.data.ResponseTimeout != "0000-00-00" && r.data.ResponseTimeout != null)
+	if(r.data.ResponseTimeout != "0000-00-00" && r.data.ResponseTimeout != null && 
+			r.data.ResponseTimeout != "")
 		v += "<br>مهلت پاسخ : " + MiladiToShamsi(r.data.ResponseTimeout);
 	return v;
 }
