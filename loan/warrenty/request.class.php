@@ -25,6 +25,7 @@ class WAR_requests extends OperationClass
 	public $StatusID;
 	public $ReqVersion;
 	public $IsBlock;
+	public $BranchID;
 	
 	public $_fullname;
 	public $_TypeDesc;
@@ -49,9 +50,10 @@ class WAR_requests extends OperationClass
 		
 		return PdoDataAccess::runquery_fetchMode("
 			select r.* , concat_ws(' ',fname,lname,CompanyName) fullname, sp.StepDesc,
-				bf.InfoDesc TypeDesc,d.DocID,d.LocalNo, d.DocStatus 
+				bf.InfoDesc TypeDesc,d.DocID,d.LocalNo, d.DocStatus , BranchName
 			from WAR_requests r 
 				left join BSC_persons using(PersonID)
+				join BSC_branches b using(BranchID)
 				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
 				join WFM_FlowSteps sp on(sp.FlowID=" . FLOWID . " AND sp.StepID=r.StatusID)
 				left join ACC_DocItems on(SourceType='" . DOCTYPE_WARRENTY . "' 

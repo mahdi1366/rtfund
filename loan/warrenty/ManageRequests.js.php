@@ -67,6 +67,25 @@ function WarrentyRequest(){
 		frame : true,
 		items : [{
 			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../../framework/baseInfo/baseInfo.data.php?' +
+						"task=SelectBranches",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BranchID','BranchName'],
+				autoLoad : true					
+			}),
+			fieldLabel : "شعبه",
+			queryMode : 'local',
+			allowBlank : false,
+			displayField : "BranchName",
+			valueField : "BranchID",
+			name : "BranchID",
+			colspan : 2
+		},{
+			xtype : "combo",
 			store : new Ext.data.Store({
 				proxy:{
 					type: 'jsonp',

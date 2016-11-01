@@ -122,7 +122,11 @@ function selectIncomeCheques() {
 		$param[":cst"] = $_POST["ChequeStatus"];
 	}
 	//.........................................................
-	
+	if (isset($_GET["fields"]) && !empty($_GET["query"])) {
+		$query .= " AND " . $_GET["fields"] . " like :f";
+		$param[":f"] = "%" . $_GET["query"] . "%";
+	}
+	//.........................................................
 	$query .= dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
 	
