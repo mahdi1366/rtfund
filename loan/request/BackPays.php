@@ -556,9 +556,12 @@ LoanPay.prototype.RegisterDoc = function(mode){
 	}
 	
 	params = {
-		task: task,
-		BackPayID : record.data.BackPayID
+		task: task
 	};
+	
+	if(record)
+		params.BackPayID = record.data.BackPayID;
+	
 	params = mergeObjects(params, this.BankWin.down('form').getForm().getValues());
 		
 	if(mode == 3)

@@ -1340,7 +1340,7 @@ function GroupSavePay(){
 				$_POST["FirstCostID"],
 				$_POST["SecondCostID"], $pdo, true);
 		else
-			$result = RegisterCustomerPayDoc($DocObj, 
+			$result = RegisterCustomerPayDoc($DocObj, $obj, 
 				$_POST["CostID"], 
 				$_POST["TafsiliID"], 
 				$_POST["TafsiliID2"], 
