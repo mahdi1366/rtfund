@@ -15,3 +15,10 @@ store.getProxy().getReader().jsonData.message;
 --------------------------------------------------------------------------------
 xtype : "displayfield",
 renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
+--------------------------------------------------------------------------------
+flush();
+ob_flush();
+foreach($costDocs as $row)
+	...
+	flush();
+	ob_flush();
