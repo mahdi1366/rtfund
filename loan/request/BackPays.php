@@ -441,7 +441,6 @@ LoanPay.prototype.BeforeRegisterDoc = function(mode){
 						name : "BranchID"
 					},{
 						xtype : "combo",
-						width : 385,
 						fieldLabel : "حساب شعبه اصلی",
 						colspan : 2,
 						store: new Ext.data.Store({
@@ -463,7 +462,6 @@ LoanPay.prototype.BeforeRegisterDoc = function(mode){
 						displayField : "fullDesc"
 					},{
 						xtype : "combo",
-						width : 385,
 						fieldLabel : "حساب شعبه واسط",
 						colspan : 2,
 						store: new Ext.data.Store({

@@ -357,7 +357,7 @@ class LON_BackPays extends PdoDataAccess
 			where " . $where . " group by BackPayID " . $order, $param);
 	}
 	
-	function AddPay($pdo = null){
+	function Add($pdo = null){
 		
 	 	if(!parent::insert("LON_BackPays",$this, $pdo))
 	 		return false;
@@ -372,7 +372,7 @@ class LON_BackPays extends PdoDataAccess
 	 	return true;
     }
 	
-	function EditPay($pdo = null){
+	function Edit($pdo = null){
 		
 	 	if( parent::update("LON_BackPays",$this," BackPayID=:l", 
 				array(":l" => $this->BackPayID), $pdo) === false )

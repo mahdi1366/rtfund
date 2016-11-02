@@ -310,6 +310,11 @@ function ChangeChequeStatus(){
 				die();
 			}
 		}
+		if(array_search($Status, array(OUERCHEQUE_EBTAL,OUERCHEQUE_MOSTARAD,
+			OUERCHEQUE_BARGHASHTI_MOSTARAD,OUERCHEQUE_MAKHDOOSH)) !== false)
+		{
+			$result = RegisterOuterCheque($obj, "","","","", $pdo);
+		}	
 	}
 	else
 	{
@@ -317,17 +322,14 @@ function ChangeChequeStatus(){
 		$obj->ChequeStatus = $Status;
 		$result = $obj->Edit($pdo);
 
-		if($Status == OUERCHEQUE_VOSUL)
+		$result = RegisterOuterCheque($obj, $_POST["BankTafsili"], 
+			$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
+		if(!$result)
 		{
-			$result = RegisterOuterCheque($obj, $_POST["BankTafsili"], 
-				$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
-			if(!$result)
-			{
-				$pdo->rollback();
-				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
-				die();
-			}
-		}
+			$pdo->rollback();
+			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+			die();
+		}		
 	}
 	
 	ACC_OuterCheques::AddToHistory($BackPayID, $OuterChequeID, $Status, $pdo);
@@ -340,6 +342,73 @@ function ChangeChequeStatus(){
 //...........................................
 
 function SaveOuterCheque(){
+	
+	if(isset($_POST["ChangingCheque"]))
+	{
+		$pdo = PdoDataAccess::getPdoObject();
+		$pdo->beginTransaction();
+		
+		if($_POST["RefBackPayID"] != "0")
+			$Refobj = new LON_BackPays($_POST["RefBackPayID"]);
+		else
+			$Refobj = new ACC_OuterCheques($_POST["RefOuterChequeID"]);		
+		$Refobj->ChequeStatus = OUERCHEQUE_CHANGE;
+		$Refobj->Edit();
+		ACC_OuterCheques::AddToHistory($_POST["RefBackPayID"], $_POST["RefOuterChequeID"], $Refobj->ChequeStatus, $pdo);
+		
+		if($_POST["RefBackPayID"] != "0")
+		{
+			$obj = new LON_BackPays();
+			PdoDataAccess::FillObjectByObject($Refobj, $obj);
+			unset($obj->BackPayID);
+			PdoDataAccess::FillObjectByArray($obj, $_POST);
+			$obj->PayAmount = $_POST["ChequeAmount"];
+			$obj->ChequeStatus = OUERCHEQUE_NOTVOSUL;
+			$obj->Add($pdo);
+			ACC_OuterCheques::AddToHistory($obj->BackPayID, 0, $obj->ChequeStatus, $pdo);
+		}		
+		else
+		{
+			$obj = new ACC_OuterCheques();
+			PdoDataAccess::FillObjectByObject($Refobj, $obj);
+			$obj->OuterChequeID = "";
+			PdoDataAccess::FillObjectByArray($obj, $_POST);
+			$obj->CostID = $Refobj->CostID;
+			$obj->ChequeStatus = OUERCHEQUE_NOTVOSUL;
+			$obj->Add($pdo);
+			ACC_OuterCheques::AddToHistory(0, $obj->OuterChequeID, $obj->ChequeStatus, $pdo);
+		}	
+		
+		
+		$Docobj = new ACC_docs();
+		$Docobj->RegDate = PDONOW;
+		$Docobj->regPersonID = $_SESSION['USER']["PersonID"];
+		$Docobj->DocDate = PDONOW;
+		$Docobj->CycleID = $_SESSION["accounting"]["CycleID"];
+		$Docobj->BranchID = $_SESSION["accounting"]["BranchID"];
+		$Docobj->DocType = DOCTYPE_OUTERCHEQUE;
+		$Docobj->description = "تعویض چک  شماره " . $Refobj->ChequeNo . " به چک شماره " . $obj->ChequeNo;
+		if(!$Docobj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد سند");
+			return false;
+		}
+		
+		if(!RegisterOuterCheque($Refobj, 0,0,0,0, $pdo, $Docobj->DocID))
+		{
+			echo Response::createObjectiveResponse(false, "");
+			die();
+		}
+		
+		if(!RegisterOuterCheque($obj,0,0,0,0, $pdo, $Docobj->DocID))
+		{
+			echo Response::createObjectiveResponse(false, "");
+			die();
+		}
+		$pdo->commit();
+		echo Response::createObjectiveResponse(true, "");
+		die();
+	}
 	
 	$obj = new ACC_OuterCheques();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);

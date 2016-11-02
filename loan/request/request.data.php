@@ -850,9 +850,9 @@ function SaveBackPay(){
 	$pdo->beginTransaction();
 	
 	if(empty($obj->BackPayID))
-		$result = $obj->AddPay($pdo);
+		$result = $obj->Add($pdo);
 	else
-		$result = $obj->EditPay($pdo);
+		$result = $obj->Edit($pdo);
 	
 	if(!$result)
 	{
@@ -1325,7 +1325,7 @@ function GroupSavePay(){
 		$obj->PartID = $PartID;
 		$obj->PayAmount = $PayAmount;
 		$obj->IsGroup = "YES";
-		$obj->AddPay($pdo);
+		$obj->Add($pdo);
 		
 		$PartObj = new LON_ReqParts($PartID);
 		$ReqObj = new LON_requests($PartObj->RequestID);

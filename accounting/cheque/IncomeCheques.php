@@ -42,6 +42,7 @@ $col->width = 80;
 
 $dg->addButton("", "اضافه چک", "add", "function(){IncomeChequeObject.AddOuterCheque();}");
 $dg->addButton("", "تغییر وضعیت چک", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
+$dg->addButton("", "تعویض چک", "copy", "function(){IncomeChequeObject.ChangeCheque();}");
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 400;
@@ -59,6 +60,8 @@ IncomeCheque.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	ChangingCheque : false,
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -173,6 +176,119 @@ function IncomeCheque(){
 	this.grid = <?= $grid ?>;
 	this.grid.getStore().proxy.form = this.get("MainForm");
 	this.grid.render(this.get("div_grid"));
+	
+	this.OuterChequeWin = new Ext.window.Window({
+		width : 400,
+		height : 250,
+		modal : true,
+		closeAction : "hide",
+		items : new Ext.form.Panel({
+			items :[{
+				xtype : "combo",
+				width : 350,
+				fieldLabel : "کد حساب",
+				colspan : 2,
+				store: new Ext.data.Store({
+					fields:["CostID","CostCode","CostDesc", "TafsiliType",{
+						name : "fullDesc",
+						convert : function(value,record){
+							return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+						}				
+					}],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectCostCode',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}),
+				typeAhead: false,
+				name : "CostID",
+				valueField : "CostID",
+				displayField : "fullDesc",
+				listConfig: {
+					loadingText: 'در حال جستجو...',
+					emptyText: 'فاقد اطلاعات'
+				},
+				listeners :{
+					select : function(combo,records){
+						if(records[0].data.TafsiliType != null)
+						{
+							combo = IncomeChequeObject.OuterChequeWin.down("[name=TafsiliID]");
+							combo.enable();
+							combo.setValue();
+							combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType;
+							combo.getStore().load();
+
+							IncomeChequeObject.OuterChequeWin.
+								down("[name=TafsiliType]").setValue(records[0].data.TafsiliType);
+						}
+					}
+				}
+			},{
+				xtype : "combo",
+				width : 350,
+				disabled : true,
+				fieldLabel : "تفصیلی",
+				store: new Ext.data.Store({
+					fields:["TafsiliID","TafsiliCode","TafsiliDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}),
+				typeAhead: false,
+				pageSize : 10,
+				name : "TafsiliID",
+				valueField : "TafsiliID",
+				displayField : "TafsiliDesc"
+			},{
+				xtype : "shdatefield",
+				name : "ChequeDate",
+				fieldLabel : "تاریخ چک"
+			},{
+				xtype : "currencyfield",
+				name : "ChequeAmount",
+				hideTrigger : true,
+				fieldLabel : "مبلغ چک"
+			},{
+				xtype : "numberfield",
+				name : "ChequeNo",
+				hideTrigger : true,
+				fieldLabel : "شماره چک"
+			},{
+				xtype : "combo",
+				store : new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetBanks',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ["BankID", "BankDesc"],
+					autoLoad : true
+				}),
+				queryMode : "local",
+				displayField: 'BankDesc',
+				valueField : "BankID",
+				name : "ChequeBank",
+				fieldLabel : "بانک"
+			},{
+				xtype : "textfield",
+				name : "ChequeBranch",
+				fieldLabel : "شعبه"
+			},{
+				xtype : "hidden",
+				name : "TafsiliType"
+			}]
+		}),
+		buttons :[{
+			text : "ذخیره",
+			iconCls : "save",
+			itemId : "btn_save",
+			handler : function(){ IncomeChequeObject.SaveOuterCheque();}
+		}]
+	});
+	Ext.getCmp(this.TabID).add(this.OuterChequeWin);
 }
 
 IncomeChequeObject = new IncomeCheque();
@@ -378,123 +494,10 @@ IncomeCheque.prototype.ChangeStatus = function(){
 
 IncomeCheque.prototype.AddOuterCheque = function(){
 	
-	if(!this.OuterChequeWin)
-	{
-		this.OuterChequeWin = new Ext.window.Window({
-			width : 400,
-			height : 250,
-			modal : true,
-			closeAction : "hide",
-			items : new Ext.form.Panel({
-				items :[{
-					xtype : "combo",
-					width : 350,
-					fieldLabel : "کد حساب",
-					colspan : 2,
-					store: new Ext.data.Store({
-						fields:["CostID","CostCode","CostDesc", "TafsiliType",{
-							name : "fullDesc",
-							convert : function(value,record){
-								return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
-							}				
-						}],
-						proxy: {
-							type: 'jsonp',
-							url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectCostCode',
-							reader: {root: 'rows',totalProperty: 'totalCount'}
-						}
-					}),
-					typeAhead: false,
-					name : "CostID",
-					valueField : "CostID",
-					displayField : "fullDesc",
-					listConfig: {
-						loadingText: 'در حال جستجو...',
-						emptyText: 'فاقد اطلاعات'
-					},
-					listeners :{
-						select : function(combo,records){
-							if(records[0].data.TafsiliType != null)
-							{
-								combo = IncomeChequeObject.OuterChequeWin.down("[name=TafsiliID]");
-								combo.enable();
-								combo.setValue();
-								combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType;
-								combo.getStore().load();
-								
-								IncomeChequeObject.OuterChequeWin.
-									down("[name=TafsiliType]").setValue(records[0].data.TafsiliType);
-							}
-						}
-					}
-				},{
-					xtype : "combo",
-					width : 350,
-					disabled : true,
-					fieldLabel : "تفصیلی",
-					store: new Ext.data.Store({
-						fields:["TafsiliID","TafsiliCode","TafsiliDesc"],
-						proxy: {
-							type: 'jsonp',
-							url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
-							reader: {root: 'rows',totalProperty: 'totalCount'}
-						}
-					}),
-					typeAhead: false,
-					pageSize : 10,
-					name : "TafsiliID",
-					valueField : "TafsiliID",
-					displayField : "TafsiliDesc"
-				},{
-					xtype : "shdatefield",
-					name : "ChequeDate",
-					fieldLabel : "تاریخ چک"
-				},{
-					xtype : "currencyfield",
-					name : "ChequeAmount",
-					hideTrigger : true,
-					fieldLabel : "مبلغ چک"
-				},{
-					xtype : "numberfield",
-					name : "ChequeNo",
-					hideTrigger : true,
-					fieldLabel : "شماره چک"
-				},{
-					xtype : "combo",
-					store : new Ext.data.Store({
-						proxy:{
-							type: 'jsonp',
-							url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetBanks',
-							reader: {root: 'rows',totalProperty: 'totalCount'}
-						},
-						fields :  ["BankID", "BankDesc"],
-						autoLoad : true
-					}),
-					queryMode : "local",
-					displayField: 'BankDesc',
-					valueField : "BankID",
-					name : "ChequeBank",
-					fieldLabel : "بانک"
-				},{
-					xtype : "textfield",
-					name : "ChequeBranch",
-					fieldLabel : "شعبه"
-				},{
-					xtype : "hidden",
-					name : "TafsiliType"
-				}]
-			}),
-			buttons :[{
-				text : "ذخیره",
-				iconCls : "save",
-				itemId : "btn_save",
-				handler : function(){ IncomeChequeObject.SaveOuterCheque();}
-			}]
-		});
-		Ext.getCmp(this.TabID).add(this.OuterChequeWin);
-	}
 	this.OuterChequeWin.show();
-	IncomeChequeObject.OuterChequeWin.down("[name=TafsiliID]").disable();
+	this.OuterChequeWin.down("[name=CostID]").show();
+	this.OuterChequeWin.down("[name=TafsiliID]").show();
+	this.OuterChequeWin.down("[name=TafsiliID]").disable();
 }
 
 IncomeCheque.prototype.SaveOuterCheque = function(){
@@ -502,10 +505,20 @@ IncomeCheque.prototype.SaveOuterCheque = function(){
 	mask = new Ext.LoadMask(this.OuterChequeWin, {msg:'در حال ذخيره سازي...'});
 	mask.show();
 
+	params = {};
+	if(this.ChangingCheque)
+	{
+		var record = this.grid.getSelectionModel().getLastSelected();
+		params.ChangingCheque = "true";
+		params.RefOuterChequeID = record.data.OuterChequeID;
+		params.RefBackPayID = record.data.BackPayID;
+	}
+	
 	this.OuterChequeWin.down('form').getForm().submit({
 		clientValidation: true,
 		url: this.address_prefix + 'cheques.data.php?task=SaveOuterCheque',
 		method : "POST",
+		params : params,
 
 		success : function(form,action){                
 			IncomeChequeObject.grid.getStore().load();
@@ -520,6 +533,25 @@ IncomeCheque.prototype.SaveOuterCheque = function(){
 		}
 	});
 
+}
+
+IncomeCheque.prototype.ChangeCheque = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+	{
+		Ext.MessageBox.alert("","انتخاب ردیف چک مورد تغییر الزامی است");
+		return;
+	}
+	if(record.data.ChequeStatus == "<?= OUERCHEQUE_VOSUL ?>")
+	{
+		Ext.MessageBox.alert("","چک وصول شده قابل تغییر نمی باشد");
+		return;
+	}
+	this.OuterChequeWin.show();
+	this.OuterChequeWin.down("[name=CostID]").hide();
+	this.OuterChequeWin.down("[name=TafsiliID]").hide();
+	this.ChangingCheque = true;
 }
 </script>
 <center>

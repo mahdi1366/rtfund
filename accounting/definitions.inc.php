@@ -46,5 +46,9 @@ define("ACCROLE_MANAGER", "2");
 
 define("OUERCHEQUE_NOTVOSUL", "1");
 define("OUERCHEQUE_VOSUL", "3");
-
+define("OUERCHEQUE_EBTAL", "6");
+define("OUERCHEQUE_MOSTARAD", "8");
+define("OUERCHEQUE_BARGHASHTI_MOSTARAD", "9");
+define("OUERCHEQUE_MAKHDOOSH", "10");
+define("OUERCHEQUE_CHANGE", "11");
 ?>
