@@ -336,7 +336,7 @@ class manage_person extends PdoDataAccess
 				return false;
 			}
 
-			$return = PdoDataAccess::delete("persons","PersonID=:PID", $whereParam, $pdo);
+			$return = PdoDataAccess::delete("HRM_persons","PersonID=:PID", $whereParam, $pdo);
 			if(!$return)
 			{
 				$pdo->rollBack();

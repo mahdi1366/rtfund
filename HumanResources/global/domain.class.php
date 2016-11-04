@@ -206,11 +206,11 @@ class manage_domains
 
 	}
 
-    public static function getAll_TaxType($personTyp)
+     public static function getAll_TaxType($personTyp)
 	 {
 
          return  PdoDataAccess::runquery(" select tax_table_type_id , title , person_type
-											 from tax_table_types where person_type in (100 , ".$personTyp." ) ");
+											 from HRM_tax_table_types where person_type in (100 , ".$personTyp." ) ");
 
 	 }
      

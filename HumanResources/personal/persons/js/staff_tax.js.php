@@ -107,7 +107,6 @@ StaffTax.prototype.saveTaxHis = function()
 	});
 }
 
-<? if( $accessTaxObj->InsertAccess() && $accessTaxObj->UpdateAccess() ){ ?>
 
 StaffTax.prototype.opDelRender = function(store,record,op)
 {
@@ -197,7 +196,7 @@ StaffTax.prototype.deleteIncHis = function()
 	});
 }
 
-<?	}	?>
+
 
 
 

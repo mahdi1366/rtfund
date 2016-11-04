@@ -122,6 +122,40 @@ function SelectMyRequests(){
 	die();
 }
 
+function SelectAllRequests2(){
+	
+	$params = array();
+	$query = "select p.*,r.IsEnded, concat_ws(' ',fname,lname,CompanyName) loanFullname,
+				i.InstallmentAmount
+		from LON_requests r 
+		join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
+		join BSC_persons on(LoanPersonID=PersonID)
+		join LON_installments i on(i.RequestID=p.RequestID)		
+		where 1=1";
+	if(!empty($_REQUEST["query"]))
+	{
+		$query .= " AND ( concat_ws(' ',fname,lname,CompanyName) like :f or r.RequestID = :f1)";
+		$params[":f"] = "%" . $_REQUEST["query"] . "%";
+		$params[":f1"] = $_REQUEST["query"] ;
+	}
+	
+	if(isset($_SESSION["USER"]["portal"]))
+		$query .= " AND LoanPersonID=" . $_SESSION["USER"]["PersonID"];
+	
+	$query .= " group by r.RequestID";
+	
+	$dt = PdoDataAccess::runquery_fetchMode($query, $params);
+	$cnt = $dt->rowCount();
+	
+	if(!empty($_REQUEST["limit"]))
+		$dt = PdoDataAccess::fetchAll($dt, $_REQUEST["start"], $_REQUEST["limit"]);
+	else
+		$dt = $dt->fetchAll();
+	
+	echo dataReader::getJsonData($dt, $cnt, $_GET["callback"]);
+	die();
+}
+
 function SelectAllRequests(){
 	
 	$param = array();
@@ -151,7 +185,12 @@ function SelectAllRequests(){
         $where .= ' and ' . $field . ' like :fld';
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
-	
+	if(!empty($_REQUEST['query']) && empty($_REQUEST["fields"]))
+	{
+		$where .= " AND ( concat_ws(' ',fname,lname,CompanyName) like :f or RequestID = :f1)";
+		$params[":f"] = "%" . $_REQUEST["query"] . "%";
+		$params[":f1"] = $_REQUEST["query"] ;
+	}
 	if(!empty($_REQUEST["IsEnded"]))
 	{
 		$where .= " AND IsEnded = :e "; 
@@ -251,7 +290,8 @@ function GetRequestParts(){
 		
 		$temp = PdoDataAccess::runquery("select count(*)
 			from ACC_DocItems join ACC_docs using(DocID) where 
-			 CostID=? AND SourceType=" . DOCTYPE_LOAN_PAYMENT . "  AND DocStatus in('CONFIRM','ARCHIVE') AND SourceID=? AND SourceID2=? ", 
+			 CostID=? AND SourceType=" . DOCTYPE_LOAN_PAYMENT . "  
+				 AND DocStatus in('CONFIRM','ARCHIVE') AND SourceID=? AND SourceID2=? ", 
 			array($CostCode_commitment, $dt[$i]["RequestID"], $dt[$i]["PartID"]));
 		$dt[$i]["IsDocRegister"] = $temp[0][0]*1 > 0 ? "YES" : "NO"; 	
 		
@@ -259,8 +299,6 @@ function GetRequestParts(){
 		$dt[$i]["IsStarted"] = WFM_FlowRows::IsFlowStarted(1, $dt[$i]["PartID"]) ? "YES" : "NO";
 		$dt[$i]["IsEnded"] = WFM_FlowRows::IsFlowEnded(1, $dt[$i]["PartID"]) ? "YES" : "NO";
 		
-		$temp = LON_installments::SelectAll("IsPaid='NO' AND PartID=?", array($dt[$i]["PartID"]));
-		$dt[$i]["IsPartEnded"] = count($temp) == 0 ? "YES" : "NO";
 	}
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
@@ -272,102 +310,87 @@ function SavePart(){
 	$obj = new LON_ReqParts();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
 	if($obj->PartID > 0)
-		$result = $obj->EditPart();
+		$result = $obj->EditPart($pdo);
 	else
-		$result = $obj->AddPart();
+	{
+		$dt = LON_ReqParts::SelectAll("RequestID=?", array($obj->RequestID));
+		$firstPart = count($dt) > 0 ? false : true;
+		
+		$result = $obj->AddPart($pdo);
+		
+		if(!$firstPart)
+		{
+			foreach($dt as $row)
+			{
+				$partobj = new LON_ReqParts($row["PartID"]);
+				if($partobj->IsHistory == "NO")
+				{
+					$partobj->IsHistory = "YES";
+					$partobj->EditPart($pdo);
+					ChangeStatus($partobj->RequestID, "100", $partobj->PartDesc, true, $pdo);
+				}
+			}
+			$result = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo);
+			ComputeInstallments($obj->RequestID, true, $pdo);
+		}		
+	}
 
 	if(!$result)
 	{
-		//print_r(ExceptionHandler::PopAllExceptions());
-		echo Response::createObjectiveResponse(false, "خطا در ثبت فاز");
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
-	
+	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
 
 function DeletePart(){
 	
-	$res = LON_ReqParts::DeletePart($_POST["PartID"]);
-	echo Response::createObjectiveResponse($res, "");
-	die();
-}
-
-function FillParts(){
+	$obj = new LON_ReqParts($_POST["PartID"]);
 	
-}
-
-function EndPart(){
+	$dt = PdoDataAccess::runquery("select * from ACC_DocItems join ACC_docs using(DocID)
+		where SourceType=" . DOCTYPE_LOAN_DIFFERENCE . "
+		AND SourceID=? AND SourceID2=?", array($obj->RequestID, $obj->PartID));
 	
-	$PartID = $_POST["PartID"];
-	
-	$dt = LON_installments::SelectAll("IsPaid='YES' AND PartID=?", array($PartID));
-	if(count($dt) == 0)
+	if(count($dt) > 0 && $dt[0]["DocStatus"] != "RAW")
 	{
-		echo Response::createObjectiveResponse(false, "هیچ قسطی از این فاز پرداخت نگردیده است.");
-		die();
-	}
-	$dt = LON_installments::SelectAll("IsPaid='NO' AND PartID=?", array($PartID));
-	if(count($dt) == 0)
-	{
-		echo Response::createObjectiveResponse(false, "کلیه اقساط این فاز پرداخت گردیده و فاز پایان یافته است");
+		echo Response::createObjectiveResponse(false, "سند اختلاف تایید شده و قادر به حذف نمی باشید");
 		die();
 	}
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	$partobj = new LON_ReqParts($PartID);
-	ChangeStatus($partobj->RequestID, "100", $partobj->PartDesc, true, $pdo);
-	
-	//---------------- delete not paid installments ---------------
-	PdoDataAccess::runquery("delete from LON_installments where PartID=? AND IsPaid='NO'",
-		array($partobj->PartID), $pdo);
-	//--------------- get total paid amount -----------------------
-	$dt = PdoDataAccess::runquery("select sum(PaidAmount) sumAmount, count(*) sumCount 
-		from LON_installments where IsPaid='YES' AND PartID=?", array($partobj->PartID), $pdo);
-	$PaidAmount = $dt[0]["sumAmount"]*1;
-	$installmentCount = $dt[0]["sumCount"]*1;
-	
-	$RemainAmount = $partobj->PartAmount - $PaidAmount;
-	$remainInstallments = $partobj->InstallmentCount - $installmentCount;
-	//-------------- register doc  ----------------
-	$ReqObj = new LON_requests($partobj->RequestID);
-	if(!EndPartDoc($ReqObj, $partobj, $PaidAmount, $installmentCount, $pdo))
+	if(count($dt) > 0)
 	{
-		$pdo->rollBack();
-		echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
+		if(!ACC_docs::Remove($dt[0]["DocID"], $pdo))
+		{
+			echo Response::createObjectiveResponse(false, "خطا در حذف سند");
+			die();
+		}
+	}
+	if(!LON_ReqParts::DeletePart($_POST["PartID"], $pdo))
+	{
+		echo Response::createObjectiveResponse(false, "خطا در حذف فاز");
 		die();
 	}
 	
-	//---------------- edit current part info -------------------
-	$partobj->PartAmount = $PaidAmount;
-	$partobj->InstallmentCount = $installmentCount;
-	if(!$partobj->EditPart($pdo))
+	$dt = PdoDataAccess::runquery("select PartID from LON_ReqParts where RequestID=? order by PartID desc", 
+			array($obj->RequestID), $pdo);
+	if(count($dt)> 0)
 	{
-		$pdo->rollBack();
-		echo Response::createObjectiveResponse(false, "خطا در ویرایش فاز");
-		die();
+		$obj2 = new LON_ReqParts($dt[0]["PartID"]);
+		$obj2->IsHistory = "NO";
+		$obj2->EditPart($pdo);
 	}
+	ComputeInstallments($obj->RequestID, true, $pdo);
 	
-	//-------------- add new part with remain amount --------------
-	$newObj = new LON_ReqParts();
-	PdoDataAccess::FillObjectByObject($partobj, $newObj);
-	unset($newObj->PartID);
-	$newObj->PartDesc = $partobj->PartDesc . "[نسخه جدید]";
-	$newObj->PartDate = PDONOW;
-	$newObj->PartAmount = $RemainAmount;
-	$newObj->InstallmentCount = $remainInstallments;
-	if(!$newObj->AddPart($pdo))
-	{
-		$pdo->rollBack();
-		print_r($newObj);
-		print_r(ExceptionHandler::PopAllExceptions());
-		echo Response::createObjectiveResponse(false, "خطا در ایجاد فاز جدید");
-		die();
-	}
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
 	die();
@@ -384,15 +407,11 @@ function StartFlow(){
 function GetRequestTotalRemainder(){
 	
 	$remain = 0;
-	$temp = PdoDataAccess::runquery("select PartID from LON_ReqParts where requestID=?", 
-		array($_POST["RequestID"]));
-	foreach($temp as $row)
-	{
-		$dt = LON_installments::SelectAll("PartID=?" , array($row["PartID"]));
-		$returnArr = ComputePayments($row["PartID"], $dt);
-		if(count($returnArr) > 0 && $returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1 > 0)
-			$remain += $returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1;
-	}
+	$RequestID = $_REQUEST["RequestID"];
+	$dt = LON_installments::SelectAll("r.RequestID=?" , array($RequestID));
+	$returnArr = ComputePayments($RequestID, $dt);
+	if(count($returnArr) > 0 && $returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1 > 0)
+		$remain = $returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1;
 	
 	echo Response::createObjectiveResponse(true, $remain);
 	die();
@@ -456,12 +475,12 @@ function ReturnEndRequest(){
 
 //--------------------------------------------------
 
-function GetPartInstallments(){
+function GetInstallments(){
 	
-	$PartID = $_REQUEST["PartID"];
+	$RequestID = $_REQUEST["RequestID"];
 	
-	$temp = LON_installments::SelectAll("PartID=? " . dataReader::makeOrder() , array($PartID));
-	$dt = ComputePayments($PartID, $dt);
+	$temp = LON_installments::SelectAll("r.RequestID=? " . dataReader::makeOrder() , array($RequestID));
+	$dt = ComputePayments($RequestID, $dt);
 	
 	$currentPay = 0;
 	foreach($dt as $row)
@@ -472,16 +491,17 @@ function GetPartInstallments(){
 	die();
 }
 
-function ComputeInstallments($PartID = "", $returnMode = false){
+function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null){
 	
-	$PartID = empty($PartID) ? $_REQUEST["PartID"] : $PartID;
+	$RequestID = empty($RequestID) ? $_REQUEST["RequestID"] : $RequestID;
 	
-	$obj = new LON_ReqParts($PartID);
-	PdoDataAccess::runquery("delete from LON_installments where PartID=? ", array($obj->PartID));
+	PdoDataAccess::runquery("delete from LON_installments where RequestID=? ", array($RequestID));
 	//-----------------------------------------------
-	$obj2 = new LON_requests($obj->RequestID);
+	$obj2 = new LON_requests($RequestID);
 	if($obj2->ReqPersonID == SHEKOOFAI)
-		return ComputeInstallmentsShekoofa($obj, $returnMode);
+		return ComputeInstallmentsShekoofa($RequestID, $returnMode);
+	//-----------------------------------------------
+	$obj = LON_ReqParts::GetValidPartObj($RequestID);
 	//-----------------------------------------------
 	$YearMonths = 12;
 	if($obj->IntervalType == "DAY")
@@ -524,91 +544,58 @@ function ComputeInstallments($PartID = "", $returnMode = false){
 	$jdate = DateModules::miladi_to_shamsi($obj->PartDate);
 	$jdate = DateModules::AddToJDate($jdate, 1+$obj->DelayDays, $obj->DelayMonths);
 	
-	$pdo = PdoDataAccess::getPdoObject();
-	$pdo->beginTransaction();
-	
+	if($pdo2 == null)
+	{
+		$pdo = PdoDataAccess::getPdoObject();
+		$pdo->beginTransaction();
+	}
+	else
+		$pdo = $pdo2;
 	for($i=0; $i < $obj->InstallmentCount-1; $i++)
 	{
 		$obj2 = new LON_installments();
-		
+		$obj2->RequestID = $RequestID;
 		$obj2->InstallmentDate = DateModules::AddToJDate($jdate, 
-			$obj->IntervalType == "DAY" ? $obj->PayInterval*($i+1) : 0, 
-			$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
-		$obj2->PartID = $obj->PartID;
+		$obj->IntervalType == "DAY" ? $obj->PayInterval*($i+1) : 0, 
+		$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
 		$obj2->InstallmentAmount = $allPay;
-		
 		if(!$obj2->AddInstallment($pdo))
 		{
 			$pdo->rollBack();
+			print_r(ExceptionHandler::PopAllExceptions());
 			echo Response::createObjectiveResponse(false, "");
 			die();
 		}
 	}
 	
 	$obj2 = new LON_installments();
-		
+	$obj2->RequestID = $RequestID;
 	$obj2->InstallmentDate = DateModules::AddToJDate($jdate, 
-		$obj->IntervalType == "DAY" ? $obj->PayInterval*($obj->InstallmentCount) : 0, 
-		$obj->IntervalType == "MONTH" ? $obj->PayInterval*($obj->InstallmentCount) : 0);
-	$obj2->PartID = $obj->PartID;
+	$obj->IntervalType == "DAY" ? $obj->PayInterval*($obj->InstallmentCount) : 0, 
+	$obj->IntervalType == "MONTH" ? $obj->PayInterval*($obj->InstallmentCount) : 0);
 	$obj2->InstallmentAmount = $LastPay;
-
 	if(!$obj2->AddInstallment($pdo))
 	{
 		$pdo->rollBack();
+		print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse(false, "");
 		die();
 	}
 	
-	$pdo->commit();
-	
 	if($returnMode)
 		return true;
 	
+	$pdo->commit();	
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
 
-function ComputeWageOfSHekoofa($partObj){
+function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false){
 	
-	$payments = LON_payments::Get(" AND PartID=? order by PayDate", array($partObj->PartID));
-	$payments = $payments->fetchAll();
-	//--------------- total pay months -------------
-	$firstPay = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
-	$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
-	$paymentPeriod = DateModules::GetDiffInMonth($firstPay, $LastPay);
-	//----------------------------------------------
-	$totalWage = 0;
-	$wages = array();
-	foreach($payments as $row)
-	{
-		$wages[] = array();
-		$wageindex = count($wages)-1;
-		for($i=0; $i < $partObj->InstallmentCount; $i++)
-		{
-			$monthplus = $paymentPeriod + $partObj->DelayMonths*1 + ($i+1)*$partObj->PayInterval*1;
-			
-			$installmentDate = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
-			$installmentDate = DateModules::AddToJDate($installmentDate, 0, $monthplus);
-			$installmentDate = DateModules::shamsi_to_miladi($installmentDate);
-			
-			$jdiff = DateModules::GDateMinusGDate($installmentDate, $row["PayDate"]);
-			
-			$wage = round(($row["PayAmount"]/$partObj->InstallmentCount)*$jdiff*$partObj->CustomerWage/36500);
-			$wages[$wageindex][] = $wage;
-			$totalWage += $wage;
-		}
-	}
+	$RequestID = empty($RequestID) ? $_REQUEST["RequestID"] : $RequestID;
+	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	
-	return $totalWage;
-}
-
-function ComputeInstallmentsShekoofa($partObj = null, $returnMode = false){
-	
-	if(!$partObj)
-		$partObj = new LON_ReqParts($_REQUEST["PartID"]);
-	
-	$payments = LON_payments::Get(" AND PartID=? order by PayDate", array($partObj->PartID));
+	$payments = LON_payments::Get(" AND RequestID=? order by PayDate", array($RequestID));
 	$payments = $payments->fetchAll();
 	
 	if(count($payments) == 0)
@@ -632,9 +619,8 @@ function ComputeInstallmentsShekoofa($partObj = null, $returnMode = false){
 		$installmentDate = DateModules::shamsi_to_miladi($installmentDate);
 			
 		$obj2 = new LON_installments();
-		
+		$obj2->RequestID = $RequestID;
 		$obj2->InstallmentDate = $installmentDate;
-		$obj2->PartID = $partObj->PartID;
 		$obj2->InstallmentAmount = round($partObj->PartAmount/$partObj->InstallmentCount) + 
 				round($totalWage/$partObj->InstallmentCount);
 		
@@ -667,16 +653,16 @@ function SaveInstallment(){
 
 function DelayInstallments(){
 	
-	$PartID = $_POST["PartID"];
+	$RequestID = $_POST["RequestID"];
 	$InstallmentID = $_POST["InstallmentID"];
 	$months = $_POST["months"];
 	
-	$PartObj = new LON_ReqParts($PartID);
+	$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	$dt = LON_installments::SelectAll("PartID=? AND InstallmentID>=?", array($PartID, $InstallmentID));
+	$dt = LON_installments::SelectAll("r.RequestID=? AND InstallmentID>=?", array($RequestID, $InstallmentID));
 	for($i=0; $i<count($dt); $i++)
 	{
 		$obj = new LON_installments();
@@ -691,7 +677,7 @@ function DelayInstallments(){
 		//...........................................
 		
 		$obj = new LON_installments();
-		$obj->PartID = $dt[$i]["PartID"];
+		$obj->RequestID = $RequestID;
 		$obj->InstallmentDate = DateModules::shamsi_to_miladi(
 				DateModules::AddToJDate(DateModules::miladi_to_shamsi($dt[$i]["InstallmentDate"]), 0, $months));
 		
@@ -742,41 +728,6 @@ function GetLastFundComment(){
 }
 
 //-------------------------------------------------
-
-function selectParts(){
-	
-	$params = array();
-	$query = "select p.*,r.IsEnded, concat_ws(' ',fname,lname,CompanyName) loanFullname,
-				i.InstallmentAmount
-		from LON_ReqParts p
-		join LON_requests r using(RequestID)
-		join BSC_persons on(LoanPersonID=PersonID)
-		join LON_installments i on(i.PartID=p.PartID)
-		
-		where 1=1";
-	if(!empty($_REQUEST["query"]))
-	{
-		$query .= " AND ( concat_ws(' ',fname,lname,CompanyName) like :f or RequestID = :f1)";
-		$params[":f"] = "%" . $_REQUEST["query"] . "%";
-		$params[":f1"] = $_REQUEST["query"] ;
-	}
-	
-	if(isset($_SESSION["USER"]["portal"]))
-		$query .= " AND LoanPersonID=" . $_SESSION["USER"]["PersonID"];
-	
-	$query .= " group by RequestID";
-	
-	$dt = PdoDataAccess::runquery_fetchMode($query, $params);
-	$cnt = $dt->rowCount();
-	
-	if(!empty($_REQUEST["limit"]))
-		$dt = PdoDataAccess::fetchAll($dt, $_REQUEST["start"], $_REQUEST["limit"]);
-	else
-		$dt = $dt->fetchAll();
-	
-	echo dataReader::getJsonData($dt, $cnt, $_GET["callback"]);
-	die();
-}
 
 function SelectReadyToPayParts($returnCount = false){
 	
@@ -832,7 +783,7 @@ function selectRequestStatuses(){
 
 function GetPartPays(){
 	
-	$dt = LON_BackPays::SelectAll("PartID=? " . dataReader::makeOrder() , array($_REQUEST["PartID"]));
+	$dt = LON_BackPays::SelectAll("RequestID=? " . dataReader::makeOrder() , array($_REQUEST["RequestID"]));
 	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
@@ -891,22 +842,21 @@ function DeletePay(){
 	die();
 }
 
-function ComputePayments($PartID, &$installments){
-	
-	$obj = new LON_ReqParts($PartID);
+function ComputePayments($RequestID, &$installments){
+
+	$obj = new LON_ReqParts($RequestID);
 	if($obj->PayCompute == "installment")
-		return ComputePaymentsBaseOnInstallment ($PartID, $installments);
+		return ComputePaymentsBaseOnInstallment ($RequestID, $installments);
 	
 	$returnArr = array();
 	$pays = PdoDataAccess::runquery("
 		select p.PayDate, sum(PayAmount) PayAmount, sum(PayAmount) FixPayAmount
 			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
-			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
-			where PartID=? AND if(p.ChequeNo<>'',p.ChequeStatus=3,1=1)
+			where RequestID=? AND if(p.ChequeNo<>'',p.ChequeStatus=3,1=1)
 			group by PayDate 
-			order by PayDate" , array($PartID));
+			order by PayDate" , array($RequestID));
 	$PayRecord = count($pays) == 0 ? null : $pays[0];
 	$payIndex = 1;
 	$Forfeit = 0;
@@ -1048,20 +998,20 @@ function ComputePayments($PartID, &$installments){
 	return $returnArr;
 }
 
-function ComputePaymentsBaseOnInstallment($PartID, &$installments){
+function ComputePaymentsBaseOnInstallment($RequestID, &$installments){
 	
 	$returnArr = array();
 	$pays = PdoDataAccess::runquery("
 		select p.PayDate, sum(PayAmount) PayAmount, sum(PayAmount) FixPayAmount
 			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
-			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
-			where PartID=? AND if(p.ChequeNo<>'',p.ChequeStatus=3,1=1)
-			group by PayDate" , array($PartID));
+			where RequestID=? AND if(p.ChequeNo<>'',p.ChequeStatus=3,1=1)
+			group by PayDate" , array($RequestID));
 	$PayRecord = count($pays) == 0 ? null : $pays[0];
 	$payIndex = 1;
 	$Forfeit = 0;
+	
 	for($i=0; $i < count($installments); $i++)
 	{
 		if($installments[$i]["IsDelayed"] == "YES")
@@ -1214,8 +1164,7 @@ function ComputePaymentsBaseOnInstallment($PartID, &$installments){
 function RegisterBackPayDoc(){
 	
 	$obj = new LON_BackPays($_POST["BackPayID"]);
-	$PartObj = new LON_ReqParts($obj->PartID);
-	$ReqObj = new LON_requests($PartObj->RequestID);
+	$ReqObj = new LON_requests($obj->RequestID);
 	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 	
 	$pdo = PdoDataAccess::getPdoObject();
@@ -1272,7 +1221,7 @@ function EditBackPayDoc(){
 		die();
 	}
 	
-	$ReqObj = new LON_requests($obj->_RequestID);
+	$ReqObj = new LON_requests($obj->RequestID);
 	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 	if($PersonObj->IsSupporter == "YES")
 		$result = RegisterSHRTFUNDCustomerPayDoc($DocObj, $obj, 
@@ -1317,18 +1266,17 @@ function GroupSavePay(){
 	foreach($parts as $partStr)
 	{
 		$arr = preg_split("/_/", $partStr);
-		$PartID = $arr[0];
+		$RequestID = $arr[0];
 		$PayAmount = $arr[1];
 
 		$obj = new LON_BackPays();
 		PdoDataAccess::FillObjectByArray($obj, $_POST);
-		$obj->PartID = $PartID;
+		$obj->RequestID = $RequestID;
 		$obj->PayAmount = $PayAmount;
 		$obj->IsGroup = "YES";
 		$obj->Add($pdo);
 		
-		$PartObj = new LON_ReqParts($PartID);
-		$ReqObj = new LON_requests($PartObj->RequestID);
+		$ReqObj = new LON_requests($RequestID);
 		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 		if($PersonObj->IsSupporter == "YES")
 			$result = RegisterSHRTFUNDCustomerPayDoc($DocObj, $obj, 
@@ -1374,9 +1322,8 @@ function GetDelayedInstallments($returnData = false){
 	
 	$ToDate = DateModules::shamsi_to_miladi($_REQUEST["ToDate"]);
 	
-	$query = "select PartID,concat_ws(' ',fname,lname,CompanyName) LoanPersonName
+	$query = "select RequestID,concat_ws(' ',fname,lname,CompanyName) LoanPersonName
 			from LON_installments p
-			join LON_ReqParts rp using(PartID)
 			join LON_requests using(RequestID)
 			join BSC_persons on(LoanPersonID=PersonID)
 			
@@ -1390,7 +1337,7 @@ function GetDelayedInstallments($returnData = false){
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
 	
-	$query .= " group by PartID
+	$query .= " group by RequestID
 			order by InstallmentDate desc";
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
@@ -1400,8 +1347,8 @@ function GetDelayedInstallments($returnData = false){
 	$result = array();
 	while($row = $dt->fetch())
 	{
-		$temp = LON_installments::SelectAll("PartID=? && InstallmentDate<now()" , array($row["PartID"]));
-		$returnArr = ComputePayments($row["PartID"], $temp);
+		$temp = LON_installments::SelectAll("r.RequestID=? && InstallmentDate<now()" , array($row["RequestID"]));
+		$returnArr = ComputePayments($row["RequestID"], $temp);
 		
 		foreach($returnArr as $row2)
 			if(isset($row2["InstallmentID"]) && $row2["InstallmentID"]*1 > 0)
@@ -1439,21 +1386,21 @@ function GetDelayedInstallments($returnData = false){
 
 function GetEndedRequests(){
 	
-	$query = "select rp.RequestID,ReqDate,PartID,concat_ws(' ',fname,lname,CompanyName) LoanPersonName
+	$query = "select rp.RequestID,ReqDate,RequestID,concat_ws(' ',fname,lname,CompanyName) LoanPersonName
 			from LON_ReqParts rp
 			join LON_requests using(RequestID)
 			join BSC_persons on(LoanPersonID=PersonID)
 						
 			where IsEnded='NO' 
-			group by rp.PartID
+			group by rp.RequestID
 			order by rp.RequestID";
 	$dt = PdoDataAccess::runquery_fetchMode($query);
 	
 	$result = array();
 	while($row = $dt->fetch())
 	{
-		$temp = LON_installments::SelectAll("PartID=?" , array($row["PartID"]));
-		$returnArr = ComputePayments($row["PartID"], $temp);
+		$temp = LON_installments::SelectAll("r.RequestID=?" , array($row["RequestID"]));
+		$returnArr = ComputePayments($row["RequestID"], $temp);
 		$row["TotalRemainder"] = count($returnArr) > 0 ? $returnArr[ count($returnArr)-1 ]["TotalRemainder"] : 0;
 		
 		if(count($returnArr) == 0)
@@ -1487,7 +1434,7 @@ function GetEndedRequests(){
 
 function GetPartPayments(){
 	
-	$dt = LON_payments::Get(" AND PartID=? " . dataReader::makeOrder() , array($_REQUEST["PartID"]));
+	$dt = LON_payments::Get(" AND RequestID=? " . dataReader::makeOrder() , array($_REQUEST["RequestID"]));
 	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
@@ -1522,8 +1469,8 @@ function RegPayPartDoc($ReturnMode = false, $pdo = null){
 	$PayObj = new LON_payments($PayID);
 	
 	//---------- check for previous payments docs registered --------------
-	$dt = LON_payments::Get(" AND PartID=? AND PayDate<? AND DocID=0",
-			array($PayObj->PartID, $PayObj->PayDate));
+	$dt = LON_payments::Get(" AND RequestID=? AND PayDate<? AND DocID=0",
+			array($PayObj->RequestID, $PayObj->PayDate));
 	if($dt->rowCount() > 0)
 	{
 		echo Response::createObjectiveResponse(false, "تا سند مراحل قبلی پرداخت صادر نشود قادر به صدور سند این مرحله نمی باشید");
@@ -1535,10 +1482,10 @@ function RegPayPartDoc($ReturnMode = false, $pdo = null){
 		$pdo = PdoDataAccess::getPdoObject();
 		$pdo->beginTransaction();
 	}
-	$partobj = new LON_ReqParts($PayObj->PartID);
-	$ReqObj = new LON_requests($partobj->RequestID);
+	$ReqObj = new LON_requests($PayObj->RequestID);
+	$partobj = LON_ReqParts::GetValidPartObj($PayObj->RequestID);
 
-	ChangeStatus($PayObj->_RequestID, "80", "پرداخت مبلغ " . number_format($PayObj->PayAmount), true, $pdo);
+	ChangeStatus($PayObj->RequestID, "80", "پرداخت مبلغ " . number_format($PayObj->PayAmount), true, $pdo);
 	
 	if($partobj->MaxFundWage*1 > 0)
 		$partobj->MaxFundWage = round($partobj->MaxFundWage*$PayObj->PayAmount/$partobj->PartAmount);
@@ -1636,8 +1583,8 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 	if(count($temp) > 0)
 	{
 		$dt = PdoDataAccess::runquery("select * from ACC_DocItems where CostID=? AND DebtorAmount>0 
-			AND SourceType=? AND SourceID2=?",
-			array($CostCode_todiee, DOCTYPE_LOAN_PAYMENT, $PayObj->PartID));
+			AND SourceType=? AND SourceID=?",
+			array($CostCode_todiee, DOCTYPE_LOAN_PAYMENT, $PayObj->RequestID));
 		if(count($dt) > 0)
 		{
 			echo Response::createObjectiveResponse(false, "به دلیل اینکه این سند اولین سند پرداخت می باشد و بعد از آن اسناد پرداخت دیگری صادر شده است" . 
@@ -1671,7 +1618,7 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 		die();
 	}
 	
-	ChangeStatus($PayObj->_RequestID, "90", "", true, $pdo);
+	ChangeStatus($PayObj->RequestID, "90", "", true, $pdo);
 	
 	if($ReturnMode)
 		return true;

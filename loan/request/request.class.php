@@ -171,6 +171,7 @@ class LON_ReqParts extends PdoDataAccess
 	public $RequestID;
 	public $PartDesc;
 	public $PartDate;
+	public $PartStartDate;
 	public $PartAmount;
 	public $InstallmentCount;
 	public $IntervalType;
@@ -187,10 +188,12 @@ class LON_ReqParts extends PdoDataAccess
 	public $DelayReturn;
 	public $AgentReturn;
 	public $AgentDelayReturn;
+	public $IsHistory;
 	
 	function __construct($PartID = "") {
 		
 		$this->DT_PartDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_PartStartDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_MaxFundWage = DataMember::CreateDMA(DataMember::DT_INT, 0);
 		
 		if($PartID != "")
@@ -233,24 +236,34 @@ class LON_ReqParts extends PdoDataAccess
 	 	return true;
     }
 	
-	static function DeletePart($PartID){
+	static function DeletePart($PartID, $pdo = null){
 		
-		if( parent::delete("LON_ReqParts"," PartID=?", array($PartID)) === false )
+		if( parent::delete("LON_ReqParts"," PartID=?", array($PartID),$pdo) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
 		$daObj->MainObjectID = $PartID;
 		$daObj->TableName = "LON_ReqParts";
-		$daObj->execute();
+		$daObj->execute($pdo);
 	 	return true;
+	}
+	
+	static function GetValidPartObj($RequestID){
+		
+		$dt = PdoDataAccess::runquery("select * from LON_ReqParts 
+			where IsHistory='NO' AND RequestID=? order by PartID desc limit 1",array($RequestID));
+		if(count($dt) == 0)
+			return null;
+		
+		return new LON_ReqParts($dt[0]["PartID"]);
 	}
 }
 
 class LON_installments extends PdoDataAccess
 {
 	public $InstallmentID;
-	public $PartID;
+	public $RequestID;
 	public $InstallmentDate;
 	public $InstallmentAmount;
 	public $IsDelayed;
@@ -267,9 +280,9 @@ class LON_installments extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select p.*,rp.*
-			from LON_installments p
-			join LON_ReqParts rp using(PartID)
+			select * from LON_installments i
+			join LON_requests r using(RequestID)
+			join LON_ReqParts p on(r.RequestID=p.RequestID AND p.IsHistory='NO')
 			where " . $where, $param);
 	}
 	
@@ -306,7 +319,7 @@ class LON_installments extends PdoDataAccess
 class LON_BackPays extends PdoDataAccess
 {
 	public $BackPayID;
-	public $PartID;
+	public $RequestID;
 	public $PayType;
 	public $PayDate;
 	public $PayAmount;
@@ -319,16 +332,14 @@ class LON_BackPays extends PdoDataAccess
 	public $details;
 	public $IsGroup;
 	
-	public $_RequestID;
-			
 	function __construct($BackPayID = "") {
 		
 		$this->DT_PayDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($BackPayID != "")
 			PdoDataAccess::FillObject ($this, "
-				select p.*,RequestID _RequestID 
-				from LON_BackPays p join LON_ReqParts using(PartID) 
+				select *
+				from LON_BackPays 
 				where BackPayID=?", array($BackPayID));
 	}
 	
@@ -339,7 +350,7 @@ class LON_BackPays extends PdoDataAccess
 		$order = count($temp) > 1 ? " order by " . $temp[1] : "";
 		
 		return PdoDataAccess::runquery("
-			select p.*,rp.*,
+			select p.*,
 				b.BankDesc, 
 				bi.InfoDesc PayTypeDesc, 
 				bi2.InfoDesc ChequeStatusDesc,
@@ -347,7 +358,6 @@ class LON_BackPays extends PdoDataAccess
 				d.DocStatus
 			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
-			join LON_ReqParts rp using(PartID)
 			left join ACC_banks b on(ChequeBank=BankID)
 			left join BaseInfo bi2 on(bi2.TypeID=16 AND bi2.InfoID=p.ChequeStatus)
 			
@@ -405,7 +415,7 @@ class LON_BackPays extends PdoDataAccess
 		
 		$dt = PdoDataAccess::runquery("
 			select DocID from ACC_DocItems where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " 
-			AND SourceID=? AND SourceID2=?" , array($obj->_RequestID, $obj->BackPayID), $pdo);
+			AND SourceID=? AND SourceID2=?" , array($obj->RequestID, $obj->BackPayID), $pdo);
 		if(count($dt) == 0)
 			return 0;
 		return $dt[0][0];
@@ -418,21 +428,19 @@ class LON_payments extends OperationClass
 	const TableKey = "PayID";
 
 	public $PayID;
-	public $PartID;
+	public $RequestID;
 	public $PayType;
 	public $PayDate;
 	public $PayAmount;
 	public $DocID;
 	
-	public $_RequestID;
-			
 	function __construct($PayID = "") {
 		
 		$this->DT_PayDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($PayID != "")
-			parent::FillObject ($this, "select p.*,RequestID _RequestID 
-				from LON_payments p join LON_ReqParts using(PartID) where payID=?", array($PayID));
+			parent::FillObject ($this, "select *
+				from LON_payments  where payID=?", array($PayID));
 	}
 	
 	static function Get($where = '', $whereParams = array()) {
@@ -445,13 +453,13 @@ class LON_payments extends OperationClass
 	function CheckPartAmount(){
 		
 		$dt = parent::runquery("select ifnull(sum(PayAmount),0) from LON_payments 
-			where PartID=? AND PayID<>?", array($this->PartID, $this->PayID));
+			where RequestID=? AND PayID<>?", array($this->RequestID, $this->PayID));
 		
-		$PartObj = new LON_ReqParts($this->PartID);
+		$PartObj = LON_ReqParts::GetValidPartObj($this->RequestID);
 		
 		if($dt[0][0]*1 + $this->PayAmount*1 > $PartObj->PartAmount*1)
 		{
-			ExceptionHandler::PushException("مبالغ وارد شده از سقف مبلغ فاز تجاوز می کند");
+			ExceptionHandler::PushException("مبالغ وارد شده از سقف مبلغ وام تجاوز می کند");
 			return false;
 		}
 		

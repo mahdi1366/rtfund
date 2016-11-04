@@ -23,7 +23,7 @@ switch ($task) {
 
 function selectIncludeHistory()
 {   
-	$personid = $_GET["PID"];
+	$personid =$_REQUEST["PID"];
 	$temp = manage_staff_include_history::GetAllStaffIncludeHistory($personid);
 	
 	echo dataReader::getJsonData($temp, count($temp), $_GET ["callback"]);

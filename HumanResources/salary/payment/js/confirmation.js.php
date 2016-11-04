@@ -74,34 +74,7 @@ function Confirm()
 		}]
 	});	
 
-	new Ext.data.Store({
-						fields : ["cost_center_id","title"],
-						proxy : {
-							type: 'jsonp',
-							url : this.address_prefix + "../../../global/domain.data.php?task=searchCostCenter",
-							reader: {
-								root: 'rows',
-								totalProperty: 'totalCount'
-							}
-						},
-						autoLoad : true,
-						listeners:{
-							load : function(){
-								this.each(function (record) {
-									ConfirmObject.formPanel.down("[itemId=chkgroup]").add({
-										xtype : "checkbox",
-										name : "chkcostID_" + record.data.cost_center_id ,
-										boxLabel : record.data.title,
-										checked:true,
-										style:'font-size:11px'		
-									});
-									
-								});
-													
-							}}
 						
-					});
-					
 
 }
 

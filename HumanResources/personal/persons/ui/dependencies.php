@@ -40,7 +40,7 @@ $colu = $dg->addColumn("ش.ش", "idcard_no", "string");
 $colu->width = 60;
 
 $colu = $dg->addColumn("تاریخ تولد", "birth_date", GridColumn::ColumnType_date);
-$colu->editor = ColumnEditor::SHDateField();
+//$colu->editor = ColumnEditor::SHDateField();
 $colu->width = 80;
 
 $colu = $dg->addColumn("نام پدر", "father_name", "");

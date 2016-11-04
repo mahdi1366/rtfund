@@ -6,12 +6,12 @@
 require_once("../header.inc.php");
 include_once('enpayment.php');
 
-if(empty($_REQUEST["PartID"]))
+if(empty($_REQUEST["RequestID"]))
 {
 	echo "دسترسی نامعتبر است.";
 	die();
 }
-$resNum = $_REQUEST["PartID"];
+$resNum = $_REQUEST["RequestID"];
 $redirectUrl = "http://portal.krrtf.ir/portal/epayment/epayment_step2.php";
 $amount = $_REQUEST["amount"];
 $_SESSION["USER"]["SHAPARAK_AMOUNT"] = $amount;

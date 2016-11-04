@@ -85,12 +85,12 @@ class manage_staff_tax extends PdoDataAccess
         if(!$this->date_overlap($PID))
 			return false ;
 
-	 	if( PdoDataAccess::insert("staff_tax_history", $this) === false )
+	 	if( PdoDataAccess::insert("HRM_staff_tax_history", $this) === false )
 			return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->RelatedPersonType = 3 ;
 		$daObj->RelatedPersonID = $this->staff_id;
 		$daObj->TableName = "staff_tax_history";
 		$daObj->execute();
@@ -108,12 +108,12 @@ class manage_staff_tax extends PdoDataAccess
 	 	$whereParams[":sid"] = $this->staff_id;
 		$whereParams[":taxid"] = $this->tax_history_id ;
 
-	 	if( PdoDataAccess::update("staff_tax_history",$this," staff_id=:sid  and tax_history_id = :taxid ", $whereParams) === false)
+	 	if( PdoDataAccess::update("HRM_staff_tax_history",$this," staff_id=:sid  and tax_history_id = :taxid ", $whereParams) === false)
 			return false;
 			
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->RelatedPersonType = 3;
 		$daObj->RelatedPersonID = $this->staff_id;		
 		$daObj->TableName = "staff_tax_history";
 		$daObj->execute();
@@ -124,9 +124,10 @@ class manage_staff_tax extends PdoDataAccess
 
 	static function GetAllStaffTaxHistory($personid){
 
-		$query = " select sth.* , bi.title person_type, p.personid 
-						from staff_tax_history sth inner join staff s on sth.staff_id = s.staff_id inner join persons p on p.personid = s.personid
-                                                 inner join Basic_Info bi on bi.typeid = 16 and bi.infoid =  s.person_type
+		$query = " select sth.* , 'روز مزد بیمه ای' person_type, p.personid 
+						from HRM_staff_tax_history sth inner join HRM_staff s on sth.staff_id = s.staff_id 
+											inner join HRM_persons p on p.personid = s.personid
+                                             
                                                         where p.personid  = ". $personid ." and payed_tax_value IS NULL";
 
 		$temp = PdoDataAccess::runquery($query);
@@ -136,7 +137,7 @@ class manage_staff_tax extends PdoDataAccess
 
 	function Remove()
 	{
-		$result = parent::delete("staff_tax_history", " staff_id = :SID and tax_history_id = :ID ",
+		$result = parent::delete("HRM_staff_tax_history", " staff_id = :SID and tax_history_id = :ID ",
 							array(":SID" => $this->staff_id,
 								  ":ID" => $this->tax_history_id));
 		if($result === false)
@@ -145,7 +146,7 @@ class manage_staff_tax extends PdoDataAccess
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
 		$daObj->RelatedPersonID = $this->staff_id;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->RelatedPersonType = 3;
 		$daObj->MainObjectID = $this->tax_history_id;
 		$daObj->TableName = "staff_tax_history";
 		$daObj->execute();

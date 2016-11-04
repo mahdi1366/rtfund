@@ -8,7 +8,7 @@ require_once '../header.inc.php';
 require_once inc_dataGrid;
 
 //................  GET ACCESS  .....................
-$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+$accessObj = FRW_access::GetAccess(empty($_POST["MenuID"]) ? "0" : $_POST["MenuID"]);
 //...................................................
 if(!empty($_SESSION["USER"]["portal"]))
 {
@@ -35,6 +35,7 @@ $dg = new sadaf_datagrid("dg","/loan/request/request.data.php?task=GetRequestPar
 $dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "StatusID","", true);
 $dg->addColumn("", "PartDate","", true);
+$dg->addColumn("", "PartStartDate","", true);
 $dg->addColumn("", "PartAmount","", true);
 $dg->addColumn("", "InstallmentCount","", true);
 $dg->addColumn("", "IntervalType","", true);
@@ -47,7 +48,6 @@ $dg->addColumn("", "FundWage","", true);
 $dg->addColumn("", "IsStarted","", true);
 $dg->addColumn("", "IsEnded","", true);
 $dg->addColumn("", "IsPaid","", true);
-$dg->addColumn("", "IsPartEnded","", true);
 $dg->addColumn("", "WageReturn","", true);
 $dg->addColumn("", "DelayReturn","", true);
 $dg->addColumn("", "imp_VamCode","", true);
@@ -58,6 +58,7 @@ $dg->addColumn("", "AgentReturn","", true);
 $dg->addColumn("", "AgentDelayReturn","", true);
 $dg->addColumn("", "IsDocRegister","", true);
 $dg->addColumn("", "DelayPercent","", true);
+$dg->addColumn("", "IsHistory","", true);
 
 
 $col = $dg->addColumn("عنوان فاز", "PartDesc", "");
@@ -66,7 +67,7 @@ $col->sortable = false;
 if(!$ReadOnly)
 {
 	if($User == "Staff")
-		$dg->addButton("addPart", "ایجاد فاز قرارداد", "add", "function(){RequestInfoObject.PartInfo(false);}");
+		$dg->addButton("addPart", "ایجاد شرایط", "add", "function(){RequestInfoObject.PartInfo(false);}");
 	
 	$col = $dg->addColumn("", "PartID");
 	$col->renderer = "RequestInfo.OperationRender";

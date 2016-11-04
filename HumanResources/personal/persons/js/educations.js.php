@@ -212,8 +212,7 @@ PersonEducation.prototype.editEducInfo = function(record)
 	this.form.thesis_ptitle.value = record.data.thesis_ptitle;
 	this.form.thesis_etitle.value = record.data.thesis_etitle;
 	this.form.comments.value = record.data.comments;
-	
-        Ext.get(this.get("EducDIV")).readonly(new Array("btn_cancel"));
+	    
 	
 }
 

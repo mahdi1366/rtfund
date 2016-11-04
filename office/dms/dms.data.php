@@ -49,7 +49,7 @@ function SelectAll(){
 		{
 			$value = $row["ParamValue"];
 			if($row["ParamType"] == "currencyfield")
-				$value = number_format((int)$value);
+				$value = number_format($value*1);
 			$temp[$i]["paramValues"] .= $row["ParamDesc"] . " : " . $value . "<br>";
 		}
 		if($temp[$i]["paramValues"] != "")
@@ -176,6 +176,18 @@ function ConfirmDocument(){
 	$obj->IsConfirm = $_POST["mode"];
 	$obj->ConfirmPersonID = $_SESSION["USER"]["PersonID"];
 	$obj->RejectDesc = $_POST["RejectDesc"];
+	
+	$result = $obj->EditDocument();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function UnConfirmDocument(){
+	
+	$obj = new DMS_documents();
+	
+	$obj->DocumentID = $_REQUEST["DocumentID"];
+	$obj->IsConfirm = "NOTSET";
 	
 	$result = $obj->EditDocument();
 	echo Response::createObjectiveResponse($result, "");

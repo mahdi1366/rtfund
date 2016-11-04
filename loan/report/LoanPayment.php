@@ -10,10 +10,10 @@ require_once '../request/request.data.php';
 
 if(isset($_REQUEST["show"]))
 {
-	$PartID = $_REQUEST["PartID"];
+	$RequestID = $_REQUEST["RequestID"];
 	
-	$dt = LON_installments::SelectAll("PartID=?" , array($PartID));
-	$returnArr = ComputePayments($PartID, $dt);
+	$dt = LON_installments::SelectAll("r.RequestID=?" , array($RequestID));
+	$returnArr = ComputePayments($RequestID, $dt);
 	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
@@ -72,8 +72,8 @@ if(isset($_REQUEST["show"]))
 	
 	echo "</td></tr></table>";
 	
-	$partObj = new LON_ReqParts($PartID);
-	$ReqObj = new LON_requests($partObj->RequestID);
+	$ReqObj = new LON_requests($RequestID);
+	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	
 	?>
 	<table style="border:2px groove #9BB1CD;border-collapse:collapse;width:100%;font-family: tahoma;font-size: 12px;line-height: 20px;">
@@ -142,23 +142,23 @@ function LoanReport_payments()
 			store: new Ext.data.Store({
 				proxy:{
 					type: 'jsonp',
-					url: this.address_prefix + '../request/request.data.php?task=selectParts',
+					url: this.address_prefix + '../request/request.data.php?task=SelectAllRequests',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['loanFullname','PartAmount','PartDesc',"RequestID","PartDate", "PartID",{
+				fields :  ['loanFullname','ReqAmount',"RequestID","PartDate", "ReqDate","RequestID",{
 					name : "fullTitle",
 					convert : function(value,record){
 						return "[ " + record.data.RequestID + " ] " + record.data.loanFullname + 
-							+ " " + record.data.PartDesc + " به مبلغ " + 
-							Ext.util.Format.Money(record.data.PartAmount) + " مورخ " + 
-							MiladiToShamsi(record.data.PartDate);
+							+ " به مبلغ " + 
+							Ext.util.Format.Money(record.data.ReqAmount) + " مورخ " + 
+							MiladiToShamsi(record.data.ReqDate);
 					}
 				}]				
 			}),
 			displayField: 'fullTitle',
 			pageSize : 10,
-			valueField : "PartID",
-			hiddenName : "PartID",
+			valueField : "RequestID",
+			hiddenName : "RequestID",
 			width : 600,
 			tpl: new Ext.XTemplate(
 				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
@@ -178,7 +178,7 @@ function LoanReport_payments()
 				'</tpl>',
 				'</table>'
 			),
-			itemId : "PartID"
+			itemId : "RequestID"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",

@@ -19,13 +19,18 @@ if(isset($_REQUEST["show"]))
 		
 		foreach($_POST as $key => $value)
 		{
-			if($key == "excel" || $value === "" || strpos($key, "combobox") !== false)
+			if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
+					$value === "" || strpos($key, "combobox") !== false)
 				continue;
 			$prefix = "";
 			switch($key)
 			{
 				case "CustomerWage":
 					$prefix = "p.";
+					break;
+				case "fromRequestID":
+				case "toRequestID":
+					$prefix = "r.";
 					break;
 				case "fromReqDate":
 				case "toReqDate":
@@ -64,29 +69,33 @@ if(isset($_REQUEST["show"]))
 				TotalInstallmentAmount
 				
 			from LON_requests r
-			join LON_ReqParts p using(RequestID)
+			join LON_ReqParts p on(r.RequestID=p.RequestID AND p.IsHistory='NO')
 			left join LON_loans l using(LoanID)
 			join BSC_branches using(BranchID)
 			left join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 			left join (
-				select PartID,sum(PayAmount) TotalPayAmount from LON_BackPays
-				group by PartID			
-			)t1 on(p.PartID=t1.PartID)
+				select RequestID,sum(PayAmount) TotalPayAmount from LON_BackPays
+				group by RequestID			
+			)t1 on(r.RequestID=t1.RequestID)
 			left join (
-				select PartID,sum(InstallmentAmount) TotalInstallmentAmount 
+				select RequestID,sum(InstallmentAmount) TotalInstallmentAmount 
 				from LON_installments
-				group by PartID			
-			)t2 on(p.PartID=t2.PartID)
-			where 1=1 " . $where . " group by r.RequestID";
+				group by RequestID			
+			)t2 on(r.RequestID=t2.RequestID)
+			where 1=1 " . $where . " 
+			
+			group by r.RequestID
+			order by " . $_POST["OrderBy"] . " " . $_POST["OrderByDirection"];
 	
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
+	$query = PdoDataAccess::GetLatestQueryString();
 	for($i=0; $i< count($dataTable); $i++)
 	{
-		$dt = LON_installments::SelectAll("PartID=?" , array($dataTable[$i]["PartID"]));
-		$returnArr = ComputePayments($dataTable[$i]["PartID"], $dt);
+		$dt = LON_installments::SelectAll("r.RequestID=?" , array($dataTable[$i]["RequestID"]));
+		$returnArr = ComputePayments($dataTable[$i]["RequestID"], $dt);
 		
 		$dataTable[$i]["remainder"] = count($returnArr)>0 ?
 			$returnArr[ count($returnArr) -1 ]["TotalRemainder"] : 0;
@@ -123,7 +132,7 @@ if(isset($_REQUEST["show"]))
 	if(!$rpg->excel)
 	{
 		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
-		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
+		echo "<div style=display:none>" . $query . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>
@@ -356,6 +365,46 @@ function LoanReport_total()
 			name : "ForfeitPercent",
 			hideTrigger : true,
 			fieldLabel : "درصد دیرکرد"
+		},{
+			xtype : "numberfield",
+			name : "DelayPercent",
+			hideTrigger : true,
+			fieldLabel : "کارمزد تنفس"
+		},{
+			xtype : "fieldset",
+			title : "مرتب سازی خروجی",
+			layout : "hbox",
+			items : [{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					data : [
+						["r.RequestID", "شماره وام"],
+						["r.ReqDate", "تاریخ درخواست"],
+						["p.PartDate", "تاریخ پرداخت"],
+						["PartAmount", "مبلغ پرداخت"],
+						["BranchName", "شعبه"],
+						["ReqFullname", "معرفی کننده"]
+					],
+					fields : ['id','title']
+				}),
+				value : "r.RequestID",
+				valueField : "id",
+				displayField : "title",
+				hiddenName : "OrderBy"
+			},{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					data : [
+						["Desc", "نزولی"],
+						["Asc", "صعودی"]
+					],
+					fields : ['id','title']
+				}),
+				value : "Desc",
+				valueField : "id",
+				displayField : "title",
+				hiddenName : "OrderByDirection"
+			}]
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",

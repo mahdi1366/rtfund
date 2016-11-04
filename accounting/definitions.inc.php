@@ -20,7 +20,7 @@ define("DOCTYPE_SAVING_OUT", "12");
 define("DOCTYPE_WARRENTY", "13");
 define("DOCTYPE_EQUALCHECKS", "14");
 define("DOCTYPE_OUTERCHEQUE", "15");
-
+define("DOCTYPE_LOAN_DIFFERENCE", "16");
 
 define("TAFTYPE_PERSONS", "1");
 define("TAFTYPE_YEARS", "2");

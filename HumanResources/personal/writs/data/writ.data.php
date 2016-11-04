@@ -1,15 +1,12 @@
 <?php
 //---------------------------
-// programmer:	Jafarkhani
-// create Date:	88.06.17
+// programmer:	Mahdipour
+// create Date:	94.12
 //---------------------------
 ini_set("display_errors","On") ; 
 $address_prefix = getenv("DOCUMENT_ROOT");
-echo $address_prefix."1111";
 
 require_once '../../../header.inc.php'; 
-echo $address_prefix."2222";
-
 require_once '../class/writ.class.php'; 
 require_once '../../staff/class/staff.class.php';
 
@@ -407,6 +404,7 @@ function MakeAdvanceSearchWhere(&$where, &$whereParam)
 function selectWrtData ()
 { 
 
+
 	$where = "";
 	$whereParam = array();
 	
@@ -490,42 +488,12 @@ function selectWrtData ()
 		}
 	}
 	
-	//$where .= isset ( $_GET ["sort"] ) ? " order by " . $_GET ["sort"] . " " . $_GET ["dir"] ." , writ_id DESC , writ_ver DESC" : "";
-	//$where .= isset($_GET ["start"]) ? " limit " . $_GET ["start"] . "," . $_GET ["limit"] : "";
 
 	$temp = manage_writ::GetAllWrits($where .dataReader::makeOrder(), $whereParam);
  
 	$no = $temp->rowCount();
         
-	/*if($no){
-	    
-		require_once 'excel.php';
-		header("Content-type: application/zip");
-		header("Content-disposition: inline; filename=excel.xls");
-		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-		header("Pragma: public");
-		
-		require_once "php_writeexcel-0.3.0/class.writeexcel_workbook.inc.php";
-		require_once "php_writeexcel-0.3.0/class.writeexcel_worksheet.inc.php";
-
-		$workbook = &new writeexcel_workbook("/tmp/hrmstemp.xls");
-		$worksheet =& $workbook->addworksheet("Sheet1");
-		$heading =& $workbook->addformat(array('align' => 'center', 'bold' => 1, 'bg_color' => 'black', 'color' => 'white'));
-		
-		$temp = $temp->fetchAll();
-		
-		// group headers
-		for($i=0; $i < count($temp); $i++)
-		    for($j=0; $j < count($temp[$i]); $j++)
-			$worksheet->write($i, $j, $temp[$i][$j]);
-
-		 $workbook->close();
-
-		echo file_get_contents("/tmp/hrmstemp.xls");
-		unlink("/tmp/hrmstemp.xls");
-		die();   
-	}*/
-       
+	      
 
 	$temp = PdoDataAccess::fetchAll($temp, $_GET ["start"], $_GET ["limit"]);
 

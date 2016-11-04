@@ -37,8 +37,8 @@ class manage_dependent_support extends PdoDataAccess
 
 			$selectedItm = " , concat( bi4.title  ,' ',dsh.calc_year_from ) start_calc , concat(bi5.title ,' ',dsh.calc_year_to) end_calc ";
 			
-			$joinqry = "	LEFT JOIN Basic_Info bi4 ON (dsh.calc_month_from = bi4.InfoID and bi4.TypeID = 41)
-						    LEFT JOIN Basic_Info bi5 ON (dsh.calc_month_to = bi5.InfoID and bi5.TypeID = 41)	";
+			$joinqry = "	LEFT JOIN BaseInfo bi4 ON (dsh.calc_month_from = bi4.InfoID and bi4.TypeID = 41)
+						    LEFT JOIN BaseInfo bi5 ON (dsh.calc_month_to = bi5.InfoID and bi5.TypeID = 41)	";
 			
 			$where .= (HRSystem == SalarySystem ) ? 'AND ( status='.IN_SALARY.' OR 
 				                                           status='.DELETE_IN_SALARY.' OR status='.DELETE_IN_EMPLOYEES.')' : '' ;
@@ -71,7 +71,7 @@ class manage_dependent_support extends PdoDataAccess
 				$query .= ($where != "") ? " where " . $where : "";			
 
 		$temp = PdoDataAccess::runquery($query, $whereParam);
-				
+			
 		return $temp;	
 	}
 
@@ -109,7 +109,7 @@ class manage_dependent_support extends PdoDataAccess
 
 	function Edit()
 	{
-		$result = parent::update("person_dependent_supports", $this, 
+		$result = parent::update("HRM_person_dependent_supports", $this, 
 				"PersonID=:psid and master_row_no=:mrowno and row_no=:rowNo", 
 				array(":psid" => $this->PersonID,
 					  ":mrowno" => $this->master_row_no,
@@ -119,7 +119,7 @@ class manage_dependent_support extends PdoDataAccess
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->RelatedPersonType = 3 ;
 		$daObj->RelatedPersonID = $this->PersonID;
 		$daObj->MainObjectID = $this->row_no;
 		$daObj->TableName = "person_dependent_supports";
@@ -131,7 +131,7 @@ class manage_dependent_support extends PdoDataAccess
 	
 	function Remove()
 	{
-		$result = parent::delete("person_dependent_supports", "PersonID=:pid and master_row_no=:mrno and row_no=:rno", array(
+		$result = parent::delete("HRM_person_dependent_supports", "PersonID=:pid and master_row_no=:mrno and row_no=:rno", array(
 			":pid" => $this->PersonID,
 			":mrno" => $this->master_row_no,
 			":rno" => $this->row_no
@@ -142,7 +142,7 @@ class manage_dependent_support extends PdoDataAccess
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
 		$daObj->RelatedPersonID = $this->PersonID;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->RelatedPersonType = 3 ;
 		$daObj->MainObjectID = $this->row_no;
 		$daObj->TableName = "person_dependent_supports";
 		$daObj->execute();

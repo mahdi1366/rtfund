@@ -42,10 +42,10 @@ if($_POST['State']== 'OK') {
 			</tr>
 		</table>";
 
-		$PartID = $_POST["ResNum"];
+		$RequestID = $_POST["ResNum"];
 	
 		$obj = new LON_BackPays();
-		$obj->PartID = $PartID;
+		$obj->RequestID = $RequestID;
 		$obj->PayType = 4;
 		$obj->PayAmount = $totalAmount;
 		$obj->PayDate = PDONOW;

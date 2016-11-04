@@ -12,6 +12,7 @@ Person.prototype = {
 	staffInfoForm : "",	
 	IncludeHistoryGrid : "" ,
 	sid : "" ,
+        pid: "" ,
 	person_type : "" ,
 	mainTab : "",
 
@@ -113,7 +114,32 @@ function Person()
 					});
 				}
 			 }
-		}		
+		}	
+,
+		{
+					 itemId: 'tax'
+					,title: 'سوابق مالی'
+					,style: 'padding:5px'
+					,height:700
+					,loader:{
+						url: this.address_prefix + "staff_tax_history.php",
+						scripts:true
+					}
+					,disabled: (this.personInfoForm.PersonID.value == "") ? true : false
+					,listeners: {activate: function(tab){
+						if(tab.isLoaded)
+							return;
+						tab.loader.load({
+							 params : {
+								Q0 : PersonObject.personInfoForm.PersonID.value,
+								Q1 : PersonObject.personInfoForm.PersonID.value,
+								Q2 : PersonObject.personInfoForm.PersonID.value
+								
+							}
+						});
+					}
+					  }
+						}	
             ]
     });
     
@@ -363,11 +389,15 @@ function Person()
 		applyTo:  this.get("military_to_date"),
 		format: 'Y/m/d'
 	});
-    
-	this.IncludeHistoryGrid = <?= $includeHistoryGrid?>;
-	this.IncludeHistoryGrid.render(this.get("includeHistoryGRID"));
-	this.sid = <?= $SummeryInfo[0]["staff_id"] ?>;
-	this.person_type = '<?= $SummeryInfo[0]["person_type_title"]  ?>' ;
+    this.IncludeHistoryGrid = <?= $includeHistoryGrid?>;
+
+    <?if($personID > 0 ){ ?>
+		this.IncludeHistoryGrid.render(this.get("includeHistoryGRID"));
+		this.sid = <?= $SummeryInfo[0]["staff_id"] ?>;
+this.pid = <?= $personID ?>;
+		
+    <?}?>
+	
 }
 
 var PersonObject = new Person();
@@ -402,6 +432,7 @@ Person.prototype.saveStaffAction = function()
                             PersonObject.mainTab.items.get("Tab_dependency").enable(); 
 			    PersonObject.mainTab.items.get("educations").enable();
 			    PersonObject.mainTab.items.get("writs").enable();
+        
 			}
 			else
 			{
@@ -430,7 +461,7 @@ Person.prototype.saveAction = function()
 			if(response.responseText.indexOf("InsertError") != -1 || 
 				response.responseText.indexOf("UpdateError") != -1)
 			{
-			alert('dfdff');
+			
 				alert("عملیات مورد نظر با شکست مواجه شد");
 				return;
 			}
@@ -447,6 +478,11 @@ Person.prototype.saveAction = function()
 				PersonObject.mainTab.items.get("Tab_dependency").enable();                                
                                 PersonObject.mainTab.items.get("educations").enable();
                                 PersonObject.mainTab.items.get("writs").enable();
+                                PersonObject.IncludeHistoryGrid.render(PersonObject.get("includeHistoryGRID"));		
+				PersonObject.sid =  st.data.SID ; 
+               PersonObject.pid =  st.data.PID ; 	
+
+
 			}
 			else
 			{
@@ -574,7 +610,7 @@ Person.prototype.SaveHistory = function(store,record,op)
 		url: PersonObject.address_prefix + '../data/person.data.php?task=saveIncludeHistory',
 		params:{
 			record: Ext.encode(record.data) ,
-			Q0 : <?= $personID?>
+			Q0 : this.pid
 		},
 		method: 'POST',
 
@@ -585,7 +621,8 @@ Person.prototype.SaveHistory = function(store,record,op)
 			if(st.success == true )
 			{
 				alert("ذخیره سازی با موفقیت انجام شد.");
-				PersonObject.IncludeHistoryGrid.getStore().load();
+				PersonObject.IncludeHistoryGrid.getStore().proxy.extraParams['PID'] = PersonObject.pid ; 
+				PersonObject.IncludeHistoryGrid.getStore().load();	
 				return;
 			}
 			else

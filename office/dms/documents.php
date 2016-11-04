@@ -109,6 +109,8 @@ if(isset($_SESSION["USER"]["framework"]))
 	$col = $dg->addColumn("تایید/رد", "", "");
 	$col->renderer = "function(v,p,r){return ManageDocument.ConfirmRender(v,p,r)}";
 	$col->width = 60;
+	
+	$dg->addButton("", "برگشت از تایید", "return", "function(){ManageDocumentObject.UnConfirm();}");
 }
 
 $dg->emptyTextOfHiddenColumns = true;
@@ -621,6 +623,39 @@ ManageDocument.prototype.ConfirmDocument = function(mode){
 				if(ManageDocumentObject.confirmWin)
 					ManageDocumentObject.confirmWin.hide();
 			}
+			else
+			{
+				if(st.data == "")
+					alert("خطا در اجرای عملیات");
+				else
+					alert(st.data);
+			}
+		},
+		failure: function(){}
+	});
+}
+
+ManageDocument.prototype.UnConfirm = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+		return;
+	mask = new Ext.LoadMask(this.grid,{msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		url: this.address_prefix +'dms.data.php',
+		method: "POST",
+		params: {
+			task: "UnConfirmDocument",
+			DocumentID : record.data.DocumentID
+		},
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+
+			if(st.success)
+				ManageDocumentObject.grid.getStore().load();
 			else
 			{
 				if(st.data == "")

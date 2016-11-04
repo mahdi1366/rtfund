@@ -8,25 +8,24 @@ require_once 'request.class.php';
 include_once inc_dataGrid;
 
 $framework = isset($_SESSION["USER"]["framework"]);
-$PartID = 0;
+$RequestID = 0;
 $editable = false;
 if($framework)
 {
-	if(empty($_POST["PartID"]))
+	if(empty($_POST["RequestID"]))
 		die();
-	$PartID = $_POST["PartID"];
 	
-	$obj = new LON_ReqParts($PartID);
-	$ReqObj = new LON_requests($obj->RequestID);
+	$RequestID = $_POST["RequestID"];
+	$ReqObj = new LON_requests($RequestID);
 	
 	if($ReqObj->IsEnded == "NO")
 		$editable = true;
 }	
 
-$dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetPartInstallments","grid_div");
+$dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetInstallments","grid_div");
 
 $dg->addColumn("", "InstallmentID","", true);
-$dg->addColumn("", "PartID","", true);
+$dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "BankDesc", "", true);
 $dg->addColumn("", "ChequeBranch", "", true);
@@ -83,7 +82,7 @@ Installment.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 	
 	framework : <?= $framework ? "true" : "false" ?>,
-	PartID : <?= $PartID ?>,
+	RequestID : <?= $RequestID ?>,
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -112,7 +111,7 @@ function Installment()
 			return "";
 		}
 		
-		this.grid.getStore().proxy.extraParams = {PartID : this.PartID};
+		this.grid.getStore().proxy.extraParams = {RequestID : this.RequestID};
 		this.grid.render(this.get("div_grid"));
 		return;
 	}
@@ -129,20 +128,20 @@ function Installment()
 			store: new Ext.data.Store({
 				proxy:{
 					type: 'jsonp',
-					url: this.address_prefix + 'request.data.php?task=selectParts',
+					url: this.address_prefix + 'request.data.php?task=SelectMyRequests',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['PartAmount','PartDesc',"RequestID","PartDate", "PartID",{
+				fields :  ['PartAmount',"RequestID","PartDate", "RequestID",{
 					name : "fullTitle",
 					convert : function(value,record){
-						return "کد وام : " + record.data.RequestID + "  " + record.data.PartDesc + " به مبلغ " + 
+						return "کد وام : " + record.data.RequestID + " به مبلغ " + 
 							Ext.util.Format.Money(record.data.PartAmount) + " مورخ " + 
 							MiladiToShamsi(record.data.PartDate);
 					}
 				}]
 			}),
 			displayField: 'fullTitle',
-			valueField : "PartID",
+			valueField : "RequestID",
 			width : 600,
 			tpl: new Ext.XTemplate(
 				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
@@ -160,11 +159,11 @@ function Installment()
 				'</tpl>',
 				'</table>'
 			),
-			itemId : "PartID",
+			itemId : "RequestID",
 			listeners :{
 				select : function(combo,records){
 					InstallmentObject.grid.getStore().proxy.extraParams = {
-						PartID : this.getValue()
+						RequestID : this.getValue()
 					};
 					if(InstallmentObject.grid.rendered)
 						InstallmentObject.grid.getStore().load();
@@ -173,7 +172,7 @@ function Installment()
 
 					InstallmentObject.PartPanel.collapse();
 					
-					InstallmentObject.PartID = this.getValue();
+					InstallmentObject.RequestID = this.getValue();
 					
 					InstallmentObject.PayPanel.show();
 					InstallmentObject.PayPanel.down("[itemId=PayCode]").setValue(
@@ -232,9 +231,9 @@ var InstallmentObject = new Installment();
 
 Installment.prototype.PayCodeRender = function(){
 
-	PartID = this.PartPanel.down("[itemId=PartID]").getValue();
+	RequestID = this.PartPanel.down("[itemId=RequestID]").getValue();
 
-	st = PartID.lpad("0", 11);
+	st = RequestID.lpad("0", 11);
 	num = (st[0]*11) + (st[1]*10) + (st[2]*9) + (st[3]*1) + (st[4]*2) + (st[5]*3)
 		+ (st[6]*4) + (st[7]*5) + (st[8]*6) + (st[9]*7) + (st[10]*8);
 	remain = num % 99;
@@ -244,14 +243,14 @@ Installment.prototype.PayCodeRender = function(){
 
 Installment.prototype.PayInstallment = function(){
 	
-	PartID = this.PartPanel.down("[itemId=PartID]").getValue();
+	RequestID = this.PartPanel.down("[itemId=RequestID]").getValue();
 	PayAmount = this.PayPanel.down("[itemId=PayAmount]").getValue();
 	
 	if(PayAmount == "")
 		return;
 
-	window.open(this.address_prefix + "../../portal/epayment/epayment_step1.php?PartID=" + 
-		PartID + "&amount=" + PayAmount);	
+	window.open(this.address_prefix + "../../portal/epayment/epayment_step1.php?RequestID=" + 
+		RequestID + "&amount=" + PayAmount);	
 }
 
 Installment.prototype.ComputeInstallments = function(){
@@ -271,7 +270,7 @@ Installment.prototype.ComputeInstallments = function(){
 			method: "POST",
 			params: {
 				task: "ComputeInstallments",
-				PartID : me.PartID
+				RequestID : me.RequestID
 			},
 			success: function(response){
 				mask.hide();
@@ -313,7 +312,7 @@ Installment.prototype.SaveInstallment = function(store, record){
 
 Installment.prototype.PayReport = function(){
 
-	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&PartID=" + this.PartID);
+	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&RequestID=" + this.RequestID);
 }
 
 Installment.prototype.DelayInstallments = function(){
@@ -361,7 +360,7 @@ Installment.prototype.DelayInstallments = function(){
 						method: "POST",
 						params: {
 							task: "DelayInstallments",
-							PartID : record.data.PartID,
+							RequestID : record.data.RequestID,
 							InstallmentID : record.data.InstallmentID,
 							months : me.delayWin.down("[name=monthCount]").getValue()						
 						},

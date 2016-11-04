@@ -30,8 +30,8 @@ class manage_person_dependency extends PdoDataAccess
 	static function GetAllDependency($where="", $whereParam = array())
 	{
 		$query = " select  pd.*,
-                           bi.InfoDesc ,
-                           bi.TypeID
+                           bi.InfoDesc Title ,
+                           bi.infoID
 
                    	from  HRM_person_dependents pd
 						INNER JOIN BaseInfo bi ON ( bi.InfoID = pd.dependency  and bi.TypeID = 54 )
@@ -39,7 +39,7 @@ class manage_person_dependency extends PdoDataAccess
 		$query .= ($where != "") ? " where " . $where : "";
 				
 		$temp = parent::runquery($query, $whereParam);
-		 
+	
 		for($i=0 ; $i<count($temp);$i++)
 		{
 			$query = "select 
@@ -110,7 +110,7 @@ class manage_person_dependency extends PdoDataAccess
 	 	$whereParams[":pid"] = $PersonID;
 	 	$whereParams[":rowid"] = $row_no;
 	 	
-	 	if(parent::delete("person_dependents"," PersonID=:pid and row_no=:rowid", $whereParams) === false)
+	 	if(parent::delete("HRM_person_dependents"," PersonID=:pid and row_no=:rowid", $whereParams) === false)
 		{
 			$error = implode("", parent::popExceptionDescription());
 			if(strpos($error, "a foreign key constraint fails") !== false)
@@ -129,7 +129,7 @@ class manage_person_dependency extends PdoDataAccess
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
 		$daObj->MainObjectID = $row_no;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->RelatedPersonType = 3 ;
 		$daObj->RelatedPersonID = $PersonID;
 		$daObj->TableName = "person_dependents";
 		$daObj->execute();

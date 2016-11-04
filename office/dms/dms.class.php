@@ -193,7 +193,7 @@ class DMS_packages extends OperationClass
 		return parent::runquery_fetchMode("
 			select d.* , concat_ws(' ',fname,lname,CompanyName) fullname
 			from DMS_packages d
-			join BSC_persons p using(PersonID)
+			left join BSC_persons p using(PersonID)
 			where 1=1 " . $where, $whereParams);		
 	}
 	

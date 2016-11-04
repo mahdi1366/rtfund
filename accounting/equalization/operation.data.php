@@ -102,9 +102,6 @@ function Equalization_UpdateChecks(){
 			$SumAmount += $row["ParamValue"]*1;
 			$countAmount++;
 			
-			$PartObj = new LON_ReqParts($obj->PartID);
-			$ReqObj = new LON_requests($PartObj->RequestID);
-			$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 			if($dt[0]["IsSupporter"] == "YES")
 				$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
 			else

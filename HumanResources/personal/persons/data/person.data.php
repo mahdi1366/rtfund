@@ -248,7 +248,7 @@ function saveData() {
 		$obj->issue_date = DateModules::Shamsi_to_Miladi($_POST["issue_date"]);
 		$obj->military_from_date = DateModules::Shamsi_to_Miladi($_POST["military_from_date"]);
 		$obj->military_to_date = DateModules::Shamsi_to_Miladi($_POST["military_to_date"]);
-		$obj->person_type = 5 ; 
+		$obj->person_type = 3 ; 
                 
                 /*$obj = new manage_person($_POST["PersonID"]);
 		$obj->insure_no = $_POST["insure_no"];
@@ -271,7 +271,7 @@ function saveData() {
 	if (trim($_FILES['ProfPhoto']['name']) == '' ) 
 		{   
 			//$message=' نام فایل خالی است ';
-			$PhotoSwitch = false;
+			$PhotoSwitch = FALSE;
 		}
 		elseif ( $_FILES['ProfPhoto']['error'] != 0 )
 			$message=' خطا در ارسال فایل' . $_FILES['ProfPhoto']['error'];
@@ -330,9 +330,10 @@ function saveData() {
 			
 		}
 			
+
 		$return = $obj->AddPerson($staffObject);	
 		
-		if($return === TRUE) 
+		if($return === TRUE && $PhotoSwitch !== FALSE ) 
 		{		
 		
 			$qry = " update HRM_persons set picture = '$data' where PersonID = ".$obj->PersonID ; 
@@ -354,12 +355,21 @@ function saveData() {
 		$staffObject = new manage_staff($obj->PersonID, $obj->person_type);
 					 
 		PdoDataAccess::FillObjectByArray($staffObject, $_POST);
-		$staffObject->EditStaff(); 	
+		$return = $staffObject->EditStaff(); 
+
+              if($return === TRUE) 
+		{		
+		
+			$qry = " update HRM_persons set picture = '$data' where PersonID = ".$obj->PersonID ; 
+			if(PdoDataAccess::runquery($qry) === false)		
+			$return	= false ;			  
+		}	
+
 		
 		
 	} 	
 		
-	echo $return ? Response::createObjectiveResponse(true, $obj->PersonID) :
+	echo $return ? Response::createObjectiveResponse(true, "{PID:" . $obj->PersonID . ",SID:" . $staffObject->staff_id . "}" ) :
 			Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString("\n"));
 	die();
 }

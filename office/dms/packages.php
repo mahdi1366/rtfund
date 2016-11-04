@@ -44,10 +44,10 @@ $col->sortable = false;
 $col->renderer = "function(v,p,r){return Package.itemsRender(v,p,r);}";
 $col->width = 30;
 
-$col = $dg->addColumn("", "");
+/*$col = $dg->addColumn("", "");
 $col->sortable = false;
 $col->renderer = "function(v,p,r){return Package.reportRender(v,p,r);}";
-$col->width = 30;			
+$col->width = 30;*/			
 
 $dg->title = "لیست پرونده ها";
 $dg->height = 500;
@@ -394,7 +394,7 @@ Package.prototype.SavingShow = function(){
 			modal : true,
 			closeAction : "hide",
 			loader : {
-				url : "/accounting/saving/saving.php",
+				url : "/accounting/saving/SavingLoan.php",
 				scripts : true
 			},
 			buttons :[{

@@ -241,31 +241,7 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
                     <td width="25%"><?= $drp_SitAvailable ?>&nbsp;*</td>
                   
             </tr>
-		 
-	
-            <tr>
-                    <td width="25%">					
-                    سرفصل اعتباري:
-                    </td>
-                   
-                    <td width="75%" colspan="3">
-                    <?= $drp_CreditTopic ?>
-                    </td>
-                    <? if($obj->salary_item_type_id == NULL ){  ?>
-                    <td width="75%" colspan="3">
-                         <input type='hidden' id='credit_topic' name='credit_topic'
-                            value="1">
-                         فصل 1
-                    </td>
-                    <? } elseif( $obj->salary_item_type_id != NULL ){  ?>
-
-                     <td width="75%" colspan="3">
-			 <input type='hidden' id='credit_topic' name='credit_topic'
-                            value="<?= $obj->credit_topic ?>" >
-                         <? if($obj->credit_topic == 1 )  echo "فصل 1"; else echo "سایر فصول" ;  ?>
-                     </td>
-                    <? }?>
-            </tr>
+           
             <tr>
                     <td width="25%">
                     مشمول بيمه ؟

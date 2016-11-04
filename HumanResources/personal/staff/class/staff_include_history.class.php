@@ -135,7 +135,7 @@ class manage_staff_include_history extends PdoDataAccess
 	function Remove()
 	{
 		$query = " select s.staff_id
-								from staff s inner join persons p on s.personid = p.personid and s.person_type = p.person_type
+								from HRM_staff s inner join HRM_persons p on s.personid = p.personid and s.person_type = p.person_type
 									where s.staff_id = ".$this->staff_id ;
 
 		$temp = PdoDataAccess::runquery($query);
@@ -145,7 +145,7 @@ class manage_staff_include_history extends PdoDataAccess
 			parent::PushException("حذف این رکورد امکان پذیر نمی باشد.");
 			return false ;
 		}
-		$result = parent::delete("staff_include_history", " staff_id = :SID and include_history_id = :ID ",
+		$result = parent::delete("HRM_staff_include_history", " staff_id = :SID and include_history_id = :ID ",
 							array(":SID" => $this->staff_id,
 								  ":ID" => $this->include_history_id));
 		if($result === false)
@@ -154,7 +154,7 @@ class manage_staff_include_history extends PdoDataAccess
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
 		$daObj->RelatedPersonID = $this->staff_id;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->RelatedPersonType = 3 ;
 		$daObj->MainObjectID = $this->include_history_id;
 		$daObj->TableName = "staff_include_history";
 		$daObj->execute();

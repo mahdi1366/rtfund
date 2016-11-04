@@ -972,7 +972,7 @@ if($this->family_responsible == 0 )
 					limit 1 " ; 
 		   $resJob = PdoDataAccess::runquery($qry); 
 		   		   
-        	   $this->job_id = $resJob[0]['job_id'] ;
+        	   $this->job_id = ( empty($resJob[0]['job_id']) ? 0 :  $resJob[0]['job_id'] ) ;
         }
 					
 			//__________________________________________________________

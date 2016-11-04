@@ -125,6 +125,7 @@ function selectDep()
 
 	$no = manage_person_dependency::CountDependency($where, $whereParam);
 	
+
 	$where .=  dataReader::makeOrder(); 
 	$where .= isset($_GET ["start"]) ? " limit " . $_GET ["start"] . "," . $_GET ["limit"] : "";
 	

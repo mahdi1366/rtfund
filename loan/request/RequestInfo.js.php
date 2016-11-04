@@ -30,7 +30,7 @@ function RequestInfo(){
 	this.grid = <?= $grid ?>;
 	this.grid.getStore().on("load", function(){
 		if(this.getCount() > 0)
-			RequestInfoObject.grid.getSelectionModel().select(0);
+			RequestInfoObject.grid.getSelectionModel().select(this.getCount()-1);
 	});
 	this.grid.on("select", function(){
 		record = RequestInfoObject.grid.getSelectionModel().getLastSelected();
@@ -40,7 +40,13 @@ function RequestInfo(){
 		RequestInfoObject.PartsPanel.down("[name=PayInterval]").setValue(record.data.PayInterval + " " + 
 			(record.data.IntervalType == "DAY" ? "روز" : "ماه"));
 	});
-	
+	this.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.IsHistory == "YES")
+			return "greenRow";
+		return "";
+	}	
+
 	if(this.RequestID > 0)
 		this.grid.getStore().proxy.extraParams = { RequestID : this.RequestID };
 		
@@ -157,6 +163,8 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 
 RequestInfo.OperationRender = function(v,p,record){
 	
+	if(record.data.IsHistory == "YES")
+		return;
 	if(RequestInfoObject.User == "Staff")
 		return "<div  title='عملیات' class='setting' onclick='RequestInfoObject.OperationMenu(event);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
@@ -177,21 +185,13 @@ RequestInfo.OperationRender = function(v,p,record){
 RequestInfo.prototype.OperationMenu = function(e){
 
 	record = this.grid.getSelectionModel().getLastSelected();
+	firstPart = this.grid.getStore().indexOf(record) == 0 ? true : false;
 	ReqRecord = this.store.getAt(0);
 	
 	var op_menu = new Ext.menu.Menu();
 	
 	if(record.data.imp_VamCode*1 > 0)
 	{
-		op_menu.add({text: 'اقساط',iconCls: 'list',
-		handler : function(){ return RequestInfoObject.LoadInstallments(); }});
-	
-		op_menu.add({text: 'پرداخت های مشتری',iconCls: 'list',
-		handler : function(){ return RequestInfoObject.LoadPays(); }});
-	
-		op_menu.add({text: 'مراحل پرداخت',iconCls: 'epay',
-		handler : function(){ return RequestInfoObject.Payments(); }});
-	
 		if(this.RequestRecord.data.IsEnded == "NO")
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
@@ -204,8 +204,8 @@ RequestInfo.prototype.OperationMenu = function(e){
 		if(record.data.StatusID == "70")
 			op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
 			handler : function(){ return RequestInfoObject.StartFlow(); }});
-		
-		op_menu.add({text: 'ویرایش',iconCls: 'edit', 
+		if(firstPart)
+			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
 
 		op_menu.add({text: 'حذف',iconCls: 'remove', 
@@ -213,22 +213,9 @@ RequestInfo.prototype.OperationMenu = function(e){
 	}	
 	if(record.data.IsEnded == "YES")
 	{
-		if(record.data.IsDocRegister == "NO" && this.RequestRecord.data.IsEnded == "NO")
+		if(firstPart && record.data.IsDocRegister == "NO" && this.RequestRecord.data.IsEnded == "NO")
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
-	
-		op_menu.add({text: 'اقساط',iconCls: 'list',
-		handler : function(){ return RequestInfoObject.LoadInstallments(); }});
-
-		op_menu.add({text: 'مراحل پرداخت',iconCls: 'epay',
-		handler : function(){ return RequestInfoObject.Payments(); }});
-	
-		op_menu.add({text: 'پرداخت های مشتری',iconCls: 'list',
-		handler : function(){ return RequestInfoObject.LoadPays(); }});
-	
-		if(record.data.IsPaid == "YES" && this.RequestRecord.data.IsEnded == "NO")
-			op_menu.add({text: 'اتمام فاز و ایجاد فاز جدید',iconCls: "app",
-			handler : function(){ return RequestInfoObject.EndPart(); }});
 	}		
 	
 	if(record.data.StatusID == "70")
@@ -238,11 +225,13 @@ RequestInfo.prototype.OperationMenu = function(e){
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
-RequestInfo.prototype.BuildForms = function(){
-
-   this.PartsPanel =  new Ext.form.FormPanel({
+RequestInfo.prototype.MakePartsPanel = function(){
+	
+	this.PartsPanel =  new Ext.form.FormPanel({
 		width: 735,
 		border : 0,
+		colspan : 2,
+		minHeight:20,
 		items: [{
 			xtype : "fieldset",
 			title : "شرایط پرداخت",
@@ -359,6 +348,11 @@ RequestInfo.prototype.BuildForms = function(){
 			}]
 		}]
 	});
+}
+
+RequestInfo.prototype.BuildForms = function(){
+
+	this.MakePartsPanel();
 	
 	this.companyPanel = new Ext.form.FormPanel({
 		renderTo : this.get("mainForm"),
@@ -407,7 +401,8 @@ RequestInfo.prototype.BuildForms = function(){
 						"task=selectSubAgents",
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields : ['SubID','SubDesc']
+				fields : ['SubID','SubDesc'],
+				autoLoad : true
 			}),
 			fieldLabel : "زیر واحد سرمایه گذار",
 			queryMode : "local",
@@ -483,12 +478,26 @@ RequestInfo.prototype.BuildForms = function(){
 			valueField : "BranchID",
 			name : "BranchID"
 		},{
-			xtype : "checkbox",
-			fieldLabel : "وام بلاعوض می باشد",
-			inputValue : "YES",
-			name : "IsFree"
+			xtype : "container",
+			layout : "hbox",
+			items :[{
+				xtype : "checkbox",
+				boxLabel : "وام بلاعوض می باشد",
+				inputValue : "YES",
+				name : "IsFree"
+			},{
+				xtype : "container",
+				html : "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+			},{
+				xtype : "checkbox",
+				name : "AgentGuarantee",
+				value : "YES",
+				colspan : 2,
+				boxLabel : "با ضمانت سرمایه گذار"
+			}]
 		},{
 			xtype : "container",
+			hidden : true,
 			itemId : "oldInfo",
 			width : 300,
 			items : [{
@@ -560,30 +569,19 @@ RequestInfo.prototype.BuildForms = function(){
 			}]
 			
 		},{
-			xtype : "checkbox",
-			name : "AgentGuarantee",
-			value : "YES",
-			colspan : 2,
-			fieldLabel : "با ضمانت سرمایه گذار"
-		},{
 			xtype : "textarea",
 			fieldLabel : "توضیحات",
-			width : 700,
 			rows : 1,
-			colspan : 2,				
+			style : this.RequestID == 0 ? "margin-bottom:15px" : "",
 			name : "ReqDetails"
 		},{
 			xtype : "textarea",
 			fieldLabel : "توضیحات مدارک",
-			colspan : 2,
-			width : 700,
 			rows : 1,
 			name : "DocumentDesc"
-		},{
-			xtype : "container",
-			colspan : 2,
-			items : this.PartsPanel
-		}],
+		},
+		this.PartsPanel
+		],
 		buttons :[{
 			text : "پیوست ها",
 			iconCls : "setting",
@@ -618,6 +616,27 @@ RequestInfo.prototype.BuildForms = function(){
 				itemId : "cmp_events",
 				handler : function(){ RequestInfoObject.ShowEvents(); }
 			}]
+		},{
+			text : "عملیات",
+			hidden : true,
+			itemId : "cmp_processes",
+			iconCls : "process",
+			menu : [{
+				text: 'اقساط',
+				itemId : "cmp_installments",
+				iconCls: 'list',
+				handler : function(){ return RequestInfoObject.LoadInstallments(); }
+			},{
+				text: 'پرداخت های مشتری',
+				itemId : "cmp_BackPays",
+				iconCls: 'list',
+				handler : function(){ return RequestInfoObject.LoadBackPays(); }
+			},{
+				text: 'مراحل پرداخت',
+				itemId : "cmp_payments",
+				iconCls: 'epay',
+				handler : function(){ return RequestInfoObject.LoadPayments(); }
+			}]
 		},'->',{
 			text : 'ویرایش شرایط پرداخت',
 			hidden : true,
@@ -629,7 +648,7 @@ RequestInfo.prototype.BuildForms = function(){
 			hidden : true,
 			iconCls : "list",
 			itemId : "cmp_payments",
-			handler : function(){ RequestInfoObject.Payments(); }
+			handler : function(){ RequestInfoObject.LoadPayments(); }
 		},{
 			text : 'تایید ارسال مدارک',
 			hidden : true,
@@ -736,6 +755,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		this.companyPanel.down("[name=LoanID]").show();
 		this.companyPanel.down("[name=BranchID]").show();
 		this.companyPanel.down("[name=LoanPersonID]").show();		
+		this.companyPanel.down("[itemId=oldInfo]").show();				
 		
 		if(record == null)
 		{
@@ -800,6 +820,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 				}
 			}		
 			this.companyPanel.down("[itemId=cmp_events]").show();
+			this.companyPanel.down("[itemId=cmp_processes]").show();	
 		}	
 		if(this.User == "Customer")
 		{
@@ -929,9 +950,8 @@ RequestInfo.prototype.SaveRequest = function(mode){
 				me.companyPanel.down("[itemId=cmp_save]").hide();
 			
 			me.PartsPanel.show();
-			
 			me.LoadRequestInfo();
-			
+			me.PartsPanel.doLayout();
 			if( mode == "send")
 			{
 				me.companyPanel.hide();
@@ -949,613 +969,6 @@ RequestInfo.prototype.SaveRequest = function(mode){
 				Ext.MessageBox.alert("Error",action.result.data);
 		}
 	});
-}
-
-RequestInfo.prototype.PartInfo = function(EditMode){
-	
-	if(!this.PartWin)
-	{
-		this.PartWin = new Ext.window.Window({
-			width : 500,
-			height : 530,
-			modal : true,
-			closeAction : 'hide',
-			title : "مشخصات فاز",
-			items : new Ext.form.Panel({
-				layout : {
-					type : "table",
-					columns : 2
-				},
-				defaults : {
-					xtype : "numberfield",
-					labelWidth : 80,
-					hideTrigger : true,
-					width : 150,
-					labelWidth : 90,
-					allowBlank : false
-				},				
-				items :[{
-					xtype : "textfield",
-					name : "PartDesc",
-					fieldLabel : "عنوان فاز",
-					colspan : 2,
-					width : 450
-				},{
-					xtype : "currencyfield",
-					name : "PartAmount",
-					fieldLabel : "مبلغ پرداخت",
-					maxValue : this.RequestRecord.data.RequestAmount,
-					width : 220
-				},{
-					xtype : "shdatefield",
-					name : "PartDate",
-					allowBlank : true,
-					hideTrigger : false,
-					fieldLabel : "تاریخ پرداخت",
-					width : 200
-				},{
-					xtype : "container",
-					layout : "hbox",
-					width : 250,
-					items : [{
-						xtype:'numberfield',
-						fieldLabel: 'فاصله اقساط',
-						hideTrigger : true,
-						allowBlank : false,
-						name: 'PayInterval',
-						labelWidth: 90,
-						width : 150
-					},{
-						xtype : "radio",
-						boxLabel : "ماه",
-						inputValue : "MONTH",
-						itemId : "monthInterval",
-						checked : true,
-						name : "IntervalType"
-					},{
-						xtype : "radio",
-						boxLabel : "روز",
-						inputValue : "DAY",
-						itemId : "dayInterval",
-						name : "IntervalType"
-					}]
-				},{
-					xtype : "container",
-					width : 300,
-					layout : "hbox",
-					items : [{
-						xtype : "numberfield",
-						labelWidth : 90,
-						width: 150,
-						hideTrigger : true,
-						fieldLabel: 'مدت تنفس',
-						name: 'DelayMonths',
-						afterSubTpl : "ماه"
-					},{
-						xtype : "numberfield",
-						hideTrigger : true,
-						width: 50,
-						name: 'DelayDays',
-						afterSubTpl : "روز"
-					}]
-				},{
-					fieldLabel: 'تعداد اقساط',
-					name: 'InstallmentCount'
-				},{
-					fieldLabel: 'درصد دیرکرد',
-					name: 'ForfeitPercent'
-				},{
-					fieldLabel: 'کارمزد مشتری',
-					name: 'CustomerWage'	
-				},{
-					fieldLabel: 'کارمزد صندوق',
-					name: 'FundWage'
-				},{
-					fieldLabel: 'کارمزد تنفس',
-					name: 'DelayPercent',
-					colspan:2
-				},{
-					xtype : "fieldset",
-					itemId : "fs_WageCompute",
-					title : "نحوه دریافت کارمزد صندوق",
-					width : 240,
-					style : "margin-right:10px",
-					items : [{
-						xtype : "radio",
-						boxLabel : "پرداخت کارمزد طی اقساط",
-						name : "WageReturn",
-						inputValue : "INSTALLMENT",
-						checked : true
-					},{
-						xtype : "radio",						
-						boxLabel : "پرداخت کارمزد هنگام پرداخت وام",
-						name : "WageReturn",
-						inputValue : "CUSTOMER"
-					}]
-				},{
-					xtype : "fieldset",
-					itemId : "fs_DelayCompute",
-					title : "نحوه دریافت تنفس صندوق",
-					width : 200,
-					style : "margin-right:10px",
-					items : [{
-						xtype : "radio",						
-						boxLabel : "هنگام پرداخت وام",
-						name : "DelayReturn",
-						inputValue : "CUSTOMER",
-						checked : true
-					},{
-						xtype : "radio",
-						boxLabel : "طی اقساط",
-						name : "DelayReturn",
-						inputValue : "INSTALLMENT"
-					}]
-				},{
-					xtype : "fieldset",
-					itemId : "fs_AgentWageCompute",
-					title : "نحوه دریافت کارمزد سرمایه گذار",
-					width : 240,
-					style : "margin-right:10px",
-					items : [{
-						xtype : "radio",
-						boxLabel : "پرداخت کارمزد طی اقساط",
-						name : "AgentReturn",
-						inputValue : "INSTALLMENT",
-						checked : true
-					},{
-						xtype : "radio",						
-						boxLabel : "پرداخت کارمزد هنگام پرداخت وام",
-						name : "AgentReturn",
-						inputValue : "CUSTOMER"
-					}]
-				},{
-					xtype : "fieldset",
-					itemId : "fs_AgentDelayCompute",
-					title : "نحوه دریافت تنفس سرمایه گذار",
-					width : 200,
-					style : "margin-right:10px",
-					items : [{
-						xtype : "radio",						
-						boxLabel : "هنگام پرداخت وام",
-						name : "AgentDelayReturn",
-						inputValue : "CUSTOMER",
-						checked : true
-					},{
-						xtype : "radio",
-						boxLabel : "طی اقساط",
-						name : "AgentDelayReturn",
-						inputValue : "INSTALLMENT"
-					}]
-				},{
-					xtype : "fieldset",
-					colspan :2,
-					width : 450,
-					style : "margin-right:10px",
-					itemId : "fs_PayCompute",
-					items : [{
-						xtype : "radio",
-						boxLabel : "محاسبه  پرداخت بر اساس اول جریمه سپس قسط",
-						name : "PayCompute",
-						inputValue : "forfeit",
-						checked : true
-					},{
-						xtype : "radio",
-						boxLabel : "محاسبه پرداخت بر اساس اول اصل مبلغ قسط سپس جرایم",
-						name : "PayCompute",
-						inputValue : "installment"
-					}]
-				},{
-					xtype : "fieldset",
-					colspan :2,
-					width : 450,
-					style : "margin-right:10px",
-					itemId : "fs_MaxFundWage",
-					items : [{
-						xtype : "currencyfield",
-						hideTrigger : true,
-						labelWidth : 120,
-						fieldLabel : "سقف کارمزد صندوق",
-						name : "MaxFundWage"
-					},{
-						xtype : "container",
-						html : "این کارمزد بر اساس نحوه دریافت کارمزد محاسبه می گردد."
-					}]
-				},{
-					xtype : "hidden",
-					name : "PartID"
-				}]				
-			}),
-			buttons : [{
-				text : "ذخیره",
-				iconCls : "save",
-				handler : function(){
-					RequestInfoObject.SavePart();
-				}
-			},{
-				text : "انصراف",
-				iconCls : "undo",
-				handler : function(){
-					this.up('window').hide();
-				}
-			}]
-		});
-		
-		if(this.User == "Agent")
-		{
-			this.PartWin.down("[name=PartDate]").hide();
-			this.PartWin.down("[itemId=fs_WageCompute]").hide();
-			this.PartWin.down("[itemId=fs_AgentWageCompute]").hide();
-			this.PartWin.down("[itemId=fs_DelayCompute]").hide();
-			this.PartWin.down("[itemId=fs_AgentDelayCompute]").hide();
-			this.PartWin.down("[itemId=fs_PayCompute]").hide();
-			this.PartWin.down("[itemId=fs_MaxFundWage]").hide();
-			this.PartWin.down("[name=PartAmount]").colspan = 2;
-			this.PartWin.setHeight(250);
-		}
-	}
-	
-	this.PartWin.show();
-	if(EditMode)
-	{
-		record = this.grid.getSelectionModel().getLastSelected();
-		this.PartWin.down('form').loadRecord(record);
-		this.PartWin.down("[name=PartDate]").setValue(MiladiToShamsi(record.data.PartDate));
-		this.PartWin.down("[name=PayInterval]").setValue(record.data.PayInterval*1);
-		this.PartWin.down("[itemId=monthInterval]").setValue(record.data.IntervalType == "MONTH" ? true : false);
-		this.PartWin.down("[itemId=dayInterval]").setValue(record.data.IntervalType == "DAY" ? true : false);
-	}
-	else
-		this.PartWin.down('form').getForm().reset();
-}
-
-RequestInfo.prototype.SavePart = function(){
-
-	if(this.PartWin.down('[name=MaxFundWage]').getValue()*1 > 0 && 
-		this.PartWin.down('[name=FundWage]').getValue()*1 > 0 )
-	{
-		Ext.MessageBox.alert("Error","در صورتی که سقف کارمزد صندوق را تعیین می کنید باید کارمزد صندوق را صفر نمایید");
-		return;
-	}
-
-	mask = new Ext.LoadMask(this.PartWin, {msg:'در حال ذخیره سازی ...'});
-	mask.show();
-
-	this.PartWin.down('form').getForm().submit({
-		clientValidation: true,
-		url: this.address_prefix +'../../loan/request/request.data.php',
-		method: "POST",
-		params: {
-			task: "SavePart",
-			RequestID : this.RequestID
-		},
-		success: function(form,action){
-			mask.hide();
-			RequestInfoObject.grid.getStore().load();
-			RequestInfoObject.PartWin.hide();
-		},
-		failure: function(){
-			mask.hide();
-		}
-	});
-}
-
-RequestInfo.prototype.DeletePart = function(){
-
-	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟",function(btn){
-		if(btn == "no")
-			return;
-		
-		me = RequestInfoObject;
-		record = me.grid.getSelectionModel().getLastSelected();
-		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
-		mask.show();
-
-		Ext.Ajax.request({
-			url: me.address_prefix +'request.data.php',
-			method: "POST",
-			params: {
-				task: "DeletePart",
-				PartID : record.data.PartID
-			},
-			success: function(response){
-				result = Ext.decode(response.responseText);
-				mask.hide();
-				if(result.success)
-					RequestInfoObject.grid.getStore().load();
-				else
-					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد;")
-			}
-		});
-	});
-}
-
-RequestInfo.prototype.SplitYears = function(startDate, endDate, TotalAmount){
-	
-	arr = startDate.split(/[\-\/]/);
-	StartYear = arr[0]*1;
-	
-	totalDays = 0;
-	yearDays = new Array();
-	newStartDate = startDate;
-	while(DateModule.IsDateGreater(endDate,newStartDate)){
-		arr = newStartDate.split(/[\-\/]/);
-		LastDayOfYear = DateModule.lastJDateOfYear(arr[0]);
-		if(DateModule.IsDateGreater(LastDayOfYear, endDate))
-			LastDayOfYear = endDate;
-		
-		thedays = DateModule.JDateMinusJDate(LastDayOfYear, newStartDate)+1;
-		yearDays.push({
-			year : StartYear, 
-			days : thedays
-		});
-		totalDays += thedays;
-		StartYear++;
-		newStartDate = DateModule.AddToJDate(LastDayOfYear, 1);
-	}
-	TotalDays = DateModule.JDateMinusJDate(endDate, startDate)+1;
-	sum = 0;
-	for(i=0; i<yearDays.length; i++)
-	{
-		yearDays[i].amount = Math.round((yearDays[i].days/TotalDays)*TotalAmount);
-		sum += yearDays[i].amount;
-	}
-	if(sum != TotalAmount)
-		yearDays[i-1].amount += TotalAmount-sum;
-	
-	return yearDays;
-}
-
-RequestInfo.prototype.LoadSummary = function(record){
-
-	if(record.data.ReqPersonID == "<?= SHEKOOFAI ?>")
-		return this.LoadSummarySHRTFUND(record, null);
-
-	function PMT(F8, F9, F7, YearMonths, PayInterval) {  
-		
-		if(F8 == 0)
-			return F7/F9;
-		
-		if(PayInterval == 0)
-			return F7;
-		
-		F8 = F8/(YearMonths*100);
-		F7 = -F7;
-		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
-	} 
-	
-	function ComputeInstallmentAmount(TotalAmount,IstallmentCount,PayInterval){
-		
-		if(PayInterval == 0)
-			return TotalAmount;
-		
-		return TotalAmount/IstallmentCount;
-	}
-	function ComputeWage(F7, F8, F9, YearMonths, PayInterval){
-		
-		if(PayInterval == 0)
-			return 0;
-		
-		if(PayInterval*1 > 0)
-			F9 = F9*PayInterval;
-		
-		if(F8 == 0)
-			return 0;
-		
-		return (((F7*F8/YearMonths*( Math.pow((1+(F8/YearMonths)),F9)))/
-			((Math.pow((1+(F8/YearMonths)),F9))-1))*F9)-F7;
-	}
-	function roundUp(number, digits)
-	{
-		var factor = Math.pow(10,digits);
-		return Math.ceil(number*factor) / factor;
-	}
-	function YearWageCompute(record,TotalWage,YearMonths){
-		
-		startDate = MiladiToShamsi(record.data.PartDate);
-		startDate = DateModule.AddToJDate(startDate, record.data.DelayDays, record.data.DelayMonths);
-		startDate = startDate.split(/[\-\/]/);
-		PayMonth = startDate[1];
-		PayMonth = PayMonth*YearMonths/12;
-		
-		FirstYearInstallmentCount = Math.floor((12 - PayMonth)/(12/YearMonths));
-		FirstYearInstallmentCount = record.data.InstallmentCount*1 < FirstYearInstallmentCount ? 
-			FirstYearInstallmentCount - record.data.InstallmentCount*1 : FirstYearInstallmentCount;
-		MidYearInstallmentCount = Math.floor((record.data.InstallmentCount*1-FirstYearInstallmentCount) / YearMonths);
-		MidYearInstallmentCount = MidYearInstallmentCount < 0 ? 0 : MidYearInstallmentCount;
-		LastYeatInstallmentCount = (record.data.InstallmentCount-FirstYearInstallmentCount) % YearMonths;
-		LastYeatInstallmentCount = LastYeatInstallmentCount < 0 ? 0 : LastYeatInstallmentCount;
-		F9 = record.data.InstallmentCount*(12/YearMonths);
-
-		yearNo = 1;
-		StartYear = startDate[0]*1;
-		returnArr = new Array();
-		while(true)
-		{
-			if(yearNo > MidYearInstallmentCount+2)
-				break;
-
-			BeforeMonths = 0;
-			if(yearNo == 2)
-				BeforeMonths = FirstYearInstallmentCount;
-			else if(yearNo > 2)
-				BeforeMonths = FirstYearInstallmentCount + (yearNo-2)*YearMonths;
-
-			curMonths = FirstYearInstallmentCount;
-			if(yearNo > 1 && yearNo <= MidYearInstallmentCount+1)
-				curMonths = YearMonths;
-			else if(yearNo > MidYearInstallmentCount+1)
-				curMonths = LastYeatInstallmentCount;
-
-			BeforeMonths = BeforeMonths*(12/YearMonths);
-			curMonths = curMonths*(12/YearMonths);
-
-			val = ((((F9-BeforeMonths)*(F9-BeforeMonths+1))-
-				(F9-BeforeMonths-curMonths)*(F9-BeforeMonths-curMonths+1)))/(F9*(F9+1))*TotalWage;
-
-			returnArr.push({
-				year : StartYear,
-				amount : Ext.util.Format.Money(Math.round(val))
-			});
-			StartYear++;
-			yearNo++;
-		}
-	
-		return returnArr;
-	}
-	
-	DelayDuration = DateModule.GDateMinusGDate(
-		DateModule.AddToGDate(record.data.PartDate, record.data.DelayDays*1, record.data.DelayMonths*1), 
-		record.data.PartDate);
-		
-	YearMonths = 12;
-	if(record.data.IntervalType == "DAY")
-		YearMonths = Math.floor(365/record.data.PayInterval);
-	
-	TotalWage = Math.round(ComputeWage(record.data.PartAmount, record.data.CustomerWage/100, 
-		record.data.InstallmentCount, YearMonths, record.data.PayInterval));
-		
-	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
-	FundWage = Math.round((record.data.FundWage/record.data.CustomerWage)*TotalWage);
-	FundWage = !isInt(FundWage) ? 0 : FundWage;
-	AgentWage = TotalWage - FundWage;
-	
-	if(record.data.DelayDays*1 > 0)
-		TotalDelay = Math.round(record.data.PartAmount*record.data.DelayPercent*DelayDuration/36500);
-	else
-		TotalDelay = Math.round(record.data.PartAmount*record.data.DelayPercent*record.data.DelayMonths/1200);
-	
-	//-------------------------- installments -----------------------------
-	MaxWage = Math.max(record.data.CustomerWage, record.data.FundWage);
-	CustomerFactor =	MaxWage == 0 ? 0 : record.data.CustomerWage/MaxWage;
-	FundFactor =		MaxWage == 0 ? 0 : record.data.FundWage/MaxWage;
-	AgentFactor =		MaxWage == 0 ? 0 : (record.data.CustomerWage-record.data.FundWage)/MaxWage;
-	
-	var extraAmount = 0;
-	if(record.data.WageReturn == "INSTALLMENT")
-	{
-		if(record.data.MaxFundWage*1 > 0)
-			extraAmount += record.data.MaxFundWage;
-		else if(record.data.CustomerWage > record.data.FundWage)
-			extraAmount += Math.round(TotalWage*FundFactor);
-		else
-			extraAmount += Math.round(TotalWage*CustomerFactor);		
-	}		
-	if(record.data.AgentReturn == "INSTALLMENT" && record.data.CustomerWage>record.data.FundWage)
-		extraAmount += Math.round(TotalWage*AgentFactor);
-
-	if(record.data.DelayReturn == "INSTALLMENT")
-		extraAmount += TotalDelay*(record.data.FundWage/record.data.DelayPercent);
-	if(record.data.AgentDelayReturn == "INSTALLMENT" && record.data.DelayPercent>record.data.FundWage)
-		extraAmount += TotalDelay*((record.data.DelayPercent-record.data.FundWage)/record.data.DelayPercent);
-	
-	TotalAmount = record.data.PartAmount*1 + extraAmount;
-	
-	FirstPay = ComputeInstallmentAmount(TotalAmount,record.data.InstallmentCount, record.data.PayInterval);
-	
-	if(record.data.InstallmentCount > 1)
-		FirstPay = roundUp(FirstPay,-3);
-	else
-		FirstPay = Math.round(FirstPay);
-	LastPay = Math.round(TotalAmount - FirstPay*(record.data.InstallmentCount-1));
-
-	//---------------------------------------------------------------------
-	if(record.data.MaxFundWage*1 > 0)
-	{
-		tmp = record.data.WageReturn == "INSTALLMENT" ? 
-			Math.round(record.data.MaxFundWage*1/record.data.InstallmentCount) : 0;
-		
-		this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay + tmp);
-		this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay + tmp);
-		this.get("SUM_Delay").innerHTML = 0;
-		this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount 
-			 - (record.data.WageReturn == "CUSTOMER" ? TotalWage + record.data.MaxFundWage*1 : 0));	
-
-		this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage + record.data.MaxFundWage*1);	
-		this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.MaxFundWage);	
-		this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
-
-		this.get("SUM_Wage_1Year").innerHTML = 0;
-		this.get("SUM_Wage_2Year").innerHTML = 0;
-		this.get("SUM_Wage_3Year").innerHTML = 0;
-		this.get("SUM_Wage_4Year").innerHTML = 0;
-		return;
-	}
-	
-	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay);
-	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay);
-	this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(TotalDelay);
-	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
-		(record.data.DelayReturn == "CUSTOMER" ? TotalDelay : 0) - 
-		(record.data.WageReturn == "CUSTOMER" ? TotalWage : 0));	
-	
-	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage);	
-	this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(FundWage);	
-	this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
-	
-	returnArr = YearWageCompute(record, TotalWage, YearMonths);
-	
-	this.get("SUM_Wage_1Year").innerHTML = returnArr[0] ? returnArr[0].amount : 0;
-	this.get("SUM_Wage_2Year").innerHTML = returnArr[1] ? returnArr[1].amount : 0;
-	this.get("SUM_Wage_3Year").innerHTML = returnArr[2] ? returnArr[2].amount : 0;
-	this.get("SUM_Wage_4Year").innerHTML = returnArr[3] ? returnArr[3].amount : 0;
-}
-
-RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
-
-	if(paymentStore == null)
-	{
-		this.paymentStore = new Ext.data.Store({
-			proxy:{
-				type: 'jsonp',
-				url: this.address_prefix + "request.data.php?task=GetPartPayments&PartID=" + record.data.PartID,
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			},
-			fields : ["PayDate", "PayAmount"],
-			autoLoad : true,
-			listeners :{
-				load : function(){
-					RequestInfoObject.LoadSummarySHRTFUND(record, this);
-				}
-			}
-		});
-		return;
-	}
-	if(this.paymentStore.totalCount == 0)
-		return;
-	//--------------- total pay months -------------
-	firstPay = MiladiToShamsi(this.paymentStore.getAt(0).data.PayDate);
-	LastPay = MiladiToShamsi(this.paymentStore.getAt(this.paymentStore.getCount()-1).data.PayDate);
-	paymentPeriod = DateModule.GetDiffInMonth(firstPay, LastPay);
-	//----------------------------------------------
-	totalWage = 0;
-	wages = new Array();
-	for(j=0; j<this.paymentStore.getCount(); j++)
-	{
-		wages.push(new Array());
-		wageindex = wages.length-1;
-		for(i=0; i < record.data.InstallmentCount; i++)
-		{
-			monthplus = paymentPeriod + record.data.DelayMonths*1 + (i+1)*record.data.PayInterval*1;
-			
-			installmentDate = MiladiToShamsi(this.paymentStore.getAt(0).data.PayDate);
-			installmentDate = DateModule.AddToJDate(installmentDate, 0, monthplus);
-			installmentDate = ShamsiToMiladi(installmentDate);
-			
-			jdiff = DateModule.GDateMinusGDate(installmentDate, this.paymentStore.getAt(j).data.PayDate);
-			
-			wage = Math.round((this.paymentStore.getAt(j).data.PayAmount/record.data.InstallmentCount)*
-				jdiff*record.data.CustomerWage/36500);
-			wages[wageindex].push(wage);
-			totalWage += wage;
-		}
-	}
-	InstallmentAmount = Math.round(record.data.PartAmount/record.data.InstallmentCount) + 
-				Math.round(totalWage/record.data.InstallmentCount);
-			
-	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(InstallmentAmount);
-	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(InstallmentAmount);
-	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(totalWage);	
-	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount);	
 }
 
 RequestInfo.prototype.ShowHistory = function(){
@@ -1859,16 +1272,643 @@ RequestInfo.prototype.ReturnEndRequest = function(){
 		});
 	});			
 }
+
+//.........................................................
+
+RequestInfo.prototype.PartInfo = function(EditMode){
+	
+	if(!this.PartWin)
+	{
+		this.PartWin = new Ext.window.Window({
+			width : 500,
+			height : 560,
+			modal : true,
+			closeAction : 'hide',
+			title : "مشخصات فاز",
+			items : new Ext.form.Panel({
+				layout : {
+					type : "table",
+					columns : 2
+				},
+				defaults : {
+					xtype : "numberfield",
+					labelWidth : 80,
+					hideTrigger : true,
+					width : 150,
+					labelWidth : 90,
+					allowBlank : false
+				},				
+				items :[{
+					xtype : "textfield",
+					name : "PartDesc",
+					fieldLabel : "عنوان فاز",
+					colspan : 2,
+					width : 450
+				},{
+					xtype : "currencyfield",
+					name : "PartAmount",
+					fieldLabel : "مبلغ وام",
+					maxValue : this.RequestRecord.data.RequestAmount,
+					width : 220
+				},{
+					xtype : "container",
+					width : 300,
+					layout : "hbox",
+					items : [{
+						xtype : "numberfield",
+						labelWidth : 90,
+						width: 150,
+						hideTrigger : true,
+						fieldLabel: 'مدت تنفس',
+						name: 'DelayMonths',
+						afterSubTpl : "ماه"
+					},{
+						xtype : "numberfield",
+						hideTrigger : true,
+						width: 50,
+						name: 'DelayDays',
+						afterSubTpl : "روز"
+					}]
+				},{
+					xtype : "shdatefield",
+					name : "PartDate",
+					allowBlank : true,
+					hideTrigger : false,
+					fieldLabel : "تاریخ پرداخت",
+					width : 200
+				},{
+					xtype : "shdatefield",
+					name : "PartStartDate",
+					hidden : true,
+					allowBlank : true,
+					hideTrigger : false,
+					fieldLabel : "اعمال شرایط",
+					width : 200
+				},{
+					xtype : "container",
+					layout : "hbox",
+					width : 250,
+					items : [{
+						xtype:'numberfield',
+						fieldLabel: 'فاصله اقساط',
+						hideTrigger : true,
+						allowBlank : false,
+						name: 'PayInterval',
+						labelWidth: 90,
+						width : 150
+					},{
+						xtype : "radio",
+						boxLabel : "ماه",
+						inputValue : "MONTH",
+						itemId : "monthInterval",
+						checked : true,
+						name : "IntervalType"
+					},{
+						xtype : "radio",
+						boxLabel : "روز",
+						inputValue : "DAY",
+						itemId : "dayInterval",
+						name : "IntervalType"
+					}]
+				},{
+					fieldLabel: 'تعداد اقساط',
+					name: 'InstallmentCount'
+				},{
+					fieldLabel: 'درصد دیرکرد',
+					name: 'ForfeitPercent'
+				},{
+					fieldLabel: 'کارمزد مشتری',
+					name: 'CustomerWage'	
+				},{
+					fieldLabel: 'کارمزد صندوق',
+					name: 'FundWage'
+				},{
+					fieldLabel: 'کارمزد تنفس',
+					name: 'DelayPercent',
+					colspan:2
+				},{
+					xtype : "fieldset",
+					itemId : "fs_WageCompute",
+					title : "نحوه دریافت کارمزد صندوق",
+					width : 240,
+					style : "margin-right:10px",
+					items : [{
+						xtype : "radio",
+						boxLabel : "پرداخت کارمزد طی اقساط",
+						name : "WageReturn",
+						inputValue : "INSTALLMENT",
+						checked : true
+					},{
+						xtype : "radio",						
+						boxLabel : "پرداخت کارمزد هنگام پرداخت وام",
+						name : "WageReturn",
+						inputValue : "CUSTOMER"
+					}]
+				},{
+					xtype : "fieldset",
+					itemId : "fs_DelayCompute",
+					title : "نحوه دریافت تنفس صندوق",
+					width : 200,
+					style : "margin-right:10px",
+					items : [{
+						xtype : "radio",						
+						boxLabel : "هنگام پرداخت وام",
+						name : "DelayReturn",
+						inputValue : "CUSTOMER",
+						checked : true
+					},{
+						xtype : "radio",
+						boxLabel : "طی اقساط",
+						name : "DelayReturn",
+						inputValue : "INSTALLMENT"
+					}]
+				},{
+					xtype : "fieldset",
+					itemId : "fs_AgentWageCompute",
+					title : "نحوه دریافت کارمزد سرمایه گذار",
+					width : 240,
+					style : "margin-right:10px",
+					items : [{
+						xtype : "radio",
+						boxLabel : "پرداخت کارمزد طی اقساط",
+						name : "AgentReturn",
+						inputValue : "INSTALLMENT",
+						checked : true
+					},{
+						xtype : "radio",						
+						boxLabel : "پرداخت کارمزد هنگام پرداخت وام",
+						name : "AgentReturn",
+						inputValue : "CUSTOMER"
+					}]
+				},{
+					xtype : "fieldset",
+					itemId : "fs_AgentDelayCompute",
+					title : "نحوه دریافت تنفس سرمایه گذار",
+					width : 200,
+					style : "margin-right:10px",
+					items : [{
+						xtype : "radio",						
+						boxLabel : "هنگام پرداخت وام",
+						name : "AgentDelayReturn",
+						inputValue : "CUSTOMER",
+						checked : true
+					},{
+						xtype : "radio",
+						boxLabel : "طی اقساط",
+						name : "AgentDelayReturn",
+						inputValue : "INSTALLMENT"
+					}]
+				},{
+					xtype : "fieldset",
+					colspan :2,
+					width : 450,
+					style : "margin-right:10px",
+					itemId : "fs_PayCompute",
+					items : [{
+						xtype : "radio",
+						boxLabel : "محاسبه  پرداخت بر اساس اول جریمه سپس قسط",
+						name : "PayCompute",
+						inputValue : "forfeit",
+						checked : true
+					},{
+						xtype : "radio",
+						boxLabel : "محاسبه پرداخت بر اساس اول اصل مبلغ قسط سپس جرایم",
+						name : "PayCompute",
+						inputValue : "installment"
+					}]
+				},{
+					xtype : "fieldset",
+					colspan :2,
+					width : 450,
+					style : "margin-right:10px",
+					itemId : "fs_MaxFundWage",
+					items : [{
+						xtype : "currencyfield",
+						hideTrigger : true,
+						labelWidth : 120,
+						fieldLabel : "سقف کارمزد صندوق",
+						name : "MaxFundWage"
+					},{
+						xtype : "container",
+						html : "این کارمزد بر اساس نحوه دریافت کارمزد محاسبه می گردد."
+					}]
+				},{
+					xtype : "hidden",
+					name : "PartID"
+				}]				
+			}),
+			buttons : [{
+				text : "ذخیره",
+				iconCls : "save",
+				handler : function(){
+					RequestInfoObject.SavePart();
+				}
+			},{
+				text : "انصراف",
+				iconCls : "undo",
+				handler : function(){
+					this.up('window').hide();
+				}
+			}]
+		});
+		
+		if(this.User == "Agent")
+		{
+			this.PartWin.down("[name=PartDate]").hide();
+			this.PartWin.down("[itemId=fs_WageCompute]").hide();
+			this.PartWin.down("[itemId=fs_AgentWageCompute]").hide();
+			this.PartWin.down("[itemId=fs_DelayCompute]").hide();
+			this.PartWin.down("[itemId=fs_AgentDelayCompute]").hide();
+			this.PartWin.down("[itemId=fs_PayCompute]").hide();
+			this.PartWin.down("[itemId=fs_MaxFundWage]").hide();
+			this.PartWin.down("[name=PartAmount]").colspan = 2;
+			this.PartWin.setHeight(250);
+		}
+	}
+	
+	this.PartWin.show();
+	if(EditMode)
+	{
+		record = this.grid.getSelectionModel().getLastSelected();
+		this.PartWin.down('form').loadRecord(record);
+		this.PartWin.down("[name=PartDate]").setValue(MiladiToShamsi(record.data.PartDate));
+		this.PartWin.down("[name=PartStartDate]").setValue(MiladiToShamsi(record.data.PartStartDate));
+		this.PartWin.down("[name=PayInterval]").setValue(record.data.PayInterval*1);
+		this.PartWin.down("[itemId=monthInterval]").setValue(record.data.IntervalType == "MONTH" ? true : false);
+		this.PartWin.down("[itemId=dayInterval]").setValue(record.data.IntervalType == "DAY" ? true : false);
+	}
+	else
+	{
+		this.PartWin.down('form').getForm().reset();
+		record = this.grid.getStore().getAt( this.grid.getStore().totalCount-1 );
+		this.PartWin.down('form').loadRecord(record);
+		this.PartWin.down("[name=PartDate]").setValue(MiladiToShamsi(record.data.PartDate));
+		this.PartWin.down("[name=PartStartDate]").setValue(MiladiToShamsi(record.data.PartStartDate));
+		this.PartWin.down("[name=PayInterval]").setValue(record.data.PayInterval*1);
+		this.PartWin.down("[itemId=monthInterval]").setValue(record.data.IntervalType == "MONTH" ? true : false);
+		this.PartWin.down("[itemId=dayInterval]").setValue(record.data.IntervalType == "DAY" ? true : false);
+		this.PartWin.down("[name=PartID]").setValue();
+	}
+}
+
+RequestInfo.prototype.SavePart = function(){
+
+	if(this.PartWin.down('[name=MaxFundWage]').getValue()*1 > 0 && 
+		this.PartWin.down('[name=FundWage]').getValue()*1 > 0 )
+	{
+		Ext.MessageBox.alert("Error","در صورتی که سقف کارمزد صندوق را تعیین می کنید باید کارمزد صندوق را صفر نمایید");
+		return;
+	}
+
+	mask = new Ext.LoadMask(this.PartWin, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	this.PartWin.down('form').getForm().submit({
+		clientValidation: true,
+		url: this.address_prefix +'../../loan/request/request.data.php',
+		method: "POST",
+		params: {
+			task: "SavePart",
+			RequestID : this.RequestID
+		},
+		success: function(form,action){
+			mask.hide();
+			RequestInfoObject.grid.getStore().load();
+			RequestInfoObject.PartWin.hide();
+		},
+		failure: function(form,action){
+			if(action.result.data == "")
+				Ext.MessageBox.alert("","عملیات مربوطه با شکست مواجه شد");
+			else
+				Ext.MessageBox.alert("",action.result.data);
+			mask.hide();
+		}
+	});
+}
+
+RequestInfo.prototype.DeletePart = function(){
+
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟",function(btn){
+		if(btn == "no")
+			return;
+		
+		me = RequestInfoObject;
+		record = me.grid.getSelectionModel().getLastSelected();
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "DeletePart",
+				PartID : record.data.PartID
+			},
+			success: function(response){
+				result = Ext.decode(response.responseText);
+				mask.hide();
+				if(result.success)
+					RequestInfoObject.grid.getStore().load();
+				else
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد;")
+			}
+		});
+	});
+}
+
+RequestInfo.prototype.SplitYears = function(startDate, endDate, TotalAmount){
+	
+	arr = startDate.split(/[\-\/]/);
+	StartYear = arr[0]*1;
+	
+	totalDays = 0;
+	yearDays = new Array();
+	newStartDate = startDate;
+	while(DateModule.IsDateGreater(endDate,newStartDate)){
+		arr = newStartDate.split(/[\-\/]/);
+		LastDayOfYear = DateModule.lastJDateOfYear(arr[0]);
+		if(DateModule.IsDateGreater(LastDayOfYear, endDate))
+			LastDayOfYear = endDate;
+		
+		thedays = DateModule.JDateMinusJDate(LastDayOfYear, newStartDate)+1;
+		yearDays.push({
+			year : StartYear, 
+			days : thedays
+		});
+		totalDays += thedays;
+		StartYear++;
+		newStartDate = DateModule.AddToJDate(LastDayOfYear, 1);
+	}
+	TotalDays = DateModule.JDateMinusJDate(endDate, startDate)+1;
+	sum = 0;
+	for(i=0; i<yearDays.length; i++)
+	{
+		yearDays[i].amount = Math.round((yearDays[i].days/TotalDays)*TotalAmount);
+		sum += yearDays[i].amount;
+	}
+	if(sum != TotalAmount)
+		yearDays[i-1].amount += TotalAmount-sum;
+	
+	return yearDays;
+}
+
+RequestInfo.prototype.LoadSummary = function(record){
+
+	if(record.data.ReqPersonID == "<?= SHEKOOFAI ?>")
+		return this.LoadSummarySHRTFUND(record, null);
+
+	function PMT(F8, F9, F7, YearMonths, PayInterval) {  
+		
+		if(F8 == 0)
+			return F7/F9;
+		
+		if(PayInterval == 0)
+			return F7;
+		
+		F8 = F8/(YearMonths*100);
+		F7 = -F7;
+		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
+	} 
+	
+	function ComputeInstallmentAmount(TotalAmount,IstallmentCount,PayInterval){
+		
+		if(PayInterval == 0)
+			return TotalAmount;
+		
+		return TotalAmount/IstallmentCount;
+	}
+	function ComputeWage(F7, F8, F9, YearMonths, PayInterval){
+		
+		if(PayInterval == 0)
+			return 0;
+		
+		if(PayInterval*1 > 0)
+			F9 = F9*PayInterval;
+		
+		if(F8 == 0)
+			return 0;
+		
+		return (((F7*F8/YearMonths*( Math.pow((1+(F8/YearMonths)),F9)))/
+			((Math.pow((1+(F8/YearMonths)),F9))-1))*F9)-F7;
+	}
+	function roundUp(number, digits)
+	{
+		var factor = Math.pow(10,digits);
+		return Math.ceil(number*factor) / factor;
+	}
+	function YearWageCompute(record,TotalWage,YearMonths){
+		
+		startDate = MiladiToShamsi(record.data.PartDate);
+		startDate = DateModule.AddToJDate(startDate, record.data.DelayDays, record.data.DelayMonths);
+		startDate = startDate.split(/[\-\/]/);
+		PayMonth = startDate[1];
+		PayMonth = PayMonth*YearMonths/12;
+		
+		FirstYearInstallmentCount = Math.floor((12 - PayMonth)/(12/YearMonths));
+		FirstYearInstallmentCount = record.data.InstallmentCount*1 < FirstYearInstallmentCount ? 
+			record.data.InstallmentCount*1 : FirstYearInstallmentCount;
+		MidYearInstallmentCount = Math.floor((record.data.InstallmentCount*1-FirstYearInstallmentCount) / YearMonths);
+		MidYearInstallmentCount = MidYearInstallmentCount < 0 ? 0 : MidYearInstallmentCount;
+		LastYeatInstallmentCount = (record.data.InstallmentCount-FirstYearInstallmentCount) % YearMonths;
+		LastYeatInstallmentCount = LastYeatInstallmentCount < 0 ? 0 : LastYeatInstallmentCount;
+		F9 = record.data.InstallmentCount*(12/YearMonths);
+
+		yearNo = 1;
+		StartYear = startDate[0]*1;
+		returnArr = new Array();
+		while(true)
+		{
+			if(yearNo > MidYearInstallmentCount+2)
+				break;
+
+			BeforeMonths = 0;
+			if(yearNo == 2)
+				BeforeMonths = FirstYearInstallmentCount;
+			else if(yearNo > 2)
+				BeforeMonths = FirstYearInstallmentCount + (yearNo-2)*YearMonths;
+
+			curMonths = FirstYearInstallmentCount;
+			if(yearNo > 1 && yearNo <= MidYearInstallmentCount+1)
+				curMonths = YearMonths;
+			else if(yearNo > MidYearInstallmentCount+1)
+				curMonths = LastYeatInstallmentCount;
+
+			BeforeMonths = BeforeMonths*(12/YearMonths);
+			curMonths = curMonths*(12/YearMonths);
+
+			val = ((((F9-BeforeMonths)*(F9-BeforeMonths+1))-
+				(F9-BeforeMonths-curMonths)*(F9-BeforeMonths-curMonths+1)))/(F9*(F9+1))*TotalWage;
+
+			returnArr.push({
+				year : StartYear,
+				amount : Ext.util.Format.Money(Math.round(val))
+			});
+			StartYear++;
+			yearNo++;
+		}
+	
+		return returnArr;
+	}
+	
+	DelayDuration = DateModule.GDateMinusGDate(
+		DateModule.AddToGDate(record.data.PartDate, record.data.DelayDays*1, record.data.DelayMonths*1), 
+		record.data.PartDate);
+		
+	YearMonths = 12;
+	if(record.data.IntervalType == "DAY")
+		YearMonths = Math.floor(365/record.data.PayInterval);
+	
+	TotalWage = Math.round(ComputeWage(record.data.PartAmount, record.data.CustomerWage/100, 
+		record.data.InstallmentCount, YearMonths, record.data.PayInterval));
+		
+	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
+	FundWage = Math.round((record.data.FundWage/record.data.CustomerWage)*TotalWage);
+	FundWage = !isInt(FundWage) ? 0 : FundWage;
+	AgentWage = TotalWage - FundWage;
+	
+	if(record.data.DelayDays*1 > 0)
+		TotalDelay = Math.round(record.data.PartAmount*record.data.DelayPercent*DelayDuration/36500);
+	else
+		TotalDelay = Math.round(record.data.PartAmount*record.data.DelayPercent*record.data.DelayMonths/1200);
+	
+	//-------------------------- installments -----------------------------
+	MaxWage = Math.max(record.data.CustomerWage, record.data.FundWage);
+	CustomerFactor =	MaxWage == 0 ? 0 : record.data.CustomerWage/MaxWage;
+	FundFactor =		MaxWage == 0 ? 0 : record.data.FundWage/MaxWage;
+	AgentFactor =		MaxWage == 0 ? 0 : (record.data.CustomerWage-record.data.FundWage)/MaxWage;
+	
+	var extraAmount = 0;
+	if(record.data.WageReturn == "INSTALLMENT")
+	{
+		if(record.data.MaxFundWage*1 > 0)
+			extraAmount += record.data.MaxFundWage;
+		else if(record.data.CustomerWage > record.data.FundWage)
+			extraAmount += Math.round(TotalWage*FundFactor);
+		else
+			extraAmount += Math.round(TotalWage*CustomerFactor);		
+	}		
+	if(record.data.AgentReturn == "INSTALLMENT" && record.data.CustomerWage>record.data.FundWage)
+		extraAmount += Math.round(TotalWage*AgentFactor);
+
+	if(record.data.DelayReturn == "INSTALLMENT")
+		extraAmount += TotalDelay*(record.data.FundWage/record.data.DelayPercent);
+	if(record.data.AgentDelayReturn == "INSTALLMENT" && record.data.DelayPercent>record.data.FundWage)
+		extraAmount += TotalDelay*((record.data.DelayPercent-record.data.FundWage)/record.data.DelayPercent);
+	
+	TotalAmount = record.data.PartAmount*1 + extraAmount;
+	
+	FirstPay = ComputeInstallmentAmount(TotalAmount,record.data.InstallmentCount, record.data.PayInterval);
+	
+	if(record.data.InstallmentCount > 1)
+		FirstPay = roundUp(FirstPay,-3);
+	else
+		FirstPay = Math.round(FirstPay);
+	LastPay = Math.round(TotalAmount - FirstPay*(record.data.InstallmentCount-1));
+
+	//---------------------------------------------------------------------
+	if(record.data.MaxFundWage*1 > 0)
+	{
+		tmp = record.data.WageReturn == "INSTALLMENT" ? 
+			Math.round(record.data.MaxFundWage*1/record.data.InstallmentCount) : 0;
+		
+		this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay + tmp);
+		this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay + tmp);
+		this.get("SUM_Delay").innerHTML = 0;
+		this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount 
+			 - (record.data.WageReturn == "CUSTOMER" ? TotalWage + record.data.MaxFundWage*1 : 0));	
+
+		this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage + record.data.MaxFundWage*1);	
+		this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.MaxFundWage);	
+		this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
+
+		this.get("SUM_Wage_1Year").innerHTML = 0;
+		this.get("SUM_Wage_2Year").innerHTML = 0;
+		this.get("SUM_Wage_3Year").innerHTML = 0;
+		this.get("SUM_Wage_4Year").innerHTML = 0;
+		return;
+	}
+	
+	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay);
+	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay);
+	this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(TotalDelay);
+	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
+		(record.data.DelayReturn == "CUSTOMER" ? TotalDelay : 0) - 
+		(record.data.WageReturn == "CUSTOMER" ? TotalWage : 0));	
+	
+	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage);	
+	this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(FundWage);	
+	this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
+	
+	returnArr = YearWageCompute(record, TotalWage, YearMonths);
+	
+	this.get("SUM_Wage_1Year").innerHTML = returnArr[0] ? returnArr[0].amount : 0;
+	this.get("SUM_Wage_2Year").innerHTML = returnArr[1] ? returnArr[1].amount : 0;
+	this.get("SUM_Wage_3Year").innerHTML = returnArr[2] ? returnArr[2].amount : 0;
+	this.get("SUM_Wage_4Year").innerHTML = returnArr[3] ? returnArr[3].amount : 0;
+}
+
+RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
+
+	if(paymentStore == null)
+	{
+		this.paymentStore = new Ext.data.Store({
+			proxy:{
+				type: 'jsonp',
+				url: this.address_prefix + "request.data.php?"+
+					"task=GetPartPayments&RequestID=" + this.RequestID,
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			fields : ["PayDate", "PayAmount"],
+			autoLoad : true,
+			listeners :{
+				load : function(){
+					RequestInfoObject.LoadSummarySHRTFUND(record, this);
+				}
+			}
+		});
+		return;
+	}
+	if(this.paymentStore.totalCount == 0)
+		return;
+	//--------------- total pay months -------------
+	firstPay = MiladiToShamsi(this.paymentStore.getAt(0).data.PayDate);
+	LastPay = MiladiToShamsi(this.paymentStore.getAt(this.paymentStore.getCount()-1).data.PayDate);
+	paymentPeriod = DateModule.GetDiffInMonth(firstPay, LastPay);
+	//----------------------------------------------
+	totalWage = 0;
+	wages = new Array();
+	for(j=0; j<this.paymentStore.getCount(); j++)
+	{
+		wages.push(new Array());
+		wageindex = wages.length-1;
+		for(i=0; i < record.data.InstallmentCount; i++)
+		{
+			monthplus = paymentPeriod + record.data.DelayMonths*1 + (i+1)*record.data.PayInterval*1;
+			
+			installmentDate = MiladiToShamsi(this.paymentStore.getAt(0).data.PayDate);
+			installmentDate = DateModule.AddToJDate(installmentDate, 0, monthplus);
+			installmentDate = ShamsiToMiladi(installmentDate);
+			
+			jdiff = DateModule.GDateMinusGDate(installmentDate, this.paymentStore.getAt(j).data.PayDate);
+			
+			wage = Math.round((this.paymentStore.getAt(j).data.PayAmount/record.data.InstallmentCount)*
+				jdiff*record.data.CustomerWage/36500);
+			wages[wageindex].push(wage);
+			totalWage += wage;
+		}
+	}
+	InstallmentAmount = Math.round(record.data.PartAmount/record.data.InstallmentCount) + 
+				Math.round(totalWage/record.data.InstallmentCount);
+			
+	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(InstallmentAmount);
+	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(InstallmentAmount);
+	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(totalWage);	
+	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount);	
+}
+
 //.........................................................
 
 RequestInfo.prototype.LoadInstallments = function(){
-	
-	var record = this.grid.getSelectionModel().getLastSelected();
-	if(!record)
-	{
-		Ext.MessageBox.alert("","ابتدا فاز مورد نظر خود را انتخاب کنید");
-		return;
-	}
 	
 	if(!this.InstallmentsWin)
 	{
@@ -1893,12 +1933,12 @@ RequestInfo.prototype.LoadInstallments = function(){
 	this.InstallmentsWin.loader.load({
 		params : {
 			ExtTabID : this.InstallmentsWin.getEl().id,
-			PartID : record.data.PartID
+			RequestID : this.RequestID
 		}
 	});
 }
 
-RequestInfo.prototype.LoadPays = function(){
+RequestInfo.prototype.LoadBackPays = function(){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
 	if(!record)
@@ -1911,7 +1951,7 @@ RequestInfo.prototype.LoadPays = function(){
 	{
 		this.PayWin = new Ext.window.Window({
 			width : 870,
-			title : "لیست پرداخت ها",
+			title : "لیست پرداخت های مشتری",
 			height : 410,
 			modal : true,
 			loader : {
@@ -1930,7 +1970,7 @@ RequestInfo.prototype.LoadPays = function(){
 	this.PayWin.loader.load({
 		params : {
 			ExtTabID : this.PayWin.getEl().id,
-			PartID : record.data.PartID
+			RequestID : this.RequestID
 		}
 	});
 	
@@ -1938,77 +1978,6 @@ RequestInfo.prototype.LoadPays = function(){
 	this.PayWin.center();
 }
 //.........................................................
-
-RequestInfo.prototype.PayInfo = function(){
-	
-	if(!this.PayInfoWin)
-	{
-		this.PayInfoWin = new Ext.window.Window({
-			width : 400,
-			height : 500,
-			autoScroll : true,
-			modal : true,
-			title : "مبلغ پرداخت",
-			bodyStyle : "background-color:white",
-			loader : {
-				url : this.address_prefix + "PartPayInfo.php"
-			},
-			closeAction : "hide",
-			buttons : [{
-				text : "بازگشت",
-				iconCls : "undo",
-				handler : function(){this.up('window').hide();}
-			}]
-		});
-		Ext.getCmp(this.TabID).add(this.PayInfoWin);
-	}
-	
-	this.PayInfoWin.show();
-	this.PayInfoWin.center();
-	
-	this.PayInfoWin.loader.load({
-		params : {
-			PartID : this.grid.getSelectionModel().getLastSelected().data.PartID
-		}
-	});
-}
-
-RequestInfo.prototype.EndPart = function(){
-	
-	Ext.MessageBox.confirm("","آیا مایل به اتمام این فاز از وام می باشید؟" 
-		+ "<br>توجه : تغییرات اعمال شده قابل برگشت نمی باشد." 
-		+ "<br>فقط زمانی این کار را انجام دهید که از انجام آن مطمئن هستید" , function(btn){
-				
-		if(btn == "no")
-			return;
-		
-		me = RequestInfoObject;
-		var record = me.grid.getSelectionModel().getLastSelected();
-	
-		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
-		mask.show();
-
-		Ext.Ajax.request({
-			url: me.address_prefix +'request.data.php',
-			method: "POST",
-			params: {
-				task: "EndPart",
-				PartID : record.data.PartID
-			},
-			success: function(response){
-				
-				result = Ext.decode(response.responseText);
-				if(!result.success)
-					Ext.MessageBox.alert("error", result.data);
-				else
-					Ext.MessageBox.alert("", "عملیات مورد نظر با موفقیت انجام گردید");
-				
-				mask.hide();
-				RequestInfoObject.grid.getStore().load();
-			}
-		});
-	});
-}
 
 RequestInfo.prototype.StartFlow = function(){
 	
@@ -2073,7 +2042,7 @@ RequestInfo.prototype.ShowPartHistory = function(){
 	});
 }
 
-RequestInfo.prototype.Payments = function(){
+RequestInfo.prototype.LoadPayments = function(){
 	
 	if(!this.PaymentWin)
 	{
@@ -2100,7 +2069,7 @@ RequestInfo.prototype.Payments = function(){
 	this.PaymentWin.loader.load({
 		params : {
 			ExtTabID : this.PaymentWin.getEl().id,
-			PartID : record.data.PartID
+			RequestID : this.RequestID
 		}
 	});
 }

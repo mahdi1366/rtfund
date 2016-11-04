@@ -107,6 +107,8 @@ function searchWritTypes()
 			from HRM_writ_types
 			where person_type = " . $_REQUEST["person_type"] . "
 			order by title"));
+
+
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
@@ -302,7 +304,8 @@ function searchCostCenter()
 	{
 		$dt[] = array("cost_center_id" => "-1", "title" => "همه");
 	}
-	$dt = array_merge($dt, PdoDataAccess::runquery(" SELECT cost_center_id,title FROM cost_centers where cost_center_id in (". manage_access::getValidCostCenters().")"));
+	$dt = array_merge($dt, PdoDataAccess::runquery(" SELECT cost_center_id,title FROM cost_centers
+ where cost_center_id in (". manage_access::getValidCostCenters().")"));
 
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();

@@ -7,16 +7,16 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-$PartID = $_REQUEST["PartID"];
-if(empty($PartID))
+$RequestID = $_REQUEST["RequestID"];
+if(empty($RequestID))
 	die();
 $editable = true;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=GetPartPayments" . 
-		"&PartID=" . $PartID, "grid_div");
+		"&RequestID=" . $RequestID, "grid_div");
 
 $dg->addColumn("", "PayID","", true);
-$dg->addColumn("", "PartID","", true);
+$dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "DocID","", true);
 $dg->addColumn("", "DocStatus","", true);
 
@@ -65,7 +65,7 @@ PartPayment.prototype = {
 	TabID : "<?= $_REQUEST["ExtTabID"] ?>",
 	address_prefix : "<?= $js_prefix_address?>",
 
-	PartID : "<?= $PartID ?>",
+	RequestID : "<?= $RequestID ?>",
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -125,7 +125,7 @@ PartPayment.prototype.AddPay = function(){
 	var record = new modelClass({
 		PayID: null,
 		DocID : 0,
-		PartID : this.PartID
+		RequestID : this.RequestID
 	});
 
 	this.grid.plugins[0].cancelEdit();

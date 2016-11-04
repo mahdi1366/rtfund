@@ -44,22 +44,22 @@ require_once '../js/view_writ.js.php';
 			<tr>
 				<td>
 					<div id="btn_last" class="moveItem" onclick="ViewWritObject.moveWrit(this,'last');">
-						<img src="img/right4.png" class="">آخرین حکم</div></td>
+						<img src="/HumanResources/img/right4.png" class="">آخرین حکم</div></td>
 				<td>
 					<div id="btn_next" class="moveItem"  onclick="ViewWritObject.moveWrit(this,'next');">
-						<img src="img/right.png" class="">حکم بعدی</div></td>
+						<img src="/HumanResources/img/right.png" class="">حکم بعدی</div></td>
 				<td>
 					<div id="btn_previous" class="moveItem" class="moveItem" onclick="ViewWritObject.moveWrit(this,'previous');">
-						<img   src="img/left.png" class="">حکم قبلی</div></td>
+						<img   src="/HumanResources/img/left.png" class="">حکم قبلی</div></td>
 				<td>
 					<div id="btn_nextVersion" class="moveItem" onclick="ViewWritObject.moveWrit(this,'nextVersion');">
-						<img src="img/right2.png" class="">نسخه بعدی حکم</div></td>
+						<img src="/HumanResources/img/right2.png" class="">نسخه بعدی حکم</div></td>
 				<td>
 					<div id="btn_previosVersion" class="moveItem" onclick="ViewWritObject.moveWrit(this,'previosVersion');">
-						<img src="img/left2.png" class="">نسخه قبلی حکم</div></td>
+						<img src="/HumanResources/img/left2.png" class="">نسخه قبلی حکم</div></td>
 				<td>
 					<div id="btn_first" class="moveItem" onclick="ViewWritObject.moveWrit(this,'first');">
-						<img src="img/left4.png" class="">اولین حکم</div></td>
+						<img src="/HumanResources/img/left4.png" class="">اولین حکم</div></td>
 				<td>
 			</tr>
 		</table>

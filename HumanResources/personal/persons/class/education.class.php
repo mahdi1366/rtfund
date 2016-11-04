@@ -49,12 +49,12 @@ class manage_person_education extends PdoDataAccess
 	 	$whereParams[":pid"] = $this->PersonID;
 	 	$whereParams[":rowid"] = $this->row_no;
 	 	
-	 	if( parent::update("person_educations",$this," PersonID=:pid and row_no=:rowid ", $whereParams) === false )
+	 	if( parent::update("HRM_person_educations",$this," PersonID=:pid and row_no=:rowid ", $whereParams) === false )
 	 		return false;
 	 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->RelatedPersonType = 3 ;
 		$daObj->RelatedPersonID = $this->PersonID;
 		$daObj->MainObjectID = $this->row_no;
 		$daObj->TableName = "person_educations";
@@ -125,14 +125,14 @@ class manage_person_education extends PdoDataAccess
 	 	$whereParams[":pid"] = $personID;
 	 	$whereParams[":rowid"] = $row_no;
 	 	 	
-		 if( parent::delete("person_educations"," PersonID=:pid and row_no=:rowid", $whereParams) === false) {
+		 if( parent::delete("HRM_person_educations"," PersonID=:pid and row_no=:rowid", $whereParams) === false) {
 			parent::PushException(ER_PERSON_DEP_DEL);
 	 		return false;	 	
 	 	}
 	 	
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->RelatedPersonType = 3 ;
 		$daObj->RelatedPersonID = $personID;
 		$daObj->MainObjectID = $row_no;
 		$daObj->TableName = "person_educations";

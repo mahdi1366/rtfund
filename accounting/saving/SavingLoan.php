@@ -64,6 +64,8 @@ SavingLoan.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 	
+	reportOnly : <?= $reportOnly ? "true" : "false" ?>,
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -72,7 +74,13 @@ SavingLoan.prototype = {
 function SavingLoan()
 {
 	this.grid = <?= $grid ?>;
-		
+	this.MakeInfoPanel();
+	
+	if(this.reportOnly)	
+	{
+		this.LoadInfo('<?= $PersonID ?>');
+		return;
+	}
 	this.PartPanel = new Ext.form.FieldSet({
 		title: "انتخاب فرد",
 		width: 500,
@@ -103,8 +111,11 @@ function SavingLoan()
 			}
 		}]
 	});
+}
+
+SavingLoan.prototype.MakeInfoPanel = function(){
 	
-	this.InfoPanel = new Ext.form.Panel({
+		this.InfoPanel = new Ext.form.Panel({
 		renderTo : this.get("div_info"),
 		width : 620,
 		hidden : true,
@@ -221,7 +232,6 @@ function SavingLoan()
 			handler : function(){ SavingLoanObject.CreateLoan(); }
 		}]
 	});
-	
 }
 
 SavingLoan.amountRender = function(v,p,r){
@@ -272,8 +282,6 @@ SavingLoan.InstallmentAmountRender = function(v,p,r){
 	return Ext.util.Format.Money( Math.round(totalAmount/(r.data.InstallmentCount*ratio)) );
 	
 }
-
-var SavingLoanObject = new SavingLoan();
 
 SavingLoan.prototype.LoadInfo = function(PersonID){
 
@@ -382,6 +390,7 @@ SavingLoan.prototype.CreateLoan = function(){
 	});
 }
 
+var SavingLoanObject = new SavingLoan();
 
 </script>
 <center>

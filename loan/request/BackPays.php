@@ -8,17 +8,15 @@ require_once 'request.class.php';
 include_once inc_dataGrid;
 
 $framework = isset($_SESSION["USER"]["framework"]);
-$PartID = 0;
+$RequestID = 0;
 $editable = false;
 if($framework)
 {
-	if(!empty($_POST["PartID"]))
+	if(!empty($_POST["RequestID"]))
 	{
-		$PartID = $_POST["PartID"];
+		$RequestID = $_POST["RequestID"];
 
-		$obj = new LON_ReqParts($PartID);
-		$ReqObj = new LON_requests($obj->RequestID);
-
+		$ReqObj = new LON_requests($RequestID);
 		if($ReqObj->IsEnded == "NO")
 			$editable = true;
 	}
@@ -29,7 +27,7 @@ if($framework)
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetPartPays","grid_div");
 
 $dg->addColumn("", "BackPayID","", true);
-$dg->addColumn("", "PartID","", true);
+$dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "PayTypeDesc","", true);
 $dg->addColumn("", "LocalNo","", true);
 $dg->addColumn("", "DocStatus","", true);
@@ -135,7 +133,7 @@ LoanPay.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 	
 	framework : <?= $framework ? "true" : "false" ?>,
-	PartID : <?= $PartID ?>,
+	RequestID : <?= $RequestID ?>,
 	PartRecord : null,
 	
 	GroupPays : new Array(),
@@ -174,9 +172,9 @@ function LoanPay()
 			return false;			
 		});
 		
-	if(this.PartID > 0)
+	if(this.RequestID > 0)
 	{
-		this.grid.getStore().proxy.extraParams = {PartID : this.PartID};
+		this.grid.getStore().proxy.extraParams = {RequestID : this.RequestID};
 		this.grid.render(this.get("div_grid"));
 		return;
 	}
@@ -191,14 +189,13 @@ function LoanPay()
 			store: new Ext.data.Store({
 				proxy:{
 					type: 'jsonp',
-					url: this.address_prefix + 'request.data.php?task=selectParts',
+					url: this.address_prefix + 'request.data.php?task=SelectAllRequests2',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['PartAmount',"IsEnded",'PartDesc',"RequestID","PartDate", 
-					"PartID","loanFullname","InstallmentAmount",{
+				fields :  ['PartAmount',"IsEnded","RequestID","PartDate","loanFullname","InstallmentAmount",{
 					name : "fullTitle",
 					convert : function(value,record){
-						return "کد وام : " + record.data.RequestID + "  " + record.data.PartDesc + " به مبلغ " + 
+						return "کد وام : " + record.data.RequestID + " به مبلغ " + 
 							Ext.util.Format.Money(record.data.PartAmount) + " مورخ " + 
 							MiladiToShamsi(record.data.PartDate) + " " + record.data.loanFullname;
 					}
@@ -206,12 +203,11 @@ function LoanPay()
 			}),
 			displayField: 'fullTitle',
 			pageSize : 25,
-			valueField : "PartID",
+			valueField : "RequestID",
 			width : 600,
 			tpl: new Ext.XTemplate(
 				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
 				'<td style="padding:7px">کد وام</td>',
-				'<td style="padding:7px">فاز وام</td>',
 				'<td style="padding:7px">وام گیرنده</td>',
 				'<td style="padding:7px">مبلغ وام</td>',
 				'<td style="padding:7px">تاریخ پرداخت</td>',
@@ -224,7 +220,6 @@ function LoanPay()
 						'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
 					'</tpl>',
 					'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
-					'<td style="border-left:0;border-right:0" class="search-item">{PartDesc}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">{loanFullname}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">',
 						'{[Ext.util.Format.Money(values.PartAmount)]}</td>',
@@ -232,7 +227,7 @@ function LoanPay()
 					'<tpl if="IsEnded == \'NO\'">',
 						'<td class="search-item"><div align=center title="اضافه به پرداخت گروهی" class=add ',
 							'onclick="LoanPayObject.AddToGroupPay(event,\'{loanFullname}\',',
-							'{PartID},{InstallmentAmount});" ',
+							'{RequestID},{InstallmentAmount});" ',
 							'style=background-repeat:no-repeat;',
 							'background-position:center;cursor:pointer;width:20px;height:16></div></td>',
 					'<tpl else>',
@@ -242,13 +237,13 @@ function LoanPay()
 				'</tpl>',
 				'</table>'
 			),
-			itemId : "PartID",
+			itemId : "RequestID",
 			listeners :{
 				select : function(combo,records){
 					me = LoanPayObject;
 					
 					me.grid.getStore().proxy.extraParams = {
-						PartID : this.getValue()
+						RequestID : this.getValue()
 					};
 					if(me.grid.rendered)
 						me.grid.getStore().load();
@@ -269,7 +264,7 @@ function LoanPay()
 					}
 					
 					me.PartRecord = records[0];
-					me.PartID = records[0].data.PartID;
+					me.RequestID = records[0].data.RequestID;
 				}
 			}
 		},{
@@ -619,7 +614,7 @@ LoanPay.prototype.AddPay = function(){
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
 		BackPayID: null,
-		PartID : this.PartID,
+		RequestID : this.RequestID,
 		PayAmount : defaultAmount
 	});
 
@@ -666,10 +661,10 @@ LoanPay.prototype.DeletePay = function(){
 
 LoanPay.prototype.PayReport = function(){
 
-	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&PartID=" + this.PartID);
+	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&RequestID=" + this.RequestID);
 }
 
-LoanPay.prototype.AddToGroupPay = function(e ,loanFullname, PartID, InstallmentAmount){
+LoanPay.prototype.AddToGroupPay = function(e ,loanFullname, RequestID, InstallmentAmount){
 
 	if(!this.groupAmountWin)
 	{
@@ -696,7 +691,7 @@ LoanPay.prototype.AddToGroupPay = function(e ,loanFullname, PartID, InstallmentA
 	this.groupAmountWin.down('currencyfield').setValue(InstallmentAmount);
 	this.groupAmountWin.down("[itemId=btn_add]").setHandler(function(){
 		amount = this.up('window').down('currencyfield').getValue();
-		LoanPayObject.GroupPays.push(PartID + "_" + amount);
+		LoanPayObject.GroupPays.push(RequestID + "_" + amount);
 		LoanPayObject.GroupPaysTitles.push(loanFullname);
 		LoanPayObject.groupAmountWin.hide();
 	})

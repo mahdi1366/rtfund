@@ -1010,24 +1010,17 @@ if( $emonth < 7 )
 		if($personID != "")
 		{
 			$whereParam = array(":pid"=> $personID);
+			$return = PdoDataAccess::delete("HRM_staff", "PersonID=:pid", $whereParam, $pdo);
 			
-			$query  = " select staff_id from staff where personid=".$personID ; 
-			$stid = PdoDataAccess::runquery($query); 
-			$whereParam[":staff_id"] = $stid[0]["staff_id"] ; 
-			
-			$return = PdoDataAccess::delete("staff_details","staff_id=:staff_id", $whereParam, $pdo);
-			if(!$return)
-				return false;
-
-			$return = PdoDataAccess::delete("staff", "PersonID=:pid", $whereParam, $pdo);
 			if(!$return)
 				return false;
 
 			$daObj = new DataAudit();
 			$daObj->ActionType = DataAudit::Action_delete;
 			$daObj->MainObjectID = $personID;
-			$daObj->TableName = "staff";
-			$daObj->execute();
+			$daObj->TableName = "HRM_staff";
+			$daObj->execute(); 				
+						
 		}
 		else if($staff_id != "")
 		{
