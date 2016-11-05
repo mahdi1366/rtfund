@@ -2559,6 +2559,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 	$CostCode_wage = FindCostID("750-07");
 	$CostCode_FutureWage = FindCostID("760-07");
 	$CostCode_fund = FindCostID("100");
+	$CostCode_seporde = FindCostID("690");
 	$CostCode_pasandaz = FindCostID("209-10");
 	$CostCode_guaranteeAmount = FindCostID("904-02");
 	$CostCode_guaranteeCount = FindCostID("904-01");
@@ -2576,7 +2577,9 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 	
 	//------------------- compute wage ------------------
 	$days = DateModules::GDateMinusGDate($ReqObj->EndDate,$ReqObj->StartDate);
-	$TotalWage = round($days*$ReqObj->amount*0.9*$ReqObj->wage/36500);	
+	//if(DateModules::YearIsLeap($CycleID));
+		$days -= 1;
+	$TotalWage = round($days*$ReqObj->amount*0.9*$ReqObj->wage/36500) + 50000;	
 	
 	$years = SplitYears(DateModules::miladi_to_shamsi($ReqObj->StartDate), 
 		DateModules::miladi_to_shamsi($ReqObj->EndDate), $TotalWage);
@@ -2719,17 +2722,15 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 	
 	// ----------------------------- bank --------------------------------
 	unset($itemObj->ItemID);
-	$itemObj->details = "کارمزد 10% ضمانت نامه شماره " . $ReqObj->RequestID;
-	$itemObj->CostID = $CostCode_wage;
+	unset($itemObj->TafsiliType);
+	unset($itemObj->TafsiliID);
+	$itemObj->details = "بابت 10% سپرده ضمانت نامه شماره " . $ReqObj->RequestID;
+	$itemObj->CostID = $CostCode_seporde;
 	$itemObj->DebtorAmount = 0;
 	$itemObj->CreditorAmount = $ReqObj->amount*0.1;
-	$itemObj->TafsiliType = TAFTYPE_YEARS;
-	$itemObj->TafsiliID = $YearTafsili;
 	$itemObj->Add($pdo);
 		
 	unset($itemObj->ItemID);
-	unset($itemObj->TafsiliType);
-	unset($itemObj->TafsiliID);
 	$itemObj->details = "بابت کارمزد ضمانت نامه شماره " . $ReqObj->RequestID;
 	$itemObj->CostID = FindCostID($WageCost);
 	$itemObj->DebtorAmount = $TotalWage + $ReqObj->amount*0.1;

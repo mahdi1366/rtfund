@@ -31,7 +31,6 @@ function selectIncomeCheques() {
 			bi2.InfoDesc ChequeStatusDesc,
 			t.docs
 		from LON_BackPays p 
-		join LON_ReqParts using(PartID)
 		join LON_requests using(RequestID)
 		join BSC_persons on(LoanPersonID=PersonID)
 		left join ACC_banks b on(ChequeBank=BankID)
