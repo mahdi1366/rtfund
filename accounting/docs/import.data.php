@@ -3,7 +3,7 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 94.06
 //-----------------------------
-
+ 
 require_once '../header.inc.php';
 require_once getenv("DOCUMENT_ROOT") . '/accounting/definitions.inc.php';
 require_once getenv("DOCUMENT_ROOT") . '/framework/person/persons.class.php';
