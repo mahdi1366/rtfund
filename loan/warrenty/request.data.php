@@ -262,4 +262,37 @@ function GetWarrentyTypes(){
 	die();
 }
 
+//------------------------------------------------
+
+function GetCosts(){
+	
+	$temp = WAR_costs::Get("AND RequestID=?", array($_REQUEST["RequestID"]));
+	$res = $temp->fetchAll();
+	echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveCosts(){
+	
+	$obj = new WAR_costs();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if(empty($obj->CostID))
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();
+}
+
+function DeleteCosts(){
+	
+	$obj = new WAR_costs();
+	$obj->CostID = $_POST["CostID"];
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();	
+}
+
 ?>

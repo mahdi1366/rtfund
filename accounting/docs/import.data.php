@@ -2579,7 +2579,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 	$days = DateModules::GDateMinusGDate($ReqObj->EndDate,$ReqObj->StartDate);
 	//if(DateModules::YearIsLeap($CycleID));
 		$days -= 1;
-	$TotalWage = round($days*$ReqObj->amount*0.9*$ReqObj->wage/36500) + 50000;	
+	$TotalWage = round($days*$ReqObj->amount*0.9*$ReqObj->wage/36500) + $ReqObj->RegisterAmount*1;	
 	
 	$years = SplitYears(DateModules::miladi_to_shamsi($ReqObj->StartDate), 
 		DateModules::miladi_to_shamsi($ReqObj->EndDate), $TotalWage);
@@ -2640,7 +2640,8 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 		$DocObj->CycleID = $CycleID;
 		$DocObj->BranchID = $ReqObj->BranchID;
 		$DocObj->DocType = DOCTYPE_WARRENTY;
-		$DocObj->description = "ضمانت نامه شماره " . $ReqObj->RequestID . " به نام " . $ReqObj->_fullname;
+		$DocObj->description = "ضمانت نامه " . $ReqObj->_TypeDesc . " به شماره " . 
+				$ReqObj->RequestID . " به نام " . $ReqObj->_fullname;
 
 		if(!$DocObj->Add($pdo))
 		{
@@ -2719,7 +2720,21 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 			return false;
 		}
 	}
-	
+	// ---------------------- Warrenty costs -----------------------------
+	$totalCostAmount = 0;
+	$dt = PdoDataAccess::runquery("select * from WAR_costs where RequestID=?", array($ReqObj->RequestID));
+	foreach($dt as $row)
+	{
+		$totalCostAmount += $row["CostAmount"]*1;
+		
+		unset($itemObj->ItemID);
+		$itemObj->SourceID2 = $row["CostID"];
+		$itemObj->details = $row["CostDesc"];
+		$itemObj->CostID = $row["CostCodeID"];
+		$itemObj->DebtorAmount = $row["CostAmount"];
+		$itemObj->CreditorAmount = 0;
+		$itemObj->Add($pdo);
+	}
 	// ----------------------------- bank --------------------------------
 	unset($itemObj->ItemID);
 	unset($itemObj->TafsiliType);
@@ -2733,7 +2748,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 	unset($itemObj->ItemID);
 	$itemObj->details = "بابت کارمزد ضمانت نامه شماره " . $ReqObj->RequestID;
 	$itemObj->CostID = FindCostID($WageCost);
-	$itemObj->DebtorAmount = $TotalWage + $ReqObj->amount*0.1;
+	$itemObj->DebtorAmount = $TotalWage + $ReqObj->amount*0.1 - $totalCostAmount;
 	$itemObj->CreditorAmount = 0;
 	
 	if($WageCost == "101")

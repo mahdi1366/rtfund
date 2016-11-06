@@ -157,6 +157,11 @@ function WarrentyRequest(){
 			afterSubTpl : "%",
 			hideTrigger : true
 		},{
+			xtype : "currencyfield",
+			name : "RegisterAmount",
+			hideTrigger : true,
+			fieldLabel : "کارمزد صدور"
+		},{
 			xtype : "checkbox",
 			boxLabel : "مبلغ ضمانت نامه از حساب سپرده فرد بلوکه شود",
 			name : "IsBlock",
@@ -228,6 +233,9 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 		op_menu.add({text: 'چاپ ضمانت نامه',iconCls: 'print',
 			handler : function(){ return WarrentyRequestObject.Print(); }});
 	}
+	
+	op_menu.add({text: 'هزینه ها',iconCls: 'account', 
+		handler : function(){ return WarrentyRequestObject.ShowCosts(); }});
 	
 	op_menu.add({text: 'مدارک ضمانت نامه',iconCls: 'attach', 
 		handler : function(){ return WarrentyRequestObject.WarrentyDocuments('warrenty'); }});
@@ -687,5 +695,43 @@ WarrentyRequest.prototype.Print = function(){
 	var record = this.grid.getSelectionModel().getLastSelected();
 	window.open(this.address_prefix + "PrintWarrenty.php?RequestID=" + record.data.RequestID);
 }
+
+WarrentyRequest.prototype.ShowCosts = function(){
+
+	if(!this.CostsWin)
+	{
+		this.CostsWin = new Ext.window.Window({
+			title: 'هزینه های ضمانت نامه',
+			modal : true,
+			autoScroll : true,
+			width: 600,
+			height : 400,
+			bodyStyle : "background-color:white",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "costs.php",
+				scripts : true
+			},
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){
+					this.up('window').hide();
+				}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.CostsWin);
+	}
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.CostsWin.show();
+	this.CostsWin.center();	
+	this.CostsWin.loader.load({
+		params : {
+			ExtTabID : this.CostsWin.getEl().id,
+			RequestID : record.data.RequestID
+		}
+	});
+}
+
 
 </script>

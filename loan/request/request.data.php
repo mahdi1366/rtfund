@@ -542,7 +542,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	//---------------------------------------------------------------------
 	
 	$jdate = DateModules::miladi_to_shamsi($obj->PartDate);
-	$jdate = DateModules::AddToJDate($jdate, 1+$obj->DelayDays, $obj->DelayMonths);
+	$jdate = DateModules::AddToJDate($jdate, $obj->DelayDays, $obj->DelayMonths);
 	
 	if($pdo2 == null)
 	{
@@ -556,8 +556,8 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 		$obj2 = new LON_installments();
 		$obj2->RequestID = $RequestID;
 		$obj2->InstallmentDate = DateModules::AddToJDate($jdate, 
-		$obj->IntervalType == "DAY" ? $obj->PayInterval*($i+1) : 0, 
-		$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
+			$obj->IntervalType == "DAY" ? $obj->PayInterval*($i+1) : 0, 
+			$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
 		$obj2->InstallmentAmount = $allPay;
 		if(!$obj2->AddInstallment($pdo))
 		{
@@ -655,45 +655,107 @@ function DelayInstallments(){
 	
 	$RequestID = $_POST["RequestID"];
 	$InstallmentID = $_POST["InstallmentID"];
-	$months = $_POST["months"];
+	$newDate = $_POST["newDate"];
 	
 	$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	$dt = LON_installments::SelectAll("r.RequestID=? AND InstallmentID>=?", array($RequestID, $InstallmentID));
-	for($i=0; $i<count($dt); $i++)
+	if($_POST["IsRemainCompute"] == " 0")
 	{
-		$obj = new LON_installments();
-		$obj->InstallmentID = $dt[$i]["InstallmentID"];
-		$obj->IsDelayed = "YES";
-		if(!$obj->EditInstallment($pdo))
+		$dt = LON_installments::SelectAll("r.RequestID=? AND InstallmentID>=?", array($RequestID, $InstallmentID));
+		$days = 0;
+		for($i=0; $i<count($dt); $i++)
 		{
-			$pdo->rollBack ();
-			echo Response::createObjectiveResponse(false, "1");
-			die();
-		}
-		//...........................................
-		
-		$obj = new LON_installments();
-		$obj->RequestID = $RequestID;
-		$obj->InstallmentDate = DateModules::shamsi_to_miladi(
-				DateModules::AddToJDate(DateModules::miladi_to_shamsi($dt[$i]["InstallmentDate"]), 0, $months));
-		
-		$days = DateModules::GDateMinusGDate($obj->InstallmentDate, $dt[$i]["InstallmentDate"]);
-		
-		$extraWage = round($dt[$i]["InstallmentAmount"]*$PartObj->CustomerWage*$days/36500);
-		
-		$obj->InstallmentAmount = $dt[$i]["InstallmentAmount"]*1 + $extraWage;
-		if(!$obj->AddInstallment($pdo))
-		{
-			$pdo->rollBack ();
-			echo Response::createObjectiveResponse(false, "2");
-			die();
+			$obj = new LON_installments();
+			$obj->InstallmentID = $dt[$i]["InstallmentID"];
+			$obj->IsDelayed = "YES";
+			if(!$obj->EditInstallment($pdo))
+			{
+				$pdo->rollBack ();
+				echo Response::createObjectiveResponse(false, "1");
+				die();
+			}
+			//...........................................
+
+			if($days == 0)
+			{
+				$newDate = DateModules::shamsi_to_miladi($newDate, "-");
+				$days = DateModules::GDateMinusGDate($newDate, $dt[$i]["InstallmentDate"]);
+			}
+
+			$obj = new LON_installments();
+			$obj->RequestID = $RequestID;
+			$obj->InstallmentDate = DateModules::AddToGDate($dt[$i]["InstallmentDate"], $days);
+
+			$extraWage = round($dt[$i]["InstallmentAmount"]*$PartObj->CustomerWage*$days/36500);
+
+			$obj->InstallmentAmount = $dt[$i]["InstallmentAmount"]*1 + $extraWage;
+			if(!$obj->AddInstallment($pdo))
+			{
+				$pdo->rollBack ();
+				echo Response::createObjectiveResponse(false, "2");
+				die();
+			}
 		}
 	}
-	
+	else
+	{
+		$dt = LON_installments::SelectAll("r.RequestID=?", array($RequestID));
+		
+		$dt2 = ComputePayments($RequestID, $dt);
+		$index = 0;
+		$ComputeRecord = $dt2[$index++];
+		
+		$days = 0;
+		for($i=0; $i<count($dt); $i++)
+		{
+			if($dt[$i]["InstallmentID"] < $InstallmentID)
+			{
+				while($ComputeRecord["InstallmentID"] == $dt[$i]["InstallmentID"])
+					$ComputeRecord = $dt2[++$index];
+				continue;
+			}
+			$remain = 0;
+			while($ComputeRecord["InstallmentID"] == $dt[$i]["InstallmentID"])
+			{
+				$remain = $ComputeRecord["remainder"];
+				$ComputeRecord = $index+1<count($dt2) ? $dt2[++$index] : null;
+			}
+			
+			$obj = new LON_installments();
+			$obj->InstallmentID = $dt[$i]["InstallmentID"];
+			$obj->IsDelayed = "YES";
+			if(!$obj->EditInstallment($pdo))
+			{
+				$pdo->rollBack ();
+				echo Response::createObjectiveResponse(false, "1");
+				die();
+			}
+			//...........................................
+
+			if($days == 0)
+			{
+				$newDate = DateModules::shamsi_to_miladi($newDate, "-");
+				$days = DateModules::GDateMinusGDate($newDate, $dt[$i]["InstallmentDate"]);
+			}
+
+			$obj = new LON_installments();
+			$obj->RequestID = $RequestID;
+			$obj->InstallmentDate = DateModules::AddToGDate($dt[$i]["InstallmentDate"], $days);
+
+			$extraWage = round($remain*$PartObj->CustomerWage*$days/36500);
+
+			$obj->InstallmentAmount = $dt[$i]["InstallmentAmount"]*1 + $extraWage;
+			if(!$obj->AddInstallment($pdo))
+			{
+				$pdo->rollBack ();
+				echo Response::createObjectiveResponse(false, "2");
+				die();
+			}
+		}
+	}
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
 		$pdo->rollBack ();

@@ -2114,7 +2114,7 @@ RequestInfo.prototype.ShowEvents = function(){
 	if(!this.EventsWin)
 	{
 		this.EventsWin = new Ext.window.Window({
-			title: 'رویدادهای مرتبط با طرح',
+			title: 'رویدادهای مرتبط با وام',
 			modal : true,
 			autoScroll : true,
 			width: 600,

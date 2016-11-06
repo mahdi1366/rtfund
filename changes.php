@@ -1,5 +1,23 @@
 <?php
 require_once "framework/header.inc.php";
+
+/*require_once("framework/PasswordHash.php");
+$dt = PdoDataAccess::runquery("select * from BSC_persons 
+	where (UserName='' or UserName is null) AND NationalID<>''");
+foreach($dt as $row)
+{
+	$defaultPass = $row["NationalID"];
+	$hash_cost_log2 = 8;	
+	$hasher = new PasswordHash($hash_cost_log2, true);
+	$newPass = $hasher->HashPassword(md5($defaultPass));
+	PdoDataAccess::runquery("update BSC_persons set UserName=?, UserPass=? where PersonID=?", 
+		array($row["NationalID"],$newPass, $row["PersonID"]));
+	echo $row["PersonID"] . " : " . (PdoDataAccess::GetExceptionCount()>0 ? "false" : "true") . "<br>";
+	flush();
+	ob_flush();
+}
+print_r(ExceptionHandler::PopAllExceptions());
+die();*/
 ?>
 <META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">
 <?

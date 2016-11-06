@@ -327,15 +327,20 @@ Installment.prototype.DelayInstallments = function(){
 	if(!this.delayWin)
 	{
 		this.delayWin = new Ext.window.Window({
-			width : 160,
-			height : 85,
+			width : 350,
+			height : 120,
 			modal : true,
-			title : "تعداد ماه تمدید",
-			bodyStyle : "background-color:white",
+			title : "تمدید اقساط",
+			bodyStyle : "background-color:white;padding-right:20px",
 			items : [{
-				xtype : "numberfield",
-				name : "monthCount",
-				hideTrigger : true
+				xtype : "shdatefield",
+				fieldLabel : "تمدید تا تاریخ",
+				name : "newDate"
+			},{
+				xtype : "checkbox",
+				boxLabel : "محاسبه کارمزد بر اساس باقیمانده قسط باشد",
+				inputValue : 1,
+				name : "IsRemainCompute"
 			}],
 			closeAction : "hide",
 			buttons : [{
@@ -362,7 +367,8 @@ Installment.prototype.DelayInstallments = function(){
 							task: "DelayInstallments",
 							RequestID : record.data.RequestID,
 							InstallmentID : record.data.InstallmentID,
-							months : me.delayWin.down("[name=monthCount]").getValue()						
+							newDate : me.delayWin.down("[name=newDate]").getRawValue(),
+							IsRemainCompute : me.delayWin.down("[name=IsRemainCompute]").checked ? 1 : 0,
 						},
 						success: function(response){
 							mask.hide();

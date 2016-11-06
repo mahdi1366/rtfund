@@ -688,24 +688,72 @@ function ComputeDoc(){
 
 //.................................
 
+function GetAccountSummary(){
+	
+	$where = "";
+	$param = array(":c" => $_SESSION["accounting"]["CycleID"], 
+		":b" => $_SESSION["accounting"]["BranchID"]);
+	
+	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
+	{
+		$where .= " AND " . $_GET["fields"] . " like :f";
+		$param[":f"] = "%" . $_GET["query"] . "%";
+	}	
+	
+	$temp = PdoDataAccess::runquery_fetchMode("
+		select t.TafsiliID,t.TafsiliDesc, 
+			ifnull(pasandaz.amount,0) pasandaz,
+			ifnull(kootah.amount,0) kootah,
+			ifnull(boland.amount,0) boland,
+			ifnull(jari.amount,0) jari
+		from ACC_tafsilis t 
+			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
+						from ACC_DocItems join ACC_docs using(DocID)
+						where BranchID=:b AND CycleID=:c AND CostID=".COSTID_saving."
+						group by TafsiliID
+			)pasandaz on(pasandaz.TafsiliID=t.TafsiliID)
+			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
+						from ACC_DocItems join ACC_docs using(DocID)
+						where BranchID=:b AND CycleID=:c AND CostID=".COSTID_ShortDeposite."
+						group by TafsiliID
+			)kootah on(kootah.TafsiliID=t.TafsiliID)
+			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
+						from ACC_DocItems join ACC_docs using(DocID)
+						where BranchID=:b AND CycleID=:c AND CostID=".COSTID_LongDeposite."
+						group by TafsiliID
+			)boland on(boland.TafsiliID=t.TafsiliID)
+			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
+						from ACC_DocItems join ACC_docs using(DocID)
+						where BranchID=:b AND CycleID=:c AND CostID=".COSTID_current."
+						group by TafsiliID
+			)jari on(jari.TafsiliID=t.TafsiliID)
+		where TafsiliType=1 " . $where . dataReader::makeOrder(), $param);
+	
+	//echo PdoDataAccess::GetLatestQueryString();
+	$no = $temp->rowCount();
+	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
+	echo dataReader::getJsonData($temp, $no, $_GET ["callback"]);
+	die();
+	
+}
+
 function GetAccountFlow() {
 	
 	$CostID = $_REQUEST["BaseCostID"];
+	$TafsiliID = $_REQUEST["TafsiliID"];
 	
 	$query = "select d.*,di.*
 		from ACC_DocItems di
 			join ACC_docs d using(DocID)
-			join ACC_tafsilis t on(di.TafsiliID=t.TafsiliID)
-			join BSC_persons p on(t.ObjectID=p.PersonID)
 		where d.CycleID=:c AND d.BranchID=:b AND 
-			di.CostID=:cost AND di.TafsiliType = :t AND p.PersonID=:p";
+			di.CostID=:cost AND di.TafsiliType = :t AND di.TafsiliID=:tid";
 	
 	$param = array(
 		":c" => $_SESSION["accounting"]["CycleID"],
 		":b" => $_SESSION["accounting"]["BranchID"],
 		":cost" => $CostID,
 		":t" => TAFTYPE_PERSONS,
-		":p" => $_REQUEST["PersonID"]
+		":tid" => $TafsiliID
 	);
 	
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
@@ -713,12 +761,8 @@ function GetAccountFlow() {
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	
 	//------------------------------------------------
-	$dt = ACC_tafsilis::SelectAll("PersonID=?", array($_REQUEST["PersonID"]));
-	$dt = $dt->fetch();
-	$tafsiliID = $dt["TafsiliID"];
-	$BlockedAmount = ACC_CostBlocks::GetBlockAmount($CostID,TAFTYPE_PERSONS, $tafsiliID);
+	$BlockedAmount = ACC_CostBlocks::GetBlockAmount($CostID, TAFTYPE_PERSONS, $TafsiliID);
 	//------------------------------------------------
-	
 	echo dataReader::getJsonData($temp, $no, $_GET ["callback"],$BlockedAmount);
 	die();
 }
@@ -726,22 +770,22 @@ function GetAccountFlow() {
 function RegisterInOutAccountDoc() {
 	
 	$CostID = $_REQUEST["BaseCostID"];
+	$BaseTafsiliID = $_REQUEST["BaseTafsiliID"];
+	
 	$mode = $_POST["mode"]*1;
 	if($mode < 0)
 	{
 		$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0) remaindar
 		from ACC_DocItems di
 			join ACC_docs d using(DocID)
-			join ACC_tafsilis t on(di.TafsiliID=t.TafsiliID)
-			join BSC_persons p on(t.ObjectID=p.PersonID)
-		where d.CycleID=:c /*AND d.BranchID=:b*/ AND 
-			di.CostID=:cost AND di.TafsiliType = :t AND p.PersonID=:p";
+		where d.CycleID=:c AND d.BranchID=:b AND 
+			di.CostID=:cost AND di.TafsiliType = :t AND di.TafsiliID=:tid";
 		$param = array(
 			":c" => $_SESSION["accounting"]["CycleID"],
 			":b" => $_SESSION["accounting"]["BranchID"],
 			":cost" => $CostID,
 			":t" => TAFTYPE_PERSONS,
-			":p" => $_REQUEST["PersonID"]
+			":tid" => $BaseTafsiliID
 		);
 		
 		$dt = PdoDataAccess::runquery($query, $param);
@@ -773,21 +817,14 @@ function RegisterInOutAccountDoc() {
 	}
 	
 	//-------------------------------------------------
-	
-	$PersonTafsili = FindTafsiliID($_POST["PersonID"], TAFTYPE_PERSONS);
-	if(!$PersonTafsili)
-	{
-		echo Response::createObjectiveResponse(false,"تفصیلی مربوطه یافت نشد");
-		die();
-	}
-	
+		
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
 	$itemObj->CostID = $CostID;
 	$itemObj->DebtorAmount = $mode > 0 ? 0 : $_POST["amount"];
 	$itemObj->CreditorAmount = $mode > 0 ? $_POST["amount"] : 0;
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
-	$itemObj->TafsiliID = $PersonTafsili;
+	$itemObj->TafsiliID = $BaseTafsiliID;
 	if(!$itemObj->Add($pdo))
 	{
 		echo Response::createObjectiveResponse(false,  ExceptionHandler::GetExceptionsToString());

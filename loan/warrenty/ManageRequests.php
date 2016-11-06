@@ -22,6 +22,7 @@ $dg->addColumn("", "DocStatus", "", true);
 $dg->addColumn("", "IsBlock", "", true);
 $dg->addColumn("", "BranchID", "", true);
 $dg->addColumn("", "BranchName", "", true);
+$dg->addColumn("", "RegisterAmount", "", true);
 
 $col = $dg->addColumn("نوع", "TypeDesc");
 $col->renderer = "function(v,p,r){p.tdAttr = \"data-qtip='\"+r.data.BranchName+\"'\"; return v;}";

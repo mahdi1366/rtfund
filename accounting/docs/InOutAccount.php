@@ -7,26 +7,49 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-$reportOnly = false;
-if(!empty($_REQUEST["reportOnly"]))
-{
-	$reportOnly = true;
-	if(isset($_SESSION["USER"]["portal"]))
-		$PersonID = $_SESSION["USER"]["PersonID"];
-	else
-		$PersonID = $_POST["PersonID"];
-	
-	if(empty($PersonID))
-		die();
-}
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "doc.data.php?task=GetAccountSummary", "grid_div");
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "doc.data.php?task=GetAccountFlow" .
-		($reportOnly ? "&PersonID=" .$PersonID : ""  ), "grid_div");
+$dg->addColumn("", "TafsiliID","", true);
 
-$col = $dg->addColumn("کد سند", "DocID","");
+$col = $dg->addColumn("تفصیلی", "TafsiliDesc","");
+
+$col = $dg->addColumn("پس انداز", "pasandaz",  GridColumn::ColumnType_money);
+$col->renderer = "InOutAccount.AccountDetailRender";
+$col->width = 110;
+
+$col = $dg->addColumn("کوتاه مدت", "kootah",  GridColumn::ColumnType_money);
+$col->renderer = "InOutAccount.AccountDetailRender";
+$col->width = 110;
+
+$col = $dg->addColumn("بلند مدت", "boland",  GridColumn::ColumnType_money);
+$col->renderer = "InOutAccount.AccountDetailRender";
+$col->width = 110;
+
+$col = $dg->addColumn("جاری", "jari",  GridColumn::ColumnType_money);
+$col->renderer = "InOutAccount.AccountDetailRender";
+$col->width = 110;
+
+$dg->emptyTextOfHiddenColumns = true;
+$dg->height = 220;
+$dg->pageSize = 5;
+$dg->width = 780;
+$dg->title = "خلاصه حساب های ذینفعان";
+$dg->DefaultSortField = "TafsiliDesc";
+$dg->DefaultSortDir = "ASC";
+$dg->autoExpandColumn = "TafsiliDesc";
+$Hgrid = $dg->makeGrid_returnObjects();
+
+//..............................................................................
+
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "doc.data.php?task=GetAccountFlow", "grid_div");
+
+$col = $dg->addColumn("شماره سند", "LocalNo","");
 $col->width = 60;
 
+$dg->addColumn("", "DocID","", true);
 $dg->addColumn("", "ItemID","", true);
+$dg->addColumn("", "TafsiliID","", true);
+$dg->addColumn("", "CostID","", true);
 $dg->addColumn("", "DocStatus","", true);
 $dg->addColumn("شرح سند", "description","");
 
@@ -47,17 +70,13 @@ $col->summaryType = GridColumn::SummeryType_sum;
 $col->summaryRenderer = "function(v){return Ext.util.Format.Money(v);}";
 $col->align = "center";
 
-$dg->addObject("this.BaseCostCombo");
+$dg->addButton("", "واریز وجه", "arrow_down", "function(){InOutAccountObject.BeforeOperation(1);}");
+$dg->addButton("", "برداشت وجه", "arrow_up", "function(){InOutAccountObject.BeforeOperation(-1);}");
 
-if(!$reportOnly)
-{
-	$dg->addButton("", "واریز وجه", "arrow_down", "function(){InOutAccountObject.BeforeOperation(1);}");
-	$dg->addButton("", "برداشت وجه", "arrow_up", "function(){InOutAccountObject.BeforeOperation(-1);}");
-}
 $dg->EnableSummaryRow = true;
 
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 480;
+$dg->height = 280;
 $dg->width = 780;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
@@ -78,35 +97,15 @@ InOutAccount.prototype = {
 	}
 };
 
+InOutAccount.AccountDetailRender = function(v,p,r,index, col){
+	
+	return "<a href='javascript:void(1)' onclick='InOutAccountObject.LoadAccountDetail(" +col+ ")'>" 
+		+ Ext.util.Format.Money(v) + "</a>";
+}
+
 function InOutAccount()
 {
-	this.BaseCostCombo = new Ext.form.ComboBox({
-		itemId : "BaseCostID",
-		pageSize : 20,
-		store: new Ext.data.SimpleStore({
-			fields : ['id','title'],
-			data : [ 
-				['<?= COSTID_saving ?>', 'حساب پس انداز'],
-				['<?= COSTID_ShortDeposite ?>', 'سپرده کوتاه مدت'],
-				['<?= COSTID_LongDeposite ?>', 'سپرده بلند مدت'],
-				['<?= COSTID_current ?>', 'حساب جاری']
-			]
-		}),
-		displayField: 'title',
-		value : "<?= COSTID_saving ?>",
-		valueField : "id",
-		listeners :{
-			select : function(combo,records){
-				me = InOutAccountObject;
-
-				me.grid.getStore().proxy.extraParams.BaseCostID = this.getValue();
-				me.grid.getStore().load();
-			}
-		}
-	});
 	this.grid = <?= $grid ?>;
-	this.grid.getStore().proxy.extraParams.BaseCostID = "<?= COSTID_saving ?>";
-	
 	this.grid.getView().getRowClass = function(record, index)
 	{
 		if(record.data.DocStatus ==  "CONFIRM")
@@ -144,58 +143,41 @@ function InOutAccount()
 		
 		var r = this.getProxy().getReader().jsonData;
 		BlockedAmount = r.message;
+		if(BlockedAmount == null)
+			BlockedAmount = 0;
 		InOutAccountObject.grid.down("[itemId=bllocked]").setValue( Ext.util.Format.Money(BlockedAmount) );
 		free = remaindar - BlockedAmount*1;
 		InOutAccountObject.grid.down("[itemId=freeAmount]").setValue( Ext.util.Format.Money(free) );
 	});
-		
-	if(<?= !$reportOnly ? "false" : "true" ?>)
-	{
-		this.grid.render(this.get("div_grid"));
-		return;
-	}
-
-		
-	//.......................................................
-		
-	this.PartPanel = new Ext.form.FieldSet({
-		title: "انتخاب فرد",
-		width: 500,
-		renderTo : this.get("div_form"),
-		frame: true,
-		items : [{
-			xtype : "combo",
-			width : 450,
-			fieldLabel : "انتخاب فرد",
-			pageSize : 20,
-			store: new Ext.data.Store({
-				proxy:{
-					type: 'jsonp',
-					url: this.address_prefix + '../../framework/person/persons.data.php?task=selectPersons',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				fields :  ['PersonID','fullname']
-			}),
-			displayField: 'fullname',
-			valueField : "PersonID",
-			listeners :{
-				select : function(combo,records){
-					me = InOutAccountObject;
-					
-					me.grid.getStore().proxy.extraParams.PersonID = this.getValue();
-					if(me.grid.rendered)
-						me.grid.getStore().load();
-					else
-						me.grid.render(me.get("div_grid"));					
-				}
-			}
-		}]
-	});
 	
+	this.Hgrid = <?= $Hgrid ?>;
+	this.Hgrid.render(this.get("div_hgrid"));
 }
 
 var InOutAccountObject = new InOutAccount();
+
+InOutAccount.prototype.LoadAccountDetail = function(col){
 	
+	var record = this.Hgrid.getSelectionModel().getLastSelected();
+	CostID = "";
+	switch(col)
+	{
+		case 2 : CostID = <?= COSTID_saving ?>; break;
+		case 3 : CostID = <?= COSTID_ShortDeposite ?>; break;
+		case 4 : CostID = <?= COSTID_LongDeposite ?>; break;
+		case 5 : CostID = <?= COSTID_current ?>; break;
+	}
+
+	this.grid.getStore().proxy.extraParams.BaseCostID = CostID;
+	this.grid.getStore().proxy.extraParams.TafsiliID = record.data.TafsiliID;
+	if(this.grid.rendered)
+		this.grid.getStore().load();
+	else
+		this.grid.render(this.get("div_grid"));			
+	
+	
+}
+
 InOutAccount.prototype.BeforeOperation = function(mode){
 	
 	if(!this.mainWin)
@@ -322,8 +304,8 @@ InOutAccount.prototype.SaveOperation = function(){
 		params: {
 			task: "RegisterInOutAccountDoc",
 			mode : this.mode,
-			BaseCostID : this.grid.down("[itemId=BaseCostID]").getValue(),
-			PersonID : this.grid.getStore().proxy.extraParams.PersonID,
+			BaseCostID : this.grid.getStore().proxy.extraParams.BaseCostID,
+			BaseTafsiliID : this.grid.getStore().proxy.extraParams.TafsiliID,
 			CostID : this.mainWin.down("[name=CostID]").getValue(),
 			TafsiliID: this.mainWin.down("[name=TafsiliID]").getValue(),
 			TafsiliID2: this.mainWin.down("[name=TafsiliID2]").getValue(),
@@ -353,6 +335,8 @@ InOutAccount.prototype.SaveOperation = function(){
 
 </script>
 <center>
-	<div id="div_form"></div>
+	<br>
+	<div id="div_hgrid"></div>
+	<br>
 	<div id="div_grid"></div>
 </center>
