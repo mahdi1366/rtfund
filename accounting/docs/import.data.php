@@ -1429,7 +1429,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	$itemObj->CreditorAmount = $PayObj->PayAmount;
 	if(!$itemObj->Add($pdo))
 	{
-		ExceptionHandler::PushException("خطا در ایجاد سند");
+		ExceptionHandler::PushException("خطا در ایجاد ردیف وام");
 		return false;
 	}
 	
@@ -1451,7 +1451,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		}
 		if(!$itemObj->Add($pdo))
 		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
+			ExceptionHandler::PushException("خطا در ایجاد ردیف سپرده");
 			return false;
 		}
 		
@@ -1464,7 +1464,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 			$itemObj->CreditorAmount = 0;
 			if(!$itemObj->Add($pdo))
 			{
-				ExceptionHandler::PushException("خطا در ایجاد سند");
+				ExceptionHandler::PushException("خطا در ایجاد ردیف تعهد");
 				return false;
 			}
 		}
@@ -1496,7 +1496,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		$itemObj->CreditorAmount = 0;
 		if(!$itemObj->Add($pdo))
 		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
+			ExceptionHandler::PushException("خطا در ایجاد ردیف محل پرداخت");
 			return false;
 		}
 		
@@ -1512,7 +1512,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 
 		if(!$Secobj->Add($pdo))
 		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
+			ExceptionHandler::PushException("خطا در ایجاد سند شعبه واسط ");
 			return false;
 		}
 		unset($itemObj->ItemID);
@@ -1526,7 +1526,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		$itemObj->CreditorAmount = $PayObj->PayAmount;
 		if(!$itemObj->Add($pdo))
 		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
+			ExceptionHandler::PushException("خطا در ایجاد ردیف سند شعبه واسط");
 			return false;
 		}
 		
@@ -1547,7 +1547,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 			$itemObj->TafsiliID2 = $TafsiliID2;
 		if(!$itemObj->Add($pdo))
 		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
+			ExceptionHandler::PushException("خطا در ایجاد ردیف سند شعبه واسط");
 			return false;
 		}		
 	}
@@ -1584,7 +1584,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 
 		if(!$itemObj->Add($pdo))
 		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
+			ExceptionHandler::PushException("خطا در ایجاد ردیف بانک");
 			return false;
 		}		
 	}
@@ -1889,7 +1889,7 @@ function ReturnCustomerPayDoc($PayObj, $pdo, $EditMode = false){
 	
 	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
 		where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID=? AND SourceID2=?",
-		array($PayObj->_RequestID, $PayObj->BackPayID), $pdo);
+		array($PayObj->RequestID, $PayObj->BackPayID), $pdo);
 	if(count($dt) == 0)
 		return true;
 	
@@ -1897,7 +1897,7 @@ function ReturnCustomerPayDoc($PayObj, $pdo, $EditMode = false){
 	{
 		PdoDataAccess::runquery("delete from ACC_DocItems 
 			where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID=? AND SourceID2=?",
-			array($PayObj->_RequestID, $PayObj->BackPayID), $pdo);
+			array($PayObj->RequestID, $PayObj->BackPayID), $pdo);
 		PdoDataAccess::runquery("delete from ACC_DocItems 
 			where SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=?",
 			array($PayObj->BackPayID), $pdo);

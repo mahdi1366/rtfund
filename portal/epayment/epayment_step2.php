@@ -42,35 +42,55 @@ if($_POST['State']== 'OK') {
 			</tr>
 		</table>";
 
-		$RequestID = $_POST["ResNum"];
-	
-		$obj = new LON_BackPays();
-		$obj->RequestID = $RequestID;
-		$obj->PayType = 4;
-		$obj->PayAmount = $totalAmount;
-		$obj->PayDate = PDONOW;
-		$obj->PayRefNo = $_POST['RefNum'];
-		
-		$pdo = PdoDataAccess::getPdoObject();
-		$pdo->beginTransaction();
-
-		$error = false;
-		if(!$obj->AddPay($pdo))
-			$error = true;
-		if(!$error)
-			if(!RegisterCustomerPayDoc(null, $obj, 2132, 1, $pdo))
-				$error = true;
-		if($error)
+		$dt = PdoDataAccess::runquery("select * from LON_BackPays where PayRefNo=?", array($_POST['RefNum']));
+		if(count($dt) == 0)
 		{
-			$pdo->rollBack();
-			$result .= "<br> عملیات پرداخت قسط در نرم افزار صندوق به درستی ثبت نگردید. " . 
-					"<br> جهت اعمال آن با صندوق تماس بگیرید." ;
-		}
-		else
-			$pdo->commit();
-	}
+			$RequestID = $_POST["ResNum"];
 
-	$payment->logout($login);
+			$obj = new LON_BackPays();
+			$obj->RequestID = $RequestID;
+			$obj->PayType = 4;
+			$obj->PayAmount = $totalAmount;
+			$obj->PayDate = PDONOW;
+			$obj->PayRefNo = $_POST['RefNum'];
+
+			$pdo = PdoDataAccess::getPdoObject();
+			$pdo->beginTransaction();
+
+			
+			if(!$obj->Add($pdo))
+				$error = true;
+			if(!$error)
+			{
+				$CostID = 253; // bank
+				$TafsiliID = 2132; // eghtesadnovin
+				$TafsiliID2 = 1; // jari
+
+				$ReqObj = new LON_requests($obj->RequestID);
+				$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+				if($PersonObj->IsSupporter == "YES")
+					$res = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, false, "", "", "", $pdo);
+				else
+					$res = RegisterCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, false, "", "", "", $pdo);
+
+				if(!$res)
+					$error = true;
+			}
+		
+			if($error)
+			{
+				$pdo->rollBack();
+				$result .= "<br> عملیات پرداخت قسط در نرم افزار صندوق به درستی ثبت نگردید. " . 
+						"<br> جهت اعمال آن با صندوق تماس بگیرید." ;
+			}
+			else
+			{
+				$pdo->commit();
+			}
+			if(!$error)
+				$payment->logout($login);
+		}		
+	}	
 }
 else 
 {

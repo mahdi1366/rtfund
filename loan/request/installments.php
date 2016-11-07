@@ -131,12 +131,12 @@ function Installment()
 					url: this.address_prefix + 'request.data.php?task=SelectMyRequests',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['PartAmount',"RequestID","PartDate", "RequestID",{
+				fields :  ['PartAmount',"RequestID","ReqAmount","ReqDate", "RequestID",{
 					name : "fullTitle",
 					convert : function(value,record){
 						return "کد وام : " + record.data.RequestID + " به مبلغ " + 
-							Ext.util.Format.Money(record.data.PartAmount) + " مورخ " + 
-							MiladiToShamsi(record.data.PartDate);
+							Ext.util.Format.Money(record.data.ReqAmount) + " مورخ " + 
+							MiladiToShamsi(record.data.ReqDate);
 					}
 				}]
 			}),
@@ -146,16 +146,14 @@ function Installment()
 			tpl: new Ext.XTemplate(
 				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
 				'<td style="padding:7px">کد وام</td>',
-				'<td style="padding:7px">فاز وام</td>',
 				'<td style="padding:7px">مبلغ وام</td>',
 				'<td style="padding:7px">تاریخ پرداخت</td> </tr>',
 				'<tpl for=".">',
 					'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
 					'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
-					'<td style="border-left:0;border-right:0" class="search-item">{PartDesc}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">',
-						'{[Ext.util.Format.Money(values.PartAmount)]}</td>',
-					'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.PartDate)]}</td> </tr>',
+						'{[Ext.util.Format.Money(values.ReqAmount)]}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.ReqDate)]}</td> </tr>',
 				'</tpl>',
 				'</table>'
 			),

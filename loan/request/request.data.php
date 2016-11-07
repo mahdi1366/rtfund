@@ -480,13 +480,13 @@ function GetInstallments(){
 	$RequestID = $_REQUEST["RequestID"];
 	
 	$temp = LON_installments::SelectAll("r.RequestID=? " . dataReader::makeOrder() , array($RequestID));
-	$dt = ComputePayments($RequestID, $dt);
-	
+	$dt = ComputePayments($RequestID, $temp);
 	$currentPay = 0;
 	foreach($dt as $row)
+	{	
 		if($row["InstallmentDate"] < DateModules::Now() && $row["TotalRemainder"]*1 > 0)
 			$currentPay += $row["TotalRemainder"]*1;
-	
+	}
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"], $currentPay);
 	die();
 }
@@ -912,13 +912,13 @@ function ComputePayments($RequestID, &$installments){
 	
 	$returnArr = array();
 	$pays = PdoDataAccess::runquery("
-		select p.PayDate, sum(PayAmount) PayAmount, sum(PayAmount) FixPayAmount
+		select substr(p.PayDate,1,10) PayDate, sum(PayAmount) PayAmount, sum(PayAmount) FixPayAmount
 			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			left join ACC_banks b on(ChequeBank=BankID)
 			where RequestID=? AND if(p.ChequeNo<>'',p.ChequeStatus=3,1=1)
-			group by PayDate 
-			order by PayDate" , array($RequestID));
+			group by substr(PayDate,1,10)
+			order by substr(PayDate,1,10)" , array($RequestID));
 	$PayRecord = count($pays) == 0 ? null : $pays[0];
 	$payIndex = 1;
 	$Forfeit = 0;
@@ -1307,7 +1307,8 @@ function EditBackPayDoc(){
 	if(!$result)
 	{
 		$pdo->rollback();
-		echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
+		//print_r(ExceptionHandler::PopAllExceptions());
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
 	

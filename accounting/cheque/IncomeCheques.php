@@ -356,72 +356,165 @@ IncomeCheque.prototype.AccountInfoWin = function(){
 	{
 		this.BankWin = new Ext.window.Window({
 			width : 400,
-			height : 220,
+			height : 350,
+			bodyStyle : "background-color:white",
 			modal : true,
 			closeAction : "hide",
 			items : [{
-				xtype : "combo",
-				store: new Ext.data.Store({
-					fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
-						name : "title",
-						convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
-					}],
-					proxy: {
-						type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=6',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
+				xtype : "form",
+				border : false,
+				items :[{
+					xtype : "combo",
+					width : 385,
+					fieldLabel : "حساب مربوطه",
+					colspan : 2,
+					store: new Ext.data.Store({
+						fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+							name : "fullDesc",
+							convert : function(value,record){
+								return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+							}				
+						}],
+						proxy: {
+							type: 'jsonp',
+							url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						}
+					}),
+					typeAhead: false,
+					name : "CostID",
+					valueField : "CostID",
+					displayField : "fullDesc",
+					listeners : {
+						select : function(combo,records){
+							if(records[0].data.TafsiliType != null)
+							{
+								LoanPayObject.BankWin.down("[itemId=TafsiliID]").setValue();
+								LoanPayObject.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
+								LoanPayObject.BankWin.down("[itemId=TafsiliID]").getStore().load();
+							}
+							if(records[0].data.TafsiliType2 != null)
+							{
+								LoanPayObject.BankWin.down("[itemId=TafsiliID2]").setValue();
+								LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType2;
+								LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getStore().load();
+							}
+						}
 					}
-				}),
-				emptyText:'انتخاب بانک ...',
-				typeAhead: false,
-				pageSize : 10,
-				width : 385,
-				valueField : "TafsiliID",
-				itemId : "TafsiliID",
-				displayField : "title"
-			},{
-				xtype : "combo",
-				store: new Ext.data.Store({
-					fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
-						name : "title",
-						convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
-					}],
-					proxy: {
-						type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=3',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					}
-				}),
-				emptyText:'انتخاب حساب ...',
-				typeAhead: false,
-				pageSize : 10,
-				width : 385,
-				valueField : "TafsiliID",
-				itemId : "TafsiliID2",
-				displayField : "title"
-			},{
-				xtype : "checkbox",
-				boxLabel : "از حساب مرکز",
-				itemId : "CenterAccount",
-				inputValue : "1"
-			},{
-				xtype : "combo",
-				store : new Ext.data.SimpleStore({
-					proxy: {
-						type: 'jsonp',
-						url: this.address_prefix + '../../framework/baseInfo/baseInfo.data.php?' +
-							"task=SelectBranches",
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					fields : ['BranchID','BranchName'],
-					autoLoad : true					
-				}),
-				fieldLabel : "شعبه واسط ",
-				queryMode : 'local',
-				width : 385,
-				displayField : "BranchName",
-				valueField : "BranchID",
-				itemId : "BranchID"
+				},{
+					xtype : "combo",
+					store: new Ext.data.Store({
+						fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
+							name : "title",
+							convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
+						}],
+						proxy: {
+							type: 'jsonp',
+							url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						}
+					}),
+					emptyText:'انتخاب تفصیلی1 ...',
+					typeAhead: false,
+					pageSize : 10,
+					width : 385,
+					valueField : "TafsiliID",
+					itemId : "TafsiliID",
+					name : "TafsiliID",
+					displayField : "title"
+				},{
+					xtype : "combo",
+					store: new Ext.data.Store({
+						fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
+							name : "title",
+							convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
+						}],
+						proxy: {
+							type: 'jsonp',
+							url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						}
+					}),
+					emptyText:'انتخاب تفصیلی2 ...',
+					typeAhead: false,
+					pageSize : 10,
+					width : 385,
+					valueField : "TafsiliID",
+					itemId : "TafsiliID2",
+					name : "TafsiliID2",
+					displayField : "title"
+				},{
+					xtype : "fieldset",
+					width : 365,
+					title : "حساب مرکز",
+					items :[{
+						xtype : "checkbox",
+						boxLabel : "از حساب مرکز",
+						name : "CenterAccount",
+						itemId : "CenterAccount",
+						inputValue : "1"
+					},{
+						xtype : "combo",
+						store : new Ext.data.SimpleStore({
+							proxy: {
+								type: 'jsonp',
+								url: this.address_prefix + '../../framework/baseInfo/baseInfo.data.php?' +
+									"task=SelectBranches",
+								reader: {root: 'rows',totalProperty: 'totalCount'}
+							},
+							fields : ['BranchID','BranchName'],
+							autoLoad : true					
+						}),
+						fieldLabel : "شعبه واسط ",
+						queryMode : 'local',
+						displayField : "BranchName",
+						valueField : "BranchID",
+						itemId : "BranchID",
+						name : "BranchID"
+					},{
+						xtype : "combo",
+						fieldLabel : "حساب شعبه اصلی",
+						colspan : 2,
+						store: new Ext.data.Store({
+							fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+								name : "fullDesc",
+								convert : function(value,record){
+									return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+								}				
+							}],
+							proxy: {
+								type: 'jsonp',
+								url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
+								reader: {root: 'rows',totalProperty: 'totalCount'}
+							}
+						}),
+						typeAhead: false,
+						name : "FirstCostID",
+						valueField : "CostID",
+						displayField : "fullDesc"
+					},{
+						xtype : "combo",
+						fieldLabel : "حساب شعبه واسط",
+						colspan : 2,
+						store: new Ext.data.Store({
+							fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+								name : "fullDesc",
+								convert : function(value,record){
+									return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+								}				
+							}],
+							proxy: {
+								type: 'jsonp',
+								url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
+								reader: {root: 'rows',totalProperty: 'totalCount'}
+							}
+						}),
+						typeAhead: false,
+						name : "SecondCostID",
+						valueField : "CostID",
+						displayField : "fullDesc"
+					}]
+				}]
 			}],
 			buttons :[{
 				text : "ذخیره",
@@ -444,16 +537,17 @@ IncomeCheque.prototype.ChangeStatus = function(){
 	var record = this.grid.getSelectionModel().getLastSelected();
 	StatusID = this.commentWin.down("[name=DstID]").getValue();
 	
-	BankTafsili = StatusID == "3" ? IncomeChequeObject.BankWin.down("[itemId=TafsiliID]").getValue() : "";
-	AccountTafsili = StatusID == "3" ? IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").getValue() : "";
-	CenterAccount = StatusID == "3" ? IncomeChequeObject.BankWin.down("[itemId=CenterAccount]").getValue() : "";
-	BranchID = StatusID == "3" ? IncomeChequeObject.BankWin.down("[itemId=BranchID]").getValue() : "";
-		
-	if(CenterAccount == true && BranchID == null)
+	params = {
+		task : "ChangeChequeStatus",
+		BackPayID : record.data.BackPayID,
+		OuterChequeID : record.data.OuterChequeID,
+		StatusID : StatusID
+	};
+	
+	if(StatusID == "<?= OUERCHEQUE_VOSUL ?>")
 	{
-		Ext.MessageBox.alert("Error","برای ثبت حساب مرکز انتخاب شعبه واسط الزامی است");
-		return;
-	}
+		params = mergeObjects(params, this.BankWin.down('form').getForm().getValues());
+	}	
 	
 	if(StatusID == null || StatusID == "")
 		return;
@@ -464,16 +558,7 @@ IncomeCheque.prototype.ChangeStatus = function(){
 	Ext.Ajax.request({
 		methos : "post",
 		url : this.address_prefix + "cheques.data.php",
-		params : {
-			task : "ChangeChequeStatus",
-			BackPayID : record.data.BackPayID,
-			OuterChequeID : record.data.OuterChequeID,
-			StatusID : StatusID,
-			BankTafsili : BankTafsili,
-			AccountTafsili : AccountTafsili,
-			CenterAccount : CenterAccount,
-			BranchID : BranchID
-		},
+		params : params,
 		
 		success : function(response){
 			mask.hide();

@@ -289,19 +289,31 @@ function ChangeChequeStatus(){
 	{
 		$obj = new LON_BackPays($BackPayID);
 		$obj->ChequeStatus = $Status;
-		$result = $obj->EditPay($pdo);
+		$result = $obj->Edit($pdo);
 
 		if($Status == OUERCHEQUE_VOSUL)
 		{
-			$PartObj = new LON_ReqParts($obj->PartID);
-			$ReqObj = new LON_requests($PartObj->RequestID);
+			$ReqObj = new LON_requests($obj->RequestID);
 			$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+
 			if($PersonObj->IsSupporter == "YES")
-				$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $_POST["BankTafsili"], 
-						$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
+				$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj,
+						$_POST["CostID"], 
+						$_POST["TafsiliID"], 
+						$_POST["TafsiliID2"], 
+						isset($_POST["CenterAccount"]) ? true : false,
+						$_POST["BranchID"],
+						$_POST["FirstCostID"],
+						$_POST["SecondCostID"], $pdo);
 			else
-				$result = RegisterCustomerPayDoc(null, $obj, $_POST["BankTafsili"], 
-						$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
+				$result = RegisterCustomerPayDoc(null, $obj, 
+						$_POST["CostID"], 
+						$_POST["TafsiliID"], 
+						$_POST["TafsiliID2"], 
+						isset($_POST["CenterAccount"]) ? true : false,
+						$_POST["BranchID"],
+						$_POST["FirstCostID"],
+						$_POST["SecondCostID"], $pdo);
 			if(!$result)
 			{
 				$pdo->rollback();
