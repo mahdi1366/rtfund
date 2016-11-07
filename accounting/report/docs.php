@@ -81,6 +81,11 @@ if(isset($_REQUEST["show"]))
 		$query .= " AND d.description like :q9 ";
 		$whereParam[":q9"] = '%' . $_POST["description"] . "%";
 	}
+	if(!empty($_POST["details"]))
+	{
+		$query .= " AND di.details like :q10 ";
+		$whereParam[":q10"] = '%' . $_POST["details"] . "%";
+	}
 	
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.DocStatus != 'RAW' ";
@@ -104,7 +109,7 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("تاریخ سند", "DocDate","dateRender");
 	$rpg->addColumn("تاریخ ثبت سند", "RegDate","dateRender");
 	$rpg->addColumn("ثبت کننده سند", "regPerson");
-	$rpg->addColumn("توضیحات", "description");
+	$rpg->addColumn("شرح سند", "description");
 	$rpg->addColumn("جمع بدهکار", "bdSum");
 	$rpg->addColumn("جمع بسنانکار", "bsSum");
 	
@@ -245,9 +250,11 @@ function AccReport_docs()
 		},{
 			xtype : "textfield",
 			name : "description",
-			colspan : 2,
-			width : 500,
 			fieldLabel : "شرح سند"
+		},{
+			xtype : "textfield",
+			name : "details",
+			fieldLabel : "جزئیات ردیف"
 		},{
 			xtype : "container",
 			colspan : 2,

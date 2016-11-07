@@ -295,7 +295,7 @@ LoanPay.DeleteRender = function(v,p,r){
 LoanPay.RegDocRender = function(v,p,r){
 	
 	if(r.data.PayType == "9")
-		return "";
+		return r.data.LocalNo;
 	
 	if(r.data.LocalNo == null)
 		return "<div align='center' title='صدور سند' class='send' "+

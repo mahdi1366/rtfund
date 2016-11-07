@@ -29,7 +29,8 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("تفصیلی", "TafsiliDesc");
 	$rpg->addColumn("تفصیلی2", "TafsiliDesc2");
 	$rpg->addColumn("تاریخ سند", "DocDate","dateRender");
-	$rpg->addColumn("توضیحات", "description");	
+	$rpg->addColumn("شرح سند", "description");	
+	$rpg->addColumn("جزئیات ردیف", "details");	
 	
 	function MakeWhere(&$where, &$whereParam){
 		
@@ -176,10 +177,20 @@ if(isset($_REQUEST["show"]))
 			$where .= " AND d.docDate <= :q2 ";
 			$whereParam[":q2"] = DateModules::shamsi_to_miladi($_REQUEST["toDate"], "-");
 		}
+		if(!empty($_REQUEST["description"]))
+		{
+			$where .= " AND d.description like :des ";
+			$whereParam[":des"] = "%" . $_REQUEST["description"] . "%";
+		}
+		if(!empty($_REQUEST["details"]))
+		{
+			$where .= " AND di.details like :det ";
+			$whereParam[":det"] = "%" . $_REQUEST["details"] . "%";
+		}
 	}	
 	
 	//.....................................
-	$query = "select d.*,di.DebtorAmount,CreditorAmount,
+	$query = "select d.*,di.DebtorAmount,CreditorAmount,di.details,
 		concat('[ ' , b0.BlockCode , ' ] ', b0.BlockDesc) level0Desc,
 		concat('[ ' , b1.BlockCode , ' ] ', b1.BlockDesc) level1Desc,
 		concat('[ ' , b2.BlockCode , ' ] ', b2.BlockDesc) level2Desc,
@@ -532,6 +543,14 @@ function AccReport_flow()
 			xtype : "shdatefield",
 			name : "toDate",
 			fieldLabel : "تا تاریخ"
+		},{
+			xtype : "textfield",
+			name : "description",
+			fieldLabel : "شرح سند"
+		},{
+			xtype : "textfield",
+			name : "details",
+			fieldLabel : "جزئیات ردیف"
 		},{
 			xtype : "container",
 			colspan : 2,

@@ -38,54 +38,37 @@ function SelectAllLetter(){
 	
 	foreach($_POST as $field => $value)
 	{
-		if(empty($value) || strpos($field, "inputEl") !== false)
+		if($field == "excel" || empty($value) || strpos($field, "inputEl") !== false)
 			continue;
-
+		$prefix = "";
 		switch($field)
 		{
-			case "LetterTitle":		
-			case "organization":
-			case "SendComment":
-			case "context":	
-				$where .= " AND " . $field . " like :" . $field;
-				$param[":" . $field] = "%" . $value . "%";
-				break;
+			case "PersonID": $prefix = "l."; break;
+			case "Customer": $prefix = "lc."; break;
+			
+			case "LetterID": 
+			case "LetterTitle": 
+				$prefix = "l."; break;
 			
 			case "FromSendDate":
-				$where .= " AND SendDate >= :" . $field;
-				$param[":" . $field] = DateModules::shamsi_to_miladi($value, "-");
-				break;
 			case "FromLetterDate":
-				$where .= " AND LetterDate >= :" . $field;
-				$param[":" . $field] = DateModules::shamsi_to_miladi($value, "-");
-				break;				
 			case "ToSendDate":
-				$where .= " AND SendDate <= :" . $field;
-				$param[":" . $field] = DateModules::shamsi_to_miladi($value, "-");
-				break;
 			case "ToLetterDate":
-				$where .= " AND LetterDate <= :" . $field;
-				$param[":" . $field] = DateModules::shamsi_to_miladi($value, "-");
-				break;	
-			
-			case "PersonID":
-				$where .= " AND l.PersonID = :" . $field;
-				$param[":" . $field] = $value;
+				$value = DateModules::shamsi_to_miladi($value, "-");
 				break;
-			case "Customer":	
-				$where .= " AND lc.PersonID = :" . $field;
-				$param[":" . $field] = $value;
-				break;
-			default:
-				$where .= " AND " . $field . " = :" . $field;
-				$param[":" . $field] = $value;
 		}
-		
+		if(strpos($field, "From") === 0)
+			$where .= " AND " . $prefix . substr($field,4) . " >= :$field";
+		else if(strpos($field, "To") === 0)
+			$where .= " AND " . $prefix . substr($field,2) . " <= :$field";
+		else
+			$where .= " AND " . $prefix . $field . " like :$field";
+		$param[":$field"] = "%" . $value . "%";
 	}
 	//echo $where;
-    $list = OFC_letters::FullSelect($where, $param);
+    $list = OFC_letters::FullSelect($where, $param, dataReader::makeOrder());
 	
-	//print_r(ExceptionHandler::PopAllExceptions());
+	print_r(ExceptionHandler::PopAllExceptions());
 	//echo PdoDataAccess::GetLatestQueryString();
 	
 	$no = $list->rowCount();

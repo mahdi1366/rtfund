@@ -25,6 +25,7 @@ class OFC_letters extends PdoDataAccess{
 	public $OuterSendType;
 	public $AccessType;
 	public $keywords;
+	public $PostalAddress;
 
     function __construct($LetterID = ""){
 		$this->DT_LetterDate = DataMember::CreateDMA(DataMember::DT_DATE);
@@ -41,7 +42,7 @@ class OFC_letters extends PdoDataAccess{
 	    return parent::runquery($query, $whereParam);
     }
 	
-	static function FullSelect($where = "",$whereParam = array()){
+	static function FullSelect($where = "",$whereParam = array(), $OrderBy = ""){
 		
 	    $query = "select l.* , s.SendDate,s.SendComment,
 				concat(p1.fname,' ',p1.lname) RegName,
@@ -58,8 +59,8 @@ class OFC_letters extends PdoDataAccess{
 			left join OFC_LetterCustomers lc on(l.LetterID=lc.LetterID)
 		";
 	    $query .= ($where != "") ? " where " . $where : "";
-		
-		$query .= " group by s.SendID";
+		$query .= " group by s.SendID ";
+		$query .= $OrderBy;
 		
 	    return parent::runquery_fetchMode($query, $whereParam);
     }

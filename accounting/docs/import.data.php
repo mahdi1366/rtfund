@@ -1491,6 +1491,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
+		$itemObj->locked = "NO";
 		$itemObj->CostID = $FirstCostID;
 		$itemObj->DebtorAmount= $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;
@@ -1572,6 +1573,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
+		$itemObj->locked = "NO";
 		$itemObj->CostID = $CostID;
 		$itemObj->DebtorAmount= $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;
@@ -1595,6 +1597,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
+		$itemObj->locked = "YES";
 		$itemObj->DocID = $obj->DocID;
 		$itemObj->CostID = $CostCode_guaranteeAmount;
 		$itemObj->DebtorAmount = 0;
@@ -2156,6 +2159,7 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
 			unset($itemObj->TafsiliID);
+			$itemObj->locked = "NO";
 			$itemObj->CostID = $CostCode_centerAccount;
 			$itemObj->DebtorAmount= $__ChequeAmount;
 			$itemObj->CreditorAmount = 0;
@@ -2218,6 +2222,7 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
 			unset($itemObj->TafsiliID);
+			$itemObj->locked = "NO";
 			$itemObj->CostID = $CostCode_bank;
 			$itemObj->DebtorAmount= $__ChequeAmount;
 			$itemObj->CreditorAmount = 0;
@@ -2239,6 +2244,7 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
+		$itemObj->locked = "NO";
 		$itemObj->DocID = $obj->DocID;
 		$itemObj->CostID = $OuterObj->CostID;
 		$itemObj->DebtorAmount = 0;

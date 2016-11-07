@@ -83,6 +83,7 @@ function SaveItem(){
 		
 		$result = $obj->Add();
 	}
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }

@@ -43,6 +43,7 @@ class VOT_FormItems extends OperationClass {
 	public $ItemValues;
 	public $ordering;
 	public $weight;
+	public $ValueWeights;
 }
 
 ?>

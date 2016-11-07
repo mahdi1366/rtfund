@@ -258,6 +258,11 @@ Letter.prototype.BuildForms = function(){
 					width : 740,
 					fieldLabel : "<span>" + "کلید واژه" + "</span><button class='x-btn help' "+
 						"style='border:0;background-color:white' data-qtip='برای جداسازی از # استفاده کنید'>"
+				},{
+					xtype : "textarea",
+					name : "PostalAddress",
+					rows: 5,
+					fieldLabel : "آدرس پستی گیرنده"
 				}]
 			})
 		},{

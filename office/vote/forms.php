@@ -96,7 +96,7 @@ $dg->addColumn("","FormID","string", true);
 $dg->addColumn("","ordering","string", true);
 
 $col = $dg->addColumn("ترتیب","ordering","string");
-$col->width = 60;
+$col->width = 50;
 
 $col = $dg->addColumn("عنوان آیتم","ItemTitle","string");
 $col->editor = ColumnEditor::TextField();
@@ -107,9 +107,13 @@ $col->editor = ColumnEditor::NumberField();
 
 $col = $dg->addColumn("نوع آیتم", "ItemType");
 $col->editor = "VOT_FormObject.ItemTypeCombo";
-$col->width = 100;
+$col->width = 70;
 
 $col = $dg->addColumn("مقادیر", "ItemValues");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 200;
+
+$col = $dg->addColumn("وزن مقادیر", "ValueWeights");
 $col->editor = ColumnEditor::TextField(true);
 $col->width = 200;
 
@@ -135,7 +139,7 @@ $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(v,p,r){return VOT_FormObject.saveItem(v,p,r);}";
 
 $dg->height = 400;
-$dg->width = 600;
+$dg->width = 790;
 $dg->DefaultSortField = "ordering";
 $dg->DefaultSortDir = "ASC";
 $dg->autoExpandColumn = "ItemTitle";
