@@ -320,11 +320,21 @@ AccDocs.prototype.makeDetailWindow = function()
 					listeners :{
 						select : function(combo,records){
 							if(records[0].data.TafsiliType != null)
-								AccDocsObject.detailWin.down("[name=TafsiliType]").
-									setValue(records[0].data.TafsiliType);
+							{
+								AccDocsObject.detailWin.down("[name=TafsiliType]").setValue(records[0].data.TafsiliType);
+								combo = AccDocsObject.detailWin.down("[name=TafsiliID]");
+								combo.setValue();
+								combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType;
+								combo.getStore().load();
+							}
 							if(records[0].data.TafsiliType2 != null)
-								AccDocsObject.detailWin.down("[name=TafsiliType2]").
-									setValue(records[0].data.TafsiliType2);
+							{
+								AccDocsObject.detailWin.down("[name=TafsiliType2]").setValue(records[0].data.TafsiliType2);
+								combo = AccDocsObject.detailWin.down("[name=TafsiliID2]");
+								combo.setValue();
+								combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType2;
+								combo.getStore().load();
+							}
 						}
 					}
 				},{

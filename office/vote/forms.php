@@ -97,8 +97,13 @@ $dg->addColumn("","ordering","string", true);
 
 $col = $dg->addColumn("ترتیب","ordering","string");
 $col->width = 60;
+
 $col = $dg->addColumn("عنوان آیتم","ItemTitle","string");
 $col->editor = ColumnEditor::TextField();
+
+$col = $dg->addColumn("وزن","weight","string");
+$col->width = 50;
+$col->editor = ColumnEditor::NumberField();
 
 $col = $dg->addColumn("نوع آیتم", "ItemType");
 $col->editor = "VOT_FormObject.ItemTypeCombo";

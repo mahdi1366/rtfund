@@ -843,7 +843,7 @@ function selectRequestStatuses(){
 
 //------------------------------------------------
 
-function GetPartPays(){
+function GetBackPays(){
 	
 	$dt = LON_BackPays::SelectAll("RequestID=? " . dataReader::makeOrder() , array($_REQUEST["RequestID"]));
 	print_r(ExceptionHandler::PopAllExceptions());

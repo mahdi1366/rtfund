@@ -85,7 +85,12 @@ function IncomeCheque(){
 			xtype : "numberfield",
 			name : "FromNo",
 			hideTrigger : true,
-			fieldLabel : "از شماره چک"
+			fieldLabel : "از شماره چک",
+			listeners : {
+				blur : function(){
+					IncomeChequeObject.formPanel.down("[name=ToNo]").setValue(this.getValue())
+				}
+			}
 		},{
 			xtype : "numberfield",
 			name : "ToNo",
@@ -389,15 +394,15 @@ IncomeCheque.prototype.AccountInfoWin = function(){
 						select : function(combo,records){
 							if(records[0].data.TafsiliType != null)
 							{
-								LoanPayObject.BankWin.down("[itemId=TafsiliID]").setValue();
-								LoanPayObject.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
-								LoanPayObject.BankWin.down("[itemId=TafsiliID]").getStore().load();
+								IncomeChequeObject.BankWin.down("[itemId=TafsiliID]").setValue();
+								IncomeChequeObject.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
+								IncomeChequeObject.BankWin.down("[itemId=TafsiliID]").getStore().load();
 							}
 							if(records[0].data.TafsiliType2 != null)
 							{
-								LoanPayObject.BankWin.down("[itemId=TafsiliID2]").setValue();
-								LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType2;
-								LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getStore().load();
+								IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").setValue();
+								IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType2;
+								IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").getStore().load();
 							}
 						}
 					}

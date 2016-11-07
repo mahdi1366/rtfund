@@ -24,7 +24,7 @@ if($framework)
 		$editable = true;
 }	
 
-$dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetPartPays","grid_div");
+$dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetBackPays","grid_div");
 
 $dg->addColumn("", "BackPayID","", true);
 $dg->addColumn("", "RequestID","", true);

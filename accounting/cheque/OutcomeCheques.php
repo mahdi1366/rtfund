@@ -90,7 +90,12 @@ function OutcomeCheque(){
 			xtype : "numberfield",
 			name : "FromCheckNo",
 			hideTrigger : true,
-			fieldLabel : "از شماره چک"
+			fieldLabel : "از شماره چک",
+			listeners : {
+				blur : function(){
+					OutcomeChequeObject.formPanel.down("[name=ToCheckNo]").setValue(this.getValue())
+				}
+			}
 		},{
 			xtype : "numberfield",
 			name : "ToCheckNo",

@@ -44,6 +44,7 @@ define("ShareBaseAmount", "1100000");
 define("ACCROLE_EXPERT", "1");
 define("ACCROLE_MANAGER", "2");
 
+//.............. TypeID=4 ................
 define("OUERCHEQUE_NOTVOSUL", "1");
 define("OUERCHEQUE_VOSUL", "3");
 define("OUERCHEQUE_EBTAL", "6");

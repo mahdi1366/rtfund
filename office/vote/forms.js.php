@@ -139,9 +139,9 @@ VOT_Form.prototype.ShowItems = function(){
 	if(!this.ItemsWin)
 	{
 		this.ItemsWin = new Ext.window.Window({
-			width : 610,
-			title : "مراحل فرم",
-			height : 460,
+			width : 800,
+			title : "آیتم های فرم",
+			height : 600,
 			modal : true,
 			closeAction : "hide",
 			items : [this.ItemsGrid],
