@@ -709,25 +709,25 @@ function GetAccountSummary(){
 		from ACC_tafsilis t 
 			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 						from ACC_DocItems join ACC_docs using(DocID)
-						where BranchID=:b AND CycleID=:c AND CostID=".COSTID_saving."
+						where TafsiliType=".TAFTYPE_PERSONS." AND BranchID=:b AND CycleID=:c AND CostID=".COSTID_saving."
 						group by TafsiliID
 			)pasandaz on(pasandaz.TafsiliID=t.TafsiliID)
 			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 						from ACC_DocItems join ACC_docs using(DocID)
-						where BranchID=:b AND CycleID=:c AND CostID=".COSTID_ShortDeposite."
+						where TafsiliType=".TAFTYPE_PERSONS." AND BranchID=:b AND CycleID=:c AND CostID=".COSTID_ShortDeposite."
 						group by TafsiliID
 			)kootah on(kootah.TafsiliID=t.TafsiliID)
 			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 						from ACC_DocItems join ACC_docs using(DocID)
-						where BranchID=:b AND CycleID=:c AND CostID=".COSTID_LongDeposite."
+						where TafsiliType=".TAFTYPE_PERSONS." AND BranchID=:b AND CycleID=:c AND CostID=".COSTID_LongDeposite."
 						group by TafsiliID
 			)boland on(boland.TafsiliID=t.TafsiliID)
 			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 						from ACC_DocItems join ACC_docs using(DocID)
-						where BranchID=:b AND CycleID=:c AND CostID=".COSTID_current."
+						where TafsiliType=".TAFTYPE_PERSONS." AND BranchID=:b AND CycleID=:c AND CostID=".COSTID_current."
 						group by TafsiliID
 			)jari on(jari.TafsiliID=t.TafsiliID)
-		where TafsiliType=1 " . $where . dataReader::makeOrder(), $param);
+		where TafsiliType=" . TAFTYPE_PERSONS . $where . dataReader::makeOrder(), $param);
 	
 	//echo PdoDataAccess::GetLatestQueryString();
 	$no = $temp->rowCount();
@@ -746,7 +746,7 @@ function GetAccountFlow() {
 		from ACC_DocItems di
 			join ACC_docs d using(DocID)
 		where d.CycleID=:c AND d.BranchID=:b AND 
-			di.CostID=:cost AND di.TafsiliType = :t AND di.TafsiliID=:tid";
+			di.CostID=:cost AND di.TafsiliType = :t AND di.TafsiliID=:tid " . dataReader::makeOrder();
 	
 	$param = array(
 		":c" => $_SESSION["accounting"]["CycleID"],
@@ -758,12 +758,11 @@ function GetAccountFlow() {
 	
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
 	$no = $temp->rowCount();
-	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	
 	//------------------------------------------------
 	$BlockedAmount = ACC_CostBlocks::GetBlockAmount($CostID, TAFTYPE_PERSONS, $TafsiliID);
 	//------------------------------------------------
-	echo dataReader::getJsonData($temp, $no, $_GET ["callback"],$BlockedAmount);
+	echo dataReader::getJsonData($temp->fetchAll(), $no, $_GET ["callback"],$BlockedAmount);
 	die();
 }
 

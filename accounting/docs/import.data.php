@@ -59,11 +59,15 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
 	$CostCode_commitment = FindCostID("660-" . $LoanObj->_BlockCode);
-	$CostCode_guaranteeAmount = FindCostID("904-02");
-	$CostCode_guaranteeCount = FindCostID("904-01");
-	$CostCode_guaranteeAmount2 = FindCostID("905-02");
-	$CostCode_guaranteeCount2 = FindCostID("905-01");
 	$CostCode_todiee = FindCostID("660-52");
+	
+	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
+	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
+	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
+	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
+	$CostCode_guaranteeCount = FindCostID("904-01");
+	$CostCode_guaranteeCount2 = FindCostID("905-01");
+	
 	//------------------------------------------------
 	$CycleID = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0 , 4);
 	$PayAmount = $PayObj->PayAmount;
@@ -492,7 +496,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
-			$itemObj->CostID = $CostCode_guaranteeAmount;
+			$itemObj->CostID = $CostCode_guaranteeAmount_zemanati;
 			$itemObj->DebtorAmount = $row["ParamValue"];
 			$itemObj->CreditorAmount = 0;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
@@ -505,21 +509,47 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$SumAmount += $row["ParamValue"]*1;
 			$countAmount++;
 		}
+		if($SumAmount > 0)
+		{
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			unset($itemObj->details);
+			$itemObj->CostID = $CostCode_guaranteeAmount2_zemanati;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $SumAmount;	
+			$itemObj->Add($pdo);
+
+			/*unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_guaranteeCount;
+			$itemObj->DebtorAmount = $countAmount;
+			$itemObj->CreditorAmount = 0;	
+			$itemObj->Add($pdo);
+
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_guaranteeCount2;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $countAmount;
+			$itemObj->Add($pdo);*/
+		}
 	}
+	//----------- cheques of installments -------------------------
 	if($FirstStep)
-	{
-		//---------------------------------------------------------		
+	{		
 		$dt = PdoDataAccess::runquery("
 			SELECT PayAmount,BackPayID,ChequeNo
 				FROM LON_BackPays
 				where RequestID=? AND ChequeNo>0",	array($ReqObj->RequestID), $pdo);
-
+		
+		$SumAmount = 0;
 		foreach($dt as $row)
 		{
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
-			$itemObj->CostID = $CostCode_guaranteeAmount;
+			$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
 			$itemObj->DebtorAmount = $row["PayAmount"];
 			$itemObj->CreditorAmount = 0;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
@@ -532,34 +562,33 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$SumAmount += $row["PayAmount"]*1;
 			$countAmount++;
 		}
-	}
-		//---------------------------------------------------------
-	if($SumAmount > 0)
-	{
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType);
-		unset($itemObj->TafsiliID);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		unset($itemObj->details);
-		$itemObj->CostID = $CostCode_guaranteeAmount2;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $SumAmount;	
-		$itemObj->Add($pdo);
+		if($SumAmount > 0)
+		{
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			unset($itemObj->details);
+			$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $SumAmount;	
+			$itemObj->Add($pdo);
 
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeCount;
-		$itemObj->DebtorAmount = $countAmount;
-		$itemObj->CreditorAmount = 0;	
-		$itemObj->Add($pdo);
+			/*unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_guaranteeCount;
+			$itemObj->DebtorAmount = $countAmount;
+			$itemObj->CreditorAmount = 0;	
+			$itemObj->Add($pdo);
 
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeCount2;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $countAmount;
-		$itemObj->Add($pdo);
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_guaranteeCount2;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $countAmount;
+			$itemObj->Add($pdo);*/
+		}
 	}
-	
+	//---------------------------------------------------------
 	//------ ایجاد چک ------
 	$chequeObj = new ACC_DocCheques();
 	$chequeObj->DocID = $obj->DocID;
@@ -603,11 +632,13 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$CostCode_varizi = FindCostID("721-01-52");
 	$CostCode_pardakhti = FindCostID("721-01-51");
 	$CostCode_bank = FindCostID("101");
-	$CostCode_guaranteeAmount = FindCostID("904-02");
-	$CostCode_guaranteeCount = FindCostID("904-01");
-	$CostCode_guaranteeAmount2 = FindCostID("905-02");
-	$CostCode_guaranteeCount2 = FindCostID("905-01");
 	$CostCode_todiee = FindCostID("660-52");
+
+	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
+	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
+	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
+	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
+	
 	//------------------------------------------------
 	
 	$CycleID = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0 , 4);
@@ -807,7 +838,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
-			$itemObj->CostID = $CostCode_guaranteeAmount;
+			$itemObj->CostID = $CostCode_guaranteeAmount_zemanati;
 			$itemObj->DebtorAmount = $row["ParamValue"];
 			$itemObj->CreditorAmount = 0;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
@@ -820,21 +851,47 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 			$SumAmount += $row["ParamValue"]*1;
 			$countAmount++;
 		}
+		if($SumAmount > 0)
+		{
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			unset($itemObj->details);
+			$itemObj->CostID = $CostCode_guaranteeAmount2_zemanati;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $SumAmount;	
+			$itemObj->Add($pdo);
+
+			/*unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_guaranteeCount;
+			$itemObj->DebtorAmount = $countAmount;
+			$itemObj->CreditorAmount = 0;	
+			$itemObj->Add($pdo);
+
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_guaranteeCount2;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $countAmount;
+			$itemObj->Add($pdo);*/
+		}
 	}
+	//--------------- cheques of installments ---------------------
 	if($FirstStep)
 	{
-		//---------------------------------------------------------		
 		$dt = PdoDataAccess::runquery("
 			SELECT PayAmount,BackPayID
 				FROM LON_BackPays
 				where RequestID=? AND PayType=9",array($PartObj->RequestID), $pdo);
-
+		
+		$SumAmount = 0;
 		foreach($dt as $row)
 		{
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
-			$itemObj->CostID = $CostCode_guaranteeAmount;
+			$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
 			$itemObj->DebtorAmount = $row["PayAmount"];
 			$itemObj->CreditorAmount = 0;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
@@ -846,34 +903,33 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 			$SumAmount += $row["ParamValue"]*1;
 			$countAmount++;
 		}
-	}
-		//---------------------------------------------------------
-	if($SumAmount > 0)
-	{
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType);
-		unset($itemObj->TafsiliID);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		unset($itemObj->details);
-		$itemObj->CostID = $CostCode_guaranteeAmount2;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $SumAmount;	
-		$itemObj->Add($pdo);
+		if($SumAmount > 0)
+		{
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			unset($itemObj->details);
+			$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $SumAmount;	
+			$itemObj->Add($pdo);
 
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeCount;
-		$itemObj->DebtorAmount = $countAmount;
-		$itemObj->CreditorAmount = 0;	
-		$itemObj->Add($pdo);
+			/*unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_guaranteeCount;
+			$itemObj->DebtorAmount = $countAmount;
+			$itemObj->CreditorAmount = 0;	
+			$itemObj->Add($pdo);
 
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeCount2;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $countAmount;
-		$itemObj->Add($pdo);
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_guaranteeCount2;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $countAmount;
+			$itemObj->Add($pdo);*/
+		}
 	}
-	
+	//---------------------------------------------------------
 	//------ ایجاد چک ------
 	$chequeObj = new ACC_DocCheques();
 	$chequeObj->DocID = $obj->DocID;
@@ -1332,8 +1388,13 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	$CostCode_fund = FindCostID("100");
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
 	$CostCode_commitment = FindCostID("660-" . $LoanObj->_BlockCode);
-	$CostCode_guaranteeAmount = FindCostID("904-02");
-	$CostCode_guaranteeAmount2 = FindCostID("905-02");
+	
+	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
+	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
+	$CostCode_guaranteeCount = FindCostID("904-01");
+	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
+	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
+	$CostCode_guaranteeCount2 = FindCostID("905-01");
 	//---------------- add doc header --------------------
 	if($DocObj == null)
 	{
@@ -1599,7 +1660,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		unset($itemObj->TafsiliID2);
 		$itemObj->locked = "YES";
 		$itemObj->DocID = $obj->DocID;
-		$itemObj->CostID = $CostCode_guaranteeAmount;
+		$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $PayObj->PayAmount;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
@@ -1615,7 +1676,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->details);
-		$itemObj->CostID = $CostCode_guaranteeAmount2;
+		$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
 		$itemObj->DebtorAmount = $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;	
 		$itemObj->Add($pdo);
@@ -1654,6 +1715,10 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 	$CostCode_varizi = FindCostID("721-01-52");
 	$CostCode_pardakhti = FindCostID("721-01-51");
 	
+	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
+	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
+	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
+	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
 	//---------------- add doc header --------------------
 	if($DocObj == null)
 	{
@@ -1858,7 +1923,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		$itemObj->DocID = $obj->DocID;
-		$itemObj->CostID = $CostCode_guaranteeAmount;
+		$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $PayObj->PayAmount;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
@@ -1874,7 +1939,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->details);
-		$itemObj->CostID = $CostCode_guaranteeAmount2;
+		$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
 		$itemObj->DebtorAmount = $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;	
 		$itemObj->Add($pdo);
@@ -1926,10 +1991,10 @@ function RegisterEndRequestDoc($ReqObj, $pdo){
 	
 	if(count($dt) > 0)
 	{
-		$CostCode_guaranteeAmount = FindCostID("904-02");
-		$CostCode_guaranteeCount = FindCostID("904-01");
-		$CostCode_guaranteeAmount2 = FindCostID("905-02");
-		$CostCode_guaranteeCount2 = FindCostID("905-01");
+		$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
+		$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
+		$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
+		$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
 		//------------------------------------------------
 
 		$CycleID = substr(DateModules::shNow(), 0 , 4);
@@ -1977,7 +2042,7 @@ function RegisterEndRequestDoc($ReqObj, $pdo){
 		foreach($dt as $row)
 		{
 			unset($itemObj->ItemID);
-			$itemObj->CostID = $CostCode_guaranteeAmount;
+			$itemObj->CostID = $CostCode_guaranteeAmount_zemanati;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $row["ParamValue"];
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
@@ -1989,28 +2054,6 @@ function RegisterEndRequestDoc($ReqObj, $pdo){
 			
 			$SumAmount += $row["ParamValue"]*1;
 		}
-		//---------------------------------------------------------		
-		$dt2 = PdoDataAccess::runquery("
-			SELECT PayAmount,BackPayID
-				FROM LON_BackPays join LON_ReqParts using(PartID)
-				where RequestID=? AND ChequeNo>0",	array($ReqObj->RequestID), $pdo);
-
-		foreach($dt2 as $row)
-		{
-			unset($itemObj->ItemID);
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
-			$itemObj->CostID = $CostCode_guaranteeAmount;
-			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $row["PayAmount"];
-			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $LoanPersonTafsili;
-			$itemObj->SourceType = DOCTYPE_DOCUMENT;
-			$itemObj->SourceID = $row["BackPayID"];
-			$itemObj->Add($pdo);
-			
-			$SumAmount += $row["PayAmount"]*1;
-		}
 		//---------------------------------------------------------
 		if($SumAmount > 0)
 		{
@@ -2020,12 +2063,12 @@ function RegisterEndRequestDoc($ReqObj, $pdo){
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
 			unset($itemObj->details);
-			$itemObj->CostID = $CostCode_guaranteeAmount2;
+			$itemObj->CostID = $CostCode_guaranteeAmount2_zemanati;
 			$itemObj->DebtorAmount = $SumAmount;
 			$itemObj->CreditorAmount = 0;	
 			$itemObj->Add($pdo);
 
-			unset($itemObj->ItemID);
+			/*unset($itemObj->ItemID);
 			$itemObj->CostID = $CostCode_guaranteeCount;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = count($dt) + count($dt2);	
@@ -2035,7 +2078,7 @@ function RegisterEndRequestDoc($ReqObj, $pdo){
 			$itemObj->CostID = $CostCode_guaranteeCount2;
 			$itemObj->DebtorAmount = count($dt) + count($dt2);
 			$itemObj->CreditorAmount = 0;
-			$itemObj->Add($pdo);
+			$itemObj->Add($pdo);*/
 		}
 	}
 	if(ExceptionHandler::GetExceptionCount() > 0)
@@ -2067,8 +2110,9 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 	//------------- get CostCodes --------------------
 	$CostCode_bank = FindCostID("101");
 	$CostCode_centerAccount = FindCostID("499");
-	$CostCode_guaranteeAmount = FindCostID("904-02");
-	$CostCode_guaranteeAmount2 = FindCostID("905-02");
+	
+	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
+	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
 	//---------------- add doc header --------------------
 	if($DocID == "")
 	{
@@ -2111,7 +2155,7 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 	if($OuterObj->ChequeStatus == OUERCHEQUE_NOTVOSUL)
 	{ 
 		$itemObj->DocID = $obj->DocID;
-		$itemObj->CostID = $CostCode_guaranteeAmount;
+		$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
 		$itemObj->DebtorAmount = $__ChequeAmount;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
@@ -2122,7 +2166,7 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 		$itemObj->Add($pdo);
 
 		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeAmount2;
+		$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $__ChequeAmount;
 		$itemObj->Add($pdo);		
@@ -2135,7 +2179,7 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 	if($OuterObj->ChequeStatus == OUERCHEQUE_VOSUL)
 	{
 		$itemObj->DocID = $obj->DocID;
-		$itemObj->CostID = $CostCode_guaranteeAmount2;
+		$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
 		$itemObj->DebtorAmount = $__ChequeAmount;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
@@ -2146,7 +2190,7 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 		$itemObj->Add($pdo);
 
 		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeAmount;
+		$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $__ChequeAmount;
 		$itemObj->Add($pdo);
@@ -2266,7 +2310,7 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 			OUERCHEQUE_BARGHASHTI_MOSTARAD,OUERCHEQUE_MAKHDOOSH,OUERCHEQUE_CHANGE)) !== false)
 	{
 		$itemObj->DocID = $obj->DocID;
-		$itemObj->CostID = $CostCode_guaranteeAmount;
+		$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
 		$itemObj->CreditorAmount = $__ChequeAmount;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
@@ -2277,7 +2321,7 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 		$itemObj->Add($pdo);
 
 		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeAmount2;
+		$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->DebtorAmount = $__ChequeAmount;
 		$itemObj->Add($pdo);
@@ -2567,10 +2611,11 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 	$CostCode_fund = FindCostID("100");
 	$CostCode_seporde = FindCostID("690");
 	$CostCode_pasandaz = FindCostID("209-10");
-	$CostCode_guaranteeAmount = FindCostID("904-02");
-	$CostCode_guaranteeCount = FindCostID("904-01");
-	$CostCode_guaranteeAmount2 = FindCostID("905-02");
-	$CostCode_guaranteeCount2 = FindCostID("905-01");
+	
+	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
+	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
+	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
+	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
 	//------------------------------------------------
 	$CycleID = substr(DateModules::miladi_to_shamsi($ReqObj->StartDate), 0 , 4);
 	//------------------ find tafsilis ---------------
@@ -2785,7 +2830,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 	foreach($dt as $row)
 	{
 		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeAmount;
+		$itemObj->CostID = $CostCode_guaranteeAmount_zemanati;
 		$itemObj->DebtorAmount = $row["ParamValue"];
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
@@ -2804,7 +2849,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliID);
 		unset($itemObj->details);
-		$itemObj->CostID = $CostCode_guaranteeAmount2;
+		$itemObj->CostID = $CostCode_guaranteeAmount2_zemanati;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $SumAmount;	
 		$itemObj->Add($pdo);
