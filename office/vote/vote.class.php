@@ -31,6 +31,17 @@ class VOT_forms extends OperationClass{
 
 }
 
+class VOT_FormGroups extends OperationClass {
+
+	const TableName = "VOT_FormGroups";
+	const TableKey = "GroupID"; 
+	
+	public $GroupID;
+	public $FormID;
+	public $GroupDesc;
+	public $GroupWeight;
+}
+
 class VOT_FormItems extends OperationClass {
 
 	const TableName = "VOT_FormItems";
@@ -38,12 +49,20 @@ class VOT_FormItems extends OperationClass {
 	
 	public $ItemID;
 	public $FormID;
+	public $GroupID;
 	public $ItemType;
 	public $ItemTitle;
 	public $ItemValues;
 	public $ordering;
 	public $weight;
 	public $ValueWeights;
+	
+	static function Get($where = '', $whereParams = array()) {
+		
+		return parent::runquery_fetchMode("select f.*,GroupDesc 
+			from VOT_FormItems f join VOT_FormGroups g using(GroupID)
+			where 1=1 " . $where, $whereParams);
+	}
 }
 
 ?>

@@ -63,7 +63,7 @@ function selectFormItems(){
 
 function SelectItems(){
 	
-	$dt = VOT_FormItems::Get(" AND FormID=? order by ordering", array($_GET["FormID"]));
+	$dt = VOT_FormItems::Get(" AND f.FormID=? order by g.ordering,f.ordering", array($_GET["FormID"]));
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
 }
@@ -114,6 +114,66 @@ function MoveItem(){
 			set ordering=? 
 			where FormID=? AND ItemID<>? AND ordering=? ",
 			array($ordering, $FormID, $ItemID, $ordering*1 + $direction*1));
+	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+//----------------------------------
+
+function SelectGroups(){
+	
+	$dt = VOT_FormGroups::Get(" AND FormID=? order by ordering", array($_GET["FormID"]));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveGroup(){
+	
+	$obj = new VOT_FormGroups();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if($obj->GroupID > 0)
+		$result = $obj->Edit();
+	else
+	{
+		$dt = PdoDataAccess::runquery("select ifnull(max(ordering),0) 
+			from VOT_FormGroups where FormID=?", array($obj->FormID));
+		$obj->ordering = $dt[0][0]*1 + 1;
+		
+		$result = $obj->Add();
+	}
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteGroup(){
+	
+	$obj = new VOT_FormGroups($_POST["GroupID"]);
+	$result =  $obj->Remove();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function MoveGroup(){
+	
+	$FormID = $_POST["FormID"];
+	$GroupID = $_POST["GroupID"];
+	$ordering = $_POST["ordering"];
+	$direction = $_POST["direction"];
+	
+	$direction = $direction == "-1" ? "-1" : "+1";
+	
+	PdoDataAccess::runquery("update VOT_FormGroups 
+		set ordering=ordering $direction
+		where FormID=? AND GroupID=?",
+			array($FormID, $GroupID));
+		
+	PdoDataAccess::runquery("update VOT_FormGroups 
+			set ordering=? 
+			where FormID=? AND GroupID<>? AND ordering=? ",
+			array($ordering, $FormID, $GroupID, $ordering*1 + $direction*1));
 	
 	echo Response::createObjectiveResponse(true, "");
 	die();
@@ -192,9 +252,9 @@ function FilledItemsValues(){
 		$PersonID = $_SESSION["USER"]["PersonID"];
 		
 	$dt = PdoDataAccess::runquery("select * 
-		from VOT_FormItems f 
+		from VOT_FormItems f join VOT_FormGroups g using(GroupID)
 		left join VOT_FilledItems i on(f.ItemID=i.ItemID AND i.PersonID=?)
-		where f.FormID=? order by ordering", array($PersonID,$_GET["FormID"]));
+		where f.FormID=? order by g.ordering,f.ordering", array($PersonID,$_GET["FormID"]));
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
@@ -216,13 +276,15 @@ function SelectFilledForms(){
 function SelectChart1Data(){
 	
 	$FormID = $_GET["FormID"];
-	$dt = PdoDataAccess::runquery("select ItemID,ItemTitle,ItemValues,ItemValue,count(*) cnt
-		from VOT_FilledItems f join VOT_FormItems using(ItemID)
+	$GroupID = $_GET["GroupID"];
+	
+	$dt = PdoDataAccess::runquery("select ItemID,fi.ordering,ItemTitle,ItemValues,ItemValue,count(*) cnt
+		from VOT_FilledItems f join VOT_FormItems fi using(ItemID)
 			join BSC_persons using(PersonID)
 		
-		where f.FormID=? AND ItemValues<>'' AND locate('#',ItemValues) >0
+		where f.FormID=? AND fi.GroupID=? AND ItemValues<>'' AND locate('#',ItemValues) >0
 		
-		group by ItemID,ItemValue", array($FormID));
+		group by ItemID,ItemValue", array($FormID, $GroupID));
 	
 	$ReturnDate = array();
 	$currentItemID = 0;
@@ -248,7 +310,10 @@ function SelectChart1Data(){
 		
 		if($i+1 == count($dt) || $dt[$i+1]["ItemID"] != $currentItemID)
 		{
-			$ReturnDate[] = array("ItemTitle" => $row["ItemTitle"], "mid" => round($total/$totalCount));
+			$ReturnDate[] = array(
+				"ItemTitle" => $row["ItemTitle"], 
+				"ordering" =>  $row["ordering"], 
+				"mid" => round($total/$totalCount));
 		}		
 	}
 	

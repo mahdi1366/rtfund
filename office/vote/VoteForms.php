@@ -97,14 +97,7 @@ function VoteForms()
 		height : 500,
 		items : [ new Ext.form.Panel({
 			itemId : "form",
-			border : false,
-			layout : {
-				type : "table",
-				columns : 2
-			},
-			defaults : {
-				style : "line-height: 30px;"
-			}
+			border : false
 		}),{
 			xtype : "hidden",
 			name : "FormID"
@@ -129,7 +122,7 @@ function VoteForms()
 	Ext.getCmp(this.TabID).add(this.FormWin);
 	
 	this.ItemsStore = new Ext.data.Store({
-		fields: ['FormID','ItemID','ItemType',"ItemTitle", 'ItemValues'],
+		fields: ['FormID','ItemID','ItemType',"ItemTitle", 'ItemValues', 'GroupID', 'GroupDesc'],
 		proxy: {
 			type: 'jsonp',
 			url: this.address_prefix + "../../office/vote/vote.data.php?task=SelectItems",
@@ -163,9 +156,24 @@ VoteForms.prototype.FillForm = function(FormID){
 			parent = VoteFormsObject.FormWin.down('[itemId=form]');
 			parent.removeAll();
 			
+			var CurGroupID = 0;
 			for(i=0; i<this.getCount(); i++)
 			{
 				record = this.getAt(i);
+				if(CurGroupID != record.data.GroupID)
+				{
+					parent.add({
+						xtype : "fieldset",
+						title : record.data.GroupDesc,
+						itemId : "Group_" + record.data.GroupID,
+						layout : {
+							type : "table",
+							columns : 2
+						}
+					});
+					fsparent = parent.down("[itemId=Group_" + record.data.GroupID + "]");
+					CurGroupID = record.data.GroupID;
+				}
 				
 				if(record.data.ItemType == "combo")
 				{
@@ -174,7 +182,7 @@ VoteForms.prototype.FillForm = function(FormID){
 					for(j=0;j<arr.length;j++)
 						data.push([ arr[j] ]);
 					
-					parent.add({
+					fsparent.add({
 						store : new Ext.data.SimpleStore({
 							fields : ['value'],
 							data : data
@@ -189,8 +197,9 @@ VoteForms.prototype.FillForm = function(FormID){
 				}
 				else if(record.data.ItemType == "radio")
 				{
-					parent.add({
+					fsparent.add({
 						xtype : "displayfield",
+						width : 400,
 						value : record.data.ItemTitle
 					});
 					var items = new Array();
@@ -202,7 +211,7 @@ VoteForms.prototype.FillForm = function(FormID){
 							name : "elem_" + record.data.ItemID,
 							width : 100
 						});
-					parent.add({
+					fsparent.add({
 						xtype : "radiogroup",
 						items : items
 					});
@@ -211,16 +220,17 @@ VoteForms.prototype.FillForm = function(FormID){
 				{
 					if(record.data.ItemType == "textarea")
 					{
-						parent.add({
+						fsparent.add({
 							xtype : "displayfield",
 							value : record.data.ItemTitle,
 							colspan : 2,
 							width : 650
 						});
 					}
-					parent.add({
+					fsparent.add({
 						xtype: record.data.ItemType,
-						fieldLabel : record.data.ItemName,
+						fieldLabel : record.data.ItemTitle,
+						style : record.data.ItemType == 'displayfield' ? "line-height: 30px;" : "",
 						name : "elem_" + record.data.ItemID,
 						hideTrigger : record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield' ? true : false,
 						value : record.data.ItemValues,

@@ -87,102 +87,83 @@ function VoteResult()
 		width : 600,
 		height : 330,
 		autoScroll : true,
-		frame : true,
-		layout : {
-			type : "table",
-			columns : 2
-		}
+		frame : true
 	});
 	
-	this.ItemsStore = new Ext.data.Store({
-		fields: ['FormID','ItemID','ItemType',"ItemTitle", 'ItemValues'],
+	this.GroupStore = new Ext.data.Store({
+		fields: ['GroupID','GroupDesc'],
 		proxy: {
 			type: 'jsonp',
-			url: this.address_prefix + "../../office/vote/vote.data.php?task=SelectItems",
+			url: this.address_prefix + "vote.data.php?task=SelectGroups",
 			reader: {
 				root: 'rows',
 				totalProperty: 'totalCount'
 			}
 		}
-	});
-	
+	});	
 	//..........................................................................
-	this.chartPanel1 = new Ext.form.Panel({
-        width: 900,
-        height: 300,
-		autoScroll : true,
-        hidden: true,
-        maximizable: true,
-        renderTo: this.get("chart1"),
-        layout: 'fit', 
-		items :[{
-			id: 'chartCmp',
-            xtype: 'chart',
-            style: 'background:#fff',
-            animate: true,
-            shadow: true,
-            store: new Ext.data.Store({
-				fields: ["ItemTitle","mid",{
-					name : "data",
-					convert : function(v,r){return parseInt(r.data.mid);}
-				}],
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + "../../office/vote/vote.data.php?task=SelectChart1Data",
-					reader: {
-						root: 'rows',
-						totalProperty: 'totalCount'
-					}
+	
+	this.chart = {
+		xtype : "chart",
+		style: 'background:#fff',
+		height : 200,
+		width : 500,
+		animate: true,
+		shadow: true,
+		axes: [{
+			type: 'Numeric',
+			position: 'left',
+			fields: ['data'],
+			maximum: 100,minimum : 0
+
+		}, {
+			type: 'Category',
+			position: 'bottom',
+			fields: ['ordering']
+		}],
+		series: [{
+			type: 'column',
+			axis: 'left',
+			label: {
+				display: 'insideEnd',
+				field: 'data',
+				orientation: 'horizontal',
+				color: '#333',
+				'text-anchor': 'middle',
+				contrast: true
+			},
+			highlight: true,
+			xField: ['ItemTitle'],
+			yField: ['data'],
+			renderer: function(sprite, record, attr, index, store) {
+				var value = record.data.mid % 7;
+				var color = ['rgb(213, 70, 121)', 
+								'rgb(44, 153, 201)', 
+								'rgb(146, 6, 157)', 
+								'rgb(49, 149, 0)', 
+								'rgb(249, 153, 0)'][value];
+				return Ext.apply(attr, {
+					fill: color
+				});
+			},
+			tips: {
+				trackMouse: true,
+				width: 250,
+				autoHeight: true,
+				renderer: function(storeItem, item) {
+				this.setTitle(storeItem.get('ItemTitle') + ' [ ' + storeItem.get('data') + ' % ]');
 				}
-			}),
-            axes: [{
-                type: 'Numeric',
-                position: 'left',
-                fields: ['data'],
-                maximum: 100,minimum : 0
-
-            }, {
-                type: 'Category',
-                position: 'bottom',
-                fields: ['ItemTitle']
-            }],
-            series: [{
-                type: 'column',
-                axis: 'left',
-				label: {
-                    display: 'insideEnd',
-                    field: 'data',
-                    orientation: 'horizontal',
-                    color: '#333',
-                    'text-anchor': 'middle',
-                    contrast: true
-                },
-                highlight: true,
-                xField: ['ItemTitle'],
-                yField: ['data'],
-				renderer: function(sprite, record, attr, index, store) {
-                    var value = (record.data.mid > 0) % 5;
-                    var color = ['rgb(213, 70, 121)', 
-                                 'rgb(44, 153, 201)', 
-                                 'rgb(146, 6, 157)', 
-                                 'rgb(49, 149, 0)', 
-                                 'rgb(249, 153, 0)'][value];
-                    return Ext.apply(attr, {
-                        fill: color
-                    });
-                },
-				tips: {
-                  trackMouse: true,
-                  width: 250,
-                  autoHeight: true,
-                  renderer: function(storeItem, item) {
-                    this.setTitle(storeItem.get('ItemTitle') + ' [ ' + storeItem.get('data') + ' % ]');
-                  }
-                }
-            }]
+			}
 		}]
+	};
+	
+	this.ChartPanel = new Ext.form.Panel({
+        width: 900,
+        autoHeight : true,
+		border : false,		
+        maximizable: true,
+        renderTo: this.get("charts")
 	});
-
 }
 
 VoteResult.viewRender = function(v,p,r){
@@ -196,119 +177,56 @@ VoteResultObject = new VoteResult();
 
 VoteResult.prototype.LoadResults = function(FormID){
 	
-	this.chartPanel1.show();
+	//this.chartPanel1.show();
 	this.MainPanel.show();
 	
 	this.grid.getStore().proxy.extraParams.FormID = FormID;
-	this.chartPanel1.down('chart').getStore().proxy.extraParams.FormID = FormID;
-	this.chartPanel1.down('chart').getStore().load();
+	//this.chartPanel1.down('chart').getStore().proxy.extraParams.FormID = FormID;
+	//this.chartPanel1.down('chart').getStore().load();
 	
 	if(this.grid.rendered)
 		this.grid.getStore().load();
 	else
 		this.grid.render(this.get("div_grid"));
-}
-
-VoteResult.prototype.FillForm = function(FormID){
 	
-	this.FormWin.down("[itemId=saveBtn]").show();
-	this.FormWin.show();
-	this.ItemsStore.load({
-		params : {
-			FormID : FormID
-		},
+	this.GroupStore.proxy.extraParams.FormID = FormID;
+	this.GroupStore.load({
 		callback : function(){
-			VoteResultObject.FormWin.down("[name=FormID]").setValue(this.getAt(0).data.FormID);
-			parent = VoteResultObject.FormWin.down('[itemId=form]');
-			parent.removeAll();
 			
-			for(i=0; i<this.getCount(); i++)
+			me = VoteResultObject;
+			for(i=0; i<this.totalCount; i++)
 			{
 				record = this.getAt(i);
 				
-				if(record.data.ItemType == "combo")
-				{
-					arr = record.data.ItemValues.split("#");
-					data = [];
-					for(j=0;j<arr.length;j++)
-						data.push([ arr[j] ]);
-					
-					parent.add({
-						store : new Ext.data.SimpleStore({
-							fields : ['value'],
-							data : data
-						}),
-						xtype: record.data.ItemType,
-						valueField : "value",
-						displayField : "value",
-						name : "elem_" + record.data.ItemID,
-						fieldLabel : record.data.ItemTitle,
-						colspan : 2
-					});
-				}
-				else if(record.data.ItemType == "radio")
-				{
-					parent.add({
-						xtype : "displayfield",
-						value : record.data.ItemTitle,
-						width : 400
-					});
-					var items = new Array();
-					arr = record.data.ItemValues.split("#");
-					for(j=0; j<arr.length; j++)
-						items.push({
-							boxLabel : arr[j],
-							inputValue : arr[j],
-							name : "elem_" + record.data.ItemID,
-							width : 50
-						});
-					parent.add({
-						xtype : "radiogroup",
-						items : items,		
-						width : 200
-					});
-				}
-				else
-				{
-					parent.add({
-						xtype: record.data.ItemType,
-						fieldLabel : record.data.ItemName,
-						name : "elem_" + record.data.ItemID,
-						hideTrigger : record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield' ? true : false,
-						value : record.data.ItemValues,
-						colspan : 2
-					});
-				}
+				newchart = Ext.clone(me.chart);
+				newchart.store = new Ext.data.Store({
+					fields: ["ItemTitle","ordering","mid",{
+						name : "data",
+						convert : function(v,r){return parseInt(r.data.mid);}
+					}],
+					proxy: {
+						type: 'jsonp',
+						url: me.address_prefix + "vote.data.php?task=SelectChart1Data",
+						reader: {
+							root: 'rows',
+							totalProperty: 'totalCount'
+						}
+					}
+				});
+				newchart.itemId = "chart" + i;
+				me.ChartPanel.add({
+					xtype : "fieldset",
+					title : record.data.GroupDesc,
+					items : newchart
+				});
+				
+				chart = me.ChartPanel.down("[itemId=chart" + i + "]");
+				chart.getStore().proxy.extraParams.FormID = FormID;
+				chart.getStore().proxy.extraParams.GroupID = record.data.GroupID;
+				chart.getStore().load();
 			}
 		}
-	});	
-}
-
-VoteResult.prototype.SaveFilledForm = function(){
-
-	mask = new Ext.LoadMask(this.FormWin, {msg:'در حال ذخیره سازی ...'});
-	mask.show();
-	
-	this.FormWin.down('[itemId=form]').getForm().submit({
-		url : this.address_prefix + "../../office/vote/vote.data.php",
-		method : "post",
-		params : {
-			task : "SaveFilledForm",
-			FormID : this.FormWin.down('[name=FormID]').getValue()
-		},
-		
-		success : function(){
-			mask.hide();
-			VoteResultObject.FormWin.hide();
-			VoteResultObject.NewVoteResultStore .load();
-			VoteResultObject.grid.getStore().load();
-		},
-		
-		failure : function(){
-			mask.hide();
-		}
 	});
-
 }
 
 VoteResult.prototype.PreviewForm = function(){
@@ -316,7 +234,7 @@ VoteResult.prototype.PreviewForm = function(){
 	if(!this.ValuesStore)
 	{
 		this.ValuesStore = new Ext.data.Store({
-			fields: ['ItemID','ItemValue','ItemType',"ItemTitle", 'ItemValues'],
+			fields: ['ItemID','ItemValue','ItemType',"ItemTitle", 'ItemValues','GroupID','GroupDesc'],
 			proxy: {
 				type: 'jsonp',
 				url: this.address_prefix + "../../office/vote/vote.data.php?task=FilledItemsValues",
@@ -342,14 +260,30 @@ VoteResult.prototype.PreviewForm = function(){
 			parent = VoteResultObject.MainPanel;
 			parent.removeAll();
 			
+			var CurGroupID = 0;
 			for(i=0; i<this.totalCount; i++)
 			{
 				record = this.getAt(i);
+				if(CurGroupID != record.data.GroupID)
+				{
+					parent.add({
+						xtype : "fieldset",
+						title : record.data.GroupDesc,
+						itemId : "Group_" + record.data.GroupID,
+						layout : {
+							type : "table",
+							columns : 2
+						}
+					});
+					fsparent = parent.down("[itemId=Group_" + record.data.GroupID + "]");
+					CurGroupID = record.data.GroupID;
+				}
 				
 				if(record.data.ItemType == "radio")
 				{
-					parent.add({
+					fsparent.add({
 						xtype : "displayfield",
+						width : 300,
 						value : record.data.ItemTitle
 					});
 					var items = new Array();
@@ -363,7 +297,7 @@ VoteResult.prototype.PreviewForm = function(){
 							checked : arr[j] == record.data.ItemValue ? true : false,
 							width : 100
 						});
-					parent.add({
+					fsparent.add({
 						xtype : "radiogroup",
 						items : items
 					});
@@ -372,14 +306,14 @@ VoteResult.prototype.PreviewForm = function(){
 				{
 					if(record.data.ItemType == "textarea")
 					{
-						parent.add({
+						fsparent.add({
 							xtype : "displayfield",
 							value : record.data.ItemTitle,
 							colspan : 2,
 							width : 590
 						});
 					}
-					parent.add({
+					fsparent.add({
 						xtype: "displayfield",
 						style : "line-height: 30px;",
 						fieldCls : record.data.ItemType == "displayfield" ? "" : "blueText",
@@ -399,7 +333,7 @@ VoteResult.prototype.PreviewForm = function(){
 <center>
 <div id="mainForm"></div>
 <br>
-<div id="chart1"></div>
+<div id="charts"></div>
 <table>
 	<tr>
 		<td><div id="div_grid"></div></td>
