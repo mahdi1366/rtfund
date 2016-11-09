@@ -6,6 +6,7 @@
 
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
+require_once '../request/request.class.php';
 require_once '../request/request.data.php';
 
 if(isset($_REQUEST["show"]))
@@ -14,6 +15,23 @@ if(isset($_REQUEST["show"]))
 	
 	$dt = LON_installments::SelectAll("r.RequestID=?" , array($RequestID));
 	$returnArr = ComputePayments($RequestID, $dt);
+	
+	//............ get remain untill now ......................
+	$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
+	$BaseInstallmentAmount = round($PartObj->PartAmount*1/$PartObj->InstallmentCount);
+	
+	$CurrentRemain = 0;
+	$EndingAmount = $returnArr[count($returnArr)-1]["TotalRemainder"];
+	foreach($dt as $row)
+	{
+		if($row["InstallmentDate"] > DateModules::Now())
+		{
+			$EndingAmount -= $row["InstallmentAmount"]*1 - $BaseInstallmentAmount;
+		}
+		else
+			$CurrentRemain = $row["TotalRemainder"];
+	}
+	//.........................................................
 	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
@@ -90,8 +108,21 @@ if(isset($_REQUEST["show"]))
 					<b><?= $partObj->DelayPercent ?> % </b>
 				<br> درصد دیرکرد : <b><?= $partObj->ForfeitPercent ?> % </b>
 			</td>
-			<td style="font-family: nazanin; font-size: 18px; font-weight: bold">
-				مانده قابل پرداخت :  <?= number_format($returnArr[count($returnArr)-1]["TotalRemainder"]) ?>  ريال
+			<td style="font-family: tahoma; font-size: 15px; font-weight: bold;line-height: 23px;">
+				<table width="440px">
+					<tr>
+						<td>مانده قابل پرداخت : </td>
+						<td><?= number_format($CurrentRemain) ?>ریال </td> 
+					</tr>
+					<tr>
+						<td>مانده تا انتها : </td>
+						<td><?= number_format($returnArr[count($returnArr)-1]["TotalRemainder"]) ?>  ريال </td> 
+					</tr>
+					<tr>
+						<td>مبلغ قابل پرداخت در صورت تسویه وام :</td>
+						<td><?= number_format($EndingAmount) ?>    ریال </td>
+					</tr>
+				</table>
 			</td>
 		</tr>
 	</table>	
