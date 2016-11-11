@@ -109,6 +109,15 @@ ManageRequest.prototype.OperationMenu = function(e){
 	op_menu.add({text: 'رویدادها',iconCls: 'task', 
 		handler : function(){ return ManageRequestObject.ShowEvents(); }});
 	
+	op_menu.add({text: 'چاپ رسید مدارک',iconCls: 'print', 
+		handler : function(){ 
+			record = ManageRequestObject.grid.getSelectionModel().getLastSelected();
+			window.open(ManageRequestObject.address_prefix + "PrintLoanDocs.php?RequestID=" +
+				record.data.RequestID);	
+	}});
+	
+	
+	
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
 

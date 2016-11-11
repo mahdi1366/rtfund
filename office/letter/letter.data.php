@@ -57,15 +57,29 @@ function SelectAllLetter(){
 				$value = DateModules::shamsi_to_miladi($value, "-");
 				break;
 		}
-		if(strpos($field, "From") === 0)
+		if($field == "FromPersonID" || $field == "ToPersonID")
+		{
+			$where .= " AND s." . $field . " = :$field";
+			$param[":$field"] = $value;
+		}
+		else if(strpos($field, "From") === 0)
+		{
 			$where .= " AND " . $prefix . substr($field,4) . " >= :$field";
+			$param[":$field"] = $value;
+		}
 		else if(strpos($field, "To") === 0)
+		{
 			$where .= " AND " . $prefix . substr($field,2) . " <= :$field";
+			$param[":$field"] = $value;
+		}
 		else
+		{
 			$where .= " AND " . $prefix . $field . " like :$field";
-		$param[":$field"] = "%" . $value . "%";
+			$param[":$field"] = "%" . $value . "%";
+		}
 	}
 	//echo $where;
+	//print_r($param);
     $list = OFC_letters::FullSelect($where, $param, dataReader::makeOrder());
 	
 	print_r(ExceptionHandler::PopAllExceptions());

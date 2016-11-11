@@ -173,16 +173,16 @@ function LoanReport_payments()
 			store: new Ext.data.Store({
 				proxy:{
 					type: 'jsonp',
-					url: this.address_prefix + '../request/request.data.php?task=SelectAllRequests',
+					url: this.address_prefix + '../request/request.data.php?task=SelectAllRequests2',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['loanFullname','ReqAmount',"RequestID","PartDate", "ReqDate","RequestID",{
+				fields :  ['loanFullname','PartAmount',"RequestID","PartDate", "ReqDate","RequestID",{
 					name : "fullTitle",
 					convert : function(value,record){
-						return "[ " + record.data.RequestID + " ] " + record.data.loanFullname + 
-							+ " به مبلغ " + 
-							Ext.util.Format.Money(record.data.ReqAmount) + " مورخ " + 
-							MiladiToShamsi(record.data.ReqDate);
+						return "[ " + record.data.RequestID + " ] " + 
+							record.data.loanFullname + "  به مبلغ  " + 
+							Ext.util.Format.Money(record.data.PartAmount) + " مورخ " + 
+							MiladiToShamsi(record.data.PartDate);
 					}
 				}]				
 			}),
@@ -195,14 +195,12 @@ function LoanReport_payments()
 				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
 				'<td style="padding:7px">کد وام</td>',
 				'<td style="padding:7px">وام گیرنده</td>',
-				'<td style="padding:7px">فاز وام</td>',
 				'<td style="padding:7px">مبلغ وام</td>',
 				'<td style="padding:7px">تاریخ پرداخت</td> </tr>',
 				'<tpl for=".">',
 					'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
 					'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">{loanFullname}</td>',
-					'<td style="border-left:0;border-right:0" class="search-item">{PartDesc}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">',
 						'{[Ext.util.Format.Money(values.PartAmount)]}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.PartDate)]}</td> </tr>',

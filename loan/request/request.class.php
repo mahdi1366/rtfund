@@ -532,4 +532,35 @@ class LON_events extends OperationClass {
     }
 
 }
+
+class LON_costs extends OperationClass
+{
+	const TableName = "LON_costs";
+	const TableKey = "CostID";
+	
+	public $CostID;
+	public $RequestID;
+	public $CostDesc;
+	public $CostAmount;
+	
+	static function Get($where = '', $whereParams = array()) {
+		
+		return PdoDataAccess::runquery_fetchMode("
+			select c.*,d.LocalNo from LON_costs c
+			left join ACC_DocItems di on(c.CostID=di.SourceID2 AND di.SourceType=17)
+			left join ACC_docs d using(DocID)
+			where 1=1 " . $where . " group by CostID", $whereParams);
+	}
+	
+	function GetAccDoc(){
+		
+		$dt = PdoDataAccess::runquery("select d.* 
+			from ACC_DocItems di join ACC_docs d using(DocID) 
+			where SourceID=? AND SourceID2=? AND SourceType=17
+			group by DocID", array($this->RequestID, $this->CostID));
+		
+		return count($dt) > 0 ? $dt[0] : false;
+	}
+
+}
 ?>

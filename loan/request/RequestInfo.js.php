@@ -636,6 +636,19 @@ RequestInfo.prototype.BuildForms = function(){
 				itemId : "cmp_payments",
 				iconCls: 'epay',
 				handler : function(){ return RequestInfoObject.LoadPayments(); }
+			},{
+				text : 'هزینه ها',
+				iconCls : "account",
+				hidden : true,
+				itemId : "cmp_costs",
+				handler : function(){ RequestInfoObject.ShowCosts(); }
+			},{
+				text : "چاپ رسید مدارک",
+				iconCls : "print",
+				handler : function(){
+					window.open(RequestInfoObject.address_prefix + "PrintLoanDocs.php?RequestID=" +
+						RequestInfoObject.RequestID);
+				}
 			}]
 		},'->',{
 			text : 'ویرایش شرایط پرداخت',
@@ -820,6 +833,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 				}
 			}		
 			this.companyPanel.down("[itemId=cmp_events]").show();
+			this.companyPanel.down("[itemId=cmp_costs]").show();
 			this.companyPanel.down("[itemId=cmp_processes]").show();	
 		}	
 		if(this.User == "Customer")
@@ -831,6 +845,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.companyPanel.down("[itemId=cmp_save]").hide();
 			this.companyPanel.down("[name=AgentGuarantee]").hide();
 			this.companyPanel.down("[itemId=cmp_events]").hide();
+			this.companyPanel.down("[itemId=cmp_costs]").hide();
 						
 			this.companyPanel.getEl().readonly();
 			
@@ -2146,6 +2161,42 @@ RequestInfo.prototype.ShowEvents = function(){
 	}
 	this.EventsWin.show();
 	this.EventsWin.center();	
+}
+
+RequestInfo.prototype.ShowCosts = function(){
+
+	if(!this.CostsWin)
+	{
+		this.CostsWin = new Ext.window.Window({
+			title: 'هزینه های ضمانت نامه',
+			modal : true,
+			autoScroll : true,
+			width: 600,
+			height : 400,
+			bodyStyle : "background-color:white",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "costs.php",
+				scripts : true
+			},
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){
+					this.up('window').hide();
+				}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.CostsWin);
+	}
+	this.CostsWin.show();
+	this.CostsWin.center();	
+	this.CostsWin.loader.load({
+		params : {
+			ExtTabID : this.CostsWin.getEl().id,
+			RequestID : this.RequestID
+		}
+	});
 }
 
 

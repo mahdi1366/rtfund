@@ -1074,8 +1074,9 @@ abstract class OperationClass extends PdoDataAccess {
         return true;
     }
 
-    public static function Get($where = '', $whereParams = array()) {
-        return parent::runquery_fetchMode("select * from " . static::TableName . " where 1=1 " . $where, $whereParams);
+    public static function Get($where = '', $whereParams = array(), $pdo = null) {
+        return parent::runquery_fetchMode("select * from " . static::TableName . 
+				" where 1=1 " . $where, $whereParams, $pdo);
     }
 
 }

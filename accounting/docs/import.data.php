@@ -236,6 +236,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$itemObj->Add($pdo);
 	}
 	//------------------------ delay -------------------------------
+	$totalAgentYearAmount = 0;
 	if($PartObj->MaxFundWage == 0 && $TotalFundDelay > 0)
 	{
 		$index = 0;
@@ -266,38 +267,40 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
 				return false;
 			}
-
-			if($AgentYearAmount < 0)
-			{
-				unset($itemObj->ItemID);
-				$itemObj->CostID = $year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
-				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-				$itemObj->TafsiliID2 = $ReqPersonTafsili;
-				$itemObj->DebtorAmount = abs($AgentYearAmount);
-				$itemObj->CreditorAmount = 0;
-				$itemObj->details = "اختلاف کارمزد تنفس وام شماره " . $ReqObj->RequestID;
-				if(!$itemObj->Add($pdo))
-				{
-					ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
-					return false;
-				}
-			}
-			if($AgentYearAmount > 0)
-			{
-				unset($itemObj->ItemID);
-				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-				$itemObj->TafsiliID2 = $ReqPersonTafsili;
-				$itemObj->CostID = $year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
-				$itemObj->DebtorAmount = 0;
-				$itemObj->CreditorAmount = $AgentYearAmount;
-				$itemObj->details = "سهم کارمزد تنفس وام شماره " . $ReqObj->RequestID;
-				if(!$itemObj->Add($pdo))
-				{
-					ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
-					return false;
-				}
-			}
+			$totalAgentYearAmount += $AgentYearAmount;
 			$index++;
+		}
+		if($totalAgentYearAmount < 0)
+		{
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_agent_wage;
+			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			$itemObj->DebtorAmount = abs($AgentYearAmount);
+			$itemObj->CreditorAmount = 0;
+			$itemObj->TafsiliID = FindTafsiliID($curYear, TAFTYPE_YEARS);
+			$itemObj->details = "اختلاف کارمزد تنفس وام شماره " . $ReqObj->RequestID;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+				return false;
+			}
+		}
+		if($totalAgentYearAmount > 0)
+		{
+			unset($itemObj->ItemID);
+			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			$itemObj->CostID = $CostCode_agent_wage;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $AgentYearAmount;
+			$itemObj->TafsiliID = FindTafsiliID($curYear, TAFTYPE_YEARS);
+			$itemObj->details = "سهم کارمزد تنفس وام شماره " . $ReqObj->RequestID;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+				return false;
+			}
 		}
 	}
 	//------------------------ کارمزد---------------------	
@@ -964,6 +967,104 @@ function ReturnPayPartDoc($DocID, $pdo){
 	
 	return ACC_docs::Remove($DocID, $pdo);	
 }
+
+function RegisterLoanCost($CostObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
+		
+	//------------- get CostCodes --------------------
+	$ReqObj = new LON_requests($CostObj->RequestID);
+	$LoanObj = new LON_loans($ReqObj->LoanID);
+	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
+	//------------------------------------------------
+	$CycleID = $_SESSION["accounting"]["CycleID"];
+	//------------------- find load mode ---------------------
+	$LoanMode = "";
+	if(!empty($ReqObj->ReqPersonID))
+	{
+		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+		if($PersonObj->IsAgent == "YES")
+			$LoanMode = "Agent";
+	}
+	else
+		$LoanMode = "Customer";
+	//------------------ find tafsilis ---------------
+	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
+	if(!$LoanPersonTafsili)
+		return false;
+	
+	if($LoanMode == "Agent")
+	{
+		$ReqPersonTafsili = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+		if(!$ReqPersonTafsili)
+			return false;
+		$SubAgentTafsili = "";
+		if(!empty($ReqObj->SubAgentID))
+		{
+			$SubAgentTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
+			if(!$SubAgentTafsili)
+				return false;
+		}
+	}	
+	//---------------- add doc header --------------------
+	$obj = new ACC_docs();
+	$obj->RegDate = PDONOW;
+	$obj->regPersonID = $_SESSION['USER']["PersonID"];
+	$obj->DocDate = PDONOW;
+	$obj->CycleID = $CycleID;
+	$obj->BranchID = $ReqObj->BranchID;
+	$obj->DocType = DOCTYPE_LOAN_COST;
+	$obj->description = "هزینه های مازاد وام شماره " . $ReqObj->RequestID . " به نام " . $ReqObj->_LoanPersonFullname;
+	if(!$obj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ایجاد سند");
+		return false;
+	}
+	//----------------- add Doc items ------------------------
+	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $obj->DocID;
+	$itemObj->TafsiliType = TAFTYPE_PERSONS;
+	$itemObj->TafsiliID = $LoanPersonTafsili;
+	if($LoanMode == "Agent")
+	{
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
+	}
+	$itemObj->locked = "YES";
+	$itemObj->SourceType = DOCTYPE_LOAN_COST;
+	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID2 = $CostObj->CostID;
+	$itemObj->CostID = $CostCode_Loan;
+	$itemObj->DebtorAmount = 0;
+	$itemObj->CreditorAmount = $CostObj->CostAmount;
+	$itemObj->Add($pdo);
+	// ----------------------------- bank --------------------------------
+	$CostCodeObj = new ACC_CostCodes($CostID);
+	unset($itemObj->ItemID);
+	unset($itemObj->TafsiliType);
+	unset($itemObj->TafsiliType2);
+	unset($itemObj->TafsiliID2);
+	unset($itemObj->TafsiliID);
+	$itemObj->locked = "NO";
+	$itemObj->CostID = $CostID;
+	$itemObj->DebtorAmount= $CostObj->CostAmount;
+	$itemObj->CreditorAmount = 0;
+	$itemObj->TafsiliType = $CostCodeObj->TafsiliType;
+	if($TafsiliID != "")
+		$itemObj->TafsiliID = $TafsiliID;
+	$itemObj->TafsiliType2 = $CostCodeObj->TafsiliType2;
+	if($TafsiliID2 != "")
+		$itemObj->TafsiliID2 = $TafsiliID2;
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ایجاد ردیف بانک");
+		return false;
+	}		
+	
+	if(ExceptionHandler::GetExceptionCount() > 0)
+		return false;
+	
+	return true;
+}
+
 //---------------------------------------------------------------
 
 function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo){

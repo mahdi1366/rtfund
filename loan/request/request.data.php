@@ -1829,4 +1829,70 @@ function DeleteEvents(){
 	die();	
 }
 
+//------------------------------------------------
+
+function GetCosts(){
+	
+	$temp = LON_costs::Get("AND RequestID=?", array($_REQUEST["RequestID"]));
+	$res = $temp->fetchAll();
+	echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveCosts(){
+	
+	$obj = new LON_costs();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	if(empty($obj->CostID))
+	{
+		if(!$obj->Add($pdo))
+		{
+			echo Response::createObjectiveResponse(false, "خطا در ثبت هزینه");
+			die();
+		}
+		if(!RegisterLoanCost($obj, $_POST["CostID"], $_POST["TafsiliID"], $_POST["TafsiliID2"], $pdo))
+		{
+			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+			die();
+		}
+	}
+	else
+	{
+		if(!$obj->Edit($pdo))
+		{
+			echo Response::createObjectiveResponse(false, "خطا در ویرایش هزینه");
+			die();
+		}
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function DeleteCosts(){
+	
+	$obj = new LON_costs($_POST["CostID"]);
+	
+	$DocRecord = $obj->GetAccDoc();
+	if($DocRecord)
+	{
+		if($DocRecord["DocStatus"] != "RAW")
+		{
+			echo Response::createObjectiveResponse(false, "سند مربوطه تایید شده و قابل حذف نمی باشد");
+			die();	
+		}
+		
+		ACC_docs::Remove($DocRecord["DocID"]);
+	}
+	
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();	
+}
+
 ?>
