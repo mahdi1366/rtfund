@@ -4,8 +4,12 @@
 //	Date		: 94.10
 //-----------------------------
 require_once '../header.inc.php';
-require_once 'contracts.js.php';
 require_once inc_dataGrid;
+
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+require_once 'contracts.js.php';
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "contract.data.php?task=SelectContracts", "div_dg");
 
@@ -41,7 +45,8 @@ $col = $dg->addColumn("", "TemplateID");
 $col->renderer = "ManageContractsObj.OperationRender";
 $col->width = 30;
 
-$dg->addButton("", "ایجاد قرارداد", "add", "function(){ManageContractsObj.AddContract();}");
+if($accessObj->AddFlag)
+	$dg->addButton("", "ایجاد قرارداد", "add", "function(){ManageContractsObj.AddContract();}");
 
 $dg->title = "لیست قراردادها";
 $dg->DefaultSortField = "ContractID";

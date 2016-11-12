@@ -6,6 +6,11 @@
 
 require_once '../header.inc.php';
 require_once inc_dataGrid;
+
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 require_once 'ManagePlans.js.php';
 
 $portal = isset($_SESSION["USER"]["portal"]) ? true : false;
@@ -34,10 +39,13 @@ if(!$portal && !$expert)
 {
 	$dg->addObject('ManagePlanObject.AllPlansObj');
 	
-	$col = $dg->addColumn('حذف', '', 'string');
-	$col->renderer = "ManagePlan.DeleteRender";
-	$col->width = 40;
-	$col->align = "center";
+	if($accessObj->RemoveFlag)
+	{
+		$col = $dg->addColumn('حذف', '', 'string');
+		$col->renderer = "ManagePlan.DeleteRender";
+		$col->width = 40;
+		$col->align = "center";
+	}
 }
 else if($portal)
 {
@@ -65,7 +73,10 @@ $grid = $dg->makeGrid_returnObjects();
 ManagePlanObject.grid = <?= $grid ?>;
 <? if(!$portal){ ?>
 	ManagePlanObject.grid.on("itemdblclick", function(view, record){
-		framework.OpenPage("/plan/plan/PlanInfo.php", "جداول اطلاعاتی طرح", {PlanID : record.data.PlanID});
+		framework.OpenPage("/plan/plan/PlanInfo.php", "جداول اطلاعاتی طرح", {
+			PlanID : record.data.PlanID,
+			MenuID : ManagePlanObject.MenuID
+		});
 	});	
 <? } ?>
 ManagePlanObject.grid.getView().getRowClass = function(record, index)

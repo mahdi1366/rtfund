@@ -6,6 +6,10 @@
 include('../header.inc.php');
 include_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $RequestID = $_REQUEST["RequestID"];
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetCosts&RequestID=" .$RequestID,"grid_div");
@@ -24,16 +28,19 @@ $col->width = 100;
 $col = $dg->addColumn("سند", "LocalNo");
 $col->width = 80;
 
-$dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(store,record){return LoanCostObject.BeforeSaveCost(record);}";
-
-$dg->addButton("AddBtn", "ایجاد ردیف هزینه", "add", "function(){LoanCostObject.AddCost();}");
-
-$col = $dg->addColumn("حذف", "");
-$col->sortable = false;
-$col->renderer = "function(v,p,r){return LoanCost.DeleteRender(v,p,r);}";
-$col->width = 35;
-
+if($accessObj->AddFlag)
+{
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(store,record){return LoanCostObject.BeforeSaveCost(record);}";
+	$dg->addButton("AddBtn", "ایجاد ردیف هزینه", "add", "function(){LoanCostObject.AddCost();}");
+}
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("حذف", "");
+	$col->sortable = false;
+	$col->renderer = "function(v,p,r){return LoanCost.DeleteRender(v,p,r);}";
+	$col->width = 35;
+}
 $dg->height = 336;
 $dg->width = 585;
 $dg->emptyTextOfHiddenColumns = true;
@@ -53,6 +60,10 @@ LoanCost.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 	
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+
 	RequestID : <?= $RequestID ?>,
 	
 	get : function(elementID){
@@ -63,12 +74,13 @@ LoanCost.prototype = {
 function LoanCost()
 {
 	this.grid = <?= $grid ?>;
-	this.grid.plugins[0].on("beforeedit", function(editor,e){
-			
-		if(e.record.data.CostID != null)
-			return false;
+	if(this.AddAccess)
+		this.grid.plugins[0].on("beforeedit", function(editor,e){
 
-	});
+			if(e.record.data.CostID != null)
+				return false;
+
+		});
 	this.grid.render(this.get("div_grid"));	
 }
 

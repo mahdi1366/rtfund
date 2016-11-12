@@ -7,6 +7,10 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "doc.data.php?task=GetAccountSummary", "grid_div");
 
 $dg->addColumn("", "TafsiliID","", true);
@@ -70,9 +74,11 @@ $col->summaryType = GridColumn::SummeryType_sum;
 $col->summaryRenderer = "function(v){return Ext.util.Format.Money(v);}";
 $col->align = "center";
 
-$dg->addButton("", "واریز وجه", "arrow_down", "function(){InOutAccountObject.BeforeOperation(1);}");
-$dg->addButton("", "برداشت وجه", "arrow_up", "function(){InOutAccountObject.BeforeOperation(-1);}");
-
+if($accessObj->AddFlag)
+{
+	$dg->addButton("", "واریز وجه", "arrow_down", "function(){InOutAccountObject.BeforeOperation(1);}");
+	$dg->addButton("", "برداشت وجه", "arrow_up", "function(){InOutAccountObject.BeforeOperation(-1);}");
+}
 $dg->EnableSummaryRow = true;
 
 $dg->emptyTextOfHiddenColumns = true;

@@ -8,6 +8,10 @@ require_once '../header.inc.php';
 require_once inc_dataGrid;
 require_once inc_dataReader;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "deposite.data.php?task=selectDeposites", "grid_div");
 
 $col = $dg->addColumn("حساب", "CostDesc");
@@ -18,7 +22,8 @@ $col = $dg->addColumn("تفصیلی", "TafsiliDesc");
 $col = $dg->addColumn("مبلغ", "amount", GridColumn::ColumnType_money);
 $col->width = 100;
 
-$dg->addButton("", "صدور سند سود سپرده", "process", "function(){DepositeObject.ComputeProfit()}");
+if($accessObj->EditFlag)
+	$dg->addButton("", "صدور سند سود سپرده", "process", "function(){DepositeObject.ComputeProfit()}");
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 400;

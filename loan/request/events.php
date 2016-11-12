@@ -6,6 +6,10 @@
 include('../header.inc.php');
 include_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $RequestID = $_REQUEST["RequestID"];
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetEvents&RequestID=" .$RequestID,"grid_div");
@@ -29,16 +33,20 @@ $col->renderer = "LoanEvent.LetterRender";
 $col->editor = ColumnEditor::NumberField(true);
 $col->width = 100;
 
-$dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(store,record){return LoanEventObject.SaveEvent(record);}";
+if($accessObj->AddFlag)
+{
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(store,record){return LoanEventObject.SaveEvent(record);}";
 
-$dg->addButton("AddBtn", "ایجاد رویداد", "add", "function(){LoanEventObject.AddEvent();}");
-
-$col = $dg->addColumn("حذف", "");
-$col->sortable = false;
-$col->renderer = "function(v,p,r){return LoanEvent.DeleteRender(v,p,r);}";
-$col->width = 35;
-
+	$dg->addButton("AddBtn", "ایجاد رویداد", "add", "function(){LoanEventObject.AddEvent();}");
+}
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("حذف", "");
+	$col->sortable = false;
+	$col->renderer = "function(v,p,r){return LoanEvent.DeleteRender(v,p,r);}";
+	$col->width = 35;
+}
 $dg->height = 336;
 $dg->width = 585;
 $dg->emptyTextOfHiddenColumns = true;

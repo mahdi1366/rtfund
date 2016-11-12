@@ -7,7 +7,13 @@
 ManageContracts.prototype = {
 	TabID: '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix: "<?= $js_prefix_address ?>",
+	
 	ContractStatus_Raw: <?= CNTconfig::ContractStatus_Raw ?>,
+	
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+	
 	get: function (elementID) {
 		return findChild(this.TabID, elementID);
 	}
@@ -34,10 +40,12 @@ ManageContracts.prototype.OperationMenu = function (e)
 		op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
 		handler : function(){ return ManageContractsObj.StartFlow(); }});
 		
-		op_menu.add({text: ' ویرایش', iconCls: 'edit',
+		if(this.EditAccess)
+			op_menu.add({text: ' ویرایش', iconCls: 'edit',
 			handler: function () {ManageContractsObj.Edit(record.data.ContractID, record.data.TemplateID); }});
 
-		op_menu.add({text: ' حذف', iconCls: 'remove',
+		if(this.RemoveAccess)
+			op_menu.add({text: ' حذف', iconCls: 'remove',
 			handler: function () {	ManageContractsObj.RemoveContract(record.data.ContractID);	}});
 				
 	}	

@@ -7,12 +7,17 @@
 PlanInfo.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
+	MenuID : "<?= $_POST["MenuID"] ?>",
 
 	PlanID : <?= $PlanID ?>,
 	PlanRecord : null,
 	User : '<?= $User ?>',
 	portal : <?= isset($_REQUEST["portal"]) ? "true" : "false" ?>,
 	readOnly : <?= $readOnly ? "true" : "false" ?>,
+	
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
 	
 	GroupForms : {},
 	Scopes : <?= common_component::PHPArray_to_JSArray($scopes, "InfoDesac", "InfoID") ?>,
@@ -87,6 +92,7 @@ function PlanInfo(){
 			},{
 				xtype : "button",
 				text : "ذخیره",
+				disabled : this.AddAccess ? false : true,
 				itemId : "btn_save",
 				style : "float:left",
 				width : 80,
@@ -202,17 +208,17 @@ function PlanInfo(){
 	
 	if(this.User == "Admin")
 	{
-		this.menu.add({
-			text : "تغییر وضعیت",
-			iconCls : "refresh",
-			handler : function(){
-				PlanInfoObject.SetStatus();
-			}
-		});
-		
+		if(this.EditAccess)
+			this.menu.add({
+				text : "تغییر وضعیت",
+				iconCls : "refresh",
+				handler : function(){
+					PlanInfoObject.SetStatus();
+				}
+			});
 	}
 	
-	if(this.User == "Customer" && !this.readOnly)
+	if(this.User == "Customer" && !this.readOnly && this.EditAccess)
 	{
 		this.menu.add({
 			text : "ارسال طرح جهت ارزیابی",
@@ -227,7 +233,7 @@ function PlanInfo(){
 		if( new Array(<?= STEPID_RAW ?>,<?= STEPID_REJECT ?>,<?= STEPID_RETURN_TO_CUSTOMER ?>).indexOf(this.PlanRecord.StepID*1) != -1)
 			return;
 			
-		if(this.PlanRecord.StepID == "<?= STEPID_CUSTOMER_SEND ?>")
+		if(this.PlanRecord.StepID == "<?= STEPID_CUSTOMER_SEND ?>" && this.EditAccess)
 		{
 			this.menu.add({
 				text : "تایید اولیه طرح",
@@ -254,8 +260,8 @@ function PlanInfo(){
 	
 	if(this.User == "Admin")
 	{
-		//if(this.PlanRecord.StepID == "< ?= STEPID_ENDFLOW ?>")
-		//{
+		if(this.EditAccess)
+		{
 			this.menu.add({
 				text : "کارشناسی طرح",
 				iconCls : "user_comment",
@@ -263,14 +269,15 @@ function PlanInfo(){
 					PlanInfoObject.experts();
 				}
 			});
-		//}
-		this.menu.add({
-			text : "ارسال به حامی طرح",
-			iconCls : "tick",
-			handler : function(){
-				PlanInfoObject.BeforeSendPlan(<?= STEPID_SEND_SUPPORTER ?>);
-			}
-		});
+		
+			this.menu.add({
+				text : "ارسال به حامی طرح",
+				iconCls : "tick",
+				handler : function(){
+					PlanInfoObject.BeforeSendPlan(<?= STEPID_SEND_SUPPORTER ?>);
+				}
+			});
+		}
 		this.menu.add({
 			text : "رویدادهای مرتبط با طرح",
 			iconCls : "task",
@@ -1187,6 +1194,7 @@ PlanInfo.prototype.EventsShow = function(){
 		this.EventsWin.center();
 		this.EventsWin.loader.load({
 			params : {
+				MenuID : this.MenuID,
 				ExtTabID : this.EventsWin.getEl().id
 			}
 		});

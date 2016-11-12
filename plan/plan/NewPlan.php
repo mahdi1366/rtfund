@@ -8,6 +8,10 @@ require_once '../header.inc.php';
 require_once inc_dataGrid;
 require_once 'plan.class.php';
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $framework = isset($_SESSION["USER"]["framework"]);
 
 if(!$framework)
@@ -75,6 +79,10 @@ NewPlan.prototype = {
 	LoanID : '<?= $LoanID ?>',
 	Mode : '<?= $Mode ?>',
 	
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+	
 	framework : <?= isset($_SESSION["USER"]["framework"]) ? "true" : "false" ?>,
 	
 	get : function(elementID){
@@ -135,6 +143,7 @@ function NewPlan(){
 				value : this.LoanID
 			},{
 				xtype : "button",
+				disabled : this.AddAccess ? false : true,
 				text : this.PlanID == 0 ? "ثبت طرح و تکمیل جداول اطلاعاتی" : "ویرایش جداول اطلاعاتی",
 				iconCls : "arrow_left",
 				handler : function(){ NewPlanObject.SaveNewPlan(); }

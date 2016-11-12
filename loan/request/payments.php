@@ -7,6 +7,10 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $RequestID = $_REQUEST["RequestID"];
 if(empty($RequestID))
 	die();
@@ -36,17 +40,20 @@ if(isset($_SESSION["USER"]["framework"]))
 	$col->renderer = "function(v,p,r){return PartPayment.DocRender(v,p,r);}";
 	$col->width = 120;
 }
-if($editable)
+if($editable && $accessObj->AddFlag)
 {
 	$dg->enableRowEdit = true;
 	$dg->rowEditOkHandler = "function(store,record){return PartPaymentObject.SavePartPayment(record);}";
 	
 	$dg->addButton("AddBtn", "ایجاد ردیف پرداخت", "add", "function(){PartPaymentObject.AddPay();}");
 	
-	$col = $dg->addColumn("حذف", "");
-	$col->sortable = false;
-	$col->renderer = "function(v,p,r){return PartPayment.DeleteRender(v,p,r);}";
-	$col->width = 35;
+	if($accessObj->RemoveFlag)
+	{
+		$col = $dg->addColumn("حذف", "");
+		$col->sortable = false;
+		$col->renderer = "function(v,p,r){return PartPayment.DeleteRender(v,p,r);}";
+		$col->width = 35;
+	}
 }
 
 $dg->emptyTextOfHiddenColumns = true;
@@ -65,6 +72,10 @@ PartPayment.prototype = {
 	TabID : "<?= $_REQUEST["ExtTabID"] ?>",
 	address_prefix : "<?= $js_prefix_address?>",
 
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+	
 	RequestID : "<?= $RequestID ?>",
 
 	get : function(elementID){
@@ -75,11 +86,12 @@ PartPayment.prototype = {
 function PartPayment()
 {
 	this.grid = <?= $grid ?>;
-	this.grid.plugins[0].on("beforeedit", function(editor,e){
-		if(e.record.data.DocID*1 > 0)
-			return false;
-		return true;
-	});
+	if(this.AddAccess)
+		this.grid.plugins[0].on("beforeedit", function(editor,e){
+			if(e.record.data.DocID*1 > 0)
+				return false;
+			return true;
+		});
 	this.grid.render(this.get("div_grid"));
 	
 }

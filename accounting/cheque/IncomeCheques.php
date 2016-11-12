@@ -8,6 +8,10 @@ require_once '../header.inc.php';
 require_once inc_dataGrid;
 require_once inc_dataReader;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "cheques.data.php?task=selectIncomeCheques", "grid_div");
 
 $col = $dg->addColumn("", "OuterChequeID", "", true);
@@ -40,10 +44,12 @@ $col->width = 80;
 $col = $dg->addColumn("اسناد", "docs", "");
 $col->width = 80;
 
-$dg->addButton("", "اضافه چک", "add", "function(){IncomeChequeObject.AddOuterCheque();}");
-$dg->addButton("", "تغییر وضعیت چک", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
-$dg->addButton("", "تعویض چک", "copy", "function(){IncomeChequeObject.ChangeCheque();}");
-
+if($accessObj->EditFlag)
+{
+	$dg->addButton("", "اضافه چک", "add", "function(){IncomeChequeObject.AddOuterCheque();}");
+	$dg->addButton("", "تغییر وضعیت چک", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
+	$dg->addButton("", "تعویض چک", "copy", "function(){IncomeChequeObject.ChangeCheque();}");
+}
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 400;
 $dg->width = 800;

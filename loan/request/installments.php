@@ -7,6 +7,10 @@ include('../header.inc.php');
 require_once 'request.class.php';
 include_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $framework = isset($_SESSION["USER"]["framework"]);
 $RequestID = 0;
 $editable = false;
@@ -47,7 +51,7 @@ $col = $dg->addColumn("وضعیت تمدید", "IsDelayed");
 $col->renderer = "function(v,p,r){ return v == 'YES' ? 'تمدید شده' : '';}";
 $col->width = 120;
 
-if($editable)
+if($editable && $accessObj->EditFlag)
 {
 	$dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", 
 			"function(){InstallmentObject.ComputeInstallments();}");

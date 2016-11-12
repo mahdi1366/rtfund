@@ -7,7 +7,7 @@
 require_once('../header.inc.php');
 include_once inc_dataReader;
 include_once inc_response;
-
+require_once getenv("DOCUMENT_ROOT") . '/office/letter/letter.class.php';
 require_once "config.inc.php";
 include_once 'operation.class.php';
 require_once 'email.php';
@@ -23,6 +23,8 @@ function SaveOperation(){
 	$obj = new NTC_operations();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
+	$obj->GroupLetter = isset($_POST["GroupLetter"]) ? "YES" : "NO";
+	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
@@ -36,7 +38,6 @@ function SaveOperation(){
 	{
 		$result = $obj->Edit($pdo);
 	}
-	
 	require_once("phpExcelReader.php");
 	
 	$data = new Spreadsheet_Excel_Reader();
@@ -72,10 +73,24 @@ function SaveOperation(){
 		die();
 	}
 	$dt = $dt->fetchAll();
+	//----------- create letter -------------
+	if($obj->SendType == "LETTER" && $obj->GroupLetter == "YES")
+	{
+		$LetterObj = new OFC_letters();
+		$LetterObj->LetterType = "INNER";
+		$LetterObj->LetterTitle = $obj->title;
+		$LetterObj->LetterDate = PDONOW;
+		$LetterObj->RegDate = PDONOW;
+		$LetterObj->PersonID = $_SESSION["USER"]["PersonID"];
+		$LetterObj->context = $obj->context;
+		if(!$LetterObj->AddLetter($pdo))
+			ExceptionHandler::PushException ("خطا در ثبت  نامه");
+	}
+	//---------------------------------------	
 	foreach($dt as $row)
 	{
 		$context = $obj->context;
-		for($i=1; $i<=10; $i++)
+		for($i=1; $i<10; $i++)
 			$context = preg_replace ("/\[col".$i."\]/", $row["col" . $i], $context);
 		
 		switch($obj->SendType){
@@ -85,19 +100,63 @@ function SaveOperation(){
 			case "EMAIL" : 
 				$email = $row["email"];
 				if($email == "")
+				{
+					ExceptionHandler::PushException ("فاقد ایمیل");
 					continue;
-				SendEmail($email, $obj->title, $context) ? "true" : "false";
+				}
+				$result = SendEmail($email, $obj->title, $context);
+				if(!$result)
+					ExceptionHandler::PushException ("خطا در ارسال ایمیل");
 				break;
 			//------------------------------------------------------------------
 			case "LETTER" : 
+				if($obj->GroupLetter == "NO")
+				{
+					$LetterObj = new OFC_letters();
+					$LetterObj->LetterType = "INNER";
+					$LetterObj->LetterTitle = $obj->title;
+					$LetterObj->LetterDate = PDONOW;
+					$LetterObj->RegDate = PDONOW;
+					$LetterObj->PersonID = $_SESSION["USER"]["PersonID"];
+					$LetterObj->context = $context;
+					$LetterObj->AddLetter($pdo);
+					
+					$SendObj = new OFC_send();
+					$SendObj->LetterID = $LetterObj->LetterID;
+					$SendObj->FromPersonID = $LetterObj->PersonID;
+					$SendObj->ToPersonID = $row["PersonID"];
+					$SendObj->SendDate = PDONOW;
+					$SendObj->SendType = 1;
+					if(!$SendObj->AddSend($pdo))
+						ExceptionHandler::PushException ("خطا در ثبت  نامه");
+				}
+				else{
+					
+					$Cobj = new OFC_LetterCustomers();
+					$Cobj->LetterID = $LetterObj->LetterID;
+					$Cobj->PersonID = $row["PersonID"];
+					$Cobj->IsHide = "NO";
+					$Cobj->LetterTitle = $obj->title;
+					if(!$Cobj->Add($pdo))
+						ExceptionHandler::PushException ("خطا در ثبت ذینفع نامه");
+				}				
 				break;
 			//------------------------------------------------------------------
+		}
+		if(ExceptionHandler::GetExceptionCount() == 0)
+		{
+			$PObj = new NTC_persons();
+			$PObj->RowID = $row["RowID"];
+			$PObj->IsSuccess = "YES";
+			if($obj->SendType == "LETTER")
+				$PObj->LetterID = $LetterObj->LetterID;
+			$PObj->Edit($pdo);
 		}
 	}
 	
 	$pdo->commit();
 	//print_r(ExceptionHandler::PopAllExceptions());
-	echo Response::createObjectiveResponse($result, "");
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
 	die();
 }
 

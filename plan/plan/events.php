@@ -6,6 +6,10 @@
 include('../header.inc.php');
 include_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $PlanID = $_REQUEST["PlanID"];
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "plan.data.php?task=GetPlanEvents&PlanID=" .$PlanID,"grid_div");
@@ -21,16 +25,20 @@ $col = $dg->addColumn("تاریخ رویداد", "EventDate", GridColumn::Column
 $col->editor = ColumnEditor::SHDateField();
 $col->width = 100;
 
-$dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(store,record){return PlanEventObject.SaveEvent(record);}";
+if($accessObj->AddFlag)
+{
+	$dg->addButton("AddBtn", "ایجاد رویداد", "add", "function(){PlanEventObject.AddEvent();}");
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(store,record){return PlanEventObject.SaveEvent(record);}";
+}
 
-$dg->addButton("AddBtn", "ایجاد رویداد", "add", "function(){PlanEventObject.AddEvent();}");
-
-$col = $dg->addColumn("حذف", "");
-$col->sortable = false;
-$col->renderer = "function(v,p,r){return PlanEvent.DeleteRender(v,p,r);}";
-$col->width = 35;
-
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("حذف", "");
+	$col->sortable = false;
+	$col->renderer = "function(v,p,r){return PlanEvent.DeleteRender(v,p,r);}";
+	$col->width = 35;
+}
 $dg->height = 336;
 $dg->width = 585;
 $dg->emptyTextOfHiddenColumns = true;

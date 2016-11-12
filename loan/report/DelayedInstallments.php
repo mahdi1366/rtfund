@@ -40,6 +40,23 @@ if(!empty($_REQUEST["print"]))
 	$rpg->generateReport();
 	die();
 }
+if(!empty($_REQUEST["NTC_EXCEL"]))
+{
+	$data = GetDelayedInstallments(true);
+	$rpt = new ReportGenerator();
+	$rpt->rowNumber = false;
+	$rpt->excel = true;
+	$rpt->mysql_resource = $data;
+	$rpt->addColumn("PID", "LoanPersonID");
+	$rpt->addColumn("کد وام", "RequestID");
+	$rpt->addColumn("وام گیرنده", "LoanPersonName");
+	$rpt->addColumn("سررسید", "InstallmentDate");
+	$rpt->addColumn("تاخیر", "ForfeitDays");
+	$rpt->addColumn("مبلغ قسط", "InstallmentAmount");
+	$rpt->addColumn("قابل پرداخت", "remainder");
+	$rpt->generateReport();
+	die();
+}
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "../request/request.data.php?task=GetDelayedInstallments","grid_div");
 
@@ -70,6 +87,8 @@ $dg->width = 850;
 $dg->emptyTextOfHiddenColumns = true;
 
 $dg->addButton("", "چاپ", "print", "LoanReport_DelayedInstallments.print");
+
+$dg->addButton("", "خروجی excel جهت ارتباط با ذینفعان", "excel", "LoanReport_DelayedInstallments.excel");
 
 $dg->HeaderMenu = false;
 $dg->DefaultSortField = "InstallmentDate";
@@ -136,6 +155,15 @@ LoanReport_DelayedInstallments.prototype.PayReport = function(){
 
 LoanReport_DelayedInstallments.print = function(){
 	window.open(LoanReport_DelayedInstallmentsObj.address_prefix + "DelayedInstallments.php?print=true");
+}
+
+LoanReport_DelayedInstallments.excel = function(){
+	
+	me = LoanReport_DelayedInstallmentsObj;
+	
+	window.open(LoanReport_DelayedInstallmentsObj.address_prefix + 
+		"DelayedInstallments.php?NTC_EXCEL=true&ToDate=" + me.DateFS.down("[itemId=ToDate]").getRawValue() +
+		"&minDays=" + me.DateFS.down("[itemId=minDays]").getRawValue());
 }
 
 LoanReport_DelayedInstallmentsObj = new LoanReport_DelayedInstallments();

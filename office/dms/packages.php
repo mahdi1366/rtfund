@@ -75,9 +75,10 @@ $dg->addColumn("", "fullname", "", true);
 $dg->addColumn("", "DocumentID", "", true);
 $dg->addColumn("", "IsConfirm", "", true);
 
-$col = $dg->addColumn("عنوان مدرک" .
+$title = $accessObj->AddFlag ? 
 	'<span style="float:right;width:16px;height: 16px;margin:2px;cursor:pointer" class=add '.
-	'onclick=PackageObject.AddPackageItem()></span>', "DocDesc", "");
+	'onclick=PackageObject.AddPackageItem()></span>' : "";
+$col = $dg->addColumn("عنوان مدرک" . $title, "DocDesc", "");
 $col->sortable = false;
 $col->width = 100;
 

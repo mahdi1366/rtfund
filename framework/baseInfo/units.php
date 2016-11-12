@@ -5,6 +5,10 @@
 //---------------------------
 require_once '../header.inc.php';
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 require_once 'units.js.php';
 ?>
 <div style="margin: 10" align="center">

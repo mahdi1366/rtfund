@@ -65,17 +65,17 @@ class OFC_letters extends PdoDataAccess{
 	    return parent::runquery_fetchMode($query, $whereParam);
     }
 	
-    function AddLetter(){
-	    if( parent::insert("OFC_letters", $this) === false )
+    function AddLetter($pdo = null){
+	    if( parent::insert("OFC_letters", $this, $pdo) === false )
 		    return false;
 
-	    $this->LetterID = parent::InsertID();
+	    $this->LetterID = parent::InsertID($pdo);
 
 	    $daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->MainObjectID = $this->LetterID;
 		$daObj->TableName = "OFC_letters";
-		$daObj->execute();
+		$daObj->execute($pdo);
 		return true;	
     }
 

@@ -7,6 +7,10 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "saving.data.php?task=selectRules", "grid_div");
 
 $dg->addColumn("", "RuleID","", true);
@@ -45,21 +49,25 @@ $col->editor = ColumnEditor::TextField(true);
 $col->ellipsis = 40;
 $col->align = "center";
 
-$dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(store,record){return SavingRuleObject.SaveRule(record);}";
+if($accessObj->AddFlag)
+{
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(store,record){return SavingRuleObject.SaveRule(record);}";
 
-$dg->addButton("AddBtn", "ایجاد", "add", "function(){SavingRuleObject.AddRule();}");
-
+	$dg->addButton("AddBtn", "ایجاد", "add", "function(){SavingRuleObject.AddRule();}");
+}
 $col = $dg->addColumn("", "");
 $col->sortable = false;
 $col->renderer = "SavingRule.PeriodsRender";
 $col->width = 35;
 
-$col = $dg->addColumn("حذف", "");
-$col->sortable = false;
-$col->renderer = "SavingRule.DeleteRender";
-$col->width = 35;
-
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("حذف", "");
+	$col->sortable = false;
+	$col->renderer = "SavingRule.DeleteRender";
+	$col->width = 35;
+}
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 400;
 $dg->width = 780;
@@ -87,16 +95,20 @@ $col = $dg->addColumn("تعداد اقساط", "InstallmentCount");
 $col->editor = ColumnEditor::NumberField();
 $col->align = "center";
 
-$dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(store,record){return SavingRuleObject.SavePeriod(record);}";
+if($accessObj->AddFlag)
+{
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(store,record){return SavingRuleObject.SavePeriod(record);}";
 
-$dg->addButton("AddBtn", "ایجاد", "add", "function(){SavingRuleObject.AddPeriod();}");
-
-$col = $dg->addColumn("حذف", "");
-$col->sortable = false;
-$col->renderer = "SavingRule.PeriodDeleteRender";
-$col->width = 35;
-
+	$dg->addButton("AddBtn", "ایجاد", "add", "function(){SavingRuleObject.AddPeriod();}");
+}
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("حذف", "");
+	$col->sortable = false;
+	$col->renderer = "SavingRule.PeriodDeleteRender";
+	$col->width = 35;
+}
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 300;
 $dg->width = 300;

@@ -7,6 +7,7 @@
 ManagePlan.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
+	MenuID : "<?= $_POST["MenuID"] ?>",
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);

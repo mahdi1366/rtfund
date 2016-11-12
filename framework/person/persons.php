@@ -75,6 +75,8 @@ if($accessObj->AddFlag)
 
 if($accessObj->EditFlag)
 {
+	$dg->addButton("", "تایید", "tick", "function(){PersonObject.Confirm();}");
+	
 	$col = $dg->addColumn("","","");
 	$col->renderer = "Person.editRender";
 	$col->sortable = false;
@@ -87,8 +89,6 @@ if($accessObj->RemoveFlag)
 	$col->sortable = false;
 	$col->width = 40;
 }
-
-$dg->addButton("", "تایید", "tick", "function(){PersonObject.Confirm();}");
 
 $dg->height = 500;
 $dg->pageSize = 15;

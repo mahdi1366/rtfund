@@ -8,6 +8,10 @@ Unit.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -53,11 +57,14 @@ function Unit(){
 		
 		if(record.data.id.indexOf("p_") != -1)
 		{
-			Menu.add({
+			if(thid.EditAccess)
+				Menu.add({
 					text: 'ویرایش پست سازمانی',
 					handler: function(){ UnitObject.BeforeSavePost("edit");},
 					iconCls: 'user_edit'
-				},{
+				});
+			if(thid.RemoveAccess)	
+				Menu.add({
 					text: 'حذف پست سازمانی',
 					handler: function(){ UnitObject.DeletePost();},
 					iconCls: 'user_delete'
@@ -65,7 +72,8 @@ function Unit(){
 		}
 		else
 		{
-			Menu.add({
+			if(thid.AddAccess)
+				Menu.add({
 					text: 'ایجاد پست سازمانی',
 					iconCls: 'user_add',
 					handler: function(){ UnitObject.BeforeSavePost("new");}
@@ -74,11 +82,15 @@ function Unit(){
 					text: 'ایجاد زیر واحد',
 					iconCls: 'add',
 					handler: function(){ UnitObject.BeforeSaveUnit("new");}
-				},{
+				});
+			if(thid.EditAccess)
+				Menu.add({
 					text: 'ویرایش اطلاعات واحد سازمانی',
 					handler: function(){ UnitObject.BeforeSaveUnit("edit");},
 					iconCls: 'edit'
-				},{
+				});
+			if(thid.RemoveAccess)
+				Menu.add({
 					text: 'حذف واحد سازمانی',
 					handler: function(){ UnitObject.DeleteUnit();},
 					iconCls: 'remove'

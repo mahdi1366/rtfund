@@ -45,8 +45,11 @@ for ($i = 0; $i < count($temp); $i++) {
         $col = $BlockGrid->addColumn('گروه حساب', "GroupID");
         $col->width = 150;
 		if($accessObj->AddFlag || $accessObj->EditFlag)
+		{
 			$groups = PdoDataAccess::runquery ("select * from ACC_blocks where levelID=0");
 			$col->editor = ColumnEditor::ComboBox($groups, 'BlockID', 'BlockDesc');
+		}
+			
     }
 	
 	if ($temp[$i]["HasEssence"]) {

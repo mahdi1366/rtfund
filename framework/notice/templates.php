@@ -6,11 +6,14 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-$dgh = new sadaf_datagrid("dgh1",$js_prefix_address."letter.data.php?task=SelectTemplates","div_dg");
+$dgh = new sadaf_datagrid("dgh1",$js_prefix_address."operation.data.php?task=SelectTemplates","div_dg");
 
 $dgh->addColumn("","TemplateID",'string',true);
 
 $col = $dgh->addColumn("عنوان الگو", "TemplateTitle");
+
+$col=$dgh->addColumn("نوع ارسال", "SendType");
+$col->width = 80;
 
 $col=$dgh->addColumn("متن الگو", "context");
 $col->renderer="LetterTemplate.ContextRender";
@@ -22,6 +25,7 @@ $col->width = 40;
 
 $dgh->emptyTextOfHiddenColumns=true;
 $dgh->width = 600;
+$dgh->title = "الگوهای ارتباط با ذینفعان";
 $dgh->DefaultSortField = "TemplateTitle";
 $dgh->DefaultSortDir = "ASC";
 $dgh->height = 400;
@@ -151,7 +155,7 @@ LetterTemplate.prototype.DeleteTemplate = function()
 		mask.show();
 		
 		Ext.Ajax.request({
-			url: me.address_prefix + 'letter.data.php?task=DeleteTemplate',
+			url: me.address_prefix + 'operation.data.php?task=DeleteTemplate',
 			params:{
 				TemplateID : record.data.TemplateID
 			},

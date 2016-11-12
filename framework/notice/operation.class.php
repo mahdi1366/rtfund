@@ -14,7 +14,7 @@ class NTC_operations extends OperationClass
 	public $OperationDate;
 	public $SendType;
 	public $context;
-
+	public $GroupLetter;
 }
 
 class NTC_persons extends OperationClass
@@ -25,6 +25,7 @@ class NTC_persons extends OperationClass
 	public $RowID;
 	public $OperationID;
 	public $PersonID;
+	public $LetterID;
 	public $col1;
 	public $col2;
 	public $col3;
@@ -34,7 +35,7 @@ class NTC_persons extends OperationClass
 	public $col7;
 	public $col8;
 	public $col9;
-	public $col10;
+	public $IsSuccess;
 
 	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		return PdoDataAccess::runquery_fetchMode("

@@ -6,6 +6,10 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $AddMode = isset($_REQUEST["mode"]) && $_REQUEST["mode"] == "adding" ? true : false;
 
 ?>
@@ -14,6 +18,10 @@ ActDomain.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : "<?= $js_prefix_address ?>",
 	AddMode : <?= $AddMode ? "true" : "false" ?>,
+
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
 
 	parent : <?= isset($_REQUEST["parent"]) ? $_REQUEST["parent"] : "null" ?>,
 	selectHandler : <?= isset($_REQUEST["selectHandler"]) ? $_REQUEST["selectHandler"] : "function(){}" ?>,
@@ -58,26 +66,28 @@ function ActDomain()
 			view.select(index);
 
 			this.Menu = new Ext.menu.Menu();
-
-			this.Menu.add({
-				text: 'ایجاد زیر سطح',
-				iconCls: 'add',
-				handler : function(){ActDomainObject.BeforeSaveDomain(false);}
-			});
+			if(this.AddAccess)
+				this.Menu.add({
+					text: 'ایجاد زیر سطح',
+					iconCls: 'add',
+					handler : function(){ActDomainObject.BeforeSaveDomain(false);}
+				});
 
 			if(record.data.id != "src")
 			{
-				this.Menu.add({
-					text: 'ویرایش عنوان',
-					iconCls: 'edit',
-					handler : function(){ActDomainObject.BeforeSaveDomain(true);}
-				});
-
-				this.Menu.add({
-					text: 'حذف سطح',
-					iconCls: 'remove',
-					handler : function(){ActDomainObject.DeleteDomain();}
-				});
+				if(this.EditAccess)
+					this.Menu.add({
+						text: 'ویرایش عنوان',
+						iconCls: 'edit',
+						handler : function(){ActDomainObject.BeforeSaveDomain(true);}
+					});
+					
+				if(this.RemoveAccess)
+					this.Menu.add({
+						text: 'حذف سطح',
+						iconCls: 'remove',
+						handler : function(){ActDomainObject.DeleteDomain();}
+					});
 			}
 
 			var coords = e.getXY();

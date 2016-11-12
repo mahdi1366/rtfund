@@ -6,6 +6,10 @@
 include('../header.inc.php');
 include_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "traffic.data.php?task=GetMyRequests", "grid_div");
 
 $dg->addColumn("", "RequestID", "", true);
@@ -41,7 +45,8 @@ $col->align = "center";
 
 $dg->addColumn("توضیحات", "details", "");
 
-$dg->addButton("","ایجاد درخواست جدید", "add", "function(){TrafficReqObject.BeforeAddRequest('new');}");
+if($accessObj->AddFlag)
+	$dg->addButton("","ایجاد درخواست جدید", "add", "function(){TrafficReqObject.BeforeAddRequest('new');}");
 
 $dg->height = 500;
 $dg->width = 750;
@@ -70,6 +75,10 @@ TrafficReq.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : '<?= $js_prefix_address ?>',
 
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -402,15 +411,19 @@ TrafficReq.OperationRender = function(v,p,r)
 {
 	if(r.data.ReqStatus == "1")
 	{
-		return "<div align='center' title='ویرایش' class='edit' "+
-		"onclick='TrafficReqObject.BeforeAddRequest(\"edit\");' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;float:right;height:16'></div>&nbsp;&nbsp;" +
-	
-		"<div align='center' title='حذف' class='remove' "+
-		"onclick='TrafficReqObject.DeleteRequest();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;float:left;height:16'></div>";
+		st = "";
+		if(TrafficReqObject.EditAccess)
+			st += "<div align='center' title='ویرایش' class='edit' "+
+			"onclick='TrafficReqObject.BeforeAddRequest(\"edit\");' " +
+			"style='background-repeat:no-repeat;background-position:center;" +
+			"cursor:pointer;width:16px;float:right;height:16'></div>&nbsp;&nbsp;";
+		if(TrafficReqObject.RemoveAccess)
+			st += "<div align='center' title='حذف' class='remove' "+
+			"onclick='TrafficReqObject.DeleteRequest();' " +
+			"style='background-repeat:no-repeat;background-position:center;" +
+			"cursor:pointer;width:16px;float:left;height:16'></div>";
+		
+		return st;
 	}	
 	if(r.data.ReqStatus == "2" && r.data.ReqType == "DayMISSION")
 		return "<div align='center' title='چاپ حکم ماموریت' class='print' "+

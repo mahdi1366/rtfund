@@ -7,6 +7,10 @@ include('../header.inc.php');
 require_once 'request.class.php';
 include_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $framework = isset($_SESSION["USER"]["framework"]);
 $RequestID = 0;
 $editable = false;
@@ -90,7 +94,7 @@ $col = $dg->addColumn("توضیحات", "details", "");
 if($editable)
 	$col->editor = ColumnEditor::TextField(true);
 
-if($editable)
+if($editable && $accessObj->AddFlag)
 {
 	$dg->enableRowEdit = true;
 	$dg->rowEditOkHandler = "function(store,record){return LoanPayObject.SaveBackPay(record);}";
@@ -101,11 +105,13 @@ if($editable)
 	$col->sortable = false;
 	$col->renderer = "function(v,p,r){return LoanPay.RegDocRender(v,p,r);}";
 	$col->width = 40;
-	
-	$col = $dg->addColumn("حذف", "");
-	$col->sortable = false;
-	$col->renderer = "function(v,p,r){return LoanPay.DeleteRender(v,p,r);}";
-	$col->width = 35;
+	if($accessObj->RemoveFlag)
+	{
+		$col = $dg->addColumn("حذف", "");
+		$col->sortable = false;
+		$col->renderer = "function(v,p,r){return LoanPay.DeleteRender(v,p,r);}";
+		$col->width = 35;
+	}
 }
 if($framework)
 {
@@ -132,6 +138,10 @@ LoanPay.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 	
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+	
 	framework : <?= $framework ? "true" : "false" ?>,
 	RequestID : <?= $RequestID ?>,
 	PartRecord : null,
@@ -154,7 +164,7 @@ function LoanPay()
 		return "";
 	}	
 
-	if(this.grid.plugins[0] != undefined)
+	if(this.AddAccess && this.grid.plugins[0] != undefined)
 		this.grid.plugins[0].on("beforeedit", function(editor,e){
 			
 			if(LoanPayObject.PartRecord != null && LoanPayObject.PartRecord.data.IsEnded == "YES")

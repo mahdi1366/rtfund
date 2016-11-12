@@ -21,6 +21,13 @@ class smtp_config{
 	public static $FromAddress = "admin@krrtf.ir";
 }
 
+class sms_config{
+	public static $send_server = "http://87.107.121.52/post/send.asmx?wsdl";
+	public static $receive_server = "http://87.107.121.52/post/IncomingMessages.asmx?wsdl";
+	public static $username = "9153750964";
+	public static $password = "1504";
+}
+
 define("SoftwareName", "صندوق غیر دولتی پژوهش و فناوری خراسان رضوی");
 define("OWNER_NATIONALID", "10380491265");
 define("OWNER_REGCODE", "33943");

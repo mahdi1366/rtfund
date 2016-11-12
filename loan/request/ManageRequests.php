@@ -55,8 +55,8 @@ $col->align = "center";
 
 $dg->addObject("ManageRequestObject.FilterObj");
 
-$dg->addButton("", "تایید", "tick", "function(){ManageRequestObject.Confirm();}");
-
+if($accessObj->EditFlag)
+	$dg->addButton("", "تایید", "tick", "function(){ManageRequestObject.Confirm();}");
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 500;

@@ -6,15 +6,20 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "elements.data.php?task=selectGroupElements&ParentID=0", "grid_div");
 
 $dg->addColumn("", "GroupID", "", true);
 $dg->addColumn("", "ParentID", "", true);
 $dg->addColumn("", "ElementID", "", true);
 
-$col = $dg->addColumn("نوع آیتم" . 
-	'<span style="float:right;width:16px;height: 16px;margin:2px;cursor:pointer" class=add '.
-	'onclick=PlanElementsObject.AddHElement()></span>', "ElementType", "");
+$title = $accessObj->AddFlag ? '<span style="float:right;width:16px;height: 16px;margin:2px;cursor:pointer" class=add '.
+	'onclick=PlanElementsObject.AddHElement()></span>' : "";
+
+$col = $dg->addColumn("نوع آیتم" . $title, "ElementType", "");
 $col->renderer = "PlanElements.ElementTypeRender";
 $col->width = 100;
 $col->sortable = false;
@@ -89,6 +94,10 @@ $grid2 = $dg->makeGrid_returnObjects();
 PlanElements.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
+
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -254,6 +263,7 @@ function PlanElements(){
 		}),
 		buttons :[{
 			text : "ذخیره",
+			disabled : this.AddAccess ? false : true,
 			iconCls : "save",
 			handler : function(){
 				PlanElementsObject.SaveElement( PlanElementsObject.HFormWin, PlanElementsObject.HGrid);
@@ -346,6 +356,7 @@ function PlanElements(){
 		}),
 		buttons :[{
 			text : "ذخیره",
+			disabled : this.AddAccess ? false : true,
 			iconCls : "save",
 			handler : function(){
 				PlanElementsObject.SaveElement( PlanElementsObject.DFormWin, PlanElementsObject.DGrid);
@@ -369,27 +380,33 @@ PlanElements.prototype.ShowMenu = function(view, record, item, index, e)
 		
 	if(record.data.id == "src")
 	{
-		Menu.add({
-			text: 'ایجاد سطح',
-			iconCls: 'add',
-			handler: function(){ PlanElementsObject.BeforeSaveGroup("new");}
-		});		
+		if(this.AddAccess)
+			Menu.add({
+				text: 'ایجاد سطح',
+				iconCls: 'add',
+				handler: function(){ PlanElementsObject.BeforeSaveGroup("new");}
+			});		
 	}
 	else
 	{
-		Menu.add({
-			text: 'ایجاد زیر سطح',
-			iconCls: 'add',
-			handler: function(){ PlanElementsObject.BeforeSaveGroup("new");}
-		},{
-			text: 'ویرایش سطح',
-			handler: function(){ PlanElementsObject.BeforeSaveGroup("edit");},
-			iconCls: 'edit'
-		},{
-			text: 'حذف سطح',
-			handler: function(){ PlanElementsObject.DeleteGroup();},
-			iconCls: 'remove'
-		});
+		if(this.AddAccess)
+			Menu.add({
+				text: 'ایجاد زیر سطح',
+				iconCls: 'add',
+				handler: function(){ PlanElementsObject.BeforeSaveGroup("new");}
+			});
+		if(this.EditAccess)
+			Menu.add({
+				text: 'ویرایش سطح',
+				handler: function(){ PlanElementsObject.BeforeSaveGroup("edit");},
+				iconCls: 'edit'
+			});
+		if(this.RemoveAccess)
+			Menu.add({
+				text: 'حذف سطح',
+				handler: function(){ PlanElementsObject.DeleteGroup();},
+				iconCls: 'remove'
+			});
 	}
 
 	var coords = e.getXY();
@@ -547,15 +564,19 @@ PlanElements.HOperationRender = function(v,p,r){
 
 PlanElements.DOperationRender = function(v,p,r){
 	
-	return "<div align='center' title='ویرایش' class='edit' "+
+	st = "";
+	if(PlanElementsObject.EditAccess)
+		st += "<div align='center' title='ویرایش' class='edit' "+
 		"onclick='PlanElementsObject.EditElement(PlanElementsObject.DFormWin, PlanElementsObject.DGrid);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;float:right;width:16px;height:16'></div>" +
-	
-	"<div align='center' title='حذف' class='remove' "+
+		"cursor:pointer;float:right;width:16px;height:16'></div>";
+	if(PlanElementsObject.RemoveAccess)
+		st += "<div align='center' title='حذف' class='remove' "+
 		"onclick='PlanElementsObject.DeleteElement(PlanElementsObject.DGrid);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;float:right;width:16px;height:16'></div>";
+	
+	return st;
 }
 
 PlanElements.prototype.ShowElements = function(GroupID)

@@ -6,6 +6,10 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $dgh = new sadaf_datagrid("dgh1",$js_prefix_address."baseinfo.data.php?task=SelectACCRoles","div_dg");
 
 $dgh->addColumn("","RowID",'string',true);
@@ -21,16 +25,20 @@ $col->renderer="function(v,p,r){return r.data.RoleDesc;}";
 $col->editor = "this.RoleCombo";;
 $col->width = 200;
 
-$col = $dgh->addColumn("حذف", "", "string");
-$col->renderer = "AccountRole.deleteRender";
-$col->width = 40;
-
-$dgh->addButton = true;
-$dgh->addHandler = "function(v,p,r){ return AccountRoleObject.Add(v,p,r);}";
+if($accessObj->RemoveFlag)
+{
+	$col = $dgh->addColumn("حذف", "", "string");
+	$col->renderer = "AccountRole.deleteRender";
+	$col->width = 40;
+}
+if($accessObj->AddFlag)
+{
+	$dgh->addButton = true;
+	$dgh->addHandler = "function(v,p,r){ return AccountRoleObject.Add(v,p,r);}";
+	$dgh->enableRowEdit = true ;
+	$dgh->rowEditOkHandler = "function(v,p,r){ return AccountRole.Save(v,p,r);}";
+}
 $dgh->title ="سمت های حسابداری";
-
-$dgh->enableRowEdit = true ;
-$dgh->rowEditOkHandler = "function(v,p,r){ return AccountRole.Save(v,p,r);}";
 
 $dgh->emptyTextOfHiddenColumns=true;
 $dgh->width = 600;

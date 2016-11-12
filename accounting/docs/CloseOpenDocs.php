@@ -6,12 +6,20 @@
 
 require_once '../header.inc.php';
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 ?>
 <script>
 CloseOpenDoc.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -36,6 +44,7 @@ function CloseOpenDoc()
 		}],
 		buttons : [{
 			text : "صدور سند اختتامیه",
+			disabled : this.AddAccess ? false : true,
 			iconCls : "account",
 			handler : function()
 			{
@@ -62,6 +71,7 @@ function CloseOpenDoc()
 			}
 		},{
 			text : "صدور سند افتتاحیه",
+			disabled : this.AddAccess ? false : true,
 			iconCls : "account",
 			handler : function()
 			{

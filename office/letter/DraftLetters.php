@@ -41,7 +41,8 @@ $grid = $dg->makeGrid_returnObjects();
 DraftLetter.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
-
+	MenuID : "<?= $_POST["MenuID"] ?>",
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -54,7 +55,9 @@ function DraftLetter(){
 	this.grid.on("itemdblclick", function(view, record){
 			
 		framework.OpenPage(DraftLetterObject.address_prefix + 
-			"NewLetter.php", "ایجاد نامه", {LetterID : record.data.LetterID});
+			"NewLetter.php", "ایجاد نامه", {
+			MenuID : DraftLetterObject.MenuID,
+			LetterID : record.data.LetterID});
 		framework.CloseTab(DraftLetterObject.TabID);
 	});
 	

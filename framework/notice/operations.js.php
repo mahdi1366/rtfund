@@ -24,36 +24,61 @@ function NTC_Operation(){
 		},		
 		applyTo : this.get("operationInfo"),
 		defaults : {
-			width : 350
+			width : 350,
+			labelWidth : 60
 		},
 		frame : true,
 		items : [{
-			xtype : "combo",
-			store : new Ext.data.SimpleStore({
-				fields : ['id','title'],
-				data : [
-					['SMS', 'SMS'],
-					['EMAIL', 'EMAIL'],
-					['LETTER', 'LETTER']
-				]				
-			}),
-			displayField : "title",
-			valueField : "id",
-			fieldLabel : "نوع ارسال",
-			name : "SendType",
-			listeners : {
-				select : function(){
-					me = NTC_OperationObject;
-					me.MainPanel.down("[itemId=templates]").getStore().proxy.extraParams.SendType = 
-						this.getValue();
-					me.MainPanel.down("[itemId=templates]").getStore().load();
-					me.MainPanel.down("[itemId=AddToTemplates]").enable();
+			xtype : "container",
+			layout : "hbox",
+			items :	[{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					fields : ['id','title'],
+					data : [
+						['SMS', 'SMS'],
+						['EMAIL', 'EMAIL'],
+						['LETTER', 'LETTER']
+					]				
+				}),
+				displayField : "title",
+				valueField : "id",
+				labelWidth : 60,
+				fieldLabel : "نوع ارسال",
+				name : "SendType",
+				listeners : {
+					select : function(){
+						me = NTC_OperationObject;
+						me.MainPanel.down("[itemId=templates]").getStore().proxy.extraParams.SendType = 
+							this.getValue();
+						me.MainPanel.down("[itemId=templates]").getStore().load();
+						me.MainPanel.down("[itemId=AddToTemplates]").enable();
+						
+						if(this.getValue() == "LETTER")
+							me.MainPanel.down("[name=GroupLetter]").enable();
+					}
 				}
-			}
+			},{
+				xtype : "checkbox",
+				width : 110,
+				boxLabel : "ارسال گروهی نامه",
+				boxValue : "YES",
+				disabled : true,
+				name : "GroupLetter"
+			},{
+				xtype : "button",
+				iconCls : "help",
+				tooltip : "در ارسال گروهی یک نامه ایجاد شده"+
+						" و افراد فایل پیوست به عنوان ذینفعان نامه تعریف می شوند."+
+						" نامه به صورت پیش نویس در باکس شما خواهد بود"+
+						 "<br> در غیر اینصورت"+
+						" برای هر یک از افراد فایل پیوست یک نامه جدا ایجاد و ارسال می گردد.",
+				width : 50
+			}]
 		},{
 			xtype : "textfield",
 			name : "title",
-			fieldLabel : "شرح"
+			fieldLabel : "عنوان"
 		},{
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({
@@ -83,6 +108,13 @@ function NTC_Operation(){
 			colspan : 2,
 			width : 730,
 			html : "<div id='NoticeEditor'></div>"
+		},{
+			xtype : "container",
+			colspan : 2,
+			width : 730,
+			html : "برای جایگزینی اطلاعات فایل excel در متن از فرمت [col(no)] استفاده کنید. به عنوان مثال : [col1]"+
+				"<br> ستون اول فایل excel باید شماره شناسایی افراد باشد"
+			
 		}],
 		buttons :[{
 			text : "اضافه متن به الگوها",

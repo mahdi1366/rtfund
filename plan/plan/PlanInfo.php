@@ -7,6 +7,10 @@
 require_once '../header.inc.php';
 require_once 'plan.class.php';
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 require_once inc_dataGrid;
 require_once inc_component;
 
@@ -49,7 +53,7 @@ if($_SESSION["USER"]["IsCustomer"] == "YES" &&
 		($PlanObj->StepID == STEPID_RAW || $PlanObj->StepID == STEPID_RETURN_TO_CUSTOMER))
 	$readOnly = false;
 
-if(isset($_SESSION["USER"]["framework"]) && $PlanObj->StepID != STEPID_SEND_SUPPORTER)
+if(isset($_SESSION["USER"]["framework"]) && $PlanObj->StepID != STEPID_SEND_SUPPORTER && $accessObj->EditFlag)
 	$readOnly = false;
 
 if(isset($_POST["ReadOnly"]) && $_POST["ReadOnly"] == "true")

@@ -6,6 +6,10 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $dgh = new sadaf_datagrid("dgh1",$js_prefix_address."cheques.data.php?task=SelectChequeStatuses","div_dgu");
 
 $dgh->addColumn("","RowID",'string',true);
@@ -19,17 +23,21 @@ $col=$dgh->addColumn("وضعیت مقصد", "DstID");
 $col->editor = ColumnEditor::ComboBox($temp, "InfoID", "InfoDesc");
 $col->width = 200;
 
-$col = $dgh->addColumn("حذف", "", "string");
-$col->renderer = "ChequeStatuses.deleteRender";
-$col->width = 10;
+if($accessObj->RemoveFlag)
+{
+	$col = $dgh->addColumn("حذف", "", "string");
+	$col->renderer = "ChequeStatuses.deleteRender";
+	$col->width = 10;
+}
+if($accessObj->AddFlag)
+{
+	$dgh->addButton = true;
+	$dgh->addHandler = "function(v,p,r){ return ChequeStatusesObject.Add(v,p,r);}";
 
-$dgh->addButton = true;
-$dgh->addHandler = "function(v,p,r){ return ChequeStatusesObject.Add(v,p,r);}";
+	$dgh->enableRowEdit = true ;
+	$dgh->rowEditOkHandler = "function(v,p,r){ return ChequeStatuses.Save(v,p,r);}";
+}
 $dgh->title ="تبدیل وضعیت های چک ها";
-
-$dgh->enableRowEdit = true ;
-$dgh->rowEditOkHandler = "function(v,p,r){ return ChequeStatuses.Save(v,p,r);}";
-
 $dgh->emptyTextOfHiddenColumns=true;
 $dgh->width = 600;
 $dgh->EnableSearch = false;

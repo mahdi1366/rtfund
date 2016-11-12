@@ -6,12 +6,20 @@
 
 require_once '../header.inc.php';
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 ?>
 <script>
 ComputeProfit.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+	
 	DocID : "",
 
 	get : function(elementID){
@@ -36,6 +44,7 @@ function ComputeProfit()
 		}],
 		buttons : [{
 			text : "صدور سند سود سهام",
+			disabled : this.AddAccess ? false : true,
 			iconCls : "account",
 			handler : function()
 			{
@@ -71,6 +80,7 @@ function ComputeProfit()
 			}
 		},{
 			text : "ابطال سند صادر شده",
+			disabled : this.AddAccess ? false : true,
 			iconCls : "undo",
 			itemId : "btn_cancel",
 			disabled : true,

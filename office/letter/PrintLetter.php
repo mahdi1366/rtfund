@@ -208,8 +208,7 @@ if($LetterObj->OuterCopies != "")
 									<div style="float:right;width:20%;font-family: titr"> فرستنده : </div>
 									<div style="float:left;width:80%;">
 										<?= SoftwareName ?><br>
-										<?= OWNER_ADDRESS1 ?><br>
-										<?= OWNER_ADDRESS2 ?>
+										<?= OWNER_ADDRESS ?><br>
 									</div>
 								</div>
 							</div>

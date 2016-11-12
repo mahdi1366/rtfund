@@ -7,7 +7,12 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $reportOnly = false;
+$PersonID = "";
 if(!empty($_REQUEST["reportOnly"]))
 {
 	$reportOnly = true;
@@ -63,6 +68,10 @@ $grid = $dg->makeGrid_returnObjects();
 SavingLoan.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
+	
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
 	
 	reportOnly : <?= $reportOnly ? "true" : "false" ?>,
 	
@@ -228,6 +237,7 @@ SavingLoan.prototype.MakeInfoPanel = function(){
 		}],
 		buttons :[{
 			text : "ایجاد وام",
+			disabled : this.AddAccess ? false : true,
 			iconCls : "save",
 			handler : function(){ SavingLoanObject.CreateLoan(); }
 		}]

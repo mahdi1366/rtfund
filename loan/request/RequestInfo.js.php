@@ -7,6 +7,7 @@
 RequestInfo.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
+	MenuID : '<?= $_POST["MenuID"] ?>',
 
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
@@ -192,7 +193,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 	
 	if(record.data.imp_VamCode*1 > 0)
 	{
-		if(this.RequestRecord.data.IsEnded == "NO")
+		if(this.EditAccess && this.RequestRecord.data.IsEnded == "NO")
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
 		
@@ -204,16 +205,16 @@ RequestInfo.prototype.OperationMenu = function(e){
 		if(record.data.StatusID == "70")
 			op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
 			handler : function(){ return RequestInfoObject.StartFlow(); }});
-		if(firstPart)
+		if(this.EditAccess && firstPart)
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
-
-		op_menu.add({text: 'حذف',iconCls: 'remove', 
+		if(this.RemoveAccess)
+			op_menu.add({text: 'حذف',iconCls: 'remove', 
 			handler : function(){ return RequestInfoObject.DeletePart(); }});				
 	}	
 	if(record.data.IsEnded == "YES")
 	{
-		if(firstPart && record.data.IsDocRegister == "NO" && this.RequestRecord.data.IsEnded == "NO")
+		if(this.EditAccess && firstPart && record.data.IsDocRegister == "NO" && this.RequestRecord.data.IsEnded == "NO")
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
 	}		
@@ -1947,6 +1948,7 @@ RequestInfo.prototype.LoadInstallments = function(){
 	
 	this.InstallmentsWin.loader.load({
 		params : {
+			MenuID : this.MenuID,
 			ExtTabID : this.InstallmentsWin.getEl().id,
 			RequestID : this.RequestID
 		}
@@ -1984,6 +1986,7 @@ RequestInfo.prototype.LoadBackPays = function(){
 	
 	this.PayWin.loader.load({
 		params : {
+			MenuID : this.MenuID,
 			ExtTabID : this.PayWin.getEl().id,
 			RequestID : this.RequestID
 		}
@@ -2083,6 +2086,7 @@ RequestInfo.prototype.LoadPayments = function(){
 	
 	this.PaymentWin.loader.load({
 		params : {
+			MenuID : this.MenuID,
 			ExtTabID : this.PaymentWin.getEl().id,
 			RequestID : this.RequestID
 		}
@@ -2114,6 +2118,7 @@ RequestInfo.prototype.ShowMessages = function(){
 
 		this.messagesWin.loader.load({
 			params : {
+				MenuID : this.MenuID,
 				ExtTabID : this.messagesWin.getEl().id,
 				RequestID : this.RequestID
 			}
@@ -2153,6 +2158,7 @@ RequestInfo.prototype.ShowEvents = function(){
 		this.EventsWin.center();	
 		this.EventsWin.loader.load({
 			params : {
+				MenuID : this.MenuID,
 				ExtTabID : this.EventsWin.getEl().id,
 				RequestID : this.RequestID
 			}
@@ -2193,6 +2199,7 @@ RequestInfo.prototype.ShowCosts = function(){
 	this.CostsWin.center();	
 	this.CostsWin.loader.load({
 		params : {
+			MenuID : this.MenuID,
 			ExtTabID : this.CostsWin.getEl().id,
 			RequestID : this.RequestID
 		}

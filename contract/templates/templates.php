@@ -8,20 +8,28 @@ ini_set("display_errors", "On");
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "templates.data.php?task=SelectTemplates", "div_dg");
 
 $dg->addColumn("شماره الگو", "TemplateID");
 
 $dg->addColumn("عنوان", "TemplateTitle");
 
-$col = $dg->addColumn("حذف", "TemplateID");
-$col->sortable = false;
-$col->renderer = "function(v,p,r){return Templates.OperationRender(v,p,r);}";
-$col->width = 40;
-
-$dg->addButton("", "ایجاد الگوی جدید", "add", "function(){TemplatesObject.ShowNewTemplateForm();}");
-$dg->addButton("", "کپی الگو", "copy", "function(){TemplatesObject.copyTemplate();}");
-
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("حذف", "TemplateID");
+	$col->sortable = false;
+	$col->renderer = "function(v,p,r){return Templates.OperationRender(v,p,r);}";
+	$col->width = 40;
+}
+if($accessObj->AddFlag)
+{
+	$dg->addButton("", "ایجاد الگوی جدید", "add", "function(){TemplatesObject.ShowNewTemplateForm();}");
+	$dg->addButton("", "کپی الگو", "copy", "function(){TemplatesObject.copyTemplate();}");
+}
 $dg->title = "لیست الگوهای قرارداد";
 $dg->DefaultSortField = "TemplateID";
 $dg->emptyTextOfHiddenColumns = true;
