@@ -8,6 +8,9 @@ require_once inc_dataGrid;
 
 $LetterID = !empty($_POST["LetterID"]) ? $_POST["LetterID"] : "";
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
 ?>
 
 <script>
@@ -18,6 +21,10 @@ Letter.prototype = {
 
 	LetterID : '<?= $LetterID ?>',
 	LoadEditor : false,
+	
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -450,6 +457,7 @@ Letter.prototype.BuildForms = function(){
 		}],
 		buttons :[{
 			text : "ذخیره",
+			disabled : this.AddAccess ? false : true,
 			iconCls : "save",
 			handler : function(){
 				LetterObject.SaveLetter(false);
@@ -457,6 +465,7 @@ Letter.prototype.BuildForms = function(){
 		},{
 			text : "اضافه متن نامه به الگوها",
 			iconCls : "add",
+			disabled : this.AddAccess ? false : true,
 			itemId : "AddToTemplates",
 			disabled : true,
 			handler : function(){ LetterObject.AddToTemplates() }

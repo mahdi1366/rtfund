@@ -6,6 +6,10 @@
 
 require_once '../header.inc.php';
 require_once inc_dataGrid;
+
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
 require_once 'ManageForms.js.php';
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "wfm.data.php?task=SelectAllForms", "grid_div");

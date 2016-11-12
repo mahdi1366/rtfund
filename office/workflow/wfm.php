@@ -5,6 +5,11 @@
 //-----------------------------
 include_once("../header.inc.php");
 require_once inc_dataGrid;
+
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 require_once 'wfm.js.php';
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "wfm.data.php?task=SelectAllFlows","");
@@ -13,7 +18,8 @@ $col = $dg->addColumn("عنوان گردش","FlowDesc","string");
 $col->editor = ColumnEditor::TextField();
 
 $col = $dg->addColumn("آیتم مورد نظر", "ObjectType", "string");
-$col->editor = ColumnEditor::ComboBox(
+if($accessObj->EditFlag && $accessObj->AddFlag)
+	$col->editor = ColumnEditor::ComboBox(
 		PdoDataAccess::runquery("select * from BaseInfo where typeID=11"), "InfoID", "InfoDesc");
 $col->width = 200;
 
@@ -21,23 +27,28 @@ $col = $dg->addColumn("مراحل","","");
 $col->renderer = "WFM.StepsRender";
 $col->sortable = false;
 $col->width = 50;
-
-$col = $dg->addColumn("حذف","FlowID","");
-$col->renderer = "WFM.deleteRender";
-$col->sortable = false;
-$col->width = 40;
-
-$dg->addButton = true;
-$dg->addHandler = "function(){WFMObject.Adding();}";
-
-$dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(v,p,r){return WFMObject.saveData(v,p,r);}";
-
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("حذف","FlowID","");
+	$col->renderer = "WFM.deleteRender";
+	$col->sortable = false;
+	$col->width = 40;
+}
+if($accessObj->AddFlag)
+{
+	$dg->addButton = true;
+	$dg->addHandler = "function(){WFMObject.Adding();}";
+}
+if($accessObj->EditFlag && $accessObj->AddFlag)
+{
+	$dg->editorGrid = true;
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(v,p,r){return WFMObject.saveData(v,p,r);}";
+}
 $dg->height = 350;
 $dg->width = 600;
 $dg->DefaultSortField = "FlowID";
 $dg->autoExpandColumn = "FlowDesc";
-$dg->editorGrid = true;
 $dg->title = "مدیریت گردش های کار";
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;
@@ -80,17 +91,23 @@ $col->renderer = "WFM.downRender";
 $col->sortable = false;
 $col->width = 30;
 
-$col = $dg->addColumn("حذف","","");
-$col->renderer = "WFM.deleteStepRender";
-$col->sortable = false;
-$col->width = 40;
-
-$dg->addButton = true;
-$dg->addHandler = "function(){WFMObject.AddStep();}";
-
-$dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(v,p,r){return WFMObject.saveStep(v,p,r);}";
-
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("حذف","","");
+	$col->renderer = "WFM.deleteStepRender";
+	$col->sortable = false;
+	$col->width = 40;
+}
+if($accessObj->AddFlag)
+{
+	$dg->addButton = true;
+	$dg->addHandler = "function(){WFMObject.AddStep();}";
+}
+if($accessObj->EditFlag && $accessObj->AddFlag)
+{
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(v,p,r){return WFMObject.saveStep(v,p,r);}";
+}
 $dg->height = 400;
 $dg->width = 600;
 $dg->DefaultSortField = "StepID";

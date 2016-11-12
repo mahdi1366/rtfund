@@ -8,6 +8,10 @@ WarrentyRequest.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -206,11 +210,13 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 	
 	if(record.data.StatusID == "<?= WAR_STEPID_RAW ?>")
 	{
-		op_menu.add({text: 'ویرایش درخواست',iconCls: 'edit', 
-		handler : function(){ return WarrentyRequestObject.editRequest(); }});
+		if(this.EditAccess)
+			op_menu.add({text: 'ویرایش درخواست',iconCls: 'edit', 
+			handler : function(){ return WarrentyRequestObject.editRequest(); }});
 	
-		op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
-		handler : function(){ return WarrentyRequestObject.deleteRequest(); }});
+		if(this.RemoveAccess)
+			op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
+			handler : function(){ return WarrentyRequestObject.deleteRequest(); }});
 	
 		op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
 			handler : function(){ return WarrentyRequestObject.StartFlow(); }});
@@ -218,18 +224,20 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 	
 	if(record.data.StatusID == "<?= WAR_STEPID_CONFIRM ?>")
 	{
-		if(record.data.DocID == "" || record.data.DocID == null)
-			op_menu.add({text: 'صدور سند',iconCls: 'send',
-			handler : function(){ return WarrentyRequestObject.BeforeRegDoc(1); }});
-		else if(record.data.DocStatus == "RAW")
+		if(this.EditAccess)
 		{
-			op_menu.add({text: 'اصلاح سند',iconCls: 'edit',
-			handler : function(){ return WarrentyRequestObject.BeforeRegDoc(2); }});
-		
-			op_menu.add({text: 'برگشت سند',iconCls: 'undo',
-			handler : function(){ return WarrentyRequestObject.ReturnWarrentyDoc(); }})
+			if(record.data.DocID == "" || record.data.DocID == null)
+				op_menu.add({text: 'صدور سند',iconCls: 'send',
+				handler : function(){ return WarrentyRequestObject.BeforeRegDoc(1); }});
+			else if(record.data.DocStatus == "RAW")
+			{
+				op_menu.add({text: 'اصلاح سند',iconCls: 'edit',
+				handler : function(){ return WarrentyRequestObject.BeforeRegDoc(2); }});
+
+				op_menu.add({text: 'برگشت سند',iconCls: 'undo',
+				handler : function(){ return WarrentyRequestObject.ReturnWarrentyDoc(); }})
+			}
 		}
-		
 		op_menu.add({text: 'چاپ ضمانت نامه',iconCls: 'print',
 			handler : function(){ return WarrentyRequestObject.Print(); }});
 	}

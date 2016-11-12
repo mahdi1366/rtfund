@@ -21,9 +21,12 @@ $col = $dg->addColumn("تاریخ رویداد", "EventDate", GridColumn::Column
 $col->editor = ColumnEditor::SHDateField();
 $col->width = 100;
 
+$col = $dg->addColumn("ثبت کننده", "RegFullname");
+$col->width = 120;
+
 $col = $dg->addColumn("شماره نامه", "LetterID");
 $col->renderer = "LoanEvent.LetterRender";
-$col->editor = ColumnEditor::NumberField();
+$col->editor = ColumnEditor::NumberField(true);
 $col->width = 100;
 
 $dg->enableRowEdit = true;

@@ -5,6 +5,11 @@
 //-----------------------------
 include_once("../header.inc.php");
 require_once inc_dataGrid;
+
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 require_once 'forms.js.php';
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "vote.data.php?task=SelectAllForms","");
@@ -65,22 +70,28 @@ $col->renderer = "VOT_Form.previewRender";
 $col->sortable = false;
 $col->width = 40;
 
-$col = $dg->addColumn("حذف","FormID","");
-$col->renderer = "VOT_Form.deleteRender";
-$col->sortable = false;
-$col->width = 40;
-
-$dg->addButton = true;
-$dg->addHandler = "function(){VOT_FormObject.Adding();}";
-
-$dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(v,p,r){return VOT_FormObject.saveData(v,p,r);}";
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("حذف","FormID","");
+	$col->renderer = "VOT_Form.deleteRender";
+	$col->sortable = false;
+	$col->width = 40;
+}
+if($accessObj->AddFlag)
+{
+	$dg->editorGrid = true;
+	
+	$dg->addButton = true;
+	$dg->addHandler = "function(){VOT_FormObject.Adding();}";
+	
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(v,p,r){return VOT_FormObject.saveData(v,p,r);}";
+}
 
 $dg->height = 350;
 $dg->width = 700;
 $dg->DefaultSortField = "FormID";
 $dg->autoExpandColumn = "FormTitle";
-$dg->editorGrid = true;
 $dg->title = "فرم های نظر سنجی";
 $dg->EnablePaging = true;
 $dg->EnableSearch = false;
@@ -112,18 +123,21 @@ $col = $dg->addColumn("","","");
 $col->renderer = "VOT_Form.GroupdownRender";
 $col->sortable = false;
 $col->width = 30;
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("حذف","","");
+	$col->renderer = "VOT_Form.deleteGroupRender";
+	$col->sortable = false;
+	$col->width = 40;
+}
+if($accessObj->AddFlag){
+	
+	$dg->addButton = true;
+	$dg->addHandler = "function(){VOT_FormObject.AddGroup();}";
 
-$col = $dg->addColumn("حذف","","");
-$col->renderer = "VOT_Form.deleteGroupRender";
-$col->sortable = false;
-$col->width = 40;
-
-$dg->addButton = true;
-$dg->addHandler = "function(){VOT_FormObject.AddGroup();}";
-
-$dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(v,p,r){return VOT_FormObject.saveGroup(v,p,r);}";
-
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(v,p,r){return VOT_FormObject.saveGroup(v,p,r);}";
+}
 $dg->height = 140;
 $dg->width = 500;
 $dg->DefaultSortField = "ordering";
@@ -179,21 +193,25 @@ $col = $dg->addColumn("","","");
 $col->renderer = "VOT_Form.downRender";
 $col->sortable = false;
 $col->width = 30;
-
-$col = $dg->addColumn("حذف","","");
-$col->renderer = "VOT_Form.deleteItemRender";
-$col->sortable = false;
-$col->width = 40;
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("حذف","","");
+	$col->renderer = "VOT_Form.deleteItemRender";
+	$col->sortable = false;
+	$col->width = 40;
+}
 
 $dg->EnableGrouping = true;
 $dg->DefaultGroupField = "GroupID";
 
-$dg->addButton = true;
-$dg->addHandler = "function(){VOT_FormObject.AddItem();}";
+if($accessObj->AddFlag)
+{
+	$dg->addButton = true;
+	$dg->addHandler = "function(){VOT_FormObject.AddItem();}";
 
-$dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(v,p,r){return VOT_FormObject.saveItem(v,p,r);}";
-
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(v,p,r){return VOT_FormObject.saveItem(v,p,r);}";
+}
 $dg->height = 400;
 $dg->width = 790;
 $dg->DefaultSortField = "ordering";

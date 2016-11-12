@@ -174,7 +174,7 @@ function ChangeStatus(){
 	
 	$result = $obj->Edit();
 	
-	if($obj->ReqType == "CORRECT")
+	/*if($obj->ReqType == "CORRECT")
 	{
 		$obj2 = new ATN_traffic();
 		$obj2->IsSystemic = "NO";
@@ -183,7 +183,7 @@ function ChangeStatus(){
 		$obj2->TrafficDate = $obj->FromDate;
 		$obj2->TrafficTime = $obj->StartTime;
 		$result = $obj2->Add();
-	}
+	}*/
 	
 	echo Response::createObjectiveResponse($result, "");
 	die();

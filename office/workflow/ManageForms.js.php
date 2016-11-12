@@ -8,6 +8,10 @@ ManageForm.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -31,12 +35,14 @@ ManageForm.prototype.OperationMenu = function(e){
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
 	
-	op_menu.add({text: 'تغییر وضعیت',iconCls: 'refresh', 
-	handler : function(){ return ManageFormObject.SetStatus(record); }});
+	if(this.EditAccess)
+	{
+		op_menu.add({text: 'تغییر وضعیت',iconCls: 'refresh', 
+		handler : function(){ return ManageFormObject.SetStatus(record); }});
 	
-	op_menu.add({text: 'اطلاعات آیتم',iconCls: 'info2', 
-		handler : function(){ return ManageFormObject.FormInfo(); }});
-	
+		op_menu.add({text: 'اطلاعات آیتم',iconCls: 'info2', 
+			handler : function(){ return ManageFormObject.FormInfo(); }});
+	}
 	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
 		handler : function(){ return ManageFormObject.ShowHistory(); }});
 	

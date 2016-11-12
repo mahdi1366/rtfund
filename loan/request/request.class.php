@@ -520,6 +520,7 @@ class LON_events extends OperationClass {
 
     public $EventID;
 	public $RequestID;
+	public $RegPersonID;
     public $EventTitle;
     public $EventDate;
 	public $LetterID;
@@ -531,6 +532,14 @@ class LON_events extends OperationClass {
         parent::__construct($id);
     }
 
+	static function Get($where = '', $whereParams = array()) {
+		
+		return PdoDataAccess::runquery_fetchMode("
+			select e.*, concat_ws(' ',CompanyName, fname,lname) RegFullname
+			from LON_events e left join BSC_persons on(PersonID=RegPersonID)
+			where 1=1 " . $where, $whereParams);
+	}
+	
 }
 
 class LON_costs extends OperationClass

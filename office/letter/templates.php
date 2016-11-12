@@ -6,6 +6,10 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 $dgh = new sadaf_datagrid("dgh1",$js_prefix_address."letter.data.php?task=SelectTemplates","div_dg");
 
 $dgh->addColumn("","TemplateID",'string',true);
@@ -16,10 +20,12 @@ $col=$dgh->addColumn("متن الگو", "context");
 $col->renderer="LetterTemplate.ContextRender";
 $col->width = 60;
 
-$col = $dgh->addColumn("حذف", "", "string");
-$col->renderer = "LetterTemplate.deleteRender";
-$col->width = 40;
-
+if($accessObj->RemoveFlag)
+{
+	$col = $dgh->addColumn("حذف", "", "string");
+	$col->renderer = "LetterTemplate.deleteRender";
+	$col->width = 40;
+}
 $dgh->emptyTextOfHiddenColumns=true;
 $dgh->width = 600;
 $dgh->DefaultSortField = "TemplateTitle";
@@ -36,6 +42,10 @@ LetterTemplate.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : "<?= $js_prefix_address ?>",
 
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+	
 	TemplateID : 0,
 	
 	get : function(elementID){
@@ -81,6 +91,7 @@ LetterTemplate.prototype.ShowContext = function(){
 			}],
 			buttons :[{
 				text : "ذخیره",
+				disabled : this.AddAccess ? false : true,
 				iconCls  : "save",
 				handler : function(){
 					me = LetterTemplateObject;

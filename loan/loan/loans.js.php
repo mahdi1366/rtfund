@@ -55,6 +55,7 @@ function Loan(){
 						fieldLabel : "عنوان گروه"
 					},{
 						xtype : "button",
+						disabled : this.AddAccess ? false : true,
 						text: "ایجاد گروه",
 						handler: function(){
 
@@ -84,6 +85,7 @@ function Loan(){
 			}],
 		buttons:[{
 				text : "حذف گروه",
+				disabled : this.RemoveAccess ? false : true,
 				iconCls : "remove",
 				handler : function(){
 					LoanObject.DeleteGroup(this.up('form').down('[name=GroupID]').getValue());
