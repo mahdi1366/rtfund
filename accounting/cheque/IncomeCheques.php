@@ -624,7 +624,10 @@ IncomeCheque.prototype.SaveOuterCheque = function(){
 		},
 		failure : function(form,action)
 		{
-			Ext.MessageBox.alert("Error","عملیات مورد نظر با شکست مواجه شد");
+			if(action.result.data == "")
+				Ext.MessageBox.alert("Error","عملیات مورد نظر با شکست مواجه شد");
+			else
+				Ext.MessageBox.alert("Error", action.result.data);
 			mask.hide();
 		}
 	});

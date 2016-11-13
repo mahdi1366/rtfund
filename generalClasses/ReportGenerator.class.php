@@ -431,8 +431,8 @@ class ReportGenerator {
 
 		// row number ----------------------------
 		if ($this->rowNumber) {
-			echo "<td height=21px style='padding:2px;direction:" . $this->columns[0]->direction . "' 
-						border='$this->border' align='" . $this->columns[0]->align . "'>
+			echo "<td height=21px width=40px style='padding:2px;direction:" . $this->columns[0]->direction . "' 
+						border='$this->border' align='center'>
 				<font color = '$this->body_textcolor' style='font-size:11px'>&nbsp;";
 			echo ($index + 1) . "</font></td>";
 		}

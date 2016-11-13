@@ -471,7 +471,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$dt = PdoDataAccess::runquery("select * from DMS_documents 
 		join BaseInfo b on(InfoID=DocType AND TypeID=8)
 		join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
-		where b.param1=1 AND ObjectType='loan' AND ObjectID=?", array($ReqObj->RequestID));
+		where IsConfirm='YES' AND b.param1=1 AND ObjectType='loan' AND ObjectID=?", array($ReqObj->RequestID));
 	$SumAmount = 0;
 	$countAmount = 0;
 	
@@ -491,7 +491,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 					group by DocumentID
 				) t on(d.DocumentID=t.DocumentID)
 				
-			where b.param1=1 AND paramType='currencyfield' AND ObjectType='loan' AND ObjectID=?",
+			where IsConfirm='YES' AND b.param1=1 AND paramType='currencyfield' AND ObjectType='loan' AND ObjectID=?",
 			array($ReqObj->RequestID), $pdo);
 		
 		foreach($dt as $row)

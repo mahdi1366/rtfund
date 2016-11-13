@@ -128,7 +128,8 @@ $grid = $dg->makeGrid_returnObjects();
 ManageDocument.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
-
+	access : <?= $access ? "true" : "false" ?>,
+	
 	pageIndex : 1,
 	
 	get : function(elementID){
@@ -397,18 +398,19 @@ ManageDocument.ShowFile = function(DocumentID, ObjectID){
 
 ManageDocument.OperationRender = function(v,p,r){
 	
-	if(r.data.IsConfirm == "YES" || r.data.RegPersonID != "<?= $_SESSION["USER"]["PersonID"] ?>")
+	if(r.data.IsConfirm == "YES")
 		return "";
-	
-	return "<div align='center' title='ویرایش' class='edit' "+
-		"onclick='ManageDocumentObject.EditDocument();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:20px;height:16;float:right'></div>" +
-	
-	"<div align='center' title='حذف' class='remove' "+
-		"onclick='ManageDocumentObject.DeleteDocument();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:20px;height:16;float:right'></div>" ;		
+
+	if(ManageDocumentObject.access)
+		return "<div align='center' title='ویرایش' class='edit' "+
+			"onclick='ManageDocumentObject.EditDocument();' " +
+			"style='background-repeat:no-repeat;background-position:center;" +
+			"cursor:pointer;width:20px;height:16;float:right'></div>" +
+
+		"<div align='center' title='حذف' class='remove' "+
+			"onclick='ManageDocumentObject.DeleteDocument();' " +
+			"style='background-repeat:no-repeat;background-position:center;" +
+			"cursor:pointer;width:20px;height:16;float:right'></div>" ;		
 }
 
 ManageDocument.commentRender = function(v,p,r){

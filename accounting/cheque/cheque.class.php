@@ -33,7 +33,6 @@ class ACC_OuterCheques extends OperationClass{
 				cc.CostCode,
 				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc) CostDesc,
 				b.BankDesc, 
-				bi.InfoDesc PayTypeDesc, 
 				bi2.InfoDesc ChequeStatusDesc,
 				d.LocalNo,
 				d.DocStatus
@@ -46,11 +45,12 @@ class ACC_OuterCheques extends OperationClass{
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
 
 			left join ACC_banks b on(ChequeBank=BankID)
-			left join BaseInfo bi2 on(bi2.TypeID=16 AND bi2.InfoID=p.ChequeStatus)
+			left join BaseInfo bi2 on(bi2.TypeID=16 AND bi2.InfoID=o.ChequeStatus)
 			
 			left join ACC_DocItems di on(SourceID=OuterChequeID AND SourceType=" . DOCTYPE_OUTERCHEQUE . ")
 			left join ACC_docs d on(di.DocID=d.DocID)
-		";
+			
+			where 1=1 " . $where;
 		
 		return parent::runquery_fetchMode($query, $param);
 	}
@@ -65,6 +65,19 @@ class ACC_OuterCheques extends OperationClass{
 				$_SESSION["USER"]["PersonID"]
 			),$pdo);
 	}
+
+	function Add($pdo = null) {
+		
+		$dt = self::Get(" AND ChequeNo=? AND ChequeDate=?", array($this->ChequeNo, DateModules::shamsi_to_miladi($this->ChequeDate)));
+		if($dt->rowCount() > 0)
+		{
+			ExceptionHandler::PushException("چک دیگری با این شماره و تاریخ قبلا ثبت شده است");
+			return false;
+		}
+		
+		parent::Add($pdo);
+	}
+	
 }
 
 ?>

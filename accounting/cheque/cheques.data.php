@@ -282,6 +282,12 @@ function ChangeChequeStatus(){
 	$OuterChequeID = $_POST["OuterChequeID"];
 	$Status = $_POST["StatusID"];
 	
+	$TafsiliID = isset($_POST["TafsiliID"]) ? $_POST["TafsiliID"] : "";
+	$TafsiliID2 = isset($_POST["TafsiliID2"]) ? $_POST["TafsiliID2"] : "";
+	$BranchID = isset($_POST["BranchID"]) ? $_POST["BranchID"] : "";
+	$FirstCostID = isset($_POST["FirstCostID"]) ? $_POST["FirstCostID"] : "";
+	$SecondCostID = isset($_POST["SecondCostID"]) ? $_POST["SecondCostID"] : "";
+	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
@@ -299,21 +305,21 @@ function ChangeChequeStatus(){
 			if($PersonObj->IsSupporter == "YES")
 				$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj,
 						$_POST["CostID"], 
-						$_POST["TafsiliID"], 
-						$_POST["TafsiliID2"], 
+						$TafsiliID, 
+						$TafsiliID2, 
 						isset($_POST["CenterAccount"]) ? true : false,
-						$_POST["BranchID"],
-						$_POST["FirstCostID"],
-						$_POST["SecondCostID"], $pdo);
+						$BranchID,
+						$FirstCostID,
+						$SecondCostID, $pdo);
 			else
 				$result = RegisterCustomerPayDoc(null, $obj, 
 						$_POST["CostID"], 
-						$_POST["TafsiliID"], 
-						$_POST["TafsiliID2"], 
+						$TafsiliID, 
+						$TafsiliID2, 
 						isset($_POST["CenterAccount"]) ? true : false,
-						$_POST["BranchID"],
-						$_POST["FirstCostID"],
-						$_POST["SecondCostID"], $pdo);
+						$BranchID,
+						$FirstCostID,
+						$SecondCostID, $pdo);
 			if(!$result)
 			{
 				$pdo->rollback();
@@ -333,8 +339,11 @@ function ChangeChequeStatus(){
 		$obj->ChequeStatus = $Status;
 		$result = $obj->Edit($pdo);
 
-		$result = RegisterOuterCheque($obj, $_POST["BankTafsili"], 
-			$_POST["AccountTafsili"],$_POST["CenterAccount"],$_POST["BranchID"], $pdo);
+		$result = RegisterOuterCheque($obj, 
+			$TafsiliID,
+			$TafsiliID2,
+			isset($_POST["CenterAccount"]) ? true : false,
+			$BranchID, $pdo);
 		if(!$result)
 		{
 			$pdo->rollback();
@@ -430,7 +439,7 @@ function SaveOuterCheque(){
 	$obj->ChequeStatus = OUERCHEQUE_NOTVOSUL;
 	if(!$obj->Add($pdo))
 	{
-		echo Response::createObjectiveResponse(false, "");
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
 	

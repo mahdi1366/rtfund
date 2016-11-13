@@ -9,7 +9,15 @@ require_once inc_dataGrid;
 $LetterID = !empty($_POST["LetterID"]) ? $_POST["LetterID"] : "";
 
 //................  GET ACCESS  .....................
-$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+if(isset($_POST["MenuID"]))
+	$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+else
+{
+	$accessObj = new FRW_access();
+	$accessObj->AddFlag = true;
+	$accessObj->EditFlag = true;
+	$accessObj->RemoveFlag = true;
+}
 //...................................................
 ?>
 
