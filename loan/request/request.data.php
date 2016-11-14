@@ -863,7 +863,11 @@ function SaveBackPay(){
 	$pdo->beginTransaction();
 	
 	if(empty($obj->BackPayID))
+	{
 		$result = $obj->Add($pdo);
+		if($obj->PayType == "9")
+			RegisterOuterCheque($obj, "","","","",$pdo);
+	}
 	else
 		$result = $obj->Edit($pdo);
 	

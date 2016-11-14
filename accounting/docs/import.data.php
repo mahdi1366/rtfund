@@ -293,7 +293,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$itemObj->TafsiliID2 = $ReqPersonTafsili;
 			$itemObj->CostID = $CostCode_agent_wage;
 			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $AgentYearAmount;
+			$itemObj->CreditorAmount = $totalAgentYearAmount;
 			$itemObj->TafsiliID = FindTafsiliID($curYear, TAFTYPE_YEARS);
 			$itemObj->details = "سهم کارمزد تنفس وام شماره " . $ReqObj->RequestID;
 			if(!$itemObj->Add($pdo))
@@ -2217,6 +2217,11 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 	//---------------- add doc header --------------------
 	if($DocID == "")
 	{
+		if(isset($OuterObj->PayAmount))
+		{
+			
+		}
+		
 		$obj = new ACC_docs();
 		$obj->RegDate = PDONOW;
 		$obj->regPersonID = $_SESSION['USER']["PersonID"];
@@ -2255,6 +2260,8 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 	
 	if($OuterObj->ChequeStatus == OUERCHEQUE_NOTVOSUL)
 	{ 
+		$dt = PdoDataAccess::runquery("select * from ACC_DocItems where CostID=? AND SourceType=? AND SourceID=?")
+		
 		$itemObj->DocID = $obj->DocID;
 		$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
 		$itemObj->DebtorAmount = $__ChequeAmount;
