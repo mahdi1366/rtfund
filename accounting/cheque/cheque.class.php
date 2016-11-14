@@ -75,7 +75,7 @@ class ACC_OuterCheques extends OperationClass{
 			return false;
 		}
 		
-		parent::Add($pdo);
+		return parent::Add($pdo);
 	}
 	
 }

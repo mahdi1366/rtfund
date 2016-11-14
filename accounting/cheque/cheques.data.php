@@ -439,15 +439,16 @@ function SaveOuterCheque(){
 	$obj->ChequeStatus = OUERCHEQUE_NOTVOSUL;
 	if(!$obj->Add($pdo))
 	{
+		//print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
 	
 	ACC_OuterCheques::AddToHistory(0, $obj->OuterChequeID, $obj->ChequeStatus, $pdo);
 	
-	if(!RegisterOuterCheque($obj, 0,0,0,0, $pdo))
+	if(!RegisterOuterCheque($obj, "","","","", $pdo))
 	{
-		echo Response::createObjectiveResponse(false, "");
+		echo Response::createObjectiveResponse(false,ExceptionHandler::GetExceptionsToString());
 		die();
 	}
 	
