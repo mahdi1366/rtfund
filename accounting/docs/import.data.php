@@ -293,7 +293,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$itemObj->TafsiliID2 = $ReqPersonTafsili;
 			$itemObj->CostID = $CostCode_agent_wage;
 			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $AgentYearAmount;
+			$itemObj->CreditorAmount = $totalAgentYearAmount;
 			$itemObj->TafsiliID = FindTafsiliID($curYear, TAFTYPE_YEARS);
 			$itemObj->details = "سهم کارمزد تنفس وام شماره " . $ReqObj->RequestID;
 			if(!$itemObj->Add($pdo))
