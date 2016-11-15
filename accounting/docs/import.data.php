@@ -636,7 +636,8 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$CostCode_pardakhti = FindCostID("721-01-51");
 	$CostCode_bank = FindCostID("101");
 	$CostCode_todiee = FindCostID("660-52");
-
+	$CostCode_agent_wage = FindCostID("200-02");
+	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
 	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
@@ -799,11 +800,29 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$itemObj->SourceID3 = $PayObj->PayID;
 	$itemObj->Add($pdo);
 	// ----------------------------- bank --------------------------------
+	$AgentWage = 0;
+	if($PartObj->CustomerWage*1 > $PartObj->FundWage*1 && $PartObj->AgentReturn == "CUSTOMER")
+	{
+		$totalWage = ComputeWageOfSHekoofa($PartObj);
+		$AgentFactor = ($PartObj->CustomerWage*1-$PartObj->FundWage*1)/$PartObj->CustomerWage*1;
+		$AgentWage = $totalWage*$AgentFactor;
+	
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_agent_wage;
+		$itemObj->DebtorAmount = $AgentWage;
+		$itemObj->CreditorAmount = 0;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $ReqPersonTafsili;
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		$itemObj->Add($pdo);
+	}
+	
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
 	$itemObj->CostID = $CostCode_bank;
 	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = $PayAmount;
+	$itemObj->CreditorAmount = $PayAmount - $AgentWage;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	$itemObj->TafsiliID = $BankTafsili;
 	$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
@@ -1565,7 +1584,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	
 	$TotalWage = round(ComputeWage($PartObj->PartAmount, $PartObj->CustomerWage/100, 
 			$PartObj->InstallmentCount, $YearMonths, $PartObj->PayInterval));
-	$FundWage = round(($PartObj->FundWage/$PartObj->CustomerWage)*$TotalWage);
+	$FundWage = $PartObj->CustomerWage == 0 ? round(($PartObj->FundWage/$PartObj->CustomerWage)*$TotalWage) : 0;
 	$wage = round($PayObj->PayAmount*$FundWage/$PartObj->PartAmount);
 	//----------------- add Doc items ------------------------
 		
@@ -2216,12 +2235,7 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
 	//---------------- add doc header --------------------
 	if($DocID == "")
-	{
-		if(isset($OuterObj->PayAmount))
-		{
-			
-		}
-		
+	{		
 		$obj = new ACC_docs();
 		$obj->RegDate = PDONOW;
 		$obj->regPersonID = $_SESSION['USER']["PersonID"];
@@ -2244,13 +2258,28 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 	{
 		$__ChequeAmount = $OuterObj->ChequeAmount;
 		$__ChequeID = $OuterObj->OuterChequeID;
+		$__SourceID = $OuterObj->OuterChequeID;
+		$__SourceID2 = "";
 		$__TafsiliID = $OuterObj->TafsiliID;
 		$__SourceType = DOCTYPE_OUTERCHEQUE;
 	}
 	else
 	{
+		if($OuterObj->ChequeStatus == OUERCHEQUE_NOTVOSUL)
+		{
+			$dt = PdoDataAccess::runquery("select * from ACC_DocItems 
+			where CostID=? AND SourceType=? AND SourceID=?", array(
+				$CostCode_guaranteeAmount_daryafti,
+				DOCTYPE_DOCUMENT,
+				$OuterObj->BackPayID
+			));
+			if(count($dt) > 0)
+				return true;
+		}
 		$__ChequeAmount = $OuterObj->PayAmount;
 		$__ChequeID = $OuterObj->BackPayID;
+		$__SourceID = $OuterObj->RequestID;
+		$__SourceID2 = $OuterObj->BackPayID;
 		$__TafsiliID = "";
 		$__SourceType = DOCTYPE_DOCUMENT;
 	}
@@ -2260,8 +2289,6 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 	
 	if($OuterObj->ChequeStatus == OUERCHEQUE_NOTVOSUL)
 	{ 
-		$dt = PdoDataAccess::runquery("select * from ACC_DocItems where CostID=? AND SourceType=? AND SourceID=?")
-		
 		$itemObj->DocID = $obj->DocID;
 		$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
 		$itemObj->DebtorAmount = $__ChequeAmount;
@@ -2269,7 +2296,8 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $__TafsiliID;
 		$itemObj->SourceType = $__SourceType;
-		$itemObj->SourceID = $__ChequeID;
+		$itemObj->SourceID = $__SourceID;
+		$itemObj->SourceID2 = $__SourceID2;
 		$itemObj->details = "چک شماره " . $OuterObj->ChequeNo;
 		$itemObj->Add($pdo);
 
@@ -2293,7 +2321,8 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $__TafsiliID;
 		$itemObj->SourceType = $__SourceType;
-		$itemObj->SourceID = $__ChequeID;
+		$itemObj->SourceID = $__SourceID;
+		$itemObj->SourceID2 = $__SourceID2;
 		$itemObj->details = "چک شماره " . $OuterObj->ChequeNo;
 		$itemObj->Add($pdo);
 
