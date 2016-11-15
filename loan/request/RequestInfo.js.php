@@ -1419,6 +1419,11 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						boxLabel : "پرداخت کارمزد هنگام پرداخت وام",
 						name : "WageReturn",
 						inputValue : "CUSTOMER"
+					},{
+						xtype : "radio",						
+						boxLabel : "کسر کارمزد از حساب سرمایه گذار",
+						name : "WageReturn",
+						inputValue : "AGENT"
 					}]
 				},{
 					xtype : "fieldset",
