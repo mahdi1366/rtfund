@@ -518,15 +518,38 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	$startDate = DateModules::miladi_to_shamsi($obj->PartDate);
 	$DelayDuration = DateModules::JDateMinusJDate(
 		DateModules::AddToJDate($startDate, $obj->DelayDays, $obj->DelayMonths), $startDate)+1;
-	//$DelayDuration = $PartObj->DelayMonths*1 + $PartObj->DelayDays*1/30;
-	$TotalDelay = round($obj->PartAmount*$obj->DelayPercent*$DelayDuration/36500);
+	
+	if($obj->DelayDays*1 > 0)
+		$TotalDelay = round($obj->PartAmount*$obj->DelayPercent*$DelayDuration/36500);
+	else
+		$TotalDelay = round($obj->PartAmount*$obj->DelayPercent*$obj->DelayMonths/1200);
 	
 	//-------------------------- installments -----------------------------
+	$MaxWage = max($obj->CustomerWage, $obj->FundWage);
+	$CustomerFactor =	$MaxWage == 0 ? 0 : $obj->CustomerWage/$MaxWage;
+	$FundFactor =		$MaxWage == 0 ? 0 : $obj->FundWage/$MaxWage;
+	$AgentFactor =		$MaxWage == 0 ? 0 : ($obj->CustomerWage-$obj->FundWage)/$MaxWage;
 	
-	$TotalAmount = $obj->PartAmount*1;
-	$TotalAmount += ($obj->WageReturn == "CUSTOMER") ? 0 : $TotalWage;
-	$TotalAmount += ($obj->DelayReturn == "CUSTOMER") ? 0 : $TotalDelay;	
+	$extraAmount = 0;
+	if($obj->WageReturn == "INSTALLMENT")
+	{
+		if($obj->MaxFundWage*1 > 0)
+			$extraAmount += $obj->MaxFundWage;
+		else if($obj->CustomerWage > $obj->FundWage)
+			$extraAmount += round($TotalWage*$FundFactor);
+		else
+			$extraAmount += round($TotalWage*$CustomerFactor);		
+	}		
+	if($obj->AgentReturn == "INSTALLMENT" && $obj->CustomerWage>$obj->FundWage)
+		$extraAmount += round($TotalWage*$AgentFactor);
 
+	if($obj->DelayReturn == "INSTALLMENT")
+		$extraAmount += $TotalDelay*($obj->FundWage/$obj->DelayPercent);
+	if($obj->AgentDelayReturn == "INSTALLMENT" && $obj->DelayPercent>$obj->FundWage)
+		$extraAmount += $TotalDelay*(($obj->DelayPercent-$obj->FundWage)/$obj->DelayPercent);
+
+	$TotalAmount = $obj->PartAmount*1 + $extraAmount;
+	
 	$allPay = ComputeInstallmentAmount($TotalAmount,$obj->InstallmentCount, $obj->PayInterval);
 	
 	if($obj->InstallmentCount > 1)
