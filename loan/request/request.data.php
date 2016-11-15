@@ -1364,6 +1364,8 @@ function GroupSavePay(){
 		$obj->RequestID = $RequestID;
 		$obj->PayAmount = $PayAmount;
 		$obj->IsGroup = "YES";
+		if($obj->PayType == "9")
+			$obj->ChequeStatus = 1;
 		$obj->Add($pdo);
 		
 		$ReqObj = new LON_requests($RequestID);
