@@ -293,7 +293,7 @@ LoanPay.DeleteRender = function(v,p,r){
 	if(r.data.PayRefNo != null &&  r.data.PayRefNo != "")
 		return "";
 	
-	if(r.data.PayType == "9" && r.data.ChequeStatus != "1")
+	if(r.data.PayType == "9")
 		return "";
 	
 	return "<div align='center' title='حذف' class='remove' "+

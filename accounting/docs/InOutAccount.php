@@ -197,31 +197,39 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 			items : [{
 				xtype : "combo",
 				width : 380,
-				store: new Ext.data.SimpleStore({
-					fields:["CostID","CostCode","CostDesc",{
-						name : "title",
-						convert : function(v,r){ return "[ " + r.data.CostCode + " ] " + r.data.CostDesc;}
+				store: new Ext.data.Store({
+					fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+						name : "fullDesc",
+						convert : function(value,record){
+							return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+						}				
 					}],
-					data : [
-						["<?= COSTID_Fund ?>", "100" , "صندوق"],
-						["<?= COSTID_Bank ?>", "101", "بانک"]
-					]
+					proxy: {
+						type: 'jsonp',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
 				}),
 				valueField : "CostID",
 				fieldLabel : "کد حساب",
 				name : "CostID",
-				displayField : "title",
+				displayField : "fullDesc",
 				listeners : {
 					select : function(combo,records){
-						if(records[0].data.CostID == "<?= COSTID_Bank ?>")
+						me = InOutAccountObject;
+						if(records[0].data.TafsiliType != null)
 						{
-							this.up('window').down("[name=TafsiliID]").enable();
-							this.up('window').down("[name=TafsiliID2]").enable();
-						}	
-						else
+							me.mainWin.down("[name=TafsiliID]").setValue();
+							me.mainWin.down("[name=TafsiliID]").getStore().proxy.extraParams.TafsiliType = 
+								records[0].data.TafsiliType;
+							me.mainWin.down("[name=TafsiliID]").getStore().load();
+						}
+						if(records[0].data.TafsiliType2 != null)
 						{
-							this.up('window').down("[name=TafsiliID]").disable();
-							this.up('window').down("[name=TafsiliID2]").disable();
+							me.mainWin.down("[name=TafsiliID2]").setValue();
+							me.mainWin.down("[name=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = 
+								records[0].data.TafsiliType2;
+							me.mainWin.down("[name=TafsiliID2]").getStore().load();
 						}
 							
 					}
@@ -229,45 +237,35 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 			},{
 				xtype : "combo",
 				store: new Ext.data.Store({
-					fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
-						name : "title",
-						convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
-					}],
+					fields:["TafsiliID","TafsiliCode","TafsiliDesc"],
 					proxy: {
 						type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=6',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					}
 				}),
-				emptyText:'انتخاب بانک ...',
 				typeAhead: false,
-				disabled : true,
 				width : 380,
-				fieldLabel : "تفصیلی بانک",
+				fieldLabel : "تفصیلی",
 				valueField : "TafsiliID",
 				name : "TafsiliID",
-				displayField : "title"
+				displayField : "TafsiliDesc"
 			},{
 				xtype : "combo",
 				store: new Ext.data.Store({
-					fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
-						name : "title",
-						convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
-					}],
+					fields:["TafsiliID","TafsiliCode","TafsiliDesc"],
 					proxy: {
 						type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=3',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					}
 				}),
-				emptyText:'انتخاب حساب ...',
 				typeAhead: false,
-				disabled : true,
 				width : 380,
-				fieldLabel : "تفصیلی بانک",
+				fieldLabel : "تفصیلی 2",
 				valueField : "TafsiliID",
 				name : "TafsiliID2",
-				displayField : "title"
+				displayField : "TafsiliDesc"
 			},{
 				xtype : "currencyfield",
 				fieldLabel : "مبلغ",
@@ -291,8 +289,6 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 	this.mode = mode;
 	
 	this.mainWin.down("[name=CostID]").setValue();
-	this.mainWin.down("[name=TafsiliID]").setValue();
-	this.mainWin.down("[name=TafsiliID]").disable();
 	this.mainWin.down("[name=amount]").setValue();
 	
 	this.mainWin.show();	

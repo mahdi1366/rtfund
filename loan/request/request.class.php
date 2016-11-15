@@ -361,7 +361,7 @@ class LON_BackPays extends PdoDataAccess
 			left join ACC_banks b on(ChequeBank=BankID)
 			left join BaseInfo bi2 on(bi2.TypeID=4 AND bi2.InfoID=p.ChequeStatus)
 			
-			left join ACC_DocItems di on(SourceID=RequestID AND SourceID2=BackPayID AND SourceType=5)
+			left join ACC_DocItems di on(SourceID=RequestID AND SourceID2=BackPayID AND SourceType in(8,5))
 			left join ACC_docs d on(di.DocID=d.DocID)
 			
 			where " . $where . " group by BackPayID " . $order, $param);
