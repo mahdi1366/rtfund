@@ -636,7 +636,8 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$CostCode_pardakhti = FindCostID("721-01-51");
 	$CostCode_bank = FindCostID("101");
 	$CostCode_todiee = FindCostID("660-52");
-
+	$CostCode_agent_wage = FindCostID("200-02");
+	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
 	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
@@ -799,11 +800,29 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$itemObj->SourceID3 = $PayObj->PayID;
 	$itemObj->Add($pdo);
 	// ----------------------------- bank --------------------------------
+	$AgentWage = 0;
+	if($PartObj->CustomerWage*1 > $PartObj->FundWage*1 && $PartObj->AgentReturn == "CUSTOMER")
+	{
+		$totalWage = ComputeWageOfSHekoofa($PartObj);
+		$AgentFactor = ($PartObj->CustomerWage*1-$PartObj->FundWage*1)/$PartObj->CustomerWage*1;
+		$AgentWage = $totalWage*$AgentFactor;
+	
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_agent_wage;
+		$itemObj->DebtorAmount = $AgentWage;
+		$itemObj->CreditorAmount = 0;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $ReqPersonTafsili;
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		$itemObj->Add($pdo);
+	}
+	
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
 	$itemObj->CostID = $CostCode_bank;
 	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = $PayAmount;
+	$itemObj->CreditorAmount = $PayAmount - $AgentWage;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	$itemObj->TafsiliID = $BankTafsili;
 	$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
@@ -1565,7 +1584,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	
 	$TotalWage = round(ComputeWage($PartObj->PartAmount, $PartObj->CustomerWage/100, 
 			$PartObj->InstallmentCount, $YearMonths, $PartObj->PayInterval));
-	$FundWage = round(($PartObj->FundWage/$PartObj->CustomerWage)*$TotalWage);
+	$FundWage = $PartObj->CustomerWage == 0 ? round(($PartObj->FundWage/$PartObj->CustomerWage)*$TotalWage) : 0;
 	$wage = round($PayObj->PayAmount*$FundWage/$PartObj->PartAmount);
 	//----------------- add Doc items ------------------------
 		
