@@ -36,6 +36,7 @@ $dg->addColumn("", "PayTypeDesc","", true);
 $dg->addColumn("", "LocalNo","", true);
 $dg->addColumn("", "DocStatus","", true);
 $dg->addColumn("", "ChequeStatus","", true);
+$dg->addColumn("", "IsGroup","", true);
 
 if($editable)
 {
@@ -159,7 +160,7 @@ function LoanPay()
 	this.grid = <?= $grid ?>;
 	this.grid.getView().getRowClass = function(record, index)
 	{
-		if(record.data.ChequeNo*1>0 && record.data.ChequeStatus != "2")
+		if(record.data.IsGroup == "YES")
 			return "yellowRow";
 		return "";
 	}	
@@ -293,7 +294,7 @@ LoanPay.DeleteRender = function(v,p,r){
 	if(r.data.PayRefNo != null &&  r.data.PayRefNo != "")
 		return "";
 	
-	if(r.data.PayType == "9")
+	if(r.data.PayType == "9" && r.data.ChequeStatus != "1")
 		return "";
 	
 	return "<div align='center' title='حذف' class='remove' "+
@@ -503,9 +504,9 @@ LoanPay.prototype.BeforeRegisterDoc = function(mode){
 	}
 	
 	record =  this.grid.getSelectionModel().getLastSelected(); 
-	if(record && record.data.ChequeNo*1 > 0 && record.data.ChequeStatus != "2")
+	if(record && mode != 3 && record.data.PayType == "9")
 	{
-		LoanPayObject.SaveBackPay(record);
+		LoanPayObject.RegisterDoc(mode); 
 		return;
 	}
 	
@@ -547,7 +548,8 @@ LoanPay.prototype.SaveBackPay = function(record){
 
 LoanPay.prototype.RegisterDoc = function(mode){
 	
-	record =  this.grid.getSelectionModel().getLastSelected(); 
+	if(mode != 3)
+		record = this.grid.getSelectionModel().getLastSelected(); 
 	
 	mask = new Ext.LoadMask(this.BankWin, {msg:'در حال ذخیره سازی ...'});
 	mask.show();

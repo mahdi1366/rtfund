@@ -1754,35 +1754,6 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	}
 
 	//---------------------------------------------------------
-	if($PayObj->PayType == "9")
-	{
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		$itemObj->locked = "YES";
-		$itemObj->DocID = $obj->DocID;
-		$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $PayObj->PayAmount;
-		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $LoanPersonTafsili;
-		$itemObj->SourceType = DOCTYPE_DOCUMENT;
-		$itemObj->SourceID = $PayObj->BackPayID;
-		$itemObj->details = "چک شماره " . $PayObj->ChequeNo . " مربوط به وام شماره " . $ReqObj->RequestID;
-		$itemObj->Add($pdo);
-
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType);
-		unset($itemObj->TafsiliID);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		unset($itemObj->details);
-		$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
-		$itemObj->DebtorAmount = $PayObj->PayAmount;
-		$itemObj->CreditorAmount = 0;	
-		$itemObj->Add($pdo);
-	}
-	//---------------------------------------------------------
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
 		
@@ -2201,7 +2172,7 @@ function ReturnEndRequestDoc($ReqObj, $pdo){
 }
 
 //---------------------------------------------------------------
-function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili, 
+function RegisterOuterCheque($OuterObj, $CostID, $TafsiliID, $TafsiliID2, 
 		$CenterAccount, $BranchID, $pdo, $DocID = ""){
 
 	/*@var $OuterObj ACC_OuterCheques */
@@ -2209,7 +2180,6 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 	$CycleID = substr(DateModules::shNow(), 0 , 4);
 	
 	//------------- get CostCodes --------------------
-	$CostCode_bank = FindCostID("101");
 	$CostCode_centerAccount = FindCostID("499");
 	
 	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
@@ -2239,8 +2209,6 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 	{
 		$__ChequeAmount = $OuterObj->ChequeAmount;
 		$__ChequeID = $OuterObj->OuterChequeID;
-		$__SourceID = $OuterObj->OuterChequeID;
-		$__SourceID2 = "";
 		$__TafsiliID = $OuterObj->TafsiliID;
 		$__SourceType = DOCTYPE_OUTERCHEQUE;
 	}
@@ -2259,8 +2227,6 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 		}
 		$__ChequeAmount = $OuterObj->PayAmount;
 		$__ChequeID = $OuterObj->BackPayID;
-		$__SourceID = $OuterObj->RequestID;
-		$__SourceID2 = $OuterObj->BackPayID;
 		$__TafsiliID = "";
 		$__SourceType = DOCTYPE_DOCUMENT;
 	}
@@ -2277,8 +2243,7 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $__TafsiliID;
 		$itemObj->SourceType = $__SourceType;
-		$itemObj->SourceID = $__SourceID;
-		$itemObj->SourceID2 = $__SourceID2;
+		$itemObj->SourceID = $__ChequeID;
 		$itemObj->details = "چک شماره " . $OuterObj->ChequeNo;
 		$itemObj->Add($pdo);
 
@@ -2302,8 +2267,7 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $__TafsiliID;
 		$itemObj->SourceType = $__SourceType;
-		$itemObj->SourceID = $__SourceID;
-		$itemObj->SourceID2 = $__SourceID2;
+		$itemObj->SourceID = $__ChequeID;
 		$itemObj->details = "چک شماره " . $OuterObj->ChequeNo;
 		$itemObj->Add($pdo);
 
@@ -2314,111 +2278,115 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 		$itemObj->Add($pdo);
 	
 		// -------------- bank ---------------
-		if($CenterAccount == "true")
+		if($CostID != "")
 		{
+			if($CenterAccount == "true")
+			{
+				unset($itemObj->ItemID);
+				unset($itemObj->TafsiliType);
+				unset($itemObj->TafsiliType2);
+				unset($itemObj->TafsiliID2);
+				unset($itemObj->TafsiliID);
+				$itemObj->locked = "NO";
+				$itemObj->CostID = $CostCode_centerAccount;
+				$itemObj->DebtorAmount= $__ChequeAmount;
+				$itemObj->CreditorAmount = 0;
+				if(!$itemObj->Add($pdo))
+				{
+					ExceptionHandler::PushException("خطا در ایجاد سند");
+					return false;
+				}
+
+				$Secobj = new ACC_docs();
+				$Secobj->RegDate = PDONOW;
+				$Secobj->regPersonID = $_SESSION['USER']["PersonID"];
+				$Secobj->DocDate = PDONOW;
+				$Secobj->CycleID = $CycleID;
+				$Secobj->BranchID = $BranchID;
+				$Secobj->DocType = $__SourceType;
+				if(!$Secobj->Add($pdo))
+				{
+					ExceptionHandler::PushException("خطا در ایجاد سند");
+					return false;
+				}
+				unset($itemObj->ItemID);
+				unset($itemObj->TafsiliType);
+				unset($itemObj->TafsiliType2);
+				unset($itemObj->TafsiliID2);
+				unset($itemObj->TafsiliID);
+				$itemObj->DocID = $Secobj->DocID;
+				$itemObj->CostID = $CostCode_centerAccount;
+				$itemObj->DebtorAmount= 0;
+				$itemObj->CreditorAmount = $__ChequeAmount;
+				if(!$itemObj->Add($pdo))
+				{
+					ExceptionHandler::PushException("خطا در ایجاد سند");
+					return false;
+				}
+				unset($itemObj->ItemID);
+				unset($itemObj->TafsiliType);
+				unset($itemObj->TafsiliType2);
+				unset($itemObj->TafsiliID2);
+				unset($itemObj->TafsiliID);
+				$CostObj = new ACC_CostCodes($CostID);
+				$itemObj->CostID = $CostID;
+				$itemObj->DebtorAmount= $__ChequeAmount;
+				$itemObj->CreditorAmount = 0;
+				$itemObj->TafsiliType = $CostObj->TafsiliType;
+				if($TafsiliID != "")
+					$itemObj->TafsiliID = $TafsiliID;
+				$itemObj->TafsiliType2 = $CostObj->TafsiliType2;
+				if($TafsiliID2 != "")
+					$itemObj->TafsiliID2 = $TafsiliID2;
+				if(!$itemObj->Add($pdo))
+				{
+					ExceptionHandler::PushException("خطا در ایجاد سند");
+					return false;
+				}
+			}
+			else
+			{
+				unset($itemObj->ItemID);
+				unset($itemObj->TafsiliType);
+				unset($itemObj->TafsiliType2);
+				unset($itemObj->TafsiliID2);
+				unset($itemObj->TafsiliID);
+				$itemObj->locked = "NO";
+				$CostObj = new ACC_CostCodes($CostID);
+				$itemObj->CostID = $CostID;
+				$itemObj->DebtorAmount= $__ChequeAmount;
+				$itemObj->CreditorAmount = 0;
+				$itemObj->TafsiliType = $CostObj->TafsiliType;
+				if($TafsiliID != "")
+					$itemObj->TafsiliID = $TafsiliID;
+				$itemObj->TafsiliType2 = $CostObj->TafsiliType2;
+				if($TafsiliID2 != "")
+					$itemObj->TafsiliID2 = $TafsiliID2;
+				if(!$itemObj->Add($pdo))
+				{
+					ExceptionHandler::PushException("خطا در ایجاد سند");
+					return false;
+				}
+			}
+
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType);
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
 			unset($itemObj->TafsiliID);
 			$itemObj->locked = "NO";
-			$itemObj->CostID = $CostCode_centerAccount;
-			$itemObj->DebtorAmount= $__ChequeAmount;
-			$itemObj->CreditorAmount = 0;
-			if(!$itemObj->Add($pdo))
-			{
-				ExceptionHandler::PushException("خطا در ایجاد سند");
-				return false;
-			}
-
-			$Secobj = new ACC_docs();
-			$Secobj->RegDate = PDONOW;
-			$Secobj->regPersonID = $_SESSION['USER']["PersonID"];
-			$Secobj->DocDate = PDONOW;
-			$Secobj->CycleID = $CycleID;
-			$Secobj->BranchID = $BranchID;
-			$Secobj->DocType = $__SourceType;
-			if(!$Secobj->Add($pdo))
-			{
-				ExceptionHandler::PushException("خطا در ایجاد سند");
-				return false;
-			}
-			unset($itemObj->ItemID);
-			unset($itemObj->TafsiliType);
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
-			unset($itemObj->TafsiliID);
-			$itemObj->DocID = $Secobj->DocID;
-			$itemObj->CostID = $CostCode_centerAccount;
-			$itemObj->DebtorAmount= 0;
+			$itemObj->DocID = $obj->DocID;
+			$itemObj->CostID = $CostID;
+			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $__ChequeAmount;
-			if(!$itemObj->Add($pdo))
-			{
-				ExceptionHandler::PushException("خطا در ایجاد سند");
-				return false;
-			}
-			unset($itemObj->ItemID);
-			unset($itemObj->TafsiliType);
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
-			unset($itemObj->TafsiliID);
-			$itemObj->CostID = $CostCode_bank;
-			$itemObj->DebtorAmount= $__ChequeAmount;
-			$itemObj->CreditorAmount = 0;
-			$itemObj->TafsiliType = TAFTYPE_BANKS;
-			if($BankTafsili != "")
-				$itemObj->TafsiliID = $BankTafsili;
-			$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-			if($AccountTafsili != "")
-				$itemObj->TafsiliID2 = $AccountTafsili;
+			$itemObj->TafsiliType = $OuterObj->TafsiliType;
+			$itemObj->TafsiliID = $__TafsiliID;
 			if(!$itemObj->Add($pdo))
 			{
 				ExceptionHandler::PushException("خطا در ایجاد سند");
 				return false;
 			}
 		}
-		else
-		{
-			unset($itemObj->ItemID);
-			unset($itemObj->TafsiliType);
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
-			unset($itemObj->TafsiliID);
-			$itemObj->locked = "NO";
-			$itemObj->CostID = $CostCode_bank;
-			$itemObj->DebtorAmount= $__ChequeAmount;
-			$itemObj->CreditorAmount = 0;
-			$itemObj->TafsiliType = TAFTYPE_BANKS;
-			if($BankTafsili != "")
-				$itemObj->TafsiliID = $BankTafsili;
-			$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-			if($AccountTafsili != "")
-				$itemObj->TafsiliID2 = $AccountTafsili;
-			if(!$itemObj->Add($pdo))
-			{
-				ExceptionHandler::PushException("خطا در ایجاد سند");
-				return false;
-			}
-		}
-
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		unset($itemObj->TafsiliID);
-		$itemObj->locked = "NO";
-		$itemObj->DocID = $obj->DocID;
-		$itemObj->CostID = $OuterObj->CostID;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $__ChequeAmount;
-		$itemObj->TafsiliType = $OuterObj->TafsiliType;
-		$itemObj->TafsiliID = $__TafsiliID;
-		if(!$itemObj->Add($pdo))
-		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
-			return false;
-		}
-		
 		if(ExceptionHandler::GetExceptionCount() > 0)
 			return false;
 
@@ -2450,6 +2418,34 @@ function RegisterOuterCheque($OuterObj, $BankTafsili, $AccountTafsili,
 
 		return true;
 	}
+}
+
+//---------------------------------------------------------------
+function ReturnOuterCheque($OuterObj, $pdo){
+
+	if(isset($OuterObj->ChequeAmount))
+	{
+		$__ChequeID = $OuterObj->OuterChequeID;
+		$__SourceType = DOCTYPE_OUTERCHEQUE;
+	}
+	else
+	{
+		$__ChequeID = $OuterObj->BackPayID;
+		$__SourceType = DOCTYPE_DOCUMENT;
+	}
+	
+	$dt = PdoDataAccess::runquery("select group_concat(DocID) docs from ACC_DocItems di
+		where SourceType=" . $__SourceType . " AND SourceID=?",	array($__ChequeID), $pdo);
+	if($dt[0][0] == "")
+		return true;
+	
+	$dt = PdoDataAccess::runquery("delete from ACC_DocItems 
+		where SourceType=" . $__SourceType . " AND SourceID=?",	array($__ChequeID), $pdo);
+	
+	$dt = PdoDataAccess::runquery("delete d from ACC_docs d left join ACC_DocItems using(DocID)
+		where ItemID is null",	array(), $pdo);
+	
+	//return ACC_docs::Remove($dt[0][0], $pdo);
 }
 //---------------------------------------------------------------
 

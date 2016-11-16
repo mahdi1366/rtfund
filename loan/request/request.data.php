@@ -889,7 +889,7 @@ function SaveBackPay(){
 	{
 		$result = $obj->Add($pdo);
 		if($obj->PayType == "9")
-			RegisterOuterCheque($obj, "","","","",$pdo);
+			RegisterOuterCheque($obj,0,0,0,0,0,$pdo);
 	}
 	else
 		$result = $obj->Edit($pdo);
@@ -912,12 +912,29 @@ function DeletePay(){
 	$pdo->beginTransaction();
 	
 	$PayObj = new LON_BackPays($_POST["BackPayID"]);
+	
+	if($PayObj->PayType == "9" && $PayObj->ChequeStatus != "1")
+	{
+		echo Response::createObjectiveResponse(false, "چک مربوطه تغییر وضعیت یافته است");
+		die();
+	}
+	
 	if(!ReturnCustomerPayDoc($PayObj, $pdo))
 	{
 		//print_r(ExceptionHandler::PopAllExceptions());
 		//$pdo->rollBack();		
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
+	}
+	
+	if($PayObj->PayType == "9")
+	{
+		if(!ReturnOuterCheque($PayObj, $pdo))
+		{
+			$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "خطا در حذف سند انتظامی چک");
+		die();
+		}
 	}
 	
 	if(!LON_BackPays::DeletePay($_POST["BackPayID"], $pdo))
@@ -1304,6 +1321,39 @@ function EditBackPayDoc(){
 		die();
 	}
 	$DocObj = new ACC_docs($DocID);
+	//------------------  cheque update ------------------------------
+	if($obj->PayType == "9")
+	{
+		if($obj->ChequeStatus != "1")
+		{
+			echo Response::createObjectiveResponse(false, "وضعیت چک وصول نشده است");
+			die();
+		}
+		if($DocObj->DocStatus != "RAW")
+		{
+			echo Response::createObjectiveResponse(false, "سند مربوطه تایید شده است");
+			die();
+		}
+		if($obj->IsGroup == "YES")
+		{
+			echo Response::createObjectiveResponse(false, "امکان ویرایش چک گروهی وجود ندارد");
+			die();
+		}
+		
+		$result = RegisterOuterCheque($obj ,0,0,0,0,0,$pdo, $DocID);
+		
+		if(!$result)
+		{
+			$pdo->rollback();
+			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+			die();
+		}
+
+		$pdo->commit();
+		echo Response::createObjectiveResponse(true, "");
+		die();
+	}
+	//-----------------------------------------------------------------
 	if(!ReturnCustomerPayDoc($obj, $pdo, true))
 	{
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
@@ -1353,6 +1403,7 @@ function GroupSavePay(){
 	
 	$FirstPay = true;
 	$DocObj = null;
+	$sumAmount = 0;
 	foreach($parts as $partStr)
 	{
 		$arr = preg_split("/_/", $partStr);
@@ -1365,7 +1416,7 @@ function GroupSavePay(){
 		$obj->PayAmount = $PayAmount;
 		$obj->IsGroup = "YES";
 		if($obj->PayType == "9")
-			$obj->ChequeStatus = 1;
+			$obj->ChequeStatus = 3;
 		$obj->Add($pdo);
 		
 		$ReqObj = new LON_requests($RequestID);
@@ -1388,6 +1439,7 @@ function GroupSavePay(){
 				$_POST["BranchID"],
 				$_POST["FirstCostID"],
 				$_POST["SecondCostID"], $pdo, true);
+		
 		if(!$result)
 		{
 			$pdo->rollback();
@@ -1395,12 +1447,28 @@ function GroupSavePay(){
 			echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
 			die();
 		}
+		
 		if($FirstPay)
 		{
 			$DocID = LON_BackPays::GetAccDoc($obj->BackPayID, $pdo);
 			$DocObj = new ACC_docs($DocID, $pdo);
 			$FirstPay = false;			
 		}
+		
+		$sumAmount += $PayAmount*1;
+	}
+	
+	if($_POST["PayType"] == "9")
+	{
+		$obj = new LON_BackPays();
+		PdoDataAccess::FillObjectByArray($obj, $_POST);
+		$obj->ChequeStatus = "1";
+		$obj->PayAmount = $sumAmount;
+		
+		$result = RegisterOuterCheque($obj,0,0,0,0,0, $pdo, $DocID);
+		
+		$obj->ChequeStatus = "3";
+		$result = RegisterOuterCheque($obj,0,0,0,0,0, $pdo, $DocID);
 	}
 	
 	$pdo->commit();

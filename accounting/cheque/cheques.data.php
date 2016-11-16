@@ -36,11 +36,11 @@ function selectIncomeCheques() {
 		left join ACC_banks b on(ChequeBank=BankID)
 		left join BaseInfo bi2 on(bi2.TypeID=4 AND bi2.InfoID=p.ChequeStatus)
 		left join (
-			select SourceID, group_concat(distinct LocalNo) docs
-			from ACC_DocItems join ACC_docs using(DocID)
-			where SourceType='" . DOCTYPE_DOCUMENT . "' 
-			group by SourceID
-		)t on(BackPayID=t.SourceID)
+			select SourceID2, group_concat(distinct LocalNo) docs
+			from ACC_DocItems di join ACC_docs d on(di.DocID=d.DocID AND di.SourceType=d.DocType)
+			where SourceType in(" . DOCTYPE_DOCUMENT . ",".DOCTYPE_INSTALLMENT_PAYMENT." )
+			group by SourceID2
+		)t on(BackPayID=t.SourceID2)
 		where ChequeNo>0
 		
 		UNION ALL
@@ -330,8 +330,12 @@ function ChangeChequeStatus(){
 		if(array_search($Status, array(OUERCHEQUE_EBTAL,OUERCHEQUE_MOSTARAD,
 			OUERCHEQUE_BARGHASHTI_MOSTARAD,OUERCHEQUE_MAKHDOOSH)) !== false)
 		{
-			$result = RegisterOuterCheque($obj, "","","","", $pdo);
+			$result = RegisterOuterCheque($obj,"","","","","", $pdo);
 		}	
+		if($Status == OUERCHEQUE_NOTVOSUL)
+		{
+			$result = ReturnCustomerPayDoc($obj, $pdo);
+		}
 	}
 	else
 	{
@@ -339,17 +343,25 @@ function ChangeChequeStatus(){
 		$obj->ChequeStatus = $Status;
 		$result = $obj->Edit($pdo);
 
-		$result = RegisterOuterCheque($obj, 
-			$TafsiliID,
-			$TafsiliID2,
-			isset($_POST["CenterAccount"]) ? true : false,
-			$BranchID, $pdo);
-		if(!$result)
+		if($Status == OUERCHEQUE_NOTVOSUL)
 		{
-			$pdo->rollback();
-			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
-			die();
-		}		
+			$result = ReturnOuterCheque($obj, $pdo);
+		}
+		else
+		{
+			$result = RegisterOuterCheque($obj, 
+				$_POST["CostID"], 
+				$TafsiliID,
+				$TafsiliID2,
+				isset($_POST["CenterAccount"]) ? true : false,
+				$BranchID, $pdo);
+			if(!$result)
+			{
+				$pdo->rollback();
+				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+				die();
+			}		
+		}
 	}
 	
 	ACC_OuterCheques::AddToHistory($BackPayID, $OuterChequeID, $Status, $pdo);
@@ -414,13 +426,13 @@ function SaveOuterCheque(){
 			return false;
 		}
 		
-		if(!RegisterOuterCheque($Refobj, 0,0,0,0, $pdo, $Docobj->DocID))
+		if(!RegisterOuterCheque($Refobj,0,0,0,0,0, $pdo, $Docobj->DocID))
 		{
 			echo Response::createObjectiveResponse(false, "");
 			die();
 		}
 		
-		if(!RegisterOuterCheque($obj,0,0,0,0, $pdo, $Docobj->DocID))
+		if(!RegisterOuterCheque($obj,0,0,0,0,0, $pdo, $Docobj->DocID))
 		{
 			echo Response::createObjectiveResponse(false, "");
 			die();
@@ -446,7 +458,7 @@ function SaveOuterCheque(){
 	
 	ACC_OuterCheques::AddToHistory(0, $obj->OuterChequeID, $obj->ChequeStatus, $pdo);
 	
-	if(!RegisterOuterCheque($obj, "","","","", $pdo))
+	if(!RegisterOuterCheque($obj,0,0,0,0,0, $pdo))
 	{
 		echo Response::createObjectiveResponse(false,ExceptionHandler::GetExceptionsToString());
 		die();
