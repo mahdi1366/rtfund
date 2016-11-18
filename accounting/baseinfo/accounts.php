@@ -104,7 +104,7 @@ $AccountsDG = $dg_accounts->makeGrid_returnObjects();
 $ChequeBook_Grid = new sadaf_datagrid('ChequeBookGrid',
 		$js_prefix_address.'baseinfo.data.php?task=SelectCheques','ChequeBookGrid_Box');
 
-$ChequeBook_Grid->addColumn('','ChequeID',GridColumn::ColumnType_int,true);
+$ChequeBook_Grid->addColumn('','ChequeBookID',GridColumn::ColumnType_int,true);
 $ChequeBook_Grid->addColumn('','AccountID',GridColumn::ColumnType_int,true);
 $ChequeBook_Grid->addColumn('','IsActive',"",true);
 
@@ -167,7 +167,7 @@ $GCheque=$ChequeBook_Grid->makeGrid_returnObjects();
 	});
 	AccountObj.CheqGrid= <?= $GCheque?>;
 	AccountObj.CheqGrid.plugins[0].on("beforeedit", function(editor,e){
-		if(!e.record.data.ChequeID)
+		if(!e.record.data.ChequeBookID)
 			return AccountObj.AddAccess;
 		return AccountObj.EditAccess;
 	});

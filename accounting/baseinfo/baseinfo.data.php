@@ -451,17 +451,17 @@ function CopySetting() {
         Response::createObjectiveResponse(false, 'حساب انتخاب شده دسته چک فعال دارای تنظیمات چک ندارد');
         die();
     }
-    $sel_chequeID = $res_sc[0]['ChequeID'];
-    $output_filename = "../../checkBuilder/output/" . $sel_chequeID . ".html";
-    $background_filename = "../../checkBuilder/backgrounds/" . $sel_chequeID . ".jpg";
+    $sel_ChequeBookID = $res_sc[0]['ChequeBookID'];
+    $output_filename = "../../checkBuilder/output/" . $sel_ChequeBookID . ".html";
+    $background_filename = "../../checkBuilder/backgrounds/" . $sel_ChequeBookID . ".jpg";
     if (!file_exists($output_filename) || !file_exists($background_filename)) {
         Response::createObjectiveResponse(false, 'حساب انتخاب شده دسته چک فعال دارای تنظیمات چک ندارد');
         die();
     }
     $res_c = cheques::SelectChequeBooks(" accountid=? and isactive='YES' ", array($_POST['AccountID']));
-    $chequeID = $res_c[0]['ChequeID'];
-    $target_output = "../../checkBuilder/output/" . $chequeID . ".html";
-    $target_background = "../../checkBuilder/backgrounds/" . $chequeID . ".jpg";
+    $ChequeBookID = $res_c[0]['ChequeBookID'];
+    $target_output = "../../checkBuilder/output/" . $ChequeBookID . ".html";
+    $target_background = "../../checkBuilder/backgrounds/" . $ChequeBookID . ".jpg";
     $fp = fopen($target_output, "w");
     fwrite($fp, file_get_contents($output_filename, "r"));
     fclose($fp);
@@ -487,7 +487,7 @@ function SelectCheques() {
 	$where .= " AND AccountID=:AccId";
 	$param[':AccId'] = $_GET['BAccId'];
 	
-	$list = ACC_cheques::SelectCheques($where, $param);
+	$list = ACC_ChequeBooks::SelectCheques($where, $param);
 	$count = count($list);
 
 	echo dataReader::getJsonData($list, $count, $_GET['callback']);
@@ -496,7 +496,7 @@ function SelectCheques() {
 
 function SaveCheque() {
 
-	$ChequeBook = new ACC_cheques();
+	$ChequeBook = new ACC_ChequeBooks();
 	PdoDataAccess::FillObjectByJsonData($ChequeBook, $_POST['record']);
 	
 	if($ChequeBook->MinNo >= $ChequeBook->MaxNo)
@@ -504,17 +504,17 @@ function SaveCheque() {
 		Response::createResponse(false, 'بازه تعریف شده برای شماره دسته چک نامعتبر است!');
 		die();
 	}    
-	if ($ChequeBook->ChequeID == '')
+	if ($ChequeBook->ChequeBookID == '')
 	{
 		$res = $ChequeBook->InsertCheque();
 		
-		$dt = PdoDataAccess::runquery("select * from ACC_cheques 
-				where AccountID=? AND ChequeID<>? order by ChequeID desc", 
-				array($ChequeBook->AccountID, $ChequeBook->ChequeID));
+		$dt = PdoDataAccess::runquery("select * from ACC_ChequeBooks 
+				where AccountID=? AND ChequeBookID<>? order by ChequeBookID desc", 
+				array($ChequeBook->AccountID, $ChequeBook->ChequeBookID));
 		if(count($dt)>0)
 		{
-			$sourceFilename = "/attachment/accounting/cheques/" . $dt[0]["ChequeID"] . ".html";
-			$filename = "/attachment/accounting/cheques/" . $ChequeBook->ChequeID . ".html";
+			$sourceFilename = "/attachment/accounting/cheques/" . $dt[0]["ChequeBookID"] . ".html";
+			$filename = "/attachment/accounting/cheques/" . $ChequeBook->ChequeBookID . ".html";
 				
 			if(file_exists($sourceFilename))
 			{
@@ -522,8 +522,8 @@ function SaveCheque() {
 				fwrite($fp,  file_get_contents($sourceFilename));
 				fclose($fp);
 
-				$sourceFilename = "/attachment/accounting/cheques/" . $dt[0]["ChequeID"] . ".jpg";
-				$filename = "/attachment/accounting/cheques/" . $ChequeBook->ChequeID . ".jpg";
+				$sourceFilename = "/attachment/accounting/cheques/" . $dt[0]["ChequeBookID"] . ".jpg";
+				$filename = "/attachment/accounting/cheques/" . $ChequeBook->ChequeBookID . ".jpg";
 				
 				$fp = fopen($filename, "w");
 				fwrite($fp,  file_get_contents($sourceFilename));
@@ -539,7 +539,7 @@ function SaveCheque() {
 
 function deleteCheque() {
 	
-	$ChequeBook = new ACC_cheques($_POST['CBId']);
+	$ChequeBook = new ACC_ChequeBooks($_POST['CBId']);
 	$res = $ChequeBook->DeleteCheque();
 
 	Response::createObjectiveResponse($res, '');

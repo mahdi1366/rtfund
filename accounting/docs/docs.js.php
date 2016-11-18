@@ -785,7 +785,7 @@ AccDocs.prototype.check_Add = function()
 		return;
 	var modelClass = this.checkGrid.getStore().model;
 	var record = new modelClass({
-		ChequeID: "",
+		DocChequeID: "",
 		DocID : this.grid.getStore().getAt(0).data.DocID
 	});
 	this.checkGrid.plugins[0].cancelEdit();
@@ -842,7 +842,7 @@ AccDocs.prototype.check_remove = function()
 		Ext.Ajax.request({
 			url: me.address_prefix + 'doc.data.php?task=removeChecks',
 			params:{
-				ChequeID: record.data.ChequeID
+				DocChequeID: record.data.DocChequeID
 			},
 			method: 'POST',
 

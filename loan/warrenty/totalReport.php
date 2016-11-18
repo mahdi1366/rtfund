@@ -6,7 +6,6 @@
 
 require_once '../header.inc.php';
 require_once 'config.inc.php';
-require_once '../../accounting/definitions.inc.php';
 require_once "ReportGenerator.class.php";
 
 if(isset($_REQUEST["show"]))

@@ -16,115 +16,109 @@ $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 if(!empty($task))
 	$task();
 
-function selectIncomeCheques() {
-
-	$param = array();
-	$query = "select * from (
-		select p.BackPayID , 0 OuterChequeID,
-			concat_ws(' ',fname,lname,CompanyName) fullname,
-			ChequeNo,
-			'وام' CostDesc,
-			p.PayDate ChequeDate,
-			PayAmount ChequeAmount,
-			b.BankDesc, 
-			ChequeStatus,
-			bi2.InfoDesc ChequeStatusDesc,
-			t.docs
-		from LON_BackPays p 
-		join LON_requests using(RequestID)
-		join BSC_persons on(LoanPersonID=PersonID)
-		left join ACC_banks b on(ChequeBank=BankID)
-		left join BaseInfo bi2 on(bi2.TypeID=4 AND bi2.InfoID=p.ChequeStatus)
-		left join (
-			select SourceID2, group_concat(distinct LocalNo) docs
-			from ACC_DocItems di join ACC_docs d on(di.DocID=d.DocID AND di.SourceType=d.DocType)
-			where SourceType in(" . DOCTYPE_DOCUMENT . ",".DOCTYPE_INSTALLMENT_PAYMENT." )
-			group by SourceID2
-		)t on(BackPayID=t.SourceID2)
-		where ChequeNo>0
-		
-		UNION ALL
-		
-		select 0 BackPayID, OuterChequeID , 
-			TafsiliDesc fullname,
-			ChequeNo,
-			concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc) CostDesc,
-			ChequeDate,
-			ChequeAmount,
-			b.BankDesc, 
-			ChequeStatus,
-			bi2.InfoDesc ChequeStatusDesc,
-			t.docs
-		from ACC_OuterCheques 
-		left join ACC_tafsilis using(TafsiliID)
-		join ACC_CostCodes cc using(CostID)
-		left join ACC_blocks b1 on(cc.level1=b1.BlockID)
-		left join ACC_blocks b2 on(cc.level2=b2.BlockID)
-		left join ACC_blocks b3 on(cc.level3=b3.BlockID)
-		
-		left join ACC_banks b on(ChequeBank=BankID)
-		left join BaseInfo bi2 on(bi2.TypeID=4 AND bi2.InfoID=ChequeStatus)
-		left join (
-			select SourceID, group_concat(distinct LocalNo) docs
-			from ACC_DocItems join ACC_docs using(DocID)
-			where SourceType='" . DOCTYPE_OUTERCHEQUE . "' 
-			group by SourceID
-		)t on(OuterChequeID=t.SourceID)
-		
-	)t
-	where 1=1";
+function MakeWhere(&$where , &$param){
 	
 	//.........................................................
 	if(!empty($_POST["FromNo"]))
 	{
-		$query .= " AND ChequeNo >= :cfn";
+		$where .= " AND ChequeNo >= :cfn";
 		$param[":cfn"] = $_POST["FromNo"];
 	}
 	if(!empty($_POST["ToNo"]))
 	{
-		$query .= " AND ChequeNo <= :ctn";
+		$where .= " AND ChequeNo <= :ctn";
 		$param[":ctn"] = $_POST["ToNo"];
 	}
 	if(!empty($_POST["FromDate"]))
 	{
-		$query .= " AND ChequeDate >= :fd";
+		$where .= " AND ChequeDate >= :fd";
 		$param[":fd"] = DateModules::shamsi_to_miladi($_POST["FromDate"], "-");
 	}
 	if(!empty($_POST["ToDate"]))
 	{
-		$query .= " AND ChequeDate <= :td";
+		$where .= " AND ChequeDate <= :td";
 		$param[":td"] = DateModules::shamsi_to_miladi($_POST["ToDate"], "-");
 	}
 	if(!empty($_POST["FromAmount"]))
 	{
-		$query .= " AND ChequeAmount >= :fa";
+		$where .= " AND ChequeAmount >= :fa";
 		$param[":fa"] = preg_replace('/,/', "", $_POST["FromAmount"]);
 	}
 	if(!empty($_POST["ToAmount"]))
 	{
-		$query .= " AND ChequeAmount <= :ta";
+		$where .= " AND ChequeAmount <= :ta";
 		$param[":ta"] = preg_replace('/,/', "", $_POST["ToAmount"]);
 	}
 	if(!empty($_POST["ChequeBank"]))
 	{
-		$query .= " AND ChequeBank = :cb";
+		$where .= " AND ChequeBank = :cb";
 		$param[":cb"] = $_POST["ChequeBank"];
 	}
 	if(!empty($_POST["ChequeBranch"]))
 	{
-		$query .= " AND ChequeBranch like :cb";
+		$where .= " AND ChequeBranch like :cb";
 		$param[":cb"] = "%" . $_POST["ChequeBranch"] . "%";
 	}
 	if(!empty($_POST["ChequeStatus"]))
 	{
-		$query .= " AND ChequeStatus = :cst";
+		$where .= " AND ChequeStatus = :cst";
 		$param[":cst"] = $_POST["ChequeStatus"];
 	}
 	//.........................................................
 	if (isset($_GET["fields"]) && !empty($_GET["query"])) {
-		$query .= " AND " . $_GET["fields"] . " like :f";
+		$where .= " AND " . $_GET["fields"] . " like :f";
 		$param[":f"] = "%" . $_GET["query"] . "%";
 	}
+}
+
+function selectIncomeCheques() {
+	
+	$where = "1=1";
+	$param = array();
+	
+	MakeWhere($where, $param);
+	
+	$query = "
+		select IncomeChequeID,
+			ChequeNo,
+			case when i.CostID is null then group_concat(t2.TafsiliDesc SEPARATOR '<br>')
+				else t1.TafsiliDesc end fullname,
+			case when i.CostID is null then group_concat(concat_ws('-', bb1.blockDesc, bb2.blockDesc) SEPARATOR '<br>') 
+				else concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc) end CostDesc,
+			ChequeDate,
+			ChequeAmount,
+			b.BankDesc, 
+			ChequeStatus,
+			t3.TafsiliDesc ChequeStatusDesc,
+			t.docs
+			
+		from ACC_IncomeCheques i
+			left join ACC_tafsilis t1 using(TafsiliID)
+			left join ACC_CostCodes cc using(CostID)
+			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
+			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
+			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
+			
+			left join LON_BackPays bp using(IncomeChequeID)
+			left join LON_requests using(RequestID)
+			left join LON_loans l using(LoanID)
+			left join ACC_CostCodes cc2 on(cc2.level1=" . BLOCKID_LOAN . " AND cc2.level2=l.blockID)
+			left join ACC_blocks bb1 on(cc2.level1=bb1.BlockID)
+			left join ACC_blocks bb2 on(cc2.level2=bb2.BlockID)
+			left join ACC_tafsilis t2 on(t2.TafsiliType=".TAFTYPE_PERSONS." AND t2.ObjectID=LoanPersonID)
+		
+		left join ACC_banks b on(ChequeBank=BankID)
+		left join ACC_tafsilis t3 on(t3.TafsiliType=".TAFTYPE_ChequeStatus." AND t3.TafsiliID=ChequeStatus)
+		left join (
+			select SourceID, group_concat(distinct LocalNo) docs
+			from ACC_DocItems join ACC_docs using(DocID)
+			where SourceType='" . DOCTYPE_INCOMERCHEQUE . "' 
+			group by SourceID
+		)t on(IncomeChequeID=t.SourceID)
+		
+		where " . $where . " 
+		group by IncomeChequeID";
+	
 	//.........................................................
 	$query .= dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
@@ -137,6 +131,254 @@ function selectIncomeCheques() {
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
 	die();
 }
+
+function SelectIncomeChequeStatuses() {
+	
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4");
+
+	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
+	die();
+}
+
+function SelectChequeStatuses(){
+	
+	$dt = PdoDataAccess::runquery("select * from ACC_ChequeStatuses");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SaveChequeStatus(){
+	
+	PdoDataAccess::runquery("insert into ACC_ChequeStatuses(SrcID,DstID) values(?,?)", 
+		array($_POST["SrcID"],$_POST["DstID"]));
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function DeleteChequeStatuses(){
+	
+	PdoDataAccess::runquery("delete from ACC_ChequeStatuses where RowID=?", 
+		array($_POST["RowID"]));
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function selectValidChequeStatuses(){
+	
+	$SrcID = $_REQUEST["SrcID"];
+	$temp = PdoDataAccess::runquery("
+		select TafsiliID,TafsiliDesc
+		from ACC_tafsilis join ACC_ChequeStatuses on(SrcID=? AND DstID=TafsiliID)
+		where TafsiliType=" . TAFTYPE_ChequeStatus, array($SrcID));
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
+//...........................................
+
+function SaveIncomeCheque(){
+	
+	if(isset($_POST["ChangingCheque"]))
+	{
+		$pdo = PdoDataAccess::getPdoObject();
+		$pdo->beginTransaction();
+		
+		if($_POST["RefBackPayID"] != "0")
+			$Refobj = new LON_BackPays($_POST["RefBackPayID"]);
+		else
+			$Refobj = new ACC_IncomeCheques($_POST["RefIncomeChequeID"]);		
+		$Refobj->ChequeStatus = INCOMECHEQUE_CHANGE;
+		$Refobj->Edit();
+		ACC_IncomeCheques::AddToHistory($_POST["RefIncomeChequeID"], $Refobj->ChequeStatus, $pdo);
+		
+		if($_POST["RefBackPayID"] != "0")
+		{
+			$obj = new LON_BackPays();
+			PdoDataAccess::FillObjectByObject($Refobj, $obj);
+			unset($obj->BackPayID);
+			PdoDataAccess::FillObjectByArray($obj, $_POST);
+			$obj->PayAmount = $_POST["ChequeAmount"];
+			$obj->ChequeStatus = INCOMECHEQUE_NOTVOSUL;
+			$obj->Add($pdo);
+			ACC_IncomeCheques::AddToHistory($obj->BackPayID, 0, $obj->ChequeStatus, $pdo);
+		}		
+		else
+		{
+			$obj = new ACC_IncomeCheques();
+			PdoDataAccess::FillObjectByObject($Refobj, $obj);
+			$obj->IncomeChequeID = "";
+			PdoDataAccess::FillObjectByArray($obj, $_POST);
+			$obj->CostID = $Refobj->CostID;
+			$obj->ChequeStatus = INCOMECHEQUE_NOTVOSUL;
+			$obj->Add($pdo);
+			ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, $obj->ChequeStatus, $pdo);
+		}	
+		
+		$Docobj = new ACC_docs();
+		$Docobj->RegDate = PDONOW;
+		$Docobj->regPersonID = $_SESSION['USER']["PersonID"];
+		$Docobj->DocDate = PDONOW;
+		$Docobj->CycleID = $_SESSION["accounting"]["CycleID"];
+		$Docobj->BranchID = $_SESSION["accounting"]["BranchID"];
+		$Docobj->DocType = DOCTYPE_INCOMERCHEQUE;
+		$Docobj->description = "تعویض چک  شماره " . $Refobj->ChequeNo . " به چک شماره " . $obj->ChequeNo;
+		if(!$Docobj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد سند");
+			return false;
+		}
+		
+		if(!RegisterOuterCheque($Docobj->DocID,$Refobj,$pdo))
+		{
+			echo Response::createObjectiveResponse(false, "");
+			die();
+		}
+		
+		if(!RegisterOuterCheque($Docobj->DocID, $obj,$pdo))
+		{
+			echo Response::createObjectiveResponse(false, "");
+			die();
+		}
+		$pdo->commit();
+		echo Response::createObjectiveResponse(true, "");
+		die();
+	}
+	//....................................................
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$obj = new ACC_IncomeCheques();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	$obj->ChequeStatus = INCOMECHEQUE_NOTVOSUL;
+	if(!$obj->Add($pdo))
+	{
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	//................. add back pays ........................
+	if(!empty($_POST["parts"]))
+	{
+		$parts = json_decode($_POST["parts"]);
+		foreach($parts as $partStr)
+		{
+			$arr = preg_split("/_/", $partStr);
+			$RequestID = $arr[0];
+			$PayAmount = $arr[1];
+
+			$bobj = new LON_BackPays();
+			$bobj->PayDate = $obj->ChequeDate;
+			$bobj->IncomeChequeID = $obj->IncomeChequeID;
+			$bobj->RequestID = $RequestID;
+			$bobj->PayAmount = $PayAmount;
+			$bobj->PayType = BACKPAY_PAYTYPE_CHEQUE;
+			$bobj->IsGroup = "YES";
+			$bobj->Add($pdo);
+		}
+	}
+	//.......................................................
+	
+	ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, $obj->ChequeStatus, $pdo);
+	
+	if(!RegisterOuterCheque("",$obj,$pdo))
+	{
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo Response::createObjectiveResponse(false,ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function ChangeChequeStatus(){
+	
+	$IncomeChequeID = $_POST["IncomeChequeID"];
+	$Status = $_POST["StatusID"];
+	
+	$TafsiliID = isset($_POST["TafsiliID"]) ? $_POST["TafsiliID"] : "";
+	$TafsiliID2 = isset($_POST["TafsiliID2"]) ? $_POST["TafsiliID2"] : "";
+	$BranchID = isset($_POST["BranchID"]) ? $_POST["BranchID"] : "";
+	$FirstCostID = isset($_POST["FirstCostID"]) ? $_POST["FirstCostID"] : "";
+	$SecondCostID = isset($_POST["SecondCostID"]) ? $_POST["SecondCostID"] : "";
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$obj = new ACC_IncomeCheques($IncomeChequeID);
+	$obj->ChequeStatus = $Status;
+	$result = $obj->Edit($pdo);
+	
+	$result = RegisterOuterCheque("",$obj, $pdo,
+		$_POST["CostID"], 
+		$TafsiliID,
+		$TafsiliID2,
+		isset($_POST["CenterAccount"]) ? true : false,
+		$BranchID,
+		$FirstCostID,
+		$SecondCostID);
+	if(!$result)
+	{
+		$pdo->rollback();
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}		
+
+	ACC_IncomeCheques::AddToHistory($IncomeChequeID, $Status, $pdo);
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function ReturnLatestOperation(){
+	
+	$OuterObj = new ACC_IncomeCheques($_POST["IncomeChequeID"]);
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$dt = PdoDataAccess::runquery("select max(DocID) docID from ACC_DocItems di
+		where SourceType=" . DOCTYPE_INCOMERCHEQUE . " AND SourceID=?",	
+			array($OuterObj->IncomeChequeID), $pdo);
+	$DocID = $dt[0][0];	
+	
+	if($DocID > 0)
+	{
+		$temp = PdoDataAccess::runquery("select TafsiliID2 from ACC_DocItems where DocID=? AND 
+		SourceType=? AND SourceID=?", array($DocID, DOCTYPE_INCOMERCHEQUE, $OuterObj->IncomeChequeID));
+		$OuterObj->ChequeStatus = $temp[0][0];		
+		
+		PdoDataAccess::runquery("delete from ACC_DocItems 
+			where DocID=? AND SourceType=" . DOCTYPE_INCOMERCHEQUE . " AND SourceID=?",	
+				array($DocID, $OuterObj->IncomeChequeID), $pdo);
+
+		PdoDataAccess::runquery("delete d from ACC_docs d left join ACC_DocItems using(DocID)
+			where DocID=? AND ItemID is null",	array($DocID), $pdo);
+	}
+	else
+		$OuterObj->ChequeStatus = INCOMECHEQUE_NOTVOSUL;
+	
+	$OuterObj->Edit($pdo);
+	
+	ACC_IncomeCheques::AddToHistory($OuterObj->IncomeChequeID, $OuterObj->ChequeStatus , $pdo);
+
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		$pdo->rollBack();
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo Response::createObjectiveResponse(false, "خطا در برگشت");
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();	
+}
+
+//...........................................
+
 
 function selectOutcomeCheques(){
 	
@@ -231,241 +473,6 @@ function selectOutcomeCheques(){
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	//echo PdoDataAccess::GetLatestQueryString();
 	echo dataReader::getJsonData($dataTable, count($dataTable), $_GET["callback"]);
-	die();
-}
-
-function SelectIncomeChequeStatuses() {
-	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4");
-
-	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
-	die();
-}
-
-function SelectChequeStatuses(){
-	
-	$dt = PdoDataAccess::runquery("select * from ACC_ChequeStatuses");
-	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
-	die();
-}
-
-function SaveChequeStatus(){
-	
-	PdoDataAccess::runquery("insert into ACC_ChequeStatuses(SrcID,DstID) values(?,?)", 
-		array($_POST["SrcID"],$_POST["DstID"]));
-	echo Response::createObjectiveResponse(true, "");
-	die();
-}
-
-function DeleteChequeStatuses(){
-	
-	PdoDataAccess::runquery("delete from ACC_ChequeStatuses where RowID=?", 
-		array($_POST["RowID"]));
-	echo Response::createObjectiveResponse(true, "");
-	die();
-}
-
-function selectValidChequeStatuses(){
-	
-	$SrcID = $_REQUEST["SrcID"];
-	$temp = PdoDataAccess::runquery("
-		select InfoID,InfoDesc 
-		from BaseInfo join ACC_ChequeStatuses on(SrcID=? AND DstID=InfoID)
-		where typeID=4", array($SrcID));
-	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
-	die();
-}
-
-function ChangeChequeStatus(){
-	
-	$BackPayID = $_POST["BackPayID"];
-	$OuterChequeID = $_POST["OuterChequeID"];
-	$Status = $_POST["StatusID"];
-	
-	$TafsiliID = isset($_POST["TafsiliID"]) ? $_POST["TafsiliID"] : "";
-	$TafsiliID2 = isset($_POST["TafsiliID2"]) ? $_POST["TafsiliID2"] : "";
-	$BranchID = isset($_POST["BranchID"]) ? $_POST["BranchID"] : "";
-	$FirstCostID = isset($_POST["FirstCostID"]) ? $_POST["FirstCostID"] : "";
-	$SecondCostID = isset($_POST["SecondCostID"]) ? $_POST["SecondCostID"] : "";
-	
-	$pdo = PdoDataAccess::getPdoObject();
-	$pdo->beginTransaction();
-	
-	if($BackPayID*1 > 0)
-	{
-		$obj = new LON_BackPays($BackPayID);
-		$obj->ChequeStatus = $Status;
-		$result = $obj->Edit($pdo);
-
-		if($Status == OUERCHEQUE_VOSUL)
-		{
-			$ReqObj = new LON_requests($obj->RequestID);
-			$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
-
-			if($PersonObj->IsSupporter == "YES")
-				$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj,
-						$_POST["CostID"], 
-						$TafsiliID, 
-						$TafsiliID2, 
-						isset($_POST["CenterAccount"]) ? true : false,
-						$BranchID,
-						$FirstCostID,
-						$SecondCostID, $pdo);
-			else
-				$result = RegisterCustomerPayDoc(null, $obj, 
-						$_POST["CostID"], 
-						$TafsiliID, 
-						$TafsiliID2, 
-						isset($_POST["CenterAccount"]) ? true : false,
-						$BranchID,
-						$FirstCostID,
-						$SecondCostID, $pdo);
-			if(!$result)
-			{
-				$pdo->rollback();
-				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
-				die();
-			}
-		}
-		if(array_search($Status, array(OUERCHEQUE_EBTAL,OUERCHEQUE_MOSTARAD,
-			OUERCHEQUE_BARGHASHTI_MOSTARAD,OUERCHEQUE_MAKHDOOSH)) !== false)
-		{
-			$result = RegisterOuterCheque($obj,"","","","","", $pdo);
-		}	
-		if($Status == OUERCHEQUE_NOTVOSUL)
-		{
-			$result = ReturnCustomerPayDoc($obj, $pdo);
-		}
-	}
-	else
-	{
-		$obj = new ACC_OuterCheques($OuterChequeID);
-		$obj->ChequeStatus = $Status;
-		$result = $obj->Edit($pdo);
-
-		if($Status == OUERCHEQUE_NOTVOSUL)
-		{
-			$result = ReturnOuterCheque($obj, $pdo);
-		}
-		else
-		{
-			$result = RegisterOuterCheque($obj, 
-				$_POST["CostID"], 
-				$TafsiliID,
-				$TafsiliID2,
-				isset($_POST["CenterAccount"]) ? true : false,
-				$BranchID, $pdo);
-			if(!$result)
-			{
-				$pdo->rollback();
-				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
-				die();
-			}		
-		}
-	}
-	
-	ACC_OuterCheques::AddToHistory($BackPayID, $OuterChequeID, $Status, $pdo);
-	
-	$pdo->commit();
-	echo Response::createObjectiveResponse($result, "");
-	die();
-}
-
-//...........................................
-
-function SaveOuterCheque(){
-	
-	if(isset($_POST["ChangingCheque"]))
-	{
-		$pdo = PdoDataAccess::getPdoObject();
-		$pdo->beginTransaction();
-		
-		if($_POST["RefBackPayID"] != "0")
-			$Refobj = new LON_BackPays($_POST["RefBackPayID"]);
-		else
-			$Refobj = new ACC_OuterCheques($_POST["RefOuterChequeID"]);		
-		$Refobj->ChequeStatus = OUERCHEQUE_CHANGE;
-		$Refobj->Edit();
-		ACC_OuterCheques::AddToHistory($_POST["RefBackPayID"], $_POST["RefOuterChequeID"], $Refobj->ChequeStatus, $pdo);
-		
-		if($_POST["RefBackPayID"] != "0")
-		{
-			$obj = new LON_BackPays();
-			PdoDataAccess::FillObjectByObject($Refobj, $obj);
-			unset($obj->BackPayID);
-			PdoDataAccess::FillObjectByArray($obj, $_POST);
-			$obj->PayAmount = $_POST["ChequeAmount"];
-			$obj->ChequeStatus = OUERCHEQUE_NOTVOSUL;
-			$obj->Add($pdo);
-			ACC_OuterCheques::AddToHistory($obj->BackPayID, 0, $obj->ChequeStatus, $pdo);
-		}		
-		else
-		{
-			$obj = new ACC_OuterCheques();
-			PdoDataAccess::FillObjectByObject($Refobj, $obj);
-			$obj->OuterChequeID = "";
-			PdoDataAccess::FillObjectByArray($obj, $_POST);
-			$obj->CostID = $Refobj->CostID;
-			$obj->ChequeStatus = OUERCHEQUE_NOTVOSUL;
-			$obj->Add($pdo);
-			ACC_OuterCheques::AddToHistory(0, $obj->OuterChequeID, $obj->ChequeStatus, $pdo);
-		}	
-		
-		
-		$Docobj = new ACC_docs();
-		$Docobj->RegDate = PDONOW;
-		$Docobj->regPersonID = $_SESSION['USER']["PersonID"];
-		$Docobj->DocDate = PDONOW;
-		$Docobj->CycleID = $_SESSION["accounting"]["CycleID"];
-		$Docobj->BranchID = $_SESSION["accounting"]["BranchID"];
-		$Docobj->DocType = DOCTYPE_OUTERCHEQUE;
-		$Docobj->description = "تعویض چک  شماره " . $Refobj->ChequeNo . " به چک شماره " . $obj->ChequeNo;
-		if(!$Docobj->Add($pdo))
-		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
-			return false;
-		}
-		
-		if(!RegisterOuterCheque($Refobj,0,0,0,0,0, $pdo, $Docobj->DocID))
-		{
-			echo Response::createObjectiveResponse(false, "");
-			die();
-		}
-		
-		if(!RegisterOuterCheque($obj,0,0,0,0,0, $pdo, $Docobj->DocID))
-		{
-			echo Response::createObjectiveResponse(false, "");
-			die();
-		}
-		$pdo->commit();
-		echo Response::createObjectiveResponse(true, "");
-		die();
-	}
-	
-	$obj = new ACC_OuterCheques();
-	PdoDataAccess::FillObjectByArray($obj, $_POST);
-	
-	$pdo = PdoDataAccess::getPdoObject();
-	$pdo->beginTransaction();
-	
-	$obj->ChequeStatus = OUERCHEQUE_NOTVOSUL;
-	if(!$obj->Add($pdo))
-	{
-		//print_r(ExceptionHandler::PopAllExceptions());
-		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
-		die();
-	}
-	
-	ACC_OuterCheques::AddToHistory(0, $obj->OuterChequeID, $obj->ChequeStatus, $pdo);
-	
-	if(!RegisterOuterCheque($obj,0,0,0,0,0, $pdo))
-	{
-		echo Response::createObjectiveResponse(false,ExceptionHandler::GetExceptionsToString());
-		die();
-	}
-	
-	$pdo->commit();
-	echo Response::createObjectiveResponse(true, "");
 	die();
 }
 

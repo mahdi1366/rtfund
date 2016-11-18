@@ -273,7 +273,7 @@ Account.prototype.NewRowCheque=function(){
 
 	var modelClass = this.CheqGrid.getStore().model;
 	var record = new modelClass({
-		ChequeID: null,
+		ChequeBookID: null,
 		AccountID: this.CheqGrid.getStore().proxy.extraParams["BAccId"],
 		SerialNo: null,
 		MinNo: null,
@@ -342,7 +342,7 @@ Account.prototype.EnableCheque = function(){
 			method: "POST",
 			params: {
 				task: "EnableChequeBook",
-				CBId: record.data.ChequeID
+				CBId: record.data.ChequeBookID
 			},
 			success: function(response){
 				mask.hide();
@@ -374,7 +374,7 @@ Account.prototype.RemoveCheque=function(){
 			method: "POST",
 			params: {
 				task: "DeleteCheque",
-				CBId: record.data.ChequeID
+				CBId: record.data.ChequeBookID
 			},
 			success: function(response){
 				mask.hide();
@@ -392,7 +392,7 @@ Account.prototype.RemoveCheque=function(){
 Account.prototype.SetChequePrint = function(){
 
 	var record = this.CheqGrid.getSelectionModel().getLastSelected();
-	window.open("checkBuilder/index.php?chequeID=" + record.data.ChequeID);
+	window.open("checkBuilder/index.php?ChequeBookID=" + record.data.ChequeBookID);
 }
 
 //------------------------------------------------------------------------------

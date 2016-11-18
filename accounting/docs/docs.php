@@ -139,7 +139,7 @@ $dgh->addColumn("","AccountDesc","",true);
 $dgh->addColumn("","TafsiliDesc","",true);
 $dgh->addColumn("","StatusTitle","",true);
 
-$col = $dgh->addColumn("کد","ChequeID","",true);
+$col = $dgh->addColumn("کد","DocChequeID","",true);
 $col->width = 50;
 
 $col = $dgh->addColumn("حساب", "AccountID");
@@ -194,7 +194,7 @@ $dgh->addColumn("", "PrintPage1","",true);
 $dgh->addColumn("", "PrintPage2","",true);
 
 $dgh->width = 780;
-$dgh->DefaultSortField = "ChequeID";
+$dgh->DefaultSortField = "DocChequeID";
 $dgh->autoExpandColumn = "description";
 $dgh->emptyTextOfHiddenColumns = true;
 $dgh->DefaultSortDir = "ASC";
@@ -284,7 +284,7 @@ AccDocsObject.itemGrid.getView().getRowClass = function(record, index)
 AccDocsObject.checkGrid = <?= $checksgrid ?>;
 AccDocsObject.checkGrid.plugins[0].on("beforeedit", AccDocs.beforeCheckEdit);
 AccDocsObject.checkGrid.plugins[0].on("beforeedit", function(editor,e){
-	if(!e.record.data.ChequeID)
+	if(!e.record.data.DocChequeID)
 		return AccDocsObject.AddAccess;
 	return AccDocsObject.EditAccess;
 });

@@ -360,7 +360,7 @@ function saveChecks() {
 	
 	//..........................................
 	$query = "select * from ACC_DocCheques where CheckNo=? AND AccountID=?";
-	$query .=!empty($obj->ChequeID) ? " AND ChequeID<>" . $obj->ChequeID : "";
+	$query .=!empty($obj->DocChequeID) ? " AND DocChequeID<>" . $obj->DocChequeID : "";
 
 	$dt = PdoDataAccess::runquery($query, array($obj->CheckNo, $obj->AccountID));
 	if (count($dt) > 0) {
@@ -368,7 +368,7 @@ function saveChecks() {
 		die();
 	}
 	//..........................................
-	if (empty($obj->ChequeID))
+	if (empty($obj->DocChequeID))
 	{
 		unset($obj->CheckStatus);
 		$return = $obj->Add();
@@ -386,14 +386,14 @@ function saveChecks() {
 }
 
 function removeChecks() {
-	$result = ACC_DocCheques::Remove($_POST["ChequeID"]);
+	$result = ACC_DocCheques::Remove($_POST["DocChequeID"]);
 	echo $result ? "true" : "conflict";
 	die();
 }
 
 function RegisterCheck() {
 	
-	PdoDataAccess::runquery("update ACC_DocCheques set CheckStatus=1 where ChequeID=?", array($_POST["ChequeID"]));
+	PdoDataAccess::runquery("update ACC_DocCheques set CheckStatus=1 where DocChequeID=?", array($_POST["DocChequeID"]));
 	echo Response::createObjectiveResponse(PdoDataAccess::AffectedRows() == 0 ? false : true, "");
 	die();
 }

@@ -10,7 +10,6 @@ include_once inc_response;
 include_once 'request.class.php';
 require_once getenv("DOCUMENT_ROOT") . '/loan/loan/loan.class.php';
 require_once "../../office/workflow/wfm.class.php";
-require_once '../../accounting/definitions.inc.php';
 require_once '../../accounting/docs/import.data.php';
 require_once '../../framework/person/persons.class.php';
 require_once 'compute.inc.php';
@@ -889,7 +888,7 @@ function SaveBackPay(){
 	{
 		$result = $obj->Add($pdo);
 		if($obj->PayType == "9")
-			RegisterOuterCheque($obj,0,0,0,0,0,$pdo);
+			RegisterOuterCheque("",$obj,$pdo);
 	}
 	else
 		$result = $obj->Edit($pdo);
@@ -958,9 +957,11 @@ function ComputePayments($RequestID, &$installments){
 	$pays = PdoDataAccess::runquery("
 		select substr(p.PayDate,1,10) PayDate, sum(PayAmount) PayAmount, sum(PayAmount) FixPayAmount
 			from LON_BackPays p
+			left join ACC_IncomeCheques i using(IncomeChequeID)
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
-			left join ACC_banks b on(ChequeBank=BankID)
-			where RequestID=? AND if(p.ChequeNo<>'',p.ChequeStatus=3,1=1)
+			where RequestID=? AND 
+				if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+
 			group by substr(PayDate,1,10)
 			order by substr(PayDate,1,10)" , array($RequestID));
 	$PayRecord = count($pays) == 0 ? null : $pays[0];
@@ -1108,12 +1109,15 @@ function ComputePaymentsBaseOnInstallment($RequestID, &$installments){
 	
 	$returnArr = array();
 	$pays = PdoDataAccess::runquery("
-		select p.PayDate, sum(PayAmount) PayAmount, sum(PayAmount) FixPayAmount
+		select substr(p.PayDate,1,10) PayDate, sum(PayAmount) PayAmount, sum(PayAmount) FixPayAmount
 			from LON_BackPays p
+			left join ACC_IncomeCheques i using(IncomeChequeID)
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
-			left join ACC_banks b on(ChequeBank=BankID)
-			where RequestID=? AND if(p.ChequeNo<>'',p.ChequeStatus=3,1=1)
-			group by PayDate" , array($RequestID));
+			where RequestID=? AND 
+				if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+
+			group by substr(PayDate,1,10)
+			order by substr(PayDate,1,10)" , array($RequestID));
 	$PayRecord = count($pays) == 0 ? null : $pays[0];
 	$payIndex = 1;
 	$Forfeit = 0;
@@ -1340,7 +1344,7 @@ function EditBackPayDoc(){
 			die();
 		}
 		
-		$result = RegisterOuterCheque($obj ,0,0,0,0,0,$pdo, $DocID);
+		$result = RegisterOuterCheque($DocID,$obj,$pdo);
 		
 		if(!$result)
 		{
@@ -1465,10 +1469,10 @@ function GroupSavePay(){
 		$obj->ChequeStatus = "1";
 		$obj->PayAmount = $sumAmount;
 		
-		$result = RegisterOuterCheque($obj,0,0,0,0,0, $pdo, $DocID);
+		$result = RegisterOuterCheque($DocID,$obj,$pdo);
 		
 		$obj->ChequeStatus = "3";
-		$result = RegisterOuterCheque($obj,0,0,0,0,0, $pdo, $DocID);
+		$result = RegisterOuterCheque($DocID,$obj,$pdo);
 	}
 	
 	$pdo->commit();

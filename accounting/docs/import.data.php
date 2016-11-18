@@ -5,7 +5,6 @@
 //-----------------------------
  
 require_once '../header.inc.php';
-require_once getenv("DOCUMENT_ROOT") . '/accounting/definitions.inc.php';
 require_once getenv("DOCUMENT_ROOT") . '/framework/person/persons.class.php';
 require_once getenv("DOCUMENT_ROOT") . '/loan/loan/loan.class.php';
 require_once getenv("DOCUMENT_ROOT") . '/loan/request/compute.inc.php';
@@ -2063,7 +2062,7 @@ function ReturnCustomerPayDoc($PayObj, $pdo, $EditMode = false){
 		return true;
 	}
 	
-	return ACC_docs::Remove($dt[0][0], $pdo);
+	//return ACC_docs::Remove($dt[0][0], $pdo);
 }
 //---------------------------------------------------------------
 
@@ -2191,16 +2190,14 @@ function ReturnEndRequestDoc($ReqObj, $pdo){
 }
 
 //---------------------------------------------------------------
-function RegisterOuterCheque($OuterObj, $CostID, $TafsiliID, $TafsiliID2, 
-		$CenterAccount, $BranchID, $pdo, $DocID = ""){
+function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID="", $TafsiliID2="", 
+		$CenterAccount="", $BranchID="", $FirstCostID="", $SecondCostID=""){
 
-	/*@var $OuterObj ACC_OuterCheques */
+	/*@var $InChequeObj ACC_IncomeCheques */
 	
 	$CycleID = substr(DateModules::shNow(), 0 , 4);
 	
 	//------------- get CostCodes --------------------
-	$CostCode_centerAccount = FindCostID("499");
-	
 	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
 	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
 	//---------------- add doc header --------------------
@@ -2212,8 +2209,8 @@ function RegisterOuterCheque($OuterObj, $CostID, $TafsiliID, $TafsiliID2,
 		$obj->DocDate = PDONOW;
 		$obj->CycleID = $CycleID;
 		$obj->BranchID = $_SESSION["accounting"]["BranchID"];
-		$obj->DocType = DOCTYPE_OUTERCHEQUE;
-		$obj->description = "چک شماره " . $OuterObj->ChequeNo;
+		$obj->DocType = DOCTYPE_INCOMERCHEQUE;
+		$obj->description = "چک شماره " . $InChequeObj->ChequeNo;
 		if(!$obj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد سند");
@@ -2224,46 +2221,37 @@ function RegisterOuterCheque($OuterObj, $CostID, $TafsiliID, $TafsiliID2,
 		$obj = new ACC_docs($DocID, $pdo);
 	//----------------- add Doc items ------------------------
 	
-	if(isset($OuterObj->ChequeAmount))
+	$__ChequeAmount = $InChequeObj->ChequeAmount;
+	$__ChequeID = $InChequeObj->IncomeChequeID;
+	$__TafsiliID = $InChequeObj->TafsiliID;
+	if($__TafsiliID == "")
 	{
-		$__ChequeAmount = $OuterObj->ChequeAmount;
-		$__ChequeID = $OuterObj->OuterChequeID;
-		$__TafsiliID = $OuterObj->TafsiliID;
-		$__SourceType = DOCTYPE_OUTERCHEQUE;
+		$dt = $InChequeObj->GetBackPays();
+		if(count($dt) == 1)
+			$__TafsiliID = $dt[0]["TafsiliID"];
 	}
-	else
-	{
-		if($OuterObj->ChequeStatus == OUERCHEQUE_NOTVOSUL)
-		{
-			$dt = PdoDataAccess::runquery("select * from ACC_DocItems 
-			where CostID=? AND SourceType=? AND SourceID=?", array(
-				$CostCode_guaranteeAmount_daryafti,
-				DOCTYPE_DOCUMENT,
-				$OuterObj->BackPayID
-			));
-			if(count($dt) > 0)
-				return true;
-		}
-		$__ChequeAmount = $OuterObj->PayAmount;
-		$__ChequeID = $OuterObj->BackPayID;
-		$__TafsiliID = "";
-		$__SourceType = DOCTYPE_DOCUMENT;
-	}
+	$__SourceType = DOCTYPE_INCOMERCHEQUE;
 	
 	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $obj->DocID;
 	$itemObj->locked = "YES";
+	$itemObj->TafsiliType = TAFTYPE_PERSONS;
+	$itemObj->TafsiliID = $__TafsiliID;
+	$itemObj->TafsiliType2 = TAFTYPE_ChequeStatus;
+	$itemObj->TafsiliID2 = $InChequeObj->ChequeStatus;
+	$itemObj->SourceType = $__SourceType;
+	$itemObj->SourceID = $__ChequeID;
+	$itemObj->details = "چک شماره " . $InChequeObj->ChequeNo;
 	
-	if($OuterObj->ChequeStatus == OUERCHEQUE_NOTVOSUL)
+	//............................................................
+	
+	if($InChequeObj->ChequeStatus == INCOMECHEQUE_NOTVOSUL)
 	{ 
-		$itemObj->DocID = $obj->DocID;
+		unset($itemObj->ItemID);
 		$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
 		$itemObj->DebtorAmount = $__ChequeAmount;
-		$itemObj->CreditorAmount = 0;
-		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $__TafsiliID;
-		$itemObj->SourceType = $__SourceType;
-		$itemObj->SourceID = $__ChequeID;
-		$itemObj->details = "چک شماره " . $OuterObj->ChequeNo;
+		$itemObj->CreditorAmount = 0;		
+		
 		$itemObj->Add($pdo);
 
 		unset($itemObj->ItemID);
@@ -2277,17 +2265,14 @@ function RegisterOuterCheque($OuterObj, $CostID, $TafsiliID, $TafsiliID2,
 
 		return true;
 	}
-	if($OuterObj->ChequeStatus == OUERCHEQUE_VOSUL)
+	//............................................................
+	
+	if($InChequeObj->ChequeStatus == INCOMECHEQUE_VOSUL)
 	{
-		$itemObj->DocID = $obj->DocID;
+		unset($itemObj->ItemID);
 		$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
 		$itemObj->DebtorAmount = $__ChequeAmount;
 		$itemObj->CreditorAmount = 0;
-		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $__TafsiliID;
-		$itemObj->SourceType = $__SourceType;
-		$itemObj->SourceID = $__ChequeID;
-		$itemObj->details = "چک شماره " . $OuterObj->ChequeNo;
 		$itemObj->Add($pdo);
 
 		unset($itemObj->ItemID);
@@ -2296,8 +2281,23 @@ function RegisterOuterCheque($OuterObj, $CostID, $TafsiliID, $TafsiliID2,
 		$itemObj->CreditorAmount = $__ChequeAmount;
 		$itemObj->Add($pdo);
 	
-		// -------------- bank ---------------
-		if($CostID != "")
+		$BackPays = $InChequeObj->GetBackPays($pdo);
+		if(count($BackPays) > 0)
+		{
+			foreach($BackPays as $row)
+			{
+				$BackPayObj = new LON_BackPays($row["BackPayID"]);
+				$ReqObj = new LON_requests($BackPayObj->RequestID);
+				$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+				if($PersonObj->IsSupporter == "YES")
+					$result = RegisterSHRTFUNDCustomerPayDoc($obj,$BackPayObj,$CostID, $TafsiliID, $TafsiliID2, 
+					$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo);
+				else
+					$result = RegisterCustomerPayDoc($obj,$BackPayObj,$CostID, $TafsiliID, $TafsiliID2, 
+					$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo);
+			}
+		}
+		else
 		{
 			if($CenterAccount == "true")
 			{
@@ -2307,7 +2307,7 @@ function RegisterOuterCheque($OuterObj, $CostID, $TafsiliID, $TafsiliID2,
 				unset($itemObj->TafsiliID2);
 				unset($itemObj->TafsiliID);
 				$itemObj->locked = "NO";
-				$itemObj->CostID = $CostCode_centerAccount;
+				$itemObj->CostID = $FirstCostID;
 				$itemObj->DebtorAmount= $__ChequeAmount;
 				$itemObj->CreditorAmount = 0;
 				if(!$itemObj->Add($pdo))
@@ -2334,7 +2334,7 @@ function RegisterOuterCheque($OuterObj, $CostID, $TafsiliID, $TafsiliID2,
 				unset($itemObj->TafsiliID2);
 				unset($itemObj->TafsiliID);
 				$itemObj->DocID = $Secobj->DocID;
-				$itemObj->CostID = $CostCode_centerAccount;
+				$itemObj->CostID = $SecondCostID;
 				$itemObj->DebtorAmount= 0;
 				$itemObj->CreditorAmount = $__ChequeAmount;
 				if(!$itemObj->Add($pdo))
@@ -2387,32 +2387,33 @@ function RegisterOuterCheque($OuterObj, $CostID, $TafsiliID, $TafsiliID2,
 					return false;
 				}
 			}
-
+			
 			unset($itemObj->ItemID);
-			unset($itemObj->TafsiliType);
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
-			unset($itemObj->TafsiliID);
-			$itemObj->locked = "NO";
+			$itemObj->locked = "YES";
 			$itemObj->DocID = $obj->DocID;
-			$itemObj->CostID = $CostID;
+			$itemObj->CostID = $InChequeObj->CostID;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $__ChequeAmount;
-			$itemObj->TafsiliType = $OuterObj->TafsiliType;
-			$itemObj->TafsiliID = $__TafsiliID;
+			$itemObj->TafsiliType = $InChequeObj->TafsiliType;
+			$itemObj->TafsiliID = $InChequeObj->TafsiliID;
+			$itemObj->TafsiliType2 = $InChequeObj->TafsiliType2;
+			$itemObj->TafsiliID2 = $InChequeObj->TafsiliID2;
 			if(!$itemObj->Add($pdo))
 			{
 				ExceptionHandler::PushException("خطا در ایجاد سند");
 				return false;
 			}
 		}
+		
 		if(ExceptionHandler::GetExceptionCount() > 0)
 			return false;
 
 		return true;
 	}
-	if(array_search($OuterObj->ChequeStatus, array(OUERCHEQUE_EBTAL,OUERCHEQUE_MOSTARAD,
-			OUERCHEQUE_BARGHASHTI_MOSTARAD,OUERCHEQUE_MAKHDOOSH,OUERCHEQUE_CHANGE)) !== false)
+	//............................................................
+
+	if(array_search($InChequeObj->ChequeStatus, array(INCOMECHEQUE_EBTAL,INCOMECHEQUE_MOSTARAD,
+			INCOMECHEQUE_BARGHASHTI_MOSTARAD,INCOMECHEQUE_MAKHDOOSH,INCOMECHEQUE_CHANGE)) !== false)
 	{
 		$itemObj->DocID = $obj->DocID;
 		$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
@@ -2422,7 +2423,7 @@ function RegisterOuterCheque($OuterObj, $CostID, $TafsiliID, $TafsiliID2,
 		$itemObj->TafsiliID = $__TafsiliID;
 		$itemObj->SourceType = $__SourceType;
 		$itemObj->SourceID = $__ChequeID;
-		$itemObj->details = "چک شماره " . $OuterObj->ChequeNo;
+		$itemObj->details = "چک شماره " . $InChequeObj->ChequeNo;
 		$itemObj->Add($pdo);
 
 		unset($itemObj->ItemID);
@@ -2439,33 +2440,6 @@ function RegisterOuterCheque($OuterObj, $CostID, $TafsiliID, $TafsiliID2,
 	}
 }
 
-//---------------------------------------------------------------
-function ReturnOuterCheque($OuterObj, $pdo){
-
-	if(isset($OuterObj->ChequeAmount))
-	{
-		$__ChequeID = $OuterObj->OuterChequeID;
-		$__SourceType = DOCTYPE_OUTERCHEQUE;
-	}
-	else
-	{
-		$__ChequeID = $OuterObj->BackPayID;
-		$__SourceType = DOCTYPE_DOCUMENT;
-	}
-	
-	$dt = PdoDataAccess::runquery("select group_concat(DocID) docs from ACC_DocItems di
-		where SourceType=" . $__SourceType . " AND SourceID=?",	array($__ChequeID), $pdo);
-	if($dt[0][0] == "")
-		return true;
-	
-	$dt = PdoDataAccess::runquery("delete from ACC_DocItems 
-		where SourceType=" . $__SourceType . " AND SourceID=?",	array($__ChequeID), $pdo);
-	
-	$dt = PdoDataAccess::runquery("delete d from ACC_docs d left join ACC_DocItems using(DocID)
-		where ItemID is null",	array(), $pdo);
-	
-	//return ACC_docs::Remove($dt[0][0], $pdo);
-}
 //---------------------------------------------------------------
 
 function ComputeDepositeProfit(){

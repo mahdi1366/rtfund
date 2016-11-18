@@ -4,15 +4,17 @@
 //	Date		: 95.07
 //-----------------------------
 
-class ACC_OuterCheques extends OperationClass{
+class ACC_IncomeCheques extends OperationClass{
 	
-	const TableName = "ACC_OuterCheques";
-	const TableKey = "OuterChequeID";
+	const TableName = "ACC_IncomeCheques";
+	const TableKey = "IncomeChequeID";
 	
-	public $OuterChequeID;
+	public $IncomeChequeID;
 	public $CostID;
 	public $TafsiliType;
 	public $TafsiliID;
+	public $TafsiliType2;
+	public $TafsiliID2;
 	public $ChequeNo;
 	public $ChequeDate;
 	public $ChequeAmount;
@@ -37,7 +39,7 @@ class ACC_OuterCheques extends OperationClass{
 				d.LocalNo,
 				d.DocStatus
 			
-			FROM ACC_OuterCheques o
+			FROM ACC_IncomeCheques o
 
 			join ACC_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
@@ -47,7 +49,7 @@ class ACC_OuterCheques extends OperationClass{
 			left join ACC_banks b on(ChequeBank=BankID)
 			left join BaseInfo bi2 on(bi2.TypeID=16 AND bi2.InfoID=o.ChequeStatus)
 			
-			left join ACC_DocItems di on(SourceID=OuterChequeID AND SourceType=" . DOCTYPE_OUTERCHEQUE . ")
+			left join ACC_DocItems di on(SourceID=IncomeChequeID AND SourceType=" . DOCTYPE_INCOMERCHEQUE . ")
 			left join ACC_docs d on(di.DocID=d.DocID)
 			
 			where 1=1 " . $where;
@@ -55,12 +57,11 @@ class ACC_OuterCheques extends OperationClass{
 		return parent::runquery_fetchMode($query, $param);
 	}
 	
-	static function AddToHistory($BackPayID, $OuterChequeID, $status, $pdo = null){
+	static function AddToHistory($IncomeChequeID, $status, $pdo = null){
 		
-		PdoDataAccess::runquery("insert into ACC_ChequeHistory(BackPayID,OuterChequeID,StatusID,PersonID,ATS)
-			values(?,?,?,?,now())", array(
-				$BackPayID,
-				$OuterChequeID,
+		PdoDataAccess::runquery("insert into ACC_ChequeHistory(IncomeChequeID,StatusID,PersonID,ATS)
+			values(?,?,?,now())", array(
+				$IncomeChequeID,
 				$status,
 				$_SESSION["USER"]["PersonID"]
 			),$pdo);
@@ -78,6 +79,15 @@ class ACC_OuterCheques extends OperationClass{
 		return parent::Add($pdo);
 	}
 	
+	function GetBackPays($pdo = null){
+		
+		return PdoDataAccess::runquery("
+			select * from LON_BackPays 
+				join LON_requests using(RequestID)
+				left join ACC_tafsilis t2 on(t2.TafsiliType=".TAFTYPE_PERSONS." AND t2.ObjectID=LoanPersonID)
+			where IncomeChequeID=?", 
+				array($this->IncomeChequeID), $pdo);
+	}
 }
 
 ?>

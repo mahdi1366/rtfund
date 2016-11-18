@@ -41,8 +41,8 @@ $dg->addColumn("", "IsGroup","", true);
 if($editable)
 {
 	$col = $dg->addColumn("نحوه پرداخت", "PayType");
-	$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from BaseInfo where typeID=6"), 
-		"InfoID", "InfoDesc");
+	$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from BaseInfo where typeID=6"),
+			"InfoID", "InfoDesc");
 }
 else
 	$col = $dg->addColumn("نحوه پرداخت", "PayTypeDesc");
@@ -69,21 +69,6 @@ $col->width = 60;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo", "string");
 $col->editor = ColumnEditor::NumberField(true);
-$col->width = 60;
-
-if($editable)
-{
-	$col = $dg->addColumn("بانک", "ChequeBank", "");
-	$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from ACC_banks"), 
-	"BankID", "BankDesc", "", "", true);
-}
-else
-	$col = $dg->addColumn("بانک", "BankDesc", "");
-$col->width = 60;
-
-$col = $dg->addColumn("شعبه", "ChequeBranch", "");
-if($editable)
-	$col->editor = ColumnEditor::TextField(true);
 $col->width = 60;
 
 $col = $dg->addColumn("وضعیت چک", "ChequeStatusDesc", "");
@@ -294,7 +279,7 @@ LoanPay.DeleteRender = function(v,p,r){
 	if(r.data.PayRefNo != null &&  r.data.PayRefNo != "")
 		return "";
 	
-	if(r.data.PayType == "9" && r.data.ChequeStatus != "1")
+	if(r.data.PayType == "9")
 		return "";
 	
 	return "<div align='center' title='حذف' class='remove' "+
@@ -519,6 +504,11 @@ LoanPay.prototype.BeforeRegisterDoc = function(mode){
 	
 LoanPay.prototype.SaveBackPay = function(record){
 
+	if(record.data.PayType == "<?= BACKPAY_PAYTYPE_CHEQUE ?>")
+	{
+		Ext.MessageBox.alert("Error", "برای ثبت چک از منوی چک های دریافتی اقدام نمایید");
+		return false;
+	}
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 

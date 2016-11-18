@@ -14,9 +14,11 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "cheques.data.php?task=selectIncomeCheques", "grid_div");
 
-$col = $dg->addColumn("", "OuterChequeID", "", true);
-$col = $dg->addColumn("", "BackPayID", "", true);
+$dg->addColumn("", "IncomeChequeID", "", true);
+$dg->addColumn("", "BackPayID", "", true);
 $dg->addColumn("", "ChequeStatus", "", true);
+$dg->addColumn("", "BankDesc", "", true);
+$dg->addColumn("", "ChequeBranch", "", true);
 
 $col = $dg->addColumn("صاحب چک", "fullname", "");
 
@@ -24,6 +26,7 @@ $col = $dg->addColumn("حساب", "CostDesc");
 $col->width = 100;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo");
+$col->renderer = "IncomeCheque.ChequeNoRender";
 $col->width = 70;
 
 $col = $dg->addColumn("تاریخ چک", "ChequeDate", GridColumn::ColumnType_date);
@@ -31,12 +34,6 @@ $col->width = 80;
 
 $col = $dg->addColumn("مبلغ چک", "ChequeAmount", GridColumn::ColumnType_money);
 $col->width = 80;
-
-$col = $dg->addColumn("بانک", "BankDesc");
-$col->width = 60;
-
-$col = $dg->addColumn("شعبه", "ChequeBranch");
-$col->width = 70;
 
 $col = $dg->addColumn("وضعیت چک", "ChequeStatusDesc", "");
 $col->width = 80;
@@ -46,10 +43,17 @@ $col->width = 80;
 
 if($accessObj->EditFlag)
 {
-	$dg->addButton("", "اضافه چک", "add", "function(){IncomeChequeObject.AddOuterCheque();}");
+	$dg->addButton("", "اضافه چک", "add", "function(){IncomeChequeObject.AddCheque();}");
 	$dg->addButton("", "تغییر وضعیت چک", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
 	$dg->addButton("", "تعویض چک", "copy", "function(){IncomeChequeObject.ChangeCheque();}");
+	
+	$dg->addButton("", "برگشت عملیات", "undo", "function(){IncomeChequeObject.ReturnLatestOperation();}");
 }
+
+$col = $dg->addColumn("", "", "");
+$col->renderer = "IncomeCheque.HistoryRender";
+$col->width = 40;
+
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 400;
 $dg->width = 800;
@@ -67,14 +71,15 @@ IncomeCheque.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 
 	ChangingCheque : false,
+	GroupPays : new Array(),
+	GroupPaysTitles : new Array(),
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
 };
 
-function IncomeCheque(){
-	
+IncomeCheque.prototype.MakeFilterPanel = function(){
 	this.formPanel = new Ext.form.Panel({
 		renderTo : this.get("div_form"),
 		width : 600,
@@ -173,6 +178,197 @@ function IncomeCheque(){
 			}
 		}]
 	});
+}
+
+IncomeCheque.prototype.MakeLoanPanel = function(){
+
+	return {
+		title : "واریز قسط وام",
+		items : [{
+			xtype : "combo",
+			store: new Ext.data.Store({
+				proxy:{
+					type: 'jsonp',
+					url: '/loan/request/request.data.php?task=SelectAllRequests2',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields :  ['PartAmount',"IsEnded","RequestID","PartDate","loanFullname","InstallmentAmount",{
+					name : "fullTitle",
+					convert : function(value,record){
+						return "کد وام : " + record.data.RequestID + " به مبلغ " + 
+							Ext.util.Format.Money(record.data.PartAmount) + " مورخ " + 
+							MiladiToShamsi(record.data.PartDate) + " " + record.data.loanFullname;
+					}
+				}]
+			}),
+			displayField: 'fullTitle',
+			pageSize : 25,
+			valueField : "RequestID",
+			width : 600,
+			tpl: new Ext.XTemplate(
+				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
+				'<td style="padding:7px">کد وام</td>',
+				'<td style="padding:7px">وام گیرنده</td>',
+				'<td style="padding:7px">مبلغ وام</td>',
+				'<td style="padding:7px">تاریخ پرداخت</td>',
+				'<td style="padding:7px"></td>',
+				'</tr>',
+				'<tpl for=".">',
+					'<tpl if="IsEnded == \'YES\'">',
+						'<tr class="x-boundlist-item pinkRow" style="border-left:0;border-right:0">',
+					'<tpl else>',
+						'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
+					'</tpl>',
+					'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">{loanFullname}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">',
+						'{[Ext.util.Format.Money(values.PartAmount)]}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.PartDate)]}</td>',
+					'<tpl if="IsEnded == \'NO\'">',
+						'<td class="search-item"><div align=center title="اضافه به پرداخت گروهی" class=add ',
+							'onclick="IncomeChequeObject.AddToGroupPay(event,\'{loanFullname}\',',
+							'{RequestID},{InstallmentAmount});" ',
+							'style=background-repeat:no-repeat;',
+							'background-position:center;cursor:pointer;width:20px;height:16></div></td>',
+					'<tpl else>',
+						'<td class="search-item"></td>',
+					'</tpl>',
+				' </tr>',
+				'</tpl>',
+				'</table>'
+			)
+		},{
+			xtype : "multiselect",
+			itemId : "GroupList",
+			store : this.GroupPaysTitles,
+			height : 100,
+			width : 500
+		},{
+			xtype : "button",
+			text : "حذف از لیست",
+			iconCls : "cross",
+			handler : function(){
+
+				me = IncomeChequeObject;
+				el = me.ChequeInfoWin.down("[itemId=GroupList]");
+				index = el.getStore().indexOf(el.getSelected()[0]);
+				if(index >= 0)
+				{
+					me.GroupPays.splice(index,1);
+					me.GroupPaysTitles.splice(index,1);
+					el.clearValue();
+					el.bindStore(me.GroupPaysTitles);
+				}
+			}
+		}]	
+	};
+}
+
+IncomeCheque.prototype.MakeCostPanel = function(){
+
+	return {
+		title : "واریز به حساب دیگر",
+		items : [{
+			xtype : "combo",
+			width : 350,
+			fieldLabel : "کد حساب",
+			colspan : 2,
+			store: new Ext.data.Store({
+				fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+					name : "fullDesc",
+					convert : function(value,record){
+						return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+					}				
+				}],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectCostCode',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				}
+			}),
+			typeAhead: false,
+			name : "CostID",
+			valueField : "CostID",
+			displayField : "fullDesc",
+			listConfig: {
+				loadingText: 'در حال جستجو...',
+				emptyText: 'فاقد اطلاعات'
+			},
+			listeners :{
+				select : function(combo,records){
+					if(records[0].data.TafsiliType != null)
+					{
+						combo = IncomeChequeObject.ChequeInfoWin.down("[name=TafsiliID]");
+						combo.enable();
+						combo.setValue();
+						combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType;
+						combo.getStore().load();
+
+						combo = IncomeChequeObject.ChequeInfoWin.down("[name=TafsiliID2]");
+						combo.enable();
+						combo.setValue();
+						combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType;
+						combo.getStore().load();
+					}
+				}
+			}
+		},{
+			xtype : "combo",
+			width : 350,
+			disabled : true,
+			fieldLabel : "تفصیلی",
+			store: new Ext.data.Store({
+				fields:["TafsiliID","TafsiliCode","TafsiliDesc"],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				}
+			}),
+			typeAhead: false,
+			pageSize : 10,
+			name : "TafsiliID",
+			valueField : "TafsiliID",
+			displayField : "TafsiliDesc"
+		},{
+			xtype : "combo",
+			width : 350,
+			disabled : true,
+			fieldLabel : "تفصیلی2",
+			store: new Ext.data.Store({
+				fields:["TafsiliID","TafsiliCode","TafsiliDesc"],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				}
+			}),
+			typeAhead: false,
+			pageSize : 10,
+			name : "TafsiliID2",
+			valueField : "TafsiliID",
+			displayField : "TafsiliDesc"
+		}]
+	};
+}
+
+IncomeCheque.HistoryRender = function(){
+	return "<div  title='سابقه تغییرات' class='history' "+
+		" onclick='IncomeChequeObject.ShowHistory();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+IncomeCheque.ChequeNoRender = function(v,p,r){
+	
+	st = "بانک : " + r.data.BankDesc + "<br>شعبه : " + r.data.ChequeBranch;
+	p.tdAttr = "data-qtip='" + st + "'";
+	return v;
+}
+
+function IncomeCheque(){
+	
+	this.MakeFilterPanel();
 	
 	this.formPanel.getEl().addKeyListener(Ext.EventObject.ENTER, function(keynumber,e){
 		if(!IncomeChequeObject.grid.rendered)
@@ -188,83 +384,36 @@ function IncomeCheque(){
 	this.grid.getStore().proxy.form = this.get("MainForm");
 	this.grid.render(this.get("div_grid"));
 	
-	this.OuterChequeWin = new Ext.window.Window({
-		width : 400,
-		height : 250,
+	
+	this.LoanPanel = this.MakeLoanPanel();
+	this.CostPanel = this.MakeCostPanel();
+	
+	this.ChequeInfoWin = new Ext.window.Window({
+		width : 700,
+		height : 350,
 		modal : true,
 		closeAction : "hide",
 		items : new Ext.form.Panel({
+			layout :{
+				type : "table",
+				columns : 2
+			},
 			items :[{
-				xtype : "combo",
-				width : 350,
-				fieldLabel : "کد حساب",
-				colspan : 2,
-				store: new Ext.data.Store({
-					fields:["CostID","CostCode","CostDesc", "TafsiliType",{
-						name : "fullDesc",
-						convert : function(value,record){
-							return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
-						}				
-					}],
-					proxy: {
-						type: 'jsonp',
-						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectCostCode',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					}
-				}),
-				typeAhead: false,
-				name : "CostID",
-				valueField : "CostID",
-				displayField : "fullDesc",
-				listConfig: {
-					loadingText: 'در حال جستجو...',
-					emptyText: 'فاقد اطلاعات'
-				},
-				listeners :{
-					select : function(combo,records){
-						if(records[0].data.TafsiliType != null)
-						{
-							combo = IncomeChequeObject.OuterChequeWin.down("[name=TafsiliID]");
-							combo.enable();
-							combo.setValue();
-							combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType;
-							combo.getStore().load();
-
-							IncomeChequeObject.OuterChequeWin.
-								down("[name=TafsiliType]").setValue(records[0].data.TafsiliType);
-						}
-					}
-				}
-			},{
-				xtype : "combo",
-				width : 350,
-				disabled : true,
-				fieldLabel : "تفصیلی",
-				store: new Ext.data.Store({
-					fields:["TafsiliID","TafsiliCode","TafsiliDesc"],
-					proxy: {
-						type: 'jsonp',
-						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					}
-				}),
-				typeAhead: false,
-				pageSize : 10,
-				name : "TafsiliID",
-				valueField : "TafsiliID",
-				displayField : "TafsiliDesc"
-			},{
 				xtype : "shdatefield",
 				name : "ChequeDate",
+				allowBlank : false,
 				fieldLabel : "تاریخ چک"
 			},{
 				xtype : "currencyfield",
 				name : "ChequeAmount",
 				hideTrigger : true,
+				allowBlank : false,
 				fieldLabel : "مبلغ چک"
 			},{
 				xtype : "numberfield",
 				name : "ChequeNo",
+				colspan : 2,
+				allowBlank : false,
 				hideTrigger : true,
 				fieldLabel : "شماره چک"
 			},{
@@ -280,6 +429,7 @@ function IncomeCheque(){
 				}),
 				queryMode : "local",
 				displayField: 'BankDesc',
+				allowBlank : false,
 				valueField : "BankID",
 				name : "ChequeBank",
 				fieldLabel : "بانک"
@@ -288,21 +438,60 @@ function IncomeCheque(){
 				name : "ChequeBranch",
 				fieldLabel : "شعبه"
 			},{
-				xtype : "hidden",
-				name : "TafsiliType"
+				xtype : "tabpanel",
+				colspan : 2,
+				height : 200,
+				items :[this.LoanPanel,this.CostPanel]
 			}]
 		}),
 		buttons :[{
 			text : "ذخیره",
 			iconCls : "save",
 			itemId : "btn_save",
-			handler : function(){ IncomeChequeObject.SaveOuterCheque();}
+			handler : function(){ IncomeChequeObject.SaveIncomeCheque();}
 		}]
 	});
-	Ext.getCmp(this.TabID).add(this.OuterChequeWin);
+	Ext.getCmp(this.TabID).add(this.ChequeInfoWin);
 }
 
 IncomeChequeObject = new IncomeCheque();
+
+IncomeCheque.prototype.AddToGroupPay = function(e ,loanFullname, RequestID, InstallmentAmount){
+
+	if(!this.groupAmountWin)
+	{
+		this.groupAmountWin = new Ext.window.Window({
+			width : 300,
+			height : 100,
+			modal : true,
+			title : "نحوه پرداخت",
+			bodyStyle : "background-color:white",
+			items : [{
+				xtype : "currencyfield",
+				hideTrigger : true,
+				fieldLabel : "مبلغ پرداخت"
+			}],
+			closeAction : "hide",
+			buttons : [{
+				text : "اضافه به پرداخت گروهی",				
+				iconCls : "add",
+				itemId : "btn_add"	
+			}]
+
+		});
+	}
+	this.groupAmountWin.down('currencyfield').setValue(InstallmentAmount);
+	this.groupAmountWin.down("[itemId=btn_add]").setHandler(function(){
+		amount = this.up('window').down('currencyfield').getValue();
+		IncomeChequeObject.GroupPays.push(RequestID + "_" + amount);
+		IncomeChequeObject.GroupPaysTitles.push(loanFullname);
+		IncomeChequeObject.groupAmountWin.hide();
+		IncomeChequeObject.ChequeInfoWin.down("[itemId=GroupList]").bindStore(IncomeChequeObject.GroupPaysTitles);
+	})
+	this.groupAmountWin.show();
+	this.groupAmountWin.center();
+	e.stopImmediatePropagation();	
+}
 
 IncomeCheque.prototype.beforeChangeStatus = function(){
 	
@@ -321,11 +510,11 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 						url: this.address_prefix + 'cheques.data.php?task=selectValidChequeStatuses',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
-					fields :  ['InfoID',"InfoDesc"]
+					fields :  ['TafsiliID',"TafsiliDesc"]
 				}),
 				queryMode : "local",
-				displayField: 'InfoDesc',
-				valueField : "InfoID",
+				displayField: 'TafsiliDesc',
+				valueField : "TafsiliID",
 				width : 400,
 				name : "DstID"
 			}],
@@ -351,7 +540,7 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 	
 	this.commentWin.down("[itemId=btn_save]").setHandler(function(){
 		status = this.up('window').down("[name=DstID]").getValue();
-		if(status == "3")
+		if(status == "<?= INCOMECHEQUE_VOSUL ?>")
 			IncomeChequeObject.AccountInfoWin();
 		else
 			IncomeChequeObject.ChangeStatus();
@@ -359,6 +548,34 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 		
 	this.commentWin.show();
 	this.commentWin.center();
+}
+
+IncomeCheque.prototype.ReturnLatestOperation = function(){
+
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+	mask = new Ext.LoadMask(this.grid, {msg:'در حال تغییر وضعیت ...'});
+	mask.show();
+	
+	Ext.Ajax.request({
+		methos : "post",
+		url : this.address_prefix + "cheques.data.php",
+		params : {
+			task : "ReturnLatestOperation",
+			IncomeChequeID : record.data.IncomeChequeID
+		},
+		
+		success : function(response){
+			mask.hide();
+			result = Ext.decode(response.responseText);
+			if(result.success)
+				IncomeChequeObject.grid.getStore().load();
+			else if(result.data != "")
+				Ext.MessageBox.alert("",result.data);
+			else
+				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+		}
+	});
 }
 
 IncomeCheque.prototype.AccountInfoWin = function(){
@@ -551,11 +768,11 @@ IncomeCheque.prototype.ChangeStatus = function(){
 	params = {
 		task : "ChangeChequeStatus",
 		BackPayID : record.data.BackPayID,
-		OuterChequeID : record.data.OuterChequeID,
+		IncomeChequeID : record.data.IncomeChequeID,
 		StatusID : StatusID
 	};
 	
-	if(StatusID == "<?= OUERCHEQUE_VOSUL ?>")
+	if(StatusID == "<?= INCOMECHEQUE_VOSUL ?>")
 	{
 		params = mergeObjects(params, this.BankWin.down('form').getForm().getValues());
 	}	
@@ -588,17 +805,20 @@ IncomeCheque.prototype.ChangeStatus = function(){
 	});
 }
 
-IncomeCheque.prototype.AddOuterCheque = function(){
+IncomeCheque.prototype.AddCheque = function(){
 	
-	this.OuterChequeWin.show();
-	this.OuterChequeWin.down("[name=CostID]").show();
-	this.OuterChequeWin.down("[name=TafsiliID]").show();
-	this.OuterChequeWin.down("[name=TafsiliID]").disable();
+	this.ChequeInfoWin.down('form').getForm().reset();
+	this.ChequeInfoWin.show();
+	this.ChequeInfoWin.down("[name=TafsiliID]").disable();
+	this.ChequeInfoWin.down("[name=TafsiliID2]").disable();
 }
 
-IncomeCheque.prototype.SaveOuterCheque = function(){
+IncomeCheque.prototype.SaveIncomeCheque = function(){
 	
-	mask = new Ext.LoadMask(this.OuterChequeWin, {msg:'در حال ذخيره سازي...'});
+	if(!this.ChequeInfoWin.down('form').getForm().isValid())
+		return;
+	
+	mask = new Ext.LoadMask(this.ChequeInfoWin, {msg:'در حال ذخيره سازي...'});
 	mask.show();
 
 	params = {};
@@ -606,19 +826,28 @@ IncomeCheque.prototype.SaveOuterCheque = function(){
 	{
 		var record = this.grid.getSelectionModel().getLastSelected();
 		params.ChangingCheque = "true";
-		params.RefOuterChequeID = record.data.OuterChequeID;
+		params.RefIncomeChequeID = record.data.IncomeChequeID;
 		params.RefBackPayID = record.data.BackPayID;
 	}
+	if(this.GroupPaysTitles.length > 0)
+	{
+		params.parts = Ext.encode(this.GroupPays);
+	}
+	else
+	{
+			
+	}
 	
-	this.OuterChequeWin.down('form').getForm().submit({
+	
+	this.ChequeInfoWin.down('form').getForm().submit({
 		clientValidation: true,
-		url: this.address_prefix + 'cheques.data.php?task=SaveOuterCheque',
+		url: this.address_prefix + 'cheques.data.php?task=SaveIncomeCheque',
 		method : "POST",
 		params : params,
 
 		success : function(form,action){                
 			IncomeChequeObject.grid.getStore().load();
-			IncomeChequeObject.OuterChequeWin.hide();
+			IncomeChequeObject.ChequeInfoWin.hide();
 			mask.hide();
 
 		},
@@ -642,16 +871,51 @@ IncomeCheque.prototype.ChangeCheque = function(){
 		Ext.MessageBox.alert("","انتخاب ردیف چک مورد تغییر الزامی است");
 		return;
 	}
-	if(record.data.ChequeStatus == "<?= OUERCHEQUE_VOSUL ?>")
+	if(record.data.ChequeStatus == "<?= INCOMECHEQUE_VOSUL ?>")
 	{
 		Ext.MessageBox.alert("","چک وصول شده قابل تغییر نمی باشد");
 		return;
 	}
-	this.OuterChequeWin.show();
-	this.OuterChequeWin.down("[name=CostID]").hide();
-	this.OuterChequeWin.down("[name=TafsiliID]").hide();
+	this.ChequeInfoWin.show();
+	this.ChequeInfoWin.down("[name=CostID]").hide();
+	this.ChequeInfoWin.down("[name=TafsiliID]").hide();
 	this.ChangingCheque = true;
 }
+
+IncomeCheque.prototype.ShowHistory = function(){
+
+	if(!this.HistoryWin)
+	{
+		this.HistoryWin = new Ext.window.Window({
+			title: 'سابقه گردش درخواست',
+			modal : true,
+			autoScroll : true,
+			width: 700,
+			height : 500,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "history.php",
+				scripts : true
+			},
+			buttons : [{
+					text : "بازگشت",
+					iconCls : "undo",
+					handler : function(){
+						this.up('window').hide();
+					}
+				}]
+		});
+		Ext.getCmp(this.TabID).add(this.HistoryWin);
+	}
+	this.HistoryWin.show();
+	this.HistoryWin.center();
+	this.HistoryWin.loader.load({
+		params : {
+			IncomeChequeID : this.grid.getSelectionModel().getLastSelected().data.IncomeChequeID
+		}
+	});
+}
+
 </script>
 <center>
 	<br>

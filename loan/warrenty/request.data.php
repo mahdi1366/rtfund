@@ -11,7 +11,6 @@ include_once inc_response;
 require_once "config.inc.php";
 include_once 'request.class.php';
 require_once "../../office/workflow/wfm.class.php";
-require_once '../../accounting/definitions.inc.php';
 require_once '../../accounting/docs/import.data.php';
 
 $task = isset($_REQUEST["task"]) ? $_REQUEST["task"] : "";

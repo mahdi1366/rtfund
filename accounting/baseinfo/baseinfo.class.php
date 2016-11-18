@@ -590,33 +590,34 @@ class ACC_accounts extends PdoDataAccess {
 
 }
 
-class ACC_cheques extends PdoDataAccess {
+class ACC_ChequeBooks extends PdoDataAccess {
 
-	public $ChequeID;
+	public $ChequeBookID;
 	public $AccountID;
 	public $SerialNo;
 	public $MinNo;
 	public $MaxNo;
 	public $IsActive;
 
-	function __construct($CId = '') {
+	function __construct($ChequeBookID = '') {
 
-		if ($CId == '')
+		if ($ChequeBookID == '')
 			return;
-		return parent::FillObject($this, "select * from ACC_cheques where ChequeID=?", array($CId));
+		return parent::FillObject($this, "select * from ACC_ChequeBooks where ChequeBookID=?", 
+				array($ChequeBookID));
 	}
 
 	function InsertCheque($pdo=null) {
 		
-		if (parent::insert("ACC_cheques", $this, $pdo) === false)
+		if (parent::insert("ACC_ChequeBooks", $this, $pdo) === false)
 			return false;
 		
-		$this->ChequeID = parent::InsertID($pdo);
+		$this->ChequeBookID = parent::InsertID($pdo);
 		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->ChequeID;
-		$daObj->TableName = "ACC_cheques";
+		$daObj->MainObjectID = $this->ChequeBookID;
+		$daObj->TableName = "ACC_ChequeBooks";
 		$daObj->execute($pdo);
 		return true;
 	}
@@ -624,13 +625,13 @@ class ACC_cheques extends PdoDataAccess {
 	function UpdateCheque($pdo=null) {
 		
             $whereParams = array();
-            $whereParams[":ChequeID"] = $this->ChequeID;
-            if (parent::update("ACC_cheques", $this, " ChequeID=:ChequeID", $whereParams) === false)
+            $whereParams[":ChequeBookID"] = $this->ChequeBookID;
+            if (parent::update("ACC_ChequeBooks", $this, " ChequeBookID=:ChequeBookID", $whereParams) === false)
                 return false;
             $daObj = new DataAudit();
             $daObj->ActionType = DataAudit::Action_update;
-            $daObj->MainObjectID = $this->ChequeID;
-            $daObj->TableName = "ACC_cheques";
+            $daObj->MainObjectID = $this->ChequeBookID;
+            $daObj->TableName = "ACC_ChequeBooks";
             $daObj->execute($pdo=null);
             return true;
         }
@@ -638,24 +639,24 @@ class ACC_cheques extends PdoDataAccess {
 	function DeleteCheque(){
 		
 		$whereParams = array();
-		$whereParams[":ChequeID"] = $this->ChequeID;
-		$result = parent::delete("ACC_cheques", "ChequeID=:ChequeID", $whereParams);
+		$whereParams[":ChequeBookID"] = $this->ChequeBookID;
+		$result = parent::delete("ACC_ChequeBooks", "ChequeBookID=:ChequeBookID", $whereParams);
 		if ($result === false)
 			return false;
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->MainObjectID = $this->ChequeID;
-		$daObj->TableName = "ACC_cheques";
+		$daObj->MainObjectID = $this->ChequeBookID;
+		$daObj->TableName = "ACC_ChequeBooks";
 		$daObj->execute();
 		return true;
 	}
 
 	static function SelectCheques($where = '', $param = array()) {
 
-		$query = "select c.* from ACC_cheques c ";
+		$query = "select c.* from ACC_ChequeBooks c ";
 		if ($where != '')
 			$query .= ' where ' . $where;
-		$query .= ' order by ChequeID desc ';
+		$query .= ' order by ChequeBookID desc ';
 		
 		return parent::runquery($query, $param);
 	}
@@ -668,8 +669,8 @@ class ACC_cheques extends PdoDataAccess {
 			$this->PushException("اطلاعات ناقص می باشد");
 			return false;
 		}
-		$res = parent::runquery("select ChequeID
-  	                         from ACC_cheques
+		$res = parent::runquery("select ChequeBookID
+  	                         from ACC_ChequeBooks
   	                        
                              where AccountID =(select AccountID from ACC_accounts where AccountID=:BAId)
                              and (
@@ -689,7 +690,8 @@ class ACC_cheques extends PdoDataAccess {
 		}
 		if (!$res)
 			return true;
-		else if (count($res) == 1 && $this->ChequeID != '' && $res[0]['ChequeID'] == $this->ChequeID)
+		else if (count($res) == 1 && $this->ChequeBookID != '' && 
+				$res[0]['ChequeBookID'] == $this->ChequeBookID)
 			return true;
 		return false;
 	}

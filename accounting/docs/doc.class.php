@@ -336,7 +336,7 @@ class ACC_DocItems extends PdoDataAccess {
 
 class ACC_DocCheques extends PdoDataAccess {
 	
-    public $ChequeID;
+    public $DocChequeID;
     public $DocID;
 	public $CheckNo;
 	public $AccountID;
@@ -369,11 +369,11 @@ class ACC_DocCheques extends PdoDataAccess {
 	    if( parent::insert("ACC_DocCheques", $this) === false )
 		    return false;
 
-	    $this->ChequeID = parent::InsertID();
+	    $this->DocChequeID = parent::InsertID();
 
 	    $daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->ChequeID;
+		$daObj->MainObjectID = $this->DocChequeID;
 		$daObj->TableName = "ACC_DocCheques";
 		$daObj->execute();
 		return true;
@@ -382,30 +382,30 @@ class ACC_DocCheques extends PdoDataAccess {
     function Edit()
     {
 	    $whereParams = array();
-	    $whereParams[":kid"] = $this->ChequeID;
+	    $whereParams[":kid"] = $this->DocChequeID;
 
-	    if( parent::update("ACC_DocCheques",$this," ChequeID=:kid", $whereParams) === false )
+	    if( parent::update("ACC_DocCheques",$this," DocChequeID=:kid", $whereParams) === false )
 		    return false;
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->MainObjectID = $this->ChequeID;
+		$daObj->MainObjectID = $this->DocChequeID;
 		$daObj->TableName = "ACC_DocCheques";
 		$daObj->execute();
 		return true;
     }
 
-    static function Remove($ChequeID)
+    static function Remove($DocChequeID)
     {
-	    $result = parent::delete("ACC_DocCheques", "ChequeID=:kid ",
-		    array(":kid" => $ChequeID));
+	    $result = parent::delete("ACC_DocCheques", "DocChequeID=:kid ",
+		    array(":kid" => $DocChequeID));
 
 	    if($result === false)
 		    return false;
 
 	    $daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->MainObjectID = $ChequeID;
+		$daObj->MainObjectID = $DocChequeID;
 		$daObj->TableName = "ACC_DocCheques";
 		$daObj->execute();
 		return true;

@@ -5,7 +5,6 @@
 //---------------------------
 include("../header.inc.php");
 require_once 'request.class.php';
-require_once "../../accounting/definitions.inc.php";
 
 if(empty($_POST["PartID"]))
 	die();

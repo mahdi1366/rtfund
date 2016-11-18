@@ -1,8 +1,4 @@
 <?php
-//-----------------------------
-//	Programmer	: SH.Jafarkhani
-//	Date		: 94.07
-//-----------------------------
 
 //................. TypeID = 9 .....................
 define("DOCTYPE_STARTCYCLE", "1");
@@ -19,15 +15,17 @@ define("DOCTYPE_SAVING_IN", "11");
 define("DOCTYPE_SAVING_OUT", "12");
 define("DOCTYPE_WARRENTY", "13");
 define("DOCTYPE_EQUALCHECKS", "14");
-define("DOCTYPE_OUTERCHEQUE", "15");
+define("DOCTYPE_INCOMERCHEQUE", "15");
 define("DOCTYPE_LOAN_DIFFERENCE", "16");
 define("DOCTYPE_LOAN_COST", "17");
 
+//............  TypeID=2 ....................
 define("TAFTYPE_PERSONS", "1");
 define("TAFTYPE_YEARS", "2");
+define("TAFTYPE_ACCOUNTS", "3");
 define("TAFTYPE_SUBAGENT", "4");
 define("TAFTYPE_BANKS", "6");
-define("TAFTYPE_ACCOUNTS", "3");
+define("TAFTYPE_ChequeStatus", "7");
 
 define("COSTID_ShortDeposite", "66");
 define("COSTID_Todiee", "63");
@@ -46,11 +44,18 @@ define("ACCROLE_EXPERT", "1");
 define("ACCROLE_MANAGER", "2");
 
 //.............. TypeID=4 ................
-define("OUERCHEQUE_NOTVOSUL", "1");
-define("OUERCHEQUE_VOSUL", "3");
-define("OUERCHEQUE_EBTAL", "6");
-define("OUERCHEQUE_MOSTARAD", "8");
-define("OUERCHEQUE_BARGHASHTI_MOSTARAD", "9");
-define("OUERCHEQUE_MAKHDOOSH", "10");
-define("OUERCHEQUE_CHANGE", "11");
+define("INCOMECHEQUE_NOTVOSUL", "3001");
+define("INCOMECHEQUE_FLOW_VOSUL", "3002");
+define("INCOMECHEQUE_VOSUL", "3003");
+define("INCOMECHEQUE_BARGASHTI", "3004");
+define("INCOMECHEQUE_EBTAL", "3006");
+define("INCOMECHEQUE_MOSTARAD", "3008");
+define("INCOMECHEQUE_BARGHASHTI_MOSTARAD", "3009");
+define("INCOMECHEQUE_MAKHDOOSH", "3010");
+define("INCOMECHEQUE_CHANGE", "3011");
+
+//............  TypeID=6 ....................
+define("BACKPAY_PAYTYPE_CHEQUE", "9");
+
+define("BLOCKID_LOAN","8");
 ?>

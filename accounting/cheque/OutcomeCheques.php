@@ -10,7 +10,7 @@ require_once inc_dataReader;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "cheques.data.php?task=selectOutcomeCheques", "grid_div");
 
-$col = $dg->addColumn("", "ChequeID", "", true);
+$col = $dg->addColumn("", "DocChequeID", "", true);
 
 $col = $dg->addColumn("شماره سند", "LocalNo");
 $col->width = 80;
