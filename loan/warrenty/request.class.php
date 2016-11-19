@@ -99,6 +99,7 @@ class WAR_costs extends OperationClass
 	public $CostDesc;
 	public $CostAmount;
 	public $CostCodeID;
+	public $CostType;
 
 	public static function Get($where = '', $whereParams = array()) {
 		

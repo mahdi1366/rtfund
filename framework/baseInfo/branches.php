@@ -19,6 +19,20 @@ $col->sortable = false;
 $col->width = 60;
 $col->align = "center";
 
+$col = $dg->addColumn("تفصیلی بانک پیش فرض", "DefaultBankTafsiliID", "string");
+$col->editor = ColumnEditor::ComboBox(
+		PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_BANKS), 
+		"TafsiliID", "TafsiliDesc");
+$col->sortable = false;
+$col->width = 130;
+
+$col = $dg->addColumn("تفصیلی حساب پیش فرض", "DefaultAccountTafsiliID", "string");
+$col->editor = ColumnEditor::ComboBox(
+		PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_ACCOUNTS), 
+		"TafsiliID", "TafsiliDesc");
+$col->sortable = false;
+$col->width = 140;
+
 $col = $dg->addColumn("حذف","BranchID","");
 $col->renderer = "Branch.deleteRender";
 $col->sortable = false;
@@ -31,7 +45,7 @@ $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(v,p,r){return BranchObject.saveData(v,p,r);}";
 
 $dg->height = 350;
-$dg->width = 600;
+$dg->width = 780;
 $dg->DefaultSortField = "BranchName";
 $dg->autoExpandColumn = "BranchName";
 $dg->editorGrid = true;

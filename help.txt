@@ -22,3 +22,5 @@ foreach($costDocs as $row)
 	...
 	flush();
 	ob_flush();
+--------------------------------------------------------------------------------
+CREATE DATABASE krrtfir_rtfund CHARACTER SET utf8 COLLATE utf8_general_ci;

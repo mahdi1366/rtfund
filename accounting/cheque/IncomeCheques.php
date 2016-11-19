@@ -484,7 +484,7 @@ IncomeCheque.prototype.AddToGroupPay = function(e ,loanFullname, RequestID, Inst
 	this.groupAmountWin.down("[itemId=btn_add]").setHandler(function(){
 		amount = this.up('window').down('currencyfield').getValue();
 		IncomeChequeObject.GroupPays.push(RequestID + "_" + amount);
-		IncomeChequeObject.GroupPaysTitles.push(loanFullname);
+		IncomeChequeObject.GroupPaysTitles.push(new Array(loanFullname,amount));
 		IncomeChequeObject.groupAmountWin.hide();
 		IncomeChequeObject.ChequeInfoWin.down("[itemId=GroupList]").bindStore(IncomeChequeObject.GroupPaysTitles);
 	})
@@ -615,17 +615,26 @@ IncomeCheque.prototype.AccountInfoWin = function(){
 					displayField : "fullDesc",
 					listeners : {
 						select : function(combo,records){
+							me = IncomeChequeObject;
 							if(records[0].data.TafsiliType != null)
 							{
-								IncomeChequeObject.BankWin.down("[itemId=TafsiliID]").setValue();
-								IncomeChequeObject.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
-								IncomeChequeObject.BankWin.down("[itemId=TafsiliID]").getStore().load();
+								me.BankWin.down("[itemId=TafsiliID]").setValue();
+								me.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
+								me.BankWin.down("[itemId=TafsiliID]").getStore().load();
 							}
 							if(records[0].data.TafsiliType2 != null)
 							{
-								IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").setValue();
-								IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType2;
-								IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]").getStore().load();
+								me.BankWin.down("[itemId=TafsiliID2]").setValue();
+								me.BankWin.down("[itemId=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType2;
+								me.BankWin.down("[itemId=TafsiliID2]").getStore().load();
+							}
+							
+							if(this.getValue() == "<?= COSTID_Bank ?>")
+							{
+								me.BankWin.down("[itemId=TafsiliID]").setValue(
+									"<?= $_SESSION["accounting"]["DefaultBankTafsiliID"] ?>");
+								me.BankWin.down("[itemId=TafsiliID2]").setValue(
+									"<?= $_SESSION["accounting"]["DefaultAccountTafsiliID"] ?>");
 							}
 						}
 					}
@@ -818,9 +827,6 @@ IncomeCheque.prototype.SaveIncomeCheque = function(){
 	if(!this.ChequeInfoWin.down('form').getForm().isValid())
 		return;
 	
-	mask = new Ext.LoadMask(this.ChequeInfoWin, {msg:'در حال ذخيره سازي...'});
-	mask.show();
-
 	params = {};
 	if(this.ChangingCheque)
 	{
@@ -831,6 +837,15 @@ IncomeCheque.prototype.SaveIncomeCheque = function(){
 	}
 	if(this.GroupPaysTitles.length > 0)
 	{
+		SumAmount = 0;
+		for(i=0; i<this.GroupPaysTitles.length; i++)
+			SumAmount += this.GroupPaysTitles[i][1];
+
+		if(SumAmount != this.ChequeInfoWin.down("[name=ChequeAmount]").getValue()*1)
+		{
+			Ext.MessageBox.alert("Error","جمع مبالغ با مبلغ چک برابر نمی باشد");
+			return false;
+		}
 		params.parts = Ext.encode(this.GroupPays);
 	}
 	else
@@ -838,6 +853,8 @@ IncomeCheque.prototype.SaveIncomeCheque = function(){
 			
 	}
 	
+	mask = new Ext.LoadMask(this.ChequeInfoWin, {msg:'در حال ذخيره سازي...'});
+	mask.show();
 	
 	this.ChequeInfoWin.down('form').getForm().submit({
 		clientValidation: true,

@@ -114,16 +114,16 @@ function selectIncomeCheques() {
 			from ACC_DocItems join ACC_docs using(DocID)
 			where SourceType='" . DOCTYPE_INCOMERCHEQUE . "' 
 			group by SourceID
-		)t on(IncomeChequeID=t.SourceID)
+		)t on(i.IncomeChequeID=t.SourceID)
 		
 		where " . $where . " 
-		group by IncomeChequeID";
+		group by i.IncomeChequeID";
 	
 	//.........................................................
 	$query .= dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
 	
-	//print_r(ExceptionHandler::PopAllExceptions());
+	print_r(ExceptionHandler::PopAllExceptions());
 	//echo PdoDataAccess::GetLatestQueryString();
 	
 	$no = $temp->rowCount();

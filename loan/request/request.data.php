@@ -312,13 +312,26 @@ function SavePart(){
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
+	$dt = LON_ReqParts::SelectAll("RequestID=?", array($obj->RequestID));
+	$firstPart = count($dt) > 0 ? false : true;
+		
 	if($obj->PartID > 0)
+	{
 		$result = $obj->EditPart($pdo);
+		if(!$firstPart)
+		{
+			$dt = PdoDataAccess::runquery("select max(DocID) from ACC_DocItems join ACC_docs using(DocID)
+				where DocType=" . DOCTYPE_LOAN_DIFFERENCE ." AND SourceID=? AND SourceID2=?",
+				array($obj->RequestID, $obj->PartID));
+			if($dt[0][0] != "")
+			{
+				$result = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo, $dt[0][0]);
+				ComputeInstallments($obj->RequestID, true, $pdo);
+			}
+		}		
+	}
 	else
 	{
-		$dt = LON_ReqParts::SelectAll("RequestID=?", array($obj->RequestID));
-		$firstPart = count($dt) > 0 ? false : true;
-		
 		$result = $obj->AddPart($pdo);
 		
 		if(!$firstPart)

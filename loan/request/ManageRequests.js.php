@@ -7,7 +7,8 @@
 ManageRequest.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
-
+	MenuID : "<?= $_POST["MenuID"] ?>",
+	
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
 	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
@@ -302,7 +303,8 @@ ManageRequest.prototype.ShowEvents = function(){
 	this.EventsWin.loader.load({
 		params : {
 			ExtTabID : this.EventsWin.getEl().id,
-			RequestID : record.data.RequestID
+			RequestID : record.data.RequestID,
+			MenuID : this.MenuID
 		}
 	});
 }

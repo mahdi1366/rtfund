@@ -28,6 +28,8 @@ foreach($systems as $sysRow)
 			$_SESSION["accounting"]["CycleID"] = $dt[0]["CycleID"];
 			$_SESSION["accounting"]["CycleYear"] = $dt[0]["CycleYear"];
 			$_SESSION["accounting"]["BranchName"] = $dt[0]["BranchName"];
+			$_SESSION["accounting"]["DefaultBankTafsiliID"] = $dt[0]["DefaultBankTafsiliID"];
+			$_SESSION["accounting"]["DefaultAccountTafsiliID"] = $dt[0]["DefaultAccountTafsiliID"];
 		}
 	}
 	

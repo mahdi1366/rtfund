@@ -28,6 +28,14 @@ $col = $dg->addColumn("مبلغ", "CostAmount", GridColumn::ColumnType_money);
 $col->editor = ColumnEditor::CurrencyField();
 $col->width = 100;
 
+$col = $dg->addColumn("ماهیت", "CostType");
+$col->editor = ColumnEditor::ComboBox(array(
+	array("id"=>'DEBTOR',"title"=>'بدهکار'),
+	array("id"=>"CREDITOR",'title'=>"بستانکار")), 
+		"id", "title");
+$col->width = 100;
+
+
 $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(store,record){return WarrentyCostObject.SaveCost(record);}";
 

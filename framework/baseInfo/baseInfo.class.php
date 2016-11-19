@@ -133,6 +133,8 @@ class BSC_branches extends PdoDataAccess
 	public $BranchID;
 	public $BranchName;
 	public $IsActive;
+	public $DefaultBankTafsiliID;
+	public $DefaultAccountTafsiliID;
 	
 	function  __construct($BranchID = "")
 	{

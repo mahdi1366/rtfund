@@ -25,7 +25,11 @@ if(isset($_REQUEST["show"]))
 		$query .= " AND BranchID=:b";
 		$whereParam[":b"] = $_POST["BranchID"];
 	}	
-	
+	if(!empty($_POST["DocType"]))
+	{
+		$query .= " AND DocType=:dt";
+		$whereParam[":dt"] = $_POST["DocType"];
+	}	
 	if(!empty($_POST["FromLocalNo"]))
 	{
 		$query .= " AND d.LocalNo >= :td ";
@@ -100,6 +104,10 @@ if(isset($_REQUEST["show"]))
 		return DateModules::miladi_to_shamsi($val);
 	}	
 	
+	function moneyRender($row, $val){
+		return number_format($val);
+	}	
+	
 	function PrintDocRender($row, $val){
 		
 		return "<a target=_blank href='../docs/print_doc.php?DocID=" . $row["DocID"] . "'>" . $val . "</a>";
@@ -110,8 +118,8 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("تاریخ ثبت سند", "RegDate","dateRender");
 	$rpg->addColumn("ثبت کننده سند", "regPerson");
 	$rpg->addColumn("شرح سند", "description");
-	$rpg->addColumn("جمع بدهکار", "bdSum");
-	$rpg->addColumn("جمع بسنانکار", "bsSum");
+	$rpg->addColumn("جمع بدهکار", "bdSum","moneyRender");
+	$rpg->addColumn("جمع بسنانکار", "bsSum","moneyRender");
 	
 	$rpg->rowColorRender = "RowColorRender";
 	function RowColorRender($row){
@@ -201,6 +209,24 @@ function AccReport_docs()
 			displayField : "BranchName",
 			valueField : "BranchID",
 			hiddenName : "BranchID"
+		},{
+			xtype : "combo",
+			colspan : 2,
+			width : 400,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: "/accounting/global/domain.data.php?task=SelectDocTypes",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['InfoID','InfoDesc'],
+				autoLoad : true					
+			}),
+			fieldLabel : "نوع سند",
+			queryMode : 'local',
+			displayField : "InfoDesc",
+			valueField : "InfoID",
+			hiddenName : "DocType"
 		},{
 			xtype : "numberfield",
 			name : "FromLocalNo",

@@ -346,17 +346,25 @@ LoanPay.prototype.BeforeRegisterDoc = function(mode){
 					displayField : "fullDesc",
 					listeners : {
 						select : function(combo,records){
+							me = LoanPayObject;
 							if(records[0].data.TafsiliType != null)
 							{
-								LoanPayObject.BankWin.down("[itemId=TafsiliID]").setValue();
-								LoanPayObject.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
-								LoanPayObject.BankWin.down("[itemId=TafsiliID]").getStore().load();
+								me.BankWin.down("[itemId=TafsiliID]").setValue();
+								me.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
+								me.BankWin.down("[itemId=TafsiliID]").getStore().load();
 							}
 							if(records[0].data.TafsiliType2 != null)
 							{
-								LoanPayObject.BankWin.down("[itemId=TafsiliID2]").setValue();
-								LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType2;
-								LoanPayObject.BankWin.down("[itemId=TafsiliID2]").getStore().load();
+								me.BankWin.down("[itemId=TafsiliID2]").setValue();
+								me.BankWin.down("[itemId=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType2;
+								me.BankWin.down("[itemId=TafsiliID2]").getStore().load();
+							}
+							if(this.getValue() == "<?= COSTID_Bank ?>")
+							{
+								me.BankWin.down("[itemId=TafsiliID]").setValue(
+									"<?= $_SESSION["accounting"]["DefaultBankTafsiliID"] ?>");
+								me.BankWin.down("[itemId=TafsiliID2]").setValue(
+									"<?= $_SESSION["accounting"]["DefaultAccountTafsiliID"] ?>");
 							}
 						}
 					}

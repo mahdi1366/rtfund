@@ -146,6 +146,14 @@ LoanCost.prototype.BeforeSaveCost = function(record){
 								me.BankWin.down("[itemId=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType2;
 								me.BankWin.down("[itemId=TafsiliID2]").getStore().load();
 							}
+							
+							if(this.getValue() == "<?= COSTID_Bank ?>")
+							{
+								me.BankWin.down("[itemId=TafsiliID]").setValue(
+									"<?= $_SESSION["accounting"]["DefaultBankTafsiliID"] ?>");
+								me.BankWin.down("[itemId=TafsiliID2]").setValue(
+									"<?= $_SESSION["accounting"]["DefaultAccountTafsiliID"] ?>");
+							}
 						}
 					}
 				},{

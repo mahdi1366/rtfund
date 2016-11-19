@@ -8,16 +8,8 @@ require_once '../header.inc.php';
 require_once inc_dataReader;
 require_once inc_response;
 
-$task = isset($_POST ["task"]) ? $_POST ["task"] : (isset($_GET ["task"]) ? $_GET ["task"] : "");
-
-switch ($task) {
-	
-	case "GetAccessBranches":
-		GetAccessBranches();
-		
-	case "SelectCycles":
-		SelectCycles();
-}
+if(!empty($_REQUEST["task"]))
+	$_REQUEST["task"]();
 
 function GetAccessBranches(){
 	
@@ -31,6 +23,13 @@ function GetAccessBranches(){
 function selectCycles(){
 	
 	$dt = PdoDataAccess::runquery("select * from ACC_cycles");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SelectDocTypes(){
+	
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=9");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
