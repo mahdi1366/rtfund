@@ -271,7 +271,7 @@ function deleteLetter() {
 function selectLetterPages(){
 	
 	$letterID = !empty($_REQUEST["LetterID"]) ? $_REQUEST["LetterID"] : 0;
-	$dt = PdoDataAccess::runquery("select RowID, DocumentID, DocDesc, ObjectID 
+	$dt = PdoDataAccess::runquery("select RowID, DocumentID, DocDesc, ObjectID , FileType
 		from DMS_DocFiles join DMS_documents using(DocumentID)
 		where ObjectType='letter' AND ObjectID=?", array($letterID));
 	

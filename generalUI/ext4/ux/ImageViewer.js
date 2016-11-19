@@ -34,6 +34,51 @@ Ext.define('ImageViewer', {
             rotateAntiClockwise: 'Rotate anticlockwise'
         });
 
+		me.pdfItem = {
+			xtype : "container",
+			itemId: 'pdfContent',
+			style: "transform-origin: top left;-webkit-transform-origin: top left;"+
+				"-ms-transform-origin: top left;box-shadow: 0 0 5px 5px #888;margin-bottom:10px;height:88%",
+			html : "",
+			listeners: {
+				afterrender : function(){
+					me.loadPdf();
+				}
+			}
+		};
+		me.imageItem = {
+			xtype: 'image',
+			itemId: 'imageContent',
+			mode: 'element',
+			src: me.src.url,
+			style: "transform-origin: top left;-webkit-transform-origin: top left;"+
+				"-ms-transform-origin: top left;box-shadow: 0 0 5px 5px #888;margin-bottom:10px",
+			listeners: {
+				render: function (image) {
+					image.el.dom.onload = function () {							
+						me.setRotation(0);
+						me.rotateImage();
+						me.setOriginalImageWidth(image.el.dom.width);
+						me.setOriginalImageHeight(image.el.dom.height);
+						me.setImageWidth(image.el.dom.width);
+						me.setImageHeight(image.el.dom.height);
+						//me.stretchOptimally();
+						me.stretchHorizontally();
+					};
+				}
+			}
+		};
+		
+		if(me.src.fileType == "pdf")
+		{
+			me.pdfItem.hidden = false;
+			me.imageItem.hidden = true;
+		}	
+		else
+		{
+			me.pdfItem.hidden = true;
+			me.imageItem.hidden = false;
+		}
         me.items = [{
             xtype: 'toolbar',
             defaults: {
@@ -86,31 +131,35 @@ Ext.define('ImageViewer', {
                 padding: '10px',
                 cursor: 'pointer'
             },
-            items: {
-                xtype: 'image',
-                mode: 'element',
-                src: me.src,
-                style: "transform-origin: top left;-webkit-transform-origin: top left;"+
-					"-ms-transform-origin: top left;box-shadow: 0 0 5px 5px #888;margin-bottom:10px",
-                listeners: {
-                    render: function (image) {
-                        image.el.dom.onload = function () {
-                            me.setRotation(0);
-                            me.rotateImage();
-                            me.setOriginalImageWidth(image.el.dom.width);
-                            me.setOriginalImageHeight(image.el.dom.height);
-                            me.setImageWidth(image.el.dom.width);
-                            me.setImageHeight(image.el.dom.height);
-                            //me.stretchOptimally();
-							me.stretchHorizontally();
-                        };
-                    }
-                }
-            }
+            items: [me.imageItem,me.pdfItem]
         }];
 
-        me.callParent();
+        me.callParent();			
     },
+
+	loadPdf : function(){
+		if(this.src.fileType == "pdf")
+		{
+			pdfContainer = this.getPdf();
+			pdfContainer.removeAll();
+			DivId = pdfContainer.getId();
+			
+			//mask = Ext.LoadMask(pdfContainer,{msg:'در حال بارگذاری...'});
+			//mask.show();
+			
+			Ext.Ajax.request({
+				url : this.src.url,
+				method : "post",
+
+				success : function(response)
+				{
+					PDFObject.embed(response.responseText, "#"+DivId);
+					//mask.hide();
+				}
+			})
+
+		}
+	},
 
     initEvents: function () {
         var me = this;
@@ -351,7 +400,11 @@ Ext.define('ImageViewer', {
     },
 
     getImage: function () {
-        return this.query('image')[0];
+        return this.down("[itemId=imageContent]");
+    },
+	
+	 getPdf: function () {
+        return this.down("[itemId=pdfContent]");
     },
 
     getImageContainer: function () {
@@ -379,7 +432,8 @@ Ext.define('MultiImageViewer', {
 
         me.currentImageTemplate = me.currentImageTemplate || 'مشاهده تصویر {i} از {total}';
         me.currentImage = 0;
-        me.src = me.src[0];
+		
+		me.src = me.src[0];
 
         me.on('beforerender', me.insertPageUI, me);
 
@@ -437,8 +491,21 @@ Ext.define('MultiImageViewer', {
 
     applyCurrentImage: function (index) {
         var me = this;
-
-        me.getImage().el.dom.src = me.getSources()[index];
+		
+		if(me.getSources()[index].fileType == "pdf")
+		{
+			me.getImage().hide();
+			me.getPdf().show();
+			me.src = me.getSources()[index];
+			me.loadPdf();
+		}	
+		else
+		{
+			me.getImage().show();
+			me.getPdf().hide();
+			me.getImage().el.dom.src = me.getSources()[index].url;
+		}
+		
 
         return index;
     },

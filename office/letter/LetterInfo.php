@@ -119,10 +119,12 @@ if(count($doc) > 0)
 {
 	$images = DMS_DocFiles::selectAll("DocumentID=?", array($doc[0]["DocumentID"]));
 	foreach($images as $img)
-		$imageslist[] = "'/office/dms/ShowFile.php?RowID=" . $img["RowID"] . "&DocumentID=" . $img["DocumentID"] . 
-			"&ObjectID=" . $LetterID . "'";
+		$imageslist[] = array(
+			"url" => "/office/dms/ShowFile.php?RowID=" . $img["RowID"] . "&DocumentID=" . $img["DocumentID"] . 
+					"&ObjectID=" . $LetterID,
+			"fileType" => $img["FileType"]);
 }
-$imageslist = implode(",", $imageslist);
+$imageslist = json_encode($imageslist);
 //..............................................................................
 $editable = false;
 if($LetterObj->LetterType == "OUTCOME" && $LetterObj->IsSigned == "NO")
@@ -144,7 +146,7 @@ LetterInfo.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 
 	LetterID : '<?= $LetterID ?>',
-	imagesList : [<?= $imageslist ?>],
+	imagesList : <?= $imageslist ?>,
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);

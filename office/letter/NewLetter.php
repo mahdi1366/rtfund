@@ -285,6 +285,7 @@ Letter.prototype.BuildForms = function(){
 			height : 450,
 			items :[{
 				xtype : "combo",
+				width : 500,
 				fieldLabel : "انتخاب متن از الگوها",
 				store: new Ext.data.Store({
 					proxy:{
@@ -378,14 +379,22 @@ Letter.prototype.BuildForms = function(){
 							url: this.address_prefix + 'letter.data.php?task=selectLetterPages',
 							reader: {root: 'rows',totalProperty: 'totalCount'}
 						},
-						fields : ['RowID','ObjectID','DocumentID','DocDesc']
+						fields : ['RowID','ObjectID','DocumentID','DocDesc','FileType']
 					}),
 					tpl: [
 						'<tpl for=".">',
 							'<div style="position:relative;float: right;padding:5px;width:100px;margin:5px">',
-							'<div class="thumb"><img style="width:100px;height:100px;cursor:pointer" ',
-								'src="/office/dms/ShowFile.php?RowID={RowID}&DocumentID={DocumentID}&ObjectID={ObjectID}" ',
-								'title="{DocumentTitle}" onclick="LetterObject.ShowPage({DocumentID},{ObjectID})"></div>',
+							'<div class="thumb">',
+								'<tpl if="FileType == \'pdf\'">' ,
+									'<img style="width:100px;height:100px;cursor:pointer" ',
+									'src="/office/icons/pdf.jpg" ',
+									'title="{DocumentTitle}" onclick="LetterObject.ShowPage({DocumentID},{ObjectID})">',
+								'<tpl else>',
+									'<img style="width:100px;height:100px;cursor:pointer" ',
+									'src="/office/dms/ShowFile.php?RowID={RowID}&DocumentID={DocumentID}&ObjectID={ObjectID}" ',
+									'title="{DocumentTitle}" onclick="LetterObject.ShowPage({DocumentID},{ObjectID})">',
+								'</tpl>',
+							'</div>',
 							'<div class="cross x-btn-default-small" style="cursor:pointer;float: right;position: absolute;top:8px;',
 								'height: 19px; width: 19px; margin: 4px;"',
 								' onclick="LetterObject.DeletePage({DocumentID},{RowID})"></div>',

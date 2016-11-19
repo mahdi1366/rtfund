@@ -24,19 +24,30 @@ $dt = PdoDataAccess::runquery($query, $params);
 if(count($dt) == 0)
 	die();
 
-if(count($dt) == 1)
+if(!empty($_REQUEST["RowID"]))
 {
-	header('Content-disposition: filename=file.' . $dt[0]["FileType"]);
-	header('Content-type: jpg');
-	header('Pragma: no-cache');
-	header('Expires: 0');
-	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-	header('Pragma: public');
-	header("Content-Transfer-Encoding: binary");
+	$FileContent = $dt[0]["FileContent"] . 
+		file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" . 
+		$dt[0]["RowID"] . "." . $dt[0]["FileType"]);
+	
+	if($dt[0]["FileType"] == "pdf")
+	{
+		echo data_uri($FileContent, "pdf");
+		die();
+	}
+	else
+	{
+		header('Content-disposition: filename=file.' . $dt[0]["FileType"]);
+		header('Content-type: jpg');
+		header('Pragma: no-cache');
+		header('Expires: 0');
+		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+		header('Pragma: public');
+		header("Content-Transfer-Encoding: binary");
 
-	echo $dt[0]["FileContent"] . 
-		file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" . $dt[0]["RowID"] . "." . $dt[0]["FileType"]);
-	die();
+		echo $FileContent;
+		die();
+	}
 }
 
 function data_uri($content, $mime) {
@@ -44,16 +55,23 @@ function data_uri($content, $mime) {
     return ('data:' . $mime . ';base64,' . $base64);
 }
 
+echo '<script src="/generalUI/pdfobject.js"></script>';
 echo '<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>';
 echo "<center>";
 foreach($dt as $file)
 {
-	echo "<div style='width:100%;' align=center><hr>صفحه " . $file["PageNo"] . "<hr></div>";
-	echo "<img src=";
-	echo data_uri($file["FileContent"] . 
+	$FileContent = $file["FileContent"] . 
 		file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" .
-		$file["RowID"] . "." . $file["FileType"]), 'image/jpeg');
-	echo " /></br>";
+		$file["RowID"] . "." . $file["FileType"]);
+	
+	echo "<div style='width:100%;' align=center><hr>صفحه " . $file["PageNo"] . "<hr></div>";
+	if($file["FileType"] == "pdf")
+	{
+		echo "<img id=pdf_DIV_" . $file["RowID"] . ">";
+		echo '<script>PDFObject.embed("'.data_uri($FileContent, "pdf") . '", "#pdf_DIV_'.$file["RowID"].'");</script>';
+	}
+	else
+		echo "<img src=" . data_uri($FileContent, 'image/jpeg') . " /></br>";
 }
 echo "</center>";
 

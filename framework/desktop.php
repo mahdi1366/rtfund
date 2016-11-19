@@ -131,8 +131,9 @@ if ($menuStr != "") {
 		<script type="text/javascript" src="/generalUI/ext4/ux/grid/ExtraBar.js"></script>
 		<script type="text/javascript" src="/generalUI/ext4/ux/grid/gridprinter/Printer.js"></script>
 		<script type="text/javascript" src="/generalUI/ext4/ux/Printer/Printer-all.js"></script>
-		<script src="/generalUI/ckeditor/ckeditor.js"></script>
-		<script src="/generalUI/ext4/ux/ImageViewer.js"></script>
+		<script type="text/javascript" src="/generalUI/ckeditor/ckeditor.js"></script>
+		<script type="text/javascript" src="/generalUI/pdfobject.js"></script>
+		<script type="text/javascript" src="/generalUI/ext4/ux/ImageViewer.js"></script>
 		<link rel="stylesheet" type="text/css" href="/office/icons/icons.css" />
 	<style>
 		
