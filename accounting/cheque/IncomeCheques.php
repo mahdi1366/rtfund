@@ -45,9 +45,14 @@ if($accessObj->EditFlag)
 {
 	$dg->addButton("", "اضافه چک", "add", "function(){IncomeChequeObject.AddCheque();}");
 	$dg->addButton("", "تغییر وضعیت چک", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
-	$dg->addButton("", "تعویض چک", "copy", "function(){IncomeChequeObject.ChangeCheque();}");
-	
 	$dg->addButton("", "برگشت عملیات", "undo", "function(){IncomeChequeObject.ReturnLatestOperation();}");
+}
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn('حذف', '', 'string');
+	$col->renderer = "IncomeCheque.DeleteRender";
+	$col->width = 40;
+	$col->align = "center";
 }
 
 $col = $dg->addColumn("", "", "");
@@ -70,7 +75,6 @@ IncomeCheque.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
-	ChangingCheque : false,
 	GroupPays : new Array(),
 	GroupPaysTitles : new Array(),
 	
@@ -364,6 +368,14 @@ IncomeCheque.ChequeNoRender = function(v,p,r){
 	st = "بانک : " + r.data.BankDesc + "<br>شعبه : " + r.data.ChequeBranch;
 	p.tdAttr = "data-qtip='" + st + "'";
 	return v;
+}
+
+IncomeCheque.DeleteRender = function(value, p, record){
+	
+	if(record.data.ChequeStatus == "<?= INCOMECHEQUE_NOTVOSUL ?>")
+		return "<div  title='حذف' class='remove' onclick='IncomeChequeObject.DeleteCheque();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
 }
 
 function IncomeCheque(){
@@ -814,9 +826,44 @@ IncomeCheque.prototype.ChangeStatus = function(){
 	});
 }
 
+IncomeCheque.prototype.DeleteCheque = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+	mask = new Ext.LoadMask(this.grid, {msg:'در حال حذف ...'});
+	mask.show();
+	
+	Ext.Ajax.request({
+		methos : "post",
+		url : this.address_prefix + "cheques.data.php",
+		params : {
+			task : "DeleteCheque",
+			IncomeChequeID : record.data.IncomeChequeID
+		},
+		
+		success : function(response){
+			mask.hide();
+			result = Ext.decode(response.responseText);
+			if(result.success)
+				IncomeChequeObject.grid.getStore().load();
+			else if(result.data != "")
+				Ext.MessageBox.alert("",result.data);
+			else
+				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+			
+			
+		}
+	});
+}
+
 IncomeCheque.prototype.AddCheque = function(){
 	
 	this.ChequeInfoWin.down('form').getForm().reset();
+	this.GroupPays = new Array();
+	this.GroupPaysTitles = new Array();
+	el = this.ChequeInfoWin.down("[itemId=GroupList]");
+	el.bindStore(this.GroupPaysTitles)
+	   
 	this.ChequeInfoWin.show();
 	this.ChequeInfoWin.down("[name=TafsiliID]").disable();
 	this.ChequeInfoWin.down("[name=TafsiliID2]").disable();
@@ -828,13 +875,6 @@ IncomeCheque.prototype.SaveIncomeCheque = function(){
 		return;
 	
 	params = {};
-	if(this.ChangingCheque)
-	{
-		var record = this.grid.getSelectionModel().getLastSelected();
-		params.ChangingCheque = "true";
-		params.RefIncomeChequeID = record.data.IncomeChequeID;
-		params.RefBackPayID = record.data.BackPayID;
-	}
 	if(this.GroupPaysTitles.length > 0)
 	{
 		SumAmount = 0;
@@ -878,25 +918,6 @@ IncomeCheque.prototype.SaveIncomeCheque = function(){
 		}
 	});
 
-}
-
-IncomeCheque.prototype.ChangeCheque = function(){
-	
-	var record = this.grid.getSelectionModel().getLastSelected();
-	if(!record)
-	{
-		Ext.MessageBox.alert("","انتخاب ردیف چک مورد تغییر الزامی است");
-		return;
-	}
-	if(record.data.ChequeStatus == "<?= INCOMECHEQUE_VOSUL ?>")
-	{
-		Ext.MessageBox.alert("","چک وصول شده قابل تغییر نمی باشد");
-		return;
-	}
-	this.ChequeInfoWin.show();
-	this.ChequeInfoWin.down("[name=CostID]").hide();
-	this.ChequeInfoWin.down("[name=TafsiliID]").hide();
-	this.ChangingCheque = true;
 }
 
 IncomeCheque.prototype.ShowHistory = function(){

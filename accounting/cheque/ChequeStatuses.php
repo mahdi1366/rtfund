@@ -14,13 +14,13 @@ $dgh = new sadaf_datagrid("dgh1",$js_prefix_address."cheques.data.php?task=Selec
 
 $dgh->addColumn("","RowID",'string',true);
 
-$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4");
+$temp = PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_ChequeStatus);
 
 $col = $dgh->addColumn("وضعیت مبدا", "SrcID");
-$col->editor = ColumnEditor::ComboBox($temp, "InfoID", "InfoDesc");
+$col->editor = ColumnEditor::ComboBox($temp, "TafsiliID", "TafsiliDesc");
 
 $col=$dgh->addColumn("وضعیت مقصد", "DstID");
-$col->editor = ColumnEditor::ComboBox($temp, "InfoID", "InfoDesc");
+$col->editor = ColumnEditor::ComboBox($temp, "TafsiliID", "TafsiliDesc");
 $col->width = 200;
 
 if($accessObj->RemoveFlag)

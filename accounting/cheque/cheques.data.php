@@ -178,73 +178,6 @@ function selectValidChequeStatuses(){
 
 function SaveIncomeCheque(){
 	
-	if(isset($_POST["ChangingCheque"]))
-	{
-		$pdo = PdoDataAccess::getPdoObject();
-		$pdo->beginTransaction();
-		
-		if($_POST["RefBackPayID"] != "0")
-			$Refobj = new LON_BackPays($_POST["RefBackPayID"]);
-		else
-			$Refobj = new ACC_IncomeCheques($_POST["RefIncomeChequeID"]);		
-		$Refobj->ChequeStatus = INCOMECHEQUE_CHANGE;
-		$Refobj->Edit();
-		ACC_IncomeCheques::AddToHistory($_POST["RefIncomeChequeID"], $Refobj->ChequeStatus, $pdo);
-		
-		if($_POST["RefBackPayID"] != "0")
-		{
-			$obj = new LON_BackPays();
-			PdoDataAccess::FillObjectByObject($Refobj, $obj);
-			unset($obj->BackPayID);
-			PdoDataAccess::FillObjectByArray($obj, $_POST);
-			$obj->PayAmount = $_POST["ChequeAmount"];
-			$obj->ChequeStatus = INCOMECHEQUE_NOTVOSUL;
-			$obj->Add($pdo);
-			ACC_IncomeCheques::AddToHistory($obj->BackPayID, 0, $obj->ChequeStatus, $pdo);
-		}		
-		else
-		{
-			$obj = new ACC_IncomeCheques();
-			PdoDataAccess::FillObjectByObject($Refobj, $obj);
-			$obj->IncomeChequeID = "";
-			PdoDataAccess::FillObjectByArray($obj, $_POST);
-			$obj->CostID = $Refobj->CostID;
-			$obj->ChequeStatus = INCOMECHEQUE_NOTVOSUL;
-			$obj->Add($pdo);
-			ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, $obj->ChequeStatus, $pdo);
-		}	
-		
-		$Docobj = new ACC_docs();
-		$Docobj->RegDate = PDONOW;
-		$Docobj->regPersonID = $_SESSION['USER']["PersonID"];
-		$Docobj->DocDate = PDONOW;
-		$Docobj->CycleID = $_SESSION["accounting"]["CycleID"];
-		$Docobj->BranchID = $_SESSION["accounting"]["BranchID"];
-		$Docobj->DocType = DOCTYPE_INCOMERCHEQUE;
-		$Docobj->description = "تعویض چک  شماره " . $Refobj->ChequeNo . " به چک شماره " . $obj->ChequeNo;
-		if(!$Docobj->Add($pdo))
-		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
-			return false;
-		}
-		
-		if(!RegisterOuterCheque($Docobj->DocID,$Refobj,$pdo))
-		{
-			echo Response::createObjectiveResponse(false, "");
-			die();
-		}
-		
-		if(!RegisterOuterCheque($Docobj->DocID, $obj,$pdo))
-		{
-			echo Response::createObjectiveResponse(false, "");
-			die();
-		}
-		$pdo->commit();
-		echo Response::createObjectiveResponse(true, "");
-		die();
-	}
-	//....................................................
-	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
@@ -292,11 +225,28 @@ function SaveIncomeCheque(){
 	die();
 }
 
+function DeleteCheque(){
+	
+	$obj = new ACC_IncomeCheques($_POST["IncomeChequeID"]);
+	if($obj->ChequeStatus != INCOMECHEQUE_NOTVOSUL)
+	{
+		echo Response::createObjectiveResponse(false, "تنها چک های وصول نشده قابل حذف می باشند");
+		die();
+	}
+	
+	ReturnLatestOperation(true);
+	
+	$obj->Remove();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
 function ChangeChequeStatus(){
 	
 	$IncomeChequeID = $_POST["IncomeChequeID"];
 	$Status = $_POST["StatusID"];
 	
+	$CostID = isset($_POST["CostID"]) ? $_POST["CostID"] : "";
 	$TafsiliID = isset($_POST["TafsiliID"]) ? $_POST["TafsiliID"] : "";
 	$TafsiliID2 = isset($_POST["TafsiliID2"]) ? $_POST["TafsiliID2"] : "";
 	$BranchID = isset($_POST["BranchID"]) ? $_POST["BranchID"] : "";
@@ -311,7 +261,7 @@ function ChangeChequeStatus(){
 	$result = $obj->Edit($pdo);
 	
 	$result = RegisterOuterCheque("",$obj, $pdo,
-		$_POST["CostID"], 
+		$CostID, 
 		$TafsiliID,
 		$TafsiliID2,
 		isset($_POST["CenterAccount"]) ? true : false,
@@ -332,7 +282,7 @@ function ChangeChequeStatus(){
 	die();
 }
 
-function ReturnLatestOperation(){
+function ReturnLatestOperation($returnMode = false){
 	
 	$OuterObj = new ACC_IncomeCheques($_POST["IncomeChequeID"]);
 	
@@ -373,6 +323,10 @@ function ReturnLatestOperation(){
 	}
 	
 	$pdo->commit();
+	
+	if($returnMode)
+		return true;
+	
 	echo Response::createObjectiveResponse(true, "");
 	die();	
 }

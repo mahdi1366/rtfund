@@ -218,7 +218,7 @@ function PlanInfo(){
 			});
 	}
 	
-	if(this.User == "Customer" && !this.readOnly && this.EditAccess)
+	if(this.User == "Customer" && !this.readOnly)
 	{
 		this.menu.add({
 			text : "ارسال طرح جهت ارزیابی",

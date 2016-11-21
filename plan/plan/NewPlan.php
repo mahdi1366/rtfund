@@ -73,7 +73,8 @@ $grid = $dg->makeGrid_returnObjects();
 NewPlan.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
-
+	MenuID : "<?= $_POST["MenuID"] ?>",
+	
 	PlanID : <?= $PlanID ?>,
 	PlanDesc : '<?= $PlanDesc ?>',
 	LoanID : '<?= $LoanID ?>',
@@ -218,10 +219,14 @@ NewPlan.prototype.SaveNewPlan = function(){
 				if(NewPlanObject.framework)
 				{
 					framework.CloseTab(NewPlanObject.TabID);
-					framework.OpenPage("/plan/plan/PlanInfo.php", "جداول اطلاعاتی طرح", {PlanID : result.data});
+					framework.OpenPage("/plan/plan/PlanInfo.php", "جداول اطلاعاتی طرح", {
+						MenuID : NewPlanObject.MenuID,
+						PlanID : result.data});
 				}	
 				else
-					portal.OpenPage("/plan/plan/PlanInfo.php", {PlanID : result.data});
+					portal.OpenPage("/plan/plan/PlanInfo.php", {
+						MenuID : NewPlanObject.MenuID,
+						PlanID : result.data});
 			}
 			else
 				Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
@@ -233,7 +238,9 @@ NewPlan.prototype.SaveNewPlan = function(){
 NewPlan.prototype.ShowPlanInfo = function(){
 	
 	record = this.grid.getSelectionModel().getLastSelected();
-	portal.OpenPage("/plan/plan/PlanInfo.php", {PlanID : record.data.PlanID});
+	portal.OpenPage("/plan/plan/PlanInfo.php", {
+		MenuID : this.MenuID,
+		PlanID : record.data.PlanID});
 }
 
 NewPlan.prototype.ShowHistory = function(){
