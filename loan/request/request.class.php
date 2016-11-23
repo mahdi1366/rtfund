@@ -29,15 +29,21 @@ class LON_requests extends PdoDataAccess
 	
 	public $_LoanDesc;
 	public $_LoanPersonFullname;
+	public $_ReqPersonFullname;
+	public $_BranchName;
 	
 	function __construct($RequestID = "") {
 		
 		if($RequestID != "")
 			PdoDataAccess::FillObject ($this, "
-				select r.* , concat_ws(' ',fname,lname,CompanyName) _LoanPersonFullname, LoanDesc _LoanDesc
+				select r.* , concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) _LoanPersonFullname, LoanDesc _LoanDesc,
+						concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) _ReqPersonFullname, b.BranchName _BranchName
+						
 					from LON_requests r 
-					left join BSC_persons on(PersonID=LoanPersonID)
+					left join BSC_persons p1 on(p1.PersonID=LoanPersonID)
 					left join LON_loans using(LoanID)
+					left join BSC_persons p2 on(p2.PersonID=ReqPersonID)
+					left join BSC_branches b using(BranchID)
 				where RequestID=?", array($RequestID));
 	}
 	

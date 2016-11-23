@@ -56,16 +56,19 @@ if(count($temp) > 0)
 //..............................................................................
 
 $dt = PdoDataAccess::runquery("
-	select p.*,
+	select p.*,i.*,
 			b.BankDesc, 
 			bi.InfoDesc PayTypeDesc, 
-			bi2.InfoDesc ChequeStatusDesc
+			t.TafsiliDesc ChequeStatusDesc
 			
 		from LON_BackPays p
 		left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
+		left join ACC_IncomeCheques i using(IncomeChequeID)
 		left join ACC_banks b on(ChequeBank=BankID)
-		left join BaseInfo bi2 on(bi2.TypeID=4 AND bi2.InfoID=p.ChequeStatus)
+		left join ACC_tafsilis t on(t.TafsiliType=" . TAFTYPE_ChequeStatus . " AND t.TafsiliID=i.ChequeStatus)
 	where p.RequestID=? AND PayType=9",	array($ReqObj->RequestID));
+
+//print_r(ExceptionHandler::PopAllExceptions());
 $SumCheques = 0;
 foreach($dt as $row)
 	$SumCheques += $row["PayAmount"]*1;
@@ -111,6 +114,21 @@ if(count($dt) > 0)
 	}
 </style>
 <body dir="rtl">
+	<table style="border : 1px solid black; width:100%; padding:4px">
+		<tr>
+			<td>شماره وام : <b><?= $ReqObj->RequestID ?></b></td>
+			<td>نوع وام : <b><?= $ReqObj->_LoanDesc ?></b></td>
+		</tr>
+		<tr>
+			<td>وام گیرنده : <b><?= $ReqObj->_LoanPersonFullname ?></b></td>
+			<td>معرف : <b><?= $ReqObj->_ReqPersonFullname ?></b></td>
+		</tr>
+		<tr>
+			<td>شعبه اخذ وام : <b><?= $ReqObj->_BranchName ?></b></td>
+			<td></td>
+		</tr>
+	</table>
+	
 	<? if(count($temp) >0) {
 		$rpt->generateReport(); ?>
 	<div style="width: 100%; padding-top: 20px; padding-bottom: 20px; height: 120px;">
