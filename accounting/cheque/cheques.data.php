@@ -79,16 +79,12 @@ function selectIncomeCheques() {
 	MakeWhere($where, $param);
 	
 	$query = "
-		select IncomeChequeID,
-			ChequeNo,
+		select i.*,
 			case when i.CostID is null then group_concat(t2.TafsiliDesc SEPARATOR '<br>')
 				else t1.TafsiliDesc end fullname,
 			case when i.CostID is null then group_concat(concat_ws('-', bb1.blockDesc, bb2.blockDesc) SEPARATOR '<br>') 
 				else concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc) end CostDesc,
-			ChequeDate,
-			ChequeAmount,
 			b.BankDesc, 
-			ChequeStatus,
 			t3.TafsiliDesc ChequeStatusDesc,
 			t.docs
 			
@@ -213,7 +209,34 @@ function SaveIncomeCheque(){
 	
 	ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, $obj->ChequeStatus, $pdo);
 	
-	if(!RegisterOuterCheque("",$obj,$pdo))
+	//--------------- get DocID ------------------
+	$DocID = "";
+	if(!empty($_POST["LocalNo"]))
+	{
+		$BackPays = $obj->GetBackPays($pdo);
+		if(count($BackPays) > 0)
+			$FirstBranchID = $BackPays[0]["BranchID"];
+		else
+			$FirstBranchID = $_SESSION["accounting"]["BranchID"];
+		
+		$dt = PdoDataAccess::runquery("select DocID,DocStatus from ACC_docs where LocalNo=? AND BranchID=?",
+			array($_POST["LocalNo"], $FirstBranchID));
+		if(count($dt) == 0)
+		{
+			$pdo->rollback();
+			echo Response::createObjectiveResponse(false, "شماره سند در شعبه مربوطه یافت نشد");
+			die();
+		}	
+		if($dt[0]["DocStatus"] != "RAW")
+		{
+			$pdo->rollback();
+			echo Response::createObjectiveResponse(false, "سند مربوطه تایید شده و امکان اضافه به آن ممکن نیست");
+			die();
+		}
+		$DocID = $dt[0][0];
+	}
+	//--------------------------------------------
+	if(!RegisterOuterCheque($DocID,$obj,$pdo))
 	{
 		print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse(false,ExceptionHandler::GetExceptionsToString());
@@ -259,8 +282,34 @@ function ChangeChequeStatus(){
 	$obj = new ACC_IncomeCheques($IncomeChequeID);
 	$obj->ChequeStatus = $Status;
 	$result = $obj->Edit($pdo);
-	
-	$result = RegisterOuterCheque("",$obj, $pdo,
+	//--------------- get DocID ------------------
+	$DocID = "";
+	if(!empty($_POST["LocalNo"]))
+	{
+		$BackPays = $obj->GetBackPays($pdo);
+		if(count($BackPays) > 0)
+			$FirstBranchID = $BackPays[0]["BranchID"];
+		else
+			$FirstBranchID = $_SESSION["accounting"]["BranchID"];
+		
+		$dt = PdoDataAccess::runquery("select DocID,DocStatus from ACC_docs where LocalNo=? AND BranchID=?",
+			array($_POST["LocalNo"], $FirstBranchID));
+		if(count($dt) == 0)
+		{
+			$pdo->rollback();
+			echo Response::createObjectiveResponse(false, "شماره سند در شعبه مربوطه یافت نشد");
+			die();
+		}	
+		if($dt[0]["DocStatus"] != "RAW")
+		{
+			$pdo->rollback();
+			echo Response::createObjectiveResponse(false, "سند مربوطه تایید شده و امکان اضافه به آن ممکن نیست");
+			die();
+		}
+		$DocID = $dt[0][0];
+	}
+	//--------------------------------------------
+	$result = RegisterOuterCheque($DocID,$obj, $pdo,
 		$CostID, 
 		$TafsiliID,
 		$TafsiliID2,
@@ -296,13 +345,17 @@ function ReturnLatestOperation($returnMode = false){
 	
 	if($DocID > 0)
 	{
-		$temp = PdoDataAccess::runquery("select TafsiliID2 from ACC_DocItems where DocID=? AND 
-		SourceType=? AND SourceID=?", array($DocID, DOCTYPE_INCOMERCHEQUE, $OuterObj->IncomeChequeID));
-		$OuterObj->ChequeStatus = $temp[0][0];		
+		$temp = PdoDataAccess::runquery("select TafsiliID2 from ACC_DocItems where DocID<>? AND 
+		SourceType=? AND SourceID=? order by DocID desc", 
+			array($DocID, DOCTYPE_INCOMERCHEQUE, $OuterObj->IncomeChequeID));
+		$OuterObj->ChequeStatus = count($temp)>0 ? $temp[0][0] : INCOMECHEQUE_NOTVOSUL;
 		
 		PdoDataAccess::runquery("delete from ACC_DocItems 
 			where DocID=? AND SourceType=" . DOCTYPE_INCOMERCHEQUE . " AND SourceID=?",	
 				array($DocID, $OuterObj->IncomeChequeID), $pdo);
+		
+		PdoDataAccess::runquery("delete from ACC_DocItems 
+			where DocID=? AND CostID=?", array($DocID, COSTID_Bank), $pdo);
 
 		PdoDataAccess::runquery("delete d from ACC_docs d left join ACC_DocItems using(DocID)
 			where DocID=? AND ItemID is null",	array($DocID), $pdo);
@@ -311,9 +364,15 @@ function ReturnLatestOperation($returnMode = false){
 		$OuterObj->ChequeStatus = INCOMECHEQUE_NOTVOSUL;
 	
 	$OuterObj->Edit($pdo);
-	
+	//..................................................
 	ACC_IncomeCheques::AddToHistory($OuterObj->IncomeChequeID, $OuterObj->ChequeStatus , $pdo);
-
+	//..................................................
+	$dt = $OuterObj->GetBackPays($pdo);
+	if(count($dt)> 0)
+	{
+		ReturnPayPartDoc($DocID, $pdo);
+	}
+	//..................................................
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
 		$pdo->rollBack();

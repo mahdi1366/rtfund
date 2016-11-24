@@ -22,6 +22,7 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "../dms/dms.data.php?" .
 		"task=SelectAll&ObjectType=letterAttach&ObjectID=" . $LetterID . 
 		($SendID > 0 ? "&checkRegPerson=true&ObjectID2=" . $SendID : ""), "grid_div");
 
+$dg->addColumn("", "RowID", "", true);
 $dg->addColumn("", "DocumentID", "", true);
 $dg->addColumn("", "ObjectType", "", true);
 $dg->addColumn("", "ObjectID", "", true);
@@ -130,14 +131,15 @@ ManageDocument.FileRender = function(v,p,r){
 		return "";
 	
 	return "<div align='center' title='مشاهده فایل' class='attach' "+
-		"onclick='ManageDocument.ShowFile(" + r.data.DocumentID + "," + r.data.ObjectID + ");' " +
+		"onclick='ManageDocument.ShowFile(" + r.data.DocumentID + "," + r.data.ObjectID + "," + r.data.RowID + ");' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16;float:right'></div>";
 }
 
-ManageDocument.ShowFile = function(DocumentID, ObjectID){
+ManageDocument.ShowFile = function(DocumentID, ObjectID, RowID){
 	
-	window.open("/office/dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID);
+	window.open("/office/dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID + 
+		"&RowID=" + RowID);
 }
 
 ManageDocument.OperationRender = function(v,p,r){

@@ -39,7 +39,7 @@ function FindTafsiliID($TafsiliCode, $TafsiliType){
 
 //---------------------------------------------------------------
 
-function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo){
+function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo, $DocID=""){
 		
 	
 	/*@var $ReqObj LON_requests */
@@ -125,21 +125,26 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		}
 	}	
 	//---------------- add doc header --------------------
-	$obj = new ACC_docs();
-	$obj->RegDate = PDONOW;
-	$obj->regPersonID = $_SESSION['USER']["PersonID"];
-	$obj->DocDate = PDONOW;
-	$obj->CycleID = $CycleID;
-	$obj->BranchID = $ReqObj->BranchID;
-	$obj->DocType = DOCTYPE_LOAN_PAYMENT;
-	$obj->description = "پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID . " به نام " . 
-		$ReqObj->_LoanPersonFullname;
-	
-	if(!$obj->Add($pdo))
+	if($DocID == "")
 	{
-		ExceptionHandler::PushException("خطا در ایجاد سند");
-		return false;
+		$obj = new ACC_docs();
+		$obj->RegDate = PDONOW;
+		$obj->regPersonID = $_SESSION['USER']["PersonID"];
+		$obj->DocDate = PDONOW;
+		$obj->CycleID = $CycleID;
+		$obj->BranchID = $ReqObj->BranchID;
+		$obj->DocType = DOCTYPE_LOAN_PAYMENT;
+		$obj->description = "پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID . " به نام " . 
+			$ReqObj->_LoanPersonFullname;
+
+		if(!$obj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد سند");
+			return false;
+		}
 	}
+	else
+		$obj = new ACC_docs($DocID);
 	//--------------------------------------------------------
 	$MaxWage = max($PartObj->CustomerWage*1 , $PartObj->FundWage);
 	$AgentFactor = $MaxWage == 0 ? 0 : ($PartObj->CustomerWage-$PartObj->FundWage)/$MaxWage;
@@ -623,7 +628,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	return $obj->DocID;
 }
 
-function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo){
+function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo, $DocID=""){
 		
 	
 	/*@var $ReqObj LON_requests */
@@ -649,21 +654,27 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$CycleID = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0 , 4);
 	
 	//---------------- add doc header --------------------
-	$obj = new ACC_docs();
-	$obj->RegDate = PDONOW;
-	$obj->regPersonID = $_SESSION['USER']["PersonID"];
-	$obj->DocDate = PDONOW;
-	$obj->CycleID = $CycleID;
-	$obj->BranchID = $ReqObj->BranchID;
-	$obj->DocType = DOCTYPE_LOAN_PAYMENT;
-	$obj->description = "پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID . " به نام " . 
-		$ReqObj->_LoanPersonFullname;
-	
-	if(!$obj->Add($pdo))
+	if($DocID == "")
 	{
-		ExceptionHandler::PushException("خطا در ایجاد سند");
-		return false;
+		$obj = new ACC_docs();
+		$obj->RegDate = PDONOW;
+		$obj->regPersonID = $_SESSION['USER']["PersonID"];
+		$obj->DocDate = PDONOW;
+		$obj->CycleID = $CycleID;
+		$obj->BranchID = $ReqObj->BranchID;
+		$obj->DocType = DOCTYPE_LOAN_PAYMENT;
+		$obj->description = "پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID . " به نام " . 
+			$ReqObj->_LoanPersonFullname;
+
+		if(!$obj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد سند");
+			return false;
+		}
 	}
+	else
+		$obj = new ACC_docs($DocID);
+	
 	$PayAmount = $PayObj->PayAmount;
 	//--------------------------------------------------------
 	$payments = LON_payments::Get(" AND RequestID=? order by PayDate", array($PartObj->RequestID));
@@ -805,14 +816,15 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$AgentWage = 0;
 	if($PartObj->CustomerWage*1 > $PartObj->FundWage*1 && $PartObj->AgentReturn == "CUSTOMER")
 	{
-		$totalWage = ComputeWageOfSHekoofa($PartObj);
+		//$totalWage = ComputeWageOfSHekoofa($PartObj);
+		$totalWage = $PayAmount*$PartObj->CustomerWage/100;
 		$AgentFactor = ($PartObj->CustomerWage*1-$PartObj->FundWage*1)/$PartObj->CustomerWage*1;
-		$AgentWage = $totalWage*$AgentFactor;
+		$AgentWage = $totalWage*$AgentFactor;		
 	
 		unset($itemObj->ItemID);
 		$itemObj->CostID = $CostCode_agent_wage;
-		$itemObj->DebtorAmount = $AgentWage;
-		$itemObj->CreditorAmount = 0;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $AgentWage;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
 		unset($itemObj->TafsiliType2);
@@ -974,9 +986,15 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	return $obj->DocID;
 }
 
-function ReturnPayPartDoc($DocID, $pdo){
+function ReturnPayPartDoc($DocID, $pdo, $DeleteDoc = true){
 	
-	return ACC_docs::Remove($DocID, $pdo);	
+	PdoDataAccess::runquery("delete from ACC_DocItems where DocID=? AND locked='YES'", array($DocID));
+
+	if($DeleteDoc)
+		PdoDataAccess::runquery("delete d from ACC_docs d left join ACC_DocItems using(DocID)
+		where DocID=? AND ItemID is null",	array($DocID), $pdo);
+	
+	return ExceptionHandler::GetExceptionCount() == 0;
 }
 
 function RegisterLoanCost($CostObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
@@ -1230,7 +1248,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	
 	$TotalFundDelay = $result["TotalFundDelay"];
 	$TotalAgentDelay = $result["TotalAgentDelay"];
-	$BankAmount = 0;
+	$ExtraAmount = 0;
 	//----------------- add Doc items ------------------------
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
@@ -1328,7 +1346,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
 				return false;
 			}
-			$BankAmount += $FundYearAmount>0 ? $FundYearAmount : 0;
+			$ExtraAmount += $FundYearAmount>0 ? $FundYearAmount : 0;
 		}
 		if($AgentYearAmount > 0)
 		{
@@ -1380,7 +1398,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		$itemObj->CreditorAmount = $amount>0 ? $amount : 0;
 		$itemObj->Add($pdo);
 		
-		//$BankAmount += $amount<0 ? abs($amount) : 0;
+		//$ExtraAmount += $amount<0 ? abs($amount) : 0;
 		
 		if($NewPartObj->AgentReturn == "INSTALLMENT")
 		{
@@ -1429,48 +1447,40 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		}
 		$itemObj->Add($pdo);
 	}*/
-	// ----------------------------- bank --------------------------------
-	if($BankAmount != 0)
+	// ---------------------------- ExtraAmount --------------------------------
+	if($ExtraAmount > 0)
 	{
 		$itemObj = new ACC_DocItems();
 		$itemObj->DocID = $obj->DocID;
-		$itemObj->CostID = $CostCode_bank;
-		$itemObj->DebtorAmount = $BankAmount;
+		$itemObj->CostID = $CostCode_Loan;
+		$itemObj->DebtorAmount = $ExtraAmount;
 		$itemObj->CreditorAmount = 0;	
 		$itemObj->locked = "YES";
 		$itemObj->SourceID = $ReqObj->RequestID;
 		$itemObj->SourceID2 = $NewPartObj->PartID;
 		$itemObj->Add($pdo);
-	}
-	/*if($LoanMode == "Agent")
-	{
-		//---- کسر از سپرده -----
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		$itemObj->CostID = $CostCode_deposite;
-		$itemObj->DebtorAmount = $PayAmount + $TotalFundWage;
-		$itemObj->CreditorAmount = 0;
-		$itemObj->details = "بابت پرداخت " . $NewPartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
-		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $ReqPersonTafsili;
-		if($SubAgentTafsili != "")
+		
+		//-------------------- add loan cost for difference --------------------
+		$dt = PdoDataAccess::runquery("select * from LON_costs where RequestID=? AND PartID=?", 
+				array($NewPartObj->RequestID, $NewPartObj->PartID));
+		if(count($dt)>0)
 		{
-			$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
-			$itemObj->TafsiliID2 = $SubAgentTafsili;
+			$obj = new LON_costs($dt[0]["CostID"]);
+			$obj->CostAmount = $ExtraAmount;
+			$obj->Edit($pdo);
 		}
-		$itemObj->Add($pdo);
-
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		$itemObj->CostID = $CostCode_commitment;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $PayAmount + $TotalFundWage;
-		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $ReqPersonTafsili;
-		$itemObj->Add($pdo);
-	}*/
+		else
+		{
+			$obj = new LON_costs();
+			$obj->RequestID = $NewPartObj->RequestID;
+			$obj->CostDesc = "اختلافت حاصل از تغییر شرایط پرداخت";
+			$obj->CostAmount = $ExtraAmount;
+			$obj->CostID = $CostCode_Loan;
+			$obj->IsPartDiff = "YES";
+			$obj->PartID = $NewPartObj->PartID;
+			$obj->Add($pdo);		
+		}
+	}
 	//---------------------------------------------------------
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
@@ -2197,10 +2207,10 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
 	//-------------------- BranchID -----------------------
 	$BackPays = $InChequeObj->GetBackPays($pdo);
-	if(count($BackPays > 0))
-		$BranchID = $BackPays[0]["BranchID"];
+	if(count($BackPays) > 0)
+		$FirstBranchID = $BackPays[0]["BranchID"];
 	else
-		$BranchID = $_SESSION["accounting"]["BranchID"];
+		$FirstBranchID = $_SESSION["accounting"]["BranchID"];
 	//---------------- add doc header --------------------
 	if($DocID == "")
 	{		
@@ -2209,7 +2219,7 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 		$obj->regPersonID = $_SESSION['USER']["PersonID"];
 		$obj->DocDate = PDONOW;
 		$obj->CycleID = $CycleID;
-		$obj->BranchID = $BranchID;
+		$obj->BranchID = $FirstBranchID;
 		$obj->DocType = DOCTYPE_INCOMERCHEQUE;
 		$obj->description = "چک شماره " . $InChequeObj->ChequeNo;
 		if(!$obj->Add($pdo))

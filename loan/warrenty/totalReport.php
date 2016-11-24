@@ -120,7 +120,7 @@ WarrentyReport_total.prototype.showReport = function(btn, e)
 	this.form = this.get("mainForm")
 	this.form.target = "_blank";
 	this.form.method = "POST";
-	this.form.action =  this.address_prefix + "totalReport.php?show=true";
+	this.form.action =  this.address_prefix + "TotalReport.php?show=true";
 	this.form.submit();
 	this.get("excel").value = "";
 	return;

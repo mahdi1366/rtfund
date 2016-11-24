@@ -1345,6 +1345,33 @@ class Spreadsheet_Excel_Reader
         return $value;
     }
 
+	function ConvertToHtmlTable(){
+		
+		$Output = "<style>
+			#excelTable {border-collapse : collapse;width : 100%; direction:rtl}
+			#excelTable td{font-family : tahoma; font-size: 12px; padding:4px}
+			#header { background-color : #20891e; color : white; font-weight:bold; text-align:center}
+			#even { background-color : #e8e8e8}
+			</style>";
+		$Output .= "<table id=excelTable border=1>";
+		$x=0;
+		while($x < $this->sheets[0]['numRows']) 
+		{
+			$trID = $x == 0 ? "header" : ($x%2 == 0 ? "even" : "odd");
+			$Output .= "\t<tr id=" . $trID . ">\n";
+			$y=0;
+			while($y < $this->sheets[0]['numCols']) 
+			{
+				$cell = isset($this->sheets[0]['cells'][$x][$y]) ? $this->sheets[0]['cells'][$x][$y] : '';
+				$Output .= "\t\t<td>$cell</td>\n";  
+				$y++;
+			}  
+			$Output .= "\t</tr>\n";
+			$x++;
+		}
+		$Output .= "</table>";
+		return $Output;
+	}
 }
 
 /*

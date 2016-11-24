@@ -1701,6 +1701,8 @@ function editPayPartDoc(){
 	
 	$PayID = $_POST["PayID"];
 	$PayObj = new LON_payments($PayID);
+	$partobj = LON_ReqParts::GetValidPartObj($PayObj->RequestID);
+	$ReqObj = new LON_requests($PayObj->RequestID);
 	
 	$DocObj = new ACC_docs($PayObj->DocID);
 	if($DocObj->DocStatus != "RAW")
@@ -1712,16 +1714,20 @@ function editPayPartDoc(){
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 		
-	RetPayPartDoc(true, $pdo);
-	RegPayPartDoc(true, $pdo);
+	if(!ReturnPayPartDoc($DocObj->DocID, $pdo, false))
+	{
+		$pdo->rollBack();
+		
+		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
+		die();
+	}
+	if($ReqObj->ReqPersonID == "1003")
+		$result = RegisterSHRTFUNDPayPartDoc($ReqObj, $partobj, $PayObj, 
+				$_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, $DocObj->DocID);
+	else
+		$result = RegisterPayPartDoc($ReqObj, $partobj, $PayObj, 
+				$_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, $DocObj->DocID);
 
-	$PayObj = new LON_payments($PayID);
-	$NewDocObj = new ACC_docs($PayObj->DocID);
-	
-	$NewDocObj->LocalNo = $DocObj->LocalNo;
-	$NewDocObj->DocDate = $DocObj->DocDate;
-	$NewDocObj->Edit($pdo);
-	
 	$pdo->commit();			
 	
 	echo Response::createObjectiveResponse(true,"");
@@ -1776,7 +1782,7 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 		$pdo->beginTransaction();
 	}
 	
-	if(!ReturnPayPartDoc($PayObj->DocID, $pdo))
+	if(!ReturnPayPartDoc($PayObj->DocID, $pdo, !$ReturnMode))
 	{
 		if($ReturnMode)
 			return false;

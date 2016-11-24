@@ -21,6 +21,7 @@ class ACC_IncomeCheques extends OperationClass{
 	public $ChequeBank;
 	public $ChequeBranch;
 	public $ChequeStatus;
+	public $description;
 	
 	function __construct($id = '') {
 		

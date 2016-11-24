@@ -26,7 +26,7 @@ class DMS_documents extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select d.*, b1.infoDesc DocTypeDesc, 
+			select d.*, b1.infoDesc DocTypeDesc, df.RowID,
 				concat(p1.fname, ' ', p1.lname) confirmfullname,
 				concat(p2.fname, ' ', p2.lname) regfullname,
 				b2.infoDesc param1Title	,b1.param1,

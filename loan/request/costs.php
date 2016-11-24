@@ -17,6 +17,7 @@ $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetCos
 $dg->addColumn("", "CostID","", true);
 $dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "DocID","", true);
+$dg->addColumn("", "IsPartDiff","", true);
 
 $col = $dg->addColumn("شرح هزینه", "CostDesc");
 $col->editor = ColumnEditor::TextField();
@@ -79,14 +80,17 @@ function LoanCost()
 
 			if(e.record.data.CostID != null)
 				return false;
-
 		});
+	
 	this.grid.render(this.get("div_grid"));	
 }
 
 LoanCost.DeleteRender = function(v,p,r){
 	
 	if(r.data.DocID != null &&  r.data.DocID != "")
+		return "";
+	
+	if(r.data.IsPartDiff == "YES")
 		return "";
 
 	return "<div align='center' title='حذف' class='remove' "+

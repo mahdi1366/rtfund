@@ -4,6 +4,7 @@
 // Create Date:	94.06
 //-------------------------
 require_once 'header.inc.php';
+require_once inc_phpExcelReader;
 
 if(empty($_REQUEST["DocumentID"]) || empty($_REQUEST["ObjectID"]))
 	die();
@@ -65,6 +66,7 @@ foreach($dt as $file)
 		$file["RowID"] . "." . $file["FileType"]);
 	
 	echo "<div style='width:100%;' align=center><hr>صفحه " . $file["PageNo"] . "<hr></div>";
+	echo $file["FileType"] ;
 	if($file["FileType"] == "pdf")
 	{
 		echo "<img id=pdf_DIV_" . $file["RowID"] . ">";

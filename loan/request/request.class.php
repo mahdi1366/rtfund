@@ -554,6 +554,8 @@ class LON_costs extends OperationClass
 	public $RequestID;
 	public $CostDesc;
 	public $CostAmount;
+	public $IsPartDiff;
+	public $PartID;
 	
 	static function Get($where = '', $whereParams = array()) {
 		

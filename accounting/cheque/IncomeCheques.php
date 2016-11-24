@@ -19,6 +19,7 @@ $dg->addColumn("", "BackPayID", "", true);
 $dg->addColumn("", "ChequeStatus", "", true);
 $dg->addColumn("", "BankDesc", "", true);
 $dg->addColumn("", "ChequeBranch", "", true);
+$dg->addColumn("", "description", "", true);
 
 $col = $dg->addColumn("صاحب چک", "fullname", "");
 
@@ -365,7 +366,8 @@ IncomeCheque.HistoryRender = function(){
 
 IncomeCheque.ChequeNoRender = function(v,p,r){
 	
-	st = "بانک : " + r.data.BankDesc + "<br>شعبه : " + r.data.ChequeBranch;
+	st = "بانک : <b>" + r.data.BankDesc + "</b><br>شعبه : <b>" + 
+		r.data.ChequeBranch + "</b><br>توضیحات : <b>" + r.data.description + "</b>";
 	p.tdAttr = "data-qtip='" + st + "'";
 	return v;
 }
@@ -396,13 +398,12 @@ function IncomeCheque(){
 	this.grid.getStore().proxy.form = this.get("MainForm");
 	this.grid.render(this.get("div_grid"));
 	
-	
 	this.LoanPanel = this.MakeLoanPanel();
 	this.CostPanel = this.MakeCostPanel();
 	
 	this.ChequeInfoWin = new Ext.window.Window({
 		width : 700,
-		height : 350,
+		height : 370,
 		modal : true,
 		closeAction : "hide",
 		items : new Ext.form.Panel({
@@ -449,6 +450,12 @@ function IncomeCheque(){
 				xtype : "textfield",
 				name : "ChequeBranch",
 				fieldLabel : "شعبه"
+			},{
+				xtype : "textfield",
+				colspan : 2,
+				width : 650,
+				name : "description",
+				fieldLabel : "توضیحات"
 			},{
 				xtype : "tabpanel",
 				colspan : 2,
@@ -564,29 +571,36 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 
 IncomeCheque.prototype.ReturnLatestOperation = function(){
 
-	var record = this.grid.getSelectionModel().getLastSelected();
-	
-	mask = new Ext.LoadMask(this.grid, {msg:'در حال تغییر وضعیت ...'});
-	mask.show();
-	
-	Ext.Ajax.request({
-		methos : "post",
-		url : this.address_prefix + "cheques.data.php",
-		params : {
-			task : "ReturnLatestOperation",
-			IncomeChequeID : record.data.IncomeChequeID
-		},
+	Ext.MessageBox.confirm("","آیا مایل به برگشت آخرین عملیات انجام شده روی چک می باشید؟", function(btn){
+		if(btn == "no")
+			return ;
 		
-		success : function(response){
-			mask.hide();
-			result = Ext.decode(response.responseText);
-			if(result.success)
-				IncomeChequeObject.grid.getStore().load();
-			else if(result.data != "")
-				Ext.MessageBox.alert("",result.data);
-			else
-				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
-		}
+		me = IncomeChequeObject;
+		
+		var record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال تغییر وضعیت ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			methos : "post",
+			url : me.address_prefix + "cheques.data.php",
+			params : {
+				task : "ReturnLatestOperation",
+				IncomeChequeID : record.data.IncomeChequeID
+			},
+
+			success : function(response){
+				mask.hide();
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					IncomeChequeObject.grid.getStore().load();
+				else if(result.data != "")
+					Ext.MessageBox.alert("",result.data);
+				else
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+			}
+		});
 	});
 }
 
@@ -801,59 +815,71 @@ IncomeCheque.prototype.ChangeStatus = function(){
 	if(StatusID == null || StatusID == "")
 		return;
 	
-	mask = new Ext.LoadMask(this.grid, {msg:'در حال تغییر وضعیت ...'});
-	mask.show();
-	
-	Ext.Ajax.request({
-		methos : "post",
-		url : this.address_prefix + "cheques.data.php",
-		params : params,
+	Ext.MessageBox.prompt("","شماره سند <br>[در صورتی که شماره سند را وارد نکنید سند جدید ایجاد می گردد]" , function(btn, DocNo){
+		if(btn == "cancel")
+			return "";
 		
-		success : function(response){
-			mask.hide();
-			IncomeChequeObject.commentWin.hide();
-			
-			result = Ext.decode(response.responseText);
-			if(result.success)
-				IncomeChequeObject.grid.getStore().load();
-			else if(result.data != "")
-				Ext.MessageBox.alert("",result.data);
-			else
-				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
-			
-			
-		}
+		params.LocalNo = DocNo;
+		me = IncomeChequeObject;
+		
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال تغییر وضعیت ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			methos : "post",
+			url : me.address_prefix + "cheques.data.php",
+			params : params,
+
+			success : function(response){
+				mask.hide();
+				IncomeChequeObject.commentWin.hide();
+
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					IncomeChequeObject.grid.getStore().load();
+				else if(result.data != "")
+					Ext.MessageBox.alert("",result.data);
+				else
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+
+
+			}
+		});
 	});
 }
 
 IncomeCheque.prototype.DeleteCheque = function(){
 	
-	var record = this.grid.getSelectionModel().getLastSelected();
-	
-	mask = new Ext.LoadMask(this.grid, {msg:'در حال حذف ...'});
-	mask.show();
-	
-	Ext.Ajax.request({
-		methos : "post",
-		url : this.address_prefix + "cheques.data.php",
-		params : {
-			task : "DeleteCheque",
-			IncomeChequeID : record.data.IncomeChequeID
-		},
+	Ext.MessageBox.confirm("","با حذف چک سند مربوطه نیز حذف می گردد. آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return ;
 		
-		success : function(response){
-			mask.hide();
-			result = Ext.decode(response.responseText);
-			if(result.success)
-				IncomeChequeObject.grid.getStore().load();
-			else if(result.data != "")
-				Ext.MessageBox.alert("",result.data);
-			else
-				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
-			
-			
-		}
-	});
+		me = IncomeChequeObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال حذف ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			methos : "post",
+			url : me.address_prefix + "cheques.data.php",
+			params : {
+				task : "DeleteCheque",
+				IncomeChequeID : record.data.IncomeChequeID
+			},
+
+			success : function(response){
+				mask.hide();
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					IncomeChequeObject.grid.getStore().load();
+				else if(result.data != "")
+					Ext.MessageBox.alert("",result.data);
+				else
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+			}
+		});
+	})
 }
 
 IncomeCheque.prototype.AddCheque = function(){
@@ -888,36 +914,38 @@ IncomeCheque.prototype.SaveIncomeCheque = function(){
 		}
 		params.parts = Ext.encode(this.GroupPays);
 	}
-	else
-	{
-			
-	}
-	
-	mask = new Ext.LoadMask(this.ChequeInfoWin, {msg:'در حال ذخيره سازي...'});
-	mask.show();
-	
-	this.ChequeInfoWin.down('form').getForm().submit({
-		clientValidation: true,
-		url: this.address_prefix + 'cheques.data.php?task=SaveIncomeCheque',
-		method : "POST",
-		params : params,
+	Ext.MessageBox.prompt("","شماره سند<br>[در صورتی که شماره سند را وارد نکنید سند جدید ایجاد می گردد]" , function(btn, DocNo){
+		if(btn == "cancel")
+			return "";
+		
+		params.LocalNo = DocNo;
+		me = IncomeChequeObject;
+		
+		mask = new Ext.LoadMask(me.ChequeInfoWin, {msg:'در حال ذخيره سازي...'});
+		mask.show();
 
-		success : function(form,action){                
-			IncomeChequeObject.grid.getStore().load();
-			IncomeChequeObject.ChequeInfoWin.hide();
-			mask.hide();
+		me.ChequeInfoWin.down('form').getForm().submit({
+			clientValidation: true,
+			url: me.address_prefix + 'cheques.data.php?task=SaveIncomeCheque',
+			method : "POST",
+			params : params,
 
-		},
-		failure : function(form,action)
-		{
-			if(action.result.data == "")
-				Ext.MessageBox.alert("Error","عملیات مورد نظر با شکست مواجه شد");
-			else
-				Ext.MessageBox.alert("Error", action.result.data);
-			mask.hide();
-		}
+			success : function(form,action){                
+				IncomeChequeObject.grid.getStore().load();
+				IncomeChequeObject.ChequeInfoWin.hide();
+				mask.hide();
+
+			},
+			failure : function(form,action)
+			{
+				if(action.result.data == "")
+					Ext.MessageBox.alert("Error","عملیات مورد نظر با شکست مواجه شد");
+				else
+					Ext.MessageBox.alert("Error", action.result.data);
+				mask.hide();
+			}
+		});
 	});
-
 }
 
 IncomeCheque.prototype.ShowHistory = function(){
