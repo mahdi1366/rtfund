@@ -5,13 +5,71 @@
 //-----------------------------
 
 require_once '../header.inc.php';
-require_once '../docs/doc.class.php';
-require_once '../docs/doc.data.php';
+require_once '../docs/import.data.php';
+require_once '../../loan/request/request.class.php';
+require_once '../cheque/cheque.class.php';
 require_once inc_dataReader;
 require_once inc_response;
 
+class ACC_equalizations extends OperationClass{
+	
+	const TableName = "ACC_equalizations";
+	const TableKey = "EqualizationID";
+	
+	public $EqualizationID;
+	public $RegDate;
+	public $BankID;
+	public $ImportFile;
+	
+	function Add($pdo = null){
+		
+		if(!$pdo)
+			$pdo = PdoDataAccess::getPdoObject();
+		
+		$stmt = $pdo->prepare("insert into ACC_equalizations(RegDate,BankID,ImportFile) 
+			values(".PDONOW.",:b,:data)");
+		
+		$stmt->bindParam(":b", $this->BankID);
+		$stmt->bindParam(":data", $this->ImportFile, PDO::PARAM_LOB);
+		$stmt->execute();
+		
+		$this->EqualizationID = $pdo->lastInsertId();
+		
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->EqualizationID;
+		$daObj->TableName = "ACC_equalizations";
+		$daObj->execute();
+		
+		return true;
+	}
+}
+
 if(!empty($_REQUEST["task"]))
 	$_REQUEST["task"]();
+
+function selectEqualizations(){
+	
+	$dt = PdoDataAccess::runquery_fetchMode("select EqualizationID,RegDate,BankID,BankDesc 
+		from ACC_equalizations left join ACC_banks using(BankID)");
+	$temp = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+	echo dataReader::getJsonData($temp, $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function showFile(){
+	
+	$obj = new ACC_equalizations($_REQUEST["EqualizationID"]);
+	header('Content-disposition: filename=file.xls');
+	header('Content-type: jpg');
+	header('Pragma: no-cache');
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	header("Content-Transfer-Encoding: binary");
+	echo $obj->ImportFile;
+	die();
+}
 
 function Equalization_UpdateChecks(){
 	
@@ -28,6 +86,13 @@ function Equalization_UpdateChecks(){
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
+	//--------------- add to equalizations -------------
+	$EqualObj = new ACC_equalizations();
+	$EqualObj->RegDate = PDONOW;
+	$EqualObj->BankID = $BankID;
+	$EqualObj->ImportFile =  fread(fopen($_FILES["attach"]["tmp_name"], 'r'), $_FILES["attach"]["size"]);
+	$EqualObj->Add($pdo);	
+	
 	//----------- insert DocHeader --------------------
 	$obj = new ACC_docs();
 	$obj->RegDate = PDONOW;
@@ -42,21 +107,16 @@ function Equalization_UpdateChecks(){
 		ExceptionHandler::PushException("خطا در ایجاد سند");
 		return false;
 	}
-	//--------------------------------------------------
-	$CostCode_guaranteeAmount = FindCostID("904-02");
-	$CostCode_guaranteeCount = FindCostID("904-01");
-	$CostCode_guaranteeAmount2 = FindCostID("905-02");
-	$CostCode_guaranteeCount2 = FindCostID("905-01");
-	//--------------------------------------------------
-	$SumAmount = 0;
-	$countAmount = 0;
-	
+		
+	$successCount = 0;
 	for ($i = 1; $i <= $data->sheets[0]['numRows']; $i++) 
 	{
 		$checkNo = "";		
 		switch($BankID)
 		{
 			case "4": // اقتصاد نوین
+				$TafsiliID = "";
+				$TafsiliID2 = "";
 				if(empty($data->sheets[0]['cells'][$i][1]))
 					continue;
 					
@@ -64,92 +124,53 @@ function Equalization_UpdateChecks(){
 				if(isset($cellData) && strpos(trim($cellData), "چک عادي ش.") !== false)
 				{
 					$arr = preg_split("/\//", $cellData);
-					$checkNo = $arr[1];
+					$checkNo = $arr[2];
+					$checkNo = substr($checkNo,0, strpos($checkNo, "صندوق پژوهش"));
 				}
 				break;
 		}
 		if($checkNo == "")
 			continue;
 	
-		//---------------- add doc header --------------------
+		//---------------- add doc items --------------------
 		$dt = PdoDataAccess::runquery("
-			SELECT PayAmount,BackPayID,PartID,LoanPersonID ,RequestID, p.IsSupporter
-				FROM LON_BackPays join LON_ReqParts using(PartID)
-				join LON_requests using(RequestID)
-				left join BSC_persons p on(p.PersonID=ReqPersonID)
-				where ChequeNo=? AND ChequeStatus<>2",	array($checkNo), $pdo);
-
+			SELECT * FROM ACC_IncomeCheques 
+				where ChequeNo=? AND ChequeStatus<>" . INCOMECHEQUE_VOSUL,array($checkNo), $pdo);
 		if(count($dt) > 0)
 		{
-			$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
-			if(!$LoanPersonTafsili)
-			{
-				echo Response::createObjectiveResponse(false, "تفصیلی مربوط به شماره چک " . $checkNo . "یافت نشد.");
-				die();
-			}
-			$itemObj = new ACC_DocItems();
-			$itemObj->DocID = $obj->DocID;
-			$itemObj->CostID = $CostCode_guaranteeAmount;
-			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $dt[0]["PayAmount"];
-			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $LoanPersonTafsili;
-			$itemObj->SourceType = DOCTYPE_DOCUMENT;
-			$itemObj->SourceID = $row["BackPayID"];
-			$itemObj->details = " وصول چک از طریق مغایرت بانکی";
-			$itemObj->Add($pdo);
+			$inChequeObj = new ACC_IncomeCheques($dt[0]["IncomeChequeID"]);
+			$inChequeObj->EqualizationID = $EqualObj->EqualizationID;
+			$inChequeObj->ChequeStatus = INCOMECHEQUE_VOSUL;
+			$inChequeObj->Edit($pdo);
 			
-			$SumAmount += $row["ParamValue"]*1;
-			$countAmount++;
-			
-			if($dt[0]["IsSupporter"] == "YES")
-				$result = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
-			else
-				$result = RegisterCustomerPayDoc(null, $obj, $_POST["BankTafsili"], $_POST["AccountTafsili"],  $pdo);
-			if(!$result)
+			$temp = $inChequeObj->GetBackPays($pdo);
+			foreach($temp as $row)
 			{
-				$pdo->rollback();
-				echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
-				die();
+				$BackPayObj = new LON_BackPays($row["BackPayID"]);
+				$BackPayObj->EqualizationID = $EqualObj->EqualizationID;
+				$BackPayObj->Edit($pdo);
 			}
 			
-			$result .= "شماره چک : " . $checkNo . " [ چک وام شماره " . 
-					$dt[0]["RequestID"] . " به روز رسانی شد ]<br>";
+			ACC_IncomeCheques::AddToHistory($inChequeObj->IncomeChequeID, $inChequeObj->ChequeStatus, $pdo);
+	
+			RegisterOuterCheque($obj->DocID, $inChequeObj, $pdo, COSTID_Bank, $TafsiliID, $TafsiliID2);
+			$successCount++;
+			
+			$result .= "شماره چک : " . $checkNo . " به روز رسانی شد <br>";
 		}
 		else
 		{
-			$result .= "شماره چک : " . $checkNo . " [ ردیفی با این شماره چک یافت نشد ]<br>";
+			$result .= "<font color=red> شماره چک : " . $checkNo . " یافت نشد </font><br>";
 			
 		}
 	}
-	//---------------------------------------------------------
-	if($SumAmount > 0)
-	{
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType);
-		unset($itemObj->TafsiliID);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		unset($itemObj->details);
-		$itemObj->CostID = $CostCode_guaranteeAmount2;
-		$itemObj->DebtorAmount = $SumAmount;
-		$itemObj->CreditorAmount = 0;	
-		$itemObj->Add($pdo);
-
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeCount;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $countAmount;	
-		$itemObj->Add($pdo);
-
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeCount2;
-		$itemObj->DebtorAmount = $countAmount;
-		$itemObj->CreditorAmount = 0;
-		$itemObj->Add($pdo);
-	}
-		
-	echo Response::createObjectiveResponse(true, $result == "" ? "هیچ چکی به روز نگردید" : $result);
+	
+	if($successCount == 0)
+		$pdo->rollBack ();
+	else
+		$pdo->commit();
+	
+	echo Response::createObjectiveResponse(true, $successCount == 0 ? "هیچ چکی به روز نگردید" : $result);
 	die();
 }
 

@@ -3,12 +3,35 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 91.03
 //-----------------------------
-
 require_once '../header.inc.php';
+require_once inc_dataGrid;
+require_once inc_dataReader;
 
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
+
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "operation.data.php?task=selectEqualizations", "grid_div");
+
+$dg->addColumn("", "EqualizationID", "", true);
+
+$col = $dg->addColumn("تاریخ عملیات", "RegDate", GridColumn::ColumnType_datetime);
+$col->width = 130;
+
+$col = $dg->addColumn("بانک", "BankDesc");
+
+$col = $dg->addColumn("", "", "");
+$col->renderer = "UpdateChecks.FileRender";
+$col->width = 40;
+
+$dg->height = 400;
+$dg->width = 800;
+$dg->title = "مغایرت گیری های انجام شده";
+$dg->DefaultSortField = "EqualizationID";
+$dg->DefaultSortDir = "Desc";
+$dg->autoExpandColumn = "BankDesc";
+$grid = $dg->makeGrid_returnObjects();
+
 ?>
 <script>
 UpdateChecks.prototype = {
@@ -26,6 +49,9 @@ UpdateChecks.prototype = {
 
 function UpdateChecks()
 {
+	this.grid = <?= $grid ?>;
+	this.grid.render(this.get("divGrid"));
+	
 	this.formPanel = new Ext.form.Panel({
 		renderTo : this.get("main"),
 		frame : true,
@@ -68,6 +94,7 @@ function UpdateChecks()
 					success : function(form,action){
 						
 						UpdateChecksObj.resultFS.update(action.result.data);
+						UpdateChecksObj.grid.getStore().load();
 					},
 					failure : function(form,action)
 					{
@@ -86,6 +113,21 @@ function UpdateChecks()
 	});
 }
 
+UpdateChecks.FileRender = function(v,p,r){
+	
+	return "<div align='center' title='مشاهده فایل' class='attach' "+
+		"onclick='UpdateChecksObj.ShowFile();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16;float:right'></div>";
+}
+
+UpdateChecks.prototype.ShowFile = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	window.open(this.address_prefix + "operation.data.php?task=showFile&EqualizationID=" + 
+		record.data.EqualizationID);
+}
+
 UpdateChecksObj = new UpdateChecks();
 
 
@@ -94,5 +136,6 @@ UpdateChecksObj = new UpdateChecks();
 	<center><br>
 		<div id="main" ></div>
 		<div id="result"></div>
+		<div id="divGrid"></div>
 	</center>
 </form>

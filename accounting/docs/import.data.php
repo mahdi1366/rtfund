@@ -1928,6 +1928,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
+		$itemObj->locked = "NO";
 		$itemObj->CostID = $FirstCostID;
 		$itemObj->DebtorAmount= $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;
@@ -1996,6 +1997,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
+		$itemObj->locked = "NO";
 		$itemObj->CostID = $PayObj->PayType == "3" ? $CostCode_fund : $CostCode_bank;
 		$itemObj->DebtorAmount= $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;
@@ -2010,34 +2012,6 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 			ExceptionHandler::PushException("خطا در ایجاد سند");
 			return false;
 		}
-	}
-	//---------------------------------------------------------
-	if($PayObj->PayType == "9")
-	{
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		$itemObj->DocID = $obj->DocID;
-		$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $PayObj->PayAmount;
-		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $LoanPersonTafsili;
-		$itemObj->SourceType = DOCTYPE_DOCUMENT;
-		$itemObj->SourceID = $PayObj->BackPayID;
-		$itemObj->details = "چک شماره " . $PayObj->ChequeNo . " مربوط به وام شماره " . $ReqObj->RequestID;
-		$itemObj->Add($pdo);
-
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType);
-		unset($itemObj->TafsiliID);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		unset($itemObj->details);
-		$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
-		$itemObj->DebtorAmount = $PayObj->PayAmount;
-		$itemObj->CreditorAmount = 0;	
-		$itemObj->Add($pdo);
 	}
 	//---------------------------------------------------------
 	if(ExceptionHandler::GetExceptionCount() > 0)

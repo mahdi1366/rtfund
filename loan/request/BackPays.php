@@ -37,6 +37,7 @@ $dg->addColumn("", "LocalNo","", true);
 $dg->addColumn("", "DocStatus","", true);
 $dg->addColumn("", "ChequeStatus","", true);
 $dg->addColumn("", "IsGroup","", true);
+$dg->addColumn("", "EqualizationID","", true);
 
 if($editable)
 {
@@ -145,8 +146,12 @@ function LoanPay()
 	this.grid = <?= $grid ?>;
 	this.grid.getView().getRowClass = function(record, index)
 	{
-		if(record.data.IsGroup == "YES")
+		if(record.data.EqualizationID*1 > 0)
 			return "yellowRow";
+		
+		if(record.data.IsGroup == "YES")
+			return "greenRow";
+		
 		return "";
 	}	
 
@@ -831,4 +836,7 @@ LoanPay.prototype.BeforeSaveGroupPay = function(){
 		 این وام خاتمه یافته و قادر به تغییر در پرداخت های آن نمی باشید
 		<br>&nbsp;</div>
 	<div id="div_grid"></div>
+	ردیف های زرد رنگ ردیف هایی هستند که از طریق مغایرت بانکی تایید شده اند
+	<br>
+	ردیف های سبز رنگ ردیف هایی هستند که از طریق پرداخت گروهی ثبت شده اند
 </center>

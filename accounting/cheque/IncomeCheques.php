@@ -20,6 +20,7 @@ $dg->addColumn("", "ChequeStatus", "", true);
 $dg->addColumn("", "BankDesc", "", true);
 $dg->addColumn("", "ChequeBranch", "", true);
 $dg->addColumn("", "description", "", true);
+$dg->addColumn("", "EqualizationID", "", true);
 
 $col = $dg->addColumn("صاحب چک", "fullname", "");
 
@@ -395,6 +396,13 @@ function IncomeCheque(){
 	});
 		 
 	this.grid = <?= $grid ?>;
+	this.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.EqualizationID*1 > 0)
+			return "yellowRow";
+		return "";
+	}
+
 	this.grid.getStore().proxy.form = this.get("MainForm");
 	this.grid.render(this.get("div_grid"));
 	
@@ -552,7 +560,12 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 		Ext.getCmp(this.TabID).add(this.commentWin);
 	}
 	var record = this.grid.getSelectionModel().getLastSelected();
-	
+	if(record.data.EqualizationID*1 > 0)
+	{
+		Ext.MessageBox.alert("Error","چکی که تایید مغایرت شده است تحت هیچ شرایطی قابل تغییر نمی باشد");
+		return;
+	}
+
 	this.commentWin.down("[name=DstID]").setValue();
 	this.commentWin.down("[name=DstID]").getStore().proxy.extraParams.SrcID = record.data.ChequeStatus;
 	this.commentWin.down("[name=DstID]").getStore().load();
@@ -570,6 +583,13 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 }
 
 IncomeCheque.prototype.ReturnLatestOperation = function(){
+
+	/*var record = this.grid.getSelectionModel().getLastSelected();
+	if(record.data.EqualizationID*1 > 0)
+	{
+		Ext.MessageBox.alert("Error","چکی که تایید مغایرت شده است تحت هیچ شرایطی قابل تغییر نمی باشد");
+		return;
+	}*/
 
 	Ext.MessageBox.confirm("","آیا مایل به برگشت آخرین عملیات انجام شده روی چک می باشید؟", function(btn){
 		if(btn == "no")
@@ -990,4 +1010,5 @@ IncomeCheque.prototype.ShowHistory = function(){
 	</form>
 	<br>
 	<div id="div_grid"></div>
+	ردیف های زرد رنگ چک هایی هستند که از طریق مغایرت تایید شده اند
 </center>

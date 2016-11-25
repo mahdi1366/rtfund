@@ -334,6 +334,7 @@ class LON_BackPays extends PdoDataAccess
 	public $details;
 	public $IsGroup;
 	public $IncomeChequeID;
+	public $EqualizationID;
 	
 	function __construct($BackPayID = "") {
 		

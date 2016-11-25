@@ -53,7 +53,40 @@ if(isset($_REQUEST["show"]))
 	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount","amountRender");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("InstallmentID");
+	//-----------------------------------------------
+	function profitRender(&$row, $value, $param, $prevRow){
+		if($prevRow && $row["InstallmentID"] == $prevRow["InstallmentID"])
+			$row["profit"] = $prevRow["profit"];
+		else
+			$row["profit"] = round((1/1200)*$param->CustomerWage*
+				(!$prevRow ? $param->PartAmount : $prevRow["pureAmount"]));
+		return number_format($row["profit"]);
+	}
+	$col = $rpg->addColumn("سهم سود از پرداختی", "PartID","profitRender", $PartObj);
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("InstallmentID");
 	
+	function pureRender($row, $value, $param, $prevRow){
+		return number_format($row["InstallmentAmount"] - $row["profit"]);
+	}
+	$col = $rpg->addColumn("سهم اصل از پرداختی", "PartID","pureRender", $PartObj);
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("InstallmentID");
+	
+	function pureRemainRender(&$row, $value, $param, $prevRow){
+		if($prevRow && $row["InstallmentID"] == $prevRow["InstallmentID"])
+			$row["pureAmount"] = $prevRow["pureAmount"]; 
+		else if(!$prevRow)
+			$row["pureAmount"] = $param - ($row["InstallmentAmount"] - $row["profit"]);
+		else
+			$row["pureAmount"] = $prevRow["pureAmount"] - ($row["InstallmentAmount"] - $row["profit"]);
+		
+		return number_format($row["pureAmount"]);
+	}
+	$col = $rpg->addColumn("مانده از اصل", "PartID","pureRemainRender",$PartObj->PartAmount);
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("InstallmentID");
+	//-----------------------------------------------
 	$col = $rpg->addColumn("تاریخ پرداخت", "PayDate","dateRender");
 	$col->rowspaning = true;
 	
@@ -73,7 +106,6 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg->addColumn("مانده قسط", "remainder","amountRender");
 	$rpg->addColumn("مانده کل", "TotalRemainder","amountRender");
-	
 	
 	//$rpg->page_size = 20;
 	//$rpg->paging = true;

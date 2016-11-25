@@ -421,7 +421,7 @@ class ReportGenerator {
 		echo "</table>";
 	}
 
-	function DrawRow($row, $index) {
+	function DrawRow(&$row, $index) {
 		
 		$color = $this->body_color;
 		if ($this->rowColorRender != "")
@@ -451,7 +451,12 @@ class ReportGenerator {
 
 			$val = "";
 			if (!empty($this->columns[$i]->renderFunction)) {
-				eval("\$val = " . $this->columns[$i]->renderFunction . "(\$row,\$row[\$this->columns[\$i]->field],\$this->columns[\$i]->renderParams);");
+				
+				$functionName = $this->columns[$i]->renderFunction;
+				$val = $functionName(
+						$row,$row[$this->columns[$i]->field],
+						$this->columns[$i]->renderParams,$this->PrevRecord);
+				
 			}
 			else if(strpos($this->columns[$i]->field, "VerticalSum_") === false) {
 				$val = $row[$this->columns[$i]->field];
@@ -481,7 +486,10 @@ class ReportGenerator {
 			
 				if($this->columns[$i]->SummaryOfRender && !empty($this->columns[$i]->renderFunction))
 				{
-					eval("\$val = " . $this->columns[$i]->renderFunction . "(\$row,\$row[\$this->columns[\$i]->field],\$this->columns[\$i]->renderParams);");
+					$functionName = $this->columns[$i]->renderFunction;
+					$val = $functionName($row,$row[$this->columns[$i]->field],
+							$this->columns[$i]->renderParams,$this->PrevRecord);
+					
 					$this->columns[$i]->HaveSum = ($this->columns[$i]->HaveSum * 1) + (str_replace(",", "", $val) * 1);
 				}
 				else
