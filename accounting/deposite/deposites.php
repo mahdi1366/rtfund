@@ -136,7 +136,9 @@ Deposite.prototype.BeforeComputeProfit = function(ReportMode){
 				return;
 			window.open(DepositeObject.address_prefix +  
 				"report.php?CostID=" + record.data.CostID + "&TafsiliID=" + 
-				record.data.TafsiliID + "&ToDate=" + DepositeObject.DateWin.down("[name=ToDate]").getRawValue());
+				record.data.TafsiliID + "&ToDate=" + 
+				DepositeObject.DateWin.down("[name=ToDate]").getRawValue());
+			DepositeObject.DateWin.hide();
 		});
 	else
 		this.DateWin.down("[itemId=btn_compute]").setHandler(function(){
