@@ -676,10 +676,6 @@ function ComputeDoc(){
 	
 	switch($_POST["ComputeType"])
 	{
-		case "DepositeProfit":
-			ComputeDepositeProfit();
-			break;
-		
 		case "ShareProfit":
 			ComputeShareProfit();
 			break;

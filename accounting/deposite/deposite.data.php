@@ -38,5 +38,17 @@ function selectDeposites() {
 	die();
 }
 
-
+function DepositeProfit(){
+	
+	$Tafsilis = array();
+	$keys = array_keys($_POST);
+	foreach($keys as $key)
+		if(strpos($key, "chk_") !== false)
+			$Tafsilis[] = substr($key, 4)*1;
+		
+	$ToDate = DateModules::shamsi_to_miladi($_POST["ToDate"]);
+	
+	ComputeDepositeProfit($ToDate, $Tafsilis);
+	die();
+}
 ?>

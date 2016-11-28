@@ -992,11 +992,13 @@ function ComputePayments($RequestID, &$installments){
 		$installments[$i]["FixPayAmount"] = 0;
 		$installments[$i]["PayAmount"] = 0;
 		$installments[$i]["UsedPayAmount"] = 0;
+		$installments[$i]["TotalRemainder"] = 0;
 		$installments[$i]["PayDate"] = '';
 		
 		if($PayRecord == null)
 		{
-			$installments[$i]["TotalRemainder"] = $i==0 ? 0 : $installments[$i-1]["TotalRemainder"];
+			$installments[$i]["TotalRemainder"] = $i==0 ? 0 : 
+				(!isset($installments[$i-1]["TotalRemainder"]) ? 0 : $installments[$i-1]["TotalRemainder"]);
 			
 			$ToDate = DateModules::Now();
 			$amount = $installments[$i]["InstallmentAmount"];
