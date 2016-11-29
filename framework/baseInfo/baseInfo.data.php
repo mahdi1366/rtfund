@@ -96,7 +96,7 @@ function GetTreeNodes(){
 
 function SelectPosts(){
 	
-	$temp = BSC_posts::Get(" AND 1=1" . dataReader::makeOrder());
+	$temp = BSC_posts::Get(" AND IsActive='YES'" . dataReader::makeOrder());
 	echo dataReader::getJsonData($temp->fetchAll(), $temp->rowCount(), $_GET["callback"]);
 	die();
 }
@@ -118,9 +118,9 @@ function SavePost(){
 
 function DeletePost(){
 	
-	$res = new BSC_posts($_POST["PostID"]);
-	
-	echo Response::createObjectiveResponse($res,"");
+	$obj = new BSC_posts($_POST["PostID"]);
+	$res = $obj->Remove();
+	echo Response::createObjectiveResponse($res,  ExceptionHandler::GetExceptionsToString());
 	die();
 }
 

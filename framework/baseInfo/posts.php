@@ -120,10 +120,15 @@ BSC_post.prototype.saveData = function(store,record)
 BSC_post.prototype.Deleting = function()
 {
 	var record = this.grid.getSelectionModel().getLastSelected();
-	if(record && confirm("آيا مايل به حذف مي باشيد؟"))
-	{
+	Ext.MessageBox.confirm("","آيا مايل به حذف مي باشيد؟", function(btn){
+	
+		if(btn == "no")
+			return;
+		
+		me = BSC_postObject;
+		
 		Ext.Ajax.request({
-		  	url : this.address_prefix + "baseInfo.data.php",
+		  	url : me.address_prefix + "baseInfo.data.php",
 		  	method : "POST",
 		  	params : {
 		  		task : "DeletePost",
@@ -131,10 +136,18 @@ BSC_post.prototype.Deleting = function()
 		  	},
 		  	success : function(response,o)
 		  	{
+				result = Ext.decode(response.responseText);
+				if(!result.success)
+				{
+					if(result.data == "")
+						Ext.MessageBox.alert("Error","عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("Error",result.data);
+				}
 		  		BSC_postObject.grid.getStore().load();
 		  	}
 		});
-	}
+	});
 }
 
 var BSC_postObject = new BSC_post();
