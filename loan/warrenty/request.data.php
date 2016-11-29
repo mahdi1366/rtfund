@@ -64,8 +64,8 @@ function SelectAllWarrentyRequests(){
 	
 	if(!empty($_REQUEST["IsEnded"]))
 	{
-		$where .= " AND IsEnded = :e "; 
-		$param[":e"] = $_REQUEST["IsEnded"];
+		$where .= " AND StatusID = :e "; 
+		$param[":e"] = WAR_STEPID_END;
 	}
 	
 	$dt = WAR_requests::SelectAll($where, $param, dataReader::makeOrder());
@@ -166,6 +166,36 @@ function ReturnWarrentyDoc(){
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
+
+function EndWarrentyDoc(){
+	
+	$ReqObj = new WAR_requests($_POST["RequestID"]);
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$result = EndWarrantyDoc($ReqObj, $pdo);
+	if(!$result)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	
+	$ReqObj->StatusID = WAR_STEPID_END;
+	$result = $ReqObj->Edit($pdo);
+	if(!$result)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
 //------------------------------------------------
 
 function GetRequestPeriods(){

@@ -63,8 +63,9 @@ function GetTreeNodes(){
         $refArray[$row["id"]] = &$parentNode["children"][$lastIndex];
     }
 	
-	$posts = PdoDataAccess::runquery("select concat('p_',PostID) id,PostName text,PostID, 'true' leaf,'user' iconCls, UnitID 
-		from BSC_posts order by PostName");
+	$posts = PdoDataAccess::runquery("select concat('p_',PersonID) id,concat_ws(' ',fname,lname,CompanyName,'[',PostName,']') text,
+		'true' leaf,'user' iconCls, p.UnitID
+		from BSC_persons p join BSC_posts using(PostID) order by PostName");
 	foreach($posts as $post)
 	{
 		$parentNode = &$refArray[ $post["UnitID"] ];
@@ -93,25 +94,32 @@ function GetTreeNodes(){
 
 //---------------------------------
 
+function SelectPosts(){
+	
+	$temp = BSC_posts::Get(" AND 1=1" . dataReader::makeOrder());
+	echo dataReader::getJsonData($temp->fetchAll(), $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
 function SavePost(){
 	
 	$obj = new BSC_posts();
-	PdoDataAccess::FillObjectByArray($obj, $_POST);
-	$obj->PostID = $obj->PostID != "" ? substr($obj->PostID, 2) : 0; 
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
 	if($obj->PostID > 0)
-		$res = $obj->EditPost();
+		$res = $obj->Edit();
 	else
-		$res = $obj->AddPost();
+		$res = $obj->Add();
 
 	//print_r(ExceptionHandler::PopAllExceptions()); 
-	echo Response::createObjectiveResponse($res, $obj->PostID);
+	echo Response::createObjectiveResponse($res, "");
 	die();
 }
 
 function DeletePost(){
-	$PostID = substr($_POST["PostID"], 2);
-	$res = BSC_posts::RemovePost($PostID);
+	
+	$res = new BSC_posts($_POST["PostID"]);
+	
 	echo Response::createObjectiveResponse($res,"");
 	die();
 }

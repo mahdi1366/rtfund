@@ -54,42 +54,23 @@ function Unit(){
 		view.select(index);
 
 		Menu = new Ext.menu.Menu();
+		me = UnitObject;
 		
-		if(record.data.id.indexOf("p_") != -1)
+		if(record.data.id.indexOf("p_") == -1)
 		{
-			if(thid.EditAccess)
+			if(me.AddAccess)
 				Menu.add({
-					text: 'ویرایش پست سازمانی',
-					handler: function(){ UnitObject.BeforeSavePost("edit");},
-					iconCls: 'user_edit'
-				});
-			if(thid.RemoveAccess)	
-				Menu.add({
-					text: 'حذف پست سازمانی',
-					handler: function(){ UnitObject.DeletePost();},
-					iconCls: 'user_delete'
-				});
-		}
-		else
-		{
-			if(thid.AddAccess)
-				Menu.add({
-					text: 'ایجاد پست سازمانی',
-					iconCls: 'user_add',
-					handler: function(){ UnitObject.BeforeSavePost("new");}
-				},
-				{
 					text: 'ایجاد زیر واحد',
 					iconCls: 'add',
 					handler: function(){ UnitObject.BeforeSaveUnit("new");}
 				});
-			if(thid.EditAccess)
+			if(me.EditAccess)
 				Menu.add({
 					text: 'ویرایش اطلاعات واحد سازمانی',
 					handler: function(){ UnitObject.BeforeSaveUnit("edit");},
 					iconCls: 'edit'
 				});
-			if(thid.RemoveAccess)
+			if(me.RemoveAccess)
 				Menu.add({
 					text: 'حذف واحد سازمانی',
 					handler: function(){ UnitObject.DeleteUnit();},
@@ -233,139 +214,6 @@ Unit.prototype.DeleteUnit = function()
 		method : 'POST',
 		params :{
 			UnitID : record.data.id
-		},
-		
-		success: function(response,option){			
-			mask.hide();
-			var sd = Ext.decode(response.responseText );
-			if(sd.success)
-			{
-				record.remove();
-	            return;
-			}
-			else
-			{
-				alert("عملیات مورد نظر با شکست مواجه شد.");
-			}
-		}
-	});
-}
-
-Unit.prototype.BeforeSavePost = function(mode)
-{
-	if(!this.postWin)
-	{
-		this.postWin = new Ext.window.Window({
-			applyTo: this.get("NewWIN"),
-			modal : true,
-			title: "اطلاعات پست",
-			width : 500,
-			closeAction : "hide",
-
-			items : new Ext.form.Panel({
-				bodyStyle : "text-align:right;padding:5px",
-				frame: true,
-				items :[{
-					xtype : "textfield",
-					name : "PostName",
-					itemId : "PostName",
-					fieldLabel : "عنوان",
-					anchor : "100%"
-				},{
-					xtype : "hidden",
-					name : "UnitID",
-					itemId : "UnitID"
-				},{
-					xtype : "hidden",
-					name : "PostID",
-					itemId : "PostID"
-				}],
-				buttons :[{
-					text : "ذخیره",
-					handler : function(){
-						mask = new Ext.LoadMask(Ext.getCmp(UnitObject.TabID), {msg:'در حال ذخيره سازي...'});
-						mask.show();
-						UnitObject.postWin.down('form').getForm().submit({
-							clientValidation: true,
-							url: UnitObject.address_prefix + 'baseInfo.data.php?task=SavePost',
-							method : "POST",
-
-							success : function(form,action){                
-
-								PostID = UnitObject.postWin.down('form').getComponent("PostID").getValue();
-								mode = PostID == "" ? "new" : "edit";
-
-								if(mode == "new")
-								{
-									UnitID = UnitObject.postWin.down('form').getComponent("UnitID").getValue();
-									Parent = UnitObject.tree.getRootNode().findChild("id",UnitID,true);
-									Parent.set('leaf', false);
-									Parent.appendChild({
-										id : action.result.data,
-										text :  UnitObject.postWin.down('form').getComponent("PostName").getValue(),
-										leaf : true,
-										iconCls : "user"
-									});  
-									Parent.expand();
-								}
-			 					else
-								{
-									node = UnitObject.tree.getRootNode().findChild("id", PostID, true);
-									node.set('text', UnitObject.postWin.down('form').getComponent("PostName").getValue());
-								}
-
-								UnitObject.postWin.down('form').getForm().reset();
-								UnitObject.postWin.hide();
-								mask.hide();
-							},
-							failure : function(form,action)
-							{
-								Ext.MessageBox.alert('Error', action.result.data);
-								mask.hide();
-							}
-						});
-					},
-					iconCls : "save"
-				},{
-					text : "انصراف",
-					handler : function(){
-						UnitObject.postWin.hide();
-					},
-					iconCls : "undo"
-				}]
-			})
-		});
-	}
-	
-	var record = this.tree.getSelectionModel().getSelection()[0];
-	this.postWin.down('form').getForm().reset();
-
-	this.postWin.show();
-	this.postWin.down('form').getComponent("UnitID").setValue(record.data.id);
-	
-	if(mode == "edit")
-	{
-		this.postWin.down('form').getComponent("PostID").setValue(record.data.id);
-		this.postWin.down('form').getComponent("PostName").setValue(record.data.text);
-		this.postWin.down('form').getComponent("UnitID").setValue(record.data.parentId);
-	}
-}
-
-Unit.prototype.DeletePost = function()
-{
-	var record = this.tree.getSelectionModel().getSelection()[0];
-	
-	if(!confirm("آیا مایل به حذف می باشید؟"))
-	{
-		return;
-	}
-	mask = new Ext.LoadMask(this.tree, {msg:'در حال ذخيره سازي...'});
-	mask.show();
-	Ext.Ajax.request({
-		url : this.address_prefix + 'baseInfo.data.php?task=DeletePost',
-		method : 'POST',
-		params :{
-			PostID : record.data.id
 		},
 		
 		success: function(response,option){			

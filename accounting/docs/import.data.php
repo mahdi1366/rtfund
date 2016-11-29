@@ -3011,6 +3011,137 @@ function ReturnWarrantyDoc($ReqObj, $pdo, $EditMode = false){
 	
 	return ACC_docs::Remove($dt[0][0], $pdo);
 }
+
+function EndWarrantyDoc($ReqObj, $pdo){
+	
+	/*@var $ReqObj WAR_requests */
+	
+	//------------- get CostCodes --------------------
+	$CostCode_warrenty = FindCostID("300");
+	$CostCode_warrenty_commitment = FindCostID("700");
+	$CostCode_wage = FindCostID("750-07");
+	$CostCode_FutureWage = FindCostID("760-07");
+	$CostCode_fund = FindCostID("100");
+	$CostCode_seporde = FindCostID("690");
+	$CostCode_pasandaz = FindCostID("209-10");
+	
+	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
+	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
+	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
+	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
+	//------------------------------------------------
+	$CycleID = substr(DateModules::miladi_to_shamsi($ReqObj->StartDate), 0 , 4);
+	//------------------ find tafsilis ---------------
+	$PersonTafsili = FindTafsiliID($ReqObj->PersonID, TAFTYPE_PERSONS);
+	if(!$PersonTafsili)
+	{
+		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->PersonID . "]");
+		return false;
+	}
+	//---------------- add doc header --------------------
+	$DocObj = new ACC_docs();
+	$DocObj->RegDate = PDONOW;
+	$DocObj->regPersonID = $_SESSION['USER']["PersonID"];
+	$DocObj->DocDate = PDONOW;
+	$DocObj->CycleID = $CycleID;
+	$DocObj->BranchID = $ReqObj->BranchID;
+	$DocObj->DocType = DOCTYPE_WARRENTY_END;
+	$DocObj->description = "خاتمه ضمانت نامه " . $ReqObj->_TypeDesc . " به شماره " . 
+			$ReqObj->RequestID . " به نام " . $ReqObj->_fullname;
+
+	if(!$DocObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ایجاد سند");
+		return false;
+	}
+	//----------------- add Doc items ------------------------
+	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $DocObj->DocID;
+	$itemObj->TafsiliType = TAFTYPE_PERSONS;
+	$itemObj->TafsiliID = $PersonTafsili;
+	$itemObj->SourceType = DOCTYPE_WARRENTY_END;
+	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID2 = $ReqObj->ReqVersion;
+	$itemObj->locked = "YES";
+	
+	$itemObj->CostID = $CostCode_warrenty;
+	$itemObj->CreditorAmount = $ReqObj->amount;
+	$itemObj->DebtorAmount = 0;
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ثبت ردیف ضمانت نامه");
+		return false;
+	}
+	
+	unset($itemObj->ItemID);
+	$itemObj->CostID = $CostCode_warrenty_commitment;
+	$itemObj->CreditorAmount = 0;
+	$itemObj->DebtorAmount = $ReqObj->amount;
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ثبت ردیف تعهد ضمانت نامه");
+		return false;
+	}
+	//---------------------------- block Cost ----------------------------
+	if($ReqObj->IsBlock == "YES")
+	{
+		$dt = PdoDataAccess::runquery("select * from ACC_blocks where SourceType=? AND SourceID=?",
+				array(DOCTYPE_WARRENTY, $ReqObj->RequestID));
+		if(count($dt) > 0)
+		{
+			$blockObj = new ACC_CostBlocks($dt[0]["BlockID"]);
+			$blockObj->IsActive = "NO";
+			$blockObj->Edit($pdo);
+		}
+	}
+	//---------- ردیف های تضمین  ----------
+
+	$SumAmount = 0;
+	$countAmount = 0;	
+	$dt = PdoDataAccess::runquery("
+		SELECT DocumentID, ParamValue, InfoDesc as DocTypeDesc
+			FROM DMS_DocParamValues
+			join DMS_DocParams using(ParamID)
+			join DMS_documents d using(DocumentID)
+			join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
+			left join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
+		where ItemID is null AND b.param1=1 AND 
+			paramType='currencyfield' AND ObjectType='warrenty' AND ObjectID=?",array($ReqObj->RequestID), $pdo);
+
+	foreach($dt as $row)
+	{
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_guaranteeAmount_zemanati;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $row["ParamValue"];
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $PersonTafsili;
+		$itemObj->SourceType = DOCTYPE_DOCUMENT;
+		$itemObj->SourceID = $row["DocumentID"];
+		$itemObj->details = $row["DocTypeDesc"];
+		$itemObj->Add($pdo);
+
+		$SumAmount += $row["ParamValue"]*1;
+		$countAmount++;
+	}
+	if($SumAmount > 0)
+	{
+		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType);
+		unset($itemObj->TafsiliID);
+		unset($itemObj->details);
+		$itemObj->CostID = $CostCode_guaranteeAmount2_zemanati;
+		$itemObj->DebtorAmount = $SumAmount;
+		$itemObj->CreditorAmount = 0;	
+		$itemObj->Add($pdo);
+	}
+	
+	if(ExceptionHandler::GetExceptionCount() > 0)
+		return false;
+	
+	return $DocObj->DocID;
+}
+
 //---------------------------------------------------------------
 
 ?>

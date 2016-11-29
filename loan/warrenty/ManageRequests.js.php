@@ -237,6 +237,9 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 				op_menu.add({text: 'برگشت سند',iconCls: 'undo',
 				handler : function(){ return WarrentyRequestObject.ReturnWarrentyDoc(); }})
 			}
+			
+			op_menu.add({text: 'خاتمه ضمانت نامه',iconCls: 'finish',
+				handler : function(){ return WarrentyRequestObject.EndWarrentyDoc(); }})
 		}
 		op_menu.add({text: 'چاپ ضمانت نامه',iconCls: 'print',
 			handler : function(){ return WarrentyRequestObject.Print(); }});
@@ -678,6 +681,44 @@ WarrentyRequest.prototype.ReturnWarrentyDoc = function(){
 			method: "POST",
 			params: {
 				task: "ReturnWarrentyDoc",
+				RequestID : record.data.RequestID
+			},
+			success: function(response){
+				
+				result = Ext.decode(response.responseText);
+				mask.hide();
+				if(!result.success)
+				{
+					if(result.data == "")
+						Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("", result.data);
+					return;
+				}				
+				WarrentyRequestObject.grid.getStore().load();
+			}
+		});
+	});
+}
+
+WarrentyRequest.prototype.EndWarrentyDoc = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به صدور سند خاتمه ضمانت نامه می باشید؟",function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		me = WarrentyRequestObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "EndWarrentyDoc",
 				RequestID : record.data.RequestID
 			},
 			success: function(response){

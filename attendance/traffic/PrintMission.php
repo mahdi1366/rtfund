@@ -13,6 +13,8 @@ $obj = new ATN_requests($_REQUEST["RequestID"]);
 if(empty($obj->RequestID))
 	die();
 
+require_once '../../framework/baseInfo/baseInfo.class.php';
+$Signer = BSC_posts::GetMissionSigner();
 ?>
 <head>
 	<meta content='text/html; charset=utf-8' http-equiv='Content-Type'/>
@@ -85,8 +87,13 @@ if(empty($obj->RequestID))
 			<td colspan="4">
 				<br><br>
 				<span style="float:left;text-align: center;margin-left:20px;font-family: titr;font-size: 14px">
-				مقام تایید کننده : مهدی مروی
-				<br>مدیر عامل
+				مقام تایید کننده : 
+				<?
+					if($Signer)
+					{
+						echo $Signer["PostName"] . "<br>" . $Signer["fullname"];
+					}
+				?>
 				</span>
 				<br><br><br><br>
 			</td>

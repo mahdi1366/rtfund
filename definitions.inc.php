@@ -18,6 +18,7 @@ define("DOCTYPE_EQUALCHECKS", "14");
 define("DOCTYPE_INCOMERCHEQUE", "15");
 define("DOCTYPE_LOAN_DIFFERENCE", "16");
 define("DOCTYPE_LOAN_COST", "17");
+define("DOCTYPE_WARRENTY_END", "18");
 
 //............  TypeID=2 ....................
 define("TAFTYPE_PERSONS", "1");

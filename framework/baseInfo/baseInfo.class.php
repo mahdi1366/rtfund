@@ -66,66 +66,38 @@ class BSC_units extends PdoDataAccess
 	}
 }
 
-class BSC_posts extends PdoDataAccess
+class BSC_posts extends OperationClass
 {
+	const TableName = "BSC_posts";
+	const TableKey = "PostID";
+	
 	public $PostID;
-	public $UnitID;
 	public $PostName;
-
-	function  __construct($PostID = "")
-	{
-		if($PostID != "")
-			parent::FillObject($this, "select * from BSC_posts where PostID=:p",
-				array(":p" => $PostID));
-	}
-
-	function AddPost()
-	{
-	 	if(!parent::insert("BSC_posts", $this))
-			return false;
-	 	
-		$this->PostID = parent::InsertID();
+	public $MissionSigner;
+	public $IsActive;
+	
+	public function Remove($pdo = null) {
 		
-	 	$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->PostID;
-		$daObj->TableName = "BSC_posts";
-		$daObj->execute();
-		return true;	
-	}
-	 
-	function EditPost()
-	{
-		$whereParams = array();
-	 	$whereParams[":p"] = $this->PostID;
-	 	
-	 	if(!parent::update("BSC_posts", $this, " PostID=:p", $whereParams))
+		$dt = parent::runquery("select * from BSC_persons where PostID=?", array($this->PostID), $pdo);
+		if(count($dt) > 0)
+		{
+			ExceptionHandler::PushException("این پست به فردی نسبت داده شده است و قابل حذف نمی باشد");
 			return false;
-	 	
-	 	$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->MainObjectID = $this->PostID;
-		$daObj->TableName = "BSC_posts";
-		$daObj->execute();
-		return true;	
-	 	
+		}
+		
+		$this->IsActive = "NO";
+		return $this->Edit($pdo);
 	}
-	 
-	static function RemovePost($PostID)
-	{
-	 	$whereParams = array();
-	 	$whereParams[":p"] = $PostID;
-	 	
-	 	if(!parent::delete("BSC_posts", " PostID=:p", $whereParams))
-			return false;
-	 	
-	 	$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->MainObjectID = $PostID;
-		$daObj->TableName = "BSC_posts";
-		$daObj->execute();
-		return true;
+
+	public static function GetMissionSigner(){
+		
+		$dt = PdoDataAccess::runquery("select PostID,PostName,concat_ws(' ',fname,lname) fullname, PersonID
+			from BSC_posts join BSC_persons using(PostID) where MissionSigner='YES'");
+		if(count($dt) > 0)
+			return $dt[0];
+		return false;
 	}
+	
 }
 
 class BSC_branches extends PdoDataAccess
