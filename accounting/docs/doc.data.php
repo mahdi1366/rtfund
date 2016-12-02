@@ -804,7 +804,6 @@ function RegisterInOutAccountDoc() {
 	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
 	$obj->DocType = $mode > 0 ? DOCTYPE_SAVING_IN : DOCTYPE_SAVING_OUT;
 	$obj->description = $mode > 0 ? "واریز به حساب" : "برداشت از حساب";
-	
 	if(!$obj->Add($pdo))
 	{
 		echo Response::createObjectiveResponse(false,"خطا در ایجاد سند");
@@ -820,6 +819,7 @@ function RegisterInOutAccountDoc() {
 	$itemObj->CreditorAmount = $mode > 0 ? $_POST["amount"] : 0;
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $BaseTafsiliID;
+	$itemObj->details = $_POST["description"];
 	if(!$itemObj->Add($pdo))
 	{
 		echo Response::createObjectiveResponse(false,  ExceptionHandler::GetExceptionsToString());

@@ -20,20 +20,21 @@ function ComputeInstallmentAmount($TotalAmount,$IstallmentCount,$PayInterval){
 	return $TotalAmount/$IstallmentCount;
 }
 
-function ComputeWage($PartAmount, $CustomerWagePercent, $InstallmentCount, $YearMonths, $PayInterval){
+function ComputeWage($PartAmount, $CustomerWagePercent, $InstallmentCount, $IntervalType, $PayInterval){
 	
 	if($PayInterval == 0)
 		return 0;
 	
-	if($PayInterval*1 > 0)
-		$InstallmentCount = $InstallmentCount*$PayInterval;
-	
 	if($CustomerWagePercent == 0)
 		return 0;
 	
-	return ((($PartAmount*$CustomerWagePercent/$YearMonths*
-		( pow((1+($CustomerWagePercent/$YearMonths)),$InstallmentCount)))/
-		((pow((1+($CustomerWagePercent/$YearMonths)),$InstallmentCount))-1))*$InstallmentCount)-$PartAmount;
+	if($IntervalType == "DAY")
+			$PayInterval = $PayInterval/30;
+		
+	$R = ($CustomerWagePercent/12)*$PayInterval;
+	$F7 = $PartAmount;
+	$F9 = $InstallmentCount;
+	return ((($F7*$R*pow(1+$R,$F9))/(pow(1+$R,$F9)-1))*$F9)-$F7;
 }
 function roundUp($number, $digits){
 	$factor = pow(10,$digits);
@@ -219,7 +220,7 @@ function ComputeWagesAndDelays($PartObj, $PayAmount, $StartDate, $PayDate){
 		$YearMonths = 12;
 	
 	$TotalWage = round(ComputeWage($PayAmount, $MaxWage/100, $PartObj->InstallmentCount, 
-			$YearMonths, $PartObj->PayInterval));	
+			$PartObj->IntervalType, $PartObj->PayInterval));	
 	
 	$CustomerFactor =	$MaxWage == 0 ? 0 : $PartObj->CustomerWage/$MaxWage;
 	$FundFactor =		$MaxWage == 0 ? 0 : $PartObj->FundWage/$MaxWage;

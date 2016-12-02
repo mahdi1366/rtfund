@@ -46,6 +46,7 @@ $col->width = 80;
 if($accessObj->EditFlag)
 {
 	$dg->addButton("", "اضافه چک", "add", "function(){IncomeChequeObject.AddCheque();}");
+	$dg->addButton("", "اضافه چکهای اقساط", "add", "function(){IncomeChequeObject.AddLoanCheque();}");
 	$dg->addButton("", "تغییر وضعیت چک", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
 	$dg->addButton("", "برگشت عملیات", "undo", "function(){IncomeChequeObject.ReturnLatestOperation();}");
 }
@@ -79,6 +80,13 @@ IncomeCheque.prototype = {
 
 	GroupPays : new Array(),
 	GroupPaysTitles : new Array(),
+	
+	GroupCheques : new Ext.data.ArrayStore({
+		fields : ["ChequeDate","ChequeAmount","ChequeBank","ChequeBranch","description","ChequeNo",
+			{name : "fullDesc",	convert : function(value,record){ return "چک به شماره " + 
+					record.data.ChequeNo + " و تاریخ " + record.data.ChequeDate + " و مبلغ " + 
+					record.data.ChequeAmount} }]
+	}),
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -998,6 +1006,213 @@ IncomeCheque.prototype.ShowHistory = function(){
 	this.HistoryWin.loader.load({
 		params : {
 			IncomeChequeID : this.grid.getSelectionModel().getLastSelected().data.IncomeChequeID
+		}
+	});
+}
+
+IncomeCheque.prototype.AddLoanCheque = function(){
+
+	if(!this.LoanChequeWin)
+	{
+		this.LoanChequeWin = new Ext.window.Window({
+			width : 700,
+			height : 370,
+			modal : true,
+			closeAction : "hide",
+			items : new Ext.form.Panel({
+				layout :{
+					type : "table",
+					columns : 1
+				},
+				items :[{
+					xtype : "combo",
+					fieldLabel : "انتخاب وام",
+					store: new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: '/loan/request/request.data.php?task=SelectAllRequests2',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields :  ['PartAmount',"IsEnded","RequestID","PartDate","loanFullname","InstallmentAmount",{
+							name : "fullTitle",
+							convert : function(value,record){
+								return "کد وام : " + record.data.RequestID + " به مبلغ " + 
+									Ext.util.Format.Money(record.data.PartAmount) + " مورخ " + 
+									MiladiToShamsi(record.data.PartDate) + " " + record.data.loanFullname;
+							}
+						}]
+					}),
+					displayField: 'fullTitle',
+					pageSize : 25,
+					allowBlank : false,
+					name : "RequestID",
+					valueField : "RequestID",
+					width : 600,
+					tpl: new Ext.XTemplate(
+						'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
+						'<td style="padding:7px">کد وام</td>',
+						'<td style="padding:7px">وام گیرنده</td>',
+						'<td style="padding:7px">مبلغ وام</td>',
+						'<td style="padding:7px">تاریخ پرداخت</td>',
+						'<td style="padding:7px"></td>',
+						'</tr>',
+						'<tpl for=".">',
+							'<tpl if="IsEnded == \'YES\'">',
+								'<tr class="x-boundlist-item pinkRow" style="border-left:0;border-right:0">',
+							'<tpl else>',
+								'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
+							'</tpl>',
+							'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
+							'<td style="border-left:0;border-right:0" class="search-item">{loanFullname}</td>',
+							'<td style="border-left:0;border-right:0" class="search-item">',
+								'{[Ext.util.Format.Money(values.PartAmount)]}</td>',
+							'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.PartDate)]}</td>',
+						' </tr>',
+						'</tpl>',
+						'</table>'
+					)
+				},{
+					xtype : "shdatefield",
+					name : "ChequeDate",
+					fieldLabel : "تاریخ چک"
+				},{
+					xtype : "currencyfield",
+					name : "ChequeAmount",
+					hideTrigger : true,
+					fieldLabel : "مبلغ چک"
+				},{
+					xtype : "numberfield",
+					name : "ChequeNo",
+					hideTrigger : true,
+					fieldLabel : "شماره چک"
+				},{
+					xtype : "combo",
+					store : new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetBanks',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields :  ["BankID", "BankDesc"],
+						autoLoad : true
+					}),
+					queryMode : "local",
+					displayField: 'BankDesc',
+					valueField : "BankID",
+					name : "ChequeBank",
+					fieldLabel : "بانک"
+				},{
+					xtype : "textfield",
+					name : "ChequeBranch",
+					fieldLabel : "شعبه"
+				},{
+					xtype : "textfield",
+					width : 650,
+					name : "description",
+					fieldLabel : "توضیحات"
+				},{
+					xtype : "container",
+					layout : "hbox",
+					items :[{
+						xtype : "button",
+						iclnCls : "add",
+						text : "اضافه به لیست",
+						handler : function(){
+							me = IncomeChequeObject;
+							parent = me.LoanChequeWin;
+							me.GroupCheques.add({
+								ChequeDate : parent.down("[name=ChequeDate]").getRawValue(),
+								ChequeAmount : parent.down("[name=ChequeAmount]").getValue(),
+								ChequeNo : parent.down("[name=ChequeNo]").getValue(),
+								ChequeBank : parent.down("[name=ChequeBank]").getValue(),
+								ChequeBranch : parent.down("[name=ChequeBranch]").getValue(),
+								description : parent.down("[name=description]").getValue()
+							});
+							
+							parent.down("[itemId=GroupList]").bindStore(me.GroupCheques);
+							parent.down("[name=ChequeDate]").setValue();
+							parent.down("[name=ChequeNo]").setValue();
+							parent.down("[name=description]").setValue();
+						}
+					},{
+						xtype : "button",
+						iclnCls : "cross",
+						text : "حذف از لیست",
+						handler : function(){
+							comp = IncomeChequeObject.LoanChequeWin.down("[itemId=GroupList]");
+							record = comp.getSelected()[0];
+							index = IncomeChequeObject.GroupCheques.find("ChequeNo",record.data.ChequeNo);
+							IncomeChequeObject.GroupCheques.removeAt(index);
+						}
+					}]
+				},{
+					xtype : "multiselect",
+					itemId : "GroupList",
+					store : this.GroupCheques,
+					displayField : "fullDesc",
+					height : 100,
+					width : 500
+		
+				}]
+			}),
+			buttons :[{
+				text : "ذخیره",
+				iconCls : "save",
+				itemId : "btn_save",
+				handler : function(){ IncomeChequeObject.SaveLoanCheque();}
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.LoanChequeWin);
+	}
+	
+	this.LoanChequeWin.show();
+}
+
+IncomeCheque.prototype.SaveLoanCheque = function(){
+		
+	mask = new Ext.LoadMask(this.LoanChequeWin, {msg:'در حال ذخيره سازي...'});
+	mask.show();
+
+	var store_data = new Array();
+	this.GroupCheques.each(function(record){
+		store_data.push(JSON.stringify({
+			ChequeDate : record.data.ChequeDate,
+			ChequeAmount : record.data.ChequeAmount,
+			ChequeNo : record.data.ChequeNo,
+			ChequeBank : record.data.ChequeBank,
+			ChequeBranch : record.data.ChequeBranch,
+			description : record.data.description
+		}));
+	});
+
+	this.LoanChequeWin.down('form').getForm().submit({
+		clientValidation: true,
+		url: this.address_prefix + 'cheques.data.php?task=SaveLoanCheque',
+		method : "POST",
+		params : {
+			cheques : JSON.stringify(store_data)
+		},
+
+		success : function(form,action){              
+			
+			IncomeChequeObject.grid.getStore().load();
+			IncomeChequeObject.LoanChequeWin.hide();
+			IncomeChequeObject.LoanChequeWin.down('form').getForm().reset();
+			IncomeChequeObject.GroupCheques.removeAll();
+			mask.hide();
+
+		},
+		failure : function(form,action)
+		{
+			mask.hide();
+			if(action.result.data == "")
+				Ext.MessageBox.alert("Error","عملیات مورد نظر با شکست مواجه شد");
+			else
+				Ext.MessageBox.alert("Error", action.result.data);
 		}
 	});
 }

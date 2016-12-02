@@ -54,7 +54,7 @@ if(isset($_REQUEST["show"]))
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("InstallmentID");
 	//-----------------------------------------------
-	function profitRender(&$row, $value, $param, $prevRow){
+	/*function profitRender(&$row, $value, $param, $prevRow){
 		if($prevRow && $row["InstallmentID"] == $prevRow["InstallmentID"])
 			$row["profit"] = $prevRow["profit"];
 		else
@@ -85,7 +85,7 @@ if(isset($_REQUEST["show"]))
 	}
 	$col = $rpg->addColumn("مانده از اصل", "PartID","pureRemainRender",$PartObj->PartAmount);
 	$col->rowspaning = true;
-	$col->rowspanByFields = array("InstallmentID");
+	$col->rowspanByFields = array("InstallmentID");*/
 	//-----------------------------------------------
 	$col = $rpg->addColumn("تاریخ پرداخت", "PayDate","dateRender");
 	$col->rowspaning = true;

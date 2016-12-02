@@ -1677,19 +1677,6 @@ RequestInfo.prototype.LoadSummary = function(record){
 
 	if(record.data.ReqPersonID == "<?= SHEKOOFAI ?>")
 		return this.LoadSummarySHRTFUND(record, null);
-
-	function PMT(F8, F9, F7, YearMonths, PayInterval) {  
-		
-		if(F8 == 0)
-			return F7/F9;
-		
-		if(PayInterval == 0)
-			return F7;
-		
-		F8 = F8/(YearMonths*100);
-		F7 = -F7;
-		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
-	} 
 	
 	function ComputeInstallmentAmount(TotalAmount,IstallmentCount,PayInterval){
 		
@@ -1698,19 +1685,20 @@ RequestInfo.prototype.LoadSummary = function(record){
 		
 		return TotalAmount/IstallmentCount;
 	}
-	function ComputeWage(F7, F8, F9, YearMonths, PayInterval){
+	function ComputeWage(F7, F8, F9, IntervalType, PayInterval){
 		
 		if(PayInterval == 0)
 			return 0;
 		
-		if(PayInterval*1 > 0)
-			F9 = F9*PayInterval;
-		
 		if(F8 == 0)
 			return 0;
 		
-		return (((F7*F8/YearMonths*( Math.pow((1+(F8/YearMonths)),F9)))/
-			((Math.pow((1+(F8/YearMonths)),F9))-1))*F9)-F7;
+		if(IntervalType == "DAY")
+			PayInterval = PayInterval/30;
+		
+		R = (F8/12)*PayInterval;
+			
+		return (((F7*R*( Math.pow((1+R),F9)))/((Math.pow((1+R),F9))-1))*F9)-F7;
 	}
 	function roundUp(number, digits)
 	{
@@ -1771,16 +1759,16 @@ RequestInfo.prototype.LoadSummary = function(record){
 		return returnArr;
 	}
 	
+	YearMonths = 12;
+	if(record.data.IntervalType == "DAY")
+		YearMonths = Math.floor(365/PayInterval);
+		
 	DelayDuration = DateModule.GDateMinusGDate(
 		DateModule.AddToGDate(record.data.PartDate, record.data.DelayDays*1, record.data.DelayMonths*1), 
 		record.data.PartDate);
 		
-	YearMonths = 12;
-	if(record.data.IntervalType == "DAY")
-		YearMonths = Math.floor(365/record.data.PayInterval);
-	
 	TotalWage = Math.round(ComputeWage(record.data.PartAmount, record.data.CustomerWage/100, 
-		record.data.InstallmentCount, YearMonths, record.data.PayInterval));
+		record.data.InstallmentCount, record.data.IntervalType, record.data.PayInterval));
 		
 	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
 	FundWage = Math.round((record.data.FundWage/record.data.CustomerWage)*TotalWage);

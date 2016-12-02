@@ -259,19 +259,20 @@ TestLoan.prototype.LoadSummary = function(){
 		
 		return TotalAmount/IstallmentCount;
 	}
-	function ComputeWage(F7, F8, F9, YearMonths, PayInterval){
+	function ComputeWage(F7, F8, F9, IntervalType, PayInterval){
 		
 		if(PayInterval == 0)
 			return 0;
 		
-		if(PayInterval*1 > 0)
-			F9 = F9*PayInterval;
-		
 		if(F8 == 0)
 			return 0;
 		
-		return (((F7*F8/YearMonths*( Math.pow((1+(F8/YearMonths)),F9)))/
-			((Math.pow((1+(F8/YearMonths)),F9))-1))*F9)-F7;
+		if(IntervalType == "DAY")
+			PayInterval = PayInterval/30;
+		
+		R = (F8/12)*PayInterval;
+			
+		return (((F7*R*( Math.pow((1+R),F9)))/((Math.pow((1+R),F9))-1))*F9)-F7;
 	}
 	function roundUp(number, digits)
 	{
@@ -362,7 +363,7 @@ TestLoan.prototype.LoadSummary = function(){
 		YearMonths = Math.floor(365/PayInterval);
 	
 	TotalWage = Math.round(ComputeWage(PartAmount, CustomerWage/100, 
-		InstallmentCount, YearMonths, PayInterval));
+		InstallmentCount, IntervalType, PayInterval));
 		
 	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
 	TotalDelay = Math.round(PartAmount*DelayPercent*DelayDuration/36500);

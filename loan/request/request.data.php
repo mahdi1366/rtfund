@@ -520,7 +520,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 		$YearMonths = floor(365/$obj->PayInterval);
 	
 	$TotalWage = round(ComputeWage($obj->PartAmount, $obj->CustomerWage/100, 
-			$obj->InstallmentCount, $YearMonths, $obj->PayInterval));
+			$obj->InstallmentCount, $PartObj->IntervalType, $obj->PayInterval));
 	
 	if($obj->WageReturn == "CUSTOMER")
 	{
@@ -1789,6 +1789,7 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 		if($ReturnMode)
 			return false;
 		$pdo->rollBack();
+		print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
 		die();
 	}

@@ -304,19 +304,14 @@ NewLoanRequestObject = new NewLoanRequest();
 
 NewLoanRequest.prototype.LoadSummary = function(record){
 
-	function PMT(F8, F9, F7, YearMonths, PayInterval) {  
-		
-		if(F8 == 0)
-			return F7/F9;
+	function ComputeInstallmentAmount(TotalAmount,IstallmentCount,PayInterval){
 		
 		if(PayInterval == 0)
-			return F7;
-				
-		F8 = F8/(YearMonths*100);
-		F7 = -F7;
-		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
-	} 
-	function ComputeWage(F7, F8, F9, YearMonths, PayInterval){
+			return TotalAmount;
+		
+		return TotalAmount/IstallmentCount;
+	}
+	function ComputeWage(F7, F8, F9, IntervalType, PayInterval){
 		
 		if(PayInterval == 0)
 			return 0;
@@ -324,8 +319,12 @@ NewLoanRequest.prototype.LoadSummary = function(record){
 		if(F8 == 0)
 			return 0;
 		
-		return (((F7*F8/YearMonths*( Math.pow((1+(F8/YearMonths)),F9)))/
-			((Math.pow((1+(F8/YearMonths)),F9))-1))*F9)-F7;
+		if(IntervalType == "DAY")
+			PayInterval = PayInterval/30;
+		
+		R = (F8/12)*PayInterval;
+			
+		return (((F7*R*( Math.pow((1+R),F9)))/((Math.pow((1+R),F9))-1))*F9)-F7;
 	}
 	function roundUp(number, digits)
 	{
@@ -338,14 +337,14 @@ NewLoanRequest.prototype.LoadSummary = function(record){
 		YearMonths = Math.floor(365/record.data.PayInterval);
 	
 	TotalWage = Math.round(ComputeWage(record.data.PartAmount, record.data.CustomerWage/100, 
-		record.data.InstallmentCount, YearMonths, record.data.PayInterval));
+		record.data.InstallmentCount, record.data.IntervalType, record.data.PayInterval));
 		
-	if(record.data.WageReturn == "CUSTOMER")
-		FirstPay = PMT(0,record.data.InstallmentCount, 
-			record.data.PartAmount, YearMonths, record.data.PayInterval);	
+	FirstPay = ComputeInstallmentAmount(TotalAmount,record.data.InstallmentCount, record.data.PayInterval);
+	if(record.data.InstallmentCount > 1)
+		FirstPay = roundUp(FirstPay,-3);
 	else
-		FirstPay = PMT(record.data.CustomerWage,record.data.InstallmentCount, 
-			record.data.PartAmount, YearMonths, record.data.PayInterval);	
+		FirstPay = Math.round(FirstPay);
+	LastPay = Math.round(TotalAmount - FirstPay*(record.data.InstallmentCount-1));
 			
 	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
 	FundWage = Math.round((record.data.FundWage/record.data.CustomerWage)*TotalWage);

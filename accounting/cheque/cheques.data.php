@@ -368,9 +368,10 @@ function ReturnLatestOperation($returnMode = false){
 	ACC_IncomeCheques::AddToHistory($OuterObj->IncomeChequeID, $OuterObj->ChequeStatus , $pdo);
 	//..................................................
 	$dt = $OuterObj->GetBackPays($pdo);
-	if(count($dt)> 0)
+	foreach($dt as $row)
 	{
-		ReturnPayPartDoc($DocID, $pdo);
+		$PayObj = new LON_BackPays($row["BackPayID"]);
+		ReturnCustomerPayDoc($PayObj, $pdo);
 	}
 	//..................................................
 	if(ExceptionHandler::GetExceptionCount() > 0)
@@ -388,6 +389,50 @@ function ReturnLatestOperation($returnMode = false){
 	
 	echo Response::createObjectiveResponse(true, "");
 	die();	
+}
+
+function SaveLoanCheque(){
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	$DocID = "";
+	
+	$cheques = json_decode($_POST["cheques"]);
+	foreach($cheques as $cheque)
+	{
+		$obj = new ACC_IncomeCheques();
+		PdoDataAccess::FillObjectByJsonData($obj, $cheque);
+		$obj->ChequeStatus = INCOMECHEQUE_NOTVOSUL;
+		if(!$obj->Add($pdo))
+		{
+			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+			die();
+		}
+		//................. add back pays ........................
+		$bobj = new LON_BackPays();
+		$bobj->PayDate = $obj->ChequeDate;
+		$bobj->IncomeChequeID = $obj->IncomeChequeID;
+		$bobj->RequestID = $_POST["RequestID"];
+		$bobj->PayAmount = $obj->ChequeAmount;
+		$bobj->PayType = BACKPAY_PAYTYPE_CHEQUE;
+		$bobj->Add($pdo);
+		//.......................................................
+
+		ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, $obj->ChequeStatus, $pdo);
+
+		//--------------------------------------------
+		$DocID = RegisterOuterCheque($DocID,$obj,$pdo);
+		
+		if(!$DocID){
+			print_r(ExceptionHandler::PopAllExceptions());
+			echo Response::createObjectiveResponse(false,ExceptionHandler::GetExceptionsToString());
+			die();
+		}
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
 }
 
 //...........................................

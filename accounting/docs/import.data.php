@@ -61,11 +61,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$CostCode_todiee = FindCostID("660-52");
 	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
-	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
-	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
-	$CostCode_guaranteeCount = FindCostID("904-01");
-	$CostCode_guaranteeCount2 = FindCostID("905-01");
 	
 	//------------------------------------------------
 	$CycleID = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0 , 4);
@@ -989,11 +985,13 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 function ReturnPayPartDoc($DocID, $pdo, $DeleteDoc = true){
 	
 	PdoDataAccess::runquery("delete from ACC_DocItems where DocID=? AND locked='YES'", array($DocID));
+	PdoDataAccess::runquery("delete from ACC_DocCheques where DocID=? ", array($DocID));
 
 	if($DeleteDoc)
+	{
 		PdoDataAccess::runquery("delete d from ACC_docs d left join ACC_DocItems using(DocID)
 		where DocID=? AND ItemID is null",	array($DocID), $pdo);
-	
+	}
 	return ExceptionHandler::GetExceptionCount() == 0;
 }
 
@@ -1593,7 +1591,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		$YearMonths = floor(365/$PartObj->PayInterval);
 	
 	$TotalWage = round(ComputeWage($PartObj->PartAmount, $PartObj->CustomerWage/100, 
-			$PartObj->InstallmentCount, $YearMonths, $PartObj->PayInterval));
+			$PartObj->InstallmentCount, $PartObj->IntervalType, $PartObj->PayInterval));
 	$FundWage = $PartObj->CustomerWage == 0 ? round(($PartObj->FundWage/$PartObj->CustomerWage)*$TotalWage) : 0;
 	$wage = round($PayObj->PayAmount*$FundWage/$PartObj->PartAmount);
 	//----------------- add Doc items ------------------------
@@ -2248,7 +2246,7 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 		if(ExceptionHandler::GetExceptionCount() > 0)
 			return false;
 
-		return true;
+		return $obj->DocID;
 	}
 	//............................................................
 	
@@ -2422,6 +2420,8 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 
 		return true;
 	}
+	
+	return true;
 }
 
 //---------------------------------------------------------------
@@ -2511,7 +2511,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 			$days = DateModules::GDateMinusGDate($row["DocDate"], $lastDate);
 
 			$amount = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] * $days * 
-				$DepositePercents[ $row["CostID"] ]/(100*30.5);
+				$DepositePercents[ $row["CostID"] ]/(36500);
 
 			if(!isset($DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"]))
 				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] = 0;
@@ -2549,7 +2549,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 		foreach($DepositeAmount[ COSTID_LongDeposite ] as $tafsili => &$row)
 		{
 			$days = DateModules::GDateMinusGDate($ToDate, $row["lastDate"]);
-			$amount = $row["amount"] * $days * $DepositePercents[ COSTID_LongDeposite ]/(100*30.5);
+			$amount = $row["amount"] * $days * $DepositePercents[ COSTID_LongDeposite ]/(36500);
 
 			if(!isset($row["profit"]))
 				$row["profit"] = 0;

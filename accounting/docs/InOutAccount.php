@@ -190,7 +190,7 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 	{
 		this.mainWin = new Ext.window.Window({
 			width : 400,
-			height : 180,
+			height : 220,
 			bodyStyle : "background-color:white",
 			modal : true,
 			closeAction : "hide",
@@ -272,6 +272,12 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 				name : "amount",
 				width : 380,
 				hideTrigger : true				
+			},{
+				xtype : "textarea",
+				name : "description",
+				width : 380,
+				rows : 2,
+				fieldLabel : "توضیحات"
 			}],
 			buttons :[{
 				text : "ذخیره",
@@ -297,6 +303,11 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 	
 InOutAccount.prototype.SaveOperation = function(){
 
+	if(this.mainWin.down("[name=amount]").getValue() == null)
+	{
+		Ext.MeesageBox.alert("Error","مبلغ را وارد کنید");
+		return;
+	}
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 
@@ -311,6 +322,7 @@ InOutAccount.prototype.SaveOperation = function(){
 			CostID : this.mainWin.down("[name=CostID]").getValue(),
 			TafsiliID: this.mainWin.down("[name=TafsiliID]").getValue(),
 			TafsiliID2: this.mainWin.down("[name=TafsiliID2]").getValue(),
+			description : this.mainWin.down("[name=description]").getValue(),
 			amount: this.mainWin.down("[name=amount]").getValue()
 		},
 		success: function(response){
