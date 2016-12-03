@@ -66,7 +66,10 @@ function MakeWhere(&$where , &$param){
 	}
 	//.........................................................
 	if (isset($_GET["fields"]) && !empty($_GET["query"])) {
-		$where .= " AND " . $_GET["fields"] . " like :f";
+		$field = $_GET["fields"];
+		$field = $field == "fullname" ? "case when i.CostID is null then 
+			t2.TafsiliDesc else t1.TafsiliDesc end" : "";
+		$where .= " AND " . $field . " like :f";
 		$param[":f"] = "%" . $_GET["query"] . "%";
 	}
 }
