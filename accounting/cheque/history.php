@@ -12,7 +12,7 @@ $query = "select h.*,
 				concat_ws(' ',fname, lname,CompanyName) fullname , 
 				t.TafsiliDesc StatusDesc
 			from ACC_ChequeHistory h 
-				join ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_ChequeStatus." AND StatusID=TafsiliID) 
+				left join ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_ChequeStatus." AND StatusID=TafsiliID) 
 				join BSC_persons using(PersonID) 
 				where h.IncomeChequeID=?
 			order by RowID ";
