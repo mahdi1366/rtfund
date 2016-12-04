@@ -129,7 +129,7 @@ function SelectAllRequests2(){
 		from LON_requests r 
 		join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
 		join BSC_persons on(LoanPersonID=PersonID)
-		join LON_installments i on(i.RequestID=p.RequestID)		
+		left join LON_installments i on(i.RequestID=p.RequestID)		
 		where 1=1";
 	if(!empty($_REQUEST["query"]))
 	{

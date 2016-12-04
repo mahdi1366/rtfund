@@ -850,6 +850,7 @@ IncomeCheque.prototype.ChangeStatus = function(){
 		params.LocalNo = DocNo;
 		me = IncomeChequeObject;
 		
+		IncomeChequeObject.commentWin.hide();		
 		mask = new Ext.LoadMask(me.grid, {msg:'در حال تغییر وضعیت ...'});
 		mask.show();
 
@@ -860,7 +861,6 @@ IncomeCheque.prototype.ChangeStatus = function(){
 
 			success : function(response){
 				mask.hide();
-				IncomeChequeObject.commentWin.hide();
 
 				result = Ext.decode(response.responseText);
 				if(result.success)
