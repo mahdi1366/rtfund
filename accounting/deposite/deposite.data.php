@@ -45,6 +45,12 @@ function DepositeProfit(){
 	foreach($keys as $key)
 		if(strpos($key, "chk_") !== false)
 			$Tafsilis[] = substr($key, 4)*1;
+	
+	if(count($Tafsilis) == 0)
+	{
+		echo Response::createObjectiveResponse(false, "هیچ ردیفی انتخاب نشده است");
+		die();
+	}
 		
 	$ToDate = DateModules::shamsi_to_miladi($_POST["ToDate"]);
 	

@@ -217,6 +217,8 @@ IncomeCheque.prototype.MakeLoanPanel = function(){
 			}),
 			displayField: 'fullTitle',
 			pageSize : 25,
+			name : "RequestID",
+			fieldLabel : "انتخاب وام",
 			valueField : "RequestID",
 			width : 600,
 			tpl: new Ext.XTemplate(
@@ -225,7 +227,6 @@ IncomeCheque.prototype.MakeLoanPanel = function(){
 				'<td style="padding:7px">وام گیرنده</td>',
 				'<td style="padding:7px">مبلغ وام</td>',
 				'<td style="padding:7px">تاریخ پرداخت</td>',
-				'<td style="padding:7px"></td>',
 				'</tr>',
 				'<tpl for=".">',
 					'<tpl if="IsEnded == \'YES\'">',
@@ -238,42 +239,74 @@ IncomeCheque.prototype.MakeLoanPanel = function(){
 					'<td style="border-left:0;border-right:0" class="search-item">',
 						'{[Ext.util.Format.Money(values.PartAmount)]}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.PartDate)]}</td>',
-					'<tpl if="IsEnded == \'NO\'">',
-						'<td class="search-item"><div align=center title="اضافه به پرداخت گروهی" class=add ',
-							'onclick="IncomeChequeObject.AddToGroupPay(event,\'{loanFullname}\',',
-							'{RequestID},{InstallmentAmount});" ',
-							'style=background-repeat:no-repeat;',
-							'background-position:center;cursor:pointer;width:20px;height:16></div></td>',
-					'<tpl else>',
-						'<td class="search-item"></td>',
-					'</tpl>',
 				' </tr>',
 				'</tpl>',
 				'</table>'
-			)
+			),
+			listeners : {
+				select : function(combo, records){
+					
+					me = IncomeChequeObject;
+					me.ChequeInfoWin.down('[name=PayAmount]').setValue(records[0].data.InstallmentAmount);
+				}
+			}
+		},{
+			xtype : "currencyfield",
+			hideTrigger : true,
+			fieldLabel : "مبلغ پرداخت",
+			name : "PayAmount"
+		},{
+			xtype : "container",
+			layout : "hbox",
+			items : [{
+				xtype : "button",
+				text : "اضافه به لیست",
+				iconCls : "add",
+				handler : function(){
+					me = IncomeChequeObject;
+					amountComp = me.ChequeInfoWin.down('[name=PayAmount]');
+					LoanCombo = me.ChequeInfoWin.down('[name=RequestID]');
+					RequestID = LoanCombo.getValue();
+					LoanRecord = LoanCombo.getStore().getAt( LoanCombo.getStore().find("RequestID", RequestID) );
+								
+					if(LoanRecord.data.IsEnded == "YES")
+					{
+						Ext.MessageBox.alert("Error","این وام خاتمه یافته و امکان ثبت چک برای آن وجود ندارد");
+						return;
+					}
+								
+					me.GroupPays.push(RequestID + "_" + amountComp.getValue());
+					me.GroupPaysTitles.push(new Array(LoanRecord.data.fullTitle + " به مبلغ " + 
+						Ext.util.Format.Money(amountComp.getValue()), amountComp.getValue()));
+					me.ChequeInfoWin.down("[itemId=GroupList]").bindStore(me.GroupPaysTitles);
+					LoanCombo.setValue();
+					amountComp.setValue();
+					
+				}
+			},{
+				xtype : "button",
+				text : "حذف از لیست",
+				iconCls : "cross",
+				handler : function(){
+
+					me = IncomeChequeObject;
+					el = me.ChequeInfoWin.down("[itemId=GroupList]");
+					index = el.getStore().indexOf(el.getSelected()[0]);
+					if(index >= 0)
+					{
+						me.GroupPays.splice(index,1);
+						me.GroupPaysTitles.splice(index,1);
+						el.clearValue();
+						el.bindStore(me.GroupPaysTitles);
+					}
+				}
+			}]
 		},{
 			xtype : "multiselect",
 			itemId : "GroupList",
 			store : this.GroupPaysTitles,
 			height : 100,
-			width : 500
-		},{
-			xtype : "button",
-			text : "حذف از لیست",
-			iconCls : "cross",
-			handler : function(){
-
-				me = IncomeChequeObject;
-				el = me.ChequeInfoWin.down("[itemId=GroupList]");
-				index = el.getStore().indexOf(el.getSelected()[0]);
-				if(index >= 0)
-				{
-					me.GroupPays.splice(index,1);
-					me.GroupPaysTitles.splice(index,1);
-					el.clearValue();
-					el.bindStore(me.GroupPaysTitles);
-				}
-			}
+			width : 600
 		}]	
 	};
 }
@@ -490,43 +523,6 @@ function IncomeCheque(){
 }
 
 IncomeChequeObject = new IncomeCheque();
-
-IncomeCheque.prototype.AddToGroupPay = function(e ,loanFullname, RequestID, InstallmentAmount){
-
-	if(!this.groupAmountWin)
-	{
-		this.groupAmountWin = new Ext.window.Window({
-			width : 300,
-			height : 100,
-			modal : true,
-			title : "نحوه پرداخت",
-			bodyStyle : "background-color:white",
-			items : [{
-				xtype : "currencyfield",
-				hideTrigger : true,
-				fieldLabel : "مبلغ پرداخت"
-			}],
-			closeAction : "hide",
-			buttons : [{
-				text : "اضافه به پرداخت گروهی",				
-				iconCls : "add",
-				itemId : "btn_add"	
-			}]
-
-		});
-	}
-	this.groupAmountWin.down('currencyfield').setValue(InstallmentAmount);
-	this.groupAmountWin.down("[itemId=btn_add]").setHandler(function(){
-		amount = this.up('window').down('currencyfield').getValue();
-		IncomeChequeObject.GroupPays.push(RequestID + "_" + amount);
-		IncomeChequeObject.GroupPaysTitles.push(new Array(loanFullname,amount));
-		IncomeChequeObject.groupAmountWin.hide();
-		IncomeChequeObject.ChequeInfoWin.down("[itemId=GroupList]").bindStore(IncomeChequeObject.GroupPaysTitles);
-	})
-	this.groupAmountWin.show();
-	this.groupAmountWin.center();
-	e.stopImmediatePropagation();	
-}
 
 IncomeCheque.prototype.beforeChangeStatus = function(){
 	
@@ -1115,7 +1111,7 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 					layout : "hbox",
 					items :[{
 						xtype : "button",
-						iclnCls : "add",
+						iconCls : "add",
 						text : "اضافه به لیست",
 						handler : function(){
 							me = IncomeChequeObject;
@@ -1136,7 +1132,7 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 						}
 					},{
 						xtype : "button",
-						iclnCls : "cross",
+						iconCls : "cross",
 						text : "حذف از لیست",
 						handler : function(){
 							comp = IncomeChequeObject.LoanChequeWin.down("[itemId=GroupList]");
