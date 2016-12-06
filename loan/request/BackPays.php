@@ -295,7 +295,7 @@ LoanPay.DeleteRender = function(v,p,r){
 
 LoanPay.RegDocRender = function(v,p,r){
 	
-	if(r.data.PayType == "9"/* || r.data.PayType == "4"*/)
+	if(r.data.PayType == "9" || r.data.PayType == "4")
 		return r.data.LocalNo;
 	
 	if(r.data.LocalNo == null)
