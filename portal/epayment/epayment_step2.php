@@ -14,34 +14,9 @@ if($_POST['State']== 'OK') {
 
 	$amount = $_SESSION["USER"]["SHAPARAK_AMOUNT"];
 
-	$payment = new Payment();
-
-	$login = $payment->login(username,password);
-	$login = $login['return'];
-
-	$params['login'] = $login;
-	$params['amount'] = $amount;	
-	$params['token']= $_POST['token'];
-	$params['RefNum']= $_POST['RefNum'];
-	$VerifyTrans = $payment->tokenPurchaseVerifyTransaction($params);
-
-	$VerifyTrans = $VerifyTrans['return'];
-	$VerifyTrans = $VerifyTrans['resultTotalAmount'];
-	
-	$totalAmount = $VerifyTrans;
-	if ($totalAmount > 0) {
-		$result = "پرداخت الكترونيكي شما به درستي انجام گرفت. شماره رسيد بانكي زير براي شما صادر گرديده است: </p>";
-		$result .= "<table width=80% align=center border=1 cellspacing=0 cellpadding=5 dir=rtl>
-			<tr>
-				<td>مبلغ پرداختي: </td>
-				<td><b>" . number_format($totalAmount) . "</b> ریال  </td>
-			</tr>
-			<tr>
-				<td> شماره پیگیری: </td>
-				<td dir=ltr align=right><b>" . $_POST['RefNum'] . "</b></td>
-			</tr>
-		</table>";
-
+	if ($amount > 0) {
+		$result = "";
+		$error = false;
 		$dt = PdoDataAccess::runquery("select * from LON_BackPays where PayRefNo=?", array($_POST['RefNum']));
 		if(count($dt) == 0)
 		{
@@ -50,14 +25,13 @@ if($_POST['State']== 'OK') {
 			$obj = new LON_BackPays();
 			$obj->RequestID = $RequestID;
 			$obj->PayType = 4;
-			$obj->PayAmount = $totalAmount;
+			$obj->PayAmount = $amount;
 			$obj->PayDate = PDONOW;
 			$obj->PayRefNo = $_POST['RefNum'];
 
 			$pdo = PdoDataAccess::getPdoObject();
 			$pdo->beginTransaction();
 
-			
 			if(!$obj->Add($pdo))
 				$error = true;
 			if(!$error)
@@ -65,30 +39,70 @@ if($_POST['State']== 'OK') {
 				$CostID = 253; // bank
 				$TafsiliID = 2132; // eghtesadnovin
 				$TafsiliID2 = 1; // jari
-
+				$CenterAccount = false;
+				$BranchID = "";
+				$FirstCostID = "";
+				$SecondCostID = "";
+				
 				$ReqObj = new LON_requests($obj->RequestID);
+				if($ReqObj->BranchID != "3") // این درگاه مخصوص دانشگاه است و وام های شعبه های دیگر باید با حساب مرکز ثبت شوند
+				{
+					$CenterAccount = true;
+					$BranchID = "3";
+					$FirstCostID = 205;
+					$SecondCostID = 17;
+				}
+				
 				$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 				if($PersonObj->IsSupporter == "YES")
-					$res = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, false, "", "", "", $pdo);
+					$res = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, 
+							$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo);
 				else
-					$res = RegisterCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, false, "", "", "", $pdo);
+					$res = RegisterCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, 
+							$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo);
 
 				if(!$res)
 					$error = true;
+				
 			}
 		
 			if($error)
 			{
 				$pdo->rollBack();
-				$result .= "<br> عملیات پرداخت قسط در نرم افزار صندوق به درستی ثبت نگردید. " . 
-						"<br> جهت اعمال آن با صندوق تماس بگیرید." ;
+				$result = "<br> عملیات پرداخت قسط در نرم افزار صندوق به درستی ثبت نگردید. " . 
+						"<br> وجه کسر شده حداکثر تا 72 ساعت به حساب شما برگشت خواهد شد." ;
 			}
 			else
 			{
 				$pdo->commit();
-			}
-			if(!$error)
+				
+				$payment = new Payment();
+
+				$login = $payment->login(username,password);
+				$login = $login['return'];
+
+				$params['login'] = $login;
+				$params['amount'] = $amount;	
+				$params['token']= $_POST['token'];
+				$params['RefNum']= $_POST['RefNum'];
+				$VerifyTrans = $payment->tokenPurchaseVerifyTransaction($params);
+
+				$VerifyTrans = $VerifyTrans['return'];
+				$VerifyTrans = $VerifyTrans['resultTotalAmount'];
+
 				$payment->logout($login);
+				$result = "پرداخت الكترونيكي شما به درستي انجام گرفت. شماره رسيد بانكي زير براي شما صادر گرديده است: </p>";
+				$result .= "<table width=80% align=center border=1 cellspacing=0 cellpadding=5 dir=rtl>
+					<tr>
+						<td>مبلغ پرداختي: </td>
+						<td><b>" . number_format($amount) . "</b> ریال  </td>
+					</tr>
+					<tr>
+						<td> شماره پیگیری: </td>
+						<td dir=ltr align=right><b>" . $_POST['RefNum'] . "</b></td>
+					</tr>
+				</table>";
+			}
 		}		
 	}	
 }

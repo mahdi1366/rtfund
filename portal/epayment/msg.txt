@@ -1,1 +1,1 @@
-"PurchaseInfoDto":{"amount":"41754746","resNum":"210","redirectUrl":"http://portal.krrtf.ir/portal/epayment/epayment_step2.php"}2621f60c-cac6-488c-92cb-b70542495b30
+"PurchaseInfoDto":{"amount":"1000","resNum":"1146","redirectUrl":"http://portal.krrtf.ir/portal/epayment/epayment_step2.php"}5104f5ba-954b-4841-a84a-6a677b3805ab

@@ -1718,6 +1718,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		}		
 	}
 	$itemObj->locked = "YES";
+	$itemObj->DocID = $obj->DocID;
 	//----------------------------------------
 	if($PartObj->DelayReturn == "INSTALLMENT")
 	{
