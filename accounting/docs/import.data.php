@@ -1773,27 +1773,6 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	//------------- wage --------------
 	if($LoanMode == "Agent")
 	{
-		if($PayObj->PayAmount>0 && $PartObj->WageReturn == "INSTALLMENT")
-		{
-			$curWage = min($PayObj->PayAmount,$curWage);
-
-			unset($itemObj->ItemID);
-			unset($itemObj->TafsiliType);
-			unset($itemObj->TafsiliID);
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
-			$itemObj->CostID = $CostCode_wage;
-			$itemObj->details = "بابت کارمزد وام " . $PayObj->RequestID;
-			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $curWage;
-			if(!$itemObj->Add($pdo))
-			{
-				ExceptionHandler::PushException("خطا در ایجاد سند");
-				return false;
-			}
-			$PayObj->PayAmount = $PayObj->PayAmount - $curWage;
-		}
-		//----------------------------------------
 		if($PayObj->PayAmount*1 > 0)
 		{
 			$amount = $PayObj->PayAmount;
@@ -1807,7 +1786,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
-			$itemObj->details = "بابت کارمزد وام " . $PayObj->RequestID;
+			$itemObj->details = "پرداخت قسط وام شماره " . $ReqObj->RequestID ;
 			$itemObj->CostID = $CostCode_deposite;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $amount;
@@ -1824,18 +1803,14 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 				return false;
 			}
 
-			//--------------- pardakhtani -----------
-			if($CostCode_commitment != "")
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_commitment;
+			$itemObj->DebtorAmount = $amount;
+			$itemObj->CreditorAmount = 0;
+			if(!$itemObj->Add($pdo))
 			{
-				unset($itemObj->ItemID);
-				$itemObj->CostID = $CostCode_commitment;
-				$itemObj->DebtorAmount = $PayObj->PayAmount;
-				$itemObj->CreditorAmount = 0;
-				if(!$itemObj->Add($pdo))
-				{
-					ExceptionHandler::PushException("خطا در ایجاد ردیف تعهد");
-					return false;
-				}
+				ExceptionHandler::PushException("خطا در ایجاد ردیف تعهد");
+				return false;
 			}
 		}
 	}
@@ -2103,6 +2078,8 @@ function ReturnCustomerPayDoc($PayObj, $pdo, $EditMode = false){
 		PdoDataAccess::runquery("delete d from ACC_docs d left join ACC_DocItems using(DocID)
 		where ItemID is null AND DocID=?",	array($dt[0][0]), $pdo);
 	}
+	
+	return true;
 	
 	//return ACC_docs::Remove($dt[0][0], $pdo);
 }

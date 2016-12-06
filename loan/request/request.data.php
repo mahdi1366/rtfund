@@ -1340,38 +1340,7 @@ function EditBackPayDoc(){
 		die();
 	}
 	$DocObj = new ACC_docs($DocID);
-	//------------------  cheque update ------------------------------
-	if($obj->PayType == "9")
-	{
-		if($obj->ChequeStatus != "1")
-		{
-			echo Response::createObjectiveResponse(false, "وضعیت چک وصول نشده است");
-			die();
-		}
-		if($DocObj->DocStatus != "RAW")
-		{
-			echo Response::createObjectiveResponse(false, "سند مربوطه تایید شده است");
-			die();
-		}
-		if($obj->IsGroup == "YES")
-		{
-			echo Response::createObjectiveResponse(false, "امکان ویرایش چک گروهی وجود ندارد");
-			die();
-		}
-		
-		$result = RegisterOuterCheque($DocID,$obj,$pdo);
-		
-		if(!$result)
-		{
-			$pdo->rollback();
-			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
-			die();
-		}
-
-		$pdo->commit();
-		echo Response::createObjectiveResponse(true, "");
-		die();
-	}
+	
 	//-----------------------------------------------------------------
 	if(!ReturnCustomerPayDoc($obj, $pdo, true))
 	{
