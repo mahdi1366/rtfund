@@ -75,7 +75,7 @@ function SaveLoanRequest(){
 		$PartObj = new LON_ReqParts();
 		PdoDataAccess::FillObjectByObject($loanObj, $PartObj);
 		$PartObj->RequestID = $obj->RequestID;
-		$PartObj->PartDesc = "فاز اول";
+		$PartObj->PartDesc = "شرایط اولیه";
 		$PartObj->FundWage = $loanObj->CustomerWage;
 		$PartObj->PartAmount = $obj->ReqAmount;
 		$PartObj->PartDate = PDONOW;
@@ -389,7 +389,7 @@ function DeletePart(){
 	}
 	if(!LON_ReqParts::DeletePart($_POST["PartID"], $pdo))
 	{
-		echo Response::createObjectiveResponse(false, "خطا در حذف فاز");
+		echo Response::createObjectiveResponse(false, "خطا در حذف شرایط");
 		die();
 	}
 	
@@ -1726,7 +1726,7 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 	}
 	if(count($temp) > 0 && $temp[0]["DocStatus"] != "RAW")
 	{
-		echo Response::createObjectiveResponse(false, "سند حسابداری این فاز تایید شده است. و قادر به برگشت نمی باشید");
+		echo Response::createObjectiveResponse(false, "سند حسابداری این شرایط تایید شده است. و قادر به برگشت نمی باشید");
 		die();
 	}
 	//------- check for being first doc and there excists docs after -----------

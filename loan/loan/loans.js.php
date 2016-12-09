@@ -208,7 +208,7 @@ Loan.prototype.LoanInfo = function(mode)
 					text : "ذخیره",
 					iconCls : "save",
 					handler : function(){
-						mask = new Ext.LoadMask(LoanObject.formPanel, {msg:'در حال حذف ...'});
+						mask = new Ext.LoadMask(LoanObject.formPanel, {msg:'در حال ذخیره ...'});
 						mask.show();
 						
 						LoanObject.formPanel.getForm().submit({

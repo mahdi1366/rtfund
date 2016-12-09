@@ -282,43 +282,6 @@ class ACC_CostCodes extends PdoDataAccess {
         return parent::runquery_fetchMode($query, $param);
     }
 
-   /* static function GetCostRemainder($UnitID, $PeriodID, $CostID = '', $LevelID = '', $BlockID = '', $PreLevelsStr = '') {
-        if (empty($LevelID)) {
-            $query = "select CostID,CostCode,blockEssence,HasArchiveNo,sum(ifnull(DebtorAmount,0)) debtor,sum(ifnull(CreditorAmount,0)) creditor
-                    from ACC_CostCodes cc
-                    left join DocItems di using(CostID)
-                    left join DocHeaders dh using(DocID)
-                    left join CostBlocks on(levelID=2 AND level2=BlockID)
-
-                    where CostID=? AND dh.UnitID=? AND dh.PeriodID=?
-
-                    group by CostID";
-
-            $dt = PdoDataAccess::runquery($query, array($CostID, $UnitID, $PeriodID));
-        } else {
-
-            $query = "select CostID,CostCode,sum(ifnull(DebtorAmount,0)) debtor,sum(ifnull(CreditorAmount,0)) creditor
-                    from ACC_CostCodes cc
-                    left join DocItems di using(CostID)
-                    left join DocHeaders dh using(DocID)
-                    left join CostBlocks b1 on b1.blockid=cc.Level1 and b1.LevelID=1 and (cc.level1 is not null) 
-                    left join CostBlocks b2 on b2.blockid=cc.Level2 and b2.LevelID=2 and (cc.level2 is not null) 
-                    left join CostBlocks b3 on b3.blockid=cc.Level3 and b3.LevelID=3 and (cc.level3 is not null) 
-                    left join CostBlocks b4 on b4.blockid=cc.Level4 and b4.LevelID=4 and (cc.level4 is not null) 
-                    left join CostBlocks b5 on b5.blockid=cc.Level5 and b5.LevelID=5 and (cc.level5 is not null) 
-
-                    where b" . $LevelID . ".BlockID=?  $PreLevelsStr AND dh.UnitID=? AND dh.PeriodID=?
-
-                    group by b" . $LevelID . ".BlockID";
-
-            $dt = PdoDataAccess::runquery($query, array($BlockID, $UnitID, $PeriodID));
-        }
-        if (count($dt) == 0)
-            return 0;
-        return array("amount" => $dt[0]["debtor"] - $dt[0]["creditor"],
-            "essence" => $dt[0]["blockEssence"], "HasArchiveNo" => $dt[0]["HasArchiveNo"]);
-    }*/
-
 }
 
 class ACC_tafsilis extends PdoDataAccess{

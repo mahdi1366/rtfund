@@ -59,7 +59,9 @@
 	function e() 
 	{ 
 		try 
-		{ 
+		{
+			document.getElementById("calculator_input").value = 
+				document.getElementById("calculator_input").value.replace(/,/g, '');
 			c(eval(document.getElementById("calculator_input").value)) 
 			document.getElementById("calculator_input").focus();
 		} 

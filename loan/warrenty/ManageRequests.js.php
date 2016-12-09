@@ -240,6 +240,9 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 			
 			op_menu.add({text: 'خاتمه ضمانت نامه',iconCls: 'finish',
 				handler : function(){ return WarrentyRequestObject.EndWarrentyDoc(); }})
+			
+			op_menu.add({text: 'تمدید ضمانت نامه',iconCls: 'delay',
+				handler : function(){ return WarrentyRequestObject.EndWarrentyDoc(); }})
 		}
 		op_menu.add({text: 'چاپ ضمانت نامه',iconCls: 'print',
 			handler : function(){ return WarrentyRequestObject.Print(); }});
@@ -457,7 +460,7 @@ WarrentyRequest.prototype.WarrentyPeriods = function(){
 	var record = this.grid.getSelectionModel().getLastSelected();
 	if(!record)
 	{
-		Ext.MessageBox.alert("","ابتدا فاز مورد نظر خود را انتخاب کنید");
+		Ext.MessageBox.alert("","ابتدا شرایط مورد نظر خود را انتخاب کنید");
 		return;
 	}
 	

@@ -223,7 +223,7 @@ function NewContract() {
 			colspan : 2
 		},{
 			xtype: "fieldset",
-			title : "جزئیات قرارداد",
+			title : "آیتم های قرارداد",
 			itemId: "templateItems",
 			width : 780,
 			maxHeight : 200,
@@ -244,7 +244,7 @@ function NewContract() {
 			name : "ContractID"
 		}],
 		buttons: [{
-			text : 'مدارک وام',
+			text : 'مدارک قراداد',
 			iconCls : "attach",
 			itemId : "cmp_ContractDocuments",
 			disabled : true,

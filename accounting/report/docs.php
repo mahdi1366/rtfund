@@ -115,7 +115,7 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg->addColumn("شماره سند", "LocalNo","PrintDocRender");
 	$rpg->addColumn("تاریخ سند", "DocDate","dateRender");
-	$rpg->addColumn("تاریخ ثبت سند", "RegDate","dateRender");
+	//$rpg->addColumn("تاریخ ثبت سند", "RegDate","dateRender");
 	$rpg->addColumn("ثبت کننده سند", "regPerson");
 	$rpg->addColumn("شرح سند", "description");
 	$rpg->addColumn("جمع بدهکار", "bdSum","moneyRender");
@@ -131,9 +131,12 @@ if(isset($_REQUEST["show"]))
 	}
 	
 	$rpg->mysql_resource = $dataTable;
+	$rpg->page_size = 22;
+	$rpg->paging = true;
 	if(!$rpg->excel)
 	{
-		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
+		BeginReport();
+		
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>

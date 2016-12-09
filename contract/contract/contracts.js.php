@@ -60,7 +60,7 @@ ManageContracts.prototype.OperationMenu = function (e)
 			ManageContractsObj.ContractDocuments('contract');
 		}});
 	
-	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
+	op_menu.add({text: 'سابقه قرارداد',iconCls: 'history', 
 		handler : function(){ return ManageContractsObj.ShowHistory(); }});
 
 	op_menu.showAt(e.pageX - 120, e.pageY);

@@ -17,6 +17,9 @@ class ReportGenerator {
 	const TempFolderAddress = "/tmp/temp.xls";
 	//const TempFolderAddress = "d:/webserver/temp/temp.xls";
 	
+	public $fontFamily = "nazanin";
+	public $fontSize = "14px";
+	
 	public $mysql_resource;
 	public $header;
 	public $foolter;
@@ -124,7 +127,8 @@ class ReportGenerator {
 			die("User doesn't supply any valid mysql resource after executing query result");
 
 		if (count($this->mysql_resource) == 0)
-			die("<center><span style='font-size:11px;font-family:tahoma;'>" . "گزارش مورد نظر فاقد اطلاعات می باشد." . "</span></center>");
+			die("<center><span style='font-size:".$this->fontSize.";font-family:".$this->fontFamily.
+				";'><br>" . "گزارش مورد نظر فاقد اطلاعات می باشد." . "</span></center>");
 
 		if ($this->excel)
 		{
@@ -242,7 +246,7 @@ class ReportGenerator {
 		//..............................................
 		
 		echo "<table id='page_" . $this->pageCount . "' width='$this->width' 
-				style='font-family:tahoma;border-collapse: collapse'  border='$this->border'
+				style='font-family:".$this->fontFamily.";border-collapse: collapse'  border='$this->border'
 				cellspacing='$this->cellspace' cellpadding='$this->cellpad'>";
 		
 		if($reportTitle)
@@ -255,7 +259,7 @@ class ReportGenerator {
 				echo $this->headerContent;
 			}
 			else if ($this->header != "") {
-				echo "<center><span style='font-family:b titr;'><b>" . $this->header . "</b></span><center>";
+				echo "<center><span style='font-family:titr,b titr;'><b>" . $this->header . "</b></span><center>";
 				echo "<P></P>";
 				$this->pageRecordCounter++;
 			}
@@ -268,7 +272,7 @@ class ReportGenerator {
 		if ($this->rowNumber)
 			echo "<td " . ($GroupHeaderFlag ? "rowspan=2" : "") . 
 				" align='center' style='padding:2px' border='$this->border' height='21px'><font
-				color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;ردیف</b></font></th>";
+				color = '$this->header_textcolor' style='font-size:".$this->fontSize."'><b>&nbsp;ردیف</b></font></th>";
 		//---------------------------------------
 		// Draw Header
 		
@@ -299,12 +303,12 @@ class ReportGenerator {
 
 						echo "<td $colspan align='center' 
 						style='padding:2px' border='$this->border' height='21px'><font
-						color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;" . 
+						color = '$this->header_textcolor' style='font-size:".$this->fontSize."'><b>&nbsp;" . 
 						$this->columns[$i]->GroupHeader . "</b></font></td>";
 					}
 					$secondRow .= "<td align='center' 
 						style='padding:2px' border='$this->border' height='21px'><font
-						color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;" . 
+						color = '$this->header_textcolor' style='font-size:".$this->fontSize."'><b>&nbsp;" . 
 						$this->columns[$i]->header . "</b></font></td>";
 				}
 				else
@@ -312,7 +316,7 @@ class ReportGenerator {
 					echo "<td $rowspan align='" . ($this->columns[$i]->align == "" ? $this->header_alignment : 
 						$this->columns[$i]->align). 
 						"' style='padding:2px' border='$this->border' height='21px'><font
-						color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;" . 
+						color = '$this->header_textcolor' style='font-size:".$this->fontSize."'><b>&nbsp;" . 
 						$this->columns[$i]->header . "</b></font></td>";
 				}
 			}
@@ -321,7 +325,7 @@ class ReportGenerator {
 				echo "<td align='" . ($this->columns[$i]->align == "" ? $this->header_alignment : 
 						$this->columns[$i]->align). 
 						"' style='padding:2px' border='$this->border' height='21px'><font
-						color = '$this->header_textcolor' style='font-size:11px'><b>&nbsp;" . 
+						color = '$this->header_textcolor' style='font-size:".$this->fontSize."'><b>&nbsp;" . 
 						$this->columns[$i]->header . "</b></font></td>";
 			}
 			
@@ -365,7 +369,7 @@ class ReportGenerator {
 				if($this->groupLabelRender != "")
 					eval("\$str = " . $this->groupLabelRender . "(\$row,\$index);");
 				
-				echo "<tr><td style=font-size:11px;font-weight:bold;height:21px; colspan=" . count($this->columns) . ">" . $str . "</td></tr>";
+				echo "<tr><td style=font-size:".$this->fontSize.";font-weight:bold;height:21px; colspan=" . count($this->columns) . ">" . $str . "</td></tr>";
 			}
 		}
 
@@ -391,7 +395,7 @@ class ReportGenerator {
 				if($this->groupLabelRender != "")
 					eval("\$str = " . $this->groupLabelRender . "(\$row,\$index);");
 				
-				echo "<tr><td style=font-size:11px;font-weight:bold;height:21px; colspan=" . count($this->columns) . ">" . $str . "</td></tr>";
+				echo "<tr><td style=font-size:".$this->fontSize.";font-weight:bold;height:21px; colspan=" . count($this->columns) . ">" . $str . "</td></tr>";
 			}
 
 			$this->EmptySummaryRow();
@@ -406,7 +410,8 @@ class ReportGenerator {
 		
 		if ($this->showPageOfPage)
 		{
-			echo "<tr><td style=font-family:tahoma;font-size:11px; colspan=" . count($this->columns) . " align=left>";
+			echo "<tr><td style=font-family:".$this->fontFamily.";font-size:".$this->fontSize.
+					"; colspan=" . count($this->columns) . " align=left>";
 			echo "صفحه " . $this->pageCount . "</td></tr>";
 			$this->pageRecordCounter++;
 		}
@@ -433,7 +438,7 @@ class ReportGenerator {
 		if ($this->rowNumber) {
 			echo "<td height=21px width=40px style='padding:2px;direction:" . $this->columns[0]->direction . "' 
 						border='$this->border' align='center'>
-				<font color = '$this->body_textcolor' style='font-size:11px'>&nbsp;";
+				<font color = '$this->body_textcolor' style='font-size:".$this->fontSize."'>&nbsp;";
 			echo ($index + 1) . "</font></td>";
 		}
 		//----------------------------------------
@@ -447,7 +452,7 @@ class ReportGenerator {
 					($this->columns[$i]->hidden ? ";display:none;" : "") . 
 					(strpos($this->columns[$i]->field,"VerticalSum_") !== false ? "background-color:" . $this->summaryRow_color : "") .
 					"' border='$this->border' align='" . $this->columns[$i]->align . "'>
-				<font color = '$this->body_textcolor' style='font-size:11px'>&nbsp;";
+				<font color = '$this->body_textcolor' style='font-size:".$this->fontSize."'>&nbsp;";
 
 			$val = "";
 			if (!empty($this->columns[$i]->renderFunction)) {
@@ -526,7 +531,8 @@ class ReportGenerator {
 					continue;
 				
 				if ($this->columns[$i]->HaveSum != -1) {
-					echo "<td id='sum_" . $this->columns[$i]->field . "' height=21px style='font-size:11px;font-weight:bold;direction:ltr;
+					echo "<td id='sum_" . $this->columns[$i]->field . "' height=21px style='font-size:".$this->fontSize.
+							";font-weight:bold;direction:ltr;
 						padding:2px;color:$this->body_textcolor' border='$this->border' align='" . $this->columns[$i]->align . "'>";
 
 					//---------- SumRender -----------

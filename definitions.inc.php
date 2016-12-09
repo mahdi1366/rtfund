@@ -59,4 +59,15 @@ define("INCOMECHEQUE_CHANGE", "3011");
 define("BACKPAY_PAYTYPE_CHEQUE", "9");
 
 define("BLOCKID_LOAN","8");
+
+function BeginReport() {
+
+        echo '<html>
+			<head>
+				<link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" />
+				<META http-equiv=Content-Type content="text/html; charset=UTF-8" >' .
+			'</head>
+			<body dir="rtl">';
+    }
+
 ?>

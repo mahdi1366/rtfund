@@ -61,7 +61,7 @@ $dg->addColumn("", "DelayPercent","", true);
 $dg->addColumn("", "IsHistory","", true);
 
 
-$col = $dg->addColumn("عنوان فاز", "PartDesc", "");
+$col = $dg->addColumn("عنوان شرایط", "PartDesc", "");
 $col->sortable = false;
 
 if(!$ReadOnly)
@@ -160,5 +160,5 @@ if(isset($_SESSION["USER"]["framework"]))
 			</tr>
 		</table></div>
 	</div> 
-
+	<br>
 </center>

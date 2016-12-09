@@ -34,9 +34,9 @@ function showReport(){
 	$select = "select 
 		sum(di.DebtorAmount) bdAmount,
 		sum(di.CreditorAmount) bsAmount,
-		concat('[ ' , b1.BlockCode , ' ] ', b1.BlockDesc) level1Desc,
-		concat('[ ' , b2.BlockCode , ' ] ', b2.BlockDesc) level2Desc,
-		concat('[ ' , b3.BlockCode , ' ] ', b3.BlockDesc) level3Desc,
+		b1.BlockDesc level1Desc,
+		b2.BlockDesc level2Desc,
+		b3.BlockDesc level3Desc,
 		b.InfoDesc TafsiliTypeDesc,
 		t.TafsiliDesc TafsiliDesc,
 		bi2.InfoDesc TafsiliTypeDesc2,
@@ -218,24 +218,24 @@ function showReport(){
 		//----------------------------------------------
 		if(!empty($_POST["TafsiliGroup"]))
 		{
-			$where .= " AND di.TafsiliType=:tt";
+			$where .= " AND (di.TafsiliType=:tt or di.TafsiliType2=:tt)";
 			$whereParam[":tt"] = $_POST["TafsiliGroup"];
 		}
-		if(!empty($_POST["TafsiliGroup2"]))
+		/*if(!empty($_POST["TafsiliGroup2"]))
 		{
 			$where .= " AND di.TafsiliType2=:tt2";
 			$whereParam[":tt2"] = $_POST["TafsiliGroup2"];
-		}
+		}*/
 		if(!empty($_POST["TafsiliID"]))
 		{
-			$where .= " AND di.TafsiliID=:tid";
+			$where .= " AND (di.TafsiliID=:tid or di.TafsiliID2=:tid)";
 			$whereParam[":tid"] = $_POST["TafsiliID"];
 		}
-		if(!empty($_POST["TafsiliID2"]))
+		/*if(!empty($_POST["TafsiliID2"]))
 		{
 			$where .= " AND di.TafsiliID2=:tid2";
 			$whereParam[":tid2"] = $_POST["TafsiliID2"];
-		}
+		}*/
 		if(!empty($_REQUEST["fromLocalNo"]))
 		{
 			$where .= " AND d.LocalNo >= :lo1 ";
@@ -320,7 +320,7 @@ function showReport(){
 
 	if(!$rpg->excel)
 	{
-		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
+		BeginReport();
 		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
@@ -643,7 +643,7 @@ function AccReport_taraz()
 			})
 		},{
 			xtype : "container",
-			rowspan : 4,
+			rowspan : 3,
 			layout : "column",
 			columns : 2,
 			items :[{
@@ -661,7 +661,7 @@ function AccReport_taraz()
 					"<input type='radio' name='col' id='2col' value='2' checked> دو ستونی <br>" + 
 					"<input type='radio' name='col' id='4col' value='4' >&nbsp; چهار ستونی"			
 			}*/]
-		},{
+		},/*{
 			xtype : "combo",
 			displayField : "InfoDesc",
 			fieldLabel : "گروه تفصیلی2",
@@ -701,7 +701,7 @@ function AccReport_taraz()
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				}
 			})
-		},{
+		},*/{
 			xtype : "numberfield",
 			hideTrigger : true,
 			name : "fromLocalNo",

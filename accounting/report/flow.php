@@ -22,15 +22,11 @@ if(isset($_REQUEST["show"]))
 	}
 	
 	$rpg->addColumn("شماره سند", "LocalNo", "PrintDocRender");
-	$rpg->addColumn("گروه حساب", "level0Desc");
-	$rpg->addColumn("حساب کل", "level1Desc");
-	$rpg->addColumn("حساب معین", "level2Desc");
-	$rpg->addColumn("حساب جزء معین", "level3Desc");
+	//$rpg->addColumn("کد حساب", "CostCode");
+	$rpg->addColumn("شرح حساب", "CostDesc");
 	$rpg->addColumn("تفصیلی", "TafsiliDesc");
-	$rpg->addColumn("تفصیلی2", "TafsiliDesc2");
 	$rpg->addColumn("تاریخ سند", "DocDate","dateRender");
-	$rpg->addColumn("شرح سند", "description");	
-	$rpg->addColumn("جزئیات ردیف", "details");	
+	$rpg->addColumn("شرح", "detail");	
 	
 	function MakeWhere(&$where, &$whereParam){
 		
@@ -55,22 +51,24 @@ if(isset($_REQUEST["show"]))
 			$where .= " AND b3.BlockID = :bf3";
 			$whereParam[":bf3"] = $_REQUEST["level3"];
 		}
-		if(isset($_REQUEST["TafsiliID"]))
+		if(isset($_REQUEST["taraz"]) && isset($_REQUEST["TafsiliID"]))
 		{
 			if($_REQUEST["TafsiliID"] == "")
-			{
-				if(isset($_REQUEST["taraz"]))
-					$where .= " AND (di.TafsiliID=0 OR di.TafsiliID is null)";
-			}
+				$where .= " AND (di.TafsiliID=0 OR di.TafsiliID is null)";
 			else
 			{
 				$where .= " AND di.TafsiliID = :tid ";
 				$whereParam[":tid"] = $_REQUEST["TafsiliID"];
 			}
 		}
+		if(!empty($_REQUEST["TafsiliID"]))
+		{
+			$where .= " AND (di.TafsiliID = :tid or di.TafsiliID2 = :tid)";
+			$whereParam[":tid"] = $_REQUEST["TafsiliID"];
+		}
 		if(!empty($_REQUEST["TafsiliType"]))
 		{
-			$where .= " AND di.TafsiliType = :tt ";
+			$where .= " AND (di.TafsiliType = :tt or di.TafsiliType2 = :tt)";
 			$whereParam[":tt"] = $_REQUEST["TafsiliType"];
 		}
 		if(isset($_REQUEST["TafsiliID2"]))
@@ -190,20 +188,17 @@ if(isset($_REQUEST["show"]))
 	}	
 	
 	//.....................................
-	$query = "select d.*,di.DebtorAmount,CreditorAmount,di.details,
-		concat('[ ' , b0.BlockCode , ' ] ', b0.BlockDesc) level0Desc,
-		concat('[ ' , b1.BlockCode , ' ] ', b1.BlockDesc) level1Desc,
-		concat('[ ' , b2.BlockCode , ' ] ', b2.BlockDesc) level2Desc,
-		concat('[ ' , b3.BlockCode , ' ] ', b3.BlockDesc) level3Desc,
+	$query = "select d.*,di.DebtorAmount,CreditorAmount,
+		concat_ws(' - ',di.details,d.description) detail,
+		concat_ws(' - ' , b1.BlockCode,b2.BlockCode,b3.BlockCode) CostCode,
+		concat_ws(' - ' , b1.BlockDesc,b2.BlockDesc,b3.BlockDesc) CostDesc,
 		b.InfoDesc TafsiliTypeDesc,
-		t.TafsiliDesc,
-		bi2.InfoDesc TafsiliTypeDesc2,
-		t2.TafsiliDesc TafsiliDesc2
+		concat_ws(' - ',t.TafsiliDesc,t2.TafsiliDesc ) TafsiliDesc,
+		bi2.InfoDesc TafsiliTypeDesc2
 		
 		from ACC_DocItems di join ACC_docs d using(DocID)
 			join ACC_CostCodes cc using(CostID)
 			join ACC_blocks b1 on(level1=b1.BlockID)
-			left join ACC_blocks b0 on(b1.GroupID=b0.BlockID)
 			left join ACC_blocks b2 on(level2=b2.BlockID)
 			left join ACC_blocks b3 on(level3=b3.BlockID)
 			left join BaseInfo b on(TypeID=2 AND di.TafsiliType=InfoID)
@@ -230,7 +225,7 @@ if(isset($_REQUEST["show"]))
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	
 	function moneyRender($row, $val) {
-		return number_format($val);
+		return  number_format($val);
 	}
 	
 	$col = $rpg->addColumn("مبلغ بدهکار", "DebtorAmount", "moneyRender");
@@ -253,18 +248,21 @@ if(isset($_REQUEST["show"]))
 	function TotalRemainRender($row){
 		global $sum;
 		$sum += $row["CreditorAmount"] - $row["DebtorAmount"];
-		return number_format($sum);
+		return "<div style=direction:ltr>" . number_format($sum) . "</div>";;
 	}
 	
 	$col = $rpg->addColumn("مانده حساب", "CreditorAmount", "TotalRemainRender");
 	//$col->EnableSummary(true);
 	
 	$rpg->mysql_resource = $dataTable;
+	$rpg->page_size = 12;
+	$rpg->paging = true;
 	if(!$rpg->excel)
 	{
-		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
-		if($_SESSION["USER"]["UserName"] == "admin")
-			echo PdoDataAccess::GetLatestQueryString ();
+		BeginReport();
+	
+		//if($_SESSION["USER"]["UserName"] == "admin")
+		//	echo PdoDataAccess::GetLatestQueryString ();
 		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
@@ -484,7 +482,7 @@ function AccReport_flow()
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				}
 			})
-		},{
+		},/*{
 			xtype : "combo",
 			displayField : "InfoDesc",
 			fieldLabel : "گروه تفصیلی2",
@@ -525,7 +523,7 @@ function AccReport_flow()
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				}
 			})
-		},{
+		},*/{
 			xtype : "numberfield",
 			hideTrigger : true,
 			name : "fromLocalNo",

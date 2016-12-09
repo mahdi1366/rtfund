@@ -19,7 +19,7 @@ function FindCostID($costCode){
 	$dt = PdoDataAccess::runquery("select * from ACC_CostCodes where IsActive='YES' AND CostCode=?",
 		array($costCode));
 	
-	return count($dt) == 0? false : $dt[0]["CostID"];
+	return count($dt) == 0 ? false : $dt[0]["CostID"];
 }
 
 function FindTafsiliID($TafsiliCode, $TafsiliType){
@@ -57,8 +57,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
-	$CostCode_commitment = FindCostID("660-" . $LoanObj->_BlockCode);
-	$CostCode_todiee = FindCostID("660-52");
+	$CostCode_commitment = FindCostID("200-" . $LoanObj->_BlockCode . "-51");
+	$CostCode_todiee = FindCostID("200-". $LoanObj->_BlockCode."-01");
 	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
@@ -130,7 +130,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$obj->CycleID = $CycleID;
 		$obj->BranchID = $ReqObj->BranchID;
 		$obj->DocType = DOCTYPE_LOAN_PAYMENT;
-		$obj->description = "پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID . " به نام " . 
+		$obj->description = "پرداخت وام شماره " . $ReqObj->RequestID . " به نام " . 
 			$ReqObj->_LoanPersonFullname;
 
 		if(!$obj->Add($pdo))
@@ -460,7 +460,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$itemObj->CostID = $CostCode_deposite;
 		$itemObj->DebtorAmount = $PayAmount;
 		$itemObj->CreditorAmount = 0;
-		$itemObj->details = "بابت پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
+		$itemObj->details = "بابت پرداخت وام شماره " . $ReqObj->RequestID;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $ReqPersonTafsili;
 		if($SubAgentTafsili != "")
@@ -600,7 +600,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$chequeObj->CheckDate = $PayObj->PayDate;
 	$chequeObj->amount = $BankItemAmount;
 	$chequeObj->TafsiliID = $LoanPersonTafsili;
-	$chequeObj->description = " پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
+	$chequeObj->description = " پرداخت وام شماره " . $ReqObj->RequestID;
 	$chequeObj->Add($pdo);
 	
 	//---------------------------------------------------------
@@ -634,16 +634,14 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	//------------- get CostCodes --------------------
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
-	$CostCode_varizi = FindCostID("721-01-52");
-	$CostCode_pardakhti = FindCostID("721-01-51");
+	$CostCode_varizi = FindCostID("721-".$LoanObj->_BlockCode."-52");
+	$CostCode_pardakhti = FindCostID("721-".$LoanObj->_BlockCode."-51");
 	$CostCode_bank = FindCostID("101");
-	$CostCode_todiee = FindCostID("660-52");
+	$CostCode_todiee = FindCostID("200-".$LoanObj->_BlockCode."-01");
 	$CostCode_agent_wage = FindCostID("200-02");
 	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
-	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
-	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
 	
 	//------------------------------------------------
 	
@@ -659,7 +657,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 		$obj->CycleID = $CycleID;
 		$obj->BranchID = $ReqObj->BranchID;
 		$obj->DocType = DOCTYPE_LOAN_PAYMENT;
-		$obj->description = "پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID . " به نام " . 
+		$obj->description = "پرداخت وام شماره " . $ReqObj->RequestID . " به نام " . 
 			$ReqObj->_LoanPersonFullname;
 
 		if(!$obj->Add($pdo))
@@ -958,7 +956,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$chequeObj->CheckDate = $PayObj->PayDate;
 	$chequeObj->amount = $PartObj->PartAmount;
 	$chequeObj->TafsiliID = $LoanPersonTafsili;
-	$chequeObj->description = " پرداخت " . $PartObj->PartDesc . " وام شماره " . $ReqObj->RequestID;
+	$chequeObj->description = " پرداخت وام شماره " . $ReqObj->RequestID;
 	$chequeObj->Add($pdo);
 	
 	//---------------------------------------------------------
@@ -1110,10 +1108,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
 	$CostCode_agent_wage = FindCostID("750" . "-52");
 	$CostCode_agent_FutureWage = FindCostID("760" . "-52");
-	$CostCode_deposite = FindCostID("210-01");
-	$CostCode_bank = FindCostID("101");
-	$CostCode_commitment = FindCostID("660-52");
-	$CostCode_todiee = FindCostID("660-52");
+	$CostCode_todiee = FindCostID("200-".$LoanObj->_BlockCode."-01");
 	//------------------------------------------------
 	$CycleID = substr(DateModules::shNow(), 0 , 4);	
 	//--------------------------------------------------
@@ -1512,7 +1507,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
-	$CostCode_commitment = FindCostID("660-" . $LoanObj->_BlockCode);
+	$CostCode_commitment = FindCostID("200-" . $LoanObj->_BlockCode . "-51");
 	//---------------- add doc header --------------------
 	if($DocObj == null)
 	{
@@ -1847,8 +1842,8 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_bank = FindCostID("101");
 	$CostCode_centerAccount = FindCostID("499");
-	$CostCode_varizi = FindCostID("721-01-52");
-	$CostCode_pardakhti = FindCostID("721-01-51");
+	$CostCode_varizi = FindCostID("721-".$LoanObj->_BlockCode."-52");
+	$CostCode_pardakhti = FindCostID("721-".$LoanObj->_BlockCode."-51");
 	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
 	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");

@@ -10,6 +10,7 @@ class Manage_Report extends PdoDataAccess{
 
         echo '<html>
 			<head>
+				<link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" />
 				<META http-equiv=Content-Type content="text/html; charset=UTF-8" >' .
                 ($includeCss ? '<link rel="stylesheet" type="text/css" href="/accounting/global/report.css" />' : '') . 
 			'</head>

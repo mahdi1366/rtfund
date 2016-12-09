@@ -49,7 +49,7 @@ $col = $dg->addColumn("شماره وام", "RequestID", "");
 $col->width = 70;
 $col->align = "center";
 
-$col = $dg->addColumn("مرحله وام", "PartDesc", "");
+$col = $dg->addColumn("شرایط وام", "PartDesc", "");
 $col->width = 130;
 
 $col = $dg->addColumn("تاریخ پرداخت", "PartDate", GridColumn::ColumnType_date);

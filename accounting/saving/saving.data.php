@@ -250,14 +250,14 @@ function CreateLoan(){
 	$pobj->RequestID = $obj->RequestID;
 	PdoDataAccess::FillObjectByArray($pobj, $_POST);
 	$pobj->PartDate = PDONOW;
-	$pobj->PartDesc = "فاز اول";
+	$pobj->PartDesc = "شرایط اولیه";
 	$pobj->PayInterval = 1;
 	$pobj->FundWage = $pobj->CustomerWage;
 	$result = $pobj->AddPart();
 	if(!$result)
 	{
 		$pdo->rollBack();
-		echo Response::createObjectiveResponse(false, "خطا در ایجاد فاز وام");
+		echo Response::createObjectiveResponse(false, "خطا در ایجاد شرایط وام");
 		die();
 	}
 	
