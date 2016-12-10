@@ -827,8 +827,6 @@ LoanPay.prototype.BeforeSaveGroupPay = function(){
 	this.groupWin.center();
 }
 
-
-
 </script>
 <center>
 	<div id="div_loans"></div>
