@@ -420,8 +420,8 @@ function GetRequestTotalRemainder(){
 	
 	$remain = 0;
 	$RequestID = $_REQUEST["RequestID"];
-	$dt = LON_installments::SelectAll("r.RequestID=?" , array($RequestID));
-	$returnArr = ComputePayments($RequestID, $dt);
+	$dt = array();
+	$returnArr = LON_requests::ComputePayments($RequestID, $dt);
 	if(count($returnArr) > 0 && $returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1 > 0)
 		$remain = $returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1;
 	
@@ -491,8 +491,8 @@ function GetInstallments(){
 	
 	$RequestID = $_REQUEST["RequestID"];
 	
-	$temp = LON_installments::SelectAll("r.RequestID=? " . dataReader::makeOrder() , array($RequestID));
-	$dt = ComputePayments($RequestID, $temp);
+	$temp = array();
+	$dt = LON_requests::ComputePayments($RequestID, $temp);
 	$currentPay = 0;
 	foreach($dt as $row)
 	{	
@@ -737,9 +737,8 @@ function DelayInstallments(){
 	}
 	else
 	{
-		$dt = LON_installments::SelectAll("r.RequestID=?", array($RequestID));
-		
-		$dt2 = ComputePayments($RequestID, $dt);
+		$dt = array();		
+		$dt2 = LON_requests::ComputePayments($RequestID, $dt);
 		$index = 0;
 		$ComputeRecord = $dt2[$index++];
 		
@@ -960,332 +959,6 @@ function DeletePay(){
 	die();
 }
 
-function ComputePayments($RequestID, &$installments){
-
-	$obj = new LON_ReqParts($RequestID);
-	if($obj->PayCompute == "installment")
-		return ComputePaymentsBaseOnInstallment ($RequestID, $installments);
-	
-	$returnArr = array();
-	$pays = PdoDataAccess::runquery("
-		select substr(p.PayDate,1,10) PayDate, sum(PayAmount) PayAmount, sum(PayAmount) FixPayAmount
-			from LON_BackPays p
-			left join ACC_IncomeCheques i using(IncomeChequeID)
-			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
-			where RequestID=? AND 
-				if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-
-			group by substr(PayDate,1,10)
-			order by substr(PayDate,1,10)" , array($RequestID));
-	$PayRecord = count($pays) == 0 ? null : $pays[0];
-	$payIndex = 1;
-	$Forfeit = 0;
-	for($i=0; $i < count($installments); $i++)
-	{
-		if($installments[$i]["IsDelayed"] == "YES")
-			continue;
-		
-		$installments[$i]["CurForfeitAmount"] = 0;
-		$installments[$i]["ForfeitAmount"] = 0;
-		$installments[$i]["ForfeitDays"] = 0;
-		$installments[$i]["remainder"] = 0;
-		$installments[$i]["FixPayAmount"] = 0;
-		$installments[$i]["PayAmount"] = 0;
-		$installments[$i]["UsedPayAmount"] = 0;
-		$installments[$i]["TotalRemainder"] = 0;
-		$installments[$i]["PayDate"] = '';
-		
-		if($PayRecord == null)
-		{
-			$installments[$i]["TotalRemainder"] = $i==0 ? 0 : 
-				(!isset($installments[$i-1]["TotalRemainder"]) ? 0 : $installments[$i-1]["TotalRemainder"]);
-			
-			$ToDate = DateModules::Now();
-			$amount = $installments[$i]["InstallmentAmount"];
-			
-			$forfeitDays = DateModules::GDateMinusGDate($ToDate,$installments[$i]["InstallmentDate"]);
-			$CurForfeit = round($amount*$installments[$i]["ForfeitPercent"]*$forfeitDays/36500);
-			
-			if ($installments[$i]["InstallmentDate"] < $ToDate) {
-				
-				$installments[$i]["ForfeitDays"] = $forfeitDays;
-				$Forfeit += $CurForfeit;
-				$installments[$i]["ForfeitAmount"] = $Forfeit;
-				$installments[$i]["CurForfeitAmount"] = $CurForfeit;
-				$installments[$i]["TotalRemainder"] += $amount + $CurForfeit;
-				$installments[$i]["remainder"] += $amount;
-			}
-			else
-			{
-				$installments[$i]["remainder"] += $amount;
-				$installments[$i]["ForfeitDays"] = 0;
-				$installments[$i]["ForfeitAmount"] = $Forfeit;
-				$installments[$i]["CurForfeitAmount"] = 0;
-				$installments[$i]["TotalRemainder"] += $amount;
-			}
-			$returnArr[] = $installments[$i];
-			continue;
-		}
-		else
-			$installments[$i]["TotalRemainder"] = 0;
-
-		$remainder = $installments[$i]["InstallmentAmount"];
-		$StartDate = $installments[$i]["InstallmentDate"];
-
-		while(true)
-		{
-			if($remainder == 0)
-				break;	
-			$ToDate = $PayRecord == null ? DateModules::Now() : $PayRecord["PayDate"];
-			if($PayRecord != null)
-			{
-				$installments[$i]["FixPayAmount"] = $PayRecord["FixPayAmount"]*1;
-				$installments[$i]["PayAmount"] = $PayRecord["PayAmount"]*1;
-				$installments[$i]["PayDate"] = $PayRecord["PayDate"];
-			}
-			else
-			{
-				$installments[$i]["FixPayAmount"] = 0;
-				$installments[$i]["PayAmount"] = 0;
-				$installments[$i]["PayDate"] = DateModules::Now();
-			}
-			if ($StartDate < $ToDate) {
-				
-				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
-				$CurForfeit = round($remainder*$installments[$i]["ForfeitPercent"]*$forfeitDays/36500);
-				$installments[$i]["ForfeitDays"] = $forfeitDays;
-				$installments[$i]["CurForfeitAmount"] = $CurForfeit;
-				$Forfeit += $CurForfeit;
-				$installments[$i]["ForfeitAmount"] = $Forfeit;				
-			}		
-			
-			if($PayRecord == null)
-			{
-				$installments[$i]["TotalRemainder"] += $Forfeit;
-				$installments[$i]["remainder"] = $remainder;
-				$returnArr[] = $installments[$i];
-				break;
-			}
-			//----------------------------------------------
-			if($PayRecord["PayAmount"]*1 <= $Forfeit)
-			{
-				$Forfeit = $Forfeit - $PayRecord["PayAmount"]*1;
-				$installments[$i]["TotalRemainder"] = $remainder + $Forfeit;
-				$installments[$i]["remainder"] = $remainder;
-				$StartDate = max($PayRecord["PayDate"],$installments[$i]["InstallmentDate"]);
-				$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
-				$returnArr[] = $installments[$i];
-				continue;
-			}
-			
-			$PayRecord["PayAmount"] = $PayRecord["PayAmount"]*1 - $Forfeit;
-			$installments[$i]["UsedPayAmount"] += $Forfeit;
-			$Forfeit = 0;			
-			
-			if($remainder < $PayRecord["PayAmount"]*1)
-			{
-				$PayRecord["PayAmount"] = $PayRecord["PayAmount"]*1 - $remainder;
-				$installments[$i]["UsedPayAmount"] += $remainder;
-				if($PayRecord["PayAmount"] == 0)
-				{
-					$StartDate = max($PayRecord["PayDate"],$installments[$i]["InstallmentDate"]);
-					$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
-				}
-				if($i == count($installments)-1)	
-				{
-					$installments[$i]["TotalRemainder"] = -1*$PayRecord["PayAmount"];
-					$installments[$i]["remainder"] = -1*$PayRecord["PayAmount"];
-				}
-				else
-				{
-					$installments[$i]["TotalRemainder"] = 0;
-					$installments[$i]["remainder"] = 0;
-				}
-				
-				$returnArr[] = $installments[$i];
-				break;
-			}
-						
-			$remainder = $remainder - $PayRecord["PayAmount"]*1;
-			$StartDate = max($PayRecord["PayDate"],$installments[$i]["InstallmentDate"]);
-			
-			$installments[$i]["TotalRemainder"] = $remainder + $Forfeit;
-			$installments[$i]["remainder"] = $remainder;
-			
-			$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
-			$returnArr[] = $installments[$i];
-		}
-	}
-	
-	return $returnArr;
-}
-
-function ComputePaymentsBaseOnInstallment($RequestID, &$installments){
-	
-	$returnArr = array();
-	$pays = PdoDataAccess::runquery("
-		select substr(p.PayDate,1,10) PayDate, sum(PayAmount) PayAmount, sum(PayAmount) FixPayAmount
-			from LON_BackPays p
-			left join ACC_IncomeCheques i using(IncomeChequeID)
-			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
-			where RequestID=? AND 
-				if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-
-			group by substr(PayDate,1,10)
-			order by substr(PayDate,1,10)" , array($RequestID));
-	$PayRecord = count($pays) == 0 ? null : $pays[0];
-	$payIndex = 1;
-	$Forfeit = 0;
-	
-	for($i=0; $i < count($installments); $i++)
-	{
-		if($installments[$i]["IsDelayed"] == "YES")
-			continue;
-		$forfeitDays = 0;
-		$installments[$i]["CurForfeitAmount"] = 0;
-		$installments[$i]["ForfeitAmount"] = 0;
-		$installments[$i]["ForfeitDays"] = 0;
-		$installments[$i]["remainder"] = 0;
-		$installments[$i]["FixPayAmount"] = 0;
-		$installments[$i]["PayAmount"] = 0;
-		$installments[$i]["UsedPayAmount"] = 0;
-		$installments[$i]["PayDate"] = '';
-		
-		if($PayRecord == null)
-		{
-			$installments[$i]["TotalRemainder"] = $i==0 ? 0 : $installments[$i-1]["TotalRemainder"];
-			
-			$ToDate = DateModules::Now();
-			$amount = $installments[$i]["InstallmentAmount"];
-			
-			$forfeitDays = DateModules::GDateMinusGDate($ToDate,$installments[$i]["InstallmentDate"]);
-			$CurForfeit = round($amount*$installments[$i]["ForfeitPercent"]*$forfeitDays/36500);
-			
-			if ($installments[$i]["InstallmentDate"] < $ToDate) {
-				
-				$installments[$i]["ForfeitDays"] = $forfeitDays;
-				$Forfeit += $CurForfeit;
-				$installments[$i]["ForfeitAmount"] = $Forfeit;
-				$installments[$i]["CurForfeitAmount"] = $CurForfeit;
-				$installments[$i]["remainder"] = $amount;
-				$installments[$i]["TotalRemainder"] += $amount + $CurForfeit ;
-			}
-			else
-			{
-				$installments[$i]["ForfeitDays"] = 0;
-				$installments[$i]["CurForfeitAmount"] = 0;
-				$installments[$i]["ForfeitAmount"] = $Forfeit;
-				$installments[$i]["remainder"] = $amount;
-				$installments[$i]["TotalRemainder"] += $amount;
-			}
-			$returnArr[] = $installments[$i];
-			continue;
-		}
-		else
-		{
-			$installments[$i]["TotalRemainder"] = 0;
-		}
-		
-		$remainder = $installments[$i]["InstallmentAmount"];
-		$StartDate = $installments[$i]["InstallmentDate"];
-
-		while(true)
-		{
-			$ToDate = $PayRecord == null ? DateModules::Now() : $PayRecord["PayDate"];
-			if($PayRecord != null)
-			{
-				$installments[$i]["FixPayAmount"] = $PayRecord["FixPayAmount"]*1;
-				$installments[$i]["PayAmount"] = $PayRecord["PayAmount"]*1;
-				$installments[$i]["UsedPayAmount"] = $PayRecord["PayAmount"]*1;
-				$installments[$i]["PayDate"] = $PayRecord["PayDate"];
-			}
-			else
-			{
-				$installments[$i]["FixPayAmount"] = 0;
-				$installments[$i]["PayAmount"] = 0;
-				$installments[$i]["UsedPayAmount"] = 0;
-				$installments[$i]["PayDate"] = DateModules::Now();
-			}
-			$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
-			$CurForfeit = round($remainder*$installments[$i]["ForfeitPercent"]*$forfeitDays/36500);
-			
-			if ($StartDate < $ToDate) {
-				
-				$installments[$i]["ForfeitDays"] = $forfeitDays;
-				$installments[$i]["CurForfeitAmount"] = $CurForfeit;
-				$Forfeit += $CurForfeit;
-			}		
-			
-			if($PayRecord == null)
-			{
-				$installments[$i]["TotalRemainder"] += $CurForfeit;
-				$installments[$i]["remainder"] = $remainder;
-				$installments[$i]["ForfeitAmount"] = $Forfeit;
-				$returnArr[] = $installments[$i];
-				break;
-			}
-			
-			if($remainder <= $PayRecord["PayAmount"]*1)
-			{
-				$PayRecord["PayAmount"] = $PayRecord["PayAmount"]*1 - $remainder;
-				$installments[$i]["UsedPayAmount"] = $remainder;
-				$remainder = 0;
-								
-				$installments[$i]["TotalRemainder"] = $Forfeit;
-				$installments[$i]["remainder"] = 0;
-				$installments[$i]["ForfeitAmount"] = $Forfeit;
-				
-				if($PayRecord["PayAmount"] == 0)
-				{
-					$StartDate = max($PayRecord["PayDate"],$installments[$i]["InstallmentDate"]);
-					$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
-				}	
-				$returnArr[] = $installments[$i];
-				
-				break;
-			}
-						
-			$remainder = $remainder - $PayRecord["PayAmount"]*1;
-			$StartDate = max($PayRecord["PayDate"],$installments[$i]["InstallmentDate"]);
-			
-			$installments[$i]["TotalRemainder"] = $remainder + $Forfeit;
-			$installments[$i]["remainder"] = $remainder;
-			$installments[$i]["ForfeitAmount"] = $Forfeit;
-			
-			$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
-			$returnArr[] = $installments[$i];
-		}
-	}
-	
-	if($Forfeit > 0)
-	{
-		while(true)
-		{
-			if($PayRecord["PayAmount"] > 0)
-			{
-				$installments[$i]["InstallmentDate"] = "---";
-				$installments[$i]["InstallmentAmount"] = 0;
-				$installments[$i]["FixPayAmount"] = $PayRecord["FixPayAmount"];
-				$installments[$i]["PayAmount"] = $PayRecord["PayAmount"];
-				$installments[$i]["UsedPayAmount"] = $PayRecord["PayAmount"];
-				$installments[$i]["PayDate"] = $PayRecord["PayDate"];
-				$Forfeit = $Forfeit - $PayRecord["PayAmount"]*1;
-				$installments[$i]["ForfeitDays"] = 0;	
-				$installments[$i]["TotalRemainder"] = $Forfeit;
-				$installments[$i]["CurForfeitAmount"] = 0;
-				$installments[$i]["ForfeitAmount"] = $Forfeit;
-				$installments[$i]["remainder"] = 0;
-				$returnArr[] = $installments[$i];
-			}
-			$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
-			if($PayRecord == null)
-				break;
-		}
-	}
-	
-	return $returnArr;
-}
-
 function RegisterBackPayDoc(){
 	
 	$obj = new LON_BackPays($_POST["BackPayID"]);
@@ -1495,8 +1168,8 @@ function GetDelayedInstallments($returnData = false){
 	$result = array();
 	while($row = $dt->fetch())
 	{
-		$temp = LON_installments::SelectAll("r.RequestID=? && InstallmentDate<now()" , array($row["RequestID"]));
-		$returnArr = ComputePayments($row["RequestID"], $temp);
+		$temp = array();
+		$returnArr = LON_requests::ComputePayments($row["RequestID"], $temp);
 		
 		foreach($returnArr as $row2)
 			if(isset($row2["InstallmentID"]) && $row2["InstallmentID"]*1 > 0)
@@ -1547,8 +1220,8 @@ function GetEndedRequests(){
 	$result = array();
 	while($row = $dt->fetch())
 	{
-		$temp = LON_installments::SelectAll("r.RequestID=?" , array($row["RequestID"]));
-		$returnArr = ComputePayments($row["RequestID"], $temp);
+		$temp = array();
+		$returnArr = LON_requests::ComputePayments($row["RequestID"], $temp);
 		$row["TotalRemainder"] = count($returnArr) > 0 ? $returnArr[ count($returnArr)-1 ]["TotalRemainder"] : 0;
 		
 		if(count($returnArr) == 0)

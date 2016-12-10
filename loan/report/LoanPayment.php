@@ -13,22 +13,15 @@ if(isset($_REQUEST["show"]))
 {
 	$RequestID = $_REQUEST["RequestID"];
 	
-	$dt = LON_installments::SelectAll("r.RequestID=?" , array($RequestID));
-	$returnArr = ComputePayments($RequestID, $dt);
+	$dt = array();
+	$returnArr = LON_requests::ComputePayments($RequestID, $dt);
 	
 	//............ get remain untill now ......................
 	$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
-	$BaseInstallmentAmount = round($PartObj->PartAmount*1/$PartObj->InstallmentCount);
-	
 	$CurrentRemain = 0;
-	$EndingAmount = $returnArr[count($returnArr)-1]["TotalRemainder"];
 	foreach($dt as $row)
 	{
-		if($row["InstallmentDate"] > DateModules::Now())
-		{
-			$EndingAmount -= $row["InstallmentAmount"]*1 - $BaseInstallmentAmount;
-		}
-		else
+		if($row["InstallmentDate"] <= DateModules::Now())
 			$CurrentRemain = $row["TotalRemainder"];
 	}
 	//.........................................................
@@ -53,40 +46,7 @@ if(isset($_REQUEST["show"]))
 	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount","amountRender");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("InstallmentID");
-	//-----------------------------------------------
-	/*function profitRender(&$row, $value, $param, $prevRow){
-		if($prevRow && $row["InstallmentID"] == $prevRow["InstallmentID"])
-			$row["profit"] = $prevRow["profit"];
-		else
-			$row["profit"] = round((1/1200)*$param->CustomerWage*
-				(!$prevRow ? $param->PartAmount : $prevRow["pureAmount"]));
-		return number_format($row["profit"]);
-	}
-	$col = $rpg->addColumn("سهم سود از پرداختی", "PartID","profitRender", $PartObj);
-	$col->rowspaning = true;
-	$col->rowspanByFields = array("InstallmentID");
 	
-	function pureRender($row, $value, $param, $prevRow){
-		return number_format($row["InstallmentAmount"] - $row["profit"]);
-	}
-	$col = $rpg->addColumn("سهم اصل از پرداختی", "PartID","pureRender", $PartObj);
-	$col->rowspaning = true;
-	$col->rowspanByFields = array("InstallmentID");
-	
-	function pureRemainRender(&$row, $value, $param, $prevRow){
-		if($prevRow && $row["InstallmentID"] == $prevRow["InstallmentID"])
-			$row["pureAmount"] = $prevRow["pureAmount"]; 
-		else if(!$prevRow)
-			$row["pureAmount"] = $param - ($row["InstallmentAmount"] - $row["profit"]);
-		else
-			$row["pureAmount"] = $prevRow["pureAmount"] - ($row["InstallmentAmount"] - $row["profit"]);
-		
-		return number_format($row["pureAmount"]);
-	}
-	$col = $rpg->addColumn("مانده از اصل", "PartID","pureRemainRender",$PartObj->PartAmount);
-	$col->rowspaning = true;
-	$col->rowspanByFields = array("InstallmentID");*/
-	//-----------------------------------------------
 	$col = $rpg->addColumn("تاریخ پرداخت", "PayDate","dateRender");
 	$col->rowspaning = true;
 	
@@ -107,11 +67,8 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("مانده قسط", "remainder","amountRender");
 	$rpg->addColumn("مانده کل", "TotalRemainder","amountRender");
 	
-	//$rpg->page_size = 20;
-	//$rpg->paging = true;
-	
 	$rpg->mysql_resource = $returnArr;
-	echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
+	BeginReport();
 	echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 			<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 			<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>
@@ -125,8 +82,83 @@ if(isset($_REQUEST["show"]))
 	$ReqObj = new LON_requests($RequestID);
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	
+	//..........................................................
+	$rpg2 = new ReportGenerator();
+	$rpg2->mysql_resource = PdoDataAccess::runquery("
+		select * from LON_installments where RequestID=?", array($RequestID));
+	$col = $rpg2->addColumn("", "InstallmentID");
+	$col->hidden = true;
+	
+	$col = $rpg2->addColumn("تاریخ قسط", "InstallmentDate","dateRender");
+	$col = $rpg2->addColumn("مبلغ قسط", "InstallmentAmount","amountRender");
+	
+	function profitRender(&$row, $value, $param, $prevRow){
+		
+		$R = $param->IntervalType == "MONTH" ? 1200/$param->PayInterval : 36500/$param->PayInterval;
+		$V = !$prevRow ? $param->PartAmount : $prevRow["EndingBalance"];
+		
+		$row["profit"] = round( $V*($param->CustomerWage/$R) );
+		
+		return number_format($row["profit"]);
+	}
+	$col = $rpg2->addColumn("بهره قسط", "InstallmentID","profitRender", $PartObj);
+	
+	function SumProfitRender(&$row, $value, $param, $prevRow){
+		
+		if(!$prevRow)
+			$row["SumProfit"] = $row["profit"];
+		else
+			$row["SumProfit"] = $prevRow["SumProfit"] + $row["profit"];
+		
+		return number_format($row["SumProfit"]);
+	}
+	$col = $rpg2->addColumn("بهره قسط (تجمعي)", "InstallmentID","SumProfitRender");
+	
+	function pureRender($row, $value, $param, $prevRow){
+		return number_format($row["InstallmentAmount"] - $row["profit"]);
+	}
+	$col = $rpg2->addColumn("اصل قسط", "InstallmentID","pureRender", $PartObj);
+	
+	function pureRemainRender(&$row, $value, $param, $prevRow){
+		if(!$prevRow)
+			$row["pureAmount"] = $param;
+		else
+			$row["pureAmount"] = $prevRow["EndingBalance"];	
+		
+		$row["EndingBalance"] = $row["pureAmount"] - ($row["InstallmentAmount"] - $row["profit"]);
+		
+		return number_format($row["pureAmount"]);
+	}
+	$col = $rpg2->addColumn("مانده اصل وام", "InstallmentID","pureRemainRender",$PartObj->PartAmount);
+	
+	ob_start();
+	$rpg2->generateReport();
+	$report2 = ob_get_clean();
+	
+	//..........................................................
+	$LastPayedInstallment = 0;
+	foreach($rpg->mysql_resource as $row)
+	{
+		if($row["remainder"]*1 == 0)
+			$LastPayedInstallment = $row["InstallmentID"];
+	}
+	if($LastPayedInstallment == 0)
+		$EndingAmount = $rpg2->mysql_resource[0]["pureAmount"];
+	else
+	{
+		for($i=0; $i < count($rpg2->mysql_resource);$i++)
+		{
+			if($rpg2->mysql_resource[$i]["InstallmentID"] == $LastPayedInstallment)
+			{
+				$EndingAmount = $rpg2->mysql_resource[$i+1]["pureAmount"];
+				break;
+			}
+		}
+	}
+	//..........................................................
 	?>
-	<table style="border:2px groove #9BB1CD;border-collapse:collapse;width:100%;font-family: tahoma;font-size: 12px;line-height: 20px;">
+	<table style="border:2px groove #9BB1CD;border-collapse:collapse;width:100%;font-family: nazanin;
+		   font-size: 16px;line-height: 20px;">
 		<tr>
 			<td style="padding-right: 10px">وام گیرنده : <b><?= $ReqObj->_LoanPersonFullname ?></b>
 				<br>مبلغ درخواست : <b><?= number_format($ReqObj->ReqAmount) ?></b>
@@ -140,19 +172,22 @@ if(isset($_REQUEST["show"]))
 					<b><?= $partObj->DelayPercent ?> % </b>
 				<br> درصد دیرکرد : <b><?= $partObj->ForfeitPercent ?> % </b>
 			</td>
-			<td style="font-family: tahoma; font-size: 15px; font-weight: bold;line-height: 23px;">
+			<td style="font-family: nazanin; font-size: 18px; font-weight: bold;line-height: 23px;">
 				<table width="440px">
 					<tr>
 						<td>مانده قابل پرداخت : </td>
-						<td><?= number_format($CurrentRemain) ?>ریال </td> 
+						<td><b><?= number_format($CurrentRemain)?> ریال
+							</b></td>
 					</tr>
 					<tr>
 						<td>مانده تا انتها : </td>
-						<td><?= number_format($returnArr[count($returnArr)-1]["TotalRemainder"]) ?>  ريال </td> 
+						<td><b><?= number_format($returnArr[count($returnArr)-1]["TotalRemainder"])?> ریال
+							</b></td>
 					</tr>
 					<tr>
 						<td>مبلغ قابل پرداخت در صورت تسویه وام :</td>
-						<td><?= number_format($EndingAmount) ?>    ریال </td>
+						<td><b><?= number_format($EndingAmount) ?> ریال
+							</b></td>
 					</tr>
 				</table>
 			</td>
@@ -161,6 +196,11 @@ if(isset($_REQUEST["show"]))
 	<?
 	
 	$rpg->generateReport();
+	
+	echo "<br>";
+	
+	echo $report2;
+	
 	die();
 }
 ?>
