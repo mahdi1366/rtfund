@@ -7,17 +7,19 @@ require_once '../header.inc.php';
 require_once inc_dataGrid;
 
 //................  GET ACCESS  .....................
-$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+if(isset($_POST["MenuID"]))
+	$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+else
+	$accessObj = new FRW_access();
 //...................................................
 
-$AddMode = isset($_REQUEST["mode"]) && $_REQUEST["mode"] == "adding" ? true : false;
-
+$SelectMode = empty($_REQUEST["MenuID"]) ? true : false;
 ?>
 <script>
 ExpertDomain.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : "<?= $js_prefix_address ?>",
-	AddMode : <?= $AddMode ? "true" : "false" ?>,
+	SelectMode : <?= $SelectMode ? "true" : "false" ?>,
 
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
@@ -53,45 +55,48 @@ function ExpertDomain()
 				ExpertDomainObject.parent.hide();
 			}
 		},
-        width: this.AddMode ? 405 : 750,
-        height: this.AddMode ? 385 : 500,
+        width: this.SelectMode ? 405 : 750,
+        height: this.SelectMode ? 385 : 500,
         renderTo: this.get("div_tree")
     });
 	
-	if(!this.AddMode)
-		this.tree.on("itemcontextmenu", function(view, record, item, index, e)
+	this.tree.on("itemcontextmenu", function(view, record, item, index, e)
+	{
+		me = ExpertDomainObject;
+		if(me.SelectMode)
+			return;
+		
+		e.stopEvent();
+		e.preventDefault();
+		view.select(index);
+
+		me.Menu = new Ext.menu.Menu();
+		if(me.AddAccess)
+			me.Menu.add({
+				text: 'ایجاد زیر سطح',
+				iconCls: 'add',
+				handler : function(){ExpertDomainObject.BeforeSaveDomain(false);}
+			});
+
+		if(record.data.id != "src")
 		{
-			e.stopEvent();
-			e.preventDefault();
-			view.select(index);
-
-			this.Menu = new Ext.menu.Menu();
-			if(this.AddAccess)
-				this.Menu.add({
-					text: 'ایجاد زیر سطح',
-					iconCls: 'add',
-					handler : function(){ExpertDomainObject.BeforeSaveDomain(false);}
+			if(me.EditAccess)
+				me.Menu.add({
+					text: 'ویرایش عنوان',
+					iconCls: 'edit',
+					handler : function(){ExpertDomainObject.BeforeSaveDomain(true);}
 				});
+			if(me.RemoveAccess)
+				me.Menu.add({
+					text: 'حذف سطح',
+					iconCls: 'remove',
+					handler : function(){ExpertDomainObject.DeleteDomain();}
+				});
+		}
 
-			if(record.data.id != "src")
-			{
-				if(this.EditAccess)
-					this.Menu.add({
-						text: 'ویرایش عنوان',
-						iconCls: 'edit',
-						handler : function(){ExpertDomainObject.BeforeSaveDomain(true);}
-					});
-				if(this.RemoveAccess)
-					this.Menu.add({
-						text: 'حذف سطح',
-						iconCls: 'remove',
-						handler : function(){ExpertDomainObject.DeleteDomain();}
-					});
-			}
-
-			var coords = e.getXY();
-			this.Menu.showAt([coords[0]-120, coords[1]]);
-		});
+		var coords = e.getXY();
+		me.Menu.showAt([coords[0]-120, coords[1]]);
+	});
 }
 
 var ExpertDomainObject = new ExpertDomain();
@@ -230,7 +235,7 @@ ExpertDomain.prototype.DeleteDomain = function(){
 }
 
 </script>
-<div id="div_body" style="<? if(!$AddMode){ ?>margin: 20 20 0 0<?}?>">
+<div id="div_body" style="<? if(!$SelectMode){ ?>margin: 20 20 0 0<?}?>">
 	<div id="div_tree"></div>
 	<div id="div_grid"></div>
 </div>

@@ -194,6 +194,10 @@ if ($menuStr != "") {
 			background-image:url('icons/Calculator.png') !important;
 			background-size: 30px 30px;
 		}
+		.framework-help{
+			background-image:url('icons/help.png') !important;
+			background-size: 30px 30px;
+		}
 		
 	</style>
 	<script type="text/javascript">
@@ -341,6 +345,15 @@ if ($menuStr != "") {
 					style : "margin: 3px;height:35px",
 					handler : function(){
 						framework.OpenClaculator();
+					}	
+				},{
+					xtype : "button",
+					tooltip : "راهنما",
+					scale: 'large',
+					iconCls : "framework-help",
+					style : "margin: 3px;height:35px",
+					handler : function(){
+						framework.OpenPage('../framework/help/help.php','راهنمای سیستم');
 					}	
 				}]
 				

@@ -75,7 +75,7 @@ function SaveLoanRequest(){
 		$PartObj = new LON_ReqParts();
 		PdoDataAccess::FillObjectByObject($loanObj, $PartObj);
 		$PartObj->RequestID = $obj->RequestID;
-		$PartObj->PartDesc = "فاز اول";
+		$PartObj->PartDesc = "شرایط اولیه";
 		$PartObj->FundWage = $loanObj->CustomerWage;
 		$PartObj->PartAmount = $obj->ReqAmount;
 		$PartObj->PartDate = PDONOW;
@@ -389,7 +389,7 @@ function DeletePart(){
 	}
 	if(!LON_ReqParts::DeletePart($_POST["PartID"], $pdo))
 	{
-		echo Response::createObjectiveResponse(false, "خطا در حذف فاز");
+		echo Response::createObjectiveResponse(false, "خطا در حذف شرایط");
 		die();
 	}
 	
@@ -1340,38 +1340,7 @@ function EditBackPayDoc(){
 		die();
 	}
 	$DocObj = new ACC_docs($DocID);
-	//------------------  cheque update ------------------------------
-	if($obj->PayType == "9")
-	{
-		if($obj->ChequeStatus != "1")
-		{
-			echo Response::createObjectiveResponse(false, "وضعیت چک وصول نشده است");
-			die();
-		}
-		if($DocObj->DocStatus != "RAW")
-		{
-			echo Response::createObjectiveResponse(false, "سند مربوطه تایید شده است");
-			die();
-		}
-		if($obj->IsGroup == "YES")
-		{
-			echo Response::createObjectiveResponse(false, "امکان ویرایش چک گروهی وجود ندارد");
-			die();
-		}
-		
-		$result = RegisterOuterCheque($DocID,$obj,$pdo);
-		
-		if(!$result)
-		{
-			$pdo->rollback();
-			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
-			die();
-		}
-
-		$pdo->commit();
-		echo Response::createObjectiveResponse(true, "");
-		die();
-	}
+	
 	//-----------------------------------------------------------------
 	if(!ReturnCustomerPayDoc($obj, $pdo, true))
 	{
@@ -1757,7 +1726,7 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 	}
 	if(count($temp) > 0 && $temp[0]["DocStatus"] != "RAW")
 	{
-		echo Response::createObjectiveResponse(false, "سند حسابداری این فاز تایید شده است. و قادر به برگشت نمی باشید");
+		echo Response::createObjectiveResponse(false, "سند حسابداری این شرایط تایید شده است. و قادر به برگشت نمی باشید");
 		die();
 	}
 	//------- check for being first doc and there excists docs after -----------

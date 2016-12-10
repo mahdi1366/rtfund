@@ -129,8 +129,8 @@ if(isset($_REQUEST["show"]))
 	<table style="border:2px groove #9BB1CD;border-collapse:collapse;width:100%;font-family: tahoma;font-size: 12px;line-height: 20px;">
 		<tr>
 			<td style="padding-right: 10px">وام گیرنده : <b><?= $ReqObj->_LoanPersonFullname ?></b>
-				<br>مبلغ وام : <b><?= number_format($ReqObj->ReqAmount) ?></b>
-				<br>مبلغ فاز : <b><?= number_format($partObj->PartAmount) ?></b>
+				<br>مبلغ درخواست : <b><?= number_format($ReqObj->ReqAmount) ?></b>
+				<br>مبلغ وام : <b><?= number_format($partObj->PartAmount) ?></b>
 			<br>تاریخ پرداخت : <b><?= DateModules::miladi_to_shamsi($partObj->PartDate) ?></b>
 			</td>
 			<td> فاصله اقساط : <b><?= $partObj->PayInterval . ($partObj->IntervalType == "DAY" ? "روز" : "ماه") ?></b>

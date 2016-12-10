@@ -147,8 +147,6 @@ function CostCode(){
 						handler: function(){
 
 							//.......... check completion of each pre level ..........
-							mask = new Ext.LoadMask(CostCodeObj.formPanel, {msg:'در حال ذخيره سازي...'});
-							mask.show();
 							
 							for(var i=0; i < CostCodeObj.levelCount; i++)
 							{
@@ -160,7 +158,9 @@ function CostCode(){
 									return;
 								}
 							}
-
+							mask = new Ext.LoadMask(CostCodeObj.formPanel, {msg:'در حال ذخيره سازي...'});
+							mask.show();
+							
 							CostCodeObj.formPanel.getForm().submit({
 								url:  CostCodeObj.address_prefix + 'baseinfo.data.php?task=SaveCostCode',
 								method : "POST",

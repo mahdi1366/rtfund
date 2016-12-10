@@ -295,7 +295,7 @@ LoanPay.DeleteRender = function(v,p,r){
 
 LoanPay.RegDocRender = function(v,p,r){
 	
-	if(r.data.PayType == "9")
+	if(r.data.PayType == "9" || r.data.PayType == "4")
 		return r.data.LocalNo;
 	
 	if(r.data.LocalNo == null)
@@ -303,7 +303,7 @@ LoanPay.RegDocRender = function(v,p,r){
 		"onclick='LoanPayObject.BeforeRegisterDoc(1);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
-	else if(r.data.DocStatus == "RAW" && r.data.PayType != "4")
+	else if(r.data.DocStatus == "RAW")
 		return r.data.LocalNo + "<div align='center' title='ویرایش سند' class='edit' "+
 		"onclick='LoanPayObject.BeforeRegisterDoc(2);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +

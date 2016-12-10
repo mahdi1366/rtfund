@@ -583,7 +583,7 @@ RequestInfo.prototype.BuildForms = function(){
 		},
 		this.PartsPanel
 		],
-		buttons :[{
+		tbar :[{
 			text : "پیوست ها",
 			iconCls : "setting",
 			menu : [{
@@ -1300,7 +1300,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 			height : 560,
 			modal : true,
 			closeAction : 'hide',
-			title : "مشخصات فاز",
+			title : "شرایط وام",
 			items : new Ext.form.Panel({
 				layout : {
 					type : "table",
@@ -1317,7 +1317,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 				items :[{
 					xtype : "textfield",
 					name : "PartDesc",
-					fieldLabel : "عنوان فاز",
+					fieldLabel : "عنوان شرایط",
 					colspan : 2,
 					width : 450
 				},{
@@ -1953,7 +1953,7 @@ RequestInfo.prototype.LoadBackPays = function(){
 	var record = this.grid.getSelectionModel().getLastSelected();
 	if(!record)
 	{
-		Ext.MessageBox.alert("","ابتدا فاز مورد نظر خود را انتخاب کنید");
+		Ext.MessageBox.alert("","ابتدا شرایط مورد نظر خود را انتخاب کنید");
 		return;
 	}
 	
@@ -1992,7 +1992,7 @@ RequestInfo.prototype.LoadBackPays = function(){
 
 RequestInfo.prototype.StartFlow = function(){
 	
-	Ext.MessageBox.confirm("","آیا مایل به شروع گردش تایید پرداخت فاز می باشید؟",function(btn){
+	Ext.MessageBox.confirm("","آیا مایل به شروع گردش تایید پرداخت شرایط می باشید؟",function(btn){
 		
 		if(btn == "no")
 			return;

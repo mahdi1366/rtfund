@@ -147,51 +147,30 @@ class CNT_ContractItems extends OperationClass {
 
 }
 
-class CNT_ContractFlows extends PdoDataAccess {
-    
-    const TableName = "CNT_ContractFlows";
-    const TableKey = "FlowID";
+class CNT_ContractSigns extends OperationClass
+{
+	const TableName = "WAR_cCNT_ContractSignsosts";
+	const TableKey = "SignID";
+	
+	public $SignID;
+	public $ContractID;
+	public $CostDesc;
+	public $CostAmount;
+	public $CostCodeID;
+	public $CostType;
 
-    /**
-     * شماره یکتای ردیف جدول 
-     * @var int 
-     */
-    public $FlowID;
-    
-    /**
-     * منبع مربوط به انجام عمل
-     * @var int 
-     */
-    public $ObjectType;
-    /**
-     * کد منبع 
-     * @var int 
-     */
-    public $ObjectID;
-    /**
-     * کد فرد انجام دهنده عمل
-     * @var int 
-     */
-    public $PersonID;
-    /**
-     * عمل انجام شده
-     * @var int 
-     */
-    public $FlowAction;
-    /**
-     * توضیح فرد در مورد عمل انجام شده
-     * @var int 
-     */
-    public $FlowComment;
-    /**
-     * تاریخ انجام عمل
-     * @var int 
-     */
-    public $FlowDate;
-    
-    function __construct($id = ""){
-        parent::__construct($id);
-    }                
+	public static function Get($where = '', $whereParams = array()) {
+		
+		$query = "select c.*,cc.CostCode , 
+				concat_ws(' - ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc) CostCodeDesc
+			from WAR_costs c
+			join ACC_CostCodes cc on(c.CostCodeID=cc.CostID)
+			join ACC_blocks b1 on(level1=b1.BlockID)
+			left join ACC_blocks b2 on(level2=b2.BlockID)
+			left join ACC_blocks b3 on(level3=b3.BlockID)
+			where 1=1 " . $where;
+		
+		return PdoDataAccess::runquery_fetchMode($query, $whereParams);
+	}
 }
-
 ?>

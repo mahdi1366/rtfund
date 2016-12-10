@@ -153,7 +153,7 @@ class LON_requests extends PdoDataAccess
 		
 		if( parent::delete("LON_ReqParts"," RequestID=?", array($RequestID)) === false )
 		{
-			ExceptionHandler::PushException("خطا در حذف مرحله");
+			ExceptionHandler::PushException("خطا در حذف شرایط");
 	 		return false;
 		}
 		if( parent::delete("LON_requests"," RequestID=?", array($RequestID)) === false )

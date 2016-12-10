@@ -149,7 +149,7 @@ function SelectAllForms(){
 
 	$ObjectDesc = 
 		"case f.FlowID 
-			when 1 then concat_ws(' ',lp.PartDesc,'وام شماره',lp.RequestID,'به مبلغ',
+			when 1 then concat_ws(' ','وام شماره',lp.RequestID,'به مبلغ',
 				PartAmount,'مربوط به',if(pp.IsReal='YES',concat(pp.fname, ' ', pp.lname),pp.CompanyName))
 				
 			when 4 then concat_ws(' ','ضمانت نامه', wp.CompanyName,wp.fname,wp.lname, 'به مبلغ ',wr.amount)
