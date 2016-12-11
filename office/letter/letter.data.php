@@ -643,4 +643,106 @@ function DeleteTemplate(){
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
+
+//..............................................
+
+function SelectMyMessages(){
+	
+	if($_REQUEST["mode"] == "receive")
+	{
+		$query = "select m.*,r.* ,concat(fname,' ',lname) FromPersonName, substr(MsgDate,1,10) _MsgDate
+			from OFC_Messages m join OFC_MessageReceivers r using(MessageID)
+				join BSC_persons p on(m.PersonID=p.PersonID)
+			where r.PersonID=:p";
+		
+		$query .= isset($_REQUEST["deleted"]) && $_REQUEST["deleted"] == "true" ? 
+			" AND r.IsDeleted='YES'" : " AND r.IsDeleted='NO'";
+	}
+	else
+	{
+		$query = "select m.*,r.* ,concat(fname,' ',lname) ToPersonName, substr(MsgDate,1,10) _MsgDate
+			from OFC_Messages m join OFC_MessageReceivers r using(MessageID)
+			join BSC_persons p on(r.PersonID=p.PersonID)
+			where m.PersonID=:p";
+		
+		$query .= isset($_REQUEST["deleted"]) && $_REQUEST["deleted"] == "true" ? 
+			" AND m.IsDeleted='YES'" : " AND m.IsDeleted='NO'";
+	}
+	
+	$param = array(":p" => $_SESSION["USER"]["PersonID"]);
+	
+	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
+	$cnt = $dt->rowCount();
+	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+	
+	echo dataReader::getJsonData($dt, $cnt, $_GET["callback"]);
+	die();
+}
+
+function SaveMessage(){
+	
+	$obj = new OFC_messages();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	$obj->PersonID = $_SESSION["USER"]["PersonID"];
+	$obj->MsgDate = PDONOW;
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	if(!$obj->Add($pdo))
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "خطا در ایجاد پیام");
+		die();
+	}
+	
+	$receivers = json_decode($_POST["receivers"]);
+	foreach($receivers as $PersonID)
+	{
+		$obj2 = new OFC_MessageReceivers();
+		$obj2->MessageID = $obj->MessageID;
+		$obj2->PersonID = $PersonID;
+		$obj2->Add($pdo);
+	}
+	
+	if(ExceptionHandler::GetExceptionCount() != 0)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "خطا در ارسال پیام");
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function SeeMessage(){
+	
+	$obj = new OFC_MessageReceivers($_POST["SendID"]);
+	$obj->IsSeen = "YES";
+	$obj->Edit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function DeleteMessage(){
+	
+	if(!empty($_POST["SendID"]))
+	{
+		$obj = new OFC_MessageReceivers($_POST["SendID"]);
+		$obj->IsDeleted = "YES";
+	}
+	else
+	{
+		$obj = new OFC_messages($_POST["MessageID"]);
+		$obj->IsDeleted = "YES";
+	}
+	
+	$obj->Edit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
 ?>

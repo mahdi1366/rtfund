@@ -139,7 +139,7 @@ if(isset($_REQUEST["show"]))
 	$LastPayedInstallment = 0;
 	foreach($rpg->mysql_resource as $row)
 	{
-		if($row["remainder"]*1 == 0)
+		if($row["remainder"]*1 == 0 && isset($row["InstallmentID"]))
 			$LastPayedInstallment = $row["InstallmentID"];
 	}
 	if($LastPayedInstallment == 0)
@@ -150,7 +150,10 @@ if(isset($_REQUEST["show"]))
 		{
 			if($rpg2->mysql_resource[$i]["InstallmentID"] == $LastPayedInstallment)
 			{
-				$EndingAmount = $rpg2->mysql_resource[$i+1]["pureAmount"];
+				if($i+1 == count($rpg2->mysql_resource) )
+					$EndingAmount = 0;
+				else
+					$EndingAmount = $rpg2->mysql_resource[$i+1]["pureAmount"];
 				break;
 			}
 		}

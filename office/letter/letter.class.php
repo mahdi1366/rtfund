@@ -346,4 +346,37 @@ class OFC_LetterNotes extends OperationClass{
 			array($_SESSION["USER"]["PersonID"]));
 	}
 }
+
+class OFC_messages extends OperationClass{
+	
+	const TableName = "OFC_messages";
+	const TableKey = "MessageID";
+	
+	public $MessageID;
+	public $MsgTitle;
+	public $MsgDesc;
+	public $MsgDate;
+	public $PersonID;
+	public $IsDeleted;
+}
+
+class OFC_MessageReceivers extends OperationClass{
+	
+	const TableName = "OFC_MessageReceivers";
+	const TableKey = "SendID";
+	
+	public $SendID;
+	public $MessageID;
+	public $PersonID;
+	public $IsSeen;
+	public $IsDeleted;
+	
+	static function GetNewMessageReceiveCount(){
+		
+		$dt = PdoDataAccess::runquery("select SendID from OFC_MessageReceivers where IsSeen='NO' AND 
+			PersonID=" . $_SESSION["USER"]["PersonID"]);
+		return count($dt);
+	}
+	
+}
 ?>

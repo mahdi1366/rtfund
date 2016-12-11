@@ -28,8 +28,16 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("تاریخ سند", "DocDate","dateRender");
 	$rpg->addColumn("شرح", "detail");	
 	
-	function MakeWhere(&$where, &$whereParam){
+	function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 		
+		if(!isset($_REQUEST["IncludeRaw"]))
+			$where .= " AND d.DocStatus != 'RAW' ";
+		
+		if(!empty($_REQUEST["BranchID"]))
+		{
+			$where .= " AND BranchID=:b";
+			$whereParam[":b"] = $_REQUEST["BranchID"];
+		}	
 		if(!empty($_REQUEST["GroupID"]))
 		{
 			$where .= " AND b1.GroupID = :gid";
@@ -89,72 +97,6 @@ if(isset($_REQUEST["show"]))
 			$where .= " AND di.TafsiliType2 = :tt ";
 			$whereParam[":tt"] = $_REQUEST["TafsiliType2"];
 		}
-		/*if(!empty($_POST["from_level1"]) || !empty($_POST["to_Level1"]))
-		{
-			if(!empty($_POST["from_level1"]))
-			{
-				$where .= " AND b1.BlockCode >= :bf1";
-				$whereParam[":bf1"] = $_POST["from_level1"];
-			}
-			if(!empty($_POST["to_level1"]))
-			{
-				$where .= " AND b1.BlockCode <= :bt1";
-				$whereParam[":bt1"] = $_POST["to_level1"];
-			}
-		}
-
-		if(!empty($_POST["from_level2"]) || !empty($_POST["to_Level2"]))
-		{
-			if(!empty($_POST["from_level2"]))
-			{
-				$where .= " AND b2.BlockCode >= :bf2";
-				$whereParam[":bf2"] = $_POST["from_level2"];
-			}
-			if(!empty($_POST["to_level2"]))
-			{
-				$where .= " AND b2.BlockCode <= :bt2";
-				$whereParam[":bt2"] = $_POST["to_level2"];
-			}
-		}
-		if(!empty($_POST["from_level3"]) || !empty($_POST["to_Level3"]))
-		{
-			if(!empty($_POST["from_level3"]))
-			{
-				$where .= " AND b3.BlockCode >= :bf3";
-				$whereParam[":bf3"] = $_POST["from_level3"];
-			}
-			if(!empty($_POST["to_level3"]))
-			{
-				$where .= " AND b3.BlockCode <= :bt3";
-				$whereParam[":bt3"] = $_POST["to_level3"];
-			}
-		}
-		if(!empty($_POST["from_tafsiliType"]) || !empty($_POST["to_tafsiliType"]))
-		{
-			if(!empty($_POST["from_TafsiliType"]))
-			{
-				$where .= " AND di.TafsiliType >= :ttf";
-				$whereParam[":ttf"] = $_POST["from_TafsiliType"];
-			}
-			if(!empty($_POST["to_TafsiliType"]))
-			{
-				$where .= " AND di.TafsiliType <= :ttt";
-				$whereParam[":ttt"] = $_POST["to_TafsiliType"];
-			}
-		}
-		if(!empty($_POST["from_TafsiliID"]) || !empty($_POST["to_TafsiliID"]))
-		{
-			if(!empty($_POST["from_TafsiliID"]))
-			{
-				$where .= " AND di.TafsiliID >= :tf";
-				$whereParam[":tf"] = $_POST["from_TafsiliID"];
-			}
-			if(!empty($_POST["to_TafsiliID"]))
-			{
-				$where .= " AND di.TafsiliID <= :tt";
-				$whereParam[":tt"] = $_POST["to_TafsiliID"];
-			}
-		}*/
 		if(!empty($_REQUEST["fromLocalNo"]))
 		{
 			$where .= " AND d.LocalNo >= :lo1 ";
@@ -165,12 +107,12 @@ if(isset($_REQUEST["show"]))
 			$where .= " AND d.LocalNo <= :lo2 ";
 			$whereParam[":lo2"] = $_REQUEST["toLocalNo"];
 		}
-		if(!empty($_REQUEST["fromDate"]))
+		if(!$ForRemain && !empty($_REQUEST["fromDate"]))
 		{
 			$where .= " AND d.docDate >= :q1 ";
 			$whereParam[":q1"] = DateModules::shamsi_to_miladi($_REQUEST["fromDate"], "-");
 		}
-		if(!empty($_REQUEST["toDate"]))
+		if(!$ForRemain && !empty($_REQUEST["toDate"]))
 		{
 			$where .= " AND d.docDate <= :q2 ";
 			$whereParam[":q2"] = DateModules::shamsi_to_miladi($_REQUEST["toDate"], "-");
@@ -205,24 +147,49 @@ if(isset($_REQUEST["show"]))
 			left join ACC_tafsilis t using(TafsiliID)
 			left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)
 			left join ACC_tafsilis t2 on(di.TafsiliID2=t2.TafsiliID)
-	";
+		where d.CycleID=" . $_SESSION["accounting"]["CycleID"];
+	
 	$where = "";
 	$whereParam = array();
-	
-	if(!empty($_REQUEST["BranchID"]))
-	{
-		$where .= " AND BranchID=:b";
-		$whereParam[":b"] = $_REQUEST["BranchID"];
-	}	
+		
 	MakeWhere($where, $whereParam);
-	$query .= " where d.CycleID=" . $_SESSION["accounting"]["CycleID"] . $where;
-
-	if(!isset($_REQUEST["IncludeRaw"]))
-		$query .= " AND d.DocStatus != 'RAW' ";
+	$query .= $where;
 	
-	$query .= " order by d.DocDate";
-	
+	$query .= " order by d.DocDate";	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
+	
+	//-------------------------- previous remaindar ----------------------------
+	$BeforeRemaindar = "";
+	$BeforeAmount = 0;
+	if(!empty($_REQUEST["fromDate"]))
+	{
+		$query = "select sum(CreditorAmount-di.DebtorAmount)
+
+			from ACC_DocItems di join ACC_docs d using(DocID)
+				join ACC_CostCodes cc using(CostID)
+				join ACC_blocks b1 on(level1=b1.BlockID)
+				left join ACC_blocks b2 on(level2=b2.BlockID)
+				left join ACC_blocks b3 on(level3=b3.BlockID)
+				left join BaseInfo b on(TypeID=2 AND di.TafsiliType=InfoID)
+				left join ACC_tafsilis t using(TafsiliID)
+				left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)
+				left join ACC_tafsilis t2 on(di.TafsiliID2=t2.TafsiliID)
+			where d.CycleID=" . $_SESSION["accounting"]["CycleID"] . " AND 
+				d.DocDate < :fd";
+		
+		$where = "";
+		$whereParam = array(":fd" => DateModules::shamsi_to_miladi($_REQUEST["fromDate"], "-"));
+
+		MakeWhere($where, $whereParam, true);
+		$query .= $where;
+
+		$DT = PdoDataAccess::runquery($query, $whereParam);
+		$BeforeAmount = $DT[0][0];
+		$BeforeRemaindar = "<div align=left style='font-family:nazanin;font-size:18px;font-weight:bold;".
+				"padding:4px;border:1px solid black'>مانده از قبل : " . 
+				number_format($DT[0][0]) . "</div>";
+	}
+	//--------------------------------------------------------------------------
 	
 	function moneyRender($row, $val) {
 		return  number_format($val);
@@ -243,20 +210,23 @@ if(isset($_REQUEST["show"]))
 		return $v < 0 ? 0 : number_format($v);
 	}
 	
-	global $sum;
-	$sum = 0;
-	function TotalRemainRender($row){
-		global $sum;
-		$sum += $row["CreditorAmount"] - $row["DebtorAmount"];
-		return "<div style=direction:ltr>" . number_format($sum) . "</div>";;
+	function TotalRemainRender(&$row, $value, $BeforeAmount, $prevRow){
+		
+		if(!$prevRow)
+			$row["Sum"] = $BeforeAmount + $row["CreditorAmount"] - $row["DebtorAmount"];
+		else
+			$row["Sum"] = $prevRow["Sum"] + $row["CreditorAmount"] - $row["DebtorAmount"];
+		
+		return "<div style=direction:ltr>" . number_format($row["Sum"]) . "</div>";;
 	}
 	
-	$col = $rpg->addColumn("مانده حساب", "CreditorAmount", "TotalRemainRender");
+	$col = $rpg->addColumn("مانده حساب", "CreditorAmount", "TotalRemainRender", $BeforeAmount);
 	//$col->EnableSummary(true);
 	
 	$rpg->mysql_resource = $dataTable;
 	$rpg->page_size = 12;
 	$rpg->paging = true;
+	
 	if(!$rpg->excel)
 	{
 		BeginReport();
@@ -279,7 +249,8 @@ if(isset($_REQUEST["show"]))
 			echo "<br>گزارش از تاریخ : " . $_POST["fromDate"] . ($_POST["toDate"] != "" ? " - " . $_POST["toDate"] : "");
 		}
 		echo "</td></tr></table>";
-		}
+	}
+	echo $BeforeRemaindar;
 	$rpg->generateReport();
 	die();
 }
