@@ -651,7 +651,7 @@ function SelectMyMessages(){
 	if($_REQUEST["mode"] == "receive")
 	{
 		$query = "select m.*,r.* ,concat(fname,' ',lname) FromPersonName, substr(MsgDate,1,10) _MsgDate
-			from OFC_Messages m join OFC_MessageReceivers r using(MessageID)
+			from OFC_messages m join OFC_MessageReceivers r using(MessageID)
 				join BSC_persons p on(m.PersonID=p.PersonID)
 			where r.PersonID=:p";
 		
@@ -661,7 +661,7 @@ function SelectMyMessages(){
 	else
 	{
 		$query = "select m.*,r.* ,concat(fname,' ',lname) ToPersonName, substr(MsgDate,1,10) _MsgDate
-			from OFC_Messages m join OFC_MessageReceivers r using(MessageID)
+			from OFC_messages m join OFC_MessageReceivers r using(MessageID)
 			join BSC_persons p on(r.PersonID=p.PersonID)
 			where m.PersonID=:p";
 		
@@ -672,6 +672,7 @@ function SelectMyMessages(){
 	$param = array(":p" => $_SESSION["USER"]["PersonID"]);
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
+	print_r(ExceptionHandler::PopAllExceptions());
 	$cnt = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	

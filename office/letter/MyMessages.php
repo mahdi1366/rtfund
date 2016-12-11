@@ -262,6 +262,9 @@ MyMessage.prototype.SaveMessage = function(){
 	if(!this.newMessageWin.down('form').getForm().isValid())
 		return;
 	
+	mask = new Ext.LoadMask(this.grid,{msg:'در حال ذخیره سازی ...'});
+	mask.show();
+	
 	this.newMessageWin.down('form').submit({
 		url : this.address_prefix + "letter.data.php?task=SaveMessage",
 		methos : "POST",
@@ -270,11 +273,13 @@ MyMessage.prototype.SaveMessage = function(){
 		},
 		
 		success : function(){
+			mask.hide();
 			MyMessageObject.newMessageWin.hide();
 			MyMessageObject.grid.getStore().loadPage(1);
 		},
 		
 		failure : function(form, response){
+			mask.hide();
 			Ext.MessageBox.alert("Error", response.result.data);
 		}
 	});
@@ -336,3 +341,4 @@ MyMessage.prototype.DeleteMessage = function(){
 </script>
 <br>
 <div id="DivGrid" style="margin-right:8px;"></div>
+با دبل کلیک روی هر ردیف، پیام مورد نظر مشاهده شده می شود.
