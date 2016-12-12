@@ -149,28 +149,23 @@ class CNT_ContractItems extends OperationClass {
 
 class CNT_ContractSigns extends OperationClass
 {
-	const TableName = "WAR_cCNT_ContractSignsosts";
+	const TableName = "CNT_ContractSigns";
 	const TableKey = "SignID";
 	
-	public $SignID;
+	public $SignID; 
 	public $ContractID;
-	public $CostDesc;
-	public $CostAmount;
-	public $CostCodeID;
-	public $CostType;
+	public $PersonID;
+	public $SignerPost;
+	public $SignerName;
 
 	public static function Get($where = '', $whereParams = array()) {
 		
-		$query = "select c.*,cc.CostCode , 
-				concat_ws(' - ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc) CostCodeDesc
-			from WAR_costs c
-			join ACC_CostCodes cc on(c.CostCodeID=cc.CostID)
-			join ACC_blocks b1 on(level1=b1.BlockID)
-			left join ACC_blocks b2 on(level2=b2.BlockID)
-			left join ACC_blocks b3 on(level3=b3.BlockID)
-			where 1=1 " . $where;
+		$query = "select s.*,concat(fname,' ',lname) fullname
+		from CNT_ContractSigns s
+			left join BSC_persons using(PersonID)
+		where 1=1 " . $where;
 		
-		return PdoDataAccess::runquery_fetchMode($query, $whereParams);
+		return PdoDataAccess::runquery($query, $whereParams);
 	}
 }
 ?>

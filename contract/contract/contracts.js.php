@@ -59,6 +59,10 @@ ManageContracts.prototype.OperationMenu = function (e)
 		handler: function () {
 			ManageContractsObj.ContractDocuments('contract');
 		}});
+	op_menu.add({text: 'امضاهای قرارداد', iconCls: 'sign',
+		handler: function () {
+			ManageContractsObj.ShowSigns();
+		}});
 	
 	op_menu.add({text: 'سابقه قرارداد',iconCls: 'history', 
 		handler : function(){ return ManageContractsObj.ShowHistory(); }});
@@ -135,6 +139,43 @@ ManageContracts.prototype.ContractDocuments = function(ObjectType){
 			ExtTabID : this.documentWin.getEl().id,
 			ObjectType : ObjectType,
 			ObjectID : record.data.ContractID
+		}
+	});
+}
+
+ManageContracts.prototype.ShowSigns = function(){
+
+	if(!this.SignsWin)
+	{
+		this.SignsWin = new Ext.window.Window({
+			title: 'امضاهای قرارداد',
+			modal : true,
+			autoScroll : true,
+			width: 600,
+			height : 400,
+			bodyStyle : "background-color:white",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "signs.php",
+				scripts : true
+			},
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){
+					this.up('window').hide();
+				}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.SignsWin);
+	}
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.SignsWin.show();
+	this.SignsWin.center();	
+	this.SignsWin.loader.load({
+		params : {
+			ExtTabID : this.SignsWin.getEl().id,
+			ContractID : record.data.ContractID
 		}
 	});
 }

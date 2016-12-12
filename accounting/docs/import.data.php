@@ -1571,26 +1571,30 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		}
 	}
 	//--------------------------------------------------------
-	/*$YearMonths = 12;
-	if($PartObj->IntervalType == "DAY")
-		$YearMonths = floor(365/$PartObj->PayInterval);
-	
-	$TotalWage = round(ComputeWage($PartObj->PartAmount, $PartObj->CustomerWage/100, 
-			$PartObj->InstallmentCount, $PartObj->IntervalType, $PartObj->PayInterval));
-	$FundWage = $PartObj->CustomerWage == 0 ? round(($PartObj->FundWage/$PartObj->CustomerWage)*$TotalWage) : 0;
-	$wage = round($PayObj->PayAmount*$FundWage/$PartObj->PartAmount);*/
 	
 	$firstPayDate = $PartObj->PartDate;
 	$result = ComputeWagesAndDelays($PartObj, $PartObj->PartAmount, $firstPayDate, $PartObj->PartDate);
 	$TotalFundWage = $result["TotalFundWage"];
-	$TotalAgentWage = $result["TotalAgentWage"];
-	$TotalCustomerWage = $result["TotalCustomerWage"];
 	
 	$TotalFundDelay = $result["TotalFundDelay"];
 	$TotalAgentDelay = $result["TotalAgentDelay"];
 	
 	$PayObj->PayAmount = $PayObj->PayAmount*1;
 	$curWage = round($PayObj->PayAmount*$TotalFundWage/$PartObj->PartAmount);
+	
+	//----------------- get total remain ---------------------
+	require_once getenv("DOCUMENT_ROOT") . '/loan/request/request.class.php';
+	$dt = array();
+	$returnArr = LON_requests::ComputePayments($PayObj->RequestID, $dt, $pdo);
+	$ExtraPay = 0;
+	if($returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 < 0)
+	{
+		$PayObj->PayAmount = $PayObj->PayAmount + $returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 ;
+		$PayObj->Edit();
+		
+		$ExtraPay = $returnArr[ count($returnArr)-1 ]["TotalRemainder"]*-1;
+		$PayObj->PayAmount = $PayObj->PayAmount;
+	}
 	//----------------- add Doc items ------------------------
 		
 	$itemObj = new ACC_DocItems();
@@ -1628,7 +1632,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		unset($itemObj->TafsiliID);
 		$itemObj->locked = "NO";
 		$itemObj->CostID = $FirstCostID;
-		$itemObj->DebtorAmount= $PayObj->PayAmount;
+		$itemObj->DebtorAmount= $PayObj->PayAmount + $ExtraPay;
 		$itemObj->CreditorAmount = 0;
 		if(!$itemObj->Add($pdo))
 		{
@@ -1659,7 +1663,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		$itemObj->DocID = $Secobj->DocID;
 		$itemObj->CostID = $SecondCostID;
 		$itemObj->DebtorAmount= 0;
-		$itemObj->CreditorAmount = $PayObj->PayAmount;
+		$itemObj->CreditorAmount = $PayObj->PayAmount + $ExtraPay;
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد ردیف سند شعبه واسط");
@@ -1673,7 +1677,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
 		$itemObj->CostID = $CostID;
-		$itemObj->DebtorAmount= $PayObj->PayAmount;
+		$itemObj->DebtorAmount= $PayObj->PayAmount + $ExtraPay;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = $CostObj->TafsiliType;
 		if($TafsiliID != "")
@@ -1697,7 +1701,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		unset($itemObj->TafsiliID);
 		$itemObj->locked = "NO";
 		$itemObj->CostID = $CostID;
-		$itemObj->DebtorAmount= $PayObj->PayAmount;
+		$itemObj->DebtorAmount= $PayObj->PayAmount + $ExtraPay;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = $CostObj->TafsiliType;
 		if($TafsiliID != "")
@@ -1714,6 +1718,24 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	}
 	$itemObj->locked = "YES";
 	$itemObj->DocID = $obj->DocID;
+	unset($itemObj->TafsiliType2);
+	unset($itemObj->TafsiliID2);
+	//-------------- extra to Pasandaz ----------------
+	if($ExtraPay > 0)
+	{
+		unset($itemObj->ItemID);
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = COSTID_saving;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $ExtraPay;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $LoanPersonTafsili;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد ردیف وام");
+			return false;
+		}
+	}
 	//----------------------------------------
 	if($PartObj->DelayReturn == "INSTALLMENT")
 	{

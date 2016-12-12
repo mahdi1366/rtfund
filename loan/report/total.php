@@ -94,7 +94,7 @@ if(isset($_REQUEST["show"]))
 	$query = PdoDataAccess::GetLatestQueryString();
 	for($i=0; $i< count($dataTable); $i++)
 	{
-		$dt = LON_installments::SelectAll("r.RequestID=?" , array($dataTable[$i]["RequestID"]));
+		$dt = array();
 		$returnArr = ComputePayments($dataTable[$i]["RequestID"], $dt);
 		
 		$dataTable[$i]["remainder"] = count($returnArr)>0 ?

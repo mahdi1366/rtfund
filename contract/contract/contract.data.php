@@ -149,5 +149,45 @@ function SelectContractTypes() {
 	die();
 }
 
+//------------------------------------------------
+
+function GetSigns(){
+	
+	$temp = CNT_ContractSigns::Get(" AND ContractID=?", array($_REQUEST["ContractID"]));
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
+function SaveSign(){
+	
+	$obj = new CNT_ContractSigns();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if(empty($obj->SignerPost) && !empty($obj->PersonID))
+	{
+		$dt = PdoDataAccess::runquery("select PostName from BSC_persons p join BSC_posts using(PostID)
+			where p.PersonID=" . $obj->PersonID);
+		if(count($dt) > 0)
+			$obj->SignerPost = $dt[0][0];
+	}
+	
+	if(empty($obj->SignID))
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();
+}
+
+function DeleteSign(){
+	
+	$obj = new CNT_ContractSigns();
+	$obj->SignID = $_POST["SignID"];
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();	
+}
+
 ?>
 

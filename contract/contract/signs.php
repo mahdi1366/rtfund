@@ -6,44 +6,35 @@
 include('../header.inc.php');
 include_once inc_dataGrid;
 
-$RequestID = $_REQUEST["RequestID"];
+$ContractID = $_REQUEST["ContractID"];
 
-$dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetCosts&RequestID=" .$RequestID,"grid_div");
+$dg = new sadaf_datagrid("dg",$js_prefix_address . "contract.data.php?task=GetSigns&ContractID=" . 
+		$ContractID,"grid_div");
+ 
+$dg->addColumn("", "SignID","", true);
+$dg->addColumn("", "ContractID","", true);
+$dg->addColumn("", "fullname","", true);
 
-$dg->addColumn("", "CostID","", true);
-$dg->addColumn("", "RequestID","", true);
-$dg->addColumn("", "DocID","", true);
-$dg->addColumn("", "CostCode","", true);
-$dg->addColumn("", "CostCodeDesc","", true);
+$col = $dg->addColumn("امضاء کننده داخلی", "PersonID");
+$col->renderer = "function(v,p,r){return r.data.fullname;}";
+$col->editor = "this.SignerCombo";
 
-$col = $dg->addColumn("شرح هزینه", "CostDesc");
-$col->editor = ColumnEditor::TextField();
-
-$col = $dg->addColumn("کد حساب", "CostCodeID");
-$col->renderer = "function(v,p,r){ return '[ ' + r.data.CostCode + ' ] ' + r.data.CostCodeDesc;}";
-$col->editor = "this.CostCodeCombo";
+$col = $dg->addColumn("امضاء کننده خارجی", "SignerName");
+$col->editor = ColumnEditor::TextField(true);
 $col->width = 150;
 
-$col = $dg->addColumn("مبلغ", "CostAmount", GridColumn::ColumnType_money);
-$col->editor = ColumnEditor::CurrencyField();
-$col->width = 100;
-
-$col = $dg->addColumn("ماهیت", "CostType");
-$col->editor = ColumnEditor::ComboBox(array(
-	array("id"=>'DEBTOR',"title"=>'بدهکار'),
-	array("id"=>"CREDITOR",'title'=>"بستانکار")), 
-		"id", "title");
-$col->width = 100;
-
+$col = $dg->addColumn("پست", "SignerPost");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 150;
 
 $dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(store,record){return WarrentyCostObject.SaveCost(record);}";
+$dg->rowEditOkHandler = "function(store,record){return ContractSignObject.SaveSign(record);}";
 
-$dg->addButton("AddBtn", "ایجاد ردیف هزینه", "add", "function(){WarrentyCostObject.AddCost();}");
+$dg->addButton("AddBtn", "ایجاد ردیف", "add", "function(){ContractSignObject.AddSign();}");
 
 $col = $dg->addColumn("حذف", "");
 $col->sortable = false;
-$col->renderer = "function(v,p,r){return WarrentyCost.DeleteRender(v,p,r);}";
+$col->renderer = "function(v,p,r){return ContractSign.DeleteRender(v,p,r);}";
 $col->width = 35;
 
 $dg->height = 336;
@@ -52,71 +43,67 @@ $dg->emptyTextOfHiddenColumns = true;
 $dg->EnableSearch = false;
 $dg->HeaderMenu = false;
 $dg->EnablePaging = false;
-$dg->DefaultSortField = "CostID";
+$dg->DefaultSortField = "SignID";
 $dg->DefaultSortDir = "ASC";
-$dg->autoExpandColumn = "CostDesc";
+$dg->autoExpandColumn = "PersonID";
 
 $grid = $dg->makeGrid_returnObjects();
 
 ?>
 <script type="text/javascript">
 
-WarrentyCost.prototype = {
+ContractSign.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 	
-	RequestID : <?= $RequestID ?>,
+	ContractID : <?= $ContractID ?>,
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
 };
 
-function WarrentyCost()
+function ContractSign()
 {
-	this.CostCodeCombo = new Ext.form.ComboBox({
+	this.SignerCombo = new Ext.form.ComboBox({
 		store: new Ext.data.Store({
-			fields:["CostID","CostCode","CostDesc",{
-				name : "fullDesc",
-				convert : function(value,record){
-					return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
-				}				
-			}],
-			proxy: {
+			proxy:{
 				type: 'jsonp',
-				url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
+				url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
 				reader: {root: 'rows',totalProperty: 'totalCount'}
-			}
+			},
+			fields :  ['PersonID','fullname']
 		}),
-		typeAhead: false,
-		valueField : "CostID",
-		displayField : "fullDesc"
-	})
+		allowBlank : true,
+		displayField: 'fullname',
+		valueField : "PersonID"			
+	});
+	
 	this.grid = <?= $grid ?>;
 	this.grid.render(this.get("div_grid"));	
 }
 
-WarrentyCost.DeleteRender = function(v,p,r){
+ContractSign.DeleteRender = function(v,p,r){
 	
 	if(r.data.DocID != null &&  r.data.DocID != "")
 		return "";
 
 	return "<div align='center' title='حذف' class='remove' "+
-		"onclick='WarrentyCostObject.DeleteCost();' " +
+		"onclick='ContractSignObject.DeleteSign();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 	
-WarrentyCost.prototype.SaveCost = function(record){
+ContractSign.prototype.SaveSign = function(record){
 
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 
 	Ext.Ajax.request({
-		url: this.address_prefix +'request.data.php',
+		url: this.address_prefix +'contract.data.php',
 		method: "POST",
 		params: {
-			task: "SaveCosts",
+			task: "SaveSign",
 			record: Ext.encode(record.data)
 		},
 		success: function(response){
@@ -125,7 +112,7 @@ WarrentyCost.prototype.SaveCost = function(record){
 
 			if(st.success)
 			{   
-				WarrentyCostObject.grid.getStore().load();
+				ContractSignObject.grid.getStore().load();
 			}
 			else
 			{
@@ -136,13 +123,13 @@ WarrentyCost.prototype.SaveCost = function(record){
 	});
 }
 
-WarrentyCost.prototype.AddCost = function(){
+ContractSign.prototype.AddSign = function(){
 
 
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
-		CostID: null,
-		RequestID : this.RequestID
+		SignID: null,
+		ContractID : this.ContractID
 	});
 
 	this.grid.plugins[0].cancelEdit();
@@ -150,30 +137,30 @@ WarrentyCost.prototype.AddCost = function(){
 	this.grid.plugins[0].startEdit(0, 0);
 }
 
-WarrentyCost.prototype.DeleteCost = function(){
+ContractSign.prototype.DeleteSign = function(){
 	
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
 		if(btn == "no")
 			return;
 		
-		me = WarrentyCostObject;
+		me = ContractSignObject;
 		var record = me.grid.getSelectionModel().getLastSelected();
 		
 		mask = new Ext.LoadMask(me.grid, {msg:'در حال حذف ...'});
 		mask.show();
 
 		Ext.Ajax.request({
-			url: me.address_prefix + 'request.data.php',
+			url: me.address_prefix + 'contract.data.php',
 			params:{
-				task: "DeleteCosts",
-				CostID : record.data.CostID
+				task: "DeleteSign",
+				SignID : record.data.SignID
 			},
 			method: 'POST',
 
 			success: function(response,option){
 				result = Ext.decode(response.responseText);
 				if(result.success)
-					WarrentyCostObject.grid.getStore().load();
+					ContractSignObject.grid.getStore().load();
 				else if(result.data == "")
 					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
 				else
@@ -186,7 +173,7 @@ WarrentyCost.prototype.DeleteCost = function(){
 	});
 }
 
-var WarrentyCostObject = new WarrentyCost();
+var ContractSignObject = new ContractSign();
 
 </script>
 <center>

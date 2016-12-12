@@ -52,6 +52,8 @@ for ($i = 0; $i < count($res); $i++) {
         $st .= $res[$i];
     }
 }
+//---------------------------------------------------------
+$signs = CNT_ContractSigns::Get(" AND ContractID=?", array($CntObj->ContractID));
 ?>
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>	
@@ -107,6 +109,21 @@ for ($i = 0; $i < count($res); $i++) {
 			</td>
 		</tr>
 		<tfoot>
+			<tr>
+				<td colspan="3" style="padding:0;height:80px;padding-right:20px;">
+					<?
+						$width = round(100/count($signs));
+						foreach($signs as $row)
+						{
+							echo "<div style='float:left;width:$width%;font-weight:bold'>
+									" . $row["fullname"] . $row["SignerName"] . "
+									<br>
+									" . $row["SignerPost"] . "
+								</div>";
+						}
+					?>
+				</td>
+			</tr>
 			<tr>
 				<td colspan="3" style="padding:0;height:150px;padding-right:20px;padding-left: 20px;">
 					<hr>

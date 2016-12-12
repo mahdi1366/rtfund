@@ -8,7 +8,7 @@ $temp = PdoDataAccess::runquery("select p.RequestID,PartID from LON_ReqParts p j
 foreach($temp as $row)
 {
 	$PartID = $row["PartID"];
-	$dt = LON_installments::SelectAll("PartID=?" , array($PartID));
+	$dt = array();
 	$returnArr = ComputePayments($PartID, $dt);
 	if(count($returnArr) > 0 && $returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 > 0)
 	{

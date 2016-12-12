@@ -17,6 +17,8 @@ $DraftCount = count($dt);
 
 $dt = WFM_FlowRows::SelectReceivedForms(); 
 $ReceiveForms = is_array($dt) ? count($dt) : $dt->rowCount();
+
+$Messages = OFC_MessageReceivers::GetNewMessageReceiveCount();
 ?>
 <script>
 
@@ -43,6 +45,9 @@ OfficeStartPage.prototype.OpenPage = function(mode){
 		framework.OpenPage("/office/letter/DraftLetters.php","نامه های پیش نویس");
 	if(mode == "form")
 		framework.OpenPage("/office/workflow/MyForms.php","فرم های رسیده");
+	if(mode == "message")
+		framework.OpenPage("/office/letter/MyMessages.php","مدیریت پیام ها");
+	
 }
 
 </script>
@@ -53,7 +58,7 @@ OfficeStartPage.prototype.OpenPage = function(mode){
 </style>
 <center><br>
 	<div id="div_summary" align="right">
-		<table id="div_content" align="right" style="width:85%;margin : 10 10 10 0">
+		<table id="div_content" align="right" style="width:85%;margin : 0 10 10 0">
 			<tr>
 				<td><img src="/office/icons/summary.png" style="width:30px;vertical-align: middle;">
 					نامه های رسیده جدید : 
@@ -64,6 +69,12 @@ OfficeStartPage.prototype.OpenPage = function(mode){
 				<td><img src="/office/icons/summary.png" style="width:30px;vertical-align: middle;">
 					نامه های پیش نویس : 
 					<a href="javascript:OfficeStartPageObject.OpenPage('draft')">( <?= $DraftCount ?> )</a>
+				</td>
+			</tr>
+			<tr>
+				<td><img src="/office/icons/comment.png" style="width:30px;vertical-align: middle;">
+					پیام های رسیده جدید :
+					<a href="javascript:OfficeStartPageObject.OpenPage('message')">( <?= $Messages ?> )</a>
 				</td>
 			</tr>
 			<tr>

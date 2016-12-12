@@ -18,7 +18,7 @@ class ReportGenerator {
 	//const TempFolderAddress = "d:/webserver/temp/temp.xls";
 	
 	public $fontFamily = "nazanin";
-	public $fontSize = "14px";
+	public $fontSize = "16px";
 	
 	public $mysql_resource;
 	public $header;
@@ -148,7 +148,7 @@ class ReportGenerator {
 				$this->mysql_resource = self::array_sort($this->mysql_resource, $this->groupField);
 
 			$this->AllRowCount = count($this->mysql_resource);
-			foreach ($this->mysql_resource as $row) {
+			foreach ($this->mysql_resource as &$row) {
 				$this->GroupOperation($index, $row);
 				$this->DrawRow($row, $index);
 				$index++;

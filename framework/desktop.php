@@ -677,7 +677,7 @@ if ($menuStr != "") {
 		});
 		framework = new FrameWorkClass();
 		//if(FrameWorkClass.StartPage != "" && FrameWorkClass.StartPage != undefined)
-		//framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
+		framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
 	}, 7);
 	
 	var MonthStore = new Ext.data.SimpleStore({
