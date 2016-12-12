@@ -60,7 +60,7 @@ class ACC_docs extends PdoDataAccess {
 			}
 			//..................................................	
 			$DocDate = $this->DocDate;
-			if($DocDate == PDONOW)
+			/*if($DocDate == PDONOW)
 				$DocDate = DateModules::Now();
 			else
 				$DocDate = DateModules::shamsi_to_miladi ($DocDate, "-");
@@ -88,7 +88,7 @@ class ACC_docs extends PdoDataAccess {
 					ExceptionHandler::PushException("تاریخ سند باید از اسناد قبلی بزرگتر باشد.");
 					return false;
 				}
-			}
+			}*/
 		}
 		
 		return true;
