@@ -230,7 +230,8 @@ class ACC_DocItems extends PdoDataAccess {
 
 	static function GetAll($where = "", $whereParam = array()) {
 		
-		$query = "select si.*,cc.CostCode,concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc) CostDesc,
+		$query = "select si.*,cc.CostCode,
+			concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) CostDesc,
 			t.TafsiliDesc,bi.InfoDesc TafsiliGroupDesc,
 			t2.TafsiliDesc as Tafsili2Desc,bi2.InfoDesc Tafsili2GroupDesc
 		from ACC_DocItems si
@@ -238,6 +239,7 @@ class ACC_DocItems extends PdoDataAccess {
 			left join ACC_blocks b1 on(cc.level1=b1.blockID)
 			left join ACC_blocks b2 on(cc.level2=b2.blockID)
 			left join ACC_blocks b3 on(cc.level3=b3.blockID)
+			left join ACC_blocks b4 on(cc.level4=b4.blockID)
 			left join BaseInfo bi on(si.TafsiliType=InfoID AND TypeID=2)
 			left join BaseInfo bi2 on(si.TafsiliType2=bi2.InfoID AND bi2.TypeID=2)
 			left join ACC_tafsilis t on(t.TafsiliID=si.TafsiliID)
@@ -433,7 +435,7 @@ class ACC_CostBlocks extends OperationClass{
 		$query = "
 			SELECT cb.*,
 				cc.CostCode,
-				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc) CostDesc,
+				concat_ws('-', b1.blockDesc, b2.blockDesc,b3.blockDesc,b4.blockDesc) CostDesc,
 				bf1.InfoDesc TafsiliTypeDesc,
 				TafsiliDesc
 			
@@ -443,6 +445,7 @@ class ACC_CostBlocks extends OperationClass{
 			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
 			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
+			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
 
 			join BaseInfo bf1 on(bf1.TypeID=2 AND bf1.InfoID=cb.TafsiliType)
 			join ACC_tafsilis using(TafsiliID)

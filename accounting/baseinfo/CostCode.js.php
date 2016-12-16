@@ -8,7 +8,7 @@ CostCode.prototype={
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : "<?= $js_prefix_address ?>",
 
-	levelCount : 3,
+	levelCount : 4,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -21,7 +21,7 @@ function CostCode(){
 		xtype : "hiddenfield",
 		name : "CostID"
 	});
-	this.levelTitles = new Array("حساب کل","معین","جزءمعین");
+	this.levelTitles = new Array("حساب کل","معین","جزءمعین","جزءمعین2");
 	for(var i=0; i < this.levelCount; i++)
 	{
 		levelCombos.push({

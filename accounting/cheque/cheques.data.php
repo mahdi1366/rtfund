@@ -86,7 +86,7 @@ function selectIncomeCheques() {
 			case when i.CostID is null then group_concat(t2.TafsiliDesc SEPARATOR '<br>')
 				else t1.TafsiliDesc end fullname,
 			case when i.CostID is null then group_concat(concat_ws('-', bb1.blockDesc, bb2.blockDesc) SEPARATOR '<br>') 
-				else concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc) end CostDesc,
+				else concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) end CostDesc,
 			b.BankDesc, 
 			t3.TafsiliDesc ChequeStatusDesc,
 			t.docs
@@ -97,6 +97,7 @@ function selectIncomeCheques() {
 			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
 			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
+			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
 			
 			left join LON_BackPays bp using(IncomeChequeID)
 			left join LON_requests using(RequestID)

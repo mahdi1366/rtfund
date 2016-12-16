@@ -46,7 +46,6 @@ $dg->height = 500;
 $dg->width = 750;
 $dg->DefaultSortField = "TafsiliDesc";
 $dg->autoExpandColumn = "TafsiliDesc";
-$dg->emptyTextOfHiddenColumns = true;
 $grid = $dg->makeGrid_returnObjects();
 
 ?>

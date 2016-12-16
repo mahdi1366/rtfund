@@ -1,5 +1,7 @@
 <?php
 
+define("Default_Agent_Loan", "9");
+
 //................. TypeID = 9 .....................
 define("DOCTYPE_STARTCYCLE", "1");
 define("DOCTYPE_NORMAL", "2");

@@ -52,7 +52,7 @@ function LoanReport(){
 	}
 	
 	$dt = PdoDataAccess::runquery("
-		select cc.*,concat_ws(' - ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc) CostDesc,
+		select cc.*,concat_ws(' - ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) CostDesc,
 				sum(CreditorAmount - DebtorAmount ) remain
 		from ACC_DocItems di
 			join ACC_docs using(DociD)
@@ -60,10 +60,12 @@ function LoanReport(){
 			join ACC_blocks b1 on(cc.level1=b1.BlockID)
 			join ACC_blocks b2 on(cc.level2=b2.BlockID)
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
+			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
 			
 		where CycleID=? AND cc.level2 = ? " . $where . "
 		
-		group by di.CostID" ,$param);
+		group by di.CostID 
+		order by cc.CostCode" ,$param);
 	
 	//print_r(ExceptionHandler::PopAllExceptions());
 	
@@ -80,6 +82,7 @@ function LoanReport(){
 		$params .= $row["level1"] != "" ? "&level1=" . $row["level1"] : "";
 		$params .= $row["level2"] != "" ? "&level2=" . $row["level2"] : "";
 		$params .= $row["level3"] != "" ? "&level3=" . $row["level3"] : "";
+		$params .= $row["level4"] != "" ? "&level4=" . $row["level4"] : "";
 		$params .= $StartDate != "" ? "&fromDate=" . $StartDate : "";
 		$params .= $EndDate != "" ? "&toDate=" . $EndDate : "";	
 		
@@ -188,7 +191,12 @@ function AccReport_LoanControl()
 			text : "بارگذاری گزارش",
 			iconCls : "report",
 			handler : function(){
+				
 				me = AccReport_LoanControlObj;
+				
+				mask = new Ext.LoadMask(me.resultPanel, {msg:'در حال بارگذاری ...'});
+				mask.show();
+				
 				me.resultPanel.loader.load({
 					params : {
 						BranchID : me.FilterPanel.down("[name=BranchID]").getValue(),
@@ -196,7 +204,11 @@ function AccReport_LoanControl()
 						StartDate : me.FilterPanel.down("[name=StartDate]").getRawValue(),
 						EndDate : me.FilterPanel.down("[name=EndDate]").getRawValue(),
 						TafsiliID : me.FilterPanel.down("[name=TafsiliID]").getValue(),
-					}						
+					},
+					callback : function(){
+						AccReport_LoanControlObj.resultPanel.doLayout();
+						mask.hide();
+					}
 				});
 			}
 		}]

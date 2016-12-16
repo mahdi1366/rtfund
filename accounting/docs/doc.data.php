@@ -244,7 +244,8 @@ function selectDocItems() {
 				$whereParam[":tl"] = $_GET["query"];
 				break;
 			case "CostDesc":
-				$where .= " AND (cc.CostCode like :cd or concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc) like :cd)";
+				$where .= " AND (cc.CostCode like :cd or 
+					concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) like :cd)";
 				$whereParam[":cd"] = "%" . $_GET["query"] . "%";
 				break;
 		}

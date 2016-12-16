@@ -83,6 +83,7 @@ class ACC_CostCodes extends PdoDataAccess {
     public $level1;
     public $level2;
     public $level3;
+	public $level4;
     public $IsActive;
     public $CostCode;
 	public $TafsiliType;
@@ -119,7 +120,8 @@ class ACC_CostCodes extends PdoDataAccess {
 			left join ACC_blocks b1 on(b1.levelID=1 AND b1.blockID=c.level1)
 			left join ACC_blocks b2 on(b2.levelID=2 AND b2.blockID=c.level2)
 			left join ACC_blocks b3 on(b3.levelID=3 AND b3.blockID=c.level3)
-			set c.CostCode=concat_ws('-', b1.blockCode,b2.BlockCode,b3.BlockCode)
+			left join ACC_blocks b4 on(b4.levelID=4 AND b4.blockID=c.level4)
+			set c.CostCode=concat_ws('-', b1.blockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode)
 			where CostID=?";
         $res = parent::runquery($query, array($this->CostID), $db);
         if ($res === false) {
@@ -197,7 +199,8 @@ class ACC_CostCodes extends PdoDataAccess {
 			left join ACC_blocks b1 on(b1.levelID=1 AND b1.blockID=c.level1)
 			left join ACC_blocks b2 on(b2.levelID=2 AND b2.blockID=c.level2)
 			left join ACC_blocks b3 on(b3.levelID=3 AND b3.blockID=c.level3)
-			set c.CostCode=concat_ws('-', b1.blockCode,b2.BlockCode,b3.BlockCode)
+			left join ACC_blocks b4 on(b4.levelID=4 AND b4.blockID=c.level4)
+			set c.CostCode=concat_ws('-', b1.blockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode)
 			where CostID=?";
         $res = parent::runquery($query, array($this->CostID), $db);
         if ($res === false) {
@@ -265,7 +268,8 @@ class ACC_CostCodes extends PdoDataAccess {
 					b1.BlockDesc LevelTitle1,
 					b2.BlockDesc LevelTitle2,
                     b3.BlockDesc LevelTitle3,
-                    concat_ws('-',b1.blockdesc,b2.blockdesc,b3.blockdesc) as CostDesc,
+					b4.BlockDesc LevelTitle4,
+                    concat_ws('-',b1.blockdesc,b2.blockdesc,b3.blockdesc,b4.blockdesc) as CostDesc,
 					bf1.InfoDesc TafsiliTypeDesc,
 					bf2.InfoDesc TafsiliTypeDesc2
 					
@@ -274,6 +278,7 @@ class ACC_CostCodes extends PdoDataAccess {
 					left join ACC_blocks b0 on(b1.GroupID=b0.BlockID)
                     left join ACC_blocks b2 on(b2.BlockID=cc.Level2)
                     left join ACC_blocks b3 on(b3.BlockID=cc.Level3)
+					left join ACC_blocks b4 on(b4.BlockID=cc.Level4)
 					left join BaseInfo bf1 on(bf1.TypeID=2 AND cc.TafsiliType=bf1.InfoID)
 					left join BaseInfo bf2 on(bf2.TypeID=2 AND cc.TafsiliType2=bf2.InfoID)";
         if ($where != '')

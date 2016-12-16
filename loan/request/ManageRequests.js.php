@@ -110,13 +110,18 @@ ManageRequest.prototype.OperationMenu = function(e){
 	op_menu.add({text: 'رویدادها',iconCls: 'task', 
 		handler : function(){ return ManageRequestObject.ShowEvents(); }});
 	
-	op_menu.add({text: 'چاپ رسید مدارک',iconCls: 'print', 
+	op_menu.add({text: 'چاپ رسید اقساط',iconCls: 'print', 
 		handler : function(){ 
 			record = ManageRequestObject.grid.getSelectionModel().getLastSelected();
-			window.open(ManageRequestObject.address_prefix + "PrintLoanDocs.php?RequestID=" +
+			window.open(ManageRequestObject.address_prefix + "PrintLoanDocs.php?type=checks&RequestID=" +
 				record.data.RequestID);	
 	}});
-	
+	op_menu.add({text: 'چاپ رسید تضامین',iconCls: 'print', 
+		handler : function(){ 
+			record = ManageRequestObject.grid.getSelectionModel().getLastSelected();
+			window.open(ManageRequestObject.address_prefix + "PrintLoanDocs.php?type=tazmin&RequestID=" +
+				record.data.RequestID);	
+	}});
 	
 	
 	op_menu.showAt(e.pageX-120, e.pageY);

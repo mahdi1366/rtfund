@@ -22,8 +22,8 @@ $dg_cost->addcolumn('','TafsiliType',"",true);
 $dg_cost->addcolumn('','TafsiliType2',"",true);
 $dg_cost->addcolumn('','IsBlockable',"",true);
 
-$col = $dg_cost->addcolumn('گروه حساب','LevelTitle0');
-$col->width = 120;
+/*$col = $dg_cost->addcolumn('گروه حساب','LevelTitle0');
+$col->width = 120;*/
 
 $col = $dg_cost->addcolumn('کد حساب','CostCode');
 $col->width = 80;
@@ -34,6 +34,9 @@ $col = $dg_cost->addcolumn("معین", "LevelTitle2");
 $col->width = 120;
 
 $col = $dg_cost->addcolumn("جزء معین", "LevelTitle3");
+$col->width = 100;
+
+$col = $dg_cost->addcolumn("جزء معین2", "LevelTitle4");
 $col->width = 100;
 
 $col = $dg_cost->addcolumn("گروه تفصیلی", "TafsiliTypeDesc");
@@ -65,7 +68,7 @@ $dg_cost->addButton('prn__btn', 'چاپ کد حسابها', 'print', 'function(e
 $dg_cost->title = 'کدینگ حساب';
 $dg_cost->width = 870;
 $dg_cost->pageSize = 19;
-$dg_cost->height = 580;
+$dg_cost->height = 500;
 $dg_cost->autoExpandColumn = "LevelTitle1";
 $dgCost = $dg_cost->makeGrid_returnObjects();
 
@@ -92,7 +95,7 @@ require_once 'CostCode.js.php';
 </script>
 <center>
 	<div><div id="mainform"></div>
-	<br></br>
+	<br>	
 	</div>
 	<div id="divCost"></div>
 </center>

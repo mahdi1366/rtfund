@@ -11,7 +11,7 @@ $docID = $_REQUEST["DocID"];
 $DocObject = new ACC_docs($docID);
 
 $temp = PdoDataAccess::runquery("
-	select	concat_ws(' - ',b1.BlockDesc, b2.BlockDesc, b3.BlockDesc) CostDesc,
+	select	concat_ws(' - ',b1.BlockDesc, b2.BlockDesc, b3.BlockDesc, b4.BlockDesc) CostDesc,
 			cc.CostCode,
 			b.InfoDesc TafsiliType,
 			t.TafsiliDesc,
@@ -26,6 +26,7 @@ $temp = PdoDataAccess::runquery("
 			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
 			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
+			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
 			left join BaseInfo b on(di.TafsiliType=InfoID AND TypeID=2)
 			left join ACC_tafsilis t on(t.TafsiliID=di.TafsiliID)
 			left join ACC_tafsilis t2 on(t2.TafsiliID=di.TafsiliID2)

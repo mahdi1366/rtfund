@@ -59,6 +59,11 @@ if(isset($_REQUEST["show"]))
 			$where .= " AND b3.BlockID = :bf3";
 			$whereParam[":bf3"] = $_REQUEST["level3"];
 		}
+		if(!empty($_REQUEST["level4"]))
+		{
+			$where .= " AND b4.BlockID = :bf4";
+			$whereParam[":bf4"] = $_REQUEST["level4"];
+		}
 		if(isset($_REQUEST["taraz"]) && isset($_REQUEST["TafsiliID"]))
 		{
 			if($_REQUEST["TafsiliID"] == "")
@@ -132,8 +137,8 @@ if(isset($_REQUEST["show"]))
 	//.....................................
 	$query = "select d.*,di.DebtorAmount,CreditorAmount,
 		concat_ws(' - ',di.details,d.description) detail,
-		concat_ws(' - ' , b1.BlockCode,b2.BlockCode,b3.BlockCode) CostCode,
-		concat_ws(' - ' , b1.BlockDesc,b2.BlockDesc,b3.BlockDesc) CostDesc,
+		concat_ws(' - ' , b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode) CostCode,
+		concat_ws(' - ' , b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) CostDesc,
 		b.InfoDesc TafsiliTypeDesc,
 		concat_ws(' - ',t.TafsiliDesc,t2.TafsiliDesc ) TafsiliDesc,
 		bi2.InfoDesc TafsiliTypeDesc2
@@ -143,6 +148,7 @@ if(isset($_REQUEST["show"]))
 			join ACC_blocks b1 on(level1=b1.BlockID)
 			left join ACC_blocks b2 on(level2=b2.BlockID)
 			left join ACC_blocks b3 on(level3=b3.BlockID)
+			left join ACC_blocks b4 on(level4=b4.BlockID)
 			left join BaseInfo b on(TypeID=2 AND di.TafsiliType=InfoID)
 			left join ACC_tafsilis t using(TafsiliID)
 			left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)
@@ -170,6 +176,7 @@ if(isset($_REQUEST["show"]))
 				join ACC_blocks b1 on(level1=b1.BlockID)
 				left join ACC_blocks b2 on(level2=b2.BlockID)
 				left join ACC_blocks b3 on(level3=b3.BlockID)
+				left join ACC_blocks b4 on(level4=b4.BlockID)
 				left join BaseInfo b on(TypeID=2 AND di.TafsiliType=InfoID)
 				left join ACC_tafsilis t using(TafsiliID)
 				left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)

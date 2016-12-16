@@ -496,8 +496,8 @@ function GetInstallments(){
 	$currentPay = 0;
 	foreach($dt as $row)
 	{	
-		if($row["InstallmentDate"] < DateModules::Now() && $row["TotalRemainder"]*1 > 0)
-			$currentPay += $row["TotalRemainder"]*1;
+		if($row["InstallmentDate"] <= DateModules::Now())
+			$currentPay = $row["TotalRemainder"];
 	}
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"], $currentPay);
 	die();

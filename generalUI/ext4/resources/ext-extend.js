@@ -12,8 +12,8 @@ function isInt(value) {
 
 function mergeObjects(obj1,obj2){
     var obj3 = {};
-    for (var attrname in obj1) { obj3[attrname] = obj1[attrname]; }
-    for (var attrname in obj2) { obj3[attrname] = obj2[attrname]; }
+    for (var attrname in obj1) {obj3[attrname] = obj1[attrname];}
+    for (var attrname in obj2) {obj3[attrname] = obj2[attrname];}
     return obj3;
 }
 
@@ -437,9 +437,30 @@ DateModule.AddToGDate = function(gdate, dayplus, monthplus, yearplus){
 }
 DateModule.AddToJDate = function(jdate, dayplus, monthplus, yearplus){
 	
-	gdate = ShamsiToMiladi(jdate);
-	gdate = DateModule.AddToGDate(gdate, dayplus, monthplus, yearplus);
-	return MiladiToShamsi(gdate);
+	dayplus = dayplus == undefined ? 0 : dayplus*1;	
+	monthplus = monthplus == undefined ? 0 : monthplus*1;
+	yearplus = yearplus == undefined ? 0 : yearplus*1;
+
+	if(dayplus > 0)
+	{
+		gdate = ShamsiToMiladi(jdate);
+		gdate_array = gdate.split(/[\-\/]/);
+		gtime = new Date(gdate_array[0],gdate_array[1]-1, gdate_array[2]+dayplus, 1);
+		jdate = MiladiToShamsi(gtime);
+	}
+
+	arr = jdate.split(/[\-\/]/);
+
+	year = arr[0]*1 + Math.floor((arr[1]*1 + monthplus) / 12) + yearplus;
+	monthplus = (arr[1]*1 + monthplus)%12;
+	if(monthplus == 0)
+	{
+		year--;
+		monthplus = 12;
+	}
+	dayplus = arr[2];
+
+	return year + "-" + monthplus.toString().lpad('0',2) + "-" + dayplus.toString().lpad('0',2);
 }
 DateModule.GDateMinusGDate = function(date1, date2){
 		
@@ -826,34 +847,34 @@ Ext.SHDate.createNewFormat = function (format) {
 };
 Ext.SHDate.getFormatCode = function (character) {
     switch (character) {
-    case "d": return "Ext.String.leftPad(this.getDate(), 2, '0') + ";
-    case "D": return "Ext.SHDate.getShortDayName(this.getDay()) + ";
-    case "j": return "this.getDate() + ";
-    case "l": return "Ext.SHDate.dayNames[this.getDay()] + ";
-    case "S": return "this.getSuffix() + ";
-    case "w": return "this.getDay() + ";
-    case "z": return "this.getDayOfYear() + ";
-    case "W": return "this.getWeekOfYear() + ";
-    case "F": return "Ext.SHDate.monthNames[this.getMonth()] + ";
-    case "m": return "Ext.String.leftPad(this.getMonth() + 1, 2, '0') + ";
-    case "M": return "Ext.SHDate.monthNames[this.getMonth()] + ";
-    case "n": return "(this.getMonth() + 1) + ";
-    case "t": return "this.getDaysInMonth() + ";
-    case "L": return "(this.isLeapYear() ? 1 : 0) + ";
-    case "Y": return "this.getFullYear() + ";
-    case "y": return "('' + this.getFullYear()).substring(2, 4) + ";
-    case "a": return "(this.getHours() < 12 ? 'am' : 'pm') + ";
-    case "A": return "(this.getHours() < 12 ? 'AM' : 'PM') + ";
-    case "g": return "((this.getHours() % 12) ? this.getHours() % 12 : 12) + ";
-    case "G": return "this.getHours() + ";
-    case "h": return "Ext.String.leftPad((this.getHours() % 12) ? this.getHours() % 12 : 12, 2, '0') + ";
-    case "H": return "Ext.String.leftPad(this.getHours(), 2, '0') + ";
-    case "i": return "Ext.String.leftPad(this.getMinutes(), 2, '0') + ";
-    case "s": return "Ext.String.leftPad(this.getSeconds(), 2, '0') + ";
-    case "O": return "this.getGMTOffset() + ";
-    case "T": return "this.getTimezone() + ";
-    case "Z": return "(this.getTimezoneOffset() * -60) + ";
-    default: return "'" + Ext.String.escape(character) + "' + ";
+    case "d":return "Ext.String.leftPad(this.getDate(), 2, '0') + ";
+    case "D":return "Ext.SHDate.getShortDayName(this.getDay()) + ";
+    case "j":return "this.getDate() + ";
+    case "l":return "Ext.SHDate.dayNames[this.getDay()] + ";
+    case "S":return "this.getSuffix() + ";
+    case "w":return "this.getDay() + ";
+    case "z":return "this.getDayOfYear() + ";
+    case "W":return "this.getWeekOfYear() + ";
+    case "F":return "Ext.SHDate.monthNames[this.getMonth()] + ";
+    case "m":return "Ext.String.leftPad(this.getMonth() + 1, 2, '0') + ";
+    case "M":return "Ext.SHDate.monthNames[this.getMonth()] + ";
+    case "n":return "(this.getMonth() + 1) + ";
+    case "t":return "this.getDaysInMonth() + ";
+    case "L":return "(this.isLeapYear() ? 1 : 0) + ";
+    case "Y":return "this.getFullYear() + ";
+    case "y":return "('' + this.getFullYear()).substring(2, 4) + ";
+    case "a":return "(this.getHours() < 12 ? 'am' : 'pm') + ";
+    case "A":return "(this.getHours() < 12 ? 'AM' : 'PM') + ";
+    case "g":return "((this.getHours() % 12) ? this.getHours() % 12 : 12) + ";
+    case "G":return "this.getHours() + ";
+    case "h":return "Ext.String.leftPad((this.getHours() % 12) ? this.getHours() % 12 : 12, 2, '0') + ";
+    case "H":return "Ext.String.leftPad(this.getHours(), 2, '0') + ";
+    case "i":return "Ext.String.leftPad(this.getMinutes(), 2, '0') + ";
+    case "s":return "Ext.String.leftPad(this.getSeconds(), 2, '0') + ";
+    case "O":return "this.getGMTOffset() + ";
+    case "T":return "this.getTimezone() + ";
+    case "Z":return "(this.getTimezoneOffset() * -60) + ";
+    default:return "'" + Ext.String.escape(character) + "' + ";
     }
 };
 Ext.SHDate.parseDate = function (input, format) {

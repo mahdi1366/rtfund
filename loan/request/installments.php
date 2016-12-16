@@ -41,10 +41,10 @@ $col->width = 80;
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
 $col->editor = ColumnEditor::CurrencyField();
 
-$col = $dg->addColumn("مبلغ جریمه", "ForfeitAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مبلغ تاخیر", "ForfeitAmount", GridColumn::ColumnType_money);
 $col->width = 80;
 
-$col = $dg->addColumn("مانده", "TotalRemainder", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مانده قسط", "remainder", GridColumn::ColumnType_money);
 $col->width = 120;
 
 $col = $dg->addColumn("وضعیت تمدید", "IsDelayed");

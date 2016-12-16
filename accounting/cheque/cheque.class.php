@@ -35,7 +35,7 @@ class ACC_IncomeCheques extends OperationClass{
 		$query = "
 			SELECT o.*,
 				cc.CostCode,
-				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc) CostDesc,
+				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) CostDesc,
 				b.BankDesc, 
 				bi2.InfoDesc ChequeStatusDesc,
 				d.LocalNo,
@@ -47,6 +47,7 @@ class ACC_IncomeCheques extends OperationClass{
 			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
 			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
+			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
 
 			left join ACC_banks b on(ChequeBank=BankID)
 			left join BaseInfo bi2 on(bi2.TypeID=16 AND bi2.InfoID=o.ChequeStatus)

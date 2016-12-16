@@ -18,10 +18,8 @@ function showReport(){
 		"l1" => "کل",
 		"l2" => "معین",
 		"l3" => "جزء معین",
-		"l4" => "گروه تفصیلی",
-		"l5" => "گروه تفصیلی2",
-		"l6" => "تفصیلی",
-		"l7" => "تفصیلی2"
+		"l4" => "جزء معین2",
+		"l5" => "تفصیلی"
 		);
 	global $level;
 	$level = empty($_REQUEST["level"]) ? "l1" : $_REQUEST["level"];
@@ -37,11 +35,12 @@ function showReport(){
 		b1.BlockDesc level1Desc,
 		b2.BlockDesc level2Desc,
 		b3.BlockDesc level3Desc,
+		b4.BlockDesc level4Desc,
 		b.InfoDesc TafsiliTypeDesc,
 		t.TafsiliDesc TafsiliDesc,
 		bi2.InfoDesc TafsiliTypeDesc2,
 		t2.TafsiliDesc TafsiliDesc2,
-		cc.level1,cc.level2,cc.level3,di.TafsiliType,di.TafsiliType2,di.TafsiliID,di.TafsiliID2,
+		cc.level1,cc.level2,cc.level3,cc.level4,di.TafsiliType,di.TafsiliType2,di.TafsiliID,di.TafsiliID2,
 		t.StartCycleDebtor,
 		t.StartCycleCreditor
 		";
@@ -51,6 +50,7 @@ function showReport(){
 				join ACC_blocks b1 on(level1=b1.BlockID)
 				left join ACC_blocks b2 on(level2=b2.BlockID)
 				left join ACC_blocks b3 on(level3=b3.BlockID)
+				left join ACC_blocks b4 on(level4=b4.BlockID)
 				left join BaseInfo b on(TypeID=2 AND di.TafsiliType=InfoID)
 				left join ACC_tafsilis t using(TafsiliID)
 				left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)
@@ -70,23 +70,19 @@ function showReport(){
 		$rpg->addColumn("معین", "level2Desc", $level =="l2" ? "levelRender" : "");
 	if($level >= "l3")
 		$rpg->addColumn("جزء معین", "level3Desc", $level =="l3" ? "levelRender" : "");
-	if($level == "l4" || $level == "l6")
-		$rpg->addColumn("گروه تفصیلی", "TafsiliTypeDesc", $level =="l4" ? "levelRender" : "");
-	if($level == "l4" || $level == "l7")
-		$rpg->addColumn("گروه تفصیلی2", "TafsiliTypeDesc2", $level == "l4" ? "levelRender2" : "");
-	if($level == "l6")
+	if($level >= "l4")
+		$rpg->addColumn("جزء معین2", "level4Desc", $level =="l4" ? "levelRender" : "");
+	if($level == "l5")
+	{
 		$rpg->addColumn("تفصیلی", "TafsiliDesc", "showDocs");
-	if($level == "l7")
 		$rpg->addColumn("تفصیلی2", "TafsiliDesc2", "showDocs2");
-	
+	}
 	switch($level)
 	{
 		case "l2" : $group .= ",cc.level2"; break;
 		case "l3" : $group .= ",cc.level3";	break;
-		case "l4" : $group .= ",di.TafsiliType"; break;
-		case "l5" : $group .= ",di.TafsiliType2"; break;
-		case "l6" : $group .= ",di.TafsiliID"; break;
-		case "l7" : $group .= ",di.TafsiliID2"; break;
+		case "l4" : $group .= ",cc.level4"; break;
+		case "l5" : $group .= ",di.TafsiliID,di.TafsiliID2"; break;
 	}
 	
 	function levelRender($row, $value){
@@ -100,8 +96,7 @@ function showReport(){
 				($level >= "l1" ? $row["level1"] : "") . "','" . 
 				($level >= "l2" ? $row["level2"] : "") . "','" . 
 				($level >= "l3" ? $row["level3"] : ""). "','" . 
-				($level == "l4" ? $row["TafsiliType"] : ""). "','" . 
-				($level == "l5" ? $row["TafsiliType2"] : ""). "') "." 
+				($level == "l4" ? $row["level4"] : ""). "') "." 
 				href='javascript:void(0);'>" . $value . "</a>";
 	}
 	function levelRender2($row, $value){
@@ -110,8 +105,7 @@ function showReport(){
 				($level >= "l1" ? $row["level1"] : "") . "','" . 
 				($level >= "l2" ? $row["level2"] : "") . "','" . 
 				($level >= "l3" ? $row["level3"] : ""). "','" . 
-				($level == "l4" ? $row["TafsiliType"] : ""). "','" . 
-				($level == "l5" ? $row["TafsiliType2"] : ""). "') "." 
+				($level == "l4" ? $row["level4"] : ""). "') "." 
 				href='javascript:void(0);'>" . $value . "</a>";
 	}
 	
@@ -123,7 +117,7 @@ function showReport(){
 				"&level1=" . $row["level1"] . 
 				"&level2=" . $row["level2"] . 
 				"&level3=" . $row["level3"] . 
-				"&TafsiliType=" . $row["TafsiliType"] . 
+				"&level4=" . $row["level4"] . 
 				"&TafsiliID=" . $row["TafsiliID"] .
 				(!empty($_REQUEST["fromDate"]) ? "&fromDate=" . $_REQUEST["fromDate"] : "") . 
 				(!empty($_REQUEST["toDate"]) ? "&toDate=" . $_REQUEST["toDate"] : "") .
@@ -141,9 +135,12 @@ function showReport(){
 				"&level1=" . $row["level1"] . 
 				"&level2=" . $row["level2"] . 
 				"&level3=" . $row["level3"] . 
+				"&level4=" . $row["level4"] . 
 				"&TafsiliID2=" . $row["TafsiliID2"] .
 				(!empty($_POST["fromDate"]) ? "&fromDate=" . $_POST["fromDate"] : "") . 
 				(!empty($_POST["toDate"]) ? "&toDate=" . $_POST["toDate"] : "") .
+				(!empty($_REQUEST["fromLocalNo"]) ? "&fromLocalNo=" . $_REQUEST["fromLocalNo"] : "") . 
+				(!empty($_REQUEST["toLocalNo"]) ? "&toLocalNo=" . $_REQUEST["toLocalNo"] : "") .
 				(!empty($_REQUEST["BranchID"]) ? "&BranchID=" . $_REQUEST["BranchID"] : "") .
 				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
 				"');\" href=javascript:void(0)>" . $value . "</a>";
@@ -185,14 +182,14 @@ function showReport(){
 				$whereParam[":l3"] = $_REQUEST["level3"];
 			}
 		}
-		if(isset($_REQUEST["tafsiligroup"]))
+		if(isset($_REQUEST["level4"]))
 		{
-			if($_REQUEST["tafsiligroup"] == "")
-				$where .= " AND di.TafsiliType is null";
+			if($_REQUEST["level4"] == "")
+				$where .= " AND cc.level4 is null";
 			else
 			{
-				$where .= " AND di.TafsiliType=:tt";
-				$whereParam[":tt"] = $_REQUEST["tafsiligroup"];
+				$where .= " AND cc.level4=:l4";
+				$whereParam[":l4"] = $_REQUEST["level4"];
 			}
 		}
 		//..............................................
@@ -273,10 +270,30 @@ function showReport(){
 		d.CycleID=" . $_SESSION["accounting"]["CycleID"] . $where;
 	$query .= $group != "" ? " group by " . $group : "";
 		
-	$query .= " order by b1.BlockCode,b2.BlockCode,b3.BlockCode";
+	$query .= " order by b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode";
 
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	
+	$redirect = "";
+	if(count($dataTable) == 1)
+	{
+		$LevelValue = "";
+		switch($level)
+		{
+			case "l2" : $LevelValue = $dataTable[0]["level2"];	break;
+			case "l3" : $LevelValue = $dataTable[0]["level3"];	break;
+			case "l4" : $LevelValue = $dataTable[0]["level4"];	break;
+		}
+		if($LevelValue == "" && $level >= "l2" && $level <= "l4")
+		{
+			$row = $dataTable[0];
+			$redirect =  "<script>changeLevel('" . $level . "','".
+			($level >= "l1" ? $row["level1"] : "") . "','" . 
+			($level >= "l2" ? $row["level2"] : "") . "','" . 
+			($level >= "l3" ? $row["level3"] : ""). "','" . 
+			($level == "l4" ? $row["level4"] : ""). "');</script>";
+		}
+	}
 	//..........................................................................
 		
 	function dateRender($row, $val){
@@ -344,10 +361,10 @@ function showReport(){
 	
 	?>
 	<script>
-		function changeLevel(curlevel,level1,level2,level3,TafsiliGroup,TafsiliID)
+		function changeLevel(curlevel,level1,level2,level3,level4,TafsiliID,TafsiliID2)
 		{
 			nextLevel = (curlevel.substring(1)*1);
-			nextLevel = (nextLevel == 4 || nextLevel == 5) ? nextLevel+2 : nextLevel+1
+			nextLevel = nextLevel+1;
 				
 			var form = document.getElementById("subForm");
 			form.action = "taraz.php?show=true&level=" + "l" + nextLevel;
@@ -359,15 +376,15 @@ function showReport(){
 			if(curlevel >= "l3")
 				form.action += "&level3=" + level3;
 			if(curlevel >= "l4")
-				form.action += "&tafsiligroup=" + TafsiliGroup;
-			if(curlevel >= "l5")
-				form.action += "&TafsiliID=" + TafsiliID;
+				form.action += "&level4=" + level4;
+			if(curlevel == "l5")
+				form.action += "&TafsiliID=" + TafsiliID + "&TafsiliID2=" + TafsiliID2;
 			
 			form.submit();
 			return;
 		}
 	</script>
-<form id="subForm" method="POST" target="_blank">
+<form id="subForm" method="POST">
 	
 	<input type="hidden" name="fromDate" value="<?= !empty($_REQUEST["fromDate"]) ? $_REQUEST["fromDate"] : "" ?>">
 	<input type="hidden" name="toDate" value="<?= !empty($_REQUEST["toDate"]) ? $_REQUEST["toDate"] : "" ?>">
@@ -381,6 +398,7 @@ function showReport(){
 	<input type="hidden" name="level3s" id="level3s" value="<?= $_POST["level3s"] ?>">
 </form>
 	<?
+	echo $redirect;
 	die();
 }
 ?>
@@ -653,8 +671,8 @@ function AccReport_taraz()
 						"<input type='radio' name='level' value='l1' checked> کل <br>" + 
 						"<input type='radio' name='level' value='l2' > معین  <br>" + 
 						"<input type='radio' name='level' value='l3' > جزء معین <br>" + 
-						"<input type='radio' name='level' value='l6' > تفصیلی  <br>" + 
-						"<input type='radio' name='level' value='l7' >&nbsp; تفصیلی2"			
+						"<input type='radio' name='level' value='l4' > جزء معین 2<br>" + 
+						"<input type='radio' name='level' value='l5' > تفصیلی " 			
 			}/*,{
 				xtype : "container",
 				html :  "نوع تراز <hr>" +
@@ -743,8 +761,7 @@ function AccReport_taraz()
 				AccReport_tarazObj.formPanel.getForm().reset();
 				AccReport_tarazObj.get("mainForm").reset();
 				AccReport_tarazObj.formPanel.down("[itemId=cmp_tafsiliID]").disable();
-				AccReport_tarazObj.formPanel.down("[itemId=cmp_tafsiliID2]").disable();
-				AccReport_tarazObj.formPanel.down('[itemId=cmp_level3]').getStore().removeAll();
+				AccReport_tarazObj.formPanel.down('[itemId=cmp_level2]').getStore().removeAll();
 				AccReport_tarazObj.formPanel.down('[itemId=cmp_level3]').getStore().removeAll();
 			}			
 		}]

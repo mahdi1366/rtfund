@@ -1129,6 +1129,8 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 							parent.down("[name=ChequeDate]").setValue();
 							parent.down("[name=ChequeNo]").setValue();
 							parent.down("[name=description]").setValue();
+							
+							parent.down("[name=ChequeDate]").focus();
 						}
 					},{
 						xtype : "button",

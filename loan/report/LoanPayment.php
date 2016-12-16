@@ -178,7 +178,7 @@ if(isset($_REQUEST["show"]))
 			<td style="font-family: nazanin; font-size: 18px; font-weight: bold;line-height: 23px;">
 				<table width="440px">
 					<tr>
-						<td>مانده قابل پرداخت : </td>
+						<td>مانده قابل پرداخت معوقه : </td>
 						<td><b><?= number_format($CurrentRemain)?> ریال
 							</b></td>
 					</tr>

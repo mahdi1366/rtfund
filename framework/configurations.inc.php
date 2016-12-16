@@ -35,7 +35,6 @@ define("OWNER_REGDATE", "1387/06/24");
 define("OWNER_ADDRESS1", "شعبه پارک علم و فناوری خراسان :  مشهد، کیلومتر 12 جاده قوچان، روبروی شیر پگاه");
 define("OWNER_ADDRESS2", "شعبه دانشگاه فردوسی مشهد : پردیس، درب غربی( ورودی شهید باهنر ) ");
 
-define("Default_Agent_Loan", "9");
 
 define("SYSTEMID_framework", 1);
 define("SYSTEMID_accounting", 2);

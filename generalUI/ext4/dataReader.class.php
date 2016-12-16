@@ -20,7 +20,7 @@ class dataReader
 		$str = $callback . '({"totalCount":"' . $countOfRows . '","' .
 				'rows":' . json_encode($dataSource);
 		
-		if($message != "")
+		if($message !== "")
 		{
 			if(is_array($message))
 				$str .= ',"message":' . json_encode ($message);

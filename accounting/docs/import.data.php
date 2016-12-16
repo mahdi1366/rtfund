@@ -24,7 +24,12 @@ function FindCostID($costCode){
 
 function FindTafsiliID($TafsiliCode, $TafsiliType){
 	
-	$dt = PdoDataAccess::runquery("select * from ACC_tafsilis "
+	if($TafsiliType == TAFTYPE_PERSONS)
+		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis "
+			. "where IsActive='YES' AND ObjectID=? AND TafsiliType=?",
+		array($TafsiliCode, $TafsiliType));
+	else
+		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis "
 			. "where IsActive='YES' AND TafsiliCode=? AND TafsiliType=?",
 		array($TafsiliCode, $TafsiliType));
 	

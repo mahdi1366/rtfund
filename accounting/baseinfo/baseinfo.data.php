@@ -22,6 +22,7 @@ function SelectBlocks() {
 			 join ACC_blocks b1 on(b1.BlockID=level1)
 			left join ACC_blocks b2 on(b2.BlockID=level2)
 			left join ACC_blocks b3 on(b3.BlockID=level3)
+			left join ACC_blocks b4 on(b4.BlockID=level4)
 		
 		where b$level.BlockID is not null AND b" . ($level*1 - 1) . ".BlockID=:b";
 		$param = array(":b" => $_REQUEST["PreLevel"]);
@@ -104,11 +105,9 @@ function SaveBlockData() {
 			left join ACC_blocks cb1 on cb1.BlockID = cc.Level1 
 			left join ACC_blocks cb2 on cb2.BlockID = cc.Level2 
 			left join ACC_blocks cb3 on cb3.BlockID = cc.Level3 
+			left join ACC_blocks cb4 on cb4.BlockID = cc.Level4 
 
-		set cc.CostCode = concat(
-		cb1.BlockCode,
-		ifnull(concat('-',cb2.BlockCode),''),
-		ifnull(concat('-',cb3.BlockCode),'') )
+		set cc.CostCode = concat_ws('-',cb1.BlockCode,cb2.BlockCode,cb3.BlockCode,cb4.BlockCode)
 
 		where level" . $block->LevelID . " = " . $block->BlockID);
     }
@@ -158,7 +157,7 @@ function SelectCostCode() {
                 $param[":f3"] = $_REQUEST['query'] . "%";
             }
         } else {
-            $where .= " AND ( concat_ws(' ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc) like :f4";
+            $where .= " AND ( concat_ws(' ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) like :f4";
             $where .= " OR CostCode like :f5 )";
             $param[":f4"] = "%" . $_REQUEST['query'] . "%";
             $param[":f5"] = $_REQUEST['query'] . "%";
@@ -229,6 +228,13 @@ function SaveCostCode() {
 	}
 	else
 		$where .= " AND level3 is null";
+	if($cc->level4*1 > 0)
+	{
+		$where .= " AND level4=?";
+		$param[] = $cc->level4;
+	}
+	else
+		$where .= " AND level4 is null";
 		
     $dt = ACC_CostCodes::SelectCost($where, $param);
 	
