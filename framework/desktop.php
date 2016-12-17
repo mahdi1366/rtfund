@@ -198,7 +198,10 @@ if ($menuStr != "") {
 			background-image:url('icons/help.png') !important;
 			background-size: 30px 30px;
 		}
-		
+		.framework-phonebook{
+			background-image:url('icons/phonebook.jpg') !important;
+			background-size: 30px 30px;
+		}
 	</style>
 	<script type="text/javascript">
 	//-----------------------------
@@ -333,7 +336,7 @@ if ($menuStr != "") {
 					tooltip : "درخواست پشتیبانی",
 					scale: 'large',
 					iconCls : "framework-comment",
-					style : "margin: 3px; height:35px",
+					style : "margin: 2px; height:35px",
 					handler : function(){
 						framework.OpenPage('../framework/ManageRequests.php','درخواست پشتیبانی');
 					}	
@@ -342,7 +345,7 @@ if ($menuStr != "") {
 					tooltip : "ماشین حساب",
 					scale: 'large',
 					iconCls : "framework-Calculator",
-					style : "margin: 3px;height:35px",
+					style : "margin: 2px;height:35px",
 					handler : function(){
 						framework.OpenClaculator();
 					}	
@@ -351,9 +354,18 @@ if ($menuStr != "") {
 					tooltip : "راهنما",
 					scale: 'large',
 					iconCls : "framework-help",
-					style : "margin: 3px;height:35px",
+					style : "margin: 2px;height:35px",
 					handler : function(){
 						framework.OpenPage('../framework/help/help.php','راهنمای سیستم');
+					}	
+				},{
+					xtype : "button",
+					tooltip : "دفترچه تلفن",
+					scale: 'large',
+					iconCls : "framework-phonebook",
+					style : "margin: 2px;height:35px",
+					handler : function(){
+						framework.OpenPage('../framework/phonebook.php','دفترچه تلفن');
 					}	
 				}]
 				
@@ -676,7 +688,6 @@ if ($menuStr != "") {
 			remove:true
 		});
 		framework = new FrameWorkClass();
-		//if(FrameWorkClass.StartPage != "" && FrameWorkClass.StartPage != undefined)
 		framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
 	}, 7);
 	

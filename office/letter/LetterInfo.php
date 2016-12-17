@@ -193,8 +193,28 @@ function LetterInfo(){
 		iconCls : "print",
 		handler : function(){ 
 			window.open( LetterInfoObject.address_prefix + 
-				"PrintLetter.php?LetterID=" + <?= $LetterID ?>); 
+				"PrintLetter.php?LetterID=" + LetterInfoObject.LetterID); 
 		}
+	},'-');
+	
+	buttons.push({
+		text : "عطف",
+		tooltip : "ایجاد نامه ای عطف به این نامه",
+		iconCls : "connect",
+		handler : function(){ 
+			framework.OpenPage(LetterInfoObject.address_prefix + 
+				"NewLetter.php", "ایجاد نامه", {
+				MenuID : LetterInfoObject.MenuID,
+				RefLetterID : LetterInfoObject.LetterID
+			});
+		}
+	},'-');
+	
+	buttons.push({
+		text : "کپی",
+		tooltip : "ایجاد کپی از نامه",
+		iconCls : "copy",
+		handler : function(){ LetterInfoObject.copyLetter();}
 	},'-');
 	
 	this.tabPanel = new Ext.TabPanel({
@@ -430,6 +450,27 @@ LetterInfo.prototype.AfterSend = function(){
 	framework.CloseTab(LetterInfoObject.TabID);
 }
 
+LetterInfo.prototype.copyLetter = function(){
+
+	Ext.Ajax.request({
+		url : this.address_prefix + "letter.data.php?task=CopyLetter",
+		method : "post",
+		params : {
+			LetterID : this.LetterID
+		},
+		success : function(response)
+		{
+			result = Ext.decode(response.responseText);
+			framework.OpenPage(LetterInfoObject.address_prefix + 
+				"NewLetter.php", "ایجاد نامه", {
+				MenuID : LetterInfoObject.MenuID,
+				LetterID : result.data
+			});
+		}
+	});
+
+	
+}
 </script>
 <style>
 	.LetterContent {

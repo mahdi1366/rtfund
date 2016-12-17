@@ -29,6 +29,7 @@ Letter.prototype = {
 
 	LetterID : '<?= $LetterID ?>',
 	LoadEditor : false,
+	RefLetterID : '<?= !empty($_REQUEST["RefLetterID"]) ? $_REQUEST["RefLetterID"] : "" ?>',
 	
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
@@ -42,6 +43,10 @@ Letter.prototype = {
 function Letter(){
 
 	this.BuildForms();
+	
+	if(this.RefLetterID != "")
+		this.letterPanel.down("[name=RefLetterID]").setValue(this.RefLetterID);
+	
 	if(this.LetterID > 0)
 	{
 		this.mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال بارگذاری...'});
@@ -473,19 +478,17 @@ Letter.prototype.BuildForms = function(){
 			}
 		}],
 		buttons :[{
+			text : "اضافه متن نامه به الگوها",
+			iconCls : "add",
+			itemId : "AddToTemplates",
+			disabled : true,
+			handler : function(){ LetterObject.AddToTemplates() }
+		},'->',{
 			text : "ذخیره",
-			disabled : this.AddAccess ? false : true,
 			iconCls : "save",
 			handler : function(){
 				LetterObject.SaveLetter(false);
 			}
-		},{
-			text : "اضافه متن نامه به الگوها",
-			iconCls : "add",
-			disabled : this.AddAccess ? false : true,
-			itemId : "AddToTemplates",
-			disabled : true,
-			handler : function(){ LetterObject.AddToTemplates() }
 		},{
 			text : "ارجاع",
 			iconCls : "sendLetter",

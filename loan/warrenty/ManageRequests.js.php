@@ -242,7 +242,7 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 				handler : function(){ return WarrentyRequestObject.EndWarrentyDoc(); }})
 			
 			op_menu.add({text: 'تمدید ضمانت نامه',iconCls: 'delay',
-				handler : function(){ return WarrentyRequestObject.EndWarrentyDoc(); }})
+				handler : function(){ return WarrentyRequestObject.BeforeExtendWarrentyDoc(); }})
 		}
 		op_menu.add({text: 'چاپ ضمانت نامه',iconCls: 'print',
 			handler : function(){ return WarrentyRequestObject.Print(); }});
@@ -292,6 +292,25 @@ WarrentyRequest.prototype.editRequest = function(){
 				WarrentyRequestObject.MainPanel.down("[name=PersonID]").setValue(this.getAt(0).data.PersonID);
 		}
 	});
+	
+	if(record.data.RequestID != record.data.RefRequestID)
+	{
+		this.MainPanel.down("[name=BranchID]").disable();
+		this.MainPanel.down("[name=PersonID]").disable();
+		this.MainPanel.down("[name=TypeID]").disable();
+		this.MainPanel.down("[name=organization]").disable();
+		this.MainPanel.down("[name=amount]").disable();
+		this.MainPanel.down("[name=IsBlock]").disable();
+	}
+	else
+	{
+		this.MainPanel.down("[name=BranchID]").enable();
+		this.MainPanel.down("[name=PersonID]").enable();
+		this.MainPanel.down("[name=TypeID]").enable();
+		this.MainPanel.down("[name=organization]").enable();
+		this.MainPanel.down("[name=amount]").enable();
+		this.MainPanel.down("[name=IsBlock]").enable();
+	}
 }
 
 WarrentyRequest.prototype.SaveRequest = function(){
@@ -502,41 +521,53 @@ WarrentyRequest.prototype.BeforeRegDoc = function(mode){
 	if(!this.BankWin)
 	{
 		this.BankWin = new Ext.window.Window({
-			width : 300,
+			width : 400,
 			height : 180,
+			bodyStyle : "background-color:white",
 			title : "نحوه پرداخت کارمزد",
 			modal : true,
 			closeAction : "hide",
 			items : [{
 				xtype : "combo",
-				width : 287,
-				store: new Ext.data.SimpleStore({
-					fields:["CostID","CostCode","CostDesc",{
-						name : "title",
-						convert : function(v,r){ return "[ " + r.data.CostCode + " ] " + r.data.CostDesc;}
+				width : 385,
+				store: new Ext.data.Store({
+					fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+						name : "fullDesc",
+						convert : function(value,record){
+							return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+						}				
 					}],
-					data : [
-						["100", "100" , "صندوق"],
-						["101", "101", "بانک"],
-						["209-10", "209-10", "حساب پس انداز"]
-					]
+					proxy: {
+						type: 'jsonp',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
 				}),
-				value : "100",
+				fieldLabel : "حساب مربوطه",
 				valueField : "CostID",
-				emptyText:'انتخاب کد حساب ...',
-				itemId : "CostCode",
-				displayField : "title",
+				itemId : "CostID",
+				displayField : "CostDesc",
 				listeners : {
 					select : function(combo,records){
-						if(records[0].data.CostID == "101")
+						me = WarrentyRequestObject;
+						if(records[0].data.TafsiliType != null)
 						{
-							this.up('window').down("[itemId=TafsiliID]").enable();
-							this.up('window').down("[itemId=TafsiliID2]").enable();
-						}	
-						else
+							me.BankWin.down("[itemId=TafsiliID]").setValue();
+							me.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
+							me.BankWin.down("[itemId=TafsiliID]").getStore().load();
+						}
+						if(records[0].data.TafsiliType2 != null)
 						{
-							this.up('window').down("[itemId=TafsiliID]").disable();
-							this.up('window').down("[itemId=TafsiliID2]").disable();
+							me.BankWin.down("[itemId=TafsiliID2]").setValue();
+							me.BankWin.down("[itemId=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType2;
+							me.BankWin.down("[itemId=TafsiliID2]").getStore().load();
+						}
+						if(this.getValue() == "<?= COSTID_Bank ?>")
+						{
+							me.BankWin.down("[itemId=TafsiliID]").setValue(
+								"<?= $_SESSION["accounting"]["DefaultBankTafsiliID"] ?>");
+							me.BankWin.down("[itemId=TafsiliID2]").setValue(
+								"<?= $_SESSION["accounting"]["DefaultAccountTafsiliID"] ?>");
 						}
 							
 					}
@@ -547,12 +578,12 @@ WarrentyRequest.prototype.BeforeRegDoc = function(mode){
 					fields:["TafsiliID","TafsiliDesc"],
 					proxy: {
 						type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=6',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					}
 				}),
-				emptyText:'انتخاب بانک ...',
-				width : 287,
+				fieldLabel : "تفصیلی",
+				width : 385,
 				typeAhead: false,
 				pageSize : 10,
 				valueField : "TafsiliID",
@@ -564,12 +595,12 @@ WarrentyRequest.prototype.BeforeRegDoc = function(mode){
 					fields:["TafsiliID","TafsiliDesc"],
 					proxy: {
 						type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=3',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					}
 				}),
-				emptyText:'انتخاب حساب ...',
-				width : 287,
+				fieldLabel : "تفصیلی2",
+				width : 385,
 				typeAhead: false,
 				pageSize : 10,
 				valueField : "TafsiliID",
@@ -599,7 +630,7 @@ WarrentyRequest.prototype.BeforeRegDoc = function(mode){
 					'</tpl>',
 					'</table>'),
 				emptyText:'حساب مورد نظر جهت بلوکه ...',
-				width : 287,
+				width : 385,
 				typeAhead: false,
 				pageSize : 10,
 				valueField : "CostID",
@@ -648,9 +679,9 @@ WarrentyRequest.prototype.RegWarrentyDoc = function(task){
 		params: {
 			task: task,
 			RequestID : record.data.RequestID,
-			CostCode : this.BankWin.down("[itemId=CostCode]").getValue(),
-			BankTafsili : this.BankWin.down("[itemId=TafsiliID]").getValue(),
-			AccountTafsili : this.BankWin.down("[itemId=TafsiliID2]").getValue(),
+			CostID : this.BankWin.down("[itemId=CostID]").getValue(),
+			TafsiliID : this.BankWin.down("[itemId=TafsiliID]").getValue(),
+			TafsiliID2 : this.BankWin.down("[itemId=TafsiliID2]").getValue(),
 			Block_CostID : this.BankWin.down("[itemId=Block_CostID]").getValue()
 		},
 		success: function(response){
@@ -740,6 +771,75 @@ WarrentyRequest.prototype.EndWarrentyDoc = function(){
 			}
 		});
 	});
+}
+
+WarrentyRequest.prototype.BeforeExtendWarrentyDoc = function(){
+
+	if(!this.ExtendWin)
+	{
+		this.ExtendWin = new Ext.window.Window({
+			width : 300,
+			height : 200,
+			items : new Ext.form.Panel({
+				width : 290,
+				items : [{
+					xtype : "shdatefield",
+					name : "EndDate",
+					allowBlank : false,
+					fieldLabel : "تاریخ پایان"
+				},{
+					xtype : "numberfield",
+					allowBlank : false,
+					fieldLabel : "کارمزد",
+					name : "wage",
+					width : 150,
+					afterSubTpl : "%",
+					hideTrigger : true
+				},{
+					xtype : "currencyfield",
+					name : "RegisterAmount",
+					hideTrigger : true,
+					fieldLabel : "کارمزد صدور"
+				}],
+				buttons :[{
+					text : "تمدید",
+					iconCls : "delay",
+					handler : function(){WarrentyRequestObject.ExtendWarrentyDoc();}
+				},{
+					text : "انصراف",
+					iconCls : "undo",
+					handler : function(){ this.up('window').hide(); }
+				}]
+			})
+		});
+	}
+	this.ExtendWin.show();
+	this.ExtendWin.center();
+}
+
+WarrentyRequest.prototype.ExtendWarrentyDoc = function(){
+
+	var record = this.grid.getSelectionModel().getLastSelected();
+
+	mask = new Ext.LoadMask(this.ExtendWin, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	this.ExtendWin.down('form').getForm().submit({
+		
+		url: this.address_prefix +'request.data.php',
+		method: "POST",
+		params: {
+			task: "ExtendWarrenty",
+			RequestID : record.data.RequestID
+		},
+		success: function(){
+
+			mask.hide();
+			WarrentyRequestObject.ExtendWin.hide();
+			WarrentyRequestObject.grid.getStore().load();
+		}
+	});
+
 }
 
 WarrentyRequest.prototype.Print = function(){

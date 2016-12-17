@@ -32,6 +32,9 @@ function SaveWarrentyRequest(){
 		$result = $obj->Add();
 		if($result)
 			WAR_requests::ChangeStatus($obj->RequestID, $obj->StatusID, "", true);
+		
+		$obj->RefRequestID = $obj->RequestID;
+		$result = $obj->Edit();
 	}
 	else
 	{
@@ -113,7 +116,7 @@ function RegWarrentyDoc(){
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	$DocID = RegisterWarrantyDoc($ReqObj, $_POST["CostCode"],
+	$DocID = RegisterWarrantyDoc($ReqObj, $_POST["CostID"],
 		$_POST["BankTafsili"],$_POST["AccountTafsili"],$_POST["Block_CostID"], null, $pdo);
 	if(!$DocID)
 	{
@@ -163,6 +166,7 @@ function ReturnWarrentyDoc(){
 	$result = ReturnWarrantyDoc($ReqObj, $pdo);
 	if($result)
 		$pdo->commit();
+	
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
@@ -196,6 +200,22 @@ function EndWarrentyDoc(){
 	die();
 }
 
+function ExtendWarrenty(){
+	
+	$baseObj = new WAR_requests($_POST["RequestID"]);
+			
+	$obj = new WAR_requests();
+	PdoDataAccess::FillObjectByObject($baseObj, $obj);
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	unset($obj->RequestID);
+	$obj->RefRequestID = $baseObj->RefRequestID;
+	$obj->StartDate = $baseObj->EndDate;
+	$obj->StatusID = WAR_STEPID_RAW;	
+	$result = $obj->Add();
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse($result, "");
+	die();	
+}
 //------------------------------------------------
 
 function GetRequestPeriods(){

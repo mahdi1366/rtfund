@@ -27,23 +27,19 @@ $dg->addColumn("", "DocStatus", "", true);
 $dg->addColumn("", "IsBlock", "", true);
 $dg->addColumn("", "BranchID", "", true);
 $dg->addColumn("", "BranchName", "", true);
-$dg->addColumn("", "RegisterAmount", "", true);
+$dg->addColumn("", "RefRequestID", "", true);
+$dg->addColumn("", "RequestID", "", true);
+$dg->addColumn("", "fullname", "", true);
 
 $col = $dg->addColumn("نوع", "TypeDesc");
 $col->renderer = "function(v,p,r){p.tdAttr = \"data-qtip='\"+r.data.BranchName+\"'\"; return v;}";
 $col->width = 80;
-
-$col = $dg->addColumn("ضمانت خواه", "fullname");
-
-$col = $dg->addColumn("شماره", "RequestID", "");
-$col->width = 50;
 
 $col = $dg->addColumn("مبلغ درخواست", "amount", GridColumn::ColumnType_money);
 $col->width = 100;
 
 $col = $dg->addColumn("سازمان مربوطه", "organization");
 $col->renderer = "WarrentyRequest.OrgRender";
-$col->width = 120;
 
 $col = $dg->addColumn("تاریخ شروع", "StartDate", GridColumn::ColumnType_date);
 $col->width = 70;
@@ -52,6 +48,15 @@ $col = $dg->addColumn("تاریخ پایان", "EndDate", GridColumn::ColumnType
 $col->width = 70;
 
 $col = $dg->addColumn("کارمزد", "wage");
+$col->width = 40;
+$col->align = "center";
+
+$col = $dg->addColumn("کارمزد صدور", "RegisterAmount", GridColumn::ColumnType_money);
+$col->width = 80;
+$col->align = "center";
+
+$col = $dg->addColumn("بلوکه", "IsBlock");
+$col->renderer = "function(v){return (v == 'YES') ? '√' : '';}";
 $col->width = 40;
 $col->align = "center";
 
@@ -71,13 +76,18 @@ $dg->addObject("WarrentyRequestObject.FilterObj");
 if($accessObj->AddFlag)
 	$dg->addButton("", "ایجاد ضمانتنامه جدید", "add", "function(){WarrentyRequestObject.AddNew();}");
 
+$dg->EnableGrouping = true;
+$dg->DefaultGroupField = "RefRequestID";
+$dg->groupHeaderTpl = "ضمانتنامه شماره [ {[values.rows[0].data.RequestID]} ] به نام ".
+		"[ {[values.rows[0].data.fullname]} ]";
+
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 500;
 $dg->pageSize = 15;
-$dg->width = 800;
+$dg->width = 850;
 $dg->title = "ضمانت نامه ها";
-$dg->DefaultSortField = "RequestID";
-$dg->autoExpandColumn = "fullname";
+$dg->DefaultSortField = "RefRequestID";
+$dg->autoExpandColumn = "organization";
 $grid = $dg->makeGrid_returnObjects();
 ?>
 <script>

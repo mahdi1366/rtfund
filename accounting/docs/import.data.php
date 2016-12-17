@@ -639,7 +639,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	//------------- get CostCodes --------------------
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
-	$CostCode_varizi = FindCostID("721-".$LoanObj->_BlockCode."-52");
+	$CostCode_varizi = FindCostID("721-".$LoanObj->_BlockCode."-52-03");
 	$CostCode_pardakhti = FindCostID("721-".$LoanObj->_BlockCode."-51");
 	$CostCode_bank = FindCostID("101");
 	$CostCode_todiee = FindCostID("200-".$LoanObj->_BlockCode."-01");
@@ -1868,14 +1868,8 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_bank = FindCostID("101");
-	$CostCode_centerAccount = FindCostID("499");
-	$CostCode_varizi = FindCostID("721-".$LoanObj->_BlockCode."-52");
+	$CostCode_varizi = FindCostID("721-".$LoanObj->_BlockCode."-52-01");
 	$CostCode_pardakhti = FindCostID("721-".$LoanObj->_BlockCode."-51");
-	
-	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
-	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
-	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
-	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
 	//---------------- add doc header --------------------
 	if($DocObj == null)
 	{
@@ -2790,23 +2784,21 @@ function ComputeShareProfit(){
 
 //---------------------------------------------------------------
 
-function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$Block_CostID, $DocID, $pdo){
+function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_CostID, $DocID, $pdo){
 	
 	/*@var $ReqObj WAR_requests */
+	$IsExtend = !empty($ReqObj->RefRequestID) ? true : false;
 	
 	//------------- get CostCodes --------------------
 	$CostCode_warrenty = FindCostID("300");
 	$CostCode_warrenty_commitment = FindCostID("700");
 	$CostCode_wage = FindCostID("750-07");
 	$CostCode_FutureWage = FindCostID("760-07");
-	$CostCode_fund = FindCostID("100");
 	$CostCode_seporde = FindCostID("690");
 	$CostCode_pasandaz = FindCostID("209-10");
 	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
-	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
-	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
 	//------------------------------------------------
 	$CycleID = substr(DateModules::miladi_to_shamsi($ReqObj->StartDate), 0 , 4);
 	//------------------ find tafsilis ---------------
@@ -2827,7 +2819,6 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 		DateModules::miladi_to_shamsi($ReqObj->EndDate), $TotalWage);
 	
 	//--------------- check pasandaz remaindar -----------------
-	
 	$dt = PdoDataAccess::runquery("select sum(CreditorAmount-DebtorAmount) remain
 		from ACC_DocItems join ACC_docs using(DocID) where CycleID=? AND CostID=?
 			AND TafsiliType=? AND TafsiliID=? AND BranchID=?", array(
@@ -2837,17 +2828,18 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 				$PersonTafsili,
 				$ReqObj->BranchID
 			));
-	if($WageCost == "209-10" && $dt[0][0]*1 < $ReqObj->amount*0.1)
+	if(!$IsExtend && $WageCost == $CostCode_pasandaz && $dt[0][0]*1 < $ReqObj->amount*0.1)
 	{
 		ExceptionHandler::PushException("مانده حساب پس انداز مشتری کمتر از 10% مبلغ ضمانت نامه می باشد");
 		return false;
 	}
-	if($WageCost == "209-10" && $dt[0][0]*1 < ($ReqObj->amount*0.1 + $TotalWage))
+	$totalAmount = $IsExtend ? $TotalWage : ($ReqObj->amount*0.1 + $TotalWage);
+	if($WageCost == $CostCode_pasandaz && $dt[0][0]*1 < $totalAmount)
 	{
 		ExceptionHandler::PushException("مانده حساب پس انداز مشتری کمتر از مبلغ کارمزد می باشد");
 		return false;
 	}
-	if($ReqObj->IsBlock == "YES")
+	if(!$IsExtend && $ReqObj->IsBlock == "YES")
 	{
 		if($Block_CostID != "" && $Block_CostID != $CostCode_pasandaz)
 		{
@@ -2862,7 +2854,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 				));
 		}
 		$amount = $ReqObj->amount*1;
-		if($WageCost == "209-10")
+		if($WageCost == $CostCode_pasandaz)
 			$amount += $ReqObj->amount*0.1 + $TotalWage;
 		
 		if($dt[0][0]*1 < $amount)
@@ -2870,8 +2862,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 			ExceptionHandler::PushException("مانده حساب انتخابی جهت بلوکه کمتر از مبلغ ضمانت نامه می باشد");
 			return false;
 		}
-	}
-	
+	}	
 	//---------------- add doc header --------------------
 	if($DocID == null)
 	{
@@ -2881,8 +2872,9 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 		$DocObj->DocDate = PDONOW;
 		$DocObj->CycleID = $CycleID;
 		$DocObj->BranchID = $ReqObj->BranchID;
-		$DocObj->DocType = DOCTYPE_WARRENTY;
-		$DocObj->description = "ضمانت نامه " . $ReqObj->_TypeDesc . " به شماره " . 
+		$DocObj->DocType = $IsExtend ? DOCTYPE_WARRENTY_EXTEND : DOCTYPE_WARRENTY;
+		$DocObj->description = ($IsExtend ? "تمدید " : "") . 
+				"ضمانت نامه " . $ReqObj->_TypeDesc . " به شماره " . 
 				$ReqObj->RequestID . " به نام " . $ReqObj->_fullname;
 
 		if(!$DocObj->Add($pdo))
@@ -2899,27 +2891,30 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $PersonTafsili;
 	$itemObj->SourceType = DOCTYPE_WARRENTY;
-	$itemObj->SourceID = $ReqObj->RequestID;
-	$itemObj->SourceID2 = $ReqObj->ReqVersion;
+	$itemObj->SourceID = $IsExtend ? $ReqObj->RefRequestID : $ReqObj->RequestID;
+	$itemObj->SourceID2 = $ReqObj->RequestID;
 	$itemObj->locked = "YES";
 	
-	$itemObj->CostID = $CostCode_warrenty;
-	$itemObj->DebtorAmount = $ReqObj->amount;
-	$itemObj->CreditorAmount = 0;
-	if(!$itemObj->Add($pdo))
+	if(!$IsExtend)
 	{
-		ExceptionHandler::PushException("خطا در ثبت ردیف ضمانت نامه");
-		return false;
-	}
-	
-	unset($itemObj->ItemID);
-	$itemObj->CostID = $CostCode_warrenty_commitment;
-	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = $ReqObj->amount;
-	if(!$itemObj->Add($pdo))
-	{
-		ExceptionHandler::PushException("خطا در ثبت ردیف تعهد ضمانت نامه");
-		return false;
+		$itemObj->CostID = $CostCode_warrenty;
+		$itemObj->DebtorAmount = $ReqObj->amount;
+		$itemObj->CreditorAmount = 0;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ثبت ردیف ضمانت نامه");
+			return false;
+		}
+
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_warrenty_commitment;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $ReqObj->amount;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ثبت ردیف تعهد ضمانت نامه");
+			return false;
+		}
 	}
 	//------------------- compute wage -----------------------
 	$curYear = substr(DateModules::miladi_to_shamsi($ReqObj->StartDate), 0, 4)*1;
@@ -2944,7 +2939,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 	}
 	
 	//---------------------------- block Cost ----------------------------
-	if($ReqObj->IsBlock == "YES")
+	if(!$IsExtend && $ReqObj->IsBlock == "YES")
 	{
 		$blockObj = new ACC_CostBlocks();
 		$blockObj->CostID = !empty($Block_CostID) ? $Block_CostID : $CostCode_pasandaz;
@@ -2978,72 +2973,74 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $BankTafsili, $AccountTafsili,$
 		$itemObj->Add($pdo);
 	}
 	// ----------------------------- bank --------------------------------
-	unset($itemObj->ItemID);
-	unset($itemObj->TafsiliType);
-	unset($itemObj->TafsiliID);
-	$itemObj->details = "بابت 10% سپرده ضمانت نامه شماره " . $ReqObj->RequestID;
-	$itemObj->CostID = $CostCode_seporde;
-	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = $ReqObj->amount*0.1;
-	$itemObj->Add($pdo);
-		
-	unset($itemObj->ItemID);
-	$itemObj->details = "بابت کارمزد ضمانت نامه شماره " . $ReqObj->RequestID;
-	$itemObj->CostID = FindCostID($WageCost);
-	$itemObj->DebtorAmount = $TotalWage + $ReqObj->amount*0.1 - $totalCostAmount;
-	$itemObj->CreditorAmount = 0;
-	
-	if($WageCost == "101")
-	{
-		$itemObj->TafsiliType = TAFTYPE_BANKS;
-		if($BankTafsili != "")
-			$itemObj->TafsiliID = $BankTafsili;
-		$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-		if($AccountTafsili != "")
-			$itemObj->TafsiliID2 = $AccountTafsili;
-	}
-	$itemObj->Add($pdo);
-	
-	//---------- ردیف های تضمین  ----------
-
-	$SumAmount = 0;
-	$countAmount = 0;	
-	$dt = PdoDataAccess::runquery("
-		SELECT DocumentID, ParamValue, InfoDesc as DocTypeDesc
-			FROM DMS_DocParamValues
-			join DMS_DocParams using(ParamID)
-			join DMS_documents d using(DocumentID)
-			join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
-			left join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
-		where ItemID is null AND b.param1=1 AND 
-			paramType='currencyfield' AND ObjectType='warrenty' AND ObjectID=?",array($ReqObj->RequestID), $pdo);
-
-	foreach($dt as $row)
-	{
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeAmount_zemanati;
-		$itemObj->DebtorAmount = $row["ParamValue"];
-		$itemObj->CreditorAmount = 0;
-		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $PersonTafsili;
-		$itemObj->SourceType = DOCTYPE_DOCUMENT;
-		$itemObj->SourceID = $row["DocumentID"];
-		$itemObj->details = $row["DocTypeDesc"];
-		$itemObj->Add($pdo);
-
-		$SumAmount += $row["ParamValue"]*1;
-		$countAmount++;
-	}
-	if($SumAmount > 0)
+	if(!$IsExtend)
 	{
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliID);
-		unset($itemObj->details);
-		$itemObj->CostID = $CostCode_guaranteeAmount2_zemanati;
+		$itemObj->details = "بابت 10% سپرده ضمانت نامه شماره " . $ReqObj->RequestID;
+		$itemObj->CostID = $CostCode_seporde;
 		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $SumAmount;	
+		$itemObj->CreditorAmount = $ReqObj->amount*0.1;
 		$itemObj->Add($pdo);
+	}
+	
+	unset($itemObj->ItemID);
+	$CostObj = new ACC_CostCodes($WageCost);
+	$itemObj->details = "بابت کارمزد ضمانت نامه شماره " . $ReqObj->RequestID;
+	$itemObj->CostID = $WageCost;
+	$itemObj->DebtorAmount = $TotalWage + (!$IsExtend ? $ReqObj->amount*0.1 : 0) - $totalCostAmount;
+	$itemObj->CreditorAmount = 0;
+	$itemObj->TafsiliType = $CostObj->TafsiliType;
+	if($TafsiliID != "")
+		$itemObj->TafsiliID = $TafsiliID;
+	$itemObj->TafsiliType2 = $CostObj->TafsiliType2;
+	if($TafsiliID2 != "")
+		$itemObj->TafsiliID2 = $TafsiliID2;
+	$itemObj->Add($pdo);
+	
+	//---------- ردیف های تضمین  ----------
+	if(!$IsExtend)
+	{
+		$SumAmount = 0;
+		$countAmount = 0;	
+		$dt = PdoDataAccess::runquery("
+			SELECT DocumentID, ParamValue, InfoDesc as DocTypeDesc
+				FROM DMS_DocParamValues
+				join DMS_DocParams using(ParamID)
+				join DMS_documents d using(DocumentID)
+				join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
+				left join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
+			where ItemID is null AND b.param1=1 AND 
+				paramType='currencyfield' AND ObjectType='warrenty' AND ObjectID=?",array($ReqObj->RequestID), $pdo);
+
+		foreach($dt as $row)
+		{
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_guaranteeAmount_zemanati;
+			$itemObj->DebtorAmount = $row["ParamValue"];
+			$itemObj->CreditorAmount = 0;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $PersonTafsili;
+			$itemObj->SourceType = DOCTYPE_DOCUMENT;
+			$itemObj->SourceID = $row["DocumentID"];
+			$itemObj->details = $row["DocTypeDesc"];
+			$itemObj->Add($pdo);
+
+			$SumAmount += $row["ParamValue"]*1;
+			$countAmount++;
+		}
+		if($SumAmount > 0)
+		{
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliID);
+			unset($itemObj->details);
+			$itemObj->CostID = $CostCode_guaranteeAmount2_zemanati;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $SumAmount;	
+			$itemObj->Add($pdo);
+		}
 	}
 	
 	if(ExceptionHandler::GetExceptionCount() > 0)
@@ -3057,8 +3054,8 @@ function ReturnWarrantyDoc($ReqObj, $pdo, $EditMode = false){
 	/*@var $PayObj WAR_requests */
 	
 	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
-		where SourceType=" . DOCTYPE_WARRENTY . " AND SourceID=? AND SourceID2=?",
-		array($ReqObj->RequestID, $ReqObj->ReqVersion), $pdo);
+		where SourceType=" . DOCTYPE_WARRENTY . " AND SourceID2=?",
+		array($ReqObj->RequestID), $pdo);
 	if(count($dt) == 0)
 		return true;
 	
@@ -3069,8 +3066,9 @@ function ReturnWarrantyDoc($ReqObj, $pdo, $EditMode = false){
 	if($EditMode)
 	{
 		PdoDataAccess::runquery("delete from ACC_DocItems 
-			where SourceType=" . DOCTYPE_WARRENTY . " AND SourceID=? AND SourceID2=?",
-			array($ReqObj->RequestID, $ReqObj->ReqVersion), $pdo);
+			where SourceType=" . DOCTYPE_WARRENTY . " AND SourceID2=?",
+			array($ReqObj->RequestID), $pdo);
+		
 		return true;
 	}
 	
@@ -3080,20 +3078,14 @@ function ReturnWarrantyDoc($ReqObj, $pdo, $EditMode = false){
 function EndWarrantyDoc($ReqObj, $pdo){
 	
 	/*@var $ReqObj WAR_requests */
+	$IsExtend = !empty($ReqObj->RefRequestID) ? true : false;
 	
 	//------------- get CostCodes --------------------
 	$CostCode_warrenty = FindCostID("300");
 	$CostCode_warrenty_commitment = FindCostID("700");
-	$CostCode_wage = FindCostID("750-07");
-	$CostCode_FutureWage = FindCostID("760-07");
-	$CostCode_fund = FindCostID("100");
-	$CostCode_seporde = FindCostID("690");
-	$CostCode_pasandaz = FindCostID("209-10");
 	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
-	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
-	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
 	//------------------------------------------------
 	$CycleID = substr(DateModules::miladi_to_shamsi($ReqObj->StartDate), 0 , 4);
 	//------------------ find tafsilis ---------------
@@ -3125,8 +3117,7 @@ function EndWarrantyDoc($ReqObj, $pdo){
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $PersonTafsili;
 	$itemObj->SourceType = DOCTYPE_WARRENTY_END;
-	$itemObj->SourceID = $ReqObj->RequestID;
-	$itemObj->SourceID2 = $ReqObj->ReqVersion;
+	$itemObj->SourceID = $IsExtend ? $ReqObj->RefRequestID : $ReqObj->RequestID;
 	$itemObj->locked = "YES";
 	
 	$itemObj->CostID = $CostCode_warrenty;

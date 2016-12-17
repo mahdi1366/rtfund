@@ -145,6 +145,49 @@ function SelectSendedLetters(){
 	die();
 }
 
+function SelectTodayResponseLetters(){
+	
+	$query = "select s.*,l.*, 
+			concat_ws(' ',fname, lname,CompanyName) FromPersonName			
+
+		from OFC_send s
+			join OFC_letters l using(LetterID)
+			join BSC_persons p on(s.FromPersonID=p.PersonID)		
+		where s.ToPersonID=? AND ResponseTimeout=" . PDONOW . "
+		group by SendID";
+	$param = array( $_SESSION["USER"]["PersonID"]);
+
+	$query .= dataReader::makeOrder();
+	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
+	
+	$cnt = $dt->rowCount();
+	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+	
+	echo dataReader::getJsonData($dt, $cnt, $_GET["callback"]);
+	die();
+}
+
+function SelectTodayFollowUpLetters(){
+	
+	$query = "select s.*,l.*, 
+			concat_ws(' ',fname, lname,CompanyName) ToPersonName			
+
+		from OFC_send s
+			join OFC_letters l using(LetterID)
+			join BSC_persons p on(s.ToPersonID=p.PersonID)		
+		where s.FromPersonID=? AND FollowUpDate=" . PDONOW . "
+		group by SendID";
+	$param = array( $_SESSION["USER"]["PersonID"]);
+
+	$query .= dataReader::makeOrder();
+	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
+	$cnt = $dt->rowCount();
+	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+	
+	echo dataReader::getJsonData($dt, $cnt, $_GET["callback"]);
+	die();
+}
+
 function SelectArchiveLetters(){
 	
 	$FolderID = isset($_REQUEST["FolderID"]) ? $_REQUEST["FolderID"] : "";
@@ -330,6 +373,22 @@ function SignLetter(){
 	die();
 }
 
+function CopyLetter(){
+	
+	$baseObj = new OFC_letters($_POST["LetterID"]);
+	$obj = new OFC_letters();
+	PdoDataAccess::FillObjectByObject($baseObj, $obj);
+	$obj->PersonID = $_SESSION["USER"]["PersonID"];
+	$obj->LetterDate = PDONOW;
+	$obj->RegDate = PDONOW;
+	unset($obj->LetterID);
+	unset($obj->IsSigned);
+	unset($obj->RefLetterID);
+	$result = $obj->AddLetter();
+	
+	echo Response::createObjectiveResponse($result, $obj->LetterID);
+	die();
+}
 //.............................................
 
 function SendLetter(){

@@ -1172,9 +1172,6 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 
 IncomeCheque.prototype.SaveLoanCheque = function(){
 		
-	mask = new Ext.LoadMask(this.LoanChequeWin, {msg:'در حال ذخيره سازي...'});
-	mask.show();
-
 	var store_data = new Array();
 	this.GroupCheques.each(function(record){
 		store_data.push(JSON.stringify({
@@ -1186,7 +1183,15 @@ IncomeCheque.prototype.SaveLoanCheque = function(){
 			description : record.data.description
 		}));
 	});
-
+	if(store_data.length == 0)
+	{
+		Ext.MessageBox.alert("Error","هیچ چکی به لیست اضافه نشده است");
+		return;
+	}
+	
+	mask = new Ext.LoadMask(this.LoanChequeWin, {msg:'در حال ذخيره سازي...'});
+	mask.show();
+	
 	this.LoanChequeWin.down('form').getForm().submit({
 		clientValidation: true,
 		url: this.address_prefix + 'cheques.data.php?task=SaveLoanCheque',

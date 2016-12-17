@@ -36,17 +36,12 @@ function SendSms($textMessage, $toNumber){
 		$status = $client->SendSms($sendsms_parameters)->SendSmsResult;
 		echo "Status: ".$status."<br />";
 
-		$getnewmessage_parameters = array(
-			"username"=>$user,
-			"password"=>$pass,
-			"from"=>"50001333837392"
-		);
 		$incomingMessagesClient = new SoapClient(sms_config::$receive_server);
-		$res = $incomingMessagesClient->GetNewMessagesList($getnewmessage_parameters);
+		$res = $incomingMessagesClient->GetNewMessagesList($sendsms_parameters);
 print_r($res);
 		echo "<table border=1>";
 		echo "<th>MsgID</th><th>MsgType</th><th>Body</th><th>SendDate</th><th>Sender</th><th>Receiver</th><th>Parts</th><th>IsRead</th>";
-		foreach($res->GetNewMessagesAResult->Message as $row){
+		$row = $res->GetNewMessagesListResult->Message;
 			echo "<tr>"
 				."<td>".$row->MsgID."</td>"
 				."<td>".$row->MsgType."</td>"
@@ -57,7 +52,6 @@ print_r($res);
 				."<td>".$row->Parts."</td>"
 				."<td>".$row->IsRead."</td>"
 				."</tr>";
-		}
 		echo "</table>";
 
 	} catch (SoapFault $ex) {

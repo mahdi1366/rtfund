@@ -53,6 +53,7 @@ if($mode == "receive")
 	$col = $dg->addColumn("فرستنده", "FromPersonName", "");
 else
 	$col = $dg->addColumn("گیرنده", "ToPersonName", "");
+$col->renderer = "function(v,p,r){ p.tdAttr = 'data-qtip=\"' + r.data.SendComment + '\"'; return v;}";
 $col->width = 150;
 
 $col = $dg->addColumn("عملیات", "");

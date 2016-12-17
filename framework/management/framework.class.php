@@ -316,7 +316,20 @@ class FRW_tasks extends PdoDataAccess {
 		$daObj->execute();
 		return true;
 	}
+}
 
+class FRW_phonebook extends OperationClass {
+	
+	const TableName = "FRW_phonebook";
+	const TableKey = "RowID"; 
+
+	public $RowID;
+	public $PersonID;
+	public $fullname;
+	public $phone;
+	public $mobile;
+	public $address;
+	public $details;
 
 }
 

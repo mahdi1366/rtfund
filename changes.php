@@ -2,7 +2,7 @@
 require_once "framework/header.inc.php";
 
 require_once("sms.php");
-SendSms("سلام تست وب سرویس", "9155089018");
+SendSms("0سلام تست وب سرویس", "9155089018");
 die();
 
 

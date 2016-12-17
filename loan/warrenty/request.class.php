@@ -23,7 +23,7 @@ class WAR_requests extends OperationClass
 	public $LetterNo;
 	public $LetterDate;
 	public $StatusID;
-	public $ReqVersion;
+	public $RefRequestID;
 	public $IsBlock;
 	public $BranchID;
 	public $RegisterAmount;
@@ -58,7 +58,7 @@ class WAR_requests extends OperationClass
 				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
 				join WFM_FlowSteps sp on(sp.FlowID=" . FLOWID . " AND sp.StepID=r.StatusID)
 				left join ACC_DocItems on(SourceType='" . DOCTYPE_WARRENTY . "' 
-					AND SourceID=r.RequestID AND SourceID2=r.ReqVersion)	
+					AND r.RequestID=SourceID2)
 				left join ACC_docs d using(DocID)
 			where " . $where . 
 			" group by r.RequestID" . $order, $param);
@@ -82,7 +82,7 @@ class WAR_requests extends OperationClass
 		
 		$dt = PdoDataAccess::runquery("
 			select DocID from ACC_DocItems where SourceType=" . DOCTYPE_WARRENTY . " 
-			AND SourceID=? AND SourceID2=?" , array($this->RequestID, $this->ReqVersion), $pdo);
+			AND SourceID2=?" , array($this->RequestID), $pdo);
 		if(count($dt) == 0)
 			return 0;
 		return $dt[0][0];

@@ -376,10 +376,7 @@ LoanPay.prototype.BeforeRegisterDoc = function(mode){
 				},{
 					xtype : "combo",
 					store: new Ext.data.Store({
-						fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
-							name : "title",
-							convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
-						}],
+						fields:["TafsiliID","TafsiliCode","TafsiliDesc"],
 						proxy: {
 							type: 'jsonp',
 							url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis',
@@ -393,14 +390,11 @@ LoanPay.prototype.BeforeRegisterDoc = function(mode){
 					valueField : "TafsiliID",
 					itemId : "TafsiliID",
 					name : "TafsiliID",
-					displayField : "title"
+					displayField : "TafsiliDesc"
 				},{
 					xtype : "combo",
 					store: new Ext.data.Store({
-						fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
-							name : "title",
-							convert : function(v,r){ return "[ " + r.data.TafsiliCode + " ] " + r.data.TafsiliDesc;}
-						}],
+						fields:["TafsiliID","TafsiliCode","TafsiliDesc"],
 						proxy: {
 							type: 'jsonp',
 							url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis',
@@ -414,7 +408,7 @@ LoanPay.prototype.BeforeRegisterDoc = function(mode){
 					valueField : "TafsiliID",
 					itemId : "TafsiliID2",
 					name : "TafsiliID2",
-					displayField : "title"
+					displayField : "TafsiliDesc"
 				},{
 					xtype : "fieldset",
 					width : 365,

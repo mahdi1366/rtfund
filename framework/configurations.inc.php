@@ -32,8 +32,9 @@ define("SoftwareName", "صندوق غیر دولتی پژوهش و فناوری 
 define("OWNER_NATIONALID", "10380491265");
 define("OWNER_REGCODE", "33943");
 define("OWNER_REGDATE", "1387/06/24");
-define("OWNER_ADDRESS1", "شعبه پارک علم و فناوری خراسان :  مشهد، کیلومتر 12 جاده قوچان، روبروی شیر پگاه");
-define("OWNER_ADDRESS2", "شعبه دانشگاه فردوسی مشهد : پردیس، درب غربی( ورودی شهید باهنر ) ");
+define("OWNER_ADDRESS", "شعبه دانشگاه فردوسی مشهد : پردیس، درب غربی( ورودی شهید باهنر ) <br>" . 
+	"email : krfn.ir@gmail.com <br> تلفن : 38837392 - فکس : 38837392 ".
+	"<br> کد پستی : 9177948974" );
 
 
 define("SYSTEMID_framework", 1);
