@@ -639,11 +639,11 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	//------------- get CostCodes --------------------
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
-	$CostCode_varizi = FindCostID("721-".$LoanObj->_BlockCode."-52-03");
+	$CostCode_varizi = FindCostID("721-".$LoanObj->_BlockCode."-52-02");
 	$CostCode_pardakhti = FindCostID("721-".$LoanObj->_BlockCode."-51");
 	$CostCode_bank = FindCostID("101");
 	$CostCode_todiee = FindCostID("200-".$LoanObj->_BlockCode."-01");
-	$CostCode_agent_wage = FindCostID("200-02");
+	$CostCode_agent_wage = FindCostID("721-".$LoanObj->_BlockCode."52-03");
 	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");

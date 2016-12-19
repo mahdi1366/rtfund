@@ -26,7 +26,7 @@ switch ($task) {
 
 function SelectAll(){
 	
-	$where = " AND PersonID=?";
+	$where = " AND (PersonID=? OR IsPublic='YES')";
 	$param = array($_SESSION["USER"]["PersonID"]);
 	
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
@@ -46,6 +46,7 @@ function Save(){
 	
 	$obj = new FRW_phonebook();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	$obj->IsPublic = $obj->IsPublic == "" ? "NO" : $obj->IsPublic;
 	
 	if($obj->RowID != "")
 		$result = $obj->Edit();
@@ -54,7 +55,7 @@ function Save(){
 		$obj->PersonID = $_SESSION["USER"]["PersonID"];
 		$result = $obj->Add();
 	}
-	
+	//print_r(ExceptionHandler::PopAllExceptions());
 	Response::createObjectiveResponse($result, "");
 	die();
 }
@@ -71,25 +72,40 @@ function remove(){
 $dgh = new sadaf_datagrid("dg",$js_prefix_address . "phonebook.php?task=SelectAll","div_dg");
 
 $dgh->addColumn("", "RowID","",true);
+$dgh->addColumn("", "PersonID","",true);
 
 $col = $dgh->addColumn("نام", "fullname");
 $col->editor = ColumnEditor::TextField();
-$col->width = 200;
+$col->width = 150;
 
 $col = $dgh->addColumn("تلفن", "phone");
 $col->editor = ColumnEditor::NumberField(true);
-$col->width = 110;
+$col->width = 80;
 
 $col = $dgh->addColumn("موبایل", "mobile");
 $col->editor = ColumnEditor::NumberField(true);
-$col->width = 110;
+$col->width = 80;
+
+$col = $dgh->addColumn("ایمیل", "email");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 150;
+
+$col = $dgh->addColumn("حوزه فعالیت", "ActInfo");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 120;
 
 $col = $dgh->addColumn("آدرس", "address");
 $col->editor = ColumnEditor::TextField(true);
 
 $col = $dgh->addColumn("توضیحات", "details");
 $col->editor = ColumnEditor::TextField(true);
-$col->width = 200;
+$col->width = 110;
+
+$col = $dgh->addColumn("عمومی", "IsPublic");
+$col->align = "center";
+$col->renderer = "function(v){ return v == 'YES' ? '*' : ''; }";
+$col->editor = ColumnEditor::CheckField("", "YES");
+$col->width = 40;
 
 $col = $dgh->addColumn("حذف", "");
 $col->renderer = "function(v,p,r){ return phonebookObj.DeleteRender(v,p,r);}";
@@ -115,6 +131,8 @@ phonebook.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	PersonID : '<?= $_SESSION["USER"]["PersonID"] ?>',
+
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -123,6 +141,18 @@ phonebook.prototype = {
 function phonebook()
 {
 	this.grid = <?=$grid?>;
+	this.grid.getView().getRowClass = function(record)
+	{
+		if(record.data.IsPublic == "YES")
+			return "violetRow";
+		return "";
+	}	
+	this.grid.plugins[0].on("beforeedit", function(editor,e){
+			
+		if(e.record.data.PersonID != phonebookObj.PersonID)
+			return false;
+		return true;			
+	});	
 	this.grid.render(this.get("div_dg"));
 }
 
@@ -132,7 +162,8 @@ phonebook.prototype.Add = function(){
 
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
-		RowID : ""
+		RowID : "",
+		PersonID : this.PersonID
 	});
 
 	this.grid.plugins[0].cancelEdit();
@@ -162,7 +193,7 @@ phonebook.prototype.save = function(store,record){
 			}
 			else
 			{
-				alert(st.data);
+				Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
 			}
 		},
 		failure: function(){}
@@ -199,9 +230,11 @@ phonebook.prototype.Remove = function(){
 
 phonebook.prototype.DeleteRender = function(v,p,r){
 
-		return "<div style='background-repeat:no-repeat;background-position:center;cursor:pointer;"+
-			"height:16;width:20px;float:left' "+
-			" onclick=phonebookObj.Remove() class=remove></div>";
+	if(r.data.PersonID != phonebookObj.PersonID)	
+		return "";
+	return "<div style='background-repeat:no-repeat;background-position:center;cursor:pointer;"+
+		"height:16;width:20px;float:left' "+
+		" onclick=phonebookObj.Remove() class=remove></div>";
 }
 
 </script>

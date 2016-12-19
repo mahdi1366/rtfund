@@ -330,7 +330,9 @@ class FRW_phonebook extends OperationClass {
 	public $mobile;
 	public $address;
 	public $details;
-
+	public $email;
+	public $ActInfo;
+	public $IsPublic;
 }
 
 ?>

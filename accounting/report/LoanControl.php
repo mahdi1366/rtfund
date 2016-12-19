@@ -194,7 +194,7 @@ function AccReport_LoanControl()
 				
 				me = AccReport_LoanControlObj;
 				
-				mask = new Ext.LoadMask(me.resultPanel, {msg:'در حال بارگذاری ...'});
+				var mask = new Ext.LoadMask(me.resultPanel, {msg:'در حال بارگذاری ...'});
 				mask.show();
 				
 				me.resultPanel.loader.load({
@@ -203,7 +203,7 @@ function AccReport_LoanControl()
 						BlockID : me.FilterPanel.down("[name=BlockID]").getValue(),
 						StartDate : me.FilterPanel.down("[name=StartDate]").getRawValue(),
 						EndDate : me.FilterPanel.down("[name=EndDate]").getRawValue(),
-						TafsiliID : me.FilterPanel.down("[name=TafsiliID]").getValue(),
+						TafsiliID : me.FilterPanel.down("[name=TafsiliID]").getValue()
 					},
 					callback : function(){
 						AccReport_LoanControlObj.resultPanel.doLayout();
@@ -218,6 +218,7 @@ function AccReport_LoanControl()
 		frame : true,
 		renderTo : this.get("div_result"),
 		autoHeight : true,
+		minHeight : 350,
 		loader : {
 			url : this.address_prefix + "LoanControl.php?task=LoanReport"
 		},
