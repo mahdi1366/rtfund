@@ -355,6 +355,15 @@ if ($menuStr != "") {
 					handler : function(){
 						framework.OpenPage('../framework/help/help.php','راهنمای سیستم');
 					}	
+				},{
+					xtype : "button",
+					tooltip : "تقویم",
+					scale: 'large',
+					iconCls : "framework-help",
+					style : "margin: 3px;height:35px",
+					handler : function(){
+						framework.OpenPage('../framework/calendar.php','تقویم');
+					}	
 				}]
 				
 			},{
