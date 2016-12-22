@@ -176,7 +176,7 @@ AccDocs.prototype.operationhMenu = function(e){
 					op_menu.add({text: 'تایید سند',iconCls: 'tick', 
 					handler : function(){ return AccDocsObject.confirmDoc(); } });
 			}
-			if(this.RemoveAccess && this.grid.getStore().currentPage == this.grid.getStore().totalCount)
+			if(this.RemoveAccess /*&& this.grid.getStore().currentPage == this.grid.getStore().totalCount*/)
 				op_menu.add({text: 'حذف سند',iconCls: 'remove', 
 					handler : function(){ return AccDocsObject.RemoveDoc(); } });
 		}

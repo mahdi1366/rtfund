@@ -367,6 +367,15 @@ if ($menuStr != "") {
 					handler : function(){
 						framework.OpenPage('../framework/phonebook.php','دفترچه تلفن');
 					}	
+				},{
+					xtype : "button",
+					tooltip : "تقویم",
+					scale: 'large',
+					iconCls : "framework-help",
+					style : "margin: 3px;height:35px",
+					handler : function(){
+						framework.OpenPage('../framework/calendar.php','تقویم');
+					}	
 				}]
 				
 			},{

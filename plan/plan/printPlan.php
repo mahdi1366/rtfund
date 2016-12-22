@@ -31,7 +31,7 @@ else
 	.level1{font-weight: bold;}
 	.level2{font-weight: bold;}
 	.level3{font-weight: bold;padding-right:20px;}
-	.form{margin-top:10px;width:95%;border-collapse: collapse;text-align: justify;}
+	.form{margin-top:10px;width:95%;border-collapse: collapse;text-align: justify; direction: rtl}
 	.form td{padding:0 4px 0 4px;}
 	.titles{background-color: #eee;font-weight: bold;text-align: center;}
 	.values{text-align: center;}
@@ -141,7 +141,10 @@ function printGrid($PlanID, $ParentID){
 		{
 			echo "<td class=values>";
 			if($col["ElementType"] == "currencyfield")
-				echo number_format($rowValues[ $col["ElementID"] ]);
+			{
+				$value = $rowValues[ $col["ElementID"] ]*1;
+				echo number_format($value);
+			}
 			else
 				echo $rowValues[ $col["ElementID"] ];
 			echo "</td>";
@@ -173,14 +176,14 @@ function printForm($ParentID, $ElementValue){
 	{
 		if($element["ElementType"] == "displayfield")
 		{
-			echo "<div class=form>" . $element["ElementValues"] . "</div>";
+			echo "<div class=form>" .  nl2br($element["ElementValues"]) . "</div>";
 			continue;
 		}
 		if(empty($planValues[ $element["ElementID"] ]))
 			continue;
 		if($element["ElementType"] == "textarea")
 		{
-			echo "<div class=form>" . $planValues[ $element["ElementID"] ] . "</div>";
+			echo "<div class=form>" . nl2br($planValues[ $element["ElementID"] ]) . "</div>";
 			break;
 		}
 		if($index == 0)

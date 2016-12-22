@@ -1,0 +1,3 @@
+1.Jus type "about:config" in address bar and you'll get a list of preferences. 
+2.Now search for "signed.applets.codebase_principal_support" in this list and toggle its value to "true". 
+3.Now everything will work rosy.

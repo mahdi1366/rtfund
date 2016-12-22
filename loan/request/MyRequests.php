@@ -56,6 +56,7 @@ $grid = $dg->makeGrid_returnObjects();
 MyRequest.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
+	MenuID : "<?= $_REQUEST["MenuID"]?>",
 
 	User : '<?= $User ?>',
 	
@@ -119,7 +120,10 @@ MyRequest.prototype.EditRequest = function(HavePart){
 	var record = this.grid.getSelectionModel().getLastSelected();
 	//if(this.User == "Agent")
 	//{
-		portal.OpenPage("../loan/request/RequestInfo.php", {RequestID : record.data.RequestID});
+		portal.OpenPage("../loan/request/RequestInfo.php", {
+			RequestID : record.data.RequestID,
+			MenuID : this.MenuID
+		});
 		return;
 	//}
 	if(this.User == "Customer")
@@ -154,7 +158,8 @@ MyRequest.prototype.EditRequest = function(HavePart){
 			scripts : true,
 			params : {
 				ExtTabID : this.RequestInfoWin.getEl().id,
-				RequestID : record.data.RequestID
+				RequestID : record.data.RequestID,
+				MenuID : this.MenuID
 			}
 		});
 	}
