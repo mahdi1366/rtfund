@@ -167,18 +167,18 @@ Ext.define('Ext.calendar.view.Month', {
     //private
     initClock: function() {
         if (Ext.fly(this.id + '-clock') !== null) {
-            this.prevClockDay = new Date().getDay();
+            this.prevClockDay = new Ext.SHDate().getDay();
             if (this.clockTask) {
                 Ext.TaskManager.stop(this.clockTask);
             }
             this.clockTask = Ext.TaskManager.start({
                 run: function() {
                     var el = Ext.fly(this.id + '-clock'),
-                    t = new Date();
+                    t = new Ext.SHDate();
 
                     if (t.getDay() == this.prevClockDay) {
                         if (el) {
-                            el.update(Ext.Date.format(t, 'g:i a'));
+                            el.update(Ext.SHDate.format(t, 'g:i a'));
                         }
                     }
                     else {
@@ -260,7 +260,7 @@ Ext.define('Ext.calendar.view.Month', {
             _elId: selector + '-' + evt._weekIndex,
             _isRecurring: evt.Recurrence && evt.Recurrence != '',
             _isReminder: evt[M.Reminder.name] && evt[M.Reminder.name] != '',
-            Title: (evt[M.IsAllDay.name] ? '' : Ext.Date.format(evt[M.StartDate.name], 'g:ia ')) + (!title || title.length == 0 ? '(No title)' : title)
+            Title: (evt[M.IsAllDay.name] ? '' : Ext.SHDate.format(evt[M.StartDate.name], 'g:ia ')) + (!title || title.length == 0 ? '(No title)' : title)
         },
         evt);
     },
@@ -301,7 +301,7 @@ Ext.define('Ext.calendar.view.Month', {
     // private
     getDayId: function(dt) {
         if (Ext.isDate(dt)) {
-            dt = Ext.Date.format(dt, 'Ymd');
+            dt = Ext.SHDate.format(dt, 'Ymd');
         }
         return this.id + this.dayElIdDelimiter + dt;
     },
@@ -385,7 +385,7 @@ Ext.define('Ext.calendar.view.Month', {
         if (!this.detailPanel) {
             this.detailPanel = Ext.create('Ext.Panel', {
                 id: this.id + '-details-panel',
-                title: Ext.Date.format(dt, 'F j'),
+                title: Ext.SHDate.format(dt, 'F j'),
                 layout: 'fit',
                 floating: true,
                 renderTo: Ext.getBody(),
@@ -408,7 +408,7 @@ Ext.define('Ext.calendar.view.Month', {
             });
         }
         else {
-            this.detailPanel.setTitle(Ext.Date.format(dt, 'F j'));
+            this.detailPanel.setTitle(Ext.SHDate.format(dt, 'F j'));
         }
         this.detailPanel.getComponent(this.id + '-details-view').update(dt);
     },
@@ -450,13 +450,13 @@ Ext.define('Ext.calendar.view.Month', {
             parts;
         if (el) {
             dt = el.id.split(this.weekLinkIdDelimiter)[1];
-            this.fireEvent('weekclick', this, Ext.Date.parseDate(dt, 'Ymd'));
+            this.fireEvent('weekclick', this, Ext.SHDate.parseDate(dt, 'Ymd'));
             return;
         }
         el = e.getTarget(this.moreSelector, 3);
         if (el) {
             dt = el.id.split(this.moreElIdDelimiter)[1];
-            this.onMoreClick(Ext.Date.parseDate(dt, 'Ymd'));
+            this.onMoreClick(Ext.SHDate.parseDate(dt, 'Ymd'));
             return;
         }
         el = e.getTarget('td', 3);
@@ -465,7 +465,7 @@ Ext.define('Ext.calendar.view.Month', {
                 parts = el.id.split(this.dayElIdDelimiter);
                 dt = parts[parts.length - 1];
 
-                this.fireEvent('dayclick', this, Ext.Date.parseDate(dt, 'Ymd'), false, Ext.get(this.getDayId(dt)));
+                this.fireEvent('dayclick', this, Ext.SHDate.parseDate(dt, 'Ymd'), false, Ext.get(this.getDayId(dt)));
                 return;
             }
         }

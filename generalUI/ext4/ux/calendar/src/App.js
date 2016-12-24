@@ -24,7 +24,7 @@ Ext.define('Ext.calendar.App', {
         'Ext.calendar.form.EventWindow'
     ],
     
-    constructor : function() {
+    constructor : function(Container) {
         // Minor workaround for OSX Lion scrollbars
         this.checkScrollOffset();
         
@@ -46,7 +46,7 @@ Ext.define('Ext.calendar.App', {
         // or placed elsewhere within the application.
         Ext.create('Ext.Viewport', {
             layout: 'border',
-            renderTo: 'calendar-ct',
+            renderTo: Container,
             items: [{
                 id: 'app-header',
                 region: 'north',
@@ -173,7 +173,7 @@ Ext.define('Ext.calendar.App', {
                                 rec.commit();
                                 
                                 this.showMsg('Event '+ rec.data[mappings.Title.name] +' was moved to '+
-                                    Ext.Date.format(rec.data[mappings.StartDate.name], ('F jS'+time)));
+                                    Ext.SHDate.format(rec.data[mappings.StartDate.name], ('F jS'+time)));
                             },
                             scope: this
                         },
@@ -260,9 +260,9 @@ Ext.define('Ext.calendar.App', {
     // updates that outer title based on the currently-selected view range anytime the view changes.
     updateTitle: function(startDt, endDt){
         var p = Ext.getCmp('app-center'),
-            fmt = Ext.Date.format;
+            fmt = Ext.SHDate.format;
         
-        if(Ext.Date.clearTime(startDt).getTime() == Ext.Date.clearTime(endDt).getTime()){
+        if(Ext.SHDate.clearTime(startDt).getTime() == Ext.SHDate.clearTime(endDt).getTime()){
             p.setTitle(fmt(startDt, 'F j, Y'));
         }
         else if(startDt.getFullYear() == endDt.getFullYear()){

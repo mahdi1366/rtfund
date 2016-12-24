@@ -4,14 +4,14 @@ Ext.define('Ext.calendar.util.Date', {
     
     diffDays: function(start, end) {
         var day = 1000 * 60 * 60 * 24,
-            clear = Ext.Date.clearTime,
+            clear = Ext.SHDate.clearTime,
             diff = clear(end, true).getTime() - clear(start, true).getTime();
         
         return Math.ceil(diff / day);
     },
 
     copyTime: function(fromDt, toDt) {
-        var dt = Ext.Date.clone(toDt);
+        var dt = Ext.SHDate.clone(toDt);
         dt.setHours(
             fromDt.getHours(),
             fromDt.getMinutes(),
@@ -23,9 +23,9 @@ Ext.define('Ext.calendar.util.Date', {
 
     compare: function(dt1, dt2, precise) {
         if (precise !== true) {
-            dt1 = Ext.Date.clone(dt1);
+            dt1 = Ext.SHDate.clone(dt1);
             dt1.setMilliseconds(0);
-            dt2 = Ext.Date.clone(dt2);
+            dt2 = Ext.SHDate.clone(dt2);
             dt2.setMilliseconds(0);
         }
         return dt2.getTime() - dt1.getTime();
@@ -40,7 +40,7 @@ Ext.define('Ext.calendar.util.Date', {
         for (; i < ln; i++) {
             dt = Math[max ? 'max': 'min'](dt, args[i].getTime());
         }
-        return new Date(dt);
+        return new Ext.SHDate(dt);
     },
 
     max: function() {
@@ -52,7 +52,7 @@ Ext.define('Ext.calendar.util.Date', {
     },
     
     today: function() {
-        return Ext.Date.clearTime(new Date());
+        return Ext.SHDate.clearTime(new Ext.SHDate());
     },
     
     /**
@@ -94,7 +94,7 @@ var futureDate = Extensible.Date.add(now, {
         if (!o) {
             return dt;
         }
-        var ExtDate = Ext.Date,
+        var ExtDate = Ext.SHDate,
             dateAdd = ExtDate.add,
             newDt = ExtDate.clone(dt);
         

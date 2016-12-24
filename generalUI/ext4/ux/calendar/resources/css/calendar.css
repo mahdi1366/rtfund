@@ -246,7 +246,7 @@
 .ext-cal-monthview .ext-cal-body-ct {
     background: #fff;
     bottom: 0;
-    left: 0;
+    right: 0;
     border:0;
     overflow: hidden;
     position: absolute;
@@ -266,12 +266,12 @@
 .ext-cal-monthview .ext-cal-week-link-hd {
     width: 20px;
     position: absolute;
-    left: 0;
+    right: 0;
     top: 0;
     height: 100%;
     background: #EFEFEF;
     border-top: 1px solid #DDD;
-    border-right: 1px solid #DDD;
+    border-left: 1px solid #DDD;
     font-size: 10px;
     color: #999;
     padding: 3px 0 0;
@@ -285,11 +285,11 @@
     border-top: 0;
 }
 .ext-cal-week-links .ext-cal-bg-tbl {
-    left: 20px;
+    right: 20px;
 }
 .ext-cal-week-links .ext-cal-evt-tbl,
 .ext-cal-week-links .ext-cal-hd-days-tbl {
-    margin-left: 20px;
+    margin-right: 20px;
 }
 .ext-cal-monthview .ext-week-link-over {
     background: #E0E7EF;
@@ -513,6 +513,15 @@ td.ext-cal-dtitle-today div {
 	position: relative;
 }
 .ext-cal-ev-spanleft {
+    -moz-border-radius-topleft:5px;
+    -moz-border-radius-bottomleft:5px;
+    -webkit-border-top-left-radius:5px;
+    -webkit-border-bottom-left-radius:5px;
+    border-top-left-radius:5px;
+    border-bottom-left-radius:5px;
+    xpadding-left:5px;
+}
+.ext-cal-ev-spanright {
     -moz-border-radius-topright:5px;
     -moz-border-radius-bottomright:5px;
     -webkit-border-top-right-radius:5px;
@@ -520,15 +529,6 @@ td.ext-cal-dtitle-today div {
     border-top-right-radius:5px;
     border-bottom-right-radius:5px;
     xpadding-left:5px;
-}
-.ext-cal-ev-spanright {
-    -moz-border-radius-topleft:5px;
-    -moz-border-radius-bottomleft:5px;
-    -webkit-border-top-left-radius:5px;
-    -webkit-border-bottom-left-radius:5px;
-    border-top-left-radius:5px;
-    border-bottom-left-radius:5px;
-    xpadding-right:5px;
 }
 /* IE/ Opera: */
 .ext-cal-ev-spanboth .ext-cal-evm {

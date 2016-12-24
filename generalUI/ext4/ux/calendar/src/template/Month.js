@@ -31,7 +31,7 @@ Ext.define('Ext.calendar.template.Month', {
                         '<tbody>',
                             '<tr>',
                                 '<tpl for="days">',
-                                    '<th class="ext-cal-hd-day{[xindex==1 ? " ext-cal-day-first" : ""]}" title="{.:date("l, F j, Y")}">{.:date("D")}</th>',
+                                    '<th class="ext-cal-hd-day{[xindex==1 ? " ext-cal-day-first" : ""]}" >{[Ext.SHDate.format(values,"l")]}</th>',
                                 '</tpl>',
                             '</tr>',
                         '</tbody>',

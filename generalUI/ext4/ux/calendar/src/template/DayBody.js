@@ -44,7 +44,7 @@ Ext.define('Ext.calendar.template.DayBody', {
                         '<tpl for="days">',
                             '<td class="ext-cal-day-col">',
                                 '<div class="ext-cal-day-col-inner">',
-                                    '<div id="{[this.id]}-day-col-{.:date("Ymd")}" class="ext-cal-day-col-gutter"></div>',
+                                    '<div id="{[this.id]}-day-col-{[xindex]}" class="ext-cal-day-col-gutter"></div>',
                                 '</div>',
                             '</td>',
                         '</tpl>',
@@ -53,7 +53,7 @@ Ext.define('Ext.calendar.template.DayBody', {
             '</table>'
         ]);
     },
-
+/*[Ext.SHDate.format(values,"Ymd")]*/
     // private
     applyTemplate : function(o){
         this.today = Ext.calendar.util.Date.today();
@@ -61,7 +61,7 @@ Ext.define('Ext.calendar.template.DayBody', {
         
         var i = 0,
             days = [],
-            dt = Ext.Date.clone(o.viewStart),
+            dt = Ext.SHDate.clone(o.viewStart),
             times = [];
             
         for(; i<this.dayCount; i++){
@@ -69,10 +69,10 @@ Ext.define('Ext.calendar.template.DayBody', {
         }
 
         // use a fixed DST-safe date so times don't get skipped on DST boundaries
-        dt = Ext.Date.clearTime(new Date('5/26/1972'));
+        dt = Ext.SHDate.clearTime(new Ext.SHDate(1390,1,1));
         
         for(i=0; i<24; i++){
-            times.push(Ext.Date.format(dt, 'ga'));
+            times.push(Ext.SHDate.format(dt, 'ga'));
             dt = Ext.calendar.util.Date.add(dt, {hours: 1});
         }
         

@@ -258,7 +258,7 @@ Ext.define('Ext.calendar.view.DayBody', {
         data._isRecurring = evt.Recurrence && evt.Recurrence != '';
         data._isReminder = evt[M.Reminder.name] && evt[M.Reminder.name] != '';
         var title = evt[M.Title.name];
-        data.Title = (evt[M.IsAllDay.name] ? '': Ext.Date.format(evt[M.StartDate.name], 'g:ia ')) + (!title || title.length == 0 ? '(No title)': title);
+        data.Title = (evt[M.IsAllDay.name] ? '': Ext.SHDate.format(evt[M.StartDate.name], 'g:ia ')) + (!title || title.length == 0 ? '(No title)': title);
 
         return Ext.applyIf(data, evt);
     },
@@ -356,7 +356,7 @@ Ext.define('Ext.calendar.view.DayBody', {
                 evt._left = colWidth * evt._overcol;
             }
             markup = this.getEventTemplate().apply(evt);
-            target = this.id + '-day-col-' + Ext.Date.format(evts[i].date, 'Ymd');
+            target = this.id + '-day-col-' + Ext.SHDate.format(evts[i].date, 'Ymd');
 
             Ext.core.DomHelper.append(target, markup);
         }
@@ -372,7 +372,7 @@ Ext.define('Ext.calendar.view.DayBody', {
     // private
     getDayId: function(dt) {
         if (Ext.isDate(dt)) {
-            dt = Ext.Date.format(dt, 'Ymd');
+            dt = Ext.SHDate.format(dt, 'Ymd');
         }
         return this.id + this.dayColumnElIdDelimiter + dt;
     },
@@ -438,7 +438,7 @@ Ext.define('Ext.calendar.view.DayBody', {
         if (el) {
             if (el.id && el.id.indexOf(this.dayElIdDelimiter) > -1) {
                 var dt = this.getDateFromId(el.id, this.dayElIdDelimiter);
-                this.fireEvent('dayclick', this, Ext.Date.parseDate(dt, 'Ymd'), true, Ext.get(this.getDayId(dt, true)));
+                this.fireEvent('dayclick', this, Ext.SHDate.parseDate(dt, 'Ymd'), true, Ext.get(this.getDayId(dt, true)));
                 return;
             }
         }

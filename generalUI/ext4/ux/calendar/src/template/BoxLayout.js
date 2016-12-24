@@ -1,7 +1,7 @@
 Ext.define('Ext.calendar.template.BoxLayout', {
     extend: 'Ext.XTemplate',
     
-    requires: ['Ext.Date'],
+    requires: ['Ext.SHDate'],
     
     constructor: function(config){
         
@@ -17,7 +17,7 @@ Ext.define('Ext.calendar.template.BoxLayout', {
                         '<tbody>',
                             '<tr>',
                                 '<tpl for=".">',
-                                     '<td id="{[this.id]}-day-{date:date("Ymd")}" class="{cellCls}">&#160;</td>',
+                                     '<td id="{[this.id]}-day-{[Ext.SHDate.format(values.date, "Ymd")]}" class="{cellCls}">&#160;</td>',
                                 '</tpl>',
                             '</tr>',
                         '</tbody>',
@@ -26,7 +26,7 @@ Ext.define('Ext.calendar.template.BoxLayout', {
                         '<tbody>',
                             '<tr>',
                                 '<tpl for=".">',
-                                    '<td id="{[this.id]}-ev-day-{date:date("Ymd")}" class="{titleCls}"><div>{title}</div></td>',
+                                    '<td id="{[this.id]}-ev-day-{[Ext.SHDate.format(values.date, "Ymd")]}" class="{titleCls}"><div>{title}</div></td>',
                                 '</tpl>',
                             '</tr>',
                         '</tbody>',
@@ -49,7 +49,7 @@ Ext.define('Ext.calendar.template.BoxLayout', {
         
         var w = 0, title = '', first = true, isToday = false, showMonth = false, prevMonth = false, nextMonth = false,
             weeks = [[]],
-            dt = Ext.Date.clone(this.viewStart),
+            dt = Ext.SHDate.clone(this.viewStart),
             thisMonth = this.startDate.getMonth();
         
         for(; w < this.weekCount || this.weekCount == -1; w++){
@@ -67,8 +67,8 @@ Ext.define('Ext.calendar.template.BoxLayout', {
                 if(dt.getDay() == 1){
                     // The ISO week format 'W' is relative to a Monday week start. If we
                     // make this check on Sunday the week number will be off.
-                    weeks[w].weekNum = this.showWeekNumbers ? Ext.Date.format(dt, 'W') : '&#160;';
-                    weeks[w].weekLinkId = 'ext-cal-week-'+Ext.Date.format(dt, 'Ymd');
+                    weeks[w].weekNum = this.showWeekNumbers ? Ext.SHDate.format(dt, 'W') : '&#160;';
+                    weeks[w].weekLinkId = 'ext-cal-week-'+Ext.SHDate.format(dt, 'Ymd');
                 }
                 
                 if(showMonth){
@@ -76,17 +76,17 @@ Ext.define('Ext.calendar.template.BoxLayout', {
                         title = this.getTodayText();
                     }
                     else{
-                        title = Ext.Date.format(dt, this.dayCount == 1 ? 'l, F j, Y' : (first ? 'M j, Y' : 'M j'));
+                        title = Ext.SHDate.format(dt, this.dayCount == 1 ? 'l, F j, Y' : (first ? 'M j, Y' : 'M j'));
                     }
                 }
                 else{
                     var dayFmt = (w == 0 && this.showHeader !== true) ? 'D j' : 'j';
-                    title = isToday ? this.getTodayText() : Ext.Date.format(dt, dayFmt);
+                    title = isToday ? this.getTodayText() : Ext.SHDate.format(dt, dayFmt);
                 }
                 
                 weeks[w].push({
                     title: title,
-                    date: Ext.Date.clone(dt),
+                    date: Ext.SHDate.clone(dt),
                     titleCls: 'ext-cal-dtitle ' + (isToday ? ' ext-cal-dtitle-today' : '') + 
                         (w==0 ? ' ext-cal-dtitle-first' : '') +
                         (prevMonth ? ' ext-cal-dtitle-prev' : '') + 
@@ -100,10 +100,11 @@ Ext.define('Ext.calendar.template.BoxLayout', {
                 first = false;
             }
         }
-        
-        return this.applyOut({
+        if(weeks.length)
+        temp = this.applyOut({
             weeks: weeks
         }, []).join('');
+		return temp;
     },
     
     apply: function(values) {
@@ -111,16 +112,16 @@ Ext.define('Ext.calendar.template.BoxLayout', {
     },
     
     getTodayText : function(){
-        var dt = Ext.Date.format(new Date(), 'l, F j, Y'),
+        var dt = Ext.SHDate.format(new Ext.SHDate(), 'l, F j, Y'),
             todayText = this.showTodayText !== false ? this.todayText : '',
             timeText = this.showTime !== false ? ' <span id="'+this.id+'-clock" class="ext-cal-dtitle-time">' + 
-                    Ext.Date.format(new Date(), 'g:i a') + '</span>' : '',
+                    Ext.SHDate.format(new Ext.SHDate(), 'g:i a') + '</span>' : '',
             separator = todayText.length > 0 || timeText.length > 0 ? ' &mdash; ' : '';
         
         if(this.dayCount == 1){
             return dt + separator + todayText + timeText;
         }
         fmt = this.weekCount == 1 ? 'D j' : 'j';
-        return todayText.length > 0 ? todayText + timeText : Ext.Date.format(new Date(), fmt) + timeText;
+        return todayText.length > 0 ? todayText + timeText : Ext.SHDate.format(new Ext.SHDate(), fmt) + timeText;
     }
 });

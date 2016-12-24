@@ -27,7 +27,7 @@ Ext.define('Ext.calendar.util.WeekEventRenderer', {
         render: function(o) {
             var w = 0,
                 grid = o.eventGrid,
-                dt = Ext.Date.clone(o.viewStart),
+                dt = Ext.SHDate.clone(o.viewStart),
                 eventTpl = o.tpl,
                 max = o.maxEventsPerDay != undefined ? o.maxEventsPerDay: 999,
                 weekCount = o.weekCount < 1 ? 6: o.weekCount,
@@ -42,7 +42,7 @@ Ext.define('Ext.calendar.util.WeekEventRenderer', {
                         cellCfg = {
                             tag: 'td',
                             cls: 'ext-cal-ev',
-                            id: o.id + '-empty-0-day-' + Ext.Date.format(dt, 'Ymd'),
+                            id: o.id + '-empty-0-day-' + Ext.SHDate.format(dt, 'Ymd'),
                             html: '&nbsp;'
                         };
                         if (dayCount > 1) {
@@ -55,7 +55,7 @@ Ext.define('Ext.calendar.util.WeekEventRenderer', {
                     var row,
                         d = 0,
                         wk = grid[w],
-                        startOfWeek = Ext.Date.clone(dt),
+                        startOfWeek = Ext.SHDate.clone(dt),
                         endOfWeek = Ext.calendar.util.Date.add(startOfWeek, {days: dayCount, millis: -1});
 
                     for (; d < dayCount; d++) {
@@ -75,7 +75,7 @@ Ext.define('Ext.calendar.util.WeekEventRenderer', {
                                     cellCfg = {
                                         tag: 'td',
                                         cls: 'ext-cal-ev',
-                                        id: o.id + '-empty-' + ct + '-day-' + Ext.Date.format(dt, 'Ymd')
+                                        id: o.id + '-empty-' + ct + '-day-' + Ext.SHDate.format(dt, 'Ymd')
                                     };
                                     if (emptyCells > 1 && max - ev > emptyCells) {
                                         cellCfg.rowspan = Math.min(emptyCells, max - ev);
@@ -120,7 +120,7 @@ Ext.define('Ext.calendar.util.WeekEventRenderer', {
                                 Ext.core.DomHelper.append(row, {
                                     tag: 'td',
                                     cls: 'ext-cal-ev-more',
-                                    id: 'ext-cal-ev-more-' + Ext.Date.format(dt, 'Ymd'),
+                                    id: 'ext-cal-ev-more-' + Ext.SHDate.format(dt, 'Ymd'),
                                     cn: {
                                         tag: 'a',
                                         html: '+' + skipped + ' more...'
@@ -133,7 +133,7 @@ Ext.define('Ext.calendar.util.WeekEventRenderer', {
                                     cellCfg = {
                                         tag: 'td',
                                         cls: 'ext-cal-ev',
-                                        id: o.id + '-empty-' + (ct + 1) + '-day-' + Ext.Date.format(dt, 'Ymd')
+                                        id: o.id + '-empty-' + (ct + 1) + '-day-' + Ext.SHDate.format(dt, 'Ymd')
                                     };
                                     var rowspan = o.evtMaxCount[w] - ct;
                                     if (rowspan > 1) {
@@ -148,7 +148,7 @@ Ext.define('Ext.calendar.util.WeekEventRenderer', {
                                 cellCfg = {
                                     tag: 'td',
                                     cls: 'ext-cal-ev',
-                                    id: o.id + '-empty-day-' + Ext.Date.format(dt, 'Ymd')
+                                    id: o.id + '-empty-day-' + Ext.SHDate.format(dt, 'Ymd')
                                 };
                                 if (o.evtMaxCount[w] > 1) {
                                     cellCfg.rowSpan = o.evtMaxCount[w];

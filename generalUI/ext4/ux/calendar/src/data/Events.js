@@ -1,16 +1,16 @@
 Ext.define('Ext.calendar.data.Events', {
     constructor: function() {
-        var today = Ext.Date.clearTime(new Date),
+        var today = Ext.SHDate.clearTime(new Ext.SHDate()),
             makeDate = function(d, h, m, s){
                 d = d * 86400;
                 h = (h || 0) * 3600;
                 m = (m || 0) * 60;
                 s = (s || 0);
-                return Ext.Date.add(today, Ext.Date.SECOND, d + h + m + s);
+                return Ext.SHDate.add(today, Ext.SHDate.SECOND, d + h + m + s);
             };
             
         return {
-            "evts":[{
+            "evts":[/*{
                 "id":1001,
                 "cid":1,
                 "title":"Vacation",
@@ -93,7 +93,7 @@ Ext.define('Ext.calendar.data.Events', {
                 "end":makeDate(2, 23),
                 "notes":"Don't forget the tickets!",
                 "rem":"60"
-            }]
+            }*/]
         }
     }
 });

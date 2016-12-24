@@ -301,6 +301,11 @@ if ($menuStr != "") {
 						icon : "icons/exit.png",
 						scale: 'medium',
 						handler : function(){framework.OpenPage("/framework/logout.php");}
+					},{
+						xtype : "button",
+						icon : "icons/calendar.png",
+						scale: 'medium',
+						handler : function(){framework.OpenPage("/framework/calendar.php");}
 					}]
 				}
 			}]
@@ -330,7 +335,8 @@ if ($menuStr != "") {
 				border : false
 			}),{
 				xtype : "container",
-				layout : "hbox",
+				layout : "column",
+				columns : 4,
 				items : [{
 					xtype : "button",
 					tooltip : "درخواست پشتیبانی",
@@ -687,7 +693,18 @@ if ($menuStr != "") {
 		this.CalcWin.loader.load();
 	}
 	//..........................................................................
-		
+		Ext.Loader.setConfig({
+	enabled: true,
+	paths: {
+		'Ext.calendar': '/generalUI/ext4/ux/calendar/src'
+	}
+});
+
+Ext.require([
+	//'Ext.diag.layout.Context',
+	//'Ext.diag.layout.ContextItem',
+	'Ext.calendar.App'
+]);
 	var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
 	Ext.QuickTips.init();
 	var framework;
@@ -697,8 +714,9 @@ if ($menuStr != "") {
 			remove:true
 		});
 		framework = new FrameWorkClass();
-		framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
-	}, 7);
+		//framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
+		//framework.OpenPage("/framework/calendar.php", "تقویم");
+	}, 1);
 	
 	var MonthStore = new Ext.data.SimpleStore({
 	fields : ['id','title'],

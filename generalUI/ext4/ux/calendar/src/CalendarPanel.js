@@ -86,7 +86,7 @@ Ext.define('Ext.calendar.CalendarPanel', {
     },
 
     // private property
-    startDate: new Date(),
+    //startDate: new Ext.SHDate(),
 
     // private
     initComponent: function() {
@@ -94,10 +94,10 @@ Ext.define('Ext.calendar.CalendarPanel', {
             cls: 'ext-cal-toolbar',
             border: true,
             items: ['->',{
-                id: this.id + '-tb-prev',
-                handler: this.onPrevClick,
-                scope: this,
-                iconCls: 'x-tbar-page-prev'
+                id: this.id + '-tb-next',
+				handler: this.onNextClick,
+				scope: this,
+				iconCls: 'x-tbar-page-next'
             }]
         };
 
@@ -135,10 +135,10 @@ Ext.define('Ext.calendar.CalendarPanel', {
             this.showMonthView = true;
         }
         this.tbar.items.push({
-            id: this.id + '-tb-next',
-            handler: this.onNextClick,
-            scope: this,
-            iconCls: 'x-tbar-page-next'
+			id: this.id + '-tb-prev',
+			handler: this.onPrevClick,
+			scope: this,
+			iconCls: 'x-tbar-page-prev'
         });
         this.tbar.items.push('->');
 

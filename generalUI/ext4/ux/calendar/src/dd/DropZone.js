@@ -35,9 +35,9 @@ Ext.define('Ext.calendar.dd.DropZone', {
             this.dragEndDate = D.add(end, {days: 1, millis: -1, clearTime: true});
             this.shim(start, end);
 
-            var range = Ext.Date.format(start, 'n/j');
+            var range = Ext.SHDate.format(start, 'n/j');
             if (D.diffDays(start, end) > 0) {
-                range += '-' + Ext.Date.format(end, 'n/j');
+                range += '-' + Ext.SHDate.format(end, 'n/j');
             }
             var msg = Ext.util.Format.format(data.type == 'eventdrag' ? this.moveText: this.createText, range);
             data.proxy.updateMsg(msg);
@@ -47,7 +47,7 @@ Ext.define('Ext.calendar.dd.DropZone', {
 
     shim: function(start, end) {
         this.currWeek = -1;
-        var dt = Ext.Date.clone(start),
+        var dt = Ext.SHDate.clone(start),
             i = 0,
             shim,
             box,

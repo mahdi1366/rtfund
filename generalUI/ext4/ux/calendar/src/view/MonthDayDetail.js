@@ -66,13 +66,13 @@ Ext.define('Ext.calendar.view.MonthDayDetail', {
         templateData = [];
 
         evts = this.store.queryBy(function(rec) {
-            var thisDt = Ext.Date.clearTime(this.date, true).getTime(),
-                recStart = Ext.Date.clearTime(rec.data[Ext.calendar.data.EventMappings.StartDate.name], true).getTime(),
+            var thisDt = Ext.SHDate.clearTime(this.date, true).getTime(),
+                recStart = Ext.SHDate.clearTime(rec.data[Ext.calendar.data.EventMappings.StartDate.name], true).getTime(),
                 startsOnDate = (thisDt == recStart),
                 spansDate = false;
 
             if (!startsOnDate) {
-                var recEnd = Ext.Date.clearTime(rec.data[Ext.calendar.data.EventMappings.EndDate.name], true).getTime();
+                var recEnd = Ext.SHDate.clearTime(rec.data[Ext.calendar.data.EventMappings.EndDate.name], true).getTime();
                 spansDate = recStart < thisDt && recEnd >= thisDt;
             }
             return startsOnDate || spansDate;

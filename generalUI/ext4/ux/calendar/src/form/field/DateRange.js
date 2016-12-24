@@ -51,10 +51,10 @@ Ext.define('Ext.calendar.form.field.DateRange', {
     /**
      * @cfg {String} timeFormat
      * The time display format used by the time fields. By default the DateRange uses the
-     * {@link Ext.Date.use24HourTime} setting and sets the format to 'g:i A' for 12-hour time (e.g., 1:30 PM) 
+     * {@link Ext.SHDate.use24HourTime} setting and sets the format to 'g:i A' for 12-hour time (e.g., 1:30 PM) 
      * or 'G:i' for 24-hour time (e.g., 13:30). This can also be overridden by a static format string if desired.
      */
-    timeFormat: Ext.Date.use24HourTime ? 'G:i' : 'g:i A',
+    timeFormat: Ext.SHDate.use24HourTime ? 'G:i' : 'g:i A',
     
     // private
     layout: {
@@ -273,18 +273,18 @@ Ext.define('Ext.calendar.form.field.DateRange', {
             dt = this[startend+'Date'].getValue();
             
         if(Ext.isDate(dt)){
-            dt = Ext.Date.format(dt, this[startend + 'Date'].format);
+            dt = Ext.SHDate.format(dt, this[startend + 'Date'].format);
         }
         else{
             return null;
         };
         if(time && time != ''){
-            time = Ext.Date.format(time, this[startend+'Time'].format);
-            var val = Ext.Date.parseDate(dt + ' ' + time, this[startend+'Date'].format + ' ' + this[startend+'Time'].format);
+            time = Ext.SHDate.format(time, this[startend+'Time'].format);
+            var val = Ext.SHDate.parseDate(dt + ' ' + time, this[startend+'Date'].format + ' ' + this[startend+'Time'].format);
             return val;
-            //return Ext.Date.parseDate(dt+' '+time, this[startend+'Date'].format+' '+this[startend+'Time'].format);
+            //return Ext.SHDate.parseDate(dt+' '+time, this[startend+'Date'].format+' '+this[startend+'Time'].format);
         }
-        return Ext.Date.parseDate(dt, this[startend+'Date'].format);
+        return Ext.SHDate.parseDate(dt, this[startend+'Date'].format);
         
     },
     
@@ -325,7 +325,7 @@ Ext.define('Ext.calendar.form.field.DateRange', {
     setDT: function(dt, startend){
         if(dt && Ext.isDate(dt)){
             this[startend + 'Date'].setValue(dt);
-            this[startend + 'Time'].setValue(Ext.Date.format(dt, this[startend + 'Time'].format));
+            this[startend + 'Time'].setValue(Ext.SHDate.format(dt, this[startend + 'Time'].format));
             return true;
         }
     },

@@ -128,7 +128,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
     // must be implemented by a subclass
     // private
     initComponent: function() {
-        this.setStartDate(this.startDate || new Date());
+        this.setStartDate(this.startDate || new Ext.SHDate());
 
         this.callParent(arguments);
 
@@ -284,10 +284,10 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
 
     // private
     prepareData: function() {
-        var lastInMonth = Ext.Date.getLastDateOfMonth(this.startDate),
+        var lastInMonth = Ext.SHDate.getLastDateOfMonth(this.startDate),
         w = 0,
         row = 0,
-        dt = Ext.Date.clone(this.viewStart),
+        dt = Ext.SHDate.clone(this.viewStart),
         weeks = this.weekCount < 1 ? 6: this.weekCount;
 
         this.eventGrid = [[]];
@@ -311,7 +311,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
             for (d = 0; d < this.dayCount; d++) {
                 if (evtsInView.getCount() > 0) {
                     var evts = evtsInView.filterBy(function(rec) {
-                        var startDt = Ext.Date.clearTime(rec.data[Ext.calendar.data.EventMappings.StartDate.name], true),
+                        var startDt = Ext.SHDate.clearTime(rec.data[Ext.calendar.data.EventMappings.StartDate.name], true),
                             startsOnDate = dt.getTime() == startDt.getTime(),
                             spansFromPrevView = (w == 0 && d == 0 && (dt > rec.data[Ext.calendar.data.EventMappings.StartDate.name]));
                             
@@ -331,7 +331,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
     // private
     prepareEventGrid: function(evts, w, d) {
         var row = 0,
-        dt = Ext.Date.clone(this.viewStart),
+        dt = Ext.SHDate.clone(this.viewStart),
         max = this.maxEventsPerDay ? this.maxEventsPerDay: 999;
 
         evts.each(function(evt) {
@@ -371,7 +371,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
         var w1 = w,
         d1 = d,
         row = this.findEmptyRowIndex(w, d, allday),
-        dt = Ext.Date.clone(this.viewStart);
+        dt = Ext.SHDate.clone(this.viewStart);
 
         var start = {
             event: evt,
@@ -426,8 +426,8 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
     renderTemplate: function() {
         if (this.tpl) {
             this.tpl.overwrite(this.el, this.getParams());
-            this.lastRenderStart = Ext.Date.clone(this.viewStart);
-            this.lastRenderEnd = Ext.Date.clone(this.viewEnd);
+            this.lastRenderStart = Ext.SHDate.clone(this.viewStart);
+            this.lastRenderEnd = Ext.SHDate.clone(this.viewEnd);
         }
     },
 
@@ -630,7 +630,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
      * @return {Boolean} True or false
      */
     isToday: function() {
-        var today = Ext.Date.clearTime(new Date()).getTime();
+        var today = Ext.SHDate.clearTime(new Ext.SHDate()).getTime();
         return this.viewStart.getTime() <= today && this.viewEnd.getTime() >= today;
     },
 
@@ -685,7 +685,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
 
     getDayId: function(dt) {
         if (Ext.isDate(dt)) {
-            dt = Ext.Date.format(dt, 'Ymd');
+            dt = Ext.SHDate.format(dt, 'Ymd');
         }
         return this.id + this.dayElIdDelimiter + dt;
     },
@@ -706,12 +706,12 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
      * @param {Date} dt The date used to calculate the new view boundaries
      */
     setStartDate: function(start, refresh) {
-        this.startDate = Ext.Date.clearTime(start);
+        this.startDate = Ext.SHDate.clearTime(start);
         this.setViewBounds(start);
         this.store.load({
             params: {
-                start: Ext.Date.format(this.viewStart, 'm-d-Y'),
-                end: Ext.Date.format(this.viewEnd, 'm-d-Y')
+                start: Ext.SHDate.format(this.viewStart, 'm-d-Y'),
+                end: Ext.SHDate.format(this.viewEnd, 'm-d-Y')
             }
         });
         if (refresh === true) {
@@ -736,7 +736,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
 
         case - 1:
             // auto by month
-            start = Ext.Date.getFirstDateOfMonth(start);
+            start = Ext.SHDate.getFirstDateOfMonth(start);
             offset = start.getDay() - this.startDay;
 
             this.viewStart = Dt.add(start, {days: -offset, clearTime: true});
@@ -877,7 +877,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
      * Updates the view to show today
      */
     moveToday: function(noRefresh) {
-        return this.moveTo(new Date(), noRefresh);
+        return this.moveTo(new Ext.SHDate(), noRefresh);
     },
 
     /**
@@ -927,7 +927,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
     },
 
     getTitle: function() {
-        return Ext.Date.format(this.startDate, 'F Y');
+        return Ext.SHDate.format(this.startDate, 'F Y');
     },
 
     /*
@@ -1011,7 +1011,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
                     if (el && this.dayOverClass != '') {
                         el[type == 'over' ? 'addCls': 'removeCls'](this.dayOverClass);
                     }
-                    this.fireEvent('day' + type, this, Ext.Date.parseDate(dt, "Ymd"), el);
+                    this.fireEvent('day' + type, this, Ext.SHDate.parseDate(dt, "Ymd"), el);
                 }
             }
         }
