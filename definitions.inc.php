@@ -35,6 +35,7 @@ define("COSTID_ShortDeposite", "66");
 define("COSTID_Todiee", "63");
 define("COSTID_LongDeposite", "119");
 define("COSTID_Fund", "1");
+define("COSTID_Wage", "19"); // 550
 define("COSTID_Bank", "253");
 define("COSTID_share", "166");
 define("COSTID_ShareProfit", "167");

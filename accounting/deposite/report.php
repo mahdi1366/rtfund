@@ -22,6 +22,7 @@ echo "<table></table>";
 echo "<table border=1>
 	<tr id=header>
 		<td>تاریخ</td>
+		<td>شرح</td>
 		<td>مبلغ گردش</td>
 		<td>مانده حساب</td>
 		<td>تعداد روز</td>
@@ -38,6 +39,7 @@ for($i=0; $i<count($dataTable)-1; $i++)
 	$sumProfit += ($nextRow ? $nextRow["profit"] : 0);
 	echo "<tr>
 			<td>" . DateModules::miladi_to_shamsi($row["row"]["DocDate"]) . "</td>
+			<td>" . $row["row"]["DocDesc"] . "</td>
 			<td>" . number_format($row["row"]["amount"]) . "</td>
 			<td>" . number_format($amount) . "</td>
 			<td>" . ($nextRow ? $nextRow["days"] : 0) . "</td>
@@ -45,7 +47,7 @@ for($i=0; $i<count($dataTable)-1; $i++)
 		</tr>";
 }
 echo "<tr id=footer>
-		<td colspan=4>جمع</td>
+		<td colspan=5>جمع</td>
 		<td>" . number_format($sumProfit) . "</td>
 	</tr>";
 echo "</table>";

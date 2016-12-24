@@ -28,9 +28,14 @@ $col = $dg->addColumn("تفصیلی", "TafsiliDesc");
 $col = $dg->addColumn("مبلغ", "amount", GridColumn::ColumnType_money);
 $col->width = 100;
 
+$col = $dg->addColumn("کنترل محاسبه", "");
+$col->renderer = "Deposite.ReportRender";
+$col->width = 40;
+
 if($accessObj->EditFlag)
 {
-	$dg->addObject("this.OperationObj");
+	$dg->addButton("", "صدور سند سود سپرده", "process", "function(){DepositeObject.BeforeComputeProfit(false);}");
+	//$dg->addObject("this.OperationObj");
 }
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 400;
@@ -57,6 +62,14 @@ Deposite.SelectRender = function(v,p,r){
 	return "<input type=checkbox id=chk_" + v + " name=chk_" + v + " >";
 }
 
+Deposite.ReportRender = function(v,p,r){
+	
+	return "<div align='center' title='کنترل محاسبه' class='report' "+
+		"onclick='DepositeObject.BeforeComputeProfit(true);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
 Deposite.CheckAll = function(checkAllElem){
 	
 	elems = DepositeObject.get("div_grid").getElementsByTagName("input");
@@ -67,7 +80,7 @@ Deposite.CheckAll = function(checkAllElem){
 	
 function Deposite(){
 	
-	this.OperationObj = Ext.button.Button({
+	/*this.OperationObj = Ext.button.Button({
 		text: 'عملیات',
 		iconCls: 'setting',
 		menu: {
@@ -88,7 +101,7 @@ function Deposite(){
 				}
 			}]
 		}
-	});
+	});*/
 	
 	this.grid = <?= $grid ?>;
 	this.grid.render(this.get("div_grid"));
