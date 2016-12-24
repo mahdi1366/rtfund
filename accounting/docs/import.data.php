@@ -643,7 +643,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$CostCode_pardakhti = FindCostID("721-".$LoanObj->_BlockCode."-51");
 	$CostCode_bank = FindCostID("101");
 	$CostCode_todiee = FindCostID("200-".$LoanObj->_BlockCode."-01");
-	$CostCode_agent_wage = FindCostID("721-".$LoanObj->_BlockCode."52-03");
+	$CostCode_agent_wage = FindCostID("721-".$LoanObj->_BlockCode."-52-03");
 	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
@@ -2505,14 +2505,14 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 		//-------------- get latest deposite compute -------------
 		$FirstYearDay = DateModules::shamsi_to_miladi($_SESSION["accounting"]["CycleID"] . "-01-01", "-");
 		$dt = PdoDataAccess::runquery("select DocID,DocDate,SourceID
-			from ACC_docs where DocType=" . DOCTYPE_DEPOSIT_PROFIT . " 
+			from ACC_docs join ACC_DocItems using(DocID)
+			where DocType=" . DOCTYPE_DEPOSIT_PROFIT . " 
 				AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 				AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "	
 				AND TafsiliID=?
 			order by DocID desc", array($TafsiliID));
 
 		$LatestComputeDate = count($dt)==0 ? $FirstYearDay : $dt[0]["SourceID"];
-		$LatestComputeDocID = count($dt)==0 ? 0 : $dt[0]["DocID"];
 
 		//----------- check for all docs confirm --------------
 		/*$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
@@ -2528,36 +2528,38 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 		//------------ get sum of deposites ----------------
 		$dt = PdoDataAccess::runquery("select TafsiliID,CostID,sum(CreditorAmount-DebtorAmount) amount
 			from ACC_DocItems join ACC_docs using(DocID)
-			where DocID<=? 
+			where DocDate <= ? 
 				AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
 				AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 				AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
 				AND TafsiliID=?
-			group by TafsiliID,CostID", array($LatestComputeDocID,$TafsiliID));
+			group by TafsiliID,CostID", array($LatestComputeDate,$TafsiliID));
 
 		foreach($dt as $row)
 		{
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] = $row["amount"];
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $LatestComputeDate;
+			
+			$row["DocDate"] = $LatestComputeDate;
+			$row["DocDesc"] = "مانده قبل";
 			$TraceArr[ $row["TafsiliID"] ][] = array(
 				"row" => $row,
-				"date" => $LatestComputeDate,
 				"profit" => 0
 			);
 		}
-		
 		//------------ get the Deposite amount -------------
 		$dt = PdoDataAccess::runquery("
-			select CostID,TafsiliID,DocDate,sum(CreditorAmount-DebtorAmount) amount
+			select CostID,TafsiliID,DocDate,group_concat(details SEPARATOR '<br>') DocDesc,sum(CreditorAmount-DebtorAmount) amount
 			from ACC_DocItems 
 				join ACC_docs using(DocID)
 			where CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
-				AND DocID > ?
+				AND DocDate > ?
 				AND TafsiliID=?
 				AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 				AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
-			group by DocDate", 
-				array($LatestComputeDocID, $TafsiliID));
+			group by DocDate
+			order by DocDate", 
+				array($LatestComputeDate, $TafsiliID));
 
 		foreach($dt as $row)
 		{
@@ -2583,7 +2585,6 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 			
 			$TraceArr[ $row["TafsiliID"] ][] = array(
 				"row" => $row,
-				"date" => $lastDate,
 				"days" => $days,
 				"profit" => $amount
 			);
@@ -2659,6 +2660,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $TafsiliID;
 			$itemObj->locked = "YES";
+			$itemObj->details = "سود سپرده تا تاریخ " . DateModules::miladi_to_shamsi($ToDate);
 			$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
 			$itemObj->SourceID = $ToDate;
 			if(!$itemObj->Add($pdo))
@@ -2675,14 +2677,16 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 	
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
-	$itemObj->CostID = COSTID_Fund;
+	$itemObj->CostID = COSTID_Wage;
 	$itemObj->DebtorAmount= $sumAmount;
 	$itemObj->CreditorAmount = 0;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
 	if(!$itemObj->Add($pdo))
 	{
-		return false;
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo Response::createObjectiveResponse(false, "خطا در ایجاد ردیف سند");
+		die();
 	}	
 	
 	$pdo->commit();
