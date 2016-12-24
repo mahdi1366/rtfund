@@ -4,6 +4,20 @@
 //	Date		: 94.06
 //-----------------------------
 
+class ACC_cycles extends OperationClass {
+
+	const TableName = "ACC_cycles";
+	const TableKey = "CycleID";
+	
+	public $CycleID;
+	public $CycleDesc;
+	public $CycleYear;
+	public $IsClosed;
+	public $ShortDepositPercent;
+	public $LongDepositPercent;
+	
+}
+
 class ACC_blocks extends PdoDataAccess{
 	
     public $BlockID;

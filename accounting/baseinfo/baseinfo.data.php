@@ -614,6 +614,29 @@ function DeleteRole(){
 
 //---------------------------------------------
 
+function SelectCycles() {
+	
+	$temp = ACC_cycles::Get();
+	echo dataReader::getJsonData($temp->fetchAll(), $temp->rowCount(), $_GET['callback']);
+	die();
+}
+
+function SaveCycle(){
+	
+	$obj = new ACC_cycles();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if(empty($obj->CycleID))
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//---------------------------------------------
+
+
 function GetBanks(){
 	
 	$dt = PdoDataAccess::runquery("select * from ACC_banks");
