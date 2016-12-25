@@ -304,6 +304,7 @@ Ext.define('Ext.calendar.CalendarPanel', {
             this.add(wk);
         }
         if (this.showMonthView) {
+			
             var month = Ext.applyIf({
                 xtype: 'monthview',
                 title: this.monthText,

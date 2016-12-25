@@ -1146,7 +1146,9 @@ Ext.SHDate.prototype.add = function (interval, value) {
     return d;
 };
 Ext.SHDate.prototype.clone = function () {
-    return new Ext.SHDate(this.year, this.month, this.day);
+    obj = new Ext.SHDate(this.year, this.month, this.day);
+	obj.XDate = this.XDate;
+	return obj;
 };
 
 
@@ -1235,7 +1237,10 @@ Ext.apply(Ext.SHDate, {
 		return d;
 	},
 	clone : function(date) {
-		return new Ext.SHDate(date.year, date.month, date.day);
+		obj = new Ext.SHDate(date.year, date.month, date.day);
+		obj.XDate = date.XDate;
+		return obj;
+		//return new Ext.SHDate(date.year, date.month, date.day);
 	},
 	getFirstDateOfMonth : function (date) {
 		return new Ext.SHDate(date.getFullYear(), date.getMonth(), 1);

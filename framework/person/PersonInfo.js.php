@@ -217,7 +217,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			name: 'email',
 			fieldStyle : "direction:ltr"
 		},{
-			xtype : "numberfield",
+			xtype : "textfield",
+			regex: /^\d/,
 			fieldLabel: 'شماره شبا',
 			hideTrigger : true,
 			fieldStyle : "direction:ltr",			
@@ -350,7 +351,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			name: 'email',
 			fieldStyle : "direction:ltr"
 		},{
-			xtype : "numberfield",
+			xtype : "textfield",
+			regex: /^\d/,
 			fieldLabel: 'شماره شبا',
 			fieldStyle : "direction:ltr",
 			name: 'AccountNo',
@@ -390,7 +392,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 
 PersonInfoObject = new PersonInfo();
 
-PersonInfo.prototype.ActDomainLOV = function(record){
+PersonInfo.prototype.ActDomainLOV = function(){
 		
 	if(!this.DomainWin)
 	{

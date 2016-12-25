@@ -53,7 +53,7 @@ Ext.define('Ext.calendar.template.BoxLayout', {
             thisMonth = this.startDate.getMonth();
         
         for(; w < this.weekCount || this.weekCount == -1; w++){
-            if(dt > this.viewEnd){
+            if(dt.XDate > this.viewEnd.XDate){
                 break;
             }
             weeks[w] = [];
@@ -101,10 +101,12 @@ Ext.define('Ext.calendar.template.BoxLayout', {
             }
         }
         if(weeks.length)
-        temp = this.applyOut({
-            weeks: weeks
-        }, []).join('');
-		return temp;
+		{
+			temp = this.applyOut({
+				weeks: weeks
+			}, []).join('');
+			return temp;
+		}
     },
     
     apply: function(values) {
