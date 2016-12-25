@@ -322,7 +322,7 @@
 }
 .ext-cal-day-first {
     /*border-left: 1px solid #BBCCFF;*/
-   border-left: 0;
+   border-right: 0;
 }
 
 .ext-cal-ev,

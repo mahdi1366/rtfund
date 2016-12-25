@@ -55,7 +55,6 @@ function calendar()
 			'eventclick': {
 				fn: function(vw, rec, el){
 					calendarObj.showEditWindow(rec, el);
-					calendarObj.clearMsg();
 				},
 				scope: this
 			},
@@ -65,30 +64,6 @@ function calendar()
 			'eventout': function(vw, rec, el){
 				//console.log('Leaving evt rec='+rec.data.Title+', view='+ vw.id +', el='+el.id);
 			},
-			'eventadd': {
-				fn: function(cp, rec){
-					calendarObj.showMsg('Event '+ rec.data.Title +' was added');
-				},
-				scope: this
-			},
-			'eventupdate': {
-				fn: function(cp, rec){
-					calendarObj.showMsg('Event '+ rec.data.Title +' was updated');
-				},
-				scope: this
-			},
-			'eventdelete': {
-				fn: function(cp, rec){
-					calendarObj.showMsg('Event '+ rec.data.Title +' was deleted');
-				},
-				scope: this
-			},
-			'eventcancel': {
-				fn: function(cp, rec){
-					// edit canceled
-				},
-				scope: this
-			},
 			'viewchange': {
 				fn: function(p, vw, dateInfo){
 					if(calendarObj.editWin){
@@ -96,7 +71,7 @@ function calendar()
 					};
 					if(dateInfo){
 						// will be null when switching to the event edit form so ignore
-						Ext.getCmp('app-nav-picker').setValue(dateInfo.activeDate);
+						//Ext.getCmp('app-nav-picker').setValue(dateInfo.activeDate);
 						calendarObj.updateTitle(dateInfo.viewStart, dateInfo.viewEnd);
 					}
 				},
@@ -108,7 +83,6 @@ function calendar()
 						StartDate: dt,
 						IsAllDay: ad
 					}, el);
-					calendarObj.clearMsg();
 				},
 				scope: this
 			},
@@ -116,7 +90,6 @@ function calendar()
 				fn: function(win, dates, onComplete){
 					calendarObj.showEditWindow(dates);
 					calendarObj.editWin.on('hide', onComplete, this, {single:true});
-					calendarObj.clearMsg();
 				},
 				scope: this
 			},
@@ -126,23 +99,18 @@ function calendar()
 						time = rec.data[mappings.IsAllDay.name] ? '' : ' \\a\\t g:i a';
 
 					rec.commit();
-
-					calendarObj.showMsg('Event '+ rec.data[mappings.Title.name] +' was moved to '+
-						Ext.Date.format(rec.data[mappings.StartDate.name], ('F jS'+time)));
 				},
 				scope: this
 			},
 			'eventresize': {
 				fn: function(vw, rec){
 					rec.commit();
-					calendarObj.showMsg('Event '+ rec.data.Title +' was updated');
 				},
 				scope: this
 			},
 			'eventdelete': {
 				fn: function(win, rec){
 					this.eventStore.remove(rec);
-					calendarObj.showMsg('Event '+ rec.data.Title +' was deleted');
 				},
 				scope: this
 			},
@@ -171,7 +139,6 @@ calendar.prototype.showEditWindow = function(rec, animateTarget){
 						rec.data.IsNew = false;
 						this.eventStore.add(rec);
 						this.eventStore.sync();
-						calendarObj.showMsg('Event '+ rec.data.Title +' was added');
 					},
 					scope: this
 				},
@@ -180,7 +147,6 @@ calendar.prototype.showEditWindow = function(rec, animateTarget){
 						win.hide();
 						rec.commit();
 						this.eventStore.sync();
-						calendarObj.showMsg('Event '+ rec.data.Title +' was updated');
 					},
 					scope: this
 				},
@@ -189,14 +155,13 @@ calendar.prototype.showEditWindow = function(rec, animateTarget){
 						this.eventStore.remove(rec);
 						this.eventStore.sync();
 						win.hide();
-						calendarObj.showMsg('Event '+ rec.data.Title +' was deleted');
 					},
 					scope: this
 				},
 				'editdetails': {
 					fn: function(win, rec){
 						win.hide();
-						Ext.getCmp('app-calendar').showEditForm(rec);
+						calendarObj.calendarPanel.showEditForm(rec);
 					}
 				}
 			}
@@ -210,8 +175,9 @@ calendar.prototype.showEditWindow = function(rec, animateTarget){
     // we added a title to the layout's outer center region that is app-specific. This code
     // updates that outer title based on the currently-selected view range anytime the view changes.
 calendar.prototype.updateTitle = function(startDt, endDt){
-	var p = Ext.getCmp('app-center'),
-		fmt = Ext.Date.format;
+
+	var p = this.calendarPanel,
+		fmt = Ext.SHDate.format;
 
 	if(Ext.Date.clearTime(startDt).getTime() == Ext.Date.clearTime(endDt).getTime()){
 		p.setTitle(fmt(startDt, 'F j, Y'));
@@ -227,12 +193,6 @@ calendar.prototype.updateTitle = function(startDt, endDt){
 	else{
 		p.setTitle(fmt(startDt, 'F j, Y') + ' - ' + fmt(endDt, 'F j, Y'));
 	}
-};
-calendar.prototype.showMsg = function(msg){
-	Ext.fly('app-msg').update(msg).removeCls('x-hidden');
-};
-calendar.prototype.clearMsg = function(){
-	Ext.fly('app-msg').update('').addCls('x-hidden');
 };
 
 Ext.onReady(function(){

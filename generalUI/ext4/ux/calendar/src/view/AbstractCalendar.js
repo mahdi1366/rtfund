@@ -385,7 +385,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
 
         while (--days) {
             dt = Ext.calendar.util.Date.add(dt, {days: 1});
-            if (dt > this.viewEnd) {
+            if (dt.XDate > this.viewEnd.XDate) {
                 break;
             }
             if (++d1 > 6) {

@@ -16,6 +16,13 @@ Ext.define('Ext.calendar.CalendarPanel', {
     alias: 'widget.calendarpanel',
     
     requires: [
+		'Ext.calendar.util.Date',
+        'Ext.calendar.data.MemoryCalendarStore',
+        'Ext.calendar.data.MemoryEventStore',
+        'Ext.calendar.data.Events',
+        'Ext.calendar.data.Calendars',
+        'Ext.calendar.form.EventWindow',
+		
         'Ext.layout.container.Card',
         'Ext.calendar.view.Day',
         'Ext.calendar.view.Week',
@@ -86,7 +93,7 @@ Ext.define('Ext.calendar.CalendarPanel', {
     },
 
     // private property
-    //startDate: new Ext.SHDate(),
+    startDate: new Ext.SHDate(),
 
     // private
     initComponent: function() {
@@ -517,6 +524,7 @@ Ext.define('Ext.calendar.CalendarPanel', {
         this.startDate = this.layout.activeItem.movePrev();
         this.updateNavState();
         this.fireViewChange();
+		this.onMonthClick();
     },
 
     // private
@@ -524,6 +532,7 @@ Ext.define('Ext.calendar.CalendarPanel', {
         this.startDate = this.layout.activeItem.moveNext();
         this.updateNavState();
         this.fireViewChange();
+		this.onMonthClick();
     },
 
     // private

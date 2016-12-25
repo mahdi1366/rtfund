@@ -63,6 +63,7 @@ function GetTreeNodes(){
         $refArray[$row["id"]] = &$parentNode["children"][$lastIndex];
     }
 	
+        if($_REQUEST['AddMode'] == "false" ){
 	$posts = PdoDataAccess::runquery("select concat('p_',PersonID) id,concat_ws(' ',fname,lname,CompanyName,'[',PostName,']') text,
 		'true' leaf,'user' iconCls, p.UnitID
 		from BSC_persons p join BSC_posts using(PostID) order by PostName");
@@ -77,7 +78,7 @@ function GetTreeNodes(){
 		$lastIndex = count($parentNode["children"]);
         $parentNode["children"][$lastIndex] = $post;
 	}
-
+        }
 	$str = json_encode($returnArray);
 
     $str = str_replace('"children"', 'children', $str);

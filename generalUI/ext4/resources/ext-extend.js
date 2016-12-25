@@ -721,6 +721,10 @@ Ext.SHDate.prototype = {
         this.XDate = JtoG(this);
         return this.XDate.getSeconds();
     },
+	getMilliseconds: function () {
+        this.XDate = JtoG(this);
+        return this.XDate.getMilliseconds();
+    },
     setDate: function (value) {
         this.setYearDay(value);
     },
@@ -820,7 +824,8 @@ Ext.SHDate.prototype.dateFormat = function (format) {
 	if(format != undefined)
 	{
 		var func = Ext.SHDate.formatFunctions[format];
-		return this[func]();
+		try{return this[func]();}
+		catch(e){alert(func);}
 	}
 };
 Ext.SHDate.prototype.format = Ext.SHDate.prototype.dateFormat;
@@ -1201,8 +1206,7 @@ Ext.apply(Ext.SHDate, {
 		return date;
 	},
 	add : function(date, interval, value) {
-		var d = Ext.SHDate.clone(date),
-			Date = Ext.SHDate;
+		var d = Ext.SHDate.clone(date);
 		if (!interval || value === 0) return d;
 		switch(interval.toLowerCase()) {
 			case Ext.SHDate.MILLI:

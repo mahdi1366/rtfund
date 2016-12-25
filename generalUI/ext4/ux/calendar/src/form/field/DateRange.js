@@ -10,7 +10,7 @@ Ext.define('Ext.calendar.form.field.DateRange', {
     alias: 'widget.daterangefield',
     
     requires: [
-        'Ext.form.field.Date',
+        'Ext.form.field.SHDate',
         'Ext.form.field.Time',
         'Ext.form.Label',
         'Ext.form.field.Checkbox',
@@ -21,12 +21,12 @@ Ext.define('Ext.calendar.form.field.DateRange', {
      * @cfg {String} toText
      * The text to display in between the date/time fields (defaults to 'to')
      */
-    toText: 'to',
+    toText: 'تا',
     /**
      * @cfg {String} allDayText
      * The text to display as the label for the all day checkbox (defaults to 'All day')
      */
-    allDayText: 'All day',
+    allDayText: 'تمام روز',
     /**
      * @cfg {String/Boolean} singleLine
      * This value can be set explicitly to <code>true</code> or <code>false</code> to force the field to render on
@@ -47,7 +47,7 @@ Ext.define('Ext.calendar.form.field.DateRange', {
      * @cfg {String} dateFormat
      * The date display format used by the date fields (defaults to 'n/j/Y') 
      */
-    dateFormat: 'n/j/Y',
+    dateFormat: 'Y/m/d',
     /**
      * @cfg {String} timeFormat
      * The time display format used by the time fields. By default the DateRange uses the
@@ -99,7 +99,7 @@ Ext.define('Ext.calendar.form.field.DateRange', {
     
     getStartDateConfig: function() {
         return {
-            xtype: 'datefield',
+            xtype: 'shdatefield',
             itemId: this.id + '-start-date',
             format: this.dateFormat,
             width: 100,
@@ -136,7 +136,7 @@ Ext.define('Ext.calendar.form.field.DateRange', {
     
     getEndDateConfig: function() {
         return {
-            xtype: 'datefield',
+            xtype: 'shdatefield',
             itemId: this.id + '-end-date',
             format: this.dateFormat,
             hideLabel: true,
@@ -272,12 +272,12 @@ Ext.define('Ext.calendar.form.field.DateRange', {
         var time = this[startend+'Time'].getValue(),
             dt = this[startend+'Date'].getValue();
             
-        if(Ext.isDate(dt)){
+        if(Ext.isSHDate(dt)){
             dt = Ext.SHDate.format(dt, this[startend + 'Date'].format);
         }
         else{
             return null;
-        };
+        }
         if(time && time != ''){
             time = Ext.SHDate.format(time, this[startend+'Time'].format);
             var val = Ext.SHDate.parseDate(dt + ' ' + time, this[startend+'Date'].format + ' ' + this[startend+'Time'].format);

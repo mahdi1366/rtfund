@@ -4,14 +4,19 @@
 //	Date		: 94.06
 //-----------------------------
 
+<?
+$AddMode = isset($_REQUEST["mode"]) && $_REQUEST["mode"] == "adding" ? true : false;
+?>
+
 Unit.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
-
+        AddMode : <?= $AddMode ? "true" : "false" ?>,
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
 	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
-
+        parent : <?= isset($_REQUEST["parent"]) ? $_REQUEST["parent"] : "null" ?>,
+        selectHandler : <?= isset($_REQUEST["selectHandler"]) ? $_REQUEST["selectHandler"] : "function(){}" ?>,
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -34,10 +39,19 @@ function Unit(){
 			},
 			proxy: {
 				type: 'ajax',
-				url: this.address_prefix + "baseInfo.data.php?task=GetTreeNodes"
+				url: this.address_prefix + "baseInfo.data.php?task=GetTreeNodes&AddMode=" +this.AddMode
 			}
-		})
+		}),
+                  listeners : {
+			itemclick : function(v,record){
+				
+				UnitObject.selectHandler(record.data.id, record.data.text);
+				UnitObject.parent.hide();
+			}
+		}
 	});
+if(!this.AddMode)
+	{
 	 this.tree.getDockedItems('toolbar[dock="top"]')[0].add({
 		xtype : "button",
 		iconCls : "print",
@@ -46,6 +60,7 @@ function Unit(){
 			Ext.ux.Printer.print(UnitObject.tree);
 		}
 	});
+        }
 
 	this.tree.on("itemcontextmenu", function(view, record, item, index, e)
 	{

@@ -244,9 +244,10 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 			op_menu.add({text: 'تمدید ضمانت نامه',iconCls: 'delay',
 				handler : function(){ return WarrentyRequestObject.BeforeExtendWarrentyDoc(); }})
 		}
-		op_menu.add({text: 'چاپ ضمانت نامه',iconCls: 'print',
-			handler : function(){ return WarrentyRequestObject.Print(); }});
 	}
+	
+	op_menu.add({text: 'چاپ ضمانت نامه',iconCls: 'print',
+			handler : function(){ return WarrentyRequestObject.Print(); }});
 	
 	op_menu.add({text: 'هزینه ها',iconCls: 'account', 
 		handler : function(){ return WarrentyRequestObject.ShowCosts(); }});

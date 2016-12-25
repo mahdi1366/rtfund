@@ -24,14 +24,12 @@ Ext.calendar.data.EventMappings = {
     StartDate: {
         name: 'StartDate',
         mapping: 'start',
-        type: 'date',
-        dateFormat: 'c'
+        dateFormat: 'Ymd'
     },
     EndDate: {
         name: 'EndDate',
         mapping: 'end',
-        type: 'date',
-        dateFormat: 'c'
+        dateFormat: 'Ymd'
     },
     Location: {
         name: 'Location',

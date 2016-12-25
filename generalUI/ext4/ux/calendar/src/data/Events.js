@@ -14,8 +14,8 @@ Ext.define('Ext.calendar.data.Events', {
                 "id":1001,
                 "cid":1,
                 "title":"Vacation",
-                "start":makeDate(-20, 10),
-                "end":makeDate(-10, 15),
+                "start":new Ext.SHDate(),
+                "end":new Ext.SHDate(),
                 "notes":"Have fun"
             },{
                 "id":1002,

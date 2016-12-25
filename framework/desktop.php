@@ -703,7 +703,7 @@ if ($menuStr != "") {
 Ext.require([
 	//'Ext.diag.layout.Context',
 	//'Ext.diag.layout.ContextItem',
-	'Ext.calendar.App'
+	'Ext.calendar.CalendarPanel'
 ]);
 	var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
 	Ext.QuickTips.init();
