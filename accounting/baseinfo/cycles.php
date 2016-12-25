@@ -10,7 +10,7 @@ require_once inc_dataGrid;
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
-$dg = new sadaf_datagrid("dg",$js_prefix_address . "baseInfo.data.php?task=SelectCycles","div_grid_user");
+$dg = new sadaf_datagrid("dg",$js_prefix_address . "baseinfo.data.php?task=SelectCycles","div_grid_user");
 
 $dg->addColumn("","CycleID","", true);
 $dg->addColumn("","IsClosed","", true);
@@ -96,7 +96,7 @@ ACC_Cycle.prototype.saveData = function(store,record)
 			task: 'SaveCycle',
 			record : Ext.encode(record.data)
 		},
-		url: this.address_prefix +'baseInfo.data.php',
+		url: this.address_prefix +'baseinfo.data.php',
 		method: 'POST',
 
 		success: function(response){

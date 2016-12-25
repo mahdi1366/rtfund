@@ -136,24 +136,32 @@ if(isset($_REQUEST["show"]))
 	$report2 = ob_get_clean();
 	
 	//..........................................................
-	$LastPayedInstallment = 0;
+	$LastPayedInstallment = null;
+	$TotalUsedPayAmount = 0;
 	foreach($rpg->mysql_resource as $row)
 	{
 		if($row["remainder"]*1 == 0 && isset($row["InstallmentID"]))
-			$LastPayedInstallment = $row["InstallmentID"];
+		{
+			$LastPayedInstallment = $row;
+			$TotalUsedPayAmount = 0;
+		}
+		else
+			$TotalUsedPayAmount += $row["UsedPayAmount"];
 	}
-	if($LastPayedInstallment == 0)
+	if($LastPayedInstallment == null)
 		$EndingAmount = $rpg2->mysql_resource[0]["pureAmount"];
 	else
 	{
 		for($i=0; $i < count($rpg2->mysql_resource);$i++)
 		{
-			if($rpg2->mysql_resource[$i]["InstallmentID"] == $LastPayedInstallment)
+			if($rpg2->mysql_resource[$i]["InstallmentID"] == $LastPayedInstallment["InstallmentID"])
 			{
 				if($i+1 == count($rpg2->mysql_resource) )
-					$EndingAmount = 0;
+					$EndingAmount = $rpg->mysql_resource[ count($rpg->mysql_resource)-1 ]["TotalRemainder"];
 				else
-					$EndingAmount = $rpg2->mysql_resource[$i+1]["pureAmount"];
+					$EndingAmount = $rpg2->mysql_resource[$i+1]["pureAmount"]*1 + 
+						$rpg->mysql_resource[ count($rpg->mysql_resource)-1 ]["ForfeitAmount"]*1 -
+						$TotalUsedPayAmount;
 				break;
 			}
 		}
