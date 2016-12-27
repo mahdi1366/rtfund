@@ -191,9 +191,10 @@ Ext.define('Ext.calendar.form.field.DateRange', {
     
     getDateSeparatorConfig: function() {
         return {
-            xtype: 'label',
+            xtype: 'displayfield',
             itemId: this.id + '-to-label',
-            text: this.toText,
+            fieldLabel: this.toText,
+			width : 20,
             margins: { top: 4, right: 5, bottom: 0, left: 0 }
         };
     },

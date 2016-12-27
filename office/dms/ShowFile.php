@@ -69,7 +69,7 @@ foreach($dt as $file)
 	echo $file["FileType"] ;
 	if($file["FileType"] == "pdf")
 	{
-		echo "<img id=pdf_DIV_" . $file["RowID"] . ">";
+		echo "<div id=pdf_DIV_" . $file["RowID"] . " style='height:500px'></div>";
 		echo '<script>PDFObject.embed("'.data_uri($FileContent, "pdf") . '", "#pdf_DIV_'.$file["RowID"].'");</script>';
 	}
 	else

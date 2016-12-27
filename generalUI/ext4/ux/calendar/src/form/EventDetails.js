@@ -107,19 +107,9 @@ Ext.define('Ext.calendar.form.EventDetails', {
             growMax: 150,
             anchor: '100%'
         });
-        this.locationField = new Ext.form.Text({
-            fieldLabel: 'Location',
-            name: Ext.calendar.data.EventMappings.Location.name,
-            anchor: '100%'
-        });
-        this.urlField = new Ext.form.Text({
-            fieldLabel: 'Web Link',
-            name: Ext.calendar.data.EventMappings.Url.name,
-            anchor: '100%'
-        });
-
+        
         var leftFields = [this.titleField, this.dateRangeField, this.reminderField],
-        rightFields = [this.notesField, this.locationField, this.urlField];
+        rightFields = [this.notesField];
 
         if (this.calendarStore) {
             this.calendarField = new Ext.calendar.form.field.CalendarCombo({

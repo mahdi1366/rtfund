@@ -254,8 +254,6 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 				break;
 
 			unset($itemObj->ItemID);
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
 			$itemObj->CostID = $year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $FundYearAmount;
@@ -313,8 +311,6 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	{
 		unset($itemObj->ItemID);
 		$itemObj->details = "کارمزد وام شماره " . $ReqObj->RequestID;
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_wage;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $PartObj->MaxFundWage;
@@ -336,21 +332,22 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			}
 			unset($itemObj->ItemID);
 			$itemObj->details = "کارمزد وام شماره " . $ReqObj->RequestID;
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
 			$itemObj->CostID = $Year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $amount;
 			$itemObj->TafsiliType = TAFTYPE_YEARS;
 			$itemObj->TafsiliID = $YearTafsili;
+			if($LoanMode == "Agent")
+			{
+				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+				$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			}
 			$itemObj->Add($pdo);
 			
 			if($PartObj->FundWage*1 > $PartObj->CustomerWage)
 			{
 				unset($itemObj->ItemID);
 				$itemObj->details = "اختلاف کارمزد وام شماره " . $ReqObj->RequestID;
-				unset($itemObj->TafsiliType2);
-				unset($itemObj->TafsiliID2);
 				$itemObj->CostID = $Year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
 				$itemObj->DebtorAmount = $amount*$AgentFactor;
 				$itemObj->CreditorAmount = 0;
@@ -2791,7 +2788,7 @@ function ComputeShareProfit(){
 function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_CostID, $DocID, $pdo){
 	
 	/*@var $ReqObj WAR_requests */
-	$IsExtend = !empty($ReqObj->RefRequestID) ? true : false;
+	$IsExtend = $ReqObj->RefRequestID != $ReqObj->RequestID ? true : false;
 	
 	//------------- get CostCodes --------------------
 	$CostCode_warrenty = FindCostID("300");
@@ -2969,7 +2966,9 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		$totalCostAmount += ($row["CostType"] == "DEBTOR"? 1 : -1)*$row["CostAmount"]*1;
 		
 		unset($itemObj->ItemID);
-		$itemObj->SourceID2 = $row["CostID"];
+		$itemObj->SourceID = $IsExtend ? $ReqObj->RefRequestID : $ReqObj->RequestID;
+		$itemObj->SourceID2 = $ReqObj->RequestID;
+		$itemObj->SourceID3 = $row["CostID"];
 		$itemObj->details = $row["CostDesc"];
 		$itemObj->CostID = $row["CostCodeID"];
 		$itemObj->DebtorAmount = $row["CostType"] == "DEBTOR" ? $row["CostAmount"] : 0;
@@ -3001,6 +3000,8 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	$itemObj->TafsiliType2 = $CostObj->TafsiliType2;
 	if($TafsiliID2 != "")
 		$itemObj->TafsiliID2 = $TafsiliID2;
+	$itemObj->SourceID = $IsExtend ? $ReqObj->RefRequestID : $ReqObj->RequestID;
+	$itemObj->SourceID2 = $ReqObj->RequestID;
 	$itemObj->Add($pdo);
 	
 	//---------- ردیف های تضمین  ----------

@@ -37,7 +37,7 @@ if($ReqObj->StatusID != WAR_STEPID_CONFIRM && empty($_POST["ReadOnly"]))
 		}
 		td {
 			font-family: nazanin;
-			font-size: 14px;
+			font-size: 16px;
 		}
 		.address td{
 			font-size: 11px;

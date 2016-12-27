@@ -301,7 +301,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
 
         for (; w < weeks; w++) {
             this.evtMaxCount[w] = 0;
-            if (this.weekCount == -1 && dt > lastInMonth) {
+            if (this.weekCount == -1 && dt.XDate > lastInMonth.XDate) {
                 //current week is fully in next month so skip
                 break;
             }
@@ -313,7 +313,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
                     var evts = evtsInView.filterBy(function(rec) {
                         var startDt = Ext.SHDate.clearTime(rec.data[Ext.calendar.data.EventMappings.StartDate.name], true),
                             startsOnDate = dt.getTime() == startDt.getTime(),
-                            spansFromPrevView = (w == 0 && d == 0 && (dt > rec.data[Ext.calendar.data.EventMappings.StartDate.name]));
+                            spansFromPrevView = (w == 0 && d == 0 && (dt.XDate > rec.data[Ext.calendar.data.EventMappings.StartDate.name].XDate));
                             
                         return startsOnDate || spansFromPrevView;
                     },
@@ -586,11 +586,11 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
     getEventIdFromEl: function(el) {
         el = Ext.get(el);
         var id = el.id.split(this.eventElIdDelimiter)[1];
-        if (id.indexOf('-') > -1) {
+        /*if (id.indexOf('-') > -1) {
             //This id has the index of the week it is rendered in as the suffix.
             //This allows events that span across weeks to still have reproducibly-unique DOM ids.
             id = id.split('-')[0];
-        }
+        }*/
         return id;
     },
 

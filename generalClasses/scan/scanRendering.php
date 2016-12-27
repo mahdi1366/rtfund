@@ -10,15 +10,20 @@
 	<META http-equiv=Content-Type content="text/html; charset=UTF-8" >
 	<meta http-equiv="Content-Language" content="fa">
 
-	<script type="text/javascript" src="/generalUI/resources/adapter/ext/ext-base.js"></script>
-	<script type="text/javascript" src="/generalUI/resources/ext-all.js"></script>
+	<script type="text/javascript" src="/generalUI/ext4/resources/ext-all.js"></script>
 
 	<script src="scripts/prototype.js" type="text/javascript"></script>
 	<script src="scripts/scriptaculous.js?load=effects,builder,dragdrop" type="text/javascript"></script>
 	<script src="scripts/cropper.js" type="text/javascript"></script>
+	<a href="javascript:program.open('C:\\SHJ_Twain\\SHJ_Twain.exe')"><img src="Registration.jpg"></a>
 	<script>
 	//netscape.security.PrivilegeManager.enablePrivilege('UniversalFileRead');
-	netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+	//netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+
+
+	var oShell = new ActiveXObject("WScript.Shell");
+    oShell.Run('C:\\SHJ_Twain\\SHJ_Twain.exe', 1);
 
 	// create rendering file ...............................................
 	var renderFile = Components.classes["@mozilla.org/file/directory_service;1"].

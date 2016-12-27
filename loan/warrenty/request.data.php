@@ -117,7 +117,7 @@ function RegWarrentyDoc(){
 	$pdo->beginTransaction();
 	
 	$DocID = RegisterWarrantyDoc($ReqObj, $_POST["CostID"],
-		$_POST["BankTafsili"],$_POST["AccountTafsili"],$_POST["Block_CostID"], null, $pdo);
+		$_POST["TafsiliID"],$_POST["TafsiliID2"],$_POST["Block_CostID"], null, $pdo);
 	if(!$DocID)
 	{
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
@@ -146,8 +146,8 @@ function editWarrentyDoc(){
 	
 	ReturnWarrantyDoc($ReqObj, $pdo, true);
 	
-	$DocID = RegisterWarrantyDoc($ReqObj, $_POST["CostCode"],
-		$_POST["BankTafsili"],$_POST["AccountTafsili"], $_POST["Block_CostID"], $DocID, $pdo);
+	$DocID = RegisterWarrantyDoc($ReqObj, $_POST["CostID"],
+		$_POST["TafsiliID"],$_POST["TafsiliID2"], $_POST["Block_CostID"], $DocID, $pdo);
 	if(!$DocID)
 	{
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());

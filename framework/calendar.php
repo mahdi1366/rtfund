@@ -38,12 +38,11 @@ function calendar()
 
 	this.calendarPanel = new Ext.calendar.CalendarPanel({
 		width : 800,
-		height : 500,
-		title : "dsfsd",
+		height : 600,
 		renderTo : this.get("calendar_container"),
 		eventStore: this.eventStore,
 		calendarStore: this.calendarStore,
-	//	activeItem: 3, // month view
+		activeItem: 3, // month view
 
 		monthViewCfg: {
 			showHeader: true,
@@ -59,10 +58,9 @@ function calendar()
 				scope: this
 			},
 			'eventover': function(vw, rec, el){
-				//console.log('Entered evt rec='+rec.data.Title+', view='+ vw.id +', el='+el.id);
+				alert(1);
 			},
 			'eventout': function(vw, rec, el){
-				//console.log('Leaving evt rec='+rec.data.Title+', view='+ vw.id +', el='+el.id);
 			},
 			'viewchange': {
 				fn: function(p, vw, dateInfo){
@@ -70,8 +68,6 @@ function calendar()
 						calendarObj.editWin.hide();
 					};
 					if(dateInfo){
-						// will be null when switching to the event edit form so ignore
-						//Ext.getCmp('app-nav-picker').setValue(dateInfo.activeDate);
 						calendarObj.updateTitle(dateInfo.viewStart, dateInfo.viewEnd);
 					}
 				},
