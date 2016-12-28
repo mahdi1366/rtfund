@@ -61,16 +61,15 @@ echo '<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>';
 echo "<center>";
 foreach($dt as $file)
 {
-	$FileContent = $file["FileContent"] . 
-		file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" .
-		$file["RowID"] . "." . $file["FileType"]);
+	$FileContent = "data:application/pdf;base64," . $file["FileContent"] . file_get_contents(
+		getenv("DOCUMENT_ROOT") . "/storage/documents/" . $file["RowID"] . "." . $file["FileType"]);
 	
 	echo "<div style='width:100%;' align=center><hr>صفحه " . $file["PageNo"] . "<hr></div>";
 	echo $file["FileType"] ;
 	if($file["FileType"] == "pdf")
 	{
 		echo "<div id=pdf_DIV_" . $file["RowID"] . " style='height:500px'></div>";
-		echo '<script>PDFObject.embed("'.data_uri($FileContent, "pdf") . '", "#pdf_DIV_'.$file["RowID"].'");</script>';
+		echo '<script>PDFObject.embed("w.pdf'./*data_uri($FileContent, "pdf") */"". '", "#pdf_DIV_'.$file["RowID"].'");</script>';
 	}
 	else
 		echo "<img src=" . data_uri($FileContent, 'image/jpeg') . " /></br>";

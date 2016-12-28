@@ -511,7 +511,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	//-----------------------------------------------
 	$obj2 = new LON_requests($RequestID);
 	if($obj2->ReqPersonID == SHEKOOFAI)
-		return ComputeInstallmentsShekoofa($RequestID, $returnMode);
+		return ComputeInstallmentsShekoofa($RequestID, $returnMode, $pdo2);
 	//-----------------------------------------------
 	$obj = LON_ReqParts::GetValidPartObj($RequestID);
 	//-----------------------------------------------
@@ -625,7 +625,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	die();
 }
 
-function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false){
+function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false, $pdo2 = null){
 	
 	$RequestID = empty($RequestID) ? $_REQUEST["RequestID"] : $RequestID;
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
@@ -642,8 +642,13 @@ function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false){
 	//----------------------------------------------	
 	$totalWage = ComputeWageOfSHekoofa($partObj);
 	
-	$pdo = PdoDataAccess::getPdoObject();
-	$pdo->beginTransaction();
+	if($pdo2 == null)
+	{
+		$pdo = PdoDataAccess::getPdoObject();
+		$pdo->beginTransaction();
+	}
+	else
+		$pdo = $pdo2;
 	
 	for($i=0; $i < $partObj->InstallmentCount; $i++)
 	{
@@ -667,10 +672,10 @@ function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false){
 		}
 	}
 	
-	$pdo->commit();
-	
 	if($returnMode)
 		return true;
+	
+	$pdo->commit();
 	
 	echo Response::createObjectiveResponse(true, "");
 	die();
