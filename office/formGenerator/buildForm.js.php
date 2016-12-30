@@ -29,45 +29,6 @@ function FGR_Form()
 				anchor : "100%",
 				allowBlank : false	
 			},{
-				xtype : "container",
-				layout : "hbox",
-				anchor : "100%",
-				items :[{
-					xtype:'filefield',
-					fieldLabel: 'فایل فرم',
-					name: 'attach',
-					width : 440
-				},{
-					xtype : "button",
-					iconCls : 'info',
-					listeners : {
-						render : function(){
-							new Ext.ToolTip({
-								target: this.getEl(),
-								html : "فایل فرم باید به صورت یک فایل html بوده و فاقد تگهای ابتدایی از جمله " +
-									"html ، head ، body و غیره باشد. در مکان هایی از فایل که اجزاء فرم باید قرار گیرند ، کد جزء را بین دو علامت # قرار دهید." + 
-									"به این ترتیب مقدار آن جزء در آن مکان قرار می گیرد.",
-								title: 'توجه',
-								autoHide: false,
-								closable: true
-							})
-						}
-					}
-				}]
-			},{
-				xtype : "combo",
-				fieldLabel: 'آیتم وابسته',
-				name: 'reference',
-				store: new Ext.data.SimpleStore({
-					fields : ['id','title'],
-					data : [ 
-						['loan', 'وام']
-					]
-				}),   
-				displayField: 'title',
-				valueField: 'id',
-				anchor : "100%"
-			},{
 				xtype : "hidden",
 				name : "FormID"
 			}

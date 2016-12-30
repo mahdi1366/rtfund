@@ -20,7 +20,7 @@ $col->editor = ColumnEditor::TextField();
 $col = $dg->addColumn("آیتم مورد نظر", "ObjectType", "string");
 if($accessObj->EditFlag && $accessObj->AddFlag)
 	$col->editor = ColumnEditor::ComboBox(
-		PdoDataAccess::runquery("select * from BaseInfo where typeID=11"), "InfoID", "InfoDesc");
+		PdoDataAccess::runquery("select * from BaseInfo where typeID=11"), "InfoID", "InfoDesc","","",true);
 $col->width = 200;
 
 $col = $dg->addColumn("مراحل","","");

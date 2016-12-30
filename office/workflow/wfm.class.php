@@ -288,6 +288,17 @@ class WFM_FlowRows extends PdoDataAccess {
 		return $obj->AddFlowRow(0);		
 	}
 	
+	static function ReturnStartFlow($FlowID, $ObjectID){
+		
+		$dt = PdoDataAccess::runquery("select * from WFM_FlowRows where FlowID=? AND ObjectID=?",
+				array($FlowID, $ObjectID));
+		if(count($dt) == 1 && $dt[0]["StepRowID"] == "")
+		{
+			PdoDataAccess::runquery("delete from WFM_FlowRows where RowID=?", array($dt[0]["RowID"]));
+			return ExceptionHandler::GetExceptionCount() == 0;
+		}
+	}
+	
 	static function IsFlowStarted($FlowID, $ObjectID){
 		
 		$dt = PdoDataAccess::runquery("select * from WFM_FlowRows "
@@ -316,6 +327,7 @@ class WFM_FlowRows extends PdoDataAccess {
 		return array(
 			"IsStarted" => count($dt) > 0 ? true : false,
 			"IsEnded" => count($dt) > 0 && $dt[0]["IsEnded"] == "YES" ? true : false,
+			"JustStarted" => count($dt) > 0 && $dt[0]["StepRowID"] == "" ? true : false ,
 			"StepDesc" => count($dt) > 0 ? ($dt[0]["StepDesc"] == "" ? "شروع گردش" : $dt[0]["StepDesc"]) : "خام"
 		);
 	}
@@ -364,7 +376,6 @@ class WFM_FlowRows extends PdoDataAccess {
 					where 1=1 " . $where . dataReader::makeOrder();
 		return PdoDataAccess::runquery_fetchMode($query, $params);
 	}
-	
 	
 }
 

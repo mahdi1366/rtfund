@@ -72,9 +72,14 @@ ManageForm.prototype.FormInfo = function(){
 		});
 	}
 	
-	this.FormInfoWindow.show();	
 	var record = this.grid.getSelectionModel().getLastSelected();
-	
+	if(record.data.target == "1")
+	{
+		window.open(record.data.url + "?" + 
+			record.data.parameter + "=" + record.data.ObjectID );
+		return;
+	}
+	this.FormInfoWindow.show();	
 	eval("param = {ExtTabID : '" + this.FormInfoWindow.getEl().id + "'," + 
 					record.data.parameter + " : '" + record.data.ObjectID + "'," +
 					"ReadOnly : true}");

@@ -19,16 +19,30 @@ if($type == "tazmin")
 	$SumAmount = 0;
 	for($i=0; $i<count($temp); $i++)
 	{
+		$temp[$i]["NO"] = "";
+		$temp[$i]["AMOUNT"] = "";
 		$temp[$i]["paramValues"] = "";
-
+		
 		$dt = PdoDataAccess::runquery("select * from DMS_DocParamValues join DMS_DocParams using(ParamID)
 			where DocumentID=?", array($temp[$i]["DocumentID"]));
+
 		foreach($dt as $row)
 		{
 			$value = $row["ParamValue"];
+			if($row["KeyTitle"] == "no")
+			{
+				$temp[$i]["NO"] = $value;
+				continue;
+			}
+			if($row["KeyTitle"] == "amount")
+			{
+				$temp[$i]["AMOUNT"] = $value;
+				continue;
+			}
 			if($row["ParamType"] == "currencyfield")
 				$value = number_format($value*1);
-			$temp[$i]["paramValues"] .= $row["ParamDesc"] . " : " . $value . "<br>";
+			$temp[$i]["paramValues"] .= "<div style='float:right;padding-left:10px' >" .
+				$row["ParamDesc"] . " : " . $value . "</div>";
 
 			if($row["KeyTitle"] == "amount")
 				$SumAmount += $row["ParamValue"]*1;
@@ -53,8 +67,10 @@ if($type == "tazmin")
 			</table>
 		";
 
-		$rpt->addColumn("نوع ضمانت", "DocTypeDesc");
-		$rpt->addColumn("اطلاعات ضمانت", "paramValues");
+		$rpt->addColumn("سند", "DocTypeDesc");
+		$rpt->addColumn("سریال", "NO");
+		$rpt->addColumn("مبلغ", "AMOUNT", "ReportMoneyRender");
+		$rpt->addColumn("سایر اطلاعات", "paramValues");
 	}
 }
 //..............................................................................

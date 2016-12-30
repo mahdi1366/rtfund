@@ -44,7 +44,7 @@ $col->sortable = false;
 $col->width = 40;
 //---------------------------
 
-$dg->addButton("","ایجاد","add","function(){FGR_FormObject.LoadInfo('new')}");
+$dg->addButton("","ایجاد","add","function(){FGR_FormObject.LoadFormInfo('new')}");
 
 $dg->height = 300;
 $dg->title = "فرم های ایجاد شده";

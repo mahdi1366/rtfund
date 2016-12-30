@@ -701,6 +701,9 @@ class ReportGenerator {
 		$this->columns[] = $obj;
 		return $obj;
 	}
+	
+	//---------------------------------------------------------------
+
 }
 
 class ReportColumn {
@@ -744,4 +747,12 @@ class ReportColumn {
 
 }
 
+	
+function ReportMoneyRender($row, $value){
+		return number_format($value);
+	}
+	
+function ReportDateRender($row, $value){
+		return DateModules::miladi_to_shamsi($value);
+	}
 ?>

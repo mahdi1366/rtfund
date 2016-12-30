@@ -1,0 +1,360 @@
+<?php
+//-----------------------------
+//	Programmer	: Fatemipour
+//	Date		: 94.08
+//-----------------------------
+
+require_once '../header.inc.php';
+require_once 'wfm.class.php';
+require_once 'form.class.php';
+require_once inc_dataReader;
+require_once inc_response;
+
+if(!empty($_REQUEST["task"]))
+      $_REQUEST["task"]();
+
+function SelectForms() {
+    $where = " AND IsActive='YES'";
+	
+    $whereParams = array();
+    if (!empty($_REQUEST['FormID'])) {
+        $where = " AND FormID = :FormID";
+        $whereParams[':FormID'] = $_REQUEST['FormID'];
+    }
+    $temp = WFM_forms::Get($where, $whereParams);
+    $res = PdoDataAccess::fetchAll($temp, $_GET['start'], $_GET['limit']);
+	
+	if(!empty($_REQUEST['FormID']) && isset($_REQUEST["EditContent"]))
+	{
+		$obj = new WFM_forms($_REQUEST['FormID']);
+		$content = $obj->FormContent;
+		$res[0]["content"] = PrepareContentToEdit($content);
+	}
+	
+    echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+    die();
+}
+
+function selectFormItems() {
+	
+	$where = "";
+	$params = array();
+	
+	if(!empty($_REQUEST["FormID"]))
+	{
+		$where .= " AND FormID in(0,:t)";
+		$params[":t"] = $_REQUEST["FormID"];
+	}
+	
+	if(!empty($_GET["query"]))
+	{
+		$field = empty($_GET["field"]) ? "" : $_GET["field"];
+	}
+	
+	if(!empty($_REQUEST["NotGlobal"]))
+		$where .= " AND FormID >0";
+	
+    $temp = WFM_FormItems::Get($where . " order by FormItemID", $params);
+	
+	if(!empty($_REQUEST["limit"]))
+		$res = PdoDataAccess::fetchAll ($temp, $_GET["start"], $_GET["limit"]);
+	else
+		$res = $temp->fetchAll();
+	
+    echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+    die();
+}
+
+function GetEmptyFormID() {
+	
+	$dt = PdoDataAccess::runquery("select FormID from WFM_forms where FormContent is null");
+	if(count($dt) > 0)
+		return $dt[0]["FormID"];
+	
+	$obj = new WFM_forms();
+	$obj->Add();
+	
+	return $obj->FormID;
+}
+
+function SaveForm() {
+	
+    $pdo = PdoDataAccess::getPdoObject();
+    $pdo->beginTransaction();
+	
+	$CorrectContent = WFM_forms::CorrectFormContentItems($_POST['FormContent']);
+	$obj = new WFM_forms();
+	$obj->FormContent = $CorrectContent;
+	$obj->FormTitle = $_POST['FormTitle'];
+	$obj->FlowID = $_POST['FlowID'];
+	if ($_POST['FormID'] > 0) {
+		$obj->FormID = $_POST['FormID'];
+		$result = $obj->Edit($pdo);
+	} else {
+		$result = $obj->Add($pdo);
+	}
+	
+	if(!$result)
+	{
+		$pdo->rollBack();
+		print_r(ExceptionHandler::PopAllExceptions());
+		//echo PdoDataAccess::GetLatestQueryString();
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, $obj->FormID);
+	die();
+}
+
+function saveFormItem() {
+	
+    $pdo = PdoDataAccess::getPdoObject();
+    $pdo->beginTransaction();
+    try {
+        $obj = new WFM_FormItems();
+        PdoDataAccess::FillObjectByJsonData($obj, $_POST['record']);
+        if ($obj->FormItemID > 0) {
+            $obj->Edit();
+        } else {
+            $obj->Add($pdo);
+        }
+        $pdo->commit();
+        echo Response::createObjectiveResponse(true, '');
+        die();
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        //print_r(ExceptionHandler::PopAllExceptions());
+        //echo PdoDataAccess::GetLatestQueryString();
+        echo Response::createObjectiveResponse(false, $e->getMessage());
+        die();
+    }
+}
+
+function GetFormContent() {
+	
+    $obj = new WFM_forms($_POST['FormID']);
+    //echo Response::createObjectiveResponse(true, $obj->FormContent);
+	echo $obj->FormContent;
+    die();
+}
+
+function GetFormTitle() {
+    $obj = new WFM_forms($_POST['FormID']);
+    echo Response::createObjectiveResponse(true, $obj->FormTitle);
+    die();
+}
+
+function deleteFormItem() {
+    $pdo = PdoDataAccess::getPdoObject();
+    $pdo->beginTransaction();
+    try {
+        $obj = new WFM_FormItems($_POST['FormItemID']);
+        $obj->Remove($pdo);
+        //
+        $pdo->commit();
+        echo Response::createObjectiveResponse(true, '');
+        die();
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        //print_r(ExceptionHandler::PopAllExceptions());
+        //echo PdoDataAccess::GetLatestQueryString();
+        echo Response::createObjectiveResponse(false, $e->getMessage());
+        die();
+    }
+}
+
+function deleteForm() {
+    $pdo = PdoDataAccess::getPdoObject();
+    $pdo->beginTransaction();
+	
+	$obj = new WFM_forms($_POST['FormID']);
+	$result = $obj->Remove();
+	
+	if(!$result)
+	{
+		$pdo->rollBack();
+		//print_r(ExceptionHandler::PopAllExceptions());
+		//echo PdoDataAccess::GetLatestQueryString();
+		echo Response::createObjectiveResponse(false, $e->getMessage());
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, '');
+	die();
+}
+
+function PrepareContentToEdit($content){
+	
+	$dt = WFM_FormItems::Get();
+	$ItemsArr = array();
+	foreach($dt as $item)
+		$ItemsArr[ $item["FormItemID"] ] = $item["ItemName"];
+		
+	$RevContent = '';
+    $arr = explode(WFM_forms::TplItemSeperator, $content);
+    for ($i = 0; $i < count($arr); $i++) {
+        $FormItemID = $arr[$i];
+        if (is_numeric($FormItemID)) {
+            $RevContent .= WFM_forms::TplItemSeperator . 
+				$FormItemID . '--' . $ItemsArr[$FormItemID] . WFM_forms::TplItemSeperator;
+        } else {
+            $RevContent .= $FormItemID;
+        }
+    }
+	return $RevContent;
+}
+
+function CopyForm(){
+	
+	$FormID = $_POST["FormID"];
+	
+	$obj = new WFM_forms($FormID);
+	$obj->FormTitle .= " (کپی)";
+	unset($obj->FormID);
+	$obj->Add();
+	
+	PdoDataAccess::runquery("insert into WFM_FormItems(FormID,ItemName,ItemType)
+		select :copy,ItemName,ItemType from WFM_FormItems where FormID=:src",
+			array(":src" => $FormID, ":copy" => $obj->FormID));
+	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+//------------------------------------------------------------------------------
+
+
+function SelectMyRequests() {
+	
+	$where = " AND r.PersonID=:p";
+	$params = array(":p" => $_SESSION["USER"]["PersonID"]);
+	
+	if(!empty($_REQUEST["RequestID"]))
+	{
+		$where .= " AND RequestID=:req";
+		$params[":req"] = $_REQUEST["RequestID"];
+	}
+	
+    $temp = WFM_requests::Get($where, $params, dataReader::makeOrder());
+	$res = PdoDataAccess::fetchAll($temp, $_GET['start'], $_GET['limit']);
+	
+	for($i=0; $i < count($res);$i++)
+	{
+		$arr = WFM_FlowRows::GetFlowInfo($res[$i]["FlowID"], $res[$i]["RequestID"]);
+		$res[$i]["IsStarted"] = $arr["IsStarted"] ? "YES" : "NO";
+		$res[$i]["IsEnded"] = $arr["IsEnded"] ? "YES" : "NO";
+		$res[$i]["JustStarted"] = $arr["JustStarted"] ? "YES" : "NO";
+		$res[$i]["StepDesc"] = $arr["StepDesc"];
+	}
+	
+    echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+    die();
+}
+
+function SaveRequest() {
+   
+	$pdo = PdoDataAccess::getPdoObject();
+    $pdo->beginTransaction();
+	
+	$ReqObj = new WFM_requests();
+	PdoDataAccess::FillObjectByArray($ReqObj, $_POST);
+	$formObj = new WFM_forms($ReqObj->FormID);
+	
+	$ReqObj->ReqContent = $formObj->FormContent;
+	
+	if ($_POST["RequestID"] == "")
+	{
+		$ReqObj->PersonID = $_SESSION['USER']["PersonID"];
+		$ReqObj->RegDate = PDONOW;
+		$result = $ReqObj->Add($pdo);
+	} 
+	else
+	{
+		$result = $ReqObj->Edit($pdo);
+		/* removing values of contract items */
+		WFM_RequestItems::RemoveAll($ReqObj->RequestID, $pdo);
+	}
+
+	if(!$result)
+	{
+		$pdo->rollBack();
+        print_r(ExceptionHandler::PopAllExceptions());
+        //echo PdoDataAccess::GetLatestQueryString();
+        echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+        die();
+	}	
+	
+	/* Adding the values of Request items */
+	foreach ($_POST as $PostData => $val) 
+	{
+		if(empty($val))
+			continue;
+		
+		if (!(substr($PostData, 0, 8) == "ReqItem_"))
+			continue;
+		
+		$items = explode('_', $PostData);
+		$FormItemID = $items[1];
+		
+		$ReqItemsObj = new WFM_RequestItems();
+		$ReqItemsObj->RequestID = $ReqObj->RequestID;
+		$ReqItemsObj->FormItemID = $FormItemID;
+		
+		$FormItemObj = new WFM_FormItems($ReqItemsObj->FormItemID);
+		switch ($FormItemObj->ItemType) {
+			case 'shdatefield':
+				$ReqItemsObj->ItemValue = DateModules::shamsi_to_miladi($val);
+				break;
+			default :
+				$ReqItemsObj->ItemValue = $val;
+		}
+		$result = $ReqItemsObj->Add($pdo);
+	}
+	
+	if(!$result)
+	{
+		$pdo->rollBack();
+        print_r(ExceptionHandler::PopAllExceptions());
+        //echo PdoDataAccess::GetLatestQueryString();
+        echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+        die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, $ReqObj->RequestID);
+	die();
+}
+
+function GetRequestItems() {
+	
+    $res = WFM_RequestItems::Get(" AND RequestID=?", array($_REQUEST['RequestID']));
+    echo dataReader::getJsonData($res->fetchAll(),$res->rowCount(), $_GET["callback"]);
+    die();
+}
+
+function DeleteRequest(){
+	
+	$pdo = PdoDataAccess::getPdoObject();
+    $pdo->beginTransaction();
+	
+	$obj = new WFM_requests($_POST['RequestID']);
+	
+	$result = WFM_RequestItems::RemoveAll($obj->RequestID, $pdo);
+	$result = $obj->Remove();
+	if(!$result)
+	{
+		$pdo->rollBack();
+		//print_r(ExceptionHandler::PopAllExceptions());
+		//echo PdoDataAccess::GetLatestQueryString();
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, '');
+	die();
+	
+}
+
+?>

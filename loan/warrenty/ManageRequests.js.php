@@ -261,6 +261,13 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
 		handler : function(){ return WarrentyRequestObject.ShowHistory(); }});
 	
+	op_menu.add({text: 'چاپ رسید تضامین',iconCls: 'print', 
+		handler : function(){ 
+			me = WarrentyRequestObject;
+			var record = me.grid.getSelectionModel().getLastSelected();
+			window.open(me.address_prefix + "PrintDocs.php?RequestID=" + record.data.RequestID);
+	}});
+	
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
 

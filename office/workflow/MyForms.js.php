@@ -154,9 +154,14 @@ MyForm.prototype.FormInfo = function(){
 			}]
 		});
 	}
-	
-	this.FormInfoWindow.show();	
 	var record = this.grid.getSelectionModel().getLastSelected();
+	if(record.data.target == "1")
+	{
+		window.open(this.address_prefix + "record.data.url?" + 
+			record.data.parameter + "=" + record.data.ObjectID );
+		return;
+	}
+	this.FormInfoWindow.show();	
 	
 	eval("param = {ExtTabID : '" + this.FormInfoWindow.getEl().id + "',ReadOnly : true," + 
 					record.data.parameter + " : '" + record.data.ObjectID + "'}");

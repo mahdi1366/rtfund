@@ -64,6 +64,9 @@ define("BACKPAY_PAYTYPE_CHEQUE", "9");
 
 define("BLOCKID_LOAN","8");
 
+define("WFM_FORM_FLOWID","5");
+
+
 function BeginReport() {
 
         echo '<html>

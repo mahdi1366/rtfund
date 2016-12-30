@@ -15,8 +15,17 @@ if(!empty($task))
 function SelectAllFlows(){
 	
 	$where = "1=1";
-	$dt = WFM_flows::GetAll($where);
+	$param = array();
+	
+	if(!empty($_REQUEST["ObjectType"]))
+	{
+		$where .= " AND ObjectType=?";
+		$param[] = $_REQUEST["ObjectType"];
+	}
+	
+	$dt = WFM_flows::GetAll($where, $param);
 	$no = $dt->rowCount();
+	
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	
 	echo dataReader::getJsonData($dt, $no, $_GET["callback"]);
@@ -154,6 +163,8 @@ function SelectAllForms(){
 				
 			when 4 then concat_ws(' ','ضمانت نامه', wp.CompanyName,wp.fname,wp.lname, 'به مبلغ ',wr.amount)
 			
+			when 5 then concat_ws(' ',wfmf.FormTitle,'به شماره',wfmr.RequestID)
+			
 		end";
 	
 	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
@@ -196,7 +207,9 @@ function SelectAllForms(){
 					if(p.IsReal='YES',concat(p.fname, ' ',p.lname),p.CompanyName) fullname,
 					$ObjectDesc ObjectDesc,
 					b.param1 url,
-					b.param2 parameter
+					b.param2 parameter,
+					b.param3 target
+	
 				from WFM_FlowRows fr
 				join ( select max(RowID) RowID,FlowID,ObjectID from WFM_FlowRows group by FlowID,ObjectID )t
 					using(RowID,FlowID,ObjectID)
@@ -212,6 +225,9 @@ function SelectAllForms(){
 				left join WAR_requests wr on(fr.FlowID=4 AND wr.RequestID=fr.ObjectID)
 				left join BaseInfo bf on(bf.TypeID=74 AND bf.InfoID=wr.TypeID)
 				left join BSC_persons wp on(wp.PersonID=wr.PersonID)
+	
+				left join WFM_requests wfmr on(fr.FlowID=".WFM_FORM_FLOWID." AND wfmr.RequestID=fr.ObjectID)
+				left join WFM_forms wfmf on(wfmr.FormID=wfmf.FormID)	
 
 				where " . $where . dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
@@ -294,4 +310,13 @@ function StartFlow(){
 	die();
 }
 
+function ReturnStartFlow(){
+	
+	$FlowID = $_REQUEST["FlowID"];
+	$ObjectID = $_REQUEST["ObjectID"];
+	$result = WFM_FlowRows::ReturnStartFlow($FlowID, $ObjectID);
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 ?>
