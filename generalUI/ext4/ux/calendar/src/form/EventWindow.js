@@ -1,5 +1,5 @@
 /**
- * @class Ext.calendar.form.EventWindow
+	* @class Ext.calendar.form.EventWindow
  * @extends Ext.Window
  * <p>A custom window containing a basic edit form used for quick editing of events.</p>
  * <p>This window also provides custom events specific to the calendar so that other calendar components can be easily
@@ -72,17 +72,15 @@ Ext.define('Ext.calendar.form.EventWindow', {
             layout: 'fit',
     
             fbar: [{
-                xtype: 'tbtext',
-                text: '<a href="#" id="tblink">Edit Details...</a>'
-            },
-            '->', {
                 text: 'Save',
+				iconCls : "save",
                 disabled: false,
                 handler: this.onSave,
                 scope: this
             },
             {
                 id: 'delete-btn',
+				iconCls : "cross",
                 text: 'Delete',
                 disabled: false,
                 handler: this.onDelete,
@@ -91,6 +89,7 @@ Ext.define('Ext.calendar.form.EventWindow', {
             },
             {
                 text: 'Cancel',
+				iconCls : "undo",
                 disabled: false,
                 handler: this.onCancel,
                 scope: this
@@ -156,15 +155,6 @@ Ext.define('Ext.calendar.form.EventWindow', {
         this.callParent();
 
         this.el.addCls('ext-cal-event-win');
-
-        Ext.get('tblink').on('click', this.onEditDetailsClick, this);
-    },
-    
-    // private
-    onEditDetailsClick: function(e){
-        e.stopEvent();
-        this.updateRecord(this.activeRecord, true);
-        this.fireEvent('editdetails', this, this.activeRecord, this.animateTarget);
     },
 
     /**

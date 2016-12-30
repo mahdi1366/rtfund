@@ -57,11 +57,6 @@ function calendar()
 				},
 				scope: this
 			},
-			'eventover': function(vw, rec, el){
-				alert(1);
-			},
-			'eventout': function(vw, rec, el){
-			},
 			'viewchange': {
 				fn: function(p, vw, dateInfo){
 					if(calendarObj.editWin){
@@ -125,6 +120,39 @@ function calendar()
 }
 
 calendar.prototype.showEditWindow = function(rec, animateTarget){
+	
+	if(!this.editWin){
+		
+		this.editWin = new Ext.Window.Window({
+			
+			items : new Ext.form.Panel({
+				layout :{
+					type : "table",
+					columns : 2
+				},
+				items :[{
+					xtype : "textfield",
+					name : "EventTitle",
+					fieldLabel : "عنوان رویداد",
+					colspan : 2
+				},{
+					xtype : "shdatefield",
+					name : "StartDate",
+					fieldLabel : "تاریخ از"
+				},{
+					xtype : "shdatefield",
+					name : "EndDate",
+					fieldLabel : "تا"
+				}]
+			})
+		});
+	}
+
+
+
+
+
+
 	if(!this.editWin){
 		this.editWin = Ext.create('Ext.calendar.form.EventWindow', {
 			calendarStore: this.calendarStore,
@@ -153,16 +181,11 @@ calendar.prototype.showEditWindow = function(rec, animateTarget){
 						win.hide();
 					},
 					scope: this
-				},
-				'editdetails': {
-					fn: function(win, rec){
-						win.hide();
-						calendarObj.calendarPanel.showEditForm(rec);
-					}
 				}
 			}
 		});
 	}
+	
 	this.editWin.show(rec, animateTarget);
 };
         
