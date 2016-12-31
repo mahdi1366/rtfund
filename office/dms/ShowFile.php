@@ -27,28 +27,18 @@ if(count($dt) == 0)
 
 if(!empty($_REQUEST["RowID"]))
 {
-	$FileContent = $dt[0]["FileContent"] . 
-		file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" . 
+	$FileContent = $dt[0]["FileContent"] . file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" . 
 		$dt[0]["RowID"] . "." . $dt[0]["FileType"]);
-	
-	if($dt[0]["FileType"] == "pdf")
-	{
-		echo data_uri($FileContent, "pdf");
-		die();
-	}
-	else
-	{
-		header('Content-disposition: filename=file.' . $dt[0]["FileType"]);
-		header('Content-type: jpg');
-		header('Pragma: no-cache');
-		header('Expires: 0');
-		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-		header('Pragma: public');
-		header("Content-Transfer-Encoding: binary");
 
-		echo $FileContent;
-		die();
-	}
+	header('Content-disposition: filename=file.' . $dt[0]["FileType"]);
+	header('Content-type: file');
+	header('Pragma: no-cache');
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	header("Content-Transfer-Encoding: binary");
+	echo $FileContent;
+	die();
 }
 
 function data_uri($content, $mime) {
@@ -61,15 +51,16 @@ echo '<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>';
 echo "<center>";
 foreach($dt as $file)
 {
-	$FileContent = "data:application/pdf;base64," . $file["FileContent"] . file_get_contents(
-		getenv("DOCUMENT_ROOT") . "/storage/documents/" . $file["RowID"] . "." . $file["FileType"]);
+	$FileContent = $file["FileContent"] . 
+		file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" .
+		$file["RowID"] . "." . $file["FileType"]);
 	
 	echo "<div style='width:100%;' align=center><hr>صفحه " . $file["PageNo"] . "<hr></div>";
 	echo $file["FileType"] ;
 	if($file["FileType"] == "pdf")
 	{
 		echo "<div id=pdf_DIV_" . $file["RowID"] . " style='height:500px'></div>";
-		echo '<script>PDFObject.embed("w.pdf'./*data_uri($FileContent, "pdf") */"". '", "#pdf_DIV_'.$file["RowID"].'");</script>';
+		echo '<script>PDFObject.embed("'.data_uri($FileContent, "pdf") . '", "#pdf_DIV_'.$file["RowID"].'");</script>';
 	}
 	else
 		echo "<img src=" . data_uri($FileContent, 'image/jpeg') . " /></br>";

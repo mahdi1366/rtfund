@@ -312,7 +312,7 @@ function SavePart(){
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	$dt = LON_ReqParts::SelectAll("RequestID=?", array($obj->RequestID));
+	$dt = LON_ReqParts::SelectAll("RequestID=? AND PartID<>?", array($obj->RequestID, $obj->PartID));
 	$firstPart = count($dt) > 0 ? false : true;
 		
 	if($obj->PartID > 0)
@@ -323,11 +323,9 @@ function SavePart(){
 			$dt = PdoDataAccess::runquery("select max(DocID) from ACC_DocItems join ACC_docs using(DocID)
 				where DocType=" . DOCTYPE_LOAN_DIFFERENCE ." AND SourceID=? AND SourceID2=?",
 				array($obj->RequestID, $obj->PartID));
-			if($dt[0][0] != "")
-			{
-				$result = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo, $dt[0][0]);
-				ComputeInstallments($obj->RequestID, true, $pdo);
-			}
+			
+			$result = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo, $dt[0][0]);
+			ComputeInstallments($obj->RequestID, true, $pdo);
 		}		
 	}
 	else
@@ -1365,20 +1363,24 @@ function editPayPartDoc(){
 		
 	if(!ReturnPayPartDoc($DocObj->DocID, $pdo, false))
 	{
-		$pdo->rollBack();
-		
+		$pdo->rollBack();		
 		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
 		die();
 	}
-	if($ReqObj->ReqPersonID == "1003")
+	if($ReqObj->ReqPersonID == SHEKOOFAI)
 		$result = RegisterSHRTFUNDPayPartDoc($ReqObj, $partobj, $PayObj, 
 				$_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, $DocObj->DocID);
 	else
 		$result = RegisterPayPartDoc($ReqObj, $partobj, $PayObj, 
 				$_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, $DocObj->DocID);
 
-	$pdo->commit();			
+	if(!$result)
+	{
+		echo Response::createObjectiveResponse(false,PdoDataAccess::GetExceptionsToString());
+		die();
+	}
 	
+	$pdo->commit();				
 	echo Response::createObjectiveResponse(true,"");
 	die();
 }

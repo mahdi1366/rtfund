@@ -61,6 +61,7 @@ define("INCOMECHEQUE_CHANGE", "3011");
 
 //............  TypeID=6 ....................
 define("BACKPAY_PAYTYPE_CHEQUE", "9");
+define("BACKPAY_PAYTYPE_CORRECT", "100");
 
 define("BLOCKID_LOAN","8");
 

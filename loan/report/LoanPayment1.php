@@ -14,7 +14,7 @@ if(isset($_REQUEST["show"]))
 	$RequestID = $_REQUEST["RequestID"];
 	
 	$dt = array();
-	$returnArr = LON_requests::ComputePayments2($RequestID, $dt);
+	$returnArr = LON_requests::ComputePayments($RequestID, $dt);
 	
 	//............ get remain untill now ......................
 	$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
@@ -27,21 +27,45 @@ if(isset($_REQUEST["show"]))
 	//.........................................................
 	
 	$rpg = new ReportGenerator();
+	$rpg->excel = !empty($_POST["excel"]);
+	function dateRender($row, $val){
+		return DateModules::miladi_to_shamsi($val);
+	}	
 	
-	$rpg->addColumn("نوع عملیات", "ActionType");
-		
-	$rpg->addColumn("تاریخ عملیات", "ActionDate","ReportDateRender");
-
-	$rpg->addColumn("مبلغ", "ActionAmount","ReportMoneyRender");
+	function amountRender($row, $val){
+		return "<span dir=ltr>" . number_format($val) . "</span>";
+	}
+	
+	$col = $rpg->addColumn("", "InstallmentID");
+	$col->hidden = true;
+	
+	$col = $rpg->addColumn("تاریخ قسط", "InstallmentDate","dateRender");
+	$col->rowspanByFields = array("InstallmentID");
+	$col->rowspaning = true;
+	
+	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount","amountRender");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("InstallmentID");
+	
+	$col = $rpg->addColumn("تاریخ پرداخت", "PayDate","dateRender");
+	$col->rowspaning = true;
+	
+	$col = $rpg->addColumn("مبلغ پرداخت", "FixPayAmount","amountRender");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("PayDate");
+	
+	$col = $rpg->addColumn("قابل برداشت", "PayAmount","amountRender");
+	
+	$col = $rpg->addColumn("برداشت شده", "UsedPayAmount","amountRender");
 	
 	$rpg->addColumn("تعداد روز تاخیر", "ForfeitDays");
-	$rpg->addColumn("مبلغ تاخیر", "CurForfeitAmount","ReportMoneyRender");
+	$col = $rpg->addColumn("مبلغ تاخیر", "CurForfeitAmount","amountRender");
 	
-	$rpg->addColumn("تاخیر کل", "ForfeitAmount","ReportMoneyRender");
+	$col = $rpg->addColumn("تاخیر کل", "ForfeitAmount","amountRender");
+	//$col->EnableSummary();
 	
-	$rpg->addColumn("مانده کل", "TotalRemainder","ReportMoneyRender");
-	
-	$rpg->addColumn("مانده", "TotalRemainder","ReportMoneyRender");
+	$rpg->addColumn("مانده قسط", "remainder","amountRender");
+	$rpg->addColumn("مانده کل", "TotalRemainder","amountRender");
 	
 	$rpg->mysql_resource = $returnArr;
 	BeginReport();
@@ -65,8 +89,8 @@ if(isset($_REQUEST["show"]))
 	$col = $rpg2->addColumn("", "InstallmentID");
 	$col->hidden = true;
 	
-	$col = $rpg2->addColumn("تاریخ قسط", "InstallmentDate","ReportDateRender");
-	$col = $rpg2->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
+	$col = $rpg2->addColumn("تاریخ قسط", "InstallmentDate","dateRender");
+	$col = $rpg2->addColumn("مبلغ قسط", "InstallmentAmount","amountRender");
 	
 	function profitRender(&$row, $value, $param, $prevRow){
 		
