@@ -9,7 +9,7 @@ require_once 'form.class.php';
 
 $ReqObj = new WFM_requests($_REQUEST['RequestID']);
 
-$temp = WFM_RequestItems::Get(" AND FormID=?", array($ReqObj->FormID));
+$temp = WFM_RequestItems::Get(" AND r.FormID=?", array($ReqObj->FormID));
 $ReqItems = $temp->fetchAll();
 
 $ReqItemsStore = array();

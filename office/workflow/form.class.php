@@ -136,7 +136,7 @@ class WFM_RequestItems extends OperationClass {
 	static public function Get($where="", $param=array()){
 		
 		$query = "select * from WFM_RequestItems
-			join WFM_requests using(RequestID)
+			join WFM_requests r using(RequestID)
 			join WFM_FormItems using(FormItemID)
 			where 1=1 " . $where;
 		return PdoDataAccess::runquery_fetchMode($query, $param);

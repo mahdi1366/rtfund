@@ -1916,7 +1916,19 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 			return false;
 		}
 	}
-	
+	//----------------- get total remain ---------------------
+	require_once getenv("DOCUMENT_ROOT") . '/loan/request/request.class.php';
+	$dt = array();
+	$returnArr = LON_requests::ComputePayments($PayObj->RequestID, $dt, $pdo);
+	$ExtraPay = 0;
+	if($returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 < 0)
+	{
+		$PayObj->PayAmount = $PayObj->PayAmount + $returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 ;
+		$PayObj->Edit();
+		
+		$ExtraPay = $returnArr[ count($returnArr)-1 ]["TotalRemainder"]*-1;
+		$PayObj->PayAmount = $PayObj->PayAmount;
+	}
 	//----------------- add Doc items ------------------------
 		
 	$itemObj = new ACC_DocItems();
@@ -1983,7 +1995,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		unset($itemObj->TafsiliID);
 		$itemObj->locked = "NO";
 		$itemObj->CostID = $FirstCostID;
-		$itemObj->DebtorAmount= $PayObj->PayAmount;
+		$itemObj->DebtorAmount= $PayObj->PayAmount + $ExtraPay;
 		$itemObj->CreditorAmount = 0;
 		if(!$itemObj->Add($pdo))
 		{
@@ -2014,7 +2026,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		$itemObj->DocID = $Secobj->DocID;
 		$itemObj->CostID = $SecondCostID;
 		$itemObj->DebtorAmount= 0;
-		$itemObj->CreditorAmount = $PayObj->PayAmount;
+		$itemObj->CreditorAmount = $PayObj->PayAmount + $ExtraPay;
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد سند");
@@ -2028,7 +2040,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		unset($itemObj->TafsiliID2);
 		unset($itemObj->TafsiliID);
 		$itemObj->CostID = $CostID;
-		$itemObj->DebtorAmount= $PayObj->PayAmount;
+		$itemObj->DebtorAmount= $PayObj->PayAmount + $ExtraPay;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = $CostObj->TafsiliType;
 		if($TafsiliID != "")
@@ -2052,7 +2064,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		unset($itemObj->TafsiliID);
 		$itemObj->locked = "NO";
 		$itemObj->CostID = $PayObj->PayType == "3" ? $CostCode_fund : $CostCode_bank;
-		$itemObj->DebtorAmount= $PayObj->PayAmount;
+		$itemObj->DebtorAmount= $PayObj->PayAmount + $ExtraPay;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = $CostObj->TafsiliType;
 		if($TafsiliID != "")
@@ -2063,6 +2075,22 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد سند");
+			return false;
+		}
+	}
+	//-------------- extra to Pasandaz ----------------
+	if($ExtraPay > 0)
+	{
+		unset($itemObj->ItemID);
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = $CostCode_pardakhti;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $ExtraPay;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $ReqPersonTafsili;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد ردیف وام");
 			return false;
 		}
 	}
