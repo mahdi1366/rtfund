@@ -443,8 +443,6 @@ class LON_requests extends PdoDataAccess
 					$installments[$i]["UsedPayAmount"] = $remainder;
 					$remainder = 0;
 
-					$installments[$i]["TotalRemainder"] = $Forfeit;
-					$installments[$i]["remainder"] = 0;
 					$installments[$i]["ForfeitAmount"] = $Forfeit;
 
 					if($PayRecord["PayAmount"] == 0)
@@ -452,6 +450,16 @@ class LON_requests extends PdoDataAccess
 						$StartDate = max($PayRecord["PayDate"],$installments[$i]["InstallmentDate"]);
 						$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
 					}	
+					if($i == count($installments)-1)	
+					{
+						$installments[$i]["TotalRemainder"] = -1*$PayRecord["PayAmount"];
+						$installments[$i]["remainder"] = -1*$PayRecord["PayAmount"];
+					}
+					else
+					{
+						$installments[$i]["TotalRemainder"] = $Forfeit;
+						$installments[$i]["remainder"] = 0;
+					}
 					$returnArr[] = $installments[$i];
 
 					break;
