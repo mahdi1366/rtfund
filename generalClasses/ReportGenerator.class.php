@@ -430,8 +430,10 @@ class ReportGenerator {
 		
 		$color = $this->body_color;
 		if ($this->rowColorRender != "")
-			eval("\$color = " . $this->rowColorRender . "(\$row);");
-
+		{
+			$func = $this->rowColorRender;
+			$color = $func($row);
+		}
 		echo "<tr align = '$this->body_alignment' bgcolor = '$color'>";
 
 		// row number ----------------------------

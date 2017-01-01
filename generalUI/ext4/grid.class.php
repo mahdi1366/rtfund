@@ -405,16 +405,24 @@ class sadaf_datagrid
 
 		if ($this->EnableGrouping)
 		{
-			$grid .= ",features : [
-				Ext.create('Ext.grid.feature.Grouping',{
-					groupHeaderTpl: " .
-						($this->groupHeaderTpl != "" ? "'" . $this->groupHeaderTpl . "'" :
-														"'{name} ({[values.rows.length]} رکورد)'") .
-					",startCollapsed: " . ($this->startCollapsed ? "true" : "false") .
-			"})" .
-			($this->EnableSummaryRow ? ",{ftype: 'summary'}" : "")
-			. "]";
-			
+			if($this->EnableSummaryRow)
+			{
+				$grid .= ",features : [{
+						ftype: 'groupingsummary',
+						groupHeaderTpl: " .	($this->groupHeaderTpl != "" ? "'" . $this->groupHeaderTpl . "'" : "'{name} ({[values.rows.length]} رکورد)'") .
+						",startCollapsed: " . ($this->startCollapsed ? "true" : "false") .
+				"}]";
+			}
+			else
+			{
+				$grid .= ",features : [
+					Ext.create('Ext.grid.feature.Grouping',{
+						groupHeaderTpl: " .	($this->groupHeaderTpl != "" ? "'" . $this->groupHeaderTpl . "'" : "'{name} ({[values.rows.length]} رکورد)'") .
+						",startCollapsed: " . ($this->startCollapsed ? "true" : "false") .
+				"})" .
+				($this->EnableSummaryRow ? ",{ftype: 'summary'}" : "")
+				. "]";
+			}
 		}
 		if($this->CurrencyStringRowDataIndex != "")
 		{

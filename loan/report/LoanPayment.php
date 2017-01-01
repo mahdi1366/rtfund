@@ -27,8 +27,17 @@ if(isset($_REQUEST["show"]))
 	//.........................................................
 	
 	$rpg = new ReportGenerator();
+		
+	function RowColorRender($row){
+		return $row["ActionType"] == "pay" ? "#fcfcb6" : "";
+	}
+	$rpg->rowColorRender = "RowColorRender";
 	
-	$rpg->addColumn("نوع عملیات", "ActionType");
+	
+	function ActionRender($row, $value){
+		return $value == "installment" ? "قسط" : "پرداخت";
+	}
+	$rpg->addColumn("نوع عملیات", "ActionType", "ActionRender");
 		
 	$rpg->addColumn("تاریخ عملیات", "ActionDate","ReportDateRender");
 
@@ -40,8 +49,6 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("تاخیر کل", "ForfeitAmount","ReportMoneyRender");
 	
 	$rpg->addColumn("مانده کل", "TotalRemainder","ReportMoneyRender");
-	
-	$rpg->addColumn("مانده", "TotalRemainder","ReportMoneyRender");
 	
 	$rpg->mysql_resource = $returnArr;
 	BeginReport();
@@ -112,17 +119,15 @@ if(isset($_REQUEST["show"]))
 	$report2 = ob_get_clean();
 	
 	//..........................................................
-	$LastPayedInstallment = null;
 	$TotalUsedPayAmount = 0;
+	$LastPayedInstallment = null;
 	foreach($rpg->mysql_resource as $row)
 	{
-		if($row["remainder"]*1 == 0 && isset($row["InstallmentID"]))
+		if($row["ActionType"] == "installment" && $row["TotalRemainder"]*1 <= 0)
 		{
 			$LastPayedInstallment = $row;
-			$TotalUsedPayAmount = 0;
+			$TotalUsedPayAmount = -1*$row["TotalRemainder"]*1;
 		}
-		else
-			$TotalUsedPayAmount += $row["UsedPayAmount"];
 	}
 	if($LastPayedInstallment == null)
 		$EndingAmount = $rpg2->mysql_resource[0]["pureAmount"];
