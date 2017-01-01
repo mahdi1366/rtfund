@@ -538,7 +538,7 @@ class LON_requests extends PdoDataAccess
 				$returnArr[] = array(
 					"InstallmentID" => 0,
 					"ActionType" => "pay",
-					"ActionDate" => $ToDate,
+					"ActionDate" => $PayRecord["PayDate"],
 					"ActionAmount" => $PayRecord["PayAmount"]*1,
 					"ForfeitDays" => 0,
 					"CurForfeitAmount" => 0,
@@ -571,7 +571,11 @@ class LON_requests extends PdoDataAccess
 			{
 				$TotalRemainder += $CurForfeit;
 				$TotalForfeit = 0;
-			}			
+			}	
+			else
+			{
+				
+			}
 						
 			$installments[$i]["ActionType"] = "installment";
 			$installments[$i]["ActionDate"] = $installments[$i]["InstallmentDate"];
@@ -582,6 +586,24 @@ class LON_requests extends PdoDataAccess
 			$installments[$i]["TotalRemainder"] = $TotalRemainder;
 			
 			$returnArr[] = $installments[$i];			
+		}
+		if($PayRecord != null)
+		{
+			while($PayRecord)
+			{
+				$TotalRemainder -= $PayRecord["PayAmount"]*1;
+				$returnArr[] = array(
+					"InstallmentID" => 0,
+					"ActionType" => "pay",
+					"ActionDate" => $PayRecord["PayDate"],
+					"ActionAmount" => $PayRecord["PayAmount"]*1,
+					"ForfeitDays" => 0,
+					"CurForfeitAmount" => 0,
+					"ForfeitAmount" => 0,
+					"TotalRemainder" => $TotalRemainder
+				);		
+				$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
+			}
 		}
 
 		return $returnArr;
