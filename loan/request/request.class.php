@@ -259,6 +259,7 @@ class LON_requests extends PdoDataAccess
 				{
 					$installments[$i]["FixPayAmount"] = 0;
 					$installments[$i]["PayAmount"] = 0;
+					$installments[$i]["UsedPayAmount"] = 0;
 					$installments[$i]["PayDate"] = DateModules::Now();
 				}
 				if ($StartDate < $ToDate) {
@@ -317,7 +318,9 @@ class LON_requests extends PdoDataAccess
 					$returnArr[] = $installments[$i];
 					break;
 				}
-
+				else 
+					$installments[$i]["UsedPayAmount"] += $PayRecord["PayAmount"]*1;
+				
 				$remainder = $remainder - $PayRecord["PayAmount"]*1;
 				$StartDate = max($PayRecord["PayDate"],$installments[$i]["InstallmentDate"]);
 
@@ -535,7 +538,8 @@ class LON_requests extends PdoDataAccess
 			if($PayRecord != null && $PayRecord["PayDate"] < $installments[$i]["InstallmentDate"])
 			{
 				$TotalRemainder -= $PayRecord["PayAmount"]*1;
-				$returnArr[] = array(
+				
+				$tempForReturnArr = array(
 					"InstallmentID" => 0,
 					"ActionType" => "pay",
 					"ActionDate" => $PayRecord["PayDate"],
@@ -547,6 +551,32 @@ class LON_requests extends PdoDataAccess
 				);		
 				$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
 				$i--;
+				
+				if($TotalRemainder > 0)
+				{
+					$StartDate = $tempForReturnArr["ActionDate"];
+					$ToDate = $PayRecord == null ? DateModules::Now() : $PayRecord["PayDate"];
+					if($StartDate < $ToDate)
+					{
+						$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
+						$CurForfeit = round($TotalRemainder*$obj->ForfeitPercent*$forfeitDays/36500);
+						$TotalForfeit += $CurForfeit;
+						$tempForReturnArr["ForfeitDays"] = $forfeitDays;
+						$tempForReturnArr["CurForfeitAmount"] = $CurForfeit;
+						$tempForReturnArr["ForfeitAmount"] = $TotalForfeit;
+					}
+				}
+				else
+				{
+					if($obj->PayCompute != "installment")
+					{
+						$TotalForfeit = 0;
+					}	
+					else
+						$tempForReturnArr["ForfeitAmount"] = $TotalForfeit;
+				}
+				
+				$returnArr[] = $tempForReturnArr;
 				continue;
 			}
 			
@@ -557,8 +587,10 @@ class LON_requests extends PdoDataAccess
 			
 			if($StartDate < $ToDate && $TotalRemainder > 0)
 			{
+				$amount = $installments[$i]["InstallmentAmount"] < $TotalRemainder ? 
+					$installments[$i]["InstallmentAmount"] : $TotalRemainder;
 				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$installments[$i]["InstallmentDate"]);
-				$CurForfeit = round($TotalRemainder*$installments[$i]["ForfeitPercent"]*$forfeitDays/36500);
+				$CurForfeit = round($amount*$obj->ForfeitPercent*$forfeitDays/36500);
 				$TotalForfeit += $CurForfeit;
 			}
 			else
@@ -572,10 +604,6 @@ class LON_requests extends PdoDataAccess
 				$TotalRemainder += $CurForfeit;
 				$TotalForfeit = 0;
 			}	
-			else
-			{
-				
-			}
 						
 			$installments[$i]["ActionType"] = "installment";
 			$installments[$i]["ActionDate"] = $installments[$i]["InstallmentDate"];
@@ -591,18 +619,40 @@ class LON_requests extends PdoDataAccess
 		{
 			while($PayRecord)
 			{
+				if($obj->PayCompute == "installment" && $TotalRemainder < 0) 
+				{
+					//$CurForfeit += $TotalRemainder;
+					//$CurForfeit = $CurForfeit < 0 ? 0 : $CurForfeit;					
+				}
 				$TotalRemainder -= $PayRecord["PayAmount"]*1;
-				$returnArr[] = array(
+				$tempForReturnArr = array(
 					"InstallmentID" => 0,
 					"ActionType" => "pay",
 					"ActionDate" => $PayRecord["PayDate"],
 					"ActionAmount" => $PayRecord["PayAmount"]*1,
 					"ForfeitDays" => 0,
 					"CurForfeitAmount" => 0,
-					"ForfeitAmount" => 0,
+					"ForfeitAmount" => $TotalForfeit,
 					"TotalRemainder" => $TotalRemainder
 				);		
 				$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
+				
+				if($TotalRemainder > 0)
+				{
+					$StartDate = $tempForReturnArr["ActionDate"];
+					$ToDate = $PayRecord == null ? DateModules::Now() : $PayRecord["PayDate"];
+					if($StartDate < $ToDate)
+					{
+						$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
+						$CurForfeit = round($TotalRemainder*$obj->ForfeitPercent*$forfeitDays/36500);
+						$TotalForfeit += $CurForfeit;
+						$tempForReturnArr["ForfeitDays"] = $forfeitDays;
+						$tempForReturnArr["CurForfeitAmount"] = $CurForfeit;
+						$tempForReturnArr["ForfeitAmount"] = $TotalForfeit;
+					}
+				}
+				
+				$returnArr[] = $tempForReturnArr;
 			}
 		}
 

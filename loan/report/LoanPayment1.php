@@ -149,7 +149,7 @@ if(isset($_REQUEST["show"]))
 			$TotalUsedPayAmount += $row["UsedPayAmount"];
 	}
 	if($LastPayedInstallment == null)
-		$EndingAmount = $rpg2->mysql_resource[0]["pureAmount"];
+		$EndingAmount = $rpg2->mysql_resource[0]["pureAmount"] + $rpg->mysql_resource[ count($rpg->mysql_resource)-1 ]["ForfeitAmount"]*1 ;
 	else
 	{
 		for($i=0; $i < count($rpg2->mysql_resource);$i++)
