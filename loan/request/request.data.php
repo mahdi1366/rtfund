@@ -638,8 +638,11 @@ function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false, $pdo2
 	$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
 	$paymentPeriod = DateModules::GetDiffInMonth($firstPay, $LastPay);
 	//----------------------------------------------	
-	$totalWage = ComputeWageOfSHekoofa($partObj);
-	
+	if($partObj->AgentReturn == "CUSTOMER")
+		$totalWage = 0;
+	else
+		$totalWage = ComputeWageOfSHekoofa($partObj);
+		
 	if($pdo2 == null)
 	{
 		$pdo = PdoDataAccess::getPdoObject();

@@ -174,7 +174,7 @@ class LON_requests extends PdoDataAccess
 
 		$installments = LON_installments::SelectAll("r.RequestID=?" , array($RequestID), $pdo);
 		
-		$obj = new LON_ReqParts($RequestID);
+		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 		if($obj->PayCompute == "installment")
 			return self::ComputePaymentsBaseOnInstallment ($RequestID, $installments, $pdo);
 
@@ -430,6 +430,11 @@ class LON_requests extends PdoDataAccess
 					$installments[$i]["CurForfeitAmount"] = $CurForfeit;
 					$Forfeit += $CurForfeit;
 				}		
+				else
+				{
+					$forfeitDays = 0;
+					$CurForfeit = 0;
+				}
 
 				if($PayRecord == null)
 				{
@@ -513,7 +518,7 @@ class LON_requests extends PdoDataAccess
 
 		$installments = LON_installments::SelectAll("r.RequestID=?" , array($RequestID), $pdo);
 		
-		$obj = new LON_ReqParts($RequestID);
+		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 
 		$returnArr = array();
 		$pays = PdoDataAccess::runquery("
@@ -589,7 +594,7 @@ class LON_requests extends PdoDataAccess
 			{
 				$amount = $installments[$i]["InstallmentAmount"] < $TotalRemainder ? 
 					$installments[$i]["InstallmentAmount"] : $TotalRemainder;
-				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$installments[$i]["InstallmentDate"]);
+				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
 				$CurForfeit = round($amount*$obj->ForfeitPercent*$forfeitDays/36500);
 				$TotalForfeit += $CurForfeit;
 			}
@@ -650,6 +655,14 @@ class LON_requests extends PdoDataAccess
 						$tempForReturnArr["CurForfeitAmount"] = $CurForfeit;
 						$tempForReturnArr["ForfeitAmount"] = $TotalForfeit;
 					}
+				}
+				else
+				{
+					$TotalForfeit += $TotalRemainder;
+					$TotalRemainder = 0;
+					
+					$tempForReturnArr["TotalRemainder"] = $TotalRemainder;
+					$tempForReturnArr["ForfeitAmount"] = $TotalForfeit;
 				}
 				
 				$returnArr[] = $tempForReturnArr;

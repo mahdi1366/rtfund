@@ -1552,6 +1552,10 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 		PdoDataAccess::runquery("delete from ACC_DocItems where DocID=?", array($DocID), $pdo);
 	}
 	//--------------------------------------------------------
+	PdoDataAccess::runquery("delete from LON_BackPays 
+			where RequestID=? AND PayType=? AND PayBillNo=?", 
+			array($ReqObj->RequestID, BACKPAY_PAYTYPE_CORRECT, $NewPartObj->PartID), $pdo);
+	//--------------------------------------------------------
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
 	$itemObj->locked = "YES";
@@ -1563,16 +1567,14 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 	//--------------------------------------------------------
 	// compute the differnce of wage of CUSTOMER
 	$PreviousAgentWage = 0;
-	if($PreviousPartObj->CustomerWage*1 > $PreviousPartObj->FundWage*1 && 
-			$PreviousPartObj->AgentReturn == "CUSTOMER")
+	if($PreviousPartObj->AgentReturn == "CUSTOMER")
 	{
 		$totalWage = $PreviousPartObj->PartAmount*$PreviousPartObj->CustomerWage/100;
 		$AgentFactor = ($PreviousPartObj->CustomerWage*1-$PreviousPartObj->FundWage*1)/$PreviousPartObj->CustomerWage*1;
 		$PreviousAgentWage = $totalWage*$AgentFactor;		
 	}
 	$NewAgentWage = 0;
-	if($NewPartObj->CustomerWage*1 > $NewPartObj->FundWage*1 && 
-			$NewPartObj->AgentReturn == "CUSTOMER")
+	if($NewPartObj->AgentReturn == "CUSTOMER")
 	{
 		$totalWage = $NewPartObj->PartAmount*$NewPartObj->CustomerWage/100;
 		$AgentFactor = ($NewPartObj->CustomerWage*1-$NewPartObj->FundWage*1)/$NewPartObj->CustomerWage*1;
@@ -1592,6 +1594,38 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 		$itemObj->DebtorAmount = $diff > 0 ? $diff : 0;
 		$itemObj->CreditorAmount = $diff < 0 ? -1*$diff : 0;
 		$itemObj->Add($pdo);		
+	}
+	//--------------------------------------------------------
+	// compute the extra pay
+	$dt = array();
+	$compute = LON_requests::ComputePayments($NewPartObj->RequestID, $dt);
+	$extraPay = $compute[ count($compute)-1 ]["TotalRemainder"]*1;
+	if($extraPay < 0)
+	{
+		$extraPay= -1*$extraPay;
+		
+		unset($itemObj->ItemID);
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = $CostCode_Loan;
+		$itemObj->DebtorAmount = $extraPay;
+		$itemObj->CreditorAmount = 0;
+		$itemObj->Add($pdo);
+		
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_CustomerComit;
+		$itemObj->CreditorAmount = $extraPay;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->Add($pdo);
+		
+		$backPayObj = new LON_BackPays();
+		$backPayObj->RequestID = $ReqObj->RequestID;
+		$backPayObj->PayAmount = -1*$extraPay;
+		$backPayObj->PayDate = $NewPartObj->PartDate;
+		$backPayObj->PayBillNo = $NewPartObj->PartID;
+		$backPayObj->PayType = BACKPAY_PAYTYPE_CORRECT;
+		$backPayObj->details = "اختلاف کارمزد حاصل از تغییر شرایط پرداخت";
+		$backPayObj->Add($pdo);
+		
 	}
 	//--------------------------------------------------------
 	// compute the differnce of wage of INSTALLMENT
@@ -1622,10 +1656,6 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 		
 		if($diff < 0)
 		{
-			PdoDataAccess::runquery("delete from LON_BackPays 
-				where RequestID=? AND PayType=? AND PayBillNo=?", 
-				array($ReqObj->RequestID, BACKPAY_PAYTYPE_CORRECT, $NewPartObj->PartID));
-			
 			$backPayObj = new LON_BackPays();
 			$backPayObj->RequestID = $ReqObj->RequestID;
 			$backPayObj->PayAmount = $diff;
