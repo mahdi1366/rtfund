@@ -160,7 +160,7 @@ function Equalization_UpdateChecks(){
 		}
 		else
 		{
-			$result .= "<font color=red> شماره چک : " . $checkNo . " یافت نشد </font><br>";
+			$result .= "<font> شماره چک : " . $checkNo . " یافت نشد </font><br>";
 			
 		}
 	}

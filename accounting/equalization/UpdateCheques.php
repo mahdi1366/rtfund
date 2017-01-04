@@ -87,17 +87,21 @@ function UpdateChecks()
 			disabled : this.AddAccess ? false : true,
 			handler : function()
 			{
+				mask = new Ext.LoadMask(Ext.getCmp(UpdateChecksObj.TabID), {msg:'در حال بارگذاری ...'});
+				mask.show()
 				this.up('form').getForm().submit({
 					clientValidation: true,
 					url: UpdateChecksObj.address_prefix + 'operation.data.php?task=Equalization_UpdateChecks',
 					method : "POST",
 					success : function(form,action){
 						
+						mask.hide();
 						UpdateChecksObj.resultFS.update(action.result.data);
 						UpdateChecksObj.grid.getStore().load();
 					},
 					failure : function(form,action)
 					{
+						mask.hide();
 						alert("عملیات مورد نظر با شکست مواجه شد");
 					}
 				});

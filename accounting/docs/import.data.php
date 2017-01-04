@@ -2121,7 +2121,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 	$dt = array();
 	$returnArr = LON_requests::ComputePayments($PayObj->RequestID, $dt, $pdo);
 	$ExtraPay = 0;
-	if($returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 < 0)
+	if(count($returnArr)>0 && $returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 < 0)
 	{
 		$ExtraPay = $returnArr[ count($returnArr)-1 ]["TotalRemainder"]*-1;
 		
