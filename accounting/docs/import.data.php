@@ -1512,6 +1512,7 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_FundComit_wage = FindCostID("721-".$LoanObj->_BlockCode."-52-03");
+	$CostCode_FundComit_mande = FindCostID("721-".$LoanObj->_BlockCode."-52-02");
 	$CostCode_CustomerComit = FindCostID("721-".$LoanObj->_BlockCode."-51");
 	//------------------------------------------------
 	$CycleID = substr(DateModules::shNow(), 0 , 4);	
@@ -1584,15 +1585,17 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 	{
 		$diff = $NewAgentWage - $PreviousAgentWage ;
 		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_FundComit_wage;
-		$itemObj->DebtorAmount = $diff < 0 ? -1*$diff : 0;
-		$itemObj->CreditorAmount = $diff > 0 ? $diff : 0;
+		$itemObj->CostID = COSTID_Bank;
+		$itemObj->locked = "NO";
+		$itemObj->DebtorAmount = $diff > 0 ? $diff : 0;
+		$itemObj->CreditorAmount = $diff < 0 ? -1*$diff : 0;
 		$itemObj->Add($pdo);
 		
 		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_CustomerComit;
-		$itemObj->DebtorAmount = $diff > 0 ? $diff : 0;
-		$itemObj->CreditorAmount = $diff < 0 ? -1*$diff : 0;
+		$itemObj->locked = "YES";
+		$itemObj->CostID = $CostCode_FundComit_mande;
+		$itemObj->DebtorAmount = $diff < 0 ? -1*$diff : 0;
+		$itemObj->CreditorAmount = $diff > 0 ? $diff : 0;
 		$itemObj->Add($pdo);		
 	}
 	//--------------------------------------------------------

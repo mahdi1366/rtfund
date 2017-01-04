@@ -3,20 +3,34 @@
 // programmer:	Sh.Jafarkhani
 // create Date:	95.09
 //---------------------------
+/*DROP TABLE IF EXISTS `krrtfir_rtfund`.`FRW_CalenderEvents`;
+CREATE TABLE  `krrtfir_rtfund`.`FRW_CalenderEvents` (
+  `EventID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `PersonID` int(10) unsigned NOT NULL,
+  `EventTitle` varchar(200) NOT NULL,
+  `EventDesc` varchar(2000) DEFAULT NULL,
+  `ColorID` smallint(5) unsigned NOT NULL,
+  `StartDate` datetime NOT NULL,
+  `EndDate` datetime NOT NULL,
+  `IsAllDay` enum('YES','NO') NOT NULL,
+  `reminder` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  PRIMARY KEY (`EventID`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+ */
 include('header.inc.php');
 ?>
 <link rel="stylesheet" type="text/css" href="/generalUI/ext4/ux/calendar/resources/css/calendar.css" />
 <link rel="stylesheet" type="text/css" href="/generalUI/ext4/ux/calendar/resources/css/examples.css" />
 
 <script type="text/javascript">
-
-
 		
 calendar.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
 	PersonID : '<?= $_SESSION["USER"]["PersonID"] ?>',
+	
+	EventID : 1,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -25,15 +39,26 @@ calendar.prototype = {
 
 function calendar()
 {
-	this.calendarStore = Ext.create('Ext.calendar.data.MemoryCalendarStore', {
-		data: Ext.create('Ext.calendar.data.Calendars')
+	this.colorsStore = new Ext.data.ArrayStore({
+		fields :['ColorID',"title"],
+		data : [
+			[1,'آبی'],
+			[2,'سبز'],
+			[3,'قهوه ای']
+		]
 	});
 
 	// A sample event store that loads static JSON from a local file. Obviously a real
 	// implementation would likely be loading remote data via an HttpProxy, but the
 	// underlying store functionality is the same.
-	this.eventStore = Ext.create('Ext.calendar.data.MemoryEventStore', {
-		data: Ext.create('Ext.calendar.data.Events')
+	this.eventStore = new Ext.data.Store({
+		proxy:{
+			type: 'jsonp',
+			url: this.address_prefix + 'management/framework.data.php?task=SelectCalenderEvents',
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		},
+		fields :  ['EventID',"ColorID","EventTitle","StartDate","EndDate","IsAllDay","reminder"],
+		autoLoad : true
 	});
 
 	this.calendarPanel = new Ext.calendar.CalendarPanel({
@@ -52,64 +77,28 @@ function calendar()
 
 		listeners: {
 			'eventclick': {
-				fn: function(vw, rec, el){
-					calendarObj.showEditWindow(rec, el);
-				},
-				scope: this
-			},
-			'viewchange': {
-				fn: function(p, vw, dateInfo){
-					if(calendarObj.editWin){
-						calendarObj.editWin.hide();
-					};
-					if(dateInfo){
-						calendarObj.updateTitle(dateInfo.viewStart, dateInfo.viewEnd);
-					}
+				fn: function(vw, record, el){
+					calendarObj.showEditWindow(record);
 				},
 				scope: this
 			},
 			'dayclick': {
 				fn: function(vw, dt, ad, el){
-					calendarObj.showEditWindow({
-						StartDate: dt,
-						IsAllDay: ad
-					}, el);
-				},
-				scope: this
-			},
-			'rangeselect': {
-				fn: function(win, dates, onComplete){
-					calendarObj.showEditWindow(dates);
-					calendarObj.editWin.on('hide', onComplete, this, {single:true});
-				},
-				scope: this
-			},
-			'eventmove': {
-				fn: function(vw, rec){
-					var mappings = Ext.calendar.data.EventMappings,
-						time = rec.data[mappings.IsAllDay.name] ? '' : ' \\a\\t g:i a';
-
-					rec.commit();
-				},
-				scope: this
-			},
-			'eventresize': {
-				fn: function(vw, rec){
-					rec.commit();
+					var modelClass = calendarObj.eventStore.model;
+					var record = new modelClass({
+						ColorID : 1,
+						StartDate :	dt.format("Y/m/d"),
+						EndDate :	dt.format("Y/m/d"),
+						AllDay :	ad
+						
+					});
+					calendarObj.showEditWindow(record);
 				},
 				scope: this
 			},
 			'eventdelete': {
 				fn: function(win, rec){
 					this.eventStore.remove(rec);
-				},
-				scope: this
-			},
-			'initdrag': {
-				fn: function(vw){
-					if(calendarObj.editWin && calendarObj.editWin.isVisible()){
-						calendarObj.editWin.hide();
-					}
 				},
 				scope: this
 			}
@@ -119,74 +108,118 @@ function calendar()
 	//document.getElementById('logo-body').innerHTML = new Date().getDate();
 }
 
-calendar.prototype.showEditWindow = function(rec, animateTarget){
+calendar.prototype.showEditWindow = function(record){
 	
-	if(!this.editWin){
+	if(!this.InfoWin){
 		
-		this.editWin = new Ext.Window.Window({
+		this.InfoWin = new Ext.window.Window({
+			width : 600,
+			autoHeight : true,
 			
 			items : new Ext.form.Panel({
 				layout :{
 					type : "table",
-					columns : 2
+					columns : 4
 				},
 				items :[{
 					xtype : "textfield",
+					colspan : 3,
+					width : 400,
+					labelWidth : 80,
 					name : "EventTitle",
-					fieldLabel : "عنوان رویداد",
-					colspan : 2
+					allowBlank : false,
+					fieldLabel : "عنوان رویداد"
+				},{
+					xtype : "combo",
+					store : this.colorsStore,
+					valueField : "ColorID",
+					displayField : "title",
+					name : "ColorID",
+					tpl: new Ext.XTemplate(
+						'<tpl for=".">',
+							'<div class="x-boundlist-item ext-color-{ColorID}">',
+								'<div class="ext-cal-picker-icon">&#160;</div>{title}',
+							'</div>',
+						'</tpl>'
+					)
 				},{
 					xtype : "shdatefield",
 					name : "StartDate",
-					fieldLabel : "تاریخ از"
+					labelWidth : 80,
+					width : 180,
+					allowBlank : false,
+					fieldLabel : "تاریخ"
+				},{
+					xtype : "timefield",
+					name : "FromTime",
+					width : 100
+				},{
+					xtype : "timefield",
+					name : "ToTime",
+					fieldLabel : "تا",
+					labelWidth : 20,
+					width : 120
 				},{
 					xtype : "shdatefield",
 					name : "EndDate",
-					fieldLabel : "تا"
+					width : 100,
+					allowBlank : false
+				},{
+					xtype : "checkbox",
+					name : "IsAllDay",
+					inputValue : "YES",
+					width : 85,
+					labelWidth : 50,
+					boxLabel : "کل روز",
+					listeners : {
+						change : function(){
+							if(this.checked)
+							{
+								this.up('form').down("[name=FromTime]").disable();
+								this.up('form').down("[name=ToTime]").disable();
+							}
+							else
+							{
+								this.up('form').down("[name=FromTime]").enable();
+								this.up('form').down("[name=ToTime]").enable();
+							}
+						}
+					}
+				},{
+					xtype : "hidden",
+					name : "EventID"
 				}]
-			})
-		});
-	}
-
-
-
-
-
-
-	if(!this.editWin){
-		this.editWin = Ext.create('Ext.calendar.form.EventWindow', {
-			calendarStore: this.calendarStore,
-			listeners: {
-				'eventadd': {
-					fn: function(win, rec){
-						win.hide();
-						rec.data.IsNew = false;
-						this.eventStore.add(rec);
-						this.eventStore.sync();
-					},
-					scope: this
-				},
-				'eventupdate': {
-					fn: function(win, rec){
-						win.hide();
-						rec.commit();
-						this.eventStore.sync();
-					},
-					scope: this
-				},
-				'eventdelete': {
-					fn: function(win, rec){
-						this.eventStore.remove(rec);
-						this.eventStore.sync();
-						win.hide();
-					},
-					scope: this
+			}),
+			buttons :[{
+				iconCls : "save",
+				text : "ذخیره",
+				handler : function(){
+					calendarObj.SaveEvent();
 				}
-			}
+			},{
+				iconCls : "remove",
+				text : "حذف",
+				handler : function(){
+					calendarObj.DeleteEvent();
+				}
+			},{
+				iconCls : "undo",
+				text : "بازگشت",
+				handler : function(){
+					this.up("window").hide();
+				}
+			}]
 		});
+		
+		Ext.getCmp(this.TabID).add(this.InfoWin);		
 	}
-	
-	this.editWin.show(rec, animateTarget);
+	if(record)
+		this.InfoWin.down('form').loadRecord(record);
+	else
+		this.up('window').down('form').down("[name=EventID]").setValue(this.EventID++);
+		
+	this.InfoWin.show();
+	this.InfoWin.center();
 };
         
     // The CalendarPanel itself supports the standard Panel title config, but that title
@@ -217,6 +250,34 @@ calendar.prototype.updateTitle = function(startDt, endDt){
 Ext.onReady(function(){
 	calendarObj = new calendar();
 });
+
+calendar.prototype.SaveEvent = function(){
+
+	if(!this.InfoWin.down('form').form.isValid())
+		return;
+			
+	mask = new Ext.LoadMask(calendarObj.InfoWin, {msg:'در حال ذخیره ...'});
+	mask.show();
+	
+	this.InfoWin.down('form').form.submit({
+		clientValidation: true,
+		url : this.address_prefix + 'management/framework.data.php?task=saveCalenderEvent',
+		method : "POST",
+		
+		success : function(form,action){
+			mask.hide();
+			if(action.result.success)
+				calendarObj.eventStore.load();
+			else
+				Ext.MessageBox.alert("Error","عملیات مورد نظر با شکست مواجه شد.");
+
+			calendarObj.InfoWin.hide();
+		},
+		failure : function(){
+			mask.hide();
+		}
+	});
+}
 
 
 	

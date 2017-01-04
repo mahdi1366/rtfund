@@ -679,11 +679,11 @@ Ext.SHDate = function (y, m, d) {
         this.month = nD.getMonth();
         this.day = nD.getDate();
     } else if (arguments.length == 1) {
-        this.XDate = new Date(arguments[0]);
-        var nD = GtoJ(this.XDate);
-        this.year = nD.getFullYear();
-        this.month = nD.getMonth();
-        this.day = nD.getDate();
+		var arr = arguments[0].split(/[\-\/ \:]/);
+		this.year = arr[0]*1;
+        this.month = arr[1]*1-1;
+        this.day = arr[2]*1;		
+		this.XDate = JtoG(this);
     } else {
         this.year = y;
         this.month = m;
