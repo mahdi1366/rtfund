@@ -66,7 +66,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
      * @cfg {Boolean} enableDD
      * True to enable drag and drop in the calendar view (the default), false to disable it
      */
-    enableDD: true,
+    enableDD: false,
     /**
      * @cfg {Boolean} monitorResize
      * True to monitor the browser's resize event (the default), false to ignore it. If the calendar view is rendered
@@ -74,7 +74,7 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
      * fit layout in a viewport or some other resizable container) it is very important that this config is true so that
      * any resize event propagates properly to all subcomponents and layouts get recalculated properly.
      */
-    monitorResize: true,
+    monitorResize: false,
     /**
      * @cfg {String} ddCreateEventText
      * The text to display inside the drag proxy while dragging over the calendar to create a new event (defaults to 
@@ -586,11 +586,11 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
     getEventIdFromEl: function(el) {
         el = Ext.get(el);
         var id = el.id.split(this.eventElIdDelimiter)[1];
-        /*if (id.indexOf('-') > -1) {
+        if (id.indexOf('-') > -1) {
             //This id has the index of the week it is rendered in as the suffix.
             //This allows events that span across weeks to still have reproducibly-unique DOM ids.
             id = id.split('-')[0];
-        }*/
+        }
         return id;
     },
 
@@ -645,8 +645,11 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
         end = this.viewEnd.getTime(),
         M = Ext.calendar.data.EventMappings,
         data = evt.data || evt,
-        evStart = data[M.StartDate.name].getTime(),
-        evEnd = Ext.calendar.util.Date.add(data[M.EndDate.name], {seconds: -1}).getTime(),
+        evStartDate = new Ext.SHDate(data[M.StartDate.name]),
+        evEndDate = new Ext.SHDate(data[M.EndDate.name]),//Ext.calendar.util.Date.add(data[M.EndDate.name], {seconds: -1}).getTime(),
+		evStart = evStartDate.getTime(),
+        evEnd = evEndDate.getTime(),//
+		
 
         startsInRange = (evStart >= start && evStart <= end),
         endsInRange = (evEnd >= start && evEnd <= end),

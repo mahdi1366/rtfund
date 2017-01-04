@@ -229,4 +229,38 @@ function selectDataAudits(){
 	die();
 }
 
+//--------------------------------------------------
+
+function SelectCalenderEvents(){
+	
+	$where = " AND PersonID=" . $_SESSION["USER"]["PersonID"];
+	$res = FRW_CalenderEvents::Get($where);	
+	echo dataReader::getJsonData($res->fetchAll(), $res->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function saveCalenderEvent(){
+	
+	$obj = new FRW_CalenderEvents();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	if($obj->EventID != "")
+		$result = $obj->Edit();
+	else
+	{
+		$obj->PersonID = $_SESSION["USER"]["PersonID"];
+		$result = $obj->Add();
+	}
+	//print_r(ExceptionHandler::PopAllExceptions());
+	Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function removeCalenderEvent(){
+	
+	$obj = new FRW_CalenderEvents($_POST["EventID"]);
+	$result = $obj->Remove();
+	Response::createObjectiveResponse($result, "");
+	die();
+}
 ?>

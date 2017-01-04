@@ -335,4 +335,19 @@ class FRW_phonebook extends OperationClass {
 	public $IsPublic;
 }
 
+class FRW_CalenderEvents extends OperationClass {
+	
+	const TableName = "FRW_CalenderEvents";
+	const TableKey = "EventID"; 
+
+	public $EventID;
+	public $PersonID;
+	public $EventTitle;
+	public $EventDesc;
+	public $ColorID;
+	public $StartDate;
+	public $EndDate;
+	public $IsAllDay;
+	public $reminder;
+}
 ?>

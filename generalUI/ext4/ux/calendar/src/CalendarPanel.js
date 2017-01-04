@@ -39,7 +39,7 @@ Ext.define('Ext.calendar.CalendarPanel', {
      * @cfg {Boolean} showWeekView
      * True to include the week view (and toolbar button), false to hide them (defaults to true).
      */
-    showWeekView: true,
+    showWeekView: false,
     /**
      * @cfg {Boolean} showMonthView
      * True to include the month view (and toolbar button), false to hide them (defaults to true).
