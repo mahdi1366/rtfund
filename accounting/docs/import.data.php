@@ -109,8 +109,9 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$FirstStep = false;
 		$firstPayObj = new LON_payments($dt[0]["SourceID3"]);
 		
-		$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0)
-			from ACC_DocItems where CostID=? AND TafsiliID=? AND sourceID=?";
+		$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0),group_concat(LocalNo) docs
+			from ACC_DocItems join ACC_docs using(DocID) 
+			where CostID=? AND TafsiliID=? AND sourceID=?";
 		$param = array($CostCode_todiee, $LoanPersonTafsili, $ReqObj->RequestID);
 		if($LoanMode == "Agent")
 		{
@@ -121,7 +122,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		if($dt[0][0]*1 < $PayAmount)
 		{
 			ExceptionHandler::PushException("حساب تودیعی این مشتری"
-					. number_format($dt[0][0]) . " ریال می باشد که کمتر از مبلغ این مرحله از پرداخت وام می باشد");
+				. number_format($dt[0][0]) . "\n ریال می باشد که کمتر از مبلغ این مرحله از پرداخت وام می باشد"
+				. "<br>\n [ شماره اسناد : " . $dt[0]["docs"] . " ]");
 			return false;
 		}
 	}	
@@ -672,7 +674,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	
 	$PayAmount = $PayObj->PayAmount;
 	//--------------------------------------------------------
-	$payments = LON_payments::Get(" AND RequestID=? order by PayDate", array($PartObj->RequestID));
+	$payments = LON_payments::Get(" AND RequestID=?", array($PartObj->RequestID), " order by PayDate");
 	$payments = $payments->fetchAll();
 	//------------------ nfind tafsilis ---------------
 	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);

@@ -3,20 +3,6 @@
 // programmer:	Sh.Jafarkhani
 // create Date:	95.09
 //---------------------------
-/*DROP TABLE IF EXISTS `krrtfir_rtfund`.`FRW_CalenderEvents`;
-CREATE TABLE  `krrtfir_rtfund`.`FRW_CalenderEvents` (
-  `EventID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `PersonID` int(10) unsigned NOT NULL,
-  `EventTitle` varchar(200) NOT NULL,
-  `EventDesc` varchar(2000) DEFAULT NULL,
-  `ColorID` smallint(5) unsigned NOT NULL,
-  `StartDate` datetime NOT NULL,
-  `EndDate` datetime NOT NULL,
-  `IsAllDay` enum('YES','NO') NOT NULL,
-  `reminder` enum('YES','NO') NOT NULL DEFAULT 'NO',
-  PRIMARY KEY (`EventID`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
- */
 include('header.inc.php');
 ?>
 <link rel="stylesheet" type="text/css" href="/generalUI/ext4/ux/calendar/resources/css/calendar.css" />
@@ -57,7 +43,40 @@ function calendar()
 			url: this.address_prefix + 'management/framework.data.php?task=SelectCalenderEvents',
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields :  ['EventID',"ColorID","EventTitle","StartDate","EndDate","IsAllDay","reminder"],
+		fields :  ['EventID',"EventTitle",{
+				name : "ColorID",
+				convert : function(value){return value*1}
+			},{
+				name : "FromTime",
+				convert : function(value){return value ? value.substr(0,5) : "";}
+			},{
+				name : "ToTime",
+				convert : function(value){return value ? value.substr(0,5) : "";}
+			},{
+				name : "StartDate",
+				convert : function(value,record){
+					var arr = value.split(/[\-\/]/), h=1, m=0;
+					if(record.data.FromTime)
+					{
+						var arr2 = record.data.FromTime.split(/[\:]/);
+						h = arr2[0]*1;
+						m = arr2[1]*1;
+					}					
+					return new Ext.SHDate(arr[0]*1, arr[1]*1-1, arr[2]*1, h,m);
+				}
+			},{
+				name : "EndDate",
+				convert : function(value){
+					var arr = value.split(/[\-\/ \:]/);
+					return new Ext.SHDate(arr[0]*1, arr[1]*1-1, arr[2]*1);
+				}
+			},{
+				name : "IsAllDay",
+				convert : function(value){return value == "YES" ? true : false}
+			},{
+				name : "reminder",
+				convert : function(value){return value == "YES" ? true : false}
+			}],
 		autoLoad : true
 	});
 
@@ -107,7 +126,7 @@ function calendar()
 	// update the header logo date:
 	//document.getElementById('logo-body').innerHTML = new Date().getDate();
 }
-
+var aaa;
 calendar.prototype.showEditWindow = function(record){
 	
 	if(!this.InfoWin){
@@ -134,14 +153,26 @@ calendar.prototype.showEditWindow = function(record){
 					store : this.colorsStore,
 					valueField : "ColorID",
 					displayField : "title",
-					name : "ColorID",
+					name : "ColorID",					
 					tpl: new Ext.XTemplate(
 						'<tpl for=".">',
 							'<div class="x-boundlist-item ext-color-{ColorID}">',
 								'<div class="ext-cal-picker-icon">&#160;</div>{title}',
 							'</div>',
 						'</tpl>'
-					)
+					),
+					listeners :{
+						change : function(el, newValue, oldValue){aaa = this;
+							wrap = this.el.down('.x-form-field');
+							
+							var currentClass = 'ext-color-' + oldValue,
+							newClass = 'ext-color-' + newValue;
+							
+							alert(currentClass + " " + newClass);
+							
+							wrap.replaceCls(currentClass, newClass);
+						}
+					}
 				},{
 					xtype : "shdatefield",
 					name : "StartDate",
@@ -152,11 +183,24 @@ calendar.prototype.showEditWindow = function(record){
 				},{
 					xtype : "timefield",
 					name : "FromTime",
-					width : 100
+					format : "H:i",
+					submitFormat : "H:i:s",
+					minValue : "06:00",
+					maxValue : "23:00",
+					width : 100,
+					listeners : {
+						select : function(){
+							this.up('form').down("[name=ToTime]").setValue(this.getValue());
+						}
+					}
 				},{
 					xtype : "timefield",
 					name : "ToTime",
 					fieldLabel : "تا",
+					format : "H:i",
+					submitFormat : "H:i:s",
+					minValue : "06:00",
+					maxValue : "23:00",
 					labelWidth : 20,
 					width : 120
 				},{
@@ -247,9 +291,7 @@ calendar.prototype.updateTitle = function(startDt, endDt){
 	}
 };
 
-Ext.onReady(function(){
-	calendarObj = new calendar();
-});
+calendarObj = new calendar();
 
 calendar.prototype.SaveEvent = function(){
 

@@ -40,7 +40,7 @@ Ext.define('Ext.calendar.util.Date', {
         for (; i < ln; i++) {
             dt = Math[max ? 'max': 'min'](dt, args[i].getTime());
         }
-        return new Ext.SHDate(dt);
+        return GtoJ(new Date(dt));
     },
 
     max: function() {
@@ -109,6 +109,7 @@ var futureDate = Extensible.Date.add(now, {
         }
         if (o.days) {
             newDt = dateAdd(newDt, ExtDate.DAY, o.days);
+			newDt.XDate.setDate(newDt.XDate.getDate() + o.days);
         }
         if (o.hours) {
             newDt = dateAdd(newDt, ExtDate.HOUR, o.hours);

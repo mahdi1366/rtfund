@@ -628,7 +628,7 @@ function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false, $pdo2
 	$RequestID = empty($RequestID) ? $_REQUEST["RequestID"] : $RequestID;
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	
-	$payments = LON_payments::Get(" AND RequestID=? order by PayDate", array($RequestID));
+	$payments = LON_payments::Get(" AND RequestID=?", array($RequestID), "order by PayDate");
 	$payments = $payments->fetchAll();
 	
 	if(count($payments) == 0)
@@ -1261,7 +1261,7 @@ function GetEndedRequests(){
 
 function GetPartPayments(){
 	
-	$dt = LON_payments::Get(" AND RequestID=? " . dataReader::makeOrder() , array($_REQUEST["RequestID"]));
+	$dt = LON_payments::Get(" AND RequestID=? ", array($_REQUEST["RequestID"]),dataReader::makeOrder());
 	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
@@ -1285,7 +1285,6 @@ function DeletePayment(){
 	
 	$obj = new LON_payments($_POST["PayID"]);
 	$result = $obj->Remove();
-	
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
@@ -1296,7 +1295,7 @@ function RegPayPartDoc($ReturnMode = false, $pdo = null){
 	$PayObj = new LON_payments($PayID);
 	
 	//---------- check for previous payments docs registered --------------
-	$dt = LON_payments::Get(" AND RequestID=? AND PayDate<? AND DocID=0",
+	$dt = LON_payments::Get(" AND RequestID=? AND PayDate<? AND d.DocID is null",
 			array($PayObj->RequestID, $PayObj->PayDate));
 	if($dt->rowCount() > 0)
 	{
@@ -1331,14 +1330,6 @@ function RegPayPartDoc($ReturnMode = false, $pdo = null){
 		die();	
 	}
 	
-	$PayObj->DocID = $result;
-	if(!$PayObj->Edit($pdo))
-	{
-		$pdo->rollBack();
-		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
-		die();
-	}
-	
 	if($ReturnMode)
 		return true;
 	
@@ -1354,7 +1345,7 @@ function editPayPartDoc(){
 	$partobj = LON_ReqParts::GetValidPartObj($PayObj->RequestID);
 	$ReqObj = new LON_requests($PayObj->RequestID);
 	
-	$DocObj = new ACC_docs($PayObj->DocID);
+	$DocObj = new ACC_docs(LON_payments::GetDocID($PayObj->PayID));
 	if($DocObj->DocStatus != "RAW")
 	{
 		echo Response::createObjectiveResponse(false,"سند تایید شده و قابل ویرایش نمی باشد");
@@ -1397,11 +1388,11 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 	}
 	$PayID = $_POST["PayID"];
 	$PayObj = new LON_payments($PayID);
-		
+	$DocID = LON_payments::GetDocID($PayObj->PayID);	
 	//------------- check for Acc doc confirm -------------------
 	$temp = PdoDataAccess::runquery("select DocStatus 
 		from ACC_DocItems join ACC_docs using(DocID) where SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND 
-		DocID=?", array($PayObj->DocID));
+		DocID=?", array($DocID));
 	if(count($temp) == 0)
 	{
 		echo Response::createObjectiveResponse(false, "سند مربوطه یافت نشد");
@@ -1416,7 +1407,7 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 	$CostCode_todiee = COSTID_Todiee;
 	$temp = PdoDataAccess::runquery("select * from ACC_DocItems 
 		where CostID=? AND CreditorAmount>0 AND DocID=?",
-		array($CostCode_todiee, $PayObj->DocID));
+		array($CostCode_todiee, $DocID));
 	if(count($temp) > 0)
 	{
 		$dt = PdoDataAccess::runquery("select * from ACC_DocItems where CostID=? AND DebtorAmount>0 
@@ -1436,22 +1427,12 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 		$pdo->beginTransaction();
 	}
 	
-	if(!ReturnPayPartDoc($PayObj->DocID, $pdo, !$ReturnMode))
+	if(!ReturnPayPartDoc($DocID, $pdo, !$ReturnMode))
 	{
 		if($ReturnMode)
 			return false;
 		$pdo->rollBack();
 		print_r(ExceptionHandler::PopAllExceptions());
-		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
-		die();
-	}
-
-	$PayObj->DocID = 0;
-	if(!$PayObj->Edit($pdo))
-	{
-		if($ReturnMode)
-			return false;
-		$pdo->rollBack();
 		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
 		die();
 	}

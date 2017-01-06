@@ -260,7 +260,7 @@ Ext.define('Ext.calendar.view.Month', {
             _elId: selector + '-' + evt._weekIndex,
             _isRecurring: evt.Recurrence && evt.Recurrence != '',
             _isReminder: evt[M.Reminder.name] && evt[M.Reminder.name] != '',
-            Title: (evt[M.IsAllDay.name] ? '' : Ext.SHDate.format(evt[M.StartDate.name], 'g:ia ')) + (!title || title.length == 0 ? '(No title)' : title)
+            Title: (evt[M.IsAllDay.name] ? '' : Ext.SHDate.format(evt[M.StartDate.name], 'G:ia ')) + (!title || title.length == 0 ? '(No title)' : title)
         },
         evt);
     },

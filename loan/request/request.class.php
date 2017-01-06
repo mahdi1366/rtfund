@@ -939,7 +939,6 @@ class LON_payments extends OperationClass
 	public $PayType;
 	public $PayDate;
 	public $PayAmount;
-	public $DocID;
 	
 	function __construct($PayID = "") {
 		
@@ -950,11 +949,15 @@ class LON_payments extends OperationClass
 				from LON_payments  where payID=?", array($PayID));
 	}
 	
-	static function Get($where = '', $whereParams = array()) {
+	static function Get($where = '', $whereParams = array(), $order = "") {
 		
-		return parent::runquery_fetchMode("select p.*,c.LocalNo,c.DocStatus 
+		return parent::runquery_fetchMode("select p.*,d.LocalNo,d.DocStatus 
 			from LON_payments p
-			left join ACC_docs c using(DocID) where 1=1 " . $where, $whereParams);
+			left join ACC_DocItems di on(di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
+				AND di.SourceID=p.RequestID AND di.SourceID3=p.PayID) 
+			left join ACC_docs d on(di.DocID=d.DocID)
+			where 1=1 " . $where . 
+			" group by p.PayID " . $order, $whereParams);
 	}
 	
 	function CheckPartAmount(){
@@ -987,6 +990,17 @@ class LON_payments extends OperationClass
 			return false;
 		
 		return parent::Edit($pdo);
+	}
+	
+	static function GetDocID($PayID){
+		
+		$dt = parent::runquery("select d.DocID
+			from LON_payments p
+			left join ACC_DocItems di on(di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
+				AND SourceID=p.RequestID AND SourceID3=p.PayID) 
+			left join ACC_docs d on(di.DocID=d.DocID)
+			where p.PayID=? ", array($PayID));
+		return count($dt) > 0 ? $dt[0][0] : 0;
 	}
 }
 

@@ -671,7 +671,7 @@ JtoG = function (date) {
 	//---------------------------------------------
 };
 
-Ext.SHDate = function (y, m, d) {
+Ext.SHDate = function (y, m, d, h, min, s) {
     if (arguments.length == 0) {
         this.XDate = new Date();
         var nD = GtoJ(this.XDate);
@@ -679,21 +679,39 @@ Ext.SHDate = function (y, m, d) {
         this.month = nD.getMonth();
         this.day = nD.getDate();
     } else if (arguments.length == 1) {
-		var arr = arguments[0].split(/[\-\/ \:]/);
-		this.year = arr[0]*1;
-        this.month = arr[1]*1-1;
-        this.day = arr[2]*1;		
-		this.XDate = JtoG(this);
-    } else {
+		this.XDate = new Date(arguments[0]);
+        nD = GtoJ(this.XDate);
+        this.year = nD.getFullYear();
+        this.month = nD.getMonth();
+        this.day = nD.getDate();		
+    } else if (arguments.length == 3) {
         this.year = y;
         this.month = m;
         this.day = d;
+		this.XDate = JtoG(this);
     }
+	else{
+		this.year = y;
+        this.month = m;
+        this.day = d;
+		this.XDate = JtoG(this);
+		min = arguments.length >= 5 ? min*1 : 0;
+		s = arguments.length >= 6 ? s*1 : 0;
+		this.XDate.setHours(h);
+		this.XDate.setMinutes(min);
+		this.XDate.setSeconds(s);
+	}		
 };
 Ext.SHDate.prototype = {
-    setHours: function () {},
-    setMinutes: function () {},
-    setSeconds: function () {},
+    setHours: function (h) {
+		this.XDate.setHours(h);
+	},
+    setMinutes: function (m) {
+		this.XDate.setMinutes(m);
+	},
+    setSeconds: function (s) {
+		this.XDate.setSeconds(s);
+	},
     setMilliseconds: function () {},
     getFullYear: function () {
         return this.year;
@@ -702,7 +720,7 @@ Ext.SHDate.prototype = {
         return this.month;
     },
     getDay: function () {
-        this.XDate = JtoG(new Ext.SHDate(this.year, this.month, this.day));
+        //this.XDate = JtoG(new Ext.SHDate(this.year, this.month, this.day));
         var d = this.XDate.getDay();
         return (d + 1 < 7) ? d + 1 : 0;
     },
@@ -710,7 +728,13 @@ Ext.SHDate.prototype = {
         return this.day;
     },
     getTime: function () {
-        this.XDate = JtoG(this);
+		h = this.XDate.getHours();
+		m = this.XDate.getMinutes();
+		s = this.XDate.getSeconds();
+		this.XDate = JtoG(this);
+		this.XDate.setHours(h);
+		this.XDate.setMinutes(m);
+		this.XDate.setSeconds(s);
         return this.XDate.getTime();
     },
 	setTime: function () {
@@ -802,11 +826,11 @@ Ext.SHDate.prototype = {
         this.day = days;
     },
 	getHours : function () {
-        this.XDate = JtoG(this);
-        return this.XDate.getSeconds();
+        //this.XDate = JtoG(this);
+        return this.XDate.getHours();
     },
 	getMinutes : function () {
-        this.XDate = JtoG(this);
+        //this.XDate = JtoG(this);
         return this.XDate.getMinutes();
     }
 };
@@ -1152,7 +1176,7 @@ Ext.SHDate.prototype.add = function (interval, value) {
 };
 Ext.SHDate.prototype.clone = function () {
     obj = new Ext.SHDate(this.year, this.month, this.day);
-	obj.XDate = this.XDate;
+	obj.XDate = new Date(this.XDate.getTime());
 	return obj;
 };
 
@@ -1199,7 +1223,8 @@ Ext.apply(Ext.SHDate, {
 		date.setSeconds(0);
 		date.setMilliseconds(0);
 		if (date.getDate() != d) { 
-			for (var hr = 1, c = Ext.SHDate.add(date, Ext.SHDate.HOUR, hr); c.getDate() != d; hr++, c = Ext.SHDate.add(date, Ext.SHDate.HOUR, hr));
+			for (var hr = 1, c = Ext.SHDate.add(date, Ext.SHDate.HOUR, hr); c.getDate() != d; 
+					hr++, c = Ext.SHDate.add(date, Ext.SHDate.HOUR, hr));
 			date.setDate(d);
 			date.setHours(c.getHours());
 		}
@@ -1242,7 +1267,7 @@ Ext.apply(Ext.SHDate, {
 	},
 	clone : function(date) {
 		obj = new Ext.SHDate(date.year, date.month, date.day);
-		obj.XDate = date.XDate;
+		obj.XDate = new Date(date.XDate.getTime());
 		return obj;
 		//return new Ext.SHDate(date.year, date.month, date.day);
 	},

@@ -14,8 +14,8 @@
 
 class ReportGenerator {
 
-	const TempFolderAddress = "/tmp/temp.xls";
-	//const TempFolderAddress = "d:/webserver/temp/temp.xls";
+	//const TempFolderAddress = "/tmp/temp.xls";
+	const TempFolderAddress = "d:/webserver/temp/temp.xls";
 	
 	public $fontFamily = "nazanin";
 	public $fontSize = "16px";
@@ -188,23 +188,34 @@ class ReportGenerator {
 			if ($this->columns[$i]->HaveSum != -1)
 				$this->EnableSumRow = true;
 		}
+		$this->PrevRecord = null;
+		//-------------------------------------------------		
 		if (is_array($this->mysql_resource)) {
 			for ($index = 0; $index < count($this->mysql_resource); $index++) {
-				$row = $this->mysql_resource[$index];
+				$row = &$this->mysql_resource[$index];
 				if ($this->rowNumber)
 					$worksheet->write($index + 1, 0, ($index + 1));
 
 				for ($i = 0; $i < count($this->columns); $i++) {
 					$val = "";
 					 if(!empty($this->columns[$i]->renderFunction))
-						eval("\$val = " . $this->columns[$i]->renderFunction . "(\$row,\$row[\$this->columns[\$i]->field]);");
+					 {
+						$functionName = $this->columns[$i]->renderFunction;
+						$val = $functionName(
+							$row,$row[$this->columns[$i]->field],
+							$this->columns[$i]->renderParams,$this->PrevRecord);
+					 }
 					else 
 						$val = $row[$this->columns[$i]->field];
 
 					$worksheet->write($index + 1, $i + ($this->rowNumber ? 1 : 0), $val);
 				}
+				$this->PrevRecord = $row;
 			}
-		} else {
+		}
+		//-------------------------------------------------
+		else 
+		{
 			$index = 0;
 			while ($row = $this->mysql_resource->fetch()) {
 				if ($this->rowNumber)
@@ -212,14 +223,20 @@ class ReportGenerator {
 
 				for ($i = 0; $i < count($this->columns); $i++) {
 					$val = "";
-					/* if(!empty($this->columns[$i]->renderFunction))
-						eval("\$val = " . $this->columns[$i]->renderFunction . "(\$row,\$row[\$this->columns[\$i]->field]);");
-						else */
-					$val = $row[$this->columns[$i]->field];
+					if(!empty($this->columns[$i]->renderFunction))
+					 {
+						$functionName = $this->columns[$i]->renderFunction;
+						$val = $functionName(
+							$row,$row[$this->columns[$i]->field],
+							$this->columns[$i]->renderParams,$this->PrevRecord);
+					 }
+					else 
+						$val = $row[$this->columns[$i]->field];
 
 					$worksheet->write($index + 1, $i + ($this->rowNumber ? 1 : 0), $val);
 				}
 				$index++;
+				$this->PrevRecord = $row;
 			}
 		}
 		$workbook->close();
@@ -751,7 +768,10 @@ class ReportColumn {
 
 	
 function ReportMoneyRender($row, $value){
-		return number_format($value);
+		if(!empty($_REQUEST["excel"]))
+			return $value;
+		else
+			return number_format($value);
 	}
 	
 function ReportDateRender($row, $value){

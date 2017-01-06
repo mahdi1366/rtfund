@@ -347,6 +347,8 @@ class FRW_CalenderEvents extends OperationClass {
 	public $ColorID;
 	public $StartDate;
 	public $EndDate;
+	public $FromTime;
+	public $ToTime;
 	public $IsAllDay;
 	public $reminder;
 }

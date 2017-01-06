@@ -21,7 +21,6 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=GetPa
 
 $dg->addColumn("", "PayID","", true);
 $dg->addColumn("", "RequestID","", true);
-$dg->addColumn("", "DocID","", true);
 $dg->addColumn("", "DocStatus","", true);
 
 $col = $dg->addColumn("تاریخ پرداخت", "PayDate", GridColumn::ColumnType_date);
@@ -88,7 +87,7 @@ function PartPayment()
 	this.grid = <?= $grid ?>;
 	if(this.AddAccess)
 		this.grid.plugins[0].on("beforeedit", function(editor,e){
-			if(e.record.data.DocID*1 > 0)
+			if(e.record.data.LocalNo*1 > 0)
 				return false;
 			return true;
 		});
@@ -98,6 +97,8 @@ function PartPayment()
 
 PartPayment.DeleteRender = function(v,p,r){
 	
+	if(r.data.LocalNo != "" && r.data.LocalNo != null)
+		return "";
 	return "<div align='center' title='حذف' class='remove' "+
 		"onclick='PartPaymentObject.DeletePayment();' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
@@ -106,7 +107,7 @@ PartPayment.DeleteRender = function(v,p,r){
 
 PartPayment.DocRender = function(v,p,r){
 	
-	if(r.data.DocID != "0")
+	if(r.data.LocalNo != "" && r.data.LocalNo != null)
 	{
 		st = v;
 		if(r.data.DocStatus == "RAW")
@@ -136,7 +137,6 @@ PartPayment.prototype.AddPay = function(){
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
 		PayID: null,
-		DocID : 0,
 		RequestID : this.RequestID
 	});
 
@@ -305,7 +305,7 @@ PartPayment.prototype.RegPayPartDoc = function(task){
 	});				
 }
 
-PartPayment.prototype.ReturnPayPartDoc = function(DocID){
+PartPayment.prototype.ReturnPayPartDoc = function(){
 	
 	Ext.MessageBox.confirm("","آیا مایل به برگشت سند پرداخت می باشید؟",function(btn){
 		

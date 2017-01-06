@@ -11,13 +11,8 @@ require_once '../baseinfo/baseinfo.class.php';
 require_once inc_dataReader;
 require_once inc_response;
 
-$task = isset($_POST ["task"]) ? $_POST ["task"] : (isset($_GET ["task"]) ? $_GET ["task"] : "");
-
-switch ($task) {
-	
-	default : 
-		eval($task. "();");
-}
+if(!empty($_REQUEST["task"]))
+	$_REQUEST["task"]();
 
 function selectDocs() {
 	$where = " sd.CycleID=:cid AND sd.BranchID=:b ";
@@ -685,11 +680,10 @@ function ComputeDoc(){
 
 //.................................
 
-function GetAccountSummary(){
+function GetAccountSummary($ReturnMode = false, $BranchID = "", $where = "", $param = array()){
 	
-	$where = "";
 	$param = array(":c" => $_SESSION["accounting"]["CycleID"], 
-		":b" => $_SESSION["accounting"]["BranchID"]);
+		":b" => $BranchID != "" ? $BranchID : $_SESSION["accounting"]["BranchID"]);
 	
 	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
 	{
@@ -702,8 +696,13 @@ function GetAccountSummary(){
 			ifnull(pasandaz.amount,0) pasandaz,
 			ifnull(kootah.amount,0) kootah,
 			ifnull(boland.amount,0) boland,
-			ifnull(jari.amount,0) jari
+			ifnull(jari.amount,0) jari,
+			packNo
+			
 		from ACC_tafsilis t 
+			left join BSC_persons p on(t.TafsiliType=".TAFTYPE_PERSONS." AND t.ObjectID=p.PersonID)
+			left join DMS_packages pk on(pk.BranchID=:b AND pk.PersonID=p.PersonID)
+
 			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 						from ACC_DocItems join ACC_docs using(DocID)
 						where TafsiliType=".TAFTYPE_PERSONS." AND BranchID=:b AND CycleID=:c AND CostID=".COSTID_saving."
@@ -726,6 +725,8 @@ function GetAccountSummary(){
 			)jari on(jari.TafsiliID=t.TafsiliID)
 		where TafsiliType=" . TAFTYPE_PERSONS . $where . dataReader::makeOrder(), $param);
 	
+	if($ReturnMode)
+		return $temp;
 	//echo PdoDataAccess::GetLatestQueryString();
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);

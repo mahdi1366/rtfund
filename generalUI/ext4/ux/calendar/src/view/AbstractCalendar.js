@@ -331,7 +331,6 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
     // private
     prepareEventGrid: function(evts, w, d) {
         var row = 0,
-        dt = Ext.SHDate.clone(this.viewStart),
         max = this.maxEventsPerDay ? this.maxEventsPerDay: 999;
 
         evts.each(function(evt) {
@@ -645,10 +644,8 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
         end = this.viewEnd.getTime(),
         M = Ext.calendar.data.EventMappings,
         data = evt.data || evt,
-        evStartDate = new Ext.SHDate(data[M.StartDate.name]),
-        evEndDate = new Ext.SHDate(data[M.EndDate.name]),//Ext.calendar.util.Date.add(data[M.EndDate.name], {seconds: -1}).getTime(),
-		evStart = evStartDate.getTime(),
-        evEnd = evEndDate.getTime(),//
+        evStart = data[M.StartDate.name].getTime(),
+        evEnd = Ext.calendar.util.Date.add(data[M.EndDate.name], {seconds: -1}).getTime(),
 		
 
         startsInRange = (evStart >= start && evStart <= end),

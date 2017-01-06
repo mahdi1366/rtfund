@@ -686,7 +686,7 @@ td.ext-cal-dtitle-today div {
 .ext-color-1,
 .x-ie .ext-color-1-ad,
 .x-opera .ext-color-1-ad {
-	color: #306da6;
+	color: #306da6 !important;
 }
 .ext-cal-day-col .ext-color-1,
 .ext-dd-drag-proxy .ext-color-1,
@@ -707,7 +707,7 @@ td.ext-cal-dtitle-today div {
 .ext-color-2,
 .x-ie .ext-color-2-ad,
 .x-opera .ext-color-2-ad {
-	color: #86a723;
+	color: #86a723 !important;
 }
 .ext-cal-day-col .ext-color-2,
 .ext-dd-drag-proxy .ext-color-2,
@@ -724,10 +724,11 @@ td.ext-cal-dtitle-today div {
 .ext-color-2-x dl {
     border-color: #86a723;
 }
+
 .ext-color-3,
 .x-ie .ext-color-3-ad,
 .x-opera .ext-color-3-ad {
-    color: #b6a980;
+    color: #b6a980 !important;
 }
 .ext-cal-day-col .ext-color-3,
 .ext-dd-drag-proxy .ext-color-3,

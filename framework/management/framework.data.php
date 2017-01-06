@@ -244,6 +244,9 @@ function saveCalenderEvent(){
 	$obj = new FRW_CalenderEvents();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
+	$obj->IsAllDay = isset($obj->IsAllDay) ? $obj->IsAllDay : "NO";
+	$obj->reminder = isset($obj->reminder) ? $obj->reminder : "NO";
+	
 	if($obj->EventID != "")
 		$result = $obj->Edit();
 	else

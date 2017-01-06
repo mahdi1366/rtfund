@@ -137,7 +137,7 @@ function YearDelayCompute($PartObj, $PayDate, $PayAmount, $wage){
 //....................
 function ComputeWageOfSHekoofa($partObj){
 	
-	$payments = LON_payments::Get(" AND RequestID=? order by PayDate", array($partObj->RequestID));
+	$payments = LON_payments::Get(" AND RequestID=?", array($partObj->RequestID), " order by PayDate");
 	$payments = $payments->fetchAll();
 	//--------------- total pay months -------------
 	$firstPay = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);

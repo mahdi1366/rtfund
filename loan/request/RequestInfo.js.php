@@ -1706,9 +1706,9 @@ RequestInfo.prototype.LoadSummary = function(record){
 		return Math.ceil(number*factor) / factor;
 	}
 	function YearWageCompute(record,TotalWage,YearMonths){
-		
-		startDate = MiladiToShamsi(record.data.PartDate);
-		startDate = DateModule.AddToJDate(startDate, record.data.DelayDays, record.data.DelayMonths);
+				
+		startDate = DateModule.AddToGDate(record.data.PartDate, record.data.DelayDays, record.data.DelayMonths);
+		startDate = MiladiToShamsi(startDate);
 		startDate = startDate.split(/[\-\/]/);
 		PayMonth = startDate[1];
 		PayMonth = PayMonth*YearMonths/12;
