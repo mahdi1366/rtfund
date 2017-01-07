@@ -4,22 +4,7 @@
 // create Date:	95.09
 //---------------------------
 include('header.inc.php');
-/*DROP TABLE IF EXISTS `krrtfir_rtfund`.`FRW_CalendarEvents`;
-CREATE TABLE  `krrtfir_rtfund`.`FRW_CalendarEvents` (
-  `EventID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `PersonID` int(10) unsigned NOT NULL,
-  `EventTitle` varchar(200) NOT NULL,
-  `EventDesc` varchar(2000) DEFAULT NULL,
-  `ColorID` smallint(5) unsigned NOT NULL,
-  `StartDate` date NOT NULL,
-  `EndDate` date NOT NULL,
-  `IsAllDay` enum('YES','NO') NOT NULL DEFAULT 'NO',
-  `reminder` enum('YES','NO') NOT NULL DEFAULT 'NO',
-  `FromTime` time DEFAULT NULL,
-  `ToTime` time DEFAULT NULL,
-  `IsSeen` enum('YES','NO') NOT NULL DEFAULT 'NO',
-  PRIMARY KEY (`EventID`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;*/
+
 ?>
 <script type="text/javascript">
 		
@@ -196,7 +181,7 @@ calendar.prototype.showEditWindow = function(record){
 					width : 550,
 					labelWidth : 80,
 					name : "EventDesc",
-					allowBlank : false,
+					allowBlank : true,
 					fieldLabel : "توضیحات"
 				},{
 					xtype : "shdatefield",
@@ -267,17 +252,17 @@ calendar.prototype.showEditWindow = function(record){
 				}]
 			}),
 			buttons :[{
-				iconCls : "save",
-				text : "ذخیره",
-				handler : function(){
-					calendarObj.SaveEvent();
-				}
-			},{
 				itemId : "DeleteBtn",
 				iconCls : "remove",
 				text : "حذف",
 				handler : function(){
 					calendarObj.DeleteEvent();
+				}
+			},'->',{
+				iconCls : "save",
+				text : "ذخیره",
+				handler : function(){
+					calendarObj.SaveEvent();
 				}
 			},{
 				iconCls : "undo",
@@ -290,15 +275,12 @@ calendar.prototype.showEditWindow = function(record){
 		
 		Ext.getCmp(this.TabID).add(this.InfoWin);		
 	}
-	if(record)
-	{
-		this.InfoWin.down('form').loadRecord(record);
+	this.InfoWin.down('form').loadRecord(record);
+	
+	if(record.data.EventID*1 > 0)
 		this.InfoWin.down("[itemId=DeleteBtn]").show();
-	}
 	else
-	{
 		this.InfoWin.down("[itemId=DeleteBtn]").hide();
-	}
 		
 	this.InfoWin.show();
 	this.InfoWin.center();
@@ -341,20 +323,21 @@ calendar.prototype.DeleteEvent = function(){
 			return; 
 		
 		me = calendarObj;
-		var record = me.infoWin.down("[name=EventID]").getValue();
+		var EventID = me.InfoWin.down("[name=EventID]").getValue();
 		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف...'});
 		mask.show();
 
 		Ext.Ajax.request({
 			url: me.address_prefix + 'management/framework.data.php?task=removeCalendarEvent',
 			params:{
-				EventID: record.data.EventID
+				EventID: EventID
 			},
 			method: 'POST',
 
 			success: function(){
 				mask.hide();
 				calendarObj.eventStore.load();
+				calendarObj.InfoWin.hide();
 			},
 			failure: function(){}
 		});

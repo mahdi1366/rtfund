@@ -17,17 +17,17 @@ Ext.define('Ext.calendar.CalendarPanel', {
     
     requires: [
 		'Ext.calendar.util.Date',
-        'Ext.calendar.data.MemoryCalendarStore',
+        /*'Ext.calendar.data.MemoryCalendarStore',
         'Ext.calendar.data.MemoryEventStore',
         'Ext.calendar.data.Events',
         'Ext.calendar.data.Calendars',
-        'Ext.calendar.form.EventWindow',
+        'Ext.calendar.form.EventWindow',*/
 		
         'Ext.layout.container.Card',
         'Ext.calendar.view.Day',
         'Ext.calendar.view.Week',
-        'Ext.calendar.view.Month',
-        'Ext.calendar.form.EventDetails'
+        'Ext.calendar.view.Month'/*,
+        'Ext.calendar.form.EventDetails'*/
     ],
     
     /**
@@ -335,30 +335,6 @@ Ext.define('Ext.calendar.CalendarPanel', {
             this.add(month);
         }
 
-        this.add(Ext.applyIf({
-            xtype: 'eventeditform',
-            id: this.id + '-edit',
-            calendarStore: this.calendarStore,
-            listeners: {
-                'eventadd': {
-                    scope: this,
-                    fn: this.onEventAdd
-                },
-                'eventupdate': {
-                    scope: this,
-                    fn: this.onEventUpdate
-                },
-                'eventdelete': {
-                    scope: this,
-                    fn: this.onEventDelete
-                },
-                'eventcancel': {
-                    scope: this,
-                    fn: this.onEventCancel
-                }
-            }
-        },
-        this.editViewCfg));
     },
 
     // private

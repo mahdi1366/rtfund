@@ -121,7 +121,7 @@ $dgh->width = 850;
 $dgh->DefaultSortField = "fullname";
 $dgh->DefaultSortDir = "ASC";
 $dgh->autoExpandColumn = "address";
-$dgh->height = 450;
+$dgh->height = 470;
 $dgh->pageSize = 15;
 $grid = $dgh->makeGrid_returnObjects();
 

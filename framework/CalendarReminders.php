@@ -19,6 +19,7 @@ $col->renderer = "CalendarReminder.ColorRender";
 $col->width = 30;
 
 $col = $dgh->addColumn("عنوان رویداد", "EventTitle");
+$col->renderer = "CalendarReminder.titleRender";
 
 $col = $dgh->addColumn("شروع", "StartDate");
 $col->width = 80;
@@ -98,6 +99,13 @@ CalendarReminder.ColorRender = function(v,p,r){
 
 	return "<div class=ext-color-"+v+"><div class=ext-cal-picker-icon> </div></div>";
 }
+
+CalendarReminder.titleRender = function(v,p,r){
+
+	p.tdAttr = "data-qtip='" + r.data.EventDesc + "'";
+	return v;
+}
+
 CalendarReminderObj = new CalendarReminder();
 
 </script>

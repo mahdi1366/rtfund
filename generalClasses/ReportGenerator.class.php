@@ -14,8 +14,8 @@
 
 class ReportGenerator {
 
-	//const TempFolderAddress = "/tmp/temp.xls";
-	const TempFolderAddress = "d:/webserver/temp/temp.xls";
+	const TempFolderAddress = "/tmp/temp.xls";
+	//const TempFolderAddress = "d:/webserver/temp/temp.xls";
 	
 	public $fontFamily = "nazanin";
 	public $fontSize = "16px";

@@ -15,9 +15,9 @@ Ext.define('Ext.calendar.view.DayBody', {
     requires: [
         'Ext.XTemplate',
         'Ext.calendar.template.DayBody',
-        'Ext.calendar.data.EventMappings',
+        'Ext.calendar.data.EventMappings'/*,
         'Ext.calendar.dd.DayDragZone',
-        'Ext.calendar.dd.DayDropZone'
+        'Ext.calendar.dd.DayDropZone'*/
     ],
     
     //private
