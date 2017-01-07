@@ -540,7 +540,7 @@ class LON_requests extends PdoDataAccess
 			if($installments[$i]["IsDelayed"] == "YES")
 				continue;
 
-			if($PayRecord != null && $PayRecord["PayDate"] < $installments[$i]["InstallmentDate"])
+			if($PayRecord != null && $PayRecord["PayDate"] <= $installments[$i]["InstallmentDate"])
 			{
 				$TotalRemainder -= $PayRecord["PayAmount"]*1;
 				
@@ -575,7 +575,9 @@ class LON_requests extends PdoDataAccess
 				{
 					if($obj->PayCompute != "installment")
 					{
+						$TotalRemainder += $TotalForfeit;
 						$TotalForfeit = 0;
+						$tempForReturnArr["TotalRemainder"] = $TotalRemainder;
 					}	
 					else
 						$tempForReturnArr["ForfeitAmount"] = $TotalForfeit;

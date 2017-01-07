@@ -64,7 +64,7 @@ $col = $dg->addColumn("وضعیت", "StepDesc", "");
 $col->width = 80;
 
 $col = $dg->addColumn("سند", "LocalNo", "");
-$col->width = 40;
+$col->width = 100;
 
 $col = $dg->addColumn('عملیات', '', 'string');
 $col->renderer = "WarrentyRequest.OperationRender";
@@ -78,7 +78,7 @@ if($accessObj->AddFlag)
 
 $dg->EnableGrouping = true;
 $dg->DefaultGroupField = "RefRequestID";
-$dg->groupHeaderTpl = "ضمانتنامه شماره [ {[values.rows[0].data.RequestID]} ] به نام ".
+$dg->groupHeaderTpl = "ضمانتنامه شماره [ {[values.rows[0].data.RefRequestID]} ] به نام ".
 		"[ {[values.rows[0].data.fullname]} ]";
 
 $dg->emptyTextOfHiddenColumns = true;

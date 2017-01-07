@@ -3135,7 +3135,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $PersonTafsili;
 	$itemObj->SourceType = DOCTYPE_WARRENTY;
-	$itemObj->SourceID = $IsExtend ? $ReqObj->RefRequestID : $ReqObj->RequestID;
+	$itemObj->SourceID = $ReqObj->RefRequestID;
 	$itemObj->SourceID2 = $ReqObj->RequestID;
 	$itemObj->locked = "YES";
 	
@@ -3326,7 +3326,6 @@ function ReturnWarrantyDoc($ReqObj, $pdo, $EditMode = false){
 function EndWarrantyDoc($ReqObj, $pdo){
 	
 	/*@var $ReqObj WAR_requests */
-	$IsExtend = !empty($ReqObj->RefRequestID) ? true : false;
 	
 	//------------- get CostCodes --------------------
 	$CostCode_warrenty = FindCostID("300");
@@ -3365,7 +3364,8 @@ function EndWarrantyDoc($ReqObj, $pdo){
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $PersonTafsili;
 	$itemObj->SourceType = DOCTYPE_WARRENTY_END;
-	$itemObj->SourceID = $IsExtend ? $ReqObj->RefRequestID : $ReqObj->RequestID;
+	$itemObj->SourceID = $ReqObj->RefRequestID;
+	$itemObj->SourceID2 = $ReqObj->RequestID;
 	$itemObj->locked = "YES";
 	
 	$itemObj->CostID = $CostCode_warrenty;
@@ -3399,9 +3399,7 @@ function EndWarrantyDoc($ReqObj, $pdo){
 		}
 	}
 	//---------- ردیف های تضمین  ----------
-
 	$SumAmount = 0;
-	$countAmount = 0;	
 	$dt = PdoDataAccess::runquery("
 		SELECT DocumentID, ParamValue, InfoDesc as DocTypeDesc
 			FROM DMS_DocParamValues
@@ -3416,8 +3414,8 @@ function EndWarrantyDoc($ReqObj, $pdo){
 	{
 		unset($itemObj->ItemID);
 		$itemObj->CostID = $CostCode_guaranteeAmount_zemanati;
-		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $row["ParamValue"];
+		$itemObj->DebtorAmount  = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $PersonTafsili;
 		$itemObj->SourceType = DOCTYPE_DOCUMENT;
@@ -3426,7 +3424,6 @@ function EndWarrantyDoc($ReqObj, $pdo){
 		$itemObj->Add($pdo);
 
 		$SumAmount += $row["ParamValue"]*1;
-		$countAmount++;
 	}
 	if($SumAmount > 0)
 	{
@@ -3435,11 +3432,11 @@ function EndWarrantyDoc($ReqObj, $pdo){
 		unset($itemObj->TafsiliID);
 		unset($itemObj->details);
 		$itemObj->CostID = $CostCode_guaranteeAmount2_zemanati;
-		$itemObj->DebtorAmount = $SumAmount;
-		$itemObj->CreditorAmount = 0;	
+		$itemObj->CreditorAmount = 0;
+		$itemObj->DebtorAmount = $SumAmount;	
 		$itemObj->Add($pdo);
 	}
-	
+
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
 	

@@ -19,12 +19,14 @@ if(isset($_REQUEST["show"]))
 	//............ get remain untill now ......................
 	$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
 	$CurrentRemain = 0;
-	foreach($dt as $row)
+	foreach($returnArr as $row)
 	{
-		if($row["InstallmentDate"] <= DateModules::Now())
-			$CurrentRemain = $row["TotalRemainder"]*1 < 0 ? 0 : $row["TotalRemainder"];
+		if($row["ActionDate"] <= DateModules::Now())
+		{
+			$amount = $row["TotalRemainder"]*1 + $row["ForfeitAmount"]*1;
+			$CurrentRemain = $amount < 0 ? 0 : $amount;
+		}
 	}
-	
 	//.........................................................
 	
 	$rpg = new ReportGenerator();
@@ -134,7 +136,8 @@ if(isset($_REQUEST["show"]))
 			}
 		}
 		if($LastPayedInstallment == null)
-			$EndingAmount = $rpg2->mysql_resource[0]["pureAmount"];
+			$EndingAmount = $returnArr[count($returnArr)-1]["TotalRemainder"]*1 + 
+								$returnArr[ count($returnArr)-1 ]["ForfeitAmount"]*1;
 		else
 		{
 			for($i=0; $i < count($rpg2->mysql_resource);$i++)
@@ -178,7 +181,9 @@ if(isset($_REQUEST["show"]))
 					</tr>
 					<tr>
 						<td>مانده تا انتها : </td>
-						<td><b><?= number_format($returnArr[count($returnArr)-1]["TotalRemainder"]*1 + $dt[ count($dt)-1 ]["ForfeitAmount"]*1)?> ریال
+						<td><b><?= number_format(
+								$returnArr[count($returnArr)-1]["TotalRemainder"]*1 + 
+								$returnArr[ count($returnArr)-1 ]["ForfeitAmount"]*1)?> ریال
 							</b></td>
 					</tr>
 					<? if($ReqObj->ReqPersonID != SHEKOOFAI){ ?>

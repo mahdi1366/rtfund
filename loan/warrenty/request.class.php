@@ -51,14 +51,15 @@ class WAR_requests extends OperationClass
 		
 		return PdoDataAccess::runquery_fetchMode("
 			select r.* , concat_ws(' ',fname,lname,CompanyName) fullname, sp.StepDesc,
-				bf.InfoDesc TypeDesc,d.DocID,d.LocalNo, d.DocStatus , BranchName
+				bf.InfoDesc TypeDesc,d.DocID,group_concat(distinct d.LocalNo) LocalNo, d.DocStatus , 
+				BranchName
 			from WAR_requests r 
 				left join BSC_persons using(PersonID)
 				join BSC_branches b using(BranchID)
 				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
 				join WFM_FlowSteps sp on(sp.FlowID=" . FLOWID . " AND sp.StepID=r.StatusID)
-				left join ACC_DocItems on(SourceType='" . DOCTYPE_WARRENTY . "' 
-					AND r.RequestID=SourceID2)
+				left join ACC_DocItems on(r.RequestID=SourceID2 AND 
+					SourceType in(" . DOCTYPE_WARRENTY . ",".DOCTYPE_WARRENTY_END.",".DOCTYPE_WARRENTY_EXTEND."))
 				left join ACC_docs d using(DocID)
 			where " . $where . 
 			" group by r.RequestID" . $order, $param);

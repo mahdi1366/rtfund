@@ -41,10 +41,10 @@ if(isset($_REQUEST["show"]))
 	
 	$col = $rpg->addColumn("تاریخ قسط", "InstallmentDate","dateRender");
 	$col->rowspanByFields = array("InstallmentID");
-	$col->rowspaning = true;
+	//$col->rowspaning = true;
 	
 	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount","amountRender");
-	$col->rowspaning = true;
+	//$col->rowspaning = true;
 	$col->rowspanByFields = array("InstallmentID");
 	
 	$col = $rpg->addColumn("تاریخ پرداخت", "PayDate","dateRender");

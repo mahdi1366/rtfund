@@ -57,7 +57,7 @@ function SelectAllWarrentyRequests(){
 	}
 	$param = array();
 	
-	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
+	if (isset($_REQUEST['fields']) && !empty($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
 		$field = $field == "fullname" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;
         $where .= ' and ' . $field . ' like :fld';
@@ -67,12 +67,12 @@ function SelectAllWarrentyRequests(){
 	
 	if(!empty($_REQUEST["IsEnded"]))
 	{
-		$where .= " AND StatusID = :e "; 
+		$where .= " AND StatusID " . ($_REQUEST["IsEnded"] == "YES" ? "=" : "<>") . " :e "; 
 		$param[":e"] = WAR_STEPID_END;
 	}
 	
 	$dt = WAR_requests::SelectAll($where, $param, dataReader::makeOrder());
-	//print_r(ExceptionHandler::PopAllExceptions());
+	print_r(ExceptionHandler::PopAllExceptions());
 	//echo PdoDataAccess::GetLatestQueryString();
 	$count = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);	
