@@ -4,10 +4,23 @@
 // create Date:	95.09
 //---------------------------
 include('header.inc.php');
+/*DROP TABLE IF EXISTS `krrtfir_rtfund`.`FRW_CalendarEvents`;
+CREATE TABLE  `krrtfir_rtfund`.`FRW_CalendarEvents` (
+  `EventID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `PersonID` int(10) unsigned NOT NULL,
+  `EventTitle` varchar(200) NOT NULL,
+  `EventDesc` varchar(2000) DEFAULT NULL,
+  `ColorID` smallint(5) unsigned NOT NULL,
+  `StartDate` date NOT NULL,
+  `EndDate` date NOT NULL,
+  `IsAllDay` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  `reminder` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  `FromTime` time DEFAULT NULL,
+  `ToTime` time DEFAULT NULL,
+  `IsSeen` enum('YES','NO') NOT NULL DEFAULT 'NO',
+  PRIMARY KEY (`EventID`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;*/
 ?>
-<link rel="stylesheet" type="text/css" href="/generalUI/ext4/ux/calendar/resources/css/calendar.css" />
-<link rel="stylesheet" type="text/css" href="/generalUI/ext4/ux/calendar/resources/css/examples.css" />
-
 <script type="text/javascript">
 		
 calendar.prototype = {
@@ -16,8 +29,6 @@ calendar.prototype = {
 
 	PersonID : '<?= $_SESSION["USER"]["PersonID"] ?>',
 	
-	EventID : 1,
-
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -28,9 +39,12 @@ function calendar()
 	this.colorsStore = new Ext.data.ArrayStore({
 		fields :['ColorID',"title"],
 		data : [
-			[1,'آبی'],
-			[2,'سبز'],
-			[3,'قهوه ای']
+			[1,'●'],
+			[2,'●'],
+			[3,'●'],
+			[4,'●'],
+			[5,'●'],
+			[6,'●']
 		]
 	});
 
@@ -40,10 +54,10 @@ function calendar()
 	this.eventStore = new Ext.data.Store({
 		proxy:{
 			type: 'jsonp',
-			url: this.address_prefix + 'management/framework.data.php?task=SelectCalenderEvents',
+			url: this.address_prefix + 'management/framework.data.php?task=SelectCalendarEvents',
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields :  ['EventID',"EventTitle",{
+		fields :  ['EventID',"EventTitle","EventDesc",{
 				name : "ColorID",
 				convert : function(value){return value*1}
 			},{
@@ -103,6 +117,9 @@ function calendar()
 			},
 			'dayclick': {
 				fn: function(vw, dt, ad, el){
+					
+					if(calendarObj.InfoWin)
+						calendarObj.InfoWin.down('form').form.reset();
 					var modelClass = calendarObj.eventStore.model;
 					var record = new modelClass({
 						ColorID : 1,
@@ -126,7 +143,7 @@ function calendar()
 	// update the header logo date:
 	//document.getElementById('logo-body').innerHTML = new Date().getDate();
 }
-var aaa;
+
 calendar.prototype.showEditWindow = function(record){
 	
 	if(!this.InfoWin){
@@ -153,7 +170,8 @@ calendar.prototype.showEditWindow = function(record){
 					store : this.colorsStore,
 					valueField : "ColorID",
 					displayField : "title",
-					name : "ColorID",					
+					name : "ColorID",	
+					fieldStyle : "font-size:20px",
 					tpl: new Ext.XTemplate(
 						'<tpl for=".">',
 							'<div class="x-boundlist-item ext-color-{ColorID}">',
@@ -162,17 +180,24 @@ calendar.prototype.showEditWindow = function(record){
 						'</tpl>'
 					),
 					listeners :{
-						change : function(el, newValue, oldValue){aaa = this;
-							wrap = this.el.down('.x-form-field');
-							
-							var currentClass = 'ext-color-' + oldValue,
-							newClass = 'ext-color-' + newValue;
-							
-							alert(currentClass + " " + newClass);
-							
-							wrap.replaceCls(currentClass, newClass);
+						change : function(el, newValue, oldValue){
+							if(this.getEl())
+							{
+								wrap = this.getEl().down('.x-form-field');
+								var currentClass = 'ext-color-' + oldValue,
+								newClass = 'ext-color-' + newValue;
+								wrap.replaceCls(currentClass, newClass);
+							}
 						}
 					}
+				},{
+					xtype : "textarea",
+					colspan : 4,
+					width : 550,
+					labelWidth : 80,
+					name : "EventDesc",
+					allowBlank : false,
+					fieldLabel : "توضیحات"
 				},{
 					xtype : "shdatefield",
 					name : "StartDate",
@@ -230,6 +255,13 @@ calendar.prototype.showEditWindow = function(record){
 						}
 					}
 				},{
+					xtype : "checkbox",
+					name : "reminder",
+					inputValue : "YES",
+					width : 85,
+					labelWidth : 50,
+					boxLabel : "هشدار رویداد"
+				},{
 					xtype : "hidden",
 					name : "EventID"
 				}]
@@ -241,6 +273,7 @@ calendar.prototype.showEditWindow = function(record){
 					calendarObj.SaveEvent();
 				}
 			},{
+				itemId : "DeleteBtn",
 				iconCls : "remove",
 				text : "حذف",
 				handler : function(){
@@ -258,39 +291,19 @@ calendar.prototype.showEditWindow = function(record){
 		Ext.getCmp(this.TabID).add(this.InfoWin);		
 	}
 	if(record)
+	{
 		this.InfoWin.down('form').loadRecord(record);
+		this.InfoWin.down("[itemId=DeleteBtn]").show();
+	}
 	else
-		this.up('window').down('form').down("[name=EventID]").setValue(this.EventID++);
+	{
+		this.InfoWin.down("[itemId=DeleteBtn]").hide();
+	}
 		
 	this.InfoWin.show();
 	this.InfoWin.center();
 };
         
-    // The CalendarPanel itself supports the standard Panel title config, but that title
-    // only spans the calendar views.  For a title that spans the entire width of the app
-    // we added a title to the layout's outer center region that is app-specific. This code
-    // updates that outer title based on the currently-selected view range anytime the view changes.
-calendar.prototype.updateTitle = function(startDt, endDt){
-
-	var p = this.calendarPanel,
-		fmt = Ext.SHDate.format;
-
-	if(Ext.Date.clearTime(startDt).getTime() == Ext.Date.clearTime(endDt).getTime()){
-		p.setTitle(fmt(startDt, 'F j, Y'));
-	}
-	else if(startDt.getFullYear() == endDt.getFullYear()){
-		if(startDt.getMonth() == endDt.getMonth()){
-			p.setTitle(fmt(startDt, 'F j') + ' - ' + fmt(endDt, 'j, Y'));
-		}
-		else{
-			p.setTitle(fmt(startDt, 'F j') + ' - ' + fmt(endDt, 'F j, Y'));
-		}
-	}
-	else{
-		p.setTitle(fmt(startDt, 'F j, Y') + ' - ' + fmt(endDt, 'F j, Y'));
-	}
-};
-
 calendarObj = new calendar();
 
 calendar.prototype.SaveEvent = function(){
@@ -303,7 +316,7 @@ calendar.prototype.SaveEvent = function(){
 	
 	this.InfoWin.down('form').form.submit({
 		clientValidation: true,
-		url : this.address_prefix + 'management/framework.data.php?task=saveCalenderEvent',
+		url : this.address_prefix + 'management/framework.data.php?task=saveCalendarEvent',
 		method : "POST",
 		
 		success : function(form,action){
@@ -321,6 +334,32 @@ calendar.prototype.SaveEvent = function(){
 	});
 }
 
+calendar.prototype.DeleteEvent = function(){
+
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return; 
+		
+		me = calendarObj;
+		var record = me.infoWin.down("[name=EventID]").getValue();
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'management/framework.data.php?task=removeCalendarEvent',
+			params:{
+				EventID: record.data.EventID
+			},
+			method: 'POST',
+
+			success: function(){
+				mask.hide();
+				calendarObj.eventStore.load();
+			},
+			failure: function(){}
+		});
+	});
+}
 
 	
 </script>

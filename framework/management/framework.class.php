@@ -335,9 +335,9 @@ class FRW_phonebook extends OperationClass {
 	public $IsPublic;
 }
 
-class FRW_CalenderEvents extends OperationClass {
+class FRW_CalendarEvents extends OperationClass {
 	
-	const TableName = "FRW_CalenderEvents";
+	const TableName = "FRW_CalendarEvents";
 	const TableKey = "EventID"; 
 
 	public $EventID;
@@ -351,5 +351,15 @@ class FRW_CalenderEvents extends OperationClass {
 	public $ToTime;
 	public $IsAllDay;
 	public $reminder;
+	public $IsSeen;
+	
+	public static function SelectTodayReminders(){
+	
+		$where = " AND reminder='YES' AND IsSeen='NO' 
+			AND StartDate <= :today AND :today <= EndDate AND PersonID=" . $_SESSION["USER"]["PersonID"];
+		$res = FRW_CalendarEvents::Get($where, array(":today" => DateModules::shNow('-')));	
+
+		return $res;
+	}
 }
 ?>

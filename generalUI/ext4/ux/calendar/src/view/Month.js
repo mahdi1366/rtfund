@@ -195,7 +195,7 @@ Ext.define('Ext.calendar.view.Month', {
     // inherited docs
     getEventBodyMarkup: function() {
         if (!this.eventBodyMarkup) {
-            this.eventBodyMarkup = ['{Title}',
+            this.eventBodyMarkup = [
             '<tpl if="_isReminder">',
                 '<i class="ext-cal-ic ext-cal-ic-rem">&nbsp;</i>',
             '</tpl>',
@@ -207,7 +207,7 @@ Ext.define('Ext.calendar.view.Month', {
             '</tpl>',
             '<tpl if="spanRight">',
                 '<i class="ext-cal-spr">&nbsp;</i>',
-            '</tpl>'
+            '</tpl>','{Title}'
             ].join('');
         }
         return this.eventBodyMarkup;

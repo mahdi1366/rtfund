@@ -103,7 +103,7 @@ class DateModules
 		return $sh[0] . $seperator . $sh[1] . $seperator . $sh[2];
 	}
 	
-	static function shNow()
+	static function shNow($seperator = "/")
 	{
 		$now = getdate();
 		$now = DateModules::ConvertX2SDate($now["mday"],$now["mon"],$now["year"]);
@@ -112,7 +112,7 @@ class DateModules
 		$dd=$now[0];
 		if ($dd < 10) $dd = '0' . $dd;
 		if ($mm < 10) $mm = '0' . $mm;
-		return $yy . '/' . $mm . '/' . $dd;
+		return $yy . $seperator . $mm . $seperator . $dd;
 	}
 
 	static function Now()

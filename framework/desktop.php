@@ -91,6 +91,8 @@ if ($menuStr != "") {
 	$menuStr = substr($menuStr, 0, strlen($menuStr) - 1);
 }
 
+//------------------------------------------------------------------------------
+$CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 ?>
 <html>
 	<head>
@@ -134,7 +136,8 @@ if ($menuStr != "") {
 		<script type="text/javascript" src="/generalUI/ckeditor/ckeditor.js"></script>
 		<script type="text/javascript" src="/generalUI/pdfobject.js"></script>
 		<script type="text/javascript" src="/generalUI/ext4/ux/ImageViewer.js"></script>
-		<link rel="stylesheet" type="text/css" href="/office/icons/icons.css" />
+		<link rel="stylesheet" type="text/css" href="/office/icons/icons.css" />		
+		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/ux/calendar/resources/css/calendar.css" />
 	<style>
 		
 		.infoBox {
@@ -186,6 +189,10 @@ if ($menuStr != "") {
 			padding: 10px !important;
 		}
 		
+		.framework-home{
+			background-image:url('icons/home.png') !important;
+			background-size: 30px 30px;
+		}
 		.framework-comment{
 			background-image:url('icons/comment.png') !important;
 			background-size: 30px 30px;
@@ -200,6 +207,10 @@ if ($menuStr != "") {
 		}
 		.framework-phonebook{
 			background-image:url('icons/phonebook.jpg') !important;
+			background-size: 30px 30px;
+		}
+		.framework-calendar{
+			background-image:url('icons/calendar.png') !important;
 			background-size: 30px 30px;
 		}
 	</style>
@@ -227,7 +238,9 @@ if ($menuStr != "") {
 		TabsArray : new Array(),
 		centerPanel : "",
 		menuItems : "",
-		StartPage : ""
+		StartPage : "",
+		
+		CalendarReminders : <?= $CalendarReminders->rowCount() ?>
 	};
 
 	function FrameWorkClass()
@@ -301,11 +314,6 @@ if ($menuStr != "") {
 						icon : "icons/exit.png",
 						scale: 'medium',
 						handler : function(){framework.OpenPage("/framework/logout.php");}
-					},{
-						xtype : "button",
-						icon : "icons/calendar.png",
-						scale: 'medium',
-						handler : function(){framework.OpenPage("/framework/calendar.php");}
 					}]
 				}
 			}]
@@ -338,6 +346,15 @@ if ($menuStr != "") {
 				layout : "column",
 				columns : 4,
 				items : [{
+					xtype : "button",
+					tooltip : "صفحه اصلی",
+					scale: 'large',
+					iconCls : "framework-home",
+					style : "margin: 2px; height:35px",
+					handler : function(){
+						framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
+					}	
+				},{
 					xtype : "button",
 					tooltip : "درخواست پشتیبانی",
 					scale: 'large',
@@ -377,7 +394,7 @@ if ($menuStr != "") {
 					xtype : "button",
 					tooltip : "تقویم",
 					scale: 'large',
-					iconCls : "framework-help",
+					iconCls : "framework-calendar",
 					style : "margin: 3px;height:35px",
 					handler : function(){
 						framework.OpenPage('../framework/calendar.php','تقویم');
@@ -657,6 +674,38 @@ if ($menuStr != "") {
             }
         }
 
+	FrameWorkClass.prototype.ShowCalendarReminderWindow = function(){
+		
+		if(!this.CalendarReminderWin)
+		{
+			this.CalendarReminderWin = new Ext.window.Window({
+				renderTo : document.body,
+				width : 520,
+				title : "یادآوری رویدادهای امروز",
+				height : 400,
+				bodyStyle : "background-color:white;",
+				modal : true,
+				closeAction : "hide",
+				loader : {
+					url : "CalendarReminders.php",
+					autoLoad : true,
+					scripts : true
+				},
+				buttons :[{
+					text : "بازگشت",
+					iconCls : "undo",
+					handler : function(){this.up('window').hide();}
+				}]
+			});
+		}
+
+		setTimeout(function(){
+			framework.CalendarReminderWin.show();
+			framework.CalendarReminderWin.center();
+		}, 100);
+		
+	}
+		
 	//..........................................................................
 	
 	function LoanRFID(RequestID)
@@ -693,20 +742,20 @@ if ($menuStr != "") {
 		this.CalcWin.loader.load();
 	}
 	//..........................................................................
-		Ext.Loader.setConfig({
-	enabled: true,
-	paths: {
-		'Ext.calendar': '/generalUI/ext4/ux/calendar/src'
-	}
-});
+	Ext.Loader.setConfig({
+		enabled: true,
+		paths: {
+			'Ext.calendar': '/generalUI/ext4/ux/calendar/src'
+		}
+	});
 
-Ext.require([
-	//'Ext.diag.layout.Context',
-	//'Ext.diag.layout.ContextItem',
-	'Ext.calendar.CalendarPanel'
-]);
+	Ext.require([
+		'Ext.calendar.CalendarPanel'
+	]);
+	//..........................................................................
 	var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
 	Ext.QuickTips.init();
+	
 	var framework;
 	setTimeout(function(){
 		Ext.get('loading').remove();
@@ -714,8 +763,11 @@ Ext.require([
 			remove:true
 		});
 		framework = new FrameWorkClass();
-		//framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
-		//framework.OpenPage("/framework/calendar.php", "تقویم");
+		framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
+		if(framework.CalendarReminders > 0)
+		{
+			framework.ShowCalendarReminderWindow();
+		}
 	}, 1);
 	
 	var MonthStore = new Ext.data.SimpleStore({
@@ -752,22 +804,22 @@ Ext.require([
 	]
 });
 
-var personStore = new Ext.data.Store({
-	pageSize: 10,
-	model:  Ext.define(Ext.id(), {
-		extend: 'Ext.data.Model',
-		fields:['PersonID','pfname','plname','unit_name','person_type','staff_id','personTypeName']
-	}),
-	remoteSort: true,
-	proxy:{
-		type: 'jsonp',
-		url: "/HumanResources/personal/persons/data/person.data.php?task=searchPerson&newPersons=true",
-		reader: {
-			root: 'rows',
-			totalProperty: 'totalCount'
+	var personStore = new Ext.data.Store({
+		pageSize: 10,
+		model:  Ext.define(Ext.id(), {
+			extend: 'Ext.data.Model',
+			fields:['PersonID','pfname','plname','unit_name','person_type','staff_id','personTypeName']
+		}),
+		remoteSort: true,
+		proxy:{
+			type: 'jsonp',
+			url: "/HumanResources/personal/persons/data/person.data.php?task=searchPerson&newPersons=true",
+			reader: {
+				root: 'rows',
+				totalProperty: 'totalCount'
+			}
 		}
-	}
-});
+	});
 					  
 	</script>
 	<script type="text/javascript" src="/HumanResources/global/LOV/LOV.js?v=1"></script>		

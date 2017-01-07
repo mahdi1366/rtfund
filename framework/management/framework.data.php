@@ -231,17 +231,17 @@ function selectDataAudits(){
 
 //--------------------------------------------------
 
-function SelectCalenderEvents(){
+function SelectCalendarEvents(){
 	
 	$where = " AND PersonID=" . $_SESSION["USER"]["PersonID"];
-	$res = FRW_CalenderEvents::Get($where);	
+	$res = FRW_CalendarEvents::Get($where);	
 	echo dataReader::getJsonData($res->fetchAll(), $res->rowCount(), $_GET["callback"]);
 	die();
 }
 
-function saveCalenderEvent(){
+function saveCalendarEvent(){
 	
-	$obj = new FRW_CalenderEvents();
+	$obj = new FRW_CalendarEvents();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
 	$obj->IsAllDay = isset($obj->IsAllDay) ? $obj->IsAllDay : "NO";
@@ -259,11 +259,34 @@ function saveCalenderEvent(){
 	die();
 }
 
-function removeCalenderEvent(){
+function removeCalendarEvent(){
 	
-	$obj = new FRW_CalenderEvents($_POST["EventID"]);
+	$obj = new FRW_CalendarEvents($_POST["EventID"]);
 	$result = $obj->Remove();
 	Response::createObjectiveResponse($result, "");
 	die();
 }
+
+function SelectTodayReminders(){
+	
+	$res = FRW_CalendarEvents::SelectTodayReminders();	
+	echo dataReader::getJsonData($res->fetchAll(), $res->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SeenReminder(){
+	
+	$obj = new FRW_CalendarEvents($_POST["EventID"]);
+	if($obj->PersonID != $_SESSION["USER"]["PersonID"])
+	{
+		Response::createObjectiveResponse(false, "");
+		die();
+	}
+	
+	$obj->IsSeen = "YES";
+	$result = $obj->Edit();
+	Response::createObjectiveResponse($result, "");
+	die();
+}
+
 ?>

@@ -383,7 +383,7 @@ td.ext-cal-dtitle-today div {
 }
 /* Event cells */
 .ext-cal-ev {
-    font-family:Verdana,sans-serif;
+    font-family:Tahoma, Verdana,sans-serif;
     padding:1px 1px 0 2px;
     vertical-align:top;
 }
@@ -703,6 +703,7 @@ td.ext-cal-dtitle-today div {
 .ext-color-1-x dl {
     border-color: #306da6;
 }
+.gridColor-1 .x-grid-cell,.gridColor-1 .x-grid-rowwrap-div, .gridColor-1  {background-color: #306da6; }
 
 .ext-color-2,
 .x-ie .ext-color-2-ad,
@@ -724,6 +725,7 @@ td.ext-cal-dtitle-today div {
 .ext-color-2-x dl {
     border-color: #86a723;
 }
+.gridColor-2 .x-grid-cell,.gridColor-2 .x-grid-rowwrap-div, .gridColor-2  {background-color: #86a723; }
 
 .ext-color-3,
 .x-ie .ext-color-3-ad,
@@ -745,6 +747,75 @@ td.ext-cal-dtitle-today div {
 .ext-color-3-x dl {
     border-color: #b6a980;
 }
+.gridColor-3 .x-grid-cell,.gridColor-3 .x-grid-rowwrap-div, .gridColor-3  {background-color: #b6a980; }
+
+.ext-color-4,
+.x-ie .ext-color-4-ad,
+.x-opera .ext-color-4-ad {
+    color: #cc84b3 !important;
+}
+.ext-cal-day-col .ext-color-4,
+.ext-dd-drag-proxy .ext-color-4,
+.ext-color-4-ad,
+.ext-color-4-ad .ext-cal-evm,
+.ext-color-4 .ext-cal-picker-icon,
+.ext-color-4-x dl,
+.ext-color-4-x .ext-cal-evb {
+    background: #cc84b3;
+}
+.ext-color-4-x .ext-cal-evb,
+.ext-color-4-ad .ext-cal-evm,
+.ext-color-4-ad,
+.ext-color-4-x dl {
+    border-color: #cc84b3;
+}
+.gridColor-4 .x-grid-cell,.gridColor-4 .x-grid-rowwrap-div, .gridColor-4  {background-color: #cc84b3; }
+
+.ext-color-5,
+.x-ie .ext-color-5-ad,
+.x-opera .ext-color-5-ad {
+    color: #83579b !important;
+}
+.ext-cal-day-col .ext-color-5,
+.ext-dd-drag-proxy .ext-color-5,
+.ext-color-5-ad,
+.ext-color-5-ad .ext-cal-evm,
+.ext-color-5 .ext-cal-picker-icon,
+.ext-color-5-x dl,
+.ext-color-5-x .ext-cal-evb {
+    background: #83579b;
+}
+.ext-color-5-x .ext-cal-evb,
+.ext-color-5-ad .ext-cal-evm,
+.ext-color-5-ad,
+.ext-color-5-x dl {
+    border-color: #83579b;
+}
+.gridColor-5 .x-grid-cell,.gridColor-5 .x-grid-rowwrap-div, .gridColor-5  {background-color: #83579b; }
+
+.ext-color-6,
+.x-ie .ext-color-6-ad,
+.x-opera .ext-color-6-ad {
+    color: #ef1c1c !important;
+}
+.ext-cal-day-col .ext-color-6,
+.ext-dd-drag-proxy .ext-color-6,
+.ext-color-6-ad,
+.ext-color-6-ad .ext-cal-evm,
+.ext-color-6 .ext-cal-picker-icon,
+.ext-color-6-x dl,
+.ext-color-6-x .ext-cal-evb {
+    background: #ef1c1c;
+}
+.ext-color-6-x .ext-cal-evb,
+.ext-color-6-ad .ext-cal-evm,
+.ext-color-6-ad,
+.ext-color-6-x dl {
+    border-color: #ef1c1c;
+}
+.gridColor-6 .x-grid-cell,.gridColor-6 .x-grid-rowwrap-div, .gridColor-6  {background-color: #ef1c1c; }
+
+/*******************************************
 
 .ext-cal-day-col .ext-cal-evt {
     position: absolute;
