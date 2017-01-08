@@ -125,7 +125,33 @@ if(isset($_REQUEST["show"]))
 		$report2 = ob_get_clean();
 
 		//..........................................................
-		$TotalUsedPayAmount = 0;
+		$EndingAmount = 0;
+		$EndingDate = DateModules::Now(); 
+		for($i=count($rpg2->mysql_resource)-1; $i != 0;$i--)
+		{
+			if($rpg2->mysql_resource[$i]["InstallmentDate"] <= DateModules::Now())
+			{
+				if($i == count($rpg2->mysql_resource)-1)
+					break;
+				
+				$EndingAmount = $rpg2->mysql_resource[$i]["pureAmount"]*1;
+				$EndingDate = $rpg2->mysql_resource[$i]["InstallmentDate"];
+				break;
+			}
+		}		
+		for($i=count($rpg->mysql_resource)-1; $i != 0;$i--)
+		{
+			$row = $rpg->mysql_resource[$i];
+			if($row["ActionType"] == "pay")
+			{
+				$EndingAmount += $row["TotalRemainder"];
+				break;
+			}
+		}
+		
+		$EndingAmount += $returnArr[ count($returnArr)-1 ]["ForfeitAmount"]*1;
+		//..........................................................
+		/*$TotalUsedPayAmount = 0;
 		$LastPayedInstallment = null;
 		foreach($rpg->mysql_resource as $row)
 		{
@@ -153,7 +179,8 @@ if(isset($_REQUEST["show"]))
 					break;
 				}
 			}
-		}
+		}*/
+		//..........................................................
 	}
 	//..........................................................
 	?>
