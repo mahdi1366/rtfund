@@ -94,20 +94,8 @@ function Equalization_UpdateChecks(){
 	$EqualObj->Add($pdo);	
 	
 	//----------- insert DocHeader --------------------
-	$obj = new ACC_docs();
-	$obj->RegDate = PDONOW;
-	$obj->regPersonID = $_SESSION['USER']["PersonID"];
-	$obj->DocDate = PDONOW;
-	$obj->CycleID =  $_SESSION["accounting"]["CycleID"];
-	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
-	$obj->DocType = DOCTYPE_EQUALCHECKS;
-	$obj->description = "مغایرت گیری بانکی / به روز رسانی چک ها ";
-	if(!$obj->Add($pdo))
-	{
-		ExceptionHandler::PushException("خطا در ایجاد سند");
-		return false;
-	}
-		
+	$DocID_UM = "";
+	$DocID_PARK = "";
 	$successCount = 0;
 	for ($i = 1; $i <= $data->sheets[0]['numRows']; $i++) 
 	{
@@ -115,8 +103,8 @@ function Equalization_UpdateChecks(){
 		switch($BankID)
 		{
 			case "4": // اقتصاد نوین
-				$TafsiliID = "";
-				$TafsiliID2 = "";
+				$TafsiliID = 2132; // eghtesadnovin
+				$TafsiliID2 = 1; // jari
 				if(empty($data->sheets[0]['cells'][$i][1]))
 					continue;
 					
@@ -143,6 +131,7 @@ function Equalization_UpdateChecks(){
 			$inChequeObj->ChequeStatus = INCOMECHEQUE_VOSUL;
 			$inChequeObj->Edit($pdo);
 			
+			$BackPayObj = null;
 			$temp = $inChequeObj->GetBackPays($pdo);
 			foreach($temp as $row)
 			{
@@ -152,8 +141,68 @@ function Equalization_UpdateChecks(){
 			}
 			
 			ACC_IncomeCheques::AddToHistory($inChequeObj->IncomeChequeID, $inChequeObj->ChequeStatus, $pdo);
-	
-			RegisterOuterCheque($obj->DocID, $inChequeObj, $pdo, COSTID_Bank, $TafsiliID, $TafsiliID2);
+			//---------------------------------------------------------
+			
+			$CenterAccount = false;
+			$BranchID = "";
+			$FirstCostID = "";
+			$SecondCostID = "";
+			$DocID = $DocID_UM;
+			if($BackPayObj)
+			{
+				$ReqObj = new LON_requests($BackPayObj->RequestID);
+				if($ReqObj->BranchID != BRANCH_UM) // این درگاه مخصوص دانشگاه است و وام های شعبه های دیگر باید با حساب مرکز ثبت شوند
+				{
+					$CenterAccount = true;
+					$BranchID = "3";
+					$FirstCostID = 205;
+					$SecondCostID = 17;
+					if($DocID_PARK == "")
+					{
+						$obj = new ACC_docs();
+						$obj->RegDate = PDONOW;
+						$obj->regPersonID = $_SESSION['USER']["PersonID"];
+						$obj->DocDate = PDONOW;
+						$obj->CycleID =  $_SESSION["accounting"]["CycleID"];
+						$obj->BranchID = BRANCH_PARK;
+						$obj->DocType = DOCTYPE_EQUALCHECKS;
+						$obj->description = "مغایرت گیری بانکی / به روز رسانی چک ها ";
+						if(!$obj->Add($pdo))
+						{
+							ExceptionHandler::PushException("خطا در ایجاد سند");
+							return false;
+						}
+						$DocID_PARK = $obj->DocID;
+						
+					}
+					$DocID = $DocID_PARK;
+				}
+				else
+					$DocID = $DocID_UM;
+			}
+			if($DocID == "")
+			{
+				$obj = new ACC_docs();
+				$obj->RegDate = PDONOW;
+				$obj->regPersonID = $_SESSION['USER']["PersonID"];
+				$obj->DocDate = PDONOW;
+				$obj->CycleID =  $_SESSION["accounting"]["CycleID"];
+				$obj->BranchID = BRANCH_UM;
+				$obj->DocType = DOCTYPE_EQUALCHECKS;
+				$obj->description = "مغایرت گیری بانکی / به روز رسانی چک ها ";
+				if(!$obj->Add($pdo))
+				{
+					ExceptionHandler::PushException("خطا در ایجاد سند");
+					return false;
+				}
+				$DocID_UM = $obj->DocID;
+				$DocID = $DocID_UM;
+			}
+			
+			
+			RegisterOuterCheque($DocID, $inChequeObj, $pdo, COSTID_Bank, $TafsiliID, $TafsiliID2, 
+					$CenterAccount, $BranchID, $FirstCostID, $SecondCostID);
+			//---------------------------------------------------------
 			$successCount++;
 			
 			$result .= "شماره چک : " . $checkNo . " به روز رسانی شد <br>";

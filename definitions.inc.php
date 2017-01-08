@@ -1,5 +1,8 @@
 <?php
 
+define("BRANCH_UM", "3");
+define("BRANCH_PARK", "4");
+
 define("Default_Agent_Loan", "9");
 
 //................. TypeID = 9 .....................
