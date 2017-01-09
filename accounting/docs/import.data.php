@@ -1018,6 +1018,7 @@ function RegisterLoanCost($CostObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
 	$ReqObj = new LON_requests($CostObj->RequestID);
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
+	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
 	//------------------------------------------------
 	$CycleID = $_SESSION["accounting"]["CycleID"];
 	//------------------- find load mode ---------------------
@@ -1077,8 +1078,8 @@ function RegisterLoanCost($CostObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
 	$itemObj->SourceID = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $CostObj->CostID;
 	$itemObj->CostID = $CostCode_Loan;
-	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = $CostObj->CostAmount;
+	$itemObj->DebtorAmount = $CostObj->CostAmount;
+	$itemObj->CreditorAmount = 0;
 	$itemObj->Add($pdo);
 	// ----------------------------- bank --------------------------------
 	$CostCodeObj = new ACC_CostCodes($CostID);
@@ -1089,8 +1090,8 @@ function RegisterLoanCost($CostObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
 	unset($itemObj->TafsiliID);
 	$itemObj->locked = "NO";
 	$itemObj->CostID = $CostID;
-	$itemObj->DebtorAmount= $CostObj->CostAmount;
-	$itemObj->CreditorAmount = 0;
+	$itemObj->DebtorAmount= 0;
+	$itemObj->CreditorAmount = $CostObj->CostAmount;
 	$itemObj->TafsiliType = $CostCodeObj->TafsiliType;
 	if($TafsiliID != "")
 		$itemObj->TafsiliID = $TafsiliID;
@@ -1780,26 +1781,29 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	$curWage = round($PayObj->PayAmount*$TotalFundWage/$PartObj->PartAmount);
 	
 	//----------------- get total remain ---------------------
+	PdoDataAccess::runquery("delete from LON_BackPays 
+		where RequestID=? AND PayType=? AND PayBillNo=?", 
+		array($ReqObj->RequestID, BACKPAY_PAYTYPE_CORRECT, $PayObj->BackPayID));
+	
 	require_once getenv("DOCUMENT_ROOT") . '/loan/request/request.class.php';
 	$dt = array();
-	$returnArr = LON_requests::ComputePayments($PayObj->RequestID, $dt, $pdo);
+	$returnArr = LON_requests::ComputePayments2($PayObj->RequestID, $dt, $pdo);
 	$ExtraPay = 0;
 	if($returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 < 0)
 	{
 		$ExtraPay = $returnArr[ count($returnArr)-1 ]["TotalRemainder"]*-1;
-		
-		PdoDataAccess::runquery("delete from LON_BackPays 
-				where RequestID=? AND PayType=? AND PayBillNo=?", 
-				array($ReqObj->RequestID, BACKPAY_PAYTYPE_CORRECT, $PartObj->PartID));
+		$ExtraPay = min($ExtraPay,$PayObj->PayAmount*1);
 		
 		$backPayObj = new LON_BackPays();
 		$backPayObj->RequestID = $PayObj->RequestID;
-		$backPayObj->PayAmount = $ExtraPay;
+		$backPayObj->PayAmount = -1*$ExtraPay;
 		$backPayObj->PayDate = $PayObj->PayDate;
 		$backPayObj->PayType = BACKPAY_PAYTYPE_CORRECT;
-		$backPayObj->PayBillNo = $PartObj->PartID;
+		$backPayObj->PayBillNo = $PayObj->BackPayID;
 		$backPayObj->details = "بابت اضافه پرداختی مشتری و انتقال به حساب قرض الحسنه";
-		$backPayObj->Add($pdo);		
+		$backPayObj->Add($pdo);	
+		
+		$PayObj->PayAmount = $PayObj->PayAmount*1 - $ExtraPay;
 	}
 	//----------------- add Doc items ------------------------
 		
@@ -2122,6 +2126,10 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		}
 	}
 	//----------------- get total remain ---------------------
+	PdoDataAccess::runquery("delete from LON_BackPays 
+		where RequestID=? AND PayType=? AND PayBillNo=?", 
+		array($ReqObj->RequestID, BACKPAY_PAYTYPE_CORRECT, $PayObj->BackPayID));
+	
 	require_once getenv("DOCUMENT_ROOT") . '/loan/request/request.class.php';
 	$dt = array();
 	$returnArr = LON_requests::ComputePayments($PayObj->RequestID, $dt, $pdo);
@@ -2129,19 +2137,18 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 	if(count($returnArr)>0 && $returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 < 0)
 	{
 		$ExtraPay = $returnArr[ count($returnArr)-1 ]["TotalRemainder"]*-1;
-		
-		PdoDataAccess::runquery("delete from LON_BackPays 
-				where RequestID=? AND PayType=? AND PayBillNo=?", 
-				array($ReqObj->RequestID, BACKPAY_PAYTYPE_CORRECT, $PartObj->PartID));
+		$ExtraPay = min($ExtraPay,$PayObj->PayAmount*1);
 		
 		$backPayObj = new LON_BackPays();
 		$backPayObj->RequestID = $PayObj->RequestID;
-		$backPayObj->PayAmount = $ExtraPay;
+		$backPayObj->PayAmount = -1*$ExtraPay;
 		$backPayObj->PayDate = $PayObj->PayDate;
 		$backPayObj->PayType = BACKPAY_PAYTYPE_CORRECT;
-		$backPayObj->PayBillNo = $PartObj->PartID;
+		$backPayObj->PayBillNo = $PayObj->BackPayID;
 		$backPayObj->details = "بابت اضافه پرداختی مشتری";
 		$backPayObj->Add($pdo);		
+		
+		$PayObj->PayAmount =  $PayObj->PayAmount*1 - $ExtraPay;
 		
 	}
 	//----------------- add Doc items ------------------------

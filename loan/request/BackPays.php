@@ -102,8 +102,11 @@ if($editable && $accessObj->AddFlag)
 }
 if($framework)
 {
-	$dg->addButton("cmp_report", "گزارش پرداخت", "report", 
+	$dg->addButton("", "گزارش پرداخت", "report", 
 			"function(){LoanPayObject.PayReport();}");
+	
+	$dg->addButton("", "گزارش پرداخت2", "report", 
+			"function(){LoanPayObject.PayReport2();}");
 }
 
 $dg->height = 377;
@@ -164,7 +167,11 @@ function LoanPay()
 			if(e.record.data.BackPayID == null)
 				return true;
 			
-			if(e.record.data.PayType == "9" && e.record.data.ChequeStatus != "1")
+			if(e.record.data.PayType == "<?= BACKPAY_PAYTYPE_CHEQUE ?>" && e.record.data.ChequeStatus != "1")
+				return false;
+				
+			if(e.record.data.PayType == "<?= BACKPAY_PAYTYPE_EPAY ?>" || 
+				e.record.data.PayType == "<?= BACKPAY_PAYTYPE_CORRECT ?>")
 				return false;
 			
 			if(e.record.data.DocStatus  != null && e.record.data.DocStatus != "RAW")
@@ -284,7 +291,7 @@ LoanPay.DeleteRender = function(v,p,r){
 	if(r.data.PayRefNo != null &&  r.data.PayRefNo != "")
 		return "";
 	
-	if(r.data.PayType == "9")
+	if(r.data.PayType == "<?= BACKPAY_PAYTYPE_CHEQUE ?>" || r.data.PayType == "<?= BACKPAY_PAYTYPE_CORRECT ?>")
 		return "";
 	
 	return "<div align='center' title='حذف' class='remove' "+
@@ -295,7 +302,9 @@ LoanPay.DeleteRender = function(v,p,r){
 
 LoanPay.RegDocRender = function(v,p,r){
 	
-	if(r.data.PayType == "9" || r.data.PayType == "4")
+	if(r.data.PayType == "<?= BACKPAY_PAYTYPE_CHEQUE ?>" 
+		|| r.data.PayType == "<?= BACKPAY_PAYTYPE_EPAY ?>"
+		|| r.data.PayType == "<?= BACKPAY_PAYTYPE_CORRECT ?>")
 		return r.data.LocalNo;
 	
 	if(r.data.LocalNo == null)
@@ -671,6 +680,11 @@ LoanPay.prototype.DeletePay = function(){
 LoanPay.prototype.PayReport = function(){
 
 	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&RequestID=" + this.RequestID);
+}
+
+LoanPay.prototype.PayReport2 = function(){
+
+	window.open(this.address_prefix + "../report/LoanPayment2.php?show=true&RequestID=" + this.RequestID);
 }
 
 LoanPay.prototype.AddToGroupPay = function(e ,loanFullname, RequestID, InstallmentAmount){

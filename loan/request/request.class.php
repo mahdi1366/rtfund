@@ -522,15 +522,20 @@ class LON_requests extends PdoDataAccess
 
 		$returnArr = array();
 		$pays = PdoDataAccess::runquery("
-			select substr(p.PayDate,1,10) PayDate, sum(PayAmount) PayAmount, sum(PayAmount) FixPayAmount
+			select * from (
+				select substr(p.PayDate,1,10) PayDate, PayAmount
 				from LON_BackPays p
 				left join ACC_IncomeCheques i using(IncomeChequeID)
 				left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
-				where RequestID=? AND 
+				where RequestID=:r AND 
 					if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-
-				group by substr(PayDate,1,10)
-				order by substr(PayDate,1,10)" , array($RequestID), $pdo);
+			union All
+				select CostDate PayDate, -1*CostAmount PayAmount
+				from LON_costs
+				where RequestID=:r 
+			)t
+			order by substr(PayDate,1,10), PayAmount desc" , array(":r" => $RequestID), $pdo);
+		
 		$PayRecord = count($pays) == 0 ? null : $pays[0];
 		$payIndex = 1;
 		$TotalForfeit = 0;
@@ -542,7 +547,10 @@ class LON_requests extends PdoDataAccess
 
 			if($PayRecord != null && $PayRecord["PayDate"] <= $installments[$i]["InstallmentDate"])
 			{
-				$TotalRemainder -= $PayRecord["PayAmount"]*1;
+				if($PayRecord["PayAmount"]*1 < 0)
+					$TotalForfeit -= $PayRecord["PayAmount"]*1;
+				else
+					$TotalRemainder -= $PayRecord["PayAmount"]*1;
 				
 				$tempForReturnArr = array(
 					"InstallmentID" => 0,
@@ -626,12 +634,10 @@ class LON_requests extends PdoDataAccess
 		{
 			while($PayRecord)
 			{
-				if($obj->PayCompute == "installment" && $TotalRemainder < 0) 
-				{
-					//$CurForfeit += $TotalRemainder;
-					//$CurForfeit = $CurForfeit < 0 ? 0 : $CurForfeit;					
-				}
-				$TotalRemainder -= $PayRecord["PayAmount"]*1;
+				if($PayRecord["PayAmount"]*1 < 0)
+					$TotalForfeit -= $PayRecord["PayAmount"]*1;
+				else
+					$TotalRemainder -= $PayRecord["PayAmount"]*1;
 				$tempForReturnArr = array(
 					"InstallmentID" => 0,
 					"ActionType" => "pay",
@@ -644,7 +650,7 @@ class LON_requests extends PdoDataAccess
 				);		
 				$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
 				
-				if($TotalRemainder > 0)
+				if($TotalRemainder > 0 && $tempForReturnArr["ActionAmount"] > 0)
 				{
 					$StartDate = $tempForReturnArr["ActionDate"];
 					$ToDate = $PayRecord == null ? DateModules::Now() : $PayRecord["PayDate"];
@@ -660,8 +666,16 @@ class LON_requests extends PdoDataAccess
 				}
 				else
 				{
-					$TotalForfeit += $TotalRemainder;
-					$TotalRemainder = 0;
+					if($TotalRemainder*-1 < $TotalForfeit)
+					{
+						$TotalForfeit += $TotalRemainder;
+						$TotalRemainder = 0;
+					}
+					else
+					{
+						$TotalRemainder += $TotalForfeit;
+						$TotalForfeit = 0;
+					}
 					
 					$tempForReturnArr["TotalRemainder"] = $TotalRemainder;
 					$tempForReturnArr["ForfeitAmount"] = $TotalForfeit;
@@ -1076,6 +1090,14 @@ class LON_costs extends OperationClass
 	public $CostAmount;
 	public $IsPartDiff;
 	public $PartID;
+	public $CostDate;
+	
+	function __construct($id = '') {
+		
+		$this->DT_CostDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
+		parent::__construct($id);
+	}
 	
 	static function Get($where = '', $whereParams = array()) {
 		

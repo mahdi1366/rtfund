@@ -10,20 +10,42 @@ require_once "ReportGenerator.class.php";
 if(isset($_REQUEST["show"]))
 {
 	$param = array();
-	$query = "select p.* , 
-			concat_ws(' ',fname,lname,CompanyName) fullname,
-			PartAmount,
-			PartDate,
+	$query = "select i.*,
+			case when i.CostID is null then group_concat(concat_ws(' ',p0.fname,p0.lname,p0.CompanyName) SEPARATOR '<br>')
+				else t1.TafsiliDesc end fullname,
+			case when i.CostID is null then group_concat(ifnull(p1.mobile,'') SEPARATOR '<br>')
+				else p2.mobile end mobile,
+			case when i.CostID is null then group_concat(ifnull(p1.SmsNo,'') SEPARATOR '<br>')
+				else p2.SmsNo end SmsNo,
+			case when i.CostID is null then group_concat(concat_ws(' ',p1.fname,p1.lname,p1.CompanyName,'-',sa.SubDesc) SEPARATOR '<br>')
+				else '' end ReqFullname,
+			case when i.CostID is null then group_concat(concat_ws('-', bb1.blockDesc, bb2.blockDesc) SEPARATOR '<br>') 
+				else concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) end CostDesc,
 			b.BankDesc, 
-			bi2.InfoDesc ChequeStatusDesc
-		from LON_BackPays p 
-		join LON_ReqParts using(PartID)
-		join LON_requests using(RequestID)
-		join BSC_persons on(LoanPersonID=PersonID)
-		left join ACC_banks b on(ChequeBank=BankID)
-		left join BaseInfo bi2 on(bi2.TypeID=4 AND bi2.InfoID=p.ChequeStatus)
-		
-		where p.PayType=9 ";
+			t3.TafsiliDesc ChequeStatusDesc			
+			
+		from ACC_IncomeCheques i
+			left join ACC_tafsilis t1 using(TafsiliID)
+			left join BSC_persons p2 on(t1.TafsiliType=" . TAFTYPE_PERSONS ." AND t1.ObjectID=p2.PersonID)
+			left join ACC_CostCodes cc using(CostID)
+			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
+			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
+			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
+			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
+			
+			left join LON_BackPays bp using(IncomeChequeID)
+			left join LON_requests r using(RequestID)
+			left join LON_loans l using(LoanID)
+			left join ACC_CostCodes cc2 on(cc2.level1=" . BLOCKID_LOAN . " AND cc2.level2=l.blockID)
+			left join ACC_blocks bb1 on(cc2.level1=bb1.BlockID)
+			left join ACC_blocks bb2 on(cc2.level2=bb2.BlockID)
+			left join BSC_persons p0 on(LoanPersonID=p0.PersonID)
+			left join BSC_persons p1 on(ReqPersonID=p1.PersonID)
+			left join BSC_SubAgents sa on(sa.SubID=r.SubAgentID)
+				
+			left join ACC_banks b on(ChequeBank=BankID)
+			left join ACC_tafsilis t3 on(t3.TafsiliType=".TAFTYPE_ChequeStatus." AND t3.TafsiliID=ChequeStatus)
+		where 1=1 ";
 	
 	//.........................................................
 	if(!empty($_POST["FromNo"]))
@@ -38,22 +60,22 @@ if(isset($_REQUEST["show"]))
 	}
 	if(!empty($_POST["FromDate"]))
 	{
-		$query .= " AND PayDate >= :fd";
+		$query .= " AND ChequeDate >= :fd";
 		$param[":fd"] = DateModules::shamsi_to_miladi($_POST["FromDate"], "-");
 	}
 	if(!empty($_POST["ToDate"]))
 	{
-		$query .= " AND PayDate <= :td";
+		$query .= " AND ChequeDate <= :td";
 		$param[":td"] = DateModules::shamsi_to_miladi($_POST["ToDate"], "-");
 	}
 	if(!empty($_POST["FromAmount"]))
 	{
-		$query .= " AND PayAmount >= :fa";
+		$query .= " AND ChequeAmount >= :fa";
 		$param[":fa"] = preg_replace('/,/', "", $_POST["FromAmount"]);
 	}
 	if(!empty($_POST["ToAmount"]))
 	{
-		$query .= " AND PayAmount <= :ta";
+		$query .= " AND ChequeAmount <= :ta";
 		$param[":ta"] = preg_replace('/,/', "", $_POST["ToAmount"]);
 	}
 	if(!empty($_POST["ChequeBank"]))
@@ -71,8 +93,13 @@ if(isset($_REQUEST["show"]))
 		$query .= " AND ChequeStatus = :cst";
 		$param[":cst"] = $_POST["ChequeStatus"];
 	}
+	if(!empty($_POST["BranchID"]))
+	{
+		$query .= " AND r.BranchID = :brnch";
+		$param[":brnch"] = $_POST["BranchID"];
+	}
 	//.........................................................
-	
+	$query .= " group by i.IncomeChequeID ";
 	$dataTable = PdoDataAccess::runquery_fetchMode($query, $param);
 
 	function dateRender($row, $value){
@@ -95,22 +122,31 @@ if(isset($_REQUEST["show"]))
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
 	
-	$rpg->addColumn("وام گیرنده", "fullname");
-	$rpg->addColumn("تاریخ وام", "PartDate","dateRender");
+	$rpg->addColumn("صاحب چک", "fullname");
+	$rpg->addColumn("موبایل", "mobile");
+	$rpg->addColumn("شماره پیامک", "SmsNo");
+	$rpg->addColumn("حساب", "CostDesc");
+	$rpg->addColumn("معرف", "ReqFullname");	
 	$rpg->addColumn("شماره چک", "ChequeNo");
-	$rpg->addColumn("بانک", "BankDesc");
-	$rpg->addColumn("شعبه", "ChequeBranch");
-	$rpg->addColumn("تاریخ چک", "PayDate","dateRender");
-	$rpg->addColumn("وضعیت چک", "ChequeStatusDesc");
-	$col = $rpg->addColumn("مبلغ چک", "PayAmount", "moneyRender");
+	$rpg->addColumn("تاریخ چک", "ChequeDate","dateRender");
+	
+	$col = $rpg->addColumn("مبلغ چک", "ChequeAmount", "moneyRender");
 	$col->EnableSummary();
 	
+	$rpg->addColumn("بانک", "BankDesc");
+	$rpg->addColumn("شعبه", "ChequeBranch");
+	$rpg->addColumn("شرح", "description");
+	$rpg->addColumn("وضعیت چک", "ChequeStatusDesc");
+	
 	//echo PdoDataAccess::GetLatestQueryString();
+	print_r(ExceptionHandler::PopAllExceptions());
 	
 	$rpg->mysql_resource = $dataTable;
 	if(!$rpg->excel)
 	{
-		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
+		BeginReport();
+	
+		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='font-family:b titr;font-size:15px'>اعتماد شما سرلوحه خدمت ماست<br>
@@ -174,6 +210,25 @@ function AccReport_IncomeCheque()
 		},
 		width : 700,
 		items :[{
+			xtype : "combo",
+			colspan : 2,
+			width : 400,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: "/accounting/global/domain.data.php?task=GetAccessBranches",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BranchID','BranchName'],
+				autoLoad : true					
+			}),
+			fieldLabel : "شعبه",
+			queryMode : 'local',
+			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
+			displayField : "BranchName",
+			valueField : "BranchID",
+			hiddenName : "BranchID"
+		},{
 			xtype : "numberfield",
 			name : "FromNo",
 			hideTrigger : true,

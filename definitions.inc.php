@@ -63,6 +63,7 @@ define("INCOMECHEQUE_MAKHDOOSH", "3010");
 define("INCOMECHEQUE_CHANGE", "3011");
 
 //............  TypeID=6 ....................
+define("BACKPAY_PAYTYPE_EPAY", "4");
 define("BACKPAY_PAYTYPE_CHEQUE", "9");
 define("BACKPAY_PAYTYPE_CORRECT", "100");
 

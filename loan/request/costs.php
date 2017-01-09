@@ -22,6 +22,10 @@ $dg->addColumn("", "IsPartDiff","", true);
 $col = $dg->addColumn("شرح هزینه", "CostDesc");
 $col->editor = ColumnEditor::TextField();
 
+$col = $dg->addColumn("تاریخ", "CostDate", GridColumn::ColumnType_date);
+$col->editor = ColumnEditor::SHDateField();
+$col->width = 80;
+
 $col = $dg->addColumn("مبلغ", "CostAmount", GridColumn::ColumnType_money);
 $col->editor = ColumnEditor::CurrencyField();
 $col->width = 100;

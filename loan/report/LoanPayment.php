@@ -41,10 +41,10 @@ if(isset($_REQUEST["show"]))
 	
 	$col = $rpg->addColumn("تاریخ قسط", "InstallmentDate","dateRender");
 	$col->rowspanByFields = array("InstallmentID");
-	//$col->rowspaning = true;
+	$col->rowspaning = true;
 	
 	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount","amountRender");
-	//$col->rowspaning = true;
+	$col->rowspaning = true;
 	$col->rowspanByFields = array("InstallmentID");
 	
 	$col = $rpg->addColumn("تاریخ پرداخت", "PayDate","dateRender");
@@ -96,12 +96,16 @@ if(isset($_REQUEST["show"]))
 		$col = $rpg2->addColumn("مبلغ قسط", "InstallmentAmount","amountRender");
 
 		function profitRender(&$row, $value, $param, $prevRow){
-
+			
+			if($param->PayInterval == 0)
+			{
+				$row["profit"] = 0;
+				return number_format($row["profit"]);
+			}
 			$R = $param->IntervalType == "MONTH" ? 1200/$param->PayInterval : 36500/$param->PayInterval;
 			$V = !$prevRow ? $param->PartAmount : $prevRow["EndingBalance"];
 
 			$row["profit"] = round( $V*($param->CustomerWage/$R) );
-
 			return number_format($row["profit"]);
 		}
 		$col = $rpg2->addColumn("بهره قسط", "InstallmentID","profitRender", $PartObj);
