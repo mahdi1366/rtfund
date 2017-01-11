@@ -129,23 +129,41 @@ if(isset($_REQUEST["show"]))
 		$report2 = ob_get_clean();
 
 		//..........................................................
-		$EndingAmount = 0;
+		$EndingAmount = -1;
 		$EndingDate = DateModules::Now(); 
-		for($i=count($rpg2->mysql_resource)-1; $i != 0;$i--)
+		$EndingInstallment = 0;
+		for($i=count($rpg2->mysql_resource)-1; $i >= 0;$i--)
 		{
 			if($rpg2->mysql_resource[$i]["InstallmentDate"] <= DateModules::Now())
 			{
 				if($i == count($rpg2->mysql_resource)-1)
+				{
+					$EndingAmount = 0;
 					break;
-				
-				$EndingAmount = $rpg2->mysql_resource[$i]["pureAmount"]*1;
+				}
+				$EndingAmount = $rpg2->mysql_resource[$i+1]["pureAmount"]*1;
 				$EndingDate = $rpg2->mysql_resource[$i]["InstallmentDate"];
+				$EndingInstallment = $rpg2->mysql_resource[$i]["InstallmentID"];
 				break;
 			}
-		}		
+		}	
+		if($EndingAmount == -1)
+		{
+			$EndingAmount = $rpg2->mysql_resource[0]["pureAmount"]*1;
+			$EndingDate = $rpg2->mysql_resource[0]["InstallmentDate"];
+			$EndingInstallment = $rpg2->mysql_resource[0]["InstallmentID"];
+		}
+		//----------------------
 		for($i=count($rpg->mysql_resource)-1; $i != 0;$i--)
 		{
 			$row = $rpg->mysql_resource[$i];
+			
+			if($row["InstallmentID"] == $EndingInstallment)
+			{
+				$EndingAmount += $row["TotalRemainder"];
+				break;
+			}
+			
 			if($row["ActionType"] == "pay")
 			{
 				$EndingAmount += $row["TotalRemainder"];

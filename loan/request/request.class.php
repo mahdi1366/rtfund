@@ -356,6 +356,7 @@ class LON_requests extends PdoDataAccess
 		{
 			if($installments[$i]["IsDelayed"] == "YES")
 				continue;
+			
 			$forfeitDays = 0;
 			$installments[$i]["CurForfeitAmount"] = 0;
 			$installments[$i]["ForfeitAmount"] = 0;
@@ -365,6 +366,7 @@ class LON_requests extends PdoDataAccess
 			$installments[$i]["PayAmount"] = 0;
 			$installments[$i]["UsedPayAmount"] = 0;
 			$installments[$i]["PayDate"] = '';
+			$installments[$i]["TotalRemainder"] = 0;
 
 			if($PayRecord == null)
 			{
@@ -460,7 +462,7 @@ class LON_requests extends PdoDataAccess
 					}	
 					if($i == count($installments)-1)	
 					{
-						$installments[$i]["TotalRemainder"] = -1*$PayRecord["PayAmount"];
+						$installments[$i]["TotalRemainder"] = -1*$PayRecord["PayAmount"] + $Forfeit;
 						$installments[$i]["remainder"] = -1*$PayRecord["PayAmount"];
 					}
 					else
@@ -548,7 +550,15 @@ class LON_requests extends PdoDataAccess
 			if($PayRecord != null && $PayRecord["PayDate"] <= $installments[$i]["InstallmentDate"])
 			{
 				if($PayRecord["PayAmount"]*1 < 0)
-					$TotalForfeit -= $PayRecord["PayAmount"]*1;
+				{
+					if($TotalForfeit > $PayRecord["PayAmount"]*-1)
+						$TotalForfeit -= $PayRecord["PayAmount"]*1;
+					else
+					{
+						$TotalRemainder += $PayRecord["PayAmount"]*-1 - $TotalForfeit;
+						$TotalForfeit = 0;
+					}
+				}
 				else
 					$TotalRemainder -= $PayRecord["PayAmount"]*1;
 				
@@ -565,7 +575,7 @@ class LON_requests extends PdoDataAccess
 				$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
 				$i--;
 				
-				if($TotalRemainder > 0)
+				if($TotalRemainder > 0 && $PayRecord["PayAmount"]*1 >0)
 				{
 					$StartDate = $tempForReturnArr["ActionDate"];
 					$ToDate = $PayRecord == null ? DateModules::Now() : $PayRecord["PayDate"];

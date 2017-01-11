@@ -203,7 +203,7 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= number_format($returnArr[count($returnArr)-1]["TotalRemainder"])?> ریال
 							</b></td>
 					</tr>
-					<? if($ReqObj->ReqPersonID != SHEKOOFAI && 1==0){ ?>
+					<? if($ReqObj->ReqPersonID != SHEKOOFAI && $_SESSION["USER"]["PersonID"] == 1000){ ?>
 					<tr>
 						<td>مبلغ قابل پرداخت در صورت تسویه وام :</td>
 						<td><b><?= number_format($EndingAmount) ?> ریال

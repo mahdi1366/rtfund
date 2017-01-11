@@ -48,6 +48,10 @@ if(isset($_REQUEST["show"]))
 		where 1=1 ";
 	
 	//.........................................................
+	if($_POST["ChequeStatus"] != INCOMECHEQUE_CHANGE)
+	{
+		$query .= " AND ChequeStatus <> " . INCOMECHEQUE_CHANGE;
+	}
 	if(!empty($_POST["FromNo"]))
 	{
 		$query .= " AND ChequeNo >= :cfn";
