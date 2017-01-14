@@ -69,7 +69,6 @@ if($editable)
 $col->width = 60;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo", "string");
-$col->editor = ColumnEditor::NumberField(true);
 $col->width = 60;
 
 $col = $dg->addColumn("وضعیت چک", "ChequeStatusDesc", "");

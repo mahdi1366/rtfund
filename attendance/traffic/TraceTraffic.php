@@ -115,7 +115,9 @@ function ShowReport($admin){
 		{
 			$holidayTitle .= $holidayRecord["details"] != "" ? "(" . $holidayRecord["details"] . ")" : "";
 			$holiday = true;
-			$holidayRecord = $holidays->fetch();
+			$holidayRecord = $i+1 <count($returnArr) && 
+				$returnArr[$i]["TrafficDate"] == $returnArr[$i+1]["TrafficDate"] 
+				? $holidayRecord : $holidays->fetch();
 		}
 		
 		$returnArr[$i]["holiday"] = $holiday;
@@ -313,7 +315,6 @@ function ShowReport($admin){
 		//$extra = ($totalAttend > $ShiftDuration) ? $totalAttend - $ShiftDuration  : 0;
 		
 		$Absence = $totalAttend < $ShiftDuration ? $ShiftDuration - $totalAttend : 0;
-		
 		if($returnArr[$i]["holiday"])
 		{
 			$extra = $totalAttend;

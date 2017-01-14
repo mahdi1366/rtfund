@@ -83,7 +83,7 @@ function selectIncomeCheques() {
 	
 	$query = "
 		select i.*,
-			case when i.CostID is null then group_concat(t2.TafsiliDesc SEPARATOR '<br>')
+			case when i.CostID is null then group_concat(concat('[ وام ',bp.RequestID,'] ',t2.TafsiliDesc) SEPARATOR '<br>')
 				else t1.TafsiliDesc end fullname,
 			case when i.CostID is null then group_concat(concat_ws('-', bb1.blockDesc, bb2.blockDesc) SEPARATOR '<br>') 
 				else concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) end CostDesc,
@@ -263,7 +263,9 @@ function DeleteCheque(){
 	
 	ReturnLatestOperation(true);
 	
-	$obj->Remove();
+	$obj->Remove();	
+	PdoDataAccess::runquery("delete from LON_BackPays where IncomeChequeID=?", array($obj->IncomeChequeID));
+	
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
@@ -285,7 +287,10 @@ function ChangeChequeStatus(){
 	
 	$obj = new ACC_IncomeCheques($IncomeChequeID);
 	$obj->ChequeStatus = $Status;
+	if($Status == INCOMECHEQUE_VOSUL)
+		$obj->PayedDate = $_POST["PayedDate"];
 	$result = $obj->Edit($pdo);
+	
 	//--------------- get DocID ------------------
 	$DocID = "";
 	if(!empty($_POST["LocalNo"]))
@@ -324,6 +329,7 @@ function ChangeChequeStatus(){
 	if(!$result)
 	{
 		$pdo->rollback();
+		print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}		
@@ -439,6 +445,20 @@ function SaveLoanCheque(){
 	die();
 }
 
+function SavePayedDate(){
+	
+	$st = stripslashes(stripslashes($_POST["record"]));
+	$data = json_decode($st);
+		
+	$obj = new ACC_IncomeCheques();
+	$obj->IncomeChequeID = $data->IncomeChequeID;
+	$obj->PayedDate = $data->PayedDate;
+	$result = $obj->Edit();
+
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 //...........................................
 
 

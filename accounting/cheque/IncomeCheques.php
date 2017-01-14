@@ -34,6 +34,12 @@ $col->width = 70;
 $col = $dg->addColumn("تاریخ چک", "ChequeDate", GridColumn::ColumnType_date);
 $col->width = 80;
 
+$col = $dg->addColumn("تاریخ وصول", "PayedDate", GridColumn::ColumnType_date);
+$col->editor = ColumnEditor::SHDateField();
+$dg->enableRowEdit = true;
+$dg->rowEditOkHandler = "function(){return IncomeChequeObject.SavePayedDate();}";
+$col->width = 80;
+
 $col = $dg->addColumn("مبلغ چک", "ChequeAmount", GridColumn::ColumnType_money);
 $col->width = 80;
 
@@ -530,7 +536,7 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 	{
 		this.commentWin = new Ext.window.Window({
 			width : 414,
-			height : 85,
+			height : 125,
 			modal : true,
 			bodyStyle : "background-color:white",
 			items : [{
@@ -547,7 +553,21 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 				displayField: 'TafsiliDesc',
 				valueField : "TafsiliID",
 				width : 400,
-				name : "DstID"
+				name : "DstID",
+				listeners : {
+					select : function(){
+						if(this.getValue() == <?= INCOMECHEQUE_VOSUL ?>)
+							this.up('window').down("[name=PayedDate]").enable();
+						else
+							this.up('window').down("[name=PayedDate]").disable();
+						
+					}
+				}
+			},{
+				xtype : "shdatefield",
+				name : "PayedDate",
+				fieldLabel : "تاریخ وصول",
+				disabled : true
 			}],
 			closeAction : "hide",
 			buttons : [{
@@ -839,6 +859,7 @@ IncomeCheque.prototype.ChangeStatus = function(){
 	
 	if(StatusID == "<?= INCOMECHEQUE_VOSUL ?>")
 	{
+		params.PayedDate = this.commentWin.down("[name=PayedDate]").getRawValue();
 		params = mergeObjects(params, this.BankWin.down('form').getForm().getValues());
 	}	
 	
@@ -975,6 +996,39 @@ IncomeCheque.prototype.SaveIncomeCheque = function(){
 				mask.hide();
 			}
 		});
+	});
+}
+
+IncomeCheque.prototype.SavePayedDate = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		url: this.address_prefix +'cheques.data.php',
+		method: "POST",
+		params: {
+			task: "SavePayedDate",
+			record: Ext.encode(record.data)
+		},
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+
+			if(st.success)
+			{   
+				IncomeChequeObject.grid.getStore().load();
+			}
+			else
+			{
+				if(st.data == "")
+					alert("خطا در اجرای عملیات");
+				else
+					alert(st.data);
+			}
+		},
+		failure: function(){}
 	});
 }
 

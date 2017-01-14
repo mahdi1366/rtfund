@@ -23,10 +23,12 @@ class ACC_IncomeCheques extends OperationClass{
 	public $ChequeStatus;
 	public $description;
 	public $EqualizationID;
+	public $PayedDate;
 	
 	function __construct($id = '') {
 		
 		$this->DT_ChequeDate = DataMember::CreateDMA(DataMember::DT_DATE);		
+		$this->DT_PayedDate = DataMember::CreateDMA(DataMember::DT_DATE);		
 		parent::__construct($id);
 	}
 	
