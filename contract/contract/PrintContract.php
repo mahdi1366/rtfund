@@ -23,6 +23,7 @@ foreach ($TplItems as $it) {
 $res = explode(CNTconfig::TplItemSeperator, $CntObj->content);
 
 $CntItems = CNT_ContractItems::GetContractItems($CntObj->ContractID);
+
 $ValuesStore = array();
 foreach ($CntItems as $it) {
     $ValuesStore[$it['TemplateItemID']] = $it['ItemValue'];
@@ -31,23 +32,34 @@ foreach ($CntItems as $it) {
 if (substr($CntObj->content, 0, 3) == CNTconfig::TplItemSeperator) {
     $res = array_merge(array(''), $res);
 }
+
 $st = '';
 for ($i = 0; $i < count($res); $i++) {
     if ($i % 2 != 0) {
+		$tempValue = "";
+		$TempType = "";
 		if(isset($ValuesStore[$res[$i]]))
 		{
-			switch ($TplItemsStore[$res[$i]]["ItemType"]) {
-				case 'shdatefield':
-					$st .= DateModules::miladi_to_shamsi($ValuesStore[$res[$i]]);
-					break;
-				default : 
-					$st .= $ValuesStore[$res[$i]];
-			}
+			$tempValue = $ValuesStore[$res[$i]];
+			$TempType = $TplItemsStore[$res[$i]]["ItemType"];
 		}
 		else if(isset($TplItemsStore[ $res[$i] ]["FieldName"]))
 		{
-			 $st .= $ContractRecord [ $TplItemsStore[ $res[$i] ]["FieldName"] ];
+			$tempValue = $ContractRecord [ $TplItemsStore[ $res[$i] ]["FieldName"] ];
+			$TempType = $TplItemsStore[ $res[$i] ]["ItemType"];
 		}
+		
+		switch ($TempType) {
+			case 'shdatefield':
+				$st .= DateModules::miladi_to_shamsi($tempValue);
+				break;
+			case 'currencyfield':
+				$st .= number_format($tempValue);
+				break;
+			default : 
+				$st .= nl2br($tempValue);
+		}
+		
     } else {
         $st .= $res[$i];
     }
@@ -97,9 +109,8 @@ $signs = CNT_ContractSigns::Get(" AND ContractID=?", array($CntObj->ContractID))
 						echo $CntObj->description;
 						?></b>
 				</td>
-				<td width=180px style='text-align:center;text-indent : 0;padding:0'>
-					شماره قرارداد :  . . . . . . . .<br>
-					تاریخ ثبت قرارداد :  <?= DateModules::shNow() ?>
+				<td width=180px style='text-align:center;text-indent : 0;padding:0'>شماره قرارداد : <?= $CntObj->ContractID ?>
+					<br> تاریخ ثبت قرارداد :  <?= DateModules::shNow() ?>
 				</td>
 			</tr>
 		</thead>
@@ -112,7 +123,8 @@ $signs = CNT_ContractSigns::Get(" AND ContractID=?", array($CntObj->ContractID))
 			<tr>
 				<td colspan="3" style="padding:0;height:80px;padding-right:20px;">
 					<?
-						$width = round(100/count($signs));
+						if(count($signs) > 0)
+							$width = round(100/count($signs));
 						foreach($signs as $row)
 						{
 							echo "<div style='float:left;width:$width%;font-weight:bold'>

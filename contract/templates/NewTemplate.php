@@ -21,13 +21,14 @@ $col->width = 50;
 
 $col = $dg->addColumn("عنوان", "ItemName");
 $col->editor = ColumnEditor::TextField();
+$col->width = 250;
 
 $col = $dg->addColumn("نوع", "ItemType");
 $col->editor = "this.ItemTypeCombo";
 
 $col = $dg->addColumn("مقادیر لیست", "ComboValues");
-$col->editor = ColumnEditor::TextField();
-$col->width = 100;
+$col->editor = ColumnEditor::TextArea(true);
+$col->ellipsis = 100;
 
 $col = $dg->addColumn("حذف", "TemplateItemID", "string");
 $col->sortable = false;
@@ -38,12 +39,12 @@ $dg->addButton("", " ایجاد", "add", "function(){NewTemplateObj.AddTemplateI
 
 $dg->DefaultSortField = "TemplateItemID";
 $dg->DefaultSortDir = "desc";
-$dg->autoExpandColumn = "ItemName";
+$dg->autoExpandColumn = "ComboValues";
 $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(v,p,r){ return NewTemplateObj.SaveItem(v,p,r);}";
 
-$dg->width = 590;
-$dg->height = 460;
+$dg->width = 890;
+$dg->height = 458;
 $dg->pageSize = 20;
 
 $grid = $dg->makeGrid_returnObjects();
@@ -266,10 +267,9 @@ NewTemplate.prototype.ManageItems = function(){
 	if(!this.itemWin)
 	{
 		this.itemWin = new Ext.window.Window({
-			width : 600,
+			width : 900,
 			title : "آیتم های الگو",
 			height : 520,
-			modal : true,
 			closeAction : "hide",
 			items : [this.grid],
 			buttons :[{

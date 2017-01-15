@@ -72,12 +72,15 @@ ManageContracts.prototype.OperationMenu = function (e)
 
 ManageContracts.prototype.Edit = function (ContractID, TemplateID)
 {        
-	framework.OpenPage(this.address_prefix + 'NewContract.php?ContractID=' + ContractID + '&TemplateID=' + TemplateID, 'ویرایش قرارداد');
+	framework.OpenPage(this.address_prefix + 'NewContract.php', "مشخصات قرارداد",{
+		ContractID : ContractID ,
+		TemplateID : TemplateID
+	});
 }
 
 ManageContracts.prototype.AddContract = function () {
 
-	framework.OpenPage(this.address_prefix + "NewContract.php", "ثبت قرارداد");
+	framework.OpenPage(this.address_prefix + "NewContract.php", "مشخصات قرارداد");
 }
 
 ManageContracts.prototype.RemoveContract = function () {

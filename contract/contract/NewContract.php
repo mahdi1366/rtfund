@@ -229,13 +229,9 @@ function NewContract() {
 			maxHeight : 200,
 			autoScroll: true,
 			colspan : 2,
-			layout: {
-				type: 'table',                
-				columns : 2
-			},
 			defaults: {
-				labelWidth: 160,
-				width : 370
+				labelWidth: 200,
+				width : 350
 			}
 		},{
 			colspan : 2,
@@ -446,6 +442,18 @@ NewContract.prototype.ShowTplItemsForm = function (TemplateID, LoadValues) {
 						itemId: 'TplItem_' + record.data.TemplateItemID,
 						name: 'TplItem_' + record.data.TemplateItemID,
 						fieldLabel : record.data.ItemName
+					});
+				}
+				else if(record.data.ItemType == "textarea")
+				{
+					me.MainForm.getComponent("templateItems").add({
+						xtype: record.data.ItemType,
+						width : 700,
+						rows : 10,
+						itemId: 'TplItem_' + record.data.TemplateItemID,
+						name: 'TplItem_' + record.data.TemplateItemID,
+						fieldLabel : record.data.ItemName,
+						value : record.data.ComboValues
 					});
 				}
 				else

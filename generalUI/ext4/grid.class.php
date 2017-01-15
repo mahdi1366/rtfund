@@ -810,5 +810,14 @@ class ColumnEditor
 		$st .= "})";
 		return $st;
 	}
+	
+	static function TextArea($allowBlank = false, $itemId = "")
+	{
+		$st = "new Ext.form.TextArea({rows : 3,allowBlank: " ;
+		$st .= ($allowBlank) ? "true" : "false";
+		$st .= ($itemId != "") ? ",itemId : '$itemId'" : "";
+		$st .= "})";
+		return $st;
+	}
 }
 ?>
