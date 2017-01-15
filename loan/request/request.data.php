@@ -186,9 +186,9 @@ function SelectAllRequests(){
     }
 	if(!empty($_REQUEST['query']) && empty($_REQUEST["fields"]))
 	{
-		$where .= " AND ( concat_ws(' ',fname,lname,CompanyName) like :f or RequestID = :f1)";
-		$params[":f"] = "%" . $_REQUEST["query"] . "%";
-		$params[":f1"] = $_REQUEST["query"] ;
+		$where .= " AND ( concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) like :f or RequestID = :f1 )";
+		$param[":f"] = "%" . $_REQUEST["query"] . "%";
+		$param[":f1"] = $_REQUEST["query"] ;
 	}
 	if(!empty($_REQUEST["IsEnded"]))
 	{
