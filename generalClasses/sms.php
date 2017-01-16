@@ -1,62 +1,69 @@
 <?php
 
-function SendSms($textMessage, $toNumber){
+function ariana2_sendSMS($toNumber,$msgText,$type = 'number'){
 	
-	// turn off the WSDL cache
-	ini_set("soap.wsdl_cache_enabled", "0");
-	try {
+	$toList = array($toNumber);
+	$msgList = array($msgText);
+	
+    $username = sms_config::$username;
+    $password = sms_config::$password;
+    $lineNumber = sms_config::$LineNumber;    
+	
+    require_once('nusoap.php');
+    
+    $soapclient = new nusoap_client(sms_config::$server,'wsdl');
 
-		$user = sms_config::$username;
-		$pass = sms_config::$password;
-
-		$client = new SoapClient(sms_config::$send_server);
-
-		$getcredit_parameters = array(
-			"username"=>$user,
-			"password"=>$pass
-		);
-		$credit = $client->GetCredit($getcredit_parameters)->GetCreditResult;
-		echo "Credit: ".$credit."<br />";
-
-		$encoding = "UTF-8";//CP1256, CP1252
-		$textMessage = iconv($encoding, 'UTF-8//TRANSLIT',$textMessage);
-
-		$sendsms_parameters = array(
-			'username' => $user,
-			'password' => $pass,
-			'from' => "50001333837392",
-			'to' => array($toNumber),
-			'text' => $textMessage,
-			'isflash' => false,
-			'udh' => "",
-			'recId' => array(0),
-			'status' => 0
-		);
-
-		$status = $client->SendSms($sendsms_parameters)->SendSmsResult;
-		echo "Status: ".$status."<br />";
-
-		$incomingMessagesClient = new SoapClient(sms_config::$receive_server);
-		$res = $incomingMessagesClient->GetNewMessagesList($sendsms_parameters);
-print_r($res);
-		echo "<table border=1>";
-		echo "<th>MsgID</th><th>MsgType</th><th>Body</th><th>SendDate</th><th>Sender</th><th>Receiver</th><th>Parts</th><th>IsRead</th>";
-		$row = $res->GetNewMessagesListResult->Message;
-			echo "<tr>"
-				."<td>".$row->MsgID."</td>"
-				."<td>".$row->MsgType."</td>"
-				."<td>".$row->Body."</td>"
-				."<td>".$row->SendDate."</td>"
-				."<td>".$row->Sender."</td>"
-				."<td>".$row->Receiver."</td>"
-				."<td>".$row->Parts."</td>"
-				."<td>".$row->IsRead."</td>"
-				."</tr>";
-		echo "</table>";
-
-	} catch (SoapFault $ex) {
-		echo $ex->faultstring;
+    if ( (!$soapclient) || ($err = $soapclient->getError()) ) {
+		var_dump($err);
+        return false;
 	}
+	$xmlNodes = '<Mobiles>';
+	foreach ($toList as $n){
+		$n='98'.$n;
+		$xmlNodes .= "<string>{$n}</string>";
+	}
+	$xmlNodes .='</Mobiles><Messages>';
+	foreach ($msgList as $m){
+		$m=strip_tags($m);
+		$m = toUTF8($m);
+		$xmlNodes .= "<string>{$m}</string>";
+	}
+	$xmlNodes .='</Messages>';
+	$xmlWrapper = "<Username>{$username}</Username><Password>{$password}</Password>".$xmlNodes;
+	if($type=='name')
+		$xmlWrapper.='<SendWithBusinessName>true</SendWithBusinessName>';
+	if($type=='number')
+		$xmlWrapper.="<LineNumber>{$lineNumber}</LineNumber>";
+
+	$res = $soapclient->call('Send', '<Send xmlns="SMSPanelWebService">'.$xmlWrapper.'</Send>');
+
+	$err = $soapclient->getError();
+	if ($err) {
+		var_dump($err);
+		return false;
+	}
+	
+	if($res["SendResult"] == "1 messages inserted in send queue")
+		return true;
+	return false;
+}
+
+function toUTF8($str)
+{
+    $result = "";
+    $unichar = "";
+    for($i = 0 ; $i < mb_strlen($str,'UTF-8') ; $i++)
+    {
+        $char = mb_substr($str, $i, 1, 'UTF-8');
+        if (mb_check_encoding($char, 'UTF-8')) {
+            $ret = mb_convert_encoding($char, 'UTF-32BE', 'UTF-8');
+            $unichar = hexdec(bin2hex($ret));
+        } else {
+            $unichar="0";
+        }
+        $result .= "&#".$unichar.";";
+    }
+    return $result;
 }
 
 ?>

@@ -8,62 +8,7 @@ require_once 'contract.class.php';
 require_once '../templates/templates.class.php';
 
 $CntObj = new CNT_contracts($_REQUEST['ContractID']);
-
-$ContractRecord = CNT_contracts::Get(false, " AND ContractID=?", array($CntObj->ContractID));
-$ContractRecord = $ContractRecord->fetch();
-
-$temp = CNT_TemplateItems::Get(" AND TemplateID in(0,?)", array($CntObj->TemplateID));
-$TplItems = $temp->fetchAll();
-
-$TplItemsStore = array();
-foreach ($TplItems as $it) {
-    $TplItemsStore[$it['TemplateItemID']] = $it;
-}
-
-$res = explode(CNTconfig::TplItemSeperator, $CntObj->content);
-
-$CntItems = CNT_ContractItems::GetContractItems($CntObj->ContractID);
-
-$ValuesStore = array();
-foreach ($CntItems as $it) {
-    $ValuesStore[$it['TemplateItemID']] = $it['ItemValue'];
-}
-
-if (substr($CntObj->content, 0, 3) == CNTconfig::TplItemSeperator) {
-    $res = array_merge(array(''), $res);
-}
-
-$st = '';
-for ($i = 0; $i < count($res); $i++) {
-    if ($i % 2 != 0) {
-		$tempValue = "";
-		$TempType = "";
-		if(isset($ValuesStore[$res[$i]]))
-		{
-			$tempValue = $ValuesStore[$res[$i]];
-			$TempType = $TplItemsStore[$res[$i]]["ItemType"];
-		}
-		else if(isset($TplItemsStore[ $res[$i] ]["FieldName"]))
-		{
-			$tempValue = $ContractRecord [ $TplItemsStore[ $res[$i] ]["FieldName"] ];
-			$TempType = $TplItemsStore[ $res[$i] ]["ItemType"];
-		}
-		
-		switch ($TempType) {
-			case 'shdatefield':
-				$st .= DateModules::miladi_to_shamsi($tempValue);
-				break;
-			case 'currencyfield':
-				$st .= number_format($tempValue);
-				break;
-			default : 
-				$st .= nl2br($tempValue);
-		}
-		
-    } else {
-        $st .= $res[$i];
-    }
-}
+$st = $CntObj->GetContractContext();
 //---------------------------------------------------------
 $signs = CNT_ContractSigns::Get(" AND ContractID=?", array($CntObj->ContractID));
 ?>

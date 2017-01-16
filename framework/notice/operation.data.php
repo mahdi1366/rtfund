@@ -11,6 +11,7 @@ require_once getenv("DOCUMENT_ROOT") . '/office/letter/letter.class.php';
 require_once "config.inc.php";
 include_once 'operation.class.php';
 require_once 'email.php';
+require_once 'sms.php';
 
 $task = isset($_REQUEST["task"]) ? $_REQUEST["task"] : "";
 if(!empty($task))
@@ -58,7 +59,8 @@ function SaveOperation(){
 				$PersonObj->PersonID = $PersonID;
 				
 				for($j=1; $j<count($data->sheets[0]['cells'][$i]); $j++)
-					eval("\$PersonObj->col$j = '" . $data->sheets[0]['cells'][$i][$j] . "';");
+					$PersonObj["col" . $j] = $data->sheets[0]['cells'][$i][$j];
+					//eval("\$PersonObj->col$j = '" . $data->sheets[0]['cells'][$i][$j] . "';");
 				
 				$PersonObj->Add($pdo);
 			}
@@ -95,6 +97,15 @@ function SaveOperation(){
 		
 		switch($obj->SendType){
 			case "SMS" :
+				$SmsNo = $row["SmsNo"];
+				if($SmsNo == "")
+				{
+					ExceptionHandler::PushException ("فاقد شماره پیامک");
+					continue;
+				}
+				$result = ariana2_sendSMS($SmsNo, $obj->context);
+				if(!$result)
+					ExceptionHandler::PushException ("خطا در ارسال پیامک");
 				break;
 			//------------------------------------------------------------------
 			case "EMAIL" : 
@@ -148,6 +159,15 @@ function SaveOperation(){
 			$PObj = new NTC_persons();
 			$PObj->RowID = $row["RowID"];
 			$PObj->IsSuccess = "YES";
+			if($obj->SendType == "LETTER")
+				$PObj->LetterID = $LetterObj->LetterID;
+			$PObj->Edit($pdo);
+		}
+		else
+		{
+			$PObj = new NTC_persons();
+			$PObj->RowID = $row["RowID"];
+			$PObj->ErrorMsg = ExceptionHandler::GetExceptionsToString();
 			if($obj->SendType == "LETTER")
 				$PObj->LetterID = $LetterObj->LetterID;
 			$PObj->Edit($pdo);

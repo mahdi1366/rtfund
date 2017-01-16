@@ -161,6 +161,8 @@ function SelectAllForms(){
 			when 1 then concat_ws(' ','وام شماره',lp.RequestID,'به مبلغ',
 				PartAmount,'مربوط به',if(pp.IsReal='YES',concat(pp.fname, ' ', pp.lname),pp.CompanyName))
 				
+			when 2 then concat_ws(' ','قرارداد شماره',c.ContractID,cp.CompanyName,cp.fname,cp.lname)
+			
 			when 4 then concat_ws(' ','ضمانت نامه', wp.CompanyName,wp.fname,wp.lname, 'به مبلغ ',wr.amount)
 			
 			when 5 then concat_ws(' ',wfmf.FormTitle,'به شماره',wfmr.RequestID)
@@ -221,6 +223,10 @@ function SelectAllForms(){
 				left join LON_ReqParts lp on(fr.FlowID=1 AND fr.ObjectID=PartID)
 				left join LON_requests lr on(lp.RequestID=lr.RequestID)
 				left join BSC_persons pp on(lr.LoanPersonID=pp.PersonID)
+	
+				left join CNT_contracts c on(fr.ObjectID=c.ContractID)
+				left join BaseInfo cbf on(cbf.TypeID=18 AND cbf.InfoID=ContractType)
+				left join BSC_persons cp on(cp.PersonID=c.PersonID)
 	
 				left join WAR_requests wr on(fr.FlowID=4 AND wr.RequestID=fr.ObjectID)
 				left join BaseInfo bf on(bf.TypeID=74 AND bf.InfoID=wr.TypeID)

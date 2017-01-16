@@ -246,6 +246,11 @@ class WFM_FlowRows extends PdoDataAccess {
 		
 		switch($FlowID*1)
 		{
+			case 2 : 
+				$EndStepID = 110; 
+				PdoDataAccess::runquery("update CNT_contracts set StatusID=? where ContractID=?", 
+					array($EndStepID, $ObjectID), $pdo);
+				return ExceptionHandler::GetExceptionCount() == 0;
 			case 3 : 
 				$EndStepID = 105; 
 				PdoDataAccess::runquery("update PLN_plans set StepID=? where PlanID=?", 

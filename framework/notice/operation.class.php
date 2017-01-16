@@ -36,6 +36,7 @@ class NTC_persons extends OperationClass
 	public $col8;
 	public $col9;
 	public $IsSuccess;
+	public $ErrorMsg;
 
 	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		return PdoDataAccess::runquery_fetchMode("

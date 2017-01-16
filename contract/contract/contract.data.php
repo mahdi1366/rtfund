@@ -14,7 +14,7 @@ require_once inc_response;
 
 $task = isset($_REQUEST ["task"]) ? $_REQUEST ["task"] : "";
 
-if(!empty($task))
+if(!empty($task)) 
 	$task();
 
 function SelectContracts() {
@@ -55,6 +55,7 @@ function SaveContract() {
 	{
 		$CntObj->RegPersonID = $_SESSION['USER']["PersonID"];
 		$CntObj->RegDate = PDONOW;
+		$CntObj->StatusID = CNT_STEPID_RAW;
 		$result = $CntObj->Add($pdo);
 	} 
 	else
@@ -149,6 +150,22 @@ function SelectContractTypes() {
 	die();
 }
 
+function StartFlow(){
+	
+	$obj = new CNT_contracts($_POST["ContractID"]);
+	$obj->content = $obj->GetContractContext();
+	$obj->StatusID = 0;
+	if(!$obj->Edit())
+	{
+		echo Response::createObjectiveResponse(false, '');
+		die();
+	}
+	
+	$result = WFM_FlowRows::StartFlow(CONTRACT_FLOWID, $obj->ContractID);
+	
+	echo Response::createObjectiveResponse($result, '');
+	die();
+}
 //------------------------------------------------
 
 function GetSigns(){

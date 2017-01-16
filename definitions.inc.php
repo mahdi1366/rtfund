@@ -70,7 +70,15 @@ define("BACKPAY_PAYTYPE_CORRECT", "100");
 define("BLOCKID_LOAN","8");
 
 define("WFM_FORM_FLOWID","5");
+define("WARRENTY_FLOWID", "4");
+define("CONTRACT_FLOWID","2");
 
+define("WAR_STEPID_RAW", "100");
+define("WAR_STEPID_CONFIRM", "110");
+define("WAR_STEPID_END", "120");
+
+define("CNT_STEPID_RAW", "100");
+define("CNT_STEPID_CONFIRM", "110");
 
 function BeginReport() {
 

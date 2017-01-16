@@ -57,7 +57,7 @@ class WAR_requests extends OperationClass
 				left join BSC_persons using(PersonID)
 				join BSC_branches b using(BranchID)
 				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
-				join WFM_FlowSteps sp on(sp.FlowID=" . FLOWID . " AND sp.StepID=r.StatusID)
+				join WFM_FlowSteps sp on(sp.FlowID=" . WARRENTY_FLOWID . " AND sp.StepID=r.StatusID)
 				left join ACC_DocItems on(r.RequestID=SourceID2 AND 
 					SourceType in(" . DOCTYPE_WARRENTY . ",".DOCTYPE_WARRENTY_END.",".DOCTYPE_WARRENTY_EXTEND."))
 				left join ACC_docs d using(DocID)
@@ -76,7 +76,7 @@ class WAR_requests extends OperationClass
 				return false;
 		}
 
-		return WFM_FlowRows::AddOuterFlow(FLOWID, $RequestID, $StatusID, $ActDesc = "", $pdo);
+		return WFM_FlowRows::AddOuterFlow(WARRENTY_FLOWID, $RequestID, $StatusID, $ActDesc = "", $pdo);
 	}
 	
 	function GetAccDoc($pdo = null){
