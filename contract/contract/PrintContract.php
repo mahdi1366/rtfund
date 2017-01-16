@@ -6,6 +6,7 @@
 require_once '../header.inc.php';
 require_once 'contract.class.php';
 require_once '../templates/templates.class.php';
+require_once inc_CurrencyModule;
 
 $CntObj = new CNT_contracts($_REQUEST['ContractID']);
 
@@ -38,6 +39,7 @@ for ($i = 0; $i < count($res); $i++) {
     if ($i % 2 != 0) {
 		$tempValue = "";
 		$TempType = "";
+		$postfix = "";
 		if(isset($ValuesStore[$res[$i]]))
 		{
 			$tempValue = $ValuesStore[$res[$i]];
@@ -47,6 +49,8 @@ for ($i = 0; $i < count($res); $i++) {
 		{
 			$tempValue = $ContractRecord [ $TplItemsStore[ $res[$i] ]["FieldName"] ];
 			$TempType = $TplItemsStore[ $res[$i] ]["ItemType"];
+			if($TplItemsStore[ $res[$i] ]["FieldName"] == "ContractAmount")
+				$postfix .= " ( به حروف " . CurrencyModulesclass::CurrencyToString($tempValue) . " ) ";
 		}
 		
 		switch ($TempType) {
@@ -59,6 +63,7 @@ for ($i = 0; $i < count($res); $i++) {
 			default : 
 				$st .= nl2br($tempValue);
 		}
+		$st .= $postfix;
 		
     } else {
         $st .= $res[$i];

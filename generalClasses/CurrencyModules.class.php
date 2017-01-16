@@ -72,7 +72,6 @@ class CurrencyModulesclass
 	 */
 	public static function CurrencyToString($value)
 	{
-		
 		if ($value == "" || $value == 0)
                 return 'صفر';
         $extend  = self::$extend;
@@ -81,7 +80,8 @@ class CurrencyModulesclass
         $number_string = '';
         while ($value > 0) {
                 $three_digit_number = 0;
-                $three_digit_number = ($value % 1000);
+				//$three_digit_number = ($value % 1000);
+				$three_digit_number = strlen($value)<=3 ? $value : substr($value, strlen($value)-3);
                 $value = floor($value / 1000);
                 if ($three_digit_number > 0) {
                         $three_digit_string = self::ConvertThreeDigitNumberToString($three_digit_number);

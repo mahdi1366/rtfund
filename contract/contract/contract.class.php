@@ -132,17 +132,8 @@ class CNT_ContractItems extends OperationClass {
 
     public static function GetContractItems($ContractID) {
         
-		$CntObj = new CNT_contracts($ContractID);
-		
-        $res_cnt = array(
-			array("TemplateItemID" => 1, "ItemValue" => $CntObj->StartDate),
-            array("TemplateItemID" => 2, "ItemValue" => $CntObj->EndDate),
-            array("TemplateItemID" => 3, "ItemValue" => $CntObj->_PersonName)
-           
-        );
-        $res = parent::runquery("select * from " . static::TableName . " where ContractID=:ContractID", array(":ContractID" => $ContractID));
-        //  echo PdoDataAccess::GetLatestQueryString();
-        return array_merge($res_cnt, $res);
+        return parent::runquery("select * from " . static::TableName . " where ContractID=:ContractID", 
+				array(":ContractID" => $ContractID));        
     }
 
 }
