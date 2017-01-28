@@ -25,6 +25,7 @@ define("DOCTYPE_LOAN_DIFFERENCE", "16");
 define("DOCTYPE_LOAN_COST", "17");
 define("DOCTYPE_WARRENTY_END", "18");
 define("DOCTYPE_WARRENTY_EXTEND", "19");
+define("DOCTYPE_INSTALLMENT_CHANGE", "20");
 
 //............  TypeID=2 ....................
 define("TAFTYPE_PERSONS", "1");

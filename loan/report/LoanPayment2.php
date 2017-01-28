@@ -72,9 +72,23 @@ if(isset($_REQUEST["show"]))
 	$report2 = "";
 	if($ReqObj->ReqPersonID != SHEKOOFAI)
 	{
+		$extraAmount = 0;
+		$startDate = DateModules::miladi_to_shamsi($PartObj->PartDate);
+		$DelayDuration = DateModules::JDateMinusJDate(
+			DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths), $startDate)+1;
+		if($PartObj->DelayDays*1 > 0)
+			$TotalDelay = round($PartObj->PartAmount*$PartObj->DelayPercent*$DelayDuration/36500);
+		else
+			$TotalDelay = round($PartObj->PartAmount*$PartObj->DelayPercent*$PartObj->DelayMonths/1200);
+		if($PartObj->DelayReturn == "INSTALLMENT")
+			$extraAmount += $TotalDelay*($PartObj->FundWage/$PartObj->DelayPercent);
+		if($PartObj->AgentDelayReturn == "INSTALLMENT" && $PartObj->DelayPercent>$PartObj->FundWage)
+			$extraAmount += $TotalDelay*(($PartObj->DelayPercent-$PartObj->FundWage)/$PartObj->DelayPercent);
+		$totalAmount = $PartObj->PartAmount + $extraAmount;
+		
 		$rpg2 = new ReportGenerator();
 		$rpg2->mysql_resource = PdoDataAccess::runquery("
-			select * from LON_installments where RequestID=?", array($RequestID));
+			select * from LON_installments where RequestID=? AND IsDelayed='NO'", array($RequestID));
 		$col = $rpg2->addColumn("", "InstallmentID");
 		$col->hidden = true;
 
@@ -122,7 +136,7 @@ if(isset($_REQUEST["show"]))
 
 			return number_format($row["pureAmount"]);
 		}
-		$col = $rpg2->addColumn("مانده اصل وام", "InstallmentID","pureRemainRender",$PartObj->PartAmount);
+		$col = $rpg2->addColumn("مانده اصل وام", "InstallmentID","pureRemainRender",$totalAmount);
 
 		ob_start();
 		$rpg2->generateReport();

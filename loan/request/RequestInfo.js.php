@@ -1759,9 +1759,11 @@ RequestInfo.prototype.LoadSummary = function(record){
 		return returnArr;
 	}
 	
-	YearMonths = 12;
-	if(record.data.IntervalType == "DAY")
-		YearMonths = Math.floor(365/PayInterval);
+	if(record.data.PayInterval > 0)
+		YearMonths = (record.data.IntervalType == "DAY" ) ? 
+			Math.floor(365/record.data.PayInterval) : 12/record.data.PayInterval;
+	else
+		YearMonths = 12;
 		
 	DelayDuration = DateModule.GDateMinusGDate(
 		DateModule.AddToGDate(record.data.PartDate, record.data.DelayDays*1, record.data.DelayMonths*1), 
@@ -1801,7 +1803,7 @@ RequestInfo.prototype.LoadSummary = function(record){
 
 	if(record.data.DelayReturn == "INSTALLMENT")
 		extraAmount += TotalDelay*(record.data.FundWage/record.data.DelayPercent);
-	if(record.data.AgentDelayReturn == "INSTALLMENT" && record.data.DelayPercent>record.data.FundWage)
+	if(record.data.AgentDelayReturn == "INSTALLMENT" && record.data.DelayPercent*1>record.data.FundWage*1)
 		extraAmount += TotalDelay*((record.data.DelayPercent-record.data.FundWage)/record.data.DelayPercent);
 	
 	TotalAmount = record.data.PartAmount*1 + extraAmount;

@@ -51,6 +51,9 @@ $col = $dg->addColumn("وضعیت تمدید", "IsDelayed");
 $col->renderer = "function(v,p,r){ return v == 'YES' ? 'تمدید شده' : '';}";
 $col->width = 120;
 
+$col = $dg->addColumn("اسناد", "docs");
+$col->width = 120;
+
 if($editable && $accessObj->EditFlag)
 {
 	$dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", 
@@ -58,11 +61,11 @@ if($editable && $accessObj->EditFlag)
 	$dg->enableRowEdit = true;
 	$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SaveInstallment(store,record);}";
 	
-	$dg->addButton("", "تمدید اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
+	$dg->addButton("", "تغییر اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
 }
 
-$dg->addButton("cmp_report", "گزارش پرداخت", "report", 
-			"function(){InstallmentObject.PayReport();}");
+$dg->addButton("cmp_report1", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport('');}");
+$dg->addButton("cmp_report2", "گزارش پرداخت2", "report", "function(){InstallmentObject.PayReport(2);}");
 
 
 $dg->height = 377;
@@ -276,11 +279,20 @@ Installment.prototype.ComputeInstallments = function(){
 			},
 			success: function(response){
 				mask.hide();
+				
+				result = Ext.decode(response.responseText);
+				if(!result.success)
+				{
+					if(result.data == "DocExists")
+						Ext.MessageBox.alert("Error", "این وام دارای سند اختلاف قسط می باشد و قادر به محاسبه مجدد نمی باشید");
+					else
+						Ext.MessageBox.alert("", "عملیات مورد نظر با شکست مواجه شد");
+				}
+				
 				InstallmentObject.grid.getStore().load();
 			}
 		});
-	});
-	
+	});	
 }
 
 Installment.prototype.SaveInstallment = function(store, record){
@@ -312,9 +324,10 @@ Installment.prototype.SaveInstallment = function(store, record){
 	});
 }
 
-Installment.prototype.PayReport = function(){
+Installment.prototype.PayReport = function(report){
 
-	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&RequestID=" + this.RequestID);
+	window.open(this.address_prefix + "../report/LoanPayment" + report		
+		+ ".php?show=true&RequestID=" + this.RequestID);
 }
 
 Installment.prototype.DelayInstallments = function(){
@@ -330,11 +343,16 @@ Installment.prototype.DelayInstallments = function(){
 	{
 		this.delayWin = new Ext.window.Window({
 			width : 350,
-			height : 120,
+			height : 160,
 			modal : true,
 			title : "تمدید اقساط",
 			bodyStyle : "background-color:white;padding-right:20px",
 			items : [{
+				xtype : "currencyfield",
+				fieldLabel : "مبلغ جدید",
+				name : "newAmount",
+				hideTrigger : true
+			},{
 				xtype : "shdatefield",
 				fieldLabel : "تمدید تا تاریخ",
 				name : "newDate"
@@ -370,7 +388,8 @@ Installment.prototype.DelayInstallments = function(){
 							RequestID : record.data.RequestID,
 							InstallmentID : record.data.InstallmentID,
 							newDate : me.delayWin.down("[name=newDate]").getRawValue(),
-							IsRemainCompute : me.delayWin.down("[name=IsRemainCompute]").checked ? 1 : 0,
+							newAmount : me.delayWin.down("[name=newAmount]").getValue(),
+							IsRemainCompute : me.delayWin.down("[name=IsRemainCompute]").checked ? 1 : 0
 						},
 						success: function(response){
 							mask.hide();
