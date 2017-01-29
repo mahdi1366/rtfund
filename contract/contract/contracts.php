@@ -37,9 +37,7 @@ $col->width = 80;
 $col = $dg->addColumn("طرف قرارداد", "PersonFullname");
 $col->ellipsis = 60;
 
-$col = $dg->addColumn("وضعیت تایید", "StepDesc");
-
-$col = $dg->addColumn("وضعیت", "StatusDesc");
+$col = $dg->addColumn("وضعیت", "StepDesc");
 
 $col = $dg->addColumn("", "TemplateID");
 $col->renderer = "ManageContractsObj.OperationRender";

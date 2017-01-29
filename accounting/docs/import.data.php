@@ -1111,7 +1111,6 @@ function RegisterLoanCost($CostObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
 }
 
 //---------------------------------------------------------------
-
 function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	
 	$ReqObj = new LON_requests($RequestID);
@@ -1679,6 +1678,132 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 	return true;
 }
 //---------------------------------------------------------------
+function RegisterChangeInstallmentWage($DocID, $ReqObj,$PartObj, $InstallmentObj, $newDate, $wage, $pdo){
+		
+	//------------- get CostCodes --------------------
+	$LoanMode = "";
+	if(!empty($ReqObj->ReqPersonID))
+	{
+		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+		if($PersonObj->IsAgent == "YES")
+			$LoanMode = "Agent";
+	}
+	else
+		$LoanMode = "Customer";
+	//------------------ find tafsilis ---------------
+	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
+	if(!$LoanPersonTafsili)
+	{
+		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->LoanPersonID . "]");
+		return false;
+	}
+	if($LoanMode == "Agent")
+	{
+		$ReqPersonTafsili = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+		if(!$ReqPersonTafsili)
+		{
+			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
+			return false;
+		}
+	}	
+	//------------------------------------------------
+	$LoanObj = new LON_loans($ReqObj->LoanID);
+	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
+	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
+	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
+	$CostCode_agent_wage = FindCostID("750" . "-52");
+	$CostCode_agent_FutureWage = FindCostID("760" . "-52");
+	//------------------------------------------------
+	$CycleID = substr(DateModules::shNow(), 0 , 4);	
+	//---------------- add doc header --------------------
+	if($DocID == "")
+	{
+		$obj = new ACC_docs();
+		$obj->RegDate = PDONOW;
+		$obj->regPersonID = $_SESSION['USER']["PersonID"];
+		$obj->DocDate = PDONOW;
+		$obj->CycleID = $CycleID;
+		$obj->BranchID = $ReqObj->BranchID;
+		$obj->DocType = DOCTYPE_INSTALLMENT_CHANGE;
+		$obj->description = "اختلاف حاصل از تغییر قسط وام شماره " . $ReqObj->RequestID;
+		if(!$obj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد سند");
+			return false;
+		}
+	}
+	else
+	{
+		$obj = new ACC_docs($DocID);
+	}
+	//----------------- add Doc items ------------------------
+	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $obj->DocID;
+	$itemObj->TafsiliType = TAFTYPE_PERSONS;
+	$itemObj->TafsiliID = $LoanPersonTafsili;
+	if($LoanMode == "Agent")
+	{
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
+	}
+	$itemObj->locked = "YES";
+	$itemObj->SourceType = DOCTYPE_INSTALLMENT_CHANGE;
+	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID2 = $InstallmentObj->InstallmentID;
+	
+	//...............Loan ..............................
+	$itemObj->CostID = $CostCode_Loan;
+	$itemObj->DebtorAmount = $wage > 0 ? $wage : 0;
+	$itemObj->CreditorAmount = $wage < 0 ? abs($wage) : 0;
+	$itemObj->Add($pdo);
+	//..........  wage .................................
+	unset($itemObj->TafsiliType2);
+	unset($itemObj->TafsiliID2);
+	
+	$MaxWage =		max($PartObj->CustomerWage*1 , $PartObj->FundWage);
+	$FundFactor =	$MaxWage == 0 ? 0 : $PartObj->FundWage/$MaxWage;
+	$AgentFactor =	$MaxWage == 0 ? 0 : ($PartObj->CustomerWage-$PartObj->FundWage)/$MaxWage;
+	
+	$curYear = $_SESSION["accounting"]["CycleYear"]*1;
+	if($wage < 0)
+		$years = SplitYears($newDate, $InstallmentObj->InstallmentDate, $wage);
+	else
+		$years = SplitYears($InstallmentObj->InstallmentDate, $newDate, $wage);
+	foreach($years as $Year => $amount)
+	{
+		if($amount == 0)
+			continue;
+		$YearTafsili = FindTafsiliID($Year, TAFTYPE_YEARS);
+		if(!$YearTafsili)
+		{
+			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $Year . "]");
+			return false;
+		}
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $Year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
+		$itemObj->TafsiliType = TAFTYPE_YEARS;
+		$itemObj->TafsiliID = $YearTafsili;
+		$itemObj->CreditorAmount = round($FundFactor*$amount) > 0 ? round($FundFactor*$amount) : 0;
+		$itemObj->DebtorAmount = round($FundFactor*$amount) < 0 ? abs(round($FundFactor*$amount)) : 0;
+		$itemObj->Add($pdo);
+		
+		if($AgentFactor > 0)
+		{
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $Year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
+			$itemObj->TafsiliType = TAFTYPE_YEARS;
+			$itemObj->TafsiliID = $YearTafsili;
+			$itemObj->CreditorAmount = round($AgentFactor*$amount) > 0 ? round($AgentFactor*$amount) : 0;
+			$itemObj->DebtorAmount = round($AgentFactor*$amount) < 0 ? abs(round($AgentFactor*$amount)) : 0;
+			$itemObj->Add($pdo);
+		}
+	}
+	//---------------------------------------------------------
+	if(ExceptionHandler::GetExceptionCount() > 0)
+		return false;
+	
+	return $obj->DocID;
+}
 
 function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliID2, 
 		$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo, $grouping=false){

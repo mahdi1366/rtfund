@@ -186,9 +186,9 @@ function SelectAllRequests(){
     }
 	if(!empty($_REQUEST['query']) && empty($_REQUEST["fields"]))
 	{
-		$where .= " AND ( concat_ws(' ',fname,lname,CompanyName) like :f or RequestID = :f1)";
-		$params[":f"] = "%" . $_REQUEST["query"] . "%";
-		$params[":f1"] = $_REQUEST["query"] ;
+		$where .= " AND ( concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) like :f or RequestID = :f1 )";
+		$param[":f"] = "%" . $_REQUEST["query"] . "%";
+		$param[":f1"] = $_REQUEST["query"] ;
 	}
 	if(!empty($_REQUEST["IsEnded"]))
 	{
@@ -490,7 +490,7 @@ function GetInstallments(){
 	$RequestID = $_REQUEST["RequestID"];
 	
 	$temp = array();
-	$dt = LON_requests::ComputePayments($RequestID, $temp);
+	$dt = LON_requests::ComputePayments2($RequestID, $temp);
 	$currentPay = 0;
 	foreach($dt as $row)
 	{	
@@ -505,6 +505,19 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	
 	$RequestID = empty($RequestID) ? $_REQUEST["RequestID"] : $RequestID;
 	
+	//------------------- check for docs -------------------
+	$dt = PdoDataAccess::runquery("select * from ACC_DocItems where SourceType=" . DOCTYPE_INSTALLMENT_CHANGE
+			. " AND SourceID=?", array($RequestID));
+	if(count($dt) > 0)
+	{
+		if($returnMode)
+			return false;
+
+		echo Response::createObjectiveResponse(false, "DocExists");
+		die();
+	}
+	//------------------------------------------------------
+	
 	PdoDataAccess::runquery("delete from LON_installments where RequestID=? ", array($RequestID));
 	//-----------------------------------------------
 	$obj2 = new LON_requests($RequestID);
@@ -513,12 +526,8 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	//-----------------------------------------------
 	$obj = LON_ReqParts::GetValidPartObj($RequestID);
 	//-----------------------------------------------
-	$YearMonths = 12;
-	if($obj->IntervalType == "DAY")
-		$YearMonths = floor(365/$obj->PayInterval);
-	
 	$TotalWage = round(ComputeWage($obj->PartAmount, $obj->CustomerWage/100, 
-			$obj->InstallmentCount, $PartObj->IntervalType, $obj->PayInterval));
+			$obj->InstallmentCount, $obj->IntervalType, $obj->PayInterval));
 	
 	if($obj->WageReturn == "CUSTOMER")
 	{
@@ -697,20 +706,26 @@ function DelayInstallments(){
 	$RequestID = $_POST["RequestID"];
 	$InstallmentID = $_POST["InstallmentID"];
 	$newDate = $_POST["newDate"];
+	$newAmount = $_POST["newAmount"]*1;
 	
+	$ReqObj = new LON_requests($RequestID);
 	$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
+	$DocID= "";
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	if($_POST["IsRemainCompute"] == " 0")
+	if($_POST["IsRemainCompute"] == "0")
 	{
-		$dt = LON_installments::SelectAll("r.RequestID=? AND InstallmentID>=?", array($RequestID, $InstallmentID));
-		$days = 0;
+		$dt = LON_installments::SelectAll("r.RequestID=? AND InstallmentID>=?", 
+				array($RequestID, $InstallmentID));
+		
+		$newDate = DateModules::shamsi_to_miladi($newDate, "-");
+		$days = DateModules::GDateMinusGDate($newDate, $dt[0]["InstallmentDate"]);
+		$prevExtraAmount = 0;
 		for($i=0; $i<count($dt); $i++)
 		{
-			$obj = new LON_installments();
-			$obj->InstallmentID = $dt[$i]["InstallmentID"];
+			$obj = new LON_installments($dt[$i]["InstallmentID"]);
 			$obj->IsDelayed = "YES";
 			if(!$obj->EditInstallment($pdo))
 			{
@@ -720,25 +735,35 @@ function DelayInstallments(){
 			}
 			//...........................................
 
-			if($days == 0)
+			$obj2 = new LON_installments();
+			$obj2->RequestID = $RequestID;
+			$obj2->InstallmentDate = DateModules::AddToGDate($dt[$i]["InstallmentDate"], $days);
+
+			if($i == 0 && $newAmount != "" && $newAmount <> $dt[$i]["InstallmentAmount"])
 			{
-				$newDate = DateModules::shamsi_to_miladi($newDate, "-");
-				$days = DateModules::GDateMinusGDate($newDate, $dt[$i]["InstallmentDate"]);
+				$extraWage = 0;
+				$extraWage = round($dt[$i]["InstallmentAmount"]*$PartObj->CustomerWage*$days/36500);
+				$days2 = DateModules::GDateMinusGDate($dt[$i+1]["InstallmentDate"], $dt[$i]["InstallmentDate"]);
+				$extraWage += round( ($dt[$i]["InstallmentAmount"]*1-$newAmount)*
+					$PartObj->CustomerWage*$days2/36500 );
+				$prevExtraAmount = $dt[$i]["InstallmentAmount"]*1-$newAmount;
+				$obj2->InstallmentAmount = $newAmount + $extraWage;
 			}
-
-			$obj = new LON_installments();
-			$obj->RequestID = $RequestID;
-			$obj->InstallmentDate = DateModules::AddToGDate($dt[$i]["InstallmentDate"], $days);
-
-			$extraWage = round($dt[$i]["InstallmentAmount"]*$PartObj->CustomerWage*$days/36500);
-
-			$obj->InstallmentAmount = $dt[$i]["InstallmentAmount"]*1 + $extraWage;
-			if(!$obj->AddInstallment($pdo))
+			else
+			{
+				$extraWage = round($dt[$i]["InstallmentAmount"]*$PartObj->CustomerWage*$days/36500);
+				$obj2->InstallmentAmount = $dt[$i]["InstallmentAmount"]*1 + $extraWage + $prevExtraAmount;
+				$prevExtraAmount = 0;
+			}
+			if(!$obj2->AddInstallment($pdo))
 			{
 				$pdo->rollBack ();
 				echo Response::createObjectiveResponse(false, "2");
 				die();
 			}
+			
+			$DocID = RegisterChangeInstallmentWage($DocID, $ReqObj, $PartObj, 
+						$obj, $obj2->InstallmentDate, $extraWage, $pdo);
 		}
 	}
 	else

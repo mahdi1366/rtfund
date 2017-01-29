@@ -69,6 +69,9 @@ $col->width = 70;
 $col = $dg->addColumn("ستون 9", "col9", "");
 $col->width = 70;
 
+$col = $dg->addColumn("خطا", "ErrorMsg", "");
+$col->width = 70;
+
 $dg->height = 500;
 $dg->width = 900;
 $dg->EnableSearch = false;

@@ -5,7 +5,6 @@
 //-----------------------------
 
 require_once '../header.inc.php';
-require_once 'config.inc.php';
 require_once "ReportGenerator.class.php";
 
 if(isset($_REQUEST["show"]))
@@ -60,7 +59,7 @@ if(isset($_REQUEST["show"]))
 			from WAR_requests r 
 				left join BSC_persons using(PersonID)
 				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
-				join WFM_FlowSteps sp on(sp.FlowID=" . FLOWID . " AND sp.StepID=r.StatusID)
+				join WFM_FlowSteps sp on(sp.FlowID=" . WARRENTY_FLOWID . " AND sp.StepID=r.StatusID)
 				left join ACC_DocItems on(SourceType='" . DOCTYPE_WARRENTY . "' 
 					AND r.RequestID=SourceID2)	
 				left join ACC_docs d using(DocID)

@@ -29,7 +29,7 @@ function ComputeWage($PartAmount, $CustomerWagePercent, $InstallmentCount, $Inte
 		return 0;
 	
 	if($IntervalType == "DAY")
-			$PayInterval = $PayInterval/30;
+		$PayInterval = $PayInterval/30;
 		
 	$R = ($CustomerWagePercent/12)*$PayInterval;
 	$F7 = $PartAmount;
@@ -170,6 +170,9 @@ function ComputeWageOfSHekoofa($partObj){
 }
 
 function SplitYears($startDate, $endDate, $TotalAmount){
+	
+	$startDate = DateModules::miladi_to_shamsi($startDate);
+	$endDate = DateModules::miladi_to_shamsi($endDate);
 	
 	if(substr($startDate,0,1) == 2)
 		$startDate = DateModules::miladi_to_shamsi ($startDate);

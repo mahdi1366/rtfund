@@ -22,10 +22,10 @@ class smtp_config{
 }
 
 class sms_config{
-	public static $send_server = "http://87.107.121.52/post/send.asmx?wsdl";
-	public static $receive_server = "http://87.107.121.52/post/IncomingMessages.asmx?wsdl";
-	public static $username = "9153750964";
-	public static $password = "1504";
+	public static $server = "http://79.175.176.61/Service.asmx?wsdl";
+	public static $username = "abdolahi";
+	public static $password = "09153750964";
+	public static $LineNumber = "20001183";
 }
 
 define("SoftwareName", "صندوق غیر دولتی پژوهش و فناوری خراسان رضوی");

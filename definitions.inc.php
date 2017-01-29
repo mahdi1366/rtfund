@@ -25,6 +25,7 @@ define("DOCTYPE_LOAN_DIFFERENCE", "16");
 define("DOCTYPE_LOAN_COST", "17");
 define("DOCTYPE_WARRENTY_END", "18");
 define("DOCTYPE_WARRENTY_EXTEND", "19");
+define("DOCTYPE_INSTALLMENT_CHANGE", "20");
 
 //............  TypeID=2 ....................
 define("TAFTYPE_PERSONS", "1");
@@ -70,7 +71,15 @@ define("BACKPAY_PAYTYPE_CORRECT", "100");
 define("BLOCKID_LOAN","8");
 
 define("WFM_FORM_FLOWID","5");
+define("WARRENTY_FLOWID", "4");
+define("CONTRACT_FLOWID","2");
 
+define("WAR_STEPID_RAW", "100");
+define("WAR_STEPID_CONFIRM", "110");
+define("WAR_STEPID_END", "120");
+
+define("CNT_STEPID_RAW", "100");
+define("CNT_STEPID_CONFIRM", "110");
 
 function BeginReport() {
 

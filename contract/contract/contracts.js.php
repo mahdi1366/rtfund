@@ -195,14 +195,13 @@ ManageContracts.prototype.StartFlow = function(){
 	
 		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
 		mask.show();
-
+		
 		Ext.Ajax.request({
-			url: '/office/workflow/wfm.data.php',
+			url: me.address_prefix + 'contract.data.php',
 			method: "POST",
 			params: {
 				task: "StartFlow",
-				FlowID : 2,
-				ObjectID : record.data.ContractID
+				ContractID : record.data.ContractID
 			},
 			success: function(response){
 				mask.hide();
@@ -241,7 +240,7 @@ ManageContracts.prototype.ShowHistory = function(){
 	this.HistoryWin.center();
 	this.HistoryWin.loader.load({
 		params : {
-			FlowID : 2,
+			FlowID : <?= CONTRACT_FLOWID ?>,
 			ObjectID : this.grid.getSelectionModel().getLastSelected().data.ContractID
 		}
 	});

@@ -815,10 +815,14 @@ class LON_installments extends PdoDataAccess
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery("
-			select * from LON_installments i
+			select i.*,r.*,p.* , group_concat(distinct LocalNo) docs
+			from LON_installments i
 			join LON_requests r using(RequestID)
 			join LON_ReqParts p on(r.RequestID=p.RequestID AND p.IsHistory='NO')
-			where " . $where, $param);
+			left join ACC_DocItems on(SourceType=" .DOCTYPE_INSTALLMENT_CHANGE. "
+				AND SourceID=i.RequestID AND SourceID2=i.InstallmentID)
+			left join ACC_docs using(DocID)
+			where " . $where . " group by i.InstallmentID", $param);
 	}
 	
 	function AddInstallment($pdo = null){
