@@ -98,7 +98,8 @@ if(isset($_REQUEST["show"]))
 		$returnArr = LON_requests::ComputePayments2($dataTable[$i]["RequestID"], $dt);
 		
 		$dataTable[$i]["remainder"] = count($returnArr)>0 ?
-			$returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1 + $returnArr[ count($returnArr) -1 ]["ForfeitAmount"]*1 : 0;
+			$returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1 + 
+			$returnArr[ count($returnArr) -1 ]["ForfeitAmount"]*1 : 0;
 	}
 	
 	$rpg = new ReportGenerator();
