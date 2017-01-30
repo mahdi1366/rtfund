@@ -6,6 +6,7 @@
 require_once '../header.inc.php';
 require_once 'contract.class.php';
 require_once '../templates/templates.class.php';
+require_once inc_CurrencyModule;
 
 $CntObj = new CNT_contracts($_REQUEST['ContractID']);
 $st = $CntObj->GetContractContext();

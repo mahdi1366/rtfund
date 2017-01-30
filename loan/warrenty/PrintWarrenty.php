@@ -14,9 +14,9 @@ if($ReqObj->RequestID == "")
 
 if($ReqObj->StatusID != WAR_STEPID_CONFIRM && empty($_POST["ReadOnly"]))
 {
-	echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" >';
+	/*echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" >';
 	echo "<br><br><h2><center> فقط زمانی قادر به چاپ ضمانتنامه می باشید که تایید نهایی شده باشد </center></h2>";
-	die();
+	die();*/
 }
 
 ?>

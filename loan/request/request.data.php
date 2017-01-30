@@ -221,7 +221,7 @@ function Selectguarantees(){
 function DeleteRequest(){
 	
 	$res = LON_requests::DeleteRequest($_POST["RequestID"]);
-	//print_r(ExceptionHandler::PopAllExceptions());
+	print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($res, !$res ? ExceptionHandler::GetExceptionsToString() : "");
 	die();
 }

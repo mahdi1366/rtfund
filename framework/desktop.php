@@ -35,7 +35,17 @@ foreach($systems as $sysRow)
 	
 	$menus = FRW_access::getAccessMenus($sysRow["SystemID"]);
 	if(count($menus) > 0)
-		$menuStr .= ",menu : {xtype : 'menu',bodyStyle: 'background:white !important;',items:[";
+		$menuStr .= ",menu : {xtype : 'menu',bodyStyle: 'background:white !important;',onClick: function(e){
+                    var t;
+                    if(t = this.findTargetItem(e)){
+                        if(t.menu){
+                            t.expandMenu();
+                        }else{
+                            t.onClick(e);
+                            this.fireEvent('click', this, t, e);
+                        }
+                    }
+                },items:[";
 	//........................................................
 	$groupArr = array();
 	foreach($menus as $row)
@@ -763,7 +773,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 			remove:true
 		});
 		framework = new FrameWorkClass();
-		//framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
+		framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
 		if(framework.CalendarReminders > 0)
 		{
 			framework.ShowCalendarReminderWindow();
