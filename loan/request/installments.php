@@ -64,8 +64,8 @@ if($editable && $accessObj->EditFlag)
 	$dg->addButton("", "تغییر اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
 }
 
-$dg->addButton("cmp_report1", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport('');}");
-$dg->addButton("cmp_report2", "گزارش پرداخت2", "report", "function(){InstallmentObject.PayReport(2);}");
+//$dg->addButton("cmp_report1", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport('');}");
+$dg->addButton("cmp_report2", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport(2);}");
 
 
 $dg->height = 377;

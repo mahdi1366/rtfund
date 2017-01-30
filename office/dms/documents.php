@@ -48,7 +48,6 @@ switch($ObjectType)
 		break;
 	case "warrenty":
 		require_once '../../loan/warrenty/request.class.php';
-		require_once '../../loan/warrenty/config.inc.php';
 		$obj = new WAR_requests($ObjectID);
 		if($_SESSION["USER"]["IsStaff"] == "YES")
 			$access = true;

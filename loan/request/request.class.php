@@ -717,6 +717,8 @@ class LON_requests extends PdoDataAccess
 				$amount = $row["TotalRemainder"]*1 + $row["ForfeitAmount"]*1;
 				$CurrentRemain = $amount < 0 ? 0 : $amount;
 			}
+			else
+				break;
 		}
 		return $CurrentRemain;
 	}

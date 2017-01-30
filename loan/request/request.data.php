@@ -491,13 +491,9 @@ function GetInstallments(){
 	
 	$temp = array();
 	$dt = LON_requests::ComputePayments2($RequestID, $temp);
-	$currentPay = 0;
-	foreach($dt as $row)
-	{	
-		if($row["ActionType"] == "installment" && $row["ActionDate"] <= DateModules::Now())
-			$currentPay = $row["TotalRemainder"];
-	}
-	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"], $currentPay);
+	$currentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $dt);
+	
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"], $currentRemain);
 	die();
 }
 
@@ -1172,15 +1168,17 @@ function GroupSavePay(){
 
 function GetDelayedInstallments($returnData = false){
 	
+	$FromDate = DateModules::shamsi_to_miladi($_REQUEST["FromDate"]);
 	$ToDate = DateModules::shamsi_to_miladi($_REQUEST["ToDate"]);
 	
-	$query = "select RequestID,concat_ws(' ',fname,lname,CompanyName) LoanPersonName
-			from LON_installments p
+	$param = array(":todate" => $ToDate, ":fromdate" => $FromDate);
+	$query = "select RequestID,concat_ws(' ',fname,lname,CompanyName) LoanPersonName,
+				max(InstallmentDate) InstallmentDate, InstallmentAmount
+			from LON_installments i
 			join LON_requests using(RequestID)
 			join BSC_persons on(LoanPersonID=PersonID)
 			
-			where InstallmentDate<:todate AND IsEnded='NO'";
-	$param = array(":todate" => $ToDate);
+			where InstallmentDate between :fromdate AND :todate AND IsEnded='NO' ";
 	
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
@@ -1189,52 +1187,26 @@ function GetDelayedInstallments($returnData = false){
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
 	
-	$query .= " group by RequestID
-			order by InstallmentDate desc";
+	$query .= " group by RequestID" . dataReader::makeOrder();
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
-	
-	//$ForfeitDays = !empty($_REQUEST["minDays"]) ? $_REQUEST["minDays"]*1 : 0;
-	
+
 	$result = array();
 	while($row = $dt->fetch())
 	{
-		/*$temp = array();
-		$returnArr = LON_requests::ComputePayments($row["RequestID"], $temp);
-		
-		foreach($returnArr as $row2)
+		$remain = LON_requests::GetCurrentRemainAmount($row["RequestID"]);
+		if($remain > 0)
 		{
-			if(isset($row2["InstallmentID"]) && $row2["InstallmentID"]*1 > 0)
-			{
-				if($ForfeitDays > 0 && $row2["ForfeitDays"]*1 < $ForfeitDays)
-					continue;
-				
-				if(count($result) > 0 && $result[ count($result)-1 ]["InstallmentID"] == $row2["InstallmentID"])
-				{
-					if($ForfeitDays == 0)
-					{
-						if($row2["remainder"]*1 == 0)
-							array_pop ($result);
-						else
-							$result[ count($result)-1 ]["remainder"] = $row2["remainder"];
-					}
-				}
-				else if($row2["remainder"]*1 > 0)
-				{
-					$row2["LoanPersonName"] = $row["LoanPersonName"];
-					$result[] = $row2;
-				}
-			}
-		}*/
-		if(LON_requests::GetCurrentRemainAmount($row["RequestID"]) > 0)
+			$row["TotalRemainder"] = $remain;
 			$result[] = $row;
+		}
 	}
 	
 	if($returnData)
 		return $result;
 	
 	$cnt = count($result);
-	$result = array_slice($result, $_REQUEST["start"], $_REQUEST["limit"]);
+	//$result = array_slice($result, $_REQUEST["start"], $_REQUEST["limit"]);
 	
 	echo dataReader::getJsonData($result, $cnt, $_GET["callback"]);
 	die();

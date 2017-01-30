@@ -62,9 +62,12 @@ function DeleteFlow(){
 }
 
 function selectFlowSteps(){
-	
+	$where = "";
+if(!isset($_REQUEST["all"]))
+$where = " AND IsOuter='NO'";
 	$dt = PdoDataAccess::runquery("select * from WFM_FlowSteps 
-		where IsActive='YES' AND FlowID=? AND IsOuter='NO'", array($_GET["FlowID"]));
+		where IsActive='YES' AND FlowID=? 
+                 ". $where , array($_GET["FlowID"]));
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

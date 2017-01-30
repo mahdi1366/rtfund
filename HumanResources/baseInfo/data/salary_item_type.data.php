@@ -143,7 +143,7 @@ function savesalaryItem() {
 	    $obj->param5_input = (isset($_POST['param5_input'])) ? $_POST['param5_input'] : 0;
 	    $obj->param6_input = (isset($_POST['param6_input'])) ? $_POST['param6_input'] : 0;
 	    $obj->param7_input = (isset($_POST['param7_input'])) ? $_POST['param7_input'] : 0;      
-	    
+	    $obj->person_type = 3 ;
 	    $obj->insure_include = (isset($_POST['insure_include'])) ? $_POST['insure_include'] : 0;
 	    $obj->tax_include = (isset($_POST['tax_include'])) ? $_POST['tax_include'] : 0;
 	    $obj->retired_include = (isset($_POST['retired_include'])) ? $_POST['retired_include'] : 0;

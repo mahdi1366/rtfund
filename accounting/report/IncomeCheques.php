@@ -22,7 +22,7 @@ if(isset($_REQUEST["show"]))
 			case when i.CostID is null then group_concat(concat_ws('-', bb1.blockDesc, bb2.blockDesc) SEPARATOR '<br>') 
 				else concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) end CostDesc,
 			b.BankDesc, 
-			t3.TafsiliDesc ChequeStatusDesc			
+			t3.TafsiliDesc ChequeStatusDesc	,LoanPersonID		
 			
 		from ACC_IncomeCheques i
 			left join ACC_tafsilis t1 using(TafsiliID)
@@ -125,6 +125,9 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
+        if($rpg->excel)
+        {$rpg->addColumn("PID", "LoanPersonID");
+}
 	
 	$rpg->addColumn("صاحب چک", "fullname");
 	$rpg->addColumn("موبایل", "mobile");
@@ -143,7 +146,7 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("وضعیت چک", "ChequeStatusDesc");
 	
 	//echo PdoDataAccess::GetLatestQueryString();
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 	
 	$rpg->mysql_resource = $dataTable;
 	if(!$rpg->excel)

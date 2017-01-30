@@ -7,6 +7,7 @@
 define("inc_PDODataAccess", "PDODataAccess.class.php");
 define("inc_reportGenerator", "ReportGenerator.class.php");
 define("inc_CurrencyModule", "CurrencyModules.class.php");
+define("inc_ExtraModule", "ExtraModules.class.php");
 define("inc_ModuleAccess", "ModuleAccess.class.php");
 define("inc_sendLetter", getenv("DOCUMENT_ROOT") . "/sharedClasses/sendLetterModule.php");
 define("inc_phpExcelReader", "phpExcelReader.php");

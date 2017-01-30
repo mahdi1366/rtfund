@@ -15,7 +15,8 @@ if(isset($_REQUEST["show"]))
 	$ReqObj = new LON_requests($RequestID);
 	$dt = array();
 	$returnArr = LON_requests::ComputePayments2($RequestID, $dt);
-	
+	$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
+
 	//............ get remain untill now ......................
 	$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $returnArr);
 	//.........................................................

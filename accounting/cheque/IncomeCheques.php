@@ -615,7 +615,7 @@ IncomeCheque.prototype.ReturnLatestOperation = function(){
 		return;
 	}
 	
-	if(record.data.EqualizationID*1 > 0)
+	if(<?= $_SESSION["USER"]["UserName"] == "admin" ? "false" : "true" ?> && record.data.EqualizationID*1 > 0)
 	{
 		Ext.MessageBox.alert("Error","چکی که تایید مغایرت شده است تحت هیچ شرایطی قابل تغییر نمی باشد");
 		return;

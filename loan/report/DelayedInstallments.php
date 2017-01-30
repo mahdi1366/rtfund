@@ -24,9 +24,9 @@ if(!empty($_REQUEST["print"]))
 	$rpg->addColumn("وام گیرنده", "LoanPersonName");
 	$rpg->addColumn("سررسید", "InstallmentDate","DateRender");
 	$rpg->addColumn("مبلغ قسط", "InstallmentAmount", "MoneyRender");
-	$rpg->addColumn("مانده", "remainder", "MoneyRender");
-			
-	echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
+	$rpg->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
+	BeginReport();
+	
 	echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 			<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 			<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>
@@ -50,16 +50,15 @@ if(!empty($_REQUEST["NTC_EXCEL"]))
 	$rpt->addColumn("کد وام", "RequestID");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("سررسید", "InstallmentDate");
-	$rpt->addColumn("تاخیر", "ForfeitDays");
-	$rpt->addColumn("مبلغ قسط", "InstallmentAmount");
-	$rpt->addColumn("قابل پرداخت", "remainder");
+	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
+	$rpt->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
 	$rpt->generateReport();
 	die();
 }
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "../request/request.data.php?task=GetDelayedInstallments","grid_div");
 
-$dg->addColumn("", "PartID","", true);
+$dg->addColumn("", "RequestID","", true);
 
 $col = $dg->addColumn("کد وام", "RequestID","");
 $col->width = 50;
@@ -68,18 +67,19 @@ $col = $dg->addColumn("وام گیرنده", "LoanPersonName");
 
 
 $col = $dg->addColumn("سررسید", "InstallmentDate", GridColumn::ColumnType_date);
-$col->width = 80;
+$col->width = 110;
 
-$col = $dg->addColumn("تاخیر", "ForfeitDays", GridColumn::ColumnType_date);
-$col->width = 80;
+//$col = $dg->addColumn("تاخیر", "ForfeitDays", GridColumn::ColumnType_date);
+//$col->width = 80;
 
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
 $col->width = 150;
 
-$col = $dg->addColumn("قابل پرداخت", "remainder", GridColumn::ColumnType_money);
+$col = $dg->addColumn("قابل پرداخت معوقه", "TotalRemainder", GridColumn::ColumnType_money);
 $col->width = 100;
 
-$dg->addButton("", "گزارش پرداخت", "report", "function(){LoanReport_DelayedInstallmentsObj.PayReport();}");
+$dg->addButton("", "گزارش پرداخت", "report", "function(){LoanReport_DelayedInstallmentsObj.PayReport('');}");
+$dg->addButton("", "گزارش پرداخت2", "report", "function(){LoanReport_DelayedInstallmentsObj.PayReport(2);}");
 
 $dg->height = 377;
 $dg->width = 850;
@@ -89,6 +89,7 @@ $dg->addButton("", "چاپ", "print", "LoanReport_DelayedInstallments.print");
 
 $dg->addButton("", "خروجی excel جهت ارتباط با ذینفعان", "excel", "LoanReport_DelayedInstallments.excel");
 
+$dg->EnablePaging = false;
 $dg->HeaderMenu = false;
 $dg->DefaultSortField = "InstallmentDate";
 $dg->DefaultSortDir = "DESC";
@@ -111,20 +112,21 @@ LoanReport_DelayedInstallments.prototype = {
 function LoanReport_DelayedInstallments()
 {
 	this.DateFS = new Ext.form.FieldSet({
-		width : 400,
+		width : 600,
 		renderTo : this.get("divPanel"),
+		layout : "hbox",
 		items : [{
 			xtype : "shdatefield",
-			itemId : "ToDate",
+			itemId : "FromDate",
 			labelWidth : 110,
-			fieldLabel : "اقساط معوق تا تاریخ",
+			fieldLabel : "اقساط معوق از تاریخ",
 			value : "<?= DateModules::shNow() ?>"
 		},{
-			xtype : "numberfield",
-			itemId : "minDays",
-			labelWidth : 110,
-			fieldLabel : "حداقل روز تاخیر در پرداخت قسط",
-			hideTrigger : true
+			xtype : "shdatefield",
+			itemId : "ToDate",
+			labelWidth : 50,
+			fieldLabel : "تا تاریخ",
+			value : "<?= DateModules::shNow() ?>"
 		},{
 			xtype : "button",
 			iconCls : "refresh",
@@ -132,13 +134,14 @@ function LoanReport_DelayedInstallments()
 			handler : function(){
 				me = LoanReport_DelayedInstallmentsObj;
 				me.grid.getStore().proxy.extraParams.ToDate = me.DateFS.down("[itemId=ToDate]").getRawValue();
-				me.grid.getStore().proxy.extraParams.minDays = me.DateFS.down("[itemId=minDays]").getRawValue();
+				me.grid.getStore().proxy.extraParams.FromDate = me.DateFS.down("[itemId=FromDate]").getRawValue();
 				me.grid.getStore().loadPage(1);
 			}
 		}]
 	});
 	
 	this.grid = <?= $grid ?>;
+	this.grid.getStore().proxy.extraParams.FromDate = this.DateFS.down("[itemId=FromDate]").getRawValue();
 	this.grid.getStore().proxy.extraParams.ToDate = this.DateFS.down("[itemId=ToDate]").getRawValue();
 	this.grid.on("itemdblclick", function(view, record){
 		framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", {RequestID : record.data.RequestID});
@@ -146,14 +149,17 @@ function LoanReport_DelayedInstallments()
 	this.grid.render(this.get("divGrid"));
 }
 
-LoanReport_DelayedInstallments.prototype.PayReport = function(){
+LoanReport_DelayedInstallments.prototype.PayReport = function(postfix){
 
 	record = this.grid.getSelectionModel().getLastSelected();
-	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&PartID=" + record.data.PartID);
+	window.open(this.address_prefix + "../report/LoanPayment"+postfix+".php?show=true&RequestID=" + 
+		record.data.RequestID);
 }
 
 LoanReport_DelayedInstallments.print = function(){
-	window.open(LoanReport_DelayedInstallmentsObj.address_prefix + "DelayedInstallments.php?print=true");
+	window.open(LoanReport_DelayedInstallmentsObj.address_prefix + "DelayedInstallments.php?print=true"+
+		"&FromDate=" + LoanReport_DelayedInstallmentsObj.DateFS.getComponent("FromDate").getRawValue()+
+		"&ToDate=" + LoanReport_DelayedInstallmentsObj.DateFS.getComponent("ToDate").getRawValue());
 }
 
 LoanReport_DelayedInstallments.excel = function(){
@@ -170,5 +176,7 @@ LoanReport_DelayedInstallmentsObj = new LoanReport_DelayedInstallments();
 <center><br>
 	<div id="divPanel"></div>
 	<br>
+	با توجه به اینکه گزارش اقساط معوق محاسباتی می باشد حتی الامکان از گزارش گیری در بازه های طولانی خودداری کنید.
+	<br><br>
 	<div id="divGrid" ></div>
 </center>
