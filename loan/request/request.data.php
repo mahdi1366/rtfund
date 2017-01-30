@@ -494,7 +494,7 @@ function GetInstallments(){
 	$currentPay = 0;
 	foreach($dt as $row)
 	{	
-		if($row["InstallmentDate"] <= DateModules::Now())
+		if($row["ActionType"] == "installment" && $row["ActionDate"] <= DateModules::Now())
 			$currentPay = $row["TotalRemainder"];
 	}
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"], $currentPay);
@@ -1194,15 +1194,16 @@ function GetDelayedInstallments($returnData = false){
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
 	
-	$ForfeitDays = !empty($_REQUEST["minDays"]) ? $_REQUEST["minDays"]*1 : 0;
+	//$ForfeitDays = !empty($_REQUEST["minDays"]) ? $_REQUEST["minDays"]*1 : 0;
 	
 	$result = array();
 	while($row = $dt->fetch())
 	{
-		$temp = array();
+		/*$temp = array();
 		$returnArr = LON_requests::ComputePayments($row["RequestID"], $temp);
 		
 		foreach($returnArr as $row2)
+		{
 			if(isset($row2["InstallmentID"]) && $row2["InstallmentID"]*1 > 0)
 			{
 				if($ForfeitDays > 0 && $row2["ForfeitDays"]*1 < $ForfeitDays)
@@ -1224,6 +1225,9 @@ function GetDelayedInstallments($returnData = false){
 					$result[] = $row2;
 				}
 			}
+		}*/
+		if(LON_requests::GetCurrentRemainAmount($row["RequestID"]) > 0)
+			$result[] = $row;
 	}
 	
 	if($returnData)

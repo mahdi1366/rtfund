@@ -698,6 +698,23 @@ class LON_requests extends PdoDataAccess
 		return $returnArr;
 	}
 	
+	static function GetCurrentRemainAmount($RequestID, $returnArr=null)
+	{
+		$dt = array();
+		if($returnArr == null)
+			$returnArr = self::ComputePayments2($RequestID, $dt);
+		
+		$CurrentRemain = 0;
+		foreach($returnArr as $row)
+		{
+			if($row["ActionDate"] <= DateModules::Now())
+			{
+				$amount = $row["TotalRemainder"]*1 + $row["ForfeitAmount"]*1;
+				$CurrentRemain = $amount < 0 ? 0 : $amount;
+			}
+		}
+		return $CurrentRemain;
+	}
 }
 
 class LON_ReqParts extends PdoDataAccess

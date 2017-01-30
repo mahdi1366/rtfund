@@ -17,16 +17,7 @@ if(isset($_REQUEST["show"]))
 	$returnArr = LON_requests::ComputePayments2($RequestID, $dt);
 	
 	//............ get remain untill now ......................
-	$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
-	$CurrentRemain = 0;
-	foreach($returnArr as $row)
-	{
-		if($row["ActionDate"] <= DateModules::Now())
-		{
-			$amount = $row["TotalRemainder"]*1 + $row["ForfeitAmount"]*1;
-			$CurrentRemain = $amount < 0 ? 0 : $amount;
-		}
-	}
+	$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $returnArr);
 	//.........................................................
 	
 	$rpg = new ReportGenerator();
