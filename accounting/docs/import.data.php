@@ -2876,7 +2876,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 	{
 		//-------------- get latest deposite compute -------------
 		$FirstYearDay = DateModules::shamsi_to_miladi($_SESSION["accounting"]["CycleID"] . "-01-01", "-");
-		$dt = PdoDataAccess::runquery("select DocID,DocDate,SourceID
+		$dt = PdoDataAccess::runquery("select max(SourceID)
 			from ACC_docs join ACC_DocItems using(DocID)
 			where DocType=" . DOCTYPE_DEPOSIT_PROFIT . " 
 				AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
@@ -2884,7 +2884,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 				AND TafsiliID=?
 			order by DocID desc", array($TafsiliID));
 
-		$LatestComputeDate = count($dt)==0 ? $FirstYearDay : $dt[0]["SourceID"];
+		$LatestComputeDate = count($dt)==0 || $dt[0][0] == "" ? $FirstYearDay : $dt[0][0];
 
 		//----------- check for all docs confirm --------------
 		/*$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
@@ -2925,14 +2925,15 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 			from ACC_DocItems 
 				join ACC_docs using(DocID)
 			where CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
-				AND DocDate > ?
+				AND DocDate > ? AND DocDate <= ?
 				AND TafsiliID=?
 				AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 				AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
 			group by DocDate
 			order by DocDate", 
-				array($LatestComputeDate, $TafsiliID));
-
+				array($LatestComputeDate, $ToDate, $TafsiliID));
+		
+		$prevDays = 0;
 		foreach($dt as $row)
 		{
 			if(!isset($DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"]))
@@ -2942,6 +2943,17 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 			}
 			$lastDate = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"];
 			$days = DateModules::GDateMinusGDate($row["DocDate"], $lastDate);
+			
+			if($row["amount"]*1 < 0)
+			{
+				$days--;
+				$prevDays = 1;
+			}
+			else
+			{
+				$days += $prevDays;
+				$prevDays = 0;
+			}
 
 			$amount = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] * $days * 
 				$DepositePercents[ $row["CostID"] ]/(36500);
@@ -2965,7 +2977,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 		foreach($DepositeAmount[ COSTID_ShortDeposite ] as $tafsili => &$row)
 		{
 			$days = DateModules::GDateMinusGDate($ToDate, $row["lastDate"]);
-			$amount = $row["amount"] * $days * $DepositePercents[ COSTID_ShortDeposite ]/(100*30.5);
+			$amount = $row["amount"] * $days * $DepositePercents[ COSTID_ShortDeposite ]/(36500);
 
 			if(!isset($row["profit"]))
 				$row["profit"] = 0;

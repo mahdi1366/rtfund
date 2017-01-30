@@ -156,6 +156,11 @@ class LON_requests extends PdoDataAccess
 			ExceptionHandler::PushException("خطا در حذف شرایط");
 	 		return false;
 		}
+		if( parent::delete("LON_installments"," RequestID=?", array($RequestID)) === false )
+		{
+			ExceptionHandler::PushException("خطا در حذف شرایط");
+	 		return false;
+		}
 		if( parent::delete("LON_requests"," RequestID=?", array($RequestID)) === false )
 	 	{
 			ExceptionHandler::PushException("خطا در حذف درخواست");

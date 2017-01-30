@@ -95,10 +95,10 @@ if(isset($_REQUEST["show"]))
 	for($i=0; $i< count($dataTable); $i++)
 	{
 		$dt = array();
-		$returnArr = ComputePayments($dataTable[$i]["RequestID"], $dt);
+		$returnArr = LON_requests::ComputePayments2($dataTable[$i]["RequestID"], $dt);
 		
 		$dataTable[$i]["remainder"] = count($returnArr)>0 ?
-			$returnArr[ count($returnArr) -1 ]["TotalRemainder"] : 0;
+			$returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1 + $returnArr[ count($returnArr) -1 ]["ForfeitAmount"]*1 : 0;
 	}
 	
 	$rpg = new ReportGenerator();
@@ -131,7 +131,7 @@ if(isset($_REQUEST["show"]))
 	
 	if(!$rpg->excel)
 	{
-		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
+		BeginReport();
 		echo "<div style=display:none>" . $query . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
