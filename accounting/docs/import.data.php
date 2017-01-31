@@ -2916,7 +2916,8 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 			$row["DocDesc"] = "مانده قبل";
 			$TraceArr[ $row["TafsiliID"] ][] = array(
 				"row" => $row,
-				"profit" => 0
+				"profit" => 0,
+				"days" => 0
 			);
 		}
 		//------------ get the Deposite amount -------------
@@ -2947,6 +2948,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 			if($row["amount"]*1 < 0)
 			{
 				$days--;
+				$days += $prevDays;
 				$prevDays = 1;
 			}
 			else
@@ -2962,50 +2964,47 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] = 0;
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] += $amount;
 
-			//echo $row["TafsiliID"] ."@" . $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] . "\n";
-
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] += $row["amount"];
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $row["DocDate"];	
 			
+			$arr = &$TraceArr[ $row["TafsiliID"] ];
+			$arr[count($arr)-1]["days"] = $days;
+			$arr[count($arr)-1]["profit"] = $amount;
+			
 			$TraceArr[ $row["TafsiliID"] ][] = array(
 				"row" => $row,
-				"days" => $days,
-				"profit" => $amount
+				"days" => 0,
+				"profit" => 0
 			);
 		}
 		//--------------------- compute untill toDate ------------------------------
 		foreach($DepositeAmount[ COSTID_ShortDeposite ] as $tafsili => &$row)
 		{
 			$days = DateModules::GDateMinusGDate($ToDate, $row["lastDate"]);
+			$days += $prevDays;
 			$amount = $row["amount"] * $days * $DepositePercents[ COSTID_ShortDeposite ]/(36500);
 
 			if(!isset($row["profit"]))
 				$row["profit"] = 0;
 			$row["profit"] += $amount;
 
-			$TraceArr[ $tafsili ][] = array(
-				"row" => $row,
-				"days" => $days,
-				"profit" => $amount
-			);
-			//echo $tafsili ."@" . $DepositeAmount[ COSTID_ShortDeposite ][ $tafsili ]["profit"] . "\n";
+			$arr = &$TraceArr[ $tafsili ];
+			$arr[count($arr)-1]["days"] = $days;
+			$arr[count($arr)-1]["profit"] = $amount;
 		}
 		foreach($DepositeAmount[ COSTID_LongDeposite ] as $tafsili => &$row)
 		{
 			$days = DateModules::GDateMinusGDate($ToDate, $row["lastDate"]);
+			$days += $prevDays;
 			$amount = $row["amount"] * $days * $DepositePercents[ COSTID_LongDeposite ]/(36500);
 
 			if(!isset($row["profit"]))
 				$row["profit"] = 0;
 			$row["profit"] += $amount;
 
-			$TraceArr[ $tafsili ][] = array(
-				"row" => $row,
-				"date" => $row["lastDate"],
-				"days" => $days,
-				"profit" => $amount
-			);
-			//echo $tafsili ."@" . $DepositeAmount[ COSTID_ShortDeposite ][ $tafsili ]["profit"] . "\n";
+			$arr = &$TraceArr[ $tafsili ];
+			$arr[count($arr)-1]["days"] = $days;
+			$arr[count($arr)-1]["profit"] = $amount;
 		}
 	}
 	if($ReportMode)
