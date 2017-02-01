@@ -215,6 +215,7 @@ function SplitYears($startDate, $endDate, $TotalAmount){
 }
 
 function ComputeWagesAndDelays($PartObj, $PayAmount, $StartDate, $PayDate){
+	
 	$MaxWage = max($PartObj->CustomerWage*1 , $PartObj->FundWage);
 	if($PartObj->PayInterval > 0)
 		$YearMonths = ($PartObj->IntervalType == "DAY" ) ? 

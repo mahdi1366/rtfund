@@ -278,7 +278,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		if($totalAgentYearAmount < 0)
 		{
 			unset($itemObj->ItemID);
-			$itemObj->CostID = $CostCode_agent_wage;
+			if($PartObj->AgentDelayReturn == "INSTALLMENT")
+				$itemObj->CostID = $CostCode_agent_wage;
+			else
+				$itemObj->CostID = $CostCode_deposite;
+			
 			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID2 = $ReqPersonTafsili;
 			$itemObj->DebtorAmount = abs($AgentYearAmount);
@@ -296,7 +300,10 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			unset($itemObj->ItemID);
 			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID2 = $ReqPersonTafsili;
-			$itemObj->CostID = $CostCode_agent_wage;
+			if($PartObj->AgentDelayReturn == "INSTALLMENT")
+				$itemObj->CostID = $CostCode_agent_wage;
+			else
+				$itemObj->CostID = $CostCode_deposite;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $totalAgentYearAmount;
 			$itemObj->TafsiliID = FindTafsiliID($curYear, TAFTYPE_YEARS);
@@ -1367,7 +1374,11 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		if($AgentYearAmount > 0)
 		{
 			unset($itemObj->ItemID);
-			$itemObj->CostID = $year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
+			if($NewPartObj->AgentDelayReturn == "INSTALLMENT")
+				$itemObj->CostID = $year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
+			else
+				$itemObj->CostID = $CostCode_deposite;
+			
 			$itemObj->DebtorAmount = $AgentYearAmount;
 			$itemObj->CreditorAmount = 0;
 			$itemObj->details = "اختلاف کارمزد تنفس وام شماره " . $ReqObj->RequestID;
@@ -1380,7 +1391,10 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		if($AgentYearAmount < 0)
 		{
 			unset($itemObj->ItemID);
-			$itemObj->CostID = $year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
+			if($NewPartObj->AgentDelayReturn == "INSTALLMENT")
+				$itemObj->CostID = $year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
+			else
+				$itemObj->CostID = $CostCode_deposite;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $AgentYearAmount;
 			$itemObj->details = "سهم کارمزد تنفس وام شماره " . $ReqObj->RequestID;
@@ -1914,9 +1928,10 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	$dt = array();
 	$returnArr = LON_requests::ComputePayments2($PayObj->RequestID, $dt, $pdo);
 	$ExtraPay = 0;
-	if($returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 < 0)
+	if($returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 + $returnArr[ count($returnArr)-1 ]["ForfeitAmount"]*1 < 0)
 	{
-		$ExtraPay = $returnArr[ count($returnArr)-1 ]["TotalRemainder"]*-1;
+		$ExtraPay = abs($returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 + 
+						$returnArr[ count($returnArr)-1 ]["ForfeitAmount"]*1);
 		$ExtraPay = min($ExtraPay,$PayObj->PayAmount*1);
 		
 		$backPayObj = new LON_BackPays();
@@ -2129,7 +2144,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		if($PayObj->PayAmount*1 > 0)
 		{
 			$amount = $PayObj->PayAmount;
-			if($PartObj->WageReturn == "INSTALLMENT")
+			if($PartObj->WageReturn == "INSTALLMENT" && $PartObj->FundWage > $PartObj->CustomerWage)
 			{
 				$amount = $PayObj->PayAmount - $curWage;
 				$amount = $amount < 0 ? 0 : $amount;
@@ -2169,6 +2184,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	}
 	
 	//---------------------------------------------------------
+	print_r(ExceptionHandler::PopAllExceptions());
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
 		
@@ -2947,7 +2963,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 			if($row["amount"]*1 < 0)
 			{
 				$days--;
-				$prevDays = 1;
+				$prevDays++;
 			}
 			else
 			{
