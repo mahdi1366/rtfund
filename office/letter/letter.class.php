@@ -158,7 +158,6 @@ class OFC_letters extends PdoDataAccess{
 
 		return PdoDataAccess::runquery_fetchMode($query, $param);
 	}
-	
 }
 
 class OFC_send extends PdoDataAccess{
