@@ -171,6 +171,13 @@ function SelectAllForms(){
 			when 5 then concat_ws(' ',wfmf.FormTitle,'به شماره',wfmr.RequestID)
 			
 		end";
+	$ObjectID = 
+		"case f.FlowID 
+			when 1 then lp.RequestID				
+			when 2 then c.ContractID			
+			when 4 then fr.ObjectID
+			when 5 then fr.ObjectID
+		end";
 	
 	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
 	{
@@ -213,7 +220,8 @@ function SelectAllForms(){
 					$ObjectDesc ObjectDesc,
 					b.param1 url,
 					b.param2 parameter,
-					b.param3 target
+					b.param3 target,
+					$ObjectID ObjectID
 	
 				from WFM_FlowRows fr
 				join ( select max(RowID) RowID,FlowID,ObjectID from WFM_FlowRows group by FlowID,ObjectID )t

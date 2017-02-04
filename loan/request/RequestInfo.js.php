@@ -7,7 +7,7 @@
 RequestInfo.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
-	MenuID : '<?= $_POST["MenuID"] ?>',
+	MenuID : '<?= isset($_POST["MenuID"]) ? $_POST["MenuID"] : 0 ?>',
 
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
