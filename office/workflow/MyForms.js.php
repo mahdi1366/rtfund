@@ -157,7 +157,7 @@ MyForm.prototype.FormInfo = function(){
 	var record = this.grid.getSelectionModel().getLastSelected();
 	if(record.data.target == "1")
 	{
-		window.open(this.address_prefix + "record.data.url?" + 
+		window.open(record.data.url + "?" + 
 			record.data.parameter + "=" + record.data.ObjectID );
 		return;
 	}

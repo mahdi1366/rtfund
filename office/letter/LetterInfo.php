@@ -121,7 +121,7 @@ if(count($doc) > 0)
 	foreach($images as $img)
 		$imageslist[] = array(
 			"url" => "/office/dms/ShowFile.php?RowID=" . $img["RowID"] . "&DocumentID=" . $img["DocumentID"] . 
-					"&ObjectID=" . $LetterID,
+					"&ObjectID=" . $LetterID . "&inline=true",
 			"fileType" => $img["FileType"]);
 }
 $imageslist = json_encode($imageslist);

@@ -29,11 +29,19 @@ if(!empty($_REQUEST["RowID"]))
 {
 	$FileContent = $dt[0]["FileContent"] . file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" . 
 		$dt[0]["RowID"] . "." . $dt[0]["FileType"]);
-
 	if($dt[0]["FileType"] == "pdf")
 	{
 		header('Content-disposition: filename=file.pdf');
-		echo data_uri($FileContent, "pdf");
+		header('Content-type: file');
+		header('Pragma: no-cache');
+		header('Expires: 0');
+		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+		header('Pragma: public');
+		header("Content-Transfer-Encoding: binary");
+		if(isset($_REQUEST["inline"]))
+			echo data_uri($FileContent, "pdf");
+		else
+			echo $FileContent;
 		die();
 	}
 	else
