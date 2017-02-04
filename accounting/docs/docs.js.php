@@ -898,6 +898,8 @@ AccDocs.prototype.showDetail = function(record)
 
 AccDocs.prototype.beforeRowEdit = function(record){
 	
+	if(<?= $_SESSION["USER"]["UserName"] == "admin" ? "true" : "false" ?>)
+		return true;
 	var hrecord = AccDocsObject.grid.getStore().getAt(0);
 	if(hrecord.data.DocStatus != "RAW")
 		return false;
@@ -944,15 +946,17 @@ AccDocs.prototype.beforeRowEdit = function(record){
 
 AccDocs.deleteitemRender = function(v,p,record)
 {
-	if(record.data.locked == "YES")
-		return "";
-	var record = AccDocsObject.grid.getStore().getAt(0);
-	if(record.data.DocStatus != "RAW")
-		return "";
-	
-	if(!AccDocsObject.EditAccess)
-		return "";
-	
+	if(<?= $_SESSION["USER"]["UserName"] == "admin" ? "false" : "true" ?>)
+	{
+		if(record.data.locked == "YES")
+			return "";
+		var record = AccDocsObject.grid.getStore().getAt(0);
+		if(record.data.DocStatus != "RAW")
+			return "";
+
+		if(!AccDocsObject.EditAccess)
+			return "";
+	}
 	return "<div title='ویرایش' class='edit' onclick='AccDocsObject.EditItem();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;height:16;width:16px;;float:right'></div>" + 

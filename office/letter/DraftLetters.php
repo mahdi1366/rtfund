@@ -41,7 +41,7 @@ $grid = $dg->makeGrid_returnObjects();
 DraftLetter.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
-	MenuID : "<?= $_POST["MenuID"] ?>",
+	MenuID : "<?= isset($_POST["MenuID"]) ? $_POST["MenuID"] : "0" ?>",
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);

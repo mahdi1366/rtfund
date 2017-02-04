@@ -30,20 +30,19 @@ echo "<table border=1>
 	</tr>";
 $amount = 0;
 $sumProfit = 0;
-for($i=0; $i<count($dataTable)-1; $i++)
+for($i=0; $i<count($dataTable); $i++)
 {
 	$row = $dataTable[$i];
-	$nextRow = $i+1<count($dataTable) ? $dataTable[$i+1] : null;
 	
 	$amount += $row["row"]["amount"]*1;
-	$sumProfit += ($nextRow ? $nextRow["profit"] : 0);
+	$sumProfit += $row["profit"]*1;
 	echo "<tr>
 			<td>" . DateModules::miladi_to_shamsi($row["row"]["DocDate"]) . "</td>
 			<td>" . $row["row"]["DocDesc"] . "</td>
 			<td>" . number_format($row["row"]["amount"]) . "</td>
 			<td>" . number_format($amount) . "</td>
-			<td>" . ($nextRow ? $nextRow["days"] : 0) . "</td>
-			<td>" . number_format(($nextRow ? $nextRow["profit"] : 0)) . "</td>
+			<td>" . $row["days"] . "</td>
+			<td>" . number_format($row["profit"]) . "</td>
 		</tr>";
 }
 echo "<tr id=footer>

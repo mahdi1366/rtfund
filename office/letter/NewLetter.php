@@ -20,7 +20,6 @@ else
 }
 //...................................................
 ?>
-
 <script>
 
 Letter.prototype = {
@@ -369,6 +368,12 @@ Letter.prototype.BuildForms = function(){
 						}
 						LetterObject.SaveLetter(true);
 					}
+				},{
+					xtype : "button",
+					text : "اسکن نامه",
+					border : true,
+					iconCls : "scan",
+					handler : function(){ LetterObject.Scan();}
 				}]
 			},new Ext.Panel({
 				frame: true,
@@ -502,6 +507,35 @@ Letter.prototype.BuildForms = function(){
 }
 
 LetterObject = new Letter();
+
+Letter.prototype.Scan = function(){
+
+	scanner.scan(function(successful, mesg, response) {
+			if(!successful) { // On error
+				alert('Failed: ' + mesg);
+				return;
+			}
+
+			if(successful && mesg != null && mesg.toLowerCase().indexOf('user cancel') >= 0) { // User cancelled.
+				alert('User cancelled');
+				return;
+			}
+		},
+		{
+			"output_settings": [{
+				"type": "upload",
+				"format": "jpg",
+				"upload_target": {
+					"url" : this.address_prefix + 'letter.data.php?task=SaveLetter' , 
+					"post_fields": {
+						"LetterID": this.LetterID
+					}
+				}
+			}]
+		}
+	);
+
+}
 
 Letter.prototype.SaveLetter = function(SendFile){
 
