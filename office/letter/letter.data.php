@@ -485,6 +485,19 @@ function DeleteSend(){
 	die();
 }
 
+function GetLetterComments(){
+	
+	$dt = PdoDataAccess::runquery("
+		select s.* ,concat_ws(' ',fname, lname,CompanyName) fromPerson
+		from OFC_send s
+			join BSC_persons on(PersonID=FromPersonID)
+		where LetterID=? AND SendComment<>'' AND SendComment is not null
+		group by FromPersonID,SendComment
+		order by SendID desc", 
+		array($_REQUEST["LetterID"]));
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
 //.............................................
 
 function SelectArchiveNodes(){

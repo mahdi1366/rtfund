@@ -93,8 +93,8 @@ function LetterHistory(){
 	this.tree = new Ext.tree.Panel({
 		renderTo : this.get('tree-div'),
 		frame: true,
-		width: 698,
-		height: 437,
+		width: 600,
+		height: 465,
 		store : new Ext.data.TreeStore({
 			root : {
 				id : "source",

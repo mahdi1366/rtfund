@@ -47,8 +47,8 @@ if($editable)
 }
 $dg->autoExpandColumn = "PersonID";
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 410;
-$dg->width = 750;
+$dg->height = 465;
+$dg->width = 600;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "PayDate";
@@ -195,6 +195,5 @@ LetterCustomers.prototype.Delete = function(){
 
 </script>
 <center>
-	<br>
 	<div id="div_grid"></div>
 </center>
