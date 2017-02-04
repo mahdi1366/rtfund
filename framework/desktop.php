@@ -148,6 +148,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 		<script type="text/javascript" src="/generalUI/ext4/ux/ImageViewer.js"></script>
 		<link rel="stylesheet" type="text/css" href="/office/icons/icons.css" />		
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/ux/calendar/resources/css/calendar.css" />
+		<script src="/generalUI/scan/scanner.js" type="text/javascript"></script>
 	<style>
 		
 		.infoBox {
