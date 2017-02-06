@@ -16,7 +16,8 @@ else
 		$User = "Customer";
 }
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectMyRequests", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectMyRequests&mode=".
+		$_REQUEST["mode"], "grid_div");
 
 $dg->addColumn("", "StatusID", "", true);
 $dg->addColumn("", "LoanID", "", true);
@@ -28,7 +29,7 @@ $col->width = 50;
 $col = $dg->addColumn("تاریخ درخواست", "ReqDate", GridColumn::ColumnType_date);
 $col->width = 110;
 
-if($_SESSION["USER"]["IsCustomer"] != "YES")
+if($_REQUEST["mode"] == "agent")
 {
 	$col = $dg->addColumn("متقاضی", "LoanFullname", "");
 	$col->renderer = "function(v,p,r){return (v == '' || v == null) ? r.data.BorrowerDesc : v}";

@@ -7,7 +7,7 @@ include('../header.inc.php');
 require_once inc_dataGrid;
 
 //................  GET ACCESS  .....................
-$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
 if(empty($_REQUEST["RequestID"]))
@@ -36,7 +36,7 @@ $col->width = 90;
 $col = $dgh->addColumn("زمان اقدام", "DoneDate", GridColumn::ColumnType_datetime);
 $col->width = 120;
 
-if(isset($_SESSION["USER"]["portal"]) && $accessObj->AddFlag)
+if(isset($_SESSION["USER"]["portal"]) )
 {
 	$dgh->addButton("", "ایجاد پیام جدید", "add", "function(){LoanMessagesObj.AddMessage();}");
 	$dgh->enableRowEdit = true;

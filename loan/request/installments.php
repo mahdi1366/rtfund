@@ -135,7 +135,7 @@ function Installment()
 			store: new Ext.data.Store({
 				proxy:{
 					type: 'jsonp',
-					url: this.address_prefix + 'request.data.php?task=SelectMyRequests',
+					url: this.address_prefix + 'request.data.php?task=SelectMyRequests&mode=customer',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields :  ['PartAmount',"RequestID","ReqAmount","ReqDate", "RequestID",{

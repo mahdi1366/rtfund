@@ -100,10 +100,11 @@ function SaveLoanRequest(){
 
 function SelectMyRequests(){
 	
-	if($_SESSION["USER"]["IsAgent"] == "YES")
-		$where = "r.ReqPersonID=" . $_SESSION["USER"]["PersonID"];
-	if($_SESSION["USER"]["IsCustomer"] == "YES")
-		$where = "r.LoanPersonID=" . $_SESSION["USER"]["PersonID"];
+	$where = "1=1 ";
+	if($_SESSION["USER"]["IsAgent"] == "YES" && $_REQUEST["mode"] == "agent")
+		$where .= " AND r.ReqPersonID=" . $_SESSION["USER"]["PersonID"];
+	if($_SESSION["USER"]["IsCustomer"] == "YES" && $_REQUEST["mode"] == "customer")
+		$where .= " AND r.LoanPersonID=" . $_SESSION["USER"]["PersonID"];
 	$param = array();
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
@@ -114,9 +115,10 @@ function SelectMyRequests(){
     }
 	
 	$dt = LON_requests::SelectAll($where . dataReader::makeOrder(), $param);
+	print_r(ExceptionHandler::PopAllExceptions());
 	$count = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
-	//print_r(ExceptionHandler::PopAllExceptions());
+	
 	echo dataReader::getJsonData($dt, $count, $_GET["callback"]);
 	die();
 }
