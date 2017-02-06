@@ -1945,6 +1945,22 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		
 		$PayObj->PayAmount = $PayObj->PayAmount*1 - $ExtraPay;
 	}
+	
+	//-------------- delay amounts ----------------
+	$delayAmount = 0;
+	if($PartObj->PayCompute == "installment")
+	{
+		if($returnArr[ count($returnArr)-2 ]["TotalRemainder"]*1 < $PayObj->PayAmount*1)
+		{
+			$remain = $PayObj->PayAmount*1 - $returnArr[ count($returnArr)-2 ]["TotalRemainder"]*1;
+			$delayAmount = min($returnArr[ count($returnArr)-2 ]["ForfeitAmount"]*1, $remain);
+		}			
+	}
+	else
+	{
+		$delayAmount = $returnArr[ count($returnArr)-2 ]["ForfeitAmount"]*1;
+	}
+	
 	//----------------- add Doc items ------------------------
 		
 	$itemObj = new ACC_DocItems();
@@ -2144,12 +2160,24 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		if($PayObj->PayAmount*1 > 0)
 		{
 			$amount = $PayObj->PayAmount;
+			
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_commitment;
+			$itemObj->DebtorAmount = $amount;
+			$itemObj->CreditorAmount = 0;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف تعهد");
+				return false;
+			}
+			
 			if($PartObj->WageReturn == "INSTALLMENT" && $PartObj->FundWage > $PartObj->CustomerWage)
 			{
 				$amount = $PayObj->PayAmount - $curWage;
 				$amount = $amount < 0 ? 0 : $amount;
 			}
-
+			$amount -= $delayAmount;
+			
 			//---- اضافه به سپرده -----
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType2);
@@ -2170,21 +2198,46 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 				ExceptionHandler::PushException("خطا در ایجاد ردیف سپرده");
 				return false;
 			}
-
-			unset($itemObj->ItemID);
-			$itemObj->CostID = $CostCode_commitment;
-			$itemObj->DebtorAmount = $amount;
-			$itemObj->CreditorAmount = 0;
-			if(!$itemObj->Add($pdo))
+			//------------------ delay amount -----------------------
+			if($delayAmount > 0)
 			{
-				ExceptionHandler::PushException("خطا در ایجاد ردیف تعهد");
-				return false;
+				unset($itemObj->ItemID);
+				unset($itemObj->TafsiliType);
+				unset($itemObj->TafsiliID);
+				unset($itemObj->TafsiliType2);
+				unset($itemObj->TafsiliID2);
+				$itemObj->details = "مبلغ تاخیر وام شماره " . $ReqObj->RequestID ;
+				$itemObj->CostID = $CostCode_wage;
+				$itemObj->DebtorAmount = 0;
+				$itemObj->CreditorAmount = $delayAmount;
+				if(!$itemObj->Add($pdo))
+				{
+					ExceptionHandler::PushException("خطا در ایجاد ردیف سپرده");
+					return false;
+				}
+			}
+			if($curWage > 0 && $PartObj->FundWage > $PartObj->CustomerWage)
+			{
+				unset($itemObj->ItemID);
+				unset($itemObj->TafsiliType);
+				unset($itemObj->TafsiliID);
+				unset($itemObj->TafsiliType2);
+				unset($itemObj->TafsiliID2);
+				$itemObj->details = "کارمزد صندوق " . $ReqObj->RequestID ;
+				$itemObj->CostID = $CostCode_wage;
+				$itemObj->DebtorAmount = 0;
+				$itemObj->CreditorAmount = $curWage;
+				if(!$itemObj->Add($pdo))
+				{
+					ExceptionHandler::PushException("خطا در ایجاد ردیف سپرده");
+					return false;
+				}
 			}
 		}
 	}
 	
 	//---------------------------------------------------------
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
 		

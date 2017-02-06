@@ -125,6 +125,15 @@ function SelectReceivedLetters(){
 		$param[":st"] = $_REQUEST["SendType"];
 	}
 	
+	if (isset($_GET["fields"]) && !empty($_GET["query"])) {
+		
+		$field = $_GET["fields"];
+		$field = $field == "FromPersonName" ? "concat_ws(' ',fname, lname,CompanyName)" : $field;
+		
+		$where .= " AND ".$field." like :f";
+		$param[":f"] = "%" . $_GET["query"] . "%";
+	}
+	
 	$dt = OFC_letters::SelectReceivedLetters($where, $param);
 	//echo PdoDataAccess::GetLatestQueryString();
 	$cnt = $dt->rowCount();
@@ -136,8 +145,20 @@ function SelectReceivedLetters(){
 
 function SelectSendedLetters(){
 	
-	$dt = OFC_letters::SelectSendedLetters();
-	//print_r(ExceptionHandler::PopAllExceptions());
+	$where = " AND 1=1 ";
+	$param = array();
+	
+	if (isset($_GET["fields"]) && !empty($_GET["query"])) {
+		
+		$field = $_GET["fields"];
+		$field = $field == "ToPersonName" ? "concat_ws(' ',fname, lname,CompanyName)" : $field;
+		
+		$where .= " AND ".$field." like :f";
+		$param[":f"] = "%" . $_GET["query"] . "%";
+	}
+	
+	$dt = OFC_letters::SelectSendedLetters($where, $param);
+	print_r(ExceptionHandler::PopAllExceptions());
 	$cnt = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	

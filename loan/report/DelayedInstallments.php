@@ -49,6 +49,9 @@ if(!empty($_REQUEST["NTC_EXCEL"]))
 	$rpt->addColumn("PID", "LoanPersonID");
 	$rpt->addColumn("کد وام", "RequestID");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
+	$rpt->addColumn("موبایل", "mobile");
+	$rpt->addColumn("شماره پیامک", "SmsNo");
+	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("سررسید", "InstallmentDate");
 	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
 	$rpt->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
@@ -165,10 +168,10 @@ LoanReport_DelayedInstallments.print = function(){
 LoanReport_DelayedInstallments.excel = function(){
 	
 	me = LoanReport_DelayedInstallmentsObj;
-	
 	window.open(LoanReport_DelayedInstallmentsObj.address_prefix + 
-		"DelayedInstallments.php?NTC_EXCEL=true&ToDate=" + me.DateFS.down("[itemId=ToDate]").getRawValue() +
-		"&minDays=" + me.DateFS.down("[itemId=minDays]").getRawValue());
+		"DelayedInstallments.php?NTC_EXCEL=true" +
+		"&FromDate=" + me.DateFS.getComponent("FromDate").getRawValue()+
+		"&ToDate=" + me.DateFS.getComponent("ToDate").getRawValue());
 }
 
 LoanReport_DelayedInstallmentsObj = new LoanReport_DelayedInstallments();

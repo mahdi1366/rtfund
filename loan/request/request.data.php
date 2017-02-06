@@ -1174,7 +1174,7 @@ function GetDelayedInstallments($returnData = false){
 	$ToDate = DateModules::shamsi_to_miladi($_REQUEST["ToDate"]);
 	
 	$param = array(":todate" => $ToDate, ":fromdate" => $FromDate);
-	$query = "select RequestID,concat_ws(' ',fname,lname,CompanyName) LoanPersonName,
+	$query = "select RequestID,LoanPersonID,mobile,SmsNo,concat_ws(' ',fname,lname,CompanyName) LoanPersonName,
 				max(InstallmentDate) InstallmentDate, InstallmentAmount
 			from LON_installments i
 			join LON_requests using(RequestID)

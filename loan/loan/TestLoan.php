@@ -240,18 +240,6 @@ TestLoan.prototype.SplitYears = function(startDate, endDate, TotalAmount){
 
 TestLoan.prototype.LoadSummary = function(){
 
-	function PMT(F8, F9, F7, YearMonths, PayInterval) {  
-		
-		if(F8 == 0)
-			return F7/F9;
-		
-		if(PayInterval == 0)
-			return F7;
-		
-		F8 = F8/(YearMonths*100);
-		F7 = -F7;
-		return F8 * F7 * Math.pow((1 + F8), F9) / (1 - Math.pow((1 + F8), F9)); 
-	} 
 	function ComputeInstallmentAmount(TotalAmount,IstallmentCount,PayInterval){
 		
 		if(PayInterval == 0)
@@ -347,26 +335,36 @@ TestLoan.prototype.LoadSummary = function(){
 	CustomerWage = this.panel.down("[name=CustomerWage]").getValue()*1;
 	InstallmentCount = this.panel.down("[name=InstallmentCount]").getValue();
 	FundWage = this.panel.down("[name=FundWage]").getValue()*1;
-	WageReturn = this.panel.down("[name=WageReturn]").inputValue;
+	WageReturn = this.panel.down("[name=WageReturn]").getValue() == true ? "INSTALLMENT" : "CUSTOMER";
 	MaxFundWage = this.panel.down("[name=MaxFundWage]").getValue();
-	AgentReturn = this.panel.down("[name=AgentReturn]").inputValue;
-	DelayReturn = this.panel.down("[name=DelayReturn]").inputValue;
-	AgentDelayReturn = this.panel.down("[name=AgentDelayReturn]").inputValue;
+	AgentReturn = this.panel.down("[name=AgentReturn]").getValue()  == true ? "INSTALLMENT" : "CUSTOMER";
+	DelayReturn = this.panel.down("[name=DelayReturn]").getValue()  == true ? "CUSTOMER" : "INSTALLMENT";
+	AgentDelayReturn = this.panel.down("[name=AgentDelayReturn]").getValue()  == true ? "CUSTOMER" : "INSTALLMENT";
 	DelayPercent = this.panel.down("[name=DelayPercent]").getValue(); 
 	
 	PartDate = ShamsiToMiladi(PartDate);
+	if(PayInterval > 0)
+		YearMonths = (IntervalType == "DAY" ) ? 
+			Math.floor(365/PayInterval) : 12/PayInterval;
+	else
+		YearMonths = 12;
+
 	
 	DelayDuration = DateModule.GDateMinusGDate(
 		DateModule.AddToGDate(PartDate, DelayDays*1, DelayMonths*1), PartDate);
-	YearMonths = 12;
-	if(IntervalType == "DAY")
-		YearMonths = Math.floor(365/PayInterval);
-	
 	TotalWage = Math.round(ComputeWage(PartAmount, CustomerWage/100, 
 		InstallmentCount, IntervalType, PayInterval));
 		
 	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
-	TotalDelay = Math.round(PartAmount*DelayPercent*DelayDuration/36500);
+	FundWage = Math.round((FundWage/CustomerWage)*TotalWage);
+	FundWage = !isInt(FundWage) ? 0 : FundWage;
+	AgentWage = TotalWage - FundWage;
+	
+	if(DelayDays*1 > 0)
+		TotalDelay = Math.round(PartAmount*DelayPercent*DelayDuration/36500);
+	else
+		TotalDelay = Math.round(PartAmount*DelayPercent*DelayMonths/1200);
+	
 	
 	//-------------------------- installments -----------------------------
 	MaxWage = Math.max(CustomerWage, FundWage);
@@ -403,9 +401,6 @@ TestLoan.prototype.LoadSummary = function(){
 	LastPay = Math.round(TotalAmount - FirstPay*(InstallmentCount-1));
 
 	//---------------------------------------------------------------------
-	FundWage = Math.round((FundWage/CustomerWage)*TotalWage);
-	FundWage = !isInt(FundWage) ? 0 : FundWage;
-	AgentWage = TotalWage - FundWage;
 	
 	if(MaxFundWage*1 > 0)
 	{
@@ -444,7 +439,7 @@ TestLoan.prototype.LoadSummary = function(){
 	
 	this.get("SUM_Wage_1Year").innerHTML = returnArr[0].amount;
 	this.get("SUM_Wage_2Year").innerHTML = returnArr[1].amount;
-	this.get("SUM_Wage_3Year").innerHTML = returnArr[2].amount;
+	this.get("SUM_Wage_3Year").innerHTML = returnArr[2].amount > 0 ? returnArr[2].amount : 0;
 	this.get("SUM_Wage_4Year").innerHTML = returnArr[3].amount > 0 ? returnArr[3].amount : 0;
 }
 
