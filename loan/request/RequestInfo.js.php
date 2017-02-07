@@ -1709,7 +1709,7 @@ RequestInfo.prototype.LoadSummary = function(record){
 				
 		startDate = DateModule.AddToGDate(record.data.PartDate, record.data.DelayDays, record.data.DelayMonths);
 		startDate = MiladiToShamsi(startDate);
-		startDate = DateModule.AddToJDate(startDate, DelayDays, DelayMonths);
+		startDate = DateModule.AddToJDate(startDate, record.data.DelayDays, record.data.DelayMonths);
 		startDate = startDate.split(/[\-\/]/);
 		PayMonth = startDate[1];
 		PayMonth = PayMonth*YearMonths/12;

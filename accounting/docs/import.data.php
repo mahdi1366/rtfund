@@ -1025,7 +1025,6 @@ function RegisterLoanCost($CostObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
 	$ReqObj = new LON_requests($CostObj->RequestID);
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
-	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
 	//------------------------------------------------
 	$CycleID = $_SESSION["accounting"]["CycleID"];
 	//------------------- find load mode ---------------------
@@ -1139,6 +1138,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	$CostCode_agent_wage = FindCostID("750" . "-52");
 	$CostCode_agent_FutureWage = FindCostID("760" . "-52");
 	$CostCode_todiee = FindCostID("200-".$LoanObj->_BlockCode."-01");
+	$CostCode_deposite = FindCostID("210-01");
 	//------------------------------------------------
 	$CycleID = substr(DateModules::shNow(), 0 , 4);	
 	//--------------------------------------------------
@@ -1220,7 +1220,12 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	$diferences = array(
 		"FundWageYears" => array(),
 		"AgentWageYears" => array(),
-		"CustomerYearDelays" => array()
+		"CustomerYearDelays" => array(),
+		"TotalFundWage" => 0,
+		"TotalAgentWage" => 0,
+		"TotalCustomerWage" => 0,
+		"TotalFundDelay" => 0,
+		"TotalAgentDelay" => 0
 	);
 	
 	$dt = PdoDataAccess::runquery("select * from LON_payments where RequestID=?", array($RequestID), $pdo);
@@ -1245,32 +1250,51 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 			$diferences["FundWageYears"][$year] -= $amount;
 		}
 		//.....................................................
-		foreach($result_new["CustomerYearDelays"] as $year => $amount)
+		foreach($result_new["AgentWageYears"] as $year => $amount)
 		{
-			if(!isset($diferences["CustomerYearDelays"][$year]))
-				$diferences["CustomerYearDelays"][$year] = 0;
-			$diferences["CustomerYearDelays"][$year] += $amount;
+			if(!isset($diferences["AgentWageYears"][$year]))
+				$diferences["AgentWageYears"][$year] = 0;
+			$diferences["AgentWageYears"][$year] += $amount;
 		}
-		foreach($result_old["CustomerYearDelays"] as $year => $amount)
+		foreach($result_old["AgentWageYears"] as $year => $amount)
 		{
-			if(!isset($diferences["CustomerYearDelays"][$year]))
-				$diferences["CustomerYearDelays"][$year] = 0;
-			$diferences["CustomerYearDelays"][$year] -= $amount;
+			if(!isset($diferences["AgentWageYears"][$year]))
+				$diferences["AgentWageYears"][$year] = 0;
+			$diferences["AgentWageYears"][$year] -= $amount;
 		}
+		//.....................................................
+		foreach($result_new["FundYearDelays"] as $year => $amount)
+		{
+			if(!isset($diferences["FundYearDelays"][$year]))
+				$diferences["FundYearDelays"][$year] = 0;
+			$diferences["FundYearDelays"][$year] += $amount;
+		}
+		foreach($result_old["FundYearDelays"] as $year => $amount)
+		{
+			if(!isset($diferences["FundYearDelays"][$year]))
+				$diferences["FundYearDelays"][$year] = 0;
+			$diferences["FundYearDelays"][$year] -= $amount;
+		}
+		//.....................................................
+		foreach($result_new["AgentYearDelays"] as $year => $amount)
+		{
+			if(!isset($diferences["AgentYearDelays"][$year]))
+				$diferences["AgentYearDelays"][$year] = 0;
+			$diferences["AgentYearDelays"][$year] += $amount;
+		}
+		foreach($result_old["AgentYearDelays"] as $year => $amount)
+		{
+			if(!isset($diferences["AgentYearDelays"][$year]))
+				$diferences["AgentYearDelays"][$year] = 0;
+			$diferences["AgentYearDelays"][$year] -= $amount;
+		}
+		//.....................................................
+		$diferences["TotalFundWage"] += $result_new["TotalFundWage"]*1 - $result_old["TotalFundWage"]*1;
+		$diferences["TotalAgentWage"] += $result_new["TotalAgentWage"]*1 - $result_old["TotalAgentWage"]*1;
+		$diferences["TotalCustomerWage"] += $result_new["TotalCustomerWage"]*1 - $result_old["TotalCustomerWage"]*1;
+		$diferences["TotalFundDelay"] += $result_new["TotalFundDelay"]*1 - $result_old["TotalFundDelay"]*1;
+		$diferences["TotalAgentDelay"] += $result_new["TotalAgentDelay"]*1 - $result_old["TotalAgentDelay"]*1;
 	}
-	
-	$MaxWage = max($NewPartObj->CustomerWage*1 , $NewPartObj->FundWage);
-	$AgentFactor = $MaxWage == 0 ? 0 : ($NewPartObj->CustomerWage-$NewPartObj->FundWage)/$MaxWage;
-	
-	$result = ComputeWagesAndDelays($NewPartObj, $NewPartObj->PartAmount, $firstPayDate, $NewPartObj->PartDate);
-	$TotalFundWage = $result["TotalFundWage"];
-	$TotalAgentWage = $result["TotalAgentWage"];
-	$TotalCustomerWage = $result["TotalCustomerWage"];
-	$FundYears = $result["FundWageYears"];
-	$AgentYears = $result["AgentWageYears"];
-	
-	$TotalFundDelay = $result["TotalFundDelay"];
-	$TotalAgentDelay = $result["TotalAgentDelay"];
 	$ExtraAmount = 0;
 	//----------------- add Doc items ------------------------
 	$itemObj = new ACC_DocItems();
@@ -1287,126 +1311,93 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	$itemObj->SourceID = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $NewPartObj->PartID;
 	
-	$extraAmount = 0;
-	if($NewPartObj->WageReturn == "INSTALLMENT")
-	{
-		if($NewPartObj->MaxFundWage*1 > 0)
-			$extraAmount += $NewPartObj->MaxFundWage;
-		else if($NewPartObj->CustomerWage > $NewPartObj->FundWage)
-			$extraAmount += $TotalFundWage;
-		else
-			$extraAmount += $TotalCustomerWage;
-	}
-		
-	if($NewPartObj->AgentReturn == "INSTALLMENT" && $NewPartObj->CustomerWage>$NewPartObj->FundWage)
-		$extraAmount += $TotalAgentWage;
-
-	if($NewPartObj->DelayReturn == "INSTALLMENT")
-		$extraAmount += $TotalFundDelay;
-	if($TotalAgentDelay > 0 && $NewPartObj->AgentDelayReturn == "INSTALLMENT")
-		$extraAmount += $TotalAgentDelay;
-	
-	function GetAmount($RequestID, $CostID, $TafsiliID = ""){
-		
-		$query = "select ifnull(sum(DebtorAmount-CreditorAmount),0) amount 
-			from ACC_DocItems 
-			where SourceType in(" . DOCTYPE_LOAN_PAYMENT . "," . DOCTYPE_LOAN_DIFFERENCE ." )
-			AND SourceID=? AND CostID=?";
-		$params = array($RequestID, $CostID);
-		
-		if($TafsiliID != "")
-		{
-			$query .= " AND TafsiliID=?";
-			$params[] = $TafsiliID;
-		}
-		
-		$dt = PdoDataAccess::runquery($query, $params);
-		return $dt[0]["amount"]*1;
-	}
+	$NewExtraAmount = GetExtraLoanAmount($NewPartObj, 
+			$diferences["TotalFundWage"], 
+			$diferences["TotalCustomerWage"], 
+			$diferences["TotalAgentWage"], 
+			$diferences["TotalFundDelay"], 
+			$diferences["TotalAgentDelay"]);
 	//...............Loan ..............................
 	
-	$CostCode_LoanAmount = GetAmount($RequestID, $CostCode_Loan) - ($NewPartObj->PartAmount*1 + $extraAmount);
+	$CostCode_LoanAmount = $NewPartObj->PartAmount*1 - $PreviousPartObj->PartAmount*1 + $NewExtraAmount;
 	if($CostCode_LoanAmount != 0)
 	{
 		unset($itemObj->ItemID);
 		$itemObj->DocID = $obj->DocID;
 		$itemObj->CostID = $CostCode_Loan;
-		$itemObj->DebtorAmount = $CostCode_LoanAmount < 0 ? abs($CostCode_LoanAmount) : 0;
-		$itemObj->CreditorAmount = $CostCode_LoanAmount > 0 ? $CostCode_LoanAmount : 0;
+		$itemObj->DebtorAmount = $CostCode_LoanAmount > 0 ? $CostCode_LoanAmount : 0;
+		$itemObj->CreditorAmount = $CostCode_LoanAmount < 0 ? abs($CostCode_LoanAmount) : 0;		
 		$itemObj->Add($pdo);
 	}
-	//.......... Todiee ....................................
-	if($NewPartObj->PartAmount*1 != $PreviousPartObj->PartAmount)
-	{
-		$CostCode_todieeAmount = GetAmount($RequestID, $CostCode_todiee) - 
-				($NewPartObj->PartAmount*1 - $totalPaid);
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_todiee;		
-		$itemObj->DebtorAmount = $CostCode_todieeAmount < 0 ? abs($CostCode_todieeAmount) : 0;
-		$itemObj->CreditorAmount = $CostCode_todieeAmount > 0 ? $CostCode_todieeAmount : 0;
-		$itemObj->Add($pdo);
-	}
-	//------------------------ delay -------------------------------
+	//------------------------ agent delay -------------------------------
 	$curYear = substr(DateModules::miladi_to_shamsi($NewPartObj->PartDate), 0, 4)*1;
-	$index = 0;
-	foreach($diferences["CustomerYearDelays"] as $year => $value)
+	if($NewPartObj->AgentDelayReturn == "CUSTOMER")
 	{
-		$FundYearAmount = ($NewPartObj->FundWage/$NewPartObj->DelayPercent)*$value;
-		$AgentYearAmount = (($NewPartObj->CustomerWage*1-$NewPartObj->FundWage*1)/$NewPartObj->DelayPercent*1)*$value;
-		if($FundYearAmount != 0)
+		if($diferences["TotalAgentDelay"]*1 > 0)
 		{
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
-			$itemObj->CostID = $year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
+			$itemObj->CostID = $CostCode_deposite;
 			$itemObj->TafsiliType = TAFTYPE_YEARS;
 			$itemObj->TafsiliID = FindTafsiliID($year, TAFTYPE_YEARS);
-			$itemObj->DebtorAmount = $FundYearAmount<0 ? abs($FundYearAmount) : 0;
-			$itemObj->CreditorAmount = $FundYearAmount>0 ? $FundYearAmount : 0;		
+			$itemObj->DebtorAmount = $diferences["TotalAgentDelay"]*1<0 ? abs($diferences["TotalAgentDelay"]*1) : 0;
+			$itemObj->CreditorAmount = $diferences["TotalAgentDelay"]*1>0 ? $diferences["TotalAgentDelay"]*1 : 0;		
 			$itemObj->details = "کارمزد دوره تنفس وام شماره " . $ReqObj->RequestID;
 			if(!$itemObj->Add($pdo))
 			{
 				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
 				return false;
 			}
-			$ExtraAmount += $FundYearAmount>0 ? $FundYearAmount : 0;
+			$ExtraAmount += $diferences["TotalAgentDelay"]*1;
 		}
-		if($AgentYearAmount > 0)
-		{
-			unset($itemObj->ItemID);
-			if($NewPartObj->AgentDelayReturn == "INSTALLMENT")
-				$itemObj->CostID = $year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
-			else
-				$itemObj->CostID = $CostCode_deposite;
-			
-			$itemObj->DebtorAmount = $AgentYearAmount;
-			$itemObj->CreditorAmount = 0;
-			$itemObj->details = "اختلاف کارمزد تنفس وام شماره " . $ReqObj->RequestID;
-			if(!$itemObj->Add($pdo))
-			{
-				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
-				return false;
-			}
-		}
-		if($AgentYearAmount < 0)
-		{
-			unset($itemObj->ItemID);
-			if($NewPartObj->AgentDelayReturn == "INSTALLMENT")
-				$itemObj->CostID = $year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
-			else
-				$itemObj->CostID = $CostCode_deposite;
-			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $AgentYearAmount;
-			$itemObj->details = "سهم کارمزد تنفس وام شماره " . $ReqObj->RequestID;
-			if(!$itemObj->Add($pdo))
-			{
-				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
-				return false;
-			}
-		}
-		$index++;
 	}
-	//------------------------ کارمزد---------------------	
+	else
+	{
+		foreach($diferences["AgentYearDelays"] as $year => $value)
+		{
+			if($value == 0)
+				continue;
+
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			$itemObj->CostID = $year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
+			$itemObj->TafsiliType = TAFTYPE_YEARS;
+			$itemObj->TafsiliID = FindTafsiliID($year, TAFTYPE_YEARS);
+			$itemObj->DebtorAmount = $value<0 ? abs($value) : 0;
+			$itemObj->CreditorAmount = $value>0 ? $value : 0;		
+			$itemObj->details = "کارمزد دوره تنفس وام شماره " . $ReqObj->RequestID;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+				return false;
+			}
+		}
+	}
+	//------------------------ fund delay -------------------------------
+	foreach($diferences["FundYearDelays"] as $year => $value)
+	{
+		if($value == 0)
+			continue;
+		
+		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		$itemObj->CostID = $year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
+		$itemObj->TafsiliType = TAFTYPE_YEARS;
+		$itemObj->TafsiliID = FindTafsiliID($year, TAFTYPE_YEARS);
+		$itemObj->DebtorAmount = $value<0 ? abs($value) : 0;
+		$itemObj->CreditorAmount = $value>0 ? $value : 0;		
+		$itemObj->details = "کارمزد دوره تنفس وام شماره " . $ReqObj->RequestID;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+			return false;
+		}
+		$ExtraAmount += $value;
+	}
+	//------------------------ fund wage ---------------------	
 	foreach($diferences["FundWageYears"] as $Year => $amount)
 	{
 		if($amount == 0)
@@ -1428,55 +1419,50 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		$itemObj->CreditorAmount = $amount>0 ? $amount : 0;
 		$itemObj->Add($pdo);
 		
-		//$ExtraAmount += $amount<0 ? abs($amount) : 0;
-		
-		if($NewPartObj->AgentReturn == "INSTALLMENT")
+		if($NewPartObj->WageReturn == "CUSTOMER")
+			$ExtraAmount += $amount;
+	}
+	//------------------------ agent wage ---------------------	
+	if($NewPartObj->AgentReturn == "CUSTOMER")
+	{
+		if($diferences["TotalAgentWage"]*1 != 0)
 		{
-			if($LoanMode == "Agent" && $NewPartObj->FundWage*1 > $NewPartObj->CustomerWage)
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			$itemObj->CostID = $CostCode_deposite;
+			$itemObj->TafsiliType = TAFTYPE_YEARS;
+			$itemObj->TafsiliID = FindTafsiliID($year, TAFTYPE_YEARS);
+			$itemObj->DebtorAmount = $diferences["TotalAgentWage"]*1<0 ? abs($diferences["TotalAgentWage"]*1) : 0;
+			$itemObj->CreditorAmount = $diferences["TotalAgentWage"]*1>0 ? $diferences["TotalAgentWage"]*1 : 0;		
+			$itemObj->details = "کارمزد وام شماره " . $ReqObj->RequestID;
+			if(!$itemObj->Add($pdo))
 			{
-				unset($itemObj->ItemID);
-				$itemObj->details = "اختلاف کارمزد وام شماره " . $ReqObj->RequestID;
-				$itemObj->CostID = $Year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
-				$itemObj->DebtorAmount = $amount*$AgentFactor<0 ? abs($amount*$AgentFactor) : 0;
-				$itemObj->CreditorAmount = $amount*$AgentFactor>0 ? $amount*$AgentFactor : 0;
-				$itemObj->TafsiliType = TAFTYPE_YEARS;
-				$itemObj->TafsiliID = $YearTafsili;
-				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-				$itemObj->TafsiliID2 = $ReqPersonTafsili;
-				$itemObj->Add($pdo);
+				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+				return false;
 			}
-			if($LoanMode == "Agent" && $NewPartObj->FundWage*1 < $NewPartObj->CustomerWage)
-			{
-				unset($itemObj->ItemID);
-				$itemObj->details = "سهم کارمزد وام شماره " . $ReqObj->RequestID;
-				$itemObj->CostID = $Year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
-				$itemObj->DebtorAmount = $amount*$AgentFactor>0 ? $amount*$AgentFactor : 0;
-				$itemObj->CreditorAmount = $amount*$AgentFactor<0 ? abs($amount*$AgentFactor) : 0;			
-				$itemObj->TafsiliType = TAFTYPE_YEARS;
-				$itemObj->TafsiliID = $YearTafsili;
-				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-				$itemObj->TafsiliID2 = $ReqPersonTafsili;
-				$itemObj->Add($pdo);
-			}
+			$ExtraAmount += $diferences["TotalAgentWage"]*1;
 		}
 	}
-	
-	/*if($NewPartObj->AgentReturn == "CUSTOMER" && $NewPartObj->CustomerWage > $NewPartObj->FundWage)
+	else
 	{
-		unset($itemObj->ItemID);
-		$itemObj->details = "سهم کارمزد وام شماره " . $ReqObj->RequestID;
-		$itemObj->CostID = $CostCode_deposite;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $TotalAgentWage;
-		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $ReqPersonTafsili;
-		if($LoanMode == "Agent")
+		foreach($diferences["AgentWageYears"] as $Year => $amount)
 		{
-			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			if($amount == 0)
+				continue;
+
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $Year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
+			$itemObj->TafsiliType = TAFTYPE_YEARS;
+			$itemObj->TafsiliID = $YearTafsili;
+			$itemObj->details = "کارمزد وام شماره " . $ReqObj->RequestID;
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			$itemObj->DebtorAmount = $amount<0 ? abs($amount) : 0;
+			$itemObj->CreditorAmount = $amount>0 ? $amount : 0;
+			$itemObj->Add($pdo);
 		}
-		$itemObj->Add($pdo);
-	}*/
+	}
 	// ---------------------------- ExtraAmount --------------------------------
 	if($ExtraAmount > 0)
 	{
@@ -1488,6 +1474,13 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		$itemObj->locked = "YES";
 		$itemObj->SourceID = $ReqObj->RequestID;
 		$itemObj->SourceID2 = $NewPartObj->PartID;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $LoanPersonTafsili;
+		if($LoanMode == "Agent")
+		{
+			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID2 = $ReqPersonTafsili;
+		}
 		$itemObj->Add($pdo);
 		
 		//-------------------- add loan cost for difference --------------------
@@ -1502,6 +1495,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		else
 		{
 			$obj = new LON_costs();
+			$obj->CostDate = PDONOW;
 			$obj->RequestID = $NewPartObj->RequestID;
 			$obj->CostDesc = "اختلافت حاصل از تغییر شرایط پرداخت";
 			$obj->CostAmount = $ExtraAmount;

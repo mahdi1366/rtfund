@@ -274,6 +274,8 @@ function ComputeWagesAndDelays($PartObj, $PayAmount, $StartDate, $PayDate){
 		$AgentDelay = round($PayAmount*($PartObj->DelayPercent - $PartObj->FundWage)*$DelayDuration/36500);		
 	}	
 	$CustomerYearDelays = SplitYears($PayDate, $endDelayDate, $CustomerDelay);
+	$FundYearDelays = SplitYears($PayDate, $endDelayDate, $FundDelay);
+	$AgentYearDelays = SplitYears($PayDate, $endDelayDate, $AgentDelay);
 	//.............................................................
 	
 	return array(
@@ -286,7 +288,33 @@ function ComputeWagesAndDelays($PartObj, $PayAmount, $StartDate, $PayDate){
 		"TotalCustomerDelay" => $CustomerDelay,
 		"TotalFundDelay" => $FundDelay,
 		"TotalAgentDelay" => $AgentDelay,
-		"CustomerYearDelays" => $CustomerYearDelays
+		"CustomerYearDelays" => $CustomerYearDelays,
+		"FundYearDelays" => $FundYearDelays,
+		"AgentYearDelays" => $AgentYearDelays
 	);
+}
+
+function GetExtraLoanAmount($PartObj, $TotalFundWage, $TotalCustomerWage, $TotalAgentWage, $TotalFundDelay, $TotalAgentDelay){
+	
+	$extraAmount = 0;
+	if($PartObj->WageReturn == "INSTALLMENT")
+	{
+		if($PartObj->MaxFundWage*1 > 0)
+			$extraAmount += $PartObj->MaxFundWage;
+		else if($PartObj->CustomerWage > $PartObj->FundWage)
+			$extraAmount += $TotalFundWage;
+		else
+			$extraAmount += $TotalCustomerWage;
+	}
+		
+	if($PartObj->AgentReturn == "INSTALLMENT" && $PartObj->CustomerWage>$PartObj->FundWage)
+		$extraAmount += $TotalAgentWage;
+
+	if($PartObj->DelayReturn == "INSTALLMENT")
+		$extraAmount += $TotalFundDelay;
+	if($TotalAgentDelay > 0 && $PartObj->AgentDelayReturn == "INSTALLMENT")
+		$extraAmount += $TotalAgentDelay;
+	
+	return $extraAmount;
 }
 ?>

@@ -265,6 +265,11 @@ Installment.prototype.ComputeInstallments = function(){
 		if(btn == "no")
 			return;
 		
+		var DeleteDelayedInstallments = false;
+		Ext.MessageBox.confirm("","آیا اقساط تمدید شده نیز حذف شوند؟",function(btn){
+			DeleteDelayedInstallments = btn == "yes" ? true : false;
+		});
+		
 		me = InstallmentObject;
 	
 		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
@@ -275,7 +280,8 @@ Installment.prototype.ComputeInstallments = function(){
 			method: "POST",
 			params: {
 				task: "ComputeInstallments",
-				RequestID : me.RequestID
+				RequestID : me.RequestID,
+				DeleteDelayedInstallments : DeleteDelayedInstallments ? "true" : "false"
 			},
 			success: function(response){
 				mask.hide();
