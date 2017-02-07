@@ -33,6 +33,7 @@ $dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "BankDesc", "", true);
 $dg->addColumn("", "ChequeBranch", "", true);
+$dg->addColumn("", "history", "", true);
 
 $col = $dg->addColumn("سررسید", "InstallmentDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
@@ -53,6 +54,10 @@ $col->width = 120;
 
 $col = $dg->addColumn("اسناد", "docs");
 $col->width = 120;
+
+$col = $dg->addColumn("ثبت سابقه", "");
+$col->renderer = "Installment.HistoryRender";
+$col->width = 80;
 
 if($editable && $accessObj->EditFlag)
 {
@@ -112,6 +117,8 @@ function Installment()
 		
 		this.grid.getView().getRowClass = function(record, index)
 		{
+			if(record.data.history == "YES")
+				return "greenRow";
 			if(record.data.IsDelayed == "YES")
 				return "yellowRow";
 
@@ -223,11 +230,10 @@ function Installment()
 	});
 }
 
-Installment.payRender = function(v,p,r){
-
-	if(r.data.IsPaid == "YES")
+Installment.HistoryRender = function(v,p,r){
+	if(r.data.history == "YES")
 		return "";
-	return  "<div  title='پرداخت قسط' class='epay' onclick='InstallmentObject.PayInstallment();' " +
+	return  "<div  title='سابقه' class='history' onclick='InstallmentObject.SetHistory();' " +
 		"style='float:left;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
@@ -258,17 +264,38 @@ Installment.prototype.PayInstallment = function(){
 		RequestID + "&amount=" + PayAmount);	
 }
 
+Installment.prototype.SetHistory = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایلید که این ردیف را ثبت سابقه کنید؟",function(btn){
+		if(btn == "no")
+			return;
+		
+		me = InstallmentObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "SetHistory",
+				InstallmentID : record.data.InstallmentID
+			},
+			success: function(response){
+				mask.hide();
+				InstallmentObject.grid.getStore().load();
+			}
+		});
+	});	
+}
+
 Installment.prototype.ComputeInstallments = function(){
 	
 	Ext.MessageBox.confirm("","در صورت محاسبه مجدد کلیه ردیف ها حذف و مجدد محاسبه و ایجاد می شوند <br>" + 
 		"آیا مایل به محاسبه مجدد می باشید؟",function(btn){
 		if(btn == "no")
 			return;
-		
-		var DeleteDelayedInstallments = false;
-		Ext.MessageBox.confirm("","آیا اقساط تمدید شده نیز حذف شوند؟",function(btn){
-			DeleteDelayedInstallments = btn == "yes" ? true : false;
-		});
 		
 		me = InstallmentObject;
 	
@@ -280,8 +307,7 @@ Installment.prototype.ComputeInstallments = function(){
 			method: "POST",
 			params: {
 				task: "ComputeInstallments",
-				RequestID : me.RequestID,
-				DeleteDelayedInstallments : DeleteDelayedInstallments ? "true" : "false"
+				RequestID : me.RequestID
 			},
 			success: function(response){
 				mask.hide();

@@ -1460,7 +1460,11 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 			unset($itemObj->TafsiliID2);
 			$itemObj->DebtorAmount = $amount<0 ? abs($amount) : 0;
 			$itemObj->CreditorAmount = $amount>0 ? $amount : 0;
-			$itemObj->Add($pdo);
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد ");
+				return false;
+			}
 		}
 	}
 	// ---------------------------- ExtraAmount --------------------------------
@@ -1468,23 +1472,21 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	{
 		$itemObj = new ACC_DocItems();
 		$itemObj->DocID = $obj->DocID;
-		$itemObj->CostID = $CostCode_Loan;
+		$itemObj->CostID = COSTID_Bank;
 		$itemObj->DebtorAmount = $ExtraAmount;
 		$itemObj->CreditorAmount = 0;	
-		$itemObj->locked = "YES";
+		$itemObj->locked = "NO";
 		$itemObj->SourceID = $ReqObj->RequestID;
 		$itemObj->SourceID2 = $NewPartObj->PartID;
-		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $LoanPersonTafsili;
-		if($LoanMode == "Agent")
+		
+		if(!$itemObj->Add($pdo))
 		{
-			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			ExceptionHandler::PushException("خطا در ایجاد ردیف مازاد");
+			return false;
 		}
-		$itemObj->Add($pdo);
 		
 		//-------------------- add loan cost for difference --------------------
-		$dt = PdoDataAccess::runquery("select * from LON_costs where RequestID=? AND PartID=?", 
+		/*$dt = PdoDataAccess::runquery("select * from LON_costs where RequestID=? AND PartID=?", 
 				array($NewPartObj->RequestID, $NewPartObj->PartID));
 		if(count($dt)>0)
 		{
@@ -1502,8 +1504,12 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 			$obj->CostID = $CostCode_Loan;
 			$obj->IsPartDiff = "YES";
 			$obj->PartID = $NewPartObj->PartID;
-			$obj->Add($pdo);		
-		}
+			if(!$obj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد هزینه");
+				return false;
+			}
+		}*/
 	}
 	//---------------------------------------------------------
 	if(ExceptionHandler::GetExceptionCount() > 0)

@@ -504,8 +504,10 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	$RequestID = empty($RequestID) ? $_REQUEST["RequestID"] : $RequestID;
 	
 	//------------------- check for docs -------------------
-	$dt = PdoDataAccess::runquery("select * from ACC_DocItems where SourceType=" . DOCTYPE_INSTALLMENT_CHANGE
-			. " AND SourceID=?", array($RequestID));
+	$dt = PdoDataAccess::runquery("select * from ACC_DocItems
+		join LON_installments on(SourceID=RequestID AND SourceID2=InstallmentID)
+		where SourceType=" . DOCTYPE_INSTALLMENT_CHANGE . " AND SourceID=? AND 
+			history='NO'", array($RequestID));
 	if(count($dt) > 0)
 	{
 		if($returnMode)
@@ -515,8 +517,8 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 		die();
 	}
 	//------------------------------------------------------
-	
-	PdoDataAccess::runquery("delete from LON_installments where RequestID=? ", array($RequestID));
+	PdoDataAccess::runquery("delete from LON_installments where RequestID=? AND history='NO'", 
+			array($RequestID));
 	//-----------------------------------------------
 	$obj2 = new LON_requests($RequestID);
 	if($obj2->ReqPersonID == SHEKOOFAI)
@@ -833,6 +835,14 @@ function DelayInstallments(){
 	die();	
 }
 
+function SetHistory(){
+	
+	$obj = new LON_installments($_POST["InstallmentID"]);
+	$obj->history = "YES";
+	$result = $obj->EditInstallment();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 //-------------------------------------------------
 
 function GetLastFundComment(){
