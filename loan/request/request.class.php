@@ -826,6 +826,7 @@ class LON_installments extends PdoDataAccess
 	public $InstallmentDate;
 	public $InstallmentAmount;
 	public $IsDelayed;
+	public $history;
 			
 	function __construct($InstallmentID = "") {
 		
