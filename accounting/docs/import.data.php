@@ -1420,7 +1420,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	{
 		if($amount == 0)
 			continue;
-		if($year*1 < $curYear)
+		if($Year*1 < $curYear)
 		{
 			$prevYear += $amount*1;
 			continue;
@@ -1477,7 +1477,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		{
 			if($amount == 0)
 				continue;
-			if($year*1 < $curYear)
+			if($Year*1 < $curYear)
 			{
 				$prevYear += $amount*1;
 				continue;
@@ -1505,7 +1505,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	{
 		$itemObj = new ACC_DocItems();
 		$itemObj->DocID = $obj->DocID;
-		$itemObj->CostID = COSTID_Bank;
+		$itemObj->CostID = $CostCode_Loan;
 		$itemObj->DebtorAmount = $ExtraAmount;
 		$itemObj->CreditorAmount = 0;	
 		$itemObj->locked = "NO";
