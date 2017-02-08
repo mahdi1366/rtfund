@@ -1330,7 +1330,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		$itemObj->Add($pdo);
 	}
 	//------------------------ agent delay -------------------------------
-	$curYear = substr(DateModules::miladi_to_shamsi($NewPartObj->PartDate), 0, 4)*1;
+	$curYear = substr(DateModules::shNow(), 0, 4)*1;
 	if($NewPartObj->AgentDelayReturn == "CUSTOMER")
 	{
 		if($diferences["TotalAgentDelay"]*1 > 0)
@@ -1339,8 +1339,8 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
 			$itemObj->CostID = $CostCode_deposite;
-			$itemObj->TafsiliType = TAFTYPE_YEARS;
-			$itemObj->TafsiliID = FindTafsiliID($year, TAFTYPE_YEARS);
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $ReqPersonTafsili;
 			$itemObj->DebtorAmount = $diferences["TotalAgentDelay"]*1<0 ? abs($diferences["TotalAgentDelay"]*1) : 0;
 			$itemObj->CreditorAmount = $diferences["TotalAgentDelay"]*1>0 ? $diferences["TotalAgentDelay"]*1 : 0;		
 			$itemObj->details = "کارمزد دوره تنفس وام شماره " . $ReqObj->RequestID;
@@ -1354,10 +1354,18 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	}
 	else
 	{
+		$prevYear = 0;
 		foreach($diferences["AgentYearDelays"] as $year => $value)
 		{
 			if($value == 0)
 				continue;
+			
+			if($year*1 < $curYear)
+			{
+				$prevYear += $value*1;
+				continue;
+			}
+			$value += $prevYear;
 
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType2);
@@ -1373,13 +1381,21 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
 				return false;
 			}
+			$prevYear = 0;
 		}
 	}
 	//------------------------ fund delay -------------------------------
+	$prevYear = 0;
 	foreach($diferences["FundYearDelays"] as $year => $value)
 	{
 		if($value == 0)
 			continue;
+		if($year*1 < $curYear)
+		{
+			$prevYear += $value*1;
+			continue;
+		}
+		$value += $prevYear;
 		
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType2);
@@ -1396,12 +1412,21 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 			return false;
 		}
 		$ExtraAmount += $value;
+		$prevYear = 0;
 	}
 	//------------------------ fund wage ---------------------	
+	$prevYear = 0;
 	foreach($diferences["FundWageYears"] as $Year => $amount)
 	{
 		if($amount == 0)
 			continue;
+		if($year*1 < $curYear)
+		{
+			$prevYear += $amount*1;
+			continue;
+		}
+		$amount += $prevYear;
+		
 		$YearTafsili = FindTafsiliID($Year, TAFTYPE_YEARS);
 		if(!$YearTafsili)
 		{
@@ -1421,6 +1446,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		
 		if($NewPartObj->WageReturn == "CUSTOMER")
 			$ExtraAmount += $amount;
+		$prevYear = 0;
 	}
 	//------------------------ agent wage ---------------------	
 	if($NewPartObj->AgentReturn == "CUSTOMER")
@@ -1446,10 +1472,17 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	}
 	else
 	{
+		$prevYear = 0;
 		foreach($diferences["AgentWageYears"] as $Year => $amount)
 		{
 			if($amount == 0)
 				continue;
+			if($year*1 < $curYear)
+			{
+				$prevYear += $amount*1;
+				continue;
+			}
+			$amount += $prevYear;
 
 			unset($itemObj->ItemID);
 			$itemObj->CostID = $Year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
@@ -1461,6 +1494,8 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 			$itemObj->DebtorAmount = $amount<0 ? abs($amount) : 0;
 			$itemObj->CreditorAmount = $amount>0 ? $amount : 0;
 			$itemObj->Add($pdo);
+			
+			$prevYear = 0;
 		}
 	}
 	// ---------------------------- ExtraAmount --------------------------------
