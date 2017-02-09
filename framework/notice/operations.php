@@ -50,7 +50,9 @@ $col->width = 70;
 $col = $dg->addColumn("شماره نامه", "LetterID");
 $col->width = 70;
 
-$col = $dg->addColumn("ستون 1", "col1", "");
+$col = $dg->addColumn("متن ارسالی", "context", "");
+
+/*$col = $dg->addColumn("ستون 1", "col1", "");
 
 $col = $dg->addColumn("ستون 2", "col2", "");
 $col->width = 70;
@@ -67,7 +69,7 @@ $col->width = 70;
 $col = $dg->addColumn("ستون 8", "col8", "");
 $col->width = 70;
 $col = $dg->addColumn("ستون 9", "col9", "");
-$col->width = 70;
+$col->width = 70;*/
 
 $col = $dg->addColumn("خطا", "ErrorMsg", "");
 $col->width = 70;
@@ -77,7 +79,7 @@ $dg->width = 900;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "RowID";
-$dg->autoExpandColumn = "col1";
+$dg->autoExpandColumn = "context";
 $grid2 = $dg->makeGrid_returnObjects();
 ?>
 <script>

@@ -26,15 +26,7 @@ class NTC_persons extends OperationClass
 	public $OperationID;
 	public $PersonID;
 	public $LetterID;
-	public $col1;
-	public $col2;
-	public $col3;
-	public $col4;
-	public $col5;
-	public $col6;
-	public $col7;
-	public $col8;
-	public $col9;
+	public $context;
 	public $IsSuccess;
 	public $ErrorMsg;
 

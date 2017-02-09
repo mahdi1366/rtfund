@@ -57,16 +57,18 @@ function SaveOperation(){
 				$PersonObj = new NTC_persons();
 				$PersonObj->OperationID = $obj->OperationID;
 				$PersonObj->PersonID = $PersonID;
+				$PersonObj->context = $obj->context;
 				
 				for($j=1; $j<count($data->sheets[0]['cells'][$i]); $j++)
-					$PersonObj["col" . $j] = $data->sheets[0]['cells'][$i][$j];
-					//eval("\$PersonObj->col$j = '" . $data->sheets[0]['cells'][$i][$j] . "';");
-				
+				{
+					$PersonObj->context = preg_replace ("/\[col".$j."\]/", 
+							$data->sheets[0]['cells'][$i][$j], 
+							$PersonObj->context);
+				}
 				$PersonObj->Add($pdo);
 			}
 		}
 	}
-	
 	$dt = NTC_persons::Get(" AND OperationID=?", array($obj->OperationID), $pdo);
 	if($dt->rowCount() == 0)
 	{
@@ -91,10 +93,7 @@ function SaveOperation(){
 	//---------------------------------------	
 	foreach($dt as $row)
 	{
-		$context = $obj->context;
-		for($i=1; $i<10; $i++)
-			$context = preg_replace ("/\[col".$i."\]/", $row["col" . $i], $context);
-		
+		$context = $row["context"];
 		switch($obj->SendType){
 			case "SMS" :
 				$SmsNo = $row["SmsNo"];
@@ -103,7 +102,7 @@ function SaveOperation(){
 					ExceptionHandler::PushException ("فاقد شماره پیامک");
 					continue;
 				}
-				$result = ariana2_sendSMS($SmsNo, $obj->context);
+				$result = ariana2_sendSMS($SmsNo, $context);
 				if(!$result)
 					ExceptionHandler::PushException ("خطا در ارسال پیامک");
 				break;
