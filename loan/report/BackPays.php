@@ -25,12 +25,12 @@ if(isset($_REQUEST["show"]))
 			$prefix = "";
 			switch($key)
 			{
-				case "fromInstallmentDate":
-				case "toInstallmentDate":
+				case "fromPayDate":
+				case "toPayDate":
 					$value = DateModules::shamsi_to_miladi($value, "-");
 					break;
-				case "fromInstallmentAmount":
-				case "toInstallmentAmount":
+				case "fromPayAmount":
+				case "toPayAmount":
 					$value = preg_replace('/,/', "", $value);
 					break;
 			}
@@ -49,22 +49,31 @@ if(isset($_REQUEST["show"]))
 	$whereParam = array();
 	MakeWhere($where, $whereParam);
 	
-	$query = "select i.*,r.*,l.*,p.*,
+	$query = "select b.*,r.*,l.*,p.*,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
-				BranchName
+				BranchName,
+				i.ChequeNo,
+				d.LocalNo,
+				bi.InfoDesc PayTypeDesc
 				
-			from LON_installments i
+			from LON_BackPays b
 			join LON_requests r using(RequestID)
 			join LON_ReqParts p on(r.RequestID=p.RequestID AND p.IsHistory='NO')
 			left join LON_loans l using(LoanID)
+			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=b.PayType)
+			left join ACC_IncomeCheques i using(IncomeChequeID)
 			join BSC_branches using(BranchID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
-			where i.history='NO' AND i.IsDelayed='NO' " . $where . " 
+			
+			left join ACC_DocItems di on(SourceID=RequestID AND SourceID2=BackPayID AND SourceType in(8,5))
+			left join ACC_docs d on(di.DocID=d.DocID)
+
+			where 1=1 " . $where . " 
 			
 			group by r.RequestID
-			order by InstallmentDate";
+			order by PayDate";
 	
 	
 	$dataTable = PdoDataAccess::runquery_fetchMode($query, $whereParam);
@@ -86,8 +95,13 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("مبلغ درخواست", "ReqAmount", "moneyRender");
 	$rpg->addColumn("مشتری", "LoanFullname");
 	$rpg->addColumn("شعبه", "BranchName");
-	$rpg->addColumn("تاریخ قسط", "InstallmentDate", "dateRender");
-	$rpg->addColumn("مبلغ قسط", "InstallmentAmount", "moneyRender");
+	$rpg->addColumn("تاریخ پرداخت", "PayDate", "dateRender");
+	$rpg->addColumn("مبلغ پرداخت", "PayAmount", "moneyRender");
+	$rpg->addColumn("نوع پرداخت", "PayTypeDesc");
+	$rpg->addColumn("شماره فیش", "PayBillNo");
+	$rpg->addColumn("کد پیگیری", "PayRefNo");
+	$rpg->addColumn("شماره چک", "ChequeNo");
+	$rpg->addColumn("شماره سند", "LocalNo");
 	
 	if(!$rpg->excel)
 	{
@@ -96,7 +110,7 @@ if(isset($_REQUEST["show"]))
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>
-					گزارش اقساط وام ها 
+					گزارش پرداخت های مشتریان
 				</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
 			. DateModules::shNow() . "<br>";
@@ -112,7 +126,7 @@ if(isset($_REQUEST["show"]))
 }
 ?>
 <script>
-LoanReport_installments.prototype = {
+LoanReport_Backays.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
@@ -121,18 +135,18 @@ LoanReport_installments.prototype = {
 	}
 }
 
-LoanReport_installments.prototype.showReport = function(btn, e)
+LoanReport_Backays.prototype.showReport = function(btn, e)
 {
 	this.form = this.get("mainForm")
 	this.form.target = "_blank";
 	this.form.method = "POST";
-	this.form.action =  this.address_prefix + "installments.php?show=true";
+	this.form.action =  this.address_prefix + "BackPays.php?show=true";
 	this.form.submit();
 	this.get("excel").value = "";
 	return;
 }
 
-function LoanReport_installments()
+function LoanReport_Backays()
 {		
 	this.formPanel = new Ext.form.Panel({
 		renderTo : this.get("main"),
@@ -163,7 +177,7 @@ function LoanReport_installments()
 			hiddenName : "ReqPersonID",
 			listeners :{
 				select : function(record){
-					el = LoanReport_installmentsObj.formPanel.down("[itemId=cmp_subAgent]");
+					el = LoanReport_BackaysObj.formPanel.down("[itemId=cmp_subAgent]");
 					el.getStore().proxy.extraParams["PersonID"] = this.getValue();
 					el.getStore().load();
 				}
@@ -241,22 +255,22 @@ function LoanReport_installments()
 			hiddenName : "BranchID"
 		},{
 			xtype : "shdatefield",
-			name : "fromInstallmentDate",
-			fieldLabel : "تاریخ قسط از"
+			name : "fromPayDate",
+			fieldLabel : "تاریخ پرداخت از"
 		},{
 			xtype : "shdatefield",
-			name : "toInstallmentDate",
+			name : "toPayDate",
 			fieldLabel : "تا تاریخ"
 		},{
 			xtype : "currencyfield",
-			name : "fromInstallmentAmount",
+			name : "fromPayAmount",
 			hideTrigger : true,
-			fieldLabel : "از مبلغ قسط"
+			fieldLabel : "مبلغ پرداخت از"
 		},{
 			xtype : "currencyfield",
-			name : "toInstallmentAmount",
+			name : "toPayAmount",
 			hideTrigger : true,
-			fieldLabel : "تا مبلغ قسط"
+			fieldLabel : "تا مبلغ"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",
@@ -267,7 +281,7 @@ function LoanReport_installments()
 			handler : Ext.bind(this.showReport,this),
 			listeners : {
 				click : function(){
-					LoanReport_installmentsObj.get('excel').value = "true";
+					LoanReport_BackaysObj.get('excel').value = "true";
 				}
 			},
 			iconCls : "excel"
@@ -275,22 +289,22 @@ function LoanReport_installments()
 			text : "پاک کردن گزارش",
 			iconCls : "clear",
 			handler : function(){
-				LoanReport_installmentsObj.formPanel.getForm().reset();
-				LoanReport_installmentsObj.get("mainForm").reset();
+				LoanReport_BackaysObj.formPanel.getForm().reset();
+				LoanReport_BackaysObj.get("mainForm").reset();
 			}			
 		}]
 	});
 	
 	this.formPanel.getEl().addKeyListener(Ext.EventObject.ENTER, function(keynumber,e){
 		
-		LoanReport_installmentsObj.showReport();
+		LoanReport_BackaysObj.showReport();
 		e.preventDefault();
 		e.stopEvent();
 		return false;
 	});
 }
 
-LoanReport_installmentsObj = new LoanReport_installments();
+LoanReport_BackaysObj = new LoanReport_Backays();
 </script>
 <form id="mainForm">
 	<center><br>
