@@ -74,7 +74,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 		fields : ["RequestID","BranchID","LoanID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
 					"guarantees","AgentGuarantee","StatusID","DocumentDesc","IsFree",
-					"imp_GirandehCode","imp_VamCode","IsEnded","SubAgentID"],
+					"imp_GirandehCode","imp_VamCode","IsEnded","SubAgentID","PlanTitle","RuleNo"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -580,6 +580,14 @@ RequestInfo.prototype.BuildForms = function(){
 			fieldLabel : "توضیحات مدارک",
 			rows : 1,
 			name : "DocumentDesc"
+		},{
+			xtype : "textfield",
+			fieldLabel : "عنوان طرح",
+			name : "PlanTitle"
+		},{
+		xtype : "textfield",
+			fieldLabel : "شماره مصوبه",
+			name : "RuleNo"
 		},
 		this.PartsPanel
 		],

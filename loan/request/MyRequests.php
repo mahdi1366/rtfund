@@ -113,6 +113,10 @@ MyRequest.OperationRender = function(v,p,record){
 		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
 	}
 	
+	str += "<div  title='چاپ کاردکس' class='print' onclick='MyRequestObject.PrintLoanSummary();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
+	
 	return str;
 }
 
@@ -338,6 +342,12 @@ MyRequest.prototype.ShowHistory = function(){
 			RequestID : this.grid.getSelectionModel().getLastSelected().data.RequestID
 		}
 	});
+}
+
+MyRequest.prototype.PrintLoanSummary = function(){
+
+	window.open(this.address_prefix + "../report/LoanSummary.php?RequestID=" + 
+		this.grid.getSelectionModel().getLastSelected().data.RequestID);
 }
 
 MyRequest.prototype.ShowMessages = function(){

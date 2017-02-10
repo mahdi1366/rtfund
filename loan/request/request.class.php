@@ -26,6 +26,8 @@ class LON_requests extends PdoDataAccess
 	public $SubAgentID;
 	public $IsFree;
 	public $imp_VamCode;
+	public $PlanTitle;
+	public $RuleNo;
 	
 	public $_LoanDesc;
 	public $_LoanPersonFullname;

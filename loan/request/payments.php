@@ -30,6 +30,8 @@ $col->align = "center";
 $col = $dg->addColumn("مبلغ پرداخت", "PayAmount", GridColumn::ColumnType_money);
 $col->editor = ColumnEditor::CurrencyField();
 $col->width = 120;
+$col->summaryType = GridColumn::SummeryType_sum;
+$col->summaryRenderer = "function(v){return Ext.util.Format.Money(v);}";
 $col->align = "center";
 
 if(isset($_SESSION["USER"]["framework"]))
@@ -54,6 +56,8 @@ if($editable && $accessObj->AddFlag)
 		$col->width = 35;
 	}
 }
+
+$dg->EnableSummaryRow = true;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 270;

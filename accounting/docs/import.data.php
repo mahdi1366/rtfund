@@ -691,35 +691,23 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 		return false;
 	}
 	
-	$LoanMode = "";
-	if(!empty($ReqObj->ReqPersonID))
+	$ReqPersonTafsili = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+	if(!$ReqPersonTafsili)
 	{
-		$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
-		if($PersonObj->IsAgent == "YES")
-			$LoanMode = "Agent";
+		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
+		return false;
 	}
-	else
-		$LoanMode = "Customer";
-	
-	if($LoanMode == "Agent")
+	$SubAgentTafsili = "";
+	if(!empty($ReqObj->SubAgentID))
 	{
-		$ReqPersonTafsili = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
-		if(!$ReqPersonTafsili)
+		$SubAgentTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
+		if(!$SubAgentTafsili)
 		{
-			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
+			ExceptionHandler::PushException("تفصیلی زیر واحد سرمایه گذار یافت نشد.[" . $ReqObj->SubAgentID . "]");
 			return false;
 		}
-		$SubAgentTafsili = "";
-		if(!empty($ReqObj->SubAgentID))
-		{
-			$SubAgentTafsili = FindTafsiliID($ReqObj->SubAgentID, TAFTYPE_SUBAGENT);
-			if(!$SubAgentTafsili)
-			{
-				ExceptionHandler::PushException("تفصیلی زیر واحد سرمایه گذار یافت نشد.[" . $ReqObj->SubAgentID . "]");
-				return false;
-			}
-		}
-	}	
+	}
+	
 	//------------ find the number step to pay ---------------
 	$FirstStep = true;
 	$dt = PdoDataAccess::runquery("select * from ACC_DocItems 
@@ -729,13 +717,9 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	{
 		$FirstStep = false;
 		$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0)
-			from ACC_DocItems where CostID=? AND TafsiliID=? AND sourceID=?";
-		$param = array($CostCode_todiee, $LoanPersonTafsili, $ReqObj->RequestID);
-		if($LoanMode == "Agent")
-		{
-			$query .= " AND TafsiliID2=?";
-			$param[] = $ReqPersonTafsili;
-		}
+			from ACC_DocItems where CostID=? AND TafsiliID=? AND sourceID=? AND TafsiliID2=?";
+		$param = array($CostCode_todiee, $LoanPersonTafsili, $ReqObj->RequestID, $ReqPersonTafsili);
+	
 		$dt = PdoDataAccess::runquery($query, $param);
 		if($dt[0][0]*1 < $PayAmount)
 		{
@@ -754,11 +738,8 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$itemObj->DocID = $obj->DocID;
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $LoanPersonTafsili;
-	if($LoanMode == "Agent")
-	{
-		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID2 = $ReqPersonTafsili;
-	}
+	$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+	$itemObj->TafsiliID2 = $ReqPersonTafsili;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
@@ -933,48 +914,6 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 			$itemObj->Add($pdo);*/
 		}
 	}
-	//--------------- cheques of installments ---------------------
-	/*if($FirstStep)
-	{
-		$dt = PdoDataAccess::runquery("
-			SELECT PayAmount,BackPayID
-				FROM LON_BackPays
-				where RequestID=? AND PayType=9",array($PartObj->RequestID), $pdo);
-		
-		$SumAmount = 0;
-		foreach($dt as $row)
-		{
-			unset($itemObj->ItemID);
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
-			$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
-			$itemObj->DebtorAmount = $row["PayAmount"];
-			$itemObj->CreditorAmount = 0;
-			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $LoanPersonTafsili;
-			$itemObj->SourceType = DOCTYPE_DOCUMENT;
-			$itemObj->SourceID = $row["BackPayID"];
-			$itemObj->Add($pdo);
-			
-			$SumAmount += $row["ParamValue"]*1;
-			$countAmount++;
-		}
-		if($SumAmount > 0)
-		{
-			unset($itemObj->ItemID);
-			unset($itemObj->TafsiliType);
-			unset($itemObj->TafsiliID);
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
-			unset($itemObj->details);
-			$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
-			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $SumAmount;	
-			$itemObj->Add($pdo);
-
-			
-		}
-	}*/
 	//---------------------------------------------------------
 	//------ ایجاد چک ------
 	$chequeObj = new ACC_DocCheques();
@@ -1178,20 +1117,6 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 			}
 		}
 	}	
-	//------------------------------------------------
-	// check for partAmount not greater than todiee
-	if($NewPartObj->PartAmount*1 != $PreviousPartObj->PartAmount*1)
-	{
-		$dt = PdoDataAccess::runquery("select ifnull(sum(CreditorAmount-DebtorAmount),0) amount
-			from ACC_DocItems where CostID=? AND TafsiliID=? AND sourceID=?",
-			array($CostCode_todiee, $LoanPersonTafsili, $ReqObj->RequestID));
-		
-		if($PreviousPartObj->PartAmount*1 - $NewPartObj->PartAmount*1 > $dt[0]["amount"]*1)
-		{
-			ExceptionHandler::PushException("مبلغ جدید کمتر از مبلغی است که تاکنون پرداخت شده است ");
-			return false;
-		}
-	}
 	//---------------- add doc header --------------------
 	if($DocID == "")
 	{

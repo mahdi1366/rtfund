@@ -353,7 +353,7 @@ function SavePart(){
 
 	if(!$result)
 	{
-		print_r(ExceptionHandler::PopAllExceptions());
+		//print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
@@ -1323,13 +1323,14 @@ function RegPayPartDoc($ReturnMode = false, $pdo = null){
 	}
 	$ReqObj = new LON_requests($PayObj->RequestID);
 	$partobj = LON_ReqParts::GetValidPartObj($PayObj->RequestID);
-
+	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
+	
 	ChangeStatus($PayObj->RequestID, "80", "پرداخت مبلغ " . number_format($PayObj->PayAmount), true, $pdo);
 	
 	if($partobj->MaxFundWage*1 > 0)
 		$partobj->MaxFundWage = round($partobj->MaxFundWage*$PayObj->PayAmount/$partobj->PartAmount);
 	
-	if($ReqObj->ReqPersonID == "1003")
+	if($PersonObj->IsSupporter == "YES")
 		$result = RegisterSHRTFUNDPayPartDoc($ReqObj, $partobj, $PayObj, 
 				$_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo);
 	else
@@ -1357,6 +1358,7 @@ function editPayPartDoc(){
 	$PayObj = new LON_payments($PayID);
 	$partobj = LON_ReqParts::GetValidPartObj($PayObj->RequestID);
 	$ReqObj = new LON_requests($PayObj->RequestID);
+	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 	
 	$DocObj = new ACC_docs(LON_payments::GetDocID($PayObj->PayID));
 	if($DocObj->DocStatus != "RAW")
@@ -1374,7 +1376,7 @@ function editPayPartDoc(){
 		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
 		die();
 	}
-	if($ReqObj->ReqPersonID == SHEKOOFAI)
+	if($PersonObj->IsSupporter == "YES")
 		$result = RegisterSHRTFUNDPayPartDoc($ReqObj, $partobj, $PayObj, 
 				$_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo, $DocObj->DocID);
 	else

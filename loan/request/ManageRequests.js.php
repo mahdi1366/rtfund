@@ -123,6 +123,12 @@ ManageRequest.prototype.OperationMenu = function(e){
 				record.data.RequestID);	
 	}});
 	
+	op_menu.add({text: 'چاپ کاردکس',iconCls: 'print', 
+		handler : function(){ 
+			record = ManageRequestObject.grid.getSelectionModel().getLastSelected();
+			window.open(ManageRequestObject.address_prefix + "../report/LoanSummary.php?RequestID=" +
+				record.data.RequestID);	
+	}});
 	
 	op_menu.showAt(e.pageX-120, e.pageY);
 }
