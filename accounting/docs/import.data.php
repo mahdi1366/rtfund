@@ -278,13 +278,16 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		if($totalAgentYearAmount < 0)
 		{
 			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			
 			if($PartObj->AgentDelayReturn == "INSTALLMENT")
 				$itemObj->CostID = $CostCode_agent_wage;
 			else
 				$itemObj->CostID = $CostCode_deposite;
 			
-			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $ReqPersonTafsili;
 			$itemObj->DebtorAmount = abs($AgentYearAmount);
 			$itemObj->CreditorAmount = 0;
 			$itemObj->TafsiliID = FindTafsiliID($curYear, TAFTYPE_YEARS);
@@ -298,15 +301,16 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		if($totalAgentYearAmount > 0)
 		{
 			unset($itemObj->ItemID);
-			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
 			if($PartObj->AgentDelayReturn == "INSTALLMENT")
 				$itemObj->CostID = $CostCode_agent_wage;
 			else
 				$itemObj->CostID = $CostCode_deposite;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $totalAgentYearAmount;
-			$itemObj->TafsiliID = FindTafsiliID($curYear, TAFTYPE_YEARS);
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $ReqPersonTafsili;
 			$itemObj->details = "سهم کارمزد تنفس وام شماره " . $ReqObj->RequestID;
 			if(!$itemObj->Add($pdo))
 			{
@@ -1076,8 +1080,9 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
 	$CostCode_agent_wage = FindCostID("750" . "-52");
 	$CostCode_agent_FutureWage = FindCostID("760" . "-52");
-	$CostCode_todiee = FindCostID("200-".$LoanObj->_BlockCode."-01");
 	$CostCode_deposite = FindCostID("210-01");
+	$CostCode_commitment = FindCostID("200-" . $LoanObj->_BlockCode . "-51");
+	$CostCode_todiee = FindCostID("200-". $LoanObj->_BlockCode."-01");
 	//------------------------------------------------
 	$CycleID = substr(DateModules::shNow(), 0 , 4);	
 	//--------------------------------------------------
@@ -1154,6 +1159,11 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	);
 	
 	$dt = PdoDataAccess::runquery("select * from LON_payments where RequestID=?", array($RequestID), $pdo);
+	if(count($dt) == 0)
+	{
+		ExceptionHandler::PushException("هیچ ﭘرداختی برای این وام ثبت نشده است");
+		return false;
+	}
 	$firstPayDate = $dt[0]["PayDate"];
 	$totalPaid = 0;
 	foreach($dt as $PayRow)
@@ -1221,6 +1231,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		$diferences["TotalAgentDelay"] += $result_new["TotalAgentDelay"]*1 - $result_old["TotalAgentDelay"]*1;
 	}
 	$ExtraAmount = 0;
+	$ExtraCommitmetAmount = 0;
 	//----------------- add Doc items ------------------------
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
@@ -1242,16 +1253,32 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 			$diferences["TotalAgentWage"], 
 			$diferences["TotalFundDelay"], 
 			$diferences["TotalAgentDelay"]);
+	//.............. todiee ............................
+	if($NewPartObj->PartAmount*1 != $PreviousPartObj->PartAmount*1)
+	{
+		$amount = $PreviousPartObj->PartAmount*1 - $NewPartObj->PartAmount*1;
+		unset($itemObj->ItemID);
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = $CostCode_todiee;
+		$itemObj->DebtorAmount = $amount > 0 ? $amount : 0;
+		$itemObj->CreditorAmount = $amount < 0 ? abs($amount) : 0;	
+		$itemObj->Add($pdo);
+		
+		unset($itemObj->ItemID);
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = $CostCode_Loan;
+		$itemObj->DebtorAmount = $amount < 0 ? abs($amount) : 0;		
+		$itemObj->CreditorAmount = $amount > 0 ? $amount : 0;
+		$itemObj->Add($pdo);
+	}
 	//...............Loan ..............................
-	
-	$CostCode_LoanAmount = $NewPartObj->PartAmount*1 - $PreviousPartObj->PartAmount*1 + $NewExtraAmount;
-	if($CostCode_LoanAmount != 0)
+	if($NewExtraAmount != 0)
 	{
 		unset($itemObj->ItemID);
 		$itemObj->DocID = $obj->DocID;
 		$itemObj->CostID = $CostCode_Loan;
-		$itemObj->DebtorAmount = $CostCode_LoanAmount > 0 ? $CostCode_LoanAmount : 0;
-		$itemObj->CreditorAmount = $CostCode_LoanAmount < 0 ? abs($CostCode_LoanAmount) : 0;		
+		$itemObj->DebtorAmount = $NewExtraAmount > 0 ? $NewExtraAmount : 0;
+		$itemObj->CreditorAmount = $NewExtraAmount < 0 ? abs($NewExtraAmount) : 0;		
 		$itemObj->Add($pdo);
 	}
 	//------------------------ agent delay -------------------------------
@@ -1336,7 +1363,9 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 			ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
 			return false;
 		}
-		$ExtraAmount += $value;
+		if($NewPartObj->DelayReturn == "CUSTOMER")
+			$ExtraAmount += $value;
+		
 		$prevYear = 0;
 	}
 	//------------------------ fund wage ---------------------	
@@ -1371,6 +1400,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		
 		if($NewPartObj->WageReturn == "CUSTOMER")
 			$ExtraAmount += $amount;
+		
 		$prevYear = 0;
 	}
 	//------------------------ agent wage ---------------------	
@@ -1426,6 +1456,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		}
 	}
 	// ---------------------------- ExtraAmount --------------------------------
+	
 	if($ExtraAmount > 0)
 	{
 		$itemObj = new ACC_DocItems();
@@ -1875,7 +1906,6 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	$TotalAgentDelay = $result["TotalAgentDelay"];
 	
 	$PayObj->PayAmount = $PayObj->PayAmount*1;
-	$curWage = round($PayObj->PayAmount*$TotalFundWage/$PartObj->PartAmount);
 	
 	//----------------- get total remain ---------------------
 	PdoDataAccess::runquery("delete from LON_BackPays 
@@ -1905,19 +1935,9 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	}
 	
 	//-------------- delay amounts ----------------
-	$delayAmount = 0;
-	if($PartObj->PayCompute == "installment")
-	{
-		if($returnArr[ count($returnArr)-2 ]["TotalRemainder"]*1 < $PayObj->PayAmount*1)
-		{
-			$remain = $PayObj->PayAmount*1 - $returnArr[ count($returnArr)-2 ]["TotalRemainder"]*1;
-			$delayAmount = min($returnArr[ count($returnArr)-2 ]["ForfeitAmount"]*1, $remain);
-		}			
-	}
-	else
-	{
-		$delayAmount = $returnArr[ count($returnArr)-2 ]["ForfeitAmount"]*1;
-	}
+	
+	$delayAmount = $returnArr[ count($returnArr)-2 ]["TotalRemainder"]*1 - 
+			$returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1;		
 	
 	//----------------- add Doc items ------------------------
 		
@@ -2060,13 +2080,23 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 			return false;
 		}
 	}
+	if($LoanMode == "Agent")
+	{
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_commitment;
+		$itemObj->DebtorAmount = $PayObj->PayAmount;
+		$itemObj->CreditorAmount = 0;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد ردیف تعهد");
+			return false;
+		}
+	}
 	//----------------------------------------
 	if($PartObj->DelayReturn == "INSTALLMENT")
 	{
-		$dt = PdoDataAccess::runquery("select ifnull(sum(CreditorAmount),0) from ACC_DocItems 
-			where CostID=? AND SourceID=? AND SourceID3=?",
-			array($CostCode_wage, $ReqObj->RequestID, "1"));
-		$TotalFundDelay = $TotalFundDelay*1 - $dt[0][0]*1;
+		$amount = round($TotalFundDelay*1/$PartObj->InstallmentCount);
+		$amount = min($amount , $PayObj->PayAmount);
 		
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
@@ -2077,120 +2107,100 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		$itemObj->details = "بابت تنفس وام " . $PayObj->RequestID;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->SourceID3 = "1";
-		$itemObj->CreditorAmount = min($TotalFundDelay , $PayObj->PayAmount);
+		$itemObj->CreditorAmount = $amount;
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد سند");
 			return false;
 		}
-		$PayObj->PayAmount = $PayObj->PayAmount - min($TotalFundDelay , $PayObj->PayAmount);
+		$PayObj->PayAmount = $PayObj->PayAmount - $amount;
 		unset($itemObj->SourceID3);
 	}
 	if($PayObj->PayAmount > 0 && $LoanMode == "Agent" && $PartObj->AgentDelayReturn == "INSTALLMENT")
 	{
-		$dt = PdoDataAccess::runquery("select ifnull(sum(CreditorAmount),0) from ACC_DocItems 
-			where CostID=? AND SourceID=? AND SourceID2=? AND SourceID3=?",
-			array($CostCode_deposite, $ReqObj->RequestID, $PayObj->BackPayID, "1"));
-		
-		$TotalAgentDelay = $TotalAgentDelay*1 - $dt[0][0]*1;
+		$amount = round($TotalAgentDelay*1/$PartObj->InstallmentCount);
+		$amount = min($amount , $PayObj->PayAmount);
 		
 		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType);
-		unset($itemObj->TafsiliID);
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_deposite;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->details = "بابت تنفس وام " . $PayObj->RequestID;
 		$itemObj->SourceID3 = "1";
-		$itemObj->CreditorAmount = min($TotalAgentDelay , $PayObj->PayAmount);
+		$itemObj->CreditorAmount = $amount;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $ReqPersonTafsili;
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد سند");
 			return false;
 		}
-		$PayObj->PayAmount = $PayObj->PayAmount - min($TotalAgentDelay , $PayObj->PayAmount);
+		$PayObj->PayAmount = $PayObj->PayAmount - $amount;
 		unset($itemObj->SourceID3);
 	}
-	//------------- wage --------------
-	if($LoanMode == "Agent")
+	//------------------ delay amount -----------------------
+	if($delayAmount > 0)
 	{
-		if($PayObj->PayAmount*1 > 0)
+		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType);
+		unset($itemObj->TafsiliID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		$itemObj->details = "مبلغ تاخیر وام شماره " . $ReqObj->RequestID ;
+		$itemObj->CostID = $CostCode_wage;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $delayAmount;
+		if(!$itemObj->Add($pdo))
 		{
-			$amount = $PayObj->PayAmount;
+			ExceptionHandler::PushException("خطا در ایجاد ردیف سپرده");
+			return false;
+		}
+		$PayObj->PayAmount -= $delayAmount;
+	}
+	//------------- wage --------------
+	if($LoanMode == "Agent" && $PayObj->PayAmount*1 > 0)
+	{
+		if($PartObj->WageReturn == "INSTALLMENT" && $PartObj->FundWage != $PartObj->CustomerWage)
+		{
+			$curWage = round($PayObj->PayAmount*$TotalFundWage/$PartObj->PartAmount);
+			$amount = $PayObj->PayAmount - $curWage;
+			$amount = $amount < 0 ? 0 : $amount;
 			
 			unset($itemObj->ItemID);
-			$itemObj->CostID = $CostCode_commitment;
-			$itemObj->DebtorAmount = $amount;
-			$itemObj->CreditorAmount = 0;
-			if(!$itemObj->Add($pdo))
-			{
-				ExceptionHandler::PushException("خطا در ایجاد ردیف تعهد");
-				return false;
-			}
-			
-			if($PartObj->WageReturn == "INSTALLMENT" && $PartObj->FundWage > $PartObj->CustomerWage)
-			{
-				$amount = $PayObj->PayAmount - $curWage;
-				$amount = $amount < 0 ? 0 : $amount;
-			}
-			$amount -= $delayAmount;
-			
-			//---- اضافه به سپرده -----
-			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliID);
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
-			$itemObj->details = "پرداخت قسط وام شماره " . $ReqObj->RequestID ;
-			$itemObj->CostID = $CostCode_deposite;
+			$itemObj->details = "کارمزد صندوق وام شماره " . $ReqObj->RequestID ;
+			$itemObj->CostID = $CostCode_wage;
 			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $amount;
-			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $ReqPersonTafsili;
-			if($SubAgentTafsili != "")
-			{
-				$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
-				$itemObj->TafsiliID2 = $SubAgentTafsili;
-			}
+			$itemObj->CreditorAmount = $curWage;
 			if(!$itemObj->Add($pdo))
 			{
 				ExceptionHandler::PushException("خطا در ایجاد ردیف سپرده");
 				return false;
 			}
-			//------------------ delay amount -----------------------
-			if($delayAmount > 0)
-			{
-				unset($itemObj->ItemID);
-				unset($itemObj->TafsiliType);
-				unset($itemObj->TafsiliID);
-				unset($itemObj->TafsiliType2);
-				unset($itemObj->TafsiliID2);
-				$itemObj->details = "مبلغ تاخیر وام شماره " . $ReqObj->RequestID ;
-				$itemObj->CostID = $CostCode_wage;
-				$itemObj->DebtorAmount = 0;
-				$itemObj->CreditorAmount = $delayAmount;
-				if(!$itemObj->Add($pdo))
-				{
-					ExceptionHandler::PushException("خطا در ایجاد ردیف سپرده");
-					return false;
-				}
-			}
-			if($curWage > 0 && $PartObj->FundWage > $PartObj->CustomerWage)
-			{
-				unset($itemObj->ItemID);
-				unset($itemObj->TafsiliType);
-				unset($itemObj->TafsiliID);
-				unset($itemObj->TafsiliType2);
-				unset($itemObj->TafsiliID2);
-				$itemObj->details = "کارمزد صندوق " . $ReqObj->RequestID ;
-				$itemObj->CostID = $CostCode_wage;
-				$itemObj->DebtorAmount = 0;
-				$itemObj->CreditorAmount = $curWage;
-				if(!$itemObj->Add($pdo))
-				{
-					ExceptionHandler::PushException("خطا در ایجاد ردیف سپرده");
-					return false;
-				}
-			}
+		}
+		//---- اضافه به سپرده -----
+		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		$itemObj->details = "پرداخت قسط وام شماره " . $ReqObj->RequestID ;
+		$itemObj->CostID = $CostCode_deposite;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $amount;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $ReqPersonTafsili;
+		if($SubAgentTafsili != "")
+		{
+			$itemObj->TafsiliType2 = TAFTYPE_SUBAGENT;
+			$itemObj->TafsiliID2 = $SubAgentTafsili;
+		}
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد ردیف سپرده");
+			return false;
 		}
 	}
 	

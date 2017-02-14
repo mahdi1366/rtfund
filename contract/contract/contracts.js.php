@@ -35,7 +35,7 @@ ManageContracts.prototype.OperationMenu = function (e)
 	var record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
 
-	if(record.data.IsStarted == "NO" && record.data.IsEnded == "NO")
+	if(record.data.StatusID == "<?= CNT_STEPID_RAW ?>")
 	{
 		op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
 		handler : function(){ return ManageContractsObj.StartFlow(); }});
@@ -46,8 +46,7 @@ ManageContracts.prototype.OperationMenu = function (e)
 
 		if(this.RemoveAccess)
 			op_menu.add({text: ' حذف', iconCls: 'remove',
-			handler: function () {	ManageContractsObj.RemoveContract(record.data.ContractID);	}});
-				
+			handler: function () {	ManageContractsObj.RemoveContract(record.data.ContractID);	}});				
 	}	
 	
 	op_menu.add({text: ' چاپ', iconCls: 'print',
@@ -154,7 +153,7 @@ ManageContracts.prototype.ShowSigns = function(){
 			title: 'امضاهای قرارداد',
 			modal : true,
 			autoScroll : true,
-			width: 600,
+			width: 700,
 			height : 400,
 			bodyStyle : "background-color:white",
 			closeAction : "hide",

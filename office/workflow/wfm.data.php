@@ -63,8 +63,8 @@ function DeleteFlow(){
 
 function selectFlowSteps(){
 	$where = "";
-if(!isset($_REQUEST["all"]))
-$where = " AND IsOuter='NO'";
+	if(!isset($_REQUEST["all"]))
+		$where = " AND IsOuter='NO'";
 	$dt = PdoDataAccess::runquery("select * from WFM_FlowSteps 
 		where IsActive='YES' AND FlowID=? 
                  ". $where , array($_GET["FlowID"]));
@@ -72,24 +72,6 @@ $where = " AND IsOuter='NO'";
 	die();
 }
 
-/*function SetStatus(){
-	
-	$SourceObj = new WFM_FlowRows($_POST["RowID"]);
-	
-	$newObj = new WFM_FlowRows();
-	$newObj->FlowID = $SourceObj->FlowID;
-	$newObj->ObjectID = $SourceObj->ObjectID;
-	$newObj->PersonID = $_SESSION["USER"]["PersonID"];
-	$newObj->StepRowID = $_POST["StepID"];
-	$newObj->ActionType = "CONFIRM";
-	$newObj->ActionDate = PDONOW;
-	$newObj->ActionComment = $_POST["ActionComment"];
-	//$newObj->StepDesc = 
-	$result = $newObj->AddFlowRow();
-	//print_r(ExceptionHandler::PopAllExceptions());
-	echo Response::createObjectiveResponse($result, "");
-	die();
-}*/
 //............................
 
 function SelectSteps(){

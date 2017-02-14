@@ -511,6 +511,21 @@ LetterObject = new Letter();
 
 Letter.prototype.Scan = function(){
 
+	var exampleSocket = new WebSocket("ws://127.0.0.1:13000", "protocolOne");
+	exampleSocket.onmessage = function (event) {
+		alert(event.data);
+	}
+	
+	/*Ext.Ajax.request({
+		url : "127.0.0.1:13000",
+				
+		success : function(response){
+			alert(response.responseText)
+		}
+	});
+*/
+	return;
+
 	scanner.scan(function(successful, mesg, response) {
 			if(!successful) { // On error
 				alert('Failed: ' + mesg);

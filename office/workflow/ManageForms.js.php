@@ -40,6 +40,9 @@ ManageForm.prototype.OperationMenu = function(e){
 		op_menu.add({text: 'تغییر وضعیت',iconCls: 'refresh', 
 		handler : function(){ return ManageFormObject.SetStatus(record); }});
 	
+		op_menu.add({text: 'برگشت شروع فرم',iconCls: 'undo', 
+		handler : function(){ return ManageFormObject.ReturnStartFlow(record); }});
+	
 		op_menu.add({text: 'اطلاعات آیتم',iconCls: 'info2', 
 			handler : function(){ return ManageFormObject.FormInfo(); }});
 	}
@@ -196,5 +199,31 @@ ManageForm.prototype.SetStatus = function(record){
 	this.setStatusWin.center();
 }
 
+ManageForm.prototype.ReturnStartFlow = function(record){
+	
+	Ext.MessageBox.confirm("","آیا مایل به برگشت شروع گردش می باشید؟", function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		mask = new Ext.LoadMask(ManageFormObject.grid, {msg:'در حال ذخيره سازي...'});
+		mask.show();  
+
+		Ext.Ajax.request({
+			methos : "post",
+			url : ManageFormObject.address_prefix + "wfm.data.php",
+			params : {
+				task : "ReturnStartFlow",
+				ObjectID : record.data.ObjectID,
+				FlowID : record.data.FlowID
+			},
+			success : function(){
+				mask.hide();
+				ManageFormObject.grid.getStore().load();
+			}
+		});
+	});
+				
+}
 
 </script>

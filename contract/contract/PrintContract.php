@@ -11,7 +11,7 @@ require_once inc_CurrencyModule;
 $CntObj = new CNT_contracts($_REQUEST['ContractID']);
 $st = $CntObj->GetContractContext();
 //---------------------------------------------------------
-$signs = CNT_ContractSigns::Get(" AND ContractID=?", array($CntObj->ContractID));
+$signs = CNT_ContractSigns::Get(" AND ContractID=? order by description", array($CntObj->ContractID));
 ?>
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>	
@@ -71,9 +71,20 @@ $signs = CNT_ContractSigns::Get(" AND ContractID=?", array($CntObj->ContractID))
 					<?
 						if(count($signs) > 0)
 							$width = round(100/count($signs));
-						foreach($signs as $row)
+						$groups_arr = array();
+						
+						for($i=0; $i<count($signs); $i++)
 						{
-							echo "<div style='float:left;width:$width%;font-weight:bold'>
+							$row = $signs[$i];
+							
+							if(!isset($groups_arr[ $row["description"] ]))
+							{
+								if($i > 0)
+									echo "</fieldset>";
+								echo "<fieldset style='float:right;width:45%;font-weight:bold'><legend>" . $row["description"] . "</legend>";
+								$groups_arr[ $row["description"] ] = true;
+							}
+							echo "<div style='float:right;width:50%;font-weight:bold'>
 									" . $row["fullname"] . $row["SignerName"] . "
 									<br>
 									" . $row["SignerPost"] . "

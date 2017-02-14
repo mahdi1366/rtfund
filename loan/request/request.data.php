@@ -593,14 +593,21 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	}
 	else
 		$pdo = $pdo2;
-	for($i=0; $i < $obj->InstallmentCount-1; $i++)
+	for($i=0; $i < $obj->InstallmentCount; $i++)
 	{
 		$obj2 = new LON_installments();
 		$obj2->RequestID = $RequestID;
-		$obj2->InstallmentDate = DateModules::AddToJDate($jdate, 
-			$obj->IntervalType == "DAY" ? $obj->PayInterval*($i+1) : 0, 
-			$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
-		$obj2->InstallmentAmount = $allPay;
+		
+		if(($obj->DelayDays*1 >0 || $obj->DelayMonths*1 > 0))
+			$obj2->InstallmentDate = DateModules::AddToJDate($jdate, 
+				$obj->IntervalType == "DAY" ? $obj->PayInterval*($i) : 0, 
+				$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i) : 0);
+		else
+			$obj2->InstallmentDate = DateModules::AddToJDate($jdate, 
+				$obj->IntervalType == "DAY" ? $obj->PayInterval*($i+1) : 0, 
+				$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
+		
+		$obj2->InstallmentAmount = $i == $obj->InstallmentCount*1-1 ? $LastPay : $allPay;
 		if(!$obj2->AddInstallment($pdo))
 		{
 			$pdo->rollBack();
@@ -608,20 +615,6 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 			echo Response::createObjectiveResponse(false, "");
 			die();
 		}
-	}
-	
-	$obj2 = new LON_installments();
-	$obj2->RequestID = $RequestID;
-	$obj2->InstallmentDate = DateModules::AddToJDate($jdate, 
-	$obj->IntervalType == "DAY" ? $obj->PayInterval*($obj->InstallmentCount) : 0, 
-	$obj->IntervalType == "MONTH" ? $obj->PayInterval*($obj->InstallmentCount) : 0);
-	$obj2->InstallmentAmount = $LastPay;
-	if(!$obj2->AddInstallment($pdo))
-	{
-		$pdo->rollBack();
-		print_r(ExceptionHandler::PopAllExceptions());
-		echo Response::createObjectiveResponse(false, "");
-		die();
 	}
 	
 	if($returnMode)

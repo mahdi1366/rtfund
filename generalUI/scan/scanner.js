@@ -107,7 +107,7 @@
 		scanAppMinVersionRequired:"2.04",
 		scanAppLicense:undefined,
 		skipLoadDefaultCss:false,
-		scanWebSocketServerRangeLowest:9713,
+		scanWebSocketServerRangeLowest:13000,
 		scanWebSocketServerRangeHighest:9716,
 		scanWebSocketServerPort:undefined,
 		scanWebSocket:undefined,

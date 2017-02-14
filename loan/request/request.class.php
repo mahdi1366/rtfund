@@ -525,7 +525,7 @@ class LON_requests extends PdoDataAccess
 
 	static function ComputePayments2($RequestID, &$installments, $pdo = null){
 
-		$installments = LON_installments::SelectAll("r.RequestID=?" , array($RequestID), $pdo);
+		$installments = LON_installments::SelectAll("r.RequestID=? AND history='NO' AND IsDelayed='NO'" , array($RequestID), $pdo);
 		
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 

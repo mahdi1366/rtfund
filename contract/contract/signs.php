@@ -15,6 +15,10 @@ $dg->addColumn("", "SignID","", true);
 $dg->addColumn("", "ContractID","", true);
 $dg->addColumn("", "fullname","", true);
 
+$col = $dg->addColumn("گروه فرد", "description");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 100;
+
 $col = $dg->addColumn("امضاء کننده داخلی", "PersonID");
 $col->renderer = "function(v,p,r){return r.data.fullname;}";
 $col->editor = "this.SignerCombo";
@@ -38,7 +42,7 @@ $col->renderer = "function(v,p,r){return ContractSign.DeleteRender(v,p,r);}";
 $col->width = 35;
 
 $dg->height = 336;
-$dg->width = 585;
+$dg->width = 685;
 $dg->emptyTextOfHiddenColumns = true;
 $dg->EnableSearch = false;
 $dg->HeaderMenu = false;

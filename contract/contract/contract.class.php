@@ -123,7 +123,7 @@ class CNT_contracts extends OperationClass {
 			
 			where ContractID=? group by ContractID ", array($this->ContractID));
 		
-		print_r(ExceptionHandler::PopAllExceptions());
+		//print_r(ExceptionHandler::PopAllExceptions());
 		$ContractRecord = $temp[0];
 		//---------------------- installment Info --------------------------
 		if($this->LoanRequestID > 0)
@@ -244,6 +244,7 @@ class CNT_ContractSigns extends OperationClass
 	public $PersonID;
 	public $SignerPost;
 	public $SignerName;
+	public $description;
 
 	public static function Get($where = '', $whereParams = array()) {
 		
