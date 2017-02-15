@@ -598,14 +598,9 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 		$obj2 = new LON_installments();
 		$obj2->RequestID = $RequestID;
 		
-		if(($obj->DelayDays*1 >0 || $obj->DelayMonths*1 > 0))
-			$obj2->InstallmentDate = DateModules::AddToJDate($jdate, 
-				$obj->IntervalType == "DAY" ? $obj->PayInterval*($i) : 0, 
-				$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i) : 0);
-		else
-			$obj2->InstallmentDate = DateModules::AddToJDate($jdate, 
-				$obj->IntervalType == "DAY" ? $obj->PayInterval*($i+1) : 0, 
-				$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
+		$obj2->InstallmentDate = DateModules::AddToJDate($jdate, 
+			$obj->IntervalType == "DAY" ? $obj->PayInterval*($i+1) : 0, 
+			$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
 		
 		$obj2->InstallmentAmount = $i == $obj->InstallmentCount*1-1 ? $LastPay : $allPay;
 		if(!$obj2->AddInstallment($pdo))

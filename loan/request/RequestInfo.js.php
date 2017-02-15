@@ -210,13 +210,17 @@ RequestInfo.prototype.OperationMenu = function(e){
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
 		if(this.RemoveAccess)
 			op_menu.add({text: 'حذف',iconCls: 'remove', 
-			handler : function(){ return RequestInfoObject.DeletePart(); }});				
+			handler : function(){ return RequestInfoObject.DeletePart(true); }});				
 	}	
 	if(record.data.IsEnded == "YES")
 	{
 		if(this.EditAccess && firstPart && record.data.IsDocRegister == "NO" && this.RequestRecord.data.IsEnded == "NO")
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
+			
+		if(this.EditAccess && !firstPart)
+			op_menu.add({text: 'حذف',iconCls: 'remove', 
+			handler : function(){ return RequestInfoObject.DeletePart(false); }});	
 	}		
 	
 	if(record.data.StatusID == "70")
@@ -1615,7 +1619,10 @@ RequestInfo.prototype.SavePart = function(){
 	});
 }
 
-RequestInfo.prototype.DeletePart = function(){
+RequestInfo.prototype.DeletePart = function(firstPart){
+
+	if(!firstPart)
+		Ext.MessageBox.alert("","در صورت حذف این شرایط سند اختلاف نیز حذف می گردد");
 
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟",function(btn){
 		if(btn == "no")

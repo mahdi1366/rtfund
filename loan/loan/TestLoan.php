@@ -342,6 +342,11 @@ TestLoan.prototype.LoadSummary = function(){
 	AgentDelayReturn = this.panel.down("[name=AgentDelayReturn]").getValue()  == true ? "CUSTOMER" : "INSTALLMENT";
 	DelayPercent = this.panel.down("[name=DelayPercent]").getValue(); 
 	
+	MaxWage = Math.max(CustomerWage, FundWage);
+	CustomerFactor =	MaxWage == 0 ? 0 : CustomerWage/MaxWage;
+	FundFactor =		MaxWage == 0 ? 0 : FundWage/MaxWage;
+	AgentFactor =		MaxWage == 0 ? 0 : (CustomerWage-FundWage)/MaxWage;
+	
 	PartDate = ShamsiToMiladi(PartDate);
 	if(PayInterval > 0)
 		YearMonths = (IntervalType == "DAY" ) ? 
@@ -365,13 +370,8 @@ TestLoan.prototype.LoadSummary = function(){
 	else
 		TotalDelay = Math.round(PartAmount*DelayPercent*DelayMonths/1200);
 	
-	
 	//-------------------------- installments -----------------------------
-	MaxWage = Math.max(CustomerWage, FundWage);
-	CustomerFactor =	MaxWage == 0 ? 0 : CustomerWage/MaxWage;
-	FundFactor =		MaxWage == 0 ? 0 : FundWage/MaxWage;
-	AgentFactor =		MaxWage == 0 ? 0 : (CustomerWage-FundWage)/MaxWage;
-	
+		
 	var extraAmount = 0;
 	if(WageReturn == "INSTALLMENT")
 	{

@@ -593,7 +593,15 @@ class LON_requests extends PdoDataAccess
 						$TotalForfeit += $CurForfeit;
 						$tempForReturnArr["ForfeitDays"] = $forfeitDays;
 						$tempForReturnArr["CurForfeitAmount"] = $CurForfeit;
-						$tempForReturnArr["ForfeitAmount"] = $TotalForfeit;
+						
+						if($obj->PayCompute == "installment")
+							$tempForReturnArr["ForfeitAmount"] = $TotalForfeit;
+						else
+						{
+							$TotalRemainder += $TotalForfeit;
+							$TotalForfeit = 0;
+							$tempForReturnArr["TotalRemainder"] = $TotalRemainder;
+						}
 					}
 				}
 				else

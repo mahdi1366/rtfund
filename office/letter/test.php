@@ -12,6 +12,7 @@
             ws.onmessage = function (evt) {
 				var received_msg = evt.data;
                 alert("Message received = "+received_msg);
+				document.getElementById("theimage").src = "data:image/bmp;base64," + received_msg;
             };
             ws.onclose = function () {
                 alert("Connection is closed...");
@@ -24,5 +25,6 @@
 <body style="font-size:xx-large" >
     <div>
     <a href="#" onclick="connect()">Click here to start</a></div>
+	<img id="theimage"></img>
 </body>
 </html>
