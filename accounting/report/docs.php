@@ -119,7 +119,8 @@ if(isset($_REQUEST["show"]))
 		return "<a target=_blank href='../docs/print_doc.php?DocID=" . $row["DocID"] . "'>" . $val . "</a>";
 	}
 	
-	$rpg->addColumn("شماره سند", "LocalNo","PrintDocRender");
+	$rpg->addColumn("شماره سند", "LocalNo",$rpg->excel ? "" : "PrintDocRender");
+	
 	$rpg->addColumn("تاریخ سند", "DocDate","dateRender");
 	//$rpg->addColumn("تاریخ ثبت سند", "RegDate","dateRender");
 	$rpg->addColumn("ثبت کننده سند", "regPerson");

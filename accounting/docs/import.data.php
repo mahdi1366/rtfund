@@ -2082,6 +2082,8 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	}
 	$itemObj->locked = "YES";
 	$itemObj->DocID = $obj->DocID;
+	unset($itemObj->TafsiliType);
+	unset($itemObj->TafsiliID);
 	unset($itemObj->TafsiliType2);
 	unset($itemObj->TafsiliID2);
 	//-------------- extra to Pasandaz ----------------
