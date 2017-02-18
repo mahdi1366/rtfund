@@ -482,6 +482,7 @@ function IncomeCheque(){
 				name : "ChequeNo",
 				colspan : 2,
 				allowBlank : false,
+				minValue : 1,
 				hideTrigger : true,
 				fieldLabel : "شماره چک"
 			},{
@@ -1130,16 +1131,20 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 				},{
 					xtype : "shdatefield",
 					name : "ChequeDate",
+					allowBlank : false,
 					fieldLabel : "تاریخ چک"
 				},{
 					xtype : "currencyfield",
 					name : "ChequeAmount",
 					hideTrigger : true,
+					allowBlank : false,
 					fieldLabel : "مبلغ چک"
 				},{
 					xtype : "numberfield",
 					name : "ChequeNo",
 					hideTrigger : true,
+					minValue : 1,
+					allowBlank : false,
 					fieldLabel : "شماره چک"
 				},{
 					xtype : "combo",
@@ -1232,6 +1237,9 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 
 IncomeCheque.prototype.SaveLoanCheque = function(){
 		
+	if(!this.LoanChequeWin.down('form').getForm().isValid())
+		return;
+	
 	var store_data = new Array();
 	this.GroupCheques.each(function(record){
 		store_data.push(JSON.stringify({

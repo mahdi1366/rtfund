@@ -94,7 +94,13 @@ if(isset($_REQUEST["show"]))
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.DocStatus != 'RAW' ";
 	
-	$query .= " group by DocID order by DocDate";
+	$query .= " group by DocID ";
+	
+	if(isset($_POST["NotTaraz"]))
+		$query .= " having bsSum<>bdSum";
+	
+	$query .= " order by DocDate";
+	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 
 	$rpg = new ReportGenerator();
@@ -284,6 +290,10 @@ function AccReport_docs()
 			xtype : "textfield",
 			name : "details",
 			fieldLabel : "جزئیات ردیف"
+		},{
+			xtype : "container",
+			colspan : 2,
+			html : "<input type=checkbox name=NotTaraz> اسنادی که تراز نمی باشند"
 		},{
 			xtype : "container",
 			colspan : 2,

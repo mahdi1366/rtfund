@@ -74,10 +74,10 @@ class ACC_IncomeCheques extends OperationClass{
 
 	function Add($pdo = null) {
 		
-		$dt = self::Get(" AND ChequeNo=? AND ChequeDate=?", array($this->ChequeNo, DateModules::shamsi_to_miladi($this->ChequeDate)));
+		$dt = self::Get(" AND ChequeNo=?", array($this->ChequeNo));
 		if($dt->rowCount() > 0)
 		{
-			ExceptionHandler::PushException("چک دیگری با این شماره و تاریخ قبلا ثبت شده است");
+			ExceptionHandler::PushException("چک دیگری با این شماره قبلا ثبت شده است");
 			return false;
 		}
 		

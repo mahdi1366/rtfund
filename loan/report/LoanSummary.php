@@ -142,6 +142,7 @@ BeginReport();
 					<td>ردیف</td>
 					<td>تاریخ پرداخت</td>
 					<td>نوع پرداخت</td>
+					<td>وضعیت چک</td>
 					<td>مبلغ</td>
 					<td>شماره فیش/پیگیری/چک</td>
 				</tr>
@@ -151,19 +152,25 @@ BeginReport();
 					$sum = 0;
 					foreach($dt as $row)
 					{
+						$color = $row["PayType"] == BACKPAY_PAYTYPE_CHEQUE && $row["ChequeStatus"] != INCOMECHEQUE_VOSUL ? "gray" : "black";
+						
 						echo "<tr><td>" . $index++ . 
 							"</td><td>" . DateModules::miladi_to_shamsi($row["PayDate"]) .
 							"</td><td>" . $row["PayTypeDesc"] . 
-							"</td><td>" . number_format($row["PayAmount"]) . "</td>" . 
+							"</td><td>" . $row["ChequeStatusDesc"] . 							
+							"</td><td style=color:$color>" . number_format($row["PayAmount"]) . "</td>" . 
 							"</td><td>" . $row["PayBillNo"] . $row["PayRefNo"] . $row["ChequeNo"] . 
 							"</td></tr>";
-							
-						$sum += $row["PayAmount"]*1;
+						
+						if($row["PayType"] != BACKPAY_PAYTYPE_CHEQUE)
+							$sum += $row["PayAmount"]*1;
+						else if($row["ChequeStatus"] == INCOMECHEQUE_VOSUL)
+								$sum += $row["PayAmount"]*1;
 					}
 				?>
 				<tr class="TBLheader">
-					<td colspan="4" align="left">جمع : </td>
-					<td><?= number_format($sum) ?></td>
+					<td colspan="4" align="left">جمع پرداختی: </td>
+					<td colspan="2"><?= number_format($sum) ?></td>
 				</tr>
 			</table>
 			<br>

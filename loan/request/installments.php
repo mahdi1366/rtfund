@@ -36,11 +36,11 @@ $dg->addColumn("", "ChequeBranch", "", true);
 $dg->addColumn("", "history", "", true);
 
 $col = $dg->addColumn("سررسید", "InstallmentDate", GridColumn::ColumnType_date);
-$col->editor = ColumnEditor::SHDateField();
+//$col->editor = ColumnEditor::SHDateField();
 $col->width = 80;
 
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
-$col->editor = ColumnEditor::CurrencyField();
+//$col->editor = ColumnEditor::CurrencyField();
 
 $col = $dg->addColumn("مبلغ تاخیر", "ForfeitAmount", GridColumn::ColumnType_money);
 $col->width = 80;
@@ -63,8 +63,8 @@ if($editable && $accessObj->EditFlag)
 {
 	$dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", 
 			"function(){InstallmentObject.ComputeInstallments();}");
-	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SaveInstallment(store,record);}";
+	//$dg->enableRowEdit = true;
+	//$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SaveInstallment(store,record);}";
 	
 	$dg->addButton("", "تغییر اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
 }

@@ -301,9 +301,10 @@ LoanPay.DeleteRender = function(v,p,r){
 
 LoanPay.RegDocRender = function(v,p,r){
 	
-	if(r.data.PayType == "<?= BACKPAY_PAYTYPE_CHEQUE ?>" 
-		|| r.data.PayType == "<?= BACKPAY_PAYTYPE_EPAY ?>"
-		|| r.data.PayType == "<?= BACKPAY_PAYTYPE_CORRECT ?>")
+	if(	<?= $_SESSION["USER"]["UserName"] == "admin" ? "false" : "true" ?> && (	
+		r.data.PayType == "<?= BACKPAY_PAYTYPE_CHEQUE ?>" 
+		||  r.data.PayType == "<?= BACKPAY_PAYTYPE_EPAY ?>"
+		||  r.data.PayType == "<?= BACKPAY_PAYTYPE_CORRECT ?>"))
 		return r.data.LocalNo;
 	
 	if(r.data.LocalNo == null)

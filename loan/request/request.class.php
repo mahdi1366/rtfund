@@ -924,6 +924,7 @@ class LON_BackPays extends PdoDataAccess
 		return PdoDataAccess::runquery("
 			select p.*,
 				i.ChequeNo,
+				i.ChequeStatus,
 				t.TafsiliDesc ChequeStatusDesc,
 				bi.InfoDesc PayTypeDesc, 				
 				d.LocalNo,
@@ -991,6 +992,13 @@ class LON_BackPays extends PdoDataAccess
 		if(count($dt) == 0)
 			return 0;
 		return $dt[0][0];
+	}
+	
+	static function GetRealPaid($RequestID){
+		
+		return LON_BackPays::SelectAll(" RequestID=? 
+			AND if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+			AND PayType<>" . BACKPAY_PAYTYPE_CORRECT, array($RequestID));
 	}
 }
 
