@@ -1231,7 +1231,6 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		$diferences["TotalAgentDelay"] += $result_new["TotalAgentDelay"]*1 - $result_old["TotalAgentDelay"]*1;
 	}
 	$ExtraAmount = 0;
-	$ExtraCommitmetAmount = 0;
 	//----------------- add Doc items ------------------------
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
@@ -1499,6 +1498,98 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 				return false;
 			}
 		}*/
+	}
+	//--------------- differences of backPays -----------------
+	$prevResult = ComputeWagesAndDelays($PreviousPartObj, $PreviousPartObj->PartAmount, $PreviousPartObj->PartDate, $PreviousPartObj->PartDate);
+	$newResult = ComputeWagesAndDelays($NewPartObj, $NewPartObj->PartAmount, $NewPartObj->PartDate, $NewPartObj->PartDate);
+	
+	$PrevTotalBackPay = $PreviousPartObj->PartAmount*1 + 
+		GetExtraLoanAmount($PreviousPartObj,$prevResult["TotalFundWage"],$prevResult["TotalCustomerWage"],
+				$prevResult["TotalAgentWage"],$prevResult["TotalFundDelay"], $prevResult["TotalAgentDelay"]);
+	$newTotalBackPay = $NewPartObj->PartAmount*1 + 
+		GetExtraLoanAmount($NewPartObj,$newResult["TotalFundWage"],$newResult["TotalCustomerWage"],
+				$newResult["TotalAgentWage"],$newResult["TotalFundDelay"], $newResult["TotalAgentDelay"]);
+	
+	$dt = LON_BackPays::GetRealPaid($RequestID);
+	$prevRemain = $PrevTotalBackPay;
+	$newRemain = $newTotalBackPay;
+	$diffFundDelayShare = $diffAgentDelayShare = $diffFundWageShare = 0;
+	foreach($dt as $row)
+	{
+		$prevFundDelayShare = $prevAgentDelayShare = $prevFundWageShare = 0;
+		
+		if($PreviousPartObj->DelayReturn == "INSTALLMENT")
+		{
+			$prevPayAmount = min($prevRemain, $row["PayAmount"]*1);
+			$prevFundDelayShare = round($prevResult["TotalFundDelay"]*$prevPayAmount/$PrevTotalBackPay);
+		}
+		if($PreviousPartObj->AgentDelayReturn == "INSTALLMENT")
+		{
+			$prevPayAmount = min($prevRemain, $row["PayAmount"]*1);
+			$prevAgentDelayShare = round($prevResult["TotalAgentDelay"]*$prevPayAmount/$PrevTotalBackPay);
+		}
+		if($PreviousPartObj->WageReturn == "INSTALLMENT")
+		{
+			$prevPayAmount = min($prevRemain, $row["PayAmount"]*1);
+			$prevFundWageShare = round($prevResult["TotalFundWage"]*$prevPayAmount/$PrevTotalBackPay);
+		}
+		$prevRemain -= $prevPayAmount;
+		//..............................................
+		$newFundDelayShare = $newAgentDelayShare = $newFundWageShare = 0;
+		
+		if($NewPartObj->DelayReturn == "INSTALLMENT")
+		{
+			$newPayAmount = min($newRemain, $row["PayAmount"]*1);
+			$newFundDelayShare = round($newResult["TotalFundDelay"]*$newPayAmount/$newTotalBackPay);
+		}
+		if($NewPartObj->AgentDelayReturn == "INSTALLMENT")
+		{
+			$newPayAmount = min($newRemain, $row["PayAmount"]*1);
+			$newAgentDelayShare = round($newResult["TotalAgentDelay"]*$newPayAmount/$newTotalBackPay);
+		}
+		if($NewPartObj->WageReturn == "INSTALLMENT")
+		{
+			$newPayAmount = min($newRemain, $row["PayAmount"]*1);
+			$newFundWageShare = round($newResult["TotalFundWage"]*$newPayAmount/$newTotalBackPay);
+		}
+		$newRemain -= $newPayAmount;
+		
+		$diffFundDelayShare += $newFundDelayShare - $prevFundDelayShare;
+		$diffAgentDelayShare += $newAgentDelayShare - $prevAgentDelayShare;
+		$diffFundWageShare += $newFundWageShare - $prevFundWageShare;
+	}
+	if($diffFundWageShare != 0)
+	{
+		$itemObj = new ACC_DocItems();
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = $CostCode_wage;
+		$itemObj->DebtorAmount = $diffFundWageShare < 0 ? abs($diffFundWageShare) : 0;
+		$itemObj->CreditorAmount = $diffFundWageShare > 0 ? $diffFundWageShare : 0;	
+		$itemObj->locked = "YES";
+		$itemObj->details = "اختلاف پرداخت های مشتری وام شماره " . $ReqObj->RequestID;
+		$itemObj->SourceID = $ReqObj->RequestID;
+		$itemObj->SourceID2 = $NewPartObj->PartID;		
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد ردیف مازاد");
+			return false;
+		}
+		$itemObj = new ACC_DocItems();
+		$itemObj->DocID = $obj->DocID;
+		$itemObj->CostID = $CostCode_deposite;
+		$itemObj->DebtorAmount = $diffFundWageShare > 0 ? $diffFundWageShare : 0;	
+		$itemObj->CreditorAmount = $diffFundWageShare < 0 ? abs($diffFundWageShare) : 0;
+		$itemObj->locked = "YES";
+		$itemObj->details = "اختلاف پرداخت های مشتری وام شماره " . $ReqObj->RequestID;
+		$itemObj->SourceID = $ReqObj->RequestID;
+		$itemObj->SourceID2 = $NewPartObj->PartID;		
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $ReqPersonTafsili;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد ردیف مازاد");
+			return false;
+		}
 	}
 	//---------------------------------------------------------
 	if(ExceptionHandler::GetExceptionCount() > 0)
