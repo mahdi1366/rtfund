@@ -110,6 +110,30 @@ ManageRequest.prototype.OperationMenu = function(e){
 	op_menu.add({text: 'رویدادها',iconCls: 'task', 
 		handler : function(){ return ManageRequestObject.ShowEvents(); }});
 	
+	op_menu.add({
+				text: 'اقساط',
+				itemId : "cmp_installments",
+				iconCls: 'list',
+				handler : function(){ return ManageRequestObject.LoadInstallments(); }
+			},{
+				text: 'پرداخت های مشتری',
+				itemId : "cmp_BackPays",
+				iconCls: 'list',
+				handler : function(){ return ManageRequestObject.LoadBackPays(); }
+			},{
+				text: 'مراحل پرداخت',
+				itemId : "cmp_payments",
+				iconCls: 'epay',
+				handler : function(){ return ManageRequestObject.LoadPayments(); }
+			},{
+				text : 'هزینه ها',
+				iconCls : "account",
+				hidden : true,
+				itemId : "cmp_costs",
+				handler : function(){ ManageRequestObject.ShowCosts(); }
+			});
+	
+	
 	op_menu.add({text: 'چاپ رسید اقساط',iconCls: 'print', 
 		handler : function(){ 
 			record = ManageRequestObject.grid.getSelectionModel().getLastSelected();
@@ -316,6 +340,141 @@ ManageRequest.prototype.ShowEvents = function(){
 			ExtTabID : this.EventsWin.getEl().id,
 			RequestID : record.data.RequestID,
 			MenuID : this.MenuID
+		}
+	});
+}
+
+//.........................................................
+
+ManageRequest.prototype.LoadInstallments = function(){
+	
+	if(!this.InstallmentsWin)
+	{
+		this.InstallmentsWin = new Ext.window.Window({
+			width : 770,
+			title : "لیست اقساط",
+			height : 410,
+			modal : true,
+			loader : {
+				url : this.address_prefix + "installments.php",
+				method : "post",
+				scripts : true
+			},
+			closeAction : "hide"
+		});
+		
+		Ext.getCmp(this.TabID).add(this.InstallmentsWin);
+	}
+	this.InstallmentsWin.show();
+	this.InstallmentsWin.center();
+	
+	this.InstallmentsWin.loader.load({
+		params : {
+			MenuID : this.MenuID,
+			ExtTabID : this.InstallmentsWin.getEl().id,
+			RequestID : this.grid.getSelectionModel().getLastSelected().data.RequestID
+		}
+	});
+}
+
+ManageRequest.prototype.LoadBackPays = function(){
+	
+	if(!this.PayWin)
+	{
+		this.PayWin = new Ext.window.Window({
+			width : 870,
+			title : "لیست پرداخت های مشتری",
+			height : 410,
+			modal : true,
+			loader : {
+				url : this.address_prefix + "BackPays.php",
+				method : "post",
+				scripts : true
+			},
+			closeAction : "hide"
+		});
+		
+		Ext.getCmp(this.TabID).add(this.PayWin);
+	}
+	this.PayWin.show();
+	this.PayWin.center();
+	
+	this.PayWin.loader.load({
+		params : {
+			MenuID : this.MenuID,
+			ExtTabID : this.PayWin.getEl().id,
+			RequestID : this.grid.getSelectionModel().getLastSelected().data.RequestID
+		}
+	});
+	
+	this.PayWin.show();
+	this.PayWin.center();
+}
+
+ManageRequest.prototype.LoadPayments = function(){
+	
+	if(!this.PaymentWin)
+	{
+		this.PaymentWin = new Ext.window.Window({
+			width : 422,
+			title : "مراحل پرداخت",
+			height : 305,
+			modal : true,
+			loader : {
+				url : this.address_prefix + "payments.php",
+				method : "post",
+				scripts : true
+			},
+			closeAction : "hide"
+		});
+		
+		Ext.getCmp(this.TabID).add(this.PaymentWin);
+	}
+	this.PaymentWin.show();
+	this.PaymentWin.center();
+	
+	this.PaymentWin.loader.load({
+		params : {
+			MenuID : this.MenuID,
+			ExtTabID : this.PaymentWin.getEl().id,
+			RequestID : this.grid.getSelectionModel().getLastSelected().data.RequestID
+		}
+	});
+}
+
+ManageRequest.prototype.ShowCosts = function(){
+
+	if(!this.CostsWin)
+	{
+		this.CostsWin = new Ext.window.Window({
+			title: 'هزینه های ضمانت نامه',
+			modal : true,
+			autoScroll : true,
+			width: 600,
+			height : 400,
+			bodyStyle : "background-color:white",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "costs.php",
+				scripts : true
+			},
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){
+					this.up('window').hide();
+				}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.CostsWin);
+	}
+	this.CostsWin.show();
+	this.CostsWin.center();	
+	this.CostsWin.loader.load({
+		params : {
+			MenuID : this.MenuID,
+			ExtTabID : this.CostsWin.getEl().id,
+			RequestID : this.grid.getSelectionModel().getLastSelected().data.RequestID
 		}
 	});
 }
