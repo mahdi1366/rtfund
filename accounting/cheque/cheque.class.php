@@ -45,7 +45,7 @@ class ACC_IncomeCheques extends OperationClass{
 			
 			FROM ACC_IncomeCheques o
 
-			join ACC_CostCodes cc using(CostID)
+			left join ACC_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
 			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
@@ -74,7 +74,8 @@ class ACC_IncomeCheques extends OperationClass{
 
 	function Add($pdo = null) {
 		
-		$dt = self::Get(" AND ChequeNo=?", array($this->ChequeNo));
+		$dt = self::Get(" AND o.ChequeNo=?", array($this->ChequeNo));
+		
 		if($dt->rowCount() > 0)
 		{
 			ExceptionHandler::PushException("چک دیگری با این شماره قبلا ثبت شده است");

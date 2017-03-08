@@ -142,7 +142,7 @@ if(isset($_REQUEST["show"]))
 		{
 			if($rpg2->mysql_resource[$i]["InstallmentDate"] <= DateModules::Now())
 			{
-				if($i == count($rpg2->mysql_resource)-1)
+				if($i == (count($rpg2->mysql_resource)-1) )
 				{
 					$EndingAmount = 0;
 					break;
@@ -159,12 +159,13 @@ if(isset($_REQUEST["show"]))
 			$EndingDate = $rpg2->mysql_resource[0]["InstallmentDate"];
 			$EndingInstallment = $rpg2->mysql_resource[0]["InstallmentID"];
 		}
+		
 		//----------------------
 		for($i=count($rpg->mysql_resource)-1; $i != 0;$i--)
 		{
 			$row = $rpg->mysql_resource[$i];
 			
-			if($row["InstallmentID"] == $EndingInstallment)
+			if($row["InstallmentID"] == $EndingInstallment || $EndingInstallment == 0)
 			{
 				$EndingAmount += $row["TotalRemainder"];
 				break;

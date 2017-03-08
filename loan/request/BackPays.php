@@ -505,11 +505,11 @@ LoanPay.prototype.BeforeRegisterDoc = function(mode){
 	}
 	
 	record =  this.grid.getSelectionModel().getLastSelected(); 
-	if(record && mode != 3 && record.data.PayType == "9")
+	/*if(record && mode != 3 && record.data.PayType == "<?= BACKPAY_PAYTYPE_CHEQUE ?>")
 	{
 		LoanPayObject.RegisterDoc(mode); 
 		return;
-	}
+	}*/
 	
 	this.BankWin.show();
 	this.BankWin.down("[itemId=btn_save]").setHandler(function(){ 

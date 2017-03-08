@@ -752,6 +752,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 		this.CalcWin.show();
 		this.CalcWin.loader.load();
 	}
+	
 	//..........................................................................
 	var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
 	Ext.QuickTips.init();
