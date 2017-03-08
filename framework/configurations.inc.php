@@ -10,7 +10,7 @@ class sys_config{
 	          "host"     => "localhost",
 	          "database" => "krrtfir_rtfund",
 	          "user"     => "root",
-	          "pass"     => "1297"
+	          "pass"     => ""
 	 );
 }
 

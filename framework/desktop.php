@@ -148,7 +148,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 		<script type="text/javascript" src="/generalUI/ext4/ux/ImageViewer.js"></script>
 		<link rel="stylesheet" type="text/css" href="/office/icons/icons.css" />		
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/ux/calendar/resources/css/calendar.css" />
-		<script src="/generalUI/scan/scanner.js" type="text/javascript"></script>
+		
 	<style>
 		
 		.infoBox {
@@ -752,17 +752,6 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 		this.CalcWin.show();
 		this.CalcWin.loader.load();
 	}
-	//..........................................................................
-	Ext.Loader.setConfig({
-		enabled: true,
-		paths: {
-			'Ext.calendar': '/generalUI/ext4/ux/calendar/src'
-		}
-	});
-
-	Ext.require([
-		'Ext.calendar.CalendarPanel'
-	]);
 	//..........................................................................
 	var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
 	Ext.QuickTips.init();
