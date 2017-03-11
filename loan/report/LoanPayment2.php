@@ -14,11 +14,12 @@ if(isset($_REQUEST["show"]))
 	$RequestID = $_REQUEST["RequestID"];
 	$ReqObj = new LON_requests($RequestID);
 	$dt = array();
-	$returnArr = LON_requests::ComputePayments2($RequestID, $dt);
-	$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
-
+	$ComputeArr = LON_requests::ComputePayments2($RequestID, $dt);
+	$PureArr = LON_requests::ComputePures($RequestID);
 	//............ get remain untill now ......................
-	$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $returnArr);
+	$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr);
+	$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID, $ComputeArr);
+	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
 	//.........................................................
 	
 	$rpg = new ReportGenerator();
@@ -45,7 +46,7 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg->addColumn("مانده کل", "TotalRemainder","ReportMoneyRender");
 	
-	$rpg->mysql_resource = $returnArr;
+	$rpg->mysql_resource = $ComputeArr;
 	BeginReport();
 	echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 			<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
@@ -64,7 +65,7 @@ if(isset($_REQUEST["show"]))
 	$report2 = "";
 	if($ReqObj->ReqPersonID != SHEKOOFAI)
 	{
-		$extraAmount = 0;
+		/*$extraAmount = 0;
 		$startDate = DateModules::miladi_to_shamsi($PartObj->PartDate);
 		$DelayDuration = DateModules::JDateMinusJDate(
 			DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths), $startDate)+1;
@@ -133,85 +134,22 @@ if(isset($_REQUEST["show"]))
 		ob_start();
 		$rpg2->generateReport();
 		$report2 = ob_get_clean();
+		*/
+		//..........................................................
+		$rpg2 = new ReportGenerator();
+		$rpg2->mysql_resource = $PureArr;
 
-		//..........................................................
-		$EndingAmount = -1;
-		$EndingDate = DateModules::Now(); 
-		$EndingInstallment = 0;
-		for($i=count($rpg2->mysql_resource)-1; $i >= 0;$i--)
-		{
-			if($rpg2->mysql_resource[$i]["InstallmentDate"] <= DateModules::Now())
-			{
-				if($i == (count($rpg2->mysql_resource)-1) )
-				{
-					$EndingAmount = 0;
-					break;
-				}
-				$EndingAmount = $rpg2->mysql_resource[$i+1]["pureAmount"]*1;
-				$EndingDate = $rpg2->mysql_resource[$i]["InstallmentDate"];
-				$EndingInstallment = $rpg2->mysql_resource[$i]["InstallmentID"];
-				break;
-			}
-		}	
-		if($EndingAmount == -1)
-		{
-			$EndingAmount = $rpg2->mysql_resource[0]["pureAmount"]*1;
-			$EndingDate = $rpg2->mysql_resource[0]["InstallmentDate"];
-			$EndingInstallment = $rpg2->mysql_resource[0]["InstallmentID"];
-		}
-		
-		//----------------------
-		for($i=count($rpg->mysql_resource)-1; $i != 0;$i--)
-		{
-			$row = $rpg->mysql_resource[$i];
-			
-			if($row["InstallmentID"] == $EndingInstallment || $EndingInstallment == 0)
-			{
-				$EndingAmount += $row["TotalRemainder"];
-				break;
-			}
-			
-			if($row["ActionType"] == "pay")
-			{
-				$EndingAmount += $row["TotalRemainder"];
-				break;
-			}
-		}
-		
-		$EndingAmount += $returnArr[ count($returnArr)-1 ]["ForfeitAmount"]*1;
-		//..........................................................
-		/*$TotalUsedPayAmount = 0;
-		$LastPayedInstallment = null;
-		foreach($rpg->mysql_resource as $row)
-		{
-			if($row["ActionType"] == "installment" && $row["TotalRemainder"]*1 <= 0)
-			{
-				$LastPayedInstallment = $row;
-				$TotalUsedPayAmount = -1*$row["TotalRemainder"]*1;
-			}
-		}
-		if($LastPayedInstallment == null)
-			$EndingAmount = $returnArr[count($returnArr)-1]["TotalRemainder"]*1 + 
-								$returnArr[ count($returnArr)-1 ]["ForfeitAmount"]*1;
-		else
-		{
-			for($i=0; $i < count($rpg2->mysql_resource);$i++)
-			{
-				if($rpg2->mysql_resource[$i]["InstallmentID"] == $LastPayedInstallment["InstallmentID"])
-				{
-					if($i+1 == count($rpg2->mysql_resource) )
-						$EndingAmount = $rpg->mysql_resource[ count($rpg->mysql_resource)-1 ]["TotalRemainder"];
-					else
-						$EndingAmount = $rpg2->mysql_resource[$i+1]["pureAmount"]*1 + 
-							$rpg->mysql_resource[ count($rpg->mysql_resource)-1 ]["ForfeitAmount"]*1 -
-							$TotalUsedPayAmount;
-					break;
-				}
-			}
-		}*/
+		$col = $rpg2->addColumn("تاریخ قسط", "InstallmentDate","ReportDateRender");
+		$col = $rpg2->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
+		$col = $rpg2->addColumn("بهره قسط", "profit","ReportMoneyRender");
+		$col = $rpg2->addColumn("بهره قسط (تجمعي)", "SumProfit","ReportMoneyRender");
+		$col = $rpg2->addColumn("اصل قسط", "pureAmount","ReportMoneyRender");
+		$col = $rpg2->addColumn("مانده اصل وام", "pureRemain","ReportMoneyRender");
+		ob_start();
+		$rpg2->generateReport();
+		$report2 = ob_get_clean();
 		//..........................................................
 	}
-	//..........................................................
 	?>
 	<table style="border:2px groove #9BB1CD;border-collapse:collapse;width:100%;font-family: nazanin;
 		   font-size: 16px;line-height: 20px;">
@@ -237,15 +175,13 @@ if(isset($_REQUEST["show"]))
 					</tr>
 					<tr>
 						<td>مانده تا انتها : </td>
-						<td><b><?= number_format(
-								$returnArr[count($returnArr)-1]["TotalRemainder"]*1 + 
-								$returnArr[ count($returnArr)-1 ]["ForfeitAmount"]*1)?> ریال
+						<td><b><?= number_format($TotalRemain)?> ریال
 							</b></td>
 					</tr>
 					<? if($ReqObj->ReqPersonID != SHEKOOFAI){ ?>
 					<tr>
 						<td>مبلغ قابل پرداخت در صورت تسویه وام :</td>
-						<td><b><?= number_format($EndingAmount) ?> ریال
+						<td><b><?= number_format($DefrayAmount) ?> ریال
 							</b></td>
 					</tr>
 					<? } ?>
@@ -257,9 +193,7 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg->generateReport();
 	
-	echo "<br>";
-	
-	echo $report2;
+	echo "<br>" . $report2;	
 	
 	die();
 }

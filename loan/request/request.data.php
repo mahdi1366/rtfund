@@ -425,16 +425,38 @@ function GetRequestTotalRemainder(){
 	if(count($returnArr) > 0 && $returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1 > 0)
 		$remain = $returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1;
 	
+	
 	echo Response::createObjectiveResponse(true, $remain);
 	die();
 }
 
 function EndRequest(){
 	
-	$ReqObj = new LON_requests($_POST["RequestID"]);
+	$RequestID = $_POST["RequestID"];
+	$ReqObj = new LON_requests($RequestID);
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
+	
+	$dt = array();
+	$computeArr = LON_requests::ComputePayments2($RequestID, $dt);
+	$pureAmount = LON_requests::GetDefrayAmount($RequestID, $computeArr);
+	if($pureAmount == 0)
+	{
+		$remain = LON_requests::GetTotalRemainAmount($RequestID, $computeArr);
+		
+		$obj = new LON_costs();
+		$obj->CostDate = PDONOW;
+		$obj->RequestID = $RequestID;
+		$obj->CostDesc = "بابت تسویه حساب وام";
+		$obj->CostAmount = -1*$remain;
+		if(!$obj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد هزینه");
+			return false;
+		}
+		//RegisterLoanCost($obj, $CostID, $TafsiliID, $TafsiliID2, $pdo)
+	}
 	
 	if(!RegisterEndRequestDoc($ReqObj, $pdo))
 	{

@@ -523,10 +523,11 @@ class LON_requests extends PdoDataAccess
 		return $returnArr;
 	}
 
+	//-------------------------------------
+	
 	static function ComputePayments2($RequestID, &$installments, $pdo = null){
 
-		$installments = LON_installments::SelectAll("r.RequestID=? AND history='NO' AND IsDelayed='NO'" , array($RequestID), $pdo);
-		
+		$installments = LON_installments::GetValidInstallments($RequestID, $pdo);
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 
 		$returnArr = array();
@@ -713,14 +714,64 @@ class LON_requests extends PdoDataAccess
 		return $returnArr;
 	}
 	
-	static function GetCurrentRemainAmount($RequestID, $returnArr=null)
-	{
+	static function ComputePures($RequestID){
+		
+		$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
+		$temp = LON_installments::GetValidInstallments($RequestID);
+		//.............................
+		$result = ComputeWagesAndDelays($PartObj, $PartObj->PartAmount, $PartObj->PartDate, $PartObj->PartDate);
+		$TotalFundDelay = $result["TotalFundDelay"];
+		$TotalAgentDelay = $result["TotalAgentDelay"];
+		$DelayAmount = 0;
+		if($PartObj->DelayReturn == "INSTALLMENT")
+			$DelayAmount += $TotalFundDelay;
+		if($TotalAgentDelay > 0 && $PartObj->AgentDelayReturn == "INSTALLMENT")
+			$DelayAmount += $TotalAgentDelay;
+		$totalBackPay = $PartObj->PartAmount*1 + $DelayAmount;
+		//.............................
+		for($i=0; $i< count($temp); $i++)
+		{
+			$prevRow = $i == 0 ? null : $temp[$i-1];
+			$row = &$temp[$i];
+			
+			//.............................
+			if($PartObj->PayInterval == 0)
+				$row["profit"] = 0;
+			else
+			{
+				$R = $PartObj->IntervalType == "MONTH" ? 
+					1200/$PartObj->PayInterval : 36500/$PartObj->PayInterval;
+				$V = !$prevRow ? $PartObj->PartAmount : $prevRow["EndingBalance"];
+				$row["profit"] = round( $V*($PartObj->CustomerWage/$R) );
+			}
+			//.............................
+			if(!$prevRow)
+				$row["SumProfit"] = $row["profit"];
+			else
+				$row["SumProfit"] = $prevRow["SumProfit"] + $row["profit"];
+			//.............................
+			$row["pureAmount"] = $row["InstallmentAmount"] - $row["profit"];
+			//.............................
+			if(!$prevRow)
+				$row["pureRemain"] = $totalBackPay;
+			else
+				$row["pureRemain"] = $prevRow["EndingBalance"];	
+
+			$row["EndingBalance"] = $row["pureRemain"] - ($row["InstallmentAmount"] - $row["profit"]);
+			//.............................
+		}
+		
+		return $temp;
+	}
+	
+	static function GetCurrentRemainAmount($RequestID, $computeArr=null){
+		
 		$dt = array();
-		if($returnArr == null)
-			$returnArr = self::ComputePayments2($RequestID, $dt);
+		if($computeArr == null)
+			$computeArr = self::ComputePayments2($RequestID, $dt);
 		
 		$CurrentRemain = 0;
-		foreach($returnArr as $row)
+		foreach($computeArr as $row)
 		{
 			if($row["ActionDate"] <= DateModules::Now())
 			{
@@ -732,10 +783,77 @@ class LON_requests extends PdoDataAccess
 		}
 		return $CurrentRemain;
 	}
+	
+	static function GetTotalRemainAmount($RequestID, $computeArr=null){
+		
+		$dt = array();
+		if($computeArr == null)
+			$computeArr = self::ComputePayments2($RequestID, $dt);
+		
+		return $computeArr[count($computeArr)-1]["TotalRemainder"]*1 + 
+				$computeArr[ count($computeArr)-1 ]["ForfeitAmount"]*1;
+	}
+	
+	static function GetDefrayAmount($RequestID, $computeArr=null, $PureArr = null){
+
+		if($computeArr == null)
+			$computeArr = self::ComputePayments2($RequestID, $dt);
+		if($PureArr == null)
+			$PureArr = self::ComputePures($RequestID);
+		
+		$EndingAmount = -1;
+		$EndingDate = DateModules::Now(); 
+		$EndingInstallment = 0;
+		for($i=count($PureArr)-1; $i >= 0;$i--)
+		{
+			if($PureArr[$i]["InstallmentDate"] <= DateModules::Now())
+			{
+				if($i == (count($PureArr)-1) )
+				{
+					$EndingAmount = 0;
+					break;
+				}
+				$EndingAmount = $PureArr[$i+1]["pureRemain"]*1;
+				$EndingDate = $PureArr[$i]["InstallmentDate"];
+				$EndingInstallment = $PureArr[$i]["InstallmentID"];
+				break;
+			}
+		}	
+		//echo $EndingAmount . "<br>";
+		
+		if($EndingAmount == -1)
+		{
+			$EndingAmount = $PureArr[0]["pureRemain"]*1;
+			$EndingDate = $PureArr["InstallmentDate"];
+			$EndingInstallment = $PureArr[0]["InstallmentID"];
+		}
+		//----------------------
+		for($i=count($computeArr)-1; $i != 0;$i--)
+		{
+			$row = $computeArr[$i];
+			
+			if($row["InstallmentID"] == $EndingInstallment || $EndingInstallment == 0)
+			{
+				$EndingAmount += $row["TotalRemainder"];
+				//echo $row["TotalRemainder"] . "<br>";
+				break;
+			}
+			
+			if($row["ActionType"] == "pay")
+			{
+				$EndingAmount += $row["TotalRemainder"];
+				//echo $row["TotalRemainder"] . "<br>";
+				break;
+			}
+		}
+		$EndingAmount += $computeArr[ count($computeArr)-1 ]["ForfeitAmount"]*1;
+		//echo $computeArr[ count($computeArr)-1 ]["ForfeitAmount"]*1 . "<br>";
+		return $EndingAmount;
+	}
 }
 
-class LON_ReqParts extends PdoDataAccess
-{
+class LON_ReqParts extends PdoDataAccess{
+	
 	public $PartID;
 	public $RequestID;
 	public $PartDesc;
@@ -829,8 +947,8 @@ class LON_ReqParts extends PdoDataAccess
 	}
 }
 
-class LON_installments extends PdoDataAccess
-{
+class LON_installments extends PdoDataAccess{
+	
 	public $InstallmentID;
 	public $RequestID;
 	public $InstallmentDate;
@@ -888,10 +1006,18 @@ class LON_installments extends PdoDataAccess
 		$daObj->execute($pdo);
 	 	return true;
     }
+	
+	static function GetValidInstallments($RequestID, $pdo = null){
+		
+		return PdoDataAccess::runquery("select * from 
+			LON_installments where RequestID=? AND history='NO' AND IsDelayed='NO'", 
+			array($RequestID), $pdo);
+		
+	}
 }
 
-class LON_BackPays extends PdoDataAccess
-{
+class LON_BackPays extends PdoDataAccess{
+	
 	public $BackPayID;
 	public $RequestID;
 	public $PayType;
@@ -1002,8 +1128,8 @@ class LON_BackPays extends PdoDataAccess
 	}
 }
 
-class LON_payments extends OperationClass
-{
+class LON_payments extends OperationClass{
+	
 	const TableName = "LON_payments";
 	const TableKey = "PayID";
 
@@ -1136,8 +1262,8 @@ class LON_events extends OperationClass {
 	
 }
 
-class LON_costs extends OperationClass
-{
+class LON_costs extends OperationClass{
+	
 	const TableName = "LON_costs";
 	const TableKey = "CostID";
 	
