@@ -109,7 +109,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$FirstStep = false;
 		$firstPayObj = new LON_payments($dt[0]["SourceID3"]);
 		
-		$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0),group_concat(LocalNo) docs
+		/*$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0),group_concat(LocalNo) docs
 			from ACC_DocItems join ACC_docs using(DocID) 
 			where CostID=? AND TafsiliID=? AND sourceID=?";
 		$param = array($CostCode_todiee, $LoanPersonTafsili, $ReqObj->RequestID);
@@ -125,7 +125,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 				. number_format($dt[0][0]) . "\n ریال می باشد که کمتر از مبلغ این مرحله از پرداخت وام می باشد"
 				. "<br>\n [ شماره اسناد : " . $dt[0]["docs"] . " ]");
 			return false;
-		}
+		}*/
 	}	
 	//---------------- add doc header --------------------
 	if($DocID == "")
@@ -199,7 +199,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$extraAmount += $TotalFundDelay;
 	if($TotalAgentDelay > 0 && $PartObj->AgentDelayReturn == "INSTALLMENT")
 		$extraAmount += $TotalAgentDelay;
-		
+	
 	if($FirstStep)
 	{
 		$amount = $PartObj->PartAmount + $extraAmount;	
@@ -210,7 +210,6 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$itemObj->DebtorAmount = $amount;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->Add($pdo);
-		$LoanRow = clone $itemObj;
 		
 		if($PartObj->PartAmount != $PayAmount)
 		{
@@ -236,7 +235,6 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$itemObj->DebtorAmount = $extraAmount;
 			$itemObj->CreditorAmount = 0;
 			$itemObj->Add($pdo);
-			$LoanRow = clone $itemObj;
 		}
 		
 		unset($itemObj->ItemID);
@@ -629,15 +627,10 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	//---------------------------------------------------------
 	$dt = PdoDataAccess::runquery("select sum(DebtorAmount) dsum, sum(CreditorAmount) csum
 		from ACC_DocItems where DocID=?", array($obj->DocID), $pdo);
-	if($dt[0]["dsum"] > $dt[0]["csum"])
+	if($dt[0]["dsum"] != $dt[0]["csum"])
 	{
 		$BankRow->CreditorAmount += $dt[0]["dsum"] - $dt[0]["csum"];
 		$BankRow->Edit($pdo);
-	}
-	else if($dt[0]["csum"] > $dt[0]["dsum"])
-	{
-		$LoanRow->DebtorAmount += $dt[0]["csum"] - $dt[0]["dsum"];
-		$LoanRow->Edit($pdo);
 	}
 	//---------------------------------------------------------
 	
@@ -728,7 +721,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	if(count($dt) > 0)
 	{
 		$FirstStep = false;
-		$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0)
+		/*$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0)
 			from ACC_DocItems where CostID=? AND TafsiliID=? AND sourceID=? AND TafsiliID2=?";
 		$param = array($CostCode_todiee, $LoanPersonTafsili, $ReqObj->RequestID, $ReqPersonTafsili);
 	
@@ -738,7 +731,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 			ExceptionHandler::PushException("حساب تودیعی این مشتری"
 					. number_format($dt[0][0]) . " ریال می باشد که کمتر از مبلغ این مرحله از پرداخت وام می باشد");
 			return false;
-		}
+		}*/
 	}
 	//---------------- compute wage --------------------------
 	$InstallmentWage = 0;

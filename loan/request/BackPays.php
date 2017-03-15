@@ -525,6 +525,11 @@ LoanPay.prototype.SaveBackPay = function(record){
 		Ext.MessageBox.alert("Error", "برای ثبت چک از منوی چک های دریافتی اقدام نمایید");
 		return false;
 	}
+	if(record.data.PayType == "<?= BACKPAY_PAYTYPE_CORRECT ?>")
+	{
+		Ext.MessageBox.alert("Error", "این گزینه تنها از طریق سیستم ثبت می گردد و شما قادر به ثبت آن نمی باشید");
+		return false;
+	}
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 
