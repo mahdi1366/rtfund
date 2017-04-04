@@ -417,5 +417,70 @@ function DeletePersonExpertDomain(){
 
 //.............................................
 
+function SelectCheckListSources(){
+	
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=11");
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
 
+function SelectCheckLists(){
+	
+	$temp = BSC_CheckLists::Get(" AND SourceType=? " . dataReader::makeOrder() ,array($_REQUEST["SourceType"]));
+	echo dataReader::getJsonData($temp->fetchAll(), $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveCheckList(){
+	
+	$obj = new BSC_CheckLists();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if($obj->ItemID == 0)
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteCheckList(){
+	
+	$obj = new BSC_CheckLists($_POST["ItemID"]);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function GetCheckValues(){
+	
+	$temp = PdoDataAccess::runquery("select c.ItemID,c.ItemDesc, if(v.ItemID is null,0,1) checked,
+			v.DoneDate,v.description
+		from BSC_CheckLists c
+		left join BSC_CheckListValues v on(c.ItemID=v.ItemID AND SourceID=?) 
+		where SourceType=? 
+		order by ordering", array($_REQUEST["SourceID"], $_REQUEST["SourceType"]));
+	
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
+function SaveCheckValue(){
+	
+	$mode = $_REQUEST["checked"];
+	if($mode == "1")
+	{
+		PdoDataAccess::runquery("insert into BSC_CheckListValues values(?,?,".PDONOW.",?)", 
+			array($_REQUEST["ItemID"], $_REQUEST["SourceID"], $_REQUEST["description"]));
+	}
+	else
+	{
+		PdoDataAccess::runquery("delete from BSC_CheckListValues where ItemID=? AND SourceID=?", 
+			array($_REQUEST["ItemID"], $_REQUEST["SourceID"]));
+	}
+	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
+	die();
+}
+//.............................................
 ?>

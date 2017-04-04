@@ -50,7 +50,6 @@ if($accessObj->AddFlag)
 
 $dg->height = 500;
 $dg->width = 750;
-$dg->EnablePaging = false;
 $dg->DefaultSortField = "ReqDate";
 $dg->autoExpandColumn = "details";
 $dg->emptyTextOfHiddenColumns = true;

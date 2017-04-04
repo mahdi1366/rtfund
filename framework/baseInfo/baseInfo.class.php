@@ -243,4 +243,14 @@ class BSC_setting extends OperationClass
 	public $ParamValue;
 }
 
+class BSC_CheckLists extends OperationClass
+{
+	const TableName = "BSC_CheckLists";
+	const TableKey = "ItemID";
+	
+	public $ItemID;
+	public $SourceType;
+	public $ItemDesc;
+	public $ordering;
+}
 ?>

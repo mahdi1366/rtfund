@@ -66,6 +66,7 @@
 .delay			{background-image:url('/generalUI/ext4/resources/themes/icons/delay.png') !important;}
 .task			{background-image:url('/generalUI/ext4/resources/themes/icons/task.jpg') !important;}
 .sign			{background-image:url('/generalUI/ext4/resources/themes/icons/sign.png') !important;}
+.check			{background-image:url('/generalUI/ext4/resources/themes/icons/check.png') !important;}
 
 .pinkRow .x-grid-cell,.pinkRow .x-grid-rowwrap-div, .pinkRow		{background-color: #FFB8C9; }
 .greenRow .x-grid-cell,.greenRow .x-grid-rowwrap-div, .greenRow		{background-color: #D0F7E2; }

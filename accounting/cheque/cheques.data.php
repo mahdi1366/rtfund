@@ -301,8 +301,9 @@ function ChangeChequeStatus(){
 		else
 			$FirstBranchID = $_SESSION["accounting"]["BranchID"];
 		
-		$dt = PdoDataAccess::runquery("select DocID,DocStatus from ACC_docs where LocalNo=? AND BranchID=?",
-			array($_POST["LocalNo"], $FirstBranchID));
+		$dt = PdoDataAccess::runquery("select DocID,DocStatus from ACC_docs where LocalNo=? AND BranchID=?
+			AND CycleID=?",
+			array($_POST["LocalNo"], $FirstBranchID, $_SESSION["accounting"]["CycleID"]));
 		if(count($dt) == 0)
 		{
 			$pdo->rollback();

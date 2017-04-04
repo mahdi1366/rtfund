@@ -35,7 +35,7 @@ function FindTafsiliID($TafsiliCode, $TafsiliType){
 	
 	if(count($dt) == 0)
 	{
-		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $TafsiliCode . "]");
+		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $TafsiliType . "-" .  $TafsiliCode . "]");
 		return false;
 	}
 	
@@ -57,8 +57,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
-	$CostCode_agent_wage = FindCostID("750" . "-52");
-	$CostCode_agent_FutureWage = FindCostID("760" . "-52");
+	$CostCode_agent_wage = FindCostID("730");
+	$CostCode_agent_FutureWage = FindCostID("740");
 	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_bank = FindCostID("101");
@@ -1094,8 +1094,8 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
 	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
-	$CostCode_agent_wage = FindCostID("750" . "-52");
-	$CostCode_agent_FutureWage = FindCostID("760" . "-52");
+	$CostCode_agent_wage = FindCostID("730");
+	$CostCode_agent_FutureWage = FindCostID("740");
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_todiee = FindCostID("200-". $LoanObj->_BlockCode."-01");
 	//------------------------------------------------
@@ -1862,8 +1862,8 @@ function RegisterChangeInstallmentWage($DocID, $ReqObj,$PartObj, $InstallmentObj
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
 	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
-	$CostCode_agent_wage = FindCostID("750" . "-52");
-	$CostCode_agent_FutureWage = FindCostID("760" . "-52");
+	$CostCode_agent_wage = FindCostID("730");
+	$CostCode_agent_FutureWage = FindCostID("740");
 	//------------------------------------------------
 	$CycleID = substr(DateModules::shNow(), 0 , 4);	
 	//---------------- add doc header --------------------

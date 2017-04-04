@@ -14,6 +14,13 @@ if(isset($_REQUEST["show"]))
 
 function showReport(){
 	
+	$dt = PdoDataAccess::runquery("select * from BSC_branches");
+	$branches = array();
+	foreach($dt as $row)
+		$branches[ $row["BranchID"] ] = $row["BranchName"];
+	
+	//......................................................
+	
 	$levelsDescArr = array(
 		"l1" => "کل",
 		"l2" => "معین",
@@ -25,6 +32,7 @@ function showReport(){
 	$level = empty($_REQUEST["level"]) ? "l1" : $_REQUEST["level"];
 	
 	$rpg = new ReportGenerator();
+	$rpg->excel = !empty($_POST["excel"]);
 	$whereParam = array();
 	$where = "";
 	$group = "cc.level1";
@@ -36,10 +44,16 @@ function showReport(){
 		b2.BlockDesc level2Desc,
 		b3.BlockDesc level3Desc,
 		b4.BlockDesc level4Desc,
+		b1.BlockCode level1Code,
+		b2.BlockCode level2Code,
+		b3.BlockCode level3Code,
+		b4.BlockCode level4Code,
 		b.InfoDesc TafsiliTypeDesc,
 		t.TafsiliDesc TafsiliDesc,
+		t.TafsiliCode TafsiliCode,
 		bi2.InfoDesc TafsiliTypeDesc2,
 		t2.TafsiliDesc TafsiliDesc2,
+		t2.TafsiliCode TafsiliCode2,
 		cc.level1,cc.level2,cc.level3,cc.level4,di.TafsiliType,di.TafsiliType2,di.TafsiliID,di.TafsiliID2,
 		t.StartCycleDebtor,
 		t.StartCycleCreditor
@@ -57,25 +71,65 @@ function showReport(){
 				left join ACC_tafsilis t2 on(t2.TafsiliID=di.TafsiliID2)
 				
 				left join (
-					select CycleID,CostID,sum(DebtorAmount) StartCycleDebtor, sum(CreditorAmount) StartCycleCreditor
+					select CycleID,CostID,sum(DebtorAmount) StartCycleDebtor, 
+							sum(CreditorAmount) StartCycleCreditor
 					from ACC_DocItems join ACC_docs using(DocID)
-					where DocType=1
+					where DocType=1 AND CycleID=".$_SESSION["accounting"]["CycleID"].
+					(!empty($_POST["BranchID"]) ? " AND BranchID=:b" : "") . "	
 					group by CostID
-				)t on(d.CycleID=t.CycleID AND di.CostID=t.CostID)
+				)t on(d.CycleID=t.CycleID AND di.CostID=t.CostID )
 	";
-			
+	
+	/*function CodeRender($row,$value){
+		global $level;
+		$st = "";
+		if($level >= "l1")
+			$st .= $row["level1Code"] . "-";
+		if($level >= "l2")
+			$st .= $row["level2Code"] . "-";
+		if($level >= "l3")
+			$st .= $row["level3Code"] . "-";
+		if($level >= "l4")
+			$st .= $row["level4Code"] . "-";
+		
+		$st = substr($st, 0, strlen($st)-1);
+		return $st;
+	}
+	$col = $rpg->addColumn("کد", "level1Code","CodeRender");*/
+	
 	if($level >= "l1")
-		$rpg->addColumn("کل", "level1Desc",$level =="l1" ? "levelRender" : "");
+	{
+		$col = $rpg->addColumn("کد کل", "level1Code");
+		$col = $rpg->addColumn("کل", "level1Desc",$level =="l1" ? "levelRender" : "");
+		$col->ExcelRender = false;
+	}
 	if($level >= "l2")
-		$rpg->addColumn("معین", "level2Desc", $level =="l2" ? "levelRender" : "");
+	{
+		$col = $rpg->addColumn("کد معین", "level2Code");
+		$col = $rpg->addColumn("معین", "level2Desc", $level =="l2" ? "levelRender" : "");
+		$col->ExcelRender = false;
+	}
 	if($level >= "l3")
-		$rpg->addColumn("جزء معین", "level3Desc", $level =="l3" ? "levelRender" : "");
+	{
+		$col = $rpg->addColumn("کد جزء معین", "level3Code");
+		$col = $rpg->addColumn("جزء معین", "level3Desc", $level =="l3" ? "levelRender" : "");
+		$col->ExcelRender = false;
+	}
 	if($level >= "l4")
-		$rpg->addColumn("جزء معین2", "level4Desc", $level =="l4" ? "levelRender" : "");
+	{
+		$col = $rpg->addColumn("کد جزء معین2", "level4Code");
+		$col = $rpg->addColumn("جزء معین2", "level4Desc", $level =="l4" ? "levelRender" : "");
+		$col->ExcelRender = false;
+	}
 	if($level == "l5")
 	{
-		$rpg->addColumn("تفصیلی", "TafsiliDesc", "showDocs");
-		$rpg->addColumn("تفصیلی2", "TafsiliDesc2", "showDocs2");
+		$col = $rpg->addColumn("کد تفصیلی", "TafsiliCode");
+		$col = $rpg->addColumn("تفصیلی", "TafsiliDesc", "showDocs");
+		$col->ExcelRender = false;
+		
+		$col = $rpg->addColumn("کد تفصیلی2", "TafsiliCode2");
+		$col = $rpg->addColumn("تفصیلی2", "TafsiliDesc2", "showDocs2");
+		$col->ExcelRender = false;
 	}
 	switch($level)
 	{
@@ -122,9 +176,13 @@ function showReport(){
 				(!empty($_REQUEST["fromDate"]) ? "&fromDate=" . $_REQUEST["fromDate"] : "") . 
 				(!empty($_REQUEST["toDate"]) ? "&toDate=" . $_REQUEST["toDate"] : "") .
 				(!empty($_REQUEST["fromLocalNo"]) ? "&fromLocalNo=" . $_REQUEST["fromLocalNo"] : "") . 
+				(!empty($_REQUEST["TafsiliID"]) ? "&TafsiliID=" . $_REQUEST["TafsiliID"] : "") . 
+				(!empty($_REQUEST["TafsiliType"]) ? "&TafsiliType=" . $_REQUEST["TafsiliType"] : "") . 
 				(!empty($_REQUEST["toLocalNo"]) ? "&toLocalNo=" . $_REQUEST["toLocalNo"] : "") .
 				(!empty($_REQUEST["BranchID"]) ? "&BranchID=" . $_REQUEST["BranchID"] : "") .
 				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
+				(!empty($_REQUEST["IncludeStart"]) ? "&IncludeStart=1" : "") .
+				(!empty($_REQUEST["IncludeEnd"]) ? "&IncludeEnd=1" : "") .
 				"');\" href=javascript:void(0)>" . $value . "</a>";
 	}
 	function showDocs2($row, $value){
@@ -141,6 +199,8 @@ function showReport(){
 				(!empty($_POST["toDate"]) ? "&toDate=" . $_POST["toDate"] : "") .
 				(!empty($_REQUEST["fromLocalNo"]) ? "&fromLocalNo=" . $_REQUEST["fromLocalNo"] : "") . 
 				(!empty($_REQUEST["toLocalNo"]) ? "&toLocalNo=" . $_REQUEST["toLocalNo"] : "") .
+				(!empty($_REQUEST["TafsiliID"]) ? "&TafsiliID=" . $_REQUEST["TafsiliID"] : "") . 
+				(!empty($_REQUEST["TafsiliType"]) ? "&TafsiliType=" . $_REQUEST["TafsiliType"] : "") . 
 				(!empty($_REQUEST["BranchID"]) ? "&BranchID=" . $_REQUEST["BranchID"] : "") .
 				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
 				"');\" href=javascript:void(0)>" . $value . "</a>";
@@ -151,6 +211,14 @@ function showReport(){
 		if(!isset($_REQUEST["IncludeRaw"]))
 		{
 			$where .= " AND d.DocStatus != 'RAW'";
+		}
+		/*if(empty($_REQUEST["IncludeStart"]))
+		{
+			$where .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;
+		}*/
+		if(empty($_REQUEST["IncludeEnd"]))
+		{
+			$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
 		}
 		if(isset($_REQUEST["level1"]))
 		{
@@ -343,9 +411,10 @@ function showReport(){
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>
 					تراز دفتر 
-				".$levelsDescArr[$level]." <br> ".
-				 $_SESSION["accounting"]["BranchName"]. "<br>" . "دوره سال " .
-				$_SESSION["accounting"]["CycleID"] .
+				".$levelsDescArr[$level]. 
+				" <br> ".
+				( empty($_POST["BranchID"]) ? "کلیه شعبه ها" : $branches[$_POST["BranchID"]]) .
+				"<br>" . "دوره سال " . $_SESSION["accounting"]["CycleID"] .
 				"</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
 			. DateModules::shNow() . "<br>";
@@ -389,8 +458,12 @@ function showReport(){
 	<input type="hidden" name="fromDate" value="<?= !empty($_REQUEST["fromDate"]) ? $_REQUEST["fromDate"] : "" ?>">
 	<input type="hidden" name="toDate" value="<?= !empty($_REQUEST["toDate"]) ? $_REQUEST["toDate"] : "" ?>">
 	<input type="hidden" name="fromLocalNo" value="<?= !empty($_REQUEST["fromLocalNo"]) ? $_REQUEST["fromLocalNo"] : "" ?>">
+	<input type="hidden" name="TafsiliID" value="<?= !empty($_REQUEST["TafsiliID"]) ? $_REQUEST["TafsiliID"] : "" ?>">
+	<input type="hidden" name="TafsiliType" value="<?= !empty($_REQUEST["TafsiliType"]) ? $_REQUEST["TafsiliType"] : "" ?>">
 	<input type="hidden" name="toLocalNo" value="<?= !empty($_REQUEST["toLocalNo"]) ? $_REQUEST["toLocalNo"] : "" ?>">
 	<input type="hidden" name="IncludeRaw" value="<?= !empty($_REQUEST["IncludeRaw"]) ? $_REQUEST["IncludeRaw"] : "" ?>">
+	<input type="hidden" name="IncludeStart" value="<?= !empty($_REQUEST["IncludeStart"]) ? $_REQUEST["IncludeStart"] : "" ?>">
+	<input type="hidden" name="IncludeEnd" value="<?= !empty($_REQUEST["IncludeEnd"]) ? $_REQUEST["IncludeEnd"] : "" ?>">
 	<input type="hidden" name="BranchID" value="<?= !empty($_REQUEST["BranchID"]) ? $_REQUEST["BranchID"] : "" ?>">
 	
 	<input type="hidden" name="level1s" id="level1s" value="<?= $_POST["level1s"] ?>">
@@ -651,6 +724,7 @@ function AccReport_taraz()
 			valueField : "TafsiliID",
 			itemId : "cmp_tafsiliID",
 			hiddenName : "TafsiliID",
+			
 			store : new Ext.data.Store({
 				fields:["TafsiliID","TafsiliDesc"],
 				proxy: {
@@ -739,7 +813,9 @@ function AccReport_taraz()
 			fieldLabel : "تا تاریخ"
 		},{
 			xtype : "container",
-			html : "<input type=checkbox name=IncludeRaw > گزارش شامل اسناد خام نیز باشد."
+			html : "<input type=checkbox name=IncludeRaw > گزارش شامل اسناد خام نیز باشد." + "<br>" +
+				/*"<input type=checkbox name=IncludeStart > گزارش شامل سند افتتاحیه باشد." + "<br>" +*/
+				"<input type=checkbox name=IncludeEnd > گزارش شامل سند اختتامیه باشد."
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",
@@ -774,6 +850,7 @@ AccReport_tarazObj = new AccReport_taraz();
 	<center><br>
 		<div id="main" ></div>
 	</center>
+	<input type="hidden" name="excel" id="excel">
 	<input type="hidden" name="level1s" id="level1s">
 	<input type="hidden" name="level2s" id="level2s">
 	<input type="hidden" name="level3s" id="level3s">
