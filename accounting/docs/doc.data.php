@@ -543,8 +543,9 @@ function RegisterEndDoc(){
 	}
 	
 	PdoDataAccess::runquery("
-		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,locked)
-		select $obj->DocID,CostID,TafsiliType,TafsiliID,
+		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
+			DebtorAmount,CreditorAmount,locked)
+		select $obj->DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
 			if( sum(CreditorAmount-DebtorAmount)>0, sum(CreditorAmount-DebtorAmount), 0 ),
 			if( sum(DebtorAmount-CreditorAmount)>0, sum(DebtorAmount-CreditorAmount), 0 ),
 			1
@@ -552,7 +553,7 @@ function RegisterEndDoc(){
 		join ACC_docs using(DocID)
 		where CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 			AND BranchID = " . $_SESSION["accounting"]["BranchID"] . "
-		group by CostID,TafsiliID	
+		group by CostID,TafsiliID,TafsiliID2	
 		having sum(CreditorAmount-DebtorAmount)<>0
 	", array(), $pdo);
 	
@@ -633,16 +634,18 @@ function RegisterStartDoc(){
 	}
 	
 	PdoDataAccess::runquery("
-		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,locked)
-		select $obj->DocID,CostID,TafsiliType,TafsiliID,
+		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
+			DebtorAmount,CreditorAmount,locked)
+		select $obj->DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
 			if( sum(DebtorAmount-CreditorAmount)>0, sum(DebtorAmount-CreditorAmount), 0 ),
 			if( sum(CreditorAmount-DebtorAmount)>0, sum(CreditorAmount-DebtorAmount), 0 ),
 			1
 		from ACC_DocItems i
 		join ACC_docs using(DocID)
-		where CycleID=" . $_SESSION["accounting"]["CycleID"]-1 . "
+		where DocType <> ".DOCTYPE_ENDCYCLE." 
+			AND CycleID=" . ($_SESSION["accounting"]["CycleID"]-1) . "
 			AND BranchID = " . $_SESSION["accounting"]["BranchID"] . "
-		group by CostID,TafsiliID	
+		group by CostID,TafsiliID,TafsiliID2	
 		having sum(CreditorAmount-DebtorAmount)<>0
 	", array(), $pdo);
 	

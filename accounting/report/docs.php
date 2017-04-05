@@ -99,7 +99,7 @@ if(isset($_REQUEST["show"]))
 	if(isset($_POST["NotTaraz"]))
 		$query .= " having bsSum<>bdSum";
 	
-	$query .= " order by DocDate";
+	$query .= " order by DocDate,LocalNo";
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 

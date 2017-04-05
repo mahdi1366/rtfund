@@ -7,6 +7,7 @@
 require_once '../header.inc.php';
 require_once '../docs/doc.class.php';
 require_once '../docs/import.data.php';
+require_once 'deposite.class.php';
 require_once inc_dataReader;
 require_once inc_response;
 
@@ -57,4 +58,38 @@ function DepositeProfit(){
 	ComputeDepositeProfit($ToDate, $Tafsilis);
 	die();
 }
+
+
+//---------------------------------------------
+
+function SelectPercents(){
+	
+	$temp = ACC_DepositePercents::Get(dataReader::makeOrder());
+	$dt = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
+	echo dataReader::getJsonData($dt, $temp->rowCount(), $_GET['callback']);
+	die();
+}
+
+function SavePercent(){
+	
+	$obj = new ACC_DepositePercents();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if($obj->RowID != "")
+		$result = $obj->Edit();
+	else
+		$result = $obj->Add();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeletePercent(){
+	
+	$obj = new ACC_DepositePercents($_POST["RowID"]);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
 ?>

@@ -68,6 +68,9 @@ define("BACKPAY_PAYTYPE_EPAY", "4");
 define("BACKPAY_PAYTYPE_CHEQUE", "9");
 define("BACKPAY_PAYTYPE_CORRECT", "100");
 
+//............  TypeID=11 ....................
+define("SOURCETYPE_LOAN", "1");
+
 define("BLOCKID_LOAN","8");
 
 define("WFM_FORM_FLOWID","5");

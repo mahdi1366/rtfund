@@ -131,6 +131,10 @@ ManageRequest.prototype.OperationMenu = function(e){
 				hidden : true,
 				itemId : "cmp_costs",
 				handler : function(){ ManageRequestObject.ShowCosts(); }
+			},{
+				text : 'چک لیست',
+				iconCls : "check",
+				handler : function(){ ManageRequestObject.ShowCheckList(); }
 			});
 	
 	
@@ -475,6 +479,44 @@ ManageRequest.prototype.ShowCosts = function(){
 			MenuID : this.MenuID,
 			ExtTabID : this.CostsWin.getEl().id,
 			RequestID : this.grid.getSelectionModel().getLastSelected().data.RequestID
+		}
+	});
+}
+
+ManageRequest.prototype.ShowCheckList = function(){
+
+	if(!this.CostsWin)
+	{
+		this.CostsWin = new Ext.window.Window({
+			title: 'چک لیست',
+			modal : true,
+			autoScroll : true,
+			width: 600,
+			height : 400,
+			bodyStyle : "background-color:white",
+			closeAction : "hide",
+			loader : {
+				url : "baseinfo/checkValues.php",
+				scripts : true
+			},
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){
+					this.up('window').hide();
+				}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.CostsWin);
+	}
+	this.CostsWin.show();
+	this.CostsWin.center();	
+	this.CostsWin.loader.load({
+		params : {
+			MenuID : this.MenuID,
+			ExtTabID : this.CostsWin.getEl().id,
+			SourceID : this.grid.getSelectionModel().getLastSelected().data.RequestID,
+			SourceType : <?= SOURCETYPE_LOAN ?>,
 		}
 	});
 }

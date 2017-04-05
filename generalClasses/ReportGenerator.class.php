@@ -198,7 +198,7 @@ class ReportGenerator {
 
 				for ($i = 0; $i < count($this->columns); $i++) {
 					$val = "";
-					 if(!empty($this->columns[$i]->renderFunction))
+					 if(!empty($this->columns[$i]->renderFunction) && $this->columns[$i]->ExcelRender)
 					 {
 						$functionName = $this->columns[$i]->renderFunction;
 						$val = $functionName(
@@ -223,7 +223,7 @@ class ReportGenerator {
 
 				for ($i = 0; $i < count($this->columns); $i++) {
 					$val = "";
-					if(!empty($this->columns[$i]->renderFunction))
+					if(!empty($this->columns[$i]->renderFunction) && $this->columns[$i]->ExcelRender)
 					 {
 						$functionName = $this->columns[$i]->renderFunction;
 						$val = $functionName(
@@ -746,6 +746,7 @@ class ReportColumn {
 	
 	public $hidden = false;
 	public $style = "";
+	public $ExcelRender = true;
 
 	public function ReportColumn($header, $field, $renderFunction = "", $renderParams = "") {
 		$this->header = $header;

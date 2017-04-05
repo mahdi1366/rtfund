@@ -30,6 +30,15 @@ if(isset($_REQUEST["show"]))
 	
 	function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 		
+		if(isset($_REQUEST["taraz"])){
+			
+			/*if(!isset($_REQUEST["IncludeStart"]))
+				$where .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;*/
+
+			if(!isset($_REQUEST["IncludeEnd"]))
+				$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
+
+		}
 		if(!isset($_REQUEST["IncludeRaw"]))
 			$where .= " AND d.DocStatus != 'RAW' ";
 		
@@ -70,7 +79,7 @@ if(isset($_REQUEST["show"]))
 				$where .= " AND (di.TafsiliID=0 OR di.TafsiliID is null)";
 			else
 			{
-				$where .= " AND di.TafsiliID = :tid ";
+				$where .= " AND (di.TafsiliID = :tid or di.TafsiliID2 = :tid) ";
 				$whereParam[":tid"] = $_REQUEST["TafsiliID"];
 			}
 		}

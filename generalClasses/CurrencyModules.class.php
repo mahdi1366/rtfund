@@ -117,7 +117,7 @@ class CurrencyModulesclass
                 if ($three_digit_string > '')
                         $three_digit_string .= ' و ';
                 if ($three_digit_number < 20) {
-                        $three_digit_string .= $number_array[$three_digit_number];
+                        $three_digit_string .= $number_array[$three_digit_number*1];
                 }
                 else {
                         $three_digit_string .= $number_array[floor($three_digit_number / 10) * 10];
