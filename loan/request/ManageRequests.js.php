@@ -496,7 +496,7 @@ ManageRequest.prototype.ShowCheckList = function(){
 			bodyStyle : "background-color:white",
 			closeAction : "hide",
 			loader : {
-				url : "baseinfo/checkValues.php",
+				url : "baseInfo/checkValues.php",
 				scripts : true
 			},
 			buttons : [{

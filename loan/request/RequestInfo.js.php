@@ -655,13 +655,6 @@ RequestInfo.prototype.BuildForms = function(){
 				hidden : true,
 				itemId : "cmp_costs",
 				handler : function(){ RequestInfoObject.ShowCosts(); }
-			},{
-				text : "چاپ رسید مدارک",
-				iconCls : "print",
-				handler : function(){
-					window.open(RequestInfoObject.address_prefix + "PrintLoanDocs.php?RequestID=" +
-						RequestInfoObject.RequestID);
-				}
 			}]
 		},'->',{
 			text : 'ویرایش شرایط پرداخت',

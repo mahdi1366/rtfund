@@ -10,7 +10,7 @@ include_once inc_dataGrid;
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "baseinfo.data.php?task=SelectCheckLists", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "baseInfo.data.php?task=SelectCheckLists", "grid_div");
 
 $dg->addColumn("", "SourceType", "", true);
 $dg->addColumn("کد", "ItemID", "", true);
@@ -93,7 +93,7 @@ function CheckList(){
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({
 				proxy: {type: 'jsonp',
-					url: this.address_prefix + 'baseinfo.data.php?task=SelectCheckListSources',
+					url: this.address_prefix + 'baseInfo.data.php?task=SelectCheckListSources',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				autoLoad : true,
@@ -150,7 +150,7 @@ CheckList.prototype.SaveCheckList = function(index){
 	mask.show();
 
 	Ext.Ajax.request({
-		url: this.address_prefix + 'baseinfo.data.php',
+		url: this.address_prefix + 'baseInfo.data.php',
 		method: "POST",
 		params: {
 			task: "SaveCheckList",
@@ -189,7 +189,7 @@ CheckList.prototype.DeleteCheckList = function(){
 		mask.show();
 
 		Ext.Ajax.request({
-			url: me.address_prefix + 'baseinfo.data.php',
+			url: me.address_prefix + 'baseInfo.data.php',
 			params:{
 				task: "DeleteCheckList",
 				ItemID : record.data.ItemID

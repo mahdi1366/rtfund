@@ -9,7 +9,7 @@ include_once inc_dataGrid;
 $SourceType = $_REQUEST["SourceType"];
 $SourceID =  $_REQUEST["SourceID"];
 
-$dg = new sadaf_datagrid("dg",$js_prefix_address . "baseinfo.data.php?task=GetCheckValues&".
+$dg = new sadaf_datagrid("dg",$js_prefix_address . "baseInfo.data.php?task=GetCheckValues&".
 		"SourceType=" .$SourceType . "&SourceID=" . $SourceID,"grid_div");
 
 $dg->addColumn("", "ItemID","", true);
@@ -112,7 +112,7 @@ CheckValues.prototype.Save = function(checked, description){
 	mask.show();
 
 	Ext.Ajax.request({
-		url: this.address_prefix +'baseinfo.data.php',
+		url: this.address_prefix +'baseInfo.data.php',
 		method: "POST",
 		params: {
 			task: "SaveCheckValue",

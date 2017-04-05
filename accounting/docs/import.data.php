@@ -3084,7 +3084,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 		$LatestComputeDate = count($dt)==0 || $dt[0][0] == "" ? $FirstYearDay : $dt[0][0];
 
 		//----------- check for all docs confirm --------------
-		/*$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
+		$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
 			join ACC_DocItems using(DocID)
 			where DocID>=? AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
 			AND DocStatus not in('CONFIRM','ARCHIVE')
@@ -3093,7 +3093,16 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 		{
 			echo Response::createObjectiveResponse(false, "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند و قادر به صدور سند سود سپرده نمی باشید.");
 			die();
-		}*/
+		}
+		//------------ get percents ------------------------
+		$percents = PdoDataAccess::runquery_fetchMode("select * from ACC_DepositePercents where TafsiliID=? AND ToDate>? order by FromDate",
+				array($TafsiliID, $LatestComputeDate));
+		if($percents->rowCount() == 0)
+		{
+			echo Response::createObjectiveResponse(false, "در بازه مربوطه درصد سود تفصیلی " . $TafsiliID . " تعریف نشده است");
+			die();
+		}
+		$percentRecord = $percents->fetch();
 		//------------ get sum of deposites ----------------
 		$dt = PdoDataAccess::runquery("select TafsiliID,CostID,sum(CreditorAmount-DebtorAmount) amount
 			from ACC_DocItems join ACC_docs using(DocID)
@@ -3132,6 +3141,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 				array($LatestComputeDate, $ToDate, $TafsiliID));
 		
 		$prevDays = 0;
+		
 		foreach($dt as $row)
 		{
 			if(!isset($DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"]))
@@ -3153,10 +3163,27 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 				$days += $prevDays;
 				$prevDays = 0;
 			}
-
-			$amount = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] * $days * 
-				$DepositePercents[ $row["CostID"] ]/(36500);
-
+			
+			if($lastDate <= $percentRecord["ToDate"])
+			{
+				$amount = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] * $days * 
+					$percentRecord["percent"] /(36500);
+			}
+			else
+			{
+				$d1 = DateModules::GDateMinusGDate($row["DocDate"], $percentRecord["ToDate"]);
+				$d2 = $days - $d1;
+				$p1 = $percentRecord["percent"];
+				$percentRecord = $percents->fetch();
+				if(!$percentRecord)
+				{
+					echo Response::createObjectiveResponse(false, "در بازه مربوطه درصد سود تفصیلی " . $TafsiliID . " تعریف نشده است");
+					die();		
+				}
+				$p2 = $percentRecord["percent"];;
+				$amount = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] * ($d1*$p1 + $d2*$p2) /(36500);
+			}
+			
 			if(!isset($DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"]))
 				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] = 0;
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] += $amount;
