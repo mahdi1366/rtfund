@@ -105,24 +105,28 @@ function showReport(){
 	}
 	if($level >= "l2")
 	{
+		$group .= ",cc.level2"; 
 		$col = $rpg->addColumn("کد معین", "level2Code");
 		$col = $rpg->addColumn("معین", "level2Desc", $level =="l2" ? "levelRender" : "");
 		$col->ExcelRender = false;
 	}
 	if($level >= "l3")
 	{
+		$group .= ",cc.level3"; 
 		$col = $rpg->addColumn("کد جزء معین", "level3Code");
 		$col = $rpg->addColumn("جزء معین", "level3Desc", $level =="l3" ? "levelRender" : "");
 		$col->ExcelRender = false;
 	}
 	if($level >= "l4")
 	{
+		$group .= ",cc.level4"; 
 		$col = $rpg->addColumn("کد جزء معین2", "level4Code");
 		$col = $rpg->addColumn("جزء معین2", "level4Desc", $level =="l4" ? "levelRender" : "");
 		$col->ExcelRender = false;
 	}
 	if($level == "l5")
 	{
+		$group .= ",di.TafsiliID,di.TafsiliID2";
 		$col = $rpg->addColumn("کد تفصیلی", "TafsiliCode");
 		$col = $rpg->addColumn("تفصیلی", "TafsiliDesc", "showDocs");
 		$col->ExcelRender = false;
@@ -131,14 +135,7 @@ function showReport(){
 		$col = $rpg->addColumn("تفصیلی2", "TafsiliDesc2", "showDocs2");
 		$col->ExcelRender = false;
 	}
-	switch($level)
-	{
-		case "l2" : $group .= ",cc.level2"; break;
-		case "l3" : $group .= ",cc.level3";	break;
-		case "l4" : $group .= ",cc.level4"; break;
-		case "l5" : $group .= ",di.TafsiliID,di.TafsiliID2"; break;
-	}
-	
+		
 	function levelRender($row, $value){
 		
 		global $level;
@@ -207,8 +204,8 @@ function showReport(){
 	}
 	
 	function MakeWhere(&$where, &$whereParam){
-
-		if(!isset($_REQUEST["IncludeRaw"]))
+ 
+		if(empty($_REQUEST["IncludeRaw"]))
 		{
 			$where .= " AND d.DocStatus != 'RAW'";
 		}
@@ -338,7 +335,7 @@ function showReport(){
 		d.CycleID=" . $_SESSION["accounting"]["CycleID"] . $where;
 	$query .= $group != "" ? " group by " . $group : "";
 		
-	$query .= " order by b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode";
+	$query .= " order by b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode,di.TafsiliID,di.TafsiliID2";
 
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	
@@ -409,7 +406,7 @@ function showReport(){
 		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
-				<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>
+				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 					تراز دفتر 
 				".$levelsDescArr[$level]. 
 				" <br> ".

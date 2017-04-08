@@ -3086,9 +3086,9 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 		//----------- check for all docs confirm --------------
 		$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
 			join ACC_DocItems using(DocID)
-			where DocID>=? AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
+			where CycleID=? AND DocID>=? AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
 			AND DocStatus not in('CONFIRM','ARCHIVE')
-			AND TafsiliID=?", array($LatestComputeDocID,$TafsiliID));
+			AND TafsiliID=?", array($LatestComputeDate,$TafsiliID));
 		if(count($dt) > 0 && $dt[0][0] != "")
 		{
 			echo Response::createObjectiveResponse(false, "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند و قادر به صدور سند سود سپرده نمی باشید.");

@@ -21,15 +21,17 @@ if(!empty($_REQUEST["print"]))
 	function DateRender($row, $value){ return DateModules::miladi_to_shamsi($value);}
 	function MoneyRender($row,$value){ return number_format($value);}
 	
+	$rpg->addColumn("شعبه وام", "BranchName");
 	$rpg->addColumn("وام گیرنده", "LoanPersonName");
 	$rpg->addColumn("سررسید", "InstallmentDate","DateRender");
 	$rpg->addColumn("مبلغ قسط", "InstallmentAmount", "MoneyRender");
 	$rpg->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
+	$rpg->addColumn("استمهال", "multipart");
 	BeginReport();
 	
 	echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 			<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
-			<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>
+			<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 				گزارش اقساط معوق
 			</td>
 			<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
@@ -48,15 +50,17 @@ if(!empty($_REQUEST["NTC_EXCEL"]))
 	$rpt->mysql_resource = $data;
 	$rpt->addColumn("PID", "LoanPersonID");
 	$rpt->addColumn("کد وام", "RequestID");
+	$rpt->addColumn("شعبه وام", "BranchName");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("موبایل", "mobile");
 	$rpt->addColumn("شماره پیامک", "SmsNo");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
-	$rpt->addColumn("سررسید", "InstallmentDate");
+	$rpt->addColumn("سررسید", "InstallmentDate","ReportDateRender");
 	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
 	$rpt->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
+	$rpt->addColumn("استمهال", "multipart");
 	$rpt->generateReport();
-	die();
+	die(); 
 }
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "../request/request.data.php?task=GetDelayedInstallments","grid_div");
@@ -115,7 +119,7 @@ LoanReport_DelayedInstallments.prototype = {
 function LoanReport_DelayedInstallments()
 {
 	this.DateFS = new Ext.form.FieldSet({
-		width : 600,
+		width : 650,
 		renderTo : this.get("divPanel"),
 		layout : "hbox",
 		items : [{

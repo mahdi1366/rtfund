@@ -1195,10 +1195,14 @@ function GetDelayedInstallments($returnData = false){
 	
 	$param = array(":todate" => $ToDate, ":fromdate" => $FromDate);
 	$query = "select RequestID,LoanPersonID,mobile,SmsNo,concat_ws(' ',fname,lname,CompanyName) LoanPersonName,
-				max(InstallmentDate) InstallmentDate, InstallmentAmount
+				max(InstallmentDate) InstallmentDate, InstallmentAmount,
+				if(count(distinct PartID) > 1, '*','') multipart,
+				BranchName
 			from LON_installments i
 			join LON_requests using(RequestID)
 			join BSC_persons on(LoanPersonID=PersonID)
+			join LON_ReqParts using(RequestID)
+			join BSC_branches using(BranchID)
 			
 			where InstallmentDate between :fromdate AND :todate AND IsEnded='NO' ";
 	
