@@ -1194,15 +1194,36 @@ function GetDelayedInstallments($returnData = false){
 	$ToDate = DateModules::shamsi_to_miladi($_REQUEST["ToDate"]);
 	
 	$param = array(":todate" => $ToDate, ":fromdate" => $FromDate);
-	$query = "select RequestID,LoanPersonID,mobile,SmsNo,concat_ws(' ',fname,lname,CompanyName) LoanPersonName,
+	$query = "select 
+				p.*,
+				r.RequestID,LoanPersonID,mobile,SmsNo,
+				concat_ws(' ',fname,lname,CompanyName) LoanPersonName,
 				max(InstallmentDate) InstallmentDate, InstallmentAmount,
-				if(count(distinct PartID) > 1, '*','') multipart,
-				BranchName
+				if(count(distinct p0.PartID) > 1, '*','') multipart,
+				BranchName,
+				tazamin
+				
 			from LON_installments i
-			join LON_requests using(RequestID)
+			join LON_requests r using(RequestID)
 			join BSC_persons on(LoanPersonID=PersonID)
-			join LON_ReqParts using(RequestID)
+			join LON_ReqParts p0 on(p0.RequestID=r.RequestID)
+			join LON_ReqParts p on(p.RequestID=r.RequestID AND p.IsHistory='NO')
 			join BSC_branches using(BranchID)
+			left join (
+				select ObjectID,group_concat(title,' به شماره سريال ',num, ' و مبلغ ', 
+					format(amount,2) separator '<br>') tazamin
+				from (	
+					select ObjectID,InfoDesc title,group_concat(if(KeyTitle='no',paramValue,'') separator '') num,
+					group_concat(if(KeyTitle='amount',paramValue,'') separator '') amount
+					from DMS_documents d
+					join BaseInfo b1 on(InfoID=d.DocType AND TypeID=8)
+					join DMS_DocParamValues dv  using(DocumentID)
+					join DMS_DocParams using(ParamID)
+				    where ObjectType='loan' AND b1.param1=1
+					group by ObjectID, DocumentID
+				)t
+				group by ObjectID
+			)t2 on(t2.ObjectID=r.RequestID)
 			
 			where InstallmentDate between :fromdate AND :todate AND IsEnded='NO' ";
 	
@@ -1213,7 +1234,7 @@ function GetDelayedInstallments($returnData = false){
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
 	
-	$query .= " group by RequestID" . dataReader::makeOrder();
+	$query .= " group by r.RequestID" . dataReader::makeOrder();
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
 

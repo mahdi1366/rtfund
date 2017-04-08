@@ -76,12 +76,17 @@ if(isset($_REQUEST["show"]))
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 			left join (
-				select RequestID,sum(PayAmount) TotalPayAmount from LON_BackPays
+				select RequestID,sum(PayAmount) TotalPayAmount 
+				from LON_BackPays
+				left join ACC_IncomeCheques i using(IncomeChequeID)
+				where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+					AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . "
 				group by RequestID			
 			)t1 on(r.RequestID=t1.RequestID)
 			left join (
 				select RequestID,sum(InstallmentAmount) TotalInstallmentAmount 
 				from LON_installments
+				where  history='NO' AND IsDelayed='NO'
 				group by RequestID			
 			)t2 on(r.RequestID=t2.RequestID)
 			where 1=1 " . $where . " 
@@ -95,11 +100,9 @@ if(isset($_REQUEST["show"]))
 	for($i=0; $i< count($dataTable); $i++)
 	{
 		$dt = array();
-		$returnArr = LON_requests::ComputePayments2($dataTable[$i]["RequestID"], $dt);
-		
-		$dataTable[$i]["remainder"] = count($returnArr)>0 ?
-			$returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1 + 
-			$returnArr[ count($returnArr) -1 ]["ForfeitAmount"]*1 : 0;
+		$ComputeArr = LON_requests::ComputePayments2($dataTable[$i]["RequestID"], $dt);
+		$TotalRemain = LON_requests::GetTotalRemainAmount($dataTable[$i]["RequestID"], $ComputeArr);
+		$dataTable[$i]["remainder"] = $TotalRemain;
 	}
 	
 	$rpg = new ReportGenerator();

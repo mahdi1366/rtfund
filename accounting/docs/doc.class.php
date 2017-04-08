@@ -189,7 +189,8 @@ class ACC_docs extends PdoDataAccess {
 
 	static function GetLastLocalNo() {
 
-		$no = parent::GetLastID("ACC_docs", "LocalNo", "CycleID=? AND BranchID=?", array($_SESSION["accounting"]["CycleID"], $_SESSION["accounting"]["BranchID"]));
+		$no = parent::GetLastID("ACC_docs", "LocalNo", "CycleID=? AND BranchID=?", 
+				array($_SESSION["accounting"]["CycleID"], $_SESSION["accounting"]["BranchID"]));
 
 		return $no + 1;
 	}

@@ -14,6 +14,7 @@ if(isset($_REQUEST["show"]))
 	$query = "select concat_ws(' - ',b1.BlockDesc, b2.BlockDesc, b3.BlockDesc, b4.BlockDesc) CostDesc,
 			cc.CostCode,
 			d.DocDate,
+			if(d.DocType=".DOCTYPE_ENDCYCLE.",1,0) IsEndDoc,
 			b.InfoDesc TafsiliType,
 			t.TafsiliDesc,
 			t2.TafsiliDesc TafsiliDesc2,
@@ -50,8 +51,8 @@ if(isset($_REQUEST["show"]))
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.DocStatus != 'RAW' ";
 	
-	$query .= " group by DocDate,if(DebtorAmount<>0,0,1),di.CostID,di.TafsiliID,di.TafsiliID2 ";
-	$query .= " order by DocDate,if(DebtorAmount<>0,0,1),cc.CostCode";
+	$query .= " group by if(DocType=".DOCTYPE_ENDCYCLE.",2,1),DocDate,if(DebtorAmount<>0,0,1),di.CostID,di.TafsiliID,di.TafsiliID2 ";
+	$query .= " order by if(DocType=".DOCTYPE_ENDCYCLE.",2,1),DocDate,if(DebtorAmount<>0,0,1),cc.CostCode";
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	BeginReport();
@@ -68,12 +69,14 @@ if(isset($_REQUEST["show"]))
 		</style>';
 	$curDate = '';
 	$index = 0;
+	$curIsEndDoc = '';
 	foreach($dataTable as $row)
 	{
-		if($curDate != $row["DocDate"])
+		if($curDate != $row["DocDate"] || $curIsEndDoc != $row["IsEndDoc"])
 		{
 			$index++;
 			$curDate = $row["DocDate"];
+			$curIsEndDoc = $row["IsEndDoc"];
 			
 			if($index > 1)
 			{

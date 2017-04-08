@@ -528,8 +528,8 @@ AccDocs.prototype.afterHeaderLoad = function(store)
 
 AccDocs.prototype.AddDoc = function()
 {
-	AccDocsObject.docWin.down("form").getForm().reset();
-	AccDocsObject.docWin.show();
+	this.docWin.down("form").getForm().reset();
+	this.docWin.show();
 	this.docWin.center();
 	
 	mask = new Ext.LoadMask(this.docWin, {msg:'در حال بارگذاری ...'});
@@ -537,8 +537,11 @@ AccDocs.prototype.AddDoc = function()
 	
 	Ext.Ajax.request({
 		url : this.address_prefix + "doc.data.php?task=GetLastLocalNo",
-		method : "post",
-		
+		method : "POST",
+		params:{
+			x: 1
+		},
+
 		success : function(response){
 			AccDocsObject.docWin.down("[name=LocalNo]").setValue(response.responseText);
 			mask.hide();
