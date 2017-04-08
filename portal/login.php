@@ -21,8 +21,9 @@ if(isset($_POST["email"]))
 	
 	$user = $_POST["UserName"];
 	$pass = $_POST["md5Pass"];
+	$NationalID = $_POST["NationalID"];	
 	
-	$return = session::register($user, $pass);
+	$return = session::register($user, $pass, $NationalID);
 	if($return === true)
 	{
 		$result = session::login($user, $pass);
@@ -466,6 +467,7 @@ else if(isset($_REQUEST["forgetStep2"]))
 								<input type="text" name="CompanyName" style="display:none" class="textfield" id="CompanyName" 
 									   placeholder="نام شرکت ..." dir="rtl"/>
 								<input type="email" name="email" id="email" class="textfield" placeholder="پست الکترونیک ..." required="required" dir="ltr"/>
+								<input type="text" name="NationalID" id="NationalID" class="textfield" placeholder="کد ملی/ شناسه ملی ..." required="required" dir="ltr"/>
 								<div id="UserNameDiv2"><input type="text" id="UserName2" name="UserName" class="textfield" 
 										placeholder="کلمه کاربری ..." required="required" dir="ltr"/></div>
 								<input type="password" class="textfield" id="password1" placeholder="رمز عبور ..." required="required" dir="ltr"/>

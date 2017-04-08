@@ -143,40 +143,44 @@ class session{
 		session_destroy();
 	}
 	
-	static function register($user, $pass){
+	static function register($user, $pass ,$NationalID){
 		
 		$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($user));
 		if(count($temp) > 0)
 		{
 			return "DuplicateUserName";
 		}
-		else
+		$temp = PdoDataAccess::runquery("select * from BSC_persons where NationalID=?", array($NationalID));
+		if(count($temp) > 0)
 		{
-			$hash_cost_log2 = 8;	
-			$hasher = new PasswordHash($hash_cost_log2, true);
-
-			$obj = new BSC_persons();
-			PdoDataAccess::FillObjectByArray($obj, $_POST);
-			$obj->UserPass = $hasher->HashPassword($pass);
-			$obj->IsCustomer = "YES";
-			$obj->AddPerson();
-
-			$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($user));
-			$_SESSION['USER'] = $temp[0];
-			$_SESSION['USER']["framework"] = true;
-			$_SESSION['USER']["portal"] = true;
-			//..........................................................
-			if (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
-				if ( strlen($_SERVER['HTTP_X_FORWARDED_FOR']) > 15 )
-					$_SESSION['LIPAddress'] = substr($_SERVER['HTTP_X_FORWARDED_FOR'] , 0,strpos($_SERVER['HTTP_X_FORWARDED_FOR'],','));
-				else
-					$_SESSION['LIPAddress'] = ($_SERVER['HTTP_X_FORWARDED_FOR']);
-			else
-				$_SESSION['LIPAddress'] = $_SERVER['REMOTE_ADDR'];
-			//..........................................................
-			return true;
-
+			return "DuplicateNationalID";
 		}
+		
+		$hash_cost_log2 = 8;	
+		$hasher = new PasswordHash($hash_cost_log2, true);
+
+		$obj = new BSC_persons();
+		PdoDataAccess::FillObjectByArray($obj, $_POST);
+		$obj->UserPass = $hasher->HashPassword($pass);
+		$obj->IsCustomer = "YES";
+		$obj->AddPerson();
+
+		$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($user));
+		$_SESSION['USER'] = $temp[0];
+		$_SESSION['USER']["framework"] = true;
+		$_SESSION['USER']["portal"] = true;
+		//..........................................................
+		if (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
+			if ( strlen($_SERVER['HTTP_X_FORWARDED_FOR']) > 15 )
+				$_SESSION['LIPAddress'] = substr($_SERVER['HTTP_X_FORWARDED_FOR'] , 0,strpos($_SERVER['HTTP_X_FORWARDED_FOR'],','));
+			else
+				$_SESSION['LIPAddress'] = ($_SERVER['HTTP_X_FORWARDED_FOR']);
+		else
+			$_SESSION['LIPAddress'] = $_SERVER['REMOTE_ADDR'];
+		//..........................................................
+		return true;
+
+
 	}
 	
 	static function getEmail($userName, $coded = false){
