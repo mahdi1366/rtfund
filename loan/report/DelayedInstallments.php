@@ -9,6 +9,10 @@ require_once "ReportGenerator.class.php";
 require_once '../request/request.data.php';
 require_once inc_dataGrid;
 
+function intervslRender($row, $value){
+	return $value . ($row["IntervalType"] == "DAY" ? " روز" : " ماه");
+}
+
 if(!empty($_REQUEST["print"]))
 {
 	$_REQUEST["sort"] = '[{"property":"InstallmentDate","direction":"DESC"}]';
@@ -18,15 +22,22 @@ if(!empty($_REQUEST["print"]))
 	$rpg = new ReportGenerator();
 	$rpg->mysql_resource = $data;
 	
-	function DateRender($row, $value){ return DateModules::miladi_to_shamsi($value);}
-	function MoneyRender($row,$value){ return number_format($value);}
-	
 	$rpg->addColumn("شعبه وام", "BranchName");
 	$rpg->addColumn("وام گیرنده", "LoanPersonName");
-	$rpg->addColumn("سررسید", "InstallmentDate","DateRender");
-	$rpg->addColumn("مبلغ قسط", "InstallmentAmount", "MoneyRender");
+	$rpg->addColumn("تضامین", "tazamin");
+	$rpg->addColumn("سررسید", "InstallmentDate","ReportDateRender");
+	$rpg->addColumn("مبلغ قسط", "InstallmentAmount", "ReportMoneyRender");
 	$rpg->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
 	$rpg->addColumn("استمهال", "multipart");
+	$rpg->addColumn("مبلغ پرداخت", "PartAmount", "ReportMoneyRender");
+	$rpg->addColumn("ماه تنفس", "DelayMonths");
+	$rpg->addColumn("روز تنفس", "DelayDays");
+	$rpg->addColumn("فاصله اقساط", "PayInterval", "intervslRender");
+	$rpg->addColumn("تعداد اقساط", "InstallmentCount");
+	$rpg->addColumn("کارمزد مشتری", "CustomerWage");
+	$rpg->addColumn("کارمزد صندوق", "FundWage");
+	$rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
+	
 	BeginReport();
 	
 	echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
@@ -51,6 +62,7 @@ if(!empty($_REQUEST["NTC_EXCEL"]))
 	$rpt->addColumn("PID", "LoanPersonID");
 	$rpt->addColumn("کد وام", "RequestID");
 	$rpt->addColumn("شعبه وام", "BranchName");
+	$rpt->addColumn("تضامین", "tazamin");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("موبایل", "mobile");
 	$rpt->addColumn("شماره پیامک", "SmsNo");
@@ -59,6 +71,14 @@ if(!empty($_REQUEST["NTC_EXCEL"]))
 	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
 	$rpt->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
 	$rpt->addColumn("استمهال", "multipart");
+	$rpt->addColumn("مبلغ پرداخت", "PartAmount", "ReportMoneyRender");
+	$rpt->addColumn("ماه تنفس", "DelayMonths");
+	$rpt->addColumn("روز تنفس", "DelayDays");
+	$rpt->addColumn("فاصله اقساط", "PayInterval", "intervslRender");
+	$rpt->addColumn("تعداد اقساط", "InstallmentCount");
+	$rpt->addColumn("کارمزد مشتری", "CustomerWage");
+	$rpt->addColumn("کارمزد صندوق", "FundWage");
+	$rpt->addColumn("درصد دیرکرد", "ForfeitPercent");
 	$rpt->generateReport();
 	die(); 
 }

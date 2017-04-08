@@ -824,7 +824,6 @@ class LON_requests extends PdoDataAccess
 		if($EndingAmount == -1)
 		{
 			$EndingAmount = $PureArr[0]["pureRemain"]*1;
-			$EndingDate = $PureArr["InstallmentDate"];
 			$EndingInstallment = $PureArr[0]["InstallmentID"];
 		}
 		//----------------------

@@ -52,7 +52,7 @@ if(isset($_REQUEST["show"]))
 			join BSC_branches using(BranchID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
-			join (
+			left join (
 				select ObjectID,group_concat(title,' به شماره سريال ',num, ' و مبلغ ', 
 					format(amount,2) separator '<br>') tazamin
 				from (	
