@@ -140,6 +140,23 @@ else if(isset($_REQUEST["forgetStep2"]))
 					document.getElementById("UserName2").placeholder = "کلمه کاربری تکراری می باشد";
 				<?}?>
 			}
+			if(error == "DuplicateNationalID")
+			{
+				Register(true);
+				document.getElementById("NationalIDDiv").className = "wrong3";
+				<?if(isset($_POST["email"])){?>
+					document.getElementById("isReal").checked = ('<?= $_POST["IsReal"]?>' == "YES") ? true : false;
+					document.getElementById("noReal").checked = ('<?= $_POST["IsReal"]?>' == "YES") ? false : true;
+					ChangePersonType(document.getElementById("isReal").checked ? 
+						document.getElementById("isReal") : document.getElementById("noReal"));
+					
+					document.getElementById("fname").value = "<?= $_POST["fname"] ?>";
+					document.getElementById("lname").value = "<?= $_POST["lname"] ?>";
+					document.getElementById("CompanyName").value = "<?= $_POST["CompanyName"] ?>";
+					document.getElementById("email").value = "<?= $_POST["email"] ?>";
+					document.getElementById("NationalID").placeholder = "کدملی / شناسه ملی ...";
+				<?}?>
+			}
 			if(error == "TooMuchAttempt")
 			{
 				document.getElementById("loginDescDIV").style.display = "block";
@@ -319,6 +336,17 @@ else if(isset($_REQUEST["forgetStep2"]))
 		vertical-align: super;
 		font-size: 11px;
 	}
+	
+	.wrong3 input {
+		border: 1px solid #9e423e;
+	}
+	.wrong3::after {
+		color: #f5443b !important;
+		content: "با این کدملی / شناسه ملی قبلا ثبت نام شده است.";
+		padding-right: 6px;
+		vertical-align: super;
+		font-size: 11px;
+	}
 
 	.btn{
 		background-color: #74a724;
@@ -467,7 +495,9 @@ else if(isset($_REQUEST["forgetStep2"]))
 								<input type="text" name="CompanyName" style="display:none" class="textfield" id="CompanyName" 
 									   placeholder="نام شرکت ..." dir="rtl"/>
 								<input type="email" name="email" id="email" class="textfield" placeholder="پست الکترونیک ..." required="required" dir="ltr"/>
-								<input type="text" name="NationalID" id="NationalID" class="textfield" placeholder="کد ملی/ شناسه ملی ..." required="required" dir="ltr"/>
+								<div id="NationalIDDiv">
+									<input type="text" name="NationalID" id="NationalID" class="textfield" placeholder="کد ملی/ شناسه ملی ..." required="required" dir="ltr"/>
+								</div>
 								<div id="UserNameDiv2"><input type="text" id="UserName2" name="UserName" class="textfield" 
 										placeholder="کلمه کاربری ..." required="required" dir="ltr"/></div>
 								<input type="password" class="textfield" id="password1" placeholder="رمز عبور ..." required="required" dir="ltr"/>
