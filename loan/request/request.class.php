@@ -539,6 +539,7 @@ class LON_requests extends PdoDataAccess
 				left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 				where RequestID=:r AND 
 					if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+					AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . "
 			union All
 				select CostDate PayDate, -1*CostAmount PayAmount
 				from LON_costs

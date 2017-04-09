@@ -149,6 +149,9 @@ Ext.define('ImageViewer', {
 			
 			Ext.Ajax.request({
 				url : this.src.url,
+				params : {
+					x: 0
+				},
 				method : "post",
 
 				success : function(response)

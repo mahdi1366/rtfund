@@ -22,13 +22,28 @@ if(!empty($_REQUEST["print"]))
 	$rpg = new ReportGenerator();
 	$rpg->mysql_resource = $data;
 	
-	$rpg->addColumn("شعبه وام", "BranchName");
-	$rpg->addColumn("وام گیرنده", "LoanPersonName");
-	$rpg->addColumn("تضامین", "tazamin");
-	$rpg->addColumn("سررسید", "InstallmentDate","ReportDateRender");
-	$rpg->addColumn("مبلغ قسط", "InstallmentAmount", "ReportMoneyRender");
-	$rpg->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
-	$rpg->addColumn("استمهال", "multipart");
+	$col = $rpg->addColumn("شماره وام", "RequestID");
+	$col->rowspaning = true;
+	$col = $rpg->addColumn("شعبه وام", "BranchName");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	$col = $rpg->addColumn("وام گیرنده", "LoanPersonName");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	$col = $rpg->addColumn("تضامین", "tazamin");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	$col = $rpg->addColumn("سررسید", "InstallmentDate","ReportDateRender");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount", "ReportMoneyRender");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	$col = $rpg->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	
+	$rpg->addColumn("شرح", "PartDesc");
 	$rpg->addColumn("مبلغ پرداخت", "PartAmount", "ReportMoneyRender");
 	$rpg->addColumn("ماه تنفس", "DelayMonths");
 	$rpg->addColumn("روز تنفس", "DelayDays");
@@ -52,7 +67,7 @@ if(!empty($_REQUEST["print"]))
 	$rpg->generateReport();
 	die();
 }
-if(!empty($_REQUEST["NTC_EXCEL"]))
+if(!empty($_REQUEST["EXCEL"]))
 {
 	$data = GetDelayedInstallments(true);
 	$rpt = new ReportGenerator();
@@ -70,8 +85,8 @@ if(!empty($_REQUEST["NTC_EXCEL"]))
 	$rpt->addColumn("سررسید", "InstallmentDate","ReportDateRender");
 	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
 	$rpt->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
-	$rpt->addColumn("استمهال", "multipart");
 	$rpt->addColumn("مبلغ پرداخت", "PartAmount", "ReportMoneyRender");
+	$rpt->addColumn("شرح", "PartDesc");
 	$rpt->addColumn("ماه تنفس", "DelayMonths");
 	$rpt->addColumn("روز تنفس", "DelayDays");
 	$rpt->addColumn("فاصله اقساط", "PayInterval", "intervslRender");
@@ -79,6 +94,26 @@ if(!empty($_REQUEST["NTC_EXCEL"]))
 	$rpt->addColumn("کارمزد مشتری", "CustomerWage");
 	$rpt->addColumn("کارمزد صندوق", "FundWage");
 	$rpt->addColumn("درصد دیرکرد", "ForfeitPercent");
+	$rpt->generateReport();
+	die(); 
+}
+if(!empty($_REQUEST["NTC_EXCEL"]))
+{
+	$data = GetDelayedInstallments(true);
+	$rpt = new ReportGenerator();
+	$rpt->rowNumber = false;
+	$rpt->excel = true;
+	$rpt->mysql_resource = $data;
+	$rpt->addColumn("PID", "LoanPersonID");
+	$rpt->addColumn("کد وام", "RequestID");
+	$rpt->addColumn("شعبه وام", "BranchName");
+	$rpt->addColumn("وام گیرنده", "LoanPersonName");
+	$rpt->addColumn("موبایل", "mobile");
+	$rpt->addColumn("شماره پیامک", "SmsNo");
+	$rpt->addColumn("وام گیرنده", "LoanPersonName");
+	$rpt->addColumn("سررسید", "InstallmentDate","ReportDateRender");
+	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
+	$rpt->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
 	$rpt->generateReport();
 	die(); 
 }
@@ -105,16 +140,16 @@ $col->width = 150;
 $col = $dg->addColumn("قابل پرداخت معوقه", "TotalRemainder", GridColumn::ColumnType_money);
 $col->width = 100;
 
-$dg->addButton("", "گزارش پرداخت", "report", "function(){LoanReport_DelayedInstallmentsObj.PayReport('');}");
-$dg->addButton("", "گزارش پرداخت2", "report", "function(){LoanReport_DelayedInstallmentsObj.PayReport(2);}");
+$dg->addButton("", "گزارش پرداخت", "report", "function(){LoanReport_DelayedInstallmentsObj.PayReport(2);}");
 
 $dg->height = 377;
 $dg->width = 850;
 $dg->emptyTextOfHiddenColumns = true;
 
 $dg->addButton("", "چاپ", "print", "LoanReport_DelayedInstallments.print");
+$dg->addButton("", "excel", "excel", "LoanReport_DelayedInstallments.excel");
 
-$dg->addButton("", "خروجی excel جهت ارتباط با ذینفعان", "excel", "LoanReport_DelayedInstallments.excel");
+$dg->addButton("", "خروجی excel جهت ارتباط با ذینفعان", "excel", "LoanReport_DelayedInstallments.NoticeExcel");
 
 $dg->EnablePaging = false;
 $dg->HeaderMenu = false;
@@ -190,6 +225,15 @@ LoanReport_DelayedInstallments.print = function(){
 }
 
 LoanReport_DelayedInstallments.excel = function(){
+	
+	me = LoanReport_DelayedInstallmentsObj;
+	window.open(LoanReport_DelayedInstallmentsObj.address_prefix + 
+		"DelayedInstallments.php?EXCEL=true" +
+		"&FromDate=" + me.DateFS.getComponent("FromDate").getRawValue()+
+		"&ToDate=" + me.DateFS.getComponent("ToDate").getRawValue());
+}
+
+LoanReport_DelayedInstallments.NoticeExcel = function(){
 	
 	me = LoanReport_DelayedInstallmentsObj;
 	window.open(LoanReport_DelayedInstallmentsObj.address_prefix + 
