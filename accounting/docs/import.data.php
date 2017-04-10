@@ -464,13 +464,15 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$itemObj->TafsiliID = $BankTafsili;
 	$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
 	$itemObj->TafsiliID2 = $AccountTafsili;
-	$itemObj->locked = "YES";
+	$itemObj->locked = "NO";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
 	$itemObj->SourceID3 = $PayObj->PayID;
 	$itemObj->Add($pdo);
 	$BankRow = clone $itemObj;
+	
+	$itemObj->locked = "YES";
 	
 	if($LoanMode == "Agent")
 	{
@@ -855,7 +857,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$itemObj->TafsiliID = $BankTafsili;
 	$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
 	$itemObj->TafsiliID2 = $AccountTafsili;
-	$itemObj->locked = "YES";
+	$itemObj->locked = "NO";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
 	$itemObj->SourceID = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
