@@ -51,7 +51,7 @@ if(isset($_REQUEST["show"]))
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.DocStatus != 'RAW' ";
 	
-	$query .= " group by if(DocType=".DOCTYPE_ENDCYCLE.",2,1),DocDate,if(DebtorAmount<>0,0,1),di.CostID,di.TafsiliID,di.TafsiliID2 ";
+	$query .= " group by if(DocType=".DOCTYPE_ENDCYCLE.",2,1),DocDate,ItemID ";
 	$query .= " order by if(DocType=".DOCTYPE_ENDCYCLE.",2,1),DocDate,if(DebtorAmount<>0,0,1),cc.CostCode";
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);

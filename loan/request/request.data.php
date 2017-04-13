@@ -526,7 +526,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	$RequestID = empty($RequestID) ? $_REQUEST["RequestID"] : $RequestID;
 	
 	//------------------- check for docs -------------------
-	$dt = PdoDataAccess::runquery("select * from ACC_DocItems
+	/*$dt = PdoDataAccess::runquery("select * from ACC_DocItems
 		join LON_installments on(SourceID=RequestID AND SourceID2=InstallmentID)
 		where SourceType=" . DOCTYPE_INSTALLMENT_CHANGE . " AND SourceID=? AND 
 			history='NO'", array($RequestID));
@@ -537,7 +537,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 
 		echo Response::createObjectiveResponse(false, "DocExists");
 		die();
-	}
+	}*/
 	//------------------------------------------------------
 	PdoDataAccess::runquery("delete from LON_installments where RequestID=? AND history='NO'", 
 			array($RequestID));
@@ -1199,15 +1199,13 @@ function GetDelayedInstallments($returnData = false){
 				r.RequestID,LoanPersonID,mobile,SmsNo,
 				concat_ws(' ',fname,lname,CompanyName) LoanPersonName,
 				max(InstallmentDate) InstallmentDate, InstallmentAmount,
-				if(count(distinct p0.PartID) > 1, '*','') multipart,
 				BranchName,
 				tazamin
 				
 			from LON_installments i
 			join LON_requests r using(RequestID)
 			join BSC_persons on(LoanPersonID=PersonID)
-			join LON_ReqParts p0 on(p0.RequestID=r.RequestID)
-			join LON_ReqParts p on(p.RequestID=r.RequestID AND p.IsHistory='NO')
+			join LON_ReqParts p on(p.RequestID=r.RequestID)
 			join BSC_branches using(BranchID)
 			left join (
 				select ObjectID,group_concat(title,' به شماره سريال ',num, ' و مبلغ ', 
@@ -1234,18 +1232,27 @@ function GetDelayedInstallments($returnData = false){
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
 	
-	$query .= " group by r.RequestID" . dataReader::makeOrder();
+	$query .= " group by p.PartID order by r.RequestID,p.PartID";
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
 
 	$result = array();
+	$currentRequestID = "";
+	
 	while($row = $dt->fetch())
 	{
+		if($currentRequestID == $row["RequestID"])
+		{
+			$row["TotalRemainder"] = $remain;
+			$result[] = $row;
+			continue;
+		}
 		$remain = LON_requests::GetCurrentRemainAmount($row["RequestID"]);
 		if($remain > 0)
 		{
 			$row["TotalRemainder"] = $remain;
 			$result[] = $row;
+			$currentRequestID = $row["RequestID"];
 		}
 	}
 	
