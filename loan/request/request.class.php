@@ -785,6 +785,39 @@ class LON_requests extends PdoDataAccess
 		return $CurrentRemain;
 	}
 	
+	/**
+	 * تاریخ اولین قسطی که پرداخت نشده است
+	 * @param type $RequestID
+	 * @param type $computeArr
+	 * @return type 
+	 */
+	static function GetMinPayedInstallmentDate($RequestID, $computeArr=null){
+		
+		$dt = array();
+		if($computeArr == null)
+			$computeArr = self::ComputePayments2($RequestID, $dt);
+		$obj = LON_ReqParts::GetValidPartObj($RequestID);
+		
+		$sumPay = 0;
+		foreach($computeArr as $row)
+			if($row["ActionType"] == "pay")
+				$sumPay += $row["ActionAmount"];
+		
+		foreach($computeArr as $row)
+		{
+			if($row["ActionType"] == "installment")
+			{
+				$amount = $row["InstallmentAmount"]*1;
+				if($obj->PayCompute != "installment")
+					$amount += $row["CurForfeitAmount"]*1;
+				if($amount > $sumPay)
+					return $row["ActionDate"];
+				$sumPay -= $amount;
+			}
+		}
+		return null;
+	}
+	
 	static function GetTotalRemainAmount($RequestID, $computeArr=null){
 		
 		$dt = array();

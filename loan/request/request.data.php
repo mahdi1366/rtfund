@@ -1190,15 +1190,15 @@ function GroupSavePay(){
 
 function GetDelayedInstallments($returnData = false){
 	
-	$FromDate = DateModules::shamsi_to_miladi($_REQUEST["FromDate"]);
-	$ToDate = DateModules::shamsi_to_miladi($_REQUEST["ToDate"]);
+	$FromDate = DateModules::shamsi_to_miladi($_REQUEST["FromDate"], "-");
+	$ToDate = DateModules::shamsi_to_miladi($_REQUEST["ToDate"], "-");
 	
 	$param = array(":todate" => $ToDate, ":fromdate" => $FromDate);
 	$query = "select 
 				p.*,
 				r.RequestID,LoanPersonID,mobile,SmsNo,
 				concat_ws(' ',fname,lname,CompanyName) LoanPersonName,
-				max(InstallmentDate) InstallmentDate, InstallmentAmount,
+				InstallmentAmount,
 				BranchName,
 				tazamin
 				
@@ -1235,7 +1235,6 @@ function GetDelayedInstallments($returnData = false){
 	$query .= " group by p.PartID order by r.RequestID,p.PartID";
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
-
 	$result = array();
 	$currentRequestID = "";
 	
@@ -1244,13 +1243,18 @@ function GetDelayedInstallments($returnData = false){
 		if($currentRequestID == $row["RequestID"])
 		{
 			$row["TotalRemainder"] = $remain;
+			$row["InstallmentDate"] = $MinDate;
 			$result[] = $row;
 			continue;
 		}
-		$remain = LON_requests::GetCurrentRemainAmount($row["RequestID"]);
-		if($remain > 0)
+		$temp = array();
+		$computeArr = LON_requests::ComputePayments2($row["RequestID"], $temp);
+		$remain = LON_requests::GetCurrentRemainAmount($row["RequestID"],$computeArr);
+		$MinDate = LON_requests::GetMinPayedInstallmentDate($row["RequestID"],$computeArr);
+		if($remain > 0 && $MinDate != null)
 		{
 			$row["TotalRemainder"] = $remain;
+			$row["InstallmentDate"] = $MinDate;
 			$result[] = $row;
 			$currentRequestID = $row["RequestID"];
 		}

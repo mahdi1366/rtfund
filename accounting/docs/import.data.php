@@ -865,6 +865,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$itemObj->Add($pdo);
 	$BankRow = clone $itemObj;
 	
+	$itemObj->locked = "YES";
 	//---------- ردیف های تضمین  ----------
 	
 	$dt = PdoDataAccess::runquery("select * from DMS_documents 
@@ -942,16 +943,12 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	//---------------------------------------------------------
 	$dt = PdoDataAccess::runquery("select sum(DebtorAmount) dsum, sum(CreditorAmount) csum
 		from ACC_DocItems where DocID=?", array($obj->DocID), $pdo);
-	if($dt[0]["dsum"] > $dt[0]["csum"])
+	if($dt[0]["dsum"] != $dt[0]["csum"])
 	{
 		$BankRow->CreditorAmount += $dt[0]["dsum"] - $dt[0]["csum"];
 		$BankRow->Edit($pdo);
 	}
-	else if($dt[0]["csum"] > $dt[0]["dsum"])
-	{
-		$LoanRow->DebtorAmount += $dt[0]["csum"] - $dt[0]["dsum"];
-		$LoanRow->Edit($pdo);
-	}
+	
 	//---------------------------------------------------------
 	
 	if(ExceptionHandler::GetExceptionCount() > 0)
