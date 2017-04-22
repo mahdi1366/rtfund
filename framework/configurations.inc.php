@@ -8,9 +8,9 @@ class sys_config{
 	 public static $db_server = array (
 	          "driver"   => "mysql",
 	          "host"     => "localhost",
-	          "database" => "krrtfir_rtfund2",
+	          "database" => "krrtfir_rtfund",
 	          "user"     => "root",
-	          "pass"     => ""
+	          "pass"     => "1297"
 	 );
 }
 
