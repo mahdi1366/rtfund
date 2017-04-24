@@ -78,7 +78,7 @@ class LON_requests extends PdoDataAccess
 						OR if(r1.BorrowerID<>'',r1.BorrowerID=r2.BorrowerID,1=0) 
 						OR if(r1.BorrowerDesc<>'',r1.BorrowerDesc=r2.BorrowerDesc,1=0) ) )
 			where r1.RequestID=?",array($this->RequestID));
-
+			
 			if(count($dt) > 0)
 			{
 				ExceptionHandler::PushException("در این تاریخ و با این مبلغ وام دیگری با شماره" .
@@ -91,9 +91,11 @@ class LON_requests extends PdoDataAccess
 			$dt = PdoDataAccess::runquery("
 			select r2.RequestID from LON_requests r2 
 			where substr(r2.ReqDate,1,10)=substr(now(),1,10) 
-				AND r2.ReqAmount=?
-				AND (r2.LoanPersonID=? OR r2.BorrowerID=? OR r2.BorrowerDesc=?)",
-				array($this->ReqAmount, $this->LoanPersonID, $this->BorrowerID, $this->BorrowerDesc));
+				AND r2.ReqAmount=:a
+				AND (if(:pid > 0,r2.LoanPersonID=:pid,1=0) OR r2.BorrowerID=:bid OR r2.BorrowerDesc=:bdesc)",
+				array(":a" => $this->ReqAmount, ":pid" => $this->LoanPersonID, 
+					":bid" => $this->BorrowerID, ":bdesc" => $this->BorrowerDesc));
+			
 			if(count($dt) > 0)
 			{
 				ExceptionHandler::PushException("در این تاریخ و با این مبلغ وام دیگری با شماره" .

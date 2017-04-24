@@ -178,7 +178,7 @@ MyRequest.prototype.DeleteRequest = function(){
 		
 		me = MyRequestObject;
 		record = me.grid.getSelectionModel().getLastSelected();
-		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
+		var mask = new Ext.LoadMask(me.grid, {msg:'در حال حذف ...'});
 		mask.show();
 
 		Ext.Ajax.request({

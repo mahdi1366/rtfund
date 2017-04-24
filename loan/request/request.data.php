@@ -48,7 +48,7 @@ function SaveLoanRequest(){
 
 			$obj->LoanID = Default_Agent_Loan;
 		}
-		if($_SESSION["USER"]["IsCustomer"] == "YES")
+		else if($_SESSION["USER"]["IsCustomer"] == "YES")
 		{
 			if(!isset($obj->LoanPersonID))
 				$obj->LoanPersonID = $_SESSION["USER"]["PersonID"];
@@ -223,7 +223,7 @@ function Selectguarantees(){
 function DeleteRequest(){
 	
 	$res = LON_requests::DeleteRequest($_POST["RequestID"]);
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($res, !$res ? ExceptionHandler::GetExceptionsToString() : "");
 	die();
 }
@@ -1194,17 +1194,18 @@ function GetDelayedInstallments($returnData = false){
 	$ToDate = DateModules::shamsi_to_miladi($_REQUEST["ToDate"], "-");
 	
 	$param = array(":todate" => $ToDate, ":fromdate" => $FromDate);
-	$query = "select 
-				p.*,
-				r.RequestID,LoanPersonID,mobile,SmsNo,
-				concat_ws(' ',fname,lname,CompanyName) LoanPersonName,
+	$query = "select p.*,
+				r.RequestID,LoanPersonID,p1.mobile,p1.SmsNo,
+				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) LoanPersonName,
+				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) ReqPersonName,
 				InstallmentAmount,
 				BranchName,
 				tazamin
 				
 			from LON_installments i
 			join LON_requests r using(RequestID)
-			join BSC_persons on(LoanPersonID=PersonID)
+			join BSC_persons p1 on(LoanPersonID=p1.PersonID)
+			left join BSC_persons p2 on(ReqPersonID=p2.PersonID)
 			join LON_ReqParts p on(p.RequestID=r.RequestID)
 			join BSC_branches using(BranchID)
 			left join (
@@ -1227,7 +1228,8 @@ function GetDelayedInstallments($returnData = false){
 	
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
-		$field = $field == "LoanPersonName" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;
+		$field = $field == "LoanPersonName" ? "concat_ws(' ',p1.fname,p1.lname,p1.CompanyName)" : $field;
+		$field = $field == "RequestID" ? "r.RequestID" : $field;
         $query .= ' and ' . $field . ' like :fld';
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
