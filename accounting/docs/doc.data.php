@@ -92,11 +92,12 @@ function confirm() {
 	//------------ check for register deposite -------------
 	if($status == "RAW")
 	{
-		$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems where DocID=? 
+		$dt = PdoDataAccess::runquery("select DocID,group_concat(TafsiliID) tafs from ACC_DocItems where DocID=? 
 			AND CostID in(".COSTID_ShortDeposite.",".COSTID_LongDeposite.") ", array($_POST["DocID"]));
 		if(count($dt) > 0)
 		{
-			$dt = PdoDataAccess::runquery("select LocalNo from ACC_docs where 
+			$dt = PdoDataAccess::runquery("select LocalNo from ACC_docs join ACC_DocItems using(DocID) where 
+				TafsiliID in(" . $dt[0]["tafs"] . ") AND
 				DocID>? AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 				AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
 				AND DocType=" . DOCTYPE_DEPOSIT_PROFIT, array($_POST["DocID"]));

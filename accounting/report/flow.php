@@ -240,7 +240,7 @@ if(isset($_REQUEST["show"]))
 	//$col->EnableSummary(true);
 	
 	$rpg->mysql_resource = $dataTable;
-	$rpg->page_size = 12;
+	$rpg->page_size = 10;
 	$rpg->paging = true;
 	
 	if(!$rpg->excel)
