@@ -989,8 +989,9 @@ AccDocs.prototype.AddItem = function()
 
 AccDocs.prototype.EditItem = function()
 {
-	if(this.grid.getStore().getAt(0).data.DocStatus != "RAW")
-		return;
+	if(<?= $_SESSION["USER"]["UserName"] == "admin" ? "false" : "true" ?>)
+		if(this.grid.getStore().getAt(0).data.DocStatus != "RAW")
+			return;
 		
 	var record = this.itemGrid.getSelectionModel().getLastSelected();
 	this.detailWin.down('panel').loadRecord(record);

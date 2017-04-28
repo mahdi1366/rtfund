@@ -217,9 +217,9 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$itemObj->DocID = $obj->DocID;
 			$itemObj->CostID = $CostCode_todiee;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $ReqPersonTafsili;
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
+			$itemObj->TafsiliID = $LoanPersonTafsili;
+			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID2 = $ReqPersonTafsili;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $PartObj->PartAmount*1 - $PayAmount;
 			$itemObj->Add($pdo);
@@ -243,9 +243,9 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$itemObj->DebtorAmount = $PayAmount;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $ReqPersonTafsili;
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
+		$itemObj->TafsiliID = $LoanPersonTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 		$itemObj->Add($pdo);
 	}
 	//------------------------ delay -------------------------------
@@ -494,13 +494,13 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$itemObj->Add($pdo);
 
 		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
 		$itemObj->CostID = $CostCode_commitment;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $PayAmount;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $ReqPersonTafsili;
+		$itemObj->TafsiliID = $LoanPersonTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 		$itemObj->Add($pdo);
 	}
 	//---------- ردیف های تضمین  ----------
@@ -780,9 +780,9 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 			$itemObj->DocID = $obj->DocID;
 			$itemObj->CostID = $CostCode_todiee;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $ReqPersonTafsili;
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
+			$itemObj->TafsiliID = $LoanPersonTafsili;
+			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID2 = $ReqPersonTafsili;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $PartObj->PartAmount*1 - $PayAmount;
 			$itemObj->Add($pdo);
@@ -794,9 +794,9 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 		$itemObj->DocID = $obj->DocID;
 		$itemObj->CostID = $CostCode_todiee;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $ReqPersonTafsili;
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
+		$itemObj->TafsiliID = $LoanPersonTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 		$itemObj->DebtorAmount = $PayAmount;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->Add($pdo);
@@ -1270,9 +1270,9 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		$itemObj->DocID = $obj->DocID;
 		$itemObj->CostID = $CostCode_todiee;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $ReqPersonTafsili;
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
+		$itemObj->TafsiliID = $LoanPersonTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 		$itemObj->DebtorAmount = $amount > 0 ? $amount : 0;
 		$itemObj->CreditorAmount = $amount < 0 ? abs($amount) : 0;	
 		$itemObj->Add($pdo);
@@ -2252,7 +2252,9 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		$itemObj->DebtorAmount = $PayObj->PayAmount;
 		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $ReqPersonTafsili;
+		$itemObj->TafsiliID = $LoanPersonTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ایجاد ردیف تعهد");
@@ -3090,7 +3092,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 			join ACC_DocItems using(DocID)
 			where CycleID=? AND DocID>=? AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
 			AND DocStatus not in('CONFIRM','ARCHIVE')
-			AND TafsiliID=?", array($LatestComputeDate,$TafsiliID));
+			AND TafsiliID=?", array($_SESSION["accounting"]["CycleID"] ,$LatestComputeDate,$TafsiliID));
 		if(count($dt) > 0 && $dt[0][0] != "")
 		{
 			echo Response::createObjectiveResponse(false, "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند و قادر به صدور سند سود سپرده نمی باشید.");

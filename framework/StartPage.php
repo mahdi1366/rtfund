@@ -11,6 +11,7 @@ require_once inc_dataGrid;
 //....................................................
 
 $frameworkAccess = false;
+$AttendanceAccess = false;
 $LoanAccess = false;
 $PlanAccess = false;
 
@@ -20,6 +21,7 @@ foreach($systems as $row)
 	switch($row["SystemID"])
 	{
 		case SYSTEMID_framework: $frameworkAccess = true; break;
+		case SYSTEMID_attendance: $AttendanceAccess = true; break;
 		case SYSTEMID_loan: $LoanAccess = true; break;
 		case SYSTEMID_plan: $PlanAccess = true; break;
 	}
@@ -93,7 +95,7 @@ function FrameworkStartPage(){
 		frame : true
 	});
 	<?}?>
-	
+	<?if($AttendanceAccess){?>
 	new Ext.panel.Panel({
 		renderTo : this.get("panel3"),
 		title : "ثبت ورود و خروج",
@@ -110,7 +112,7 @@ function FrameworkStartPage(){
 			autoLoad : true
 		}
     });
-	
+	<?}?>
 	new Ext.panel.Panel({
 		renderTo : this.get("panelNotes"),
 		title : "یادآوری ها",

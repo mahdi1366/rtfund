@@ -434,7 +434,7 @@ function showReport(){
 				
 			var form = document.getElementById("subForm");
 			form.action = "taraz.php?show=true&level=" + "l" + nextLevel;
-			
+			form.target = "_blank";
 			if(curlevel >= "l1")
 				form.action += "&level1=" + level1;
 			if(curlevel >= "l2")
@@ -450,7 +450,7 @@ function showReport(){
 			return;
 		}
 	</script>
-<form id="subForm" method="POST">
+	<form id="subForm" method="POST" target="blank">
 	
 	<input type="hidden" name="fromDate" value="<?= !empty($_REQUEST["fromDate"]) ? $_REQUEST["fromDate"] : "" ?>">
 	<input type="hidden" name="toDate" value="<?= !empty($_REQUEST["toDate"]) ? $_REQUEST["toDate"] : "" ?>">

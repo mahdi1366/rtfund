@@ -27,6 +27,9 @@ if(!empty($_REQUEST["print"]))
 	$col = $rpg->addColumn("شعبه وام", "BranchName");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
+	$col = $rpg->addColumn("معرف", "ReqPersonName");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("وام گیرنده", "LoanPersonName");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
@@ -78,6 +81,7 @@ if(!empty($_REQUEST["EXCEL"]))
 	$rpt->addColumn("کد وام", "RequestID");
 	$rpt->addColumn("شعبه وام", "BranchName");
 	$rpt->addColumn("تضامین", "tazamin");
+	$rpt->addColumn("معرف", "ReqPersonName");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("موبایل", "mobile");
 	$rpt->addColumn("شماره پیامک", "SmsNo");
@@ -107,6 +111,7 @@ if(!empty($_REQUEST["NTC_EXCEL"]))
 	$rpt->addColumn("PID", "LoanPersonID");
 	$rpt->addColumn("کد وام", "RequestID");
 	$rpt->addColumn("شعبه وام", "BranchName");
+	$rpt->addColumn("معرف", "ReqPersonName");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("موبایل", "mobile");
 	$rpt->addColumn("شماره پیامک", "SmsNo");

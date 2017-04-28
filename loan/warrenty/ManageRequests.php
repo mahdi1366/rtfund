@@ -28,7 +28,7 @@ $dg->addColumn("", "BranchID", "", true);
 $dg->addColumn("", "BranchName", "", true);
 $dg->addColumn("", "RefRequestID", "", true);
 $dg->addColumn("", "RequestID", "", true);
-$dg->addColumn("", "fullname", "", true);
+$dg->addColumn("نام شرکت", "fullname", "", true);
 
 $col = $dg->addColumn("نوع", "TypeDesc");
 $col->renderer = "function(v,p,r){p.tdAttr = \"data-qtip='\"+r.data.BranchName+\"'\"; return v;}";
