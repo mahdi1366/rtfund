@@ -201,6 +201,7 @@ if(isset($_REQUEST["show"]))
 
 		$DT = PdoDataAccess::runquery($query, $whereParam);
 		$BeforeAmount = $DT[0][0];
+		global $BeforeRemaindar;
 		$BeforeRemaindar = "<div align=left style='font-family:nazanin;font-size:18px;font-weight:bold;".
 				"padding:4px;border:1px solid black'>مانده از قبل : " . 
 				number_format($DT[0][0]) . "</div>";
@@ -246,13 +247,10 @@ if(isset($_REQUEST["show"]))
 	if(!$rpg->excel)
 	{
 		BeginReport();
-	
-		//if($_SESSION["USER"]["UserName"] == "admin")
-		//	echo PdoDataAccess::GetLatestQueryString ();
-		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
-		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
+		$rpg->headerContent = 
+		"<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
-				<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>
+				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 					گزارش گردش حساب ها 
 					 <br> ".
 				 $_SESSION["accounting"]["BranchName"]. "<br>" . "دوره سال " .
@@ -262,11 +260,19 @@ if(isset($_REQUEST["show"]))
 			. DateModules::shNow() . "<br>";
 		if(!empty($_POST["fromDate"]))
 		{
-			echo "<br>گزارش از تاریخ : " . $_POST["fromDate"] . ($_POST["toDate"] != "" ? " - " . $_POST["toDate"] : "");
+			$rpg->headerContent .= "<br>گزارش از تاریخ : " . $_POST["fromDate"] . ($_POST["toDate"] != "" ? " - " . $_POST["toDate"] : "");
 		}
-		echo "</td></tr></table>";
+		$rpg->headerContent .= "</td></tr></table>";
 	}
-	echo $BeforeRemaindar;
+
+	$rpg->SubHeaderFunction = "RemainRender";
+function RemainRender($PageNo)
+{
+global $BeforeRemaindar;
+if($PageNo == 1)
+echo $BeforeRemaindar;
+}
+	
 	$rpg->generateReport();
 	die();
 }
