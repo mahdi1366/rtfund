@@ -26,6 +26,7 @@ echo "<table border=1>
 		<td>مبلغ گردش</td>
 		<td>مانده حساب</td>
 		<td>تعداد روز</td>
+		<td>درصد</td>
 		<td>سود</td>
 	</tr>";
 $amount = 0;
@@ -42,11 +43,12 @@ for($i=0; $i<count($dataTable); $i++)
 			<td>" . number_format($row["row"]["amount"]) . "</td>
 			<td>" . number_format($amount) . "</td>
 			<td>" . $row["days"] . "</td>
+			<td>" . $row["percent"] . "</td>
 			<td>" . number_format($row["profit"]) . "</td>
 		</tr>";
 }
 echo "<tr id=footer>
-		<td colspan=5>جمع</td>
+		<td colspan=6>جمع</td>
 		<td>" . number_format($sumProfit) . "</td>
 	</tr>";
 echo "</table>";

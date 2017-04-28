@@ -13,9 +13,9 @@ if(isset($_REQUEST["show"]))
 	$query = "select i.*,
 			case when i.CostID is null then group_concat(concat_ws(' ',p0.fname,p0.lname,p0.CompanyName) SEPARATOR '<br>')
 				else t1.TafsiliDesc end fullname,
-			case when i.CostID is null then group_concat(ifnull(p1.mobile,'') SEPARATOR '<br>')
+			case when i.CostID is null then group_concat(ifnull(p0.mobile,'') SEPARATOR '<br>')
 				else p2.mobile end mobile,
-			case when i.CostID is null then group_concat(ifnull(p1.SmsNo,'') SEPARATOR '<br>')
+			case when i.CostID is null then group_concat(ifnull(p0.SmsNo,'') SEPARATOR '<br>')
 				else p2.SmsNo end SmsNo,
 			case when i.CostID is null then group_concat(concat_ws(' ',p1.fname,p1.lname,p1.CompanyName,'-',sa.SubDesc) SEPARATOR '<br>')
 				else '' end ReqFullname,

@@ -48,7 +48,7 @@ function SaveLoanRequest(){
 
 			$obj->LoanID = Default_Agent_Loan;
 		}
-		if($_SESSION["USER"]["IsCustomer"] == "YES")
+		else if($_SESSION["USER"]["IsCustomer"] == "YES")
 		{
 			if(!isset($obj->LoanPersonID))
 				$obj->LoanPersonID = $_SESSION["USER"]["PersonID"];
@@ -223,7 +223,7 @@ function Selectguarantees(){
 function DeleteRequest(){
 	
 	$res = LON_requests::DeleteRequest($_POST["RequestID"]);
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($res, !$res ? ExceptionHandler::GetExceptionsToString() : "");
 	die();
 }
@@ -1237,7 +1237,6 @@ function GetDelayedInstallments($returnData = false){
 	$query .= " group by p.PartID order by r.RequestID,p.PartID";
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
-
 	$result = array();
 	$currentRequestID = "";
 	
