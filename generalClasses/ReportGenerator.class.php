@@ -62,8 +62,9 @@ class ReportGenerator {
 	public $groupPerPage = false;
 	
 	public $showPageOfPage = false;
-	
 	public $VerticalSumColumn = array();
+
+	public $SubHeaderFunction = "";
 	
 	public function ReportGenerator() {
 		$this->border = "1";
@@ -260,15 +261,16 @@ class ReportGenerator {
 				break;
 			}
 		}
+		
 		//..............................................
 		
 		echo "<table id='page_" . $this->pageCount . "' width='$this->width' 
 				style='font-family:".$this->fontFamily.";border-collapse: collapse'  border='$this->border'
 				cellspacing='$this->cellspace' cellpadding='$this->cellpad'>";
-		
+		echo "<caption>";
 		if($reportTitle)
 		{
-			echo "<caption>";
+			
 			if ($this->headerContent != "")
 			{
 				$this->pageRecordCounter++;
@@ -280,9 +282,16 @@ class ReportGenerator {
 				echo "<P></P>";
 				$this->pageRecordCounter++;
 			}
-			echo "</caption>";
+			
 		}
-		
+		//..............................................
+		if($this->SubHeaderFunction != "")
+{
+$temp= $this->SubHeaderFunction;
+$temp($this->pageCount);
+
+}//..............................................
+echo "</caption>";
 		echo "<tr bgcolor = '$this->header_color'>";
 
 		// row number ---------------------------
@@ -290,6 +299,7 @@ class ReportGenerator {
 			echo "<td " . ($GroupHeaderFlag ? "rowspan=2" : "") . 
 				" align='center' style='padding:2px' border='$this->border' height='21px'><font
 				color = '$this->header_textcolor' style='font-size:".$this->fontSize."'><b>&nbsp;ردیف</b></font></th>";
+
 		//---------------------------------------
 		// Draw Header
 		
