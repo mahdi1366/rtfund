@@ -28,7 +28,7 @@ function AddGroup(){
 
 function SelectLoanGroups(){
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=1");
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=1 AND IsActive='YES'");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }

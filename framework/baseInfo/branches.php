@@ -22,16 +22,23 @@ $col->align = "center";
 $col = $dg->addColumn("تفصیلی بانک پیش فرض", "DefaultBankTafsiliID", "string");
 $col->editor = ColumnEditor::ComboBox(
 		PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_BANKS), 
-		"TafsiliID", "TafsiliDesc");
+		"TafsiliID", "TafsiliDesc", "", "", true);
 $col->sortable = false;
 $col->width = 130;
 
 $col = $dg->addColumn("تفصیلی حساب پیش فرض", "DefaultAccountTafsiliID", "string");
 $col->editor = ColumnEditor::ComboBox(
 		PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_ACCOUNTS), 
-		"TafsiliID", "TafsiliDesc");
+		"TafsiliID", "TafsiliDesc", "", "", true);
 $col->sortable = false;
 $col->width = 140;
+
+$col = $dg->addColumn("مجوز صدور ضمانتنامه", "WarrentyAllowed", "string");
+$col->renderer = "function(v){return v == 'YES' ? '√' : '';}";
+$col->editor = ColumnEditor::CheckField("", "YES");
+$col->sortable = false;
+$col->align = "center";
+$col->width = 100;
 
 $col = $dg->addColumn("حذف","BranchID","");
 $col->renderer = "Branch.deleteRender";

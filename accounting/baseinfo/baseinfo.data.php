@@ -288,7 +288,7 @@ function AddGroup(){
 
 function SelectTafsiliGroups(){
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=2");
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=2 AND IsActive='YES'");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -567,7 +567,7 @@ function EnableChequeBook() {
 
 function SelectChequeStatuses() {
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4");
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4 AND IsActive='YES'");
 
 	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
 	die();
@@ -589,7 +589,7 @@ function SelectACCRoles(){
 
 function SelectRoles() {
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=75");
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=75 AND IsActive='YES'");
 	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
 	die();
 }

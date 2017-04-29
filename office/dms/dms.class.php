@@ -260,4 +260,24 @@ class DMS_PackageItems extends OperationClass
 			", $whereParams);
 	}
 }
+
+class DMS_DocParams extends OperationClass
+{
+	const TableName = "DMS_DocParams";
+	const TableKey = "ParamID";
+	
+	public $ParamID;
+	public $DocType;
+	public $ParamDesc;
+	public $ParamType;
+	public $ParamValues;
+	public $IsActive;
+	
+	function Remove($pdo = null) {
+		
+		$this->IsActive = "NO";
+		return $this->Edit();
+	}
+}
+
 ?>

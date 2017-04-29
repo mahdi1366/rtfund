@@ -24,6 +24,7 @@ define("DOCTYPE_INCOMERCHEQUE", "15");
 define("DOCTYPE_LOAN_DIFFERENCE", "16");
 define("DOCTYPE_LOAN_COST", "17");
 define("DOCTYPE_WARRENTY_END", "18");
+define("DOCTYPE_WARRENTY_CANCEL", "21");
 define("DOCTYPE_WARRENTY_EXTEND", "19");
 define("DOCTYPE_INSTALLMENT_CHANGE", "20");
 
@@ -80,6 +81,7 @@ define("CONTRACT_FLOWID","2");
 define("WAR_STEPID_RAW", "100");
 define("WAR_STEPID_CONFIRM", "110");
 define("WAR_STEPID_END", "120");
+define("WAR_STEPID_CANCEL", "130");
 
 define("CNT_STEPID_RAW", "100");
 define("CNT_STEPID_CONFIRM", "110");

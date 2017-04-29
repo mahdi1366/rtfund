@@ -134,7 +134,7 @@ function selectIncomeCheques() {
 
 function SelectIncomeChequeStatuses() {
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4");
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4 AND IsActive='YES'");
 
 	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
 	die();

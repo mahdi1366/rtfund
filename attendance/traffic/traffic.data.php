@@ -152,14 +152,14 @@ function DeleteRequest(){
 
 function selectOffTypes(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=20");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=20 AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
 
 function selectMeans(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=21");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=21 AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

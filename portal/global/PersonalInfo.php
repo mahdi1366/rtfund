@@ -16,7 +16,8 @@ $dg->addColumn("", "ObjectID", "", true);
 $dg->addColumn("", "IsConfirm", "", true);
 
 $col = $dg->addColumn("مدرک", "DocType", "");
-$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from BaseInfo where typeID=8"), "InfoID", "InfoDesc");
+$col->editor = ColumnEditor::ComboBox(PdoDataAccess::runquery("select * from BaseInfo where typeID=8 AND IsActive='YES'"),
+		"InfoID", "InfoDesc");
 $col->width = 140;
 
 $col = $dg->addColumn("توضیح", "DocDesc", "");

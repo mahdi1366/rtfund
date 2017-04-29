@@ -128,7 +128,11 @@ function DeletePost(){
 //---------------------------------
 
 function SelectBranches(){
-	$temp = PdoDataAccess::runquery("select * from BSC_branches");
+	
+	$query = "select * from BSC_branches where 1=1 ";
+	$query .= !empty($_REQUEST["WarrentyAllowed"]) ? " AND WarrentyAllowed='YES'" : "";
+			
+	$temp = PdoDataAccess::runquery($query);
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -137,6 +141,8 @@ function SaveBranch(){
 	
 	$obj = new BSC_branches();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	$obj->WarrentyAllowed = $obj->WarrentyAllowed == "true" ? "YES" : "NO";
 	
 	if($obj->BranchID > 0)
 		$result = $obj->EditBranch();
@@ -201,7 +207,7 @@ function SelectBaseTypes(){
 
 function SelectBaseInfo(){
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where typeID=? AND IsActive='YES'",
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where typeID=? ",
 		array($_REQUEST["TypeID"]));
 
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
@@ -210,25 +216,22 @@ function SelectBaseInfo(){
 
 function SaveBaseInfo(){
 	
-	$st = stripslashes(stripslashes($_POST["record"]));
-	$data = json_decode($st);
+	$obj = new BaseInfo();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 
-	if($data->InfoID*1 == 0)
+	if($obj->InfoID*1 == 0)
 	{
 		$pdo = PdoDataAccess::getPdoObject();
 		$pdo->beginTransaction();
 	
-		$data->InfoID = PdoDataAccess::GetLastID("BaseInfo", "InfoID", "TypeID=?", array($data->TypeID), $pdo);
-		$data->InfoID = $data->InfoID*1 + 1;
+		$obj->InfoID = PdoDataAccess::GetLastID("BaseInfo", "InfoID", "TypeID=?", array($obj->TypeID), $pdo);
+		$obj->InfoID = $obj->InfoID*1 + 1;
 		
-		PdoDataAccess::runquery("insert into BaseInfo(TypeID,InfoID,InfoDesc) values(?,?,?)",
-			array($data->TypeID, $data->InfoID, $data->InfoDesc), $pdo);
-		
+		$obj->Add($pdo);		
 		$pdo->commit();
 	}
 	else
-		PdoDataAccess::runquery("update BaseInfo set InfoDesc=? where typeID=? AND InfoID=?",
-			array($data->InfoDesc, $data->TypeID, $data->InfoID));	
+		$obj->Edit($pdo);
 
 	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
 	die();
@@ -236,9 +239,8 @@ function SaveBaseInfo(){
 
 function DeleteBaseInfo(){
 	
-	PdoDataAccess::runquery("update BaseInfo set IsActive='NO' 
-		where TypeID=? AND InfoID=?",array($_REQUEST["TypeID"], $_REQUEST["InfoID"]));
-
+	$obj = new BaseInfo($_REQUEST["TypeID"], $_REQUEST["InfoID"]);
+	$obj->Remove();
 	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
 	die();
 }

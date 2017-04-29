@@ -74,7 +74,7 @@ $col = $dg_accounts->addColumn("نوع حساب",'AccountType');
 $col->width = 80;
 $col->renderer = 'function(v,p,r){return AccountObj.TypeHesab(v,p,r);}';
 $col->editor = ColumnEditor::ComboBox(
-		PdoDataAccess::runquery("select * from BaseInfo where TypeID=3"),'InfoID','InfoDesc');
+		PdoDataAccess::runquery("select * from BaseInfo where TypeID=3 AND IsActive='YES'"),'InfoID','InfoDesc');
 
 if($accessObj->AddFlag)
 {

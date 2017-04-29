@@ -19,6 +19,7 @@ class WAR_requests extends OperationClass
 	public $amount;
 	public $StartDate;
 	public $EndDate;
+	public $CancelDate;
 	public $wage;
 	public $LetterNo;
 	public $LetterDate;
@@ -31,12 +32,13 @@ class WAR_requests extends OperationClass
 	public $_fullname;
 	public $_TypeDesc;
 	
-	function __construct($RequestID = "") {
+	function __construct($RequestID = "", $pdo = null) {
 		
 		$this->DT_ReqDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_StartDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_EndDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_LetterDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_CancelDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($RequestID != "")
 			PdoDataAccess::FillObject ($this, "
@@ -44,7 +46,7 @@ class WAR_requests extends OperationClass
 					from WAR_requests r 
 					left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
 					left join BSC_persons using(PersonID)
-				where RequestID=?", array($RequestID));
+				where RequestID=?", array($RequestID), $pdo);
 	}
 	
 	static function SelectAll($where = "", $param = array(), $order = ""){

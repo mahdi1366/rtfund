@@ -45,7 +45,7 @@ else
 			$User = "Supporter";
 	}
 }
-$scopes = PdoDataAccess::runquery("select InfoID,InfoDesc from BaseInfo where typeID=21" . $ScopeWhere);
+$scopes = PdoDataAccess::runquery("select InfoID,InfoDesc from BaseInfo where typeID=21 AND IsActive='YES'" . $ScopeWhere);
 //-----------------------------------------------------
 $readOnly = true;
 if($_SESSION["USER"]["IsCustomer"] == "YES" && 

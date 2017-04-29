@@ -28,7 +28,12 @@ $dg->addColumn("", "BranchID", "", true);
 $dg->addColumn("", "BranchName", "", true);
 $dg->addColumn("", "RefRequestID", "", true);
 $dg->addColumn("", "RequestID", "", true);
+$dg->addColumn("", "wage", "", true);
+$dg->addColumn("", "RegisterAmount", "", true);
 $dg->addColumn("نام شرکت", "fullname", "", true);
+
+$col = $dg->addColumn("شعبه", "BranchName");
+$col->width = 120;
 
 $col = $dg->addColumn("نوع", "TypeDesc");
 $col->renderer = "function(v,p,r){p.tdAttr = \"data-qtip='\"+r.data.BranchName+\"'\"; return v;}";
@@ -45,14 +50,6 @@ $col->width = 70;
 
 $col = $dg->addColumn("تاریخ پایان", "EndDate", GridColumn::ColumnType_date);
 $col->width = 70;
-
-$col = $dg->addColumn("کارمزد", "wage");
-$col->width = 40;
-$col->align = "center";
-
-$col = $dg->addColumn("کارمزد صدور", "RegisterAmount", GridColumn::ColumnType_money);
-$col->width = 80;
-$col->align = "center";
 
 $col = $dg->addColumn("بلوکه", "IsBlock");
 $col->renderer = "function(v){return (v == 'YES') ? '√' : '';}";

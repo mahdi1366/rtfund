@@ -13,6 +13,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "baseInfo.data.php?task=SelectBaseInfo", "grid_div");
 
 $dg->addColumn("", "TypeID", "", true);
+$dg->addColumn("", "IsActive", "", true);
 
 $col = $dg->addColumn("کد", "InfoID");
 $col->width = 100;
@@ -27,10 +28,10 @@ if($accessObj->AddFlag)
 }
 if($accessObj->RemoveFlag)
 {
-	$col = $dg->addColumn("حذف", "");
+	$col = $dg->addColumn("غیر فعال", "");
 	$col->sortable = false;
 	$col->renderer = "function(v,p,r){return BaseInfo.DeleteRender(v,p,r);}";
-	$col->width = 50;
+	$col->width = 70;
 }
 $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(){return BaseInfoObject.SaveBaseInfo();}";
@@ -73,12 +74,19 @@ function BaseInfo(){
 
 	this.grid = <?= $grid ?>;
 	this.grid.plugins[0].on("beforeedit", function(editor,e){
+		if(e.record.data.IsActive == "NO")
+			return false;
 		if(e.record.data.ObjectID*1 > 0)
 			return false;
 		if(!e.record.data.InfoID)
 			return BaseInfoObject.AddAccess;
 		return BaseInfoObject.EditAccess;
 	});
+	this.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.IsActive == "NO")
+			return "pinkRow";
+	}
 	
 	this.groupPnl = new Ext.form.Panel({
 		renderTo: this.get("div_selectGroup"),
@@ -123,6 +131,8 @@ var BaseInfoObject = new BaseInfo();
 
 BaseInfo.DeleteRender = function(v,p,r){
 	
+	if(r.data.IsActive == "NO")
+		return "";
 	return "<div align='center' title='حذف' class='remove' "+
 		"onclick='BaseInfoObject.DeleteBaseInfo();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
@@ -178,7 +188,7 @@ BaseInfo.prototype.SaveBaseInfo = function(index){
 
 BaseInfo.prototype.DeleteBaseInfo = function(){
 	
-	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+	Ext.MessageBox.confirm("","در صورتی که آیتم مورد نظر استفاده نشده باشد حذف می شود. آیا مایل به ادامه می باشید؟", function(btn){
 		if(btn == "no")
 			return;
 		

@@ -66,6 +66,11 @@ $col->width = 60;
 $col = $dg->addColumn("شرح", "InfoDesc", "");
 $col->editor = ColumnEditor::TextField();
 
+$col = $dg->addColumn("آیتم ها", "");
+$col->sortable = false;
+$col->renderer = "function(v,p,r){return DocType.ParamRender(v,p,r,2);}";
+$col->width = 50;
+
 if($accessObj->AddFlag)
 {
 	$dg->addButton = true;
@@ -141,8 +146,6 @@ function DocType(){
 	});
 }
 
-var DocTypeObject = new DocType();	
-
 DocType.listRender = function(v,p,r, gridIndex){
 	
 	return "<div align='center' title='لیست آیتم ها' class='list' "+
@@ -155,6 +158,14 @@ DocType.DeleteRender = function(v,p,r, gridIndex){
 	
 	return "<div align='center' title='حذف' class='remove' "+
 		"onclick='DocTypeObject.DeleteDocType(" + gridIndex + ");' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+DocType.ParamRender = function(v,p,r, gridIndex){
+	
+	return "<div align='center' title='لیست آیتم ها' class='list' "+
+		"onclick='DocTypeObject.LoadParams();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
@@ -269,5 +280,44 @@ DocType.prototype.DeleteDocType = function(gridIndex){
 		});
 	});
 }
+
+//-----------------------------------------------------------
+
+DocType.prototype.LoadParams = function(){
+
+	if(!this.ParamWin)
+	{
+		this.ParamWin = new Ext.window.Window({
+			width : 600,
+			title : "آیتم های الگو",
+			height : 520,
+			modal : true,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "DocParams.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.ParamWin);
+	}
+
+	this.ParamWin.show();
+	this.ParamWin.center();
+	
+	var record = this.grid2.getSelectionModel().getLastSelected();
+	this.ParamWin.loader.load({
+		params : {
+			ExtTabID : this.ParamWin.getEl().id,
+			DocType : record.data.InfoID
+		}
+	});
+}
+
+var DocTypeObject = new DocType();	
 
 </script>

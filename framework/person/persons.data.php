@@ -191,7 +191,7 @@ function ConfirmPersons(){
 
 function selectCompanyTypes(){
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where typeID=14 order by InfoDesc");
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where typeID=14 AND IsActive='YES' order by InfoDesc");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -303,7 +303,7 @@ function ConfirmLicense(){
 
 function selectCities(){
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where typeID=15 order by InfoDesc");
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where typeID=15 AND IsActive='YES' order by InfoDesc");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }

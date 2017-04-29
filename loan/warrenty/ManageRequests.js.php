@@ -75,7 +75,7 @@ function WarrentyRequest(){
 				proxy: {
 					type: 'jsonp',
 					url: this.address_prefix + '../../framework/baseInfo/baseInfo.data.php?' +
-						"task=SelectBranches",
+						"task=SelectBranches&WarrentyAllowed=true",
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields : ['BranchID','BranchName'],
@@ -240,6 +240,9 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 			
 			op_menu.add({text: 'خاتمه ضمانت نامه',iconCls: 'finish',
 				handler : function(){ return WarrentyRequestObject.EndWarrentyDoc(); }})
+			
+			op_menu.add({text: 'ابطال ضمانت نامه',iconCls: 'cross',
+				handler : function(){ return WarrentyRequestObject.BeforeCancelWarrentyDoc(); }})
 			
 			op_menu.add({text: 'تمدید ضمانت نامه',iconCls: 'delay',
 				handler : function(){ return WarrentyRequestObject.BeforeExtendWarrentyDoc(); }})
@@ -778,6 +781,64 @@ WarrentyRequest.prototype.EndWarrentyDoc = function(){
 				WarrentyRequestObject.grid.getStore().load();
 			}
 		});
+	});
+}
+
+WarrentyRequest.prototype.BeforeCancelWarrentyDoc = function(){
+
+	if(!this.CancelWin)
+	{
+		this.CancelWin = new Ext.window.Window({
+			width : 400,
+			height : 90,
+			items : new Ext.form.Panel({
+				items : [{
+					xtype : "shdatefield",
+					name : "CancelDate",
+					labelWidth : 200,
+					allowBlank : false,
+					fieldLabel : "تاریخ ابطال ضمانت نامه"
+				}],
+				buttons :[{
+					text : "ابطال",
+					iconCls : "cross",
+					handler : function(){WarrentyRequestObject.CancelWarrentyDoc();}
+				},{
+					text : "انصراف",
+					iconCls : "undo",
+					handler : function(){ this.up('window').hide(); }
+				}]
+			})
+		});
+	}
+	this.CancelWin.show();
+	this.CancelWin.center();
+}
+
+WarrentyRequest.prototype.CancelWarrentyDoc = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+
+	var mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	this.CancelWin.down('form').getForm().submit({
+
+		url: this.address_prefix +'request.data.php',
+		method: "POST",
+		params: {
+			task: "CancelWarrentyDoc",
+			RequestID : record.data.RequestID
+		},
+		success: function(){
+			mask.hide();
+			WarrentyRequestObject.CancelWin.hide();
+			WarrentyRequestObject.grid.getStore().load();
+		},
+		failure : function(form, action){
+			mask.hide();
+			Ext.MessageBox.alert("",action.result.data);
+		}
 	});
 }
 

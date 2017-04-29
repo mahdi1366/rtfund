@@ -29,7 +29,7 @@ function selectCycles(){
 
 function SelectDocTypes(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=9");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=9 AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

@@ -145,7 +145,7 @@ function DeleteContract(){
 
 function SelectContractTypes() {
    
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=18");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=18 AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

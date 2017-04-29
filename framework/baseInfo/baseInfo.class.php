@@ -4,8 +4,7 @@
 // create Date: 94.06
 //---------------------------
 
-class BSC_units extends PdoDataAccess
-{
+class BSC_units extends PdoDataAccess {
 	public $UnitID;
 	public $ParentID;
 	public $UnitName;
@@ -66,8 +65,7 @@ class BSC_units extends PdoDataAccess
 	}
 }
 
-class BSC_posts extends OperationClass
-{
+class BSC_posts extends OperationClass {
 	const TableName = "BSC_posts";
 	const TableKey = "PostID";
 	
@@ -100,13 +98,13 @@ class BSC_posts extends OperationClass
 	
 }
 
-class BSC_branches extends PdoDataAccess
-{
+class BSC_branches extends PdoDataAccess {
 	public $BranchID;
 	public $BranchName;
 	public $IsActive;
 	public $DefaultBankTafsiliID;
 	public $DefaultAccountTafsiliID;
+	public $WarrentyAllowed;
 	
 	function  __construct($BranchID = "")
 	{
@@ -230,8 +228,7 @@ class BSC_PersonExpertDomain extends OperationClass{
 	public $DomainID;
 }
 
-class BSC_setting extends OperationClass
-{
+class BSC_setting extends OperationClass {
 	const TableName = "BSC_setting";
 	const TableKey = "ParamID";
 	
@@ -243,8 +240,7 @@ class BSC_setting extends OperationClass
 	public $ParamValue;
 }
 
-class BSC_CheckLists extends OperationClass
-{
+class BSC_CheckLists extends OperationClass {
 	const TableName = "BSC_CheckLists";
 	const TableKey = "ItemID";
 	
@@ -252,5 +248,85 @@ class BSC_CheckLists extends OperationClass
 	public $SourceType;
 	public $ItemDesc;
 	public $ordering;
+}
+
+class BaseInfo extends PdoDataAccess {
+
+	public $TypeID;
+	public $InfoID;
+	public $InfoDesc;
+	public $IsActive;
+	
+	public $_TableName;
+	public $_FieldName;
+	
+	function __construct($TypeID = "", $infoID = "") {
+		
+		if($TypeID != "")
+		{
+			return parent::FillObject($this, "select i.*, TableName _TableName, FieldName _FieldName "
+					. "from BaseInfo i join BaseTypes using(TypeID)"
+					. "where i.TypeID=? AND i.InfoID=?", 
+				array($TypeID , $infoID));
+		}
+	}
+	
+	function Add($pdo = null){
+		
+		if( parent::insert("BaseInfo", $this, $pdo) === false )
+		    return false;
+
+	    $daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->TypeID;
+		$daObj->SubObjectID = $this->InfoID;
+		$daObj->TableName = "BaseInfo";
+		$daObj->execute($pdo);
+		return true;	
+    }
+
+    function Edit($pdo = null){
+		
+	    $whereParams = array();
+	    $whereParams[":tid"] = $this->TypeID;
+		$whereParams[":fid"] = $this->InfoID;
+
+	    if( parent::update("BaseInfo",$this," TypeID=:tid and InfoID=:fid", $whereParams, $pdo) === false )
+		    return false;
+
+	    $daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_update;
+		$daObj->MainObjectID = $this->TypeID;
+		$daObj->SubObjectID = $this->InfoID;
+		$daObj->TableName = "BaseInfo";
+		$daObj->execute($pdo);
+		return true;	
+    }
+
+    function Remove(){
+		
+		if($this->_FieldName == "" || $this->_TableName == "")
+		{
+			$this->IsActive = "NO";
+			return $this->Edit();
+		}
+	    $dt = PdoDataAccess::runquery("select count(*) from " . $this->_TableName . 
+				" where " . $this->_FieldName . "=?", array($this->InfoID));
+		if($dt[0][0]*1 == 0)
+		{
+			parent::delete("BaseInfo", "TypeID=? AND InfoID=?", array($this->TypeID, $this->InfoID));
+			$daObj = new DataAudit();
+			$daObj->ActionType = DataAudit::Action_delete;
+			$daObj->MainObjectID = $this->TypeID;
+			$daObj->SubObjectID = $this->InfoID;
+			$daObj->TableName = "BaseInfo";
+			$daObj->execute();
+			return true;	
+		}
+		
+		$this->IsActive = "NO";
+		return $this->Edit();
+    }
+
 }
 ?>

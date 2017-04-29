@@ -857,7 +857,7 @@ function RegisterInOutAccountDoc() {
 
 function GetSubjects(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=73");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=73 AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

@@ -215,6 +215,39 @@ function ExtendWarrenty(){
 	echo Response::createObjectiveResponse($result, "");
 	die();	
 }
+
+function CancelWarrentyDoc(){
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$ReqObj = new WAR_requests($_POST["RequestID"]);
+	$ReqObj->StatusID = WAR_STEPID_CANCEL;
+	$ReqObj->CancelDate = $_POST["CancelDate"];
+	$result = $ReqObj->Edit($pdo);
+	if(!$result)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	$ReqObj = new WAR_requests($_POST["RequestID"], $pdo); 
+	
+	$result = CancelWarrantyDoc($ReqObj, $pdo);
+	if(!$result)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	
+	
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
 //------------------------------------------------
 
 function GetRequestPeriods(){
@@ -305,7 +338,7 @@ function EditWarrantyDoc(){
 
 function GetWarrentyTypes(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=74");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=74 AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

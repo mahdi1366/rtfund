@@ -240,14 +240,14 @@ function SelectArchiveLetters(){
 
 function selectOuterSendType(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=76");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=76 AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
 
 function selectAccessType(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=77");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=77 AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -370,7 +370,7 @@ function DeletePage(){
 
 function selectSendTypes(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=12");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=12 AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

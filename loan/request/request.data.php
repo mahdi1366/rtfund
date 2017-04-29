@@ -215,7 +215,7 @@ function SelectAllRequests(){
 
 function Selectguarantees(){
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=8 and param1=1");
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=8 AND IsActive='YES' and param1=1");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -919,7 +919,7 @@ function SelectReceivedRequests($returnCount = false){
 }
 
 function selectRequestStatuses(){
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=5");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=5 AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -1595,14 +1595,14 @@ function ConfirmRequest(){
 
 function GetChequeStatuses(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=16");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=16 AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
 
 function GetPayTypes(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=6");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=6 AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

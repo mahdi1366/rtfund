@@ -213,7 +213,7 @@ function selectDocTypes(){
 
 function selectAllParams(){
 	
-	$dt = PdoDataAccess::runquery("select * from DMS_DocParams");
+	$dt = PdoDataAccess::runquery("select * from DMS_DocParams where IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -351,7 +351,7 @@ function selectPackageItems(){
 
 function selectObjectTypes(){
 	
-	$list = PdoDataAccess::runquery("select * from BaseInfo where typeID=11");
+	$list = PdoDataAccess::runquery("select * from BaseInfo where typeID=11 AND IsActive='YES'");
 	
 	echo dataReader::getJsonData($list, count($list), $_GET["callback"]);
 	die();
@@ -423,6 +423,39 @@ function DeletePackageItem(){
 	$result = $obj->Remove();
 	
 	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//.................................................
+
+function selectDocParams() {
+	
+	$temp = DMS_DocParams::Get(" AND IsActive='YES' AND DocType=?" . 
+			dataReader::makeOrder(), array($_REQUEST["DocType"]));
+	
+	$res = $temp->fetchAll();
+    echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+    die();
+}
+
+function saveDocParam() {
+	
+	$obj = new DMS_DocParams();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST['record']);
+	if ($obj->ParamID > 0) 
+		$obj->Edit();
+	 else 
+		$obj->Add();
+
+	echo Response::createObjectiveResponse(true, '');
+	die();
+}
+
+function deleteDocParam() {
+
+	$obj = new DMS_DocParams($_POST['ParamID']);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, '');
 	die();
 }
 
