@@ -37,8 +37,16 @@ if(isset($_REQUEST["show"]))
 
 			if(!isset($_REQUEST["IncludeEnd"]))
 				$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
-
+			
+			$where .= " d.CycleID=:c" ;
+				$whereParam[":c"] = $_SESSION["accounting"]["CycleID"];
 		}
+		if(!isset($_REQUEST["CycleID"]))
+		{
+			$where .= " d.CycleID=:c" ;
+			$whereParam[":c"] = $_REQUEST["CycleID"];
+		}
+		 
 		if(!isset($_REQUEST["IncludeRaw"]))
 			$where .= " AND d.DocStatus != 'RAW' ";
 		
@@ -162,7 +170,7 @@ if(isset($_REQUEST["show"]))
 			left join ACC_tafsilis t using(TafsiliID)
 			left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)
 			left join ACC_tafsilis t2 on(di.TafsiliID2=t2.TafsiliID)
-		where d.CycleID=" . $_SESSION["accounting"]["CycleID"];
+		where 1=1 ";
 	
 	$where = "";
 	$whereParam = array();
@@ -343,6 +351,25 @@ function AccReport_flow()
 			displayField : "BranchName",
 			valueField : "BranchID",
 			hiddenName : "BranchID"
+		},{
+			xtype : "combo",
+			colspan : 2,
+			width : 400,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: "/accounting/global/domain.data.php?task=SelectCycles",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['CycleID','CycleDesc'],
+				autoLoad : true					
+			}),
+			fieldLabel : "دوره",
+			queryMode : 'local',
+			value : "<?= !isset($_SESSION["accounting"]["CycleID"]) ? "" : $_SESSION["accounting"]["CycleID"] ?>",
+			displayField : "CycleDesc",
+			valueField : "CycleID",
+			hiddenName : "CycleID"
 		},{
 			xtype : "combo",
 			displayField : "BlockDesc",

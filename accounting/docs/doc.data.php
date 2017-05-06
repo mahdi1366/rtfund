@@ -747,11 +747,10 @@ function GetAccountFlow() {
 	$query = "select d.*,di.*
 		from ACC_DocItems di
 			join ACC_docs d using(DocID)
-		where d.CycleID=:c AND d.BranchID=:b AND 
+		where d.BranchID=:b AND 
 			di.CostID=:cost AND di.TafsiliType = :t AND di.TafsiliID=:tid " . dataReader::makeOrder();
 	
 	$param = array(
-		":c" => $_SESSION["accounting"]["CycleID"],
 		":b" => $_SESSION["accounting"]["BranchID"],
 		":cost" => $CostID,
 		":t" => TAFTYPE_PERSONS,
