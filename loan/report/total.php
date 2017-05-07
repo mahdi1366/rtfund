@@ -117,11 +117,13 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("نوع وام", "LoanDesc");
 	$rpg->addColumn("معرفی کننده", "ReqFullname");
 	$rpg->addColumn("تاریخ درخواست", "ReqDate", "dateRender");
-	$rpg->addColumn("مبلغ درخواست", "ReqAmount", "moneyRender");
+	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "moneyRender");
+	$col->EnableSummary();
 	$rpg->addColumn("مشتری", "LoanFullname");
 	$rpg->addColumn("شعبه", "BranchName");
 	$rpg->addColumn("تاریخ پرداخت", "PartDate", "dateRender");
-	$rpg->addColumn("مبلغ پرداخت", "PartAmount", "moneyRender");
+	$col = $rpg->addColumn("مبلغ پرداخت", "PartAmount", "moneyRender");
+	$col->EnableSummary();
 	$rpg->addColumn("تعداد اقساط", "InstallmentCount");
 	$rpg->addColumn("تنفس(ماه)", "DelayMonths");
 	$rpg->addColumn("کارمزد مشتری", "CustomerWage");
@@ -131,8 +133,8 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("جاری/خاتمه", "IsEnded", "endedRender");
 	$rpg->addColumn("قابل پرداخت مشتری", "TotalInstallmentAmount", "moneyRender");
 	$rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount", "moneyRender");
-	$rpg->addColumn("مانده قابل پرداخت", "remainder", "moneyRender");
-	
+	$col = $rpg->addColumn("مانده قابل پرداخت", "remainder", "moneyRender");
+	$col->EnableSummary();
 	if(!$rpg->excel)
 	{
 		BeginReport();

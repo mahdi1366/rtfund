@@ -319,16 +319,25 @@ function SavePart(){
 		
 	if($obj->PartID > 0)
 	{
-		$result = $obj->EditPart($pdo);
 		if(!$firstPart)
 		{
 			$dt = PdoDataAccess::runquery("select max(DocID) from ACC_DocItems join ACC_docs using(DocID)
 				where DocType=" . DOCTYPE_LOAN_DIFFERENCE ." AND SourceID=? AND SourceID2=?",
 				array($obj->RequestID, $obj->PartID));
 			
+			$dt2 = PdoDataAccess::runquery("select * ACC_docs where DocID=?", array($dt[0][0]));
+			if(count($dt2) > 0 && $dt2[0]["DocStatus"] != "RAW")
+			{
+				echo Response::createObjectiveResponse(false, "سند اختلاف تایید شده و قادر به صدور مجدد نمی باشید");
+				die();
+			}
+			
+			$result = $obj->EditPart($pdo);
 			$result = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo, $dt[0][0]);
 			ComputeInstallments($obj->RequestID, true, $pdo);
 		}		
+		else
+			$result = $obj->EditPart($pdo);
 	}
 	else
 	{

@@ -16,6 +16,15 @@ class ACC_cycles extends OperationClass {
 	public $ShortDepositPercent;
 	public $LongDepositPercent;
 	
+	static function IsClosed(){
+		
+		$dt = PdoDataAccess::runquery("select * from ACC_cycles where CycleID=?", array($_SESSION["accounting"]["CycleID"]));
+		if($dt[0]["IsClosed"] == "YES")
+			return true;
+		
+		return false;
+	}
+	
 }
 
 class ACC_blocks extends PdoDataAccess{
