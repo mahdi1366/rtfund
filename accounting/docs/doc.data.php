@@ -85,6 +85,12 @@ function removeDoc() {
 
 function confirm() {
 
+	if(ACC_cycles::IsClosed())
+	{
+		echo Response::createObjectiveResponse(false, "دوره مالی جاری بسته شده است و قادر به اعمال تغییرات نمی باشید");
+		die();	
+	}
+	
 	$status = "CONFIRM";
 	if(isset($_POST["undo"]) && $_POST["undo"] == "true")
 		$status = "RAW";
@@ -398,6 +404,12 @@ function RegisterCheck() {
 //............................
 
 function openDoc() {
+	
+	if(ACC_cycles::IsClosed())
+	{
+		echo Response::createObjectiveResponse(false, "دوره مالی جاری بسته شده است و قادر به اعمال تغییرات نمی باشید");
+		die();	
+	}
 	PdoDataAccess::runquery("update ACC_docs set DocStatus='RAW' where DocID=" . $_POST["DocID"]);
 	PdoDataAccess::AUDIT("ACC_docs","باز کردن سند", $_POST["DocID"]);
 	echo "true";

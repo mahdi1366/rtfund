@@ -38,10 +38,10 @@ if(isset($_REQUEST["show"]))
 			if(!isset($_REQUEST["IncludeEnd"]))
 				$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
 			
-			$where .= " d.CycleID=:c" ;
+			$where .= " AND d.CycleID=:c" ;
 				$whereParam[":c"] = $_SESSION["accounting"]["CycleID"];
 		}
-		if(!isset($_REQUEST["CycleID"]))
+		if(!empty($_REQUEST["CycleID"]))
 		{
 			$where .= " d.CycleID=:c" ;
 			$whereParam[":c"] = $_REQUEST["CycleID"];
@@ -180,7 +180,7 @@ if(isset($_REQUEST["show"]))
 	
 	$query .= " order by d.DocDate";	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
-	
+	print_r(ExceptionHandler::PopAllExceptions());
 	//-------------------------- previous remaindar ----------------------------
 	$BeforeRemaindar = "";
 	$BeforeAmount = 0;

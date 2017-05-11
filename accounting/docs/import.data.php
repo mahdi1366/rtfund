@@ -14,6 +14,15 @@ require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php'
 require_once inc_dataReader;
 require_once inc_response;
 
+function CheckCloseCycle(){
+	
+	if(ACC_cycles::IsClosed())
+	{
+		echo Response::createObjectiveResponse(false, "دوره مالی جاری بسته شده است و قادر به اعمال تغییرات نمی باشید");
+		die();	
+	}
+}
+
 function FindCostID($costCode){
 	
 	$dt = PdoDataAccess::runquery("select * from ACC_CostCodes where IsActive='YES' AND CostCode=?",
@@ -46,7 +55,7 @@ function FindTafsiliID($TafsiliCode, $TafsiliType){
 
 function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo, $DocID=""){
 		
-	
+	CheckCloseCycle();
 	/*@var $ReqObj LON_requests */
 	/*@var $PartObj LON_ReqParts */
 	/*@var $PayObj LON_payments */
@@ -69,7 +78,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
 	
 	//------------------------------------------------
-	$CycleID = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0 , 4);
+	$CycleID = $_SESSION["accounting"]["CycleID"];
 	$PayAmount = $PayObj->PayAmount;
 	//------------------- find load mode ---------------------
 	$LoanMode = "";
@@ -644,6 +653,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 
 function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo, $DocID=""){
 		
+	CheckCloseCycle();
 	/*@var $ReqObj LON_requests */
 	/*@var $PartObj LON_ReqParts */
 	/*@var $PayObj LON_payments */
@@ -959,6 +969,8 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 
 function ReturnPayPartDoc($DocID, $pdo, $DeleteDoc = true){
 	
+	CheckCloseCycle();
+	
 	PdoDataAccess::runquery("delete from ACC_DocItems where DocID=? AND locked='YES'", array($DocID));
 	PdoDataAccess::runquery("delete from ACC_DocCheques where DocID=? ", array($DocID));
 
@@ -972,6 +984,7 @@ function ReturnPayPartDoc($DocID, $pdo, $DeleteDoc = true){
 
 function RegisterLoanCost($CostObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
 		
+	CheckCloseCycle();
 	//------------- get CostCodes --------------------
 	$ReqObj = new LON_requests($CostObj->RequestID);
 	$LoanObj = new LON_loans($ReqObj->LoanID);
@@ -1069,6 +1082,8 @@ function RegisterLoanCost($CostObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
 
 //---------------------------------------------------------------
 function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
+	
+	CheckCloseCycle();
 	
 	$ReqObj = new LON_requests($RequestID);
 	$NewPartObj = new LON_ReqParts($NewPartID);
@@ -1649,6 +1664,8 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 
 function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=""){
 	
+	CheckCloseCycle();
+	
 	$dt = PdoDataAccess::runquery("select * from LON_ReqParts 
 		where RequestID=? AND IsHistory='YES' order by PartID desc limit 1", array($ReqObj->RequestID));
 	$PreviousPartObj = new LON_ReqParts($dt[0]["PartID"]);
@@ -1823,6 +1840,7 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 //---------------------------------------------------------------
 function RegisterChangeInstallmentWage($DocID, $ReqObj,$PartObj, $InstallmentObj, $newDate, $wage, $pdo){
 		
+	CheckCloseCycle();
 	//------------- get CostCodes --------------------
 	$LoanMode = "";
 	if(!empty($ReqObj->ReqPersonID))
@@ -1951,6 +1969,7 @@ function RegisterChangeInstallmentWage($DocID, $ReqObj,$PartObj, $InstallmentObj
 function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliID2, 
 		$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo, $grouping=false){
 	
+	CheckCloseCycle();
 	/*@var $PayObj LON_BackPays */
 	$ReqObj = new LON_requests($PayObj->RequestID);
 	$PartObj = LON_ReqParts::GetValidPartObj($PayObj->RequestID);
@@ -2376,6 +2395,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliID2, 
 		$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo, $grouping=false){
 	
+	CheckCloseCycle();
 	/*@var $PayObj LON_BackPays */
 	$ReqObj = new LON_requests($PayObj->RequestID);
 	$PartObj = LON_ReqParts::GetValidPartObj($PayObj->RequestID);
@@ -2648,6 +2668,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 
 function ReturnCustomerPayDoc($PayObj, $pdo, $EditMode = false){
 	
+	CheckCloseCycle();
 	/*@var $PayObj LON_BackPays */
 	
 	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
@@ -2674,6 +2695,8 @@ function ReturnCustomerPayDoc($PayObj, $pdo, $EditMode = false){
 
 function RegisterEndRequestDoc($ReqObj, $pdo){
 		
+	CheckCloseCycle();
+	
 	require_once '../../loan/request/request.data.php';
 	
 	/*@var $ReqObj LON_requests */
@@ -2785,6 +2808,8 @@ function RegisterEndRequestDoc($ReqObj, $pdo){
 
 function ReturnEndRequestDoc($ReqObj, $pdo){
 		
+	CheckCloseCycle();
+	
 	$dt = PdoDataAccess::runquery("select d.DocID from ACC_DocItems d join ACC_docs using(DocID)
 		where DocType=" . DOCTYPE_END_REQUEST . " AND SourceID2=?",
 		array($ReqObj->RequestID), $pdo);
@@ -2799,6 +2824,8 @@ function ReturnEndRequestDoc($ReqObj, $pdo){
 function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID="", $TafsiliID2="", 
 		$CenterAccount="", $BranchID="", $FirstCostID="", $SecondCostID=""){
 
+	CheckCloseCycle();
+	
 	/*@var $InChequeObj ACC_IncomeCheques */
 	
 	$CycleID = substr(DateModules::shNow(), 0 , 4);
@@ -3057,6 +3084,8 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 
 function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 	
+	CheckCloseCycle();
+	
 	//-------------------get percents ---------------------
 	$dt = PdoDataAccess::runquery("select * from ACC_cycles where CycleID=" . 
 			$_SESSION["accounting"]["CycleID"]);
@@ -3313,6 +3342,8 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 
 function ComputeShareProfit(){
 	
+	CheckCloseCycle();
+	
 	//----------- check for all docs confirm --------------
 	$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
 		join ACC_DocItems using(DocID)
@@ -3404,6 +3435,8 @@ function ComputeShareProfit(){
 //---------------------------------------------------------------
 
 function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_CostID, $DocID, $pdo){
+	
+	CheckCloseCycle();
 	
 	/*@var $ReqObj WAR_requests */
 	$IsExtend = $ReqObj->RefRequestID != $ReqObj->RequestID ? true : false;
@@ -3674,6 +3707,8 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 
 function ReturnWarrantyDoc($ReqObj, $pdo, $EditMode = false){
 	
+	CheckCloseCycle();
+	
 	/*@var $PayObj WAR_requests */
 	
 	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
@@ -3699,6 +3734,8 @@ function ReturnWarrantyDoc($ReqObj, $pdo, $EditMode = false){
 }
 
 function EndWarrantyDoc($ReqObj, $pdo){
+	
+	CheckCloseCycle();
 	
 	/*@var $ReqObj WAR_requests */
 	
@@ -3819,6 +3856,8 @@ function EndWarrantyDoc($ReqObj, $pdo){
 }
 
 function CancelWarrantyDoc($ReqObj, $pdo){
+	
+	CheckCloseCycle();
 	
 	/*@var $ReqObj WAR_requests */
 	
