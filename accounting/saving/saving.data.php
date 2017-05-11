@@ -74,26 +74,29 @@ function GetSavingFlow() {
 	die();
 }
 
-function GetSavingLoanInfo(){
+function GetSavingLoanInfo($ReportMode = false){
 	
 	if(isset($_SESSION["USER"]["portal"]))
 		$PersonID = $_SESSION["USER"]["PersonID"];
 	else
 		$PersonID = $_REQUEST["PersonID"];
-	
+	$StartDate = DateModules::shamsi_to_miladi($_REQUEST["StartDate"], "-");
 	//----------- check for all docs confirm --------------
-	/*$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
-		join ACC_DocItems using(DocID) join ACC_tafsilis t using(TafsiliType,TafsiliID)
-		where TafsiliType=" . TAFTYPE_PERSONS . " 
-			AND ObjectID = ? AND CostID in(" . COSTID_saving . ")
-			AND DocType not in(" . DOCTYPE_STARTCYCLE . "," . DOCTYPE_ENDCYCLE . ")
-			AND DocStatus not in('CONFIRM','ARCHIVE')", array($PersonID));
-	if(count($dt) > 0 && $dt[0][0] != "")
+	if(!$ReportMode)
 	{
-		$msg = "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند.";
-		echo dataReader::getJsonData(array(), 0, $_GET["callback"], $msg);
-		die();
-	}*/
+		$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
+			join ACC_DocItems using(DocID) join ACC_tafsilis t using(TafsiliType,TafsiliID)
+			where TafsiliType=" . TAFTYPE_PERSONS . " 
+				AND ObjectID = ? AND CostID in(" . COSTID_saving . ")
+				AND DocStatus not in('CONFIRM','ARCHIVE')
+				AND DocDate >= ?", array($PersonID, $StartDate));
+		/*if(count($dt) > 0 && $dt[0][0] != "")
+		{
+			$msg = "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند.";
+			echo dataReader::getJsonData(array(), 0, $_GET["callback"], $msg);
+			die();
+		}*/
+	}
 	//------------ get sum of savings ----------------
 	$dt = PdoDataAccess::runquery("
 		select DocDate,sum(CreditorAmount-DebtorAmount) amount
@@ -104,10 +107,10 @@ function GetSavingLoanInfo(){
 		where TafsiliType=" . TAFTYPE_PERSONS . " 
 			AND ObjectID = ?
 			AND CostID in(" . COSTID_saving . ")
-			AND DocType not in(" . DOCTYPE_STARTCYCLE . "," . DOCTYPE_ENDCYCLE . ")
 			AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
+			AND DocDate >= ?
 		group by DocDate
-		order by DocDate", array($PersonID));
+		order by DocDate", array($PersonID, $StartDate));
 	
 	if(count($dt) == 0)
 	{
@@ -116,27 +119,48 @@ function GetSavingLoanInfo(){
 		die();
 	}
 	//------------ get the Deposite amount -------------
-	
-	$totalAmount = 0;
+	$TraceArr = array();
+	$remain = $dt[0]["amount"]*1;
 	$totalDays = 0;
-	
+	$totalAmount = 0;
+	$TraceArr[] = array(
+		"Date" => $dt[0]["DocDate"],
+		"amount" => $dt[0]["amount"],
+		"remain" => $dt[0]["amount"],
+		"days" => 0,
+		"average" => 0
+	);
 	for($i=1; $i < count($dt); $i++)
 	{
 		$days = DateModules::GDateMinusGDate($dt[$i]["DocDate"],$dt[$i-1]["DocDate"]);
 		$totalDays += $days;
-		$totalAmount += $dt[$i-1]["amount"]*$days;
+		
+		$totalAmount += $remain*$days;
+		$remain += $dt[$i]["amount"];
+			
+		$TraceArr[count($TraceArr)-1]["days"] = $days;
+		$TraceArr[count($TraceArr)-1]["average"] = $totalAmount / $totalDays;
+		$TraceArr[] = array(
+			"Date" => $dt[$i]["DocDate"],
+			"amount" => $dt[$i]["amount"],
+			"remain" => $remain,
+			"days" => 0
+		);
 	}
 	
 	$days = DateModules::GDateMinusGDate(DateModules::Now(),$dt[$i-1]["DocDate"]);
-	$totalDays += $days;
-	$totalAmount += $dt[$i-1]["amount"]*$days;
-	
-	$average = round($totalAmount/$totalDays);
+	$totalAmount += $remain*$days;
+	$totalAmount = round($totalAmount / $totalDays);
+	$TraceArr[count($TraceArr)-1]["days"] = $days;
+	$TraceArr[count($TraceArr)-1]["average"] = $totalAmount;
+		
+	if($ReportMode)	
+		return $TraceArr;
 	
 	$returnArray = array(
 		"PersonID" => $PersonID,
 		"FirstDate" => DateModules::miladi_to_shamsi($dt[0]["DocDate"]),
-		"AverageAmount" => $average,
+		"AverageAmount" => $totalAmount,
 		"TotalMonths" => floor($totalDays/30.5)
 	);
 	echo dataReader::getJsonData($returnArray, 1, $_GET["callback"]);
