@@ -79,7 +79,7 @@ function saveDoc() {
 function removeDoc() {
 	
 	$result = ACC_docs::Remove($_REQUEST["DocID"]);
-	echo Response::createObjectiveResponse($result, "");
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
 	die();
 }
 

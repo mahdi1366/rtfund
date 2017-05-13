@@ -12,7 +12,13 @@ p.tdAttr = "data-qtip='text'"
 {name : "fullDesc",	convert : function(value,record){} }
 --------------------------------------------------------------------------------
 **** GRID ***
+
 store.getProxy().getReader().jsonData.message;
+this.grid.getStore().proxy.form = this.get("MainForm");
+
+
+grid.columns.findObject('dataIndex','CreditID')
+
 --------------------------------------------------------------------------------
 xtype : "displayfield",
 renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
@@ -26,3 +32,4 @@ foreach($costDocs as $row)
 --------------------------------------------------------------------------------
 CREATE DATABASE krrtfir_rtfund CHARACTER SET utf8 COLLATE utf8_general_ci;
 --------------------------------------------------------------------------------
+params = mergeObjects(params, this.DocWin.down('form').getForm().getValues());

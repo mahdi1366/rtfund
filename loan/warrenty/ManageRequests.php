@@ -26,9 +26,10 @@ $dg->addColumn("", "DocStatus", "", true);
 $dg->addColumn("", "IsBlock", "", true);
 $dg->addColumn("", "BranchID", "", true);
 $dg->addColumn("", "BranchName", "", true);
-$dg->addColumn("", "RefRequestID", "", true);
+$dg->addColumn("شماره ضمانت نامه", "RefRequestID", "", true);
 $dg->addColumn("", "RequestID", "", true);
 $dg->addColumn("", "wage", "", true);
+$dg->addColumn("", "CancelDate", "", true);
 $dg->addColumn("", "RegisterAmount", "", true);
 $dg->addColumn("نام شرکت", "fullname", "", true);
 
@@ -57,6 +58,8 @@ $col->width = 40;
 $col->align = "center";
 
 $col = $dg->addColumn("وضعیت", "StepDesc", "");
+$col->renderer = "function(v,p,r){ if(r.data.StatusID == ".WAR_STEPID_CANCEL.") return v + '<br>تاریخ ابطال :' + "
+		. "MiladiToShamsi(r.data.CancelDate); return v; }";
 $col->width = 80;
 
 $col = $dg->addColumn("سند", "LocalNo", "");

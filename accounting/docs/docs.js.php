@@ -618,7 +618,7 @@ AccDocs.prototype.RemoveDoc = function()
 				result = Ext.decode(response.responseText);
 				if(!result.success)
 				{
-					Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+					Ext.MessageBox.alert("Error", result.data);
 					return;
 				}
 				var currentPage = AccDocsObject.grid.getStore().currentPage;

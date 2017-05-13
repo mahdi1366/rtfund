@@ -93,6 +93,12 @@ class ACC_docs extends PdoDataAccess {
 
 	function Add($pdo = null) {
 
+		$temp = parent::runquery("select * from ACC_cycles where CycleID=?", array($this->CycleID));
+		if ($temp[0]["IsClosed"] == "YES") {
+			ExceptionHandler::PushException("دوره مربوطه بسته شده و سند قابل حذف نمی باشد.");
+			return false;
+		}		
+		
 		$pdo2 = $pdo == null ? parent::getPdoObject() : $pdo;
 		if ($pdo == null)
 			$pdo2->beginTransaction();
