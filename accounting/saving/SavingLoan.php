@@ -90,12 +90,19 @@ function SavingLoan()
 		this.LoadInfo('<?= $PersonID ?>');
 		return;
 	}
-	this.PartPanel = new Ext.form.FieldSet({
+	this.MainPanel = new Ext.form.FieldSet({
 		title: "انتخاب فرد",
 		width: 500,
 		renderTo : this.get("div_form"),
 		frame: true,
 		items : [{
+			xtype : "shdatefield",
+			name : "StartDate",
+			labelWidth : 150,
+			width : 300,
+			value : '<?= DateModules::FirstGDateOfYear() ?>',
+			fieldLabel : "تاریخ شروع محاسبه میانگین"
+		},{
 			xtype : "combo",
 			width : 450,
 			fieldLabel : "انتخاب فرد",
@@ -115,8 +122,26 @@ function SavingLoan()
 			}),
 			displayField: 'title',
 			valueField : "PersonID",
-			listeners :{
-				select : function(combo,records){SavingLoanObject.LoadInfo(records[0].data.PersonID);}
+			name : "PersonID"
+		},{
+			xtype : "button",
+			text : "بارگذاری اطلاعات",
+			iconCls : "refresh",
+			handler : function(){
+				me = SavingLoanObject;
+				SavingLoanObject.LoadInfo(
+					me.MainPanel.down("[name=StartDate]").getRawValue(),
+					me.MainPanel.down("[name=PersonID]").getValue());
+			}
+		},{
+			xtype : "button",
+			text : "گزارش  محاسبه میانگین",
+			iconCls : "report",
+			handler : function(){
+				me = SavingLoanObject;
+				SDate = me.MainPanel.down("[name=StartDate]").getRawValue();
+				PID = me.MainPanel.down("[name=PersonID]").getValue();
+				window.open(me.address_prefix + "report.php?PersonID="+PID+"&StartDate="+ SDate);
 			}
 		}]
 	});
@@ -293,7 +318,7 @@ SavingLoan.InstallmentAmountRender = function(v,p,r){
 	
 }
 
-SavingLoan.prototype.LoadInfo = function(PersonID){
+SavingLoan.prototype.LoadInfo = function(StartDate, PersonID){
 
 	if(!this.InfoStore)
 	{
@@ -334,6 +359,7 @@ SavingLoan.prototype.LoadInfo = function(PersonID){
 	
 	this.InfoStore.load({
 		params : {
+			StartDate : StartDate,
 			PersonID : PersonID
 		},
 		callback : function(){mask.hide();}

@@ -603,6 +603,13 @@ class DateModules
 		return $month_length;
 	}	  
 
+	static function FirstGDateOfYear()
+	{
+		$now = self::shNow();
+		$cur_year = substr($now,0,4);
+		return $cur_year . "/01/01";
+	}
+	
 	static function lastJDateOfYear($jyear, $delimiter = "/"){
 		
 		$day = self::DaysOfMonth($jyear, 12);
