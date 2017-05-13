@@ -43,7 +43,7 @@ if(isset($_REQUEST["show"]))
 		}
 		if(!empty($_REQUEST["CycleID"]))
 		{
-			$where .= " d.CycleID=:c" ;
+			$where .= " AND d.CycleID=:c" ;
 			$whereParam[":c"] = $_REQUEST["CycleID"];
 		}
 		 
