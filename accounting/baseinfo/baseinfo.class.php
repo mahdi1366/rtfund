@@ -18,6 +18,9 @@ class ACC_cycles extends OperationClass {
 	
 	static function IsClosed(){
 		
+		if(!isset($_SESSION["accounting"]))
+			return true;
+		
 		$dt = PdoDataAccess::runquery("select * from ACC_cycles where CycleID=?", array($_SESSION["accounting"]["CycleID"]));
 		if($dt[0]["IsClosed"] == "YES")
 			return true;

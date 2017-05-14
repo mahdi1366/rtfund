@@ -403,6 +403,12 @@ class ACC_DocItems extends PdoDataAccess {
 			}
 		}
 
+		if(empty($this->CostID))
+		{
+			ExceptionHandler::PushException("کد حساب مقدار دهی نشده است");
+			return false;
+		}
+		
 		if (!parent::insert("ACC_DocItems", $this, $pdo))
 			return false;
 

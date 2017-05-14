@@ -330,7 +330,7 @@ function ChangeChequeStatus(){
 	if(!$result)
 	{
 		$pdo->rollback();
-		print_r(ExceptionHandler::PopAllExceptions());
+		//print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}		

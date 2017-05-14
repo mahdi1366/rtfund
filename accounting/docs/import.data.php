@@ -2011,7 +2011,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		}
 	}
 	
-	$CycleID = substr(DateModules::shNow(), 0 , 4);
+	$CycleID = isset($_SESSION["accounting"]) ? $_SESSION["accounting"]["CycleID"] : substr(DateModules::shNow(), 0 , 4);
 	
 	//------------- get CostCodes --------------------
 	$LoanObj = new LON_loans($ReqObj->LoanID);
@@ -2019,6 +2019,12 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	$CostCode_deposite = FindCostID("210-01");
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
 	$CostCode_commitment = FindCostID("200-" . $LoanObj->_BlockCode . "-51");
+	
+	if(empty($CostCode_Loan))
+	{
+		ExceptionHandler::PushException("کد حساب مربوط به وام تعریف نشده است");
+		return false;
+	}
 	//---------------- add doc header --------------------
 	if($DocObj == null)
 	{
@@ -2168,7 +2174,8 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	$itemObj->CreditorAmount = $PayObj->PayAmount;
 	if(!$itemObj->Add($pdo))
 	{
-		ExceptionHandler::PushException("خطا در ایجاد ردیف وام");
+		print_r(ExceptionHandler::PopAllExceptions());
+		ExceptionHandler::PushException("خطا در ایجاد ردیف وام 1");
 		return false;
 	}
 	// -------------- bank ---------------
@@ -2283,7 +2290,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		$itemObj->TafsiliID = $LoanPersonTafsili;
 		if(!$itemObj->Add($pdo))
 		{
-			ExceptionHandler::PushException("خطا در ایجاد ردیف وام");
+			ExceptionHandler::PushException("خطا در ایجاد ردیف وام2");
 			return false;
 		}
 	}
@@ -2437,7 +2444,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		}
 	}
 	
-	$CycleID = substr(DateModules::shNow(), 0 , 4);
+	$CycleID = isset($_SESSION["accounting"]) ? $_SESSION["accounting"]["CycleID"] : substr(DateModules::shNow(), 0 , 4);
 	
 	//------------- get CostCodes --------------------
 	$LoanObj = new LON_loans($ReqObj->LoanID);
