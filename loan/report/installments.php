@@ -25,6 +25,10 @@ if(isset($_REQUEST["show"]))
 			$prefix = "";
 			switch($key)
 			{
+				case "fromRequestID":
+				case "toRequestID":
+					$prefix = "i.";
+					break;
 				case "fromInstallmentDate":
 				case "toInstallmentDate":
 					$value = DateModules::shamsi_to_miladi($value, "-");
@@ -63,13 +67,84 @@ if(isset($_REQUEST["show"]))
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 			where i.history='NO' AND i.IsDelayed='NO' " . $where . " 
 			
-			group by r.RequestID
+			group by r.RequestID, i.InstallmentID
 			order by InstallmentDate";
 	
 	
-	$dataTable = PdoDataAccess::runquery_fetchMode($query, $whereParam);
-	$query = PdoDataAccess::GetLatestQueryString();
-	//print_r(ExceptionHandler::PopAllExceptions());
+	$dataTable = PdoDataAccess::runquery($query, $whereParam);
+	if($_SESSION["USER"]["UserName"] == "admin")
+		echo PdoDataAccess::GetLatestQueryString();
+	//-------------------- get the payed of installments -----------------------
+	
+	$computeArr = array();
+	for($index=0; $index<count($dataTable); $index++)
+	{
+		$MainRow = &$dataTable[$index];
+		$MainRow["PayedDate"] = "";
+		$MainRow["PayedAmount"] = "";
+		$MainRow["forfeit"] = 0;
+		$MainRow["SumPayed"] = 0;
+	
+		if(!isset($computeArr[ $MainRow["RequestID"] ]))
+		{
+			$dt = array();
+			$computeArr[ $MainRow["RequestID"] ] = array(
+				"compute" => LON_requests::ComputePayments2($MainRow["RequestID"], $dt),
+				"obj" => LON_ReqParts::GetValidPartObj($MainRow["RequestID"]),
+				"pays" => array(),
+				"computIndex" => 0,
+				"PayIndex" => 0
+				);
+			$ref = & $computeArr[ $MainRow["RequestID"] ];
+			foreach($ref["compute"] as $row)
+			{
+				if($row["ActionType"] == "pay")
+					$ref["pays"][] = $row;
+			}
+		}
+		
+		$ref = & $computeArr[ $MainRow["RequestID"] ];
+		for(; $ref["computIndex"] < count($ref["compute"]); $ref["computIndex"]++)
+		{
+			$row = $ref["compute"][$ref["computIndex"]];
+			$obj = $ref["obj"];
+			if($row["ActionType"] != "installment")
+				continue;
+			if($row["ActionType"] == "installment")
+			{
+				$amount = $row["ActionAmount"]*1;
+				if($obj->PayCompute != "installment")
+				{
+					$amount += $row["CurForfeitAmount"]*1;
+					if($row["InstallmentID"] == $MainRow["InstallmentID"])
+						$MainRow["forfeit"] = $row["CurForfeitAmount"]*1;
+				}
+				
+				for(; $ref["PayIndex"]<count($ref["pays"]); $ref["PayIndex"]++)
+				{
+					if($obj->PayCompute != "installment")
+					{
+						$ref["pays"][$ref["PayIndex"]]["ActionAmount"] -= $ref["pays"][$ref["PayIndex"]]["CurForfeitAmount"]*1;
+						$ref["pays"][$ref["PayIndex"]]["CurForfeitAmount"] = 0;
+					}
+					$min = min($ref["pays"][$ref["PayIndex"]]["ActionAmount"]*1,$amount);
+					$ref["pays"][$ref["PayIndex"]]["ActionAmount"] -= $min;
+					$amount -= $min;
+					if($row["InstallmentID"] == $MainRow["InstallmentID"])
+					{
+						$MainRow["PayedDate"] .= DateModules::miladi_to_shamsi($ref["pays"][$ref["PayIndex"]]["ActionDate"]) . "<br>";
+						$MainRow["PayedAmount"] .= number_format($min) . "<br>";
+						$MainRow["SumPayed"] += $min;
+					}
+					if($ref["pays"][$ref["PayIndex"]]["ActionAmount"]*1 > 0)
+						break;
+				}
+			}
+			if($row["InstallmentID"] == $MainRow["InstallmentID"])
+				break;
+		}
+	}
+	//--------------------------------------------------------------------------
 	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
@@ -77,6 +152,10 @@ if(isset($_REQUEST["show"]))
 	
 	function endedRender($row,$value){
 		return ($value == "YES") ? "خاتمه" : "جاری";
+	}
+	
+	function remainRender($row){
+		return number_format($row["InstallmentAmount"]*1 + $row["forfeit"] - $row["SumPayed"]);
 	}
 	
 	$rpg->addColumn("شماره وام", "RequestID");
@@ -88,6 +167,10 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("شعبه", "BranchName");
 	$rpg->addColumn("تاریخ قسط", "InstallmentDate", "dateRender");
 	$rpg->addColumn("مبلغ قسط", "InstallmentAmount", "moneyRender");
+	$rpg->addColumn("مبلغ تاخیر", "forfeit", "moneyRender");	
+	$rpg->addColumn("تاریخ پرداخت", "PayedDate");
+	$rpg->addColumn("مبلغ پرداخت", "PayedAmount");
+	$rpg->addColumn("مانده قسط", "SumPayed", "remainRender");
 	
 	if(!$rpg->excel)
 	{
@@ -239,6 +322,16 @@ function LoanReport_installments()
 			displayField : "BranchName",
 			valueField : "BranchID",
 			hiddenName : "BranchID"
+		},{
+			xtype : "numberfield",
+			name : "fromRequestID",
+			hideTrigger : true,
+			fieldLabel : "شماره وام از"
+		},{
+			xtype : "numberfield",
+			name : "toRequestID",
+			hideTrigger : true,
+			fieldLabel : "تا شماره"
 		},{
 			xtype : "shdatefield",
 			name : "fromInstallmentDate",
