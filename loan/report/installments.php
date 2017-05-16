@@ -128,6 +128,8 @@ if(isset($_REQUEST["show"]))
 						$ref["pays"][$ref["PayIndex"]]["CurForfeitAmount"] = 0;
 					}
 					$min = min($ref["pays"][$ref["PayIndex"]]["ActionAmount"]*1,$amount);
+					if($min == 0)
+						break;
 					$ref["pays"][$ref["PayIndex"]]["ActionAmount"] -= $min;
 					$amount -= $min;
 					if($row["InstallmentID"] == $MainRow["InstallmentID"])
@@ -141,7 +143,10 @@ if(isset($_REQUEST["show"]))
 				}
 			}
 			if($row["InstallmentID"] == $MainRow["InstallmentID"])
+			{
+				$ref["computIndex"]++;
 				break;
+			}
 		}
 	}
 	//--------------------------------------------------------------------------

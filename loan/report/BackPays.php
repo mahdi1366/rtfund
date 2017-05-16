@@ -25,6 +25,10 @@ if(isset($_REQUEST["show"]))
 			$prefix = "";
 			switch($key)
 			{
+				case "fromRequestID":
+				case "toRequestID":
+					$prefix = "b.";
+					break;
 				case "fromPayDate":
 				case "toPayDate":
 					$value = DateModules::shamsi_to_miladi($value, "-");
@@ -72,7 +76,7 @@ if(isset($_REQUEST["show"]))
 
 			where 1=1 " . $where . " 
 			
-			group by r.RequestID
+			group by b.BackPayID 
 			order by PayDate";
 	
 	
@@ -253,6 +257,16 @@ function LoanReport_Backays()
 			displayField : "BranchName",
 			valueField : "BranchID",
 			hiddenName : "BranchID"
+		},{
+			xtype : "numberfield",
+			name : "fromRequestID",
+			hideTrigger : true,
+			fieldLabel : "شماره وام از"
+		},{
+			xtype : "numberfield",
+			name : "toRequestID",
+			hideTrigger : true,
+			fieldLabel : "تا شماره"
 		},{
 			xtype : "shdatefield",
 			name : "fromPayDate",

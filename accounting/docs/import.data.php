@@ -271,6 +271,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 				break;
 
 			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
 			$itemObj->CostID = $year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $FundYearAmount;
@@ -287,7 +289,35 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
 				return false;
 			}
-			$totalAgentYearAmount += $AgentYearAmount;
+			
+			if($PartObj->AgentDelayReturn == "INSTALLMENT")
+			{
+				unset($itemObj->ItemID);
+				$itemObj->CostID = $year == $curYear ? $CostCode_agent_wage : $CostCode_agent_FutureWage;
+				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+				$itemObj->TafsiliID2 = $ReqPersonTafsili;
+				$itemObj->TafsiliType = TAFTYPE_YEARS;
+				$itemObj->TafsiliID = FindTafsiliID($year, TAFTYPE_YEARS);
+				if($AgentYearAmount < 0)
+				{
+					$itemObj->DebtorAmount = abs($AgentYearAmount);
+					$itemObj->CreditorAmount = 0;
+					$itemObj->details = "اختلاف کارمزد تنفس وام شماره " . $ReqObj->RequestID;
+				}
+				else
+				{
+					$itemObj->DebtorAmount = 0;
+					$itemObj->CreditorAmount = $AgentYearAmount;
+					$itemObj->details = "سهم کارمزد تنفس وام شماره " . $ReqObj->RequestID;
+				}
+				if(!$itemObj->Add($pdo))
+				{
+					ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+					return false;
+				}
+			}
+			else
+				$totalAgentYearAmount += $AgentYearAmount;
 			$index++;
 		}
 		if($totalAgentYearAmount < 0)
@@ -295,12 +325,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
-			
-			if($PartObj->AgentDelayReturn == "INSTALLMENT")
-				$itemObj->CostID = $CostCode_agent_wage;
-			else
-				$itemObj->CostID = $CostCode_deposite;
-			
+			$itemObj->CostID = $CostCode_deposite;			
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $ReqPersonTafsili;
 			$itemObj->DebtorAmount = abs($AgentYearAmount);
@@ -318,10 +343,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType2);
 			unset($itemObj->TafsiliID2);
-			if($PartObj->AgentDelayReturn == "INSTALLMENT")
-				$itemObj->CostID = $CostCode_agent_wage;
-			else
-				$itemObj->CostID = $CostCode_deposite;
+			$itemObj->CostID = $CostCode_deposite;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $totalAgentYearAmount;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
