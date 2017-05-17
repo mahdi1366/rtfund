@@ -163,6 +163,8 @@ AccDocs.prototype.operationhMenu = function(e){
         {
 			op_menu.add({text: 'ایجاد سند',iconCls: 'add', 
 				handler : function(){ return AccDocsObject.AddDoc(); }})
+			op_menu.add({text: 'کپی سند',iconCls: 'copy', 
+				handler : function(){ return AccDocsObject.CopyDoc(); }})
 		}
 
 		if(record != null && record.data.DocStatus == "RAW")
@@ -190,6 +192,12 @@ AccDocs.prototype.operationhMenu = function(e){
 				op_menu.add({text: 'قطعی کردن سند',iconCls: 'archive', 
 				handler : function(){ return AccDocsObject.archiveDoc(); } });
 			}
+		}
+		if(this.Role == "<?= ACCROLE_MANAGER ?>")
+		{
+			op_menu.add({text: 'تایید گروهی اسناد',iconCls: 'tick', 
+			handler : function(){ return AccDocsObject.BeforeTotalConfirmDoc(); } });
+
 		}
 	}
     if(record != null)           
@@ -547,7 +555,111 @@ AccDocs.prototype.AddDoc = function()
 			mask.hide();
 		}
 	});
+}
+
+AccDocs.prototype.CopyDoc = function()
+{
+	var record = this.grid.getStore().getAt(0);
+	if(!record)
+		return;
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخیره سازی ...'});
+	mask.show()
 	
+	Ext.Ajax.request({
+		url : this.address_prefix + "doc.data.php?task=CopyDoc",
+		method : "POST",
+		params:{
+			DocID : record.data.DocID
+		},
+
+		success : function(response){
+			AccDocsObject.grid.getStore().loadPage(AccDocsObject.grid.getStore().totalCount+1);
+			mask.hide();
+		}
+	});
+}
+
+AccDocs.prototype.BeforeTotalConfirmDoc = function()
+{
+	if(!this.totalConfirmWin)
+	{
+		this.totalConfirmWin = new Ext.window.Window({
+			title: 'تایید گروهی اسناد',
+			modal : true,
+			width: 400,
+			closeAction : "hide",
+			items : new Ext.form.Panel({
+				plain: true,
+				border: 0,
+				bodyPadding: 5,
+
+				fieldDefaults: {
+					labelWidth: 140
+				},
+				layout: {
+					type: 'vbox',
+					align: 'stretch'
+				},
+				items : [{
+						xtype : "shdatefield",
+						fieldLabel: "تاریخ سند از",
+						name : "FromDate"
+					},{
+						xtype : "shdatefield",
+						fieldLabel: "تا تاریخ",
+						name : "ToDate"
+					},{
+						xtype : "numberfield",
+						fieldLabel: "شماره سند از",
+						name : "FromNo",
+						hideTrigger : true
+					},{
+						xtype : "numberfield",
+						fieldLabel: "تا شماره",
+						name : "ToNo",
+						hideTrigger : true
+					}],
+				buttons : [
+					{
+						text : "تایید گروهی اسناد",
+						iconCls : "tick",
+						handler : function(){ AccDocsObject.TotalConfirmDoc();	}
+					},{
+						text : "انصراف",
+						iconCls : "undo",
+						handler : function(){
+							AccDocsObject.totalConfirmWin.hide();
+						}
+					}
+				]
+			})
+		});
+	}
+	this.totalConfirmWin.down("form").getForm().reset();
+	this.totalConfirmWin.show();
+	this.totalConfirmWin.center();
+}
+
+AccDocs.prototype.TotalConfirmDoc = function(){
+	
+	this.totalConfirmWin.down('form').getForm().submit({
+		clientValidation: true,
+		url: AccDocsObject.address_prefix + 'doc.data.php?task=TotalConfirm',
+		method : "POST",
+
+		success : function(form,action){
+			AccDocsObject.totalConfirmWin.hide();
+			AccDocsObject.grid.getStore().load();
+			Ext.MessageBox.alert("","عملیات مورد نظر با موفقیت انجام گردید");
+		},
+		failure : function(form,action)
+		{
+			if(action.result.data != "")
+				Ext.MessageBox.alert("Error",action.result.data);
+			else
+				Ext.MessageBox.alert("Error","عملیات مورد نظر با شکست مواجه شد");
+		}
+	});
 }
 
 AccDocs.prototype.EditDoc = function()
