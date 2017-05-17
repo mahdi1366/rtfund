@@ -1243,7 +1243,8 @@ function GetDelayedInstallments($returnData = false){
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
 	
-	$query .= " group by p.PartID order by r.RequestID,p.PartID";
+	$query .= " group by " . (isset($_GET["callback"]) ? "r.RequestID" : "p.PartID")
+			. " order by r.RequestID,p.PartID";
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
 	$result = array();
