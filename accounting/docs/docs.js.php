@@ -201,9 +201,13 @@ AccDocs.prototype.operationhMenu = function(e){
 		}
 	}
     if(record != null)           
+	{
 		op_menu.add({text: 'چاپ سند',iconCls: 'print', 
 			handler : function(){ return AccDocsObject.PrintDoc(); } });
-
+		
+		op_menu.add({text: 'سابقه سند',iconCls: 'history', 
+			handler : function(){ return AccDocsObject.HistoryWin(); } });
+	}
 	op_menu.showAt([e.getEl().getX()-60, e.getEl().getY()+20]);
 }
 

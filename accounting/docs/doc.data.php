@@ -98,17 +98,19 @@ function confirm() {
 	//------------ check for register deposite -------------
 	if($status == "RAW")
 	{
-		$dt = PdoDataAccess::runquery("select DocID,group_concat(TafsiliID) tafs from ACC_DocItems where DocID=? 
+		$dt = PdoDataAccess::runquery("select DocID,group_concat(TafsiliID) tafs,DocDate from ACC_DocItems join ACC_docs using(DocID) where DocID=? 
 			AND CostID in(".COSTID_ShortDeposite.",".COSTID_LongDeposite.") ", array($_POST["DocID"]));
-		if(count($dt) > 0)
+		
+		if(count($dt) > 0 && $dt[0]["tafs"] != "")
 		{
 			$dt = PdoDataAccess::runquery("select LocalNo from ACC_docs join ACC_DocItems using(DocID) where 
 				TafsiliID in(" . $dt[0]["tafs"] . ") AND
-				DocID>? AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+				DocDate>=? AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 				AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
-				AND DocType=" . DOCTYPE_DEPOSIT_PROFIT, array($_POST["DocID"]));
+				AND DocType=" . DOCTYPE_DEPOSIT_PROFIT, array($dt[0]["DocDate"]));
 			if(count($dt) > 0)
 			{
+				print_r(ExceptionHandler::PopAllExceptions());
 				echo Response::createObjectiveResponse(false, "سند سپرده با شماره " . $dt[0][0] . " بر اساس این سند صادر شده و قادر به برگشت این سند نمی باشید.");
 				die();						
 			}
@@ -119,6 +121,8 @@ function confirm() {
 	$obj->DocID = $_POST["DocID"];
 	$obj->DocStatus = $status;
 	$obj->Edit();
+	
+	ACC_DocHistory::AddLog($obj->DocID, $status = "CONFIRM" ? "تایید سند" : "برگشت از تایید سند");
 	
 	echo Response::createObjectiveResponse(true, "");
 	die();

@@ -148,7 +148,7 @@ function SelectAllForms(){
 				
 			when 2 then concat_ws(' ','قرارداد شماره',c.ContractID,cp.CompanyName,cp.fname,cp.lname)
 			
-			when 4 then concat_ws(' ','ضمانت نامه', wp.CompanyName,wp.fname,wp.lname, 'به مبلغ ',wr.amount)
+			when 4 then concat_ws(' ','ضمانت نامه [',wr.RefRequestID,'] ', wp.CompanyName,wp.fname,wp.lname, 'به مبلغ ',wr.amount)
 			
 			when 5 then concat_ws(' ',wfmf.FormTitle,'به شماره',wfmr.RequestID)
 			
@@ -318,4 +318,15 @@ function ReturnStartFlow(){
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
+
+function DeleteAllFlow(){
+	
+	$FlowID = $_REQUEST["FlowID"];
+	$ObjectID = $_REQUEST["ObjectID"];
+	$result = WFM_FlowRows::DeleteAllFlow($FlowID, $ObjectID);
+	
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();
+}
+
 ?>

@@ -3537,13 +3537,22 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 			));
 	if(!$IsExtend && $WageCost == $CostCode_pasandaz && $dt[0][0]*1 < $ReqObj->amount*0.1)
 	{
-		ExceptionHandler::PushException("مانده حساب پس انداز مشتری کمتر از 10% مبلغ ضمانت نامه می باشد");
+		$message = "مانده حساب پس انداز مشتری کمتر از 10% مبلغ ضمانت نامه می باشد";
+		$message .= "<br> مانده حساب پس انداز : " . number_format($dt[0][0]);
+		$message .= "<br> 10% مبلغ ضمانت نامه: " . number_format($ReqObj->amount*0.1);
+		$message .= "<br> مبلغ کارمزد: " . number_format($TotalWage);
+		ExceptionHandler::PushException($message);
+		ExceptionHandler::PushException();
 		return false;
 	}
 	$totalAmount = $IsExtend ? $TotalWage : ($ReqObj->amount*0.1 + $TotalWage);
 	if($WageCost == $CostCode_pasandaz && $dt[0][0]*1 < $totalAmount)
 	{
-		ExceptionHandler::PushException("مانده حساب پس انداز مشتری کمتر از مبلغ کارمزد می باشد");
+		$message = "مانده حساب پس انداز مشتری کمتر از مبلغ کارمزد و 10% مبلغ ضمانت نامه می باشد";
+		$message .= "<br> مانده حساب پس انداز : " . number_format($dt[0][0]);
+		$message .= "<br> 10% مبلغ ضمانت نامه: " . number_format($ReqObj->amount*0.1);
+		$message .= "<br> مبلغ کارمزد: " . number_format($TotalWage);
+		ExceptionHandler::PushException($message);
 		return false;
 	}
 	if(!$IsExtend && $ReqObj->IsBlock == "YES")
@@ -3566,7 +3575,12 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		
 		if($dt[0][0]*1 < $amount)
 		{
-			ExceptionHandler::PushException("مانده حساب انتخابی جهت بلوکه کمتر از مبلغ ضمانت نامه می باشد");
+			$message = "مانده حساب انتخابی جهت بلوکه کمتر از مبلغ ضمانت نامه می باشد";
+			$message .= "<br>مانده حساب  : " . number_format($dt[0][0]);
+			$message .= "<br> 10% مبلغ ضمانت نامه: " . number_format($ReqObj->amount*0.1);
+			$message .= "<br> مبلغ کارمزد: " . number_format($TotalWage);
+			$message .= "<br> مبلغ بلوکه: " . number_format($ReqObj->amount*1);
+			ExceptionHandler::PushException($message);
 			return false;
 		}
 	}	
@@ -3857,6 +3871,7 @@ function EndWarrantyDoc($ReqObj, $pdo){
 		return false;
 	}
 	//...............................................
+	unset($itemObj->ItemID);
 	$itemObj->CostID = $CostCode_seporde;
 	$itemObj->DebtorAmount = round($ReqObj->amount/10);
 	$itemObj->CreditorAmount = 0;
