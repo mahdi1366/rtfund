@@ -1,0 +1,94 @@
+/*
+ * Ext JS Library 2.0
+ * Copyright(c) 2006-2007, Ext JS, LLC.
+ * licensing@extjs.com
+ * 
+ * http://extjs.com/license
+ */
+ 
+.icon-grid {
+    background-image:url('/sharedClasses/resources/images/icons/grid.gif') !important;
+}
+#button-grid .x-panel-body {
+    border:1px solid #99bbe8;
+    border-top:0 none;
+}
+.add {
+    background-image:url('/sharedClasses/resources/images/icons/add.gif') !important;
+}
+.arrow_left {
+    background-image:url('/sharedClasses/resources/images/icons/arrow-left.gif') !important;
+}
+.arrow_right {
+    background-image:url('/sharedClasses/resources/images/icons/arrow-right.gif') !important;
+}
+.arrow_up {
+    background-image:url('/sharedClasses/resources/images/icons/arrow-up.gif') !important;
+}
+.arrow_down {
+    background-image:url('/sharedClasses/resources/images/icons/arrow-down.gif') !important;
+}
+.option {
+    background-image:url('/sharedClasses/resources/images/icons/plugin.gif') !important;
+}
+.cross{
+    background-image:url('/sharedClasses/resources/images/icons/cross.gif') !important;
+}
+.remove {
+    background-image:url('/sharedClasses/resources/images/icons/delete.gif') !important;
+}
+.edit {
+	    background-image:url('/sharedClasses/resources/images/icons/edit.gif') !important;
+	    background-color: transparent;
+}
+.print {
+    background-image:url('/sharedClasses/resources/images/icons/print.gif') !important;
+}
+.refresh {
+    background-image:url('/sharedClasses/resources/images/icons/table_refresh.gif') !important;
+}
+.reload{
+    background-image:url('/sharedClasses/resources/images/default/grid/done.gif') !important;
+}
+.save {
+    background-image:url('/sharedClasses/resources/images/icons/save.gif') !important;
+}
+.send {
+    background-image:url('/sharedClasses/resources/images/icons/application_go.gif') !important;
+}
+.undo {
+    background-image:url('/sharedClasses/resources/images/icons/undo.gif') !important;
+}
+.return {
+    background-image:url('/sharedClasses/resources/images/icons/return.gif') !important;
+}
+.back {
+    background-image:url('/sharedClasses/resources/images/icons/back.gif') !important;    
+}
+.forward {
+    background-image:url('/sharedClasses/resources/images/icons/forward.gif') !important;      
+}
+.help {
+    background-image:url('/sharedClasses/resources/images/icons/help.gif') !important;      
+}
+.list {
+    background-image:url('/sharedClasses/resources/images/icons/list.gif') !important;      
+}
+.search{
+    background-image:url('/sharedClasses/resources/images/icons/search.gif') !important;      
+}
+.info{
+    background-image:url('/sharedClasses/resources/images/icons/info.gif') !important;      
+}
+.clear{
+    background-image:url('/sharedClasses/resources/images/icons/clear.gif') !important;      
+}
+.excel{
+    background-image:url('/sharedClasses/resources/images/icons/excel.gif') !important;      
+}
+.history{
+    background-image:url('/sharedClasses/resources/images/icons/history.gif') !important;      
+}
+.warning{
+    background-image:url('/sharedClasses/resources/images/icons/warning.gif') !important;      
+}

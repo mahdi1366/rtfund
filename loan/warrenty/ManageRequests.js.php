@@ -179,6 +179,10 @@ function WarrentyRequest(){
 		},{
 			xtype : "hidden",
 			name : "RequestID"
+		}, {
+			xtype : "fieldset",
+			title : "محاسبات مربوطه",
+			items : [{}]
 		}],
 		buttons :[{
 			text : "ذخیره",

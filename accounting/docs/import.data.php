@@ -3656,7 +3656,11 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		$itemObj->CreditorAmount = $amount;
 		$itemObj->TafsiliType = TAFTYPE_YEARS;
 		$itemObj->TafsiliID = $YearTafsili;
-		$itemObj->Add($pdo);
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ثبت ردیف کارمزد ضمانت نامه");
+			return false;
+		}
 	}
 	
 	//---------------------------- block Cost ----------------------------
@@ -3681,10 +3685,15 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	// ---------------------- Warrenty costs -----------------------------
 	$totalCostAmount = 0;
 	$dt = PdoDataAccess::runquery("select * from WAR_costs where RequestID=?", array($ReqObj->RequestID));
+	
 	foreach($dt as $row)
 	{
 		$totalCostAmount += ($row["CostType"] == "DEBTOR"? 1 : -1)*$row["CostAmount"]*1;
-		
+		if($row["CostCodeID"] == "0")
+		{
+			ExceptionHandler::PushException("کد حساب هزینه " . $row["CostDesc"] . " تعیین نشده است");
+			return false;
+		}
 		unset($itemObj->ItemID);
 		$itemObj->SourceID = $IsExtend ? $ReqObj->RefRequestID : $ReqObj->RequestID;
 		$itemObj->SourceID2 = $ReqObj->RequestID;
@@ -3693,7 +3702,11 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		$itemObj->CostID = $row["CostCodeID"];
 		$itemObj->DebtorAmount = $row["CostType"] == "DEBTOR" ? $row["CostAmount"] : 0;
 		$itemObj->CreditorAmount = $row["CostType"] == "CREDITOR" ? $row["CostAmount"] : 0;
-		$itemObj->Add($pdo);
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ثبت هزینه ضمانت نامه");
+			return false;
+		}
 	}
 	// ----------------------------- bank --------------------------------
 	if(!$IsExtend)
@@ -3705,7 +3718,11 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		$itemObj->CostID = $CostCode_seporde;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $ReqObj->amount*0.1;
-		$itemObj->Add($pdo);
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ثبت ردیف سپرده");
+			return false;
+		}
 	}
 	
 	unset($itemObj->ItemID);
@@ -3722,7 +3739,11 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		$itemObj->TafsiliID2 = $TafsiliID2;
 	$itemObj->SourceID = $IsExtend ? $ReqObj->RefRequestID : $ReqObj->RequestID;
 	$itemObj->SourceID2 = $ReqObj->RequestID;
-	$itemObj->Add($pdo);
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ثبت ردیف کارمزد");
+		return false;
+	}
 	
 	//---------- ردیف های تضمین  ----------
 	if(!$IsExtend)

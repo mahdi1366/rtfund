@@ -19,6 +19,29 @@ if($ReqObj->StatusID != WAR_STEPID_CONFIRM && empty($_POST["ReadOnly"]))
 	die();*/
 }
 
+$dt = WAR_requests::SelectAll("RequestID=?" , array($ReqObj->RequestID));
+$record = $dt->fetch();
+$record["LetterDate"] = DateModules::miladi_to_shamsi($record["LetterDate"]);
+$record["StartDate"] = DateModules::miladi_to_shamsi($record["StartDate"]);
+$record["EndDate"] = DateModules::miladi_to_shamsi($record["EndDate"]);
+$record["amount_char"] = CurrencyModulesclass::CurrencyToString($record["amount"]);
+$record["amount"] = number_format($record["amount"]);
+$record["duration_month"] = DateModules::GetDiffInMonth($record["StartDate"], $record["EndDate"]);
+$record["EndDate_char"] = DateModules::DateToString(DateModules::miladi_to_shamsi($record["EndDate"]));
+
+$content = file_get_contents("prints/" . $ReqObj->TypeID . ".html");
+$contentArr = explode("#", $content);
+$content = "";
+for ($i = 0; $i < count($contentArr); $i++) {
+	if ($i % 2 == 0) 
+	{
+		$content .= $contentArr[$i];
+		continue;
+	}
+		
+	$content .= $record[ $contentArr[$i] ];
+}
+
 ?>
 <html>
 	<head>
@@ -71,39 +94,9 @@ if($ReqObj->StatusID != WAR_STEPID_CONFIRM && empty($_POST["ReadOnly"]))
 							<br><br>
 						</span>
 						<div style="text-align: justify;">
-						نظر به اینکه به موجب نامه شماره <?= $ReqObj->LetterNo ?>
-						مورخ <?= DateModules::miladi_to_shamsi($ReqObj->LetterDate) ?>
-						 <?= $ReqObj->organization ?>
-						و بر طبق قرارداد منعقده بین <?= $ReqObj->organization ?>
-						و <?= $ReqObj->_fullname ?>
-						قرار است مبلغ <?= number_format($ReqObj->amount) ?>ریال 
-						( <?= CurrencyModulesclass::CurrencyToString($ReqObj->amount) ?> ریال )
-						بعنوان <?= $ReqObj->_TypeDesc ?>
-						به <?= $ReqObj->_fullname ?>
-						پرداخت گردد. این صندوق متعهد است هر مبلغی را تا میزان 
-						<?= number_format($ReqObj->amount) ?>ریال 
-						( <?= CurrencyModulesclass::CurrencyToString($ReqObj->amount) ?> ریال )
-						که از طرف سازمان <?= $ReqObj->organization ?>
-						مطالبه شود به محض دریافت اولین تقاضانامه کتبی و بدون اینکه احتیاج به صدور 
-						اظهارنامه یا اقدامی از مجرای اداری، قضایی ویا مقام دیگری و یا ذکر علتی داشته باشد،
-						مبلغ مورد درخواست <?= $ReqObj->_fullname ?>
-						را در وجه یا حواله کرد <?= $ReqObj->organization ?>
-						بپردازد.
-						<br>
-						این ضمانت نامه تا آخر ساعت اداری روز 
-						<?= DateModules::miladi_to_shamsi($ReqObj->EndDate) ?>
-						( <?= DateModules::DateToString(DateModules::miladi_to_shamsi($ReqObj->EndDate)) ?>)
-							معتبر بوده و بنا به درخواست <?= $ReqObj->organization ?>
-							برای مدتی که درخواست شود قابل تمدید خواهد بود و در صورتی که صندوق نتواند
-							و یا نخواهد مدت ضمانت نامه را تمدید نماید و یا 
-							<?= $ReqObj->_fullname ?>
-							موجبات تمدید را قبل از انقضای مدت فوق نزد صندوق فراهم نسازد و صندوق را حاضر به 
-							تمدید ننماید، صندوق در اینصورت متعهد است بدون اینکه احتیاج به مطالبه مجدد باشد
-							مبلغ مرقوم فوق را در وجه یا حواله کرد 
-							<?= $ReqObj->organization ?>
-							پرداخت کند.
+						<?= $content ?>
 						</div>
-						<br><br><br><br><br><br><br>
+						<br><br><br><br><br>
 						<div style="width:300px; float:left; font-family: titr" align="center">
 							صندوق پژوهش و فناوری خراسان رضوی
 							<br>

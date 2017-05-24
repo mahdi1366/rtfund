@@ -89,6 +89,7 @@ function WarrentyCost()
 			}
 		}),
 		typeAhead: false,
+		allowBlank : false,
 		valueField : "CostID",
 		displayField : "fullDesc"
 	})
