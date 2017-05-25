@@ -2909,6 +2909,17 @@ Ext.apply(Ext.grid.Panel.prototype, {
 		return this.headerCt.getGridColumns();
 	}
 });
+
+Ext.apply(Ext.form.Panel.prototype, {
+    setReadOnly : function(flag){
+        
+        for(i=0; i<this.items.items.length; i++)
+        {
+            this.items.items[i].setReadOnly(flag);
+            
+        }
+    }
+});
 //***********************************************************
 //************* fix autoHeight of Components ****************
 //***********************************************************
@@ -4932,3 +4943,4 @@ Ext.override(Ext.data.Store, {
     }
   }
 });  
+

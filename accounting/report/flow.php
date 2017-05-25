@@ -21,7 +21,8 @@ if(isset($_REQUEST["show"]))
 		return "<a target=_blank href='../docs/print_doc.php?DocID=" . $row["DocID"] . "'>" . $val . "</a>";
 	}
 	
-	$rpg->addColumn("شماره سند", "LocalNo", "PrintDocRender");
+	$col = $rpg->addColumn("شماره سند", "LocalNo", "PrintDocRender");
+	$col->ExcelRender = false;
 	//$rpg->addColumn("کد حساب", "CostCode");
 	$rpg->addColumn("شرح حساب", "CostDesc");
 	$rpg->addColumn("تفصیلی", "TafsiliDesc");
@@ -180,7 +181,6 @@ if(isset($_REQUEST["show"]))
 	
 	$query .= " order by d.DocDate";	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
-	print_r(ExceptionHandler::PopAllExceptions());
 	//-------------------------- previous remaindar ----------------------------
 	$BeforeRemaindar = "";
 	$BeforeAmount = 0;
@@ -246,7 +246,7 @@ if(isset($_REQUEST["show"]))
 	}
 	
 	$col = $rpg->addColumn("مانده حساب", "CreditorAmount", "TotalRemainRender", $BeforeAmount);
-	//$col->EnableSummary(true);
+	$col->ExcelRender = false;
 	
 	$rpg->mysql_resource = $dataTable;
 	$rpg->page_size = 10;

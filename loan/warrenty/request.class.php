@@ -53,6 +53,7 @@ class WAR_requests extends OperationClass
 		
 		return PdoDataAccess::runquery_fetchMode("
 			select r.* , concat_ws(' ',fname,lname,CompanyName) fullname, sp.StepDesc,
+				address,
 				bf.InfoDesc TypeDesc,d.DocID,group_concat(distinct d.LocalNo) LocalNo, d.DocStatus , 
 				BranchName
 			from WAR_requests r 
@@ -109,8 +110,8 @@ class WAR_costs extends OperationClass
 		$query = "select c.*,cc.CostCode , 
 				concat_ws(' - ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) CostCodeDesc
 			from WAR_costs c
-			join ACC_CostCodes cc on(c.CostCodeID=cc.CostID)
-			join ACC_blocks b1 on(level1=b1.BlockID)
+			left join ACC_CostCodes cc on(c.CostCodeID=cc.CostID)
+			left join ACC_blocks b1 on(level1=b1.BlockID)
 			left join ACC_blocks b2 on(level2=b2.BlockID)
 			left join ACC_blocks b3 on(level3=b3.BlockID)
 			left join ACC_blocks b4 on(level4=b4.BlockID)

@@ -102,6 +102,7 @@ function WarrentyRequest(){
 			displayField: 'InfoDesc',
 			valueField : "InfoID",
 			name : "TypeID",
+			colspan : 2,
 			allowBlank : false,
 			fieldLabel : "نوع ضمانت نامه"
 		},{
@@ -118,6 +119,8 @@ function WarrentyRequest(){
 			fieldLabel : "مشتری",
 			displayField : "fullname",
 			pageSize : 20,
+			width : 600,
+			colspan : 2,
 			allowBlank : false,
 			valueField : "PersonID",
 			name : "PersonID"
@@ -125,10 +128,13 @@ function WarrentyRequest(){
 			xtype : "textfield",
 			name : "organization",
 			allowBlank : false,
+			width : 600,
+			colspan : 2,
 			fieldLabel : "سازمان مربوطه"
 		},{
 			xtype : "currencyfield",
 			name : "amount",
+			colspan : 2,
 			hideTrigger : true,
 			allowBlank : false,
 			fieldLabel : "مبلغ ضمانت نامه"
@@ -173,10 +179,15 @@ function WarrentyRequest(){
 		},{
 			xtype : "hidden",
 			name : "RequestID"
+		}, {
+			xtype : "fieldset",
+			title : "محاسبات مربوطه",
+			items : [{}]
 		}],
 		buttons :[{
 			text : "ذخیره",
 			iconCls : "save",
+			itemId : "btn_save",
 			handler : function(){ WarrentyRequestObject.SaveRequest(); }
 		},{
 			text : "انصراف",
@@ -220,6 +231,11 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 	
 		op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
 			handler : function(){ return WarrentyRequestObject.StartFlow(); }});
+	}
+	else
+	{
+		op_menu.add({text: 'اطلاعات درخواست',iconCls: 'info', 
+			handler : function(){ return WarrentyRequestObject.InfoRequest(); }});
 	}
 	
 	if(record.data.StatusID == "<?= WAR_STEPID_CONFIRM ?>")
@@ -277,11 +293,15 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 WarrentyRequest.prototype.AddNew = function(){
 	
 	this.MainPanel.show();
+	this.MainPanel.setReadOnly(false);
+	
 	this.MainPanel.getForm().reset();
 }
 
 WarrentyRequest.prototype.editRequest = function(){
 	
+	this.MainPanel.down("[itemId=btn_save]").show();
+	this.MainPanel.setReadOnly(false);
 	record = this.grid.getSelectionModel().getLastSelected();
 	this.MainPanel.show();
 	mask = new Ext.LoadMask(this.MainPanel, {msg:'در حال ذخیره سازی ...'});
@@ -322,6 +342,34 @@ WarrentyRequest.prototype.editRequest = function(){
 		this.MainPanel.down("[name=amount]").enable();
 		this.MainPanel.down("[name=IsBlock]").enable();
 	}
+}
+
+WarrentyRequest.prototype.InfoRequest = function(){
+	
+	record = this.grid.getSelectionModel().getLastSelected();
+	this.MainPanel.show();
+	mask = new Ext.LoadMask(this.MainPanel, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+	
+	this.MainPanel.loadRecord(record);
+	
+	this.MainPanel.down("[name=StartDate]").setValue(MiladiToShamsi(record.data.StartDate) );
+	this.MainPanel.down("[name=EndDate]").setValue(MiladiToShamsi(record.data.EndDate) );
+	this.MainPanel.down("[name=LetterDate]").setValue(MiladiToShamsi(record.data.LetterDate) );
+	
+	this.MainPanel.down("[name=PersonID]").getStore().load({
+		params : {
+			PersonID : record.data.PersonID
+		},
+		callback : function(){
+			mask.hide();	
+			if(this.getCount() > 0)
+				WarrentyRequestObject.MainPanel.down("[name=PersonID]").setValue(this.getAt(0).data.PersonID);
+		}
+	});
+	
+	this.MainPanel.down("[itemId=btn_save]").hide();
+	this.MainPanel.setReadOnly(true);
 }
 
 WarrentyRequest.prototype.SaveRequest = function(){

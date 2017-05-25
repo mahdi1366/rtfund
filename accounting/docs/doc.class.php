@@ -578,4 +578,39 @@ class ACC_CostBlocks extends OperationClass {
 
 }
 
+class ACC_DocHistory extends OperationClass {
+
+	const TableName = "ACC_DocHistory";
+	const TableKey = "RowID";
+
+	public $RowID;
+	public $DocID;
+	public $PersonID;
+	public $ActionDate;
+	public $description;
+
+	static function Get($where = "", $param = array()) {
+
+		$query = "
+			SELECT h.*,
+				concat_ws(' ',fname, lname, CompanyName) fullname
+			
+			FROM ACC_DocHistory h
+				join BSC_persons using(PersonID)";
+
+		return parent::runquery_fetchMode($query, $param);
+	}
+	
+	static function AddLog($DocID, $desc){
+		
+		$obj = new ACC_DocHistory();
+		$obj->PersonID = $_SESSION["USER"]["PersonID"];
+		$obj->ActionDate = PDONOW;
+		$obj->DocID = $DocID;
+		$obj->description = $desc;
+		
+		PdoDataAccess::insert(self::TableName, $obj);				
+	}
+
+}
 ?>

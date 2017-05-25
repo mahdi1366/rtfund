@@ -266,7 +266,6 @@ class WFM_FlowRows extends PdoDataAccess {
 		return true;
 	}
 	
-	
 	function EditFlowRow($pdo = null) {
 		
 		if (parent::update("WFM_FlowRows", $this, " RowID=:did", array(":did" => $this->RowID), $pdo) === false)
@@ -302,6 +301,38 @@ class WFM_FlowRows extends PdoDataAccess {
 			PdoDataAccess::runquery("delete from WFM_FlowRows where RowID=?", array($dt[0]["RowID"]));
 			return ExceptionHandler::GetExceptionCount() == 0;
 		}
+	}
+	
+	static function DeleteAllFlow($FlowID, $ObjectID){
+		
+		switch($FlowID*1)
+		{
+			case 2 : 
+				$RawStepID = 100; 
+				PdoDataAccess::runquery("update CNT_contracts set StatusID=? where ContractID=?", array($RawStepID, $ObjectID));
+				PdoDataAccess::runquery("delete from WFM_FlowRows where FlowID=? AND ObjectID=?", array($FlowID, $ObjectID));
+				return ExceptionHandler::GetExceptionCount() == 0;
+			/*case 3 : 
+				$RawStepID = 100; 
+				PdoDataAccess::runquery("update PLN_plans set StepID=? where PlanID=?", 
+					array($RawStepID, $ObjectID), $pdo);
+				return ExceptionHandler::GetExceptionCount() == 0;*/
+			case 4 : 
+				$RawStepID = 100; 
+				require_once("../../loan/warrenty/request.class.php");
+				$obj = new WAR_requests($ObjectID);
+				if($obj->GetAccDoc()*1 > 0)
+				{
+					ExceptionHandler::PushException("این ضمانت نامه دارای سند بوده و گردش آن قابل حذف نمی باشد");
+					return false;
+				}
+				PdoDataAccess::runquery("delete from WFM_FlowRows where FlowID=? AND ObjectID=?", array($FlowID, $ObjectID));
+				PdoDataAccess::runquery("update WAR_requests set StatusID=? where RequestID=?", 
+					array($RawStepID, $ObjectID));
+				return ExceptionHandler::GetExceptionCount() == 0;
+		}
+		
+		return ExceptionHandler::GetExceptionCount() == 0;
 	}
 	
 	static function IsFlowStarted($FlowID, $ObjectID){

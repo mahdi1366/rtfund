@@ -43,6 +43,9 @@ ManageForm.prototype.OperationMenu = function(e){
 		op_menu.add({text: 'برگشت شروع فرم',iconCls: 'undo', 
 		handler : function(){ return ManageFormObject.ReturnStartFlow(record); }});
 	
+		op_menu.add({text: 'ابطال گردش فرم',iconCls: 'undo', 
+		handler : function(){ return ManageFormObject.DeleteFlow(record); }});
+	
 		op_menu.add({text: 'اطلاعات آیتم',iconCls: 'info2', 
 			handler : function(){ return ManageFormObject.FormInfo(); }});
 	}
@@ -220,6 +223,37 @@ ManageForm.prototype.ReturnStartFlow = function(record){
 			success : function(){
 				mask.hide();
 				ManageFormObject.grid.getStore().load();
+			}
+		});
+	});
+				
+}
+
+ManageForm.prototype.DeleteFlow = function(record){
+	
+	Ext.MessageBox.confirm("","آیا مایل به حذف گردش فرم و خام شدن فرم می باشید؟", function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		mask = new Ext.LoadMask(ManageFormObject.grid, {msg:'در حال ذخيره سازي...'});
+		mask.show();  
+
+		Ext.Ajax.request({
+			methos : "post",
+			url : ManageFormObject.address_prefix + "wfm.data.php",
+			params : {
+				task : "DeleteAllFlow",
+				ObjectID : record.data.ObjectID,
+				FlowID : record.data.FlowID
+			},
+			success : function(response){
+				result = Ext.decode(response.responseText);
+				mask.hide();
+				if(result.success)
+					ManageFormObject.grid.getStore().load();
+				else
+					Ext.MessageBox.alert("Error", result.data == "" ? "عملیات مورد نظر با شکست مواجه شد" : result.data)
 			}
 		});
 	});

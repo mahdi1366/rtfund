@@ -392,7 +392,7 @@ Account.prototype.RemoveCheque=function(){
 Account.prototype.SetChequePrint = function(){
 
 	var record = this.CheqGrid.getSelectionModel().getLastSelected();
-	window.open("checkBuilder/index.php?ChequeBookID=" + record.data.ChequeBookID);
+	window.open(this.address_prefix + "checkBuilder/index.php?ChequeBookID=" + record.data.ChequeBookID);
 }
 
 //------------------------------------------------------------------------------

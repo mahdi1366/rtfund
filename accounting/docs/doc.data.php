@@ -98,24 +98,32 @@ function confirm() {
 	//------------ check for register deposite -------------
 	if($status == "RAW")
 	{
-		$dt = PdoDataAccess::runquery("select DocID,group_concat(TafsiliID) tafs from ACC_DocItems where DocID=? 
+		$dt = PdoDataAccess::runquery("select DocID,group_concat(TafsiliID) tafs,DocDate from ACC_DocItems join ACC_docs using(DocID) where DocID=? 
 			AND CostID in(".COSTID_ShortDeposite.",".COSTID_LongDeposite.") ", array($_POST["DocID"]));
-		if(count($dt) > 0)
+		
+		if(count($dt) > 0 && $dt[0]["tafs"] != "")
 		{
 			$dt = PdoDataAccess::runquery("select LocalNo from ACC_docs join ACC_DocItems using(DocID) where 
 				TafsiliID in(" . $dt[0]["tafs"] . ") AND
-				DocID>? AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+				DocDate>=? AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 				AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
-				AND DocType=" . DOCTYPE_DEPOSIT_PROFIT, array($_POST["DocID"]));
+				AND DocType=" . DOCTYPE_DEPOSIT_PROFIT, array($dt[0]["DocDate"]));
 			if(count($dt) > 0)
 			{
+				print_r(ExceptionHandler::PopAllExceptions());
 				echo Response::createObjectiveResponse(false, "سند سپرده با شماره " . $dt[0][0] . " بر اساس این سند صادر شده و قادر به برگشت این سند نمی باشید.");
 				die();						
 			}
 		}
 	}
 	
-	PdoDataAccess::runquery("update ACC_docs set DocStatus='$status' where DocID=" . $_POST["DocID"]);
+	$obj = new ACC_docs();
+	$obj->DocID = $_POST["DocID"];
+	$obj->DocStatus = $status;
+	$obj->Edit();
+	
+	ACC_DocHistory::AddLog($obj->DocID, $status = "CONFIRM" ? "تایید سند" : "برگشت از تایید سند");
+	
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
@@ -177,17 +185,46 @@ function regResid() {
 	die();
 }
 
-function copyDoc(){
+function CopyDoc(){
 	
-	PdoDataAccess::runquery("insert into ACC_DocItems
-		SELECT :dst,ItemID,kolID,moinID,TafsiliID,TafsiliID2,DebtorAmount,CreditorAmount,details,locked FROM ACC_DocItems where DocID=:src",
-		array(":src" => $_POST["src_DocID"], ":dst" => $_POST["dst_DocID"]));
+	if(ACC_cycles::IsClosed())
+	{
+		echo Response::createObjectiveResponse(false, "دوره مالی جاری بسته شده است و قادر به اعمال تغییرات نمی باشید");
+		die();	
+	}
 	
-	echo PdoDataAccess::GetLatestQueryString();
-	print_r(ExceptionHandler::PopAllExceptions());
-	echo PdoDataAccess::AffectedRows();
+	$RefDocID = $_POST["DocID"];
 	
-	echo Response::createObjectiveResponse(true, "");
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$hobj = new ACC_docs();
+	$hobj->CycleID = $_SESSION["accounting"]["CycleID"];
+	$hobj->BranchID = $_SESSION["accounting"]["BranchID"];
+	$hobj->RegDate = DateModules::Now();
+	$hobj->regPersonID = $_SESSION['USER']["PersonID"];
+	$hobj->DocDate = PDONOW;
+	$hobj->Add($pdo);
+	
+	$dt = PdoDataAccess::runquery("select * from ACC_DocItems where DocID=?", array($RefDocID));
+	foreach($dt as $row)
+	{
+		$obj = new ACC_DocItems();
+		PdoDataAccess::FillObjectByArray($obj, $row);
+		$obj->DocID = $hobj->DocID;
+		unset($obj->ItemID);
+		$obj->locked = "NO";
+		unset($obj->SourceType);	
+		unset($obj->SourceID);
+		unset($obj->SourceID2);
+		unset($obj->SourceID3);
+		$obj->Add($pdo);
+	}
+	
+	$result = ExceptionHandler::GetExceptionCount() == 0;
+	if($result)
+		$pdo->commit();
+	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
@@ -211,6 +248,59 @@ function GetSearchCount() {
 	$dt = PdoDataAccess::runquery($query, $param);
     echo Response::createObjectiveResponse(true, $dt[0]['CurrentPage']);
     die();
+}
+
+function TotalConfirm(){
+	
+	if(ACC_cycles::IsClosed())
+	{
+		echo Response::createObjectiveResponse(false, "دوره مالی جاری بسته شده است و قادر به اعمال تغییرات نمی باشید");
+		die();	
+	}
+	
+	$where = "";
+	$param = array(
+		":c" => $_SESSION["accounting"]["CycleID"],
+		":b" => $_SESSION["accounting"]["BranchID"]
+	);
+	if(!empty($_POST["FromDate"]))
+	{
+		$where .= " AND DocDate >= :fd";
+		$param[":fd"] = DateModules::shamsi_to_miladi($_POST["FromDate"], "-");
+	}
+	if(!empty($_POST["ToDate"]))
+	{
+		$where .= " AND DocDate <= :td";
+		$param[":td"] = DateModules::shamsi_to_miladi($_POST["ToDate"], "-");
+	}
+	if(!empty($_POST["FromNo"]))
+	{
+		$where .= " AND LocalNo >= :fl";
+		$param[":fl"] = $_POST["FromNo"];
+	}
+	if(!empty($_POST["ToNo"]))
+	{
+		$where .= " AND LocalNo <= :tl";
+		$param[":tl"] = $_POST["ToNo"];
+	}
+	
+	$dt = PdoDataAccess::runquery("select DocID from ACC_docs where DocStatus='RAW' AND CycleID=:c AND BranchID=:b " . $where, $param);
+	if(count($dt) == 0)
+	{
+		echo Response::createObjectiveResponse(false, "هیچ سندی یافت نشد");
+		die();
+	}
+	
+	foreach($dt as $row)
+	{
+		$obj = new ACC_docs();
+		$obj->DocID = $row["DocID"];
+		$obj->DocStatus = 'CONFIRM';
+		$obj->Edit();
+	}
+	
+	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
+	die();
 }
 
 //............................

@@ -1,0 +1,19 @@
+
+
+.label-over{
+    border: 1px dashed green;
+	background-color: #FFFFCC !important;
+}
+
+.label-select{
+	border: 1px dashed green;
+	background-color: #FFFFCC !important;
+}
+
+.save {
+    background-image:url('icons/save.gif') !important;
+}
+
+.preview {
+    background-image:url('icons/television.png') !important;
+}
