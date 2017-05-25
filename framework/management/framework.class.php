@@ -362,4 +362,59 @@ class FRW_CalendarEvents extends OperationClass {
 		return $res;
 	}
 }
+
+class FRW_AccessGroups extends OperationClass{
+
+	const TableName = "FRW_AccessGroups";
+	const TableKey = "GroupID"; 
+	
+	public $GroupID;
+	public $GroupDesc;
+			
+}
+
+class FRW_AccessGroupList extends OperationClass{
+
+	const TableName = "FRW_AccessGroupList";
+	const TableKey = "GroupID"; 
+	
+	public $GroupID;
+	public $PersonID;
+	
+	static public function SelectAll(){
+		
+		return PdoDataAccess::runquery("select * from " . self::TableName);
+	}
+
+	public function Add() {
+		
+		$result = PdoDataAccess::insert(self::TableName,$this );
+		if ($result === false)
+			return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->MainObjectID = $this->GroupID;
+		$daObj->SubObjectID = $this->PersonID;
+		$daObj->TableName = "FRW_AccessGroupList";
+		$daObj->execute();
+		return true;
+	}
+	
+	public function Remove() {
+		
+		$result = PdoDataAccess::delete(self::TableName, "GroupID=? AND PersonID=?", 
+			array($this->GroupID, $this->PersonID));
+		if ($result === false)
+			return false;
+
+		$daObj = new DataAudit();
+		$daObj->ActionType = DataAudit::Action_delete;
+		$daObj->MainObjectID = $this->GroupID;
+		$daObj->SubObjectID = $this->PersonID;
+		$daObj->TableName = "FRW_AccessGroupList";
+		$daObj->execute();
+		return true;
+	}
+}
 ?>

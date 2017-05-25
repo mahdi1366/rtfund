@@ -289,4 +289,60 @@ function SeenReminder(){
 	die();
 }
 
+//---------------------------------------------------
+
+function SaveAccessGroup(){
+	
+	$obj = new FRW_AccessGroups();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	if(empty($obj->GroupID))
+		$result = $obj->Add ();
+	else
+		$result = $obj->Edit ();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function SelectAccessGroups(){
+	
+	$temp = FRW_AccessGroups::Get();
+	echo dataReader::getJsonData($temp->fetchAll(), $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function DeleteAccessGroup(){
+	
+	$obj = new FRW_AccessGroups($_POST["GroupID"]);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function SelectGroupList() {
+	
+	$temp = FRW_AccessGroupList::SelectAll();
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
+function SaveGroupList() {
+
+	$obj = new FRW_AccessGroupList();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	$result = $obj->Add();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteGroupList() {
+	
+	$obj = new FRW_AccessGroupList();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	$result = $obj->Remove();	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
 ?>
