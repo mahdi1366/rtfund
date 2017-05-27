@@ -50,7 +50,11 @@ function SelectAll(){
 			$value = $row["ParamValue"];
 			if($row["ParamType"] == "currencyfield")
 				$value = number_format($value*1);
-			$temp[$i]["paramValues"] .= $row["ParamDesc"] . " : " . $value . "<br>";
+			
+			if($row["DocType"] == DMS_DOCTYPE_LETTER)
+				$temp[$i]["paramValues"] .= $value . "<br>";
+			else
+				$temp[$i]["paramValues"] .= $row["ParamDesc"] . " : " . $value . "<br>";
 		}
 		if($temp[$i]["paramValues"] != "")
 			$temp[$i]["paramValues"] = substr($temp[$i]["paramValues"], 0 , strlen($temp[$i]["paramValues"])-4);

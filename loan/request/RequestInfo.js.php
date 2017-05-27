@@ -73,7 +73,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 		},
 		fields : ["RequestID","BranchID","LoanID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
-					"guarantees","AgentGuarantee","StatusID","DocumentDesc","IsFree",
+					"BorrowerMobile","guarantees","AgentGuarantee","FundGuarantee","StatusID","DocumentDesc","IsFree",
 					"imp_GirandehCode","imp_VamCode","IsEnded","SubAgentID","PlanTitle","RuleNo"],
 		autoLoad : true,
 		listeners :{
@@ -105,6 +105,8 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 				//..........................................................
 				if(record.data.AgentGuarantee == "YES")
 					me.companyPanel.down("[name=AgentGuarantee]").setValue(true);
+				if(record.data.FundGuarantee == "YES")
+					me.companyPanel.down("[name=FundGuarantee]").setValue(true);
 				if(record.data.guarantees != null)
 				{
 					arr = record.data.guarantees.split(",");
@@ -458,6 +460,12 @@ RequestInfo.prototype.BuildForms = function(){
 			name : "BorrowerID",
 			fieldLabel : "کد ملی / کد اقتصادی"
 		},{
+			xtype : "numberfield",
+			hideTrigger : true,
+			name : "BorrowerMobile",
+			fieldLabel : "موبایل وام گیرنده"
+			
+		},{
 			xtype : "currencyfield",
 			name : "ReqAmount",
 			allowBlank : false,
@@ -497,8 +505,13 @@ RequestInfo.prototype.BuildForms = function(){
 				xtype : "checkbox",
 				name : "AgentGuarantee",
 				value : "YES",
-				colspan : 2,
 				boxLabel : "با ضمانت سرمایه گذار"
+			},{
+				xtype : "checkbox",
+				name : "FundGuarantee",
+				value : "YES",
+				colspan : 2,
+				boxLabel : "با ضمانت صندوق"
 			}]
 		},{
 			xtype : "container",
@@ -780,7 +793,9 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		{
 			this.companyPanel.down("[name=BorrowerDesc]").hide();
 			this.companyPanel.down("[name=BorrowerID]").hide();
+			this.companyPanel.down("[name=BorrowerMobile]").hide();			
 			this.companyPanel.down("[name=AgentGuarantee]").hide();
+			this.companyPanel.down("[name=FundGuarantee]").hide();
 			this.PartsPanel.hide();
 		}
 	}
@@ -826,7 +841,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			{
 				if(record.data.StatusID == "70")
 				{
-					if(record.data.imp_VamCode*1 == null || record.data.imp_VamCode == "")
+					if(record.data.imp_VamCode*1 == null || record.data.imp_VamCode*1 == 0)
 					{
 						this.companyPanel.getEl().readonly();
 						this.companyPanel.down("[itemId=cmp_save]").hide();
@@ -836,6 +851,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 				{
 					this.companyPanel.down("[name=BorrowerDesc]").hide();
 					this.companyPanel.down("[name=BorrowerID]").hide();
+					this.companyPanel.down("[name=BorrowerMobile]").hide();					
 				}
 			}		
 			this.companyPanel.down("[itemId=cmp_events]").show();
@@ -847,9 +863,11 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			//this.companyPanel.down("[itemId=cmp_requester]").show();
 			this.companyPanel.down("[name=BorrowerDesc]").hide();
 			this.companyPanel.down("[name=BorrowerID]").hide();
+			this.companyPanel.down("[name=BorrowerMobile]").hide();
 			this.companyPanel.down("[name=ReqDetails]").hide();
 			this.companyPanel.down("[itemId=cmp_save]").hide();
 			this.companyPanel.down("[name=AgentGuarantee]").hide();
+			this.companyPanel.down("[name=FundGuarantee]").hide();
 			this.companyPanel.down("[itemId=cmp_events]").hide();
 			this.companyPanel.down("[itemId=cmp_costs]").hide();
 						
@@ -1301,7 +1319,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 	if(!this.PartWin)
 	{
 		this.PartWin = new Ext.window.Window({
-			width : 500,
+			width : 550,
 			height : 560,
 			modal : true,
 			closeAction : 'hide',

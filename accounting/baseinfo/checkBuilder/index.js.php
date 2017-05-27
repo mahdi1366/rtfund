@@ -674,7 +674,7 @@ function SaveFn()
 		params : {
 			task : "SaveCheck",
 			content : returnElem.parentNode.innerHTML,
-			chequeID : <?= $checkID?> 
+			ChequeBookID : <?= $checkID?> 
 		},
 		method : "post",
 		

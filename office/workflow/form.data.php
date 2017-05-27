@@ -82,11 +82,19 @@ function SaveForm() {
     $pdo = PdoDataAccess::getPdoObject();
     $pdo->beginTransaction();
 	
-	$CorrectContent = WFM_forms::CorrectFormContentItems($_POST['FormContent']);
 	$obj = new WFM_forms();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	$CorrectContent = WFM_forms::CorrectFormContentItems($_POST['FormContent']);
 	$obj->FormContent = $CorrectContent;
-	$obj->FormTitle = $_POST['FormTitle'];
-	$obj->FlowID = $_POST['FlowID'];
+	
+	$obj->IsStaff = $obj->IsStaff ? "YES" : "NO";
+	$obj->IsCustomer = $obj->IsCustomer ? "YES" : "NO";
+	$obj->IsShareholder = $obj->IsShareholder ? "YES" : "NO";
+	$obj->IsSupporter = $obj->IsSupporter ? "YES" : "NO";
+	$obj->IsExpert = $obj->IsExpert ? "YES" : "NO";
+	$obj->IsAgent = $obj->IsAgent ? "YES" : "NO";
+	
 	if ($_POST['FormID'] > 0) {
 		$obj->FormID = $_POST['FormID'];
 		$result = $obj->Edit($pdo);
@@ -225,6 +233,21 @@ function CopyForm(){
 
 //------------------------------------------------------------------------------
 
+function SelectValidForms(){
+	
+	$dt = PdoDataAccess::runquery("select f.* from WFM_forms f
+		join BSC_persons p on(p.PersonID=:pid AND (
+			if(f.IsStaff='YES',f.IsStaff=p.IsStaff,1=0) OR
+			if(f.IsCustomer='YES',f.IsCustomer=p.IsCustomer,1=0) OR
+			if(f.IsShareholder='YES',f.IsShareholder=p.IsShareholder,1=0) OR
+			if(f.IsAgent='YES',f.IsAgent=p.IsAgent,1=0) OR
+			if(f.IsSupporter='YES',f.IsSupporter=p.IsSupporter,1=0) OR
+			if(f.IsExpert='YES',f.IsExpert=p.IsExpert,1=0) ) )
+		", array(":pid" => $_SESSION["USER"]["PersonID"]));
+	
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
 
 function SelectMyRequests() {
 	

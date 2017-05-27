@@ -19,6 +19,43 @@ $dg->addColumn("عنوان", "FormTitle");
 $col = $dg->addColumn("فرایند گردش", "FlowDesc");
 $col->width = 200;
 
+
+$col = $dg->addColumn("<font style=font-size:10px>کاربر</font>","IsStaff","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>مشتری</font>","IsCustomer","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>سهامدار</font>","IsShareholder","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>سرمایه گذار</font>","IsAgent","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>حامی</font>","IsSupporter","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>کارشناس</font>","IsExpert","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
 if($accessObj->RemoveFlag)
 {
 	$col = $dg->addColumn("حذف", "FormID");

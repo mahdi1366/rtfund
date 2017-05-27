@@ -68,6 +68,17 @@ define("INCOMECHEQUE_CHANGE", "3011");
 define("BACKPAY_PAYTYPE_EPAY", "4");
 define("BACKPAY_PAYTYPE_CHEQUE", "9");
 define("BACKPAY_PAYTYPE_CORRECT", "100");
+//.............. Loan Statuses TypeID=5 ..............
+define("LON_REQ_STATUS_RAW", "1");
+define("LON_REQ_STATUS_SEND", "10");
+define("LON_REQ_STATUS_RETURN", "11");
+define("LON_REQ_STATUS_REJECT", "20");
+define("LON_REQ_STATUS_PRECONFIRM", "30");
+define("LON_REQ_STATUS_RETURN_CUSTOMER", "35");
+define("LON_REQ_STATUS_SEND_CUSTOMER", "40");
+define("LON_REQ_STATUS_CUSTOMER_COMPLETE", "50");
+define("LON_REQ_STATUS_REJECT_ATTACH", "60");
+define("LON_REQ_STATUS_CONFIRM", "70");
 
 //............  TypeID=11 ....................
 define("SOURCETYPE_LOAN", "1");
@@ -85,6 +96,8 @@ define("WAR_STEPID_CANCEL", "130");
 
 define("CNT_STEPID_RAW", "100");
 define("CNT_STEPID_CONFIRM", "110");
+
+define("DMS_DOCTYPE_LETTER", "63");
 
 function BeginReport() {
 

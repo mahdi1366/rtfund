@@ -6,8 +6,8 @@
 
 require_once getenv("DOCUMENT_ROOT") . '/office/dms/dms.class.php';
 
-class LON_requests extends PdoDataAccess
-{
+class LON_requests extends PdoDataAccess{
+	
 	public $RequestID;
 	public $BranchID;
 	public $LoanID;
@@ -18,9 +18,11 @@ class LON_requests extends PdoDataAccess
 	public $ReqDetails;
 	public $BorrowerDesc;
 	public $BorrowerID;
+	public $BorrowerMobile;
 	public $LoanPersonID;
 	public $guarantees;
 	public $AgentGuarantee;
+	public $FundGuarantee;
 	public $DocumentDesc;	
 	public $IsEnded;
 	public $SubAgentID;

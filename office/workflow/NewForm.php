@@ -80,7 +80,8 @@ function WFM_NewForm() {
 				{"id": "textfield", "name": "متن کوتاه"},
 				{"id": "textarea", "name": "متن بلند"},
 				{"id": "shdatefield", "name": "تاریخ"},
-				{"id": "combo", "name": "لیستی"}
+				{"id": "combo", "name": "لیستی"},
+				{"id": "checkbox", "name": "انتخابی"}
 			]
 		}),
 		emptyText: 'انتخاب ...',
@@ -120,7 +121,8 @@ WFM_NewForm.prototype.LoadForm = function(){
 				"&EditContent=true&FormID=" + this.FormID,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["FormID","FormTitle", "content", "FlowID"],
+		fields : ["FormID","FormTitle", "content", "FlowID", 
+			"IsStaff", "IsCustomer", "IsShareholder", "IsSupporter", "IsExpert", "IsAgent"],
 		autoLoad : true,
 		listeners : {
 			load : function(){
@@ -206,8 +208,44 @@ WFM_NewForm.prototype.BuildForms = function(){
 				iconCls : "list",
 				handler : function(){WFM_NewFormObj.ManageItems();}
 			},{
+				xtype : "fieldset",
+				title : " ذینفع",
+				layout : "hbox",
+				defaults : {style : "margin-right : 10px"},
+				items :[{
+					xtype : "checkbox",
+					boxLabel: 'همکاران صندوق',
+					name: 'IsStaff',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'مشتری',
+					name: 'IsCustomer',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'سهامدار',
+					name: 'IsShareholder',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'سرمایه گذار',
+					name: 'IsAgent',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'حامی',
+					name: 'IsSupporter',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'کارشناس',
+					name: 'IsExpert',
+					inputValue: 'YES'
+				}]
+			},{
 				xtype: 'combo',
-				colspan : 3,
+				colspan : 2,
 				allowBlank : false,
 				fieldLabel: 'فرایند گردش',
 				store: new Ext.data.Store({
@@ -260,26 +298,20 @@ WFM_NewForm.prototype.SaveForm = function(){
 
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg: 'در حال ذخیره سازی ...'});
 	mask.show();
-	Ext.Ajax.request({
+	this.formPanel.getForm().submit({
 		url: WFM_NewFormObj.address_prefix + "form.data.php",
 		method: "POST",
 		params: {
 			task: 'SaveForm',
-			FormContent: CKEDITOR.instances.FormEditor.getData(), 
-			FormTitle: this.formPanel.getComponent('FormTitle').getValue(),
-			FormID: this.formPanel.getComponent('FormID').getValue(),
-			FlowID: this.formPanel.getComponent('FlowID').getValue()
+			FormContent: CKEDITOR.instances.FormEditor.getData()
 		},
-		success: function (response) {
+		success: function (form, action) {
 			mask.hide();
-			var sd = Ext.decode(response.responseText);
-			if (sd.success) 
-			{
-				WFM_NewFormObj.formPanel.getComponent('FormID').setValue(sd.data);
-				Ext.MessageBox.alert('', 'با موفقیت ذخیره شد');
-			} else {
-				Ext.MessageBox.alert('خطا', sd.data);
-			}
+			WFM_NewFormObj.formPanel.getComponent('FormID').setValue(sd.data);
+			Ext.MessageBox.alert('', 'با موفقیت ذخیره شد');
+		},
+		failure : function(form,action){
+			Ext.MessageBox.alert('خطا', action.result.data);
 		}
 	});
 }

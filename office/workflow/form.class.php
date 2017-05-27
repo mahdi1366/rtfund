@@ -17,6 +17,12 @@ class WFM_forms extends OperationClass {
     public $FormContent;
     public $IsActive;
 	public $FlowID;
+	public $IsStaff;
+	public $IsCustomer;
+	public $IsShareholder;
+	public $IsSupporter;
+	public $IsExpert;
+	public $IsAgent;
 
     public function Remove($pdo = null){
         $res = parent::runquery("select count(*) from WFM_requests where FormID = ? limit 1",

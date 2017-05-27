@@ -93,8 +93,10 @@ document.write('<script src="rightPanel.js?' + now.getTime() + '"><\/script>');
 		</tr>
 		<tr>
 			<td>فونت:</td>
-			<td><input class="x-form-text x-form-field" type="text"
-				style="width:100px" id="fontFamily" onchange="changeStyle(this);"></td>
+			<td><select class="x-form-text x-form-field" id="fontFamily" onchange="changeStyle(this);">
+					<option value="titr">Titr</option>
+					<option value="nazanin">Nazanin</option>
+				</select></td>
 			<td>اندازه فونت:</td>
 			<td><input type="text" id="fontSize" style="width:50px" class="x-form-text x-form-field"
 				onchange="changeStyle(this);"></td>

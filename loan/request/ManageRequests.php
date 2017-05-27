@@ -18,6 +18,7 @@ $dg->addColumn("", "StatusID", "", true);
 $dg->addColumn("", "BranchID", "", true);
 $dg->addColumn("", "BorrowerDesc", "", true);
 $dg->addColumn("", "BorrowerID", "", true);
+$dg->addColumn("", "BorrowerMobile", "", true);
 $dg->addColumn("", "LoanPersonID", "", true);
 $dg->addColumn("", "ReqPersonID", "", true);
 $dg->addColumn("", "IsEnded", "", true);

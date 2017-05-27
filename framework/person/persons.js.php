@@ -185,7 +185,7 @@ function Person()
 			defaults : {style : "margin-right : 20px"},
 			items :[{
 				xtype : "checkbox",
-                boxLabel: 'پرسنل صندوق',
+                boxLabel: 'همکاران صندوق',
                 name: 'IsStaff',
                 inputValue: 'YES'
 			},{

@@ -194,9 +194,13 @@ function SelectNewVoteForms(){
 	
 	$dt = PdoDataAccess::runquery("select f.* from VOT_forms f
 		left join VOT_FilledForms ff on(ff.FormID=f.FormID AND ff.PersonID=:pid)
-		join BSC_persons p on(p.PersonID=:pid AND (f.IsStaff=p.IsStaff OR f.IsCustomer=p.IsCustomer OR
-			f.IsShareholder=p.IsShareholder OR f.IsAgent=p.IsAgent OR f.IsSupporter=p.IsSupporter OR 
-			f.IsExpert=p.IsExpert))
+		join BSC_persons p on(p.PersonID=:pid AND ( 
+			if(f.IsStaff='YES',f.IsStaff=p.IsStaff,1=0) OR
+			if(f.IsCustomer='YES',f.IsCustomer=p.IsCustomer,1=0) OR
+			if(f.IsShareholder='YES',f.IsShareholder=p.IsShareholder,1=0) OR
+			if(f.IsAgent='YES',f.IsAgent=p.IsAgent,1=0) OR
+			if(f.IsSupporter='YES',f.IsSupporter=p.IsSupporter,1=0) OR
+			if(f.IsExpert='YES',f.IsExpert=p.IsExpert,1=0) ) )
 		where ff.FormID is null", array(":pid" => $_SESSION["USER"]["PersonID"]));
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);

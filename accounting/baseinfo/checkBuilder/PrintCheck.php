@@ -8,27 +8,22 @@
 require_once '../../header.inc.php';
 require_once 'CurrencyModules.class.php';
 
-if (!empty($_GET['ChequeBookID'])) {
-	$CheckID = $_GET['ChequeBookID'];
-	/*$record = $docItem->fetch();
-	$res = PdoDataAccess::runquery("select * from DocItems di 
-		inner join DocItems di1 on (di.sourceitemid=di1.itemid)
-		inner join GeneralDocHeaders gdh on (gdh.docid=di1.docid)
-		where di.docid=?", array($record['DocID']));
+BeginReport();
 
-	if (count($res) != 0)
-		$GeneralID = $res[0]['GeneralID'];
-	$signs = signs::GetSignsNames(" SignType='CHECK' AND UnitID=? AND PeriodID=?", array($_SESSION['ACCUSER']['UnitID'], $_SESSION["ACCUSER"]["PeriodID"]));
-	if ($_SESSION['ACCUSER']['UnitID'] == 505 && $_GET['IsPrinted'] == 'NO' && !empty($GeneralID)) {
-		require_once '../import/purchase/purchase.data.php';
-		PurchaseChangeStatus($GeneralID, 430, 'صدور چک ');
-	}
-	$checkID = $record["ChequeID"];
+if (!empty($_GET['DocChequeID'])) {
+	
+	$DocChequeID = $_GET['DocChequeID'];
+	$res = PdoDataAccess::runquery("select * from ACC_DocCheques "
+			. " where DocChequeID=?", array($record['DocChequeID']));
+	if (count($res) == 0)
+		die();
+	
+	$checkID = $record["DocChequeID"];
 	$checkNo = $record["CheckNo"];
 	$LocalNo = $record["LocalNo"];
 	$date = DateModules::miladi_to_shamsi($record["CheckDate"]);
 	$amount = $record["amount"];
-	$desc = $record['CheckDesc'];*/
+	$desc = $record['CheckDesc'];
 } else {
 	$checkID = $_REQUEST["ChequeBookID"];
 	$checkNo = "121212";

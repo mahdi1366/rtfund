@@ -1020,6 +1020,17 @@ AccDocs.beforeCheckEdit = function(editor,e){
 		return false;
 }
 
+AccDocs.prototype.printCheck = function(){
+	
+	var record = this.checkGrid.getSelectionModel().getLastSelected();
+	if(!record)
+	{
+		Ext.MessageBox.alert("Error", "ردیف چک مربوطه را انتخاب کنید");
+		return;
+	}
+	window.open(this.address_prefix + "../baseinfo/checkBuilder/PrintCheck.php?DocChequeID=" 
+			+ record.data.DocChequeID);
+}
 //.........................................................
 
 AccDocs.prototype.showDetail = function(record)

@@ -26,7 +26,8 @@ function SaveLoanRequest(){
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
 	$obj->AgentGuarantee = isset($_POST["AgentGuarantee"]) ? "YES" : "NO";	
-
+	$obj->FundGuarantee = isset($_POST["FundGuarantee"]) ? "YES" : "NO";	
+	
 	$obj->guarantees = array();
 	$arr = array_keys($_POST);
 	foreach($arr as $index)
@@ -42,9 +43,9 @@ function SaveLoanRequest(){
 			$obj->ReqPersonID = $_SESSION["USER"]["PersonID"];
 			
 			if(isset($_POST["sending"]) &&  $_POST["sending"] == "true")
-				$obj->StatusID = 10;
+				$obj->StatusID = LON_REQ_STATUS_SEND;
 			else
-				$obj->StatusID = 1;
+				$obj->StatusID = LON_REQ_STATUS_RAW;
 
 			$obj->LoanID = Default_Agent_Loan;
 		}
@@ -52,17 +53,18 @@ function SaveLoanRequest(){
 		{
 			if(!isset($obj->LoanPersonID))
 				$obj->LoanPersonID = $_SESSION["USER"]["PersonID"];
-			$obj->StatusID = 10;
+			$obj->StatusID = LON_REQ_STATUS_SEND;
 		}
 	}
 	else if(empty($obj->RequestID))
 	{
 		$obj->LoanID = Default_Agent_Loan;
-		$obj->StatusID = 1;
+		$obj->StatusID = LON_REQ_STATUS_RAW;
 	}
 	if(empty($obj->RequestID))
 	{
 		$obj->AgentGuarantee = isset($_POST["AgentGuarantee"]) ? "YES" : "NO";
+		$obj->FundGuarantee = isset($_POST["FundGuarantee"]) ? "YES" : "NO";
 		$result = $obj->AddRequest();
 		if($result)
 			ChangeStatus($obj->RequestID,$obj->StatusID, "", true);
@@ -898,15 +900,17 @@ function SelectReadyToPayParts($returnCount = false){
 		join LON_requests r using(RequestID)
 		left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 		left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
-		left join ACC_DocItems di on(SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND SourceID=RequestID AND SourceID2=PartID)
+		left join ACC_DocItems di on(SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
+			AND SourceID=RequestID AND SourceID2=PartID)
 		where fr.FlowID=1 AND StepID=? AND ActionType='CONFIRM' AND di.ItemID is null 
+			AND r.StatusID=" . LON_REQ_STATUS_CONFIRM . "
 		group by RequestID",
 		array($dt[0][0]));
 	
 	if($returnCount)
 		return count($dt);
 
-	//print_r(ExceptionHandler::PopAllExceptions());
+	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

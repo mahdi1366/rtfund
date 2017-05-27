@@ -34,8 +34,8 @@ $col->width = 50;
 $col->align = "center";
 
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 500;
-$dg->width = 770;
+$dg->height = 480;
+$dg->width = 750;
 $dg->title = "فرم های من";
 $dg->DefaultSortField = "RegDate";
 $dg->autoExpandColumn = "FormTitle";

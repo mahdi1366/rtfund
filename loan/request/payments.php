@@ -5,6 +5,7 @@
 //-----------------------------
 
 require_once '../header.inc.php';
+require_once './request.class.php';
 require_once inc_dataGrid;
 
 //................  GET ACCESS  .....................
@@ -15,6 +16,8 @@ $RequestID = $_REQUEST["RequestID"];
 if(empty($RequestID))
 	die();
 $editable = true;
+
+$obj = new LON_requests($RequestID);
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=GetPartPayments" . 
 		"&RequestID=" . $RequestID, "grid_div");
@@ -80,6 +83,7 @@ PartPayment.prototype = {
 	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
 	
 	RequestID : "<?= $RequestID ?>",
+	StatusID : "<?= $obj->StatusID ?>", 
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -111,6 +115,8 @@ PartPayment.DeleteRender = function(v,p,r){
 
 PartPayment.DocRender = function(v,p,r){
 	
+	if(PartPaymentObject.StatusID != "<?= LON_REQ_STATUS_CONFIRM ?>")
+		return "";
 	if(r.data.LocalNo != "" && r.data.LocalNo != null)
 	{
 		st = v;

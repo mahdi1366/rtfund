@@ -50,7 +50,7 @@ function WFM_NewRequest() {
 			store: new Ext.data.Store({
 				proxy: {
 					type: 'jsonp',
-					url: this.address_prefix + 'form.data.php?task=SelectForms',
+					url: this.address_prefix + 'form.data.php?task=SelectValidForms',
 					reader: {root: 'rows', totalProperty: 'totalCount'}
 				},
 				fields: ['FormID', 'FormTitle', 'FormContent'],
@@ -85,7 +85,7 @@ function WFM_NewRequest() {
 			}
 		},{
 			xtype: "fieldset",
-			title : "آیتم های قرارداد",
+			title : "آیتم های فرم",
 			itemId: "FormItems",
 			width : 680,
 			height : 280,
@@ -166,18 +166,13 @@ WFM_NewRequest.prototype.LoadRequest = function(){
 			record = this.getAt(0);
 		
 			me.FormItemsStore.load({
-				params : {FormID : record.data.FormID}
-			});
-			
-			me.MainForm.loadRecord(record);
-			
-			me.ReqItemsStore.load({
-				params: {RequestID: record.data.RequestID},
+				params : {FormID : record.data.FormID},
 				callback : function(){
-					me.ShowTplItemsForm(record.data.FormID, true);			
+					me.ShowTplItemsForm(record.data.FormID, true);		
+					me.MainForm.loadRecord(record);
 					mask1.hide();
 				}
-			});	
+			});
 		}
 	});
 }
@@ -206,9 +201,9 @@ WFM_NewRequest.prototype.SaveRequest = function (print) {
 				var RequestID = WFM_NewRequestObj.MainForm.getComponent('RequestID').getValue();
 				window.open(WFM_NewRequestObj.address_prefix + 'PrintForm.php?RequestID=' + RequestID);
 			}
-			else
-				Ext.MessageBox.alert('', 'با موفقیت ذخیره شد');
 			
+			WFM_MyRequestsObject.requestWin.hide();
+			WFM_MyRequestsObject.grid.getStore().load();
 		},
 		failure : function(form,action){
 			mask.hide();

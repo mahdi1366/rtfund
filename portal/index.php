@@ -88,9 +88,9 @@ for ($i = 0; $i < count($menus); $i++) {
 			</div>
 			<!----------------------------------------------------------------->
 			<div class="headerItems" style="color:#FF9F00"
-				 onclick="portal.OpenPage('/portal/empty.php');">
-				<span class="fa fa-comments-o"></span><br>
-				<font style="font-family:tahoma;font-size:12px;font-weight:bold">پیام ها</font>
+				 onclick="portal.OpenPage('/office/workflow/MyRequests.php');">
+				<span class="fa fa-list-alt"></span><br>
+				<font style="font-family:tahoma;font-size:12px;font-weight:bold">فرم ها</font>
 			</div>
 			<!----------------------------------------------------------------->
 			<div class="headerItems" style="color:#35BC7A"

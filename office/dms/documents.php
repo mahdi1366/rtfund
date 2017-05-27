@@ -77,6 +77,7 @@ $col = $dg->addColumn("مدرک", "DocTypeDesc", "");
 $col->width = 120;
 
 $col = $dg->addColumn("اطلاعات مدرک", "paramValues", "");
+$col->renderer = "ManageDocument.ParamValueRender";
 $col->width = 150;
 
 $col = $dg->addColumn("عنوان مدرک ارسالی", "DocDesc", "");
@@ -377,17 +378,27 @@ function ManageDocument(){
 	this.grid.render(this.get("div_grid"));
 }
 
-ManageDocumentObject = new ManageDocument();
-
 ManageDocument.FileRender = function(v,p,r){
 	
 	if(v == "false")
 		return "";
-	
 	return "<div align='center' title='مشاهده فایل' class='attach' "+
 		"onclick='ManageDocument.ShowFile(" + r.data.DocumentID + "," + r.data.ObjectID + ");' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16;float:right'></div>";
+}
+
+ManageDocument.OpenLetter = function(LetterID){
+	
+	framework.OpenPage('/office/letter/LetterInfo.php','مشخصات نامه',
+		{LetterID : LetterID});
+}
+
+ManageDocument.ParamValueRender = function(v,p,r){
+	
+	if(r.data.DocType != "<?= DMS_DOCTYPE_LETTER ?>")
+		return v;
+	return "<a href=javascript:void() onclick=ManageDocument.OpenLetter("+v+");>شماره نامه : "+v+"</a>";
 }
 
 ManageDocument.ShowFile = function(DocumentID, ObjectID){
@@ -668,6 +679,8 @@ ManageDocument.prototype.UnConfirm = function(){
 		failure: function(){}
 	});
 }
+
+ManageDocumentObject = new ManageDocument();
 
 <?}?>
 </script>
