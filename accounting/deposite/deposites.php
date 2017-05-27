@@ -34,6 +34,7 @@ $col->width = 40;
 
 if($accessObj->EditFlag)
 {
+	$dg->addButton("", "گردش حساب سپرده", "report", "function(){DepositeObject.ComputeProfit(true);}");
 	$dg->addButton("", "صدور سند سود سپرده", "process", "function(){DepositeObject.BeforeComputeProfit(false);}");
 	//$dg->addObject("this.OperationObj");
 }
@@ -129,7 +130,7 @@ Deposite.prototype.BeforeComputeProfit = function(ReportMode){
 				text : "محاسبه سود",
 				iconCls : "send",
 				itemId : "btn_compute",
-				handler : function(){DepositeObject.ComputeProfit();}
+				handler : function(){DepositeObject.ComputeProfit(false);}
 			},{
 				text : "بازگشت",
 				iconCls : "undo",
@@ -159,8 +160,21 @@ Deposite.prototype.BeforeComputeProfit = function(ReportMode){
 		});
 }
 
-Deposite.prototype.ComputeProfit = function(){
+Deposite.prototype.ComputeProfit = function(flow){
 	
+	if(flow)
+	{
+		var record = DepositeObject.grid.getSelectionModel().getLastSelected();
+		if(!record)
+		{
+			Ext.MessageBox.alert("","ردیف مورد نظر خود را انتخاب کنید");
+			return;
+		}
+		window.open(DepositeObject.address_prefix +  
+			"report.php?CostID=" + record.data.CostID + "&TafsiliID=" + 
+			record.data.TafsiliID + "&IsFlow=true");
+		return;
+	}
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال تایید سند ...'});
 	mask.show();
 
@@ -168,7 +182,8 @@ Deposite.prototype.ComputeProfit = function(){
 		url: this.address_prefix + 'deposite.data.php?task=DepositeProfit',
 		params:{
 			ComputeType : "DepositeProfit",
-			ToDate : this.DateWin.down("[name=ToDate]").getRawValue()
+			ToDate : flow ? this.DateWin.down("[name=ToDate]").getRawValue() : '',
+			IsFlow : flow ? "true" : "false"
 		},
 		form : this.get("mainForm"),
 		method: 'POST',

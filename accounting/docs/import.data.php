@@ -3137,9 +3137,10 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 
 //---------------------------------------------------------------
 
-function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
+function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow = false){
 	
-	CheckCloseCycle();
+	if(!$ReportMode)
+		CheckCloseCycle();
 	
 	//-------------------get percents ---------------------
 	$dt = PdoDataAccess::runquery("select * from ACC_cycles where CycleID=" . 
@@ -3158,15 +3159,19 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false){
 	{
 		//-------------- get latest deposite compute -------------
 		$FirstYearDay = DateModules::shamsi_to_miladi($_SESSION["accounting"]["CycleID"] . "-01-01", "-");
-		$dt = PdoDataAccess::runquery("select max(SourceID)
-			from ACC_docs join ACC_DocItems using(DocID)
-			where DocType=" . DOCTYPE_DEPOSIT_PROFIT . " 
-				AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-				AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "	
-				AND TafsiliID=?
-			order by DocID desc", array($TafsiliID));
-
-		$LatestComputeDate = count($dt)==0 || $dt[0][0] == "" ? $FirstYearDay : $dt[0][0];
+		if(!$IsFlow)
+		{
+			$dt = PdoDataAccess::runquery("select max(SourceID)
+				from ACC_docs join ACC_DocItems using(DocID)
+				where DocType=" . DOCTYPE_DEPOSIT_PROFIT . " 
+					AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+					AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "	
+					AND TafsiliID=?
+				order by DocID desc", array($TafsiliID));
+			$LatestComputeDate = count($dt)==0 || $dt[0][0] == "" ? $FirstYearDay : $dt[0][0];
+		}
+		else
+			$LatestComputeDate = $FirstYearDay;		
 
 		//----------- check for all docs confirm --------------
 		if(!$ReportMode)

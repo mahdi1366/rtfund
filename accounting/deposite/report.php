@@ -7,7 +7,12 @@
 require_once '../header.inc.php';
 require_once '../docs/import.data.php';
 
-$dataTable = ComputeDepositeProfit(DateModules::shamsi_to_miladi($_REQUEST["ToDate"]), array($_REQUEST["TafsiliID"]), true);
+if($_REQUEST["IsFlow"] == "true")
+	$ToDate = DateModules::Now();
+else
+	$ToDate = DateModules::shamsi_to_miladi($_REQUEST["ToDate"]);
+
+$dataTable = ComputeDepositeProfit($ToDate, array($_REQUEST["TafsiliID"]), true, $_REQUEST["IsFlow"] == "true");
 $dataTable = $dataTable[$_REQUEST["TafsiliID"]];
 
 echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';

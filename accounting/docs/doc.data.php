@@ -96,7 +96,7 @@ function confirm() {
 		$status = "RAW";
 	
 	//------------ check for register deposite -------------
-	if($status == "RAW")
+	/*if($status == "RAW")
 	{
 		$dt = PdoDataAccess::runquery("select DocID,group_concat(TafsiliID) tafs,DocDate from ACC_DocItems join ACC_docs using(DocID) where DocID=? 
 			AND CostID in(".COSTID_ShortDeposite.",".COSTID_LongDeposite.") ", array($_POST["DocID"]));
@@ -115,7 +115,7 @@ function confirm() {
 				die();						
 			}
 		}
-	}
+	}*/
 	
 	$obj = new ACC_docs();
 	$obj->DocID = $_POST["DocID"];
