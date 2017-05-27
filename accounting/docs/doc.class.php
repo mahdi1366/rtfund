@@ -341,9 +341,14 @@ class ACC_DocItems extends PdoDataAccess {
 	public $SourceID;
 	public $SourceID2;
 	public $SourceID3;
+	
+	public $_CostCode;
 
-	function __construct() {
+	function __construct($itemID = "") {
 		
+		if($itemID != "")
+			PdoDataAccess::FillObject ($this, "select d.*,c.CostCode _CostCode from ACC_DocItems d join "
+					. "ACC_CostCodes c using(CostID) where ItemID=?", array($itemID));
 	}
 
 	static function GetAll($where = "", $whereParam = array()) {
@@ -416,7 +421,8 @@ class ACC_DocItems extends PdoDataAccess {
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->ItemID;
+		$daObj->MainObjectID = $this->DocID;
+		$daObj->SubObjectID = $this->ItemID;
 		$daObj->TableName = "ACC_DocItems";
 		$daObj->execute($pdo);
 		return true;
@@ -426,33 +432,68 @@ class ACC_DocItems extends PdoDataAccess {
 
 		if (!self::BlockTrigger($pdo))
 			return false;
+		
+		if(!$this->EditTrigger())
+			return false;
 
 		if (!parent::update("ACC_DocItems", $this, "ItemID=:rid", array(":rid" => $this->ItemID), $pdo))
 			return false;
 
+		if(empty($this->_CostCode))
+		{
+			$obj = new ACC_DocItems($this->ItemID);
+			$this->_CostCode = $obj->_CostCode;
+		}
+		ACC_DocHistory::AddLog($this->DocID, "ویرایش ردیف سند با کدحساب [" . $this->_CostCode . "]");
+		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->MainObjectID = $this->ItemID;
+		$daObj->MainObjectID = $this->DocID;
+		$daObj->SubObjectID = $this->ItemID;
 		$daObj->TableName = "ACC_DocItems";
 		$daObj->execute($pdo);
 		return true;
 	}
 
-	static function Remove($ItemID) {
+	function Remove() {
 
-		$result = parent::delete("ACC_DocItems", "ItemID=:rid", array(":rid" => $ItemID));
-
+		if(!$this->EditTrigger())
+			return false;
+		
+		$result = parent::delete("ACC_DocItems", "ItemID=:rid", array(":rid" => $this->ItemID));
 		if ($result === false)
 			return false;
 
+		ACC_DocHistory::AddLog($this->DocID, "حذف ردیف سند با کدحساب [" . $this->_CostCode . "]");
+		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->MainObjectID = $ItemID;
+		$daObj->MainObjectID = $this->DocID;
+		$daObj->SubObjectID = $this->ItemID;
 		$daObj->TableName = "ACC_DocItems";
 		$daObj->execute();
 		return true;
 	}
 
+	function EditTrigger(){
+		//------------ check for register deposite -------------
+		if($this->TafsiliID > 0)
+		{
+			$hobj = new ACC_docs($this->DocID);
+			$dt = PdoDataAccess::runquery("select LocalNo from ACC_docs join ACC_DocItems using(DocID) where 
+				TafsiliID=? AND
+				DocDate>=? AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+				AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
+				AND DocType=" . DOCTYPE_DEPOSIT_PROFIT, array($this->TafsiliID, $hobj->DocDate));
+			if(count($dt) > 0)
+			{
+				ExceptionHandler::PushException("سند سود سپرده با شماره " . 
+						$dt[0][0] . " بر اساس این ردیف صادر شده و قادر به ویرایش آن نمی باشید.");
+				return false;
+			}
+		}	
+		return true;
+	}
 }
 
 class ACC_DocCheques extends PdoDataAccess {
@@ -613,4 +654,5 @@ class ACC_DocHistory extends OperationClass {
 	}
 
 }
+
 ?>

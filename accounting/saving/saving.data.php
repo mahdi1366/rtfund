@@ -81,6 +81,7 @@ function GetSavingLoanInfo($ReportMode = false){
 	else
 		$PersonID = $_REQUEST["PersonID"];
 	$StartDate = DateModules::shamsi_to_miladi($_REQUEST["StartDate"], "-");
+	$EndDate = DateModules::shamsi_to_miladi($_REQUEST["EndDate"], "-");
 	//----------- check for all docs confirm --------------
 	if(!$ReportMode)
 	{
@@ -90,12 +91,12 @@ function GetSavingLoanInfo($ReportMode = false){
 				AND ObjectID = ? AND CostID in(" . COSTID_saving . ")
 				AND DocStatus not in('CONFIRM','ARCHIVE')
 				AND DocDate >= ?", array($PersonID, $StartDate));
-		/*if(count($dt) > 0 && $dt[0][0] != "")
+		if(count($dt) > 0 && $dt[0][0] != "")
 		{
 			$msg = "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند.";
 			echo dataReader::getJsonData(array(), 0, $_GET["callback"], $msg);
 			die();
-		}*/
+		}
 	}
 	//------------ get sum of savings ----------------
 	$dt = PdoDataAccess::runquery("
@@ -108,9 +109,9 @@ function GetSavingLoanInfo($ReportMode = false){
 			AND ObjectID = ?
 			AND CostID in(" . COSTID_saving . ")
 			AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
-			AND DocDate >= ?
+			AND DocDate >= ? AND DocDate <= ?
 		group by DocDate
-		order by DocDate", array($PersonID, $StartDate));
+		order by DocDate", array($PersonID, $StartDate, $EndDate));
 	
 	if(count($dt) == 0)
 	{
@@ -147,9 +148,9 @@ function GetSavingLoanInfo($ReportMode = false){
 			"days" => 0
 		);
 	}
-	
-	$days = DateModules::GDateMinusGDate(DateModules::Now(),$dt[$i-1]["DocDate"]);
+	$days = DateModules::GDateMinusGDate($EndDate,$dt[$i-1]["DocDate"]);
 	$totalAmount += $remain*$days;
+	$totalDays += $days;
 	$totalAmount = round($totalAmount / $totalDays);
 	$TraceArr[count($TraceArr)-1]["days"] = $days;
 	$TraceArr[count($TraceArr)-1]["average"] = $totalAmount;

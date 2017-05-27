@@ -55,7 +55,9 @@ class WAR_requests extends OperationClass
 			select r.* , concat_ws(' ',fname,lname,CompanyName) fullname, sp.StepDesc,
 				address,
 				bf.InfoDesc TypeDesc,d.DocID,group_concat(distinct d.LocalNo) LocalNo, d.DocStatus , 
-				BranchName
+				BranchName,
+				if(lst.RequestID=r.RequestID, 'YES', 'NO') IsCurrent
+
 			from WAR_requests r 
 				left join BSC_persons using(PersonID)
 				join BSC_branches b using(BranchID)
@@ -64,6 +66,11 @@ class WAR_requests extends OperationClass
 				left join ACC_DocItems on(r.RequestID=SourceID2 AND 
 					SourceType in(" . DOCTYPE_WARRENTY . ",".DOCTYPE_WARRENTY_END.",".DOCTYPE_WARRENTY_EXTEND."))
 				left join ACC_docs d using(DocID)
+				left join (
+						select max(RequestID) RequestID,RefRequestID
+						from WAR_requests 
+						group by RefRequestID
+				)lst on(lst.RefRequestID=r.RefRequestID)
 			where " . $where . 
 			" group by r.RequestID" . $order, $param);
 	}

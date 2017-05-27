@@ -20,8 +20,8 @@ AccDocs.prototype = {
 	}
 };
 
-function AccDocs()
-{
+function AccDocs(){
+	
 	this.form = this.get("mainForm");
 
 	this.makeInfoWindow();
@@ -206,13 +206,13 @@ AccDocs.prototype.operationhMenu = function(e){
 			handler : function(){ return AccDocsObject.PrintDoc(); } });
 		
 		op_menu.add({text: 'سابقه سند',iconCls: 'history', 
-			handler : function(){ return AccDocsObject.HistoryWin(); } });
+			handler : function(){ return AccDocsObject.ShowHistory(); } });
 	}
 	op_menu.showAt([e.getEl().getX()-60, e.getEl().getY()+20]);
 }
 
-AccDocs.prototype.makeInfoWindow = function()
-{
+AccDocs.prototype.makeInfoWindow = function(){
+
 	this.docWin = new Ext.window.Window({
 		title: 'مشخصات سند',
 		modal : true,
@@ -284,8 +284,8 @@ AccDocs.prototype.makeInfoWindow = function()
 	});
 }
 
-AccDocs.prototype.makeDetailWindow = function()
-{
+AccDocs.prototype.makeDetailWindow = function(){
+
 	this.detailWin = new Ext.window.Window({
 		title: 'ایجاد ردیف سند',
 		modal : true,
@@ -886,6 +886,39 @@ AccDocs.prototype.SearchDoc = function(){
 
 }    
 
+AccDocs.prototype.ShowHistory = function(){
+
+	if(!this.HistoryWin)
+	{
+		this.HistoryWin = new Ext.window.Window({
+			title: 'سابقه تغییرات سند',
+			modal : true,
+			autoScroll : true,
+			width: 700,
+			height : 500,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "history.php",
+				scripts : true
+			},
+			buttons : [{
+					text : "بازگشت",
+					iconCls : "undo",
+					handler : function(){
+						this.up('window').hide();
+					}
+				}]
+		});
+		Ext.getCmp(this.TabID).add(this.HistoryWin);
+	}
+	this.HistoryWin.show();
+	this.HistoryWin.center();
+	this.HistoryWin.loader.load({
+		params : {
+			DocID : this.grid.getStore().getAt(0).data.DocID
+		}
+	});
+}
 //.........................................................
 
 AccDocs.prototype.check_deleteRender = function()
@@ -1217,17 +1250,13 @@ AccDocs.prototype.SaveItem = function(store,record)
 
 			success: function(form,action){
 				mask.hide();
-				if(action.result.success)
-				{
-					AccDocsObject.itemGrid.getStore().load();
-					AccDocsObject.detailWin.hide();
-				}
-				else
-				{
-					Ext.MessageBox.alert("Error",action.result.data);
-				}
+				AccDocsObject.itemGrid.getStore().load();
+				AccDocsObject.detailWin.hide();
 			},
-			failure: function(){}
+			failure: function(form,action){
+				mask.hide();
+				Ext.MessageBox.alert("Error",action.result.data);
+			}
 		});
 	}
 

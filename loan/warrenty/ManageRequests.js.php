@@ -238,7 +238,7 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 			handler : function(){ return WarrentyRequestObject.InfoRequest(); }});
 	}
 	
-	if(record.data.StatusID == "<?= WAR_STEPID_CONFIRM ?>")
+	if(record.data.StatusID == "<?= WAR_STEPID_CONFIRM ?>" && record.data.IsCurrent == "YES")
 	{
 		if(this.EditAccess)
 		{

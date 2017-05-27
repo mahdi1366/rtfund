@@ -103,6 +103,13 @@ function SavingLoan()
 			value : '<?= DateModules::FirstGDateOfYear() ?>',
 			fieldLabel : "تاریخ شروع محاسبه میانگین"
 		},{
+			xtype : "shdatefield",
+			name : "EndDate",
+			labelWidth : 150,
+			width : 300,
+			value : '<?= DateModules::shNow() ?>',
+			fieldLabel : "تاریخ پایان محاسبه میانگین"
+		},{
 			xtype : "combo",
 			width : 450,
 			fieldLabel : "انتخاب فرد",
@@ -131,6 +138,7 @@ function SavingLoan()
 				me = SavingLoanObject;
 				SavingLoanObject.LoadInfo(
 					me.MainPanel.down("[name=StartDate]").getRawValue(),
+					me.MainPanel.down("[name=EndDate]").getRawValue(),
 					me.MainPanel.down("[name=PersonID]").getValue());
 			}
 		},{
@@ -140,8 +148,10 @@ function SavingLoan()
 			handler : function(){
 				me = SavingLoanObject;
 				SDate = me.MainPanel.down("[name=StartDate]").getRawValue();
+				EDate = me.MainPanel.down("[name=EndDate]").getRawValue();
 				PID = me.MainPanel.down("[name=PersonID]").getValue();
-				window.open(me.address_prefix + "report.php?PersonID="+PID+"&StartDate="+ SDate);
+				window.open(me.address_prefix + "report.php?PersonID="+PID+"&StartDate="+ SDate
+						+"&EndDate="+ EDate);
 			}
 		}]
 	});
@@ -318,7 +328,7 @@ SavingLoan.InstallmentAmountRender = function(v,p,r){
 	
 }
 
-SavingLoan.prototype.LoadInfo = function(StartDate, PersonID){
+SavingLoan.prototype.LoadInfo = function(StartDate,EndDate, PersonID){
 
 	if(!this.InfoStore)
 	{
@@ -360,6 +370,7 @@ SavingLoan.prototype.LoadInfo = function(StartDate, PersonID){
 	this.InfoStore.load({
 		params : {
 			StartDate : StartDate,
+			EndDate : EndDate,
 			PersonID : PersonID
 		},
 		callback : function(){mask.hide();}

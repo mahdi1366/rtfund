@@ -3,10 +3,10 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 1394.07
 //-----------------------------
-
+ 
 require_once '../header.inc.php';
 
-?>
+?> 
 <br>
 <table width="700" style="margin-right:20px">
 	<tr>
@@ -20,6 +20,12 @@ require_once '../header.inc.php';
 				<img src="icons/help.png" style="width:60px;vertical-align:middle;cursor: pointer"></a>
 		</td>
 		<td>راهنمای زیر سیستم تسهیلات</td>
+	</tr>
+	<tr>
+		<td width="10%"><a target="_blank" href="help/help_warrenty.pdf">
+				<img src="icons/help.png" style="width:60px;vertical-align:middle;cursor: pointer"></a>
+		</td>
+		<td>راهنمای زیر سیستم ضمانت نامه ها</td>
 	</tr>
 	<tr>
 		<td width="10%"><a target="_blank" href="help/help_contract.pdf">
