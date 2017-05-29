@@ -680,9 +680,10 @@ ManageDocument.prototype.UnConfirm = function(){
 	});
 }
 
+<?}?>
 ManageDocumentObject = new ManageDocument();
 
-<?}?>
+
 </script>
 <center>
 	<div id="MainForm"></div>
