@@ -2017,7 +2017,8 @@ function RegisterChangeInstallmentWage($DocID, $ReqObj,$PartObj, $InstallmentObj
 function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliID2, 
 		$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo, $grouping=false){
 	
-	CheckCloseCycle();
+	if(isset($_SESSION["accounting"]) )
+		CheckCloseCycle();
 	/*@var $PayObj LON_BackPays */
 	$ReqObj = new LON_requests($PayObj->RequestID);
 	$PartObj = LON_ReqParts::GetValidPartObj($PayObj->RequestID);
@@ -2450,7 +2451,8 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliID2, 
 		$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo, $grouping=false){
 	
-	CheckCloseCycle();
+	if(isset($_SESSION["accounting"]) )
+		CheckCloseCycle();
 	/*@var $PayObj LON_BackPays */
 	$ReqObj = new LON_requests($PayObj->RequestID);
 	$PartObj = LON_ReqParts::GetValidPartObj($PayObj->RequestID);

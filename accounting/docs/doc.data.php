@@ -392,6 +392,36 @@ function removeDocItem() {
 
 //............................
 
+function SelectAccounts(){
+	
+	$DocID = $_GET["DocID"];
+	$temp = PdoDataAccess::runquery("
+		select * from ACC_accounts where AccountID in(
+				select ObjectID from ACC_DocItems d
+				join ACC_tafsilis t1 on(d.TafsiliType=".TAFTYPE_ACCOUNTS." and d.tafsiliID=t1.TafsiliID)
+				where docID=:d
+			union all
+				select ObjectID from ACC_DocItems d
+				join ACC_tafsilis t2 on(d.TafsiliType2=".TAFTYPE_ACCOUNTS." and d.tafsiliID2=t2.TafsiliID)
+				where docID=:d
+			)", array(":d" => $DocID));
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
+function GetTafsilis(){
+	
+	$DocID = $_GET["DocID"];
+	$temp = PdoDataAccess::runquery("
+		select t.* from ACC_DocItems d
+		join ACC_tafsilis t on(t.TafsiliID=d.TafsiliID or t.TafsiliID=d.TafsiliID2)
+		where d.DociD=:d and (d.TafsiliType in(".TAFTYPE_PERSONS.") or d.TafsiliType2 in(".TAFTYPE_PERSONS."))
+		group by t.TafsiliID
+			", array(":d" => $DocID));
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
 function selectCheques() {
 	$where = "1=1";
 	$whereParam = array();
@@ -474,7 +504,9 @@ function saveChecks() {
 }
 
 function removeChecks() {
+	
 	$result = ACC_DocCheques::Remove($_POST["DocChequeID"]);
+	
 	echo $result ? "true" : "conflict";
 	die();
 }

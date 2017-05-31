@@ -33,13 +33,12 @@ function AccDocs(){
 			fields:["TafsiliID","TafsiliDesc"],
 			proxy: {
 				type: 'jsonp',
-				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=1',
+				url: this.address_prefix + 'doc.data.php?task=GetTafsilis',
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			}
 		}),
 		emptyText:'انتخاب تفصیلی ...',
-		typeAhead: false,
-		pageSize : 10,
+		queryMode : 'local',
 		valueField : "TafsiliID",
 		displayField : "TafsiliDesc"
 	});
@@ -49,16 +48,15 @@ function AccDocs(){
 			fields:["AccountID","AccountDesc","StartNo","EndNo","StartNo2","EndNo2"],
 			proxy: {
 				type: 'jsonp',
-				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectAccounts',
+				url: this.address_prefix + 'doc.data.php?task=SelectAccounts',
 				reader: {
 					root: 'rows',
 					totalProperty: 'totalCount'
 				}
-			},
-			autoLoad : true			
+			}		
 		}),
 		emptyText:'انتخاب حساب ....',
-		typeAhead: false,
+		queryMode : 'local',
 		valueField : "AccountID",
 		displayField : "AccountDesc"
 	});
@@ -940,6 +938,14 @@ AccDocs.prototype.check_Add = function()
 		DocChequeID: "",
 		DocID : this.grid.getStore().getAt(0).data.DocID
 	});
+	
+	this.checkTafsiliCombo.getStore().load({
+		params :{ DocID : this.grid.getStore().getAt(0).data.DocID}
+	});
+	this.accountCombo.getStore().load({
+		params :{ DocID : this.grid.getStore().getAt(0).data.DocID}
+	});
+	
 	this.checkGrid.plugins[0].cancelEdit();
 	this.checkGrid.getStore().insert(0, record);
 	this.checkGrid.plugins[0].startEdit(0, 0);

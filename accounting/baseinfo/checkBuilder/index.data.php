@@ -63,7 +63,7 @@ function SaveCheck(){
 	$Content = $_POST["content"];
 	$Content = preg_replace("/&quot;/", "'", $Content);
 	$fp = fopen($filename, "w");
-	fwrite($fp,'<body dir="rtl">@'. $Content . '@</body>');
+	fwrite($fp,'<body dir="rtl"><style>body{font-family:nazanin}</style>@'. $Content . '@</body>');
 	fclose($fp);
 	die();
 }

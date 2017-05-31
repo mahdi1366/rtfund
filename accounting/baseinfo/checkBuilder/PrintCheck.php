@@ -13,17 +13,25 @@ BeginReport();
 if (!empty($_GET['DocChequeID'])) {
 	
 	$DocChequeID = $_GET['DocChequeID'];
-	$res = PdoDataAccess::runquery("select * from ACC_DocCheques "
-			. " where DocChequeID=?", array($record['DocChequeID']));
+	$res = PdoDataAccess::runquery("
+		SELECT c.*,LocalNo,ChequeBookID,TafsiliDesc 
+		FROM ACC_DocCheques c 
+			join ACC_docs using(DocID)
+			join ACC_tafsilis using(TafsiliID)
+			join ACC_accounts a using(AccountID)
+			join ACC_ChequeBooks b on(a.AccountID=b.AccountID and c.CheckNo between MinNo and MaxNo)
+		where DocChequeID=?
+		group by DocChequeID", array($DocChequeID));
 	if (count($res) == 0)
 		die();
+	$record = $res[0];
 	
-	$checkID = $record["DocChequeID"];
+	$checkID = $record["ChequeBookID"];
 	$checkNo = $record["CheckNo"];
 	$LocalNo = $record["LocalNo"];
 	$date = DateModules::miladi_to_shamsi($record["CheckDate"]);
 	$amount = $record["amount"];
-	$desc = $record['CheckDesc'];
+	$desc = $record["TafsiliDesc"] . "  " . $record['description'];
 } else {
 	$checkID = $_REQUEST["ChequeBookID"];
 	$checkNo = "121212";
@@ -65,6 +73,7 @@ $content = str_replace("#key106#", CurrencyModulesclass::CurrencyToString($amoun
 $content = str_replace("#key107#", $desc, $content);
 
 $index = 108;
+$signs = array();
 if (count($signs) > 0) {
 	for ($i = 0; $i < 3; $i++) {
 		$content = str_replace("#key" . ($index++) . "#", $signs[$i]["FullName"], $content);
@@ -82,11 +91,12 @@ $content = str_replace("#key117#", $checkNo, $content);
 echo $content;
 ?>
 <center>
-	<div class="noPrint" style="position: absolute;top:400px;left: 50%;">
+<!--	<div class="noPrint" style="position: absolute;top:400px;left: 50%;">
 		<input type="checkbox" onchange="setSign(this, 2)" checked>امضاء دوم
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		<input type="checkbox" onchange="setSign(this, 3)" checked>امضاء سوم
 	</div>
+-->
 </center>
 
 <style media="print">
