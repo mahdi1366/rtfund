@@ -30,6 +30,9 @@ $col->width = 120;
 $col = $dg->addColumn("مبلغ بلوکه", "BlockAmount", GridColumn::ColumnType_money);
 $col->width = 100;
 
+$col = $dg->addColumn("تاریخ پایان", "EndDate", GridColumn::ColumnType_date);
+$col->width = 100;
+
 $col = $dg->addColumn("جزئیات", "details", "");
 $col->width = 120;
 $col->ellipsis = 20;

@@ -454,6 +454,7 @@ function SavePayedDate(){
 	$obj = new ACC_IncomeCheques();
 	$obj->IncomeChequeID = $data->IncomeChequeID;
 	$obj->PayedDate = $data->PayedDate;
+	$obj->ChequeDate = $data->ChequeDate;
 	$result = $obj->Edit();
 
 	//print_r(ExceptionHandler::PopAllExceptions());

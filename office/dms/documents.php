@@ -55,6 +55,12 @@ switch($ObjectType)
 				&& in_array($obj->StatusID, array(STEPID_RAW,STEPID_RETURN_TO_CUSTOMER)) )
 			$access = true;
 		break;
+	case "accdoc":
+		require_once '../../accounting/docs/doc.class.php';
+		$obj = new ACC_docs($ObjectID);
+		if($obj->DocStatus == "RAW")
+			$access = true;
+		break;
 }
 //------------------------------------------------------
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "dms.data.php?" .

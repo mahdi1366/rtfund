@@ -23,10 +23,14 @@ function showSummary(){
 
 	$rpg->addColumn("تفصیلی", "TafsiliDesc");
 	$rpg->addColumn("شماره پرونده", "packNo");
-	$rpg->addColumn("پس انداز", "pasandaz","ReportMoneyRender");
-	$rpg->addColumn("کوتاه مدت", "kootah","ReportMoneyRender");
-	$rpg->addColumn("بلند مدت", "boland","ReportMoneyRender");
-	$rpg->addColumn("جاری", "jari","ReportMoneyRender");
+	if(isset($_POST["savingCost"]))	
+		$rpg->addColumn("پس انداز", "pasandaz","ReportMoneyRender");
+	if(isset($_POST["shortCost"]))	
+		$rpg->addColumn("کوتاه مدت", "kootah","ReportMoneyRender");
+	if(isset($_POST["longCost"]))	
+		$rpg->addColumn("بلند مدت", "boland","ReportMoneyRender");
+	if(isset($_POST["currentCost"]))	
+		$rpg->addColumn("جاری", "jari","ReportMoneyRender");
 
 	if(!$rpg->excel)
 	{

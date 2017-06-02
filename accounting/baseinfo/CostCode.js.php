@@ -66,54 +66,11 @@ function CostCode(){
 		});
 	}
 	
-	levelCombos.push({
-		xtype : "combo",
-		store: new Ext.data.Store({
-			fields:["InfoID","InfoDesc"],
-			proxy: {
-				type: 'jsonp',
-				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			},
-			autoLoad : true
-		}),
-		name : "TafsiliType",
-		fieldLabel : "گروه تفصیلی",
-		typeAhead: false,
-		style : "margin-left : 50px",
-		queryMode : "local",
-		valueField : "InfoID",
-		displayField : "InfoDesc"
-	},{
-		xtype : "combo",
-		store: new Ext.data.Store({
-			fields:["InfoID","InfoDesc"],
-			proxy: {
-				type: 'jsonp',
-				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			},
-			autoLoad : true
-		}),
-		typeAhead: false,
-		name : "TafsiliType2",
-		fieldLabel : "گروه تفصیلی2",
-		queryMode : "local",
-		style : "margin-left : 50px",
-		valueField : "InfoID",
-		displayField : "InfoDesc"
-	},{
-		xtype : "checkbox",
-		inputValue : "YES",
-		boxLabel : "این حساب قابل بلوکه شدن است",
-		name : "IsBlockable"
-	});
-
 	this.formPanel = new Ext.form.Panel({
 		applyTo: this.get("mainform"),
 		collapsible: true,
 		bodyPadding: '5 5 0',
-		width: 810,
+		width: 590,
 		frame : true,
 		fieldDefaults: {
 			msgTarget: 'side',
@@ -124,12 +81,12 @@ function CostCode(){
 		},
 		items: [{
 				xtype:'fieldset',
-				itemId:'level',
+				itemId:'fs_level',
 				title: 'تعیین سطوح کد هزینه',
 				width: 570,
 				collapsible: true,
 				defaultType: 'textfield',
-				disabled : false	,
+				disabled : false,
 				layout: 'anchor',
 				defaults: {
 					anchor: '100%'
@@ -141,50 +98,93 @@ function CostCode(){
 				html : "-اگر در هر جزء کد حساب آیتم مورد نظرتان"
 				+" وجود نداشت می توانید با زدن دکمه ایجاد آنرا ایجاد کنید."
 			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["InfoID","InfoDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad : true
+				}),
+				name : "TafsiliType",
+				fieldLabel : "گروه تفصیلی",
+				typeAhead: false,
+				width: 500,
+				style : "margin-left : 50px",
+				queryMode : "local",
+				valueField : "InfoID",
+				displayField : "InfoDesc"
+			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["InfoID","InfoDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad : true
+				}),
+				typeAhead: false,
+				name : "TafsiliType2",
+				width: 500,
+				fieldLabel : "گروه تفصیلی2",
+				queryMode : "local",
+				style : "margin-left : 50px",
+				valueField : "InfoID",
+				displayField : "InfoDesc"
+			},{
+				xtype : "checkbox",
+				inputValue : "YES",
+				boxLabel : "این حساب قابل بلوکه شدن است",
+				name : "IsBlockable"
+			},{
 				buttons: [{
-						text : "ذخیره",
-						iconCls : "save",
-						handler: function(){
+					text : "ذخیره",
+					iconCls : "save",
+					handler: function(){
 
-							//.......... check completion of each pre level ..........
-							
-							for(var i=0; i < CostCodeObj.levelCount; i++)
+						//.......... check completion of each pre level ..........
+
+						for(var i=0; i < CostCodeObj.levelCount; i++)
+						{
+							if(CostCodeObj.formPanel.down('[name=level' + (i+1) + "]").getValue() == null)
+								if(i+2 <= CostCodeObj.levelCount && CostCodeObj.formPanel.down('[name=level' + (i+2) + "]").getValue() != null)
 							{
-								if(CostCodeObj.formPanel.down('[name=level' + (i+1) + "]").getValue() == null)
-									if(i+2 <= CostCodeObj.levelCount && CostCodeObj.formPanel.down('[name=level' + (i+2) + "]").getValue() != null)
-								{
-									alert("تکمیل " + CostCodeObj.levelTitles[i] + " با توجه به انتخاب " + 
-										CostCodeObj.levelTitles[i+1] + " الزامی است");
-									return;
-								}
+								alert("تکمیل " + CostCodeObj.levelTitles[i] + " با توجه به انتخاب " + 
+									CostCodeObj.levelTitles[i+1] + " الزامی است");
+								return;
 							}
-							mask = new Ext.LoadMask(CostCodeObj.formPanel, {msg:'در حال ذخيره سازي...'});
-							mask.show();
-							
-							CostCodeObj.formPanel.getForm().submit({
-								url:  CostCodeObj.address_prefix + 'baseinfo.data.php?task=SaveCostCode',
-								method : "POST",
-								clientValidation : true,
+						}
+						mask = new Ext.LoadMask(CostCodeObj.formPanel, {msg:'در حال ذخيره سازي...'});
+						mask.show();
 
-								success : function(form,action){
-									CostCodeObj.grid.getStore().load();
-									CostCodeObj.formPanel.hide();
-									mask.hide();
-								}
-								,
-								failure : function(form,action){                                  
-									alert(action.result.data);
-									mask.hide();
-								}
-							});								
-						}
-					},{
-						text : "انصراف",
-						iconCls : "undo",
-						handler : function(){
-							CostCodeObj.formPanel.hide();
-						}
-					}]
+						CostCodeObj.formPanel.getForm().submit({
+							url:  CostCodeObj.address_prefix + 'baseinfo.data.php?task=SaveCostCode',
+							method : "POST",
+							clientValidation : true,
+
+							success : function(form,action){
+								CostCodeObj.grid.getStore().load();
+								CostCodeObj.formPanel.hide();
+								mask.hide();
+							}
+							,
+							failure : function(form,action){                                  
+								alert(action.result.data);
+								mask.hide();
+							}
+						});								
+					}
+				},{
+					text : "انصراف",
+					iconCls : "undo",
+					handler : function(){
+						CostCodeObj.formPanel.hide();
+					}
+				}]
 			}]	
 
 	});
@@ -199,9 +199,15 @@ CostCode.prototype.BeforeSaveCost = function(EditMode){
 	
 	if(EditMode)
 	{
-		mask = new Ext.LoadMask(this.formPanel, {msg:'در حال ذخيره سازي...'});
-		mask.show();
 		var record = this.grid.getSelectionModel().getLastSelected();
+		
+		this.formPanel.down("[itemId=fs_level]").hide();
+		this.formPanel.down("[name=CostID]").setValue(record.data.CostID);
+		this.formPanel.loadRecord(record);
+		
+		/*mask = new Ext.LoadMask(this.formPanel, {msg:'در حال ذخيره سازي...'});
+		mask.show();
+		
 		this.formPanel.down("[name=CostID]").setValue(record.data.CostID);
 		this.formPanel.down("[name=TafsiliType]").setValue(record.data.TafsiliType);
 		this.formPanel.down("[name=TafsiliType2]").setValue(record.data.TafsiliType2);
@@ -228,8 +234,10 @@ CostCode.prototype.BeforeSaveCost = function(EditMode){
 				clearInterval(t);
 				mask.hide();
 			}
-		}, 1000);
+		}, 1000);*/
 	}	
+	else
+		this.formPanel.down("[itemId=fs_level]").show();
 }
 
 CostCode.RemoveCost = function(value,p,record){

@@ -3406,12 +3406,14 @@ function ComputeShareProfit(){
 	
 	CheckCloseCycle();
 	
+	$BranchID = $_POST["BranchID"];
 	//----------- check for all docs confirm --------------
 	$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
 		join ACC_DocItems using(DocID)
 		where CostID =" . COSTID_share . "
 		AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-		AND DocStatus not in('CONFIRM','ARCHIVE')");
+		AND BranchID=?
+		AND DocStatus not in('CONFIRM','ARCHIVE')", array($BranchID));
 	if(count($dt) > 0 && $dt[0][0] != "")
 	{
 		echo Response::createObjectiveResponse(false, "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند و قادر به صدور سند سود سهام نمی باشید.");
@@ -3427,7 +3429,7 @@ function ComputeShareProfit(){
 	$obj->regPersonID = $_SESSION['USER']["PersonID"];
 	$obj->DocDate = PDONOW;
 	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
-	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
+	$obj->BranchID = $BranchID;
 	$obj->DocType = DOCTYPE_SHARE_PROFIT;
 	$obj->description = "محاسبه سود سهام سهامداران";
 
@@ -3442,9 +3444,16 @@ function ComputeShareProfit(){
 	$dt = PdoDataAccess::runquery("select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 		from ACC_DocItems join ACC_docs using(DocID)
 		where CostID=" . COSTID_share . "
-			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "			
+			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "	
+			AND BranchID=?
 		group by TafsiliID
-		order by amount");
+		order by amount", array($BranchID));
+	
+	if(count($dt) == 0)
+	{
+		echo Response::createObjectiveResponse(false, "هیچ حساب سهامی در این شعبه یافت نشد");
+		die();
+	}
 	
 	$TotalShares = 0;
 	foreach($dt as $row)
@@ -3679,6 +3688,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		$blockObj->TafsiliID = $PersonTafsili;
 		$blockObj->BlockAmount = $ReqObj->amount;
 		$blockObj->IsLock = "YES";
+		$blockObj->EndDate = $ReqObj->EndDate;
 		$blockObj->SourceType = DOCTYPE_WARRENTY;
 		$blockObj->SourceID = $ReqObj->RequestID;
 		$blockObj->details = "بابت ضمانت نامه شماره " . $ReqObj->RequestID;
@@ -3975,7 +3985,7 @@ function EndWarrantyDoc($ReqObj, $pdo){
 	return $DocObj->DocID;
 }
 
-function CancelWarrantyDoc($ReqObj, $pdo){
+function CancelWarrantyDoc($ReqObj, $extradays, $pdo){
 	
 	CheckCloseCycle();
 	
@@ -3986,8 +3996,9 @@ function CancelWarrantyDoc($ReqObj, $pdo){
 	$CostCode_warrenty_commitment = FindCostID("700");
 	$CostCode_wage = FindCostID("750-07");
 	$CostCode_FutureWage = FindCostID("760-07");
-	$CostCode_seporde = FindCostID("690");
+	
 	$CostCode_pasandaz = FindCostID("209-10");
+	$CostCode_seporde = FindCostID("210-03");
 	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
@@ -4031,7 +4042,7 @@ function CancelWarrantyDoc($ReqObj, $pdo){
 	$TotalWage = round($days*$ReqObj->amount*0.9*$ReqObj->wage/36500);	
 	
 	$days = DateModules::GDateMinusGDate($ReqObj->CancelDate,$ReqObj->StartDate);
-	$days += 30;
+	$days += $extradays*1;
 	$FundWage = round($days*$ReqObj->amount*0.9*$ReqObj->wage/36500);	
 	
 	$RemainWage = $TotalWage-$FundWage;
@@ -4103,6 +4114,26 @@ function CancelWarrantyDoc($ReqObj, $pdo){
 		ExceptionHandler::PushException("خطا در ثبت ردیف تعهد ضمانت نامه");
 		return false;
 	}
+	//...............................................
+	unset($itemObj->ItemID);
+	$itemObj->CostID = $CostCode_seporde;
+	$itemObj->DebtorAmount = round($ReqObj->amount/10);
+	$itemObj->CreditorAmount = 0;
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ثبت ردیف ضمانت نامه");
+		return false;
+	}
+	
+	unset($itemObj->ItemID);
+	$itemObj->CostID = $CostCode_pasandaz;
+	$itemObj->DebtorAmount = 0;
+	$itemObj->CreditorAmount = round($ReqObj->amount/10);
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ثبت ردیف تعهد ضمانت نامه");
+		return false;
+	}
 	//---------------------------- block Cost ----------------------------
 	if($ReqObj->IsBlock == "YES")
 	{
@@ -4159,6 +4190,32 @@ function CancelWarrantyDoc($ReqObj, $pdo){
 	
 	return $DocObj->DocID;
 }
+
+function ReturnCancelDoc($ReqObj, $pdo, $EditMode = false){
+	
+	CheckCloseCycle();
+	
+	/*@var $PayObj WAR_requests */
+	
+	$dt = PdoDataAccess::runquery("select DocID,DocStatus from ACC_DocItems join ACC_docs using(DocID)
+		where SourceType=" . DOCTYPE_WARRENTY_CANCEL . " AND SourceID2=?",
+		array($ReqObj->RequestID), $pdo);
+	if(count($dt) == 0)
+		return true;
+	
+	if($dt[0]["DocStatus"] != "RAW")
+	{
+		ExceptionHandler::PushException("سند تایید شده و قابل برگشت نمی باشد");
+		return false;
+	}
+
+	PdoDataAccess::runquery("delete from ACC_DocItems 
+		where SourceType=" . DOCTYPE_WARRENTY_CANCEL . " AND SourceID2=?",
+		array($ReqObj->RequestID), $pdo);
+
+	return ACC_docs::Remove($dt[0][0], $pdo);
+}
+
 //---------------------------------------------------------------
 
 ?>

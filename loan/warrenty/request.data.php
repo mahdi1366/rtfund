@@ -234,7 +234,7 @@ function CancelWarrentyDoc(){
 	}
 	$ReqObj = new WAR_requests($_POST["RequestID"], $pdo); 
 	
-	$result = CancelWarrantyDoc($ReqObj, $pdo);
+	$result = CancelWarrantyDoc($ReqObj, $_POST["extradays"], $pdo);
 	if(!$result)
 	{
 		$pdo->rollBack();
@@ -249,6 +249,27 @@ function CancelWarrentyDoc(){
 	die();
 }
 
+function ReturnCancel(){
+	
+	$ReqObj = new WAR_requests($_POST["RequestID"]);
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$result = ReturnCancelDoc($ReqObj, $pdo);
+	if(!$result)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	
+	$ReqObj->StatusID = WAR_STEPID_CONFIRM;
+	$ReqObj->Edit($pdo);
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 //------------------------------------------------
 
 function GetRequestPeriods(){

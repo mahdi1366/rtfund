@@ -57,7 +57,6 @@ class ReportGenerator {
 	public $footerContent = "";
 	
 	public $groupField = "";
-	public $groupLabel = false;
 	public $groupLabelRender = "";
 	public $groupPerPage = false;
 	
@@ -145,8 +144,8 @@ class ReportGenerator {
 		$index = 0;
 		
 		if (is_array($this->mysql_resource)) {
-			if ($this->groupField != "")
-				$this->mysql_resource = self::array_sort($this->mysql_resource, $this->groupField);
+			//if ($this->groupField != "")
+			//	$this->mysql_resource = self::array_sort($this->mysql_resource, $this->groupField);
 
 			$this->AllRowCount = count($this->mysql_resource);
 			foreach ($this->mysql_resource as &$row) {
@@ -390,14 +389,12 @@ echo "</caption>";
 		if ($index == 0)
 		{
 			$this->curGroup = $row[$this->groupField];
-			if($this->groupLabel)
-			{
-				$str = $row[$this->groupField];
-				if($this->groupLabelRender != "")
-					eval("\$str = " . $this->groupLabelRender . "(\$row,\$index);");
+			$str = $row[$this->groupField];
+			if($this->groupLabelRender != "")
+				eval("\$str = " . $this->groupLabelRender . "(\$row,\$index);");
 				
-				echo "<tr><td style=font-size:".$this->fontSize.";font-weight:bold;height:21px; colspan=" . count($this->columns) . ">" . $str . "</td></tr>";
-			}
+			echo "<tr><td style=font-size:".$this->fontSize.";font-weight:bold;height:21px; colspan=" . 
+					count($this->columns) . ">" . $str . "</td></tr>";
 		}
 
 		if ($this->groupField != "" && $this->curGroup != $row[$this->groupField]) {
@@ -416,14 +413,11 @@ echo "</caption>";
 				$this->drawHeader(false);
 			}
 			
-			if($this->groupLabel)
-			{
-				$str = $row[$this->groupField];
-				if($this->groupLabelRender != "")
-					eval("\$str = " . $this->groupLabelRender . "(\$row,\$index);");
-				
-				echo "<tr><td style=font-size:".$this->fontSize.";font-weight:bold;height:21px; colspan=" . count($this->columns) . ">" . $str . "</td></tr>";
-			}
+			$str = $row[$this->groupField];
+			if($this->groupLabelRender != "")
+				eval("\$str = " . $this->groupLabelRender . "(\$row,\$index);");
+
+			echo "<tr><td style=font-size:".$this->fontSize.";font-weight:bold;height:21px; colspan=" . count($this->columns) . ">" . $str . "</td></tr>";
 
 			$this->EmptySummaryRow();
 			$this->curGroup = $row[$this->groupField];

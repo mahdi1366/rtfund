@@ -32,10 +32,11 @@ $col->renderer = "IncomeCheque.ChequeNoRender";
 $col->width = 70;
 
 $col = $dg->addColumn("تاریخ چک", "ChequeDate", GridColumn::ColumnType_date);
+$col->editor = ColumnEditor::SHDateField();
 $col->width = 80;
 
 $col = $dg->addColumn("تاریخ وصول", "PayedDate", GridColumn::ColumnType_date);
-$col->editor = ColumnEditor::SHDateField();
+$col->editor = ColumnEditor::SHDateField(true);
 $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(){return IncomeChequeObject.SavePayedDate();}";
 $col->width = 80;

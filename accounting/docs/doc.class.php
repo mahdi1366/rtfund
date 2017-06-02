@@ -95,7 +95,7 @@ class ACC_docs extends PdoDataAccess {
 
 		$temp = parent::runquery("select * from ACC_cycles where CycleID=?", array($this->CycleID));
 		if ($temp[0]["IsClosed"] == "YES") {
-			ExceptionHandler::PushException("دوره مربوطه بسته شده و سند قابل حذف نمی باشد.");
+			ExceptionHandler::PushException("دوره مالی مربوطه بسته شده است");
 			return false;
 		}		
 		
@@ -581,6 +581,7 @@ class ACC_CostBlocks extends OperationClass {
 	public $BlockAmount;
 	public $IsActive;
 	public $IsLock;
+	public $EndDate;
 	public $details;
 	public $SourceType;
 	public $SourceID;

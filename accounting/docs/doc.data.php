@@ -667,8 +667,7 @@ function RegisterEndDoc(){
 
 	if (!$result) {
 		$pdo->rollBack();
-		print_r(ExceptionHandler::PopAllExceptions());
-		echo Response::createObjectiveResponse(false, "");
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
 	

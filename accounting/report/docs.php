@@ -146,7 +146,7 @@ if(isset($_REQUEST["show"]))
 		
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
-				<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>
+				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 					گزارش اسناد حسابداری
 					 <br> ".
 				 $_SESSION["accounting"]["BranchName"]. "<br>" . "دوره سال " .
@@ -159,7 +159,7 @@ if(isset($_REQUEST["show"]))
 			echo "<br>گزارش از تاریخ : " . $_POST["fromDate"] . ($_POST["toDate"] != "" ? " - " . $_POST["toDate"] : "");
 		}
 		echo "</td></tr></table>";
-		}
+	}
 	$rpg->generateReport();
 	die();
 }

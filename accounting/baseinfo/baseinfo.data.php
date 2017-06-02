@@ -212,44 +212,53 @@ function SaveCostCode() {
 	if(empty($_POST["IsBlockable"]))
 		$cc->IsBlockable = "NO";
 
-	$where = " cc.IsActive='YES' AND level1=?";
-	$param = array($cc->level1);
-	if($cc->level2*1 > 0)
-	{
-		$where .= " AND level2=?";
-		$param[] = $cc->level2;
-	}
-	else
-		$where .= " AND level2 is null";
-	if($cc->level3*1 > 0)
-	{
-		$where .= " AND level3=?";
-		$param[] = $cc->level3;
-	}
-	else
-		$where .= " AND level3 is null";
-	if($cc->level4*1 > 0)
-	{
-		$where .= " AND level4=?";
-		$param[] = $cc->level4;
-	}
-	else
-		$where .= " AND level4 is null";
-		
-    $dt = ACC_CostCodes::SelectCost($where, $param);
-	
-    if ($dt->rowCount() > 0) {
-		$record = $dt->fetch();
-		if($record["CostID"] != $cc->CostID)
-		{
-			Response::createObjectiveResponse(false, 'کد حساب تکراری است');
-			die();
-		}        
-    }
     if ($cc->CostID == '')
-        $res = $cc->InsertCost();
+    {
+		$where = " cc.IsActive='YES' AND level1=?";
+		$param = array($cc->level1);
+		if($cc->level2*1 > 0)
+		{
+			$where .= " AND level2=?";
+			$param[] = $cc->level2;
+		}
+		else
+			$where .= " AND level2 is null";
+		if($cc->level3*1 > 0)
+		{
+			$where .= " AND level3=?";
+			$param[] = $cc->level3;
+		}
+		else
+			$where .= " AND level3 is null";
+		if($cc->level4*1 > 0)
+		{
+			$where .= " AND level4=?";
+			$param[] = $cc->level4;
+		}
+		else
+			$where .= " AND level4 is null";
+
+		$dt = ACC_CostCodes::SelectCost($where, $param);
+
+		if ($dt->rowCount() > 0) {
+			$record = $dt->fetch();
+			if($record["CostID"] != $cc->CostID)
+			{
+				Response::createObjectiveResponse(false, 'کد حساب تکراری است');
+				die();
+			}        
+		}
+		$res = $cc->InsertCost();
+	}
     else
-        $res = $cc->UpdateCost();
+	{
+		unset($cc->CostCode);
+		unset($cc->level1);
+		unset($cc->level2);
+		unset($cc->level3);
+		unset($cc->level4);
+		$res = $cc->UpdateCost();
+	}
 
     Response::createObjectiveResponse($res, $cc->popExceptionDescription());
     die();

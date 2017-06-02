@@ -111,6 +111,25 @@ function SavingLoan()
 			fieldLabel : "تاریخ پایان محاسبه میانگین"
 		},{
 			xtype : "combo",
+			colspan : 2,
+			width : 450,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: "/accounting/global/domain.data.php?task=GetAccessBranches",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BranchID','BranchName'],
+				autoLoad : true					
+			}),
+			fieldLabel : "شعبه",
+			queryMode : 'local',
+			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
+			displayField : "BranchName",
+			valueField : "BranchID",
+			name : "BranchID"
+		},{
+			xtype : "combo",
 			width : 450,
 			fieldLabel : "انتخاب فرد",
 			pageSize : 20,
@@ -123,7 +142,7 @@ function SavingLoan()
 				fields :  ['PackNo','PersonID','fullname', {
 					name : "title",
 					convert : function(v,r){
-						return "[ " + r.data.PackNo + " ] " + r.data.fullname;
+						return "[ شماره پرونده : " + r.data.PackNo + " ] " + r.data.fullname;
 					}
 				}]
 			}),
@@ -150,8 +169,10 @@ function SavingLoan()
 				SDate = me.MainPanel.down("[name=StartDate]").getRawValue();
 				EDate = me.MainPanel.down("[name=EndDate]").getRawValue();
 				PID = me.MainPanel.down("[name=PersonID]").getValue();
+				BranchID = me.MainPanel.down("[name=BranchID]").getValue();
+				
 				window.open(me.address_prefix + "report.php?PersonID="+PID+"&StartDate="+ SDate
-						+"&EndDate="+ EDate);
+						+"&EndDate="+ EDate + "&BranchID=" + BranchID);
 			}
 		}]
 	});

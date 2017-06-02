@@ -82,6 +82,7 @@ function GetSavingLoanInfo($ReportMode = false){
 		$PersonID = $_REQUEST["PersonID"];
 	$StartDate = DateModules::shamsi_to_miladi($_REQUEST["StartDate"], "-");
 	$EndDate = DateModules::shamsi_to_miladi($_REQUEST["EndDate"], "-");
+	$BranchID = $_REQUEST["BranchID"];
 	//----------- check for all docs confirm --------------
 	if(!$ReportMode)
 	{
@@ -90,7 +91,8 @@ function GetSavingLoanInfo($ReportMode = false){
 			where TafsiliType=" . TAFTYPE_PERSONS . " 
 				AND ObjectID = ? AND CostID in(" . COSTID_saving . ")
 				AND DocStatus not in('CONFIRM','ARCHIVE')
-				AND DocDate >= ?", array($PersonID, $StartDate));
+				AND BranchID=?
+				AND DocDate >= ?", array($PersonID, $BranchID, $StartDate));
 		if(count($dt) > 0 && $dt[0][0] != "")
 		{
 			$msg = "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند.";
@@ -108,7 +110,7 @@ function GetSavingLoanInfo($ReportMode = false){
 		where TafsiliType=" . TAFTYPE_PERSONS . " 
 			AND ObjectID = ?
 			AND CostID in(" . COSTID_saving . ")
-			AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
+			AND BranchID=" . $BranchID . "
 			AND DocDate >= ? AND DocDate <= ?
 		group by DocDate
 		order by DocDate", array($PersonID, $StartDate, $EndDate));
@@ -165,8 +167,7 @@ function GetSavingLoanInfo($ReportMode = false){
 		"TotalMonths" => floor($totalDays/30.5)
 	);
 	echo dataReader::getJsonData($returnArray, 1, $_GET["callback"]);
-	die();
-	
+	die();	
 }
 
 //-------------------------------------------------

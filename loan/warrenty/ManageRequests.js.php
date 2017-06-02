@@ -264,6 +264,11 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 				handler : function(){ return WarrentyRequestObject.BeforeExtendWarrentyDoc(); }})
 		}
 	}
+	if(record.data.StatusID == "<?= WAR_STEPID_CANCEL ?>" && record.data.IsCurrent == "YES")
+	{
+		op_menu.add({text: 'برگشت از ابطال',iconCls: 'undo',
+				handler : function(){ return WarrentyRequestObject.ReturnCancel(); }})
+	}
 	
 	op_menu.add({text: 'چاپ ضمانت نامه',iconCls: 'print',
 			handler : function(){ return WarrentyRequestObject.Print(); }});
@@ -848,25 +853,33 @@ WarrentyRequest.prototype.BeforeCancelWarrentyDoc = function(){
 	{
 		this.CancelWin = new Ext.window.Window({
 			width : 400,
-			height : 90,
+			height : 120,
 			items : new Ext.form.Panel({
 				items : [{
+					xtype : "numberfield",
+					name : "extradays",
+					labelWidth : 200,
+					hideTrigger : true,
+					fieldLabel : "تعداد روز مازاد کارمزد",
+					allowBlank : false,
+					value : 30
+				},{
 					xtype : "shdatefield",
 					name : "CancelDate",
 					labelWidth : 200,
 					allowBlank : false,
 					fieldLabel : "تاریخ ابطال ضمانت نامه"
-				}],
-				buttons :[{
-					text : "ابطال",
-					iconCls : "cross",
-					handler : function(){WarrentyRequestObject.CancelWarrentyDoc();}
-				},{
-					text : "انصراف",
-					iconCls : "undo",
-					handler : function(){ this.up('window').hide(); }
 				}]
-			})
+			}),
+			buttons :[{
+				text : "ابطال",
+				iconCls : "cross",
+				handler : function(){WarrentyRequestObject.CancelWarrentyDoc();}
+			},{
+				text : "انصراف",
+				iconCls : "undo",
+				handler : function(){ this.up('window').hide(); }
+			}]
 		});
 	}
 	this.CancelWin.show();
@@ -897,6 +910,44 @@ WarrentyRequest.prototype.CancelWarrentyDoc = function(){
 			mask.hide();
 			Ext.MessageBox.alert("",action.result.data);
 		}
+	});
+}
+
+WarrentyRequest.prototype.ReturnCancel = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به برگشت سند می باشید؟",function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		me = WarrentyRequestObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "ReturnCancel",
+				RequestID : record.data.RequestID
+			},
+			success: function(response){
+				
+				result = Ext.decode(response.responseText);
+				mask.hide();
+				if(!result.success)
+				{
+					if(result.data == "")
+						Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("", result.data);
+					return;
+				}				
+				WarrentyRequestObject.grid.getStore().load();
+			}
+		});
 	});
 }
 

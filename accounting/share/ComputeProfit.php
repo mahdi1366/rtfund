@@ -34,13 +34,32 @@ function ComputeProfit()
 		frame : true,
 		bodyStyle : "text-align:right;padding:5px",
 		title : "صدور سند محاسبه سود سهام سهامداران",
-		width : 350,
+		width : 500,
 		items :[{
 			xtype : "currencyfield",
 			fieldLabel : "سود سهام ویژه",
 			allowBlank : false,
 			name : "TotalProfit",
 			hideTrigger : true
+		},{
+			xtype : "combo",
+			colspan : 2,
+			width : 400,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: "/accounting/global/domain.data.php?task=GetAccessBranches",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BranchID','BranchName'],
+				autoLoad : true					
+			}),
+			fieldLabel : "صدور سند در شعبه",
+			queryMode : 'local',
+			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
+			displayField : "BranchName",
+			valueField : "BranchID",
+			name : "BranchID"
 		}],
 		buttons : [{
 			text : "صدور سند سود سهام",

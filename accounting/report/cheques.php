@@ -11,22 +11,25 @@ if(isset($_REQUEST["show"]))
 {
 	$Year = $_SESSION["accounting"]["CycleYear"];
 	$query = "
-	select c.*,d.docDate,a.*,b.InfoDesc as checkTitle,t.tafsiliDesc,bankDesc
+	select c.*,d.LocalNo,br.BranchName,d.DocDate,a.AccountDesc,a.AccountNo,
+		b.InfoDesc as checkTitle,t.TafsiliDesc,bankDesc,cb.SerialNo
 
 	from ACC_DocCheques c
 	left join ACC_tafsilis t using(tafsiliID)
 	join ACC_docs d using(DocID)
+	join BSC_branches br using(BranchID)
 	join ACC_accounts a using(AccountID)
 	join ACC_banks bb using(BankID)
 	join BaseInfo b on(b.typeID=3 AND b.infoID=CheckStatus)
+	join ACC_ChequeBooks cb on(a.AccountID=cb.AccountID and c.CheckNo between MinNo and MaxNo)
 	
-	where d.DocStatus != 'RAW' AND d.CycleID=" . $_SESSION["accounting"]["CycleID"];
+	where d.CycleID=" . $_SESSION["accounting"]["CycleID"];
 
 	$whereParam = array();
 	
 	if(!empty($_POST["BranchID"]))
 	{
-		$query .= " AND BranchID=:b";
+		$query .= " AND d.BranchID=:b";
 		$whereParam[":b"] = $_POST["BranchID"];
 	}		
 	if(!empty($_POST["fromDate"]))
@@ -54,30 +57,42 @@ if(isset($_REQUEST["show"]))
 		$query .= " AND c.checkStatus = :cs ";
 		$whereParam[":cs"] = $_POST["checkStatus"];
 	}
-	if(!empty($_POST["checkNo"]))
+	if(!empty($_POST["FromCheckNo"]))
 	{
-		$query .= " AND c.checkNo = :cn ";
-		$whereParam[":cn"] = $_POST["checkNo"];
+		$query .= " AND c.checkNo >= :cn ";
+		$whereParam[":cn"] = $_POST["FromCheckNo"];
 	}
-	if(!empty($_POST["bankID"]))
+	if(!empty($_POST["ToCheckNo"]))
+	{
+		$query .= " AND c.checkNo <= :tcn ";
+		$whereParam[":tcn"] = $_POST["ToCheckNo"];
+	}
+	if(!empty($_POST["BankID"]))
 	{
 		$query .= " AND a.bankID = :b ";
-		$whereParam[":b"] = $_POST["bankID"];
+		$whereParam[":b"] = $_POST["BankID"];
 	}
-	if(!empty($_POST["accountID"]))
+	if(!empty($_POST["AccountID"]))
 	{
 		$query .= " AND c.accountID = :ac ";
-		$whereParam[":ac"] = $_POST["accountID"];
+		$whereParam[":ac"] = $_POST["AccountID"];
 	}
-	if(!empty($_POST["tafsiliID"]))
+	if(!empty($_POST["ChequeBookID"]))
+	{
+		$query .= " AND cb.ChequeBookID = :cb ";
+		$whereParam[":cb"] = $_POST["ChequeBookID"];
+	}
+	if(!empty($_POST["TafsiliID"]))
 	{
 		$query .= " AND c.tafsiliID = :taf ";
-		$whereParam[":taf"] = $_POST["tafsiliID"];
+		$whereParam[":taf"] = $_POST["TafsiliID"];
 	}
 	$query .= " order by checkDate";
 
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 
+	//echo PdoDataAccess::GetLatestQueryString();
+	
 	function dateRender($row, $value){
 		return DateModules::miladi_to_shamsi($value);
 	}
@@ -98,31 +113,32 @@ if(isset($_REQUEST["show"]))
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
 	
-	$rpg->addColumn("شماره سند", "docID");
-	$rpg->addColumn("تاریخ سند", "docDate","dateRender");
-	$rpg->addColumn("شماره چک", "checkNo");
-	$rpg->addColumn("بانک", "bankTitle");
-	$rpg->addColumn("شماره حساب", "accountNo");
-	$rpg->addColumn("تاریخ چک", "checkDate","dateRender");
+	$rpg->addColumn("شماره سند", "LocalNo");
+	$rpg->addColumn("تاریخ سند", "DocDate","dateRender");
+	$rpg->addColumn("شماره چک", "CheckNo");
+	$rpg->addColumn("بانک", "bankDesc");
+	$rpg->addColumn("شماره حساب", "AccountNo");
+	$rpg->addColumn("حساب", "AccountDesc");
+	$rpg->addColumn("سریال دسته چک", "SerialNo");
+	
+	$rpg->addColumn("تاریخ چک", "CheckDate","dateRender");
 	$rpg->addColumn("وضعیت چک", "checkTitle");
 	$col = $rpg->addColumn("مبلغ", "amount");
 	$col->EnableSummary();
-	$rpg->addColumn("تفصیلی گیرنده", "tafsiliTitle");
+	$rpg->addColumn("تفصیلی گیرنده", "TafsiliDesc");
 	
 	$rpg->mysql_resource = $dataTable;
 	if(!$rpg->excel)
 	{
-		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
+		BeginReport();
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
-				<td align='center' style='font-family:b titr;font-size:15px'>اعتماد شما سرلوحه خدمت ماست<br>
-					گزارش چک ها
-					";
-		if(!empty($_POST["l_fromDate"]))
-		{
-			echo "<br>سررسید چک ها از تاریخ : " . $_POST["l_fromDate"] . ($_POST["l_toDate"] != "" ? " - " . $_POST["l_toDate"] : "");
-		}
-		echo	"</td>
+				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
+					گزارش چک های پرداختی
+					 <br> ".
+				 $_SESSION["accounting"]["BranchName"]. "<br>" . "دوره سال " .
+				$_SESSION["accounting"]["CycleID"] .
+				"</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
 			. DateModules::shNow() . "<br>";
 		if(!empty($_POST["fromDate"]))
@@ -164,13 +180,14 @@ function AccReport_checks()
 		bodyStyle : "text-align:right;padding:5px",
 		title : "گزارش چک ها",
 		defaults : {
-			labelWidth :150
+			labelWidth :110,
+			width : 350
 		},
 		layout :{
 			type : "table",
 			columns :2
 		},
-		width : 700,
+		width : 750,
 		items :[{
 			xtype : "combo",
 			colspan : 2,
@@ -235,10 +252,19 @@ function AccReport_checks()
 				fields : ['BankID','BankDesc'],
 				autoLoad : true
 			}),
+			queryMode: 'local',
 			displayField : 'BankDesc',
 			valueField : 'bankID',
 			hiddenName : "bankID",
-			fieldLabel : "نام بانک"
+			fieldLabel : "نام بانک",
+			listeners : { 
+				select : function(el,records){
+					combo = AccReport_checksObj.formPanel.down("[hiddenName=AccountID]");
+					combo.setValue();
+					combo.getStore().proxy.extraParams["BankID"] = records[0].data.BankID;
+					combo.getStore().load();					
+				}
+			}
 		},
 		{
 			xtype : "combo",
@@ -249,28 +275,55 @@ function AccReport_checks()
 						"task=SelectAccounts",
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields : ['BankID','BankDesc'],
-				autoLoad : true
+				fields : ['AccountID','AccountDesc']
 			}),
-			displayField : 'accountTitle',
-			valueField : 'accountID',
-			hiddenName : "accountID",
-			fieldLabel : "حساب"
+			displayField : 'AccountDesc',
+			valueField : 'AccountID',
+			hiddenName : "AccountID",
+			fieldLabel : "حساب",
+			queryMode: 'local',
+			listeners : { 
+				select : function(el,records){
+					combo = AccReport_checksObj.formPanel.down("[hiddenName=ChequeBookID]");
+					combo.setValue();
+					combo.getStore().proxy.extraParams["BAccId"] = records[0].data.AccountID;
+					combo.getStore().load();					
+				}
+			}
+		},{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?' +
+						"task=SelectCheques",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['ChequeBookID','SerialNo']
+			}),
+			displayField : 'SerialNo',
+			valueField : 'ChequeBookID',
+			hiddenName : "ChequeBookID",
+			queryMode: 'local',
+			fieldLabel : "دسته چک"
 		},{
 			xtype : "numberfield",
-			fieldLabel : "شماره چک",
-			name : "checkNo",
+			fieldLabel : "از شماره چک",
+			name : "fromCheckNo",
+			hideTrigger : true
+		},{
+			xtype : "numberfield",
+			fieldLabel : "تا شماره چک",
+			name : "ToCheckNo",
 			hideTrigger : true
 		},{
 			xtype : "combo",
-			colspan : 2,
-			width : 620,
 			displayField : "tafsiliTitle",
 			fieldLabel : "حساب تفصیلی",
-			valueField : "tafsiliID",
-			hiddenName : "tafsiliID",
+			valueField : "TafsiliID",
+			hiddenName : "TafsiliID",
 			store : new Ext.data.Store({
-				fields:["tafsiliID","tafsiliTitle"],
+				fields:["TafsiliID","tafsiliTitle"],
 				proxy: {
 					type: 'jsonp',
 					url: this.address_prefix + '../account/data/tafsilis.data.php?task=selectTafsili',

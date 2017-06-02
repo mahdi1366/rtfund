@@ -38,7 +38,7 @@ if($accessObj->AddFlag)
 	$dgh->enableRowEdit = true ;
 	$dgh->rowEditOkHandler = "function(v,p,r){ return AccountRole.Save(v,p,r);}";
 }
-$dgh->title ="سمت های حسابداری";
+$dgh->title ="نوع دسترسی";
 
 $dgh->emptyTextOfHiddenColumns=true;
 $dgh->width = 600;
