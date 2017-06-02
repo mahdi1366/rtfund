@@ -360,7 +360,7 @@ IncomeCheque.prototype.MakeCostPanel = function(){
 						combo = IncomeChequeObject.ChequeInfoWin.down("[name=TafsiliID2]");
 						combo.enable();
 						combo.setValue();
-						combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType;
+						combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType2;
 						combo.getStore().load();
 					}
 				}
@@ -382,7 +382,22 @@ IncomeCheque.prototype.MakeCostPanel = function(){
 			pageSize : 10,
 			name : "TafsiliID",
 			valueField : "TafsiliID",
-			displayField : "TafsiliDesc"
+			displayField : "TafsiliDesc",
+			listeners : { 
+				select : function(){
+					t1 = this.getStore().proxy.extraParams["TafsiliType"];
+					combo = IncomeChequeObject.ChequeInfoWin.down("[name=TafsiliID2]");
+					
+					if(t1 == <?= TAFTYPE_BANKS ?>)
+					{
+						combo.setValue();
+						combo.getStore().proxy.extraParams["ParentTafsili"] = this.getValue();
+						combo.getStore().load();
+					}			
+					else
+						combo.getStore().proxy.extraParams["ParentTafsili"] = "";
+				}
+			}
 		},{
 			xtype : "combo",
 			width : 350,
@@ -735,7 +750,21 @@ IncomeCheque.prototype.AccountInfoWin = function(){
 					valueField : "TafsiliID",
 					itemId : "TafsiliID",
 					name : "TafsiliID",
-					displayField : "title"
+					displayField : "title",
+					listeners : { 
+						change : function(){
+							t1 = this.getStore().proxy.extraParams["TafsiliType"];
+							combo = IncomeChequeObject.BankWin.down("[itemId=TafsiliID2]");
+
+							if(t1 == <?= TAFTYPE_BANKS ?>)
+							{
+								combo.getStore().proxy.extraParams["ParentTafsili"] = this.getValue();
+								combo.getStore().load();
+							}			
+							else
+								combo.getStore().proxy.extraParams["ParentTafsili"] = "";
+						}
+					}
 				},{
 					xtype : "combo",
 					store: new Ext.data.Store({
@@ -1131,20 +1160,17 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 				},{
 					xtype : "shdatefield",
 					name : "ChequeDate",
-					allowBlank : false,
 					fieldLabel : "تاریخ چک"
 				},{
 					xtype : "currencyfield",
 					name : "ChequeAmount",
 					hideTrigger : true,
-					allowBlank : false,
 					fieldLabel : "مبلغ چک"
 				},{
 					xtype : "numberfield",
 					name : "ChequeNo",
 					hideTrigger : true,
 					minValue : 1,
-					allowBlank : false,
 					fieldLabel : "شماره چک"
 				},{
 					xtype : "combo",

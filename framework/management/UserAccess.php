@@ -10,8 +10,8 @@ require_once 'UserAccess.js.php';
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "framework.data.php?task=selectAccess","div_dg");
 
 $dg->addColumn("","MenuID","string",true);
-$dg->addColumn("","GroupID","string",true);
-$dg->addColumn("","GroupDesc","string",true);
+$dg->addColumn("","ParentID","string",true);
+$dg->addColumn("","ParentDesc","string",true);
 $dg->addColumn("نام فرم","MenuDesc","string");
 
 $col = $dg->addColumn("دسترسی کامل","","string");
@@ -42,8 +42,8 @@ $col->width = 60;
 $dg->addButton("save","ذخیره تغییرات","save","function(v,p,r){return AccessObject.saveAction(v,p,r);}");
 $dg->EnableGrouping = true;
 $dg->emptyTextOfHiddenColumns = true;
-$dg->DefaultGroupField = "GroupID";
-$dg->groupHeaderTpl = "::: {[values.rows[0].data.GroupDesc]}";
+$dg->DefaultGroupField = "ParentID";
+$dg->groupHeaderTpl = "::: {[values.rows[0].data.ParentDesc]}";
 
 $dg->title = "تخصیص دسترسی به کاربران";
 $dg->width = 700;

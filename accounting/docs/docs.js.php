@@ -39,6 +39,7 @@ function AccDocs(){
 		}),
 		emptyText:'انتخاب تفصیلی ...',
 		queryMode : 'local',
+		allowBlank : false,
 		valueField : "TafsiliID",
 		displayField : "TafsiliDesc"
 	});
@@ -57,6 +58,7 @@ function AccDocs(){
 		}),
 		emptyText:'انتخاب حساب ....',
 		queryMode : 'local',
+		allowBlank : false,
 		valueField : "AccountID",
 		displayField : "AccountDesc"
 	});
@@ -398,9 +400,24 @@ AccDocs.prototype.makeDetailWindow = function(){
 										return false;
 									this.proxy.extraParams["TafsiliType"] = group;
 								}
-							}
+							}							
 						}
 					}),
+					listeners : { 
+						change : function(){
+							t1 = this.getStore().proxy.extraParams["TafsiliType"];
+							combo = AccDocsObject.detailWin.down("[name=TafsiliID2]");
+							
+							if(t1 == <?= TAFTYPE_BANKS ?>)
+							{
+								combo.setValue();
+								combo.getStore().proxy.extraParams["ParentTafsili"] = this.getValue();
+								combo.getStore().load();
+							}			
+							else
+								combo.getStore().proxy.extraParams["ParentTafsili"] = "";
+						}
+					},
 					typeAhead: false,
 					pageSize : 10,
 					name : "TafsiliID",
@@ -531,6 +548,12 @@ AccDocs.prototype.afterHeaderLoad = function(store)
 	{
 		AccDocsObject.itemGrid.show();
 		AccDocsObject.showDetail(store.getAt(0));
+		AccDocsObject.checkTafsiliCombo.getStore().load({
+			params :{ DocID : store.getAt(0).data.DocID}
+		});
+		AccDocsObject.accountCombo.getStore().load({
+			params :{ DocID : store.getAt(0).data.DocID}
+		});
 	}
 	else
 		AccDocsObject.itemGrid.hide();
@@ -937,13 +960,6 @@ AccDocs.prototype.check_Add = function()
 	var record = new modelClass({
 		DocChequeID: "",
 		DocID : this.grid.getStore().getAt(0).data.DocID
-	});
-	
-	this.checkTafsiliCombo.getStore().load({
-		params :{ DocID : this.grid.getStore().getAt(0).data.DocID}
-	});
-	this.accountCombo.getStore().load({
-		params :{ DocID : this.grid.getStore().getAt(0).data.DocID}
 	});
 	
 	this.checkGrid.plugins[0].cancelEdit();

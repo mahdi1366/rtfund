@@ -18,6 +18,10 @@ function Access()
 	this.filterPanel = new Ext.form.Panel({
 		title: "انتخاب سیستم",
 		width: 500,
+		layout : {
+			type : "table",
+			columns : 1
+		},
 		applyTo : this.get("div_form"),
 		collapsible : true,
 		collapsed : false,
@@ -41,30 +45,81 @@ function Access()
 			width : 400,
 			itemId : "SystemID"
 		},{
-			xtype : "combo",
-			store: new Ext.data.Store({
-				proxy:{
-					type: 'jsonp',
-					url: this.address_prefix + 'framework.data.php?task=selectPersons',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				fields :  ['PersonID','fullname']
-			}),
-			fieldLabel : "کاربر",
-			displayField: 'fullname',
-			valueField : "PersonID",
-			hiddenName : "PersonID",
-			width : 400,
-			itemId : "PersonID"
+			xtype : "container",
+			layout : "hbox",
+			items : [{
+				xtype : "radio",
+				name : "choose",
+				width : 10,
+				checked : true,
+				listeners : {
+					change : function(){
+						this.up('form').down("[itemId=PersonID]").setDisabled(this.checked);
+						this.up('form').down("[itemId=GroupID]").setDisabled(!this.checked);
+						this.up('form').down("[itemId=PersonID]").setValue();
+					}
+				}		
+			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: this.address_prefix + 'framework.data.php?task=SelectAccessGroups',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ['GroupID','GroupDesc']
+				}),
+				fieldLabel : "گروه",
+				displayField: 'GroupDesc',
+				valueField : "GroupID",
+				hiddenName : "GroupID",
+				width : 390,
+				labelWidth : 90,
+				itemId : "GroupID"
+			}]
+		},{
+			xtype : "container",
+			layout : "hbox",
+			items : [{
+				xtype : "radio",
+				name : "choose",
+				width : 10,
+				listeners : {
+					change : function(){
+						this.up('form').down("[itemId=PersonID]").setDisabled(!this.checked);
+						this.up('form').down("[itemId=GroupID]").setDisabled(this.checked);
+						this.up('form').down("[itemId=GroupID]").setValue()
+					}
+				}
+			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: this.address_prefix + 'framework.data.php?task=selectPersons',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ['PersonID','fullname']
+				}),
+				fieldLabel : "کاربر",
+				displayField: 'fullname',
+				valueField : "PersonID",
+				hiddenName : "PersonID",
+				width : 390,
+				labelWidth : 90,
+				disabled : true,
+				itemId : "PersonID"
+			}]
 		}], 
 		buttons : [{
-			text : "دسترسی های کاربر",
+			text : "بارگذاری دسترسی ها",
 			iconCls : "refresh",
 			handler : function(){
 				
 				AccessObject.grid.getStore().proxy.extraParams = {
 					SystemID : this.up('form').getComponent("SystemID").getValue(),
-					PersonID : this.up('form').getComponent("PersonID").getValue()
+					GroupID : this.up('form').down("[itemId=GroupID]").getValue(),
+					PersonID : this.up('form').down("[itemId=PersonID]").getValue()
 				};
 				if(!AccessObject.grid.rendered)
 					AccessObject.grid.render(AccessObject.get("div_dg"));

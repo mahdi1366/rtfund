@@ -309,6 +309,11 @@ function DeleteGroup(){
 
 function GetAllTafsilis() {
 	
+	if(empty($_GET["TafsiliType"]))
+	{
+		echo dataReader::getJsonData(array(), 0, $_GET["callback"]);
+		die();
+	}
 	$where = " t.IsActive='YES' AND t.TafsiliType=:g";
 	$whereParam = array();
 	$whereParam[":g"] = $_GET["TafsiliType"];
@@ -322,6 +327,17 @@ function GetAllTafsilis() {
 	if(!empty($_REQUEST["Shareholder"]))
 	{
 		$where .= " AND p.IsShareholder='YES' ";
+	}
+	
+	if($_GET["TafsiliType"] == TAFTYPE_ACCOUNTS && !empty($_REQUEST["ParentTafsili"]))
+	{
+		$dt = PdoDataAccess::runquery("select group_concat(AccountID) 
+			from ACC_tafsilis t
+			join ACC_accounts on(BankID=ObjectID)
+			where TafsiliType=" . TAFTYPE_BANKS . " and t.tafsiliID=?", 
+			array($_REQUEST["ParentTafsili"]));
+		
+		$where .= " and ObjectID in(" . ($dt[0][0] == "" ? "0" : $dt[0][0]) . " )";
 	}
 
 	$temp = ACC_tafsilis::SelectAll($where . dataReader::makeOrder(), $whereParam);
@@ -360,11 +376,11 @@ function DeleteTafsili() {
 //---------------------------------------------
 
 function GetBankData() {
-	$where = '';
+	$where = "IsActive='YES' ";
 	$param = array();
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
 		$fld = $_REQUEST['fields'];
-		$where = $fld . ' like :' . $fld;
+		$where = " and " .  $fld . ' like :' . $fld;
 		$param[':' . $fld] = '%' . $_REQUEST['query'] . '%';
 	}
 

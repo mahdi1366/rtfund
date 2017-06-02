@@ -403,6 +403,13 @@ class ACC_banks extends PdoDataAccess {
 
         $this->BankID = parent::InsertID();
 
+		$obj = new ACC_tafsilis();
+		$obj->ObjectID = $this->BankID;
+		$obj->TafsiliCode = $this->BankID;
+		$obj->TafsiliDesc = $this->BankDesc;
+		$obj->TafsiliType = TAFTYPE_BANKS;
+		$obj->AddTafsili();
+		
         $daObj = new DataAudit();
         $daObj->ActionType = DataAudit::Action_add;
         $daObj->MainObjectID = $this->BankID;
@@ -418,6 +425,25 @@ class ACC_banks extends PdoDataAccess {
         if ($res === false)
 			return false;
 
+		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where ObjectID=? AND TafsiliType="
+				. TAFTYPE_BANKS, array($this->BankID));
+		if(count($dt) == 0)
+		{
+			$obj = new ACC_tafsilis();
+			$obj->ObjectID = $this->BankID;
+			$obj->TafsiliCode = $this->BankID;
+			$obj->TafsiliDesc = $this->BankDesc;
+			$obj->TafsiliType = TAFTYPE_BANKS;
+			$obj->AddTafsili();
+		}
+		else
+		{
+			$obj = new ACC_tafsilis($dt[0]["TafsiliID"]);
+			$obj->TafsiliCode = $this->BankID;
+			$obj->TafsiliDesc = $this->BankDesc;
+			$obj->EditTafsili();
+		}
+		
         if (parent::AffectedRows()) {
             $daObj = new DataAudit();
             $daObj->ActionType = DataAudit::Action_update;
@@ -431,17 +457,19 @@ class ACC_banks extends PdoDataAccess {
 
     function DeleteBank() {
 
-        $res = parent::delete("ACC_banks", 'BankID=:BId', array(':BId' => $this->BankID));
-        if ($res === false) 
-            return false;
+        parent::runquery("update ACC_banks set IsActive='NO' where BankID=?", array($this->BankID));
 
-        if (parent::AffectedRows()) {
-            $daObj = new DataAudit();
-            $daObj->ActionType = DataAudit::Action_delete;
-            $daObj->MainObjectID = $this->BankID;
-            $daObj->TableName = "ACC_banks";
-            $daObj->execute();
-        }
+		if (ExceptionHandler::GetExceptionCount() <> 0)
+            return false;
+		
+		parent::runquery("update ACC_tafsilis set IsActive='NO' where TafsiliType=".TAFTYPE_BANKS." 
+			AND ObjectID=?", array($this->BankID));
+
+        $daObj = new DataAudit();
+        $daObj->ActionType = DataAudit::Action_delete;
+        $daObj->MainObjectID = $this->BankID;
+        $daObj->TableName = "ACC_banks";
+        $daObj->execute();
 
         return true;
     }
@@ -514,7 +542,7 @@ class ACC_accounts extends PdoDataAccess {
 		$obj->ObjectID = $this->AccountID;
 		$obj->TafsiliCode = $this->AccountNo;
 		$obj->TafsiliDesc = $this->AccountDesc;
-		$obj->TafsiliType = "3";
+		$obj->TafsiliType = TAFTYPE_ACCOUNTS;
 		$obj->AddTafsili();
 		
         $daObj = new DataAudit();
@@ -535,14 +563,15 @@ class ACC_accounts extends PdoDataAccess {
         if (!parent::update("ACC_accounts", $this, 'AccountID=:ACId', array(':ACId' => $this->AccountID)))
             return false;
 
-		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where ObjectID=? AND TafsiliType=3", array($this->AccountID));
+		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where ObjectID=? AND TafsiliType=" 
+				. TAFTYPE_ACCOUNTS, array($this->AccountID));
 		if(count($dt) == 0)
 		{
 			$obj = new ACC_tafsilis();
 			$obj->ObjectID = $this->AccountID;
 			$obj->TafsiliCode = $this->AccountNo;
 			$obj->TafsiliDesc = $this->AccountDesc;
-			$obj->TafsiliType = "3";
+			$obj->TafsiliType = TAFTYPE_ACCOUNTS;
 			$obj->AddTafsili();
 		}
 		else
@@ -570,7 +599,7 @@ class ACC_accounts extends PdoDataAccess {
 		if (ExceptionHandler::GetExceptionCount() <> 0)
             return false;
 		
-		parent::runquery("update ACC_tafsilis set IsActive='NO' where TafsiliType=3 
+		parent::runquery("update ACC_tafsilis set IsActive='NO' where TafsiliType=".TAFTYPE_ACCOUNTS."
 			AND ObjectID=?", array($AccountID));
 
         $daObj = new DataAudit();

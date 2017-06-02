@@ -13,26 +13,32 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "framework.data.php?task=SelectGroupList", "grid_div");
 
 $dg->addColumn("", "GroupID", "", true);
-$dg->addColumn("", "PersonID", "", true);
+$dg->addColumn("", "fullname", "", true);
 
-$col = $dg->addColumn("نام و نام خانوادگی", "fullname", "");
-$col->editor = 
+
+$col = $dg->addColumn("نام و نام خانوادگی", "PersonID", "");
+$col->renderer="function(v,p,r){return r.data.fullname;}";
+$col->editor = "this.PersonCombo";
 
 if($accessObj->AddFlag)
 {
 	$dg->addButton = true;
-	$dg->addHandler = "function(){LoanObject.LoanInfo('new');}";
+	$dg->addHandler = "function(){AccessGroupObject.AddPerson();}";
+	
+	$dg->enableRowEdit = true ;
+	$dg->rowEditOkHandler = "function(v,p,r){ return AccessGroupObject.Save(v,p,r);}";
 }
-$dg->title = "لیست وام ها";
+$dg->title = "لیست کاربران";
 
 $dg->height = 500;
 $dg->width = 750;
 $dg->EnablePaging = false;
-$dg->DefaultSortField = "LoanDesc";
+$dg->DefaultSortField = "AccessGroupDesc";
+$dg->emptyTextOfHiddenColumns = true;
 
 $col = $dg->addColumn("عملیات", "");
 $col->sortable = false;
-$col->renderer = "function(v,p,r){return Loan.OperationRender(v,p,r);}";
+$col->renderer = "function(v,p,r){return AccessGroup.OperationRender(v,p,r);}";
 $col->width = 50;
 
 $grid = $dg->makeGrid_returnObjects();
@@ -53,7 +59,7 @@ $grid = $dg->makeGrid_returnObjects();
 // Create Date:	94.06
 //-------------------------
 
-Loan.prototype = {
+AccessGroup.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : '<?= $js_prefix_address ?>',
 
@@ -61,13 +67,34 @@ Loan.prototype = {
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
 	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
 
+	GroupID : null,
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
 }
 
-function Loan(){
+function AccessGroup(){
 	
+	this.PersonCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			proxy:{
+				type: 'jsonp',
+				url: this.address_prefix + '../management/framework.data.php?task=selectPersons',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			fields :  ['PersonID','fullname']
+		}),
+		fieldLabel : "کاربر",
+		displayField: 'fullname',
+		valueField : "PersonID",
+		hiddenName : "PersonID",
+		width : 400,
+		itemId : "PersonID"
+	});
+	
+	this.grid = <?= $grid ?>;
+
 	this.groupPnl = new Ext.form.Panel({
 		renderTo: this.get("div_selectGroup"),
 		title: "انتخاب گروه",
@@ -80,16 +107,16 @@ function Loan(){
 				xtype : "combo",
 				store : new Ext.data.SimpleStore({
 					proxy: {type: 'jsonp',
-						url: this.address_prefix + 'loan.data.php?task=SelectLoanGroups',
+						url: this.address_prefix + 'framework.data.php?task=SelectAccessGroups',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
 					autoLoad : true,
-					fields : ['InfoID','InfoDesc']
+					fields : ['GroupID','GroupDesc']
 				}),
-				valueField : "InfoID",
+				valueField : "GroupID",
 				queryMode : "local",
 				name : "GroupID",
-				displayField : "InfoDesc",
+				displayField : "GroupDesc",
 				fieldLabel : "انتخاب گروه"
 			},{
 				xtype : "fieldset",
@@ -108,241 +135,109 @@ function Loan(){
 						text: "ایجاد گروه",
 						handler: function(){
 
-							var mask = new Ext.LoadMask(this.up('form'),{msg: 'تغییر اطلاعات ...'});
-							mask.show();
-
-							Ext.Ajax.request({
-								method : "POST",
-								url: LoanObject.address_prefix + "loan.data.php",
-								params: {
-									task: "AddGroup",
-									GroupDesc: this.up('form').down("[name=GroupDesc]").getValue()
-								},
-								success: function(response){
-									mask.hide();
-									LoanObject.groupPnl.down("[name=GroupID]").getStore().load({
-										callback : function(){
-											LoanObject.groupPnl.down("[name=GroupID]").setValue(
-												this.getAt(this.getCount()-1));
-											LoanObject.LoadLoans();
-										}});
-									LoanObject.groupPnl.down('fieldset').collapse();
-								}
-							});
+							GroupDesc = this.up('form').down("[name=GroupDesc]").getValue();
+							AccessGroupObject.SaveGroups(0,GroupDesc);
 						}
 					}]
 			}],
 		buttons:[{
+				text : "ویرایش گروه",
+				disabled : this.RemoveAccess ? false : true,
+				iconCls : "edit",
+				handler : function(){
+					AccessGroupObject.EditGroup(this.up('form').down('[name=GroupID]').getValue());
+				}
+			},{
 				text : "حذف گروه",
 				disabled : this.RemoveAccess ? false : true,
 				iconCls : "remove",
 				handler : function(){
-					LoanObject.DeleteGroup(this.up('form').down('[name=GroupID]').getValue());
+					AccessGroupObject.DeleteGroup(this.up('form').down('[name=GroupID]').getValue());
 				}
-			},{
-				text: "لیست وام ها",
+			},'->',{
+				text: "لیست افراد",
 				iconCls: "refresh",
-				handler: function(){ LoanObject.LoadLoans(); }
+				handler: function(){ AccessGroupObject.LoadAccessGroups(); }
 			}]
 	});	
 }
 
-Loan.prototype.LoadLoans = function(){
-
-	LoanObject.GroupID = this.groupPnl.down('[name=GroupID]').getValue();
-
-	LoanObject.grid.getStore().proxy.extraParams.GroupID = LoanObject.GroupID;
-
-	if(LoanObject.grid.rendered)
-		LoanObject.grid.getStore().load();
-	else
-		LoanObject.grid.render(LoanObject.get("grid_div"));
+AccessGroup.prototype.SaveGroups = function(GroupID,GroupDesc){
 	
-	LoanObject.grid.show();
-	LoanObject.groupPnl.collapse();
+	var mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg: 'تغییر اطلاعات ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		method : "POST",
+		url: AccessGroupObject.address_prefix + "framework.data.php",
+		params: {
+			task: "SaveAccessGroup",
+			GroupID : GroupID,
+			GroupDesc: GroupDesc
+		},
+		success: function(response){
+			mask.hide();
+			if(GroupID == 0)
+			{
+				AccessGroupObject.groupPnl.down("[name=GroupID]").getStore().load({
+					callback : function(){
+						AccessGroupObject.groupPnl.down("[name=GroupID]").setValue(
+							this.getAt(this.getCount()-1));
+						AccessGroupObject.LoadAccessGroups();
+					}});
+				AccessGroupObject.groupPnl.down('fieldset').collapse();
+			}
+			else
+			{
+				AccessGroupObject.groupPnl.down("[name=GroupID]").getStore().load({
+					callback : function(){
+						AccessGroupObject.groupPnl.down("[name=GroupID]").setValue(GroupID);
+					}});
+				AccessGroupObject.editWin.hide();
+			}
+		}
+	});
 }
 
-Loan.prototype.LoanInfo = function(mode)
-{
-	if(!this.formPanel)
-	{
-		this.formPanel = new Ext.form.Panel({
-			renderTo: this.get("newDiv"),                  
-			collapsible: true,
-			frame: true,
-			title: 'اطلاعات وام',
-			bodyPadding: ' 10 10 12 10',
-			width:750,
-			layout :{
-				type : "table",
-				columns :2,
-				width:750
-			},
-			defaults : {
-				width : 180
-			},
-			items: [{
-					xtype:'textfield',
-					fieldLabel: 'عنوان وام',
-					name: 'LoanDesc',
-					colspan : 2,
-					width : 510,
-					allowBlank : false	
-				},{
-					xtype:'currencyfield',
-					fieldLabel: 'سقف مبلغ',
-					name: 'MaxAmount',
-					width : 250,
-					hideTrigger : true
-				},{
-					xtype:'numberfield',
-					fieldLabel: 'تعداد اقساط',
-					name: 'InstallmentCount',
-					hideTrigger : true
-				},{
-					xtype : "container",
-					layout : "hbox",
-					width : 250,
-					items : [{
-						xtype:'numberfield',
-						fieldLabel: 'فاصله اقساط',
-						name: 'PayInterval',
-						hideTrigger : true,
-						width : 180
-					},{
-						xtype : "radio",
-						boxLabel : "ماه",
-						inputValue : "MONTH",
-						checked : true,
-						name : "IntervalType"
-					},{
-						xtype : "radio",
-						boxLabel : "روز",
-						inputValue : "DAY",
-						name : "IntervalType"
-					}]
-				},{
-					xtype:'numberfield',
-					fieldLabel: 'مدت تنفس',
-					afterSubTpl : "ماه",
-					name: 'DelayMonths',
-					hideTrigger : true
-				},{
-					xtype:'numberfield',
-					fieldLabel: 'درصد دیرکرد',
-					afterSubTpl : "%",
-					name: 'ForfeitPercent',
-					maxValue  : 100,
-					hideTrigger : true
-				},{
-					xtype:'numberfield',
-					fieldLabel: 'کارمزد مشتری',
-					afterSubTpl : "%",
-					name: 'CustomerWage',
-					maxValue  : 100,
-					hideTrigger : true
-				},{
-					xtype : "checkbox",
-					boxLabel : "قابل درخواست برای مشتریان",
-					name : "IsCustomer"
-				},{
-					xtype : "checkbox",
-					boxLabel : "قابل درخواست برای طرح",
-					name : "IsPlan"
-				},{
-					xtype : "hidden",
-					name : "LoanID"
-				}],		
-			buttons: [{
-					text : "ذخیره",
-					iconCls : "save",
-					handler : function(){
-						mask = new Ext.LoadMask(LoanObject.formPanel, {msg:'در حال ذخیره ...'});
-						mask.show();
-						
-						LoanObject.formPanel.getForm().submit({
-							clientValidation: true,
-							url : LoanObject.address_prefix + 'loan.data.php?task=SaveLoan',
-							method : "POST",
-							params : {
-								GroupID : LoanObject.groupPnl.down("[name=GroupID]").getValue()
-							},
+AccessGroup.prototype.LoadAccessGroups = function(){
 
-							success : function(form,action){
-								mask.hide();
-								if(action.result.success)
-									LoanObject.grid.getStore().load();
-								else
-									alert("عملیات مورد نظر با شکست مواجه شد.");
-								
-								LoanObject.formPanel.hide();
-							},
-							failure : function(){
-								mask.hide();
-							}
-						});
-					}
-				},{
-					text : "انصراف",
-					iconCls : "undo",
-					handler : function(){
-						LoanObject.formPanel.hide();
-					}
-				}]
-		});
-	}
-	
-	if(mode == "new")
-	{
-		this.formPanel.getForm().reset();
-	}
+	AccessGroupObject.GroupID = this.groupPnl.down('[name=GroupID]').getValue();
+
+	AccessGroupObject.grid.getStore().proxy.extraParams.GroupID = AccessGroupObject.GroupID;
+
+	if(AccessGroupObject.grid.rendered)
+		AccessGroupObject.grid.getStore().load();
 	else
-	{
-		var record = this.grid.getSelectionModel().getLastSelected();
-		this.formPanel.getForm().loadRecord(record);
-		this.formPanel.down("[name=IsCustomer]").setValue(record.data.IsCustomer == "YES");
-		this.formPanel.down("[name=IsPlan]").setValue(record.data.IsPlan == "YES");
-	}
+		AccessGroupObject.grid.render(AccessGroupObject.get("grid_div"));
 	
-	this.formPanel.show();
+	AccessGroupObject.grid.show();
+	AccessGroupObject.groupPnl.collapse();
 }
 
-Loan.OperationRender = function(v,p,r)
-{
-	st = "<table width=100%><tr><td>";
+AccessGroup.OperationRender = function(v,p,r){
 	
-	if(LoanObject.EditAccess)
-		st += "<div align='center' title='ویرایش وام' class='edit' "+
-		"onclick='LoanObject.LoanInfo(\"edit\");' " +
+	if(AccessGroupObject.RemoveAccess)	
+		return "<div align='center' title='حذف' class='remove' "+
+		"onclick='AccessGroupObject.DeletePerson();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
-	
-	st += "</td><td>";
-	
-	if(LoanObject.RemoveAccess)	
-		st += "<div align='center' title='حذف وام' class='remove' "+
-		"onclick='LoanObject.DeleteLoan();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";
-	
-	st += "</td></tr></table>";
-	
-	return st;
+	return "";
 }
 
-Loan.prototype.DeleteGroup = function(GroupID)
-{
-	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+AccessGroup.prototype.DeleteGroup = function(GroupID){
+	
+	Ext.MessageBox.confirm("","درصورت حذف کلیه افراد گروه نیز حذف می شوند.<br>آیا مایل به حذف می باشید؟", 
+	function(btn){
 		if(btn == "no")
 			return;
 		
-		me = LoanObject;
+		me = AccessGroupObject;
 		
 		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
 		mask.show();
 
 		Ext.Ajax.request({
-			url: me.address_prefix + 'loan.data.php',
+			url: me.address_prefix + 'framework.data.php',
 			params:{
 				task: "DeleteGroup",
 				GroupID : GroupID
@@ -355,49 +250,126 @@ Loan.prototype.DeleteGroup = function(GroupID)
 
 				if(sd.success)
 				{
-					LoanObject.groupPnl.down('[name=GroupID]').setValue();
-					LoanObject.groupPnl.down('[name=GroupID]').getStore().load();
-					LoanObject.grid.hide();
+					AccessGroupObject.groupPnl.down('[name=GroupID]').setValue();
+					AccessGroupObject.groupPnl.down('[name=GroupID]').getStore().load();
+					AccessGroupObject.grid.hide();
 				}	
-				else
-				{
-					Ext.MessageBox.alert("Error","در این گروه وام تعریف شده و قادر به حذف آن نمی باشید");
-				}
 			},
 			failure: function(){}
 		});
 	});
 }
 
-Loan.prototype.DeleteLoan = function()
-{
+AccessGroup.prototype.EditGroup = function(){
+	
+	if(!this.editWin)
+	{
+		this.editWin = new Ext.window.Window({
+			title: 'ویرایش گروه',
+			modal : true,
+			width: 400,
+			closeAction : "hide",
+			items : new Ext.form.Panel({
+				plain: true,
+				border: 0,
+				bodyPadding: 5,
+				items : [{
+					xtype : "textfield",
+					fieldLabel: "عنوان گروه",
+					name : "GroupDesc"
+				}],
+				buttons : [{
+					text : "ذخیره",
+					iconCls : "save",
+					handler : function(){ 
+						GroupDesc = this.up('form').down("[name=GroupDesc]").getValue();
+						AccessGroupObject.SaveGroups(AccessGroupObject.GroupID,GroupDesc);	}
+				},{
+					text : "انصراف",
+					iconCls : "undo",
+					handler : function(){
+						this.up('window').hide();
+					}
+				}]
+			})
+		});	
+		
+		Ext.getCmp(this.TabID).add(this.editWin);
+	}
+	
+	el = this.groupPnl.down('[name=GroupID]');
+	this.GroupID = el.getValue();
+	if(this.GroupID == null)
+		return;
+	
+	this.editWin.down('[name=GroupDesc]').setValue(
+			el.getStore().findRecord("GroupID",el.getValue()).data.GroupDesc);
+	this.editWin.show();
+	this.editWin.center();	
+}
+
+AccessGroup.prototype.Save = function(store,record,op){
+	
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
+	mask.show();    
+	Ext.Ajax.request({
+		url: this.address_prefix + 'framework.data.php?task=SaveGroupList',
+		params:{
+			PersonID : record.data.PersonID,
+			GroupID : this.GroupID
+		},
+		method: 'POST',
+		success: function(response,option){
+			mask.hide();
+			AccessGroupObject.grid.getStore().load();
+		},
+		failure: function(){}
+	});
+}
+
+AccessGroup.prototype.DeletePerson = function(){
+	
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
 		if(btn == "no")
 			return;
 		
-		me = LoanObject;
+		me = AccessGroupObject;
 		var record = me.grid.getSelectionModel().getLastSelected();
 		
 		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
 		mask.show();
 
 		Ext.Ajax.request({
-			url: me.address_prefix + 'loan.data.php',
+			url: me.address_prefix + 'framework.data.php',
 			params:{
-				task: "DeleteLoan",
-				LoanID : record.data.LoanID
+				task: "DeleteGroupList",
+				GroupID : record.data.GroupID,
+				PersonID : record.data.PersonID
 			},
 			method: 'POST',
 
 			success: function(response,option){
 				mask.hide();
-				LoanObject.grid.getStore().load();
+				AccessGroupObject.grid.getStore().load();
 			},
 			failure: function(){}
 		});
 	});
 }
 
-var LoanObject = new Loan();	
+AccessGroup.prototype.AddPerson = function(){
+	
+	var modelClass = this.grid.getStore().model;
+	var record = new modelClass({
+		GroupID:null,
+		PersonID:null		
+
+	});
+	this.grid.plugins[0].cancelEdit();
+	this.grid.getStore().insert(0, record);
+	this.grid.plugins[0].startEdit(0, 0);
+}
+
+var AccessGroupObject = new AccessGroup();	
 
 </script>

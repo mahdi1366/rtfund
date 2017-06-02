@@ -236,16 +236,34 @@ PartPayment.prototype.BeforeRegDoc = function(mode){
 					proxy: {
 						type: 'jsonp',
 						url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=6',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					}
+						reader: {root: 'rows',totalProperty: 'totalCount'},
+						extraParams : {
+							TafsiliType : 6
+						}
+					},
+					autoLoad : true
 				}),
 				emptyText:'انتخاب بانک ...',
 				width : 287,
-				typeAhead: false,
-				pageSize : 10,
+				queryMode : 'local',
 				valueField : "TafsiliID",
 				itemId : "TafsiliID",
-				displayField : "TafsiliDesc"
+				displayField : "TafsiliDesc",
+				listeners : { 
+					change : function(){
+						t1 = this.getStore().proxy.extraParams["TafsiliType"];
+						combo = PartPaymentObject.BankWin.down("[itemId=TafsiliID2]");
+
+						if(t1 == <?= TAFTYPE_BANKS ?>)
+						{
+							combo.setValue();
+							combo.getStore().proxy.extraParams["ParentTafsili"] = this.getValue();
+							combo.getStore().load();
+						}			
+						else
+							combo.getStore().proxy.extraParams["ParentTafsili"] = "";
+					}
+				}
 			},{
 				xtype : "combo",
 				store: new Ext.data.Store({
@@ -258,8 +276,7 @@ PartPayment.prototype.BeforeRegDoc = function(mode){
 				}),
 				emptyText:'انتخاب حساب ...',
 				width : 287,
-				typeAhead: false,
-				pageSize : 10,
+				queryMode : 'local',
 				valueField : "TafsiliID",
 				itemId : "TafsiliID2",
 				displayField : "TafsiliDesc"
@@ -279,6 +296,9 @@ PartPayment.prototype.BeforeRegDoc = function(mode){
 		});
 		Ext.getCmp(this.TabID).add(this.BankWin);
 	}
+	
+	this.BankWin.down("[itemId=TafsiliID]").setValue("<?= $_SESSION["accounting"]["DefaultBankTafsiliID"] ?>");
+	this.BankWin.down("[itemId=TafsiliID2]").setValue("<?= $_SESSION["accounting"]["DefaultAccountTafsiliID"] ?>");
 	
 	this.BankWin.show();
 	this.BankWin.down("[itemId=btn_save]").setHandler(function(){

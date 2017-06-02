@@ -142,18 +142,13 @@ LoanCost.prototype.BeforeSaveCost = function(record){
 						select : function(combo,records){
 							
 							me = LoanCostObject;
-							if(records[0].data.TafsiliType != null)
-							{
-								me.BankWin.down("[itemId=TafsiliID]").setValue();
-								me.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
-								me.BankWin.down("[itemId=TafsiliID]").getStore().load();
-							}
-							if(records[0].data.TafsiliType2 != null)
-							{
-								me.BankWin.down("[itemId=TafsiliID2]").setValue();
-								me.BankWin.down("[itemId=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType2;
-								me.BankWin.down("[itemId=TafsiliID2]").getStore().load();
-							}
+							me.BankWin.down("[itemId=TafsiliID]").setValue();
+							me.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
+							me.BankWin.down("[itemId=TafsiliID]").getStore().load();
+
+							me.BankWin.down("[itemId=TafsiliID2]").setValue();
+							me.BankWin.down("[itemId=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType2;
+							me.BankWin.down("[itemId=TafsiliID2]").getStore().load();
 							
 							if(this.getValue() == "<?= COSTID_Bank ?>")
 							{
@@ -184,7 +179,21 @@ LoanCost.prototype.BeforeSaveCost = function(record){
 					valueField : "TafsiliID",
 					itemId : "TafsiliID",
 					name : "TafsiliID",
-					displayField : "title"
+					displayField : "title",
+					listeners : { 
+						change : function(){
+							t1 = this.getStore().proxy.extraParams["TafsiliType"];
+							combo = LoanCostObject.BankWin.down("[itemId=TafsiliID2]");
+
+							if(t1 == <?= TAFTYPE_BANKS ?>)
+							{
+								combo.getStore().proxy.extraParams["ParentTafsili"] = this.getValue();
+								combo.getStore().load();
+							}			
+							else
+								combo.getStore().proxy.extraParams["ParentTafsili"] = "";
+						}
+					}
 				},{
 					xtype : "combo",
 					store: new Ext.data.Store({

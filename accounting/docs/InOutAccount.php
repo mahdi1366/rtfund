@@ -190,7 +190,7 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 	{
 		this.mainWin = new Ext.window.Window({
 			width : 400,
-			height : 220,
+			height : 250,
 			bodyStyle : "background-color:white",
 			modal : true,
 			closeAction : "hide",
@@ -231,7 +231,13 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 								records[0].data.TafsiliType2;
 							me.mainWin.down("[name=TafsiliID2]").getStore().load();
 						}
-							
+						if(this.getValue() == "<?= COSTID_Bank ?>")
+						{
+							me.mainWin.down("[name=TafsiliID]").setValue(
+								"<?= $_SESSION["accounting"]["DefaultBankTafsiliID"] ?>");
+							me.mainWin.down("[name=TafsiliID2]").setValue(
+								"<?= $_SESSION["accounting"]["DefaultAccountTafsiliID"] ?>");
+						}
 					}
 				}
 			},{
@@ -249,7 +255,21 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 				fieldLabel : "تفصیلی",
 				valueField : "TafsiliID",
 				name : "TafsiliID",
-				displayField : "TafsiliDesc"
+				displayField : "TafsiliDesc",
+				listeners : { 
+					change : function(){
+						t1 = this.getStore().proxy.extraParams["TafsiliType"];
+						combo = InOutAccountObject.mainWin.down("[name=TafsiliID2]");
+
+						if(t1 == <?= TAFTYPE_BANKS ?>)
+						{
+							combo.getStore().proxy.extraParams["ParentTafsili"] = this.getValue();
+							combo.getStore().load();
+						}			
+						else
+							combo.getStore().proxy.extraParams["ParentTafsili"] = "";
+					}
+				}
 			},{
 				xtype : "combo",
 				store: new Ext.data.Store({

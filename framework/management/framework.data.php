@@ -100,7 +100,11 @@ function DeleteMenu(){
 //--------------------------------------------------
 
 function selectAccess(){
-	$temp = FRW_access::selectAccess($_REQUEST["SystemID"], $_REQUEST["PersonID"]);
+	
+	$GroupID = empty($_REQUEST["GroupID"]) ? 0 : $_REQUEST["GroupID"];
+	$PersonID = empty($_REQUEST["PersonID"]) ? 0 : $_REQUEST["PersonID"];
+	
+	$temp = FRW_access::selectAccess($_REQUEST["SystemID"], $GroupID, $PersonID);
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -108,12 +112,15 @@ function selectAccess(){
 function SavePersonAccess(){
 	
 	$keys = array_keys($_POST);
+	$GroupID = empty($_REQUEST["GroupID"]) ? 0 : $_REQUEST["GroupID"];
+	$PersonID = empty($_REQUEST["PersonID"]) ? 0 : $_REQUEST["PersonID"];
 
 	$pdo = PdoDataAccess::getPdoObject();
 	/*@var $pdo PDO*/
 	$pdo->beginTransaction();
-	PdoDataAccess::runquery("delete a from FRW_access a join FRW_menus using(MenuID) where SystemID=? AND PersonID=?",
-		array($_POST["SystemID"],$_POST["PersonID"]));
+	PdoDataAccess::runquery("delete a from FRW_access a join FRW_menus using(MenuID) "
+			. " where SystemID=? AND PersonID=? AND GroupID=?",
+		array($_POST["SystemID"],$PersonID,$GroupID));
 	
 	for($i=0; $i < count($keys); $i++)
 	{
@@ -121,7 +128,8 @@ function SavePersonAccess(){
 			continue;
 		
 		$obj = new FRW_access();
-		$obj->PersonID = $_POST["PersonID"];
+		$obj->PersonID = $PersonID;
+		$obj->GroupID = $GroupID;
 		
 		$obj->MenuID = preg_split('/_/',$keys[$i]);
 		$obj->MenuID = $obj->MenuID[1];
@@ -134,7 +142,7 @@ function SavePersonAccess(){
 		if(!$obj->AddAccess())
 		{
 			$pdo->rollBack();	
-			//print_r(ExceptionHandler::PopAllExceptions());
+			print_r(ExceptionHandler::PopAllExceptions());
 			echo Response::createObjectiveResponse(false, "");
 			die();
 		}
@@ -322,7 +330,7 @@ function DeleteAccessGroup(){
 
 function SelectGroupList() {
 	
-	$temp = FRW_AccessGroupList::SelectAll();
+	$temp = FRW_AccessGroupList::SelectAll(" and GroupID=" . $_REQUEST["GroupID"]);
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }

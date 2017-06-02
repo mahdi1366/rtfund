@@ -144,6 +144,7 @@ class FRW_access extends PdoDataAccess {
 
 	public $MenuID;
 	public $PersonID;
+	public $GroupID;
 	public $ViewFlag;
 	public $AddFlag;
 	public $EditFlag;
@@ -156,10 +157,12 @@ class FRW_access extends PdoDataAccess {
 			from FRW_menus m 
 			join FRW_menus g on(m.ParentID=g.MenuID)
 			join FRW_systems s on(m.SystemID=s.SystemID)
-			join FRW_access a on(a.personID=" . $_SESSION["USER"]["PersonID"] . " and m.MenuID=a.MenuID)
-			
-			where m.ParentID>0 AND m.IsActive='YES' AND m.SystemID=?
-			order by g.ordering,m.ordering", array($SystemID));
+			left join FRW_AccessGroupList gl on(gl.PersonID=:p)
+			join FRW_access a on((a.personID=:p or a.groupID=gl.GroupID) and m.MenuID=a.MenuID)
+			where m.ParentID>0 AND m.IsActive='YES' AND m.SystemID=:s
+			group by m.MenuID
+			order by g.ordering,m.ordering", 
+			array(":s" => $SystemID, ":p" => $_SESSION["USER"]["PersonID"]));
 	}
 	
 	static function getPortalMenus($SystemID) {
@@ -196,17 +199,17 @@ class FRW_access extends PdoDataAccess {
 			order by SysName");
 	}
 
-	static function selectAccess($SystemID, $PersonID) {
+	static function selectAccess($SystemID, $GroupID, $PersonID) {
 		$query = "
-			select g.MenuID GroupID, g.MenuDesc GroupDesc, m.*, a.ViewFlag,a.AddFlag,a.EditFlag,a.RemoveFlag
+			select g.MenuID ParentID, g.MenuDesc ParentDesc, m.*, a.ViewFlag,a.AddFlag,a.EditFlag,a.RemoveFlag
 			from FRW_menus m 
 			join FRW_menus g on(m.ParentID=g.MenuID)
-			left join FRW_access a on(a.personID=? and m.MenuID=a.MenuID)
+			left join FRW_access a on(a.personID=? and a.GroupID=? and m.MenuID=a.MenuID)
 			
 			where m.SystemID=? AND m.ParentID>0 
 			order by g.ordering,m.ordering";
 
-		return parent::runquery($query, array($PersonID, $SystemID));
+		return parent::runquery($query, array($PersonID, $GroupID, $SystemID));
 	}
 
 	function AddAccess() {
@@ -229,8 +232,20 @@ class FRW_access extends PdoDataAccess {
 	static function GetAccess($MenuID){
 		
 		$obj = new FRW_access();
-		PdoDataAccess::FillObject($obj, "select * from FRW_access where MenuID=? AND PersonID=?",
-				array($MenuID, $_SESSION["USER"]["PersonID"]));
+		PdoDataAccess::FillObject($obj,
+		"select max(ViewFlag) ViewFlag,max(AddFlag) AddFlag,max(EditFlag) EditFlag,max(RemoveFlag) RemoveFlag
+		from (
+			select ViewFlag, AddFlag, EditFlag, RemoveFlag from FRW_access
+			where MenuID=:m AND PersonID=:p
+
+		union all
+
+			select max(ViewFlag) ViewFlag,max(AddFlag) AddFlag,max(EditFlag) EditFlag,max(RemoveFlag) RemoveFlag
+			from FRW_access
+			join FRW_AccessGroupList g using(groupID)
+			where MenuID=:m AND g.PersonID=:p
+		)t",
+		array(":m" => $MenuID, ":p" => $_SESSION["USER"]["PersonID"]));
 		
 		$obj->ViewFlag =	$obj->ViewFlag == "YES" ? true : false;
 		$obj->AddFlag =		$obj->AddFlag == "YES" ? true : false;
@@ -381,9 +396,11 @@ class FRW_AccessGroupList extends OperationClass{
 	public $GroupID;
 	public $PersonID;
 	
-	static public function SelectAll(){
+	static public function SelectAll($where ="", $param = array()){
 		
-		return PdoDataAccess::runquery("select * from " . self::TableName);
+		return PdoDataAccess::runquery("select l.*, concat_ws(' ',fname,lname,CompanyName) fullname 
+			from FRW_AccessGroupList l join BSC_persons using(PersonID)
+			where 1=1 " . $where, $param);
 	}
 
 	public function Add() {
