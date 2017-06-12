@@ -83,6 +83,8 @@ ManageRequestObject.grid.getView().getRowClass = function(record, index)
 			return "greenRow";
 		if(record.data.IsConfirm == "YES")
 			return "violetRow";
+		if(record.data.StatusID == "<?= LON_REQ_STATUS_REJECT ?>")
+			return "pinkRow";
 		return "";
 	}	
 	

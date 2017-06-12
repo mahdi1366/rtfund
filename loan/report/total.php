@@ -130,7 +130,8 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("کارمزد صندوق", "FundWage");
 	$rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
 	$rpg->addColumn("شماره قدیم", "imp_VamCode");
-	$rpg->addColumn("جاری/خاتمه", "IsEnded", "endedRender");
+	//$rpg->addColumn("جاری/خاتمه", "IsEnded", "endedRender");
+	$rpg->addColumn("وضعیت", "StatusDesc");
 	$rpg->addColumn("قابل پرداخت مشتری", "TotalInstallmentAmount", "moneyRender");
 	$rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount", "moneyRender");
 	$col = $rpg->addColumn("مانده قابل پرداخت", "remainder", "moneyRender");

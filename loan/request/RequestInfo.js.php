@@ -493,6 +493,7 @@ RequestInfo.prototype.BuildForms = function(){
 		},{
 			xtype : "container",
 			layout : "hbox",
+			itemId : "setting",
 			items :[{
 				xtype : "checkbox",
 				boxLabel : "وام بلاعوض می باشد",
@@ -834,8 +835,17 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		{
 			if(record.data.IsEnded == "YES")
 			{
-				this.companyPanel.getEl().readonly();
-				this.companyPanel.down("[itemId=cmp_save]").hide();
+				//this.companyPanel.getEl().readonly();
+				this.companyPanel.getComponent("cmp_requester").setReadOnly(true);
+				this.companyPanel.getComponent("cmp_subAgent").setReadOnly(true);
+				this.companyPanel.down("[name=LoanPersonID]").setReadOnly(true);
+				this.companyPanel.down("[name=LoanID]").setReadOnly(true);
+				this.companyPanel.down("[name=BorrowerDesc]").setReadOnly(true);
+				this.companyPanel.down("[name=BorrowerID]").setReadOnly(true);
+				this.companyPanel.down("[name=BorrowerMobile]").setReadOnly(true);
+				this.companyPanel.down("[name=ReqAmount]").setReadOnly(true);
+				this.companyPanel.down("[name=BranchID]").setReadOnly(true);
+				//this.companyPanel.down("[itemId=cmp_save]").hide();
 			}
 			else
 			{
@@ -843,8 +853,17 @@ RequestInfo.prototype.CustomizeForm = function(record){
 				{
 					if(record.data.imp_VamCode*1 == null || record.data.imp_VamCode*1 == 0)
 					{
-						this.companyPanel.getEl().readonly();
-						this.companyPanel.down("[itemId=cmp_save]").hide();
+						//this.companyPanel.getEl().readonly();
+						this.companyPanel.getComponent("cmp_requester").setReadOnly(true);
+						this.companyPanel.getComponent("cmp_subAgent").setReadOnly(true);
+						this.companyPanel.down("[name=LoanPersonID]").setReadOnly(true);
+						this.companyPanel.down("[name=LoanID]").setReadOnly(true);
+						this.companyPanel.down("[name=BorrowerDesc]").setReadOnly(true);
+						this.companyPanel.down("[name=BorrowerID]").setReadOnly(true);
+						this.companyPanel.down("[name=BorrowerMobile]").setReadOnly(true);
+						this.companyPanel.down("[name=ReqAmount]").setReadOnly(true);
+						this.companyPanel.down("[name=BranchID]").setReadOnly(true);
+						//this.companyPanel.down("[itemId=cmp_save]").hide();
 					}					
 				}
 				if(record.data.ReqPersonID == null)

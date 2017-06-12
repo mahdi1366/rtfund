@@ -158,7 +158,8 @@ function SavingLoan()
 				SavingLoanObject.LoadInfo(
 					me.MainPanel.down("[name=StartDate]").getRawValue(),
 					me.MainPanel.down("[name=EndDate]").getRawValue(),
-					me.MainPanel.down("[name=PersonID]").getValue());
+					me.MainPanel.down("[name=PersonID]").getValue(),
+					me.MainPanel.down("[name=BranchID]").getValue());
 			}
 		},{
 			xtype : "button",
@@ -349,7 +350,7 @@ SavingLoan.InstallmentAmountRender = function(v,p,r){
 	
 }
 
-SavingLoan.prototype.LoadInfo = function(StartDate,EndDate, PersonID){
+SavingLoan.prototype.LoadInfo = function(StartDate,EndDate, PersonID, BranchID){
 
 	if(!this.InfoStore)
 	{
@@ -392,7 +393,8 @@ SavingLoan.prototype.LoadInfo = function(StartDate,EndDate, PersonID){
 		params : {
 			StartDate : StartDate,
 			EndDate : EndDate,
-			PersonID : PersonID
+			PersonID : PersonID,
+			BranchID : BranchID
 		},
 		callback : function(){mask.hide();}
 	});

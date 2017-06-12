@@ -79,6 +79,7 @@ define("LON_REQ_STATUS_SEND_CUSTOMER", "40");
 define("LON_REQ_STATUS_CUSTOMER_COMPLETE", "50");
 define("LON_REQ_STATUS_REJECT_ATTACH", "60");
 define("LON_REQ_STATUS_CONFIRM", "70");
+define("LON_REQ_STATUS_ENDED", "101");
 
 //............  TypeID=11 ....................
 define("SOURCETYPE_LOAN", "1");

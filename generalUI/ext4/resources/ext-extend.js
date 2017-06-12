@@ -2915,7 +2915,8 @@ Ext.apply(Ext.form.Panel.prototype, {
         
         for(i=0; i<this.items.items.length; i++)
         {
-            this.items.items[i].setReadOnly(flag);
+            try{this.items.items[i].setReadOnly(flag);}
+			catch(e){}
             
         }
     }

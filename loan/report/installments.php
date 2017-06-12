@@ -22,6 +22,10 @@ if(isset($_REQUEST["show"]))
 			if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
 					$value === "" || strpos($key, "combobox") !== false)
 				continue;
+			
+			if($key == "IsEndedInclude")
+				continue;
+			
 			$prefix = "";
 			switch($key)
 			{
@@ -46,6 +50,10 @@ if(isset($_REQUEST["show"]))
 				$where .= " AND " . $prefix . $key . " = :$key";
 			$whereParam[":$key"] = $value;
 		}
+		
+		$where .= isset($_POST["IsEndedInclude"]) ? 
+				" AND r.StatusID in('".LON_REQ_STATUS_CONFIRM."','".LON_REQ_STATUS_ENDED."')" : 
+				" AND r.StatusID in('".LON_REQ_STATUS_CONFIRM."')";
 	}	
 	
 	//.....................................
@@ -355,6 +363,9 @@ function LoanReport_installments()
 			name : "toInstallmentAmount",
 			hideTrigger : true,
 			fieldLabel : "تا مبلغ قسط"
+		},{
+			xtype : "container",
+			html : "<input type=checkbox name=IsEndedInclude >  گزارش شامل وام های خاتمه یافته نیز باشد"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",
