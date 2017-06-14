@@ -86,7 +86,7 @@ function GetSavingLoanInfo($ReportMode = false){
 	//----------- check for all docs confirm --------------
 	if(!$ReportMode)
 	{
-		$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
+		/*$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
 			join ACC_DocItems using(DocID) join ACC_tafsilis t using(TafsiliType,TafsiliID)
 			where TafsiliType=" . TAFTYPE_PERSONS . " 
 				AND ObjectID = ? AND CostID in(" . COSTID_saving . ")
@@ -98,7 +98,7 @@ function GetSavingLoanInfo($ReportMode = false){
 			$msg = "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند.";
 			echo dataReader::getJsonData(array(), 0, $_GET["callback"], $msg);
 			die();
-		}
+		}*/
 	}
 	//------------ get sum of savings ----------------
 	$dt = PdoDataAccess::runquery("
