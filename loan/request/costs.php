@@ -264,7 +264,10 @@ LoanCost.prototype.SaveCost = function(record){
 			}
 			else
 			{
-				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+				if(st.data == "")
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+				else
+					Ext.MessageBox.alert("",st.data);
 			}
 		},
 		failure: function(){}

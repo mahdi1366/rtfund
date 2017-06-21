@@ -1234,7 +1234,8 @@ Ext.apply(Ext.SHDate, {
 		return date;
 	},
 	add : function(date, interval, value) {
-		var d = Ext.SHDate.clone(date);
+		var d = Ext.SHDate.clone(date),
+			Date = Ext.SHDate;
 		if (!interval || value === 0) return d;
 		switch(interval.toLowerCase()) {
 			case Ext.SHDate.MILLI:
@@ -2556,9 +2557,13 @@ Ext.apply(Ext.data.JsonP,{
         return script;
     }
 });
-Ext.override(Ext.data.JsonP,{timeout: 300000});
-Ext.override(Ext.data.Connection,{timeout: 300000});
-Ext.override(Ext.data.proxy.Server,{timeout: 300000});
+Ext.override(Ext.form.action.Action, { timeout: 600});
+Ext.override(Ext.form.Basic, { timeout: 600 });
+
+Ext.override(Ext.data.JsonP,{timeout: 600000});
+Ext.override(Ext.data.Connection,{timeout: 600000});
+Ext.override(Ext.data.proxy.Server,{timeout: 600000});
+Ext.override(Ext.data.proxy.Ajax, { timeout:600000 });
 
 Ext.override(Ext.data.proxy.JsonP,{
 	doRequest: function(operation, callback, scope) {
@@ -3768,7 +3773,7 @@ Ext.ux.PageSizePlugin = function() {
 	Ext.ux.PageSizePlugin.superclass.constructor.call(this, {
           store: new Ext.data.SimpleStore({
                  fields: ['text', 'value'],
-                 data: [['10', 10], ['25', 25], ['50', 50], ['100', 100],['150', 150],['200', 200]]
+                 data: [['10', 10], ['25', 25], ['50', 50], ['100', 100],['150', 150],['200', 200],['250', 250],['300', 300],['350', 350]]
           }),
           mode: 'local',
           displayField: 'text',
@@ -4864,6 +4869,41 @@ Ext.define('Ext.FormSerializer', {
     }
     ,toJSON: function() {
         return Ext.JSON.encode(this.toObject());
+    }
+});
+
+Ext.override(Ext.data.Store, {
+    /**
+     * @override
+     * The fix is to rearrange store.data so that it has the same order as the records in groups.
+     * Multiple methods are using the order of store.data for finding the record.
+     */
+    group: function () {
+        var store = this,
+            groups;
+
+
+        grid.getSelectionModel().deselectAll();
+
+
+        store.callOverridden(arguments);
+
+
+        groups = store.getGroups();
+
+
+        store.data.clear();
+
+
+        Ext.Array.each(groups, function (group) {
+            Ext.Array.each(group.children, function (child) {
+                store.data.add(child.internalId, child);
+            });
+        });
+
+
+        // update the view index after the store data is sorted by groups
+        grid.getView().updateIndexes();
     }
 });
 

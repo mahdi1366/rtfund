@@ -12,6 +12,8 @@ $portal = isset($_SESSION["USER"]["portal"]) ? true : false;
 
 if(isset($_REQUEST["print"]))
 {
+	BeginReport();
+	
 	$TafsiliID = !empty($_REQUEST["TafsiliID"]) ? $_REQUEST["TafsiliID"] : "";
 	$param = array();
 	if($TafsiliID != "")
@@ -28,7 +30,7 @@ if(isset($_REQUEST["print"]))
 	if(count($sumRecord) == 0)
 	{
 		echo "<center><h2>" . "فاقد اطلاعات" . "</h2></center>";
-		die();
+		die(); 
 	}
 	$sumRecord = $sumRecord[0];
 	//------------------------------------------
@@ -54,26 +56,21 @@ if(isset($_REQUEST["print"]))
 		die();
 	}
 ?>
-<html>
-	<head>
-		<META http-equiv=Content-Type content="text/html; charset=UTF-8" >
-		<link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" /></head>
-		<style>
-		@media print {
-			.pageBreak {page-break-before:always;height:1px;}
-		}
-		.page {
-			width: 245mm;
-			height: 160mm;
-			margin : 2cm 2cm 0 2cm;
-		}
-		td {
-			font-family: IranNastaliq;
-			font-size: 28px;
-		}
-		</style>
-	</head>
-	<body dir="rtl">
+
+<style>
+@media print {
+	.pageBreak {page-break-before:always;height:1px;}
+}
+.page {
+	width: 245mm;
+	height: 160mm;
+	margin : 2cm 2cm 0 2cm;
+}
+td {
+	font-family: IranNastaliq;
+	font-size: 28px;
+}
+</style>
 <?
 	for($i=0; $i<count($dataTable);$i++)
 	{
