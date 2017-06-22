@@ -540,7 +540,29 @@ DateModule.lastJDateOfYear = function(jyear, delimiter){
 	day = DateModule.DaysOfMonth(jyear, 12).toString();
 	return jyear + delimiter + "12" + delimiter + day;
 }
-
+DateModule.SecondsToTime = function(seconds){
+		
+	hours = Math.floor(seconds / 3600);
+	seconds = seconds - hours*3600;
+	minutes = Math.floor( seconds / 60);
+	seconds = seconds - minutes*60;
+	return new Array(
+		hours.toString().lpad("0",2), 
+		minutes.toString().lpad("0",2),
+		seconds.toString().lpad("0",2)
+	);
+}
+DateModule.SecondsToTimeString = function(seconds){
+		
+	arr = DateModule.SecondsToTime(seconds);
+	if(arr[0] == "00" && arr[1] == "00")
+		return "";
+	return (arr[0]*1) + ":" + arr[1];
+}
+DateModule.TimeToSeconds = function(hour, min, second){
+		
+	return hour*3600 + min*60 + second;
+}
 
 MiladiToShamsi = function (date, format) {
     

@@ -235,4 +235,41 @@ function ImportHolidaysFromExcel(){
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
+
+//..................................
+
+function GetAllSettings() {
+	
+	$where = "";
+	$whereParam = array();
+	
+	$temp = ATN_settings::Get($where . dataReader::makeOrder(), $whereParam);
+	echo dataReader::getJsonData($temp->fetchAll(), $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveSetting() {
+
+	$obj = new ATN_settings();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+
+	if ($obj->RowID == "")
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteSetting() {
+	
+	$obj = new ATN_settings($_POST["RowID"]);
+	$result = $obj->Remove();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
 ?>

@@ -14,13 +14,6 @@ if(isset($_REQUEST["show"]))
 {
 	ShowReport();
 }
-
-function ShowTime($arr){
-
-	if($arr[0] == "00" && $arr[1] == "00")
-		return "";
-	return $arr[0] . ":" . $arr[1];
-}
 		
 function ShowReport(){
 	
@@ -34,10 +27,7 @@ function ShowReport(){
 		$OrigStartDate = DateModules::shamsi_to_miladi($_POST["FromDate"], "-");
 		$OrigEndDate = DateModules::shamsi_to_miladi($_POST["ToDate"], "-");
 	}
-	$holidays = ATN_holidays::Get(" AND TheDate between ? AND ? order by TheDate", array($OrigStartDate, $OrigEndDate));
-	$holidayIndex = 0;
-	$holidays = $holidays->fetchAll();
-	
+
 	$where = "";
 	$param = array();
 	if(!empty($_POST["PersonID"]))
@@ -51,263 +41,11 @@ function ShowReport(){
 	$returnStr = "";
 	foreach($PersonsDT as $personRecord)
 	{
-		$holidayIndex = 0;
-		$holidayRecord = $holidayIndex < count($holidays) ? $holidays[$holidayIndex++] : null;
-		
-		$PersonID = $personRecord["PersonID"];
-		$SUM = array(
-			"absence" => 0,
-			"attend"=> 0,
-			"firstAbsence" => 0,
-			"lastAbsence" => 0,
-			"extra" => 0,
-			"Off" => 0,
-			"mission" => 0,
-			"DailyOff_1" => 0,
-			"DailyOff_2" => 0,
-			"DailyOff_3" => 0,
-			"DailyMission" => 0,
-			"DailyAbsence" => 0
-		);
-		
-		$StartDate = $OrigStartDate;
-		$EndDate = $OrigEndDate;
-		
-		$query = "select * from (
-
-				select 'normal' RecordType,'' ReqType, TrafficDate,TrafficTime,s.ShiftTitle,s.FromTime,s.ToTime
-					,ExceptFromTime,ExceptToTime
-				from ATN_traffic t
-				left join ATN_PersonShifts ps on(ps.IsActive='YES' AND t.PersonID=ps.PersonID AND TrafficDate between FromDate AND ToDate)
-				left join ATN_shifts s on(ps.ShiftID=s.ShiftID)
-				where t.IsActive='YES' AND t.PersonID=:p AND TrafficDate>= :sd AND TrafficDate <= :ed 
-
-				union All
-
-				select 'start' RecordType,t.ReqType, t.FromDate,StartTime,s.ShiftTitle,s.FromTime,s.ToTime
-					,ExceptFromTime,ExceptToTime
-				from ATN_requests t
-				left join ATN_PersonShifts ps on(ps.IsActive='YES' AND t.PersonID=ps.PersonID AND t.FromDate between ps.FromDate AND ps.ToDate)
-				left join ATN_shifts s on(ps.ShiftID=s.ShiftID)
-				where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 AND t.FromDate>= :sd
-
-				union all
-
-				select 'end' RecordType,t.ReqType, t.FromDate,EndTime,s.ShiftTitle,s.FromTime,s.ToTime
-					,ExceptFromTime,ExceptToTime
-				from ATN_requests t
-				left join ATN_PersonShifts ps on(ps.IsActive='YES' AND t.PersonID=ps.PersonID AND t.FromDate between ps.FromDate AND ps.ToDate)
-				left join ATN_shifts s on(ps.ShiftID=s.ShiftID)
-				where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 AND t.FromDate>= :sd
-					AND EndTime is not null
-			)t2
-			order by  TrafficDate,TrafficTime";
-		$dt = PdoDataAccess::runquery($query, array(":p" => $PersonID, 
-			":sd" => $StartDate, ":ed" => $EndDate));
-		
-		//........................ create days array ..................
-		$index = 0;
-		$returnArr = array();
-		while($StartDate <= $EndDate)
+		$SUM = ATN_traffic::Compute($OrigStartDate, $OrigEndDate, $personRecord["PersonID"], false);
+		if($SUM === false)
 		{
-			if($index < count($dt) && $StartDate == $dt[$index]["TrafficDate"])
-			{
-				while($index < count($dt) && $StartDate == $dt[$index]["TrafficDate"])
-					$returnArr[] = $dt[$index++];
-
-				$StartDate = DateModules::AddToGDate($StartDate, 1);	
-				continue;
-			}
-
-			$shiftRecord = ATN_PersonShifts::GetShiftOfDate($PersonID, $StartDate);
-
-			$returnArr[] = array(
-				"RecordType" => "normal",
-				"TrafficID" => "", 
-				"TrafficDate" => $StartDate , 
-				"ShiftTitle" => $shiftRecord["ShiftTitle"], 
-				"FromTime" => $shiftRecord["FromTime"], 
-				"ToTime" => $shiftRecord["ToTime"], 
-				"ExceptFromTime" => $shiftRecord["ExceptFromTime"], 
-				"ExceptToTime" => $shiftRecord["ExceptToTime"], 
-				"TrafficTime" => "");
-			$StartDate = DateModules::AddToGDate($StartDate, 1);
-		}
-		//------------ holidays ------------------
-		for($i=0; $i<count($returnArr); $i++)
-		{
-			$holiday = false;
-			if(FridayIsHoliday && DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") == "5")
-				$holiday = true;
-			if(ThursdayIsHoliday && DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") == "4")
-				$holiday = true;
-
-			if($holidayRecord && $holidayRecord["TheDate"] == $returnArr[$i]["TrafficDate"])
-			{
-				$holiday = true;
-				$holidayRecord = $holidayIndex < count($holidays) ? $holidays[$holidayIndex++] : null;
-			}
-
-			$returnArr[$i]["holiday"] = $holiday;
-		}
-		//...........................................................
-
-		for($i=0; $i < count($returnArr); $i++)
-		{
-			if(!$returnArr[$i]["holiday"])
-			{
-				//........... Daily off and mission ...................
-				$requests = PdoDataAccess::runquery("
-					select t.*, InfoDesc OffTypeDesc from ATN_requests t
-						left join BaseInfo on(TypeID=20 AND InfoID=OffType)
-					where ReqStatus=2 AND PersonID=:p AND FromDate <= :td 
-						AND if(ToDate is not null, ToDate >= :td, 1=1)
-					order by ToDate desc,StartTime asc
-				", array(
-					":p" => $PersonID,
-					":td" => $returnArr[$i]["TrafficDate"]
-				));
-
-				if(count($requests) > 0)
-				{
-					if($requests[0]["ReqType"] == "DayOFF")
-					{
-						$SUM["DailyOff_" . $requests[0]["OffType"] ]++;
-
-						$currentDay = $returnArr[$i]["TrafficDate"];
-						while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
-							$i++;
-						$i--;
-						continue;
-					}
-					if($requests[0]["ReqType"] == "DayMISSION")
-					{
-						$SUM["DailyMission"]++;
-
-						$currentDay = $returnArr[$i]["TrafficDate"];
-						while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
-							$i++;
-						$i--;
-						continue;
-					}
-				}
-			}
-			//....................................................
-			if( DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "l") == "Thursday")
-			{
-				$returnArr[$i]["FromTime"] = $returnArr[$i]["ExceptFromTime"];
-				$returnArr[$i]["ToTime"] = $returnArr[$i]["ExceptToTime"];
-			}
-			//....................................................
-
-			$firstAbsence = 0;
-			$Off = 0;	
-			$mission = 0;
-			$index = 1;
-			$totalAttend = 0;
-
-			if($returnArr[$i]["TrafficTime"] != "" && 
-				strtotime($returnArr[$i]["TrafficTime"]) > strtotime($returnArr[$i]["FromTime"]))
-					$firstAbsence = strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i]["FromTime"]);
-
-			$currentDay = $returnArr[$i]["TrafficDate"];
-			$startOff = 0;
-			$endOff = 0;
-			$extra = 0;
-			while($i < count($returnArr) && $currentDay == $returnArr[$i]["TrafficDate"])
-			{
-				//....................................................
-				if( DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "l") == "Thursday")
-				{
-					$returnArr[$i]["FromTime"] = $returnArr[$i]["ExceptFromTime"];
-					$returnArr[$i]["ToTime"] = $returnArr[$i]["ExceptToTime"];
-				}
-				//....................................................
-
-				if($index % 2 == 0)
-				{
-					$totalAttend += strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i-1]["TrafficTime"]);
-
-					if(strtotime($returnArr[$i]["TrafficTime"]) > strtotime($returnArr[$i]["ToTime"]))
-					{
-						if(strtotime($returnArr[$i-1]["TrafficTime"]) > strtotime($returnArr[$i]["ToTime"]))
-							$extra += strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i-1]["TrafficTime"]);
-						else
-							$extra += strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i-1]["ToTime"]);
-					}
-				}	
-
-				if($returnArr[$i]["RecordType"] != "normal")
-				{
-					if($i>0 && $returnArr[$i-1]["TrafficDate"] == $currentDay && $returnArr[$i]["RecordType"] == "start")
-					{
-						if($i == 0 || $returnArr[$i-1]["TrafficDate"] != $currentDay)
-							$startDiff = 0;
-						else
-							$startDiff = strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i-1]["TrafficTime"]);
-
-						if($startDiff > Valid_Traffic_diff)
-							$startOff = strtotime($returnArr[$i]["TrafficTime"]) - Valid_Traffic_diff;						
-						else
-							$startOff = strtotime($returnArr[$i-1]["TrafficTime"]);
-					}
-					if( ($i==0 || $returnArr[$i-1]["TrafficDate"] != $currentDay) && $returnArr[$i]["RecordType"] == "start")
-					{
-						$startOff = strtotime($returnArr[$i]["TrafficTime"]);
-					}
-					if($returnArr[$i]["RecordType"] == "end")
-					{
-						if($i == count($returnArr)-1 || $returnArr[$i+1]["TrafficDate"] != $currentDay)
-							$endDiff = 0;
-						else
-							$endDiff = strtotime($returnArr[$i+1]["TrafficTime"]) - strtotime($returnArr[$i]["TrafficTime"]);
-
-						if($endDiff > Valid_Traffic_diff)
-							$endOff = strtotime($returnArr[$i]["TrafficTime"]) - Valid_Traffic_diff;						
-						else
-							$endOff = strtotime($returnArr[$i]["TrafficTime"]);
-
-						if($returnArr[$i]["ReqType"] == "OFF")
-							$Off += $endOff - $startOff;
-						else
-							$mission += $endOff - $startOff;
-					}				
-				}
-				$index++;
-				$i++;
-			}
-			$i--;
-
-			$lastAbsence = 0;
-			if($returnArr[$i]["TrafficTime"] != "" && 
-				strtotime($returnArr[$i]["TrafficTime"]) < strtotime($returnArr[$i]["ToTime"]))
-					$lastAbsence = strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["TrafficTime"]);
-
-			$ShiftDuration = strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["FromTime"]);
-			$Absence = $totalAttend < $ShiftDuration ? $ShiftDuration - $totalAttend : 0;
-
-			if($returnArr[$i]["holiday"])
-			{
-				$extra = $totalAttend + $mission;
-				$lastAbsence = 0;
-				$firstAbsence = 0;
-				$Absence = 0;
-				$Off = 0;
-			}
-
-			if($Absence == $ShiftDuration)
-			{
-				$SUM["DailyAbsence"]++;
-				$Absence = 0;
-			}
-
-			$SUM["absence"] += $Absence;
-			$SUM["attend"] += $totalAttend;
-			$SUM["firstAbsence"] += $firstAbsence;
-			$SUM["lastAbsence"] += $lastAbsence;
-			$SUM["extra"] += $extra;
-			$SUM["Off"] += $Off;
-			$SUM["mission"] += $mission;		
+			echo ExceptionHandler::GetExceptionsToString();
+			die();
 		}
 		$SUM["absence"] = TimeModules::SecondsToTime($SUM["absence"]);
 		$SUM["attend"] = TimeModules::SecondsToTime($SUM["attend"] );
@@ -316,16 +54,20 @@ function ShowReport(){
 		$SUM["extra"] = TimeModules::SecondsToTime($SUM["extra"]);
 		$SUM["Off"] = TimeModules::SecondsToTime($SUM["Off"]);
 		$SUM["mission"] = TimeModules::SecondsToTime($SUM["mission"]);
+		$SUM["LegalExtra"] = TimeModules::SecondsToTime($SUM["LegalExtra"]);
+		$SUM["AllowedExtra"] = TimeModules::SecondsToTime($SUM["AllowedExtra"]);		
 			
 		$returnStr .= "<tr>
 			<td>" . $personRecord["fullname"] . "</td>
-			<td>" . ShowTime($SUM["attend"]) . "</td>
-			<td>" . ShowTime($SUM["extra"]) . "</td>
-			<td>" . ShowTime($SUM["Off"]) . "</td>
-			<td>" . ShowTime($SUM["mission"]) . "</td>
-			<td>" . ShowTime($SUM["firstAbsence"]) . "</td>
-			<td>" . ShowTime($SUM["lastAbsence"]) . "</td>
-			<td>" . ShowTime($SUM["absence"]) . "</td>
+			<td>" . TimeModules::ShowTime($SUM["attend"]) . "</td>
+			<td>" . TimeModules::ShowTime($SUM["extra"]) . "</td>
+			<td>" . TimeModules::ShowTime($SUM["LegalExtra"]) . "</td>
+			<td>" . TimeModules::ShowTime($SUM["AllowedExtra"]) . "</td>
+			<td>" . TimeModules::ShowTime($SUM["Off"]) . "</td>
+			<td>" . TimeModules::ShowTime($SUM["mission"]) . "</td>
+			<td>" . TimeModules::ShowTime($SUM["firstAbsence"]) . "</td>
+			<td>" . TimeModules::ShowTime($SUM["lastAbsence"]) . "</td>
+			<td>" . TimeModules::ShowTime($SUM["absence"]) . "</td>
 			
 			<td>" . $SUM["DailyOff_1"] . "</td>
 			<td>" . $SUM["DailyOff_2"] . "</td>
@@ -339,7 +81,7 @@ function ShowReport(){
 <link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" /></head>
 <style>
 	.reportTbl {border-collapse:collapse}
-	.reportTbl td {padding:4px;font-family: nazanin; font-size:14px;}
+	.reportTbl td {padding:4px;font-family: nazanin; font-size:14px; text-align: center}
 	.reportTbl th {font-family: nazanin; font-size:14px;padding:4px;text-align: center; 
 				  background-color: #efefef; font-weight: bold}
 	.reportTbl .attend { text-align:center}
@@ -352,7 +94,7 @@ function ShowReport(){
 <table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'>
 	<tr>
 		<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
-		<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>
+		<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 			گزارش خلاصه کارکرد پرسنل
 			<br>از تاریخ <?= DateModules::miladi_to_shamsi($OrigStartDate) ?> تا تاریخ 
 				<?= DateModules::miladi_to_shamsi($OrigEndDate) ?>
@@ -366,7 +108,9 @@ function ShowReport(){
 	<tr class="blueText">
 		<th>نام و نام خانوادگی</th>
 		<th>حضور</th>
-		<th>اضافه کار</th>
+		<th>اضافه کار واقعی</th>
+		<th>اضافه کار مجاز</th>
+		<th>اضافه کار مجوز</th>
 		<th>مرخصی</th>
 		<th>ماموریت</th>
 		<th>تاخیر</th>

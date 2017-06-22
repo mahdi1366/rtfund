@@ -171,7 +171,16 @@ function ChangeStatus(){
 	$obj->SurveyPersonID = $_SESSION["USER"]["PersonID"];
 	$obj->SurveyDate = PDONOW;
 	$obj->SurveyDesc = $_POST["SurveyDesc"];
+	$obj->ConfirmExtra = $_POST["ConfirmExtra"];
 	
+	if($obj->ReqType == "EXTRA")
+	{
+		$dt = ATN_requests::Get(" AND RequestID=?", array($obj->RequestID));
+		$dt = $dt->fetch();
+		$SUM = ATN_traffic::Compute($dt["FromDate"], $dt["FromDate"], $dt["PersonID"]);
+		$obj->RealExtra = $SUM["extra"];
+		$obj->LegalExtra = $SUM["LegalExtra"];
+	}
 	$result = $obj->Edit();
 	
 	/*if($obj->ReqType == "CORRECT")
@@ -203,22 +212,18 @@ function SelectDayTraffics(){
 	$dt = PdoDataAccess::runquery("
 		select * from (
 
-			select '' ReqType, TrafficID,TrafficDate,TrafficTime,IsActive 
+			select 'user' ReqType, TrafficID,TrafficDate,TrafficTime,'' EndTime,IsActive 
 			from ATN_traffic where PersonID=:p AND TrafficDate=:d
 
 			union all
 
-			select t.ReqType,null,t.FromDate,StartTime,'YES'
+			select t.ReqType,null,t.FromDate,StartTime,EndTime,'YES'
 			from ATN_requests t
-			where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 AND t.FromDate=:d
+			where t.PersonID=:p AND t.ReqType in('CORRECT','OFF','MISSION') 
+				AND t.ToDate is null AND ReqStatus=2 AND t.FromDate=:d
 
-			union all
-
-			select t.ReqType,null,t.FromDate,EndTime,'YES'
-			from ATN_requests t
-			where t.PersonID=:p AND t.ToDate is null AND ReqStatus=2 AND t.FromDate=:d AND EndTime is not null
 		)t 
-		order by TrafficTime",
+		order by TrafficTime,ReqType",
 		array(":p" => $_GET["PersonID"], ":d" => $_GET["TrafficDate"]));
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
@@ -231,6 +236,16 @@ function DeleteTraffic(){
 	PdoDataAccess::runquery("update ATN_traffic set IsActive='NO' where TrafficID=?",
 		array($TrafficID));
 	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function GetExtraInfo(){
+	
+	$RequestID = $_REQUEST["RequestID"];
+	$dt = ATN_requests::Get(" AND RequestID=?", array($RequestID));
+	$dt = $dt->fetch();
+	$SUM = ATN_traffic::Compute($dt["FromDate"], $dt["FromDate"], $dt["PersonID"]);
+	echo dataReader::getJsonData($SUM, 1, $_GET["callback"]);
 	die();
 }
 ?>

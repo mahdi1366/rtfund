@@ -671,6 +671,11 @@ class TimeModules {
 			str_pad($seconds, 2, "0", STR_PAD_LEFT));
 	}
 
+	static function ShowTime($arr){
 
+		if($arr[0] == "00" && $arr[1] == "00")
+			return "";
+		return $arr[0] . ":" . $arr[1];
+	}	
 }
 ?>

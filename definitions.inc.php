@@ -42,7 +42,7 @@ define("COSTID_LongDeposite", "119");
 define("COSTID_Fund", "1");
 define("COSTID_Wage", "19"); // 550
 define("COSTID_Bank", "253");
-define("COSTID_share", "166");
+define("COSTID_share", "313"); 
 define("COSTID_ShareProfit", "167");
 define("COSTID_Commitment", "165");
 define("COSTID_saving", "65");

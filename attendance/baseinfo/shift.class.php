@@ -116,12 +116,17 @@ class ATN_PersonShifts extends OperationClass
 	
 	static function GetShiftOfDate($PersonID, $date){
 		
-		$query = "select s.*			
-			from ATN_PersonShifts ps
-			join ATN_shifts s on(ps.ShiftID=s.ShiftID)
-			where ps.IsActive='YES' AND ps.PersonID=? AND ? between FromDate AND ToDate";
+		$query = "select s.*
+
+		from ATN_PersonShifts ps
+		left join ATN_requests r on(ReqType='CHANGE_SHIFT' and ReqStatus=2 and r.FromDate=:d
+		  and ps.PersonID=r.PersonID)
+
+		join ATN_shifts s on(ifnull(r.ShiftID,ps.ShiftID)=s.ShiftID)
+
+		where ps.IsActive='YES' AND ps.PersonID=:p AND :d between ps.FromDate AND ps.ToDate";
 		
-		$dt = parent::runquery($query, array($PersonID, $date));
+		$dt = parent::runquery($query, array(":p" => $PersonID, ":d" => $date));
 		return count($dt) > 0 ? $dt[0] : null;
 	}
 	
@@ -143,5 +148,27 @@ class ATN_holidays extends OperationClass
 		parent::__construct($id);
 	}
 }
+
+class ATN_settings extends OperationClass
+{
+	const TableName = "ATN_settings";
+	const TableKey = "RowID";
+	
+	public $RowID;
+	public $StartDate;
+	public $EndDate;
+	public $telorance;
+	public $MaxDayExtra;
+	public $MaxMonthExtra;
+	
+	function __construct($id = '') {
+		
+		$this->DT_StartDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_EndDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
+		parent::__construct($id);
+	}
+}
+
 
 ?>

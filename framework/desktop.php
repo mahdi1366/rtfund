@@ -773,7 +773,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 			remove:true
 		});
 		framework = new FrameWorkClass();
-		framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
+		//framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
 		if(framework.CalendarReminders > 0)
 		{
 			framework.ShowCalendarReminderWindow();
