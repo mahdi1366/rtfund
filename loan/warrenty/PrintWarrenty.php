@@ -19,7 +19,12 @@ if($ReqObj->StatusID != WAR_STEPID_CONFIRM && empty($_POST["ReadOnly"]))
 	die();*/
 }
 
-$dt = WAR_requests::SelectAll("RequestID=?" , array($ReqObj->RequestID));
+$dt = WAR_requests::SelectAll("r.RequestID=?" , array($ReqObj->RequestID));
+if($_SESSION["USER"]["UserName"] == "admin")
+{
+	//echo PdoDataAccess::GetLatestQueryString();
+	print_r(ExceptionHandler::PopAllExceptions());
+}
 $record = $dt->fetch();
 $record["LetterDate"] = DateModules::miladi_to_shamsi($record["LetterDate"]);
 $record["StartDate"] = DateModules::miladi_to_shamsi($record["StartDate"]);
