@@ -132,8 +132,10 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("شماره قدیم", "imp_VamCode");
 	//$rpg->addColumn("جاری/خاتمه", "IsEnded", "endedRender");
 	$rpg->addColumn("وضعیت", "StatusDesc");
-	$rpg->addColumn("قابل پرداخت مشتری", "TotalInstallmentAmount", "moneyRender");
-	$rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount", "moneyRender");
+	$col = $rpg->addColumn("قابل پرداخت مشتری", "TotalInstallmentAmount", "moneyRender");
+	$col->EnableSummary();
+	$col = $rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount", "moneyRender");
+	$col->EnableSummary();
 	$col = $rpg->addColumn("مانده قابل پرداخت", "remainder", "moneyRender");
 	$col->EnableSummary();
 	if(!$rpg->excel)
@@ -142,8 +144,8 @@ if(isset($_REQUEST["show"]))
 		echo "<div style=display:none>" . $query . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
-				<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>
-					گزارش وام ها 
+				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
+					گزارش کلی وام ها
 				</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
 			. DateModules::shNow() . "<br>";
@@ -197,7 +199,7 @@ function LoanReport_total()
 				proxy: {
 					type: 'jsonp',
 					url: this.address_prefix + '../../framework/person/persons.data.php?' +
-						"task=selectPersons&UserTypes=IsAgent,IsSupporter",
+						"task=selectPersons&UserTypes=IsAgent,IsSupporter&EmptyRow=true",
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields : ['PersonID','fullname']

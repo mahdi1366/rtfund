@@ -63,7 +63,7 @@ LoanReport_EndedRequestsObj = new LoanReport_EndedRequests();
 LoanReport_EndedRequests.prototype.PayReport = function(){
 
 	record = this.grid.getSelectionModel().getLastSelected();
-	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&PartID=" + record.data.PartID);
+	window.open(this.address_prefix + "../report/LoanPayment2.php?show=true&RequestID=" + record.data.RequestID);
 }
 
 </script>

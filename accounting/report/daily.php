@@ -101,7 +101,7 @@ if(isset($_REQUEST["show"]))
 		$rpg->headerContent .= "</td></tr></table>";
 	}
 
-	$rpg->addColumn("شماره سند", "DocNo");
+	$rpg->addColumn("شماره سریال", "DocNo");
 	$rpg->addColumn("تاریخ سند", "DocDate");
 	$rpg->addColumn("کد حساب", "CostCode");
 	$rpg->addColumn("حساب", "CostDesc");

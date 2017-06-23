@@ -22,6 +22,7 @@ function showReport(){
 	//......................................................
 	
 	$levelsDescArr = array(
+		"l0" => "گروه",
 		"l1" => "کل",
 		"l2" => "معین",
 		"l3" => "جزء معین",
@@ -35,15 +36,17 @@ function showReport(){
 	$rpg->excel = !empty($_POST["excel"]);
 	$whereParam = array();
 	$where = "";
-	$group = "cc.level1";
 	
 	$select = "select 
 		sum(di.DebtorAmount) bdAmount,
 		sum(di.CreditorAmount) bsAmount,
+		b0.BlockDesc level0Desc,
 		b1.BlockDesc level1Desc,
 		b2.BlockDesc level2Desc,
 		b3.BlockDesc level3Desc,
 		b4.BlockDesc level4Desc,
+		
+		b0.BlockCode level0Code,
 		b1.BlockCode level1Code,
 		b2.BlockCode level2Code,
 		b3.BlockCode level3Code,
@@ -54,7 +57,18 @@ function showReport(){
 		bi2.InfoDesc TafsiliTypeDesc2,
 		t2.TafsiliDesc TafsiliDesc2,
 		t2.TafsiliCode TafsiliCode2,
-		cc.level1,cc.level2,cc.level3,cc.level4,di.TafsiliType,di.TafsiliType2,di.TafsiliID,di.TafsiliID2,
+		
+		b1.GroupID as level0,
+		cc.level1,
+		cc.level2,
+		cc.level3,
+		cc.level4,
+
+		di.TafsiliType,
+		di.TafsiliType2,
+		di.TafsiliID,
+		di.TafsiliID2,
+		
 		t.StartCycleDebtor,
 		t.StartCycleCreditor
 		";
@@ -62,6 +76,7 @@ function showReport(){
 				join ACC_docs d using(DocID)
 				join ACC_CostCodes cc using(CostID)
 				join ACC_blocks b1 on(level1=b1.BlockID)
+				left join ACC_blocks b0 on(b1.GroupID=b0.BlockID)
 				left join ACC_blocks b2 on(level2=b2.BlockID)
 				left join ACC_blocks b3 on(level3=b3.BlockID)
 				left join ACC_blocks b4 on(level4=b4.BlockID)
@@ -79,29 +94,21 @@ function showReport(){
 					group by CostID
 				)t on(d.CycleID=t.CycleID AND di.CostID=t.CostID )
 	";
-	
-	/*function CodeRender($row,$value){
-		global $level;
-		$st = "";
-		if($level >= "l1")
-			$st .= $row["level1Code"] . "-";
-		if($level >= "l2")
-			$st .= $row["level2Code"] . "-";
-		if($level >= "l3")
-			$st .= $row["level3Code"] . "-";
-		if($level >= "l4")
-			$st .= $row["level4Code"] . "-";
-		
-		$st = substr($st, 0, strlen($st)-1);
-		return $st;
+	$group = "";
+	if($level >= "l0")
+	{
+		$col = $rpg->addColumn("کد گروه", "level0Code");
+		$col = $rpg->addColumn("گروه", "level0Desc",$level =="l0" ? "levelRender" : "");
+		$group = "b1.GroupID";
+		$col->ExcelRender = false;
 	}
-	$col = $rpg->addColumn("کد", "level1Code","CodeRender");*/
 	
 	if($level >= "l1")
 	{
 		$col = $rpg->addColumn("کد کل", "level1Code");
 		$col = $rpg->addColumn("کل", "level1Desc",$level =="l1" ? "levelRender" : "");
 		$col->ExcelRender = false;
+		$group = "cc.level1";
 	}
 	if($level >= "l2")
 	{
@@ -144,6 +151,7 @@ function showReport(){
 			$value = "-----";
 		
 		return "<a onclick=changeLevel('" . $level . "','".
+				($level >= "l0" ? $row["level0"] : "") . "','" . 
 				($level >= "l1" ? $row["level1"] : "") . "','" . 
 				($level >= "l2" ? $row["level2"] : "") . "','" . 
 				($level >= "l3" ? $row["level3"] : ""). "','" . 
@@ -153,6 +161,7 @@ function showReport(){
 	function levelRender2($row, $value){
 		global $level;
 		return "<a onclick=changeLevel('l5','".
+				($level >= "l0" ? $row["level0"] : "") . "','" . 
 				($level >= "l1" ? $row["level1"] : "") . "','" . 
 				($level >= "l2" ? $row["level2"] : "") . "','" . 
 				($level >= "l3" ? $row["level3"] : ""). "','" . 
@@ -217,6 +226,11 @@ function showReport(){
 		{
 			$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
 		}
+		if(isset($_REQUEST["level0"]))
+		{
+			$where .= " AND b1.GroupID=:l0";
+			$whereParam[":l0"] = $_REQUEST["level0"];
+		}
 		if(isset($_REQUEST["level1"]))
 		{
 			if($_REQUEST["level1"] == "")
@@ -258,6 +272,12 @@ function showReport(){
 			}
 		}
 		//..............................................
+		if(!empty($_POST["level0s"]))
+		{
+			$level0s = preg_replace("/[^0-9,]+/", "", $_POST["level0s"]);
+            $where .= " AND b1.GroupID in( " . $level0s . ")";
+		}
+		//----------------------------------------------
 		if(!empty($_POST["level1s"]))
 		{
 			$level1s = preg_replace("/[^0-9,]+/", "", $_POST["level1s"]);
@@ -353,6 +373,7 @@ function showReport(){
 		{
 			$row = $dataTable[0];
 			$redirect =  "<script>changeLevel('" . $level . "','".
+			($level >= "l0" ? $row["level0"] : "") . "','" . 
 			($level >= "l1" ? $row["level1"] : "") . "','" . 
 			($level >= "l2" ? $row["level2"] : "") . "','" . 
 			($level >= "l3" ? $row["level3"] : ""). "','" . 
@@ -427,7 +448,7 @@ function showReport(){
 	
 	?>
 	<script>
-		function changeLevel(curlevel,level1,level2,level3,level4,TafsiliID,TafsiliID2)
+		function changeLevel(curlevel,level0,level1,level2,level3,level4,TafsiliID,TafsiliID2)
 		{
 			nextLevel = (curlevel.substring(1)*1);
 			nextLevel = nextLevel+1;
@@ -435,6 +456,8 @@ function showReport(){
 			var form = document.getElementById("subForm");
 			form.action = "taraz.php?show=true&level=" + "l" + nextLevel;
 			form.target = "_blank";
+			if(curlevel >= "l0")
+				form.action += "&level0=" + level0;
 			if(curlevel >= "l1")
 				form.action += "&level1=" + level1;
 			if(curlevel >= "l2")
@@ -490,15 +513,16 @@ AccReport_taraz.prototype.showReport = function(btn, e)
 	this.form.method = "POST";
 	this.form.action =  this.address_prefix + "taraz.php?show=true";
 	
+	this.get("level0s").value = this.formPanel.down("[itemId=cmp_level0]").getValue();
 	this.get("level1s").value = this.formPanel.down("[itemId=cmp_level]").getValue();
-	this.get("level2s").value = "";
+	/*this.get("level2s").value = "";
 	this.formPanel.down('[itemId=cmp_level2]').getStore().each(function(r){
 		AccReport_tarazObj.get("level2s").value += r.data.BlockID + ",";
 	});
 	this.get("level3s").value = "";
 	this.formPanel.down('[itemId=cmp_level3]').getStore().each(function(r){
 		AccReport_tarazObj.get("level3s").value += r.data.BlockID + ",";
-	});
+	});*/
 	
 	this.form.submit();
 	this.get("excel").value = "";
@@ -521,7 +545,7 @@ function AccReport_taraz()
 			width : 240,
 			style : "margin-left:15px"
 		},
-		width : 770,
+		width : 800,
 		items :[{
 			xtype : "combo",
 			colspan : 3,
@@ -543,18 +567,32 @@ function AccReport_taraz()
 			hiddenName : "BranchID"
 		},{
 			xtype : "displayfield",
-			fieldLabel : "کل"
+			fieldLabel : "گروه"
 		},{
 			xtype : "displayfield",
-			fieldLabel : "معین"
-		},{
-			xtype : "displayfield",
-			fieldLabel : "جزء معین"
+			fieldLabel : "کل",
+			colspan : 2
 		},{
 			xtype : "container",
 			html : "&nbsp;",
 			height : 5,
 			colspan : 3
+		},{
+			xtype : "multiselect",
+			height : 195,
+			valueField : "BlockID",
+			displayField : "BlockDesc",
+			itemId : "cmp_level0",
+			store : new Ext.data.Store({
+				fields:["BlockID","BlockCode","BlockDesc"],
+				
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&All=true&level=0',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				autoLoad : true
+			})
 		},{
 			xtype : "multiselect",
 			height : 195,
@@ -576,115 +614,23 @@ function AccReport_taraz()
 		},{
 			xtype : "container",
 			layout : "column",
-			colmns : 3,
-			items : [{
-				xtype : "combo",
-				width : 195,
-				displayField : "full",				
-				valueField : "BlockID",
-				itemId : "combo_level2",
-				pageSize : 10,
-				store : new Ext.data.Store({
-					fields:["BlockID","BlockCode","BlockDesc",
-					{name : "full", 
-					convert: function(v,r){return "[" + r.data.BlockCode + "] " + r.data.BlockDesc; }}],
-					proxy: {
-						type: 'jsonp',
-						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=2',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					autoLoad : true
-				})
-			},{
-				xtype : "button",
-				iconCls : "add",
-				handler : function(){
-					comboEl = AccReport_tarazObj.formPanel.down('[itemId=combo_level2]');
-					if(comboEl.getValue() == "")
-						return;
-					elem = AccReport_tarazObj.formPanel.down('[itemId=cmp_level2]');
-					elem.getStore().add({
-						BlockID : comboEl.getValue(),
-						title : comboEl.getRawValue()
-					});
-					comboEl.setValue();
-				}
-			},{
-				xtype : "button",
-				iconCls : "cross",
-				handler : function(){
-					elem = AccReport_tarazObj.formPanel.down('[itemId=cmp_level2]');
-					elem.getStore().removeAt(elem.getStore().find("BlockID",elem.getValue()));
-				}
-			},{
-				xtype : "multiselect",
-				width : 240,
-				colspan : 3,
-				itemId : "cmp_level2",
-				height : 170,
-				store: new Ext.data.Store({
-					fields : ['BlockID','title']
-				}),
-				ddReorder: true,
-				valueField : "BlockID",
-				displayField : "title"
-			}]			
+			items :[{
+				xtype : "container",
+				style : "margin-left:10px",
+				html :  "<div align=center>تراز بر اساس </div><hr>" +
+						"<input type='radio' name='level' value='l0' > گروه<br>" + 
+						"<input type='radio' name='level' value='l1' checked> کل <br>" + 
+						"<input type='radio' name='level' value='l2' > معین  <br>" + 
+						"<input type='radio' name='level' value='l3' > جزء معین <br>" + 
+						"<input type='radio' name='level' value='l4' > جزء معین 2<br>" + 
+						"<input type='radio' name='level' value='l5' > تفصیلی " 			
+			}]
 		},{
 			xtype : "container",
-			layout : "column",
-			colmns : 3,
-			items : [{
-				xtype : "combo",
-				width : 195,
-				displayField : "full",
-				valueField : "BlockID",
-				itemId : "combo_level3",
-				pageSize : 10,
-				store : new Ext.data.Store({
-					fields:["BlockID","BlockCode","BlockDesc",
-					{name : "full", 
-					convert: function(v,r){return "[" + r.data.BlockCode + "] " + r.data.BlockDesc; }}],
-					proxy: {
-						type: 'jsonp',
-						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=3',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					autoLoad : true
-				})
-			},{
-				xtype : "button",
-				iconCls : "add",
-				handler : function(){
-					comboEl = AccReport_tarazObj.formPanel.down('[itemId=combo_level3]');
-					if(comboEl.getValue() == "")
-						return;
-					elem = AccReport_tarazObj.formPanel.down('[itemId=cmp_level3]');
-					elem.getStore().add({
-						BlockID : comboEl.getValue(),
-						title : comboEl.getRawValue()
-					});
-					comboEl.setValue();
-				}
-			},{
-				xtype : "button",
-				iconCls : "cross",
-				handler : function(){
-					elem = AccReport_tarazObj.formPanel.down('[itemId=cmp_level3]');
-					elem.getStore().removeAt(elem.getStore().find("BlockID",elem.getValue()));
-				}
-			},{
-				xtype : "multiselect",
-				width : 240,
-				colspan : 3,
-				itemId : "cmp_level3",
-				height : 170,
-				store: new Ext.data.Store({
-					fields : ['BlockID','BlockCode','BlockDesc']
-				}),
-				ddReorder: true,
-				valueField : "BlockID",
-				displayField : "BlockCode"
-			}]			
+			colspan : 3,
+			width : 500,
+			cls : "blueText",
+			html : "* " + "با نگه داشتن کلید CTRL می توانید چندین مورد را انتخاب کنید"
 		},{
 			xtype : "container",
 			html : "<br>",
@@ -733,64 +679,9 @@ function AccReport_taraz()
 		},{
 			xtype : "container",
 			rowspan : 3,
-			layout : "column",
-			columns : 2,
-			items :[{
-				xtype : "container",
-				style : "margin-left:10px",
-				html :  "<div align=center>تراز بر اساس </div><hr>" +
-						"<input type='radio' name='level' value='l1' checked> کل <br>" + 
-						"<input type='radio' name='level' value='l2' > معین  <br>" + 
-						"<input type='radio' name='level' value='l3' > جزء معین <br>" + 
-						"<input type='radio' name='level' value='l4' > جزء معین 2<br>" + 
-						"<input type='radio' name='level' value='l5' > تفصیلی " 			
-			}/*,{
-				xtype : "container",
-				html :  "نوع تراز <hr>" +
-					"<input type='radio' name='col' id='2col' value='2' checked> دو ستونی <br>" + 
-					"<input type='radio' name='col' id='4col' value='4' >&nbsp; چهار ستونی"			
-			}*/]
-		},/*{
-			xtype : "combo",
-			displayField : "InfoDesc",
-			fieldLabel : "گروه تفصیلی2",
-			valueField : "InfoID",
-			hiddenName : "TafsiliGroup2",
-			store : new Ext.data.Store({
-				fields:['InfoID','InfoDesc'],
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				autoLoad : true
-			}),
-			listeners : {
-				select : function(combo,records){
-					el = AccReport_tarazObj.formPanel.down("[itemId=cmp_tafsiliID2]");
-					el.enable();
-					el.setValue();
-					el.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
-					el.getStore().load();
-				}
-			}
+			html : "<input type=checkbox name=IncludeRaw > گزارش شامل اسناد خام نیز باشد." + "<br>" +
+				"<input type=checkbox name=IncludeEnd > گزارش شامل سند اختتامیه باشد."
 		},{
-			xtype : "combo",
-			displayField : "TafsiliDesc",
-			fieldLabel : "تفصیلی2",
-			disabled : true,
-			valueField : "TafsiliID",
-			itemId : "cmp_tafsiliID2",
-			hiddenName : "TafsiliID2",
-			store : new Ext.data.Store({
-				fields:["TafsiliID","TafsiliDesc"],
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				}
-			})
-		},*/{
 			xtype : "numberfield",
 			hideTrigger : true,
 			name : "fromLocalNo",
@@ -808,11 +699,6 @@ function AccReport_taraz()
 			xtype : "shdatefield",
 			name : "toDate",
 			fieldLabel : "تا تاریخ"
-		},{
-			xtype : "container",
-			html : "<input type=checkbox name=IncludeRaw > گزارش شامل اسناد خام نیز باشد." + "<br>" +
-				/*"<input type=checkbox name=IncludeStart > گزارش شامل سند افتتاحیه باشد." + "<br>" +*/
-				"<input type=checkbox name=IncludeEnd > گزارش شامل سند اختتامیه باشد."
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",
@@ -840,7 +726,119 @@ function AccReport_taraz()
 		}]
 	});
 }
-
+/*,{
+	xtype : "container",
+	layout : "column",
+	colmns : 3,
+	items : [{
+		xtype : "combo",
+		width : 195,
+		displayField : "full",				
+		valueField : "BlockID",
+		itemId : "combo_level2",
+		pageSize : 10,
+		store : new Ext.data.Store({
+			fields:["BlockID","BlockCode","BlockDesc",
+			{name : "full", 
+			convert: function(v,r){return "[" + r.data.BlockCode + "] " + r.data.BlockDesc; }}],
+			proxy: {
+				type: 'jsonp',
+				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=2',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			autoLoad : true
+		})
+	},{
+		xtype : "button",
+		iconCls : "add",
+		handler : function(){
+			comboEl = AccReport_tarazObj.formPanel.down('[itemId=combo_level2]');
+			if(comboEl.getValue() == "")
+				return;
+			elem = AccReport_tarazObj.formPanel.down('[itemId=cmp_level2]');
+			elem.getStore().add({
+				BlockID : comboEl.getValue(),
+				title : comboEl.getRawValue()
+			});
+			comboEl.setValue();
+		}
+	},{
+		xtype : "button",
+		iconCls : "cross",
+		handler : function(){
+			elem = AccReport_tarazObj.formPanel.down('[itemId=cmp_level2]');
+			elem.getStore().removeAt(elem.getStore().find("BlockID",elem.getValue()));
+		}
+	},{
+		xtype : "multiselect",
+		width : 240,
+		colspan : 3,
+		itemId : "cmp_level2",
+		height : 170,
+		store: new Ext.data.Store({
+			fields : ['BlockID','title']
+		}),
+		ddReorder: true,
+		valueField : "BlockID",
+		displayField : "title"
+	}]			
+},{
+	xtype : "container",
+	layout : "column",
+	colmns : 3,
+	items : [{
+		xtype : "combo",
+		width : 195,
+		displayField : "full",
+		valueField : "BlockID",
+		itemId : "combo_level3",
+		pageSize : 10,
+		store : new Ext.data.Store({
+			fields:["BlockID","BlockCode","BlockDesc",
+			{name : "full", 
+			convert: function(v,r){return "[" + r.data.BlockCode + "] " + r.data.BlockDesc; }}],
+			proxy: {
+				type: 'jsonp',
+				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=3',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			autoLoad : true
+		})
+	},{
+		xtype : "button",
+		iconCls : "add",
+		handler : function(){
+			comboEl = AccReport_tarazObj.formPanel.down('[itemId=combo_level3]');
+			if(comboEl.getValue() == "")
+				return;
+			elem = AccReport_tarazObj.formPanel.down('[itemId=cmp_level3]');
+			elem.getStore().add({
+				BlockID : comboEl.getValue(),
+				title : comboEl.getRawValue()
+			});
+			comboEl.setValue();
+		}
+	},{
+		xtype : "button",
+		iconCls : "cross",
+		handler : function(){
+			elem = AccReport_tarazObj.formPanel.down('[itemId=cmp_level3]');
+			elem.getStore().removeAt(elem.getStore().find("BlockID",elem.getValue()));
+		}
+	},{
+		xtype : "multiselect",
+		width : 240,
+		colspan : 3,
+		itemId : "cmp_level3",
+		height : 170,
+		store: new Ext.data.Store({
+			fields : ['BlockID','BlockCode','BlockDesc']
+		}),
+		ddReorder: true,
+		valueField : "BlockID",
+		displayField : "BlockCode"
+	}]			
+}*/
 AccReport_tarazObj = new AccReport_taraz();
 </script>
 <form id="mainForm">
@@ -848,6 +846,7 @@ AccReport_tarazObj = new AccReport_taraz();
 		<div id="main" ></div>
 	</center>
 	<input type="hidden" name="excel" id="excel">
+	<input type="hidden" name="level0s" id="level0s">
 	<input type="hidden" name="level1s" id="level1s">
 	<input type="hidden" name="level2s" id="level2s">
 	<input type="hidden" name="level3s" id="level3s">

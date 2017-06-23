@@ -43,7 +43,7 @@ function selectPersons(){
 		foreach($arr as $r)
 			$where .= " OR $r='YES'";
 		$where .= ")";
-	}
+	}	
 	
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) 
 	{
@@ -78,6 +78,11 @@ function selectPersons(){
 		$temp = BSC_persons::MinSelect($where . dataReader::makeOrder(), $param);
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
+	
+	if(!empty($_REQUEST["EmptyRow"]))
+	{
+		$temp = array_merge(array(array("PersonID" => 0, "fullname" => "بدون معرفی کننده")), $temp);
+	}
 	
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
 	die();

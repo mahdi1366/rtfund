@@ -1810,13 +1810,12 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 	}
 	//--------------------------------------------------------
 	// compute the extra pay
-	$dt = array();
-	$compute = LON_requests::ComputePayments($NewPartObj->RequestID, $dt);
-	$extraPay = $compute[ count($compute)-1 ]["TotalRemainder"]*1;
-	if($extraPay < 0)
+	$remain = LON_requests::GetTotalRemainAmount($NewPartObj->RequestID);
+	$extraPay = 0;
+	if($remain < 0)
 	{
-		$extraPay= -1*$extraPay;
-		
+		$extraPay = abs($remain);
+
 		unset($itemObj->ItemID);
 		$itemObj->DocID = $obj->DocID;
 		$itemObj->CostID = $CostCode_Loan;
@@ -2154,11 +2153,11 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	require_once getenv("DOCUMENT_ROOT") . '/loan/request/request.class.php';
 	$dt = array();
 	$returnArr = LON_requests::ComputePayments2($PayObj->RequestID, $dt, $pdo);
+	$remain = LON_requests::GetTotalRemainAmount($PayObj->RequestID, $returnArr);
 	$ExtraPay = 0;
-	if($returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 + $returnArr[ count($returnArr)-1 ]["ForfeitAmount"]*1 < 0)
+	if($remain < 0)
 	{
-		$ExtraPay = abs($returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 + 
-						$returnArr[ count($returnArr)-1 ]["ForfeitAmount"]*1);
+		$ExtraPay = abs($remain);
 		$ExtraPay = min($ExtraPay,$PayObj->PayAmount*1);
 		
 		$backPayObj = new LON_BackPays();
@@ -2531,12 +2530,11 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		array($ReqObj->RequestID, BACKPAY_PAYTYPE_CORRECT, $PayObj->BackPayID));
 	
 	require_once getenv("DOCUMENT_ROOT") . '/loan/request/request.class.php';
-	$dt = array();
-	$returnArr = LON_requests::ComputePayments($PayObj->RequestID, $dt, $pdo);
+	$remain = LON_requests::GetTotalRemainAmount($PayObj->RequestID);
 	$ExtraPay = 0;
-	if(count($returnArr)>0 && $returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 < 0)
+	if($remain < 0)
 	{
-		$ExtraPay = $returnArr[ count($returnArr)-1 ]["TotalRemainder"]*-1;
+		$ExtraPay = abs($remain);
 		$ExtraPay = min($ExtraPay,$PayObj->PayAmount*1);
 		
 		$backPayObj = new LON_BackPays();

@@ -20,7 +20,7 @@ if($IsCustomer)
 		AND (ReqPersonID<>LoanPersonID)",
 		array($_SESSION["USER"]["PersonID"]));
 	if(count($dt) == 0)
-		$loansText = "هنوز وامی به نام شما به صندوق معرفی نشده است";
+		$loansText = "هنوز وامی به نام شما از طرف سرمایه گذار یا سهامداری به صندوق معرفی نشده است";
 	else
 		$loansText = "<a class='menuItem blueText' style='text-align:center;font-size:12px' ".
 			"href='javascript:StartPageObject.OpenLoan(" . 

@@ -156,7 +156,7 @@ if(isset($_REQUEST["show"]))
 		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
-				<td align='center' style='font-family:b titr;font-size:15px'>اعتماد شما سرلوحه خدمت ماست<br>
+				<td align='center' style='font-family:titr;font-size:15px'>
 					گزارش چک های دریافتی
 					";
 		if(!empty($_POST["l_fromDate"]))
@@ -207,7 +207,7 @@ function AccReport_IncomeCheque()
 		renderTo : this.get("main"),
 		frame : true,
 		bodyStyle : "text-align:right;padding:5px",
-		title : "گزارش چک ها",
+		title : "گزارش چک های دریافتی",
 		defaults : {
 			labelWidth :150
 		},

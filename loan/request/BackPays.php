@@ -102,9 +102,6 @@ if($editable && $accessObj->AddFlag)
 if($framework)
 {
 	$dg->addButton("", "گزارش پرداخت", "report", 
-			"function(){LoanPayObject.PayReport();}");
-	
-	$dg->addButton("", "گزارش پرداخت2", "report", 
 			"function(){LoanPayObject.PayReport2();}");
 }
 
@@ -694,10 +691,6 @@ LoanPay.prototype.DeletePay = function(){
 	});
 }
 
-LoanPay.prototype.PayReport = function(){
-
-	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&RequestID=" + this.RequestID);
-}
 
 LoanPay.prototype.PayReport2 = function(){
 

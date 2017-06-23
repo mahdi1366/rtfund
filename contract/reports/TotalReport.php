@@ -99,7 +99,7 @@ function ShowReport(){
 		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
-				<td align='center' style='height:100px;vertical-align:middle;font-family:b titr;font-size:15px'>
+				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 					گزارش قرارداد ها
 				</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 

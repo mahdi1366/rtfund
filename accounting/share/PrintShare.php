@@ -3,12 +3,15 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 94.12
 //-----------------------------
-
+ 
 require_once '../header.inc.php';
 require_once '../global/ManageReport.class.php';
 require_once inc_CurrencyModule;
 
-$portal = isset($_SESSION["USER"]["portal"]) ? true : false;
+$CycleID = isset($_SESSION["accounting"]) ? 
+		$_SESSION["accounting"]["CycleID"] : 
+		substr(DateModules::shNow(), 0 , 4);
+
 
 if(isset($_REQUEST["print"]))
 {
@@ -25,7 +28,7 @@ if(isset($_REQUEST["print"]))
 				
 	from ACC_DocItems 
 		join ACC_docs using(DocID)
-		where CostID=" . COSTID_share . " AND CycleID=" . $_SESSION["accounting"]["CycleID"];
+		where CostID=" . COSTID_share . " AND CycleID=" . $CycleID;
 	$sumRecord = PdoDataAccess::runquery($query, $param);
 	if(count($sumRecord) == 0)
 	{
@@ -43,7 +46,7 @@ if(isset($_REQUEST["print"]))
 		join ACC_docs using(DocID)
 		join ACC_tafsilis using(TafsiliID)
 		join BSC_persons on(ObjectID=PersonID)
-	where CostID=" . COSTID_share . " AND CycleID=" . $_SESSION["accounting"]["CycleID"] . 
+	where CostID=" . COSTID_share . " AND CycleID=" . $CycleID . 
 	($TafsiliID != "" ? " AND TafsiliID=?" : "") .
 	" group by TafsiliID";
 
@@ -77,7 +80,7 @@ td {
 		echo "<div class=page><table width=100%>
 			<tr>
 				<td width=160px  style='vertical-align: top'>
-					<img style=width:120px src=/framework/icons/logo.jpg />
+					<img style=width:160px  src=/framework/icons/logo.jpg />
 				</td>
 				<td align=center style='font-size:30px !important'>بسمه تعالی
 					<br>برگ سهام " . SoftwareName . "(سهامی خاص)" . "
@@ -88,9 +91,9 @@ td {
 					</b><br><br>
 					</span>
 				</td>
-				<td width=160px style='font-family:Homa;font-size: 12px;vertical-align: top'>شناسه ملی : " . OWNER_NATIONALID . "
-					<br>شماره ثبت : " . OWNER_REGCODE . "
-					<br>تاریخ ثبت : " . OWNER_REGDATE . "
+				<td width=160px style='font-family:Homa;font-size: 12px;vertical-align: top'>شناسه ملی: " . OWNER_NATIONALID . "
+					<br>شماره ثبت: " . OWNER_REGCODE . "
+					<br>تاریخ ثبت: " . OWNER_REGDATE . "
 					<br><img width=120 src='/generalClasses/phpqrcode/showQRcode.php?value=سهام " . SoftwareName . 
 						" %0D شناسه ملی : 10380491265 %0D سهامدار : " . $dataTable[$i]["TafsiliDesc"] . "%0D ارزش سهام : " . 
 						number_format($dataTable[$i]["amount"]) . " ریال " . " %0D شماره سریال: " . $dataTable[$i]["PersonID"] . "' >

@@ -167,7 +167,7 @@ if($LetterObj->OuterCopies != "")
 						<td align="center" style="width:200px;">
 							<img  src="/framework/icons/logo.jpg" style="width:150px">
 						</td>
-						<td align="center" style="font-family: b titr;font-size: 14px;">
+						<td align="center" style="font-family: titr;font-size: 14px;">
 							<b>بسمه تعالی</b>
 						</td>
 						<td style="width:200px;line-height: 25px;">
@@ -227,7 +227,7 @@ if($LetterObj->OuterCopies != "")
 						<td align="center" style="width:200px;">
 							<img  src="/framework/icons/logo.jpg" style="width:150px">
 						</td>
-						<td align="center" style="font-family: b titr;font-size: 14px;">
+						<td align="center" style="font-family: titr;font-size: 14px;">
 							<b>بسمه تعالی</b>
 						</td>
 						<td style="width:200px;line-height: 25px;">

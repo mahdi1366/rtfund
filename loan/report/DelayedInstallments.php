@@ -145,7 +145,7 @@ $col->width = 150;
 $col = $dg->addColumn("قابل پرداخت معوقه", "TotalRemainder", GridColumn::ColumnType_money);
 $col->width = 100;
 
-$dg->addButton("", "گزارش پرداخت", "report", "function(){LoanReport_DelayedInstallmentsObj.PayReport(2);}");
+$dg->addButton("", "گزارش پرداخت", "report", "function(){LoanReport_DelayedInstallmentsObj.PayReport();}");
 
 $dg->height = 377;
 $dg->width = 850;
@@ -216,10 +216,10 @@ function LoanReport_DelayedInstallments()
 	this.grid.render(this.get("divGrid"));
 }
 
-LoanReport_DelayedInstallments.prototype.PayReport = function(postfix){
+LoanReport_DelayedInstallments.prototype.PayReport = function(){
 
 	record = this.grid.getSelectionModel().getLastSelected();
-	window.open(this.address_prefix + "../report/LoanPayment"+postfix+".php?show=true&RequestID=" + 
+	window.open(this.address_prefix + "../report/LoanPayment2.php?show=true&RequestID=" + 
 		record.data.RequestID);
 }
 

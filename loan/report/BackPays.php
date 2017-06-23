@@ -100,7 +100,8 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("مشتری", "LoanFullname");
 	$rpg->addColumn("شعبه", "BranchName");
 	$rpg->addColumn("تاریخ پرداخت", "PayDate", "dateRender");
-	$rpg->addColumn("مبلغ پرداخت", "PayAmount", "moneyRender");
+	$col = $rpg->addColumn("مبلغ پرداخت", "PayAmount", "moneyRender");
+	$col->EnableSummary();
 	$rpg->addColumn("نوع پرداخت", "PayTypeDesc");
 	$rpg->addColumn("شماره فیش", "PayBillNo");
 	$rpg->addColumn("کد پیگیری", "PayRefNo");
@@ -160,7 +161,7 @@ function LoanReport_Backays()
 			columns :2
 		},
 		bodyStyle : "text-align:right;padding:5px",
-		title : "گزارش اقساط وام ها",
+		title : "گزارش پرداخت های مشتریان",
 		width : 780,
 		items :[{
 			xtype : "combo",

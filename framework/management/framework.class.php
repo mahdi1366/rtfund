@@ -196,7 +196,7 @@ class FRW_access extends PdoDataAccess {
 			
 			where a.PersonID=" . $_SESSION["USER"]["PersonID"] . "
 			group by SystemID
-			order by SysName");
+			order by s.ordering");
 	}
 
 	static function selectAccess($SystemID, $GroupID, $PersonID) {

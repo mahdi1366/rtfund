@@ -349,7 +349,6 @@ class ATN_traffic extends OperationClass
 							$lastAbsence = $firstAbsence;
 						$firstAbsence = 0;
 					}
-					
 				}
 				//--------------------------------------------------------
 			}

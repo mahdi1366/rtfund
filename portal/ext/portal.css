@@ -51,9 +51,10 @@ a:active {
 	background-color: #F05A49;
 	font-family: IranNastaliq;
 	font-size:31px;
-	padding-top : 30px;
+	padding-top : 20px;
 	color : white;
 	text-align:center;
+	line-height: 35px;
 }
 .headerLogo:hover{
 	background-color: #D7BAFF;

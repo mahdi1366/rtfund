@@ -12,16 +12,16 @@ if(isset($_REQUEST["show"]))
 	$Year = $_SESSION["accounting"]["CycleYear"];
 	$query = "
 	select c.*,d.LocalNo,br.BranchName,d.DocDate,a.AccountDesc,a.AccountNo,
-		b.InfoDesc as checkTitle,t.TafsiliDesc,bankDesc,cb.SerialNo
+		b.InfoDesc as checkStatus,t.TafsiliDesc,bankDesc,cb.SerialNo
 
 	from ACC_DocCheques c
 	left join ACC_tafsilis t using(tafsiliID)
-	join ACC_docs d using(DocID)
-	join BSC_branches br using(BranchID)
-	join ACC_accounts a using(AccountID)
-	join ACC_banks bb using(BankID)
-	join BaseInfo b on(b.typeID=3 AND b.infoID=CheckStatus)
-	join ACC_ChequeBooks cb on(a.AccountID=cb.AccountID and c.CheckNo between MinNo and MaxNo)
+	left join ACC_docs d using(DocID)
+	left join BSC_branches br using(BranchID)
+	left join ACC_accounts a using(AccountID)
+	left join ACC_banks bb using(BankID)
+	left join BaseInfo b on(b.typeID=4 AND b.infoID=CheckStatus)
+	left join ACC_ChequeBooks cb on(a.AccountID=cb.AccountID and c.CheckNo between MinNo and MaxNo)
 	
 	where d.CycleID=" . $_SESSION["accounting"]["CycleID"];
 
@@ -93,39 +93,23 @@ if(isset($_REQUEST["show"]))
 
 	//echo PdoDataAccess::GetLatestQueryString();
 	
-	function dateRender($row, $value){
-		return DateModules::miladi_to_shamsi($value);
-	}
-	
-	function dateRender2($row,$val){
-		return DateModules::miladi_to_shamsi($val);
-	}
-	
-	function moneyRender($row,$val)
-	{
-		return number_format($val, 0, '.', ',');
-	}
-	function durationRender($row)
-	{
-		return (string)((int)substr($row["toDate"], 5, 2) - (int)substr($row["fromDate"], 5, 2) + 1);
-	}
-	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
 	
 	$rpg->addColumn("شماره سند", "LocalNo");
-	$rpg->addColumn("تاریخ سند", "DocDate","dateRender");
+	$rpg->addColumn("تاریخ سند", "DocDate","ReportDateRender");
 	$rpg->addColumn("شماره چک", "CheckNo");
 	$rpg->addColumn("بانک", "bankDesc");
 	$rpg->addColumn("شماره حساب", "AccountNo");
 	$rpg->addColumn("حساب", "AccountDesc");
 	$rpg->addColumn("سریال دسته چک", "SerialNo");
 	
-	$rpg->addColumn("تاریخ چک", "CheckDate","dateRender");
-	$rpg->addColumn("وضعیت چک", "checkTitle");
-	$col = $rpg->addColumn("مبلغ", "amount");
+	$rpg->addColumn("تاریخ چک", "CheckDate","ReportDateRender");
+	$rpg->addColumn("وضعیت چک", "checkStatus");
+	$col = $rpg->addColumn("مبلغ", "amount","ReportMoneyRender");
 	$col->EnableSummary();
 	$rpg->addColumn("تفصیلی گیرنده", "TafsiliDesc");
+	$rpg->addColumn("بابت", "description");
 	
 	$rpg->mysql_resource = $dataTable;
 	if(!$rpg->excel)
@@ -178,7 +162,7 @@ function AccReport_checks()
 		renderTo : this.get("main"),
 		frame : true,
 		bodyStyle : "text-align:right;padding:5px",
-		title : "گزارش چک ها",
+		title : "گزارش چک های پرداختی",
 		defaults : {
 			labelWidth :110,
 			width : 350

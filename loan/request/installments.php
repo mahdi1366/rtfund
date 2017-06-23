@@ -69,8 +69,7 @@ if($editable && $accessObj->EditFlag)
 	$dg->addButton("", "تغییر اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
 }
 
-//$dg->addButton("cmp_report1", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport('');}");
-$dg->addButton("cmp_report2", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport(2);}");
+$dg->addButton("cmp_report2", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport();}");
 
 
 $dg->height = 377;
@@ -145,7 +144,7 @@ function Installment()
 					url: this.address_prefix + 'request.data.php?task=SelectMyRequests&mode=customer',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['PartAmount',"RequestID","ReqAmount","ReqDate", "RequestID",{
+				fields :  ['PartAmount',"RequestID","ReqAmount","ReqDate", "RequestID", "CurrentRemain",{
 					name : "fullTitle",
 					convert : function(value,record){
 						return "کد وام : " + record.data.RequestID + " به مبلغ " + 
@@ -177,31 +176,30 @@ function Installment()
 					InstallmentObject.grid.getStore().proxy.extraParams = {
 						RequestID : this.getValue()
 					};
-					if(InstallmentObject.grid.rendered)
-						InstallmentObject.grid.getStore().load();
-					else
-						InstallmentObject.grid.render(InstallmentObject.get("div_grid"));
-
-					InstallmentObject.PartPanel.collapse();
 					
 					InstallmentObject.RequestID = this.getValue();
 					
 					InstallmentObject.PayPanel.show();
 					InstallmentObject.PayPanel.down("[itemId=PayCode]").setValue(
 						LoanRFID(records[0].data.RequestID));
-					
-					
+				
+					InstallmentObject.PayPanel.down("[itemId=PayAmount]").setValue(records[0].data.CurrentRemain);	
 				}
 			}
 		}]
 	});
 	
+	this.grid.getStore().on("load", function(store){
+		var r = store.getProxy().getReader().jsonData;
+		InstallmentObject.PayPanel.down("[itemId=PayAmount]").setValue(r.message);
+	});
+	
 	this.PayPanel = new Ext.form.FieldSet({
-		title: "انتخاب وام",
+		title: "پرداخت وام",
 		hidden : true,
 		layout : "column",
-		columns : 2,
-		width: 500,
+		columns : 3,
+		width: 650,
 		renderTo : this.get("div_paying"),
 		frame: true,
 		items : [{
@@ -218,15 +216,16 @@ function Installment()
 		},{
 			xtype : "button",
 			border : true,
+			style : "margin-right:10px",
 			text : "پرداخت الکترونیک",
 			iconCls : "epay",
 			handler : function(){ InstallmentObject.PayInstallment(); }
+		},{
+			xtype : "container",
+			columns : 3,
+			html : "* برای مشاهده ریز گزارش پرداخت وام خود می توانید از منوی گزارش پرداخت وام استفاده کنید ",
+			cls : "blueText"
 		}]
-	});
-	
-	this.grid.getStore().on("load", function(store){
-		var r = store.getProxy().getReader().jsonData;
-		InstallmentObject.PayPanel.down("[itemId=PayAmount]").setValue(r.message);
 	});
 }
 
@@ -356,10 +355,9 @@ Installment.prototype.SaveInstallment = function(store, record){
 	});
 }
 
-Installment.prototype.PayReport = function(report){
+Installment.prototype.PayReport = function(){
 
-	window.open(this.address_prefix + "../report/LoanPayment" + report		
-		+ ".php?show=true&RequestID=" + this.RequestID);
+	window.open(this.address_prefix + "../report/LoanPayment2.php?show=true&RequestID=" + this.RequestID);
 }
 
 Installment.prototype.DelayInstallments = function(){

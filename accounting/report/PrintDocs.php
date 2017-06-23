@@ -109,7 +109,7 @@ if(isset($_REQUEST["show"]))
 						<tr>
 						<td style="width:25%"><img src="/framework/icons/logo.jpg" style="width:100px" /></td>
 						<td style="height: 60px;font-family:titr;font-size:16px" align="center">سند حسابداری</td>
-						<td style="width:25%" align="center" >شماره سند : 
+						<td style="width:25%" align="center" >شماره سریال : 
 						'. $index .'<br>تاریخ سند :
 						'. DateModules::miladi_to_shamsi($row["DocDate"]).'</td>
 						</tr>

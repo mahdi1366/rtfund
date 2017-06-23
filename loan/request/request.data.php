@@ -117,9 +117,14 @@ function SelectMyRequests(){
     }
 	
 	$dt = LON_requests::SelectAll($where . dataReader::makeOrder(), $param);
-	print_r(ExceptionHandler::PopAllExceptions());
 	$count = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+	
+	if($_SESSION["USER"]["IsCustomer"] == "YES" && $_REQUEST["mode"] == "customer")
+	{
+		for($i=0; $i<count($dt); $i++)
+			$dt[$i]["CurrentRemain"] = LON_requests::GetCurrentRemainAmount($dt[$i]["RequestID"]);
+	}
 	
 	echo dataReader::getJsonData($dt, $count, $_GET["callback"]);
 	die();
@@ -431,12 +436,7 @@ function GetRequestTotalRemainder(){
 	
 	$remain = 0;
 	$RequestID = $_REQUEST["RequestID"];
-	$dt = array();
-	$returnArr = LON_requests::ComputePayments($RequestID, $dt);
-	if(count($returnArr) > 0 && $returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1 > 0)
-		$remain = $returnArr[ count($returnArr) -1 ]["TotalRemainder"]*1;
-	
-	
+	$remain = LON_requests::GetTotalRemainAmount($RequestID);	
 	echo Response::createObjectiveResponse(true, $remain);
 	die();
 }
@@ -525,10 +525,9 @@ function GetInstallments(){
 	$RequestID = $_REQUEST["RequestID"];
 	
 	$temp = array();
-	$dt = LON_requests::ComputePayments2($RequestID, $temp);
-	$currentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $dt);
+	LON_requests::ComputePayments2($RequestID, $temp);
 	
-	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"], $currentRemain);
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
 
@@ -790,7 +789,7 @@ function DelayInstallments(){
 	else
 	{
 		$dt = array();		
-		$dt2 = LON_requests::ComputePayments($RequestID, $dt);
+		$dt2 = LON_requests::ComputePayments2($RequestID);
 		$index = 0;
 		$ComputeRecord = $dt2[$index++];
 		
@@ -890,7 +889,7 @@ function SelectReadyToPayParts($returnCount = false){
 	$dt = PdoDataAccess::runquery("select max(StepID) from WFM_FlowSteps where FlowID=1 AND IsActive='YES'");
 
 	$dt = PdoDataAccess::runquery("
-		select RequestID,PartAmount,PartDesc,PartDate,
+		select r.RequestID,PartAmount,PartDesc,PartDate,
 			if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) ReqFullname,
 			if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) LoanFullname
 			
@@ -898,15 +897,13 @@ function SelectReadyToPayParts($returnCount = false){
 		join WFM_FlowSteps using(StepRowID)
 		join LON_ReqParts on(PartID=ObjectID)
 		join LON_requests r using(RequestID)
+		left join LON_payments pay on(r.RequestID=pay.RequestID)
 		left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 		left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
-		left join ACC_DocItems di on(SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
-			AND SourceID=RequestID AND SourceID2=PartID)
-		where fr.FlowID=1 AND StepID=? AND ActionType='CONFIRM' AND di.ItemID is null 
-			AND r.StatusID=" . LON_REQ_STATUS_CONFIRM . "
-		group by RequestID",
+		where fr.FlowID=1 AND StepID=? AND ActionType='CONFIRM' 
+			AND r.StatusID=" . LON_REQ_STATUS_CONFIRM . " AND pay.RequestID is null
+		group by r.RequestID" . dataReader::makeOrder(),
 		array($dt[0][0]));
-	
 	if($returnCount)
 		return count($dt);
 
@@ -922,7 +919,7 @@ function SelectReceivedRequests($returnCount = false){
 	$branches = FRW_access::GetAccessBranches();
 	$where .= " AND BranchID in(" . implode(",", $branches) . ")";
 	
-	$dt = LON_requests::SelectAll($where);
+	$dt = LON_requests::SelectAll($where . dataReader::makeOrder());
 	
 	if($returnCount)
 		return $dt->rowCount();
@@ -1301,28 +1298,9 @@ function GetEndedRequests(){
 	$result = array();
 	while($row = $dt->fetch())
 	{
-		$temp = array();
-		$returnArr = LON_requests::ComputePayments($row["RequestID"], $temp);
-		$row["TotalRemainder"] = count($returnArr) > 0 ? $returnArr[ count($returnArr)-1 ]["TotalRemainder"] : 0;
-		
-		if(count($returnArr) == 0)
-			continue;
-		
-		if($returnArr[ count($returnArr)-1 ]["TotalRemainder"]*1 == 0)
-		{
-			if(count($result) > 0 && $result[ count($result)-1 ]["RequestID"] == $row["RequestID"])
-				continue;
+		$remain = LON_requests::GetTotalRemainAmount($row["RequestID"]);
+		if($remain == 0)
 			$result[] = $row;
-		}
-		else
-		{
-			if(count($result) > 0 && $result[ count($result)-1 ]["RequestID"] == $row["RequestID"])
-			{
-				array_pop($result);
-				while($row["RequestID"] == $result[ count($result)-1 ]["RequestID"])
-					$row = $dt->fetch();
-			}
-		}
 	}
 	
 	$cnt = count($result);
