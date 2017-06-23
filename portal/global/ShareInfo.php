@@ -64,7 +64,7 @@ function ShareInfo()
 			fieldLabel : "تعداد سهام",
 			style : "margin-top:10px",
 			fieldCls : "blueText",
-			value : "<?= $dataTable[0]["shareCount"] . " سهام" ?>"
+			value : "<?= $dataTable[0]["shareCount"] . " سهم" ?>"
 		},{
 			xtype : "displayfield",
 			fieldLabel : "ارزش سهام",
