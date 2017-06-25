@@ -15,7 +15,7 @@ if(isset($_REQUEST["show"]))
 		return number_format($val);
 	}
 	
-	function MakeWhere(&$where, &$whereParam){
+	function MakeWhere(&$where, &$pay_where, &$whereParam){
 		
 		foreach($_POST as $key => $value)
 		{
@@ -23,6 +23,7 @@ if(isset($_REQUEST["show"]))
 					$value === "" || strpos($key, "combobox") !== false)
 				continue;
 			$prefix = "";
+			$pay = false;
 			switch($key)
 			{
 				case "CustomerWage":
@@ -43,28 +44,41 @@ if(isset($_REQUEST["show"]))
 				case "fromPartAmount":
 				case "toPartAmount":
 					$value = preg_replace('/,/', "", $value);
+					$pay = true;
+					break;
+				case "fromPayAmount":
+				case "toPayAmount":
+					$value = preg_replace('/,/', "", $value);
+					$pay = true;
 					break;
 			}
 			if(strpos($key, "from") === 0)
-				$where .= " AND " . $prefix . substr($key,4) . " >= :$key";
+				$where_temp = " AND " . $prefix . substr($key,4) . " >= :$key";
 			else if(strpos($key, "to") === 0)
-				$where .= " AND " . $prefix . substr($key,2) . " <= :$key";
+				$where_temp = " AND " . $prefix . substr($key,2) . " <= :$key";
 			else
-				$where .= " AND " . $prefix . $key . " = :$key";
+				$where_temp = " AND " . $prefix . $key . " = :$key";
+			
+			if($pay)
+				$pay_where .= $where_temp;
+			else
+				$where .= $where_temp;
 			$whereParam[":$key"] = $value;
 		}
 	}	
 	
 	//.....................................
 	$where = "";
+	$pay_where = "";
 	$whereParam = array();
-	MakeWhere($where, $whereParam);
+	MakeWhere($where, $pay_where, $whereParam);
 	
 	$query = "select r.*,l.*,p.*,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
 				bi.InfoDesc StatusDesc,
 				BranchName,
+				SumPayments,
 				TotalPayAmount,
 				TotalInstallmentAmount
 				
@@ -75,6 +89,12 @@ if(isset($_REQUEST["show"]))
 			left join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
+			left join (
+				select RequestID,sum(PayAmount) SumPayments 
+				from LON_payments
+				where 1=1 $pay_where
+				group by RequestID			
+			)t_pay on(r.RequestID=t_pay.RequestID)
 			left join (
 				select RequestID,sum(PayAmount) TotalPayAmount 
 				from LON_BackPays
@@ -122,7 +142,9 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("مشتری", "LoanFullname");
 	$rpg->addColumn("شعبه", "BranchName");
 	$rpg->addColumn("تاریخ پرداخت", "PartDate", "dateRender");
-	$col = $rpg->addColumn("مبلغ پرداخت", "PartAmount", "moneyRender");
+	$col = $rpg->addColumn("مبلغ تایید شده", "PartAmount", "moneyRender");
+	$col->EnableSummary();
+	$col = $rpg->addColumn("مبلغ پرداخت شده", "SumPayments", "moneyRender");
 	$col->EnableSummary();
 	$rpg->addColumn("تعداد اقساط", "InstallmentCount");
 	$rpg->addColumn("تنفس(ماه)", "DelayMonths");
@@ -325,10 +347,20 @@ function LoanReport_total()
 			xtype : "currencyfield",
 			name : "fromPartAmount",
 			hideTrigger : true,
-			fieldLabel : "از مبلغ پرداخت"
+			fieldLabel : "از مبلغ تایید پرداخت"
 		},{
 			xtype : "currencyfield",
 			name : "toPartAmount",
+			hideTrigger : true,
+			fieldLabel : "تا مبلغ تایید پرداخت"
+		},{
+			xtype : "currencyfield",
+			name : "fromPayAmount",
+			hideTrigger : true,
+			fieldLabel : "از مبلغ پرداخت"
+		},{
+			xtype : "currencyfield",
+			name : "toPayAmount",
 			hideTrigger : true,
 			fieldLabel : "تا مبلغ پرداخت"
 		},{

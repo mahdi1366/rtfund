@@ -121,7 +121,7 @@ td {
 			<tr>
 				<td style=padding-right:40px align=center>رسول عبدالهی<br> مدیر عامل</td>
 				<td align=center>مهر صندوق</td>
-				<td style=padding-left:40px align=center>دکتر جواد بهارآرا <br> رئیس هیئت مدیره</td>
+				<td style=padding-left:40px align=center>دکتر مرتضی خادمی<br> رئیس هیات مدیره</td>
 			</tr>
 		</table></div>";
 		

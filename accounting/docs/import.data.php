@@ -3210,6 +3210,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 		{
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] = $row["amount"];
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $LatestComputeDate;
+			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] = 0;
 			
 			$row["DocDate"] = $LatestComputeDate;
 			$row["DocDesc"] = "مانده قبل";
@@ -3250,6 +3251,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 			{
 				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $FirstYearDay;
 				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] = 0;
+				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] = 0;
 			}
 			$lastDate = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"];
 			$EndDate = $row["DocDate"];
@@ -3274,10 +3276,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 			$amount = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] * $days * 
 				$percentRecord["percent"] /(36500);
 			
-			if(!isset($DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"]))
-				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] = 0;
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] += $amount;
-
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] += $row["amount"];
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $EndDate;	
 			
@@ -3298,6 +3297,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 				$i--;
 			}			
 		}
+		
 		//--------------------- compute untill toDate ------------------------------
 		foreach($DepositeAmount[ COSTID_ShortDeposite ] as $tafsili => &$row)
 		{
@@ -3351,6 +3351,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 	}
 	
 	//---------------- add DocItems -------------------
+
 	$sumAmount = 0;
 	foreach($DepositeAmount as $CostID => $DepRow)
 	{
