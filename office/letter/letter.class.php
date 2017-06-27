@@ -42,24 +42,28 @@ class OFC_letters extends PdoDataAccess{
 	    return parent::runquery($query, $whereParam);
     }
 	
-	static function FullSelect($where = "",$whereParam = array(), $OrderBy = ""){
+	static function FullSelect($where = "",$whereParam = array(), $OrderBy = "", $RefInclude= false){
 		
-	    $query = "select l.* , s.SendDate,s.SendComment,
-				concat(p1.fname,' ',p1.lname) RegName,
+	    $query = "select l.*,concat(p1.fname,' ',p1.lname) RegName,
+				concat(p4.fname,' ',p4.lname) signer " . 
+				($RefInclude ? ",s.SendDate,s.SendComment,	
 				concat(p2.fname,' ',p2.lname) sender,
-				concat(p3.fname,' ',p3.lname) receiver,
-				concat(p4.fname,' ',p4.lname) signer
+				concat(p3.fname,' ',p3.lname) receiver" : "") . " 
+				
 			from OFC_letters l 
-			join OFC_send s using(LetterID)
 			join BSC_persons p1 on(l.PersonID=p1.PersonID)
-			join BSC_persons p2 on(s.FromPersonID=p2.PersonID)
-			join BSC_persons p3 on(s.ToPersonID=p3.PersonID)
 			left join BSC_persons p4 on(l.SignerPersonID=p4.PersonID)
-			left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
-			left join OFC_LetterCustomers lc on(l.LetterID=lc.LetterID)
-		";
+			left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=l.LetterID)
+			left join OFC_LetterCustomers lc on(l.LetterID=lc.LetterID)";
+			
+		if($RefInclude)
+			$query .= " 
+			join OFC_send s on(l.LetterID=s.LetterID)
+			join BSC_persons p2 on(s.FromPersonID=p2.PersonID)
+			join BSC_persons p3 on(s.ToPersonID=p3.PersonID)";
+		
 	    $query .= ($where != "") ? " where " . $where : "";
-		$query .= " group by s.SendID ";
+		$query .= $RefInclude ? " group by s.SendID " : " group by l.LetterID ";
 		$query .= $OrderBy;
 		
 	    return parent::runquery_fetchMode($query, $whereParam);
@@ -171,6 +175,7 @@ class OFC_send extends PdoDataAccess{
 	public $SendComment;
 	public $IsUrgent;
 	public $IsSeen;
+	public $SeenTime;
 	public $IsDeleted;
 	public $IsCopy;
 	public $ResponseTimeout;
@@ -238,6 +243,8 @@ class OFC_send extends PdoDataAccess{
 			return false;
 		
 		$obj->IsSeen = "YES";		
+		if($obj->SeenTime == "")
+			$obj->SeenTime = PDONOW;
 		return $obj->EditSend();
 	}
 }
@@ -379,4 +386,77 @@ class OFC_MessageReceivers extends OperationClass{
 	}
 	
 }
+
+class OFC_RefLetters extends OperationClass{
+	
+	const TableName = "OFC_RefLetters";
+	const TableKey = "LetterID";
+	
+	public $LetterID;
+	public $RefLetterID;
+	
+	public function Remove($LetterID, $RefLetterID){
+		
+		if(!PdoDataAccess::delete(self::TableName, " LetterID=? AND RefLetterID=?", 
+				array($LetterID, $RefLetterID)))
+			return false;
+		
+		$daObj = new DataAudit();
+        $daObj->ActionType = DataAudit::Action_add;
+        $daObj->MainObjectID = $LetterID;
+		$daObj->SubObjectID = $RefLetterID;
+        $daObj->TableName = self::TableName;
+        $daObj->execute();		
+		
+		return true;
+	}
+}
+
+class OFC_SendComments extends OperationClass{
+	
+	const TableName = "OFC_SendComments";
+	const TableKey = "RowID";
+	
+	public $RowID;
+	public $PersonID;
+	public $SendComment;
+	
+}
+
+class OFC_receivers extends OperationClass{
+	
+	const TableName = "OFC_receivers";
+	const TableKey = "RowID";
+	
+	public $RowID;
+	public $PersonID;
+	public $ToPersonID;
+	
+	static function Get($where = '', $whereParams = array(), $pdo = null) {
+		$query = "select r.*,concat_ws(' ',fname,lname,CompanyName) fullname "
+				. " from OFC_receivers r join BSC_persons p on(r.ToPersonID=p.PersonID)"
+				. " where 1=1 " . $where;
+		return parent::runquery($query, $whereParams, $pdo);		
+	}
+}
+
+class OFC_DailyTips extends OperationClass{
+	
+	const TableName = "OFC_DailyTips";
+	const TableKey = "RowID";
+	
+	public $RowID;
+	public $FromDate;
+	public $ToDate;
+	public $description;
+	
+	function __construct($id = '') {
+		
+		$this->DT_FromDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_ToDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
+		parent::__construct($id);
+	}
+}
+
 ?>

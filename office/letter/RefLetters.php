@@ -10,116 +10,103 @@ $LetterID = $_REQUEST["LetterID"];
 if(empty($LetterID))
 	die();
 
-$editable = isset($_REQUEST["editable"]) && $_REQUEST["editable"] == "false" ? false : true;
 $editable = true;
+		
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=GetRefLetters&LetterID=" . $LetterID, "grid_div");
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=GetLetterCustomerss&LetterID=" . $LetterID, "grid_div");
+$col = $dg->addColumn("نامه مبدا", "LetterID","");
+$col->width = 60;
 
-$dg->addColumn("", "RowID","", true);
-$dg->addColumn("", "fullname","", true);
-$dg->addColumn("", "LetterID","", true);
-
-$col = $dg->addColumn("مشتری", "PersonID");
-$col->renderer = "function(v,p,r){return r.data.fullname;}";
-$col->editor = "this.PersonCombo";
+$col = $dg->addColumn("شماره نامه", "RefLetterID","");
+$col->renderer = "RefLetters.RefLetterRender";
+$col->editor = ColumnEditor::NumberField();
+$col->width = 70;
 
 $col = $dg->addColumn("عنوان نامه", "LetterTitle");
-$col->editor = ColumnEditor::TextField(true);
-$col->width = 250;
-
-$col = $dg->addColumn("عدم مشاهده ذینفع", "IsHide");
-$col->editor = ColumnEditor::CheckField("","YES");
-$col->renderer = "function(v,p,r){return v == 'YES' ? '<span style=color:green;font-weight:bold >√</span>' : ''}";
-$col->width = 100;
-$col->align = "center";
 
 if($editable)
 {
 	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(store,record){return LetterCustomersObject.SaveLetterCustomers(record);}";
+	$dg->rowEditOkHandler = "function(store,record){return RefLettersObject.SaveRefLetters(record);}";
 
-	$dg->addButton("AddBtn", "اضافه ذینفع", "add", "function(){LetterCustomersObject.Add();}");
+	$dg->addButton("AddBtn", "اتصال نامه", "add", "function(){RefLettersObject.Add();}");
 
 	$col = $dg->addColumn("حذف", "");
 	$col->sortable = false;
-	$col->renderer = "function(v,p,r){return LetterCustomers.DeleteRender(v,p,r);}";
+	$col->renderer = "function(v,p,r){return RefLetters.DeleteRender(v,p,r);}";
 	$col->width = 35;
 }
-$dg->autoExpandColumn = "PersonID";
+$dg->autoExpandColumn = "LetterTitle";
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 400;
 $dg->width = 560;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
-$dg->DefaultSortField = "PayDate";
+$dg->DefaultSortField = "LetterTitle";
 $dg->DefaultSortDir = "ASC";
 
 $grid = $dg->makeGrid_returnObjects();
 
 ?>
 <script>
-LetterCustomers.prototype = {
+RefLetters.prototype = {
 	TabID : "<?= $_REQUEST["ExtTabID"] ?>",
 	address_prefix : "<?= $js_prefix_address?>",
 
 	LetterID : "<?= $LetterID ?>",
-	editable : <?= $editable ? "true" : "false" ?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
 };
 
-function LetterCustomers()
-{
-	this.PersonCombo = new Ext.form.ComboBox({
-		store : new Ext.data.SimpleStore({
-			proxy: {
-				type: 'jsonp',
-				url: this.address_prefix + '../../framework/person/persons.data.php?' +
-					"task=selectPersons&UserType=IsCustomer",
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			},
-			fields : ['PersonID','fullname']
-		}),
-		displayField : "fullname",
-		pageSize : 20,
-		itemId : "Customer",
-		allowBlank : false,
-		valueField : "PersonID"
-	});
-	
+function RefLetters()
+{	
 	this.grid = <?= $grid ?>;
-	if(this.editable)
-		this.grid.plugins[0].on("beforeedit", function(editor,e){
+	this.grid.plugins[0].on("beforeedit", function(editor,e){
 
-			editor = LetterCustomersObject.grid.plugins[0].getEditor();
-
-			if(e.record.data.PersonID*1 > 0)
-				editor.down("[itemId=Customer]").disable();
-			else
-				editor.down("[itemId=Customer]").enable();
-			return true;
-		});
+		if(e.record.data.RefLetterID*1 > 0)
+			return false;
+	});
+	/*this.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.RefLetterID == RefLettersObject.LetterID)
+			return "violetRow";
+		return "";
+	}*/	
 	this.grid.render(this.get("div_grid"));
-	
 }
 
-LetterCustomers.DeleteRender = function(v,p,r){
+RefLetters.RefLetterRender = function(v,p,r){
 	
+	if(r.data.RefLetterID == RefLettersObject.LetterID)
+		return v;
+	return "<a href='javascript:void(0)' onclick='RefLetters.OpenRefLetter(" + v + ")'>" + v + "</a>";
+}
+
+RefLetters.OpenRefLetter = function(LetterID){
+	framework.OpenPage("/office/letter/LetterInfo.php", "مشخصات نامه", {
+		LetterID : LetterID
+	});
+}
+
+RefLetters.DeleteRender = function(v,p,r){
+	
+	/*if(r.data.RefLetterID == RefLettersObject.LetterID)
+		return "";*/
 	return "<div align='center' title='حذف' class='remove' "+
-		"onclick='LetterCustomersObject.Delete();' " +
+		"onclick='RefLettersObject.Delete();' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:18px;height:16'></div>";
 }
 
-LetterCustomersObject = new LetterCustomers();
+RefLettersObject = new RefLetters();
 	
-LetterCustomers.prototype.Add = function(){
+RefLetters.prototype.Add = function(){
 
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
-		PersonID: null,
+		RefLetterID: null,
 		LetterID : this.LetterID
 	});
 
@@ -128,7 +115,7 @@ LetterCustomers.prototype.Add = function(){
 	this.grid.plugins[0].startEdit(0, 0);
 }
 	
-LetterCustomers.prototype.SaveLetterCustomers = function(record){
+RefLetters.prototype.SaveRefLetters = function(record){
 
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
@@ -137,7 +124,7 @@ LetterCustomers.prototype.SaveLetterCustomers = function(record){
 		url: this.address_prefix +'letter.data.php',
 		method: "POST",
 		params: {
-			task: "SaveLetterCustomer",
+			task: "SaveRefLetter",
 			record: Ext.encode(record.data)
 		},
 		success: function(response){
@@ -151,19 +138,19 @@ LetterCustomers.prototype.SaveLetterCustomers = function(record){
 					Ext.MessageBox.alert("Error",st.data);
 			}
 			else
-				LetterCustomersObject.grid.getStore().load();
+				RefLettersObject.grid.getStore().load();
 		},
 		failure: function(){}
 	});
 }
 
-LetterCustomers.prototype.Delete = function(){
+RefLetters.prototype.Delete = function(){
 	
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
 		if(btn == "no")
 			return;
 		
-		me = LetterCustomersObject;
+		me = RefLettersObject;
 		var record = me.grid.getSelectionModel().getLastSelected();
 		
 		mask = new Ext.LoadMask(me.grid, {msg:'در حال حذف ...'});
@@ -172,15 +159,16 @@ LetterCustomers.prototype.Delete = function(){
 		Ext.Ajax.request({
 			url: me.address_prefix + 'letter.data.php',
 			params:{
-				task: "DeleteLetterCustomer",
-				RowID : record.data.RowID
+				task: "DeleteRefLetter",
+				LetterID : record.data.LetterID,
+				RefLetterID : record.data.RefLetterID
 			},
 			method: 'POST',
 
 			success: function(response,option){
 				result = Ext.decode(response.responseText);
 				if(result.success)
-					LetterCustomersObject.grid.getStore().load();
+					RefLettersObject.grid.getStore().load();
 				else if(result.data == "")
 					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
 				else

@@ -24,19 +24,23 @@ $col = $dg->addColumn("شماره", "LetterID", "");
 $col->width = 60;
 $col->align = "center";
 
+$col = $dg->addColumn("تاریخ نامه", "LetterDate", GridColumn::ColumnType_date);
+$col->width = 90;
+$col->align = "center";
+
 $col = $dg->addColumn("موضوع نامه", "LetterTitle", "");
 
 $col = $dg->addColumn("ثبت کننده", "RegName", "");
 $col->width = 110;
 
-$col = $dg->addColumn("فرستنده", "sender", "");
+/*$col = $dg->addColumn("فرستنده", "sender", "");
 $col->width = 110;
 
 $col = $dg->addColumn("گیرنده", "receiver", "");
 $col->width = 110;
 
 $col = $dg->addColumn("تاریخ ارجاع", "SendDate", GridColumn::ColumnType_date);
-$col->width = 80;
+$col->width = 80;*/
 
 $col = $dg->addColumn("سابقه", "");
 $col->renderer = "function(v,p,r){return ManageLetter.OperationRender(v,p,r);}";
@@ -46,7 +50,7 @@ $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 380;
 $dg->width = 800;
 $dg->title = "مدیریت نامه ها";
-$dg->DefaultSortField = "SendDate";
+$dg->DefaultSortField = "LetterDate";
 $dg->EnableSearch = false;
 $dg->autoExpandColumn = "LetterTitle";
 $grid = $dg->makeGrid_returnObjects();
@@ -214,6 +218,12 @@ function ManageLetter(){
 			width : 520,
 			fieldLabel : "متن نامه"
 		},{
+			xtype : "textfield",
+			name : "keywords",
+			colspan : 3,
+			width : 520,
+			fieldLabel : "کلید واژگان"
+		},{
 			xtype : "combo",
 			fieldLabel : "ذینفع",
 			store : new Ext.data.SimpleStore({
@@ -262,7 +272,7 @@ function ManageLetter(){
 		return "";
 	}	
 	
-	this.grid.getView().on('render', function(view) {
+	/*this.grid.getView().on('render', function(view) {
         view.tip = Ext.create('Ext.tip.ToolTip', {
             target: view.el,
             delegate: view.itemSelector,
@@ -273,7 +283,7 @@ function ManageLetter(){
                 }
             }
         });
-    });
+    });*/
 	
 	this.grid.on("itemdblclick", function(view, record){
 			

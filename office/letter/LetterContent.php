@@ -37,7 +37,15 @@ if($LetterObj->RefLetterID != "")
 }
 $content .= "</div><br><br>";
 
-$content .= "<b><br><div align=center>بسمه تعالی</div><br>";
+$content .= "<b><br><div align=center>بسمه تعالی</div>";
+
+//------------- daily tip ---------------
+$dt = PdoDataAccess::runquery("select * from OFC_DailyTips where :ld >= FromDate and :ld <= ToDate",
+	array(":ld" => $LetterObj->LetterDate));
+if(count($dt) > 0)
+	$content .= "<div align=center>" . $dt[0]["description"] . "</div>";
+//---------------------------------------
+$content .= "<br>";
 $dt = PdoDataAccess::runquery("
 	select  p2.sex,FromPersonID,p3.PersonSign signer, p1.PersonSign regSign,
 		if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) RegPersonName ,
@@ -85,6 +93,11 @@ if($LetterObj->LetterType == "OUTCOME")
 	
 	$content .= "<table width=100%><tr><td><div class=signDiv style=" . $sign . "><b>" . 
 			$dt[0]["SignPersonName"] . "</b><br><br>" . $dt[0]["PostName"] . "</div></td></tr></table>";
+}
+if($LetterObj->LetterType == "INCOME")
+{
+	$content .= $LetterObj->OrgPost . " " . $LetterObj->organization . "<br>" ;
+	$content .= "<br> موضوع : " . $LetterObj->LetterTitle . "<br><br></b>";
 }
 foreach($dt as $row)
 {

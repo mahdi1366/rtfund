@@ -66,7 +66,7 @@ Letter.prototype.LoadLetter = function(){
 		},
 		fields : ["LetterID","LetterType","LetterTitle","SubjectID","summary","context",
 			"keywords","AccessType","OuterSendType","SignerPersonID", "organization",
-			"OrgPost","InnerLetterNo","InnerLetterDate","OuterCopies"],
+			"OrgPost","InnerLetterNo","InnerLetterDate","OuterCopies","IsSigned"],
 		autoLoad : true,
 		listeners : {
 			load : function(){
@@ -86,7 +86,12 @@ Letter.prototype.LoadLetter = function(){
 				me.TabPanel.down("[itemId=attach_tab]").enable();	
 				me.TabPanel.down("[itemId=LetterPices]").enable();
 				me.TabPanel.down("[itemId=customer_tab]").enable();	
-				me.TabPanel.down("[itemId=notes_tab]").enable();					
+				me.TabPanel.down("[itemId=notes_tab]").enable();			
+				me.TabPanel.down("[itemId=refs_tab]").enable();			
+				
+				if(record.data.LetterType == "OUTCOME" && record.data.IsSigned == "NO" && 
+				record.data.SignerPersonID == "<?= $_SESSION["USER"]["PersonID"] ?>")
+					me.TabPanel.down("[itemId=btn_sign]").show();	
 			}
 		}
 	});
@@ -482,6 +487,28 @@ Letter.prototype.BuildForms = function(){
 					});
 				}
 			}
+		},{
+			title : "نامه های وابسته",
+			itemId : "refs_tab",
+			disabled : true,
+			loader : {
+				url : this.address_prefix + "RefLetters.php",
+				method: "POST",
+				text: "در حال بار گذاری...",
+				scripts : true
+			},
+			listeners : {
+				activate : function(){
+					if(this.loader.isLoaded)
+						return;
+					this.loader.load({
+						params : {
+							LetterID : LetterObject.LetterID,
+							ExtTabID : this.getEl().id
+						}
+					});
+				}
+			}
 		}],
 		buttons :[{
 			text : "اضافه متن نامه به الگوها",
@@ -490,6 +517,14 @@ Letter.prototype.BuildForms = function(){
 			disabled : true,
 			handler : function(){ LetterObject.AddToTemplates() }
 		},'->',{
+			text : "امضاء نامه",
+			iconCls : "sign",
+			itemId : "btn_sign",
+			hidden : true,
+			handler : function(){
+				LetterObject.SignLetter();
+			}
+		},{
 			text : "ذخیره",
 			iconCls : "save",
 			handler : function(){
@@ -587,12 +622,41 @@ Letter.prototype.SaveLetter = function(SendFile){
 			me.TabPanel.down("[itemId=LetterPices]").enable();			
 			me.TabPanel.down("[itemId=customer_tab]").enable();
 			me.TabPanel.down("[itemId=notes_tab]").enable();			
+			me.TabPanel.down("[itemId=refs_tab]").enable();
 		},
 		failure : function(form,action){
 			mask.hide();
 			Ext.MessageBox.alert("Error", action.result.data);
 		}
 	});
+}
+
+Letter.prototype.SignLetter = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به امضا می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		me = LetterObject;
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخيره سازي...'});
+		mask.show();  
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'letter.data.php?task=SignLetter' , 
+			method: "POST",
+			params : {
+				LetterID : me.LetterID
+			},
+
+			success : function(response){
+				mask.hide();
+				framework.CloseTab(LetterObject.TabID);
+			},
+			failure : function(){
+				mask.hide();
+			}
+		});
+	})
+	
 }
 
 Letter.prototype.ShowPage = function(DocumentID, ObjectID){

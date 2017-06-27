@@ -43,6 +43,10 @@ $col = $dg->addColumn("<img src=/office/icons/attach.gif>", "hasAttach", "");
 $col->renderer = "function(v,p,r){if(v == 'YES') return '<img src=/office/icons/attach.gif>';}";
 $col->width = 30;
 
+$col = $dg->addColumn("فوری", "IsUrgent", "");
+$col->renderer = "function(v,p,r){if(v == 'YES') return '<img width=16px src=/office/icons/light.gif>';}";
+$col->width = 30;
+
 $col = $dg->addColumn("شماره", "LetterID", "");
 $col->width = 60;
 $col->align = "center";
@@ -61,7 +65,10 @@ $col->renderer = "function(v,p,r){return MyLetter.OperationRender(v,p,r);}";
 $col->width = 80;
 
 if($mode == "receive")
+{
 	$dg->addObject("this.deletedBtnObj");
+	$dg->addButton("", "خوانده نشده", "view", "function(){MyLetterObject.UnSeen();}");
+}
 
 $dg->EnableGrouping = true;
 $dg->DefaultGroupField = "_SendDate";
@@ -333,8 +340,8 @@ MyLetter.prototype.ShowHistory = function(){
 			title: 'سابقه گردش نامه',
 			modal : true,
 			autoScroll : true,
-			width: 710,
-			height : 500,
+			width: 615,
+			height : 530,
 			closeAction : "hide",
 			loader : {
 				url : this.address_prefix + "history.php",
@@ -366,6 +373,37 @@ MyLetter.prototype.AfterSend = function(){
 	this.grid.getStore().load();
 }
 
+MyLetter.prototype.UnSeen = function(){
+	
+	record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+	{
+		Ext.MessageBox.alert("","ابتدا ردیف مورد نظر را انتخاب کنید");
+		return;
+	}
+	
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg:'در حال ذخیره سازی ...'});
+	mask.show();
+	
+	Ext.Ajax.request({
+		url : this.address_prefix + "letter.data.php?task=UnSeen",
+		method : "post",
+		params : {
+			SendID : record.data.SendID
+		},
+		
+		success : function(response){
+			mask.hide();
+			result = Ext.decode(response.responseText);
+			if(result.success)
+				MyLetterObject.grid.getStore().load();
+			else
+			{	
+				Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+			}
+		}
+	})
+}
 </script>
 	<br>
 	<div id="DivPanel" style="margin-right:8px;"></div>
