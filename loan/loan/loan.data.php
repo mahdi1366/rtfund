@@ -92,7 +92,41 @@ function SaveLoan() {
 	$obj->IsPlan = isset($_POST["IsPlan"]) ? "YES" : "NO";
 	
 	if (empty($_POST["LoanID"]))
-		$result = $obj->AddLoan();
+	{
+		$pdo = PdoDataAccess::getPdoObject();
+		$pdo->beginTransaction();
+		
+		$result = $obj->AddLoan($pdo);
+		
+		$CostCodesArr = array(
+			array(8, $obj->BlockID),				/*110-?*/
+			array(28, $obj->BlockID, 120),			/*721-?-51*/
+			array(28, $obj->BlockID, 121, 213),		/*721-?-52-01*/
+			array(28, $obj->BlockID, 121, 214),		/*721-?-52-02*/
+			array(28, $obj->BlockID, 121, 215),		/*721-?-52-03*/
+			array(11, $obj->BlockID, 211),			/*200-?-01*/
+			array(11, $obj->BlockID, 120),			/*200-?-51*/
+			array(40, $obj->BlockID),				/*750-?*/
+			array(41, $obj->BlockID)				/*760-?*/
+		);
+		
+		foreach($CostCodesArr as $row)
+		{
+			$Cobj = new ACC_CostCodes();
+			for($i=0; $i<count($row); $i++)
+				$Cobj->{"level" . ($i+1)} = $row[$i];
+			
+			$Cobj->InsertCost($pdo);
+		}
+		
+		if(ExceptionHandler::GetExceptionCount() > 0)
+		{
+			$pdo->rollBack();
+			$result = false;
+		}
+		else
+			$pdo->commit();
+	}
 	else
 		$result = $obj->EditLoan();
 

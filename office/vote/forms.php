@@ -59,6 +59,12 @@ $col->editor = ColumnEditor::CheckField("","YES");
 $col->align = "center";
 $col->width = 35;
 
+$col = $dg->addColumn("افراد","","");
+$col->renderer = "VOT_Form.PersonsRender";
+$col->sortable = false;
+$col->align = "center";
+$col->width = 40;
+
 $col = $dg->addColumn("آیتم ها","","");
 $col->renderer = "VOT_Form.ItemsRender";
 $col->sortable = false;

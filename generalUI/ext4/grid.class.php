@@ -2,7 +2,7 @@
 //---------------------------
 // programmer:	Jafarkhani
 // create Date:	88.03.24
-//---------------------------
+//--------------------------- 
 
 class sadaf_datagrid
 {
@@ -127,7 +127,7 @@ class sadaf_datagrid
 	public $collapsible;
 	public $collapsed;
 	
-	public $pageSize = 25;
+	public $pageSize = 30;
 	public $disableFooter = false;
 	
 	public $enableRowEdit = false;

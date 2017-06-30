@@ -38,7 +38,8 @@ function SaveLoanRequest(){
 	//------------------------------------------------------
 	if(isset($_SESSION["USER"]["portal"]))
 	{
-		if($_SESSION["USER"]["IsAgent"] == "YES" || $_SESSION["USER"]["IsSupporter"] == "YES")
+		if($_SESSION["USER"]["IsAgent"] == "YES" || $_SESSION["USER"]["IsSupporter"] == "YES"
+				|| $_SESSION["USER"]["IsShareholder"] == "YES")
 		{
 			$obj->ReqPersonID = $_SESSION["USER"]["PersonID"];
 			
@@ -107,6 +108,8 @@ function SelectMyRequests(){
 		$where .= " AND r.ReqPersonID=" . $_SESSION["USER"]["PersonID"];
 	if($_SESSION["USER"]["IsCustomer"] == "YES" && $_REQUEST["mode"] == "customer")
 		$where .= " AND r.LoanPersonID=" . $_SESSION["USER"]["PersonID"];
+	if($_SESSION["USER"]["IsShareholder"] == "YES" && $_REQUEST["mode"] == "shareholder")
+		$where .= " AND r.ReqPersonID=" . $_SESSION["USER"]["PersonID"];
 	$param = array();
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
@@ -1019,7 +1022,7 @@ function DeletePay(){
 }
 
 function RegisterBackPayDoc(){
-	
+
 	$obj = new LON_BackPays($_POST["BackPayID"]);
 	$ReqObj = new LON_requests($obj->RequestID);
 	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
@@ -1346,6 +1349,18 @@ function RegPayPartDoc($ReturnMode = false, $pdo = null){
 	
 	$PayID = $_POST["PayID"];
 	$PayObj = new LON_payments($PayID);
+	
+	//------------- check for all checklist checked ---------------
+	$dt = PdoDataAccess::runquery("
+		SELECT * FROM BSC_CheckLists c
+		left join BSC_CheckListValues v on(c.ItemID=v.ItemID AND SourceID=:l)
+		where SourceType=".SOURCETYPE_LOAN." and v.ItemID is null", array(":l" => $PayObj->RequestID));
+	if(count($dt) > 0)
+	{
+		echo Response::createObjectiveResponse(false, "تا زمانی که کلیه آیتم های چک لیست انجام نشوند قادر به صدور سند نمی باشید");
+		die();
+	}
+	//-------------------------------------------------------------
 	
 	//---------- check for previous payments docs registered --------------
 	$dt = LON_payments::Get(" AND RequestID=? AND PayDate<? AND d.DocID is null",

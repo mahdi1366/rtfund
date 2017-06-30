@@ -192,16 +192,23 @@ function SelectMyFilledForms(){
 
 function SelectNewVoteForms(){
 	
-	$dt = PdoDataAccess::runquery("select f.* from VOT_forms f
+	$dt = PdoDataAccess::runquery("
+		select f.* from VOT_forms f
 		left join VOT_FilledForms ff on(ff.FormID=f.FormID AND ff.PersonID=:pid)
-		join BSC_persons p on(p.PersonID=:pid AND ( 
-			if(f.IsStaff='YES',f.IsStaff=p.IsStaff,1=0) OR
-			if(f.IsCustomer='YES',f.IsCustomer=p.IsCustomer,1=0) OR
-			if(f.IsShareholder='YES',f.IsShareholder=p.IsShareholder,1=0) OR
-			if(f.IsAgent='YES',f.IsAgent=p.IsAgent,1=0) OR
-			if(f.IsSupporter='YES',f.IsSupporter=p.IsSupporter,1=0) OR
-			if(f.IsExpert='YES',f.IsExpert=p.IsExpert,1=0) ) )
-		where ff.FormID is null", array(":pid" => $_SESSION["USER"]["PersonID"]));
+		left join VOT_FormPersons fp on(fp.FormID=f.FormID)
+		join BSC_persons p on(
+			case when fp.FormID is not null then fp.PersonID=:pid AND p.PersonID=fp.PersonID
+			else
+				p.PersonID=:pid AND ( 
+					if(f.IsStaff='YES',f.IsStaff=p.IsStaff,1=0) OR
+					if(f.IsCustomer='YES',f.IsCustomer=p.IsCustomer,1=0) OR
+					if(f.IsShareholder='YES',f.IsShareholder=p.IsShareholder,1=0) OR
+					if(f.IsAgent='YES',f.IsAgent=p.IsAgent,1=0) OR
+					if(f.IsSupporter='YES',f.IsSupporter=p.IsSupporter,1=0) OR
+					if(f.IsExpert='YES',f.IsExpert=p.IsExpert,1=0) ) 
+			end)
+		where ff.FormID is null
+		group by f.FormID", array(":pid" => $_SESSION["USER"]["PersonID"]));
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
@@ -282,13 +289,14 @@ function SelectChart1Data(){
 	$FormID = $_GET["FormID"];
 	$GroupID = $_GET["GroupID"];
 	
-	$dt = PdoDataAccess::runquery("select ItemID,fi.ordering,ItemTitle,ItemValues,ItemValue,count(*) cnt
+	$dt = PdoDataAccess::runquery("
+		select  fi.*,f.ItemValue,GroupWeight
 		from VOT_FilledItems f join VOT_FormItems fi using(ItemID)
+			join VOT_FormGroups using(GroupID)
 			join BSC_persons using(PersonID)
 		
 		where f.FormID=? AND fi.GroupID=? AND ItemValues<>'' AND locate('#',ItemValues) >0
-		
-		group by ItemID,ItemValue", array($FormID, $GroupID));
+		order by ordering", array($FormID, $GroupID));
 	
 	$ReturnDate = array();
 	$currentItemID = 0;
@@ -296,6 +304,9 @@ function SelectChart1Data(){
 	$factor = 0;
 	$total = 0;
 	$totalCount = 0;
+	$ItemWeight = 1;
+	$GroupTotal = 0;
+	$GroupTotalWeight = 0;
 	for($i=0; $i< count($dt); $i++)
 	{
 		$row = $dt[$i];
@@ -304,26 +315,62 @@ function SelectChart1Data(){
 		{
 			$currentItemID = $row["ItemID"];
 			$valuesArr = preg_split('/#/', $row["ItemValues"]);
+			$weightsArr = preg_split('/#/', $row["ValueWeights"]);
 			$factor = 100/(count($valuesArr)-1);
 			$total = 0;
 			$totalCount = 0;
+			$ItemWeight = $row["weight"]*1;
 		}
 		
-		$total += 100 - array_search($row["ItemValue"], $valuesArr)*$factor;
-		$totalCount++;
+		$index = array_search($row["ItemValue"], $valuesArr);
+		$weight = isset($weightsArr[$index]) ? $weightsArr[$index] : 1;
+		$total += $weight*(100 - $index*$factor);
+		$totalCount += $weight;
 		
 		if($i+1 == count($dt) || $dt[$i+1]["ItemID"] != $currentItemID)
 		{
 			$ReturnDate[] = array(
+				"GroupID" => $row["GroupID"], 
+				"GroupWeight" => $row["GroupWeight"], 
 				"ItemTitle" => $row["ItemTitle"], 
 				"ordering" =>  $row["ordering"], 
 				"mid" => round($total/$totalCount));
+			
+			$GroupTotal += $ItemWeight*round($total/$totalCount);
+			$GroupTotalWeight += $ItemWeight;
 		}		
 	}
 	
-	echo dataReader::getJsonData($ReturnDate, count($ReturnDate), $_GET["callback"]);
+	echo dataReader::getJsonData($ReturnDate, count($ReturnDate), $_GET["callback"], 
+			round($GroupTotal/$GroupTotalWeight));
 	die();
 	
+}
+
+//-------------------------------------
+
+function GetFormPersons(){
+	
+	$dt = VOT_FormPersons::Get(" AND FormID=?", array($_REQUEST["FormID"]));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount());
+	die();
+}
+
+function SaveFormPerson(){
+	
+	$obj = new VOT_FormPersons();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	$result = $obj->Add();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function RemoveFormPersons(){
+	
+	$obj = new VOT_FormPersons($_REQUEST["RowID"]);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, "");
+	die();
 }
 
 ?>

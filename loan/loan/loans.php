@@ -20,6 +20,7 @@ $dg->addColumn("", "CustomerWage", "", true);
 $dg->addColumn("", "IntervalType", "", true);
 $dg->addColumn("", "IsCustomer", "", true);
 $dg->addColumn("", "IsPlan", "", true);
+$dg->addColumn("", "IsActive", "", true);
 
 $col = $dg->addColumn("عنوان وام", "LoanDesc", "");
 
@@ -71,5 +72,10 @@ $grid = $dg->makeGrid_returnObjects();
     var LoanObject = new Loan();	
 
 	LoanObject.grid = <?= $grid ?>;
-  
+	LoanObject.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.IsActive == "NO")
+			return "pinkRow";
+		return "";
+	}	
 </script>

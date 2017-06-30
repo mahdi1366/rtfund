@@ -42,6 +42,8 @@ VoteResult.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 
 	FormID : "",
+	FormValue : 0,
+	TotalFormWeights : 0,
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -72,8 +74,19 @@ function VoteResult()
 			valueField : "FormID",
 			listeners : {
 				change : function(){
+					VoteResultObject.FormID = this.getValue();
 					VoteResultObject.LoadResults(this.getValue());
 				}
+			}
+		},{
+			xtype : "button",
+			text : "چاپ نتایج",
+			iconCls : "print",
+			handler : function(){
+				if(VoteResultObject.FormID == "")
+					return;
+				window.open(VoteResultObject.address_prefix + "PrintResults.php?FormID=" + 
+						VoteResultObject.FormID);
 			}
 		}]
 	});
@@ -91,7 +104,7 @@ function VoteResult()
 	});
 	
 	this.GroupStore = new Ext.data.Store({
-		fields: ['GroupID','GroupDesc'],
+		fields: ['GroupID','GroupDesc',"GroupWeight"],
 		proxy: {
 			type: 'jsonp',
 			url: this.address_prefix + "vote.data.php?task=SelectGroups",
@@ -177,12 +190,8 @@ VoteResultObject = new VoteResult();
 
 VoteResult.prototype.LoadResults = function(FormID){
 	
-	//this.chartPanel1.show();
 	this.MainPanel.show();
-	
 	this.grid.getStore().proxy.extraParams.FormID = FormID;
-	//this.chartPanel1.down('chart').getStore().proxy.extraParams.FormID = FormID;
-	//this.chartPanel1.down('chart').getStore().load();
 	
 	if(this.grid.rendered)
 		this.grid.getStore().load();
@@ -194,13 +203,17 @@ VoteResult.prototype.LoadResults = function(FormID){
 		callback : function(){
 			
 			me = VoteResultObject;
+			me.FormValue = 0;
+			me.TotalFormWeights = 0;
+			me.ChartPanel.removeAll();
+			
 			for(i=0; i<this.totalCount; i++)
 			{
 				record = this.getAt(i);
 				
 				newchart = Ext.clone(me.chart);
 				newchart.store = new Ext.data.Store({
-					fields: ["ItemTitle","ordering","mid",{
+					fields: ["ItemTitle","ordering","GroupID","GroupWeight","mid",{
 						name : "data",
 						convert : function(v,r){return parseInt(r.data.mid);}
 					}],
@@ -216,15 +229,56 @@ VoteResult.prototype.LoadResults = function(FormID){
 				newchart.itemId = "chart" + i;
 				me.ChartPanel.add({
 					xtype : "fieldset",
-					title : record.data.GroupDesc,
-					items : newchart
+					title : record.data.GroupDesc + " [ وزن گروه : " + record.data.GroupWeight + " ]",
+					items : [newchart,{
+						xtype : "displayfield",
+						fieldLabel : "امتیاز کل گروه",
+						fieldCls : "blueText",
+						cls :  "blueText",
+						itemId : "cmp_total_" + record.data.GroupID
+					}]
 				});
 				
 				chart = me.ChartPanel.down("[itemId=chart" + i + "]");
 				chart.getStore().proxy.extraParams.FormID = FormID;
 				chart.getStore().proxy.extraParams.GroupID = record.data.GroupID;
-				chart.getStore().load();
+				window["R" + i] = newchart.store.load({
+					callback : function(){
+						record = this.getAt(0);
+						GroupValue = this.getProxy().getReader().jsonData.message;
+						VoteResultObject.ChartPanel.down("[itemId=cmp_total_" + record.data.GroupID + "]").
+							setValue(this.getProxy().getReader().jsonData.message + "%");
+						VoteResultObject.FormValue += GroupValue*record.data.GroupWeight;
+						VoteResultObject.TotalFormWeights += record.data.GroupWeight*1;
+					}
+				});
 			}
+			me.ChartPanel.add({
+				xtype : "fieldset",
+				items : [{
+					xtype : "displayfield",
+					fieldLabel : "امتیاز کل فرم",
+					fieldCls : "blueText",
+					cls :  "blueText",
+					itemId : "cmp_total"
+				}]
+			});
+		
+		var t = setInterval(function(){
+			AllLoaded = true;
+			for(var i=0; i < this.totalCount; i++)
+				if(window["R" + i].isLoading())
+				{
+					AllLoaded = false;
+					break;
+				}
+			if(AllLoaded)
+			{
+				clearInterval(t);
+				VoteResultObject.ChartPanel.down("[itemId=cmp_total]").
+					setValue(Math.round(VoteResultObject.FormValue/VoteResultObject.TotalFormWeights) + "%");
+			}
+		}, 1000);
 		}
 	});
 }

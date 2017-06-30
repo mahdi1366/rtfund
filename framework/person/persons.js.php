@@ -210,7 +210,7 @@ function Person()
                 inputValue: 'YES'
 			},{
 				xtype : "checkbox",
-                boxLabel: 'کارشناس',
+                boxLabel: 'کارشناس خارج از صندوق',
                 name: 'IsExpert',
                 inputValue: 'YES'
 			}]

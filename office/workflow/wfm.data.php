@@ -41,11 +41,14 @@ function SaveFlow(){
 		$result = $obj->EditFlow();
 	else
 	{
-		$dt = PdoDataAccess::runquery("select * from WFM_flows where ObjectType=?", array($obj->ObjectType));
-		if(count($dt) > 0)
+		if($obj->ObjectType != SOURCETYPE_FORM)
 		{
-			echo Response::createObjectiveResponse(false, "برای این آیتم قبلا گردش تعریف شده است");
-			die();
+			$dt = PdoDataAccess::runquery("select * from WFM_flows where ObjectType=?", array($obj->ObjectType));
+			if(count($dt) > 0)
+			{
+				echo Response::createObjectiveResponse(false, "برای این آیتم قبلا گردش تعریف شده است");
+				die();
+			}
 		}
 		$result = $obj->AddFlow ();
 	}

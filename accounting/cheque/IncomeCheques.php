@@ -254,7 +254,9 @@ IncomeCheque.prototype.MakeLoanPanel = function(){
 				select : function(combo, records){
 					
 					me = IncomeChequeObject;
-					me.ChequeInfoWin.down('[name=PayAmount]').setValue(records[0].data.InstallmentAmount);
+					//me.ChequeInfoWin.down('[name=PayAmount]').setValue(records[0].data.InstallmentAmount);
+					me.ChequeInfoWin.down('[name=PayAmount]').setValue(
+							me.ChequeInfoWin.down('[name=ChequeAmount]').getValue());
 				}
 			}
 		},{

@@ -993,7 +993,8 @@ function ReturnPayPartDoc($DocID, $pdo, $DeleteDoc = true){
 	
 	CheckCloseCycle();
 	
-	PdoDataAccess::runquery("delete from ACC_DocItems where DocID=? AND locked='YES'", array($DocID));
+	PdoDataAccess::runquery("delete from ACC_DocItems where DocID=? AND SourceType=". DOCTYPE_LOAN_PAYMENT
+		, array($DocID));
 	PdoDataAccess::runquery("delete from ACC_DocCheques where DocID=? ", array($DocID));
 
 	if($DeleteDoc)

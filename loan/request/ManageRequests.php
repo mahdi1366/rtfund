@@ -61,7 +61,6 @@ if($accessObj->EditFlag)
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 500;
-$dg->pageSize = 15;
 $dg->width = 800;
 $dg->title = "درخواست های وام";
 $dg->DefaultSortField = "ReqDate";

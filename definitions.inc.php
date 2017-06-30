@@ -83,6 +83,10 @@ define("LON_REQ_STATUS_ENDED", "101");
 
 //............  TypeID=11 ....................
 define("SOURCETYPE_LOAN", "1");
+define("SOURCETYPE_CONTRACT", "2");
+define("SOURCETYPE_PLAN", "3");
+define("SOURCETYPE_WARRENTY", "4");
+define("SOURCETYPE_FORM", "5");
 
 define("BLOCKID_LOAN","8");
 

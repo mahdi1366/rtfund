@@ -24,10 +24,15 @@ if(isset($_SESSION["USER"]["framework"]))
 	$User = "Staff";
 else
 {
-	if($_SESSION["USER"]["IsAgent"] == "YES")
-		$User = "Agent";
-	else if($_SESSION["USER"]["IsCustomer"] == "YES")
-		$User = "Customer";
+	if(isset($_REQUEST["mode"]))
+		$User = $_REQUEST["mode"];
+	else
+	{
+		if($_SESSION["USER"]["IsAgent"] == "YES")
+			$User = "Agent";
+		else if($_SESSION["USER"]["IsCustomer"] == "YES")
+			$User = "Customer";
+	}
 }
 
 $dg = new sadaf_datagrid("dg","/loan/request/request.data.php?task=GetRequestParts", "grid_div");

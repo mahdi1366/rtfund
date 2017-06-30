@@ -416,7 +416,7 @@ RequestInfo.prototype.BuildForms = function(){
 				proxy: {
 					type: 'jsonp',
 					url: this.address_prefix + '../../framework/person/persons.data.php?' +
-						"task=selectPersons&UserTypes=IsAgent,IsSupporter",
+						"task=selectPersons&UserTypes=IsAgent,IsSupporter,IsShareholder",
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields : ['PersonID','fullname']
@@ -674,6 +674,12 @@ RequestInfo.prototype.BuildForms = function(){
 				hidden : true,
 				itemId : "cmp_costs",
 				handler : function(){ RequestInfoObject.ShowCosts(); }
+			},{
+				text : 'چک لیست',
+				iconCls : "check",
+				hidden : true,
+				itemId : "cmp_checklist",
+				handler : function(){ RequestInfoObject.ShowCheckList(); }
 			}]
 		},'->',{
 			text : 'ویرایش شرایط پرداخت',
@@ -823,6 +829,22 @@ RequestInfo.prototype.CustomizeForm = function(record){
 		
 		this.companyPanel.doLayout();
 	}
+	if(this.User == "Shareholder")
+	{
+		this.PartsPanel.hide();
+		this.companyPanel.down("[itemId=cmp_save]").hide();
+		this.companyPanel.down("[itemId=cmp_subAgent]").hide();
+		this.companyPanel.down("[itemId=cmp_guarantees]").hide();
+		this.companyPanel.down("[itemId=setting]").hide();
+		this.companyPanel.down("[name=PlanTitle]").hide();
+		this.companyPanel.down("[name=RuleNo]").hide();
+		
+		this.companyPanel.down("[itemId=cmp_saveAndSend]").show();
+		this.grid.hide();
+		this.companyPanel.down("[name=BranchID]").setValue(1);
+		this.companyPanel.down("[name=BranchID]").hide();	
+		this.companyPanel.doLayout();
+	}
 	
 	if(record != null)
 	{
@@ -880,6 +902,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			}		
 			this.companyPanel.down("[itemId=cmp_events]").show();
 			this.companyPanel.down("[itemId=cmp_costs]").show();
+			this.companyPanel.down("[itemId=cmp_checklist]").show();			
 			this.companyPanel.down("[itemId=cmp_processes]").show();	
 		}	
 		if(this.User == "Customer")
@@ -893,6 +916,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.companyPanel.down("[name=FundGuarantee]").hide();
 			this.companyPanel.down("[itemId=cmp_events]").hide();
 			this.companyPanel.down("[itemId=cmp_costs]").hide();
+			this.companyPanel.down("[itemId=cmp_checklist]").hide();			
 						
 			this.companyPanel.getEl().readonly();
 			
@@ -2262,5 +2286,42 @@ RequestInfo.prototype.ShowCosts = function(){
 	});
 }
 
+RequestInfo.prototype.ShowCheckList = function(){
+
+	if(!this.CostsWin)
+	{
+		this.CostsWin = new Ext.window.Window({
+			title: 'چک لیست',
+			modal : true,
+			autoScroll : true,
+			width: 600,
+			height : 400,
+			bodyStyle : "background-color:white",
+			closeAction : "hide",
+			loader : {
+				url : "baseInfo/checkValues.php",
+				scripts : true
+			},
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){
+					this.up('window').hide();
+				}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.CostsWin);
+	}
+	this.CostsWin.show();
+	this.CostsWin.center();	
+	this.CostsWin.loader.load({
+		params : {
+			MenuID : this.MenuID,
+			ExtTabID : this.CostsWin.getEl().id,
+			SourceID : this.RequestID,
+			SourceType : <?= SOURCETYPE_LOAN ?>,
+		}
+	});
+}
 
 </script>
