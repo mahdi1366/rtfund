@@ -98,6 +98,39 @@ class BSC_posts extends OperationClass {
 	
 }
 
+class BSC_jobs extends OperationClass {
+	
+	const TableName = "BSC_jobs";
+	const TableKey = "JobID";
+	
+	public $JobID;
+	public $PostID;
+	public $UnitID;
+	
+	public function Remove($pdo = null) {
+		
+		$dt = parent::runquery("select * from BSC_persons where PostID=?", array($this->PostID), $pdo);
+		if(count($dt) > 0)
+		{
+			ExceptionHandler::PushException("این پست به فردی نسبت داده شده است و قابل حذف نمی باشد");
+			return false;
+		}
+		
+		$this->IsActive = "NO";
+		return $this->Edit($pdo);
+	}
+
+	public static function GetMissionSigner(){
+		
+		$dt = PdoDataAccess::runquery("select PostID,PostName,concat_ws(' ',fname,lname) fullname, PersonID
+			from BSC_posts join BSC_persons using(PostID) where MissionSigner='YES'");
+		if(count($dt) > 0)
+			return $dt[0];
+		return false;
+	}
+	
+}
+
 class BSC_branches extends PdoDataAccess {
 	public $BranchID;
 	public $BranchName;
