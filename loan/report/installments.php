@@ -56,6 +56,10 @@ if(isset($_REQUEST["show"]))
 				" AND r.StatusID in('".LON_REQ_STATUS_CONFIRM."')";
 	}	
 	
+	$rpg = new ReportGenerator();
+	$rpg->excel = !empty($_POST["excel"]);
+	ini_set("memory_limit", "1000M");
+	ini_set("max_execution_time", "600");
 	//.....................................
 	$where = "";
 	$whereParam = array();
@@ -80,11 +84,12 @@ if(isset($_REQUEST["show"]))
 	
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
-	if($_SESSION["USER"]["UserName"] == "admin")
-		echo PdoDataAccess::GetLatestQueryString();
+	//if($_SESSION["USER"]["UserName"] == "admin")
+	//	echo PdoDataAccess::GetLatestQueryString();
 	//-------------------- get the payed of installments -----------------------
 	
 	$computeArr = array();
+	$returnArr = array();
 	for($index=0; $index<count($dataTable); $index++)
 	{
 		$MainRow = &$dataTable[$index];
@@ -111,6 +116,7 @@ if(isset($_REQUEST["show"]))
 			}
 		}
 		
+		$IsAdded = false;
 		$ref = & $computeArr[ $MainRow["RequestID"] ];
 		for(; $ref["computIndex"] < count($ref["compute"]); $ref["computIndex"]++)
 		{
@@ -142,9 +148,16 @@ if(isset($_REQUEST["show"]))
 					$amount -= $min;
 					if($row["InstallmentID"] == $MainRow["InstallmentID"])
 					{
-						$MainRow["PayedDate"] .= DateModules::miladi_to_shamsi($ref["pays"][$ref["PayIndex"]]["ActionDate"]) . "<br>";
-						$MainRow["PayedAmount"] .= number_format($min) . "<br>";
-						$MainRow["SumPayed"] += $min;
+							$MainRow["PayedDate"] = DateModules::miladi_to_shamsi($ref["pays"][$ref["PayIndex"]]["ActionDate"]) ;
+							$MainRow["PayedAmount"] = number_format($min);
+							$MainRow["SumPayed"] += $min;
+							$returnArr[] = $MainRow;
+							$IsAdded = true;
+							
+							/*$MainRow["PayedDate"] .= DateModules::miladi_to_shamsi($ref["pays"][$ref["PayIndex"]]["ActionDate"]) . "<br>";
+							$MainRow["PayedAmount"] .= number_format($min) . "<br>";
+							$MainRow["SumPayed"] += $min;*/
+						
 					}
 					if($ref["pays"][$ref["PayIndex"]]["ActionAmount"]*1 > 0)
 						break;
@@ -156,12 +169,11 @@ if(isset($_REQUEST["show"]))
 				break;
 			}
 		}
+		if(!$IsAdded)
+			$returnArr[] = $MainRow;
 	}
 	//--------------------------------------------------------------------------
-	
-	$rpg = new ReportGenerator();
-	$rpg->excel = !empty($_POST["excel"]);
-	$rpg->mysql_resource = $dataTable;
+	$rpg->mysql_resource = $returnArr;
 	
 	function endedRender($row,$value){
 		return ($value == "YES") ? "خاتمه" : "جاری";
@@ -171,16 +183,39 @@ if(isset($_REQUEST["show"]))
 		return number_format($row["InstallmentAmount"]*1 + $row["forfeit"] - $row["SumPayed"]);
 	}
 	
-	$rpg->addColumn("شماره وام", "RequestID");
-	$rpg->addColumn("نوع وام", "LoanDesc");
-	$rpg->addColumn("معرفی کننده", "ReqFullname");
-	$rpg->addColumn("تاریخ درخواست", "ReqDate", "dateRender");
-	$rpg->addColumn("مبلغ درخواست", "ReqAmount", "moneyRender");
-	$rpg->addColumn("مشتری", "LoanFullname");
-	$rpg->addColumn("شعبه", "BranchName");
-	$rpg->addColumn("تاریخ قسط", "InstallmentDate", "dateRender");
-	$rpg->addColumn("مبلغ قسط", "InstallmentAmount", "moneyRender");
-	$rpg->addColumn("مبلغ تاخیر", "forfeit", "moneyRender");	
+	$col = $rpg->addColumn("شماره وام", "RequestID");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	$col = $rpg->addColumn("نوع وام", "LoanDesc");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	$col = $rpg->addColumn("معرفی کننده", "ReqFullname");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	$col = $rpg->addColumn("تاریخ درخواست", "ReqDate", "dateRender");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "moneyRender");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	$col = $rpg->addColumn("مشتری", "LoanFullname");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	$col = $rpg->addColumn("شعبه", "BranchName");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	
+	$col = $rpg->addColumn("تاریخ قسط", "InstallmentDate", "dateRender");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID","InstallmentDate");
+	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount", "moneyRender");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID","InstallmentDate");
+	$col = $rpg->addColumn("مبلغ تاخیر", "forfeit", "moneyRender");	
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID","InstallmentDate");
+	
+	
 	$rpg->addColumn("تاریخ پرداخت", "PayedDate");
 	$rpg->addColumn("مبلغ پرداخت", "PayedAmount");
 	$rpg->addColumn("مانده قسط", "SumPayed", "remainRender");

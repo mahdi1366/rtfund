@@ -182,7 +182,7 @@ Deposite.prototype.ComputeProfit = function(flow){
 		url: this.address_prefix + 'deposite.data.php?task=DepositeProfit',
 		params:{
 			ComputeType : "DepositeProfit",
-			ToDate : flow ? this.DateWin.down("[name=ToDate]").getRawValue() : '',
+			ToDate : this.DateWin.down("[name=ToDate]").getRawValue(),
 			IsFlow : flow ? "true" : "false"
 		},
 		form : this.get("mainForm"),
