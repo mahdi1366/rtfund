@@ -63,20 +63,23 @@ function GetTreeNodes(){
         $refArray[$row["id"]] = &$parentNode["children"][$lastIndex];
     }
 	
-        if($_REQUEST['AddMode'] == "false" ){
-	$posts = PdoDataAccess::runquery("select concat('p_',PersonID) id,concat_ws(' ',fname,lname,CompanyName,'[',PostName,']') text,
-		'true' leaf,'user' iconCls, p.UnitID
-		from BSC_persons p join BSC_posts using(PostID) order by PostName");
-	foreach($posts as $post)
+    if($_REQUEST['AddMode'] == "false" ){
+		$jobs = PdoDataAccess::runquery("
+			select concat('p_',JobID) id,
+				concat_ws(' ',JobID,'-',PostName,'[ ',
+					if(IsMain='YES' AND p.PersonID is not null,'* ',''),fname,lname,CompanyName,' ]') text,
+				'true' leaf,'user' iconCls, j.*
+			from BSC_jobs j join BSC_posts using(PostID) left join BSC_persons p using(PersonID) order by PostName");
+	foreach($jobs as $job)
 	{
-		$parentNode = &$refArray[ $post["UnitID"] ];
+		$parentNode = &$refArray[ $job["UnitID"] ];
 
         if (!isset($parentNode["children"])) {
             $parentNode["children"] = array();
             $parentNode["leaf"] = "false";
         }
 		$lastIndex = count($parentNode["children"]);
-        $parentNode["children"][$lastIndex] = $post;
+        $parentNode["children"][$lastIndex] = $job;
 	}
         }
 	$str = json_encode($returnArray);
@@ -125,6 +128,33 @@ function DeletePost(){
 	die();
 }
 
+//---------------------------------
+
+function SaveJob(){
+	
+	$obj = new BSC_jobs();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	if($obj->JobID > 0)
+		$res = $obj->Edit();
+	else
+		$res = $obj->Add();
+
+	//print_r(ExceptionHandler::PopAllExceptions()); 
+	echo Response::createObjectiveResponse($res, $res ? $obj->JobID : ExceptionHandler::GetExceptionsToString());
+	die();
+}
+
+function DeleteJob(){
+	
+	$JobID = $_POST["JobID"];
+	$JobID = str_replace("p_", "", $JobID);
+	
+	$obj = new BSC_jobs($JobID);
+	$res = $obj->Remove();
+	echo Response::createObjectiveResponse($res,  ExceptionHandler::GetExceptionsToString());
+	die();
+}
 //---------------------------------
 
 function SelectBranches(){

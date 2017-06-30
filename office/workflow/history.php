@@ -67,11 +67,12 @@ else
 	if($Logs[$i-1]["StepRowID"] == "" || $Logs[$i-1]["IsOuter"] == "NO")
 	{
 		$StepID = ($Logs[$i-1]["StepID"] == "" ? 0 : $Logs[$i-1]["StepID"]) + 1;
-		$query = "select StepDesc,po.PostName,
+		$query = "select StepDesc,PostName,
 					concat_ws(' ',fname, lname,CompanyName) fullname
 				from WFM_FlowSteps fs
-				left join BSC_posts po using(PostID)
-				left join BSC_persons p on(if(fs.PersonID>0,fs.PersonID=p.PersonID,po.PostID=p.PostID))
+				left join BSC_jobs j on(fs.JobID=j.JobID or fs.PostID=j.PostID)
+				left join BSC_posts ps on(j.PostID=ps.PostID)
+				left join BSC_persons p on(j.PersonID=p.PersonID or fs.PersonID=p.PersonID)
 				where fs.IsActive='YES' AND fs.FlowID=? AND fs.StepID=?";
 		$nextOne = PdoDataAccess::runquery($query, array($FlowID, $StepID));
 
@@ -79,13 +80,13 @@ else
 		{
 			$str = "";
 			foreach($nextOne as $row)
-				$str .= $row["fullname"] . 
+				$str .= "<br>" . $row["fullname"] . 
 					($row["PostName"] != "" ? " [ پست : " . $row["PostName"] . " ]" : "") . " و ";
 			$str = substr($str, 0, strlen($str)-3);
 
 			$tbl_content .= "<tr style='background-color:#A9E8E8'>
 					<td colspan=4 align=center>در حال حاضر فرم در مرحله <b>" . 
-					$nextOne[0]["StepDesc"] . "</b>  در کارتابل <b>" . $str . "</b> می باشد.</td>
+					$nextOne[0]["StepDesc"] . "</b>  در کارتابل <b>" . $str . "</b><br> می باشد.</td>
 				</tr>";
 		}
 		else

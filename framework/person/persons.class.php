@@ -313,16 +313,4 @@ class BSC_licenses extends PdoDataAccess{
 	
 }
 
-class BSC_PersonJobs extends OperationClass {
-	
-	const TableName = "BSC_PersonJobs";
-	const TableKey = "RowID";
-	
-	public $RowID;
-	public $PersonID;
-	public $JobID;
-	public $IsMain;
-	
-}
-
 ?>

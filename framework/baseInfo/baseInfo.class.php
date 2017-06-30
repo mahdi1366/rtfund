@@ -106,29 +106,37 @@ class BSC_jobs extends OperationClass {
 	public $JobID;
 	public $PostID;
 	public $UnitID;
+	public $PersonID;
+	public $IsMain;
 	
-	public function Remove($pdo = null) {
+	public function CheckUniqueMainJob(){
 		
-		$dt = parent::runquery("select * from BSC_persons where PostID=?", array($this->PostID), $pdo);
+		if($this->IsMain != "YES")
+			return true;
+		
+		$dt = PdoDataAccess::runquery("select * from BSC_jobs where PersonID=? AND IsMain='YES' AND JobID<>?",
+			array($this->PersonID, $this->JobID));
 		if(count($dt) > 0)
 		{
-			ExceptionHandler::PushException("این پست به فردی نسبت داده شده است و قابل حذف نمی باشد");
+			ExceptionHandler::PushException("هر فرد تنها یک شغل اصلی می تواند داشته باشد");
 			return false;
 		}
-		
-		$this->IsActive = "NO";
-		return $this->Edit($pdo);
-	}
-
-	public static function GetMissionSigner(){
-		
-		$dt = PdoDataAccess::runquery("select PostID,PostName,concat_ws(' ',fname,lname) fullname, PersonID
-			from BSC_posts join BSC_persons using(PostID) where MissionSigner='YES'");
-		if(count($dt) > 0)
-			return $dt[0];
-		return false;
+		return true;
 	}
 	
+	public function Add($pdo = null) {
+		
+		if(!$this->CheckUniqueMainJob())
+			return false;
+		return parent::Add($pdo);
+	}
+	
+	public function Edit($pdo = null) {
+		
+		if(!$this->CheckUniqueMainJob())
+			return false;
+		return parent::Edit($pdo);
+	}
 }
 
 class BSC_branches extends PdoDataAccess {
