@@ -226,6 +226,10 @@ FrameworkStartPage.prototype.ConfirmPerson = function(mode){
 
 FrameworkStartPageObject = new FrameworkStartPage();
 
+framework.centerPanel.items.get(FrameworkStartPageObject.TabID).on("activate", function(){
+	framework.ReloadTab(FrameworkStartPageObject.TabID);
+});
+		
 </script>
 <table style="margin:10px">
 	<tr>

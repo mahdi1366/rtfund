@@ -4,8 +4,8 @@
 // create Date: 94.06
 //---------------------------
 
-class BSC_persons extends PdoDataAccess
-{
+class BSC_persons extends PdoDataAccess{
+	
 	public $PersonID;
 	public $UserName;
 	public $UserPass;
@@ -310,6 +310,18 @@ class BSC_licenses extends PdoDataAccess{
 		$daObj->execute();
 		return true;	
     }
+	
+}
+
+class BSC_PersonJobs extends OperationClass {
+	
+	const TableName = "BSC_PersonJobs";
+	const TableKey = "RowID";
+	
+	public $RowID;
+	public $PersonID;
+	public $JobID;
+	public $IsMain;
 	
 }
 
