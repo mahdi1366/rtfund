@@ -33,6 +33,10 @@ $col->renderer = "LoanEvent.LetterRender";
 $col->editor = ColumnEditor::NumberField(true);
 $col->width = 100;
 
+$col = $dg->addColumn("تاریخ پیگیری", "FollowUpDate", GridColumn::ColumnType_date);
+$col->editor = ColumnEditor::SHDateField(true);
+$col->width = 100;
+
 if($accessObj->AddFlag)
 {
 	$dg->enableRowEdit = true;
@@ -95,6 +99,8 @@ LoanEvent.DeleteRender = function(v,p,r){
 
 LoanEvent.LetterRender = function(v,p,r){
 	
+	if(v == null)
+		return "";
 	return "<a onclick='LoanEventObject.OpenLetter(" + v + ")' href=javascript:void(1) >" + v + "</a>";
 }
 		

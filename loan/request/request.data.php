@@ -1387,10 +1387,10 @@ function RegPayPartDoc($ReturnMode = false, $pdo = null){
 	
 	if($PersonObj->IsSupporter == "YES")
 		$result = RegisterSHRTFUNDPayPartDoc($ReqObj, $partobj, $PayObj, 
-				$_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo);
+				$_POST["BankTafsili"], $_POST["AccountTafsili"], $_POST["ChequeNo"], $pdo);
 	else
 		$result = RegisterPayPartDoc($ReqObj, $partobj, $PayObj, 
-				$_POST["BankTafsili"], $_POST["AccountTafsili"], $pdo);
+				$_POST["BankTafsili"], $_POST["AccountTafsili"], $_POST["ChequeNo"], $pdo);
 	
 	if(!$result)
 	{

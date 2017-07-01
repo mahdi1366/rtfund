@@ -122,7 +122,7 @@ function FrameworkStartPage(){
 		autoHeight : true,
         layout: 'fit',
         loader : {
-			url : "../office/notes.php",
+			url : "../framework/FollowUps.php",
 			params : {
 				ExtTabID : this.TabID
 			},

@@ -941,10 +941,12 @@ class LON_events extends OperationClass {
     public $EventTitle;
     public $EventDate;
 	public $LetterID;
+	public $FollowUpDate;
 	
     function __construct($id = ""){
         
 		$this->DT_EventDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_FollowUpDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
         parent::__construct($id);
     }

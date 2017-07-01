@@ -226,7 +226,7 @@ PartPayment.prototype.BeforeRegDoc = function(mode){
 	{
 		this.BankWin = new Ext.window.Window({
 			width : 300,
-			height : 120,
+			height : 150,
 			modal : true,
 			closeAction : "hide",
 			items : [{
@@ -280,6 +280,11 @@ PartPayment.prototype.BeforeRegDoc = function(mode){
 				valueField : "TafsiliID",
 				itemId : "TafsiliID2",
 				displayField : "TafsiliDesc"
+			},{
+				xtype : "numberfield",
+				name: "ChequeNo",
+				hideTrigger : true,
+				fieldLabel : "شماره چک"
 			}],
 			buttons :[{
 				text : "ذخیره",
@@ -320,7 +325,8 @@ PartPayment.prototype.RegPayPartDoc = function(task){
 			task: task,
 			PayID : record.data.PayID,
 			BankTafsili : this.BankWin.down("[itemId=TafsiliID]").getValue(),
-			AccountTafsili : this.BankWin.down("[itemId=TafsiliID2]").getValue()
+			AccountTafsili : this.BankWin.down("[itemId=TafsiliID2]").getValue(),
+			ChequeNo : this.BankWin.down("[name=ChequeNo]").getValue()
 		},
 		success: function(response){
 

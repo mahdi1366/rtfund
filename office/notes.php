@@ -7,6 +7,8 @@
 require_once 'header.inc.php';
 require_once inc_dataGrid;
 
+
+
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "letter/letter.data.php?task=GetRemindNotes", "grid_div");
 
 $dg->addColumn("", "NoteID", "", true);

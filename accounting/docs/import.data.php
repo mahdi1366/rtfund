@@ -53,7 +53,7 @@ function FindTafsiliID($TafsiliCode, $TafsiliType){
 
 //---------------------------------------------------------------
 
-function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo, $DocID=""){
+function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $ChequeNo, $pdo, $DocID=""){
 		
 	CheckCloseCycle();
 	/*@var $ReqObj LON_requests */
@@ -649,11 +649,18 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	}*/
 	//---------------------------------------------------------
 	//------ ایجاد چک ------
+	
+	$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_ACCOUNTS . 
+			" AND TafsiliID=? ", array($AccountTafsili));
+	$AccountID = (count($dt) > 0) ? $dt[0]["ObjectID"] : "";
+	
 	$chequeObj = new ACC_DocCheques();
 	$chequeObj->DocID = $obj->DocID;
 	$chequeObj->CheckDate = $PayObj->PayDate;
 	$chequeObj->amount = $BankItemAmount;
 	$chequeObj->TafsiliID = $LoanPersonTafsili;
+	$chequeObj->CheckNo = $ChequeNo;
+	$chequeObj->AccountID = $AccountID ;
 	$chequeObj->description = " پرداخت وام شماره " . $ReqObj->RequestID;
 	$chequeObj->Add($pdo);
 	
@@ -673,7 +680,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	return $obj->DocID;
 }
 
-function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo, $DocID=""){
+function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $ChequeNo, $pdo, $DocID=""){
 		
 	CheckCloseCycle();
 	/*@var $ReqObj LON_requests */
@@ -964,10 +971,17 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	}
 	//---------------------------------------------------------
 	//------ ایجاد چک ------
+	
+	$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_ACCOUNTS . 
+			" AND TafsiliID=? ", array($AccountTafsili));
+	$AccountID = (count($dt) > 0) ? $dt[0]["ObjectID"] : "";
+			
 	$chequeObj = new ACC_DocCheques();
 	$chequeObj->DocID = $obj->DocID;
 	$chequeObj->CheckDate = $PayObj->PayDate;
 	$chequeObj->amount = $PartObj->PartAmount;
+	$chequeObj->CheckNo = $ChequeNo;
+	$chequeObj->AccountID = $AccountID;
 	$chequeObj->TafsiliID = $LoanPersonTafsili;
 	$chequeObj->description = " پرداخت وام شماره " . $ReqObj->RequestID;
 	$chequeObj->Add($pdo);
