@@ -1105,7 +1105,9 @@ function EmailLetter(){
 		);
 	}
 
-	$result = SendEmail($PObj->email, $CObj->LetterTitle, "--", $attachmnets);
+	$result = SendEmail($PObj->email, 
+			$CObj->LetterTitle == "" ? $LObj->LetterTitle : $CObj->LetterTitle, 
+			"--", $attachmnets);
 	if(!$result)
 	{
 		echo Response::createObjectiveResponse(false, "خطا در ارسال ایمیل");

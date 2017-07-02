@@ -216,7 +216,7 @@ LetterCustomers.prototype.Email = function(){
 		var record = me.grid.getSelectionModel().getLastSelected();
 		
 		mask = new Ext.LoadMask(me.grid, {msg:'در حال ارسال نامه ...'});
-		//mask.show();
+		mask.show();
 
 		Ext.Ajax.request({
 			url: me.address_prefix + 'letter.data.php',
@@ -228,7 +228,7 @@ LetterCustomers.prototype.Email = function(){
 			},
 			method: 'POST',
 
-			success: function(response,option){ return;
+			success: function(response,option){ 
 				result = Ext.decode(response.responseText);
 				if(result.success)
 					Ext.MessageBox.alert("","نامه با موفقیت ارسال شد");
