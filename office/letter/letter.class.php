@@ -162,6 +162,119 @@ class OFC_letters extends PdoDataAccess{
 
 		return PdoDataAccess::runquery_fetchMode($query, $param);
 	}
+	
+	function LetterContent($IsForPDF = false){
+
+		$letterYear = substr(DateModules::miladi_to_shamsi($this->LetterDate),0,4);
+		$content = "";
+		
+		if($IsForPDF)
+			$content .= "<style>body {font-family: BNazanin;}</style><body dir=rtl>";
+		
+		$content .= "<br><div>";
+		if($IsForPDF)
+		{
+			$content .= "<div style=margin-right:30px;float:right;width:200px>"
+					. "<img  src='/framework/icons/logo.jpg' style='width:150px'></div>";
+		}
+		$content .= "<div style=margin-left:30px;float:left;width:150px >شماره نامه : " . 
+			"<span dir=ltr>" . $letterYear . "-" . $this->LetterID . "</span>". 
+			"<br>تاریخ نامه : " . DateModules::miladi_to_shamsi($this->LetterDate);
+
+		if($this->LetterType == "INCOME")
+		{
+			$content .= "<br>شماره نامه وارده : " . $this->InnerLetterNo;
+			$content .= "<br>تاریخ نامه وارده : " . DateModules::miladi_to_shamsi($this->InnerLetterDate);
+		}
+
+		if($this->RefLetterID != "")
+		{
+			$refObj = new OFC_letters($this->RefLetterID);
+			$RefletterYear = substr(DateModules::miladi_to_shamsi($refObj->LetterDate),0,4);
+			$content .= "<br>عطف به نامه : <a href=javascript:void(0) onclick=LetterInfo.OpenRefLetter(" . 
+				$this->RefLetterID . ")>".
+				"<span dir=ltr>" . $RefletterYear . "-" . $this->RefLetterID. "</span></a>";
+		}
+		$content .= "</div></div><br><br>";
+
+		$content .= "<b><br><div align=center>بسمه تعالی</div>";
+
+		//------------- daily tip ---------------
+		$dt = PdoDataAccess::runquery("select * from OFC_DailyTips where :ld >= FromDate and :ld <= ToDate",
+			array(":ld" => $this->LetterDate));
+		if(count($dt) > 0)
+			$content .= "<div align=center>" . $dt[0]["description"] . "</div>";
+		//---------------------------------------
+		$content .= "<br>";
+		$dt = PdoDataAccess::runquery("
+			select  p2.sex,FromPersonID,p3.PersonSign signer, p1.PersonSign regSign,
+				if(p1.IsReal='YES',concat(p1.fname, ' ', p1.lname),p1.CompanyName) RegPersonName ,
+				if(p2.IsReal='YES',concat(p2.fname, ' ', p2.lname),p2.CompanyName) ToPersonName ,
+				concat(p3.fname, ' ', p3.lname) SignPersonName ,
+				po.PostName,
+				s.IsCopy
+			from OFC_send s
+				join OFC_letters l using(LetterID)
+				join BSC_persons p1 on(l.PersonID=p1.PersonID)
+				join BSC_persons p2 on(s.ToPersonID=p2.PersonID)
+				left join BSC_persons p3 on(l.SignerPersonID=p3.PersonID)
+				left join BSC_posts po on(l.SignPostID=po.PostID)
+			where LetterID=? 
+			order by SendID
+			", array($this->LetterID));
+
+		if($this->LetterType == "INNER")
+		{
+			foreach($dt as $row)
+			{
+				if($row["FromPersonID"] != $this->PersonID || $row["IsCopy"] == "YES")
+					continue;	
+				$content .= $row["sex"] == "MALE" ? "جناب آقای " : "سرکار خانم ";
+				$content .= $row['ToPersonName'] . "<br>";
+			}
+
+			$content .= "<br> موضوع : " . $this->LetterTitle . "<br><br></b>";
+			$content .= str_replace("\r\n", "", $this->context);
+
+			$sign = $dt[0]["regSign"] != "" ? "background-image:url(\"" .
+					data_uri($dt[0]["regSign"],'image/jpeg') . "\")" : "";
+
+			$content .= "<table width=100%><tr><td><div class=signDiv style=" . $sign . "><b>" . 
+					$dt[0]["RegPersonName"] . "</b><br><br>" . $dt[0]["PostName"] . "</div></td></tr></table>";
+		}
+		if($this->LetterType == "OUTCOME")
+		{
+			$content .= $this->OrgPost . " " . $this->organization . "<br>" ;
+			$content .= "<br> موضوع : " . $this->LetterTitle . "<br><br></b>";
+			$content .= str_replace("\r\n", "", $this->context);
+
+			$sign = $this->IsSigned == "YES" && $dt[0]["signer"] != "" ? 
+					"background-image:url(\"" . data_uri($dt[0]["signer"],'image/jpeg') . "\")" : "";
+
+			$content .= "<table width=100%><tr><td><div class=signDiv style=" . $sign . "><b>" . 
+					$dt[0]["SignPersonName"] . "</b><br><br>" . $dt[0]["PostName"] . "</div></td></tr></table>";
+		}
+		if($this->LetterType == "INCOME")
+		{
+			$content .= $this->OrgPost . " " . $this->organization . "<br>" ;
+			$content .= "<br> موضوع : " . $this->LetterTitle . "<br><br></b>";
+		}
+		foreach($dt as $row)
+		{
+			if($row["FromPersonID"] != $this->PersonID || $row["IsCopy"] == "NO")
+				continue;	
+			$content .= "<b> رونوشت : " . ($row["sex"] == "MALE" ? "جناب آقای " : "سرکار خانم ") . 
+					$row['ToPersonName'] . "<br></b>";
+		}
+
+		if($this->OuterCopies != "")
+		{
+			$this->OuterCopies = str_replace("\r\n", " , ", $this->OuterCopies);
+			$content .= "<br><b> رونوشت خارج از سازمان : " . $this->OuterCopies . "</b><br>";
+		}
+
+		return $content;
+	}
 }
 
 class OFC_send extends PdoDataAccess{

@@ -1,6 +1,6 @@
 <?php
 
-function SendEmail($ToEmail, $subject, $body){
+function SendEmail($ToEmail, $subject, $body, $attachmets = array()){
 	
 	$from = smtp_config::$FromAddress;
 	$SMTP_server = smtp_config::$server;
@@ -27,6 +27,9 @@ function SendEmail($ToEmail, $subject, $body){
 	$mail->Body    = $body;
 	$mail->AltBody = "This is the body in plain text for non-HTML mail clients";
 	$mail->CharSet = 'utf-8'; 
+	
+	foreach($attachmets as $row)
+		$mail->AddAttachment ($row["path"], $row["name"]);
 
 	return $mail->Send();
 }

@@ -33,6 +33,11 @@ $col->renderer = "function(v,p,r){return v == 'YES' ? '<span style=color:green;f
 $col->width = 100;
 $col->align = "center";
 
+$col = $dg->addColumn("ایمیل", "");
+$col->sortable = false;
+$col->renderer = "function(v,p,r){return LetterCustomers.EmailRender(v,p,r);}";
+$col->width = 35;
+
 if($editable)
 {
 	$dg->enableRowEdit = true;
@@ -109,6 +114,14 @@ LetterCustomers.DeleteRender = function(v,p,r){
 	
 	return "<div align='center' title='حذف' class='remove' "+
 		"onclick='LetterCustomersObject.Delete();' " +
+		"style='float:right;background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:18px;height:16'></div>";
+}
+
+LetterCustomers.EmailRender = function(v,p,r){
+	
+	return "<div align='center' title='ارسال نامه به ایمیل ذینفع' class='email' "+
+		"onclick='LetterCustomersObject.Email();' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:18px;height:16'></div>";
 }
@@ -193,6 +206,43 @@ LetterCustomers.prototype.Delete = function(){
 	});
 }
 
+LetterCustomers.prototype.Email = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به ایمیل نامه به ذینفع می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = LetterCustomersObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+		
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال ارسال نامه ...'});
+		//mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'letter.data.php',
+			params:{
+				task: "EmailLetter",
+				RowID  : record.data.RowID,
+				LetterID : record.data.LetterID,
+				PersonID : record.data.PersonID
+			},
+			method: 'POST',
+
+			success: function(response,option){ return;
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					Ext.MessageBox.alert("","نامه با موفقیت ارسال شد");
+				else if(result.data == "")
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+				else
+					Ext.MessageBox.alert("",result.data);
+				mask.hide();
+				
+			},
+			failure: function(){}
+		});
+	});
+}
 </script>
 <center>
 	<br>

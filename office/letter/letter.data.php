@@ -13,7 +13,7 @@ require_once '../../framework/person/persons.class.php';
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 if(!empty($task))
-	$task();
+	$task();  
 
 function SelectLetter() {
 
@@ -1057,5 +1057,67 @@ function DeleteDailyTip(){
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
+
+//.............................................
+
+function EmailLetter(){
+	
+	$PersonID = $_POST["PersonID"];
+	$PObj = new BSC_persons($PersonID);
+	if($PObj->email == "")
+	{
+		echo Response::createObjectiveResponse(false, "ذینفع انتخابی فاقد پست الکترونیک می باشد");
+		die();
+	}
+	
+	$LetterID = $_POST["LetterID"];
+	$LObj = new OFC_letters($LetterID);
+	$CObj = new OFC_LetterCustomers($_POST["RowID"]);
+	$html = $LObj->LetterContent(true);
+	
+	//------------ create PDF of letter -------------------
+	require_once inc_Mpdf;
+	$html = iconv("utf-8","UTF-8//IGNORE",$html);
+	$mpdf = new mPDF('fa','A4','','BNazanin',5,5,5,5,16,13);
+	$mpdf->SetDirectionality('rtl');
+	$mpdf->WriteHTML($html);
+	$mpdf->Output("letter.pdf", "F");
+	
+	//------------ email letter ------------------------
+	require_once 'email.php';
+	$attachmnets = array(
+		array("name" => "letter.pdf","path" => "letter.pdf")
+	);
+	$dt = PdoDataAccess::runquery("select * from DMS_documents d
+			join DMS_DocFiles df using(DocumentID)
+			where ObjectType='letterAttach' AND ObjectID=?", array($LObj->LetterID));
+	foreach($dt as $file)
+	{
+		$fp = fopen($file["RowID"] . "." . $file["FileType"], "w");
+		fwrite($fp, $file["FileContent"] . 
+			file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" .
+			$file["RowID"] . "." . $file["FileType"]));
+		fclose($fp);
+			
+		$attachmnets[] = array(
+			"name" => $file["DocDesc"] . "." . $file["FileType"],
+			"path" => $file["RowID"] . "." . $file["FileType"]
+		);
+	}
+
+	$result = SendEmail($PObj->email, $CObj->LetterTitle, "--", $attachmnets);
+	if(!$result)
+	{
+		echo Response::createObjectiveResponse(false, "خطا در ارسال ایمیل");
+		die();
+	}
+	unlink("letter.pdf");
+	foreach($dt as $file)
+		unlink($file["RowID"] . "." . $file["FileType"]);
+	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
 
 ?>
