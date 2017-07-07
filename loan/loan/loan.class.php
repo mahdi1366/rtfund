@@ -4,7 +4,7 @@
 // create Date: 94.06
 //---------------------------
 
-require_once "../../accounting/baseinfo/baseinfo.class.php";
+require_once getenv("DOCUMENT_ROOT") . "/accounting/baseinfo/baseinfo.class.php";
 
 class LON_loans extends PdoDataAccess
 {

@@ -80,20 +80,22 @@ class manage_writ_item extends PdoDataAccess {
 					inner join HRM_staff s on s.staff_id = w.staff_id
 					inner join HRM_persons p on p.personid = s.personid and p.person_type = s.person_type 
 					join BaseInfo bf on(bf.TypeID=56 AND bf.InfoID=w.education_level)
-					left join HRM_jobs j on(j.job_id=w.job_id),HRM_salary_item_types sit
+					left join BSC_posts j on(j.PostID=w.post_id),HRM_salary_item_types sit
 
 				where w.writ_id = " . $this->writ_id . " and w.writ_ver = " . $this->writ_ver . " and w.staff_id =" . $this->staff_id . " and
 					  sit.salary_item_type_id = " . $this->salary_item_type_id;
 
 
 		$baseInfo = parent::runquery($query);
+
+
 			
 		if (count($baseInfo) == 0)
 			return true;
 
 		// ----- در صورتی که حکم خودکار است روال مربوط به محاسبه قلم فراخوانی می شود ------------------
 
-		if (manage_writ::is_auto_writ($baseInfo[0]['execute_date'], $baseInfo[0]['person_type']) !== false) {
+		//if (manage_writ::is_auto_writ($baseInfo[0]['execute_date'], $baseInfo[0]['person_type']) !== false) {
 
 			$value = $this->calculate_writ_item_value($baseInfo[0]);
 
@@ -110,7 +112,7 @@ class manage_writ_item extends PdoDataAccess {
 				$this->base_value = $value;
 				$this->value = $value;
 			}
-		}
+		//}
 		
 
 
@@ -118,6 +120,8 @@ class manage_writ_item extends PdoDataAccess {
 	}
 
 	private function OnBeforeUpdate() {
+
+
 		if (isset($_REQUEST['onlyUpdateRemembred'])) {
 			unset($this->value);
 			return true;
@@ -230,6 +234,8 @@ class manage_writ_item extends PdoDataAccess {
 	}
 
 	function replaceWritItem() {
+
+
 		$return = $this->OnBeforeUpdate();
 
 		if (!$return) {
@@ -257,7 +263,7 @@ class manage_writ_item extends PdoDataAccess {
 
 		$where = "writ_id=:wid AND writ_ver=:wver AND staff_id = :stid AND salary_item_type_id=:sid";
 
-		$return = parent::update("writ_salary_items", $this, $where, array(":wid" => $this->writ_id,
+		$return = parent::update("HRM_writ_salary_items", $this, $where, array(":wid" => $this->writ_id,
 					":wver" => $this->writ_ver,
 					":stid" => $this->staff_id,
 					":sid" => $this->salary_item_type_id));
@@ -275,7 +281,7 @@ class manage_writ_item extends PdoDataAccess {
 		$obj->SubObjectID = $this->salary_item_type_id;
 		$obj->TableName = "writ_salary_items";
 		$obj->ActionType = DataAudit::Action_update;
-		$obj->RelatedPersonType = DataAudit::PersonType_staff;
+		$obj->RelatedPersonType = 3;
 		$obj->RelatedPersonID = $this->staff_id;
 		$obj->execute();
 
@@ -320,7 +326,7 @@ class manage_writ_item extends PdoDataAccess {
 	 * 
 	 */
 	public static function compute_writ_items($writ_id, $writ_ver, $staff_id, $reComputeFlag = false) {
-	  
+	
 		//__________________________________________
 		//کنترل معتبر بودن کد و نسخه حکم
 		$curWrit = new manage_writ($writ_id, $writ_ver, $staff_id);
@@ -330,20 +336,19 @@ class manage_writ_item extends PdoDataAccess {
 			return false;
 		}
 
-
-		if ($curWrit->salary_pay_proc != BENEFIT_CUT) {
+ 
+		if ($curWrit->salary_pay_proc != 3 ) {
 	
 			if (!$reComputeFlag) {
 				
-				
-				//__________________________________________
+							//__________________________________________
 				//first delete all current rows
 				parent::runquery(" delete from HRM_writ_salary_items
 													where writ_id=$writ_id AND writ_ver=$writ_ver AND staff_id= $staff_id");
 	
 				//__________________________________________
 				//copy all of prior writ items to this writ
-				$prior_writ_Obj = $curWrit->get_prior_writ("","","2013-02-19");
+				$prior_writ_Obj = $curWrit->get_prior_writ("","");
 				
 					
 				if (!empty($prior_writ_Obj->writ_id)) { 
@@ -412,11 +417,10 @@ class manage_writ_item extends PdoDataAccess {
 				
 			}
  		
-			/*if (!manage_writ::is_auto_writ($curWrit->execute_date, $curWrit->person_type))
-				return true; */ 
+			
 
 			$WsiObj = new manage_writ_item();
-						 			 
+				 			 
 			$return = $WsiObj->compute_automatic_writ_salary_items($curWrit);
 		
 			if ($return === false) {			
@@ -425,21 +429,8 @@ class manage_writ_item extends PdoDataAccess {
 			}
 
 			$WsiObj->compute_semi_automatic_writ_salary_items($curWrit);
-							
-			/*if ($curWrit->person_type == HR_EMPLOYEE) {
-                        
-
-unset($WsiObj);  
-$WsiObj = new manage_writ_item(); 
-
-
-				$return = $WsiObj->compute_automatic_writ_salary_items($curWrit,"1");
-				if ($return === false) {
-					return false;
-				}
-			} */ 
-
-
+					
+			
 			//______________________________________________________________
 			//بر اساس روال پرداخت حقوق نحوه پرداخت اقلام حقوقي کنترل مي شود
 
@@ -642,6 +633,8 @@ $WsiObj = new manage_writ_item();
 					ORDER BY ComputeOrder "; 
 	
 		$salary_items_DT = parent::runquery_fetchMode($query);	
+
+
 	  				
 		for ($i = 0; $i < $salary_items_DT->rowCount(); $i++) {
 		    
@@ -693,7 +686,7 @@ $WsiObj = new manage_writ_item();
 
                  FROM    HRM_writs as w 
                 			inner join HRM_staff as s on(w.staff_id = s.staff_id)
-							left join HRM_jobs j on(j.job_id=w.job_id)
+							left join BSC_posts j on(j.PostID=w.post_id)
                 			inner join HRM_persons as p on(s.PersonID = p.PersonID)
 							join BaseInfo bf on(bf.TypeID=56 AND bf.InfoID=w.education_level)
 							join HRM_salary_item_types sit
@@ -707,6 +700,8 @@ $WsiObj = new manage_writ_item();
                 		sit.salary_item_type_id = " . $salary_items_row["salary_item_type_id"];
 
 			$dt = parent::runquery_fetchMode($query);		
+
+
 						
 			if ($dt->rowCount() > 0)
 				$wsi_record = $dt->fetch();
@@ -728,7 +723,7 @@ $WsiObj = new manage_writ_item();
 				
 	
 			$this->value = manage_writ_item::$function_name($wsi_record);
-							
+					
 			if ($this->value === false){				
 				
 				return false;
@@ -743,8 +738,11 @@ $WsiObj = new manage_writ_item();
 			$this->param6 = $wsi_record["param6"];
 			$this->param7 = $wsi_record["param7"];
 
+
 			if ($this->value > 0) { 
 				$this->replaceWritItem();
+
+
 			}
 			else
 				manage_writ_item::RemoveWritItem(" writ_id = " . $this->writ_id . " AND 
@@ -5844,7 +5842,54 @@ else if($writ_rec['person_type'] == HR_CONTRACT  ) {
 	 */
 
 	private function compute_salary_item3_01($writ_rec) {
-		return $this->compute_salary_item5_34($writ_rec);
+
+
+		//param1 : گروه
+		//param2 : مزد شغل
+		//param3 : ورودی : مجموع روزهای کارکرد سال قبل
+		// should be deleted at the first of 91 ------------------------------------------
+             
+
+		$MONTH_DAY_COUNT = 30;
+
+
+		if (!(1 <= $writ_rec['job_group'] && $writ_rec['job_group'] <= 20)) {
+			parent::PushException(UNKNOWN_JOB_GROUP);
+			return false;
+		}
+
+		$job_group = $writ_rec['job_group'];
+
+ 
+		$group1_annual_rate = manage_salary_params::get_salaryParam_value("", $writ_rec["person_type"], SPT_GROUP1_ANNUAL_RATE, $writ_rec['execute_date']);
+				
+		if ($group1_annual_rate < 0) {
+			parent::PushException(UNKNOWN_GROUP1_ANNUAL_RATE);
+			return false;
+		}
+
+		$job_salary = manage_salary_params::get_salaryParam_value("", $writ_rec["person_type"], SPT_JOB_SALARY, $writ_rec['execute_date'], $writ_rec['job_group']);
+
+		if (!(0 < $job_salary)) {
+
+			parent::PushException(UNKNOWN_JOB_SALARY);
+			return false;
+		}
+		
+		$this->param3 = 365 ;
+		 
+		$annual_salary = ($this->param3 / 365) * $group1_annual_rate;
+		$this->param1 = $job_group;
+		$this->param2 = $job_salary;
+						
+		if ($writ_rec['execute_date'] >= '2012-03-20') {
+			$month_duration = 30;
+		}
+		//مبناي محاسبه تعداد روز در ماه براي محاسبه 31 روز است نه 30 روز.
+		//$month_duration = 30 ; //$MONTH_DAY_COUNT;
+		$value = ($job_salary + $annual_salary) * $month_duration;
+
+		return $value;
 	}
 
 	/*
@@ -6296,53 +6341,7 @@ if ($writ_rec['execute_date'] > '2015-03-20') {
 		return $this->compute_salary_item2_18($writ_rec);
 	}
 
-	/** مزد مبنا  */
-	private function compute_salary_item5_34($writ_rec) {
-		//param1 : گروه
-		//param2 : مزد شغل
-		//param3 : ورودی : مجموع روزهای کارکرد سال قبل
-		// should be deleted at the first of 91 ------------------------------------------
-             
-
-		$MONTH_DAY_COUNT = 30;
-
-		if (!(1 <= $writ_rec['job_group'] && $writ_rec['job_group'] <= 20)) {
-			parent::PushException(UNKNOWN_JOB_GROUP);
-			return false;
-		}
-
-		$job_group = $writ_rec['job_group'];
-
-		$group1_annual_rate = manage_salary_params::get_salaryParam_value("", $writ_rec["person_type"], SPT_GROUP1_ANNUAL_RATE, $writ_rec['execute_date']);
-				
-		if ($group1_annual_rate < 0) {
-			parent::PushException(UNKNOWN_GROUP1_ANNUAL_RATE);
-			return false;
-		}
-
-		$job_salary = manage_salary_params::get_salaryParam_value("", $writ_rec["person_type"], SPT_JOB_SALARY, $writ_rec['execute_date'], $writ_rec['job_group']);
-
-		if (!(0 < $job_salary)) {
-
-			parent::PushException(UNKNOWN_JOB_SALARY);
-			return false;
-		}
-		
-		$this->param3 = 365 ;
-		
-		$annual_salary = ($this->param3 / 365) * $group1_annual_rate;
-		$this->param1 = $job_group;
-		$this->param2 = $job_salary;
-						
-		if ($writ_rec['execute_date'] >= '2012-03-20') {
-			$month_duration = 30;
-		}
-		//مبناي محاسبه تعداد روز در ماه براي محاسبه 31 روز است نه 30 روز.
-		//$month_duration = 30 ; //$MONTH_DAY_COUNT;
-		$value = ($job_salary + $annual_salary) * $month_duration;
-
-		return $value;
-	}
+	
 
 	/** حق عائله مندی  */
 	private function compute_salary_item5_35($writ_rec) {

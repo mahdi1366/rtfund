@@ -139,7 +139,29 @@ function Person()
 						});
 					}
 					  }
-						}	
+						},
+						{
+						 itemId: 'salaryReceipt'
+						,title: 'فیش حقوقی'
+						,style: 'padding:5px'
+						,height:700
+						,loader:{
+							url: this.address_prefix + "../ui/salaryReceipt.php",
+							scripts:true
+						}
+						,disabled: (this.personInfoForm.PersonID.value == "") ? true : false
+						,listeners: {activate: function(tab){
+							if(tab.isLoaded)
+								return;
+							tab.loader.load({
+								params : {
+									Q0 : PersonObject.personInfoForm.PersonID.value,
+									FacilID : '<?= $FacilID ?>'
+								}
+							});
+						}
+						  }
+						}
             ]
     });
     
@@ -398,6 +420,31 @@ this.pid = <?= $personID ?>;
 		
     <?}?>
 	
+
+this.store1.load({
+	callback:function(){
+		PersonObject.birthStateCombo.setValue("<?= $obj->birth_state_id ?>");
+		PersonObject.store2.load({
+			params:{state_id:PersonObject.birthStateCombo.getValue()},
+			callback:function(){
+				PersonObject.birthCityCombo.setValue("<?= $obj->birth_city_id ?>");
+			}
+		});
+	}
+});
+
+this.store9.load({
+	callback:function(){ 
+		PersonObject.issueStateCombo.setValue("<?= $obj->issue_state_id ?>");
+		PersonObject.store10.load({
+			params:{state_id:PersonObject.issueStateCombo.getValue()},
+			callback:function(){
+				PersonObject.issueCityCombo.setValue("<?= $obj->issue_city_id ?>");
+			}
+		});
+	}
+});
+
 }
 
 var PersonObject = new Person();

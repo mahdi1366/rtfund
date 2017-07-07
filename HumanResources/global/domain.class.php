@@ -458,10 +458,10 @@ class manage_domains
 	{
 		$obj = new CHECKBOXLIST();
 		
-		$obj->datasource = PdoDataAccess::runquery("select * from Basic_Info where TypeID=4");
+		$obj->datasource = PdoDataAccess::runquery("select * from BaseInfo where TypeID=61");
 		$obj->idfield = $checkboxPrefix . "%InfoID%";
 		$obj->valuefield = $checkboxPrefix . "%InfoID%";
-		$obj->textfield = "%Title%";
+		$obj->textfield = "%InfoDesc%";
 		$obj->columnCount = $columnCount;
 		$obj->Allchecked = true;
 		$obj->EnableCheckAllButton = $enableAllCheck;
@@ -1126,6 +1126,33 @@ class manage_domains
 		return $return;		
 		
 	}
+
+public static function DRP_Posts($dropdownName, $slaveDropName = "", $selectedID = "", 
+    	$extraRow = "", $width = "", $formName = "")
+	{
+		$query = "SELECT PostID,PostName FROM BSC_posts ";
+		
+		$obj = new AutoComplete_DROPDOWN();
+
+		$temp = PdoDataAccess::runquery($query);
+				
+		$obj->datasource = $temp;
+		$obj->valuefield = "%PostID%";
+		$obj->textfield = "%PostName%";
+		$obj->width = $width;
+		$obj->Style = 'class="x-form-text x-form-field" style="width:'.$width.'" ';
+		$obj->id = $dropdownName;
+		$obj->slaveID = $slaveDropName;
+		$obj->formName = $formName;
+
+		if(!empty($extraRow))
+			$obj->datasource = array_merge(array(array("PostID" => "-1", "PostName" => $extraRow)),$obj->datasource);
+		$return = $obj->bind_dropdown($selectedID);
+		
+		return $return;		
+		
+	}
+
 	public static function DRP_StudyFieldes($dropdownName, $selectedID = "", $extraRow = "",$style="")
 	{
 		$query = "select sfid,ptitle from study_fields";

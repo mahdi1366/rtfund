@@ -67,10 +67,10 @@ class manage_payment_cancel extends PdoDataAccess
 		
 		parent::runquery('CREATE TABLE temp_cancel_limit_staff  AS
 							SELECT DISTINCT s.staff_id , s.PersonID
-							FROM staff s
-								 INNER JOIN writs w
+							FROM HRM_staff s
+								 INNER JOIN HRM_writs w
 								 	   ON(s.last_writ_id = w.writ_id AND s.last_writ_ver = w.writ_ver AND s.staff_id = w.staff_id )
-							     LEFT OUTER JOIN payment_items pit
+							     LEFT OUTER JOIN HRM_payment_items pit
 							           ON(s.staff_id = pit.staff_id AND '.$this->where_clause.')
 							WHERE '.$this->staff_where.' AND '.
 	    						  '((pit.staff_id IS NOT NULL AND '.$this->where_clause.') OR '.
@@ -95,7 +95,7 @@ class manage_payment_cancel extends PdoDataAccess
 				    		 		null as salary_item_type_id,
 				    		 		p.state
 				    		 FROM temp_cancel_limit_staff ls
-				    		 	  INNER JOIN payments p
+				    		 	  INNER JOIN HRM_payments p
 				    		 	  	ON(ls.staff_id = p.staff_id)
 				    		 WHERE p.pay_year = '.$this->year.' AND
 				    		 	   p.pay_month = '.$this->month.' AND
@@ -213,7 +213,7 @@ class manage_payment_cancel extends PdoDataAccess
 				 </body>
 				 </html>';
 		
-		$fail_log_file_h = fopen('../../../HRProcess/cancel_fail_log.php','w');
+		$fail_log_file_h = fopen('../../../../HumanResources/tempDir/cancel_fail_log.php','w');
 		fwrite($fail_log_file_h, $row);	
 		fclose($fail_log_file_h);		
 		$this->unsuccess_count = $fail_counter - 1;				
@@ -269,51 +269,13 @@ class manage_payment_cancel extends PdoDataAccess
 	/*حذف اقلام فيش*/
 	private function remove_payment_items($PayType="") {
 		
-		if($PayType!="" && $PayType > 1 ){
-             
-                        if($PayType == 9 ) 
-			{
-				parent::runquery('DELETE pit.* FROM Arrear_payment_items pit inner join Arrear_payments p 
-													on  pit.payment_type = p.payment_type AND 
-														pit.pay_year = p.pay_year AND 
-														pit.pay_month = p.pay_month AND 
-														pit.staff_id = p.staff_id 
-
-									WHERE p.state = 1  AND 
-										  pit.pay_year = '.$this->year.' AND
-										  pit.pay_month = '.$this->month.' AND
-										  pit.payment_type = '.$this->payment_type);	
-//echo PdoDataAccess::GetLatestQueryString() ."***" ; die();
-				
-			}
-			else {  
-			
-			parent::runquery('DELETE pit.* FROM payment_items pit inner join payments p 
-												on pit.payment_type = p.payment_type AND 
-												   pit.pay_year = p.pay_year AND 
-												   pit.pay_month = p.pay_month AND 
-												   pit.staff_id = p.staff_id 
-													
-								WHERE p.state = 1  AND 
-									  pit.pay_year = '.$this->year.' AND
-									  pit.pay_month = '.$this->month.' AND
-									  pit.payment_type = '.$this->payment_type);	
-                             }
-			//  echo PdoDataAccess::GetLatestQueryString()."********"; die(); 
-			
-		}
-		elseif($PayType=="") {
-		parent::runquery('DELETE FROM payment_items
+	    parent::runquery('DELETE FROM HRM_payment_items
 							 USING  temp_cancel_limit_staff ls
-							 		INNER JOIN payment_items
-							 			ON(ls.staff_id = payment_items.staff_id)
-							 WHERE payment_items.pay_year = '.$this->year.' AND
-				    		 	   payment_items.pay_month = '.$this->month.' AND
-				    		 	   payment_items.payment_type = '.$this->payment_type);		
-						    }		
-		 // parent::GetExceptionCount() > 1 
-		/*echo 	"---".PdoDataAccess::GetLatestQueryString() ; 
-		die()  ; */ 
+							 		INNER JOIN HRM_payment_items
+							 			ON(ls.staff_id = HRM_payment_items.staff_id)
+							 WHERE HRM_payment_items.pay_year = '.$this->year.' AND
+				    		 	   HRM_payment_items.pay_month = '.$this->month.' AND
+				    		 	   HRM_payment_items.payment_type = '.$this->payment_type);
 		
 		$this->success_count['FICH_ITEM'] = parent::AffectedRows() ; 
 		
@@ -321,16 +283,14 @@ class manage_payment_cancel extends PdoDataAccess
 	
 	/*حذف احكام مربوط به محاسبه*/
 	private function remove_payment_writs() {
-		if($this->payment_type != NORMAL_PAYMENT)
-			return;
-			
-		parent::runquery('DELETE FROM payment_writs
+	
+		parent::runquery('DELETE FROM HRM_payment_writs
 							 USING  temp_cancel_limit_staff ls
-							 		INNER JOIN payment_writs
-							 			ON(ls.staff_id = payment_writs.staff_id)	
-							 WHERE payment_writs.pay_year = '.$this->year.' AND
-				    		 	   payment_writs.pay_month = '.$this->month.' AND
-				    		 	   payment_writs.payment_type = '.$this->payment_type);	
+							 		INNER JOIN HRM_payment_writs
+							 			ON(ls.staff_id = HRM_payment_writs.staff_id)	
+							 WHERE HRM_payment_writs.pay_year = '.$this->year.' AND
+				    		 	   HRM_payment_writs.pay_month = '.$this->month.' AND
+				    		 	   HRM_payment_writs.payment_type = '.$this->payment_type);	
 		
 		$this->success_count['WRIT'] = parent::AffectedRows() ; 
 	}
@@ -338,24 +298,15 @@ class manage_payment_cancel extends PdoDataAccess
 	/*حذف فيش*/
 	private function remove_payments($PayType="") {
 		
-		if($PayType!="" && $PayType > 1 ) 
-		{
-			parent::runquery('DELETE FROM payments
-							
-							  WHERE payments.state = 1 AND 
-									payments.pay_year = '.$this->year.' AND
-				    		 	    payments.pay_month = '.$this->month.' AND
-				    		 	    payments.payment_type = '.$this->payment_type) ; 			
-		}
-		else if ($PayType=="") {
-			parent::runquery('DELETE FROM payments
+		
+			parent::runquery('DELETE FROM HRM_payments
 								 USING  temp_cancel_limit_staff ls
-										INNER JOIN payments
-											ON(ls.staff_id = payments.staff_id)		
-								 WHERE payments.pay_year = '.$this->year.' AND
-									   payments.pay_month = '.$this->month.' AND
-									   payments.payment_type = '.$this->payment_type) ; 
-		}		
+										INNER JOIN HRM_payments
+											ON(ls.staff_id = HRM_payments.staff_id)		
+								 WHERE HRM_payments.pay_year = '.$this->year.' AND
+									   HRM_payments.pay_month = '.$this->month.' AND
+									   HRM_payments.payment_type = '.$this->payment_type) ; 
+				
 		
 		$this->success_count['FICH'] = parent::AffectedRows() ;
 	}
@@ -404,20 +355,16 @@ class manage_payment_cancel extends PdoDataAccess
 			$this->init();
 	 
 			$this->ins_commited_staff(); 
-			$this->ins_last_flow_not_fich();
-			$this->fail_log(); 
+		//	$this->ins_last_flow_not_fich();
+		//	$this->fail_log(); 
 			$this->remove_from_limit_staff();		
 			$this->remove_payment_items();
 			$this->remove_payment_writs();
 			$this->remove_payments();			
-			$this->remove_temp_subtract_flow(); 
-			$this->update_person_dependent_support();
+			//$this->remove_temp_subtract_flow(); 
+		//	$this->update_person_dependent_support();
 		}
-		else 
-		{			
-			$this->remove_payment_items($this->payment_type);
-			$this->remove_payments($this->payment_type);			
-		}
+		
 		
 		if(parent::GetExceptionCount() > 0 )
 		{

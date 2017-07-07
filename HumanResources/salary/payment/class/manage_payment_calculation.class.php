@@ -244,6 +244,8 @@ class manage_payment_calculation extends PdoDataAccess
 
 	public function run_back()
 	{
+
+echo  "****" ; die();
 		//در اين تابع فرض براين است که سال مالي با سال شمسي مطابقت دارد
 		$this->empty_back_tables();
 

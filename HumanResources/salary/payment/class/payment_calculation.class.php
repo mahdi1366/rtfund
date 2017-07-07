@@ -121,6 +121,8 @@ class manage_payment_calculation extends PdoDataAccess
 		$this->monitor(8);
 				
 		$this->moveto_curStaff($this->staff_rs,'STF'); 
+
+
 	
 		/* پيماش recordset احکام*/
 		while ($this->writRowID <= $this->writRowCount ) {
@@ -192,7 +194,9 @@ class manage_payment_calculation extends PdoDataAccess
 					$time_slice = $main_time_slice;
 					$computed_time_slice = $main_time_slice; 
 				}
-												
+				
+			/*	echo $fields['salary_item_type_id'].'***'.$fields['pay_value'].'###'.$time_slice.'----';
+				die(); */
 				if( isset($this->payment_items[$key]) ) { // اگر قبلا اين قلم در آرايه اقلام حقوقي وجود دارد
 					$this->payment_items[$key]['pay_value'] += $fields['pay_value'] * $time_slice;					
 					$this->payment_items[$key]['param4'] += $time_slice;
@@ -211,13 +215,15 @@ class manage_payment_calculation extends PdoDataAccess
 					'param4' => $computed_time_slice ,				
 					'payment_type' => NORMAL );
 				}
-								
+			//	print_r($this->payment_items) ; 				die();
 				//محاسبه مجموع حقوق مشول بازنشستگي در آخرين حکم ماه جاري
 				$this->add_to_last_writ_sum_retired_include($fields,$key,$fields['pay_value']);
 
 				$this->update_sums($fields,$fields['pay_value'] * $time_slice);
 			}
-		
+
+
+
 			$temp_array = array();
 					
 			if( $this->writRow['staff_id'] == $this->cur_staff_id ) { //حکم بعدي متعلق به همين شخص است
@@ -225,6 +231,8 @@ class manage_payment_calculation extends PdoDataAccess
 			}
 				
 			$success_check = $this->control();
+
+
 				
 			if( count($this->payment_items) == 0) { //احکام فرد هيچ قلم حقوقي نداشته اند		
 					
@@ -233,11 +241,11 @@ class manage_payment_calculation extends PdoDataAccess
 			}
 	 	
 			//شرح وضعيت : در اين نقطه بايستي تمام اقلام حکمي cur_staff در payment_items قرار گرفته باشد
-	//$this->process_subtract();
+	$this->process_subtract();
 		
 			//شرح وضعيت : در اين نقطه بايستي تمام اقلام مربوط به وام و کسورو مزاياي ثابت cur_staff محاسبه شده باشد
 
-	//$this->process_pay_get_lists();
+	$this->process_pay_get_lists();
 			// شرح وضعيت : در اين نقطه بايستي تمام اقلام مربوط به کشيک ، حق التدريس ، ماموريت ، اضافه
 			//کار و کسور و مزاياي موردي فرد cur_staff محاسبه و دز payment_items قرار گرفته باشند
 			
@@ -255,7 +263,7 @@ class manage_payment_calculation extends PdoDataAccess
 										 (isset($this->payment_items[9964]['get_value']) ? $this->payment_items[9964]['get_value'] : 0 ) + 
 										 (isset($this->payment_items[9998]['get_value']) ? $this->payment_items[9998]['get_value'] : 0) )  ; 
 			
-						
+				
 			//پردازش مربوط به ماليات
 			if($this->__CALC_NORMALIZE_TAX == 1) {		
 					
@@ -263,16 +271,16 @@ class manage_payment_calculation extends PdoDataAccess
 			}else{			
 				$this->process_tax(); 
 			}			
-			
+				
 			//فراخواني تابع رير جهت مواردي غير از موارد هميشگي است که معمولا بنا بر نياز مشتري بايد نوشته شوند
 			$this->process_custom();
 
 			//افزودن مبالغ difference در صورت محاسبه از طريق backpay
 			$this->add_difference();  
-			
+		
 			//ثبت حقوق محاسبه شده براي staff جاري در فايل
 			$this->save_to_DataBase();			
-					
+	
 			//مقداردهي مجدد متغيرها براي محاسبه حقوق staff بعدي
 			$this->initForNextStaff();
 			
@@ -291,6 +299,7 @@ class manage_payment_calculation extends PdoDataAccess
 	
 	private function process_subtract() {
 		
+	
 		$this->moveto_curStaff($this->subtracts_rs,'SUB');		
 
 		while ($this->subRowID  <=  $this->subRowCount && $this->subRow['staff_id'] == $this->cur_staff_id) {
@@ -362,7 +371,7 @@ $Remainder = $this->subRow['receipt'] ;
 			'param2' => $this->subRow['subtract_id'],
 			'param3' => NULL,
 			'param4' => /*$this->subRow['remainder']*/ $Remainder + $this->subRow['get_value']* $multiply, 
-			'cost_center_id' => $this->staffRow['cost_center_id'],
+			'cost_center_id' => 0,
 			'payment_type' => NORMAL
 			);
 						 
@@ -429,56 +438,23 @@ $Remainder = $this->subRow['receipt'] ;
 	private function process_pay_get_lists() {
 		//param5 list_id
 		//param6 list_type
+	 
 		$this->moveto_curStaff($this->pay_get_list_rs,'PGL');
-		 
+				
 		while ($this->PGLRowID <= $this->pgRowCount  && $this->PGLRow['staff_id'] == $this->cur_staff_id) {
 
-			if( !$this->validate_salary_item_id($this->PGLRow['validity_start_date'], $this->PGLRow['validity_end_date']) ) {				
-				$this->PGLRow = $this->pay_get_list_rs->fetch(); 
-				$this->PGLRowID++ ;
-				continue;
-			}
+			
+	
+			$key = 12 ; //اين متغير صرفا جهت افزايش خوانايي کد تعريف شده است
 
-			$key = $this->PGLRow['salary_item_type_id']; //اين متغير صرفا جهت افزايش خوانايي کد تعريف شده است
-
-			//فرخواني تابع مربوط به هر رديف ...
-			//خروجي تابع بايد رديف قابل درج، قلم حقوقي ارسال شده در ماه باشد اين قسمت براي قلم هايي است که تابع دارند
-			if( $this->PGLRow['salary_compute_type'] == SALARY_COMPUTE_TYPE_FUNCTION) { // تابعي
-				$func_name = $this->PGLRow['function_name']; 			
-				$temp_array = $this->$func_name(); //&
-			}
-			else if( $this->PGLRow['salary_compute_type'] == SALARY_COMPUTE_TYPE_MULTIPLY) //ضريبي
-			//در مورد ضريبي ها فرض مي شود که فيلد approved_amount همان ضريب باشد
-			$temp_array = $this->coef(); //&
-			else { //با فرض اينکه رديفهاي بدون تابع همگي مبلغ هستند
-				if($this->PGLRow['list_type'] == PAY_GET_LIST || $this->PGLRow['list_type'] == GROUP_PAY_GET_LIST) {
-					$entry_title_full = 'pay_value';
-					$entry_title_empty = 'get_value';
-				}
-				else {
-					$entry_title_full = 'get_value';
-					$entry_title_empty = 'pay_value';
-				}
-				// param1 , param2 , param3 مبالغ ثابت null است
-				$temp_array = array(
-				'pay_year' => $this->__YEAR,
-				'pay_month' => $this->__MONTH,
-				'staff_id' => $this->cur_staff_id,
-				'salary_item_type_id' => $key,
-				$entry_title_full => $this->PGLRow['value'],
-				$entry_title_empty => 0,
-				'cost_center_id' => $this->staffRow['cost_center_id'],
-				'payment_type' => NORMAL
-				);
-			}
-			$temp_array['param5'] = $this->PGLRow['list_id'];
-			$temp_array['param6'] = $this->PGLRow['list_type'];
+			$func_name = 'compute_salary_item3_20' ; 			
+			$temp_array = $this->$func_name();
+		
+		//	$temp_array['param5'] = $this->PGLRow['list_id'];
+		//	$temp_array['param6'] = $this->PGLRow['list_type'];
 
 			if( isset($this->payment_items[$key]) ) {
-				if(in_array($key , array(SIT_STAFF_EXTRA_WORK,
-        								 SIT_WORKER_EXTRA_WORK,
-        								 SIT_STAFF_HORTATIVE_EXTRA_WORK,
-        								 SIT_WORKER_HORTATIVE_EXTRA_WORK))){
+				if(in_array($key , array(12))){
         			if($this->staffRow['person_type'] == HR_WORKER ){
         				$this->payment_items[$key]['param2'] += $temp_array['param2'];
         			}
@@ -552,7 +528,7 @@ $Remainder = $this->subRow['receipt'] ;
 		    {
 		    	$param3 = 0 ; 
 		    }
-		    
+		  
 		$value = round($person_insure_value * $param1);
 
 		$this->payment_items[$key] = array(
@@ -650,7 +626,7 @@ $Remainder = $this->subRow['receipt'] ;
 		'param7' =>$org_value,
 		'param8' =>$this->insureRow['normal2'],
 		'param9' => 0 ,		
-		'cost_center_id' => $this->staffRow['cost_center_id'],
+		'cost_center_id' => 0,
 		'payment_type' => NORMAL );
 	}
 	
@@ -673,7 +649,7 @@ $Remainder = $this->subRow['receipt'] ;
 			'get_value' => 0, 
 			'pay_value' => 0,
 			'diff_get_value' => 1,//براي اينكه اين قلم هم در پايگاه داده درج شود
-			'cost_center_id' => $this->staffRow['cost_center_id'],
+			'cost_center_id' => 0,
 			'payment_type' => NORMAL,
 			'param1' => $this->sum_tax_include);
 			return true;
@@ -683,7 +659,8 @@ $Remainder = $this->subRow['receipt'] ;
 		if(empty($this->staffRow['tax_include'])) {
 			return ;
 		}
-		
+	
+
 		/*قلم حقوقي ماليات معتبر نبوده است*/
 		if( !$this->validate_salary_item_id($this->acc_info[$key]['validity_start_date'], $this->acc_info[$key]['validity_end_date']) ) {
 			return ;
@@ -716,6 +693,8 @@ $Remainder = $this->subRow['receipt'] ;
 				$tax_table_type_id = $this->taxHisRow['tax_table_type_id'];
 				break;
 			}
+			
+		
 			if(!isset($tax_table_type_id) ||  $tax_table_type_id == NULL) 
 			{
 				continue ; 
@@ -728,10 +707,10 @@ $Remainder = $this->subRow['receipt'] ;
 				$pay_mid_month_date = DateModules::shamsi_to_miladi($this->__YEAR."/".$m."/1") ;				
 				if( DateModules::CompareDate($pay_mid_month_date, $tax_table_row['from_date']) != -1 && 
 					DateModules::CompareDate($pay_mid_month_date,$tax_table_row['to_date']) != 1 ) { 
-										
+	//	echo $year_avg_tax_include .'---'.$tax_table_row['from_value'] .'****'. $year_avg_tax_include ."****". $tax_table_row['to_value'].'---<br>' ; 
 					if( $year_avg_tax_include >= $tax_table_row['from_value'] && $year_avg_tax_include <= $tax_table_row['to_value'] ) {
 						$sum_normalized_tax += ( $year_avg_tax_include - $tax_table_row['from_value'] ) * $tax_table_row['coeficient'];						
-						
+						echo ( $year_avg_tax_include - $tax_table_row['from_value'] ) .'-----'. $tax_table_row['coeficient'];
 					}
 					else if($year_avg_tax_include > $tax_table_row['to_value']){
 						$sum_normalized_tax += ( $tax_table_row['to_value'] - $tax_table_row['from_value'] ) * $tax_table_row['coeficient'];											
@@ -740,11 +719,15 @@ $Remainder = $this->subRow['receipt'] ;
 				
 			}
 		}
-		
+	//	 die();
+	//	echo $sum_normalized_tax .'****'.$this->taxRow['sum_tax'];
+	//	die();
 	
 		$normalized_tax = $sum_normalized_tax - $this->taxRow['sum_tax'];
 		if($normalized_tax < 0)
 		$normalized_tax = 0;
+
+ 
 		//انتصاب ماليات تعديل شده به  payment_items
 		$this->payment_items[$key] = array(
 		'pay_year' => $this->__YEAR,
@@ -753,7 +736,7 @@ $Remainder = $this->subRow['receipt'] ;
 		'salary_item_type_id' => $key,
 		'get_value' => $normalized_tax,
 		'pay_value' => 0,
-		'cost_center_id' => $this->staffRow['cost_center_id'],
+		'cost_center_id' => 0 ,
 		'payment_type' => NORMAL );
 
 		$this->payment_items[$key]['param1'] = $this->sum_tax_include; //مجموع حقوق مشمول ماليات در ماه جاري
@@ -812,7 +795,7 @@ $Remainder = $this->subRow['receipt'] ;
 		'salary_item_type_id' => $key,
 		'get_value' => $tax,
 		'pay_value' => 0,
-		'cost_center_id' => $this->staffRow['cost_center_id'],
+		'cost_center_id' => 0,
 		'payment_type' => NORMAL );
 
 		$this->payment_items[$key]['param1'] = $this->sum_tax_include; //مجموع حقوق مشمول ماليات در اين ماه
@@ -897,7 +880,7 @@ $Remainder = $this->subRow['receipt'] ;
 			'salary_item_type_id' => $key,
 			'get_value' => $value,
 			'pay_value' => 0,
-			'cost_center_id' => $this->staffRow['cost_center_id'],
+			'cost_center_id' => 0,
 			'payment_type' => NORMAL );
 		}
 	}
@@ -952,7 +935,7 @@ $Remainder = $this->subRow['receipt'] ;
 		'param3' => $param3,
 		'param4' => $this->max_sum_pension,
 		'param5' => $param5,
-		'cost_center_id' => $this->staffRow['cost_center_id'],
+		'cost_center_id' => 0,
 		'payment_type' => NORMAL );
 	}
 
@@ -961,10 +944,7 @@ $Remainder = $this->subRow['receipt'] ;
 	private function process_custom(){
 
 
-/*if($_SESSION['UserID'] == 'jafarkhani' && $this->__MONTH == 11    ) 
-	{
-		echo $this->payment_items[524]['pay_value']."***" ;  
-	}*/
+return ; 
 	
 			//cur_staff جانباز است و بايد قلم برگشتي بيمه تامين اجتماعي براي او محاسبه شود
 		if($this->staffRow['sacrifice'] > 0 || $this->staffRow['freedman'] > 0 || $this->staffRow['shohadachild'] > 0 ) {
@@ -1060,7 +1040,7 @@ $Remainder = $this->subRow['receipt'] ;
 							'diff_param7' =>$this->diffRow['param7_diff'],
 							'diff_param8' =>$this->diffRow['param8_diff'],
 							'diff_param9' =>$this->diffRow['param9_diff'],
-							'cost_center_id' => $this->staffRow['cost_center_id'],
+							'cost_center_id' => 0,
 							'payment_type' => NORMAL);
 					}
 					
@@ -1286,6 +1266,8 @@ $Remainder = $this->subRow['receipt'] ;
 							GROUP BY pit.staff_id,
 									 pit.salary_item_type_id,
 									 sit.effect_type;') ; 
+
+
 		
 		$this->diff_rs = parent::runquery_fetchMode('
                         (SELECT
@@ -1443,7 +1425,8 @@ $Remainder = $this->subRow['receipt'] ;
 
                         ORDER BY staff_id,salary_item_type_id
                 ') ; 
-		
+		 	
+
 		$this->diffRowCount = $this->diff_rs->rowCount();
 		$this->diffRow = $this->diff_rs->fetch() ;
 		$this->diffRowID++ ; 
@@ -1520,7 +1503,7 @@ $Remainder = $this->subRow['receipt'] ;
 			$pay_row['diff_param7'].','.
 			$pay_row['diff_param8'].','.
 			$pay_row['diff_param9'].','.
-			$pay_row['cost_center_id'].','.
+			'0,'.
 			$pay_row['payment_type'].','.			
 			$pay_row['diff_value_coef'].'),';
 			
@@ -1563,27 +1546,26 @@ $Remainder = $this->subRow['receipt'] ;
 		else 
 			$ptype = NORMAL ; 
 		
+		
 		foreach ($this->staff_writs[$this->cur_staff_id] as $writ) {
-				 
-			parent::runquery(" insert into hrmstotal.payment_writs (writ_id,writ_ver,staff_id,pay_year,pay_month,payment_type) values 
-							(".$writ['writ_id'].",".$writ['writ_ver'].",".$this->cur_staff_id.",".$this->__YEAR.",".$this->last_month.",".$ptype.")" , array(),$pdo ) ; 
-			 	
 			
+			parent::runquery(" insert into HRM_payment_writs(writ_id,writ_ver,staff_id,pay_year,pay_month,payment_type) values 
+							(".$writ['writ_id'].",".$writ['writ_ver'].",".$this->cur_staff_id.",".$this->__YEAR.",".$this->last_month.",".$ptype.")" , array() ,$pdo) ; 
+			 	
+	//print_r(ExceptionHandler::PopAllExceptions());
+	//	echo PdoDataAccess::GetLatestQueryString() ; 
+	//die();	
 			if( parent::AffectedRows() == 0  )
 			{
+
+
 				$this->log('FAIL' ,'خطا در افزودن اطلاعات به جدول احکام مورد استفاده در ماه جاری ');
 				$pdo->rollBack();	
 				ob_clean();				
 				return ;
 			}
+ 
 			
-			/*$writ_row .= $writ['writ_id'] . ',' .
-			$writ['writ_ver'] . ',' .
-			$this->cur_staff_id . ',' .
-			$this->__YEAR . ',' .
-			$this->last_month . ',' .
-			NORMAL . ',' .
-			$this->__MSG.chr(10);*/
 		}
 		//fwrite($this->payment_writs_file_h,$writ_row);
 		
@@ -1606,13 +1588,13 @@ $Remainder = $this->subRow['receipt'] ;
 		$file_line2 = str_replace(',,',',\N,',$payment_row); //براي اصلاح مقادير null
 		$file_line2 = str_replace(',,',',\N,',$file_line2); //براي اصلاح مقادير null
 
-		parent::runquery(" insert into payments (staff_id,pay_year,pay_month,writ_id,writ_ver,start_date,end_date,payment_type,message,
+		parent::runquery(" insert into HRM_payments(staff_id,pay_year,pay_month,writ_id,writ_ver,start_date,end_date,payment_type,message,
 						   bank_id,account_no,state ,calc_date ) value (".$file_line2.") ", array(),$pdo) ; 
 			
 		 
 		if( parent::AffectedRows() == 0  )
 		{
-					 echo 	PdoDataAccess::GetLatestQueryString() ; die() ; 	 
+					 
 			$this->log('FAIL' ,'خطا در افزودن اطلاعات به جدول پرداختها ');
 			$pdo->rollBack();
 			ob_clean();				
@@ -1622,9 +1604,9 @@ $Remainder = $this->subRow['receipt'] ;
 		}
 
 if($this->backpay)
-		$tblName =  "back_payment_items" ; 
+		$tblName =  "HRM_back_payment_items" ; 
 	else 
-		$tblName = "payment_items"; 
+		$tblName = "HRM_payment_items"; 
 	$file_line = substr($file_line, 0, (strlen($file_line)-2)) ;
 
 	if(strlen($file_line) > 0 ) {
@@ -1632,6 +1614,8 @@ if($this->backpay)
                         salary_item_type_id, pay_value, get_value, param1, param2, param3,param4, param5, param6, param7, param8, param9,
                         diff_param1,diff_param2,diff_param3,diff_param4,diff_param5,diff_param6,diff_param7,diff_param8,diff_param9,
                         cost_center_id, payment_type, diff_value_coef ) values ".$file_line." " , array(),$pdo ) ; 
+
+ 
 	}
 	else {
 		$pdo->rollBack();
@@ -1664,8 +1648,8 @@ if($this->backpay)
 			fwrite($this->success_log_file_h, '</table></cenetr></body></html>');
 			fclose($this->fail_log_file_h);
 			fclose($this->success_log_file_h);
-			chmod('../../../tempDir/fail_log.php',0777);
-			chmod('../../../tempDir/success_log.php',0777);		
+			chmod('../../../tempDir/fail_log.php',0644);
+			chmod('../../../tempDir/success_log.php',0644);		
 		}
 	}
 	
@@ -1785,7 +1769,9 @@ if($this->backpay)
 //............................................................. محاسبه حقوق با انجام فرآیند back Pay...............................................
 		
 	public function run_back()
-	{			
+	{	
+
+
 		//در اين تابع فرض براين است که سال مالي با سال شمسي مطابقت دارد
 		$this->empty_back_tables() ; 
 	
@@ -1836,6 +1822,7 @@ if($this->backpay)
 	
 		if(!$this->check_to_run())
 			return false;  
+
 		
 		$this->salary_params = array(); //يک آرايه جهت نگهداري پارامترهاي حقوقي
 		$this->tax_tables = array(); //يک ارايه جهت نگهداري جداول مالياتي
@@ -1873,10 +1860,10 @@ if($this->backpay)
 		$this->exe_writ_sql();	 		
 		
 		$this->exe_param_sql(); 		
-		//$this->exe_paygetlist_sql(); 
+		$this->exe_paygetlist_sql(); 
 		$this->exe_staff_sql();
 		
-		//$this->exe_subtract_sql(); 
+		$this->exe_subtract_sql(); 
 				
 		$this->exe_tax_sql(); 
 		$this->exe_tax_history(); 
@@ -1894,13 +1881,13 @@ if($this->backpay)
 		$this->staffRow = $this->staff_rs->fetch(); 
 		$this->staffRowID++ ;
 		
-		/*$this->pgRowCount = $this->pay_get_list_rs->rowCount();
+		$this->pgRowCount = $this->pay_get_list_rs->rowCount();
 		$this->PGLRow =  $this->pay_get_list_rs->fetch() ; 				
-		$this->PGLRowID++ ; */	 
+		$this->PGLRowID++ ; 
 		
-		/*$this->subRowCount = $this->subtracts_rs->rowCount();
+		$this->subRowCount = $this->subtracts_rs->rowCount();
 		$this->subRow = $this->subtracts_rs->fetch() ; 
-		$this->subRowID++ ; 	*/		
+		$this->subRowID++ ; 	
 	
 		if(!$this->backpay) { 
 			$this->taxRowCount = $this->tax_rs->rowCount();
@@ -1911,13 +1898,15 @@ if($this->backpay)
 			$this->taxHisRow = $this->tax_history_rs->fetch() ;
 			$this->taxHisRowID++ ; 
 		}
-				
+			
 
 		if($this->backpay_recurrence == 1 || !$this->backpay) {
 			$this->monitor(7); 
 			
-			$this->fail_log_file_h = fopen('../../../tempDir/fail_log.php','w+');
-			$this->success_log_file_h = fopen('../../../tempDir/success_log.php','w+');
+			$this->fail_log_file_h = fopen('../../../../HumanResources/tempDir/fail_log.php','w+');
+			$this->success_log_file_h = fopen('../../../../HumanResources/tempDir/success_log.php','w+');
+
+
 
 			$this->fail_counter = 1;
 			$this->success_counter = 1;
@@ -2179,7 +2168,7 @@ if($this->backpay)
 							 $entry_title_full            => $value,
 							 $entry_title_empty    => 0,
 							 'param1'              => $this->PGLRow['approved_amount'],
-							 'cost_center_id'      => $this->staffRow['cost_center_id'],
+							 'cost_center_id'      => 0,
 							 'payment_type'        => NORMAL );
 		return $payment_rec;
 
@@ -2199,7 +2188,7 @@ if($this->backpay)
 		switch ($this->staffRow['person_type']) {
 			case HR_EMPLOYEE: return SIT_STAFF_COLLECTIVE_SECURITY_INSURE;
 			case HR_PROFESSOR: return SIT_PROFESSOR_COLLECTIVE_SECURITY_INSURE;
-			case HR_WORKER: return SIT_WORKER_COLLECTIVE_SECURITY_INSURE;
+			case HR_WORKER: return  7 ;
 			case HR_CONTRACT: return SIT5_STAFF_COLLECTIVE_SECURITY_INSURE;
 		}
 	}
@@ -2209,7 +2198,7 @@ if($this->backpay)
 		switch ($this->staffRow['person_type']) {
 			case HR_EMPLOYEE: return SIT_STAFF_TAX;
 			case HR_PROFESSOR: return SIT_PROFESSOR_TAX;
-			case HR_WORKER: return SIT_WORKER_TAX;
+			case HR_WORKER: return  8 ;
 			case HR_CONTRACT: return SIT5_STAFF_TAX ;	
 		}
 	}
@@ -2311,7 +2300,7 @@ if($this->backpay)
 	private function update_sums(&$fields, $value) {
 		$this->sum_tax_include += $value * $fields['tax_include'];		
 		$this->sum_insure_include += $value * $fields['insure_include'];
-		$this->sum_retired_include += $value * $fields['retired_include'];
+	//	$this->sum_retired_include += $value * $fields['retired_include'];
 	}
 	
 		//قسمت کنترل فرد
@@ -2409,7 +2398,8 @@ return true ;
 									INNER JOIN HRM_writs w ON(s.last_writ_id = w.writ_id AND s.last_writ_ver = w.writ_ver AND
 														      w.staff_id=s.staff_id AND w.person_type=s.person_type)
 									
-								WHERE p.person_type IN(3) AND  ' . $this->__WHERE , $this->__WHEREPARAM ); 		
+								WHERE p.person_type IN(3) AND  ' . $this->__WHERE , $this->__WHEREPARAM ); 	
+
 			
 	    			
 	}
@@ -2438,7 +2428,6 @@ return true ;
                         GROUP BY w.staff_id;
                 ");		
 
-
 		parent::runquery("						
 						insert into HRM_mwv
                         SELECT  w.staff_id,
@@ -2458,7 +2447,7 @@ return true ;
                         GROUP BY w.staff_id, w.writ_id"
                 );
 		
-		
+	
 
 		/*
 		 اقلام آخرین حکم افراد
@@ -2520,7 +2509,8 @@ return true ;
                         ORDER BY staff_id,execute_date,writ_id,writ_ver
                 ');			
 							
-								 
+				//	echo PdoDataAccess::GetLatestQueryString() ;
+			//	die();		 
 	}
 
 	/* نوشتن اطلاعات  مربوط به مراحل محاسبه حقوق در فايل مربوطه*/
@@ -2593,7 +2583,8 @@ return true ;
 
                         FROM HRM_salary_params
 
-                        WHERE from_date <= '" . $this->month_end . "' AND to_date >= '" . $this->month_end . "'");
+                        WHERE from_date <= '" . $this->month_end . "' AND
+							 (  to_date >= '" . $this->month_end . "' OR to_date IS NULL OR to_date = '0000-00-00') ");
 
 		for($i=0; $i<count($tmp_rs); $i++)
 		{
@@ -2603,6 +2594,7 @@ return true ;
 				'dim3_id' => $tmp_rs[$i]['dim3_id'],
 				'value'   => $tmp_rs[$i]['value']);
 		} 
+
 			
 		 
 	}
@@ -2619,37 +2611,20 @@ return true ;
 			$backpay_where = 'sit.backpay_include = 1';
 		
 		$this->pay_get_list_rs = parent::runquery_fetchMode("
-                        SELECT pgli.staff_id staff_id,
-                               pgl.list_id list_id,
-                               pgl.list_type list_type,
-                               0 as using_facilities,
-                               sit.salary_item_type_id salary_item_type_id,
-                               sit.compute_place,
-                               sit.salary_compute_type,
-                               sit.multiplicand,
-                               sit.function_name,
-                               sit.validity_start_date,
-                               sit.validity_end_date,
-                               sit.insure_include,
-                               sit.tax_include,
-                               sit.retired_include,                               
-                               approved_amount,
-                               initial_amount,
-                               value,
-                               0 as travel_cost
+                        SELECT staff_id ,
+       FinalAmount , 1 insure_include , 0 tax_include 
+    
 
-                        FROM pay_get_lists pgl
-                             INNER JOIN pay_get_list_items pgli
-                                   ON(pgl.list_id = pgli.list_id AND pgl.list_date >= '".$this->month_start."'
-									   AND pgl.list_date <= '".$this->month_end."' AND doc_state = ".CENTER_CONFIRM.")
-                             INNER JOIN limit_staff ls ON(pgli.staff_id = ls.staff_id)
-                             INNER JOIN salary_item_types sit
-                                   ON(pgli.salary_item_type_id = sit.salary_item_type_id AND ".$backpay_where.")
-                        WHERE pgl.list_type <> 9                
-                        ORDER by staff_id,list_type DESC
+  FROM ATN_ExtraSummary es
+           inner join HRM_persons p on es.PersonID = p.RefPersonID
+           inner join HRM_limit_staff s on p.PersonID = s.PersonID
+           
+            
+where SummaryYear = ".$this->__YEAR." AND SummaryMonth = ".$this->__MONTH." AND StatusCode = 'CONFIRM'
+ ORDER by staff_id
                         "); 
 
-						
+					
 		
 	}
 
@@ -2740,7 +2715,9 @@ return true ;
                                  	ON( s.PersonID = tdc.PersonID )    
                                  LEFT OUTER JOIN HRM_payments p
                                     ON(w.staff_id = p.staff_id AND p.pay_year = ".$this->__YEAR." AND p.pay_month=".$this->__MONTH." AND p.payment_type = ".NORMAL_PAYMENT.")
-                        ORDER BY s.staff_id ") ; 		
+                        ORDER BY s.staff_id ") ; 	
+
+
 			
 	}
 	
@@ -2759,13 +2736,10 @@ return true ;
 																	ps.subtract_type,																	
 																	ls.staff_id, 
 																	ps.salary_item_type_id,
-																	CASE
-																		WHEN ps.subtract_type = ".LOAN." AND ps.instalment > sr.remainder THEN sr.remainder
-																		ELSE ps.instalment
-																	END get_value,
+																    ps.instalment get_value,
 																	ps.instalment,
-																	sr.remainder,
-																	sr.receipt,
+																	0 remainder,
+																	0 receipt,
 																	sit.validity_start_date,
 																	sit.validity_end_date,
 																	sit.insure_include,
@@ -2780,13 +2754,12 @@ return true ;
 																	ps.loan_no,
 																	ps.contract_no 
 
-													FROM limit_staff ls
-															INNER JOIN person_subtracts ps
+													FROM HRM_limit_staff ls
+															INNER JOIN HRM_person_subtracts ps
 																ON(ps.PersonID = ls.PersonID)																															
-															INNER JOIN salary_item_types sit
+															INNER JOIN HRM_salary_item_types sit
 																ON(ps.salary_item_type_id = sit.salary_item_type_id)
-															LEFT JOIN tmp_SubtractRemainders sr 
-																ON  sr.subtract_id = ps.subtract_id
+															
 																
 													WHERE  (ps.instalment > 0) AND	if(ps.subtract_type = 1 , ps.IsFinished = 0 , (1=1))  AND													
 														   (ps.start_date <= '".$this->month_end."') AND 
@@ -2798,12 +2771,8 @@ return true ;
 															ps.subtract_type,
 															ps.salary_item_type_id,
 															ps.subtract_id,
-															CASE
-															WHEN ps.subtract_type = ".LOAN." AND ps.instalment > sr.remainder THEN sr.remainder
-															ELSE ps.instalment
-															END,
+														    ps.instalment,
 															ps.instalment,
-															sr.remainder,
 															sit.validity_start_date,
 															sit.validity_end_date,
 															sit.insure_include,
@@ -2817,12 +2786,10 @@ return true ;
 															ps.account_no,
 															ps.loan_no
 															") ;  
-		/*if($_SESSION['UserID'] == 'jafarkhani' && $this->__MONTH == 11 ) 
-		{		
-			echo PdoDataAccess::GetLatestQueryString() ; 
-			die() ; 				
-		}*/
-										
+	
+	
+	
+			
 												
 	}
 	
@@ -2863,17 +2830,16 @@ return true ;
                                         ON(pit3.staff_id = pit.staff_id AND 
                                            pit3.pay_year = pit.pay_year AND
                                            pit3.pay_month = pit.pay_month AND
-										   pit3.payment_type = 3 AND if( pit3.pay_year = 1393 , pit3.pay_month > 1 , (1=1) )  AND
+	 pit3.payment_type = 3 AND if( pit3.pay_year = 1393 , pit3.pay_month > 1 , (1=1) )  AND
                                            pit3.salary_item_type_id = pit.salary_item_type_id)
 
                         WHERE pit.pay_year >= ".$this->__START_NORMALIZE_TAX_YEAR." AND
                                   pit.pay_month >= ".$this->__START_NORMALIZE_TAX_MONTH." AND
-                                  pit.salary_item_type_id IN(".SIT_PROFESSOR_TAX.",
-                                                             ".SIT_STAFF_TAX.",
-                                                             ".SIT_WORKER_TAX.",
-															 ".SIT5_STAFF_TAX.") ".$TaxWhere."
+                                  pit.salary_item_type_id IN(8) ".$TaxWhere."
                         GROUP BY pit.staff_id
-                        ");					
+                        ");	
+
+
 	}
 	
 	/* اجراي query مربوط به استخراج سابقه مالياتي*/
@@ -2901,8 +2867,7 @@ return true ;
 													WHERE ".$w."
 													ORDER BY sth.staff_id,sth.start_date			
 													");	
-		
-		
+													
 	}
 	
 		/* اجراي query جداول مالياتي و انتقال آنها به يک ارايه */
@@ -2932,7 +2897,7 @@ return true ;
                         ORDER BY ttype.person_type,ttype.tax_table_type_id,ttable.from_date,titem.from_value
                         ");
 				
-				
+					
 		for($i=0; $i<count($tmp_rs); $i++)
 		{
 			$this->tax_tables[$tmp_rs[$i]['tax_table_type_id']][] = array(
@@ -2942,7 +2907,7 @@ return true ;
 																		'to_value' => $tmp_rs[$i]['to_value'],
 																		'coeficient'   => $tmp_rs[$i]['coeficient']);
 		}
-						
+		
 	}
 	
 	/* اجراي query براي استخراج سرفصل ماليات و بازنشتگي وبيمه*/
@@ -2956,26 +2921,10 @@ return true ;
 								
                         FROM HRM_salary_item_types sit
                         WHERE
-                             sit.salary_item_type_id IN (".SIT_PROFESSOR_COLLECTIVE_SECURITY_INSURE.",
-														 ".SIT_STAFF_COLLECTIVE_SECURITY_INSURE.",
-														 ".SIT_WORKER_COLLECTIVE_SECURITY_INSURE.",
-														 ".SIT5_STAFF_COLLECTIVE_SECURITY_INSURE.",
-														 ".SIT_PROFESSOR_RETIRED.",
-														 ".SIT_STAFF_RETIRED.",
-														 ".SIT_WORKER_RETIRED.",
-														 ".SIT5_STAFF_RETIRED.",
-														 ".SIT_PROFESSOR_TAX.",														
-														 ".SIT_STAFF_TAX.",
-														 ".SIT_WORKER_TAX.",
-														 ".SIT5_STAFF_TAX.",
-														 ".STAFF_FIRST_MONTH_MOGHARARY.",
-														 ".PROFESSOR_FIRST_MONTH_MOGHARARY.",
-														 ".RETURN_FIRST_MONTH_MOGHARARY." ,
-														 ".SIT5_STAFF_FIRST_MONTH_MOGHARARY.",
-														 ".SIT_RETURN_INSURE_AND_RETIRED_WOUNDED_PERSONS.")
+                             sit.salary_item_type_id IN (7,8)
 						");
 		
-				
+			
 		for($i=0; $i<count($tmp_rs); $i++)
 		{
 			$this->acc_info[$tmp_rs[$i]['salary_item_type_id']] = array(
@@ -3004,7 +2953,7 @@ return true ;
 										 'salary_item_type_id' => $key,
 										 'get_value'           => 0,
 										 'pay_value'           => $value,
-										 'cost_center_id'      => $this->staffRow['cost_center_id'],
+										 'cost_center_id'      => 0,
 										 'payment_type'        => NORMAL );				
 	}
 	
@@ -3094,7 +3043,7 @@ return true ;
 							 'param6'			   => $second_surplus_value,
 							 'param8'			   => $param8,
 							 'param9'			   => $normal2_value,
-							 'cost_center_id'      => $this->staffRow['cost_center_id'],
+							 'cost_center_id'      => 0,
 							 'payment_type'        => NORMAL );
 		
 		return $payment_rec;
@@ -3189,7 +3138,7 @@ return true ;
 							 'param2'              => $param2,
 							 'param3'              => $param3,
 							 'param4'              => 0 ,
-							 'cost_center_id'      => $this->staffRow['cost_center_id'],
+							 'cost_center_id'      => 0,
 							 'payment_type'        => NORMAL );
 
 		return $payment_rec;	
@@ -3234,7 +3183,7 @@ return true ;
 								 'param1'              => $param1,
 								 'param2'              => $param2,
 								 'param3'              => $param3,
-								 'cost_center_id'      => $this->staffRow['cost_center_id'],
+								 'cost_center_id'      => 0,
 								 'payment_type'        => NORMAL );
 		}
 							 
@@ -3249,33 +3198,27 @@ return true ;
 		//param2 : تعداد ساعات اضافه کار
 		//param3 : دستمزد روزانه
 
-		//اضافه کار تشويقي را محاسبه مي کند.
-		if ($this->PGLRow['initial_amount']) {
-			$this->compute_salary_item3_29();
-		}
-		
 		$param1 = 1.4;
-		$param2 = $this->PGLRow['approved_amount'];
-		
-		$salary = $this->payment_items[SIT_WORKER_BASE_SALARY]['pay_value'] +
-				  $this->payment_items[SIT_WORKER_ANNUAL_INC]['pay_value'] + 
-				  (isset($this->payment_items[SIT_WORKER_DEVOTION_EXTRA]['pay_value']) ? $this->payment_items[SIT_WORKER_DEVOTION_EXTRA]['pay_value'] : 0 ) ;	
+		$param2 = $this->PGLRow['FinalAmount'];
+
+	
+		$salary = $this->payment_items[1]['pay_value']  ;	
 
 		$param3 = $salary / $this->__MONTH_LENGTH;
-
+ 
 		$value = $param1 * ($param2 / 7.33) * $param3;
-		
+	
 		$payment_rec = array(
 							 'pay_year'            => $this->__YEAR,
 							 'pay_month'           => $this->__MONTH,
 							 'staff_id'            => $this->cur_staff_id,
-							 'salary_item_type_id' => SIT_WORKER_EXTRA_WORK,
+							 'salary_item_type_id' => 12 ,
 							 'get_value'           => 0,
 							 'pay_value'           => $value,
 							 'param1'              => $param1,
 							 'param2'              => $param2,
 							 'param3'              => $param3,
-							 'cost_center_id'      => $this->staffRow['cost_center_id'],
+							 'cost_center_id'      => 0,
 							 'payment_type'        => NORMAL );
 
 		return $payment_rec;		
@@ -3315,7 +3258,7 @@ return true ;
 								 'param1'              => $param1,
 								 'param2'              => $param2,
 								 'param3'              => $param3,
-								 'cost_center_id'      => $this->staffRow['cost_center_id'],
+								 'cost_center_id'      => 0,
 								 'payment_type'        => NORMAL );
 		}
 

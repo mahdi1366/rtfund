@@ -9,6 +9,7 @@ require_once '../class/payments.class.php';
 require_once '../class/payment_cancel.class.php';
 require_once '../../../baseInfo/class/salary_item_report.class.php';
 require_once '../class/arrear_pay_calculation.class.php';
+require_once '../../../../accounting/docs/import.data.php';
 
 require_once inc_QueryHelper;
 require_once(inc_response);
@@ -45,7 +46,7 @@ switch ($task) {
 }
 
 function ProcessPayment() {
-		
+	
 	
 	$paymentCalcObj = new manage_payment_calculation();
 
@@ -182,85 +183,53 @@ function getProgress() {
 
 function confirmation () {
     
-	$keys = array_keys($_POST);
-	$WhereCost = "" ;
-	$arr = "" ;
+	$obj = new manage_payments();
+	PdoDataAccess::FillObjectByArray($obj, $_POST) ;  
 	
-	//...................... مراکز هزینه ................
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
 	
-	for($i=0; $i < count($_POST); $i++)
+	if(!$obj->change_payment_state($pdo))
 	{
-		if(strpos($keys[$i],"chkcostID_") !== false)
-		{			
-			$arr = preg_split('/_/', $keys[$i]);	
-			if(isset($arr[1]))
-			$WhereCost .= ($WhereCost!="") ?  ",".$arr[1] : $arr[1] ; 
-		}	
-				
+		echo Response::createObjectiveResponse(false , ExceptionHandler::GetExceptionsToString());
+		die();
 	}
-    
-    if($_POST["ItemType"] == "salary") 
-        {
-            $obj = new manage_payments();
-            PdoDataAccess::FillObjectByArray($obj, $_POST) ;  
-            $obj->_CostCenter = $WhereCost; 
-            $return = $obj->change_payment_state($_POST["PersonType"]);	
-        }    
-    else if($_POST["ItemType"] == "reportSub") 
-        {        
-           $obj = new manage_salary_item_report() ;  
-           
-           $obj->PayYear = $_POST["pay_year"] ; 
-           $obj->PayMonth = $_POST["pay_month"] ; 
-           $obj->PersonType = $_POST["PersonType"] ;  
-           $obj->state =  $_POST["state"] ;  
-           
-           $return = $obj->change_state() ; 
-
-        }
-    
-    
-        if($return)
-		echo Response::createResponse(true,$obj->state);
+	if($obj->state == "2")
+	{
+		if(!RegisterSalaryDoc($obj,$_POST["CostID"], $_POST["TafsiliID"], $_POST["TafsiliID2"], $pdo))
+		{
+			print_r(ExceptionHandler::PopAllExceptions());
+			echo Response::createObjectiveResponse(false , ExceptionHandler::GetExceptionsToString());
+			die();
+		}
+	}
 	else
-		echo Response::createResponse(false , ExceptionHandler::ConvertExceptionsToJsObject());
+	{
+		if(!ReturnSalaryDoc($obj, $pdo))
+		{
+			print_r(ExceptionHandler::PopAllExceptions());
+			echo Response::createObjectiveResponse(false , ExceptionHandler::GetExceptionsToString());
+			die();
+		}
+	}
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true,$obj->state);
 	die();
             
 }
 
 function Remove() {	
-	//... برای ماموریت قسمت تایید مماموریت نوشته شود و چک بشود که چنانچه تایید شده است امکان حذف ان رکوردها وجود ندارد.
-	
-	$keys = array_keys($_POST);
+
+    $keys = array_keys($_POST);
 	$WhereCost = "" ;
 	$arr = "" ;
-	
-	//...................... مراکز هزینه ................
-	
-	for($i=0; $i < count($_POST); $i++)
-	{
-		if(strpos($keys[$i],"chkcostID_") !== false)
-		{			
-			$arr = preg_split('/_/', $keys[$i]);	
-			if(isset($arr[1]))
-			$WhereCost .= ($WhereCost!="") ?  ",".$arr[1] : $arr[1] ; 
-		}	
-				
-	}
-	
+			
 	$cancelObj = new manage_payment_cancel();
 	$cancelObj->year = $_POST["pay_year"] ; 	
 	$cancelObj->month = $_POST["pay_month"] ; 
-	$cancelObj->payment_type = $_POST["payment_type"] ;  
-	$cancelObj->cost_center_id = $WhereCost;
+	$cancelObj->payment_type = $_POST["payment_type"] ;  	
 	$cancelObj->staff_id = $_POST["SID"] ; 
 		
-	if($_POST["PersonType"] == 1 ||  $_POST["PersonType"] == 2 || $_POST["PersonType"] == 3 || $_POST["PersonType"] == 5 )
-	$cancelObj->person_type = $_POST["PersonType"] ; 
-    elseif ( $_POST["PersonType"] == 102 )
-	   $cancelObj->person_type = '1,2,3' ; 	
-    elseif ( $_POST["PersonType"] == 100 )
-	   $cancelObj->person_type = '1,2,3,5' ; 	
   
 	$res = $cancelObj->run();
 	
@@ -270,10 +239,6 @@ function Remove() {
 		echo Response::createObjectiveResponse($res, $cancelObj->success_count['FICH']."_". $cancelObj->success_count['FICH_ITEM'] . "_" . $cancelObj->unsuccess_count );	
 
 	die();
-	
-	  
-	 // فعلا که دیتا بیس ها جداگانه است پارامتر می فرستیم بعد با یستی اصلاح گردد.
-	// $return = $obj->PaymentCancle($_POST["PersonType"]); 
 	
 }
 

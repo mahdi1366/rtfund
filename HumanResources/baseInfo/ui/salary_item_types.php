@@ -70,10 +70,10 @@ $grid = $dg->makeGrid_returnObjects();
 		this.grid = <?= $grid?>;
 		
 		this.grid.getView().getRowClass = function(record,index)
-                                        { 
-                                           if(record.data.valid == 1 ){  return "VioletRow"; };
-                                           return "";
-                                        }
+		{ 
+		   if(record.data.valid == 1 ){  return "VioletRow"; };
+		   return "";
+		}
 		this.grid.render("ItemResDIV");
 	}
 

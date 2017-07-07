@@ -153,7 +153,7 @@ PaymentProcess.prototype.IssuePayment = function(btn){
 				PaymentProcessObject.get("img_loading").style.display = "none";		
 				PaymentProcessObject.resultPanel.down("[itemId=resultSt]").update(
 					"<br>" + "<a href='/HumanResources/tempDir/success_log.php' target='_blank' >" +
-					"<img src=<?=HR_ImagePath?>success.gif > " + (cnt[0]-1 ) + " موفق " + "</a> &nbsp;&nbsp;" + "<a href='/HumanResources/tempDir/fail_log.php' target='_blank' >" +
+					"<img src=<?=HR_ImagePath?>success.gif > " + (cnt[0]-1 ) + " موفق " + "</a> &nbsp;&nbsp;" + "<a href='../../../../HumanResources/tempDir/fail_log.php' target='_blank' >" +
 					"<img src=<?=HR_ImagePath?>fail.gif > " + (cnt[1]-1) + " شکست  " );  				
 			}
 		},

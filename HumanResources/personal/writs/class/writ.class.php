@@ -72,7 +72,7 @@ class manage_writ extends PdoDataAccess
     public $hortative_group;
     
     public $writ_transfer_date;   
-    public $MissionPlace ; 
+    
 	public $CostCenterID ; 
 	public $PayRet ; 
 
@@ -118,13 +118,8 @@ class manage_writ extends PdoDataAccess
 
     private function onBeforeUpdate()
 	{
-		if(!$this->check_send_letter_no())
-		{
-			return false ;
-		}
-
-		if(HRSystem == 'PersonalSystem' && $this->person_type != HR_PROFESSOR )
-		{
+		
+		
 			if( $this->onduty_day < 0 || $this->onduty_day > 29 )
 			{
 				parent::PushException(ERR_ONDUTY_DAY_VALUE );
@@ -135,17 +130,16 @@ class manage_writ extends PdoDataAccess
 				parent::PushException(ERR_ONDUTY_MONTH_VALUE );
     			return false ;
 			}
-		}
+		
 		//در صورتي كه واحد اصلي محل خدمت فرد تغيير كند مركز هزينه خالي خواهد شد تا واحد مالي
         //ملزم به تعيين مركز هزينه گردد
-		if( HRSystem == 'PersonalSystem' )
-		{
+		
 			$pre_writ_rec = $this->get_prior_writ();
 			if($pre_writ_rec->ouid != $this->ouid )
 			{
 				$this->cost_center_id = null ;
 			}
-		}
+		
 
 		if($this->person_type == HR_PROFESSOR || $this->person_type == HR_EMPLOYEE )
 		{
@@ -205,8 +199,7 @@ if($this->family_responsible == 0 )
 
 	private function onBeforeInsert()
 	{
-		/*if($this->check_send_letter_no() === false )
-			return false ; */ 
+		 
 
 		$query = "
 			select w.writ_id, w.writ_ver , w.emp_mode , w.execute_date
@@ -312,7 +305,7 @@ if($this->family_responsible == 0 )
 	}
 
     private function onAfterUpdate()
-    {
+    {   
 	$lastWritObj = manage_writ::GetLastWrit($this->staff_id);
         $prior_writ_Obj = $this->get_prior_writ();
 
@@ -320,11 +313,11 @@ if($this->family_responsible == 0 )
 		{
 			//---- چنانچه پست فرد را تغییر دهند ---------
 
-			if($prior_writ_Obj->post_id != $this->post_id)
+			/*if($prior_writ_Obj->post_id != $this->post_id)
 			{
 			   if (manage_posts::change_user_post($this->staff_id, $prior_writ_Obj->post_id , $this->post_id, $this->execute_date) === false)
 				   return false ;
-			}
+			}*/
 			//__________________________________________________________
 			if( manage_staff::SetStaffLastWrit($this->staff_id) === false )
 			   return false ;
@@ -502,45 +495,7 @@ if($this->family_responsible == 0 )
 
 		}
 
-   // چک کردن شماره دبيرخانه - شماره دبيرخانه نبايد در يک سال تکراري باشد
-	public function check_send_letter_no() {
-                           
-		if ($this->send_letter_no == PDONULL ||  empty($this->send_letter_no)  )
-			return true;
-
-            $send_letter_year = substr(DateModules::Miladi_to_Shamsi($this->send_letter_date),0,4);
-	    $jthis_year_first_day = '01/01/'.$send_letter_year;
-	    $jthis_year_last_day  = '29/12/'.$send_letter_year;
-
-	    $Gthis_year_first_day = DateModules::Shamsi_to_Miladi($jthis_year_first_day);
-	    $Gone_year_ago_last_day_writ = DateModules::Shamsi_to_Miladi($jthis_year_last_day);
-
-	    $query = " select writ_id , writ_ver ,send_letter_no
-	               from HRM_writs
-		       where  send_letter_no = ".$this->send_letter_no." AND
-						issue_date >= '".$Gthis_year_first_day."' AND
-						issue_date<='".$Gone_year_ago_last_day_writ."' AND 
-						send_letter_date >= '".$Gthis_year_first_day."' AND
-						send_letter_date <='".$Gone_year_ago_last_day_writ."' AND    
-						(writ_id <> ".$this->writ_id." ) AND
-						(if(corrective!=1,history_only != 1,(1=1)) OR history_only IS NULL)  "; 
-
-            
-	    $temp = parent::runquery($query);
-	   	   	    
-            if(count($temp) != 0)
-            {
-    		parent::PushException(strtr(ER_SEND_LETTER_NO_IS_REAPEATED,
-                                      array("%0%" => $temp[0]["send_letter_no"], "%1%" => $temp[0]["writ_id"])));
-
-    		return false ;
-            }
-	    else {
-	    	return true ;
-	    }
-
-	}
-
+  
 	/**
 	 * اگر تابع را بدون ورودي فراخواني کنيد يک شي خالي برمي گرداند
 	 * اگر فقط شماره حکم را بفرستيد شي را با آخرين نسخه آن حکم پر مي کند
@@ -578,7 +533,8 @@ if($this->family_responsible == 0 )
 
 	 	}
 //  این قسمت در زمان ثبت در دیتا بیس مورد استفاده قرار می گیرد چون تاریخ است بررسی میکند و ان را میلادی می کند و در دیتا بیس ذخیره می نماید.
-
+/*echo $this->post_id .''; 
+die();*/
         $this->DT_corrective_date = DataMember::CreateDMA(DataMember::DT_DATE);
         $this->DT_ref_letter_date = DataMember::CreateDMA(DataMember::DT_DATE);
         $this->DT_send_letter_date = DataMember::CreateDMA(DataMember::DT_DATE);
@@ -593,15 +549,16 @@ if($this->family_responsible == 0 )
 
 	function EditWrit()
 	{
+
 	 	if(!$this->onBeforeUpdate())
 	 		return false ;
 
 
 	 	$whereParams = array(":WID" => $this->writ_id , ":WVER" => $this->writ_ver, ":SID" => $this->staff_id);
-
-	 	if(!parent::update("writs",$this," writ_id=:WID and writ_ver=:WVER and staff_id=:SID ", $whereParams))
+                $this->corrective = ($this->corrective == null ) ? 0 : $this->corrective ; 
+	 	if(!parent::update("HRM_writs",$this," writ_id=:WID and writ_ver=:WVER and staff_id=:SID ", $whereParams))
                     return false ;
-                
+               
 
         if(!$this->onAfterUpdate())
 	 		return false ;
@@ -1258,7 +1215,7 @@ if($this->family_responsible == 0 )
 												   		$this->issue_date,
 												   		false,
 												  		false ,
-												   		$this->send_letter_no,
+												   		null,
 												  		$this->writ_id,
 												   		$this->writ_ver,
 												   		$this->base
@@ -2160,7 +2117,7 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
                           c.cost_center_id ,
                           sf.sfid,
                           sf.ptitle sf_ptitle,
-                          sb.sbid,
+                          sb.sbid,po.PostName,
                           sb.ptitle sb_ptitle ,
                           parentu.ouid ,
                           parentu.ptitle parentTitle , 
@@ -2178,7 +2135,7 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
                         LEFT JOIN Basic_Info bi5 ON (bi5.InfoID = w.education_level AND bi5.TypeID = 6 )
                         LEFT JOIN Basic_Info bi6 ON (bi6.InfoID = w.salary_pay_proc AND bi6.TypeID = 12 )
                         LEFT JOIN Basic_Info bi7 ON (bi7.InfoID = w.annual_effect AND bi7.TypeID = 13 )
-                        LEFT OUTER JOIN position po ON (w.post_id = po.post_id)
+                       LEFT OUTER JOIN BSC_posts po ON (w.post_id = po.PostID)
                         LEFT OUTER JOIN writ_types wt ON (w.writ_type_id = wt.writ_type_id AND w.person_type = wt.person_type)
                         LEFT OUTER JOIN writ_subtypes wst ON (w.writ_subtype_id = wst.writ_subtype_id AND
                                                w.writ_type_id = wst.writ_type_id AND w.person_type = wst.person_type)
@@ -2200,7 +2157,7 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 			                  bi2.InfoDesc history_only_title ,	                         
 	                          p.pfname ,
 	                          p.plname ,
-	                          p.PersonID ,
+	                          p.PersonID ,po.PostName,
 	                          concat(p.pfname ,' ',p.plname) fullname ,
 	                          wt.title MainWtitle,
 	                          wst.title wst_title,
@@ -2211,20 +2168,20 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 	                          bi6.InfoDesc SPTitle ,
 	                          bi7.InfoDesc AETitle ,
 	                          bi8.InfoDesc ModeTitle ,
-	                          o.ptitle o_ptitle,	                         
+	                          o.ptitle o_ptitle,
+                                  u.UnitName ,                         
 	                          sf.sfid,
 	                          sf.ptitle sf_ptitle,
 	                          sb.sbid,
 	                          sb.ptitle sb_ptitle ,
 	                          parentu.ouid ,
 	                          parentu.ptitle parentTitle ,
-	                          po.title post_title ,
-	                          po.post_no ,
+	                         
 	                          j.title job_title ,
-	                          j.job_group ,
+	                          j.job_group /*,
 	                          
 				 (w.cur_group - jf.start_group) + 1 job_category 
-
+*/
 				FROM HRM_persons p
 	                        JOIN HRM_staff s ON(p.personid = s.personid)
 	                        ".$staff_group_join ."
@@ -2237,16 +2194,16 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 	                        LEFT JOIN BaseInfo bi6 ON (bi6.InfoID = w.salary_pay_proc AND bi6.TypeID = 59 )
 	                        LEFT JOIN BaseInfo bi7 ON (bi7.InfoID = w.annual_effect AND bi7.TypeID = 60 )
 	                        LEFT OUTER JOIN BaseInfo bi8 ON ( bi8.InfoID = w.emp_mode AND bi8.TypeID = 61 )
-	                        LEFT OUTER JOIN HRM_position po ON (w.post_id = po.post_id)
-							LEFT OUTER JOIN HRM_job_fields jf ON (po.jfid = jf.jfid)
-							
+	                       
+							/*LEFT OUTER JOIN HRM_job_fields jf ON (po.jfid = jf.jfid)*/
+					 LEFT OUTER JOIN BSC_posts po ON (w.post_id = po.PostID)		
 	                        LEFT OUTER JOIN HRM_writ_types wt ON ((w.writ_type_id = wt.writ_type_id) AND (w.person_type = wt.person_type))
 	                        LEFT OUTER JOIN HRM_writ_subtypes wst ON ((w.writ_subtype_id = wst.writ_subtype_id) AND (w.writ_type_id = wst.writ_type_id) AND (w.person_type = wst.person_type))
 	                        LEFT OUTER JOIN HRM_study_branchs sb ON ((w.sbid = sb.sbid) AND (w.sfid = sb.sfid))
 	                        LEFT OUTER JOIN HRM_study_fields sf ON (w.sfid = sf.sfid)
 	                        LEFT OUTER JOIN HRM_org_new_units o ON (o.ouid = w.ouid)
 	                        LEFT OUTER JOIN HRM_org_new_units parentu ON (parentu.ouid = o.parent_ouid)
-	                       						
+	                       LEFT OUTER JOIN BSC_units u ON u.UnitID = w.ouid	
 	                        LEFT OUTER JOIN HRM_jobs j ON ( w.job_id = j.job_id )
 							
 					where (s.last_cost_center_id is null )	";

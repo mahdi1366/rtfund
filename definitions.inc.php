@@ -4,6 +4,7 @@ define("BRANCH_UM", "3");
 define("BRANCH_PARK", "4");
 
 define("Default_Agent_Loan", "9");
+define("Default_BranchID", "3");
 
 //................. TypeID = 9 .....................
 define("DOCTYPE_STARTCYCLE", "1");
@@ -24,9 +25,10 @@ define("DOCTYPE_INCOMERCHEQUE", "15");
 define("DOCTYPE_LOAN_DIFFERENCE", "16");
 define("DOCTYPE_LOAN_COST", "17");
 define("DOCTYPE_WARRENTY_END", "18");
-define("DOCTYPE_WARRENTY_CANCEL", "21");
 define("DOCTYPE_WARRENTY_EXTEND", "19");
 define("DOCTYPE_INSTALLMENT_CHANGE", "20");
+define("DOCTYPE_WARRENTY_CANCEL", "21");
+define("DOCTYPE_SALARY", "22");
 
 //............  TypeID=2 ....................
 define("TAFTYPE_PERSONS", "1");

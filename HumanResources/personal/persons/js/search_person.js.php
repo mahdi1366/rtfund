@@ -23,7 +23,7 @@ function SearchPerson()
 	
 	this.personCombo = new Ext.form.ComboBox({
 		store: personStore,
-		emptyText:'جستجوي استاد/كارمند بر اساس نام و نام خانوادگي ...',
+		emptyText:'جستجوي كارمند بر اساس نام و نام خانوادگي ...',
 		typeAhead: false,
 		listConfig : {
 			loadingText: 'در حال جستجو...'
@@ -73,15 +73,7 @@ function SearchPerson()
 		width: 800,
 		frame:true,
 		items : [this.personCombo],
-		buttons : [  <?if($accessObj->AddFlag){?>
-			{
-				text: "ایجاد",
-				iconCls: 'add',
-				handler: function(){
-					framework.OpenPage(SearchPersonObject.address_prefix + "new_person.php", "ایجاد فرد جدید",
-					{FacilID : '<?= $_POST["MenuID"]?>'});
-				}
-			}, <?}?> {
+		buttons : [   {
 				text: editButtonText ,
 				iconCls:'edit' ,
 				handler:function(){

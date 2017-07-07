@@ -109,7 +109,7 @@ function searchWritTypes()
 			order by title"));
 
 
-	
+
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -459,7 +459,7 @@ function searchPayType()
 	{
 		$dt[] = array(array("InfoID" => $_REQUEST["extraRowID"], "Title" => $_REQUEST["extraRowText"]));
 	}
-	$dt = array_merge($dt, PdoDataAccess::runquery(" SELECT InfoID,Title FROM Basic_Info where typeid = 50  and InfoID in (".manage_access::getValidPayments().")"));
+	$dt = array_merge($dt, PdoDataAccess::runquery(" SELECT InfoID,InfoDesc FROM BaseInfo where typeid = 72  and InfoID in (1,2,3) " )); 
 
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
@@ -471,7 +471,7 @@ function searchBank()
 	if(!empty($_REQUEST["rep"]) && $_REQUEST["rep"] == 1 )
 		$dt[] = array("bank_id" => "-1", "name" => "همه");
 	
-	$query = "SELECT bank_id,name FROM banks where 1=1";
+	$query = "SELECT bank_id,name FROM HRM_banks where 1=1";
 	$params = array();
 	if(!empty($_REQUEST["query"]))
 	{
@@ -484,11 +484,13 @@ function searchBank()
 		$query .= " AND bank_id=?";
 		$params[] = $_REQUEST["bank_id"];
 	}
-	elseif($_REQUEST["sub"] == 1 && empty($_REQUEST["bank_id"]) )  {
+	elseif(!empty($_REQUEST["sub"]) && $_REQUEST["sub"] == 1 && empty($_REQUEST["bank_id"]) )  {
 		$query .= " AND 1=0 ";
 	}
 	
 	$dt = array_merge($dt, PdoDataAccess::runquery($query, $params));
+	
+
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 	
@@ -512,9 +514,9 @@ function searchEmpState()
 	$dt = array();
 	if(!empty($_REQUEST["extraRowText"]))
 	{
-		$dt[] = array(array("InfoID" => $_REQUEST["extraRowID"], "Title" => $_REQUEST["extraRowText"]));
+		$dt[] = array(array("InfoID" => $_REQUEST["extraRowID"], "InfoDesc" => $_REQUEST["extraRowText"]));
 	}
-	$dt = array_merge($dt, PdoDataAccess::runquery(" SELECT InfoID,Title FROM Basic_Info where typeid = 3 "));
+	$dt = array_merge($dt, PdoDataAccess::runquery(" SELECT InfoID,InfoDesc FROM BaseInfo where typeid = 58  "));
 
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();	
@@ -586,7 +588,7 @@ function searchSalaryItemTypes()
 	
 	
 
-	$query = "SELECT salary_item_type_id,full_title , person_type FROM salary_item_types where 1=1 ".$Whr ;
+	$query = "SELECT salary_item_type_id,full_title , person_type FROM HRM_salary_item_types where 1=1 ".$Whr ;
 	$params = array();
 	if(!empty($_REQUEST["query"]))
 	{
@@ -597,10 +599,9 @@ function searchSalaryItemTypes()
 		
 	$query .= " order by person_type " ; 
 	$dt = array_merge($dt, PdoDataAccess::runquery($query, $params));
-	if($_SESSION['UserID'] == 'bmahdipour')
-	{
-		//echo PdoDataAccess::GetLatestQueryString() . "***sds*"; die(); 
-	}
+
+		
+	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 	

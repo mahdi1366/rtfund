@@ -505,16 +505,22 @@ function selectWrtData ()
 
 function saveData()
 {      
+ 
   	//........ Fill object ..............
 	$obj = new manage_writ($_POST['writ_id'],$_POST['writ_ver'], $_POST['staff_id']);
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
+        
+
 
     $obj->family_responsible = (isset($_POST['family_responsible'])) ?  $_POST['family_responsible'] : 0 ;
     $obj->history_only = (isset($_POST['history_only'])) ?  $_POST['history_only'] : 0 ;
     $obj->remembered = (isset($_POST['remembered'])) ?  $_POST['remembered'] : 0 ;
        
     $obj->dont_transfer = (isset($_POST['dont_transfer'])) ?  $_POST['dont_transfer'] : 0 ;
-	
+    $obj->post_id = $_POST['postID'];
+    $obj->ouid = $_POST['UnitID'] ; 
+
+
 	//.............. محاسبه مجدد پایه سنواتی فرد ..................
 	$Pqry = " select sex , p.person_type ,military_duration_day , military_duration
 				from persons p inner join staff s 
@@ -523,7 +529,7 @@ function saveData()
 				 where s.staff_id = ".$obj->staff_id  ; 
 	$Pres = PdoDataAccess::runquery($Pqry) ; 
 	
-	if( $obj->person_type == 2 ||  $obj->person_type == 5  ) {
+	/*if( $obj->person_type == 2 ||  $obj->person_type == 5  ) {
 		if($Pres[0]["sex"] == 1 &&  $Pres[0]["person_type"] == 2 && ($Pres[0]["military_duration_day"] > 0 || $Pres[0]["military_duration"] > 0 ) )
 		{
 
@@ -541,7 +547,7 @@ function saveData()
 			$Vyear =  $obj->onduty_year ;  
 			 
 		$obj->base = $Vyear + 1; 
-	}
+	}*/
 //............................................................
 	/*$arr = get_object_vars($obj);
 	$KeyArr = array_keys($arr);
@@ -566,11 +572,7 @@ function saveData()
 
    	//....................................
         
-	if( $obj->check_send_letter_no() === false )   
-	{
-		Response::createObjectiveResponse(false, ExceptionHandler::ConvertExceptionsToJsObject());
-		die();
-	}       
+	     
         
 	if(!$obj->EditWrit())
 		{
@@ -1402,7 +1404,7 @@ function recalculate()
 
 function calculate()
 {   
-     
+    
     $return = manage_writ_item::compute_writ_items( $_POST["writ_id"],  $_POST["writ_ver"],  $_POST["staff_id"]);
     if($return)
 		$return = 'true';

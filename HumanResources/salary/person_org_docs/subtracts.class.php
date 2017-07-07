@@ -45,27 +45,24 @@ class manage_subtracts extends PdoDataAccess
 				left join tmp_SubtractRemainders sr using(subtract_id)";
 		}
 		else {
+		    
+		    
 			$query = "select s.*,si.full_title, b.name bankTitle, 0 remainder,0 receipt
-						from person_subtracts s 
-						join salary_item_types si using(salary_item_type_id)
-						left join banks b using(bank_id)
+						from HRM_person_subtracts s 
+						join HRM_salary_item_types si using(salary_item_type_id)
+						left join HRM_banks b using(bank_id)
+						inner join HRM_persons p on p.PersonID = s.PersonID 
 						";
 		}
 		
 		$query .= ($where != "") ? " where " . $where : "";
-	/*if($_SESSION['UserID'] == 'jafarkhani')
-	{
-		  echo $query ; 
-		  print_r($whereParam); 
-		  die(); 
-	} 	*/
-		 
+
 		return parent::runquery($query, $whereParam);
 	}
 
 	function Add()
 	{
-	 	if( parent::insert("person_subtracts", $this) === false ) {
+	 	if( parent::insert("HRM_person_subtracts", $this) === false ) {
 				
 			return false; 
 			
@@ -88,7 +85,7 @@ class manage_subtracts extends PdoDataAccess
 	 	$whereParams = array();
 	 	$whereParams[":sid"] = $this->subtract_id;
 
-	 	if( parent::update("person_subtracts",$this," subtract_id=:sid", $whereParams) === false )
+	 	if( parent::update("HRM_person_subtracts",$this," subtract_id=:sid", $whereParams) === false )
 	 		return false;
 
 		$daObj = new DataAudit();

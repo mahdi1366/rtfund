@@ -1,69 +1,38 @@
 <?php
 //---------------------------
 // programmer:	Mahdipour
-// create Date:	90.10
+// create Date:	95.10
 //---------------------------
 require_once '../../../header.inc.php';
 
 function salary_receipt_list()
 {
-	$query = " select	ps.pfname,
-						ps.plname,
-						s.person_type,
-						sit.effect_type,
-						sit.print_title salary_item_title,
-						c.cost_center_id,
-						c.title cost_center_title,
-						pai.pay_value,
-						pai.get_value,
-						(pai.diff_pay_value * diff_value_coef) diff_pay_value,
-						(pai.diff_get_value * diff_value_coef) diff_get_value,
-						pai.salary_item_type_id,
-						pai.param3,
-						pai.param2,
-						pa.account_no,
-						o.ptitle,
-						s.tafsili_id,
-						s.staff_id,
-						b.bank_id,
-						b.name,
-						pa.message,
-						pa.pay_year,
-						pa.pay_month,
-						BI.title month_title ,
-						CASE pai.param1
-							WHEN 'LOAN' THEN  pai.param4
-						END loan_remainder,
-						CASE pai.param1
-							WHEN 'FRACTION' THEN  pai.param4
-						END frac_remainder
+	$query = " select	ps.pfname, ps.plname,
+        s.person_type, sit.effect_type,
+        sit.print_title salary_item_title,
+        pai.pay_value,
+        pai.get_value, (pai.diff_pay_value * diff_value_coef) diff_pay_value,
+       (pai.diff_get_value * diff_value_coef) diff_get_value,
+        pai.salary_item_type_id, pai.param3, pai.param2, pa.account_no,
+        s.staff_id, b.bank_id, b.name, pa.message, pa.pay_year, pa.pay_month, BI.InfoDesc month_title ,
+        CASE pai.param1 WHEN 'LOAN' THEN pai.param4 END loan_remainder,
+        CASE pai.param1 WHEN 'FRACTION' THEN pai.param4 END frac_remainder
 
-			from hrmstotal.payment_items pai
-										  INNER JOIN hrmstotal.payments pa
-												ON (pa.pay_year = pai.pay_year AND
-													pa.pay_month = pai.pay_month AND
-													pa.staff_id = pai.staff_id AND
-													pa.payment_type = pai.payment_type )
-										  INNER JOIN salary_item_types sit
-												ON (pai.salary_item_type_id = sit.salary_item_type_id)
-										  LEFT JOIN writs w
-												ON ((pa.writ_id = w.writ_id) AND (pa.writ_ver = w.writ_ver) AND (pa.staff_id = w.staff_id) )
-										  LEFT JOIN org_new_units o
-												ON (w.ouid = o.ouid)
-										  INNER JOIN staff s
-												ON (pa.staff_id = s.staff_id)
-										  INNER JOIN persons ps
-												ON (s.PersonID = ps.PersonID)
-										  INNER JOIN cost_centers c
-												ON (pai.cost_center_id = c.cost_center_id)
-										  LEFT OUTER JOIN banks b
-												ON (s.bank_id = b.bank_id)
-										  INNER JOIN Basic_Info BI
-												ON BI.typeid = 41 and BI.infoid = pa.pay_month
+		from HRM_payment_items pai
+
+     INNER JOIN HRM_payments pa ON (pa.pay_year = pai.pay_year AND pa.pay_month = pai.pay_month AND
+                                          pa.staff_id = pai.staff_id AND pa.payment_type = pai.payment_type )
+
+     INNER JOIN HRM_salary_item_types sit ON (pai.salary_item_type_id = sit.salary_item_type_id)
+     LEFT JOIN HRM_writs w ON ((pa.writ_id = w.writ_id) AND (pa.writ_ver = w.writ_ver) AND (pa.staff_id = w.staff_id) )
+     INNER JOIN HRM_staff s ON (pa.staff_id = s.staff_id)
+     INNER JOIN HRM_persons ps ON (s.PersonID = ps.PersonID)
+     LEFT OUTER JOIN HRM_banks b ON (s.bank_id = b.bank_id)
+     INNER JOIN BaseInfo BI ON BI.typeid = 78 and BI.infoid = pa.pay_month
 
 			where pa.pay_year = :py and pa.pay_month =:pm and pa.staff_id =:st and pa.payment_type = :pt
 
-			order by c.cost_center_id,
+			order by 
 					 pa.pay_year,
 					 pa.pay_month,
 					 ps.plname,
@@ -78,11 +47,9 @@ function salary_receipt_list()
 	$whereParam[":pt"] = $_GET['payment_type'] ;
 
 	$dt = PdoDataAccess::runquery($query, $whereParam);
-	if($_SESSION['UserID'] == 'jafarkhani')
-	{
-		//echo PdoDataAccess::GetLatestQueryString() ; die() ; 
-	}
-	
+
+//	echo PdoDataAccess::GetLatestQueryString() ; die() ; 
+
 	return $dt ; 
 	
 }
@@ -211,7 +178,6 @@ function generateReport()
 				   '<!--staff_id-->' => $dt[0]['staff_id'] ,
 				   '<!--pfname-->' => $dt[0]['pfname']  ,
 				   '<!--name-->' => $dt[0]['name'] ,
-				   '<!--cost_center_title-->' => $dt[0]['cost_center_title'],
 				   '<!--month_title-->' => $dt[0]['month_title'],
 				   '<!--pay_year-->' => $dt[0]['pay_year'],
 				   '<!--total_pay_diffpay-->' => CurrencyModulesclass::toCurrency(($pay_sum + $pay_diff_sum)),
