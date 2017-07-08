@@ -23,7 +23,7 @@ $col->renderer = "CheckValues.CheckRender";
 $col->width = 40;
 
 $col = $dg->addColumn("تاریخ انجام", "DoneDate", GridColumn::ColumnType_datetime);
-$col->width = 100;
+$col->width = 120;
 
 $col = $dg->addColumn("توضیحات", "description");
 $col->ellipsis = 60;

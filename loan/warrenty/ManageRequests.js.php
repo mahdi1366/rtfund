@@ -276,6 +276,9 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 	op_menu.add({text: 'هزینه ها',iconCls: 'account', 
 		handler : function(){ return WarrentyRequestObject.ShowCosts(); }});
 	
+	op_menu.add({text: 'چک لیست',iconCls: 'check', 
+		handler : function(){ return WarrentyRequestObject.ShowCheckList(); }});
+	
 	op_menu.add({text: 'مدارک ضمانت نامه',iconCls: 'attach', 
 		handler : function(){ return WarrentyRequestObject.WarrentyDocuments('warrenty'); }});
 
@@ -1063,5 +1066,42 @@ WarrentyRequest.prototype.ShowCosts = function(){
 	});
 }
 
+WarrentyRequest.prototype.ShowCheckList = function(){
 
+	if(!this.CostsWin)
+	{
+		this.CostsWin = new Ext.window.Window({
+			title: 'چک لیست',
+			modal : true,
+			autoScroll : true,
+			width: 600,
+			height : 400,
+			bodyStyle : "background-color:white",
+			closeAction : "hide",
+			loader : {
+				url : "baseInfo/checkValues.php",
+				scripts : true
+			},
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){
+					this.up('window').hide();
+				}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.CostsWin);
+	}
+	this.CostsWin.show();
+	this.CostsWin.center();	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.CostsWin.loader.load({
+		params : {
+			MenuID : this.MenuID,
+			ExtTabID : this.CostsWin.getEl().id,
+			SourceID : record.data.RequestID,
+			SourceType : <?= SOURCETYPE_WARRENTY ?>
+		}
+	});
+}
 </script>

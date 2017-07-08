@@ -14,9 +14,9 @@ require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php'
 require_once inc_dataReader;
 require_once inc_response;
 
-function CheckCloseCycle(){
+function CheckCloseCycle($CycleID = ""){
 	
-	if(ACC_cycles::IsClosed())
+	if(ACC_cycles::IsClosed($CycleID))
 	{
 		echo Response::createObjectiveResponse(false, "دوره مالی جاری بسته شده است و قادر به اعمال تغییرات نمی باشید");
 		die();	
@@ -53,7 +53,7 @@ function FindTafsiliID($TafsiliCode, $TafsiliType){
 
 //---------------------------------------------------------------
 
-function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo, $DocID=""){
+function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $ChequeNo, $pdo, $DocID=""){
 		
 	CheckCloseCycle();
 	/*@var $ReqObj LON_requests */
@@ -649,11 +649,18 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	}*/
 	//---------------------------------------------------------
 	//------ ایجاد چک ------
+	
+	$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_ACCOUNTS . 
+			" AND TafsiliID=? ", array($AccountTafsili));
+	$AccountID = (count($dt) > 0) ? $dt[0]["ObjectID"] : "";
+	
 	$chequeObj = new ACC_DocCheques();
 	$chequeObj->DocID = $obj->DocID;
 	$chequeObj->CheckDate = $PayObj->PayDate;
 	$chequeObj->amount = $BankItemAmount;
 	$chequeObj->TafsiliID = $LoanPersonTafsili;
+	$chequeObj->CheckNo = $ChequeNo;
+	$chequeObj->AccountID = $AccountID ;
 	$chequeObj->description = " پرداخت وام شماره " . $ReqObj->RequestID;
 	$chequeObj->Add($pdo);
 	
@@ -673,7 +680,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	return $obj->DocID;
 }
 
-function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $pdo, $DocID=""){
+function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTafsili, $ChequeNo, $pdo, $DocID=""){
 		
 	CheckCloseCycle();
 	/*@var $ReqObj LON_requests */
@@ -964,10 +971,17 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	}
 	//---------------------------------------------------------
 	//------ ایجاد چک ------
+	
+	$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_ACCOUNTS . 
+			" AND TafsiliID=? ", array($AccountTafsili));
+	$AccountID = (count($dt) > 0) ? $dt[0]["ObjectID"] : "";
+			
 	$chequeObj = new ACC_DocCheques();
 	$chequeObj->DocID = $obj->DocID;
 	$chequeObj->CheckDate = $PayObj->PayDate;
 	$chequeObj->amount = $PartObj->PartAmount;
+	$chequeObj->CheckNo = $ChequeNo;
+	$chequeObj->AccountID = $AccountID;
 	$chequeObj->TafsiliID = $LoanPersonTafsili;
 	$chequeObj->description = " پرداخت وام شماره " . $ReqObj->RequestID;
 	$chequeObj->Add($pdo);
@@ -993,7 +1007,8 @@ function ReturnPayPartDoc($DocID, $pdo, $DeleteDoc = true){
 	
 	CheckCloseCycle();
 	
-	PdoDataAccess::runquery("delete from ACC_DocItems where DocID=? AND locked='YES'", array($DocID));
+	PdoDataAccess::runquery("delete from ACC_DocItems where DocID=? AND SourceType=". DOCTYPE_LOAN_PAYMENT
+		, array($DocID));
 	PdoDataAccess::runquery("delete from ACC_DocCheques where DocID=? ", array($DocID));
 
 	if($DeleteDoc)
@@ -4216,5 +4231,227 @@ function ReturnCancelDoc($ReqObj, $pdo, $EditMode = false){
 }
 
 //---------------------------------------------------------------
+
+function RegisterSalaryDoc($PObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
+	
+	$CycleID = $PObj->pay_year;
+	CheckCloseCycle($CycleID);
+	
+	//-------------------------------------------------
+	$query = "
+		select salary_item_type_id,full_title
+		FROM HRM_payments p
+			JOIN HRM_payment_items pi ON(p.pay_year = pi.pay_year AND p.pay_month = pi.pay_month AND	
+					p.staff_id = pi.staff_id AND p.payment_type = pi.payment_type)
+			JOIN HRM_salary_item_types sit using(salary_item_type_id)
+
+		WHERE p.pay_year = ? and p.pay_month = ? and p.payment_type = ?
+			and CostID is null
+			and (pay_value > 0 or get_value>0)
+		group by pi.salary_item_type_id
+		order by pi.salary_item_type_id";
+
+	$dt = PdoDataAccess::runquery_fetchMode($query, 
+			array($PObj->pay_year, $PObj->pay_month,$PObj->payment_type), $pdo);
+	if($dt->rowCount() > 0)
+	{
+		$str = "اقلام حقوقی زیر فاقد کد حساب می باشند و امکان صدور سند وجود ندارد<br>".
+				"<table border=1 width=100%>";
+		while ($row = $dt->fetch())
+			$str .= "<tr><td style=padding:5px align=center>" . $row["salary_item_type_id"] . 
+				"</td><td style=padding:5px>" . $row["full_title"] . "</td></tr>";
+
+		$str .= "</table>";
+		ExceptionHandler::PushException($str);
+		return false;
+	}
+
+	//................. check register before .................
+
+	$query = "select * from ACC_DocItems di join ACC_docs using(DocID)
+		where SourceType=".DOCTYPE_SALARY." AND SourceID=? AND SourceID2=? AND CycleID=" . $CycleID;
+	$dt = PdoDataAccess::runquery_fetchMode($query, array($PObj->payment_type, $PObj->pay_month));
+	
+	if($dt->rowCount() > 0)
+	{
+		ExceptionHandler::PushException("سند این ماه قبلا صادر شده است");
+		return false;
+	};
+
+	//---------------- check for non-confirm salary payments ---------------
+
+	$query = "	
+		select p.pay_year
+		FROM HRM_payment_items pi join HRM_payments p 
+			ON(p.pay_year = pi.pay_year AND p.pay_month = pi.pay_month AND
+				p.staff_id = pi.staff_id AND p.payment_type = pi.payment_type)
+		WHERE p.pay_year = ? and p.pay_month = ? and p.payment_type = ? 
+			and p.state=1 ";
+	$dt = PdoDataAccess::runquery_fetchMode($query, 
+			array($PObj->pay_year, $PObj->pay_month,$PObj->payment_type), $pdo);
+	if($dt->rowCount() > 0)
+	{
+		ExceptionHandler::PushException("در این ماه محاسبات حقوق غیر قطعی وجود دارد و قادر به صدور سند نمی باشید.");
+		return false;
+	}
+	
+	//---------------- add doc header --------------------
+	$DocObj = new ACC_docs();
+	$DocObj->RegDate = PDONOW;
+	$DocObj->regPersonID = $_SESSION['USER']["PersonID"];
+	$DocObj->DocDate = PDONOW;
+	$DocObj->CycleID = $CycleID;
+	$DocObj->BranchID = Default_BranchID;
+	$DocObj->DocType = DOCTYPE_SALARY;
+	$DocObj->description = "پرداخت حقوق " . DateModules::GetMonthName($PObj->pay_month) . " ماه";
+	if(!$DocObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ایجاد سند");
+		return false;
+	}
+	//----------------- add Doc items ------------------------
+	PdoDataAccess::runquery("
+		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,
+			details,locked,SourceType,SourceID,SourceID2)
+
+		select $DocObj->DocID,
+			CostID,
+			".TAFTYPE_PERSONS.",
+			TafsiliID,
+			if(amount>0,amount,0),
+			if(amount<0,-1*amount,0),
+			'".$DocObj->description ."',
+			'YES',
+			".DOCTYPE_SALARY.",
+			".$PObj->payment_type.",
+			".$PObj->pay_month."
+
+		from (
+			select 
+				sit.CostID,
+				t.TafsiliID,
+				round(sum(
+					case when salary_item_type_id in(7) then (param2 + diff_param2_coef * diff_param2)
+						 when salary_item_type_id in(8) then (param2 + diff_param2_coef * diff_param2)
+					else 0
+					end + pit.pay_value + pit.diff_value_coef * pit.diff_pay_value 
+				)) as amount
+
+			FROM HRM_payments p
+				JOIN HRM_staff s ON s.staff_id = p.staff_id
+				join HRM_persons p1 on(p1.PersonID=s.PersonID)
+				join BSC_persons p2 on(p1.RefPersonID=p2.PersonID)
+				JOIN ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_PERSONS." AND ObjectID=p2.PersonID)
+					
+				JOIN HRM_payment_items pit
+					ON(p.pay_year = pit.pay_year AND p.pay_month = pit.pay_month AND
+					p.staff_id = pit.staff_id AND p.payment_type = pit.payment_type)
+				JOIN HRM_salary_item_types sit using(salary_item_type_id)				
+
+			WHERE p.pay_year = :py and p.pay_month = :pm and p.payment_type = :pt
+			group by p.staff_id,CostID
+		)t 
+		where amount<>0", array(":py" => $PObj->pay_year, ":pm" => $PObj->pay_month, 
+			":pt" => $PObj->payment_type), $pdo);
+
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		$pdo->rollBack();
+		ExceptionHandler::PushException("خطا در بازیابی و اضافه رکورد ها از سیستم حقوق");
+		return false;
+	}
+	// ----------------------------- bank --------------------------------
+	$dt = PdoDataAccess::runquery(
+		"select 
+			round(sum(pit.pay_value + pit.diff_value_coef * pit.diff_pay_value)) as amount,
+			
+			round(sum(
+				if(salary_item_type_id in(7) , (param2 + diff_param2_coef * diff_param2) , 0) )) as bime,
+
+			round(sum(
+				if(salary_item_type_id in(8) , (param2 + diff_param2_coef * diff_param2) , 0) )) as tax
+
+		FROM HRM_payments p
+			JOIN HRM_staff s ON s.staff_id = p.staff_id
+			join HRM_persons p1 on(p1.PersonID=s.PersonID)
+			join BSC_persons p2 on(p1.RefPersonID=p2.PersonID)
+			JOIN ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_PERSONS." AND ObjectID=p2.PersonID)
+			JOIN HRM_payment_items pit
+				ON(p.pay_year = pit.pay_year AND p.pay_month = pit.pay_month AND
+				p.staff_id = pit.staff_id AND p.payment_type = pit.payment_type)
+			JOIN HRM_salary_item_types sit using(salary_item_type_id)
+
+		WHERE p.pay_year = :py and p.pay_month = :pm and p.payment_type = :pt
+		group by p.payment_type", 
+			array(":py" => $PObj->pay_year, ":pm" => $PObj->pay_month, ":pt" => $PObj->payment_type), $pdo);
+
+	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $DocObj->DocID;
+	$itemObj->SourceType = DOCTYPE_SALARY;
+	$itemObj->SourceID = $PObj->payment_type;
+	$itemObj->SourceID2 = $PObj->pay_month;
+	
+	$CostObj = new ACC_CostCodes($CostID);
+	$itemObj->CostID = $CostID;
+	$itemObj->TafsiliType = $CostObj->TafsiliType;
+	if($TafsiliID != "")
+		$itemObj->TafsiliID = $TafsiliID;
+	$itemObj->TafsiliType2 = $CostObj->TafsiliType2;
+	if($TafsiliID2 != "")
+		$itemObj->TafsiliID2 = $TafsiliID2;
+	//--------------- بیمه   -----------------------------
+	$itemObj->DebtorAmount = 0;
+	$itemObj->CreditorAmount = $dt[0]["bime"];
+	$itemObj->CostID = $CostID;
+	$itemObj->details = "بابت بیمه سهم کارفرما";
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ثبت ردیف کارمزد");
+		return false;
+	}
+	//--------------- مالیات  -----------------------------
+	unset($itemObj->ItemID);
+	$itemObj->DebtorAmount = 0;
+	$itemObj->CreditorAmount = $dt[0]["tax"];
+	$itemObj->details = "بابت مالیات سهم کارفرما";
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ثبت ردیف کارمزد");
+		return false;
+	}
+	//--------------------- بانک ---------------------------
+	unset($itemObj->ItemID);
+	$itemObj->DebtorAmount = 0;
+	$itemObj->CreditorAmount = $dt[0]["amount"];
+	$itemObj->details = "بابت خالص حقوق";
+	if(!$itemObj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ثبت ردیف کارمزد");
+		return false;
+	}
+	
+	if(ExceptionHandler::GetExceptionCount() > 0)
+		return false;
+	
+	return $DocObj->DocID;
+}
+
+function ReturnSalaryDoc($PObj, $pdo){
+	
+	$CycleID = $PObj->pay_year;
+	CheckCloseCycle($CycleID);
+	
+	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
+		where SourceType=" . DOCTYPE_SALARY . " AND SourceID=? AND SourceID2=?",
+		array($PObj->payment_type, $PObj->pay_month), $pdo);
+	if(count($dt) == 0)
+		return true;
+	
+	PdoDataAccess::runquery("delete from ACC_DocItems 
+		where SourceType=" . DOCTYPE_SALARY . " AND SourceID=? AND SourceID2=?",
+		array($PObj->payment_type, $PObj->pay_month), $pdo);
+
+	return ACC_docs::Remove($dt[0][0], $pdo);
+}
 
 ?>

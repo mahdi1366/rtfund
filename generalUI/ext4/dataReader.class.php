@@ -2,8 +2,12 @@
 
 class dataReader
 {
-	static function getJsonData($dataSource, $countOfRows, $callback, $message = "")
+	static function getJsonData($dataSource, $countOfRows, $callback = "", $message = "")
 	{
+		
+		if($callback == "" && isset($_GET["callback"]))
+			$callback = $_GET["callback"];
+		
 		if($dataSource instanceof ADORecordSet)
 			$dataSource = $dataSource->GetRows();
 /*

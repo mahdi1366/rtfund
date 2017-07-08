@@ -211,12 +211,13 @@ define('SALARY_ITEM_COMPUTE_PLACE_PAYMENT',  2);
     define('FIX_BENEFIT',3); // مزایای ثابت
     define('GUARANTIED_LOAN',	4);	// وامهای ضمانت شده
 //.............................................................................................
-define('BENEFIT_CUT',1);								//حقوق و مزايا کلا قطع مي شود.
-define('ONLY_BASE_SALARY_PAY',2);						//فقط حقوق مبنا پرداخت مي شود.
-define('ONLY_CONTINUES_SALARY_PAY',3);					//فقط حقوق و مزاياي مستمر پرداخت مي شود.
+define('BENEFIT_CUT',3);	// قطع 
+define('BENEFIT_PAY',1);								//حقوق و مزايا کامل پرداخت مي شود.				
+define('ONLY_CONTINUES_SALARY_PAY',2);				//فقط حقوق و مزاياي مستمر پرداخت مي شود.
+define('ONLY_BASE_SALARY_PAY',30);						//فقط حقوق مبنا پرداخت مي شود.
 define('CONTINUES_SALARY_RETIRED_HALF_BENEFIT_PAY',4);	//حقوق و مزاياي مستمر و کسور بازنشستگي نصف و مزايا کامل پرداخت مي شود.
 define('CONTINUES_SALARY_HALF_BENEFIT_RETIRED_PAY',5);	//حقوق و مزاياي مستمر نصف و مزايا و کسور بازنشستگي کامل پرداخت مي شود.
-define('BENEFIT_PAY',6);								//حقوق و مزايا کامل پرداخت مي شود.
+
 define('BENEFIT_WITHOUT_EXTRAWORK',7);					//حقوق و مزايا کامل بدون اضافه کار پرداخت مي شود.
 define('CONTINUES_SALARY_HALF_BENEFIT_FRACTION_PAY',8);	//حقوق و مزاياي مستمر نصف و مزايا و کسورات کامل پرداخت مي شود.
 define('BENEFIT_EXIT_IN_WRIT_NOT_EXIST_IN_PAYMENT',9);	//حقوق و مزاياي کامل در حکم منظور مي شوداما پرداخت نمي شود - از ليست حقوق حذف.

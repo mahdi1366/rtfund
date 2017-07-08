@@ -14,7 +14,7 @@ ViewWrit.prototype = {
 	staff_id : '<?= $staff_id ?>',
 	AllWrits : new Array(<?= $jsArr ?>),
 	WritIndex	 : <?= $currentWritIndex ?>,
-
+        
 	mainPanel : "",
 
 	get : function(elementID){
@@ -190,26 +190,52 @@ function WritForm(parent)
 		});
 	}
         
-        if(this.get("emp_mode").value == 6 || this.get("emp_mode").value == 16 )
-            this.get("MP_TR").style.display = "";
-        else   this.get("MP_TR").style.display = "none";
-
+        
 	new Ext.form.TriggerField({
 	    triggerCls:'x-form-search-trigger',
-	    onTriggerClick : function(){
-	    	returnVal = LOV_OrgUnit();
-			if(returnVal != "")
-			{
-				this.setValue(returnVal);
-				WritFormObject.postCombo.enable();
-			}
-
+	    onTriggerClick : function(){	    	
+		WritFormObject.ActDomainLOV();
 	    },
-	    applyTo : this.get("ouid"),
-	    width : 90
+	    applyTo : this.get("UnitDesc"),
+	    width : 300
 	});
+	
+WritForm.prototype.ActDomainLOV = function(record){
+		
+	if(!this.DomainWin)
+	{
+		this.DomainWin = new Ext.window.Window({
+			autoScroll : true,
+			width : 480,
+			height : 550,
+			title : "حوزه فعالیت",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "../../../../framework/baseInfo/units.php?mode=adding",				
+				scripts : true
+			}
+		});
+		
+		Ext.getCmp(this.TabID).add(this.DomainWin);
+	}
+	
+	this.DomainWin.show();
+	
+	this.DomainWin.loader.load({
+		params : {
+			ExtTabID : this.DomainWin.getEl().dom.id,
+			parent : "WritFormObject.DomainWin",
+                        MenuID : this.MenuID ,
+			selectHandler : function(id, name){
+                                         WritFormObject.form.UnitDesc.value = name ; 
+                                         WritFormObject.form.UnitID.value = id;			
+			}
+		}
+	});	
 
-	new Ext.form.TriggerField({
+	
+}
+	/*new Ext.form.TriggerField({
 	    triggerCls:'x-form-search-trigger',
 	    onTriggerClick : function(){
 			returnVal = LOV_Post('ALL');
@@ -222,7 +248,7 @@ function WritForm(parent)
 	    },
 	    applyTo : this.get("post_id"),
 	    width : 120
-	});
+	});*/
  
 	this.afterLoad();
 
@@ -387,79 +413,7 @@ function WritForm(parent)
 		});
     } 
 
-	this.store1 = new Ext.data.Store({
-		fields : ["state_id","ptitle"],
-		proxy : {
-			type: 'jsonp',
-			url : this.address_prefix + "../../global/domain.data.php?task=searchStates",
-			reader: {
-				root: 'rows',
-				totalProperty: 'totalCount'
-			}
-		},
-		autoLoad : true
-	});
-	this.store2 = new Ext.data.Store({
-		fields : ["state_id","city_id","ptitle"],
-		proxy : {
-			type: 'jsonp',
-			url : this.address_prefix + "../../global/domain.data.php?task=searchCities",
-			reader: {
-				root: 'rows',
-				totalProperty: 'totalCount'
-			}
-		}
-	});
-	this.StateCombo = new Ext.form.field.ComboBox({
-		store : this.store1,
-		width : 200,
-		typeAhead: false,
-		queryMode : "local",
-		displayField : "ptitle",
-		valueField : "state_id",
-		hiddenName : "work_state_id",
-		applyTo : this.get("state"),
-		listeners : {
-			select : function(combo, records){
-				WritFormObject.CityCombo.reset();
-				WritFormObject.store2.load({
-					params : {state_id : records[0].data.state_id}
-				})
-			}
-		}
-	});
-
-	this.CityCombo = new Ext.form.field.ComboBox({
-		store : this.store2,
-		width : 200,
-		typeAhead: false,
-		queryMode : "local",
-		displayField : "ptitle",
-		valueField : "city_id",
-		hiddenName : "work_city_id",
-		applyTo : this.get("city")
-	});
-
-    this.store1.load({
-                callback:function(){
-                    WritFormObject.StateCombo.setValue(WritFormObject.work_state_id);
-                    WritFormObject.store2.load({
-                        params:{state_id:WritFormObject.StateCombo.getValue()},
-                        callback:function(){
-                            WritFormObject.CityCombo.setValue(WritFormObject.work_city_id);
-                        }
-                    });
-                }
-            });
-
  
-
-}
-WritForm.prototype.showDivEmp  = function (elem)
-{
-    if(elem.value == 6 || elem.value == 16 )      
-        this.get("MP_TR").style.display = ""; 
-    else   this.get("MP_TR").style.display = "none";     
 
 }
 

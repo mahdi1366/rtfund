@@ -41,11 +41,14 @@ function SaveFlow(){
 		$result = $obj->EditFlow();
 	else
 	{
-		$dt = PdoDataAccess::runquery("select * from WFM_flows where ObjectType=?", array($obj->ObjectType));
-		if(count($dt) > 0)
+		if($obj->ObjectType != SOURCETYPE_FORM)
 		{
-			echo Response::createObjectiveResponse(false, "برای این آیتم قبلا گردش تعریف شده است");
-			die();
+			$dt = PdoDataAccess::runquery("select * from WFM_flows where ObjectType=?", array($obj->ObjectType));
+			if(count($dt) > 0)
+			{
+				echo Response::createObjectiveResponse(false, "برای این آیتم قبلا گردش تعریف شده است");
+				die();
+			}
 		}
 		$result = $obj->AddFlow ();
 	}
@@ -171,11 +174,26 @@ function SelectAllForms(){
 	//----------------- received forms ----------------------
 	if(!empty($_GET["MyForms"]) && $_GET["MyForms"] == "true")
 	{
-		$dt = PdoDataAccess::runquery("select FlowID,StepID 
+		$dt = PdoDataAccess::runquery("
+			select FlowID,StepID 
 			from WFM_FlowSteps s 
-			left join BSC_persons p using(PostID)
-			where s.IsActive='YES' AND if(s.PersonID>0,s.PersonID=:pid,p.PersonID=:pid)",
-				array(":pid" => $_SESSION["USER"]["PersonID"]));
+			where s.IsActive='YES' AND s.PersonID=:pid
+			
+			union all
+			
+			select FlowID,StepID 
+			from WFM_FlowSteps s 
+			join BSC_jobs j using(JobID)
+			where s.IsActive='YES' AND j.PersonID=:pid
+			
+			union all 
+			
+			select FlowID,StepID 
+			from WFM_FlowSteps s 
+			join BSC_jobs j using(PostID)
+			where s.IsActive='YES' AND j.PersonID=:pid
+
+			", array(":pid" => $_SESSION["USER"]["PersonID"]));
 		if(count($dt) == 0)
 		{
 			echo dataReader::getJsonData(array(), 0, $_GET["callback"]);

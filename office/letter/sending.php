@@ -117,22 +117,46 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 			store: new Ext.data.Store({
 				proxy:{
 					type: 'jsonp',
-					url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
+					url: this.address_prefix + 'letter.data.php?task=SendToList',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['PersonID','fullname']
+				fields :  ['type','id','name']
 			}),
+			tpl : new Ext.XTemplate(
+				'<tpl for=".">',
+					'<tpl if="type == \'Group\'">',
+						'<div class="x-boundlist-item" style="background-color:#fcfcb6">{name}</div>',
+					'<tpl else>',
+						'<div class="x-boundlist-item">{name}</div>',
+					'</tpl>',						
+				'</tpl>'
+			),
 			fieldLabel : "ارجاع به",
-			displayField: 'fullname',
-			valueField : "PersonID"				
+			displayField: 'name',
+			valueField : "id"				
 		},{
-			xtype : "textarea",
-			emptyText : "شرح ارجاع",
-			name : this.index + "_SendComment",
-			value : this.index > 1 ? this.mainPanel.down("[name=1_SendComment]").getValue() : "",
-			rowspan : 6,
-			rows : 10,
-			width : 300
+			xtype : "combo",
+			store: new Ext.data.Store({
+				proxy:{
+					type: 'jsonp',
+					url: this.address_prefix + 'letter.data.php?task=GetSendComments',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields :  ['SendComment']
+			}),
+			width : 270,
+			displayField: 'SendComment',
+			valueField : "SendComment",
+			listeners : {
+				select : function(){
+					for(i=SendLetterObject.index-1; i>0; i--)
+					{
+						el = SendLetterObject.mainPanel.down("[name=" + i + "_SendComment]");
+						if(el.getValue() == "")
+							el.setValue(this.getValue());
+					}
+				}
+			}
 		},{
 			xtype : "combo",
 			name : this.index + "_SendType",
@@ -150,6 +174,14 @@ SendLetter.prototype.AddSendingFieldSet = function(){
 			displayField: 'InfoDesc',
 			valueField : "InfoID",
 			value : this.index > 1 ? this.mainPanel.down("[name=1_SendType]").getValue() : "1"
+		},{
+			xtype : "textarea",
+			emptyText : "شرح ارجاع",
+			name : this.index + "_SendComment",
+			value : this.index > 1 ? this.mainPanel.down("[name=1_SendComment]").getValue() : "",
+			rowspan : 5,
+			rows : 6,
+			width :270
 		},{
 			xtype : "combo",
 			name : this.index + "_IsUrgent",

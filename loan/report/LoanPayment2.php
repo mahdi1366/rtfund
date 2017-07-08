@@ -35,7 +35,11 @@ if(isset($_REQUEST["show"]))
 	
 	
 	function ActionRender($row, $value){
-		return $value == "installment" ? "قسط" : "پرداخت";
+		if($value == "installment")
+			return "قسط" ;
+		if($row["ActionAmount"]*1 < 0)
+			return "هزینه";
+		return "پرداخت";
 	}
 	$rpg->addColumn("نوع عملیات", "ActionType", "ActionRender");
 		

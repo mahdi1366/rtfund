@@ -9,9 +9,7 @@ require_once("../data/salary_item_type.data.php");
 
 if(!empty($_POST["SIT"]))
 {
-	
 	$obj = new manage_salary_item_type($_POST["SIT"]);
-		   
 }
 else 
 {
@@ -44,30 +42,30 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
 		});
 
         this.store1 = new Ext.data.Store({
-                                            fields : ["InfoID","InfoDesc"],
-                                            proxy : {
-                                                type: 'jsonp',
-                                                url : this.address_prefix + "../../global/domain.data.php?task=searchComputetype",
-                                                reader: {
-                                                    root: 'rows',
-                                                    totalProperty: 'totalCount'
-                                                }
-                                            },
-                                            autoLoad:true
-                                        });
+			fields : ["InfoID","InfoDesc"],
+			proxy : {
+				type: 'jsonp',
+				url : this.address_prefix + "../../global/domain.data.php?task=searchComputetype",
+				reader: {
+					root: 'rows',
+					totalProperty: 'totalCount'
+				}
+			},
+			autoLoad:true
+		});
 
 
         this.store2 = new Ext.data.Store({
-                                                fields : ["InfoID","param1","InfoDesc"],
-                                                proxy : {
-                                                    type: 'jsonp',
-                                                    url : this.address_prefix + "../../global/domain.data.php?task=searchMultiplicand",
-                                                    reader: {
-                                                        root: 'rows',
-                                                        totalProperty: 'totalCount'
-                                                    }
-                                                }
-                                            });
+			fields : ["InfoID","param1","InfoDesc"],
+			proxy : {
+				type: 'jsonp',
+				url : this.address_prefix + "../../global/domain.data.php?task=searchMultiplicand",
+				reader: {
+					root: 'rows',
+					totalProperty: 'totalCount'
+				}
+			}
+		});
 
 
 	this.computeTypCombo = new Ext.form.field.ComboBox({
@@ -112,7 +110,36 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
         }
     });
 	
+	this.CostIDCombo = new Ext.form.field.ComboBox({
+		xtype : "combo",
+		width : 400,
+		applyTo : this.get("cmp_costCode"),
+		store: new Ext.data.Store({
+			fields:["CostID","CostCode","CostDesc",{
+				name : "fullDesc",
+				convert : function(value,record){
+					return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+				}				
+			}],
+			proxy: {
+				type: 'jsonp',
+				url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			}
+		}),
+		typeAhead: false,
+		hiddenName : "CostID",
+		valueField : "CostID",
+		displayField : "fullDesc"
+	});
 	
+	if("<?= $obj->CostID ?>" != "")
+		this.CostIDCombo.getStore().load({
+			params : { CostID : "<?= $obj->CostID ?>"},
+			callback : function(){
+				SalaryItemTypeObject.CostIDCombo.setValue(this.getAt(0).data.CostID)
+			}
+		});
  
     if(this.disabled)
     {
@@ -168,7 +195,7 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
         <table id="InfoPanel" width="100%">
             <tr>
                 <td width="25%">نوع نيروي انساني :</td>
-                <td width="25%">کارمند</td>
+                <td width="25%">قراردادی</td>
                 <td width="25%">تعريف شده توسط :</td>
 
 
@@ -262,26 +289,7 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
                              class="x-form-text x-form-field" style="width: 10px" >
                     </td>
             </tr>
-            <tr>
-                    <td width="25%">
-                    مشمول بازنشستگي ؟
-                    </td>
-                    <td width="5%">
-
-                    <input type="checkbox" value="1" id="retired_include"
-                             name="retired_include"
-                             <?= ($obj->retired_include == 1) ? "checked" : "" ?>                           
-                             class="x-form-text x-form-field" style="width: 10px" >
-                    </td>
-                    <td width="25%">
-                    مشمول مقرري ؟
-                    </td>
-                    <td width="5%">
-                        <input type="checkbox" value="1" id="pension_include"
-                             name="pension_include" <?= ($obj->pension_include == 1) ? "checked" : "" ?>                          
-                            class="x-form-text x-form-field" style="width: 10px" >
-                    </td>
-            </tr>
+           
             <tr>
                     <td width="25%">
                     ثبت داده توسط کاربر؟
@@ -299,6 +307,12 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
             </font>
             </td>
             </tr>
+			<tr>
+				 <td width="25%">
+				کد حساب :
+				</td>
+				<td width="25%" colspan="3"><input type="text" id="cmp_costCode"></td>
+			</tr>
             <tr>
                     <td width="25%">
                     محاسبه در backpay ؟

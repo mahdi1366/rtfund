@@ -148,7 +148,8 @@ function savesalaryItem() {
 	    $obj->tax_include = (isset($_POST['tax_include'])) ? $_POST['tax_include'] : 0;
 	    $obj->retired_include = (isset($_POST['retired_include'])) ? $_POST['retired_include'] : 0;
 	    $obj->pension_include = (isset($_POST['pension_include'])) ? $_POST['pension_include'] : 0;    	  
-
+		if(empty($_POST['validity_start_date']))
+			unset($obj->validity_start_date);
  
 	if (empty($_POST["salary_item_type_id"])) {
 		$obj->salary_item_type_id = null;
@@ -188,29 +189,5 @@ function searchSubtractItem() {
 	die();
 }
 
-function GetCostCode() {
-	
-	
-
-    $where = 'where cc.globality ="GLOBAL" AND cc.IsActive="YES" ';
-	
-	if(isset($_REQUEST['CostID']) && $_REQUEST['CostID'] != NULL )
-		$where .= ' AND CostID='.$_REQUEST['CostID'] ; 
-	
-    $whereParam = array();
-
-    if (isset($_REQUEST["query"]) && $_REQUEST["query"] != "") {
-
-        $where .= " AND (cc.CostCode LIKE :qry )";
-        $whereParam = array(":qry" => $_REQUEST["query"] . "%");
-    }
-
-    $temp = manage_salary_item_type::GetAllCostCode($where, $whereParam);
-    $no = count($temp);
-    $temp = array_slice($temp, $_GET["start"], $_GET["limit"]);
-
-    echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
-    die();
-}
 
 ?>

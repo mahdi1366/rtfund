@@ -58,6 +58,7 @@ class manage_person extends PdoDataAccess
 	public $military_duration_day ; 
 	public $OtherPerson ; 
 	public $picture ;
+public $RefPersonID ;
 
 
 
@@ -108,23 +109,19 @@ class manage_person extends PdoDataAccess
 	static public function SelectPerson($where, $whereParam, $include_new_persons = false , $show_All_history = false , $costID = false )
 	{            
            
-        if (!$show_All_history)
-            $ptJoin = " and s.person_type=p.person_type ";
-        else
-            $ptJoin = "" ;
-
-        $query = "  select p.PersonID,
-		                 p.pfname,
-		                 p.plname,
+       $query = "SELECT bp.PersonID,
+		                 bp.fname pfname,
+		                 bp.lname plname,
 		                 s.staff_id,
 		                 p.person_type,
 		                 o.ptitle as unit_name,
-		                 'کارمند' as personTypeName
+		                                 'کارمند' as personTypeName
 
-				from HRM_persons  p
-						inner join HRM_staff  s on(s.PersonID=p.PersonID $ptJoin )
-						left join HRM_org_new_units  o on(o.ouid=s.ouid)						
-				where (1=1) ";		
+					FROM BSC_persons bp
+						LEFT JOIN HRM_persons p ON bp.PersonID = p.RefPersonID
+						LEFT JOIN HRM_staff s ON s.PersonID = p.PersonID
+						LEFT JOIN HRM_org_new_units o ON o.ouid = s.ouid
+					WHERE (1=1) " ; 	
 		             
         $query .= ($where != "") ? " AND " . $where : "";
             

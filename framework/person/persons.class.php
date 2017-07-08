@@ -4,8 +4,8 @@
 // create Date: 94.06
 //---------------------------
 
-class BSC_persons extends PdoDataAccess
-{
+class BSC_persons extends PdoDataAccess{
+	
 	public $PersonID;
 	public $UserName;
 	public $UserPass;

@@ -120,7 +120,7 @@ WFM.prototype.Steps = function(){
 	if(!this.stepsWin)
 	{
 		this.stepsWin = new Ext.window.Window({
-			width : 610,
+			width : 710,
 			title : "مراحل گردش",
 			height : 460,
 			modal : true,

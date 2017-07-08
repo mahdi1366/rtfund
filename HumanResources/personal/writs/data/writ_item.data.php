@@ -73,9 +73,9 @@ function not_assigned_items()
 {
 	$query = '
 		SELECT s.salary_item_type_id,s.full_title
-		FROM salary_item_types s
-				LEFT OUTER JOIN writ_salary_items wsi ON(wsi.salary_item_type_id = s.salary_item_type_id AND wsi.writ_id = :wid AND wsi.writ_ver = :wver)
-				,writs w 
+		FROM HRM_salary_item_types s
+				LEFT OUTER JOIN HRM_writ_salary_items wsi ON(wsi.salary_item_type_id = s.salary_item_type_id AND wsi.writ_id = :wid AND wsi.writ_ver = :wver)
+				,HRM_writs w 
 		WHERE
 			w.writ_id = :wid AND w.writ_ver = :wver AND w.staff_id = :stid AND
 			(s.person_type = w.person_type OR s.person_type = '.PERSON_TYPE_ALL.' OR s.person_type = if(w.person_type != 1, 101,0)) AND
@@ -86,6 +86,8 @@ function not_assigned_items()
 			wsi.salary_item_type_id IS NULL';
 
 	$temp = PdoDataAccess::runquery($query, array(":wid" => $_GET["writ_id"], ":wver" => $_GET["writ_ver"], ":stid" => $_GET["staff_id"]));
+
+
 	
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();

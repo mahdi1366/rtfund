@@ -80,14 +80,18 @@ class WFM_FlowSteps extends PdoDataAccess {
 	public $StepDesc;
 	public $PostID;
 	public $PersonID;
+	public $JobID;
 	public $IsActive;
 
 	static function GetAll($where = "", $whereParam = array()) {
 		
-		$query = "select fs.*,PostName,concat_ws(' ',fname, lname,CompanyName) fullname 
+		$query = "select fs.*,PostName,concat_ws(' ',fname, lname,CompanyName) fullname ,
+					concat(JobID,'-',PostName) JobDesc
 			from WFM_FlowSteps fs
-			left join BSC_posts using(PostID)
-			left join BSC_persons using(PersonID)";
+			left join BSC_jobs j using(JobID)
+			left join BSC_posts p on(if(fs.PostID is null,j.PostID=p.PostID,fs.PostID=p.PostID))
+			left join BSC_persons ps on(ps.PersonID=fs.PersonID)
+			";
 		$query .= ($where != "") ? " where " . $where : "";
 		
 		return parent::runquery($query, $whereParam);

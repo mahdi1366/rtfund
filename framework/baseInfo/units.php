@@ -9,6 +9,8 @@ require_once '../header.inc.php';
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
+$AddMode = isset($_REQUEST["mode"]) && $_REQUEST["mode"] == "adding" ? true : false;
+
 require_once 'units.js.php';
 ?>
 <div style="margin: 10" align="center">

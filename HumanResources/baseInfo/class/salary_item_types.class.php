@@ -34,6 +34,7 @@ class manage_salary_item_type extends PdoDataAccess
 	public $print_order;
 	public $validity_start_date;
 	public $validity_end_date;
+	public $CostID;
 	
 	public $available_for;
 	public $backpay_include;
@@ -99,7 +100,7 @@ class manage_salary_item_type extends PdoDataAccess
 			}
 			else {*/
 				$query = "select sit.salary_item_type_id,
-								'کارمند' PTitle ,
+								'قراردادی' PTitle ,
 								bi2.InfoDesc effectTitle ,
 								full_title,
 								print_title,
@@ -232,7 +233,7 @@ if(validity_end_date is null or validity_end_date = '0000-00-00' or validity_end
 	}
         
         
-        function validate_salary_item_type_id($validity_start_date, $validity_end_date,$date) {
+    function validate_salary_item_type_id($validity_start_date, $validity_end_date,$date) {
                 
             if( DateModules::CompareDate($validity_start_date, $date) != 1 &&
                 ( DateModules::CompareDate($validity_end_date, $date) != -1 ||
@@ -241,23 +242,6 @@ if(validity_end_date is null or validity_end_date = '0000-00-00' or validity_end
                     else
                     return false;
 	}
-	
-	function GetAllCostCode($where = '', $whereParam = array()) {
-
-        $query = " select CostCode , CostID ,concat_ws('-',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc,b5.BlockDesc) as CostCodeName
-						from
-							accountancy.CostCodes cc
-									left join accountancy.CostBlocks b1 on(b1.blockid=cc.Level1 and b1.LevelID=1 and (cc.level1 is not null))
-									left join accountancy.CostBlocks b2 on(b2.blockid=cc.Level2 and b2.LevelID=2 and (cc.level2 is not null))
-									left join accountancy.CostBlocks b3 on(b3.blockid=cc.Level3 and b3.LevelID=3 and (cc.level3 is not null))
-									left join accountancy.CostBlocks b4 on(b4.blockid=cc.Level4 and b4.LevelID=4 and (cc.level4 is not null))
-									left join accountancy.CostBlocks b5 on(b5.blockid=cc.Level5 and b5.LevelID=5 and (cc.level5 is not null))
-
-				";
-        $query .= $where;
-
-        return parent::runquery($query, $whereParam);
-    }
 
 }
 

@@ -58,6 +58,7 @@ function IssueWrit(){
 		applyTo : this.get("writ_type_id"),
 		listeners : {
 			select : function(combo, records){
+			     
 				IssueWritObject.writSubTypeCombo.reset();
 				IssueWritObject.store2.load({
 					params : {writ_type_id : records[0].data.writ_type_id,
@@ -80,7 +81,7 @@ function IssueWrit(){
 	
 	this.personCombo = new Ext.form.ComboBox({
 		store: personStore,
-		emptyText:'جستجوي استاد/كارمند بر اساس نام و نام خانوادگي ...',
+		emptyText:'جستجوي كارمند بر اساس نام و نام خانوادگي ...',
 		typeAhead: false,
 		listConfig :{
 			loadingText: 'در حال جستجو...'

@@ -11,7 +11,7 @@ require_once '../../staff/class/staff.class.php';
 //require_once '../../../baseInfo/class/bases.class.php';
 //require_once '../../staff/class/staff_detasils.php';
 require_once '../../staff/class/staff_include_history.class.php';
-//require_once '../../../salary/payment/class/payments.class.php';
+require_once '../../../salary/payment/class/payments.class.php';
 
 require_once(inc_response); 
 require_once inc_dataReader;
@@ -202,8 +202,8 @@ function searchPerson() {
 	$where = " 1=1";
 	$whereParam = array();
 	if (isset($_REQUEST["query"]) && $_REQUEST["query"] != "") {
-		$where .= " AND (PFName LIKE :qry or PLName LIKE :qry or concat(PFName,' ',PLName) like :qry
-				                          or concat(PLName,' ',PFName) like :qry 
+		$where .= " AND (fname LIKE :qry or lname LIKE :qry or concat(fname,' ',lname) like :qry
+				                          or concat(lname,' ',fname) like :qry 
 				                          OR p.PersonID = :qry2
 				                          OR o.ptitle like :qry
 										  OR s.staff_id = :qry2
@@ -232,6 +232,8 @@ function searchPerson() {
 
 	$temp = manage_person::SelectPerson($where, $whereParam, $include_new_persons, $show_All_history);
  
+
+
 	$no = count($temp);
 	$temp = array_slice($temp, $_GET["start"], $_GET["limit"]);
  
@@ -243,12 +245,14 @@ function saveData() {
 	
 		$obj = new manage_person();
 		PdoDataAccess::FillObjectByArray($obj, $_POST);
-
+ 
 		$obj->birth_date = DateModules::Shamsi_to_Miladi($_POST["birth_date"]);
 		$obj->issue_date = DateModules::Shamsi_to_Miladi($_POST["issue_date"]);
 		$obj->military_from_date = DateModules::Shamsi_to_Miladi($_POST["military_from_date"]);
 		$obj->military_to_date = DateModules::Shamsi_to_Miladi($_POST["military_to_date"]);
 		$obj->person_type = 3 ; 
+
+//print_r($obj); die() ; 
                 
                 /*$obj = new manage_person($_POST["PersonID"]);
 		$obj->insure_no = $_POST["insure_no"];
@@ -271,9 +275,10 @@ function saveData() {
 	if (trim($_FILES['ProfPhoto']['name']) == '' ) 
 		{   
 			//$message=' نام فایل خالی است ';
-			$PhotoSwitch = FALSE;
+		  $PhotoSwitch = FALSE;
+	
 		}
-		elseif ( $_FILES['ProfPhoto']['error'] != 0 )
+		elseif ( $_FILES['ProfPhoto']['error'] != 0 ) 
 			$message=' خطا در ارسال فایل' . $_FILES['ProfPhoto']['error'];
 		elseif 	($_FILES['ProfPhoto']['size'] > $_POST['MAX_FILE_SIZE'] )
 			$message=' طول فایل بیش از 50 کیلو بایت است ';
@@ -284,12 +289,14 @@ function saveData() {
 	   				
 		else
 		{ 		
+
 			
 			$_size = $_FILES['ProfPhoto']['size'];
 			$_name = $_FILES['ProfPhoto']['tmp_name'];
 			$data = addslashes((fread(fopen($_name, 'r' ),$_size)));
 			$PhotoQuery = "";
-				
+		
+	
 			/*
 			//اگر استاد قبلا عکس داشته است
 			$Photosql = pdodb::getInstance("","","","photo","");
@@ -349,7 +356,7 @@ function saveData() {
 												
 			              where p.personid = ".$obj->PersonID ; 
 		$ptres = PdoDataAccess::runquery($qry) ; 
-		
+	
 		$return = $obj->EditPerson();
 	
 		$staffObject = new manage_staff($obj->PersonID, $obj->person_type);
@@ -357,7 +364,7 @@ function saveData() {
 		PdoDataAccess::FillObjectByArray($staffObject, $_POST);
 		$return = $staffObject->EditStaff(); 
 
-              if($return === TRUE) 
+              if($return === TRUE && $PhotoSwitch !== FALSE  ) 
 		{		
 		
 			$qry = " update HRM_persons set picture = '$data' where PersonID = ".$obj->PersonID ; 
@@ -630,6 +637,7 @@ function removeIncHistory() {
 }
 
 function selectSalaryReceipt() {
+    
 	$no = count(manage_payments::GetSalaryReceipt($_GET['Q0']));
 
 	$temp = manage_payments::GetSalaryReceipt($_GET['Q0']);

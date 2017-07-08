@@ -1,7 +1,7 @@
 <?php
 //---------------------------
 // programmer:	Mahdipour
-// create Date:	88.07.15
+// create Date:	93.12
 //---------------------------
 
 require_once("../data/writ.data.php");
@@ -32,6 +32,7 @@ if( !empty($_REQUEST["WID"]) )
 						 ":STID" => $staff_id);
 		
 	$FullWrt = manage_writ::GetWritInfo($where ,$whereParam);
+
 
 	if(count($FullWrt) == 0)
 	   $FullWrt = NULL;
@@ -118,10 +119,11 @@ $time_limited = $FullWrt[0]['time_limited'];
 
 $drp_salary_pay_proc = manage_domains::DRP_SalaryPayProc("salary_pay_proc",$objWrt->salary_pay_proc ,"width:50%", "blueText");
 $drp_annual_effect = manage_domains::DRP_Annual_Effect("annual_effect", $objWrt->annual_effect ,"with:50%", "blueText");
-$drp_jobs = manage_domains::DRP_Jobs("job_id", $objWrt->job_id, "form_WritForm");
+//$drp_jobs = manage_domains::DRP_Jobs("job_id", $objWrt->job_id, "form_WritForm");
 $drp_worktime = manage_domains::DRP_WorkTimeType("worktime_type", $objWrt->worktime_type); 
+$drp_post = manage_domains::DRP_Posts("postID","",$objWrt->post_id,"","","50"); 
 $drp_emp_state = manage_domains::DRP_EMP_STATE_WST("emp_state", $objWrt->emp_state);
-$event = "onchange='WritFormObject.showDivEmp(this);'" ; 
+ $event = "" ;
 $drp_emp_mode = manage_domains::DRP_EMP_MODE_WST("emp_mode", $objWrt->emp_mode , "" , $event);
 
 if(!$is_new_corrective)
@@ -243,11 +245,6 @@ WritForm.prototype.afterLoad = function()
                                            return "";
                                         }
 	    //this.curItemsGrid.render(this.get("WGRID"));
-    <?}if($objWrt->person_type == HR_WORKER ){?>
-	    this.jobCombo = <?= $drp_jobs["extCombo"]?>;
-	  /*  this.jobCombo.on("select", function(combo,record){
-		    WritFormObject.get("job_group").innerHTML = record.data.job_group;
-	    });*/
     <?}if($readOnly ){ ?>
     Ext.get(this.form).readonly(new Array("single_print", "multi_print", "btn_save", "warning_date", "warning_message", "remembered" , "cost_center_id","CostCenterID" ));
     <?	
@@ -330,12 +327,12 @@ WritForm.prototype.afterLoad = function()
                 text : "چاپ تك نسخه",
 				direction : "ltr",
                 handler : function(){WritFormObject.print('');}
-            },{
+            }/*,{
                 iconCls : "print",
                 text : "چاپ تمام نسخ",
 				direction : "ltr",
                 handler : function(){WritFormObject.print('all');}
-            }]
+            }*/]
         }]
 	});
 	
@@ -552,40 +549,25 @@ WritFormObject = new WritForm(ViewWritObject);
 			<input type="text" id="ref_letter_date" name="ref_letter_date" class="x-form-text x-form-field" style="width: 100px" 
 					value="<?= ($objWrt->ref_letter_date) ? DateModules::Miladi_to_Shamsi($objWrt->ref_letter_date) : "" ?>" >
 			</td>
-		</tr>		
-		
-		<tr>
-			<td>واحد محل خدمت :</td>
-			<td class="blueText" colspan="3"><input type="text" id="ouid" name="ouid" value="<?= $objWrt->ouid?>"></td>			
-		</tr>
-		
-		<tr>
-			<td>عنوان کامل واحد محل خدمت :</td>
-			<td colspan="3"><span class="blueText" id="unit_title"><?= $objWrt->ouid != "" ? manage_units::get_full_title($objWrt->ouid) : "" ?></span>
-			</td>
-		</tr>
-		<?if($objWrt->person_type == HR_EMPLOYEE || $objWrt->person_type == HR_PROFESSOR || $objWrt->person_type == HR_CONTRACT){?>
+		</tr>	
 		<tr>
 			<td>پست سازمانی :</td>
-			<td><input class="blueText" type="text" id="post_id" name="post_id" style="width:98%" value="<?= $objWrt->post_id ?>"></td>
-			<td colspan="2">
-			<span class="blueText" id="post_title">
-					<?= $objWrt->post_id != "" ? $FullWrt[0]['post_no'] ."-".$FullWrt[0]['post_title'] : ""?></span>
-			</td>
+			<td class="blueText" colspan="3"><?= $drp_post?></td>
 		</tr>
-		<?}if($objWrt->person_type == HR_WORKER || $objWrt->person_type == HR_CONTRACT){?>
+                <tr>
+			<td> واحد سازمانی:</td>
+			<td class="blueText" colspan="3">
+				<input type="text" id="UnitDesc" name="UnitDesc" value="<?= $FullWrt[0]['UnitName']?>"> 
+				<input type="hidden" id="UnitID" name="UnitID" value="<?= $objWrt->ouid ?>">
+			</td>			
+		</tr>
+		
+		<?if($objWrt->person_type == HR_WORKER || $objWrt->person_type == HR_CONTRACT){?>
 		<tr>
 			<td>گروه مورد تطبیق :</td>
 			<td><input type="text" name="cur_group" class="x-form-text x-form-field" id="cur_group" value="<?= $objWrt->cur_group ?>"></td>
 			<td></td>
 			<td></td>
-		</tr>
-		<?}if($objWrt->person_type == HR_WORKER /*|| $objWrt->person_type == HR_CONTRACT */ ){?>
-		<tr>
-			<td>شغل :</td>
-			<td><?= $drp_jobs["combo"] ?></td>
-			<td>گروه :</td>
-			<td class="blueText" id="cur_group"><?= $FullWrt[0]['cur_group'] ?></td>
 		</tr>
 		<?}if($objWrt->person_type == HR_EMPLOYEE){?>
 		<tr>
@@ -637,16 +619,7 @@ WritFormObject = new WritForm(ViewWritObject);
 			<td>حالت استخدامي :</td>
 			<td><?= $drp_emp_mode?></td>                        
 		</tr>
-                <tr id="MP_TR">
-                    <td class="blueText" colspan="2">&nbsp;</td>
-                    <td>
-			محل ماموریت :
-                    </td>
-                    <td class="blueText" >
-			<input type="text" id="MissionPlace" name="MissionPlace" class="x-form-text x-form-field" style="width: 130px" 
-				value="<?= $objWrt->MissionPlace?>" >
-			</td>
-                </tr>
+                
 		<tr>
 			<td>
 			شرح حکم : 
@@ -700,36 +673,7 @@ WritFormObject = new WritForm(ViewWritObject);
 			<input type="checkbox" value="1" <?= $ch3?> id="remembered"  name="remembered">
 			</td>
 	</tr>
-	<? if($state == WRIT_PERSONAL){ ?>
-		<tr>
-			<td>
-			عدم ارسال به حقوق
-			</td>
-			<td class="blueText" >
-			<? ($objWrt->dont_transfer == 1) ?	$ch4 = "checked" : $ch4 = "" ; ?>
-			<input type="checkbox" value="1" <?= $ch4?> id="dont_transfer"  name="dont_transfer">
-			</td>
-		</tr>			
-		<?}?>
 
-		<tr>
-			<td> زمان انتقال به حقوق :
-			</td>
-			<td>
-				<font class="blueText" ><?= DateModules::Miladi_to_Shamsi($FullWrt[0]['writ_transfer_date']); ?></font> &nbsp;&nbsp;ساعت :
-				<font class="blueText" >&nbsp;<?= substr($FullWrt[0]['writ_transfer_date'],11,5); ?></font>
-			</td>
-
-		</tr>	
-		<tr>
-			<td>زمان دریافت حقوق :
-			</td>
-			<td> 
-				<font class="blueText" ><?= DateModules::Miladi_to_Shamsi($FullWrt[0]['writ_recieve_date']); ?></font> &nbsp;&nbsp;ساعت :
-				<font class="blueText" >&nbsp;<?= substr($FullWrt[0]['writ_recieve_date'],11,5); ?></font>
-			</td>
-
-		</tr>		
 		<tr>
 			<td colspan="4" align="center"><br><hr><br>
 				<div id="div_fs"></div>

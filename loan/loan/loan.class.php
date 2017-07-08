@@ -4,7 +4,7 @@
 // create Date: 94.06
 //---------------------------
 
-require_once "../../accounting/baseinfo/baseinfo.class.php";
+require_once getenv("DOCUMENT_ROOT") . "/accounting/baseinfo/baseinfo.class.php";
 
 class LON_loans extends PdoDataAccess
 {
@@ -21,7 +21,7 @@ class LON_loans extends PdoDataAccess
 	public $BlockID;
 	public $IsCustomer;
 	public $IsPlan;
-	
+	public $IsActive;
 	public $_BlockCode;
 			
 	function __construct($LoanID = "") {
@@ -54,7 +54,7 @@ class LON_loans extends PdoDataAccess
 		$this->EditLoan();
 		
 		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_add;
+		$daObj->ActionType = DataAudit::Action_add;	
 		$daObj->MainObjectID = $this->LoanID;
 		$daObj->TableName = "LON_loans";
 		$daObj->execute();
@@ -83,7 +83,11 @@ class LON_loans extends PdoDataAccess
 	static function DeleteLoan($LoanID){
 		
 		if( parent::delete("LON_loans"," LoanID=?", array($LoanID)) === false )
-	 		return false;
+		{
+			$obj = new LON_loans($LoanID);
+			$obj->IsActive = "NO";
+			return $obj->EditLoan();
+		}
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;

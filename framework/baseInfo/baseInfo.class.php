@@ -98,6 +98,47 @@ class BSC_posts extends OperationClass {
 	
 }
 
+class BSC_jobs extends OperationClass {
+	
+	const TableName = "BSC_jobs";
+	const TableKey = "JobID";
+	
+	public $JobID;
+	public $PostID;
+	public $UnitID;
+	public $PersonID;
+	public $IsMain;
+	
+	public function CheckUniqueMainJob(){
+		
+		if($this->IsMain != "YES")
+			return true;
+		
+		$dt = PdoDataAccess::runquery("select * from BSC_jobs where PersonID=? AND IsMain='YES' AND JobID<>?",
+			array($this->PersonID, $this->JobID));
+		if(count($dt) > 0)
+		{
+			ExceptionHandler::PushException("هر فرد تنها یک شغل اصلی می تواند داشته باشد");
+			return false;
+		}
+		return true;
+	}
+	
+	public function Add($pdo = null) {
+		
+		if(!$this->CheckUniqueMainJob())
+			return false;
+		return parent::Add($pdo);
+	}
+	
+	public function Edit($pdo = null) {
+		
+		if(!$this->CheckUniqueMainJob())
+			return false;
+		return parent::Edit($pdo);
+	}
+}
+
 class BSC_branches extends PdoDataAccess {
 	public $BranchID;
 	public $BranchName;

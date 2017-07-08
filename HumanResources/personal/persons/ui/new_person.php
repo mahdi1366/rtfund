@@ -11,8 +11,24 @@ require_once '../../staff/class/staff.class.php';
 
 require_once inc_dataGrid;
 //-----------------------------------------------
-$personID = !empty($_POST["Q0"]) ? $_POST["Q0"] : "";
+$RefPersonID = $personID = !empty($_POST["Q0"]) ? $_POST["Q0"] : "";
 $FacilID = isset($_POST["MenuID"]) ? $_POST["MenuID"] : "";
+
+$query = " select fname ,lname from BSC_persons  where PersonID = ".$personID  ; 
+$resAccInfo = PdoDataAccess::runquery($query);
+
+
+$query = " select PersonID from HRM_persons  where RefPersonID = ".$personID  ; 
+$resPr = PdoDataAccess::runquery($query);
+
+
+if(!empty($resPr[0]['PersonID']))
+{
+	$personID = $resPr[0]['PersonID'];	
+}
+else
+	$personID ="";
+
 
 if(!empty($personID))
 {
@@ -107,11 +123,11 @@ require_once '../js/new_person.js.php';
 			<td width="20%">
 			نام :
 			</td>
-			<td width="30%" class="blueText" ><?=$SummeryInfo[0]['pfname'] ?>	</td>
+			<td width="30%" class="blueText" ><?=$resAccInfo[0]['fname'] ?>	</td>
 			<td width="15%">
 			نام خانوادگی :
 			</td>
-			<td width="15%" class="blueText" ><?=$SummeryInfo[0]['plname'] ?></td>
+			<td width="15%" class="blueText" ><?=$resAccInfo[0]['lname'] ?></td>
 		</tr>
              
 		<tr>
@@ -129,6 +145,7 @@ require_once '../js/new_person.js.php';
 			<form id="personInfoForm" enctype='multipart/form-data'>
 				<div class="panel" style="width:950px;">
 					<input type='hidden' id='PersonID' name='PersonID' value="<?= $personID ?>">
+<input type='hidden' id='RefPersonID' name='RefPersonID' value="<?= $RefPersonID ?>"> 
 					<table width="640px">
 						<tr>
 							<td width="25%">
@@ -136,14 +153,14 @@ require_once '../js/new_person.js.php';
 							</td>
 							<td width="25%">
 							<input type="text" id="pfname" name="pfname" class="x-form-text x-form-field" style="width: 100px"
-								   value="<?= $obj->pfname?>">
+								   value="<?= $resAccInfo[0]['fname']?>">
 							</td>
 							<td width="25%">
 							نام خانوادگي فارسي :
 							</td>
 							<td width="25%">
 							<input type="text" id="plname" name="plname" class="x-form-text x-form-field" style="width: 150px"
-								   value="<?= $obj->plname?>">
+								   value="<?= $resAccInfo[0]['lname']?>">
 							</td>
 						</tr>                     
 						<tr>

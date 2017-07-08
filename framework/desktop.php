@@ -504,9 +504,16 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 	{
 		delete framework.TabsArray[TabID];
 		//this.centerPanel.getItem(TabID).close();
-	// this.centerPanel.getItem(TabID).destroy();
-	this.centerPanel.items.get(TabID).destroy();
+		// this.centerPanel.getItem(TabID).destroy();
+		this.centerPanel.items.get(TabID).destroy();
 	}
+	
+	FrameWorkClass.prototype.ReloadTab = function(TabID)
+	{
+		el = framework.centerPanel.items.get(TabID);
+		el.loader.load();
+	}
+	
 
 	FrameWorkClass.prototype.logout = function()
 	{

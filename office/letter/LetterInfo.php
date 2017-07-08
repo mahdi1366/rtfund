@@ -47,6 +47,11 @@ if($LetterObj->LetterType == "OUTCOME" && $LetterObj->IsSigned == "NO")
 	if($dt->rowCount()>0)
 		$editable = true;
 }
+if($LetterObj->LetterType == "INCOME")
+{
+	$editable = true;
+}
+//..............................................................................
 $signing = false;
 if($LetterObj->LetterType == "OUTCOME" && 
 	$LetterObj->IsSigned == "NO" && 
@@ -100,6 +105,7 @@ function LetterInfo(){
 				LetterInfoObject.EditLetter();
 			}
 		},'-');
+	<?} if($signing){?>
 		buttons.push({
 			text : "امضاء نامه",
 			iconCls : "sign",
@@ -180,7 +186,7 @@ function LetterInfo(){
 				}				
 			}]			
 		},{
-			title : "پیوست های نامه",
+			title : "پیوست ها",
 			loader : {
 				url : this.address_prefix + "attach.php",
 				method : "post",
@@ -201,7 +207,7 @@ function LetterInfo(){
 				}
 			}
 		},{
-			title : "سابقه نامه",
+			title : "سابقه",
 			loader : {
 				url : this.address_prefix + "history.php",
 				method: "POST",
@@ -221,7 +227,7 @@ function LetterInfo(){
 				}
 			}
 		},{
-			title : "ذینفعان نامه",
+			title : "ذینفعان",
 			loader : {
 				url : this.address_prefix + "LetterCustomers.php",
 				method: "POST",
@@ -242,9 +248,30 @@ function LetterInfo(){
 				}
 			}
 		},{
-			title : "یادداشت های نامه",
+			title : "یادداشت ها",
 			loader : {
 				url : this.address_prefix + "LetterNotes.php",
+				method: "POST",
+				text: "در حال بار گذاری...",
+				scripts : true
+			},
+			listeners : {
+				activate : function(){
+					if(this.loader.isLoaded)
+						return;
+					this.loader.load({
+						params : {
+							LetterID : LetterInfoObject.LetterID,
+							ExtTabID : this.getEl().id
+						}
+					});
+				}
+			}
+		},{
+			title : "نامه های وابسته",
+			itemId : "refs_tab",
+			loader : {
+				url : this.address_prefix + "RefLetters.php",
 				method: "POST",
 				text: "در حال بار گذاری...",
 				scripts : true
@@ -264,9 +291,8 @@ function LetterInfo(){
 		}]
 	});	
 	
-	
-	
 	if(this.imagesList.length > 0)
+	{
 		this.tabPanel.insert(1,{
 			title : "تصاویر نامه",
 			itemId : "tab_images",
@@ -274,8 +300,9 @@ function LetterInfo(){
 				height : 525,
 				src: this.imagesList
 			})
-			
 		});
+		this.tabPanel.setActiveTab("tab_images");
+	}
 }
 
 LetterInfo.CommentsRender = function(v,p,r){

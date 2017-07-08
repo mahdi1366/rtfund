@@ -71,16 +71,21 @@ $col->editor = ColumnEditor::TextField();
 
 $col = $dg->addColumn("پست مربوطه", "PostID", "string");
 $col->editor = ColumnEditor::ComboBox(
-array_merge(
-	array(array("PostID"=>"-100", "PostName" => "ذینفع")), 
-	PdoDataAccess::runquery("select * from BSC_posts where IsActive='YES'")), 
+	PdoDataAccess::runquery("select * from BSC_posts where IsActive='YES'"), 
 		"PostID", "PostName","","", true);
-$col->width = 170;
+$col->width = 130;
+
+$col = $dg->addColumn("شغل مربوطه", "JobID", "string");
+$col->editor = ColumnEditor::ComboBox(
+	PdoDataAccess::runquery("select JobID,concat(JobID,'-',PostName) title "
+		. "from BSC_jobs join BSC_posts using(PostID)"), 
+		"JobID", "title","","", true);
+$col->width = 130;
 
 $col = $dg->addColumn("شخص مربوطه", "PersonID", "string");
 $col->renderer = "function(v,p,r){return r.data.fullname;}";
 $col->editor = "WFMObject.PersonCombo";
-$col->width = 170;
+$col->width = 130;
 
 $col = $dg->addColumn("","","");
 $col->renderer = "WFM.upRender";
@@ -110,7 +115,7 @@ if($accessObj->EditFlag && $accessObj->AddFlag)
 	$dg->rowEditOkHandler = "function(v,p,r){return WFMObject.saveStep(v,p,r);}";
 }
 $dg->height = 400;
-$dg->width = 600;
+$dg->width = 700;
 $dg->DefaultSortField = "StepID";
 $dg->DefaultSortDir = "ASC";
 $dg->autoExpandColumn = "StepDesc";

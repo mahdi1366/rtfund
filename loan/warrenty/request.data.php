@@ -112,6 +112,18 @@ function RegWarrentyDoc(){
 	
 	$ReqObj = new WAR_requests($_POST["RequestID"]);
 	
+	//------------- check for all checklist checked ---------------
+	$dt = PdoDataAccess::runquery("
+		SELECT * FROM BSC_CheckLists c
+		left join BSC_CheckListValues v on(c.ItemID=v.ItemID AND SourceID=:l)
+		where SourceType=".SOURCETYPE_WARRENTY." and v.ItemID is null", array(":l" => $ReqObj->RequestID));
+	if(count($dt) > 0)
+	{
+		echo Response::createObjectiveResponse(false, "تا زمانی که کلیه آیتم های چک لیست انجام نشوند قادر به صدور سند نمی باشید");
+		die();
+	}
+	//-------------------------------------------------------------
+	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	

@@ -24,10 +24,15 @@ if(isset($_SESSION["USER"]["framework"]))
 	$User = "Staff";
 else
 {
-	if($_SESSION["USER"]["IsAgent"] == "YES")
-		$User = "Agent";
-	else if($_SESSION["USER"]["IsCustomer"] == "YES")
-		$User = "Customer";
+	if(isset($_REQUEST["mode"]))
+		$User = $_REQUEST["mode"];
+	else
+	{
+		if($_SESSION["USER"]["IsAgent"] == "YES")
+			$User = "Agent";
+		else if($_SESSION["USER"]["IsCustomer"] == "YES")
+			$User = "Customer";
+	}
 }
 
 $dg = new sadaf_datagrid("dg","/loan/request/request.data.php?task=GetRequestParts", "grid_div");
@@ -141,7 +146,7 @@ if(isset($_SESSION["USER"]["framework"]))
 				<td><div id="SUM_AgentWage" class="blueText">&nbsp;</div></td>
 			</tr>
 		</table></div>
-		<div style="float:right"><table  style="width:190px" class="summary">
+		<div style="float:right"><table id="div_yearly" style="width:190px" class="summary">
 			<tr>
 				<td style="direction:rtl;width:85px;background-color: #dfe8f6;">کارمزد سال اول</td>
 				<td><div id="SUM_Wage_1Year" class="blueText">&nbsp;</div></td>

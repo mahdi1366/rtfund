@@ -33,7 +33,7 @@ require_once '../js/payment_process.js.php';
 				</tr>				
 				<tr>
 					<td>شروع تعديل ماليات از سال:</td>
-					<td><input type="text" name="tax_normalized_year" id="tax_normalized_year" class="x-form-text x-form-field" value="1395"></td>
+					<td><input type="text" name="tax_normalized_year" id="tax_normalized_year" class="x-form-text x-form-field" value="1396"></td>
 					<td>شروع تعديل ماليات از ماه:</td>
 					<td><?= $drp_month ?></td>
 				</tr>
@@ -64,7 +64,7 @@ require_once '../js/payment_process.js.php';
 		<!-- ------------------------------------------------------------ -->
 		<div align="right" class="panel" id="result" style="display:none;width: 750px;">
 			<br>
-			<img src="img/loading.gif" id="img_loading" style="vertical-align: middle">
+			<img src="/HumanResources/img/loading.gif" id="img_loading" style="vertical-align: middle">
 				<font style="font-size:'10px';font-weight: bold" color="#194775" > &nbsp;&nbsp;&nbsp;
 				محاسبه حقوق <br>
 				<hr size="3" width="50%" noshade align="right" style="color:#66A3E0" >				

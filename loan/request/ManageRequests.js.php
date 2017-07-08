@@ -110,6 +110,9 @@ ManageRequest.prototype.OperationMenu = function(e){
 	op_menu.add({text: 'رویدادها',iconCls: 'task', 
 		handler : function(){ return ManageRequestObject.ShowEvents(); }});
 	
+	op_menu.add({text: 'چک لیست',iconCls: 'check', 
+		handler : function(){ return ManageRequestObject.ShowCheckList(); }});
+	
 	op_menu.add({
 				text: 'اقساط',
 				itemId : "cmp_installments",
@@ -131,10 +134,6 @@ ManageRequest.prototype.OperationMenu = function(e){
 				hidden : true,
 				itemId : "cmp_costs",
 				handler : function(){ ManageRequestObject.ShowCosts(); }
-			},{
-				text : 'چک لیست',
-				iconCls : "check",
-				handler : function(){ ManageRequestObject.ShowCheckList(); }
 			});
 	
 	
@@ -516,7 +515,7 @@ ManageRequest.prototype.ShowCheckList = function(){
 			MenuID : this.MenuID,
 			ExtTabID : this.CostsWin.getEl().id,
 			SourceID : this.grid.getSelectionModel().getLastSelected().data.RequestID,
-			SourceType : <?= SOURCETYPE_LOAN ?>,
+			SourceType : <?= SOURCETYPE_LOAN ?>
 		}
 	});
 }

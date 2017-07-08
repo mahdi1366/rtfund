@@ -36,7 +36,7 @@ function GetTreeNodes(){
 	$refArray[ $creator[0]["PersonID"] ] = &$returnArray[count($returnArray) - 1];
 	
 	$nodes = PdoDataAccess::runquery("
-		select FromPersonID ,ToPersonID, SendDate,
+		select FromPersonID ,ToPersonID, SendDate, SeenTime, IsSeen,
 			concat_ws(' ',fname, lname,CompanyName,' - ',InfoDesc) text, 
 			concat('<b>توضیحات ارجاع : </b>' ,replace(SendComment,'\n','<br>')) qtip,
 			'true' as leaf, 'true' expanded,'user' iconCls
@@ -51,6 +51,10 @@ function GetTreeNodes(){
 		$row["id"] = $index++;
 		$row["text"] .= " [ " . substr($row["SendDate"], 10, 6) . 
 			 " &nbsp;&nbsp; " . DateModules::miladi_to_shamsi($row["SendDate"]) . " ]";
+		
+		if($row["SeenTime"] != "")
+			$row["text"] .= " [مشاهده در " . DateModules::miladi_to_shamsi($row["SeenTime"]) .
+				"&nbsp;" . substr($row["SeenTime"], 10, 6) . " ]";
 		
 		$parentNode = &$refArray[ $row["FromPersonID"] ];
 

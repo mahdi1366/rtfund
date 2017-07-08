@@ -20,8 +20,8 @@ $wstid = !empty($_POST["wstid"]) ? $_POST["wstid"] : "";
 $pt = !empty($_POST["pt"]) ? $_POST["pt"] : "";
 $wtid = !empty($_POST["wtid"]) ? $_POST["wtid"] : "";
 
-$obj = new manage_writ_subType($pt,$wtid,$wstid);
 
+$obj = new manage_writ_subType($pt,$wtid,$wstid);
 
 $drp_EMP_STATE = manage_domains::DRP_EMP_STATE_WST("emp_state", $obj->emp_state, "", "200px");
 $drp_EMP_MODE  = manage_domains::DRP_EMP_MODE_WST("emp_mode", $obj->emp_mode, "", "200px");
@@ -40,7 +40,7 @@ $drp_annual_effect_wst = manage_domains::DRP_ANN_EFF_WST("annual_effect", $obj->
 		<table width="100%">
 	<tr>
 		<td width="20%">نوع اصلي حکم:</td>
-		<td width="80%" height="21px" colspan="3"><b><?= $drp_WRT_TYP ?></b></td>
+		<td width="80%" height="21px" colspan="3"><b>قراردادی</b></td>
 	</tr>
    
 	<tr>
@@ -61,26 +61,7 @@ $drp_annual_effect_wst = manage_domains::DRP_ANN_EFF_WST("annual_effect", $obj->
 		<td width="20%">زمان کاري :</td>
 		<td width="80%" colspan="3" ><?= $drp_WTT ?></td>
 	</tr>
-	
-    <tr>
-        <td colspan="4">
-        <font color=green>گزينه محدوديت زماني براي احكامي استفاده مي شود كه ثبت تاريخ شروع و خاتمه قرارداد در آنها اجباري مي باشد .</font>
-        </td>
-    </tr> 
-    <tr>
-		<td width="20%">
-		امضاي مستخدم؟
-		</td>
-		<td width="80%" colspan="3" >
-		<input type="checkbox" value="1" id="req_staff_signature"  name="req_staff_signature" 
-			class="x-form-text x-form-field" style="width: 10px" <?= ($obj->req_staff_signature == "1") ? "checked" : ""?> >
-		</td>
-	</tr>
-    <tr>
-        <td colspan="4">
-            <font color=green>گزينه امضاي مستخدم براي مواردي كه حكم بايستي توسط خود مستخدم نيز امضا گردد استفاده مي شود .</font>
-        </td>
-    </tr>
+	        
 	<tr>
 		<td width="20%">
 		صدور خودکار ؟
@@ -119,13 +100,7 @@ $drp_annual_effect_wst = manage_domains::DRP_ANN_EFF_WST("annual_effect", $obj->
         <td width="20%" >اثر سنواتي:</td>
 		<td width="30%" ><?= $drp_annual_effect_wst ?></td>
 	</tr>    
-    <tr>
-		<td width="20%" colspan="4">
-		نمايش در گزارش خلاصه پرونده؟		
-		&nbsp;<input type="checkbox" value="1" id="show_in_summary_doc"  name="show_in_summary_doc" 
-			     class="x-form-text x-form-field" style="width: 10px" <?= ($obj->show_in_summary_doc == "1") ? "checked" : ""?> >
-		</td>
-	</tr> 
+     
     <tr>
 		<td  width="20%">فاصله زماني يادآوري : </td>
 		<td  width="30%" ><input type="text" class="x-form-text x-form-field" name="remember_distance" id="remember_distance"

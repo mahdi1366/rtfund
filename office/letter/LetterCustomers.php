@@ -25,13 +25,18 @@ $col->editor = "this.PersonCombo";
 
 $col = $dg->addColumn("عنوان نامه", "LetterTitle");
 $col->editor = ColumnEditor::TextField(true);
-$col->width = 200;
+$col->width = 250;
 
-$col = $dg->addColumn("مخفی", "IsHide");
+$col = $dg->addColumn("عدم مشاهده ذینفع", "IsHide");
 $col->editor = ColumnEditor::CheckField("","YES");
 $col->renderer = "function(v,p,r){return v == 'YES' ? '<span style=color:green;font-weight:bold >√</span>' : ''}";
-$col->width = 50;
+$col->width = 100;
 $col->align = "center";
+
+$col = $dg->addColumn("ایمیل", "");
+$col->sortable = false;
+$col->renderer = "function(v,p,r){return LetterCustomers.EmailRender(v,p,r);}";
+$col->width = 35;
 
 if($editable)
 {
@@ -47,8 +52,8 @@ if($editable)
 }
 $dg->autoExpandColumn = "PersonID";
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 465;
-$dg->width = 600;
+$dg->height = 400;
+$dg->width = 560;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "PayDate";
@@ -109,6 +114,14 @@ LetterCustomers.DeleteRender = function(v,p,r){
 	
 	return "<div align='center' title='حذف' class='remove' "+
 		"onclick='LetterCustomersObject.Delete();' " +
+		"style='float:right;background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:18px;height:16'></div>";
+}
+
+LetterCustomers.EmailRender = function(v,p,r){
+	
+	return "<div align='center' title='ارسال نامه به ایمیل ذینفع' class='email' "+
+		"onclick='LetterCustomersObject.Email();' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:18px;height:16'></div>";
 }
@@ -193,7 +206,45 @@ LetterCustomers.prototype.Delete = function(){
 	});
 }
 
+LetterCustomers.prototype.Email = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به ایمیل نامه به ذینفع می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = LetterCustomersObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+		
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال ارسال نامه ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'letter.data.php',
+			params:{
+				task: "EmailLetter",
+				RowID  : record.data.RowID,
+				LetterID : record.data.LetterID,
+				PersonID : record.data.PersonID
+			},
+			method: 'POST',
+
+			success: function(response,option){ 
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					Ext.MessageBox.alert("","نامه با موفقیت ارسال شد");
+				else if(result.data == "")
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+				else
+					Ext.MessageBox.alert("",result.data);
+				mask.hide();
+				
+			},
+			failure: function(){}
+		});
+	});
+}
 </script>
 <center>
+	<br>
 	<div id="div_grid"></div>
 </center>

@@ -13,7 +13,7 @@ require_once '../../framework/person/persons.class.php';
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 if(!empty($task))
-	$task();
+	$task();  
 
 function SelectLetter() {
 
@@ -35,20 +35,29 @@ function SelectAllLetter(){
 	
 	$where = "1=1";
     $param = array();
+	$RefInclude = false;
 	
+	$index = 0;
 	foreach($_POST as $field => $value)
 	{
 		if($field == "excel" || empty($value) || strpos($field, "inputEl") !== false)
 			continue;
+		
+		$value = str_replace(" ", "", $value);
+		
 		$prefix = "";
 		switch($field)
 		{
 			case "PersonID": $prefix = "l."; break;
-			case "Customer": $prefix = "lc."; break;
+			case "Customer": $prefix = "lc."; $field = "PersonID"; break;
 			
 			case "LetterID": 
-			case "LetterTitle": 
 				$prefix = "l."; break;
+			
+			case "LetterTitle": 
+				 $field = "replace(l.LetterTitle,' ','')"; break;
+			case "context": 
+				 $field = "replace(l.context,' ','')"; break;
 			
 			case "FromSendDate":
 			case "FromLetterDate":
@@ -59,28 +68,33 @@ function SelectAllLetter(){
 		}
 		if($field == "FromPersonID" || $field == "ToPersonID")
 		{
-			$where .= " AND s." . $field . " = :$field";
-			$param[":$field"] = $value;
+			$where .= " AND s." . $field . " = :f" . $index;
+			$param[":f" . $index] = $value;
 		}
 		else if(strpos($field, "From") === 0)
 		{
-			$where .= " AND " . $prefix . substr($field,4) . " >= :$field";
-			$param[":$field"] = $value;
+			$where .= " AND " . $prefix . substr($field,4) . " >= :f" . $index;
+			$param[":f" . $index] = $value;
 		}
 		else if(strpos($field, "To") === 0)
 		{
-			$where .= " AND " . $prefix . substr($field,2) . " <= :$field";
-			$param[":$field"] = $value;
+			$where .= " AND " . $prefix . substr($field,2) . " <= :f" . $index;
+			$param[":f" . $index] = $value;
 		}
 		else
 		{
-			$where .= " AND " . $prefix . $field . " like :$field";
-			$param[":$field"] = "%" . $value . "%";
+			$where .= " AND " . $prefix . $field . " like :f" . $index;
+			$param[":f" . $index] = "%" . $value . "%";
 		}
+		
+		if(array_search($field, array("FromSendDate", "ToSendDate", "FromPersonID", "ToPersonID", 
+				"SendType", "IsUrgent", "SendComment")) !== false)
+			$RefInclude = true;
+		
+		$index++;
 	}
-	//echo $where;
-	//print_r($param);
-    $list = OFC_letters::FullSelect($where, $param, dataReader::makeOrder());
+	
+    $list = OFC_letters::FullSelect($where, $param, dataReader::makeOrder(), $RefInclude);
 	
 	print_r(ExceptionHandler::PopAllExceptions());
 	//echo PdoDataAccess::GetLatestQueryString();
@@ -410,7 +424,38 @@ function CopyLetter(){
 	echo Response::createObjectiveResponse($result, $obj->LetterID);
 	die();
 }
+
+function UnSeen(){
+	
+	$obj = new OFC_send();
+	$obj->SendID = $_POST["SendID"];
+	$obj->IsSeen = "NO";
+	$result = $obj->EditSend();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 //.............................................
+
+function SendToList(){
+	
+	$param = array(":q" => "%" . $_REQUEST["query"] . "%");
+	
+	$query = "select 'Person' type,concat('p_',p.PersonID) id, concat_ws(' ',fname,lname,CompanyName) name
+			from OFC_receivers r join BSC_persons p on(r.ToPersonID=p.PersonID) where IsStaff='YES'
+				AND r.PersonID=" . $_SESSION["USER"]["PersonID"] . "
+				AND concat_ws(' ',fname,lname,CompanyName) like :q
+			
+			union all
+			
+			select 'Group' type,concat('g_',GroupID) id, GroupDesc from FRW_AccessGroups
+			where GroupDesc like :q
+			
+			order by type";
+	
+	$dt = PdoDataAccess::runquery($query, $param);
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
 
 function SendLetter(){
 	
@@ -435,31 +480,51 @@ function SendLetter(){
 		if(strpos($key, "ToPersonID") === false)
 			continue;
 		
-		$toPersonID = $_POST[$key];
-		if(isset($toPersonArr[$toPersonID]) || $toPersonID*1 == 0)
-			continue;
-		$toPersonArr[$toPersonID] = true;		
-		
 		$index = preg_split("/_/", $key);
 		$index = $index[0];
-
-		$obj = new OFC_send();
-		$obj->LetterID = $LetterID;
-		$obj->FromPersonID = $_SESSION["USER"]["PersonID"];
-		$obj->ToPersonID = $toPersonID;
-		$obj->SendDate = PDONOW;
-		$obj->SendType = $_POST[$index . "_SendType"];
-		$obj->ResponseTimeout = $_POST[$index . "_ResponseTimeout"];
-		$obj->FollowUpDate = $_POST[$index . "_FollowUpDate"];
-		$obj->IsUrgent = $_POST[$index . "_IsUrgent"];
-		$obj->IsCopy = isset($_POST[$index . "_IsCopy"]) ? "YES" : "NO";
-		$obj->SendComment = $_POST[$index . "_SendComment"];
-		$obj->SendComment = $obj->SendComment == "شرح ارجاع" ? "" : $obj->SendComment;
-		if(!$obj->AddSend($pdo))
+		$toPersonID = $_POST[$key];
+		
+		//------------------------
+		$arr = array();
+		if(strpos($toPersonID,"p_") !== false)
 		{
-			$pdo->rollBack();
-			echo Response::createObjectiveResponse(false, "");
-			die();
+			$personID = substr($toPersonID, 2);
+			if(isset($toPersonArr[ $personID ]))
+				continue;
+			$arr[] = $personID;
+			$toPersonArr[ $personID ] = true;
+		}
+		else {
+			$GroupID = substr($toPersonID, 2);
+			$dt = PdoDataAccess::runquery("select * from FRW_AccessGroupList where GroupID=?", array($GroupID));
+			foreach($dt as $row)
+				if(!isset($toPersonArr[ $row["PersonID"] ]))
+				{
+					$arr[] = $row["PersonID"];
+					$toPersonArr[ $row["PersonID"] ] = true;
+				}
+		}
+		//------------------------
+		for($i=0; $i<count($arr); $i++)
+		{
+			$obj = new OFC_send();
+			$obj->LetterID = $LetterID;
+			$obj->FromPersonID = $_SESSION["USER"]["PersonID"];
+			$obj->ToPersonID = $arr[$i];
+			$obj->SendDate = PDONOW;
+			$obj->SendType = $_POST[$index . "_SendType"];
+			$obj->ResponseTimeout = $_POST[$index . "_ResponseTimeout"];
+			$obj->FollowUpDate = $_POST[$index . "_FollowUpDate"];
+			$obj->IsUrgent = $_POST[$index . "_IsUrgent"];
+			$obj->IsCopy = isset($_POST[$index . "_IsCopy"]) ? "YES" : "NO";
+			$obj->SendComment = $_POST[$index . "_SendComment"];
+			$obj->SendComment = $obj->SendComment == "شرح ارجاع" ? "" : $obj->SendComment;
+			if(!$obj->AddSend($pdo))
+			{
+				$pdo->rollBack();
+				echo Response::createObjectiveResponse(false, "");
+				die();
+			}
 		}
 	}
 	
@@ -838,5 +903,223 @@ function DeleteMessage(){
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
+
+//.............................................
+
+function GetRefLetters(){
+
+	$dt = PdoDataAccess::runquery("
+		select r.LetterID,r.RefLetterID,l.LetterTitle
+		from OFC_RefLetters r
+		join OFC_letters l on(if(r.RefLetterID=:l,r.LetterID=l.LetterID,r.RefLetterID=l.LetterID))
+		where (r.LetterID=:l or r.RefLetterID=:l)
+
+		union all
+		
+		select r.LetterID,r.RefLetterID,l.LetterTitle
+		from OFC_RefLetters r0 join OFC_RefLetters r on(r0.RefLetterID=r.LetterID)
+		join OFC_letters l on(r.RefLetterID=l.LetterID)
+		where r0.LetterID=:l
+
+		union all
+		
+		select r.LetterID,r.RefLetterID,l.LetterTitle
+		from OFC_RefLetters r00 join OFC_RefLetters r0 on(r00.RefLetterID=r0.LetterID)
+		join OFC_RefLetters r on(r0.RefLetterID=r.LetterID)
+		join OFC_letters l on(r.RefLetterID=l.LetterID)
+		where r00.LetterID=:l", 
+			array(":l" => $_REQUEST["LetterID"]));
+	
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SaveRefLetter(){
+	
+	$obj = new OFC_RefLetters();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	$LObj = new OFC_letters($obj->RefLetterID);
+	if(!$LObj->LetterID)
+	{
+		echo Response::createObjectiveResponse(false, "شماره نامه موجود نیست");
+		die();
+	}
+	
+	if(!$obj->Add())
+	{
+		echo Response::createObjectiveResponse(false, "این نامه قبلا اضافه شده است");
+		die();
+	}
+	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function DeleteRefLetter(){
+	
+	$obj = new OFC_RefLetters();
+	$result = $obj->Remove($_POST["LetterID"], $_POST["RefLetterID"]);
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//.............................................
+
+function GetSendComments(){
+
+	$dt = OFC_SendComments::Get(" AND PersonID=?", array($_SESSION["USER"]["PersonID"]));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveSendComment(){
+	
+	$obj = new OFC_SendComments();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	$obj->PersonID = $_SESSION["USER"]["PersonID"];
+	
+	if(!isset($obj->RowID))
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteSendComment(){
+	
+	$obj = new OFC_SendComments($_POST["RowID"]);
+	$result = $obj->Remove();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//.............................................
+
+function GetReceivers(){
+
+	$dt = OFC_receivers::Get(" AND r.PersonID=?", array($_SESSION["USER"]["PersonID"]));
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SaveReceiver(){
+	
+	$obj = new OFC_receivers();
+	$obj->ToPersonID = $_POST["ToPersonID"];
+	$obj->PersonID = $_SESSION["USER"]["PersonID"];
+	$result = $obj->Add();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteReceiver(){
+	
+	$obj = new OFC_receivers($_POST["RowID"]);
+	$result = $obj->Remove();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//.............................................
+
+function GetDailyTips(){
+
+	$dt = OFC_DailyTips::Get();
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveDailyTip(){
+	
+	$obj = new OFC_DailyTips();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if(!isset($obj->RowID))
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteDailyTip(){
+	
+	$obj = new OFC_DailyTips($_POST["RowID"]);
+	$result = $obj->Remove();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//.............................................
+
+function EmailLetter(){
+	
+	$PersonID = $_POST["PersonID"];
+	$PObj = new BSC_persons($PersonID);
+	if($PObj->email == "")
+	{
+		echo Response::createObjectiveResponse(false, "ذینفع انتخابی فاقد پست الکترونیک می باشد");
+		die();
+	}
+	
+	$LetterID = $_POST["LetterID"];
+	$LObj = new OFC_letters($LetterID);
+	$CObj = new OFC_LetterCustomers($_POST["RowID"]);
+	$html = $LObj->LetterContent(true);
+	
+	//------------ create PDF of letter -------------------
+	require_once inc_Mpdf;
+	$html = iconv("utf-8","UTF-8//IGNORE",$html);
+	$mpdf = new mPDF('fa','A4','','BNazanin',5,5,5,5,16,13);
+	$mpdf->SetDirectionality('rtl');
+	$mpdf->WriteHTML($html);
+	$mpdf->Output("letter.pdf", "F");
+	
+	//------------ email letter ------------------------
+	require_once 'email.php';
+	$attachmnets = array(
+		array("name" => "letter.pdf","path" => "letter.pdf")
+	);
+	$dt = PdoDataAccess::runquery("select * from DMS_documents d
+			join DMS_DocFiles df using(DocumentID)
+			where ObjectType='letterAttach' AND ObjectID=?", array($LObj->LetterID));
+	foreach($dt as $file)
+	{
+		$fp = fopen($file["RowID"] . "." . $file["FileType"], "w");
+		fwrite($fp, $file["FileContent"] . 
+			file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" .
+			$file["RowID"] . "." . $file["FileType"]));
+		fclose($fp);
+			
+		$attachmnets[] = array(
+			"name" => $file["DocDesc"] . "." . $file["FileType"],
+			"path" => $file["RowID"] . "." . $file["FileType"]
+		);
+	}
+
+	$result = SendEmail($PObj->email, 
+			$CObj->LetterTitle == "" ? $LObj->LetterTitle : $CObj->LetterTitle, 
+			"--", $attachmnets);
+	if(!$result)
+	{
+		echo Response::createObjectiveResponse(false, "خطا در ارسال ایمیل");
+		die();
+	}
+	unlink("letter.pdf");
+	foreach($dt as $file)
+		unlink($file["RowID"] . "." . $file["FileType"]);
+	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
 
 ?>

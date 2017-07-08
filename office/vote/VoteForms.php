@@ -143,6 +143,102 @@ VoteForms.viewRender = function(v,p,r){
 
 VoteFormsObject = new VoteForms();
 
+VoteForms.MakeForm = function(store, readOnly){
+	
+	VoteFormsObject.FormWin.down("[name=FormID]").setValue(store.getAt(0).data.FormID);
+	parent = VoteFormsObject.FormWin.down('[itemId=form]');
+	parent.removeAll();
+
+	var CurGroupID = 0;
+	for(i=0; i<store.getCount(); i++)
+	{
+		record = store.getAt(i);
+		if(CurGroupID !== record.data.GroupID)
+		{
+			parent.add({
+				xtype : "fieldset",
+				title : record.data.GroupDesc,
+				itemId : "Group_" + record.data.GroupID,
+				layout : {
+					type : "table",
+					columns : 2
+				}
+			});
+			fsparent = parent.down("[itemId=Group_" + record.data.GroupID + "]");
+			CurGroupID = record.data.GroupID;
+		}
+
+		if(record.data.ItemType === "combo")
+		{
+			arr = record.data.ItemValues.split("#");
+			data = [];
+			for(j=0;j<arr.length;j++)
+				data.push([ arr[j] ]);
+
+			fsparent.add({
+				store : new Ext.data.SimpleStore({
+					fields : ['value'],
+					data : data
+				}),
+				xtype: record.data.ItemType,
+				value : record.data.ItemValue,
+				valueField : "value",
+				displayField : "value",
+				readOnly : readOnly,
+				name : "elem_" + record.data.ItemID,
+				fieldLabel : record.data.ItemTitle,
+				colspan : 2
+			});
+		}
+		else if(record.data.ItemType === "radio")
+		{
+			fsparent.add({
+				xtype : "displayfield",
+				width : 400,
+				value : record.data.ItemTitle
+			});
+			var items = new Array();
+			arr = record.data.ItemValues.split("#");
+			for(j=0; j<arr.length; j++)
+				items.push({
+					boxLabel : arr[j],
+					inputValue : arr[j],
+					readOnly : readOnly,
+					name : "elem_" + record.data.ItemID,
+					checked : arr[j] == record.data.ItemValue ? true : false,
+					width : 100
+				});
+			fsparent.add({
+				xtype : "radiogroup",
+				items : items
+			});
+		}
+		else
+		{
+			if(record.data.ItemType === "textarea")
+			{
+				fsparent.add({
+					xtype : "displayfield",
+					readOnly : readOnly,
+					value : record.data.ItemTitle,
+					colspan : 2,
+					width : 650
+				});
+			}
+			fsparent.add({
+				xtype: record.data.ItemType,
+				fieldLabel : record.data.ItemTitle,
+				style : record.data.ItemType == 'displayfield' ? "line-height: 30px;" : "",
+				name : "elem_" + record.data.ItemID,
+				hideTrigger : record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield' ? true : false,
+				value : record.data.ItemValue,
+				colspan : 2,
+				width : 650
+			});
+		}
+	}
+}
+
 VoteForms.prototype.FillForm = function(FormID){
 	
 	this.FormWin.down("[itemId=saveBtn]").show();
@@ -152,93 +248,7 @@ VoteForms.prototype.FillForm = function(FormID){
 			FormID : FormID
 		},
 		callback : function(){
-			VoteFormsObject.FormWin.down("[name=FormID]").setValue(this.getAt(0).data.FormID);
-			parent = VoteFormsObject.FormWin.down('[itemId=form]');
-			parent.removeAll();
-			
-			var CurGroupID = 0;
-			for(i=0; i<this.getCount(); i++)
-			{
-				record = this.getAt(i);
-				if(CurGroupID != record.data.GroupID)
-				{
-					parent.add({
-						xtype : "fieldset",
-						title : record.data.GroupDesc,
-						itemId : "Group_" + record.data.GroupID,
-						layout : {
-							type : "table",
-							columns : 2
-						}
-					});
-					fsparent = parent.down("[itemId=Group_" + record.data.GroupID + "]");
-					CurGroupID = record.data.GroupID;
-				}
-				
-				if(record.data.ItemType == "combo")
-				{
-					arr = record.data.ItemValues.split("#");
-					data = [];
-					for(j=0;j<arr.length;j++)
-						data.push([ arr[j] ]);
-					
-					fsparent.add({
-						store : new Ext.data.SimpleStore({
-							fields : ['value'],
-							data : data
-						}),
-						xtype: record.data.ItemType,
-						valueField : "value",
-						displayField : "value",
-						name : "elem_" + record.data.ItemID,
-						fieldLabel : record.data.ItemTitle,
-						colspan : 2
-					});
-				}
-				else if(record.data.ItemType == "radio")
-				{
-					fsparent.add({
-						xtype : "displayfield",
-						width : 400,
-						value : record.data.ItemTitle
-					});
-					var items = new Array();
-					arr = record.data.ItemValues.split("#");
-					for(j=0; j<arr.length; j++)
-						items.push({
-							boxLabel : arr[j],
-							inputValue : arr[j],
-							name : "elem_" + record.data.ItemID,
-							width : 100
-						});
-					fsparent.add({
-						xtype : "radiogroup",
-						items : items
-					});
-				}
-				else
-				{
-					if(record.data.ItemType == "textarea")
-					{
-						fsparent.add({
-							xtype : "displayfield",
-							value : record.data.ItemTitle,
-							colspan : 2,
-							width : 650
-						});
-					}
-					fsparent.add({
-						xtype: record.data.ItemType,
-						fieldLabel : record.data.ItemTitle,
-						style : record.data.ItemType == 'displayfield' ? "line-height: 30px;" : "",
-						name : "elem_" + record.data.ItemID,
-						hideTrigger : record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield' ? true : false,
-						value : record.data.ItemValues,
-						colspan : 2,
-						width : 650
-					});
-				}
-			}
+			VoteForms.MakeForm(this, false);
 		}
 	});	
 }
@@ -275,7 +285,7 @@ VoteForms.prototype.PreviewForm = function(){
 	if(!this.ValuesStore)
 	{
 		this.ValuesStore = new Ext.data.Store({
-			fields: ['ItemID','ItemValue','ItemType',"ItemTitle", 'ItemValues'],
+			fields: ['ItemID','ItemValue','ItemType',"ItemTitle", 'ItemValues', 'GroupID', 'GroupDesc'],
 			proxy: {
 				type: 'jsonp',
 				url: this.address_prefix + "../../office/vote/vote.data.php?task=FilledItemsValues",
@@ -297,57 +307,7 @@ VoteForms.prototype.PreviewForm = function(){
 		},
 		callback : function(){
 			
-			VoteFormsObject.FormWin.down("[name=FormID]").setValue(this.getAt(0).data.FormID);
-			parent = VoteFormsObject.FormWin.down('[itemId=form]');
-			parent.removeAll();
-			
-			for(i=0; i<this.totalCount; i++)
-			{
-				record = this.getAt(i);
-				
-				if(record.data.ItemType == "radio")
-				{
-					parent.add({
-						xtype : "displayfield",
-						value : record.data.ItemTitle
-					});
-					var items = new Array();
-					arr = record.data.ItemValues.split("#");
-					for(j=0; j<arr.length; j++)
-						items.push({
-							boxLabel : arr[j],
-							name : "elem_" + record.data.ItemID,
-							readOnly : true,
-							inputValue : arr[j],
-							checked : arr[j] == record.data.ItemValue ? true : false,
-							width : 100
-						});
-					parent.add({
-						xtype : "radiogroup",
-						items : items
-					});
-				}
-				else
-				{
-					if(record.data.ItemType == "textarea")
-					{
-						parent.add({
-							xtype : "displayfield",
-							value : record.data.ItemTitle,
-							colspan : 2,
-							width : 650
-						});
-					}
-					parent.add({
-						xtype: "displayfield",
-						fieldCls : record.data.ItemType == "displayfield" ? "" : "blueText",
-						fieldLabel : record.data.ItemType == "displayfield" ? "" : record.data.ItemTitle ,
-						value : record.data.ItemType == "displayfield" ? record.data.ItemTitle : record.data.ItemValue,
-						colspan : 2,
-						width : 650
-					});
-				}
-			}
+			VoteForms.MakeForm(this,true);
 		}
 	});
 }

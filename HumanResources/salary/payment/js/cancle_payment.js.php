@@ -140,7 +140,7 @@ Cancle.prototype.Remove = function(btn)
 						"<br><img src=<?=HR_ImagePath?>success.gif > " + "تعداد احكام استفاده شده در محاسبه كه با موفقيت حذف شد : " + cnt[0] + 
 						"<br><img src=<?=HR_ImagePath?>success.gif > " + "تعداد فيشهايي كه با موفقيت حذف شد : "  + cnt[1] +  
 						"<br><img src=<?=HR_ImagePath?>success.gif > " + "تعداد اقلامي از فيش كه با موفقيت حذف شد : " + cnt[2] +
-						"<br><br>&nbsp;&nbsp; <a href='/HumanResources/HRProcess/cancel_fail_log.php' target='_blank' >" + "تعداد فيشهايي که در حذف با خطا مواجه شد : " + cnt[3] + "</a><br><br>" );  
+						"<br><br>&nbsp;&nbsp; <a href='./../../../HumanResources/tempDir/cancel_fail_log.php' target='_blank' >" + "تعداد فيشهايي که در حذف با خطا مواجه شد : " + cnt[3] + "</a><br><br>" );  
 					
 			btn.enable();
 			btn.setText('ابطال پرداخت') ;

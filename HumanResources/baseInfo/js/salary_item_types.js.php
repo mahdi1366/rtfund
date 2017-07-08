@@ -17,8 +17,6 @@ function SalaryItemType()
 {
 	this.form = this.get("form_SalaryItemTypes");
 	
-	
-
 	this.newItemPanel = new Ext.Panel({
 		renderTo: this.get("mainpanel"),
 		title: "مشخصات یک قلم حقوقی",
@@ -31,17 +29,16 @@ function SalaryItemType()
             scripts: true
         },
         buttons : [{
-					text : "ذخیره",
-					iconCls : "save",
-					handler : function(){SalaryItemTypeObject.saveSalaryItem();}
-                    },
-                    {
-                        text : "انصراف",
-                        iconCls : "back",
-                        handler: function(){SalaryItemTypeObject.newItemPanel.hide();}
-                    }
-			]
-
+			text : "ذخیره",
+			iconCls : "save",
+			handler : function(){SalaryItemTypeObject.saveSalaryItem();}
+			},
+			{
+				text : "انصراف",
+				iconCls : "back",
+				handler: function(){SalaryItemTypeObject.newItemPanel.hide();}
+			}
+		]
 	});
 
 	this.newItemPanel.hide();

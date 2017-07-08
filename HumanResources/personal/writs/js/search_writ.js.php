@@ -7,7 +7,7 @@
 SearchWrit.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
-
+        MenuID : "<?= $_POST["MenuID"]?>", 
 	grid : "",
 	mainPanel : "",
 	advanceSearchPanel : "",
@@ -92,6 +92,7 @@ SearchWrit.opRender = function(value, p, record)
 	    
 SearchWrit.prototype.editWrit = function()
 {
+
 	var record = this.grid.getSelectionModel().getLastSelected();
 
 	framework.OpenPage(this.address_prefix + "../../writs/ui/view_writ.php", "مشاهده حکم",
@@ -100,7 +101,8 @@ SearchWrit.prototype.editWrit = function()
              STID : record.data.staff_id,
              WVER : record.data.writ_ver ,
 			 PID : record.data.PersonID,
-             ExeDate : record.data.execute_date
+             ExeDate : record.data.execute_date,
+              MenuID : this.MenuID
 			
 		 });
 }	    
