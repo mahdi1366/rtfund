@@ -242,7 +242,7 @@ function ChangeStatus($RequestID, $StatusID, $StepComment = "", $LogOnly = false
 		$obj = new LON_requests();
 		$obj->RequestID = $RequestID;
 		$obj->StatusID = $StatusID;
-		if(!$obj->EditRequest($pdo))
+		if(!$obj->EditRequest($pdo , false))
 			return false;
 	}
 	if(!$UpdateOnly)
@@ -269,7 +269,7 @@ function ChangeRequestStatus(){
 	}
 	
 	$result = ChangeStatus($_POST["RequestID"],$_POST["StatusID"],$_POST["StepComment"]);
-	Response::createObjectiveResponse($result, "");
+	Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
 	die();
 }
 
