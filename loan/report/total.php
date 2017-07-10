@@ -135,6 +135,7 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg->addColumn("شماره وام", "RequestID");
 	$rpg->addColumn("نوع وام", "LoanDesc");
+	$rpg->addColumn("عنوان طرح", "PlanTitle");	
 	$rpg->addColumn("معرفی کننده", "ReqFullname");
 	$rpg->addColumn("تاریخ درخواست", "ReqDate", "dateRender");
 	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "moneyRender");
