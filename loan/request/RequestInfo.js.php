@@ -1209,13 +1209,18 @@ RequestInfo.prototype.ChangeStatus = function(StatusID, StepComment){
 			StepComment : StepComment
 		},
 		
-		success : function(){
+		success : function(response){
 			
+			result = Ext.decode(response.responseText);
 			if(StatusID == 50)
 				Ext.MessageBox.alert("","مدارک شما به صندوق پژوهش و فناوری ارسال گردید");
 			RequestInfoObject.LoadRequestInfo();
 			if(RequestInfoObject.commentWin)
 				RequestInfoObject.commentWin.hide();
+			if(!result.success)
+			{
+				Ext.MessageBox.alert("ERROR", result.data == "" ? "عملیات مورد نظر با شکست مواجه شد" : result.data )
+			}
 		}
 	});
 }

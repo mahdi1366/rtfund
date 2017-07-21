@@ -1085,8 +1085,8 @@ function RegisterLoanCost($CostObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
 	$itemObj->SourceID = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $CostObj->CostID;
 	$itemObj->CostID = $CostCode_Loan;
-	$itemObj->DebtorAmount = $CostObj->CostAmount;
-	$itemObj->CreditorAmount = 0;
+	$itemObj->DebtorAmount = $CostObj->CostAmount*1 > 0 ? $CostObj->CostAmount : 0;
+	$itemObj->CreditorAmount = $CostObj->CostAmount*1 < 0 ? abs($CostObj->CostAmount) : 0;
 	$itemObj->Add($pdo);
 	// ----------------------------- bank --------------------------------
 	$CostCodeObj = new ACC_CostCodes($CostID);
@@ -1097,8 +1097,8 @@ function RegisterLoanCost($CostObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
 	unset($itemObj->TafsiliID);
 	$itemObj->locked = "NO";
 	$itemObj->CostID = $CostID;
-	$itemObj->DebtorAmount= 0;
-	$itemObj->CreditorAmount = $CostObj->CostAmount;
+	$itemObj->DebtorAmount = $CostObj->CostAmount*1 < 0 ? abs($CostObj->CostAmount) : 0;
+	$itemObj->CreditorAmount = $CostObj->CostAmount*1 > 0 ? $CostObj->CostAmount : 0;
 	$itemObj->TafsiliType = $CostCodeObj->TafsiliType;
 	if($TafsiliID != "")
 		$itemObj->TafsiliID = $TafsiliID;
