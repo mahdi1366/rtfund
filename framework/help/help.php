@@ -21,12 +21,35 @@ require_once '../header.inc.php';
 		</td>
 		<td>راهنمای زیر سیستم تسهیلات</td>
 	</tr>
+	
+	<tr>
+		<td width="10%"><a target="_blank" href="help/help_accounting.pdf">
+				<img src="icons/help.png" style="width:60px;vertical-align:middle;cursor: pointer"></a>
+		</td>
+		<td>راهنمای زیر سیستم حسابداری</td>
+	</tr>
+	
 	<tr>
 		<td width="10%"><a target="_blank" href="help/help_warrenty.pdf">
 				<img src="icons/help.png" style="width:60px;vertical-align:middle;cursor: pointer"></a>
 		</td>
 		<td>راهنمای زیر سیستم ضمانت نامه ها</td>
 	</tr>
+	
+	<tr>
+		<td width="10%"><a target="_blank" href="help/help_office.pdf">
+				<img src="icons/help.png" style="width:60px;vertical-align:middle;cursor: pointer"></a>
+		</td>
+		<td>راهنمای زیر سیستم اتوماسیون اداری</td>
+	</tr>
+	
+	<tr>
+		<td width="10%"><a target="_blank" href="help/help_attendance.pdf">
+				<img src="icons/help.png" style="width:60px;vertical-align:middle;cursor: pointer"></a>
+		</td>
+		<td>راهنمای زیر سیستم حضور و غیاب</td>
+	</tr>
+	
 	<tr>
 		<td width="10%"><a target="_blank" href="help/help_contract.pdf">
 				<img src="icons/help.png" style="width:60px;vertical-align:middle;cursor: pointer"></a>

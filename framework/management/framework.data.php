@@ -360,7 +360,7 @@ function SelectFollowUps(){
 	$dt = PdoDataAccess::runquery(" 
 		select 'letter' type, 'یادداشت نامه' title, LetterID ObjectID, 
 		concat_ws(' ','[',NoteTitle,']',NoteDesc) description
-		from OFC_LetterNotes where PersonID=:p AND " . PDONOW . ">= ReminderDate
+		from OFC_LetterNotes where PersonID=:p AND " . PDONOW . "= ReminderDate
 		
 		union all
 		

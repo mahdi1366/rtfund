@@ -22,7 +22,7 @@ $col->sortable = false;
 $col = $dg->addColumn("سال", "CycleYear", "string");
 $col->editor = ColumnEditor::NumberField();
 
-$col = $dg->addColumn("درصد سود سپرده کوتاه مدت", "ShortDepositPercent", "string");
+/*$col = $dg->addColumn("درصد سود سپرده کوتاه مدت", "ShortDepositPercent", "string");
 $col->editor = ColumnEditor::NumberField();
 $col->width = 130;
 $col->align = "center";
@@ -30,7 +30,7 @@ $col->align = "center";
 $col = $dg->addColumn("درصد سود سپرده بلند مدت", "LongDepositPercent", "string");
 $col->editor = ColumnEditor::NumberField();
 $col->width = 130;
-$col->align = "center";
+$col->align = "center";*/
 
 $col = $dg->addColumn("بسته شده", "IsClosed", "string");
 $col->renderer = "function(v){if(v == 'YES') return '*';}";
@@ -48,7 +48,7 @@ if($accessObj->AddFlag || $accessObj->EditFlag)
 	$dg->rowEditOkHandler = "function(v,p,r){return ACC_CycleObject.saveData(v,p,r);}";
 }
 $dg->height = 350;
-$dg->width = 780;
+$dg->width = 500;
 $dg->DefaultSortField = "CycleYear";
 $dg->DefaultSortDir = "ASC";
 $dg->autoExpandColumn = "CycleDesc";

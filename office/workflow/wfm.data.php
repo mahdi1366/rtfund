@@ -99,6 +99,8 @@ function SaveStep(){
 		
 		$result = $obj->AddFlowStep();
 	}
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
