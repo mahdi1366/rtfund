@@ -73,7 +73,8 @@ class session{
 			$_SESSION['USER']["IsShareholder"] = $temp[0]["IsShareholder"];
 			$_SESSION['USER']["IsExpert"] = $temp[0]["IsExpert"];
 
-			$_SESSION['USER']["fullname"] = $temp[0]["fname"] . " " . $temp[0]["lname"];
+			$_SESSION['USER']["fullname"] = $temp[0]["fname"] . " " . $temp[0]["lname"] . " " . 
+					$temp[0]["CompanyName"];
 
 			//..............................................................
 

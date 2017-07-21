@@ -112,6 +112,17 @@ function SelectDraftLetters() {
     die();
 }
 
+function  CustomerLetters(){
+	
+	$list = PdoDataAccess::runquery("
+		select * from OFC_letters l join OFC_LetterCustomers c using(LetterID)
+		where c.IsHide='NO' AND l.AccessType=".OFC_ACCESSTYPE_NORMAL." 
+			AND c.PersonID=" . $_SESSION["USER"]["PersonID"]);
+
+    echo dataReader::getJsonData($list, count($list), $_GET['callback']);
+    die();
+}
+
 function ReceivedSummary(){
 	
 	$temp = PdoDataAccess::runquery("
@@ -462,6 +473,7 @@ function SendLetter(){
 	SaveLetter(false);
 	
 	$LetterID = $_POST["LetterID"];
+	$LetterObj = new OFC_letters($LetterID);
 	$toPersonArr = array();
 	
 	$pdo = PdoDataAccess::getPdoObject();
@@ -507,6 +519,16 @@ function SendLetter(){
 		//------------------------
 		for($i=0; $i<count($arr); $i++)
 		{
+			if($LetterObj->AccessType == OFC_ACCESSTYPE_SECRET)
+			{
+				if(!OFC_roles::UserHasRole($arr[$i], OFC_ROLE_SECRET))
+				{
+					$pdo->rollBack();
+					echo Response::createObjectiveResponse(false, "نامه محرمانه را تنها به افرادی که دسترسی نامه محرمانه دارند می توانید ارسال کنید");
+					die();
+				}
+			}
+			
 			$obj = new OFC_send();
 			$obj->LetterID = $LetterID;
 			$obj->FromPersonID = $_SESSION["USER"]["PersonID"];
@@ -1121,5 +1143,43 @@ function EmailLetter(){
 	die();
 }
 
+//.............................................
+
+function SelectOFCRoles(){
+	
+	$temp = PdoDataAccess::runquery("select RowID,
+			PersonID,concat_ws(' ',CompanyName,fname,lname) fullname,
+			RoleID,InfoDesc RoleDesc
+		from OFC_roles 
+			join BSC_persons using(PersonID)
+			join BaseInfo on(TypeID=79 AND InfoID=RoleID)");
+	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
+	die();
+}
+
+function SelectRoles() {
+	
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=79 AND IsActive='YES'");
+	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
+	die();
+}
+
+function SaveRole(){
+	
+	$obj = new OFC_roles();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	$obj->Add();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function DeleteRole(){
+	
+	$obj = new OFC_roles($_POST["RowID"]);
+	$obj->Remove();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
 
 ?>

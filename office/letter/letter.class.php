@@ -177,9 +177,10 @@ class OFC_letters extends PdoDataAccess{
 			$content .= "<div style=margin-right:30px;float:right;width:200px>"
 					. "<img  src='/framework/icons/logo.jpg' style='width:150px'></div>";
 		}
-		$content .= "<div style=margin-left:30px;float:left;width:150px >شماره نامه : " . 
+		$content .= "<div style=margin-left:30px;float:left;width:150px;line-height:15px >شماره نامه : " . 
 			"<span dir=ltr>" . $letterYear . "-" . $this->LetterID . "</span>". 
-			"<br>تاریخ نامه : " . DateModules::miladi_to_shamsi($this->LetterDate);
+			"<br>تاریخ نامه : " . DateModules::miladi_to_shamsi($this->LetterDate) . 
+			($this->AccessType == OFC_ACCESSTYPE_SECRET ? "<br>دسترسی : محرمانه" : "");
 
 		if($this->LetterType == "INCOME")
 		{
@@ -572,4 +573,31 @@ class OFC_DailyTips extends OperationClass{
 	}
 }
 
+class OFC_roles extends OperationClass {
+
+	const TableName = "OFC_roles";
+	const TableKey = "RowID";
+	
+	public $RowID;
+	public $PersonID;
+	public $RoleID;
+	
+	static function GetUserRole($PersonID){
+		
+		$dt = PdoDataAccess::runquery("select * from OFC_roles where PersonID=? order by RoleID desc",
+			array($PersonID));
+		
+		return count($dt) == 0 ? "" : $dt[0]["RoleID"];
+	}
+	
+	static function UserHasRole($PersonID, $RoleID){
+		
+		$dt = PdoDataAccess::runquery("select * from OFC_roles "
+				. " where PersonID=? AND RoleID=? order by RoleID desc",
+			array($PersonID, $RoleID));
+		
+		return count($dt) > 0;
+	}
+
+}
 ?>

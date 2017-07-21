@@ -236,9 +236,12 @@ SendLetter.prototype.SendingLetter = function(){
 			SendLetterObject.parent.hide();
 			eval("SendLetterObject.AfterSendHandler();");
 		},
-		failure : function(){
+		failure : function(form,action){
 			mask.hide();
-			Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+			if(action.result.data == "")
+				Ext.MessageBox.alert("ERROR","عملیات مورد نظر با شکست مواجه شد");
+			else
+				Ext.MessageBox.alert("ERROR",action.result.data);
 		}
 	});
 }

@@ -11,6 +11,7 @@ if(empty($LetterID))
 	die();
 
 $editable = true;
+$ReadOnly = isset($_REQUEST["ReadOnly"]) && $_REQUEST["ReadOnly"] == "true" ? true : false;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=GetLetterNotes&LetterID=" . $LetterID, "grid_div");
 
@@ -28,7 +29,7 @@ $col = $dg->addColumn("یادآوری", "ReminderDate", GridColumn::ColumnType_d
 $col->editor = ColumnEditor::SHDateField(true);
 $col->width = 110;
 
-if($editable)
+if($editable && !$ReadOnly)
 {
 	$dg->enableRowEdit = true;
 	$dg->rowEditOkHandler = "function(store,record){return LetterNoteObject.SaveLetterNote(record);}";

@@ -11,6 +11,7 @@ if(empty($LetterID))
 	die();
 
 $editable = isset($_REQUEST["editable"]) && $_REQUEST["editable"] == "false" ? false : true;
+$ReadOnly = isset($_REQUEST["ReadOnly"]) && $_REQUEST["ReadOnly"] == "true" ? true : false;
 $editable = true;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=GetLetterCustomerss&LetterID=" . $LetterID, "grid_div");
@@ -33,12 +34,14 @@ $col->renderer = "function(v,p,r){return v == 'YES' ? '<span style=color:green;f
 $col->width = 100;
 $col->align = "center";
 
-$col = $dg->addColumn("ایمیل", "");
-$col->sortable = false;
-$col->renderer = "function(v,p,r){return LetterCustomers.EmailRender(v,p,r);}";
-$col->width = 35;
-
-if($editable)
+if(!$ReadOnly)
+{
+	$col = $dg->addColumn("ایمیل", "");
+	$col->sortable = false;
+	$col->renderer = "function(v,p,r){return LetterCustomers.EmailRender(v,p,r);}";
+	$col->width = 35;
+}
+if($editable  && !$ReadOnly)
 {
 	$dg->enableRowEdit = true;
 	$dg->rowEditOkHandler = "function(store,record){return LetterCustomersObject.SaveLetterCustomers(record);}";
@@ -69,6 +72,7 @@ LetterCustomers.prototype = {
 
 	LetterID : "<?= $LetterID ?>",
 	editable : <?= $editable ? "true" : "false" ?>,
+	ReadOnly : <?= $ReadOnly ? "true" : "false" ?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -95,7 +99,7 @@ function LetterCustomers()
 	});
 	
 	this.grid = <?= $grid ?>;
-	if(this.editable)
+	if(this.editable && !this.ReadOnly)
 		this.grid.plugins[0].on("beforeedit", function(editor,e){
 
 			editor = LetterCustomersObject.grid.plugins[0].getEditor();

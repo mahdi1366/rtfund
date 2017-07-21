@@ -21,8 +21,18 @@ if(count($dt) == 0)
 }
 
 $ForView = isset($_POST["ForView"]) && $_POST["ForView"] == "true" ? true : false;
+$ReadOnly = isset($_REQUEST["ReadOnly"]) && $_REQUEST["ReadOnly"] == "true" ? true : false;
 
 $LetterObj = new OFC_letters($LetterID);
+//................. access secret control .........................
+if($LetterObj->AccessType == OFC_ACCESSTYPE_SECRET)
+{
+	if(!OFC_roles::UserHasRole($_SESSION["USER"]["PersonID"], OFC_ROLE_SECRET))
+	{
+		echo "<br><br><br><h1><center>این نامه محرمانه است و شما دسترسی به نامه محرمانه ندارید</center></h1>";
+		die();
+	}
+}
 //..............................................................................
 if(!empty($_REQUEST["SendID"]))
 	OFC_send::UpdateIsSeen($_REQUEST["SendID"]);
@@ -85,6 +95,7 @@ LetterInfo.prototype = {
 
 	LetterID : '<?= $LetterID ?>',
 	imagesList : <?= $imageslist ?>,
+	ReadOnly : <?= $ReadOnly ? "true" : "false" ?>,
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -93,72 +104,76 @@ LetterInfo.prototype = {
 
 function LetterInfo(){
 	
-	this.grid = <?= $grid ?>;
-	this.grid.render(this.get("div_grid"));
-	
+	if(!this.ReadOnly)
+	{
+		this.grid = <?= $grid ?>;
+		this.grid.render(this.get("div_grid"));
+	}
 	buttons = new Array();
-	<? if($editable){?>
-		buttons.push({text : "ویرایش",
-			iconCls : "edit",
-			itemId : "btn_edit",
-			handler : function(){
-				LetterInfoObject.EditLetter();
-			}
-		},'-');
-	<?} if($signing){?>
+	if(!this.ReadOnly)
+	{
+		<? if($editable){?>
+			buttons.push({text : "ویرایش",
+				iconCls : "edit",
+				itemId : "btn_edit",
+				handler : function(){
+					LetterInfoObject.EditLetter();
+				}
+			},'-');
+		<?} if($signing){?>
+			buttons.push({
+				text : "امضاء نامه",
+				iconCls : "sign",
+				handler : function(){
+					LetterInfoObject.SignLetter();
+				}
+			},'-');
+		<?} if(!$ForView){?>
+			buttons.push({
+				text : "ارجاع",
+				iconCls : "sendLetter",
+				itemId : "btn_send",
+				handler : function(){
+					LetterInfoObject.SendWindowShow();
+				}
+			},'-');
+			buttons.push({
+				text : "بایگانی",
+				iconCls : "archive",
+				handler : function(){
+					LetterInfoObject.ArchiveWindowShow();
+				}
+			},'-');
+		<?}?>	
 		buttons.push({
-			text : "امضاء نامه",
-			iconCls : "sign",
-			handler : function(){
-				LetterInfoObject.SignLetter();
+			text : "چاپ",
+			iconCls : "print",
+			handler : function(){ 
+				window.open( LetterInfoObject.address_prefix + 
+					"PrintLetter.php?LetterID=" + LetterInfoObject.LetterID); 
 			}
 		},'-');
-	<?} if(!$ForView){?>
+
 		buttons.push({
-			text : "ارجاع",
-			iconCls : "sendLetter",
-			itemId : "btn_send",
-			handler : function(){
-				LetterInfoObject.SendWindowShow();
+			text : "عطف",
+			tooltip : "ایجاد نامه ای عطف به این نامه",
+			iconCls : "connect",
+			handler : function(){ 
+				framework.OpenPage(LetterInfoObject.address_prefix + 
+					"NewLetter.php", "ایجاد نامه", {
+					MenuID : LetterInfoObject.MenuID,
+					RefLetterID : LetterInfoObject.LetterID
+				});
 			}
 		},'-');
+
 		buttons.push({
-			text : "بایگانی",
-			iconCls : "archive",
-			handler : function(){
-				LetterInfoObject.ArchiveWindowShow();
-			}
+			text : "کپی",
+			tooltip : "ایجاد کپی از نامه",
+			iconCls : "copy",
+			handler : function(){ LetterInfoObject.copyLetter();}
 		},'-');
-	<?}?>	
-	buttons.push({
-		text : "چاپ",
-		iconCls : "print",
-		handler : function(){ 
-			window.open( LetterInfoObject.address_prefix + 
-				"PrintLetter.php?LetterID=" + LetterInfoObject.LetterID); 
-		}
-	},'-');
-	
-	buttons.push({
-		text : "عطف",
-		tooltip : "ایجاد نامه ای عطف به این نامه",
-		iconCls : "connect",
-		handler : function(){ 
-			framework.OpenPage(LetterInfoObject.address_prefix + 
-				"NewLetter.php", "ایجاد نامه", {
-				MenuID : LetterInfoObject.MenuID,
-				RefLetterID : LetterInfoObject.LetterID
-			});
-		}
-	},'-');
-	
-	buttons.push({
-		text : "کپی",
-		tooltip : "ایجاد کپی از نامه",
-		iconCls : "copy",
-		handler : function(){ LetterInfoObject.copyLetter();}
-	},'-');
-	
+	}
 	this.tabPanel = new Ext.TabPanel({
 		renderTo: this.get("mainForm"),
 		activeTab: 0,
@@ -228,6 +243,7 @@ function LetterInfo(){
 			}
 		},{
 			title : "ذینفعان",
+			hidden : this.ReadOnly,
 			loader : {
 				url : this.address_prefix + "LetterCustomers.php",
 				method: "POST",
@@ -242,13 +258,14 @@ function LetterInfo(){
 						params : {
 							LetterID : LetterInfoObject.LetterID,
 							ExtTabID : this.getEl().id,
-							editable : "false"
+							ReadOnly : LetterInfoObject.ReadOnly ? "true" : "false"
 						}
 					});
 				}
 			}
 		},{
 			title : "یادداشت ها",
+			hidden : this.ReadOnly,
 			loader : {
 				url : this.address_prefix + "LetterNotes.php",
 				method: "POST",
@@ -262,13 +279,15 @@ function LetterInfo(){
 					this.loader.load({
 						params : {
 							LetterID : LetterInfoObject.LetterID,
-							ExtTabID : this.getEl().id
+							ExtTabID : this.getEl().id,
+							ReadOnly : LetterInfoObject.ReadOnly ? "true" : "false"
 						}
 					});
 				}
 			}
 		},{
 			title : "نامه های وابسته",
+			hidden : this.ReadOnly,
 			itemId : "refs_tab",
 			loader : {
 				url : this.address_prefix + "RefLetters.php",
@@ -283,7 +302,8 @@ function LetterInfo(){
 					this.loader.load({
 						params : {
 							LetterID : LetterInfoObject.LetterID,
-							ExtTabID : this.getEl().id
+							ExtTabID : this.getEl().id,
+							ReadOnly : LetterInfoObject.ReadOnly ? "true" : "false"
 						}
 					});
 				}

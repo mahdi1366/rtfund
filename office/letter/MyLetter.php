@@ -62,7 +62,7 @@ $col->width = 150;
 
 $col = $dg->addColumn("عملیات", "");
 $col->renderer = "function(v,p,r){return MyLetter.OperationRender(v,p,r);}";
-$col->width = 80;
+$col->width = 100;
 
 if($mode == "receive")
 {
@@ -208,7 +208,12 @@ MyLetterObject = new MyLetter();
 
 MyLetter.OperationRender = function(v,p,r){
 	
-	return "<div  title='ارجاع نامه' class='sendLetter' "+
+	return "<div  title='اطلاعات نامه' class='info2' "+
+		" onclick='MyLetterObject.LetterInfo();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;float:right;width:20px;height:16'></div>" + 
+		
+		"<div  title='ارجاع نامه' class='sendLetter' "+
 		" onclick='MyLetterObject.SendLetter();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;float:right;width:20px;height:16'></div>" + 
@@ -237,6 +242,16 @@ MyLetter.OperationRender = function(v,p,r){
 			"style='background-repeat:no-repeat;background-position:center;" +
 			"cursor:pointer;float:right;width:20px;height:16'></div>" : ""
 		) ;
+}
+
+MyLetter.prototype.LetterInfo = function(){
+	
+	record = this.grid.getSelectionModel().getLastSelected();
+	framework.OpenPage("/office/letter/LetterInfo.php", "مشخصات نامه", 
+		{
+			LetterID : record.data.LetterID,
+			SendID : record.data.SendID
+		});
 }
 
 MyLetter.prototype.SendLetter = function(){

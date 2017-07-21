@@ -106,6 +106,13 @@ define("CNT_STEPID_CONFIRM", "110");
 
 define("DMS_DOCTYPE_LETTER", "63");
 
+//-------------- office ---------------
+define("OFC_ACCESSTYPE_NORMAL", "1");
+define("OFC_ACCESSTYPE_SECRET", "2");
+
+define("OFC_ROLE_SECRET", "1");
+//-------------------------------------
+
 function BeginReport() {
 
         echo '<html>

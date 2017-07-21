@@ -11,6 +11,7 @@ if(empty($LetterID))
 	die();
 
 $editable = true;
+$ReadOnly = isset($_REQUEST["ReadOnly"]) && $_REQUEST["ReadOnly"] == "true" ? true : false;
 		
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=GetRefLetters&LetterID=" . $LetterID, "grid_div");
 
@@ -24,7 +25,7 @@ $col->width = 70;
 
 $col = $dg->addColumn("عنوان نامه", "LetterTitle");
 
-if($editable)
+if($editable && !$ReadOnly)
 {
 	$dg->enableRowEdit = true;
 	$dg->rowEditOkHandler = "function(store,record){return RefLettersObject.SaveRefLetters(record);}";
@@ -54,6 +55,7 @@ RefLetters.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 
 	LetterID : "<?= $LetterID ?>",
+	ReadOnly : <?= $ReadOnly ? "true" : "false" ?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -63,11 +65,12 @@ RefLetters.prototype = {
 function RefLetters()
 {	
 	this.grid = <?= $grid ?>;
-	this.grid.plugins[0].on("beforeedit", function(editor,e){
+	if(!this.ReadOnly)
+		this.grid.plugins[0].on("beforeedit", function(editor,e){
 
-		if(e.record.data.RefLetterID*1 > 0)
-			return false;
-	});
+			if(e.record.data.RefLetterID*1 > 0)
+				return false;
+		});
 	/*this.grid.getView().getRowClass = function(record, index)
 	{
 		if(record.data.RefLetterID == RefLettersObject.LetterID)
@@ -79,7 +82,7 @@ function RefLetters()
 
 RefLetters.RefLetterRender = function(v,p,r){
 	
-	if(r.data.RefLetterID == RefLettersObject.LetterID)
+	if(r.data.RefLetterID == RefLettersObject.LetterID || RefLettersObject.ReadOnly)
 		return v;
 	return "<a href='javascript:void(0)' onclick='RefLetters.OpenRefLetter(" + v + ")'>" + v + "</a>";
 }

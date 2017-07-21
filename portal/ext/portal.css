@@ -229,3 +229,11 @@ a:active {
     background-color:#ff9f00;
     text-align:left;
 }
+.UserInfoBox{
+	line-height: 22px; 
+	text-align: right;
+	vertical-align: middle;
+	font-family: tahoma;
+	font-size: 11px;
+	width : 220px;
+}

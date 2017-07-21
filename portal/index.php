@@ -97,37 +97,43 @@ for ($i = 0; $i < count($menus); $i++) {
 				<font style="font-family:tahoma;font-size:12px;font-weight:bold">نظر سنجی</font>
 			</div>
 			<!----------------------------------------------------------------->
-			<div class="headerItems" style="color:#F05A49"
-				 onclick="portal.OpenPage('/portal/logout.php');">
-				<span class="fa fa-sign-out"></span><br>
-				<font style="font-family:tahoma;font-size:12px;font-weight:bold">خروج</font>
+			<div class="headerItems" style="color:#1E8BC3"
+				 onclick="portal.OpenPage('/portal/global/letters.php');">
+				<span class="fa fa-envelope-o "></span><br>
+				<font style="font-family:tahoma;font-size:12px;font-weight:bold">نامه ها</font>
 			</div>
 		</div>
      <div class="main">
 			
           <div id="mainPortalFrame" class="mainFrame" ></div>
-          <div class="menu" >
-               <?= $menuStr?>
-          </div>
+		  <div align='right' class="UserInfoBox blueText">
+			  <img style='width: 35px; float: right; vertical-align: middle; margin-top: 3px;' 
+				   src='/framework/icons/user.png'>
+			  <img style='width: 22px; float: left; vertical-align: middle; margin-top: 10px;cursor: pointer' 
+				 src='/framework/icons/exit.png' onclick="portal.OpenPage('/portal/logout.php');"> 
+				<?= $_SESSION['USER']["fullname"] ?>
+				<br> شناسه : <?= $_SESSION['USER']["UserName"]?>
+			
+			</div>
+			<div class="menu" ><?= $menuStr?></div>
      </div>
+		<!--
 		 <table class ="example_3">
 			 <td width="33%" style="background-color:#35bc7a;">
-				<img id='nbpewmcswmcsnbpedrft' style='cursor:pointer' 
-onclick='window.open("http://trustseal.enamad.ir/Verify.aspx?id=28821&p=wkynaqgwaqgwwkynnbpd", "Popup",
-	"toolbar=no, location=no, statusbar=no, menubar=no, scrollbars=1, resizable=0, width=580, height=600, top=30")' 
-	alt='' src='http://trustseal.enamad.ir/logo.aspx?id=28821&p=qesgukaqukaqqesglznb'/>
-
-
-
 			 </td>
 			 <td width="12px"></td>
 			 <td width="33%" style="background-color:#f86924;"></td>
 			 <td width="12px"></td>
 			 <td width="" style="background-color:#ff9f00;"></td>
 		 </table>
+  -->
      <div class="footer">
+		 <img id='nbpewmcswmcsnbpedrft' style='cursor:pointer' 
+onclick='window.open("http://trustseal.enamad.ir/Verify.aspx?id=28821&p=wkynaqgwaqgwwkynnbpd", "Popup",
+	"toolbar=no, location=no, statusbar=no, menubar=no, scrollbars=1, resizable=0, width=580, height=600, top=30")' 
+	alt='' src='http://trustseal.enamad.ir/logo.aspx?id=28821&p=qesgukaqukaqqesglznb'/>
      </div>
-     <div class="copyright" align=center></div>          
+  <div class="copyright" style="font-family: tahoma" align=center>کلیه حقوق مادی و معنوی این پورتال محفوظ می باشد</div>          
   </center>
 	<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/icons.css" />
 	<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-rtl.css" />
