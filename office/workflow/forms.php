@@ -201,7 +201,6 @@ WFM_form.prototype.copyForm = function () {
 		
 }
 
-
 WFM_form.prototype.ShowPersons = function(){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();

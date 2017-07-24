@@ -97,6 +97,12 @@ $col->renderer = "WFM.downRender";
 $col->sortable = false;
 $col->width = 30;
 
+$col = $dg->addColumn("افراد","","");
+$col->renderer = "WFM.PersonsRender";
+$col->sortable = false;
+$col->align = "center";
+$col->width = 40;
+
 if($accessObj->RemoveFlag)
 {
 	$col = $dg->addColumn("حذف","","");

@@ -170,6 +170,13 @@ WFM.downRender = function(v,p,r)
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
+WFM.PersonsRender = function(v,p,r)
+{
+	return "<div align='center' title='افراد' class='list' onclick='WFMObject.ShowPersons();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16'></div>";
+}
+
 WFM.prototype.AddStep = function()
 {
 	var record = this.grid.getSelectionModel().getLastSelected();
@@ -275,6 +282,41 @@ WFM.prototype.DeleteStep = function()
 					
 		  	}
 		});
+	});
+}
+
+WFM.prototype.ShowPersons = function(){
+	
+	var record = this.StepsGrid.getSelectionModel().getLastSelected();
+	
+	if(!this.PersonsWin)
+	{
+		this.PersonsWin = new Ext.window.Window({
+			width : 765,
+			title : "لیست کاربران جهت مشاهده فرم",
+			bodyStyle : "background-color:white;text-align:-moz-center",
+			height : 565,
+			modal : true,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "FlowStepPersons.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.PersonsWin);
+	}
+	this.PersonsWin.show();
+	this.PersonsWin.center();
+	this.PersonsWin.loader.load({
+		params : { 
+			ExtTabID : this.PersonsWin.getEl().id,
+			MenuID : <?= $_REQUEST["MenuID"] ?>,
+			StepRowID : record.data.StepRowID}
 	});
 }
 

@@ -348,5 +348,30 @@ function DeleteAllFlow(){
 	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
 	die();
 }
+//-------------------------------------
+
+function GetStepPersons(){
+	
+	$dt = WFM_FlowStepPersons::Get(" AND StepRowID=?", array($_REQUEST["StepRowID"]));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount());
+	die();
+}
+
+function SaveStepPerson(){
+	
+	$obj = new WFM_FlowStepPersons();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	$result = $obj->Add();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function RemoveStepPersons(){
+	
+	$obj = new WFM_FlowStepPersons($_REQUEST["RowID"]);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 
 ?>
