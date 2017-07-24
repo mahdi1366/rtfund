@@ -82,6 +82,23 @@ class WFM_FormItems extends OperationClass {
     }    
 }
 
+class WFM_FormPersons extends OperationClass {
+
+	const TableName = "WFM_FormPersons";
+	const TableKey = "RowID"; 
+	
+	public $RowID;
+	public $FormID;
+	public $PersonID;
+	
+	static function Get($where = '', $whereParams = array()) {
+		
+		return parent::runquery_fetchMode("select fp.*, concat_ws(' ',fname,lname,CompanyName) fullname 
+			from WFM_FormPersons fp join BSC_persons p using(PersonID)
+			where 1=1 " . $where, $whereParams);
+	}
+}
+
 
 class WFM_requests extends OperationClass {
 

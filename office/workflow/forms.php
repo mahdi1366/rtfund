@@ -56,6 +56,12 @@ $col->editor = ColumnEditor::CheckField("","YES");
 $col->align = "center";
 $col->width = 35;
 
+$col = $dg->addColumn("افراد","","");
+$col->renderer = "WFM_form.PersonsRender";
+$col->sortable = false;
+$col->align = "center";
+$col->width = 40;
+
 if($accessObj->RemoveFlag)
 {
 	$col = $dg->addColumn("حذف", "FormID");
@@ -94,6 +100,13 @@ WFM_form.OperationRender = function(v,p,r){
 
 	return "<div align='center' title='حذف' class='remove' "+
 		"onclick='WFM_formObject.RemoveForm();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16'></div>";
+}
+
+WFM_form.PersonsRender = function(v,p,r)
+{
+	return "<div align='center' title='افراد' class='list' onclick='WFM_formObject.ShowPersons();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;height:16'></div>";
 }
@@ -186,6 +199,42 @@ WFM_form.prototype.copyForm = function () {
 		});
 	});
 		
+}
+
+
+WFM_form.prototype.ShowPersons = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+	if(!this.PersonsWin)
+	{
+		this.PersonsWin = new Ext.window.Window({
+			width : 765,
+			title : "لیست کاربران مجاز جهت پر کردن فرم",
+			bodyStyle : "background-color:white;text-align:-moz-center",
+			height : 565,
+			modal : true,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "FormPersons.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.PersonsWin);
+	}
+	this.PersonsWin.show();
+	this.PersonsWin.center();
+	this.PersonsWin.loader.load({
+		params : { 
+			ExtTabID : this.PersonsWin.getEl().id,
+			MenuID : <?= $_REQUEST["MenuID"] ?>,
+			FormID : record.data.FormID}
+	});
 }
 
 </script>

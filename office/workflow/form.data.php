@@ -235,14 +235,21 @@ function CopyForm(){
 
 function SelectValidForms(){
 	
-	$dt = PdoDataAccess::runquery("select f.* from WFM_forms f
-		join BSC_persons p on(p.PersonID=:pid AND (
-			if(f.IsStaff='YES',f.IsStaff=p.IsStaff,1=0) OR
-			if(f.IsCustomer='YES',f.IsCustomer=p.IsCustomer,1=0) OR
-			if(f.IsShareholder='YES',f.IsShareholder=p.IsShareholder,1=0) OR
-			if(f.IsAgent='YES',f.IsAgent=p.IsAgent,1=0) OR
-			if(f.IsSupporter='YES',f.IsSupporter=p.IsSupporter,1=0) OR
-			if(f.IsExpert='YES',f.IsExpert=p.IsExpert,1=0) ) )
+	$dt = PdoDataAccess::runquery("
+		select f.* from WFM_forms f
+		left join WFM_FormPersons fp on(fp.FormID=f.FormID)
+		join BSC_persons p on(
+			case when fp.FormID is not null then fp.PersonID=:pid AND p.PersonID=fp.PersonID
+			else
+				p.PersonID=:pid AND (
+					if(f.IsStaff='YES',f.IsStaff=p.IsStaff,1=0) OR
+					if(f.IsCustomer='YES',f.IsCustomer=p.IsCustomer,1=0) OR
+					if(f.IsShareholder='YES',f.IsShareholder=p.IsShareholder,1=0) OR
+					if(f.IsAgent='YES',f.IsAgent=p.IsAgent,1=0) OR
+					if(f.IsSupporter='YES',f.IsSupporter=p.IsSupporter,1=0) OR
+					if(f.IsExpert='YES',f.IsExpert=p.IsExpert,1=0) ) 
+			end)
+		group by f.FormID
 		", array(":pid" => $_SESSION["USER"]["PersonID"]));
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
@@ -378,6 +385,32 @@ function DeleteRequest(){
 	echo Response::createObjectiveResponse(true, '');
 	die();
 	
+}
+
+//-------------------------------------
+
+function GetFormPersons(){
+	
+	$dt = WFM_FormPersons::Get(" AND FormID=?", array($_REQUEST["FormID"]));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount());
+	die();
+}
+
+function SaveFormPerson(){
+	
+	$obj = new WFM_FormPersons();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	$result = $obj->Add();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function RemoveFormPersons(){
+	
+	$obj = new WFM_FormPersons($_REQUEST["RowID"]);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, "");
+	die();
 }
 
 ?>
