@@ -104,6 +104,9 @@ ManageRequest.prototype.OperationMenu = function(e){
 	op_menu.add({text: 'مدارک وام گیرنده',iconCls: 'attach', 
 		handler : function(){ return ManageRequestObject.LoanDocuments('person'); }});
 	
+	op_menu.add({text: 'ضامنین/وثیقه گذاران',iconCls: 'list', 
+		handler : function(){ return ManageRequestObject.LoanGuarantors(); }});
+	
 	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
 		handler : function(){ return ManageRequestObject.ShowHistory(); }});
 	
@@ -193,6 +196,43 @@ ManageRequest.prototype.LoanDocuments = function(ObjectType){
 			ExtTabID : this.documentWin.getEl().id,
 			ObjectType : ObjectType,
 			ObjectID : ObjectType == "loan" ? record.data.RequestID : record.data.LoanPersonID
+		}
+	});
+}
+
+ManageRequest.prototype.LoanGuarantors = function(){
+
+	if(!this.GuarantorWin)
+	{
+		this.GuarantorWin = new Ext.window.Window({
+			width : 750,
+			height : 600,
+			autoScroll : true,
+			modal : true,
+			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "guarantors.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.GuarantorWin);
+	}
+
+	this.GuarantorWin.show();
+	this.GuarantorWin.center();
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.GuarantorWin.loader.load({
+		scripts : true,
+		params : {
+			ExtTabID : this.GuarantorWin.getEl().id,
+			RequestID : record.data.RequestID
 		}
 	});
 }

@@ -51,23 +51,31 @@ function SelectAllWarrentyRequests(){
 	$where = "1=1 ";
 	if(!empty($_REQUEST["RequestID"]))
 	{
-		$where .= " AND RequestID=:r";
+		$where .= " AND r.RequestID=:r";
 		$param[":r"] = $_REQUEST["RequestID"];
 	}
-	$param = array();
 	
-	if (isset($_REQUEST['fields']) && !empty($_REQUEST['query'])) {
-        $field = $_REQUEST['fields'];
+	if ( !empty($_REQUEST['query'])) {
+        $field = isset($_REQUEST['fields']) ? $_REQUEST['fields'] : "fullname";
 		$field = $field == "fullname" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;
         $where .= ' and ' . $field . ' like :fld';
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
 	
-	
+	if (empty($_REQUEST['fields']) && !empty($_REQUEST['query'])) {
+        $where .= ' and r.RequestID = :rid';
+        $param[':rid'] = $_REQUEST['query'];
+    }
+		
 	if(!empty($_REQUEST["IsEnded"]))
 	{
 		$where .= " AND StatusID " . ($_REQUEST["IsEnded"] == "YES" ? "=" : "<>") . " :e "; 
 		$param[":e"] = WAR_STEPID_END;
+	}
+	
+	if(!empty($_REQUEST["IsMain"]))
+	{
+		$where .= " AND r.RefRequestID=r.RequestID"; 
 	}
 	
 	$dt = WAR_requests::SelectAll($where, $param, dataReader::makeOrder());

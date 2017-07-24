@@ -380,6 +380,11 @@ RequestInfo.prototype.BuildForms = function(){
 		itemId : "cmp_PersonDocuments",
 		handler : function(){ RequestInfoObject.LoanDocuments('person'); }
 	},{
+		text : 'ضامنین/وثیقه گذاران',
+		iconCls : "list",
+		itemId : "cmp_guarantors",
+		handler : function(){ RequestInfoObject.LoanGuarantors(); }
+	},{
 		text : 'سابقه',
 		iconCls : "history",
 		itemId : "cmp_history",
@@ -1105,6 +1110,46 @@ RequestInfo.prototype.ShowHistory = function(){
 	
 	this.HistoryWin.show();
 	this.HistoryWin.center();
+}
+
+RequestInfo.prototype.LoanGuarantors = function(){
+
+	if(!this.GuarantorWin)
+	{
+		this.GuarantorWin = new Ext.window.Window({
+			title: 'ضامنین / وثیقه گذاران',
+			modal : true,
+			autoScroll : true,
+			width: 750,
+			height : 600,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "guarantors.php",
+				scripts : true
+			},
+			buttons : [{
+					text : "بازگشت",
+					iconCls : "undo",
+					handler : function(){
+						this.up('window').hide();
+					}
+				}]
+		});
+		Ext.getCmp(this.TabID).add(this.GuarantorWin);
+		
+		this.GuarantorWin.show();
+		this.GuarantorWin.center();
+		this.GuarantorWin.loader.load({
+			params : {
+				ExtTabID : this.GuarantorWin.getEl().id,
+				RequestID : this.RequestID
+			}
+		});
+		return;
+	}
+	
+	this.GuarantorWin.show();
+	this.GuarantorWin.center();
 }
 
 RequestInfo.prototype.LoanDocuments = function(ObjectType){

@@ -24,6 +24,7 @@ class CNT_contracts extends OperationClass {
 	public $content;
 	public $ContractType;
 	public $LoanRequestID;
+	public $WarrentyRequestID;
 	public $ContractAmount;
 	public $StatusID;
 
@@ -63,6 +64,7 @@ class CNT_contracts extends OperationClass {
 				($content ? "c.content," : "") .
 				"c.ContractType,
 				c.LoanRequestID,
+				c.WarrentyRequestID,
 				c.ContractAmount,
 				t.TemplateTitle,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) PersonFullname
@@ -111,11 +113,21 @@ class CNT_contracts extends OperationClass {
 				rp.InstallmentCount,
 				rp.CustomerWage,
 				rp.DelayMonths,
-				concat(rp.PayInterval,' ',if(IntervalType='MONTH','ماه','روز')) PayInterval
+				concat(rp.PayInterval,' ',if(IntervalType='MONTH','ماه','روز')) PayInterval,
 				
+				wr.organization WAR_organization,
+				wr.amount WAR_amount,
+				wr.StartDate WAR_StartDate,
+				wr.EndDate WAR_EndDate,
+				wr.wage WAR_wage,
+				wr.LetterNo WAR_LetterNo,
+				wr.LetterDate WAR_LetterDate
+	
 			from CNT_contracts c 
 			left join LON_requests r on(LoanRequestID=RequestID)
 			left join LON_ReqParts rp on(rp.IsHistory='NO' AND rp.RequestID=r.RequestID)
+			left join WAR_requests wr on(c.RequestID=wr.RequestID)
+			
 			left join BSC_persons p1 on(c.PersonID=p1.PersonID)
 			left join BaseInfo bfp1 on(bfp1.TypeID=14 AND p1.CompanyType=bfp1.InfoID)
 			left join BSC_persons p2 on(c.PersonID2=p2.PersonID)
@@ -163,16 +175,19 @@ class CNT_contracts extends OperationClass {
 		for ($i = 0; $i < count($res); $i++) {
 			if ($i % 2 != 0) {
 				$tempValue = "";
-				$TempType = "";
-				if(isset($ValuesStore[$res[$i]]))
+				$TempType = $TplItemsStore[ $res[$i] ]["ItemType"];
+				
+				if($TempType == "block")
+				{
+					$st .= $this->BlockInfo( $TplItemsStore[ $res[$i] ]["FieldName"] );
+				}
+				else if(isset($ValuesStore[$res[$i]]))
 				{
 					$tempValue = $ValuesStore[$res[$i]];
-					$TempType = $TplItemsStore[$res[$i]]["ItemType"];
 				}
 				else if(isset($TplItemsStore[ $res[$i] ]["FieldName"]))
 				{
 					$tempValue = $ContractRecord [ $TplItemsStore[ $res[$i] ]["FieldName"] ];
-					$TempType = $TplItemsStore[ $res[$i] ]["ItemType"];
 				}
 
 				switch ($TempType) {
@@ -193,6 +208,79 @@ class CNT_contracts extends OperationClass {
 		}
 		
 		return $st;
+	}
+	
+	private function BlockInfo($FieldName){
+		switch($FieldName)
+		{
+			case "OrgSigners":
+				$dt = PdoDataAccess::runquery("select * from BSC_OrgSigners "
+					. "where PersonID=?", array($this->PersonID));
+				if(count($dt) == 0)
+					return "";
+				$returnStr = "<table width=100% border=1 style=border-collapse:collapse>
+					<tr>
+						<td>نام و نام خانوادگی</td>
+						<td>پست</td>
+						<td>کد ملی</td>
+						<td>تلفن ثابت</td>
+						<td>تلفن همراه</td>
+						<td>پست الکترونیک</td>
+					</tr>
+				";
+				foreach($dt as $row){
+					$returnStr .= "<tr>
+						<td>" . ($row["sex"] == "MALE" ? "آقای " : "خانم ") . $row["fullname"] . "</td>
+						<td>" . $row["PostDesc"] . "</td>
+						<td>" . $row["NationalID"] . "</td>
+						<td>" . $row["phone"] . "</td>
+						<td>" . $row["mobile"] . "</td>
+						<td>" . $row["email"] . "</td>
+					</tr>";
+				}				
+				return $returnStr . "</table>";
+			//..................................................................
+			case "guarantors":
+				
+				$dt = PdoDataAccess::runquery("select * from LON_guarantors "
+					. "where RequestID=? AND PersonType='GUARANTOR'", array($this->LoanRequestID));
+				break;				
+			case "sponsors":
+							
+				$dt = PdoDataAccess::runquery("select * from LON_guarantors "
+					. "where RequestID=? AND PersonType='SPONSOR'", array($this->LoanRequestID));
+				break;
+		}
+		
+		if(count($dt) == 0)
+			return "";
+		$returnStr = "<table width=100% border=1 style=border-collapse:collapse>
+			<tr>
+				<td>نام و نام خانوادگی</td>
+				<td>نام پدر</td>
+				<td>کد ملی</td>
+				<td>شماره شناسنامه</td>
+				<td>تاریخ تولد</td>
+				<td>محل تولد</td>
+				<td>تلفن ثابت</td>
+				<td>تلفن همراه</td>
+				<td>آدرس</td>
+			</tr>
+		";
+		foreach($dt as $row){
+			$returnStr .= "<tr>
+				<td>" . ($row["sex"] == "MALE" ? "آقای " : "خانم ") . $row["fullname"] . "</td>
+				<td>" . $row["father"] . "</td>
+				<td>" . $row["NationalCode"] . "</td>
+				<td>" . $row["ShNo"] . "</td>
+				<td>" . DateModules::miladi_to_shamsi($row["BirthDate"]) . "</td>
+				<td>" . $row["ShCity"] . "</td>
+				<td>" . $row["phone"] . "</td>
+				<td>" . $row["mobile"] . "</td>
+				<td>" . $row["address"] . "</td>
+			</tr>";
+		}				
+		return $returnStr . "</table>";
 	}
 	
 	public function Remove()

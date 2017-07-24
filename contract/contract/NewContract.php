@@ -43,7 +43,6 @@ function NewContract() {
 		},
 		items: [{
 			xtype: 'combo',
-			colspan : 2,
 			fieldLabel: 'انتخاب الگو',
 			itemId: 'TemplateID',
 			store: new Ext.data.Store({
@@ -84,7 +83,44 @@ function NewContract() {
 			}
 		},{
 			xtype : "combo",
-			width : 740,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + 'contract.data.php?task=SelectContractTypes',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['InfoID','InfoDesc'],
+				autoLoad : true
+			}),
+			fieldLabel : "نوع قرارداد",
+			displayField : "InfoDesc",
+			width: 350,
+			queryMode : "local",
+			allowBlank : false,
+			value : "1",
+			valueField : "InfoID",
+			name : "ContractType",
+			itemId : "ContractType",
+			listeners : {
+				select : function(combo, records){
+					me = NewContractObj;
+					if(records[0].data.InfoID == "1")
+					{
+						me.MainForm.getComponent("LoanRequestID").enable();
+						me.MainForm.getComponent("WarrentyRequestID").disable();
+					}
+					else
+					{
+						me.MainForm.getComponent("LoanRequestID").disable();
+						me.MainForm.getComponent("WarrentyRequestID").enable();
+					}
+				}
+			}
+		},{
+			xtype : "combo",
+			width : 635,
+			fieldLabel : "وام",
+			colspan : 2,
 			store : new Ext.data.SimpleStore({
 				proxy: {
 					type: 'jsonp',
@@ -100,13 +136,11 @@ function NewContract() {
 					}
 				}]
 			}),
-			fieldLabel : "وام",
 			displayField : "fullTitle",
 			pageSize : 20,
 			valueField : "RequestID",
 			name : "LoanRequestID",
 			itemId : "LoanRequestID",
-			colspan : 2,
 			tpl: new Ext.XTemplate(
 				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
 				'<td style="padding:7px">کد وام</td>',
@@ -135,13 +169,84 @@ function NewContract() {
 						}
 					});
 					me.MainForm.getComponent("ContractAmount").setValue(records[0].data.ReqAmount);
-					me.MainForm.getComponent("ContractType").setValue("1");
-					
+
 					me.MainForm.getComponent("PersonID").readOnly = true;
 					me.MainForm.getComponent("ContractAmount").readOnly = true;
 					me.MainForm.getComponent("ContractType").readOnly = true;
 				}
 			}
+
+		},{
+			xtype : "combo",
+			width : 635,
+			fieldLabel : "ضمانت نامه",
+			colspan : 2,
+			disabled : true,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../../loan/warrenty/request.data.php?'+
+						'task=SelectAllWarrentyRequests&IsMain=true',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ["PersonID",'fullname','amount',"RequestID","StartDate","EndDate","organization",{
+					name : "fullTitle",
+					convert : function(value,record){
+						return "[ " + record.data.RequestID + " ]" + record.data.fullname  + " به مبلغ " + 
+							Ext.util.Format.Money(record.data.amount) + " از تاریخ " + 
+							MiladiToShamsi(record.data.StartDate) + " تا تاریخ " + 
+							MiladiToShamsi(record.data.EndDate) + " سازمان " + record.data.organization;
+					}
+				}]
+			}),
+			displayField : "fullTitle",
+			pageSize : 20,
+			valueField : "RequestID",
+			name : "WarrentyRequestID",
+			itemId : "WarrentyRequestID",
+			tpl: new Ext.XTemplate(
+				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
+				'<td style="padding:7px">شماره</td>',
+				'<td style="padding:7px">ضمانت خواه</td>',
+				'<td style="padding:7px">مبلغ</td>',
+				'<td style="padding:7px">تاریخ شروع</td>',
+				'<td style="padding:7px">تاریخ پایان</td>',
+				'<td style="padding:7px">سازمان</td> </tr>',
+				'<tpl for=".">',
+					'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
+					'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">{fullname}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">',
+						'{[Ext.util.Format.Money(values.amount)]}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">',
+						'{[MiladiToShamsi(values.StartDate)]}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">',
+						'{[MiladiToShamsi(values.EndDate)]}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">',
+						'{organization}</td> </tr>',
+				'</tpl>',
+				'</table>'
+			),
+			listeners : {
+				select : function(combo, records){
+					me = NewContractObj;
+					me.MainForm.getComponent("PersonID").getStore().load({
+						params : {PersonID: records[0].data.PersonID},
+						callback : function(){
+							if(this.getCount() > 0)
+								me.MainForm.getComponent("PersonID").setValue(this.getAt(0).data.PersonID);
+						}
+					});
+					me.MainForm.getComponent("ContractAmount").setValue(records[0].data.amount);
+					me.MainForm.getComponent("StartDate").setValue(MiladiToShamsi(records[0].data.StartDate));
+					me.MainForm.getComponent("EndDate").setValue(MiladiToShamsi(records[0].data.EndDate));
+
+					me.MainForm.getComponent("PersonID").readOnly = true;
+					me.MainForm.getComponent("ContractAmount").readOnly = true;
+					me.MainForm.getComponent("ContractType").readOnly = true;
+				}
+			}
+						
 		},{
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({
@@ -155,6 +260,7 @@ function NewContract() {
 			fieldLabel : "طرف قرارداد اول",
 			displayField : "fullname",
 			pageSize : 20,
+			colspan : 2,
 			width: 350,
 			valueField : "PersonID",
 			name : "PersonID",
@@ -176,25 +282,6 @@ function NewContract() {
 			valueField : "PersonID",
 			name : "PersonID2",
 			itemId : "PersonID2"
-		},{
-			xtype : "combo",
-			store : new Ext.data.SimpleStore({
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + 'contract.data.php?task=SelectContractTypes',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				fields : ['InfoID','InfoDesc'],
-				autoLoad : true
-			}),
-			fieldLabel : "نوع قرارداد",
-			displayField : "InfoDesc",
-			width: 350,
-			queryMode : "local",
-			allowBlank : false,
-			valueField : "InfoID",
-			name : "ContractType",
-			itemId : "ContractType"
 		},{
 			xtype : "currencyfield",
 			fieldLabel: 'مبلغ قرارداد',
@@ -283,7 +370,7 @@ function NewContract() {
 	
 	this.ContractStore = new Ext.data.Store({
 		fields: ['ContractID', "TemplateID", 'description', 'StartDate', "EndDate","PersonID","ContractType",
-			"PersonID2","LoanRequestID","content","ContractAmount"],
+			"PersonID2","LoanRequestID","WarrentyRequestID","content","ContractAmount"],
 		proxy: {
 			type: 'jsonp',
 			url: this.address_prefix + "contract.data.php?task=SelectContracts&content=true",
@@ -333,10 +420,21 @@ NewContract.prototype.LoadContract = function(){
 			me.MainForm.loadRecord(record);
 			
 			if(record.data.LoanRequestID != null)
+			{
+				me.MainForm.getComponent("WarrentyRequestID").disable();
 				me.MainForm.getComponent("LoanRequestID").getStore().load({
 					params :{RequestID : record.data.LoanRequestID}
 				});
-			
+			}
+			if(record.data.WarrentyRequestID != null)
+			{
+				me.MainForm.getComponent("WarrentyRequestID").enable();
+				me.MainForm.getComponent("LoanRequestID").disable();
+				
+				me.MainForm.getComponent("WarrentyRequestID").getStore().load({
+					params :{RequestID : record.data.WarrentyRequestID}
+				});
+			}
 			if(record.data.PersonID != null)
 				me.MainForm.getComponent("PersonID").getStore().load({
 					params :{PersonID : record.data.PersonID}
@@ -354,9 +452,6 @@ NewContract.prototype.LoadContract = function(){
 				}
 			});	
 			
-			//CKEDITOR.instances.ContractEditor.on('instanceReady', function( ev ) {
-			//	ev.editor.setData(record.data.content);
-			//});
 			CKEDITOR.instances.ContractEditor.setData(record.data.content);
 		}
 	});

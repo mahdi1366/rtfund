@@ -28,7 +28,7 @@ $signs = CNT_ContractSigns::Get(" AND ContractID=? order by description", array(
     </style>
     <style type="text/css">
         body {font-family: nazanin;font-size: 10pt;margin: 20px}
-        td	 {
+        .mainTD {
 			padding: 4px 30px 10px 30px;
 			font-size: 11pt; 
 			/*text-indent : 20px; */
@@ -43,31 +43,31 @@ $signs = CNT_ContractSigns::Get(" AND ContractID=? order by description", array(
 </head>
 
 <body dir="rtl">
-    <table style='border:2px dashed #AAAAAA;border-collapse:collapse;width:19cm;height:100%' align='center'>
+    <table  style='border:2px dashed #AAAAAA;border-collapse:collapse;width:19cm;height:100%' align='center'>
 		<thead>
 			<tr style="margin-top:40px">
 				<td width=180px style='text-indent : 0;padding:0; '>
 					<img style="width:150px" src='/framework/icons/logo.jpg'></td>
-				<td align='center' style='font-family:Titr;font-size:18px;text-align:center !important;'>
+				<td class="mainTD" align='center' style='font-family:Titr;font-size:18px;text-align:center !important;'>
 					<b><?php
 						echo $CntObj->_TemplateTitle;
 						echo '<br>';
 						echo $CntObj->description;
 						?></b>
 				</td>
-				<td width=180px style='text-align:center;text-indent : 0;padding:0'>شماره قرارداد : <?= $CntObj->ContractID ?>
+				<td class="mainTD" width=180px style='text-align:center;text-indent : 0;padding:0'>شماره قرارداد : <?= $CntObj->ContractID ?>
 					<br> تاریخ ثبت قرارداد :  <?= DateModules::shNow() ?>
 				</td>
 			</tr>
 		</thead>
 		<tr>
-			<td colspan="3" style="vertical-align: top">
+			<td  class="mainTD" colspan="3" style="vertical-align: top">
 				<?= $st ?>
 			</td>
 		</tr>
 		<tfoot>
 			<tr>
-				<td colspan="3" style="padding:0;height:80px;padding-right:20px;">
+				<td  class="mainTD" colspan="3" style="padding:0;height:80px;padding-right:20px;">
 					<?
 						if(count($signs) > 0)
 							$width = round(100/count($signs));
