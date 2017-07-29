@@ -857,6 +857,7 @@ WarrentyRequest.prototype.BeforeCancelWarrentyDoc = function(){
 		this.CancelWin = new Ext.window.Window({
 			width : 400,
 			height : 120,
+			closeAction : "hide",
 			items : new Ext.form.Panel({
 				items : [{
 					xtype : "numberfield",
