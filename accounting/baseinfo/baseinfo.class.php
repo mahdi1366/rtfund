@@ -191,19 +191,7 @@ class ACC_CostCodes extends PdoDataAccess {
         } else {
             $db = $pdo;
         }
-		$dt = parent::runquery("select * from ACC_DocItems where CostID=?", array($this->CostID));
-		$obj = new ACC_CostCodes($this->CostID);
-		if(count($dt) > 0 && 
-			($this->level1 != $obj->level1 ||$this->level2 != $obj->level2 || $this->level3 != $obj->level3))
-		{
-			$this->DeleteCost($db);
-			unset($this->CostID);
-			$result = $this->InsertCost($db);
-			if($result)
-				$db->commit();
-			return $result;
-		}
-		
+				
 		$dt = PdoDataAccess::runquery("select c2.* from ACC_CostCodes c1 
 			join ACC_CostCodes c2 on(c2.IsActive='YES' AND c1.CostID<>c2.CostID AND c1.CostCode=c2.CostCode)
 			where c1.CostID=?", array($this->CostID), $db);
@@ -252,22 +240,8 @@ class ACC_CostCodes extends PdoDataAccess {
 	
 	function ActiveCode(){
 		
-		$dt = PdoDataAccess::runquery("select c2.* from ACC_CostCodes c1 
-			join ACC_CostCodes c2 on(c2.IsActive='YES' AND c1.CostID<>c2.CostID AND c1.CostCode=c2.CostCode)
-			where c1.CostID=?", array($this->CostID));
-		if (count($dt) > 0) {
-			parent::PushException("کد حساب تکراری است");
-            return false;
-        }
 		$this->IsActive = "YES";
-		if(!parent::update("ACC_CostCodes", $this,"CostID=:c", array(":c" => $this->CostID)))
-			return false;
-
-		$auditObj = new DataAudit();
-        $auditObj->ActionType = DataAudit::Action_update;
-        $auditObj->MainObjectID = $this->CostID;
-        $auditObj->TableName = "ACC_CostCodes";
-        $auditObj->execute();
+		return $this->UpdateCost();		
 	}
 	
     function DeleteCost($pdo = null) {

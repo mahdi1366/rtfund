@@ -278,7 +278,7 @@ function ActiveCostCode(){
 	$cc = new ACC_CostCodes();
 	$cc->CostID = $_POST['CostID'];
     $res = $cc->ActiveCode();
-    Response::createObjectiveResponse($res, $cc->popExceptionDescription());
+    Response::createObjectiveResponse($res, $cc->GetExceptionsToString());
 
     die();
 }
