@@ -2020,8 +2020,9 @@ RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
 		return;
 	//--------------- total pay months -------------
 	firstPay = MiladiToShamsi(this.paymentStore.getAt(0).data.PayDate);
-	LastPay = MiladiToShamsi(this.paymentStore.getAt(this.paymentStore.getCount()-1).data.PayDate);
-	paymentPeriod = DateModule.GetDiffInMonth(firstPay, LastPay);
+	//LastPay = MiladiToShamsi(this.paymentStore.getAt(this.paymentStore.getCount()-1).data.PayDate);
+	//paymentPeriod = DateModule.GetDiffInMonth(firstPay, LastPay);
+	paymentPeriod = record.data.PayDuration*1;
 	//----------------------------------------------
 	totalWage = 0;
 	wages = new Array();
