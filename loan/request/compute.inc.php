@@ -144,6 +144,11 @@ function ComputeWageOfSHekoofa($partObj){
 	//$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
 	//$paymentPeriod = DateModules::GetDiffInMonth($firstPay, $LastPay);
 	$paymentPeriod = $partObj->PayDuration*1;
+	if($paymentPeriod == 0)
+	{
+		$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
+		$paymentPeriod = DateModules::GetDiffInMonth($firstPay, $LastPay);
+	}
 	//----------------------------------------------
 	$totalWage = 0;
 	$wages = array();

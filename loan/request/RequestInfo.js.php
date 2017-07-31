@@ -2023,6 +2023,11 @@ RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
 	//LastPay = MiladiToShamsi(this.paymentStore.getAt(this.paymentStore.getCount()-1).data.PayDate);
 	//paymentPeriod = DateModule.GetDiffInMonth(firstPay, LastPay);
 	paymentPeriod = record.data.PayDuration*1;
+	if(paymentPeriod == 0)
+	{
+		LastPay = MiladiToShamsi(this.paymentStore.getAt(this.paymentStore.getCount()-1).data.PayDate);
+		paymentPeriod = DateModule.GetDiffInMonth(firstPay, LastPay);
+	}
 	//----------------------------------------------
 	totalWage = 0;
 	wages = new Array();
