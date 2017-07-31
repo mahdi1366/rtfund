@@ -69,8 +69,8 @@ function showReport(){
 		di.TafsiliID,
 		di.TafsiliID2,
 		
-		t.StartCycleDebtor,
-		t.StartCycleCreditor
+		tdt.StartCycleDebtor,
+		tdt.StartCycleCreditor
 		";
 	$from = " from ACC_DocItems di 
 				join ACC_docs d using(DocID)
@@ -86,13 +86,13 @@ function showReport(){
 				left join ACC_tafsilis t2 on(t2.TafsiliID=di.TafsiliID2)
 				
 				left join (
-					select CycleID,CostID,sum(DebtorAmount) StartCycleDebtor, 
+					select CycleID,CostID,di.TafsiliID,di.TafsiliID2,sum(DebtorAmount) StartCycleDebtor,
 							sum(CreditorAmount) StartCycleCreditor
-					from ACC_DocItems join ACC_docs using(DocID)
+					from ACC_DocItems di join ACC_docs using(DocID)
 					where DocType=1 AND CycleID=".$_SESSION["accounting"]["CycleID"].
 					(!empty($_POST["BranchID"]) ? " AND BranchID=:b" : "") . "	
-					group by CostID
-				)t on(d.CycleID=t.CycleID AND di.CostID=t.CostID )
+					group by CostID,TafsiliID,TafsiliID2
+				)tdt on(d.CycleID=tdt.CycleID AND di.CostID=tdt.CostID AND di.TafsiliID=tdt.TafsiliID AND di.TafsiliID2=tdt.TafsiliID2)
 	";
 	$group = "";
 	if($level >= "l0")
