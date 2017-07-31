@@ -574,6 +574,7 @@ class LON_ReqParts extends PdoDataAccess{
 	public $AgentReturn;
 	public $AgentDelayReturn;
 	public $IsHistory;
+	public $PayDuration;
 	
 	function __construct($PartID = "") {
 		

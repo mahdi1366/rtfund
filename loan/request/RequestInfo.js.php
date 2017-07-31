@@ -1531,8 +1531,10 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					name: 'FundWage'
 				},{
 					fieldLabel: 'کارمزد تنفس',
-					name: 'DelayPercent',
-					colspan:2
+					name: 'DelayPercent'					
+				},{
+					fieldLabel: 'مدت پرداخت(ماه)',
+					name: 'PayDuration'
 				},{
 					xtype : "fieldset",
 					itemId : "fs_WageCompute",
