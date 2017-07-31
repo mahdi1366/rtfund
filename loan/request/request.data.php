@@ -667,8 +667,9 @@ function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false, $pdo2
 		return true;
 	//--------------- total pay months -------------
 	$firstPay = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
-	$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
-	$paymentPeriod = DateModules::GetDiffInMonth($firstPay, $LastPay);
+	//$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
+	//$paymentPeriod = DateModules::GetDiffInMonth($firstPay, $LastPay);
+	$paymentPeriod = $partObj->PayDuration;
 	//----------------------------------------------	
 	if($partObj->AgentReturn == "CUSTOMER")
 		$totalWage = 0;

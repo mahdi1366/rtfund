@@ -1533,7 +1533,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					fieldLabel: 'کارمزد تنفس',
 					name: 'DelayPercent'					
 				},{
-					fieldLabel: 'مدت پرداخت(ماه)',
+					fieldLabel: 'دوره پرداخت(ماه)',
 					name: 'PayDuration'
 				},{
 					xtype : "fieldset",
