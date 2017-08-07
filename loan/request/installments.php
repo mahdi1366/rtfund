@@ -216,10 +216,24 @@ function Installment()
 		},{
 			xtype : "button",
 			border : true,
+			disabled : true,
 			style : "margin-right:10px",
-			text : "پرداخت الکترونیک",
+			text : "پرداخت الکترونیک بانک اقتصاد نوین",
 			iconCls : "epay",
 			handler : function(){ InstallmentObject.PayInstallment(); }
+		},{
+			xtype : "button",
+			border : true,
+			disabled : true,
+			style : "margin-right:10px",
+			text : "پرداخت الکترونیک بانک آینده",
+			iconCls : "epay",
+			handler : function(){ InstallmentObject.PayInstallment_ayande(); }
+		},{
+			xtype : "container",
+			columns : 3,
+			html : "در حال حاضر به دلیل خطای فنی در شبکه پرداخت الکترونیکی شاپرک امکان پرداخت از این طریق میسر نمی باشد.",
+			style : "color:red"
 		},{
 			xtype : "container",
 			columns : 3,
@@ -260,6 +274,18 @@ Installment.prototype.PayInstallment = function(){
 		return;
 
 	window.open(this.address_prefix + "../../portal/epayment/epayment_step1.php?RequestID=" + 
+		RequestID + "&amount=" + PayAmount);	
+}
+
+Installment.prototype.PayInstallment_ayande = function(){
+	
+	RequestID = this.PartPanel.down("[itemId=RequestID]").getValue();
+	PayAmount = this.PayPanel.down("[itemId=PayAmount]").getValue();
+	
+	if(PayAmount == "")
+		return;
+
+	window.open(this.address_prefix + "../../portal/epayment-ayande/epayment_step1.php?RequestID=" + 
 		RequestID + "&amount=" + PayAmount);	
 }
 
