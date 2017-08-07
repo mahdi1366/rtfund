@@ -227,8 +227,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$itemObj->CostID = $CostCode_todiee;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $LoanPersonTafsili;
-			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			if(!empty($ReqPersonTafsili))
+			{
+				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+				$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			}
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $PartObj->PartAmount*1 - $PayAmount;
 			$itemObj->Add($pdo);
