@@ -224,7 +224,8 @@ function Installment()
 		},{
 			xtype : "button",
 			border : true,
-			disabled : true,
+			itemId : "cmp_ayande",
+			hidden : true,
 			style : "margin-right:10px",
 			text : "پرداخت الکترونیک بانک آینده",
 			iconCls : "epay",
@@ -241,6 +242,9 @@ function Installment()
 			cls : "blueText"
 		}]
 	});
+	
+	if(<?= $_SESSION["USER"]["UserName"] == "tureini" ? "true" : "false" ?>)
+		this.PayPanel.down("[itemId=cmp_ayande]").show();
 }
 
 Installment.HistoryRender = function(v,p,r){
