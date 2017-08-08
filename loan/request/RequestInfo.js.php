@@ -1534,7 +1534,8 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					name: 'DelayPercent'					
 				},{
 					fieldLabel: 'دوره پرداخت(ماه)',
-					name: 'PayDuration'
+					name: 'PayDuration',
+					allowBlank : true
 				},{
 					xtype : "fieldset",
 					itemId : "fs_WageCompute",
