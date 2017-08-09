@@ -33,7 +33,8 @@ function AccDocs(){
 			fields:["TafsiliID","TafsiliDesc"],
 			proxy: {
 				type: 'jsonp',
-				url: this.address_prefix + 'doc.data.php?task=GetTafsilis',
+				//url: this.address_prefix + 'doc.data.php?task=GetTafsilis',
+				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=1',
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			}
 		}),

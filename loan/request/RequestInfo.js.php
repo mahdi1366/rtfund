@@ -685,6 +685,26 @@ RequestInfo.prototype.BuildForms = function(){
 				hidden : true,
 				itemId : "cmp_checklist",
 				handler : function(){ RequestInfoObject.ShowCheckList(); }
+			},{
+				text: 'چاپ رسید اقساط',
+				iconCls: 'print', 
+				handler : function(){ 
+					window.open(ManageRequestObject.address_prefix + "PrintLoanDocs.php?type=checks&RequestID=" +
+						RequestInfoObject.RequestID);	
+				}
+			},{
+				text: 'چاپ رسید تضامین',
+				iconCls: 'print', 
+				handler : function(){ 
+					window.open(ManageRequestObject.address_prefix + "PrintLoanDocs.php?type=tazmin&RequestID=" +
+						RequestInfoObject.RequestID);	
+				}
+			},{
+				text: 'چاپ کاردکس',iconCls: 'print', 
+				handler : function(){ 
+					window.open(ManageRequestObject.address_prefix + "../report/LoanSummary.php?RequestID=" +
+						RequestInfoObject.RequestID);	
+				}
 			}]
 		},'->',{
 			text : 'ویرایش شرایط پرداخت',

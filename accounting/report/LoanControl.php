@@ -53,7 +53,7 @@ function LoanReport(){
 	
 	$dt = PdoDataAccess::runquery("
 		select cc.*,concat_ws(' - ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) CostDesc,
-				sum(CreditorAmount - DebtorAmount ) remain
+				sum(CreditorAmount - DebtorAmount ) remain,sum(DebtorAmount) dsum, sum(CreditorAmount) csum
 		from ACC_DocItems di
 			join ACC_docs using(DociD)
 			join ACC_CostCodes cc using(CostID)
@@ -93,6 +93,8 @@ function LoanReport(){
 	$rpg->mysql_resource = $dt;
 	
 	$col = $rpg->addColumn("کد حساب", "CostDesc");
+	$col = $rpg->addColumn("جمع بدهکار", "dsum", "ReportMoneyRender");
+	$col = $rpg->addColumn("جمع بستانکار", "csum", "ReportMoneyRender");
 	$col = $rpg->addColumn("مانده حساب", "remain", "moneyRender");
 	$rpg->generateReport();
 	die();

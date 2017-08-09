@@ -982,7 +982,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$chequeObj = new ACC_DocCheques();
 	$chequeObj->DocID = $obj->DocID;
 	$chequeObj->CheckDate = $PayObj->PayDate;
-	$chequeObj->amount = $PartObj->PartAmount;
+	$chequeObj->amount = $PayAmount - $AgentWage;
 	$chequeObj->CheckNo = $ChequeNo;
 	$chequeObj->AccountID = $AccountID;
 	$chequeObj->TafsiliID = $LoanPersonTafsili;
