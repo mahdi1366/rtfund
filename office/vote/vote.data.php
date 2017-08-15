@@ -47,7 +47,7 @@ function DeleteForm(){
 	
 	$obj = new VOT_forms($_POST["FormID"]);
 	$result =  $obj->Remove();
-	echo Response::createObjectiveResponse($result, "");
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
 	die();
 }
 
@@ -56,6 +56,47 @@ function selectFormItems(){
 	$dt = PdoDataAccess::runquery("select * from VOT_FormItems 
 		where FormID=?", array($_GET["FormID"]));
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+
+function CopyForm(){
+	
+	$FormID = $_POST["FormID"];
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$obj = new VOT_forms($FormID);
+	$obj->FormTitle .= " (کپی)";
+	unset($obj->FormID);
+	$obj->Add($pdo);
+	
+	PdoDataAccess::runquery("insert into VOT_FormGroups
+		(FormID,GroupDesc,GroupWeight,CopyGroupID,ordering)
+		select :copy,GroupDesc,GroupWeight,GroupID,ordering 
+		from VOT_FormGroups where FormID=:src",
+			array(":src" => $FormID, ":copy" => $obj->FormID), $pdo);
+	
+	PdoDataAccess::runquery("insert into VOT_FormItems
+		(FormID,GroupID,ItemType,ItemTitle,ItemValues,ordering,
+				weight,ValueWeights)
+		select :copy,g.GroupID,ItemType,ItemTitle,ItemValues,i.ordering,
+				weight,ValueWeights
+		from VOT_FormItems i join VOT_FormGroups g on(i.GroupID=g.CopyGroupID) 
+		where i.FormID=:src",
+			array(":src" => $FormID, ":copy" => $obj->FormID), $pdo);
+	
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		$pdo->rollBack();
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
 	die();
 }
 
@@ -92,7 +133,7 @@ function DeleteItem(){
 	
 	$obj = new VOT_FormItems($_POST["ItemID"]);
 	$result =  $obj->Remove();
-	echo Response::createObjectiveResponse($result, "");
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
 	die();
 }
 
@@ -152,7 +193,7 @@ function DeleteGroup(){
 	
 	$obj = new VOT_FormGroups($_POST["GroupID"]);
 	$result =  $obj->Remove();
-	echo Response::createObjectiveResponse($result, "");
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
 	die();
 }
 

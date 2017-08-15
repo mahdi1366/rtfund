@@ -25,7 +25,8 @@ function PortalClass()
 	this.mainPanel = new Ext.Panel({
 		border : 0,
 		height : 535,
-		autoScroll : true,
+		autoHeight : true,
+		//autoScroll : true,
 		renderTo : document.getElementById("mainPortalFrame"),
 		loader : {}
 	})

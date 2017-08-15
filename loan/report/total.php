@@ -135,10 +135,14 @@ if(isset($_REQUEST["show"]))
 		return ($value == "YES") ? "خاتمه" : "جاری";
 	}
 	
+	function ReqPersonRender($row,$value){
+		return $value == "" ? "منابع داخلی" : $value;
+	}
+	
 	$rpg->addColumn("شماره وام", "RequestID");
 	$rpg->addColumn("نوع وام", "LoanDesc");
 	$rpg->addColumn("عنوان طرح", "PlanTitle");	
-	$rpg->addColumn("معرفی کننده", "ReqFullname");
+	$rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
 	$rpg->addColumn("تاریخ درخواست", "ReqDate", "dateRender");
 	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "moneyRender");
 	$col->ExcelRender = false;

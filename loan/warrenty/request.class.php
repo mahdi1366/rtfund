@@ -25,6 +25,7 @@ class WAR_requests extends OperationClass
 	public $LetterDate;
 	public $StatusID;
 	public $RefRequestID;
+	public $version;
 	public $IsBlock;
 	public $BranchID;
 	public $RegisterAmount;

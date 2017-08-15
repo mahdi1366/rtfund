@@ -92,6 +92,9 @@ if($accessObj->AddFlag)
 	
 	$dg->enableRowEdit = true;
 	$dg->rowEditOkHandler = "function(v,p,r){return VOT_FormObject.saveData(v,p,r);}";
+	
+	$dg->addButton("", "کپی فرم", "copy", "function(){VOT_FormObject.copyForm();}");
+
 }
 
 $dg->height = 350;

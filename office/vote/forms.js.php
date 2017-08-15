@@ -13,8 +13,8 @@ VOT_Form.prototype = {
 	}
 };
 
-function VOT_Form()
-{
+function VOT_Form(){
+	
 	this.ItemTypeCombo = new Ext.form.ComboBox({
 		store: new Ext.data.Store({
 			fields: ["id", "name"],
@@ -51,36 +51,32 @@ function VOT_Form()
 	});
 }
 
-VOT_Form.deleteRender = function(v,p,r)
-{
+VOT_Form.deleteRender = function(v,p,r){
 	return "<div align='center' title='حذف ' class='remove' onclick='VOT_FormObject.Deleting();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-VOT_Form.previewRender = function(v,p,r)
-{
+VOT_Form.previewRender = function(v,p,r){
 	return "<div align='center' title='پیش نمایش ' class='view' onclick='VOT_FormObject.PreviewForm();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-VOT_Form.ItemsRender = function(v,p,r)
-{
+VOT_Form.ItemsRender = function(v,p,r){
 	return "<div align='center' title='آیتم ها' class='list' onclick='VOT_FormObject.ShowItems();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;height:16'></div>";
 }
 
-VOT_Form.PersonsRender = function(v,p,r)
-{
+VOT_Form.PersonsRender = function(v,p,r){
 	return "<div align='center' title='افراد' class='list' onclick='VOT_FormObject.ShowPersons();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;height:16'></div>";
 }
 
-VOT_Form.prototype.Adding = function()
-{
+VOT_Form.prototype.Adding = function(){
+	
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
 		FormID : "",
@@ -92,8 +88,8 @@ VOT_Form.prototype.Adding = function()
 	this.grid.plugins[0].startEdit(0, 0);
 }
 
-VOT_Form.prototype.saveData = function(store,record)
-{
+VOT_Form.prototype.saveData = function(store,record){
+	
     mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 
@@ -121,11 +117,12 @@ VOT_Form.prototype.saveData = function(store,record)
 	});
 }
 
-VOT_Form.prototype.Deleting = function()
-{
+VOT_Form.prototype.Deleting = function(){
+	
 	var record = this.grid.getSelectionModel().getLastSelected();
 	
-	Ext.MessageBox.confirm("","آيا مايل به حذف مي باشيد؟", function(btn){
+	Ext.MessageBox.confirm("","در صورت حذف کلیه آیتم ها نیز حذف می گردند." +
+			"آیا مایل به حذف می باشید؟", function(btn){
 		
 		if(btn == "no")
 			return;
@@ -143,12 +140,54 @@ VOT_Form.prototype.Deleting = function()
 		  	},
 		  	success : function(response,o)
 		  	{
-				me.hide();
-		  		VOT_FormObject.grid.getStore().load();
+				result = Ext.decode(response.responseText);
+				mask.hide();
+				if(!result.success)
+				{
+					if(result.data == "")
+						Ext.MessageBox.alert("ERROR", "عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("ERROR", result.data);
+				}
+				else
+					VOT_FormObject.grid.getStore().load();
 		  	}
 		});
 	})
 
+}
+
+VOT_Form.prototype.copyForm = function () {
+	
+	record = this.grid.getSelectionModel().getLastSelected();
+	if(record == null)
+	{
+		Ext.MessageBox.alert("","ابتدا فرم مورد نظر را خود را انتخاب کنید");
+		return;
+	}
+	
+	Ext.MessageBox.confirm("","آیا مایل به ایجاد کپی از فرم می باشید؟", function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		me = VOT_FormObject;
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال حذف...'});
+		mask.show();
+	
+		Ext.Ajax.request({
+			url: me.address_prefix + 'vote.data.php?task=CopyForm',
+			params: {                
+				FormID: me.grid.getSelectionModel().getLastSelected().data.FormID            
+			},
+			method: 'POST',
+			success: function (res) {
+				mask.hide();
+				VOT_FormObject.grid.getStore().load();
+			}
+		});
+	});
+		
 }
 
 VOT_Form.prototype.ShowItems = function(){
@@ -176,8 +215,11 @@ VOT_Form.prototype.ShowItems = function(){
 		Ext.getCmp(this.TabID).add(this.ItemsWin);
 	}
 	else
+	{
+		this.GroupGrid.getStore().load();
 		this.ItemsGrid.getStore().load();
-
+	}
+	
 	this.ItemsWin.show();
 	this.ItemsWin.center();
 }
@@ -475,7 +517,12 @@ VOT_Form.prototype.DeleteItem = function()
 				if(result.success)
 					VOT_FormObject.ItemsGrid.getStore().load();
 				else
-					Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+				{
+					if(result.data == "")
+						Ext.MessageBox.alert("ERROR", "عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("ERROR", result.data);
+				}
 					
 		  	}
 		});
@@ -594,7 +641,7 @@ VOT_Form.prototype.DeleteGroup = function()
 {
 	var record = this.GroupGrid.getSelectionModel().getLastSelected();
 	
-	Ext.MessageBox.confirm("", "آیا مایل به حذف می باشید؟", function(btn){
+	Ext.MessageBox.confirm("", "در صورت حذف کلیه آیتم های این گروه حذف می شوند.آیا مایل به حذف می باشید؟", function(btn){
 		if(btn == "no")
 			return;
 		me = VOT_FormObject;
@@ -604,16 +651,23 @@ VOT_Form.prototype.DeleteGroup = function()
 		  	method : "POST",
 		  	params : {
 		  		task : "DeleteGroup",
-		  		ItemID : record.data.GroupID
+		  		GroupID : record.data.GroupID
 		  	},
 		  	success : function(response)
 		  	{
 				result = Ext.decode(response.responseText);
 				if(result.success)
+				{
+					VOT_FormObject.ItemsGrid.getStore().load();
 					VOT_FormObject.GroupGrid.getStore().load();
+				}
 				else
-					Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
-					
+				{
+					if(result.data == "")
+						Ext.MessageBox.alert("ERROR", "عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("ERROR", result.data);
+				}
 		  	}
 		});
 	});

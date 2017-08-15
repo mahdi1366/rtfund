@@ -87,7 +87,7 @@ if(isset($_REQUEST["show"]))
 	//if($_SESSION["USER"]["UserName"] == "admin")
 	//	echo PdoDataAccess::GetLatestQueryString();
 	//-------------------- get the payed of installments -----------------------
-	
+	/*
 	$computeArr = array();
 	$returnArr = array();
 	for($index=0; $index<count($dataTable); $index++)
@@ -97,6 +97,7 @@ if(isset($_REQUEST["show"]))
 		$MainRow["PayedAmount"] = "";
 		$MainRow["forfeit"] = 0;
 		$MainRow["SumPayed"] = 0;
+		$MainRow["TotalRemainder"] = $MainRow["InstallmentAmount"];
 	
 		if(!isset($computeArr[ $MainRow["RequestID"] ]))
 		{
@@ -108,6 +109,7 @@ if(isset($_REQUEST["show"]))
 				"computIndex" => 0,
 				"PayIndex" => 0
 				);
+			
 			$ref = & $computeArr[ $MainRow["RequestID"] ];
 			foreach($ref["compute"] as $row)
 			{
@@ -131,15 +133,31 @@ if(isset($_REQUEST["show"]))
 				{
 					$amount += $row["CurForfeitAmount"]*1;
 					if($row["InstallmentID"] == $MainRow["InstallmentID"])
+					{
 						$MainRow["forfeit"] = $row["CurForfeitAmount"]*1;
+						$MainRow["TotalRemainder"] += $row["CurForfeitAmount"]*1;
+					}
 				}
 				
 				for(; $ref["PayIndex"]<count($ref["pays"]); $ref["PayIndex"]++)
 				{
 					if($obj->PayCompute != "installment")
 					{
-						$ref["pays"][$ref["PayIndex"]]["ActionAmount"] -= $ref["pays"][$ref["PayIndex"]]["CurForfeitAmount"]*1;
-						$ref["pays"][$ref["PayIndex"]]["CurForfeitAmount"] = 0;
+						if($ref["pays"][$ref["PayIndex"]]["ActionAmount"]*1 < $amount)
+						{
+							$amount += $ref["pays"][$ref["PayIndex"]]["CurForfeitAmount"]*1;
+							if($row["InstallmentID"] == $MainRow["InstallmentID"])
+							{
+								$MainRow["TotalRemainder"] += $ref["pays"][$ref["PayIndex"]]["CurForfeitAmount"]*1;
+								if(!$IsAdded)
+									$MainRow["forfeit"] += $ref["pays"][$ref["PayIndex"]]["CurForfeitAmount"]*1;
+								else
+									$MainRow["forfeit"] = $ref["pays"][$ref["PayIndex"]]["CurForfeitAmount"]*1;
+							}
+						}
+						//$ref["pays"][$ref["PayIndex"]]["ActionAmount"] -= $ref["pays"][$ref["PayIndex"]]["CurForfeitAmount"]*1;
+						//$ref["pays"][$ref["PayIndex"]]["CurForfeitAmount"] = 0;
+						
 					}
 					$min = min($ref["pays"][$ref["PayIndex"]]["ActionAmount"]*1,$amount);
 					if($min == 0)
@@ -151,13 +169,9 @@ if(isset($_REQUEST["show"]))
 							$MainRow["PayedDate"] = DateModules::miladi_to_shamsi($ref["pays"][$ref["PayIndex"]]["ActionDate"]) ;
 							$MainRow["PayedAmount"] = number_format($min);
 							$MainRow["SumPayed"] += $min;
+							$MainRow["TotalRemainder"] -= $min; 
 							$returnArr[] = $MainRow;
 							$IsAdded = true;
-							
-							/*$MainRow["PayedDate"] .= DateModules::miladi_to_shamsi($ref["pays"][$ref["PayIndex"]]["ActionDate"]) . "<br>";
-							$MainRow["PayedAmount"] .= number_format($min) . "<br>";
-							$MainRow["SumPayed"] += $min;*/
-						
 					}
 					if($ref["pays"][$ref["PayIndex"]]["ActionAmount"]*1 > 0)
 						break;
@@ -171,16 +185,62 @@ if(isset($_REQUEST["show"]))
 		}
 		if(!$IsAdded)
 			$returnArr[] = $MainRow;
+	}*/
+	//--------------------------------------------------------------------------
+	
+	$computeArr = array();
+	$returnArr = array();
+	for($index=0; $index<count($dataTable); $index++)
+	{
+		$MainRow = &$dataTable[$index];
+		$MainRow["PayedDate"] = "";
+		$MainRow["PayedAmount"] = "";
+		$MainRow["forfeit"] = 0;
+		$MainRow["TotalRemainder"] = $MainRow["InstallmentAmount"];
+	
+		if(!isset($computeArr[ $MainRow["RequestID"] ]))
+		{
+			$dt = array();
+			$computeArr[ $MainRow["RequestID"] ] = array(
+				"compute" => LON_requests::ComputePayments2($MainRow["RequestID"], $dt),
+				"computIndex" => 0,
+				"PayIndex" => 0
+				);
+		}
+		$ref = & $computeArr[ $MainRow["RequestID"] ];
+		
+		for(; $ref["computIndex"] < count($ref["compute"]); $ref["computIndex"]++)
+		{
+			$row = $ref["compute"][$ref["computIndex"]];
+			if($row["ActionType"] != "installment")
+				continue;
+			if($row["InstallmentID"] == $MainRow["InstallmentID"])
+			{
+				for($k=0; $k < count($row["pays"]); $k++)
+				{  
+					$payRow = $row["pays"][$k];
+					$MainRow["forfeit"] = $payRow["forfeit"];
+					$MainRow["TotalRemainder"] = $payRow["remain"];
+					$MainRow["PayedDate"] = $payRow["PayedDate"];
+					$MainRow["PayedAmount"] = $payRow["PayedAmount"];
+					$MainRow["TotalRemainder"] = $payRow["remain"];
+					$returnArr[] = $MainRow;
+				}
+				
+				if(count($row["pays"]) == 0)
+					$returnArr[] = $MainRow;
+				
+				$ref["computIndex"]++;
+				break;
+				
+			}
+		}
 	}
 	//--------------------------------------------------------------------------
 	$rpg->mysql_resource = $returnArr;
 	
 	function endedRender($row,$value){
 		return ($value == "YES") ? "خاتمه" : "جاری";
-	}
-	
-	function remainRender($row){
-		return number_format($row["InstallmentAmount"]*1 + $row["forfeit"] - $row["SumPayed"]);
 	}
 	
 	$col = $rpg->addColumn("شماره وام", "RequestID");
@@ -196,6 +256,7 @@ if(isset($_REQUEST["show"]))
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "moneyRender");
+	$col->EnableSummary();
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("مشتری", "LoanFullname");
@@ -211,14 +272,18 @@ if(isset($_REQUEST["show"]))
 	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount", "moneyRender");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID","InstallmentDate");
+	$col->EnableSummary();
+	
 	$col = $rpg->addColumn("مبلغ تاخیر", "forfeit", "moneyRender");	
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID","InstallmentDate");
-	
+	$col->EnableSummary();
 	
 	$rpg->addColumn("تاریخ پرداخت", "PayedDate");
 	$rpg->addColumn("مبلغ پرداخت", "PayedAmount");
-	$rpg->addColumn("مانده قسط", "SumPayed", "remainRender");
+	$col = $rpg->addColumn("مانده قسط", "TotalRemainder", "ReportMoneyRender");
+	$col->EnableSummary();
+	
 	
 	if(!$rpg->excel)
 	{

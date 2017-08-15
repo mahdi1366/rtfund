@@ -80,11 +80,22 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("سازمان مربوطه", "organization");
 	$rpg->addColumn("کارمزد", "wage");
 	$rpg->addColumn("شماره نامه معرفی", "LetterNo");
-	$rpg->addColumn("تاریخ نامه معرفی", "LetterDate");
+	$rpg->addColumn("تاریخ نامه معرفی", "LetterDate", "ReportDateRender");
+	$rpg->addColumn("وضعیت", "StepDesc");
+	$rpg->addColumn("نسخه", "version", "RefReasonRender");
+	
+	function RefReasonRender($row, $value){
+		switch($value)
+		{
+			case "MAIN" : return "اصل";
+			case "EXTEND" : return "تمدید";
+			case "CHANGE" : return "متمم";
+		}
+	}
 	
 	if(!$rpg->excel)
 	{
-		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
+		BeginReport();
 		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
@@ -138,7 +149,7 @@ function WarrentyReport_total()
 			width : 300
 		},
 		bodyStyle : "text-align:right;padding:5px",
-		title : "گزارش کلی تضمین ها",
+		title : "گزارش کلی ضمانت نامه ها",
 		width : 650,
 		items :[{
 			xtype : "combo",
@@ -228,12 +239,40 @@ function WarrentyReport_total()
 			name : "LetterNo"
 		},{
 			xtype : "numberfield",
-			allowBlank : false,
 			fieldLabel : "کارمزد",
 			name : "wage",
 			width : 150,
 			afterSubTpl : "%",
 			hideTrigger : true
+		},{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				data : [
+					[100 , "خام" ],
+					[110 , "تایید شده" ],
+					[120 , "خاتمه یافته" ],
+					[130 , "ابطال شده" ]
+				],
+				fields : ['id','value']
+			}),
+			fieldLabel : "وضعیت",
+			displayField : "value",
+			valueField : "id",
+			hiddenName : "StatusID"
+		},{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				data : [
+					['MAIN' , "اصل" ],
+					['EXTEND' , "تمدید" ],
+					['CHANGE' , "متمم" ]
+				],
+				fields : ['id','value']
+			}),
+			fieldLabel : "نسخه ضمانتنامه",
+			displayField : "value",
+			valueField : "id",
+			hiddenName : "version"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",

@@ -173,11 +173,11 @@ WFM_form.prototype.copyForm = function () {
 	record = this.grid.getSelectionModel().getLastSelected();
 	if(record == null)
 	{
-		Ext.MessageBox.alert("","ابتدا الگوی مورد نظر را خود را انتخاب کنید");
+		Ext.MessageBox.alert("","ابتدا فرم مورد نظر را خود را انتخاب کنید");
 		return;
 	}
 	
-	Ext.MessageBox.confirm("","آیا مایل به ایجاد کپی از الگو می باشید؟", function(btn){
+	Ext.MessageBox.confirm("","آیا مایل به ایجاد کپی از فرم می باشید؟", function(btn){
 		
 		if(btn == "no")
 			return;

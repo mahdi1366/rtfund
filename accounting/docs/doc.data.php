@@ -814,8 +814,8 @@ function ComputeDoc(){
 
 function GetAccountSummary($ReturnMode = false, $BranchID = "", $where = "", $param = array()){
 	
-	$param = array(":c" => $_SESSION["accounting"]["CycleID"], 
-		":b" => $BranchID != "" ? $BranchID : $_SESSION["accounting"]["BranchID"]);
+	$param[":c"] = $_SESSION["accounting"]["CycleID"];
+	$param[":b"] = $BranchID != "" ? $BranchID : $_SESSION["accounting"]["BranchID"];
 	
 	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
 	{

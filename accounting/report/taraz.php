@@ -300,24 +300,24 @@ function showReport(){
 		//----------------------------------------------
 		if(!empty($_POST["TafsiliGroup"]))
 		{
-			$where .= " AND (di.TafsiliType=:tt or di.TafsiliType2=:tt)";
+			$where .= " AND di.TafsiliType=:tt";
 			$whereParam[":tt"] = $_POST["TafsiliGroup"];
 		}
-		/*if(!empty($_POST["TafsiliGroup2"]))
+		if(!empty($_POST["TafsiliGroup2"]))
 		{
 			$where .= " AND di.TafsiliType2=:tt2";
 			$whereParam[":tt2"] = $_POST["TafsiliGroup2"];
-		}*/
+		}
 		if(!empty($_POST["TafsiliID"]))
 		{
-			$where .= " AND (di.TafsiliID=:tid or di.TafsiliID2=:tid)";
+			$where .= " AND di.TafsiliID=:tid";
 			$whereParam[":tid"] = $_POST["TafsiliID"];
 		}
-		/*if(!empty($_POST["TafsiliID2"]))
+		if(!empty($_POST["TafsiliID2"]))
 		{
 			$where .= " AND di.TafsiliID2=:tid2";
 			$whereParam[":tid2"] = $_POST["TafsiliID2"];
-		}*/
+		}
 		if(!empty($_REQUEST["fromLocalNo"]))
 		{
 			$where .= " AND d.LocalNo >= :lo1 ";
@@ -400,20 +400,24 @@ function showReport(){
 		return $v < 0 ? 0 : number_format($v);
 	}
 	
-	$col = $rpg->addColumn("بدهکار", "StartCycleDebtor", "moneyRender");
-	$col->GroupHeader = "حساب ابتدای دوره";
-	$col->EnableSummary(true);
-	$col = $rpg->addColumn("بستانکار", "StartCycleCreditor", "moneyRender");
-	$col->GroupHeader = "حساب ابتدای دوره";
-	$col->EnableSummary(true);
-	
-	$col = $rpg->addColumn("بدهکار", "bdAmount" , "moneyRender");
-	$col->GroupHeader = "گردش طی دوره";
-	$col->EnableSummary();
-	$col = $rpg->addColumn("بستانکار", "bsAmount", "moneyRender");
-	$col->GroupHeader = "گردش طی دوره";
-	$col->EnableSummary();
-
+	if($_REQUEST["resultColumns"]*1 >= 6)
+	{
+		$col = $rpg->addColumn("بدهکار", "StartCycleDebtor", "moneyRender");
+		$col->GroupHeader = "حساب ابتدای دوره";
+		$col->EnableSummary(true);
+		$col = $rpg->addColumn("بستانکار", "StartCycleCreditor", "moneyRender");
+		$col->GroupHeader = "حساب ابتدای دوره";
+		$col->EnableSummary(true);
+	}
+	if($_REQUEST["resultColumns"]*1 >= 4)
+	{
+		$col = $rpg->addColumn("بدهکار", "bdAmount" , "moneyRender");
+		$col->GroupHeader = "گردش طی دوره";
+		$col->EnableSummary();
+		$col = $rpg->addColumn("بستانکار", "bsAmount", "moneyRender");
+		$col->GroupHeader = "گردش طی دوره";
+		$col->EnableSummary();
+	}
 	$col = $rpg->addColumn("مانده بدهکار", "bdAmount", "bdremainRender");
 	$col->GroupHeader = "مانده پایان دوره";
 	$col->EnableSummary(true);
@@ -536,7 +540,7 @@ function AccReport_taraz()
 		frame : true,
 		layout :{
 			type : "table",
-			columns :3
+			columns :4
 		},
 		bodyStyle : "text-align:right;padding:5px",
 		title : "گزارش تراز",
@@ -548,7 +552,7 @@ function AccReport_taraz()
 		width : 800,
 		items :[{
 			xtype : "combo",
-			colspan : 3,
+			colspan : 4,
 			width : 400,
 			store : new Ext.data.SimpleStore({
 				proxy: {
@@ -614,6 +618,7 @@ function AccReport_taraz()
 		},{
 			xtype : "container",
 			layout : "column",
+			width : 120,
 			items :[{
 				xtype : "container",
 				style : "margin-left:10px",
@@ -627,14 +632,26 @@ function AccReport_taraz()
 			}]
 		},{
 			xtype : "container",
-			colspan : 3,
+			layout : "column",
+			width : 120,
+			items :[{
+				xtype : "container",
+				style : "margin-left:10px",
+				html :  "<div align=center>ستون های تراز</div><hr>" +
+						"<input type='radio' name='resultColumns' value='2' >دوستونی<br>" + 
+						"<input type='radio' name='resultColumns' value='4' checked>چهارستونی <br>" + 
+						"<input type='radio' name='resultColumns' value='6' >شش ستونی"
+			}]
+		},{
+			xtype : "container",
+			colspan : 4,
 			width : 500,
 			cls : "blueText",
 			html : "* " + "با نگه داشتن کلید CTRL می توانید چندین مورد را انتخاب کنید"
 		},{
 			xtype : "container",
 			html : "<br>",
-			colspan : 3
+			colspan : 4
 		},{
 			xtype : "combo",
 			displayField : "InfoDesc",
@@ -678,9 +695,51 @@ function AccReport_taraz()
 			})
 		},{
 			xtype : "container",
-			rowspan : 3,
+			rowspan : 5,
+			colspan : 2,
 			html : "<input type=checkbox name=IncludeRaw > گزارش شامل اسناد خام نیز باشد." + "<br>" +
 				"<input type=checkbox name=IncludeEnd > گزارش شامل سند اختتامیه باشد."
+		},{
+			xtype : "combo",
+			displayField : "InfoDesc",
+			fieldLabel : "گروه تفصیلی2",
+			valueField : "InfoID",
+			hiddenName : "TafsiliGroup2",
+			store : new Ext.data.Store({
+				fields:['InfoID','InfoDesc'],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				autoLoad : true
+			}),
+			listeners : {
+				select : function(combo,records){
+					el = AccReport_tarazObj.formPanel.down("[itemId=cmp_tafsiliID2]");
+					el.enable();
+					el.setValue();
+					el.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
+					el.getStore().load();
+				}
+			}
+		},{
+			xtype : "combo",
+			displayField : "TafsiliDesc",
+			fieldLabel : "تفصیلی2",
+			disabled : true,
+			valueField : "TafsiliID",
+			itemId : "cmp_tafsiliID2",
+			hiddenName : "TafsiliID2",
+			
+			store : new Ext.data.Store({
+				fields:["TafsiliID","TafsiliDesc"],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				}
+			})
 		},{
 			xtype : "numberfield",
 			hideTrigger : true,

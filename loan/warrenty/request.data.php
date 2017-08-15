@@ -229,6 +229,7 @@ function ExtendWarrenty(){
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	unset($obj->RequestID);
 	$obj->RefRequestID = $baseObj->RefRequestID;
+	$obj->RefReason = "EXTEND";
 	$obj->StartDate = $baseObj->EndDate;
 	$obj->StatusID = WAR_STEPID_RAW;	
 	$result = $obj->Add();
