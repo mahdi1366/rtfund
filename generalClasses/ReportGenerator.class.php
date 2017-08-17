@@ -65,6 +65,8 @@ class ReportGenerator {
 
 	public $SubHeaderFunction = "";
 	
+	public $ReportSettingObject;
+	
 	public function ReportGenerator() {
 		$this->border = "1";
 		$this->cellpad = "1";
@@ -130,12 +132,15 @@ class ReportGenerator {
 			die("<center><span style='font-size:".$this->fontSize.";font-family:".$this->fontFamily.
 				";'><br>" . "گزارش مورد نظر فاقد اطلاعات می باشد." . "</span></center>");
 
+		//..................... column setting .......................
+		$this->ColumnSetting();		
+		//...........................................................
+		
 		if ($this->excel)
 		{
 			$this->ExcelGeneration();
 			die();
 		}
-
 		//........................ draw header .......................
 		
 		$this->drawHeader(true);
@@ -375,7 +380,7 @@ echo "</caption>";
 	 * @return \ReportColumn 
 	 */
 	function addColumn($header, $field, $renderFunction = "", $renderParams = array()) {
-		
+				
 		$obj = new ReportColumn($header, $field, $renderFunction, $renderParams);
 		$this->columns[] = $obj;
 		return $obj;
@@ -727,6 +732,37 @@ echo "</caption>";
 	
 	//---------------------------------------------------------------
 
+	function ColumnSetting(){
+		
+		$IsAnyColumnSelected = false;
+		foreach($_POST as $key => $value)
+			if(strpos($key, ReportSetting::$FieldPrefix) !== false)
+			{
+				$IsAnyColumnSelected = true;
+				break;
+			}
+			
+		if(!$IsAnyColumnSelected)
+			return;
+		
+		$columnObjectArr = array();
+		for($i=0; $i< count($this->columns); $i++)
+			$columnObjectArr[ $this->columns[$i]->field ] = $this->columns[$i];
+		
+		$tempColumns = array();
+		
+		foreach($_POST as $key => $value)
+			if(strpos($key, ReportSetting::$FieldPrefix) !== false)
+			{
+				$field = str_replace(ReportSetting::$FieldPrefix, "", $key);
+				$tempColumns[ $_POST[ReportSetting::$OrderPrefix . $field ] ] = $columnObjectArr[$field];
+			}
+		
+		ksort($tempColumns);
+		$this->columns = array();
+		foreach($tempColumns as $row)
+			$this->columns[] = $row;
+	}
 }
 
 class ReportColumn {
@@ -771,7 +807,53 @@ class ReportColumn {
 
 }
 
+class ReportSetting {
 	
+	private $columns = array();
+	private $MainForm;
+	private $ObjectName;
+	static $FieldPrefix = "reportcolumn_fld_";
+	static $OrderPrefix = "reportcolumn_ord_";
+	
+	function __construct($MainForm, $ObjectName) {
+		
+		$this->MainForm = $MainForm;
+		$this->ObjectName = $ObjectName;
+	}
+	
+	function addColumn($title, $field){
+		$this->columns[] = array($title , $field);
+	}
+	
+	function GetColumnCheckboxList($columns = 1){
+		
+		$columnCount = ceil( count($this->columns)/$columns );
+		
+		$div = "<div style='float:right;height:100%'>";
+		$returnStr = "";
+		$index = 0;
+		foreach($this->columns as $row)
+		{
+			if($index % $columnCount == 0)
+				$returnStr .= ($index == 1 ? "" : "</div>") . $div;
+			$title = $row[0];
+			$field = $row[1];
+			$returnStr .= "<input style='width:20' type=text name='".self::$OrderPrefix.$field."' "
+					. "id='".self::$OrderPrefix.$field."'>"
+					. "<input onclick=ReportGenerator.setOrder(this,'".$this->MainForm."',".$this->ObjectName.") "
+					. "type=checkbox name='".self::$FieldPrefix.$field."' id='".self::$FieldPrefix.$field."'>"
+					. $title."<br>";
+			$index++;
+		}
+		
+		return $returnStr . "</div>";
+	}
+	
+	function GetChartItems(){
+		$items = "";
+	}
+}
+
 function ReportMoneyRender($row, $value){
 		if(!empty($_REQUEST["excel"]))
 			return $value;

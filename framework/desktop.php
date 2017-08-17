@@ -145,6 +145,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 		<script type="text/javascript" src="/generalUI/ext4/ux/Printer/Printer-all.js"></script>
 		<script type="text/javascript" src="/generalUI/ckeditor/ckeditor.js"></script>
 		<script type="text/javascript" src="/generalUI/pdfobject.js"></script>
+		<script type="text/javascript" src="/generalUI/ReportGenerator.js"></script>
 		<script type="text/javascript" src="/generalUI/ext4/ux/ImageViewer.js"></script>
 		<link rel="stylesheet" type="text/css" href="/office/icons/icons.css" />		
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/ux/calendar/resources/css/calendar.css" />
@@ -780,7 +781,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 			remove:true
 		});
 		framework = new FrameWorkClass();
-		framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
+		//framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
 		if(framework.CalendarReminders > 0)
 		{
 			framework.ShowCalendarReminderWindow();
@@ -788,38 +789,38 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 	}, 1);
 	
 	var MonthStore = new Ext.data.SimpleStore({
-	fields : ['id','title'],
-	data : [ 
-		["1", "فروردین"],
-		["2", "اردیبهشت"],
-		["3", "خرداد"],
-		["4", "تیر"],
-		["5", "مرداد"],
-		["6", "شهریور"],
-		["7", "مهر"],
-		["8", "آبان"],
-		["9", "آذر"],
-		["10", "دی"],
-		["11", "بهمن"],
-		["12", "اسفند"]
-	]
-});
+		fields : ['id','title'],
+		data : [ 
+			["1", "فروردین"],
+			["2", "اردیبهشت"],
+			["3", "خرداد"],
+			["4", "تیر"],
+			["5", "مرداد"],
+			["6", "شهریور"],
+			["7", "مهر"],
+			["8", "آبان"],
+			["9", "آذر"],
+			["10", "دی"],
+			["11", "بهمن"],
+			["12", "اسفند"]
+		]
+	});
 
 	var YearStore = new Ext.data.SimpleStore({
-	fields : ['id','title'],
-	data : [ 
-		["1395", "1395"],
-		["1396", "1396"],
-		["1397", "1397"],
-		["1398", "1398"],
-		["1399", "1399"],
-		["1400", "1400"],
-		["1401", "1401"],
-		["1402", "1402"],
-		["1403", "1403"],
-		["1404", "1404"]
-	]
-});
+		fields : ['id','title'],
+		data : [ 
+			["1395", "1395"],
+			["1396", "1396"],
+			["1397", "1397"],
+			["1398", "1398"],
+			["1399", "1399"],
+			["1400", "1400"],
+			["1401", "1401"],
+			["1402", "1402"],
+			["1403", "1403"],
+			["1404", "1404"]
+		]
+	});
 
 	var personStore = new Ext.data.Store({
 		pageSize: 10,
@@ -837,6 +838,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 			}
 		}
 	});
+	
 					  
 	</script>
 	<script type="text/javascript" src="/HumanResources/global/LOV/LOV.js?v=1"></script>		

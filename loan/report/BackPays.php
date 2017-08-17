@@ -20,7 +20,8 @@ if(isset($_REQUEST["show"]))
 		foreach($_POST as $key => $value)
 		{
 			if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
-					$value === "" || strpos($key, "combobox") !== false)
+					$value === "" || strpos($key, "combobox") !== false ||
+					strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 				continue;
 			$prefix = "";
 			switch($key)
@@ -130,6 +131,22 @@ if(isset($_REQUEST["show"]))
 	$rpg->generateReport();
 	die();
 }
+
+$rptsetting = new ReportSetting("mainForm","LoanReport_BackaysObj");
+$rptsetting->addColumn("شماره وام", "RequestID");
+$rptsetting->addColumn("نوع وام", "LoanDesc");
+$rptsetting->addColumn("معرفی کننده", "ReqFullname");
+$rptsetting->addColumn("تاریخ درخواست", "ReqDate");
+$rptsetting->addColumn("مبلغ درخواست", "ReqAmount");
+$rptsetting->addColumn("مشتری", "LoanFullname");
+$rptsetting->addColumn("شعبه", "BranchName");
+$rptsetting->addColumn("تاریخ پرداخت", "PayDate");
+$rptsetting->addColumn("مبلغ پرداخت", "PayAmount");
+$rptsetting->addColumn("نوع پرداخت", "PayTypeDesc");
+$rptsetting->addColumn("شماره فیش", "PayBillNo");
+$rptsetting->addColumn("کد پیگیری", "PayRefNo");
+$rptsetting->addColumn("شماره چک", "ChequeNo");
+$rptsetting->addColumn("شماره سند", "LocalNo");
 ?>
 <script>
 LoanReport_Backays.prototype = {
@@ -287,8 +304,24 @@ function LoanReport_Backays()
 			name : "toPayAmount",
 			hideTrigger : true,
 			fieldLabel : "تا مبلغ"
+		},{
+			xtype : "fieldset",
+			title : "ستونهای گزارش",
+			items :[{
+				xtype : "container",
+				html : "<?= $rptsetting->GetColumnCheckboxList(2) ?>"
+			}]
 		}],
 		buttons : [{
+			text : "گزارش ساز",
+			iconCls : "db",
+			handler : function(){ReportGenerator.ShowReportDB(
+						LoanReport_BackaysObj, 
+						<?= $_REQUEST["MenuID"] ?>,
+						"mainForm",
+						"formPanel"
+						);}
+		},'->',{
 			text : "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),
 			iconCls : "report"

@@ -446,6 +446,10 @@ function saveDocParam() {
 	
 	$obj = new DMS_DocParams();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST['record']);
+	
+	if($obj->ParamType == "currencyfield")
+		$obj->KeyTitle = "amount";
+	
 	if ($obj->ParamID > 0) 
 		$obj->Edit();
 	 else 

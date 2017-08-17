@@ -20,7 +20,8 @@ if(isset($_REQUEST["show"]))
 		foreach($_POST as $key => $value)
 		{
 			if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
-					$value === "" || strpos($key, "combobox") !== false)
+					$value === "" || strpos($key, "combobox") !== false ||
+					strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 				continue;
 			$prefix = "";
 			$pay = false;
@@ -114,7 +115,7 @@ if(isset($_REQUEST["show"]))
 			where 1=1 " . $where . " 
 			
 			group by r.RequestID
-			order by " . $_POST["OrderBy"] . " " . $_POST["OrderByDirection"];
+			order by r.ReqDate";
 	
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
@@ -194,6 +195,29 @@ if(isset($_REQUEST["show"]))
 	$rpg->generateReport();
 	die();
 }
+
+$rptsetting = new ReportSetting("mainForm","LoanReport_totalObj");
+$rptsetting->addColumn("شماره وام", "RequestID");
+$rptsetting->addColumn("نوع وام", "LoanDesc");
+$rptsetting->addColumn("عنوان طرح", "PlanTitle");	
+$rptsetting->addColumn("معرفی کننده", "ReqFullname");
+$rptsetting->addColumn("تاریخ درخواست", "ReqDate");
+$rptsetting->addColumn("مبلغ درخواست", "ReqAmount");
+$rptsetting->addColumn("مشتری", "LoanFullname");
+$rptsetting->addColumn("شعبه", "BranchName");
+$rptsetting->addColumn("تاریخ پرداخت", "PartDate");
+$rptsetting->addColumn("مبلغ تایید شده", "PartAmount");
+$rptsetting->addColumn("مبلغ پرداخت شده", "SumPayments");
+$rptsetting->addColumn("تعداد اقساط", "InstallmentCount");
+$rptsetting->addColumn("تنفس(ماه)", "DelayMonths");
+$rptsetting->addColumn("کارمزد مشتری", "CustomerWage");
+$rptsetting->addColumn("کارمزد صندوق", "FundWage");
+$rptsetting->addColumn("درصد دیرکرد", "ForfeitPercent");
+$rptsetting->addColumn("شماره قدیم", "imp_VamCode");
+$rptsetting->addColumn("وضعیت", "StatusDesc");
+$rptsetting->addColumn("قابل پرداخت مشتری", "TotalInstallmentAmount");
+$rptsetting->addColumn("جمع پرداختی مشتری", "TotalPayAmount");
+$rptsetting->addColumn("مانده قابل پرداخت", "remainder");
 ?>
 <script>
 LoanReport_total.prototype = {
@@ -426,41 +450,26 @@ function LoanReport_total()
 			fieldLabel : "کارمزد تنفس"
 		},{
 			xtype : "fieldset",
-			title : "مرتب سازی خروجی",
-			layout : "hbox",
-			items : [{
-				xtype : "combo",
-				store : new Ext.data.SimpleStore({
-					data : [
-						["r.RequestID", "شماره وام"],
-						["r.ReqDate", "تاریخ درخواست"],
-						["p.PartDate", "تاریخ پرداخت"],
-						["PartAmount", "مبلغ پرداخت"],
-						["BranchName", "شعبه"],
-						["ReqFullname", "معرفی کننده"]
-					],
-					fields : ['id','title']
-				}),
-				value : "r.RequestID",
-				valueField : "id",
-				displayField : "title",
-				hiddenName : "OrderBy"
-			},{
-				xtype : "combo",
-				store : new Ext.data.SimpleStore({
-					data : [
-						["Desc", "نزولی"],
-						["Asc", "صعودی"]
-					],
-					fields : ['id','title']
-				}),
-				value : "Desc",
-				valueField : "id",
-				displayField : "title",
-				hiddenName : "OrderByDirection"
+			title : "ستونهای گزارش",
+			items :[{
+				xtype : "container",
+				html : "<?= $rptsetting->GetColumnCheckboxList(2) ?>"
 			}]
+		},{
+			xtype : "fieldset",
+			title : "رسم نمودار",
+			items : [<?= $rptsetting->GetChartItems() ?>]
 		}],
 		buttons : [{
+			text : "گزارش ساز",
+			iconCls : "db",
+			handler : function(){ReportGenerator.ShowReportDB(
+						LoanReport_totalObj, 
+						<?= $_REQUEST["MenuID"] ?>,
+						"mainForm",
+						"formPanel"
+						);}
+		},'->',{
 			text : "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),
 			iconCls : "report"

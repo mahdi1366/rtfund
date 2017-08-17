@@ -21,7 +21,8 @@ if(isset($_REQUEST["show"]))
 		
 		foreach($_POST as $key => $value)
 		{
-			if($key == "excel" || $value === "" || strpos($key, "combobox") !== false)
+			if($key == "excel" || $value === "" || strpos($key, "combobox") !== false ||
+					strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 				continue;
 			$prefix = "";
 			switch($key)
@@ -114,6 +115,21 @@ if(isset($_REQUEST["show"]))
 	$rpg->generateReport();
 	die();
 }
+
+$rptsetting = new ReportSetting("mainForm","WarrentyReport_totalObj");
+$rptsetting->addColumn("شماره تضمین", "RequestID");
+$rptsetting->addColumn("نوع تضمین", "TypeDesc");	
+$rptsetting->addColumn("تاریخ شروع", "StartDate");
+$rptsetting->addColumn("تاریخ پایان", "EndDate");
+$rptsetting->addColumn("مبلغ", "amount");
+$rptsetting->addColumn("مشتری", "fullname");
+$rptsetting->addColumn("سازمان مربوطه", "organization");
+$rptsetting->addColumn("کارمزد", "wage");
+$rptsetting->addColumn("شماره نامه معرفی", "LetterNo");
+$rptsetting->addColumn("تاریخ نامه معرفی", "LetterDate");
+$rptsetting->addColumn("وضعیت", "StepDesc");
+$rptsetting->addColumn("نسخه", "version");
+
 ?>
 <script>
 WarrentyReport_total.prototype = {
@@ -273,8 +289,24 @@ function WarrentyReport_total()
 			displayField : "value",
 			valueField : "id",
 			hiddenName : "version"
+		},{
+			xtype : "fieldset",
+			title : "ستونهای گزارش",
+			items :[{
+				xtype : "container",
+				html : "<?= $rptsetting->GetColumnCheckboxList(2) ?>"
+			}]
 		}],
 		buttons : [{
+			text : "گزارش ساز",
+			iconCls : "db",
+			handler : function(){ReportGenerator.ShowReportDB(
+						WarrentyReport_totalObj, 
+						<?= $_REQUEST["MenuID"] ?>,
+						"mainForm",
+						"formPanel"
+						);}
+		},'->',{
 			text : "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),
 			iconCls : "report"

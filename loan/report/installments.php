@@ -20,7 +20,8 @@ if(isset($_REQUEST["show"]))
 		foreach($_POST as $key => $value)
 		{
 			if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
-					$value === "" || strpos($key, "combobox") !== false)
+					$value === "" || strpos($key, "combobox") !== false ||
+					strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 				continue;
 			
 			if($key == "IsEndedInclude")
@@ -306,6 +307,20 @@ if(isset($_REQUEST["show"]))
 	$rpg->generateReport();
 	die();
 }
+$rptsetting = new ReportSetting("mainForm","LoanReport_installmentsObj");
+$rptsetting->addColumn("شماره وام", "RequestID");
+$rptsetting->addColumn("نوع وام", "LoanDesc");
+$rptsetting->addColumn("معرفی کننده", "ReqFullname");
+$rptsetting->addColumn("تاریخ درخواست", "ReqDate");
+$rptsetting->addColumn("مبلغ درخواست", "ReqAmount");
+$rptsetting->addColumn("مشتری", "LoanFullname");
+$rptsetting->addColumn("شعبه", "BranchName");
+$rptsetting->addColumn("تاریخ قسط", "InstallmentDate");
+$rptsetting->addColumn("مبلغ قسط", "InstallmentAmount");
+$rptsetting->addColumn("مبلغ تاخیر", "forfeit");	
+$rptsetting->addColumn("تاریخ پرداخت", "PayedDate");
+$rptsetting->addColumn("مبلغ پرداخت", "PayedAmount");
+$rptsetting->addColumn("مانده قسط", "TotalRemainder");
 ?>
 <script>
 LoanReport_installments.prototype = {
@@ -465,9 +480,26 @@ function LoanReport_installments()
 			fieldLabel : "تا مبلغ قسط"
 		},{
 			xtype : "container",
+			colspan : 2,
 			html : "<input type=checkbox name=IsEndedInclude >  گزارش شامل وام های خاتمه یافته نیز باشد"
+		},{
+			xtype : "fieldset",
+			title : "ستونهای گزارش",
+			items :[{
+				xtype : "container",
+				html : "<?= $rptsetting->GetColumnCheckboxList(2) ?>"
+			}]
 		}],
 		buttons : [{
+			text : "گزارش ساز",
+			iconCls : "db",
+			handler : function(){ReportGenerator.ShowReportDB(
+						LoanReport_installmentsObj, 
+						<?= $_REQUEST["MenuID"] ?>,
+						"mainForm",
+						"formPanel"
+						);}
+		},'->',{
 			text : "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),
 			iconCls : "report"

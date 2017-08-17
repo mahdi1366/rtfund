@@ -31,16 +31,14 @@ String.prototype.rpad = function(padString, length) {
     return str;
 }
 
-Array.prototype.find = function(o)
-{
+Array.prototype.find = function(o){
 	for(var i = 0; i < this.length; i++)
 	   if(this[i] == o)
 		 return i;
 	return -1;
 }
 
-Array.prototype.findObject = function(datamember, value)
-{
+Array.prototype.findObject = function(datamember, value){
 	for(var i = 0; i < this.length; i++)
 	{
 		eval("tmp = this[i]." + datamember + ";");
@@ -48,6 +46,12 @@ Array.prototype.findObject = function(datamember, value)
 		 return this[i];
 	}
 	return null;
+}
+
+ObjectName = function(obj){
+	for (var name in window)
+      if (window[name] == obj) 
+        return name;
 }
 
 Ext.apply(Ext.Array, {
@@ -4867,13 +4871,18 @@ Ext.define('Ext.FormSerializer', {
         Ext.each(elements, function(element) {
             if(element.name)
             {
-                if(element.type != 'checkbox')
-                {
-                    Data[element.name] = element.value;
-                }
-                else if(element.type == 'checkbox')
+                if(element.type == 'checkbox')
                 {
                     Data[element.name] = element.checked?element.value:false;                    
+                }
+				else if(element.type == 'radio')
+                {
+					if(element.checked)
+						Data[element.name] = element.value;
+                }
+				else
+                {
+                    Data[element.name] = element.value;
                 }
             }
         }, this);

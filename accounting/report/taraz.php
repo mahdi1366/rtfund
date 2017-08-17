@@ -484,11 +484,14 @@ function showReport(){
 	<input type="hidden" name="fromLocalNo" value="<?= !empty($_REQUEST["fromLocalNo"]) ? $_REQUEST["fromLocalNo"] : "" ?>">
 	<input type="hidden" name="TafsiliID" value="<?= !empty($_REQUEST["TafsiliID"]) ? $_REQUEST["TafsiliID"] : "" ?>">
 	<input type="hidden" name="TafsiliType" value="<?= !empty($_REQUEST["TafsiliType"]) ? $_REQUEST["TafsiliType"] : "" ?>">
+	<input type="hidden" name="TafsiliID2" value="<?= !empty($_REQUEST["TafsiliID2"]) ? $_REQUEST["TafsiliID2"] : "" ?>">
+	<input type="hidden" name="TafsiliType2" value="<?= !empty($_REQUEST["TafsiliType2"]) ? $_REQUEST["TafsiliType2"] : "" ?>">
 	<input type="hidden" name="toLocalNo" value="<?= !empty($_REQUEST["toLocalNo"]) ? $_REQUEST["toLocalNo"] : "" ?>">
 	<input type="hidden" name="IncludeRaw" value="<?= !empty($_REQUEST["IncludeRaw"]) ? $_REQUEST["IncludeRaw"] : "" ?>">
 	<input type="hidden" name="IncludeStart" value="<?= !empty($_REQUEST["IncludeStart"]) ? $_REQUEST["IncludeStart"] : "" ?>">
 	<input type="hidden" name="IncludeEnd" value="<?= !empty($_REQUEST["IncludeEnd"]) ? $_REQUEST["IncludeEnd"] : "" ?>">
 	<input type="hidden" name="BranchID" value="<?= !empty($_REQUEST["BranchID"]) ? $_REQUEST["BranchID"] : "" ?>">
+	<input type="hidden" name="resultColumns" value="<?= $_REQUEST["resultColumns"] ?>">
 	
 	<input type="hidden" name="level1s" id="level1s" value="<?= $_POST["level1s"] ?>">
 	<input type="hidden" name="level2s" id="level2s" value="<?= $_POST["level2s"] ?>">
@@ -518,7 +521,8 @@ AccReport_taraz.prototype.showReport = function(btn, e)
 	this.form.action =  this.address_prefix + "taraz.php?show=true";
 	
 	this.get("level0s").value = this.formPanel.down("[itemId=cmp_level0]").getValue();
-	this.get("level1s").value = this.formPanel.down("[itemId=cmp_level]").getValue();
+	this.get("level1s").value = this.formPanel.down("[itemId=cmp_level1]").getValue();
+	this.get("level2s").value = this.formPanel.down("[itemId=cmp_level2]").getValue();
 	/*this.get("level2s").value = "";
 	this.formPanel.down('[itemId=cmp_level2]').getStore().each(function(r){
 		AccReport_tarazObj.get("level2s").value += r.data.BlockID + ",";
@@ -574,19 +578,18 @@ function AccReport_taraz()
 			fieldLabel : "گروه"
 		},{
 			xtype : "displayfield",
-			fieldLabel : "کل",
-			colspan : 2
+			fieldLabel : "کل"			
 		},{
-			xtype : "container",
-			html : "&nbsp;",
-			height : 5,
-			colspan : 3
+			xtype : "displayfield",
+			fieldLabel : "معین",
+			colspan : 2
 		},{
 			xtype : "multiselect",
 			height : 195,
 			valueField : "BlockID",
 			displayField : "BlockDesc",
 			itemId : "cmp_level0",
+			name : "multi_level0",
 			store : new Ext.data.Store({
 				fields:["BlockID","BlockCode","BlockDesc"],
 				
@@ -600,9 +603,10 @@ function AccReport_taraz()
 		},{
 			xtype : "multiselect",
 			height : 195,
+			name : "multi_level1",
 			valueField : "BlockID",
 			displayField : "full",
-			itemId : "cmp_level",
+			itemId : "cmp_level1",
 			store : new Ext.data.Store({
 				fields:["BlockID","BlockCode","BlockDesc",
 					{name : "full", 
@@ -616,32 +620,25 @@ function AccReport_taraz()
 				autoLoad : true
 			})
 		},{
-			xtype : "container",
-			layout : "column",
-			width : 120,
-			items :[{
-				xtype : "container",
-				style : "margin-left:10px",
-				html :  "<div align=center>تراز بر اساس </div><hr>" +
-						"<input type='radio' name='level' value='l0' > گروه<br>" + 
-						"<input type='radio' name='level' value='l1' checked> کل <br>" + 
-						"<input type='radio' name='level' value='l2' > معین  <br>" + 
-						"<input type='radio' name='level' value='l3' > جزء معین <br>" + 
-						"<input type='radio' name='level' value='l4' > جزء معین 2<br>" + 
-						"<input type='radio' name='level' value='l5' > تفصیلی " 			
-			}]
-		},{
-			xtype : "container",
-			layout : "column",
-			width : 120,
-			items :[{
-				xtype : "container",
-				style : "margin-left:10px",
-				html :  "<div align=center>ستون های تراز</div><hr>" +
-						"<input type='radio' name='resultColumns' value='2' >دوستونی<br>" + 
-						"<input type='radio' name='resultColumns' value='4' checked>چهارستونی <br>" + 
-						"<input type='radio' name='resultColumns' value='6' >شش ستونی"
-			}]
+			xtype : "multiselect",
+			height : 195,
+			colspan : 2,
+			name : "multi_level2",
+			valueField : "BlockID",
+			displayField : "full",
+			itemId : "cmp_level2",
+			store : new Ext.data.Store({
+				fields:["BlockID","BlockCode","BlockDesc",
+					{name : "full", 
+					convert: function(v,r){return "[" + r.data.BlockCode + "] " + r.data.BlockDesc }}],
+				
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&All=true&level=2',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				autoLoad : true
+			})
 		},{
 			xtype : "container",
 			colspan : 4,
@@ -696,9 +693,32 @@ function AccReport_taraz()
 		},{
 			xtype : "container",
 			rowspan : 5,
-			colspan : 2,
-			html : "<input type=checkbox name=IncludeRaw > گزارش شامل اسناد خام نیز باشد." + "<br>" +
-				"<input type=checkbox name=IncludeEnd > گزارش شامل سند اختتامیه باشد."
+			layout : "column",
+			width : 120,
+			items :[{
+				xtype : "container",
+				style : "margin-left:10px",
+				html :  "<div align=center>تراز بر اساس </div><hr>" +
+						"<input type='radio' name='level' id='level-l0' value='l0' > گروه<br>" + 
+						"<input type='radio' name='level' id='level-l1' value='l1' checked> کل <br>" + 
+						"<input type='radio' name='level' id='level-l2' value='l2' > معین  <br>" + 
+						"<input type='radio' name='level' id='level-l3' value='l3' > جزء معین <br>" + 
+						"<input type='radio' name='level' id='level-l4' value='l4' > جزء معین 2<br>" + 
+						"<input type='radio' name='level' id='level-l5' value='l5' > تفصیلی " 			
+			}]
+		},{
+			xtype : "container",
+			layout : "column",
+			rowspan : 5,
+			width : 120,
+			items :[{
+				xtype : "container",
+				style : "margin-left:10px",
+				html :  "<div align=center>ستون های تراز</div><hr>" +
+						"<input type='radio' name='resultColumns' id='resultColumns-2' value='2' >دوستونی<br>" + 
+						"<input type='radio' name='resultColumns' id='resultColumns-4' value='4' checked>چهارستونی <br>" + 
+						"<input type='radio' name='resultColumns' id='resultColumns-6' value='6' >شش ستونی"
+			}]
 		},{
 			xtype : "combo",
 			displayField : "InfoDesc",
@@ -758,8 +778,21 @@ function AccReport_taraz()
 			xtype : "shdatefield",
 			name : "toDate",
 			fieldLabel : "تا تاریخ"
+		},{
+			xtype : "container",
+			html : "<input type=checkbox name=IncludeRaw id=IncludeRaw> گزارش شامل اسناد خام نیز باشد." + "<br>" +
+				"<input type=checkbox name=IncludeEnd id=IncludeEnd> گزارش شامل سند اختتامیه باشد."
 		}],
 		buttons : [{
+			text : "گزارش ساز",
+			iconCls : "db",
+			handler : function(){ReportGenerator.ShowReportDB(
+						AccReport_tarazObj, 
+						<?= $_REQUEST["MenuID"] ?>,
+						"mainForm",
+						"formPanel"
+						);}
+		},'->',{
 			text : "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),
 			iconCls : "report"
@@ -779,8 +812,6 @@ function AccReport_taraz()
 				AccReport_tarazObj.formPanel.getForm().reset();
 				AccReport_tarazObj.get("mainForm").reset();
 				AccReport_tarazObj.formPanel.down("[itemId=cmp_tafsiliID]").disable();
-				AccReport_tarazObj.formPanel.down('[itemId=cmp_level2]').getStore().removeAll();
-				AccReport_tarazObj.formPanel.down('[itemId=cmp_level3]').getStore().removeAll();
 			}			
 		}]
 	});
