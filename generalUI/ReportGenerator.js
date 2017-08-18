@@ -21,7 +21,7 @@ ReportGenerator.ShowReportDB = function(obj, MenuID, mainForm, formPanel){
 	if(!obj.ReportWin)
 	{
 		obj.ReportWin = new Ext.window.Window({
-			title: 'سابقه گردش درخواست',
+			title: 'گزارش ساز',
 			modal : true,
 			autoScroll : true,
 			width: 500,
@@ -53,6 +53,51 @@ ReportGenerator.ShowReportDB = function(obj, MenuID, mainForm, formPanel){
 			formPanel : formPanel
 		}
 	});
+}
+
+ReportGenerator.ShowDiagramSetting = function(obj, items, mainForm, pageName){
+
+	if(!obj.diagramWin)
+	{
+		var node = document.createElement("div");
+		node.id = "div_diagram";
+		obj.get(mainForm).appendChild(node);
+		
+		obj.diagramWin = new Ext.window.Window({
+			applyTo : obj.get("div_diagram"),
+			title: 'تنظیمات نمودار',
+			modal : true,
+			autoScroll : true,
+			width: 350,
+			height : 300,
+			bodyStyle : "background-color:white",
+			closeAction : "hide",
+			items : items,
+			buttons : [{
+					text : "مشاهده نمودار",
+					iconCls : "diagram",
+					handler : function(){ 
+						
+						obj.form = obj.get(mainForm)
+						obj.form.target = "_blank";
+						obj.form.method = "POST";
+						obj.form.action =  obj.address_prefix + pageName;
+						obj.form.submit();
+						return;
+					}
+				},{
+					text : "بازگشت",
+					iconCls : "undo",
+					handler : function(){
+						this.up('window').hide();
+					}
+				}]
+		});
+		
+	}
+	obj.diagramWin.show();
+	obj.diagramWin.center();
+	
 }
 
 ReportGenerator.setOrder = function(elem, mainForm, obj){

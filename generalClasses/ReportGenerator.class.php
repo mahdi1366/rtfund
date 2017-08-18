@@ -27,21 +27,21 @@ class ReportGenerator {
 	public $arrayName = array();
 	public $fieldRenders = array();
 	public $columns = array();
-	public $cellpad;
-	public $cellspace;
-	public $border;
-	public $width;
-	public $modified_width;
-	public $header_color;
-	public $header_textcolor;
-	public $header_alignment;
-	public $body_color;
-	public $summaryRow_color;
-	public $body_textcolor;
-	public $body_alignment;
-	public $surrounded;
-	public $page_size; //(paging) تعداد رديف ها در هر صفحه
-	public $paging; // (paging) صفحه بند
+	public $cellpad = "1";
+	public $cellspace = "0";
+	public $border = "1";
+	public $width = "100%";
+	public $modified_width = "100%";
+	public $header_color = "#BDD3EF";
+	public $header_textcolor = "#15428B";
+	public $header_alignment = "right";
+	public $body_color = "#FFFFFF";
+	public $summaryRow_color = "#E2E2E2";
+	public $body_textcolor = "#000000";
+	public $body_alignment = "right";
+	public $surrounded = true;
+	public $page_size = "-1"; //(paging) تعداد رديف ها در هر صفحه
+	public $paging = false; // (paging) صفحه بند
 	
 	private $EnableSumRow = false;
 	private $pageCount = 1;
@@ -65,25 +65,18 @@ class ReportGenerator {
 
 	public $SubHeaderFunction = "";
 	
-	public $ReportSettingObject;
+	//------------ list of columns --------------
+	public $MainForm;
+	public $ObjectName;
+	static $FieldPrefix = "reportcolumn_fld_";
+	static $OrderPrefix = "reportcolumn_ord_";
+	static $Chart_X_title = "X";
+	static $Chart_Y_title = "Y";
+	//-------------------------------------------
 	
-	public function ReportGenerator() {
-		$this->border = "1";
-		$this->cellpad = "1";
-		$this->cellspace = "0";
-		$this->width = "100%";
-		$this->header_color = "#BDD3EF";
-		$this->header_textcolor = "#15428B";
-		$this->summaryRow_color = "#E2E2E2";
-		$this->header_alignment = "right";
-		$this->body_color = "#FFFFFF";
-		$this->body_textcolor = "#000000";
-		$this->body_alignment = "right";
-		$this->surrounded = true;
-		$this->modified_width = "100%";
-
-		$this->page_size = "-1";
-		$this->paging = false;
+	public function ReportGenerator($MainForm = "", $ObjectName = "") {
+		$this->MainForm = $MainForm;
+		$this->ObjectName = $ObjectName;
 	}
 
 	static function array_sort($array, $key, $order = SORT_ASC) {
@@ -133,7 +126,7 @@ class ReportGenerator {
 				";'><br>" . "گزارش مورد نظر فاقد اطلاعات می باشد." . "</span></center>");
 
 		//..................... column setting .......................
-		$this->ColumnSetting();		
+		$this->ColumnOrder();		
 		//...........................................................
 		
 		if ($this->excel)
@@ -732,11 +725,11 @@ echo "</caption>";
 	
 	//---------------------------------------------------------------
 
-	function ColumnSetting(){
+	function ColumnOrder(){
 		
 		$IsAnyColumnSelected = false;
 		foreach($_POST as $key => $value)
-			if(strpos($key, ReportSetting::$FieldPrefix) !== false)
+			if(strpos($key, ReportGenerator::$FieldPrefix) !== false)
 			{
 				$IsAnyColumnSelected = true;
 				break;
@@ -752,16 +745,236 @@ echo "</caption>";
 		$tempColumns = array();
 		
 		foreach($_POST as $key => $value)
-			if(strpos($key, ReportSetting::$FieldPrefix) !== false)
+			if(strpos($key, self::$FieldPrefix) !== false)
 			{
-				$field = str_replace(ReportSetting::$FieldPrefix, "", $key);
-				$tempColumns[ $_POST[ReportSetting::$OrderPrefix . $field ] ] = $columnObjectArr[$field];
+				$field = str_replace(self::$FieldPrefix, "", $key);
+				$tempColumns[ $_POST[self::$OrderPrefix . $field ] ] = $columnObjectArr[$field];
 			}
 		
 		ksort($tempColumns);
 		$this->columns = array();
 		foreach($tempColumns as $row)
 			$this->columns[] = $row;
+	}
+	
+	function GetColumnCheckboxList($columns = 1){
+		
+		$columnCount = ceil( count($this->columns)/$columns );
+		
+		$div = "<div style='float:right;height:100%'>";
+		$returnStr = "";
+		$index = 0;
+		foreach($this->columns as $row)
+		{
+			if($index % $columnCount == 0)
+				$returnStr .= ($index == 1 ? "" : "</div>") . $div;
+			$title = $row->header;
+			$field = $row->field;
+			$returnStr .= "<input style='width:20' type=text name='".self::$OrderPrefix.$field."' "
+					. "id='".self::$OrderPrefix.$field."'>"
+					. "<input onclick=ReportGenerator.setOrder(this,'".$this->MainForm."',".$this->ObjectName.") "
+					. "type=checkbox name='".self::$FieldPrefix.$field."' id='".self::$FieldPrefix.$field."'>"
+					. $title."<br>";
+			$index++;
+		}
+		
+		return $returnStr . "</div>";
+	}
+	
+	//---------------------------------------------------------------
+	
+	static function PHPArray_to_JSSimpleArray($datasource){
+		
+		if(count($datasource) == 0)
+			return "[]";
+			
+		$output = "[ ";
+		for($i=0; $i<count($datasource); $i++)
+		{
+			if(is_array($datasource[$i])){
+				$RowKeys = array_keys($datasource[$i]);
+				$output .= "[";
+				for($j=0; $j< count($RowKeys); $j++)
+					$output .= "'" . $datasource[$i][$RowKeys[$j]] . "',";
+				$output = substr($output,0,strlen($output)-1) . "],";	
+			}
+			else
+				$output .= "'" . $datasource[$i] . "',";	
+		}
+		$output = substr($output,0,strlen($output)-1) . "]";
+		return $output;
+	}
+	
+	private function CreateColumnCombo($fieldLabel, $itemId, $extras = ""){
+		
+		$colStr = array();
+		foreach($this->columns as $row)
+			$colStr[] = '["'.$row->field.'", "'.$row->header.'", "'.$row->type.'"]';
+			
+		$str = '{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				data : [' . implode(",", $colStr) . '],
+				fields : ["id","value","type"]
+			}),
+			fieldLabel : "'.$fieldLabel.'",
+			displayField : "value",
+			valueField : "id",
+			itemId : "'.$itemId.'",
+			hiddenName : "'.$itemId.'"
+			' . ($extras != "" ? ','. $extras : "") . '
+		}';
+		
+		return $str;
+	}
+			
+	function GetChartItems($SourceObject, $MainFrame, $PageName){
+		
+		$items = array();
+		$items[] = '{
+			xtype : "textfield",
+			name : "rpcmp_chartName",
+			fieldLabel : "عنوان نمودار",
+			labelWidth : 90,
+			width : 290,
+		}';
+		$items[] = '{
+			xtype : "combo",
+			labelWidth : 90,
+			width : 290,
+			store : new Ext.data.SimpleStore({
+				data : [
+					/*["gauge", "نموار گیج"],*/
+					["bar", "نمودار میله ای افقی"],
+					["column", "نمودار میله ای عمودی"],
+					["pie", "نمودار دایره ای"]
+				],
+				fields : ["id","value"]
+			}),
+			fieldLabel : "انتخاب نمودار",
+			displayField : "value",
+			valueField : "id",
+			itemId : "rpcmp_series",
+			hiddenName : "rpcmp_series"
+		}';
+		
+		$items[] = '{
+			xtype : "fieldset",
+			width : 350,
+			title : "' . self::$Chart_X_title . '",
+			layout : "column",
+			columns : 2,
+			items:[{
+					xtype : "combo",
+					width : 80,
+					store : new Ext.data.SimpleStore({
+						data : [
+							["value", "مقدار اصلی"],
+							["year", "سال"],
+							["month", "ماه"],
+							["weekday", "روز هفته"],
+							["monthday", "روز ماه"]
+						],
+						fields : ["id","value"]
+					}),
+					displayField : "value",
+					valueField : "id",
+					disabled : true,
+					itemId : "rpcmp_x1_date",
+					hiddenName : "rpcmp_x1_date"
+				},'. $this->CreateColumnCombo("", "rpcmp_x1", 'width : 200,listeners : {
+						select : function(combo, records){ 
+							if(records[0].data.type == "date")
+								this.up("fieldset").down("[itemId=rpcmp_x1_date]").enable()
+							else
+								this.up("fieldset").down("[itemId=rpcmp_x1_date]").disable()
+						}
+					}') . ',
+				{
+					xtype : "combo",
+					width : 80,
+					store : new Ext.data.SimpleStore({
+						data : [
+							["value", "مقدار اصلی"],
+							["year", "سال"],
+							["month", "ماه"],
+							["weekday", "روز هفته"]
+						],
+						fields : ["id","value"]
+					}),
+					displayField : "value",
+					valueField : "id",
+					disabled : true,
+					itemId : "rpcmp_x2_date",
+					hiddenName : "rpcmp_x2_date"
+				},'. $this->CreateColumnCombo("", "rpcmp_x2", 'width : 200,listeners : {
+						select : function(combo,records){ 
+							if(records[0].data.type == "date")
+								this.up("fieldset").down("[itemId=rpcmp_x2_date]").enable()
+							else
+								this.up("fieldset").down("[itemId=rpcmp_x2_date]").disable()
+						}
+					}') . ']
+			}';
+		
+		$items[] = '{
+			xtype : "fieldset",
+			width : 350,
+			height : 90,
+			style : "margin-right:5px",
+			title : "' . self::$Chart_Y_title . '",
+			layout : "hbox",
+			items:[{
+					xtype : "combo",
+					width : 80,
+					store : new Ext.data.SimpleStore({
+						data : [
+							["value", "مقدار واقعی"],
+							["sum", "مجموع"],
+							["min", "مینیمم"],
+							["max", "ماکزیمم"],
+							["average", "میانگین"],
+							["count", "تعداد"]
+						],
+						fields : ["id","value"]
+					}),
+					displayField : "value",
+					valueField : "id",
+					itemId : "rpcmp_y_func",
+					hiddenName : "rpcmp_y_func"
+				},'. $this->CreateColumnCombo("","rpcmp_y","width : 200") . ']
+			}';		
+		
+		$items[] = "{
+			xtype : 'button',
+			text : 'مشاهده نمودار',
+			colspan : 2,
+			style : 'float:left',
+			iconCls : 'diagram',
+			handler : function(){ 
+				$SourceObject.form = $SourceObject.get('$MainFrame')
+				$SourceObject.form.target = '_blank';
+				$SourceObject.form.method = 'POST';
+				$SourceObject.form.action =  $SourceObject.address_prefix + '$PageName';
+				$SourceObject.form.submit();
+				return;
+			}
+		}";
+		
+		$items[] = '{xtype : "hidden", name : "rpcmp_chart", value : "true"}';
+		
+		return '{
+			xtype : "container",
+			layout :{type : "table", columns : 2},
+			items : [' . implode(",", $items) . ']}';
+	}
+	
+	function GenerateChart(){
+		
+		global $SourceObject;
+		$SourceObject = $this;
+		require_once 'ReportGeneratorChartView.php';
+		die();
 	}
 }
 
@@ -787,6 +1000,8 @@ class ReportColumn {
 	public $hidden = false;
 	public $style = "";
 	public $ExcelRender = true;
+	
+	public $type = "string"; // string or date
 
 	public function ReportColumn($header, $field, $renderFunction = "", $renderParams = "") {
 		$this->header = $header;
@@ -805,53 +1020,6 @@ class ReportColumn {
 		$this->SummaryOfRender = $SummaryOfRender;
 	}
 
-}
-
-class ReportSetting {
-	
-	private $columns = array();
-	private $MainForm;
-	private $ObjectName;
-	static $FieldPrefix = "reportcolumn_fld_";
-	static $OrderPrefix = "reportcolumn_ord_";
-	
-	function __construct($MainForm, $ObjectName) {
-		
-		$this->MainForm = $MainForm;
-		$this->ObjectName = $ObjectName;
-	}
-	
-	function addColumn($title, $field){
-		$this->columns[] = array($title , $field);
-	}
-	
-	function GetColumnCheckboxList($columns = 1){
-		
-		$columnCount = ceil( count($this->columns)/$columns );
-		
-		$div = "<div style='float:right;height:100%'>";
-		$returnStr = "";
-		$index = 0;
-		foreach($this->columns as $row)
-		{
-			if($index % $columnCount == 0)
-				$returnStr .= ($index == 1 ? "" : "</div>") . $div;
-			$title = $row[0];
-			$field = $row[1];
-			$returnStr .= "<input style='width:20' type=text name='".self::$OrderPrefix.$field."' "
-					. "id='".self::$OrderPrefix.$field."'>"
-					. "<input onclick=ReportGenerator.setOrder(this,'".$this->MainForm."',".$this->ObjectName.") "
-					. "type=checkbox name='".self::$FieldPrefix.$field."' id='".self::$FieldPrefix.$field."'>"
-					. $title."<br>";
-			$index++;
-		}
-		
-		return $returnStr . "</div>";
-	}
-	
-	function GetChartItems(){
-		$items = "";
-	}
 }
 
 function ReportMoneyRender($row, $value){

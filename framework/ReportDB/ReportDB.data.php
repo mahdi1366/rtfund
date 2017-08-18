@@ -60,7 +60,7 @@ function SaveReport() {
 				continue;
 			if(strpos($key, "combobox-") !== false)
 				continue;
-			if(strpos($key, ReportSetting::$FieldPrefix) !== false && $value == "false")
+			if(strpos($key, ReportGenerator::$FieldPrefix) !== false && $value == "false")
 				continue;
 
 			$obj2 = new FRW_ReportItems();

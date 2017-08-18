@@ -58,6 +58,8 @@ function SelectAllWarrentyRequests(){
 	if ( !empty($_REQUEST['query'])) {
         $field = isset($_REQUEST['fields']) ? $_REQUEST['fields'] : "fullname";
 		$field = $field == "fullname" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;
+		$field = $field == "RefRequestID" ? "r.RefRequestID" : $field;
+		
         $where .= ' and ' . $field . ' like :fld';
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }

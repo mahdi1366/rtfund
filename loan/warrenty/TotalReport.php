@@ -116,19 +116,19 @@ if(isset($_REQUEST["show"]))
 	die();
 }
 
-$rptsetting = new ReportSetting("mainForm","WarrentyReport_totalObj");
-$rptsetting->addColumn("شماره تضمین", "RequestID");
-$rptsetting->addColumn("نوع تضمین", "TypeDesc");	
-$rptsetting->addColumn("تاریخ شروع", "StartDate");
-$rptsetting->addColumn("تاریخ پایان", "EndDate");
-$rptsetting->addColumn("مبلغ", "amount");
-$rptsetting->addColumn("مشتری", "fullname");
-$rptsetting->addColumn("سازمان مربوطه", "organization");
-$rptsetting->addColumn("کارمزد", "wage");
-$rptsetting->addColumn("شماره نامه معرفی", "LetterNo");
-$rptsetting->addColumn("تاریخ نامه معرفی", "LetterDate");
-$rptsetting->addColumn("وضعیت", "StepDesc");
-$rptsetting->addColumn("نسخه", "version");
+$page_rpg = new ReportGenerator("mainForm","aWarrentyReport_totalObj");
+$page_rpg->addColumn("شماره تضمین", "RequestID");
+$page_rpg->addColumn("نوع تضمین", "TypeDesc");	
+$page_rpg->addColumn("تاریخ شروع", "StartDate");
+$page_rpg->addColumn("تاریخ پایان", "EndDate");
+$page_rpg->addColumn("مبلغ", "amount");
+$page_rpg->addColumn("مشتری", "fullname");
+$page_rpg->addColumn("سازمان مربوطه", "organization");
+$page_rpg->addColumn("کارمزد", "wage");
+$page_rpg->addColumn("شماره نامه معرفی", "LetterNo");
+$page_rpg->addColumn("تاریخ نامه معرفی", "LetterDate");
+$page_rpg->addColumn("وضعیت", "StepDesc");
+$page_rpg->addColumn("نسخه", "version");
 
 ?>
 <script>
@@ -294,7 +294,7 @@ function WarrentyReport_total()
 			title : "ستونهای گزارش",
 			items :[{
 				xtype : "container",
-				html : "<?= $rptsetting->GetColumnCheckboxList(2) ?>"
+				html : "<?= $page_rpg->GetColumnCheckboxList(2) ?>"
 			}]
 		}],
 		buttons : [{

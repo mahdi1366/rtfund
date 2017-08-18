@@ -4171,10 +4171,9 @@ function CancelWarrantyDoc($ReqObj, $extradays, $pdo){
 			join DMS_DocParams using(ParamID)
 			join DMS_documents d using(DocumentID)
 			join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
-			left join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
-		where ItemID is null AND b.param1=1 AND 
+			
+		where b.param1=1 AND 
 			paramType='currencyfield' AND ObjectType='warrenty' AND ObjectID=?",array($ReqObj->RequestID), $pdo);
-
 	foreach($dt as $row)
 	{
 		unset($itemObj->ItemID);

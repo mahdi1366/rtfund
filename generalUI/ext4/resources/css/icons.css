@@ -69,6 +69,8 @@
 .check			{background-image:url('/generalUI/ext4/resources/themes/icons/check.png') !important;}
 .email			{background-image:url('/generalUI/ext4/resources/themes/icons/email.png') !important;}
 .db				{background-image:url('/generalUI/ext4/resources/themes/icons/db.png') !important;}
+.systems		{background-image:url('/generalUI/ext4/resources/themes/icons/systems.gif') !important;}
+.diagram		{background-image:url('/generalUI/ext4/resources/themes/icons/diagram.png') !important;}
 
 .pinkRow .x-grid-cell,.pinkRow .x-grid-rowwrap-div, .pinkRow		{background-color: #FFB8C9; }
 .greenRow .x-grid-cell,.greenRow .x-grid-rowwrap-div, .greenRow		{background-color: #D0F7E2; }

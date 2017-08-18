@@ -5,68 +5,89 @@ require_once "../request/request.class.php";
 require_once "../request/request.data.php";
 require_once "ReportGenerator.class.php";
 
-if(isset($_REQUEST["show"]))
-{
-	function dateRender($row, $val){
-		return DateModules::miladi_to_shamsi($val);
-	}	
+function ReqPersonRender($row,$value){
+	return $value == "" ? "منابع داخلی" : $value;
+}
 	
-	function moneyRender($row, $val) {
-		return number_format($val);
-	}
-	
-	function MakeWhere(&$where, &$pay_where, &$whereParam){
-		
-		foreach($_POST as $key => $value)
+$page_rpg = new ReportGenerator("mainForm","LoanReport_totalObj");
+$page_rpg->addColumn("شماره وام", "RequestID");
+$page_rpg->addColumn("نوع وام", "LoanDesc");
+$page_rpg->addColumn("عنوان طرح", "PlanTitle");	
+$page_rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
+$col = $page_rpg->addColumn("تاریخ درخواست", "ReqDate");
+$col->type = "date";	
+$page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
+$page_rpg->addColumn("مشتری", "LoanFullname");
+$page_rpg->addColumn("شعبه", "BranchName");
+$col = $page_rpg->addColumn("تاریخ پرداخت", "PartDate");
+$col->type = "date";
+$page_rpg->addColumn("مبلغ تایید شده", "PartAmount");
+$page_rpg->addColumn("مبلغ پرداخت شده", "SumPayments");
+$page_rpg->addColumn("تعداد اقساط", "InstallmentCount");
+$page_rpg->addColumn("تنفس(ماه)", "DelayMonths");
+$page_rpg->addColumn("کارمزد مشتری", "CustomerWage");
+$page_rpg->addColumn("کارمزد صندوق", "FundWage");
+$page_rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
+$page_rpg->addColumn("شماره قدیم", "imp_VamCode");
+$page_rpg->addColumn("وضعیت", "StatusDesc");
+$page_rpg->addColumn("قابل پرداخت مشتری", "TotalInstallmentAmount");
+$page_rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount");
+$page_rpg->addColumn("مانده قابل پرداخت", "remainder");
+
+function MakeWhere(&$where, &$pay_where, &$whereParam){
+
+	foreach($_POST as $key => $value)
+	{
+		if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
+				$value === "" || strpos($key, "combobox") !== false || strpos($key, "rpcmp") !== false ||
+				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
+			continue;
+		$prefix = "";
+		$pay = false;
+		switch($key)
 		{
-			if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
-					$value === "" || strpos($key, "combobox") !== false ||
-					strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
-				continue;
-			$prefix = "";
-			$pay = false;
-			switch($key)
-			{
-				case "CustomerWage":
-					$prefix = "p.";
-					break;
-				case "fromRequestID":
-				case "toRequestID":
-					$prefix = "r.";
-					break;
-				case "fromReqDate":
-				case "toReqDate":
-				case "fromPartDate":
-				case "toPartDate":
-					$value = DateModules::shamsi_to_miladi($value, "-");
-					break;
-				case "fromReqAmount":
-				case "toReqAmount":
-				case "fromPartAmount":
-				case "toPartAmount":
-					$value = preg_replace('/,/', "", $value);
-					$pay = true;
-					break;
-				case "fromPayAmount":
-				case "toPayAmount":
-					$value = preg_replace('/,/', "", $value);
-					$pay = true;
-					break;
-			}
-			if(strpos($key, "from") === 0)
-				$where_temp = " AND " . $prefix . substr($key,4) . " >= :$key";
-			else if(strpos($key, "to") === 0)
-				$where_temp = " AND " . $prefix . substr($key,2) . " <= :$key";
-			else
-				$where_temp = " AND " . $prefix . $key . " = :$key";
-			
-			if($pay)
-				$pay_where .= $where_temp;
-			else
-				$where .= $where_temp;
-			$whereParam[":$key"] = $value;
+			case "CustomerWage":
+				$prefix = "p.";
+				break;
+			case "fromRequestID":
+			case "toRequestID":
+				$prefix = "r.";
+				break;
+			case "fromReqDate":
+			case "toReqDate":
+			case "fromPartDate":
+			case "toPartDate":
+				$value = DateModules::shamsi_to_miladi($value, "-");
+				break;
+			case "fromReqAmount":
+			case "toReqAmount":
+			case "fromPartAmount":
+			case "toPartAmount":
+				$value = preg_replace('/,/', "", $value);
+				$pay = true;
+				break;
+			case "fromPayAmount":
+			case "toPayAmount":
+				$value = preg_replace('/,/', "", $value);
+				$pay = true;
+				break;
 		}
-	}	
+		if(strpos($key, "from") === 0)
+			$where_temp = " AND " . $prefix . substr($key,4) . " >= :$key";
+		else if(strpos($key, "to") === 0)
+			$where_temp = " AND " . $prefix . substr($key,2) . " <= :$key";
+		else
+			$where_temp = " AND " . $prefix . $key . " = :$key";
+
+		if($pay)
+			$pay_where .= $where_temp;
+		else
+			$where .= $where_temp;
+		$whereParam[":$key"] = $value;
+	}
+}	
+	
+function GetData(){
 	
 	//.....................................
 	$where = "";
@@ -128,33 +149,34 @@ if(isset($_REQUEST["show"]))
 		$dataTable[$i]["remainder"] = $TotalRemain;
 	}
 	
+	return $dataTable; 
+}
+
+if(isset($_REQUEST["show"]))
+{
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
-	$rpg->mysql_resource = $dataTable;
+	$rpg->mysql_resource = GetData();
 	
 	function endedRender($row,$value){
 		return ($value == "YES") ? "خاتمه" : "جاری";
-	}
-	
-	function ReqPersonRender($row,$value){
-		return $value == "" ? "منابع داخلی" : $value;
 	}
 	
 	$rpg->addColumn("شماره وام", "RequestID");
 	$rpg->addColumn("نوع وام", "LoanDesc");
 	$rpg->addColumn("عنوان طرح", "PlanTitle");	
 	$rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
-	$rpg->addColumn("تاریخ درخواست", "ReqDate", "dateRender");
-	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "moneyRender");
+	$rpg->addColumn("تاریخ درخواست", "ReqDate", "ReportDateRender");
+	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	$rpg->addColumn("مشتری", "LoanFullname");
 	$rpg->addColumn("شعبه", "BranchName");
-	$rpg->addColumn("تاریخ پرداخت", "PartDate", "dateRender");
-	$col = $rpg->addColumn("مبلغ تایید شده", "PartAmount", "moneyRender");
+	$rpg->addColumn("تاریخ پرداخت", "PartDate", "ReportDateRender");
+	$col = $rpg->addColumn("مبلغ تایید شده", "PartAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
-	$col = $rpg->addColumn("مبلغ پرداخت شده", "SumPayments", "moneyRender");
+	$col = $rpg->addColumn("مبلغ پرداخت شده", "SumPayments", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	$rpg->addColumn("تعداد اقساط", "InstallmentCount");
@@ -165,19 +187,18 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("شماره قدیم", "imp_VamCode");
 	//$rpg->addColumn("جاری/خاتمه", "IsEnded", "endedRender");
 	$rpg->addColumn("وضعیت", "StatusDesc");
-	$col = $rpg->addColumn("قابل پرداخت مشتری", "TotalInstallmentAmount", "moneyRender");
+	$col = $rpg->addColumn("قابل پرداخت مشتری", "TotalInstallmentAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
-	$col = $rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount", "moneyRender");
+	$col = $rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
-	$col = $rpg->addColumn("مانده قابل پرداخت", "remainder", "moneyRender");
+	$col = $rpg->addColumn("مانده قابل پرداخت", "remainder", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	if(!$rpg->excel)
 	{
 		BeginReport();
-		echo "<div style=display:none>" . $query . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
@@ -196,28 +217,13 @@ if(isset($_REQUEST["show"]))
 	die();
 }
 
-$rptsetting = new ReportSetting("mainForm","LoanReport_totalObj");
-$rptsetting->addColumn("شماره وام", "RequestID");
-$rptsetting->addColumn("نوع وام", "LoanDesc");
-$rptsetting->addColumn("عنوان طرح", "PlanTitle");	
-$rptsetting->addColumn("معرفی کننده", "ReqFullname");
-$rptsetting->addColumn("تاریخ درخواست", "ReqDate");
-$rptsetting->addColumn("مبلغ درخواست", "ReqAmount");
-$rptsetting->addColumn("مشتری", "LoanFullname");
-$rptsetting->addColumn("شعبه", "BranchName");
-$rptsetting->addColumn("تاریخ پرداخت", "PartDate");
-$rptsetting->addColumn("مبلغ تایید شده", "PartAmount");
-$rptsetting->addColumn("مبلغ پرداخت شده", "SumPayments");
-$rptsetting->addColumn("تعداد اقساط", "InstallmentCount");
-$rptsetting->addColumn("تنفس(ماه)", "DelayMonths");
-$rptsetting->addColumn("کارمزد مشتری", "CustomerWage");
-$rptsetting->addColumn("کارمزد صندوق", "FundWage");
-$rptsetting->addColumn("درصد دیرکرد", "ForfeitPercent");
-$rptsetting->addColumn("شماره قدیم", "imp_VamCode");
-$rptsetting->addColumn("وضعیت", "StatusDesc");
-$rptsetting->addColumn("قابل پرداخت مشتری", "TotalInstallmentAmount");
-$rptsetting->addColumn("جمع پرداختی مشتری", "TotalPayAmount");
-$rptsetting->addColumn("مانده قابل پرداخت", "remainder");
+if(isset($_REQUEST["rpcmp_chart"]))
+{
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart();
+	die();
+}
+
 ?>
 <script>
 LoanReport_total.prototype = {
@@ -451,14 +457,16 @@ function LoanReport_total()
 		},{
 			xtype : "fieldset",
 			title : "ستونهای گزارش",
+			colspan :2,
 			items :[{
 				xtype : "container",
-				html : "<?= $rptsetting->GetColumnCheckboxList(2) ?>"
+				html : "<?= $page_rpg->GetColumnCheckboxList(6) ?>"
 			}]
 		},{
 			xtype : "fieldset",
+			colspan :2,
 			title : "رسم نمودار",
-			items : [<?= $rptsetting->GetChartItems() ?>]
+			items : [<?= $page_rpg->GetChartItems("LoanReport_totalObj","mainForm","total.php") ?>]
 		}],
 		buttons : [{
 			text : "گزارش ساز",
@@ -499,6 +507,16 @@ function LoanReport_total()
 		e.stopEvent();
 		return false;
 	});
+}
+
+LoanReport_total.prototype.ShowChart = function()
+{
+	this.form = this.get("mainForm")
+	this.form.target = "_blank";
+	this.form.method = "POST";
+	this.form.action =  this.address_prefix + "total.php?chart=true";
+	this.form.submit();
+	return;
 }
 
 LoanReport_totalObj = new LoanReport_total();

@@ -437,9 +437,9 @@ class DateModules
 		return false;
 	}
 	
-	static function GetWeekDay($date, $format = "l")
+	static function GetWeekDay($jdate, $format = "l")
 	{
-		return date_format(new DateTime(self::shamsi_to_miladi($date)), $format);
+		return date_format(new DateTime(self::shamsi_to_miladi($jdate)), $format);
 	}
 	
 	static function DateToString($SHdate)
