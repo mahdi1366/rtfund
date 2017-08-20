@@ -151,7 +151,8 @@ function SelectAllRequests2(){
 	}
 	
 	if(isset($_SESSION["USER"]["portal"]))
-		$query .= " AND LoanPersonID=" . $_SESSION["USER"]["PersonID"];
+		$query .= " AND ( LoanPersonID=" . $_SESSION["USER"]["PersonID"] . 
+			" or ReqPersonID  = " . $_SESSION["USER"]["PersonID"] . " )";
 	
 	$query .= " group by r.RequestID";
 	
@@ -1252,6 +1253,10 @@ function GetDelayedInstallments($returnData = false){
         $query .= ' and ' . $field . ' like :fld';
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
+	
+	if(isset($_SESSION["USER"]["portal"]))
+		$query .= " AND ( LoanPersonID=" . $_SESSION["USER"]["PersonID"] . 
+			" or ReqPersonID  = " . $_SESSION["USER"]["PersonID"] . " )";
 	
 	$query .= " group by " . (isset($_GET["callback"]) ? "r.RequestID" : "p.PartID")
 			. " order by r.RequestID,p.PartID";

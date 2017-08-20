@@ -270,6 +270,7 @@ class DMS_DocParams extends OperationClass
 	public $DocType;
 	public $ParamDesc;
 	public $ParamType;
+	public $KeyTitle;
 	public $ParamValues;
 	public $IsActive;
 	

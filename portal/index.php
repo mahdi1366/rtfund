@@ -112,10 +112,9 @@ for ($i = 0; $i < count($menus); $i++) {
 			  <img style='width: 22px; float: left; vertical-align: middle; margin-top: 10px;cursor: pointer' 
 				 src='/framework/icons/exit.png' onclick="portal.OpenPage('/portal/logout.php');"> 
 				<?= $_SESSION['USER']["fullname"] ?>
-				<br> شناسه : <?= $_SESSION['USER']["UserName"]?>
-			
+				<br> شناسه : <?= $_SESSION['USER']["UserName"]?>			
 			</div>
-			<div class="menu" ><?= $menuStr?></div>
+		<div class="menu" ><?= $menuStr?></div>
      </div>
 		<!--
 		 <table class ="example_3">
@@ -155,7 +154,7 @@ onclick='window.open("http://trustseal.enamad.ir/Verify.aspx?id=28821&p=wkynaqgw
 						});*/
 						portal = new PortalClass();
 						portal.OpenPage("/portal/FirstPage.php");
-						PortalClass.SystemLoad();
+						//PortalClass.SystemLoad();
 					});
 				}
 				catch(err){}

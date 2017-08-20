@@ -81,7 +81,7 @@ function selectPersons(){
 	
 	if(!empty($_REQUEST["EmptyRow"]))
 	{
-		$temp = array_merge(array(array("PersonID" => 0, "fullname" => "بدون معرفی کننده")), $temp);
+		$temp = array_merge(array(array("PersonID" => 0, "fullname" => "منابع داخلی")), $temp);
 	}
 	
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);

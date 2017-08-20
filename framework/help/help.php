@@ -56,4 +56,26 @@ require_once '../header.inc.php';
 		</td>
 		<td>راهنمای زیر سیستم قراردادها</td>
 	</tr>
+	
+	<tr>
+		<td width="10%"><a target="_blank" href="help/help_hrms.pdf">
+				<img src="icons/help.png" style="width:60px;vertical-align:middle;cursor: pointer"></a>
+		</td>
+		<td>راهنمای زیر سیستم منابع انسانی</td>
+	</tr>
+	
+	<tr>
+		<td width="10%"><a target="_blank" href="help/help_plan.pdf">
+				<img src="icons/help.png" style="width:60px;vertical-align:middle;cursor: pointer"></a>
+		</td>
+		<td>راهنمای زیر سیستم نظارت و ارزیابی</td>
+	</tr>
+	
+	<tr>
+		<td width="10%"><a target="_blank" href="help/help_vote.pdf">
+				<img src="icons/help.png" style="width:60px;vertical-align:middle;cursor: pointer"></a>
+		</td>
+		<td>راهنمای زیر سیستم نظرسنجی</td>
+	</tr>
 </table>
+<br><br><br><br>

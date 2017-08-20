@@ -58,6 +58,8 @@ function SelectAllWarrentyRequests(){
 	if ( !empty($_REQUEST['query'])) {
         $field = isset($_REQUEST['fields']) ? $_REQUEST['fields'] : "fullname";
 		$field = $field == "fullname" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;
+		$field = $field == "RefRequestID" ? "r.RefRequestID" : $field;
+		
         $where .= ' and ' . $field . ' like :fld';
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
@@ -229,6 +231,7 @@ function ExtendWarrenty(){
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	unset($obj->RequestID);
 	$obj->RefRequestID = $baseObj->RefRequestID;
+	$obj->RefReason = "EXTEND";
 	$obj->StartDate = $baseObj->EndDate;
 	$obj->StatusID = WAR_STEPID_RAW;	
 	$result = $obj->Add();

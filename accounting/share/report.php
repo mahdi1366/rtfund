@@ -7,6 +7,11 @@
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 
+if(isset($_SESSION["USER"]["portal"]))
+{
+	$_SESSION["accounting"]["CycleID"] = substr(DateModules::shNow(),0,4);
+}
+
 $query = "select sum(CreditorAmount-DebtorAmount) amount, 
 				ShareNo,
 				TafsiliDesc,
@@ -100,8 +105,8 @@ function ShareReport()
 {
 	this.formPanel = new Ext.form.Panel({
 		renderTo : this.get("main"),
-		width : 800,
-		height : 600,
+		width : 750,
+		height : 500,
 		autoScroll : true,
 		frame : true,
 		contentEl : this.get("subDiv"),		

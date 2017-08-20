@@ -276,6 +276,16 @@ class OFC_letters extends PdoDataAccess{
 
 		return $content;
 	}
+	
+	static function HasAttach($LetterID){
+		
+		$dt = PdoDataAccess::runquery( "select LetterID				
+			from OFC_letters l 
+				join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
+			where l.LetterID=?", array($LetterID));
+
+		return count($dt) > 0;
+	}
 }
 
 class OFC_send extends PdoDataAccess{

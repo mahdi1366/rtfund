@@ -210,6 +210,7 @@ class LON_requests extends PdoDataAccess{
 		$payIndex = 1;
 		$TotalForfeit = 0;
 		$TotalRemainder = 0;
+		$ComputePayRows = array();
 		for($i=0; $i < count($installments); $i++)
 		{
 			if($installments[$i]["IsDelayed"] == "YES")
@@ -243,7 +244,7 @@ class LON_requests extends PdoDataAccess{
 				$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
 				$i--;
 				
-				if($TotalRemainder > 0 && $PayRecord["PayAmount"]*1 >0)
+				if($TotalRemainder > 0 && $i>0 && $PayRecord["PayAmount"]*1 >0)
 				{
 					$StartDate = $tempForReturnArr["ActionDate"];
 					$ToDate = $PayRecord == null ? DateModules::Now() : $PayRecord["PayDate"];
@@ -278,8 +279,10 @@ class LON_requests extends PdoDataAccess{
 				}
 				
 				$returnArr[] = $tempForReturnArr;
+				$ComputePayRows[] = $tempForReturnArr;
 				continue;
 			}
+			//-----------------------------
 			
 			$TotalRemainder += $installments[$i]["InstallmentAmount"];
 			
@@ -314,8 +317,9 @@ class LON_requests extends PdoDataAccess{
 			$installments[$i]["ForfeitAmount"] = $TotalForfeit;
 			$installments[$i]["TotalRemainder"] = $TotalRemainder;
 			
-			$returnArr[] = $installments[$i];			
+			$returnArr[] = $installments[$i];
 		}
+		//----------------------------------
 		if($PayRecord != null)
 		{
 			while($PayRecord)
@@ -368,9 +372,71 @@ class LON_requests extends PdoDataAccess{
 				}
 				
 				$returnArr[] = $tempForReturnArr;
+				$ComputePayRows[] = $tempForReturnArr;
 			}
 		}
 
+		//............. pay rows of each installment ..............
+		$payIndex2 = 0;
+		for($i=0; $i < count($returnArr); $i++)
+		{
+			$row = &$returnArr[$i];
+			if($row["ActionType"] != "installment")
+				continue;
+			
+			$row["pays"] = array();
+			$payRecord = array(
+				"forfeit" => 0,
+				"remain"  => $row["ActionAmount"]*1				
+			);
+			$amount = $row["ActionAmount"]*1;
+			if($obj->PayCompute != "installment")
+			{
+				$amount += $row["CurForfeitAmount"]*1;
+				$payRecord["forfeit"] += $row["CurForfeitAmount"]*1;
+				$payRecord["remain"] += $row["CurForfeitAmount"]*1;
+			}
+
+			for(; $payIndex2<count($ComputePayRows); $payIndex2++)
+			{
+				if($obj->PayCompute != "installment")
+				{
+					if($ComputePayRows[$payIndex2]["ActionAmount"]*1 < $amount)
+					{
+						$amount += $ComputePayRows[$payIndex2]["CurForfeitAmount"]*1;
+						$payRecord["remain"] += $ComputePayRows[$payIndex2]["CurForfeitAmount"]*1;
+						$payRecord["forfeit"] += $ComputePayRows[$payIndex2]["CurForfeitAmount"]*1;
+					}
+				}
+				$min = min($ComputePayRows[$payIndex2]["ActionAmount"]*1,$amount);
+				if($min == 0)
+					break;
+				$ComputePayRows[$payIndex2]["ActionAmount"] -= $min;
+				$amount -= $min;
+
+				$payRecord["PayedDate"] = DateModules::miladi_to_shamsi($ComputePayRows[$payIndex2]["ActionDate"]) ;
+				$payRecord["PayedAmount"] = number_format($min);
+				$payRecord["remain"] -= $min; 
+				$row["pays"][] = $payRecord;
+				$payRecord = array(
+					"forfeit" => 0,
+					"remain"  => $payRecord["remain"]
+				);
+
+				if($ComputePayRows[$payIndex2]["ActionAmount"]*1 > 0)
+					break;
+			}
+			
+			if(count($row["pays"]) == 0)
+			{
+				$payRecord["PayedDate"] = "";
+				$payRecord["PayedAmount"] = "";
+				$row["pays"][] = $payRecord;
+			}
+		}
+
+		//.........................................................
+		
 		return $returnArr;
 	}
 	
@@ -527,24 +593,16 @@ class LON_requests extends PdoDataAccess{
 		$dt = array();
 		if($computeArr == null)
 			$computeArr = self::ComputePayments2($RequestID, $dt);
-		$obj = LON_ReqParts::GetValidPartObj($RequestID);
-
-		$sumPay = 0;
-		foreach($computeArr as $row)
-			if($row["ActionType"] == "pay")
-				$sumPay += $row["ActionAmount"]*1;
-			
+	
 		foreach($computeArr as $row)
 			if($row["ActionType"] == "installment")
 			{
-				$amount = $row["ActionAmount"]*1;
-				if($obj->PayCompute != "installment")
-					$amount += $row["CurForfeitAmount"]*1;
-				
-				if($amount > $sumPay)
+				if(count($row["pays"]) == 0)
 					return $row["ActionDate"];
 				
-				$sumPay -= $amount;
+				$remain = $row["pays"][ count($row["pays"])-1 ]["remain"]*1;
+				if($remain > 0)
+					return $row["ActionDate"];
 			}
 		return null;
 	}

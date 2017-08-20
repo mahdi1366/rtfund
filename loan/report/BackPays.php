@@ -5,22 +5,31 @@ require_once "../request/request.class.php";
 require_once "../request/request.data.php";
 require_once "ReportGenerator.class.php";
 
-if(isset($_REQUEST["show"]))
-{
-	function dateRender($row, $val){
-		return DateModules::miladi_to_shamsi($val);
-	}	
-	
-	function moneyRender($row, $val) {
-		return number_format($val);
-	}
-	
-	function MakeWhere(&$where, &$whereParam){
+$page_rpg = new ReportGenerator("mainForm","LoanReport_BackaysObj");
+$page_rpg->addColumn("شماره وام", "RequestID");
+$page_rpg->addColumn("نوع وام", "LoanDesc");
+$page_rpg->addColumn("معرفی کننده", "ReqFullname");
+$col = $page_rpg->addColumn("تاریخ درخواست", "ReqDate");
+$col->type = "date";
+$page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
+$page_rpg->addColumn("مشتری", "LoanFullname");
+$page_rpg->addColumn("شعبه", "BranchName");
+$col = $page_rpg->addColumn("تاریخ پرداخت", "PayDate");
+$col->type = "date";
+$page_rpg->addColumn("مبلغ پرداخت", "PayAmount");
+$page_rpg->addColumn("نوع پرداخت", "PayTypeDesc");
+$page_rpg->addColumn("شماره فیش", "PayBillNo");
+$page_rpg->addColumn("کد پیگیری", "PayRefNo");
+$page_rpg->addColumn("شماره چک", "ChequeNo");
+$page_rpg->addColumn("شماره سند", "LocalNo");
+
+function MakeWhere(&$where, &$whereParam){
 		
 		foreach($_POST as $key => $value)
 		{
 			if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
-					$value === "" || strpos($key, "combobox") !== false)
+					$value === "" || strpos($key, "combobox") !== false || strpos($key, "rpcmp") !== false ||
+					strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 				continue;
 			$prefix = "";
 			switch($key)
@@ -47,8 +56,8 @@ if(isset($_REQUEST["show"]))
 			$whereParam[":$key"] = $value;
 		}
 	}	
-	
-	//.....................................
+
+function GetData(){
 	$where = "";
 	$whereParam = array();
 	MakeWhere($where, $whereParam);
@@ -84,9 +93,14 @@ if(isset($_REQUEST["show"]))
 	$query = PdoDataAccess::GetLatestQueryString();
 	//print_r(ExceptionHandler::PopAllExceptions());
 	
+	return $dataTable;
+}
+	
+if(isset($_REQUEST["show"]))
+{
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
-	$rpg->mysql_resource = $dataTable;
+	$rpg->mysql_resource = GetData();
 	
 	function endedRender($row,$value){
 		return ($value == "YES") ? "خاتمه" : "جاری";
@@ -95,12 +109,13 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("شماره وام", "RequestID");
 	$rpg->addColumn("نوع وام", "LoanDesc");
 	$rpg->addColumn("معرفی کننده", "ReqFullname");
-	$rpg->addColumn("تاریخ درخواست", "ReqDate", "dateRender");
-	$rpg->addColumn("مبلغ درخواست", "ReqAmount", "moneyRender");
+	$rpg->addColumn("تاریخ درخواست", "ReqDate", "ReportDateRender");
+	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "ReportMoneyRender");
+	$col->EnableSummary();
 	$rpg->addColumn("مشتری", "LoanFullname");
 	$rpg->addColumn("شعبه", "BranchName");
-	$rpg->addColumn("تاریخ پرداخت", "PayDate", "dateRender");
-	$col = $rpg->addColumn("مبلغ پرداخت", "PayAmount", "moneyRender");
+	$rpg->addColumn("تاریخ پرداخت", "PayDate", "ReportDateRender");
+	$col = $rpg->addColumn("مبلغ پرداخت", "PayAmount", "ReportMoneyRender");
 	$col->EnableSummary();
 	$rpg->addColumn("نوع پرداخت", "PayTypeDesc");
 	$rpg->addColumn("شماره فیش", "PayBillNo");
@@ -127,6 +142,13 @@ if(isset($_REQUEST["show"]))
 		echo "</td></tr></table>";
 		}
 	$rpg->generateReport();
+	die();
+}
+
+if(isset($_REQUEST["rpcmp_chart"]))
+{
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart();
 	die();
 }
 ?>
@@ -286,8 +308,30 @@ function LoanReport_Backays()
 			name : "toPayAmount",
 			hideTrigger : true,
 			fieldLabel : "تا مبلغ"
+		},{
+			xtype : "fieldset",
+			colspan :2,
+			title : "ستونهای گزارش",
+			items :[{
+				xtype : "container",
+				html : "<?= $page_rpg->GetColumnCheckboxList(2) ?>"
+			}]
+		},{
+			xtype : "fieldset",
+			colspan :2,
+			title : "رسم نمودار",
+			items : [<?= $page_rpg->GetChartItems("LoanReport_installmentsObj","mainForm","installments.php") ?>]
 		}],
 		buttons : [{
+			text : "گزارش ساز",
+			iconCls : "db",
+			handler : function(){ReportGenerator.ShowReportDB(
+						LoanReport_BackaysObj, 
+						<?= $_REQUEST["MenuID"] ?>,
+						"mainForm",
+						"formPanel"
+						);}
+		},'->',{
 			text : "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),
 			iconCls : "report"

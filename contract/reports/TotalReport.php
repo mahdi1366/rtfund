@@ -24,7 +24,7 @@ function ShowReport(){
 	$params = array();
 	
 	$index = 0;
-	$itemsWhere = "1=0 ";
+	$itemsWhere = "1=1 ";
 	$keys = array_keys($_POST);
 	foreach($keys as $key)
 	{
@@ -96,7 +96,7 @@ function ShowReport(){
 	
 	if(!$rpg->excel)
 	{
-		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
+		BeginReport();
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
@@ -277,6 +277,15 @@ function TotalReport() {
 			}
 		}],
 		buttons: [{
+			text : "گزارش ساز",
+			iconCls : "db",
+			handler : function(){ReportGenerator.ShowReportDB(
+						TotalReportObj, 
+						<?= $_REQUEST["MenuID"] ?>,
+						"mainForm",
+						"formPanel"
+						);}
+		},'->',{
 			text: "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),
 			iconCls: "report"

@@ -31,16 +31,14 @@ String.prototype.rpad = function(padString, length) {
     return str;
 }
 
-Array.prototype.find = function(o)
-{
+Array.prototype.find = function(o){
 	for(var i = 0; i < this.length; i++)
 	   if(this[i] == o)
 		 return i;
 	return -1;
 }
 
-Array.prototype.findObject = function(datamember, value)
-{
+Array.prototype.findObject = function(datamember, value){
 	for(var i = 0; i < this.length; i++)
 	{
 		eval("tmp = this[i]." + datamember + ";");
@@ -48,6 +46,12 @@ Array.prototype.findObject = function(datamember, value)
 		 return this[i];
 	}
 	return null;
+}
+
+ObjectName = function(obj){
+	for (var name in window)
+      if (window[name] == obj) 
+        return name;
 }
 
 Ext.apply(Ext.Array, {
@@ -4867,13 +4871,18 @@ Ext.define('Ext.FormSerializer', {
         Ext.each(elements, function(element) {
             if(element.name)
             {
-                if(element.type != 'checkbox')
-                {
-                    Data[element.name] = element.value;
-                }
-                else if(element.type == 'checkbox')
+                if(element.type == 'checkbox')
                 {
                     Data[element.name] = element.checked?element.value:false;                    
+                }
+				else if(element.type == 'radio')
+                {
+					if(element.checked)
+						Data[element.name] = element.value;
+                }
+				else
+                {
+                    Data[element.name] = element.value;
                 }
             }
         }, this);
@@ -5007,3 +5016,134 @@ Ext.override(Ext.data.Store, {
   }
 });  
 
+//***********************************************************
+//**********************  CHART *****************************
+//***********************************************************
+Ext.override(Ext.chart.theme.Base, {
+    constructor: function(config) {
+        Ext.chart.theme.call(this, config, {
+            background: false,
+            axis: {
+                stroke: '#444',
+                'stroke-width': 1
+            },
+            axisLabelTop: {
+                fill: '#444',
+                font: '11px Tahoma, Helvetica, sans-serif',
+                spacing: 2,
+                padding: 5,
+                renderer: function(v) { return v; }
+            },
+            axisLabelRight: {
+                fill: '#444',
+                font: '11px Tahoma, Helvetica, sans-serif',
+                spacing: 2,
+                padding: 5,
+                renderer: function(v) { return v; }
+            },
+            axisLabelBottom: {
+                fill: '#444',
+                font: '11px Tahoma, Helvetica, sans-serif',
+                spacing: 2,
+                padding: 5,
+                renderer: function(v) { return v; }
+            },
+            axisLabelLeft: {
+                fill: '#444',
+                font: '11px Tahoma, Helvetica, sans-serif',
+                spacing: 2,
+                padding: 5,
+                renderer: function(v) { return v; }
+            },
+            axisTitleTop: {
+                font: 'bold 12px Tahoma',
+                fill: '#444'
+            },
+            axisTitleRight: {
+                font: 'bold 12px Tahoma',
+                fill: '#444',
+                rotate: {
+                    x:0, y:0,
+                    degrees: 270
+                }
+            },
+            axisTitleBottom: {
+                font: 'bold 12px Tahoma',
+                fill: '#444'
+            },
+            axisTitleLeft: {
+                font: 'bold 12px Tahoma',
+                fill: '#444',
+                rotate: {
+                    x:0, y:0,
+                    degrees: 270
+                }
+            },
+            series: {
+                'stroke-width': 0
+            },
+            seriesLabel: {
+                font: '9px Tahoma',
+                fill: '#333'
+            },
+            marker: {
+                stroke: '#555',
+                radius: 3,
+                size: 3
+            },
+            colors: [ "#94ae0a", "#115fa6","#a61120", "#ff8809", "#ffd13e", "#a61187", "#24ad9a", "#7c7474", "#a66111"],
+            seriesThemes: [{
+                fill: "#115fa6"
+            }, {
+                fill: "#94ae0a"
+            }, {
+                fill: "#a61120"
+            }, {
+                fill: "#ff8809"
+            }, {
+                fill: "#ffd13e"
+            }, {
+                fill: "#a61187"
+            }, {
+                fill: "#24ad9a"
+            }, {
+                fill: "#7c7474"
+            }, {
+                fill: "#115fa6"
+            }, {
+                fill: "#94ae0a"
+            }, {
+                fill: "#a61120"
+            }, {
+                fill: "#ff8809"
+            }, {
+                fill: "#ffd13e"
+            }, {
+                fill: "#a61187"
+            }, {
+                fill: "#24ad9a"
+            }, {
+                fill: "#7c7474"
+            }, {
+                fill: "#a66111"
+            }],
+            markerThemes: [{
+                fill: "#115fa6",
+                type: 'circle' 
+            }, {
+                fill: "#94ae0a",
+                type: 'cross'
+            }, {
+                fill: "#115fa6",
+                type: 'plus' 
+            }, {
+                fill: "#94ae0a",
+                type: 'circle'
+            }, {
+                fill: "#a61120",
+                type: 'cross'
+            }]
+        });
+    }
+});
+			

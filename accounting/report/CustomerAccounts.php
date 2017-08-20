@@ -18,8 +18,14 @@ function showSummary(){
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
 
+	$param = array();
 	$where = " AND (pasandaz.amount>0 or kootah.amount>0 or	boland.amount>0 or jari.amount>0)";
-	$rpg->mysql_resource = GetAccountSummary(true, $_POST["BranchID"], $where);
+	if(!empty($_POST["TafsiliID"]))
+	{
+		$where .= " AND t.TafsiliID=:t";
+		$param[":t"] = $_POST["TafsiliID"];
+	}
+	$rpg->mysql_resource = GetAccountSummary(true, $_POST["BranchID"], $where, $param);
 
 	$rpg->addColumn("تفصیلی", "TafsiliDesc");
 	$rpg->addColumn("شماره پرونده", "packNo");
@@ -97,7 +103,7 @@ function showFlow(){
 			if(CostID=".COSTID_current.",CreditorAmount,0) current_creditor
 			
 		from ACC_DocItems di
-			join ACC_Tafsilis using(TafsiliID)
+			join ACC_tafsilis using(TafsiliID)
 			join ACC_docs d using(DocID)
 		where d.CycleID=:c 
 			AND d.BranchID=:b AND 
@@ -107,6 +113,7 @@ function showFlow(){
 	
 	
 	$temp = PdoDataAccess::runquery($query, $param);
+	//print_r(ExceptionHandler::PopAllExceptions());
 	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);

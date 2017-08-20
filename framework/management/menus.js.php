@@ -73,8 +73,7 @@ function Menu()
 	this.MenuWin = new Ext.window.Window({
 		autoScroll : true,
 		width : 400,
-		modal : true,
-		
+				
 		title : "ایجاد منو",
 		closeAction : "hide",
 		items : [{

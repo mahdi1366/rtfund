@@ -23,7 +23,7 @@ $dt = WAR_requests::SelectAll("r.RequestID=?" , array($ReqObj->RequestID));
 if($_SESSION["USER"]["UserName"] == "admin")
 {
 	//echo PdoDataAccess::GetLatestQueryString();
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 }
 $record = $dt->fetch();
 $record["LetterDate"] = DateModules::miladi_to_shamsi($record["LetterDate"]);
@@ -57,17 +57,47 @@ for ($i = 0; $i < count($contentArr); $i++) {
 			.pageBreak {page-break-before:always;height:1px;}
 		}
 		.page {
-			width: 180mm;
-			height: 260mm;
-			border : 6px double black;
-			margin : 1cm;
+			width:800px;
+			height:1100px;
+			background-image: url('prints/bg.jpg');
+			background-size: 800px 1100px;
 		}
-		td {
-			font-family: nazanin;
-			font-size: 16px;
+		@media print {
+			.page{
+				background-image: none;
+			}
 		}
-		.address td{
-			font-size: 11px;
+			
+		.title {
+			width:300px;
+			font-family: titr; font-size: 18px;
+			position: absolute;
+			top : 75px; left : 225px;
+		}
+		.date {
+			width:300px;
+			font-family: titr; font-size: 16px;
+			position: absolute;
+			top : 130px; left : 215px;
+		} 
+		.number {
+			width:300px;
+			font-family: titr; font-size: 16px;
+			position: absolute;
+			top : 163px; left : 186px;
+		}
+		.context {
+			text-align: justify;
+			padding-left: 60px;
+			padding-right: 60px;
+			font-family: nazanin; 
+			font-size: 18px;
+		}
+		.sign {
+			width:300px; 
+			float:left; 
+			font-family: titr;
+			margin-left: 20px;
 		}
 		</style>
 	</head>
@@ -75,34 +105,25 @@ for ($i = 0; $i < count($contentArr); $i++) {
 	<center>
 		<div class=page>
 			<table style="width:95%; height:260mm">
-				<tr>
-					<td><br>
-						<div style="width:150px; float:left" align="center">
-						شماره : <?= $ReqObj->RequestID ?>
-						<br> تاریخ : <?= DateModules::miladi_to_shamsi($ReqObj->StartDate) ?>
-						</div>
+				<tr style="height: 255px">
+					<td>
+						<br>
+						<div class='title'><?= $ReqObj->_TypeDesc ?></div>
+						<br>
+						<div class='date'><?= DateModules::miladi_to_shamsi($ReqObj->StartDate) ?></div>
+						<br>
+						<div class='number'><?= $ReqObj->RequestID ?></div>
 					</td>
 				</tr>
 				<tbody>
 				<tr>
 					<td align="center" style="vertical-align: top">
-						<span style="font-family: titr; font-size: 16px">
-							بسمه تعالی
-							<br>
-							<?= $ReqObj->_TypeDesc ?>
-							<br>
-							**************************
-							<br>
-							<font style="font-size: 30px">
-								غیـــــــر قابل انتـــقال
-							</font>
-							<br><br>
-						</span>
-						<div style="text-align: justify;">
+						
+						<div class='context' >
 						<?= $content ?>
 						</div>
-						<br><br><br><br><br>
-						<div style="width:300px; float:left; font-family: titr" align="center">
+						<br><br><br>
+						<div class='sign' align="center">
 							صندوق پژوهش و فناوری خراسان رضوی
 							<br>
 							مدیر عامل 
@@ -115,32 +136,7 @@ for ($i = 0; $i < count($contentArr); $i++) {
 				<tfoot>
 				<tr style="height:150px;">
 					<td colspan="2">
-						<div style="width:200px; float:right;">
-							<table cellpadding="0" cellspacing="0" style="width: 100%" class="address">
-								<tr>
-									<td colspan="2">
-										نشانی : مشهد، کیلومتر 12 بزرگراه قوچان، مقابل شیر پگاه، پارک علم و فناوری خراسان
-									</td>
-								</tr>
-								<tr>
-									<td>تلفن : </td>
-									<td align="left">051-35003441</td>
-								</tr>
-								<tr>
-									<td colspan="2">
-									شعبه: پردیس دانشگاه فردوسی مشهد، درب غربی
-									</td>
-								</tr>
-								<tr>
-									<td>تلفن :</td>
-									<td align="left">051-38837392</td>
-								</tr>
-								<tr>
-									<td>وب سایت :</td>
-									<td align="left">www.krrtf.ir</td>
-								</tr>
-							</table>
-						</div>
+						
 					</td>
 				</tr>
 				</tfoot>

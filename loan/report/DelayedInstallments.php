@@ -41,13 +41,16 @@ if(!empty($_REQUEST["print"]))
 	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount", "ReportMoneyRender");
 	$col->rowspaning = true;
+	$col->EnableSummary();
 	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
+	$col->EnableSummary();
 	
 	$rpg->addColumn("شرح", "PartDesc");
-	$rpg->addColumn("مبلغ پرداخت", "PartAmount", "ReportMoneyRender");
+	$col = $rpg->addColumn("مبلغ پرداخت", "PartAmount", "ReportMoneyRender");
+	$col->EnableSummary();
 	$rpg->addColumn("ماه تنفس", "DelayMonths");
 	$rpg->addColumn("روز تنفس", "DelayDays");
 	$rpg->addColumn("فاصله اقساط", "PayInterval", "intervslRender");
@@ -148,7 +151,7 @@ $col->width = 100;
 $dg->addButton("", "گزارش پرداخت", "report", "function(){LoanReport_DelayedInstallmentsObj.PayReport();}");
 
 $dg->height = 377;
-$dg->width = 850;
+$dg->width = 750;
 $dg->emptyTextOfHiddenColumns = true;
 
 $dg->addButton("", "چاپ", "print", "LoanReport_DelayedInstallments.print");

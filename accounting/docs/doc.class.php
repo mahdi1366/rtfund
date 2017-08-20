@@ -99,7 +99,7 @@ class ACC_docs extends PdoDataAccess {
 			return false;
 		}		
 		
-		$pdo2 = $pdo == null ? parent::getPdoObject() : $pdo;
+		$pdo2 = $pdo == null ? PdoDataAccess::getPdoObject() : $pdo;
 		if ($pdo == null)
 			$pdo2->beginTransaction();
 

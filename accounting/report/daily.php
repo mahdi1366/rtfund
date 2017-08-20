@@ -19,6 +19,7 @@ if(isset($_REQUEST["show"]))
 			t.TafsiliDesc,
 			t2.TafsiliDesc TafsiliDesc2,
 			di.details,
+			di.details,
 			sum(DebtorAmount) DSUM, 
 			sum(CreditorAmount) CSUM
 			
@@ -107,6 +108,7 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("حساب", "CostDesc");
 	$rpg->addColumn("تفصیلی", "TafsiliDesc");
 	$rpg->addColumn("تفصیلی2", "TafsiliDesc2");
+	$rpg->addColumn("شرح", "details");
 	$rpg->addColumn("بدهکار", "DSUM");
 	$rpg->addColumn("بستانکار", "CSUM");
 

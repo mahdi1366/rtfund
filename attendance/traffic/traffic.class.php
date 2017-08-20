@@ -252,27 +252,6 @@ class ATN_traffic extends OperationClass
 				{
 					$returnStr .= " - " . substr($returnArr[$i]["EndTime"],0,5);
 					$index++;
-					/*if($i == 0 || $returnArr[$i-1]["TrafficDate"] != $currentDay)
-						$startDiff = 0;
-					else
-						$startDiff = strtotime($returnArr[$i]["TrafficTime"]) - 
-							strtotime($returnArr[$i-1]["TrafficTime"]);
-
-					if($startDiff > Valid_Traffic_diff)
-						$startOff = strtotime($returnArr[$i]["TrafficTime"]) - Valid_Traffic_diff;						
-					else
-						$startOff = strtotime($returnArr[$i-1]["TrafficTime"]);
-					//-------------------------------------
-					if($i == count($returnArr)-1 || $returnArr[$i+1]["TrafficDate"] != $currentDay)
-						$endDiff = 0;
-					else
-						$endDiff = strtotime($returnArr[$i+1]["TrafficTime"]) - 
-							strtotime($returnArr[$i]["ToTime"]);
-
-					if($endDiff > Valid_Traffic_diff)
-						$endOff = strtotime($returnArr[$i]["ToTime"]) - Valid_Traffic_diff;						
-					else
-						$endOff = strtotime($returnArr[$i]["ToTime"]);*/
 					//-------------------------------------
 					$startOff = strtotime($returnArr[$i]["TrafficTime"]);
 					$endOff = strtotime($returnArr[$i]["EndTime"]);
@@ -304,15 +283,21 @@ class ATN_traffic extends OperationClass
 			$i--;
 
 			$lastAbsence = 0;
-			if($returnArr[$i]["TrafficTime"] != "" && 
-				strtotime($returnArr[$i]["TrafficTime"]) < strtotime($returnArr[$i]["ToTime"]))
+			if($returnArr[$i]["TrafficTime"] != "")
+			{
+				if($returnArr[$i]["EndTime"] != "")
+				{
+					if(strtotime($returnArr[$i]["EndTime"]) < strtotime($returnArr[$i]["ToTime"]))
+						$lastAbsence = strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["EndTime"]);
+				}
+				else if(strtotime($returnArr[$i]["TrafficTime"]) < strtotime($returnArr[$i]["ToTime"]))
 					$lastAbsence = strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["TrafficTime"]);
-
+			}
 			$ShiftDuration = strtotime($returnArr[$i]["ToTime"]) - strtotime($returnArr[$i]["FromTime"]);
 			//$extra = ($totalAttend > $ShiftDuration) ? $totalAttend - $ShiftDuration  : 0;
 
 			$Absence = ($totalAttend + $Off + $mission) < $ShiftDuration ? 
-					$ShiftDuration - $totalAttend - $Off - $mission : 0;
+					$ShiftDuration + $extra - $totalAttend - $Off - $mission  : 0;
 			$extra = $extra < 0 ? 0 : $extra;
 			if($returnArr[$i]["holiday"])
 			{
@@ -345,9 +330,9 @@ class ATN_traffic extends OperationClass
 							$lastAbsence -= $min;
 							$firstAbsence -= $min;
 						}
-						if($firstAbsence > 0)
-							$lastAbsence = $firstAbsence;
-						$firstAbsence = 0;
+						//if($firstAbsence > 0)
+						//	$lastAbsence = $firstAbsence;
+						//$firstAbsence = 0;
 					}
 				}
 				//--------------------------------------------------------

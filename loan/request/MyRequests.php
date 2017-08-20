@@ -116,6 +116,10 @@ MyRequest.OperationRender = function(v,p,record){
 	str += "<div  title='چاپ کاردکس' class='print' onclick='MyRequestObject.PrintLoanSummary();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
+
+	str += "<div  title='سابقه' class='history' onclick='MyRequestObject.ShowHistory();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
 	
 	return str;
 }

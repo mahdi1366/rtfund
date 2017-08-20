@@ -53,6 +53,26 @@ var DocumentationObject = new Documentation();
 			<img src="/framework/documentation/bpmn.png" 
 				 style="width:50px;vertical-align:middle;cursor: pointer;margin-bottom:5px"></a>
 			زیر سیستم نظارت و ارزیابی
+			<br><a target="_blank" href="/framework/documentation/bpmn-accounting.png">
+			<img src="/framework/documentation/bpmn.png" 
+				 style="width:50px;vertical-align:middle;cursor: pointer;margin-bottom:5px"></a>
+			زیر سیستم حسابداری
+			<br><a target="_blank" href="/framework/documentation/bpmn-cheque.png">
+			<img src="/framework/documentation/bpmn.png" 
+				 style="width:50px;vertical-align:middle;cursor: pointer;margin-bottom:5px"></a>
+			زیر سیستم خزانه داری
+			<br><a target="_blank" href="/framework/documentation/bpmn-vote.png">
+			<img src="/framework/documentation/bpmn.png" 
+				 style="width:50px;vertical-align:middle;cursor: pointer;margin-bottom:5px"></a>
+			زیر سیستم نظرسنجی
+			<br><a target="_blank" href="/framework/documentation/bpmn-attendance.png">
+			<img src="/framework/documentation/bpmn.png" 
+				 style="width:50px;vertical-align:middle;cursor: pointer;margin-bottom:5px"></a>
+			زیر سیستم حضور و غیاب
+			<br><a target="_blank" href="/framework/documentation/bpmn-wfm.png">
+			<img src="/framework/documentation/bpmn.png" 
+				 style="width:50px;vertical-align:middle;cursor: pointer;margin-bottom:5px"></a>
+			زیر سیستم فرم ساز
 	</div>
 </div>
 <div id="div_cld">
