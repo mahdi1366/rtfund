@@ -4,12 +4,57 @@
 // Create Date:	93.06
 //-------------------------
 require_once '../header.inc.php';
-require_once '../../loan/request/request.class.php';
-require_once '../../accounting/docs/import.data.php';
+require_once getenv("DOCUMENT_ROOT") . '/loan/request/request.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/accounting/docs/import.data.php';
+require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
+require_once 'nusoap.php';
 
 ini_set("display_errors", "On");
 
-if($_POST['State']== 'OK') {
+$authority = $_REQUEST['au'];
+$status = $_REQUEST['rs'];
+
+
+if ($status == 0) 
+{
+    $soapclient = new soapclient('https://www.pec24.com/pecpaymentgateway/eshopservice.asmx?wsdl','wsdl');
+
+	if ( (!$soapclient) OR ($err = $soapclient->getError()) ) {
+	   // this is unsucccessfull connection
+      echo  $err . "<br />" ;
+
+    } else {
+	  $status = 1 ;   // default status
+      $params = array(
+	            'pin' => ... ,  // this is our PIN NUMBER
+	 			'authority' => $authority,
+                'status' => $status ) ; // to see if we can change it
+	  $sendParams = array($params) ;
+      $res = $soapclient->call('PinPaymentEnquiry', $sendParams);
+	  $status = $res['status'];
+
+	  if ($status==0) {
+	   // this is a succcessfull payment
+	   // we update our DataBase
+
+	  } else {
+
+	   // this is a UNsucccessfull payment
+	   // we update our DataBase
+
+	    echo  "Couldn't Validate Payment with Parsian "  ;
+
+	  }
+
+	}
+
+
+  } else {
+	   // this is a UNsucccessfull payment
+
+  }
+
+if($status == '0') {
 	include_once('enpayment.php');
 
 	$amount = $_SESSION["USER"]["SHAPARAK_AMOUNT"];

@@ -5,13 +5,22 @@
 //-------------------------
 require_once("../header.inc.php");
 require_once 'nusoap.php';
+require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
 
 if(empty($_REQUEST["RequestID"]))
 {
 echo "دسترسی نامعتبر است.";
 die();
 }
-$orderId = $_REQUEST["RequestID"];
+
+$PayObj = new ACC_EPays();
+$PayObj->PayDate = PDONOW;
+$PayObj->PersonID = $_SESSION["USER"]["PersonID"];
+$PayObj->RequestID = $_REQUEST["RequestID"];
+$PayObj->Add();
+
+
+$orderId = $PayObj->PayID;
 $callbackUrl = "http://portal.krrtf.ir/portal/epayment-ayande/epayment_step2.php";
 $amount = $_REQUEST["amount"];
 $pin = "qn75G3KAr0R03J5lCm6X";
@@ -41,16 +50,16 @@ $authority = $res['authority'];
 $status = $res['status'];
 
 if ( ($authority) and ($status==0) )  {
-   // this is succcessfull connection
-   $parsURL = "https://pec.shaparak.ir/pecpaymentgateway/?au=" . $authority ;
-   echo $parsURL;
-   redirectToURL ($parsURL) ;
-   die() ;
+	// this is succcessfull connection
+	$PayObj->authority = $authority;
+	$parsURL = "https://pec.shaparak.ir/pecpaymentgateway/?au=" . $authority ;
+	header("location:" . $parsURL);
+	die();
 
 } else {
 	// this is unsucccessfull connection
 	echo "<p dir=LTR>";
-	if ($err=$soapclient->getError()) {
+	if ($err = $soapclient->getError()) {
 		echo "ERROR = $err <br /> " ;
   }
   echo "$authority <br />" ;
