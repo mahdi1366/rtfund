@@ -715,4 +715,20 @@ class ACC_roles extends OperationClass {
 	}
 
 }
+
+class ACC_EPays extends OperationClass {
+
+	const TableName = "ACC_EPays";
+	const TableKey = "PayID";
+	
+	public $PayID;
+	public $RequestID;
+	public $amount;
+	public $PayDate;
+	public $PersonID;
+	public $authority;
+	public $StatusCode;
+	public $error;
+	
+}
 ?>

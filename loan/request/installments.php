@@ -225,7 +225,6 @@ function Installment()
 			xtype : "button",
 			border : true,
 			itemId : "cmp_ayande",
-			hidden : true,
 			style : "margin-right:10px",
 			text : "پرداخت الکترونیک بانک آینده",
 			iconCls : "epay",
@@ -233,7 +232,7 @@ function Installment()
 		},{
 			xtype : "container",
 			columns : 3,
-			html : "در حال حاضر به دلیل خطای فنی در شبکه پرداخت الکترونیکی شاپرک امکان پرداخت از این طریق میسر نمی باشد.",
+			html : "در حال حاضر به دلیل خطای فنی در شبکه پرداخت الکترونیکی شاپرک امکان پرداخت از طریق بانک اقتصاد نوین میسر نمی باشد.",
 			style : "color:red"
 		},{
 			xtype : "container",
@@ -243,8 +242,8 @@ function Installment()
 		}]
 	});
 	
-	if(<?= $_SESSION["USER"]["UserName"] == "tureini" ? "true" : "false" ?>)
-		this.PayPanel.down("[itemId=cmp_ayande]").show();
+	/*if(<?= $_SESSION["USER"]["UserName"] == "tureini" ? "true" : "false" ?>)
+		this.PayPanel.down("[itemId=cmp_ayande]").show();*/
 }
 
 Installment.HistoryRender = function(v,p,r){

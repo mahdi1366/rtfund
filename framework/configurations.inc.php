@@ -27,6 +27,8 @@ class sms_config{
 	public static $password = "09153750964";
 	public static $LineNumber = "20001183";
 }
+
+define("BANK_AYANDEH_PIN", "qn75G3KAr0R03J5lCm6X");
  
 define("SoftwareName", "صندوق پژوهش و فناوری غیر دولتی استان خراسان رضوی");
 define("OWNER_NATIONALID", "10380491265");
