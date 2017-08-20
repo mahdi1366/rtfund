@@ -723,6 +723,7 @@ class ACC_EPays extends OperationClass {
 	
 	public $PayID;
 	public $RequestID;
+	public $amount;
 	public $PayDate;
 	public $PersonID;
 	public $authority;

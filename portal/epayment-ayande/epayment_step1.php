@@ -14,16 +14,16 @@ die();
 }
 
 $PayObj = new ACC_EPays();
+$PayObj->amount = $_REQUEST["amount"];
 $PayObj->PayDate = PDONOW;
 $PayObj->PersonID = $_SESSION["USER"]["PersonID"];
 $PayObj->RequestID = $_REQUEST["RequestID"];
 $PayObj->Add();
 
-
-$orderId = $PayObj->PayID;
 $callbackUrl = "http://portal.krrtf.ir/portal/epayment-ayande/epayment_step2.php";
 $amount = $_REQUEST["amount"];
-$pin = "qn75G3KAr0R03J5lCm6X";
+$pin = BANK_AYANDEH_PIN;
+$orderId = $PayObj->PayID;
 
 $soapclient = new soapclient2('https://pec.shaparak.ir/pecpaymentgateway/EShopService.asmx?wsdl','wsdl');
 if (!$err = $soapclient->getError())
@@ -52,6 +52,7 @@ $status = $res['status'];
 if ( ($authority) and ($status==0) )  {
 	// this is succcessfull connection
 	$PayObj->authority = $authority;
+	$PayObj->Edit();
 	$parsURL = "https://pec.shaparak.ir/pecpaymentgateway/?au=" . $authority ;
 	header("location:" . $parsURL);
 	die();
