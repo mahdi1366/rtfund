@@ -33,3 +33,7 @@ foreach($costDocs as $row)
 CREATE DATABASE krrtfir_rtfund CHARACTER SET utf8 COLLATE utf8_general_ci;
 --------------------------------------------------------------------------------
 params = mergeObjects(params, this.DocWin.down('form').getForm().getValues());
+
+
+
+ALTER TABLE `krrtfir_rtfund`.`FRW_reports` ADD COLUMN `IsDashboard` ENUM('YES','NO') DEFAULT 'NO' AFTER `MenuID`;
