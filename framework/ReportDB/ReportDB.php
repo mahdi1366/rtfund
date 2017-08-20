@@ -25,7 +25,7 @@ FRW_ReportDB.prototype = {
 function FRW_ReportDB(){
 	
 	this.runPanel = new Ext.form.Panel({
-		renderTo : this.get("div1"),
+		renderTo : this.get("div2"),
 		frame : false,
 		width : 485,
 		border : false,
@@ -41,7 +41,7 @@ function FRW_ReportDB(){
 						url: this.address_prefix + 'ReportDB.data.php?task=SelectReports&MenuID=' + this.MenuID,
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
-					fields :  ["ReportID", "title"],
+					fields :  ["ReportID", "title", "IsDashboard"],
 					autoLoad : true
 				}),
 				displayField: 'title',
@@ -50,19 +50,48 @@ function FRW_ReportDB(){
 				queryMode : 'local',
 				name : "ReportID",
 				allowBlank : false,
-				fieldLabel : "انتخاب گزارش"
+				fieldLabel : "انتخاب گزارش",
+				listeners : {
+					select : function(combo,records)
+					{
+						if(records[0].data.IsDashboard == "YES")
+						{
+							this.up('form').down("[itemId=cmp_addDashboard]").disable();
+							this.up('form').down("[itemId=cmp_RemoveDashboard]").enable();
+						}
+						else
+						{
+							this.up('form').down("[itemId=cmp_addDashboard]").enable();
+							this.up('form').down("[itemId=cmp_RemoveDashboard]").disable();
+						}
+					}
+				}
 			},{
 				xtype : "button",
 				style : "float:left",
 				iconCls : "report",
 				text : "اجرای گزارش",
 				handler : function(){ FRW_ReportDBObj.ShowReport(); }
+			},{
+				xtype : "button",
+				style : "float:right",
+				itemId : "cmp_addDashboard",
+				iconCls : "add",
+				text : "اضافه به داشبورد",
+				handler : function(){ FRW_ReportDBObj.ChangeDashboard('YES'); }
+			},{
+				xtype : "button",
+				style : "float:right",
+				itemId : "cmp_RemoveDashboard",
+				iconCls : "cross",
+				text : "حذف از داشبورد",
+				handler : function(){ FRW_ReportDBObj.ChangeDashboard('NO'); }
 			}]
 		}]
 	});
 	
 	this.addPanel = new Ext.form.Panel({
-		renderTo : this.get("div2"),
+		renderTo : this.get("div1"),
 		frame : false,
 		width : 485,
 		border : false,
@@ -307,6 +336,29 @@ FRW_ReportDB.prototype.EditReport = function(EditAll){
 		success: function(response){
 			mask.hide();
 			FRW_ReportDBObj.SourceObject.ReportWin.hide();
+		}
+	});
+	
+}
+
+FRW_ReportDB.prototype.ChangeDashboard = function(IsDashboard){
+	
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		url: this.address_prefix +'ReportDB.data.php?task=SaveReport',
+		method: "POST",
+		params: {
+			ReportID : this.runPanel.down("[name=ReportID]").getValue(),
+			EditItems : "NO",
+			MenuID : this.MenuID,
+			IsDashboard : IsDashboard
+		},
+		success: function(response){
+			mask.hide();
+			Ext.MessageBox.alert("", IsDashboard == "YES" ? "گزارش به داشبورد مدیریت اضافه شد.":
+					"گزارش از داشبورد مدیریت حذف شد")
 		}
 	});
 	

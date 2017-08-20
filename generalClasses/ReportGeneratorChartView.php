@@ -4,12 +4,13 @@
 //	Date		: 1396.05
 //-----------------------------
 
+global $NewPage;
 global $SourceObject;
 /* @var  $SourceObject ReportGenerator */
 
-$chartTitle = $_POST["rpcmp_chartName"];
+$chartTitle = isset($_POST["rpcmp_chartName"]) ? $_POST["rpcmp_chartName"] : "";
 $axe_x1 = $_POST["rpcmp_x1"];
-$axe_x2 = $_POST["rpcmp_x2"] ;
+$axe_x2 = isset($_POST["rpcmp_x2"]) ? $_POST["rpcmp_x2"] : "";
 $axe_x1_renderer = "";
 $axe_x2_renderer = "";
 $axe_y = $_POST["rpcmp_y"];
@@ -19,8 +20,8 @@ $SeriesType = $_POST["rpcmp_series"];
 $y_func = $_POST["rpcmp_y_func"];
 $x1_type = "";
 $x2_type = "";
-$x1_func = $_POST["rpcmp_x1_date"];
-$x2_func = $_POST["rpcmp_x2_date"];
+$x1_func = isset($_POST["rpcmp_x1_date"]) ? $_POST["rpcmp_x1_date"] : "";
+$x2_func = isset($_POST["rpcmp_x2_date"]) ? $_POST["rpcmp_x2_date"] : "";
 
 foreach ($SourceObject->columns as $col) {
 	if ($col->field == $axe_x1)
@@ -149,6 +150,9 @@ $returnArray = array(
 	array("x" => "دانشگاه فردوسی", "y" => 664, "y2" => 552, "y3" => 0)
 		);*/
 //print_r($returnArray);die();
+
+if($NewPage)
+{
 ?>
 <html>
 	<head>
@@ -190,6 +194,7 @@ $returnArray = array(
 		<script type="text/javascript" src="/generalUI/ext4/ux/ImageViewer.js"></script>
 		<link rel="stylesheet" type="text/css" href="/office/icons/icons.css" />		
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/ux/calendar/resources/css/calendar.css" />
+<?php } ?>
 <script>
 
 	ReportGeneratorChart.prototype = {
@@ -204,6 +209,8 @@ $returnArray = array(
 		x_fields: <?= json_encode($x_fields) ?>,
 		y_fields: <?= json_encode($y_fields) ?>,
 		y_titles: <?= json_encode($y_titles) ?>,
+		
+		NewPage : <?= $NewPage ? "true" : "false" ?>,
 
 		get: function (elementID) {
 			return findChild(this.TabID, elementID);
@@ -220,33 +227,57 @@ $returnArray = array(
 			fields: fields
 		});
 
-		eval("this." + this.SeriesType + "();");
+		this.legendView = this.y_fields.length > 1 ? true : false;
+		if(this.SeriesType == "pie")
+			this.legendView = true;
 
-		this.ChartPanel = new Ext.form.Panel({
-			width: 1050,
-			title : this.chartTitle,
-			height: 650,
-			autoScroll : true,
-			border: true,
-			frame: true,
-			maximizable: true,
-			renderTo: this.get("charts"),
-			items: [{
-					xtype: "chart",
-					store: this.MainStore,
-					style: 'background:#fff',
-					height: 600,
-					width: 1000,
-					animate: true,
-					shadow: true,
-					axes: this.axes,
-					series: this.series,
-					legend: {
-						position: 'bottom',
-						visible : this.y_fields.length > 1 ? true : false
-					}
-				}]
-		});
+		eval("this." + this.SeriesType + "();");
+		if(this.NewPage)
+		{
+			this.ChartPanel = new Ext.form.Panel({
+				width: 1050,
+				title : this.chartTitle,
+				height: 650 ,
+				autoScroll : true,
+				border: true,
+				frame: true,
+				maximizable: true,
+				renderTo: this.get("charts"),
+				items: [{
+						xtype: "chart",
+						store: this.MainStore,
+						style: 'background:#fff',
+						height: 600 ,
+						width: 1000 ,
+						animate: true,
+						shadow: true,
+						axes: this.axes,
+						series: this.series,
+						legend: {
+							position: 'left',
+							visible : this.legendView
+						}
+					}]
+			});
+		}
+		else
+		{
+			new Ext.chart.Chart({
+				renderTo: this.get("charts"),
+				store: this.MainStore,
+				style: 'background:#fff',
+				height: 280 ,
+				width: 350 ,
+				animate: true,
+				shadow: true,
+				axes: this.axes,
+				series: this.series,
+				legend: {
+					position: 'left',
+					visible : this.legendView
+				}
+			});
+		}
 	}
 
 	ReportGeneratorChart.prototype.bar = function () {
@@ -385,18 +416,26 @@ $returnArray = array(
 		}];
 	};
 
+	if(<?= $NewPage ? "true" : "false" ?>){
 
-	setTimeout(function () {
-		Ext.get('loading').remove();
-		Ext.get('loading-mask').fadeOut({
-			remove: true
+		setTimeout(function () {
+			Ext.get('loading').remove();
+			Ext.get('loading-mask').fadeOut({
+				remove: true
+			});
+		}, 1);
+		
+		var ReportGeneratorChartObject;
+		Ext.onReady(function () {
+			ReportGeneratorChartObject = new ReportGeneratorChart();
 		});
-	}, 1);
+	}
+	else
+	{
+		EventRowsObj<?= $random ?> = new ReportGeneratorChart();
+	}
 
-	var ReportGeneratorChartObject;
-	Ext.onReady(function () {
-		ReportGeneratorChartObject = new ReportGeneratorChart();
-	});
+	
 
 
 </script>

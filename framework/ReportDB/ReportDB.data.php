@@ -17,8 +17,19 @@ if(!empty($task))
 
 function SelectReports() {
 	
-	$where = " AND MenuID=?";
-	$params = array($_REQUEST["MenuID"]);
+	$where = "";
+	$params = array();
+	if(!empty($_REQUEST["MenuID"]))
+	{
+		$where = " AND MenuID=?";
+		$params[] = $_REQUEST["MenuID"];
+	}
+	
+	if(!empty($_REQUEST["IsDashboard"]))
+	{
+		$where .= " AND IsDashboard=?";
+		$params[] = $_REQUEST["IsDashboard"];
+	}
 	
 	$list = FRW_reports::Get($where, $params);
 	print_r(ExceptionHandler::PopAllExceptions());
@@ -35,7 +46,9 @@ function SaveReport() {
 		$obj->ReportID = $_POST["ReportID"];
 	if(!empty($_POST["ReportDBTitle"]))
 		$obj->title = $_POST["ReportDBTitle"];
-	
+	if(isset($_POST["IsDashboard"]))
+		$obj->IsDashboard = $_POST["IsDashboard"];
+			
 	$EditItems = $_REQUEST["EditItems"] == "YES" ? true : false;
 	
 	$pdo = PdoDataAccess::getPdoObject();

@@ -152,8 +152,8 @@ function GetData(){
 	return $dataTable; 
 }
 
-if(isset($_REQUEST["show"]))
-{
+function ListDate($IsDashboard = false){
+	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
 	$rpg->mysql_resource = GetData();
@@ -196,7 +196,8 @@ if(isset($_REQUEST["show"]))
 	$col = $rpg->addColumn("مانده قابل پرداخت", "remainder", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
-	if(!$rpg->excel)
+	
+	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
@@ -212,9 +213,14 @@ if(isset($_REQUEST["show"]))
 				($_POST["toReqDate"] != "" ? " - " . $_POST["toReqDate"] : "");
 		}
 		echo "</td></tr></table>";
-		}
+	}
 	$rpg->generateReport();
 	die();
+}
+
+if(isset($_REQUEST["show"]))
+{
+	ListDate();	
 }
 
 if(isset($_REQUEST["rpcmp_chart"]))
@@ -222,6 +228,17 @@ if(isset($_REQUEST["rpcmp_chart"]))
 	$page_rpg->mysql_resource = GetData();
 	$page_rpg->GenerateChart();
 	die();
+}
+
+if(isset($_REQUEST["dashboard_show"]))
+{
+	$chart = ReportGenerator::DashboardSetParams($_REQUEST["rpcmp_ReportID"]);
+	if(!$chart)
+		ListDate(true);	
+	
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart(false);
+	die();	
 }
 
 ?>

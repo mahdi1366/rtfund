@@ -11,6 +11,17 @@ class FRW_reports extends OperationClass{
 	public $ReportID;
 	public $title;
 	public $MenuID;
+	public $IIsDashboard;
+	
+	static function Get($where = '', $whereParams = array(), $pdo = null) {
+		
+		$query = "select r.*, concat(SysPath,'/',MenuPath) reportPath
+			from FRW_reports r
+			join FRW_menus using(MenuID)
+			join FRW_systems using(SystemID)
+			where 1=1 " . $where;
+		return PdoDataAccess::runquery_fetchMode($query, $whereParams, $pdo);
+	}
 }
 
 class FRW_ReportItems extends OperationClass{

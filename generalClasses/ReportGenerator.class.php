@@ -969,12 +969,31 @@ echo "</caption>";
 			items : [' . implode(",", $items) . ']}';
 	}
 	
-	function GenerateChart(){
+	function GenerateChart($newPage = true){
 		
 		global $SourceObject;
 		$SourceObject = $this;
+		
+		global $NewPage;
+		$NewPage = $newPage;
+		
 		require_once 'ReportGeneratorChartView.php';
 		die();
+	}
+	
+	static function DashboardSetParams($ReportID){
+		
+		require_once getenv("DOCUMENT_ROOT") . '/framework/ReportDB/ReportDB.class.php';
+		$items = FRW_ReportItems::Get(" AND ReportID=?", array($ReportID));
+		$items = $items->fetchAll();
+		$chart = false;
+		foreach($items as $row)
+		{
+			$_POST[ $row["ElemName"] ] = $row["ElemValue"];
+			if($row["ElemName"] == "rpcmp_series")
+				$chart = true;
+		}
+		return $chart;
 	}
 }
 
