@@ -49,9 +49,14 @@ function ComputeExtraSummary() {
 	}
 	//.......................................................................
 	
-	$StartDate = DateModules::shamsi_to_miladi($SummaryYear . "-" . $SummaryMonth . "-01", "-");
-	$EndDate = DateModules::shamsi_to_miladi($SummaryYear . "-" . $SummaryMonth ."-" . 
-			DateModules::DaysOfMonth($SummaryYear ,$SummaryMonth), "-");
+	if($SummaryMonth == "1")
+		$StartDate = ($SummaryYear-1) . "-12-29";
+	else
+		$StartDate = $SummaryYear . "-" . ($SummaryMonth-1) . "-29";
+			
+	$StartDate = DateModules::shamsi_to_miladi($StartDate);
+	$EndDate = DateModules::shamsi_to_miladi($SummaryYear . "-" . $SummaryMonth ."-" . "28");
+			//DateModules::DaysOfMonth($SummaryYear ,$SummaryMonth), "-");
 	
 	$PersonsDT = PdoDataAccess::runquery("
 		select PersonID, concat(fname,' ',lname) fullname from BSC_persons
