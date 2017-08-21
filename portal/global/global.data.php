@@ -55,10 +55,10 @@ function AccDocFlow(){
 		from ACC_DocItems di join ACC_docs d using(DocID)
 		left join ACC_tafsilis t1 on(t1.TafsiliType=1 AND di.TafsiliID=t1.TafsiliID)
 		left join ACC_tafsilis t2 on(t2.TafsiliType=1 AND di.TafsiliID2=t2.TafsiliID)
-		where CycleID=:year AND CostID=:cid AND (t1.ObjectID=:pid or t2.ObjectID=:pid)
-			AND DocStatus in('CONFIRM','ARCHIVE')
+		where CostID=:cid AND (t1.ObjectID=:pid or t2.ObjectID=:pid)
+			/*AND DocStatus in('CONFIRM','ARCHIVE')*/
 		order by DocDate
-	", array(":year" => $CurYear, ":pid" => $_SESSION["USER"]["PersonID"], ":cid" => $CostID));
+	", array(/*":year" => $CurYear, */":pid" => $_SESSION["USER"]["PersonID"], ":cid" => $CostID));
 	//print_r(ExceptionHandler::PopAllExceptions());
 	$count = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);

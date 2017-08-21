@@ -19,7 +19,7 @@ $query = "select sum(CreditorAmount-DebtorAmount) amount,
 		join ACC_tafsilis using(TafsiliID)
 		join BSC_persons on(ObjectID=PersonID)
 	where CostID=" . COSTID_share . " AND PersonID= " . $_SESSION["USER"]["PersonID"] . "
-		AND DocType not in('".DOCTYPE_STARTCYCLE."','".DOCTYPE_ENDCYCLE."')
+		/*AND DocType not in('".DOCTYPE_STARTCYCLE."','".DOCTYPE_ENDCYCLE."')*/
 	group by TafsiliID
 	order by amount desc";
 

@@ -95,7 +95,7 @@ class BSC_persons extends PdoDataAccess{
 		$obj = new ACC_tafsilis();
 		$obj->ObjectID = $this->PersonID;
 		$obj->TafsiliCode = $this->PersonID;
-		$obj->TafsiliDesc = $this->IsReal == "YES" ? $this->fname . " " . $this->lname : $this->CompanyName;
+		$obj->TafsiliDesc = trim($this->fname . " " . $this->lname . " " . $this->CompanyName);
 		$obj->TafsiliType = "1";
 		$obj->AddTafsili();
 		
@@ -130,7 +130,7 @@ class BSC_persons extends PdoDataAccess{
 			$obj = new ACC_tafsilis();
 			$obj->ObjectID = $this->PersonID;
 			$obj->TafsiliCode = $this->PersonID;
-			$obj->TafsiliDesc = $this->IsReal == "YES" ? $this->fname . " " . $this->lname : $this->CompanyName;
+			$obj->TafsiliDesc =  trim($this->fname . " " . $this->lname . " " . $this->CompanyName);
 			$obj->TafsiliType = "1";
 			$obj->AddTafsili();
 		}

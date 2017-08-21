@@ -19,7 +19,7 @@ $temp = PdoDataAccess::runquery("
 	where CycleID=:year 
 		AND CostID = " . $GharzolhasaneCostID . " 
 		AND (t1.ObjectID=:pid or t2.ObjectID=:pid) 
-		AND DocStatus in('CONFIRM','ARCHIVE')
+		/*AND DocStatus in('CONFIRM','ARCHIVE')*/
 	group by CostID
 	order by CostID
 ", array(":year" => $CurYear, ":pid" => $_SESSION["USER"]["PersonID"]));
