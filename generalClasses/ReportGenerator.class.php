@@ -969,13 +969,19 @@ echo "</caption>";
 			items : [' . implode(",", $items) . ']}';
 	}
 	
-	function GenerateChart($newPage = true){
+	function GenerateChart($newPage = true, $reportID = ""){
 		
 		global $SourceObject;
 		$SourceObject = $this;
 		
 		global $NewPage;
 		$NewPage = $newPage;
+		
+		if($reportID != "")
+		{
+			global $ReportID;
+			$ReportID = $reportID;
+		}
 		
 		require_once 'ReportGeneratorChartView.php';
 		die();

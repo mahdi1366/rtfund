@@ -80,7 +80,7 @@ td {
 		echo "<div class=page><table width=100%>
 			<tr>
 				<td width=160px  style='vertical-align: top'>
-					<img style=width:160px  src=/framework/icons/logo.jpg />
+					<img style=width:160px  src=/framework/icons/big-logo.png />
 				</td>
 				<td align=center style='font-size:30px !important'>بسمه تعالی
 					<br>برگ سهام " . SoftwareName . "(سهامی خاص)" . "
@@ -127,7 +127,8 @@ td {
 		
 		echo "<div style='width:285mm;font-family:Homa;font-size:12px'>
 			<center>با صدور این برگ اوراق صادره قبلی باطل اعلام می گردد.( تاریخ صدور : " .
-			DateModules::shNow(). " )</center></div>";
+			DateModules::shNow(). " )"
+				. "<br>برگ سهام بدون هولوگرام و مهر برجسته فاقد اعتبار است</center></div>";
 		
 		if($i != count($dataTable)-1)
 			echo Manage_Report::PageBreak();

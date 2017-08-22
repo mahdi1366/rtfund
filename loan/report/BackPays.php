@@ -83,7 +83,8 @@ function GetData(){
 			left join ACC_DocItems di on(SourceID=r.RequestID AND SourceID2=BackPayID AND SourceType in(8,5))
 			left join ACC_docs d on(di.DocID=d.DocID)
 
-			where 1=1 " . $where . " 
+			where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+					AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . $where . " 
 			
 			group by b.BackPayID 
 			order by PayDate";
@@ -126,7 +127,6 @@ if(isset($_REQUEST["show"]))
 	if(!$rpg->excel)
 	{
 		BeginReport();
-		echo "<div style=display:none>" . $query . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>

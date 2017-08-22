@@ -4,6 +4,7 @@
 //	Date		: 1396.05
 //-----------------------------
 
+global $ReportID;
 global $NewPage;
 global $SourceObject;
 /* @var  $SourceObject ReportGenerator */
@@ -22,6 +23,7 @@ $x1_type = "";
 $x2_type = "";
 $x1_func = isset($_POST["rpcmp_x1_date"]) ? $_POST["rpcmp_x1_date"] : "";
 $x2_func = isset($_POST["rpcmp_x2_date"]) ? $_POST["rpcmp_x2_date"] : "";
+
 
 foreach ($SourceObject->columns as $col) {
 	if ($col->field == $axe_x1)
@@ -374,7 +376,11 @@ if($NewPage)
 				'direction' : "rtl",
 				renderer: function (storeItem) {
 					//calculate percentage.
+					<?php if($NewPage) { ?>
 					me = ReportGeneratorChartObject;
+					<?php } else { ?>
+					me = Rpt_chart_Object<?= $ReportID ?> 
+					<?php } ?>
 					var total = 0;
 					me.MainStore.each(function (rec) {
 						total += rec.get(me.y_fields[0])*1;
@@ -432,7 +438,7 @@ if($NewPage)
 	}
 	else
 	{
-		EventRowsObj<?= $random ?> = new ReportGeneratorChart();
+		Rpt_chart_Object<?= $ReportID ?> = new ReportGeneratorChart();
 	}
 
 	
