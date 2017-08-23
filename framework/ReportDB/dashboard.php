@@ -29,10 +29,10 @@ function Dashboard(){
 		border : false,
 		layout : "column",
 		columns : 2,
-		width : 780,
+		width : 1000,
 		defaults : {
-			width : 370,
-			height : 320,
+			width : 980, 
+			height : 350,
 			style : "margin : 10px"
 		}
 	});
@@ -68,6 +68,7 @@ function Dashboard(){
 					DashboardObj.masks["ReportID" + record.data.ReportID].show();
 					el.loader.load({
 						params : {
+							rpcmp_ExtTabID : el.getEl().id,
 							rpcmp_ReportID : record.data.ReportID
 						},
 						callback : function(a,b,c,options){

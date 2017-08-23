@@ -213,6 +213,8 @@ function ListDate($IsDashboard = false){
 				($_POST["toReqDate"] != "" ? " - " . $_POST["toReqDate"] : "");
 		}
 		echo "</td></tr></table>";
+		
+		$rpg->groupField = "ReqFullname";
 	}
 	$rpg->generateReport();
 	die();
@@ -237,7 +239,7 @@ if(isset($_REQUEST["dashboard_show"]))
 		ListDate(true);	
 	
 	$page_rpg->mysql_resource = GetData();
-	$page_rpg->GenerateChart(false);
+	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
 	die();	
 }
 

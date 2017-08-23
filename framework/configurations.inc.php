@@ -25,11 +25,11 @@ class sms_config{
 	public static $server = "http://79.175.176.61/Service.asmx?wsdl";
 	public static $username = "abdolahi";
 	public static $password = "09153750964";
-	public static $LineNumber = "20001183";
+	public static $LineNumber = "30002222000000";
 }
 
 define("BANK_AYANDEH_PIN", "qn75G3KAr0R03J5lCm6X");
- 
+
 define("SoftwareName", "صندوق پژوهش و فناوری غیر دولتی استان خراسان رضوی");
 define("OWNER_NATIONALID", "10380491265");
 define("OWNER_REGCODE", "33943");
@@ -37,7 +37,6 @@ define("OWNER_REGDATE", "1387/06/24");
 define("OWNER_ADDRESS", "شعبه دانشگاه فردوسی مشهد : پردیس، درب غربی( ورودی شهید باهنر ) <br>" . 
 	"email : krfn.ir@gmail.com <br> تلفن : 38837392 - فکس : 38837392 ".
 	"<br> کد پستی : 9177948974" );
-
 
 define("SYSTEMID_framework", 1);
 define("SYSTEMID_accounting", 2);

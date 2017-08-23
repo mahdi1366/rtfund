@@ -47,6 +47,7 @@ function ShowReport(){
 			echo ExceptionHandler::GetExceptionsToString();
 			die();
 		}
+		//print_r($SUM);
 		$SUM["absence"] = TimeModules::SecondsToTime($SUM["absence"]);
 		$SUM["attend"] = TimeModules::SecondsToTime($SUM["attend"] );
 		$SUM["firstAbsence"] = TimeModules::SecondsToTime($SUM["firstAbsence"]);

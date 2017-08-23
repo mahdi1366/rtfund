@@ -13,7 +13,7 @@ class ATN_traffic extends OperationClass
 	public $PersonID;
 	public $TrafficDate;
 	public $TrafficTime;
-	public $IsSystemic;
+	public $IsSystemic; 
 	public $IsActive;
 	public $RequestID;
 	
@@ -31,8 +31,9 @@ class ATN_traffic extends OperationClass
 	
 	static function Compute($StartDate, $EndDate, $PersonID, $admin=true, &$returnStr=""){
 		
-		require_once '../baseinfo/shift.class.php';
+		require_once getenv("DOCUMENT_ROOT") . '/attendance/baseinfo/shift.class.php';
 		
+		$StartDateParam = $StartDate;
 		$holidays = ATN_holidays::Get(" AND TheDate between ? AND ? order by TheDate", 
 				array($StartDate, $EndDate));
 		$holidayRecord = $holidays->fetch();
@@ -129,6 +130,9 @@ class ATN_traffic extends OperationClass
 		}
 		//...........................................................
 		$SUM = array(
+			"PersonID" => $PersonID,
+			"StartDate" => $StartDateParam,
+			"EndDate" => $EndDate,
 			"absence" => 0,
 			"attend"=> 0,
 			"firstAbsence" => 0,

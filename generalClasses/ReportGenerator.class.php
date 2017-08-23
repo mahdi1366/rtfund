@@ -1,4 +1,4 @@
-<?
+<?php
 
 /* * *****************************************************************************************
  *
@@ -142,8 +142,8 @@ class ReportGenerator {
 		$index = 0;
 		
 		if (is_array($this->mysql_resource)) {
-			//if ($this->groupField != "")
-			//	$this->mysql_resource = self::array_sort($this->mysql_resource, $this->groupField);
+			if ($this->groupField != "")
+				$this->mysql_resource = self::array_sort($this->mysql_resource, $this->groupField);
 
 			$this->AllRowCount = count($this->mysql_resource);
 			foreach ($this->mysql_resource as &$row) {

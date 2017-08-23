@@ -4,7 +4,7 @@
 //	Date		: 1396.05
 //-----------------------------
 
-global $ReportID;
+global $ReportID; 
 global $NewPage;
 global $SourceObject;
 /* @var  $SourceObject ReportGenerator */
@@ -24,6 +24,7 @@ $x2_type = "";
 $x1_func = isset($_POST["rpcmp_x1_date"]) ? $_POST["rpcmp_x1_date"] : "";
 $x2_func = isset($_POST["rpcmp_x2_date"]) ? $_POST["rpcmp_x2_date"] : "";
 
+$TabID = $NewPage ? "document.body" : "'" . $_REQUEST["rpcmp_ExtTabID"] . "'";
 
 foreach ($SourceObject->columns as $col) {
 	if ($col->field == $axe_x1)
@@ -151,7 +152,7 @@ $returnArray = array(
 	array("x" => "پارک علم و فناوری", "y" => 850, "y2" => 0, "y3" => 135),
 	array("x" => "دانشگاه فردوسی", "y" => 664, "y2" => 552, "y3" => 0)
 		);*/
-//print_r($returnArray);die();
+//print_r($returnArray);die(); 
 
 if($NewPage)
 {
@@ -200,7 +201,7 @@ if($NewPage)
 <script>
 
 	ReportGeneratorChart.prototype = {
-		TabID: document.body,
+		TabID: <?= $TabID ?>,
 		
 		chartTitle : "<?= $chartTitle ?>",
 
@@ -268,8 +269,8 @@ if($NewPage)
 				renderTo: this.get("charts"),
 				store: this.MainStore,
 				style: 'background:#fff',
-				height: 280 ,
-				width: 350 ,
+				height: 300 , 
+				width: 980 ,
 				animate: true,
 				shadow: true,
 				axes: this.axes,
@@ -318,7 +319,25 @@ if($NewPage)
 					'text-anchor': 'middle',
 					contrast: true
 				}
-			}];
+			,renderer: function(sprite, record, attr, index, store) {
+				var value = index % 4;
+				var color = ['rgb(213, 70, 121)', 
+							 'rgb(44, 153, 201)', 
+							 'rgb(146, 6, 157)', 
+							 'rgb(49, 149, 0)', 
+							 'rgb(249, 153, 0)'][value];
+				return Ext.apply(attr, {
+					fill: color
+				});
+			},tips: {
+				trackMouse: true,
+				width: 300,
+				height: 28,
+				renderer: function(storeItem, item) {
+					this.setTitle(storeItem.get('x'));
+				}
+			}
+		}];
 	};
 
 	ReportGeneratorChart.prototype.column = function () {
@@ -356,6 +375,23 @@ if($NewPage)
 				'font-weight': "bold",
 				'text-anchor': 'middle',
 				contrast: true
+			},renderer: function(sprite, record, attr, index, store) {
+				var value = index % 4;
+				var color = ['rgb(213, 70, 121)', 
+							 'rgb(44, 153, 201)', 
+							 'rgb(146, 6, 157)', 
+							 'rgb(49, 149, 0)', 
+							 'rgb(249, 153, 0)'][value];
+				return Ext.apply(attr, {
+					fill: color
+				});
+			},tips: {
+				trackMouse: true,
+				width: 300,
+				height: 28,
+				renderer: function(storeItem, item) {
+					this.setTitle(storeItem.get('x'));
+				}
 			}
 		}];
 	};

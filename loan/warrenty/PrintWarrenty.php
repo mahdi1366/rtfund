@@ -66,7 +66,7 @@ for ($i = 0; $i < count($contentArr); $i++) {
 			.page{
 				background-image: none;
 			}
-		}
+		} 
 			
 		.title {
 			width:300px;
@@ -74,13 +74,13 @@ for ($i = 0; $i < count($contentArr); $i++) {
 			position: absolute;
 			top : 75px; left : 225px;
 		}
-		.date {
+		.date {  
 			width:300px;
 			font-family: titr; font-size: 16px;
 			position: absolute;
 			top : 130px; left : 215px;
 		} 
-		.number {
+		.number { 
 			width:300px;
 			font-family: titr; font-size: 16px;
 			position: absolute;
@@ -94,8 +94,7 @@ for ($i = 0; $i < count($contentArr); $i++) {
 			font-size: 18px;
 		}
 		.sign {
-			width:300px; 
-			float:left; 
+			width:500px; 
 			font-family: titr;
 			margin-left: 20px;
 		}
@@ -112,7 +111,7 @@ for ($i = 0; $i < count($contentArr); $i++) {
 						<br>
 						<div class='date'><?= DateModules::miladi_to_shamsi($ReqObj->StartDate) ?></div>
 						<br>
-						<div class='number'><?= $ReqObj->RequestID ?></div>
+						<div class='number'><?= $ReqObj->RefRequestID ?></div>
 					</td>
 				</tr>
 				<tbody>
@@ -123,12 +122,10 @@ for ($i = 0; $i < count($contentArr); $i++) {
 						<?= $content ?>
 						</div>
 						<br><br><br>
-						<div class='sign' align="center">
-							صندوق پژوهش و فناوری خراسان رضوی
-							<br>
-							مدیر عامل 
-							<br>
-							رسول عبدالهی
+						<div class='sign' align="center"><br><br>
+							<center>صندوق پژوهش و فناوری خراسان رضوی</center><br>
+							<div style="float: right" >مدیر عامل  </div>
+							<div style="float: left" >عضو هیات مدیره  </div>
 						</div>
 					</td>
 				</tr>

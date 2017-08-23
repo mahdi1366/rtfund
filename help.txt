@@ -36,4 +36,3 @@ params = mergeObjects(params, this.DocWin.down('form').getForm().getValues());
 
 
 
-ALTER TABLE `krrtfir_rtfund`.`FRW_reports` ADD COLUMN `IsDashboard` ENUM('YES','NO') DEFAULT 'NO' AFTER `MenuID`;

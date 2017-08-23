@@ -5,10 +5,15 @@ require_once "../request/request.class.php";
 require_once "../request/request.data.php";
 require_once "ReportGenerator.class.php";
 
+function ReqPersonRender($row,$value){
+	return $value == "" ? "منابع داخلی" : $value;
+}
+	
+
 $page_rpg = new ReportGenerator("mainForm","LoanReport_installmentsObj");
 $page_rpg->addColumn("شماره وام", "RequestID");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
-$page_rpg->addColumn("معرفی کننده", "ReqFullname");
+$page_rpg->addColumn("معرفی کننده", "ReqFullname", "ReqPersonRender");
 $col = $page_rpg->addColumn("تاریخ درخواست", "ReqDate");
 $col->type = "date";
 $page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
@@ -240,7 +245,7 @@ if(isset($_REQUEST["dashboard_show"]))
 		ListDate(true);	
 	
 	$page_rpg->mysql_resource = GetData();
-	$page_rpg->GenerateChart(false);
+	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
 	die();	
 }
 ?>
