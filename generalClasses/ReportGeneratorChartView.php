@@ -74,15 +74,17 @@ foreach ($SourceObject->mysql_resource as $row) {
 	switch($x1_func)
 	{
 		case "year" :		$row[$axe_x1] = "سال" . substr($row[$axe_x1] , 0 , 4);	break;
-		case "month" :		$row[$axe_x1] = DateModules::GetMonthName(substr($row[$axe_x1] , 5 , 2)*1);	break;
-		case "weekday" :	$row[$axe_x1] = DateModules::GetWeekDay($row[$axe_x1]);	break;
+		case "month" :		$row[$axe_x1] = "(".substr($row[$axe_x1] , 5 , 2)*1 .")" . 
+								DateModules::GetMonthName(substr($row[$axe_x1] , 5 , 2)*1);	break;
+		case "weekday" :	$row[$axe_x1] = DateModules::GetJWeekDay($row[$axe_x1]);	break;
 		case "monthday" :	$row[$axe_x1] = "روز " . substr($row[$axe_x1] , 8 , 2);	break;
 	}
 	switch($x2_func)
 	{
 		case "year" :		$row[$axe_x2] = "سال" . substr($row[$axe_x2] , 0 , 4);	break;
-		case "month" :		$row[$axe_x2] = DateModules::GetMonthName(substr($row[$axe_x2] , 5 , 2)*1);	break;
-		case "weekday" :	$row[$axe_x2] = DateModules::GetWeekDay($row[$axe_x2]);	break;
+		case "month" :		$row[$axe_x2] = "(".substr($row[$axe_x1] , 5 , 2)*1 .")" . 
+								DateModules::GetMonthName(substr($row[$axe_x2] , 5 , 2)*1);	break;
+		case "weekday" :	$row[$axe_x2] = DateModules::GetJWeekDay($row[$axe_x2]);	break;
 		case "monthday" :	$row[$axe_x2] = "روز " . substr($row[$axe_x2] , 8 , 2);	break;
 	}
 	//..................................................
@@ -122,6 +124,7 @@ foreach ($SourceObject->mysql_resource as $row) {
 	}	
 }
 $returnArray = array();
+ksort($data);
 foreach($data as $x1 => $x2Arr)
 {
 	$y_index = 0;
@@ -152,7 +155,7 @@ $returnArray = array(
 	array("x" => "پارک علم و فناوری", "y" => 850, "y2" => 0, "y3" => 135),
 	array("x" => "دانشگاه فردوسی", "y" => 664, "y2" => 552, "y3" => 0)
 		);*/
-//print_r($returnArray);die(); 
+//print_r($returnArray);
 
 if($NewPage)
 {

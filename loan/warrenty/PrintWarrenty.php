@@ -69,23 +69,13 @@ for ($i = 0; $i < count($contentArr); $i++) {
 		} 
 			
 		.title {
-			width:300px;
 			font-family: titr; font-size: 18px;
-			position: absolute;
-			top : 75px; left : 225px;
+			margin-right: 80px;
+			line-height: 55px;
+			text-align: right;
+			padding-right: 300px;
 		}
-		.date {  
-			width:300px;
-			font-family: titr; font-size: 16px;
-			position: absolute;
-			top : 130px; left : 215px;
-		} 
-		.number { 
-			width:300px;
-			font-family: titr; font-size: 16px;
-			position: absolute;
-			top : 163px; left : 186px;
-		}
+		
 		.context {
 			text-align: justify;
 			padding-left: 60px;
@@ -94,50 +84,30 @@ for ($i = 0; $i < count($contentArr); $i++) {
 			font-size: 18px;
 		}
 		.sign {
-			width:500px; 
+			width: 80%; 
 			font-family: titr;
 			margin-left: 20px;
 		}
 		</style>
 	</head>
 	<body dir="rtl">
-	<center>
+	<center> 
 		<div class=page>
-			<table style="width:95%; height:260mm">
-				<tr style="height: 255px">
-					<td>
-						<br>
-						<div class='title'><?= $ReqObj->_TypeDesc ?></div>
-						<br>
-						<div class='date'><?= DateModules::miladi_to_shamsi($ReqObj->StartDate) ?></div>
-						<br>
-						<div class='number'><?= $ReqObj->RefRequestID ?></div>
-					</td>
-				</tr>
-				<tbody>
-				<tr>
-					<td align="center" style="vertical-align: top">
-						
-						<div class='context' >
-						<?= $content ?>
-						</div>
-						<br><br><br>
-						<div class='sign' align="center"><br><br>
-							<center>صندوق پژوهش و فناوری خراسان رضوی</center><br>
-							<div style="float: right" >مدیر عامل  </div>
-							<div style="float: left" >عضو هیات مدیره  </div>
-						</div>
-					</td>
-				</tr>
-				</tbody>
-				<tfoot>
-				<tr style="height:150px;">
-					<td colspan="2">
-						
-					</td>
-				</tr>
-				</tfoot>
-			</table>
+			<div class=title style="height: 250px">
+				<br>
+				<?= $ReqObj->_TypeDesc ?>
+				<br><?= DateModules::miladi_to_shamsi($ReqObj->StartDate) ?>
+				<div style="line-height: 15px;padding-right:20px"><?= $ReqObj->RefRequestID ?></div>				
+			</div>
+			<div class='context' style="height: 600px">
+				<?= $content ?>
+				<center><div class='sign' align="center"><br><br>
+					صندوق پژوهش و فناوری خراسان رضوی<br><br>
+					<div style="float: right" >مدیر عامل  </div>
+					<div style="float: left" >عضو هیات مدیره  </div>
+				</div></center>
+			</div>
+			
 		</div>
 	</center>
 	</body>

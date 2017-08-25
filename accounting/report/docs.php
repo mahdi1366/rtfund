@@ -7,12 +7,23 @@
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 
-if(isset($_REQUEST["show"]))
-{
+$page_rpg = new ReportGenerator("mainForm","AccReport_docsObj");
+$page_rpg->addColumn("شماره سند", "LocalNo");
+$col = $page_rpg->addColumn("تاریخ سند", "DocDate");
+$col->type = "date";
+$page_rpg->addColumn("ثبت کننده سند", "regPerson");
+$page_rpg->addColumn("شرح سند", "description");
+$page_rpg->addColumn("جمع بدهکار", "bdSum");
+$page_rpg->addColumn("جمع بسنانکار", "bsSum");
+
+function GetData(){
+	
+	$userFields = ReportGenerator::UserDefinedFields();
 	$query = "select d.*, 
 					concat(fname,' ',lname) as regPerson, 
 					sum(CreditorAmount) bsSum,
-					sum(DebtorAmount) bdSum
+					sum(DebtorAmount) bdSum".
+					($userFields != "" ? "," . $userFields : "")."
 			from ACC_docs d
 			join ACC_DocItems di using(docID)
 			join BSC_persons p on(RegPersonID=PersonID)
@@ -94,25 +105,20 @@ if(isset($_REQUEST["show"]))
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.DocStatus != 'RAW' ";
 	
-	$query .= " group by DocID ";
-	
+	$group = ReportGenerator::GetSelectedColumnsStr();
+	$query .= $group == "" ? " group by DocID" : " group by " . $group;
 	if(isset($_POST["NotTaraz"]))
-		$query .= " having bsSum<>bdSum";
-	
-	$query .= " order by DocDate,LocalNo";
+		$query .= " having bsSum<>bdSum ";
+	$query .= $group == "" ? " order by DocDate,LocalNo" : " order by " . $group;
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
+	return $dataTable;
+}
 
+function ListData($IsDashboard = false){
+	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
-	
-	function dateRender($row, $val){
-		return DateModules::miladi_to_shamsi($val);
-	}	
-	
-	function moneyRender($row, $val){
-		return number_format($val);
-	}	
 	
 	function PrintDocRender($row, $val){
 		
@@ -121,12 +127,12 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg->addColumn("شماره سند", "LocalNo",$rpg->excel ? "" : "PrintDocRender");
 	
-	$rpg->addColumn("تاریخ سند", "DocDate","dateRender");
+	$rpg->addColumn("تاریخ سند", "DocDate","ReportDateRender");
 	//$rpg->addColumn("تاریخ ثبت سند", "RegDate","dateRender");
 	$rpg->addColumn("ثبت کننده سند", "regPerson");
 	$rpg->addColumn("شرح سند", "description");
-	$rpg->addColumn("جمع بدهکار", "bdSum","moneyRender");
-	$rpg->addColumn("جمع بسنانکار", "bsSum","moneyRender");
+	$rpg->addColumn("جمع بدهکار", "bdSum","ReportMoneyRender");
+	$rpg->addColumn("جمع بسنانکار", "bsSum","ReportMoneyRender");
 	
 	$rpg->rowColorRender = "RowColorRender";
 	function RowColorRender($row){
@@ -137,10 +143,10 @@ if(isset($_REQUEST["show"]))
 		return "white";
 	}
 	
-	$rpg->mysql_resource = $dataTable;
+	$rpg->mysql_resource = GetData();
 	$rpg->page_size = 22;
 	$rpg->paging = true;
-	if(!$rpg->excel)
+	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
 		
@@ -160,8 +166,38 @@ if(isset($_REQUEST["show"]))
 		}
 		echo "</td></tr></table>";
 	}
-	$rpg->generateReport();
+	if($IsDashboard)
+	{
+		echo "<div style=direction:rtl;padding-right:10px>";
+		$rpg->generateReport();
+		echo "</div>";
+	}
+	else
+		$rpg->generateReport();
 	die();
+}
+
+if(isset($_REQUEST["show"]))
+{
+	ListData();	
+}
+
+if(isset($_REQUEST["rpcmp_chart"]))
+{
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart();
+	die();
+}
+
+if(isset($_REQUEST["dashboard_show"]))
+{
+	$chart = ReportGenerator::DashboardSetParams($_REQUEST["rpcmp_ReportID"]);
+	if(!$chart)
+		ListData(true);	
+	
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
+	die();	
 }
 ?>
 <script>
@@ -199,7 +235,7 @@ function AccReport_docs()
 		defaults : {
 			labelWidth :120
 		},
-		width : 600,
+		width : 750,
 		items :[{
 			xtype : "combo",
 			colspan : 2,
@@ -299,6 +335,16 @@ function AccReport_docs()
 			xtype : "container",
 			colspan : 2,
 			html : "<input type=checkbox name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
+		},{
+			xtype : "fieldset",
+			title : "ستونهای گزارش",
+			colspan :2,
+			items :[<?= $page_rpg->ReportColumns() ?>]
+		},{
+			xtype : "fieldset",
+			colspan :2,
+			title : "رسم نمودار",
+			items : [<?= $page_rpg->GetChartItems("AccReport_docsObj","mainForm","docs.php") ?>]
 		}],
 		buttons : [{
 			text : "گزارش ساز",

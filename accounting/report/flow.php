@@ -7,159 +7,161 @@
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 
-if(isset($_REQUEST["show"]))
-{
-	$rpg = new ReportGenerator();
-	$rpg->excel = !empty($_POST["excel"]);
-	
-	function dateRender($row, $val){
-		return DateModules::miladi_to_shamsi($val);
-	}	
-	
-	function PrintDocRender($row, $val){
+function TotalRemainRender(&$row, $value, $x, $prevRow){
 		
-		return "<a target=_blank href='../docs/print_doc.php?DocID=" . $row["DocID"] . "'>" . $val . "</a>";
-	}
-	
-	$col = $rpg->addColumn("شماره سند", "LocalNo", "PrintDocRender");
-	$col->ExcelRender = false;
-	//$rpg->addColumn("کد حساب", "CostCode");
-	$rpg->addColumn("شرح حساب", "CostDesc");
-	$rpg->addColumn("تفصیلی", "TafsiliDesc");
-	$rpg->addColumn("تاریخ سند", "DocDate","dateRender");
-	$rpg->addColumn("شرح", "detail");	
-	
-	function MakeWhere(&$where, &$whereParam , $ForRemain = false){
-		
-		if(isset($_REQUEST["taraz"])){
-			
-			/*if(!isset($_REQUEST["IncludeStart"]))
-				$where .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;*/
+	$row["Sum"] = $prevRow["Sum"] + $row["CreditorAmount"] - $row["DebtorAmount"];
+	return "<div style=direction:ltr>" . number_format($row["Sum"]) . "</div>";;
+}
 
-			if(!isset($_REQUEST["IncludeEnd"]))
-				$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
-			
-			$where .= " AND d.CycleID=:c" ;
-				$whereParam[":c"] = $_SESSION["accounting"]["CycleID"];
-		}
-		if(!empty($_REQUEST["CycleID"]))
-		{
-			$where .= " AND d.CycleID=:c" ;
-			$whereParam[":c"] = $_REQUEST["CycleID"];
-		}
-		 
-		if(!isset($_REQUEST["IncludeRaw"]))
-			$where .= " AND d.DocStatus != 'RAW' ";
+$page_rpg = new ReportGenerator("mainForm","AccReport_flowObj");
+$page_rpg->addColumn("شماره سند", "LocalNo");
+$page_rpg->addColumn("شرح حساب", "CostDesc");
+$page_rpg->addColumn("تفصیلی", "TafsiliDesc");
+$page_rpg->addColumn("تفصیلی2", "TafsiliDesc2");
+$col = $page_rpg->addColumn("تاریخ سند", "DocDate");
+$col->type = "date";
+$page_rpg->addColumn("شرح", "detail");	
+$page_rpg->addColumn("مبلغ بدهکار", "DebtorAmount");
+$page_rpg->addColumn("مبلغ بستانکار", "CreditorAmount");
+
+$page_rpg->addColumn("مانده", "CreditorAmount", "TotalRemainRender");
+	
+function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 		
-		if(!empty($_REQUEST["BranchID"]))
+	if(isset($_REQUEST["taraz"])){
+
+		/*if(!isset($_REQUEST["IncludeStart"]))
+			$where .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;*/
+
+		if(!isset($_REQUEST["IncludeEnd"]))
+			$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
+
+		$where .= " AND d.CycleID=:c" ;
+			$whereParam[":c"] = $_SESSION["accounting"]["CycleID"];
+	}
+	if(!empty($_REQUEST["CycleID"]))
+	{
+		$where .= " AND d.CycleID=:c" ;
+		$whereParam[":c"] = $_REQUEST["CycleID"];
+	}
+
+	if(!isset($_REQUEST["IncludeRaw"]))
+		$where .= " AND d.DocStatus != 'RAW' ";
+
+	if(!empty($_REQUEST["BranchID"]))
+	{
+		$where .= " AND BranchID=:b";
+		$whereParam[":b"] = $_REQUEST["BranchID"];
+	}	
+	if(!empty($_REQUEST["GroupID"]))
+	{
+		$where .= " AND b1.GroupID = :gid";
+		$whereParam[":gid"] = $_REQUEST["GroupID"];
+	}
+
+	if(!empty($_REQUEST["level1"]))
+	{
+		$where .= " AND b1.BlockID = :bf1";
+		$whereParam[":bf1"] = $_REQUEST["level1"];
+	}
+	if(!empty($_REQUEST["level2"]))
+	{
+		$where .= " AND b2.BlockID = :bf2";
+		$whereParam[":bf2"] = $_REQUEST["level2"];
+	}
+	if(!empty($_REQUEST["level3"]))
+	{
+		$where .= " AND b3.BlockID = :bf3";
+		$whereParam[":bf3"] = $_REQUEST["level3"];
+	}
+	if(!empty($_REQUEST["level4"]))
+	{
+		$where .= " AND b4.BlockID = :bf4";
+		$whereParam[":bf4"] = $_REQUEST["level4"];
+	}
+	if(isset($_REQUEST["taraz"]) && isset($_REQUEST["TafsiliID"]))
+	{
+		if($_REQUEST["TafsiliID"] == "")
+			$where .= " AND (di.TafsiliID=0 OR di.TafsiliID is null)";
+		else
 		{
-			$where .= " AND BranchID=:b";
-			$whereParam[":b"] = $_REQUEST["BranchID"];
-		}	
-		if(!empty($_REQUEST["GroupID"]))
-		{
-			$where .= " AND b1.GroupID = :gid";
-			$whereParam[":gid"] = $_REQUEST["GroupID"];
-		}
-		
-		if(!empty($_REQUEST["level1"]))
-		{
-			$where .= " AND b1.BlockID = :bf1";
-			$whereParam[":bf1"] = $_REQUEST["level1"];
-		}
-		if(!empty($_REQUEST["level2"]))
-		{
-			$where .= " AND b2.BlockID = :bf2";
-			$whereParam[":bf2"] = $_REQUEST["level2"];
-		}
-		if(!empty($_REQUEST["level3"]))
-		{
-			$where .= " AND b3.BlockID = :bf3";
-			$whereParam[":bf3"] = $_REQUEST["level3"];
-		}
-		if(!empty($_REQUEST["level4"]))
-		{
-			$where .= " AND b4.BlockID = :bf4";
-			$whereParam[":bf4"] = $_REQUEST["level4"];
-		}
-		if(isset($_REQUEST["taraz"]) && isset($_REQUEST["TafsiliID"]))
-		{
-			if($_REQUEST["TafsiliID"] == "")
-				$where .= " AND (di.TafsiliID=0 OR di.TafsiliID is null)";
-			else
-			{
-				$where .= " AND (di.TafsiliID = :tid or di.TafsiliID2 = :tid) ";
-				$whereParam[":tid"] = $_REQUEST["TafsiliID"];
-			}
-		}
-		if(!empty($_REQUEST["TafsiliID"]))
-		{
-			$where .= " AND (di.TafsiliID = :tid or di.TafsiliID2 = :tid)";
+			$where .= " AND (di.TafsiliID = :tid or di.TafsiliID2 = :tid) ";
 			$whereParam[":tid"] = $_REQUEST["TafsiliID"];
 		}
-		if(!empty($_REQUEST["TafsiliType"]))
+	}
+	if(!empty($_REQUEST["TafsiliID"]))
+	{
+		$where .= " AND (di.TafsiliID = :tid )";
+		$whereParam[":tid"] = $_REQUEST["TafsiliID"];
+	}
+	if(!empty($_REQUEST["TafsiliType"]))
+	{
+		$where .= " AND (di.TafsiliType = :tt sssssssssssssssssss)";
+		$whereParam[":tt"] = $_REQUEST["TafsiliType"];
+	}
+	if(isset($_REQUEST["TafsiliID2"]))
+	{
+		if($_REQUEST["TafsiliID2"] == "")
 		{
-			$where .= " AND (di.TafsiliType = :tt or di.TafsiliType2 = :tt)";
-			$whereParam[":tt"] = $_REQUEST["TafsiliType"];
+			if(isset($_REQUEST["taraz"]))
+				$where .= " AND (di.TafsiliID2=0 OR di.TafsiliID2 is null)";
 		}
-		if(isset($_REQUEST["TafsiliID2"]))
+		else
 		{
-			if($_REQUEST["TafsiliID2"] == "")
-			{
-				if(isset($_REQUEST["taraz"]))
-					$where .= " AND (di.TafsiliID2=0 OR di.TafsiliID2 is null)";
-			}
-			else
-			{
-				$where .= " AND di.TafsiliID2 = :tid ";
-				$whereParam[":tid"] = $_REQUEST["TafsiliID2"];
-			}
+			$where .= " AND di.TafsiliID2 = :tid ";
+			$whereParam[":tid"] = $_REQUEST["TafsiliID2"];
 		}
-		if(!empty($_REQUEST["TafsiliType2"]))
-		{
-			$where .= " AND di.TafsiliType2 = :tt ";
-			$whereParam[":tt"] = $_REQUEST["TafsiliType2"];
-		}
-		if(!empty($_REQUEST["fromLocalNo"]))
-		{
-			$where .= " AND d.LocalNo >= :lo1 ";
-			$whereParam[":lo1"] = $_REQUEST["fromLocalNo"];
-		}
-		if(!empty($_REQUEST["toLocalNo"]))
-		{
-			$where .= " AND d.LocalNo <= :lo2 ";
-			$whereParam[":lo2"] = $_REQUEST["toLocalNo"];
-		}
-		if(!$ForRemain && !empty($_REQUEST["fromDate"]))
-		{
-			$where .= " AND d.docDate >= :q1 ";
-			$whereParam[":q1"] = DateModules::shamsi_to_miladi($_REQUEST["fromDate"], "-");
-		}
-		if(!$ForRemain && !empty($_REQUEST["toDate"]))
-		{
-			$where .= " AND d.docDate <= :q2 ";
-			$whereParam[":q2"] = DateModules::shamsi_to_miladi($_REQUEST["toDate"], "-");
-		}
-		if(!empty($_REQUEST["description"]))
-		{
-			$where .= " AND d.description like :des ";
-			$whereParam[":des"] = "%" . $_REQUEST["description"] . "%";
-		}
-		if(!empty($_REQUEST["details"]))
-		{
-			$where .= " AND di.details like :det ";
-			$whereParam[":det"] = "%" . $_REQUEST["details"] . "%";
-		}
-	}	
+	}
+	if(!empty($_REQUEST["TafsiliType2"]))
+	{
+		$where .= " AND di.TafsiliType2 = :tt ";
+		$whereParam[":tt"] = $_REQUEST["TafsiliType2"];
+	}
+	if(!empty($_REQUEST["fromLocalNo"]))
+	{
+		$where .= " AND d.LocalNo >= :lo1 ";
+		$whereParam[":lo1"] = $_REQUEST["fromLocalNo"];
+	}
+	if(!empty($_REQUEST["toLocalNo"]))
+	{
+		$where .= " AND d.LocalNo <= :lo2 ";
+		$whereParam[":lo2"] = $_REQUEST["toLocalNo"];
+	}
+	if(!$ForRemain && !empty($_REQUEST["fromDate"]))
+	{
+		$where .= " AND d.docDate >= :q1 ";
+		$whereParam[":q1"] = DateModules::shamsi_to_miladi($_REQUEST["fromDate"], "-");
+	}
+	if(!$ForRemain && !empty($_REQUEST["toDate"]))
+	{
+		$where .= " AND d.docDate <= :q2 ";
+		$whereParam[":q2"] = DateModules::shamsi_to_miladi($_REQUEST["toDate"], "-");
+	}
+	if(!empty($_REQUEST["description"]))
+	{
+		$where .= " AND d.description like :des ";
+		$whereParam[":des"] = "%" . $_REQUEST["description"] . "%";
+	}
+	if(!empty($_REQUEST["details"]))
+	{
+		$where .= " AND di.details like :det ";
+		$whereParam[":det"] = "%" . $_REQUEST["details"] . "%";
+	}
+}	
 	
-	//.....................................
+function GetData(){
+	
+	$userFields = ReportGenerator::UserDefinedFields();
+	
 	$query = "select d.*,di.DebtorAmount,CreditorAmount,
 		concat_ws(' - ',di.details,d.description) detail,
 		concat_ws(' - ' , b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode) CostCode,
 		concat_ws(' - ' , b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) CostDesc,
 		b.InfoDesc TafsiliTypeDesc,
-		concat_ws(' - ',t.TafsiliDesc,t2.TafsiliDesc ) TafsiliDesc,
-		bi2.InfoDesc TafsiliTypeDesc2
+		t.TafsiliDesc TafsiliDesc,
+		t2.TafsiliDesc TafsiliDesc2,
+		bi2.InfoDesc TafsiliTypeDesc2".
+				($userFields != "" ? "," . $userFields : "")."
 		
 		from ACC_DocItems di join ACC_docs d using(DocID)
 			join ACC_CostCodes cc using(CostID)
@@ -179,11 +181,12 @@ if(isset($_REQUEST["show"]))
 	MakeWhere($where, $whereParam);
 	$query .= $where;
 	
-	$query .= " order by d.DocDate";	
+	$group = ReportGenerator::GetSelectedColumnsStr();
+	$query .= $group == "" ? " " : " group by " . $group;
+	$query .= $group == "" ? " order by d.DocDate" : " order by " . $group;	
+	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	//-------------------------- previous remaindar ----------------------------
-	$BeforeRemaindar = "";
-	$BeforeAmount = 0;
 	if(!empty($_REQUEST["fromDate"]))
 	{
 		$query = "select sum(CreditorAmount-di.DebtorAmount)
@@ -209,50 +212,55 @@ if(isset($_REQUEST["show"]))
 
 		$DT = PdoDataAccess::runquery($query, $whereParam);
 		$BeforeAmount = $DT[0][0];
-		global $BeforeRemaindar;
-		$BeforeRemaindar = "<div align=left style='font-family:nazanin;font-size:18px;font-weight:bold;".
-				"padding:4px;border:1px solid black'>مانده از قبل : " . 
-				number_format($DT[0][0]) . "</div>";
-	}
-	//--------------------------------------------------------------------------
-	
-	function moneyRender($row, $val) {
-		return  number_format($val);
-	}
-	
-	$col = $rpg->addColumn("مبلغ بدهکار", "DebtorAmount", "moneyRender");
-	$col->EnableSummary();
-	$col = $rpg->addColumn("مبلغ بستانکار", "CreditorAmount", "moneyRender");
-	$col->EnableSummary();
-	
-	function bdremainRender($row){
-		$v = $row["DebtorAmount"] - $row["CreditorAmount"];
-		return $v < 0 ? 0 : number_format($v);
+		$dataTable = array_merge(array( array(
+			"DocID" => "",
+			"LocalNo" => "",
+			"CostDesc" => "مانده از قبل",
+			"TafsiliDesc" => "",
+			"DocDate" => "",
+			"detail" => "",
+			"DebtorAmount" => $BeforeAmount < 0 ? abs($BeforeAmount) : 0,
+			"CreditorAmount" => $BeforeAmount > 0 ? $BeforeAmount : 0
+		)), $dataTable);
 	}
 	
-	function bsremainRender($row){
-		$v = $row["CreditorAmount"] - $row["DebtorAmount"];
-		return $v < 0 ? 0 : number_format($v);
-	}
+	return $dataTable;
+}
+
+function ListData($IsDashboard = false){
 	
-	function TotalRemainRender(&$row, $value, $BeforeAmount, $prevRow){
+	$rpg = new ReportGenerator();
+	$rpg->excel = !empty($_POST["excel"]);
+	
+	function PrintDocRender($row, $val){
 		
-		if(!$prevRow)
-			$row["Sum"] = $BeforeAmount + $row["CreditorAmount"] - $row["DebtorAmount"];
-		else
-			$row["Sum"] = $prevRow["Sum"] + $row["CreditorAmount"] - $row["DebtorAmount"];
-		
-		return "<div style=direction:ltr>" . number_format($row["Sum"]) . "</div>";;
+		return "<a target=_blank href='../docs/print_doc.php?DocID=" . $row["DocID"] . "'>" . $val . "</a>";
 	}
 	
-	$col = $rpg->addColumn("مانده حساب", "CreditorAmount", "TotalRemainRender", $BeforeAmount);
+	$dataTable = GetData();
+	
+	$col = $rpg->addColumn("شماره سند", "LocalNo", "PrintDocRender");
+	$col->ExcelRender = false;
+	//$rpg->addColumn("کد حساب", "CostCode");
+	$rpg->addColumn("شرح حساب", "CostDesc");
+	$rpg->addColumn("تفصیلی", "TafsiliDesc");
+	$rpg->addColumn("تفصیلی", "TafsiliDesc2");
+	$rpg->addColumn("تاریخ سند", "DocDate","ReportDateRender");
+	$rpg->addColumn("شرح", "detail");	
+	
+	$col = $rpg->addColumn("مبلغ بدهکار", "DebtorAmount", "ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpg->addColumn("مبلغ بستانکار", "CreditorAmount", "ReportMoneyRender");
+	$col->EnableSummary();
+
+	$col = $rpg->addColumn("مانده حساب", "CreditorAmount", "TotalRemainRender");
 	$col->ExcelRender = false;
 	
 	$rpg->mysql_resource = $dataTable;
 	$rpg->page_size = 10;
 	$rpg->paging = true;
 	
-	if(!$rpg->excel)
+	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
 		$rpg->headerContent = 
@@ -274,15 +282,45 @@ if(isset($_REQUEST["show"]))
 	}
 
 	$rpg->SubHeaderFunction = "RemainRender";
-function RemainRender($PageNo)
-{
-global $BeforeRemaindar;
-if($PageNo == 1)
-echo $BeforeRemaindar;
-}
-	
-	$rpg->generateReport();
+	function RemainRender($PageNo)
+	{
+		global $BeforeRemaindar;
+		if($PageNo == 1)
+		echo $BeforeRemaindar;
+	}
+
+	if($IsDashboard)
+	{
+		echo "<div style=direction:rtl;padding-right:10px>";
+		$rpg->generateReport();
+		echo "</div>";
+	}
+	else
+		$rpg->generateReport();
 	die();
+}
+
+if(isset($_REQUEST["show"]))
+{
+	ListData();	
+}
+
+if(isset($_REQUEST["rpcmp_chart"]))
+{
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart();
+	die();
+}
+
+if(isset($_REQUEST["dashboard_show"]))
+{
+	$chart = ReportGenerator::DashboardSetParams($_REQUEST["rpcmp_ReportID"]);
+	if(!$chart)
+		ListData(true);	
+	
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
+	die();	
 }
 ?>
 <script>
@@ -331,7 +369,7 @@ function AccReport_flow()
 			labelWidth :100,
 			width : 270
 		},
-		width : 600,
+		width : 750,
 		items :[{
 			xtype : "combo",
 			colspan : 2,
@@ -502,7 +540,7 @@ function AccReport_flow()
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				}
 			})
-		},/*{
+		},{
 			xtype : "combo",
 			displayField : "InfoDesc",
 			fieldLabel : "گروه تفصیلی2",
@@ -543,7 +581,7 @@ function AccReport_flow()
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				}
 			})
-		},*/{
+		},{
 			xtype : "numberfield",
 			hideTrigger : true,
 			name : "fromLocalNo",
@@ -573,6 +611,18 @@ function AccReport_flow()
 			xtype : "container",
 			colspan : 2,
 			html : "<input type=checkbox name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
+		},{
+			xtype : "fieldset",
+			title : "ستونهای گزارش",
+			colspan :2,
+			width : 730,
+			items :[<?= $page_rpg->ReportColumns() ?>]
+		},{
+			xtype : "fieldset",
+			colspan :2,
+			width : 730,
+			title : "رسم نمودار",
+			items : [<?= $page_rpg->GetChartItems("AccReport_flowObj","mainForm","flow.php") ?>]
 		}],
 		buttons : [{
 			text : "گزارش ساز",

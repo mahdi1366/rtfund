@@ -7,35 +7,39 @@
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 
-if(isset($_REQUEST["show"]))
-{
-	showReport();
+function bdremainRender($row){
+	$v = $row["bdAmount"] - $row["bsAmount"];
+	return $v < 0 ? 0 : number_format($v);
 }
 
-function showReport(){
+function bsremainRender($row){
+	$v = $row["bsAmount"] - $row["bdAmount"];
+	return $v < 0 ? 0 : number_format($v);
+}
+function remainRender($row){
+	return $row["bsAmount"]*1 - $row["bdAmount"]*1;
+}
+
+$page_rpg = new ReportGenerator("mainForm","AccReport_tarazObj");
+$page_rpg->addColumn("گروه", "level0Code");
+$page_rpg->addColumn("کل", "level1Desc");
+$page_rpg->addColumn("معین", "level2Desc");
+$page_rpg->addColumn("جزءمعین", "level3Desc");
+$page_rpg->addColumn("جزءمعین2", "level4Desc");
+$page_rpg->addColumn("تفصیلی", "TafsiliDesc");
+$page_rpg->addColumn("تفصیلی2", "TafsiliDesc2");
+$page_rpg->addColumn("گردش بدهکار", "bdAmount" , "ReportMoneyRender");
+$page_rpg->addColumn("گردش بستانکار", "bsAmount", "ReportMoneyRender");
+$page_rpg->addColumn("مانده بدهکار", "bdAmount", "bdremainRender");
+$page_rpg->addColumn("مانده بستانکار", "bsAmount", "bsremainRender");
+$page_rpg->addColumn("مانده حساب", "bsAmount", "remainRender");
+
+global $level;
+
+function GetData(&$rpg){
 	
-	$dt = PdoDataAccess::runquery("select * from BSC_branches");
-	$branches = array();
-	foreach($dt as $row)
-		$branches[ $row["BranchID"] ] = $row["BranchName"];
-	
-	//......................................................
-	
-	$levelsDescArr = array(
-		"l0" => "گروه",
-		"l1" => "کل",
-		"l2" => "معین",
-		"l3" => "جزء معین",
-		"l4" => "جزء معین2",
-		"l5" => "تفصیلی"
-		);
 	global $level;
 	$level = empty($_REQUEST["level"]) ? "l1" : $_REQUEST["level"];
-	
-	$rpg = new ReportGenerator();
-	$rpg->excel = !empty($_POST["excel"]);
-	$whereParam = array();
-	$where = "";
 	
 	$select = "select 
 		sum(di.DebtorAmount) bdAmount,
@@ -133,11 +137,14 @@ function showReport(){
 	}
 	if($level == "l5")
 	{
-		$group .= ",di.TafsiliID,di.TafsiliID2";
+		$group .= ",di.TafsiliID";
 		$col = $rpg->addColumn("کد تفصیلی", "TafsiliCode");
 		$col = $rpg->addColumn("تفصیلی", "TafsiliDesc", "showDocs");
 		$col->ExcelRender = false;
-		
+	}
+	if($level == "l6")
+	{
+		$group .= ",di.TafsiliID2";
 		$col = $rpg->addColumn("کد تفصیلی2", "TafsiliCode2");
 		$col = $rpg->addColumn("تفصیلی2", "TafsiliDesc2", "showDocs2");
 		$col->ExcelRender = false;
@@ -287,7 +294,7 @@ function showReport(){
 		if(!empty($_POST["level2s"]))
 		{
 			$level2s = preg_replace("/[^0-9,]+/", "", $_POST["level2s"]);
-			$level2s = substr($level2s, 0, strlen($level2s)-1);
+			$level2s = trim($level2s, ",");
             $where .= " AND cc.level2 in( " . $level2s . ")";
 		}
 		//----------------------------------------------
@@ -357,10 +364,34 @@ function showReport(){
 		
 	$query .= " order by b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode,di.TafsiliID,di.TafsiliID2";
 
-	$dataTable = PdoDataAccess::runquery($query, $whereParam);
+	return PdoDataAccess::runquery($query, $whereParam);
+}
+
+function ListData($IsDashboard = false){
+	
+	global $level;
+	$levelsDescArr = array(
+		"l0" => "گروه",
+		"l1" => "کل",
+		"l2" => "معین",
+		"l3" => "جزء معین",
+		"l4" => "جزء معین2",
+		"l5" => "تفصیلی",
+		"l6" => "تفصیلی2"
+		);
+	$dt = PdoDataAccess::runquery("select * from BSC_branches");
+	$branches = array();
+	foreach($dt as $row)
+		$branches[ $row["BranchID"] ] = $row["BranchName"];
+	
+	
+	$rpg = new ReportGenerator();
+	$rpg->excel = !empty($_POST["excel"]);
+	
+	$dataTable = GetData($rpg);
 	
 	$redirect = "";
-	if(count($dataTable) == 1)
+	if(count($dataTable) == 1 && !$IsDashboard)
 	{
 		$LevelValue = "";
 		switch($level)
@@ -382,39 +413,21 @@ function showReport(){
 	}
 	//..........................................................................
 		
-	function dateRender($row, $val){
-		return DateModules::miladi_to_shamsi($val);
-	}	
-	
-	function moneyRender($row, $val) {
-		return number_format($val, 0, '.', ',');
-	}
-
-	function bdremainRender($row){
-		$v = $row["bdAmount"] - $row["bsAmount"];
-		return $v < 0 ? 0 : number_format($v);
-	}
-	
-	function bsremainRender($row){
-		$v = $row["bsAmount"] - $row["bdAmount"];
-		return $v < 0 ? 0 : number_format($v);
-	}
-	
 	if($_REQUEST["resultColumns"]*1 >= 6)
 	{
-		$col = $rpg->addColumn("بدهکار", "StartCycleDebtor", "moneyRender");
+		$col = $rpg->addColumn("بدهکار", "StartCycleDebtor", "ReportMoneyRender");
 		$col->GroupHeader = "حساب ابتدای دوره";
 		$col->EnableSummary(true);
-		$col = $rpg->addColumn("بستانکار", "StartCycleCreditor", "moneyRender");
+		$col = $rpg->addColumn("بستانکار", "StartCycleCreditor", "ReportMoneyRender");
 		$col->GroupHeader = "حساب ابتدای دوره";
 		$col->EnableSummary(true);
 	}
 	if($_REQUEST["resultColumns"]*1 >= 4)
 	{
-		$col = $rpg->addColumn("بدهکار", "bdAmount" , "moneyRender");
+		$col = $rpg->addColumn("بدهکار", "bdAmount" , "ReportMoneyRender");
 		$col->GroupHeader = "گردش طی دوره";
 		$col->EnableSummary();
-		$col = $rpg->addColumn("بستانکار", "bsAmount", "moneyRender");
+		$col = $rpg->addColumn("بستانکار", "bsAmount", "ReportMoneyRender");
 		$col->GroupHeader = "گردش طی دوره";
 		$col->EnableSummary();
 	}
@@ -425,7 +438,7 @@ function showReport(){
 	$col->GroupHeader = "مانده پایان دوره";
 	$col->EnableSummary(true);
 
-	if(!$rpg->excel)
+	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
 		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
@@ -448,8 +461,15 @@ function showReport(){
 	}
 	
 	$rpg->mysql_resource = $dataTable;
-	$rpg->generateReport();
+	if($IsDashboard)
+	{
+		echo "<div style=direction:rtl;padding-right:10px>";
+		$rpg->generateReport();
+		echo "</div>";
+		die();
+	}
 	
+	$rpg->generateReport();
 	?>
 	<script>
 		function changeLevel(curlevel,level0,level1,level2,level3,level4,TafsiliID,TafsiliID2)
@@ -478,7 +498,6 @@ function showReport(){
 		}
 	</script>
 	<form id="subForm" method="POST" target="blank">
-	
 	<input type="hidden" name="fromDate" value="<?= !empty($_REQUEST["fromDate"]) ? $_REQUEST["fromDate"] : "" ?>">
 	<input type="hidden" name="toDate" value="<?= !empty($_REQUEST["toDate"]) ? $_REQUEST["toDate"] : "" ?>">
 	<input type="hidden" name="fromLocalNo" value="<?= !empty($_REQUEST["fromLocalNo"]) ? $_REQUEST["fromLocalNo"] : "" ?>">
@@ -496,11 +515,36 @@ function showReport(){
 	<input type="hidden" name="level1s" id="level1s" value="<?= $_POST["level1s"] ?>">
 	<input type="hidden" name="level2s" id="level2s" value="<?= $_POST["level2s"] ?>">
 	<input type="hidden" name="level3s" id="level3s" value="<?= $_POST["level3s"] ?>">
-</form>
+	</form>
 	<?
 	echo $redirect;
 	die();
 }
+
+if(isset($_REQUEST["show"]))
+{
+	ListData();	
+}
+
+if(isset($_REQUEST["rpcmp_chart"]))
+{
+	$temp = new ReportGenerator();
+	$page_rpg->mysql_resource = GetData($temp);
+	$page_rpg->GenerateChart();
+	die();
+}
+
+if(isset($_REQUEST["dashboard_show"]))
+{
+	$chart = ReportGenerator::DashboardSetParams($_REQUEST["rpcmp_ReportID"]);
+	if(!$chart)
+		ListDate(true);	
+	
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
+	die();	
+}
+	
 ?>
 <script>
 	
@@ -513,6 +557,13 @@ AccReport_taraz.prototype = {
 	}
 }
 
+AccReport_taraz.prototype.BeforeSubmit = function(){
+	
+	this.get("level0s").value = this.formPanel.down("[itemId=cmp_level0]").getValue();
+	this.get("level1s").value = this.formPanel.down("[itemId=cmp_level1]").getValue();
+	this.get("level2s").value = this.formPanel.down("[itemId=cmp_level2]").getValue();
+}
+
 AccReport_taraz.prototype.showReport = function(btn, e)
 {
 	this.form = this.get("mainForm")
@@ -520,9 +571,7 @@ AccReport_taraz.prototype.showReport = function(btn, e)
 	this.form.method = "POST";
 	this.form.action =  this.address_prefix + "taraz.php?show=true";
 	
-	this.get("level0s").value = this.formPanel.down("[itemId=cmp_level0]").getValue();
-	this.get("level1s").value = this.formPanel.down("[itemId=cmp_level1]").getValue();
-	this.get("level2s").value = this.formPanel.down("[itemId=cmp_level2]").getValue();
+	AccReport_tarazObj.BeforeSubmit();
 	/*this.get("level2s").value = "";
 	this.formPanel.down('[itemId=cmp_level2]').getStore().each(function(r){
 		AccReport_tarazObj.get("level2s").value += r.data.BlockID + ",";
@@ -704,7 +753,8 @@ function AccReport_taraz()
 						"<input type='radio' name='level' id='level-l2' value='l2' > معین  <br>" + 
 						"<input type='radio' name='level' id='level-l3' value='l3' > جزء معین <br>" + 
 						"<input type='radio' name='level' id='level-l4' value='l4' > جزء معین 2<br>" + 
-						"<input type='radio' name='level' id='level-l5' value='l5' > تفصیلی " 			
+						"<input type='radio' name='level' id='level-l5' value='l5' > تفصیلی<br>" + 
+						"<input type='radio' name='level' id='level-l6' value='l6' > تفصیلی 2" 			
 			}]
 		},{
 			xtype : "container",
@@ -780,8 +830,16 @@ function AccReport_taraz()
 			fieldLabel : "تا تاریخ"
 		},{
 			xtype : "container",
+			colspan : 2,
 			html : "<input type=checkbox name=IncludeRaw id=IncludeRaw> گزارش شامل اسناد خام نیز باشد." + "<br>" +
 				"<input type=checkbox name=IncludeEnd id=IncludeEnd> گزارش شامل سند اختتامیه باشد."
+		},{
+			xtype : "fieldset",
+			colspan :4,
+			width : 730,
+			title : "رسم نمودار",
+			items : [<?= $page_rpg->GetChartItems("AccReport_tarazObj","mainForm","taraz.php", 
+					"AccReport_tarazObj.BeforeSubmit") ?>]
 		}],
 		buttons : [{
 			text : "گزارش ساز",

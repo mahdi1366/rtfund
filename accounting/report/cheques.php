@@ -7,12 +7,30 @@
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 
-if(isset($_REQUEST["show"]))
-{
+$page_rpg = new ReportGenerator("mainForm","AccReport_checksObj");
+$page_rpg->addColumn("شماره سند", "LocalNo");
+$col = $page_rpg->addColumn("تاریخ سند", "DocDate");
+$col->type = "date";
+$page_rpg->addColumn("شماره چک", "CheckNo");
+$page_rpg->addColumn("بانک", "bankDesc");
+$page_rpg->addColumn("شماره حساب", "AccountNo");
+$page_rpg->addColumn("حساب", "AccountDesc");
+$page_rpg->addColumn("سریال دسته چک", "SerialNo");
+$col = $page_rpg->addColumn("تاریخ چک", "CheckDate");
+$col->type = "date";
+$page_rpg->addColumn("وضعیت چک", "checkStatus");
+$page_rpg->addColumn("مبلغ", "amount");
+$page_rpg->addColumn("تفصیلی گیرنده", "TafsiliDesc");
+$page_rpg->addColumn("بابت", "description");
+
+function GetData(){
+	
+	$userFields = ReportGenerator::UserDefinedFields();
 	$Year = $_SESSION["accounting"]["CycleYear"];
 	$query = "
 	select c.*,d.LocalNo,br.BranchName,d.DocDate,a.AccountDesc,a.AccountNo,
-		b.InfoDesc as checkStatus,t.TafsiliDesc,bankDesc,cb.SerialNo
+		b.InfoDesc as checkStatus,t.TafsiliDesc,bankDesc,cb.SerialNo".
+				($userFields != "" ? "," . $userFields : "")."
 
 	from ACC_DocCheques c
 	left join ACC_tafsilis t using(tafsiliID)
@@ -87,11 +105,16 @@ if(isset($_REQUEST["show"]))
 		$query .= " AND c.tafsiliID = :taf ";
 		$whereParam[":taf"] = $_POST["TafsiliID"];
 	}
-	$query .= " order by checkDate";
+	
+	$group = ReportGenerator::GetSelectedColumnsStr();
+	$query .= $group == "" ? " " : " group by " . $group;
+	$query .= $group == "" ? " order by checkDate" : " order by " . $group;
 
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
+	return $dataTable;
+}
 
-	//echo PdoDataAccess::GetLatestQueryString();
+function ListData($IsDashboard = false){
 	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
@@ -111,8 +134,8 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("تفصیلی گیرنده", "TafsiliDesc");
 	$rpg->addColumn("بابت", "description");
 	
-	$rpg->mysql_resource = $dataTable;
-	if(!$rpg->excel)
+	$rpg->mysql_resource = GetData();
+	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
@@ -131,8 +154,38 @@ if(isset($_REQUEST["show"]))
 		}
 		echo "</td></tr></table>";
 	}
-	$rpg->generateReport();
+	if($IsDashboard)
+	{
+		echo "<div style=direction:rtl;padding-right:10px>";
+		$rpg->generateReport();
+		echo "</div>";
+	}
+	else
+		$rpg->generateReport();
 	die();
+}
+
+if(isset($_REQUEST["show"]))
+{
+	ListData();	
+}
+
+if(isset($_REQUEST["rpcmp_chart"]))
+{
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart();
+	die();
+}
+
+if(isset($_REQUEST["dashboard_show"]))
+{
+	$chart = ReportGenerator::DashboardSetParams($_REQUEST["rpcmp_ReportID"]);
+	if(!$chart)
+		ListData(true);	
+	
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
+	die();	
 }
 ?>
 <script>
@@ -304,6 +357,7 @@ function AccReport_checks()
 			xtype : "combo",
 			displayField : "tafsiliTitle",
 			fieldLabel : "حساب تفصیلی",
+			colspan : 2,
 			valueField : "TafsiliID",
 			hiddenName : "TafsiliID",
 			store : new Ext.data.Store({
@@ -323,6 +377,18 @@ function AccReport_checks()
 				,'<td style="border-left:0;border-right:0" class="search-item">{tafsiliTitle}</td>'
 				,'</tpl>'
 				,'</table>')
+		},{
+			xtype : "fieldset",
+			title : "ستونهای گزارش",
+			colspan :2,
+			width : 730,
+			items :[<?= $page_rpg->ReportColumns() ?>]
+		},{
+			xtype : "fieldset",
+			colspan :2,
+			width : 730,	
+			title : "رسم نمودار",
+			items : [<?= $page_rpg->GetChartItems("AccReport_checksObj","mainForm","cheques.php") ?>]
 		}],
 		buttons : [{
 			text : "گزارش ساز",

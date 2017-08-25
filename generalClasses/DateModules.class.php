@@ -442,6 +442,11 @@ class DateModules
 		return date_format(new DateTime(self::shamsi_to_miladi($jdate)), $format);
 	}
 	
+	static function GetJWeekDay($jdate)
+	{
+		return self::$JWeekDays[ self::GetWeekDay($jdate, "N") ];
+	}
+	
 	static function DateToString($SHdate)
 	{
 		$year = substr($SHdate, 1, 3);

@@ -64,6 +64,7 @@ function MakeWhere(&$where, &$whereParam){
 function GetData(){
 	$where = "";
 	$whereParam = array();
+	$userFields = ReportGenerator::UserDefinedFields();
 	MakeWhere($where, $whereParam);
 	
 	$query = "select b.*,r.*,l.*,p.*,
@@ -72,7 +73,8 @@ function GetData(){
 				BranchName,
 				i.ChequeNo,
 				d.LocalNo,
-				bi.InfoDesc PayTypeDesc
+				bi.InfoDesc PayTypeDesc".
+				($userFields != "" ? "," . $userFields : "")."
 				
 			from LON_BackPays b
 			join LON_requests r using(RequestID)
@@ -84,15 +86,18 @@ function GetData(){
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 			
-			left join ACC_DocItems di on(SourceID=r.RequestID AND SourceID2=BackPayID AND SourceType in(8,5))
-			left join ACC_docs d on(di.DocID=d.DocID)
+			left join ( select d.LocalNo,SourceID,SourceID2
+				from ACC_DocItems di join ACC_docs d on(di.DocID=d.DocID)
+				where SourceType in(".DOCTYPE_INSTALLMENT_PAYMENT.")
+				group by SourceID,SourceID2
+			)d on(d.SourceID=r.RequestID AND d.SourceID2=BackPayID )
 
 			where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-					AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . $where . " 
-			
-			group by b.BackPayID 
-			order by PayDate";
+					AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . $where ;
 	
+	$group = ReportGenerator::GetSelectedColumnsStr();
+	$query .= $group == "" ? " group by b.BackPayID" : " group by " . $group;
+	$query .= $group == "" ? " order by PayDate" : " order by " . $group;
 	
 	$dataTable = PdoDataAccess::runquery_fetchMode($query, $whereParam);
 	$query = PdoDataAccess::GetLatestQueryString();
@@ -144,8 +149,15 @@ function ListDate($IsDashboard = false){
 				($_POST["toReqDate"] != "" ? " - " . $_POST["toReqDate"] : "");
 		}
 		echo "</td></tr></table>";
-		}
-	$rpg->generateReport();
+	}
+	if($IsDashboard)
+	{
+		echo "<div style=direction:rtl;padding-right:10px>";
+		$rpg->generateReport();
+		echo "</div>";
+	}
+	else
+		$rpg->generateReport();
 	die();
 }
 
@@ -332,15 +344,12 @@ function LoanReport_Backays()
 			xtype : "fieldset",
 			colspan :2,
 			title : "ستونهای گزارش",
-			items :[{
-				xtype : "container",
-				html : "<?= $page_rpg->GetColumnCheckboxList(2) ?>"
-			}]
+			items :[<?= $page_rpg->ReportColumns() ?>]
 		},{
 			xtype : "fieldset",
 			colspan :2,
 			title : "رسم نمودار",
-			items : [<?= $page_rpg->GetChartItems("LoanReport_installmentsObj","mainForm","installments.php") ?>]
+			items : [<?= $page_rpg->GetChartItems("LoanReport_BackaysObj","mainForm","BackPays.php") ?>]
 		}],
 		buttons : [{
 			text : "گزارش ساز",

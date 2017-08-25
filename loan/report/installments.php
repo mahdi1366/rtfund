@@ -9,7 +9,6 @@ function ReqPersonRender($row,$value){
 	return $value == "" ? "منابع داخلی" : $value;
 }
 	
-
 $page_rpg = new ReportGenerator("mainForm","LoanReport_installmentsObj");
 $page_rpg->addColumn("شماره وام", "RequestID");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
@@ -77,12 +76,14 @@ function GetData(){
 	
 	$where = "";
 	$whereParam = array();
+	$userFields = ReportGenerator::UserDefinedFields();
 	MakeWhere($where, $whereParam);
 	
 	$query = "select i.*,r.*,l.*,p.*,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
-				BranchName
+				BranchName".
+				($userFields != "" ? "," . $userFields : "")."
 				
 			from LON_installments i
 			join LON_requests r using(RequestID)
@@ -91,11 +92,11 @@ function GetData(){
 			join BSC_branches using(BranchID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
-			where i.history='NO' AND i.IsDelayed='NO' " . $where . " 
-			
-			group by r.RequestID, i.InstallmentID
-			order by InstallmentDate";
+			where i.history='NO' AND i.IsDelayed='NO' " . $where;
 	
+	$group = ReportGenerator::GetSelectedColumnsStr();
+	$query .= $group == "" ? " group by i.InstallmentID" : " group by " . $group;
+	$query .= $group == "" ? " order by i.InstallmentID" : " order by " . $group;		
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	
@@ -208,7 +209,6 @@ function ListData($IsDashboard = false){
 	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
-		echo "<div style=display:none>" . $query . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family: titr;font-size:15px'>
@@ -223,7 +223,14 @@ function ListData($IsDashboard = false){
 		}
 		echo "</td></tr></table>";
 	}
-	$rpg->generateReport();
+	if($IsDashboard)
+	{
+		echo "<div style=direction:rtl;padding-right:10px>";
+		$rpg->generateReport();
+		echo "</div>";
+	}
+	else
+		$rpg->generateReport();
 	die();
 }
 
@@ -413,10 +420,7 @@ function LoanReport_installments()
 			xtype : "fieldset",
 			title : "ستونهای گزارش",
 			colspan :2,
-			items :[{
-				xtype : "container",
-				html : "<?= $page_rpg->GetColumnCheckboxList(4) ?>"
-			}]
+			items :[<?= $page_rpg->ReportColumns() ?>]
 		},{
 			xtype : "fieldset",
 			colspan :2,

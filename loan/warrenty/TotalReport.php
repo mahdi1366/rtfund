@@ -7,21 +7,29 @@
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 
-if(isset($_REQUEST["show"]))
-{
-	function dateRender($row, $val){
-		return DateModules::miladi_to_shamsi($val);
-	}	
-	
-	function moneyRender($row, $val) {
-		return number_format($val);
-	}
-	
-	function MakeWhere(&$where, &$whereParam){
+$page_rpg = new ReportGenerator("mainForm","WarrentyReport_totalObj");
+$page_rpg->addColumn("شماره تضمین", "RequestID");
+$page_rpg->addColumn("نوع تضمین", "TypeDesc");	
+$col = $page_rpg->addColumn("تاریخ شروع", "StartDate");
+$col->type = "date";
+$col = $page_rpg->addColumn("تاریخ پایان", "EndDate");
+$col->type = "date";
+$page_rpg->addColumn("مبلغ ضمانتنمه", "amount");
+$page_rpg->addColumn("مشتری", "fullname");
+$page_rpg->addColumn("سازمان مربوطه", "organization");
+$page_rpg->addColumn("کارمزد", "wage");
+$page_rpg->addColumn("شماره نامه معرفی", "LetterNo");
+$col = $page_rpg->addColumn("تاریخ نامه معرفی", "LetterDate");
+$col->type = "date";
+$page_rpg->addColumn("وضعیت", "StepDesc");
+$page_rpg->addColumn("نسخه", "version");
+
+function MakeWhere(&$where, &$whereParam){
 		
 		foreach($_POST as $key => $value)
 		{
-			if($key == "excel" || $value === "" || strpos($key, "combobox") !== false ||
+			if($key == "excel" || 
+					$value === "" || strpos($key, "combobox") !== false || strpos($key, "rpcmp") !== false ||
 					strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 				continue;
 			$prefix = "";
@@ -49,34 +57,44 @@ if(isset($_REQUEST["show"]))
 			$whereParam[":$key"] = $value;
 		}
 	}	
+		
+function GetData(){
 	
-	//.....................................
 	$where = "1=1";
 	$whereParam = array();
+	$userFields = ReportGenerator::UserDefinedFields();
 	MakeWhere($where, $whereParam);
 	
 	$query = "select r.* , concat_ws(' ',fname,lname,CompanyName) fullname, sp.StepDesc,
-				bf.InfoDesc TypeDesc,d.DocID, d.DocStatus 
+				bf.InfoDesc TypeDesc ".
+				($userFields != "" ? "," . $userFields : "")
+				."
 			from WAR_requests r 
 				left join BSC_persons using(PersonID)
 				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
 				join WFM_FlowSteps sp on(sp.FlowID=" . WARRENTY_FLOWID . " AND sp.StepID=r.StatusID)
-				left join ACC_DocItems on(SourceType='" . DOCTYPE_WARRENTY . "' 
-					AND r.RequestID=SourceID2)	
-				left join ACC_docs d using(DocID)
-			where " . $where . " group by r.RequestID";
+				
+			where " . $where;
 	
+	$group = ReportGenerator::GetSelectedColumnsStr();
+	$query .= $group == "" ? " group by r.RequestID" : " group by " . $group;
+	$query .= $group == "" ? " order by r.RequestID" : " order by " . $group;
 	
-	$dataTable = PdoDataAccess::runquery($query, $whereParam);
+	return PdoDataAccess::runquery($query, $whereParam);
+}
+
+function ListDate($IsDashboard = false){
+	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
-	$rpg->mysql_resource = $dataTable;
+	$rpg->mysql_resource = GetData();
 	
 	$rpg->addColumn("شماره تضمین", "RequestID");
 	$rpg->addColumn("نوع تضمین", "TypeDesc");	
-	$rpg->addColumn("تاریخ شروع", "StartDate", "dateRender");
-	$rpg->addColumn("تاریخ پایان", "EndDate", "dateRender");
-	$rpg->addColumn("مبلغ", "amount", "moneyRender");
+	$rpg->addColumn("تاریخ شروع", "StartDate", "ReportDateRender");
+	$rpg->addColumn("تاریخ پایان", "EndDate", "ReportDateRender");
+	$col = $rpg->addColumn("مبلغ ضمانتنمه", "amount", "ReportMoneyRender");
+	$col->EnableSummary();
 	$rpg->addColumn("مشتری", "fullname");
 	$rpg->addColumn("سازمان مربوطه", "organization");
 	$rpg->addColumn("کارمزد", "wage");
@@ -94,7 +112,7 @@ if(isset($_REQUEST["show"]))
 		}
 	}
 	
-	if(!$rpg->excel)
+	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
 		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
@@ -111,24 +129,41 @@ if(isset($_REQUEST["show"]))
 				($_POST["toReqDate"] != "" ? " - " . $_POST["toReqDate"] : "");
 		}
 		echo "</td></tr></table>";
-		}
-	$rpg->generateReport();
+	}
+	
+	if($IsDashboard)
+	{
+		echo "<div style=direction:rtl;padding-right:10px>";
+		$rpg->generateReport();
+		echo "</div>";
+	}
+	else
+		$rpg->generateReport();
 	die();
 }
 
-$page_rpg = new ReportGenerator("mainForm","aWarrentyReport_totalObj");
-$page_rpg->addColumn("شماره تضمین", "RequestID");
-$page_rpg->addColumn("نوع تضمین", "TypeDesc");	
-$page_rpg->addColumn("تاریخ شروع", "StartDate");
-$page_rpg->addColumn("تاریخ پایان", "EndDate");
-$page_rpg->addColumn("مبلغ", "amount");
-$page_rpg->addColumn("مشتری", "fullname");
-$page_rpg->addColumn("سازمان مربوطه", "organization");
-$page_rpg->addColumn("کارمزد", "wage");
-$page_rpg->addColumn("شماره نامه معرفی", "LetterNo");
-$page_rpg->addColumn("تاریخ نامه معرفی", "LetterDate");
-$page_rpg->addColumn("وضعیت", "StepDesc");
-$page_rpg->addColumn("نسخه", "version");
+if(isset($_REQUEST["show"]))
+{
+	ListDate();	
+}
+
+if(isset($_REQUEST["rpcmp_chart"]))
+{
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart();
+	die();
+}
+
+if(isset($_REQUEST["dashboard_show"]))
+{
+	$chart = ReportGenerator::DashboardSetParams($_REQUEST["rpcmp_ReportID"]);
+	if(!$chart)
+		ListDate(true);	
+	
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
+	die();	
+}
 
 ?>
 <script>
@@ -162,11 +197,11 @@ function WarrentyReport_total()
 			columns :2
 		},
 		defaults : {
-			width : 300
+			width : 365
 		},
 		bodyStyle : "text-align:right;padding:5px",
 		title : "گزارش کلی ضمانت نامه ها",
-		width : 650,
+		width : 780,
 		items :[{
 			xtype : "combo",
 			store : new Ext.data.Store({
@@ -197,41 +232,34 @@ function WarrentyReport_total()
 			fieldLabel : "مشتری",
 			displayField : "fullname",
 			pageSize : 20,
-			allowBlank : false,
 			valueField : "PersonID",
 			hiddenName : "PersonID"
 		},{
 			xtype : "textfield",
 			name : "organization",
-			allowBlank : false,
 			fieldLabel : "سازمان مربوطه",
 			colspan : 2
 		},{
 			xtype : "currencyfield",
 			name : "FromAmount",
 			hideTrigger : true,
-			allowBlank : false,
 			fieldLabel : "مبلغ ضمانت نامه از"
 		},{
 			xtype : "currencyfield",
 			name : "ToAmount",
 			hideTrigger : true,
-			allowBlank : false,
 			fieldLabel : "مبلغ ضمانت نامه تا"
 		},{
 			xtype : "shdatefield",
 			name : "FromStartDate",
-			allowBlank : false,
 			fieldLabel : "تاریخ شروع از"
 		},{
 			xtype : "shdatefield",
 			name : "ToStartDate",
-			allowBlank : false,
 			fieldLabel : "تاریخ شروع تا"
 		},{
 			xtype : "shdatefield",
 			name : "FromEndDate",
-			allowBlank : false,
 			fieldLabel : "تاریخ پایان از"
 		},{
 			xtype : "shdatefield",
@@ -240,17 +268,14 @@ function WarrentyReport_total()
 			fieldLabel : "تاریخ پایان تا"
 		},{
 			xtype : "shdatefield",
-			allowBlank : false,
 			fieldLabel : "تاریخ نامه معرفی از",
 			name : "FromLetterDate"
 		},{
 			xtype : "shdatefield",
-			allowBlank : false,
 			fieldLabel : "تاریخ نامه معرفی تا",
 			name : "ToLetterDate"
 		},{
 			xtype : "textfield",
-			allowBlank : false,
 			fieldLabel : "شماره نامه معرفی",
 			name : "LetterNo"
 		},{
@@ -291,11 +316,16 @@ function WarrentyReport_total()
 			hiddenName : "version"
 		},{
 			xtype : "fieldset",
+			colspan :2,
+			width : 730,
 			title : "ستونهای گزارش",
-			items :[{
-				xtype : "container",
-				html : "<?= $page_rpg->GetColumnCheckboxList(2) ?>"
-			}]
+			items :[<?= $page_rpg->ReportColumns() ?>]
+		},{
+			xtype : "fieldset",
+			colspan :2,
+			width : 730,
+			title : "رسم نمودار",
+			items : [<?= $page_rpg->GetChartItems("WarrentyReport_totalObj","mainForm","TotalReport.php") ?>]
 		}],
 		buttons : [{
 			text : "گزارش ساز",

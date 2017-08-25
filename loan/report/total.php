@@ -92,6 +92,7 @@ function GetData(){
 	//.....................................
 	$where = "";
 	$pay_where = "";
+	$userFields = ReportGenerator::UserDefinedFields();
 	$whereParam = array();
 	MakeWhere($where, $pay_where, $whereParam);
 	
@@ -102,7 +103,8 @@ function GetData(){
 				BranchName,
 				SumPayments,
 				TotalPayAmount,
-				TotalInstallmentAmount
+				TotalInstallmentAmount".
+				($userFields != "" ? "," . $userFields : "")."
 				
 			from LON_requests r
 			join LON_ReqParts p on(r.RequestID=p.RequestID AND p.IsHistory='NO')
@@ -133,11 +135,11 @@ function GetData(){
 				where  history='NO' AND IsDelayed='NO'
 				group by RequestID			
 			)t2 on(r.RequestID=t2.RequestID)
-			where 1=1 " . $where . " 
-			
-			group by r.RequestID
-			order by r.ReqDate";
+			where 1=1 " . $where;
 	
+	$group = ReportGenerator::GetSelectedColumnsStr();
+	$query .= $group == "" ? " group by r.RequestID" : " group by " . $group;
+	$query .= $group == "" ? " order by r.RequestID" : " order by " . $group;	
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	$query = PdoDataAccess::GetLatestQueryString();
@@ -152,7 +154,7 @@ function GetData(){
 	return $dataTable; 
 }
 
-function ListDate($IsDashboard = false){
+function ListData($IsDashboard = false){
 	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
@@ -214,15 +216,21 @@ function ListDate($IsDashboard = false){
 		}
 		echo "</td></tr></table>";
 		
-		$rpg->groupField = "ReqFullname";
 	}
-	$rpg->generateReport();
+	if($IsDashboard)
+	{
+		echo "<div style=direction:rtl;padding-right:10px>";
+		$rpg->generateReport();
+		echo "</div>";
+	}
+	else
+		$rpg->generateReport();
 	die();
 }
 
 if(isset($_REQUEST["show"]))
 {
-	ListDate();	
+	ListData();	
 }
 
 if(isset($_REQUEST["rpcmp_chart"]))
@@ -236,7 +244,7 @@ if(isset($_REQUEST["dashboard_show"]))
 {
 	$chart = ReportGenerator::DashboardSetParams($_REQUEST["rpcmp_ReportID"]);
 	if(!$chart)
-		ListDate(true);	
+		ListData(true);	
 	
 	$page_rpg->mysql_resource = GetData();
 	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
@@ -477,10 +485,7 @@ function LoanReport_total()
 			xtype : "fieldset",
 			title : "ستونهای گزارش",
 			colspan :2,
-			items :[{
-				xtype : "container",
-				html : "<?= $page_rpg->GetColumnCheckboxList(6) ?>"
-			}]
+			items :[<?= $page_rpg->ReportColumns() ?>]
 		},{
 			xtype : "fieldset",
 			colspan :2,

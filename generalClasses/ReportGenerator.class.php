@@ -755,6 +755,46 @@ echo "</caption>";
 		$this->columns = array();
 		foreach($tempColumns as $row)
 			$this->columns[] = $row;
+		
+		if(!empty($_POST["rpcmp_userfields"]))
+		{
+			$arr = explode("#", $_POST["rpcmp_userfields"]);
+			for($i=1; $i < count($arr); $i=$i+2)
+			{
+				$fieldArr = explode("_",$arr[$i]);
+				$func = $fieldArr[0];
+				$field = $fieldArr[1];
+				$obj = new ReportColumn(self::FunctionName($func) . " " . 
+						$columnObjectArr[$field]->header , $arr[$i], "ReportMoneyRender");
+				$obj->EnableSummary();
+				$this->columns[] = $obj;
+			}
+		}
+	}
+	
+	static function GetSelectedColumnsStr(){
+		
+		$IsAnyColumnSelected = false;
+		foreach($_POST as $key => $value)
+			if(strpos($key, ReportGenerator::$FieldPrefix) !== false)
+			{
+				$IsAnyColumnSelected = true;
+				break;
+			}
+			
+		if(!$IsAnyColumnSelected)
+			return "";
+		
+		$tempColumns = array();
+		foreach($_POST as $key => $value)
+			if(strpos($key, self::$FieldPrefix) !== false)
+			{
+				$field = str_replace(self::$FieldPrefix, "", $key);
+				$tempColumns[ $_POST[self::$OrderPrefix . $field ] ] = $field;
+			}
+		
+		ksort($tempColumns);
+		return implode(",", $tempColumns);
 	}
 	
 	function GetColumnCheckboxList($columns = 1){
@@ -770,17 +810,131 @@ echo "</caption>";
 				$returnStr .= ($index == 1 ? "" : "</div>") . $div;
 			$title = $row->header;
 			$field = $row->field;
-			$returnStr .= "<input style='width:20' type=text name='".self::$OrderPrefix.$field."' "
+			$returnStr .= "<div style=padding-left:10px>"
+					. "<input style='width:20' type=text name='".self::$OrderPrefix.$field."' "
 					. "id='".self::$OrderPrefix.$field."'>"
 					. "<input onclick=ReportGenerator.setOrder(this,'".$this->MainForm."',".$this->ObjectName.") "
 					. "type=checkbox name='".self::$FieldPrefix.$field."' id='".self::$FieldPrefix.$field."'>"
-					. $title."<br>";
+					. $title.
+				"</div>";
 			$index++;
 		}
 		
 		return $returnStr . "</div>";
 	}
 	
+	private static function FunctionName($func){
+		switch($func)
+		{
+			case "sum": return "مجموع";
+			case "min": return "مینیمم";
+			case "max": return "ماکزیمم";
+			case "average": return "میانگین";
+			case "count": return "تعداد";
+		}
+		
+	}
+	
+	function ReportColumns(){
+		
+		return '{
+			xtype : "container",
+			autoWidth : true,
+			layout : {
+				type : "table",
+				columns : 3
+			},
+			items : [{
+				xtype : "container",
+				html : "' . $this->GetColumnCheckboxList(3) . '"
+			},{
+				xtype : "fieldset",
+				title : "ایجاد ستون سفارشی",
+				height : 157,
+				layout : "vbox",
+				items : [{
+					xtype : "combo",
+					width : 150,
+					store : new Ext.data.SimpleStore({
+						data : [
+							["sum", "مجموع"],
+							["min", "مینیمم"],
+							["max", "ماکزیمم"],
+							["average", "میانگین"],
+							["count", "تعداد"]
+						],
+						fields : ["id","value"]
+					}),
+					displayField : "value",
+					valueField : "id",
+					itemId : "rpcmp_newfield_func"
+				},'.$this->CreateColumnCombo("","rpcmp_newfield","width : 150") .',
+				{
+					xtype : "button",
+					text : "اضافه ستون",
+					iconCls : "add",
+					handler : function(){
+						parent = this.up("fieldset").up("fieldset");
+						functionEl = parent.down("[itemId=rpcmp_newfield_func]");
+						comboEl = parent.down("[itemId=rpcmp_newfield]");
+						if(comboEl.getValue() == "")
+							return;
+						elem = parent.down("[itemId=rpcmp_newfield_mullti]");
+						elem.getStore().add({
+							id : functionEl.getValue() + "_" + comboEl.getValue(),
+							title : functionEl.getRawValue() + " " + comboEl.getRawValue()
+						});
+						hiddenEl = parent.down("[name=rpcmp_userfields]");
+						hiddenEl.setValue( hiddenEl.getValue() + "#" + functionEl.getValue() + "_" + comboEl.getValue() + "#");
+						comboEl.setValue();
+						functionEl.setValue();						
+					}
+				},{
+					xtype : "button",
+					text : "حذف ستون",
+					iconCls : "cross",
+					handler : function(){
+						parent = this.up("fieldset").up("fieldset");
+						elem = parent.down("[itemId=rpcmp_newfield_mullti]");
+						hiddenEl = parent.down("[name=rpcmp_userfields]");
+						str = hiddenEl.getValue().replace("#" + elem.getValue() + "#", "");
+						hiddenEl.setValue(str);
+						elem.getStore().removeAt(elem.getStore().find("id",elem.getValue()));
+					}
+				}]				
+			},{
+				xtype : "multiselect",
+				width : 160,
+				itemId : "rpcmp_newfield_mullti",
+				height : 150,
+				store: new Ext.data.Store({
+					fields : ["id","title"]
+				}),
+				ddReorder: true,
+				displayField : "title",
+				valueField : "id"
+			},{
+				xtype : "hidden",
+				name : "rpcmp_userfields"
+			}]
+		}';
+	}
+	
+	static function UserDefinedFields(){
+		
+		if(empty($_POST["rpcmp_userfields"]))
+			return "";
+		
+		$returnArr = array();
+		$arr = explode("#", $_POST["rpcmp_userfields"]);
+		for($i=1; $i < count($arr); $i=$i+2)
+		{
+			$returnArr[] = str_replace("_", "(",$arr[$i]) . ") as " . $arr[$i];
+		}
+
+		return implode(",", $returnArr);
+
+	}
 	//---------------------------------------------------------------
 	
 	static function PHPArray_to_JSSimpleArray($datasource){
@@ -828,7 +982,7 @@ echo "</caption>";
 		return $str;
 	}
 			
-	function GetChartItems($SourceObject, $MainFrame, $PageName){
+	function GetChartItems($SourceObject, $MainFrame, $PageName, $BeforeShowFn = ""){
 		
 		$items = array();
 		$items[] = '{
@@ -952,6 +1106,9 @@ echo "</caption>";
 			style : 'float:left',
 			iconCls : 'diagram',
 			handler : function(){ 
+				
+				" . ($BeforeShowFn != "" ? $BeforeShowFn . "();" : "") . "
+
 				$SourceObject.form = $SourceObject.get('$MainFrame')
 				$SourceObject.form.target = '_blank';
 				$SourceObject.form.method = 'POST';

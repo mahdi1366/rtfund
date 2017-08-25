@@ -53,7 +53,7 @@ function Dashboard(){
 					DashboardObj.MainPanel.add({
 						xtype : "fieldset",
 						style : "direction:ltr;text-align:center",
-						autoscroll : true,
+						autoScroll : true,
 						title : record.data.title,
 						itemId : "cmp_panel_" + record.data.ReportID ,
 						loader : {

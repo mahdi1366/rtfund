@@ -7,9 +7,25 @@
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 
-if(isset($_REQUEST["show"]))
-{
+$page_rpg = new ReportGenerator("mainForm","AccReport_IncomeChequeObj");
+$page_rpg->addColumn("صاحب چک", "fullname");
+$page_rpg->addColumn("موبایل", "mobile");
+$page_rpg->addColumn("شماره پیامک", "SmsNo");
+$page_rpg->addColumn("حساب", "CostDesc");
+$page_rpg->addColumn("معرف", "ReqFullname");	
+$page_rpg->addColumn("شماره چک", "ChequeNo");
+$col = $page_rpg->addColumn("تاریخ چک", "ChequeDate");
+$col->type = "date";
+$page_rpg->addColumn("مبلغ چک", "ChequeAmount");
+$page_rpg->addColumn("بانک", "BankDesc");
+$page_rpg->addColumn("شعبه", "ChequeBranch");
+$page_rpg->addColumn("شرح", "description");
+$page_rpg->addColumn("وضعیت چک", "ChequeStatusDesc");
+	
+function GetData(){
+	
 	$param = array();
+	$userFields = ReportGenerator::UserDefinedFields();
 	$query = "select i.*,
 			case when i.CostID is null then group_concat(concat_ws(' ',p0.fname,p0.lname,p0.CompanyName) SEPARATOR '<br>')
 				else t1.TafsiliDesc end fullname,
@@ -22,7 +38,8 @@ if(isset($_REQUEST["show"]))
 			case when i.CostID is null then group_concat(concat_ws('-', bb1.blockDesc, bb2.blockDesc) SEPARATOR '<br>') 
 				else concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) end CostDesc,
 			b.BankDesc, 
-			t3.TafsiliDesc ChequeStatusDesc	,LoanPersonID		
+			t3.TafsiliDesc ChequeStatusDesc	,LoanPersonID	".
+				($userFields != "" ? "," . $userFields : "")."	
 			
 		from ACC_IncomeCheques i
 			left join ACC_tafsilis t1 using(TafsiliID)
@@ -103,31 +120,20 @@ if(isset($_REQUEST["show"]))
 		$param[":brnch"] = $_POST["BranchID"];
 	}
 	//.........................................................
-	$query .= " group by i.IncomeChequeID ";
-	$dataTable = PdoDataAccess::runquery_fetchMode($query, $param);
+	$group = ReportGenerator::GetSelectedColumnsStr();
+	$query .= $group == "" ? " group by i.IncomeChequeID" : " group by " . $group;
+	$query .= $group == "" ? " order by i.IncomeChequeID" : " order by " . $group;	
+	
+	return  PdoDataAccess::runquery_fetchMode($query, $param);
+}
 
-	function dateRender($row, $value){
-		return DateModules::miladi_to_shamsi($value);
-	}
-	
-	function dateRender2($row,$val){
-		return DateModules::miladi_to_shamsi($val);
-	}
-	
-	function moneyRender($row,$val)
-	{
-		return number_format($val, 0, '.', ',');
-	}
-	function durationRender($row)
-	{
-		return (string)((int)substr($row["toDate"], 5, 2) - (int)substr($row["fromDate"], 5, 2) + 1);
-	}
+function ListData($IsDashboard = false){
 	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
-        if($rpg->excel)
-        {$rpg->addColumn("PID", "LoanPersonID");
-}
+    if($rpg->excel){
+		$rpg->addColumn("PID", "LoanPersonID");
+	}
 	
 	$rpg->addColumn("صاحب چک", "fullname");
 	$rpg->addColumn("موبایل", "mobile");
@@ -135,9 +141,9 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("حساب", "CostDesc");
 	$rpg->addColumn("معرف", "ReqFullname");	
 	$rpg->addColumn("شماره چک", "ChequeNo");
-	$rpg->addColumn("تاریخ چک", "ChequeDate","dateRender");
+	$rpg->addColumn("تاریخ چک", "ChequeDate","ReportDateRender");
 	
-	$col = $rpg->addColumn("مبلغ چک", "ChequeAmount", "moneyRender");
+	$col = $rpg->addColumn("مبلغ چک", "ChequeAmount", "ReportMoneyRender");
 	$col->EnableSummary();
 	
 	$rpg->addColumn("بانک", "BankDesc");
@@ -148,8 +154,8 @@ if(isset($_REQUEST["show"]))
 	//echo PdoDataAccess::GetLatestQueryString();
 	//print_r(ExceptionHandler::PopAllExceptions());
 	
-	$rpg->mysql_resource = $dataTable;
-	if(!$rpg->excel)
+	$rpg->mysql_resource = GetData();
+	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
 	
@@ -176,8 +182,39 @@ if(isset($_REQUEST["show"]))
 		}
 		echo "</td></tr></table>";
 	}
-	$rpg->generateReport();
+	if($IsDashboard)
+	{
+		echo "<div style=direction:rtl;padding-right:10px>";
+		$rpg->generateReport();
+		echo "</div>";
+	}
+	else
+		$rpg->generateReport();
 	die();
+}
+
+
+if(isset($_REQUEST["show"]))
+{
+	ListData();	
+}
+
+if(isset($_REQUEST["rpcmp_chart"]))
+{
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart();
+	die();
+}
+
+if(isset($_REQUEST["dashboard_show"]))
+{
+	$chart = ReportGenerator::DashboardSetParams($_REQUEST["rpcmp_ReportID"]);
+	if(!$chart)
+		ListData(true);	
+	
+	$page_rpg->mysql_resource = GetData();
+	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
+	die();	
 }
 ?>
 <script>
@@ -215,7 +252,7 @@ function AccReport_IncomeCheque()
 			type : "table",
 			columns :2
 		},
-		width : 700,
+		width : 750,
 		items :[{
 			xtype : "combo",
 			colspan : 2,
@@ -298,8 +335,19 @@ function AccReport_IncomeCheque()
 			fieldLabel : "وضعیت چک",
 			displayField : "InfoDesc",
 			queryMode : "local",
+			colspan : 2,
 			valueField : "InfoID",
 			hiddenName :"ChequeStatus"
+		},{
+			xtype : "fieldset",
+			title : "ستونهای گزارش",
+			colspan :2,
+			items :[<?= $page_rpg->ReportColumns() ?>]
+		},{
+			xtype : "fieldset",
+			colspan :2,
+			title : "رسم نمودار",
+			items : [<?= $page_rpg->GetChartItems("AccReport_IncomeChequeObj","mainForm","IncomeCheques.php") ?>]
 		}],
 		buttons : [{
 			text : "گزارش ساز",
