@@ -9,6 +9,24 @@ require_once $address_prefix . '/framework/management/framework.class.php';
 $SystemID = 1000; // portal
 
 $menus = FRW_access::getPortalMenus($SystemID);
+
+//------------- one sended loans ---------------------
+//51,209
+$Menu51 = false;
+for($i=0; $i < count($menus); $i++)
+{
+	if($menus[$i]["MenuID"] == "51")
+		$Menu51 = true;
+	
+	if($menus[$i]["MenuID"] == "209")
+	{
+		if($Menu51)
+			$menus = array_merge(array_slice($menus, 0, $i-1) , array_slice ($menus, $i+1) );
+		break;
+	}
+}
+//----------------------------------------------------
+
 $groupArr = array();
 $menuStr = "";
 

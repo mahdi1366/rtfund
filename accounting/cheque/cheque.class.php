@@ -95,6 +95,16 @@ class ACC_IncomeCheques extends OperationClass{
 			where IncomeChequeID=?", 
 				array($this->IncomeChequeID), $pdo);
 	}
+	
+	function HasDoc(){
+		
+		$dt = PdoDataAccess::runquery("
+			select DocID
+			from ACC_DocItems join ACC_docs using(DocID)
+			where SourceType in(" . DOCTYPE_INCOMERCHEQUE . ",".DOCTYPE_EDITINCOMECHEQUE.")
+			AND SourceID=?", array($this->IncomeChequeID));
+		return count($dt) > 0;
+	}
 }
 
 ?>

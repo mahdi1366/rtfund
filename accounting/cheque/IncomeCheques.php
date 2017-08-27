@@ -47,15 +47,15 @@ $col->width = 80;
 $col = $dg->addColumn("وضعیت چک", "ChequeStatusDesc", "");
 $col->width = 80;
 
-$col = $dg->addColumn("اسناد", "docs", "");
-$col->width = 80;
+/*$col = $dg->addColumn("اسناد", "docs", "");
+$col->width = 80;*/
 
 if($accessObj->EditFlag)
 {
 	$dg->addButton("", "اضافه چک", "add", "function(){IncomeChequeObject.AddCheque();}");
 	$dg->addButton("", "اضافه چکهای اقساط", "add", "function(){IncomeChequeObject.AddLoanCheque();}");
-	$dg->addButton("", "ویرایش چک", "edit", "function(){IncomeChequeObject.beforeEdit();}");
-	$dg->addButton("", "تغییر مبلغ", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
+	$dg->addButton("", "ویرایش مبلغ", "edit", "function(){IncomeChequeObject.beforeEdit();}");
+	$dg->addButton("", "تغییر وضعیت", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
 	$dg->addButton("", "برگشت عملیات", "undo", "function(){IncomeChequeObject.ReturnLatestOperation();}");
 }
 if($accessObj->RemoveFlag)
@@ -959,9 +959,9 @@ IncomeCheque.prototype.DeleteCheque = function(){
 				if(result.success)
 					IncomeChequeObject.grid.getStore().load();
 				else if(result.data != "")
-					Ext.MessageBox.alert("",result.data);
+					Ext.MessageBox.alert("ERROR",result.data);
 				else
-					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+					Ext.MessageBox.alert("ERROR","عملیات مورد نظر با شکست مواجه شد");
 			}
 		});
 	})
@@ -1093,10 +1093,13 @@ IncomeCheque.prototype.ShowHistory = function(){
 	}
 	this.HistoryWin.show();
 	this.HistoryWin.center();
+	mask = new Ext.LoadMask(this.HistoryWin, {msg:'در حال بارگذاری ...'});
+	mask.show();
 	this.HistoryWin.loader.load({
 		params : {
 			IncomeChequeID : this.grid.getSelectionModel().getLastSelected().data.IncomeChequeID
-		}
+		},
+		callback : function(){mask.hide();}
 	});
 }
 
@@ -1355,6 +1358,11 @@ IncomeCheque.prototype.beforeEdit = function(){
 		Ext.getCmp(this.TabID).add(this.editWin);
 	}
 	var record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+	{
+		Ext.MessageBox.alert("Error","ابتدا ردیف مورد نظر خود را انتخاب کنید");
+		return;
+	}
 	if(record.data.EqualizationID*1 > 0)
 	{
 		Ext.MessageBox.alert("Error","چکی که تایید مغایرت شده است تحت هیچ شرایطی قابل تغییر نمی باشد");
@@ -1370,7 +1378,7 @@ IncomeCheque.prototype.beforeEdit = function(){
 		newAmount = this.up('window').down("[name=newAmount]").getValue();
 		reason = this.up('window').down("[name=reason]").getValue();
 
-		mask = new Ext.LoadMask(IncomeChequeObject.grid, {msg:'در حال تغییر وضعیت ...'});
+		mask = new Ext.LoadMask(IncomeChequeObject.grid, {msg:'در حال تغییر ...'});
 		mask.show();
 
 		Ext.Ajax.request({
@@ -1385,7 +1393,7 @@ IncomeCheque.prototype.beforeEdit = function(){
 
 			success : function(response){
 				mask.hide();
-
+				IncomeChequeObject.editWin.hide();
 				result = Ext.decode(response.responseText);
 				if(result.success)
 					IncomeChequeObject.grid.getStore().load();

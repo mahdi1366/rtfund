@@ -6,9 +6,13 @@
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 
-$page_rpg = new ReportGenerator("mainForm","BSC_PersonsObj");
+function RealRender($row, $value){
+	return $value == "YES" ? "حقیقی" : "حقوقی";
+}
+
+$page_rpg = new ReportGenerator("mainForm","BSC_PersonReportObj");
 $page_rpg->addColumn("نام و نام خانوادگی/شرکت", "fullname");
-$page_rpg->addColumn("نوع", "IsReal", "ReportYesNoRender");
+$page_rpg->addColumn("نوع", "IsReal", "RealRender");
 $page_rpg->addColumn("کدملی/شناسه ملی", "NationalID");
 $page_rpg->addColumn("نام پدر", "FatherName");
 $page_rpg->addColumn("شماره شناسنامه", "ShNo");
@@ -44,27 +48,7 @@ function MakeWhere(&$where, &$whereParam){
 					strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 				continue;
 			$prefix = "";
-			switch($key)
-			{
-				case "fromRequestID":
-				case "toRequestID":
-					$prefix = "b.";
-					break;
-				case "fromPayDate":
-				case "toPayDate":
-					$value = DateModules::shamsi_to_miladi($value, "-");
-					break;
-				case "fromPayAmount":
-				case "toPayAmount":
-					$value = preg_replace('/,/', "", $value);
-					break;
-			}
-			if(strpos($key, "from") === 0)
-				$where .= " AND " . $prefix . substr($key,4) . " >= :$key";
-			else if(strpos($key, "to") === 0)
-				$where .= " AND " . $prefix . substr($key,2) . " <= :$key";
-			else
-				$where .= " AND " . $prefix . $key . " = :$key";
+			$where .= " AND " . $prefix . $key . " = :$key";
 			$whereParam[":$key"] = $value;
 		}
 	}	
@@ -73,6 +57,7 @@ function GetData(){
 	$where = "";
 	$whereParam = array();
 	$userFields = ReportGenerator::UserDefinedFields();
+	$userFields = str_replace("(fullname)", "(concat_ws(' ',fname,lname,CompanyName))", $userFields);
 	MakeWhere($where, $whereParam);
 	
 	$query = "select p.*, concat_ws(' ',fname,lname,CompanyName) fullname,
@@ -84,7 +69,7 @@ function GetData(){
 			from BSC_persons p
 			left join BaseInfo b1 on(b1.typeID=14 and b1.InfoID=CompanyType)
 			left join BSC_ActDomain d using(DomainID)
-			" . $where ;
+			where 1=1 " . $where ;
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
 	$query .= $group == "" ? " " : " group by " . $group;
@@ -92,7 +77,7 @@ function GetData(){
 	
 	$dataTable = PdoDataAccess::runquery_fetchMode($query, $whereParam);
 	$query = PdoDataAccess::GetLatestQueryString();
-	//print_r(ExceptionHandler::PopAllExceptions());
+	print_r(ExceptionHandler::PopAllExceptions());
 	
 	return $dataTable;
 }
@@ -103,26 +88,30 @@ function ListDate($IsDashboard = false){
 	$rpg->excel = !empty($_POST["excel"]);
 	$rpg->mysql_resource = GetData();
 	
-	function endedRender($row,$value){
-		return ($value == "YES") ? "خاتمه" : "جاری";
-	}
-	
-	$rpg->addColumn("شماره وام", "RequestID");
-	$rpg->addColumn("نوع وام", "LoanDesc");
-	$rpg->addColumn("معرفی کننده", "ReqFullname");
-	$rpg->addColumn("تاریخ درخواست", "ReqDate", "ReportDateRender");
-	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "ReportMoneyRender");
-	$col->EnableSummary();
-	$rpg->addColumn("مشتری", "LoanFullname");
-	$rpg->addColumn("شعبه", "BranchName");
-	$rpg->addColumn("تاریخ پرداخت", "PayDate", "ReportDateRender");
-	$col = $rpg->addColumn("مبلغ پرداخت", "PayAmount", "ReportMoneyRender");
-	$col->EnableSummary();
-	$rpg->addColumn("نوع پرداخت", "PayTypeDesc");
-	$rpg->addColumn("شماره فیش", "PayBillNo");
-	$rpg->addColumn("کد پیگیری", "PayRefNo");
-	$rpg->addColumn("شماره چک", "ChequeNo");
-	$rpg->addColumn("شماره سند", "LocalNo");
+	$rpg->addColumn("نام و نام خانوادگی/شرکت", "fullname");
+	$rpg->addColumn("نوع", "IsReal", "RealRender");
+	$rpg->addColumn("کدملی/شناسه ملی", "NationalID");
+	$rpg->addColumn("نام پدر", "FatherName");
+	$rpg->addColumn("شماره شناسنامه", "ShNo");
+	$rpg->addColumn("تلفن", "PhoneNo");
+	$rpg->addColumn("همراه", "mobile");
+	$rpg->addColumn("شماره پیامک", "SmsNo");
+	$rpg->addColumn("آدرس", "address");
+	$rpg->addColumn("ایمیل", "email");
+	$rpg->addColumn("وب سایت", "WebSite");
+	$rpg->addColumn("کد اقتصادی", "NationalID");
+	$rpg->addColumn("شماره ثبت", "RegNo");
+	$rpg->addColumn("تاریخ ثبت", "RegDate", "ReportDateRender");
+	$rpg->addColumn("محل ثبت", "RegPlace");
+	$rpg->addColumn("نوع شرکت", "CompanyTypeDesc");
+	$rpg->addColumn("شماره شبا", "AccountNo");
+	$rpg->addColumn("حوزه فعالیت", "DomainDesc");
+	$rpg->addColumn("مشتری", "IsCustomer", 'ReportTickRender');
+	$rpg->addColumn("سهامدار", "IsShareholder", 'ReportTickRender');
+	$rpg->addColumn("سرمایه گذار", "IsAgent", 'ReportTickRender');
+	$rpg->addColumn("حامی", "IsSupporter", 'ReportTickRender');
+	$rpg->addColumn("همکاران صندوق", "IsStaff", 'ReportTickRender');
+	$rpg->addColumn("کارشناس خارج از صندوق", "IsExpert", 'ReportTickRender');
 	
 	if(!$rpg->excel && !$IsDashboard)
 	{
@@ -130,15 +119,10 @@ function ListDate($IsDashboard = false){
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
-					گزارش پرداخت های مشتریان
+					گزارش ذینفعان
 				</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
 			. DateModules::shNow() . "<br>";
-		if(!empty($_POST["fromReqDate"]))
-		{
-			echo "<br>گزارش از تاریخ : " . $_POST["fromReqDate"] . 
-				($_POST["toReqDate"] != "" ? " - " . $_POST["toReqDate"] : "");
-		}
 		echo "</td></tr></table>";
 	}
 	if($IsDashboard)
@@ -176,7 +160,7 @@ if(isset($_REQUEST["dashboard_show"]))
 }
 ?>
 <script>
-BSC_Persons.prototype = {
+BSC_PersonReport.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
@@ -185,7 +169,7 @@ BSC_Persons.prototype = {
 	}
 }
 
-BSC_Persons.prototype.showReport = function(btn, e)
+BSC_PersonReport.prototype.showReport = function(btn, e)
 {
 	this.form = this.get("mainForm")
 	this.form.target = "_blank";
@@ -196,7 +180,7 @@ BSC_Persons.prototype.showReport = function(btn, e)
 	return;
 }
 
-function BSC_Persons()
+function BSC_PersonReport()
 {		
 	this.formPanel = new Ext.form.Panel({
 		renderTo : this.get("main"),
@@ -206,20 +190,20 @@ function BSC_Persons()
 			columns :2
 		},
 		bodyStyle : "text-align:right;padding:5px",
-		title : "گزارش پرداخت های مشتریان",
-		width : 780,
+		title : "گزارش ذینفعان ",
+		width : 800,
 		items :[{
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({
 				proxy: {
 					type: 'jsonp',
-					url: this.address_prefix + '../../framework/person/persons.data.php?' +
-						"task=selectPersons&UserTypes=IsAgent,IsSupporter",
+					url: this.address_prefix + '../person/persons.data.php?' +
+						"task=selectPersons",
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields : ['PersonID','fullname']
 			}),
-			fieldLabel : "معرفی کننده",
+			fieldLabel : "ذینفع",
 			pageSize : 25,
 			width : 370,
 			displayField : "fullname",
@@ -227,7 +211,7 @@ function BSC_Persons()
 			hiddenName : "ReqPersonID",
 			listeners :{
 				select : function(record){
-					el = BSC_PersonsObj.formPanel.down("[itemId=cmp_subAgent]");
+					el = BSC_PersonReportObj.formPanel.down("[itemId=cmp_subAgent]");
 					el.getStore().proxy.extraParams["PersonID"] = this.getValue();
 					el.getStore().load();
 				}
@@ -235,102 +219,53 @@ function BSC_Persons()
 		},{
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../../framework/person/persons.data.php?' +
-						"task=selectSubAgents",
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				fields : ['SubID','SubDesc']
+				data : [
+					['YES' , "حقیقی" ],
+					['NO' , "حقوقی" ]
+				],
+				fields : ['id','value']
 			}),
-			fieldLabel : "زیر واحد سرمایه گذار",
-			queryMode : "local",
-			width : 370,
-			displayField : "SubDesc",
-			valueField : "SubID",
-			hiddenName : "SubAgentID",
-			itemId : "cmp_subAgent"
+			fieldLabel : "نوع ذینفع",
+			displayField : "value",
+			valueField : "id",
+			hiddenName : "IsReal"
 		},{
-			xtype : "combo",
-			store : new Ext.data.SimpleStore({
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../../framework/person/persons.data.php?' +
-						"task=selectPersons&UserType=IsCustomer",
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				fields : ['PersonID','fullname']
-			}),
-			fieldLabel : "مشتری",
-			displayField : "fullname",
-			pageSize : 20,
-			width : 370,
-			valueField : "PersonID",
-			hiddenName : "LoanPersonID"
-		},{
-			xtype : "combo",
-			store : new Ext.data.SimpleStore({
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../loan/loan.data.php?task=GetAllLoans',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				fields : ['LoanID','LoanDesc'],
-				autoLoad : true					
-			}),
-			fieldLabel : "نوع وام",
-			queryMode : 'local',
-			width : 370,
-			displayField : "LoanDesc",
-			valueField : "LoanID",
-			hiddenName : "LoanID"
-		},{
-			xtype : "combo",
-			store : new Ext.data.SimpleStore({
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../../framework/baseInfo/baseInfo.data.php?' +
-						"task=SelectBranches",
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				fields : ['BranchID','BranchName'],
-				autoLoad : true					
-			}),
-			fieldLabel : "شعبه اخذ وام",
-			queryMode : 'local',
-			width : 370,
+			xtype : "fieldset",
 			colspan : 2,
-			displayField : "BranchName",
-			valueField : "BranchID",
-			hiddenName : "BranchID"
+			title : " ذینفع",
+			items :[{
+				xtype : "container",
+				html : "<input type=checkbox name=IsStaff value='YES'>همکاران صندوق" + "&nbsp;&nbsp;" +
+					"<input type=checkbox name=IsCustomer value='YES'>مشتری " + "&nbsp;&nbsp;" +
+					"<input type=checkbox name=IsShareholder value='YES'>سهامدار " + "&nbsp;&nbsp;" +
+					"<input type=checkbox name=IsAgent value='YES'>سرمایه گذار " + "&nbsp;&nbsp;" +
+					"<input type=checkbox name=IsSupporter value='YES'>حامی " + "&nbsp;&nbsp;" +
+					"<input type=checkbox name=IsExpert value='YES'>کارشناس خارج از صندوق " 
+			}]
 		},{
-			xtype : "numberfield",
-			name : "fromRequestID",
-			hideTrigger : true,
-			fieldLabel : "شماره وام از"
+			xtype : "trigger",
+			fieldLabel: 'حوزه فعالیت',
+			name: 'DomainDesc',	
+			triggerCls:'x-form-search-trigger',
+			onTriggerClick : function(){
+				BSC_PersonReportObj.ActDomainLOV();
+			}
 		},{
-			xtype : "numberfield",
-			name : "toRequestID",
-			hideTrigger : true,
-			fieldLabel : "تا شماره"
-		},{
-			xtype : "shdatefield",
-			name : "fromPayDate",
-			fieldLabel : "تاریخ پرداخت از"
-		},{
-			xtype : "shdatefield",
-			name : "toPayDate",
-			fieldLabel : "تا تاریخ"
-		},{
-			xtype : "currencyfield",
-			name : "fromPayAmount",
-			hideTrigger : true,
-			fieldLabel : "مبلغ پرداخت از"
-		},{
-			xtype : "currencyfield",
-			name : "toPayAmount",
-			hideTrigger : true,
-			fieldLabel : "تا مبلغ"
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../person/persons.data.php?task=selectCompanyTypes',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['InfoID','InfoDesc'],
+				autoLoad : true					
+			}),
+			displayField : "InfoDesc",
+			valueField : "InfoID",
+			queryMode : "local",
+			fieldLabel: 'نوع شرکت',
+			hiddenName: 'CompanyType'
 		},{
 			xtype : "fieldset",
 			colspan :2,
@@ -340,13 +275,17 @@ function BSC_Persons()
 			xtype : "fieldset",
 			colspan :2,
 			title : "رسم نمودار",
-			items : [<?= $page_rpg->GetChartItems("BSC_PersonsObj","mainForm","persons.php") ?>]
+			items : [<?= $page_rpg->GetChartItems("BSC_PersonReportObj","mainForm","persons.php") ?>]
+		},{
+			xtype : "hidden",
+			name : "DomainID",
+			colspan : 2
 		}],
 		buttons : [{
 			text : "گزارش ساز",
 			iconCls : "db",
 			handler : function(){ReportGenerator.ShowReportDB(
-						BSC_PersonsObj, 
+						BSC_PersonReportObj, 
 						<?= $_REQUEST["MenuID"] ?>,
 						"mainForm",
 						"formPanel"
@@ -360,7 +299,7 @@ function BSC_Persons()
 			handler : Ext.bind(this.showReport,this),
 			listeners : {
 				click : function(){
-					BSC_PersonsObj.get('excel').value = "true";
+					BSC_PersonReportObj.get('excel').value = "true";
 				}
 			},
 			iconCls : "excel"
@@ -368,22 +307,55 @@ function BSC_Persons()
 			text : "پاک کردن گزارش",
 			iconCls : "clear",
 			handler : function(){
-				BSC_PersonsObj.formPanel.getForm().reset();
-				BSC_PersonsObj.get("mainForm").reset();
+				BSC_PersonReportObj.formPanel.getForm().reset();
+				BSC_PersonReportObj.get("mainForm").reset();
 			}			
 		}]
 	});
 	
 	this.formPanel.getEl().addKeyListener(Ext.EventObject.ENTER, function(keynumber,e){
 		
-		BSC_PersonsObj.showReport();
+		BSC_PersonReportObj.showReport();
 		e.preventDefault();
 		e.stopEvent();
 		return false;
 	});
 }
 
-BSC_PersonsObj = new BSC_Persons();
+BSC_PersonReport.prototype.ActDomainLOV = function(){
+		
+	if(!this.DomainWin)
+	{
+		this.DomainWin = new Ext.window.Window({
+			autoScroll : true,
+			width : 420,
+			height : 420,
+			title : "حوزه فعالیت",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "../baseInfo/ActDomain.php?mode=adding",
+				scripts : true
+			}
+		});
+		
+		Ext.getCmp(this.TabID).add(this.DomainWin);
+	}
+	
+	this.DomainWin.show();
+	
+	this.DomainWin.loader.load({
+		params : {
+			ExtTabID : this.DomainWin.getEl().dom.id,
+			parent : "BSC_PersonReportObj.DomainWin",
+			selectHandler : function(id, name){
+				BSC_PersonReportObj.formPanel.down("[name=DomainDesc]").setValue(name);
+				BSC_PersonReportObj.formPanel.down("[name=DomainID]").setValue(id);
+			}
+		}
+	});
+}
+
+BSC_PersonReportObj = new BSC_PersonReport();
 </script>
 <form id="mainForm">
 	<center><br>

@@ -14,7 +14,8 @@ $dgh = new sadaf_datagrid("dgh1",$js_prefix_address."cheques.data.php?task=Selec
 
 $dgh->addColumn("","RowID",'string',true);
 
-$temp = PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_ChequeStatus);
+$temp = PdoDataAccess::runquery("select * from ACC_tafsilis where
+	TafsiliID<>".INCOMECHEQUE_EDIT." AND TafsiliType=" . TAFTYPE_ChequeStatus);
 
 $col = $dgh->addColumn("وضعیت مبدا", "SrcID");
 $col->editor = ColumnEditor::ComboBox($temp, "TafsiliID", "TafsiliDesc");

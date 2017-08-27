@@ -29,7 +29,7 @@ define("DOCTYPE_WARRENTY_EXTEND", "19");
 define("DOCTYPE_INSTALLMENT_CHANGE", "20");
 define("DOCTYPE_WARRENTY_CANCEL", "21");
 define("DOCTYPE_SALARY", "22");
-
+define("DOCTYPE_EDITINCOMECHEQUE", "23");
 //............  TypeID=2 ....................
 define("TAFTYPE_PERSONS", "1");
 define("TAFTYPE_YEARS", "2");
@@ -65,6 +65,7 @@ define("INCOMECHEQUE_MOSTARAD", "3008");
 define("INCOMECHEQUE_BARGHASHTI_MOSTARAD", "3009");
 define("INCOMECHEQUE_MAKHDOOSH", "3010");
 define("INCOMECHEQUE_CHANGE", "3011");
+define("INCOMECHEQUE_EDIT", "3333");
 
 //............  TypeID=6 ....................
 define("BACKPAY_PAYTYPE_EPAY", "4");

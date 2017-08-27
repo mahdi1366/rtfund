@@ -1,7 +1,22 @@
 <?php
 require_once "framework/header.inc.php";
 
-/*require_once("framework/PasswordHash.php");
+/*
+ * select * from ACC_tafsilis where TafsiliType=7;
+
+
+SELECT * FROM BaseInfo where typeID=9
+ * ALTER TABLE `krrtfir_rtfund`.`ACC_ChequeHistory` ADD COLUMN `details` VARCHAR(1000) AFTER `ATS`;
+
+
+ALTER TABLE `krrtfir_rtfund`.`LON_BackPays` ADD INDEX `Index_2`(`IncomeChequeID`);
+
+
+ALTER TABLE `krrtfir_rtfund`.`ACC_tafsilis` ADD INDEX `Index_2`(`ObjectID`);
+
+ * 
+ * 
+ * require_once("framework/PasswordHash.php");
 $dt = PdoDataAccess::runquery("select * from BSC_persons 
 	where (UserName='' or UserName is null) AND NationalID<>''");
 foreach($dt as $row)
