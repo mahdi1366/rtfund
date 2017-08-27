@@ -93,6 +93,7 @@ function SaveOperation(){
 	//---------------------------------------	
 	foreach($dt as $row)
 	{
+		ExceptionHandler::PopAllExceptions();
 		$context = $row["context"];
 		switch($obj->SendType){
 			case "SMS" :
@@ -100,11 +101,14 @@ function SaveOperation(){
 				if($SmsNo == "")
 				{
 					ExceptionHandler::PushException ("فاقد شماره پیامک");
-					continue;
 				}
-				$result = ariana2_sendSMS($SmsNo, $context);
-				if(!$result)
-					ExceptionHandler::PushException ("خطا در ارسال پیامک");
+				else
+				{
+					$SendError = "";
+					$result = ariana2_sendSMS($SmsNo, $context, "number", $SendError);
+					if(!$result)
+						ExceptionHandler::PushException ("خطا در ارسال پیامک" . "[" . $SendError . "]");
+				}
 				break;
 			//------------------------------------------------------------------
 			case "EMAIL" : 
@@ -112,11 +116,13 @@ function SaveOperation(){
 				if($email == "")
 				{
 					ExceptionHandler::PushException ("فاقد ایمیل");
-					continue;
 				}
-				$result = SendEmail($email, $obj->title, $context);
-				if(!$result)
-					ExceptionHandler::PushException ("خطا در ارسال ایمیل");
+				else
+				{
+					$result = SendEmail($email, $obj->title, $context);
+					if(!$result)
+						ExceptionHandler::PushException ("خطا در ارسال ایمیل");
+				}
 				break;
 			//------------------------------------------------------------------
 			case "LETTER" : 

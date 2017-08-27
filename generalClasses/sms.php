@@ -1,6 +1,6 @@
 <?php
 
-function ariana2_sendSMS($toNumber,$msgText,$type = 'number'){
+function ariana2_sendSMS($toNumber,$msgText,$type = 'number', &$SendError = "" ){
 	
 	$toList = array($toNumber);
 	$msgList = array($msgText);
@@ -14,7 +14,7 @@ function ariana2_sendSMS($toNumber,$msgText,$type = 'number'){
     $soapclient = new nusoap_client(sms_config::$server,'wsdl');
 
     if ( (!$soapclient) || ($err = $soapclient->getError()) ) {
-		var_dump($err);
+		$SendError = $err;
         return false;
 	}
 	$xmlNodes = '<Mobiles>';
@@ -39,12 +39,14 @@ function ariana2_sendSMS($toNumber,$msgText,$type = 'number'){
 
 	$err = $soapclient->getError();
 	if ($err) {
-		var_dump($err);
+		$SendError = $err;
 		return false;
 	}
 	
 	if($res["SendResult"] == "1 messages inserted in send queue")
 		return true;
+	
+	$SendError = $res["SendResult"];
 	return false;
 }
 
