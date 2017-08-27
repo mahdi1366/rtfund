@@ -1,5 +1,8 @@
 <?php
-
+//-------------------------
+// programmer:	Jafarkhani
+// Create Date:	94.12
+//-------------------------
 require_once '../header.inc.php';
 require_once "../request/request.class.php";
 require_once "../request/request.data.php";
@@ -29,8 +32,14 @@ $page_rpg->addColumn("کارمزد مشتری", "CustomerWage");
 $page_rpg->addColumn("کارمزد صندوق", "FundWage");
 $page_rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
 $page_rpg->addColumn("شماره قدیم", "imp_VamCode");
+$page_rpg->addColumn("تضامین", "tazamin");
 $page_rpg->addColumn("وضعیت", "StatusDesc");
-$page_rpg->addColumn("قابل پرداخت مشتری", "TotalInstallmentAmount");
+$page_rpg->addColumn("جمع اقساط", "TotalInstallmentAmount");
+$col = $page_rpg->addColumn("تاریخ آخرین قسط", "MaxInstallmentDate");
+$col->type = "date";
+$col = $page_rpg->addColumn("تاریخ آخرین پرداخت", "MaxPayDate");
+$col->type = "date";
+$page_rpg->addColumn("مبلغ آخرین پرداخت", "LastPayAmount");
 $page_rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount");
 $page_rpg->addColumn("مانده قابل پرداخت", "remainder");
 
@@ -103,7 +112,11 @@ function GetData(){
 				BranchName,
 				SumPayments,
 				TotalPayAmount,
-				TotalInstallmentAmount".
+				TotalInstallmentAmount,
+				MaxInstallmentDate,
+				MaxPayDate,
+				ifnull(LastPayAmount,0) LastPayAmount,
+				tazamin".
 				($userFields != "" ? "," . $userFields : "")."
 				
 			from LON_requests r
@@ -122,7 +135,7 @@ function GetData(){
 				group by RequestID			
 			)t_pay on(r.RequestID=t_pay.RequestID)
 			left join (
-				select RequestID,sum(PayAmount) TotalPayAmount 
+				select RequestID,sum(PayAmount) TotalPayAmount , max(PayDate) MaxPayDate
 				from LON_BackPays
 				left join ACC_IncomeCheques i using(IncomeChequeID)
 				where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
@@ -135,6 +148,33 @@ function GetData(){
 				where  history='NO' AND IsDelayed='NO'
 				group by RequestID			
 			)t2 on(r.RequestID=t2.RequestID)
+			left join (
+				select RequestID,max(InstallmentDate) MaxInstallmentDate
+				from LON_installments
+				where history='NO' AND IsDelayed='NO'
+				group by RequestID			
+			)inst on(r.RequestID=inst.RequestID)
+			left join (
+				select RequestID,PayAmount LastPayAmount from LON_BackPays
+				join (	select RequestID,max(BackPayID) BackPayID 
+						from LON_BackPays group by RequestID)t using(BackPayID,RequestID) 
+				group by RequestID
+			)t3 on(r.RequestID=t3.RequestID)
+			left join (
+				select ObjectID,group_concat(title,' به شماره سريال ',num, ' و مبلغ ', 
+					format(amount,2) separator '<br>') tazamin
+				from (	
+					select ObjectID,InfoDesc title,group_concat(if(KeyTitle='no',paramValue,'') separator '') num,
+					group_concat(if(KeyTitle='amount',paramValue,'') separator '') amount
+					from DMS_documents d
+					join BaseInfo b1 on(InfoID=d.DocType AND TypeID=8)
+					join DMS_DocParamValues dv  using(DocumentID)
+					join DMS_DocParams using(ParamID)
+				    where ObjectType='loan' AND b1.param1=1
+					group by ObjectID, DocumentID
+				)t
+				group by ObjectID
+			)t4 on(t4.ObjectID=r.RequestID)
 			where 1=1 " . $where;
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
@@ -143,6 +183,8 @@ function GetData(){
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	$query = PdoDataAccess::GetLatestQueryString();
+	//print_r(ExceptionHandler::PopAllExceptions());
+	//echo $query;
 	for($i=0; $i< count($dataTable); $i++)
 	{
 		$dt = array();
@@ -188,10 +230,16 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
 	$rpg->addColumn("شماره قدیم", "imp_VamCode");
 	//$rpg->addColumn("جاری/خاتمه", "IsEnded", "endedRender");
+	$rpg->addColumn("تضامین", "tazamin");
 	$rpg->addColumn("وضعیت", "StatusDesc");
-	$col = $rpg->addColumn("قابل پرداخت مشتری", "TotalInstallmentAmount", "ReportMoneyRender");
+	$col = $rpg->addColumn("جمع اقساط", "TotalInstallmentAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
+	$rpg->addColumn("تاریخ آخرین قسط", "MaxInstallmentDate", "ReportDateRender");
+
+	$rpg->addColumn("تاریخ آخرین پرداخت", "MaxPayDate", "ReportDateRender");
+	$rpg->addColumn("مبلغ آخرین پرداخت", "LastPayAmount", "ReportMoneyRender");
+	
 	$col = $rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();

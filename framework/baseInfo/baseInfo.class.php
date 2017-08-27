@@ -76,10 +76,10 @@ class BSC_posts extends OperationClass {
 	
 	public function Remove($pdo = null) {
 		
-		$dt = parent::runquery("select * from BSC_persons where PostID=?", array($this->PostID), $pdo);
+		$dt = parent::runquery("select * from BSC_jobs where PostID=?", array($this->PostID), $pdo);
 		if(count($dt) > 0)
 		{
-			ExceptionHandler::PushException("این پست به فردی نسبت داده شده است و قابل حذف نمی باشد");
+			ExceptionHandler::PushException("برای این پست شغل تعریف شده و قابل حذف نمی باشد");
 			return false;
 		}
 		
@@ -90,7 +90,10 @@ class BSC_posts extends OperationClass {
 	public static function GetMissionSigner(){
 		
 		$dt = PdoDataAccess::runquery("select PostID,PostName,concat_ws(' ',fname,lname) fullname, PersonID
-			from BSC_posts join BSC_persons using(PostID) where MissionSigner='YES'");
+			from BSC_posts 
+				join BSC_jobs using(PostID) 
+				join BSC_persons using(PersonID) 
+			where MissionSigner='YES' AND IsMain='YES'");
 		if(count($dt) > 0)
 			return $dt[0];
 		return false;

@@ -35,6 +35,9 @@ function MakeWhere(&$where, &$whereParam){
 			$prefix = "";
 			switch($key)
 			{
+				case "PersonID":
+					$prefix = "r.";
+					break;
 				case "FromStartDate":
 				case "ToStartDate":
 				case "FromEndDate":

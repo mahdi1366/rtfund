@@ -411,7 +411,7 @@ function SignLetter(){
 		$PersonObj = new BSC_persons($obj->SignerPersonID);
 		
 		$obj->IsSigned = "YES";
-		$obj->SignPostID = $PersonObj->PostID;
+		$obj->SignPostID = $PersonObj->_PostID;
 		$result = $obj->EditLetter();
 	}
 	

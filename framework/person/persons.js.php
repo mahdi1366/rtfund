@@ -150,33 +150,18 @@ function Person()
 			fieldLabel: 'تلفن همراه',
 			name: 'mobile'
 		},{
-			xtype : "combo",
-			store : new Ext.data.SimpleStore({
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + 'persons.data.php?task=selectPosts',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				fields : ['PostID','PostName'],
-				autoLoad : true					
-			}),
-			name : "PostID",
-			displayField : "PostName",
-			valueField : "PostID",
-			queryMode : "local",
-			fieldLabel : "پست سازمانی"			
+			xtype : "numberfield",
+			name : "SmsNo",
+			hideTrigger : true,
+			fieldLabel : "شماره دریافت پیامک"
 		},{
 			xtype : "numberfield",
 			name : "ShareNo",
 			hideTrigger : true,
 			labelWidth : 100,
 			width : 235,
+			colspan : 2,
 			fieldLabel : "شماره دفتر سهام"
-		},{
-			xtype : "numberfield",
-			name : "SmsNo",
-			hideTrigger : true,
-			fieldLabel : "شماره دریافت پیامک"
 		},{
 			xtype : "fieldset",
 			colspan : 2,

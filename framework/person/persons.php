@@ -15,7 +15,6 @@ $dg = new sadaf_datagrid("dg",$js_prefix_address . "persons.data.php?task=select
 
 $dg->addColumn("PID","PersonID","string");
 $dg->addColumn("","IsReal","string", true);
-$dg->addColumn("","PostID","string", true);
 $dg->addColumn("","fname","string", true);
 $dg->addColumn("","lname","string", true);
 $dg->addColumn("","NationalID","string", true);
