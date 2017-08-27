@@ -461,6 +461,35 @@ function SavePayedDate(){
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
+
+function editCheque(){
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$obj = new ACC_IncomeCheques($_POST["IncomeChequeID"]);
+	
+	if($obj->ChequeStatus == INCOMECHEQUE_VOSUL)
+	{
+		echo Response::createObjectiveResponse(false, "چک وصول شده قابل تغییر نمی باشد");
+		die();
+	}
+	
+	$obj->ChequeAmount = $_POST["newAmount"];
+	$obj->Edit($pdo);
+	
+	ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, $obj->IncomeChequeID, $pdo, $_POST["reason"]);
+	
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
 //...........................................
 
 

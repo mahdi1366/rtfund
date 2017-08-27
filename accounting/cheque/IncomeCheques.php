@@ -54,7 +54,8 @@ if($accessObj->EditFlag)
 {
 	$dg->addButton("", "اضافه چک", "add", "function(){IncomeChequeObject.AddCheque();}");
 	$dg->addButton("", "اضافه چکهای اقساط", "add", "function(){IncomeChequeObject.AddLoanCheque();}");
-	$dg->addButton("", "تغییر وضعیت چک", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
+	$dg->addButton("", "ویرایش چک", "edit", "function(){IncomeChequeObject.beforeEdit();}");
+	$dg->addButton("", "تغییر مبلغ", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
 	$dg->addButton("", "برگشت عملیات", "undo", "function(){IncomeChequeObject.ReturnLatestOperation();}");
 }
 if($accessObj->RemoveFlag)
@@ -71,7 +72,7 @@ $col->width = 40;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 400;
-$dg->width = 800;
+$dg->width = 850;
 $dg->title = "چک های دریافتی";
 $dg->DefaultSortField = "ChequeDate";
 $dg->DefaultSortDir = "Desc";
@@ -1315,6 +1316,89 @@ IncomeCheque.prototype.SaveLoanCheque = function(){
 				Ext.MessageBox.alert("Error", action.result.data);
 		}
 	});
+}
+
+IncomeCheque.prototype.beforeEdit = function(){
+	
+	if(!this.editWin)
+	{
+		this.editWin = new Ext.window.Window({
+			width : 414,
+			height : 200,
+			defaults : {
+				width : 400
+			},
+			modal : true,
+			bodyStyle : "background-color:white",
+			items : [{
+				xtype : "textarea",
+				name : "reason",
+				fieldLabel : "دلیل تغییر"
+			},{
+				xtype : "currencyfield",
+				name : "newAmount",
+				hideTrigger : true,
+				fieldLabel : "مبلغ جدید"
+			}],
+			closeAction : "hide",
+			buttons : [{
+				text : "تغییر چک",				
+				iconCls : "edit",
+				itemId : "btn_save"
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.editWin);
+	}
+	var record = this.grid.getSelectionModel().getLastSelected();
+	if(record.data.EqualizationID*1 > 0)
+	{
+		Ext.MessageBox.alert("Error","چکی که تایید مغایرت شده است تحت هیچ شرایطی قابل تغییر نمی باشد");
+		return;
+	}
+	if(record.data.ChequeStatus == "<?= INCOMECHEQUE_VOSUL ?>")
+	{
+		Ext.MessageBox.alert("Error","چکی که وصول شده است قابل تغییر نمی باشد");
+		return;
+	}
+	
+	this.editWin.down("[itemId=btn_save]").setHandler(function(){
+		newAmount = this.up('window').down("[name=newAmount]").getValue();
+		reason = this.up('window').down("[name=reason]").getValue();
+
+		mask = new Ext.LoadMask(IncomeChequeObject.grid, {msg:'در حال تغییر وضعیت ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			methos : "post",
+			url : IncomeChequeObject.address_prefix + "cheques.data.php",
+			params : {
+				task : "editCheque",
+				newAmount : newAmount,
+				reason : reason,
+				IncomeChequeID : record.data.IncomeChequeID
+			},
+
+			success : function(response){
+				mask.hide();
+
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					IncomeChequeObject.grid.getStore().load();
+				else if(result.data != "")
+					Ext.MessageBox.alert("",result.data);
+				else
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+			}
+		});
+	});
+		
+	this.editWin.show();
+	this.editWin.center();
 }
 
 </script>
