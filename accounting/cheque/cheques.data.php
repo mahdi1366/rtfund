@@ -480,6 +480,14 @@ function editCheque(){
 	
 	ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, $obj->IncomeChequeID, $pdo, $_POST["reason"]);
 	
+	$BackPays = $obj->GetBackPays($pdo);
+	if(count($BackPays) > 0)
+	{
+		$bobj = new LON_BackPays($BackPays[0]["BackPayID"]);
+		$bobj->PayAmount = $_POST["newAmount"];
+		$bobj->Edit($pdo);
+	}
+	
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
 		$pdo->rollBack();
