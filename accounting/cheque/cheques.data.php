@@ -88,8 +88,8 @@ function selectIncomeCheques() {
 			case when i.CostID is null then group_concat(concat_ws('-', bb1.blockDesc, bb2.blockDesc) SEPARATOR '<br>') 
 				else concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) end CostDesc,
 			b.BankDesc, 
-			t3.TafsiliDesc ChequeStatusDesc,
-			t.docs
+			t3.TafsiliDesc ChequeStatusDesc
+			/*,t.docs*/
 			
 		from ACC_IncomeCheques i
 			left join ACC_tafsilis t1 using(TafsiliID)
@@ -109,12 +109,12 @@ function selectIncomeCheques() {
 		
 		left join ACC_banks b on(ChequeBank=BankID)
 		left join ACC_tafsilis t3 on(t3.TafsiliType=".TAFTYPE_ChequeStatus." AND t3.TafsiliID=ChequeStatus)
-		left join (
+		/*left join (
 			select SourceID, group_concat(distinct LocalNo) docs
 			from ACC_DocItems join ACC_docs using(DocID)
 			where SourceType='" . DOCTYPE_INCOMERCHEQUE . "' 
 			group by SourceID
-		)t on(i.IncomeChequeID=t.SourceID)
+		)t on(i.IncomeChequeID=t.SourceID)*/
 		
 		where " . $where . " 
 		group by i.IncomeChequeID";
@@ -261,7 +261,11 @@ function DeleteCheque(){
 		die();
 	}
 	
-	ReturnLatestOperation(true);
+	if($obj->HasDoc())
+	{
+		echo Response::createObjectiveResponse(false, "برای این چک سند حسابداری وجود دارد");
+		die();
+	}
 	
 	$obj->Remove();	
 	PdoDataAccess::runquery("delete from LON_BackPays where IncomeChequeID=?", array($obj->IncomeChequeID));
@@ -475,10 +479,18 @@ function editCheque(){
 		die();
 	}
 	
+	ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, INCOMECHEQUE_EDIT, $pdo, "مبلغ قبلی : " .
+			number_format($obj->ChequeAmount) . "<br>دلیل تغییر : " . $_POST["reason"]);
+	
+	if(!EditIncomeCheque($obj, $_POST["newAmount"], $pdo))
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	
 	$obj->ChequeAmount = $_POST["newAmount"];
 	$obj->Edit($pdo);
-	
-	ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, $obj->IncomeChequeID, $pdo, $_POST["reason"]);
 	
 	$BackPays = $obj->GetBackPays($pdo);
 	if(count($BackPays) > 0)

@@ -3153,6 +3153,91 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 	return true;
 }
 
+function EditIncomeCheque($InChequeObj, $newAmount, $pdo){
+
+	CheckCloseCycle();
+	
+	/*@var $InChequeObj ACC_IncomeCheques */
+	
+	$CycleID = $_SESSION["accounting"]["CycleID"];
+	
+	//------------- get CostCodes --------------------
+	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
+	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
+	//-------------------- BranchID -----------------------
+	$BackPays = $InChequeObj->GetBackPays($pdo);
+	if(count($BackPays) > 0)
+		$FirstBranchID = $BackPays[0]["BranchID"];
+	else
+		$FirstBranchID = $_SESSION["accounting"]["BranchID"];
+	//---------------- add doc header --------------------
+	$obj = new ACC_docs();
+	$obj->RegDate = PDONOW;
+	$obj->regPersonID = $_SESSION['USER']["PersonID"];
+	$obj->DocDate = PDONOW;
+	$obj->CycleID = $CycleID;
+	$obj->BranchID = $FirstBranchID;
+	$obj->DocType = DOCTYPE_EDITINCOMECHEQUE;
+	$obj->description = "چک شماره " . $InChequeObj->ChequeNo;
+	if(!$obj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ایجاد سند");
+		return false;
+	}
+	//----------------- add Doc items ------------------------
+	
+	$__ChequeAmount = $InChequeObj->ChequeAmount;
+	$__ChequeID = $InChequeObj->IncomeChequeID;
+	$__TafsiliID = $InChequeObj->TafsiliID;
+	if($__TafsiliID == "")
+	{
+		$dt = $InChequeObj->GetBackPays();
+		if(count($dt) == 1)
+			$__TafsiliID = $dt[0]["TafsiliID"];
+	}
+	$__SourceType = DOCTYPE_EDITINCOMECHEQUE;
+	
+	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $obj->DocID;
+	$itemObj->locked = "YES";
+	$itemObj->TafsiliType = TAFTYPE_PERSONS;
+	$itemObj->TafsiliID = $__TafsiliID;
+	$itemObj->TafsiliType2 = TAFTYPE_ChequeStatus;
+	$itemObj->TafsiliID2 = INCOMECHEQUE_EDIT;
+	$itemObj->SourceType = $__SourceType;
+	$itemObj->SourceID = $__ChequeID;
+	$itemObj->details = "چک شماره " . $InChequeObj->ChequeNo;
+	
+	unset($itemObj->ItemID);
+	$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
+	$itemObj->CreditorAmount = $__ChequeAmount;
+	$itemObj->DebtorAmount = 0;		
+	$itemObj->Add($pdo);
+
+	unset($itemObj->ItemID);
+	$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
+	$itemObj->CreditorAmount = 0;
+	$itemObj->DebtorAmount = $__ChequeAmount;
+	$itemObj->Add($pdo);	
+	
+	unset($itemObj->ItemID);
+	$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
+	$itemObj->DebtorAmount = $newAmount;
+	$itemObj->CreditorAmount = 0;		
+	$itemObj->Add($pdo);
+
+	unset($itemObj->ItemID);
+	$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
+	$itemObj->DebtorAmount = 0;
+	$itemObj->CreditorAmount = $newAmount;
+	$itemObj->Add($pdo);	
+
+	if(ExceptionHandler::GetExceptionCount() > 0)
+		return false;
+
+	return true;
+}
+
 //---------------------------------------------------------------
 
 function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow = false){

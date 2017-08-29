@@ -42,12 +42,17 @@ class BSC_persons extends PdoDataAccess{
 	public $ShareNo;
 	
 	public $IsActive;
-	public $PostID;
+	public $_PostID;
 			
 	function __construct($PersonID = "") {
 		
 		if($PersonID != "")
-			PdoDataAccess::FillObject ($this, "select * from BSC_persons where PersonID=?", array($PersonID));
+			PdoDataAccess::FillObject ($this, 
+					"select p.*, po.PostID _PostID 
+						from BSC_persons p 
+						left join BSC_jobs j using(PersonID)
+						left join BSC_posts po on(j.PostID=po.PostID)
+					where PersonID=?", array($PersonID));
 	}
 	
 	static function SelectAll($where = "", $param = array()){
@@ -56,7 +61,6 @@ class BSC_persons extends PdoDataAccess{
 			p.*, '' UserPass, '' PersonSign,
 			concat_ws(' ',fname, lname,CompanyName) fullname, DomainDesc
 			from BSC_persons p
-				left join BSC_posts using(PostID)
 				left join BSC_ActDomain using(DomainID)
 			where " . $where, $param);
 	}

@@ -1214,4 +1214,13 @@ function ReportMoneyRender($row, $value){
 function ReportDateRender($row, $value){
 		return DateModules::miladi_to_shamsi($value);
 	}
+	
+function ReportYesNoRender($row, $value){
+	return $value == "YES" ? "بلی" : "خیر";
+}
+
+function ReportTickRender($row, $value){
+	return $value == "YES" ? "٭" : "";
+}
+
 ?>

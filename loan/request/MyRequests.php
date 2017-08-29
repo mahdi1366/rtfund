@@ -10,10 +10,11 @@ if(isset($_SESSION["USER"]["framework"]))
 	$User = "Staff";
 else
 {
-	if($_SESSION["USER"]["IsAgent"] == "YES")
+	$User = $_REQUEST["mode"];
+	/*if($_SESSION["USER"]["IsAgent"] == "YES")
 		$User = "Agent";
 	else if($_SESSION["USER"]["IsCustomer"] == "YES")
-		$User = "Customer";
+		$User = "Customer";*/
 }
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectMyRequests&mode=".
@@ -29,7 +30,7 @@ $col->width = 50;
 $col = $dg->addColumn("تاریخ درخواست", "ReqDate", GridColumn::ColumnType_date);
 $col->width = 110;
 
-if($_REQUEST["mode"] == "agent")
+if($_REQUEST["mode"] == "agent" || $_REQUEST["mode"] == "shareholder")
 {
 	$col = $dg->addColumn("متقاضی", "LoanFullname", "");
 	$col->renderer = "function(v,p,r){return (v == '' || v == null) ? r.data.BorrowerDesc : v}";
