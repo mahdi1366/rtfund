@@ -1019,6 +1019,10 @@ WarrentyRequest.prototype.ExtendWarrentyDoc = function(){
 			mask.hide();
 			WarrentyRequestObject.ExtendWin.hide();
 			WarrentyRequestObject.grid.getStore().load();
+		},
+		failure : function(){
+			mask.hide();
+			Ext.MessageBox.alert("ERROR", "عملیات مورد نظر با شکست مواجه گردید");
 		}
 	});
 
