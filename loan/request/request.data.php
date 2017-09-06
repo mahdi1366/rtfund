@@ -504,7 +504,7 @@ function ReturnEndRequest(){
 	if(!ReturnEndRequestDoc($ReqObj, $pdo))
 	{
 		$pdo->rollback();
-		echo Response::createObjectiveResponse(false, "خطا در ابطال سند");
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
 	
