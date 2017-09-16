@@ -59,6 +59,8 @@ function merging($main,$sub){
 		echo "update PLN_plans : " . PdoDataAccess::AffectedRows() . "<br>";
 		PdoDataAccess::runquery("update DataAudit set PersonID=? where PersonID=?", array($PersonID1, $PersonID2));
 		echo "update DataAudit : " . PdoDataAccess::AffectedRows() . "<br>";
+		PdoDataAccess::runquery("update WAR_requests set PersonID=? where PersonID=?", array($PersonID1, $PersonID2));
+		echo "update WAR_requests : " . PdoDataAccess::AffectedRows() . "<br>";
 		
 		PdoDataAccess::runquery("update DMS_documents set ObjectID=? where ObjectType='person' AND ObjectID=?", array($PersonID1, $PersonID2));
 		echo "update DMS_documents : " . PdoDataAccess::AffectedRows() . "<br>";
