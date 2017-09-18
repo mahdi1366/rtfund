@@ -57,6 +57,7 @@ class ReportGenerator {
 	public $footerContent = "";
 	
 	public $groupField = "";
+	public $groupLabel = false;
 	public $groupLabelRender = "";
 	public $groupPerPage = false;
 	
@@ -73,7 +74,16 @@ class ReportGenerator {
 	static $Chart_X_title = "X";
 	static $Chart_Y_title = "Y";
 	//-------------------------------------------
-	
+	static function BeginReport() {
+
+        echo '<html>
+			<head>
+				<link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" />
+				<META http-equiv=Content-Type content="text/html; charset=UTF-8" >' .
+			'</head>
+			<body dir="rtl">';
+    	}
+    
 	public function ReportGenerator($MainForm = "", $ObjectName = "") {
 		$this->MainForm = $MainForm;
 		$this->ObjectName = $ObjectName;
@@ -283,12 +293,12 @@ class ReportGenerator {
 		}
 		//..............................................
 		if($this->SubHeaderFunction != "")
-{
-$temp= $this->SubHeaderFunction;
-$temp($this->pageCount);
+		{
+			$temp= $this->SubHeaderFunction;
+			$temp($this->pageCount);
 
-}//..............................................
-echo "</caption>";
+		}//..............................................
+		echo "</caption>";
 		echo "<tr bgcolor = '$this->header_color'>";
 
 		// row number ---------------------------
@@ -387,12 +397,15 @@ echo "</caption>";
 		if ($index == 0)
 		{
 			$this->curGroup = $row[$this->groupField];
-			$str = $row[$this->groupField];
-			if($this->groupLabelRender != "")
-				eval("\$str = " . $this->groupLabelRender . "(\$row,\$index);");
+			if($this->groupLabel)
+			{
+				$str = $row[$this->groupField];
+				if($this->groupLabelRender != "")
+					eval("\$str = " . $this->groupLabelRender . "(\$row,\$index);");
 				
-			echo "<tr><td style=font-size:".$this->fontSize.";font-weight:bold;height:21px; colspan=" . 
+				echo "<tr><td style=font-size:".$this->fontSize.";font-weight:bold;height:21px; colspan=" . 
 					count($this->columns) . ">" . $str . "</td></tr>";
+			}
 		}
 
 		if ($this->groupField != "" && $this->curGroup != $row[$this->groupField]) {
@@ -411,11 +424,14 @@ echo "</caption>";
 				$this->drawHeader(false);
 			}
 			
-			$str = $row[$this->groupField];
-			if($this->groupLabelRender != "")
-				eval("\$str = " . $this->groupLabelRender . "(\$row,\$index);");
-
-			echo "<tr><td style=font-size:".$this->fontSize.";font-weight:bold;height:21px; colspan=" . count($this->columns) . ">" . $str . "</td></tr>";
+			if($this->groupLabel)
+			{
+				$str = $row[$this->groupField];
+				if($this->groupLabelRender != "")
+					eval("\$str = " . $this->groupLabelRender . "(\$row,\$index);");
+				
+				echo "<tr><td style=font-size:".$this->fontSize.";font-weight:bold;height:21px; colspan=" . count($this->columns) . ">" . $str . "</td></tr>";
+			}
 
 			$this->EmptySummaryRow();
 			$this->curGroup = $row[$this->groupField];
@@ -709,14 +725,14 @@ echo "</caption>";
 		echo "</script>";
 	}
 	
-	function AddVerticalSumColumn($fieldsArray, $amountField){
+	function AddVerticalSumColumn($fieldsArray, $amountField, $header = ""){
 		
 		$index = 0;
 		foreach($this->columns as $col)
 			if(strpos($col->field, "VerticalSum_") !== false)
 				$index++;
 		
-		$obj = new ReportColumn("", "VerticalSum_" . $index . "_" . $amountField);
+		$obj = new ReportColumn($header, "VerticalSum_" . $index . "_" . $amountField);
 		$obj->rowspaning = true;
 		$obj->rowspanByFields = $fieldsArray;
 		$this->columns[] = $obj;

@@ -382,6 +382,8 @@ function SelectChart1Data(){
 		}		
 	}
 	
+	$GroupTotalWeight = $GroupTotalWeight == 0 ? 1 : $GroupTotalWeight;
+	
 	echo dataReader::getJsonData($ReturnDate, count($ReturnDate), $_GET["callback"], 
 			round($GroupTotal/$GroupTotalWeight));
 	die();
