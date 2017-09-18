@@ -11,7 +11,10 @@ class FRW_reports extends OperationClass{
 	public $ReportID;
 	public $title;
 	public $MenuID;
-	public $IIsDashboard;
+	public $IsManagerDashboard ;
+	public $IsShareholderDashboard ;
+	public $IsAgentDashboard ;
+	public $IsSupporterDashboard ;
 	
 	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		

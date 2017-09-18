@@ -764,8 +764,10 @@ echo "</caption>";
 				$fieldArr = explode("_",$arr[$i]);
 				$func = $fieldArr[0];
 				$field = $fieldArr[1];
+				$field = explode(".", $field);
+				$field = count($field)>1 ? $field[1] : $field[0];
 				$obj = new ReportColumn(self::FunctionName($func) . " " . 
-						$columnObjectArr[$field]->header , $arr[$i], "ReportMoneyRender");
+						$columnObjectArr[$field]->header , preg_replace('/\./','',$arr[$i]), "ReportMoneyRender");
 				$obj->EnableSummary();
 				$this->columns[] = $obj;
 			}
@@ -929,7 +931,7 @@ echo "</caption>";
 		$arr = explode("#", $_POST["rpcmp_userfields"]);
 		for($i=1; $i < count($arr); $i=$i+2)
 		{
-			$returnArr[] = str_replace("_", "(",$arr[$i]) . ") as " . $arr[$i];
+			$returnArr[] = str_replace("_", "(",$arr[$i]) . ") as " . preg_replace('/\./','',$arr[$i]);
 		}
 
 		return implode(",", $returnArr);

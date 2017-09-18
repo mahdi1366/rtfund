@@ -9,8 +9,8 @@ class sys_config{
 	          "driver"   => "mysql",
 	          "host"     => "localhost",
 	          "database" => "krrtfir_rtfund",
-	          "user"     => "user1",
-	          "pass"     => "user1"
+	          "user"     => "root",
+	          "pass"     => "1297"
 	 );
 }
 

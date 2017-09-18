@@ -27,20 +27,13 @@ function Dashboard(){
 		style : "margin : 10px",
 		renderTo : this.get("div1"),
 		border : false,
-		layout : "column",
-		columns : 2,
-		width : 1000,
-		defaults : {
-			width : 980, 
-			height : 350,
-			style : "margin : 10px"
-		}
+		width : 1000
 	});
 	
 	this.MainStore = new Ext.data.Store({
 		proxy:{
 			type: 'jsonp',
-			url: this.address_prefix + 'ReportDB.data.php?task=SelectReports&IsDashboard=YES',
+			url: this.address_prefix + 'ReportDB.data.php?task=SelectReports&IsManagerDashboard=YES',
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
 		fields :  ["ReportID", "title", "reportPath"],
@@ -52,29 +45,41 @@ function Dashboard(){
 					record = this.getAt(i);
 					DashboardObj.MainPanel.add({
 						xtype : "fieldset",
+						width : 980, 
+						style : "margin : 10px",
 						style : "direction:ltr;text-align:center",
 						autoScroll : true,
+						collapsible : true,
+						collapsed : true,
 						title : record.data.title,
 						itemId : "cmp_panel_" + record.data.ReportID ,
 						loader : {
 							url : "../" + record.data.reportPath + "?dashboard_show=true",
 							scripts : true
-						}
-					});
-					
-					el = DashboardObj.MainPanel.getComponent("cmp_panel_" + record.data.ReportID);
-					DashboardObj.masks["ReportID" + record.data.ReportID] = 
-						new Ext.LoadMask(el, {msg:'در حال بارگذاری ...'});
-					DashboardObj.masks["ReportID" + record.data.ReportID].show();
-					el.loader.load({
-						params : {
-							rpcmp_ExtTabID : el.getEl().id,
-							rpcmp_ReportID : record.data.ReportID
 						},
-						callback : function(a,b,c,options){
-							DashboardObj.masks["ReportID" + options.params.rpcmp_ReportID].hide();
+						listeners : {
+							expand : function(el){
+								ReportID = el.itemId.replace("cmp_panel_", "");
+								el.setHeight(350);
+								if(!el.loader.isLoaded)
+								{
+									DashboardObj.masks["ReportID" + ReportID] = 
+										new Ext.LoadMask(el, {msg:'در حال بارگذاری ...'});
+									DashboardObj.masks["ReportID" + ReportID].show();
+									el.loader.load({
+										params : {
+											rpcmp_ExtTabID : el.getEl().id,
+											rpcmp_ReportID : ReportID
+										},
+										callback : function(a,b,c,options){
+											DashboardObj.masks["ReportID" + options.params.rpcmp_ReportID].hide();
+										}
+									});
+								}
+							}
 						}
-					});
+					});				
+					
 				}
 			}
 		}

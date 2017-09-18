@@ -24,8 +24,8 @@ ReportGenerator.ShowReportDB = function(obj, MenuID, mainForm, formPanel){
 			title: 'گزارش ساز',
 			modal : true,
 			autoScroll : true,
-			width: 500,
-			height : 480,
+			width: 510,
+			height : 450,
 			closeAction : "hide",
 			loader : {
 				url : "/framework/ReportDB/ReportDB.php",

@@ -10,11 +10,22 @@ global $SourceObject;
 /* @var  $SourceObject ReportGenerator */
 
 $chartTitle = isset($_POST["rpcmp_chartName"]) ? $_POST["rpcmp_chartName"] : "";
+
 $axe_x1 = $_POST["rpcmp_x1"];
+$axe_x1 = explode(".", $axe_x1);
+$axe_x1 = count($axe_x1)>1 ? $axe_x1[1] : $axe_x1[0];
+
 $axe_x2 = isset($_POST["rpcmp_x2"]) ? $_POST["rpcmp_x2"] : "";
+$axe_x2 = explode(".", $axe_x2);
+$axe_x2 = count($axe_x2)>1 ? $axe_x2[1] : $axe_x2[0];
+
 $axe_x1_renderer = "";
 $axe_x2_renderer = "";
+
 $axe_y = $_POST["rpcmp_y"];
+$axe_y = explode(".", $axe_y);
+$axe_y = count($axe_y)>1 ? $axe_y[1] : $axe_y[0];
+
 $axe_y_renderer = "";
 $axe_x1_title = $axe_y_title = "";
 $SeriesType = $_POST["rpcmp_series"];
@@ -322,17 +333,21 @@ if($NewPage)
 					'text-anchor': 'middle',
 					contrast: true
 				}
+			<? if(count($y_fields) == 1){?>
 			,renderer: function(sprite, record, attr, index, store) {
-				var value = index % 4;
-				var color = ['rgb(213, 70, 121)', 
-							 'rgb(44, 153, 201)', 
-							 'rgb(146, 6, 157)', 
-							 'rgb(49, 149, 0)', 
-							 'rgb(249, 153, 0)'][value];
-				return Ext.apply(attr, {
-					fill: color
-				});
-			},tips: {
+				
+					var value = index % 4;
+					var color = ['rgb(213, 70, 121)', 
+								'rgb(44, 153, 201)', 
+								'rgb(146, 6, 157)', 
+								'rgb(49, 149, 0)', 
+								'rgb(249, 153, 0)'][value];
+					return Ext.apply(attr, {
+						fill: color
+					});			
+			}
+			<?}?>
+			,tips: {
 				trackMouse: true,
 				width: 300,
 				height: 28,
@@ -378,17 +393,22 @@ if($NewPage)
 				'font-weight': "bold",
 				'text-anchor': 'middle',
 				contrast: true
-			},renderer: function(sprite, record, attr, index, store) {
+			}
+			<? if(count($y_fields) == 1){?>
+			,renderer: function(sprite, record, attr, index, store) {
+				
 				var value = index % 4;
 				var color = ['rgb(213, 70, 121)', 
-							 'rgb(44, 153, 201)', 
-							 'rgb(146, 6, 157)', 
-							 'rgb(49, 149, 0)', 
-							 'rgb(249, 153, 0)'][value];
+							'rgb(44, 153, 201)', 
+							'rgb(146, 6, 157)', 
+							'rgb(49, 149, 0)', 
+							'rgb(249, 153, 0)'][value];
 				return Ext.apply(attr, {
 					fill: color
 				});
-			},tips: {
+			}
+			<?}?>
+			,tips: {
 				trackMouse: true,
 				width: 300,
 				height: 28,

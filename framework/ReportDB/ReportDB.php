@@ -32,6 +32,8 @@ function FRW_ReportDB(){
 		bodyStyle : "padding: 0 10px 0 10px",
 		items :[{
 			xtype : "fieldset",
+			layout : "column",
+			columns : 2,
 			title : "اجرای گزارش",
 			items : [{
 				xtype : "combo",
@@ -41,12 +43,13 @@ function FRW_ReportDB(){
 						url: this.address_prefix + 'ReportDB.data.php?task=SelectReports&MenuID=' + this.MenuID,
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
-					fields :  ["ReportID", "title", "IsDashboard"],
+					fields :  ["ReportID", "title", "IsManagerDashboard", "IsShareholderDashboard",
+						"IsAgentDashboard", "IsSupporterDashboard"],
 					autoLoad : true
 				}),
 				displayField: 'title',
 				valueField : "ReportID",
-				width : 430,
+				width : 350,
 				queryMode : 'local',
 				name : "ReportID",
 				allowBlank : false,
@@ -54,37 +57,78 @@ function FRW_ReportDB(){
 				listeners : {
 					select : function(combo,records)
 					{
-						if(records[0].data.IsDashboard == "YES")
-						{
-							this.up('form').down("[itemId=cmp_addDashboard]").disable();
-							this.up('form').down("[itemId=cmp_RemoveDashboard]").enable();
-						}
-						else
-						{
-							this.up('form').down("[itemId=cmp_addDashboard]").enable();
-							this.up('form').down("[itemId=cmp_RemoveDashboard]").disable();
-						}
+						this.up('form').down("[name=cmp_IsManagerDashboard]").setDisabled(
+							records[0].data.IsManagerDashboard == "YES" ? false : true );
+						
+						this.up('form').down("[name=cmp_IsShareholderDashboard]").setDisabled(
+							records[0].data.IsShareholderDashboard == "YES" ? false : true );
+							
+						this.up('form').down("[name=cmp_IsAgentDashboard]").setDisabled(
+							records[0].data.IsAgentDashboard == "YES" ? false : true );
+							
+						this.up('form').down("[name=cmp_IsSupporterDashboard]").setDisabled(
+							records[0].data.IsSupporterDashboard == "YES" ? false : true );
 					}
 				}
 			},{
 				xtype : "button",
-				style : "float:left",
 				iconCls : "report",
 				text : "اجرای گزارش",
 				handler : function(){ FRW_ReportDBObj.ShowReport(); }
 			},{
+				xtype : "container",
+				colspan : 2,
+				style : "margin-bottom:10px",
+				width : 430,
+				defaults : {
+					xtype : "displayfield",
+					fieldCls : "blueText",
+					disabled : true,
+					style : "margin-left : 10px"
+				},
+				layout : "hbox",
+				items : [{
+					
+					name : "cmp_IsManagerDashboard",
+					value : "داشبورد مدیریت"
+				},{
+					name : "cmp_IsShareholderDashboard",
+					value : "داشبورد سهامدار"
+				},{
+					name : "cmp_IsAgentDashboard",
+					value : "داشبورد سرمایه گذار"
+				},{
+					name : "cmp_IsSupporterDashboard",
+					value : "داشبورد حامی"
+				}]
+			},{
+				xtype : "combo",
+				itemId : "cmp_Dashboard",
+				emptyValue : "انتخاب داشبورد",
+				store : new Ext.data.SimpleStore({
+					data : [
+						["IsManagerDashboard" , "داشبورد مدیریت" ],
+						["IsShareholderDashboard" , "داشبورد سهامدار" ],
+						["IsAgentDashboard" , "داشبورد سرمایه گذار" ],
+						["IsSupporterDashboard" , "داشبورد حامی" ]
+					],
+					fields : ['id','value']
+				}),
+				fieldLabel : "انتخاب داشبورد",
+				displayField : "value",
+				valueField : "id",
+				name : "DashboardType"
+			},{
 				xtype : "button",
-				style : "float:right",
 				itemId : "cmp_addDashboard",
 				iconCls : "add",
-				text : "اضافه به داشبورد",
+				text : "اضافه",
 				handler : function(){ FRW_ReportDBObj.ChangeDashboard('YES'); }
 			},{
 				xtype : "button",
-				style : "float:right",
 				itemId : "cmp_RemoveDashboard",
 				iconCls : "cross",
-				text : "حذف از داشبورد",
+				text : "حذف&nbsp;",
 				handler : function(){ FRW_ReportDBObj.ChangeDashboard('NO'); }
 			}]
 		}]
@@ -98,17 +142,17 @@ function FRW_ReportDB(){
 		bodyStyle : "padding: 0 10px 0 10px",
 		items :[{
 			xtype : "fieldset",
+			layout : "hbox",
 			title : "ایجاد گزارش",
 			items : [{
 				xtype : "textfield",
 				fieldLabel : "عنوان گزارش",
-				width : 430,
+				width : 350,
 				allowBlank : false,
 				name : "ReportDBTitle"
 			},{
 				xtype : "button",
 				iconCls : "save",
-				style : "float:left",
 				text : "ذخیره گزارش",
 				handler : function(){ FRW_ReportDBObj.AddReport(); }
 			}]
@@ -172,6 +216,7 @@ function FRW_ReportDB(){
 		bodyStyle : "padding: 0 10px 0 10px",
 		items :[{
 			xtype : "fieldset",
+			layout : "hbox",
 			title : "حذف گزارش",
 			items : [{
 				xtype : "combo",
@@ -186,14 +231,13 @@ function FRW_ReportDB(){
 				}),
 				displayField: 'title',
 				valueField : "ReportID",
-				width : 430,
+				width : 350,
 				name : "ReportID",
 				queryMode : 'local',
 				allowBlank : false,
 				fieldLabel : "انتخاب گزارش"
 			},{
 				xtype : "button",
-				style : "float:left",
 				iconCls : "remove",
 				text : "حذف گزارش",
 				handler : function(){ FRW_ReportDBObj.DeleteReport(); }
@@ -353,12 +397,13 @@ FRW_ReportDB.prototype.ChangeDashboard = function(IsDashboard){
 			ReportID : this.runPanel.down("[name=ReportID]").getValue(),
 			EditItems : "NO",
 			MenuID : this.MenuID,
+			DashboardType : this.runPanel.down("[name=DashboardType]").getValue(),
 			IsDashboard : IsDashboard
 		},
 		success: function(response){
 			mask.hide();
-			Ext.MessageBox.alert("", IsDashboard == "YES" ? "گزارش به داشبورد مدیریت اضافه شد.":
-					"گزارش از داشبورد مدیریت حذف شد")
+			Ext.MessageBox.alert("", IsDashboard == "YES" ? "گزارش به داشبورد اضافه شد.":
+					"گزارش از داشبورد حذف شد")
 		}
 	});
 	

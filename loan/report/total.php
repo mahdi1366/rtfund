@@ -13,7 +13,7 @@ function ReqPersonRender($row,$value){
 }
 	
 $page_rpg = new ReportGenerator("mainForm","LoanReport_totalObj");
-$page_rpg->addColumn("شماره وام", "RequestID");
+$page_rpg->addColumn("شماره وام", "r.RequestID");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
 $page_rpg->addColumn("عنوان طرح", "PlanTitle");	
 $page_rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
@@ -45,6 +45,11 @@ $page_rpg->addColumn("مانده قابل پرداخت", "remainder");
 
 function MakeWhere(&$where, &$pay_where, &$whereParam){
 
+	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	{
+		$where .= " AND ReqPersonID=" . $_SESSION["USER"]["PersonID"];
+	}
+	
 	foreach($_POST as $key => $value)
 	{
 		if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 

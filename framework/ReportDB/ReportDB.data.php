@@ -32,7 +32,6 @@ function SelectReports() {
 	}
 	
 	$list = FRW_reports::Get($where, $params);
-	print_r(ExceptionHandler::PopAllExceptions());
 	$count = $list->rowCount();
 	echo dataReader::getJsonData($list->fetchAll(), $count, $_GET['callback']);
 	die();
@@ -46,8 +45,8 @@ function SaveReport() {
 		$obj->ReportID = $_POST["ReportID"];
 	if(!empty($_POST["ReportDBTitle"]))
 		$obj->title = $_POST["ReportDBTitle"];
-	if(isset($_POST["IsDashboard"]))
-		$obj->IsDashboard = $_POST["IsDashboard"];
+	if(isset($_POST["DashboardType"]))
+		$obj->$_POST["DashboardType"] = $_POST["IsDashboard"];
 			
 	$EditItems = $_REQUEST["EditItems"] == "YES" ? true : false;
 	
