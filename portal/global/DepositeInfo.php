@@ -36,11 +36,14 @@ for($i=0; $i < count($temp); $i++)
 
 $dg = new sadaf_datagrid("dg","global/global.data.php?task=AccDocFlow", "");
 
+$col = $dg->addColumn("شماره سند", "LocalNo", "");
+$col->width = 65;
+
 $col = $dg->addColumn("تاریخ", "DocDate", GridColumn::ColumnType_date);
 $col->width = 80;
 
 $col = $dg->addColumn("شرح سند", "description", "");
-$col->width = 250;
+$col->width = 100;
 
 $col = $dg->addColumn("شرح ردیف", "details", "");
 
@@ -48,6 +51,9 @@ $col = $dg->addColumn("مبلغ بدهکار", "DebtorAmount", GridColumn::Colum
 $col->width = 100;
 
 $col = $dg->addColumn("مبلغ بستانکار", "CreditorAmount", GridColumn::ColumnType_money);
+$col->width = 100;
+
+$col = $dg->addColumn("مانده", "Remainder", GridColumn::ColumnType_money);
 $col->width = 100;
 
 $dg->HeaderMenu = false;

@@ -46,8 +46,10 @@ function AccDocFlow(){
 	$CostID = $_REQUEST["CostID"];
 	$CurYear = substr(DateModules::shNow(),0,4);
 
-	$temp = PdoDataAccess::runquery_fetchMode("
-		select d.DocDate,
+	$temp = PdoDataAccess::runquery("
+		select 
+			d.LocalNo,
+			d.DocDate,
 			d.description,
 			di.DebtorAmount,
 			di.CreditorAmount,
@@ -59,11 +61,17 @@ function AccDocFlow(){
 			/*AND DocStatus in('CONFIRM','ARCHIVE')*/
 		order by DocDate
 	", array(/*":year" => $CurYear, */":pid" => $_SESSION["USER"]["PersonID"], ":cid" => $CostID));
-	//print_r(ExceptionHandler::PopAllExceptions());
-	$count = $temp->rowCount();
-	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	
-	echo dataReader::getJsonData($temp, $count, $_GET["callback"]);
+	$PreSum = 0;
+	for($i=0; $i < $_GET["start"]*1 + $_GET["limit"]*1; $i++)
+	{
+		$PreSum += $temp[$i]["CreditorAmount"] - $temp[$i]["DebtorAmount"];
+		$temp[$i]["Remainder"] = $PreSum;		
+	}
+	
+	$temp = array_slice($temp, $_GET["start"], $_GET["limit"]);
+	
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();	
 }
 
