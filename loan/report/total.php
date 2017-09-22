@@ -49,7 +49,6 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 	{
 		$where .= " AND ReqPersonID=" . $_SESSION["USER"]["PersonID"];
 	}
-	
 	foreach($_POST as $key => $value)
 	{
 		if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 

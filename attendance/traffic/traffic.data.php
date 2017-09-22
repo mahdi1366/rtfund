@@ -159,7 +159,7 @@ function selectOffTypes(){
 
 function selectMeans(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=21 AND IsActive='YES'");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=23  AND IsActive='YES'");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

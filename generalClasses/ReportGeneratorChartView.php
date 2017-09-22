@@ -9,6 +9,9 @@ global $NewPage;
 global $SourceObject;
 /* @var  $SourceObject ReportGenerator */
 
+if(empty($ReportID))
+	$ReportID = "99999";
+
 $chartTitle = isset($_POST["rpcmp_chartName"]) ? $_POST["rpcmp_chartName"] : "";
 
 $axe_x1 = $_POST["rpcmp_x1"];
@@ -93,7 +96,7 @@ foreach ($SourceObject->mysql_resource as $row) {
 	switch($x2_func)
 	{
 		case "year" :		$row[$axe_x2] = "سال" . substr($row[$axe_x2] , 0 , 4);	break;
-		case "month" :		$row[$axe_x2] = "(".substr($row[$axe_x1] , 5 , 2)*1 .")" . 
+		case "month" :		$row[$axe_x2] = "(".substr($row[$axe_x2] , 5 , 2)*1 .")" . 
 								DateModules::GetMonthName(substr($row[$axe_x2] , 5 , 2)*1);	break;
 		case "weekday" :	$row[$axe_x2] = DateModules::GetJWeekDay($row[$axe_x2]);	break;
 		case "monthday" :	$row[$axe_x2] = "روز " . substr($row[$axe_x2] , 8 , 2);	break;
@@ -120,7 +123,7 @@ foreach ($SourceObject->mysql_resource as $row) {
 	switch($y_func)
 	{
 		case "value" :	$data[ $row[$axe_x1] ][ $axe_x2_value ] = $row[$axe_y];	break;
-		case "sum" :	$data[ $row[$axe_x1] ][ $axe_x2_value ] += $row[$axe_y];	break;
+		case "sum" :	$data[ $row[$axe_x1] ][ $axe_x2_value ] += $row[$axe_y];break;
 		case "count" :	$data[ $row[$axe_x1] ][ $axe_x2_value ] ++;				break;
 		case "min" : 
 			$data[ $row[$axe_x1] ][ $axe_x2_value ] = min($data[ $row[$axe_x1] ][ $axe_x2_value ] , $row[$axe_y]);				
@@ -136,6 +139,8 @@ foreach ($SourceObject->mysql_resource as $row) {
 }
 $returnArray = array();
 ksort($data);
+$minValue = -1;
+$totalValue = array();
 foreach($data as $x1 => $x2Arr)
 {
 	$y_index = 0;
@@ -152,21 +157,72 @@ foreach($data as $x1 => $x2Arr)
 		else
 			$returnRow[ "y" . $y_index ] = 0;
 		
+		if($returnRow[ "y" . $y_index ] <> 0)
+		{
+			if($minValue == -1)
+				$minValue = $returnRow[ "y" . $y_index ];
+			$minValue = min($minValue, $returnRow[ "y" . $y_index ]);
+		}
+		
+		if(!isset($totalValue[ "y" . $y_index ]))
+			$totalValue[ "y" . $y_index ] = 0;
+		$totalValue[ "y" . $y_index ] += $returnRow[ "y" . $y_index ];
+		
 		$y_index++;
 	}
 	$returnArray[] = $returnRow;
 }
-
 $x_fields = array("x");
 $y_titles = array_keys($x2_keys);
 
+//------------------- round y values ------------------------
+if($minValue / 1000000000 > 1)
+{
+	$axe_y_title = $axe_y_title . "(میلیارد)";
+	$minValue = 1000000000;
+}
+else if($minValue / 1000000 > 1)
+{
+	$axe_y_title = $axe_y_title . "(میلیون)";
+	$minValue = 1000000;
+}
+else if($minValue / 1000 > 1)
+{
+	$axe_y_title = $axe_y_title . "(هزار)";
+	$minValue = 1000;
+}
+else
+	$minValue = 1;
+if($minValue > 1)
+{
+	foreach($returnArray as &$row)
+	{
+		foreach($row as $key => $value)
+		{
+			if($key == "x")
+				continue;
+
+			$row[$key] = round($value / $minValue, 3);
+			
+			if(count($y_fields) == 1)
+			{
+				foreach($totalValue as $key => $totalVal)
+				{
+					$row["x"] .= " [" . round($value*100/$totalVal) . "%]";
+				}
+			}
+		}		
+		
+	}
+}
+//-----------------------------------------------------------
 /*print_r($returnArray);
 $returnArray = array(
 	array("x" => "منابع داخلی", "y" => 0, "y2" => 0, "y3" => 458),
 	array("x" => "پارک علم و فناوری", "y" => 850, "y2" => 0, "y3" => 135),
 	array("x" => "دانشگاه فردوسی", "y" => 664, "y2" => 552, "y3" => 0)
 		);*/
-//print_r($returnArray);
+//print_r($returnArray);die();
 
 if($NewPage)
 {
@@ -213,7 +269,7 @@ if($NewPage)
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/ux/calendar/resources/css/calendar.css" />
 <?php } ?>
 <script>
-
+var aaa;
 	ReportGeneratorChart.prototype = {
 		TabID: <?= $TabID ?>,
 		
@@ -284,7 +340,7 @@ if($NewPage)
 				store: this.MainStore,
 				style: 'background:#fff',
 				height: 300 , 
-				width: 980 ,
+				width: 750 ,
 				animate: true,
 				shadow: true,
 				axes: this.axes,
@@ -317,45 +373,46 @@ if($NewPage)
 			}];
 
 		this.series = [{
-				type: 'bar',
-				axis: 'bottom',
-				highlight: true,
-				xField: this.x_fields,
-				yField: this.y_fields,
-				title: this.y_titles,
-				label: {
-					display: 'insideEnd',
-					field: this.y_fields,
-					renderer: Ext.util.Format.numberRenderer('0,0'),
-					orientation: 'horizontal',
-					color: '#333',
-					'font-weight': "bold",
-					'text-anchor': 'middle',
-					contrast: true
-				}
-			<? if(count($y_fields) == 1){?>
-			,renderer: function(sprite, record, attr, index, store) {
-				
-					var value = index % 4;
-					var color = ['rgb(213, 70, 121)', 
-								'rgb(44, 153, 201)', 
-								'rgb(146, 6, 157)', 
-								'rgb(49, 149, 0)', 
-								'rgb(249, 153, 0)'][value];
-					return Ext.apply(attr, {
-						fill: color
-					});			
-			}
-			<?}?>
-			,tips: {
+			type: 'bar',
+			axis: 'bottom',
+			highlight: true,
+			xField: this.x_fields,
+			yField: this.y_fields,
+			title: this.y_titles,
+			label: {
+				display: 'insideEnd',
+				field: this.y_fields,
+				renderer: Ext.util.Format.numberRenderer('0,0'),
+				orientation: 'horizontal',
+				color: '#333',
+				'font-weight': "bold",
+				'text-anchor': 'middle',
+				contrast: true
+			},
+			tips: {
 				trackMouse: true,
 				width: 300,
 				height: 28,
 				renderer: function(storeItem, item) {
-					this.setTitle(storeItem.get('x'));
+					this.setTitle(storeItem.get('x') + "[" + storeItem.get(item.yField) + "]");
 				}
 			}
 		}];
+	
+		if(<?= count($y_fields) == 1 ? "true" : "false" ?>)
+		{
+			this.series[0].renderer = function(sprite, record, attr, index, store) {
+				var value = index % 4;
+				var color = ['rgb(213, 70, 121)', 
+							'rgb(44, 153, 201)', 
+							'rgb(146, 6, 157)', 
+							'rgb(49, 149, 0)', 
+							'rgb(249, 153, 0)'][value];
+				return Ext.apply(attr, {
+					fill: color
+				});			
+			}
+		}
 	};
 
 	ReportGeneratorChart.prototype.column = function () {
@@ -393,10 +450,20 @@ if($NewPage)
 				'font-weight': "bold",
 				'text-anchor': 'middle',
 				contrast: true
+			},
+			tips: {
+				trackMouse: true,
+				width: 300,
+				height: 28,
+				renderer: function(storeItem, item) {
+					this.setTitle(storeItem.get('x') + "[" + storeItem.get(item.yField) + "]");
+				}
 			}
-			<? if(count($y_fields) == 1){?>
-			,renderer: function(sprite, record, attr, index, store) {
-				
+		}];
+	
+		if(<?= count($y_fields) == 1 ? "true" : "false" ?>)
+		{
+			this.series[0].renderer = function(sprite, record, attr, index, store) {
 				var value = index % 4;
 				var color = ['rgb(213, 70, 121)', 
 							'rgb(44, 153, 201)', 
@@ -405,18 +472,9 @@ if($NewPage)
 							'rgb(249, 153, 0)'][value];
 				return Ext.apply(attr, {
 					fill: color
-				});
+				});			
 			}
-			<?}?>
-			,tips: {
-				trackMouse: true,
-				width: 300,
-				height: 28,
-				renderer: function(storeItem, item) {
-					this.setTitle(storeItem.get('x'));
-				}
-			}
-		}];
+		}
 	};
 
 	ReportGeneratorChart.prototype.pie = function () {
@@ -434,19 +492,8 @@ if($NewPage)
 				autoWidth : true,
 				'direction' : "rtl",
 				renderer: function (storeItem) {
-					//calculate percentage.
-					<?php if($NewPage) { ?>
-					me = ReportGeneratorChartObject;
-					<?php } else { ?>
-					me = Rpt_chart_Object<?= $ReportID ?> 
-					<?php } ?>
-					var total = 0;
-					me.MainStore.each(function (rec) {
-						total += rec.get(me.y_fields[0])*1;
-					});
-					
-					this.setTitle(storeItem.get(me.x_fields[0]) + ': ' +
-							Math.round(storeItem.get(me.y_fields[0])*1 / total * 100) + '%');
+					me = Rpt_chart_Object<?= $ReportID ?>;
+					this.setTitle(storeItem.get(me.x_fields[0]));
 				}
 			},
 			highlight: {
@@ -462,7 +509,7 @@ if($NewPage)
 			}
 		}];
 	};
-
+	
 	ReportGeneratorChart.prototype.gauge = function () {
 
 		this.axes = [{
@@ -490,9 +537,9 @@ if($NewPage)
 			});
 		}, 1);
 		
-		var ReportGeneratorChartObject;
+		var Rpt_chart_Object<?= $ReportID ?>;
 		Ext.onReady(function () {
-			ReportGeneratorChartObject = new ReportGeneratorChart();
+			Rpt_chart_Object<?= $ReportID ?> = new ReportGeneratorChart();
 		});
 	}
 	else

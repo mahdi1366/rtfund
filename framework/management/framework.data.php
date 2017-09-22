@@ -187,6 +187,7 @@ function selectDataAudits(){
 
 	$query = "select 
 			SysName,
+			IPAddress,
 			concat_ws(' ',fname,lname,CompanyName) fullname , 
 			MainObjectID , 
 			SubObjectID, 

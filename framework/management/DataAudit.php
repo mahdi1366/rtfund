@@ -20,6 +20,11 @@ $col->width = 120;
 $col = $dg->addColumn("تاریخ عملیات","ActionTime",  GridColumn::ColumnType_datetime);
 $col->width = 120;
 
+$col = $dg->addColumn("IP","IPAddress");
+$col->width = 120;
+
+$col = $dg->addColumn("تاریخ عملیات","ActionTime",  GridColumn::ColumnType_datetime);
+$col->width = 120;
 $col = $dg->addColumn("عملیات","ActionType", "");
 $col->renderer = "DataAudit.ActionTypeRender";
 $col->width = 110;
@@ -31,7 +36,7 @@ $col = $dg->addColumn("کلید فرعی","SubObjectID");
 $col->width = 80;
 
 $dg->height = 350;
-$dg->width = 850;
+$dg->width = 1000;
 $dg->DefaultSortField = "ActionTime";
 $dg->autoExpandColumn = "SysName";
 $dg->EnableSearch = false;

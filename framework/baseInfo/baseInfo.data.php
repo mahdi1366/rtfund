@@ -109,6 +109,7 @@ function SavePost(){
 	
 	$obj = new BSC_posts();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	$obj->MissionSigner = !isset($obj->MissionSigner) ? "NO" : "YES";
 	
 	if($obj->PostID > 0)
 		$res = $obj->Edit();

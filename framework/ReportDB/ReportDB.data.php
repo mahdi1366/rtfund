@@ -25,12 +25,22 @@ function SelectReports() {
 		$params[] = $_REQUEST["MenuID"];
 	}
 	
-	if(!empty($_REQUEST["IsDashboard"]))
+	if(isset($_SESSION["USER"]["framework"]))
 	{
-		$where .= " AND IsDashboard=?";
-		$params[] = $_REQUEST["IsDashboard"];
+		if(isset($_REQUEST["dashboard"]))
+			$where .= " AND IsManagerDashboard='YES'";
 	}
-	
+	else
+	{
+		$where .= " AND (1=0";
+		if($_SESSION["USER"]["IsShareholder"] == "YES")
+			$where .= " OR IsShareholderDashboard='YES'";
+		if($_SESSION["USER"]["IsAgent"] == "YES")
+			$where .= " OR IsAgentDashboard='YES'";
+		if($_SESSION["USER"]["IsSupporter"] == "YES")
+			$where .= " OR IsSupporterDashboard='YES'";
+		$where .= ")";
+	}
 	$list = FRW_reports::Get($where, $params);
 	$count = $list->rowCount();
 	echo dataReader::getJsonData($list->fetchAll(), $count, $_GET['callback']);

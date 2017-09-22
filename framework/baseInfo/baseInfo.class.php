@@ -66,6 +66,7 @@ class BSC_units extends PdoDataAccess {
 }
 
 class BSC_posts extends OperationClass {
+	
 	const TableName = "BSC_posts";
 	const TableKey = "PostID";
 	

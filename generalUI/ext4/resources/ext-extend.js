@@ -5019,6 +5019,9 @@ Ext.override(Ext.data.Store, {
 //***********************************************************
 //**********************  CHART *****************************
 //***********************************************************
+Ext.override(Ext.chart.Legend, {
+    labelFont: '11px tahoma'
+});
 Ext.override(Ext.chart.theme.Base, {
     constructor: function(config) {
         Ext.chart.theme.call(this, config, {
@@ -5146,3 +5149,4 @@ Ext.override(Ext.chart.theme.Base, {
         });
     }
 });
+			

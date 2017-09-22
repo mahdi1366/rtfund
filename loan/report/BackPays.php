@@ -28,38 +28,43 @@ $page_rpg->addColumn("شماره چک", "ChequeNo");
 $page_rpg->addColumn("شماره سند", "LocalNo");
 
 function MakeWhere(&$where, &$whereParam){
-		
-		foreach($_POST as $key => $value)
+
+	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	{
+		$where .= " AND ReqPersonID=" . $_SESSION["USER"]["PersonID"];
+	}
+	
+	foreach($_POST as $key => $value)
+	{
+		if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
+				$value === "" || strpos($key, "combobox") !== false || strpos($key, "rpcmp") !== false ||
+				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
+			continue;
+		$prefix = "";
+		switch($key)
 		{
-			if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
-					$value === "" || strpos($key, "combobox") !== false || strpos($key, "rpcmp") !== false ||
-					strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
-				continue;
-			$prefix = "";
-			switch($key)
-			{
-				case "fromRequestID":
-				case "toRequestID":
-					$prefix = "b.";
-					break;
-				case "fromPayDate":
-				case "toPayDate":
-					$value = DateModules::shamsi_to_miladi($value, "-");
-					break;
-				case "fromPayAmount":
-				case "toPayAmount":
-					$value = preg_replace('/,/', "", $value);
-					break;
-			}
-			if(strpos($key, "from") === 0)
-				$where .= " AND " . $prefix . substr($key,4) . " >= :$key";
-			else if(strpos($key, "to") === 0)
-				$where .= " AND " . $prefix . substr($key,2) . " <= :$key";
-			else
-				$where .= " AND " . $prefix . $key . " = :$key";
-			$whereParam[":$key"] = $value;
+			case "fromRequestID":
+			case "toRequestID":
+				$prefix = "b.";
+				break;
+			case "fromPayDate":
+			case "toPayDate":
+				$value = DateModules::shamsi_to_miladi($value, "-");
+				break;
+			case "fromPayAmount":
+			case "toPayAmount":
+				$value = preg_replace('/,/', "", $value);
+				break;
 		}
-	}	
+		if(strpos($key, "from") === 0)
+			$where .= " AND " . $prefix . substr($key,4) . " >= :$key";
+		else if(strpos($key, "to") === 0)
+			$where .= " AND " . $prefix . substr($key,2) . " <= :$key";
+		else
+			$where .= " AND " . $prefix . $key . " = :$key";
+		$whereParam[":$key"] = $value;
+	}
+}	
 
 function GetData(){
 	$where = "";

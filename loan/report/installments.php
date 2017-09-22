@@ -28,46 +28,51 @@ $page_rpg->addColumn("مبلغ پرداخت", "PayedAmount");
 $page_rpg->addColumn("مانده قسط", "TotalRemainder");
 
 function MakeWhere(&$where, &$whereParam){
-		
-		foreach($_POST as $key => $value)
+
+	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	{
+		$where .= " AND ReqPersonID=" . $_SESSION["USER"]["PersonID"];
+	}
+	
+	foreach($_POST as $key => $value)
+	{
+		if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
+				$value === "" || strpos($key, "combobox") !== false || strpos($key, "rpcmp") !== false ||
+				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
+			continue;
+
+		if($key == "IsEndedInclude")
+			continue;
+
+		$prefix = "";
+		switch($key)
 		{
-			if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
-					$value === "" || strpos($key, "combobox") !== false || strpos($key, "rpcmp") !== false ||
-					strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
-				continue;
-			
-			if($key == "IsEndedInclude")
-				continue;
-			
-			$prefix = "";
-			switch($key)
-			{
-				case "fromRequestID":
-				case "toRequestID":
-					$prefix = "i.";
-					break;
-				case "fromInstallmentDate":
-				case "toInstallmentDate":
-					$value = DateModules::shamsi_to_miladi($value, "-");
-					break;
-				case "fromInstallmentAmount":
-				case "toInstallmentAmount":
-					$value = preg_replace('/,/', "", $value);
-					break;
-			}
-			if(strpos($key, "from") === 0)
-				$where .= " AND " . $prefix . substr($key,4) . " >= :$key";
-			else if(strpos($key, "to") === 0)
-				$where .= " AND " . $prefix . substr($key,2) . " <= :$key";
-			else
-				$where .= " AND " . $prefix . $key . " = :$key";
-			$whereParam[":$key"] = $value;
+			case "fromRequestID":
+			case "toRequestID":
+				$prefix = "i.";
+				break;
+			case "fromInstallmentDate":
+			case "toInstallmentDate":
+				$value = DateModules::shamsi_to_miladi($value, "-");
+				break;
+			case "fromInstallmentAmount":
+			case "toInstallmentAmount":
+				$value = preg_replace('/,/', "", $value);
+				break;
 		}
-		
-		$where .= isset($_POST["IsEndedInclude"]) ? 
-				" AND r.StatusID in('".LON_REQ_STATUS_CONFIRM."','".LON_REQ_STATUS_ENDED."')" : 
-				" AND r.StatusID in('".LON_REQ_STATUS_CONFIRM."')";
-	}	
+		if(strpos($key, "from") === 0)
+			$where .= " AND " . $prefix . substr($key,4) . " >= :$key";
+		else if(strpos($key, "to") === 0)
+			$where .= " AND " . $prefix . substr($key,2) . " <= :$key";
+		else
+			$where .= " AND " . $prefix . $key . " = :$key";
+		$whereParam[":$key"] = $value;
+	}
+
+	$where .= isset($_POST["IsEndedInclude"]) ? 
+			" AND r.StatusID in('".LON_REQ_STATUS_CONFIRM."','".LON_REQ_STATUS_ENDED."')" : 
+			" AND r.StatusID in('".LON_REQ_STATUS_CONFIRM."')";
+}	
 
 function GetData(){
 	

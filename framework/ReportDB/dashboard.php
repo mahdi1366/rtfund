@@ -27,13 +27,13 @@ function Dashboard(){
 		style : "margin : 10px",
 		renderTo : this.get("div1"),
 		border : false,
-		width : 1000
+		width : 760
 	});
 	
 	this.MainStore = new Ext.data.Store({
 		proxy:{
 			type: 'jsonp',
-			url: this.address_prefix + 'ReportDB.data.php?task=SelectReports&IsManagerDashboard=YES',
+			url: this.address_prefix + 'ReportDB.data.php?task=SelectReports&dashboard=true',
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
 		fields :  ["ReportID", "title", "reportPath"],
@@ -44,8 +44,9 @@ function Dashboard(){
 				{
 					record = this.getAt(i);
 					DashboardObj.MainPanel.add({
-						xtype : "fieldset",
-						width : 980, 
+						xtype : "panel",
+						titleCollapse : true,
+						autoWidth : true, 
 						style : "margin : 10px",
 						style : "direction:ltr;text-align:center",
 						autoScroll : true,
