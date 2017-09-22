@@ -21,7 +21,7 @@ function remainRender($row){
 }
 
 $page_rpg = new ReportGenerator("mainForm","AccReport_tarazObj");
-$page_rpg->addColumn("گروه", "level0Code");
+$page_rpg->addColumn("گروه", "level0Desc");
 $page_rpg->addColumn("کل", "level1Desc");
 $page_rpg->addColumn("معین", "level2Desc");
 $page_rpg->addColumn("جزءمعین", "level3Desc");
@@ -221,7 +221,12 @@ function GetData(&$rpg){
 	
 	function MakeWhere(&$where, &$whereParam){
  
-		if(empty($_REQUEST["IncludeRaw"]))
+		if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+		{
+			$where .= " AND (t.TafsiliType=".TAFTYPE_PERSONS." AND t.ObjectID=" . $_SESSION["USER"]["PersonID"] .
+				" OR t2.TafsiliType=".TAFTYPE_PERSONS." AND t2.ObjectID=" . $_SESSION["USER"]["PersonID"] . ")";
+		}
+		if(empty($_POST["IncludeRaw"]))
 		{
 			$where .= " AND d.DocStatus != 'RAW'";
 		}

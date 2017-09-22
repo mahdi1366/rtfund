@@ -1171,6 +1171,7 @@ class ReportGenerator {
 		foreach($items as $row)
 		{
 			$_POST[ $row["ElemName"] ] = $row["ElemValue"];
+			$_REQUEST[ $row["ElemName"] ] = $row["ElemValue"];
 			if($row["ElemName"] == "rpcmp_series")
 				$chart = true;
 		}

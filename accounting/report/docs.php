@@ -18,6 +18,9 @@ $page_rpg->addColumn("جمع بسنانکار", "bsSum");
 
 function GetData(){
 	
+	if(!isset($_SESSION["accounting"]))
+		$_SESSION["accounting"]["CycleID"] = DateModules::GetYear(DateModules::shNow());
+	
 	$userFields = ReportGenerator::UserDefinedFields();
 	$query = "select d.*, 
 					concat(fname,' ',lname) as regPerson, 
@@ -26,11 +29,18 @@ function GetData(){
 					($userFields != "" ? "," . $userFields : "")."
 			from ACC_docs d
 			join ACC_DocItems di using(docID)
+			left join ACC_tafsilis t on(di.TafsiliID=t.TafsiliID)
+			left join ACC_tafsilis t2 on(di.TafsiliID2=t2.TafsiliID)
 			join BSC_persons p on(RegPersonID=PersonID)
 			where d.CycleID=" . $_SESSION["accounting"]["CycleID"];
 	
 	$whereParam = array();
 	
+	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	{
+		$query .= " AND (t.TafsiliType=".TAFTYPE_PERSONS." AND t.ObjectID=" . $_SESSION["USER"]["PersonID"] .
+			" OR t2.TafsiliType=".TAFTYPE_PERSONS." AND t2.ObjectID=" . $_SESSION["USER"]["PersonID"] . ")";
+	}
 	if(!empty($_POST["BranchID"]))
 	{
 		$query .= " AND BranchID=:b";

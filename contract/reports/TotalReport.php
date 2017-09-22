@@ -31,6 +31,12 @@ function GetData(){
 	";
 	$params = array();
 	
+	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	{
+		$where .= " AND (p1.PersonID=" . $_SESSION["USER"]["PersonID"] .
+			" OR p2.PersonID=" . $_SESSION["USER"]["PersonID"] . ")";
+	}
+	
 	$index = 0;
 	$itemsWhere = "1=1 ";
 	$keys = array_keys($_POST);

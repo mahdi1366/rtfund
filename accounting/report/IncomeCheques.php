@@ -65,6 +65,11 @@ function GetData(){
 		where 1=1 ";
 	
 	//.........................................................
+	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	{
+		$where .= " AND r.ReqPersonID=" . $_SESSION["USER"]["PersonID"];
+	}
+	
 	if($_POST["ChequeStatus"] != INCOMECHEQUE_CHANGE)
 	{
 		$query .= " AND ChequeStatus <> " . INCOMECHEQUE_CHANGE;

@@ -45,6 +45,10 @@ function GetData(){
 
 	$whereParam = array();
 	
+	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	{
+		$query .= " AND t.TafsiliType=".TAFTYPE_PERSONS." AND t.ObjectID=" . $_SESSION["USER"]["PersonID"];
+	}
 	if(!empty($_POST["BranchID"]))
 	{
 		$query .= " AND d.BranchID=:b";

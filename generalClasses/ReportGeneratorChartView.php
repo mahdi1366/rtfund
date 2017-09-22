@@ -70,15 +70,16 @@ foreach ($SourceObject->columns as $col) {
 $data = array();
 $x2_keys = array();
 $y_fields = array();
+$PrevRow = null;
 foreach ($SourceObject->mysql_resource as $row) {
 	
 	//................... render values .................
 	if($axe_x1_renderer != "")
-		$row[$axe_x1] = $axe_x1_renderer($row,$row[$axe_x1]);
+		$row[$axe_x1] = $axe_x1_renderer($row,$row[$axe_x1],0,$PrevRow);
 	if($axe_x2_renderer != "")
-		$row[$axe_x2] = $axe_x1_renderer($row,$row[$axe_x2]);
+		$row[$axe_x2] = $axe_x1_renderer($row,$row[$axe_x2],0,$PrevRow);
 	if($axe_y_renderer != "")
-		$row[$axe_y] = $axe_y_renderer($row,$row[$axe_y]);
+		$row[$axe_y] = $axe_y_renderer($row,$row[$axe_y],0,$PrevRow);
 	
 	if($x1_type == "date")
 		$row[$axe_x1] = DateModules::miladi_to_shamsi ($row[$axe_x1] );
@@ -136,6 +137,7 @@ foreach ($SourceObject->mysql_resource as $row) {
 			$data[ $row[$axe_x1] ][ $axe_x2_value ]["count"] ++;
 			break;
 	}	
+	$PrevRow = $row;
 }
 $returnArray = array();
 ksort($data);

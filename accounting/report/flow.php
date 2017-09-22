@@ -7,10 +7,11 @@
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 
+$x= 0;
 function TotalRemainRender(&$row, $value, $x, $prevRow){
 		
 	$row["Sum"] = $prevRow["Sum"] + $row["CreditorAmount"] - $row["DebtorAmount"];
-	return "<div style=direction:ltr>" . number_format($row["Sum"]) . "</div>";;
+	return $row["Sum"];
 }
 
 $page_rpg = new ReportGenerator("mainForm","AccReport_flowObj");
@@ -27,7 +28,13 @@ $page_rpg->addColumn("مبلغ بستانکار", "CreditorAmount");
 $page_rpg->addColumn("مانده", "CreditorAmount", "TotalRemainRender");
 	
 function MakeWhere(&$where, &$whereParam , $ForRemain = false){
-		
+	
+	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	{
+		$where .= " AND (t.TafsiliType=".TAFTYPE_PERSONS." AND t.ObjectID=" . $_SESSION["USER"]["PersonID"] .
+			" OR t2.TafsiliType=".TAFTYPE_PERSONS." AND t2.ObjectID=" . $_SESSION["USER"]["PersonID"] . ")";
+	}
+	
 	if(isset($_REQUEST["taraz"])){
 
 		/*if(!isset($_REQUEST["IncludeStart"]))
@@ -96,7 +103,7 @@ function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 	}
 	if(!empty($_REQUEST["TafsiliType"]))
 	{
-		$where .= " AND (di.TafsiliType = :tt sssssssssssssssssss)";
+		$where .= " AND (di.TafsiliType = :tt)";
 		$whereParam[":tt"] = $_REQUEST["TafsiliType"];
 	}
 	if(isset($_REQUEST["TafsiliID2"]))
@@ -319,6 +326,7 @@ if(isset($_REQUEST["dashboard_show"]))
 		ListData(true);	
 	
 	$page_rpg->mysql_resource = GetData();
+	echo PdoDataAccess::GetLatestQueryString();die();
 	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
 	die();	
 }

@@ -40,6 +40,13 @@ function Dashboard(){
 		autoLoad : true,
 		listeners : {
 			load : function(){
+				if(this.totalCount == 0)
+				{
+					DashboardObj.MainPanel.add({
+						xtype : "container",
+						html : "هیچ گزارشی تعریف نشده است"
+					});
+				}
 				for(i=0; i < this.totalCount; i++)
 				{
 					record = this.getAt(i);
