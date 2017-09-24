@@ -73,7 +73,7 @@ function WFM_FormPersons(){
 		store: new Ext.data.Store({
 			proxy:{
 				type: 'jsonp',
-				url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
+				url: '/framework/person/persons.data.php?task=selectPersons',
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
 			fields :  ['PersonID','fullname']
