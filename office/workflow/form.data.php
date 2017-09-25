@@ -249,6 +249,7 @@ function SelectValidForms(){
 					if(f.IsSupporter='YES',f.IsSupporter=p.IsSupporter,1=0) OR
 					if(f.IsExpert='YES',f.IsExpert=p.IsExpert,1=0) ) 
 			end)
+		where f.IsActive='YES'
 		group by f.FormID
 		", array(":pid" => $_SESSION["USER"]["PersonID"]));
 	
