@@ -7,7 +7,7 @@
 class ACC_cycles extends OperationClass {
 
 	const TableName = "ACC_cycles";
-	const TableKey = "CycleID";
+	const TableKey = "CycleID";     
 	
 	public $CycleID;
 	public $CycleDesc;
@@ -118,6 +118,7 @@ class ACC_CostCodes extends PdoDataAccess {
 	public $TafsiliType;
 	public $TafsiliType2;
 	public $IsBlockable;
+	public $CostGroupID;
 
     function __construct($CstID = '') {
 
@@ -274,7 +275,8 @@ class ACC_CostCodes extends PdoDataAccess {
 					b4.BlockDesc LevelTitle4,
                     concat_ws('-',b1.blockdesc,b2.blockdesc,b3.blockdesc,b4.blockdesc) as CostDesc,
 					bf1.InfoDesc TafsiliTypeDesc,
-					bf2.InfoDesc TafsiliTypeDesc2
+					bf2.InfoDesc TafsiliTypeDesc2,
+					bf3.InfoDesc CostGroupDesc
 					
                     from ACC_CostCodes as cc
 					left join ACC_blocks b1 on(b1.BlockID=cc.Level1)
@@ -283,8 +285,9 @@ class ACC_CostCodes extends PdoDataAccess {
                     left join ACC_blocks b3 on(b3.BlockID=cc.Level3)
 					left join ACC_blocks b4 on(b4.BlockID=cc.Level4)
 					left join BaseInfo bf1 on(bf1.TypeID=2 AND cc.TafsiliType=bf1.InfoID)
-					left join BaseInfo bf2 on(bf2.TypeID=2 AND cc.TafsiliType2=bf2.InfoID)";
-        if ($where != '')
+					left join BaseInfo bf2 on(bf2.TypeID=2 AND cc.TafsiliType2=bf2.InfoID)
+					left join BaseInfo bf3 on(bf3.TypeID=80 AND cc.CostGroupID=bf3.InfoID)";
+        if ($where != '') 
             $query .= ' where ' . $where;
 
         return parent::runquery_fetchMode($query, $param);

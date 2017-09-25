@@ -21,6 +21,7 @@ $dg_cost->addcolumn('','level3',"",true);
 $dg_cost->addcolumn('','TafsiliType',"",true);
 $dg_cost->addcolumn('','TafsiliType2',"",true);
 $dg_cost->addcolumn('','IsBlockable',"",true);
+$dg_cost->addcolumn('','CostGroupID',"",true);
 
 /*$col = $dg_cost->addcolumn('گروه حساب','LevelTitle0');
 $col->width = 120;*/
@@ -45,6 +46,9 @@ $col->width = 100;
 $col = $dg_cost->addcolumn("گروه تفصیلی2", "TafsiliTypeDesc2");
 $col->width = 100;
 
+$col = $dg_cost->addcolumn('گروه حساب','CostGroupDesc');
+$col->width = 120;
+
 if($accessObj->EditFlag	)
 {
 	$col=$dg_cost->addcolumn('ویرایش','','string');
@@ -66,7 +70,7 @@ if($accessObj->AddFlag)
 $dg_cost->addButton('prn__btn', 'چاپ کد حسابها', 'print', 'function(e){ return CostCodeObj.PrintCost(); }');
 
 $dg_cost->title = 'کدینگ حساب';
-$dg_cost->width = 870;
+$dg_cost->width = 1000;
 $dg_cost->pageSize = 19;
 $dg_cost->height = 500;
 $dg_cost->autoExpandColumn = "LevelTitle1";

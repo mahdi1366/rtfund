@@ -136,6 +136,23 @@ function CostCode(){
 				valueField : "InfoID",
 				displayField : "InfoDesc"
 			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["InfoID","InfoDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectCostGroups',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}),
+				typeAhead: false,
+				name : "CostGroupID",
+				width: 500,
+				fieldLabel : "گروه حساب",
+				style : "margin-left : 50px",
+				valueField : "InfoID",
+				displayField : "InfoDesc"
+			},{
 				xtype : "checkbox",
 				inputValue : "YES",
 				boxLabel : "این حساب قابل بلوکه شدن است",
