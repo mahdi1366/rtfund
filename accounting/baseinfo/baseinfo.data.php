@@ -282,6 +282,13 @@ function ActiveCostCode(){
 
     die();
 }
+
+function SelectCostGroups(){
+	
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=80 AND IsActive='YES'");
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
 //-------------------------------------------
 
 function AddGroup(){

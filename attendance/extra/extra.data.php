@@ -54,23 +54,23 @@ function ComputeExtraSummary() {
 	else
 		$StartDate = $SummaryYear . "-" . ($SummaryMonth-1) . "-29";
 			
-	$StartDate = DateModules::shamsi_to_miladi($StartDate);
-	$EndDate = DateModules::shamsi_to_miladi($SummaryYear . "-" . $SummaryMonth ."-" . "28");
+	$StartDate = DateModules::shamsi_to_miladi($StartDate, "-");
+	$EndDate = DateModules::shamsi_to_miladi($SummaryYear . "-" . $SummaryMonth ."-" . "28", "-");
 			//DateModules::DaysOfMonth($SummaryYear ,$SummaryMonth), "-");
 	
 	$PersonsDT = PdoDataAccess::runquery("
 		select PersonID, concat(fname,' ',lname) fullname from BSC_persons
 		where IsStaff='YES' ");
 	
-	$pdo = PdoDataAccess::getPdoObject();
+	$pdo = PdoDataAccess::getPdoObject(); 
 	$pdo->beginTransaction();
 			
 	ATN_ExtraSummary::RemoveAll($SummaryYear,$SummaryMonth, $pdo);
 	
 	foreach($PersonsDT as $personRecord)
 	{
-		$SUM = ATN_traffic::Compute($StartDate, $EndDate, $personRecord["PersonID"]);
-		
+		$SUM = ATN_traffic::Compute($StartDate, $EndDate, $personRecord["PersonID"], false);
+			
 		$extra = round(($SUM["extra"]<0 ? 0 : $SUM["extra"])/3600,2);
 		$LegalExtra = round($SUM["LegalExtra"]/3600,2);
 		$AllowedExtra = round($SUM["AllowedExtra"]/3600,2);
