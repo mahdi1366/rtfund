@@ -204,13 +204,13 @@ function confirmation() {
 	}
 	if ($obj->state == "2") {
 		if (!RegisterSalaryDoc($obj, $pdo)) {
-			print_r(ExceptionHandler::PopAllExceptions());
+			//print_r(ExceptionHandler::PopAllExceptions());
 			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 			die();
 		}
 	} else {
 		if (!ReturnSalaryDoc($obj, $pdo)) {
-			print_r(ExceptionHandler::PopAllExceptions());
+			//print_r(ExceptionHandler::PopAllExceptions());
 			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 			die();
 		}

@@ -77,7 +77,7 @@ function Confirm()
 		applyTo: this.get("settingPanel"),
 		layout: "vbox",
 		collapsible: true,
-		//collapsed : true,
+		collapsed : true,
 		frame: true,
 		title: 'تنظیمات حساب های سند حقوق',
 		bodyPadding: '5 5 0',

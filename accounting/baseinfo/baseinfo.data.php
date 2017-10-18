@@ -338,7 +338,7 @@ function GetAllTafsilis() {
 		$where .= " AND p.IsShareholder='YES' ";
 	}
 	
-	if(!empty($_REQUEST["TafsiliID"]))
+	if(isset($_REQUEST["TafsiliID"]) && $_REQUEST["TafsiliID"] != "")
 	{
 		$where .= " AND TafsiliID=:t ";
 		$whereParam[":t"] = $_REQUEST["TafsiliID"];
