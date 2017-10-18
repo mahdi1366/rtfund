@@ -56,7 +56,7 @@ class manage_payments extends PdoDataAccess
 																					p.writ_ver = w.writ_ver and
 																					p.staff_id = w.staff_id
 																					
-																		inner join BSC_units bu on bu.UnitID  = w.ouid
+																		left join BSC_units bu on bu.UnitID  = w.ouid
 
 									where per.personid =:pid
 																		
@@ -73,11 +73,7 @@ class manage_payments extends PdoDataAccess
 		$tmp = PdoDataAccess::runquery($query ,$whereParam);
 		
 
-	//	for($i=0 ; $i < count($tmp) ; $i++ ){
-
-			//	$tmp[$i]['full_unit_title'] = '' ;//manage_units::get_full_title($tmp[$i]['ouid']);
-
-		//	}
+	
 
 			return $tmp ; 
 	}

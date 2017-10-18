@@ -228,7 +228,7 @@ Subtract.prototype.BeforeEdit = function(EditMode){
 				name : "loan_no"
 			},{
 				xtype : "currencyfield",
-				fieldLabel : "مبلغ وام",
+				fieldLabel : "مبلغ وام/ مزایا",
 				name : "first_value",
 				hideTrigger : true,
 				allowBlank : false

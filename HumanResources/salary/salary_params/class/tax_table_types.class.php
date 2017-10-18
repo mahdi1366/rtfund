@@ -26,7 +26,7 @@ class manage_tax_table_types extends PdoDataAccess
 
 	private function onBeforeDelete()
 	{
-        $res = parent::runquery(" select * from tax_tables
+        $res = parent::runquery(" select * from HRM_tax_tables
 													where tax_table_type_id = ".$this->tax_table_type_id );
 
         if(count($res) > 0 )
@@ -36,7 +36,7 @@ class manage_tax_table_types extends PdoDataAccess
 
         }
 
-		$resstaff = parent::runquery(" select * from staff_tax_history
+		$resstaff = parent::runquery(" select * from HRM_staff_tax_history
 													where tax_table_type_id = ".$this->tax_table_type_id );
 
         if(count($resstaff) > 0 )
@@ -97,20 +97,20 @@ class manage_tax_table_types extends PdoDataAccess
 	}
 	
 	function RemoveTax($tax_table_type_id , $person_type)
-	{          
+	{    
+	 
         if(!$this->onBeforeDelete())
 			return false;
             
-        $result = parent::delete("tax_table_types", "tax_table_type_id=:tid and person_type = :pt ",
+        $result = parent::delete("HRM_tax_table_types", "tax_table_type_id=:tid and person_type = :pt ",
                                   array(":tid" => $this->tax_table_type_id , ":pt" => $this->person_type ));
 
-                            
+                           
 		if($result === false)
 			return false;
 
 		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->ActionType = DataAudit::Action_delete;		
 		$daObj->MainObjectID = $this->tax_table_type_id;
 		$daObj->TableName = "tax_table_types";
 		$daObj->execute();

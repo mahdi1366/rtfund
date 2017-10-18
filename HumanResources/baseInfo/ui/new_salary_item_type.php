@@ -132,12 +132,95 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
 		valueField : "CostID",
 		displayField : "fullDesc"
 	});
+	this.Param1CostIDCombo = new Ext.form.field.ComboBox({
+		xtype : "combo",
+		width : 400,
+		applyTo : this.get("cmp_param1cost"),
+		store: new Ext.data.Store({
+			fields:["CostID","CostCode","CostDesc",{
+				name : "fullDesc",
+				convert : function(value,record){
+					return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+				}				
+			}],
+			proxy: {
+				type: 'jsonp',
+				url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			}
+		}),
+		typeAhead: false,
+		hiddenName : "Param1CostID",
+		valueField : "CostID",
+		displayField : "fullDesc"
+	});
+	this.Param2CostIDCombo = new Ext.form.field.ComboBox({
+		xtype : "combo",
+		width : 400,
+		applyTo : this.get("cmp_param2cost"),
+		store: new Ext.data.Store({
+			fields:["CostID","CostCode","CostDesc",{
+				name : "fullDesc",
+				convert : function(value,record){
+					return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+				}				
+			}],
+			proxy: {
+				type: 'jsonp',
+				url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			}
+		}),
+		typeAhead: false,
+		hiddenName : "Param2CostID",
+		valueField : "CostID",
+		displayField : "fullDesc"
+	});
+	this.TafsiliIDCombo = new Ext.form.field.ComboBox({
+		xtype : "combo",
+		width : 400,
+		applyTo : this.get("cmp_TafsiliID"),
+		store: new Ext.data.Store({
+			fields:["TafsiliID","TafsiliDesc"],
+			proxy: {
+				type: 'jsonp',
+				url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=9',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			}
+		}),
+		typeAhead: false,
+		pageSize : 10,
+		valueField : "TafsiliID",
+		hiddenName : "TafsiliID",
+		displayField : "TafsiliDesc"
+	});
 	
 	if("<?= $obj->CostID ?>" != "")
 		this.CostIDCombo.getStore().load({
 			params : { CostID : "<?= $obj->CostID ?>"},
 			callback : function(){
 				SalaryItemTypeObject.CostIDCombo.setValue(this.getAt(0).data.CostID)
+			}
+		});
+	if("<?= $obj->TafsiliID ?>" != "")
+		this.TafsiliIDCombo.getStore().load({
+			params : { TafsiliID : "<?= $obj->TafsiliID ?>"},
+			callback : function(){
+				SalaryItemTypeObject.TafsiliIDCombo.setValue(this.getAt(0).data.TafsiliID)
+			}
+		});
+	if("<?= $obj->Param1CostID ?>" != "")
+		this.Param1CostIDCombo.getStore().load({
+			params : { CostID : "<?= $obj->Param1CostID ?>"},
+			callback : function(){
+				SalaryItemTypeObject.Param1CostIDCombo.setValue(this.getAt(0).data.CostID)
+			}
+		});
+	if("<?= $obj->Param2CostID ?>" != "")
+		this.Param2CostIDCombo.getStore().load({
+			params : { CostID : "<?= $obj->Param2CostID ?>"},
+			callback : function(){
+				SalaryItemTypeObject.Param2CostIDCombo.setValue(this.getAt(0).data.CostID)
 			}
 		});
  
@@ -313,6 +396,12 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
 				</td>
 				<td width="25%" colspan="3"><input type="text" id="cmp_costCode"></td>
 			</tr>
+			<tr>
+				 <td width="25%">
+				حساب تفصیلی :
+				</td>
+				<td width="25%" colspan="3"><input type="text" id="cmp_TafsiliID"></td>
+			</tr>
             <tr>
                     <td width="25%">
                     محاسبه در backpay ؟
@@ -390,6 +479,10 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
                              name="param1_input" <?= ($obj->param1_input == 1) ? "checked" : "" ?> class="x-form-text x-form-field" style="width: 10px" >
                     </td>
             </tr>
+			<tr>
+				<td width="25%">کد حساب پارامتر 1</td>
+				<td><div id="cmp_param1cost"></div></td>
+			</tr>
             <tr> 
                     <td width="25%">
                        عنوان پارامتر 2:
@@ -402,6 +495,10 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
                              name="param2_input" <?= ($obj->param2_input == 1) ? "checked" : "" ?> class="x-form-text x-form-field" style="width: 10px" >
                     </td>
             </tr>
+			<tr>
+				<td width="25%">کد حساب پارامتر 2</td>
+				<td><div id="cmp_param2cost"></div></td>
+			</tr>
             <tr>
                     <td width="25%">
                        عنوان پارامتر 3:

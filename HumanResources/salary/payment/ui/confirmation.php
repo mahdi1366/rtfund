@@ -14,5 +14,7 @@ require_once '../js/confirmation.js.php';
 		<span>
 			<div id="mainpanel"></div>
 		</span>				
+		<br>
+		<div id="settingPanel"></div>
     </center>    
 </form>

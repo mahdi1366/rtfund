@@ -17,7 +17,7 @@ class manage_Tax_Table_Item extends PdoDataAccess
 	{
 		if($tax_table_id != "" && $row_no != "" )
 		{
-			parent::FillObject($this, "select * from tax_table_items where tax_table_id=:tid and row_no=:rid ", array("tid"=>$tax_table_id , "rid"=>$row_no ));
+			parent::FillObject($this, "select * from HRM_tax_table_items where tax_table_id=:tid and row_no=:rid ", array("tid"=>$tax_table_id , "rid"=>$row_no ));
 		}
 	}
 
@@ -89,8 +89,11 @@ class manage_Tax_Table_Item extends PdoDataAccess
 	function RemoveTaxItem($tax_table_id, $row_no)
 	{
 	 			
-        $result = parent::delete("tax_table_items", "tax_table_id=:tid and row_no=:rid",
+        $result = parent::delete("HRM_tax_table_items", "tax_table_id=:tid and row_no=:rid",
                                                    array(":tid" => $this->tax_table_id , ":rid" => $this->row_no ));
+                                                   
+       
+		
 		if($result === false)
 			return false;
 

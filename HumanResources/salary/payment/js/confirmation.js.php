@@ -61,7 +61,32 @@ function Confirm()
 		 },{
 			 xtype : "container",
 			 html : "<hr>"
-		 },{
+		 }], 
+		buttons : [{
+			iconCls : "tick",
+			text : "پرداخت حقوق",
+			handler : function(){ConfirmObject.Save(this, 2);}
+		},{
+			iconCls : "cross",
+			text : "برگشت پرداخت",
+			handler : function(){ConfirmObject.Save(this, 1);}
+		}]
+	});	
+
+	this.SettingPanel = new Ext.form.Panel({
+		applyTo: this.get("settingPanel"),
+		layout: "vbox",
+		collapsible: true,
+		//collapsed : true,
+		frame: true,
+		title: 'تنظیمات حساب های سند حقوق',
+		bodyPadding: '5 5 0',
+		width:580,
+		fieldDefaults: {
+			msgTarget: 'side',
+			labelWidth: 150	 
+		},
+		items: [{
 			xtype : "combo",
 			width : 385,
 			store: new Ext.data.Store({
@@ -77,95 +102,17 @@ function Confirm()
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				}
 			}),
-			fieldLabel : "حساب مربوطه",
+			fieldLabel : "خالص پرداختی هر فرد",
 			valueField : "CostID",
-			itemId : "CostID",
-			name : "CostID",
-			displayField : "CostDesc",
-			listeners : {
-				select : function(combo,records){
-					me = ConfirmObject;
-					me.formPanel.down("[itemId=TafsiliID]").setValue();
-					me.formPanel.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
-					me.formPanel.down("[itemId=TafsiliID]").getStore().load();
-
-					me.formPanel.down("[itemId=TafsiliID2]").setValue();
-					me.formPanel.down("[itemId=TafsiliID2]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType2;
-					me.formPanel.down("[itemId=TafsiliID2]").getStore().load();
-
-					if(this.getValue() == "<?= COSTID_Bank ?>")
-					{
-						me.formPanel.down("[itemId=TafsiliID]").setValue(
-							"<?= $_SESSION["accounting"]["DefaultBankTafsiliID"] ?>");
-						me.formPanel.down("[itemId=TafsiliID2]").setValue(
-							"<?= $_SESSION["accounting"]["DefaultAccountTafsiliID"] ?>");
-					}
-
-				}
-			}
-		},{
-			xtype : "combo",
-			store: new Ext.data.Store({
-				fields:["TafsiliID","TafsiliDesc"],
-				proxy: {
-					type: 'jsonp',
-					url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				}
-			}),
-			fieldLabel : "تفصیلی",
-			width : 385,
-			typeAhead: false,
-			pageSize : 10,
-			valueField : "TafsiliID",
-			itemId : "TafsiliID",
-			name : "TafsiliID",
-			displayField : "TafsiliDesc",
-			listeners : { 
-				change : function(){
-					t1 = this.getStore().proxy.extraParams["TafsiliType"];
-					combo = ConfirmObject.formPanel.down("[itemId=TafsiliID2]");
-
-					if(t1 == <?= TAFTYPE_BANKS ?>)
-					{
-						combo.getStore().proxy.extraParams["ParentTafsili"] = this.getValue();
-						combo.getStore().load();
-					}			
-					else
-						combo.getStore().proxy.extraParams["ParentTafsili"] = "";
-				}
-			}
-		},{
-			xtype : "combo",
-			store: new Ext.data.Store({
-				fields:["TafsiliID","TafsiliDesc"],
-				proxy: {
-					type: 'jsonp',
-					url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				}
-			}),
-			fieldLabel : "تفصیلی2",
-			width : 385,
-			typeAhead: false,
-			pageSize : 10,
-			valueField : "TafsiliID",
-			itemId : "TafsiliID2",
-			name : "TafsiliID2",
-			displayField : "TafsiliDesc"
-		}], 
-		buttons : [{
-			iconCls : "tick",
-			text : "پرداخت حقوق",
-			handler : function(){ConfirmObject.Save(this, 2);}
-		},{
-			iconCls : "cross",
-			text : "برگشت پرداخت",
-			handler : function(){ConfirmObject.Save(this, 1);}
+			name : "RT_PurePay",
+			displayField : "CostDesc"
+		}],
+		buttons :[{
+			text : "ذخیره",
+			iconCls : "save",
+			handler: function(){ConfirmObject.SaveSetting(this);}
 		}]
-	});	
-
-						
+	});
 
 }
 
@@ -194,4 +141,24 @@ Confirm.prototype.Save = function(btn, state)
 	});
 }
 
+Confirm.prototype.SaveSetting = function(btn)
+{             
+	var mask = new Ext.LoadMask(btn.up('form'), {msg:'در حال ذخيره سازي...'});
+	mask.show();
+	
+	btn.up('form').getForm().submit({
+	    clientValidation: true,
+	    url: this.address_prefix + '../data/payment.data.php?task=SaveSetting',
+	    method : "POST",
+		
+	    success : function(form,action){
+			mask.hide();
+			Ext.MessageBox.alert("","عملیات با موفقیت انجام گرفت ."); 
+	    },
+		failure : function(form,action){
+			mask.hide();
+			Ext.MessageBox.alert("ERROR",action.result.data);
+	    }
+	});
+}
 </script>
