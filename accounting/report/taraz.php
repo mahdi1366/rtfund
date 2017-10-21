@@ -245,7 +245,7 @@ function GetData(&$rpg){
 		{
 			$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
 		}
-		if(isset($_REQUEST["CostGroupID"]))
+		if(!empty($_REQUEST["CostGroupID"]))
 		{
 			$where .= " AND cc.CostGroupID=:ccid";
 			$whereParam[":ccid"] = $_REQUEST["CostGroupID"];

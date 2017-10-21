@@ -224,6 +224,7 @@ function GetData(){
 			"LocalNo" => "",
 			"CostDesc" => "مانده از قبل",
 			"TafsiliDesc" => "",
+			"TafsiliDesc2" => "",
 			"DocDate" => "",
 			"detail" => "",
 			"DebtorAmount" => $BeforeAmount < 0 ? abs($BeforeAmount) : 0,

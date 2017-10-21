@@ -30,7 +30,7 @@ class ACC_docs extends PdoDataAccess {
 
 	static function GetAll($where = "", $whereParam = array()) {
 
-		$query = "select sd.*, concat(fname,' ',lname) as regPerson, 
+		$query = "select sd.*, concat_ws(' ',fname,lname,CompanyName) as regPerson, 
 				b.InfoDesc SubjectDesc,b2.InfoDesc DocTypeDesc
 			
 			from ACC_docs sd
