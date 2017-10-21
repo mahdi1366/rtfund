@@ -35,6 +35,9 @@ class manage_salary_item_type extends PdoDataAccess
 	public $validity_start_date;
 	public $validity_end_date;
 	public $CostID;
+	public $TafsiliID;
+	public $Param1CostID;
+	public $Param2CostID;
 	
 	public $available_for;
 	public $backpay_include;

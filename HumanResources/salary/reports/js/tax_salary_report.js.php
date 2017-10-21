@@ -1,7 +1,7 @@
 <script type="text/javascript">
 //---------------------------
 // programmer:	Mahdipour
-// Date:		92.03
+// Date:		96.05
 //---------------------------
 
 LoanSubtract.prototype = {
@@ -31,28 +31,24 @@ LoanSubtract.prototype.showReport2 = function(btn,e)
 	this.form.submit();	
 	return;
 }
+
+LoanSubtract.prototype.showReport3 = function(btn,e)
+{            
+	this.form = this.get("mainForm")
+	this.form.target = "_blank";
+	this.form.method = "POST";
+	this.form.action =  this.address_prefix + "tax_salary_report.php?show=true&WP=true";
+	this.form.submit();	
+	return;
+}
+
 function LoanSubtract()
 {
-	var types = Ext.create('Ext.data.ArrayStore', {
-			fields: ['val', 'title'],
-			data : [ ['1','بانک ملی ایران'] ,
-				     ['2','بانک صادرات']  ,
-					 ['9','بانک تجارت']
-                          ]
-                             });
-							 
-							 
+	
 	var Persontypes = Ext.create('Ext.data.ArrayStore', {
 			fields: ['val', 'title'],
 			data : [
-                                    ['1','هیئت علمی'],                               
-                                ['2','کارمند'],                               
-                                        ['3','روزمزدبیمه ای'],                               
-['5','قراردادی'],                               
-['10','بازنشسته'],
-                                   ['102','هیئت علمی،کارمند،روزمزد'],		 
-						    
-                                  
+                                    ['3','قراردادی ']				                                     
                           ]
                              }); 
        
@@ -86,7 +82,7 @@ function LoanSubtract()
                                             width:200,
                                             hideTrigger:true
                                         },
-										{
+									/*	{
                                          xtype:"numberfield" ,
                                          fieldLabel: 'شماره سریال چک',
                                          name: 'check-serial',										 
@@ -98,20 +94,37 @@ function LoanSubtract()
 											name : "check_date",
 											fieldLabel : "تاریخ چک",
 											width:250
-										},
-                                        {
-                                            xtype : "combo",
-                                            hiddenName:"BankCode",                                    
-                                            fieldLabel : "نام بانک",
-                                            store: types,
-                                            valueField: 'val',
-                                            displayField: 'title'
-                                         },{
+										},  */                                       
+										{
+											xtype : "combo",
+											store :  new Ext.data.Store({
+												fields : ["bank_id","name"],
+												proxy : {
+															type: 'jsonp',
+															url : this.address_prefix + "../../../global/domain.data.php?task=searchBank",
+															reader: {
+																root: 'rows',
+																totalProperty: 'totalCount'
+															}
+														}
+																		}),
+											valueField : "bank_id",
+											displayField : "name",
+											hiddenName : "BankCode",
+											allowBlank : false,
+											fieldLabel : "نام بانک ",
+											listConfig: {
+												loadingText: 'در حال جستجو...',
+												emptyText: 'فاقد اطلاعات',
+												itemCls : "search-item"
+											},
+											width:300
+										},{
 											xtype: 'textfield',
 											name : "BankTitle",
 											fieldLabel: 'نام شعبه',
 											anchor : "100%"
-										 },{
+										 }/*,{
 											xtype:"numberfield" ,
 											fieldLabel: 'شماره حساب',
 											name: 'account_no',										 
@@ -123,7 +136,7 @@ function LoanSubtract()
 											name: 'PayVal',										 
 											width:300,
 											hideTrigger:true
-										},
+										}*/,
 										{
                                             xtype : "combo",
                                             hiddenName:"PTY",                                    
@@ -131,12 +144,11 @@ function LoanSubtract()
                                             store: Persontypes,
                                             valueField: 'val',
                                             displayField: 'title'
-                                        }										 
-										 ,
+                                        },
                                         {
 											xtype : "combo",
 											store :  new Ext.data.Store({
-												fields : ["InfoID","Title"],
+												fields : ["InfoID","InfoDesc"],
 												proxy : {
 															type: 'jsonp',
 															url : this.address_prefix + "../../../global/domain.data.php?task=searchPayType",
@@ -147,7 +159,7 @@ function LoanSubtract()
 														}
 																		}),
 											valueField : "InfoID",
-											displayField : "Title",
+											displayField : "InfoDesc",
 											hiddenName : "PayType",
 											allowBlank : false,
 											fieldLabel : "نوع پرداخت",
@@ -157,17 +169,23 @@ function LoanSubtract()
 												itemCls : "search-item"
 											},
 											width:300
-										}
+										} 										
 										] , 
                                 buttons: [{
-                                            text : "دریافت فهرست حقوق",
+                                            text : "فهرست حقوق(WH)",
                                             handler : Ext.bind(this.showReport,this),
                                             iconCls : "report"                                
-                                          },{
-                                            text : "دریافت خلاصه فهرست حقوق",
+                                          },
+                                          {
+                                            text : "(WP)",
+                                            handler : Ext.bind(this.showReport3,this),
+                                            iconCls : "report"                                
+                                          }/*,
+                                          {
+                                            text : "خلاصه فهرست حقوق(WK)",
                                             handler : Ext.bind(this.showReport2,this),
                                             iconCls : "report"                                
-                                          }]
+                                          }*/]
                                 });
 	
 }

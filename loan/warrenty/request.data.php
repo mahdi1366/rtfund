@@ -422,4 +422,19 @@ function DeleteCosts(){
 	die();	
 }
 
+//------------------------------------------------
+
+function GetPrintContent(){
+	
+	echo file_get_contents("prints/" . (int)$_POST["TypeID"] . ".html");
+	die();
+}
+
+function SavePrintSetting(){
+	
+	$fp = fopen("prints/". (int)$_POST["TypeID"] . ".html", "w");
+	fwrite($fp, $_POST["context"] );
+	fclose($fp);
+	die();
+}
 ?>

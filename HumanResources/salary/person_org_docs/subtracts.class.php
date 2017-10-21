@@ -1,7 +1,7 @@
 <?php
 //-----------------------------
-//	Programmer	: SH.Jafarkhani
-//	Date		: 93.03
+//	Programmer	: Mahdipour
+//	Date		: 95.12
 //-----------------------------
 
 class manage_subtracts extends PdoDataAccess
@@ -29,23 +29,28 @@ class manage_subtracts extends PdoDataAccess
 		$this->DT_end_date = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($subtract_id != "")
-			parent::FillObject ($this, "select * from person_subtracts where subtract_id=?", array($subtract_id));
+			parent::FillObject ($this, "select * from HRM_person_subtracts where subtract_id=?", array($subtract_id));
 	}
 
 	static function GetAll($subtract_type, $PersonID, $where = "", $whereParam = array())
 	{
+	    
+	   
 		if($subtract_type != SUBTRACT_TYPE_FIX_BENEFIT &&  $subtract_type != SUBTRACT_TYPE_FIX_FRACTION ){
-			
-		    self::GetRemainder($subtract_type, "", $PersonID, true);
+		   
+		   
+		   self::GetRemainder($subtract_type, "", $PersonID, true);
 		
 			$query = "select s.*,si.full_title, b.name bankTitle, if(IsFinished,0,sr.remainder) remainder,receipt
-				from person_subtracts s 
-				join salary_item_types si using(salary_item_type_id)
-				left join banks b using(bank_id)
-				left join tmp_SubtractRemainders sr using(subtract_id)";
+				from HRM_person_subtracts s 
+				join HRM_salary_item_types si using(salary_item_type_id)
+				left join HRM_banks b using(bank_id)
+				left join HRM_tmp_SubtractRemainders sr using(subtract_id)
+				inner join HRM_persons p on p.PersonID = s.PersonID  
+				
+				";
 		}
-		else {
-		    
+		else {		    
 		    
 			$query = "select s.*,si.full_title, b.name bankTitle, 0 remainder,0 receipt
 						from HRM_person_subtracts s 
@@ -125,7 +130,7 @@ class manage_subtracts extends PdoDataAccess
 		
 		if($PersonID != "")
 		{
-			$where .= " AND s.PersonID=:pid";
+			$where .= " AND per.RefPersonID=:pid";
 			$param[":pid"] = $PersonID;
 		}
 		if($subtract_id != "")
@@ -154,18 +159,18 @@ class manage_subtracts extends PdoDataAccess
 			$JoinClause2 = "" ; 
 		}
 		else { */
-			$JoinClause = "  payment_items p join person_subtracts s on(p.param2=s.subtract_id) 
-											 inner join staff st
+			$JoinClause = "  HRM_payment_items p join HRM_person_subtracts s on(p.param2=s.subtract_id) 
+											 inner join HRM_staff st
                                                    on p.staff_id = st.staff_id 
-										     inner join persons per 
+										     inner join HRM_persons per 
 												   on st.personid = per.personid and st.person_type = per.person_type  ";  
 			$JoinClause2 = " " ; 
 		/*}*/
 				
 		//parent::runquery("drop table if exists tmp_SubtractReceiptSummary");				
 		//parent::runquery("drop table if exists tmp_SubtractRemainders");
-		parent::runquery('TRUNCATE tmp_SubtractReceiptSummary');
-		parent::runquery('TRUNCATE tmp_SubtractRemainders');
+		parent::runquery('TRUNCATE HRM_tmp_SubtractReceiptSummary');
+		parent::runquery('TRUNCATE HRM_tmp_SubtractRemainders');
 	
 		if($last_month > 0 ) {
 		
@@ -181,7 +186,7 @@ class manage_subtracts extends PdoDataAccess
 		   $WhrMonth = " " ; 
 		 
 		parent::runquery("/*create table tmp_SubtractReceiptSummary as */
-						 insert into tmp_SubtractReceiptSummary 
+						 insert into HRM_tmp_SubtractReceiptSummary 
 							select s.*,sum(get_value) receipt 
 				
 							from  $JoinClause
@@ -189,8 +194,7 @@ class manage_subtracts extends PdoDataAccess
 							where param1 in($stypes) $WhrMonth AND s.IsFinished=0 AND  st.person_type in (1,2,3,5)  $where
 							group by s.subtract_id", $param);
 							
-		/*	echo PdoDataAccess::GetLatestQueryString() ; 								 
-			die() ;*/
+		
 			//	parent::runquery("ALTER TABLE tmp_SubtractReceiptSummary ADD INDEX Index_1(subtract_id)");
 				
 		$query = "
@@ -198,37 +202,39 @@ class manage_subtracts extends PdoDataAccess
 				from
 					(
 					select subtract_id,first_value,0 receipt,0 flow
-					from person_subtracts s $JoinClause2
+					from HRM_person_subtracts s 
+					            inner join HRM_persons per on per.PersonID = s.PersonID $JoinClause2
 					where IsFinished=0  and  s.subtract_type = 1  $where
 
 					union All
 
 					select sf.subtract_id,0,0 receipt,sum(cast(flow_coaf as Decimal(2))*amount) flow 
-					from person_subtract_flows sf join person_subtracts s on(sf.subtract_id=s.subtract_id AND IsFinished=0  AND  s.subtract_type = 1 ) $JoinClause2
+					from HRM_person_subtract_flows sf 
+					            join HRM_person_subtracts s on(sf.subtract_id=s.subtract_id AND IsFinished=0  AND  s.subtract_type = 1 ) 
+					             inner join HRM_persons per on per.PersonID = s.PersonID $JoinClause2
 					where flow_type=3 $where
 					group by sf.subtract_id
 
 					union All
 
-					select subtract_id,0,receipt,0 from tmp_SubtractReceiptSummary s where 1=1 $where
+					select subtract_id,0,receipt,0 
+					          from HRM_tmp_SubtractReceiptSummary s  
+					                  inner join HRM_persons per on per.PersonID = s.PersonID where 1=1 $where
 
 					)t
 				group by subtract_id";
 		
-	/*if($_SESSION['UserID'] == 'jafarkhani' || $_SESSION['UserID'] == 'bmahdipour' ) {
-			echo $query  ;  die() ;  
-		}*/
+	
 		
 		if($justCreateTempTable)
 		{			
-			parent::runquery("/*create table tmp_SubtractRemainders as*/ insert into tmp_SubtractRemainders  " . $query, $param);
-	/*echo "**************".PdoDataAccess::GetLatestQueryString() ; 				
-	
-	die();*/
+			parent::runquery("/*create table tmp_SubtractRemainders as*/ insert into HRM_tmp_SubtractRemainders  " . $query, $param);
+
 			//parent::runquery("ALTER TABLE tmp_SubtractRemainders ADD INDEX Index_1(subtract_id)");
 			return;
 		}
 
+	
 		$dt = parent::runquery($query, $param);
 		if($subtract_id != "")
 			return $dt[0]["remainder"];
@@ -239,11 +245,11 @@ class manage_subtracts extends PdoDataAccess
 	static function UpdateExpireLoan(){
 		
 		$dt = PdoDataAccess::runquery(" select subtract_id , remainder
-												from tmp_SubtractRemainders where remainder <= 0 ", array());
+												from HRM_tmp_SubtractRemainders where remainder <= 0 ", array());
 		
 		for($i=0;$i<count($dt);$i++)
 		{
-			PdoDataAccess::runquery(" update person_subtracts set IsFinished = 1 where subtract_id = ? and subtract_type = 1  ", array($dt[$i]['subtract_id'])); 			
+			PdoDataAccess::runquery(" update HRM_person_subtracts set IsFinished = 1 where subtract_id = ? and subtract_type = 1  ", array($dt[$i]['subtract_id'])); 			
 		}
 		
 		return ; 			

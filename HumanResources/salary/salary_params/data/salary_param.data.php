@@ -29,7 +29,7 @@ function selectAll()
 	$temp = manage_salary_params::GetAll($_GET["person_type"],$_GET["param_type"] , dataReader::makeOrder());
 	$no = count($temp);
 	
-	
+
 	$temp = array_slice($temp, $_GET["start"], $_GET["limit"]);	
 	echo dataReader::getJsonData ( $temp, $no, $_GET ["callback"] );
 	die ();

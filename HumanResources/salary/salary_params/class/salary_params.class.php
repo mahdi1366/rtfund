@@ -92,6 +92,7 @@ class manage_salary_params extends PdoDataAccess
 	function GetAll($person_type, $param_type, $where="", $whereParam=array())
 	{
 		
+		
 		$query = "select * from HRM_salary_params";
 
 		if($param_type == SPT_FACILITY_PRIVATION_COEF)

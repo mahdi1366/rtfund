@@ -156,10 +156,7 @@ ExceptionHandler::showExceptionPanel('result'); ?>
 					محاسبه فيشهاي منفي (هشدار! اين گزينه صرفا جهت كنترل فيشهاي منفي گذاشته شده است. لطفا در استفاده از آن دقت نماييد.)
 					</td>					
 				</tr>
-				<tr>
-					<td>پيام :</td>
-					<td colspan="3"><textarea id="message" name="message" class="x-form-field" style="width:90%"></textarea></td>
-				</tr>
+				
 			</table>
 		</div>
 

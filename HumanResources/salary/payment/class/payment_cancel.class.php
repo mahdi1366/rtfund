@@ -20,6 +20,10 @@ class manage_payment_cancel extends PdoDataAccess
 	public $staff_where;
 	public $writ_where;
 	
+	public $__WHERE;
+	public $__WHEREPARAM;
+	
+	
 	function __construct()
 	 {
 		        
@@ -41,7 +45,7 @@ class manage_payment_cancel extends PdoDataAccess
 			$this->staff_where .= ' AND s.person_type in (1,2,3,5) ' ;
 		}*/
 		if(!($this->staff_id > 0 ))
-		$this->staff_where .= ' AND s.person_type in ('.$this->person_type.') ' ;
+		$this->staff_where .= ' ' ;
 		
 		//توليد شرط مربوط به پرداخت
 		//توليد شرط مربوط به مركز هزينه در حكم
@@ -62,6 +66,7 @@ class manage_payment_cancel extends PdoDataAccess
 	مركز هزينه تعيين خواهد شد.*/
 	private function init() {
 		
+	
 		parent::runquery('TRUNCATE delete_payment_staff;');
 		parent::runquery('DROP TABLE IF EXISTS temp_cancel_limit_staff;');
 		
@@ -70,12 +75,24 @@ class manage_payment_cancel extends PdoDataAccess
 							FROM HRM_staff s
 								 INNER JOIN HRM_writs w
 								 	   ON(s.last_writ_id = w.writ_id AND s.last_writ_ver = w.writ_ver AND s.staff_id = w.staff_id )
+									   
 							     LEFT OUTER JOIN HRM_payment_items pit
 							           ON(s.staff_id = pit.staff_id AND '.$this->where_clause.')
-							WHERE '.$this->staff_where.' AND '.
+										   
+								 LEFT JOIN HRM_payments p 
+									   ON pit.staff_id = p.staff_id AND 
+									      pit.pay_year = p.pay_year AND 
+										  pit.pay_month = p.pay_month AND 
+										  pit.payment_type = p.payment_type 
+										  
+								 LEFT JOIN BSC_jobs bj
+										ON bj.JobID = w.job_id
+										
+							WHERE p.state = 1 AND 
+								  '.$this->staff_where.' AND '.
 	    						  '((pit.staff_id IS NOT NULL AND '.$this->where_clause.') OR '.
-	    						  '('.$this->writ_where.'))'); 
-		
+	    						  '('.$this->writ_where.'))' .$this->__WHERE ,$this->__WHEREPARAM ); 
+	    						  
 		parent::runquery('ALTER TABLE temp_cancel_limit_staff ADD INDEX(staff_id);');
 		
 		$this->end_date =  DateModules::shamsi_to_miladi($this->year.'/'.$this->month.'/'.DateModules::DaysOfMonth($this->year, $this->month)) ;  

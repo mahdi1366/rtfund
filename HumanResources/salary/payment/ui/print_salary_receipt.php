@@ -4,11 +4,12 @@
 // create Date:	95.10
 //---------------------------
 require_once '../../../header.inc.php';
+require_once getenv("DOCUMENT_ROOT") .'/attendance/traffic/traffic.class.php';
 
 function salary_receipt_list()
 {
 	$query = " select	ps.pfname, ps.plname,
-        s.person_type, sit.effect_type,
+        s.person_type, sit.effect_type,ps.RefPersonID ,
         sit.print_title salary_item_title,
         pai.pay_value,
         pai.get_value, (pai.diff_pay_value * diff_value_coef) diff_pay_value,
@@ -48,7 +49,7 @@ function salary_receipt_list()
 
 	$dt = PdoDataAccess::runquery($query, $whereParam);
 
-//	echo PdoDataAccess::GetLatestQueryString() ; die() ; 
+	//echo PdoDataAccess::GetLatestQueryString() ; die() ; 
 
 	return $dt ; 
 	
@@ -70,7 +71,7 @@ function generateReport()
     	$gets['diff_value']     = array();
     	$pays['title']          = array();
     	$gets['title']          = array();
-    	$pays['param3']         = array();
+    	$pays['param2']         = array();
 		$gets['loan_remainder'] = array();
     	$gets['frac_remainder'] = array();
 
@@ -103,14 +104,15 @@ function generateReport()
 				array_push($pays['diff_value'], $dt[$i]['diff_pay_value']);
 				array_push($pays['title'], $dt[$i]['salary_item_title']);
 				
-				if( $dt[$i]['salary_item_type_id'] == $SIT_STAFF_EXTRA_WORK ||
-					$dt[$i]['salary_item_type_id'] == $SIT_STAFF_HORTATIVE_EXTRA_WORK) {
-					array_push($pays['param3'], $dt[$i]['param3']);
-				} elseif ( $dt[$i]['salary_item_type_id'] == $SIT_WORKER_EXTRA_WORK ||
-						   $dt[$i]['salary_item_type_id'] == $SIT_WORKER_HORTATIVE_EXTRA_WORK ) {
-					array_push($pays['param3'], $dt[$i]['param2']);
-				} else {
-					array_push($pays['param3'], NULL);
+				if( $dt[$i]['salary_item_type_id'] == 12 || 
+					$dt[$i]['salary_item_type_id'] == 13 || 
+					$dt[$i]['salary_item_type_id'] == 14 || 
+					$dt[$i]['salary_item_type_id'] == 15 || 
+					$dt[$i]['salary_item_type_id'] == 16  ) {
+					array_push($pays['param2'], $dt[$i]['param2']);
+				} 
+				else {
+					array_push($pays['param2'], NULL);
 				}
 
 		}else if($dt[$i]['get_value'] != 0 || $dt[$i]['diff_get_value'] != 0){
@@ -136,12 +138,12 @@ function generateReport()
 		    if( $i < count($pays['title']) ){
 			    $report .=  "<td   class='payment_report_data_custom_noborder' width=5% >".($i + 1)."</td>";
 			    $report .=  "<td   class='payment_report_data_custom_noborder' width=20% >".$pays['title'][$i]."</td>";
-			    $report .=  "<td   class='payment_report_data_custom_noborder' width=10% >".$pays['value'][$i]."</td>";
+			    $report .=  "<td   class='payment_report_data_custom_noborder' width=10% >".number_format($pays['value'][$i], 0, '.', ',')."</td>";
 			    $pay_sum += $pays['value'][$i];
-			    $report .= "<td    class='payment_report_data_custom_noborder' width=10% >".$pays['diff_value'][$i]."</td>";
+			    $report .= "<td    class='payment_report_data_custom_noborder' width=10% >".number_format($pays['diff_value'][$i], 0, '.', ',')."</td>";
 			    $pay_diff_sum += $pays['diff_value'][$i];
-			    if($pays['param3'][$i] != null)
-					  $report .= "<td  class='payment_report_data_custom_noborder'   width=3% >".$pays['param3'][$i]."</td>";
+			    if($pays['param2'][$i] != null)
+					  $report .= "<td  class='payment_report_data_custom_noborder'   width=3% >".$pays['param2'][$i]."</td>";
 			    else  $report .= "<td  class='payment_report_data_custom_noborder'  width=3% >"."&nbsp;"."</td>";
 		    }
 		    else {
@@ -153,12 +155,12 @@ function generateReport()
 		    }
 		    if( $i < count($gets['title']) ){
 			    $report .= "<td   class='payment_report_data_custom_noborder' width=20% >".$gets['title'][$i]."</td>";
-			    $report .= "<td   class='payment_report_data_custom_noborder' width=10% >".$gets['value'][$i]."</td>";
+			    $report .= "<td   class='payment_report_data_custom_noborder' width=10% >".number_format($gets['value'][$i], 0, '.', ',')."</td>";
 			    $get_sum += $gets['value'][$i];
-			    $report .= "<td   class='payment_report_data_custom_noborder' width=10% >".$gets['diff_value'][$i]."</td>";
+			    $report .= "<td   class='payment_report_data_custom_noborder' width=10% >".number_format($gets['diff_value'][$i], 0, '.', ',')."</td>";
 			    $get_diff_sum += $gets['diff_value'][$i];
 			    if($gets['loan_remainder'][$i] != null)
-					$report .=  "<td   class='payment_report_data_custom_noborder' width=10% >".$gets['loan_remainder'][$i]."</td>";
+					$report .=  "<td   class='payment_report_data_custom_noborder' width=10% >".number_format($gets['loan_remainder'][$i], 0, '.', ',') ."</td>";
 			    else $report .= "<td   class='payment_report_data_custom_noborder' width=10% >"."&nbsp"."</td>";
 					$report .=  "<td   class='payment_report_data_custom_noborder' width=7% >"."&nbsp;"."</td>";
 		    }
@@ -195,6 +197,33 @@ function generateReport()
 
 	echo $content;
 	
+	$endDay = 0 ; 
+	if($dt[0]['pay_month'] < 7)
+		$endDay = 31 ;
+	else if($dt[0]['pay_month'] > 6 && $dt[0]['pay_month'] < 12) 
+		$endDay = 30 ;
+	else 
+		$endDay = 29 ;
+	
+	$startDate = DateModules::shamsi_to_miladi($dt[0]['pay_year']."/1/1") ;
+	$endDate = DateModules::shamsi_to_miladi($dt[0]['pay_year']."/".$dt[0]['pay_month']."/".$endDay) ; 
+	
+	$SUM = ATN_traffic::Compute($startDate,$endDate, $dt[0]['RefPersonID']) ; 
+	$SUM["attend"] = TimeModules::SecondsToTime($SUM["attend"] );
+	$SUM["LegalExtra"] = TimeModules::SecondsToTime($SUM["LegalExtra"]);
+	echo "<br>
+		  <center>
+			<table  width='40%' border='1' cellpadding='3' cellspacing='0' align='center' >
+				<tr><td colspan='4' align='center' style='font-family:b titr;font-weight:bold;font-size:15px' >خلاصه کارکرد سال 
+				&nbsp;".$dt[0]['pay_year']."</td></tr>
+				<tr><td colspan='2'>حضور</td><td colspan='2' align='center'>" . TimeModules::ShowTime($SUM["attend"]) . "</td></tr>
+				<tr><td colspan='2'>اضافه کار مجاز</td><td colspan='2' align='center'>" . TimeModules::ShowTime($SUM["LegalExtra"]) . "</td></tr>
+				<tr><td colspan='2'>مرخصی استعلاجی</td><td colspan='2' align='center'>" . $SUM["DailyOff_1"] . "</td></tr>
+				<tr><td colspan='2'>مرخصی استحقاقی</td><td colspan='2' align='center'>" . $SUM["DailyOff_2"] . "</td></tr>
+				<tr><td colspan='2'>مرخصی بدون حقوق</td><td colspan='2' align='center'>" . $SUM["DailyOff_3"] . "</td></tr>
+				<tr><td colspan='2'>ماموریت</td><td colspan='2' align='center'>" . $SUM["DailyMission"] . "</td></tr>				
+	        </table>
+		  </center>" ;
 }
 
 ?>

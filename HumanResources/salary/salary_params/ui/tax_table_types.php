@@ -12,6 +12,7 @@ require_once '../js/tax_table_types.js.php';
 $tdg = new sadaf_datagrid("tdg", $js_prefix_address . "../data/tax_table_types.data.php?task=selectAll","tdgDiv");
 
 $tdg->addColumn('', "tax_table_type_id", "int", true);
+$tdg->addColumn('', "person_type", "int", true);
 
 $col = $tdg->addColumn('عنوان جدول', "title", "string");
 $col->editor = ColumnEditor::TextField();

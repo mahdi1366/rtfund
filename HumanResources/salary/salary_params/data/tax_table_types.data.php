@@ -41,6 +41,8 @@ function saveTax()
     $obj = new manage_tax_table_types();
     
     PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	
     if($obj->tax_table_type_id == ""){
  	   $return = $obj->AddTax();
     }

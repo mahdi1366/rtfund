@@ -1,28 +1,30 @@
 <?php
 //---------------------------
 // programmer:	B.Mahdipour
-// create Date:	93.06
+// create Date:	96.06
 //---------------------------
 
 require_once("../../../header.inc.php");
-// این گزارش مورد بررسی مجدد قرار گیرد چون در صفحه مربوطه تغییراتی اعمال شده است .................
-die();
- ini_set("display_errors", "On");
-if(!isset($_REQUEST["task"]))   
-	require_once '../js/insure_diskette.js.php';
-	
-if( isset($_REQUEST["task"]) /*&& $_REQUEST["task"] != 'GetDisk' */ ) {
+//require_once  "/home/krrtfir/public_html/HumanResources/global/sisW2D.php";
+//require_once "/home/krrtfir/public_html/generalClasses/pear/DB/dbase.php" ;
+//ini_set("display_errors", "Off") ;
 
-	?>
-	<style>
+// این گزارش مورد بررسی مجدد قرار گیرد چون در صفحه مربوطه تغییراتی اعمال شده است .................
+//die();
+ 
+	if(!isset($_REQUEST["task"]))   
+		require_once '../js/insure_diskette.js.php';
+	
+	if( isset($_REQUEST["task"]) && $_REQUEST["task"] != 'GetDisk'  ) {
+?>
+<style>
 		.reportGenerator {border-collapse: collapse;border: 1px solid black;font-family:tahoma;font-size: 8pt;
 			text-align: center;width: 50%;padding: 2px;}
 		.reportGenerator .header {color: white;font-weight: bold;background-color:#4D7094}
 		.reportGenerator .header1 {color: white;font-weight: bold;background-color:#465E86}		
 		.reportGenerator td {border: 1px solid #555555;height: 20px;}
-	</style>
-	<?
-	
+</style>		
+<?
 	}
 /*اولین حکم بعد از این حکم را استخراج می کند*/
 	function get_next_writ($execute_date,$staff_id)
@@ -44,8 +46,9 @@ if( isset($_REQUEST["task"]) /*&& $_REQUEST["task"] != 'GetDisk' */ ) {
 	
 function onCalcField(&$rec)
 {
+
 	if(empty($rec['work_sheet'])) {
-		$DT = PdoDataAccess::runquery('SELECT MAX(DISTINCT pai.param4) work_days,
+	/*	$DT = PdoDataAccess::runquery('SELECT MAX(DISTINCT pai.param4) work_days,
 									   s.person_type
 								 FROM  payment_items pai
 									  INNER JOIN salary_item_types sit
@@ -59,7 +62,7 @@ function onCalcField(&$rec)
 									  sit.compute_place = '.SALARY_ITEM_COMPUTE_PLACE_WRIT.'
 								 GROUP BY s.staff_id') ; 	
 								 
-	    if( $DT[0]['work_days'] > 1 ) 
+	    if( $DT[0]['work_days'] > 1 ) */
 			$DT[0]['work_days'] = 1 ; 
 			 
 	    $work_days = $DT[0]['work_days'];
@@ -69,14 +72,13 @@ function onCalcField(&$rec)
 		$rec['work_sheet'] = $work_days;			 
 	    
 	}
+	
+	$rec['work_sheet'] = 31 ;
+	
 	if(!empty($rec['work_sheet']))
 			$rec['work_sheet'] = round($rec['work_sheet']) ;
 
-		if ($rec['person_type'] == HR_WORKER) {
-			$rec['daily_fee'] = $rec['monthly_fee'] / $rec['work_sheet'];
-        } else {
-        	$rec['daily_fee'] = $rec['monthly_fee'] / DateModules::DaysOfMonth($rec['pay_month'],$rec['pay_year']);
-        }
+		$rec['daily_fee'] = $rec['monthly_fee'] / $rec['work_sheet'];
 
 		$rec['monthly_premium'] = $rec['monthly_insure_include'] - $rec['monthly_fee'];
 		$rec['other_gets'] = $rec['gets'] - $rec['worker_insure_include'];
@@ -85,8 +87,8 @@ function onCalcField(&$rec)
 
 function copyDbfFiles() {
 
-	$from_path = "/var/www/sadaf/HumanResources/upload/dbf/" ;
-	$to_path = "../../../HRProcess/" ;
+    $from_path = "/home/krrtfir/public_html/HumanResources/upload/dbf/" ;
+	$to_path = "/home/krrtfir/public_html/HumanResources/upload/" ;
 	$this_path = getcwd();
 	
 
@@ -111,7 +113,6 @@ function copyDbfFiles() {
 	}
 	chdir($this_path);
 	
-	
 }
 
 if(isset($_REQUEST["task"]))
@@ -122,30 +123,13 @@ if(isset($_REQUEST["task"]))
 	$WhereCost = $WherePT = $WhereDetec = "" ;
 	$arr = "" ;
 	
-	for($i=0; $i < count($_POST); $i++)
-	{
-		if(strpos($keys[$i],"chkcostID_") !== false)
-		{			
-			$arr = preg_split('/_/', $keys[$i]);	
-			if(isset($arr[1]))
-			$WhereCost .= ($WhereCost!="") ?  ",".$arr[1] : $arr[1] ; 
-		}	
-		
-		
-		if(strpos($keys[$i],"chkDetect_") !== false)
-		{		
-			$arr = preg_split('/_/', $keys[$i]);		
-			if(isset($arr[1]))
-			$WhereDetec .= ($WhereDetec!="") ?  ",".$arr[1] : $arr[1] ;
-		}			 		
+	$WhereUnit = "" ; 
+	if(!empty($_POST['DomainID'])){
+		$WhereUnit = " AND bj.UnitID = ".$_POST['DomainID'] ; 
 	}
-	
-	$WhereDetec = ($WhereDetec !="") ? " AND  daily_work_place_no in (".$WhereDetec.")" : "" ;
-	$PT = ( $_POST['PersonType'] == 102 ) ? '1,2,3' :  $_POST['PersonType']  ; 
-		
 	//............................ Query ...........................................
 	
-	$query = " DROP TABLE IF EXISTS temp_insure_include " ;
+	$query = " DROP TABLE IF EXISTS HRM_temp_insure_include " ;
 	PdoDataAccess::runquery($query) ; 
 	
 	if($_POST['pay_month'] >= 1 && $_POST['pay_month'] < 7 )
@@ -159,298 +143,125 @@ if(isset($_REQUEST["task"]))
 	$month_end = DateModules::shamsi_to_miladi($_POST['pay_year']."/".$_POST['pay_month']."/".$EndDay) ;
 	$next_month_start = DateModules::shamsi_to_miladi($_POST['pay_year']."/".($_POST['pay_month']+1)."/01") ;
 	
-	$query = " CREATE TABLE temp_insure_include  AS
-			    SELECT DISTINCT staff_id
-				FROM payment_items
-				WHERE pay_year = ".$_POST['pay_year']." AND
-					  pay_month = ".$_POST['pay_month']." AND
-					  salary_item_type_id IN(".SIT_WORKER_COLLECTIVE_SECURITY_INSURE.",
-											 ".SIT_PROFESSOR_COLLECTIVE_SECURITY_INSURE.",
-											 ".SIT_STAFF_COLLECTIVE_SECURITY_INSURE.") AND 
-											  get_value <> 0  " ; 	
+	$query = " CREATE TABLE HRM_temp_insure_include  AS
+			    SELECT DISTINCT pit.staff_id
+				FROM HRM_payment_items pit
+							INNER JOIN HRM_payments p ON (  pit.pay_year = p.pay_year AND 
+							                                pit.pay_month = p.pay_month AND pit.staff_id = p.staff_id AND
+															pit.payment_type = p.payment_type)
+							INNER JOIN HRM_writs w ON ( p.writ_id = w.writ_id AND
+														p.writ_ver = w.writ_ver AND p.staff_id = w.staff_id )							
+							LEFT JOIN BSC_jobs bj ON bj.JobID = w.job_id
+							
+				WHERE pit.pay_year = ".$_POST['pay_year']." AND
+					  pit.pay_month = ".$_POST['pay_month']." AND
+					  pit.salary_item_type_id IN(7) AND 
+					  pit.get_value <> 0 ".$WhereUnit ; 	
 	PdoDataAccess::runquery($query) ; 	
-	PdoDataAccess::runquery("ALTER TABLE temp_insure_include ADD INDEX(staff_id)") ; 		
-
-	PdoDataAccess::runquery("DROP TABLE IF EXISTS temp_work_sheet") ; 		
-	PdoDataAccess::runquery("CREATE TABLE temp_work_sheet AS
-							  SELECT pgli.staff_id , SUM(pgli.approved_amount) work_sheet , MAX(pgli.comments) description
-							  FROM pay_get_list_items pgli
-							  INNER JOIN pay_get_lists pgl
-									ON pgl.list_id = pgli.list_id
-							  WHERE list_date >= '".$month_start."' AND list_date<='".$month_end."' AND
-								  list_type = ".WORK_SHEET_LIST."  AND (doc_state=".CENTER_CONFIRM." OR doc_state=".COMPUTED.")
-							  GROUP BY pgli.staff_id") ; 
 	
-	PdoDataAccess::runquery("DROP TABLE IF EXISTS temp_insure_list") ; 							  
-	PdoDataAccess::runquery(" CREATE TABLE temp_insure_list AS 
-						 select s.staff_id,
-        						s.work_start_date,
-                                s.account_no,
-                                ps.pfname,
-                                ps.plname,
-                                ps.idcard_no,
-                                ps.sex,
-                                CASE WHEN ps.sex = 1 THEN 1 ELSE 0 END man_counter ,
-                                CASE WHEN ps.sex = 2 THEN 1 ELSE 0 END woman_counter ,
-        						ps.father_name,
-        						ps.insure_no,
-        						ps.country_id,
-        						ps.national_code ,
-                                CASE s.person_type
-                                	WHEN ".HR_WORKER." THEN  j.title
-                                	WHEN ".HR_EMPLOYEE." THEN  po.title
-                                	WHEN ".HR_PROFESSOR." THEN  po.title
-		                        END job_title,
-                                w.contract_start_date,
-        						w.contract_end_date,
-								w.issue_date,
-                                w.ouid,
-                                w.salary_pay_proc,
-                                w.person_type,
-								c.ptitle country_title , 
-                                pa.pay_year,
-                                pa.pay_month,
-                                pa.start_date,
-                                pa.end_date,
-                                tc.daily_work_place_no,tc.cost_center_id ,
-                                tc.detective_name,
-                                tc.detective_address,
-                                tc.collective_security_branch,
-                                tc.employer_name,
-                                tws.work_sheet ,
-                                tws.description ,
-                                CASE s.person_type
-                                	WHEN ".HR_WORKER." THEN
-		                                SUM(CASE
-		                                    WHEN (pai.salary_item_type_id = ".SIT_WORKER_BASE_SALARY."  OR
-		                                          pai.salary_item_type_id = ".SIT_WORKER_ANNUAL_INC.")
-		                                    THEN (pai.pay_value + pai.diff_pay_value * pai.diff_value_coef)
-		                                    END)
-                                	WHEN ".HR_EMPLOYEE." THEN
-		                                SUM(CASE
-		                                    WHEN (pai.salary_item_type_id IN(".SIT_STAFF_BASE_SALARY.",".SIT_STAFF_ANNUAL_INC
-        									.",".SIT_STAFF_MIN_PAY.",".SIT_STAFF_ADAPTION_DIFFERENCE.",".SIT_STAFF_ABSOPPTION_EXTRA
-        									.",".SIT_STAFF_DOMINANT_JOB_EXTRA.",".SIT_STAFF_JOB_EXTRA.",
-										    34,36,10264 , 10267 , 10364 , 10367 , 10366 ))
-		                                    THEN (pai.pay_value + pai.diff_pay_value * pai.diff_value_coef)
-		                                    END)
-                                	WHEN ".HR_PROFESSOR." THEN
-		                                SUM(CASE
-		                                    WHEN (pai.salary_item_type_id IN(".SIT_PROFESSOR_BASE_SALARY.",".SIT_PROFESSOR_SPECIAL_EXTRA.") )
-		                                    THEN (pai.pay_value + pai.diff_pay_value * pai.diff_value_coef)
-		                                    END)
-		                        END monthly_fee,
-                                SUM(pai.pay_value + pai.diff_pay_value * pai.diff_value_coef) pay,
-                                SUM(CASE
-                                    WHEN (pai.salary_item_type_id = ".SIT_WORKER_COLLECTIVE_SECURITY_INSURE." OR
-                                    	 pai.salary_item_type_id = ".SIT_STAFF_COLLECTIVE_SECURITY_INSURE." OR
-                                    	 pai.salary_item_type_id = ".SIT_PROFESSOR_COLLECTIVE_SECURITY_INSURE.")
-                                    THEN (pai.param1 + pai.diff_param1 * pai.diff_param1_coef)
-                                    END) monthly_insure_include,
-                                ROUND(SUM(CASE
-                                    WHEN (pai.salary_item_type_id = ".SIT_WORKER_COLLECTIVE_SECURITY_INSURE." OR
-                                    	 pai.salary_item_type_id = ".SIT_STAFF_COLLECTIVE_SECURITY_INSURE." OR
-                                    	 pai.salary_item_type_id = ".SIT_PROFESSOR_COLLECTIVE_SECURITY_INSURE.")
-                                    THEN (pai.get_value + pai.diff_get_value * pai.diff_value_coef)
-                                    END)) worker_insure_include,
-                                ROUND(SUM(CASE
-                                    WHEN (pai.salary_item_type_id = ".SIT_WORKER_COLLECTIVE_SECURITY_INSURE." OR
-                                    	 pai.salary_item_type_id = ".SIT_STAFF_COLLECTIVE_SECURITY_INSURE." OR
-                                    	 pai.salary_item_type_id = ".SIT_PROFESSOR_COLLECTIVE_SECURITY_INSURE.")
-                                    THEN (pai.get_value)
-                                    END)) worker_insure_include_val,
-                                  ROUND(SUM(CASE
-                                    WHEN (pai.salary_item_type_id = ".SIT_WORKER_COLLECTIVE_SECURITY_INSURE." OR
-                                    	 pai.salary_item_type_id = ".SIT_STAFF_COLLECTIVE_SECURITY_INSURE." OR
-                                    	 pai.salary_item_type_id = ".SIT_PROFESSOR_COLLECTIVE_SECURITY_INSURE.")
-                                    THEN ( pai.diff_get_value * pai.diff_value_coef)
-                                    END)) worker_insure_include_diffval,    
-                                ROUND(SUM(CASE
-                                    WHEN (pai.salary_item_type_id = ".SIT_WORKER_COLLECTIVE_SECURITY_INSURE." OR
-                                    	 pai.salary_item_type_id = ".SIT_STAFF_COLLECTIVE_SECURITY_INSURE." OR
-                                    	 pai.salary_item_type_id = ".SIT_PROFESSOR_COLLECTIVE_SECURITY_INSURE.")
-                                    THEN (pai.param2 + pai.diff_param2 * diff_param2_coef)
-                                    END)) employer_insure_value,
-                                ROUND(SUM(CASE
-                                    WHEN (pai.salary_item_type_id = ".SIT_WORKER_COLLECTIVE_SECURITY_INSURE." )
-                                    THEN (pai.param3 + pai.diff_param3 * diff_param3_coef)
-                                    END)) unemployment_insure_value,
-                                SUM(pai.get_value + pai.diff_get_value * pai.diff_value_coef) gets,
-                                SUM( (pai.pay_value + pai.diff_pay_value * pai.diff_value_coef) - (pai.get_value - pai.diff_get_value * pai.diff_value_coef)) pure_pay
-                                
-                 from temp_insure_include ti
-        					  INNER JOIN payments pa
-        					  	   ON(ti.staff_id = pa.staff_id)
-                              LEFT OUTER JOIN payment_items pai
-                                   ON (pai.pay_year = pa.pay_year AND
-                                   	   pai.pay_month = pa.pay_month AND
-                                   	   pai.payment_type = pa.payment_type AND
-                                   	   pai.staff_id = pa.staff_id)
-                              LEFT OUTER JOIN writs w
-                                   ON (pa.writ_id = w.writ_id AND pa.writ_ver=w.writ_ver AND pa.staff_id = w.staff_id AND w.state=".WRIT_SALARY.")
-                              LEFT OUTER JOIN position po
-                                   ON (w.post_id = po.post_id)
-                              LEFT OUTER JOIN jobs j
-                                   ON (w.job_id = j.job_id)
-                              LEFT OUTER JOIN staff s
-                                   ON (w.staff_id = s.staff_id)
-                              LEFT OUTER JOIN cost_centers  tc
-                                   ON (w.cost_center_id = tc.cost_center_id)
-                              LEFT OUTER JOIN persons ps
-                                   ON (ps.PersonID = s.PersonID)
-						      LEFT OUTER JOIN countries c 
-								   ON (ps.country_id = c.country_id)
-                              LEFT OUTER JOIN salary_item_types sit
-                                   ON(pai.salary_item_type_id = sit.salary_item_type_id)
-                              LEFT OUTER JOIN temp_work_sheet tws
-                              	   ON tws.staff_id = s.staff_id 
-                              	   
-                   where  (pa.pay_year = ".$_POST['pay_year'].") AND
-						   (pa.pay_month = ".$_POST['pay_month'].") AND	       						
-							pa.payment_type=".$_POST['PayType']." ".(($WhereCost !="" ) ? " AND  
-							w.cost_center_id in (".$WhereCost.") " : "" )." ".$WhereDetec." AND 
-							s.person_type in (".$PT.")
-       			   group by s.staff_id,
-                                     pa.pay_year,
-                                     pa.pay_month,
-                                     s.work_start_date,
-                                     ps.pfname,
-                                     ps.plname,
-                                     ps.idcard_no,
-                                     ps.sex,
-                                     ps.father_name,
-                                     ps.insure_no,
-                                     ps.country_id,
-                                     j.title,
-                                     w.contract_start_date,
-                                     w.contract_end_date,
-                                     w.ouid,
-                                     w.salary_pay_proc,
-                                     pa.start_date,
-                                     pa.end_date,
-                                     tc.cost_center_id,
-                                     tc.daily_work_place_no,
-                                     tc.detective_name,
-                                     tc.detective_address,
-                                     tc.collective_security_branch,
-                                     tc.employer_name ");
+	
+	PdoDataAccess::runquery("ALTER TABLE HRM_temp_insure_include ADD INDEX(staff_id)") ; 		
+
+	PdoDataAccess::runquery("DROP TABLE IF EXISTS HRM_temp_work_sheet") ; 		
+	
+
+	PdoDataAccess::runquery("DROP TABLE IF EXISTS HRM_temp_insure_list") ; 	
+		
+	PdoDataAccess::runquery(" CREATE TABLE HRM_temp_insure_list AS 
+						 select
+
+   s.staff_id ,
+   s.work_start_date,
+   s.account_no,
+   ps.pfname,
+   ps.plname, ps.idcard_no, ps.sex,
+  CASE WHEN ps.sex = 1 THEN 1 ELSE 0 END man_counter ,
+  CASE WHEN ps.sex = 2 THEN 1 ELSE 0 END woman_counter ,
+  ps.father_name, ps.insure_no,
+  ps.country_id,
+  ps.birth_date,
+  ps.national_code,
+  po.PostName job_title,
+  w.contract_start_date, w.contract_end_date,
+  w.issue_date, w.ouid, w.salary_pay_proc,
+  w.person_type, c.ptitle country_title , pa.pay_year, pa.pay_month,
+  pa.start_date, pa.end_date,
+  '4000976046' daily_work_place_no,
+  '-' cost_center_id ,
+  'صندوق پژوهش و فن آوری استان خراسان رضوی' detective_name,
+  '-' detective_address,
+  '-' collective_security_branch,
+  '-' employer_name,
+  '-' work_sheet ,
+  '-' description ,
+   SUM(pai.pay_value + pai.diff_pay_value * pai.diff_value_coef) monthly_fee,
+   SUM(pai.pay_value + pai.diff_pay_value * pai.diff_value_coef) pay,
+   SUM(CASE WHEN (pai.salary_item_type_id = 7 )
+   THEN (pai.param1 + pai.diff_param1 * pai.diff_param1_coef) END) monthly_insure_include,
+
+   ROUND(SUM(CASE WHEN (pai.salary_item_type_id = 7 )
+   THEN (pai.get_value + pai.diff_get_value * pai.diff_value_coef) END)) worker_insure_include,
+
+   ROUND(SUM(CASE WHEN (pai.salary_item_type_id = 7 )
+   THEN (pai.get_value) END)) worker_insure_include_val,
+
+   ROUND(SUM(CASE WHEN (pai.salary_item_type_id = 7 )
+             THEN ( pai.diff_get_value * pai.diff_value_coef) END)) worker_insure_include_diffval,
+
+   ROUND(SUM(CASE WHEN (pai.salary_item_type_id = 7 )
+   THEN (pai.param2 + pai.diff_param2 * diff_param2_coef) END)) employer_insure_value,
+
+    ROUND(SUM(CASE WHEN (pai.salary_item_type_id = 7 ) THEN (pai.param3 + pai.diff_param3 * diff_param3_coef) END)) unemployment_insure_value,
+
+    SUM(pai.get_value + pai.diff_get_value * pai.diff_value_coef) gets,
+
+    SUM( (pai.pay_value + pai.diff_pay_value * pai.diff_value_coef) - (pai.get_value - pai.diff_get_value * pai.diff_value_coef)) pure_pay
+
+
+     from HRM_temp_insure_include ti
+
+     INNER JOIN HRM_payments pa ON(ti.staff_id = pa.staff_id)
+     LEFT OUTER JOIN HRM_payment_items pai ON (pai.pay_year = pa.pay_year AND pai.pay_month = pa.pay_month AND
+                                      pai.payment_type = pa.payment_type AND pai.staff_id = pa.staff_id)
+
+     LEFT OUTER JOIN HRM_writs w ON (pa.writ_id = w.writ_id AND
+                                     pa.writ_ver=w.writ_ver AND
+                                     pa.staff_id = w.staff_id )
+
+     LEFT OUTER JOIN HRM_staff s ON (w.staff_id = s.staff_id)
+
+     LEFT OUTER JOIN HRM_persons ps ON (ps.PersonID = s.PersonID)
+     LEFT OUTER JOIN HRM_countries c ON (ps.country_id = c.country_id)
+     LEFT OUTER JOIN HRM_salary_item_types sit ON(pai.salary_item_type_id = sit.salary_item_type_id)
+	 
+	 LEFT JOIN BSC_jobs bj ON bj.PersonID = ps.RefPersonID
+	 LEFT join BSC_posts po ON po.PostID= bj.PostID
+
+      where (pa.pay_year = ".$_POST['pay_year']." ) AND (pa.pay_month = ".$_POST['pay_month']." ) AND pa.payment_type= ".$_POST['PayType']." 
+
+
+      group by s.staff_id,
+               pa.pay_year, pa.pay_month, s.work_start_date, ps.pfname, ps.plname,
+               ps.idcard_no, ps.sex, ps.father_name, ps.insure_no, ps.country_id,
+               w.contract_start_date,w.contract_end_date, w.ouid, w.salary_pay_proc,
+               pa.start_date, pa.end_date  ");
 									 
-								//	 echo PdoDataAccess::GetLatestQueryString() ; die() ;
-	 
-	 
-					PdoDataAccess::runquery("insert into temp_insure_list (
-					                                staff_id,
-					        						work_start_date,
-					                                account_no,
-					                                pfname,
-					                                plname,
-					                                idcard_no,  sex,man_counter ,woman_counter ,father_name,insure_no,
-					        						country_id,	national_code , job_title,
-					                                contract_start_date,contract_end_date,
-					                                ouid,
-					                                salary_pay_proc,
-					                                person_type,
-					                                pay_year,
-					                                pay_month,
-					                                start_date,
-					                                end_date,
-					                                daily_work_place_no,cost_center_id,
-					                                detective_name,
-					                                detective_address,
-					                                collective_security_branch,
-					                                employer_name,
-					                                work_sheet ,
-					                                description ,
-					                                monthly_fee,
-					                                pay,
-					                                monthly_insure_include,
-					                                worker_insure_include,
-					                                employer_insure_value,
-					                                unemployment_insure_value,
-					                                gets,
-					                                pure_pay  ) (
-
-                                        SELECT distinct s.staff_id,
-                                                        s.work_start_date,
-                                                        s.account_no,
-                                                        ps.pfname,
-                                                        ps.plname,
-                                                        ps.idcard_no,
-                                                        ps.sex,
-                                                        CASE ps.sex
-                                                            WHEN 1 THEN 1
-                                                            ELSE 0
-                                                        END man_counter,
-                                                        CASE ps.sex
-                                                            WHEN 2 THEN 1
-                                                            ELSE 0
-                                                        END woman_counter,
-                                                        ps.father_name,
-                                                        ps.insure_no,
-                                                        ps.country_id,ps.national_code,
-                                                        CASE s.person_type
-                                                            WHEN ".HR_WORKER." THEN  po.title
-                                                            WHEN ".HR_EMPLOYEE." THEN  po.title
-                                                            WHEN ".HR_PROFESSOR." THEN  po.title
-                                                        END job_title,
-                                                        w.contract_start_date,
-                                                        w.contract_end_date,
-                                                        w.ouid, w.salary_pay_proc,
-                                                        w.person_type,
-                                ".$_POST['pay_year']." pay_year,
-                                ".$_POST['pay_month']." pay_month,
-                                '".$month_start."' start_date,
-                                '".$month_end."' end_date,
-                                c.daily_work_place_no,c.cost_center_id,
-                                c.detective_name,
-                                c.detective_address,
-                                c.collective_security_branch,
-                                c.employer_name,
-                                0 work_sheet,
-                                '' description ,
-					            0  monthly_fee,
-                                0 pay,
-                                0 monthly_insure_include,
-                                0 worker_insure_include,
-                                0 employer_insure_value,
-                                0 unemployment_insure_value,
-                                0 gets,
-                                0 pure_pay
-
-                                        FROM staff s INNER JOIN writs w
-                                                          ON s.last_writ_id = w.writ_id and
-                                                             s.last_writ_ver = w.writ_ver AND s.staff_id = w.staff_id AND  w.state=".WRIT_SALARY."
-                                                     INNER JOIN  staff_include_history sih
-                                                                      ON s.staff_id = sih.staff_id
-
-
-                              LEFT OUTER JOIN position  po
-                                   ON (w.post_id = po.post_id)
-                              LEFT OUTER JOIN jobs j
-                                   ON (w.job_id = j.job_id)
-                             
-                              LEFT OUTER JOIN cost_centers c
-                                   ON (w.cost_center_id = c.cost_center_id)
-                              LEFT OUTER JOIN persons ps
-                                   ON (ps.PersonID = s.PersonID)
-                              
-                              WHERE w.emp_mode = ".EMP_MODE_LEAVE_WITH_SALARY." AND
-                                                          sih.start_date <= '".$month_start."' AND
-                                                         (sih.end_date IS NULL OR sih.end_date >= '".$month_end."') AND sih.insure_include = 1 AND
-                                                                                    s.staff_id not in ( select staff_id from  temp_insure_list )
-                                          )");
-										  
-										  
-	PdoDataAccess::runquery('ALTER TABLE temp_insure_list ADD INDEX(staff_id);');
+						
+								  
+	PdoDataAccess::runquery('ALTER TABLE HRM_temp_insure_list ADD INDEX(staff_id);');
 	
 	$query = "	select 
 					staff_id,
 					work_start_date,
 					account_no,
 					pfname,
-					plname,
-					idcard_no,  sex,man_counter ,woman_counter ,father_name,insure_no,
-					country_id,	national_code , job_title,country_title,
+					plname, birth_date , 
+					'مشهد' city_title, 
+					idcard_no,  sex,man_counter ,
+					woman_counter ,father_name,insure_no,
+					country_id,	national_code ,
+					job_title,
+					country_title,
 					contract_start_date,contract_end_date,
 					ouid,
 					salary_pay_proc,
@@ -463,7 +274,7 @@ if(isset($_REQUEST["task"]))
 					detective_name,
 					detective_address,
 					collective_security_branch,
-					employer_name,
+				    employer_name,
 					work_sheet ,issue_date,
 					description ,
 					monthly_fee,
@@ -475,44 +286,34 @@ if(isset($_REQUEST["task"]))
 					gets,
 					pure_pay 
 				
-				from temp_insure_list 
-				where (pay_year = ".$_POST['pay_year'].") AND
-					  (pay_month = ".$_POST['pay_month'].") "." ".(($WhereCost !="" ) ? " AND  cost_center_id in (".$WhereCost.") " : "" )." ".$WhereDetec."  AND person_type in (".$PT.")
+				from HRM_temp_insure_list s
+				where  (pay_year = ".$_POST['pay_year'].") AND
+					   (pay_month = ".$_POST['pay_month'].") 
 					  
 				order by pay_year,pay_month,daily_work_place_no,plname,pfname " ; 
 									
 		$res = PdoDataAccess::runquery($query) ; 	
 
-//echo PdoDataAccess::GetLatestQueryString(); die() ; 
+
 
 		$qry = " select bi.Title month_title 
                         from  Basic_Info bi 
-                                where  bi.typeid = 41 AND InfoID = ".$_POST["pay_month"] ; 
+                                where  bi.typeid = 78 AND InfoID = ".$_POST["pay_month"] ; 
 		$MRes = PdoDataAccess::runquery($qry) ; 
 		$monthTitle = $MRes[0]['month_title'] ;
 	
-			
+		
 	if( $_REQUEST["task"] == 'GetDisk' ) {		
 	
 	
-		copyDbfFiles();		
-				
 		$counter =$work_sheet = $daily_fee = $monthly_fee = 0 ; 
 		$monthly_premium = $monthly_insure_include = $pay = $worker_insure_include =$other_gets = 0 ; 
 		$pure_pay = $employer_insure_value = $unemployment_insure_value = 0  ; 
-		
-		$cnv = new manage_W2DFormatConvertor() ; 
-		
-		for($i=0;$i<count($res); $i++)
-		{
+		$record = "" ;	
+		for($i=0;$i<count($res);$i++){
 			
-			onCalcField($res[$i]) ;
-					
-			while(list($key, $value) = each($res[$i]) ) 
-					$res[$i][$key] = str_replace(array("ی","ی","ک","ك","ؤ"),
-												 array("ي","ي","ك","ك","و"), $res[$i][$key]);
-											 
-			if($res[$i]['sex'] == 1 )
+		onCalcField($res[$i]) ;
+		if($res[$i]['sex'] == 1 )
 				$sex = 'مرد';
 			else
 				$sex = 'زن';
@@ -552,40 +353,35 @@ if(isset($_REQUEST["task"]))
 			} else
 			$contract_end_date = NULL;
 			
-			$res[$i]['city_title'] = 'مشهد' ;
-							/* $res[$i]['plname'] = 'ئ' ; 
-							echo $cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$res[$i]['plname'])) ; 
-							die()  ; */
-			$record = array($res[$i]['daily_work_place_no'],
-							substr($_POST['pay_year'],2,2),
-	    					$_POST['pay_month'],
-	    					NULL, /* شماره ليست*/
-	    					$cnv->correctDigitDir($res[$i]['insure_no']),
-	    					$cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$res[$i]['pfname'])),
-	    					$cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$res[$i]['plname'])),
-	    					$cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$res[$i]['father_name'])),
-	    					$cnv->convertDigitDosEnToFa($cnv->correctDigitDir($res[$i]['idcard_no'])),
-	    					$cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$res[$i]['city_title'])),
-	    					substr(DateModules::Miladi_to_Shamsi($res[$i]['issue_date']),2),
-	    					NULL, /*DSW_BDATE*/
-	    					$cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$sex)),
-	    					$cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$res[$i]['country_title'])),
-	    					$cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$res[$i]['job_title'])),
-	    					substr($contract_start_date,2),
-	    					substr($contract_end_date,2),
-	    					round($res[$i]['work_sheet']),
-	    					round($res[$i]['daily_fee']),
-	    					round($res[$i]['monthly_fee']),
-	    					round($res[$i]['monthly_premium']),
-	    					round($res[$i]['monthly_insure_include']),
-	    					round($res[$i]['pay']),
-	    					round($res[$i]['worker_insure_include']),							                          
-	    					NULL, /* نرخ پورسانتاژ */
-	    					NULL,  /* DSW_JOB */
-							$res[$i]['national_code']
-    					);
-						
 			
+			$record .=		$res[$i]['daily_work_place_no'].",".
+							substr($_POST['pay_year'],2,2).",".
+	    					$_POST['pay_month'].",NULL,".
+							$res[$i]['insure_no'].",".
+	    					$res[$i]['pfname'].",".
+	    					$res[$i]['plname'].",".
+	    					$res[$i]['father_name'].",".
+	    					$res[$i]['idcard_no'].",".
+	    					$res[$i]['city_title'].",".
+	    					substr(DateModules::Miladi_to_Shamsi($res[$i]['issue_date']),2).",".
+							substr(DateModules::Miladi_to_Shamsi($res[$i]['birth_date']),2).",".				
+	    					$sex.",".
+	    					$res[$i]['country_title'].",".
+	    					$res[$i]['job_title'].",".
+	    					substr($contract_start_date,2).",".
+	    					substr($contract_end_date,2).",".
+	    					round($res[$i]['work_sheet']).",".
+	    					round($res[$i]['daily_fee']).",".
+	    					round($res[$i]['monthly_fee']).",".
+	    					round($res[$i]['monthly_premium']).",".
+	    					round($res[$i]['monthly_insure_include']).",".
+	    					round($res[$i]['pay']).",".
+	    					round($res[$i]['worker_insure_include']).",".							                          
+	    					NULL.",". /* نرخ پورسانتاژ */
+	    					NULL.",".  /* DSW_JOB */
+							$res[$i]['national_code']."\r\n";	 
+							
+							
 			$counter++;
 			$work_sheet += $res[$i]['work_sheet'];
 			$daily_fee += $res[$i]['daily_fee']; 
@@ -596,118 +392,80 @@ if(isset($_REQUEST["task"]))
 			$worker_insure_include += $res[$i]['worker_insure_include'];
 			$employer_insure_value += $res[$i]['employer_insure_value']; 
 			$unemployment_insure_value += $res[$i]['unemployment_insure_value']; 
-						
-			$file = "DSKWOR00.DBF" ;
-			$db_path = "../../../HRProcess/".$file ;
-			$dbi = dbase_open($db_path,2);
-			dbase_add_record($dbi, $record);
-			dbase_close($dbi);
-									
-		}	
- 
-		if (file_exists("../../../HRProcess/"."DSKWOR".$res[0]['cost_center_id'].".DBF")) {			
-			unlink("../../../HRProcess/"."DSKWOR".$res[0]['cost_center_id'].".DBF");				
+			
 			}
-
-		//.............rename a file ............................
-		$directory ="../../../HRProcess/" ;
-		foreach (glob($directory."*.DBF") as $filename) {
-			$file = realpath($filename);
-			rename($file, str_replace("DSKWOR00","DSKWOR".$res[0]['cost_center_id'],$file));
-		}
 			
-	
-		//..........................................................
-	
-		$record2 = array($res[0]['daily_work_place_no'],
-    					$cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$res[0]['detective_name'])),
-    					$cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$res[0]['employer_name'])),
-    					$cnv->convertDigitDosEnToFa($cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$res[0]['detective_address']))),
-    					1,
-    					substr($_POST['pay_year'],2,2),
-    					$_POST['pay_month'],
-    					NULL,
-    					$cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256','ليست اصلي مشمول بيمه')),
-    					$counter,
-    					round($work_sheet),
-    					round($daily_fee),
-    					round($monthly_fee),
-    					round($monthly_premium),
-    					round($monthly_insure_include),
-    					round($pay),
-    					round($worker_insure_include),                     
-    					round($employer_insure_value),
-    					round($unemployment_insure_value),
-    					'27',
-    					NULL, 
-    					NULL  
-    					);
+			if(empty($_GET['TypeDisk'])) {
 			
-		$file = "DSKKAR00.DBF" ;
-		$db_path = "../../../HRProcess/".$file ;    	
-    	$dbi = dbase_open($db_path,2);
-		dbase_add_record($dbi, $record2);
-		dbase_close($dbi);
-		
-		if (file_exists("../../../HRProcess/"."DSKKAR".$res[0]['cost_center_id'].".DBF")) {			
-			unlink("../../../HRProcess/"."DSKKAR".$res[0]['cost_center_id'].".DBF");				
-			}
+				$file = "DSKWOR00".$_POST["pay_year"].str_pad($_POST["pay_month"], 2, "0", STR_PAD_LEFT).".TXT";
+								
+				$filename = "../../../tempDir/".$file ;
+				$fp=fopen($filename,'w');
+				fwrite($fp ,$record);
+				fclose($fp);
 
-		//.............rename a file ............................
-		$directory ="../../../HRProcess/" ;
-		foreach (glob($directory."*.DBF") as $filename) {
-			$file = realpath($filename);
-			rename($file, str_replace("DSKKAR00","DSKKAR".$res[0]['cost_center_id'],$file));
-		}
-		
-		
-		//...........................................................
-		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
-		echo "<center><table style='border:0px groove #9BB1CD;border-collapse:collapse;width:50%'><tr>
-				<td width=60px><img src='/HumanResources/img/fum_symbol.jpg'></td>
-				<td align='center' style='font-family:b titr;font-size:15px'>گزارش دیسکت بیمه "." </td>				
-				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
-				. DateModules::shNow() . "<br>";		
-		echo "</td></tr></table>";      
-	
-		echo '<table  class="reportGenerator" style="text-align: right;width:70%!important" cellpadding="4" cellspacing="0">
+				header('Content-disposition: filename="'.$file.'"');
+				header('Content-type: application/file');
+				header('Pragma: no-cache');
+				header('Expires: 0');
+				header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+				header('Pragma: public');
+
+				echo file_get_contents("../../../tempDir/".$file);
+				die() ; 
+				
+			}	
+			else if($_GET['TypeDisk'] == 'KAR'){
+			
+			
+			
+			$record2 = $res[0]['daily_work_place_no'].",".
+    				   $res[0]['detective_name'].",".
+    				   $res[0]['employer_name'].",".
+    				   $res[0]['detective_address'].",1,".
+    				   substr($_POST['pay_year'],2,2).",".
+    				   $_POST['pay_month'].",NULL,'ليست اصلي مشمول بيمه',".    					
+    					$counter.",".
+    					round($work_sheet).",".
+    					round($daily_fee).",".
+    					round($monthly_fee).",".
+    					round($monthly_premium).",".
+    					round($monthly_insure_include).",".
+    					round($pay).",".
+    					round($worker_insure_include).",".                     
+    					round($employer_insure_value).",".
+    					round($unemployment_insure_value).",'27',NULL, NULL "  ; 
 						
-				<tr class="header">					
-					<td >ردیف </td>
-					<td> مرکز هزینه </td>
-					<td align="center" >دریافت فایل کارفرما</td>
-					<td align="center" >دریافت فایل کارکنان </td>				
-				</tr>	' ;
-				
-		
-		echo "<tr>
-				<td>1</td>				
-				<td>".$res[0]['detective_name']."</td>
-				<td><a href=''>فایل کارفرما -  ".$res[0]['detective_name']."</td>
-				<td><a href=''> فایل کارکنان - ".$res[0]['detective_name']."</td>
-			  </tr>"; 
-				
-			
-		
-		//...........................................................
-	/*	header('Content-disposition: filename="'."DSKWOR".$res[0]['cost_center_id'].'.DBF"');
-		header('Content-type: application/file');
-		header('Pragma: no-cache');
-		header('Expires: 0');
-		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-		header('Pragma: public');
+						
+			    $file = "DSKKAR00".$_POST["pay_year"].str_pad($_POST["pay_month"], 2, "0", STR_PAD_LEFT).".TXT";
+								
+				$filename = "../../../tempDir/".$file ;
+				$fp=fopen($filename,'w');
+				fwrite($fp ,$record2);
+				fclose($fp);
 
-		echo file_get_contents("../../../HRProcess/"."DSKWOR".$res[0]['cost_center_id'].'.DBF'); */ 
-		die() ; 		  		
+				header('Content-disposition: filename="'.$file.'"');
+				header('Content-type: application/file');
+				header('Pragma: no-cache');
+				header('Expires: 0');
+				header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+				header('Pragma: public');
+
+				echo file_get_contents("../../../tempDir/".$file);
+				die() ; 
+    					
+			}
+		
+	
 	}		
 	elseif( $_REQUEST["task"] == 'ShowList' ) 
 	{
 
-	 
+	
 	
 	echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
 		echo "<center><table style='border:0px groove #9BB1CD;border-collapse:collapse;width:90%'><tr>
-				<td width=60px><img src='/HumanResources/img/fum_symbol.jpg'></td>
+				<td width=60px>&nbsp;<br><br></td>
 				<td align='center' style='font-family:b titr;font-size:15px'>گزارش لیست بیمه"." </td>				
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
 		     . DateModules::shNow() . "<br>";		
@@ -783,7 +541,7 @@ if(isset($_REQUEST["task"]))
 			else 
 				echo "<td>&nbsp;</td>" ; 
 				
-			if($res[$i]['country_id'] != 1111 )
+			if($res[$i]['country_id'] != 1 )
 				echo "<td> * </td>" ; 
 			else 
 				echo "<td>&nbsp;</td>" ; 
@@ -866,7 +624,7 @@ if(isset($_REQUEST["task"]))
 				  <td colspan='4'>&nbsp;</td></tr></table></center>" ;
 	
 	}
-	elseif( $_REQUEST["task"] == 'ApprovedForm' ) 
+/*	elseif( $_REQUEST["task"] == 'ApprovedForm' ) 
 	{
 		
 		$man_counter = $woman_counter =$work_sheet = $daily_fee = $monthly_fee = 0 ; 
@@ -945,7 +703,7 @@ if(isset($_REQUEST["task"]))
 			 ' ; 
 		 die() ; 
 				
-	}	
+	}	*/
 		
 }
 ?>

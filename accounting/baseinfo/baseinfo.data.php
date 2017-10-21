@@ -345,6 +345,12 @@ function GetAllTafsilis() {
 		$where .= " AND p.IsShareholder='YES' ";
 	}
 	
+	if(isset($_REQUEST["TafsiliID"]) && $_REQUEST["TafsiliID"] != "")
+	{
+		$where .= " AND TafsiliID=:t ";
+		$whereParam[":t"] = $_REQUEST["TafsiliID"];
+	}
+	
 	if($_GET["TafsiliType"] == TAFTYPE_ACCOUNTS && !empty($_REQUEST["ParentTafsili"]))
 	{
 		$dt = PdoDataAccess::runquery("select group_concat(AccountID) 

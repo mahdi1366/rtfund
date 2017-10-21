@@ -13,7 +13,7 @@ $temp = PdoDataAccess::runquery(" select *
                                   where param_type = ".$_POST['param_type']." and person_type = 3 ");
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address .
-	"../data/salary_param.data.php?task=selectAll&param_type=".$_POST['param_type']."&person_type=".$_POST['person_type'] ,"dgDiv", "mainForm");
+	"../data/salary_param.data.php?task=selectAll&param_type=".$_POST['param_type']."&person_type=3" ,"dgDiv", "mainForm");
 
 $dg->addColumn('', "param_id", "string", true);
 
