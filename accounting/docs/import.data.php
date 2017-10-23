@@ -4405,9 +4405,9 @@ function RegisterSalaryDoc($PObj, $pdo){
 
 	$query = "select * from ACC_DocItems di join ACC_docs using(DocID)
 		where SourceType=".DOCTYPE_SALARY." AND SourceID=? AND SourceID2=? AND CycleID=" . $CycleID;
-	$dt = PdoDataAccess::runquery_fetchMode($query, array($PObj->payment_type, $PObj->pay_month));
+	$dt = PdoDataAccess::runquery($query, array($PObj->payment_type, $PObj->pay_month));
 	
-	if($dt->rowCount() > 0)
+	if(count($dt) > 0)
 	{
 		ExceptionHandler::PushException("سند این ماه قبلا صادر شده است");
 		return false;
@@ -4486,6 +4486,8 @@ function RegisterSalaryDoc($PObj, $pdo){
 					end
 					+ if(sit.Param1CostID>0, param1 + diff_param1_coef * diff_param1 , 0)
 					+ if(sit.Param2CostID>0, param2 + diff_param2_coef * diff_param2 , 0)
+					+ if(sit.Param3CostID>0, param3 + diff_param3_coef * diff_param3 , 0)
+					+ if(sit.Param4CostID>0, param4 + diff_param4_coef * diff_param4 , 0)
 				)) as amount
 
 			FROM HRM_payments p
@@ -4564,74 +4566,45 @@ function RegisterSalaryDoc($PObj, $pdo){
 		return false;
 	}
 	//---------------------  param1 and param2 --------------------------
-	PdoDataAccess::runquery("
-		insert into ACC_DocItems(DocID,CostID,details,
-			DebtorAmount,CreditorAmount,
-			locked,SourceType,SourceID,SourceID2)
+	for($i=1; $i<=4; $i++)
+	{
+		PdoDataAccess::runquery("
+			insert into ACC_DocItems(DocID,CostID,details,
+				DebtorAmount,CreditorAmount,
+				locked,SourceType,SourceID,SourceID2)
 
-		select $DocObj->DocID,
-			Param1CostID,
-			'".$DocObj->description ."',
-			if(effect_type=2,amount,0), 
-			if(effect_type=1,amount,0),
-			'YES',
-			".DOCTYPE_SALARY.",
-			".$PObj->payment_type.",
-			".$PObj->pay_month."
+			select $DocObj->DocID,
+				Param".$i."CostID,
+				'".$DocObj->description ."',
+				if(effect_type=2,amount,0), 
+				if(effect_type=1,amount,0),
+				'YES',
+				".DOCTYPE_SALARY.",
+				".$PObj->payment_type.",
+				".$PObj->pay_month."
 
-		from (
-			select sit.Param1CostID,effect_type,
-				sum(param1 + diff_param1_coef * diff_param1) as amount
+			from (
+				select sit.Param".$i."CostID,effect_type,
+					sum(param".$i." + diff_param".$i."_coef * diff_param".$i.") as amount
 
-			FROM HRM_payments p
-				JOIN HRM_payment_items pit
-					ON(p.pay_year = pit.pay_year AND p.pay_month = pit.pay_month AND
-					p.staff_id = pit.staff_id AND p.payment_type = pit.payment_type)
-				JOIN HRM_salary_item_types sit using(salary_item_type_id)
-					
-			WHERE p.pay_year = :py and p.pay_month = :pm and p.payment_type = :pt
-				AND sit.Param1CostID>0
-			group by sit.Param1CostID
-		)t 
-		where amount<>0", array(":py" => $PObj->pay_year, ":pm" => $PObj->pay_month, 
-			":pt" => $PObj->payment_type), $pdo);
+				FROM HRM_payments p
+					JOIN HRM_payment_items pit
+						ON(p.pay_year = pit.pay_year AND p.pay_month = pit.pay_month AND
+						p.staff_id = pit.staff_id AND p.payment_type = pit.payment_type)
+					JOIN HRM_salary_item_types sit using(salary_item_type_id)
 
-	PdoDataAccess::runquery("
-		insert into ACC_DocItems(DocID,CostID,details,
-			DebtorAmount,CreditorAmount,
-			locked,SourceType,SourceID,SourceID2)
-
-		select $DocObj->DocID,
-			Param2CostID,
-			'".$DocObj->description ."',
-			if(effect_type=2,amount,0), 
-			if(effect_type=1,amount,0),
-			'YES',
-			".DOCTYPE_SALARY.",
-			".$PObj->payment_type.",
-			".$PObj->pay_month."
-
-		from (
-			select sit.Param2CostID,effect_type,
-				sum(param2 + diff_param2_coef * diff_param2) as amount
-
-			FROM HRM_payments p
-				JOIN HRM_payment_items pit
-					ON(p.pay_year = pit.pay_year AND p.pay_month = pit.pay_month AND
-					p.staff_id = pit.staff_id AND p.payment_type = pit.payment_type)
-				JOIN HRM_salary_item_types sit using(salary_item_type_id)
-					
-			WHERE p.pay_year = :py and p.pay_month = :pm and p.payment_type = :pt
-				AND sit.Param2CostID>0
-			group by sit.Param2CostID
-		)t 
-		where amount<>0", array(":py" => $PObj->pay_year, ":pm" => $PObj->pay_month, 
-			":pt" => $PObj->payment_type), $pdo);
-
+				WHERE p.pay_year = :py and p.pay_month = :pm and p.payment_type = :pt
+					AND sit.Param".$i."CostID>0
+				group by sit.Param".$i."CostID
+			)t 
+			where amount<>0", array(":py" => $PObj->pay_year, ":pm" => $PObj->pay_month, 
+				":pt" => $PObj->payment_type), $pdo);
+	}	
+	
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
 		$pdo->rollBack();
-		ExceptionHandler::PushException("خطا در ثبت خالص حقوق");
+		ExceptionHandler::PushException("خطا در ثبت پارامترهای اقلام");
 		return false;
 	}
 	return true;
@@ -4653,16 +4626,6 @@ function ReturnSalaryDoc($PObj, $pdo){
 		die();
 	}
 	//..........................................................................
-	
-	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
-		where SourceType=" . DOCTYPE_SALARY . " AND SourceID=? AND SourceID2=?",
-		array($PObj->payment_type, $PObj->pay_month), $pdo);
-	
-	if($dt->rowCount() > 0)
-	{
-		ExceptionHandler::PushException("سند این ماه قبلا صادر شده است");
-		return false;
-	};
 	
 	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
 		where SourceType=" . DOCTYPE_SALARY . " AND SourceID=? AND SourceID2=?",

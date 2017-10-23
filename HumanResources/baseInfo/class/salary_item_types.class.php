@@ -38,6 +38,8 @@ class manage_salary_item_type extends PdoDataAccess
 	public $TafsiliID;
 	public $Param1CostID;
 	public $Param2CostID;
+	public $Param3CostID;
+	public $Param4CostID;
 	
 	public $available_for;
 	public $backpay_include;
