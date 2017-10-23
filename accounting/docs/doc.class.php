@@ -586,7 +586,7 @@ class ACC_CostBlocks extends OperationClass {
 	public $SourceType;
 	public $SourceID;
 
-	static function Get($where = "", $param = array()) {
+	static function Get($where = "", $param = array(), $pdo = null) {
 
 		$query = "
 			SELECT cb.*,
@@ -631,7 +631,7 @@ class ACC_DocHistory extends OperationClass {
 	public $ActionDate;
 	public $description;
 
-	static function Get($where = "", $param = array()) {
+	static function Get($where = "", $param = array(), $pdo = null) {
 
 		$query = "
 			SELECT h.*,

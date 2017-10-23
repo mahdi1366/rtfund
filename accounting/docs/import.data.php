@@ -1010,6 +1010,17 @@ function ReturnPayPartDoc($DocID, $pdo, $DeleteDoc = true){
 	
 	CheckCloseCycle();
 	
+	//..........................................................................
+	$dt = PdoDataAccess::runquery("select d.DocID,LocalNo 
+		from ACC_DocItems d join ACC_docs using(DocID)
+		where DocStatus <> 'RAW' AND d.DocID=? AND SourceType=". DOCTYPE_LOAN_PAYMENT, array($DocID));
+	if(count($dt) > 0)
+	{
+		echo Response::createObjectiveResponse(false, "سند مربوطه با شماره " . $dt[0]["LocalNo"] . " تایید شده و قادر به برگشت نمی باشید");
+		die();
+	}
+	//..........................................................................
+	
 	PdoDataAccess::runquery("delete from ACC_DocItems where DocID=? AND SourceType=". DOCTYPE_LOAN_PAYMENT
 		, array($DocID));
 	PdoDataAccess::runquery("delete from ACC_DocCheques where DocID=? ", array($DocID));
@@ -2744,6 +2755,18 @@ function ReturnCustomerPayDoc($PayObj, $pdo, $EditMode = false){
 	CheckCloseCycle();
 	/*@var $PayObj LON_BackPays */
 	
+	//..........................................................................
+	$dt = PdoDataAccess::runquery("select d.DocID,LocalNo 
+		from ACC_DocItems d join ACC_docs using(DocID)
+		where DocStatus <> 'RAW' AND SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID=? AND SourceID2=?",
+		array($PayObj->RequestID, $PayObj->BackPayID), $pdo);
+	if(count($dt) > 0)
+	{
+		echo Response::createObjectiveResponse(false, "سند مربوطه با شماره " . $dt[0]["LocalNo"] . " تایید شده و قادر به برگشت نمی باشید");
+		die();
+	}
+	//..........................................................................
+	
 	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
 		where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID=? AND SourceID2=?",
 		array($PayObj->RequestID, $PayObj->BackPayID), $pdo);
@@ -2882,6 +2905,18 @@ function RegisterEndRequestDoc($ReqObj, $pdo){
 function ReturnEndRequestDoc($ReqObj, $pdo){
 		
 	CheckCloseCycle();
+	
+	//..........................................................................
+	$dt = PdoDataAccess::runquery("select d.DocID,LocalNo 
+		from ACC_DocItems d join ACC_docs using(DocID)
+		where DocStatus <> 'RAW' AND DocType=" . DOCTYPE_END_REQUEST . " AND SourceID2=?",
+			array($ReqObj->RequestID), $pdo);
+	if(count($dt) > 0)
+	{
+		echo Response::createObjectiveResponse(false, "سند مربوطه با شماره " . $dt[0]["LocalNo"] . " تایید شده و قادر به برگشت نمی باشید");
+		die();
+	}
+	//..........................................................................
 	
 	$dt = PdoDataAccess::runquery("select d.DocID from ACC_DocItems d join ACC_docs using(DocID)
 		where DocType=" . DOCTYPE_END_REQUEST . " AND SourceID2=?",
@@ -3920,6 +3955,18 @@ function ReturnWarrantyDoc($ReqObj, $pdo, $EditMode = false){
 	
 	/*@var $PayObj WAR_requests */
 	
+	//..........................................................................
+	$dt = PdoDataAccess::runquery("select DocID,LocalNo from ACC_docs 
+			join ACC_DocItems using(DocID)
+			where DocStatus <> 'RAW' AND SourceType=" . DOCTYPE_WARRENTY . " AND SourceID2=?",
+			array($ReqObj->RequestID), $pdo);
+	if(count($dt) > 0)
+	{
+		echo Response::createObjectiveResponse(false, "سند مربوطه با شماره " . $dt[0]["LocalNo"] . " تایید شده و قادر به برگشت نمی باشید");
+		die();
+	}
+	//..........................................................................
+	
 	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
 		where SourceType=" . DOCTYPE_WARRENTY . " AND SourceID2=?",
 		array($ReqObj->RequestID), $pdo);
@@ -4594,6 +4641,28 @@ function ReturnSalaryDoc($PObj, $pdo){
 	
 	$CycleID = $PObj->pay_year;
 	CheckCloseCycle($CycleID);
+	
+	//..........................................................................
+	$dt = PdoDataAccess::runquery("select DocID,LocalNo from ACC_docs 
+			join ACC_DocItems using(DocID)
+			where DocStatus <> 'RAW' AND SourceType=" . DOCTYPE_SALARY . " AND SourceID=? AND SourceID2=?",
+	array($PObj->payment_type, $PObj->pay_month), $pdo);
+	if(count($dt) > 0)
+	{
+		echo Response::createObjectiveResponse(false, "سند مربوطه با شماره " . $dt[0]["LocalNo"] . " تایید شده و قادر به برگشت نمی باشید");
+		die();
+	}
+	//..........................................................................
+	
+	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
+		where SourceType=" . DOCTYPE_SALARY . " AND SourceID=? AND SourceID2=?",
+		array($PObj->payment_type, $PObj->pay_month), $pdo);
+	
+	if($dt->rowCount() > 0)
+	{
+		ExceptionHandler::PushException("سند این ماه قبلا صادر شده است");
+		return false;
+	};
 	
 	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
 		where SourceType=" . DOCTYPE_SALARY . " AND SourceID=? AND SourceID2=?",
