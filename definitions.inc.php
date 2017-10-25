@@ -29,6 +29,7 @@ define("DOCTYPE_WARRENTY_EXTEND", "19");
 define("DOCTYPE_INSTALLMENT_CHANGE", "20");
 define("DOCTYPE_WARRENTY_CANCEL", "21");
 define("DOCTYPE_SALARY", "22");
+define("DOCTYPE_SALARY_PAY", "24");
 define("DOCTYPE_EDITINCOMECHEQUE", "23");
 //............  TypeID=2 ....................
 define("TAFTYPE_PERSONS", "1");

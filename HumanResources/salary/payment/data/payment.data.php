@@ -198,6 +198,30 @@ function confirmation() {
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
+	//------------- pay salary -------------
+	if ($obj->state*1 == 4) 
+	{
+		if (!RegisterPaySalaryDoc($obj, $pdo)) {
+			//print_r(ExceptionHandler::PopAllExceptions());
+			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+			die();
+		}
+		$pdo->commit();
+		echo Response::createObjectiveResponse(true, "");
+		die();
+	}
+	if($obj->state*1 == 3) 
+	{
+		if (!ReturnPaySalaryDoc($obj, $pdo)) {
+			//print_r(ExceptionHandler::PopAllExceptions());
+			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+			die();
+		}
+		$pdo->commit();
+		echo Response::createObjectiveResponse(true, "");
+		die();
+	}
+	//------------- compute salary -------------
 	if (!$obj->change_payment_state($pdo)) {
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
