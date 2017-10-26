@@ -9,6 +9,7 @@ require_once "ReportGenerator.class.php";
 
 $page_rpg = new ReportGenerator("mainForm","WarrentyReport_totalObj");
 $page_rpg->addColumn("شماره تضمین", "RequestID");
+$page_rpg->addColumn("شعبه", "BranchName");
 $page_rpg->addColumn("نوع تضمین", "TypeDesc");	
 $col = $page_rpg->addColumn("تاریخ شروع", "StartDate");
 $col->type = "date";
@@ -226,7 +227,6 @@ function WarrentyReport_total()
 			}),
 			fieldLabel : "شعبه",
 			queryMode : 'local',
-			width : 370,
 			displayField : "BranchName",
 			valueField : "BranchID",
 			hiddenName : "BranchID"
