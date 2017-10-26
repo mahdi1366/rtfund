@@ -73,10 +73,12 @@ function GetData(){
 	MakeWhere($where, $whereParam);
 	
 	$query = "select r.* , concat_ws(' ',fname,lname,CompanyName) fullname, sp.StepDesc,
-				bf.InfoDesc TypeDesc ".
+				bf.InfoDesc TypeDesc ,
+				BranchName".
 				($userFields != "" ? "," . $userFields : "")
 				."
 			from WAR_requests r 
+				left join BSC_branches using(BranchID)
 				left join BSC_persons using(PersonID)
 				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
 				join WFM_FlowSteps sp on(sp.FlowID=" . WARRENTY_FLOWID . " AND sp.StepID=r.StatusID)
@@ -97,6 +99,7 @@ function ListDate($IsDashboard = false){
 	$rpg->mysql_resource = GetData();
 	
 	$rpg->addColumn("شماره تضمین", "RequestID");
+	$rpg->addColumn("شعبه", "BranchName");
 	$rpg->addColumn("نوع تضمین", "TypeDesc");	
 	$rpg->addColumn("تاریخ شروع", "StartDate", "ReportDateRender");
 	$rpg->addColumn("تاریخ پایان", "EndDate", "ReportDateRender");
@@ -211,6 +214,24 @@ function WarrentyReport_total()
 		width : 780,
 		items :[{
 			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../../framework/baseInfo/baseInfo.data.php?' +
+						"task=SelectBranches",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BranchID','BranchName'],
+				autoLoad : true					
+			}),
+			fieldLabel : "شعبه",
+			queryMode : 'local',
+			width : 370,
+			displayField : "BranchName",
+			valueField : "BranchID",
+			hiddenName : "BranchID"
+		},{
+			xtype : "combo",
 			store : new Ext.data.Store({
 				proxy:{
 					type: 'jsonp',
@@ -244,8 +265,7 @@ function WarrentyReport_total()
 		},{
 			xtype : "textfield",
 			name : "organization",
-			fieldLabel : "سازمان مربوطه",
-			colspan : 2
+			fieldLabel : "سازمان مربوطه"
 		},{
 			xtype : "currencyfield",
 			name : "FromAmount",
