@@ -29,6 +29,7 @@ class WAR_requests extends OperationClass
 	public $IsBlock;
 	public $BranchID;
 	public $RegisterAmount;
+	public $SavePercent;
 	
 	public $_fullname;
 	public $_TypeDesc;

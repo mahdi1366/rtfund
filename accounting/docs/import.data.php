@@ -3673,7 +3673,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	$days = DateModules::GDateMinusGDate($ReqObj->EndDate,$ReqObj->StartDate);
 	//if(DateModules::YearIsLeap($CycleID));
 		$days -= 1;
-	$TotalWage = round($days*$ReqObj->amount*0.9*$ReqObj->wage/36500) + $ReqObj->RegisterAmount*1;	
+	$TotalWage = round($days*$ReqObj->amount*(1-$ReqObj->SavePercent/100)*$ReqObj->wage/36500) + $ReqObj->RegisterAmount*1;	
 	
 	$years = SplitYears(DateModules::miladi_to_shamsi($ReqObj->StartDate), 
 		DateModules::miladi_to_shamsi($ReqObj->EndDate), $TotalWage);
@@ -3688,22 +3688,22 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 				$PersonTafsili,
 				$ReqObj->BranchID
 			));
-	if(!$IsExtend && $WageCost == $CostCode_pasandaz && $dt[0][0]*1 < $ReqObj->amount*0.1)
+	if(!$IsExtend && $WageCost == $CostCode_pasandaz && $dt[0][0]*1 < $ReqObj->amount*$ReqObj->SavePercent/100)
 	{
-		$message = "مانده حساب پس انداز مشتری کمتر از 10% مبلغ ضمانت نامه می باشد";
+		$message = "مانده حساب پس انداز مشتری کمتر از ".$ReqObj->SavePercent."% مبلغ ضمانت نامه می باشد";
 		$message .= "<br> مانده حساب پس انداز : " . number_format($dt[0][0]);
-		$message .= "<br> 10% مبلغ ضمانت نامه: " . number_format($ReqObj->amount*0.1);
+		$message .= "<br> ".$ReqObj->SavePercent."% مبلغ ضمانت نامه: " . number_format($ReqObj->amount*$ReqObj->SavePercent/100);
 		$message .= "<br> مبلغ کارمزد: " . number_format($TotalWage);
 		ExceptionHandler::PushException($message);
 		ExceptionHandler::PushException();
 		return false;
 	}
-	$totalAmount = $IsExtend ? $TotalWage : ($ReqObj->amount*0.1 + $TotalWage);
+	$totalAmount = $IsExtend ? $TotalWage : ($ReqObj->amount*$ReqObj->SavePercent/100 + $TotalWage);
 	if($WageCost == $CostCode_pasandaz && $dt[0][0]*1 < $totalAmount)
 	{
-		$message = "مانده حساب پس انداز مشتری کمتر از مبلغ کارمزد و 10% مبلغ ضمانت نامه می باشد";
+		$message = "مانده حساب پس انداز مشتری کمتر از مبلغ کارمزد و ".$ReqObj->SavePercent."% مبلغ ضمانت نامه می باشد";
 		$message .= "<br> مانده حساب پس انداز : " . number_format($dt[0][0]);
-		$message .= "<br> 10% مبلغ ضمانت نامه: " . number_format($ReqObj->amount*0.1);
+		$message .= "<br> ".$ReqObj->SavePercent."% مبلغ ضمانت نامه: " . number_format($ReqObj->amount*$ReqObj->SavePercent/100);
 		$message .= "<br> مبلغ کارمزد: " . number_format($TotalWage);
 		ExceptionHandler::PushException($message);
 		return false;
@@ -3724,13 +3724,13 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		}
 		$amount = $ReqObj->amount*1;
 		if($WageCost == $CostCode_pasandaz)
-			$amount += $ReqObj->amount*0.1 + $TotalWage;
+			$amount += $ReqObj->amount*$ReqObj->SavePercent/100 + $TotalWage;
 		
 		if($dt[0][0]*1 < $amount)
 		{
 			$message = "مانده حساب انتخابی جهت بلوکه کمتر از مبلغ ضمانت نامه می باشد";
 			$message .= "<br>مانده حساب  : " . number_format($dt[0][0]);
-			$message .= "<br> 10% مبلغ ضمانت نامه: " . number_format($ReqObj->amount*0.1);
+			$message .= "<br> ".$ReqObj->SavePercent."% مبلغ ضمانت نامه: " . number_format($ReqObj->amount*$ReqObj->SavePercent/100);
 			$message .= "<br> مبلغ کارمزد: " . number_format($TotalWage);
 			$message .= "<br> مبلغ بلوکه: " . number_format($ReqObj->amount*1);
 			ExceptionHandler::PushException($message);
@@ -3868,10 +3868,10 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliID);
-		$itemObj->details = "بابت 10% سپرده ضمانت نامه شماره " . $ReqObj->RequestID;
+		$itemObj->details = "بابت ".$ReqObj->SavePercent."% سپرده ضمانت نامه شماره " . $ReqObj->RequestID;
 		$itemObj->CostID = $CostCode_seporde;
 		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $ReqObj->amount*0.1;
+		$itemObj->CreditorAmount = $ReqObj->amount*$ReqObj->SavePercent/100;
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ثبت ردیف سپرده");
@@ -3883,7 +3883,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	$CostObj = new ACC_CostCodes($WageCost);
 	$itemObj->details = "بابت کارمزد ضمانت نامه شماره " . $ReqObj->RequestID;
 	$itemObj->CostID = $WageCost;
-	$itemObj->DebtorAmount = $TotalWage + (!$IsExtend ? $ReqObj->amount*0.1 : 0) - $totalCostAmount;
+	$itemObj->DebtorAmount = $TotalWage + (!$IsExtend ? $ReqObj->amount*$ReqObj->SavePercent/100 : 0) - $totalCostAmount;
 	$itemObj->CreditorAmount = 0;
 	$itemObj->TafsiliType = $CostObj->TafsiliType;
 	if($TafsiliID != "")
@@ -4060,7 +4060,7 @@ function EndWarrantyDoc($ReqObj, $pdo){
 	//...............................................
 	unset($itemObj->ItemID);
 	$itemObj->CostID = $CostCode_seporde;
-	$itemObj->DebtorAmount = round($ReqObj->amount/10);
+	$itemObj->DebtorAmount = round($ReqObj->amount*$ReqObj->SavePercent/100);
 	$itemObj->CreditorAmount = 0;
 	if(!$itemObj->Add($pdo))
 	{
@@ -4071,7 +4071,7 @@ function EndWarrantyDoc($ReqObj, $pdo){
 	unset($itemObj->ItemID);
 	$itemObj->CostID = $CostCode_pasandaz;
 	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = round($ReqObj->amount/10);
+	$itemObj->CreditorAmount = round($ReqObj->amount*$ReqObj->SavePercent/100);
 	if(!$itemObj->Add($pdo))
 	{
 		ExceptionHandler::PushException("خطا در ثبت ردیف تعهد ضمانت نامه");
@@ -4188,11 +4188,11 @@ function CancelWarrantyDoc($ReqObj, $extradays, $pdo){
 	//------------------- compute wage ------------------
 	$days = DateModules::GDateMinusGDate($ReqObj->EndDate,$ReqObj->StartDate);
 	$days -= 1;
-	$TotalWage = round($days*$ReqObj->amount*0.9*$ReqObj->wage/36500);	
+	$TotalWage = round($days*$ReqObj->amount*(1-($ReqObj->SavePercent/100))*$ReqObj->wage/36500);	
 	
 	$days = DateModules::GDateMinusGDate($ReqObj->CancelDate,$ReqObj->StartDate);
 	$days += $extradays*1;
-	$FundWage = round($days*$ReqObj->amount*0.9*$ReqObj->wage/36500);	
+	$FundWage = round($days*$ReqObj->amount*(1-($ReqObj->SavePercent/100))*$ReqObj->wage/36500);	
 	
 	$RemainWage = $TotalWage-$FundWage;
 	
@@ -4266,7 +4266,7 @@ function CancelWarrantyDoc($ReqObj, $extradays, $pdo){
 	//...............................................
 	unset($itemObj->ItemID);
 	$itemObj->CostID = $CostCode_seporde;
-	$itemObj->DebtorAmount = round($ReqObj->amount/10);
+	$itemObj->DebtorAmount = round($ReqObj->amount*$ReqObj->SavePercent/100);
 	$itemObj->CreditorAmount = 0;
 	if(!$itemObj->Add($pdo))
 	{
@@ -4277,7 +4277,7 @@ function CancelWarrantyDoc($ReqObj, $extradays, $pdo){
 	unset($itemObj->ItemID);
 	$itemObj->CostID = $CostCode_pasandaz;
 	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = round($ReqObj->amount/10);
+	$itemObj->CreditorAmount = round($ReqObj->amount*$ReqObj->SavePercent/100);
 	if(!$itemObj->Add($pdo))
 	{
 		ExceptionHandler::PushException("خطا در ثبت ردیف تعهد ضمانت نامه");

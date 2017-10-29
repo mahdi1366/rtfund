@@ -172,6 +172,14 @@ function WarrentyRequest(){
 			hideTrigger : true,
 			fieldLabel : "کارمزد صدور"
 		},{
+			xtype : "numberfield",
+			allowBlank : false,
+			fieldLabel : "درصد سپرده",
+			name : "SavePercent",
+			width : 150,
+			afterSubTpl : "%",
+			hideTrigger : true
+		},{
 			xtype : "checkbox",
 			boxLabel : "مبلغ ضمانت نامه از حساب سپرده فرد بلوکه شود",
 			name : "IsBlock",
@@ -179,10 +187,6 @@ function WarrentyRequest(){
 		},{
 			xtype : "hidden",
 			name : "RequestID"
-		}, {
-			xtype : "fieldset",
-			title : "محاسبات مربوطه",
-			items : [{}]
 		}],
 		buttons :[{
 			text : "ذخیره",
@@ -1073,9 +1077,9 @@ WarrentyRequest.prototype.ShowCosts = function(){
 
 WarrentyRequest.prototype.ShowCheckList = function(){
 
-	if(!this.CostsWin)
+	if(!this.CheckListWin)
 	{
-		this.CostsWin = new Ext.window.Window({
+		this.CheckListWin = new Ext.window.Window({
 			title: 'چک لیست',
 			modal : true,
 			autoScroll : true,
@@ -1095,15 +1099,15 @@ WarrentyRequest.prototype.ShowCheckList = function(){
 				}
 			}]
 		});
-		Ext.getCmp(this.TabID).add(this.CostsWin);
+		Ext.getCmp(this.TabID).add(this.CheckListWin);
 	}
-	this.CostsWin.show();
-	this.CostsWin.center();	
+	this.CheckListWin.show();
+	this.CheckListWin.center();	
 	var record = this.grid.getSelectionModel().getLastSelected();
-	this.CostsWin.loader.load({
+	this.CheckListWin.loader.load({
 		params : {
 			MenuID : this.MenuID,
-			ExtTabID : this.CostsWin.getEl().id,
+			ExtTabID : this.CheckListWin.getEl().id,
 			SourceID : record.data.RequestID,
 			SourceType : <?= SOURCETYPE_WARRENTY ?>
 		}
