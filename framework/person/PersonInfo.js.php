@@ -41,7 +41,7 @@ function PersonInfo()
 		fields : ["IsReal","fname","lname","CompanyName","UserName","NationalID","CityID",
 			"EconomicID","PhoneNo","mobile","address","email","RegNo","RegDate","RegPlace",
 			"CompanyType","AccountNo","DomainID","WebSite","IsGovermental","DomainDesc",
-			"FatherName","ShNo","PostID","IsStaff","IsCustomer","IsSupporter","IsShareholder",
+			"FatherName","ShNo","IsStaff","IsCustomer","IsSupporter","IsShareholder",
 			"IsAgent","IsExpert", "SmsNo"],
 		autoLoad : true,
 		listeners :{

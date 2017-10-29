@@ -197,11 +197,36 @@ function confirmation() {
 
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
-
+	
+	//------------- pay salary -------------
+	if ($obj->state*1 == 4) 
+	{
+		if (!RegisterPaySalaryDoc($obj, $pdo)) {
+			//print_r(ExceptionHandler::PopAllExceptions());
+			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+			die();
+		}
+		$pdo->commit();
+		echo Response::createObjectiveResponse(true, "");
+		die();
+	}
+	if($obj->state*1 == 3) 
+	{
+		if (!ReturnPaySalaryDoc($obj, $pdo)) {
+			//print_r(ExceptionHandler::PopAllExceptions());
+			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+			die();
+		}
+		$pdo->commit();
+		echo Response::createObjectiveResponse(true, "");
+		die();
+	}
+	//------------- compute salary -------------
 	if (!$obj->change_payment_state($pdo)) {
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
+	
 	if ($obj->state == "2") {
 		if (!RegisterSalaryDoc($obj, $pdo)) {
 			//print_r(ExceptionHandler::PopAllExceptions());
@@ -215,6 +240,7 @@ function confirmation() {
 			die();
 		}
 	}
+	
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, $obj->state);
 	die();
@@ -263,122 +289,6 @@ function Remove() {
 }
 
 //------------------------------------------------------
-
-function registerDoc() {
-
-	require_once '../../../../accountancy/import/salary/salary.class.php';
-	$AccDocObj = new ImportSalary($_POST["pay_year"], $_POST["pay_month"]);
-	if ($AccDocObj->InitialImportance($_POST["PersonType"] == "contract") === false) {
-		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString("<br>"));
-		die();
-	}
-
-	$query = "	
-		select  c.CostCenterID,
-				c.Title,
-				sit.CostID,
-				sit.CostType,
-				case s.person_type when 1 then if(w.emp_state=11, 'ConditionalProf', 'Prof')
-								   when 2 then 'Staff'
-								   when 3 then 'Worker'
-								   when 5 then 'Contract' end PersonType, 
-				s.last_retired_pay,
-				w.emp_state,
-				c.AccUnitID,				
-				pit.salary_item_type_id,
-				sum(pit.pay_value) pay_value,
-				sum(pit.diff_value_coef * pit.diff_pay_value) diff_pay_value,
-				sum(param7) param7,
-				sum(diff_param7_coef * diff_param7) diff_param7,
-				sum(param2) param2,
-				sum(diff_param2_coef * diff_param2) diff_param2,
-				sum(param3) param3,
-				sum(diff_param3_coef * diff_param3) diff_param3
-				
-		FROM payments p 
-			JOIN staff s ON s.staff_id = p.staff_id
-			JOIN writs w
-				ON(p.writ_id = w.writ_id AND
-				   p.writ_ver = w.writ_ver AND
-				   p.staff_id = w.staff_id AND w.state=3)
-
-			JOIN payment_items pit 
-				ON(p.pay_year = pit.pay_year AND p.pay_month = pit.pay_month AND
-				   p.staff_id = pit.staff_id AND p.payment_type = pit.payment_type)
-
-			JOIN persons per ON (per.personid = s.personid )
-			JOIN banks b ON b.bank_id = p.bank_id
-			JOIN CostCenterPlan c ON c.CostCenterID = w.CostCenterID
-			JOIN salary_item_types sit using(salary_item_type_id)
-			
-		WHERE p.pay_year = :py and p.pay_month = :pm and p.payment_type = 1 
-			and s.person_type in(" . ($_POST["PersonType"] == "contract" ? "5" : "1,2,3") . ") AND sit.CostID>0
-
-		group by c.CostCenterID , s.person_type , p.payment_type , pit.salary_item_type_id
-		order by c.CostCenterID,pit.salary_item_type_id";
-
-	$dt = PdoDataAccess::runquery_fetchMode($query, array(":py" => $_POST["pay_year"], ":pm" => $_POST["pay_month"]));
-
-	$AccError = "";
-	while ($row = $dt->fetch()) {
-		$amount = 0;
-		switch ($row["salary_item_type_id"]) {
-			case 44 :
-				if ($row["PersonType"] == "ConditionalProf")
-					$row["CostID"] = 19023;
-				$amount = $row["pay_value"] + $row["diff_pay_value"];
-				break;
-			//..................................................................
-			case 143 :
-			case 38 :
-				$coef_dolat = 1.7 / 1.65;
-				$amount = $row["param7"] + $row["diff_param7"] + ($row["param7"] + $row["diff_param7"]) * $coef_dolat;
-				break;
-			//..................................................................
-			case 9920 :
-			case 144 :
-				$amount = $row["param2"] + $row["diff_param2"];
-				break;
-			case 145 :
-				$amount = $row["param2"] + $row["diff_param2"] + $row["param3"] + $row["diff_param3"];
-				break;
-			case 744 :
-				$amount = $row["param2"] + $row["diff_param2"];
-				break;
-			//..................................................................
-			case 149 :
-			case 150 :
-			case 750 :
-				$amount = $row["param3"] + $row["diff_param3"];
-				break;
-			//..................................................................
-			case 9931 :
-				if ($row["PersonType"] == "Staff" || $row["PersonType"] == "Contract")
-					$row["CostID"] = 341;
-				if ($row["PersonType"] == "Worker")
-					$row["CostID"] = 342;
-
-				$amount = $row["pay_value"] + $row["diff_pay_value"];
-				break;
-			//..................................................................
-			default :
-				$amount = $row["pay_value"] + $row["diff_pay_value"];
-		}
-
-		$AccDocObj->AddItem($row["AccUnitID"], $row["CostID"], $amount, $row["PersonType"]);
-
-		if (ExceptionHandler::GetExceptionCount() > 0) {
-			$AccError .= "مرکز هزینه : " . $row["Title"] . "<br><hr><br>";
-			$AccError .= "<span style=color:red><h3>" . ExceptionHandler::GetExceptionsToString("<br>") . "</h3></span>";
-		}
-		ExceptionHandler::PopAllExceptions();
-	}
-
-	$AccDocObj->CommitImportance();
-
-	echo Response::createObjectiveResponse($AccError == "", $AccError);
-	die();
-}
 
 function deleteDoc() {
 

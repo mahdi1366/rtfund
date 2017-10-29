@@ -64,12 +64,20 @@ function Confirm()
 		 }], 
 		buttons : [{
 			iconCls : "tick",
-			text : "پرداخت حقوق",
+			text : "سند حقوق",
 			handler : function(){ConfirmObject.Save(this, 2);}
 		},{
 			iconCls : "cross",
-			text : "برگشت پرداخت",
+			text : "برگشت سند پرداخت",
 			handler : function(){ConfirmObject.Save(this, 1);}
+		},'->',{
+			iconCls : "tick",
+			text : "پرداخت حقوق",
+			handler : function(){ConfirmObject.Save(this, 4);}
+		},{
+			iconCls : "cross",
+			text : "برگشت پرداخت پرداخت",
+			handler : function(){ConfirmObject.Save(this, 3);}
 		}]
 	});	
 

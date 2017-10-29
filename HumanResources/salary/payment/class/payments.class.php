@@ -101,11 +101,7 @@ class manage_payments extends PdoDataAccess
 			 ExceptionHandler::PushException("خطا در تغییر وضعیت پرداخت حقوق");
 			return false;
 		}
-		if(self::AffectedRows($pdo) == 0)
-		{
-			ExceptionHandler::PushException("محاسبه ایی جهت پرداخت در ماه فوق یافت نشد");
-			return false;
-		}
+		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
 		$daObj->MainObjectID = $this->pay_year;
