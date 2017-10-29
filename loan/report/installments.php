@@ -41,7 +41,7 @@ function MakeWhere(&$where, &$whereParam){
 				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 			continue;
 
-		if($key == "IsEndedInclude")
+		if($key == "IsEndedInclude" || $key == "ZeroRemain")
 			continue;
 
 		$prefix = "";
@@ -154,6 +154,31 @@ function GetData(){
 				
 			}
 		}
+	}
+	
+	if(!empty($_POST["ZeroRemain"]))
+	{
+		if($_SESSION["USER"]["UserName"] == "admin")
+		{
+		}
+		$currentIns = $returnArr[0]["InstallmentID"];
+		$tempArr = array();
+		$returnArr2 = array();
+		for($i=0; $i<count($returnArr); $i++)
+		{
+			if($currentIns == $returnArr[$i]["InstallmentID"])
+				$tempArr[] = $returnArr[$i];
+			
+			if($i+1 == count($returnArr) || $returnArr[$i+1]["InstallmentID"] != $currentIns)
+			{
+				if($returnArr[$i]["TotalRemainder"] == 0)
+					$returnArr2 = array_merge ($returnArr2, $tempArr);
+				$tempArr = array();
+				$currentIns = $returnArr[$i+1]["InstallmentID"];
+			}
+		}
+		
+		return $returnArr2;
 	}
 	
 	return $returnArr;
@@ -421,6 +446,10 @@ function LoanReport_installments()
 			xtype : "container",
 			colspan : 2,
 			html : "<input type=checkbox name=IsEndedInclude >  گزارش شامل وام های خاتمه یافته نیز باشد"
+		},{
+			xtype : "container",
+			colspan : 2,
+			html : "<input type=checkbox name=ZeroRemain >  قسط کامل پرداخت شده باشد"
 		},{
 			xtype : "fieldset",
 			title : "ستونهای گزارش",
