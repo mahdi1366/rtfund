@@ -3673,11 +3673,12 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	$days = DateModules::GDateMinusGDate($ReqObj->EndDate,$ReqObj->StartDate);
 	//if(DateModules::YearIsLeap($CycleID));
 		$days -= 1;
-	$TotalWage = round($days*$ReqObj->amount*(1-$ReqObj->SavePercent/100)*$ReqObj->wage/36500) + $ReqObj->RegisterAmount*1;	
+	$TotalWage = round($days*$ReqObj->amount*(1-$ReqObj->SavePercent/100)*$ReqObj->wage/36500);	
 	
 	$years = SplitYears(DateModules::miladi_to_shamsi($ReqObj->StartDate), 
 		DateModules::miladi_to_shamsi($ReqObj->EndDate), $TotalWage);
 	
+	$TotalWage += $ReqObj->RegisterAmount*1;
 	//--------------- check pasandaz remaindar -----------------
 	$dt = PdoDataAccess::runquery("select sum(CreditorAmount-DebtorAmount) remain
 		from ACC_DocItems join ACC_docs using(DocID) where CycleID=? AND CostID=?
@@ -3815,6 +3816,21 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 			return false;
 		}
 	}
+	if($ReqObj->RegisterAmount*1 > 0)
+	{
+		unset($itemObj->ItemID);
+		$itemObj->details = "کارمزد صدور ضمانت نامه شماره " . $ReqObj->RequestID;
+		$itemObj->CostID = $CostCode_wage;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $ReqObj->RegisterAmount*1 ;
+		$itemObj->TafsiliType = TAFTYPE_YEARS;
+		$itemObj->TafsiliID = $YearTafsili;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ثبت ردیف کارمزد ضمانت نامه");
+			return false;
+		}
+	}
 	
 	//---------------------------- block Cost ----------------------------
 	if(!$IsExtend && $ReqObj->IsBlock == "YES")
@@ -3881,7 +3897,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	
 	unset($itemObj->ItemID);
 	$CostObj = new ACC_CostCodes($WageCost);
-	$itemObj->details = "بابت کارمزد ضمانت نامه شماره " . $ReqObj->RequestID;
+	$itemObj->details = "بابت سپرده و کارمزد ضمانت نامه شماره " . $ReqObj->RequestID;
 	$itemObj->CostID = $WageCost;
 	$itemObj->DebtorAmount = $TotalWage + (!$IsExtend ? $ReqObj->amount*$ReqObj->SavePercent/100 : 0) - $totalCostAmount;
 	$itemObj->CreditorAmount = 0;
