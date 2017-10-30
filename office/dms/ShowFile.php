@@ -74,7 +74,6 @@ foreach($dt as $file)
 		$file["RowID"] . "." . $file["FileType"]);
 	
 	echo "<div style='width:100%;' align=center><hr>صفحه " . $file["PageNo"] . "<hr></div>";
-	echo $file["FileType"] ;
 	if($file["FileType"] == "pdf")
 	{
 		echo "<div id=pdf_DIV_" . $file["RowID"] . " style='height:500px'></div>";
