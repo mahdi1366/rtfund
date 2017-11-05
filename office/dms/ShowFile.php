@@ -25,7 +25,7 @@ $dt = PdoDataAccess::runquery($query, $params);
 if(count($dt) == 0)
 	die();
 
-if(!empty($_REQUEST["RowID"]))
+if(!empty($_REQUEST["RowID"]) || count($dt) == 1)
 {
 	$FileContent = $dt[0]["FileContent"] . file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" . 
 		$dt[0]["RowID"] . "." . $dt[0]["FileType"]);
@@ -77,8 +77,8 @@ foreach($dt as $file)
 	if($file["FileType"] == "pdf")
 	{
 		echo "<div id=pdf_DIV_" . $file["RowID"] . " style='height:500px'></div>";
-		echo '<script>PDFObject.embed("'.data_uri($FileContent, "pdf") . '", "#pdf_DIV_'.$file["RowID"].'");</script>';
-	}
+		echo '<script>PDFObject.embed("'.data_uri($FileContent, "application/pdf") . '", "#pdf_DIV_'.$file["RowID"].'");</script>';
+	} 
 	else
 		echo "<img src=" . data_uri($FileContent, 'image/jpeg') . " /></br>";
 }

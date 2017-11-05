@@ -60,8 +60,12 @@ $col = $rpg->addColumn("تعداد سهام", "shareCount");
 $col->align = "center";
 $col->EnableSummary();
 
+function SumRender($sum){
+	return round($sum, 0)*1 . "%";
+}
 $col = $rpg->addColumn("درصد سهم", "shareCount", "PercentRender");
 $col->align = "center";
+$col->SumRener = "SumRender";
 $col->EnableSummary(true);
 
 $col = $rpg->addColumn("ارزش سهام", "amount","moneyRender");
@@ -77,8 +81,8 @@ foreach($dataTable as $row)
 	else
 		$percentGovermental[1] += round($row["shareCount"]*100/$TotalShare,2);
 $percentGovermental = "<table width=100% style=font-weight:bold;font-family:tahoma;font-size:13px><tr>
-	<td align=center>جمع درصد سهم بخش دولتی : " . $percentGovermental[0] . " %</td>
-	<td align=center>جمع درصد سهم بخش خصوصی : " . $percentGovermental[1] . " %</td></tr></table>";
+	<td align=center>جمع درصد سهم بخش دولتی : " . round($percentGovermental[0]) . " %</td>
+	<td align=center>جمع درصد سهم بخش خصوصی : " . round($percentGovermental[1]) . " %</td></tr></table>";
 
 if(isset($_REQUEST["print"]))
 {

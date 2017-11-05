@@ -198,6 +198,14 @@ function CopyDoc(){
 	{
 		$obj = new ACC_DocItems();
 		PdoDataAccess::FillObjectByArray($obj, $row);
+		
+		if($_POST["mode"] == "2")
+		{
+			$temp = $obj->DebtorAmount;
+			$obj->DebtorAmount = $obj->CreditorAmount;
+			$obj->CreditorAmount = $temp;
+		}
+		
 		$obj->DocID = $hobj->DocID;
 		unset($obj->ItemID);
 		$obj->locked = "NO";

@@ -55,6 +55,16 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 				$value === "" || strpos($key, "combobox") !== false || strpos($key, "rpcmp") !== false ||
 				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 			continue;
+		
+		if(strpos($key, "FILTERPERSON_") !== false)
+		{
+			$prefix = "p2.";
+			$key = str_replace("FILTERPERSON_", "", $key);
+			$where .= " AND " . $prefix . $key . " = :$key";
+			$whereParam[":$key"] = $value;
+			continue;
+		}
+		
 		$prefix = "";
 		$pay = false;
 		switch($key)
@@ -77,7 +87,6 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 			case "fromPartAmount":
 			case "toPartAmount":
 				$value = preg_replace('/,/', "", $value);
-				$pay = true;
 				break;
 			case "fromPayAmount":
 			case "toPayAmount":
@@ -132,7 +141,7 @@ function GetData(){
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 			left join (
 				select RequestID,sum(PayAmount) SumPayments 
-				from LON_payments
+				from LON_payments 
 				join (select SourceID,SourceID3 from ACC_DocItems where SourceType=".DOCTYPE_LOAN_PAYMENT." group by SourceID,SourceID3)t 
 					on(t.SourceID=RequestID AND t.SourceID3=PayID)
 				where 1=1 $pay_where
@@ -187,8 +196,12 @@ function GetData(){
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	$query = PdoDataAccess::GetLatestQueryString();
-	//print_r(ExceptionHandler::PopAllExceptions());
-	//echo $query;
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		//print_r(ExceptionHandler::PopAllExceptions());
+		//echo $query;die();
+	}
+	
 	for($i=0; $i< count($dataTable); $i++)
 	{
 		$dt = array();
@@ -205,6 +218,11 @@ function ListData($IsDashboard = false){
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
 	$rpg->mysql_resource = GetData();
+	
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		//echo PdoDataAccess::GetLatestQueryString();
+	}
 	
 	function endedRender($row,$value){
 		return ($value == "YES") ? "خاتمه" : "جاری";
@@ -302,8 +320,9 @@ if(isset($_REQUEST["dashboard_show"]))
 	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
 	die();	
 }
-
+require_once getenv("DOCUMENT_ROOT") . '/framework/ReportDB/Filter_person.php';
 ?>
+
 <script>
 LoanReport_total.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
@@ -533,6 +552,18 @@ function LoanReport_total()
 			name : "DelayPercent",
 			hideTrigger : true,
 			fieldLabel : "کارمزد تنفس"
+		},{
+			xtype : "fieldset",
+			title : "اطلاعات مشتری",
+			colspan : 2,
+			layout : {
+				type : "table",
+				columns : 2,
+			},
+			defaults : {
+				width : 350
+			},
+			items : framework.PersonFilterList
 		},{
 			xtype : "fieldset",
 			title : "ستونهای گزارش",

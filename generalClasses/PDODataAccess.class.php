@@ -105,9 +105,9 @@ class PdoDataAccess extends ExceptionHandler
 			{
 				$record[$keys[$i]] = preg_replace('/\'/', "\\'", $record[$keys[$i]]);
 				if($record[$keys[$i]] == "NULL")
-					eval("\$obj->" . $keys[$i] . " = null;");
+					$obj->{ $keys[$i] } = null;
 				else 
-				 	eval("\$obj->" . $keys[$i] . " = '" . $record[$keys[$i]] . "';");
+					$obj->{ $keys[$i] } = $record[$keys[$i]];
 			}
 		return true;
 	}
@@ -141,11 +141,11 @@ class PdoDataAccess extends ExceptionHandler
 		{
 			$index = array_search($src_keys[$i], $dst_keys);
 			
-			//if(is_int($src_keys[$i]))
-			//	continue;
+			if(is_int($src_keys[$i]))
+				continue;
 			
-			if($index !== false && empty($destinationObj->$src_keys[$i]))
-				eval("\$destinationObj->" . $src_keys[$i] . " = \$sourceObj->" . $src_keys[$i] . ";");
+			if($index !== false && !isset($destinationObj->$src_keys[$i]))
+				$destinationObj->{ $src_keys[$i] } = $sourceObj->{ $src_keys[$i] };
 		}
 		return true;
 	}
@@ -210,6 +210,10 @@ class PdoDataAccess extends ExceptionHandler
 		$mainQuery = $query;
 		
 		$statement = $PDO_Obj->prepare(self::CorrectFarsiString($query));
+		
+		if(!is_array($whereParams))
+			$whereParams = array($whereParams);
+		
 		$keys = array_keys($whereParams);
 		for($i=0; $i < count($keys); $i++)
 		{
@@ -371,14 +375,14 @@ class PdoDataAccess extends ExceptionHandler
 		$temp = array();
 		
 		$index = 0;
-		while($index < $start)
+		while($index < $start*1)
 		{
 			if(!$statement->fetch(PDO::FETCH_ASSOC))
 				return $temp;
 			$index++;
 		}
 		
-		while($index < $start + $limit)
+		while($index < $start*1 + $limit*1)
 		{
 			$row = $statement->fetch(PDO::FETCH_ASSOC);
 			if(!$row)
@@ -418,7 +422,10 @@ class PdoDataAccess extends ExceptionHandler
 
 		$Arr = self::GetObjectMembers($obj, "insert");
 		if($Arr === false)
+		{
+			ExceptionHandler::PushException("خطا در داده های ورودی");
 			return false;
+		}
 		$KeyArr = array_keys($Arr);
 		//.................................................		
 		$flds = "";
@@ -505,7 +512,10 @@ class PdoDataAccess extends ExceptionHandler
 		
 		$Arr = self::GetObjectMembers($obj, "update");
 		if($Arr === false)
+		{
+			ExceptionHandler::PushException("خطا در داده های ورودی");
 			return false;
+		}
 		$KeyArr = array_keys($Arr);
 
 
@@ -853,6 +863,66 @@ class PdoDataAccess extends ExceptionHandler
 		parent::PushException($statement->errorInfo());
 		return false;
 	}
+	
+	//------------ photo in db operation ------------------
+	/**
+	 *
+	 * @param string $query example : insert into PersonSigns values(:p, :photo)
+	 * @param array $photoParams	: array(":p" => $PersonID)
+	 * @param array $whereParams	: array(":photo" => $PhotoContent)
+	 * @return boolean 
+	 */
+	public static function runquery_photo($query, $photoParams = array() , $whereParams = array(), $pdoObject = null)
+	{
+		
+		$PDO_Obj = $pdoObject != null ? $pdoObject : self::getPdoObject();
+		/*@var $PDO_Obj PDO*/
+		//-------------------
+		$mainQuery = $query;
+		
+		$statement = $PDO_Obj->prepare(self::CorrectFarsiString($query));
+		
+		if(!is_array($whereParams))
+			$whereParams = array($whereParams);
+		
+		$index = 1;
+		
+		$keys = array_keys($photoParams);
+		for($i=0; $i < count($keys); $i++)
+		{
+			$st = (is_int($keys[$i])) ? $index++ : $keys[$i];
+			$statement->bindParam($st, $photoParams[$keys[$i]], PDO::PARAM_LOB);
+		}
+		
+		$keys = array_keys($whereParams);
+		for($i=0; $i < count($keys); $i++)
+		{
+			$st = (is_int($keys[$i])) ? $index++ : $keys[$i];
+			$whereParams[$keys[$i]] = self::CorrectFarsiString($whereParams[$keys[$i]]);
+			$statement->bindParam($st, $whereParams[$keys[$i]]);
+			if((is_int($keys[$i])))
+				$mainQuery = preg_replace("/\?/", "'".$whereParams[$keys[$i]]."'", $mainQuery, 1);
+			else
+				$mainQuery = str_replace ($keys[$i], "'".$whereParams[$keys[$i]]."'", $mainQuery);
+		}
+		
+		//.............................
+		$startTime = microtime(true);
+		$statement->execute();
+		$endTime = microtime(true);
+		self::$executionTime = $endTime - $startTime;
+		self::$statements[$PDO_Obj->getAttribute(PDO::ATTR_CONNECTION_STATUS)] = $statement;
+		self::$queryString = $mainQuery;
+		self::LogQueryToDB(true);
+		//.............................	
+		
+		if($statement->errorCode() == "00000")
+			return $statement->fetchAll();
+
+		parent::PushException(array_merge($statement->errorInfo(), array("query" => $statement->queryString)));
+		return false;
+	}
+	
 	//-----------------------------------------------------
 
 	private static function LogQueryToDB()
@@ -952,22 +1022,21 @@ class PdoDataAccess extends ExceptionHandler
 
 	private static function DataMemberValidation($action, $obj, $key, $value)
 	{
-		$checkDT;
-		eval("\$checkDT = (isset(\$obj['DT_" . $key . "'])) ? \$obj['DT_" . $key . "'] : null;");
-
+		$checkDT = (isset($obj['DT_' . $key])) ? $obj['DT_' . $key] : null;
+		
 		if($checkDT === null)
 			return $value;
 		//...................................
 		if($action == "insert" && DataMember::GetNotNullValue($checkDT) && ($value == PDONULL || $value == ""))
 		{
-			parent::PushException("فیلد " . $key . " نمی تواند مقدار null داشته باشد.");
+			ExceptionHandler::PushException("فیلد " . $key . " نمی تواند مقدار null داشته باشد.");
 			return false;
 		}
 		//...................................
 		$defaultValue = DataMember::GetDefaultValue($checkDT);
-		if(empty($value))
+		if(!isset($value))
 		{
-			if($defaultValue !== null)
+			if($defaultValue != null)
 				$value = $defaultValue;
 			else
 				return $value;

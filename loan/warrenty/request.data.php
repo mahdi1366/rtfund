@@ -23,6 +23,8 @@ function SaveWarrentyRequest(){
 	$obj = new WAR_requests();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	$obj->StatusID = WAR_STEPID_RAW;
+	$obj->IsBlock = !empty($_POST["IsBlock"]) ? "YES" : "NO";
+	
 	
 	if(empty($obj->RequestID))
 	{

@@ -55,7 +55,7 @@ if(count($temp) > 0)
 		<table id=header width=100%>
 			<tr>
 				<td width=45%>شماره ضمانت نامه : <b>" .$ReqObj->RequestID . "</b>
-					<br>نوع ضمانت نامه : <b>" . $ReqObj->_TypeDesc . "</b>
+					<br>نوع درخواست : <b>" . $ReqObj->_TypeDesc . "</b>
 					<br>ضمانت خواه : <b>" . $ReqObj->_fullname . "</b>
 				</td>
 				<td width=20% style='font-family:titr'>اسناد ضمانتی</td>

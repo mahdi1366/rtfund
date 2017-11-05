@@ -16,6 +16,8 @@ $page_rpg->addColumn("معرف", "ReqFullname");
 $page_rpg->addColumn("شماره چک", "ChequeNo");
 $col = $page_rpg->addColumn("تاریخ چک", "ChequeDate");
 $col->type = "date";
+$col = $page_rpg->addColumn("تاریخ وصول چک", "PayedDate");
+$col->type = "date";
 $page_rpg->addColumn("مبلغ چک", "ChequeAmount");
 $page_rpg->addColumn("بانک", "BankDesc");
 $page_rpg->addColumn("شعبه", "ChequeBranch");
@@ -94,6 +96,16 @@ function GetData(){
 		$query .= " AND ChequeDate <= :td";
 		$param[":td"] = DateModules::shamsi_to_miladi($_POST["ToDate"], "-");
 	}
+	if(!empty($_POST["FromPayedDate"]))
+	{
+		$query .= " AND PayedDate >= :fpd";
+		$param[":fpd"] = DateModules::shamsi_to_miladi($_POST["FromPayedDate"], "-");
+	}
+	if(!empty($_POST["ToPayedDate"]))
+	{
+		$query .= " AND PayedDate <= :tpd";
+		$param[":tpd"] = DateModules::shamsi_to_miladi($_POST["ToPayedDate"], "-");
+	}
 	if(!empty($_POST["FromAmount"]))
 	{
 		$query .= " AND ChequeAmount >= :fa";
@@ -147,6 +159,7 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("معرف", "ReqFullname");	
 	$rpg->addColumn("شماره چک", "ChequeNo");
 	$rpg->addColumn("تاریخ چک", "ChequeDate","ReportDateRender");
+	$rpg->addColumn("تاریخ وصول چک", "PayedDate", "ReportDateRender");
 	
 	$col = $rpg->addColumn("مبلغ چک", "ChequeAmount", "ReportMoneyRender");
 	$col->EnableSummary();
@@ -156,10 +169,11 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("شرح", "description");
 	$rpg->addColumn("وضعیت چک", "ChequeStatusDesc");
 	
-	//echo PdoDataAccess::GetLatestQueryString();
-	//print_r(ExceptionHandler::PopAllExceptions());
-	
 	$rpg->mysql_resource = GetData();
+	
+//	if($_SESSION["USER"]["UserName"] == "admin")
+//		echo PdoDataAccess::GetLatestQueryString ();
+	
 	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
@@ -295,6 +309,14 @@ function AccReport_IncomeCheque()
 			xtype : "shdatefield",
 			name : "ToDate",
 			fieldLabel : "تا تاریخ چک"
+		},{
+			xtype : "shdatefield",
+			name : "FromPayedDate",
+			fieldLabel : "از تاریخ وصول"
+		},{
+			xtype : "shdatefield",
+			name : "ToPayedDate",
+			fieldLabel : "تا تاریخ وصول"
 		},{
 			xtype : "currencyfield",
 			name : "FromAmount",

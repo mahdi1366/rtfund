@@ -165,7 +165,9 @@ AccDocs.prototype.operationhMenu = function(e){
 			op_menu.add({text: 'ایجاد سند',iconCls: 'add', 
 				handler : function(){ return AccDocsObject.AddDoc(); }})
 			op_menu.add({text: 'کپی سند',iconCls: 'copy', 
-				handler : function(){ return AccDocsObject.CopyDoc(); }})
+				handler : function(){ return AccDocsObject.CopyDoc(1); }})
+			op_menu.add({text: 'کپی وارونه سند',iconCls: 'copy', 
+				handler : function(){ return AccDocsObject.CopyDoc(2); }})
 		}
 
 		if(record != null && record.data.DocStatus == "RAW")
@@ -587,7 +589,7 @@ AccDocs.prototype.AddDoc = function()
 	});
 }
 
-AccDocs.prototype.CopyDoc = function()
+AccDocs.prototype.CopyDoc = function(mode)
 {
 	var record = this.grid.getStore().getAt(0);
 	if(!record)
@@ -599,7 +601,8 @@ AccDocs.prototype.CopyDoc = function()
 		url : this.address_prefix + "doc.data.php?task=CopyDoc",
 		method : "POST",
 		params:{
-			DocID : record.data.DocID
+			DocID : record.data.DocID,
+			mode : mode
 		},
 
 		success : function(response){

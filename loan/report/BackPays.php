@@ -18,7 +18,7 @@ $col->type = "date";
 $page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
 $page_rpg->addColumn("مشتری", "LoanFullname");
 $page_rpg->addColumn("شعبه", "BranchName");
-$col = $page_rpg->addColumn("تاریخ پرداخت", "PayDate");
+$col = $page_rpg->addColumn("تاریخ پرداخت", "realPayDate");
 $col->type = "date";
 $page_rpg->addColumn("مبلغ پرداخت", "PayAmount");
 $page_rpg->addColumn("نوع پرداخت", "PayTypeDesc");
@@ -40,6 +40,22 @@ function MakeWhere(&$where, &$whereParam){
 				$value === "" || strpos($key, "combobox") !== false || strpos($key, "rpcmp") !== false ||
 				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 			continue;
+		
+		if($key == "fromPayDate")
+		{
+			$value = DateModules::shamsi_to_miladi($value, "-");
+			$where .= " AND if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",i.PayedDate,b.PayDate) >= :$key";
+			$whereParam[":$key"] = $value;
+			continue;
+		}
+		if($key == "toPayDate")
+		{
+			$value = DateModules::shamsi_to_miladi($value, "-");
+			$where .= " AND if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",i.PayedDate,b.PayDate) <= :$key";
+			$whereParam[":$key"] = $value;
+			continue;
+		}
+
 		$prefix = "";
 		switch($key)
 		{
@@ -47,14 +63,11 @@ function MakeWhere(&$where, &$whereParam){
 			case "toRequestID":
 				$prefix = "b.";
 				break;
-			case "fromPayDate":
-			case "toPayDate":
-				$value = DateModules::shamsi_to_miladi($value, "-");
-				break;
 			case "fromPayAmount":
 			case "toPayAmount":
 				$value = preg_replace('/,/', "", $value);
 				break;
+				
 		}
 		if(strpos($key, "from") === 0)
 			$where .= " AND " . $prefix . substr($key,4) . " >= :$key";
@@ -78,6 +91,7 @@ function GetData(){
 				BranchName,
 				i.ChequeNo,
 				d.LocalNo,
+				if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",i.PayedDate,b.PayDate) as realPayDate,
 				bi.InfoDesc PayTypeDesc".
 				($userFields != "" ? "," . $userFields : "")."
 				
@@ -117,6 +131,9 @@ function ListDate($IsDashboard = false){
 	$rpg->excel = !empty($_POST["excel"]);
 	$rpg->mysql_resource = GetData();
 	
+	//if($_SESSION["USER"]["UserName"] == "admin")
+	//	echo PdoDataAccess::GetLatestQueryString ();
+		
 	function endedRender($row,$value){
 		return ($value == "YES") ? "خاتمه" : "جاری";
 	}
@@ -129,7 +146,7 @@ function ListDate($IsDashboard = false){
 	$col->EnableSummary();
 	$rpg->addColumn("مشتری", "LoanFullname");
 	$rpg->addColumn("شعبه", "BranchName");
-	$rpg->addColumn("تاریخ پرداخت", "PayDate", "ReportDateRender");
+	$rpg->addColumn("تاریخ پرداخت", "realPayDate", "ReportDateRender");
 	$col = $rpg->addColumn("مبلغ پرداخت", "PayAmount", "ReportMoneyRender");
 	$col->EnableSummary();
 	$rpg->addColumn("نوع پرداخت", "PayTypeDesc");

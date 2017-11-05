@@ -104,7 +104,7 @@ function WarrentyRequest(){
 			name : "TypeID",
 			colspan : 2,
 			allowBlank : false,
-			fieldLabel : "نوع ضمانت نامه"
+			fieldLabel : "نوع درخواست"
 		},{
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({

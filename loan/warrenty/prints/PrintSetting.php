@@ -74,7 +74,7 @@ function WarrentyPrintSetting(){
 
 	this.groupPnl = new Ext.form.Panel({
 		renderTo: this.get("div_selectGroup"),
-		title: "انتخاب نوع ضمانت نامه",
+		title: "انتخاب نوع درخواست",
 		width: 400,
 		frame: true,
 		bodyCfg: {style: "background-color:white"},
@@ -93,7 +93,7 @@ function WarrentyPrintSetting(){
 			name : "TypeID",
 			displayField: 'InfoDesc',
 			valueField : "InfoID",
-			fieldLabel : "نوع ضمانت نامه",
+			fieldLabel : "نوع درخواست",
 			listeners :{
 				select : function(el, records){
 					me = WarrentyPrintSettingObject;
@@ -119,7 +119,7 @@ function WarrentyPrintSetting(){
 	
 	this.SettingPanel = new Ext.form.Panel({
 		renderTo: this.get("div_form"),
-		title: "انتخاب نوع ضمانت نامه",
+		title: "انتخاب نوع درخواست",
 		width: 700,
 		hidden : true,
 		collapsible : true,
@@ -131,7 +131,7 @@ function WarrentyPrintSetting(){
 			store : new Ext.data.SimpleStore({
 				data : [
 					["#RequestID#" , "شماره ضمانت نامه" ],
-					["#TypeDesc#" , "نوع ضمانت نامه" ],
+					["#TypeDesc#" , "نوع درخواست" ],
 					["#fullname#" , "مشتری" ],
 					["#address#" , "نشانی طرف قرارداد" ],
 					["#organization#" , "سازمان مربوطه" ],

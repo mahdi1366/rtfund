@@ -6,11 +6,11 @@
 
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
-
+ 
 $page_rpg = new ReportGenerator("mainForm","WarrentyReport_totalObj");
 $page_rpg->addColumn("شماره تضمین", "RequestID");
 $page_rpg->addColumn("شعبه", "BranchName");
-$page_rpg->addColumn("نوع تضمین", "TypeDesc");	
+$page_rpg->addColumn("نوع درخواست", "TypeDesc");	
 $col = $page_rpg->addColumn("تاریخ شروع", "StartDate");
 $col->type = "date";
 $col = $page_rpg->addColumn("تاریخ پایان", "EndDate");
@@ -34,13 +34,32 @@ function MakeWhere(&$where, &$whereParam){
 	foreach($_POST as $key => $value)
 	{
 		if($key == "excel" || 
-				$value === "" || strpos($key, "combobox") !== false || strpos($key, "rpcmp") !== false ||
+				$value === "" || strpos($key, "-inputEl") !== false || strpos($key, "rpcmp") !== false ||
 				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 			continue;
+		
+		if(strpos($key, "FILTERPERSON_") !== false)
+		{
+			$prefix = "p.";
+			$key = str_replace("FILTERPERSON_", "", $key);
+			InputValidation::validate($value, InputValidation::Pattern_NumComma);
+			if($key == "DomainID")
+			{
+				$where .= " AND " . $prefix . $key . " in(" . $value . ")";
+			}
+			else
+			{
+				$where .= " AND " . $prefix . $key . " = :$key";
+				$whereParam[":$key"] = $value;
+			}
+			continue;
+		}
+		
 		$prefix = "";
 		switch($key)
 		{
 			case "PersonID":
+			case "TypeID":
 				$prefix = "r.";
 				break;
 			case "FromStartDate":
@@ -50,7 +69,7 @@ function MakeWhere(&$where, &$whereParam){
 			case "FromLetterDate":
 			case "ToLetterDate":
 				$value = DateModules::shamsi_to_miladi($value, "-");
-				break;
+				break; 
 			case "FromAmount":
 			case "ToAmount":
 				$value = preg_replace('/,/', "", $value);
@@ -80,7 +99,7 @@ function GetData(){
 				."
 			from WAR_requests r 
 				left join BSC_branches using(BranchID)
-				left join BSC_persons using(PersonID)
+				left join BSC_persons p using(PersonID)
 				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
 				join WFM_FlowSteps sp on(sp.FlowID=" . WARRENTY_FLOWID . " AND sp.StepID=r.StatusID)
 				
@@ -99,9 +118,12 @@ function ListDate($IsDashboard = false){
 	$rpg->excel = !empty($_POST["excel"]);
 	$rpg->mysql_resource = GetData();
 	
+	if($_SESSION["USER"]["UserName"] == "admin")
+		echo PdoDataAccess::GetLatestQueryString ();
+	
 	$rpg->addColumn("شماره تضمین", "RequestID");
 	$rpg->addColumn("شعبه", "BranchName");
-	$rpg->addColumn("نوع تضمین", "TypeDesc");	
+	$rpg->addColumn("نوع درخواست", "TypeDesc");	
 	$rpg->addColumn("تاریخ شروع", "StartDate", "ReportDateRender");
 	$rpg->addColumn("تاریخ پایان", "EndDate", "ReportDateRender");
 	$col = $rpg->addColumn("مبلغ ضمانتنمه", "amount", "ReportMoneyRender");
@@ -130,7 +152,7 @@ function ListDate($IsDashboard = false){
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
-					گزارش کلی تضمین ها
+					گزارش کلی ضمانت نامه ها
 				</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
 			. DateModules::shNow() . "<br>";
@@ -161,6 +183,7 @@ if(isset($_REQUEST["show"]))
 if(isset($_REQUEST["rpcmp_chart"]))
 {
 	$page_rpg->mysql_resource = GetData();
+	
 	$page_rpg->GenerateChart();
 	die();
 }
@@ -175,6 +198,8 @@ if(isset($_REQUEST["dashboard_show"]))
 	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
 	die();	
 }
+
+require_once getenv("DOCUMENT_ROOT") . '/framework/ReportDB/Filter_person.php';
 
 ?>
 <script>
@@ -245,7 +270,7 @@ function WarrentyReport_total()
 			valueField : "InfoID",
 			hiddenName : "TypeID",
 			allowBlank : false,
-			fieldLabel : "نوع ضمانت نامه"
+			fieldLabel : "نوع درخواست"
 		},{
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({
@@ -341,6 +366,19 @@ function WarrentyReport_total()
 			displayField : "value",
 			valueField : "id",
 			hiddenName : "version"
+		},{
+			xtype : "fieldset",
+			width : 730,
+			title : "اطلاعات مشتری",
+			colspan : 2,
+			layout : {
+				type : "table",
+				columns : 2,
+			},
+			defaults : {
+				width : 350
+			},
+			items : framework.PersonFilterList
 		},{
 			xtype : "fieldset",
 			colspan :2,

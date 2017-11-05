@@ -634,7 +634,27 @@ class DateModules
         $month2 = self::GetMonth($jdate2);
 
         return ($year2-$year1)*12 + ($month2-$month1);
-    }		
+    }	
+    
+    static function CalculateDuration($start_date,$end_date) {
+
+	      $start_date = DateModules::miladi_to_shamsi($start_date); 
+	      $end_date = DateModules::miladi_to_shamsi($end_date); 
+
+	      $start_date_day = substr($start_date,8,2);
+	      $start_date_month = substr($start_date,5,2);
+	      $start_date_year = substr($start_date,0,4);
+
+	      $end_date_day = substr($end_date,8,2);
+	      $end_date_month = substr($end_date,5,2);
+	      $end_date_year = substr($end_date,0,4);
+	      $duration = ($end_date_year - $start_date_year) * 360 +
+			  ($end_date_month - $start_date_month) * 30 +
+			  ($end_date_day - $start_date_day) ;
+
+	      return $duration;
+	}
+	
 	
 }
 

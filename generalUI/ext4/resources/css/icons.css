@@ -10,7 +10,7 @@
 .icon-grid		{background-image:url('/generalUI/ext4/resources/themes/icons/grid.gif') !important;}
 .add			{background-image:url('/generalUI/ext4/resources/themes/icons/add.gif') !important;}
 .arrow_left		{background-image:url('/generalUI/ext4/resources/themes/icons/arrow-left.gif') !important;}
-.arrow_right	{background-image:url('/generalUI/ext4/resources/themes/icons/arrow-right.gif') !important;}
+.arrow_right		{background-image:url('/generalUI/ext4/resources/themes/icons/arrow-right.gif') !important;}
 .arrow_up		{background-image:url('/generalUI/ext4/resources/themes/icons/arrow-up.gif') !important;}
 .arrow_down		{background-image:url('/generalUI/ext4/resources/themes/icons/arrow-down.gif') !important;}
 .option			{background-image:url('/generalUI/ext4/resources/themes/icons/plugin.gif') !important;}
@@ -46,7 +46,7 @@
 .copy			{background-image:url('/generalUI/ext4/resources/themes/icons/copy.gif') !important;}
 .not_pay		{background-image:url('/generalUI/resources/images/icons/not_pay.gif') !important;}
 .process		{background-image:url('/generalUI/ext4/resources/themes/icons/process.gif') !important;}
-.up				{background-image:url('/generalUI/ext4/resources/themes/icons/up.gif') !important;}
+.up			{background-image:url('/generalUI/ext4/resources/themes/icons/up.gif') !important;}
 .down			{background-image:url('/generalUI/ext4/resources/themes/icons/down.gif') !important;}
 .app			{background-image:url('/generalUI/ext4/resources/themes/icons/app.gif') !important;}
 .connect		{background-image:url('/generalUI/ext4/resources/themes/icons/connect.gif') !important;}
@@ -54,7 +54,7 @@
 .comment		{background-image:url('/generalUI/ext4/resources/themes/icons/comment.png') !important;}
 .setting		{background-image:url('/generalUI/ext4/resources/themes/icons/setting.gif') !important;}
 .letter			{background-image:url('/generalUI/ext4/resources/themes/icons/letter.gif') !important;}
-.icon-magnifier	{background-image:url('/generalUI/ext4/resources/themes/icons/search.gif') !important;}
+.icon-magnifier		{background-image:url('/generalUI/ext4/resources/themes/icons/search.gif') !important;}
 .report			{background-image:url('/generalUI/ext4/resources/themes/icons/report.gif') !important;}
 .sum			{background-image:url('/generalUI/ext4/resources/themes/icons/sum.png') !important;}
 .attach			{background-image:url('/generalUI/ext4/resources/themes/icons/attach.gif') !important;}
@@ -71,10 +71,15 @@
 .db				{background-image:url('/generalUI/ext4/resources/themes/icons/db.png') !important;}
 .systems		{background-image:url('/generalUI/ext4/resources/themes/icons/systems.gif') !important;}
 .diagram		{background-image:url('/generalUI/ext4/resources/themes/icons/diagram.png') !important;}
+.tick2			{background-image:url('/generalUI/ext4/resources/themes/icons/tick2.png') !important;}
+.tick3			{background-image:url('/generalUI/ext4/resources/themes/icons/tick3.png') !important;}
+.session		{background-image:url('/generalUI/ext4/resources/themes/icons/session.png') !important;}
+.form			{background-image:url('/generalUI/ext4/resources/themes/icons/form.png') !important;}
 
-.pinkRow .x-grid-cell,.pinkRow .x-grid-rowwrap-div, .pinkRow		{background-color: #FFB8C9; }
-.greenRow .x-grid-cell,.greenRow .x-grid-rowwrap-div, .greenRow		{background-color: #D0F7E2; }
-.yellowRow .x-grid-cell,.yellowRow .x-grid-rowwrap-div, .yellowRow	{background-color: #FCFCB6; }
-.violetRow .x-grid-cell,.violetRow .x-grid-rowwrap-div, .violetRow  {background-color: #E7DBFF; }
+.pinkRow .x-grid-cell,.pinkRow .x-grid-rowwrap-div, .pinkRow {background-color: #FFB8C9; }
+.greenRow .x-grid-cell,.greenRow .x-grid-rowwrap-div, .greenRow	 {background-color: #D0F7E2; }
+.yellowRow .x-grid-cell,.yellowRow .x-grid-rowwrap-div, .yellowRow {background-color: #FCFCB6; }
+.violetRow .x-grid-cell,.violetRow .x-grid-rowwrap-div, .yellowRow {background-color: #E7DBFF; }
+.orangeRow .x-grid-cell,.orangeRow .x-grid-rowwrap-div {background-color: #FFD9B3; }
 .ltrDir {direction:ltr}
 .rtlDir {direction:rtl}
