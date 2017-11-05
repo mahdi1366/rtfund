@@ -510,7 +510,14 @@ TrafficRequests.AdminOperationRender = function(v,p,r){
 		return st;
 	}
 	if(r.data.ReqStatus == "3")
+	{
 		p.tdAttr = "data-qtip='دلیل رد درخواست : <b>" + r.data.SurveyDesc + "</b>'";
+		
+		return "<div align='center' title='تایید' class='tick' "+
+		"onclick='TrafficRequestsObject.beforeChangeStatus(2);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;float:right;height:16'></div>";
+	}
 	
 }
 

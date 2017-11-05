@@ -8,11 +8,22 @@ include_once inc_dataReader;
 include_once inc_response;
 include_once 'traffic.class.php';
 
-$task = $_REQUEST["task"];
+$task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 switch ($task) {
 
-	default : 
-		eval($task. "();");
+	case "AddTraffic":
+	case "GetMyRequests":
+	case "GetAllRequests":
+	case "SaveRequest":
+	case "DeleteRequest":
+	case "selectOffTypes":
+	case "selectMeans":
+	case "ChangeStatus":
+	case "ArchiveRequest":
+	case "SelectDayTraffics":
+	case "DeleteTraffic":
+	case "GetExtraInfo":
+		$task();
 }
 
 function AddTraffic(){

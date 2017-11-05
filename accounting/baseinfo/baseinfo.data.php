@@ -10,8 +10,45 @@ require_once inc_dataReader;
 require_once 'baseinfo.class.php';
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
-if(!empty($task))
-	$task();
+switch ($task) {
+
+	case "SelectBlocks":
+	case "SaveBlockData":
+	case "deleteBlock":
+	case "getLastID":
+	case "SelectCostCode":
+	case "SelectBlockableCostCode":
+	case "SaveCostCode":
+	case "DeleteCostCode":
+	case "ActiveCostCode":
+	case "SelectCostGroups":
+	case "AddGroup":
+	case "SelectTafsiliGroups":
+	case "DeleteGroup":
+	case "GetAllTafsilis":
+	case "SaveTafsili":
+	case "DeleteTafsili":
+	case "GetBankData":
+	case "SaveBankData":
+	case "DeleteBank":
+	case "SelectAccounts":
+	case "SaveAccount":
+	case "DeleteAccount":
+	case "CopySetting":
+	case "SelectCheques":
+	case "SaveCheque":
+	case "deleteCheque":
+	case "EnableChequeBook":
+	case "SelectChequeStatuses":
+	case "SelectACCRoles":
+	case "SelectRoles":
+	case "SaveRole":
+	case "DeleteRole":
+	case "SelectCycles":
+	case "SaveCycle":
+	case "GetBanks":
+		$task();
+};
 
 function SelectBlocks() {
 
