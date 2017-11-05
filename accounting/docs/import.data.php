@@ -2097,6 +2097,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 			ExceptionHandler::PushException("خطا در ایجاد سند");
 			return false;
 		}
+		
 	}
 	else
 		$obj = $DocObj;
@@ -2197,7 +2198,6 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		$backPayObj->PayBillNo = $PayObj->BackPayID;
 		$backPayObj->details = "بابت اضافه پرداختی مشتری و انتقال به حساب قرض الحسنه";
 		$backPayObj->Add($pdo);	
-		
 		$PayObj->PayAmount = $PayObj->PayAmount*1 - $ExtraPay;
 	}
 

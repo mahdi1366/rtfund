@@ -21,8 +21,8 @@ class ACC_docs extends PdoDataAccess {
 
 	function __construct($DocID = "", $pdo = null) {
 
-		$this->DT_DocDate = DataMember::CreateDMA(DataMember::DT_DATE);
-		$this->DT_RegDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_DocDate = DataMember::CreateDMA(InputValidation::Pattern_Date);
+		$this->DT_RegDate = DataMember::CreateDMA(InputValidation::Pattern_DateTime);
 
 		if ($DocID != "")
 			parent::FillObject($this, "select * from ACC_docs where DocID=?", array($DocID), $pdo);
