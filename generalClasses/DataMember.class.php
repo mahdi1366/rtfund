@@ -11,6 +11,8 @@ require_once getenv("DOCUMENT_ROOT") . "/generalClasses/InputValidation.class.ph
 class DataMember extends InputValidation{
 	
 	const DT_DATE = parent::Pattern_Date;
+	const DT_INT = parent::Pattern_Num;
+	const DT_TIME = parent::Pattern_Time;
 	
 	public static function CreateDMA($DataType, $defaultValue = null, $NotNull = false)
 	{

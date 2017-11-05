@@ -87,7 +87,8 @@ class InputValidation {
 		if($value == "%pdonull%")
 			return true;
 		
-		if(($pattern == self::Pattern_Date || $pattern == self::Pattern_JDate || $pattern == self::Pattern_GDate) && $value == "now()")
+		if(($pattern == self::Pattern_DateTime || $pattern == self::Pattern_Date || $pattern == self::Pattern_JDate || $pattern == self::Pattern_GDate) 
+				&& $value == PDONOW)
 			return true;
 		
 		switch($pattern)
@@ -253,6 +254,7 @@ class InputValidation {
 			"Pattern_FaEnAlphaNum" => "اعداد و حروف",
 			"Pattern_Time" => "زمان",
 			"Pattern_Date" => "تاریخ",
+			"Pattern_DateTime" => "تاریخ و زمان",
 			"Pattern_JDate" => "تاریخ شمسی",
 			"Pattern_GDate" => "تاریخ میلادی",
 			"Pattern_FileName" => "نام فایل",
@@ -265,7 +267,7 @@ class InputValidation {
        // return $b[$pattern];
 	}
 	
-	private static function LogToDB($value, $pattern){
+	private static function LogToDB($value, $pattern){return;
 		
 		$pdo = new PDO("mysql:host=" . config::$db_servers['master']['host'] . ";dbname=" . 
 				config::$db_servers['master']['dataanalysis_db'], 

@@ -193,7 +193,6 @@ function ChangeStatus(){
 		$obj2->TrafficTime = $obj->StartTime;
 		$result = $obj2->Add();
 	}*/
-	
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }

@@ -1042,9 +1042,6 @@ class PdoDataAccess extends ExceptionHandler
 				return $value;
 		}
 		//...................................
-		if(!DataMember::IsValid($checkDT, $value))
-			return false;
-		//...................................
 		switch ($checkDT["DataType"])
 		{
 			case DataMember::DT_DATE :
@@ -1055,7 +1052,10 @@ class PdoDataAccess extends ExceptionHandler
 				if(strlen($value) > 8)
 					$value = substr($value, strlen($value)-8);
 		}
-
+		//...................................
+		if(!DataMember::IsValid($checkDT, $value))
+			return false;
+		//...................................
 		return $value;
 	}
         

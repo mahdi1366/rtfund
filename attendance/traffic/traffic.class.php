@@ -429,13 +429,13 @@ class ATN_requests extends OperationClass
 	
 	function __construct($id = '') {
 		
-		$this->DT_ReqDate = DataMember::CreateDMA(DataMember::DT_DATE);
-		$this->DT_FromDate = DataMember::CreateDMA(DataMember::DT_DATE);
-		$this->DT_ToDate = DataMember::CreateDMA(DataMember::DT_DATE);
-		$this->DT_SurveyDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_ReqDate = DataMember::CreateDMA(InputValidation::Pattern_DateTime);
+		$this->DT_FromDate = DataMember::CreateDMA(InputValidation::Pattern_Date);
+		$this->DT_ToDate = DataMember::CreateDMA(InputValidation::Pattern_Date);
+		$this->DT_SurveyDate = DataMember::CreateDMA(InputValidation::Pattern_DateTime);
 		
-		$this->DT_StartTime = DataMember::CreateDMA(DataMember::DT_TIME);
-		$this->DT_EndTime = DataMember::CreateDMA(DataMember::DT_TIME);
+		$this->DT_StartTime = DataMember::CreateDMA(InputValidation::Pattern_Time);
+		$this->DT_EndTime = DataMember::CreateDMA(InputValidation::Pattern_Time);
 		
 		parent::FillObject($this, "select t.*,concat(fname,' ',lname) _fullname,
 				bf1.InfoDesc _GoMeanDesc,bf2.InfoDesc _ReturnMeanDesc

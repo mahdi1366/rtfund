@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // create Date:	94.10
 //---------------------------
- 
+
 require_once '../header.inc.php';
 require_once(inc_response);
 require_once inc_dataReader;
@@ -13,7 +13,7 @@ require_once '../../framework/person/persons.class.php';
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 if(!empty($task))
-	$task();  
+	$task();    
 
 function SelectLetter() {
 
@@ -544,6 +544,7 @@ function SendLetter(){
 			if(!$obj->AddSend($pdo))
 			{
 				$pdo->rollBack();
+				print_r(ExceptionHandler::PopAllExceptions());
 				echo Response::createObjectiveResponse(false, "");
 				die();
 			}
