@@ -615,7 +615,8 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	if($obj->DelayReturn == "INSTALLMENT")
 		$allPay += $TotalDelay/$obj->InstallmentCount*1;
 	
-	$LastPay = $TotalAmount - $allPay*($obj->InstallmentCount-1);
+	$LastPay = $TotalAmount + ($obj->DelayReturn == "INSTALLMENT" ? $TotalDelay : 0) 
+			- $allPay*($obj->InstallmentCount-1);
 	
 	//---------------------------------------------------------------------
 	

@@ -1857,8 +1857,7 @@ RequestInfo.prototype.LoadSummary = function(record){
 			
 		return (((F7*R*( Math.pow((1+R),F9)))/((Math.pow((1+R),F9))-1))*F9)-F7;
 	}
-	function roundUp(number, digits)
-	{
+	function roundUp(number, digits){
 		var factor = Math.pow(10,digits);
 		return Math.ceil(number*factor) / factor;
 	}
@@ -1972,7 +1971,12 @@ RequestInfo.prototype.LoadSummary = function(record){
 		FirstPay = roundUp(FirstPay,-3);
 	else
 		FirstPay = Math.round(FirstPay);
-	LastPay = Math.round(TotalAmount - FirstPay*(record.data.InstallmentCount-1));
+	
+	if(record.data.DelayReturn == "INSTALLMENT")
+		FirstPay += TotalDelay/record.data.InstallmentCount*1;
+	
+	LastPay = Math.round(TotalAmount + (record.data.DelayReturn == "INSTALLMENT" ? TotalDelay : 0) 
+			- FirstPay*(record.data.InstallmentCount-1));
 
 	//---------------------------------------------------------------------
 	if(record.data.MaxFundWage*1 > 0)

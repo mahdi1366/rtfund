@@ -88,7 +88,7 @@ $dg->width = 120;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "MaxAmount";
-$dg->disableFooter = true;
+//$dg->disableFooter = true;
 
 $grid = $dg->makeGrid_returnObjects();
 
