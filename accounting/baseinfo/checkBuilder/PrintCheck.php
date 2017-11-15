@@ -17,9 +17,9 @@ if (!empty($_GET['DocChequeID'])) {
 		SELECT c.*,LocalNo,ChequeBookID,TafsiliDesc 
 		FROM ACC_DocCheques c 
 			join ACC_docs using(DocID)
-			join ACC_tafsilis using(TafsiliID)
-			join ACC_accounts a using(AccountID)
-			join ACC_ChequeBooks b on(a.AccountID=b.AccountID and c.CheckNo between MinNo and MaxNo)
+			left join ACC_tafsilis using(TafsiliID)
+			left join ACC_accounts a using(AccountID)
+			left join ACC_ChequeBooks b on(a.AccountID=b.AccountID and c.CheckNo between MinNo and MaxNo)
 		where DocChequeID=?
 		group by DocChequeID", array($DocChequeID));
 	if (count($res) == 0)

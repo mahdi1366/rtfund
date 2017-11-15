@@ -47,9 +47,9 @@ BeginReport();
 		<td colspan="3" align="center">
 			<hr>
 			<table width="98%" border="1" style="border-collapse: collapse;" cellpadding="2">
-				<tr>
-					<td width="15%">نام شرکت : </td>
-					<td width="35%"><b><?= $ReqObj->_LoanPersonFullname ?></b></td>
+				<tr> 
+					<td width="18%">نام شرکت : </td>
+					<td width="32%"><b><?= $ReqObj->_LoanPersonFullname ?></b></td>
 					<td width="18%">حامی / سرمایه گذار :</td>
 					<td width="32%"><b><?= $ReqObj->_ReqPersonFullname ?></b></td>
 				</tr>
@@ -75,7 +75,11 @@ BeginReport();
 				<tr>
 					<td>تضمینات : </td>
 					<td colspan="3"><?= implode(" , ",$docs) ?></td>
-				</tr>				
+				</tr>	
+				<tr>
+					<td>زیرواحد سرمایه گذار:</td>
+					<td colspan="3"><?= $ReqObj->_SubAgentDesc ?></td>
+				</tr>
 			</table>
 			<br><b>	مراحل پرداخت </b>
 			<table width="98%" border="1" style="border-collapse: collapse;">

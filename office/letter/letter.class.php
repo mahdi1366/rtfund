@@ -555,11 +555,17 @@ class OFC_receivers extends OperationClass{
 	public $RowID;
 	public $PersonID;
 	public $ToPersonID;
+	public $ToGroupID;
 	
 	static function Get($where = '', $whereParams = array(), $pdo = null) {
-		$query = "select r.*,concat_ws(' ',fname,lname,CompanyName) fullname "
-				. " from OFC_receivers r join BSC_persons p on(r.ToPersonID=p.PersonID)"
-				. " where 1=1 " . $where;
+		$query = "select 
+						r.*,
+						if(r.ToPersonID>0, 'Person', 'Group' ) type,
+						if(r.ToPersonID>0, concat_ws(' ',fname,lname,CompanyName), GroupDesc ) title 
+				 from OFC_receivers r 
+					left join BSC_persons p on(r.ToPersonID=p.PersonID)
+					left join FRW_AccessGroups g on(r.ToGroupID=g.GroupID)
+				 where 1=1 " . $where ;
 		return parent::runquery($query, $whereParams, $pdo);		
 	}
 }

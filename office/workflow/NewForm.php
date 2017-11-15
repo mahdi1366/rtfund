@@ -22,13 +22,14 @@ $col->width = 50;
 
 $col = $dg->addColumn("عنوان", "ItemName");
 $col->editor = ColumnEditor::TextField();
+$col->width = 200;
 
 $col = $dg->addColumn("نوع", "ItemType");
 $col->editor = "this.ItemTypeCombo";
 
 $col = $dg->addColumn("مقادیر لیست", "ComboValues");
 $col->editor = ColumnEditor::TextField(true);
-$col->width = 100;
+
 
 $col = $dg->addColumn("حذف", "FormItemID", "string");
 $col->sortable = false;
@@ -39,11 +40,11 @@ $dg->addButton("", " ایجاد", "add", "function(){WFM_NewFormObj.AddFormItem(
 
 $dg->DefaultSortField = "FormItemID";
 $dg->DefaultSortDir = "desc";
-$dg->autoExpandColumn = "ItemName";
+$dg->autoExpandColumn = "ComboValues";
 $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(v,p,r){ return WFM_NewFormObj.SaveItem(v,p,r);}";
 
-$dg->width = 590;
+$dg->width = 790;
 $dg->height = 460;
 $dg->pageSize = 20;
 
@@ -276,6 +277,10 @@ WFM_NewForm.prototype.BuildForms = function(){
 				itemId: 'FormID'
 			}],
 		buttons: [{
+				iconCls: "view",
+				text: " ذخیره",
+				handler: function () { WFM_NewFormObj.SaveForm();}
+			},'->',{
 				iconCls: "save",
 				text: " ذخیره",
 				handler: function () { WFM_NewFormObj.SaveForm();}
@@ -311,6 +316,7 @@ WFM_NewForm.prototype.SaveForm = function(){
 			Ext.MessageBox.alert('', 'با موفقیت ذخیره شد');
 		},
 		failure : function(form,action){
+			mask.hide();
 			Ext.MessageBox.alert('خطا', action.result.data);
 		}
 	});
@@ -324,7 +330,7 @@ WFM_NewForm.prototype.ManageItems = function(){
 	if(!this.itemWin)
 	{
 		this.itemWin = new Ext.window.Window({
-			width : 600,
+			width : 800,
 			title : "آیتم های الگو",
 			height : 520,
 			modal : true,

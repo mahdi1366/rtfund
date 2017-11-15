@@ -20,11 +20,31 @@ foreach ($ReqItems as $it) {
 $res = explode(WFM_forms::TplItemSeperator, $ReqObj->ReqContent);
 
 $ReqItems = WFM_RequestItems::Get(" AND RequestID=?", array($ReqObj->RequestID));
-$ValuesStore = array();
-foreach ($ReqItems as $it) {
-    $ValuesStore[$it['FormItemID']] = $it['ItemValue'];
-}
 
+$ValuesStore = array();
+foreach ($ReqItems as $row) 
+{
+	if($row["ItemType"] == "shdatefield")
+		$ValuesStore[$row['FormItemID']] = DateModules::miladi_to_shamsi($row['ItemValue']);
+	if($row["ItemType"] == "currencyfield")
+		$ValuesStore[$row['FormItemID']] = number_format($row['ItemValue']*1);
+	if($row["ItemType"] == "checkbox")
+	{
+		if($row["ComboValues"] != "")
+		{
+			$arr = explode("#", $row["ComboValues"]);
+			if(!isset($ValuesStore[$row['FormItemID']]))
+				$ValuesStore[$row['FormItemID']] = "";
+			$ValuesStore[$row['FormItemID']] .= "<br>● " . $arr[$row['ItemValue']*1];
+		}
+		else
+		{
+			$ValuesStore[$row['FormItemID']] = "√";
+		}
+	}
+}
+//print_r($ValuesStore);
+//die();
 if (substr($ReqObj->ReqContent, 0, 3) == WFM_forms::TplItemSeperator) {
     $res = array_merge(array(''), $res);
 }
@@ -33,20 +53,11 @@ for ($i = 0; $i < count($res); $i++) {
     if ($i % 2 != 0) {
 		if(isset($ValuesStore[$res[$i]]))
 		{
-			switch ($ReqItemsStore[$res[$i]]["ItemType"]) {
-				case 'shdatefield':
-					$st .= DateModules::miladi_to_shamsi($ValuesStore[$res[$i]]);
-					break;
-				case 'currencyfield':
-					$st .= number_format($ValuesStore[$res[$i]]);
-					break;
-				default : 
-					$st .= nl2br($ValuesStore[$res[$i]]);
-			}
+			$st .= nl2br($ValuesStore[$res[$i]]);
 		}
 		else if(isset($ReqItemsStore[ $res[$i] ]["FieldName"]))
 		{
-			 $st .= $ContractRecord [ $ReqItemsStore[ $res[$i] ]["FieldName"] ];
+			$st .= $ContractRecord [ $ReqItemsStore[ $res[$i] ]["FieldName"] ];
 		}
     } else {
         $st .= $res[$i];

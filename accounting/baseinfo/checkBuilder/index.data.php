@@ -43,8 +43,7 @@ function getFileContent(){
 function SaveBackground(){
 	
 	$checkID = $_REQUEST["ChequeBookID"];
-//	if($checkID==41) $checkID=25;
-	$st = split ( '\.', $_FILES ['imageAttach']['name'] );
+	$st = preg_split( '/\./', $_FILES ['imageAttach']['name'] );
 	$extension = $st [count ( $st ) - 1];	
 	$extension = strtolower($extension);	
 	

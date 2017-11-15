@@ -10,8 +10,9 @@ require_once "ReportGenerator.class.php";
 $x= 0;
 function TotalRemainRender(&$row, $value, $x, $prevRow){
 		
-	$row["Sum"] = $prevRow["Sum"] + $row["CreditorAmount"] - $row["DebtorAmount"];
-	return $row["Sum"];
+	$row["Sum"] = $prevRow["Sum"] + 
+			($row["essence"] == "DEBTOR" ? $row["DebtorAmount"] - $row["CreditorAmount"] : $row["CreditorAmount"] - $row["DebtorAmount"] );
+	return number_format($row["Sum"]);
 }
 
 $page_rpg = new ReportGenerator("mainForm","AccReport_flowObj");
@@ -164,11 +165,12 @@ function GetData(){
 		concat_ws(' - ',di.details,d.description) detail,
 		concat_ws(' - ' , b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode) CostCode,
 		concat_ws(' - ' , b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) CostDesc,
+		b1.essence,
 		b.InfoDesc TafsiliTypeDesc,
 		t.TafsiliDesc TafsiliDesc,
 		t2.TafsiliDesc TafsiliDesc2,
 		bi2.InfoDesc TafsiliTypeDesc2".
-				($userFields != "" ? "," . $userFields : "")."
+		($userFields != "" ? "," . $userFields : "")."
 		
 		from ACC_DocItems di join ACC_docs d using(DocID)
 			join ACC_CostCodes cc using(CostID)
@@ -247,6 +249,9 @@ function ListData($IsDashboard = false){
 	
 	$dataTable = GetData();
 	
+	//if($_SESSION["USER"]["UserName"] == "admin")
+	//	echo PdoDataAccess::GetLatestQueryString ();
+	
 	$col = $rpg->addColumn("شماره سند", "LocalNo", "PrintDocRender");
 	$col->ExcelRender = false;
 	//$rpg->addColumn("کد حساب", "CostCode");
@@ -262,10 +267,10 @@ function ListData($IsDashboard = false){
 	$col->EnableSummary();
 
 	$col = $rpg->addColumn("مانده حساب", "CreditorAmount", "TotalRemainRender");
-	$col->ExcelRender = false;
+	$col->ExcelRender = true;
 	
 	$rpg->mysql_resource = $dataTable;
-	$rpg->page_size = 10;
+	$rpg->page_size = 18;
 	$rpg->paging = true;
 	
 	if(!$rpg->excel && !$IsDashboard)

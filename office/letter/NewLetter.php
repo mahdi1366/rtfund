@@ -342,6 +342,9 @@ Letter.prototype.BuildForms = function(){
 							CKEDITOR.instances.LetterEditor.setData(record.data.context);
 
 						}	
+						else
+							CKEDITOR.instances.LetterEditor.setData();
+						
 						LetterObject.TabPanel.down("[itemId=AddToTemplates]").enable();
 					}					
 				}

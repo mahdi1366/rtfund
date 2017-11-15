@@ -103,6 +103,7 @@ if ($menuStr != "") {
 
 //------------------------------------------------------------------------------
 $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
+
 ?>
 <html>
 	<head>

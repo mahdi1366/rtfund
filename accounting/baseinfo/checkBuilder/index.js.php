@@ -837,6 +837,12 @@ function initOperations(element)
 
 function saveImage()
 {
+	if(document.getElementById("imageAttach").value.substr(document.getElementById("imageAttach").value.length-3) != "jpg")
+	{
+		alert("تنها تصویر با فرمت jpg را می توانید ذخیره کنید");
+		return;
+	}
+	
 	mask = new Ext.LoadMask(document.body, {msg:'در حال ذخيره سازي...'});
 	mask.show();
 	

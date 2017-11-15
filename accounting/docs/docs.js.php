@@ -39,7 +39,6 @@ function AccDocs(){
 			}
 		}),
 		emptyText:'انتخاب تفصیلی ...',
-		queryMode : 'local',
 		allowBlank : false,
 		valueField : "TafsiliID",
 		displayField : "TafsiliDesc"

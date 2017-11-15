@@ -46,8 +46,14 @@ if(!empty($_REQUEST["RowID"]) || count($dt) == 1)
 	}
 	else
 	{
-		header('Content-disposition: filename=file.' . $dt[0]["FileType"]);
-		header('Content-type: file');
+		$file = "file"; 
+		if($dt[0]["FileType"] == "jpg" || $dt[0]["FileType"] == "png")
+			$file = "image/" . $dt[0]["FileType"];
+		if($dt[0]["FileType"] == "pdf" )
+			$file = "application/" . $dt[0]["FileType"];
+		
+		header('Content-disposition:inline; filename=file.' . $dt[0]["FileType"]);
+		header('Content-type: '. $file);
 		header('Pragma: no-cache');
 		header('Expires: 0');
 		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');

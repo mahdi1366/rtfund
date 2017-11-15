@@ -34,8 +34,8 @@ $col->width = 50;
 $col->align = "center";
 
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 480;
-$dg->width = 750;
+$dg->height = 500;
+$dg->width = 770;
 $dg->title = "فرم های من";
 $dg->DefaultSortField = "RegDate";
 $dg->autoExpandColumn = "FormTitle";
@@ -71,7 +71,7 @@ WFM_MyRequests.prototype.AddNewRequest = function(RequestID){
 	{
 		this.requestWin = new Ext.window.Window({
 			width : 740,
-			height : 440,
+			height : 640,
 			modal : true,
 			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
 			closeAction : "hide",
@@ -152,7 +152,7 @@ WFM_MyRequests.prototype.OperationMenu = function(e){
 WFM_MyRequests.prototype.DeleteRequest = function(){
 	
 	record = this.grid.getSelectionModel().getLastSelected();
-	if(record.data.CurStepID != "0")
+	if(record.data.IsStarted == "YES")
 	{
 		Ext.MessageBox.alert("Error","فرم دارای گردش بوده و قابل حذف نمی باشد");
 		return;

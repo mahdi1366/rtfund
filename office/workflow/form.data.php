@@ -338,6 +338,11 @@ function SaveRequest() {
 			case 'shdatefield':
 				$ReqItemsObj->ItemValue = DateModules::shamsi_to_miladi($val);
 				break;
+			case "checkbox":
+				if(count($items) > 2 && $items[2] == "checkbox")
+				{
+					$val = $items[3];
+				}
 			default :
 				$ReqItemsObj->ItemValue = $val;
 		}

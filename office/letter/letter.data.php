@@ -447,20 +447,42 @@ function UnSeen(){
 }
 //.............................................
 
-function SendToList(){
+function receiversSelect(){
 	
 	$param = array(":q" => "%" . $_REQUEST["query"] . "%");
 	
-	$query = "select 'Person' type,concat('p_',p.PersonID) id, concat_ws(' ',fname,lname,CompanyName) name
-			from OFC_receivers r join BSC_persons p on(r.ToPersonID=p.PersonID) where IsStaff='YES'
-				AND r.PersonID=" . $_SESSION["USER"]["PersonID"] . "
+	$query = "select 'Person' type,p.PersonID id, concat_ws(' ',fname,lname,CompanyName) title
+			from BSC_persons p 
+				where IsStaff='YES'
 				AND concat_ws(' ',fname,lname,CompanyName) like :q
 			
 			union all
 			
-			select 'Group' type,concat('g_',GroupID) id, GroupDesc from FRW_AccessGroups
+			select 'Group' type,GroupID id, GroupDesc title from FRW_AccessGroups
 			where GroupDesc like :q
 			
+			order by type";
+	
+	$dt = PdoDataAccess::runquery($query, $param);
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SendToList(){
+	
+	$param = array(":q" => "%" . $_REQUEST["query"] . "%");
+	
+	$query = "select if(r.ToPersonID>0,'Person','Group' ) type,
+					if(r.ToPersonID>0, concat('p_',r.ToPersonID),concat('g_',ToGroupID) )  id,  
+					if(r.ToPersonID>0, concat_ws(' ',fname,lname,CompanyName),GroupDesc )  name
+					
+			from OFC_receivers r 
+				left join BSC_persons p on(r.ToPersonID=p.PersonID) 
+				left join FRW_AccessGroups g on(g.GroupID=r.ToGroupID)
+			
+			where r.PersonID=" . $_SESSION["USER"]["PersonID"] . "
+				AND if(r.ToPersonID>0, concat_ws(' ',fname,lname,CompanyName),GroupDesc ) like :q
+
 			order by type";
 	
 	$dt = PdoDataAccess::runquery($query, $param);
@@ -1033,10 +1055,14 @@ function GetReceivers(){
 function SaveReceiver(){
 	
 	$obj = new OFC_receivers();
-	$obj->ToPersonID = $_POST["ToPersonID"];
 	$obj->PersonID = $_SESSION["USER"]["PersonID"];
-	$result = $obj->Add();
 	
+	if($_POST["type"] == "Person")
+		$obj->ToPersonID = $_POST["id"];
+	else
+		$obj->ToGroupID = $_POST["id"];
+	
+	$result = $obj->Add();
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }

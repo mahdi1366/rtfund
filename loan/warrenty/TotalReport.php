@@ -353,7 +353,7 @@ function WarrentyReport_total()
 			valueField : "id",
 			hiddenName : "StatusID"
 		},{
-			xtype : "combo",
+			xtype : "checkcombo",
 			store : new Ext.data.SimpleStore({
 				data : [
 					['MAIN' , "اصل" ],

@@ -5611,6 +5611,47 @@ Ext.define('Ext.ux.TreeCombo',
 //***********************************************************
 //**********************  CheckCombo ************************
 //***********************************************************
+Ext.override(Ext.form.field.ComboBox, {
+	
+    setHiddenValue: function(values){
+        var me = this,
+            name = me.hiddenName, 
+            i;
+        if (!me.hiddenDataEl || !name) {
+            return;
+        }
+        values = Ext.Array.from(values);
+        var dom = me.hiddenDataEl.dom,
+            childNodes = dom.childNodes,
+            input = childNodes[0],
+            valueCount = values.length;
+        //var childrenCount = childNodes.length;
+        if (!input && valueCount > 0) {
+            me.hiddenDataEl.update(Ext.DomHelper.markup({
+                tag: 'input', 
+                type: 'hidden', 
+                name: name
+            }));
+            //childrenCount = 1;
+            input = dom.firstChild;
+        }
+		if (input)
+			input.value = "";
+		for (i = 0; i < valueCount; i++) 
+            input.value += values[i] + (i+1 < valueCount ? "," : "" );
+        /*while (childrenCount > valueCount) {
+            dom.removeChild(childNodes[0]);
+            -- childrenCount;
+        }
+        while (childrenCount < valueCount) {
+            dom.appendChild(input.cloneNode(true));
+            ++ childrenCount;
+        }
+        for (i = 0; i < valueCount; i++) {
+            childNodes[i].value = values[i];
+        }*/
+    }
+});
 Ext.define('Ext.ux.CheckCombo',
 {
 	extend: 'Ext.form.field.ComboBox',
@@ -5619,7 +5660,8 @@ Ext.define('Ext.ux.CheckCombo',
 	allSelector: false,
 	addAllSelector: false,
 	allText: 'All',
-	createPicker: function() {
+	createPicker: function() 
+	{
 	   var me = this,
 	       picker,
 	       menuCls = Ext.baseCSSPrefix + 'menu',

@@ -8,9 +8,16 @@ require_once '../header.inc.php';
 require_once 'form.class.php';
 
 if (!empty($_REQUEST['RequestID'])) 
+{
 	$RequestID = $_REQUEST['RequestID'];
+	$ReqObj = new WFM_requests($RequestID);
+	$FormID = $ReqObj->FormID;
+}
 else
-	$RequestID = 0;
+{
+	$RequestID = "";
+	$FormID = "";
+}
 ?>
 <script type="text/javascript">
 
@@ -19,7 +26,9 @@ WFM_NewRequest.prototype = {
 	address_prefix: "<?= $js_prefix_address ?>",
 	TplItemSeperator: "<?= WFM_forms::TplItemSeperator ?>",
 	
-	RequestID : <?= $RequestID ?>,
+	RequestID : "<?= $RequestID ?>",
+	FormID : "<?= $FormID ?>",
+	ItemsMmask : null,
 	
 	get: function (elementID) {
 		return findChild(this.TabID, elementID);
@@ -33,7 +42,7 @@ function WFM_NewRequest() {
 		frame: false,
 		border : false,
 		width: 700,
-		height : 350,
+		height : 550,
 		fieldDefaults: {
 			labelWidth: 100
 		},
@@ -56,10 +65,11 @@ function WFM_NewRequest() {
 				fields: ['FormID', 'FormTitle', 'FormContent'],
 				autoLoad : true
 			}),
+			queryMode : "local",
 			displayField: 'FormTitle',
 			valueField: "FormID",
-			name : "FormID",
-			
+			name : "FormID",	
+			value : this.FormID,
 			queryMode : "local",
 			allowBlank : false,
 			listConfig: {
@@ -70,14 +80,15 @@ function WFM_NewRequest() {
 			width: 350,
 			listeners: {
 				select: function (combo, records) {
+					
 					this.collapse();
-					masktpl = new Ext.LoadMask(WFM_NewRequestObj.MainForm, {msg:'در حال ذخيره سازي...'});
-					masktpl.show();
+					fieldset = WFM_NewRequestObj.MainForm.down("[itemId=FormItems]");
+					WFM_NewRequestObj.ItemsMmask = new Ext.LoadMask(fieldset, {msg:'در حال بارگذاری...'});
+					WFM_NewRequestObj.ItemsMmask.show();
 					WFM_NewRequestObj.FormItemsStore.load({
 						params : {FormID : records[0].data.FormID},
 						callback : function(){
-							WFM_NewRequestObj.ShowTplItemsForm(records[0].data.FormID, false);
-							masktpl.hide();
+							WFM_NewRequestObj.ShowTplItemsForm();
 						}
 					});
 					
@@ -88,7 +99,7 @@ function WFM_NewRequest() {
 			title : "آیتم های فرم",
 			itemId: "FormItems",
 			width : 680,
-			height : 280,
+			height : 480,
 			autoScroll: true,
 			colspan : 2,
 			layout: {
@@ -100,10 +111,10 @@ function WFM_NewRequest() {
 				width : 320
 			}
 		},{
-			colspan : 2,
 			xtype: "hidden",
 			itemId: "RequestID",
-			name : "RequestID"
+			name : "RequestID",
+			value : this.RequestID
 		}],
 		buttons: [{
 			text: "  ذخیره",
@@ -139,7 +150,7 @@ function WFM_NewRequest() {
 			url: this.address_prefix + 'form.data.php?task=GetRequestItems',
 			reader: {root: 'rows', totalProperty: 'totalCount'}
 		},
-		fields: ['ReqItemID', 'RequestID','FormID', 'FormItemID', 'ItemValue']
+		fields: ['ReqItemID', 'RequestID','FormID', 'FormItemID', 'ItemValue', 'ItemType', "ComboValues"]
 	});
 	
 	if(this.RequestID > 0)
@@ -147,37 +158,63 @@ function WFM_NewRequest() {
 }
 
 WFM_NewRequest.prototype.LoadRequest = function(){
-
-	mask1 = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال بارگذاری...'});
-	mask1.show();
+	
+	this.MainForm.down("[itemId=FormID]").disable();
+	
+	fieldset = this.MainForm.down("[itemId=FormItems]");
+	this.ItemsMmask = new Ext.LoadMask(fieldset, {msg:'در حال بارگذاری...'});
+	this.ItemsMmask.show();
 	
 	this.ReqItemsStore.load({
-		params : {
-			RequestID : this.RequestID
-		},
+		params : {RequestID : this.RequestID},
 		callback : function(){
 			
 			me = WFM_NewRequestObj;
 			if(this.totalCount == 0)
 			{
-				mask1.hide();
+				me.FormItemsStore.load({
+					params : {FormID : me.FormID},
+					callback : function(){
+						WFM_NewRequestObj.ShowTplItemsForm();
+						WFM_NewRequestObj.ItemsMmask.hide();
+					}
+				});				
 				return;
 			}				
-			record = this.getAt(0);
-		
 			me.FormItemsStore.load({
-				params : {FormID : record.data.FormID},
+				params : {FormID : this.getAt(0).data.FormID},
 				callback : function(){
-					me.ShowTplItemsForm(record.data.FormID, true);		
-					me.MainForm.loadRecord(record);
-					mask1.hide();
+					me = WFM_NewRequestObj;
+					me.ShowTplItemsForm();	
+					for(i=0; i<me.ReqItemsStore.getCount(); i++){
+						record = me.ReqItemsStore.getAt(i); 
+						switch(record.data.ItemType){
+							case "shdatefield" :
+								me.MainForm.getComponent("FormItems").
+									down('[name=ReqItem_' + record.data.FormItemID + "]").setValue(MiladiToShamsi(record.data.ItemValue));
+								break;
+							case "checkbox" :
+								if(record.data.ComboValues == null)
+									me.MainForm.getComponent("FormItems").
+										down('[name=ReqItem_' + record.data.FormItemID + "]").setValue(record.data.ItemValue);
+								else
+									me.MainForm.getComponent("FormItems").
+										down('[name=ReqItem_' + record.data.FormItemID + "_checkbox_" + record.data.ItemValue + "]").setValue(true);
+								break; 
+							default :
+								me.MainForm.getComponent("FormItems").
+									down('[name=ReqItem_' + record.data.FormItemID + "]").setValue(record.data.ItemValue);
+						}
+					};
+					
+					WFM_NewRequestObj.ItemsMmask.hide();
 				}
 			});
 		}
 	});
 }
 
-WFM_NewRequestObj = new WFM_NewRequest();
+var WFM_NewRequestObj = new WFM_NewRequest();
 
 WFM_NewRequest.prototype.SaveRequest = function (print) {
 
@@ -191,6 +228,9 @@ WFM_NewRequest.prototype.SaveRequest = function (print) {
 		
 		url: this.address_prefix + 'form.data.php?task=SaveRequest',
 		method: 'POST',
+		params : {
+			FormID : this.MainForm.down("[itemId=FormID]").getValue()
+		},
 		
 		success: function (form,action) {
 			mask.hide();
@@ -212,7 +252,7 @@ WFM_NewRequest.prototype.SaveRequest = function (print) {
 	});
 }
 
-WFM_NewRequest.prototype.ShowTplItemsForm = function (FormID, LoadValues) {
+WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 
 	this.MainForm.getComponent("FormItems").removeAll();
 
@@ -221,6 +261,8 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function (FormID, LoadValues) {
 		record = this.FormItemsStore.getAt(i);
 		if(record.data.ItemType == "" || record.data.FormID == "0")
 			continue;
+		
+		parent = this.MainForm.getComponent("FormItems");
 
 		if(record.data.ItemType == "combo")
 		{
@@ -229,7 +271,7 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function (FormID, LoadValues) {
 			for(j=0;j<arr.length;j++)
 				data.push([ arr[j] ]);
 
-			this.MainForm.getComponent("FormItems").add({
+			parent.add({
 				store : new Ext.data.SimpleStore({
 					fields : ['value'],
 					data : data
@@ -242,9 +284,46 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function (FormID, LoadValues) {
 				fieldLabel : record.data.ItemName
 			});
 		}
+		if(record.data.ItemType == "checkbox")
+		{
+			if(record.data.ComboValues == null)
+			{
+				parent.add({
+					boxLabel : record.data.ItemName,
+					xtype : "checkbox",
+					name : "ReqItem_" + record.data.FormItemID,
+					itemId : "ReqItem_" + record.data.FormItemID
+				});
+			}
+			else
+			{
+				if(i%2 > 0 && i != 0)
+				{
+					parent.add({
+						xtype : "container"
+					});
+				}
+				var items = new Array();
+				arr = record.data.ComboValues.split("#");
+				for(j=0; j<arr.length; j++)
+					items.push({
+						boxLabel : arr[j],
+						name : "ReqItem_" + record.data.FormItemID + "_checkbox_" + j,
+						itemId : "ReqItem_" + record.data.FormItemID + "_checkbox_" + j
+					});
+				parent.add({
+					fieldLabel : record.data.ItemName,
+					xtype : "checkboxgroup",
+					items : items,
+					width : 610,
+					columns : 1,				
+					colspan : 2
+				});
+			}
+		}			
 		else
 		{
-			this.MainForm.getComponent("FormItems").add({
+			parent.add({
 				xtype: record.data.ItemType,
 				itemId: 'ReqItem_' + record.data.FormItemID,
 				name: 'ReqItem_' + record.data.FormItemID,
@@ -252,25 +331,9 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function (FormID, LoadValues) {
 				hideTrigger : record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield' ? true : false
 			});
 		}
-
-		if (LoadValues > 0) {
-			var num = this.ReqItemsStore.find('FormItemID', record.data.FormItemID);                                    
-			if (this.ReqItemsStore.getAt(num)){
-				switch(record.data.ItemType){
-					case "shdatefield" :
-						this.MainForm.getComponent("FormItems").
-							getComponent('ReqItem_' + record.data.FormItemID).setValue(
-								MiladiToShamsi(this.ReqItemsStore.getAt(num).data.ItemValue));
-						break;
-					default : 
-						this.MainForm.getComponent("FormItems").
-							getComponent('ReqItem_' + record.data.FormItemID).setValue(
-								this.ReqItemsStore.getAt(num).data.ItemValue);                                    
-				}
-			}
-		}            
 	}
-			
+	
+	WFM_NewRequestObj.ItemsMmask.hide();
 }
 
 WFM_NewRequest.prototype.getShdatefield = function (fieldname, ren) {
@@ -319,6 +382,7 @@ WFM_NewRequest.prototype.ContractDocuments = function(ObjectType){
 		}
 	});
 }
+
 </script>
 <br>
 <center>

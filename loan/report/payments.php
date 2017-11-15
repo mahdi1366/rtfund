@@ -9,7 +9,7 @@ function ReqPersonRender($row,$value){
 	return $value == "" ? "منابع داخلی" : $value;
 }
 function IsDocRegisteredRender($row,$value){
-	return $value == "YES" ? "√" : "";
+	return $value == "YES" ? "*" : "";
 }
 		
 $page_rpg = new ReportGenerator("mainForm","LoanReport_paymentsObj");
@@ -150,7 +150,8 @@ function ListData($IsDashboard = false){
 	
 	$rpg->addColumn("تاریخ مرحله پرداخت", "PayDate", "ReportDateRender");
 	$rpg->addColumn("مبلغ پرداخت", "PayAmount", "ReportMoneyRender");
-	$rpg->addColumn("صدور سند", "IsDocRegistered" , "IsDocRegisteredRender");
+	$col = $rpg->addColumn("صدور سند", "IsDocRegistered" , "IsDocRegisteredRender");
+	$col->align = "center";
 	$rpg->addColumn("شماره سند", "LocalNo");
 	
 	if(!$rpg->excel && !$IsDashboard)

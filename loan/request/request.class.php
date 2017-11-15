@@ -35,19 +35,22 @@ class LON_requests extends PdoDataAccess{
 	public $_LoanPersonFullname;
 	public $_ReqPersonFullname;
 	public $_BranchName;
+	public $_SubAgentDesc;
 	
 	function __construct($RequestID = "") {
 		
 		if($RequestID != "")
 			PdoDataAccess::FillObject ($this, "
 				select r.* , concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) _LoanPersonFullname, LoanDesc _LoanDesc,
-						concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) _ReqPersonFullname, b.BranchName _BranchName
+						concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) _ReqPersonFullname, b.BranchName _BranchName,
+						SubDesc as _SubAgentDesc
 						
 					from LON_requests r 
 					left join BSC_persons p1 on(p1.PersonID=LoanPersonID)
 					left join LON_loans using(LoanID)
 					left join BSC_persons p2 on(p2.PersonID=ReqPersonID)
 					left join BSC_branches b using(BranchID)
+					left join BSC_SubAgents sa on(SubID=SubAgentID)
 				where RequestID=?", array($RequestID));
 	}
 	
