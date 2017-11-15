@@ -616,9 +616,11 @@ Letter.prototype.SaveLetter = function(SendFile){
 			mask.hide();
 			me = LetterObject;
 			me.LetterID = action.result.data;
+			Ext.MessageBox.alert("", "ذخیره نامه "+me.LetterID+" با موفقیت انجام شد");			
+			
 			me.TabPanel.down("[itemId=pagesView]").getStore().proxy.extraParams = {
 				LetterID : me.LetterID
-			};
+			}; 
 			me.TabPanel.down("[itemId=pagesView]").getStore().load();
 			me.TabPanel.down("[itemId=btn_send]").enable();
 			me.TabPanel.down("[itemId=attach_tab]").enable();
