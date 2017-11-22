@@ -3,7 +3,7 @@
 // programmer:	Sh.Jafarkhani
 // create Date:	95.09
 //---------------------------
-include('header.inc.php');
+require_once('header.inc.php');
 
 ?>
 <script type="text/javascript">

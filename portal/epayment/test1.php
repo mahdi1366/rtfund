@@ -2,7 +2,7 @@
 
 if(isset($_POST['ok'])) 
 {
-	include_once('enpayment.php');
+	require_once('enpayment.php');
 
 	$amount = $_POST["amount"];
 	$payment = new Payment();

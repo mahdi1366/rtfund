@@ -10,7 +10,7 @@ require_once '../../accounting/docs/import.data.php';
 ini_set("display_errors", "On");
 
 if($_POST['State']== 'OK') {
-	include_once('enpayment.php');
+	require_once('enpayment.php');
 
 	$amount = $_SESSION["USER"]["SHAPARAK_AMOUNT"];
 

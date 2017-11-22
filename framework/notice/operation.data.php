@@ -5,11 +5,11 @@
 //-------------------------
 
 require_once('../header.inc.php');
-include_once inc_dataReader;
-include_once inc_response;
+require_once inc_dataReader;
+require_once inc_response;
 require_once getenv("DOCUMENT_ROOT") . '/office/letter/letter.class.php';
 require_once "config.inc.php";
-include_once 'operation.class.php';
+require_once 'operation.class.php';
 require_once 'email.php';
 require_once 'sms.php';
 

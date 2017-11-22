@@ -3,7 +3,7 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 94.06
 //-----------------------------
-include_once("../header.inc.php");
+require_once("../header.inc.php");
 require_once inc_dataGrid;
 require_once 'systems.js.php';
 

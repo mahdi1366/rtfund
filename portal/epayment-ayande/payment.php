@@ -4,7 +4,7 @@
 //  this function is to get proper authority key from Parsian
 function gotoParsian () {
 
-  include("nusoap/nusoap.php");
+  require_once("nusoap/nusoap.php");
 
   $soapclient = new soapclient('https://www.pec24.com/pecpaymentgateway/eshopservice.asmx?wsdl','wsdl');
   if (!$err = $soapclient->getError())
@@ -69,7 +69,7 @@ function gotoParsian () {
 //  this function is to Validate Payment
 function check_Payment_Parsian () {
 
-  include("nusoap/nusoap.php");
+  require_once("nusoap/nusoap.php");
 
   $authority = $_REQUEST['au'];
   $status = $_REQUEST['rs'];

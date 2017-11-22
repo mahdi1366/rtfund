@@ -3,7 +3,7 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 1390-02
 //-----------------------------
-include('header.inc.php');
+require_once('header.inc.php');
 require_once 'management/framework.class.php';
 
 if(empty($_REQUEST["SystemID"]))

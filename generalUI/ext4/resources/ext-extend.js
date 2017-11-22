@@ -5639,17 +5639,7 @@ Ext.override(Ext.form.field.ComboBox, {
 			input.value = "";
 		for (i = 0; i < valueCount; i++) 
             input.value += values[i] + (i+1 < valueCount ? "," : "" );
-        /*while (childrenCount > valueCount) {
-            dom.removeChild(childNodes[0]);
-            -- childrenCount;
-        }
-        while (childrenCount < valueCount) {
-            dom.appendChild(input.cloneNode(true));
-            ++ childrenCount;
-        }
-        for (i = 0; i < valueCount; i++) {
-            childNodes[i].value = values[i];
-        }*/
+        
     }
 });
 Ext.define('Ext.ux.CheckCombo',

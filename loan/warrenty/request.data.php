@@ -5,10 +5,10 @@
 //-------------------------
 
 require_once('../header.inc.php');
-include_once inc_dataReader;
-include_once inc_response;
+require_once inc_dataReader;
+require_once inc_response;
 
-include_once 'request.class.php';
+require_once 'request.class.php';
 require_once "../../office/workflow/wfm.class.php";
 require_once '../../accounting/docs/import.data.php';
 

@@ -3,8 +3,8 @@
 // programmer:	Jafarkhani
 // Create Date:	95.03
 //-------------------------
-include('../header.inc.php');
-include_once inc_dataGrid;
+require_once('../header.inc.php');
+require_once inc_dataGrid;
 
 $AdminMode = isset($_REQUEST["admin"]) && $_REQUEST["admin"] == "true" ? true : false;
 

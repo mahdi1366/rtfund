@@ -30,7 +30,7 @@
  * Copyright (C) Jean-Sebastien Goupil
  * http://www.barcodephp.com
  */
-include_once('BCGBarcode1D.php');
+require_once('BCGBarcode1D.php');
 
 class BCGean13 extends BCGBarcode1D {
 	protected $codeParity = array();

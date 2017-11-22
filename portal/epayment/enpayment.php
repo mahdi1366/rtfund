@@ -1,7 +1,7 @@
 <?php
 
-include("nusoap.php");
-include_once('enpayment.conf.php');
+require_once("nusoap.php");
+require_once('enpayment.conf.php');
 
 class Payment
 {

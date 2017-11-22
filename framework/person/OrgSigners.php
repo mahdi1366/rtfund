@@ -3,7 +3,7 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 94.12
 //-----------------------------
-include_once("../header.inc.php");
+require_once("../header.inc.php");
 require_once inc_dataGrid;
 
 $PersonID = $_REQUEST["PersonID"];

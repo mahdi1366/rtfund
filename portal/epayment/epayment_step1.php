@@ -4,7 +4,7 @@
 // Create Date:	93.06
 //-------------------------
 require_once("../header.inc.php");
-include_once('enpayment.php');
+require_once('enpayment.php');
 
 if(empty($_REQUEST["RequestID"]))
 {

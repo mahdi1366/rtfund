@@ -3,8 +3,8 @@
 // programmer:	Sh.Jafarkhani
 // create Date:	95.01
 //---------------------------
-ini_set("display_errors","On");
-include('header.inc.php');
+
+require_once('header.inc.php');
 
 require_once inc_dataGrid;
 require_once inc_dataReader;

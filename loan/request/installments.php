@@ -3,9 +3,9 @@
 // programmer:	Jafarkhani
 // Create Date:	94.08
 //-------------------------
-include('../header.inc.php');
+require_once('../header.inc.php');
 require_once 'request.class.php';
-include_once inc_dataGrid;
+require_once inc_dataGrid;
 
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);

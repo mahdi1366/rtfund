@@ -17,10 +17,12 @@ $page_rpg->addColumn("شماره وام", "r.RequestID");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
 $page_rpg->addColumn("عنوان طرح", "PlanTitle");	
 $page_rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
+$page_rpg->addColumn("زیرواحد سرمایه گذار", "SubDesc");
 $col = $page_rpg->addColumn("تاریخ درخواست", "ReqDate");
 $col->type = "date";	
 $page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
 $page_rpg->addColumn("مشتری", "LoanFullname");
+$page_rpg->addColumn("حوزه فعالیت", "DomainDesc");
 $page_rpg->addColumn("شعبه", "BranchName");
 $col = $page_rpg->addColumn("تاریخ پرداخت", "PartDate");
 $col->type = "date";
@@ -52,8 +54,14 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 	foreach($_POST as $key => $value)
 	{
 		if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
-				$value === "" || strpos($key, "combobox") !== false || strpos($key, "rpcmp") !== false ||
-				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
+				$value === "" || 
+				
+				strpos($key, "combobox") !== false || 
+				strpos($key, "rpcmp") !== false ||
+				strpos($key, "checkcombo") !== false || 
+				strpos($key, "treecombo") !== false || 
+				strpos($key, "reportcolumn_fld") !== false || 
+				strpos($key, "reportcolumn_ord") !== false)
 			continue;
 		
 		if(strpos($key, "FILTERPERSON_") !== false)
@@ -62,6 +70,13 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 			$key = str_replace("FILTERPERSON_", "", $key);
 			$where .= " AND " . $prefix . $key . " = :$key";
 			$whereParam[":$key"] = $value;
+			continue;
+		}
+		
+		if($key == "SubAgentID")
+		{
+			InputValidation::validate($value, InputValidation::Pattern_NumComma);
+			$where .= " AND SubAgentID in(" . $value . ")";
 			continue;
 		}
 		
@@ -109,7 +124,7 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 	}
 }	
 	
-function GetData(){
+function GetData($mode = "list"){
 	
 	//.....................................
 	$where = "";
@@ -122,6 +137,8 @@ function GetData(){
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
 				bi.InfoDesc StatusDesc,
+				sb.SubDesc,
+				ad.DomainDesc,
 				BranchName,
 				SumPayments,
 				TotalPayAmount,
@@ -130,15 +147,17 @@ function GetData(){
 				MaxPayDate,
 				ifnull(LastPayAmount,0) LastPayAmount,
 				tazamin".
-				($userFields != "" ? "," . $userFields : "")."
+				($mode == "list" && $userFields != "" ? "," . $userFields : "")."
 				
 			from LON_requests r
 			join LON_ReqParts p on(r.RequestID=p.RequestID AND p.IsHistory='NO')
 			left join LON_loans l using(LoanID)
+			left join BSC_SubAgents sb on(sb.SubID=SubAgentID)
 			join BSC_branches using(BranchID)
 			left join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
+			left join BSC_ActDomain ad on(p2.DomainID=ad.DomainID)
 			left join (
 				select RequestID,sum(PayAmount) SumPayments 
 				from LON_payments 
@@ -191,15 +210,16 @@ function GetData(){
 			where 1=1 " . $where;
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
-	$query .= $group == "" ? " group by r.RequestID" : " group by " . $group;
-	$query .= $group == "" ? " order by r.RequestID" : " order by " . $group;	
+	$query .= $group == "" || $mode == "chart" ? " group by r.RequestID" : " group by " . $group;
+	$query .= $group == "" || $mode == "chart" ? " order by r.RequestID" : " order by " . $group;	
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	$query = PdoDataAccess::GetLatestQueryString();
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
+		//BeginReport();
 		//print_r(ExceptionHandler::PopAllExceptions());
-		//echo $query;die();
+		//echo $query;
 	}
 	
 	for($i=0; $i< count($dataTable); $i++)
@@ -219,11 +239,6 @@ function ListData($IsDashboard = false){
 	$rpg->excel = !empty($_POST["excel"]);
 	$rpg->mysql_resource = GetData();
 	
-	if($_SESSION["USER"]["UserName"] == "admin")
-	{
-		//echo PdoDataAccess::GetLatestQueryString();
-	}
-	
 	function endedRender($row,$value){
 		return ($value == "YES") ? "خاتمه" : "جاری";
 	}
@@ -232,11 +247,13 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("نوع وام", "LoanDesc");
 	$rpg->addColumn("عنوان طرح", "PlanTitle");	
 	$rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
+	$rpg->addColumn("زیرواحد سرمایه گذار", "SubDesc");
 	$rpg->addColumn("تاریخ درخواست", "ReqDate", "ReportDateRender");
 	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	$rpg->addColumn("مشتری", "LoanFullname");
+	$rpg->addColumn("حوزه فعالیت", "DomainDesc");
 	$rpg->addColumn("شعبه", "BranchName");
 	$rpg->addColumn("تاریخ پرداخت", "PartDate", "ReportDateRender");
 	$col = $rpg->addColumn("مبلغ تایید شده", "PartAmount", "ReportMoneyRender");
@@ -305,7 +322,7 @@ if(isset($_REQUEST["show"]))
 
 if(isset($_REQUEST["rpcmp_chart"]))
 {
-	$page_rpg->mysql_resource = GetData();
+	$page_rpg->mysql_resource = GetData("chart");
 	$page_rpg->GenerateChart();
 	die();
 }
@@ -381,7 +398,7 @@ function LoanReport_total()
 				}
 			}
 		},{
-			xtype : "combo",
+			xtype : "checkcombo",
 			store : new Ext.data.SimpleStore({
 				proxy: {
 					type: 'jsonp',

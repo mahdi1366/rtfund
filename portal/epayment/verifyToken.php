@@ -1,7 +1,7 @@
 <?php
 
 if($_POST['State']== 'OK') {
-include_once('./ipg/enpayment.php');
+require_once('./ipg/enpayment.php');
 
 $amount = //set amount
 

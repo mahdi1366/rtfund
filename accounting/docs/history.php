@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // create Date:	95.08
 //---------------------------
-include("../header.inc.php");
+require_once("../header.inc.php");
 require_once inc_component;
 
 $DocID = $_POST["DocID"];

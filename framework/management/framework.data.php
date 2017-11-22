@@ -3,10 +3,10 @@
 // programmer:	Jafarkhani
 // Create Date:	89.11
 //-------------------------
-include('../header.inc.php');
+require_once('../header.inc.php');
 require_once 'framework.class.php';
 require_once '../person/persons.class.php';
-include_once inc_dataReader;
+require_once inc_dataReader;
 require_once inc_response;
 
 if(!empty($_REQUEST["task"]))
@@ -242,8 +242,18 @@ function selectDataAudits(){
 
 function SelectCalendarEvents(){
 	
+	$params = array();
 	$where = " AND PersonID=" . $_SESSION["USER"]["PersonID"];
-	$res = FRW_CalendarEvents::Get($where);	
+	
+	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
+	{
+		$where .= " AND " . $_GET["fields"] . " like ?";
+		$params [] = "%" . $_GET["query"] . "%";
+	}
+	
+	$where .= dataReader::makeOrder();
+	
+	$res = FRW_CalendarEvents::Get($where,$params);	
 	echo dataReader::getJsonData($res->fetchAll(), $res->rowCount(), $_GET["callback"]);
 	die();
 }

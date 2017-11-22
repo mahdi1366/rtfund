@@ -3,11 +3,12 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 1395.03
 //-----------------------------
-include('header.inc.php');
+ini_set("display_errors", "On");
+
+require_once ('header.inc.php');
 require_once 'management/framework.class.php';
 
 $systems = FRW_access::getAccessSystems();
-
 $menuStr = "";
 
 foreach($systems as $sysRow)

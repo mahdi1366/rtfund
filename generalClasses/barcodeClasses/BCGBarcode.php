@@ -14,7 +14,7 @@
  * Copyright (C) Jean-Sebastien Goupil
  * http://www.barcodephp.com
  */
-include_once('BCGColor.php');
+require_once('BCGColor.php');
 
 abstract class BCGBarcode {
 	const COLOR_BG = 0;

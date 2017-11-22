@@ -11003,7 +11003,7 @@ function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=fal
 		}
 
 		if (!class_exists('gif', false)) { 
-			include_once(_MPDF_PATH.'classes/gif.php'); 
+			require_once(_MPDF_PATH.'classes/gif.php'); 
 		}
 		$gif=new CGIF();
 
@@ -17975,7 +17975,7 @@ function OpenTag($tag,$attr,&$ahtml,&$ihtml) {	// mPDF 6
 	else { $gid = '0'; }
 	if (!is_array($this->graphs[$gid]) || count($this->graphs[$gid])==0 ) { break; }
 	$this->ignorefollowingspaces = false; 
-	include_once(_MPDF_PATH.'graph.php');
+	require_once(_MPDF_PATH.'graph.php');
 	$this->graphs[$gid]['attr'] = $attr;
 
 

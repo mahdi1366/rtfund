@@ -3,8 +3,8 @@
 // programmer:	Jafarkhani
 // Create Date:	95.01
 //-------------------------
-include('../../header.inc.php');
-include_once inc_dataGrid;
+require_once('../../header.inc.php');
+require_once inc_dataGrid;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "baseinfo.data.php?task=GetAllSettings", "grid_div");
 

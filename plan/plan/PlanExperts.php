@@ -3,8 +3,8 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 95.02
 //-----------------------------
-include('../header.inc.php');
-include_once inc_dataGrid;
+require_once('../header.inc.php');
+require_once inc_dataGrid;
 
 if(empty($_POST["PlanID"]))
 {

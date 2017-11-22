@@ -3,10 +3,10 @@
 // programmer:	Jafarkhani
 // create Date: 94.06
 //-------------------------
-include_once('../header.inc.php');
-include_once inc_dataReader;
-include_once inc_response;
-include_once 'loan.class.php';
+require_once('../header.inc.php');
+require_once inc_dataReader;
+require_once inc_response;
+require_once 'loan.class.php';
 
 $task = $_REQUEST["task"];
 switch ($task) {

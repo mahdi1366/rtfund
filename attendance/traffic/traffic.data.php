@@ -3,10 +3,10 @@
 // programmer:	Jafarkhani
 // create Date: 95.02
 //-------------------------
-include_once('../header.inc.php');
-include_once inc_dataReader;
-include_once inc_response;
-include_once 'traffic.class.php';
+require_once('../header.inc.php');
+require_once inc_dataReader;
+require_once inc_response;
+require_once 'traffic.class.php';
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 switch ($task) {

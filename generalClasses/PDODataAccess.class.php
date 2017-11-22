@@ -14,7 +14,7 @@ define("PDONULL", "%pdonull%");
 define("PDONOW", "ADDTIME(now(), '03:30:00') ");
 
 define("DEBUGQUERY", false);
-include_once 'ExceptionHandler.class.php';
+require_once 'ExceptionHandler.class.php';
 require_once 'DateModules.class.php';
 require_once 'DataMember.class.php';
 //require_once 'DataAudit.class.php';

@@ -3,12 +3,12 @@
 // programmer:	khoshroo
 // create Date: 96.03
 //-------------------------
-include_once('../header.inc.php');
-include_once inc_dataReader;
-include_once inc_response;
-include_once 'extra.class.php';
-include_once '../traffic/traffic.class.php';
-include_once '../baseinfo/shift.class.php';
+require_once('../header.inc.php');
+require_once inc_dataReader;
+require_once inc_response;
+require_once 'extra.class.php';
+require_once '../traffic/traffic.class.php';
+require_once '../baseinfo/shift.class.php';
 
 $task = $_REQUEST["task"];
 switch ($task) {

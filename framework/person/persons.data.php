@@ -3,11 +3,11 @@
 // programmer:	Jafarkhani
 // Create Date:	94.7
 //-------------------------
-include('../header.inc.php');
+require_once('../header.inc.php');
 require_once 'persons.class.php';
 require_once '../PasswordHash.php';
 
-include_once inc_dataReader;
+require_once inc_dataReader;
 require_once inc_response;
 
 if(isset($_REQUEST["task"]))
