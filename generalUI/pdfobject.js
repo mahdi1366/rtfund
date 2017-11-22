@@ -78,7 +78,7 @@
     supportsPdfActiveX = function (){ return !!(createAXO("AcroPDF.PDF") || createAXO("PDF.PdfCtrl")); };
 
     //Determines whether PDF support is available
-    supportsPDFs = true;//(supportsPdfMimeType || (isIE() && supportsPdfActiveX()));
+    supportsPDFs = (supportsPdfMimeType || (isIE() && supportsPdfActiveX()));
 
     //Create a fragment identifier for using PDF Open parameters when embedding PDF
     buildFragmentString = function(pdfParams){

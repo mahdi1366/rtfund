@@ -12,7 +12,7 @@ if(empty($_REQUEST["DocumentID"]) || empty($_REQUEST["ObjectID"]))
 $DocumentID = $_REQUEST["DocumentID"];
 $ObjectID = $_REQUEST["ObjectID"];
 
-$query = "select RowID,PageNo,FileType,FileContent 
+$query = "select RowID,PageNo,FileType,FileContent,DocumentID,ObjectID,DocDesc
 	from DMS_DocFiles df join DMS_documents using(DocumentID)
 	where df.DocumentID=? AND ObjectID=?" . (!empty($_REQUEST["RowID"]) ? " AND RowID=?" : "")."
 	order by PageNo";
@@ -25,29 +25,13 @@ $dt = PdoDataAccess::runquery($query, $params);
 if(count($dt) == 0)
 	die();
 
-if(!empty($_REQUEST["RowID"]) || count($dt) == 1)
+if(isset($_REQUEST["inline"]))
 {
 	$FileContent = $dt[0]["FileContent"] . file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" . 
 		$dt[0]["RowID"] . "." . $dt[0]["FileType"]);
-	if($dt[0]["FileType"] == "pdf")
-	{
-		header('Content-disposition: filename=file.pdf');
-		header('Content-type: file');
-		header('Pragma: no-cache');
-		header('Expires: 0');
-		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-		header('Pragma: public');
-		header("Content-Transfer-Encoding: binary");
-		if(isset($_REQUEST["inline"]))
-			echo data_uri($FileContent, "pdf");
-		else
-			echo $FileContent;
-		die();
-	}
-	else
-	{
+	
 		$file = "file"; 
-		if($dt[0]["FileType"] == "jpg" || $dt[0]["FileType"] == "png")
+		if(array_search ($dt[0]["FileType"], array("jpg","jpeg","png","gif")) !== false)
 			$file = "image/" . $dt[0]["FileType"];
 		if($dt[0]["FileType"] == "pdf" )
 			$file = "application/" . $dt[0]["FileType"];
@@ -61,8 +45,7 @@ if(!empty($_REQUEST["RowID"]) || count($dt) == 1)
 		header("Content-Transfer-Encoding: binary");
 
 		echo $FileContent;
-		die();
-	}
+		die();	
 }
 
 function data_uri($content, $mime) {
@@ -70,23 +53,43 @@ function data_uri($content, $mime) {
     return ('data:' . $mime . ';base64,' . $base64);
 }
 
-echo '<script src="/generalUI/pdfobject.js"></script>';
+echo '<script src="/generalUI/pdfobject/pdfobject.js"></script>';
 echo '<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>';
 echo "<center>";
 foreach($dt as $file)
 {
-	$FileContent = $file["FileContent"] . 
-		file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" .
-		$file["RowID"] . "." . $file["FileType"]);
-	
 	echo "<div style='width:100%;' align=center><hr>صفحه " . $file["PageNo"] . "<hr></div>";
 	if($file["FileType"] == "pdf")
 	{
-		echo "<div id=pdf_DIV_" . $file["RowID"] . " style='height:500px'></div>";
-		echo '<script>PDFObject.embed("'.data_uri($FileContent, "application/pdf") . '", "#pdf_DIV_'.$file["RowID"].'");</script>';
+		echo "<div id=pdf_DIV_" . $file["RowID"] . " style='height:500px'></div></br>";
+		echo '<script>var options = {
+				pdfOpenParams: {
+					navpanes: 0,
+					toolbar: 0,
+					statusbar: 0,
+					view: "FitV",
+					pagemode: "thumbs",
+					page: 2
+				},
+				forcePDFJS: true,
+				PDFJS_URL: "/generalUI/pdfobject/viewer.html"
+			};
+			var myPDF = PDFObject.embed("/office/dms/ShowFile.php?DocumentID='.$file["DocumentID"].
+				'&RowID=' . $file["RowID"] . '&ObjectID='.$file["ObjectID"].'&inline=true","#pdf_DIV_'.$file["RowID"].'", options);
+			</script>';
 	} 
-	else
+	else if(array_search ($file["FileType"], array("jpg","jpeg","png","gif")) !== false)
+	{
+		$FileContent = $file["FileContent"] . 
+		file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" .	$file["RowID"] . "." . $file["FileType"]);
 		echo "<img src=" . data_uri($FileContent, 'image/jpeg') . " /></br>";
+	}
+	else
+	{
+		echo '<a href="/office/dms/ShowFile.php?DocumentID='.$file["DocumentID"].
+				'&RowID=' . $file["RowID"] . '&ObjectID='.$file["ObjectID"].'&inline=true" target=_blank>' . 
+				$file["DocDesc"] . "." . $file["FileType"] . "</a>";
+	}
 }
 echo "</center>";
 

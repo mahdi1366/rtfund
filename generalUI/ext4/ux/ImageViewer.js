@@ -144,23 +144,19 @@ Ext.define('ImageViewer', {
 			pdfContainer.removeAll();
 			DivId = pdfContainer.getId();
 			
-			//mask = Ext.LoadMask(pdfContainer,{msg:'در حال بارگذاری...'});
-			//mask.show();
-			
-			Ext.Ajax.request({
-				url : this.src.url,
-				params : {
-					x: 0
-				},
-				method : "post",
-
-				success : function(response)
-				{
-					PDFObject.embed(response.responseText, "#"+DivId);
-					//mask.hide();
-				}
-			})
-
+			var options = {
+						pdfOpenParams: {
+							navpanes: 0,
+							toolbar: 0,
+							statusbar: 0
+							//view: "FitV",
+							//pagemode: "thumbs",
+							//page: 2
+						},
+						forcePDFJS: true,
+						PDFJS_URL: "/generalUI/pdfobject/viewer.html"
+					};
+			PDFObject.embed(this.src.url, "#"+DivId, options);
 		}
 	},
 
