@@ -17,6 +17,7 @@ $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetEve
 $dg->addColumn("", "EventID","", true);
 $dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "EventTypeDesc","", true);
+$dg->addColumn("", "FollowUpFullname","", true);
 
 $col = $dg->addColumn("شرح رویداد", "EventTitle");
 $col->editor = ColumnEditor::TextField();
@@ -31,6 +32,11 @@ $col->width = 120;
 $col = $dg->addColumn("شماره نامه", "LetterID");
 $col->renderer = "LoanEvent.LetterRender";
 $col->editor = ColumnEditor::NumberField(true);
+$col->width = 100;
+
+$col = $dg->addColumn("پیگیری کننده", "FollowUpPersonID");
+$col->editor = "this.PersonCombo";
+$col->renderer = "function(v,p,r){return r.data.FollowUpFullname }";
 $col->width = 100;
 
 $col = $dg->addColumn("تاریخ پیگیری", "FollowUpDate", GridColumn::ColumnType_date);
@@ -52,7 +58,7 @@ if($accessObj->RemoveFlag)
 	$col->width = 35;
 }
 $dg->height = 336;
-$dg->width = 585;
+$dg->width = 685;
 $dg->emptyTextOfHiddenColumns = true;
 $dg->EnableSearch = false;
 $dg->HeaderMenu = false;
@@ -79,6 +85,19 @@ LoanEvent.prototype = {
 
 function LoanEvent()
 {
+	this.PersonCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			proxy:{
+				type: 'jsonp',
+				url: this.address_prefix + '../../framework/management/framework.data.php?task=selectPersons&IsStaff=YES',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			fields :  ['PersonID','fullname']
+		}),
+		displayField: 'fullname',
+		valueField : "PersonID"
+	});
+	
 	this.grid = <?= $grid ?>;
 	this.grid.render(this.get("div_grid"));	
 }

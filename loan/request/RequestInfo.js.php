@@ -2300,7 +2300,7 @@ RequestInfo.prototype.ShowEvents = function(){
 			title: 'رویدادهای مرتبط با وام',
 			modal : true,
 			autoScroll : true,
-			width: 600,
+			width: 700, 
 			height : 400,
 			bodyStyle : "background-color:white",
 			closeAction : "hide",

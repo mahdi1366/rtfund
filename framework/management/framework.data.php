@@ -371,30 +371,30 @@ function SelectFollowUps(){
 	$dt = PdoDataAccess::runquery(" 
 		select 'letter' type, 'یادداشت نامه' title, LetterID ObjectID, 
 		concat_ws(' ','[',NoteTitle,']',NoteDesc) description
-		from OFC_LetterNotes where PersonID=:p AND " . PDONOW . "= ReminderDate
+		from OFC_LetterNotes where PersonID=:p AND ReminderDate=substr(" . PDONOW . ",1,10) 
 		
 		union all
 		
 		select 'letter' type, 'پاسخ به نامه' title, LetterID ObjectID, 
 		concat_ws(' ',LetterTitle,'[',SendComment,']')
 		from OFC_send join OFC_letters using(LetterID)
-		where ToPersonID=:p AND ResponseTimeout=" . PDONOW . "
+		where ToPersonID=:p AND ResponseTimeout=substr(" . PDONOW . ",1,10)
 		
 		union all
 		
 		select 'letter' type, 'پیگیری نامه' title, LetterID ObjectID, 
 		concat_ws(' ',LetterTitle,'[',SendComment,']')
 		from OFC_send join OFC_letters using(LetterID)
-		where FromPersonID=:p AND FollowUpDate=" . PDONOW . "
+		where FromPersonID=:p AND FollowUpDate=substr(" . PDONOW . ",1,10)
 	
 		union all
 		
 		select 'loan' type, 'رویداد وام' title, RequestID, EventTitle
 		from LON_events 
-		where FollowUpDate=" . PDONOW 
+		where FollowUpDate= substr(" . PDONOW . ",1,10) AND FollowUpPersonID=:p" 
 		
 	, array(":p" => $_SESSION["USER"]["PersonID"]));
-	print_r(ExceptionHandler::PopAllExceptions());
+	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();			
 }

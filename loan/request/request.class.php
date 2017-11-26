@@ -1005,7 +1005,8 @@ class LON_events extends OperationClass {
     public $EventDate;
 	public $LetterID;
 	public $FollowUpDate;
-	
+	public $FollowUpPersonID;
+	  
     function __construct($id = ""){
         
 		$this->DT_EventDate = DataMember::CreateDMA(DataMember::DT_DATE);
@@ -1017,8 +1018,11 @@ class LON_events extends OperationClass {
 	static function Get($where = '', $whereParams = array()) {
 		
 		return PdoDataAccess::runquery_fetchMode("
-			select e.*, concat_ws(' ',CompanyName, fname,lname) RegFullname
-			from LON_events e left join BSC_persons on(PersonID=RegPersonID)
+			select e.*, concat_ws(' ',p1.CompanyName,p1.fname,p1.lname) RegFullname, 
+				concat_ws(' ',p2.CompanyName,p2.fname,p2.lname) FollowUpFullname
+			from LON_events e 
+				left join BSC_persons p1 on(p1.PersonID=RegPersonID)
+				left join BSC_persons p2 on(p2.PersonID=FollowUpPersonID)
 			where 1=1 " . $where, $whereParams);
 	}
 	

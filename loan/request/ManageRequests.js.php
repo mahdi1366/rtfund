@@ -352,12 +352,12 @@ ManageRequest.prototype.Confirm = function()
 ManageRequest.prototype.ShowEvents = function(){
 
 	if(!this.EventsWin)
-	{
+	{  
 		this.EventsWin = new Ext.window.Window({
 			title: 'رویدادهای مرتبط با طرح',
 			modal : true,
 			autoScroll : true,
-			width: 600,
+			width: 700,
 			height : 400,
 			bodyStyle : "background-color:white",
 			closeAction : "hide",

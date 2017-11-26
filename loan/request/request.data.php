@@ -1649,6 +1649,9 @@ function SaveEvents(){
 	$obj = new LON_events();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
+	if(empty($obj->FollowUpPersonID))
+		$obj->FollowUpPersonID = $_SESSION["USER"]["PersonID"];
+	
 	if(empty($obj->EventID))
 	{
 		$obj->RegPersonID = $_SESSION["USER"]["PersonID"];
