@@ -77,6 +77,33 @@ class ATN_traffic extends OperationClass
 		$dt = PdoDataAccess::runquery($query, array(":p" => $PersonID, ":sd" => $StartDate, ":ed" => $EndDate));
 		//print_r(ExceptionHandler::PopAllExceptions());
 		//echo PdoDataAccess::GetLatestQueryString();die();
+		
+		//............ Reset wrong hourly off and mission requests .............
+		$currentDate = $dt[0]["TrafficDate"];
+		$index = 0;
+		for($i=0; $i<count($dt); $i++)
+		{
+			
+			if($dt[$i]["ReqType"] == "")
+			{
+				if($currentDate == $dt[$i]["TrafficDate"])
+					$index++;
+				else
+					$index = 1;
+			}				
+				
+			if($dt[$i]["ReqType"] == "OFF" || $dt[$i]["ReqType"] == "MISSION")
+			{
+				if($index == 1 && $dt[$i+1]["TrafficDate"] == $currentDate && $dt[$i+1]["TrafficTime"])
+				{
+					$dt[$i]["TrafficTime"] = $dt[$i+1]["TrafficTime"];
+					$temp = $dt[$i+1];
+					$dt[$i+1] = $dt[$i];
+					$dt[$i] = $temp;
+				}
+			}
+			$currentDate = $dt[$i]["TrafficDate"];
+		}		
 		//........................ create days array ..................
 
 		$index = 0;

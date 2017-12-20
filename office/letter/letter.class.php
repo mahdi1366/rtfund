@@ -259,6 +259,7 @@ class OFC_letters extends PdoDataAccess{
 		{
 			$content .= $this->OrgPost . " " . $this->organization . "<br>" ;
 			$content .= "<br> موضوع : " . $this->LetterTitle . "<br><br></b>";
+			$content .= str_replace("\r\n", "", $this->context);
 		}
 		foreach($dt as $row)
 		{

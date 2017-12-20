@@ -189,7 +189,9 @@ class LON_requests extends PdoDataAccess{
 	
 	static function ComputePayments2($RequestID, &$installments, $pdo = null){
 
-		$installments = LON_installments::GetValidInstallments($RequestID, $pdo);
+		$installments = PdoDataAccess::runquery("select * from 
+			LON_installments where RequestID=? AND history='NO' order by InstallmentDate", 
+			array($RequestID), $pdo);
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 
 		$returnArr = array();

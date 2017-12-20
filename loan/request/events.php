@@ -89,7 +89,7 @@ function LoanEvent()
 		store: new Ext.data.Store({
 			proxy:{
 				type: 'jsonp',
-				url: this.address_prefix + '../../framework/management/framework.data.php?task=selectPersons&IsStaff=YES',
+				url: '/framework/person/persons.data.php?task=selectPersons&IsStaff=YES',
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
 			fields :  ['PersonID','fullname']

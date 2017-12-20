@@ -185,12 +185,19 @@ function SplitYears($startDate, $endDate, $TotalAmount){
 	if(substr($endDate,0,1) == 2)
 		$endDate = DateModules::miladi_to_shamsi ($endDate);
 	
-	
 	$arr = preg_split('/[\-\/]/',$startDate);
 	$StartYear = $arr[0]*1;
 	
 	$totalDays = 0;
 	$yearDays = array();
+	
+	//............. startDate = enddate ...................
+	if($startDate == $endDate)
+	{
+		$yearDays[$StartYear] = $TotalAmount;
+	}
+	//.....................................................
+	
 	$newStartDate = $startDate;
 	while(DateModules::CompareDate($newStartDate, $endDate) < 0){
 		

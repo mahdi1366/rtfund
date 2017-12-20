@@ -279,9 +279,15 @@ TraceTraffic.DeleteRender = function(v,p,r)
 	}
 	if(r.data.IsActive == "YES" )
 		return "<div align='center' title='حذف' class='remove' "+
-		"onclick='TraceTrafficObj.DeleteTraffic();' " +
+		"onclick='TraceTrafficObj.DeleteTraffic(true);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;float:left;height:16'></div>";
+	if(r.data.IsActive == "NO" )
+		return "<div align='center' title='برگشت' class='undo' "+
+		"onclick='TraceTrafficObj.DeleteTraffic(false);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;float:left;height:16'></div>";
+
 }
 
 TraceTraffic.prototype.TrafficList = function(TrafficDate){
@@ -314,9 +320,10 @@ TraceTraffic.prototype.TrafficList = function(TrafficDate){
 
 }
 
-TraceTraffic.prototype.DeleteTraffic = function()
+TraceTraffic.prototype.DeleteTraffic = function(DeleteMode)
 {
-	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+	message = DeleteMode ? "آیا مایل به حذف می باشید؟" : "آیا مایل به برگشت می باشید؟";
+	Ext.MessageBox.confirm("",message, function(btn){
 		if(btn == "no")
 			return;
 		
@@ -330,6 +337,7 @@ TraceTraffic.prototype.DeleteTraffic = function()
 			url: me.address_prefix + 'traffic.data.php',
 			params:{
 				task: "DeleteTraffic",
+				DeleteMode : DeleteMode ? "delete" : "undo",
 				TrafficID : record.data.TrafficID
 			},
 			method: 'POST',

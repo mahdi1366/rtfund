@@ -1931,7 +1931,7 @@ function RegisterChangeInstallmentWage($DocID, $ReqObj,$PartObj, $InstallmentObj
 	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
 	if(!$LoanPersonTafsili)
 	{
-		ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->LoanPersonID . "]");
+		ExceptionHandler::PushException("تفصیلی وام گیرنده یافت نشد.[" . $ReqObj->LoanPersonID . "]");
 		return false;
 	}
 	if($LoanMode == "Agent")
@@ -1939,7 +1939,7 @@ function RegisterChangeInstallmentWage($DocID, $ReqObj,$PartObj, $InstallmentObj
 		$ReqPersonTafsili = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
 		if(!$ReqPersonTafsili)
 		{
-			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $ReqObj->ReqPersonID . "]");
+			ExceptionHandler::PushException("تفصیلی سرمایه گذار یافت نشد.[" . $ReqObj->ReqPersonID . "]");
 			return false;
 		}
 	}	
@@ -2006,6 +2006,7 @@ function RegisterChangeInstallmentWage($DocID, $ReqObj,$PartObj, $InstallmentObj
 		$years = SplitYears($newDate, $InstallmentObj->InstallmentDate, $wage);
 	else
 		$years = SplitYears($InstallmentObj->InstallmentDate, $newDate, $wage);
+	
 	foreach($years as $Year => $amount)
 	{
 		if($amount == 0)
@@ -2013,7 +2014,7 @@ function RegisterChangeInstallmentWage($DocID, $ReqObj,$PartObj, $InstallmentObj
 		$YearTafsili = FindTafsiliID($Year, TAFTYPE_YEARS);
 		if(!$YearTafsili)
 		{
-			ExceptionHandler::PushException("تفصیلی مربوطه یافت نشد.[" . $Year . "]");
+			ExceptionHandler::PushException("تفصیلی سال یافت نشد.[" . $Year . "]");
 			return false;
 		}
 		unset($itemObj->ItemID);

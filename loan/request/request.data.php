@@ -749,115 +749,94 @@ function DelayInstallments(){
 	if($_POST["IsRemainCompute"] == "0")
 	{
 		$dt = LON_installments::SelectAll("r.RequestID=? AND InstallmentID>=?", 
-				array($RequestID, $InstallmentID));
-		
-		$newDate = DateModules::shamsi_to_miladi($newDate, "-");
-		$days = DateModules::GDateMinusGDate($newDate, $dt[0]["InstallmentDate"]);
-		$prevExtraAmount = 0;
-		for($i=0; $i<count($dt); $i++)
-		{
-			$obj = new LON_installments($dt[$i]["InstallmentID"]);
-			$obj->IsDelayed = "YES";
-			if(!$obj->EditInstallment($pdo))
-			{
-				$pdo->rollBack ();
-				echo Response::createObjectiveResponse(false, "1");
-				die();
-			}
-			//...........................................
-
-			$obj2 = new LON_installments();
-			$obj2->RequestID = $RequestID;
-			$obj2->InstallmentDate = DateModules::AddToGDate($dt[$i]["InstallmentDate"], $days);
-
-			if($i == 0 && $newAmount != "" && $newAmount <> $dt[$i]["InstallmentAmount"])
-			{
-				$extraWage = 0;
-				$extraWage = round($dt[$i]["InstallmentAmount"]*$PartObj->CustomerWage*$days/36500);
-				$days2 = DateModules::GDateMinusGDate($dt[$i+1]["InstallmentDate"], $dt[$i]["InstallmentDate"]);
-				$extraWage += round( ($dt[$i]["InstallmentAmount"]*1-$newAmount)*
-					$PartObj->CustomerWage*$days2/36500 );
-				$prevExtraAmount = $dt[$i]["InstallmentAmount"]*1-$newAmount;
-				$obj2->InstallmentAmount = $newAmount + $extraWage;
-			}
-			else
-			{
-				$extraWage = round($dt[$i]["InstallmentAmount"]*$PartObj->CustomerWage*$days/36500);
-				$obj2->InstallmentAmount = $dt[$i]["InstallmentAmount"]*1 + $extraWage + $prevExtraAmount;
-				$prevExtraAmount = 0;
-			}
-			if(!$obj2->AddInstallment($pdo))
-			{
-				$pdo->rollBack ();
-				echo Response::createObjectiveResponse(false, "2");
-				die();
-			}
-			
-			$DocID = RegisterChangeInstallmentWage($DocID, $ReqObj, $PartObj, 
-						$obj, $obj2->InstallmentDate, $extraWage, $pdo);
-		}
+			array($RequestID, $InstallmentID));
 	}
 	else
 	{
-		$dt = array();		
-		$dt2 = LON_requests::ComputePayments2($RequestID);
-		$index = 0;
-		$ComputeRecord = $dt2[$index++];
-		
-		$days = 0;
-		for($i=0; $i<count($dt); $i++)
-		{
-			if($dt[$i]["InstallmentID"] < $InstallmentID)
-			{
-				while($ComputeRecord["InstallmentID"] == $dt[$i]["InstallmentID"])
-					$ComputeRecord = $dt2[++$index];
-				continue;
-			}
-			$remain = 0;
-			while($ComputeRecord["InstallmentID"] == $dt[$i]["InstallmentID"])
-			{
-				$remain = $ComputeRecord["remainder"];
-				$ComputeRecord = $index+1<count($dt2) ? $dt2[++$index] : null;
-			}
-			
-			$obj = new LON_installments();
-			$obj->InstallmentID = $dt[$i]["InstallmentID"];
-			$obj->IsDelayed = "YES";
-			if(!$obj->EditInstallment($pdo))
-			{
-				$pdo->rollBack ();
-				echo Response::createObjectiveResponse(false, "1");
-				die();
-			}
-			//...........................................
-
-			if($days == 0)
-			{
-				$newDate = DateModules::shamsi_to_miladi($newDate, "-");
-				$days = DateModules::GDateMinusGDate($newDate, $dt[$i]["InstallmentDate"]);
-			}
-
-			$obj = new LON_installments();
-			$obj->RequestID = $RequestID;
-			$obj->InstallmentDate = DateModules::AddToGDate($dt[$i]["InstallmentDate"], $days);
-
-			$extraWage = round($remain*$PartObj->CustomerWage*$days/36500);
-
-			$obj->InstallmentAmount = $dt[$i]["InstallmentAmount"]*1 + $extraWage;
-			if(!$obj->AddInstallment($pdo))
-			{
-				$pdo->rollBack ();
-				echo Response::createObjectiveResponse(false, "2");
-				die();
-			}
-		}
+		$dt = array();
+		LON_requests::ComputePayments2($RequestID, $dt);
 	}
+	
+	$prevExtraAmount = 0;
+	for($i=0; $i<count($dt); $i++)
+	{
+		if($dt[$i]["InstallmentID"] == $InstallmentID)
+		{
+			$newDate = DateModules::shamsi_to_miladi($newDate, "-");
+			$days = DateModules::GDateMinusGDate($newDate, $dt[$i]["InstallmentDate"]);
+		}
+		if($dt[$i]["InstallmentID"] < $InstallmentID)
+			continue;
+		if($_POST["ContinueToEnd"] == "0" && $dt[$i]["InstallmentID"] > $InstallmentID)
+		{
+			if($prevExtraAmount > 0)
+			{
+				$obj = new LON_installments($dt[$i]["InstallmentID"]);
+				$obj->InstallmentAmount = $obj->InstallmentAmount*1 + $prevExtraAmount;
+				if(!$obj->EditInstallment($pdo))
+				{
+					$pdo->rollBack ();
+					echo Response::createObjectiveResponse(false, "1");
+					die();
+				}
+				$prevExtraAmount = 0;
+			}
+			break;
+		}
+				
+		$obj = new LON_installments($dt[$i]["InstallmentID"]);
+		$obj->IsDelayed = "YES";
+		if(!$obj->EditInstallment($pdo))
+		{
+			$pdo->rollBack ();
+			echo Response::createObjectiveResponse(false, "1");
+			die();
+		}
+		//...........................................
+
+		$obj2 = new LON_installments();
+		$obj2->RequestID = $RequestID;
+		$obj2->InstallmentDate = DateModules::AddToGDate($dt[$i]["InstallmentDate"], $days);
+
+		$ComputeInstallmentAmount = $dt[$i]["InstallmentAmount"]*1;
+		if($_POST["IsRemainCompute"] == "1")
+		{
+			$ComputeInstallmentAmount = $dt[$i]["TotalRemainder"]*1;
+			if($dt[$i]["TotalRemainder"]*1 > $dt[$i]["InstallmentAmount"]*1)
+				$ComputeInstallmentAmount = $dt[$i]["InstallmentAmount"]*1;
+		}
+		
+		if($dt[$i]["InstallmentID"] == $InstallmentID && $newAmount != "" && $newAmount <> $dt[$i]["InstallmentAmount"])
+		{
+			$extraWage = 0;
+			$extraWage = round($ComputeInstallmentAmount*$PartObj->CustomerWage*$days/36500);
+			$days2 = DateModules::GDateMinusGDate($dt[$i+1]["InstallmentDate"], $dt[$i]["InstallmentDate"]);
+			$extraWage += round( ($ComputeInstallmentAmount-$newAmount)*$PartObj->CustomerWage*$days2/36500 );
+			$prevExtraAmount = $ComputeInstallmentAmount-$newAmount;
+			$obj2->InstallmentAmount = $newAmount + $extraWage;
+		}
+		else
+		{
+			$extraWage = round($ComputeInstallmentAmount*$PartObj->CustomerWage*$days/36500);
+			$obj2->InstallmentAmount = $dt[$i]["InstallmentAmount"]*1 + $extraWage + $prevExtraAmount;
+			$prevExtraAmount = 0;
+		}
+		if(!$obj2->AddInstallment($pdo))
+		{
+			$pdo->rollBack ();
+			echo Response::createObjectiveResponse(false, "2");
+			die();
+		}
+
+		/*$DocID = RegisterChangeInstallmentWage($DocID, $ReqObj, $PartObj, 
+					$obj, $obj2->InstallmentDate, $extraWage, $pdo);*/
+	}
+
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
 		$pdo->rollBack ();
 		
-		print_r(ExceptionHandler::PopAllExceptions());
-		echo Response::createObjectiveResponse(false, "");
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
 	

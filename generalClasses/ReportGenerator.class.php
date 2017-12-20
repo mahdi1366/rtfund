@@ -90,6 +90,29 @@ class ReportGenerator {
 	}
 
 	static function array_sort($array, $key, $order = SORT_ASC) {
+		
+		$groupArrays = array();
+		if (count($array) == 0) 
+			return $array;
+		
+		foreach ($array as $row) {
+			
+			if(!isset($groupArrays[ $row[$key] ]))
+				$groupArrays[ $row[$key] ] = array();
+			$groupArrays[ $row[$key] ][] = $row;
+		}
+
+		$returnArr = array();
+		foreach($groupArrays as $key => $GArr)
+			foreach($GArr as $row)
+				$returnArr[] = $row;
+
+		return $returnArr;
+		
+		
+		
+		
+		
 		$new_array = array();
 		$sortable_array = array();
 

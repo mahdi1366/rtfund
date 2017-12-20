@@ -11,12 +11,15 @@ require_once inc_CurrencyModule;
 
 if(isset($_REQUEST["show"]))
 {
-	$query = "select b1.BlockCode,b1.BlockDesc,
-			d.DocDate,
-			if(d.DocType=".DOCTYPE_ENDCYCLE.",1,0) IsEndDoc,
-			b.InfoDesc TafsiliType,
-			t.TafsiliDesc,
-			t2.TafsiliDesc TafsiliDesc2,
+	$query = "select 
+			b1.essence,
+			b1.BlockCode kol_code,
+			b1.BlockDesc kol_desc,
+			DocType,
+			DocDate,
+			if(DocType in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE."), DocDate, 
+			substr(g2j(DocDate),6,2)  ) DocDate2,
+			di.details,
 			di.details,
 			sum(DebtorAmount) DSUM, 
 			sum(CreditorAmount) CSUM
@@ -26,8 +29,6 @@ if(isset($_REQUEST["show"]))
 			join ACC_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
 			left join BaseInfo b on(di.TafsiliType=InfoID AND TypeID=2)
-			left join ACC_tafsilis t on(t.TafsiliID=di.TafsiliID)
-			left join ACC_tafsilis t2 on(t2.TafsiliID=di.TafsiliID2)
 			
 		where d.CycleID=" . $_SESSION["accounting"]["CycleID"];
 	
@@ -42,22 +43,43 @@ if(isset($_REQUEST["show"]))
 	{
 		$query .= " AND d.DocDate <= :q2 ";
 		$whereParam[":q2"] = DateModules::shamsi_to_miladi($_POST["toDate"], "-");
-	}
-	
+	} 
+	if(!empty($_POST["BranchID"]))
+	{
+		$query .= " AND d.BranchID = :b ";
+		$whereParam[":b"] = $_POST["BranchID"];
+	} 
+	if(!empty($_POST["level1"]))
+	{
+		$query .= " AND cc.level1 = :l1 ";
+		$whereParam[":l1"] = $_POST["level1"];
+	} 
+	 
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.DocStatus != 'RAW' ";
 	
-	$query .= " group by if(DocType=".DOCTYPE_ENDCYCLE.",2,1),b1.blockCode,DocDate ";
-	$query .= " order by b1.blockCode,if(DocType=".DOCTYPE_ENDCYCLE.",2,1),DocDate,if(DebtorAmount<>0,0,1)";
+	$query .= " group by if ( DocType not in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE.") , 2, DocType),
+						 if(DocType in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE."), DocDate, substr(g2j(DocDate),6,2)  ),
+						 b1.BlockDesc ";
+	$query .= " order by b1.BlockCode, if ( DocType not in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE.") , 2, DocType),
+						if(DocType in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE."), DocDate, substr(g2j(DocDate),6,2)  ),
+						if(DebtorAmount>0,0,1),b1.BlockCode,DSUM,CSUM";
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
-	//echo PdoDataAccess::GetLatestQueryString();
+	
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		//print_r(ExceptionHandler::PopAllExceptions());
+		//echo PdoDataAccess::GetLatestQueryString();
+	}
+		
 	$rpg = new ReportGenerator();
-	//$rpg->rowNumber = false;
-	//$rpg->page_size = 20;
-	//$rpg->paging = true;
+	$rpg->rowNumber = true;
+	$rpg->page_size = 30;
+	$rpg->paging = true;
 	$rpg->excel = !empty($_POST["excel"]);
-	$rpg->mysql_resource = $dataTable;if(!$rpg->excel)
+	$rpg->mysql_resource = $dataTable;
+	if(!$rpg->excel)
 	{
 		BeginReport();
 		$rpg->headerContent = 
@@ -78,38 +100,62 @@ if(isset($_REQUEST["show"]))
 		$rpg->headerContent .= "</td></tr></table>";
 	}
 
-	$rpg->groupPerPage = true;
-	$rpg->groupField = "BlockCode";
-	$rpg->groupLabelRender = "GroupRender";
+	function DocDateRender($row, $value){
+		
+		if($row["DocType"] == DOCTYPE_STARTCYCLE || $row["DocType"] == DOCTYPE_ENDCYCLE)
+			return DateModules::miladi_to_shamsi ($value);
+		
+		$DocDate = DateModules::miladi_to_shamsi($row["DocDate"]);
+		$year = DateModules::GetYear($DocDate);
+		return $year . "/" . $value . "/" . DateModules::DaysOfMonth($year,$value*1);
+	}
+	
+	function RemainRender(&$row, $value, $x, $prevRow){
+		
+		if($prevRow["kol_code"] != $row["kol_code"])
+			$prevRow["Sum"] = 0;
+		
+		$row["Sum"] = $prevRow["Sum"] + $row["DSUM"] - $row["CSUM"] ;
+			//($row["essence"] == "DEBTOR" ? $row["DSUM"] - $row["CSUM"] : $row["CSUM"] - $row["DSUM"] );
+		return number_format($row["Sum"]);
+	}
+	
 	function GroupRender($row, $index){
-		return "حساب کل : [ " . $row["BlockCode"] . " ] " . $row["BlockDesc"];
+		return "[ " . $row["kol_code"] . " ] " . $row["kol_desc"];
 	}
+	
+	function DocDescRender($row, $value){
+		
+		if($row["DocType"] == DOCTYPE_STARTCYCLE)
+			return "افتتاحیه";
+		if($row["DocType"] == DOCTYPE_ENDCYCLE)
+			return "اختتامیه";
+		
+		return DateModules::GetMonthName($row["DocDate2"]*1);
+	}
+	
+	$rpg->addColumn("کل", "kol_code");
+	
+	$rpg->groupField = "kol_code";
+	$rpg->groupLabel = true;
+	$rpg->groupLabelRender = "GroupRender";
+	$rpg->groupPerPage = true;
+	$rpg->GroupSortSource = false;
+	
+	$rpg->addColumn("تاریخ سند", "DocDate2", "DocDateRender");
+	$rpg->addColumn("شرح سند", "DocType", "DocDescRender");
+	$col = $rpg->addColumn("بدهکار", "DSUM", "ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpg->addColumn("بستانکار", "CSUM", "ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpg->addColumn("مانده", "essence", "RemainRender");
 
-	$rpg->addColumn("تاریخ سند", "DocDate","ReportDateRender");
-	$rpg->addColumn("بدهکار", "DSUM","ReportMoneyRender");
-	$rpg->addColumn("بستانکار", "CSUM","ReportMoneyRender");
-	
-	function bdremainRender($row){
-		$v = $row["DSUM"] - $row["CSUM"];
-		return $v < 0 ? 0 : number_format($v);
-	}
-	
-	function bsremainRender($row){
-		$v = $row["CSUM"] - $row["DSUM"];
-		return $v < 0 ? 0 : number_format($v);
-	}
-	
-	$col = $rpg->addColumn("مانده بدهکار", "DSUM", "bdremainRender");
-	$col->EnableSummary(true);
-	$col = $rpg->addColumn("مانده بستانکار", "CSUM", "bsremainRender");
-	$col->EnableSummary(true);
-	
 	echo $rpg->generateReport();
 	die();
 }
 ?>
 <script>
-AccReport_daily.prototype = {
+AccReport_kolBook.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
@@ -118,7 +164,7 @@ AccReport_daily.prototype = {
 	}
 }
 
-AccReport_daily.prototype.showReport = function(btn, e)
+AccReport_kolBook.prototype.showReport = function(btn, e)
 {
 	this.form = this.get("mainForm")
 	this.form.target = "_blank";
@@ -129,7 +175,7 @@ AccReport_daily.prototype.showReport = function(btn, e)
 	return;
 }
 
-function AccReport_daily()
+function AccReport_kolBook()
 {
 	this.formPanel = new Ext.form.Panel({
 		renderTo : this.get("main"),
@@ -139,12 +185,31 @@ function AccReport_daily()
 			columns :2
 		},
 		bodyStyle : "text-align:right;padding:5px",
-		title : "گزارش  دفتر روزنامه",
+		title : "گزارش  دفتر کل",
 		defaults : {
 			labelWidth :120
 		},
 		width : 600,
 		items :[{
+			xtype : "combo",
+			colspan : 2,
+			width : 400,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: "/accounting/global/domain.data.php?task=GetAccessBranches",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BranchID','BranchName'],
+				autoLoad : true					
+			}),
+			fieldLabel : "شعبه",
+			queryMode : 'local',
+			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
+			displayField : "BranchName",
+			valueField : "BranchID",
+			hiddenName : "BranchID"
+		},{
 			xtype : "shdatefield",
 			name : "fromDate",
 			fieldLabel : "تاریخ سند از"
@@ -166,7 +231,7 @@ function AccReport_daily()
 			handler : Ext.bind(this.showReport,this),
 			listeners : {
 				click : function(){
-					AccReport_dailyObj.get('excel').value = "true";
+					AccReport_kolBookObj.get('excel').value = "true";
 				}
 			},
 			iconCls : "excel"
@@ -174,14 +239,14 @@ function AccReport_daily()
 			text : "پاک کردن گزارش",
 			iconCls : "clear",
 			handler : function(){
-				AccReport_dailyObj.formPanel.getForm().reset();
-				AccReport_dailyObj.get("mainForm").reset();
+				AccReport_kolBookObj.formPanel.getForm().reset();
+				AccReport_kolBookObj.get("mainForm").reset();
 			}			
 		}]
 	});
 }
 
-AccReport_dailyObj = new AccReport_daily();
+AccReport_kolBookObj = new AccReport_kolBook();
 </script>
 <form id="mainForm">
 	<center><br>

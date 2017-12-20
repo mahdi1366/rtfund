@@ -11,14 +11,24 @@ require_once inc_CurrencyModule;
 
 if(isset($_REQUEST["show"]))
 {
-	$query = "select concat_ws(' - ',b1.BlockDesc, b2.BlockDesc, b3.BlockDesc, b4.BlockDesc) CostDesc,
+	$query = "select 
 			cc.CostCode,
-			d.DocDate,
+			b1.BlockCode level1_code,
+			b1.BlockDesc level1_desc,
+			concat_ws('-',b1.BlockCode,b2.BlockCode) level2_code,
+			concat_ws('-',b1.BlockDesc,b2.BlockDesc) level2_desc,
+			concat_ws('-',b1.BlockCode,b2.BlockCode,b3.BlockCode) level3_code,
+			concat_ws('-',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc) level3_desc,
+			concat_ws('-',b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode) level4_code,
+			concat_ws('-',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) level4_desc,
+			concat_ws('-',b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode,t.TafsiliID) level5_code,
+			concat_ws('-',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc,t.TafsiliDesc) level5_desc,
+			concat_ws('-',b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode,t.TafsiliID,t2.TafsiliID) level6_code,
+			concat_ws('-',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc,t.TafsiliDesc,t2.TafsiliDesc) level6_desc,
+			DocType,
+			DocDate,
+			if(DocType in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE."), DocDate, substr(g2j(DocDate),6,2)  ) DocDate2,
 			if(d.DocType=".DOCTYPE_ENDCYCLE.",1,0) IsEndDoc,
-			b.InfoDesc TafsiliType,
-			t.TafsiliDesc,
-			t2.TafsiliDesc TafsiliDesc2,
-			di.details,
 			di.details,
 			sum(DebtorAmount) DSUM, 
 			sum(CreditorAmount) CSUM
@@ -30,7 +40,6 @@ if(isset($_REQUEST["show"]))
 			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
 			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
-			left join BaseInfo b on(di.TafsiliType=InfoID AND TypeID=2)
 			left join ACC_tafsilis t on(t.TafsiliID=di.TafsiliID)
 			left join ACC_tafsilis t2 on(t2.TafsiliID=di.TafsiliID2)
 			
@@ -47,15 +56,36 @@ if(isset($_REQUEST["show"]))
 	{
 		$query .= " AND d.DocDate <= :q2 ";
 		$whereParam[":q2"] = DateModules::shamsi_to_miladi($_POST["toDate"], "-");
-	}
-	
+	} 
+	if(!empty($_POST["BranchID"]))
+	{
+		$query .= " AND d.BranchID = :b ";
+		$whereParam[":b"] = $_POST["BranchID"];
+	} 
+	 
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.DocStatus != 'RAW' ";
 	
-	$query .= " group by if(DocType=".DOCTYPE_ENDCYCLE.",2,1),DocDate,ItemID ";
-	$query .= " order by if(DocType=".DOCTYPE_ENDCYCLE.",2,1),DocDate,if(DebtorAmount<>0,0,1),cc.CostCode";
+	$group = $_POST['ReportLevel'];
+	if($_POST["ReportDate"] == "month")
+		$groupDate = "if(DocType in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE."), DocDate, substr(g2j(DocDate),6,2)  )";
+	else
+		$groupDate = "DocDate";
+	
+	$query .= " group by if ( DocType not in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE.") , 2, DocType),
+						 $groupDate,
+						 ".$group."_code,if(DebtorAmount>0,0,1) ";
+	$query .= " order by if ( DocType not in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE.") , 2, DocType),
+						$groupDate,
+						if(DebtorAmount>0,0,1),".$group."_code,DSUM,CSUM";
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
+	
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		//print_r(ExceptionHandler::PopAllExceptions());
+		//echo PdoDataAccess::GetLatestQueryString();
+	}
 	
 	$curDate = '';
 	$index = 0;
@@ -63,25 +93,38 @@ if(isset($_REQUEST["show"]))
 	for($i=0; $i < count($dataTable); $i++)
 	{
 		$row = & $dataTable[$i];
-		if($curDate != $row["DocDate"] || $curIsEndDoc != $row["IsEndDoc"])
+		
+		if($row["DocType"] == DOCTYPE_STARTCYCLE || $row["DocType"] == DOCTYPE_ENDCYCLE)
+			$DocDate2 = DateModules::miladi_to_shamsi ($row["DocDate"]);
+		else
+		{
+			if($_POST["ReportDate"] == "month")
+			{
+				$DocDate = DateModules::miladi_to_shamsi($row["DocDate"]);
+				$year = DateModules::GetYear($DocDate);
+				$DocDate2 = $year . "/" . $row["DocDate2"] . "/" . DateModules::DaysOfMonth($year,$row["DocDate2"]*1);
+			}
+			else
+				$DocDate2 = DateModules::miladi_to_shamsi($row["DocDate"]);
+		}
+		
+		if($curDate != $DocDate2)
 		{
 			$index++;
-			$curDate = $row["DocDate"];
-			$j_curDate = DateModules::miladi_to_shamsi($row["DocDate"]);
-			$curIsEndDoc = $row["IsEndDoc"];
+			$curDate = $DocDate2;
 		}		
 		
 		$row["DocNo"] = $index;
-		$row["DocDate"] = $j_curDate;
+		$row["NewDocDate"] = $DocDate2;
 	}
 	
 	$rpg = new ReportGenerator();
-	$rpg->rowNumber = false;
-	$rpg->page_size = 20;
+	$rpg->rowNumber = true;
+	$rpg->page_size = $_POST["PageRecord"]*1 + 4;
 	$rpg->paging = true;
 	$rpg->excel = !empty($_POST["excel"]);
-	//echo PdoDataAccess::GetLatestQueryString();
-	$rpg->mysql_resource = $dataTable;if(!$rpg->excel)
+	$rpg->mysql_resource = $dataTable;
+	if(!$rpg->excel)
 	{
 		BeginReport();
 		$rpg->headerContent = 
@@ -101,16 +144,17 @@ if(isset($_REQUEST["show"]))
 		}
 		$rpg->headerContent .= "</td></tr></table>";
 	}
-
-	$rpg->addColumn("شماره سریال", "DocNo");
-	$rpg->addColumn("تاریخ سند", "DocDate");
-	$rpg->addColumn("کد حساب", "CostCode");
-	$rpg->addColumn("حساب", "CostDesc");
-	$rpg->addColumn("تفصیلی", "TafsiliDesc");
-	$rpg->addColumn("تفصیلی2", "TafsiliDesc2");
-	$rpg->addColumn("شرح", "details");
-	$rpg->addColumn("بدهکار", "DSUM");
-	$rpg->addColumn("بستانکار", "CSUM");
+	
+	$rpg->addColumn("شماره سریال", "DocNo"); 
+	$rpg->addColumn("تاریخ سند", "NewDocDate");
+	
+	$rpg->addColumn("کد حساب", $group . "_code"); 
+	$rpg->addColumn("شرح حساب", $group . "_desc");
+	
+	$col = $rpg->addColumn("بدهکار", "DSUM", "ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpg->addColumn("بستانکار", "CSUM", "ReportMoneyRender");
+	$col->EnableSummary();
 
 	echo $rpg->generateReport();
 	die();
@@ -153,6 +197,39 @@ function AccReport_daily()
 		},
 		width : 600,
 		items :[{
+			xtype : "combo",
+			colspan : 2,
+			width : 400,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: "/accounting/global/domain.data.php?task=GetAccessBranches",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BranchID','BranchName'],
+				autoLoad : true					
+			}),
+			fieldLabel : "شعبه",
+			queryMode : 'local',
+			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
+			displayField : "BranchName",
+			valueField : "BranchID",
+			hiddenName : "BranchID"
+		},{
+			xtype : "fieldset",
+			title : "گزارش بر اساس",
+			colspan : 2,
+			html : "<input type=radio checked name=ReportLevel value='level1'>کل" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+					"<input type=radio name=ReportLevel value='level2'>معین" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+					"<input type=radio name=ReportLevel value='level3'>جزء معین" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+					"<input type=radio name=ReportLevel value='level4'>جزء معین2" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+					"<input type=radio name=ReportLevel value='level5'>تفصیلی" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+					"<input type=radio name=ReportLevel value='level6'>تفصیلی2" + "<br><br>" + 
+					
+					"<input type=radio checked name=ReportDate value='month'>ماهانه" + "&nbsp;&nbsp;&nbsp; " + 
+					"<input type=radio name=ReportDate value='day'>روزانه" + "&nbsp;&nbsp;&nbsp; "
+					
+		},{
 			xtype : "shdatefield",
 			name : "fromDate",
 			fieldLabel : "تاریخ سند از"
@@ -161,9 +238,15 @@ function AccReport_daily()
 			name : "toDate",
 			fieldLabel : "تا"
 		},{
+			xtype : "textfield",
+			value : 26,
+			colspan : 2,
+			fieldLabel : "تعداد رکورد در صفحه",
+			name : "PageRecord"
+		},{
 			xtype : "container",
 			colspan : 2,
-			html : "<input type=checkbox name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
+			html : "&nbsp;<input type=checkbox name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",

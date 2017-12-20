@@ -78,7 +78,7 @@ $dg->emptyTextOfHiddenColumns = true;
 $dg->EnableSearch = false;
 $dg->HeaderMenu = false;
 $dg->EnablePaging = false;
-$dg->DefaultSortField = "InstallmentDate";
+$dg->DefaultSortField = "InstallmentID";
 $dg->DefaultSortDir = "ASC";
 $dg->title = "جدول اقساط";
 $dg->autoExpandColumn = "InstallmentAmount";
@@ -420,6 +420,11 @@ Installment.prototype.DelayInstallments = function(){
 				boxLabel : "محاسبه کارمزد بر اساس باقیمانده قسط باشد",
 				inputValue : 1,
 				name : "IsRemainCompute"
+			},{
+				xtype : "checkbox",
+				boxLabel : "تمدید برای کلیه اقساط بعدی نیز انجام شود",
+				inputValue : 1,
+				name : "ContinueToEnd"
 			}],
 			closeAction : "hide",
 			buttons : [{
@@ -448,7 +453,8 @@ Installment.prototype.DelayInstallments = function(){
 							InstallmentID : record.data.InstallmentID,
 							newDate : me.delayWin.down("[name=newDate]").getRawValue(),
 							newAmount : me.delayWin.down("[name=newAmount]").getValue(),
-							IsRemainCompute : me.delayWin.down("[name=IsRemainCompute]").checked ? 1 : 0
+							IsRemainCompute : me.delayWin.down("[name=IsRemainCompute]").checked ? 1 : 0,
+							ContinueToEnd : me.delayWin.down("[name=ContinueToEnd]").checked ? 1 : 0
 						},
 						success: function(response){
 							mask.hide();

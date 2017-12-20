@@ -3,14 +3,13 @@
 // programmer:	Jafarkhani
 // create Date:	94.10
 //---------------------------
-
 require_once '../header.inc.php';
 require_once(inc_response);
 require_once inc_dataReader;
 require_once 'letter.class.php';
 require_once '../dms/dms.class.php';
 require_once '../../framework/person/persons.class.php';
-
+			
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 if(!empty($task))
 	$task();    
@@ -282,7 +281,8 @@ function SaveLetter($dieing = true) {
 
     $Letter = new OFC_letters();
     pdoDataAccess::FillObjectByArray($Letter, $_POST);
-
+	$Letter->context = InputValidation::filteyByHTMLPurifier($Letter->context);
+	
 	if($Letter->RefLetterID != "")
 	{
 		$obj = new OFC_letters($Letter->RefLetterID);

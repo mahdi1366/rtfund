@@ -80,11 +80,12 @@ function AccessGroup(){
 		store: new Ext.data.Store({
 			proxy:{
 				type: 'jsonp',
-				url: this.address_prefix + '../management/framework.data.php?task=selectPersons',
+				url: this.address_prefix + '../person/persons.data.php?task=selectPersons',
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
 			fields :  ['PersonID','fullname']
 		}),
+		pageSize : 25,
 		fieldLabel : "کاربر",
 		displayField: 'fullname',
 		valueField : "PersonID",

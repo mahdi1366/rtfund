@@ -243,7 +243,8 @@ function SelectDayTraffics(){
 function DeleteTraffic(){
 	
 	$TrafficID = $_POST["TrafficID"];
-	PdoDataAccess::runquery("update ATN_traffic set IsActive='NO' where TrafficID=?",
+	$mode = $_POST["DeleteMode"] == "delete" ? "NO" : "YES";
+	PdoDataAccess::runquery("update ATN_traffic set IsActive='".$mode."' where TrafficID=?",
 		array($TrafficID));
 	echo Response::createObjectiveResponse(true, "");
 	die();
