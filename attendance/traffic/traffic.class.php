@@ -70,21 +70,23 @@ class ATN_traffic extends OperationClass
 				  and tr.PersonID=r.PersonID)
 				left join ATN_shifts s on(ifnull(r.ShiftID,ps.ShiftID)=s.ShiftID)
 				where tr.PersonID=:p AND tr.ToDate is null AND tr.ReqType not in('EXTRA' ,'CHANGE_SHIFT')
-					AND tr.ReqStatus=2 AND tr.FromDate>= :sd
+					AND tr.ReqStatus=2 AND tr.FromDate>= :sd and tr.FromDate <= :ed 
 
 			)t2
 			order by  TrafficDate,TrafficTime,ReqType";
 		$dt = PdoDataAccess::runquery($query, array(":p" => $PersonID, ":sd" => $StartDate, ":ed" => $EndDate));
 		//print_r(ExceptionHandler::PopAllExceptions());
-		//echo PdoDataAccess::GetLatestQueryString();die();
-		
+		if($_SESSION["USER"]["UserName"] = "admin")
+		{
+			//echo PdoDataAccess::GetLatestQueryString();die();
+		}
 		//............ Reset wrong hourly off and mission requests .............
 		$currentDate = $dt[0]["TrafficDate"];
 		$index = 0;
 		for($i=0; $i<count($dt); $i++)
 		{
 			
-			if($dt[$i]["ReqType"] == "")
+			if($dt[$i]["ReqType"] == "" || $dt[$i]["ReqType"] == "CORRECT" )
 			{
 				if($currentDate == $dt[$i]["TrafficDate"])
 					$index++;
@@ -94,14 +96,15 @@ class ATN_traffic extends OperationClass
 				
 			if($dt[$i]["ReqType"] == "OFF" || $dt[$i]["ReqType"] == "MISSION")
 			{
-				if($index == 1 && $dt[$i+1]["TrafficDate"] == $currentDate && $dt[$i+1]["TrafficTime"])
+				if($index == 1 && $i+1 < count($dt) && $dt[$i+1]["TrafficDate"] == $currentDate && 
+						$dt[$i]["TrafficTime"] < $dt[$i+1]["TrafficTime"])
 				{
 					$dt[$i]["TrafficTime"] = $dt[$i+1]["TrafficTime"];
 					$temp = $dt[$i+1];
 					$dt[$i+1] = $dt[$i];
 					$dt[$i] = $temp;
 				}
-			}
+			} 
 			$currentDate = $dt[$i]["TrafficDate"];
 		}		
 		//........................ create days array ..................
@@ -278,10 +281,10 @@ class ATN_traffic extends OperationClass
 					$returnArr[$i]["ToTime"] = $returnArr[$i]["ExceptToTime"];
 				}
 				//....................................................
-				$returnStr .= substr($returnArr[$i]["TrafficTime"],0,5);
 				if($returnArr[$i]["ReqType"] == "OFF" || $returnArr[$i]["ReqType"] == "MISSION")
 				{
-					$returnStr .= " - " . substr($returnArr[$i]["EndTime"],0,5);
+					$returnStr .= "<span style=color:red>" . substr($returnArr[$i]["TrafficTime"],0,5) .
+						" - " . substr($returnArr[$i]["EndTime"],0,5) . "</span>";
 					$index++;
 					//-------------------------------------
 					$startOff = strtotime($returnArr[$i]["TrafficTime"]);
@@ -294,6 +297,8 @@ class ATN_traffic extends OperationClass
 				}
 				else 
 				{
+					$returnStr .= substr($returnArr[$i]["TrafficTime"],0,5);
+					
 					if($index % 2 == 0)
 					{
 						$totalAttend += strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i-1]["TrafficTime"]);
