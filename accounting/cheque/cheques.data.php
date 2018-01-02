@@ -479,17 +479,26 @@ function editCheque(){
 		die();
 	}
 	
-	ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, INCOMECHEQUE_EDIT, $pdo, "مبلغ قبلی : " .
-			number_format($obj->ChequeAmount) . "<br>دلیل تغییر : " . $_POST["reason"]);
+	$comment = "";
+	if($obj->ChequeAmount != $_POST["newAmount"])
+		$comment .= "مبلغ قبلی : " . number_format($obj->ChequeAmount) . "<br>";
+	if($obj->ChequeDate != $_POST["newDate"])
+		$comment .= "تاریخ قبلی : " . DateModules::miladi_to_shamsi($obj->ChequeDate) . "<br>";
+	$comment .= "دلیل تغییر : " . $_POST["reason"];
 	
-	if(!EditIncomeCheque($obj, $_POST["newAmount"], $pdo))
+	ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, INCOMECHEQUE_EDIT, $pdo,  $comment);
+	
+	if($obj->ChequeAmount != $_POST["newAmount"])
 	{
-		$pdo->rollBack();
-		echo Response::createObjectiveResponse(false, "");
-		die();
+		if(!EditIncomeCheque($obj, $_POST["newAmount"], $pdo))
+		{
+			$pdo->rollBack();
+			echo Response::createObjectiveResponse(false, "");
+			die();
+		}
 	}
-	
 	$obj->ChequeAmount = $_POST["newAmount"];
+	$obj->ChequeDate = $_POST["newDate"];
 	$obj->Edit($pdo);
 	
 	$BackPays = $obj->GetBackPays($pdo);
@@ -497,12 +506,14 @@ function editCheque(){
 	{
 		$bobj = new LON_BackPays($BackPays[0]["BackPayID"]);
 		$bobj->PayAmount = $_POST["newAmount"];
+		$bobj->PayDate = $_POST["newDate"];
 		$bobj->Edit($pdo);
 	}
 	
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
 		$pdo->rollBack();
+		print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse(false, "");
 		die();
 	}

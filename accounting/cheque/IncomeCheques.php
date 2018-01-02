@@ -32,7 +32,6 @@ $col->renderer = "IncomeCheque.ChequeNoRender";
 $col->width = 70;
 
 $col = $dg->addColumn("تاریخ چک", "ChequeDate", GridColumn::ColumnType_date);
-$col->editor = ColumnEditor::SHDateField();
 $col->width = 80;
 
 $col = $dg->addColumn("تاریخ وصول", "PayedDate", GridColumn::ColumnType_date);
@@ -54,7 +53,7 @@ if($accessObj->EditFlag)
 {
 	$dg->addButton("", "اضافه چک", "add", "function(){IncomeChequeObject.AddCheque();}");
 	$dg->addButton("", "اضافه چکهای اقساط", "add", "function(){IncomeChequeObject.AddLoanCheque();}");
-	$dg->addButton("", "ویرایش مبلغ", "edit", "function(){IncomeChequeObject.beforeEdit();}");
+	$dg->addButton("", "ویرایش چک", "edit", "function(){IncomeChequeObject.beforeEdit();}");
 	$dg->addButton("", "تغییر وضعیت", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
 	$dg->addButton("", "برگشت عملیات", "undo", "function(){IncomeChequeObject.ReturnLatestOperation();}");
 }
@@ -1327,14 +1326,12 @@ IncomeCheque.prototype.beforeEdit = function(){
 	{
 		this.editWin = new Ext.window.Window({
 			width : 414,
-			height : 200,
-			defaults : {
-				width : 400
-			},
+			height : 220,
 			modal : true,
 			bodyStyle : "background-color:white",
 			items : [{
 				xtype : "textarea",
+				width : 400,
 				name : "reason",
 				fieldLabel : "دلیل تغییر"
 			},{
@@ -1342,6 +1339,10 @@ IncomeCheque.prototype.beforeEdit = function(){
 				name : "newAmount",
 				hideTrigger : true,
 				fieldLabel : "مبلغ جدید"
+			},{
+				xtype : "shdatefield",
+				name : "newDate",
+				fieldLabel : "تاریخ جدید"
 			}],
 			closeAction : "hide",
 			buttons : [{
@@ -1373,9 +1374,12 @@ IncomeCheque.prototype.beforeEdit = function(){
 		Ext.MessageBox.alert("Error","چکی که وصول شده است قابل تغییر نمی باشد");
 		return;
 	}
+	this.editWin.down("[name=newAmount]").setValue(record.data.ChequeAmount);
+	this.editWin.down("[name=newDate]").setValue(MiladiToShamsi(record.data.ChequeDate));
 	
 	this.editWin.down("[itemId=btn_save]").setHandler(function(){
 		newAmount = this.up('window').down("[name=newAmount]").getValue();
+		newDate = this.up('window').down("[name=newDate]").getRawValue();
 		reason = this.up('window').down("[name=reason]").getValue();
 
 		mask = new Ext.LoadMask(IncomeChequeObject.grid, {msg:'در حال تغییر ...'});
@@ -1387,6 +1391,7 @@ IncomeCheque.prototype.beforeEdit = function(){
 			params : {
 				task : "editCheque",
 				newAmount : newAmount,
+				newDate : newDate,
 				reason : reason,
 				IncomeChequeID : record.data.IncomeChequeID
 			},

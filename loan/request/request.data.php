@@ -1199,6 +1199,7 @@ function GetDelayedInstallments($returnData = false){
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) LoanPersonName,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) ReqPersonName,
 				InstallmentAmount,
+				InstallmentDate,
 				BranchName,
 				tazamin
 				
@@ -1224,7 +1225,7 @@ function GetDelayedInstallments($returnData = false){
 				group by ObjectID
 			)t2 on(t2.ObjectID=r.RequestID)
 			
-			where InstallmentDate between :fromdate AND :todate AND IsEnded='NO' ";
+			where InstallmentDate between :fromdate AND :todate AND IsHistory='NO' AND IsEnded='NO' ";
 	
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
@@ -1242,6 +1243,10 @@ function GetDelayedInstallments($returnData = false){
 			. " order by r.RequestID,p.PartID";
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		//echo PdoDataAccess::GetLatestQueryString();
+	}
 	$result = array();
 	$currentRequestID = "";
 	
@@ -1250,7 +1255,7 @@ function GetDelayedInstallments($returnData = false){
 		if($currentRequestID == $row["RequestID"])
 		{
 			$row["TotalRemainder"] = $remain;
-			$row["InstallmentDate"] = $MinDate;
+			//$row["InstallmentDate"] = $MinDate;
 			$result[] = $row;
 			continue;
 		}
@@ -1261,7 +1266,7 @@ function GetDelayedInstallments($returnData = false){
 		if($remain > 0 && $MinDate != null)
 		{
 			$row["TotalRemainder"] = $remain;
-			$row["InstallmentDate"] = $MinDate;
+			//$row["InstallmentDate"] = $MinDate;
 			$result[] = $row;
 			$currentRequestID = $row["RequestID"];
 		}
