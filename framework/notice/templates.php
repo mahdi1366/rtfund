@@ -81,7 +81,7 @@ LetterTemplate.prototype.ShowContext = function(){
 			closeAction : "hide",
 			items : [{
 				xtype : "container",
-				html : "<div id='TemplateLetterEditor'></div>"
+				html : "<div id='NoticeTemplateLetterEditor'></div>"
 			}],
 			buttons :[{
 				text : "ذخیره",
@@ -96,7 +96,7 @@ LetterTemplate.prototype.ShowContext = function(){
 						method : "post",
 						params :{
 							TemplateID : LetterTemplateObject.TemplateID,
-							context : CKEDITOR.instances.TemplateLetterEditor.getData()
+							context : CKEDITOR.instances.NoticeTemplateLetterEditor.getData()
 						},
 						success : function(){
 							me.grid.getStore().load();
@@ -123,21 +123,21 @@ LetterTemplate.prototype.ShowContext = function(){
 		if ( CKEDITOR.env.ie && CKEDITOR.env.version < 9 )
 			CKEDITOR.tools.enableHtml5Elements( document );
 
-		if(CKEDITOR.instances.TemplateLetterEditor)
-			CKEDITOR.instances.TemplateLetterEditor.destroy();
+		if(CKEDITOR.instances.NoticeTemplateLetterEditor)
+			CKEDITOR.instances.NoticeTemplateLetterEditor.destroy();
 		CKEDITOR.config.width = 'auto';
 		CKEDITOR.config.height = 330;
 		CKEDITOR.config.autoGrow_minHeight = 170;
-		CKEDITOR.replace('TemplateLetterEditor');	
+		CKEDITOR.replace('NoticeTemplateLetterEditor');	
 		CKEDITOR.add;
 	}
 	record = this.grid.getSelectionModel().getLastSelected();
 	LetterTemplateObject.TemplateID = record.data.TemplateID;
 
-	CKEDITOR.instances.TemplateLetterEditor.on('instanceReady', function( ev ) {
+	CKEDITOR.instances.NoticeTemplateLetterEditor.on('instanceReady', function( ev ) {
 		ev.editor.setData(record.data.context);
 	});			
-	CKEDITOR.instances.TemplateLetterEditor.setData(record.data.context);
+	CKEDITOR.instances.NoticeTemplateLetterEditor.setData(record.data.context);
 
 }
 
