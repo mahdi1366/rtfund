@@ -139,6 +139,7 @@ function GetData($mode = "list"){
 				bi.InfoDesc StatusDesc,
 				sb.SubDesc,
 				ad.DomainDesc,
+				dp.PackNo,
 				BranchName,
 				SumPayments,
 				TotalPayAmount,
@@ -157,6 +158,7 @@ function GetData($mode = "list"){
 			left join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
+			left join DMS_packages dp on(p2.PersonID=dp.PersonID AND r.BranchID=dp.BranchID)
 			left join BSC_ActDomain ad on(p2.DomainID=ad.DomainID)
 			left join (
 				select RequestID,sum(PayAmount) SumPayments 
@@ -253,6 +255,7 @@ function ListData($IsDashboard = false){
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	$rpg->addColumn("مشتری", "LoanFullname");
+	$rpg->addColumn("شماره پرونده", "PackNo");	
 	$rpg->addColumn("حوزه فعالیت", "DomainDesc");
 	$rpg->addColumn("شعبه", "BranchName");
 	$rpg->addColumn("تاریخ پرداخت", "PartDate", "ReportDateRender");

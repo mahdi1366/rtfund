@@ -394,8 +394,7 @@ function ListData($IsDashboard = false){
 		"l3" => "جزء معین",
 		"l4" => "جزء معین2",
 		"l5" => "تفصیلی",
-		"l6" => "تفصیلی2",
-		
+		"l6" => "تفصیلی2",		
 		"g" => "گروه حساب"
 		);
 	$dt = PdoDataAccess::runquery("select * from BSC_branches");
@@ -929,119 +928,7 @@ function AccReport_taraz()
 		}]
 	});
 }
-/*,{
-	xtype : "container",
-	layout : "column",
-	colmns : 3,
-	items : [{
-		xtype : "combo",
-		width : 195,
-		displayField : "full",				
-		valueField : "BlockID",
-		itemId : "combo_level2",
-		pageSize : 10,
-		store : new Ext.data.Store({
-			fields:["BlockID","BlockCode","BlockDesc",
-			{name : "full", 
-			convert: function(v,r){return "[" + r.data.BlockCode + "] " + r.data.BlockDesc; }}],
-			proxy: {
-				type: 'jsonp',
-				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=2',
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			},
-			autoLoad : true
-		})
-	},{
-		xtype : "button",
-		iconCls : "add",
-		handler : function(){
-			comboEl = AccReport_tarazObj.formPanel.down('[itemId=combo_level2]');
-			if(comboEl.getValue() == "")
-				return;
-			elem = AccReport_tarazObj.formPanel.down('[itemId=cmp_level2]');
-			elem.getStore().add({
-				BlockID : comboEl.getValue(),
-				title : comboEl.getRawValue()
-			});
-			comboEl.setValue();
-		}
-	},{
-		xtype : "button",
-		iconCls : "cross",
-		handler : function(){
-			elem = AccReport_tarazObj.formPanel.down('[itemId=cmp_level2]');
-			elem.getStore().removeAt(elem.getStore().find("BlockID",elem.getValue()));
-		}
-	},{
-		xtype : "multiselect",
-		width : 240,
-		colspan : 3,
-		itemId : "cmp_level2",
-		height : 170,
-		store: new Ext.data.Store({
-			fields : ['BlockID','title']
-		}),
-		ddReorder: true,
-		valueField : "BlockID",
-		displayField : "title"
-	}]			
-},{
-	xtype : "container",
-	layout : "column",
-	colmns : 3,
-	items : [{
-		xtype : "combo",
-		width : 195,
-		displayField : "full",
-		valueField : "BlockID",
-		itemId : "combo_level3",
-		pageSize : 10,
-		store : new Ext.data.Store({
-			fields:["BlockID","BlockCode","BlockDesc",
-			{name : "full", 
-			convert: function(v,r){return "[" + r.data.BlockCode + "] " + r.data.BlockDesc; }}],
-			proxy: {
-				type: 'jsonp',
-				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=3',
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			},
-			autoLoad : true
-		})
-	},{
-		xtype : "button",
-		iconCls : "add",
-		handler : function(){
-			comboEl = AccReport_tarazObj.formPanel.down('[itemId=combo_level3]');
-			if(comboEl.getValue() == "")
-				return;
-			elem = AccReport_tarazObj.formPanel.down('[itemId=cmp_level3]');
-			elem.getStore().add({
-				BlockID : comboEl.getValue(),
-				title : comboEl.getRawValue()
-			});
-			comboEl.setValue();
-		}
-	},{
-		xtype : "button",
-		iconCls : "cross",
-		handler : function(){
-			elem = AccReport_tarazObj.formPanel.down('[itemId=cmp_level3]');
-			elem.getStore().removeAt(elem.getStore().find("BlockID",elem.getValue()));
-		}
-	},{
-		xtype : "multiselect",
-		width : 240,
-		colspan : 3,
-		itemId : "cmp_level3",
-		height : 170,
-		store: new Ext.data.Store({
-			fields : ['BlockID','BlockCode','BlockDesc']
-		}),
-		ddReorder: true,
-		valueField : "BlockID",
-		displayField : "BlockCode"
-	}]			
-}*/
+
 AccReport_tarazObj = new AccReport_taraz();
 </script>
 <form id="mainForm">
