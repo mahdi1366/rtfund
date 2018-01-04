@@ -97,7 +97,7 @@ function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 			$whereParam[":tid"] = $_REQUEST["TafsiliID"];
 		}
 	}
-	if(!empty($_REQUEST["TafsiliID"]))
+	if(empty($_REQUEST["taraz"]) && !empty($_REQUEST["TafsiliID"]))
 	{
 		$where .= " AND (di.TafsiliID = :tid )";
 		$whereParam[":tid"] = $_REQUEST["TafsiliID"];
@@ -198,7 +198,7 @@ function GetData(){
 	//-------------------------- previous remaindar ----------------------------
 	if(!empty($_REQUEST["fromDate"]))
 	{
-		$query = "select sum(CreditorAmount-di.DebtorAmount)
+		$query = "select sum(if(b1.essence='DEBTOR',DebtorAmount-CreditorAmount,CreditorAmount-DebtorAmount))
 
 			from ACC_DocItems di join ACC_docs d using(DocID)
 				join ACC_CostCodes cc using(CostID)
@@ -249,8 +249,8 @@ function ListData($IsDashboard = false){
 	
 	$dataTable = GetData();
 	
-	//if($_SESSION["USER"]["UserName"] == "admin")
-	//	echo PdoDataAccess::GetLatestQueryString ();
+	if($_SESSION["USER"]["UserName"] == "admin")
+		echo PdoDataAccess::GetLatestQueryString ();
 	
 	$col = $rpg->addColumn("شماره سند", "LocalNo", "PrintDocRender");
 	$col->ExcelRender = false;
