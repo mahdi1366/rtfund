@@ -282,12 +282,12 @@ Unit.prototype.BeforeSaveJob = function(mode)
 				bodyStyle : "text-align:right;padding:5px",
 				frame: true,
 				items :[{
-					xtype : "combo",
+					xtype : "combo", 
 					width : 400,
 					store : new Ext.data.SimpleStore({
 						proxy: {
 							type: 'jsonp',
-							url: this.address_prefix + 'baseinfo.data.php?task=selectPosts',
+							url: this.address_prefix + 'baseInfo.data.php?task=selectPosts',
 							reader: {root: 'rows',totalProperty: 'totalCount'}
 						},
 						fields : ['PostID','PostName'],

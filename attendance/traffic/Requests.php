@@ -731,14 +731,14 @@ TrafficRequests.prototype.beforeChangeStatus = function(mode){
 	{
 		this.commentWin = new Ext.window.Window({
 			width : 412,
-			height : 198,
+			height : 218,
 			modal : true,
 			title : "دلیل رد درخواست",
 			bodyStyle : "background-color:white",
 			items : [{
 				xtype : "textarea",
 				width : 400,
-				rows : 8,
+				rows : 6,
 				name : "comment"
 			}],
 			closeAction : "hide",

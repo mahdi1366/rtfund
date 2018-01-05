@@ -100,6 +100,7 @@ function SavePerson(){
 	
 	$obj = new BSC_persons();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	unset($obj->PersonPic);
 	
 	if(isset($_SESSION["USER"]["portal"]))
 		$obj->PersonID = $_SESSION["USER"]["PersonID"];
@@ -124,6 +125,20 @@ function SavePerson(){
 		$result = $obj->EditPerson();
 	else 
 		$result = $obj->AddPerson();
+	
+	//-----------  save Person pic ----------------
+	if($_FILES['PersonPic']['size'] > 200000)
+	{
+		echo Response::createObjectiveResponse(false, "حداکثر حجم مجاز فایل 200 کیلوبایت می باشد");
+		die();
+	}
+	if(!empty($_FILES['PersonPic']['tmp_name']))
+	{
+		PdoDataAccess::runquery_photo("update BSC_persons set PersonPic=:pdata where PersonID=:p", 
+				array(":pdata" => fread(fopen($_FILES['PersonPic']['tmp_name'], 'r' ),$_FILES['PersonPic']['size'])), 
+				array(":p" => $obj->PersonID));
+	}
+	//---------------------------------------------
 	 
 	echo Response::createObjectiveResponse($result, !$result ? ExceptionHandler::GetExceptionsToString() : "");
 	die();

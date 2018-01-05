@@ -150,6 +150,13 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 	var items;
 	if(PersonRecord.data.IsReal == "YES")
 		items = [{
+			xtype : "container",
+			colspan : 2,
+			height : 160,
+			width : 700,
+			html : "<center><img class='PersonPicStyle' src='"+this.address_prefix+
+				"showImage.php?PersonID="+this.PersonID+"' /></center>"
+		},{
 			xtype : "textfield",
 			fieldLabel: 'نام',
 			allowBlank : false,
@@ -224,12 +231,23 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			fieldStyle : "direction:ltr",			
 			name: 'AccountNo'
 		},{
+			xtype : "filefield",
+			name : "PersonPic",
+			fieldLabel : "تصویر"
+		},{
 			xtype : "hidden",
 			name : "DomainID",
 			colspan : 2
 		}];
 	else
 		items = [{
+			xtype : "container",
+			colspan : 2,
+			height : 160,
+			width : 700,
+			html : "<center><img class='PersonPicStyle' src='"+this.address_prefix+
+				"showImage.php?PersonID="+this.PersonID+"&v="+this.TabID+"' /></center>"
+		},{
 			xtype : "textfield",
 			beforeLabelTextTpl: required,
 			fieldLabel: 'نام شرکت',
@@ -363,6 +381,10 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			hideTrigger : true,
 			fieldLabel : "شماره دریافت پیامک"
 		},{
+			xtype : "filefield",
+			name : "PersonPic",
+			fieldLabel : "لوگوی شرکت"
+		},{
 			xtype : "hidden",
 			name : "DomainID",
 			colspan : 2
@@ -436,6 +458,8 @@ PersonInfo.prototype.SaveData = function() {
 	this.mainPanel.getForm().submit({
 		clientValidation: true,
 		url: this.address_prefix + 'persons.data.php?task=SavePerson',
+		IsUpload : true,
+		
 		params : {
 			PersonID : this.PersonID
 		},
@@ -445,9 +469,9 @@ PersonInfo.prototype.SaveData = function() {
 			mask.hide();
 			Ext.MessageBox.alert("","اطلاعات با موفقیت ذخیره شد");
 		},
-		failure : function(){
+		failure : function(form,result){
 			mask.hide();
-			//Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+			Ext.MessageBox.alert("",result.result.data == "" ? "عملیات مورد نظر با شکست مواجه شد" : result.result.data);
 		}
 	});
 }

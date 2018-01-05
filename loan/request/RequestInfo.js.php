@@ -576,7 +576,7 @@ RequestInfo.prototype.BuildForms = function(){
 			},
 			itemId : "cmp_guarantees",
 			width : 700,
-			height : 80,
+			height : 90,
 			items :[{
 				xtype : "checkbox",
 				boxLabel: 'وثیقه ملکی',

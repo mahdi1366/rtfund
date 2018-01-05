@@ -3,7 +3,6 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 1395.03
 //-----------------------------
-ini_set("display_errors", "On");
 
 require_once ('header.inc.php');
 require_once 'management/framework.class.php';
@@ -111,7 +110,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 		<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>	
 		<title><?= SoftwareName ?></title>
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/Loading.css" />
-		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-all.css" />
+		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-all.css?v=1" />
 
 		<style type="text/css">
 			html, body {
@@ -135,7 +134,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 		<link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" />
 		<script type="text/javascript" src="/generalUI/ext4/resources/ext-all.js"></script>
 
-		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-rtl.css" />
+		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-rtl.css?v=1" />
 		<script type="text/javascript" src="/generalUI/ext4/resources/ext-extend.js"></script>
 		<script type="text/javascript" src="/generalUI/ext4/ux/component.js"></script>
 		<script type="text/javascript" src="/generalUI/ext4/ux/message.js"></script>

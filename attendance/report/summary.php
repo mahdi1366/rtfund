@@ -82,8 +82,8 @@ function ShowReport(){
 <link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" /></head>
 <style>
 	.reportTbl {border-collapse:collapse}
-	.reportTbl td {padding:4px;font-family: nazanin; font-size:14px; text-align: center}
-	.reportTbl th {font-family: nazanin; font-size:14px;padding:4px;text-align: center; 
+	.reportTbl td {padding:4px;font-family: nazanin; font-size:15px; text-align: center}
+	.reportTbl th {font-family: nazanin; font-size:15px;padding:4px;text-align: center; 
 				  background-color: #efefef; font-weight: bold}
 	.reportTbl .attend { text-align:center}
 	.reportTbl .extra { background-color: #D0F7E2; text-align:center}

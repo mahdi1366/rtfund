@@ -31,6 +31,8 @@ class BSC_persons extends PdoDataAccess{
 	public $CityID;
 	public $SmsNo;
 	public $DomainID;
+	public $PersonSign;
+	public $PersonPic;
 	
 	public $IsCustomer;
 	public $IsShareholder;
@@ -58,7 +60,7 @@ class BSC_persons extends PdoDataAccess{
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery_fetchMode("select 
-			p.*, '' UserPass, '' PersonSign,
+			p.*,null PersonSign, null PersonPic, '' UserPass, '' PersonSign,
 			concat_ws(' ',fname, lname,CompanyName) fullname, DomainDesc
 			from BSC_persons p
 				left join BSC_ActDomain using(DomainID)

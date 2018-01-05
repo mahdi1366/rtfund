@@ -56,7 +56,7 @@ function ShowReport($admin){
 		<th>روز</th>
 		<th>تاریخ</th>
 		<th>شیفت</th>
-		<th style=width:70px>ورود/خروج</th>
+		<th style=width:80px>ورود/خروج</th>
 		<th>حضور</th>
 		<th class="extra" width="60">اضافه کار</th>
 		<th class="off" >مرخصی</th>
@@ -108,7 +108,8 @@ function ShowReport($admin){
 	die();
 }
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "traffic.data.php?task=SelectDayTraffics", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "traffic.data.php?task=SelectDayTraffics&admin="
+		. ($admin ? "true" : "false"), "grid_div");
 
 $dg->addColumn("", "TrafficID", "", true);
 $dg->addColumn("", "IsActive", "", true);
@@ -116,20 +117,19 @@ $dg->addColumn("", "IsActive", "", true);
 $col = $dg->addColumn("نوع رکورد", "ReqType");
 $col->renderer = "TraceTraffic.RecordTypeRender";
 
-/*$col = $dg->addColumn("تاریخ", "TrafficDate", GridColumn::ColumnType_date);
-$col->width = 120;*/
-
 $col = $dg->addColumn("ساعت", "TrafficTime");
 $col->width = 60;
 
 $col = $dg->addColumn("تا ساعت", "EndTime");
 $col->width = 60;
 
-$col = $dg->addColumn("حذف", "");
-$col->sortable = false;
-$col->renderer = "function(v,p,r){return TraceTraffic.DeleteRender(v,p,r);}";
-$col->width = 40;
-
+if($admin)
+{
+	$col = $dg->addColumn("حذف", "");
+	$col->sortable = false;
+	$col->renderer = "function(v,p,r){return TraceTraffic.DeleteRender(v,p,r);}";
+	$col->width = 40;
+}
 $dg->height = 230;
 $dg->width = 400;
 $dg->EnablePaging = false;
@@ -349,6 +349,40 @@ TraceTraffic.prototype.DeleteTraffic = function(DeleteMode)
 			},
 			failure: function(){}
 		});
+	});
+}
+
+TraceTraffic.prototype.CreateRequest = function(date,type)
+{
+	if(!this.NewTrafficWin)
+	{
+		this.NewTrafficWin = new Ext.window.Window({
+			width : 600,
+			height : 400,
+			modal : true,
+			bodyStyle : "background-color:white",
+			loader : {
+				url : this.address_prefix + "NewRequest.php",
+				scripts : true
+			},
+			closeAction : "hide",
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.NewTrafficWin);
+	}
+	this.NewTrafficWin.show();
+	this.NewTrafficWin.center();
+	this.NewTrafficWin.loader.load({
+		params : {
+			ExtTabID : this.NewTrafficWin.getEl().id,
+			TheDate : date,
+			type : type
+		}
 	});
 }
 

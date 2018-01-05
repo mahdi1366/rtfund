@@ -145,7 +145,7 @@ function MyLetter(){
 			scale : "large",
 			style : "margin-bottom:10px",	
 			itemId : this.summary[i].SendType,
-			text : this.summary[i].SendTypeDesc + "<br><br><div style=float:right>" + " تعداد : " + 
+			text : this.summary[i].SendTypeDesc + "<br><div style=float:right>" + " تعداد : " + 
 				this.summary[i].totalCnt + "</div><div style=float:left>" + "جدید : " + (this.summary[i].newCnt*1>0 ? "<b>" : "") + 
 				"( " + this.summary[i].newCnt + " )" + (this.summary[i].newCnt*1>0 ? "<b>" : "") + "</div>",
 			handler : function(){

@@ -219,6 +219,20 @@ function ArchiveRequest(){
 
 function SelectDayTraffics(){
 	
+	$params = array();
+	$params[":d"] = $_GET["TrafficDate"];
+	
+	if($_REQUEST["admin"] == "true")
+	{
+		$params[":p"] = $_GET["PersonID"];
+		$ReqStatusWhere = " AND ReqStatus=2";
+	}
+	else
+	{
+		$params[":p"] = $_SESSION["USER"]["PersonID"];
+		$ReqStatusWhere = "";
+	}
+	
 	$dt = PdoDataAccess::runquery("
 		select * from (
 
@@ -230,11 +244,10 @@ function SelectDayTraffics(){
 			select t.ReqType,null,t.FromDate,StartTime,EndTime,'YES'
 			from ATN_requests t
 			where t.PersonID=:p AND t.ReqType in('CORRECT','OFF','MISSION') 
-				AND t.ToDate is null AND ReqStatus=2 AND t.FromDate=:d
+				AND t.ToDate is null $ReqStatusWhere AND t.FromDate=:d
 
 		)t 
-		order by TrafficTime,ReqType",
-		array(":p" => $_GET["PersonID"], ":d" => $_GET["TrafficDate"]));
+		order by TrafficTime,ReqType",$params);
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();

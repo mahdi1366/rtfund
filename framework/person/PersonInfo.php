@@ -63,6 +63,14 @@ $grid = $dg->makeGrid_returnObjects();
 
 require_once 'PersonInfo.js.php';
 ?>
+<style>
+	.PersonPicStyle {
+		width : 150px;
+		height: 150px;
+		border: 1px solid black;
+		border-radius: 50%;
+	}
+</style>
 <br>
 <center>
 <div id="mainForm"><div>

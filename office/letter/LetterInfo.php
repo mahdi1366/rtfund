@@ -468,7 +468,7 @@ LetterInfo.prototype.copyLetter = function(){
 		padding:20px;
 		margin:10px; 
 		height : 500;
-		font-size : 11px;
+		font-size : 15px;
 		line-height: 30px;
 		border: 1px solid #bbb;
 		border-radius: 10px;

@@ -239,12 +239,9 @@ class ATN_traffic extends OperationClass
 			$returnStr .= "<tr>
 				<td>" . DateModules::$JWeekDays[ DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "N") ] . "</td>";
 
-			if($admin)
-				$returnStr .= "<td><a class=link onclick=TraceTrafficObj.TrafficList('" . 
-					$returnArr[$i]["TrafficDate"] . "')>" . 
-					DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</a></td>";
-			else
-				$returnStr .= "<td>" . DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</td>";
+			$returnStr .= "<td><a class=link onclick=TraceTrafficObj.TrafficList('" . 
+				$returnArr[$i]["TrafficDate"] . "')>" . 
+				DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</a></td>";
 
 			$returnStr .= "<td>" . ($returnArr[$i]["holiday"] ? $returnArr[$i]["holidayTitle"] : $returnArr[$i]["ShiftTitle"]) . "</td>
 				<td>";
@@ -258,6 +255,7 @@ class ATN_traffic extends OperationClass
 			$startOff = 0;
 			$endOff = 0;
 			$extra = 0;
+			$durAbsense = 0;
 
 			if($returnArr[$i]["TrafficTime"] != "")
 			{
@@ -283,7 +281,9 @@ class ATN_traffic extends OperationClass
 				//....................................................
 				if($returnArr[$i]["ReqType"] == "OFF" || $returnArr[$i]["ReqType"] == "MISSION")
 				{
-					$returnStr .= "<span style=color:red>" . substr($returnArr[$i]["TrafficTime"],0,5) .
+					$ReqDesc = $returnArr[$i]["ReqType"] == "OFF" ? "مرخصی ساعتی" : "ماموریت ساعتی";
+					$returnStr .= "<span data-qtip='$ReqDesc' style=color:red>" . 
+						substr($returnArr[$i]["TrafficTime"],0,5) .
 						" - " . substr($returnArr[$i]["EndTime"],0,5) . "</span>";
 					$index++;
 					//-------------------------------------
@@ -311,6 +311,18 @@ class ATN_traffic extends OperationClass
 								$extra += strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i-1]["ToTime"]);
 						}
 					}	
+					else
+					{
+						if($i>0 && $returnArr[$i]["TrafficDate"] == $returnArr[$i-1]["TrafficDate"]
+							&& $returnArr[$i]["TrafficTime"] > $returnArr[$i-1]["TrafficTime"]
+							&& $returnArr[$i]["TrafficTime"] < $returnArr[$i]["ToTime"]
+							&& $returnArr[$i-1]["TrafficTime"] < $returnArr[$i]["ToTime"])
+						{
+							if($returnArr[$i-1]["ReqType"] != "OFF" && $returnArr[$i-1]["ReqType"] != "MISSION")
+								$durAbsense += strtotime($returnArr[$i]["TrafficTime"]) - 
+									strtotime($returnArr[$i-1]["TrafficTime"]);
+						}
+					}
 				}
 				$returnStr .= $index % 2 == 0 ? "<br>" : " - ";
 				$index++;
@@ -333,7 +345,7 @@ class ATN_traffic extends OperationClass
 			//$extra = ($totalAttend > $ShiftDuration) ? $totalAttend - $ShiftDuration  : 0;
 
 			$Absence = ($totalAttend + $Off + $mission) < $ShiftDuration ? 
-					$ShiftDuration + $extra - $totalAttend - $Off - $mission  : 0;
+					$ShiftDuration + $extra - $totalAttend - $Off - $mission + $durAbsense : $durAbsense;
 			$extra = $extra < 0 ? 0 : $extra;
 			if($returnArr[$i]["holiday"])
 			{
@@ -406,13 +418,16 @@ class ATN_traffic extends OperationClass
 			$Off = TimeModules::SecondsToTime($Off);
 			$mission = TimeModules::SecondsToTime($mission);	
 		
+			$link = "<a href='javascript:void(0)' ".
+					"onclick=\"TraceTrafficObj.CreateRequest('".$returnArr[$i]["TrafficDate"];
+			
 			$returnStr .= "</td><td class=attend>" . TimeModules::ShowTime($totalAttend) . "</td>
 				<td class=extra>" . TimeModules::ShowTime($extra) . "</td>
 				<td class=off>" . TimeModules::ShowTime($Off) . "</td>
 				<td class=mission>" . TimeModules::ShowTime($mission) . "</td>
-				<td class=sub>" . TimeModules::ShowTime($firstAbsence) . "</td>
-				<td class=sub>" . TimeModules::ShowTime($lastAbsence) . "</td>
-				<td class=sub>" . TimeModules::ShowTime($Absence) . "</td>
+				<td class=sub>" . $link . "','firstAbsence')\" >" . TimeModules::ShowTime($firstAbsence) . "</a></td>
+				<td class=sub>" . $link . "','lastAbsence')\" >" . TimeModules::ShowTime($lastAbsence) . "</a></td>
+				<td class=sub>" . $link . "','Absence')\" >" . TimeModules::ShowTime($Absence) . "</a></td>
 				</tr>";
 		}
 		
