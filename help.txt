@@ -33,6 +33,12 @@ foreach($costDocs as $row)
 CREATE DATABASE krrtfir_rtfund CHARACTER SET utf8 COLLATE utf8_general_ci;
 --------------------------------------------------------------------------------
 params = mergeObjects(params, this.DocWin.down('form').getForm().getValues());
-
+--------------------------------------------------------------------------------
+Object.grid.getView().getRowClass = function (record, index)
+{
+	if (record.data.StatusCode)
+		return "greenRow";
+	return "";
+}
 
 
