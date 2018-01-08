@@ -36,8 +36,8 @@ class session{
 		else
 		{
 			$dt = PdoDataAccess::runquery("select AttemptTime from FRW_LoginAttempts 
-				where PersonID=? AND AttemptTime > ?",	array($temp[0]["PersonID"], 
-				time() - (10*60*60))); // second
+				where PersonID=? AND ?-AttemptTime < 10*60 ",	array($temp[0]["PersonID"], time())); 
+			
 			if(count($dt) > 5)
 			{
 				return "TooMuchAttempt";
@@ -61,6 +61,8 @@ class session{
 				return "InActiveUser";
 			} 
 
+			//..............................................................
+			 PdoDataAccess::runquery("delete from FRW_LoginAttempts where PersonID=? ",	array($temp[0]["PersonID"])); 
 			//..............................................................
 
 			$_SESSION['USER']["PersonID"] = $temp[0]["PersonID"];
@@ -156,6 +158,8 @@ class session{
 		{
 			return "DuplicateNationalID";
 		}
+
+		define("SYSTEMID", "1000");
 		
 		$hash_cost_log2 = 8;	
 		$hasher = new PasswordHash($hash_cost_log2, true);

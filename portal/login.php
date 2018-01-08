@@ -9,14 +9,37 @@ set_include_path(get_include_path() . PATH_SEPARATOR . getenv("DOCUMENT_ROOT") .
 require_once 'PDODataAccess.class.php';
 require_once 'DataAudit.class.php';
 require_once getenv("DOCUMENT_ROOT") . '/framework/PasswordHash.php';
+require_once '../definitions.inc.php';
 
 require_once getenv("DOCUMENT_ROOT") . '/framework/session.php';
 session::sec_session_start();
 
-$return = "";
-//------------- register ------------------
-if(isset($_POST["email"]))
+$task = empty($_REQUEST["task"]) ? "" : $_REQUEST["task"];
+switch($task)
 {
+	case "login": login();die();
+	case "register": register();die();
+	case "forget": forget();die();
+}
+
+function login(){
+	
+	$user = $_POST["UserName"];
+	$pass = $_POST["md5Pass"];
+	
+	$result = session::login($user, $pass);
+	if($result !== true)
+	{
+		echo $result;
+		die();
+	}
+	
+	unset($_SESSION['USER']["framework"]);
+	$_SESSION['USER']["portal"] = true;
+	echo "true";
+	die();
+}
+function register(){
 	require_once getenv("DOCUMENT_ROOT") . '/framework/person/persons.class.php';
 	
 	$user = $_POST["UserName"];
@@ -27,55 +50,45 @@ if(isset($_POST["email"]))
 	if($return === true)
 	{
 		$result = session::login($user, $pass);
-		header("location: index.php");
+		echo "true";
+		die();
 	}
+	echo $return;
+	die();
 }
-//------------- login ------------------
-else if(isset($_POST["UserName"]))
-{
-	$user = $_POST["UserName"];
-	$pass = $_POST["md5Pass"];
+function forget(){
 	
-	$result = session::login($user, $pass);
-	if($result !== true)
+	if(isset($_REQUEST["forgetStep1"]))
 	{
-		echo $return;
-		$return = $result;
+		if(!empty($_POST["ForgetUserName"]))
+		{
+			echo session::getEmail($_POST["ForgetUserName"], true);
+			die();			
+		}
+
+		echo "WrongUserName";die();
 	}
-	else
+	else if(isset($_REQUEST["forgetStep2"]))
 	{
-		unset($_SESSION['USER']["framework"]);
-		$_SESSION['USER']["portal"] = true;
-		header("location: index.php");
+		$email = session::getEmail($_POST["ForgetUserName"]);
+		if($email != $_POST["forgetemail"])
+		{
+			echo "WrongEmail";
+			die();	
+		}
+		session::SendNewPass($_POST["ForgetUserName"]);
+		echo "true";
 		die();
 	}
 }
-//------------- forget pass --------------------
-else if(isset($_REQUEST["forgetStep1"]))
-{
-	if(!empty($_POST["ForgetUserName"]))
-	{
-		echo session::getEmail($_POST["ForgetUserName"], true);
-		die();			
-	}
-	
-	echo "WrongUserName";die();
-}
-else if(isset($_REQUEST["forgetStep2"]))
-{
-	$email = session::getEmail($_POST["ForgetUserName"]);
-	if($email != $_POST["forgetemail"])
-	{
-		echo "WrongEmail";
-		die();	
-	}
-	session::SendNewPass($_POST["ForgetUserName"]);
-	echo "true";
-	die();
-}
+//........................................
+
+$pics = PdoDataAccess::runquery("select PicID,FileType from FRW_pics where SourceType='login'");
+$index = rand(0, count($pics)-1);
 ?>
 <html>
   <head>
+	<link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" />  
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <title>پرتال <?= SoftwareName?></title>
   	<? require_once 'md5.php'; ?>
@@ -91,80 +104,88 @@ else if(isset($_REQUEST["forgetStep2"]))
 			// code for IE6, IE5
 			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
 		}
+		
 		function pressing(e)
 		{
 			var c = (e.keyCode)? e.keyCode: (e.charCode)? e.charCode: e.which;
 			if(c == 13)
 			{
 				loginFN();
-				document.getElementById('MainForm').submit();
-				return false;
 			}
 		}
 		
 		function loginFN()
 		{
 			document.getElementById("md5Pass").value = MD5(document.getElementById('password').value);
+			xmlhttp.onreadystatechange = function()
+			{
+				if (xmlhttp.readyState==4 && xmlhttp.status==200)
+				{
+					document.getElementById("ajax-loading").style.display = "none";
+					document.getElementById("LoginErrorDiv").style.display = "block";
+					switch(xmlhttp.responseText)
+					{
+						case "WrongUserName":
+							document.getElementById("LoginErrorDiv").innerHTML = "کلمه کاربری وارد شده وجود ندارد";
+							break;
+						case "TooMuchAttempt":
+							document.getElementById("LoginErrorDiv").innerHTML = "شناسه شما برای 10 دقیقه مسدود می باشد";
+							break;
+						case "WrongPassword":
+							document.getElementById("LoginErrorDiv").innerHTML = "رمز عبور وارد شده صحیح نمی باشد";
+							break;
+						case "InActiveUser":
+							document.getElementById("LoginErrorDiv").innerHTML = "کلمه کاربری شما هنوز در صندوق فعال نشده است";
+							break;
+						
+						case "true":
+							document.getElementById("LoginErrorDiv").style.display = "none";
+							window.location = "index.php";
+					}
+				}
+			}
+
+			xmlhttp.open("POST","login.php?task=login",true);
+			document.getElementById("ajax-loading").style.display = "block";
+			xmlhttp.send(new FormData(document.getElementById("LoginForm")));
 		}
 		
 		function RegisterFN()
 		{
 			document.getElementById("md5Pass2").value = MD5(document.getElementById('password1').value);
+			if(document.getElementById("NationalID").value == "")
+			{
+				document.getElementById("NationalID").setCustomValidity("ورود کد ملی/شناسه ملی الزامی است");
+				document.getElementById("RegisterErrorDiv").innerHTML = "تکمیل کد ملی / شناسه ملی الزامی است";
+				document.getElementById("RegisterErrorDiv").style.display = "block";
+				return;
+			}
+			xmlhttp.onreadystatechange = function()
+			{
+				if (xmlhttp.readyState==4 && xmlhttp.status==200)
+				{
+					document.getElementById("ajax-loading").style.display = "none";
+					document.getElementById("RegisterErrorDiv").style.display = "block";
+					switch(xmlhttp.responseText)
+					{
+						case "DuplicateUserName":
+							document.getElementById("RegisterErrorDiv").innerHTML = "کلمه کاربری انتخابی شما قبلا استفاده شده است";
+							break;
+						case "DuplicateNationalID":
+							document.getElementById("RegisterErrorDiv").innerHTML = "با این کدملی / شناسه ملی قبلا ثبت نام انجام شده است";
+							break;
+						case "true":
+							document.getElementById("RegisterErrorDiv").style.display = "none";
+							window.location = "index.php";
+					}
+				}
+			}
+
+			xmlhttp.open("POST","login.php?task=register",true);
+			document.getElementById("ajax-loading").style.display = "block";
+			xmlhttp.send(new FormData(document.getElementById("RegisterForm")));
 		}
 				
-		function BodyLoad(){
-			
-			document.getElementById('UserName').focus();
-			var error = '<?= $return ?>';
-			if(error == "WrongUserName")
-				document.getElementById("UserNameDiv").className = "wrong";
-			if(error == "WrongPassword")
-			{
-				document.getElementById("PasswordDiv").className = "wrong2";
-				document.getElementById("UserName").value = "<?= isset($_POST["UserName"]) ? $_POST["UserName"] : "" ?>";
-				document.getElementById('password').focus();
-			}	
-			if(error == "DuplicateUserName")
-			{
-				Register(true);
-				document.getElementById("UserNameDiv2").className = "wrong";
-				<?if(isset($_POST["email"])){?>
-					document.getElementById("isReal").checked = ('<?= $_POST["IsReal"]?>' == "YES") ? true : false;
-					document.getElementById("noReal").checked = ('<?= $_POST["IsReal"]?>' == "YES") ? false : true;
-					
-					document.getElementById("fname").value = "<?= $_POST["fname"] ?>";
-					document.getElementById("lname").value = "<?= $_POST["lname"] ?>";
-					document.getElementById("CompanyName").value = "<?= $_POST["CompanyName"] ?>";
-					document.getElementById("email").value = "<?= $_POST["email"] ?>";
-					document.getElementById("UserName2").value = "";
-					document.getElementById("UserName2").placeholder = "کلمه کاربری تکراری می باشد";
-				<?}?>
-			}
-			if(error == "DuplicateNationalID")
-			{
-				Register(true);
-				document.getElementById("NationalIDDiv").className = "wrong3";
-				<?if(isset($_POST["email"])){?>
-					document.getElementById("isReal").checked = ('<?= $_POST["IsReal"]?>' == "YES") ? true : false;
-					document.getElementById("noReal").checked = ('<?= $_POST["IsReal"]?>' == "YES") ? false : true;
-					ChangePersonType(document.getElementById("isReal").checked ? 
-						document.getElementById("isReal") : document.getElementById("noReal"));
-					
-					document.getElementById("fname").value = "<?= $_POST["fname"] ?>";
-					document.getElementById("lname").value = "<?= $_POST["lname"] ?>";
-					document.getElementById("CompanyName").value = "<?= $_POST["CompanyName"] ?>";
-					document.getElementById("email").value = "<?= $_POST["email"] ?>";
-					document.getElementById("NationalID").placeholder = "کدملی / شناسه ملی ...";
-				<?}?>
-			}
-			if(error == "TooMuchAttempt")
-			{
-				document.getElementById("loginDescDIV").style.display = "block";
-				document.getElementById("loginDIV").style.display = "none";
-			}
-			
-		}
-		
 		function Register(registerMode){
 		
 			document.getElementById("loginDIV").style.display = registerMode ? "none" : "block";
@@ -216,20 +237,22 @@ else if(isset($_REQUEST["forgetStep2"]))
 					if (xmlhttp.readyState==4 && xmlhttp.status==200)
 					{
 						document.getElementById("ajax-loading").style.display = "none";
+						
 						if(xmlhttp.responseText == "WrongUserName")
-						{						
-							document.getElementById("errorDIV").innerHTML = "کلمه کاربری وارد شده وجود ندارد";
+						{
+							document.getElementById("ForgetErrorDiv").style.display = "block";
+							document.getElementById("ForgetErrorDiv").innerHTML = "کلمه کاربری وارد شده وجود ندارد";
 							return;
 						}
 						if(xmlhttp.responseText == "EmptyEmail")
 						{
-							document.getElementById("errorDIV").innerHTML = 
+							document.getElementById("ForgetErrorDiv").style.display = "block";
+							document.getElementById("ForgetErrorDiv").innerHTML = 
 								"ایمیل شما برای ارسال رمز عبور جدید در سیستم ثبت نشده است"+
 								"برای بازیابی رمز با صندوق تماس بگیرید ";
-							document.getElementById("step1BTN").style.display = "none";
 							return;
 						}
-						document.getElementById("errorDIV").innerHTML = "";
+						document.getElementById("ForgetErrorDiv").style.display = "none";
 						document.getElementById("ForgetUserName").style.display = "none";
 						document.getElementById("descDIV").innerHTML = "ابمیل خود را که مطابق با الگوی زیر می باشد وارد کنید" +
 							"<br><br>" + xmlhttp.responseText + "<br><br>";
@@ -239,7 +262,7 @@ else if(isset($_REQUEST["forgetStep2"]))
 					}
 				}
 
-				xmlhttp.open("POST","login.php?forgetStep1=true",true);
+				xmlhttp.open("POST","login.php?task=forget&forgetStep1=true",true);
 				document.getElementById("ajax-loading").style.display = "block";
 				xmlhttp.send(new FormData(document.getElementById("forgetForm")));
 			}
@@ -252,130 +275,177 @@ else if(isset($_REQUEST["forgetStep2"]))
 						document.getElementById("ajax-loading").style.display = "none";
 						if(xmlhttp.responseText == "WrongEmail")
 						{						
-							document.getElementById("errorDIV").innerHTML = "ایمیل وارد شده صحیح نمی باشد";
+							document.getElementById("ForgetErrorDiv").style.display = "block";
+							document.getElementById("ForgetErrorDiv").innerHTML = "ایمیل وارد شده صحیح نمی باشد";
+							return;
+						}
+						if(xmlhttp.responseText == "true")
+						{						
+							document.getElementById("ForgetErrorDiv").style.display = "none";
+							document.getElementById("descDIV").innerHTML = "رمز عبور جدید به ایمیل شما ارسال گردید" +
+							"<br><br>";
+							document.getElementById("step2BTN").style.display = "none";
+							document.getElementById("loginBTN").style.display = "block";	
 							return;
 						}
 						
-						document.getElementById("errorDIV").innerHTML = "";
-						document.getElementById("forgetemail").style.display = "none";
-						document.getElementById("descDIV").innerHTML = "رمز عبور جدید به ایمیل شما ارسال گردید" +
-							"<br><br>";
-						document.getElementById("step2BTN").style.display = "none";
-						document.getElementById("loginBTN").style.display = "block";					
+						document.getElementById("ForgetErrorDiv").style.display = "block";
+						document.getElementById("ForgetErrorDiv").innerHTML = "ارسال ایمیل با شکست مواجه گردید";
+										
 					}
 				}
 
-				xmlhttp.open("POST","login.php?forgetStep2=true",true);
+				xmlhttp.open("POST","login.php?task=forget&forgetStep2=true",true);
 				document.getElementById("ajax-loading").style.display = "block";
 				xmlhttp.send(new FormData(document.getElementById("forgetForm")));
 			}			
 		}
 		
+		function BackToLogin(){
+			
+			document.getElementById("loginDIV").style.display = "block";
+			document.getElementById("forgetDIV").style.display ="none";
+			document.getElementById("registerDIV").style.display ="none";
+		}
+		
 	</script>
 	 <style>
-	  body td div{
-		  font-family: tahoma;
-		  font-size: 12px;
-	  }
-	.headerDiv{
-		height: 100px;
-		width : 100%;
-		background-color: #88a401;
-		border-bottom: 15px solid #314e00;
+	body, td, div, button{
+		font-family: irsans;
+	}
+	header{
+		background: url("../framework/management/ShowFile.php?PicID=<?= $pics[$index]["PicID"] ?>") center center no-repeat;
+		width: 100%;
+		height: 95vh; 
+		overflow: hidden;
+		background-size: cover;
+		-webkit-background-size: cover;
+		-moz-background-size: cover;
+		-o-background-size: cover;
+		display: block;
+		box-sizing: border-box;
 	}
 	.footerDiv{
-		background-color: #324e03;
+		background-color: black;
 		position: absolute;
 		bottom: 0;
-		font-family: tahoma;
-		font-size: 12px;
 		height : 50px;
-		width : 100%;
+		width : 100%;		
+	}
+	.footerDiv td , a{
+		padding-top : 10px;
+		font-size: 13px;
+		text-decoration: none;
+		font-weight: bold;
 		color : white;		
 	}
-	.mainDiv{
-		width : 533px;	
-		right : 35%;
-		top : 130px;
-		position: absolute;
-
+	.loginDiv{
+		width: 400px;
+		position: fixed;
+		top: 40%;
+		left: 50%;
+		margin-left: -211px;
+		margin-top: -187px;
 	}
-	.title{
-		font-family: tahoma;
-		font-size: 14px;
-		font-weight: bold;
-		color: #74a724;
+	.loginDiv .title{
+		color: #fff;
+		background-color: rgba(0,0,0,.6);
+		border-top-right-radius: 5px;
+		border-top-left-radius: 5px;
+		padding: 14px;
+		font-size: 21px;
+		text-align: center;
 	}
-	.textfield {
-		border: 1px solid #cacaca;
+	.loginDiv .error{
+		background-color: rgba(255,0,0,.8) !important;
+		height: 20px;
+		color: white !important;
 		font-size: 12px;
-		padding: 5px;
-		margin-bottom: 10px;
-		vertical-align: middle;
-		width: 200px;
-		font-family: tahoma;
-	}
-	.wrong input {
-		border: 1px solid #9e423e;
-	}
-	.wrong::after {
-		color: #f5443b !important;
-		content: "کلمه کاربری اشتباه است";
-		padding-right: 6px;
-		vertical-align: super;
-		font-size: 11px;
+		text-align: justify;
+		margin-bottom: 20px;
+		background-color: #fff;
+		color: #000;
+		padding: 10px;
+		line-height: 2em;
+		-webkit-border-radius: .3em;
+		-moz-border-radius: .3em;
+		border-radius: .3em;
 	}
 	
-	.wrong2 input {
-		border: 1px solid #9e423e;
+	.loginDiv .body{
+		background-color: rgba(255,255,255,.33);
+		border: 1px solid rgba(0,0,0,.22);
+		border-top-width: 1px;
+		border-top-style: solid;
+		border-top-color: rgba(0, 0, 0, 0.22);
+		border-top: none;
+		padding: 20px 35px 0;
+		position: relative;
 	}
-	.wrong2::after {
-		color: #f5443b !important;
-		content: "رمز عبور اشتباه است";
-		padding-right: 6px;
-		vertical-align: super;
+	.loginDiv .footer{
+		color: #fff;
+		background-color: rgba(0,0,0,.6);
+		border-bottom-right-radius: 5px;
+		border-bottom-left-radius: 5px;
+		padding: 10px;
 		font-size: 11px;
-	}
-	
-	.wrong3 input {
-		border: 1px solid #9e423e;
-	}
-	.wrong3::after {
-		color: #f5443b !important;
-		content: "با این کدملی / شناسه ملی قبلا ثبت نام شده است.";
-		padding-right: 6px;
-		vertical-align: super;
-		font-size: 11px;
-	}
-
-	.btn{
-		background-color: #74a724;
-		border: 0 none;
-		cursor: pointer;
-		border-radius: 10px;
+		text-align: center;
+		font-size: 12px;
+		height: 20px;
 		color: white;
-		float: right;
-		font-size: 12px;
-		font-weight: bold;
-		height: 30px;
-		font-family: tahoma;
+		cursor: pointer;
+	}
+	
+	.textfield {
+		border: 1px solid rgba(0,0,0,.22);
+		height: 55px;
+		border-radius: 4px;
+		font-size: 16px;
+		direction: ltr;
+		text-align: left;
+		color: #858585;
+		width: 100%;
+		margin-top : 5px;
+		font-weight: 400;
+		padding-right: 20px;
+		padding-left: 20px;
+	}
+	.textfield2 {
+		border: 1px solid rgba(0,0,0,.22);
+		height: 35px;
+		border-radius: 4px;
+		font-size: 16px;
+		direction: ltr;
+		text-align: left;
+		margin-top : 5px;
+		color: #858585;
+		width: 100%;
+		font-weight: 400;
+		padding-right: 20px;
+		padding-left: 20px;
+	}
+	
+	.btn{
+		height: 55px;
+		display: block;
+		width: 100%;
+		font-size: 18px;
+		margin-top: 30px;
+		background-color: #009cfc;
+		color: #fff;
+		border-radius: 4px;
+		border: 1px solid rgba(0,0,0,.1);
 	}
 
 	.btn:hover {
-		background-color: #679caa;
+		background-color: #48d1fe;
 	}
 	.forget{
-		cursor: pointer;
-		color: #74a724;
-		font-family: tahoma;
-		font-size: 11px;
-		font-weight: bold;
-		margin-top: 10px;
-		margin-right: 4px;
+		float: left;
 	}
-	.forget:hover{
-		color: #76c9df;
-	}	
+	.register{
+		float: right;
+	}
 	
 	#ajax-loading{
 		position: fixed;
@@ -448,89 +518,84 @@ else if(isset($_REQUEST["forgetStep2"]))
 	} 
   </style>
   </head> 
-  <body dir="rtl" style="margin:0" onload="return BodyLoad();">
-	<center>
-		<div class="headerDiv" align="center">
-			<div style="width:800;right : 20%;position: absolute;" align="right">
-				<img width="130px" src="../framework/icons/LoginLogo.png"></div>
+  <body dir="rtl" style="margin:0">
+	  <div id="ajax-loading"><div><span>&nbsp;&nbsp;&nbsp;</span></div></div>
+	  <header>
+		  
+		<div class="loginDiv" id="loginDIV">
+			<div class="title" > ورود به پرتال </div>
+			<div class="body">
+				<div class="error" id="LoginErrorDiv" style="display:none"></div>
+				<form method="post" id="LoginForm">
+					<input type="text" name="UserName" class="textfield" id="UserName" 
+						placeholder="کلمه کاربری ..." required="required" dir="ltr" />
+					<input onkeydown="pressing(event);" type="password" class="textfield" id="password" 
+						placeholder="رمز عبور ..." required="required" dir="ltr"/>
+					<button type="button" onclick="loginFN()" class="btn">ورود</button>
+					<input type="hidden" id="md5Pass" name="md5Pass">
+				</form>
+			</div>
+			<div class="footer">
+				<div onclick="ForgetPass(1);" class="forget">◄&nbsp;رمز عبور را فراموش کرده ام </div>
+				<div onclick="Register(true)" class="register">۞  ثبت نام در سامانه</div>
+			</div>
 		</div>
-		<div align="center">
-		<div class="mainDiv">
-			<table width="100%">
+		  
+		<div class="loginDiv" id="registerDIV" style="display:none;" align="right">
+			<div class="title">ثبت نام در پرتال</div>
+			<div class="body">
+				<div class="error" id="RegisterErrorDiv" style="display:none"></div>
+				<form method="post" id="RegisterForm" onsubmit="return RegisterFN();">
+					<div style="margin-bottom:10px;direction:rtl;font-size: 13px;color:white">
+						<input type="radio" id="isReal" name="IsReal" value="YES" onclick="ChangePersonType(this);" checked> شخص حقیقی
+						<input type="radio" id="noReal" name="IsReal" value="NO" onclick="ChangePersonType(this);" value="LEGAL"> شخص حقوقی
+					</div>
+					<input type="text" name="fname" class="textfield2" id="fname" placeholder="نام ..." required="required" dir="rtl"/>
+					<input type="text" name="lname" class="textfield2" id="lname" placeholder="نام خانوادگی ..." required="required" dir="rtl"/>
+					<input type="text" name="CompanyName" style="display:none" class="textfield2" id="CompanyName" 
+						   placeholder="نام شرکت ..." dir="rtl"/>
+					<input type="email" name="email" id="email" class="textfield2" placeholder="پست الکترونیک ..." required="required" dir="ltr"/>
+					<input type="text" name="NationalID" id="NationalID" class="textfield2" placeholder="کد ملی/ شناسه ملی ..." required="required" dir="ltr"/>
+					<div id="UserNameDiv2"><input type="text" id="UserName2" name="UserName" class="textfield2" 
+							placeholder="کلمه کاربری ..." required="required" dir="ltr"/></div>
+					<input type="password" class="textfield2" id="password1" placeholder="رمز عبور ..." required="required" dir="ltr"/>
+					<input type="password" class="textfield2" id="password2" placeholder="تکرار رمز عبور ..." required="required" 
+						   dir="ltr" oninput="ConfirmPassword(this)"/><br>
+					<input type="hidden" id="md5Pass2" name="md5Pass">
+					<button type="button" onclick="RegisterFN()" class="btn"> ثبت نام </button>					
+				</form>
+			</div>
+			<div class="footer"><div align="left" style="cursor: pointer;" onclick="BackToLogin()">بازگشت</div></div>
+		</div>	
+		  
+		<div class="loginDiv" id="forgetDIV" style="display:none">
+			<div class="title">بازیابی کلمه عبور</div>
+			<div class="body">
+				<div class="error" id="ForgetErrorDiv" style="display: none"></div>
+				<form id="forgetForm">
+					<div style="font-size: 12px;color:white;" id="descDIV">ابتدا کلمه کاربری خود را وارد کنید
+					<br><br></div>
+					<input type="text" id="ForgetUserName" name="ForgetUserName" class="textfield" 
+					placeholder="کلمه کاربری ..." required="required" dir="ltr"/>
+					<input type="text" id="forgetemail" name="forgetemail" style="display:none" class="textfield" 
+							placeholder="ایمیل ..." dir="ltr"/>
+					<button type="button" onclick="ForgetPass(2)" style="" id="step1BTN" class="btn"> مرحله بعد </button>
+					<button type="button" onclick="ForgetPass(3)" style="display:none" id="step2BTN" class="btn"> ارسال ایمیل </button>
+					<button type="button" onclick="ForgetPass(0)" style="display:none" id="loginBTN" class="btn"> ورود </button>
+				</form>
+			</div>
+			<div class="footer"><div align="left" style="cursor: pointer;" onclick="BackToLogin()">بازگشت</div></div>
+		</div>
+				
+		<div class="footerDiv" align="center">
+			<table width="90%">
 				<tr>
-					<td width="200px" style="vertical-align: middle;"><img src="../framework/icons/keys.jpg"</td>
-					<td style="vertical-align: top;">
-						
-						<div id="loginDescDIV" style="color:red;display:none">
-							<br><br>به دلیل تعداد زیاد تلاش ناموفق جهت ورود به سیستم، <br>
-							به مدت 10 دقیقه ورود به سیستم برای شما قفل خواهد بود<br>
-						</div>
-						
-						<div id="loginDIV">
-							<form method="post" id="MainForm" onsubmit="return loginFN();">
-								<div class="title" > ورود به پرتال </div>
-								<br>
-								<div style="font-size: 12px">جهت ورود به پرتال نام کاربری و کلمه عبور خود را وارد کنید.
-									درغیر اینصورت با زدن دکمه ثبت نام به پرتال وارد شوید.</div>
-								<br>
-								<div id="UserNameDiv"><input type="text" name="UserName" class="textfield" id="UserName" 
-									placeholder="کلمه کاربری ..." required="required" dir="ltr" /></div>
-								<div id="PasswordDiv"><input onkeydown="pressing(event);" type="password" class="textfield" id="password" 
-									placeholder="رمز عبور ..." required="required" dir="ltr"/></div>
-								<button type="submit" style="width:80px" class="btn  ">ورود</button>
-								<div onclick="ForgetPass(1);" class="forget">&nbsp;| رمز عبور را فراموش کرده ام </div>
-								<br><div onclick="Register(true)" class="forget">ثبت نام در سامانه</div>
-								<input type="hidden" id="md5Pass" name="md5Pass">
-							</form>
-						</div>
-						<div  id="registerDIV" style="display:none;" align="right">
-							<div class="title">ثبت نام در پرتال</div>
-							<form method="post" id="MainForm2" onsubmit="return RegisterFN();">
-								<div style="margin-bottom:10px;direction:rtl;font-size: 13px">
-									<input type="radio" id="isReal" name="IsReal" value="YES" onclick="ChangePersonType(this);" checked> شخص حقیقی
-									<input type="radio" id="noReal" name="IsReal" value="NO" onclick="ChangePersonType(this);" value="LEGAL"> شخص حقوقی
-								</div>
-								<input type="text" name="fname" class="textfield" id="fname" placeholder="نام ..." required="required" dir="rtl"/>
-								<input type="text" name="lname" class="textfield" id="lname" placeholder="نام خانوادگی ..." required="required" dir="rtl"/>
-								<input type="text" name="CompanyName" style="display:none" class="textfield" id="CompanyName" 
-									   placeholder="نام شرکت ..." dir="rtl"/>
-								<input type="email" name="email" id="email" class="textfield" placeholder="پست الکترونیک ..." required="required" dir="ltr"/>
-								<div id="NationalIDDiv">
-									<input type="text" name="NationalID" id="NationalID" class="textfield" placeholder="کد ملی/ شناسه ملی ..." required="required" dir="ltr"/>
-								</div>
-								<div id="UserNameDiv2"><input type="text" id="UserName2" name="UserName" class="textfield" 
-										placeholder="کلمه کاربری ..." required="required" dir="ltr"/></div>
-								<input type="password" class="textfield" id="password1" placeholder="رمز عبور ..." required="required" dir="ltr"/>
-								<input type="password" class="textfield" id="password2" placeholder="تکرار رمز عبور ..." required="required" 
-									   dir="ltr" oninput="ConfirmPassword(this)"/><br>
-								<input type="hidden" id="md5Pass2" name="md5Pass">
-								<button type="submit" style="float:right;width:100px" class="btn"> ثبت نام </button>
-								<button type="button" onclick="Register(false)" class="btn" style="width: 58px;margin-right:40px">بازگشت</button>
-							</form>
-						</div>	
-						<div id="ajax-loading"><div></div><span>در حال انجام عملیات . . .</span></div>
-						<div id="forgetDIV" style="display:none">
-							<form id="forgetForm">
-								<div style="font-size: 12px" id="descDIV">ابتدا کلمه کاربری خود را وارد کنید
-								<br><br></div>
-								<input type="text" id="ForgetUserName" name="ForgetUserName" class="textfield" 
-								placeholder="کلمه کاربری ..." required="required" dir="ltr"/>
-								<input type="text" id="forgetemail" name="forgetemail" style="display:none" class="textfield" 
-										placeholder="ایمیل ..." dir="ltr"/>
-								<div id="errorDIV" style="color:red;font-size: 12px"></div>	<br>								
-							<button type="button" onclick="ForgetPass(2)" style="float:right;width:100px" id="step1BTN" class="btn"> مرحله بعد </button>
-							<button type="button" onclick="ForgetPass(3)" style="float:right;width:100px;display:none" id="step2BTN" class="btn"> ارسال ایمیل </button>
-							<button type="button" onclick="ForgetPass(0)" style="float:right;width:100px;display:none" id="loginBTN" class="btn"> ورود </button>
-							
-							</form>
-						</div>
-					</td>
+					<td width="33%">تلفن پشتیبانی : 05138837393</td>
+					<td width="33%" align="center"><a target="blank" href="http://krrtf.ir/">سایت صندوق پژوهش و فناوری خراسان رضوی</a></td>
+					<td width="33%" align="left">© کلیه حقوق این نرم افزار محفوظ می باشد</td>
 				</tr>
 			</table>
 		</div>
-		</div>
-		<div class="footerDiv">
-<br>© کلیه حقوق این نرم افزار محفوظ است.</div>
-	</center>	  
+	</header>
 </body>
 </html>

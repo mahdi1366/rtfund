@@ -398,4 +398,62 @@ function SelectFollowUps(){
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();			
 }
+
+//---------------------------------------------------
+
+function GetPics(){
+	
+    $dt = FRW_pics::Get();
+    echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+    die;
+}
+
+function SavePics(){
+	
+    $obj = new FRW_pics();
+    PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+    // first get the file extension
+    if (isset($_FILES) && $_FILES["attachfile"] && $_FILES["attachfile"]['name'] && $_FILES["attachfile"]['name'] != "") {
+        $st = preg_split("/\./", $_FILES["attachfile"]['name']);
+        $extension = $st[count($st) - 1];
+        $extension = strtolower($extension);
+        
+        if(!in_array($extension, explode(",", "png,jpg,jpeg,gif"))){
+            echo Response::createObjectiveResponse(false, "نوع فایل نا معتبر است.");
+            die;
+        }
+        $obj->FileType = $extension;
+    }
+	
+    if(empty($obj->PicID))
+		$result = $obj->Add();
+    else
+		$result = $obj->Edit();
+	
+    
+    if (isset($_FILES) && $_FILES["attachfile"] && $_FILES["attachfile"]['name'] && $_FILES["attachfile"]['name'] != "") {
+       
+        $fileFullName = FILE_FRAMEWORK_PICS . "pic#" . $obj->PicID . "." . $obj->FileType;
+        if (file_exists($fileFullName))
+            unlink($fileFullName);
+
+        move_uploaded_file($_FILES["attachfile"]["tmp_name"], $fileFullName);
+    }
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
+    echo Response::createObjectiveResponse($result, "");
+    die();
+}
+
+function removePics(){
+    
+    $obj = new FRW_pics($_POST['PicID']);
+    $result = $obj->Remove();
+	$fileFullName = FILE_FRAMEWORK_PICS . "pic#" . $obj->PicID . "." . $obj->FileType;
+	unlink($fileFullName);
+    echo Response::createObjectiveResponse($result, "");
+    die();
+}
+
 ?>

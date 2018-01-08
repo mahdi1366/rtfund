@@ -434,4 +434,24 @@ class FRW_AccessGroupList extends OperationClass{
 		return true;
 	}
 }
+
+class FRW_pics extends OperationClass {
+
+    const TableName = "FRW_pics";
+    const TableKey = "PicID";
+
+    public $PicID;
+    public $SourceType;
+    public $FileType;
+
+    function __construct($PicID = '')
+    {
+        $this->DT_PicID = DataMember::CreateDMA(DataMember::Pattern_Num);
+        $this->DT_SourceType = DataMember::CreateDMA(DataMember::Pattern_FaEnAlphaNum);
+        $this->DT_FileType = DataMember::CreateDMA(DataMember::Pattern_EnAlphaNum);
+
+        parent::__construct($PicID);
+    }
+
+}
 ?>

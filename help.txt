@@ -40,5 +40,18 @@ Object.grid.getView().getRowClass = function (record, index)
 		return "greenRow";
 	return "";
 }
+--------------------------------------------------------------------------------
+xtype : "combo",
+	store : new Ext.data.SimpleStore({
+		data : [
+			[100 , "خام" ],
+			[110 , "تایید شده" ],
+			[120 , "خاتمه یافته" ],
+			[130 , "ابطال شده" ]
+		],
+		fields : ['id','value']
+	}),
+	displayField : "value",
+	valueField : "id",
 
 

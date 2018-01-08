@@ -513,7 +513,7 @@ function ReturnEndRequest(){
 	if(!$ReqObj->EditRequest($pdo))
 	{
 		$pdo->rollback();
-		echo Response::createObjectiveResponse(false, "خطا در تغییر درخواست");
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
 	

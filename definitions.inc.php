@@ -115,6 +115,8 @@ define("OFC_ACCESSTYPE_SECRET", "2");
 define("OFC_ROLE_SECRET", "1");
 //-------------------------------------
 
+define("FILE_FRAMEWORK_PICS",getenv("DOCUMENT_ROOT") . "/storage/framework/");
+
 function BeginReport() {
 
         echo '<html>

@@ -3660,7 +3660,14 @@ Ext.override(Ext.picker.Date,{
 Ext.override(Ext.form.CheckboxGroup,{blankText : "حداقل یک مورد از این گروه را باید انتخاب کنید"});
 Ext.override(Ext.form.RadioGroup,{blankText : "حداقل یک مورد از این گروه را باید انتخاب کنید"});
 Ext.override(Ext.form.field.HtmlEditor, {createLinkText : 'آدرس مربوط به لینک را وارد کنید:'});
-
+Ext.override(Ext.window.MessageBox, {
+    buttonText: {
+        ok: 'تایید',
+        yes: 'بلی',
+        no: 'خیر',
+        cancel: 'انصراف'
+    }
+});
 //***********************************************************
 //*********** always send combobox value even empty   *******
 //*********** empty combobox value on clear input ***********

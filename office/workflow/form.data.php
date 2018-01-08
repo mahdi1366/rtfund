@@ -54,7 +54,7 @@ function selectFormItems() {
 	if(!empty($_REQUEST["NotGlobal"]))
 		$where .= " AND FormID >0";
 	
-    $temp = WFM_FormItems::Get($where . " order by FormItemID", $params);
+    $temp = WFM_FormItems::Get($where . " order by ordering", $params);
 	
 	if(!empty($_REQUEST["limit"]))
 		$res = PdoDataAccess::fetchAll ($temp, $_GET["start"], $_GET["limit"]);
