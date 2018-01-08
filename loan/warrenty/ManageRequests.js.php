@@ -969,6 +969,12 @@ WarrentyRequest.prototype.BeforeExtendWarrentyDoc = function(){
 			items : new Ext.form.Panel({
 				width : 290,
 				items : [{
+					xtype : "currencyfield",
+					name : "amount",
+					allowBlank : false,
+					hideTrigger : true,
+					fieldLabel : "مبلغ ضمانت نامه"
+				},{
 					xtype : "shdatefield",
 					name : "EndDate",
 					allowBlank : false,
