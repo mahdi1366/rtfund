@@ -131,9 +131,9 @@ class LON_requests extends PdoDataAccess{
 	
 	function EditRequest($pdo = null, $CheckDuplicate = true){
 		
-		if($CheckDuplicate)
+		/*if($CheckDuplicate)
 			if(!$this->CheckForDuplicate())
-				return false;
+				return false;*/
 		
 	 	if( parent::update("LON_requests",$this," RequestID=:l", array(":l" => $this->RequestID), $pdo) === false )
 	 		return false;
