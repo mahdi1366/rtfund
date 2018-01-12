@@ -10,8 +10,32 @@ require_once 'form.class.php';
 require_once inc_dataReader;
 require_once inc_response;
 
-if(!empty($_REQUEST["task"]))
-      $_REQUEST["task"]();
+$task = !empty($_REQUEST["task"]) ? $_REQUEST["task"] : "";
+switch($task)
+{
+	case "SelectForms":
+	case "selectFormItems":
+	case "GetEmptyFormID":
+	case "SaveForm":
+	case "saveFormItem":
+	case "GetFormContent":
+	case "GetFormTitle":
+	case "deleteFormItem":
+	case "deleteForm":
+	case "PrepareContentToEdit":
+	case "CopyForm":
+	case "SelectValidForms":
+	case "SelectMyRequests":
+	case "SaveRequest":
+	case "GetRequestItems":
+	case "DeleteRequest":
+	case "GetFormPersons":
+	case "SaveFormPerson":
+	case "RemoveFormPersons":
+	case "SelectFormSteps":
+		
+		$task();
+}
 
 function SelectForms() {
     $where = " AND IsActive='YES'";
@@ -416,6 +440,19 @@ function RemoveFormPersons(){
 	$obj = new WFM_FormPersons($_REQUEST["RowID"]);
 	$result = $obj->Remove();
 	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//---------------------------------------
+
+function SelectFormSteps(){
+	
+	$FormID = $_REQUEST["FormID"];
+	
+	$dt = PdoDataAccess::runquery("SELECT s.* FROM WFM_FlowSteps s join WFM_forms using(FlowID)
+		where FormID=?", array($FormID));
+	
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
 

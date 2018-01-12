@@ -171,4 +171,13 @@ class WFM_RequestItems extends OperationClass {
 				array(":RequestID" => $RequestID), $pdo);
 	}
 }
+
+class WFM_FormAccess extends OperationClass {
+
+	const TableName = "WFM_FormAccess";
+    const TableKey = "FormItemID";
+	
+    public $FormItemID;
+    public $StepRowID;
+}
 ?>
