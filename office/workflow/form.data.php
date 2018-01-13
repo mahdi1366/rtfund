@@ -33,7 +33,8 @@ switch($task)
 	case "SaveFormPerson":
 	case "RemoveFormPersons":
 	case "SelectFormSteps":
-		
+	case "SelectAccessFromItems":
+	case "ChangeFormAccess":
 		$task();
 }
 
@@ -456,4 +457,36 @@ function SelectFormSteps(){
 	die();
 }
 
+function SelectAccessFromItems(){
+	
+	$FormID = $_REQUEST["FormID"];
+	$StepRowID = $_REQUEST["StepRowID"];
+	
+	$dt = PdoDataAccess::runquery("
+		SELECT fi.FormItemID,ItemName, if(StepRowID is null,'NO','YES') access,AccessID
+		FROM WFM_FormItems fi left join WFM_FormAccess fa on(fi.FormItemID=fa.FormItemID AND fa.StepRowiD=?)
+		where FormID=?", array($StepRowID, $FormID));
+	
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function ChangeFormAccess(){
+	
+	$access = $_POST["access"];
+	if($access == "true")
+	{
+		$obj = new WFM_FormAccess();
+		$obj->FormItemID = $_POST["FormItemID"];
+		$obj->StepRowID = $_POST["StepRowID"];
+		$result = $obj->Add();
+	}
+	else
+	{
+		$obj = new WFM_FormAccess($_POST["AccessID"]);
+		$result = $obj->Remove();
+	}
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 ?>

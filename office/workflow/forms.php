@@ -62,6 +62,12 @@ $col->sortable = false;
 $col->align = "center";
 $col->width = 40;
 
+$col = $dg->addColumn("دسترسی","","");
+$col->renderer = "WFM_form.AccessRender";
+$col->sortable = false;
+$col->align = "center";
+$col->width = 40;
+
 if($accessObj->RemoveFlag)
 {
 	$col = $dg->addColumn("حذف", "FormID");
@@ -107,6 +113,13 @@ WFM_form.OperationRender = function(v,p,r){
 WFM_form.PersonsRender = function(v,p,r)
 {
 	return "<div align='center' title='افراد' class='list' onclick='WFM_formObject.ShowPersons();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16'></div>";
+}
+
+WFM_form.AccessRender = function(v,p,r)
+{
+	return "<div align='center' title='دسترسی های فرم' class='user' onclick='WFM_formObject.ShowAccess();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;height:16'></div>";
 }
@@ -231,6 +244,41 @@ WFM_form.prototype.ShowPersons = function(){
 	this.PersonsWin.loader.load({
 		params : { 
 			ExtTabID : this.PersonsWin.getEl().id,
+			MenuID : <?= $_REQUEST["MenuID"] ?>,
+			FormID : record.data.FormID}
+	});
+}
+
+WFM_form.prototype.ShowAccess = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+	if(!this.AccessWin)
+	{
+		this.AccessWin = new Ext.window.Window({
+			width : 500,
+			title : "تعیین دسترسی های آیتم های فرم برای هر مرحله",
+			bodyStyle : "background-color:white;text-align:-moz-center",
+			height : 480,
+			modal : true,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "FormItemAccess.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.AccessWin);
+	}
+	this.AccessWin.show();
+	this.AccessWin.center();
+	this.AccessWin.loader.load({
+		params : { 
+			ExtTabID : this.AccessWin.getEl().id,
 			MenuID : <?= $_REQUEST["MenuID"] ?>,
 			FormID : record.data.FormID}
 	});

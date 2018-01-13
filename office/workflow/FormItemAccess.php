@@ -12,32 +12,30 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 
 $FormID = $_REQUEST["FormID"];
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "form.data.php?task=selectFormItems", "div_dg");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "form.data.php?task=SelectAccessFromItems&FormID=" . $FormID, "div_dg");
 
-$col = $dg->addColumn("عنوان", "FormItemID");
+$dg->addColumn("", "access", "", true);
+$dg->addColumn("", "AccessID", "", true);
+
+$col = $dg->addColumn("", "FormItemID");
 $col->renderer = "WFM_FormAccess.CheckRender";
-
+$col->width = 50;
+$col->align = "center";
 $col = $dg->addColumn("عنوان", "ItemName");
-$col->width = 200;
 
-$col = $dg->addColumn("نوع", "ItemType");
-$col->editor = "this.ItemTypeCombo";
+$dg->DefaultSortField = "ordering";
+$dg->autoExpandColumn = "ItemName";
 
-$col = $dg->addColumn("مقادیر لیست", "ComboValues");
-
-$dg->DefaultSortField = "FormItemID";
-$dg->DefaultSortDir = "desc";
-$dg->autoExpandColumn = "ComboValues";
-
-$dg->width = 790;
-$dg->height = 460;
-$dg->pageSize = 20;
+$dg->EnablePaging = false;
+$dg->EnableSearch = false;
+$dg->width = 480;
+$dg->height = 390;
 
 $grid = $dg->makeGrid_returnObjects();
 ?>
 <center>
 	<form id="mainForm">
-        <div id="grid_div"></div>
+        <div id="panel_div"></div>
 	</form>
 </center>
 <script>
@@ -59,8 +57,11 @@ WFM_FormAccess.prototype = {
 
 function WFM_FormAccess(){
 	
+	this.grid = <?= $grid ?>;
+	
 	this.formPanel = new Ext.form.Panel({
 		border : false,
+		renderTo : this.get("panel_div"),
 		items : [{
 			xtype : "combo",
 			store: new Ext.data.Store({
@@ -69,44 +70,54 @@ function WFM_FormAccess(){
 					url: this.address_prefix + 'form.data.php?task=SelectFormSteps&FormID=' + this.FormID,
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['StepRowID','StepDesc']
+				fields :  ['StepRowID','StepDesc'],
+				autoLoad : true
 			}),
+			queryMode : "local",
+			labelWidth : 150,
 			fieldLabel : "انتخاب مرحله گردش فرم",
 			displayField: 'StepDesc',
 			valueField : "StepRowID",
 			name : "StepRowID",
-			width : 400
-		},
-		this.grid]
+			width : 400,
+			listeners : {
+				select : function(combo,records){
+					me = WFM_FormAccessObject;
+					me.grid.getStore().proxy.extraParams.StepRowID = records[0].data.StepRowID;
+					if(me.grid.rendered)
+						me.grid.getStore().load();
+					else
+						me.formPanel.add(me.grid);
+				}
+			}
+		}]
 	});
-}
-
-WFM_FormAccess.DeleteRender = function(v,p,r){
-	
-	return "<div align='center' title='حذف' class='remove' "+
-	"onclick='WFM_FormAccessObject.DeletePerson();' " +
-	"style='background-repeat:no-repeat;background-position:center;" +
-	"cursor:pointer;width:100%;height:16'></div>";
 }
 
 WFM_FormAccess.CheckRender = function(v,p,r){
 	
-	return "<input type=checkbox name='chk_"+v+"' >";
+	return "<input type=checkbox name='chk_"+v+"' "+
+		(r.data.access == "YES" ? "checked" : "")+" onchange='WFM_FormAccessObject.ChangeAccess(this)'>";
 }
 
-WFM_FormAccess.prototype.Save = function(store,record,op){
+WFM_FormAccess.prototype.ChangeAccess = function(el){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
 	
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
 	mask.show();    
 	Ext.Ajax.request({
-		url: this.address_prefix + 'wfm.data.php?task=SaveStepPerson',
+		url: this.address_prefix + 'form.data.php?task=ChangeFormAccess',
 		params:{
-			record : Ext.encode(record.data)
+			FormItemID : record.data.FormItemID,
+			access : el.checked ? "true" : "false",
+			StepRowID : this.formPanel.down("[name=StepRowID]").getValue(),
+			AccessID : record.data.AccessID
+			
 		},
 		method: 'POST',
 		success: function(response,option){
 			mask.hide();
-			WFM_FormAccessObject.grid.getStore().load();
 		},
 		failure: function(){}
 	});
