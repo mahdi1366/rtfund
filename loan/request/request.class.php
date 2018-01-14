@@ -296,8 +296,13 @@ class LON_requests extends PdoDataAccess{
 			
 			if($StartDate < $ToDate && $TotalRemainder > 0)
 			{
-				$amount = $installments[$i]["InstallmentAmount"] < $TotalRemainder ? 
-					$installments[$i]["InstallmentAmount"] : $TotalRemainder;
+				if($obj->PayCompute != "installment")
+					$amount = $TotalRemainder;
+				else
+					$amount = $installments[$i]["InstallmentAmount"] < $TotalRemainder ? 
+								$installments[$i]["InstallmentAmount"] : $TotalRemainder;
+				
+				
 				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
 				$CurForfeit = round($amount*$obj->ForfeitPercent*$forfeitDays/36500);
 				$TotalForfeit += $CurForfeit;
