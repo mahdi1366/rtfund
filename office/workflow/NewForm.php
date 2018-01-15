@@ -13,9 +13,10 @@ if (!empty($_REQUEST['FormID']))
 else
     $FormID = GetEmptyFormID();
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "form.data.php?task=selectFormItems", "div_dg");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "form.data.php?task=selectFormItems&NotGlobal=true", "div_dg");
 
 $dg->addColumn("", "FormID", "", true);
+$dg->addColumn("", "ordering", "");
 
 $col = $dg->addColumn("شماره ", "FormItemID");
 $col->width = 50;
@@ -30,6 +31,16 @@ $col->editor = "this.ItemTypeCombo";
 $col = $dg->addColumn("مقادیر لیست", "ComboValues");
 $col->editor = ColumnEditor::TextField(true);
 
+
+$col = $dg->addColumn("","","");
+$col->renderer = "WFM_NewForm.upRender";
+$col->sortable = false;
+$col->width = 30;
+
+$col = $dg->addColumn("","","");
+$col->renderer = "WFM_NewForm.downRender";
+$col->sortable = false;
+$col->width = 30;
 
 $col = $dg->addColumn("حذف", "FormItemID", "string");
 $col->sortable = false;
@@ -110,6 +121,58 @@ function WFM_NewForm() {
 	this.LoadForm();
 }
 
+WFM_NewForm.upRender = function(v,p,r){
+	store = WFM_NewFormObj.grid.getStore();
+	record = store.getAt(0);
+	if(r.data.ordering == record.data.ordering)
+		return "";
+	return "<div align='center' title='حذف ' class='up' onclick='WFM_NewFormObj.moveStep(-1);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+WFM_NewForm.downRender = function(v,p,r){
+	store = WFM_NewFormObj.grid.getStore();
+	record = store.getAt(store.getCount()-1);
+	if(r.data.ordering == record.data.ordering)
+		return "";
+	return "<div align='center' title='حذف ' class='down' onclick='WFM_NewFormObj.moveStep(1);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+WFM_NewForm.prototype.moveStep = function(direction){
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+    mask = new Ext.LoadMask(this.itemWin, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		params: {
+			task: 'MoveItem',
+			FormID : this.FormID,
+			FormItemID : record.data.FormItemID,
+			direction : direction
+		},
+		url: this.address_prefix + 'form.data.php',
+		method: 'POST',
+
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+			if(st.success)
+			{
+				WFM_NewFormObj.grid.getStore().load();
+			}
+			else
+			{
+				Ext.MessageBox.alert("Error",st.data);
+			}
+		},
+		failure: function(){}
+	});
+}
+
 WFM_NewForm.prototype.LoadForm = function(){
 		
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال بارگذاری...'});
@@ -148,7 +211,7 @@ WFM_NewForm.prototype.BuildForms = function(){
 	this.formPanel = new Ext.form.Panel({
 		renderTo: this.get('WFM_NewFormDIV'),
 		width: 960,
-		height : 550,
+		height : 610,
 		title : "اطلاعات فرم",
 		frame: true,
 		fieldDefaults: {
@@ -176,7 +239,7 @@ WFM_NewForm.prototype.BuildForms = function(){
 						reader: {root: 'rows', totalProperty: 'totalCount'}
 					},
 					fields: ['FormItemID', "FormID", 'ItemName', 'ItemType'],
-					pageSize : 10
+					pageSize : 9
 				}),
 				displayField: 'ItemName',
 				pageSize : 10,
@@ -277,9 +340,9 @@ WFM_NewForm.prototype.BuildForms = function(){
 				itemId: 'FormID'
 			}],
 		buttons: [{
-				iconCls: "view",
-				text: " ذخیره",
-				handler: function () { WFM_NewFormObj.SaveForm();}
+				iconCls: "print",
+				text: " پیش نمایش",
+				handler: function () { window.open(WFM_NewFormObj.address_prefix + "PrintForm.php?RequestID=0&FormID=" + WFM_NewFormObj.FormID);}
 			},'->',{
 				iconCls: "save",
 				text: " ذخیره",
@@ -312,7 +375,7 @@ WFM_NewForm.prototype.SaveForm = function(){
 		},
 		success: function (form, action) {
 			mask.hide();
-			WFM_NewFormObj.formPanel.getComponent('FormID').setValue(sd.data);
+			WFM_NewFormObj.formPanel.getComponent('FormID').setValue(action.result.data);
 			Ext.MessageBox.alert('', 'با موفقیت ذخیره شد');
 		},
 		failure : function(form,action){
@@ -337,6 +400,10 @@ WFM_NewForm.prototype.ManageItems = function(){
 			closeAction : "hide",
 			items : [this.grid],
 			buttons :[{
+				text : "پیش نمایش",
+				iconCls : "view",
+				handler : function(){WFM_NewFormObj.PreviewForm();}
+			},{
 				text : "بازگشت",
 				iconCls : "undo",
 				handler : function(){this.up('window').hide();}
@@ -439,4 +506,36 @@ WFM_NewForm.prototype.removeItem = function(){
 
 };
 
+WFM_NewForm.prototype.PreviewForm = function(){
+	
+	if(!this.requestWin)
+	{
+		this.requestWin = new Ext.window.Window({
+			width : 740,
+			height : 660, 
+			modal : true,
+			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "NewRequest.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.requestWin);
+	}
+
+	this.requestWin.show();
+	this.requestWin.center();
+	this.requestWin.loader.load({
+		params : {
+			ExtTabID : this.requestWin.getEl().id,
+			FormID : this.FormID
+		}
+	});
+}
 </script>

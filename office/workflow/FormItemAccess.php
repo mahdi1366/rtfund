@@ -23,6 +23,9 @@ $col->width = 50;
 $col->align = "center";
 $col = $dg->addColumn("عنوان", "ItemName");
 
+$dg->addButton("", "انتخاب همه", "add", "function(){WFM_FormAccessObject.CheckAll(1);}");
+$dg->addButton("", "حذف همه", "cross", "function(){WFM_FormAccessObject.CheckAll(0);}");
+
 $dg->DefaultSortField = "ordering";
 $dg->autoExpandColumn = "ItemName";
 
@@ -96,11 +99,11 @@ function WFM_FormAccess(){
 
 WFM_FormAccess.CheckRender = function(v,p,r){
 	
-	return "<input type=checkbox name='chk_"+v+"' "+
+	return "<input type=checkbox id='chk_"+v+"' name='chk_"+v+"' "+
 		(r.data.access == "YES" ? "checked" : "")+" onchange='WFM_FormAccessObject.ChangeAccess(this)'>";
 }
 
-WFM_FormAccess.prototype.ChangeAccess = function(el){
+WFM_FormAccess.prototype.ChangeAccess = function(el, values){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
 	
@@ -163,6 +166,30 @@ WFM_FormAccess.prototype.AddPerson = function(){
 	this.grid.plugins[0].cancelEdit();
 	this.grid.getStore().insert(0, record);
 	this.grid.plugins[0].startEdit(0, 0);
+}
+
+WFM_FormAccess.prototype.CheckAll = function(mode){
+	
+	this.grid.getStore().each(function(record){
+		WFM_FormAccessObject.get("chk_" + record.data.FormItemID).checked = mode == 1 ? true : false;
+	});
+	
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
+	mask.show();    
+	Ext.Ajax.request({
+		url: this.address_prefix + 'form.data.php?task=ChangeTotalFormAccess',
+		params:{
+			FormID : this.FormID,
+			StepRowID : this.formPanel.down("[name=StepRowID]").getValue(),
+			access : mode == 1 ? "true" : "false"
+			
+		},
+		method: 'POST',
+		success: function(response,option){
+			mask.hide();
+		},
+		failure: function(){}
+	});
 }
 
 var WFM_FormAccessObject = new WFM_FormAccess();	

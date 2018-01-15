@@ -97,7 +97,7 @@ function FrameWorkClass()
 								
 							'<div style="margin-top:4px;color:white;line-height: 18px;font-weight: bold;'+
 								'background-color : #009de0;border-radius:20px; padding:6px">'+
-							"<?= $SystemName?>"+
+							
 							"<br> کاربر : <?= $_SESSION['USER']["fullname"] ?>"+
 							"<br> شناسه : <?= $_SESSION['USER']["UserName"]?></div>"
 					},{
@@ -120,12 +120,7 @@ function FrameWorkClass()
 						xtype: 'menu',
 						bodyStyle : "background-color:white !important;",
 						floating: false,
-						items: [
-							{
-								icon : "/generalUI/ext4/resources/themes/icons/systems.gif",
-								text: 'انتخاب سیستم',
-								menu : [<?= $sysArray ?>]
-							},{
+						items: [{
 								icon: '/generalUI/ext4/resources/themes/icons/access.gif',
 								text: 'تغییر رمز عبور',
 								handler : function(){

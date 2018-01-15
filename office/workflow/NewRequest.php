@@ -16,8 +16,11 @@ if (!empty($_REQUEST['RequestID']))
 else
 {
 	$RequestID = "";
-	$FormID = "";
+	$FormID = !empty($_REQUEST['FormID']) ? $_REQUEST['FormID'] : "";
 }
+
+$StepRowID = empty($_REQUEST["StepRowID"]) ? 0 : $_REQUEST["StepRowID"];
+
 ?>
 <script type="text/javascript">
 
@@ -28,6 +31,8 @@ WFM_NewRequest.prototype = {
 	
 	RequestID : "<?= $RequestID ?>",
 	FormID : "<?= $FormID ?>",
+	StepRowID : "<?= $StepRowID ?>",
+	
 	ItemsMmask : null,
 	
 	get: function (elementID) {
@@ -47,13 +52,8 @@ function WFM_NewRequest() {
 			labelWidth: 100
 		},
 		renderTo: this.get("SelectTplComboDIV"),
-		layout: {
-			type: 'table',                
-			columns : 2
-		},
 		items: [{
 			xtype: 'combo',
-			colspan : 2,
 			fieldLabel: 'انتخاب فرم',
 			itemId: 'FormID',
 			store: new Ext.data.Store({
@@ -80,18 +80,8 @@ function WFM_NewRequest() {
 			width: 350,
 			listeners: {
 				select: function (combo, records) {
-					
 					this.collapse();
-					fieldset = WFM_NewRequestObj.MainForm.down("[itemId=FormItems]");
-					WFM_NewRequestObj.ItemsMmask = new Ext.LoadMask(fieldset, {msg:'در حال بارگذاری...'});
-					WFM_NewRequestObj.ItemsMmask.show();
-					WFM_NewRequestObj.FormItemsStore.load({
-						params : {FormID : records[0].data.FormID},
-						callback : function(){
-							WFM_NewRequestObj.ShowTplItemsForm();
-						}
-					});
-					
+					WFM_NewRequestObj.FormSelect(records[0].data.FormID);
 				}
 			}
 		},{
@@ -99,16 +89,12 @@ function WFM_NewRequest() {
 			title : "آیتم های فرم",
 			itemId: "FormItems",
 			width : 680,
+			style : "text-align:right",
 			height : 480,
 			autoScroll: true,
-			colspan : 2,
-			layout: {
-				type: 'table',                
-				columns : 2
-			},
 			defaults: {
-				labelWidth: 100,
-				width : 320
+				labelWidth: 150,
+				width : 600
 			}
 		},{
 			xtype: "hidden",
@@ -118,12 +104,14 @@ function WFM_NewRequest() {
 		}],
 		buttons: [{
 			text: "  ذخیره",
+			itemId : "btn_save",
 			handler: function () {
 				WFM_NewRequestObj.SaveRequest(false);
 			},
 			iconCls: "save"
 		}, {
 			text: "  مشاهده",
+			itemId : "btn_view",
 			handler: function () {
 				WFM_NewRequestObj.SaveRequest(true);
 			},
@@ -132,10 +120,10 @@ function WFM_NewRequest() {
 	});
 	
 	this.FormItemsStore = new Ext.data.Store({
-		fields: ['FormItemID',"FormID", 'ItemName', 'ItemType', "ComboValues"],
+		fields: ['FormItemID',"FormID", 'ItemName', 'ItemType', "ComboValues", "access"],
 		proxy: {
 			type: 'jsonp',
-			url: this.address_prefix + "form.data.php?task=selectFormItems",
+			url: this.address_prefix + "form.data.php?task=selectFormItems&NotGlobal=true&StepRowID=" + this.StepRowID,
 			reader: {
 				root: 'rows',
 				totalProperty: 'totalCount'
@@ -155,6 +143,26 @@ function WFM_NewRequest() {
 	
 	if(this.RequestID > 0)
 		this.LoadRequest();
+	else if(this.FormID*1 > 0)
+	{
+		this.MainForm.getComponent("FormID").setValue(this.FormID);
+		this.FormSelect(this.FormID);
+		this.MainForm.down("[itemId=btn_save]").hide();
+		this.MainForm.down("[itemId=btn_view]").hide();
+	}
+}
+
+WFM_NewRequest.prototype.FormSelect = function(FormID){
+	
+	fieldset = this.MainForm.down("[itemId=FormItems]");
+	this.ItemsMmask = new Ext.LoadMask(fieldset, {msg:'در حال بارگذاری...'});
+	this.ItemsMmask.show();
+	this.FormItemsStore.load({
+		params : {FormID : FormID},
+		callback : function(){
+			WFM_NewRequestObj.ShowTplItemsForm();
+		}
+	});
 }
 
 WFM_NewRequest.prototype.LoadRequest = function(){
@@ -278,13 +286,14 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 				}),
 				xtype: record.data.ItemType,
 				valueField : "value",
+				disabled : record.data.access == "NO" ? true : false,
 				displayField : "value",
 				itemId: 'ReqItem_' + record.data.FormItemID,
 				name: 'ReqItem_' + record.data.FormItemID,
 				fieldLabel : record.data.ItemName
 			});
 		}
-		if(record.data.ItemType == "checkbox")
+		else if(record.data.ItemType == "checkbox")
 		{
 			if(record.data.ComboValues == null)
 			{
@@ -292,17 +301,18 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 					boxLabel : record.data.ItemName,
 					xtype : "checkbox",
 					name : "ReqItem_" + record.data.FormItemID,
-					itemId : "ReqItem_" + record.data.FormItemID
+					itemId : "ReqItem_" + record.data.FormItemID,
+					disabled : record.data.access == "NO" ? true : false
 				});
 			}
 			else
 			{
-				if(i%2 > 0 && i != 0)
+				/*if(i%2 > 0 && i != 0)
 				{
 					parent.add({
 						xtype : "container"
 					});
-				}
+				}*/
 				var items = new Array();
 				arr = record.data.ComboValues.split("#");
 				for(j=0; j<arr.length; j++)
@@ -317,23 +327,32 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 					items : items,
 					width : 610,
 					columns : 1,				
-					colspan : 2
+					//colspan : 2,
+					disabled : record.data.access == "NO" ? true : false
 				});
 			}
 		}			
 		else
 		{
-			parent.add({
+			item = {
 				xtype: record.data.ItemType,
 				itemId: 'ReqItem_' + record.data.FormItemID,
 				name: 'ReqItem_' + record.data.FormItemID,
 				fieldLabel : record.data.ItemName,
-				hideTrigger : record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield' ? true : false
-			});
+				disabled : record.data.access == "NO" ? true : false,
+			};
+			if(record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield')
+				item.hideTrigger =  true;
+			if(record.data.ItemType == 'textarea')
+				item.rows = 2;
+			if(new Array('numberfield','currencyfield','shdatefield').indexOf(record.data.ItemType) >= 0)
+				item.width = 400;
+			
+			parent.add(item);
 		}
 	}
 	
-	WFM_NewRequestObj.ItemsMmask.hide();
+	this.ItemsMmask.hide();
 }
 
 WFM_NewRequest.prototype.getShdatefield = function (fieldname, ren) {

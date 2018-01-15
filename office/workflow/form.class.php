@@ -70,15 +70,23 @@ class WFM_FormItems extends OperationClass {
     public $ItemName;
     public $ItemType;
 	public $ComboValues;
+	public $ordering;
+	public $IsActive;
     
+	static function Get($where = "", $params = array())
+	{
+		if(!isset($params[":StepRowID"]))
+			$params[":StepRowID"] = -1;
+		return PdoDataAccess::runquery_fetchMode("  
+			select fi.* , if(fa.FormItemID is null, 'NO', 'YES') access
+			from WFM_FormItems fi left join WFM_FormAccess fa on(fi.FormItemID=fa.FormItemID AND fa.StepRowID=:StepRowID)
+			where 1=1 " . $where, $params);
+	}
+	
     public function Remove($pdo = null){
-        $res = parent::runquery("select count(*) from WFM_FormItems where FormItemID = ? limit 1",
-				array($this->FormItemID),$pdo);
-        if ($res[0][0] > 0){
-			parent::PushException("UsedTemplateItem");
-			return false;
-        }
-        return parent::Remove($pdo);
+        
+		$this->IsActive = "NO";
+		return $this->Edit($pdo);
     }    
 }
 
@@ -144,6 +152,48 @@ class WFM_requests extends OperationClass {
 			
 			where 1=1 " . $where . $order, $whereParams);
     }
+	
+	public static function FullSelect($where = '', $whereParams = array(), $order = "") {
+		
+        return parent::runquery_fetchMode("
+			select r.RequestID,
+				r.FormID,
+				f.FlowID,
+				r.PersonID,
+				r.RegDate,
+				f.FormTitle,
+				p.CompanyName,
+				p.NationalID,
+				p.EconomicID,
+				p.RegNo,
+				p.RegDate CompanyRegDate,
+				p.RegPlace,
+				b1.InfoDesc CompanyType,
+				p.IsGovermental,
+				d.DomainDesc,
+				p.PhoneNo,
+				p.mobile,
+				b2.InfoDesc CityDesc,
+				p.WebSite,
+				p.address,
+				p.email,
+				p.AccountNo,
+				p.SmsNo,
+				p.fname,
+				p.lname,
+				p.FatherName,
+				p.ShNo
+			
+			from WFM_requests r
+			join WFM_forms f using(FormID) 
+			join BSC_persons p using(PersonID)
+			left join BaseInfo b1 on(b1.typeID=14 and b1.InfoID=CompanyType)
+			left join BSC_ActDomain d using(DomainID)
+			left join BaseInfo b2 on(b2.typeID=15 and b2.InfoID=p.CityID)
+			
+			where 1=1 " . $where . $order, $whereParams);
+    }
+	
 }
 
 class WFM_RequestItems extends OperationClass {
@@ -158,9 +208,9 @@ class WFM_RequestItems extends OperationClass {
 
 	static public function Get($where="", $param=array()){
 		
-		$query = "select * from WFM_RequestItems
+		$query = "select ri.*,fi.* from WFM_RequestItems ri
 			join WFM_requests r using(RequestID)
-			join WFM_FormItems using(FormItemID)
+			join WFM_FormItems fi using(FormItemID)
 			where 1=1 " . $where;
 		return PdoDataAccess::runquery_fetchMode($query, $param);
 	}
@@ -175,8 +225,9 @@ class WFM_RequestItems extends OperationClass {
 class WFM_FormAccess extends OperationClass {
 
 	const TableName = "WFM_FormAccess";
-    const TableKey = "FormItemID";
+    const TableKey = "AccessID";
 	
+	public $AccessID;
     public $FormItemID;
     public $StepRowID;
 }

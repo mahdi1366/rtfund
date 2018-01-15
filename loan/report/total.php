@@ -41,6 +41,8 @@ $col = $page_rpg->addColumn("تاریخ آخرین قسط", "MaxInstallmentDate"
 $col->type = "date";
 $col = $page_rpg->addColumn("تاریخ آخرین پرداخت", "MaxPayDate");
 $col->type = "date";
+$page_rpg->addColumn("جمع مبلغ اقساط سررسید شده", "installmentsToNow");
+
 $page_rpg->addColumn("مبلغ آخرین پرداخت", "LastPayAmount");
 $page_rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount");
 $page_rpg->addColumn("مانده قابل پرداخت", "remainder");
@@ -147,6 +149,7 @@ function GetData($mode = "list"){
 				MaxInstallmentDate,
 				MaxPayDate,
 				ifnull(LastPayAmount,0) LastPayAmount,
+				t5.amount installmentsToNow,
 				tazamin".
 				($mode == "list" && $userFields != "" ? "," . $userFields : "")."
 				
@@ -209,6 +212,11 @@ function GetData($mode = "list"){
 				)t
 				group by ObjectID
 			)t4 on(t4.ObjectID=r.RequestID)
+			left join (
+				select RequestID,sum(InstallmentAmount) amount from LON_installments
+				where InstallmentDate<= " . PDONOW . "
+				group by RequestID
+			)t5 on(r.RequestID=t5.RequestID)
 			where 1=1 " . $where;
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
@@ -278,6 +286,8 @@ function ListData($IsDashboard = false){
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	$rpg->addColumn("تاریخ آخرین قسط", "MaxInstallmentDate", "ReportDateRender");
+	$rpg->addColumn("جمع مبلغ اقساط سررسید شده", "installmentsToNow", "ReportMoneyRender");
+	
 
 	$rpg->addColumn("تاریخ آخرین پرداخت", "MaxPayDate", "ReportDateRender");
 	$rpg->addColumn("مبلغ آخرین پرداخت", "LastPayAmount", "ReportMoneyRender");

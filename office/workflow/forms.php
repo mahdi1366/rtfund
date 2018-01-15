@@ -77,7 +77,7 @@ if($accessObj->RemoveFlag)
 }
 if($accessObj->AddFlag)
 {
-	$dg->addButton("", "ایجاد فرم جدید", "add", "function(){WFM_formObject.ShowNewFormForm();}");
+	$dg->addButton("", "ایجاد فرم جدید", "add", "function(){WFM_formObject.ShowNewForm();}");
 	$dg->addButton("", "کپی فرم", "copy", "function(){WFM_formObject.copyForm();}");
 }
 $dg->title = "فرم ها";
@@ -110,15 +110,13 @@ WFM_form.OperationRender = function(v,p,r){
 		"cursor:pointer;width:16px;height:16'></div>";
 }
 
-WFM_form.PersonsRender = function(v,p,r)
-{
+WFM_form.PersonsRender = function(v,p,r){
 	return "<div align='center' title='افراد' class='list' onclick='WFM_formObject.ShowPersons();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;height:16'></div>";
 }
 
-WFM_form.AccessRender = function(v,p,r)
-{
+WFM_form.AccessRender = function(v,p,r){
 	return "<div align='center' title='دسترسی های فرم' class='user' onclick='WFM_formObject.ShowAccess();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;height:16'></div>";
@@ -136,7 +134,7 @@ function WFM_form() {
 
 WFM_formObject = new WFM_form();
 
-WFM_form.prototype.ShowNewFormForm = function () {
+WFM_form.prototype.ShowNewForm = function () {
 	framework.OpenPage(this.address_prefix + "NewForm.php", "ایجاد فرم جدید");
 }
 

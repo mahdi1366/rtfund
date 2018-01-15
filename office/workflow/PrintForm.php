@@ -9,21 +9,31 @@ require_once 'form.class.php';
 
 $ReqObj = new WFM_requests($_REQUEST['RequestID']);
 
-$temp = WFM_RequestItems::Get(" AND r.FormID=?", array($ReqObj->FormID));
+$temp = WFM_FormItems::Get(" AND FormID=0");
 $ReqItems = $temp->fetchAll();
-
 $ReqItemsStore = array();
 foreach ($ReqItems as $it) {
     $ReqItemsStore[$it['FormItemID']] = $it;
 }
 
-$res = explode(WFM_forms::TplItemSeperator, $ReqObj->ReqContent);
+
+$content = $ReqObj->ReqContent;
+if($ReqObj->ReqContent == "" && !empty($_REQUEST["FormID"]))
+{
+	$FormObj = new WFM_forms($_REQUEST["FormID"]);
+	$content = $FormObj->FormContent;
+}
+$res = explode(WFM_forms::TplItemSeperator, $content);
+
 
 $ReqItems = WFM_RequestItems::Get(" AND RequestID=?", array($ReqObj->RequestID));
+$ReqItems = $ReqItems->fetchAll();
 
 $ValuesStore = array();
 foreach ($ReqItems as $row) 
 {
+	$ValuesStore[$row['FormItemID']] = $row['ItemValue'];
+			
 	if($row["ItemType"] == "shdatefield")
 		$ValuesStore[$row['FormItemID']] = DateModules::miladi_to_shamsi($row['ItemValue']);
 	if($row["ItemType"] == "currencyfield")
@@ -43,8 +53,10 @@ foreach ($ReqItems as $row)
 		}
 	}
 }
-//print_r($ValuesStore);
-//die();
+
+$dt = WFM_requests::FullSelect(" AND RequestID=?", array($ReqObj->RequestID));
+$RequestRecord = $dt->fetch();
+
 if (substr($ReqObj->ReqContent, 0, 3) == WFM_forms::TplItemSeperator) {
     $res = array_merge(array(''), $res);
 }
@@ -57,7 +69,12 @@ for ($i = 0; $i < count($res); $i++) {
 		}
 		else if(isset($ReqItemsStore[ $res[$i] ]["FieldName"]))
 		{
-			$st .= $ContractRecord [ $ReqItemsStore[ $res[$i] ]["FieldName"] ];
+			if($ReqItemsStore[ $res[$i] ]["ItemType"] == "shdatefield")
+				$st .= DateModules::miladi_to_shamsi($RequestRecord [ $ReqItemsStore[ $res[$i] ]["FieldName"] ]);
+			else if($ReqItemsStore[ $res[$i] ]["ItemType"] == "currencyfield")
+				$st .= number_format($RequestRecord [ $ReqItemsStore[ $res[$i] ]["FieldName"] ]);
+			else
+				$st .= $RequestRecord [ $ReqItemsStore[ $res[$i] ]["FieldName"] ];
 		}
     } else {
         $st .= $res[$i];

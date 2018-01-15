@@ -296,7 +296,7 @@ class LON_requests extends PdoDataAccess{
 			
 			if($StartDate < $ToDate && $TotalRemainder > 0)
 			{
-				if($obj->PayCompute != "installment")
+				if($obj->PayCompute == "installment")
 					$amount = $TotalRemainder;
 				else
 					$amount = $installments[$i]["InstallmentAmount"] < $TotalRemainder ? 

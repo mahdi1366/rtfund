@@ -105,6 +105,11 @@ function GetData(){
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		echo PdoDataAccess::GetLatestQueryString();
+	}
+	
 	//.....................................
 	
 	$computeArr = array();

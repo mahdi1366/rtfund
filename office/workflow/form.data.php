@@ -24,6 +24,7 @@ switch($task)
 	case "deleteForm":
 	case "PrepareContentToEdit":
 	case "CopyForm":
+	case "MoveItem":
 	case "SelectValidForms":
 	case "SelectMyRequests":
 	case "SaveRequest":
@@ -35,6 +36,7 @@ switch($task)
 	case "SelectFormSteps":
 	case "SelectAccessFromItems":
 	case "ChangeFormAccess":
+	case "ChangeTotalFormAccess":
 		$task();
 }
 
@@ -55,7 +57,7 @@ function SelectForms() {
 		$content = $obj->FormContent;
 		$res[0]["content"] = PrepareContentToEdit($content);
 	}
-	
+	print_r(ExceptionHandler::PopAllExceptions());
     echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
     die();
 }
@@ -65,21 +67,20 @@ function selectFormItems() {
 	$where = "";
 	$params = array();
 	
+	$params[":StepRowID"] = !isset($_REQUEST["StepRowID"]) ? "-1" : $_REQUEST["StepRowID"];
+	
 	if(!empty($_REQUEST["FormID"]))
 	{
 		$where .= " AND FormID in(0,:t)";
 		$params[":t"] = $_REQUEST["FormID"];
 	}
 	
-	if(!empty($_GET["query"]))
-	{
-		$field = empty($_GET["field"]) ? "" : $_GET["field"];
-	}
-	
 	if(!empty($_REQUEST["NotGlobal"]))
 		$where .= " AND FormID >0";
 	
-    $temp = WFM_FormItems::Get($where . " order by ordering", $params);
+    $temp = WFM_FormItems::Get($where . " order by if(FormID=0,1,0),ordering", $params);
+	
+	//echo PdoDataAccess::GetLatestQueryString();
 	
 	if(!empty($_REQUEST["limit"]))
 		$res = PdoDataAccess::fetchAll ($temp, $_GET["start"], $_GET["limit"]);
@@ -150,6 +151,9 @@ function saveFormItem() {
         if ($obj->FormItemID > 0) {
             $obj->Edit();
         } else {
+			$dt = PdoDataAccess::runquery("select ifnull(max(ordering),0) from WFM_FormItems where FormID=? AND IsActive='YES'", 
+				array($obj->FormID));
+			$obj->ordering = $dt[0][0]*1 + 1;
             $obj->Add($pdo);
         }
         $pdo->commit();
@@ -179,22 +183,12 @@ function GetFormTitle() {
 }
 
 function deleteFormItem() {
-    $pdo = PdoDataAccess::getPdoObject();
-    $pdo->beginTransaction();
-    try {
-        $obj = new WFM_FormItems($_POST['FormItemID']);
-        $obj->Remove($pdo);
-        //
-        $pdo->commit();
-        echo Response::createObjectiveResponse(true, '');
-        die();
-    } catch (Exception $e) {
-        $pdo->rollBack();
-        //print_r(ExceptionHandler::PopAllExceptions());
-        //echo PdoDataAccess::GetLatestQueryString();
-        echo Response::createObjectiveResponse(false, $e->getMessage());
-        die();
-    }
+
+	$obj = new WFM_FormItems($_POST['FormItemID']);
+	$result = $obj->Remove($pdo);
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
 }
 
 function deleteForm() {
@@ -220,7 +214,7 @@ function deleteForm() {
 
 function PrepareContentToEdit($content){
 	
-	$dt = WFM_FormItems::Get();
+	$dt = WFM_FormItems::Get("", array(":StepRowID" => -1));
 	$ItemsArr = array();
 	foreach($dt as $item)
 		$ItemsArr[ $item["FormItemID"] ] = $item["ItemName"];
@@ -256,6 +250,27 @@ function CopyForm(){
 	die();
 }
 
+function MoveItem(){
+	
+	$FormID = $_POST["FormID"];
+	$FormItemID = $_POST["FormItemID"];
+	$direction = $_POST["direction"] == "-1" ? -1 : 1;
+	$revdirection = $direction == "-1" ? "+1" : "-1";
+	
+	$obj = new WFM_FormItems($FormItemID);
+	
+	PdoDataAccess::runquery("update WFM_FormItems 
+			set ordering=ordering $revdirection 
+			where FormID=? AND ordering=? AND IsActive='YES'",
+			array($FormID, $obj->ordering*1 + $direction));
+	
+	PdoDataAccess::runquery("update WFM_FormItems 
+		set ordering=? 
+		where FormID=? AND FormItemID=? AND IsActive='YES'",
+			array($obj->ordering*1 + $direction, $FormID, $FormItemID));
+	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
+	die();
+}
 //------------------------------------------------------------------------------
 
 function SelectValidForms(){
@@ -453,6 +468,11 @@ function SelectFormSteps(){
 	$dt = PdoDataAccess::runquery("SELECT s.* FROM WFM_FlowSteps s join WFM_forms using(FlowID)
 		where FormID=?", array($FormID));
 	
+	$dt = array_merge(array(array(
+		"StepRowID" => 0,
+		"StepDesc" => "درخواست دهنده"
+	)), $dt);
+	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -465,7 +485,7 @@ function SelectAccessFromItems(){
 	$dt = PdoDataAccess::runquery("
 		SELECT fi.FormItemID,ItemName, if(StepRowID is null,'NO','YES') access,AccessID
 		FROM WFM_FormItems fi left join WFM_FormAccess fa on(fi.FormItemID=fa.FormItemID AND fa.StepRowiD=?)
-		where FormID=?", array($StepRowID, $FormID));
+		where FormID=? order by ordering", array($StepRowID, $FormID));
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
@@ -487,6 +507,24 @@ function ChangeFormAccess(){
 		$result = $obj->Remove();
 	}
 	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function ChangeTotalFormAccess(){
+	
+	$access = $_POST["access"];
+	$StepRowID = $_POST["StepRowID"];
+	$FormID = $_POST["FormID"];
+	
+	$dt = PdoDataAccess::runquery("delete a from WFM_FormAccess a join WFM_FormItems using(FormItemID) "
+				. " where FormID=? AND StepRowID=?" , array($FormID, $StepRowID));
+	
+	if($access == "true")
+		$dt = PdoDataAccess::runquery("insert into WFM_FormAccess(FormItemID,StepRowID) 
+				SELECT FormItemID,? FROM WFM_FormItems s join WFM_forms using(FormID)
+				where FormID=?" , array($StepRowID, $FormID));
+
+	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
 	die();
 }
 ?>

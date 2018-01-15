@@ -138,7 +138,7 @@ MyForm.prototype.FormInfo = function(){
 	{
 		this.FormInfoWindow = new Ext.window.Window({
 			width : 800,
-			height : 400,
+			height : 660,
 			autoScroll : true,
 			modal : true,
 			title : "اطلاعات فرم مربوطه",

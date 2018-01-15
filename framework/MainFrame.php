@@ -6,113 +6,107 @@
 require_once('header.inc.php');
 require_once 'management/framework.class.php';
 
-if(empty($_REQUEST["SystemID"]))
-	die();
+$systems = FRW_access::getAccessSystems();
 
-$_SESSION['USER']["RecentSystems"][ $_REQUEST["SystemID"] ] = true;
-$_SESSION["SystemID"] = $_REQUEST["SystemID"];
-
-$menus = FRW_access::getAccessMenus($_REQUEST["SystemID"]);
-
-$groupArr = array();
 $menuStr = "";
-
-for ($i = 0; $i < count($menus); $i++) {
-	
-	if (!isset($groupArr[ $menus[$i]["GroupID"] ] )) {
-		if ($i > 0) {
-			$menuStr = substr($menuStr, 0, strlen($menuStr) - 1);
-			$menuStr .= "]}]},";
-		}
-		$menuStr .= "{
-			xtype : 'panel',
-			layout: 'fit',
-			title: '" . $menus[$i]["GroupDesc"] . "',
-			items :[{
-				xtype : 'menu',
-				floating: false,
-				bodyStyle : 'background-color:white !important;',
-				items :[";
-		
-		$groupArr[ $menus[$i]["GroupID"] ] = true;
-	}
-
-	$icon = $menus[$i]['icon'];
-	$icon = (!$icon) ? "/generalUI/ext4/resources/themes/icons/star.gif" : 
-		"/generalUI/ext4/resources/themes/icons/$icon";
-
-	$link_path = "/" . $menus[$i]['SysPath'] . "/" . $menus[$i]['MenuPath'];
-	$param = "{";
-	$param .= "MenuID : " . $menus[$i]['MenuID'] . ",";
-
-	//--------- extract params --------------
-	if (strpos($link_path, "?") !== false) {
-		$arr = preg_split('/\?/', $link_path);
-		$link_path = $arr[0];
-		$arr = preg_split('/\&/', $arr[1]);
-		for ($k = 0; $k < count($arr); $k++)
-			$param .= str_replace("=", ":'", $arr[$k]) . "',";
-	}
-	$param = substr($param, 0, strlen($param) - 1);
-	//---------------------------------------
-	$param .= "}";
-
-	$menuStr .= "{
-		text: '" . $menus[$i]["MenuDesc"] . "',
-		handler: function(){
-			framework.OpenPage('" . $link_path . "','" . $menus[$i]["MenuDesc"] . "'," . $param . ");
-		},
-		icon: '" . $icon . "'
-	},";
-}
-
-if ($menuStr != "") {
-	$menuStr = substr($menuStr, 0, strlen($menuStr) - 1);
-	$menuStr .= "]}]}";
-}
-//------------------------------------------------------------------------------
-$sysArray = "";
-$sysArray1 = "";
-$sysArray2 = "";
-$syslist = FRW_access::getAccessSystems();
-if (count($syslist) > 1) {
-	for ($i = 0; $i < count($syslist); $i++) {
-		if (isset($_SESSION['USER']["RecentSystems"][$syslist[$i]['SystemID']])) {
-			$sysArray1 .= "
-				{
-					text: '<span style=color:#2D5696 ><b>" . $syslist[$i]['SysName'] . "</b></span>',
-					icon: '/generalUI/ext4/resources/themes/icons/arrow-left.gif',
-					handler: function(){
-						window.location = '/" . $syslist[$i]['SysPath']  . "/start.php?SystemID=" . $syslist[$i]['SystemID'] . "';
-					}
-				},";
-		}
-		else
-			$sysArray2 .= "
-				{
-					text: '" . $syslist[$i]['SysName'] . "',
-					icon: '/generalUI/ext4/resources/themes/icons/arrow-left.gif',
-					handler: function(){
-						window.location = '/" . $syslist[$i]['SysPath']  . "/start.php?SystemID=" . $syslist[$i]['SystemID'] . "';
-					}
-				},";
-	}
-	
-	$sysArray = $sysArray1 . "'-'," . substr($sysArray2, 0, strlen($sysArray2) - 1);
-}
-
-if(count($menus) == 0)
+foreach($systems as $sysRow)
 {
-	echo "<script>window.location='/framework/login.php';</script>";
-	die();
+	$menuStr .= "{
+				xtype : 'panel',
+				layout: 'fit',
+				title: '" . $sysRow["SysName"] . "',
+				items :[{
+					xtype : 'menu',
+					floating: false,
+					bodyStyle : 'background-color:white !important;',
+					items :[";
+
+	
+	if($sysRow["SystemID"] == "2")
+	{
+		$dt = PdoDataAccess::runquery("
+			select * from ACC_UserState 
+				join BSC_branches using(BranchID)
+				join ACC_cycles using(CycleID)
+			where PersonID=?", array($_SESSION["USER"]["PersonID"]));
+
+		if(count($dt) > 0)
+		{
+			$_SESSION["accounting"]["BranchID"] = $dt[0]["BranchID"];
+			$_SESSION["accounting"]["CycleID"] = $dt[0]["CycleID"];
+			$_SESSION["accounting"]["CycleYear"] = $dt[0]["CycleYear"];
+			$_SESSION["accounting"]["BranchName"] = $dt[0]["BranchName"];
+			$_SESSION["accounting"]["DefaultBankTafsiliID"] = $dt[0]["DefaultBankTafsiliID"];
+			$_SESSION["accounting"]["DefaultAccountTafsiliID"] = $dt[0]["DefaultAccountTafsiliID"];
+		}
+	}
+	
+	$menus = FRW_access::getAccessMenus($sysRow["SystemID"]);
+	$groupArr = array();
+	for ($i = 0; $i < count($menus); $i++) 
+	{
+		if (!isset($groupArr[ $menus[$i]["GroupID"] ] )) {
+			if ($i > 0) {
+				$menuStr = substr($menuStr, 0, strlen($menuStr) - 1);
+				$menuStr .= "]}},";
+			}
+			$icon = $menus[$i]['GroupIcon'];
+			$icon = (!$icon) ? "/generalUI/ext4/resources/themes/icons/star.gif" : 
+				"/generalUI/ext4/resources/themes/icons/$icon";
+			
+			$menuStr .= "{
+				text: '" . $menus[$i]["GroupDesc"] . "',
+				icon : '".$icon."',
+				menu :{
+					bodyStyle : 'background-color:white !important;',
+					items :[";
+
+			$groupArr[ $menus[$i]["GroupID"] ] = true;
+		}
+
+		$icon = $menus[$i]['icon'];
+		$icon = (!$icon) ? "/generalUI/ext4/resources/themes/icons/star.gif" : 
+			"/generalUI/ext4/resources/themes/icons/$icon";
+
+		$link_path = "/" . $menus[$i]['SysPath'] . "/" . $menus[$i]['MenuPath'];
+		$param = "{";
+		$param .= "MenuID : " . $menus[$i]['MenuID'] . ",";
+
+		//--------- extract params --------------
+		if (strpos($link_path, "?") !== false) {
+			$arr = preg_split('/\?/', $link_path);
+			$link_path = $arr[0];
+			$arr = preg_split('/\&/', $arr[1]);
+			for ($k = 0; $k < count($arr); $k++)
+				$param .= str_replace("=", ":'", $arr[$k]) . "',";
+		}
+		$param = substr($param, 0, strlen($param) - 1);
+		//---------------------------------------
+		$param .= "}";
+
+		$menuStr .= "{
+			text: '" . $menus[$i]["MenuDesc"] . "',
+			handler: function(){
+				framework.OpenPage('" . $link_path . "','" . $menus[$i]["MenuDesc"] . "'," . $param . ");
+			},
+			icon: '" . $icon . "'
+		},";
+	}
+
+	if ($menuStr != "") {
+		$menuStr = substr($menuStr, 0, strlen($menuStr) - 1);
+		$menuStr .= "]}}";
+	}
+	
+	$menuStr .= "]}]},";
 }
 
-$SystemName = $menus[0]["SysName"];
+$menuStr = substr($menuStr, 0, strlen($menuStr) - 1);
+
 ?>
 <html>
 	<head>
 		<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>	
-		<title><?php echo $menus[0]["SysName"]; ?></title>
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/Loading.css" />
 		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-all.css" />
 
