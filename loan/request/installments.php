@@ -66,11 +66,12 @@ if($editable && $accessObj->EditFlag)
 	//$dg->enableRowEdit = true;
 	//$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SaveInstallment(store,record);}";
 	
+	$dg->addButton("", "ایجاد اقساط", "add", "function(){InstallmentObject.AddInstallments();}");
+	
 	$dg->addButton("", "تغییر اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
 }
 
 $dg->addButton("cmp_report2", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport();}");
-
 
 $dg->height = 377;
 $dg->width = 755;
@@ -477,8 +478,131 @@ Installment.prototype.DelayInstallments = function(){
 	this.delayWin.center();
 }
 
-function LoanRFID(RequestID)
-{
+Installment.prototype.AddInstallments = function(){
+	
+	if(!this.AddWin)
+	{
+		this.card0 = {
+			itemId: 'card-0',
+			anchor: "100%",
+			layout : "vbox",
+			items: [{
+				xtype : "radiogroup",
+				columns : 1,
+				items : [{
+					xtype : "radio",
+					boxLabel : "ورود اقساط بر اساس مبلغ کل وام و اعمال از ابتدای شروع اقساط",
+					inputValue : "START",
+					checked : true,
+					name : "ComputeMode"
+				},{
+					xtype : "radio",
+					boxLabel : "ورود اقساط بر اساس مانده اصل وام و اعمال از تاریخ خاص"	,
+					inputValue : "REMAIN",
+					name : "ComputeMode",
+					listeners : {
+						change : function(el){
+							InstallmentObject.formPanel.down("[name=ComputeDate]").setDisabled(!el.getValue());
+						}
+					}
+				}]
+			},{
+				xtype : "shdatefield",
+				fieldLabel : "تاریخ شروع تغییرات",
+				name : "ComputeDate",
+				disabled : true
+			}]
+		};
+		this.card1 = {
+			itemId : "card-1",
+			anchor: "100%",
+			layout : "vbox",
+			items : [{
+				xtype : "displayfield",
+				name : "DefrayAmount",
+				fieldLabel : "مانده اصل وام در تاریخ فوق"
+			}],
+			listeners :{
+				activate : function(){
+					me = InstallmentObject;
+					var mask = new Ext.LoadMask(me.formPanel,{msg:'در حال بارگذاری ...'});
+					//mask.show();
+					Ext.Ajax.request({
+						url : me.address_prefix + "request.data.php?task=GetDefrayAmount",
+						method : "POST",
+						params : {
+							RequestID : this.RequestID,
+							ComputeDate : InstallmentObject.formPanel.down("[name=ComputeDate]").getRawValue()
+						},
+						success : function(response){
+							st = Ext.decode(response.responseText);
+							InstallmentObject.card1.down("[name=DefrayAmount]").setValue(st.data);
+							mask.hide();
+						}
+					});
+				}
+			}
+		};
+		
+		this.AddWin = new Ext.window.Window({
+			width : 510,
+			height : 360,
+			modal : true,
+			title : "ثبت دستی اقساط",
+			items : [
+				this.formPanel = new Ext.form.Panel({
+					defaults: {border: false},
+					height : 300,
+					width : 500,
+					frame: true,
+					bodyPadding: '5 5 0',
+					layout: "card",
+					activeItem: 0,
+					items : [this.card0,this.card1],
+					bbar: [{
+						itemId: 'card-prev',
+						text: '&laquo; قبلی',
+						handler: function() {
+							var itemId = InstallmentObject.formPanel.items.items[0].itemId;
+							var i = itemId.split('card-')[1];
+							var next = parseInt(i, 10) - 1;
+							InstallmentObject.formPanel.getLayout().setActiveItem(next);
+							InstallmentObject.formPanel.down('[itemId=card-prev]').setDisabled(next === 0);
+							InstallmentObject.formPanel.down('[itemId=card-next]').setDisabled(next === 6);
+						},
+						disabled: true
+					},'->', {
+						itemId: 'card-next',
+						text: 'بعدی &raquo;',
+						handler: function() {
+							var itemId = InstallmentObject.formPanel.items.items[0].itemId;
+							var i = itemId.split('card-')[1];
+							var next = parseInt(i, 10) + 1;
+							InstallmentObject.formPanel.getLayout().setActiveItem(next);
+							InstallmentObject.formPanel.down('[itemId=card-prev]').setDisabled(next === 0);
+							InstallmentObject.formPanel.down('[itemId=card-next]').setDisabled(next === 6);
+						}
+					}]
+				})
+			],
+			closeAction : "hide",
+			buttons : [{
+				text : "بازگشت",				
+				iconCls : "undo",
+				handler : function(){
+					InstallmentObject.AddWin.hide();
+				}				
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.AddWin);
+	}
+	
+	this.AddWin.show();
+	this.AddWin.center();
+}
+
+function LoanRFID(RequestID){
 	st = RequestID.lpad("0", 7);
 	SUM = st[0]*1 + st[1]*2 + st[2]*3 + st[3]*4 + st[4]*5 + st[5]*6 + st[6]*7;
 	remain = SUM % 11;

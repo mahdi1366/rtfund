@@ -15,9 +15,64 @@ require_once '../../framework/person/persons.class.php';
 require_once 'compute.inc.php';
 
 $task = isset($_REQUEST["task"]) ? $_REQUEST["task"] : "";
-if(!empty($task))
+switch($task)
 {
-	$task();
+	case "SaveLoanRequest":
+	case "SelectMyRequests":
+	case "SelectAllRequests2":
+	case "SelectAllRequests":
+	case "Selectguarantees":
+	case "DeleteRequest":
+	case "ChangeRequestStatus":
+	case "GetRequestParts":
+	case "SavePart":
+	case "DeletePart":
+	case "StartFlow":
+	case "GetRequestTotalRemainder":
+	case "EndRequest":
+	case "ReturnEndRequest":
+	case "GetInstallments":
+	case "ComputeInstallments":
+	case "ComputeInstallmentsShekoofa":
+	case "SaveInstallment":
+	case "DelayInstallments":
+	case "SetHistory":
+	case "GetLastFundComment":
+	case "SelectReadyToPayParts":
+	case "SelectReceivedRequests":
+	case "selectRequestStatuses":
+	case "GetBackPays":
+	case "SaveBackPay":
+	case "DeletePay":
+	case "RegisterBackPayDoc":
+	case "EditBackPayDoc":
+	case "GroupSavePay":
+	case "GetDelayedInstallments":
+	case "GetEndedRequests":
+	case "GetPartPayments":
+	case "SavePartPayment":
+	case "DeletePayment":
+	case "RegPayPartDoc":
+	case "editPayPartDoc":
+	case "RetPayPartDoc":
+	case "SelectAllMessages":
+	case "saveMessage":
+	case "removeMessage":
+	case "ConfirmRequest":
+	case "GetChequeStatuses":
+	case "GetPayTypes":
+	case "GetBanks":
+	case "GetEvents":
+	case "SaveEvents":
+	case "DeleteEvents":
+	case "GetCosts":
+	case "SaveCosts":
+	case "DeleteCosts":
+	case "GetGuarantors":
+	case "SaveGuarantor":
+	case "DeleteGuarantor":
+	case "GetDefrayAmount":
+		$task();
 }
 
 function SaveLoanRequest(){
@@ -1207,7 +1262,7 @@ function GetDelayedInstallments($returnData = false){
 			join LON_requests r using(RequestID)
 			join BSC_persons p1 on(LoanPersonID=p1.PersonID)
 			left join BSC_persons p2 on(ReqPersonID=p2.PersonID)
-			join LON_ReqParts p on(p.RequestID=r.RequestID)
+			join LON_ReqParts p on(p.RequestID=r.RequestID AND p.IsHistory='NO')
 			join BSC_branches using(BranchID)
 			left join (
 				select ObjectID,group_concat(title,' به شماره سريال ',num, ' و مبلغ ', 
@@ -1767,4 +1822,15 @@ function DeleteGuarantor(){
 	die();	
 }
 
+//------------------------------------------------
+
+function GetDefrayAmount(){
+	
+	$RequestID = (int)$_POST["RequestID"];
+	$ComputeDate = empty($_POST["ComputeDate"]) ? "" : DateModules::shamsi_to_miladi($_POST["ComputeDate"], "-");
+	
+	$amount = LON_requests::GetDefrayAmount($RequestID, null, null, $ComputeDate);
+	echo Response::createObjectiveResponse(true, $amount);
+	die();
+}
 ?>

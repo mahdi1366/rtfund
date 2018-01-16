@@ -453,6 +453,7 @@ class LON_requests extends PdoDataAccess{
 	static function ComputePures($RequestID){
 		
 		$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
+		echo $RequestID;
 		$temp = LON_installments::GetValidInstallments($RequestID);
 		//.............................
 		$result = ComputeWagesAndDelays($PartObj, $PartObj->PartAmount, $PartObj->PartDate, $PartObj->PartDate);
@@ -471,7 +472,7 @@ class LON_requests extends PdoDataAccess{
 			$row = &$temp[$i];
 			
 			//.............................
-			if($PartObj->PayInterval == 0)
+			if($PartObj->PayInterval == 0 || $PartObj->WageReturn != "INSTALLMENT")
 				$row["profit"] = 0;
 			else
 			{
@@ -533,7 +534,7 @@ class LON_requests extends PdoDataAccess{
 		
 	}
 	
-	static function GetDefrayAmount($RequestID, $computeArr=null, $PureArr = null){
+	static function GetDefrayAmount($RequestID, $computeArr=null, $PureArr = null, $ComputeDate = ""){
 
 		if($computeArr == null)
 			$computeArr = self::ComputePayments2($RequestID, $dt);
@@ -543,12 +544,14 @@ class LON_requests extends PdoDataAccess{
 		if(count($computeArr) == 0)
 			return 0;
 		
+		$ComputeDate = $ComputeDate = "" ? DateModules::Now() : $ComputeDate;		
+		
 		$EndingAmount = -1;
-		$EndingDate = DateModules::Now(); 
+		$EndingDate = $ComputeDate;
 		$EndingInstallment = 0;
 		for($i=count($PureArr)-1; $i >= 0;$i--)
 		{
-			if($PureArr[$i]["InstallmentDate"] <= DateModules::Now())
+			if($PureArr[$i]["InstallmentDate"] <= $ComputeDate)
 			{
 				if($i == (count($PureArr)-1) )
 				{

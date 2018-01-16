@@ -118,8 +118,8 @@ function ListDate($IsDashboard = false){
 	$rpg->excel = !empty($_POST["excel"]);
 	$rpg->mysql_resource = GetData();
 	
-	if($_SESSION["USER"]["UserName"] == "admin")
-		echo PdoDataAccess::GetLatestQueryString ();
+	//if($_SESSION["USER"]["UserName"] == "admin")
+	//	echo PdoDataAccess::GetLatestQueryString ();
 	
 	$rpg->addColumn("شماره تضمین", "RequestID");
 	$rpg->addColumn("شعبه", "BranchName");

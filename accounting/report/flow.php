@@ -9,8 +9,9 @@ require_once "ReportGenerator.class.php";
 
 $x= 0;
 function TotalRemainRender(&$row, $value, $x, $prevRow){
-		
-	$row["Sum"] = $prevRow["Sum"] + 
+	
+	$preAmount = !$prevRow ? 0 : $prevRow["Sum"];
+	$row["Sum"] = $preAmount + 
 			($row["essence"] == "DEBTOR" ? $row["DebtorAmount"] - $row["CreditorAmount"] : $row["CreditorAmount"] - $row["DebtorAmount"] );
 	return number_format($row["Sum"]);
 }
@@ -198,7 +199,7 @@ function GetData(){
 	//-------------------------- previous remaindar ----------------------------
 	if(!empty($_REQUEST["fromDate"]))
 	{
-		$query = "select sum(if(b1.essence='DEBTOR',DebtorAmount-CreditorAmount,CreditorAmount-DebtorAmount))
+		$query = "select b1.essence,sum(if(b1.essence='DEBTOR',DebtorAmount-CreditorAmount,CreditorAmount-DebtorAmount)) amount
 
 			from ACC_DocItems di join ACC_docs d using(DocID)
 				join ACC_CostCodes cc using(CostID)
@@ -220,7 +221,7 @@ function GetData(){
 		$query .= $where;
 
 		$DT = PdoDataAccess::runquery($query, $whereParam);
-		$BeforeAmount = $DT[0][0];
+		$BeforeAmount = $DT[0]["amount"];
 		$dataTable = array_merge(array( array(
 			"DocID" => "",
 			"LocalNo" => "",
@@ -229,8 +230,9 @@ function GetData(){
 			"TafsiliDesc2" => "",
 			"DocDate" => "",
 			"detail" => "",
-			"DebtorAmount" => $BeforeAmount < 0 ? abs($BeforeAmount) : 0,
-			"CreditorAmount" => $BeforeAmount > 0 ? $BeforeAmount : 0
+			"essence" => $DT[0]["essence"] ,
+			"DebtorAmount" => $DT[0]["essence"] == "DEBTOR" ? ($BeforeAmount>0 ? $BeforeAmount : 0) : ($BeforeAmount<0 ? abs($BeforeAmount) : 0),
+			"CreditorAmount" => $DT[0]["essence"] == "CREDITOR" ? ($BeforeAmount>0 ? $BeforeAmount : 0) : ($BeforeAmount<0 ? abs($BeforeAmount) : 0)
 		)), $dataTable);
 	}
 	
@@ -249,8 +251,8 @@ function ListData($IsDashboard = false){
 	
 	$dataTable = GetData();
 	
-	if($_SESSION["USER"]["UserName"] == "admin")
-		echo PdoDataAccess::GetLatestQueryString ();
+	//if($_SESSION["USER"]["UserName"] == "admin")
+	//	echo PdoDataAccess::GetLatestQueryString ();
 	
 	$col = $rpg->addColumn("شماره سند", "LocalNo", "PrintDocRender");
 	$col->ExcelRender = false;
@@ -294,13 +296,13 @@ function ListData($IsDashboard = false){
 		$rpg->headerContent .= "</td></tr></table>";
 	}
 
-	$rpg->SubHeaderFunction = "RemainRender";
+	/*$rpg->SubHeaderFunction = "RemainRender";
 	function RemainRender($PageNo)
 	{
 		global $BeforeRemaindar;
 		if($PageNo == 1)
 		echo $BeforeRemaindar;
-	}
+	}*/
 
 	if($IsDashboard)
 	{
@@ -332,7 +334,6 @@ if(isset($_REQUEST["dashboard_show"]))
 		ListData(true);	
 	
 	$page_rpg->mysql_resource = GetData();
-	echo PdoDataAccess::GetLatestQueryString();die();
 	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
 	die();	
 }
