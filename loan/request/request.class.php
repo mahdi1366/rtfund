@@ -247,7 +247,6 @@ class LON_requests extends PdoDataAccess{
 					"TotalRemainder" => $TotalRemainder
 				);		
 				$PayRecord = $payIndex < count($pays) ? $pays[$payIndex++] : null;
-				$i--;
 				
 				if($TotalRemainder > 0 && $i>0 && $PayRecord["PayAmount"]*1 >0)
 				{
@@ -285,6 +284,7 @@ class LON_requests extends PdoDataAccess{
 				
 				$returnArr[] = $tempForReturnArr;
 				$ComputePayRows[] = $tempForReturnArr;
+				$i--;
 				continue;
 			}
 			//-----------------------------
@@ -296,11 +296,9 @@ class LON_requests extends PdoDataAccess{
 			
 			if($StartDate < $ToDate && $TotalRemainder > 0)
 			{
-				if($obj->PayCompute == "installment")
-					$amount = $TotalRemainder;
-				else
-					$amount = $installments[$i]["InstallmentAmount"] < $TotalRemainder ? 
-								$installments[$i]["InstallmentAmount"] : $TotalRemainder;
+				$amount = $TotalRemainder;
+				/*$amount = $installments[$i]["InstallmentAmount"] < $TotalRemainder ? 
+								$installments[$i]["InstallmentAmount"] : $TotalRemainder;*/
 				
 				
 				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
@@ -453,7 +451,6 @@ class LON_requests extends PdoDataAccess{
 	static function ComputePures($RequestID){
 		
 		$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
-		echo $RequestID;
 		$temp = LON_installments::GetValidInstallments($RequestID);
 		//.............................
 		$result = ComputeWagesAndDelays($PartObj, $PartObj->PartAmount, $PartObj->PartDate, $PartObj->PartDate);

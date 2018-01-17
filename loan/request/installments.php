@@ -518,8 +518,12 @@ Installment.prototype.AddInstallments = function(){
 			anchor: "100%",
 			layout : "vbox",
 			items : [{
-				xtype : "displayfield",
+				xtype : "currencyfield",
 				name : "DefrayAmount",
+				readOnly : true,
+				value : "0",
+				width : 300,
+				labelWidth : 150,
 				fieldLabel : "مانده اصل وام در تاریخ فوق"
 			}],
 			listeners :{
@@ -531,12 +535,12 @@ Installment.prototype.AddInstallments = function(){
 						url : me.address_prefix + "request.data.php?task=GetDefrayAmount",
 						method : "POST",
 						params : {
-							RequestID : this.RequestID,
+							RequestID : me.RequestID,
 							ComputeDate : InstallmentObject.formPanel.down("[name=ComputeDate]").getRawValue()
 						},
 						success : function(response){
 							st = Ext.decode(response.responseText);
-							InstallmentObject.card1.down("[name=DefrayAmount]").setValue(st.data);
+							InstallmentObject.formPanel.down("[name=DefrayAmount]").setValue(st.data);
 							mask.hide();
 						}
 					});
