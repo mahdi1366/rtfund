@@ -625,8 +625,8 @@ class DateModules
         return date('H:i:s');
     }
 
-	static function GetDiffInMonth($jdate1, $jdate2)
-    {
+	static function GetDiffInMonth($jdate1, $jdate2){
+		
         $year1 = self::GetYear($jdate1);
         $month1 = self::GetMonth($jdate1);
 

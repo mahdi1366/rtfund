@@ -71,7 +71,9 @@ switch($task)
 	case "GetGuarantors":
 	case "SaveGuarantor":
 	case "DeleteGuarantor":
-	case "GetDefrayAmount":
+	case "GetPureAmount":
+	case "emptyDataTable":
+	case "ComputeManualInstallments":
 		$task();
 }
 
@@ -908,6 +910,7 @@ function SetHistory(){
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
+
 //-------------------------------------------------
 
 function GetLastFundComment(){
@@ -1824,13 +1827,66 @@ function DeleteGuarantor(){
 
 //------------------------------------------------
 
-function GetDefrayAmount(){
+function GetPureAmount(){
 	
 	$RequestID = (int)$_POST["RequestID"];
 	$ComputeDate = empty($_POST["ComputeDate"]) ? "" : DateModules::shamsi_to_miladi($_POST["ComputeDate"], "-");
 	
-	$amount = LON_requests::GetDefrayAmount($RequestID, null, null, $ComputeDate);
+	$dt = LON_requests::GetPureAmount($RequestID, null, null, $ComputeDate);
+	$amount = $dt["PureAmount"];
 	echo Response::createObjectiveResponse(true, $amount);
 	die();
 }
+
+function emptyDataTable(){
+	echo dataReader::getJsonData(array(), 0, $_GET["callback"]);
+	die();
+}
+
+function ComputeManualInstallments(){
+	
+	$RequestID = $_POST["RequestID"];
+	$ComputeDate = $_POST["ComputeDate"];
+	$ComputeWage = $_POST["ComputeWage"];
+	
+	$items = json_decode(stripcslashes($_REQUEST["records"]));
+	$installmentArray = array();
+	for ($i = 0; $i < count($items); $i++) {
+		$installmentArray[] = array(
+			"InstallmentAmount" => $items[$i]->InstallmentAmount,
+			"InstallmentDate" => $items[$i]->InstallmentDate
+		);
+	}
+	$installmentArray = ExtraModules::array_sort($installmentArray, "InstallmentDate");
+		
+	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
+	$installmentArray = ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate, $ComputeWage);
+	
+	//........................
+
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	PdoDataAccess::runquery("delete from LON_installments where RequestID=? AND history='NO'", array($RequestID), $pdo);
+	
+	for($i=0; $i < count($installmentArray); $i++)
+	{
+		$obj = new LON_installments();
+		$obj->RequestID = $RequestID;
+		$obj->InstallmentDate = DateModules::shamsi_to_miladi($installmentArray[$i]["InstallmentDate"]);
+		$obj->InstallmentAmount = $installmentArray[$i]["InstallmentAmount"];
+		$obj->wage = $installmentArray[$i]["wage"];
+		if(!$obj->AddInstallment($pdo))
+		{
+			$pdo->rollBack();
+			print_r(ExceptionHandler::PopAllExceptions());
+			echo Response::createObjectiveResponse(false, "");
+			die();
+		}
+	}
+	
+	$pdo->commit();	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
 ?>

@@ -33,7 +33,7 @@ class ExtraModules{
 			}
 
 			foreach ($sortable_array as $k => $v) {
-				$new_array[$k] = $array[$k];
+				$new_array[] = $array[$k];
 			}
 		}
 

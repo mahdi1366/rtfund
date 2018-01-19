@@ -14,6 +14,7 @@ require_once getenv("DOCUMENT_ROOT") . '/definitions.inc.php';
 require_once 'PDODataAccess.class.php';
 require_once 'classconfig.inc.php';
 require_once 'DataAudit.class.php';
+require_once 'ExtraModules.class.php';
 
 require_once getenv("DOCUMENT_ROOT") . '/framework/session.php';
 require_once getenv("DOCUMENT_ROOT") . '/framework/management/framework.class.php';

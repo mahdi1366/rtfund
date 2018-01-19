@@ -42,8 +42,12 @@ $col->width = 80;
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
 //$col->editor = ColumnEditor::CurrencyField();
 
-$col = $dg->addColumn("مبلغ تاخیر", "ForfeitAmount", GridColumn::ColumnType_money);
-$col->width = 80;
+$col = $dg->addColumn("کارمزد", "wage", GridColumn::ColumnType_money);
+$col = $dg->addColumn("اصل", "", GridColumn::ColumnType_money);
+$col->renderer = "function(v,p,r){return r.data.InstallmentAmount - r.data.wage;}";
+
+/*$col = $dg->addColumn("مبلغ تاخیر", "ForfeitAmount", GridColumn::ColumnType_money);
+$col->width = 80;*/
 
 $col = $dg->addColumn("مانده قسط", "remainder", GridColumn::ColumnType_money);
 $col->width = 120;
@@ -52,8 +56,8 @@ $col = $dg->addColumn("وضعیت تمدید", "IsDelayed");
 $col->renderer = "function(v,p,r){ return v == 'YES' ? 'تمدید شده' : '';}";
 $col->width = 120;
 
-$col = $dg->addColumn("اسناد", "docs");
-$col->width = 120;
+/*$col = $dg->addColumn("اسناد", "docs");
+$col->width = 120;*/
 
 $col = $dg->addColumn("ثبت سابقه", "");
 $col->renderer = "Installment.HistoryRender";
@@ -71,7 +75,8 @@ if($editable && $accessObj->EditFlag)
 	$dg->addButton("", "تغییر اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
 }
 
-$dg->addButton("cmp_report2", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport();}");
+$dg->addButton("cmp_report2", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport('old');}");
+$dg->addButton("cmp_report3", "گزارش پرداخت جدید", "report", "function(){InstallmentObject.PayReport('new');}");
 
 $dg->height = 377;
 $dg->width = 755;
@@ -85,6 +90,33 @@ $dg->title = "جدول اقساط";
 $dg->autoExpandColumn = "InstallmentAmount";
 
 $grid = $dg->makeGrid_returnObjects();
+
+//--------------------------------------------
+
+$dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=emptyDataTable","grid_div");
+
+$col = $dg->addColumn("سررسید", "InstallmentDate");
+$col->width = 100;
+
+$col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
+
+$col = $dg->addColumn("حذف", "");
+$col->renderer = "function(v,p,r){return Installment.DeleteRender(v,p,r)}";
+$col->width =50;
+$col->align = "center";
+
+$dg->enableRowEdit = true;
+$dg->disableFooter = true;
+$dg->rowEditOkHandler = "function(store,record){record.InstallmentDate}";
+$dg->height = 250;
+$dg->width = 270;
+$dg->EnableSearch = false;
+$dg->HeaderMenu = false;
+$dg->EnablePaging = false;
+$dg->DefaultSortField = "InstallmentDate";
+$dg->autoExpandColumn = "InstallmentAmount";
+$grid2 = $dg->makeGrid_returnObjects();
+
 
 ?>
 <script type="text/javascript">
@@ -104,6 +136,8 @@ Installment.prototype = {
 function Installment()
 {
 	this.grid = <?= $grid ?>;
+	this.AddGrid = <?= $grid2 ?>;
+		
 	if(this.framework)
 	{
 		if(this.grid.plugins[0])
@@ -385,9 +419,12 @@ Installment.prototype.SaveInstallment = function(store, record){
 	});
 }
 
-Installment.prototype.PayReport = function(){
+Installment.prototype.PayReport = function(mode){
 
-	window.open(this.address_prefix + "../report/LoanPayment2.php?show=true&RequestID=" + this.RequestID);
+	if(mode == 'old')
+		window.open(this.address_prefix + "../report/LoanPayment2.php?show=true&RequestID=" + this.RequestID);
+	else
+		window.open(this.address_prefix + "../report/LoanPayment3.php?show=true&RequestID=" + this.RequestID);
 }
 
 Installment.prototype.DelayInstallments = function(){
@@ -478,6 +515,15 @@ Installment.prototype.DelayInstallments = function(){
 	this.delayWin.center();
 }
 
+//............................................................
+
+Installment.DeleteRender = function(){
+	return "<div align='center' title='حذف' class='remove' "+
+		"onclick='InstallmentObject.DeletRow();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
 Installment.prototype.AddInstallments = function(){
 	
 	if(!this.AddWin)
@@ -489,6 +535,7 @@ Installment.prototype.AddInstallments = function(){
 			items: [{
 				xtype : "radiogroup",
 				columns : 1,
+				defaults : {width:450},
 				items : [{
 					xtype : "radio",
 					boxLabel : "ورود اقساط بر اساس مبلغ کل وام و اعمال از ابتدای شروع اقساط",
@@ -499,6 +546,7 @@ Installment.prototype.AddInstallments = function(){
 					xtype : "radio",
 					boxLabel : "ورود اقساط بر اساس مانده اصل وام و اعمال از تاریخ خاص"	,
 					inputValue : "REMAIN",
+					itemId : "CMP_remain",
 					name : "ComputeMode",
 					listeners : {
 						change : function(el){
@@ -513,6 +561,37 @@ Installment.prototype.AddInstallments = function(){
 				disabled : true
 			}]
 		};
+		this.addRecord = {
+			xtype : "panel",
+			layout : "vbox",
+			height : 250,
+			width : 200,
+			bodyStyle : "padding : 10px",
+			defaults : {labelWidth : 40, width: 180},
+			items : [{
+				xtype : "shdatefield",
+				name : "date",
+				fieldLabel : "تاریخ"
+			},{
+				xtype : "currencyfield",
+				name : "amount",
+				hideTrigger : true, 
+				fieldLabel : "مبلغ"
+			},{
+				xtype : "button",
+				width : 80,
+				style : "margin:0 40px",
+				text : "ایجاد ردیف",
+				iconCls : "add",
+				handler : function(){
+					me = InstallmentObject;
+					me.AddGrid.getStore().add({
+						InstallmentDate : me.formPanel.down("[name=date]").getRawValue(),
+						InstallmentAmount : me.formPanel.down("[name=amount]").getValue()
+					})
+				}
+			}]
+		};
 		this.card1 = {
 			itemId : "card-1",
 			anchor: "100%",
@@ -525,6 +604,24 @@ Installment.prototype.AddInstallments = function(){
 				width : 300,
 				labelWidth : 150,
 				fieldLabel : "مانده اصل وام در تاریخ فوق"
+			},{
+				xtype : "checkbox",
+				name : 'ComputeWage',
+				width : 230,
+				boxLabel : "بعد از محاسبه کارمزد به مبلغ قسط اضافه شود"
+			},{
+				xtype : "container",
+				layout :{
+					type : "table",
+					columns : 2
+				},
+				items : [this.addRecord, this.AddGrid,{
+					xtype : "button",
+					iconCls : "process",
+					text : "محاسبه اقساط",
+					style : "text-align:center",
+					handler : function(){ InstallmentObject.ComputeManualInstallments();}
+				}]
 			}],
 			listeners :{
 				activate : function(){
@@ -532,11 +629,12 @@ Installment.prototype.AddInstallments = function(){
 					var mask = new Ext.LoadMask(me.formPanel,{msg:'در حال بارگذاری ...'});
 					//mask.show();
 					Ext.Ajax.request({
-						url : me.address_prefix + "request.data.php?task=GetDefrayAmount",
+						url : me.address_prefix + "request.data.php?task=GetPureAmount",
 						method : "POST",
 						params : {
 							RequestID : me.RequestID,
-							ComputeDate : InstallmentObject.formPanel.down("[name=ComputeDate]").getRawValue()
+							ComputeDate : me.formPanel.down("[itemId=CMP_remain]").getValue() ?
+								me.formPanel.down("[name=ComputeDate]").getRawValue() : ""
 						},
 						success : function(response){
 							st = Ext.decode(response.responseText);
@@ -550,13 +648,12 @@ Installment.prototype.AddInstallments = function(){
 		
 		this.AddWin = new Ext.window.Window({
 			width : 510,
-			height : 360,
-			modal : true,
+			height : 460,
 			title : "ثبت دستی اقساط",
 			items : [
 				this.formPanel = new Ext.form.Panel({
 					defaults: {border: false},
-					height : 300,
+					height : 400,
 					width : 500,
 					frame: true,
 					bodyPadding: '5 5 0',
@@ -567,24 +664,24 @@ Installment.prototype.AddInstallments = function(){
 						itemId: 'card-prev',
 						text: '&laquo; قبلی',
 						handler: function() {
-							var itemId = InstallmentObject.formPanel.items.items[0].itemId;
+							var itemId = InstallmentObject.formPanel.getLayout().getActiveItem().itemId;
 							var i = itemId.split('card-')[1];
-							var next = parseInt(i, 10) - 1;
-							InstallmentObject.formPanel.getLayout().setActiveItem(next);
-							InstallmentObject.formPanel.down('[itemId=card-prev]').setDisabled(next === 0);
-							InstallmentObject.formPanel.down('[itemId=card-next]').setDisabled(next === 6);
+							var pre = i*1 - 1;
+							InstallmentObject.formPanel.getLayout().setActiveItem(pre);
+							InstallmentObject.formPanel.down('[itemId=card-prev]').setDisabled(pre === 0);
+							InstallmentObject.formPanel.down('[itemId=card-next]').setDisabled(pre === 1);
 						},
 						disabled: true
 					},'->', {
 						itemId: 'card-next',
 						text: 'بعدی &raquo;',
 						handler: function() {
-							var itemId = InstallmentObject.formPanel.items.items[0].itemId;
+							var itemId = InstallmentObject.formPanel.getLayout().getActiveItem().itemId;
 							var i = itemId.split('card-')[1];
 							var next = parseInt(i, 10) + 1;
 							InstallmentObject.formPanel.getLayout().setActiveItem(next);
 							InstallmentObject.formPanel.down('[itemId=card-prev]').setDisabled(next === 0);
-							InstallmentObject.formPanel.down('[itemId=card-next]').setDisabled(next === 6);
+							InstallmentObject.formPanel.down('[itemId=card-next]').setDisabled(next === 1);
 						}
 					}]
 				})
@@ -604,6 +701,60 @@ Installment.prototype.AddInstallments = function(){
 	
 	this.AddWin.show();
 	this.AddWin.center();
+}
+
+Installment.prototype.AddRow = function(){
+
+	var modelClass = this.AddGrid.getStore().model;
+	var record = new modelClass({
+		InstallmentDate : null,
+		InstallmentAmount : null
+	});
+
+	this.AddGrid.plugins[0].cancelEdit();
+	this.AddGrid.getStore().insert(0, record);
+	this.AddGrid.plugins[0].startEdit(0, 0);
+}
+
+Installment.prototype.DeletRow = function(){
+
+	var record = this.AddGrid.getSelectionModel().getLastSelected();
+	this.AddGrid.getStore().remove(record);
+}
+
+Installment.prototype.ComputeManualInstallments = function(){
+	
+	var items = "[";
+	for(i=0; i < this.AddGrid.getStore().getCount(); i++)
+		items += Ext.encode(this.AddGrid.getStore().getAt(i).data) + ",";
+	if(this.AddGrid.getStore().getCount() != 0)
+		items = items.substring(0, items.length - 1);
+	items += "]";
+	
+	Ext.Ajax.request({
+		url : this.address_prefix + "request.data.php?task=ComputeManualInstallments",
+		method : "POST",
+		params : {
+			RequestID : this.RequestID,
+			ComputeDate : this.formPanel.down("[itemId=CMP_remain]").getValue() ?
+								this.formPanel.down("[name=ComputeDate]").getRawValue() : "",
+			ComputeWage : this.formPanel.down("[name=ComputeWage]").getValue() ? "YES" : "NO",
+			records : items
+		},
+		
+		success : function(response){
+			sd = Ext.decode(response.responseText);
+			if(sd.success)
+			{
+				InstallmentObject.AddWin.hide();
+				InstallmentObject.grid.getStore().load();
+			}
+			else
+			{
+				Ext.MessageBox.alert("",sd.data == "" ? "عملیات مورد نظر با شکست مواجه شد" : sd.data);
+			}
+		}
+	});
 }
 
 function LoanRFID(RequestID){

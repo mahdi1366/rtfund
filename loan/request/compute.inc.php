@@ -228,6 +228,7 @@ function SplitYears($startDate, $endDate, $TotalAmount){
 }
 
 function ComputeWagesAndDelays($PartObj, $PayAmount, $StartDate, $PayDate){
+	
 	$MaxWage = max($PartObj->CustomerWage*1 , $PartObj->FundWage);
 	if($PartObj->PayInterval > 0)
 		$YearMonths = ($PartObj->IntervalType == "DAY" ) ? 
@@ -235,8 +236,17 @@ function ComputeWagesAndDelays($PartObj, $PayAmount, $StartDate, $PayDate){
 	else
 		$YearMonths = 12;
 	
+	//.................................
 	$TotalWage = round(ComputeWage($PayAmount, $MaxWage/100, $PartObj->InstallmentCount, 
 			$PartObj->IntervalType, $PartObj->PayInterval));	
+	$dt = LON_installments::GetValidInstallments($PartObj->RequestID);
+	if(count($dt)>0 && $dt[0]["wage"]*1 > 0)
+	{
+		$TotalWage = 0;
+		foreach($dt as $row)
+			$TotalWage += $row["wage"]*1;
+	}
+	//.................................
 	
 	$CustomerFactor =	$MaxWage == 0 ? 0 : $PartObj->CustomerWage/$MaxWage;
 	$FundFactor =		$MaxWage == 0 ? 0 : $PartObj->FundWage/$MaxWage;
@@ -330,4 +340,104 @@ function GetExtraLoanAmount($PartObj, $TotalFundWage, $TotalCustomerWage, $Total
 	
 	return $extraAmount;
 }
+
+//....................
+
+function ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate = "", $ComputeWage = 'YES'){
+	
+	$ComputeDate = empty($ComputeDate) ? DateModules::miladi_to_shamsi($partObj->PartDate) : $ComputeDate;
+	$dt = LON_requests::GetPureAmount($partObj->RequestID, null, null, DateModules::shamsi_to_miladi($ComputeDate, "-"));
+	$amount = $dt["PureAmount"];
+	
+	//------------- compute monthly or daily -----------------
+	$monthly = true;
+	$factor = 1200;
+	$day = substr($installmentArray[0]["InstallmentDate"],8)*1;
+	for($i=1; $i<count($installmentArray);$i++)
+		if(substr($installmentArray[0]["InstallmentDate"],8)*1 != $day)
+		{
+			$monthly = false;
+			$factor = 36500;
+			break;
+		}
+	//------------- compute percents of each installment amount ----------------
+	$sum = 0;
+	$makhrag = 0;
+	for($i=0; $i<count($installmentArray);$i++)
+	{
+		if($monthly)
+			$power = DateModules::GetDiffInMonth($ComputeDate, $installmentArray[$i]["InstallmentDate"]);
+		else
+			$power = DateModules::JDateMinusJDate($installmentArray[$i]["InstallmentDate"],$ComputeDate);
+		
+		if($ComputeWage == "YES")
+		{
+			if($installmentArray[$i]["InstallmentAmount"]*1 == 0)
+				$percent = 1;
+			else
+			{
+				if($i < count($installmentArray)-1)
+				{
+					$percent = round($installmentArray[$i]["InstallmentAmount"]*1/$amount, 2);
+					$sum += round($installmentArray[$i]["InstallmentAmount"]*1/$amount, 2);
+				}
+				else
+					$percent = 1-$sum;
+			}
+			$installmentArray[$i]["percent"] = $percent;
+			$makhrag += $percent/pow(1+($partObj->CustomerWage/$factor), $power);
+		}
+		else
+		{
+			if($i < count($installmentArray)-1)
+				$makhrag += $installmentArray[$i]["InstallmentAmount"]/pow(1+($partObj->CustomerWage/$factor), $power);
+		}
+	}
+	
+	if($ComputeWage == "YES")
+	{
+		$x = round($amount/$makhrag);
+	}
+	else
+	{
+		if($monthly)
+			$power = DateModules::GetDiffInMonth($ComputeDate, $installmentArray[$i-1]["InstallmentDate"]);
+		else
+			$power = DateModules::JDateMinusJDate($installmentArray[$i-1]["InstallmentDate"], $ComputeDate);
+
+		$lastMakhrag = 1/pow(1+($partObj->CustomerWage/$factor), $power);
+		$x = round(($amount-$makhrag)/$lastMakhrag);
+	}
+
+	//-------  update installment Amounts ------------
+	$TotalAmount = 0;
+	for($i=0; $i<count($installmentArray);$i++)
+	{
+		if($ComputeWage == "YES")
+			$installmentArray[$i]["InstallmentAmount"] = $x*$installmentArray[$i]["percent"];
+		else if($i == count($installmentArray)-1)
+			$installmentArray[$i]["InstallmentAmount"] = $x;
+		
+		$TotalAmount += $installmentArray[$i]["InstallmentAmount"];
+	}
+
+	//------ compute wages of installments -----------
+	$TotalWage = $TotalAmount - $partObj->PartAmount;
+	for($i=0; $i < count($installmentArray); $i++)
+	{
+		if($monthly)
+			$power = DateModules::GetDiffInMonth($ComputeDate, $installmentArray[$i]["InstallmentDate"]);
+		else
+			$power = DateModules::JDateMinusJDate($installmentArray[$i]["InstallmentDate"],$ComputeDate);
+		
+		$installmentArray[$i]["wage"] = round(($TotalAmount-$TotalWage)*(pow(1+($partObj->CustomerWage/$factor),$power)-1));
+	
+		$TotalAmount -= $installmentArray[$i]["InstallmentAmount"];
+		$TotalWage -= $installmentArray[$i]["wage"];
+		$ComputeDate  = $installmentArray[$i]["InstallmentDate"];
+	}
+	//------------------------------------------------	
+	return $installmentArray;
+}
+
 ?>
