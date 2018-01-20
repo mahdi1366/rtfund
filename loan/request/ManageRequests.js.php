@@ -98,6 +98,16 @@ ManageRequest.prototype.OperationMenu = function(e){
 			handler : function(){ return ManageRequestObject.deleteRequest(); }});
 	}
 	
+	op_menu.add({text: 'اطلاعات وام',iconCls: 'info', 
+		handler : function(){ 
+			record = ManageRequestObject.grid.getSelectionModel().getLastSelected();
+			framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", 
+			{
+				RequestID : record.data.RequestID,
+				MenuID : ManageRequestObject.MenuID
+			});
+	}});	
+	
 	op_menu.add({text: 'مدارک وام',iconCls: 'attach', 
 		handler : function(){ return ManageRequestObject.LoanDocuments('loan'); }});
 
