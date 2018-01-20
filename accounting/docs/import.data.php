@@ -3850,7 +3850,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $ReqObj->RegisterAmount*1 ;
 		$itemObj->TafsiliType = TAFTYPE_YEARS;
-		$itemObj->TafsiliID = $YearTafsili;
+		$itemObj->TafsiliID = FindTafsiliID($curYear, TAFTYPE_YEARS);
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ثبت ردیف کارمزد ضمانت نامه");
@@ -3918,6 +3918,8 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 			return false;
 		}
 		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType);
+		unset($itemObj->TafsiliID);
 		$itemObj->SourceID = $IsExtend ? $ReqObj->RefRequestID : $ReqObj->RequestID;
 		$itemObj->SourceID2 = $ReqObj->RequestID;
 		$itemObj->SourceID3 = $row["CostID"];
