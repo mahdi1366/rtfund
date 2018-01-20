@@ -3650,6 +3650,10 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	/*@var $ReqObj WAR_requests */
 	$IsExtend = $ReqObj->RefRequestID != $ReqObj->RequestID ? true : false;
 	$refObj = new WAR_requests($ReqObj->RefRequestID);
+	//-------------- get last record -----------------
+	$dt = PdoDataAccess::runquery("select max(RequestID) from WAR_requests where RequestID<? AND RefRequestID=?", 
+			array($ReqObj->RequestID, $ReqObj->RefRequestID));
+	$preObj = new WAR_requests($dt[0][0]);
 	//------------- get CostCodes --------------------
 	$CostCode_warrenty = FindCostID("300");
 	$CostCode_warrenty_commitment = FindCostID("700");
@@ -3792,11 +3796,11 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 			return false;
 		}
 	}
-	else if($refObj->amount*1 <> $ReqObj->amount*1)
+	else if($preObj->amount*1 <> $ReqObj->amount*1)
 	{
 		$itemObj->CostID = $CostCode_warrenty;
 		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $refObj->amount*1 - $ReqObj->amount*1;
+		$itemObj->CreditorAmount = $preObj->amount*1 - $ReqObj->amount*1;
 		if(!$itemObj->Add($pdo))
 		{
 			ExceptionHandler::PushException("خطا در ثبت ردیف ضمانت نامه");
@@ -3805,7 +3809,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 
 		unset($itemObj->ItemID);
 		$itemObj->CostID = $CostCode_warrenty_commitment;
-		$itemObj->DebtorAmount = $refObj->amount*1 - $ReqObj->amount*1;
+		$itemObj->DebtorAmount = $preObj->amount*1 - $ReqObj->amount*1;
 		$itemObj->CreditorAmount = 0;
 		if(!$itemObj->Add($pdo))
 		{
@@ -3826,7 +3830,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 			return false;
 		}
 		unset($itemObj->ItemID);
-		$itemObj->details = "کارمزد ضمانت نامه شماره " . $ReqObj->RequestID;
+		$itemObj->details = "کارمزد ضمانت نامه شماره " . $ReqObj->RefRequestID;
 		$itemObj->CostID = $Year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $amount;
@@ -3841,7 +3845,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	if($ReqObj->RegisterAmount*1 > 0)
 	{
 		unset($itemObj->ItemID);
-		$itemObj->details = "کارمزد صدور ضمانت نامه شماره " . $ReqObj->RequestID;
+		$itemObj->details = "کارمزد صدور ضمانت نامه شماره " . $ReqObj->RefRequestID;
 		$itemObj->CostID = $CostCode_wage;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $ReqObj->RegisterAmount*1 ;
@@ -3866,7 +3870,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		$blockObj->EndDate = $ReqObj->EndDate;
 		$blockObj->SourceType = DOCTYPE_WARRENTY;
 		$blockObj->SourceID = $ReqObj->RequestID;
-		$blockObj->details = "بابت ضمانت نامه شماره " . $ReqObj->RequestID;
+		$blockObj->details = "بابت ضمانت نامه شماره " . $ReqObj->RefRequestID;
 		if(!$blockObj->Add())
 		{
 			print_r(ExceptionHandler::PopAllExceptions());
@@ -3874,7 +3878,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 			return false;
 		}
 	}
-	if($IsExtend && $refObj->amount*1 <> $ReqObj->amount*1 && $ReqObj->IsBlock == "YES")
+	if($IsExtend && $preObj->amount*1 <> $ReqObj->amount*1 && $ReqObj->IsBlock == "YES")
 	{
 		$dt = PdoDataAccess::runquery("select * from ACC_blocks where SourceType=? AND SourceID=?",
 				array(DOCTYPE_WARRENTY, $ReqObj->RequestID));
@@ -3888,12 +3892,12 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		$blockObj->CostID = !empty($Block_CostID) ? $Block_CostID : $CostCode_pasandaz;
 		$blockObj->TafsiliType = TAFTYPE_PERSONS;
 		$blockObj->TafsiliID = $PersonTafsili;
-		$blockObj->BlockAmount = $refObj->amount*1 - $ReqObj->amount*1;
+		$blockObj->BlockAmount = $preObj->amount*1 - $ReqObj->amount*1;
 		$blockObj->IsLock = "YES";
 		$blockObj->EndDate = $ReqObj->EndDate;
 		$blockObj->SourceType = DOCTYPE_WARRENTY;
 		$blockObj->SourceID = $ReqObj->RequestID;
-		$blockObj->details = "بابت ضمانت نامه شماره " . $ReqObj->RequestID;
+		$blockObj->details = "بابت ضمانت نامه شماره " . $ReqObj->RefRequestID;
 		if(!$blockObj->Add())
 		{
 			print_r(ExceptionHandler::PopAllExceptions());
@@ -3933,7 +3937,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliID);
-		$itemObj->details = "بابت ".$ReqObj->SavePercent."% سپرده ضمانت نامه شماره " . $ReqObj->RequestID;
+		$itemObj->details = "بابت ".$ReqObj->SavePercent."% سپرده ضمانت نامه شماره " . $ReqObj->RefRequestID;
 		$itemObj->CostID = $CostCode_seporde;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $ReqObj->amount*$ReqObj->SavePercent/100;
@@ -3943,14 +3947,14 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 			return false;
 		}
 	}
-	else if($refObj->amount*1 <> $ReqObj->amount*1)
+	else if($preObj->amount*1 <> $ReqObj->amount*1)
 	{
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliID);
-		$itemObj->details = "بابت ".$ReqObj->SavePercent."% سپرده ضمانت نامه شماره " . $ReqObj->RequestID;
+		$itemObj->details = "بابت ".$ReqObj->SavePercent."% سپرده ضمانت نامه شماره " . $ReqObj->RefRequestID;
 		$itemObj->CostID = $CostCode_seporde;
-		$itemObj->DebtorAmount = ($refObj->amount*1 - $ReqObj->amount*1)*$refObj->SavePercent/100;
+		$itemObj->DebtorAmount = ($preObj->amount*1 - $ReqObj->amount*1)*$refObj->SavePercent/100;
 		$itemObj->CreditorAmount = 0;
 		if(!$itemObj->Add($pdo))
 		{
@@ -3963,14 +3967,14 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	$sepordehAmount = 0;
 	if(!$IsExtend)
 		$sepordehAmount = $ReqObj->amount*$ReqObj->SavePercent/100;
-	else if($refObj->amount*1 <> $ReqObj->amount*1)
-		$sepordehAmount -= ($refObj->amount*1 - $ReqObj->amount*1)*$refObj->SavePercent/100;
+	else if($preObj->amount*1 <> $ReqObj->amount*1)
+		$sepordehAmount -= ($preObj->amount*1 - $ReqObj->amount*1)*$refObj->SavePercent/100;
 		
 	$TAMOUNT = $TotalWage + $sepordehAmount - $totalCostAmount;
 	
 	unset($itemObj->ItemID);
 	$CostObj = new ACC_CostCodes($WageCost);
-	$itemObj->details = "بابت سپرده و کارمزد ضمانت نامه شماره " . $ReqObj->RequestID;
+	$itemObj->details = "بابت سپرده و کارمزد ضمانت نامه شماره " . $ReqObj->RefRequestID;
 	$itemObj->CostID = $WageCost;
 	$itemObj->DebtorAmount = $TAMOUNT < 0 ? 0 : $TAMOUNT;
 	$itemObj->CreditorAmount = $TAMOUNT < 0 ? abs($TAMOUNT) : 0;
