@@ -3862,6 +3862,8 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	if(!$IsExtend && $ReqObj->IsBlock == "YES")
 	{
 		$blockObj = new ACC_CostBlocks();
+		$blockObj->RegDate = PDONOW;
+		$blockObj->RegPersonID = $_SESSION["USER"]["PersonID"];
 		$blockObj->CostID = !empty($Block_CostID) ? $Block_CostID : $CostCode_pasandaz;
 		$blockObj->TafsiliType = TAFTYPE_PERSONS;
 		$blockObj->TafsiliID = $PersonTafsili;
@@ -3889,6 +3891,8 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 			$blockObj->Edit($pdo);
 		}
 		$blockObj = new ACC_CostBlocks();
+		$blockObj->RegDate = PDONOW;
+		$blockObj->RegPersonID = $_SESSION["USER"]["PersonID"];
 		$blockObj->CostID = !empty($Block_CostID) ? $Block_CostID : $CostCode_pasandaz;
 		$blockObj->TafsiliType = TAFTYPE_PERSONS;
 		$blockObj->TafsiliID = $PersonTafsili;

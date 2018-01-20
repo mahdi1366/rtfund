@@ -11,8 +11,45 @@ require_once '../baseinfo/baseinfo.class.php';
 require_once inc_dataReader;
 require_once inc_response;
 
-if(!empty($_REQUEST["task"]))
-	$_REQUEST["task"]();
+$task = empty($_REQUEST["task"]) ? "" : $_REQUEST["task"];
+switch($task)
+{
+	case "selectDocs":
+	case "saveDoc":
+	case "removeDoc":
+	case "confirm":
+	case "archive":
+	case "regResid":
+	case "CopyDoc":
+	case "GetLastLocalNo":
+	case "GetSearchCount":
+	case "TotalConfirm":
+		
+	case "selectDocItems":
+	case "saveDocItem":
+	case "removeDocItem":
+	case "SelectAccounts":
+	case "GetTafsilis":
+	case "selectCheques":
+	case "saveChecks":	
+	case "removeChecks":
+	case "RegisterCheck":
+	case "openDoc":
+	case "UpdateChecks":
+	case "RegisterEndDoc":
+	case "RegisterStartDoc":
+	case "ComputeDoc":
+	case "GetAccountSummary":
+	case "GetAccountFlow":
+	case "RegisterInOutAccountDoc":
+	case "GetSubjects":
+	case "GetAllCostBlocks":
+	case "SaveCostBlock":
+	case "DeleteCostBlock":
+		
+		$task();
+		die();
+}
 
 function selectDocs() {
 	$where = " sd.CycleID=:cid AND sd.BranchID=:b ";
@@ -1007,4 +1044,31 @@ function GetAllCostBlocks(){
 	echo dataReader::getJsonData($dt, $temp->rowCount(), $_GET["callback"]);
 	die();
 }
+
+function SaveCostBlock(){
+	
+	$obj = new ACC_CostBlocks();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	if(empty($obj->CostBlockID))
+	{
+		$obj->RegDate = PDONOW;
+		$obj->RegPersonID = $_SESSION['USER']["PersonID"];
+		$result = $obj->Add ();
+	}
+	else
+		$result = $obj->Edit ();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteCostBlock(){
+	
+	$obj = new ACC_CostBlocks($_POST["CostBlockID"]);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
 ?>
