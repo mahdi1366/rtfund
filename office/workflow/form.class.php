@@ -34,7 +34,9 @@ class WFM_forms extends OperationClass {
 			return ExceptionHandler::GetExceptionCount() == 0;
         }
 		
+		parent::runquery("delete from WFM_FormAccess join WFM_FormItems using(FormItemID) where FormID=?", array($this->FormID), $pdo);
 		parent::runquery("delete from WFM_FormItems where FormID=?", array($this->FormID), $pdo);
+		parent::runquery("delete from WFM_FormPersons where FormID=?", array($this->FormID), $pdo);
 		
         return parent::Remove($pdo);
     }    
@@ -107,6 +109,17 @@ class WFM_FormPersons extends OperationClass {
 	}
 }
 
+class WFM_FormAccess extends OperationClass {
+
+	const TableName = "WFM_FormAccess";
+    const TableKey = "AccessID";
+	
+	public $AccessID;
+    public $FormItemID;
+    public $StepRowID;
+}
+
+//..........................................................
 
 class WFM_requests extends OperationClass {
 
@@ -222,13 +235,5 @@ class WFM_RequestItems extends OperationClass {
 	}
 }
 
-class WFM_FormAccess extends OperationClass {
 
-	const TableName = "WFM_FormAccess";
-    const TableKey = "AccessID";
-	
-	public $AccessID;
-    public $FormItemID;
-    public $StepRowID;
-}
 ?>
