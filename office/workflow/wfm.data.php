@@ -124,15 +124,14 @@ function MoveStep(){
 		where FlowID=? AND StepID=? AND IsOuter='NO' AND IsActive='YES'",
 			array($FlowID, $StepID));
 	
-	
 	PdoDataAccess::runquery("update WFM_FlowSteps 
 			set StepID=StepID $revdirection 
 			where FlowID=? AND StepID=? AND IsOuter='NO' AND IsActive='YES'",
 			array($FlowID, $StepID + $direction));
 	
 	PdoDataAccess::runquery("update WFM_FlowSteps 
-		set StepID=? w
-		here FlowID=? AND StepID=1000 AND IsOuter='NO' AND IsActive='YES'",
+		set StepID=? 
+		where FlowID=? AND StepID=1000 AND IsOuter='NO' AND IsActive='YES'",
 			array($StepID + $direction, $FlowID));
 	
 	echo Response::createObjectiveResponse(true, "");
