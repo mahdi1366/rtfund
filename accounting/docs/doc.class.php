@@ -22,7 +22,7 @@ class ACC_docs extends PdoDataAccess {
 	function __construct($DocID = "", $pdo = null) {
 
 		$this->DT_DocDate = DataMember::CreateDMA(InputValidation::Pattern_Date);
-		$this->DT_RegDate = DataMember::CreateDMA(InputValidation::Pattern_DateTime);
+		$this->DT_RegDate = DataMember::CreateDMA(InputValidation::Pattern_Date);
 
 		if ($DocID != "")
 			parent::FillObject($this, "select * from ACC_docs where DocID=?", array($DocID), $pdo);
@@ -572,9 +572,11 @@ class ACC_DocCheques extends PdoDataAccess {
 class ACC_CostBlocks extends OperationClass {
 
 	const TableName = "ACC_CostBlocks";
-	const TableKey = "BlockID";
+	const TableKey = "CostBlockID";
 
-	public $BlockID;
+	public $CostBlockID;
+	public $RegDate;
+	public $RegPersonID;
 	public $CostID;
 	public $TafsiliType;
 	public $TafsiliID;
@@ -586,6 +588,13 @@ class ACC_CostBlocks extends OperationClass {
 	public $SourceType;
 	public $SourceID;
 
+	function __construct($id = '') {
+		
+		$this->DT_EndDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
+		parent::__construct($id);
+	}
+	
 	static function Get($where = "", $param = array(), $pdo = null) {
 
 		$query = "

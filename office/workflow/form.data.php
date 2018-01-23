@@ -237,15 +237,34 @@ function CopyForm(){
 	
 	$FormID = $_POST["FormID"];
 	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
 	$obj = new WFM_forms($FormID);
 	$obj->FormTitle .= " (کپی)";
 	unset($obj->FormID);
-	$obj->Add();
+	$obj->Add($pdo);
 	
-	PdoDataAccess::runquery("insert into WFM_FormItems(FormID,ItemName,ItemType)
-		select :copy,ItemName,ItemType from WFM_FormItems where FormID=:src",
-			array(":src" => $FormID, ":copy" => $obj->FormID));
+	PdoDataAccess::runquery("insert into WFM_FormItems(FormID,ItemName,ItemType,ordering)
+		select :copy,ItemName,ItemType,ordering from WFM_FormItems where FormID=:src",
+			array(":src" => $FormID, ":copy" => $obj->FormID), $pdo);
 	
+	PdoDataAccess::runquery("insert into WFM_FormAccess(FormItemID,StepRowID)
+		select m2.FormItemID,a.StepRowID
+		from WFM_FormItems m1
+		join WFM_FormAccess a using(FormItemID)
+		join WFM_FormItems m2 on(m2.FormID=:copy AND m1.ItemType=m2.ItemType AND m1.ItemName=m2.ItemName AND m1.ordering=m2.ordering)
+		where m1.FormID=:src ",
+			array(":src" => $FormID, ":copy" => $obj->FormID), $pdo);
+	
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	
+	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }

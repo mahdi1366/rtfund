@@ -158,25 +158,19 @@ function PlanInfo(){
 		autoScroll : true
 	});
 
-   this.MainPanel =  new Ext.panel.Panel({
-		applyTo : this.get("mainForm"),
-		width: 760,
-		height : this.portal ? 530 : 618,
-		items : [this.TabPanel,this.itemsPanel],
-		tbar : [{
-			text : "ردیف های دارای اطلاعات",
-			iconCls : "list",
-			itemId : "btn_filled",
-			enableToggle : true,
-			handler : function(){
-				PlanInfoObject.itemsPanel.items.each(function(item){item.hide();});
-				PlanInfoObject.TabPanel.getActiveTab().down('treepanel').getStore().load({
-					params : {
-						filled : this.pressed ? "true" : "false"
-					}
-				});
-			}
-		},'-',{
+	if(this.portal)
+		buttons = [{
+			text : 'مدارک درخواست دهنده',
+			iconCls : "attach",
+			handler : function(){ PlanInfoObject.PlanDocuments('person'); }
+		},{
+			text : 'مدارک ضمیمه طرح',
+			iconCls : "attach",
+			itemId : "cmp_PlanDocuments",
+			handler : function(){ PlanInfoObject.PlanDocuments('plan'); }
+		}];
+	else
+		buttons = {
 			text : "عملیات",
 			iconCls: 'setting',
 			menu: {
@@ -195,7 +189,27 @@ function PlanInfo(){
 					handler : function(){ PlanInfoObject.PlanDocuments('plan'); }
 				}]
 			}
-		},'-',{
+		};
+
+   this.MainPanel =  new Ext.panel.Panel({
+		applyTo : this.get("mainForm"),
+		width: 760,
+		height : this.portal ? 530 : 618,
+		items : [this.TabPanel,this.itemsPanel],
+		tbar : [{
+			text : "ردیف های دارای اطلاعات",
+			iconCls : "list",
+			itemId : "btn_filled",
+			enableToggle : true,
+			handler : function(){
+				PlanInfoObject.itemsPanel.items.each(function(item){item.hide();});
+				PlanInfoObject.TabPanel.getActiveTab().down('treepanel').getStore().load({
+					params : {
+						filled : this.pressed ? "true" : "false"
+					}
+				});
+			}
+		},'-',buttons,'-',{
 			text : "چاپ طرح",
 			iconCls : "print",
 			handler : function(){
@@ -220,7 +234,7 @@ function PlanInfo(){
 	
 	if(this.User == "Customer" && !this.readOnly)
 	{
-		this.menu.add({
+		this.MainPanel.getDockedItems('toolbar').add({
 			text : "ارسال طرح جهت ارزیابی",
 			iconCls : "send",
 			handler : function(){

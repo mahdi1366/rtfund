@@ -194,11 +194,11 @@ WFM_form.prototype.copyForm = function () {
 			return;
 		
 		me = WFM_formObject;
-		mask = new Ext.LoadMask(me.grid, {msg:'در حال حذف...'});
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال کپی فرم...'});
 		mask.show();
 	
 		Ext.Ajax.request({
-			url: me.address_prefix + 'WFM_form.data.php?task=CopyForm',
+			url: me.address_prefix + 'form.data.php?task=CopyForm',
 			params: {                
 				FormID: me.grid.getSelectionModel().getLastSelected().data.FormID            
 			},

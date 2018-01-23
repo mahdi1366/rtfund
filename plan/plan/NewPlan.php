@@ -23,6 +23,10 @@ if(!$framework)
 	$PlanID = $Mode == "new" ? "0" : $dt[0]["PlanID"];
 	$PlanDesc = $Mode == "new" ? "" : $dt[0]["PlanDesc"];
 	$LoanID = $Mode == "new" ? "" : $dt[0]["LoanID"];
+	
+	$accessObj->AddFlag = true;
+	$accessObj->EditFlag = true;
+	$accessObj->RemoveFlag = true;
 }
 else
 {
@@ -53,6 +57,9 @@ $col = $dg->addColumn('عملیات', '', 'string');
 $col->renderer = "NewPlan.OperationRender";
 $col->width = 50;
 $col->align = "center";
+
+$dg->addButton("","مشاهده اطلاعات طرح", 'info2', 'function(){NewPlanObject.ShowPlanInfo()}');
+$dg->addButton("","سابقه درخواست", 'history', 'function(){NewPlanObject.ShowHistory()}');
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 300;
@@ -238,6 +245,11 @@ NewPlan.prototype.SaveNewPlan = function(){
 NewPlan.prototype.ShowPlanInfo = function(){
 	
 	record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+	{
+		Ext.MessageBox.alert("","ابتدا رکورد مورد نظر را انتخاب کنید");
+		return;
+	}
 	portal.OpenPage("/plan/plan/PlanInfo.php", {
 		MenuID : this.MenuID,
 		PlanID : record.data.PlanID});
@@ -245,6 +257,12 @@ NewPlan.prototype.ShowPlanInfo = function(){
 
 NewPlan.prototype.ShowHistory = function(){
 
+	record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+	{
+		Ext.MessageBox.alert("","ابتدا رکورد مورد نظر را انتخاب کنید");
+		return;
+	}
 	if(!this.HistoryWin)
 	{
 		this.HistoryWin = new Ext.window.Window({
@@ -272,7 +290,7 @@ NewPlan.prototype.ShowHistory = function(){
 	this.HistoryWin.center();
 	this.HistoryWin.loader.load({
 		params : {
-			PlanID : this.grid.getSelectionModel().getLastSelected().data.PlanID
+			PlanID : record.data.PlanID
 		}
 	});
 }
