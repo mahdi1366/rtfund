@@ -272,7 +272,7 @@ class OFC_letters extends PdoDataAccess{
 		if($this->OuterCopies != "")
 		{
 			$this->OuterCopies = str_replace("\r\n", " , ", $this->OuterCopies);
-			$content .= "<br><b> رونوشت خارج از سازمان : " . $this->OuterCopies . "</b><br>";
+			$content .= "<br><b> رونوشت خارج از سازمان : <br>" . hebrevc($this->OuterCopies) . "</b><br>";
 		}
 
 		return $content;
