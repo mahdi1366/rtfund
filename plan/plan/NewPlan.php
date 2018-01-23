@@ -59,6 +59,7 @@ $col->width = 50;
 $col->align = "center";
 
 $dg->addButton("","مشاهده اطلاعات طرح", 'info2', 'function(){NewPlanObject.ShowPlanInfo()}');
+$dg->addButton("","سابقه درخواست", 'history', 'function(){NewPlanObject.ShowHistory()}');
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 300;
@@ -256,6 +257,12 @@ NewPlan.prototype.ShowPlanInfo = function(){
 
 NewPlan.prototype.ShowHistory = function(){
 
+	record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+	{
+		Ext.MessageBox.alert("","ابتدا رکورد مورد نظر را انتخاب کنید");
+		return;
+	}
 	if(!this.HistoryWin)
 	{
 		this.HistoryWin = new Ext.window.Window({
@@ -283,7 +290,7 @@ NewPlan.prototype.ShowHistory = function(){
 	this.HistoryWin.center();
 	this.HistoryWin.loader.load({
 		params : {
-			PlanID : this.grid.getSelectionModel().getLastSelected().data.PlanID
+			PlanID : record.data.PlanID
 		}
 	});
 }
