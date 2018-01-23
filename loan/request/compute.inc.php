@@ -345,16 +345,34 @@ function GetExtraLoanAmount($PartObj, $TotalFundWage, $TotalCustomerWage, $Total
 
 function ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate = "", $ComputeWage = 'YES'){
 	
-	$ComputeDate = empty($ComputeDate) ? DateModules::miladi_to_shamsi($partObj->PartDate) : $ComputeDate;
-	$dt = LON_requests::GetPureAmount($partObj->RequestID, null, null, DateModules::shamsi_to_miladi($ComputeDate, "-"));
-	$amount = $dt["PureAmount"];
+	if(!empty($ComputeDate))
+	{
+		$dt = LON_requests::GetPureAmount($partObj->RequestID, null, null, DateModules::shamsi_to_miladi($ComputeDate, "-"));
+		$amount = $dt["PureAmount"];
+	}
+	else
+	{
+		$ComputeDate = DateModules::miladi_to_shamsi($partObj->PartDate);
+		$dt = LON_payments::Get(" AND RequestID=?", array($partObj->RequestID));
+		$dt = $dt->fetchAll();
+		if(count($dt) == 0)
+		{
+			ExceptionHandler::PushException("مراحل پرداخت را وارد نکرده اید");
+			return false;
+		}
+		$amount = $dt[0]["PayAmount"];
+		for($i=1; $i<count($dt); $i++)
+		{
+			$amount += Tanzil($dt[$i]["PayAmount"], $partObj->CustomerWage, $dt[$i]["PayDate"], $partObj->PartDate);
+		}
+	}
 	
 	//------------- compute monthly or daily -----------------
 	$monthly = true;
 	$factor = 1200;
 	$day = substr($installmentArray[0]["InstallmentDate"],8)*1;
 	for($i=1; $i<count($installmentArray);$i++)
-		if(substr($installmentArray[0]["InstallmentDate"],8)*1 != $day)
+		if(substr($installmentArray[$i]["InstallmentDate"],8)*1 != $day)
 		{
 			$monthly = false;
 			$factor = 36500;
@@ -440,4 +458,12 @@ function ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate = 
 	return $installmentArray;
 }
 
+function Tanzil($amount, $wage, $Date, $StartDate)
+{
+	$Date = DateModules::miladi_to_shamsi($Date);
+	$StartDate = DateModules::miladi_to_shamsi($StartDate);
+	$days = DateModules::JDateMinusJDate($Date, $StartDate);
+	
+	return $amount/pow(1+($wage/36500), $days);
+}
 ?>
