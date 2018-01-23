@@ -37,7 +37,7 @@ class WFM_forms extends OperationClass {
 		parent::runquery("delete from WFM_FormAccess join WFM_FormItems using(FormItemID) where FormID=?", array($this->FormID), $pdo);
 		parent::runquery("delete from WFM_FormItems where FormID=?", array($this->FormID), $pdo);
 		parent::runquery("delete from WFM_FormPersons where FormID=?", array($this->FormID), $pdo);
-		
+  		
         return parent::Remove($pdo);
     }    
     
