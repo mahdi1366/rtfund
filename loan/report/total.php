@@ -235,7 +235,7 @@ function GetData($mode = "list"){
 	for($i=0; $i< count($dataTable); $i++)
 	{
 		$dt = array();
-		$ComputeArr = LON_requests::ComputePayments2($dataTable[$i]["RequestID"], $dt);
+		$ComputeArr = LON_requests::ComputePayments($dataTable[$i]["RequestID"], $dt);
 		$TotalRemain = LON_requests::GetTotalRemainAmount($dataTable[$i]["RequestID"], $ComputeArr);
 		$dataTable[$i]["remainder"] = $TotalRemain;
 	}
