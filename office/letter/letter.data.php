@@ -62,6 +62,8 @@ function SelectAllLetter(){
 			case "FromLetterDate":
 			case "ToSendDate":
 			case "ToLetterDate":
+			case "FromInnerLetterDate":
+			case "ToInnerLetterDate":	
 				$value = DateModules::shamsi_to_miladi($value, "-");
 				break;
 		}
