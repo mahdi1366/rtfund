@@ -78,7 +78,7 @@ foreach($dt as $row)
 if($LetterObj->OuterCopies != "")
 {
 	$LetterObj->OuterCopies = str_replace("\r\n", " , ", $LetterObj->OuterCopies);
-	$content .= "<br><b> رونوشت به : " . $LetterObj->OuterCopies . "</b><br>";
+	$content .= "<br><b> رونوشت : " . $LetterObj->OuterCopies . "</b><br>";
 }
 ?>
 <html>
