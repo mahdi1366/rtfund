@@ -176,6 +176,18 @@ function ManageLetter(){
 			displayField: 'title',
 			valueField : "id"	
 		},{
+			xtype : "shdatefield",
+			name : "FromInnerLetterDate",
+			fieldLabel : "تاریخ نامه وارده از"
+		},{
+			xtype : "shdatefield",
+			name : "ToInnerLetterDate",
+			fieldLabel : "تا"
+		},{
+			xtype : "textfield",
+			name : "InnerLetterNo",
+			fieldLabel : "شماره نامه وارده"
+		},{
 			xtype : "combo",
 			hiddenName : "FromPersonID",
 			store: new Ext.data.Store({
