@@ -588,70 +588,63 @@ class LON_requests extends PdoDataAccess{
 			
 			$returnArr[] = $tempForReturnArr;
 			if($record["type"] == "pay")
+			{
+				if($obj->PayCompute == "forfeit")
+					$tempForReturnArr["ActionAmount"] = 
 				$ComputePayRows[] = $tempForReturnArr;
-			continue;
-			
+			}
+			continue;			
 		}
 
 		//............. pay rows of each installment ..............
-		$payIndex2 = 0;
+		$payIndex = 0;
+		$PayRecord = count($ComputePayRows)>0 ? $ComputePayRows[$payIndex++] : null;
+		
 		for($i=0; $i < count($returnArr); $i++)
 		{
-			$row = &$returnArr[$i];
-			if($row["ActionType"] != "installment")
+			$InstallmentRow = &$returnArr[$i];
+			if($InstallmentRow["ActionType"] != "installment")
 				continue;
 			
-			$row["pays"] = array();
-			$payRecord = array(
-				"forfeit" => 0,
-				"remain"  => $row["ActionAmount"]*1				
-			);
-			$amount = $row["ActionAmount"]*1;
-			if($obj->PayCompute != "installment")
-			{
-				$amount += $row["CurForfeitAmount"]*1;
-				$payRecord["forfeit"] += $row["CurForfeitAmount"]*1;
-				$payRecord["remain"] += $row["CurForfeitAmount"]*1;
-			}
-
-			for(; $payIndex2<count($ComputePayRows); $payIndex2++)
-			{
-				if($obj->PayCompute != "installment")
-				{
-					if($ComputePayRows[$payIndex2]["ActionAmount"]*1 < $amount)
-					{
-						$amount += $ComputePayRows[$payIndex2]["CurForfeitAmount"]*1;
-						$payRecord["remain"] += $ComputePayRows[$payIndex2]["CurForfeitAmount"]*1;
-						$payRecord["forfeit"] += $ComputePayRows[$payIndex2]["CurForfeitAmount"]*1;
-					}
-				}
-				$min = min($ComputePayRows[$payIndex2]["ActionAmount"]*1,$amount);
-				if($min == 0)
-					break;
-				$ComputePayRows[$payIndex2]["ActionAmount"] -= $min;
-				$amount -= $min;
-
-				$payRecord["PayedDate"] = DateModules::miladi_to_shamsi($ComputePayRows[$payIndex2]["ActionDate"]) ;
-				$payRecord["PayedAmount"] = number_format($min);
-				$payRecord["remain"] -= $min; 
-				$row["pays"][] = $payRecord;
-				$payRecord = array(
-					"forfeit" => 0,
-					"remain"  => $payRecord["remain"]
-				);
-
-				if($ComputePayRows[$payIndex2]["ActionAmount"]*1 > 0)
-					break;
-			}
+			$InstallmentRow["pays"] = array();
+			$amount = $InstallmentRow["ActionAmount"]*1;
 			
-			if(count($row["pays"]) == 0)
+			$StartDate = $InstallmentRow["ActionDate"];
+			while($amount > 0)
 			{
-				$payRecord["PayedDate"] = "";
-				$payRecord["PayedAmount"] = "";
-				$row["pays"][] = $payRecord;
+				$ToDate = $PayRecord ? $PayRecord["ActionDate"] : DateModules::Now();
+				if($ToDate > DateModules::Now())
+					$ToDate = DateModules::Now();
+				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
+				$CurForfeit = round($amount*$obj->ForfeitPercent*$forfeitDays/36500);
+				
+				$SavePayedAmount = $PayRecord ? $PayRecord["ActionAmount"] : 0;
+				$SaveAmount = $amount;
+				if($PayRecord && $obj->PayCompute == "forfeit")
+					$PayRecord["ActionAmount"] -= min($CurForfeit,$PayRecord["ActionAmount"]);
+							
+				$payAmount = $PayRecord ? $PayRecord["ActionAmount"] : $amount;
+				
+				$min = min($amount,$payAmount);
+				$amount -= $min;
+				if($PayRecord)
+					$PayRecord["ActionAmount"] -= $min;
+				
+				$InstallmentRow["pays"][] = array(
+					"ForfeitDays" => $forfeitDays,
+					"forfeit" => $CurForfeit,
+					"remain" => $PayRecord ? $amount : $SaveAmount ,
+					"PayedDate" => $PayRecord ? DateModules::miladi_to_shamsi($PayRecord["ActionDate"]) : '',
+					"PayedAmount" => number_format($SavePayedAmount)
+				);
+				if($PayRecord && $PayRecord["ActionAmount"] == 0)
+				{
+					$StartDate = $PayRecord["ActionDate"];
+					$PayRecord = $payIndex < count($ComputePayRows) ? $ComputePayRows[$payIndex++] : null;
+				}
 			}
 		}
-
+			
 		//.........................................................
 		
 		return $returnArr;
