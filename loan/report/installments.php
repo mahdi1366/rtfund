@@ -143,8 +143,9 @@ function GetData(){
 				for($k=0; $k < count($row["pays"]); $k++)
 				{  
 					$payRow = $row["pays"][$k];
+					
 					$MainRow["forfeit"] = $payRow["forfeit"];
-					$MainRow["TotalRemainder"] = $payRow["remain"];
+					$MainRow["ForfeitDays"] = $payRow["ForfeitDays"];
 					$MainRow["PayedDate"] = $payRow["PayedDate"];
 					$MainRow["PayedAmount"] = $payRow["PayedAmount"];
 					$MainRow["TotalRemainder"] = $payRow["remain"];
@@ -229,6 +230,11 @@ function ListData($IsDashboard = false){
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID","InstallmentDate");
 	$col->EnableSummary();
+	
+	
+	$col = $rpg->addColumn("روز تاخیر", "ForfeitDays");	
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID","InstallmentDate");
 	
 	$col = $rpg->addColumn("مبلغ تاخیر", "forfeit", "ReportMoneyRender");	
 	$col->rowspaning = true;
