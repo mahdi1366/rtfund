@@ -126,7 +126,7 @@ function GetData(){
 		{
 			$dt = array();
 			$computeArr[ $MainRow["RequestID"] ] = array(
-				"compute" => LON_requests::ComputePayments2($MainRow["RequestID"], $dt),
+				"compute" => LON_requests::ComputePayments($MainRow["RequestID"], $dt),
 				"computIndex" => 0,
 				"PayIndex" => 0
 				);

@@ -113,7 +113,7 @@ function SelectDraftLetters() {
     die();
 }
 
-function  CustomerLetters(){
+function CustomerLetters(){
 	
 	$list = PdoDataAccess::runquery("
 		select * from OFC_letters l join OFC_LetterCustomers c using(LetterID)
@@ -277,6 +277,21 @@ function selectAccessType(){
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
+
+function selectOrganizations(){
+	
+	$params = array();
+	$query = "select * from OFC_organizations ";
+	if(!empty($_GET["query"]))
+	{
+		$query .= " where OrgTitle like :q";
+		$params[":q"] = "%" . $_GET["query"] . "%";
+	}
+	$dt = PdoDataAccess::runquery_fetchMode($query, $params);
+	$temp = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+	echo dataReader::getJsonData($temp, $dt->rowCount(), $_GET["callback"]);
+	die();
+}
 //.............................................
 
 function SaveLetter($dieing = true) {
@@ -284,6 +299,20 @@ function SaveLetter($dieing = true) {
     $Letter = new OFC_letters();
     pdoDataAccess::FillObjectByArray($Letter, $_POST);
 	$Letter->context = InputValidation::filteyByHTMLPurifier($Letter->context);
+	
+	//------------ add organiation ----------------
+	if(!empty($Letter->organization))
+	{	
+		$dt = PdoDataAccess::runquery("select * from OFC_organizations where OrgTitle=?", 
+			array($Letter->organization));
+		if(count($dt) == 0)
+		{
+			$obj = new OFC_organizations();
+			$obj->OrgTitle = $Letter->organization;
+			$obj->Add();
+		}
+	}
+	//---------------------------------------------
 	
 	if($Letter->RefLetterID != "")
 	{

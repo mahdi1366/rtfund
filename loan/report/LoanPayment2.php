@@ -18,14 +18,14 @@ if(isset($_REQUEST["show"]))
 	$WageAmount = $arr["TotalCustomerWage"];
 	//............ get remain untill now ......................
 	$dt = array();
-	$ComputeArr = LON_requests::ComputePayments2($RequestID, $dt);
+	$ComputeArr = LON_requests::ComputePayments($RequestID, $dt);
 	$PureArr = LON_requests::ComputePures($RequestID);
 	//............ get remain untill now ......................
 	$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr);
 	$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID, $ComputeArr);
 	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
 	//.........................................................
-	
+	 
 	$rpg = new ReportGenerator();
 		
 	function RowColorRender($row){
@@ -38,8 +38,8 @@ if(isset($_REQUEST["show"]))
 		if($value == "installment")
 			return "قسط" ;
 		if($row["ActionAmount"]*1 < 0)
-			return "هزینه";
-		return "پرداخت";
+			return  $row["details"];
+		return "پرداخت " . $row["details"];
 	}
 	$rpg->addColumn("نوع عملیات", "ActionType", "ActionRender");
 		
@@ -52,7 +52,7 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg->addColumn("تاخیر کل", "ForfeitAmount","ReportMoneyRender");
 	
-	$rpg->addColumn("مانده کل", "TotalRemainder","ReportMoneyRender");
+	$rpg->addColumn("مانده اقساط", "TotalRemainder","ReportMoneyRender");
 	
 	$rpg->mysql_resource = $ComputeArr;
 	BeginReport();
@@ -107,10 +107,18 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= $partObj->PayInterval . ($partObj->IntervalType == "DAY" ? "روز" : "ماه") ?>
 							</b></td>
 					</tr>
+					<tr>
+						<td>نحوه محاسبه :</td>
+						<td><b><?= $partObj->PayCompute == "installment" ? "ابتدا اقساط" : "ابتدا جرائم" ?></b></td>
+					</tr>
 				</table>
 			</td>
 			<td>
-				<table >
+				<table>
+					<tr>
+						<td>معرفی کننده :</td>
+						<td><b><?= $ReqObj->_ReqPersonFullname ?></b></td>
+					</tr>
 					<tr>
 						<td>مدت تنفس :  </td>
 						<td><b><?= $partObj->DelayMonths  ?></b></td>

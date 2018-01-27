@@ -74,7 +74,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 		fields : ["RequestID","BranchID","LoanID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
 					"BorrowerMobile","guarantees","AgentGuarantee","FundGuarantee","StatusID","DocumentDesc","IsFree",
-					"imp_GirandehCode","imp_VamCode","IsEnded","SubAgentID","PlanTitle","RuleNo"],
+					"imp_GirandehCode","imp_VamCode","IsEnded","SubAgentID","PlanTitle","RuleNo","FundRule"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -106,6 +106,8 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 				if(record.data.AgentGuarantee == "YES")
 					me.companyPanel.down("[name=AgentGuarantee]").setValue(true);
 				if(record.data.FundGuarantee == "YES")
+					me.companyPanel.down("[name=FundGuarantee]").setValue(true);
+				if(record.data.FundRule == "YES")
 					me.companyPanel.down("[name=FundGuarantee]").setValue(true);
 				if(record.data.guarantees != null)
 				{
@@ -576,8 +578,29 @@ RequestInfo.prototype.BuildForms = function(){
 			},
 			itemId : "cmp_guarantees",
 			width : 700,
-			height : 100,
 			items :[{
+				xtype : "radiogroup",
+				colspan : 6,
+				width : 400,
+				fieldLabel : "تضامین بر اساس",
+				items : [{
+					boxLabel : "نظر صندوق",
+					inputValue : "YES",
+					checked : true,
+					itemId : "Cmp_FundRule",
+					name : "FundRules"
+				},{
+					boxLabel : "نظر معرفی کننده",
+					inputValue : "NO",
+					itemId : "Cmp_fRule",
+					name : "FundRules"
+				}]
+			},{
+				xtype : "container",
+				colspan : 6,
+				width : 700,
+				html : "<hr>"
+			},{
 				xtype : "checkbox",
 				boxLabel: 'وثیقه ملکی',
 				name: 'guarantee_1',	

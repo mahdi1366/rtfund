@@ -225,9 +225,20 @@ Letter.prototype.BuildForms = function(){
 					displayField: 'fullname',
 					valueField : "PersonID"
 				},{
-					xtype : "textfield",
-					name : "organization",
+					xtype : "combo",
+					store : new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: this.address_prefix + 'letter.data.php?task=selectOrganizations',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields :  ['OrgID','OrgTitle'],
+						pageSize : 25
+					}),
 					fieldLabel : "فرستنده/گیرنده",
+					displayField: 'OrgTitle',
+					valueField : "OrgTitle",
+					name : "organization",					
 					disabled : true,
 					allowBlank : true
 				},{

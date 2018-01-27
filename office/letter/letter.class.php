@@ -617,4 +617,14 @@ class OFC_roles extends OperationClass {
 	}
 
 }
+
+class OFC_organizations extends OperationClass {
+
+	const TableName = "OFC_organizations";
+	const TableKey = "OrgID";
+	
+	public $OrgID;
+	public $OrgTitle;
+	
+}
 ?>

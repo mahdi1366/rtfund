@@ -511,7 +511,7 @@ function EndRequest(){
 	$pdo->beginTransaction();
 	
 	$dt = array();
-	$computeArr = LON_requests::ComputePayments2($RequestID, $dt);
+	$computeArr = LON_requests::ComputePayments($RequestID, $dt);
 	$pureAmount = LON_requests::GetDefrayAmount($RequestID, $computeArr);
 	if($pureAmount == 0)
 	{
@@ -586,7 +586,7 @@ function GetInstallments(){
 	$RequestID = $_REQUEST["RequestID"];
 	
 	$temp = array();
-	LON_requests::ComputePayments2($RequestID, $temp);
+	LON_requests::ComputePayments($RequestID, $temp);
 	
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
@@ -811,7 +811,7 @@ function DelayInstallments(){
 	else
 	{
 		$dt = array();
-		LON_requests::ComputePayments2($RequestID, $dt);
+		LON_requests::ComputePayments($RequestID, $dt);
 	}
 	
 	$prevExtraAmount = 0;
@@ -1318,7 +1318,7 @@ function GetDelayedInstallments($returnData = false){
 			continue;
 		}
 		$temp = array();
-		$computeArr = LON_requests::ComputePayments2($row["RequestID"], $temp);
+		$computeArr = LON_requests::ComputePayments($row["RequestID"], $temp);
 		$remain = LON_requests::GetCurrentRemainAmount($row["RequestID"],$computeArr);
 		$MinDate = LON_requests::GetMinPayedInstallmentDate($row["RequestID"],$computeArr);
 		if($remain > 0 && $MinDate != null)
