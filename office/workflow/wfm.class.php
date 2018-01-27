@@ -18,7 +18,7 @@ class WFM_flows extends PdoDataAccess {
 	
 	static function GetAll($where = "", $whereParam = array()) {
 		
-		$query = "select f.*, InfoDesc ObjectDesc
+		$query = "select f.*, InfoDesc ObjectDesc,b.param4
 			from WFM_flows f
 			join BaseInfo b on(TypeID=11 AND ObjectType=InfoID)";
 		
@@ -203,6 +203,15 @@ class WFM_FlowRows extends PdoDataAccess {
 		{
 			case "4":
 				PdoDataAccess::runquery("update WAR_requests set StatusID=? where RequestID=?",
+					array($StepID, $this->ObjectID ));
+			case "6":
+			case "7":
+			case "8":
+			case "9":
+			case "10":
+			case "11":
+			case "12":
+				PdoDataAccess::runquery("update ATN_requests set ReqStatus=? where RequestID=?",
 					array($StepID, $this->ObjectID ));
 		}
 	}
