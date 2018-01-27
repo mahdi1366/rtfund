@@ -365,6 +365,7 @@ function ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate = 
 		{
 			$amount += Tanzil($dt[$i]["PayAmount"], $partObj->CustomerWage, $dt[$i]["PayDate"], $partObj->PartDate);
 		}
+		$amount = round($amount);
 	}
 	
 	//------------- compute monthly or daily -----------------
@@ -390,7 +391,7 @@ function ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate = 
 		
 		if($ComputeWage == "YES")
 		{
-			if($installmentArray[$i]["InstallmentAmount"]*1 == 0)
+			if($installmentArray[$i]["InstallmentAmount"]*1 == 0 && $i < count($installmentArray)-1)
 				$percent = 1;
 			else
 			{
