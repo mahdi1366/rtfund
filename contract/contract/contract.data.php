@@ -161,7 +161,7 @@ function StartFlow(){
 		die();
 	}
 	
-	$result = WFM_FlowRows::StartFlow(CONTRACT_FLOWID, $obj->ContractID);
+	$result = WFM_FlowRows::StartFlow(FLOWID_CONTRACT, $obj->ContractID);
 	
 	echo Response::createObjectiveResponse($result, '');
 	die();

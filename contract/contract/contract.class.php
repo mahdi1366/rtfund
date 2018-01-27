@@ -71,7 +71,7 @@ class CNT_contracts extends OperationClass {
 			
 			from CNT_contracts c 
 			join CNT_templates t using(TemplateID) 
-			join WFM_FlowSteps sp on(sp.FlowID=" . CONTRACT_FLOWID . " AND sp.StepID=c.StatusID)
+			join WFM_FlowSteps sp on(sp.FlowID=" . FLOWID_CONTRACT . " AND sp.StepID=c.StatusID)
 			left join BSC_persons p1 on(c.PersonID=p1.PersonID)
 			
 			where 1=1 " . $where . " group by ContractID " . $order, $whereParams);

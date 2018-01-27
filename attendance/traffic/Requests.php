@@ -452,33 +452,9 @@ TrafficRequests.InfoRender = function(v,p,r){
 
 TrafficRequests.OperationRender = function(v,p,r){
 	
-	if(r.data.ReqStatus == "1")
-	{
-		st = "";
-		if(TrafficRequestsObject.EditAccess)
-			st += "<div align='center' title='ویرایش' class='edit' "+
-			"onclick='TrafficRequestsObject.BeforeAddRequest(\"edit\");' " +
-			"style='background-repeat:no-repeat;background-position:center;" +
-			"cursor:pointer;width:16px;float:right;height:16'></div>&nbsp;&nbsp;";
-		if(TrafficRequestsObject.RemoveAccess)
-			st += "<div align='center' title='حذف' class='remove' "+
-			"onclick='TrafficRequestsObject.DeleteRequest();' " +
-			"style='background-repeat:no-repeat;background-position:center;" +
-			"cursor:pointer;width:16px;float:left;height:16'></div>";
-		
-		return st;
-	}	
-	if(r.data.ReqStatus == "2" && r.data.ReqType == "DayMISSION")
-		return "<div align='center' title='چاپ حکم ماموریت' class='print' "+
-		"onclick='TrafficRequestsObject.PrintMission();' " +
+	return "<div  title='عملیات' class='setting' onclick='TrafficRequestsObject.OperationMenu(event);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;float:right;height:16'></div>";
-	
-	if(r.data.ReqStatus == "3")
-		return "<div align='center' class='comment' "+
-		"data-qtip='دلیل رد درخواست : <b>" + r.data.SurveyDesc + "</b>' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;float:right;height:16'></div>";
+		"cursor:pointer;width:100%;height:16'></div>";
 }
 
 TrafficRequests.AdminOperationRender = function(v,p,r){
@@ -535,6 +511,40 @@ TrafficRequests.ReqTypeRender = function(v,p,r){
 	}
 }
 
+TrafficRequests.prototype.OperationMenu = function(e){
+	
+	record = this.grid.getSelectionModel().getLastSelected();
+	var op_menu = new Ext.menu.Menu();
+	
+	if(record.data.ReqStatus == "<?= ATN_STEPID_RAW ?>")
+	{
+		if(this.EditAccess)
+			op_menu.add({text: 'ویرایش درخواست',iconCls: 'edit', 
+			handler : function(){ return TrafficRequestsObject.BeforeAddRequest("edit"); }});
+	
+		if(this.RemoveAccess)
+			op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
+			handler : function(){ return TrafficRequestsObject.DeleteRequest(); }});
+	
+		op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
+			handler : function(){ return TrafficRequestsObject.StartFlow(); }});
+	}
+	if(record.data.ReqStatus == "<?= ATN_STEPID_CONFIRM ?>" && r.data.ReqType == "DayMISSION")
+		op_menu.add({text: 'چاپ حکم ماموریت',iconCls: 'print',
+			handler : function(){ return TrafficRequestsObject.PrintMission(); }});
+	
+	if(record.data.ReqStatus == "<?= ATN_STEPID_REJECT ?>")
+		op_menu.add({text: 'دلیل رد درخواست',iconCls: 'comment',
+			handler : function(){ 
+				record = this.grid.getSelectionModel().getLastSelected();
+				Ext.MessageBox.alert("",record.data.SurveyDesc);
+			}});
+		
+	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
+		handler : function(){ return TrafficRequestsObject.ShowHistory(); }});
+	
+	op_menu.showAt(e.pageX-120, e.pageY);
+}
 //..................................................
 
 TrafficRequests.prototype.SetFormElems = function(ReqType){
@@ -947,6 +957,72 @@ TrafficRequests.prototype.ArchiveRequest = function(){
 				TrafficRequestsObject.grid.getStore().load();
 			}
 		});		
+	});
+}
+
+//..................................................
+
+TrafficRequests.prototype.StartFlow = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به شروع گردش می باشید؟",function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		me = TrafficRequestsObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'traffic.data.php',
+			method: "POST",
+			params: {
+				task: "StartFlow",
+				RequestID : record.data.RequestID
+			},
+			success: function(response){
+				mask.hide();
+				TrafficRequestsObject.grid.getStore().load();
+			}
+		});
+	});
+}
+
+TrafficRequests.prototype.ShowHistory = function(){
+
+	if(!this.HistoryWin)
+	{
+		this.HistoryWin = new Ext.window.Window({
+			title: 'سابقه گردش درخواست',
+			modal : true,
+			autoScroll : true,
+			width: 700,
+			height : 500,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "history.php",
+				scripts : true
+			},
+			buttons : [{
+					text : "بازگشت",
+					iconCls : "undo",
+					handler : function(){
+						this.up('window').hide();
+					}
+				}]
+		});
+		Ext.getCmp(this.TabID).add(this.HistoryWin);
+	}
+	this.HistoryWin.show();
+	this.HistoryWin.center();
+	record = this.grid.getSelectionModel().getLastSelected();
+	this.HistoryWin.loader.load({
+		params : {
+			RequestID : record.data.RequestID,
+			ReqType : record.data.ReqType
+		}
 	});
 }
 

@@ -239,7 +239,7 @@ ManageContracts.prototype.ShowHistory = function(){
 	this.HistoryWin.center();
 	this.HistoryWin.loader.load({
 		params : {
-			FlowID : <?= CONTRACT_FLOWID ?>,
+			FlowID : <?= FLOWID_CONTRACT ?>,
 			ObjectID : this.grid.getSelectionModel().getLastSelected().data.ContractID
 		}
 	});

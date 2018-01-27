@@ -74,7 +74,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 		fields : ["RequestID","BranchID","LoanID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
 					"BorrowerMobile","guarantees","AgentGuarantee","FundGuarantee","StatusID","DocumentDesc","IsFree",
-					"imp_GirandehCode","imp_VamCode","IsEnded","SubAgentID","PlanTitle","RuleNo","FundRule"],
+					"imp_GirandehCode","imp_VamCode","IsEnded","SubAgentID","PlanTitle","RuleNo","FundRules"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -107,8 +107,10 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 					me.companyPanel.down("[name=AgentGuarantee]").setValue(true);
 				if(record.data.FundGuarantee == "YES")
 					me.companyPanel.down("[name=FundGuarantee]").setValue(true);
-				if(record.data.FundRule == "YES")
-					me.companyPanel.down("[name=FundGuarantee]").setValue(true);
+				if(record.data.FundRules == "YES")
+					me.companyPanel.down("[itemId=Cmp_FundRule]").setValue(true);
+				else
+					me.companyPanel.down("[itemId=Cmp_AgentRule]").setValue(true);
 				if(record.data.guarantees != null)
 				{
 					arr = record.data.guarantees.split(",");
@@ -259,10 +261,13 @@ RequestInfo.prototype.MakePartsPanel = function(){
 					hideTrigger : true,
 					width : 200,
 					labelWidth : 90,
-					style : "margin-bottom:5px",
 					fieldCls : "blueText"
 				},
 				items : [{
+					name : "details",
+					colspan : 3,
+					fieldLabel: 'توضیحات'
+				},{
 					fieldLabel: 'مبلغ پرداخت',
 					name: 'PartAmount',
 					renderer : function(v){ return Ext.util.Format.Money(v) + " ریال"}
@@ -592,7 +597,7 @@ RequestInfo.prototype.BuildForms = function(){
 				},{
 					boxLabel : "نظر معرفی کننده",
 					inputValue : "NO",
-					itemId : "Cmp_fRule",
+					itemId : "Cmp_AgentRule",
 					name : "FundRules"
 				}]
 			},{
@@ -1472,6 +1477,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 		this.PartWin = new Ext.window.Window({
 			width : 550,
 			height : 560,
+			autoScroll : true,
 			modal : true,
 			closeAction : 'hide',
 			title : "شرایط وام",
@@ -1492,6 +1498,12 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					xtype : "textfield",
 					name : "PartDesc",
 					fieldLabel : "عنوان شرایط",
+					colspan : 2,
+					width : 450
+				},{
+					xtype : "textfield",
+					name : "details",
+					fieldLabel : "توضیحات",
 					colspan : 2,
 					width : 450
 				},{

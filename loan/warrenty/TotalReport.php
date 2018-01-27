@@ -101,7 +101,7 @@ function GetData(){
 				left join BSC_branches using(BranchID)
 				left join BSC_persons p using(PersonID)
 				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
-				join WFM_FlowSteps sp on(sp.FlowID=" . WARRENTY_FLOWID . " AND sp.StepID=r.StatusID)
+				join WFM_FlowSteps sp on(sp.FlowID=" . FLOWID_WARRENTY . " AND sp.StepID=r.StatusID)
 				
 			where " . $where;
 	

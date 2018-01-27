@@ -65,6 +65,7 @@ $dg->addColumn("", "IsDocRegister","", true);
 $dg->addColumn("", "DelayPercent","", true);
 $dg->addColumn("", "IsHistory","", true);
 $dg->addColumn("", "PayDuration","", true);
+$dg->addColumn("", "details","", true);
 
 $col = $dg->addColumn("عنوان شرایط", "PartDesc", "");
 $col->sortable = false;

@@ -546,12 +546,29 @@ class LON_requests extends PdoDataAccess{
 						$record["RecordAmount"] -= $min;
 						if($record["RecordAmount"] > 0)
 						{
-							$TotalForfeit -= $record["RecordAmount"];
-							if($TotalForfeit < 0)
+							$IsInstallmentAfter = false;
+							for($j=$i+1; $j<count($records); $j++)
 							{
-								$TotalRemainder += $TotalForfeit;
-								$TotalForfeit = 0;
+								if($records[$j]["type"] == "installment")
+								{
+									$IsInstallmentAfter = true;
+									break;
+								}
 							}
+							if($IsInstallmentAfter)
+							{
+								$TotalRemainder -= $record["RecordAmount"];
+							}
+							else
+							{
+								$TotalForfeit -= $record["RecordAmount"];
+								if($TotalForfeit < 0)
+								{
+									$TotalRemainder += $TotalForfeit;
+									$TotalForfeit = 0;
+								}
+							}
+							
 						}
 					}
 					else
@@ -586,19 +603,78 @@ class LON_requests extends PdoDataAccess{
 			$tempForReturnArr["TotalRemainder"] = $TotalRemainder;
 			$tempForReturnArr["ForfeitAmount"] = $TotalForfeit;
 			
+			$tempForReturnArr["pays"] = array();
 			$returnArr[] = $tempForReturnArr;
-			if($record["type"] == "pay")
-			{
-				if($obj->PayCompute == "forfeit")
-					$tempForReturnArr["ActionAmount"] = 
+			
+			if($record["type"] == "pay" && $tempForReturnArr["ActionAmount"] > 0)
 				$ComputePayRows[] = $tempForReturnArr;
-			}
-			continue;			
 		}
 
 		//............. pay rows of each installment ..............
+		/*$payIndex = 0;
+		if(count($ComputePayRows)>0)
+			$PayRecord2 = &$ComputePayRows[$payIndex++];
+		else
+			$PayRecord2 = null;
+		$PrePayAmounts = 0;
+		if($obj->PayCompute == "forfeit" && $PayRecord2)
+		{
+			for($i=0; $i < count($returnArr); $i++)
+			{
+				if($returnArr[$i]["ActionType"] == "pay")
+					continue;
+				
+				if($returnArr[$i]["ActionDate"] > $PayRecord2["ActionDate"])
+				{
+					$PrePayAmounts += $PayRecord2["ActionAmount"];
+					if($payIndex < count($ComputePayRows))
+						$PayRecord2 = &$ComputePayRows[$payIndex++];
+					else
+						break;
+					$i--;
+					continue;
+				}
+				
+				$StartDate = $returnArr[$i]["ActionDate"];
+				$ToDate = $PayRecord2["ActionDate"];
+				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
+				$min = min($returnArr[$i]["ActionAmount"], $PrePayAmounts);
+				$TempAmount = $returnArr[$i]["ActionAmount"] - $min;
+				$PrePayAmounts -= $min;
+				$CurForfeit = round($TempAmount*$obj->ForfeitPercent*$forfeitDays/36500);
+				while($CurForfeit > 0 && $PayRecord2)
+				{
+					$returnArr[$i]["pays"][] = array(
+						"ForfeitDays" => $forfeitDays,
+						"forfeit" => $CurForfeit,
+						"remain" => $returnArr[$i]["ActionAmount"],
+						"G-PayedDate" => $PayRecord2["ActionDate"] ,
+						"PayedDate" => DateModules::miladi_to_shamsi($PayRecord2["ActionDate"]),
+						"PayedAmount" => number_format($PayRecord2["ActionAmount"])
+					);
+					
+					$min = min($CurForfeit,$PayRecord2["ActionAmount"]);
+					$PayRecord2["ActionAmount"] -= $min;
+					$CurForfeit -= $min;
+					
+					if($PayRecord2["ActionAmount"] == 0)
+					{
+						if($payIndex < count($ComputePayRows))
+							$PayRecord2 = &$ComputePayRows[$payIndex++];
+						else
+							break;
+					}
+				}
+			}				
+		}
+		*/
 		$payIndex = 0;
-		$PayRecord = count($ComputePayRows)>0 ? $ComputePayRows[$payIndex++] : null;
+		while(true)
+		{
+			$PayRecord = $payIndex < count($ComputePayRows) ? $ComputePayRows[$payIndex++] : null;
+			if(!$PayRecord || $PayRecord["ActionAmount"] > 0)
+				break;
+		}
 		
 		for($i=0; $i < count($returnArr); $i++)
 		{
@@ -606,17 +682,28 @@ class LON_requests extends PdoDataAccess{
 			if($InstallmentRow["ActionType"] != "installment")
 				continue;
 			
-			$InstallmentRow["pays"] = array();
 			$amount = $InstallmentRow["ActionAmount"]*1;
 			
-			$StartDate = $InstallmentRow["ActionDate"];
 			while($amount > 0)
 			{
+				$StartDate = count($InstallmentRow["pays"]) > 0 ?
+						$InstallmentRow["pays"][count($InstallmentRow["pays"])-1]["G-PayedDate"] :
+						$InstallmentRow["ActionDate"];
+				if($InstallmentRow["ActionDate"] > $StartDate)
+					$StartDate = $InstallmentRow["ActionDate"];
+				if(!$PayRecord)
+					$StartDate = $InstallmentRow["ActionDate"];
+				
 				$ToDate = $PayRecord ? $PayRecord["ActionDate"] : DateModules::Now();
 				if($ToDate > DateModules::Now())
 					$ToDate = DateModules::Now();
 				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
 				$CurForfeit = round($amount*$obj->ForfeitPercent*$forfeitDays/36500);
+				if($CurForfeit < 0)
+				{
+					$forfeitDays = 0;
+					$CurForfeit = 0;
+				}
 				
 				$SavePayedAmount = $PayRecord ? $PayRecord["ActionAmount"] : 0;
 				$SaveAmount = $amount;
@@ -634,12 +721,12 @@ class LON_requests extends PdoDataAccess{
 					"ForfeitDays" => $forfeitDays,
 					"forfeit" => $CurForfeit,
 					"remain" => $PayRecord ? $amount : $SaveAmount ,
+					"G-PayedDate" => $PayRecord ? $PayRecord["ActionDate"] : '',
 					"PayedDate" => $PayRecord ? DateModules::miladi_to_shamsi($PayRecord["ActionDate"]) : '',
 					"PayedAmount" => number_format($SavePayedAmount)
 				);
 				if($PayRecord && $PayRecord["ActionAmount"] == 0)
 				{
-					$StartDate = $PayRecord["ActionDate"];
 					$PayRecord = $payIndex < count($ComputePayRows) ? $ComputePayRows[$payIndex++] : null;
 				}
 			}
@@ -1107,6 +1194,7 @@ class LON_ReqParts extends PdoDataAccess{
 	public $AgentDelayReturn;
 	public $IsHistory;
 	public $PayDuration;
+	public $details;
 	
 	function __construct($PartID = "") {
 		

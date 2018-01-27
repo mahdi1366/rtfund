@@ -115,7 +115,7 @@ function DeleteWarrentyRequest(){
 function StartWarrentyFlow(){
 	
 	$RequestID = $_REQUEST["RequestID"];
-	$result = WFM_FlowRows::StartFlow(WARRENTY_FLOWID, $RequestID);
+	$result = WFM_FlowRows::StartFlow(FLOWID_WARRENTY, $RequestID);
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }

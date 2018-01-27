@@ -7,6 +7,7 @@ require_once('../header.inc.php');
 require_once inc_dataReader;
 require_once inc_response;
 require_once 'traffic.class.php';
+require_once "../../office/workflow/wfm.class.php";
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 switch ($task) {
@@ -23,6 +24,8 @@ switch ($task) {
 	case "SelectDayTraffics":
 	case "DeleteTraffic":
 	case "GetExtraInfo":
+		
+	case "StartFlow":
 		$task();
 }
 
@@ -272,4 +275,19 @@ function GetExtraInfo(){
 	echo dataReader::getJsonData($SUM, 1, $_GET["callback"]);
 	die();
 }
+
+//.................................
+
+function StartFlow(){
+	
+	$RequestID = $_REQUEST["RequestID"];
+	$obj = new ATN_requests($RequestID);
+	$FlowID = constant("FLOWID_TRAFFIC_" . $obj->ReqType);
+	
+	$result = WFM_FlowRows::StartFlow($FlowID, $RequestID);
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+
 ?>

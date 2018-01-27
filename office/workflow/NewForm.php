@@ -316,7 +316,7 @@ WFM_NewForm.prototype.BuildForms = function(){
 					proxy: {
 						type: 'jsonp',
 						url: this.address_prefix + 'wfm.data.php?task=SelectAllFlows'+
-							'&ObjectType=<?= WFM_FORM_FLOWID ?>',
+							'&ObjectType=<?= FLOWID_WFM_FORM ?>',
 						reader: {root: 'rows', totalProperty: 'totalCount'}
 					},
 					fields: ['FlowID', "FlowDesc"],

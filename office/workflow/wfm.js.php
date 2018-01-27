@@ -37,7 +37,8 @@ function WFM()
 
 WFM.deleteRender = function(v,p,r)
 {
-	return "<div align='center' title='حذف ' class='remove' onclick='WFMObject.Deleting();' " +
+	if(r.data.param4 == 'form')
+		return "<div align='center' title='حذف ' class='remove' onclick='WFMObject.Deleting();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }

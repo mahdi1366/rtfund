@@ -14,6 +14,8 @@ require_once 'wfm.js.php';
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "wfm.data.php?task=SelectAllFlows","");
 
+$dg->addColumn("","param4","string",true);
+
 $col = $dg->addColumn("عنوان گردش","FlowDesc","string");
 $col->editor = ColumnEditor::TextField();
 
@@ -140,6 +142,11 @@ $grid2 = $dg->makeGrid_returnObjects();
 var WFMObject = new WFM();
 
 WFMObject.grid = <?= $grid?>;
+WFMObject.grid.plugins[0].on("beforeedit", function(editor,e){
+		if(e.record.data.param4 != "form")
+			return false;
+		return true;
+	});
 WFMObject.grid.render(WFMObject.get("div_grid"));
 WFMObject.StepsGrid = <?= $grid2 ?>;
 

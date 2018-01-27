@@ -94,9 +94,19 @@ define("SOURCETYPE_FORM", "5");
 
 define("BLOCKID_LOAN","8");
 
-define("WFM_FORM_FLOWID","5");
-define("WARRENTY_FLOWID", "4");
-define("CONTRACT_FLOWID","2");
+//------------- flowID baseinfo typwID=11 ---------------
+define("FLOWID_WFM_FORM","5");
+define("FLOWID_WARRENTY", "4");
+define("FLOWID_CONTRACT","2");
+
+define("FLOWID_TRAFFIC_CORRECT","6");
+define("FLOWID_TRAFFIC_DayOFF","7");
+define("FLOWID_TRAFFIC_OFF","8");
+define("FLOWID_TRAFFIC_DayMISSION","9");
+define("FLOWID_TRAFFIC_MISSION","10");
+define("FLOWID_TRAFFIC_EXTRA","11");
+define("FLOWID_TRAFFIC_CHANGE_SHIFT","12");
+//-------------------------------------------------------
 
 define("WAR_STEPID_RAW", "100");
 define("WAR_STEPID_CONFIRM", "110");
@@ -113,7 +123,13 @@ define("OFC_ACCESSTYPE_NORMAL", "1");
 define("OFC_ACCESSTYPE_SECRET", "2");
 
 define("OFC_ROLE_SECRET", "1");
-//-------------------------------------
+
+//------------ attendance ------------
+define("ATN_STEPID_RAW", "100");
+define("ATN_STEPID_CONFIRM", "200");
+define("ATN_STEPID_REJECT", "300");
+
+
 
 define("FILE_FRAMEWORK_PICS",getenv("DOCUMENT_ROOT") . "/storage/framework/");
 
