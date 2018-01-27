@@ -298,7 +298,7 @@ function SaveLetter($dieing = true) {
 
     $Letter = new OFC_letters();
     pdoDataAccess::FillObjectByArray($Letter, $_POST);
-	$Letter->context = InputValidation::filteyByHTMLPurifier($Letter->context);
+	/*$Letter->context = InputValidation::filteyByHTMLPurifier($Letter->context);*/
 	
 	//------------ add organiation ----------------
 	if(!empty($Letter->organization))
