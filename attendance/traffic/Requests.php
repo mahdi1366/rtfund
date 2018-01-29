@@ -14,6 +14,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 $task = $AdminMode ? "GetAllRequests" : "GetMyRequests";
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "traffic.data.php?task=" . $task, "grid_div");
 
+$dg->addColumn("", "FlowID", "", true);
 $dg->addColumn("", "RequestID", "", true);
 $dg->addColumn("", "ToDate", "", true);
 $dg->addColumn("", "ReqStatus", "", true);
@@ -69,31 +70,21 @@ $col->align = "center";*/
 $col = $dg->addColumn("توضیحات", "details", "");
 $col->ellipsis = 40;
 
+$col = $dg->addColumn("وضعیت", "StepDesc", "");
+$col->ellipsis = 70;
+
 $col = $dg->addColumn("", "");
 $col->sortable = false;
 $col->renderer = "function(v,p,r){return TrafficRequests.InfoRender(v,p,r);}";
 $col->width = 40;
 
-if($AdminMode)
-{
-	$col = $dg->addColumn("عملیات", "");
-	$col->sortable = false;
-	$col->renderer = "function(v,p,r){return TrafficRequests.AdminOperationRender(v,p,r);}";
-	$col->width = 60;
-	
-	$dg->addButton("", "بایگانی درخواست", "archive", "function(){return TrafficRequestsObject.ArchiveRequest();}");
-	$dg->addObject('this.AllReqsObj');
-}
-else
-{
-	$col = $dg->addColumn("عملیات", "");
-	$col->sortable = false;
-	$col->renderer = "function(v,p,r){return TrafficRequests.OperationRender(v,p,r);}";
-	$col->width = 60;
-	
-	if($accessObj->AddFlag)
-		$dg->addButton("","ایجاد درخواست جدید", "add", "function(){TrafficRequestsObject.BeforeAddRequest('new');}");
-}
+$col = $dg->addColumn("عملیات", "");
+$col->sortable = false;
+$col->renderer = "function(v,p,r){return TrafficRequests.OperationRender(v,p,r);}";
+$col->width = 60;
+
+if( !$AdminMode && $accessObj->AddFlag)
+	$dg->addButton("","ایجاد درخواست جدید", "add", "function(){TrafficRequestsObject.BeforeAddRequest('new');}");
 
 $dg->height = 500;
 $dg->width = 750;
@@ -457,46 +448,6 @@ TrafficRequests.OperationRender = function(v,p,r){
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-TrafficRequests.AdminOperationRender = function(v,p,r){
-	
-	if(r.data.ReqStatus == "1")
-	{
-		return "<div align='center' title='تایید' class='tick' "+
-		"onclick='TrafficRequestsObject.beforeChangeStatus(2);' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;float:right;height:16'></div>&nbsp;&nbsp;&nbsp;&nbsp;" +
-	
-		"<div align='center' title='رد' class='cross' "+
-		"onclick='TrafficRequestsObject.beforeChangeStatus(3);' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;float:left;height:16'></div>";
-	}	
-	if(r.data.ReqStatus == "2")
-	{
-		st = "<div align='center' title='رد' class='cross' "+
-		"onclick='TrafficRequestsObject.beforeChangeStatus(3);' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;float:left;height:16'></div>";
-		
-		if(r.data.ReqType == "MISSION" && r.data.ToDate)
-			st += "<div align='center' title='چاپ حکم ماموریت' class='print' "+
-			"onclick='TrafficRequestsObject.PrintMission();' " +
-			"style='background-repeat:no-repeat;background-position:center;" +
-			"cursor:pointer;width:16px;float:right;height:16'></div>";
-		return st;
-	}
-	if(r.data.ReqStatus == "3")
-	{
-		p.tdAttr = "data-qtip='دلیل رد درخواست : <b>" + r.data.SurveyDesc + "</b>'";
-		
-		return "<div align='center' title='تایید' class='tick' "+
-		"onclick='TrafficRequestsObject.beforeChangeStatus(2);' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;float:right;height:16'></div>";
-	}
-	
-}
-
 TrafficRequests.ReqTypeRender = function(v,p,r){
 	
 	switch(v)
@@ -529,16 +480,15 @@ TrafficRequests.prototype.OperationMenu = function(e){
 		op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
 			handler : function(){ return TrafficRequestsObject.StartFlow(); }});
 	}
-	if(record.data.ReqStatus == "<?= ATN_STEPID_CONFIRM ?>" && r.data.ReqType == "DayMISSION")
+	if(record.data.ReqStatus == "0")
+	{
+		op_menu.add({text: 'برگشت فرم',iconCls: 'return',
+		handler : function(){ return TrafficRequestsObject.ReturnStartFlow(); }});
+	}
+	
+	if(record.data.ReqStatus == "<?= ATN_STEPID_CONFIRM ?>" && record.data.ReqType == "DayMISSION")
 		op_menu.add({text: 'چاپ حکم ماموریت',iconCls: 'print',
 			handler : function(){ return TrafficRequestsObject.PrintMission(); }});
-	
-	if(record.data.ReqStatus == "<?= ATN_STEPID_REJECT ?>")
-		op_menu.add({text: 'دلیل رد درخواست',iconCls: 'comment',
-			handler : function(){ 
-				record = this.grid.getSelectionModel().getLastSelected();
-				Ext.MessageBox.alert("",record.data.SurveyDesc);
-			}});
 		
 	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
 		handler : function(){ return TrafficRequestsObject.ShowHistory(); }});
@@ -981,6 +931,35 @@ TrafficRequests.prototype.StartFlow = function(){
 			params: {
 				task: "StartFlow",
 				RequestID : record.data.RequestID
+			},
+			success: function(response){
+				mask.hide();
+				TrafficRequestsObject.grid.getStore().load();
+			}
+		});
+	});
+}
+
+TrafficRequests.prototype.ReturnStartFlow = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به برگشت فرم می باشید؟",function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		me = TrafficRequestsObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: '/office/workflow/wfm.data.php',
+			method: "POST",
+			params: {
+				task: "ReturnStartFlow",
+				FlowID : record.data.FlowID,
+				ObjectID : record.data.RequestID
 			},
 			success: function(response){
 				mask.hide();

@@ -99,13 +99,13 @@ define("FLOWID_WFM_FORM","5");
 define("FLOWID_WARRENTY", "4");
 define("FLOWID_CONTRACT","2");
 
-define("FLOWID_TRAFFIC_CORRECT","6");
-define("FLOWID_TRAFFIC_DayOFF","7");
-define("FLOWID_TRAFFIC_OFF","8");
-define("FLOWID_TRAFFIC_DayMISSION","9");
-define("FLOWID_TRAFFIC_MISSION","10");
-define("FLOWID_TRAFFIC_EXTRA","11");
-define("FLOWID_TRAFFIC_CHANGE_SHIFT","12");
+define("FLOWID_TRAFFIC_CORRECT","9");
+define("FLOWID_TRAFFIC_DayOFF","10");
+define("FLOWID_TRAFFIC_OFF","11");
+define("FLOWID_TRAFFIC_DayMISSION","12");
+define("FLOWID_TRAFFIC_MISSION","13");
+define("FLOWID_TRAFFIC_EXTRA","14");
+define("FLOWID_TRAFFIC_CHANGE_SHIFT","15");
 //-------------------------------------------------------
 
 define("WAR_STEPID_RAW", "100");
@@ -127,8 +127,6 @@ define("OFC_ROLE_SECRET", "1");
 //------------ attendance ------------
 define("ATN_STEPID_RAW", "100");
 define("ATN_STEPID_CONFIRM", "200");
-define("ATN_STEPID_REJECT", "300");
-
 
 
 define("FILE_FRAMEWORK_PICS",getenv("DOCUMENT_ROOT") . "/storage/framework/");

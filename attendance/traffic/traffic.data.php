@@ -47,6 +47,7 @@ function GetMyRequests(){
 	
 	$dt = ATN_requests::Get(" AND t.PersonID=?" . dataReader::makeOrder(), 
 		array($_SESSION["USER"]["PersonID"]));
+	print_r(ExceptionHandler::PopAllExceptions());
 	$result = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	
 	echo dataReader::getJsonData($result, $dt->rowCount(), $_GET["callback"]);
@@ -57,6 +58,12 @@ function GetAllRequests(){
 	
 	$where = "";
 	$param = array();
+	
+	if(!empty($_REQUEST["RequestID"]))
+	{
+		$where .= " AND	RequestID=:r ";
+		$param[":r"] = $_REQUEST["RequestID"];
+	}
 	
 	if(!empty($_REQUEST["fields"]) && !empty($_GET["query"]))
 	{
@@ -228,7 +235,7 @@ function SelectDayTraffics(){
 	if($_REQUEST["admin"] == "true")
 	{
 		$params[":p"] = $_GET["PersonID"];
-		$ReqStatusWhere = " AND ReqStatus=2";
+		$ReqStatusWhere = " AND ReqStatus=".ATN_STEPID_CONFIRM;
 	}
 	else
 	{

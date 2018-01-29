@@ -11,9 +11,14 @@ class WFM_flows extends PdoDataAccess {
 	public $FlowDesc;
 	public $IsSystemic;
 
+	public $_ObjectType;
+	
 	function __construct($FlowID = "") {
 		if($FlowID != "")
-			parent::FillObject ($this, "select * from WFM_flows where FlowID=?", array($FlowID));
+			parent::FillObject ($this, "select f.* , bf.param4 _ObjectType
+				from WFM_flows f
+				join baseinfo bf on(bf.TypeID=11 AND f.ObjectType=bf.InfoID)
+				where FlowID=?", array($FlowID));
 	}
 	
 	static function GetAll($where = "", $whereParam = array()) {
@@ -176,13 +181,17 @@ class WFM_FlowRows extends PdoDataAccess {
 	public $StepDesc;
 	
 	public $_StepID;
+	public $_ObjectType;
 
-	function __construct($RowID = "") {
+	function __construct($RowID = "", $pdo = null) {
 		if($RowID != "")
-			parent::FillObject ($this, "select f.* ,StepID _StepID
+			parent::FillObject ($this, "select f.* ,StepID _StepID, bf.param4 _ObjectType
 				from WFM_FlowRows f
 				left join WFM_FlowSteps using(StepRowID)
-				where RowID=?", array($RowID));
+				join WFM_flows fl on(f.FlowID=fl.FlowID)
+				join baseinfo bf on(bf.TypeID=11 AND fl.ObjectType=bf.InfoID)
+				
+				where RowID=?", array($RowID), $pdo);
 	}
 	
 	static function GetAll($where = "", $whereParam = array()) {
@@ -255,23 +264,34 @@ class WFM_FlowRows extends PdoDataAccess {
 		return $obj->AddFlowRow($StepID, $pdo);
 	}
 	
-	static function EndObjectFlow($FlowID, $ObjectID, $pdo = null){
+	static function EndObjectFlow($ObjectType, $ObjectID, $pdo = null){
 		
-		switch($FlowID*1)
+		switch($ObjectType)
 		{
-			case 2 : 
-				$EndStepID = 110; 
+			case 'contract' : 
+				$EndStepID = CNT_STEPID_CONFIRM; 
 				PdoDataAccess::runquery("update CNT_contracts set StatusID=? where ContractID=?", 
 					array($EndStepID, $ObjectID), $pdo);
 				return ExceptionHandler::GetExceptionCount() == 0;
-			case 3 : 
+			case 'plan' : 
 				$EndStepID = 105; 
 				PdoDataAccess::runquery("update PLN_plans set StepID=? where PlanID=?", 
 					array($EndStepID, $ObjectID), $pdo);
 				return ExceptionHandler::GetExceptionCount() == 0;
-			case 4 : 
-				$EndStepID = 110; 
+			case 'warrenty' : 
+				$EndStepID = WAR_STEPID_CONFIRM; 
 				PdoDataAccess::runquery("update WAR_requests set StatusID=? where RequestID=?", 
+					array($EndStepID, $ObjectID), $pdo);
+				return ExceptionHandler::GetExceptionCount() == 0;
+			case 'CORRECT':
+			case 'DayOFF':
+			case 'OFF':
+			case 'DayMISSION':
+			case 'MISSION':
+			case 'EXTRA':
+			case 'CHANGE_SHIFT':
+				$EndStepID = ATN_STEPID_CONFIRM; 
+				PdoDataAccess::runquery("update ATN_requests set ReqStatus=? where RequestID=?", 
 					array($EndStepID, $ObjectID), $pdo);
 				return ExceptionHandler::GetExceptionCount() == 0;
 		}
@@ -312,6 +332,32 @@ class WFM_FlowRows extends PdoDataAccess {
 		if(count($dt) == 1 && $dt[0]["StepRowID"] == "")
 		{
 			PdoDataAccess::runquery("delete from WFM_FlowRows where RowID=?", array($dt[0]["RowID"]));
+			
+			$FlowObj = new WFM_flows($FlowID);
+			switch($FlowObj->_ObjectType)
+			{
+				case 'contract' : 
+					$EndStepID = CNT_STEPID_RAW; 
+					PdoDataAccess::runquery("update CNT_contracts set StatusID=? where ContractID=?", 
+						array($EndStepID, $ObjectID));
+					break;
+				case 'warrenty' : 
+					$EndStepID = WAR_STEPID_RAW; 
+					PdoDataAccess::runquery("update WAR_requests set StatusID=? where RequestID=?", 
+						array($EndStepID, $ObjectID));
+					break;
+				case 'CORRECT':
+				case 'DayOFF':
+				case 'OFF':
+				case 'DayMISSION':
+				case 'MISSION':
+				case 'EXTRA':
+				case 'CHANGE_SHIFT':
+					$EndStepID = ATN_STEPID_RAW; 
+					PdoDataAccess::runquery("update ATN_requests set ReqStatus=? where RequestID=?", 
+						array($EndStepID, $ObjectID));
+					break;
+			}
 			return ExceptionHandler::GetExceptionCount() == 0;
 		}
 	}

@@ -5,80 +5,95 @@
 //-------------------------
 require_once('../header.inc.php');
 
-$dt = PdoDataAccess::runquery("
-	select * from (
-		select TrafficTime,s.FromTime,s.ToTime,ExceptFromTime,ExceptToTime
-		from ATN_PersonShifts ps join ATN_shifts s on(ps.ShiftID=s.ShiftID)
-		join ATN_traffic t on(t.IsActive='YES' AND ps.PersonID=t.PersonID AND t.TrafficDate=:d)
-		where ps.IsActive='YES' AND ps.PersonID=:p AND :d between FromDate AND ToDate
+$RequestID = !empty($_POST["RequestID"]) ? $_POST["RequestID"] : 0;
 
-		union all
-
-		select StartTime,s.FromTime,s.ToTime,ExceptFromTime,ExceptToTime from ATN_requests r
-		join ATN_PersonShifts ps on(ps.IsActive='YES' AND r.PersonID=ps.PersonID
-							AND r.FromDate between ps.FromDate AND ps.ToDate)
-		join ATN_shifts s on(ps.ShiftID=s.ShiftID)
-		where ReqType='CORRECT' AND ReqStatus=2 AND r.PersonID=:p AND r.FromDate=:d
-		)t
-	order by TrafficTime", array(":p" => $_SESSION["USER"]["PersonID"],":d" => $_REQUEST["TheDate"]));
-//echo PdoDataAccess::GetLatestQueryString();
-if(count($dt) > 0)
+if(!empty($_REQUEST["TheDate"]))
 {
-	$FromTime = substr($dt[0]["FromTime"],0,5);
-	$ToTime = substr($dt[0]["ToTime"],0,5);
-	if( DateModules::GetWeekDay($_REQUEST["TheDate"], "l") == "Thursday")
+	$TheDate = DateModules::miladi_to_shamsi($_REQUEST["TheDate"]);
+	$type = $_REQUEST["type"];
+	$dt = PdoDataAccess::runquery("
+		select * from (
+			select TrafficTime,s.FromTime,s.ToTime,ExceptFromTime,ExceptToTime
+			from ATN_PersonShifts ps join ATN_shifts s on(ps.ShiftID=s.ShiftID)
+			join ATN_traffic t on(t.IsActive='YES' AND ps.PersonID=t.PersonID AND t.TrafficDate=:d)
+			where ps.IsActive='YES' AND ps.PersonID=:p AND :d between FromDate AND ToDate
+
+			union all
+
+			select StartTime,s.FromTime,s.ToTime,ExceptFromTime,ExceptToTime from ATN_requests r
+			join ATN_PersonShifts ps on(ps.IsActive='YES' AND r.PersonID=ps.PersonID
+								AND r.FromDate between ps.FromDate AND ps.ToDate)
+			join ATN_shifts s on(ps.ShiftID=s.ShiftID)
+			where ReqType='CORRECT' AND ReqStatus=".ATN_STEPID_CONFIRM." AND r.PersonID=:p AND r.FromDate=:d
+			)t
+		order by TrafficTime", array(":p" => $_SESSION["USER"]["PersonID"],":d" => $_REQUEST["TheDate"]));
+	//echo PdoDataAccess::GetLatestQueryString();
+	if(count($dt) > 0)
 	{
-		$FromTime = substr($dt[0]["ExceptFromTime"],0,5);
-		$ToTime = substr($dt[0]["ExceptToTime"],0,5);
-	}
-	$ReqType = "OFF";
-	if($_REQUEST["type"] == "Absence")
-	{
-		if(count($dt) > 3)
+		$FromTime = substr($dt[0]["FromTime"],0,5);
+		$ToTime = substr($dt[0]["ToTime"],0,5);
+		if( DateModules::GetWeekDay($_REQUEST["TheDate"], "l") == "Thursday")
 		{
-			$ST = substr($dt[1]["TrafficTime"],0,5);
-			$ET = substr($dt[2]["TrafficTime"],0,5);
+			$FromTime = substr($dt[0]["ExceptFromTime"],0,5);
+			$ToTime = substr($dt[0]["ExceptToTime"],0,5);
 		}
-		else
+		$ReqType = "OFF";
+		if($_REQUEST["type"] == "Absence")
 		{
-			if($dt[0]["TrafficTime"] > $FromTime)
+			if(count($dt) > 3)
 			{
-				$ST = substr($dt[0]["FromTime"],0,5);
-				$ET = substr($dt[0]["TrafficTime"],0,5);
+				$ST = substr($dt[1]["TrafficTime"],0,5);
+				$ET = substr($dt[2]["TrafficTime"],0,5);
 			}
-			if($dt[count($dt)-1]["TrafficTime"] < $ToTime)
+			else
 			{
-				$ST = substr($dt[count($dt)-1]["TrafficTime"],0,5);
-				$ET = substr($dt[0]["ToTime"],0,5);
+				if($dt[0]["TrafficTime"] > $FromTime)
+				{
+					$ST = substr($dt[0]["FromTime"],0,5);
+					$ET = substr($dt[0]["TrafficTime"],0,5);
+				}
+				if($dt[count($dt)-1]["TrafficTime"] < $ToTime)
+				{
+					$ST = substr($dt[count($dt)-1]["TrafficTime"],0,5);
+					$ET = substr($dt[0]["ToTime"],0,5);
+				}
+			}
+		}
+		if($_REQUEST["type"] == "firstAbsence")
+		{
+			$ST = substr($FromTime,0,5);
+			$ET = substr($dt[0]["TrafficTime"],0,5);
+			if(count($dt) % 2 == 1)
+			{
+				$ReqType = "CORRECT";
+				$ST = $FromTime;
+				$ET = '';
+			}
+		}
+		if($_REQUEST["type"] == "lastAbsence")
+		{
+			$ST = substr($dt[count($dt)-1]["TrafficTime"],0,5);
+			$ET = substr($ToTime,0,5);
+
+			if(count($dt) % 2 == 1)
+			{
+				$ReqType = "CORRECT";
+				$ST = $ToTime;
+				$ET = '';
 			}
 		}
 	}
-	if($_REQUEST["type"] == "firstAbsence")
+	else
 	{
-		$ST = substr($FromTime,0,5);
-		$ET = substr($dt[0]["TrafficTime"],0,5);
-		if(count($dt) % 2 == 1)
-		{
-			$ReqType = "CORRECT";
-			$ST = $FromTime;
-			$ET = '';
-		}
-	}
-	if($_REQUEST["type"] == "lastAbsence")
-	{
-		$ST = substr($dt[count($dt)-1]["TrafficTime"],0,5);
-		$ET = substr($ToTime,0,5);
-		
-		if(count($dt) % 2 == 1)
-		{
-			$ReqType = "CORRECT";
-			$ST = $ToTime;
-			$ET = '';
-		}
+		$ReqType = "DayOFF";
+		$ST = '';
+		$ET = '';
 	}
 }
 else
 {
+	$TheDate = '';
+	$type = "";
 	$ReqType = "DayOFF";
 	$ST = '';
 	$ET = '';
@@ -93,8 +108,10 @@ NewTrafficRequest.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : '<?= $js_prefix_address ?>',
 
-	TheDate : '<?= DateModules::miladi_to_shamsi($_REQUEST["TheDate"]) ?>',
-	type : '<?= $_REQUEST["type"] ?>',
+	TheDate : '<?= $TheDate ?>',
+	type : '<?= $type ?>',
+	
+	RequestID : <?= $RequestID ?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -107,7 +124,7 @@ function NewTrafficRequest(){
 		renderTo: this.get("newDiv"),                  
 		width:588,
 		border : false,
-		frame : true,
+		frame : this.RequestID>0 ? false : true,
 		layout : "column",
 		columns :2,
 		items: [{
@@ -165,7 +182,7 @@ function NewTrafficRequest(){
 				fieldLabel: 'تاریخ مورد نظر',
 				name: 'FromDate',
 				value : this.TheDate,
-				disabled : true,
+				disabled : this.RequestID>0 ? false : true,
 				allowBlank : false	
 			},{
 				xtype:'shdatefield',
@@ -302,10 +319,55 @@ function NewTrafficRequest(){
 			}],		
 		buttons: [{
 				text : "ذخیره",
+				itemId : "cmp_save",
 				iconCls : "save",
 				handler : function(){ NewTrafficRequestObject.SaveRequest();}
 			}]
 	});
+	
+	if(this.RequestID > 0)
+	{
+		new Ext.data.Store({
+			proxy:{
+				type: 'jsonp',
+				url: this.address_prefix + "traffic.data.php?task=GetAllRequests&RequestID=" + this.RequestID,
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			fields : ["RequestID","ToDate","ReqStatus","MissionPlace","MissionSubject","MissionStay","GoMean",
+						"ReturnMean","GoMeanDesc","ReturnMeanDesc","OffType","OffPersonID","OffTypeDesc",
+						"OffFullname","ShiftTitle","ShiftFromTime","ShiftToTime","StartTime",
+						"EndTime","details","fullname","ReqDate","ReqType","FromDate","StartTime","EndTime"],
+			autoLoad : true,
+			listeners :{
+				load : function(){
+					me = NewTrafficRequestObject;
+					me.formPanel.down("[itemId=cmp_save]").hide();
+					var record = this.getAt(0);
+					me.formPanel.getForm().loadRecord(record);
+					me.formPanel.down("[name=FromDate]").setValue(MiladiToShamsi(record.data.FromDate));
+					me.formPanel.down("[name=ToDate]").setValue(MiladiToShamsi(record.data.ToDate));
+
+					me.SetFormElems(record.data.ReqType);
+
+					R1 = null;
+					if(record.data.ReqType == "OFF" || record.data.ReqType == "DayOFF")
+						R1 = me.formPanel.down("[name=OffPersonID]").getStore().load({
+							params : { PersonID : record.data.OffPersonID}
+						});
+					
+					var t = setInterval(function(){
+						if(R1 == null || !R1.isLoading())
+						{
+							clearInterval(t);
+							NewTrafficRequestObject.formPanel.getEl().readonly();
+						}
+					}, 100);
+				}
+			}
+		});
+		return;
+		
+	}
 	
 	this.formPanel.down("[name=ReqType]").setValue('<?= $ReqType ?>');
 	this.SetFormElems('<?= $ReqType ?>');
@@ -323,41 +385,51 @@ NewTrafficRequest.prototype.SetFormElems = function(ReqType){
 	this.formPanel.down("[name=StartTime]").enable();
 	this.formPanel.down("[name=EndTime]").enable();
 
-	if(ReqType == "CORRECT")
+	if(ReqType == "CORRECT" && this.RequestID == 0)
 	{
 		this.formPanel.down("[name=ToDate]").disable();
 		this.formPanel.down("[name=EndTime]").disable();
 	}
 	if(ReqType == "DayOFF")
 	{
-		this.formPanel.down("[name=OffType]").enable();
-		this.formPanel.down("[name=StartTime]").disable();
-		this.formPanel.down("[name=EndTime]").disable();
+		if(this.RequestID == 0)
+		{
+			this.formPanel.down("[name=OffType]").enable();
+			this.formPanel.down("[name=StartTime]").disable();
+			this.formPanel.down("[name=EndTime]").disable();
+		}
 		this.formPanel.down("[itemId=fs_off]").show();
 		this.formPanel.down("[name=StartTime]").setValue();
 		this.formPanel.down("[name=EndTime]").setValue();
 	}
 	if(ReqType == "OFF")
 	{
+		if(this.RequestID == 0)
+		{
+			this.formPanel.down("[name=OffType]").disable();
+			this.formPanel.down("[name=ToDate]").disable();
+		}
 		this.formPanel.down("[name=OffType]").setValue("2");
-		this.formPanel.down("[name=OffType]").disable();
-		this.formPanel.down("[name=ToDate]").disable();
 		this.formPanel.down("[itemId=fs_off]").show();
 	}
 	if(ReqType == "DayMISSION")
 	{
-		this.formPanel.down("[name=StartTime]").disable();
-		this.formPanel.down("[name=EndTime]").disable();
+		if(this.RequestID == 0)
+		{
+			this.formPanel.down("[name=StartTime]").disable();
+			this.formPanel.down("[name=EndTime]").disable();
+		}
 		this.formPanel.down("[itemId=fs_mission]").show();
 		this.formPanel.down("[name=StartTime]").setValue();
 		this.formPanel.down("[name=EndTime]").setValue();
 	}
 	if(ReqType == "MISSION")
 	{
-		this.formPanel.down("[name=ToDate]").disable();
+		if(this.RequestID == 0)
+			this.formPanel.down("[name=ToDate]").disable();
 		this.formPanel.down("[itemId=fs_mission]").show();
 	}
-	if(ReqType == "EXTRA")
+	if(ReqType == "EXTRA" && this.RequestID == 0)
 	{
 		this.formPanel.down("[name=ToDate]").disable();
 		this.formPanel.down("[name=StartTime]").disable();
@@ -366,9 +438,12 @@ NewTrafficRequest.prototype.SetFormElems = function(ReqType){
 	if(ReqType == "CHANGE_SHIFT")
 	{
 		this.formPanel.down("[name=ShiftID]").show();
-		this.formPanel.down("[name=ToDate]").disable();
-		this.formPanel.down("[name=StartTime]").disable();
-		this.formPanel.down("[name=EndTime]").disable();
+		if(this.RequestID == 0)
+		{
+			this.formPanel.down("[name=ToDate]").disable();
+			this.formPanel.down("[name=StartTime]").disable();
+			this.formPanel.down("[name=EndTime]").disable();
+		}
 	}
 }
 

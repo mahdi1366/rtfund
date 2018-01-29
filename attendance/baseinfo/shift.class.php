@@ -119,7 +119,7 @@ class ATN_PersonShifts extends OperationClass
 		$query = "select s.*
 
 		from ATN_PersonShifts ps
-		left join ATN_requests r on(ReqType='CHANGE_SHIFT' and ReqStatus=2 and r.FromDate=:d
+		left join ATN_requests r on(ReqType='CHANGE_SHIFT' and ReqStatus=".ATN_STEPID_CONFIRM." and r.FromDate=:d
 		  and ps.PersonID=r.PersonID)
 
 		join ATN_shifts s on(ifnull(r.ShiftID,ps.ShiftID)=s.ShiftID)

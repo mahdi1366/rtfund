@@ -54,7 +54,7 @@ class ATN_traffic extends OperationClass
 				from ATN_traffic t
 				left join ATN_PersonShifts ps on(ps.IsActive='YES' AND t.PersonID=ps.PersonID AND 
 					TrafficDate between FromDate AND ToDate)
-				left join ATN_requests r on(ReqType='CHANGE_SHIFT' and ReqStatus=2 and r.FromDate=TrafficDate
+				left join ATN_requests r on(ReqType='CHANGE_SHIFT' and ReqStatus=".ATN_STEPID_CONFIRM." and r.FromDate=TrafficDate
 				  and t.PersonID=r.PersonID)
 				left join ATN_shifts s on(ifnull(r.ShiftID,ps.ShiftID)=s.ShiftID)
 				where t.IsActive='YES' AND t.PersonID=:p AND TrafficDate>= :sd AND TrafficDate <= :ed 
@@ -66,11 +66,11 @@ class ATN_traffic extends OperationClass
 				from ATN_requests tr
 				left join ATN_PersonShifts ps on(ps.IsActive='YES' AND tr.PersonID=ps.PersonID 
 					AND tr.FromDate between ps.FromDate AND ps.ToDate)
-				left join ATN_requests r on(r.ReqType='CHANGE_SHIFT' and r.ReqStatus=2 and r.FromDate=tr.FromDate
+				left join ATN_requests r on(r.ReqType='CHANGE_SHIFT' and r.ReqStatus=".ATN_STEPID_CONFIRM." and r.FromDate=tr.FromDate
 				  and tr.PersonID=r.PersonID)
 				left join ATN_shifts s on(ifnull(r.ShiftID,ps.ShiftID)=s.ShiftID)
 				where tr.PersonID=:p AND tr.ToDate is null AND tr.ReqType not in('EXTRA' ,'CHANGE_SHIFT')
-					AND tr.ReqStatus=2 AND tr.FromDate>= :sd and tr.FromDate <= :ed 
+					AND tr.ReqStatus=".ATN_STEPID_CONFIRM." AND tr.FromDate>= :sd and tr.FromDate <= :ed 
 
 			)t2
 			order by  TrafficDate,TrafficTime,ReqType";
@@ -187,7 +187,7 @@ class ATN_traffic extends OperationClass
 				$requests = PdoDataAccess::runquery("
 					select t.*, InfoDesc OffTypeDesc from ATN_requests t
 						left join BaseInfo on(TypeID=20 AND InfoID=OffType)
-					where ReqType in('DayOFF','DayMISSION') AND ReqStatus=2 AND 
+					where ReqType in('DayOFF','DayMISSION') AND ReqStatus=".ATN_STEPID_CONFIRM." AND 
 						PersonID=:p AND FromDate <= :td 
 						AND if(ToDate is not null, ToDate >= :td, 1=1)
 					order by ToDate desc,StartTime asc
@@ -399,7 +399,7 @@ class ATN_traffic extends OperationClass
 			
 			$requests = PdoDataAccess::runquery("
 				select t.* from ATN_requests t
-				where ReqType='EXTRA' AND ReqStatus=2 AND PersonID=:p AND FromDate = :d 						
+				where ReqType='EXTRA' AND ReqStatus=".ATN_STEPID_CONFIRM." AND PersonID=:p AND FromDate = :d 						
 			", array(
 				":p" => $PersonID,
 				":d" => $returnArr[$i]["TrafficDate"]
@@ -500,7 +500,9 @@ class ATN_requests extends OperationClass
 				concat(p3.fname,' ',p3.lname) SurveyFullname,
 				sh.ShiftTitle,
 				sh.FromTime ShiftFromTime,
-				sh.ToTime ShiftToTime
+				sh.ToTime ShiftToTime,
+				sp.FlowID,
+				sp.StepDesc
 				
 			from ATN_requests t
 			join BSC_persons p1 using(PersonID)
@@ -509,6 +511,10 @@ class ATN_requests extends OperationClass
 			left join BaseInfo bf1 on(bf1.TypeID=21 AND bf1.InfoID=GoMean)
 			left join BaseInfo bf2 on(bf2.TypeID=21 AND bf2.InfoID=ReturnMean)
 			left join BaseInfo bf3 on(bf3.TypeID=20 AND bf3.InfoID=OffType)
+			
+			join Baseinfo bf4 on(bf4.TypeID=11 AND bf4.param4=t.ReqType)
+			join WFM_flows fl on(fl.ObjectType=bf4.InfoID)
+			join WFM_FlowSteps sp on(sp.FlowID=fl.FlowID AND sp.StepID=t.ReqStatus)
 			
 			left join ATN_shifts sh using(ShiftID)
 			where 1=1 " . $where;

@@ -146,23 +146,34 @@ function SelectAllForms(){
 	$param = array();
 
 	$ObjectDesc = 
-		"case b.param4
-			when 'loan' then concat_ws(' ','وام شماره',lp.RequestID,'به مبلغ',
+		"case 
+			when b.param4='loan' then concat_ws(' ','وام شماره',lp.RequestID,'به مبلغ',
 				PartAmount,'مربوط به',if(pp.IsReal='YES',concat(pp.fname, ' ', pp.lname),pp.CompanyName))
 				
-			when 'contract' then concat_ws(' ','قرارداد شماره',c.ContractID,cp.CompanyName,cp.fname,cp.lname)
+			when b.param4='contract' then concat_ws(' ','قرارداد شماره',c.ContractID,cp.CompanyName,cp.fname,cp.lname)
 			
-			when 'warrenty' then concat_ws(' ','ضمانت نامه [',wr.RefRequestID,'] ', wp.CompanyName,wp.fname,wp.lname, 'به مبلغ ',wr.amount)
+			when b.param4='warrenty' then concat_ws(' ','ضمانت نامه [',wr.RefRequestID,'] ', 
+												wp.CompanyName,wp.fname,wp.lname, 'به مبلغ ',wr.amount)
 			
-			when 'form' then concat_ws(' ',wfmf.FormTitle,'به شماره',wfmr.RequestID)
+			when b.param4='form' then concat_ws(' ',wfmf.FormTitle,'به شماره',wfmr.RequestID)
+			
+			when b.param4 in('CORRECT','DayOFF','OFF','DayMISSION','MISSION','EXTRA','CHANGE_SHIFT')
+				then concat_ws(' ','درخواست ',ap.CompanyName,ap.fname,ap.lname,'مربوط به تاریخ', (ar.FromDate))
 			
 		end";
 	$ObjectID = 
 		"case b.param4
-			when 'loan'		then lp.RequestID				
-			when 'contract' then c.ContractID			
-			when 'warrenty' then wr.RefRequestID
-			when 'form'		then wfmr.RequestID
+			when 'loan'			then lp.RequestID				
+			when 'contract'		then c.ContractID			
+			when 'warrenty'		then wr.RefRequestID
+			when 'form'			then wfmr.RequestID
+			when 'CORRECT'		then ar.RequestID
+			when 'DayOFF'		then ar.RequestID
+			when 'OFF'			then ar.RequestID
+			when 'DayMISSION'	then ar.RequestID
+			when 'MISSION'		then ar.RequestID
+			when 'EXTRA'		then ar.RequestID
+			when 'CHANGE_SHIFT'	then ar.RequestID
 		end";
 	
 	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
@@ -247,9 +258,13 @@ function SelectAllForms(){
 				left join WFM_requests wfmr on(b.param4='form' AND wfmr.RequestID=fr.ObjectID)
 				left join WFM_forms wfmf on(wfmr.FormID=wfmf.FormID)	
 	
+				left join ATN_requests ar on(b.param4=ar.ReqType AND ar.RequestID=fr.ObjectID)
+				left join BSC_persons ap on(ap.PersonID=ar.PersonID)
+	
 				where " . $where . dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
 	//echo PdoDataAccess::GetLatestQueryString();
+	print_r(ExceptionHandler::PopAllExceptions());
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	
@@ -264,6 +279,8 @@ function ChangeStatus(){
 	
 	$mode = $_REQUEST["mode"];
 	$SourceObj = new WFM_FlowRows($_POST["RowID"]);
+	$FlowObj = new WFM_flows($SourceObj->FlowID);
+	
 	$newObj = new WFM_FlowRows();
 	$newObj->FlowID = $SourceObj->FlowID;
 	$newObj->ObjectID = $SourceObj->ObjectID;
@@ -304,7 +321,7 @@ function ChangeStatus(){
 	}
 	
 	if($newObj->IsEnded == "YES")
-		$result = WFM_FlowRows::EndObjectFlow($newObj->FlowID, $newObj->ObjectID, $pdo);
+		$result = WFM_FlowRows::EndObjectFlow($FlowObj->_ObjectType, $newObj->ObjectID, $pdo);
 
 	if(!$result)
 	{
