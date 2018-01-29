@@ -55,13 +55,16 @@ class WAR_requests extends OperationClass
 		
 		return PdoDataAccess::runquery_fetchMode("
 			select r.* , concat_ws(' ',fname,lname,CompanyName) fullname, sp.StepDesc,
-				address,
+				p.address,
+				p.NationalID,
+				p.PhoneNo,
+				p.mobile,
 				bf.InfoDesc TypeDesc,d.DocID,group_concat(distinct d.LocalNo) LocalNo, d.DocStatus , 
 				BranchName,
 				if(lst.RequestID=r.RequestID, 'YES', 'NO') IsCurrent
 
 			from WAR_requests r 
-				left join BSC_persons using(PersonID)
+				left join BSC_persons p using(PersonID)
 				join BSC_branches b using(BranchID)
 				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
 				join WFM_FlowSteps sp on(sp.FlowID=" . FLOWID_WARRENTY . " AND sp.StepID=r.StatusID)

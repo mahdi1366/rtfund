@@ -133,14 +133,17 @@ function WarrentyPrintSetting(){
 					["#RequestID#" , "شماره ضمانت نامه" ],
 					["#TypeDesc#" , "نوع درخواست" ],
 					["#fullname#" , "مشتری" ],
-					["#address#" , "نشانی طرف قرارداد" ],
+					["#NationalID#" , "شناسه ملی مشتری / کدملی" ],
+					["#address#" , "نشانی مشتری" ],
+					["#PhoneNo#" , "تلفن مشتری" ],
+					["#mobile#" , "تلفن همراه مشتری" ],
 					["#organization#" , "سازمان مربوطه" ],
 					["#LetterNo#" , "شماره نامه سازمان مربوطه" ],
 					["#LetterDate#" , "تاریخ نامه سازمان مربوطه" ],
 					["#amount#" , "مبلغ ضمانت نامه" ],
 					["#amount_char#" , "مبلغ حروفی ضمانت نامه" ],
 					["#StartDate#" , "تاریخ شروع ضمانت نامه" ],
-					["#StartDate_char#" , "تاریخ شروع حروفی" ],
+					["#StartDate_char#" , "تاریخ شروع حروفی" ], 
 					["#EndDate#" , "تاریخ پایان ضمانت نامه" ],
 					["#EndDate_char#" , "تاریخ پایان حروفی" ],
 					["#duration_month#" , "مدت ضمانت نامه به ماه" ],
@@ -190,7 +193,7 @@ WarrentyPrintSetting.prototype.Save = function(){
 	Ext.Ajax.request({
 		url: this.address_prefix +'../request.data.php',
 		method: "POST",
-		params: {
+		params: { 
 			task: "SavePrintSetting",
 			context : CKEDITOR.instances.WarrentySettingEditor.getData(), 
 			TypeID : this.groupPnl.down("[name=TypeID]").getValue()
