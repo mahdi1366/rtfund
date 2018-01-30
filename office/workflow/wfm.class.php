@@ -189,7 +189,7 @@ class WFM_FlowRows extends PdoDataAccess {
 				from WFM_FlowRows f
 				left join WFM_FlowSteps using(StepRowID)
 				join WFM_flows fl on(f.FlowID=fl.FlowID)
-				join baseinfo bf on(bf.TypeID=11 AND fl.ObjectType=bf.InfoID)
+				join BaseInfo bf on(bf.TypeID=11 AND fl.ObjectType=bf.InfoID)
 				
 				where RowID=?", array($RowID), $pdo);
 	}
