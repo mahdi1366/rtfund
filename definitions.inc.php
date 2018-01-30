@@ -123,7 +123,7 @@ define("OFC_ACCESSTYPE_NORMAL", "1");
 define("OFC_ACCESSTYPE_SECRET", "2");
 
 define("OFC_ROLE_SECRET", "1");
-
+ 
 //------------ attendance ------------
 define("ATN_STEPID_RAW", "100");
 define("ATN_STEPID_CONFIRM", "200");

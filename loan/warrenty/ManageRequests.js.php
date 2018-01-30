@@ -106,6 +106,12 @@ function WarrentyRequest(){
 			allowBlank : false,
 			fieldLabel : "نوع درخواست"
 		},{
+			xtype : "textfield",
+			fieldLabel : "موضوع",
+			width : 600,
+			colspan : 2,
+			name : "SubjectDesc"
+		},{
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({
 				proxy: {

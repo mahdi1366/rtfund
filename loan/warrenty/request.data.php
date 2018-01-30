@@ -42,7 +42,7 @@ function SaveWarrentyRequest(){
 		$result = $obj->Edit();
 	}
 	
-	//print_r(ExceptionHandler::PopAllExceptions());
+	print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, $obj->RequestID);
 	die();
 }

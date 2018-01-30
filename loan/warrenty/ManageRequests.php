@@ -34,6 +34,7 @@ $dg->addColumn("", "RegisterAmount", "", true);
 $dg->addColumn("نام شرکت", "fullname", "", true);
 $dg->addColumn("", "IsCurrent", "", true);
 $dg->addColumn("", "SavePercent", "", true);
+$dg->addColumn("", "SubjectDesc", "", true);
 
 $col = $dg->addColumn("شعبه", "BranchName");
 $col->width = 120;
