@@ -132,7 +132,8 @@ function WarrentyPrintSetting(){
 				data : [
 					["#RequestID#" , "شماره ضمانت نامه" ],
 					["#TypeDesc#" , "نوع درخواست" ],
-					["#SubjectDesc#" , "موضوع ضمانت نامه" ],
+					["#SubjectNO#" , "شماره قرارداد" ],
+					["#SubjectDesc#" , "موضوع قرارداد" ],
 					["#fullname#" , "مشتری" ],
 					["#NationalID#" , "شناسه ملی مشتری / کدملی" ],
 					["#address#" , "نشانی مشتری" ],

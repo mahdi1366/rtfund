@@ -15,6 +15,7 @@ class WAR_requests extends OperationClass
 	public $TypeID;
 	public $PersonID;
 	public $SubjectDesc;
+	public $SubjectNO;
 	public $organization;
 	public $ReqDate;
 	public $amount;

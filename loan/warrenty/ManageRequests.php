@@ -35,6 +35,7 @@ $dg->addColumn("نام شرکت", "fullname", "", true);
 $dg->addColumn("", "IsCurrent", "", true);
 $dg->addColumn("", "SavePercent", "", true);
 $dg->addColumn("", "SubjectDesc", "", true);
+$dg->addColumn("", "SubjectNO", "", true);
 
 $col = $dg->addColumn("شعبه", "BranchName");
 $col->width = 120;

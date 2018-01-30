@@ -107,7 +107,12 @@ function WarrentyRequest(){
 			fieldLabel : "نوع درخواست"
 		},{
 			xtype : "textfield",
-			fieldLabel : "موضوع",
+			fieldLabel : "شماره قرارداد",
+			colspan : 2,
+			name : "SubjectNO"
+		},{
+			xtype : "textfield",
+			fieldLabel : "موضوع قرارداد",
 			width : 600,
 			colspan : 2,
 			name : "SubjectDesc"
