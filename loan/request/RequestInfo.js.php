@@ -211,7 +211,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 		if(record.data.StatusID == "70")
 			op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
 			handler : function(){ return RequestInfoObject.StartFlow(); }});
-		if(this.EditAccess && firstPart)
+		if(this.EditAccess )
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
 		if(this.RemoveAccess)
