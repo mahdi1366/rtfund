@@ -224,9 +224,9 @@ RequestInfo.prototype.OperationMenu = function(e){
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
 			
-		if(this.EditAccess && !firstPart)
+		/*if(this.EditAccess && !firstPart)
 			op_menu.add({text: 'حذف',iconCls: 'remove', 
-			handler : function(){ return RequestInfoObject.DeletePart(false); }});	
+			handler : function(){ return RequestInfoObject.DeletePart(false); }});	*/
 	}		
 	
 	if(record.data.StatusID == "70")
