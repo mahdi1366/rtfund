@@ -3491,7 +3491,6 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 	
 	//---------------- add DocItems -------------------
 
-	$sumAmount = 0;
 	foreach($DepositeAmount as $CostID => $DepRow)
 	{
 		foreach($DepRow as $TafsiliID => $itemrow)
@@ -3509,30 +3508,27 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 			$itemObj->SourceID = $ToDate;
 			if(!$itemObj->Add($pdo))
 			{
-				print_r(ExceptionHandler::PopAllExceptions());
-				echo Response::createObjectiveResponse(false, "خطا در ایجاد ردیف سند");
+				echo Response::createObjectiveResponse(false, "خطا در ایجاد ردیف اول سند");
 				die();
 			}
 			
-			$sumAmount += round($itemrow["profit"]);
+			$itemObj = new ACC_DocItems();
+			$itemObj->DocID = $obj->DocID;
+			$itemObj->CostID = COSTID_Wage;
+			$itemObj->DebtorAmount= round($itemrow["profit"]>0 ? $itemrow["profit"] : 0);
+			$itemObj->CreditorAmount = round($itemrow["profit"]<0 ? -1*$itemrow["profit"] : 0);
+			$itemObj->locked = "YES";
+			$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $TafsiliID;
+			if(!$itemObj->Add($pdo))
+			{
+				echo Response::createObjectiveResponse(false, "خطا در ایجاد ردیف دوم سند");
+				die();
+			}	
 		}
 	}
-	//---------------------- add fund row ----------------
-	
-	$itemObj = new ACC_DocItems();
-	$itemObj->DocID = $obj->DocID;
-	$itemObj->CostID = COSTID_Wage;
-	$itemObj->DebtorAmount= $sumAmount;
-	$itemObj->CreditorAmount = 0;
-	$itemObj->locked = "YES";
-	$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
-	if(!$itemObj->Add($pdo))
-	{
-		print_r(ExceptionHandler::PopAllExceptions());
-		echo Response::createObjectiveResponse(false, "خطا در ایجاد ردیف سند");
-		die();
-	}	
-	
+
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, $obj->LocalNo);
 	die();	
