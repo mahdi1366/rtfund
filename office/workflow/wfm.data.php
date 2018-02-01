@@ -227,7 +227,7 @@ function SelectAllForms(){
 	//--------------------------------------------------------
 	$query = "select fr.*,f.FlowDesc, 
 					b.InfoDesc ObjectTypeDesc,
-					ifnull(fr.StepDesc,'شروع گردش') StepDesc,
+					concat(if(fr.ActionType='REJECT','رد ',''),ifnull(fr.StepDesc,'شروع گردش')) StepDesc,
 					if(p.IsReal='YES',concat(p.fname, ' ',p.lname),p.CompanyName) fullname,
 					$ObjectDesc ObjectDesc,
 					b.param1 url,
@@ -304,13 +304,14 @@ function ChangeStatus(){
 	$newObj->StepRowID = $dt[0]["StepRowID"];	
 	$newObj->StepDesc = $dt[0]["StepDesc"];	
 	//.............................................
-	if($SourceObj->ActionType == "CONFIRM")
+	if($newObj->ActionType == "CONFIRM")
 	{
 		$dt = PdoDataAccess::runquery("select Max(StepID) maxStepID from WFM_FlowSteps 
 			where IsActive='YES' AND FlowID=? AND IsOuter='NO'" , array($newObj->FlowID));
 		if($dt[0][0] == $StepID)
 			$newObj->IsEnded = "YES";
 	}
+	
 	//.............................................
 	$result = $newObj->AddFlowRow($StepID, $pdo);	
 	if(!$result)

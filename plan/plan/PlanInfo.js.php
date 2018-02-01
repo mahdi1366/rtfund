@@ -159,16 +159,26 @@ function PlanInfo(){
 	});
 
 	if(this.portal)
-		buttons = [{
-			text : 'مدارک درخواست دهنده',
-			iconCls : "attach",
-			handler : function(){ PlanInfoObject.PlanDocuments('person'); }
-		},{
-			text : 'مدارک ضمیمه طرح',
-			iconCls : "attach",
-			itemId : "cmp_PlanDocuments",
-			handler : function(){ PlanInfoObject.PlanDocuments('plan'); }
-		}];
+		buttons = {
+			text : "مدارک",
+			iconCls: 'attach',
+			menu: {
+				itemId : "Operation",
+				xtype: 'menu',
+				plain: true,
+				showSeparator : true,
+				items : [{
+					text : 'مدارک درخواست دهنده',
+					iconCls : "attach",
+					handler : function(){ PlanInfoObject.PlanDocuments('person'); }
+				},{
+					text : 'مدارک ضمیمه طرح',
+					iconCls : "attach",
+					itemId : "cmp_PlanDocuments",
+					handler : function(){ PlanInfoObject.PlanDocuments('plan'); }
+				}]
+			}
+		};
 	else
 		buttons = {
 			text : "عملیات",
@@ -234,7 +244,7 @@ function PlanInfo(){
 	
 	if(this.User == "Customer" && !this.readOnly)
 	{
-		this.MainPanel.getDockedItems('toolbar').add({
+		this.MainPanel.getDockedItems()[0].add('-',{
 			text : "ارسال طرح جهت ارزیابی",
 			iconCls : "send",
 			handler : function(){

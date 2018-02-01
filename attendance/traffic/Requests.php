@@ -41,6 +41,7 @@ $dg->addColumn("", "ShiftFromTime", "", true);
 $dg->addColumn("", "ShiftToTime", "", true);
 $dg->addColumn("", "StartTime", "", true);
 $dg->addColumn("", "EndTime", "", true);
+$dg->addColumn("", "ActionType", "", true);
 
 if($AdminMode)
 {
@@ -139,7 +140,7 @@ function TrafficRequests(){
 	this.grid.getStore().proxy.extraParams["AllReqs"] = "false";
 	this.grid.getView().getRowClass = function(record, index)
 	{
-		if(record.data.ReqStatus == "3")
+		if(record.data.ActionType == "REJECT")
 			return "pinkRow";
 		if(record.data.IsArchive == "YES")
 			return "yellowRow";
