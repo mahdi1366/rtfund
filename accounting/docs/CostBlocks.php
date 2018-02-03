@@ -94,6 +94,7 @@ function CostBlock(){
 	
 	this.formPanel = new Ext.form.Panel({
 		frame : true,
+		hidden : true,
 		style : "margin:10px 0 10px",
 		renderTo : this.get("newDiv"),
 		width : 700,
@@ -221,6 +222,10 @@ function CostBlock(){
 			text : "ذخیره",
 			iconCls : "save",
 			handler : function(){CostBlockObject.SaveCostBlock();}
+		},{
+			text : "انصراف",
+			iconCls : "undo",
+			handler : function(){this.up('panel').hide();}
 		}]
 	});
 }
@@ -254,6 +259,7 @@ CostBlock.prototype.SaveCostBlock = function(){
 		success: function(form,result){
 			mask.hide();
 			CostBlockObject.grid.getStore().load();
+			CostBlockObject.formPanel.hide();
 		},
 		failure: function(form,action){
 			mask.hide();

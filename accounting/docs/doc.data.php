@@ -1054,7 +1054,7 @@ function SaveCostBlock(){
 	{
 		$obj->RegDate = PDONOW;
 		$obj->RegPersonID = $_SESSION['USER']["PersonID"];
-		$result = $obj->Add ();
+		$result = $obj->Add();
 	}
 	else
 		$result = $obj->Edit ();

@@ -23,29 +23,14 @@ if(!empty($_REQUEST["print"]))
 	$rpg->mysql_resource = $data;
 	
 	$col = $rpg->addColumn("شماره وام", "RequestID");
-	$col->rowspaning = true;
 	$col = $rpg->addColumn("شعبه وام", "BranchName");
-	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("معرف", "ReqPersonName");
-	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("وام گیرنده", "LoanPersonName");
-	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("تضامین", "tazamin");
-	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("سررسید", "InstallmentDate","ReportDateRender");
-	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount", "ReportMoneyRender");
-	$col->rowspaning = true;
 	$col->EnableSummary();
-	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
-	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
 	$col->EnableSummary();
 	
 	$rpg->addColumn("شرح", "PartDesc");

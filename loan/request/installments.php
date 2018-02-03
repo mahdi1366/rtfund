@@ -42,27 +42,26 @@ $col->width = 80;
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
 //$col->editor = ColumnEditor::CurrencyField();
 
-$col = $dg->addColumn("کارمزد", "wage", GridColumn::ColumnType_money);
-$col = $dg->addColumn("اصل", "", GridColumn::ColumnType_money);
-$col->renderer = "function(v,p,r){return r.data.InstallmentAmount - r.data.wage;}";
-
-/*$col = $dg->addColumn("مبلغ تاخیر", "ForfeitAmount", GridColumn::ColumnType_money);
-$col->width = 80;*/
+if($framework)
+{
+	$col = $dg->addColumn("کارمزد", "wage", GridColumn::ColumnType_money);
+	$col = $dg->addColumn("اصل", "", GridColumn::ColumnType_money);
+	$col->renderer = "function(v,p,r){return r.data.InstallmentAmount - r.data.wage;}";
+}
 
 $col = $dg->addColumn("مانده قسط", "remainder", GridColumn::ColumnType_money);
 $col->width = 120;
 
-$col = $dg->addColumn("وضعیت تمدید", "IsDelayed");
-$col->renderer = "function(v,p,r){ return v == 'YES' ? 'تمدید شده' : '';}";
-$col->width = 120;
+if($framework)
+{
+	$col = $dg->addColumn("وضعیت تمدید", "IsDelayed");
+	$col->renderer = "function(v,p,r){ return v == 'YES' ? 'تمدید شده' : '';}";
+	$col->width = 120;
 
-/*$col = $dg->addColumn("اسناد", "docs");
-$col->width = 120;*/
-
-$col = $dg->addColumn("ثبت سابقه", "");
-$col->renderer = "Installment.HistoryRender";
-$col->width = 80;
-
+	$col = $dg->addColumn("ثبت سابقه", "");
+	$col->renderer = "Installment.HistoryRender";
+	$col->width = 80;
+}
 if($editable && $accessObj->EditFlag)
 {
 	$dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", 
@@ -75,9 +74,11 @@ if($editable && $accessObj->EditFlag)
 	$dg->addButton("", "تغییر اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
 }
 
-$dg->addButton("cmp_report2", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport('old');}");
-$dg->addButton("cmp_report3", "گزارش پرداخت جدید", "report", "function(){InstallmentObject.PayReport('new');}");
-
+if($framework)
+{
+	$dg->addButton("cmp_report2", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport('old');}");
+	$dg->addButton("cmp_report3", "گزارش پرداخت جدید", "report", "function(){InstallmentObject.PayReport('new');}");
+}
 $dg->height = 377;
 $dg->width = 755;
 $dg->emptyTextOfHiddenColumns = true;
@@ -179,7 +180,7 @@ function Installment()
 					url: this.address_prefix + 'request.data.php?task=SelectMyRequests&mode=customer',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['PartAmount',"RequestID","ReqAmount","ReqDate", "RequestID", "CurrentRemain",{
+				fields :  ['PartAmount',"RequestID","ReqAmount","ReqDate", "RequestID", "CurrentRemain","IsEnded",{
 					name : "fullTitle",
 					convert : function(value,record){
 						return "کد وام : " + record.data.RequestID + " به مبلغ " + 
@@ -208,9 +209,23 @@ function Installment()
 			itemId : "RequestID",
 			listeners :{
 				select : function(combo,records){
-					InstallmentObject.grid.getStore().proxy.extraParams = {
+					
+					me = InstallmentObject;
+					
+					me.grid.getStore().proxy.extraParams = {
 						RequestID : this.getValue()
 					};
+					
+					if(!me.grid.isRendered)
+						me.grid.render(me.get("div_grid"));
+					else
+						me.grid.getStore().load();
+					
+					if(records[0].data.IsEnded == "YES")
+					{
+						Ext.MessageBox.alert("","این وام خاتمه یافته است");
+						return;
+					}
 					
 					InstallmentObject.RequestID = this.getValue();
 					

@@ -194,11 +194,13 @@ function SelectAllRequests2(){
 	
 	$params = array();
 	$query = "select p.*,r.IsEnded, concat_ws(' ',fname,lname,CompanyName) loanFullname,
-				i.InstallmentAmount
+				i.InstallmentAmount,LoanDesc,concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) ReqFullName
 		from LON_requests r 
 		join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
 		join BSC_persons on(LoanPersonID=PersonID)
+		left join BSC_persons p2 on(p2.PersonID=ReqPersonID)
 		left join LON_installments i on(i.RequestID=p.RequestID)		
+		left join LON_loans using(LoanID)
 		where 1=1";
 	if(!empty($_REQUEST["query"]))
 	{
@@ -215,11 +217,15 @@ function SelectAllRequests2(){
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $params);
 	$cnt = $dt->rowCount();
-	
 	if(!empty($_REQUEST["limit"]))
 		$dt = PdoDataAccess::fetchAll($dt, $_REQUEST["start"], $_REQUEST["limit"]);
 	else
 		$dt = $dt->fetchAll();
+	
+	//--------------- remain of each loan ------------------
+	for($i=0; $i<count($dt);$i++)
+		$dt[$i]["totalRemain"] = LON_requests::GetTotalRemainAmount($dt[$i]["RequestID"]);
+	//-------------------------------------------------------
 	
 	echo dataReader::getJsonData($dt, $cnt, $_GET["callback"]);
 	die();

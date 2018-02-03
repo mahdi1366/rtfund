@@ -213,7 +213,8 @@ IncomeCheque.prototype.MakeLoanPanel = function(){
 					url: '/loan/request/request.data.php?task=SelectAllRequests2',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['PartAmount',"IsEnded","RequestID","PartDate","loanFullname","InstallmentAmount",{
+				fields :  ['PartAmount',"IsEnded","RequestID","PartDate","loanFullname",
+					"InstallmentAmount","ReqFullName","LoanDesc","totalRemain",{
 					name : "fullTitle",
 					convert : function(value,record){
 						return "کد وام : " + record.data.RequestID + " به مبلغ " + 
@@ -227,13 +228,16 @@ IncomeCheque.prototype.MakeLoanPanel = function(){
 			name : "RequestID",
 			fieldLabel : "انتخاب وام",
 			valueField : "RequestID",
-			width : 600,
+			width : 850,
 			tpl: new Ext.XTemplate(
 				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
-				'<td style="padding:7px">کد وام</td>',
+				'<td style="padding:7px">کد</td>',
+				'<td style="padding:7px">نوع وام</td>',
 				'<td style="padding:7px">وام گیرنده</td>',
+				'<td style="padding:7px">معرفی کننده</td>',	
 				'<td style="padding:7px">مبلغ وام</td>',
-				'<td style="padding:7px">تاریخ پرداخت</td>',
+				'<td style="padding:7px">تاریخ وام</td>',	
+				'<td style="padding:7px">مانده وام</td>',	
 				'</tr>',
 				'<tpl for=".">',
 					'<tpl if="IsEnded == \'YES\'">',
@@ -242,10 +246,14 @@ IncomeCheque.prototype.MakeLoanPanel = function(){
 						'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
 					'</tpl>',
 					'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">{LoanDesc}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">{loanFullname}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">{ReqFullName}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">',
 						'{[Ext.util.Format.Money(values.PartAmount)]}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.PartDate)]}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">',
+						'{[Ext.util.Format.Money(values.totalRemain)]}</td>',
 				' </tr>',
 				'</tpl>',
 				'</table>'
@@ -475,7 +483,7 @@ function IncomeCheque(){
 	this.CostPanel = this.MakeCostPanel();
 	
 	this.ChequeInfoWin = new Ext.window.Window({
-		width : 700,
+		width : 900,
 		height : 370,
 		modal : true,
 		closeAction : "hide",
@@ -1107,7 +1115,7 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 	if(!this.LoanChequeWin)
 	{
 		this.LoanChequeWin = new Ext.window.Window({
-			width : 700,
+			width : 900,
 			height : 370,
 			modal : true,
 			closeAction : "hide",
@@ -1125,7 +1133,8 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 							url: '/loan/request/request.data.php?task=SelectAllRequests2',
 							reader: {root: 'rows',totalProperty: 'totalCount'}
 						},
-						fields :  ['PartAmount',"IsEnded","RequestID","PartDate","loanFullname","InstallmentAmount",{
+						fields :  ['PartAmount',"IsEnded","RequestID","PartDate","loanFullname",
+							"InstallmentAmount","ReqFullName","LoanDesc","totalRemain",{
 							name : "fullTitle",
 							convert : function(value,record){
 								return "کد وام : " + record.data.RequestID + " به مبلغ " + 
@@ -1139,14 +1148,16 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 					allowBlank : false,
 					name : "RequestID",
 					valueField : "RequestID",
-					width : 600,
+					width : 850,
 					tpl: new Ext.XTemplate(
 						'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
-						'<td style="padding:7px">کد وام</td>',
+						'<td style="padding:7px">کد </td>',
+						'<td style="padding:7px">نوع وام</td>',
 						'<td style="padding:7px">وام گیرنده</td>',
+						'<td style="padding:7px">معرفی کننده</td>',
 						'<td style="padding:7px">مبلغ وام</td>',
-						'<td style="padding:7px">تاریخ پرداخت</td>',
-						'<td style="padding:7px"></td>',
+						'<td style="padding:7px">تاریخ وام</td>',
+						'<td style="padding:7px">مانده وام</td>',
 						'</tr>',
 						'<tpl for=".">',
 							'<tpl if="IsEnded == \'YES\'">',
@@ -1155,10 +1166,14 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 								'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
 							'</tpl>',
 							'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
+							'<td style="border-left:0;border-right:0" class="search-item">{LoanDesc}</td>',
 							'<td style="border-left:0;border-right:0" class="search-item">{loanFullname}</td>',
+							'<td style="border-left:0;border-right:0" class="search-item">{ReqFullName}</td>',
 							'<td style="border-left:0;border-right:0" class="search-item">',
 								'{[Ext.util.Format.Money(values.PartAmount)]}</td>',
 							'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.PartDate)]}</td>',
+							'<td style="border-left:0;border-right:0" class="search-item">',
+								'{[Ext.util.Format.Money(values.totalRemain)]}</td>',
 						' </tr>',
 						'</tpl>',
 						'</table>'
