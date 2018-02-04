@@ -240,7 +240,7 @@ AccessGroup.prototype.DeleteGroup = function(GroupID){
 		Ext.Ajax.request({
 			url: me.address_prefix + 'framework.data.php',
 			params:{
-				task: "DeleteGroup",
+				task: "DeleteAccessGroup",
 				GroupID : GroupID
 			},
 			method: 'POST',
