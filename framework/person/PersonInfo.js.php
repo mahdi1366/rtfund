@@ -264,7 +264,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			name: 'NationalID'
 		},{
 			xtype : "textfield",
-			regex: /^\d{10}$/,
+			regex: /^\d{12}$/,
 			maskRe: /[\d\-]/,
 			fieldLabel: 'کد اقتصادی',
 			name: 'EconomicID'
