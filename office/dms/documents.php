@@ -19,6 +19,8 @@ switch($ObjectType)
 			$ObjectID = $_SESSION["USER"]["PersonID"];
 		if($_SESSION["USER"]["PersonID"] == $ObjectID)
 			$access = true;
+		if($_SESSION["USER"]["IsStaff"] == "YES")
+			$access = true;
 		break;
 	case "loan":
 		require_once '../../loan/request/request.class.php';
