@@ -193,18 +193,18 @@ function SelectMyRequests(){
 function SelectAllRequests2(){
 	
 	$params = array();
-	$query = "select p.*,r.IsEnded, concat_ws(' ',fname,lname,CompanyName) loanFullname,
+	$query = "select p.*,r.IsEnded, concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) loanFullname,
 				i.InstallmentAmount,LoanDesc,concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) ReqFullName
 		from LON_requests r 
 		join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
-		join BSC_persons on(LoanPersonID=PersonID)
+		join BSC_persons p1 on(LoanPersonID=PersonID)
 		left join BSC_persons p2 on(p2.PersonID=ReqPersonID)
 		left join LON_installments i on(i.RequestID=p.RequestID)		
 		left join LON_loans using(LoanID)
 		where 1=1";
 	if(!empty($_REQUEST["query"]))
 	{
-		$query .= " AND ( concat_ws(' ',fname,lname,CompanyName) like :f or r.RequestID = :f1)";
+		$query .= " AND ( concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) like :f or r.RequestID = :f1)";
 		$params[":f"] = "%" . $_REQUEST["query"] . "%";
 		$params[":f1"] = $_REQUEST["query"] ;
 	}
@@ -216,6 +216,9 @@ function SelectAllRequests2(){
 	$query .= " group by r.RequestID";
 	
 	$dt = PdoDataAccess::runquery_fetchMode($query, $params);
+	
+	print_r(ExceptionHandler::PopAllExceptions());
+	
 	$cnt = $dt->rowCount();
 	if(!empty($_REQUEST["limit"]))
 		$dt = PdoDataAccess::fetchAll($dt, $_REQUEST["start"], $_REQUEST["limit"]);
@@ -257,6 +260,8 @@ function SelectAllRequests(){
         $field = $_REQUEST['fields'];
 		$field = $field == "ReqFullname" ? "concat_ws(' ',p1.fname,p1.lname,p1.CompanyName)" : $field;
 		$field = $field == "LoanFullname" ? "concat_ws(' ',p2.fname,p2.lname,p2.CompanyName,BorrowerDesc)" : $field;
+		$field = $field == "StatusDesc" ? "bi.InfoDesc" : $field;
+		
         $where .= ' and ' . $field . ' like :fld';
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
