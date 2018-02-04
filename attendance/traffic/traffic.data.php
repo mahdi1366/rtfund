@@ -68,6 +68,15 @@ function GetAllRequests(){
 	if(!empty($_REQUEST["fields"]) && !empty($_GET["query"]))
 	{
 		$field = $_REQUEST["fields"] == "fullname" ? "concat(p1.fname,' ',p1.lname)" : $_REQUEST["fields"];
+		$field = $_REQUEST["fields"] == "ReqType" ? 
+				"case ReqType when 'CORRECT' then'فراموشی'
+							when 'DayOFF' then 'مرخصی روزانه'
+							when 'OFF' then 'مرخصی ساعتی'
+							when 'DayMISSION' then 'ماموریت روزانه'
+							when 'MISSION' then 'ماموریت ساعتی'
+							when 'EXTRA' then 'اضافه کار غیر مجاز'
+							when 'CHANGE_SHIFT' then 'تغییر شیفت روزانه' end " : $_REQUEST["fields"];
+		
 		$where .= " AND	" . $field . " like :q";
 		$param[":q"] = "%" . $_GET["query"] . "%";
 	}
