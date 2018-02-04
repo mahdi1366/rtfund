@@ -583,6 +583,13 @@ function LoanReport_total()
 			hideTrigger : true,
 			fieldLabel : "کارمزد تنفس"
 		},{
+			xtype : "container",
+			colspan : 2,
+			html : "وضعیت وام&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
+				"<input name=IsEnded type=radio value='YES' > خاتمه یافته &nbsp;&nbsp;" +
+				"<input name=IsEnded type=radio value='NO' > جاری &nbsp;&nbsp;" +
+				"<input name=IsEnded type=radio value='' checked > هردو " 
+		},{
 			xtype : "fieldset",
 			title : "اطلاعات مشتری",
 			colspan : 2,
