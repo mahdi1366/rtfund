@@ -17,7 +17,7 @@ class WFM_flows extends PdoDataAccess {
 		if($FlowID != "")
 			parent::FillObject ($this, "select f.* , bf.param4 _ObjectType
 				from WFM_flows f
-				join baseinfo bf on(bf.TypeID=11 AND f.ObjectType=bf.InfoID)
+				join BaseInfo bf on(bf.TypeID=11 AND f.ObjectType=bf.InfoID)
 				where FlowID=?", array($FlowID));
 	}
 	
