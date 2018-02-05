@@ -32,12 +32,17 @@ class ACC_docs extends PdoDataAccess {
 	static function GetAll($where = "", $whereParam = array()) {
 
 		$query = "select sd.*, concat_ws(' ',fname,lname,CompanyName) as regPerson, 
-				b.InfoDesc SubjectDesc,b2.InfoDesc DocTypeDesc
+				b.InfoDesc SubjectDesc,b2.InfoDesc DocTypeDesc,
+				fs.StepID,
+				fr.ActionType
 			
 			from ACC_docs sd
 			left join BaseInfo b on(b.TypeID=73 AND b.InfoID=SubjectID)
 			left join BaseInfo b2 on(b2.TypeID=9 AND b2.InfoID=DocType)
-			left join BSC_persons p on(regPersonID=PersonID)";
+			left join BSC_persons p on(regPersonID=PersonID)
+			join WFM_FlowSteps fs on(fs.FlowID=".FLOWID_ACCDOC." AND fs.StepID=sd.StatusID)
+			left join WFM_FlowRows fr on(fr.IsLastRow='YES' AND fr.FlowID=fs.FlowID AND fr.StepRowID=fs.StepRowID AND fr.ObjectID=sd.DocID)
+		";
 
 		$query .= ($where != "") ? " where " . $where : "";
 

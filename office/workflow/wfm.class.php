@@ -230,6 +230,8 @@ class WFM_FlowRows extends PdoDataAccess {
 	
 	function AddFlowRow($StepID, $pdo = null) {
 		
+		PdoDataAccess::runquery("update WFM_FlowRows set IsLastRow='NO' where FlowID=? AND ObjectID=?", array($this->FlowID, $this->ObjectID), $pdo);
+		
 		if (!parent::insert("WFM_FlowRows", $this, $pdo)) {
 			return false;
 		}

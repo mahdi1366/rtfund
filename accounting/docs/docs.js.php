@@ -170,24 +170,27 @@ AccDocs.prototype.operationhMenu = function(e){
 				handler : function(){ return AccDocsObject.CopyDoc(2); }})
 		}
 		
-		if(record != null && record.data.StatusID == "<?= ACC_STEPID_RAW ?>")
+		if(record != null) 
 		{
-			if(this.EditAccess)
+			if(record.data.StatusID == "<?= ACC_STEPID_RAW ?>" || (record.data.StepID == "1" && record.data.ActionType == "REJECT"))
 			{
-				op_menu.add({text: 'ویرایش سند',iconCls: 'edit', 
-					handler : function(){ return AccDocsObject.EditDoc(); } });
-				
-				op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
-					handler : function(){ return AccDocsObject.StartFlow(); }});
+				if(this.EditAccess)
+				{
+					op_menu.add({text: 'ویرایش سند',iconCls: 'edit', 
+						handler : function(){ return AccDocsObject.EditDoc(); } });
+
+					op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
+						handler : function(){ return AccDocsObject.StartFlow(); }});
+				}
+				if(this.RemoveAccess /*&& this.grid.getStore().currentPage == this.grid.getStore().totalCount*/)
+					op_menu.add({text: 'حذف سند',iconCls: 'remove', 
+						handler : function(){ return AccDocsObject.RemoveDoc(); } });
 			}
-			if(this.RemoveAccess /*&& this.grid.getStore().currentPage == this.grid.getStore().totalCount*/)
-				op_menu.add({text: 'حذف سند',iconCls: 'remove', 
-					handler : function(){ return AccDocsObject.RemoveDoc(); } });
-		}
-		if(record != null && record.data.StatusID == "0")
-		{
-			op_menu.add({text: 'برگشت فرم',iconCls: 'return',
-			handler : function(){ return AccDocsObject.ReturnStartFlow(); }});
+			if(record.data.StatusID == "0")
+			{
+				op_menu.add({text: 'برگشت فرم',iconCls: 'return',
+				handler : function(){ return AccDocsObject.ReturnStartFlow(); }});
+			}
 		}
 		/*if(record != null && record.data.StatusID == "<?= ACC_STEPID_CONFIRM ?>" && this.EditAccess)
 		{
@@ -993,16 +996,17 @@ AccDocs.prototype.Documents = function(ObjectType){
 AccDocs.prototype.check_deleteRender = function()
 {
 	var record = AccDocsObject.grid.getStore().getAt(0);
-	if(record.data.StatusID != "<?= ACC_STEPID_RAW ?>")
-		return "";
-	return  "<div title='حذف اطلاعات' class='remove' onclick='AccDocsObject.check_remove();' " +
+	if(record.data.StatusID == "<?= ACC_STEPID_RAW ?>" || (record.data.StepID == "1" && record.data.ActionType == "REJECT"))
+		return  "<div title='حذف اطلاعات' class='remove' onclick='AccDocsObject.check_remove();' " +
 			"style='background-repeat:no-repeat;background-position:center;" +
 			"cursor:pointer;height:16'></div>";
+	return "";
 }
 
 AccDocs.prototype.check_Add = function()
 {
-	if(this.grid.getStore().getAt(0).data.StatusID != "<?= ACC_STEPID_RAW ?>")
+	var record = this.grid.getStore().getAt(0);
+	if(!(record.data.StatusID == "<?= ACC_STEPID_RAW ?>" || (record.data.StepID == "1" && record.data.ActionType == "REJECT")))
 		return;
 	var modelClass = this.checkGrid.getStore().model;
 	var record = new modelClass({
@@ -1086,7 +1090,7 @@ AccDocs.prototype.check_remove = function()
 AccDocs.beforeCheckEdit = function(editor,e){
 	
 	var record = AccDocsObject.grid.getStore().getAt(0);
-	if(record.data.StatusID != "<?= ACC_STEPID_RAW ?>")
+	if(!(record.data.StatusID == "<?= ACC_STEPID_RAW ?>" || (record.data.StepID == "1" && record.data.ActionType == "REJECT")))
 		return false;
 }
 
@@ -1134,7 +1138,7 @@ AccDocs.prototype.beforeRowEdit = function(record){
 	if(<?= $_SESSION["USER"]["UserName"] == "admin" ? "true" : "false" ?>)
 		return true;
 	var hrecord = AccDocsObject.grid.getStore().getAt(0);
-	if(hrecord.data.StatusID != "<?= ACC_STEPID_RAW ?>")
+	if(!(hrecord.data.StatusID == "<?= ACC_STEPID_RAW ?>" || (hrecord.data.StepID == "1" && hrecord.data.ActionType == "REJECT")))
 		return false;
 	
 	if(record.data.locked == "YES")
@@ -1184,7 +1188,7 @@ AccDocs.deleteitemRender = function(v,p,record)
 		if(record.data.locked == "YES")
 			return "";
 		var record = AccDocsObject.grid.getStore().getAt(0);
-		if(record.data.StatusID != "<?= ACC_STEPID_RAW ?>")
+		if(!(record.data.StatusID == "<?= ACC_STEPID_RAW ?>" || (record.data.StepID == "1" && record.data.ActionType == "REJECT")))
 			return "";
 
 		if(!AccDocsObject.EditAccess)
@@ -1201,7 +1205,8 @@ AccDocs.deleteitemRender = function(v,p,record)
 
 AccDocs.prototype.AddItem = function()
 {
-	if(this.grid.getStore().getAt(0).data.StatusID != "<?= ACC_STEPID_RAW ?>")
+	record = this.grid.getStore().getAt(0);
+	if(!(record.data.StatusID == "<?= ACC_STEPID_RAW ?>" || (record.data.StepID == "1" && record.data.ActionType == "REJECT")))
 		return;
 	
 	this.detailWin.show();
@@ -1220,8 +1225,11 @@ AccDocs.prototype.AddItem = function()
 AccDocs.prototype.EditItem = function()
 {
 	if(<?= $_SESSION["USER"]["UserName"] == "admin" ? "false" : "true" ?>)
-		if(this.grid.getStore().getAt(0).data.StatusID != "<?= ACC_STEPID_RAW ?>")
+	{
+		record = this.grid.getStore().getAt(0);
+		if(!(record.data.StatusID == "<?= ACC_STEPID_RAW ?>" || (record.data.StepID == "1" && record.data.ActionType == "REJECT")))
 			return;
+	}
 		
 	var record = this.itemGrid.getSelectionModel().getLastSelected();
 	this.detailWin.down('panel').loadRecord(record);

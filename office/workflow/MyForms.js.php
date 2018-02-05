@@ -69,7 +69,7 @@ MyForm.prototype.beforeChangeStatus = function(mode){
 	{
 		this.commentWin = new Ext.window.Window({
 			width : 412,
-			height : 270,
+			height : 320,
 			modal : true,
 			title : "دلیل عدم تایید",
 			bodyStyle : "background-color:white",

@@ -62,7 +62,7 @@ class WAR_requests extends OperationClass
 				p.NationalID,
 				p.PhoneNo,
 				p.mobile,
-				bf.InfoDesc TypeDesc,d.DocID,group_concat(distinct d.LocalNo) LocalNo, d.StatusID , 
+				bf.InfoDesc TypeDesc,d.DocID,group_concat(distinct d.LocalNo) LocalNo, d.StatusID DocStatusID , 
 				BranchName,
 				if(lst.RequestID=r.RequestID, 'YES', 'NO') IsCurrent
 

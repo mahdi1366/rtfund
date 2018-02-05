@@ -37,6 +37,8 @@ $dg->addColumn("","DocTypeDesc","",true);
 
 $dg->addColumn("", "FlowID", "", true);
 $dg->addColumn("", "StatusID", "", true);
+$dg->addColumn("", "StepID", "", true);
+$dg->addColumn("", "ActionType", "", true);
 
 $col = $dg->addColumn("اطلاعات سند","DocID");
 $col->renderer = "AccDocs.docRender";
@@ -220,6 +222,8 @@ $docsCount = $dt[0][0];
 AccDocsObject.grid = <?= $grid ?>;
 AccDocsObject.grid.getView().getRowClass = function(record, index)
 {
+	if(record.data.StepID == "1" && record.data.ActionType == "REJECT")
+		return "pinkRow";
 	if(record.data.StatusID == "<?= ACC_STEPID_RAW ?>")
 		return "";
 	if(record.data.StatusID == "<?= ACC_STEPID_CONFIRM ?>")
