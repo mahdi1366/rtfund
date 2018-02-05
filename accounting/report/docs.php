@@ -113,7 +113,7 @@ function GetData(){
 	}
 	
 	if(!isset($_REQUEST["IncludeRaw"]))
-		$query .= " AND d.DocStatus != 'RAW' ";
+		$query .= " AND d.StatusID != " . ACC_STEPID_RAW;
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
 	$query .= $group == "" ? " group by DocID" : " group by " . $group;
@@ -146,11 +146,11 @@ function ListData($IsDashboard = false){
 	
 	$rpg->rowColorRender = "RowColorRender";
 	function RowColorRender($row){
-		if($row["DocStatus"] == "CONFIRM")
-			return "#D0F7E2";
-		if($row["DocStatus"] == "ARCHIVE")
+		if($row["StatusID"] == ACC_STEPID_RAW)
+			return "white";
+		if($row["StatusID"] == ACC_STEPID_CONFIRM)
 			return "#FFFF9E";
-		return "white";
+		return "#D0F7E2";
 	}
 	
 	$rpg->mysql_resource = GetData();

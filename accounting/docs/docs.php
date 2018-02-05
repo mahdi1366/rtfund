@@ -35,6 +35,9 @@ $dg->addColumn("","SubjectDesc","",true);
 $dg->addColumn("","SubjectID","",true);
 $dg->addColumn("","DocTypeDesc","",true);
 
+$dg->addColumn("", "FlowID", "", true);
+$dg->addColumn("", "StatusID", "", true);
+
 $col = $dg->addColumn("اطلاعات سند","DocID");
 $col->renderer = "AccDocs.docRender";
 
@@ -217,12 +220,12 @@ $docsCount = $dt[0][0];
 AccDocsObject.grid = <?= $grid ?>;
 AccDocsObject.grid.getView().getRowClass = function(record, index)
 {
-	if(record.data.DocStatus == "CONFIRM")
-		return "greenRow";
-	if(record.data.DocStatus == "ARCHIVE")
+	if(record.data.StatusID == "<?= ACC_STEPID_RAW ?>")
+		return "";
+	if(record.data.StatusID == "<?= ACC_STEPID_CONFIRM ?>")
 		return "yellowRow";
 	
-	return "";
+	return "greenRow";
 }
 
 var pagingToolbar = AccDocsObject.grid.getDockedItems('pagingtoolbar')[0];

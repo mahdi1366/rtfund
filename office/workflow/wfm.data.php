@@ -159,6 +159,8 @@ function SelectAllForms(){
 			
 			when b.param4 in('CORRECT','DayOFF','OFF','DayMISSION','MISSION','EXTRA','CHANGE_SHIFT')
 				then concat_ws(' ','درخواست ',ap.CompanyName,ap.fname,ap.lname,'مربوط به تاریخ', (ar.FromDate))
+				
+			when b.param4='accdoc' then concat_ws(' ','سند شماره',ad.LocalNo,adb.BranchName)
 			
 		end";
 	$ObjectID = 
@@ -174,6 +176,7 @@ function SelectAllForms(){
 			when 'MISSION'		then ar.RequestID
 			when 'EXTRA'		then ar.RequestID
 			when 'CHANGE_SHIFT'	then ar.RequestID
+			when 'accdoc'		then ad.DocID
 		end";
 	
 	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
@@ -260,6 +263,9 @@ function SelectAllForms(){
 	
 				left join ATN_requests ar on(b.param4=ar.ReqType AND ar.RequestID=fr.ObjectID)
 				left join BSC_persons ap on(ap.PersonID=ar.PersonID)
+	
+				left join ACC_docs ad on(b.param4='accdoc' AND ad.DocID=fr.ObjectID)
+				left join BSC_branches adb on(adb.BranchID=ad.BranchID)
 	
 				where " . $where . dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);

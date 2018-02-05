@@ -34,7 +34,7 @@ $dg->addColumn("", "BackPayID","", true);
 $dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "PayTypeDesc","", true);
 $dg->addColumn("", "LocalNo","", true);
-$dg->addColumn("", "DocStatus","", true);
+$dg->addColumn("", "StatusID","", true);
 $dg->addColumn("", "ChequeStatus","", true);
 $dg->addColumn("", "IsGroup","", true);
 $dg->addColumn("", "EqualizationID","", true);
@@ -170,7 +170,7 @@ function LoanPay()
 				e.record.data.PayType == "<?= BACKPAY_PAYTYPE_CORRECT ?>")
 				return false;
 			
-			if(e.record.data.DocStatus  != null && e.record.data.DocStatus != "RAW")
+			if(e.record.data.StatusID != "<?= ACC_STEPID_RAW ?>")
 				return false;
 			
 			return true;			
@@ -309,7 +309,7 @@ LoanPay.RegDocRender = function(v,p,r){
 		"onclick='LoanPayObject.BeforeRegisterDoc(1);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
-	else if(r.data.DocStatus == "RAW")
+	else if(r.data.StatusID == "<?= ACC_STEPID_RAW ?>")
 		return r.data.LocalNo + "<div align='center' title='ویرایش سند' class='edit' "+
 		"onclick='LoanPayObject.BeforeRegisterDoc(2);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +

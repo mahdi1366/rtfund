@@ -54,7 +54,7 @@ $dg->addColumn("", "DocID","", true);
 $dg->addColumn("", "ItemID","", true);
 $dg->addColumn("", "TafsiliID","", true);
 $dg->addColumn("", "CostID","", true);
-$dg->addColumn("", "DocStatus","", true);
+$dg->addColumn("", "StatusID","", true);
 $dg->addColumn("شرح سند", "description","");
 
 $col = $dg->addColumn("شرح ردیف", "details","");
@@ -114,9 +114,11 @@ function InOutAccount()
 	this.grid = <?= $grid ?>;
 	this.grid.getView().getRowClass = function(record, index)
 	{
-		if(record.data.DocStatus ==  "CONFIRM")
-			return "greenRow";
-		return "";
+		if(record.data.StatusID == "<?= ACC_STEPID_CONFIRM ?>")
+			return "yellowRow";
+		if(record.data.StatusID == "<?= ACC_STEPID_RAW ?>")
+			return "";	
+		return "greenRow";
 	}	
 	this.grid.addDocked({
 		xtype : "toolbar",

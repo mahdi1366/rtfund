@@ -24,7 +24,7 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=GetPa
 
 $dg->addColumn("", "PayID","", true);
 $dg->addColumn("", "RequestID","", true);
-$dg->addColumn("", "DocStatus","", true);
+$dg->addColumn("", "StatusID","", true);
 
 $col = $dg->addColumn("تاریخ پرداخت", "PayDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
@@ -120,7 +120,7 @@ PartPayment.DocRender = function(v,p,r){
 	if(r.data.LocalNo != "" && r.data.LocalNo != null)
 	{
 		st = v;
-		if(r.data.DocStatus == "RAW")
+		if(r.data.StatusID == "<?= ACC_STEPID_RAW ?>")
 		{
 			st += "<div align='center' title='برگشت سند' class='undo' "+
 				"onclick='PartPaymentObject.ReturnPayPartDoc();' " +

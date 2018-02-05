@@ -41,7 +41,7 @@ class ACC_IncomeCheques extends OperationClass{
 				b.BankDesc, 
 				bi2.InfoDesc ChequeStatusDesc,
 				d.LocalNo,
-				d.DocStatus
+				d.StatusID
 			
 			FROM ACC_IncomeCheques o
 

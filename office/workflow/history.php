@@ -21,10 +21,12 @@ else if(!empty($_REQUEST["FlowID"]) && !empty($_REQUEST["ObjectID"]))
 else
 	die();
 	 
-$query = "select fr.* ,fs.StepID, fs.IsOuter,
+$query = "select fr.* ,fs.StepID, fs.IsOuter,bf.*,
 				ifnull(fr.StepDesc, ifnull(fs.StepDesc,'شروع گردش')) StepDesc,
 				concat_ws(' ',fname, lname,CompanyName) fullname
 			from WFM_FlowRows fr
+			join WFM_flows f using(FlowID)
+			join BaseInfo bf on(bf.TypeID=11 AND f.ObjectType=bf.InfoID)
 			left join WFM_FlowSteps fs on(fr.StepRowID=fs.StepRowID)
 			join BSC_persons p on(fr.PersonID=p.PersonID)
 			where fr.FlowID=? AND fr.ObjectID=?
@@ -63,10 +65,20 @@ else
 		</tr>";
 	}
 	//------------------------ get next one ------------------------------------
-	
-	if($Logs[$i-1]["StepRowID"] == "" || $Logs[$i-1]["IsOuter"] == "NO")
+	$LastRecord = $Logs[$i-1];
+	if($LastRecord["param5"] != "")
 	{
-		$StepID = ($Logs[$i-1]["StepID"] == "" ? 0 : $Logs[$i-1]["StepID"]) + 1;
+		$dt = PdoDataAccess::runquery("select " . $LastRecord["param6"] . " from " . $LastRecord["param5"] . "
+			where " . $LastRecord["param2"] . "=?", array($LastRecord["ObjectID"]));
+		if($dt[0][0] == $LastRecord["param7"])
+			$tbl_content .= "<tr style='background-color:#A9E8E8'>
+				<td colspan=4 align=center><b>گردش فرم پایان یافته است.</b></td>
+				<tr>";
+	}
+	else if($LastRecord["StepRowID"] == "" || $LastRecord["IsOuter"] == "NO")
+	{
+		$StepID = $LastRecord["StepID"] == "" ? 0 :
+			($LastRecord["ActionType"] == "CONFIRM" ? $LastRecord["StepID"] + 1 : $LastRecord["StepID"] - 1);
 		$query = "select StepDesc,PostName,
 					concat_ws(' ',fname, lname,CompanyName) fullname
 				from WFM_FlowSteps fs

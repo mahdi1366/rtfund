@@ -27,7 +27,7 @@ function selectDeposites() {
 			left join ACC_blocks b2 on(b2.BlockID=cc.level2)
 			join ACC_tafsilis using(TafsiliID)
 		
-		where /*DocStatus != 'RAW'*/ 1=1
+		where /*StatusID != ".ACC_STEPID_RAW." */ 1=1
 			AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
 			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 			AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "

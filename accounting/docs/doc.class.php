@@ -14,6 +14,7 @@ class ACC_docs extends PdoDataAccess {
 	public $DocDate;
 	public $RegDate;
 	public $DocStatus;
+	public $StatusID;
 	public $DocType;
 	public $SubjectID;
 	public $description;
@@ -155,7 +156,7 @@ class ACC_docs extends PdoDataAccess {
 		if (count($temp) == 0)
 			return false;
 
-		if ($temp[0]["DocStatus"] != "RAW") {
+		if ($temp[0]["StatusID"] != ACC_STEPID_RAW) {
 			ExceptionHandler::PushException("سند مربوطه تایید شده و قابل حذف نمی باشد");
 			return false;
 		}
@@ -296,19 +297,22 @@ class ACC_docs extends PdoDataAccess {
 					<td colspan="7">شرح سند : ' . $DocObject->description . '
 					</td>
 				</tr>';
-		/*$dt = ACC_DocCheques::GetAll("DocID=?", array($docID));
+		//------------------------------------------------------
+		
+		//------------------------------------------------------
+		$dt = ACC_DocCheques::GetAll("DocID=?", array($docID));
 		for ($i = 0; $i < count($dt); $i++) {
 			echo "<tr style='height:60px;vertical-align:middle'>
-							<td>" . "چک شماره " . "<b>" . $dt[$i]["CheckNo"] . "</b>" . " بانک " .
+			<td colspan=7>" . "چک شماره " . "<b>" . $dt[$i]["CheckNo"] . "</b>" . " بانک " .
 			"<b>" . $dt[$i]["BankDesc"] . "</b>" . " شماره حساب " .
 			"<b>" . $dt[$i]["AccountNo"] . "</b>" . " مورخ " .
 			"<b>" . DateModules::miladi_to_shamsi($dt[$i]["CheckDate"]) . "</b>" . " به مبلغ " .
 			"<b>" . number_format($dt[$i]["amount"]) . " ریال</b>" . " در وجه " .
 			"<b>" . $dt[$i]["TafsiliDesc"] . " بابت " . $dt[$i]["description"] . "</b>" . " صادر گردید." .
 			"</td>";
-			echo '<td width=200>امضاء تحویل گیرنده</td></tr>';
+			//echo '<td colspan=2>امضاء تحویل گیرنده</td></tr>';
 		}
-		*/
+		//------------------------------------------------------
 		echo '	</table>
 				<br>
 				<div align="center" style="float:right;width:50%;" class=SignTbl>

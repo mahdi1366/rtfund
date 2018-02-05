@@ -15,7 +15,7 @@ $PartObj = new LON_ReqParts($PartID);
 
 $CostCode_commitment = COSTID_Commitment;
 $dt = PdoDataAccess::runquery("
-		select DocID,LocalNo,sum(CreditorAmount) amount,PartAmount,DocStatus
+		select DocID,LocalNo,sum(CreditorAmount) amount,PartAmount,StatusID
 		from ACC_DocItems 
 			join ACC_docs using(DocID)
 			join LON_ReqParts on(PartID = SourceID2)
@@ -25,7 +25,7 @@ $dt = PdoDataAccess::runquery("
 if(count($dt) == 0)
 {
 	$dt = PdoDataAccess::runquery("
-		select DocID,LocalNo,sum(CreditorAmount) amount,PartAmount,DocStatus
+		select DocID,LocalNo,sum(CreditorAmount) amount,PartAmount,StatusID
 		from ACC_DocItems 
 			join ACC_docs using(DocID)
 			join LON_ReqParts on(PartID = SourceID2)
@@ -36,17 +36,17 @@ if(count($dt) == 0)
 $tbl_content = "";
 foreach($dt as $row)
 {
-	switch($row["DocStatus"])
+	switch($row["StatusID"])
 	{
-		case "RAW" : $status = "خام"; break;
-		case "CONFIRM" : $status = "تایید شده"; break;
-		case "ARCHIVE" : $status = "بایگانی شده"; break;
+		case ACC_STEPID_RAW :		$status = "خام"; break;
+		case ACC_STEPID_CONFIRM :	$status = "قطعی شده"; break;
+		default :					$status = "در مسیر گردش";
 	}
 	$tbl_content .= 
 		"<tr><td width=85px>شماره سند :</td><td class=blueText>" . $row["LocalNo"] . "</td><tr>".
 		"<tr><td>مبلغ پرداخت :</td><td class=blueText>" . number_format($row["amount"]) . "</td></tr>".
 		"<tr><td>وضعیت سند :</td><td class=blueText>" . $status . "</td></tr>".
-		($row["DocStatus"] == "RAW" ? 
+		($row["StatusID"] == ACC_STEPID_RAW ? 
 			"<tr><td colspan=2 align=left><button class=x-btn ".
 				"onclick=RequestInfoObject.ReturnPayPart(" . $row["DocID"] . ") >برگشت</button></td></tr>" : "") .
 		"<tr><td colspan=2 style=background-color:yellowgreen;height:15px;>&nbsp;</td></tr>";

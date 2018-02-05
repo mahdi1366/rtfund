@@ -213,6 +213,9 @@ class WFM_FlowRows extends PdoDataAccess {
 			case "4":
 				PdoDataAccess::runquery("update WAR_requests set StatusID=? where RequestID=?",
 					array($StepID, $this->ObjectID ));
+			case "8":
+				PdoDataAccess::runquery("update ACC_docs set StatusID=? where DocID=?",
+					array($StepID, $this->ObjectID ));
 			case "6":
 			case "7":
 			case "8":
@@ -283,6 +286,11 @@ class WFM_FlowRows extends PdoDataAccess {
 				PdoDataAccess::runquery("update WAR_requests set StatusID=? where RequestID=?", 
 					array($EndStepID, $ObjectID), $pdo);
 				return ExceptionHandler::GetExceptionCount() == 0;
+			case 'accdoc' : 
+				$EndStepID = ACC_STEPID_CONFIRM; 
+				PdoDataAccess::runquery("update ACC_docs set StatusID=? where DocID=?", 
+					array($EndStepID, $ObjectID), $pdo);
+				return ExceptionHandler::GetExceptionCount() == 0;
 			case 'CORRECT':
 			case 'DayOFF':
 			case 'OFF':
@@ -344,6 +352,11 @@ class WFM_FlowRows extends PdoDataAccess {
 				case 'warrenty' : 
 					$EndStepID = WAR_STEPID_RAW; 
 					PdoDataAccess::runquery("update WAR_requests set StatusID=? where RequestID=?", 
+						array($EndStepID, $ObjectID));
+					break;
+				case 'accdoc' : 
+					$EndStepID = ACC_STEPID_RAW; 
+					PdoDataAccess::runquery("update ACC_docs set StatusID=? where DocID=?", 
 						array($EndStepID, $ObjectID));
 					break;
 				case 'CORRECT':
@@ -463,10 +476,6 @@ class WFM_FlowRows extends PdoDataAccess {
 					join BaseInfo b on(b.TypeID=11 AND b.InfoID=f.ObjectType)
 					left join WFM_FlowSteps fs on(fr.StepRowID=fs.StepRowID)
 					join BSC_persons p on(fr.PersonID=p.PersonID)
-
-					left join LON_ReqParts lp on(fr.ObjectID=PartID)
-					left join LON_requests lr on(lp.RequestID=lr.RequestID)
-					left join BSC_persons pp on(lr.LoanPersonID=pp.PersonID)
 
 					where 1=1 " . $where . dataReader::makeOrder();
 		return PdoDataAccess::runquery_fetchMode($query, $params);

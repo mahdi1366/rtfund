@@ -19,7 +19,7 @@ $temp = PdoDataAccess::runquery("
 	left join ACC_tafsilis t2 on(t2.TafsiliType=1 AND di.TafsiliID2=t2.TafsiliID)
 	where CycleID=:year AND CostID in($COSTID_ShortDeposite,$COSTID_LongDeposite) 
 		AND (t1.ObjectID=:pid or t2.ObjectID=:pid) 
-		/*AND DocStatus in('CONFIRM','ARCHIVE')*/
+		/*AND StatusID = ".ACC_STEPID_CONFIRM." */
 	group by CostID
 	order by CostID
 ", array(":year" => $CurYear, ":pid" => $_SESSION["USER"]["PersonID"]));

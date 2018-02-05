@@ -56,7 +56,7 @@ if(isset($_REQUEST["show"]))
 	} 
 	 
 	if(!isset($_REQUEST["IncludeRaw"]))
-		$query .= " AND d.DocStatus != 'RAW' ";
+		$query .= " AND d.StatusID != " . ACC_STEPID_RAW;
 	
 	$query .= " group by if ( DocType not in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE.") , 2, DocType),
 						 if(DocType in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE."), DocDate, substr(g2j(DocDate),6,2)  ),

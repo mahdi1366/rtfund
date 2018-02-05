@@ -34,7 +34,6 @@ switch($task)
 	case "saveChecks":	
 	case "removeChecks":
 	case "RegisterCheck":
-	case "openDoc":
 	case "UpdateChecks":
 	case "RegisterEndDoc":
 	case "RegisterStartDoc":
@@ -140,19 +139,6 @@ function confirm() {
 	$obj->Edit();
 	
 	ACC_DocHistory::AddLog($obj->DocID, $status == "CONFIRM" ? "تایید سند" : "برگشت از تایید سند");
-	
-	echo Response::createObjectiveResponse(true, "");
-	die();
-}
-
-function archive() {
-
-	$obj = new ACC_docs();
-	$obj->DocID = $_POST["DocID"];
-	$obj->DocStatus = 'ARCHIVE';
-	$obj->Edit();
-	
-	ACC_DocHistory::AddLog($obj->DocID, "قطعی کردن سند");
 	
 	echo Response::createObjectiveResponse(true, "");
 	die();
@@ -316,7 +302,8 @@ function TotalConfirm(){
 		$param[":tl"] = $_POST["ToNo"];
 	}
 	
-	$dt = PdoDataAccess::runquery("select DocID from ACC_docs where DocStatus='RAW' AND CycleID=:c AND BranchID=:b " . $where, $param);
+	$dt = PdoDataAccess::runquery("select DocID from ACC_docs 
+		where StatusID=".ACC_STEPID_RAW." AND CycleID=:c AND BranchID=:b " . $where, $param);
 	if(count($dt) == 0)
 	{
 		echo Response::createObjectiveResponse(false, "هیچ سندی یافت نشد");
@@ -327,7 +314,7 @@ function TotalConfirm(){
 	{
 		$obj = new ACC_docs();
 		$obj->DocID = $row["DocID"];
-		$obj->DocStatus = 'CONFIRM';
+		$obj->StatusID = ACC_STEPID_CONFIRM;
 		$obj->Edit();
 		ACC_DocHistory::AddLog($obj->DocID, "تایید سند");
 	}
@@ -564,19 +551,6 @@ function RegisterCheck() {
 }
 
 //............................
-
-function openDoc() {
-	
-	if(ACC_cycles::IsClosed())
-	{
-		echo Response::createObjectiveResponse(false, "دوره مالی جاری بسته شده است و قادر به اعمال تغییرات نمی باشید");
-		die();	
-	}
-	PdoDataAccess::runquery("update ACC_docs set DocStatus='RAW' where DocID=" . $_POST["DocID"]);
-	PdoDataAccess::AUDIT("ACC_docs","باز کردن سند", $_POST["DocID"]);
-	echo "true";
-	die();
-}
 
 function UpdateChecks(){
 	

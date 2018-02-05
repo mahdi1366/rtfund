@@ -64,7 +64,7 @@ if(isset($_REQUEST["show"]))
 	} 
 	 
 	if(!isset($_REQUEST["IncludeRaw"]))
-		$query .= " AND d.DocStatus != 'RAW' ";
+		$query .= " AND d.StatusID != " . ACC_STEPID_RAW;
 	
 	$group = $_POST['ReportLevel'];
 	if($_POST["ReportDate"] == "month")

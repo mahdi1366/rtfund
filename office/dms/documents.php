@@ -60,7 +60,7 @@ switch($ObjectType)
 	case "accdoc":
 		require_once '../../accounting/docs/doc.class.php';
 		$obj = new ACC_docs($ObjectID);
-		if($obj->DocStatus == "RAW")
+		if($obj->StatusID == ACC_STEPID_RAW)
 			$access = true;
 		break;
 }

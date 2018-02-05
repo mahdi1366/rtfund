@@ -364,14 +364,14 @@ function GetRequestParts(){
 		$temp = PdoDataAccess::runquery("select ifnull(sum(CreditorAmount),0)
 			from ACC_DocItems join ACC_docs using(DocID) where 
 			 CostID=? AND SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND 
-			SourceID=? AND SourceID2=? AND DocStatus in('CONFIRM','ARCHIVE')", 
+			SourceID=? AND SourceID2=? AND StatusID = " . ACC_STEPID_CONFIRM, 
 			array($CostCode_commitment, $dt[$i]["RequestID"], $dt[$i]["PartID"]));
 		$dt[$i]["IsPaid"] = $temp[0][0] == $dt[$i]["PartAmount"] ? "YES" : "NO"; 		
 		
 		$temp = PdoDataAccess::runquery("select count(*)
 			from ACC_DocItems join ACC_docs using(DocID) where 
 			 CostID=? AND SourceType=" . DOCTYPE_LOAN_PAYMENT . "  
-				 AND DocStatus in('CONFIRM','ARCHIVE') AND SourceID=? AND SourceID2=? ", 
+				 AND StatusID=".ACC_STEPID_CONFIRM." AND SourceID=? AND SourceID2=? ", 
 			array($CostCode_commitment, $dt[$i]["RequestID"], $dt[$i]["PartID"]));
 		$dt[$i]["IsDocRegister"] = $temp[0][0]*1 > 0 ? "YES" : "NO"; 	
 		
@@ -400,11 +400,11 @@ function SavePart(){
 	{
 		if(!$firstPart)
 		{
-			$dt = PdoDataAccess::runquery("select DocID,DocStatus from ACC_DocItems join ACC_docs using(DocID)
+			$dt = PdoDataAccess::runquery("select DocID,StatusID from ACC_DocItems join ACC_docs using(DocID)
 				where DocType=" . DOCTYPE_LOAN_DIFFERENCE ." AND SourceID=? AND SourceID2=?",
 				array($obj->RequestID, $obj->PartID));
 			
-			if(count($dt) > 0 && $dt[0]["DocStatus"] != "RAW")
+			if(count($dt) > 0 && $dt[0]["StatusID"] != ACC_STEPID_RAW)
 			{
 				echo Response::createObjectiveResponse(false, "سند اختلاف تایید شده و قادر به صدور مجدد نمی باشید");
 				die();
@@ -458,7 +458,7 @@ function DeletePart(){
 		where SourceType=" . DOCTYPE_LOAN_DIFFERENCE . "
 		AND SourceID=? AND SourceID2=?", array($obj->RequestID, $obj->PartID));
 	
-	if(count($dt) > 0 && $dt[0]["DocStatus"] != "RAW")
+	if(count($dt) > 0 && $dt[0]["StatusID"] != ACC_STEPID_RAW)
 	{
 		echo Response::createObjectiveResponse(false, "سند اختلاف تایید شده و قادر به حذف نمی باشید");
 		die();
@@ -1481,7 +1481,7 @@ function editPayPartDoc(){
 	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 	
 	$DocObj = new ACC_docs(LON_payments::GetDocID($PayObj->PayID));
-	if($DocObj->DocStatus != "RAW")
+	if($DocObj->StatusID != ACC_STEPID_RAW)
 	{
 		echo Response::createObjectiveResponse(false,"سند تایید شده و قابل ویرایش نمی باشد");
 		die();
@@ -1525,7 +1525,7 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 	$PayObj = new LON_payments($PayID);
 	$DocID = LON_payments::GetDocID($PayObj->PayID);	
 	//------------- check for Acc doc confirm -------------------
-	$temp = PdoDataAccess::runquery("select DocStatus 
+	$temp = PdoDataAccess::runquery("select StatusID 
 		from ACC_DocItems join ACC_docs using(DocID) where SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND 
 		DocID=?", array($DocID));
 	if(count($temp) == 0)
@@ -1533,7 +1533,7 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 		echo Response::createObjectiveResponse(false, "سند مربوطه یافت نشد");
 		die();
 	}
-	if(count($temp) > 0 && $temp[0]["DocStatus"] != "RAW")
+	if(count($temp) > 0 && $temp[0]["StatusID"] != ACC_STEPID_RAW)
 	{
 		echo Response::createObjectiveResponse(false, "سند حسابداری این شرایط تایید شده است. و قادر به برگشت نمی باشید");
 		die();
@@ -1778,7 +1778,7 @@ function DeleteCosts(){
 	$DocRecord = $obj->GetAccDoc();
 	if($DocRecord)
 	{
-		if($DocRecord["DocStatus"] != "RAW")
+		if($DocRecord["StatusID"] != ACC_STEPID_RAW)
 		{
 			echo Response::createObjectiveResponse(false, "سند مربوطه تایید شده و قابل حذف نمی باشد");
 			die();	

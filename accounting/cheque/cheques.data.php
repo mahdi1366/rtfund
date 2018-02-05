@@ -223,7 +223,7 @@ function SaveIncomeCheque(){
 		else
 			$FirstBranchID = $_SESSION["accounting"]["BranchID"];
 		
-		$dt = PdoDataAccess::runquery("select DocID,DocStatus from ACC_docs where LocalNo=? AND BranchID=?",
+		$dt = PdoDataAccess::runquery("select DocID,StatusID from ACC_docs where LocalNo=? AND BranchID=?",
 			array($_POST["LocalNo"], $FirstBranchID));
 		if(count($dt) == 0)
 		{
@@ -231,7 +231,7 @@ function SaveIncomeCheque(){
 			echo Response::createObjectiveResponse(false, "شماره سند در شعبه مربوطه یافت نشد");
 			die();
 		}	
-		if($dt[0]["DocStatus"] != "RAW")
+		if($dt[0]["StatusID"] != ACC_STEPID_RAW)
 		{
 			$pdo->rollback();
 			echo Response::createObjectiveResponse(false, "سند مربوطه تایید شده و امکان اضافه به آن ممکن نیست");
@@ -305,7 +305,7 @@ function ChangeChequeStatus(){
 		else
 			$FirstBranchID = $_SESSION["accounting"]["BranchID"];
 		
-		$dt = PdoDataAccess::runquery("select DocID,DocStatus from ACC_docs where LocalNo=? AND BranchID=?
+		$dt = PdoDataAccess::runquery("select DocID,StatusID from ACC_docs where LocalNo=? AND BranchID=?
 			AND CycleID=?",
 			array($_POST["LocalNo"], $FirstBranchID, $_SESSION["accounting"]["CycleID"]));
 		if(count($dt) == 0)
@@ -314,7 +314,7 @@ function ChangeChequeStatus(){
 			echo Response::createObjectiveResponse(false, "شماره سند در شعبه مربوطه یافت نشد");
 			die();
 		}	
-		if($dt[0]["DocStatus"] != "RAW")
+		if($dt[0]["StatusID"] != ACC_STEPID_RAW)
 		{
 			$pdo->rollback();
 			echo Response::createObjectiveResponse(false, "سند مربوطه تایید شده و امکان اضافه به آن ممکن نیست");

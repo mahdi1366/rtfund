@@ -1374,7 +1374,7 @@ class LON_BackPays extends PdoDataAccess{
 				t.TafsiliDesc ChequeStatusDesc,
 				bi.InfoDesc PayTypeDesc, 				
 				d.LocalNo,
-				d.DocStatus
+				d.StatusID
 			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			left join ACC_IncomeCheques i using(IncomeChequeID)
@@ -1470,7 +1470,7 @@ class LON_payments extends OperationClass{
 	
 	static function Get($where = '', $whereParams = array(), $order = "") {
 		
-		return parent::runquery_fetchMode("select p.*,d.LocalNo,d.DocStatus 
+		return parent::runquery_fetchMode("select p.*,d.LocalNo,d.StatusID 
 			from LON_payments p
 			left join ACC_DocItems di on(di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
 				AND di.SourceID=p.RequestID AND di.SourceID3=p.PayID) 

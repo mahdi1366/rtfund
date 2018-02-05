@@ -1013,7 +1013,8 @@ function ReturnPayPartDoc($DocID, $pdo, $DeleteDoc = true){
 	//..........................................................................
 	$dt = PdoDataAccess::runquery("select d.DocID,LocalNo 
 		from ACC_DocItems d join ACC_docs using(DocID)
-		where DocStatus <> 'RAW' AND d.DocID=? AND SourceType=". DOCTYPE_LOAN_PAYMENT, array($DocID));
+		where StatusID <> ".ACC_STEPID_RAW." 
+			AND d.DocID=? AND SourceType=". DOCTYPE_LOAN_PAYMENT, array($DocID));
 	if(count($dt) > 0)
 	{
 		echo Response::createObjectiveResponse(false, "سند مربوطه با شماره " . $dt[0]["LocalNo"] . " تایید شده و قادر به برگشت نمی باشید");
@@ -2759,7 +2760,8 @@ function ReturnCustomerPayDoc($PayObj, $pdo, $EditMode = false){
 	//..........................................................................
 	$dt = PdoDataAccess::runquery("select d.DocID,LocalNo 
 		from ACC_DocItems d join ACC_docs using(DocID)
-		where DocStatus <> 'RAW' AND SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID=? AND SourceID2=?",
+		where StatusID <> ".ACC_STEPID_RAW." 
+			AND SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID=? AND SourceID2=?",
 		array($PayObj->RequestID, $PayObj->BackPayID), $pdo);
 	if(count($dt) > 0)
 	{
@@ -2910,7 +2912,7 @@ function ReturnEndRequestDoc($ReqObj, $pdo){
 	//..........................................................................
 	$dt = PdoDataAccess::runquery("select d.DocID,LocalNo 
 		from ACC_DocItems d join ACC_docs using(DocID)
-		where DocStatus <> 'RAW' AND DocType=" . DOCTYPE_END_REQUEST . " AND SourceID2=?",
+		where StatusID <> ".ACC_STEPID_RAW." AND DocType=" . DOCTYPE_END_REQUEST . " AND SourceID2=?",
 			array($ReqObj->RequestID), $pdo);
 	if(count($dt) > 0)
 	{
@@ -3318,7 +3320,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 			$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
 				join ACC_DocItems using(DocID)
 				where CycleID=? AND DocID>=? AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
-				AND DocStatus not in('CONFIRM','ARCHIVE')
+				AND StatusID <> ".ACC_STEPID_CONFIRM."
 				AND TafsiliID=?", array($_SESSION["accounting"]["CycleID"] ,$LatestComputeDate,$TafsiliID));
 			if(count($dt) > 0 && $dt[0][0] != "")
 			{
@@ -3547,7 +3549,7 @@ function ComputeShareProfit(){
 		where CostID =" . COSTID_share . "
 		AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 		AND BranchID=?
-		AND DocStatus not in('CONFIRM','ARCHIVE')", array($BranchID));
+		AND StatusID <> " . ACC_STEPID_CONFIRM, array($BranchID));
 	if(count($dt) > 0 && $dt[0][0] != "")
 	{
 		echo Response::createObjectiveResponse(false, "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند و قادر به صدور سند سود سهام نمی باشید.");
@@ -4053,7 +4055,7 @@ function ReturnWarrantyDoc($ReqObj, $pdo, $EditMode = false){
 	//..........................................................................
 	$dt = PdoDataAccess::runquery("select DocID,LocalNo from ACC_docs 
 			join ACC_DocItems using(DocID)
-			where DocStatus <> 'RAW' AND SourceType=" . DOCTYPE_WARRENTY . " AND SourceID2=?",
+			where StatusID <> ".ACC_STEPID_RAW." AND SourceType=" . DOCTYPE_WARRENTY . " AND SourceID2=?",
 			array($ReqObj->RequestID), $pdo);
 	if(count($dt) > 0)
 	{
@@ -4440,13 +4442,13 @@ function ReturnCancelDoc($ReqObj, $pdo, $EditMode = false){
 	
 	/*@var $PayObj WAR_requests */
 	
-	$dt = PdoDataAccess::runquery("select DocID,DocStatus from ACC_DocItems join ACC_docs using(DocID)
+	$dt = PdoDataAccess::runquery("select DocID,StatusID from ACC_DocItems join ACC_docs using(DocID)
 		where SourceType=" . DOCTYPE_WARRENTY_CANCEL . " AND SourceID2=?",
 		array($ReqObj->RequestID), $pdo);
 	if(count($dt) == 0)
 		return true;
 	
-	if($dt[0]["DocStatus"] != "RAW")
+	if($dt[0]["StatusID"] != ACC_STEPID_RAW)
 	{
 		ExceptionHandler::PushException("سند تایید شده و قابل برگشت نمی باشد");
 		return false;
@@ -4713,7 +4715,7 @@ function ReturnSalaryDoc($PObj, $pdo){
 	//..........................................................................
 	$dt = PdoDataAccess::runquery("select DocID,LocalNo from ACC_docs 
 			join ACC_DocItems using(DocID)
-			where DocStatus <> 'RAW' AND SourceType=" . DOCTYPE_SALARY . " AND SourceID=? AND SourceID2=?",
+			where StatusID <> ".ACC_STEPID_RAW." AND SourceType=" . DOCTYPE_SALARY . " AND SourceID=? AND SourceID2=?",
 	array($PObj->payment_type, $PObj->pay_month), $pdo);
 	if(count($dt) > 0)
 	{
@@ -4838,7 +4840,7 @@ function ReturnPaySalaryDoc($PObj, $pdo){
 	//..........................................................................
 	$dt = PdoDataAccess::runquery("select DocID,LocalNo from ACC_docs 
 			join ACC_DocItems using(DocID)
-			where DocStatus <> 'RAW' AND SourceType=" . DOCTYPE_SALARY_PAY . 
+			where StatusID <> ".ACC_STEPID_RAW." AND SourceType=" . DOCTYPE_SALARY_PAY . 
 			" AND SourceID=? AND SourceID2=?",
 	array($PObj->payment_type, $PObj->pay_month), $pdo);
 	if(count($dt) > 0)

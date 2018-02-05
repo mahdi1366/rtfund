@@ -260,7 +260,7 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 			if(record.data.DocID == "" || record.data.DocID == null)
 				op_menu.add({text: 'صدور سند',iconCls: 'send',
 				handler : function(){ return WarrentyRequestObject.BeforeRegDoc(1); }});
-			else if(record.data.DocStatus == "RAW")
+			else if(record.data.StatusID == "<?= ACC_STEPID_RAW ?>")
 			{
 				op_menu.add({text: 'اصلاح سند',iconCls: 'edit',
 				handler : function(){ return WarrentyRequestObject.BeforeRegDoc(2); }});

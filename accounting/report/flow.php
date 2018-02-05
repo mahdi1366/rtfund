@@ -55,7 +55,7 @@ function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 	}
 
 	if(!isset($_REQUEST["IncludeRaw"]))
-		$where .= " AND d.DocStatus != 'RAW' ";
+		$where .= " AND d.StatusID != " . ACC_STEPID_RAW;
 
 	if(!empty($_REQUEST["BranchID"]))
 	{

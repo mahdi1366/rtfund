@@ -90,7 +90,7 @@ function GetSavingLoanInfo($ReportMode = false){
 			join ACC_DocItems using(DocID) join ACC_tafsilis t using(TafsiliType,TafsiliID)
 			where TafsiliType=" . TAFTYPE_PERSONS . " 
 				AND ObjectID = ? AND CostID in(" . COSTID_saving . ")
-				AND DocStatus not in('CONFIRM','ARCHIVE')
+				AND StatusID <> ".ACC_STEPID_CONFIRM."
 				AND BranchID=?
 				AND DocDate >= ?", array($PersonID, $BranchID, $StartDate));
 		if(count($dt) > 0 && $dt[0][0] != "")

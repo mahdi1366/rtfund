@@ -14,6 +14,7 @@ AccDocs.prototype = {
 
 	CycleIsOpen : true,
 	Role : "<?= $Role ?>",
+	FlowID : <?= FLOWID_ACCDOC ?>,
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -168,23 +169,27 @@ AccDocs.prototype.operationhMenu = function(e){
 			op_menu.add({text: 'کپی وارونه سند',iconCls: 'copy', 
 				handler : function(){ return AccDocsObject.CopyDoc(2); }})
 		}
-
-		if(record != null && record.data.DocStatus == "RAW")
+		
+		if(record != null && record.data.StatusID == "<?= ACC_STEPID_RAW ?>")
 		{
 			if(this.EditAccess)
 			{
 				op_menu.add({text: 'ویرایش سند',iconCls: 'edit', 
 					handler : function(){ return AccDocsObject.EditDoc(); } });
 				
-				if(this.Role == "<?= ACCROLE_MANAGER ?>")
-					op_menu.add({text: 'تایید سند',iconCls: 'tick', 
-					handler : function(){ return AccDocsObject.confirmDoc(); } });
+				op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
+					handler : function(){ return AccDocsObject.StartFlow(); }});
 			}
 			if(this.RemoveAccess /*&& this.grid.getStore().currentPage == this.grid.getStore().totalCount*/)
 				op_menu.add({text: 'حذف سند',iconCls: 'remove', 
 					handler : function(){ return AccDocsObject.RemoveDoc(); } });
 		}
-		if(record != null && record.data.DocStatus == "CONFIRM" && this.EditAccess)
+		if(record != null && record.data.StatusID == "0")
+		{
+			op_menu.add({text: 'برگشت فرم',iconCls: 'return',
+			handler : function(){ return AccDocsObject.ReturnStartFlow(); }});
+		}
+		/*if(record != null && record.data.StatusID == "<?= ACC_STEPID_CONFIRM ?>" && this.EditAccess)
 		{
 			if(this.Role == "<?= ACCROLE_MANAGER ?>")
 			{
@@ -200,7 +205,7 @@ AccDocs.prototype.operationhMenu = function(e){
 			op_menu.add({text: 'تایید گروهی اسناد',iconCls: 'tick', 
 			handler : function(){ return AccDocsObject.BeforeTotalConfirmDoc(); } });
 
-		}
+		}*/
 	}
     if(record != null)           
 	{
@@ -780,7 +785,7 @@ AccDocs.prototype.RemoveDoc = function()
 	});
 }
 
-AccDocs.prototype.confirmDoc = function()
+AccDocs.prototype.StartFlow = function()
 {
 	var record = this.grid.getStore().getAt(0);
 
@@ -789,7 +794,7 @@ AccDocs.prototype.confirmDoc = function()
 	
 	if(r[0] != r[1])
 	{
-		Ext.MessageBox.alert("","به دلیل تراز نبودن سند قادر به تایید آن نمی باشید");
+		Ext.MessageBox.alert("","به دلیل تراز نبودن سند قادر به شروع گردش آن نمی باشید");
 		return
 	}
 	
@@ -798,7 +803,7 @@ AccDocs.prototype.confirmDoc = function()
 		Ext.MessageBox.alert("","سند فاقد مبلغ می باشد");
 		return
 	}
-	Ext.MessageBox.confirm("","پس از تایید سند دیگر قادر به ویرایش و یا حذف سند نمی باشید."	, function(btn){
+	Ext.MessageBox.confirm("","آیا مایل به شروع گردش می باشید؟", function(btn){
 		if(btn == "no")
 			return;
 		
@@ -807,9 +812,12 @@ AccDocs.prototype.confirmDoc = function()
 		mask.show();
 
 		Ext.Ajax.request({
-			url: me.address_prefix + 'doc.data.php?task=confirm',
-			params:{
-				DocID: record.data.DocID
+			url: '/office/workflow/wfm.data.php',
+			method: "POST",
+			params: {
+				task: "StartFlow",
+				FlowID : me.FlowID,
+				ObjectID : record.data.DocID
 			},
 			method: 'POST',
 
@@ -827,36 +835,31 @@ AccDocs.prototype.confirmDoc = function()
 	});
 }
 
-AccDocs.prototype.UndoConfirmDoc = function()
-{
-	var record = this.grid.getStore().getAt(0);
-
-	Ext.MessageBox.confirm("","آیا مایل به برگشت از تایید می باشید؟", function(btn){
+AccDocs.prototype.ReturnStartFlow = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به برگشت فرم می باشید؟",function(btn){
+		
 		if(btn == "no")
 			return;
 		
 		me = AccDocsObject;
-		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال تایید سند ...'});
+		var record = me.grid.getStore().getAt(0);
+	
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
 		mask.show();
 
 		Ext.Ajax.request({
-			url: me.address_prefix + 'doc.data.php?task=confirm',
-			params:{
-				DocID: record.data.DocID,
-				undo : "true"
+			url: '/office/workflow/wfm.data.php',
+			method: "POST",
+			params: {
+				task: "ReturnStartFlow",
+				FlowID : me.FlowID,
+				ObjectID : record.data.DocID
 			},
-			method: 'POST',
-
 			success: function(response){
-				result = Ext.decode(response.responseText);
 				mask.hide();
-				if(result.success)
-					AccDocsObject.grid.getStore().load();
-				else
-					Ext.MessageBox.alert("Error", 
-						result.data == "" ? "عملیات مورد نظر با شکست مواجه شد" : result.data);
-			},
-			failure: function(){}
+				AccDocsObject.grid.getStore().load();
+			}
 		});
 	});
 }
@@ -990,7 +993,7 @@ AccDocs.prototype.Documents = function(ObjectType){
 AccDocs.prototype.check_deleteRender = function()
 {
 	var record = AccDocsObject.grid.getStore().getAt(0);
-	if(record.data.DocStatus != "RAW")
+	if(record.data.StatusID != "<?= ACC_STEPID_RAW ?>")
 		return "";
 	return  "<div title='حذف اطلاعات' class='remove' onclick='AccDocsObject.check_remove();' " +
 			"style='background-repeat:no-repeat;background-position:center;" +
@@ -999,7 +1002,7 @@ AccDocs.prototype.check_deleteRender = function()
 
 AccDocs.prototype.check_Add = function()
 {
-	if(this.grid.getStore().getAt(0).data.DocStatus != "RAW")
+	if(this.grid.getStore().getAt(0).data.StatusID != "<?= ACC_STEPID_RAW ?>")
 		return;
 	var modelClass = this.checkGrid.getStore().model;
 	var record = new modelClass({
@@ -1083,7 +1086,7 @@ AccDocs.prototype.check_remove = function()
 AccDocs.beforeCheckEdit = function(editor,e){
 	
 	var record = AccDocsObject.grid.getStore().getAt(0);
-	if(record.data.DocStatus != "RAW")
+	if(record.data.StatusID != "<?= ACC_STEPID_RAW ?>")
 		return false;
 }
 
@@ -1131,7 +1134,7 @@ AccDocs.prototype.beforeRowEdit = function(record){
 	if(<?= $_SESSION["USER"]["UserName"] == "admin" ? "true" : "false" ?>)
 		return true;
 	var hrecord = AccDocsObject.grid.getStore().getAt(0);
-	if(hrecord.data.DocStatus != "RAW")
+	if(hrecord.data.StatusID != "<?= ACC_STEPID_RAW ?>")
 		return false;
 	
 	if(record.data.locked == "YES")
@@ -1181,7 +1184,7 @@ AccDocs.deleteitemRender = function(v,p,record)
 		if(record.data.locked == "YES")
 			return "";
 		var record = AccDocsObject.grid.getStore().getAt(0);
-		if(record.data.DocStatus != "RAW")
+		if(record.data.StatusID != "<?= ACC_STEPID_RAW ?>")
 			return "";
 
 		if(!AccDocsObject.EditAccess)
@@ -1198,7 +1201,7 @@ AccDocs.deleteitemRender = function(v,p,record)
 
 AccDocs.prototype.AddItem = function()
 {
-	if(this.grid.getStore().getAt(0).data.DocStatus != "RAW")
+	if(this.grid.getStore().getAt(0).data.StatusID != "<?= ACC_STEPID_RAW ?>")
 		return;
 	
 	this.detailWin.show();
@@ -1217,7 +1220,7 @@ AccDocs.prototype.AddItem = function()
 AccDocs.prototype.EditItem = function()
 {
 	if(<?= $_SESSION["USER"]["UserName"] == "admin" ? "false" : "true" ?>)
-		if(this.grid.getStore().getAt(0).data.DocStatus != "RAW")
+		if(this.grid.getStore().getAt(0).data.StatusID != "<?= ACC_STEPID_RAW ?>")
 			return;
 		
 	var record = this.itemGrid.getSelectionModel().getLastSelected();
