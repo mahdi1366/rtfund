@@ -79,10 +79,12 @@ if(isset($_REQUEST["show"]))
 
 		$col = $rpg2->addColumn("تاریخ قسط", "InstallmentDate","ReportDateRender");
 		$col = $rpg2->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
-		$col = $rpg2->addColumn("بهره قسط", "profit","ReportMoneyRender");
-		$col = $rpg2->addColumn("بهره قسط (تجمعي)", "SumProfit","ReportMoneyRender");
-		$col = $rpg2->addColumn("اصل قسط", "pureAmount","ReportMoneyRender");
-		$col = $rpg2->addColumn("مانده اصل وام", "pureRemain","ReportMoneyRender");
+		$col->EnableSummary();
+		$col = $rpg2->addColumn("بهره قسط", "wage","ReportMoneyRender");
+		$col->EnableSummary();
+		$col = $rpg2->addColumn("اصل قسط", "pure","ReportMoneyRender");
+		$col->EnableSummary();
+		$col = $rpg2->addColumn("مانده اصل وام", "totalPure","ReportMoneyRender");
 		ob_start();
 		$rpg2->generateReport();
 		$report2 = ob_get_clean();

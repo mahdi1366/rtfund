@@ -397,8 +397,8 @@ function ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate = 
 			{
 				if($i < count($installmentArray)-1)
 				{
-					$percent = round($installmentArray[$i]["InstallmentAmount"]*1/$amount, 2);
-					$sum += round($installmentArray[$i]["InstallmentAmount"]*1/$amount, 2);
+					$percent = round($installmentArray[$i]["InstallmentAmount"]*1/$partObj->PartAmount, 2);
+					$sum += round($installmentArray[$i]["InstallmentAmount"]*1/$partObj->PartAmount, 2);
 				}
 				else
 					$percent = 1-$sum;

@@ -752,6 +752,15 @@ class LON_requests extends PdoDataAccess{
 			$DelayAmount += $TotalAgentDelay;
 		$totalBackPay = $PartObj->PartAmount*1 + $DelayAmount;
 		//.............................
+		$returnArr = array();
+		$returnArr[] = array(
+			"InstallmentDate" => "",
+			"InstallmentAmount" => 0,
+			"wage" => 0,
+			"pure" => 0,
+			"totalPure" => $totalBackPay
+		);
+		$totalPure = $totalBackPay;
 		for($i=0; $i< count($temp); $i++)
 		{
 			$prevRow = $i == 0 ? null : $temp[$i-1];
@@ -759,6 +768,58 @@ class LON_requests extends PdoDataAccess{
 			
 			if($temp[$i]["wage"]*1 > 0)
 			{
+				$totalPure -= $row["InstallmentAmount"] - $row["wage"];
+				$returnArr[] = array(
+					"InstallmentDate" => $row["InstallmentDate"],
+					"InstallmentAmount" => $row["InstallmentAmount"],
+					"wage" => $row["wage"],
+					"pure" => $row["InstallmentAmount"] - $row["wage"],
+					"totalPure" => $totalPure 
+				);
+				continue;
+			}
+			$record = array(
+				"InstallmentDate" => $row["InstallmentDate"],
+				"InstallmentAmount" => $row["InstallmentAmount"],
+				"wage" => 0,
+				"pure" => 0,
+				"totalPure" => 0 
+			);
+			//.............................
+			if($PartObj->PayInterval == 0 || $PartObj->WageReturn != "INSTALLMENT")
+				$record["wage"] = 0;
+			else
+			{
+				$R = $PartObj->IntervalType == "MONTH" ? 
+					1200/$PartObj->PayInterval : 36500/$PartObj->PayInterval;
+				$V = $totalPure;
+				$record["wage"] = round( $V*($PartObj->CustomerWage/$R) );
+			}
+			//.............................
+			$record["pure"] = $row["InstallmentAmount"] - $record["wage"];
+			$totalPure -= $row["InstallmentAmount"] - $record["wage"];
+			$record["totalPure"] = $totalPure;
+			//.............................
+			$returnArr[] = $record;
+		}
+		
+		return $returnArr;
+		
+		for($i=0; $i< count($temp); $i++)
+		{
+			$prevRow = $i == 0 ? null : $temp[$i-1];
+			$row = &$temp[$i];
+			
+			if($temp[$i]["wage"]*1 > 0)
+			{
+				$totalPure -= $row["InstallmentAmount"] - $row["wage"];
+				$returnArr[] = array(
+					"InstallmentDate" => $row["InstallmentDate"],
+					"InstallmentAmount" => $row["InstallmentAmount"],
+					"wage" => $row["wage"],
+					"pure" => $row["InstallmentAmount"] - $row["wage"],
+					"totalPure" => $totalPure 
+				);
 				$row["profit"] = $row["wage"];
 				$row["pureAmount"] = $row["InstallmentAmount"] - $row["wage"];
 				$row["SumProfit"] = $prevRow["SumProfit"] + $row["profit"];
@@ -856,13 +917,13 @@ class LON_requests extends PdoDataAccess{
 		$PureRemain = 0;
 		for($i=0; $i < count($PureArr);$i++)
 		{
-			if($PureArr[$i]["InstallmentDate"] <= $ComputeDate)
+			if($PureArr[$i]["InstallmentDate"] < $ComputeDate)
 			{
 				$TotalShouldPay += $PureArr[$i]["InstallmentAmount"]*1;
 			}
 			else
 			{
-				$PureRemain = $PureArr[$i]["pureRemain"]*1;
+				$PureRemain = $PureArr[$i]["totalPure"]*1;
 				break;
 			}
 		}
@@ -870,7 +931,6 @@ class LON_requests extends PdoDataAccess{
 			"PureAmount" => $PureRemain == 0 ? $TotalShouldPay : $PureRemain,
 			"TotalShouldPay" => $TotalShouldPay + $PureRemain
 		);	
-
 	}
 	
 	/**
