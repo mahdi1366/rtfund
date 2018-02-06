@@ -47,6 +47,9 @@ MyForm.prototype.OperationMenu = function(e){
 	op_menu.add({text: 'رد درخواست',iconCls: 'cross',
 	handler : function(){ return MyFormObject.beforeChangeStatus('REJECT'); }});
 	
+	op_menu.add({text: 'پیوستها',iconCls: 'attach', 
+		handler : function(){ return MyFormObject.ShowAttaches(); }});
+	
 	op_menu.add({text: 'سابقه درخواست',iconCls: 'history', 
 		handler : function(){ return MyFormObject.ShowHistory(); }});
 	
@@ -263,6 +266,43 @@ MyForm.prototype.ShowHistory = function(){
 	this.HistoryWin.loader.load({
 		params : {
 			RowID : this.grid.getSelectionModel().getLastSelected().data.RowID
+		}
+	});
+}
+
+MyForm.prototype.ShowAttaches = function(){
+
+	if(!this.documentWin)
+	{
+		this.documentWin = new Ext.window.Window({
+			width : 720,
+			height : 440,
+			modal : true,
+			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
+			closeAction : "hide",
+			loader : {
+				url : "../../office/dms/documents.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.documentWin);
+	}
+
+	this.documentWin.show();
+	this.documentWin.center();
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.documentWin.loader.load({
+		scripts : true,
+		params : {
+			ExtTabID : this.documentWin.getEl().id,
+			ObjectType : record.data.param4,
+			ObjectID : record.data.ObjectID
 		}
 	});
 }

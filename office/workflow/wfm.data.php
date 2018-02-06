@@ -153,13 +153,13 @@ function SelectAllForms(){
 			when b.param4='contract' then concat_ws(' ','قرارداد شماره',c.ContractID,cp.CompanyName,cp.fname,cp.lname)
 			
 			when b.param4='warrenty' then concat_ws(' ','ضمانت نامه [',wr.RefRequestID,'] ', 
-												wp.CompanyName,wp.fname,wp.lname, 'به مبلغ ',format(wr.amount,0)
-												,'از تاریخ',(wr.StartDate),'تا تاریخ',(wr.EndDate))
+				wp.CompanyName,wp.fname,wp.lname, 'به مبلغ ',
+				format(wr.amount,0),'از تاریخ',g2j(wr.StartDate),'تا تاریخ',g2j(wr.EndDate))
 			
 			when b.param4='form' then concat_ws(' ',wfmf.FormTitle,'به شماره',wfmr.RequestID)
 			
 			when b.param4 in('CORRECT','DayOFF','OFF','DayMISSION','MISSION','EXTRA','CHANGE_SHIFT')
-				then concat_ws(' ','درخواست ',ap.CompanyName,ap.fname,ap.lname,'مربوط به تاریخ', (ar.FromDate))
+				then concat_ws(' ','درخواست ',ap.CompanyName,ap.fname,ap.lname,'مربوط به تاریخ', g2j(ar.FromDate))
 				
 			when b.param4='accdoc' then concat_ws(' ','سند شماره',ad.LocalNo,adb.BranchName)
 			
@@ -237,6 +237,7 @@ function SelectAllForms(){
 					b.param1 url,
 					b.param2 parameter,
 					b.param3 target,
+					b.param4,
 					$ObjectID ObjectID
 	
 				from WFM_FlowRows fr

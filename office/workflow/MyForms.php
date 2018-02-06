@@ -20,6 +20,7 @@ $dg->addColumn("", "ActionComment", "", true);
 $dg->addColumn("", "url", "", true);
 $dg->addColumn("", "parameter", "", true);
 $dg->addColumn("", "target", "", true);
+$dg->addColumn("", "param4", "", true);
 
 $col = $dg->addColumn("نوع فرم دریافتی", "ObjectTypeDesc", "");
 $col->width = 130;
