@@ -346,6 +346,8 @@ function NewTrafficRequest(){
 					me.formPanel.getForm().loadRecord(record);
 					me.formPanel.down("[name=FromDate]").setValue(MiladiToShamsi(record.data.FromDate));
 					me.formPanel.down("[name=ToDate]").setValue(MiladiToShamsi(record.data.ToDate));
+					me.formPanel.down("[name=StartTime]").setValue(record.data.StartTime.substr(0,5));
+					me.formPanel.down("[name=EndTime]").setValue(record.data.EndTime.substr(0,5));
 
 					me.SetFormElems(record.data.ReqType);
 

@@ -625,6 +625,7 @@ class OFC_organizations extends OperationClass {
 	
 	public $OrgID;
 	public $OrgTitle;
+	public $OrgPost;
 	
 }
 ?>

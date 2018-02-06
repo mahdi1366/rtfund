@@ -5,7 +5,12 @@
 //---------------------------
 require_once("../header.inc.php");
 
-$Image = PdoDataAccess::runquery("select PersonPic from BSC_persons where PersonID=?",array($_GET["PersonID"]));
+$object = isset($_REQUEST["PersonSign"]) ? "PersonSign" : "PersonPic";
+
+$Image = PdoDataAccess::runquery("select $object from BSC_persons where PersonID=?",array($_GET["PersonID"]));
+
+if($Image[0][0] == "")
+	die();
 
 header('Content-type: image/jpg');
 header('Pragma: no-cache');

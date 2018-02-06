@@ -200,6 +200,28 @@ function Person()
                 inputValue: 'YES'
 			}]
 		},{
+			xtype : "container",
+			colspan : 2,
+			layout : "hbox",
+			items : [{
+				xtype : "filefield",
+				name : "PersonSign",
+				fieldLabel : "امضا"
+			},{
+				xtype : "button",
+				style : "margin-right:20px",
+				iconCls : "sign",
+				text : "تصویر امضا",
+				handler : function(){
+					me = PersonObject;
+					PersonID = me.InfoPanel.down("[name=PersonID]").getValue();
+					if(!PersonID)
+						return;
+					window.open(me.address_prefix + "showImage.php?PersonSign=true&PersonID=" + PersonID);
+				}
+			}]
+			
+		},{
 			xtype : "hidden",
 			name : "PersonID"
 		}],
@@ -301,6 +323,7 @@ Person.prototype.saveData = function()
 
 	this.InfoPanel.getForm().submit({
 		clientValidation: true,
+		IsUpload : true,
 		url : this.address_prefix + 'persons.data.php?task=SavePerson',
 		method : "POST",
 		

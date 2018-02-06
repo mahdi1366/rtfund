@@ -5,6 +5,7 @@
 //-----------------------------
 
 require_once '../header.inc.php';
+require_once 'letter.class.php';
 require_once inc_dataGrid;
 
 if(empty($_POST["LetterID"]))
@@ -12,10 +13,9 @@ if(empty($_POST["LetterID"]))
 
 $LetterID = $_POST["LetterID"];
 $SendID = !empty($_POST["SendID"]) ? $_POST["SendID"] : "0";
+$LetterObj = new OFC_letters($LetterID);
 
-$access = true;
-if(isset($_POST["lock"]) && $_POST["lock"] == "true")
-	$access = false;
+$access = $LetterObj->IsSigned == "YES" ? false : true;
 
 //------------------------------------------------------
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "../dms/dms.data.php?" .

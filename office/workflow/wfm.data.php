@@ -154,12 +154,12 @@ function SelectAllForms(){
 			
 			when b.param4='warrenty' then concat_ws(' ','ضمانت نامه [',wr.RefRequestID,'] ', 
 												wp.CompanyName,wp.fname,wp.lname, 'به مبلغ ',format(wr.amount,0)
-												,'از تاریخ',g2j(wr.StartDate),'تا تاریخ',g2j(wr.EndDate))
+												,'از تاریخ',(wr.StartDate),'تا تاریخ',(wr.EndDate))
 			
 			when b.param4='form' then concat_ws(' ',wfmf.FormTitle,'به شماره',wfmr.RequestID)
 			
 			when b.param4 in('CORRECT','DayOFF','OFF','DayMISSION','MISSION','EXTRA','CHANGE_SHIFT')
-				then concat_ws(' ','درخواست ',ap.CompanyName,ap.fname,ap.lname,'مربوط به تاریخ', g2j(ar.FromDate))
+				then concat_ws(' ','درخواست ',ap.CompanyName,ap.fname,ap.lname,'مربوط به تاریخ', (ar.FromDate))
 				
 			when b.param4='accdoc' then concat_ws(' ','سند شماره',ad.LocalNo,adb.BranchName)
 			

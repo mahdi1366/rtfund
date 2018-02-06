@@ -235,6 +235,18 @@ Letter.prototype.BuildForms = function(){
 						fields :  ['OrgID','OrgTitle'],
 						pageSize : 25
 					}),
+					listeners : {
+						select : function(combo, records){
+							LetterObject.TabPanel.down("[name=OrgPost]").getStore().proxy.extraParams.OrgTitle = 
+								records[0].data.OrgTitle;
+							LetterObject.TabPanel.down("[name=OrgPost]").getStore().load({
+								callback : function(){
+									if(this.totalCount > 0)
+										LetterObject.TabPanel.down("[name=OrgPost]").setValue(this.getAt(0).data.OrgPost);
+								}
+							});
+						}
+					},
 					fieldLabel : "فرستنده/گیرنده",
 					displayField: 'OrgTitle',
 					valueField : "OrgTitle",
@@ -249,11 +261,23 @@ Letter.prototype.BuildForms = function(){
 					rowspan :2,			
 					allowBlank : true
 				},{
-					xtype : "textfield",
-					name : "OrgPost",
+					xtype : "combo",
+					store : new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: this.address_prefix + 'letter.data.php?task=selectOrgPosts',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields :  ['OrgPost'],
+						pageSize : 25
+					}),
+					queruMode : "local",
 					fieldLabel : "پست مربوطه",
+					displayField: 'OrgPost',
+					valueField : "OrgPost",
+					name : "OrgPost",		
 					disabled : true,
-					allowBlank : true			
+					allowBlank : true
 				},{
 					xtype : "combo",
 					disabled : true,

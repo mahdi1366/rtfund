@@ -127,15 +127,47 @@ function SavePerson(){
 		$result = $obj->AddPerson();
 	
 	//-----------  save Person pic ----------------
-	if($_FILES['PersonPic']['size'] > 200000)
+	if(isset($_FILES['PersonPic']))
 	{
-		echo Response::createObjectiveResponse(false, "حداکثر حجم مجاز فایل 200 کیلوبایت می باشد");
-		die();
+		if($_FILES['PersonPic']['size'] > 200000)
+		{
+			echo Response::createObjectiveResponse(false, "حداکثر حجم مجاز فایل 200 کیلوبایت می باشد");
+			die();
+		}
+		$st = preg_split("/\./", $_FILES['PersonPic']['name']);
+		$extension = strtolower($st [count($st) - 1]);
+		if(array_search($extension, array("gif","jpg","jpeg","png")) === false)
+		{
+			echo Response::createObjectiveResponse(false, "فقط موارد زیر برای نوع فایل مجاز می باشد: <br>" . 
+				"gif , jpg , jpeg , png");
+			die();
+		}
+		if(!empty($_FILES['PersonPic']['tmp_name']))
+		{
+			PdoDataAccess::runquery_photo("update BSC_persons set PersonPic=:pdata where PersonID=:p", 
+					array(":pdata" => fread(fopen($_FILES['PersonPic']['tmp_name'], 'r' ),$_FILES['PersonPic']['size'])), 
+					array(":p" => $obj->PersonID));
+		}
 	}
-	if(!empty($_FILES['PersonPic']['tmp_name']))
+	//-----------  save Person sign ----------------
+	if(isset($_FILES['PersonSign']))
 	{
-		PdoDataAccess::runquery_photo("update BSC_persons set PersonPic=:pdata where PersonID=:p", 
-				array(":pdata" => fread(fopen($_FILES['PersonPic']['tmp_name'], 'r' ),$_FILES['PersonPic']['size'])), 
+		if($_FILES['PersonSign']['size'] > 200000)
+		{
+			echo Response::createObjectiveResponse(false, "حداکثر حجم مجاز فایل 200 کیلوبایت می باشد");
+			die();
+		}
+		$st = preg_split("/\./", $_FILES['PersonSign']['name']);
+		$extension = strtolower($st [count($st) - 1]);
+		if(array_search($extension, array("gif","jpg","jpeg","png")) === false)
+		{
+			echo Response::createObjectiveResponse(false, "فقط موارد زیر برای نوع فایل مجاز می باشد: <br>" . 
+				"gif , jpg , jpeg , png");
+			die();
+		}
+
+		PdoDataAccess::runquery_photo("update BSC_persons set PersonSign=:pdata where PersonID=:p", 
+				array(":pdata" => fread(fopen($_FILES['PersonSign']['tmp_name'], 'r' ),$_FILES['PersonSign']['size'])), 
 				array(":p" => $obj->PersonID));
 	}
 	//---------------------------------------------

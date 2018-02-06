@@ -82,30 +82,15 @@ function UpdateChecks()
 			anchor : "100%"
 		}],
 		buttons : [{
-			text : "به روز رسانی چک ها",
+			text : "ذخیره و بروز رسانی چک ها",
 			iconCls : "refresh",
 			disabled : this.AddAccess ? false : true,
-			handler : function()
-			{
-				mask = new Ext.LoadMask(Ext.getCmp(UpdateChecksObj.TabID), {msg:'در حال بارگذاری ...'});
-				mask.show()
-				this.up('form').getForm().submit({
-					clientValidation: true,
-					url: UpdateChecksObj.address_prefix + 'operation.data.php?task=Equalization_UpdateChecks',
-					method : "POST",
-					success : function(form,action){
-						
-						mask.hide();
-						UpdateChecksObj.resultFS.update(action.result.data);
-						UpdateChecksObj.grid.getStore().load();
-					},
-					failure : function(form,action)
-					{
-						mask.hide();
-						alert("عملیات مورد نظر با شکست مواجه شد");
-					}
-				});
-			}
+			handler : function(){ UpdateChecksObj.Save("true"); }
+		},{
+			text : "ذخیره فایل",
+			iconCls : "save",
+			disabled : this.AddAccess ? false : true,
+			handler : function(){ UpdateChecksObj.Save("false"); }
 		}]
 	});
 	
@@ -123,6 +108,31 @@ UpdateChecks.FileRender = function(v,p,r){
 		"onclick='UpdateChecksObj.ShowFile();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16;float:right'></div>";
+}
+
+UpdateChecks.prototype.Save = function(DoEqual){
+	
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال بارگذاری ...'});
+	mask.show()
+	this.formPanel.getForm().submit({
+		clientValidation: true,
+		url: this.address_prefix + 'operation.data.php?task=Equalization_UpdateChecks',
+		method : "POST",
+		params : {
+			DoEqual : DoEqual
+		},
+		success : function(form,action){
+
+			mask.hide();
+			UpdateChecksObj.resultFS.update(action.result.data);
+			UpdateChecksObj.grid.getStore().load();
+		},
+		failure : function(form,action)
+		{
+			mask.hide();
+			alert("عملیات مورد نظر با شکست مواجه شد");
+		}
+	});
 }
 
 UpdateChecks.prototype.ShowFile = function(){

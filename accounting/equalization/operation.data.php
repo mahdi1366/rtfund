@@ -19,30 +19,7 @@ class ACC_equalizations extends OperationClass{
 	public $EqualizationID;
 	public $RegDate;
 	public $BankID;
-	public $ImportFile;
-	
-	function Add($pdo = null){
-		
-		if(!$pdo)
-			$pdo = PdoDataAccess::getPdoObject();
-		
-		$stmt = $pdo->prepare("insert into ACC_equalizations(RegDate,BankID,ImportFile) 
-			values(".PDONOW.",:b,:data)");
-		
-		$stmt->bindParam(":b", $this->BankID);
-		$stmt->bindParam(":data", $this->ImportFile, PDO::PARAM_LOB);
-		$stmt->execute();
-		
-		$this->EqualizationID = $pdo->lastInsertId();
-		
-		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $this->EqualizationID;
-		$daObj->TableName = "ACC_equalizations";
-		$daObj->execute();
-		
-		return true;
-	}
+	public $FileExtension;
 }
 
 if(!empty($_REQUEST["task"]))
@@ -60,14 +37,17 @@ function selectEqualizations(){
 function showFile(){
 	
 	$obj = new ACC_equalizations($_REQUEST["EqualizationID"]);
-	header('Content-disposition: filename=file.xls');
+	header('Content-disposition: filename=file');
 	header('Content-type: jpg');
 	header('Pragma: no-cache');
 	header('Expires: 0');
 	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
 	header('Pragma: public');
 	header("Content-Transfer-Encoding: binary");
-	echo $obj->ImportFile;
+	
+	echo file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/Equalization/" . 
+		$obj->EqualizationID . "." . $obj->FileExtension);
+	
 	die();
 }
 
@@ -76,12 +56,14 @@ function Equalization_UpdateChecks(){
 	$BankID = $_POST["BankID"];
 	$result = "";
 	
-	require_once("phpExcelReader.php");
-	
-	$data = new Spreadsheet_Excel_Reader();
-    $data->setOutputEncoding('utf-8');
-    $data->setRowColOffset(0);
-	$data->read($_FILES["attach"]["tmp_name"]);
+	$st = preg_split("/\./", $_FILES["attach"]["name"]);
+	$extension = strtolower($st [count($st) - 1]);
+	if (in_array($extension, array("jpg", "jpeg", "gif", "png", "pdf", 
+		"xls", "xlsx", "csv", "doc", "docx")) === false) 
+	{
+		Response::createObjectiveResponse(false, "فرمت فایل ارسالی نامعتبر است");
+		die();
+	}
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
@@ -90,9 +72,25 @@ function Equalization_UpdateChecks(){
 	$EqualObj = new ACC_equalizations();
 	$EqualObj->RegDate = PDONOW;
 	$EqualObj->BankID = $BankID;
-	$EqualObj->ImportFile =  fread(fopen($_FILES["attach"]["tmp_name"], 'r'), $_FILES["attach"]["size"]);
+	$EqualObj->FileExtension = $extension;
 	$EqualObj->Add($pdo);	
 	
+	$fp = fopen(getenv("DOCUMENT_ROOT") . "/storage/Equalization/". $EqualObj->EqualizationID . "." . $extension, "w");
+	fwrite($fp, fread(fopen($_FILES["attach"]['tmp_name'], 'r'), $_FILES["attach"]['size']) );
+	fclose($fp);
+	
+	if($_POST["DoEqual"] == "false")
+	{
+		$pdo->commit();
+		echo Response::createObjectiveResponse(true, "");
+		die();
+	}
+	//-------------------------------------------------
+	require_once("phpExcelReader.php");
+	$data = new Spreadsheet_Excel_Reader();
+    $data->setOutputEncoding('utf-8');
+    $data->setRowColOffset(0);
+	$data->read($_FILES["attach"]["tmp_name"]);
 	//----------- insert DocHeader --------------------
 	$DocID_UM = "";
 	$DocID_PARK = "";

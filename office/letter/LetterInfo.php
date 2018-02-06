@@ -39,8 +39,10 @@ if(!empty($_REQUEST["SendID"]))
 //..............................................................................
 $imageslist = array();
 $doc = DMS_documents::SelectAll("ObjectType='letter' AND ObjectID=?", array($LetterID));
+$DocumentID = 0;
 if(count($doc) > 0)
 {
+	$DocumentID = $doc[0]["DocumentID"];
 	$images = DMS_DocFiles::selectAll("DocumentID=?", array($doc[0]["DocumentID"]));
 	foreach($images as $img)
 		$imageslist[] = array(
@@ -96,6 +98,7 @@ LetterInfo.prototype = {
 	LetterID : '<?= $LetterID ?>',
 	imagesList : <?= $imageslist ?>,
 	ReadOnly : <?= $ReadOnly ? "true" : "false" ?>,
+	DocumentID : <?= $DocumentID ?>,
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -215,8 +218,7 @@ function LetterInfo(){
 					this.loader.load({
 						params : {
 							LetterID : LetterInfoObject.LetterID,
-							ExtTabID : this.getEl().id,
-							lock : "true"
+							ExtTabID : this.getEl().id
 						}
 					});
 				}
@@ -316,12 +318,22 @@ function LetterInfo(){
 		this.tabPanel.insert(1,{
 			title : "تصاویر نامه",
 			itemId : "tab_images",
-			items : new MultiImageViewer({
+			items :this.ImageViewer = new MultiImageViewer({
 				height : 525,
 				src: this.imagesList
 			})
 		});
 		this.tabPanel.setActiveTab("tab_images");
+		this.ImageViewer.down('toolbar').add({
+			text : "چاپ",
+			iconCls : "print",
+			handler : function(){
+				me = LetterInfoObject;
+				window.open(me.address_prefix + "../dms/ShowFile.php?DocumentID=" + 
+					me.DocumentID + "&ObjectID=" + me.LetterID);
+			}
+		});
+		
 	}
 }
 

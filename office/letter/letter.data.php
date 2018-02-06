@@ -287,11 +287,43 @@ function selectOrganizations(){
 		$query .= " where OrgTitle like :q";
 		$params[":q"] = "%" . $_GET["query"] . "%";
 	}
-	$dt = PdoDataAccess::runquery_fetchMode($query, $params);
+	$dt = PdoDataAccess::runquery_fetchMode($query . dataReader::makeOrder(), $params);
 	$temp = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	echo dataReader::getJsonData($temp, $dt->rowCount(), $_GET["callback"]);
 	die();
 }
+
+function selectOrgPosts(){
+	
+	$query = "select * from OFC_organizations where OrgTitle=?";
+	$dt = PdoDataAccess::runquery($query, array($_REQUEST["OrgTitle"]));
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SaveOrganization(){
+	
+	$obj = new OFC_organizations();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if(!isset($obj->OrgID))
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteOrganization(){
+	
+	$obj = new OFC_organizations($_POST["OrgID"]);
+	$result = $obj->Remove();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
 //.............................................
 
 function SaveLetter($dieing = true) {
@@ -303,12 +335,13 @@ function SaveLetter($dieing = true) {
 	//------------ add organiation ----------------
 	if(!empty($Letter->organization))
 	{	
-		$dt = PdoDataAccess::runquery("select * from OFC_organizations where OrgTitle=?", 
-			array($Letter->organization));
+		$dt = PdoDataAccess::runquery("select * from OFC_organizations where OrgTitle=? AND OrgPost=?", 
+			array($Letter->organization, $Letter->OrgPost));
 		if(count($dt) == 0)
 		{
 			$obj = new OFC_organizations();
 			$obj->OrgTitle = $Letter->organization;
+			$obj->OrgPost = $Letter->OrgPost;
 			$obj->Add();
 		}
 	}
