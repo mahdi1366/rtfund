@@ -4196,7 +4196,7 @@ function EndWarrantyDoc($ReqObj, $pdo){
 			join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
 			left join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
 		where ItemID is null AND b.param1=1 AND 
-			paramType='currencyfield' AND ObjectType='warrenty' AND ObjectID=?",array($ReqObj->RequestID), $pdo);
+			paramType='currencyfield' AND ObjectType='warrenty' AND ObjectID=?",array($ReqObj->RefRequestID), $pdo);
 
 	foreach($dt as $row)
 	{
@@ -4402,7 +4402,7 @@ function CancelWarrantyDoc($ReqObj, $extradays, $pdo){
 			join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
 			
 		where b.param1=1 AND 
-			paramType='currencyfield' AND ObjectType='warrenty' AND ObjectID=?",array($ReqObj->RequestID), $pdo);
+			paramType='currencyfield' AND ObjectType='warrenty' AND ObjectID=?",array($ReqObj->RefRequestID), $pdo);
 	foreach($dt as $row)
 	{
 		unset($itemObj->ItemID);

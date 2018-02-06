@@ -453,7 +453,7 @@ WarrentyRequest.prototype.WarrentyDocuments = function(ObjectType){
 		params : {
 			ExtTabID : this.documentWin.getEl().id,
 			ObjectType : ObjectType,
-			ObjectID : record.data.RequestID
+			ObjectID : record.data.RefRequestID
 		}
 	});
 }
