@@ -234,6 +234,7 @@ OrgSigner.prototype.saveData = function()
 
 		success: function(form,action){
 			mask.hide();
+			OrgSignerObject.MainForm.hide();
 			OrgSignerObject.grid.getStore().load();
 		},
 		failure: function(){

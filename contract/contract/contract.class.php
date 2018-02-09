@@ -242,23 +242,34 @@ class CNT_contracts extends OperationClass {
 				if(count($dt) == 0)
 					return "";
 				$returnStr = "<table width=100% border=1 style=border-collapse:collapse>
+					<caption>صاحبین امضاء</caption>
 					<tr>
-						<td>نام و نام خانوادگی</td>
-						<td>پست</td>
-						<td>کد ملی</td>
-						<td>تلفن ثابت</td>
-						<td>تلفن همراه</td>
-						<td>پست الکترونیک</td>
+						<th>نام و نام خانوادگی</th>
+						<th>پست</th>
+						<th>نام پدر</th>
+						<th>شماره شناسنامه</th>
+						<th>محل صدور</th>
+						<th>تاریخ تولد</th>
+						<th>کد ملی</th>
+						<th>تلفن ثابت</th>
+						<th>تلفن همراه</th>
+						<th>آدرس</th>
+						<th>کد پستی</th>
 					</tr>
 				";
 				foreach($dt as $row){
 					$returnStr .= "<tr>
 						<td>" . ($row["sex"] == "MALE" ? "آقای " : "خانم ") . $row["fullname"] . "</td>
 						<td>" . $row["PostDesc"] . "</td>
+						<td>" . $row["FatherName"] . "</td>
+						<td>" . $row["ShNo"] . "</td>
+						<td>" . $row["ShPlace"] . "</td>
+						<td>" . DateModules::miladi_to_shamsi($row["BirthDate"]) . "</td>
 						<td>" . $row["NationalID"] . "</td>
-						<td>" . $row["phone"] . "</td>
+						<td>" . $row["telephone"] . "</td>
 						<td>" . $row["mobile"] . "</td>
-						<td>" . $row["email"] . "</td>
+						<td>" . $row["address"] . "</td>
+						<td>" . $row["PostalCode"] . "</td>
 					</tr>";
 				}				
 				return $returnStr . "</table>";
@@ -272,7 +283,8 @@ class CNT_contracts extends OperationClass {
 						left join DMS_DocParamValues  using(ParamID,DocumentID)
 
 						where  ObjectType='warrenty' AND ObjectID=?
-					order by d.DocType,DocumentID,ParamID",array($this->WarrentyRequestID));
+					order by d.DocType,DocumentID,ParamID",array(
+						$this->ContractType == "1" ? $this->LoanRequestID : $this->WarrentyRequestID));
 				if(count($dt) == 0)
 					return "";
 				

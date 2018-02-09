@@ -200,6 +200,7 @@ class BSC_OrgSigners extends PdoDataAccess{
 	
 	public $RowID;
     public $PersonID;
+	public $PostDesc;
 	public $fullname;
 	public $sex;
 	public $FatherName;
@@ -210,8 +211,7 @@ class BSC_OrgSigners extends PdoDataAccess{
 	public $PostalCode;
 	public $NationalID;
 	public $telephone;
-	public $mobile;
-	public $PostDesc;
+	public $mobile;	
 	public $email;
 
 	function __construct() {
