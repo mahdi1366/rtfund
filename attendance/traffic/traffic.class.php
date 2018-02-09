@@ -503,6 +503,7 @@ class ATN_requests extends OperationClass
 				sh.ToTime ShiftToTime,
 				sp.FlowID,
 				concat(if(fr.ActionType='REJECT','رد ',''),sp.StepDesc) StepDesc,
+				sp.StepID,
 				ActionType
 				
 			from ATN_requests t
@@ -516,7 +517,8 @@ class ATN_requests extends OperationClass
 			join BaseInfo bf4 on(bf4.TypeID=11 AND bf4.param4=t.ReqType)
 			join WFM_flows fl on(fl.ObjectType=bf4.InfoID)
 			join WFM_FlowSteps sp on(sp.FlowID=fl.FlowID AND sp.StepID=t.ReqStatus)
-			left join WFM_FlowRows fr on(fr.ObjectID=t.RequestID AND fr.StepRowID=sp.StepRowID AND fr.FlowID=fl.FlowID)
+			left join WFM_FlowRows fr on(fr.IsLastRow='YES' AND fr.ObjectID=t.RequestID 
+				AND fr.StepRowID=sp.StepRowID AND fr.FlowID=fl.FlowID)
 			
 			left join ATN_shifts sh using(ShiftID)
 			where 1=1 " . $where;

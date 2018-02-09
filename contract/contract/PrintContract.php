@@ -34,6 +34,8 @@ $signs = CNT_ContractSigns::Get(" AND ContractID=? order by description", array(
 			/*text-indent : 20px; */
 			text-align: justify; 
 			line-height : 2;}
+		table caption{background-color: #ccc;font-family: titr;font-size: 15px;}	
+		table th {background-color: #ddd;}
 		table { page-break-inside:auto; }
 		tr    { /*page-break-inside:avoid;*/ page-break-after:auto }
 		thead { display:table-header-group }

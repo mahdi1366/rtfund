@@ -13,43 +13,50 @@ $dg = new sadaf_datagrid("dg",$js_prefix_address .
 
 $dg->addColumn("","RowID","string", true);
 $dg->addColumn("","PersonID","string", true);
+$dg->addColumn("","address","string", true);
+$dg->addColumn("","PostalCode","string", true);
+$dg->addColumn("","ShNo","string", true);
+$dg->addColumn("","ShPlace","string", true);
+$dg->addColumn("","email","string", true);
+$dg->addColumn("","sex","string", true);
+$dg->addColumn("","NationalID","string", true);
 
 $col = $dg->addColumn("سمت","PostDesc","string");
-$col->editor = ColumnEditor::TextField();
-$col->width = 100;
+$col->width = 70;
 
 $col = $dg->addColumn("نام و نام خانوادگی ","fullname","string");
-$col->editor = ColumnEditor::TextField();
 
-$col = $dg->addColumn("جنسیت", "sex", "string");
-$col->editor = ColumnEditor::ComboBox(array(array("id"=>"MALE", "title"=>'مرد'),
-		array("id"=>'FEMALE', "title"=>'زن')), "id", "title");
-$col->width = 50;
-$col->align = "center";
+$col = $dg->addColumn("نام پدر","FatherName","string");
+$col->width = 60;
 
-$col = $dg->addColumn("کد ملی","NationalID","string");
-$col->editor = ColumnEditor::NumberField();
-$col->width = 100;
+$col = $dg->addColumn("تاریخ تولد","BirthDate",  GridColumn::ColumnType_date);
+$col->width = 80;
 
 $col = $dg->addColumn("تلفن","telephone","string");
-$col->editor = ColumnEditor::NumberField();
-$col->width = 100;
+$col->width = 90;
 
 $col = $dg->addColumn("موبایل","mobile","string");
-$col->editor = ColumnEditor::NumberField();
-$col->width = 100;
+$col->width = 90;
 
-$col = $dg->addColumn("ایمیل","email","string");
-$col->editor = ColumnEditor::TextField(true);
-$col->width = 100;
+$dg->addPlugin("{
+            ptype: 'rowexpander',
+            rowBodyTpl : [
+				'<p><b>شماره شناسنامه : </b> {ShNo}&nbsp;&nbsp;&nbsp;&nbsp;',
+				'<b>کد ملی : </b>{NationalID}&nbsp;&nbsp;&nbsp;&nbsp;<b>صادره از : </b>{ShPlace}</p>',
+				'<p><b>آدرس : </b> {address}&nbsp;&nbsp;&nbsp;&nbsp;<b>کد پستی : </b>{PostalCode}</p>',
+				'<p><b>ایمیل : </b> {email}</p>',
+            ]
+        }");
+
+$col = $dg->addColumn("ویرایش","","");
+$col->renderer = "OrgSigner.editRender";
+$col->sortable = false;
+$col->width = 40;
 
 $col = $dg->addColumn("حذف","","");
 $col->renderer = "OrgSigner.deleteRender";
 $col->sortable = false;
 $col->width = 40;
-
-$dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(v,p,r){return OrgSignerObject.saveData(v,p,r);}";
 
 $dg->addButton = true;
 $dg->addHandler = "function(){OrgSignerObject.Adding();}";
@@ -58,6 +65,7 @@ $dg->height = 350;
 $dg->width = 730;
 $dg->DefaultSortField = "RowID";
 $dg->autoExpandColumn = "fullname";
+$dg->emptyTextOfHiddenColumns = true;
 $dg->editorGrid = true;
 $dg->title = "صاحبان امضاء";
 $dg->EnablePaging = false;
@@ -87,53 +95,150 @@ OrgSigner.deleteRender = function(v,p,r)
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
+OrgSigner.editRender = function(v,p,r)
+{
+	return "<div align='center' title='ویرایش' class='edit' onclick='OrgSignerObject.Editing();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
 function OrgSigner()
 {
 	this.grid = <?= $grid?>;
 	this.grid.render(this.get("div_grid"));
+	
+	this.MainForm = new Ext.form.Panel({
+		renderTo : this.get("mainForm"),
+		frame : true,
+		hidden : true,
+		style : "margin-bottom:20px",
+		width : 730,
+		defaults : {
+			width : 350,
+			allowBlank : false
+		},
+		layout : {
+			type : "table",
+			columns : 2
+		},
+		items : [{
+			xtype : "combo",
+			name : "sex",
+			fieldLabel : "جنسیت",
+			store : new Ext.data.SimpleStore({
+				data : [
+					["FEMALE" , "زن" ],["MALE" , "مرد" ]
+				],
+				fields : ['id','value']
+			}),
+			displayField : "value",
+			valueField : "id"
+		},{
+			xtype : "textfield",
+			name : "fullname",
+			fieldLabel : "نام و نام خانوادگی"
+		},{
+			xtype : "textfield",
+			name : "PostDesc",
+			fieldLabel : "سمت"
+		},{
+			xtype : "textfield",
+			name : "FatherName",
+			fieldLabel : "نام پدر"
+		},{
+			xtype : "numberfield",
+			name : "ShNo",
+			hideTrigger : true,
+			fieldLabel : "شماره شناسنامه"
+		},{
+			xtype : "textfield",
+			name : "ShPlace",
+			fieldLabel : "صادره از"
+		},{
+			xtype : "shdatefield",
+			name : "BirthDate",
+			fieldLabel : "تاریخ تولد"
+		},{
+			xtype : "numberfield",
+			name : "NationalID",
+			hideTrigger : true,
+			fieldLabel : "کد ملی"
+		},{
+			xtype : "numberfield",
+			name : "telephone",
+			hideTrigger : true,
+			fieldLabel : "تلفن"
+		},{
+			xtype : "numberfield",
+			name : "mobile",
+			hideTrigger : true,
+			fieldLabel : "تلفن همراه"
+		},{
+			xtype : "textfield",
+			name : "address",
+			colspan : 2,
+			width : 560,
+			fieldLabel : "آدرس"
+		},{
+			xtype : "numberfield",
+			name : "PostalCode",
+			hideTrigger : true,
+			fieldLabel : "کد پستی"
+		},{
+			xtype : "textfield",
+			name : "email",
+			fieldLabel : "پست الکترونیک"
+		},{
+			xtype : "hidden",
+			name : "RowID"
+		}],
+		buttons : [{
+			text : "ذخیره",
+			iconCls : "save",
+			handler : function(){ OrgSignerObject.saveData(); }
+		},{
+			text : "بازگشت",
+			iconCls : "undo",
+			handler : function(){ this.up('panel').hide(); }
+		}]
+	});
 }
 
 var OrgSignerObject = new OrgSigner();
 
 OrgSigner.prototype.Adding = function()
 {
-	var modelClass = this.grid.getStore().model;
-	var record = new modelClass({
-		RowID : "",
-		PersonID : this.PersonID
-	});
-
-	this.grid.plugins[0].cancelEdit();
-	this.grid.getStore().insert(0, record);
-	this.grid.plugins[0].startEdit(0, 0);
+	this.MainForm.show();
+	this.MainForm.getForm().reset();
 }
 
-OrgSigner.prototype.saveData = function(store,record)
+OrgSigner.prototype.Editing = function()
+{
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.MainForm.show();
+	this.MainForm.loadRecord(record);
+	this.MainForm.down("[name=BirthDate]").setValue(MiladiToShamsi(record.data.BirthDate));
+}
+
+OrgSigner.prototype.saveData = function()
 {
     mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 
-	Ext.Ajax.request({
-		params: {
-			task: 'SaveSigner',
-			record : Ext.encode(record.data)
-		},
-		url: this.address_prefix +'persons.data.php',
+	this.MainForm.getForm().submit({
+		url: this.address_prefix +'persons.data.php?task=SaveSigner',
 		method: 'POST',
-
-		success: function(response){
-			mask.hide();
-			var st = Ext.decode(response.responseText);
-			if(st.success)
-			{
-				OrgSignerObject.grid.getStore().load();
-			}
-			else
-			{
-				alert(st.data);
-			}
+		params : {
+			PersonID : this.PersonID
 		},
-		failure: function(){}
+
+		success: function(form,action){
+			mask.hide();
+			OrgSignerObject.grid.getStore().load();
+		},
+		failure: function(){
+			mask.hide();
+		}
 	});
 }
 
@@ -165,5 +270,6 @@ OrgSigner.prototype.Deleting = function()
 
 </script>
 <center>
+	<div id="mainForm"></div>
 	<div id="div_grid"></div>
 </center>

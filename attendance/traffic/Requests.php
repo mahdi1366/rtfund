@@ -42,6 +42,7 @@ $dg->addColumn("", "ShiftToTime", "", true);
 $dg->addColumn("", "StartTime", "", true);
 $dg->addColumn("", "EndTime", "", true);
 $dg->addColumn("", "ActionType", "", true);
+$dg->addColumn("", "StepID", "", true);
 
 if($AdminMode)
 {
@@ -477,6 +478,15 @@ TrafficRequests.prototype.OperationMenu = function(e){
 		if(this.RemoveAccess)
 			op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
 			handler : function(){ return TrafficRequestsObject.DeleteRequest(); }});
+	
+		op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
+			handler : function(){ return TrafficRequestsObject.StartFlow(); }});
+	}
+	if(record.data.StepID == "1" && record.data.ActionType == "REJECT")
+	{
+		if(this.EditAccess)
+			op_menu.add({text: 'ویرایش درخواست',iconCls: 'edit', 
+			handler : function(){ return TrafficRequestsObject.BeforeAddRequest("edit"); }});
 	
 		op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
 			handler : function(){ return TrafficRequestsObject.StartFlow(); }});

@@ -33,6 +33,7 @@ class BSC_persons extends PdoDataAccess{
 	public $DomainID;
 	public $PersonSign;
 	public $PersonPic;
+	public $PostalCode;
 	
 	public $IsCustomer;
 	public $IsShareholder;
@@ -47,6 +48,8 @@ class BSC_persons extends PdoDataAccess{
 	public $_PostID;
 			
 	function __construct($PersonID = "") {
+		
+		$this->DT_RegDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($PersonID != "")
 			PdoDataAccess::FillObject ($this, 
@@ -199,12 +202,23 @@ class BSC_OrgSigners extends PdoDataAccess{
     public $PersonID;
 	public $fullname;
 	public $sex;
+	public $FatherName;
+	public $ShNo;
+	public $BirthDate;
+	public $ShPlace;
+	public $address;
+	public $PostalCode;
 	public $NationalID;
 	public $telephone;
 	public $mobile;
 	public $PostDesc;
 	public $email;
 
+	function __construct() {
+		
+		$this->DT_BirthDate = DataMember::CreateDMA(DataMember::DT_DATE);
+	}
+	
     static function GetAll($where = "",$whereParam = array()){
 	    $query = "select * from BSC_OrgSigners ";
 	    $query .= ($where != "") ? " where " . $where : "";

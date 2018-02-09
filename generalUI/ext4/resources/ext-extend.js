@@ -4659,8 +4659,6 @@ Ext.define('Ext.ux.RowExpander', {
      * (defaults to <tt>false</tt>).
      */
     selectRowOnExpand: false,
-	
-	defaultExpand: false,
 
     rowBodyTrSelector: '.x-grid-rowbody-tr',
     rowBodyHiddenCls: 'x-grid-row-body-hidden',
@@ -4706,13 +4704,15 @@ Ext.define('Ext.ux.RowExpander', {
                 ftype: 'rowbody',
                 columnId: this.getHeaderId(),
                 recordsExpanded: this.recordsExpanded,
-                rowBodyHiddenCls: this.defaultExpand ? "" : this.rowBodyHiddenCls,
-                rowCollapsedCls: this.defaultExpand ? "" : this.rowCollapsedCls,
+                rowBodyHiddenCls: this.rowBodyHiddenCls,
+                rowCollapsedCls: this.rowCollapsedCls,
                 getAdditionalData: this.getRowBodyFeatureData,
                 getRowBodyContents: function(data) {
                     return rowBodyTpl.applyTemplate(data);
                 }
-            },{ftype: 'rowwrap'}];
+            },{
+                ftype: 'rowwrap'
+            }];
 
         if (grid.features) {
             grid.features = features.concat(grid.features);
@@ -4844,7 +4844,9 @@ Ext.define('Ext.ux.RowExpander', {
         };
     }
 });
-
+//***********************************************************
+//**************** FormSerializer  **************************
+//***********************************************************
 /*    @Author    Henry Paradiz    henry.paradiz at gmail dot com *    
  *    Ext.FormSerializer
  *

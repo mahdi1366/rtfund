@@ -48,10 +48,24 @@ ManageContracts.prototype.OperationMenu = function (e)
 			op_menu.add({text: ' حذف', iconCls: 'remove',
 			handler: function () {	ManageContractsObj.RemoveContract(record.data.ContractID);	}});				
 	}	
+	if(record.data.StepID == "1" && record.data.ActionType == "REJECT")
+	{
+		op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
+		handler : function(){ return ManageContractsObj.StartFlow(); }});
+		
+		if(this.EditAccess)
+			op_menu.add({text: ' ویرایش', iconCls: 'edit',
+			handler: function () {ManageContractsObj.Edit(record.data.ContractID, record.data.TemplateID); }});
+	}
 	
 	op_menu.add({text: ' چاپ', iconCls: 'print',
 		handler: function () {
 			window.open(ManageContractsObj.address_prefix + 'PrintContract.php?ContractID=' + record.data.ContractID);
+		}});
+	
+	op_menu.add({text: ' اطلاعات قرارداد', iconCls: 'info2',
+		handler: function () {
+			ManageContractsObj.ShowInfo(record.data.ContractID, record.data.TemplateID);
 		}});
 
 	op_menu.add({text: 'پیوست های قرارداد', iconCls: 'attach',
@@ -245,4 +259,41 @@ ManageContracts.prototype.ShowHistory = function(){
 	});
 }
 
+ManageContracts.prototype.ShowInfo = function(){
+
+	if(!this.InfoWin)
+	{
+		this.InfoWin = new Ext.window.Window({
+			title: "مشخصات قرارداد",
+			modal : true,
+			autoScroll : true,
+			width: 830,
+			height : 560,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + 'NewContract.php',
+				scripts : true
+			},
+			buttons : [{
+					text : "بازگشت",
+					iconCls : "undo",
+					handler : function(){
+						this.up('window').hide();
+					}
+				}]
+		});
+		Ext.getCmp(this.TabID).add(this.InfoWin);
+	}
+	record = this.grid.getSelectionModel().getLastSelected();
+	this.InfoWin.show();
+	this.InfoWin.center();
+	this.InfoWin.loader.load({
+		params : {
+			ExtTabID : this.InfoWin.getEl().id,
+			ContractID : record.data.ContractID ,
+			TemplateID : record.data.TemplateID,
+			readOnly : true
+		}
+	});
+}
 </script>

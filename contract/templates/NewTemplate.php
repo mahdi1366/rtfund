@@ -142,6 +142,46 @@ NewTemplate.prototype.LoadTemplate = function(){
 
 NewTemplate.prototype.BuildForms = function(){
 	
+	this.tree = new Ext.tree.Panel({
+		frame: true,
+		width: 300,
+		height: 450,
+		store : new Ext.data.TreeStore({
+			root : {
+				id : "source",
+				text : "آیتمها",
+				expanded: true
+			},
+			proxy: {
+				type: 'ajax',
+				url: this.address_prefix + "templates.data.php?task=GetItemTreeNodes&TemplateID=" + this.TemplateID
+			}
+		}),
+		tbar : [{
+			xtype : "button",
+			border : true,
+			text : "بارگذاری مجدد",
+			iconCls : "refresh",
+			handler : function(){ NewTemplateObj.tree.getStore().load()}
+		},{
+			xtype : "button",
+			border : true,
+			text : "مدیریت آیتم ها",
+			iconCls : "list",
+			handler : function(){NewTemplateObj.ManageItems();}
+		}],
+        listeners : {
+			itemclick : function(v,record){
+				if(record.raw.TemplateItemID == "0")
+					return;
+				CKEDITOR.instances.TemplateEditor.insertText(' ' + 
+							NewTemplateObj.TplItemSeperator + 
+							record.raw.TemplateItemID + '--' + 
+							record.raw.ItemName + NewTemplateObj.TplItemSeperator + ' ');
+			}
+		}
+	});
+	
 	this.formPanel = new Ext.form.Panel({
 		renderTo: this.get('NewTemplateDIV'),
 		width: 960,
@@ -153,60 +193,17 @@ NewTemplate.prototype.BuildForms = function(){
 		},
 		layout: {
 			type: 'table',
-			columns: 3
+			columns: 2
 		},
 		items: [{
 				xtype: 'textfield',
 				fieldLabel: 'عنوان الگو',
 				width: 450,
+				colspan : 2,
 				name : "TemplateTitle",
 				itemId: 'TemplateTitle'
-			}, {
-				xtype: 'combo',
-				fieldLabel: 'اضافه آیتم',
-				store: new Ext.data.Store({
-					proxy: {
-						type: 'jsonp',
-						url: this.address_prefix + 'templates.data.php?task=selectTemplateItems'+
-							'&TemplateID=' + this.TemplateID,
-						reader: {root: 'rows', totalProperty: 'totalCount'}
-					},
-					fields: ['TemplateItemID', "TemplateID", 'ItemName', 'ItemType'],
-					pageSize : 10
-				}),
-				displayField: 'ItemName',
-				pageSize : 10,
-				valueField: "TemplateItemID",
-				itemId : "TemplateItemID",
-				width: 400,
-				tpl : new Ext.XTemplate(
-					'<tpl for=".">',
-						'<tpl if="TemplateID == 0">',
-							'<div class="x-boundlist-item" style="background-color:#fcfcb6">{ItemName}</div>',
-						'<tpl else>',
-							'<div class="x-boundlist-item">{ItemName}</div>',
-						'</tpl>',						
-					'</tpl>'
-				),
-				listeners: {
-					select: function (combo, records) {
-						this.collapse();
-						CKEDITOR.instances.TemplateEditor.insertText(' ' + 
-							NewTemplateObj.TplItemSeperator + 
-							records[0].data.TemplateItemID + '--' + 
-							records[0].data.ItemName + NewTemplateObj.TplItemSeperator + ' ');
-
-					}
-				}
-			},{
-				xtype : "button",
-				border : true,
-				text : "مدیریت آیتم ها",
-				iconCls : "list",
-				handler : function(){NewTemplateObj.ManageItems();}
-			},{
+			},this.tree,{
 				xtype : "container",
-				colspan : 3,
 				html : "<div id=TemplateEditor></div>"
 			},{
 				xtype: 'hidden',

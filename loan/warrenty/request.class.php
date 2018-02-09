@@ -135,4 +135,31 @@ class WAR_costs extends OperationClass
 		return PdoDataAccess::runquery_fetchMode($query, $whereParams);
 	}
 }
+
+class WAR_guarantors extends OperationClass{
+	
+	const TableName = "WAR_guarantors";
+	const TableKey = "GuarantorID";
+	
+	public $GuarantorID;
+	public $RequestID;
+	public $sex;
+	public $fullname;
+	public $NationalCode;
+	public $father;
+	public $ShNo;
+	public $ShCity;
+	public $BirthDate;
+	public $address;
+	public $phone;
+	public $mobile;
+	public $PersonType;
+	
+	function __construct($id = '') {
+		
+		$this->DT_BirthDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
+		parent::__construct($id);
+	}
+}
 ?>

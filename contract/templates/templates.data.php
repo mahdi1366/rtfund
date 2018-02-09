@@ -34,6 +34,57 @@ function SelectTemplates() {
     die();
 }
 
+function GetItemTreeNodes(){
+	$where = "";
+	$params = array();
+	if(!empty($_REQUEST["TemplateID"]))
+	{
+		$where .= " AND TemplateID in(0,:t)";
+		$params[":t"] = $_REQUEST["TemplateID"];
+	}
+	$temp = CNT_TemplateItems::Get($where . " order by TemplateGroup", $params);
+	//.....................................................
+	$returnArray = Array();
+	$refArray = array();
+	foreach($temp as $row)
+	{
+		if(!isset($refArray[ $row["TemplateGroup"] ]))
+		{
+			switch($row["TemplateGroup"])
+			{
+				case "person": $groupText = "طرف قرارداد";break;
+				case "person2": $groupText = "طرف دوم قرارداد";break;
+				case "loan": $groupText = "تسهیلات";break;
+				case "warrenty": $groupText = "ضمانت نامه";break;
+				case "contract": $groupText = "قرارداد";break;
+				case "template": $groupText = "آیتم های الگوی قرارداد";break;
+				default : $groupText = "";
+			}
+			$returnArray[] = array(
+				"text" => $groupText,
+				"id" => $row["TemplateGroup"],
+				"TemplateItemID" => "0",
+				"ItemName" => "",
+				"leaf" => "false",
+				"children" => array()
+			);
+			$refArray[ $row["TemplateGroup"] ] = &$returnArray[ count($returnArray)-1 ];
+		}
+		
+		$refArray[ $row["TemplateGroup"] ]["children"][] = array(
+				"text" => $row["ItemName"],
+				"id" => $row["TemplateItemID"],
+				"TemplateItemID" => $row["TemplateItemID"],
+				"ItemName" => $row["ItemName"],
+				"leaf" => "true"
+		);
+	}
+	
+	$str = json_encode($returnArray);
+    echo $str;
+    die();
+}
+
 function selectTemplateItems() {
 	
 	$where = "";

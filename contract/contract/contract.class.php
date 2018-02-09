@@ -60,7 +60,9 @@ class CNT_contracts extends OperationClass {
 				c.StartDate,
 				c.EndDate,
 				c.StatusID,
-				sp.StepDesc," .
+				sp.StepID,
+				concat(if(fr.ActionType='REJECT','رد ',''),sp.StepDesc) StepDesc,
+				fr.ActionType," .
 				($content ? "c.content," : "") .
 				"c.ContractType,
 				c.LoanRequestID,
@@ -68,12 +70,14 @@ class CNT_contracts extends OperationClass {
 				c.ContractAmount,
 				t.TemplateTitle,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) PersonFullname
-			
-			from CNT_contracts c 
+			  
+			from CNT_contracts c  
 			join CNT_templates t using(TemplateID) 
 			join WFM_FlowSteps sp on(sp.FlowID=" . FLOWID_CONTRACT . " AND sp.StepID=c.StatusID)
 			left join BSC_persons p1 on(c.PersonID=p1.PersonID)
-			
+			left join WFM_FlowRows fr on(fr.IsLastRow='YES' AND fr.ObjectID=c.ContractID 
+				AND fr.StepRowID=sp.StepRowID AND fr.FlowID=sp.FlowID)
+				
 			where 1=1 " . $where . " group by ContractID " . $order, $whereParams);
     }
 
@@ -98,6 +102,10 @@ class CNT_contracts extends OperationClass {
 				p1.mobile,
 				p1.WebSite,
 				p1.email,
+				p1.PostalCode,
+				p1.RegNo,
+				p1.RegDate,
+				p1.EconomicID,
 				bfp1.InfoDesc CompanyTypeDesc,
 				
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) PersonFullname2,
@@ -126,7 +134,7 @@ class CNT_contracts extends OperationClass {
 			from CNT_contracts c 
 			left join LON_requests r on(LoanRequestID=RequestID)
 			left join LON_ReqParts rp on(rp.IsHistory='NO' AND rp.RequestID=r.RequestID)
-			left join WAR_requests wr on(c.RequestID=wr.RequestID)
+			left join WAR_requests wr on(c.WarrentyRequestID=wr.RequestID)
 			
 			left join BSC_persons p1 on(c.PersonID=p1.PersonID)
 			left join BaseInfo bfp1 on(bfp1.TypeID=14 AND p1.CompanyType=bfp1.InfoID)
@@ -150,6 +158,18 @@ class CNT_contracts extends OperationClass {
 				$ContractRecord["LastInstallmentAmount"] = $dt[count($dt)-1]["InstallmentAmount"];
 				unset($dt);
 			}
+		}
+		//---------------------- Warrenty Info --------------------------
+		if($this->WarrentyRequestID > 0)
+		{
+			require_once getenv("DOCUMENT_ROOT") . '/loan/warrenty/request.class.php';
+			$warObj = new WAR_requests($this->WarrentyRequestID);
+			$days = DateModules::GDateMinusGDate($warObj->EndDate,$warObj->StartDate);
+			$days -= 1;
+			$TotalWage = round($days*$warObj->amount*(1-$warObj->SavePercent/100)*$warObj->wage/36500);	
+			
+			$ContractRecord["WAR_WageAmount"] = $TotalWage;
+			$ContractRecord["WAR_SepordeAmount"] = $warObj->amount*$warObj->SavePercent/100;
 		}
 		//------------------------------------------------------------------
 		$temp = CNT_TemplateItems::Get(" AND TemplateID in(0,?)", array($this->TemplateID));
@@ -195,8 +215,11 @@ class CNT_contracts extends OperationClass {
 						$st .= DateModules::miladi_to_shamsi($tempValue);
 						break;
 					case 'currencyfield':
-						$st .= number_format($tempValue) . " ( به حروف " . 
-							CurrencyModulesclass::CurrencyToString($tempValue) . " ) ";
+						$st .= number_format($tempValue) . " ( " . 
+							CurrencyModulesclass::CurrencyToString($tempValue) . " ) ریال";
+						break;
+					case "charCurrencyfield":
+						$st .= CurrencyModulesclass::CurrencyToString($tempValue);
 						break;
 					default : 
 						$st .= nl2br($tempValue);
@@ -240,16 +263,77 @@ class CNT_contracts extends OperationClass {
 				}				
 				return $returnStr . "</table>";
 			//..................................................................
-			case "guarantors":
+			case "documents":
+				$dt = PdoDataAccess::runquery("
+					SELECT d.DocType,d.DocumentID,ParamType,ParamDesc,ParamValue,b.InfoDesc
+						FROM DMS_documents d
+						join BaseInfo b on(InfoID=DocType AND TypeID=8 AND param1=1)
+						join DMS_DocParams using(DocType)
+						left join DMS_DocParamValues  using(ParamID,DocumentID)
+
+						where  ObjectType='warrenty' AND ObjectID=?
+					order by d.DocType,DocumentID,ParamID",array($this->WarrentyRequestID));
+				if(count($dt) == 0)
+					return "";
 				
-				$dt = PdoDataAccess::runquery("select * from LON_guarantors "
+				$returnStr = "";
+				$currentDocType = 0;
+				$currenctDocumentID = 0;
+				for($i=0; $i<count($dt); $i++)
+				{
+					if($dt[$i]["DocType"] != $currentDocType)
+					{
+						$currenctDocumentID = $dt[$i]["DocumentID"];
+						$currentDocType = $dt[$i]["DocType"];
+						$returnStr .= "<table width=100% border=1 style=border-collapse:collapse>
+							<caption>" . $dt[$i]["InfoDesc"] . "</caption><tr>";
+						for($j=$i; $j<count($dt); $j++)
+						{
+							if($dt[$j]["DocumentID"] == $currenctDocumentID)
+								$returnStr .= "<th>" . $dt[$j]["ParamDesc"] . "</th>";
+						}
+						$returnStr .= "</tr>";			
+						$currenctDocumentID = 0;
+					}
+					
+					if($dt[$i]["DocumentID"] != $currenctDocumentID)
+						$returnStr .= "<tr>";
+					//..............................................
+					$value = $dt[$i]["ParamValue"];
+					switch($dt[$i]["ParamType"])
+					{
+						case "currencyfield" : $value = number_format($value); break;
+						case "shdatefield" : $value = DateModules::miladi_to_shamsi($value); break;
+						case "textarea" : $value = hebrevc($value); break;
+					}
+					$returnStr .= "<td>" . $value . "</td>";
+					//..............................................
+					$currenctDocumentID = $dt[$i]["DocumentID"];	
+					if($i+1 >= count($dt) || $dt[$i+1]["DocumentID"] != $currenctDocumentID)
+						$returnStr .= "</tr>";
+					if($i+1 >= count($dt) || $dt[$i+1]["DocType"] != $currentDocType)
+						$returnStr .= "</table><br>";
+				}
+				return $returnStr;
+			//..................................................................
+			case "guarantors":
+				if($this->ContractType == "1")
+					$dt = PdoDataAccess::runquery("select * from LON_guarantors "
 					. "where RequestID=? AND PersonType='GUARANTOR'", array($this->LoanRequestID));
-				break;				
+				else
+					$dt = PdoDataAccess::runquery("select * from WAR_guarantors "
+					. "where RequestID=? AND PersonType='GUARANTOR'", array($this->WarrentyRequestID));
+				break;		
+			//..................................................................
 			case "sponsors":
-							
-				$dt = PdoDataAccess::runquery("select * from LON_guarantors "
+				if($this->ContractType == "1")
+					$dt = PdoDataAccess::runquery("select * from LON_guarantors "
 					. "where RequestID=? AND PersonType='SPONSOR'", array($this->LoanRequestID));
+				else
+					$dt = PdoDataAccess::runquery("select * from WAR_guarantors "
+					. "where RequestID=? AND PersonType='SPONSOR'", array($this->WarrentyRequestID));
 				break;
+			//..................................................................
 		}
 		
 		if(count($dt) == 0)

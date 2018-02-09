@@ -55,6 +55,11 @@ function PersonInfo()
 				
 				if(record.data.IsReal == "YES")
 					PersonInfoObject.tabPanel.down("[itemId=tab_signers]").destroy();
+				else
+				{
+					PersonInfoObject.tabPanel.down("[name=RegDate]").setValue(
+					MiladiToShamsi(record.data.RegDate) );
+				}
 				
 				mask.hide();    
 			}
@@ -211,7 +216,12 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			xtype : "textarea",
 			fieldLabel: 'آدرس',
 			name: 'address',
-			rowspan : 3
+			rowspan : 4
+		},{
+			xtype : "numberfield",
+			name : "PostalCode",
+			fieldLabel : "کد پستی",
+			hideTrigger : true
 		},{
 			xtype : "textfield",
 			fieldLabel: 'وب سایت',
@@ -377,6 +387,11 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			hideTrigger : true
 		},{
 			xtype : "numberfield",
+			name : "PostalCode",
+			fieldLabel : "کد پستی",
+			hideTrigger : true
+		},{
+			xtype : "numberfield",
 			name : "SmsNo",
 			hideTrigger : true,
 			fieldLabel : "شماره دریافت پیامک"
@@ -409,7 +424,6 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 
 		}]
 	});
-
 }
 
 PersonInfoObject = new PersonInfo();

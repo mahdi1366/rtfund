@@ -291,7 +291,7 @@ class sadaf_datagrid
 						
 			store: " . $store . ",
 			scroll: '" . $this->scroll . "', 
-
+			
 			title:'" . $this->title . "'," .
 			"hideHeaders: " . ($this->hideHeaders ? "true," : "false,") .
 			($this->width == "" ? "autoWidth:true," : "width: " . $this->width . ",") .

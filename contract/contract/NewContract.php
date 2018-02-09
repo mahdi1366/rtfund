@@ -10,6 +10,9 @@ if (!empty($_REQUEST['ContractID']))
 	$ContractID = $_REQUEST['ContractID'];
 else
 	$ContractID = 0;
+
+$readOnly = isset($_REQUEST["readOnly"]) ? true : false;
+
 ?>
 <script type="text/javascript">
 
@@ -19,6 +22,7 @@ NewContract.prototype = {
 	TplItemSeperator: "<?= CNTconfig::TplItemSeperator ?>",
 	
 	ContractID : <?= $ContractID ?>,
+	readOnly : <?= $readOnly ? "true" : "false" ?>,
 	
 	get: function (elementID) {
 		return findChild(this.TabID, elementID);
@@ -313,7 +317,7 @@ function NewContract() {
 			title : "آیتم های قرارداد",
 			itemId: "templateItems",
 			width : 780,
-			maxHeight : 200,
+			maxHeight : 280,
 			autoScroll: true,
 			colspan : 2,
 			defaults: {
@@ -327,6 +331,12 @@ function NewContract() {
 			name : "ContractID"
 		}],
 		buttons: [{
+			text : 'بارگذاری مجدد متن از الگو',
+			iconCls : "refresh",
+			itemId : "cmp_Reload",
+			disabled : true,
+			handler : function(){ NewContractObj.ReloadTemplateContext(); }
+		},{
 			text : 'مدارک قراداد',
 			iconCls : "attach",
 			itemId : "cmp_ContractDocuments",
@@ -347,14 +357,16 @@ function NewContract() {
 		}]
 	});
 	
-	if ( CKEDITOR.env.ie && CKEDITOR.env.version < 9 )
-		CKEDITOR.tools.enableHtml5Elements( document );
+	if(!this.readOnly)
+	{
+		if ( CKEDITOR.env.ie && CKEDITOR.env.version < 9 )
+			CKEDITOR.tools.enableHtml5Elements( document );
 
-	CKEDITOR.config.width = 790;
-	CKEDITOR.config.height = 200;
-	CKEDITOR.config.autoGrow_minHeight = 200;
-	CKEDITOR.replace('ContractEditor');
-	
+		CKEDITOR.config.width = 790;
+		CKEDITOR.config.height = 200;
+		CKEDITOR.config.autoGrow_minHeight = 200;
+		CKEDITOR.replace('ContractEditor');
+	}
 	this.TplItemsStore = new Ext.data.Store({
 		fields: ['TemplateItemID',"TemplateID", 'ItemName', 'ItemType', "ComboValues"],
 		proxy: {
@@ -394,6 +406,21 @@ function NewContract() {
 		this.LoadContract();
 }
 
+NewContract.prototype.ReloadTemplateContext = function(){
+
+	Ext.Ajax.request({
+		url: this.address_prefix + '../templates/templates.data.php?task=GetTemplateContent',
+		params: {
+			TemplateID: this.MainForm.down("[itemId=TemplateID]").getValue()
+		},
+		method: 'POST',
+		success: function (response) {
+			var TplContent = response.responseText;
+			CKEDITOR.instances.ContractEditor.setData(TplContent);
+		}
+	});
+}
+
 NewContract.prototype.LoadContract = function(){
 
 	mask1 = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
@@ -412,6 +439,7 @@ NewContract.prototype.LoadContract = function(){
 				params : {TemplateID : record.data.TemplateID}
 			});
 			
+			me.MainForm.down("[itemId=cmp_Reload]").enable();
 			me.MainForm.down("[itemId=cmp_ContractDocuments]").enable();
 			
 			record.data.StartDate = MiladiToShamsi(record.data.StartDate);
@@ -419,38 +447,62 @@ NewContract.prototype.LoadContract = function(){
 			
 			me.MainForm.loadRecord(record);
 			
+			R1 = null;
 			if(record.data.LoanRequestID != null)
 			{
 				me.MainForm.getComponent("WarrentyRequestID").disable();
-				me.MainForm.getComponent("LoanRequestID").getStore().load({
+				R1 = me.MainForm.getComponent("LoanRequestID").getStore().load({
 					params :{RequestID : record.data.LoanRequestID}
 				});
 			}
+			R2 = null;
 			if(record.data.WarrentyRequestID != null)
 			{
 				me.MainForm.getComponent("WarrentyRequestID").enable();
 				me.MainForm.getComponent("LoanRequestID").disable();
-				
-				me.MainForm.getComponent("WarrentyRequestID").getStore().load({
+				R2 = me.MainForm.getComponent("WarrentyRequestID").getStore().load({
 					params :{RequestID : record.data.WarrentyRequestID}
 				});
 			}
+			
+			R3 = null;
 			if(record.data.PersonID != null)
-				me.MainForm.getComponent("PersonID").getStore().load({
+				R3 = me.MainForm.getComponent("PersonID").getStore().load({
 					params :{PersonID : record.data.PersonID}
 				});
+			
+			R4 = null;
 			if(record.data.PersonID2 != null)
-				me.MainForm.getComponent("PersonID2").getStore().load({
+				R4 = me.MainForm.getComponent("PersonID2").getStore().load({
 					params :{PersonID : record.data.PersonID2}
 				});
 			
-			me.ContractItemsStore.load({
+			R5 = me.ContractItemsStore.load({
 				params: {ContractID: record.data.ContractID},
 				callback : function(){
 					me.ShowTplItemsForm(record.data.TemplateID, true);			
 					mask1.hide();
+					
+					
+					if(me.readOnly)
+					{
+						var t = setInterval(function(){
+							if((R1 == null || !R1.isLoading()) && (R2 == null || !R2.isLoading())
+								&& (R3 == null || !R3.isLoading()) && (R4 == null || !R4.isLoading()))
+							{
+								clearInterval(t);
+								me.MainForm.getEl().readonly();
+							}
+						}, 100);
+					}
 				}
 			});	
+			
+			if(me.readOnly)
+			{
+				me.MainForm.down('toolbar').hide();
+				return;
+			}	
 			
 			CKEDITOR.instances.ContractEditor.setData(record.data.content);
 		}
@@ -634,9 +686,7 @@ NewContract.prototype.ContractDocuments = function(ObjectType){
 	});
 }
 </script>
-<br>
 <center>
     <div id="SelectTplComboDIV"></div>
     <div id="ContractEditor"></div>
 </center>
-<br>

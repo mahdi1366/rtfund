@@ -288,6 +288,9 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 	op_menu.add({text: 'چاپ ضمانت نامه',iconCls: 'print',
 			handler : function(){ return WarrentyRequestObject.Print(); }});
 	
+	op_menu.add({text: 'ضامنین/وثیقه گذاران',iconCls: 'list', 
+		handler : function(){ return WarrentyRequestObject.LoanGuarantors(); }});
+	
 	op_menu.add({text: 'هزینه ها',iconCls: 'account', 
 		handler : function(){ return WarrentyRequestObject.ShowCosts(); }});
 	
@@ -1130,4 +1133,42 @@ WarrentyRequest.prototype.ShowCheckList = function(){
 		}
 	});
 }
+
+WarrentyRequest.prototype.LoanGuarantors = function(){
+
+	if(!this.GuarantorWin)
+	{
+		this.GuarantorWin = new Ext.window.Window({
+			width : 750,
+			height : 600,
+			autoScroll : true,
+			modal : true,
+			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "guarantors.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.GuarantorWin);
+	}
+
+	this.GuarantorWin.show();
+	this.GuarantorWin.center();
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.GuarantorWin.loader.load({
+		scripts : true,
+		params : {
+			ExtTabID : this.GuarantorWin.getEl().id,
+			RequestID : record.data.RequestID
+		}
+	});
+}
+
 </script>

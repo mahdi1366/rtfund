@@ -439,4 +439,48 @@ function SavePrintSetting(){
 	fclose($fp);
 	die();
 }
+
+//------------------------------------------------
+
+function GetGuarantors(){
+	
+	$temp = WAR_guarantors::Get("AND RequestID=?", array($_REQUEST["RequestID"]));
+	$res = $temp->fetchAll();
+	echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveGuarantor(){
+	
+	$obj = new WAR_guarantors();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	if(empty($obj->GuarantorID))
+	{
+		if(!$obj->Add())
+		{print_r(ExceptionHandler::PopAllExceptions());
+			echo Response::createObjectiveResponse(false, "");
+			die();
+		}
+	}
+	else
+	{
+		if(!$obj->Edit())
+		{
+			echo Response::createObjectiveResponse(false, "");
+			die();
+		}
+	}
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function DeleteGuarantor(){
+	
+	$obj = new WAR_guarantors($_POST["GuarantorID"]);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();	
+}
+
 ?>

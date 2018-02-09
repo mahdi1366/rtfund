@@ -18,6 +18,8 @@ $dg->addColumn("", "IsStarted", "", true);
 $dg->addColumn("", "IsEnded", "", true);
 $dg->addColumn("", "RegDate", "", true);
 $dg->addColumn("", "StatusID", "", true);
+$dg->addColumn("", "StepID", "", true);
+$dg->addColumn("", "ActionType", "", true);
 
 $col = $dg->addColumn("شماره قرارداد", "ContractID");
 $col->align = "center";
@@ -64,12 +66,9 @@ $grid = $dg->makeGrid_returnObjects();
 		if(record.data.IsEnded == "YES")
 			return "greenRow";
 		
-		if(record.data.StatusID == "2")
+		if(record.data.ActionType == "REJECT")
 			return "pinkRow";
-		
-		if(record.data.StatusID == "3")
-			return "violetRow";
-		
+	
 		return "";
 	}	
     ManageContractsObj.grid.render(ManageContractsObj.get("div_dg"));

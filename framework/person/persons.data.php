@@ -127,7 +127,7 @@ function SavePerson(){
 		$result = $obj->AddPerson();
 	
 	//-----------  save Person pic ----------------
-	if(isset($_FILES['PersonPic']))
+	if(!empty($_FILES['PersonPic']['tmp_name']))
 	{
 		if($_FILES['PersonPic']['size'] > 200000)
 		{
@@ -141,7 +141,7 @@ function SavePerson(){
 			echo Response::createObjectiveResponse(false, "فقط موارد زیر برای نوع فایل مجاز می باشد: <br>" . 
 				"gif , jpg , jpeg , png");
 			die();
-		}
+		} 
 		if(!empty($_FILES['PersonPic']['tmp_name']))
 		{
 			PdoDataAccess::runquery_photo("update BSC_persons set PersonPic=:pdata where PersonID=:p", 
@@ -150,7 +150,7 @@ function SavePerson(){
 		}
 	}
 	//-----------  save Person sign ----------------
-	if(isset($_FILES['PersonSign']))
+	if(!empty($_FILES['PersonSign']['tmp_name']))
 	{
 		if($_FILES['PersonSign']['size'] > 200000)
 		{
@@ -274,7 +274,7 @@ function SelectSigners(){
 function SaveSigner(){
 	
 	$obj = new BSC_OrgSigners();
-	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
 	if(isset($_SESSION["USER"]["portal"]))
 		$obj->PersonID = $_SESSION["USER"]["PersonID"];
