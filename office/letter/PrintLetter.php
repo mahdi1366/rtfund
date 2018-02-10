@@ -94,6 +94,14 @@ if($LetterObj->OuterCopies != "")
 				background-image: none;
 			}
 		}
+		
+		.div-sarbargA5 { background-image: url('../bgA5.jpg');}
+		@media print {
+			.div-sarbargA5{
+				background-image: none;
+			}
+		}
+		
 		.header td{background-color: #cccccc; font-weight: bold;size: 12px;}
 		td { font-family: Nazanin; font-size: 12pt; line-height: 26px; padding: 3px;}
 		.signDiv {
@@ -132,7 +140,11 @@ if($LetterObj->OuterCopies != "")
 						&nbsp;&nbsp;&nbsp;
 						<input onchange="document.forms.mainForm.submit()" name="sarbarg" 
 								<?= isset($_POST["sarbarg"]) ? "checked" : "" ?>
-							type="checkbox"> چاپ روی برگه سربرگ دار			
+							type="checkbox"> چاپ روی برگه سربرگ دار			 A4
+						&nbsp;&nbsp;&nbsp;
+						<input onchange="document.forms.mainForm.submit()" name="sarbargA5" 
+								<?= isset($_POST["sarbargA5"]) ? "checked" : "" ?>
+							type="checkbox"> چاپ روی برگه سربرگ دار			 A5
 						&nbsp;&nbsp;&nbsp;
 						<input onchange="document.forms.mainForm.submit()" name="triplePart" 
 								<?= isset($_POST["triplePart"]) ? "checked" : "" ?>
@@ -160,6 +172,31 @@ if($LetterObj->OuterCopies != "")
 					<tr>
 						<td colspan="3" style="padding-right:50px;padding-left: 50px;vertical-align: top;">
 							<br><br>
+							<?= $content ?>
+							<br>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!----------------------------------------------------------------->
+			<?}else if(isset($_POST["sarbargA5"])){ ?>
+				<div class='div-sarbargA5' style="width:140mm;height:190mm;">
+				<table style="width:140mm;height:100%">
+					<thead>
+					<tr style="height:150px">
+						<td align="center">
+						</td>
+						<td align="center">
+						</td>
+						<td style="width: 85px;line-height: 21px;vertical-align: top;padding-top: 28px;">
+							<b><?= DateModules::miladi_to_shamsi($LetterObj->LetterDate) ?><br>
+							 <span dir=ltr><?= $letterYear . "-" . $LetterObj->LetterID ?></span>
+							 <br><?= OFC_letters::HasAttach($LetterObj->LetterID) ? "دارد" : "ندارد" ?></b>
+						</td>
+					</tr>
+					</thead>
+					<tr>
+						<td colspan="3" style="padding-right:15px;padding-left: 15px;vertical-align: top;">
 							<?= $content ?>
 							<br>
 						</td>
