@@ -69,7 +69,7 @@ class ATN_traffic extends OperationClass
 				left join ATN_requests r on(r.ReqType='CHANGE_SHIFT' and r.ReqStatus=".ATN_STEPID_CONFIRM." and r.FromDate=tr.FromDate
 				  and tr.PersonID=r.PersonID)
 				left join ATN_shifts s on(ifnull(r.ShiftID,ps.ShiftID)=s.ShiftID)
-				where tr.PersonID=:p AND tr.ToDate is null AND tr.ReqType not in('EXTRA' ,'CHANGE_SHIFT')
+				where tr.PersonID=:p AND tr.ReqType in('OFF' ,'CORRECT','MISSION')
 					AND tr.ReqStatus=".ATN_STEPID_CONFIRM." AND tr.FromDate>= :sd and tr.FromDate <= :ed 
 
 			)t2
