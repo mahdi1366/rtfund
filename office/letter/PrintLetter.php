@@ -130,7 +130,7 @@ if($LetterObj->OuterCopies != "")
 	</style>	
 	<body dir="rtl">
 		<center>
-			<div class="noPrint" style="width:500px;font-family: Nazanin; font-size: 12pt;">
+			<div class="noPrint" style="width:800px;font-family: Nazanin; font-size: 12pt;">
 				<form method="post" id="mainForm">
 					<fieldset>
 						<legend>تنظیمات چاپ نامه</legend>
