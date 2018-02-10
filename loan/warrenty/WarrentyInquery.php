@@ -6,11 +6,39 @@
 
 require_once getenv("DOCUMENT_ROOT") . '/framework/configurations.inc.php';
 require_once getenv("DOCUMENT_ROOT") . '/generalClasses/PDODataAccess.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/generalClasses/ReportGenerator.class.php';
 require_once getenv("DOCUMENT_ROOT") . '/definitions.inc.php';
 
 if(!empty($_POST["RequestID"]))
 {
-	$dt = PdoDataAccess::runquery("select * from WAR_requests where RequestID");
+	$dt = PdoDataAccess::runquery("select w.*,NationalID from WAR_requests w join BSC_persons using(PersonID) where RefRequestID=?",
+			array((int)$_POST["RequestID"]));
+	if(count($dt) == 0)
+	{
+		echo "ضمانت نامه ایی با این شماره در سیستم صندوق ثبت نشده است";
+		die();
+	}
+	
+	if($dt[0]["NationalID"] != $_POST["NationalID"])
+	{
+		echo $dt[0]["NationalID"] . "<br>";
+		echo "کدملی / شناسه ملی وارد شده مطابق به ضمانت نامه موجود نمی باشد";
+		die();
+	}
+	ReportGenerator::BeginReport();
+	
+	$rpt = new ReportGenerator();
+	$rpt->mysql_resource = $dt;
+	
+	$rpt->addColumn("شماره ضمانت نامه", "RefRequestID");
+	$rpt->addColumn("مبلغ ضمانت نامه", "amount", "ReportMoneyRender");
+	$rpt->addColumn("تاریخ شروع", "StartDate", "ReportDateRender");
+	$rpt->addColumn("تاریخ پایان", "StartDate", "ReportDateRender");
+
+	echo $rpt->generateReport();
+	
+	require_once 'PrintWarrenty.php';
+	
 	die();
 }
 ?>
@@ -51,7 +79,7 @@ if(!empty($_POST["RequestID"]))
 			background-image : url('icons/bg.jpg');
 		}
 		.mainPanel { 
-			background-color: #DDF2D0;
+			background-color: #EDFFFF;
 			border-radius: 20px;
 			height: 350px;
 			left: 50%;
