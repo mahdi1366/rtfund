@@ -297,7 +297,7 @@ class ReportGenerator {
 		echo "<table id='page_" . $this->pageCount . "' width='$this->width' 
 				style='font-family:".$this->fontFamily.";border-collapse: collapse'  border='$this->border'
 				cellspacing='$this->cellspace' cellpadding='$this->cellpad'>";
-		echo "<caption>";
+		echo "<caption style='background-color: #2D72AD;color: white;'>";
 		if($reportTitle)
 		{
 			
@@ -308,8 +308,7 @@ class ReportGenerator {
 				echo $this->headerContent;
 			}
 			else if ($this->header != "") {
-				echo "<center><span style='font-family:titr,b titr;'><b>" . $this->header . "</b></span><center>";
-				echo "<P></P>";
+				echo "<center><span style='font-family:titr,b titr;'>" . $this->header . "</span><center>";
 				$this->pageRecordCounter++;
 			}
 			

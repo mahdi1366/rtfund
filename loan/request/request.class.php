@@ -955,7 +955,7 @@ class LON_requests extends PdoDataAccess{
 		foreach($dt as $row)
 			$TotalShouldPay -= $row["PayAmount"]*1;
 
-		//-------- add forfeits ----------------
+		//-------- add costs ----------------
 		$dt = LON_costs::Get(" AND RequestID=?", array($RequestID));
 		$dt = $dt->fetchAll();
 		foreach($dt as $row)
@@ -965,7 +965,7 @@ class LON_requests extends PdoDataAccess{
 		foreach($computeArr as $row)
 			$TotalShouldPay += $row["CurForfeitAmount"]*1;
 		
-		return $TotalShouldPay;
+		return $TotalShouldPay<0 ? 0 : $TotalShouldPay;
 	}
 	
         /**

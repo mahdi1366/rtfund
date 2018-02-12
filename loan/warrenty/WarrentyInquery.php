@@ -9,37 +9,73 @@ require_once getenv("DOCUMENT_ROOT") . '/generalClasses/PDODataAccess.class.php'
 require_once getenv("DOCUMENT_ROOT") . '/generalClasses/ReportGenerator.class.php';
 require_once getenv("DOCUMENT_ROOT") . '/definitions.inc.php';
 
-if(!empty($_POST["RequestID"]))
-{
+function ShowInfo(&$errorMsg){
+	
+	//-------------------- captcha check ----------------
+	
+	require_once getenv("DOCUMENT_ROOT") . '/generalClasses/recaptchalib.php';
+	// your secret key
+	$secret = "6LcDx0UUAAAAANzj3XJRTQVt0Y2jioK9X80fiV3J";
+	// empty response
+	$response = null;
+	// check secret key
+	$reCaptcha = new ReCaptcha($secret);
+	// if submitted check response
+	if ($_POST["g-recaptcha-response"]) {
+		$response = $reCaptcha->verifyResponse(
+			$_SERVER["REMOTE_ADDR"],
+			$_POST["g-recaptcha-response"]
+		);
+	}
+	if ($response == null || !$response->success)
+	{
+		$errorMsg = "اهراز هویت شما تایید نگردید";
+		return false;
+	}
+	//------------------------------------------------------
+	
 	$dt = PdoDataAccess::runquery("select w.*,NationalID from WAR_requests w join BSC_persons using(PersonID) where RefRequestID=?",
 			array((int)$_POST["RequestID"]));
 	if(count($dt) == 0)
 	{
-		echo "ضمانت نامه ایی با این شماره در سیستم صندوق ثبت نشده است";
-		die();
+		$errorMsg =  "ضمانت نامه ایی با این شماره در سیستم صندوق ثبت نشده است";
+		return false;
 	}
 	
 	if($dt[0]["NationalID"] != $_POST["NationalID"])
 	{
-		echo $dt[0]["NationalID"] . "<br>";
-		echo "کدملی / شناسه ملی وارد شده مطابق به ضمانت نامه موجود نمی باشد";
-		die();
+		$errorMsg = "کدملی / شناسه ملی وارد شده مطابق با ضمانت نامه موجود نمی باشد";
+		return false;
 	}
-	ReportGenerator::BeginReport();
 	
+	//---------------------------------------------------------
+	ReportGenerator::BeginReport();
 	$rpt = new ReportGenerator();
 	$rpt->mysql_resource = $dt;
+	
+	$rpt->header = "سابقه تمدید ضمانت نامه";
+	$rpt->width = 800;
 	
 	$rpt->addColumn("شماره ضمانت نامه", "RefRequestID");
 	$rpt->addColumn("مبلغ ضمانت نامه", "amount", "ReportMoneyRender");
 	$rpt->addColumn("تاریخ شروع", "StartDate", "ReportDateRender");
 	$rpt->addColumn("تاریخ پایان", "StartDate", "ReportDateRender");
 
+	echo "<center>";
 	echo $rpt->generateReport();
+	echo "</center>";
 	
 	require_once 'PrintWarrenty.php';
 	
-	die();
+	return true;
+}
+
+$errorMsg = "";
+if(!empty($_POST["RequestID"]))
+{
+	$result = ShowInfo($errorMsg);
+	if($result)
+		die();
 }
 ?>
 <html>
@@ -79,9 +115,9 @@ if(!empty($_POST["RequestID"]))
 			background-image : url('icons/bg.jpg');
 		}
 		.mainPanel { 
-			background-color: #EDFFFF;
+			background-color: #EBFDFF;
 			border-radius: 20px;
-			height: 350px;
+			height: 400px;
 			left: 50%;
 			margin: -230px 0 0 -230px;
 			padding: 20px;
@@ -91,7 +127,7 @@ if(!empty($_POST["RequestID"]))
 			box-shadow: 10px 10px 5px #aaaaaa;
 		}
 		.title {font-family: titr; font-size: 18px; color: #0F5163; font-weight: normal;
-			   text-align: center; line-height: 30px; padding-bottom: 30px;}
+			   text-align: center; line-height: 30px; padding-bottom: 20px;}
 		input { 
 			width: 100%; 
 			margin-bottom: 10px; 
@@ -115,18 +151,24 @@ if(!empty($_POST["RequestID"]))
 		
 		input:focus { box-shadow: inset 0 -5px 45px rgba(100,100,100,0.4), 0 1px 1px rgba(255,255,255,0.2); }
     </style>
+	
+	<script src='https://www.google.com/recaptcha/api.js'></script>
+	
   </head>
 
   <body dir="rtl">
     <div class="mainPanel">
 		<div class="title" >	استعلام ضمانت نامه <br><?= SoftwareName ?>
 		<br></div>
+		<center><font style="color:red; font-weight: bold"><?= $errorMsg ?></font></center>
 		<form method="post" id="MainForm">
 			شماره ضمانت نامه :
-			<input type="text" name="RequestID" id="RequestID"  required="required"  />
+			<input type="text" name="RequestID" id="RequestID" value="<?= isset($_POST["RequestID"]) ? $_POST["RequestID"] : "" ?>" required="required"  />
 			شناسه ملی / کد ملی ذینفع :
-			<input type="text" name="NationalID" id="NationalID"  required="required" />
-			اعداد تصویر زیر را وارد کنید :
+			<input type="text" name="NationalID" id="NationalID" value="<?= isset($_POST["NationalID"]) ? $_POST["NationalID"] : "" ?>" required="required" />
+			
+			<center><div class="g-recaptcha" data-sitekey="6LcDx0UUAAAAAGUHlh3jS9xpp1eHhV7G3t6nCxBV" style="margin-bottom: 10px"></div></center>
+			
 			<button type="submit" class="btn btn-primary btn-block btn-large ">استعلام</button>
 		</form>
 	</div>
