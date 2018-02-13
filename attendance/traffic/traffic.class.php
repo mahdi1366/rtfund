@@ -80,6 +80,7 @@ class ATN_traffic extends OperationClass
 		{
 			//echo PdoDataAccess::GetLatestQueryString();die();
 		}
+		ini_set("display_errors", "On");
 		//............ Reset wrong hourly off and mission requests .............
 		$currentDate = $dt[0]["TrafficDate"];
 		$index = 0;
@@ -97,12 +98,30 @@ class ATN_traffic extends OperationClass
 			if($dt[$i]["ReqType"] == "OFF" || $dt[$i]["ReqType"] == "MISSION")
 			{
 				if($index == 1 && $i+1 < count($dt) && $dt[$i+1]["TrafficDate"] == $currentDate && 
-						$dt[$i]["TrafficTime"] < $dt[$i+1]["TrafficTime"])
+						$dt[$i]["TrafficTime"] < $dt[$i+1]["TrafficTime"] && $dt[$i]["EndTime"] > $dt[$i+1]["TrafficTime"])
 				{
 					$dt[$i]["TrafficTime"] = $dt[$i+1]["TrafficTime"];
 					$temp = $dt[$i+1];
 					$dt[$i+1] = $dt[$i];
 					$dt[$i] = $temp;
+				}
+				
+				if($index == 1 && $i+1 < count($dt) && $dt[$i+1]["TrafficDate"] == $currentDate && 
+						$dt[$i]["TrafficTime"] < $dt[$i+1]["TrafficTime"] && $dt[$i]["EndTime"] < $dt[$i+1]["TrafficTime"])
+				{
+					$EndTime = $dt[$i]["EndTime"];
+					array_splice($dt, $i, 0,
+							array(array("ReqType" => '' , 
+								"EndTime" => '',
+								"ToTime" => $dt[$i]["ToTime"],
+								"TrafficDate" => $currentDate,
+								"TrafficTime" => $dt[$i]["TrafficTime"])));
+					array_splice($dt, $i+2, 0,
+							array(array("ReqType" => '' , 
+								"EndTime" => '',
+								"ToTime" => $dt[$i]["ToTime"],
+								"TrafficDate" => $currentDate,
+								"TrafficTime" => $EndTime)));
 				}
 			} 
 			$currentDate = $dt[$i]["TrafficDate"];

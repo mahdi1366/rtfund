@@ -59,7 +59,7 @@ function ShowInfo(&$errorMsg){
 	$rpt->addColumn("شماره ضمانت نامه", "RefRequestID");
 	$rpt->addColumn("مبلغ ضمانت نامه", "amount", "ReportMoneyRender");
 	$rpt->addColumn("تاریخ شروع", "StartDate", "ReportDateRender");
-	$rpt->addColumn("تاریخ پایان", "StartDate", "ReportDateRender");
+	$rpt->addColumn("تاریخ پایان", "EndDate", "ReportDateRender");
 
 	echo "<center>";
 	echo $rpt->generateReport();
