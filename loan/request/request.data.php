@@ -29,8 +29,11 @@ switch($task)
 	case "DeletePart":
 	case "StartFlow":
 	case "GetRequestTotalRemainder":
+	case "GetDefrayAmount":
 	case "EndRequest":
 	case "ReturnEndRequest":
+	case "DefrayRequest":	
+		
 	case "GetInstallments":
 	case "ComputeInstallments":
 	case "ComputeInstallmentsShekoofa":
@@ -582,6 +585,60 @@ function ReturnEndRequest(){
 	{
 		$pdo->rollback();
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function GetDefrayAmount(){
+	
+	$RequestID = (int)$_REQUEST["RequestID"];
+	$dt = array();
+	$computeArr = LON_requests::ComputePayments($RequestID, $dt);
+	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $computeArr);
+	echo Response::createObjectiveResponse(true, $DefrayAmount);
+	die();
+}
+
+function DefrayRequest(){
+	
+	$RequestID = $_POST["RequestID"];
+	$ReqObj = new LON_requests($RequestID);
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$remain = LON_requests::GetTotalRemainAmount($RequestID);
+	if($remain > 0)
+	{		
+		$obj = new LON_costs();
+		$obj->CostDate = PDONOW;
+		$obj->RequestID = $RequestID;
+		$obj->CostDesc = "بابت تسویه حساب وام";
+		$obj->CostAmount = -1*$remain;
+		if(!$obj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد هزینه");
+			return false;
+		}
+		//............................................
+		$LoanObj = new LON_loans($ReqObj->LoanID);
+		$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
+		if(!RegisterLoanCost($obj, $CostCode_wage, null, null, $pdo))
+		{
+			$pdo->rollback();
+			echo Response::createObjectiveResponse(false, "خطا در صدور سند");
+			die();
+		}
+	}
+	$ReqObj->StatusID = 95;
+	if(!$ReqObj->EditRequest($pdo))
+	{
+		$pdo->rollback();
+		echo Response::createObjectiveResponse(false, "خطا در تغییر درخواست");
 		die();
 	}
 	
