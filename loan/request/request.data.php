@@ -687,48 +687,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	//-----------------------------------------------
 	$obj = LON_ReqParts::GetValidPartObj($RequestID);
 	//-----------------------------------------------
-	$TotalWage = round(ComputeWage($obj->PartAmount, $obj->CustomerWage/100, 
-			$obj->InstallmentCount, $obj->IntervalType, $obj->PayInterval));
-	
-	if($obj->WageReturn == "CUSTOMER")
-	{
-		$TotalWage = 0;
-		$obj->CustomerWage = 0;
-	}
-	$startDate = DateModules::miladi_to_shamsi($obj->PartDate);
-	$DelayDuration = DateModules::JDateMinusJDate(
-		DateModules::AddToJDate($startDate, $obj->DelayDays, $obj->DelayMonths), $startDate)+1;
-	
-	if($obj->DelayDays*1 > 0)
-		$TotalDelay = round($obj->PartAmount*$obj->DelayPercent*$DelayDuration/36500);
-	else
-		$TotalDelay = round($obj->PartAmount*$obj->DelayPercent*$obj->DelayMonths/1200);
-	
-	//-------------------------- installments -----------------------------
-	$MaxWage = max($obj->CustomerWage, $obj->FundWage);
-	$CustomerFactor =	$MaxWage == 0 ? 0 : $obj->CustomerWage/$MaxWage;
-	$FundFactor =		$MaxWage == 0 ? 0 : $obj->FundWage/$MaxWage;
-	$AgentFactor =		$MaxWage == 0 ? 0 : ($obj->CustomerWage-$obj->FundWage)/$MaxWage;
-	
-	$extraAmount = 0;
-	if($obj->WageReturn == "INSTALLMENT")
-	{
-		if($obj->MaxFundWage*1 > 0)
-			$extraAmount += $obj->MaxFundWage;
-		else if($obj->CustomerWage > $obj->FundWage)
-			$extraAmount += round($TotalWage*$FundFactor);
-		else
-			$extraAmount += round($TotalWage*$CustomerFactor);		
-	}		
-	if($obj->AgentReturn == "INSTALLMENT" && $obj->CustomerWage>$obj->FundWage)
-		$extraAmount += round($TotalWage*$AgentFactor);
-
-	if($obj->DelayReturn == "INSTALLMENT")
-		$extraAmount += $TotalDelay*($obj->FundWage/$obj->DelayPercent);
-	if($obj->AgentDelayReturn == "INSTALLMENT" && $obj->DelayPercent>$obj->FundWage)
-		$extraAmount += $TotalDelay*(($obj->DelayPercent-$obj->FundWage)/$obj->DelayPercent);
-
-	$TotalAmount = $obj->PartAmount*1 + $extraAmount;
+	$TotalAmount = LON_requests::GetTotalLoanAmount($RequestID);
 	
 	$allPay = ComputeInstallmentAmount($TotalAmount,$obj->InstallmentCount, $obj->PayInterval);
 	
@@ -737,11 +696,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	else
 		$allPay = round($allPay);
 	
-	if($obj->DelayReturn == "INSTALLMENT")
-		$allPay += $TotalDelay/$obj->InstallmentCount*1;
-	
-	$LastPay = $TotalAmount + ($obj->DelayReturn == "INSTALLMENT" ? $TotalDelay : 0) 
-			- $allPay*($obj->InstallmentCount-1);
+	$LastPay = $TotalAmount - $allPay*($obj->InstallmentCount-1);
 	
 	//---------------------------------------------------------------------
 	

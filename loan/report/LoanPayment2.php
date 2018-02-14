@@ -13,9 +13,9 @@ if(isset($_REQUEST["show"]))
 {
 	$RequestID = $_REQUEST["RequestID"];
 	$ReqObj = new LON_requests($RequestID);
-	$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
-	$arr = ComputeWagesAndDelays($PartObj, $PartObj->PartAmount, $PartObj->PartDate, $PartObj->PartDate);
-	$WageAmount = $arr["TotalCustomerWage"];
+	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
+	//............ get total loan amount ......................
+	$TotalAmount = LON_requests::GetTotalLoanAmount($RequestID);
 	//............ get remain untill now ......................
 	$dt = array();
 	$ComputeArr = LON_requests::ComputePayments($RequestID, $dt);
@@ -24,8 +24,25 @@ if(isset($_REQUEST["show"]))
 	$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr);
 	$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID, $ComputeArr);
 	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
-	//.........................................................
-	 
+	//............. get total payed .............................
+	$dt = LON_BackPays::GetRealPaid($RequestID);
+	$totalPayed = 0;
+	foreach($dt as $row)
+		$totalPayed += $row["PayAmount"]*1;
+	//............................................................
+	if($ReqObj->IsEnded == "YES")
+	{
+		$CurrentRemain = "وام خاتمه یافته";
+		$TotalRemain = "وام خاتمه یافته";
+		$DefrayAmount = "وام خاتمه یافته";
+	}
+	else
+	{
+		$CurrentRemain = number_format($CurrentRemain) . " ریال";
+		$TotalRemain = number_format($TotalRemain) . " ریال";
+		$DefrayAmount = number_format($DefrayAmount) . " ریال";
+	}
+	//............................................................
 	$rpg = new ReportGenerator();
 		
 	function RowColorRender($row){
@@ -65,9 +82,6 @@ if(isset($_REQUEST["show"]))
 		. DateModules::shNow() . "<br>";
 	
 	echo "</td></tr></table>";
-	
-	$ReqObj = new LON_requests($RequestID);
-	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	
 	//..........................................................
 	$report2 = "";
@@ -123,7 +137,7 @@ if(isset($_REQUEST["show"]))
 					</tr>
 					<tr>
 						<td>مدت تنفس :  </td>
-						<td><b><?= $partObj->DelayMonths  ?></b></td>
+						<td><b><?= $partObj->DelayMonths  ?>ماه و  <?= $partObj->DelayDays ?> روز</b></td>
 					</tr>
 					<tr>
 						<td> کارمزد وام:  </td>
@@ -144,13 +158,13 @@ if(isset($_REQUEST["show"]))
 							</b></td>
 					</tr>
 					<tr>
-						<td>مبلغ کارمزد : </td>
-						<td><b><?= number_format($WageAmount)?> ریال
+						<td>جمع وام و کارمزد : </td>
+						<td><b><?= number_format($TotalAmount) ?> ریال
 							</b></td>
 					</tr>
 					<tr>
-						<td>جمع وام و کارمزد : </td>
-						<td><b><?= number_format($partObj->PartAmount + $WageAmount) ?> ریال
+						<td>جمع کل پرداختی تاکنون : </td>
+						<td><b><?= number_format($totalPayed) ?> ریال
 							</b></td>
 					</tr>
 				</table>
@@ -159,19 +173,16 @@ if(isset($_REQUEST["show"]))
 				<table>
 					<tr>
 						<td>مانده قابل پرداخت معوقه : </td>
-						<td><b><?= number_format($CurrentRemain)?> ریال
-							</b></td>
+						<td><b><?= $CurrentRemain ?></b></td>
 					</tr>
 					<tr>
 						<td>مانده تا انتها : </td>
-						<td><b><?= number_format($TotalRemain)?> ریال
-							</b></td>
+						<td><b><?= $TotalRemain?></b></td>
 					</tr>
 					<? if($ReqObj->ReqPersonID != SHEKOOFAI){ ?>
 					<tr>
 						<td>مبلغ قابل پرداخت در صورت تسویه وام :</td>
-						<td><b><?= number_format($DefrayAmount) ?> ریال
-							</b></td>
+						<td><b><?= $DefrayAmount ?></b></td>
 					</tr>
 					<? } ?>
 				</table>

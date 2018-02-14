@@ -187,6 +187,67 @@ class LON_requests extends PdoDataAccess{
 	}
 	
 	//-------------------------------------
+	static function GetDelayAmounts($RequestID){
+		
+		$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
+		
+		$endDelayDate = DateModules::AddToGDate($PartObj->PartDate, $PartObj->DelayDays*1, $PartObj->DelayMonths*1);
+		$DelayDuration = DateModules::GDateMinusGDate($endDelayDate, $PartObj->PartDate)+1;
+		if($PartObj->DelayDays*1 > 0)
+		{
+			$CustomerDelay = round($PartObj->PartAmount*$PartObj->DelayPercent*$DelayDuration/36500);
+			$FundDelay = round($PartObj->PartAmount*$PartObj->FundWage*$DelayDuration/36500);
+			$AgentDelay = round($PartObj->PartAmount*($PartObj->DelayPercent - $PartObj->FundWage)*$DelayDuration/36500);		
+		}
+		else
+		{
+			$CustomerDelay = round($PartObj->PartAmount*$PartObj->DelayPercent*$PartObj->DelayMonths/1200);
+			$FundDelay = round($PartObj->PartAmount*$PartObj->FundWage*$PartObj->DelayMonths/1200);
+			$AgentDelay = round($PartObj->PartAmount*($PartObj->DelayPercent - $PartObj->FundWage)*$PartObj->DelayMonths/1200);
+		}
+		
+		return array(
+			"CustomerDelay" => $CustomerDelay,
+			"FundDelay" => $FundDelay,
+			"AgentDelay" => $AgentDelay
+		);
+	}
+	
+	static function GetWageAmounts($RequestID){
+		
+		$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
+		
+		$MaxWage = max($PartObj->CustomerWage*1 , $PartObj->FundWage);
+		if($PartObj->PayInterval > 0)
+			$YearMonths = ($PartObj->IntervalType == "DAY" ) ? 
+				floor(365/$PartObj->PayInterval) : 12/$PartObj->PayInterval;
+		else
+			$YearMonths = 12;
+
+		//.................................
+		$TotalWage = round(ComputeWage($PartObj->PartAmount, $MaxWage/100, $PartObj->InstallmentCount, 
+				$PartObj->IntervalType, $PartObj->PayInterval));	
+		$dt = LON_installments::GetValidInstallments($PartObj->RequestID);
+		if(count($dt)>0 && $dt[0]["wage"]*1 > 0)
+		{
+			$TotalWage = 0;
+			foreach($dt as $row)
+				$TotalWage += $row["wage"]*1;
+		}
+		//.................................
+
+		$CustomerFactor =	$MaxWage == 0 ? 0 : $PartObj->CustomerWage/$MaxWage;
+		$FundFactor =		$MaxWage == 0 ? 0 : $PartObj->FundWage/$MaxWage;
+		$AgentFactor =		$MaxWage == 0 ? 0 : ($PartObj->CustomerWage-$PartObj->FundWage)/$MaxWage;
+
+		
+		return array(
+			"FundWage" => round($TotalWage*$FundFactor),
+			"AgentWage" => round($TotalWage*$AgentFactor),
+			"CustomerWage" => round($TotalWage*$CustomerFactor)
+		);
+	}
+	//-------------------------------------
 	
 	static function ComputePayments2($RequestID, &$installments, $pdo = null){
 
@@ -741,16 +802,8 @@ class LON_requests extends PdoDataAccess{
 		
 		$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
 		$temp = LON_installments::GetValidInstallments($RequestID);
-		//.............................
-		$result = ComputeWagesAndDelays($PartObj, $PartObj->PartAmount, $PartObj->PartDate, $PartObj->PartDate);
-		$TotalFundDelay = $result["TotalFundDelay"];
-		$TotalAgentDelay = $result["TotalAgentDelay"];
-		$DelayAmount = 0;
-		if($PartObj->DelayReturn == "INSTALLMENT")
-			$DelayAmount += $TotalFundDelay;
-		if($TotalAgentDelay > 0 && $PartObj->AgentDelayReturn == "INSTALLMENT")
-			$DelayAmount += $TotalAgentDelay;
-		$totalBackPay = $PartObj->PartAmount*1 + $DelayAmount;
+		$totalBackPay = $PartObj->PartAmount;
+		
 		//.............................
 		$returnArr = array();
 		$returnArr[] = array(
@@ -761,6 +814,7 @@ class LON_requests extends PdoDataAccess{
 			"totalPure" => $totalBackPay
 		);
 		$totalPure = $totalBackPay;
+		$ComputeDate = $PartObj->PartDate;
 		for($i=0; $i< count($temp); $i++)
 		{
 			$prevRow = $i == 0 ? null : $temp[$i-1];
@@ -786,81 +840,85 @@ class LON_requests extends PdoDataAccess{
 				"totalPure" => 0 
 			);
 			//.............................
-			if($PartObj->PayInterval == 0 || $PartObj->WageReturn != "INSTALLMENT")
+			/*if($PartObj->PayInterval == 0 || $PartObj->WageReturn != "INSTALLMENT")
 				$record["wage"] = 0;
 			else
-			{
+			{*/
+				
+				//$tanzilAmount = Tanzil($row["InstallmentAmount"], $PartObj->CustomerWage, $row["InstallmentDate"], $PartObj->PartDate);
+				//$record["wage"] = $row["InstallmentAmount"]*1 - $tanzilAmount;
+				
+				/*$V = $totalPure;
 				$R = $PartObj->IntervalType == "MONTH" ? 
 					1200/$PartObj->PayInterval : 36500/$PartObj->PayInterval;
-				$V = $totalPure;
-				$record["wage"] = round( $V*($PartObj->CustomerWage/$R) );
-			}
+				$record["wage"] = round( $V*($PartObj->CustomerWage/$R) );*/
+			//}
+			
+			$days = DateModules::GDateMinusGDate($row["InstallmentDate"], $ComputeDate)+1;
+			$record["wage"] = round( $totalPure*$PartObj->CustomerWage*$days/36500 );
+			
 			//.............................
-			$record["pure"] = $row["InstallmentAmount"] - $record["wage"];
 			$totalPure -= $row["InstallmentAmount"] - $record["wage"];
+			$ComputeDate = $row["InstallmentDate"];			
+			$record["pure"] = $row["InstallmentAmount"] - $record["wage"];
 			$record["totalPure"] = $totalPure;
 			//.............................
 			$returnArr[] = $record;
 		}
 		
 		return $returnArr;
+
+	}
+	
+	/**
+	 * loan amount + delay if in installment + wage if in installment
+	 */
+	static function GetTotalLoanAmount($RequestID, $WithDelayIfInstallment = true){
 		
-		for($i=0; $i< count($temp); $i++)
+		$obj = LON_ReqParts::GetValidPartObj($RequestID);
+		//-----------------------------------------------
+		$TotalWage = round(ComputeWage($obj->PartAmount, $obj->CustomerWage/100, 
+				$obj->InstallmentCount, $obj->IntervalType, $obj->PayInterval));
+
+		if($obj->WageReturn == "CUSTOMER")
 		{
-			$prevRow = $i == 0 ? null : $temp[$i-1];
-			$row = &$temp[$i];
-			
-			if($temp[$i]["wage"]*1 > 0)
-			{
-				$totalPure -= $row["InstallmentAmount"] - $row["wage"];
-				$returnArr[] = array(
-					"InstallmentDate" => $row["InstallmentDate"],
-					"InstallmentAmount" => $row["InstallmentAmount"],
-					"wage" => $row["wage"],
-					"pure" => $row["InstallmentAmount"] - $row["wage"],
-					"totalPure" => $totalPure 
-				);
-				$row["profit"] = $row["wage"];
-				$row["pureAmount"] = $row["InstallmentAmount"] - $row["wage"];
-				$row["SumProfit"] = $prevRow["SumProfit"] + $row["profit"];
-				$row["pureRemain"] = $prevRow["EndingBalance"];	
-				if(!$prevRow)
-					$row["pureRemain"] = $totalBackPay;
-				else
-					$row["pureRemain"] = $prevRow["EndingBalance"];	
-
-				$row["EndingBalance"] = $row["pureRemain"] - ($row["InstallmentAmount"] - $row["profit"]);
-				continue;
-			}
-			
-			//.............................
-			if($PartObj->PayInterval == 0 || $PartObj->WageReturn != "INSTALLMENT")
-				$row["profit"] = 0;
-			else
-			{
-				$R = $PartObj->IntervalType == "MONTH" ? 
-					1200/$PartObj->PayInterval : 36500/$PartObj->PayInterval;
-				$V = !$prevRow ? $PartObj->PartAmount : $prevRow["EndingBalance"];
-				$row["profit"] = round( $V*($PartObj->CustomerWage/$R) );
-			}
-			//.............................
-			if(!$prevRow)
-				$row["SumProfit"] = $row["profit"];
-			else
-				$row["SumProfit"] = $prevRow["SumProfit"] + $row["profit"];
-			//.............................
-			$row["pureAmount"] = $row["InstallmentAmount"] - $row["profit"];
-			//.............................
-			if(!$prevRow)
-				$row["pureRemain"] = $totalBackPay;
-			else
-				$row["pureRemain"] = $prevRow["EndingBalance"];	
-
-			$row["EndingBalance"] = $row["pureRemain"] - ($row["InstallmentAmount"] - $row["profit"]);
-			//.............................
+			$TotalWage = 0;
+			$obj->CustomerWage = 0;
 		}
-		
-		return $temp;
+		$startDate = DateModules::miladi_to_shamsi($obj->PartDate);
+		$DelayDuration = DateModules::JDateMinusJDate(
+			DateModules::AddToJDate($startDate, $obj->DelayDays, $obj->DelayMonths), $startDate)+1;
+
+		if($obj->DelayDays*1 > 0)
+			$TotalDelay = round($obj->PartAmount*$obj->DelayPercent*$DelayDuration/36500);
+		else
+			$TotalDelay = round($obj->PartAmount*$obj->DelayPercent*$obj->DelayMonths/1200);
+
+		//-------------------------- installments -----------------------------
+		$MaxWage = max($obj->CustomerWage, $obj->FundWage);
+		$CustomerFactor =	$MaxWage == 0 ? 0 : $obj->CustomerWage/$MaxWage;
+		$FundFactor =		$MaxWage == 0 ? 0 : $obj->FundWage/$MaxWage;
+		$AgentFactor =		$MaxWage == 0 ? 0 : ($obj->CustomerWage-$obj->FundWage)/$MaxWage;
+
+		$extraAmount = 0;
+		if($obj->WageReturn == "INSTALLMENT")
+		{
+			if($obj->MaxFundWage*1 > 0)
+				$extraAmount += $obj->MaxFundWage;
+			else if($obj->CustomerWage > $obj->FundWage)
+				$extraAmount += round($TotalWage*$FundFactor);
+			else
+				$extraAmount += round($TotalWage*$CustomerFactor);		
+		}		
+		if($obj->AgentReturn == "INSTALLMENT" && $obj->CustomerWage>$obj->FundWage)
+			$extraAmount += round($TotalWage*$AgentFactor);
+
+		if($obj->DelayReturn == "INSTALLMENT" && $obj->DelayPercent*1 > 0)
+			$extraAmount += $TotalDelay*($obj->FundWage/$obj->DelayPercent);
+		if($obj->AgentDelayReturn == "INSTALLMENT" && $obj->DelayPercent*1 > 0 && $obj->DelayPercent>$obj->FundWage)
+			$extraAmount += $TotalDelay*(($obj->DelayPercent-$obj->FundWage)/$obj->DelayPercent);
+
+		return $obj->PartAmount*1 + $extraAmount;		
 	}
 	
 	static function GetCurrentRemainAmount($RequestID, $computeArr=null){
