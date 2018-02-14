@@ -807,6 +807,12 @@ RequestInfo.prototype.BuildForms = function(){
 			itemId : "cmp_reject60",
 			handler : function(){ RequestInfoObject.beforeChangeStatus(60); }
 		},{
+			text : 'تسویه وام',
+			hidden : true,
+			iconCls : "account",
+			itemId : "cmp_Defray",
+			handler : function(){ RequestInfoObject.DefrayRequest(); }
+		},{
 			text : 'خاتمه وام',
 			hidden : true,
 			iconCls : "finish",
@@ -1003,6 +1009,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 	this.companyPanel.down("[itemId=cmp_reject60]").hide();
 	this.companyPanel.down("[itemId=cmp_changeStatus]").hide();
 	this.companyPanel.down("[itemId=cmp_end]").hide();
+	this.companyPanel.down("[itemId=cmp_Defray]").hide();	
 	this.companyPanel.down("[itemId=cmp_undoend]").hide();
 	this.companyPanel.down("[itemId=cmp_confirm50]").hide();
 	
@@ -1065,6 +1072,10 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.companyPanel.down("[itemId=cmp_reject60]").show();
 		}
 		if(record.data.IsEnded == "NO" && record.data.StatusID == "70")
+		{
+			this.companyPanel.down("[itemId=cmp_Defray]").show();
+		}
+		if(record.data.IsEnded == "NO" && (record.data.StatusID == "70" || record.data.StatusID == "95"))
 		{
 			this.companyPanel.down("[itemId=cmp_end]").show();
 		}
@@ -1428,8 +1439,58 @@ RequestInfo.prototype.EndRequest = function(){
 
 		}
 	});
+}
+
+RequestInfo.prototype.DefrayRequest = function(){
 	
+	this.mask.show();
 	
+	Ext.Ajax.request({
+		methos : "post",
+		url : this.address_prefix + "request.data.php",
+		params : {
+			task : "GetDefrayAmount",
+			RequestID : this.RequestID
+		},
+
+		success : function(response){
+			result = Ext.decode(response.responseText);
+			if(result.data*1 > 0)
+			{
+				Ext.MessageBox.alert("","مبلغ تسویه وام " + 
+				Ext.util.Format.Money(result.data) + " ریال می باشد" +
+				"<br>تا زمانی که کل این مبلغ پرداخت نشده است قادر به تسویه وام نمی باشید");
+				RequestInfoObject.mask.hide();
+				return;
+			}
+			
+			me = RequestInfoObject;
+			me.mask.show();
+
+			Ext.Ajax.request({
+				methos : "post",
+				url : me.address_prefix + "request.data.php",
+				params : {
+					task : "DefrayRequest",
+					RequestID : me.RequestID
+				},
+
+				success : function(response){
+					result = Ext.decode(response.responseText);
+					if(result.success)
+					{
+						Ext.MessageBox.alert("","سند مربوطه با موفقیت صادر گردید");
+						RequestInfoObject.LoadRequestInfo();					
+					}	
+					else if(result.data == "")
+						Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("",result.data);
+
+				}
+			});
+		}	
+	});
 }
 
 RequestInfo.prototype.ReturnEndRequest = function(){
