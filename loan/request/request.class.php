@@ -873,7 +873,7 @@ class LON_requests extends PdoDataAccess{
 	/**
 	 * loan amount + delay if in installment + wage if in installment
 	 */
-	static function GetTotalLoanAmount($RequestID, $WithDelayIfInstallment = true){
+	static function GetTotalLoanAmount($RequestID){
 		
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 		//-----------------------------------------------
@@ -981,7 +981,7 @@ class LON_requests extends PdoDataAccess{
 			}
 			else
 			{
-				$PureRemain = $PureArr[$i]["totalPure"]*1;
+				$PureRemain = $i == 0 ? $PureArr[0]["totalPure"] : $PureArr[$i-1]["totalPure"]*1;
 				break;
 			}
 		}
