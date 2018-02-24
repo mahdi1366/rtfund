@@ -55,5 +55,17 @@ xtype : "combo",
 	}),
 	displayField : "value",
 	valueField : "id",
-
-
+--------------------------------------------------------------------------------
+$dg->addPlugin("{
+	ptype: 'rowexpander',
+	rowBodyTpl : [
+		'<p><b>شماره شناسنامه : </b> {ShNo}&nbsp;&nbsp;&nbsp;&nbsp;',
+		'<b>کد ملی : </b>{NationalID}&nbsp;&nbsp;&nbsp;&nbsp;<b>صادره از : </b>{ShPlace}</p>',
+		'<p><b>آدرس : </b> {address}&nbsp;&nbsp;&nbsp;&nbsp;<b>کد پستی : </b>{PostalCode}</p>',
+		'<p><b>ایمیل : </b> {email}</p>',
+	]
+}");
+--------------------------------------------------------------------------------
+access object property by variable
+php : $obj->{ $key } = ...
+javascript : obj[ "..." ]
