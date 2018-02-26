@@ -74,7 +74,7 @@ function SaveDocument() {
 			$st = preg_split("/\./", $file["name"]);
 			$extension = strtolower($st [count($st) - 1]);
 			if (in_array($extension, array("jpg", "jpeg", "gif", "png", "pdf", 
-				"xls", "xlsx", "csv", "doc", "docx")) === false) 
+				"xls", "xlsx", "csv", "doc", "docx", "rar", "zip")) === false) 
 			{
 				Response::createObjectiveResponse(false, "فرمت فایل ارسالی نامعتبر است");
 				die();
