@@ -514,6 +514,10 @@ class ReportGenerator {
 				<font color = '$this->body_textcolor' style='font-size:".$this->fontSize."'>&nbsp;";
 
 			$val = "";
+			//------------ remove prefix of field -------------------
+			$a = preg_split("/\./", $this->columns[$i]->field);
+			$this->columns[$i]->field = $a[ count($a)-1 ];
+			//-------------------------------------------------------
 			if (!empty($this->columns[$i]->renderFunction)) {
 				
 				$functionName = $this->columns[$i]->renderFunction;
@@ -786,7 +790,7 @@ class ReportGenerator {
 			if(strpos($key, self::$FieldPrefix) !== false)
 			{
 				$field = str_replace(self::$FieldPrefix, "", $key);
-				$tempColumns[ $_POST[self::$OrderPrefix . $field ] ] = $columnObjectArr[$field];
+				$tempColumns[ $_POST[self::$OrderPrefix . $field ] ] = $columnObjectArr[str_replace("*", ".", $field) ];
 			}
 		
 		ksort($tempColumns);
@@ -830,7 +834,7 @@ class ReportGenerator {
 			if(strpos($key, self::$FieldPrefix) !== false)
 			{
 				$field = str_replace(self::$FieldPrefix, "", $key);
-				$tempColumns[ $_POST[self::$OrderPrefix . $field ] ] = $field;
+				$tempColumns[ $_POST[self::$OrderPrefix . $field ] ] = str_replace("*", ".", $field);
 			}
 		
 		ksort($tempColumns);
@@ -1228,7 +1232,7 @@ class ReportColumn {
 
 	public function ReportColumn($header, $field, $renderFunction = "", $renderParams = "") {
 		$this->header = $header;
-		$this->field = $field;
+		$this->field = str_replace("*", ".", $field);
 		$this->renderFunction = $renderFunction;
 		$this->renderParams = $renderParams;
 		$this->HaveSum = -1;
