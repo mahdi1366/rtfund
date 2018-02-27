@@ -4,7 +4,6 @@
 // Create Date:	94.12
 //-------------------------
 
-print_r($_POST);
 require_once '../header.inc.php';
 require_once "../request/request.class.php";
 require_once "../request/request.data.php";
@@ -244,8 +243,6 @@ function GetData($mode = "list"){
 			where 1=1 " . $where;
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
-	if($_SESSION["USER"]["UserName"] == "admin")
-		echo $group . "<br>";
 	$query .= $group == "" || $mode == "chart" ? " group by r.RequestID" : " group by " . $group;
 	$query .= $group == "" || $mode == "chart" ? " order by r.RequestID" : " order by " . $group;	
 	
@@ -280,7 +277,7 @@ function ListData($IsDashboard = false){
 		return ($value == "YES") ? "خاتمه" : "جاری";
 	}
 	
-	$rpg->addColumn("شماره وام", "RequestID");
+	$rpg->addColumn("شماره وام", "r*RequestID");
 	$rpg->addColumn("نوع وام", "LoanDesc");
 	$rpg->addColumn("عنوان طرح", "PlanTitle");	
 	$rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
@@ -292,6 +289,15 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("مشتری", "LoanFullname");
 	$rpg->addColumn("شماره پرونده", "PackNo");	
 	$rpg->addColumn("حوزه فعالیت", "DomainDesc");
+	$rpg->addColumn("نوع", "IsReal", "RealRender");
+	$rpg->addColumn("کدملی/شناسه ملی", "NationalID");
+	$rpg->addColumn("تلفن", "PhoneNo");
+	$rpg->addColumn("همراه", "mobile");
+	$rpg->addColumn("شماره پیامک", "SmsNo");
+	$rpg->addColumn("آدرس", "address");
+	$rpg->addColumn("ایمیل", "email");
+	$rpg->addColumn("وب سایت", "WebSite");
+
 	$rpg->addColumn("شعبه", "BranchName");
 	$rpg->addColumn("تاریخ پرداخت", "PartDate", "ReportDateRender");
 	$col = $rpg->addColumn("مبلغ تایید شده", "PartAmount", "ReportMoneyRender");
