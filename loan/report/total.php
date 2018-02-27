@@ -3,6 +3,8 @@
 // programmer:	Jafarkhani
 // Create Date:	94.12
 //-------------------------
+
+print_r($_POST);
 require_once '../header.inc.php';
 require_once "../request/request.class.php";
 require_once "../request/request.data.php";
@@ -11,9 +13,12 @@ require_once "ReportGenerator.class.php";
 function ReqPersonRender($row,$value){
 	return $value == "" ? "منابع داخلی" : $value;
 }
+function RealRender($row, $value){
+	return $value == "YES" ? "حقیقی" : "حقوقی";
+}
 	
 $page_rpg = new ReportGenerator("mainForm","LoanReport_totalObj");
-$page_rpg->addColumn("شماره وام", "r.RequestID");
+$page_rpg->addColumn("شماره وام", "r*RequestID");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
 $page_rpg->addColumn("عنوان طرح", "PlanTitle");	
 $page_rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
@@ -23,6 +28,15 @@ $col->type = "date";
 $page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
 $page_rpg->addColumn("مشتری", "LoanFullname");
 $page_rpg->addColumn("حوزه فعالیت", "DomainDesc");
+$page_rpg->addColumn("نوع", "IsReal", "RealRender");
+$page_rpg->addColumn("کدملی/شناسه ملی", "NationalID");
+$page_rpg->addColumn("تلفن", "PhoneNo");
+$page_rpg->addColumn("همراه", "mobile");
+$page_rpg->addColumn("شماره پیامک", "SmsNo");
+$page_rpg->addColumn("آدرس", "address");
+$page_rpg->addColumn("ایمیل", "email");
+$page_rpg->addColumn("وب سایت", "WebSite");
+
 $page_rpg->addColumn("شعبه", "BranchName");
 $col = $page_rpg->addColumn("تاریخ پرداخت", "PartDate");
 $col->type = "date";
@@ -137,7 +151,17 @@ function GetData($mode = "list"){
 	
 	$query = "select r.*,l.*,p.*,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
+				
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
+				p2.IsReal,
+				p2.NationalID,
+				p2.PhoneNo,
+				p2.mobile,
+				p2.SmsNo,
+				p2.address,
+				p2.email,
+				p2.WebSite,
+				
 				bi.InfoDesc StatusDesc,
 				sb.SubDesc,
 				ad.DomainDesc,
@@ -220,6 +244,8 @@ function GetData($mode = "list"){
 			where 1=1 " . $where;
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
+	if($_SESSION["USER"]["UserName"] == "admin")
+		echo $group . "<br>";
 	$query .= $group == "" || $mode == "chart" ? " group by r.RequestID" : " group by " . $group;
 	$query .= $group == "" || $mode == "chart" ? " order by r.RequestID" : " order by " . $group;	
 	
@@ -227,9 +253,10 @@ function GetData($mode = "list"){
 	$query = PdoDataAccess::GetLatestQueryString();
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		//BeginReport();
+		///BeginReport();
 		//print_r(ExceptionHandler::PopAllExceptions());
 		//echo $query;
+		
 	}
 	
 	for($i=0; $i< count($dataTable); $i++)
