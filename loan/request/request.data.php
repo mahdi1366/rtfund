@@ -31,6 +31,7 @@ switch($task)
 	case "GetRequestTotalRemainder":
 	case "GetDefrayAmount":
 	case "EndRequest":
+	case "GetEndDoc":
 	case "ReturnEndRequest":
 	case "DefrayRequest":	
 		
@@ -382,6 +383,27 @@ function GetRequestParts(){
 		$dt[$i]["IsStarted"] = WFM_FlowRows::IsFlowStarted(1, $dt[$i]["PartID"]) ? "YES" : "NO";
 		$dt[$i]["IsEnded"] = WFM_FlowRows::IsFlowEnded(1, $dt[$i]["PartID"]) ? "YES" : "NO";
 		
+		//--------------- computes ------------------
+		$installments = ComputeInstallments($dt[$i]["RequestID"], false, null, true);
+		$dt[$i]["AllPay"] =  $installments["AllPay"];
+		$dt[$i]["LastPay"] =  $installments["LastPay"];
+		
+		$PartObj = new LON_ReqParts($dt[$i]["PartID"]);
+		
+		if($dt[$i]["ReqPersonID"] == SHEKOOFAI)
+			$dt[$i]["TotalCustomerWage"] = ComputeWageOfSHekoofa($PartObj);		
+		else
+		{
+			$result = ComputeWagesAndDelays($PartObj, $PartObj->PartAmount, $PartObj->PartDate, $PartObj->PartDate);
+			$dt[$i]["TotalCustomerDelay"] = $result["TotalCustomerDelay"];
+			$dt[$i]["TotalCustomerWage"] = $result["TotalCustomerWage"];
+			$dt[$i]["TotalAgentWage"] = $result["TotalAgentWage"];
+			$dt[$i]["TotalFundWage"] = $result["TotalFundWage"];
+			$FundYears = $result["FundWageYears"];
+			$index = 1;
+			foreach($FundYears as $row)
+				$dt[$i]["WageYear" . ($index++)] = $row;
+		}
 	}
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
@@ -444,7 +466,8 @@ function SavePart(){
 
 	if(!$result)
 	{
-		//print_r(ExceptionHandler::PopAllExceptions());
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo PdoDataAccess::GetLatestQueryString();
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
@@ -565,6 +588,32 @@ function EndRequest(){
 	die();
 }
 
+function GetEndDoc(){
+	
+	$RequestID = $_POST["RequestID"];
+	
+	$dt = PdoDataAccess::runquery("select d.DocID,LocalNo,StatusID,CycleDesc
+		from ACC_DocItems d join ACC_docs using(DocID) join ACC_cycles using(CycleID)
+		where DocType=" . DOCTYPE_END_REQUEST . " AND SourceID2=?",
+			array($RequestID));
+	
+	if(count($dt) > 0)
+	{
+		if($dt[0]["StatusID"] != ACC_STEPID_RAW)
+		{
+			Response::createObjectiveResponse (false, "سند مربوط به خاتمه وام با شماره " . $dt[0]["LocalNo"] . " در " . 
+					$dt[0]["CycleDesc"] . " تایید شده و قادر به برگشت از خاتمه وام نمی باشید.");
+			die();
+		}
+		
+		Response::createObjectiveResponse (true, "سند مربوط به خاتمه وام با شماره " . $dt[0]["LocalNo"] . " در " . 
+				$dt[0]["CycleDesc"] . " صادر شده است. آیا مایله به برگشت خاتمه وام و حذف سند مربوطه می باشید؟");
+		die();
+	}
+	Response::createObjectiveResponse (true, "سند خاتمه برای این وام یافت نشد. آیا مایل به برگشت از خاتمه می باشید؟");
+	die();
+}
+
 function ReturnEndRequest(){
 	
 	$ReqObj = new LON_requests($_POST["RequestID"]);
@@ -660,7 +709,7 @@ function GetInstallments(){
 	die();
 }
 
-function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null){
+function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null, $ReturnAmounts = false){
 	
 	$RequestID = empty($RequestID) ? $_REQUEST["RequestID"] : $RequestID;
 	
@@ -683,7 +732,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	//-----------------------------------------------
 	$obj2 = new LON_requests($RequestID);
 	if($obj2->ReqPersonID == SHEKOOFAI)
-		return ComputeInstallmentsShekoofa($RequestID, $returnMode, $pdo2);
+		return ComputeInstallmentsShekoofa($RequestID, $returnMode, $pdo2, $ReturnAmounts);
 	//-----------------------------------------------
 	$obj = LON_ReqParts::GetValidPartObj($RequestID);
 	//-----------------------------------------------
@@ -697,6 +746,9 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 		$allPay = round($allPay);
 	
 	$LastPay = $TotalAmount - $allPay*($obj->InstallmentCount-1);
+	
+	if($ReturnAmounts)
+		return array("AllPay" => $allPay, "LastPay" => $LastPay);
 	
 	//---------------------------------------------------------------------
 	
@@ -737,7 +789,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null)
 	die();
 }
 
-function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false, $pdo2 = null){
+function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false, $pdo2 = null, $ReturnAmounts = false){
 	
 	$RequestID = empty($RequestID) ? $_REQUEST["RequestID"] : $RequestID;
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
@@ -762,7 +814,13 @@ function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false, $pdo2
 		$totalWage = 0;
 	else
 		$totalWage = ComputeWageOfSHekoofa($partObj);
-		
+	
+	if($ReturnAmounts)
+	{
+		$amount = round($partObj->PartAmount/$partObj->InstallmentCount) + round($totalWage/$partObj->InstallmentCount);
+		return array("AllPay" => $amount, "LastPay" => $amount);		
+	}				
+	
 	if($pdo2 == null)
 	{
 		$pdo = PdoDataAccess::getPdoObject();

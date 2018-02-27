@@ -1495,38 +1495,57 @@ RequestInfo.prototype.DefrayRequest = function(){
 
 RequestInfo.prototype.ReturnEndRequest = function(){
 	
-	Ext.MessageBox.confirm("","آیا مایل به برگشت خاتمه وام و ابطال سند خاتمه می باشید؟", function(btn){
+	me.mask.show();
+	Ext.Ajax.request({
+		methos : "post",
+		url : me.address_prefix + "request.data.php",
+		params : {
+			task : "GetEndDoc",
+			RequestID : me.RequestID
+		},
+
+		success : function(response){
+			result = Ext.decode(response.responseText);
+			if(result.success)
+			{
+				Ext.MessageBox.confirm("",result.data, function(btn){
 				
-		if(btn == "no")
-			return;
+					if(btn == "no")
+						return;
 
-		me = RequestInfoObject;
-		me.mask.show();
+					me = RequestInfoObject;
 
-		Ext.Ajax.request({
-			methos : "post",
-			url : me.address_prefix + "request.data.php",
-			params : {
-				task : "ReturnEndRequest",
-				RequestID : me.RequestID
-			},
+					Ext.Ajax.request({
+						methos : "post",
+						url : me.address_prefix + "request.data.php",
+						params : {
+							task : "ReturnEndRequest",
+							RequestID : me.RequestID
+						},
 
-			success : function(response){
-				result = Ext.decode(response.responseText);
-				if(result.success)
-				{
-					Ext.MessageBox.alert("","سند مربوطه با موفقیت باطل گردید");
-					RequestInfoObject.LoadRequestInfo();					
-				}	
-				else if(result.data == "")
-					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
-				else
-					Ext.MessageBox.alert("",result.data);
+						success : function(response){
+							result = Ext.decode(response.responseText);
+							if(result.success)
+							{
+								Ext.MessageBox.alert("","سند مربوطه با موفقیت باطل گردید");
+								RequestInfoObject.LoadRequestInfo();					
+							}	
+							else if(result.data == "")
+								Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+							else
+								Ext.MessageBox.alert("",result.data);
 
-				RequestInfoObject.mask.hide();
-			}
-		});
-	});			
+							RequestInfoObject.mask.hide();
+						}
+					});
+				});		
+			}	
+			else 
+				Ext.MessageBox.alert("",result.data);
+
+			RequestInfoObject.mask.hide();
+		}
+	});
 }
 
 //.........................................................
@@ -1564,6 +1583,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 				},{
 					xtype : "textfield",
 					name : "details",
+					allowBlank : true,
 					fieldLabel : "توضیحات",
 					colspan : 2,
 					width : 450
@@ -1929,256 +1949,27 @@ RequestInfo.prototype.SplitYears = function(startDate, endDate, TotalAmount){
 RequestInfo.prototype.LoadSummary = function(record){
 
 	if(record.data.ReqPersonID == "<?= SHEKOOFAI ?>")
-		return this.LoadSummarySHRTFUND(record, null);
-	
-	function ComputeInstallmentAmount(TotalAmount,IstallmentCount,PayInterval){
-		
-		if(PayInterval == 0)
-			return TotalAmount;
-		
-		return TotalAmount/IstallmentCount;
-	}
-	function ComputeWage(F7, F8, F9, IntervalType, PayInterval){
-		
-		if(PayInterval == 0)
-			return 0;
-		
-		if(F8 == 0)
-			return 0;
-		
-		if(IntervalType == "DAY")
-			PayInterval = PayInterval/30;
-		
-		R = (F8/12)*PayInterval;
-			
-		return (((F7*R*( Math.pow((1+R),F9)))/((Math.pow((1+R),F9))-1))*F9)-F7;
-	}
-	function roundUp(number, digits){
-		var factor = Math.pow(10,digits);
-		return Math.ceil(number*factor) / factor;
-	}
-	function YearWageCompute(record,TotalWage,YearMonths){
-				
-		startDate = DateModule.AddToGDate(record.data.PartDate, record.data.DelayDays, record.data.DelayMonths);
-		startDate = MiladiToShamsi(startDate);
-		startDate = DateModule.AddToJDate(startDate, record.data.DelayDays, record.data.DelayMonths);
-		startDate = startDate.split(/[\-\/]/);
-		PayMonth = startDate[1];
-		PayMonth = PayMonth*YearMonths/12;
-		
-		FirstYearInstallmentCount = Math.floor((12 - PayMonth)/(12/YearMonths));
-		FirstYearInstallmentCount = record.data.InstallmentCount*1 < FirstYearInstallmentCount ? 
-			record.data.InstallmentCount*1 : FirstYearInstallmentCount;
-		MidYearInstallmentCount = Math.floor((record.data.InstallmentCount*1-FirstYearInstallmentCount) / YearMonths);
-		MidYearInstallmentCount = MidYearInstallmentCount < 0 ? 0 : MidYearInstallmentCount;
-		LastYeatInstallmentCount = (record.data.InstallmentCount-FirstYearInstallmentCount) % YearMonths;
-		LastYeatInstallmentCount = LastYeatInstallmentCount < 0 ? 0 : LastYeatInstallmentCount;
-		F9 = record.data.InstallmentCount*(12/YearMonths);
-
-		yearNo = 1;
-		StartYear = startDate[0]*1;
-		returnArr = new Array();
-		while(true)
-		{
-			if(yearNo > MidYearInstallmentCount+2)
-				break;
-
-			BeforeMonths = 0;
-			if(yearNo == 2)
-				BeforeMonths = FirstYearInstallmentCount;
-			else if(yearNo > 2)
-				BeforeMonths = FirstYearInstallmentCount + (yearNo-2)*YearMonths;
-
-			curMonths = FirstYearInstallmentCount;
-			if(yearNo > 1 && yearNo <= MidYearInstallmentCount+1)
-				curMonths = YearMonths;
-			else if(yearNo > MidYearInstallmentCount+1)
-				curMonths = LastYeatInstallmentCount;
-
-			BeforeMonths = BeforeMonths*(12/YearMonths);
-			curMonths = curMonths*(12/YearMonths);
-
-			val = ((((F9-BeforeMonths)*(F9-BeforeMonths+1))-
-				(F9-BeforeMonths-curMonths)*(F9-BeforeMonths-curMonths+1)))/(F9*(F9+1))*TotalWage;
-
-			returnArr.push({
-				year : StartYear,
-				amount : Ext.util.Format.Money(Math.round(val))
-			});
-			StartYear++;
-			yearNo++;
-		}
-	
-		return returnArr;
-	}
-	
-	if(record.data.PayInterval > 0)
-		YearMonths = (record.data.IntervalType == "DAY" ) ? 
-			Math.floor(365/record.data.PayInterval) : 12/record.data.PayInterval;
-	else
-		YearMonths = 12;
-		
-	DelayDuration = DateModule.GDateMinusGDate(
-		DateModule.AddToGDate(record.data.PartDate, record.data.DelayDays*1, record.data.DelayMonths*1), 
-		record.data.PartDate);
-		
-	TotalWage = Math.round(ComputeWage(record.data.PartAmount, record.data.CustomerWage/100, 
-		record.data.InstallmentCount, record.data.IntervalType, record.data.PayInterval));
-		
-	TotalWage = !isInt(TotalWage) ? 0 : TotalWage;	
-	FundWage = Math.round((record.data.FundWage/record.data.CustomerWage)*TotalWage);
-	FundWage = !isInt(FundWage) ? 0 : FundWage;
-	AgentWage = TotalWage - FundWage;
-	
-	if(record.data.DelayDays*1 > 0)
-		TotalDelay = Math.round(record.data.PartAmount*record.data.DelayPercent*DelayDuration/36500);
-	else
-		TotalDelay = Math.round(record.data.PartAmount*record.data.DelayPercent*record.data.DelayMonths/1200);
-	
-	//-------------------------- installments -----------------------------
-	MaxWage = Math.max(record.data.CustomerWage, record.data.FundWage);
-	CustomerFactor =	MaxWage == 0 ? 0 : record.data.CustomerWage/MaxWage;
-	FundFactor =		MaxWage == 0 ? 0 : record.data.FundWage/MaxWage;
-	AgentFactor =		MaxWage == 0 ? 0 : (record.data.CustomerWage-record.data.FundWage)/MaxWage;
-	
-	var extraAmount = 0;
-	if(record.data.WageReturn == "INSTALLMENT")
 	{
-		if(record.data.MaxFundWage*1 > 0)
-			extraAmount += record.data.MaxFundWage;
-		else if(record.data.CustomerWage > record.data.FundWage)
-			extraAmount += Math.round(TotalWage*FundFactor);
-		else
-			extraAmount += Math.round(TotalWage*CustomerFactor);		
-	}		
-	if(record.data.AgentReturn == "INSTALLMENT" && record.data.CustomerWage>record.data.FundWage)
-		extraAmount += Math.round(TotalWage*AgentFactor);
-
-	if(record.data.DelayReturn == "INSTALLMENT")
-		extraAmount += TotalDelay*(record.data.FundWage/record.data.DelayPercent);
-	if(record.data.AgentDelayReturn == "INSTALLMENT" && record.data.DelayPercent*1>record.data.FundWage*1)
-		extraAmount += TotalDelay*((record.data.DelayPercent-record.data.FundWage)/record.data.DelayPercent);
-	
-	TotalAmount = record.data.PartAmount*1 + extraAmount;
-	
-	FirstPay = ComputeInstallmentAmount(TotalAmount,record.data.InstallmentCount, record.data.PayInterval);
-	
-	if(record.data.InstallmentCount > 1)
-		FirstPay = roundUp(FirstPay,-3);
-	else
-		FirstPay = Math.round(FirstPay);
-	
-	if(record.data.DelayReturn == "INSTALLMENT")
-		FirstPay += TotalDelay/record.data.InstallmentCount*1;
-	
-	LastPay = Math.round(TotalAmount + (record.data.DelayReturn == "INSTALLMENT" ? TotalDelay : 0) 
-			- FirstPay*(record.data.InstallmentCount-1));
-
-	//---------------------------------------------------------------------
-	if(record.data.MaxFundWage*1 > 0)
-	{
-		tmp = record.data.WageReturn == "INSTALLMENT" ? 
-			Math.round(record.data.MaxFundWage*1/record.data.InstallmentCount) : 0;
-		
-		this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay + tmp);
-		this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay + tmp);
-		this.get("SUM_Delay").innerHTML = 0;
-		this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount 
-			 - (record.data.WageReturn == "CUSTOMER" ? TotalWage + record.data.MaxFundWage*1 : 0));	
-
-		this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage + record.data.MaxFundWage*1);	
-		this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.MaxFundWage);	
-		this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
-
-		this.get("SUM_Wage_1Year").innerHTML = 0;
-		this.get("SUM_Wage_2Year").innerHTML = 0;
-		this.get("SUM_Wage_3Year").innerHTML = 0;
-		this.get("SUM_Wage_4Year").innerHTML = 0;
+		this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.AllPay);
+		this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.LastPay);
+		this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerWage);
+		this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount);	
 		return;
 	}
 	
-	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(FirstPay);
-	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(LastPay);
-	this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(TotalDelay);
+	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.AllPay);
+	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.LastPay);
+	this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerDelay);
+	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerWage);
+	this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.TotalFundWage);
+	this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(record.data.TotalAgentWage);
+	this.get("SUM_Wage_1Year").innerHTML = Ext.util.Format.Money(record.data.WageYear1);
+	this.get("SUM_Wage_2Year").innerHTML = Ext.util.Format.Money(record.data.WageYear2);
+	this.get("SUM_Wage_3Year").innerHTML = Ext.util.Format.Money(record.data.WageYear3);
+	this.get("SUM_Wage_4Year").innerHTML = Ext.util.Format.Money(record.data.WageYear4);
 	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
-		(record.data.DelayReturn == "CUSTOMER" ? TotalDelay : 0) - 
-		(record.data.WageReturn == "CUSTOMER" ? TotalWage : 0));	
-	
-	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(TotalWage);	
-	this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(FundWage);	
-	this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(AgentWage);	
-	
-	returnArr = YearWageCompute(record, TotalWage, YearMonths);
-	
-	this.get("SUM_Wage_1Year").innerHTML = returnArr[0] ? returnArr[0].amount : 0;
-	this.get("SUM_Wage_2Year").innerHTML = returnArr[1] ? returnArr[1].amount : 0;
-	this.get("SUM_Wage_3Year").innerHTML = returnArr[2] ? returnArr[2].amount : 0;
-	this.get("SUM_Wage_4Year").innerHTML = returnArr[3] ? returnArr[3].amount : 0;
-}
-
-RequestInfo.prototype.LoadSummarySHRTFUND = function(record, paymentStore){
-
-	if(paymentStore == null)
-	{
-		this.paymentStore = new Ext.data.Store({
-			proxy:{
-				type: 'jsonp',
-				url: this.address_prefix + "request.data.php?"+
-					"task=GetPartPayments&RequestID=" + this.RequestID,
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			},
-			fields : ["PayDate", "PayAmount"],
-			autoLoad : true,
-			listeners :{
-				load : function(){
-					RequestInfoObject.LoadSummarySHRTFUND(record, this);
-				}
-			}
-		});
-		return;
-	}
-	if(this.paymentStore.totalCount == 0)
-		return;
-	//--------------- total pay months -------------
-	firstPay = MiladiToShamsi(this.paymentStore.getAt(0).data.PayDate);
-	//LastPay = MiladiToShamsi(this.paymentStore.getAt(this.paymentStore.getCount()-1).data.PayDate);
-	//paymentPeriod = DateModule.GetDiffInMonth(firstPay, LastPay);
-	paymentPeriod = record.data.PayDuration*1;
-	if(paymentPeriod == 0)
-	{
-		LastPay = MiladiToShamsi(this.paymentStore.getAt(this.paymentStore.getCount()-1).data.PayDate);
-		paymentPeriod = DateModule.GetDiffInMonth(firstPay, LastPay);
-	}
-	//----------------------------------------------
-	totalWage = 0;
-	wages = new Array();
-	for(j=0; j<this.paymentStore.getCount(); j++)
-	{
-		wages.push(new Array());
-		wageindex = wages.length-1;
-		for(i=0; i < record.data.InstallmentCount; i++)
-		{
-			monthplus = paymentPeriod + record.data.DelayMonths*1 + (i+1)*record.data.PayInterval*1;
-			
-			installmentDate = MiladiToShamsi(this.paymentStore.getAt(0).data.PayDate);
-			installmentDate = DateModule.AddToJDate(installmentDate, 0, monthplus);
-			installmentDate = ShamsiToMiladi(installmentDate);
-			
-			jdiff = DateModule.GDateMinusGDate(installmentDate, this.paymentStore.getAt(j).data.PayDate);
-			
-			wage = Math.round((this.paymentStore.getAt(j).data.PayAmount/record.data.InstallmentCount)*
-				jdiff*record.data.CustomerWage/36500);
-			wages[wageindex].push(wage);
-			totalWage += wage;
-		}
-	}
-	InstallmentAmount = Math.round(record.data.PartAmount/record.data.InstallmentCount) + 
-				Math.round(totalWage/record.data.InstallmentCount);
-			
-	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(InstallmentAmount);
-	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(InstallmentAmount);
-	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(totalWage);	
-	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount);	
+		(record.data.DelayReturn == "CUSTOMER" ? record.data.TotalCustomerDelay : 0) - 
+		(record.data.WageReturn == "CUSTOMER" ? record.data.TotalCustomerWage : 0));	
 }
 
 //.........................................................

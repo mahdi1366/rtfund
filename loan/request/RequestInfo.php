@@ -67,6 +67,17 @@ $dg->addColumn("", "IsHistory","", true);
 $dg->addColumn("", "PayDuration","", true);
 $dg->addColumn("", "details","", true);
 
+$dg->addColumn("", "AllPay","", true);
+$dg->addColumn("", "LastPay","", true);
+$dg->addColumn("", "TotalCustomerDelay","", true);
+$dg->addColumn("", "TotalCustomerWage","", true);
+$dg->addColumn("", "TotalAgentWage","", true);
+$dg->addColumn("", "TotalFundWage","", true);
+$dg->addColumn("", "WageYear1","", true);
+$dg->addColumn("", "WageYear2","", true);
+$dg->addColumn("", "WageYear3","", true);
+$dg->addColumn("", "WageYear4","", true);
+
 $col = $dg->addColumn("عنوان شرایط", "PartDesc", "");
 $col->sortable = false;
 
