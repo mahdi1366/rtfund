@@ -42,7 +42,7 @@ function PersonInfo()
 			"EconomicID","PhoneNo","mobile","address","email","RegNo","RegDate","RegPlace",
 			"CompanyType","AccountNo","DomainID","WebSite","IsGovermental","DomainDesc",
 			"FatherName","ShNo","IsStaff","IsCustomer","IsSupporter","IsShareholder",
-			"IsAgent","IsExpert", "SmsNo"],
+			"IsAgent","IsExpert", "SmsNo","IsScienceBase","ScinceEndDate"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -51,6 +51,9 @@ function PersonInfo()
 				
 				PersonInfoObject.MakeInfoPanel(record);
 				PersonInfoObject.mainPanel.loadRecord(record);
+				PersonInfoObject.mainPanel.down("[name=IsScienceBase]").setValue(record.data.IsScienceBase == "YES");
+				PersonInfoObject.mainPanel.down("[name=ScinceEndDate]").setValue(MiladiToShamsi(record.data.ScinceEndDate));
+				
 				PersonInfoObject.tabPanel.down("[itemId=tab_info]").add(PersonInfoObject.mainPanel);
 				
 				if(record.data.IsReal == "YES")
@@ -395,6 +398,23 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			name : "SmsNo",
 			hideTrigger : true,
 			fieldLabel : "شماره دریافت پیامک"
+		},{
+			xtype : "checkbox",
+			name : "IsScienceBase",
+			boxLabel : "شرکت دانش بنیان است.",
+			listeners : {
+				change : function(){
+					if(this.checked)
+						PersonInfoObject.mainPanel.down("[name=ScinceEndDate]").enable();
+					else
+						PersonInfoObject.mainPanel.down("[name=ScinceEndDate]").disable();
+				}
+			}
+		},{
+			xtype : "shdatefield",
+			name : "ScinceEndDate",
+			disabled : true,
+			fieldLabel : "تاریخ اعتبار دانش بنیان"
 		},{
 			xtype : "filefield",
 			name : "PersonPic",
