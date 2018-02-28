@@ -193,6 +193,10 @@ function TestLoan(){
 				xtype : "container",
 				html : "این کارمزد بر اساس نحوه دریافت کارمزد محاسبه می گردد."
 			}]
+		},{
+			xtype : "hidden",
+			name : "PartID",
+			value : 0
 		}],buttons : [{
 			text : "محاسبه",
 			handler : function(){ TestLoanObject.SavePart();}
@@ -205,31 +209,32 @@ function TestLoan(){
 			url: this.address_prefix + "../request/request.data.php?task=GetRequestParts&RequestID=0",
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["AllPay","LastPay","TotalCustomerDelay","TotalCustomerWage","TotalAgentWage","TotalFundWage","WageYear1",
+		fields : ["PartAmount","AllPay","LastPay","TotalCustomerDelay","TotalCustomerWage","TotalAgentWage","TotalFundWage","WageYear1",
 					"WageYear2","WageYear3","WageYear4"],
 		listeners :{
 			load : function(){
+				me = TestLoanObject;
 				record = this.getAt(0);
 				if(record.data.ReqPersonID == "<?= SHEKOOFAI ?>")
 				{
-					this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.AllPay);
-					this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.LastPay);
-					this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerWage);
-					this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount);	
+					me.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.AllPay);
+					me.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.LastPay);
+					me.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerWage);
+					me.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount);	
 					return;
 				}
 
-				this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.AllPay);
-				this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.LastPay);
-				this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerDelay);
-				this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerWage);
-				this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.TotalFundWage);
-				this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(record.data.TotalAgentWage);
-				this.get("SUM_Wage_1Year").innerHTML = Ext.util.Format.Money(record.data.WageYear1);
-				this.get("SUM_Wage_2Year").innerHTML = Ext.util.Format.Money(record.data.WageYear2);
-				this.get("SUM_Wage_3Year").innerHTML = Ext.util.Format.Money(record.data.WageYear3);
-				this.get("SUM_Wage_4Year").innerHTML = Ext.util.Format.Money(record.data.WageYear4);
-				this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
+				me.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.AllPay);
+				me.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.LastPay);
+				me.get("SUM_Delay").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerDelay);
+				me.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerWage);
+				me.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.TotalFundWage);
+				me.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(record.data.TotalAgentWage);
+				me.get("SUM_Wage_1Year").innerHTML = Ext.util.Format.Money(record.data.WageYear1);
+				me.get("SUM_Wage_2Year").innerHTML = Ext.util.Format.Money(record.data.WageYear2);
+				me.get("SUM_Wage_3Year").innerHTML = Ext.util.Format.Money(record.data.WageYear3);
+				me.get("SUM_Wage_4Year").innerHTML = Ext.util.Format.Money(record.data.WageYear4);
+				me.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
 					(record.data.DelayReturn == "CUSTOMER" ? record.data.TotalCustomerDelay : 0) - 
 					(record.data.WageReturn == "CUSTOMER" ? record.data.TotalCustomerWage : 0));
 			}
@@ -264,10 +269,6 @@ TestLoan.prototype.SavePart = function(){
 			TestLoanObject.PartStore.load();
 		},
 		failure: function(form,action){
-			if(action.result.data == "")
-				Ext.MessageBox.alert("","عملیات مربوطه با شکست مواجه شد");
-			else
-				Ext.MessageBox.alert("",action.result.data);
 			mask.hide();
 		}
 	});
