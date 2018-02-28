@@ -11,7 +11,7 @@ p.tdAttr = "data-qtip='text'"
 --------------------------------------------------------------------------------
 {name : "fullDesc",	convert : function(value,record){} }
 --------------------------------------------------------------------------------
-**** GRID ****
+******* GRID ****
 
 store.getProxy().getReader().jsonData.message;
 this.grid.getStore().proxy.form = this.get("MainForm");
