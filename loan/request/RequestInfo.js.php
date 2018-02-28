@@ -1455,39 +1455,40 @@ RequestInfo.prototype.DefrayRequest = function(){
 
 		success : function(response){
 			result = Ext.decode(response.responseText);
-			if(result.data*1 > 0)
-			{
-				Ext.MessageBox.alert("","مبلغ تسویه وام " + 
-				Ext.util.Format.Money(result.data) + " ریال می باشد" +
-				"<br>تا زمانی که کل این مبلغ پرداخت نشده است قادر به تسویه وام نمی باشید");
-				RequestInfoObject.mask.hide();
-				return;
-			}
-			
-			me = RequestInfoObject;
-			me.mask.show();
+			Ext.MessageBox.confirm("","مبلغ تسویه وام " + 
+			Ext.util.Format.Money(result.data) + " ریال می باشد" +
+			"<br>آیا مایل به تسویه می باشید؟", function(btn){
+				
+				if(btn == "no")
+					return;
+				
+				me = RequestInfoObject;
+				me.mask.show();
 
-			Ext.Ajax.request({
-				methos : "post",
-				url : me.address_prefix + "request.data.php",
-				params : {
-					task : "DefrayRequest",
-					RequestID : me.RequestID
-				},
+				Ext.Ajax.request({
+					methos : "post",
+					url : me.address_prefix + "request.data.php",
+					params : {
+						task : "DefrayRequest",
+						RequestID : me.RequestID
+					},
 
-				success : function(response){
-					result = Ext.decode(response.responseText);
-					if(result.success)
-					{
-						Ext.MessageBox.alert("","سند مربوطه با موفقیت صادر گردید");
-						RequestInfoObject.LoadRequestInfo();					
-					}	
-					else if(result.data == "")
-						Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
-					else
-						Ext.MessageBox.alert("",result.data);
+					success : function(response){
+						result = Ext.decode(response.responseText);
+						if(result.success)
+						{
+							Ext.MessageBox.alert("","سند مربوطه با موفقیت صادر گردید");
+							RequestInfoObject.LoadRequestInfo();					
+						}	
+						else if(result.data == "")
+							Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+						else
+							Ext.MessageBox.alert("",result.data);
+						
+						me.mask.hide();
 
-				}
+					}
+				});
 			});
 		}	
 	});
