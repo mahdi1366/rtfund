@@ -726,8 +726,8 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 		die();
 	}*/
 	//------------------------------------------------------
-	PdoDataAccess::runquery("delete from LON_installments where RequestID=? AND history='NO'", 
-			array($RequestID));
+	if(!$ReturnAmounts)
+		PdoDataAccess::runquery("delete from LON_installments where RequestID=? AND history='NO'", array($RequestID));
 	//-----------------------------------------------
 	$obj2 = new LON_requests($RequestID);
 	if($obj2->ReqPersonID == SHEKOOFAI)
