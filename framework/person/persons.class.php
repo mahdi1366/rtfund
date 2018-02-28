@@ -34,6 +34,8 @@ class BSC_persons extends PdoDataAccess{
 	public $PersonSign;
 	public $PersonPic;
 	public $PostalCode;
+	public $IsScienceBase;
+	public $ScinceEndDate;
 	
 	public $IsCustomer;
 	public $IsShareholder;
@@ -50,6 +52,7 @@ class BSC_persons extends PdoDataAccess{
 	function __construct($PersonID = "") {
 		
 		$this->DT_RegDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_ScinceEndDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($PersonID != "")
 			PdoDataAccess::FillObject ($this, 
