@@ -353,7 +353,7 @@ function ChangeRequestStatus(){
 
 function GetRequestParts(){
 	
-	if(empty($_REQUEST["RequestID"]))
+	if(!isset($_REQUEST["RequestID"] ))
 	{
 		echo dataReader::getJsonData(array(), 0, $_GET["callback"]);
 		die();
@@ -421,7 +421,7 @@ function SavePart(){
 	$dt = LON_ReqParts::SelectAll("RequestID=? AND PartID<>?", array($obj->RequestID, $obj->PartID));
 	$firstPart = count($dt) > 0 ? false : true;
 		
-	if($obj->PartID > 0)
+	if($obj->PartID != "")
 	{
 		if(!$firstPart)
 		{
@@ -466,7 +466,6 @@ function SavePart(){
 
 	if(!$result)
 	{
-		print_r(ExceptionHandler::PopAllExceptions());
 		echo PdoDataAccess::GetLatestQueryString();
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
