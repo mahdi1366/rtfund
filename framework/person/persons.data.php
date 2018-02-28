@@ -100,7 +100,10 @@ function SavePerson(){
 	
 	$obj = new BSC_persons();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	$obj->IsScienceBase = !isset($_POST["IsScienceBase"]) ? "NO" : "YES";
 	unset($obj->PersonPic);
+	
 	
 	if(isset($_SESSION["USER"]["portal"]))
 		$obj->PersonID = $_SESSION["USER"]["PersonID"];
@@ -171,7 +174,7 @@ function SavePerson(){
 				array(":p" => $obj->PersonID));
 	}
 	//---------------------------------------------
-	 
+	//print_r(ExceptionHandler::PopAllExceptions()); 
 	echo Response::createObjectiveResponse($result, !$result ? ExceptionHandler::GetExceptionsToString() : "");
 	die();
 }
