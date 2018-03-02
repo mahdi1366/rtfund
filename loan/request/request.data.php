@@ -24,6 +24,8 @@ switch($task)
 	case "Selectguarantees":
 	case "DeleteRequest":
 	case "ChangeRequestStatus":
+	case "GetAllStatuses":	
+		
 	case "GetRequestParts":
 	case "SavePart":
 	case "DeletePart":
@@ -349,6 +351,13 @@ function ChangeRequestStatus(){
 	die();
 }
 
+function GetAllStatuses(){
+	
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=5 and param1=0");
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
 //------------------------------------------------
 
 function GetRequestParts(){
@@ -456,7 +465,6 @@ function SavePart(){
 				{
 					$partobj->IsHistory = "YES";
 					$partobj->EditPart($pdo);
-					ChangeStatus($partobj->RequestID, "100", $partobj->PartDesc, true, $pdo);
 				}
 			}
 			$result = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo);

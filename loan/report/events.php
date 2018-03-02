@@ -31,7 +31,10 @@ function MakeWhere(&$where, &$whereParam){
 
 	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
 	{
-		$where .= " AND ReqPersonID=" . $_SESSION["USER"]["PersonID"];
+		if($_REQUEST["DashboardType"] == "shareholder" || $_REQUEST["DashboardType"] == "agent")
+			$where .= " AND ReqPersonID=" . $_SESSION["USER"]["PersonID"];
+		if($_REQUEST["DashboardType"] == "customer")
+			$where .= " AND LoanPersonID=" . $_SESSION["USER"]["PersonID"];
 	}
 	
 	foreach($_POST as $key => $value)

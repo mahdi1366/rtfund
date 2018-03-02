@@ -66,6 +66,8 @@ class ReportGenerator {
 
 	public $SubHeaderFunction = "";
 	
+	public $flushReport = false;
+	
 	//------------ list of columns --------------
 	public $MainForm;
 	public $ObjectName;
@@ -168,9 +170,11 @@ class ReportGenerator {
 			die();
 		}
 		//........................ draw header .......................
-		
+		if($this->flushReport)
+			ob_start();
 		$this->drawHeader(true);
-
+		if($this->flushReport)
+			ob_flush();
 		//.................. fill the table with data  ......................
 		$index = 0;
 		
@@ -184,6 +188,8 @@ class ReportGenerator {
 				$this->DrawRow($row, $index);
 				$index++;
 				$this->PrevRecord = $row;
+				if($this->flushReport)
+					ob_flush();
 			}
 		} else {
 			$this->AllRowCount = $this->mysql_resource->RowCount();
@@ -192,6 +198,8 @@ class ReportGenerator {
 				$this->DrawRow($row, $index);
 				$index++;
 				$this->PrevRecord = $row;
+				if($this->flushReport)
+					ob_flush();
 			}
 		}
 

@@ -46,9 +46,13 @@ $col->renderer = "function(v,p,r){return MyRequest.OperationRender(v,p,r);}";
 $col->width = 120;
 
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 420;
-$dg->width = 770;
-$dg->title = "درخواست ارسالی";
+//$dg->height = 420;
+$dg->width = 750;
+$dg->title = "تسهیلات درخواستی";
+
+if($User == "customer")
+	$dg->EnableSearch = false;
+
 $dg->DefaultSortField = "ReqDate";
 $dg->autoExpandColumn = $_SESSION["USER"]["IsCustomer"] == "YES" ? "StatusDesc" : "LoanFullname";
 $grid = $dg->makeGrid_returnObjects();

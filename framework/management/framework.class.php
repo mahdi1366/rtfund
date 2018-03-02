@@ -454,4 +454,25 @@ class FRW_pics extends OperationClass {
     }
 
 }
+
+class FRW_news extends OperationClass {
+
+    const TableName = "FRW_news";
+    const TableKey = "NewsID";
+
+    public $NewsID;
+    public $NewsTitle;
+    public $context;
+	public $StartDate;
+	public $EndDate;
+
+    function __construct($PicID = '')
+    {
+        $this->DT_StartDate = DataMember::CreateDMA(DataMember::Pattern_Date);
+        $this->DT_EndDate = DataMember::CreateDMA(DataMember::Pattern_Date);
+
+        parent::__construct($PicID);
+    }
+
+}
 ?>

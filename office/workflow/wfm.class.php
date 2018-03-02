@@ -216,13 +216,13 @@ class WFM_FlowRows extends PdoDataAccess {
 			case "8":
 				PdoDataAccess::runquery("update ACC_docs set StatusID=? where DocID=?",
 					array($StepID, $this->ObjectID ));
-			case "6":
-			case "7":
-			case "8":
 			case "9":
 			case "10":
 			case "11":
 			case "12":
+			case "13":
+			case "14":
+			case "15":				
 				PdoDataAccess::runquery("update ATN_requests set ReqStatus=? where RequestID=?",
 					array($StepID, $this->ObjectID ));
 		}

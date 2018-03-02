@@ -69,7 +69,10 @@ function GetData(){
 	//.........................................................
 	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
 	{
-		$where .= " AND r.ReqPersonID=" . $_SESSION["USER"]["PersonID"];
+		if($_REQUEST["DashboardType"] == "shareholder" || $_REQUEST["DashboardType"] == "agent")
+			$where .= " AND r.ReqPersonID=" . $_SESSION["USER"]["PersonID"];
+		if($_REQUEST["DashboardType"] == "customer")
+			$where .= " AND r.LoanPersonID=" . $_SESSION["USER"]["PersonID"];
 	}
 	
 	if($_POST["ChequeStatus"] != INCOMECHEQUE_CHANGE)

@@ -147,8 +147,8 @@ function WFM_NewRequest() {
 	{
 		this.MainForm.getComponent("FormID").setValue(this.FormID);
 		this.FormSelect(this.FormID);
-		this.MainForm.down("[itemId=btn_save]").hide();
-		this.MainForm.down("[itemId=btn_view]").hide();
+		//this.MainForm.down("[itemId=btn_save]").hide();
+		//this.MainForm.down("[itemId=btn_view]").hide();
 	}
 }
 

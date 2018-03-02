@@ -39,6 +39,8 @@ function SelectReports() {
 			$where .= " OR IsAgentDashboard='YES'";
 		if($_SESSION["USER"]["IsSupporter"] == "YES")
 			$where .= " OR IsSupporterDashboard='YES'";
+		if($_SESSION["USER"]["IsCustomer"] == "YES")
+			$where .= " OR IsCustomerDashboard='YES'";
 		$where .= ")";
 	}
 	$list = FRW_reports::Get($where, $params);

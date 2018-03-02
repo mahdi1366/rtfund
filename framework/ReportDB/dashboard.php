@@ -7,12 +7,14 @@
 require_once '../header.inc.php';
 require_once './ReportDB.class.php';
 
+$DashboardType = $_REQUEST["DashboardType"];
 ?>
 <script>
 Dashboard.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	DashboardType : "<?= $DashboardType ?>",
 	masks : [], 
 	
 	get : function(elementID){
@@ -27,13 +29,14 @@ function Dashboard(){
 		style : "margin : 10px",
 		renderTo : this.get("div1"),
 		border : false,
-		width : 760
+		width : 750
 	});
 	
 	this.MainStore = new Ext.data.Store({
 		proxy:{
 			type: 'jsonp',
-			url: this.address_prefix + 'ReportDB.data.php?task=SelectReports&dashboard=true',
+			url: this.address_prefix + 'ReportDB.data.php?task=SelectReports&dashboard=true&'+
+				'DashboardType=' + this.DashboardType,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
 		fields :  ["ReportID", "title", "reportPath"],
@@ -49,8 +52,9 @@ function Dashboard(){
 				}
 				for(i=0; i < this.totalCount; i++)
 				{
+					me = DashboardObj;
 					record = this.getAt(i);
-					DashboardObj.MainPanel.add({
+					me.MainPanel.add({
 						xtype : "panel",
 						titleCollapse : true,
 						autoWidth : true, 
@@ -62,7 +66,8 @@ function Dashboard(){
 						title : record.data.title,
 						itemId : "cmp_panel_" + record.data.ReportID ,
 						loader : {
-							url : "../" + record.data.reportPath + "?dashboard_show=true",
+							url : "../" + record.data.reportPath + "?dashboard_show=true&DashboardType=" +
+								me.DashboardType,
 							scripts : true
 						},
 						listeners : {

@@ -15,6 +15,7 @@ class FRW_reports extends OperationClass{
 	public $IsShareholderDashboard ;
 	public $IsAgentDashboard ;
 	public $IsSupporterDashboard ;
+	public $IsCustomerDashboard ;
 	
 	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		

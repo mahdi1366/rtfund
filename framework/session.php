@@ -63,6 +63,7 @@ class session{
 
 			//..............................................................
 			 PdoDataAccess::runquery("delete from FRW_LoginAttempts where PersonID=? ",	array($temp[0]["PersonID"])); 
+			 PdoDataAccess::runquery("insert into FRW_LoginAttempts values(?, now())",	array($temp[0]["PersonID"])); 
 			//..............................................................
 
 			$_SESSION['USER']["PersonID"] = $temp[0]["PersonID"];
@@ -91,8 +92,6 @@ class session{
 			else
 				$_SESSION['LIPAddress'] = $_SERVER['REMOTE_ADDR'];
 			//..........................................................
-			PdoDataAccess::runquery("delete from FRW_LoginAttempts where PersonID=?",
-				array($temp[0]["PersonID"]));
 			
 			return true;
 			

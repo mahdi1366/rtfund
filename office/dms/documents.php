@@ -22,6 +22,7 @@ switch($ObjectType)
 		if($_SESSION["USER"]["IsStaff"] == "YES")
 			$access = true;
 		break;
+	//......................................................
 	case "loan":
 		require_once '../../loan/request/request.class.php';
 		$obj = new LON_requests($ObjectID);
@@ -30,6 +31,7 @@ switch($ObjectType)
 		if($_SESSION["USER"]["IsStaff"] == "YES" /*&& $obj->StatusID == "50"*/)
 			$access = true;
 		break;
+	//......................................................
 	case "plan":
 		require_once '../../plan/plan/plan.class.php';
 		require_once '../../plan/PLNconfig.inc.php';
@@ -42,12 +44,14 @@ switch($ObjectType)
 		if($_SESSION["USER"]["IsStaff"] == "YES")
 			$access = true;
 		break;
+	//......................................................
 	case "contract":
 		require_once '../../contract/contract/contract.class.php';
 		$obj = new CNT_contracts($ObjectID);
 		if($_SESSION["USER"]["IsStaff"] == "YES")
 			$access = true;
 		break;
+	//......................................................
 	case "warrenty":
 		require_once '../../loan/warrenty/request.class.php';
 		$obj = new WAR_requests($ObjectID);
@@ -57,10 +61,18 @@ switch($ObjectType)
 				&& in_array($obj->StatusID, array(STEPID_RAW,STEPID_RETURN_TO_CUSTOMER)) )
 			$access = true;
 		break;
+	//......................................................
 	case "accdoc":
 		require_once '../../accounting/docs/doc.class.php';
 		$obj = new ACC_docs($ObjectID);
 		if($obj->StatusID == ACC_STEPID_RAW)
+			$access = true;
+		break;
+	//......................................................
+	case "traffic":
+		require_once '../../attendance/traffic/traffic.class.php';
+		$obj = new ATN_requests($ObjectID);
+		if($obj->ReqStatus == ATN_STEPID_RAW)
 			$access = true;
 		break;
 }

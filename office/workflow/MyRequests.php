@@ -35,7 +35,7 @@ $col->align = "center";
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 500;
-$dg->width = 770;
+$dg->width = 750;
 $dg->title = "فرم های من";
 $dg->DefaultSortField = "RegDate";
 $dg->autoExpandColumn = "FormTitle";
@@ -54,6 +54,48 @@ WFM_MyRequests.prototype = {
 
 function WFM_MyRequests(){
 	
+	this.mainPanel = new Ext.form.FormPanel({
+		frame: true,
+		bodyStyle : "padding:10px",
+		renderTo : this.get("mainForm"),
+		title: 'فرم ها',
+		width: 500,
+		layout : {
+			type : "table",
+			columns : 2
+		}
+	});	
+		
+	this.NewVoteFormsStore = new Ext.data.Store({
+		proxy:{
+			type: 'jsonp',
+			url: this.address_prefix + "form.data.php?task=SelectValidForms",
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		},
+		fields : ["FormID","FormTitle"],
+		autoLoad : true,
+		listeners :{
+			load : function(){
+				
+				WFM_MyRequestsObject.mainPanel.removeAll();
+				for(i=0; i<this.totalCount; i++)
+				{
+					WFM_MyRequestsObject.mainPanel.add({
+						xtype : "button",
+						style : "margin:5px ",
+						itemId : this.getAt(i).data.FormID,
+						border : true,
+						iconCls : "add",
+						text : "ایجاد " + this.getAt(i).data.FormTitle,
+						handler : function(){ 
+							WFM_MyRequestsObject.AddNewRequest("",this.itemId);
+						}
+					});
+				}
+			}
+		}
+	});	
+	
 	this.grid = <?= $grid ?>;
 	this.grid.getView().getRowClass = function(record, index)
 	{
@@ -65,7 +107,7 @@ function WFM_MyRequests(){
 	this.grid.render(this.get("DivGrid"));
 }
 
-WFM_MyRequests.prototype.AddNewRequest = function(RequestID){
+WFM_MyRequests.prototype.AddNewRequest = function(RequestID, FormID){
 	
 	if(!this.requestWin)
 	{
@@ -93,7 +135,8 @@ WFM_MyRequests.prototype.AddNewRequest = function(RequestID){
 	this.requestWin.loader.load({
 		params : {
 			ExtTabID : this.requestWin.getEl().id,
-			RequestID : RequestID
+			RequestID : RequestID,
+			FormID : FormID
 		}
 	});
 	
@@ -289,7 +332,8 @@ WFM_MyRequests.prototype.ShowHistory = function(){
 WFM_MyRequestsObject = new WFM_MyRequests();
 
 </script>
-<center><br>
+<center>
+	<div id="mainForm"></div><BR>
 	<div id="DivGrid"></div>
 	توجه : ردیف های سبز رنگ ردیف هایی هستند که فرایند گردش آنها خاتمه یافته است
 </center>

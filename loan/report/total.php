@@ -64,8 +64,12 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 
 	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
 	{
-		$where .= " AND ReqPersonID=" . $_SESSION["USER"]["PersonID"];
+		if($_REQUEST["DashboardType"] == "shareholder" || $_REQUEST["DashboardType"] == "agent")
+			$where .= " AND ReqPersonID=" . $_SESSION["USER"]["PersonID"];
+		if($_REQUEST["DashboardType"] == "customer")
+			$where .= " AND LoanPersonID=" . $_SESSION["USER"]["PersonID"];
 	}
+	
 	foreach($_POST as $key => $value)
 	{
 		if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
@@ -616,9 +620,26 @@ function LoanReport_total()
 			hideTrigger : true,
 			fieldLabel : "کارمزد تنفس"
 		},{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../request/request.data.php?' +
+						"task=GetAllStatuses",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['InfoID','InfoDesc'],
+				autoLoad : true					
+			}),
+			fieldLabel : "وضعیت وام",
+			queryMode : 'local',
+			width : 370,
+			displayField : "InfoDesc",
+			valueField : "InfoID",
+			hiddenName : "StatusID"
+		},{
 			xtype : "container",
-			colspan : 2,
-			html : "وضعیت وام&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
+			html : "وضعیت خاتمه&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
 				"<input name=IsEnded type=radio value='YES' > خاتمه یافته &nbsp;&nbsp;" +
 				"<input name=IsEnded type=radio value='NO' > جاری &nbsp;&nbsp;" +
 				"<input name=IsEnded type=radio value='' checked > هردو " 

@@ -16,6 +16,8 @@ $SendID = !empty($_POST["SendID"]) ? $_POST["SendID"] : "0";
 $LetterObj = new OFC_letters($LetterID);
 $access = $LetterObj->IsSigned == "YES" ? false : true;
 $access = $SendID != "0" ? true : $access;
+$access = isset($_SESSION["USER"]["portal"]) ? false : $access;
+
 //------------------------------------------------------
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "../dms/dms.data.php?" .
 		"task=SelectAll&ObjectType=letterAttach&ObjectID=" . $LetterID . 

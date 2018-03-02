@@ -7,8 +7,8 @@ require_once '../header.inc.php';
 require_once(inc_response);
 require_once inc_dataReader;
 require_once 'letter.class.php';
-require_once '../dms/dms.class.php';
-require_once '../../framework/person/persons.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/office/dms/dms.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/framework/person/persons.class.php';
 			
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 if(!empty($task))
@@ -113,13 +113,15 @@ function SelectDraftLetters() {
     die();
 }
 
-function CustomerLetters(){
+function CustomerLetters($returnMode = false){
 	
 	$list = PdoDataAccess::runquery("
 		select * from OFC_letters l join OFC_LetterCustomers c using(LetterID)
 		where c.IsHide='NO' AND l.AccessType=".OFC_ACCESSTYPE_NORMAL." 
 			AND c.PersonID=" . $_SESSION["USER"]["PersonID"]);
 
+	if($returnMode)
+		return $list;
     echo dataReader::getJsonData($list, count($list), $_GET['callback']);
     die();
 }

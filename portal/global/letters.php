@@ -3,11 +3,11 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 1394.10
 //-----------------------------
-require_once '../header.inc.php';
+require_once getenv("DOCUMENT_ROOT") . '/portal/header.inc.php';
 require_once inc_dataGrid;
 require_once inc_component;
 
-$dg = new sadaf_datagrid("dg", "/office/letter/letter.data.php?task=CustomerLetters" , "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "global.data.php?task=CustomerLetters" , "grid_div");
 
 $dg->addColumn("", "LetterID", "", true);
 $dg->addColumn("", "LetterDate", "", true);
@@ -37,7 +37,6 @@ $col->renderer = "function(v,p,r){return PortalLetters.OperationRender(v,p,r);}"
 $col->width = 100;
 
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 490;
 $dg->width = 750;
 $dg->title = "لیست نامه های مربوط به شما";
 $dg->DefaultSortField = "LetterDate";
@@ -155,5 +154,4 @@ PortalLetters.prototype.ShowHistory = function(){
 }
 
 </script>
-	<br>
-	<div id="DivPanel" style="margin-right:8px;"></div>
+	<div id="DivPanel"></div>

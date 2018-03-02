@@ -51,9 +51,11 @@ function PersonInfo()
 				
 				PersonInfoObject.MakeInfoPanel(record);
 				PersonInfoObject.mainPanel.loadRecord(record);
-				PersonInfoObject.mainPanel.down("[name=IsScienceBase]").setValue(record.data.IsScienceBase == "YES");
-				PersonInfoObject.mainPanel.down("[name=ScinceEndDate]").setValue(MiladiToShamsi(record.data.ScinceEndDate));
-				
+				if(record.data.IsReal == "NO")
+				{
+					PersonInfoObject.mainPanel.down("[name=IsScienceBase]").setValue(record.data.IsScienceBase == "YES");
+					PersonInfoObject.mainPanel.down("[name=ScinceEndDate]").setValue(MiladiToShamsi(record.data.ScinceEndDate));
+				}
 				PersonInfoObject.tabPanel.down("[itemId=tab_info]").add(PersonInfoObject.mainPanel);
 				
 				if(record.data.IsReal == "YES")

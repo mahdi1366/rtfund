@@ -456,4 +456,35 @@ function removePics(){
     die();
 }
 
+//.............................................
+
+function SelectNews(){
+
+	$temp = FRW_news::Get();
+	echo dataReader::getJsonData($temp->fetchAll(), $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveNews(){
+	
+	$obj = new FRW_news();
+	$obj->FillObjectByArray($obj, $_POST);
+	
+	if(empty($obj->NewsID))
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteNew(){
+	
+	$obj = new FRW_news($_POST["NewsID"]);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
 ?>

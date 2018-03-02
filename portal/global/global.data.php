@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // create Date:	94.06
 //---------------------------
-require_once '../header.inc.php';
+require_once getenv("DOCUMENT_ROOT") . '/portal/header.inc.php';
 require_once getenv("DOCUMENT_ROOT") . '/framework/person/persons.class.php';
 require_once inc_response;
 require_once inc_dataReader;
@@ -20,6 +20,9 @@ switch ($task)
 		
 	case "AccDocFlow":
 		AccDocFlow();
+		
+	case "CustomerLetters":
+		CustomerLetters();
 }
 
 function SelectPersonInfo(){
@@ -75,6 +78,17 @@ function AccDocFlow(){
 	die();	
 }
 
+function CustomerLetters($returnMode = false){
+	
+	$list = PdoDataAccess::runquery("
+		select * from OFC_letters l join OFC_LetterCustomers c using(LetterID)
+		where c.IsHide='NO' AND l.AccessType=".OFC_ACCESSTYPE_NORMAL." 
+			AND c.PersonID=" . $_SESSION["USER"]["PersonID"]);
 
+	if($returnMode)
+		return $list;
+    echo dataReader::getJsonData($list, count($list), $_GET['callback']);
+    die();
+}
 
 ?>

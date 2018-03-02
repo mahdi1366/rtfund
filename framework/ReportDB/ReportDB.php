@@ -44,7 +44,7 @@ function FRW_ReportDB(){
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
 					fields :  ["ReportID", "title", "IsManagerDashboard", "IsShareholderDashboard",
-						"IsAgentDashboard", "IsSupporterDashboard"],
+						"IsAgentDashboard", "IsSupporterDashboard", "IsCustomerDashboard"],
 					autoLoad : true
 				}),
 				displayField: 'title',
@@ -68,6 +68,9 @@ function FRW_ReportDB(){
 							
 						this.up('form').down("[name=cmp_IsSupporterDashboard]").setDisabled(
 							records[0].data.IsSupporterDashboard == "YES" ? false : true );
+							
+						this.up('form').down("[name=IsCustomerDashboard]").setDisabled(
+							records[0].data.IsCustomerDashboard == "YES" ? false : true );	
 					}
 				}
 			},{
@@ -100,6 +103,9 @@ function FRW_ReportDB(){
 				},{
 					name : "cmp_IsSupporterDashboard",
 					value : "داشبورد حامی"
+				},{
+					name : "IsCustomerDashboard",
+					value : "داشبورد مشتری"
 				}]
 			},{
 				xtype : "combo",
@@ -110,7 +116,8 @@ function FRW_ReportDB(){
 						["IsManagerDashboard" , "داشبورد مدیریت" ],
 						["IsShareholderDashboard" , "داشبورد سهامدار" ],
 						["IsAgentDashboard" , "داشبورد سرمایه گذار" ],
-						["IsSupporterDashboard" , "داشبورد حامی" ]
+						["IsSupporterDashboard" , "داشبورد حامی" ],
+						["IsCustomerDashboard" , "داشبورد مشتری" ]
 					],
 					fields : ['id','value']
 				}),
