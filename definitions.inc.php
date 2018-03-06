@@ -95,6 +95,7 @@ define("SOURCETYPE_FORM", "5");
 define("BLOCKID_LOAN","8");
 
 //------------- flowID baseinfo typeID=11 ---------------
+define("FLOWID_LOAN","1");
 define("FLOWID_WFM_FORM","5");
 define("FLOWID_WARRENTY", "4");
 define("FLOWID_CONTRACT","2");
