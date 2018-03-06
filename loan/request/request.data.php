@@ -388,9 +388,10 @@ function GetRequestParts(){
 			array($CostCode_commitment, $dt[$i]["RequestID"], $dt[$i]["PartID"]));
 		$dt[$i]["IsDocRegister"] = $temp[0][0]*1 > 0 ? "YES" : "NO"; 	
 		
-		
-		$dt[$i]["IsStarted"] = WFM_FlowRows::IsFlowStarted(1, $dt[$i]["PartID"]) ? "YES" : "NO";
-		$dt[$i]["IsEnded"] = WFM_FlowRows::IsFlowEnded(1, $dt[$i]["PartID"]) ? "YES" : "NO";
+		$result = WFM_FlowRows::GetFlowInfo(FLOWID_LOAN, $dt[$i]["PartID"]);
+		$dt[$i]["IsStarted"] = $result["IsStarted"] ? "YES" : "NO";
+		$dt[$i]["IsEnded"] = $result["IsEnded"] ? "YES" : "NO";
+		$dt[$i]["ResendEnable"] = $result["ResendEnable"] ? "YES" : "NO";		
 		
 		//--------------- computes ------------------
 		$installments = ComputeInstallments($dt[$i]["RequestID"], false, null, true);
