@@ -199,14 +199,14 @@ RequestInfo.prototype.OperationMenu = function(e){
 	
 	if(record.data.imp_VamCode*1 > 0)
 	{
-		if(this.EditAccess && this.RequestRecord.data.IsEnded == "NO")
+		if(this.EditAccess && this.RequestRecord.data.IsEnded == "NO" )
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
 			handler : function(){ return RequestInfoObject.PartInfo(true); }});
 		
 		op_menu.showAt(e.pageX-120, e.pageY);
 		return;
 	}
-	if(record.data.IsStarted == "NO" && record.data.IsEnded == "NO")
+	if(record.data.IsStarted == "NO" || record.data.ResendEnable == "YES")
 	{
 		if(record.data.StatusID == "70")
 			op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
