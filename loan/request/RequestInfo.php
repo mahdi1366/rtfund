@@ -50,8 +50,11 @@ $dg->addColumn("", "DelayDays","", true);
 $dg->addColumn("", "ForfeitPercent","", true);
 $dg->addColumn("", "CustomerWage","", true);
 $dg->addColumn("", "FundWage","", true);
+
 $dg->addColumn("", "IsStarted","", true);
 $dg->addColumn("", "IsEnded","", true);
+$dg->addColumn("", "ResendEnable", "", true);
+
 $dg->addColumn("", "IsPaid","", true);
 $dg->addColumn("", "WageReturn","", true);
 $dg->addColumn("", "DelayReturn","", true);
