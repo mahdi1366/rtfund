@@ -430,8 +430,9 @@ class WFM_FlowRows extends PdoDataAccess {
 	
 	static function GetFlowInfo($FlowID, $ObjectID){
 		
-		$dt = PdoDataAccess::runquery("select * from WFM_FlowRows 
-			where FlowID=? AND ObjectID=? 
+		$dt = PdoDataAccess::runquery("select * from WFM_FlowRows fr
+			join WFM_FlowSteps sp on(sp.FlowID=fr.FlowID AND fr.StepRowID=sp.StepRowID)
+			where fr.FlowID=? AND ObjectID=? 
 			order by RowID desc limit 1", array($FlowID, $ObjectID));
 		
 		return array(
