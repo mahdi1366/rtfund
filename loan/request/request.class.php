@@ -1382,6 +1382,18 @@ class LON_ReqParts extends PdoDataAccess{
 		
 		return new LON_ReqParts($dt[0]["PartID"]);
 	}
+	
+	static function GetRejectParts(){
+
+		return PdoDataAccess::runquery("
+			select r.RequestID ,concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) LoanPersonFullname
+				from WFM_FlowRows fr
+				join WFM_FlowSteps sp on(sp.FlowID=fr.FlowID AND fr.StepRowID=sp.StepRowID)
+				join LON_ReqParts r on(PartID=ObjectID)
+				join LON_requests using(RequestID)
+				left join BSC_persons p1 on(p1.PersonID=LoanPersonID)
+			where fr.FlowID=" . FLOWID_LOAN . " AND IsLastRow='YES' AND ActionType='REJECT' AND StepID=1");	
+	}
 }
 
 class LON_installments extends PdoDataAccess{
@@ -1683,6 +1695,7 @@ class LON_events extends OperationClass {
     public $EventDate;
 	public $LetterID;
 	public $FollowUpDate;
+	public $FollowUpDesc;
 	public $FollowUpPersonID;
 	  
     function __construct($id = ""){

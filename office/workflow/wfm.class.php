@@ -179,6 +179,7 @@ class WFM_FlowRows extends PdoDataAccess {
 	public $ActionComment;
 	public $IsEnded;
 	public $StepDesc;
+	public $IsLastRow;
 	
 	public $_StepID;
 	public $_ObjectType;

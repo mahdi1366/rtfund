@@ -10,7 +10,6 @@ require_once inc_dataGrid;
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
-require_once 'ManageRequests.js.php';
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=SelectAllRequests", "grid_div");
 
@@ -54,7 +53,7 @@ $col->renderer = "ManageRequest.OperationRender";
 $col->width = 50;
 $col->align = "center";
 
-$dg->addObject("ManageRequestObject.FilterObj");
+$dg->addObject("this.FilterObj");
 
 if($accessObj->EditFlag)
 	$dg->addButton("", "تایید", "tick", "function(){ManageRequestObject.Confirm();}");
@@ -66,31 +65,18 @@ $dg->title = "درخواست های وام";
 $dg->DefaultSortField = "ReqDate";
 $dg->autoExpandColumn = "LoanFullname";
 $grid = $dg->makeGrid_returnObjects();
+
+//----------------------------------------------
+
+require_once "request.class.php";
+$temp = LON_ReqParts::GetRejectParts();
+$rejectedParts = common_component::PHPArray_to_JSSimpleArray($temp);
+
+//----------------------------------------------
+
+require_once 'ManageRequests.js.php';
 ?>
-<script>
-ManageRequestObject.grid = <?= $grid ?>;
-ManageRequestObject.grid.on("itemdblclick", function(view, record){
-	framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", 
-	{
-		RequestID : record.data.RequestID,
-		MenuID : '<?= $_POST["MenuID"] ?>'
-	});
-});	
-ManageRequestObject.grid.getView().getRowClass = function(record, index)
-	{
-		if(record.data.IsEnded == "YES")
-			return "greenRow";
-		if(record.data.IsConfirm == "YES")
-			return "violetRow";
-		if(record.data.StatusID == "<?= LON_REQ_STATUS_REJECT ?>")
-			return "pinkRow";
-		return "";
-	}	
-	
-ManageRequestObject.grid.render(ManageRequestObject.get("DivGrid"));
-</script>
 <center><br>
-	<div id="DivGrid"></div>
-	<br>
-	<div id="LoanInfo"></div>
+	<div id="rejectedDIV"></div>
+	<div id="DivGrid"></div>	
 </center>

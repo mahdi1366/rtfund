@@ -75,9 +75,62 @@ function ManageRequest(){
 			}]
 		}
 	});
+	
+	this.grid = <?= $grid ?>;
+	this.grid.on("itemdblclick", function(view, record){
+		framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", 
+		{
+			RequestID : record.data.RequestID,
+			MenuID : '<?= $_POST["MenuID"] ?>'
+		});
+	});	
+	this.grid.getView().getRowClass = function(record, index)
+		{
+			if(record.data.IsEnded == "YES")
+				return "greenRow";
+			if(record.data.IsConfirm == "YES")
+				return "violetRow";
+			if(record.data.StatusID == "<?= LON_REQ_STATUS_REJECT ?>")
+				return "pinkRow";
+			return "";
+		}	
+	this.grid.render(this.get("DivGrid"));
+
+	this.rejectedParts = <?= $rejectedParts ?>;
+	if(this.rejectedParts.length > 0)
+	{
+		this.RejectPanel = new Ext.panel.Panel({
+			title : "وام هایی که شرایط پرداخت آنها تایید نشده است",
+			renderTo : this.get("rejectedDIV"),
+			frame : true,			
+			width : 400,
+			height : 140,
+			autoScroll : true,
+			items :[{
+				xtype: 'menu',
+				border : false,
+				itemId : "cmp_menu",
+				bodyStyle : "text-align:right;background-color:white !important;",
+				floating: false
+			}]			
+		}); 
+		for(i=0; i<this.rejectedParts.length; i++)
+			this.RejectPanel.down("[itemId=cmp_menu]").add({
+				text : "[ " + this.rejectedParts[i][0] + " ] " + this.rejectedParts[i][2],
+				icon: '/generalUI/ext4/resources/themes/icons/arrow-left.gif',
+				handler : Ext.bind(ManageRequest.OpenRequest, this,[this.rejectedParts[i][0]])
+			});
+	}
 }
 
-ManageRequestObject = new ManageRequest();
+ManageRequest.OpenRequest = function(RequestID){
+	
+	framework.OpenPage("../loan/request/RequestInfo.php", "اطلاعات درخواست", 
+		{
+			RequestID : RequestID,
+			MenuID : '<?= $_POST["MenuID"] ?>'
+		});
+}
 
 ManageRequest.OperationRender = function(value, p, record){
 	
@@ -85,6 +138,8 @@ ManageRequest.OperationRender = function(value, p, record){
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
+
+ManageRequestObject = new ManageRequest();
 
 ManageRequest.prototype.OperationMenu = function(e){
 
@@ -362,12 +417,12 @@ ManageRequest.prototype.Confirm = function()
 ManageRequest.prototype.ShowEvents = function(){
 
 	if(!this.EventsWin)
-	{  
+	{   
 		this.EventsWin = new Ext.window.Window({
 			title: 'رویدادهای مرتبط با طرح',
 			modal : true,
 			autoScroll : true,
-			width: 700,
+			width: 800,
 			height : 400,
 			bodyStyle : "background-color:white",
 			closeAction : "hide",

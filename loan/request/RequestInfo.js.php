@@ -1460,7 +1460,10 @@ RequestInfo.prototype.DefrayRequest = function(){
 			"<br>آیا مایل به تسویه می باشید؟", function(btn){
 				
 				if(btn == "no")
+				{
+					RequestInfoObject.mask.hide();
 					return;
+				}	
 				
 				me = RequestInfoObject;
 				me.mask.show();
@@ -2181,14 +2184,14 @@ RequestInfo.prototype.ShowMessages = function(){
 }
 
 RequestInfo.prototype.ShowEvents = function(){
-
+ 
 	if(!this.EventsWin)
 	{
 		this.EventsWin = new Ext.window.Window({
 			title: 'رویدادهای مرتبط با وام',
 			modal : true,
 			autoScroll : true,
-			width: 700, 
+			width: 800, 
 			height : 400,
 			bodyStyle : "background-color:white",
 			closeAction : "hide",

@@ -24,24 +24,28 @@ $col->editor = ColumnEditor::TextField();
 	
 $col = $dg->addColumn("تاریخ رویداد", "EventDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
-$col->width = 100;
+$col->width = 70;
 
 $col = $dg->addColumn("ثبت کننده", "RegFullname");
-$col->width = 120;
+$col->width = 100;
 
 $col = $dg->addColumn("شماره نامه", "LetterID");
 $col->renderer = "LoanEvent.LetterRender";
 $col->editor = ColumnEditor::NumberField(true);
-$col->width = 100;
+$col->width = 70;
 
-$col = $dg->addColumn("پیگیری کننده", "FollowUpPersonID");
+$col = $dg->addColumn("پیگیری کننده آینده", "FollowUpPersonID");
 $col->editor = "this.PersonCombo";
 $col->renderer = "function(v,p,r){return r.data.FollowUpFullname }";
-$col->width = 100;
+$col->width = 70;
 
-$col = $dg->addColumn("تاریخ پیگیری", "FollowUpDate", GridColumn::ColumnType_date);
+$col = $dg->addColumn("تاریخ پیگیری آینده", "FollowUpDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField(true);
-$col->width = 100;
+$col->width = 70;
+
+$col = $dg->addColumn("شرح پیگیری آینده", "FollowUpDesc");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 200;
 
 if($accessObj->AddFlag)
 {
@@ -58,7 +62,7 @@ if($accessObj->RemoveFlag)
 	$col->width = 35;
 }
 $dg->height = 336;
-$dg->width = 685;
+$dg->width = 785;
 $dg->emptyTextOfHiddenColumns = true;
 $dg->EnableSearch = false;
 $dg->HeaderMenu = false;

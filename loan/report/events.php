@@ -15,8 +15,8 @@ function IsDocRegisteredRender($row,$value){
 $page_rpg = new ReportGenerator("mainForm","LoanReport_eventsObj");
 $page_rpg->addColumn("شماره وام", "RequestID");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
-$page_rpg->addColumn("معرفی کننده", "ReqFullname", "ReqPersonRender");
-$col = $page_rpg->addColumn("تاریخ درخواست", "ReqDate");
+//$page_rpg->addColumn("معرفی کننده", "ReqFullname", "ReqPersonRender");
+//$col = $page_rpg->addColumn("تاریخ درخواست", "ReqDate");
 $col->type = "date";
 $page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
 $page_rpg->addColumn("مشتری", "LoanFullname");
@@ -24,8 +24,11 @@ $page_rpg->addColumn("شعبه", "BranchName");
 
 $page_rpg->addColumn("تاریخ رویداد", "EventDate", "ReportDateRender");
 $page_rpg->addColumn("شرح رویداد", "EventTitle");
-$page_rpg->addColumn("شماره نامه", "LetterID");
+//$page_rpg->addColumn("شماره نامه", "LetterID");
 $page_rpg->addColumn("تاریخ پیگیری", "FollowUpDate", "ReportDateRender");
+
+$page_rpg->addColumn("پیگیری کننده آینده", "FollowUpFullname");
+$page_rpg->addColumn("شرح پیگیری آینده", "FollowUpDesc");
 
 function MakeWhere(&$where, &$whereParam){
 
@@ -94,6 +97,7 @@ function GetData(){
 	$query = "select e.*,r.*,l.*,p.*,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
+				concat_ws(' ',p3.CompanyName,p3.fname,p3.lname) FollowUpFullname,
 				BranchName".
 				($userFields != "" ? "," . $userFields : "")."
 				
@@ -104,11 +108,12 @@ function GetData(){
 			join BSC_branches using(BranchID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
+			left join BSC_persons p3 on(p3.PersonID=FollowUpPersonID)
 			where 1=1 " . $where;
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
 	$query .= $group == "" ? " group by e.EventID" : " group by " . $group;
-	$query .= $group == "" ? " order by e.EventDate" : " order by " . $group;		
+	$query .= $group == "" ? " order by e.EventDate desc" : " order by " . $group;		
 	
 	return PdoDataAccess::runquery($query, $whereParam);
 	
@@ -134,12 +139,12 @@ function ListData($IsDashboard = false){
 	$col = $rpg->addColumn("نوع وام", "LoanDesc");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
-	$col = $rpg->addColumn("معرفی کننده", "ReqFullname");
-	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
-	$col = $rpg->addColumn("تاریخ درخواست", "ReqDate", "ReportDateRender");
-	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
+	//$col = $rpg->addColumn("معرفی کننده", "ReqFullname");
+	//$col->rowspaning = true;
+	//$col->rowspanByFields = array("RequestID");
+//	$col = $rpg->addColumn("تاریخ درخواست", "ReqDate", "ReportDateRender");
+//	$col->rowspaning = true;
+//	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "ReportMoneyRender");
 	$col->EnableSummary();
 	$col->rowspaning = true;
@@ -153,8 +158,10 @@ function ListData($IsDashboard = false){
 	
 	$rpg->addColumn("تاریخ رویداد", "EventDate", "ReportDateRender");
 	$rpg->addColumn("شرح رویداد", "EventTitle");
-	$rpg->addColumn("شماره نامه", "LetterID");
+	//$rpg->addColumn("شماره نامه", "LetterID");
 	$rpg->addColumn("تاریخ پیگیری", "FollowUpDate", "ReportDateRender");
+	$rpg->addColumn("پیگیری کننده آینده", "FollowUpFullname");
+	$rpg->addColumn("شرح پیگیری آینده", "FollowUpDesc");
 	
 	if(!$rpg->excel && !$IsDashboard)
 	{
