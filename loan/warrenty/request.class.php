@@ -57,20 +57,26 @@ class WAR_requests extends OperationClass
 	static function SelectAll($where = "", $param = array(), $order = ""){
 		
 		return PdoDataAccess::runquery_fetchMode("
-			select r.* , concat_ws(' ',fname,lname,CompanyName) fullname, sp.StepDesc,
+			select r.* , concat_ws(' ',fname,lname,CompanyName) fullname, 
 				p.address,
 				p.NationalID,
 				p.PhoneNo,
 				p.mobile,
 				bf.InfoDesc TypeDesc,d.DocID,group_concat(distinct d.LocalNo) LocalNo, d.StatusID DocStatusID , 
 				BranchName,
-				if(lst.RequestID=r.RequestID, 'YES', 'NO') IsCurrent
-
+				if(lst.RequestID=r.RequestID, 'YES', 'NO') IsCurrent,
+				concat(if(fr.ActionType='REJECT','رد ',''),sp.StepDesc) StepDesc,
+				if(sp.StepID=1 AND fr.ActionType='REJECT', 'YES', 'NO') ResendEnable,
+				fr.ActionType
+				
 			from WAR_requests r 
 				left join BSC_persons p using(PersonID)
 				join BSC_branches b using(BranchID)
 				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
 				join WFM_FlowSteps sp on(sp.FlowID=" . FLOWID_WARRENTY . " AND sp.StepID=r.StatusID)
+				left join WFM_FlowRows fr on(fr.IsLastRow='YES' AND fr.ObjectID=r.RequestID 
+					AND fr.StepRowID=sp.StepRowID AND fr.FlowID=sp.FlowID)
+			
 				left join ACC_DocItems on(r.RequestID=SourceID2 AND 
 					SourceType in(" . DOCTYPE_WARRENTY . ",".DOCTYPE_WARRENTY_END.",".DOCTYPE_WARRENTY_EXTEND."))
 				left join ACC_docs d using(DocID)

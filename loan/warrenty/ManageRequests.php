@@ -36,6 +36,8 @@ $dg->addColumn("", "IsCurrent", "", true);
 $dg->addColumn("", "SavePercent", "", true);
 $dg->addColumn("", "SubjectDesc", "", true);
 $dg->addColumn("", "SubjectNO", "", true);
+$dg->addColumn("", "ResendEnable", "", true);
+$dg->addColumn("", "ActionType", "", true);
 
 $col = $dg->addColumn("شعبه", "BranchName");
 $col->width = 120;
@@ -99,6 +101,8 @@ WarrentyRequestObject.grid.getView().getRowClass = function(record, index)
 	{
 		if(record.data.IsEnded == "YES")
 			return "greenRow";
+		if(record.data.ActionType == "REJECT")
+			return "pinkRow";
 		return "";
 	}	
 	

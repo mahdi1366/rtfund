@@ -210,6 +210,8 @@ function WarrentyRequest(){
 			handler : function(){ this.up('panel').hide(); }
 		}]
 	});
+	
+	
 }
 
 WarrentyRequest.OrgRender = function(v,p,r){
@@ -234,18 +236,19 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
 	
-	if(record.data.StatusID == "<?= WAR_STEPID_RAW ?>")
+	if(record.data.StatusID == "<?= WAR_STEPID_RAW ?>" || record.data.ResendEnable == "YES")
 	{
 		if(this.EditAccess)
+		{
+			op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
+			handler : function(){ return WarrentyRequestObject.StartFlow(); }});
+		
 			op_menu.add({text: 'ویرایش درخواست',iconCls: 'edit', 
 			handler : function(){ return WarrentyRequestObject.editRequest(); }});
-	
+		}
 		if(this.RemoveAccess)
 			op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
 			handler : function(){ return WarrentyRequestObject.deleteRequest(); }});
-	
-		op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
-			handler : function(){ return WarrentyRequestObject.StartFlow(); }});
 	}
 	else
 	{
@@ -253,33 +256,33 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 			handler : function(){ return WarrentyRequestObject.InfoRequest(); }});
 	}
 	
-	if(record.data.StatusID == "<?= WAR_STEPID_CONFIRM ?>" && record.data.IsCurrent == "YES")
+	if(this.EditAccess && record.data.StatusID == "<?= WAR_STEPID_CONFIRM ?>")
 	{
-		if(this.EditAccess)
+		if(record.data.DocID == "" || record.data.DocID == null)
+			op_menu.add({text: 'صدور سند',iconCls: 'send',
+			handler : function(){ return WarrentyRequestObject.BeforeRegDoc(1); }});
+		else if(record.data.DocStatusID == "<?= ACC_STEPID_RAW ?>")
 		{
-			if(record.data.DocID == "" || record.data.DocID == null)
-				op_menu.add({text: 'صدور سند',iconCls: 'send',
-				handler : function(){ return WarrentyRequestObject.BeforeRegDoc(1); }});
-			else if(record.data.DocStatusID == "<?= ACC_STEPID_RAW ?>")
-			{
-				op_menu.add({text: 'اصلاح سند',iconCls: 'edit',
-				handler : function(){ return WarrentyRequestObject.BeforeRegDoc(2); }});
+			op_menu.add({text: 'اصلاح سند',iconCls: 'edit',
+			handler : function(){ return WarrentyRequestObject.BeforeRegDoc(2); }});
 
-				op_menu.add({text: 'برگشت سند',iconCls: 'undo',
-				handler : function(){ return WarrentyRequestObject.ReturnWarrentyDoc(); }})
-			}
-			
+			op_menu.add({text: 'برگشت سند',iconCls: 'undo',
+			handler : function(){ return WarrentyRequestObject.ReturnWarrentyDoc(); }})
+		}
+
+		if(record.data.IsCurrent == "YES")
+		{
 			op_menu.add({text: 'خاتمه ضمانت نامه',iconCls: 'finish',
 				handler : function(){ return WarrentyRequestObject.EndWarrentyDoc(); }})
-			
+
 			op_menu.add({text: 'ابطال ضمانت نامه',iconCls: 'cross',
 				handler : function(){ return WarrentyRequestObject.BeforeCancelWarrentyDoc(); }})
-			
+
 			op_menu.add({text: 'تمدید ضمانت نامه',iconCls: 'delay',
 				handler : function(){ return WarrentyRequestObject.BeforeExtendWarrentyDoc(); }})
 		}
 	}
-	if(record.data.StatusID == "<?= WAR_STEPID_CANCEL ?>" && record.data.IsCurrent == "YES")
+	if(this.EditAccess && record.data.StatusID == "<?= WAR_STEPID_CANCEL ?>" && record.data.IsCurrent == "YES")
 	{
 		op_menu.add({text: 'برگشت از ابطال',iconCls: 'undo',
 				handler : function(){ return WarrentyRequestObject.ReturnCancel(); }})

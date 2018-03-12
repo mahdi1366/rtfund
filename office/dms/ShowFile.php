@@ -6,19 +6,30 @@
 require_once 'header.inc.php';
 require_once inc_phpExcelReader;
 
-if(empty($_REQUEST["DocumentID"]) || empty($_REQUEST["ObjectID"]))
+if(empty($_REQUEST["ObjectID"]))
 	die();
 
-$DocumentID = $_REQUEST["DocumentID"];
-$ObjectID = $_REQUEST["ObjectID"];
+$ObjectID = (int)$_REQUEST["ObjectID"];
+$DocumentID = isset($_REQUEST["DocumentID"]) ? (int)$_REQUEST["DocumentID"] : "";
+$RowID = isset($_REQUEST["RowID"]) ? (int)$_REQUEST["RowID"] : "";
+$DocTypes = isset($_REQUEST["DocType"]) ? $_REQUEST["DocType"] : "";
+
+InputValidation::validate($_REQUEST["DocType"], InputValidation::Pattern_NumComma);
 
 $query = "select RowID,PageNo,FileType,FileContent,DocumentID,ObjectID,DocDesc
-	from DMS_DocFiles df join DMS_documents using(DocumentID)
-	where df.DocumentID=? AND ObjectID=?" . (!empty($_REQUEST["RowID"]) ? " AND RowID=?" : "")."
+	from DMS_DocFiles df join DMS_documents d using(DocumentID)
+	where ObjectID=:o " 
+		. (!empty($RowID) ? " AND RowID=:r" : "")
+		. (!empty($DocumentID) ? " AND df.DocumentID=:d" : "")
+		. (!empty($DocTypes) ? " AND d.DocType in(".$DocTypes.")" : "")."
 	order by PageNo";
-$params = array($DocumentID, $ObjectID);
-if(!empty($_REQUEST["RowID"]))
-	$params[] = $_REQUEST["RowID"];
+
+$params = array(":o" => $ObjectID);
+
+if(!empty($RowID))
+	$params[":r"] = (int)$RowID;
+if(!empty($DocumentID))
+	$params[":d"] = (int)$DocumentID;
 
 $dt = PdoDataAccess::runquery($query, $params);
 

@@ -67,6 +67,11 @@ function ShowInfo(&$errorMsg){
 	
 	require_once 'PrintWarrenty.php';
 	
+	$_REQUEST["ObjectID"] = $_POST["RequestID"];
+	$_REQUEST["DocType"] = "69,70";
+	
+	require_once '../../office/dms/ShowFile.php';
+	
 	return true;
 }
 
