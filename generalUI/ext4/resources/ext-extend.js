@@ -3200,6 +3200,87 @@ Ext.apply(Ext.dom.Element.prototype, {
     }
 });
 Ext.override(Ext.form.field.HtmlEditor,{
+	fontFamilies : [
+        'nazanin',
+		'titr',
+        'Courier New',
+        'Tahoma',
+        'Times New Roman',
+        'Verdana'
+    ],
+    defaultFont: 'nazanin',
+	buttonTips : {
+        bold : {
+            title: 'Bold (Ctrl+B)',
+            text: 'Make the selected text bold.',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        italic : {
+            title: 'Italic (Ctrl+I)',
+            text: 'Make the selected text italic.',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        underline : {
+            title: 'Underline (Ctrl+U)',
+            text: 'Underline the selected text.',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        increasefontsize : {
+            title: 'افزایش اندازه',
+            text: 'افزایش اندازه فونت',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        decreasefontsize : {
+            title: 'کاهش اندازه',
+            text: 'کاهش اندازه فونت',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        backcolor : {
+            title: 'رنگ زمینه',
+            text: 'تغییر رنگ زمینه متن انتخابی',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        forecolor : {
+            title: 'رنگ متن',
+            text: 'تغییر رنگ متن انتخابی',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        justifyleft : {
+            title: 'چپ چین',
+            text: 'انتقال متن به سمت چپ',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        justifycenter : {
+            title: 'وسط چین',
+            text: 'انتقال متن به وسط',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        justifyright : {
+            title: 'راست چین',
+            text: 'انتقال متن به راست',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        insertunorderedlist : {
+            title: 'Bullet List',
+            text: 'Start a bulleted list.',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        insertorderedlist : {
+            title: 'Numbered List',
+            text: 'Start a numbered list.',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        createlink : {
+            title: 'Hyperlink',
+            text: 'Make the selected text a hyperlink.',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        sourceedit : {
+            title: 'Source Edit',
+            text: 'Switch to source editing mode.',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        }
+    },
 	createToolbar : function(editor){
         var me = this,
             items = [], i,
@@ -3352,9 +3433,9 @@ Ext.override(Ext.form.field.HtmlEditor,{
         if (me.enableAlignments) {
             items.push(
                 '-',
-                btn('justifyleft'),
+                btn('justifyright'),
                 btn('justifycenter'),
-                btn('justifyright')
+                btn('justifyleft')
             );
         }
 
@@ -3410,6 +3491,11 @@ Ext.override(Ext.form.field.HtmlEditor,{
         });
 
         me.toolbar = toolbar;
+    },
+	getDocMarkup: function() {
+        var me = this,
+            h = me.iframeEl.getHeight() - me.iframePad * 2;
+        return Ext.String.format('<html><head><link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" /><style type="text/css">body{border:0;margin:0;padding:{0}px;height:{1}px;box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box;cursor:text}</style></head><body style=direction:rtl></body></html>', me.iframePad, h);
     }
 });
 
