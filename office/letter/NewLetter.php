@@ -74,6 +74,7 @@ Letter.prototype.LoadLetter = function(){
 				//..........................................................
 				record = this.getAt(0);
 				me.letterPanel.loadRecord(record);
+				me.TabPanel.down("[name=context]").setValue(record.data.context);
 				
 				me.TabPanel.down("[itemId=pagesView]").getStore().proxy.extraParams = {
 					LetterID : record.data.LetterID
@@ -347,13 +348,17 @@ Letter.prototype.BuildForms = function(){
 				valueField : "TemplateTitle",
 				listeners :{
 					select : function(store,records){
-						CKEDITOR.instances.LetterEditor.setData(records[0].data.context);
+						
+						LetterObject.TabPanel.down("[name=context]").setValue(records[0].data.context);
+						//CKEDITOR.instances.LetterEditor.setData(records[0].data.context);
 					}
 				}
 			},{
-				xtype : "container",
-				html : "<div id='LetterEditor'></div>"
-			}],			
+				xtype : "htmleditor",
+				width : 700,
+				height : 400,
+				name : "context"
+			}]/*,			
 			listeners : {
 				activate : function(){
 					if(!LetterObject.LoadEditor)
@@ -383,7 +388,7 @@ Letter.prototype.BuildForms = function(){
 						LetterObject.TabPanel.down("[itemId=AddToTemplates]").enable();
 					}					
 				}
-			}
+			}*/
 		},{
 			title : "تصاویر نامه",
 			itemId : "LetterPices",
@@ -552,7 +557,6 @@ Letter.prototype.BuildForms = function(){
 			text : "اضافه متن نامه به الگوها",
 			iconCls : "add",
 			itemId : "AddToTemplates",
-			disabled : true,
 			handler : function(){ LetterObject.AddToTemplates() }
 		},'->',{
 			text : "امضاء نامه",
@@ -632,9 +636,10 @@ Letter.prototype.SaveLetter = function(SendFile){
 	mask.show();  
 	
 	params = {LetterID : this.LetterID};
-	if(CKEDITOR.instances.LetterEditor)
-		params.context = CKEDITOR.instances.LetterEditor.getData();
-	
+	/*if(CKEDITOR.instances.LetterEditor)
+		params.context = CKEDITOR.instances.LetterEditor.getData();*/
+	params.context = this.TabPanel.down("[name=context]").getValue();
+		
 	if(SendFile)
 	   form = this.TabPanel.down("[itemId=LetterPicsPanel]").getForm();
    else
@@ -798,7 +803,8 @@ Letter.prototype.AddToTemplates = function(){
 						url : LetterObject.address_prefix + "letter.data.php?task=AddToTemplates",
 						method : "post",
 						params :{
-							context : CKEDITOR.instances.LetterEditor.getData(),
+							/*context : CKEDITOR.instances.LetterEditor.getData(),*/
+							context : LetterObject.TabPanel.down("[name=context]").getValue(),
 							TemplateTitle : LetterObject.TemplatesWin.down("[name=TemplateTitle]").getValue()
 						},
 						success : function(){
