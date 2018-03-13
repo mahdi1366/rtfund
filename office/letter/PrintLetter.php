@@ -42,7 +42,7 @@ if($LetterObj->LetterType == "INNER")
 	}
 
 	$content .= " موضوع : " . $LetterObj->LetterTitle . "<br><br></span></b>";
-	$content .= str_replace("\r\n", "", $LetterObj->context);
+	$content .= "<div style=text-align:justify;text-justify:inter-word;>" . str_replace("\r\n", "", $LetterObj->context) . "</div>";
 	
 	if(isset($_POST["sign"]))
 		$sign = $dt[0]["regSign"] != "" ? "background-image:url('" .
