@@ -600,6 +600,11 @@ class LON_requests extends PdoDataAccess{
 				}
 				else
 				{
+					if($record["RecordAmount"]*1 < 0)
+					{
+						$TotalRemainder += abs($record["RecordAmount"]*1);
+						$record["RecordAmount"] = 0;
+					}
 					if($obj->PayCompute == "installment")
 					{
 						$min = min($TotalRemainder, $record["RecordAmount"]*1);
