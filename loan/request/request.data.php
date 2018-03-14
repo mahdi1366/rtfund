@@ -435,13 +435,16 @@ function SavePart(){
 	{
 		if(!$firstPart)
 		{
-			$dt = PdoDataAccess::runquery("select DocID,StatusID from ACC_DocItems join ACC_docs using(DocID)
+			$dt = PdoDataAccess::runquery("select DocID,LocalNo,CycleDesc,StatusID 
+				from ACC_DocItems join ACC_docs using(DocID)
+				join ACC_cycles using(CycleID)
 				where DocType=" . DOCTYPE_LOAN_DIFFERENCE ." AND SourceID=? AND SourceID2=?",
 				array($obj->RequestID, $obj->PartID));
 			
 			if(count($dt) > 0 && $dt[0]["StatusID"] != ACC_STEPID_RAW)
 			{
-				echo Response::createObjectiveResponse(false, "سند اختلاف تایید شده و قادر به صدور مجدد نمی باشید");
+				echo Response::createObjectiveResponse(false, "سند اختلاف به شماره ".$dt[0]["LocalNo"]."در ".
+						$dt[0]["CycleDesc"]." تایید شده و قادر به صدور مجدد نمی باشید");
 				die();
 			}
 			$OldDocID = count($dt)>0 ? $dt[0]["DocID"] : 0;
