@@ -264,8 +264,16 @@ RequestInfo.prototype.MakePartsPanel = function(){
 					fieldCls : "blueText"
 				},
 				items : [{
+					name : "ComputeMode",
+					fieldLabel: 'مبنای محاسبه',
+					renderer : function(v){
+						if(v == "BANK") return "فرمول بانک مرکزی";
+						if(v == "NEW") return 'فرمول تنزیل اقساط';
+					}
+				},{
 					name : "details",
-					colspan : 3,
+					colspan : 2,
+					width : 500,
 					fieldLabel: 'توضیحات'
 				},{
 					fieldLabel: 'مبلغ پرداخت',
@@ -985,6 +993,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			
 			this.PartsPanel.down("[name=FundWage]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=WageReturn]").getEl().dom.style.display = "none";
+			this.PartsPanel.down("[name=ComputeMode]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=PayCompute]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=MaxFundWage]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=AgentReturn]").getEl().dom.style.display = "none";
@@ -1676,6 +1685,23 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					fieldLabel: 'دوره پرداخت(ماه)',
 					name: 'PayDuration',
 					allowBlank : true
+				},{
+					xtype : "fieldset",
+					colspan : 2,
+					width : 450,
+					title : "نحوه محاسبه کارمزد و اقساط",
+					items : [{
+						xtype : "radio",
+						boxLabel : "فرمول جدید بانک مرکزی",
+						name : "ComputeMode",
+						inputValue : "BANK",
+						checked : true
+					},{
+						xtype : "radio",						
+						boxLabel : "فرمول تنزیل هر قسط",
+						name : "ComputeMode",
+						inputValue : "NEW"
+					}]
 				},{
 					xtype : "fieldset",
 					itemId : "fs_WageCompute",
