@@ -35,30 +35,40 @@ echo "<table border=1>
 		<td>مبلغ گردش</td>
 		<td>مانده حساب</td>
 		<td>تعداد روز</td>
-		<td>درصد</td>
-		<td>سود</td>
+		<td>سقف مبلغ جهت پرداخت سود</td>
+		<td>درصد پرداختی</td>
+		<td>سود پرداختی</td>
+		<td>درصد دریافتی</td>
+		<td>سود دریافتی</td>
 	</tr>";
 $amount = 0;
 $sumProfit = 0;
+$sumReturnProfit = 0;
 for($i=0; $i<count($dataTable); $i++)
 {
 	$row = $dataTable[$i];
 	
 	$amount += $row["row"]["amount"]*1;
 	$sumProfit += $row["profit"]*1;
+	$sumReturnProfit += $row["ReturnProfit"]*1;
 	echo "<tr>
 			<td>" . DateModules::miladi_to_shamsi($row["row"]["DocDate"]) . "</td>
 			<td>" . $row["row"]["DocDesc"] . "</td>
 			<td>" . number_format($row["row"]["amount"]) . "</td>
 			<td>" . number_format($amount) . "</td>
 			<td>" . $row["days"] . "</td>
-			<td>" . $row["percent"] . "</td>
+			<td>" . number_format($row["MaxAmount"]) . "</td>
+			<td>" . $row["percent"] . "</td>				
 			<td>" . number_format($row["profit"]) . "</td>
+				<td>" . $row["ReturnPercent"] . "</td>
+			<td>" . number_format($row["ReturnProfit"]) . "</td>
 		</tr>";
 }
 echo "<tr id=footer>
-		<td colspan=6>جمع</td>
+		<td colspan=7>جمع</td>
 		<td>" . number_format($sumProfit) . "</td>
+		<td></td>
+		<td>" . number_format($sumReturnProfit) . "</td>
 	</tr>";
 echo "</table>";
 

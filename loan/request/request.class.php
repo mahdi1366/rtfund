@@ -212,11 +212,11 @@ class LON_requests extends PdoDataAccess{
 			}
 			$amount = round($amount);
 			
-			if($partObj->DelayReturn != "INSTALLMENT")
+			/*if($partObj->DelayReturn == "CUSTOMER")
 			{
 				$arr = self::GetDelayAmounts($partObj->RequestID);
 				$amount -= $arr["CustomerDelay"];
-			}
+			}*/
 		}
 		//------------- compute percents of each installment amount ----------------
 		$zarib = 1;
@@ -945,11 +945,11 @@ class LON_requests extends PdoDataAccess{
 		$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
 		$temp = LON_installments::GetValidInstallments($RequestID);
 		$totalBackPay = $PartObj->PartAmount;
-		if($PartObj->ComputeMode == "NEW" && $PartObj->DelayReturn != "INSTALLMENT")
+		/*if($PartObj->ComputeMode == "NEW" && $PartObj->DelayReturn != "INSTALLMENT")
 		{
 			$arr = self::GetDelayAmounts($PartObj->RequestID);
 			$totalBackPay -= $arr["CustomerDelay"];
-		}
+		}*/
 		//.............................
 		$returnArr = array();
 		$returnArr[] = array(

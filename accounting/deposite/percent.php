@@ -21,15 +21,23 @@ $col->editor = "this.TafCombo";
 
 $col=$dgh->addColumn("از تاریخ", "FromDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
-$col->width = 120;
+$col->width = 90;
 
 $col=$dgh->addColumn("تا تاریخ", "ToDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
-$col->width = 120;
+$col->width = 90;
 
-$col=$dgh->addColumn("درصد سود", "percent");
+$col=$dgh->addColumn("درصد سود پرداختی", "percent");
 $col->editor = ColumnEditor::NumberField();
 $col->width = 70;
+
+$col=$dgh->addColumn("درصد سود دریافتی", "ReturnPercent");
+$col->editor = ColumnEditor::NumberField();
+$col->width = 70;
+
+$col=$dgh->addColumn("سقف مبلغ پراخت سود", "MaxAmount", GridColumn::ColumnType_money);
+$col->editor = ColumnEditor::CurrencyField();
+$col->width = 130;
 
 if($accessObj->RemoveFlag)
 {

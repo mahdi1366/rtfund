@@ -14,6 +14,8 @@ class ACC_DepositePercents extends OperationClass {
 	public $FromDate;
 	public $ToDate;
 	public $percent;
+	public $ReturnPercent;
+	public $MaxAmount;
 	
 	function __construct($id = '') {
 		

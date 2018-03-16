@@ -76,9 +76,9 @@ class ATN_traffic extends OperationClass
 			order by  TrafficDate,TrafficTime,ReqType";
 		$dt = PdoDataAccess::runquery($query, array(":p" => $PersonID, ":sd" => $StartDate, ":ed" => $EndDate));
 		//print_r(ExceptionHandler::PopAllExceptions());
-		if($_SESSION["USER"]["UserName"] = "admin")
+		if($_SESSION["USER"]["UserName"] == "admin")
 		{
-			//echo PdoDataAccess::GetLatestQueryString();die();
+			//echo PdoDataAccess::GetLatestQueryString();
 		}
 		ini_set("display_errors", "On");
 		//............ Reset wrong hourly off and mission requests .............
@@ -115,13 +115,19 @@ class ATN_traffic extends OperationClass
 								"EndTime" => '',
 								"ToTime" => $dt[$i]["ToTime"],
 								"TrafficDate" => $currentDate,
-								"TrafficTime" => $dt[$i]["TrafficTime"])));
+								"TrafficTime" => $dt[$i]["TrafficTime"],
+								"ExceptFromTime" => $dt[$i]["ExceptFromTime"],
+								"ExceptToTime" => $dt[$i]["ExceptToTime"]
+							)));
 					array_splice($dt, $i+2, 0,
 							array(array("ReqType" => '' , 
 								"EndTime" => '',
 								"ToTime" => $dt[$i]["ToTime"],
 								"TrafficDate" => $currentDate,
-								"TrafficTime" => $EndTime)));
+								"TrafficTime" => $EndTime,
+								"ExceptFromTime" => $dt[$i]["ExceptFromTime"],
+								"ExceptToTime" => $dt[$i]["ExceptToTime"]
+							)));
 				}
 			} 
 			$currentDate = $dt[$i]["TrafficDate"];
