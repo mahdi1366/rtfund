@@ -69,8 +69,15 @@ function selectFlowSteps(){
 	if(!isset($_REQUEST["all"]))
 		$where = " AND IsOuter='NO'";
 	$dt = PdoDataAccess::runquery("select * from WFM_FlowSteps 
-		where IsActive='YES' AND FlowID=? 
-                 ". $where , array($_GET["FlowID"]));
+		where IsActive='YES' AND FlowID=? ". $where , array($_GET["FlowID"]));
+	
+	$StartArr = array($dt[0]);
+	$StartArr[0]["StepRowID"] = 0;
+	$StartArr[0]["StepID"] = 0;
+	$StartArr[0]["StepDesc"] = "قبل از شروع گردش";
+	
+	$dt = array_merge($StartArr, $dt);
+	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

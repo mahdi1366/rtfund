@@ -3286,13 +3286,6 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 	if(!$ReportMode)
 		CheckCloseCycle();
 	
-	//-------------------get percents ---------------------
-	$dt = PdoDataAccess::runquery("select * from ACC_cycles where CycleID=" . 
-			$_SESSION["accounting"]["CycleID"]);
-	$DepositePercents = array(
-		COSTID_ShortDeposite => $dt[0]["ShortDepositPercent"],
-		COSTID_LongDeposite  => $dt[0]["LongDepositPercent"]
-	);
 	//-----------------------------------------------------
 	$DepositeAmount = array(
 		COSTID_ShortDeposite => array(),
@@ -3332,8 +3325,8 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 			}
 		}
 		//------------ get percents ------------------------
-		$percents = PdoDataAccess::runquery_fetchMode("select * from ACC_DepositePercents where TafsiliID=? AND ToDate>? order by FromDate",
-				array($TafsiliID, $LatestComputeDate));
+		$percents = PdoDataAccess::runquery_fetchMode("select * from ACC_DepositePercents 
+			where TafsiliID=? AND ToDate>? order by FromDate",array($TafsiliID, $LatestComputeDate));
 		if($percents->rowCount() == 0)
 		{
 			echo Response::createObjectiveResponse(false, "در بازه مربوطه درصد سود تفصیلی " . $TafsiliID . " تعریف نشده است");
@@ -3355,19 +3348,24 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] = $row["amount"];
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $LatestComputeDate;
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] = 0;
+			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["ReturnProfit"] = 0;
 			
 			$row["DocDate"] = $LatestComputeDate;
 			$row["DocDesc"] = "مانده قبل";
 			$TraceArr[ $row["TafsiliID"] ][] = array(
 				"row" => $row,
 				"percent" => $percentRecord["percent"],
+				"ReturnPercent" => $percentRecord["ReturnPercent"],
+				"MaxAmount" => $percentRecord["MaxAmount"],
 				"profit" => 0,
+				"ReturnProfit" => 0,
 				"days" => 0
 			);
 		}
 		//------------ get the Deposite amount -------------
 		$dt = PdoDataAccess::runquery("
-			select CostID,TafsiliID,DocDate,group_concat(details SEPARATOR '<br>') DocDesc,sum(CreditorAmount-DebtorAmount) amount
+			select CostID,TafsiliID,DocDate,group_concat(details SEPARATOR '<br>') DocDesc,
+			sum(CreditorAmount-DebtorAmount) amount
 			from ACC_DocItems 
 				join ACC_docs using(DocID)
 			where CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
@@ -3380,22 +3378,21 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 				array($LatestComputeDate, $ToDate, $TafsiliID));
 		
 		$prevDays = 0;
-		
 		for($i=0; $i<count($dt); $i++)
 		{
-			$row = $dt[$i];
-			
 			if(!$percentRecord)
 			{
 				echo Response::createObjectiveResponse(false, "در بازه مربوطه درصد سود تفصیلی تعریف نشده است");
 				die();	
 			}
-			
+			$row = $dt[$i];			
 			if(!isset($DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"]))
 			{
 				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $FirstYearDay;
 				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] = 0;
 				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] = 0;
+				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["ReturnProfit"] = 0;
+				
 			}
 			$lastDate = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"];
 			$EndDate = $row["DocDate"];
@@ -3417,22 +3414,33 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 				$prevDays = 0;
 			}
 			
-			$amount = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] * $days * 
-				$percentRecord["percent"] /(36500);
+			//-------------- compute profits ----------------
+			$profit = 0;
+			$returnProfit = 0;
+			$amount = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"];
+			if($percentRecord["MaxAmount"]*1 > 0 && $amount < $percentRecord["MaxAmount"]*1)
+				$returnProfit = ($percentRecord["MaxAmount"]*1 - $amount) * $days * 
+						$percentRecord["ReturnPercent"] /(36500);
+			else
+				$profit = $amount * $days * $percentRecord["percent"] /(36500);
+			//-----------------------------------------------
 			
-			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] += $amount;
+			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] += $profit;
+			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["ReturnProfit"] += $returnProfit;
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] += $row["amount"];
 			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $EndDate;	
 			
 			$arr = &$TraceArr[ $row["TafsiliID"] ];
 			$arr[count($arr)-1]["days"] = $days;
-			$arr[count($arr)-1]["profit"] = $amount;
+			$arr[count($arr)-1]["profit"] = $profit;
+			$arr[count($arr)-1]["ReturnProfit"] = $returnProfit;
 			
 			$TraceArr[ $row["TafsiliID"] ][] = array(
 				"row" => $row,
 				"percent" => $percentRecord["percent"],
 				"days" => 0,
-				"profit" => 0
+				"profit" => 0,
+				"ReturnProfit" => 0
 			);
 			
 			if($row["DocDate"] > $percentRecord["ToDate"])
@@ -3447,29 +3455,47 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 		{
 			$days = DateModules::GDateMinusGDate($ToDate, $row["lastDate"]);
 			$days += $prevDays;
-			$amount = $row["amount"] * $days * $percentRecord["percent"]/(36500);
-
-			if(!isset($row["profit"]))
-				$row["profit"] = 0;
-			$row["profit"] += $amount;
+			//-------------- compute profits ----------------
+			$profit = 0;
+			$returnProfit = 0;
+			$amount = $row["amount"];
+			if($percentRecord["MaxAmount"]*1 > 0 && $amount < $percentRecord["MaxAmount"]*1)
+				$returnProfit = ($percentRecord["MaxAmount"]*1 - $amount) * $days * 
+						$percentRecord["ReturnPercent"] /(36500);
+			else
+				$profit = $amount * $days * $percentRecord["percent"] /(36500);
+			//-----------------------------------------------
+			
+			$row["profit"] = $profit;
+			$row["ReturnProfit"] = $returnProfit;
 
 			$arr = &$TraceArr[ $tafsili ];
 			$arr[count($arr)-1]["days"] = $days;
-			$arr[count($arr)-1]["profit"] = $amount;
+			$arr[count($arr)-1]["profit"] = $profit;
+			$arr[count($arr)-1]["ReturnProfit"] = $returnProfit;
 		}
 		foreach($DepositeAmount[ COSTID_LongDeposite ] as $tafsili => &$row)
 		{
 			$days = DateModules::GDateMinusGDate($ToDate, $row["lastDate"]);
 			$days += $prevDays;
-			$amount = $row["amount"] * $days * $percentRecord["percent"]/(36500);
-
-			if(!isset($row["profit"]))
-				$row["profit"] = 0;
-			$row["profit"] += $amount;
+			//-------------- compute profits ----------------
+			$profit = 0;
+			$returnProfit = 0;
+			$amount = $row["amount"];
+			if($percentRecord["MaxAmount"]*1 > 0 && $amount < $percentRecord["MaxAmount"]*1)
+				$returnProfit = ($percentRecord["MaxAmount"]*1 - $amount) * $days * 
+						$percentRecord["ReturnPercent"] /(36500);
+			else
+				$profit = $amount * $days * $percentRecord["percent"] /(36500);
+			//-----------------------------------------------
+			
+			$row["profit"] = $profit;
+			$row["ReturnProfit"] = $returnProfit;
 
 			$arr = &$TraceArr[ $tafsili ];
 			$arr[count($arr)-1]["days"] = $days;
-			$arr[count($arr)-1]["profit"] = $amount;
+			$arr[count($arr)-1]["profit"] = $profit;
+			$arr[count($arr)-1]["ReturnProfit"] = $returnProfit;
 		}
 	}
 	if($ReportMode)
@@ -3503,8 +3529,8 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 			$itemObj = new ACC_DocItems();
 			$itemObj->DocID = $obj->DocID;
 			$itemObj->CostID = $CostID;
-			$itemObj->CreditorAmount = round($itemrow["profit"]>0 ? $itemrow["profit"] : 0);
-			$itemObj->DebtorAmount = round($itemrow["profit"]<0 ? -1*$itemrow["profit"] : 0);
+			$itemObj->CreditorAmount = $itemrow["profit"]*1 > 0 ? $itemrow["profit"] : 0;
+			$itemObj->DebtorAmount = $itemrow["ReturnProfit"]*1 > 0 ? $itemrow["ReturnProfit"] : 0;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $TafsiliID;
 			$itemObj->locked = "YES";
@@ -3519,9 +3545,9 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 			
 			$itemObj = new ACC_DocItems();
 			$itemObj->DocID = $obj->DocID;
-			$itemObj->CostID = COSTID_Wage;
-			$itemObj->DebtorAmount= round($itemrow["profit"]>0 ? $itemrow["profit"] : 0);
-			$itemObj->CreditorAmount = round($itemrow["profit"]<0 ? -1*$itemrow["profit"] : 0);
+			$itemObj->CostID = $itemrow["profit"]*1 > 0 ? COSTID_Wage : COSTID_DepositeWage;
+			$itemObj->DebtorAmount= $itemrow["profit"]*1 > 0 ? $itemrow["profit"] : 0;
+			$itemObj->CreditorAmount = $itemrow["ReturnProfit"]*1 > 0 ? $itemrow["ReturnProfit"] : 0;
 			$itemObj->locked = "YES";
 			$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;

@@ -465,6 +465,6 @@ function Tanzil($amount, $wage, $Date, $StartDate)
 	$StartDate = DateModules::miladi_to_shamsi($StartDate);
 	$days = DateModules::JDateMinusJDate($Date, $StartDate);
 	
-	return $amount/pow(1+($wage/36500), $days);
+	return $amount/(1+($wage*$days/36500));
 }
 ?>

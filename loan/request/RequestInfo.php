@@ -69,6 +69,7 @@ $dg->addColumn("", "DelayPercent","", true);
 $dg->addColumn("", "IsHistory","", true);
 $dg->addColumn("", "PayDuration","", true);
 $dg->addColumn("", "details","", true);
+$dg->addColumn("", "ComputeMode","", true);
 
 $dg->addColumn("", "AllPay","", true);
 $dg->addColumn("", "LastPay","", true);

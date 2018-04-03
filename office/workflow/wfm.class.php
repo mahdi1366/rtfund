@@ -336,11 +336,13 @@ class WFM_FlowRows extends PdoDataAccess {
 		return $obj->AddFlowRow(0);		
 	}
 	
-	static function ReturnStartFlow($FlowID, $ObjectID){
+	static function ReturnStartFlow($FlowID, $ObjectID, $pdo = null){
 		
-		$dt = PdoDataAccess::runquery("select * from WFM_FlowRows where FlowID=? AND ObjectID=?",
-				array($FlowID, $ObjectID));
-		if(count($dt) == 1 && $dt[0]["StepRowID"] == "")
+		$dt = PdoDataAccess::runquery("select * from WFM_FlowRows 
+			join WFM_FlowSteps using(StepRowID)
+			where FlowID=? AND ObjectID=? AND IsLastRow='YES'",
+				array($FlowID, $ObjectID), $pdo);
+		if(count($dt) == 1 && $dt[0]["StepID"] == "0")
 		{
 			PdoDataAccess::runquery("delete from WFM_FlowRows where RowID=?", array($dt[0]["RowID"]));
 			
@@ -350,17 +352,17 @@ class WFM_FlowRows extends PdoDataAccess {
 				case 'contract' : 
 					$EndStepID = CNT_STEPID_RAW; 
 					PdoDataAccess::runquery("update CNT_contracts set StatusID=? where ContractID=?", 
-						array($EndStepID, $ObjectID));
+						array($EndStepID, $ObjectID), $pdo);
 					break;
 				case 'warrenty' : 
 					$EndStepID = WAR_STEPID_RAW; 
 					PdoDataAccess::runquery("update WAR_requests set StatusID=? where RequestID=?", 
-						array($EndStepID, $ObjectID));
+						array($EndStepID, $ObjectID), $pdo);
 					break;
 				case 'accdoc' : 
 					$EndStepID = ACC_STEPID_RAW; 
 					PdoDataAccess::runquery("update ACC_docs set StatusID=? where DocID=?", 
-						array($EndStepID, $ObjectID));
+						array($EndStepID, $ObjectID), $pdo);
 					break;
 				case 'CORRECT':
 				case 'DayOFF':
@@ -371,7 +373,7 @@ class WFM_FlowRows extends PdoDataAccess {
 				case 'CHANGE_SHIFT':
 					$EndStepID = ATN_STEPID_RAW; 
 					PdoDataAccess::runquery("update ATN_requests set ReqStatus=? where RequestID=?", 
-						array($EndStepID, $ObjectID));
+						array($EndStepID, $ObjectID), $pdo);
 					break;
 			}
 			return ExceptionHandler::GetExceptionCount() == 0;

@@ -64,8 +64,9 @@ if($framework)
 }
 if($editable && $accessObj->EditFlag)
 {
-	$dg->addButton("cmp_computeInstallment", "محاسبه اقساط", "list", 
+	$dg->addButton("", "محاسبه اقساط", "list", 
 			"function(){InstallmentObject.ComputeInstallments();}");
+	
 	//$dg->enableRowEdit = true;
 	//$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SaveInstallment(store,record);}";
 	
@@ -395,8 +396,10 @@ Installment.prototype.ComputeInstallments = function(){
 				{
 					if(result.data == "DocExists")
 						Ext.MessageBox.alert("Error", "این وام دارای سند اختلاف قسط می باشد و قادر به محاسبه مجدد نمی باشید");
-					else
+					else if(result.data == "")
 						Ext.MessageBox.alert("", "عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("", result.data);
 				}
 				
 				InstallmentObject.grid.getStore().load();

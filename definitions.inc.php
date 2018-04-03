@@ -39,11 +39,12 @@ define("TAFTYPE_SUBAGENT", "4");
 define("TAFTYPE_BANKS", "6");
 define("TAFTYPE_ChequeStatus", "7");
 
-define("COSTID_ShortDeposite", "416");
+define("COSTID_ShortDeposite", "416"); // 210-04
 define("COSTID_Todiee", "63");
 define("COSTID_LongDeposite", "119");
 define("COSTID_Fund", "1");
 define("COSTID_Wage", "19"); // 550
+define("COSTID_DepositeWage", "418"); // 750-09
 define("COSTID_Bank", "253");
 define("COSTID_share", "313"); 
 define("COSTID_ShareProfit", "167");
