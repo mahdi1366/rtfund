@@ -1011,6 +1011,8 @@ class LON_requests extends PdoDataAccess{
 		$PureAmount = $dt["PureAmount"];
 		$TotalShouldPay = $dt["TotalShouldPay"];
 		
+		if($_SESSION["USER"]["UserName"] == "admin")
+			print_r($dt); 
 		//------------ sub pays --------------
 		$dt = LON_BackPays::SelectAll(" RequestID=? 
 			AND if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)"
