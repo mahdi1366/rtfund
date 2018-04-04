@@ -16,9 +16,6 @@ if(isset($_REQUEST["IsFlow"]) && $_REQUEST["IsFlow"] == "true")
 else
 	$ToDate = DateModules::shamsi_to_miladi($_REQUEST["ToDate"]);
 
-$dataTable = ComputeDepositeProfit($ToDate, array($_REQUEST["TafsiliID"]), true, $IsFlow);
-$dataTable = $dataTable[$_REQUEST["TafsiliID"]];
-
 echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
 echo '<link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" />';
 echo "<style>
@@ -27,6 +24,11 @@ echo "<style>
 		#footer {background-color : #bbb;}
 		td {font-family : nazanin; font-size:16px; padding:4px}
 	</style>";
+
+$dataTable = ComputeDepositeProfit($ToDate, array($_REQUEST["TafsiliID"]), true, $IsFlow);
+$dataTable = $dataTable[$_REQUEST["TafsiliID"]];
+
+
 echo "<table></table>";
 echo "<table border=1>
 	<tr id=header>
