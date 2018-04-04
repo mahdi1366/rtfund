@@ -50,7 +50,16 @@ function SaveFlow(){
 				die();
 			}
 		}
-		$result = $obj->AddFlow ();
+		$result = $obj->AddFlow();
+		
+		//------------ add start Flow step -----------
+		$obj2 = new WFM_FlowSteps();
+		$obj2->FlowID = $obj->FlowID;
+		$obj2->StepID = "0";
+		$obj2->StepDesc = "شروع گردش";
+		$obj2->IsOuter = "YES";
+		$obj2->AddFlowStep();
+		//--------------------------------------------
 	}
 	
 	echo Response::createObjectiveResponse($result, "");
@@ -60,7 +69,7 @@ function SaveFlow(){
 function DeleteFlow(){
 	
 	$result = WFM_flows::RemoveFlow($_POST["FlowID"]);
-	echo Response::createObjectiveResponse($result, "");
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
 	die();
 }
 
@@ -74,7 +83,7 @@ function selectFlowSteps(){
 	$StartArr = array($dt[0]);
 	$StartArr[0]["StepRowID"] = 0;
 	$StartArr[0]["StepID"] = 0;
-	$StartArr[0]["StepDesc"] = "قبل از شروع گردش";
+	$StartArr[0]["StepDesc"] = "شروع گردش";
 	
 	$dt = array_merge($StartArr, $dt);
 	
@@ -149,7 +158,7 @@ function MoveStep(){
 
 function SelectAllForms(){
 	
-	$where = "1=1";
+	$where = " ";
 	$param = array();
 
 	$ObjectDesc = 
@@ -191,6 +200,7 @@ function SelectAllForms(){
 	{
 		$field = $_GET["fields"] == "ObjectDesc" ? $ObjectDesc : $_GET["fields"];
 		$field = $_GET["fields"] == "StepDesc" ? "ifnull(fs.StepDesc,'شروع گردش')" : $field;
+		$field = $_GET["fields"] == "ObjectTypeDesc" ? "b.InfoDesc" : $field;
 		$where .= " AND $field like :fld";
 		$param[":fld"] = "%" . $_GET["query"] . "%";
 	}
@@ -228,10 +238,9 @@ function SelectAllForms(){
 			$preStep = $row["StepID"]*1-1;
 			$nextStep = $row["StepID"]*1+1;
 			
-			$where .= "(fr.FlowID=" . $row["FlowID"] .
-				" AND fs.StepID" . ($preStep == 0 ? " is null" : "=" . $preStep) . 
-				" AND ActionType='CONFIRM') OR (fr.FlowID=" . $row["FlowID"] . 
-				" AND fs.StepID=" . $nextStep . " AND ActionType='REJECT') OR";
+			$where .= 
+				"(fr.FlowID=" . $row["FlowID"] ." AND fs.StepID=" . $preStep . " AND ActionType='CONFIRM') OR 
+				(fr.FlowID=" . $row["FlowID"] . " AND fs.StepID=" . $nextStep . " AND ActionType='REJECT') OR";
 		}
 		$where = substr($where, 0, strlen($where)-2) . ")";
 	}
@@ -248,8 +257,7 @@ function SelectAllForms(){
 					$ObjectID ObjectID
 	
 				from WFM_FlowRows fr
-				join ( select max(RowID) RowID,FlowID,ObjectID from WFM_FlowRows group by FlowID,ObjectID )t
-					using(RowID,FlowID,ObjectID)
+				
 				join WFM_flows f using(FlowID)
 				join BaseInfo b on(b.TypeID=11 AND b.InfoID=f.ObjectType)
 				left join WFM_FlowSteps fs on(fr.StepRowID=fs.StepRowID)
@@ -276,10 +284,10 @@ function SelectAllForms(){
 				left join ACC_docs ad on(b.param4='accdoc' AND ad.DocID=fr.ObjectID)
 				left join BSC_branches adb on(adb.BranchID=ad.BranchID)
 	
-				where " . $where . dataReader::makeOrder();
+				where fr.IsLastRow='YES' " . $where . dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
 	//echo PdoDataAccess::GetLatestQueryString();
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	
@@ -309,15 +317,6 @@ function ChangeStatus(){
 	else 
 		$StepID = $SourceObj->ActionType == "CONFIRM" ? $SourceObj->_StepID+1 : $SourceObj->_StepID-1;
 	
-	$dt = PdoDataAccess::runquery("select StepRowID, StepDesc from WFM_FlowSteps 
-		where IsActive='YES' AND FlowID=? AND StepID=?" , array($newObj->FlowID, $StepID));
-	if(count($dt) == 0)
-	{
-		echo Response::createObjectiveResponse(false, "1");
-		die();
-	}
-	$newObj->StepRowID = $dt[0]["StepRowID"];	
-	$newObj->StepDesc = $dt[0]["StepDesc"];	
 	//.............................................
 	if($newObj->ActionType == "CONFIRM")
 	{
@@ -357,7 +356,7 @@ function StartFlow(){
 	$ObjectID = $_REQUEST["ObjectID"];
 	$result = WFM_FlowRows::StartFlow($FlowID, $ObjectID);
 	
-	echo Response::createObjectiveResponse($result, "");
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
 	die();
 }
 
