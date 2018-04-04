@@ -363,10 +363,15 @@ RequestInfo.prototype.MakePartsPanel = function(){
 					}
 				},{
 					colspan : 3,
+					name : "BackPayComputeDesc",
+					width : 580,
+					fieldLabel: 'محاسبه پرداخت'
+				},{
+					colspan : 3,
 					xtype : "container",
 					width : 580,
 					contentEl : this.get("summaryDIV")
-				},{
+				}/*,{
 					xtype : "button",
 					style : "margin-top:5px",
 					text : "فرمول های محاسبات وام",
@@ -374,7 +379,7 @@ RequestInfo.prototype.MakePartsPanel = function(){
 					handler : function(){
 						window.open("/framework/help/compute.pdf");
 					}
-				}]
+				}*/]
 			}]
 		}]
 	});
@@ -1688,6 +1693,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 				},{
 					xtype : "fieldset",
 					colspan : 2,
+					style : "margin-right:10px",
 					width : 450,
 					title : "نحوه محاسبه کارمزد و اقساط",
 					items : [{
@@ -1701,6 +1707,23 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						boxLabel : "فرمول تنزیل هر قسط",
 						name : "ComputeMode",
 						inputValue : "NEW"
+					},{
+						xtype : "combo",
+						width : 400,
+						store : new Ext.data.SimpleStore({
+							proxy: {
+								type: 'jsonp',
+								url: this.address_prefix + 'request.data.php?' +
+									"task=selectBackPayComputes",
+								reader: {root: 'rows',totalProperty: 'totalCount'}
+							},
+							fields : ['InfoID','InfoDesc'],
+							autoLoad : true
+						}),
+						fieldLabel : "محاسبه بازپرداخت",
+						displayField : "InfoDesc",
+						valueField : "InfoID",
+						name : "BackPayCompute"						
 					}]
 				},{
 					xtype : "fieldset",
@@ -2254,7 +2277,7 @@ RequestInfo.prototype.ShowCosts = function(){
 	if(!this.CostsWin)
 	{
 		this.CostsWin = new Ext.window.Window({
-			title: 'هزینه های ضمانت نامه',
+			title: 'هزینه های وام',
 			modal : true,
 			autoScroll : true,
 			width: 600,

@@ -65,6 +65,13 @@ class WFM_flows extends PdoDataAccess {
 	
 	static function RemoveFlow($FlowID){
 		
+		$dt = PdoDataAccess::runquery("select * from WFM_FlowRows where FlowID=?", array($FlowID));
+		if(count($dt) > 0)
+		{
+			ExceptionHandler::PushException("این گردش در برخی فرم ها استفاده شده است");
+			return false;
+		}
+		
 	 	if(!parent::delete("WFM_flows", " FlowID=?", array($FlowID)))
 			return false;
 	 	
@@ -87,6 +94,7 @@ class WFM_FlowSteps extends PdoDataAccess {
 	public $PersonID;
 	public $JobID;
 	public $IsActive;
+	public $IsOuter;
 
 	static function GetAll($where = "", $whereParam = array()) {
 		
@@ -229,9 +237,22 @@ class WFM_FlowRows extends PdoDataAccess {
 		}
 	}
 	
-	function AddFlowRow($StepID, $pdo = null) {
+	function AddFlowRow($StepID , $pdo = null) {
 		
-		PdoDataAccess::runquery("update WFM_FlowRows set IsLastRow='NO' where FlowID=? AND ObjectID=?", array($this->FlowID, $this->ObjectID), $pdo);
+		PdoDataAccess::runquery("update WFM_FlowRows set IsLastRow='NO' where FlowID=? AND ObjectID=?", 
+				array($this->FlowID, $this->ObjectID), $pdo);
+		
+		//.......... get StepRowID ...................
+		$dt = PdoDataAccess::runquery("select StepRowID, StepDesc from WFM_FlowSteps 
+			where IsActive='YES' AND FlowID=? AND StepID=?" , array($this->FlowID, $StepID));
+		if(count($dt) == 0)
+		{
+			ExceptionHandler::PushException("خطا در تعریف وضعیت ها");
+			return false;
+		}
+		$this->StepRowID = $dt[0]["StepRowID"];	
+		$this->StepDesc = $dt[0]["StepDesc"];	
+		//..............................................
 		
 		if (!parent::insert("WFM_FlowRows", $this, $pdo)) {
 			return false;
@@ -338,46 +359,49 @@ class WFM_FlowRows extends PdoDataAccess {
 	
 	static function ReturnStartFlow($FlowID, $ObjectID, $pdo = null){
 		
-		$dt = PdoDataAccess::runquery("select * from WFM_FlowRows 
-			join WFM_FlowSteps using(StepRowID)
-			where FlowID=? AND ObjectID=? AND IsLastRow='YES'",
-				array($FlowID, $ObjectID), $pdo);
-		if(count($dt) == 1 && $dt[0]["StepID"] == "0")
+		$newObj = new WFM_FlowRows();
+		$newObj->FlowID = $FlowID;
+		$newObj->ObjectID = $ObjectID;
+		$newObj->PersonID = $_SESSION["USER"]["PersonID"];
+		$newObj->ActionType = "REJECT";
+		$newObj->ActionDate = PDONOW;
+		$newObj->ActionComment = "برگشت شروع گردش";
+		$newObj->AddFlowRow("0", $pdo);	
+		
+		//-------------------------------------------------------
+		
+		$FlowObj = new WFM_flows($FlowID);
+		switch($FlowObj->_ObjectType)
 		{
-			PdoDataAccess::runquery("delete from WFM_FlowRows where RowID=?", array($dt[0]["RowID"]));
-			
-			$FlowObj = new WFM_flows($FlowID);
-			switch($FlowObj->_ObjectType)
-			{
-				case 'contract' : 
-					$EndStepID = CNT_STEPID_RAW; 
-					PdoDataAccess::runquery("update CNT_contracts set StatusID=? where ContractID=?", 
-						array($EndStepID, $ObjectID), $pdo);
-					break;
-				case 'warrenty' : 
-					$EndStepID = WAR_STEPID_RAW; 
-					PdoDataAccess::runquery("update WAR_requests set StatusID=? where RequestID=?", 
-						array($EndStepID, $ObjectID), $pdo);
-					break;
-				case 'accdoc' : 
-					$EndStepID = ACC_STEPID_RAW; 
-					PdoDataAccess::runquery("update ACC_docs set StatusID=? where DocID=?", 
-						array($EndStepID, $ObjectID), $pdo);
-					break;
-				case 'CORRECT':
-				case 'DayOFF':
-				case 'OFF':
-				case 'DayMISSION':
-				case 'MISSION':
-				case 'EXTRA':
-				case 'CHANGE_SHIFT':
-					$EndStepID = ATN_STEPID_RAW; 
-					PdoDataAccess::runquery("update ATN_requests set ReqStatus=? where RequestID=?", 
-						array($EndStepID, $ObjectID), $pdo);
-					break;
-			}
-			return ExceptionHandler::GetExceptionCount() == 0;
+			case 'contract' : 
+				$EndStepID = CNT_STEPID_RAW; 
+				PdoDataAccess::runquery("update CNT_contracts set StatusID=? where ContractID=?", 
+					array($EndStepID, $ObjectID), $pdo);
+				break;
+			case 'warrenty' : 
+				$EndStepID = WAR_STEPID_RAW; 
+				PdoDataAccess::runquery("update WAR_requests set StatusID=? where RequestID=?", 
+					array($EndStepID, $ObjectID), $pdo);
+				break;
+			case 'accdoc' : 
+				$EndStepID = ACC_STEPID_RAW; 
+				PdoDataAccess::runquery("update ACC_docs set StatusID=? where DocID=?", 
+					array($EndStepID, $ObjectID), $pdo);
+				break;
+			case 'CORRECT':
+			case 'DayOFF':
+			case 'OFF':
+			case 'DayMISSION':
+			case 'MISSION':
+			case 'EXTRA':
+			case 'CHANGE_SHIFT':
+				$EndStepID = ATN_STEPID_RAW; 
+				PdoDataAccess::runquery("update ATN_requests set ReqStatus=? where RequestID=?", 
+					array($EndStepID, $ObjectID), $pdo);
+				break;
 		}
+		return ExceptionHandler::GetExceptionCount() == 0;
+		
 	}
 	
 	static function DeleteAllFlow($FlowID, $ObjectID){

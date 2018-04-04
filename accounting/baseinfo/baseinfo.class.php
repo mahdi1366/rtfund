@@ -319,17 +319,17 @@ class ACC_tafsilis extends PdoDataAccess{
 				where " . $where, $param);
 	}
 	
-	function AddTafsili()
+	function AddTafsili($pdo = null)
 	{
-	 	if(!parent::insert("ACC_tafsilis",$this))
+	 	if(!parent::insert("ACC_tafsilis",$this, $pdo))
 			return false;
-		$this->TafsiliID = parent::InsertID();
+		$this->TafsiliID = parent::InsertID($pdo);
 		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->MainObjectID = $this->TafsiliID;
 		$daObj->TableName = "ACC_tafsilis";
-		$daObj->execute();
+		$daObj->execute($pdo);
 		return true;
 	}
 	
@@ -726,12 +726,14 @@ class ACC_EPays extends OperationClass {
 	
 	public $PayID;
 	public $RequestID;
+	public $CostID;
 	public $amount;
 	public $PayDate;
 	public $PersonID;
 	public $authority;
 	public $StatusCode;
 	public $error;
+	public $PayRefNo;
 	
 }
 ?>

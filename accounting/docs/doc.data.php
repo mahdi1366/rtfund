@@ -40,7 +40,7 @@ switch($task)
 	case "ComputeDoc":
 	case "GetAccountSummary":
 	case "GetAccountFlow":
-	case "RegisterInOutAccountDoc":
+	case "RegisterInOutDoc":
 	case "GetSubjects":
 	case "GetAllCostBlocks":
 	case "SaveCostBlock":
@@ -914,90 +914,21 @@ function GetAccountFlow() {
 	die();
 }
 
-function RegisterInOutAccountDoc() {
+function RegisterInOutDoc() {
 	
-	$CostID = $_REQUEST["BaseCostID"];
+	$BaseCostID = $_REQUEST["BaseCostID"];
 	$BaseTafsiliID = $_REQUEST["BaseTafsiliID"];
-	
 	$mode = $_POST["mode"]*1;
-	if($mode < 0)
-	{
-		$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0) remaindar
-		from ACC_DocItems di
-			join ACC_docs d using(DocID)
-		where d.CycleID=:c AND d.BranchID=:b AND 
-			di.CostID=:cost AND di.TafsiliType = :t AND di.TafsiliID=:tid";
-		$param = array(
-			":c" => $_SESSION["accounting"]["CycleID"],
-			":b" => $_SESSION["accounting"]["BranchID"],
-			":cost" => $CostID,
-			":t" => TAFTYPE_PERSONS,
-			":tid" => $BaseTafsiliID
-		);
-		
-		$dt = PdoDataAccess::runquery($query, $param);
-		//echo PdoDataAccess::GetLatestQueryString();
-		if($_POST["amount"] > $dt[0][0]*1)
-		{
-			echo Response::createObjectiveResponse(false,"مبلغ وارد شده بیشتر از مانده حساب می باشد");
-			die();
-		}
-	}
+	$description = $_POST["description"];
 	
-	$pdo = PdoDataAccess::getPdoObject();
-	$pdo->beginTransaction();
+	$CostID = $_POST["CostID"];
+	$CostObj = new ACC_CostCodes($_POST["CostID"]);
 	
-	//---------------- add doc header --------------------
-	$obj = new ACC_docs();
-	$obj->RegDate = PDONOW;
-	$obj->regPersonID = $_SESSION['USER']["PersonID"];
-	$obj->DocDate = PDONOW;
-	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
-	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
-	$obj->DocType = $mode > 0 ? DOCTYPE_SAVING_IN : DOCTYPE_SAVING_OUT;
-	$obj->description = $mode > 0 ? "واریز به حساب" : "برداشت از حساب";
-	if(!$obj->Add($pdo))
-	{
-		echo Response::createObjectiveResponse(false,"خطا در ایجاد سند");
-		die();
-	}
+	$result = RegisterInOutAccountDoc($_SESSION["accounting"]["BranchID"], $_POST["amount"], $mode, $description, 
+			$BaseCostID, TAFTYPE_PERSONS, $BaseTafsiliID, "", "", 
+			$CostID, $CostObj->TafsiliType, $_POST["TafsiliID"], $CostObj->TafsiliType2, $_POST["TafsiliID2"]);
 	
-	//-------------------------------------------------
-		
-	$itemObj = new ACC_DocItems();
-	$itemObj->DocID = $obj->DocID;
-	$itemObj->CostID = $CostID;
-	$itemObj->DebtorAmount = $mode > 0 ? 0 : $_POST["amount"];
-	$itemObj->CreditorAmount = $mode > 0 ? $_POST["amount"] : 0;
-	$itemObj->TafsiliType = TAFTYPE_PERSONS;
-	$itemObj->TafsiliID = $BaseTafsiliID;
-	$itemObj->details = $_POST["description"];
-	if(!$itemObj->Add($pdo))
-	{
-		echo Response::createObjectiveResponse(false,  ExceptionHandler::GetExceptionsToString());
-		die();
-	}
-	
-	$itemObj = new ACC_DocItems();
-	$itemObj->DocID = $obj->DocID;
-	$itemObj->CostID = $_POST["CostID"];
-	$itemObj->DebtorAmount = $mode > 0 ? $_POST["amount"] : 0;
-	$itemObj->CreditorAmount = $mode > 0 ? 0 : $_POST["amount"];
-	if($itemObj->CostID == COSTID_Bank)
-	{
-		$itemObj->TafsiliType = TAFTYPE_BANKS;
-		$itemObj->TafsiliID = $_POST["TafsiliID"];
-		$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-		$itemObj->TafsiliID2 = $_POST["TafsiliID2"];
-	}
-	if(!$itemObj->Add($pdo))
-	{
-		echo Response::createObjectiveResponse(false,  ExceptionHandler::GetExceptionsToString());
-		die();
-	}
-	
-	$pdo->commit();
-	echo Response::createObjectiveResponse(true,"");
+	echo Response::createObjectiveResponse($result,  ExceptionHandler::GetExceptionsToString());
 	die();
 }
 

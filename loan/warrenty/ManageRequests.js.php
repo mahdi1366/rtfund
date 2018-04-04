@@ -256,6 +256,12 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 			handler : function(){ return WarrentyRequestObject.InfoRequest(); }});
 	}
 	
+	if(record.data.StatusID == "0")
+	{
+		op_menu.add({text: 'برگشت فرم',iconCls: 'return',
+		handler : function(){ return WarrentyRequestObject.ReturnStartFlow(); }});
+	}
+	
 	if(this.EditAccess && record.data.StatusID == "<?= WAR_STEPID_CONFIRM ?>")
 	{
 		if(record.data.DocID == "" || record.data.DocID == null)
@@ -483,6 +489,35 @@ WarrentyRequest.prototype.StartFlow = function(){
 			params: {
 				task: "StartWarrentyFlow",
 				RequestID : record.data.RequestID
+			},
+			success: function(response){
+				mask.hide();
+				WarrentyRequestObject.grid.getStore().load();
+			}
+		});
+	});
+}
+
+WarrentyRequest.prototype.ReturnStartFlow = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به برگشت فرم می باشید؟",function(btn){
+		
+		if(btn == "no")
+			return;
+		
+		me = WarrentyRequestObject;
+		var record = me.grid.getStore().getAt(0);
+	
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: '/office/workflow/wfm.data.php',
+			method: "POST",
+			params: {
+				task: "ReturnStartFlow",
+				FlowID : <?= FLOWID_WARRENTY ?>,
+				ObjectID : record.data.RequestID
 			},
 			success: function(response){
 				mask.hide();

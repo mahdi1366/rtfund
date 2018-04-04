@@ -47,10 +47,15 @@ else
 		$backgroundColor = $Logs[$i]["ActionType"] == "REJECT" ? "style='background-color:#ffccd1'" : $backgroundColor;
 		
 		$StepDesc = $Logs[$i]["StepDesc"];
-		if($Logs[$i]["ActionType"] == "CONFIRM")
-			$StepDesc = "تایید " . $StepDesc;
+		if($Logs[$i]["StepID"] != "0")
+		{
+			if($Logs[$i]["ActionType"] == "CONFIRM")
+				$StepDesc = "تایید " . $StepDesc;
+			else if($Logs[$i]["ActionType"] == "REJECT")
+				$StepDesc = "رد " . $StepDesc;
+		}
 		else if($Logs[$i]["ActionType"] == "REJECT")
-			$StepDesc = "رد " . $StepDesc;
+			$StepDesc = "برگشت " . $StepDesc;
 			
 		
 		$tbl_content .= "<tr " . $backgroundColor . ">
@@ -66,7 +71,7 @@ else
 	}
 	//------------------------ get next one ------------------------------------
 	$LastRecord = $Logs[$i-1];
-	if($LastRecord["param5"] != "")
+	/*if($LastRecord["param5"] != "")
 	{
 		$dt = PdoDataAccess::runquery("select " . $LastRecord["param6"] . " from " . $LastRecord["param5"] . "
 			where " . $LastRecord["param2"] . "=?", array($LastRecord["ObjectID"]));
@@ -75,8 +80,8 @@ else
 				<td colspan=4 align=center><b>گردش فرم پایان یافته است.</b></td>
 				<tr>";
 	}
-	else if($LastRecord["StepRowID"] == "" || $LastRecord["IsOuter"] == "NO")
-	{
+	if($LastRecord["StepRowID"] != "")
+	{*/
 		$StepID = $LastRecord["StepID"] == "" ? 0 :
 			($LastRecord["ActionType"] == "CONFIRM" ? $LastRecord["StepID"] + 1 : $LastRecord["StepID"] - 1);
 		$query = "select StepDesc,PostName,
@@ -107,7 +112,7 @@ else
 				<td colspan=4 align=center><b>گردش فرم پایان یافته است.</b></td>
 				<tr>";
 		}
-	}
+	//}
 }
 ?>
 <style>

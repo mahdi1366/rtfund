@@ -301,6 +301,13 @@ class BaseInfo extends PdoDataAccess {
 	public $InfoID;
 	public $InfoDesc;
 	public $IsActive;
+	public $param1;
+	public $param2;
+	public $param3;
+	public $param4;
+	public $param5;
+	public $param6;
+	public $param7;
 	
 	public $_TableName;
 	public $_FieldName;

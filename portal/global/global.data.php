@@ -44,29 +44,33 @@ function SavePersonalInfo(){
 	die();
 }
 
-function AccDocFlow(){
+function AccDocFlow($CostID = null, $returnTotal = false){
 	
-	$CostID = $_REQUEST["CostID"];
-	$CurYear = substr(DateModules::shNow(),0,4);
+	$CostID = $CostID== null ? $_REQUEST["CostID"] : $CostID;
+	//$CurYear = substr(DateModules::shNow(),0,4);
 
-	$temp = PdoDataAccess::runquery("
-		select 
-			d.LocalNo,
+	$temp = PdoDataAccess::runquery("select " .
+			($returnTotal ? "sum(CreditorAmount-DebtorAmount) amount" : 
+			" d.LocalNo,
 			d.DocDate,
 			d.description,
 			di.DebtorAmount,
 			di.CreditorAmount,
-			di.details
-		from ACC_DocItems di join ACC_docs d using(DocID)
+			di.details" ) . 
+		" from ACC_DocItems di join ACC_docs d using(DocID)
 		left join ACC_tafsilis t1 on(t1.TafsiliType=1 AND di.TafsiliID=t1.TafsiliID)
 		left join ACC_tafsilis t2 on(t2.TafsiliType=1 AND di.TafsiliID2=t2.TafsiliID)
 		where CostID=:cid AND (t1.ObjectID=:pid or t2.ObjectID=:pid)
-			/*AND StatusID = ".ACC_STEPID_CONFIRM." */
-		order by DocDate
-	", array(/*":year" => $CurYear, */":pid" => $_SESSION["USER"]["PersonID"], ":cid" => $CostID));
+			/*AND StatusID = ".ACC_STEPID_CONFIRM." */".
+		($returnTotal ? " group by CostID " : "") .
+		"order by DocDate
+	", array(":pid" => $_SESSION["USER"]["PersonID"], ":cid" => $CostID));
+	
+	if($returnTotal)
+		return $temp;
 	
 	$PreSum = 0;
-	for($i=0; $i < $_GET["start"]*1 + $_GET["limit"]*1; $i++)
+	for($i=0; $i < $_GET["start"]*1 + $_GET["limit"]*1 && $i < count($temp); $i++)
 	{
 		$PreSum += $temp[$i]["CreditorAmount"] - $temp[$i]["DebtorAmount"];
 		$temp[$i]["Remainder"] = $PreSum;		

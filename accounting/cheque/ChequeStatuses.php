@@ -65,11 +65,12 @@ function ChequeStatuses()
 	this.grid = <?= $gridUsers?>;                
 	this.grid.render(this.get("div_dgu"));
 	
-	this.grid.plugins[0].on("beforeedit", function(editor,e){
+	if(this.grid.plugins.length > 0)
+		this.grid.plugins[0].on("beforeedit", function(editor,e){
 
-		if(e.record.data.RowID > 0)
-			return false;
-	});
+			if(e.record.data.RowID > 0)
+				return false;
+		});
 }
 
 ChequeStatuses.Save = function(store,record,op)

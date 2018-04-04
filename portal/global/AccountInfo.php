@@ -6,29 +6,14 @@
 
 require_once '../header.inc.php';
 require_once inc_dataGrid;
+require_once 'global.data.php';
 
-$GharzolhasaneCostID = 65;
-
-$CurYear = substr(DateModules::shNow(),0,4);
-
-$temp = PdoDataAccess::runquery("
-	select sum(CreditorAmount-DebtorAmount) amount 
-	from ACC_DocItems di join ACC_docs d using(DocID)
-	left join ACC_tafsilis t1 on(t1.TafsiliType=1 AND di.TafsiliID=t1.TafsiliID)
-	left join ACC_tafsilis t2 on(t2.TafsiliType=1 AND di.TafsiliID2=t2.TafsiliID)
-	where CycleID=:year 
-		AND CostID = " . $GharzolhasaneCostID . " 
-		AND (t1.ObjectID=:pid or t2.ObjectID=:pid) 
-		/*AND StatusID=".ACC_STEPID_CONFIRM." */
-	group by CostID
-	order by CostID
-", array(":year" => $CurYear, ":pid" => $_SESSION["USER"]["PersonID"]));
-
+$temp = AccDocFlow(COSTID_saving, true);
 $TotalAmount = count($temp) > 0 ? $temp[0]["amount"] : 0;
 
 //------------------------------------------------------------------------------
 
-$dg = new sadaf_datagrid("dg","global/global.data.php?task=AccDocFlow&CostID=" . $GharzolhasaneCostID, "");
+$dg = new sadaf_datagrid("dg","global/global.data.php?task=AccDocFlow&CostID=" . COSTID_saving, "");
 
 $col = $dg->addColumn("تاریخ", "DocDate", GridColumn::ColumnType_date);
 $col->width = 80;
@@ -42,6 +27,9 @@ $col = $dg->addColumn("مبلغ بدهکار", "DebtorAmount", GridColumn::Colum
 $col->width = 100;
 
 $col = $dg->addColumn("مبلغ بستانکار", "CreditorAmount", GridColumn::ColumnType_money);
+$col->width = 100;
+
+$col = $dg->addColumn("مانده", "Remainder", GridColumn::ColumnType_money);
 $col->width = 100;
 
 $dg->HeaderMenu = false;

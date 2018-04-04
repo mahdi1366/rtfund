@@ -262,7 +262,7 @@ function SaveBaseInfo(){
 		$pdo->commit();
 	}
 	else
-		$obj->Edit($pdo);
+		$obj->Edit();
 
 	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
 	die();

@@ -15,16 +15,12 @@ require_once 'wfm.js.php';
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "wfm.data.php?task=SelectAllFlows","");
 
 $dg->addColumn("","param4","string",true);
+$dg->addColumn("","ObjectType","string",true);
 
 $col = $dg->addColumn("عنوان گردش","FlowDesc","string");
 $col->editor = ColumnEditor::TextField();
 
-$col = $dg->addColumn("آیتم مورد نظر", "ObjectType", "string");
-if($accessObj->EditFlag && $accessObj->AddFlag)
-	$col->editor = ColumnEditor::ComboBox(
-		PdoDataAccess::runquery("select * from BaseInfo where typeID=11 AND IsActive='YES'"), 
-			"InfoID", "InfoDesc","","",true);
-$col->width = 200;
+$col = $dg->addColumn("آیتم مورد نظر", "ObjectDesc", "string");
 
 $col = $dg->addColumn("مراحل","","");
 $col->renderer = "WFM.StepsRender";

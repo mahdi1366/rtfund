@@ -337,7 +337,7 @@ InOutAccount.prototype.SaveOperation = function(){
 		url: this.address_prefix +'doc.data.php',
 		method: "POST",
 		params: {
-			task: "RegisterInOutAccountDoc",
+			task: "RegisterInOutDoc",
 			mode : this.mode,
 			BaseCostID : this.grid.getStore().proxy.extraParams.BaseCostID,
 			BaseTafsiliID : this.grid.getStore().proxy.extraParams.TafsiliID,

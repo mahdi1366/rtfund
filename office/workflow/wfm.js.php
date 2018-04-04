@@ -55,6 +55,8 @@ WFM.prototype.Adding = function()
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
 		FlowID : "",
+		param4 : "form",
+		ObjectType : "5",
 		FlowDesc : ""
 	});
 
@@ -106,7 +108,13 @@ WFM.prototype.Deleting = function()
 		  	},
 		  	success : function(response,o)
 		  	{
-		  		WFMObject.grid.getStore().load();
+				sd = Ext.decode(response.responseText);
+				if(sd.success)
+					WFMObject.grid.getStore().load();
+				else{
+					Ext.MessageBox.alert("ERROR", sd.data != "" ? sd.data : "عملیات مورد نظر با شکست مواجه شد" )
+				}
+					
 		  	}
 		});
 	}

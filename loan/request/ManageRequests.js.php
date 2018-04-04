@@ -555,7 +555,7 @@ ManageRequest.prototype.ShowCosts = function(){
 	if(!this.CostsWin)
 	{
 		this.CostsWin = new Ext.window.Window({
-			title: 'هزینه های ضمانت نامه',
+			title: 'هزینه های وام',
 			modal : true,
 			autoScroll : true,
 			width: 600,

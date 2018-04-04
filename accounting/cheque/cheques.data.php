@@ -134,7 +134,26 @@ function selectIncomeCheques() {
 
 function SelectIncomeChequeStatuses() {
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4 AND IsActive='YES'");
+	$temp = PdoDataAccess::runquery("
+		select b.* , 
+		concat('[',c1.CostCode,']',concat_ws('-',b11.blockDesc,b12.blockDesc,b13.blockDesc,b14.blockDesc)) 
+			bed_CostCode, 
+		concat('[',c2.CostCode,']',concat_ws('-',b21.blockDesc,b22.blockDesc,b23.blockDesc,b24.blockDesc)) 
+			bes_CostCode 
+		from BaseInfo b 
+		left join ACC_CostCodes c1 on(c1.CostID=param1)
+		left join ACC_blocks b11 on(c1.level1=b11.blockID)
+		left join ACC_blocks b12 on(c1.level2=b12.blockID)
+		left join ACC_blocks b13 on(c1.level3=b13.blockID)
+		left join ACC_blocks b14 on(c1.level4=b14.blockID)
+		
+		left join ACC_CostCodes c2 on(c2.CostID=param2)
+		left join ACC_blocks b21 on(c1.level1=b21.blockID)
+		left join ACC_blocks b22 on(c2.level2=b22.blockID)
+		left join ACC_blocks b23 on(c2.level3=b23.blockID)
+		left join ACC_blocks b24 on(c2.level4=b24.blockID)
+		
+		where TypeID=4 AND b.IsActive='YES'");
 
 	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
 	die();
@@ -290,6 +309,7 @@ function ChangeChequeStatus(){
 	$pdo->beginTransaction();
 	
 	$obj = new ACC_IncomeCheques($IncomeChequeID);
+	$PreStatus = $obj->ChequeStatus;
 	$obj->ChequeStatus = $Status;
 	if($Status == INCOMECHEQUE_VOSUL)
 		$obj->PayedDate = $_POST["PayedDate"];
@@ -330,7 +350,8 @@ function ChangeChequeStatus(){
 		isset($_POST["CenterAccount"]) ? true : false,
 		$BranchID,
 		$FirstCostID,
-		$SecondCostID);
+		$SecondCostID, 
+		$PreStatus);
 	if(!$result)
 	{
 		$pdo->rollback();
@@ -521,8 +542,8 @@ function editCheque(){
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
-//...........................................
 
+//...........................................
 
 function selectOutcomeCheques(){
 	
@@ -617,6 +638,51 @@ function selectOutcomeCheques(){
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	//echo PdoDataAccess::GetLatestQueryString();
 	echo dataReader::getJsonData($dataTable, count($dataTable), $_GET["callback"]);
+	die();
+}
+
+//...........................................
+
+function SaveStatus(){
+	
+	require_once '../../framework/baseInfo/baseInfo.class.php';
+	$obj = new BaseInfo();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	$obj->TypeID = 4;
+	
+	if($obj->InfoID*1 == 0)
+	{
+		$pdo = PdoDataAccess::getPdoObject();
+		$pdo->beginTransaction();
+	
+		$obj->InfoID = PdoDataAccess::GetLastID("BaseInfo", "InfoID", "TypeID=?", array($obj->TypeID), $pdo);
+		$obj->InfoID = $obj->InfoID*1 + 1;
+		
+		$obj->Add($pdo);		
+		
+		$obj2 = new ACC_tafsilis();
+		$obj2->TafsiliType = TAFTYPE_ChequeStatus;
+		$obj2->ObjectID = $obj->InfoID;
+		$obj2->TafsiliDesc = $obj->InfoDesc;
+		$obj2->TafsiliCode = $obj->InfoID;
+		$obj2->AddTafsili($pdo);
+		
+		$pdo->commit();
+	}
+	else
+		$obj->Edit();
+
+	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
+	die();
+}
+
+function DeleteStatus(){
+
+	require_once '../../framework/baseInfo/baseInfo.class.php';
+	$TypeID = 4;
+	$obj = new BaseInfo($TypeID, $_REQUEST["InfoID"]);
+	$obj->Remove();
+	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
 	die();
 }
 

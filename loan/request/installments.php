@@ -441,8 +441,8 @@ Installment.prototype.PayReport = function(mode){
 
 	if(mode == 'old')
 		window.open(this.address_prefix + "../report/LoanPayment2.php?show=true&RequestID=" + this.RequestID);
-	else
-		window.open(this.address_prefix + "../report/LoanPayment3.php?show=true&RequestID=" + this.RequestID);
+	else 
+		window.open(this.address_prefix + "../report/LoanPayment4.php?show=true&RequestID=" + this.RequestID);
 }
 
 Installment.prototype.DelayInstallments = function(){
