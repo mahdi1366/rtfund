@@ -3552,7 +3552,10 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 	}
 	if($ReportMode)
 		return $TraceArr;
-	//--------------------------------------------------------------------------
+	
+	//---------------   get Total Amount  ------------------
+	
+	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	

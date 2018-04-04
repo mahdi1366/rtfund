@@ -210,8 +210,7 @@ class LON_requests extends PdoDataAccess{
 			{
 				$amount += Tanzil($dt[$i]["PayAmount"], $partObj->CustomerWage, $dt[$i]["PayDate"], $partObj->PartDate);
 			}
-			$amount = round($amount);
-			
+			$amount = round($amount);			
 			/*if($partObj->DelayReturn == "CUSTOMER")
 			{
 				$arr = self::GetDelayAmounts($partObj->RequestID);
@@ -305,7 +304,7 @@ class LON_requests extends PdoDataAccess{
 		
 		$PartObj = $PartObj == null ? LON_ReqParts::GetValidPartObj($RequestID) : $PartObj;
 		
-		if($PartObj->ComputeMode == "NEW" && $PartObj->DelayReturn == "INSTALLMENT")
+		if($PartObj->ComputeMode == "NEW" )
 		{
 			return array(
 				"CustomerDelay" => 0,
@@ -1009,12 +1008,15 @@ class LON_requests extends PdoDataAccess{
 			$result = self::GetWageAmounts($RequestID, $PartObj);
 			$extraAmount += $result["CustomerWage"];
 		}
+		
+		$result = self::GetDelayAmounts($RequestID, $PartObj);
+		
 		if($PartObj->DelayReturn == "INSTALLMENT")
-		{
-			$result = self::GetDelayAmounts($RequestID, $PartObj);
-			$extraAmount += $result["CustomerDelay"];
-		}
-
+			$extraAmount += $result["FundDelay"];
+		
+		if($PartObj->AgentDelayReturn == "INSTALLMENT")
+			$extraAmount += $result["AgentDelay"];
+		
 		return $PartObj->PartAmount*1 + $extraAmount;		
 	}
 	
