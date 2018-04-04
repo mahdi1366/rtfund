@@ -80,6 +80,7 @@ switch($task)
 	case "GetPureAmount":
 	case "emptyDataTable":
 	case "ComputeManualInstallments":
+	case "selectBackPayComputes":
 		$task();
 }
 
@@ -2028,4 +2029,11 @@ function ComputeManualInstallments(){
 	die();
 }
 
+//------------------------------------------------
+
+function selectBackPayComputes(){
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=81 AND IsActive='YES'");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
 ?>
