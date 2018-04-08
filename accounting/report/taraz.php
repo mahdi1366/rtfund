@@ -52,9 +52,9 @@ function GetData(&$rpg){
 		
 		b0.BlockCode level0Code,
 		b1.BlockCode level1Code,
-		b2.BlockCode level2Code,
-		b3.BlockCode level3Code,
-		b4.BlockCode level4Code,
+		ifnull(b2.BlockCode,'00') level2Code,
+		ifnull(b3.BlockCode,'00') level3Code,
+		ifnull(b4.BlockCode,'00') level4Code,
 		b.InfoDesc TafsiliTypeDesc,
 		t.TafsiliDesc TafsiliDesc,
 		t.TafsiliCode TafsiliCode,
@@ -459,7 +459,6 @@ function ListData($IsDashboard = false){
 	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
-		echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>

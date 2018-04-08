@@ -1396,6 +1396,7 @@ function GetDelayedInstallments($returnData = false){
 	
 	$param = array(":todate" => $ToDate, ":fromdate" => $FromDate);
 	$query = "select p.*,
+				l.LoanDesc,
 				r.RequestID,LoanPersonID,p1.mobile,p1.SmsNo,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) LoanPersonName,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) ReqPersonName,
@@ -1406,6 +1407,7 @@ function GetDelayedInstallments($returnData = false){
 				
 			from LON_installments i
 			join LON_requests r using(RequestID)
+			join LON_loans l using(LoanID)
 			join BSC_persons p1 on(LoanPersonID=p1.PersonID)
 			left join BSC_persons p2 on(ReqPersonID=p2.PersonID)
 			join LON_ReqParts p on(p.RequestID=r.RequestID AND p.IsHistory='NO')
@@ -1463,10 +1465,12 @@ function GetDelayedInstallments($returnData = false){
 		$temp = array();
 		$computeArr = LON_requests::ComputePayments($row["RequestID"], $temp);
 		$remain = LON_requests::GetCurrentRemainAmount($row["RequestID"],$computeArr);
+		$PureRemain = LON_requests::GetCurrentRemainAmount($row["RequestID"],$computeArr, false);
 		$MinDate = LON_requests::GetMinPayedInstallmentDate($row["RequestID"],$computeArr);
 		if($remain > 0 && $MinDate != null)
 		{
 			$row["TotalRemainder"] = $remain;
+			$row["PureRemain"] = $PureRemain;
 			//$row["InstallmentDate"] = $MinDate;
 			$result[] = $row;
 			$currentRequestID = $row["RequestID"];

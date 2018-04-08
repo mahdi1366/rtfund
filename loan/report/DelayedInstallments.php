@@ -24,6 +24,7 @@ if(!empty($_REQUEST["print"]))
 	
 	$col = $rpg->addColumn("شماره وام", "RequestID");
 	$col = $rpg->addColumn("شعبه وام", "BranchName");
+	$col = $rpg->addColumn("نوع وام", "LoanDesc");
 	$col = $rpg->addColumn("معرف", "ReqPersonName");
 	$col = $rpg->addColumn("وام گیرنده", "LoanPersonName");
 	$col = $rpg->addColumn("تضامین", "tazamin");
@@ -31,6 +32,9 @@ if(!empty($_REQUEST["print"]))
 	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount", "ReportMoneyRender");
 	$col->EnableSummary();
 	$col = $rpg->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
+	$col->EnableSummary();
+	
+	$col = $rpg->addColumn("اصل و کارمزد معوقه", "PureRemain","ReportMoneyRender");
 	$col->EnableSummary();
 	
 	$rpg->addColumn("شرح", "PartDesc");
@@ -68,6 +72,7 @@ if(!empty($_REQUEST["EXCEL"]))
 	$rpt->addColumn("PID", "LoanPersonID");
 	$rpt->addColumn("کد وام", "RequestID");
 	$rpt->addColumn("شعبه وام", "BranchName");
+	$rpt->addColumn("نوع وام", "LoanDesc");
 	$rpt->addColumn("تضامین", "tazamin");
 	$rpt->addColumn("معرف", "ReqPersonName");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
@@ -77,6 +82,7 @@ if(!empty($_REQUEST["EXCEL"]))
 	$rpt->addColumn("سررسید", "InstallmentDate","ReportDateRender");
 	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
 	$rpt->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
+	$rpt->addColumn("اصل و کارمزد معوقه", "PureRemain","ReportMoneyRender");
 	$rpt->addColumn("مبلغ پرداخت", "PartAmount", "ReportMoneyRender");
 	$rpt->addColumn("شرح", "PartDesc");
 	$rpt->addColumn("ماه تنفس", "DelayMonths");
@@ -99,6 +105,7 @@ if(!empty($_REQUEST["NTC_EXCEL"]))
 	$rpt->addColumn("PID", "LoanPersonID");
 	$rpt->addColumn("کد وام", "RequestID");
 	$rpt->addColumn("شعبه وام", "BranchName");
+	$rpt->addColumn("نوع وام", "LoanDesc");
 	$rpt->addColumn("معرف", "ReqPersonName");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("موبایل", "mobile");

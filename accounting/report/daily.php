@@ -15,15 +15,15 @@ if(isset($_REQUEST["show"]))
 			cc.CostCode,
 			b1.BlockCode level1_code,
 			b1.BlockDesc level1_desc,
-			concat_ws('-',b1.BlockCode,b2.BlockCode) level2_code,
+			concat_ws('-',b1.BlockCode,ifnull(b2.BlockCode,'00')) level2_code,
 			concat_ws('-',b1.BlockDesc,b2.BlockDesc) level2_desc,
-			concat_ws('-',b1.BlockCode,b2.BlockCode,b3.BlockCode) level3_code,
+			concat_ws('-',b1.BlockCode,ifnull(b2.BlockCode,'00'),ifnull(b3.BlockCode,'00')) level3_code,
 			concat_ws('-',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc) level3_desc,
-			concat_ws('-',b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode) level4_code,
+			concat_ws('-',b1.BlockCode,ifnull(b2.BlockCode,'00'),ifnull(b3.BlockCode,'00'),ifnull(b4.BlockCode,'00')) level4_code,
 			concat_ws('-',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) level4_desc,
-			concat_ws('-',b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode,t.TafsiliID) level5_code,
+			concat_ws('-',b1.BlockCode,ifnull(b2.BlockCode,'00'),ifnull(b3.BlockCode,'00'),ifnull(b4.BlockCode,'00'),t.TafsiliID) level5_code,
 			concat_ws('-',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc,t.TafsiliDesc) level5_desc,
-			concat_ws('-',b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode,t.TafsiliID,t2.TafsiliID) level6_code,
+			concat_ws('-',b1.BlockCode,ifnull(b2.BlockCode,'00'),ifnull(b3.BlockCode,'00'),ifnull(b4.BlockCode,'00'),t.TafsiliID,t2.TafsiliID) level6_code,
 			concat_ws('-',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc,t.TafsiliDesc,t2.TafsiliDesc) level6_desc,
 			DocType,
 			DocDate,
@@ -127,8 +127,7 @@ if(isset($_REQUEST["show"]))
 	if(!$rpg->excel)
 	{
 		BeginReport();
-		$rpg->headerContent = 
-		"<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
+		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 					گزارش دفتر روزنامه
@@ -140,9 +139,9 @@ if(isset($_REQUEST["show"]))
 			. DateModules::shNow() . "<br>";
 		if(!empty($_POST["fromDate"]))
 		{
-			$rpg->headerContent .= "<br>گزارش از تاریخ : " . $_POST["fromDate"] . ($_POST["toDate"] != "" ? " - " . $_POST["toDate"] : "");
+			echo "<br>گزارش از تاریخ : " . $_POST["fromDate"] . ($_POST["toDate"] != "" ? " - " . $_POST["toDate"] : "");
 		}
-		$rpg->headerContent .= "</td></tr></table>";
+		echo "</td></tr></table>";
 	}
 	
 	$rpg->addColumn("شماره سریال", "DocNo"); 

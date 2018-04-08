@@ -1020,7 +1020,7 @@ class LON_requests extends PdoDataAccess{
 		return $PartObj->PartAmount*1 + $extraAmount;		
 	}
 	
-	static function GetCurrentRemainAmount($RequestID, $computeArr=null){
+	static function GetCurrentRemainAmount($RequestID, $computeArr=null, $forfeitInclude = true){
 		
 		$dt = array();
 		if($computeArr == null)
@@ -1031,8 +1031,9 @@ class LON_requests extends PdoDataAccess{
 		{
 			if($row["ActionDate"] <= DateModules::Now())
 			{
-				$amount = $row["TotalRemainder"]*1 + 
-						(isset($row["ForfeitAmount"]) ? $row["ForfeitAmount"]*1 : 0);
+				$amount = $row["TotalRemainder"]*1;
+				if($forfeitInclude) 
+					$amount += isset($row["ForfeitAmount"]) ? $row["ForfeitAmount"]*1 : 0;
 				$CurrentRemain = $amount < 0 ? 0 : $amount;
 			}
 			else

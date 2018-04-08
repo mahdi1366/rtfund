@@ -3578,6 +3578,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 
 	foreach($DepositeAmount as $CostID => $DepRow)
 	{
+		$CostID = $CostID == COSTID_ShortDeposite ? 416 : $CostID;
 		foreach($DepRow as $TafsiliID => $itemrow)
 		{
 			$amount = $itemrow["profit"]*1 - $itemrow["ReturnProfit"]*1;

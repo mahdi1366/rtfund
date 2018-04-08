@@ -24,6 +24,9 @@ $page_rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
 $page_rpg->addColumn("زیرواحد سرمایه گذار", "SubDesc");
 $col = $page_rpg->addColumn("تاریخ درخواست", "ReqDate");
 $col->type = "date";	
+$col = $page_rpg->addColumn("تاریخ خاتمه", "EndReqDate");
+$col->type = "date";	
+$page_rpg->addColumn("سند خاتمه", "EndDocNo");
 $page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
 $page_rpg->addColumn("مشتری", "LoanFullname");
 $page_rpg->addColumn("حوزه فعالیت", "DomainDesc");
@@ -114,6 +117,8 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 			case "toReqDate":
 			case "fromPartDate":
 			case "toPartDate":
+			case "fromEndReqDate":
+			case "toEndReqDate":
 				$value = DateModules::shamsi_to_miladi($value, "-");
 				break;
 			case "fromReqAmount":
@@ -165,6 +170,9 @@ function GetData($mode = "list"){
 				p2.email,
 				p2.WebSite,
 				
+				doc.EndReqDate,
+				doc.EndDocNo,
+
 				bi.InfoDesc StatusDesc,
 				sb.SubDesc,
 				ad.DomainDesc,
@@ -190,6 +198,14 @@ function GetData($mode = "list"){
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 			left join DMS_packages dp on(p2.PersonID=dp.PersonID AND r.BranchID=dp.BranchID)
 			left join BSC_ActDomain ad on(p2.DomainID=ad.DomainID)
+			
+			left join (
+				select SourceID2 RequestID,LocalNo EndDocNo,DocDate EndReqDate
+				from ACC_DocItems join ACC_docs using(DocID)
+				where DocType=".DOCTYPE_END_REQUEST."
+				group by SourceID2
+			) doc on(r.RequestID=doc.RequestID)
+
 			left join (
 				select RequestID,sum(PayAmount) SumPayments 
 				from LON_payments 
@@ -290,6 +306,9 @@ function ListData($IsDashboard = false){
 	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
+	$rpg->addColumn("تاریخ خاتمه", "EndReqDate", "ReportDateRender");
+	$rpg->addColumn("سند خاتمه", "EndDocNo");
+	
 	$rpg->addColumn("مشتری", "LoanFullname");
 	$rpg->addColumn("شماره پرونده", "PackNo");	
 	$rpg->addColumn("حوزه فعالیت", "DomainDesc");
@@ -644,12 +663,20 @@ function LoanReport_total()
 				"<input name=IsEnded type=radio value='NO' > جاری &nbsp;&nbsp;" +
 				"<input name=IsEnded type=radio value='' checked > هردو " 
 		},{
+			xtype : "shdatefield",
+			name : "fromEndReqDate",
+			fieldLabel : "تاریخ خاتمه از"
+		},{
+			xtype : "shdatefield",
+			name : "toEndReqDate",
+			fieldLabel : "تا تاریخ"
+		},{
 			xtype : "fieldset",
 			title : "اطلاعات مشتری",
 			colspan : 2,
 			layout : {
 				type : "table",
-				columns : 2,
+				columns : 2
 			},
 			defaults : {
 				width : 350

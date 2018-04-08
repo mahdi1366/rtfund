@@ -112,7 +112,7 @@ Ext.extend(Ext.tree.Search, Ext.util.Observable, {
 			if(i == this.menu.items.items.length)
 			{
 				alert('ابتدا ستون مورد نظر براي جستجو را انتخاب كنيد');
-				return;
+				return false;
 			}
 		}
 		else
@@ -120,6 +120,7 @@ Ext.extend(Ext.tree.Search, Ext.util.Observable, {
 			this.tree.searchField = "text";
 		}
 		Ext.tree.searchingTree(this.tree, val);
+                return false;
 
     } // eo function onTriggerSearch
     ,reconfigure:function() {
