@@ -8,6 +8,8 @@ require_once getenv("DOCUMENT_ROOT") . '/framework/configurations.inc.php';
 
 set_include_path(get_include_path() . PATH_SEPARATOR . getenv("DOCUMENT_ROOT") . "/generalClasses");
 set_include_path(get_include_path() . PATH_SEPARATOR . getenv("DOCUMENT_ROOT") . "/generalUI/ext4");
+set_include_path(get_include_path() . PATH_SEPARATOR . "/home/krrtfir/php");
+
 
 require_once getenv("DOCUMENT_ROOT") . '/definitions.inc.php';
 

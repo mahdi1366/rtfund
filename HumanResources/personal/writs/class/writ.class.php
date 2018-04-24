@@ -83,14 +83,17 @@ class manage_writ extends PdoDataAccess
             return false;
 	
 		//.................................
-
+ 
 		$useInPayCalc = manage_writ::check_for_use_in_pay_calc($this->writ_id, $this->writ_ver, $this->staff_id);
-		if($useInPayCalc != null || $this->state != WRIT_PERSONAL)
+		 
+	
+		 
+		if($useInPayCalc != null )
 		{ 
 			parent::PushException(WRIT_CAN_NOT_DELETE);
 			return false;
 		}
-
+	 
 		if($this->check_corrective_state() == "NOT_CORRECTING" || $this->writ_has_new_version())
 		{
 			parent::PushException(ER_CANNT_DELETE_CORREDTED_WRIT);
@@ -104,7 +107,7 @@ class manage_writ extends PdoDataAccess
 			return false;
 		}
 
-		$query = "select * from writs where corrective_writ_id=:wid AND corrective_writ_ver=:wver AND staff_id = :stid";
+		$query = "select * from HRM_writs where corrective_writ_id=:wid AND corrective_writ_ver=:wver AND staff_id = :stid";
 		$temp = PdoDataAccess::runquery($query, array(":wid" => $this->writ_id, ":wver" => $this->writ_ver, ":stid" => $this->staff_id));
 		if(count($temp) > 0)
 		{
@@ -150,19 +153,10 @@ class manage_writ extends PdoDataAccess
 					if(!manage_posts::is_valid($this->post_id, $this->execute_date, $this->staff_id))
 						return false;
 
-                //---- چنانچه پست فرد را تغییر دهند ---------
-
-               /* $prior_writ_Obj = $this->get_prior_writ();
-                if($prior_writ_Obj->post_id != $this->post_id)
-                {
-                   if (manage_posts::change_user_post($prior_writ_Obj->staff_id, $prior_writ_Obj->post_id , NULL , $prior_writ_Obj->execute_date) === false )
-                       return false ;
-                }*/
-
 			}
 		}
 	
-
+/*
 		if( $this->pay_date < $this->issue_date )
 		{
 			if($this->state == WRIT_PERSONAL )
@@ -173,6 +167,8 @@ class manage_writ extends PdoDataAccess
 				return false ;
 			}
 		}
+		
+*/		
 
 		if(isset($_POST['contract_start_date']))
 		   $this->contract_start_date = DateModules::Shamsi_to_Miladi($_POST['contract_start_date']);
@@ -922,14 +918,26 @@ die();*/
 
         if( $this->person_type == HR_WORKER )
         {
-		   $qry = " select job_id
+		   /*$qry = " select job_id
 					from HRM_writs
 					where execute_date < '".$this->execute_date."' and staff_id = ".$this->staff_id."
 					order by execute_date  Desc
 					limit 1 " ; 
 		   $resJob = PdoDataAccess::runquery($qry); 
 		   		   
-        	   $this->job_id = ( empty($resJob[0]['job_id']) ? 0 :  $resJob[0]['job_id'] ) ;
+        	   $this->job_id = ( empty($resJob[0]['job_id']) ? 0 :  $resJob[0]['job_id'] ) ; */
+			
+			$query = " SELECT bj.JobID
+				       FROM BSC_jobs bj
+								inner join  HRM_persons p
+									ON bj.PersonID = p.RefPersonID
+
+								inner join HRM_staff s
+									ON s.PersonID = p.PersonID
+					   WHERE s.staff_id = ".$this->staff_id ; 
+			$res = PdoDataAccess::runquery($query) ; 
+			$this->job_id = (empty($res[0]['JobID'])) ? PDONULL : $res[0]['JobID'] ;
+			
         }
 					
 			//__________________________________________________________
@@ -1095,8 +1103,8 @@ die();*/
 	    	$this->history_only = 0;
 
 	//__________________________________________________________
-		$this->job_id = (empty($this->job_id)) ? PDONULL : $this->job_id;
-
+		
+		
         //---------------------
 	$pObj = new manage_person("", $this->staff_id ) ; 
 	
@@ -1107,8 +1115,8 @@ die();*/
 	    $this->family_responsible = 1 ; 
 	
 	if($pObj->sex == 2 && (  $this->person_type == 5 ) && $this->execute_date > '2014-03-20' ) 
-	    $this->family_responsible = 0 ;
-	        
+	    $this->family_responsible = 0 ;	        
+	
 	    //.............................................
 	    $pdo = parent::getPdoObject();
 	    /*@var $pdo PDO*/
@@ -1434,7 +1442,7 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
     	/*@var $DB PDO*/
     	$DB->beginTransaction();
 
-        $return = PdoDataAccess::delete("writ_salary_items", "writ_id=:wid AND writ_ver=:wver AND staff_id=:stid",
+        $return = PdoDataAccess::delete("HRM_writ_salary_items", "writ_id=:wid AND writ_ver=:wver AND staff_id=:stid",
                         array(":wid"=> $obj->writ_id, ":wver"=> $obj->writ_ver, ":stid" => $obj->staff_id));
 
         if($return === false)
@@ -1444,7 +1452,7 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
         }
 
 
-        $return = PdoDataAccess::delete("writs", "writ_id=:wid AND writ_ver=:wver AND staff_id=:stid",
+        $return = PdoDataAccess::delete("HRM_writs", "writ_id=:wid AND writ_ver=:wver AND staff_id=:stid",
         	array(":wid"=> $obj->writ_id, ":wver"=> $obj->writ_ver, ":stid" => $obj->staff_id));
 
 		if($return === false)
@@ -1456,32 +1464,12 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 	$daObj = new DataAudit();
 	$daObj->ActionType = DataAudit::Action_delete;
 	$daObj->MainObjectID = $obj->staff_id;
-	$daObj->TableName = "writs";	
+	$daObj->TableName = "HRM_writs";	
 	$daObj->execute();
 
         $last_writ_obj = manage_staff::GetLastWrit($obj->staff_id);
 
-        if($last_writ_obj) {
-
-        //__________________________________________________
-        // دادن پست حكم قبلي به فرد در صورت خالي بودن اين پست
-    	if($obj->is_last($obj->staff_id, $obj->execute_date) && $last_writ_obj->post_id != $obj->post_id)
-    	{
-    		if(!manage_posts::change_user_post($obj->staff_id, $obj->post_id, $last_writ_obj->post_id, $obj->execute_date))
-    		{
-    			$DB->rollBack();
-        		return false;
-    		}
-    	}
-
-        }
-    	if($obj->history_only != HISTORY_ONLY)
-    		if(!manage_writ::change_writ_state(WRIT_PERSONAL, WRIT_PERSONAL, $obj->writ_id, $obj->writ_ver,
-					$obj->staff_id, $obj->execute_date, $DB))
-    		{
-    			$DB->rollBack();
-        		return false;
-    		}
+       
     	//__________________________________________________
     	//در صورت حذف يک حکم نسخه قبلي آن را در صورتي که به حقوق منتقل نشده است فعال مي کند
     	if(!manage_staff::SetStaffLastWrit($obj->staff_id))
@@ -2117,7 +2105,8 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
                           c.cost_center_id ,
                           sf.sfid,
                           sf.ptitle sf_ptitle,
-                          sb.sbid,po.PostName,
+                          sb.sbid,
+						  po.PostName,
                           sb.ptitle sb_ptitle ,
                           parentu.ouid ,
                           parentu.ptitle parentTitle , 
@@ -2135,7 +2124,7 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
                         LEFT JOIN Basic_Info bi5 ON (bi5.InfoID = w.education_level AND bi5.TypeID = 6 )
                         LEFT JOIN Basic_Info bi6 ON (bi6.InfoID = w.salary_pay_proc AND bi6.TypeID = 12 )
                         LEFT JOIN Basic_Info bi7 ON (bi7.InfoID = w.annual_effect AND bi7.TypeID = 13 )
-                       LEFT OUTER JOIN BSC_posts po ON (w.post_id = po.PostID)
+                      
                         LEFT OUTER JOIN writ_types wt ON (w.writ_type_id = wt.writ_type_id AND w.person_type = wt.person_type)
                         LEFT OUTER JOIN writ_subtypes wst ON (w.writ_subtype_id = wst.writ_subtype_id AND
                                                w.writ_type_id = wst.writ_type_id AND w.person_type = wst.person_type)
@@ -2144,14 +2133,16 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
                         LEFT OUTER JOIN org_new_units o ON (o.ouid = w.ouid)
                         LEFT OUTER JOIN org_new_units parentu ON (parentu.ouid = o.parent_ouid)
                         LEFT OUTER JOIN cost_centers c ON (w.cost_center_id = c.cost_center_id)
-			LEFT OUTER JOIN bases ba ON p.personid = ba.personid 
-
+						LEFT OUTER JOIN bases ba ON p.personid = ba.personid 
+						LEFT JOIN BSC_jobs bj ON bj.PersonID = p.RefPersonID
+						inner join BSC_posts po ON po.PostID= bj.PostID
+						
                         where (s.last_cost_center_id is null OR s.last_cost_center_id in(" . manage_access::getValidCostCenters() . "))
 						AND s.person_type in(" . manage_access::getValidPersonTypes() . ")";
 		}
 		else {
 			
-			
+		
 			$query = " SELECT w.*, w.ouid sub_ouid ,
 	                          bi1.InfoDesc corrective_title ,
 			                  bi2.InfoDesc history_only_title ,	                         
@@ -2194,9 +2185,9 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 	                        LEFT JOIN BaseInfo bi6 ON (bi6.InfoID = w.salary_pay_proc AND bi6.TypeID = 59 )
 	                        LEFT JOIN BaseInfo bi7 ON (bi7.InfoID = w.annual_effect AND bi7.TypeID = 60 )
 	                        LEFT OUTER JOIN BaseInfo bi8 ON ( bi8.InfoID = w.emp_mode AND bi8.TypeID = 61 )
-	                       
+	                        
 							/*LEFT OUTER JOIN HRM_job_fields jf ON (po.jfid = jf.jfid)*/
-					 LEFT OUTER JOIN BSC_posts po ON (w.post_id = po.PostID)		
+					
 	                        LEFT OUTER JOIN HRM_writ_types wt ON ((w.writ_type_id = wt.writ_type_id) AND (w.person_type = wt.person_type))
 	                        LEFT OUTER JOIN HRM_writ_subtypes wst ON ((w.writ_subtype_id = wst.writ_subtype_id) AND (w.writ_type_id = wst.writ_type_id) AND (w.person_type = wst.person_type))
 	                        LEFT OUTER JOIN HRM_study_branchs sb ON ((w.sbid = sb.sbid) AND (w.sfid = sb.sfid))
@@ -2205,7 +2196,8 @@ if ($exist_writ_rec->person_type == HR_EMPLOYEE || $exist_writ_rec->person_type 
 	                        LEFT OUTER JOIN HRM_org_new_units parentu ON (parentu.ouid = o.parent_ouid)
 	                       LEFT OUTER JOIN BSC_units u ON u.UnitID = w.ouid	
 	                        LEFT OUTER JOIN HRM_jobs j ON ( w.job_id = j.job_id )
-							
+							LEFT JOIN BSC_jobs bj ON bj.PersonID = p.RefPersonID
+							LEFT join BSC_posts po ON po.PostID= bj.PostID
 					where (s.last_cost_center_id is null )	";
 		}
 
@@ -2696,11 +2688,9 @@ echo PdoDataAccess::GetLatestQueryString(); die();
 
 	static function check_for_use_in_pay_calc($writ_id , $writ_ver, $staff_id)
     {
-    	/*$query = "SELECT GROUP_CONCAT(DISTINCT '&nbsp;',pay_year,'-',pay_month,'&nbsp;') use_list
-                  FROM payment_writs
-                  WHERE  writ_id = :wid AND writ_ver = :wver AND staff_id = :stid";*/
+    
 		$query = "SELECT distinct concat(pay_year,'-',pay_month) lst
-                  FROM payment_writs
+                  FROM HRM_payment_writs
                   WHERE  writ_id = :wid AND writ_ver = :wver AND staff_id = :stid";
     	$temp = PdoDataAccess::runquery($query , array(":wid" => $writ_id, ":wver" => $writ_ver, ":stid" => $staff_id));
 

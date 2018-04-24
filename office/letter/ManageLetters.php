@@ -3,7 +3,7 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 1394.10
 //-----------------------------
-require_once '../header.inc.php';
+require_once '../header.inc.php'; 
 require_once inc_dataGrid;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=SelectAllLetter", "grid_div");
@@ -130,6 +130,12 @@ function ManageLetter(){
 			queryMode : "local",
 			displayField: 'fullname',
 			valueField : "PersonID"		
+		},{
+			xtype : "textfield",
+			fieldLabel : "آدرس پستی گیرنده",
+			name : "PostalAddress",
+			colspan : 3,
+			width : 520
 		},{
 			xtype : "shdatefield",
 			fieldLabel : "تاریخ نامه از",

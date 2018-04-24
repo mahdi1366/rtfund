@@ -13,8 +13,6 @@ require_once '../class/payment_items.class.php';
 require_once 'phpExcelReader.php';
 require_once(inc_response);
 
-ini_set("display_errors","On") ;
-
 function exe_param_sql($PayYear ,$PayMonth , &$salaryParam) {
 	
 	$SDate = $PayYear."/".$PayMonth."/01" ; 

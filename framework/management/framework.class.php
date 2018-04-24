@@ -403,10 +403,10 @@ class FRW_AccessGroupList extends OperationClass{
 			where 1=1 " . $where, $param);
 	}
 
-	public function Add() {
+	public function Add($pdo = null) {
 		
-		$result = PdoDataAccess::insert(self::TableName,$this );
-		if ($result === false)
+		$result = PdoDataAccess::insert(self::TableName,$this, $pdo );
+		if (!$results)
 			return false;
 
 		$daObj = new DataAudit();
@@ -414,14 +414,14 @@ class FRW_AccessGroupList extends OperationClass{
 		$daObj->MainObjectID = $this->GroupID;
 		$daObj->SubObjectID = $this->PersonID;
 		$daObj->TableName = "FRW_AccessGroupList";
-		$daObj->execute();
+		$daObj->execute($pdo);
 		return true;
 	}
 	
-	public function Remove() {
+	public function Remove($pdo = null) {
 		
 		$result = PdoDataAccess::delete(self::TableName, "GroupID=? AND PersonID=?", 
-			array($this->GroupID, $this->PersonID));
+			array($this->GroupID, $this->PersonID), $pdo);
 		if ($result === false)
 			return false;
 
@@ -430,7 +430,7 @@ class FRW_AccessGroupList extends OperationClass{
 		$daObj->MainObjectID = $this->GroupID;
 		$daObj->SubObjectID = $this->PersonID;
 		$daObj->TableName = "FRW_AccessGroupList";
-		$daObj->execute();
+		$daObj->execute($pdo);
 		return true;
 	}
 }

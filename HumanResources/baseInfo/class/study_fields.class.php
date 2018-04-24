@@ -17,14 +17,14 @@ class manage_study_fields extends PdoDataAccess
 	 }
 	static function GetAll($where = "",$whereParam = array())
 	{
-		$query = "select * from study_fields";
+		$query = "select * from HRM_study_fields";
 		$query .= ($where != "") ? " where " . $where : "";
 		return parent::runquery($query, $whereParam);
 	}
 	 
 	function Add()
 	{
-	 	if( parent::insert("study_fields", $this) === false )
+	 	if( parent::insert("HRM_study_fields", $this) === false )
 			return false;
 
 		$this->sfid = parent::InsertID();
@@ -42,7 +42,7 @@ class manage_study_fields extends PdoDataAccess
 	 	$whereParams = array();
 	 	$whereParams[":sfid"] = $this->sfid;
 
-	 	if( parent::update("study_fields",$this," sfid=:sfid", $whereParams) === false )
+	 	if( parent::update("HRM_study_fields",$this," sfid=:sfid", $whereParams) === false )
 	 		return false;
 
 		$daObj = new DataAudit();
@@ -58,7 +58,7 @@ class manage_study_fields extends PdoDataAccess
 	static function Remove($sfid)
 	{
 
-        $res = parent::runquery(" select count(*) cn from study_branchs where sfid = ".$sfid );
+        $res = parent::runquery(" select count(*) cn from HRM_study_branchs where sfid = ".$sfid );
 
         if($res[0]['cn'] > 0 )
         {
@@ -66,7 +66,7 @@ class manage_study_fields extends PdoDataAccess
             return false ;
         }
 
-        $educRes = parent::runquery(" select count(*) cn from person_educations where sfid = ".$sfid );
+        $educRes = parent::runquery(" select count(*) cn from HRM_person_educations where sfid = ".$sfid );
 
         if($educRes[0]['cn'] > 0 )
         {
@@ -74,7 +74,7 @@ class manage_study_fields extends PdoDataAccess
             return false ;
         }
 
-        $result = parent::delete("study_fields", "sfid=:sfid ", array(":sfid" => $sfid));
+        $result = parent::delete("HRM_study_fields", "sfid=:sfid ", array(":sfid" => $sfid));
 		
 		if($result === false)
 			return false;
@@ -82,7 +82,7 @@ class manage_study_fields extends PdoDataAccess
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;
 		$daObj->MainObjectID = $sfid;
-		$daObj->TableName = "study_fields";
+		$daObj->TableName = "HRM_study_fields";
 		$daObj->execute();
 
 		return true;

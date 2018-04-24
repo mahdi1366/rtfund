@@ -27,9 +27,9 @@ class manage_staff_include_history extends PdoDataAccess
 	private function date_overlap($PID)
 	 {
 		$query = "	select count(*)
-							from staff_include_history sih inner join staff s
+							from HRM_staff_include_history sih inner join HRM_staff s
 																on sih.staff_id = s.staff_id
-														   inner join persons p
+														   inner join HRM_persons p
 																on s.personid = p.personid
 									where
 											((sih.start_date <=:fdate AND sih.end_date>=:fdate) OR (sih.start_date>=:fdate AND sih.start_date <=:tdate)) AND
@@ -112,12 +112,17 @@ class manage_staff_include_history extends PdoDataAccess
 
 	function Edit($PID)
 	{
+	    
+	   
 		if(!$this->date_overlap($PID))
 			return false ;
-			
-		$result = parent::update("staff_include_history", $this, " staff_id = :SID and include_history_id = :ID " ,
+	
+		$result = parent::update("HRM_staff_include_history", $this, " staff_id = :SID and include_history_id = :ID " ,
 							array(":SID" => $this->staff_id,
 								  ":ID" => $this->include_history_id));
+								  
+								  
+								  
 		if($result === false)
 			return false;
 

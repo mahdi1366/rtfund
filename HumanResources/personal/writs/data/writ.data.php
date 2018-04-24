@@ -3,7 +3,6 @@
 // programmer:	Mahdipour
 // create Date:	94.12
 //---------------------------
-ini_set("display_errors","On") ; 
 $address_prefix = getenv("DOCUMENT_ROOT");
 
 require_once '../../../header.inc.php'; 
@@ -73,10 +72,30 @@ switch ( $task) {
 
    case "Next_Corrective_Writ":
          Next_Corrective_Writ();
+         
+    case "deleteWInf":
+		  deleteWInf();
 	   
    
         
 }
+
+function deleteWInf()
+{
+	
+	$qry = " delete from HRM_writ_subtypes 
+					where writ_type_id =".$_REQUEST["WTI"]." and  writ_subtype_id = ".$_REQUEST["WSI"] ; 
+
+	$return = PdoDataAccess::runquery($qry);
+if(PdoDataAccess::runquery($qry) === false )
+		$return = FALSE ; 
+	else 
+		$return = TRUE ; 
+	
+	echo Response::createObjectiveResponse($return, ($return ? "" : ExceptionHandler::popExceptionDescription()));
+	die();
+}
+
 
 function selectPersonWrt()
 {
@@ -529,50 +548,9 @@ function saveData()
 				 where s.staff_id = ".$obj->staff_id  ; 
 	$Pres = PdoDataAccess::runquery($Pqry) ; 
 	
-	/*if( $obj->person_type == 2 ||  $obj->person_type == 5  ) {
-		if($Pres[0]["sex"] == 1 &&  $Pres[0]["person_type"] == 2 && ($Pres[0]["military_duration_day"] > 0 || $Pres[0]["military_duration"] > 0 ) )
-		{
-
-			$totalDayWrt = DateModules::ymd_to_days($obj->onduty_year, $obj->onduty_month, $obj->onduty_day ) ; 			
-			$totalDaySar = DateModules::ymd_to_days(0, $Pres[0]["military_duration"] , $Pres[0]["military_duration_day"] ) ; 					
-			$resDay = $totalDayWrt -  $totalDaySar  ; 
-
-			$Vyear = 0 ; 
-			$Vmonth = $Vday = 0 ; 
-			DateModules::day_to_ymd($resDay, $Vyear, $Vmonth, $Vday) ; 
-			$Vyear =  $Vyear ; 
-		
-		}						
-		else  		
-			$Vyear =  $obj->onduty_year ;  
-			 
-		$obj->base = $Vyear + 1; 
-	}*/
-//............................................................
-	/*$arr = get_object_vars($obj);
-	$KeyArr = array_keys($arr);
-	
-	for($i=0; $i<count($arr); $i++)
-	{
-		eval("if(isset(\$_POST['" . $KeyArr[$i] . "']))
-			\$obj->" . $KeyArr[$i] . "= \$_POST ['" . $KeyArr[$i] . "'];");
-		
-	}
-		
-	$obj->staff_id = $_POST['staff_id'];
-	$obj->writ_id  = $_POST['writ_id'];
-	$obj->writ_ver = $_POST['writ_ver'];
-	$obj->sbid = (empty($obj->sbid)) ? PDONULL : $obj->sbid;
-	$obj->issue_date = DateModules::Shamsi_to_Miladi($obj->issue_date);
-	$obj->pay_date = DateModules::Shamsi_to_Miladi($obj->pay_date);	
-	$obj->ref_letter_date = DateModules::Shamsi_to_Miladi($obj->ref_letter_date);
-	$obj->send_letter_date = DateModules::Shamsi_to_Miladi($obj->send_letter_date);	
-	$obj->warning_date = DateModules::Shamsi_to_Miladi($obj->warning_date);	
-	$obj->remembered = (isset($_POST['remembered'])) ? $_POST['remembered'] : "0" ;*/
-
    	//....................................
         
-	     
+	    
         
 	if(!$obj->EditWrit())
 		{

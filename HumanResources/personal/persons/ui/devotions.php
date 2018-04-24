@@ -1,15 +1,11 @@
 <?php
 //---------------------------
 // programmer:	Mahdipour
-// create Date:	88.07.05
+// create Date:	96.06
 //---------------------------
 require_once '../../../header.inc.php';
 require_once("../data/person.data.php");
 require_once inc_dataGrid;
-
-//________________  GET ACCESS  _________________
-$accessObj = new ModuleAccess($_POST["FacilID"], SubModule_person_devotion);
-//-----------------------------------------------
 
 require_once '../js/devotions.js.php';
 
@@ -27,11 +23,9 @@ $col= $dg->addColumn("توضیحات","comments","string",true);
 $col = $dg->addColumn("ردیف", "devotion_row", "string");
 $col->width = 100;
 
-$col = $dg->addColumn("نوع ایثارگری", "Title", "string");
+$col = $dg->addColumn("نوع ایثارگری", "InfoDesc", "string");
 $col->width = 100;
 
-$col = $dg->addColumn("داوطلبانه", "Tenlisted", "string");
-$col->width = 100;
 
 $col = $dg->addColumn("از تاریخ", "from_date", "string");
 $col->renderer = "function(v){return MiladiToShamsi(v);}";
@@ -52,14 +46,13 @@ $col->renderer = "PersonDevotion.opRender";
 $col->width = 100;
 
 $dg->height = 400;
-$dg->width = 780;
+$dg->width = 700;
 $dg->DefaultSortField = "devotion_row";
 $dg->DefaultSortDir = "ASC";
-if($accessObj->InsertAccess())
-{
-	$dg->addButton = true;
-	$dg->addHandler = "function(){PersonDevotionObject.AddDev();}";
-}
+
+$dg->addButton = true;
+$dg->addHandler = "function(){PersonDevotionObject.AddDev();}";
+
 $dg->EnableSearch = false;
 
 $grid = $dg->makeGrid_returnObjects();
@@ -105,11 +98,11 @@ var PersonDevotionObject = new PersonDevotion();
 			</td>
 		</tr>
 		<tr>
-			<td width="5%">
-			داوطلبانه؟
+			<td width="25%">
+			 منطقه عملياتي:
 			</td>
-			<td width="5%" >
-			<input type="checkbox" value="1" id="enlisted"  name="enlisted" class="x-form-text x-form-field" style="width: 10px" >
+			<td width="25%">
+			<input type="text" id="war_place" name="war_place" class="x-form-text x-form-field" style="width: 150px" >
 			</td>
 			<td width="50%">
 			مدت به روز/درصد(مشمول امتياز) :
@@ -117,36 +110,7 @@ var PersonDevotionObject = new PersonDevotion();
 			<td width="25%">
 			<input type="text" id="amount" name="amount" class="x-form-text x-form-field" style="width: 50px">
 			</td>
-		</tr>
-		<tr>
-			<td width="5%">
-			پيوسته ؟
-			</td>
-			<td width="5%">
-			<input type="checkbox" value="1" id="continous" name="continous" class="x-form-text x-form-field" style="width: 10px" >
-			</td>
-			<td width="25%">
-			 منطقه عملياتي:
-			</td>
-			<td width="25%">
-			<input type="text" id="war_place" name="war_place" class="x-form-text x-form-field" style="width: 150px" >
-			</td>
-		</tr>
-
-		<tr>
-			<td width="25%">
-			شماره نامه :
-			</td>
-			<td width="25%">
-			<input type="text" id="letter_no" name="letter_no" class="x-form-text x-form-field" style="width: 100px" >
-			</td>
-			<td width="25%">
-			تاريخ نامه:
-			</td>
-			<td width="25%">
-			<input type="text" id="letter_date" name="letter_date" class="x-form-text x-form-field" style="width: 80px" >
-			</td>
-		</tr>
+		</tr>		
 		
 		<tr>
 			<td width="25%">
@@ -157,15 +121,7 @@ var PersonDevotionObject = new PersonDevotion();
 			</textarea>
 			</td>
 		<tr>
-		<tr>
-			<td width="50%" colspan="2">
-			مدت قابل قبول بازنشستگی که کسور آن پرداخت شده است(به روز) :
-			
-			</td>
-            <td  width="50%" colspan="2" >
-                <input type="text" id="duration_include_paied_retired_fraction" name="duration_include_paied_retired_fraction" class="x-form-text x-form-field" style="width: 100px" >
-            </td>
-		</tr>
+		
 		<tr><td><br></td></tr>
 		<tr><td colspan="4" >
 			<hr  width="615px" style="color: #99BBE8 " align="left"></td></tr>

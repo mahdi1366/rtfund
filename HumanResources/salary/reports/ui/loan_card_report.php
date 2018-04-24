@@ -4,7 +4,6 @@
 // create Date:	92.08
 //---------------------------
 require_once("../../../header.inc.php");
-//ini_set("display_errors", "On");
 
 if (!isset($_REQUEST["show"]))
 	require_once '../js/loan_card_report.js.php';

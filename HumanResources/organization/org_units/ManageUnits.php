@@ -5,7 +5,6 @@
 //---------------------------
 require_once '../header.inc.php';
 require_once 'unit.data.php';
-ini_set("display_errors","On") ; 
 $drp_units = manage_units::DRP_Units("org_units","","","210","");
 
 jsConfig::initialExt();

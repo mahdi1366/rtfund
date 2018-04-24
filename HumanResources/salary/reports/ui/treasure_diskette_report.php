@@ -3,9 +3,8 @@
 // programmer:	B.Mahdipour
 // create Date:	93.06
 //---------------------------
-
+			
 require_once("../../../header.inc.php");
-ini_set("display_errors","On") ; 
 
 function getSalaryItemValue(){
 

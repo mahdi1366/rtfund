@@ -1,7 +1,7 @@
 <?php
 //---------------------------
 // programmer:	Mahdipour
-// create Date:	88.06.17
+// create Date:	96.06
 //---------------------------
 class manage_person_devotion extends PdoDataAccess
 {
@@ -65,7 +65,7 @@ class manage_person_devotion extends PdoDataAccess
 			if ($this->devotion_type == FIGHTING_DEVOTION) {
 				
 				$query = "	select *
-									from person_devotions pd
+									from HRM_person_devotions pd
 											where pd.devotion_type = ".SACRIFICE_DEVOTION." and  pd.PersonID = ".$this->PersonID ;
 
 				$temp = parent::runquery($query);
@@ -84,8 +84,8 @@ class manage_person_devotion extends PdoDataAccess
 				
 				  //با خدمت در دستگاه نباید همپوشانی زمانی داشته باشد.
 
-				$query ="select * from writs w
-										INNER JOIN staff s
+				$query ="select * from HRM_writs w
+										INNER JOIN HRM_staff s
 											  ON (w.staff_id = s.staff_id)
 						 where w.execute_date >='".$this->from_date."' and w.execute_date <='".$this->to_date."' and s.PersonID = ".$this->PersonID ;
 
@@ -97,30 +97,7 @@ class manage_person_devotion extends PdoDataAccess
 					 return false;
 				}
 				
-				 // با سربازی نباید تداخل داشته باشد.
-                                //---------- این شرط بنابه درخواست آقای دلکلاله در تاریخ 28 خرداد 91 حذف گردید---------------------------
-
-			/*	if($this->enlisted != 0 ) {
-                                    
-                                    $query =" select *
-                                                                            from persons p
-                                                                                            where ( p.military_from_date >='".$this->from_date."' and p.military_to_date <='".$this->to_date."' ) and
-                                                                                                            p.PersonID =".$this->PersonID ;
-    /*
-    *  or
-                                                                                                            p.military_from_date <= '".$this->from_date."' and  p.military_to_date >= '".$this->to_date."' or
-                                                                                                            p.military_from_date >='".$this->from_date."' and p.military_to_date >= '".$this->to_date."' or
-                                                                                                            p.military_from_date <= '".$this->from_date."' and p.military_to_date >= '".$this->to_date."' 
-    *
-    */
-      /*                              $res = parent::runquery($query);
-
-                                    if(count($res) >  0)
-                                    {
-                                            parent::PushException(ER_PERSON_DEVOTIONS_AND_MILITARY_SERVICE_COINCIDENT);
-                                            return false;
-                                    }
-                                }*/
+				 
                               
 
 			}	
@@ -129,198 +106,13 @@ class manage_person_devotion extends PdoDataAccess
 
 	 }
 	 
-	function OnAfterInsert()
-	{
 	
-
-$query1 = "	select PersonID ,  devotion_type , sum(amount) amount
-			from (
-				select personid ,devotion_type , from_date ,g2j(to_date) ,  enlisted ,
-					   sum(if(to_date > '1988-8-21' ,DATEDIFF('1988-8-21',from_date), DATEDIFF(to_date,from_date))) amount
-				from hrmstotal.person_devotions
-
-				where devotion_type = 1 AND  from_date < '1988-8-21' and personid = ".$this->PersonID."  AND enlisted = 1  
-
-				) t1
-			group by PersonID
-
-			UNION ALL
-
-			select  PersonID ,
-					devotion_type,
-					if((devotion_type=3 ) ,MAX(amount),SUM(amount)) amount
-
-			from hrmstotal.person_devotions
-			where  devotion_type in (3) and personid = ".$this->PersonID."
-
-			group by personid , devotion_type
-
-			UNION ALL
-
-			select  PersonID ,
-					devotion_type,
-					if(( devotion_type=2 ) ,MAX(amount),SUM(amount)) amount
-
-			from hrmstotal.person_devotions
-			where if((devotion_type != 5 and devotion_type!=3),(from_date is not null AND from_date != '0000-00-00'),(1=1)) and devotion_type in (2)
-				  and personid = ".$this->PersonID."
-
-			group by personid , devotion_type
-		"; 
-		
-		
-		
-		/*$query1 = "  select personid ,
-                            devotion_type,
-                            if((devotion_type=3 or devotion_type=2 ) ,MAX(amount),SUM(amount)) amount
-
-                        from hrmstotal.person_devotions
-					 where if((devotion_type != 5 and devotion_type!=3),(from_date is not null AND from_date != '0000-00-00'),(1=1)) and devotion_type in (2,3,1) 
-								and personid = ".$this->PersonID."
-									
-					 group by personid , devotion_type " ;*/
-
-	    $temp1 = PdoDataAccess::runquery($query1);
-	
-		for ($i=0 ; $i < count($temp1) ; $i++){
-			$base=0 ;
-			$type = 0;
-						
-			//.......................................آزادگی...........................
-			if($temp1[$i]['devotion_type'] == 2 && (($temp1[$i]['amount'])/365 ) < 3  )  {
-				$base = 1 ;
-				$type = 3 ; 
-			}			
-			elseif($temp1[$i]['devotion_type'] == 2 && (($temp1[$i]['amount'])/365 ) >= 3  && (($temp1[$i]['amount'])/365 ) < 6 )  {
-				$base = 2 ; 
-				$type = 3 ;
-			}	
-			elseif($temp1[$i]['devotion_type'] == 2 && (($temp1[$i]['amount'])/365 ) >= 6  )  {
-				$base = 3 ; 
-				$type = 3 ;
-			}		
-			
-			//.......................................رزمندگی...........................
-			if( $temp1[$i]['devotion_type'] == 1 && (($temp1[$i]['amount'])/30 ) >= 6 && (($temp1[$i]['amount'])/30 ) < 9  ){
-		
-				$qry2 = " select personid ,devotion_type , from_date ,g2j(to_date) ,  enlisted ,
-											sum(if(to_date > '1988-8-21' ,DATEDIFF('1988-8-21',from_date), DATEDIFF(to_date,from_date))) amount
-											from hrmstotal.person_devotions
-
-											where devotion_type = 1 AND enlisted = 1 AND  personid = ".$temp1[$i]['PersonID']." AND from_date < '1988-8-21' "; 
-
-				$tmp2 = PdoDataAccess::runquery($qry2);
-
-				/*for($j=0;$j< count($tmp2); $j++){*/
-
-					if((($tmp2[0]['amount'])/30 ) >= 6 )
-					{
-						$base = 1 ; $type = 5 ; 					 
-						//break ; 
-					}			
-
-				/*}			*/
-		
-			}					
-		elseif($temp1[$i]['devotion_type'] == 1 && (($temp1[$i]['amount'])/365 ) < 3 && (($temp1[$i]['amount'])/30 ) >= 9  ){
-
-				$base = 1 ; $type = 5 ; 
-
-				}
-        
-        elseif($temp1[$i]['devotion_type'] == 1 && (($temp1[$i]['amount'])/365 ) >= 3  && (($temp1[$i]['amount'])/365 ) < 6  )  {
-	        
-            $base = 2 ; $type = 5 ; 
-            
-		}
-        
-        elseif($temp1[$i]['devotion_type'] == 1 && (($temp1[$i]['amount'])/365 ) >= 6  )   { 
-	
-            $base = 3 ; $type = 5 ; 
-            
-		} 
-        //......................................جانبازی................................	
-			
-		if( $temp1[$i]['devotion_type'] == 3 && ($temp1[$i]['amount']) <= 34 )   {
-			$base = 1 ; $type = 4 ;            
-		}			
-		elseif($temp1[$i]['devotion_type'] == 3 && ($temp1[$i]['amount']) >=35 && $temp1[$i]['amount'] <= 69 )   {
-			
-		$base = 2 ; $type = 4 ;            
-
-		}
-		elseif($temp1[$i]['devotion_type'] == 3 && ($temp1[$i]['amount'])>= 70 )   {
-			
-		$base = 3 ; $type = 4 ;            
-
-		}							
-		//......................................................................
-		  			
-		$qry = " select personid ,BaseType , BaseValue   
-					from bases 
-						where PersonID = ".$temp1[$i]['PersonID']." and BaseType = ".$type." and BaseStatus = 'NORMAL' "  ; 
-		$tmp = PdoDataAccess::runquery($qry);
-						
-		if(count($tmp)> 0 && $tmp[0]['BaseValue'] == $base ) {
-			continue;
-		}
-		elseif(count($tmp)> 0 && $tmp[0]['BaseValue'] != $base ) {
-			// قبلی را DELETED و رکورد جدید را اضافه بکن..................
-			$qry = " update bases 
-								set BaseStatus = 'DELETED'
-							where PersonID = ".$tmp[0]['personid']." and BaseType = ".$tmp[0]['BaseType']; 
-			PdoDataAccess::runquery($qry);
-			if($base > 0 ){
-			$qry = " insert into hrmstotal.bases(PersonID ,BaseType ,BaseValue , RegDate , ExecuteDate ,BaseMode , ExtraInfo ,BaseStatus ) values
-				( ".$temp1[$i]['PersonID'].", ".$type." , ".$base." , now() ,'2013-02-19' ,  'SYSTEM' ,0 , 'NORMAL'
-						)"; 
-			PdoDataAccess::runquery($qry);								
-			}
-		}			
-		elseif(count($tmp)== 0 && $base!=0 && $type != 0){
-			//.............رکورد جدید اضافه می شود ......................
-			$qry = " insert into hrmstotal.bases(PersonID ,BaseType ,BaseValue , RegDate , ExecuteDate ,BaseMode , ExtraInfo ,BaseStatus ) values
-				( ".$temp1[$i]['PersonID'].", ".$type." , ".$base." , now() ,'2013-02-19' ,  'SYSTEM' ,0 , 'NORMAL'
-						)"; 
-			PdoDataAccess::runquery($qry);				
-
-		}			
-		elseif($base==0 && $type == 0){
-			if($temp1[$i]['devotion_type'] == 1)
-				{		
-					$qry = " select personid ,BaseType , BaseValue   
-								from bases 
-									where PersonID = ".$temp1[$i]['PersonID']." and BaseType = 5 and BaseStatus = 'NORMAL' "  ; 
-					$tmp = PdoDataAccess::runquery($qry);
-
-					if(count($tmp) > 0) 
-						{
-							$qry = " update bases 
-										set BaseStatus = 'DELETED'
-											where PersonID = ".$tmp[0]['personid']." and BaseType = 5 " ; 
-							PdoDataAccess::runquery($qry);
-						}						
-				}
-			continue;
-		}
-			//......................................................................
-		}		
-		return	true ;
-
-//................
-	}
-
 	function onBeforeUpdate()
 	{
 		return $this->OnBeforeInsert() ;
 	}
 	
-	function onAfterUpdate()
-	{
-		return $this->OnAfterInsert() ;
-	}
-
-
+	
 	static function GetAllDevotions($where = "",$whereParam = array())
 	{ 
 		$query = " select d.PersonID,
@@ -330,22 +122,21 @@ $query1 = "	select PersonID ,  devotion_type , sum(amount) amount
                           d.from_date,
                           d.to_date,
                           d.war_place,
-                          bi.Title,
+                          bi.InfoDesc,
                           bi.TypeID ,
                           d.comments ,
                           d.letter_date , 
                           d.letter_no ,
-                          d.continous,
-						  bi2.Title Tenlisted ,
+                          d.continous,						 
 		                  d.devotion_type ,
 		                  d.personel_relation                           
                                
-                    from person_devotions d
-						 LEFT OUTER JOIN persons p ON (d.PersonID = p.PersonID)
-						 LEFT join Basic_Info bi ON (bi.InfoID =d.devotion_type and bi.TypeID = 2)
-						 LEFT JOIN Basic_Info bi2 ON ( bi2.InfoID = d.enlisted  and bi2.TypeID = 7 )
+                    from HRM_person_devotions d
+						 LEFT OUTER JOIN HRM_persons p ON (d.PersonID = p.PersonID)
+						 LEFT join BaseInfo bi ON (bi.InfoID =d.devotion_type and bi.TypeID = 70 )
+						
 
-                   where bi.TypeID = 2";
+                   where bi.TypeID = 70 ";
 		
         
 		$query .= ($where != "") ? " AND " . $where : "";
@@ -360,15 +151,13 @@ $query1 = "	select PersonID ,  devotion_type , sum(amount) amount
 	 { 
 	 	$this->devotion_row  = (manage_person_devotion::LastID($this->PersonID)+1);
 		if($this->OnBeforeInsert() === false )
-			return false;
-	 	if( PdoDataAccess::insert("person_devotions", $this) === false )
+			return false; 
+	 	if( PdoDataAccess::insert("HRM_person_devotions", $this) === false )
 			return false;
 		
-		$this->OnAfterInsert(); 
 		
 		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->ActionType = DataAudit::Action_add;		
 		$daObj->RelatedPersonID = $this->PersonID;
 		$daObj->MainObjectID = $this->devotion_row;
 		$daObj->TableName = "person_devotions";
@@ -386,14 +175,12 @@ $query1 = "	select PersonID ,  devotion_type , sum(amount) amount
 	 	$whereParams = array();
 	 	$whereParams[":pid"] = $this->PersonID;
 	 	$whereParams[":rowid"] = $this->devotion_row;
-		if( PdoDataAccess::update("person_devotions",$this," PersonID=:pid and devotion_row=:rowid ", $whereParams) === false)
+		if( PdoDataAccess::update("HRM_person_devotions",$this," PersonID=:pid and devotion_row=:rowid ", $whereParams) === false)
 	 		return false;
 		
-		$this->onAfterUpdate(); 
 		
 		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_update;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->ActionType = DataAudit::Action_update;		
 		$daObj->RelatedPersonID = $this->PersonID;
 		$daObj->MainObjectID = $this->devotion_row;
 		$daObj->TableName = "person_devotions";
@@ -410,14 +197,13 @@ $query1 = "	select PersonID ,  devotion_type , sum(amount) amount
 	 	$whereParams[":pid"] = $PersonID;
 	 	$whereParams[":rowid"] = $row_no;
 	 	
-	 	if( PdoDataAccess::delete("person_devotions"," PersonID=:pid and devotion_row=:rowid", $whereParams) === false) {
+	 	if( PdoDataAccess::delete("HRM_person_devotions"," PersonID=:pid and devotion_row=:rowid", $whereParams) === false) {
 			parent::PushException(ER_PERSON_DEP_DEL);
 	 		return false;	 	
 	 	}
 
 		$daObj = new DataAudit();
-		$daObj->ActionType = DataAudit::Action_delete;
-		$daObj->RelatedPersonType = DataAudit::PersonType_staff;
+		$daObj->ActionType = DataAudit::Action_delete;		
 		$daObj->RelatedPersonID = $PersonID;
 		$daObj->MainObjectID = $row_no;
 		$daObj->TableName = "person_devotions";
@@ -431,11 +217,11 @@ $query1 = "	select PersonID ,  devotion_type , sum(amount) amount
 	{
 		$query = " select count(*)
                                
-                   from person_devotions d
-                             LEFT OUTER JOIN persons p ON (d.PersonID = p.PersonID)
-                             INNER join Basic_Info bi ON (bi.InfoID =d.devotion_type and bi.TypeID = 2)
+                   from HRM_person_devotions d
+                             LEFT OUTER JOIN HRM_persons p ON (d.PersonID = p.PersonID)
+                             INNER join BaseInfo bi ON (bi.InfoID =d.devotion_type and bi.TypeID = 70 )
 
-                   where bi.TypeID = 2";
+                   where bi.TypeID = 70 ";
 		
 		$query .= ($where != "") ? " AND " . $where : "";		
 		
@@ -449,7 +235,7 @@ $query1 = "	select PersonID ,  devotion_type , sum(amount) amount
 	 	$whereParam = array();
 	 	$whereParam[":PD"] = $PersonID;
 	 	
-	 	return parent::GetLastID("person_devotions","devotion_row","PersonID=:PD",$whereParam);
+	 	return parent::GetLastID("HRM_person_devotions","devotion_row","PersonID=:PD",$whereParam);
 	 }
 	 
     public static function get_person_devotions($personID, $devotion_type_set = NULL, $personel_relation = OWN)

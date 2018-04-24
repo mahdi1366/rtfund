@@ -7,6 +7,7 @@ require_once '../../header.inc.php';
 require_once inc_dataGrid;
 require_once inc_dataReader;
 
+
 require_once '../js/banks.js.php';
 
 $dg = new sadaf_datagrid("BGrid", $js_prefix_address . "../data/banks.data.php?task=Searchbank", "BDIV");
@@ -20,9 +21,6 @@ $col = $dg->addColumn("کد شعبه", "branch_code", "int");
 $col->editor =  ColumnEditor::NumberField(true) ; 
 $col->width = 100;
 
-$col = $dg->addColumn("نوع","type", "int");
-$col->editor = ColumnEditor::ComboBox(manage_domains::GETALL_BankType(),"InfoID","Title") ;        
-$col->width = 200;
 
 $col = $dg->addColumn("عملیات", "", "string");
 $col->renderer = "  function(v,p,r){  return bank.opRender(v,p,r);}";
@@ -33,7 +31,7 @@ $dg->addHandler = " function(){  bankObject.AddBnak();}";
 
 $dg->pageSize = "15";
 $dg->EnableSearch = false ;
-$dg->width = 550;
+$dg->width = 350;
 $dg->height = 530;
 $dg->title = " بانکها";
 $dg->autoExpandColumn = "name";

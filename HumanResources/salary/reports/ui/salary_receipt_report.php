@@ -4,7 +4,6 @@
 // create Date:	92.07
 //---------------------------
 require_once("../../../header.inc.php");
- //ini_set("display_errors", "On");
 if(!isset($_REQUEST["show"]))   
 	require_once '../js/salary_receipt_report.js.php';
 	require_once "ReportGenerator.class.php"; 

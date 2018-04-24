@@ -241,7 +241,7 @@ class manage_staff extends PdoDataAccess
 	 */
 	public static function GetLastWrit($staff_id)
 	{
-		$query = "select * from writs 
+		$query = "select * from HRM_writs 
 			where staff_id=:stfid and (history_only != ".HISTORY_ONLY." OR history_only IS NULL)
 			order by execute_date DESC,writ_id DESC,writ_ver DESC";
 		$whereParam = array(":stfid"=> $staff_id);

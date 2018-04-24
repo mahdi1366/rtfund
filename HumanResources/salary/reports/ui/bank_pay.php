@@ -5,7 +5,6 @@
 //---------------------------
 
 require_once("../../../header.inc.php");
-ini_set("display_errors","On") ; 
 	
 if (isset($_REQUEST["show"]))
 {
@@ -105,9 +104,6 @@ if (isset($_REQUEST["show"]))
 
 	if(isset($_GET['excel']))
 	{
-		
-		ini_set("display_errors","On") ; 
-	
 		require_once 'excel.php';
 		require_once "php_writeexcel-0.3.0/class.writeexcel_workbook.inc.php";
 		require_once "php_writeexcel-0.3.0/class.writeexcel_worksheet.inc.php";

@@ -73,7 +73,6 @@ $dg->addColumn("", "ComputeMode","", true);
 $dg->addColumn("", "BackPayCompute","", true);
 $dg->addColumn("", "BackPayComputeDesc","", true);
 
-
 $dg->addColumn("", "AllPay","", true);
 $dg->addColumn("", "LastPay","", true);
 $dg->addColumn("", "TotalCustomerDelay","", true);
@@ -85,7 +84,11 @@ $dg->addColumn("", "WageYear2","", true);
 $dg->addColumn("", "WageYear3","", true);
 $dg->addColumn("", "WageYear4","", true);
 
+$dg->addColumn("", "LocalNo","", true);
+$dg->addColumn("", "DocDate","", true);
+
 $col = $dg->addColumn("عنوان شرایط", "PartDesc", "");
+$col->renderer = "RequestInfo.PartRender";
 $col->sortable = false;
 
 if(!$ReadOnly)

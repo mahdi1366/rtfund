@@ -3,7 +3,6 @@
 // programmer:	Mahdipour
 // create Date:	94.02
 //---------------------------
-ini_set('display_errors','On');
 require_once("../../../header.inc.php");
 require_once '../../../../accountancy/commitment/import/HrmsProcesses.class.php';
 ini_set('max_execution_time', 3000);

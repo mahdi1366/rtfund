@@ -2154,30 +2154,17 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	$TotalAgentDelay = $result["TotalAgentDelay"];
 	$totalBackPay = $PartObj->PartAmount*1 + 
 		GetExtraLoanAmount($PartObj,$TotalFundWage,$TotalCustomerWage,$TotalAgentWage,$TotalFundDelay, $TotalAgentDelay);
-	
-	$dt = LON_BackPays::GetRealPaid($PayObj->RequestID);
-	$remain = $totalBackPay;
+			
 	$FundDelayShare = $AgentDelayShare = $FundWageShare = 0;
-	foreach($dt as $row)
-	{
-		if($PartObj->DelayReturn == "INSTALLMENT")
-		{
-			$payAmount = min($remain, $row["PayAmount"]*1);
-			$FundDelayShare = round($TotalFundDelay*$payAmount/$totalBackPay);
-		}
-		if($PartObj->AgentDelayReturn == "INSTALLMENT")
-		{
-			$payAmount = min($remain, $row["PayAmount"]*1);
-			$AgentDelayShare = round($TotalAgentDelay*$payAmount/$totalBackPay);
-		}
-		if($PartObj->WageReturn == "INSTALLMENT")
-		{
-			$payAmount = min($remain, $row["PayAmount"]*1);
-			$FundWageShare = round($TotalFundWage*$payAmount/$totalBackPay);
-		}
-		$remain -= $payAmount;
-	}
-	
+	if($PartObj->DelayReturn == "INSTALLMENT")
+		$FundDelayShare = round($TotalFundDelay*$PayObj->PayAmount/$totalBackPay);
+	if($PartObj->AgentDelayReturn == "INSTALLMENT")
+		$AgentDelayShare = round($TotalAgentDelay*$PayObj->PayAmount/$totalBackPay);
+	if($PartObj->WageReturn == "INSTALLMENT")
+		$FundWageShare = round($TotalFundWage*$PayObj->PayAmount/$totalBackPay);
+	if($PartObj->AgentReturn == "INSTALLMENT")	
+		$AgentWageShare = round($TotalAgentWage*$PayObj->PayAmount/$totalBackPay);
+
 	//----------------- get total remain ---------------------
 	PdoDataAccess::runquery("delete from LON_BackPays 
 		where RequestID=? AND PayType=? AND PayBillNo=?", 
@@ -2364,51 +2351,13 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 			return false;
 		}
 	}
-	//------------------- delay amount ---------------------
-	if($PartObj->DelayReturn == "INSTALLMENT" && $LoanMode == "Agent" && $FundDelayShare > 0)
-	{
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType);
-		unset($itemObj->TafsiliID);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		$itemObj->CostID = $CostCode_wage;
-		$itemObj->details = "بابت تنفس وام " . $PayObj->RequestID;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->SourceID3 = "1";
-		$itemObj->CreditorAmount = $FundDelayShare;
-		if(!$itemObj->Add($pdo))
-		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
-			return false;
-		}
-		$PayObj->PayAmount = $PayObj->PayAmount - $FundDelayShare;
-		unset($itemObj->SourceID3);
-	}
-	if($PayObj->PayAmount > 0 && $LoanMode == "Agent" && $PartObj->AgentDelayReturn == "INSTALLMENT" && $AgentDelayShare > 0)
-	{
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		$itemObj->CostID = $CostCode_deposite;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->details = "بابت تنفس وام " . $PayObj->RequestID;
-		$itemObj->SourceID3 = "1";
-		$itemObj->CreditorAmount = $AgentDelayShare;
-		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $ReqPersonTafsili;
-		if(!$itemObj->Add($pdo))
-		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
-			return false;
-		}
-		$PayObj->PayAmount = $PayObj->PayAmount - $AgentDelayShare;
-		unset($itemObj->SourceID3);
-	}
 	//------------------ forfeit amount -----------------------
-	$forfeitAmount = $returnArr[ count($returnArr)-2 ]["ForfeitAmount"]*1 - 
-			$returnArr[ count($returnArr)-1 ]["ForfeitAmount"]*1;		
-	
+	for($j=0; $j < count($returnArr); $j++)
+		if($returnArr[$j]["ActionType"] == "pay" && $returnArr[$j]["InstallmentID"] == $PayObj->BackPayID)
+			break;
+	$forfeitAmount = $returnArr[ $j-1 ]["ForfeitAmount"]*1 - 
+			$returnArr[ $j ]["ForfeitAmount"]*1 + $returnArr[ $j ]["CurForfeitAmount"]*1;		
+	$forfeitAmount = min($forfeitAmount, $PayObj->PayAmount);
 	if($forfeitAmount > 0 && $LoanMode == "Agent")
 	{
 		unset($itemObj->ItemID);
@@ -2427,11 +2376,62 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		}
 		$PayObj->PayAmount -= $forfeitAmount;
 	}
+	if($PayObj->PayAmount == 0)
+		return ExceptionHandler::GetExceptionCount() == 0;
+	//------------------- delay amount ---------------------
+	if($PartObj->DelayReturn == "INSTALLMENT" && $LoanMode == "Agent" && $FundDelayShare > 0)
+	{
+		$FundDelayShare = min($FundDelayShare, $PayObj->PayAmount );
+		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType);
+		unset($itemObj->TafsiliID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		$itemObj->CostID = $CostCode_wage;
+		$itemObj->details = "بابت تنفس وام " . $PayObj->RequestID;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->SourceID3 = "1";
+		$itemObj->CreditorAmount = $FundDelayShare;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد سند");
+			return false;
+		}
+		$PayObj->PayAmount = $PayObj->PayAmount - $FundDelayShare;
+		unset($itemObj->SourceID3);
+	}
+	if($PayObj->PayAmount == 0)
+		return ExceptionHandler::GetExceptionCount() == 0;
+	
+	if($LoanMode == "Agent" && $PartObj->AgentDelayReturn == "INSTALLMENT" && $AgentDelayShare > 0)
+	{
+		$AgentDelayShare = min($AgentDelayShare, $PayObj->PayAmount);
+		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		$itemObj->CostID = $CostCode_deposite;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->details = "بابت تنفس وام " . $PayObj->RequestID;
+		$itemObj->SourceID3 = "1";
+		$itemObj->CreditorAmount = $AgentDelayShare;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $ReqPersonTafsili;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد سند");
+			return false;
+		}
+		$PayObj->PayAmount = $PayObj->PayAmount - $AgentDelayShare;
+		unset($itemObj->SourceID3);
+	}
+	if($PayObj->PayAmount == 0)
+		return ExceptionHandler::GetExceptionCount() == 0;
 	//------------- wage --------------
-	if($LoanMode == "Agent" && $PayObj->PayAmount*1 > 0)
+	if($LoanMode == "Agent")
 	{
 		if($PartObj->WageReturn == "INSTALLMENT" && $FundWageShare > 0)
 		{
+			$FundWageShare = min($FundWageShare, $PayObj->PayAmount);
 			$PayObj->PayAmount -= $FundWageShare;
 			
 			unset($itemObj->ItemID);
@@ -2449,6 +2449,9 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 				return false;
 			}
 		}
+		if($PayObj->PayAmount == 0)
+			return ExceptionHandler::GetExceptionCount() == 0;
+		
 		//---- اضافه به سپرده -----
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType2);

@@ -562,7 +562,7 @@ class manage_domains
 	}
 	public static function DRP_Devotions($dropdownName, $selectedID = "", $style="")
 	{
-		$query = "select * from Basic_Info where TypeID = 2 ";
+		$query = "select * from BaseInfo where TypeID = 70 ";
 
 		$obj = new DROPDOWN();
 
@@ -570,7 +570,7 @@ class manage_domains
 
 		$obj->datasource = $temp;
 		$obj->valuefield = "%InfoID%";
-		$obj->textfield = "%Title%";
+		$obj->textfield = "%InfoDesc%";
 		$obj->Style = 'class="x-form-text x-form-field" style="'.$style.'"';
 		$obj->id = $dropdownName;
 
@@ -1329,7 +1329,7 @@ public static function DRP_Posts($dropdownName, $slaveDropName = "", $selectedID
     
     public static function GETALL_Country()
 	{
-		$query = " select country_id , ptitle  from countries  ";
+		$query = " select country_id , ptitle  from HRM_countries  ";
                 
 		$tmp = PdoDataAccess::runquery($query);
               

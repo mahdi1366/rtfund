@@ -121,7 +121,7 @@ public $RefPersonID ;
 						LEFT JOIN HRM_persons p ON bp.PersonID = p.RefPersonID
 						LEFT JOIN HRM_staff s ON s.PersonID = p.PersonID
 						LEFT JOIN HRM_org_new_units o ON o.ouid = s.ouid
-					WHERE (1=1) " ; 	
+					WHERE bp.IsStaff='YES' " ; 	
 		             
         $query .= ($where != "") ? " AND " . $where : "";
             
@@ -302,7 +302,10 @@ public $RefPersonID ;
 				
 				return false;
 			}			
-								 	
+					
+				/*	PdoDataAccess::update("HRM_persons",$this," PersonID=:pid", $whereParams) ; 
+					echo PdoDataAccess::GetLatestQueryString() ;
+die() ;*/
 	 	if(PdoDataAccess::update("HRM_persons",$this," PersonID=:pid", $whereParams) === false)
 	 		return false;
 

@@ -1,7 +1,7 @@
 <script type="text/javascript">
 //---------------------------
-// programmer:	Jafarkhani
-// create Date:	90.03
+// programmer:	Mahdipour
+// create Date:	96.06
 //---------------------------
 
 PersonDevotion.prototype = {
@@ -48,11 +48,11 @@ PersonDevotion.opRender = function(value, p, record)
 	st += "<div  title='ویرایش اطلاعات' class='edit' onclick='PersonDevotionObject.editDevInfo();' " +
 			"style='float:right;background-repeat:no-repeat;background-position:center;" +
 			"cursor:pointer;width:50%;height:16'></div>";
-	<?if($accessObj->DeleteAccess()){?>
+	
 	st += "<div  title='حذف اطلاعات' class='remove' onclick='PersonDevotionObject.deleteDevInfo();' " +
 			"style='float:left;background-repeat:no-repeat;background-position:center;" +
 			"cursor:pointer;width:50%;height:16'></div>";
-	<?}?>
+	
 	return st;
 }
 
@@ -82,10 +82,10 @@ PersonDevotion.prototype.editDevInfo = function(record)
 	//this.form.letter_date.value =  MiladiToShamsi(record.data.letter_date) ;
 	this.get('comments').value = record.data.comments ;
 
-	<?if(!$accessObj->UpdateAccess()){?>
-        Ext.get(this.get("devDIV")).readonly(new Array("btn_cancel")); 
+	
+        //Ext.get(this.get("devDIV")).readonly(new Array("btn_cancel")); 
 		//Ext.get(this.get("btn_cancel")).enable();
-	<?}?>
+	
 }
 
 PersonDevotion.prototype.ValidateDevForm = function()

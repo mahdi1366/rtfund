@@ -5,7 +5,6 @@
 //---------------------------
 
 require_once("../../../header.inc.php");
-ini_set("display_errors","On") ; 
 
 	function copyDbfFiles() {
 		$from_path = '/var/www/sadaf/HumanResources/dbf/';

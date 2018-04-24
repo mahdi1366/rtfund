@@ -5,7 +5,6 @@
 //---------------------------
 
 require_once("../../../header.inc.php");
-ini_set("display_errors","On") ; 
 
 function getSum($inds,&$vals,$kind = 1) {//kind = 1 means pay and 2 means diff_pay
 

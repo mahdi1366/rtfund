@@ -278,7 +278,7 @@ function ListData($IsDashboard = false){
 	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
-		$rpg->headerContent = 
+		echo
 		"<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
@@ -291,9 +291,9 @@ function ListData($IsDashboard = false){
 			. DateModules::shNow() . "<br>";
 		if(!empty($_POST["fromDate"]))
 		{
-			$rpg->headerContent .= "<br>گزارش از تاریخ : " . $_POST["fromDate"] . ($_POST["toDate"] != "" ? " - " . $_POST["toDate"] : "");
+			echo "<br>گزارش از تاریخ : " . $_POST["fromDate"] . ($_POST["toDate"] != "" ? " - " . $_POST["toDate"] : "");
 		}
-		$rpg->headerContent .= "</td></tr></table>";
+		echo "</td></tr></table>";
 	}
 
 	/*$rpg->SubHeaderFunction = "RemainRender";

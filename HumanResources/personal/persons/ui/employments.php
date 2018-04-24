@@ -1,15 +1,12 @@
 <?php
 //---------------------------
 // programmer:	Mahdipour
-// create Date:	88.07.07
+// create Date:	96.06
 //---------------------------
 require_once '../../../header.inc.php';
 require_once("../data/person.data.php");
 require_once inc_dataGrid;
 
-//________________  GET ACCESS  _________________
-$accessObj = new ModuleAccess($_POST["FacilID"], SubModule_person_employment);
-//-----------------------------------------------
 
 require_once '../js/employment.js.php';
 
@@ -48,14 +45,9 @@ $col = $dg->addColumn("تا تاریخ", "to_date", "string");
 $col->renderer = "function(v){return MiladiToShamsi(v);}";
 $col->width = 80;
 
-$col = $dg->addColumn("نوع سازمان", "org_title", "string");
-$col->width = 80;
-
 $col = $dg->addColumn("عنوان شغل", "title", "string");
 $col->width = 100;
 
-$col = $dg->addColumn("دلیل خاتمه", "unempTitle", "string");
-$col->width = 100;
 
 $col = $dg->addColumn("عملیات", "", "string");
 $col->renderer = "PersonEmplyment.opRender";
@@ -67,11 +59,10 @@ $dg->DefaultSortField = "row_no";
 $dg->DefaultSortDir = "ASC";
 $dg->autoExpandColumn = "unit";
 
-if($accessObj->InsertAccess())
-{
+
 	$dg->addButton = true;
 	$dg->addHandler = "function(){PersonEmplymentObject.AddEmp();}";
-}
+
 $dg->EnableSearch = false;
 $grid = $dg->makeGrid_returnObjects();
 
@@ -113,28 +104,7 @@ var PersonEmplymentObject = new PersonEmplyment();
 		<input type="text" id="unit" name="unit" class="x-form-text x-form-field" style="width: 120px" >
 		</td>
 	</tr>
-	<tr>
-		<td width="10%">
-		نوع سازمان:
-		</td>
-		<td width="40%"><?= $drp_org_type ?></td>
-		<td width="40%">
-		نوع خدمت:
-		</td>
-		<td width="10%"><?= $drp_PType ?></td>
-	</tr>
-	
-	<tr>
-		<td width="10%">
-		وضعیت استخدامی:
-		</td>
-		<td width="40%"><?= $drp_EmpState ?></td>
-		<td width="40%">
-		حالت استخدامی:
-		</td>
-		<td width="10%"><?= $drp_EmpMode ?></td>
-	</tr>
-	
+		
 	<tr>
 		<td width="10%">
 		تاریخ شروع:
@@ -154,42 +124,10 @@ var PersonEmplymentObject = new PersonEmplyment();
 		<td width="10%">
 		عنوان شغل :
 		</td>
-		<td width="40%">
+		<td width="40%" colspan="3">
 		<input type="text" id="title" name="title" class="x-form-text x-form-field" style="width: 100px">
-		</td>
-		<td width="40%" >
-		دليل خاتمه خدمت : 
-		</td>
-		<td width="10%"><?= $drp_UnEmp ?></td>
-	</tr>
-	
-	<tr>
-		<td width="40%" colspan="1">
-		مدت خدمت:
-		<td width="60%" colspan="3" >
-		<input type="text" id="duration_year" name="duration_year" class="x-form-text x-form-field" style="width: 50px">سال
-		<input type="text" id="duration_month" name="duration_month" class="x-form-text x-form-field" style="width: 50px">ماه
-		<input type="text" id="duration_day" name="duration_day" class="x-form-text x-form-field" style="width: 50px">روز
-		</td>
-	<tr>
-	<tr>
-		<td width="40%" colspan="1">
-		مدت قابل قبول بازنشستگی:
-		<td width="60%" colspan="3" >
-		<input type="text" id="retired_duration_year" name="retired_duration_year" class="x-form-text x-form-field" style="width: 50px">سال
-		<input type="text" id="retired_duration_month" name="retired_duration_month" class="x-form-text x-form-field" style="width: 50px">ماه
-		<input type="text" id="retired_duration_day" name="retired_duration_day" class="x-form-text x-form-field" style="width: 50px">روز
-		</td>
-	<tr>
-	<tr>
-		<td width="40%" colspan="1">
-		مدت قابل قبول اعطای گروه :
-		<td width="60%" colspan="3" >
-		<input type="text" id="group_duration_year" name="group_duration_year" class="x-form-text x-form-field" style="width: 50px">سال
-		<input type="text" id="group_duration_month" name="group_duration_month" class="x-form-text x-form-field" style="width: 50px">ماه
-		<input type="text" id="group_duration_day" name="group_duration_day" class="x-form-text x-form-field" style="width: 50px">روز
-		</td>
-	<tr>
+		</td>		
+	</tr>		
 	<tr>
 		<td width="40%">
 		توضیحات:

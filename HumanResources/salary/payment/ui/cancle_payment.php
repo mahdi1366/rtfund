@@ -6,7 +6,6 @@
 require_once '../../../header.inc.php';  
 require_once inc_dataReader;
 require_once '../js/cancle_payment.js.php';
-ini_set("display_errors","On") ; 
 
 ?>
 <form id="mainForm">

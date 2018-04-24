@@ -132,153 +132,12 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
 		valueField : "CostID",
 		displayField : "fullDesc"
 	});
-	this.Param1CostIDCombo = new Ext.form.field.ComboBox({
-		xtype : "combo",
-		width : 400,
-		applyTo : this.get("cmp_param1cost"),
-		store: new Ext.data.Store({
-			fields:["CostID","CostCode","CostDesc",{
-				name : "fullDesc",
-				convert : function(value,record){
-					return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
-				}				
-			}],
-			proxy: {
-				type: 'jsonp',
-				url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			}
-		}),
-		typeAhead: false,
-		hiddenName : "Param1CostID",
-		valueField : "CostID",
-		displayField : "fullDesc"
-	});
-	this.Param2CostIDCombo = new Ext.form.field.ComboBox({
-		xtype : "combo",
-		width : 400,
-		applyTo : this.get("cmp_param2cost"),
-		store: new Ext.data.Store({
-			fields:["CostID","CostCode","CostDesc",{
-				name : "fullDesc",
-				convert : function(value,record){
-					return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
-				}				
-			}],
-			proxy: {
-				type: 'jsonp',
-				url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			}
-		}),
-		typeAhead: false,
-		hiddenName : "Param2CostID",
-		valueField : "CostID",
-		displayField : "fullDesc"
-	});
-	this.Param3CostIDCombo = new Ext.form.field.ComboBox({
-		xtype : "combo",
-		width : 400,
-		applyTo : this.get("cmp_param3cost"),
-		store: new Ext.data.Store({
-			fields:["CostID","CostCode","CostDesc",{
-				name : "fullDesc",
-				convert : function(value,record){
-					return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
-				}				
-			}],
-			proxy: {
-				type: 'jsonp',
-				url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			}
-		}),
-		typeAhead: false,
-		hiddenName : "Param3CostID",
-		valueField : "CostID",
-		displayField : "fullDesc"
-	});
-	this.Param4CostIDCombo = new Ext.form.field.ComboBox({
-		xtype : "combo",
-		width : 400,
-		applyTo : this.get("cmp_param4cost"),
-		store: new Ext.data.Store({
-			fields:["CostID","CostCode","CostDesc",{
-				name : "fullDesc",
-				convert : function(value,record){
-					return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
-				}				
-			}],
-			proxy: {
-				type: 'jsonp',
-				url: '/accounting/baseinfo/baseinfo.data.php?task=SelectCostCode',
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			}
-		}),
-		typeAhead: false,
-		hiddenName : "Param4CostID",
-		valueField : "CostID",
-		displayField : "fullDesc"
-	});
-	this.TafsiliIDCombo = new Ext.form.field.ComboBox({
-		xtype : "combo",
-		width : 400,
-		applyTo : this.get("cmp_TafsiliID"),
-		store: new Ext.data.Store({
-			fields:["TafsiliID","TafsiliDesc"],
-			proxy: {
-				type: 'jsonp',
-				url: '/accounting/baseinfo/baseinfo.data.php?task=GetAllTafsilis&TafsiliType=9',
-				reader: {root: 'rows',totalProperty: 'totalCount'}
-			}
-		}),
-		typeAhead: false,
-		pageSize : 10,
-		valueField : "TafsiliID",
-		hiddenName : "TafsiliID",
-		displayField : "TafsiliDesc"
-	});
 	
 	if("<?= $obj->CostID ?>" != "")
 		this.CostIDCombo.getStore().load({
 			params : { CostID : "<?= $obj->CostID ?>"},
 			callback : function(){
 				SalaryItemTypeObject.CostIDCombo.setValue(this.getAt(0).data.CostID)
-			}
-		});
-	if("<?= $obj->TafsiliID ?>" != "")
-		this.TafsiliIDCombo.getStore().load({
-			params : { TafsiliID : "<?= $obj->TafsiliID ?>"},
-			callback : function(){
-				SalaryItemTypeObject.TafsiliIDCombo.setValue(this.getAt(0).data.TafsiliID)
-			}
-		});
-	if("<?= $obj->Param1CostID ?>" != "")
-		this.Param1CostIDCombo.getStore().load({
-			params : { CostID : "<?= $obj->Param1CostID ?>"},
-			callback : function(){
-				SalaryItemTypeObject.Param1CostIDCombo.setValue(this.getAt(0).data.CostID)
-			}
-		});
-	if("<?= $obj->Param2CostID ?>" != "")
-		this.Param2CostIDCombo.getStore().load({
-			params : { CostID : "<?= $obj->Param2CostID ?>"},
-			callback : function(){
-				SalaryItemTypeObject.Param2CostIDCombo.setValue(this.getAt(0).data.CostID)
-			}
-		});
-	if("<?= $obj->Param3CostID ?>" != "")
-		this.Param3CostIDCombo.getStore().load({
-			params : { CostID : "<?= $obj->Param3CostID ?>"},
-			callback : function(){
-				SalaryItemTypeObject.Param3CostIDCombo.setValue(this.getAt(0).data.CostID)
-			}
-		});
-	if("<?= $obj->Param4CostID ?>" != "")
-		this.Param4CostIDCombo.getStore().load({
-			params : { CostID : "<?= $obj->Param4CostID ?>"},
-			callback : function(){
-				SalaryItemTypeObject.Param4CostIDCombo.setValue(this.getAt(0).data.CostID)
 			}
 		});
  
@@ -440,6 +299,14 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
                              name="user_data_entry" <?= ($obj->user_data_entry == 1) ? "checked" : "" ?>
                              class="x-form-text x-form-field" style="width: 10px" >
                     </td>
+					<td width="25%">
+                    قلم تحت تاثیر ماه می باشد ؟ 
+                    </td>
+                    <td width="5%">
+                        <input type="checkbox" value="1" id="month_length_effect"
+                             name="month_length_effect" <?= ($obj->month_length_effect == 1) ? "checked" : "" ?>
+                             class="x-form-text x-form-field" style="width: 10px" >
+                    </td>
             </tr>
             <tr>
             <td colspan="4">
@@ -453,12 +320,6 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
 				کد حساب :
 				</td>
 				<td width="25%" colspan="3"><input type="text" id="cmp_costCode"></td>
-			</tr>
-			<tr>
-				 <td width="25%">
-				حساب تفصیلی :
-				</td>
-				<td width="25%" colspan="3"><input type="text" id="cmp_TafsiliID"></td>
 			</tr>
             <tr>
                     <td width="25%">
@@ -537,10 +398,6 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
                              name="param1_input" <?= ($obj->param1_input == 1) ? "checked" : "" ?> class="x-form-text x-form-field" style="width: 10px" >
                     </td>
             </tr>
-			<tr>
-				<td width="25%">کد حساب پارامتر 1</td>
-				<td><div id="cmp_param1cost"></div></td>
-			</tr>
             <tr> 
                     <td width="25%">
                        عنوان پارامتر 2:
@@ -553,10 +410,6 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
                              name="param2_input" <?= ($obj->param2_input == 1) ? "checked" : "" ?> class="x-form-text x-form-field" style="width: 10px" >
                     </td>
             </tr>
-			<tr>
-				<td width="25%">کد حساب پارامتر 2</td>
-				<td><div id="cmp_param2cost"></div></td>
-			</tr>
             <tr>
                     <td width="25%">
                        عنوان پارامتر 3:
@@ -569,10 +422,6 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
                              name="param3_input" <?= ($obj->param3_input == 1) ? "checked" : "" ?> class="x-form-text x-form-field" style="width: 10px" >
                     </td>
             </tr>
-			<tr>
-				<td width="25%">کد حساب پارامتر 3</td>
-				<td><div id="cmp_param3cost"></div></td>
-			</tr>
             <tr>
                     <td width="25%">
                        عنوان پارامتر 4:
@@ -585,10 +434,6 @@ $drp_SitAvailable = manage_domains::DRP_SalaryItemAvailableFor("available_for",$
                              name="param4_input"  <?= ($obj->param4_input == 1) ? "checked" : "" ?> class="x-form-text x-form-field" style="width: 10px" >
                     </td>
             </tr>
-			<tr>
-				<td width="25%">کد حساب پارامتر 4</td>
-				<td><div id="cmp_param4cost"></div></td>
-			</tr>
             <tr>
                     <td width="25%">
                        عنوان پارامتر 5:

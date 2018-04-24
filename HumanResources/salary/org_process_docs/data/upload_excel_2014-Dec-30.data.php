@@ -14,8 +14,6 @@ require_once '../../person_org_docs/subtracts.class.php';
 require_once(inc_response);
 require_once 'phpExcelReader.php';
 
-ini_set("display_errors","on") ;
-
 $task = isset($_POST ["task"]) ? $_POST ["task"] : (isset($_GET ["task"]) ? $_GET ["task"] : "");
 
 switch ($task) {

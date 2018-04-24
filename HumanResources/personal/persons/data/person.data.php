@@ -356,7 +356,9 @@ function saveData() {
 												
 			              where p.personid = ".$obj->PersonID ; 
 		$ptres = PdoDataAccess::runquery($qry) ; 
-	
+		
+//	echo PdoDataAccess::GetLatestQueryString() ;
+
 		$return = $obj->EditPerson();
 	
 		$staffObject = new manage_staff($obj->PersonID, $obj->person_type);

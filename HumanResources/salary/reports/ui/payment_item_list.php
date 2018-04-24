@@ -5,7 +5,6 @@
 //---------------------------
 
 require_once("../../../header.inc.php");
-ini_set("display_errors", "On");
 
 if (isset($_REQUEST["show"])) {
 
@@ -32,7 +31,7 @@ if (isset($_REQUEST["show"])) {
 	
 	$query = "		
 					select  hp.pfname , hp.plname , pit.pay_year, pit.pay_month,
-							31 item1 ,
+							if(p.pay_month > 6 , 30 , 31 ) item1 ,
 							SUM(if( sit.salary_item_type_id = 1 , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef) , 0  )) item2 ,
 							SUM(if( sit.salary_item_type_id = 2 , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef) , 0  )) item3 ,
 							SUM(if( sit.salary_item_type_id = 9 , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef) , 0  )) item4 ,
@@ -53,7 +52,7 @@ if (isset($_REQUEST["show"])) {
 							SUM(if( sit.effect_type = 2 and sit.available_for in (1,2,4,5) and  sit.salary_item_type_id != 11 , (pit.get_value + pit.diff_get_value * pit.diff_value_coef) , 0 )) item18 ,
 							SUM(if( sit.effect_type = 2 , (pit.get_value + pit.diff_get_value * pit.diff_value_coef) , 0 )) item21 , 							
 							SUM(if( sit.salary_item_type_id in (17) , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef) , 0  )) item23 ,
-							SUM(if( sit.salary_item_type_id in (13,14,15,21,22) , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef) , 0  )) item24 ,
+							SUM(if( sit.salary_item_type_id in (13,14,15,16,21,22) , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef) , 0  )) item24 ,
 							SUM(if( sit.effect_type = 1 , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef) , 0 )) item25 
 							 
 
@@ -92,7 +91,7 @@ if (isset($_REQUEST["show"])) {
 		.reportGenerator .header1 {color: white;font-weight: bold;background-color:#465E86}		
 		.reportGenerator td {border: 1px solid #555555;height: 20px;}
 	</style>
-	<?
+	<?php
 	echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl"><center>';
 
 	//.........................................

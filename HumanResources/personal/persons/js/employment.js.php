@@ -1,7 +1,7 @@
 <script type="text/javascript">
 //---------------------------
-// programmer:	Jafarkhani
-// create Date:	90.03
+// programmer:	Mahdipour
+// create Date:	96.06
 //---------------------------
 
 PersonEmplyment.prototype = {
@@ -39,11 +39,11 @@ PersonEmplyment.opRender = function(value, p, record)
 	st += "<div  title='ویرایش اطلاعات' class='edit' onclick='PersonEmplymentObject.editEmpInfo();' " +
 			"style='float:right;background-repeat:no-repeat;background-position:center;" +
 			"cursor:pointer;width:50%;height:16'></div>";
-	<?if($accessObj->DeleteAccess()){?>
+	
 	st += "<div  title='حذف اطلاعات' class='remove' onclick='PersonEmplymentObject.deleteEmpInfo();' " +
 			"style='float:left;background-repeat:no-repeat;background-position:center;" +
 			"cursor:pointer;width:50%;height:16'></div>";
-	<?}?>
+	
 	return st;
 }
 
@@ -53,48 +53,25 @@ PersonEmplyment.prototype.AddEmp = function()
   this.grid.hide();
   Ext.get(this.get("EmpDIV")).clear();
   this.form.row_no.value = null;
-  this.form.duration_year.value = 0 ;
-  this.form.duration_month.value = 0 ;
-  this.form.duration_day.value = 0 ;
-  this.form.retired_duration_year.value = 0 ;
-  this.form.retired_duration_month.value = 0 ;
-  this.form.retired_duration_day.value = 0 ;
-  this.form.group_duration_year.value = 0 ;
-  this.form.group_duration_month.value = 0 ;
-  this.form.group_duration_day.value = 0 ;
+  
 }
 
 PersonEmplyment.prototype.editEmpInfo = function(record)
 {
     var record = this.grid.getSelectionModel().getLastSelected(); 
 	Ext.get(this.get("EmpDIV")).setVisible(true);
-	//this.grid.hide();
+	
 	this.form.row_no.value = record.data.row_no;
 	this.form.organization.value = record.data.organization;
-	this.form.unit.value = record.data.unit;
-	this.form.org_type.value = record.data.org_type;
-	this.form.person_type.value = record.data.person_type;
-	this.form.emp_state.value = record.data.emp_state;
-	this.form.emp_mode.value = record.data.emp_mode;
+	this.form.unit.value = record.data.unit;	
+	
 	this.form.from_date.value = MiladiToShamsi(record.data.from_date);
 	this.form.to_date.value = MiladiToShamsi(record.data.to_date);
 	this.form.title.value = record.data.title;
-	this.form.unemp_cause.value = record.data.unemp_cause;
-	this.form.duration_year.value = (record.data.duration_year !=null )? record.data.duration_year : 0 ;
-	this.form.duration_month.value =(record.data.duration_month !=null )? record.data.duration_month : 0 ;
-	this.form.duration_day.value = (record.data.duration_day!=null )? record.data.duration_day : 0  ;
-	this.form.retired_duration_year.value = (record.data.retired_duration_year!= null ) ? record.data.retired_duration_year : 0 ;
-	this.form.retired_duration_month.value = (record.data.retired_duration_month!= null ) ? record.data.retired_duration_month : 0 ;
-	this.form.retired_duration_day.value = (record.data.retired_duration_day!= null ) ? record.data.retired_duration_day : 0 ;
-	this.form.group_duration_year.value = (record.data.group_duration_year!= null ) ? record.data.group_duration_year : 0 ;
-	this.form.group_duration_month.value = (record.data.group_duration_month!=null) ? record.data.group_duration_month : 0 ;
-	this.form.group_duration_day.value = (record.data.group_duration_day!= null) ? record.data.group_duration_day : 0 ;
+	
 	this.form.comments.value = record.data.comments;
-
-	<?if(!$accessObj->UpdateAccess()){?>
-        Ext.get(this.get("EmpDIV")).readonly(new Array("btn_cancel"));
-		
-	<?}?>
+	
+			
 }
 
 PersonEmplyment.prototype.ValidateEmpForm = function()

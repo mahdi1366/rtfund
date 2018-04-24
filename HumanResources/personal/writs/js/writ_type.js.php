@@ -109,22 +109,15 @@ SalaryItemType.prototype.saveWritType = function()
 
 		success: function(response,option){
 			mask.hide();
-			if(response.responseText.indexOf("InsertError") != -1 ||
-				response.responseText.indexOf("UpdateError") != -1)
-			{
-				alert("عملیات مورد نظر با شکست مواجه شد");
-				return;
-			}
 			var st = Ext.decode(response.responseText);
 			if(st.success)
 			{
 				SalaryItemTypeObject.newItemPanel.hide();
 				SalaryItemTypeObject.grid.getStore().load();
+			alert("ایجاد نوع حکم با موفقیت انجام شد.");
 			}
 			else
-			{
-				alert(response.responseText);
-			}
+				alert("عملیات مورد نظر با شکست مواجه شد");
 		},
 		failure: function(){}
 	});
@@ -205,9 +198,10 @@ SalaryItemType.prototype.deleteDevInfo = function()
 	mask.show();
 
 	Ext.Ajax.request({
-		url: this.address_prefix + '../data/salary_item_type.data.php?task=deleteSIT',
+		url: this.address_prefix + '../data/writ.data.php?task=deleteWInf',
 		params:{
-			salary_item_type_id: record.data.salary_item_type_id
+			WTI: record.data.writ_type_id,
+			WSI : record.data.writ_subtype_id
 		},
 		method: 'POST',
 
@@ -217,7 +211,7 @@ SalaryItemType.prototype.deleteDevInfo = function()
 			if(st.success)
 			{
 				SalaryItemTypeObject.grid.getStore().load();
-				alert("حذف قلم حقوقی با موفقیت انجام شد.");
+			alert("حذف نوع حکم با موفقیت انجام شد.");
 			}
 			else
 				alert("عملیات مورد نظر با شکست مواجه شد");

@@ -28,47 +28,7 @@ function selectDev ()
 	$where = " d.PersonID = :PID ";
 	$whereParam = array();
 	$whereParam[":PID"] = $_GET["Q0"];
-	/*
-	$field = isset ( $_GET ["fields"] ) ? $_GET ["fields"] : "";
-	
-	if (isset ( $_GET ["query"] ) && $_GET ["query"] != "") {
-			switch ( $field) {
-				case "Title" :
-					$where .= " AND Title LIKE :qry " ;
-					$whereParam[":qry"] = "%" . $_GET["query"] . "%";
-			        
-				break;
-				case "enlisted" :	
-					$where .= " AND enlisted = :qry1 " ;
-					$whereParam[":qry1"] = "%" . $_GET["query"] . "%";
-			
-				break;
-				case "from_date" :
-					$where .= " AND from_date = :qry1 " ;
-					$whereParam[":qry1"] = $_GET["query"];
-					
-				break;
-				case "to_date" :
-					$where .= " AND to_date = :qry1 " ;
-					$whereParam[":qry1"] = $_GET["query"];
-					
-				break;
-				case "amount" :
-					$where .= " AND amount = :qry1 " ;
-					$whereParam[":qry1"] = $_GET["query"];
-				
-				break;
-				case "war_place" :
-					$where .= " AND war_place LIKE :qry ";
-					$whereParam[":qry"] = "%" . $_GET["query"] . "%";
-					
-				break;
-				
-				
-					}
-		}
-		*/
-    
+	    
 	$no = manage_person_devotion::CountDevotion($where, $whereParam);
 
 	$where .=  dataReader::makeOrder(); 
@@ -89,14 +49,13 @@ function saveDevData(){
 
 	$obj->PersonID = $_POST['PersonID'];
 	$obj->from_date = DateModules::Shamsi_to_Miladi($_POST["from_date"]);
-	$obj->to_date = DateModules::Shamsi_to_Miladi($_POST["to_date"]);
-	$obj->letter_date = DateModules::Shamsi_to_Miladi($_POST["letter_date"]);
+	$obj->to_date = DateModules::Shamsi_to_Miladi($_POST["to_date"]);	
 	$obj->amount = (empty($obj->amount)) ? "0" : $obj->amount;
         $obj->continous = (!empty($obj->continous)) ? $obj->continous : 0 ; 
 	$obj->enlisted = (!empty($obj->enlisted)) ? $obj->enlisted : 0 ;  	
 		
 	if(empty($_POST["devotion_row"]))
-	{
+	{		
 		$return = $obj->AddDevotion();
 	}
 	else 

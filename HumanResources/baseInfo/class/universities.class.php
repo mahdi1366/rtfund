@@ -22,7 +22,7 @@ class manage_University extends PdoDataAccess
 	 {
 	 	
                 $query = " SELECT u.country_id , u.university_id , u.university_category , u.ptitle , u.etitle , c.ptitle country_title 
-                                FROM universities  u inner join countries c 
+                                FROM HRM_universities  u inner join HRM_countries c 
                                                             on u.country_id = c.country_id 
                                                      " ; 
 	 	return parent::runquery($query);
@@ -31,11 +31,11 @@ class manage_University extends PdoDataAccess
         
 	function Add()
 	{
-            $qry = "select max(university_id) uid from universities where country_id = ". $this->country_id ; 
+            $qry = "select max(university_id) uid from HRM_universities where country_id = ". $this->country_id ; 
             $res = parent::runquery($qry) ; 
             $this->university_id = $res[0]['uid'] + 1  ;
             
-                $return = parent::insert("universities",$this);
+                $return = parent::insert("HRM_universities",$this);
 
 	 	if($return === false)
 			return false;
@@ -43,7 +43,7 @@ class manage_University extends PdoDataAccess
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
 		$daObj->MainObjectID = $this->university_id;                
-		$daObj->TableName = "universities";
+		$daObj->TableName = "HRM_universities";
 		$daObj->execute();
 
 		return true;
@@ -51,7 +51,7 @@ class manage_University extends PdoDataAccess
         
         function Edit() {
             
-                $query = "update universities set ptitle = '".$this->ptitle."' 
+                $query = "update HRM_universities set ptitle = '".$this->ptitle."' 
                                         where university_id= ".$this->university_id ." and country_id = ".$this->country_id ; 
                 $result = parent::runquery($query) ; 
                 
@@ -62,7 +62,7 @@ class manage_University extends PdoDataAccess
 		$daObj->ActionType = DataAudit::Action_update;
 		$daObj->MainObjectID = $this->university_id;
                 $daObj->SubObjectID = $this->country_id ; 
-		$daObj->TableName = "universities";
+		$daObj->TableName = "HRM_universities";
 		$daObj->execute();
 
 		return true;
@@ -72,7 +72,7 @@ class manage_University extends PdoDataAccess
 	{
             
                     
-                $res = parent::runquery(" select count(*) cn from person_educations where university_id = ".$uid ." and country_id =".$cid );
+                $res = parent::runquery(" select count(*) cn from HRM_person_educations where university_id = ".$uid ." and country_id =".$cid );
 
                 if($res[0]['cn'] > 0 )
                 {
@@ -80,7 +80,7 @@ class manage_University extends PdoDataAccess
                     return false ;
                 }
             
-                        $result = parent::delete("universities","university_id=:UID and  country_id = :CID ",
+                        $result = parent::delete("HRM_universities","university_id=:UID and  country_id = :CID ",
                                                                             array(":UID" => $uid , 
                                                                                   ":CID" => $cid ));                
 
@@ -91,7 +91,7 @@ class manage_University extends PdoDataAccess
                         $daObj->ActionType = DataAudit::Action_delete;
                         $daObj->MainObjectID = $uid;
                         $daObj->SubObjectID = $cid;
-                        $daObj->TableName = "universities";
+                        $daObj->TableName = "HRM_universities";
                         $daObj->execute();
 
                         return true;

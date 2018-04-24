@@ -6,6 +6,7 @@
 require_once '../../../header.inc.php';
 require_once '../class/writ.class.php';
 require_once inc_dataReader;
+ini_set("display_errors","Off") ; 
 
   //$WritTypeArr = manage_domains::DRP_writType_writSubType("form_issueWrit","writ_type_id", "writ_subtype_id", "" , "" , "" , "" , "200");
 

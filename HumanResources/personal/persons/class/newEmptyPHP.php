@@ -1,5 +1,4 @@
 <?php
-ini_set('display_errors', 'On'); 
  // System : HRMSv(beta)
  // Author :B.Mahdipour
  // Date : 87.6

@@ -7,7 +7,6 @@
 require_once("../../../header.inc.php");
 //require_once  "/home/krrtfir/public_html/HumanResources/global/sisW2D.php";
 //require_once "/home/krrtfir/public_html/generalClasses/pear/DB/dbase.php" ;
-//ini_set("display_errors", "Off") ;
 
 // این گزارش مورد بررسی مجدد قرار گیرد چون در صفحه مربوطه تغییراتی اعمال شده است .................
 //die();

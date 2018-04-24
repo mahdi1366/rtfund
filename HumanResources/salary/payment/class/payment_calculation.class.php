@@ -7,7 +7,7 @@ require_once '../../salary_params/class/salary_params.class.php';
 require_once '../../person_org_docs/subtracts.class.php';
 require_once getenv("DOCUMENT_ROOT") .'/attendance/traffic/traffic.class.php';
 
-ini_set("display_errors","On");
+ini_set("display_errors","Off");
 class manage_payment_calculation extends PdoDataAccess
 {
 	public $month_start; //از ورودي

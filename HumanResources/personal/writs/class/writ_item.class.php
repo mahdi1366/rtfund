@@ -2865,14 +2865,12 @@ $resDay = $totalDayWrt -  $totalDaySar  ;
 			return false;
 		}
 
-		$rial_coef = manage_salary_params::get_salaryParam_value("", $writ_rec["sp_person_type"], SPT_RIAL_COEF, $writ_rec["execute_date"]);
-		$score = $this->param2 * 210;
-		$value = $score * $rial_coef;
+		$OladParam = manage_salary_params::get_salaryParam_value("", 3, 203, $writ_rec["execute_date"]);
+		
+		$value = $this->param2 * $OladParam;
 
 		if (!($value > 0))
 			return false;
-
-		$this->param1 = $score;
 
 		return $value;
 	}

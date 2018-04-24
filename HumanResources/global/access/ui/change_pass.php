@@ -3,7 +3,6 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 90.10
 //-----------------------------
-ini_set("display_errors", "on") ; 
 
 if (!isset($_REQUEST["task"])){	
 	set_include_path(get_include_path() . PATH_SEPARATOR . getenv("DOCUMENT_ROOT") . "/generalClasses");

@@ -79,8 +79,6 @@ if(isset($_GET['showRes']) && $_GET['showRes'] == 1 )
 	   
 	if($_GET['excel'] == 'true')
 	{
-		ini_set("display_errors","On") ; 
-	
 		require_once 'excel.php';
 		require_once "php_writeexcel-0.3.0/class.writeexcel_workbook.inc.php";
 		require_once "php_writeexcel-0.3.0/class.writeexcel_worksheet.inc.php";

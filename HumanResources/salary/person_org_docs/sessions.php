@@ -51,7 +51,7 @@ $dg->pageSize = "15";
 $dg->EnableSearch = false ;
 $dg->width = 780;
 $dg->height = 500;
-$dg->title = " بانکها";
+$dg->title = " حق الجلسه";
 $dg->autoExpandColumn = "PersonID";
 
 $dg->enableRowEdit = true ;

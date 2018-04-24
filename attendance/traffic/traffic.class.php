@@ -80,7 +80,6 @@ class ATN_traffic extends OperationClass
 		{
 			//echo PdoDataAccess::GetLatestQueryString();
 		}
-		ini_set("display_errors", "On");
 		//............ Reset wrong hourly off and mission requests .............
 		$currentDate = $dt[0]["TrafficDate"];
 		$index = 0;

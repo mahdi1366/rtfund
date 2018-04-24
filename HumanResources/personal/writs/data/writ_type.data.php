@@ -33,12 +33,14 @@ switch ( $task)
 
 function WritTypeSave()
 {
-		
+	
 	if(empty($_POST["writ_subtype_id"]))
 	{
 
         $wtid = PdoDataAccess::GetLastID("HRM_writ_subtypes", "writ_subtype_id", " person_type=:PT", array(":PT" => $_POST['pt']));
         $wtid++ ; 
+       
+     
 		$query = "insert into HRM_writ_subtypes(person_type,writ_type_id,writ_subtype_id,title,print_title,description,
 			emp_state , emp_mode , worktime_type)
                                 values('" . $_POST["pt"] . "',1,".$wtid.",'".  $_POST["title"] ."','".$_POST["print_title"]."','',0,0,0)";
@@ -46,11 +48,12 @@ function WritTypeSave()
 	
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;
-		$daObj->MainObjectID = $_POST['pt']."-".$wtid;
+		$daObj->MainObjectID = $wtid;
 		$daObj->TableName = "HRM_writ_subtypes";
-		$daObj->execute();
+        $daObj->execute();
 
-		echo Response::createObjectiveResponse("true", $_POST['pt']."-".$wtid);
+		echo Response::createObjectiveResponse("true", $wtid);
+		die();
 	}
 	else
 	{
@@ -58,7 +61,7 @@ function WritTypeSave()
 		$query = "update HRM_writ_subtypes set title = '" . $_POST["title"] . "',print_title = '".$_POST['print_title']."', description = '".$_POST['comments']."',
        emp_state = ".$_POST['emp_state']." , emp_mode = ".$_POST['emp_mode']." , worktime_type = ".$_POST['worktime_type']." ,
             salary_pay_proc = ".$_POST['salary_pay_proc']." , post_effect = ".$_POST['post_effect'].",annual_effect = ".$_POST['annual_effect']."
-                            where person_type=" . $_POST['person_type'] . " and writ_type_id=" . $_POST['writ_type_id'] ;
+                            where person_type=" . $_POST['person_type'] . " and writ_type_id=" . $_POST['writ_type_id'] ." and writ_subtype_id = ".$_POST['writ_subtype_id']  ;
 		PdoDataAccess::runquery($query);
 
 		$daObj = new DataAudit();

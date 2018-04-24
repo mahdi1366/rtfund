@@ -21,7 +21,7 @@ function RegDoc($PayObj){
 	
 	$CostID = COSTID_Bank;
 	$TafsiliID = 3049; // ayande
-	$TafsiliID2 = 3046; // jari
+	$TafsiliID2 = 3052; // kootahmodat 
 	
 	return RegisterInOutAccountDoc($BranchID, $PayObj->amount, 1, "پرداخت الکترونیک به شماره رهگیری " . 
 			$PayObj->PayRefNo,

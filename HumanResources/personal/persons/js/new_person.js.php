@@ -12,7 +12,7 @@ Person.prototype = {
 	staffInfoForm : "",	
 	IncludeHistoryGrid : "" ,
 	sid : "" ,
-        pid: "" ,
+	pid: "" ,
 	person_type : "" ,
 	mainTab : "",
 
@@ -73,6 +73,49 @@ function Person()
              }
 
             },{
+				itemId: 'Tab_Isar'
+            	,title: 'ایثارگری'
+            	,style: 'padding:5px'
+				,height:700
+				,loader:{
+					url: this.address_prefix + "devotions.php",
+					scripts:true
+				}
+            	,disabled: (this.personInfoForm.PersonID.value == ""  ) ? true : false
+				,listeners: {activate: function(tab){
+					if(tab.isLoaded)
+						return;
+					tab.loader.load({
+						params : {
+							Q0 : PersonObject.personInfoForm.PersonID.value,
+							FacilID : '<?=$FacilID ?>'
+						}
+					});
+				}
+			 } 
+            },{
+				itemId: 'Tab_employments'
+            	,title: 'سوابق کاری'
+            	,style: 'padding:5px'
+				,height:700
+				,loader:{
+					url: this.address_prefix + "employments.php",
+					scripts:true
+				}
+            	,disabled: (this.personInfoForm.PersonID.value == "") ? true : false
+				,listeners: {activate: function(tab){
+					if(tab.isLoaded)
+						return;
+					tab.loader.load({
+						params : {
+							Q0 : PersonObject.personInfoForm.PersonID.value,
+							FacilID : '<?= $FacilID ?>'
+						}
+					});
+				}
+			 }
+
+            },{
                 itemId: 'educations'
             	,title: 'سوابق تحصیلی'
             	,style: 'padding:5px'
@@ -114,8 +157,9 @@ function Person()
 					});
 				}
 			 }
+					 
 		}	
-,
+		,
 		{
 					 itemId: 'tax'
 					,title: 'سوابق مالی'
@@ -162,6 +206,7 @@ function Person()
 						}
 						  }
 						}
+						
             ]
     });
     
@@ -411,17 +456,8 @@ function Person()
 		applyTo:  this.get("military_to_date"),
 		format: 'Y/m/d'
 	});
-    this.IncludeHistoryGrid = <?= $includeHistoryGrid?>;
-
-    <?if($personID > 0 ){ ?>
-		this.IncludeHistoryGrid.render(this.get("includeHistoryGRID"));
-		this.sid = <?= $SummeryInfo[0]["staff_id"] ?>;
-this.pid = <?= $personID ?>;
-		
-    <?}?>
 	
-
-this.store1.load({
+	this.store1.load({
 	callback:function(){
 		PersonObject.birthStateCombo.setValue("<?= $obj->birth_state_id ?>");
 		PersonObject.store2.load({
@@ -445,6 +481,41 @@ this.store9.load({
 	}
 });
 
+this.store3.load({
+	callback:function(){
+		PersonObject.religionCombo.setValue("<?= $obj->religion ?>");
+		PersonObject.store4.load({
+			params:{MasterID:PersonObject.religionCombo.getValue()},
+			callback:function(){
+				PersonObject.subreligionCombo.setValue("<?= $obj->subreligion ?>");
+			}
+		});
+	}
+});
+
+this.store5.load({
+	callback:function(){
+		PersonObject.militaryCombo.setValue("<?= $obj->military_status ?>");
+		PersonObject.store6.load({
+			params:{MasterID:PersonObject.militaryCombo.getValue()},
+			callback:function(){
+				PersonObject.submilitaryCombo.setValue("<?= $obj->military_type ?>");
+			}
+		});
+	}
+});
+
+
+	this.IncludeHistoryGrid = <?= $includeHistoryGrid?>;
+	
+	<?if($personID > 0 ){ ?>
+		this.IncludeHistoryGrid.render(this.get("includeHistoryGRID"));
+		this.sid = <?= $SummeryInfo[0]["staff_id"] ?>;
+		this.pid = <?= $personID ?>;
+		
+	<?}?>
+		   
+	
 }
 
 var PersonObject = new Person();
@@ -479,7 +550,6 @@ Person.prototype.saveStaffAction = function()
                             PersonObject.mainTab.items.get("Tab_dependency").enable(); 
 			    PersonObject.mainTab.items.get("educations").enable();
 			    PersonObject.mainTab.items.get("writs").enable();
-        
 			}
 			else
 			{
@@ -488,6 +558,8 @@ Person.prototype.saveStaffAction = function()
 		},
 		failure: function(){}
 	});
+	
+		
 
 }
 
@@ -508,7 +580,7 @@ Person.prototype.saveAction = function()
 			if(response.responseText.indexOf("InsertError") != -1 || 
 				response.responseText.indexOf("UpdateError") != -1)
 			{
-			
+			alert('dfdff');
 				alert("عملیات مورد نظر با شکست مواجه شد");
 				return;
 			}
@@ -520,16 +592,17 @@ Person.prototype.saveAction = function()
 				else
 					alert("ویرایش فرد با موفقیت انجام شد");
 					
-				PersonObject.personInfoForm.PersonID.value = st.data;
+										
+				PersonObject.personInfoForm.PersonID.value = st.data.PID ;
 				
 				PersonObject.mainTab.items.get("Tab_dependency").enable();                                
-                                PersonObject.mainTab.items.get("educations").enable();
-                                PersonObject.mainTab.items.get("writs").enable();
-                                PersonObject.IncludeHistoryGrid.render(PersonObject.get("includeHistoryGRID"));		
-				PersonObject.sid =  st.data.SID ; 
-               PersonObject.pid =  st.data.PID ; 	
-
-
+				PersonObject.mainTab.items.get("educations").enable();
+				PersonObject.mainTab.items.get("writs").enable();							
+	
+				PersonObject.IncludeHistoryGrid.render(PersonObject.get("includeHistoryGRID"));		
+				PersonObject.sid =  st.data.SID ; 	
+				PersonObject.pid =  st.data.PID ; 	
+			
 			}
 			else
 			{
@@ -648,6 +721,7 @@ Person.prototype.opDelRender = function(store,record,op)
 			"cursor:pointer;width:50%;height:16'></div>";
 }
 
+ 
 Person.prototype.SaveHistory = function(store,record,op)
 {
 	mask = new Ext.LoadMask(Ext.getCmp(PersonObject.TabID), {msg:'در حال ذخيره سازي...'});
@@ -657,7 +731,7 @@ Person.prototype.SaveHistory = function(store,record,op)
 		url: PersonObject.address_prefix + '../data/person.data.php?task=saveIncludeHistory',
 		params:{
 			record: Ext.encode(record.data) ,
-			Q0 : this.pid
+			Q0 : PersonObject.pid
 		},
 		method: 'POST',
 
@@ -666,10 +740,11 @@ Person.prototype.SaveHistory = function(store,record,op)
 			var st = Ext.decode(response.responseText);
 
 			if(st.success == true )
-			{
-				alert("ذخیره سازی با موفقیت انجام شد.");
+			{				
+				alert("ذخیره سازی با موفقیت انجام شد.");				
+				
 				PersonObject.IncludeHistoryGrid.getStore().proxy.extraParams['PID'] = PersonObject.pid ; 
-				PersonObject.IncludeHistoryGrid.getStore().load();	
+				PersonObject.IncludeHistoryGrid.getStore().load();					
 				return;
 			}
 			else
@@ -681,6 +756,8 @@ Person.prototype.SaveHistory = function(store,record,op)
 		failure: function(){}
 	});
 }
+
+
 
 Person.prototype.AddIncludeHistory = function()
 { 

@@ -168,6 +168,14 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 	});
 }
 
+RequestInfo.PartRender = function(v,p,record){
+
+	if(record.data.LocalNo*1 > 0)
+		p.tdAttr = "data-qtip='شماره سند اختلاف : "+record.data.LocalNo+"<br>تاریخ سند : "+
+			MiladiToShamsi(record.data.DocDate)+"'";
+	return v;
+}
+
 RequestInfo.OperationRender = function(v,p,record){
 	
 	if(record.data.IsHistory == "YES")
@@ -263,7 +271,7 @@ RequestInfo.prototype.MakePartsPanel = function(){
 					labelWidth : 90,
 					fieldCls : "blueText"
 				},
-				items : [{
+				items : [{ 
 					name : "ComputeMode",
 					fieldLabel: 'مبنای محاسبه',
 					renderer : function(v){
@@ -273,7 +281,7 @@ RequestInfo.prototype.MakePartsPanel = function(){
 				},{
 					name : "details",
 					colspan : 2,
-					width : 500,
+					width : 390,
 					fieldLabel: 'توضیحات'
 				},{
 					fieldLabel: 'مبلغ پرداخت',
@@ -364,7 +372,7 @@ RequestInfo.prototype.MakePartsPanel = function(){
 				},{
 					colspan : 3,
 					name : "BackPayComputeDesc",
-					width : 580,
+					width : 500,
 					fieldLabel: 'محاسبه پرداخت'
 				},{
 					colspan : 3,

@@ -3,10 +3,6 @@
 // programmer:	b.Mahdipour
 // create Date:	94.11
 //---------------------------
-<?
-ini_set("display_errors","On");
-
-?>
 PaymentProcess.prototype = {
 
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',

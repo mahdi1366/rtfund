@@ -26,6 +26,26 @@ switch ($task) {
 		
 	case "GetCostCode":
 		 GetCostCode() ; 
+		
+	case "searchSessionItem" :
+		searchSessionItem() ; 
+}
+
+
+function searchSessionItem() {
+
+	$where = " (1=1) AND salary_item_type_id in (13,14,15,16)  ";
+	$whereParam = array();
+		
+	$no = manage_salary_item_type::Count($where, $whereParam);
+
+	$where .= dataReader::makeOrder();
+	$where .= isset($_GET ["start"]) ? " limit " . $_GET ["start"] . "," . $_GET ["limit"] : "";
+
+	$temp = manage_salary_item_type::Select($where, $whereParam);
+
+	echo dataReader::getJsonData($temp, $no, $_GET ["callback"]);
+	die();
 }
 
 function selectsalaryItem() {
@@ -147,7 +167,9 @@ function savesalaryItem() {
 	    $obj->insure_include = (isset($_POST['insure_include'])) ? $_POST['insure_include'] : 0;
 	    $obj->tax_include = (isset($_POST['tax_include'])) ? $_POST['tax_include'] : 0;
 	    $obj->retired_include = (isset($_POST['retired_include'])) ? $_POST['retired_include'] : 0;
-	    $obj->pension_include = (isset($_POST['pension_include'])) ? $_POST['pension_include'] : 0;    	  
+	    $obj->pension_include = (isset($_POST['pension_include'])) ? $_POST['pension_include'] : 0; 
+		$obj->month_length_effect = (isset($_POST['month_length_effect'])) ? $_POST['month_length_effect'] : 0;
+		
 		if(empty($_POST['validity_start_date']))
 			unset($obj->validity_start_date);
  

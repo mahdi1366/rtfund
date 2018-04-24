@@ -5,7 +5,6 @@
 //---------------------------
 require_once "../../header.inc.php";
 require_once inc_dataGrid;
-ini_set("display_errors", "On");
 ?>
 <html>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>

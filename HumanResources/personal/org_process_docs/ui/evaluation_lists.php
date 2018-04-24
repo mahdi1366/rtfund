@@ -6,7 +6,6 @@
 require_once '../../../header.inc.php';
 require_once inc_dataGrid;
 
-
 require_once '../js/evaluation_lists.js.php';
 
 $dg = new sadaf_datagrid("EvalGrid", $js_prefix_address . "../data/evaluation.data.php?task=SelectEvalList", "EvalDIV");

@@ -9,8 +9,6 @@ require_once '../../persons/class/person.class.php';
 require_once inc_dataGrid;
 require_once inc_manage_unit;
 		
-/*ini_set("display_errors","on") ; 
- error_reporting(E_ALL);*/ 
 //-----------------------------------------------
 
 $writ_id = $_REQUEST["WID"];
@@ -121,7 +119,7 @@ $drp_salary_pay_proc = manage_domains::DRP_SalaryPayProc("salary_pay_proc",$objW
 $drp_annual_effect = manage_domains::DRP_Annual_Effect("annual_effect", $objWrt->annual_effect ,"with:50%", "blueText");
 //$drp_jobs = manage_domains::DRP_Jobs("job_id", $objWrt->job_id, "form_WritForm");
 $drp_worktime = manage_domains::DRP_WorkTimeType("worktime_type", $objWrt->worktime_type); 
-$drp_post = manage_domains::DRP_Posts("postID","",$objWrt->post_id,"","","50"); 
+//$drp_post = manage_domains::DRP_Posts("postID","",$objWrt->post_id,"","","50"); 
 $drp_emp_state = manage_domains::DRP_EMP_STATE_WST("emp_state", $objWrt->emp_state);
  $event = "" ;
 $drp_emp_mode = manage_domains::DRP_EMP_MODE_WST("emp_mode", $objWrt->emp_mode , "" , $event);
@@ -552,15 +550,9 @@ WritFormObject = new WritForm(ViewWritObject);
 		</tr>	
 		<tr>
 			<td>پست سازمانی :</td>
-			<td class="blueText" colspan="3"><?= $drp_post?></td>
+			<td class="blueText" colspan="3"><?= $FullWrt[0]['PostName']?></td>
 		</tr>
-                <tr>
-			<td> واحد سازمانی:</td>
-			<td class="blueText" colspan="3">
-				<input type="text" id="UnitDesc" name="UnitDesc" value="<?= $FullWrt[0]['UnitName']?>"> 
-				<input type="hidden" id="UnitID" name="UnitID" value="<?= $objWrt->ouid ?>">
-			</td>			
-		</tr>
+               
 		
 		<?if($objWrt->person_type == HR_WORKER || $objWrt->person_type == HR_CONTRACT){?>
 		<tr>

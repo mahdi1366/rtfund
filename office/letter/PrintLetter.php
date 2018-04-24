@@ -103,7 +103,7 @@ if($LetterObj->OuterCopies != "")
 		}
 		
 		.header td{background-color: #cccccc; font-weight: bold;size: 12px;}
-		td { font-family: Nazanin; font-size: 12pt; line-height: 26px; padding: 3px;}
+		td { font-family: Nazanin; font-size: 12pt; line-height: 25px; padding: 3px;}
 		.signDiv {
 			height: 140px;
 			float : left;
@@ -170,7 +170,8 @@ if($LetterObj->OuterCopies != "")
 					</tr>
 					</thead>
 					<tr>
-						<td colspan="3" style="padding-right:50px;padding-left: 50px;vertical-align: top;">
+						<td colspan="3" style="padding-right:50px;padding-left: 50px;vertical-align: top;
+							text-align: justify;text-justify: inter-word;">
 							<br><br>
 							<?= $content ?>
 							<br>
@@ -193,10 +194,11 @@ if($LetterObj->OuterCopies != "")
 							 <span dir=ltr><?= $letterYear . "-" . $LetterObj->LetterID ?></span>
 							 <br><?= OFC_letters::HasAttach($LetterObj->LetterID) ? "دارد" : "ندارد" ?></b>
 						</td>
-					</tr>
+					</tr> 
 					</thead>
 					<tr>
-						<td colspan="3" style="padding-right:15px;padding-left: 15px;vertical-align: top;">
+						<td colspan="3" style="padding-right:15px;padding-left: 15px;vertical-align: top;
+							text-align: justify;text-justify: inter-word;">
 							<?= $content ?>
 							<br>
 						</td>
@@ -234,7 +236,8 @@ if($LetterObj->OuterCopies != "")
 					</tr>
 					</thead>
 					<tr>
-						<td colspan="3" style="padding-right:50px;padding-left: 50px;vertical-align: top;">
+						<td colspan="3" style="padding-right:50px;padding-left: 50px;vertical-align: top;
+							text-align: justify;text-justify: inter-word;">
 							<?= $content ?>
 							<br>
 						</td>
@@ -250,8 +253,8 @@ if($LetterObj->OuterCopies != "")
 										<?= hebrevc($LetterObj->PostalAddress) ?></div>
 								</div>
 								<div style="float:left;" class="tripleFooter">
-									<div style="float:right;width:20%;font-family: titr"> فرستنده : </div>
-									<div style="float:left;width:80%;">
+									<div style="float:right;width:18%;font-family: titr"> فرستنده : </div>
+									<div style="float:left;width:82%;font-size: 11pt !important;">
 										<?= SoftwareName ?><br>
 										<?= OWNER_ADDRESS ?><br>
 									</div>
@@ -294,7 +297,8 @@ if($LetterObj->OuterCopies != "")
 					</tr>
 					</thead>
 					<tr>
-						<td colspan="3" style="padding-right:50px;padding-left: 50px;vertical-align: top;">
+						<td colspan="3" style="padding-right:50px;padding-left: 50px;vertical-align: top;
+							text-align: justify;text-justify: inter-word;">
 							<br><br>
 							<?= $content ?>
 							<br>

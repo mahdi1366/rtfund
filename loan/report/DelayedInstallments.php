@@ -28,6 +28,7 @@ if(!empty($_REQUEST["print"]))
 	$col = $rpg->addColumn("معرف", "ReqPersonName");
 	$col = $rpg->addColumn("وام گیرنده", "LoanPersonName");
 	$col = $rpg->addColumn("تضامین", "tazamin");
+	$col = $rpg->addColumn("تاریخ آخرین قسط", "LastInstallmentDate","ReportDateRender");
 	$col = $rpg->addColumn("سررسید", "InstallmentDate","ReportDateRender");
 	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount", "ReportMoneyRender");
 	$col->EnableSummary();

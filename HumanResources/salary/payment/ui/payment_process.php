@@ -6,7 +6,6 @@
 require_once '../../../header.inc.php';
 require_once inc_dataReader;
 require_once inc_manage_unit;
-ini_set("display_errors","On");
 
 $drp_month = manage_domains::DRP_months("tax_n_m");
 

@@ -6,7 +6,7 @@
 
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
-require_once '../request/request.class.php';
+require_once '../request/request.class.php'; 
 require_once '../request/request.data.php';
 
 if(isset($_REQUEST["show"]))
@@ -15,7 +15,7 @@ if(isset($_REQUEST["show"]))
 	$ReqObj = new LON_requests($RequestID);
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	//............ get total loan amount ......................
-	$TotalAmount = LON_requests::GetTotalReturnAmount($RequestID, $partObj);
+	$TotalAmount = LON_requests::GetTotalReturnAmount($RequestID, $partObj, true);
 	//............ get remain untill now ......................
 	$dt = array();
 	$ComputeArr = LON_requests::ComputePayments2($RequestID, $dt);
@@ -191,6 +191,7 @@ if(isset($_REQUEST["show"]))
 					<tr>
 						<td>مبلغ قابل پرداخت در صورت تسویه وام :</td>
 						<td><b><?= $DefrayAmount ?></b></td>
+						<td></td><td></td>
 					</tr>
 					<? } ?>
 				</table>

@@ -192,30 +192,16 @@ class LON_requests extends PdoDataAccess{
 
 		if(!empty($ComputeDate))
 		{
-			$dt = LON_requests::GetPureAmount($partObj->RequestID, null, null, DateModules::shamsi_to_miladi($ComputeDate, "-"));
+			$dt = LON_requests::GetPureAmount($partObj->RequestID, null, null, 
+					DateModules::shamsi_to_miladi($ComputeDate, "-"));
 			$amount = $dt["PureAmount"];
 		}
 		else
 		{
 			$ComputeDate = DateModules::miladi_to_shamsi($partObj->PartDate);
-			$dt = LON_payments::Get(" AND RequestID=?", array($partObj->RequestID));
-			$dt = $dt->fetchAll();
-			if(count($dt) == 0)
-			{
-				ExceptionHandler::PushException("مراحل پرداخت را وارد نکرده اید");
-				return false;
-			}
-			$amount = $dt[0]["PayAmount"];
-			for($i=1; $i<count($dt); $i++)
-			{
-				$amount += Tanzil($dt[$i]["PayAmount"], $partObj->CustomerWage, $dt[$i]["PayDate"], $partObj->PartDate);
-			}
-			$amount = round($amount);			
-			/*if($partObj->DelayReturn == "CUSTOMER")
-			{
-				$arr = self::GetDelayAmounts($partObj->RequestID);
-				$amount -= $arr["CustomerDelay"];
-			}*/
+			$amount = self::GetLoanPureAmount($partObj->RequestID, $partObj, true);
+			$TotalPureAmount = $amount;
+			
 		}
 		//------------- compute percents of each installment amount ----------------
 		$zarib = 1;
@@ -273,7 +259,7 @@ class LON_requests extends PdoDataAccess{
 
 		//------ compute wages of installments -----------
 		$difference = 0;
-		$TotalWage = $TotalAmount - $partObj->PartAmount;
+		$TotalWage = $TotalAmount - $TotalPureAmount;
 		for($i=0; $i < count($installmentArray); $i++)
 		{
 			$days = DateModules::JDateMinusJDate($installmentArray[$i]["InstallmentDate"],$ComputeDate);
@@ -673,7 +659,7 @@ class LON_requests extends PdoDataAccess{
 				InstallmentDate RecordDate,InstallmentAmount RecordAmount,0 PayType, '' details, wage
 				from LON_installments where RequestID=:r AND history='NO' AND IsDelayed='NO'
 			union All
-				select 0 id, 'pay' type, substr(p.PayDate,1,10) RecordDate, PayAmount RecordAmount, PayType,
+				select BackPayID id, 'pay' type, substr(p.PayDate,1,10) RecordDate, PayAmount RecordAmount, PayType,
 					if(PayType=" . BACKPAY_PAYTYPE_CORRECT . ",p.details,'') details,0
 				from LON_BackPays p
 				left join ACC_IncomeCheques i using(IncomeChequeID)
@@ -923,12 +909,8 @@ class LON_requests extends PdoDataAccess{
 		
 		$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
 		$temp = LON_installments::GetValidInstallments($RequestID);
-		$totalBackPay = $PartObj->PartAmount;
-		/*if($PartObj->ComputeMode == "NEW" && $PartObj->DelayReturn != "INSTALLMENT")
-		{
-			$arr = self::GetDelayAmounts($PartObj->RequestID);
-			$totalBackPay -= $arr["CustomerDelay"];
-		}*/
+		//$totalBackPay = $PartObj->PartAmount;
+		$totalBackPay = self::GetLoanPureAmount($RequestID, $PartObj, $PartObj->ComputeMode == "NEW");
 		//.............................
 		$returnArr = array();
 		$returnArr[] = array(
@@ -995,29 +977,61 @@ class LON_requests extends PdoDataAccess{
 
 	}
 	
+	static function GetLoanPureAmount($RequestID, $PartObj = null,$TanzilCompute = false)
+	{
+		$PartObj = $PartObj == null ? LON_ReqParts::GetValidPartObj($RequestID) : $PartObj;
+		
+		if(!$TanzilCompute)
+		{
+			$amount = $PartObj->PartAmount*1;
+			$result = self::GetDelayAmounts($RequestID, $PartObj);
+			if($PartObj->DelayReturn == "INSTALLMENT")
+				$amount += $result["FundDelay"];
+			if($PartObj->AgentDelayReturn == "INSTALLMENT")
+				$amount += $result["AgentDelay"];
+			return $amount;
+		}
+		
+		$dt = LON_payments::Get(" AND RequestID=?", array($PartObj->RequestID));
+		$dt = $dt->fetchAll();
+		if(count($dt) == 0)
+		{
+			ExceptionHandler::PushException("مراحل پرداخت را وارد نکرده اید");
+			return false;
+		}
+		$amount = $dt[0]["PayAmount"];
+		for($i=1; $i<count($dt); $i++)
+		{
+			$amount += Tanzil($dt[$i]["PayAmount"], $PartObj->CustomerWage, $dt[$i]["PayDate"], 
+					$PartObj->PartDate);
+		}
+		
+		$result = self::GetDelayAmounts($RequestID, $PartObj);
+		if($PartObj->DelayReturn != "INSTALLMENT")
+			$amount -= $result["FundDelay"];
+		if($PartObj->AgentDelayReturn != "INSTALLMENT")
+			$amount -= $result["AgentDelay"];
+		
+		return round($amount);		
+	}
+	
 	/**
 	 * loan amount + delay if in installment + wage if in installment
 	 */
-	static function GetTotalReturnAmount($RequestID, $PartObj = null){
+	static function GetTotalReturnAmount($RequestID, $PartObj = null , $TanzilCompute = false){
 		
 		$PartObj = $PartObj == null ? LON_ReqParts::GetValidPartObj($RequestID) : $PartObj;
 		
 		$extraAmount = 0;
+		$result = self::GetWageAmounts($RequestID, $PartObj);
+		
 		if($PartObj->WageReturn == "INSTALLMENT")
-		{
-			$result = self::GetWageAmounts($RequestID, $PartObj);
-			$extraAmount += $result["CustomerWage"];
-		}
+			$extraAmount += $result["FundWage"];
+		if($PartObj->AgentReturn == "INSTALLMENT")
+			$extraAmount += $result["AgentWage"];
 		
-		$result = self::GetDelayAmounts($RequestID, $PartObj);
-		
-		if($PartObj->DelayReturn == "INSTALLMENT")
-			$extraAmount += $result["FundDelay"];
-		
-		if($PartObj->AgentDelayReturn == "INSTALLMENT")
-			$extraAmount += $result["AgentDelay"];
-		
-		return $PartObj->PartAmount*1 + $extraAmount;		
+		$amount = self::GetLoanPureAmount($RequestID, $PartObj , $TanzilCompute);		
+		return $amount + $extraAmount;		
 	}
 	
 	static function GetCurrentRemainAmount($RequestID, $computeArr=null, $forfeitInclude = true){
@@ -1465,9 +1479,15 @@ class LON_ReqParts extends PdoDataAccess{
 		
 		return PdoDataAccess::runquery("
 			select rp.*,r.StatusID,r.LoanPersonID,r.ReqPersonID, r.imp_VamCode,
-				bf.InfoDesc BackPayComputeDesc
+				bf.InfoDesc BackPayComputeDesc,t.LocalNo,t.DocDate				
+				
 			from LON_ReqParts rp join LON_requests r using(RequestID)
 			join BaseInfo bf on(TypeID=81 AND InfoID=BackPayCompute)
+			left join (
+				select SourceID2,LocalNo, DocDate from ACC_DocItems join ACC_docs using(DocID)
+				where SourceType=".DOCTYPE_LOAN_DIFFERENCE."
+				group by SourceID2
+			)t on(SourceID2=rp.PartID)
 			where " . $where, $param);
 	}
 	

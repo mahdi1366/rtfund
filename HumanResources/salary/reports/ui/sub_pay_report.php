@@ -5,7 +5,6 @@
 //---------------------------
 
 require_once("../../../header.inc.php");
-ini_set("display_errors","On") ; 
 	
 if (isset($_REQUEST["show"]))
 {

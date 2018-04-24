@@ -1403,7 +1403,8 @@ function GetDelayedInstallments($returnData = false){
 				InstallmentAmount,
 				InstallmentDate,
 				BranchName,
-				tazamin
+				tazamin,
+				t1.LastInstallmentDate
 				
 			from LON_installments i
 			join LON_requests r using(RequestID)
@@ -1412,6 +1413,10 @@ function GetDelayedInstallments($returnData = false){
 			left join BSC_persons p2 on(ReqPersonID=p2.PersonID)
 			join LON_ReqParts p on(p.RequestID=r.RequestID AND p.IsHistory='NO')
 			join BSC_branches using(BranchID)
+			left join (
+				select RequestID, max(InstallmentDate) LastInstallmentDate 
+				from LON_installments group by RequestID
+			)t1 on(i.RequestID=t1.RequestID)
 			left join (
 				select ObjectID,group_concat(title,' به شماره سريال ',num, ' و مبلغ ', 
 					format(amount,2) separator '<br>') tazamin
@@ -2007,7 +2012,8 @@ function ComputeManualInstallments(){
 	$installmentArray = ExtraModules::array_sort($installmentArray, "InstallmentDate");
 		
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
-	$installmentArray = ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate, $ComputeWage);
+	//$installmentArray = ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate, $ComputeWage);
+	$installmentArray = LON_requests::FreeDobellWageComputeInstallment($partObj, $installmentArray, $ComputeDate, $ComputeWage);
 	
 	//........................
 

@@ -12,7 +12,7 @@ class manage_writ_group_issue_log
 	private $s_content = "";
 	private $e_content = "";
 	private $u_content = "";
-	
+	   
 	function manage_writ_group_issue_log()
 	{
 		

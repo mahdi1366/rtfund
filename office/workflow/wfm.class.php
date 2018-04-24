@@ -488,7 +488,7 @@ class WFM_FlowRows extends PdoDataAccess {
 			$nextStep = $row["StepID"]*1+1;
 
 			$where .= "(fr.FlowID=" . $row["FlowID"] .
-				" AND fs.StepID" . ($preStep == 0 ? " is null" : "=" . $preStep) . 
+				" AND fs.StepID" . "=" . $preStep . 
 				" AND ActionType='CONFIRM') OR (fr.FlowID=" . $row["FlowID"] . 
 				" AND fs.StepID=" . $nextStep . " AND ActionType='REJECT') OR";
 		}
@@ -501,14 +501,12 @@ class WFM_FlowRows extends PdoDataAccess {
 						b.param1 url,
 						b.param2 parameter
 					from WFM_FlowRows fr
-					join ( select max(RowID) RowID,FlowID,ObjectID from WFM_FlowRows group by FlowID,ObjectID )t
-						using(RowID,FlowID,ObjectID)
 					join WFM_flows f using(FlowID)
 					join BaseInfo b on(b.TypeID=11 AND b.InfoID=f.ObjectType)
 					left join WFM_FlowSteps fs on(fr.StepRowID=fs.StepRowID)
 					join BSC_persons p on(fr.PersonID=p.PersonID)
 
-					where 1=1 " . $where . dataReader::makeOrder();
+					where fr.IsLastRow='YES' " . $where . dataReader::makeOrder();
 		return PdoDataAccess::runquery_fetchMode($query, $params);
 	}
 	

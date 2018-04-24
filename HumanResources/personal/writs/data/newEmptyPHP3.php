@@ -3,7 +3,6 @@
 //	Programmer	: S.Taghizadeh
 //	Date		: 94.06
 //-----------------------------
-ini_set("display_errors", "On");
 
 require_once '../../header.inc.php';
 //require_once '../UserRole/UserRole.class.php';

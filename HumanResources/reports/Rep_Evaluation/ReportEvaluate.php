@@ -3,7 +3,6 @@
 // programmer:	Gholami
 // create Date:	93.07
 //---------------------------
-ini_set("display_errors","on"); 
 require_once("../../header.inc.php");
 
 if(!isset($_REQUEST["showRes"]))
@@ -71,8 +70,6 @@ if(isset($_GET['showRes']) && $_GET['showRes'] == 1 )
 	   
 	if(isset($_GET['excel']) && $_GET['excel'] == 'true')
 	{
-		ini_set("display_errors","On") ; 
-	
 		require_once 'excel.php';
 		require_once "php_writeexcel-0.3.0/class.writeexcel_workbook.inc.php";
 		require_once "php_writeexcel-0.3.0/class.writeexcel_worksheet.inc.php";

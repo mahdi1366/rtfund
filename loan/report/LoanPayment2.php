@@ -180,9 +180,10 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= $TotalRemain?></b></td>
 					</tr>
 					<? if($ReqObj->ReqPersonID != SHEKOOFAI){ ?>
-					<tr>
-						<td>مبلغ قابل پرداخت در صورت تسویه وام :</td>
-						<td><b><?= $DefrayAmount ?></b></td>
+			 		<tr>
+						<!--<td>مبلغ قابل پرداخت در صورت تسویه وام :</td>
+						<td><b><?= $DefrayAmount ?></b></td>-->
+						<td></td><td></td>
 					</tr>
 					<? } ?>
 				</table>
@@ -193,7 +194,7 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg->generateReport();
 	
-	echo "<br>" . $report2;	
+	//echo "<br>" . $report2;	
 	
 	die();
 }
