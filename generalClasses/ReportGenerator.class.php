@@ -798,7 +798,7 @@ class ReportGenerator {
 			if(strpos($key, self::$FieldPrefix) !== false)
 			{
 				$field = str_replace(self::$FieldPrefix, "", $key);
-				$tempColumns[ $_POST[self::$OrderPrefix . $field ] ] = $columnObjectArr[str_replace("*", ".", $field) ];
+				$tempColumns[ $_POST[self::$OrderPrefix . $field ] ] = $columnObjectArr[ $field ];
 			}
 		
 		ksort($tempColumns);
@@ -842,7 +842,7 @@ class ReportGenerator {
 			if(strpos($key, self::$FieldPrefix) !== false)
 			{
 				$field = str_replace(self::$FieldPrefix, "", $key);
-				$tempColumns[ $_POST[self::$OrderPrefix . $field ] ] = str_replace("*", ".", $field);
+				$tempColumns[ $_POST[self::$OrderPrefix . $field ] ] = $field;
 			}
 		
 		ksort($tempColumns);
@@ -1240,7 +1240,7 @@ class ReportColumn {
 
 	public function ReportColumn($header, $field, $renderFunction = "", $renderParams = "") {
 		$this->header = $header;
-		$this->field = str_replace("*", ".", $field);
+		$this->field = $field;
 		$this->renderFunction = $renderFunction;
 		$this->renderParams = $renderParams;
 		$this->HaveSum = -1;
