@@ -9,7 +9,7 @@ ob_start();
 $fp = fopen("/home/krrtfir/public_html/storage/errors.txt", "w");
 //$fp = fopen(getenv("DOCUMENT_ROOT"). "/storage/errors.txt", "w");
 
-//ini_set("MAX_EXECUTION_TIME",300);
+ini_set("MAX_EXECUTION_TIME",3000);
 set_include_path("/home/krrtfir/public_html/generalClasses");
 //set_include_path(getenv("DOCUMENT_ROOT") . "/generalClasses");
 
@@ -36,7 +36,7 @@ $alarms = PdoDataAccess::runquery("select * from NTC_alarms
 
 foreach($alarms as $row)
 {
-	$query = $row["TableName"] != "" ? "select * from " . $row["TableName"] . " where 1=1" : $row["QueryString"];
+	$query = $row["QueryString"];
 	$query .= " AND DATE_ADD(".$row["DateField"].", INTERVAL ".
 			(($row["compute"] == "BEFORE" ? 1 : -1)*$row["days"])." DAY) = substr(".PDONOW.",1,10)";
 	
