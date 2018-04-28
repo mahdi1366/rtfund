@@ -65,7 +65,7 @@ function ShowInfo(&$errorMsg){
 	echo $rpt->generateReport();
 	echo "</center>";
 	
-	require_once 'PrintWarrenty.php';
+	//require_once 'PrintWarrenty.php';
 	
 	$_REQUEST["ObjectID"] = $_POST["RequestID"];
 	$_REQUEST["DocType"] = "69,70";

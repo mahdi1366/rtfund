@@ -7,7 +7,7 @@
  * Date : 1395/09/22
  */
 
-require_once getenv("DOCUMENT_ROOT") . "/generalClasses/htmlpurifier-4.8.0/HTMLPurifier.auto.php";
+require_once "htmlpurifier-4.8.0/HTMLPurifier.auto.php";
 
 class InputValidation {
     /* we used const in methodes also in all over System,Programmers must use this Patterns */

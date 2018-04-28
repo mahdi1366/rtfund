@@ -5,7 +5,7 @@
  * Date : 1389-10-15
  */
 
-require_once getenv("DOCUMENT_ROOT") . "/generalClasses/InputValidation.class.php";
+require_once "InputValidation.class.php";
 
 
 class DataMember extends InputValidation{

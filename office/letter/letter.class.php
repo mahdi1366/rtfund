@@ -520,7 +520,7 @@ class OFC_RefLetters extends OperationClass{
 	public $LetterID;
 	public $RefLetterID;
 	
-	public function Remove($LetterID, $RefLetterID){
+	public function RemoveRef($LetterID, $RefLetterID){
 		
 		if(!PdoDataAccess::delete(self::TableName, " LetterID=? AND RefLetterID=?", 
 				array($LetterID, $RefLetterID)))

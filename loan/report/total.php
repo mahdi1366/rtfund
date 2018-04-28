@@ -62,6 +62,7 @@ $page_rpg->addColumn("جمع مبلغ اقساط سررسید شده", "installm
 $page_rpg->addColumn("مبلغ آخرین پرداخت", "LastPayAmount");
 $page_rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount");
 $page_rpg->addColumn("مانده قابل پرداخت", "remainder");
+$page_rpg->addColumn("مبلغ تاخیر کل", "ForfeitAmount");
 
 function MakeWhere(&$where, &$pay_where, &$whereParam){
 
@@ -282,6 +283,7 @@ function GetData($mode = "list"){
 		$ComputeArr = LON_requests::ComputePayments($dataTable[$i]["RequestID"], $dt);
 		$TotalRemain = LON_requests::GetTotalRemainAmount($dataTable[$i]["RequestID"], $ComputeArr);
 		$dataTable[$i]["remainder"] = $TotalRemain;
+		$dataTable[$i]["ForfeitAmount"] = $ComputeArr[count($ComputeArr)-1]["ForfeitAmount"];
 	}
 	
 	return $dataTable; 
@@ -352,6 +354,10 @@ function ListData($IsDashboard = false){
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	$col = $rpg->addColumn("مانده قابل پرداخت", "remainder", "ReportMoneyRender");
+	$col->ExcelRender = false;
+	$col->EnableSummary();
+	
+	$col = $rpg->addColumn("مبلغ تاخیر کل", "ForfeitAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	

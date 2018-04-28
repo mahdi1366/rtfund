@@ -1,0 +1,2 @@
+/usr/bin/php /home/krrtfir/public_html/framework/notice/AlarmExecute.php
+

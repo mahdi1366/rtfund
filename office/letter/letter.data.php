@@ -1070,7 +1070,7 @@ function SaveRefLetter(){
 function DeleteRefLetter(){
 	
 	$obj = new OFC_RefLetters();
-	$result = $obj->Remove($_POST["LetterID"], $_POST["RefLetterID"]);
+	$result = $obj->RemoveRef($_POST["LetterID"], $_POST["RefLetterID"]);
 	
 	echo Response::createObjectiveResponse($result, "");
 	die();

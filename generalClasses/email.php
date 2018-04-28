@@ -1,6 +1,6 @@
 <?php
 
-function SendEmail($ToEmail, $subject, $body, $attachmets = array()){
+function SendEmail($ToEmail, $subject, $body, $attachmets = array(), &$error = ""){
 	
 	$from = smtp_config::$FromAddress;
 	$SMTP_server = smtp_config::$server;
@@ -31,7 +31,10 @@ function SendEmail($ToEmail, $subject, $body, $attachmets = array()){
 	foreach($attachmets as $row)
 		$mail->AddAttachment ($row["path"], $row["name"]);
 
-	return $mail->Send();
+	$result = $mail->Send();
+	if(!$result)
+		$error = $mail->ErrorInfo;
+	return $result;
 }
 
 class SMTP {

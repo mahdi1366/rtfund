@@ -93,7 +93,7 @@ foreach($dt as $file)
 	{
 		$FileContent = $file["FileContent"] . 
 		file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" .	$file["RowID"] . "." . $file["FileType"]);
-		echo "<img src=" . data_uri($FileContent, 'image/jpeg') . " /></br>";
+		echo "<img style='width:100%' src=" . data_uri($FileContent, 'image/jpeg') . " /></br>";
 	}
 	else
 	{

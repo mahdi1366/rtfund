@@ -48,9 +48,15 @@ class DataAudit
   		//------------------- fill data members --------------------
   		$this->DataAuditID = PDONULL;
   		$this->PersonID = isset($_SESSION["USER"]["PersonID"]) ? $_SESSION["USER"]["PersonID"] : "";
-  		
   		$this->SystemID = SYSTEMID;
-  		$this->PageName = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : $_SERVER['SCRIPT_FILENAME'];
+		
+  		if(isset($_SERVER['HTTP_REFERER']))
+			$this->PageName = $_SERVER['HTTP_REFERER'];
+		else if(isset($_SERVER['SCRIPT_FILENAME']))
+			$this->PageName = $_SERVER['SCRIPT_FILENAME'];
+		else 
+			$this->PageName = "";
+		
   		$this->IPAddress = $_SESSION['LIPAddress'];
   		
   		$this->ActionTime = PDONOW;
