@@ -234,6 +234,7 @@ NTC_Alarms.prototype.AddNew = function(){
 	
 	this.MainPanel.show();
 	this.MainPanel.getForm().reset();
+	NTC_AlarmsObject.MainPanel.down("[itemId=ObjectItems]").update();
 }
 
 NTC_Alarms.prototype.EditAlarm = function(){
@@ -312,7 +313,7 @@ NTC_Alarms.prototype.DeleteAlarm = function(){
 
 </script>
 <center>
+	<br> کلیه آلارم های تعریف شده ساعت 8 صبح هر روز به صورت اتومات اجرا می گردند.
 	<div><div id="operationInfo"></div></div>
-	<br>
 	<div id="DivGrid"></div>	
 </center>
