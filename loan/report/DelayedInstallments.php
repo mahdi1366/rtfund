@@ -80,6 +80,7 @@ if(!empty($_REQUEST["EXCEL"]))
 	$rpt->addColumn("موبایل", "mobile");
 	$rpt->addColumn("شماره پیامک", "SmsNo");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
+	$rpt->addColumn("تاریخ آخرین قسط", "LastInstallmentDate","ReportDateRender");
 	$rpt->addColumn("سررسید", "InstallmentDate","ReportDateRender");
 	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
 	$rpt->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
