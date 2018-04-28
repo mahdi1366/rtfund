@@ -17,7 +17,7 @@ function RealRender($row, $value){
 }
 	
 $page_rpg = new ReportGenerator("mainForm","LoanReport_totalObj");
-$page_rpg->addColumn("شماره وام", "r*RequestID");
+$page_rpg->addColumn("شماره وام", "RRequestID");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
 $page_rpg->addColumn("عنوان طرح", "PlanTitle");	
 $page_rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
@@ -159,6 +159,7 @@ function GetData($mode = "list"){
 	MakeWhere($where, $pay_where, $whereParam);
 	
 	$query = "select r.*,l.*,p.*,
+				r.RequestID as RRequestID,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
@@ -299,7 +300,7 @@ function ListData($IsDashboard = false){
 		return ($value == "YES") ? "خاتمه" : "جاری";
 	}
 	
-	$rpg->addColumn("شماره وام", "r*RequestID");
+	$rpg->addColumn("شماره وام", "RRequestID");
 	$rpg->addColumn("نوع وام", "LoanDesc");
 	$rpg->addColumn("عنوان طرح", "PlanTitle");	
 	$rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
