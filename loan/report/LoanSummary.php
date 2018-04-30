@@ -151,7 +151,7 @@ BeginReport();
 					<td>شماره فیش/پیگیری/چک</td>
 				</tr>
 				<?
-					$dt = LON_BackPays::SelectAll("RequestID=?", array($RequestID));
+					$dt = LON_BackPays::SelectAll("RequestID=? order by PayDate", array($RequestID));
 					$index = 1;
 					$sum = 0;
 					foreach($dt as $row)
