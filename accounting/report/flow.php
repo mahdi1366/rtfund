@@ -211,8 +211,7 @@ function GetData(){
 				left join ACC_tafsilis t using(TafsiliID)
 				left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)
 				left join ACC_tafsilis t2 on(di.TafsiliID2=t2.TafsiliID)
-			where d.CycleID=" . $_SESSION["accounting"]["CycleID"] . " AND 
-				d.DocDate < :fd";
+			where d.DocDate < :fd";
 		
 		$where = "";
 		$whereParam = array(":fd" => DateModules::shamsi_to_miladi($_REQUEST["fromDate"], "-"));
