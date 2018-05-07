@@ -371,7 +371,7 @@ function GetAllTafsilis() {
 	$whereParam = array();
 	$whereParam[":g"] = $_GET["TafsiliType"];
 	
-	$field = isset($_GET ["fields"]) ? $_GET ["fields"] : "concat(TafsiliID, TafsiliDesc)";
+	$field = isset($_GET ["fields"]) ? $_GET ["fields"] : "concat(TafsiliCode,' ', TafsiliDesc)";
 	if (isset($_GET ["query"]) && $_GET ["query"] != "") {
 		$where .= " AND " . $field . " LIKE :qry ";
 		$whereParam[":qry"] = "%" . $_GET["query"] . "%";
@@ -400,6 +400,9 @@ function GetAllTafsilis() {
 	}
 
 	$temp = ACC_tafsilis::SelectAll($where . dataReader::makeOrder(), $whereParam);
+	
+	//if($_SESSION["USER"]["UserName"] == "admin")
+	//	echo PdoDataAccess::GetLatestQueryString ();
 	
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);

@@ -10,7 +10,7 @@ require_once "ReportGenerator.class.php";
 if(isset($_SESSION["USER"]["portal"]))
 {
 	$_SESSION["accounting"]["CycleID"] = substr(DateModules::shNow(),0,4);
-}
+} 
 
 $query = "select sum(CreditorAmount-DebtorAmount) amount, 
 				ShareNo,
@@ -22,7 +22,7 @@ $query = "select sum(CreditorAmount-DebtorAmount) amount,
 		join ACC_docs using(DocID)
 		join ACC_tafsilis using(TafsiliID)
 		join BSC_persons on(ObjectID=PersonID)
-	where CostID=" . COSTID_share . " AND CycleID=" . $_SESSION["accounting"]["CycleID"] . 
+	where CostID=" . COSTID_share . /*" AND CycleID=" . $_SESSION["accounting"]["CycleID"] . */
 	" group by TafsiliID";
 
 $query .= " order by amount desc";
@@ -86,12 +86,10 @@ $percentGovermental = "<table width=100% style=font-weight:bold;font-family:taho
 
 if(isset($_REQUEST["print"]))
 {
-	echo '<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>';
-	echo "<body dir=rtl>";
+	BeginReport();
 	$rpg->generateReport();
 	echo "<br>" . $percentGovermental . "<br>";
-	echo "</body>";
-	die();
+	die(); 
 }
 
 ?>

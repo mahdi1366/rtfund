@@ -188,6 +188,19 @@ class LON_requests extends PdoDataAccess{
 	
 	//-------------------------------------
 	
+	static function GetFirstPayDate($RequestID){
+		
+		$dt = PdoDataAccess::runquery("select * from LON_payments where RequestID=? order by PayDate",
+				array($RequestID));
+		if(count($dt) == 0)
+		{
+			$obj = LON_ReqParts::GetValidPartObj($RequestID);
+			return $obj->PartDate;
+		}
+		
+		return $dt[0]["PayDate"];
+	}
+	
 	static function FreeDobellWageComputeInstallment($partObj, $installmentArray, $ComputeDate = "", $ComputeWage = 'YES'){
 
 		if(!empty($ComputeDate))
@@ -198,7 +211,8 @@ class LON_requests extends PdoDataAccess{
 		}
 		else
 		{
-			$ComputeDate = DateModules::miladi_to_shamsi($partObj->PartDate);
+			$FirstPay = self::GetFirstPayDate($partObj->RequestID);
+			$ComputeDate = DateModules::miladi_to_shamsi($FirstPay);
 			$amount = self::GetLoanPureAmount($partObj->RequestID, $partObj, true);
 			$TotalPureAmount = $amount;
 			
@@ -1003,7 +1017,7 @@ class LON_requests extends PdoDataAccess{
 		for($i=1; $i<count($dt); $i++)
 		{
 			$amount += Tanzil($dt[$i]["PayAmount"], $PartObj->CustomerWage, $dt[$i]["PayDate"], 
-					$PartObj->PartDate);
+					$dt[0]["PayDate"]);
 		}
 		
 		$result = self::GetDelayAmounts($RequestID, $PartObj);

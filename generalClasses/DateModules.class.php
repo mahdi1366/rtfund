@@ -32,7 +32,7 @@ class DateModules
 	 * @param Y-m-d $date
 	 * @return Y-m-d $date
 	 */
-	static function miladi_to_shamsi($date)
+	static function miladi_to_shamsi($date, $delimiter = "/")
 	{
 		if($date == "0000-00-00" || $date == "0000-00-00 00:00:00")
 			return '';
@@ -60,7 +60,7 @@ class DateModules
 		if ($sh[0]<10)
 			$sh[0]='0'.$sh[0];
 		
-		return $sh[2]."/".$sh[1].'/'.$sh[0];
+		return $sh[2].$delimiter.$sh[1].$delimiter.$sh[0];
 	}
 	
 	/**

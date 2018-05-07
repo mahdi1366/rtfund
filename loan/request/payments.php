@@ -25,6 +25,7 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=GetPa
 $dg->addColumn("", "PayID","", true);
 $dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "StatusID","", true);
+$dg->addColumn("", "DocID","", true);
 
 $col = $dg->addColumn("تاریخ پرداخت", "PayDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
@@ -115,11 +116,12 @@ PartPayment.DeleteRender = function(v,p,r){
 
 PartPayment.DocRender = function(v,p,r){
 	
+	st = "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+v+"</a>";
+	
 	if(PartPaymentObject.StatusID != "<?= LON_REQ_STATUS_CONFIRM ?>")
-		return "";
+		return st;
 	if(r.data.LocalNo != "" && r.data.LocalNo != null)
 	{
-		st = v;
 		if(r.data.StatusID == "<?= ACC_STEPID_RAW ?>")
 		{
 			st += "<div align='center' title='برگشت سند' class='undo' "+

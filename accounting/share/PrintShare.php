@@ -28,7 +28,7 @@ if(isset($_REQUEST["print"]))
 				
 	from ACC_DocItems 
 		join ACC_docs using(DocID)
-		where CostID=" . COSTID_share . " AND CycleID=" . $CycleID;
+		where CostID=" . COSTID_share; /*" AND CycleID=" . $CycleID*/
 	$sumRecord = PdoDataAccess::runquery($query, $param);
 	if(count($sumRecord) == 0)
 	{
@@ -46,7 +46,7 @@ if(isset($_REQUEST["print"]))
 		join ACC_docs using(DocID)
 		join ACC_tafsilis using(TafsiliID)
 		join BSC_persons on(ObjectID=PersonID)
-	where CostID=" . COSTID_share . " AND CycleID=" . $CycleID . 
+	where CostID=" . COSTID_share /* . " AND CycleID=" . $CycleID */. 
 	($TafsiliID != "" ? " AND TafsiliID=?" : "") .
 	" group by TafsiliID";
 

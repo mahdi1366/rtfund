@@ -698,6 +698,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$CostCode_bank = FindCostID("101");
 	$CostCode_todiee = FindCostID("200-".$LoanObj->_BlockCode."-01");
 	$CostCode_FundComit_wage = FindCostID("721-".$LoanObj->_BlockCode."-52-03");
+	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
 	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
@@ -871,7 +872,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$itemObj->SourceID2 = $PartObj->PartID;
 	$itemObj->SourceID3 = $PayObj->PayID;
 	$itemObj->Add($pdo);
-	// ----------------------------- bank --------------------------------
+	// ----------------------------- wage --------------------------------
 	$AgentWage = 0;
 	if($PartObj->CustomerWage*1 > $PartObj->FundWage*1 && $PartObj->AgentReturn == "CUSTOMER")
 	{
@@ -889,7 +890,23 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 		unset($itemObj->TafsiliID2);
 		$itemObj->Add($pdo);
 	}
-	
+	if($PartObj->CustomerWage*1 <= $PartObj->FundWage*1 && $PartObj->WageReturn == "CUSTOMER")
+	{
+		$FundWage = $PayAmount*$PartObj->FundWage/100;
+		
+		unset($itemObj->ItemID);
+		unset($itemObj->TafsiliType);
+		unset($itemObj->TafsiliID);
+		$itemObj->CostID = $CostCode_wage;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $ReqPersonTafsili;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $FundWage;
+		unset($itemObj->TafsiliType2);
+		unset($itemObj->TafsiliID2);
+		$itemObj->Add($pdo);
+	}
+	// ----------------------------- bank --------------------------------
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
 	$itemObj->CostID = $CostCode_bank;
@@ -1871,6 +1888,28 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 		
 	}
 	//--------------------------------------------------------
+	// compute the differnce of PartPAy
+	
+	if($PreviousPartObj->PartAmount*1 <> $NewPartObj->PartAmount*1)
+	{
+		$diff = $PreviousPartObj->PartAmount*1 - $NewPartObj->PartAmount*1;
+				
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_Loan;
+		$itemObj->DebtorAmount = $diff<0 ? -1*$diff : 0;
+		$itemObj->CreditorAmount = $diff>0 ? $diff : 0;
+		$itemObj->details = "اختلاف مبلغ پرداخت";
+		$itemObj->Add($pdo);
+		
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_CustomerComit;
+		$itemObj->DebtorAmount = $diff>0 ? $diff : 0;
+		$itemObj->CreditorAmount = $diff<0 ? -1*$diff : 0;
+		$itemObj->details = "اختلاف مبلغ پرداخت";
+		$itemObj->Add($pdo);
+	}
+	
+	//--------------------------------------------------------
 	// compute the differnce of wage of INSTALLMENT
 	$PreviousInstallmentWage = 0;
 	if($PreviousPartObj->AgentReturn == "INSTALLMENT")
@@ -1885,19 +1924,20 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 		$diff = $NewInstallmentWage - $PreviousInstallmentWage ;
 		
 		unset($itemObj->ItemID);
-		$itemObj->DocID = $obj->DocID;
 		$itemObj->CostID = $CostCode_Loan;
 		$itemObj->DebtorAmount = $diff>0 ? $diff : 0;
 		$itemObj->CreditorAmount = $diff<0 ? -1*$diff : 0;
+		$itemObj->details = "اختلاف کارمزد";
 		$itemObj->Add($pdo);
 		
 		unset($itemObj->ItemID);
 		$itemObj->CostID = $CostCode_CustomerComit;
 		$itemObj->CreditorAmount = $diff>0 ? $diff : 0;
 		$itemObj->DebtorAmount = $diff<0 ? -1*$diff : 0;
+		$itemObj->details = "اختلاف کارمزد";
 		$itemObj->Add($pdo);
 		
-		if($diff < 0)
+		/*if($diff < 0)
 		{
 			$backPayObj = new LON_BackPays();
 			$backPayObj->RequestID = $ReqObj->RequestID;
@@ -1907,7 +1947,7 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 			$backPayObj->PayType = BACKPAY_PAYTYPE_CORRECT;
 			$backPayObj->details = "اختلاف کارمزد حاصل از تغییر شرایط پرداخت";
 			$backPayObj->Add($pdo);
-		}
+		}*/
 	}
 	//---------------------------------------------------------
 	if(ExceptionHandler::GetExceptionCount() > 0)
