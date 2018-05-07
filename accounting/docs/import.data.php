@@ -3882,7 +3882,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		$DocObj->DocType = $IsExtend ? DOCTYPE_WARRENTY_EXTEND : DOCTYPE_WARRENTY;
 		$DocObj->description = ($IsExtend ? "تمدید " : "") . 
 				"ضمانت نامه " . $ReqObj->_TypeDesc . " به شماره " . 
-				$ReqObj->RequestID . " به نام " . $ReqObj->_fullname;
+				$ReqObj->RefRequestID . " به نام " . $ReqObj->_fullname;
 
 		if(!$DocObj->Add($pdo))
 		{
