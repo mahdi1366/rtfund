@@ -14,9 +14,12 @@ if(empty($_POST["LetterID"]))
 $LetterID = $_POST["LetterID"];
 $SendID = !empty($_POST["SendID"]) ? $_POST["SendID"] : "0";
 $LetterObj = new OFC_letters($LetterID);
-$access = $LetterObj->IsSigned == "YES" ? false : true;
-$access = $SendID != "0" ? true : $access;
-$access = isset($_SESSION["USER"]["portal"]) ? false : $access;
+
+$AddAccess = true;
+$DelAccess = true;
+$DelAccess = $LetterObj->IsSigned == "YES" ? false : true;
+$DelAccess = $SendID != "0" ? true : $DelAccess;
+$AddAccess = isset($_SESSION["USER"]["portal"]) ? false : $AddAccess;
 
 //------------------------------------------------------
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "../dms/dms.data.php?" .
@@ -44,7 +47,7 @@ $col->renderer = "function(v,p,r){return ManageDocument.FileRender(v,p,r)}";
 $col->align = "center";
 $col->width = 50;
 
-if($access)
+if($AddAccess || $DelAccess)
 {
 	$col = $dg->addColumn("عملیات", "", "");
 	$col->renderer = "function(v,p,r){return ManageDocument.OperationRender(v,p,r)}";
@@ -69,7 +72,8 @@ ManageDocument.prototype = {
 
 	LetterID : <?= $LetterID ?>,
 	SendID : <?= $SendID ?>,
-	access : <?= $access ? "true" : "false" ?>,
+	AddAccess : <?= $AddAccess ? "true" : "false" ?>,
+	DelAccess : <?= $DelAccess ? "true" : "false" ?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -77,7 +81,7 @@ ManageDocument.prototype = {
 };
 
 function ManageDocument(){
-	if(this.access)
+	if(this.AddAccess)
 	{
 		this.formPanel = new Ext.form.Panel({
 			renderTo: this.get("MainForm"),      
@@ -124,8 +128,6 @@ function ManageDocument(){
 	this.grid.render(this.get("div_grid"));
 }
 
-ManageDocumentObject = new ManageDocument();
-
 ManageDocument.FileRender = function(v,p,r){
 	
 	if(v == "false")
@@ -148,15 +150,19 @@ ManageDocument.OperationRender = function(v,p,r){
 	if(r.data.IsConfirm == "YES" || r.data.RegPersonID != "<?= $_SESSION["USER"]["PersonID"] ?>")
 		return "";
 	
-	return "<div align='center' title='ویرایش' class='edit' "+
+	var st = "";
+	if(ManageDocumentObject.AddAccess)
+		st += "<div align='center' title='ویرایش' class='edit' "+
 		"onclick='ManageDocumentObject.EditDocument();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:20px;height:16;float:right'></div>" +
-	
-	"<div align='center' title='حذف' class='remove' "+
+		"cursor:pointer;width:20px;height:16;float:right'></div>";
+	if(ManageDocumentObject.DelAccess)
+		st += "<div align='center' title='حذف' class='remove' "+
 		"onclick='ManageDocumentObject.DeleteDocument();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:20px;height:16;float:right'></div>" ;		
+		
+	return st;
 }
 
 ManageDocument.prototype.EditDocument = function(){
@@ -236,6 +242,8 @@ ManageDocument.prototype.DeleteDocument = function(){
 		});
 	});
 }
+
+ManageDocumentObject = new ManageDocument();
 
 </script>
 <div id="MainForm"></div>
