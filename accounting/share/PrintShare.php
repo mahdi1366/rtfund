@@ -115,7 +115,7 @@ td {
 				می باشد و سهام مذکور در دفتر ثبت سهام تحت شماره
 				<b><u> &nbsp;&nbsp;" . $dataTable[$i]["ShareNo"] . "</u></b> &nbsp;( " . CurrencyModulesclass::CurrencyToString($dataTable[$i]["ShareNo"]) . " ) &nbsp;&nbsp; 
 				ثبت گردیده است.
-				<br><br>
+				<br>
 				</td>
 			</tr>
 			<tr>
