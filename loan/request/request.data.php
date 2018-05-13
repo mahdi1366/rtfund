@@ -717,7 +717,7 @@ function GetInstallments(){
 	$RequestID = $_REQUEST["RequestID"];
 	
 	$temp = array();
-	LON_requests::ComputePayments($RequestID, $temp);
+	$Compute = LON_requests::ComputePayments($RequestID, $temp);
 	
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();

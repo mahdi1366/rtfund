@@ -1015,7 +1015,7 @@ class LON_requests extends PdoDataAccess{
 		}
 		$amount = $dt[0]["PayAmount"];
 		for($i=1; $i<count($dt); $i++)
-		{
+		{ 
 			$amount += Tanzil($dt[$i]["PayAmount"], $PartObj->CustomerWage, $dt[$i]["PayDate"], 
 					$dt[0]["PayDate"]);
 		}

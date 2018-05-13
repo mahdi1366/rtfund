@@ -253,8 +253,10 @@ class ATN_traffic extends OperationClass
 				}
 			}
 			//....................................................
+			$ShiftDesc = $returnArr[$i]["FromTime"]." - ".$returnArr[$i]["ToTime"];
 			if( DateModules::GetWeekDay($returnArr[$i]["TrafficDate"], "l") == "Thursday")
 			{
+				$ShiftDesc = $returnArr[$i]["ExceptFromTime"]." - ".$returnArr[$i]["ExceptToTime"];
 				$returnArr[$i]["FromTime"] = $returnArr[$i]["ExceptFromTime"];
 				$returnArr[$i]["ToTime"] = $returnArr[$i]["ExceptToTime"];
 			}
@@ -267,7 +269,8 @@ class ATN_traffic extends OperationClass
 				$returnArr[$i]["TrafficDate"] . "')>" . 
 				DateModules::miladi_to_shamsi($returnArr[$i]["TrafficDate"]) . "</a></td>";
 
-			$returnStr .= "<td>" . ($returnArr[$i]["holiday"] ? $returnArr[$i]["holidayTitle"] : $returnArr[$i]["ShiftTitle"]) . "</td>
+			$returnStr .= "<td data-qtip='".$ShiftDesc."' >" . 
+				($returnArr[$i]["holiday"] ? $returnArr[$i]["holidayTitle"] : $returnArr[$i]["ShiftTitle"]) . "</td>
 				<td>";
 
 			$firstAbsence = 0;

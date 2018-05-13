@@ -212,37 +212,29 @@ function Installment()
 				select : function(combo,records){
 					
 					me = InstallmentObject;
-					
 					me.grid.getStore().proxy.extraParams = {
 						RequestID : this.getValue()
 					};
-					
-					if(!me.grid.isRendered)
+					if(!me.grid.rendered)
 						me.grid.render(me.get("div_grid"));
 					else
 						me.grid.getStore().load();
-					
 					if(records[0].data.IsEnded == "YES")
 					{
 						Ext.MessageBox.alert("","این وام خاتمه یافته است");
 						return;
 					}
 					
-					InstallmentObject.RequestID = this.getValue();
+					me.RequestID = this.getValue();
 					
-					InstallmentObject.PayPanel.show();
-					InstallmentObject.PayPanel.down("[itemId=PayCode]").setValue(
+					me.PayPanel.show();
+					me.PayPanel.down("[itemId=PayCode]").setValue(
 						LoanRFID(records[0].data.RequestID));
 				
-					InstallmentObject.PayPanel.down("[itemId=PayAmount]").setValue(records[0].data.CurrentRemain);	
+					me.PayPanel.down("[itemId=PayAmount]").setValue(records[0].data.CurrentRemain);	
 				}
 			}
 		}]
-	});
-	
-	this.grid.getStore().on("load", function(store){
-		var r = store.getProxy().getReader().jsonData;
-		InstallmentObject.PayPanel.down("[itemId=PayAmount]").setValue(r.message);
 	});
 	
 	this.PayPanel = new Ext.form.FieldSet({
@@ -264,7 +256,7 @@ function Installment()
 			width: 300,
 			fieldLabel : "مبلغ قابل پرداخت",
 			itemId : "PayAmount"
-		},{
+		}/*,{
 			xtype : "button",
 			border : true,
 			disabled : true,
@@ -272,7 +264,7 @@ function Installment()
 			text : "پرداخت الکترونیک بانک اقتصاد نوین",
 			iconCls : "epay",
 			handler : function(){ InstallmentObject.PayInstallment(); }
-		},{
+		}*/,{
 			xtype : "button",
 			border : true,
 			itemId : "cmp_ayande",
@@ -283,18 +275,10 @@ function Installment()
 		},{
 			xtype : "container",
 			columns : 3,
-			html : "در حال حاضر به دلیل خطای فنی در شبکه پرداخت الکترونیکی شاپرک امکان پرداخت از طریق بانک اقتصاد نوین میسر نمی باشد.",
-			style : "color:red"
-		},{
-			xtype : "container",
-			columns : 3,
 			html : "* برای مشاهده ریز گزارش پرداخت وام خود می توانید از منوی گزارش پرداخت وام استفاده کنید ",
 			cls : "blueText"
 		}]
 	});
-	
-	/*if(<?= $_SESSION["USER"]["UserName"] == "tureini" ? "true" : "false" ?>)
-		this.PayPanel.down("[itemId=cmp_ayande]").show();*/
 }
 
 Installment.HistoryRender = function(v,p,r){

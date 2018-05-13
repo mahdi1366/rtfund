@@ -66,7 +66,7 @@ if(isset($_REQUEST["print"]))
 }
 .page {
 	width: 245mm;
-	height: 160mm;
+	height: 150mm; 
 	margin : 2cm 2cm 0 2cm;
 }
 td {

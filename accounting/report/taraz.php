@@ -96,7 +96,8 @@ function GetData(&$rpg){
 					select CycleID,CostID,di.TafsiliID,di.TafsiliID2,sum(DebtorAmount) StartCycleDebtor,
 							sum(CreditorAmount) StartCycleCreditor
 					from ACC_DocItems di join ACC_docs using(DocID)
-					where DocType=1 AND CycleID=".$_SESSION["accounting"]["CycleID"].
+					where DocType=1 " .
+					(!empty($_POST["CycleID"]) ? " AND CycleID=:c" : "") . 
 					(!empty($_POST["BranchID"]) ? " AND BranchID=:b" : "") . "	
 					group by CostID,TafsiliID,TafsiliID2
 				)tdt on(d.CycleID=tdt.CycleID AND di.CostID=tdt.CostID AND di.TafsiliID=tdt.TafsiliID AND di.TafsiliID2=tdt.TafsiliID2)
@@ -200,6 +201,7 @@ function GetData(&$rpg){
 				(!empty($_REQUEST["TafsiliType"]) ? "&TafsiliType=" . $_REQUEST["TafsiliType"] : "") . 
 				(!empty($_REQUEST["toLocalNo"]) ? "&toLocalNo=" . $_REQUEST["toLocalNo"] : "") .
 				(!empty($_REQUEST["BranchID"]) ? "&BranchID=" . $_REQUEST["BranchID"] : "") .
+				(!empty($_REQUEST["CycleID"]) ? "&CycleID=" . $_REQUEST["CycleID"] : "") .
 				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
 				(!empty($_REQUEST["IncludeStart"]) ? "&IncludeStart=1" : "") .
 				(!empty($_REQUEST["IncludeEnd"]) ? "&IncludeEnd=1" : "") .
@@ -222,6 +224,7 @@ function GetData(&$rpg){
 				(!empty($_REQUEST["TafsiliID"]) ? "&TafsiliID=" . $_REQUEST["TafsiliID"] : "") . 
 				(!empty($_REQUEST["TafsiliType"]) ? "&TafsiliType=" . $_REQUEST["TafsiliType"] : "") . 
 				(!empty($_REQUEST["BranchID"]) ? "&BranchID=" . $_REQUEST["BranchID"] : "") .
+				(!empty($_REQUEST["CycleID"]) ? "&CycleID=" . $_REQUEST["CycleID"] : "") .
 				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
 				"');\" href=javascript:void(0)>" . $value . "</a>";
 	}
@@ -372,11 +375,15 @@ function GetData(&$rpg){
 		$where .= " AND d.BranchID=:b";
 		$whereParam[":b"] = $_POST["BranchID"];
 	}	
+	if(!empty($_POST["CycleID"]))
+	{
+		$where .= " AND d.CycleID=:c";
+		$whereParam[":c"] = $_POST["CycleID"];
+	}	
 	
 	MakeWhere($where, $whereParam);
 	
-	$query = $select . $from . " where 
-		d.CycleID=" . $_SESSION["accounting"]["CycleID"] . $where;
+	$query = $select . $from . " where 1=1 " . $where;
 	$query .= $group != "" ? " group by " . $group : "";
 		
 	$query .= " order by b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode,di.TafsiliID,di.TafsiliID2";
@@ -401,7 +408,7 @@ function ListData($IsDashboard = false){
 	$branches = array();
 	foreach($dt as $row)
 		$branches[ $row["BranchID"] ] = $row["BranchName"];
-	
+			
 	
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
@@ -456,6 +463,9 @@ function ListData($IsDashboard = false){
 	$col->GroupHeader = "مانده پایان دوره";
 	$col->EnableSummary(true);
 
+	//if($_SESSION["USER"]["UserName"] == "admin")
+	//	echo PdoDataAccess::GetLatestQueryString ();
+	
 	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
@@ -466,7 +476,8 @@ function ListData($IsDashboard = false){
 				".$levelsDescArr[$level]. 
 				" <br> ".
 				( empty($_POST["BranchID"]) ? "کلیه شعبه ها" : $branches[$_POST["BranchID"]]) .
-				"<br>" . "دوره سال " . $_SESSION["accounting"]["CycleID"] .
+				"<br>" . 
+				( empty($_POST["CycleID"]) ? "کلیه دوره ها" : "دوره سال " . $_POST["CycleID"]) .
 				"</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
 			. DateModules::shNow() . "<br>";
@@ -535,6 +546,7 @@ function ListData($IsDashboard = false){
 	<input type="hidden" name="IncludeStart" value="<?= !empty($_REQUEST["IncludeStart"]) ? $_REQUEST["IncludeStart"] : "" ?>">
 	<input type="hidden" name="IncludeEnd" value="<?= !empty($_REQUEST["IncludeEnd"]) ? $_REQUEST["IncludeEnd"] : "" ?>">
 	<input type="hidden" name="BranchID" value="<?= !empty($_REQUEST["BranchID"]) ? $_REQUEST["BranchID"] : "" ?>">
+	<input type="hidden" name="CycleID" value="<?= !empty($_REQUEST["CycleID"]) ? $_REQUEST["CycleID"] : "" ?>">
 	<input type="hidden" name="resultColumns" value="<?= $_REQUEST["resultColumns"] ?>">
 	
 	<input type="hidden" name="level1s" id="level1s" value="<?= $_POST["level1s"] ?>">
@@ -769,6 +781,25 @@ function AccReport_taraz()
 			displayField : "BranchName",
 			valueField : "BranchID",
 			hiddenName : "BranchID"
+		},{
+			xtype : "combo",
+			colspan : 4,
+			width : 400,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: "/accounting/global/domain.data.php?task=SelectCycles",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['CycleID','CycleDesc'],
+				autoLoad : true					
+			}),
+			fieldLabel : "دوره",
+			queryMode : 'local',
+			value : "<?= !isset($_SESSION["accounting"]["CycleID"]) ? "" : $_SESSION["accounting"]["CycleID"] ?>",
+			displayField : "CycleDesc",
+			valueField : "CycleID",
+			hiddenName : "CycleID"
 		},{
 			xtype : "displayfield",
 			fieldLabel : "گروه"
