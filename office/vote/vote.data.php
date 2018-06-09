@@ -8,10 +8,35 @@ require_once 'vote.class.php';
 require_once inc_dataReader;
 require_once inc_response;
 
-$task = isset($_POST["task"]) ? $_POST["task"] : (isset($_GET["task"]) ? $_GET["task"] : "");
-if(!empty($task))
-	$task();
+ini_set("display_errors", "On");
 
+$task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
+switch($task)
+{
+	case "SelectAllForms":
+	case "SaveForm":
+	case "DeleteForm":
+	case "selectFormItems":
+	case "CopyForm":
+	case "SelectItems":
+	case "SaveItem":
+	case "DeleteItem":
+	case "MoveItem":
+	case "SelectGroups":
+	case "SaveGroup":
+	case "DeleteGroup":
+	case "MoveGroup":
+	case "SelectMyFilledForms":
+	case "SelectNewVoteForms":
+	case "SaveFilledForm":
+	case "FilledItemsValues":
+	case "SelectFilledForms":
+	case "SelectChart1Data":
+	case "GetFormPersons":
+	case "SaveFormPerson":
+	case "RemoveFormPersons":
+		$task();   
+}
 function SelectAllForms(){
 	
 	$dt = VOT_forms::Get();
@@ -58,7 +83,6 @@ function selectFormItems(){
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
-
 
 function CopyForm(){
 	

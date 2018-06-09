@@ -99,7 +99,7 @@ function ComputeExtraSummary() {
 	die();
 }
 
-function SaveExtraSummary() {
+function SaveExtraSummary($returning = false) {
 
 	$SummaryYear = $_POST["SummaryYear"];
 	$SummaryMonth = $_POST["SummaryMonth"];
@@ -138,6 +138,10 @@ function SaveExtraSummary() {
 	}
 	
 	$pdo->commit();
+	
+	if($returning)
+		return true;
+	
 	echo Response::createObjectiveResponse(true, "");
 	die();	
 }
@@ -147,6 +151,8 @@ function ConfirmSummary() {
 	$SummaryYear = $_POST["SummaryYear"];
 	$SummaryMonth = $_POST["SummaryMonth"];
 
+	SaveExtraSummary(true);
+	
 	PdoDataAccess::runquery("update ATN_ExtraSummary set StatusCode='CONFIRM' "
 			. " where SummaryYear=? and SummaryMonth=?", array(
 				$SummaryYear, $SummaryMonth

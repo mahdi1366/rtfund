@@ -67,7 +67,7 @@ if(isset($_REQUEST["print"]))
 .page {
 	width: 245mm;
 	height: 150mm; 
-	margin : 2cm 2cm 0 2cm;
+	margin : 2.5cm 2cm 0 2cm; 
 }
 td {
 	font-family: IranNastaliq;

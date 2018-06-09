@@ -100,7 +100,11 @@ function VoteResult()
 		width : 600,
 		height : 330,
 		autoScroll : true,
-		frame : true
+		frame : true,
+		loader : {
+			url : this.address_prefix + "FormInfo.php",
+			scripts : true
+		}
 	});
 	
 	this.GroupStore = new Ext.data.Store({
@@ -285,100 +289,14 @@ VoteResult.prototype.LoadResults = function(FormID){
 
 VoteResult.prototype.PreviewForm = function(){
 	
-	if(!this.ValuesStore)
-	{
-		this.ValuesStore = new Ext.data.Store({
-			fields: ['ItemID','ItemValue','ItemType',"ItemTitle", 'ItemValues','GroupID','GroupDesc'],
-			proxy: {
-				type: 'jsonp',
-				url: this.address_prefix + "../../office/vote/vote.data.php?task=FilledItemsValues",
-				reader: {
-					root: 'rows',
-					totalProperty: 'totalCount'
-				}
-			}
-		});
-	}
-	
-	mask = new Ext.LoadMask(this.MainPanel, {msg:'در حال بارگذاری ...'});
-	mask.show();
-	
 	var record = this.grid.getSelectionModel().getLastSelected();
-	this.ValuesStore.load({
+	
+	this.MainPanel.show();
+	this.MainPanel.loader.load({
 		params : {
+			ExtTabID : this.MainPanel.getEl().id,
 			FormID : record.data.FormID,
 			PersonID : record.data.PersonID
-		},
-		callback : function(){
-			
-			parent = VoteResultObject.MainPanel;
-			parent.removeAll();
-			
-			var CurGroupID = 0;
-			for(i=0; i<this.totalCount; i++)
-			{
-				record = this.getAt(i);
-				if(CurGroupID != record.data.GroupID)
-				{
-					parent.add({
-						xtype : "fieldset",
-						title : record.data.GroupDesc,
-						itemId : "Group_" + record.data.GroupID,
-						layout : {
-							type : "table",
-							columns : 2
-						}
-					});
-					fsparent = parent.down("[itemId=Group_" + record.data.GroupID + "]");
-					CurGroupID = record.data.GroupID;
-				}
-				
-				if(record.data.ItemType == "radio")
-				{
-					fsparent.add({
-						xtype : "displayfield",
-						width : 300,
-						value : record.data.ItemTitle
-					});
-					var items = new Array();
-					arr = record.data.ItemValues.split("#");
-					for(j=0; j<arr.length; j++)
-						items.push({
-							boxLabel : arr[j],
-							name : "elem_" + record.data.ItemID,
-							readOnly : true,
-							inputValue : arr[j],
-							checked : arr[j] == record.data.ItemValue ? true : false,
-							width : 100
-						});
-					fsparent.add({
-						xtype : "radiogroup",
-						items : items
-					});
-				}
-				else
-				{
-					if(record.data.ItemType == "textarea")
-					{
-						fsparent.add({
-							xtype : "displayfield",
-							value : record.data.ItemTitle,
-							colspan : 2,
-							width : 590
-						});
-					}
-					fsparent.add({
-						xtype: "displayfield",
-						style : "line-height: 30px;",
-						fieldCls : record.data.ItemType == "displayfield" ? "" : "blueText",
-						fieldLabel : record.data.ItemType == "displayfield" ? "" : record.data.ItemTitle ,
-						value : record.data.ItemType == "displayfield" ? record.data.ItemTitle : record.data.ItemValue,
-						colspan : 2,
-						width : 590
-					});
-				}
-			}
-			mask.hide();
 		}
 	});
 }

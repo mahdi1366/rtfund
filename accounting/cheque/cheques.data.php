@@ -83,7 +83,8 @@ function selectIncomeCheques() {
 	
 	$query = "
 		select i.*,
-			case when i.CostID is null then group_concat(concat('[ وام ',bp.RequestID,'] ',t2.TafsiliDesc) SEPARATOR '<br>')
+			case when i.CostID is null OR LoanRequestID is not null 
+			then group_concat(concat('[ وام ',r.RequestID,'] ',t2.TafsiliDesc) SEPARATOR '<br>')
 				else t1.TafsiliDesc end fullname,
 			case when i.CostID is null then group_concat(concat_ws('-', bb1.blockDesc, bb2.blockDesc) SEPARATOR '<br>') 
 				else concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) end CostDesc,
@@ -100,7 +101,8 @@ function selectIncomeCheques() {
 			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
 			
 			left join LON_BackPays bp using(IncomeChequeID)
-			left join LON_requests using(RequestID)
+			left join LON_requests r on(
+			if(bp.RequestID is null,i.LoanRequestID=r.RequestID,bp.RequestID=r.RequestID))
 			left join LON_loans l using(LoanID)
 			left join ACC_CostCodes cc2 on(cc2.level1=" . BLOCKID_LOAN . " AND cc2.level2=l.blockID)
 			left join ACC_blocks bb1 on(cc2.level1=bb1.BlockID)
@@ -261,7 +263,7 @@ function SaveIncomeCheque(){
 	//--------------------------------------------
 	if(!RegisterOuterCheque($DocID,$obj,$pdo))
 	{
-		print_r(ExceptionHandler::PopAllExceptions());
+		//print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse(false,ExceptionHandler::GetExceptionsToString());
 		die();
 	}
@@ -439,28 +441,42 @@ function SaveLoanCheque(){
 		$obj = new ACC_IncomeCheques();
 		PdoDataAccess::FillObjectByJsonData($obj, $cheque);
 		$obj->ChequeStatus = INCOMECHEQUE_NOTVOSUL;
+		
+		if($_POST["ChequeFor"] == "INSTALLMENT")
+		{
+			//................. add back pays ........................
+			$bobj = new LON_BackPays();
+			$bobj->PayDate = $obj->ChequeDate;
+			$bobj->IncomeChequeID = $obj->IncomeChequeID;
+			$bobj->RequestID = $_POST["RequestID"];
+			$bobj->PayAmount = $obj->ChequeAmount;
+			$bobj->PayType = BACKPAY_PAYTYPE_CHEQUE;
+			$bobj->Add($pdo);			
+		}
+		else
+		{
+			$ReqObj = new LON_requests($_POST["RequestID"]);
+			$obj->CostID = FindCostID("190-436");
+			$obj->LoanRequestID = $_POST["RequestID"];
+			$obj->TafsiliType = TAFTYPE_PERSONS;
+			$obj->TafsiliID = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
+			if(!empty($ReqObj->ReqPersonID))
+			{
+				$obj->TafsiliType2 = TAFTYPE_PERSONS;
+				$obj->TafsiliID2 = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
+			}
+		}
+		
 		if(!$obj->Add($pdo))
 		{
 			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 			die();
 		}
-		//................. add back pays ........................
-		$bobj = new LON_BackPays();
-		$bobj->PayDate = $obj->ChequeDate;
-		$bobj->IncomeChequeID = $obj->IncomeChequeID;
-		$bobj->RequestID = $_POST["RequestID"];
-		$bobj->PayAmount = $obj->ChequeAmount;
-		$bobj->PayType = BACKPAY_PAYTYPE_CHEQUE;
-		$bobj->Add($pdo);
 		//.......................................................
-
 		ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, $obj->ChequeStatus, $pdo);
-
 		//--------------------------------------------
 		$DocID = RegisterOuterCheque($DocID,$obj,$pdo);
-		
 		if(!$DocID){
-			print_r(ExceptionHandler::PopAllExceptions());
 			echo Response::createObjectiveResponse(false,ExceptionHandler::GetExceptionsToString());
 			die();
 		}

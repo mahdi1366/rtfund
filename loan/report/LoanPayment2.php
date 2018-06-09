@@ -36,6 +36,12 @@ if(isset($_REQUEST["show"]))
 		$TotalRemain = "وام خاتمه یافته";
 		$DefrayAmount = "وام خاتمه یافته";
 	}
+	else if($ReqObj->StatusID == LON_REQ_STATUS_DEFRAY)
+	{
+		$CurrentRemain = "وام تسویه شده";
+		$TotalRemain = "وام تسویه شده";
+		$DefrayAmount = "وام تسویه شده";
+	}
 	else
 	{
 		$CurrentRemain = number_format($CurrentRemain) . " ریال";
@@ -194,7 +200,7 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg->generateReport();
 	
-	//echo "<br>" . $report2;	
+	echo "<br>" . $report2;	
 	
 	die();
 }

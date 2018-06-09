@@ -160,12 +160,21 @@ function ListData($IsDashboard = false){
 	{
 		BeginReport();
 		
+		//if($_SESSION["USER"]["UserName"] == "admin")
+		//	echo PdoDataAccess::GetLatestQueryString();
+		
+		$dt = PdoDataAccess::runquery("select * from BSC_branches");
+		$branches = array();
+		foreach($dt as $row)
+			$branches[ $row["BranchID"] ] = $row["BranchName"];
+		
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 					گزارش اسناد حسابداری
 					 <br> ".
-				 $_SESSION["accounting"]["BranchName"]. "<br>" . "دوره سال " .
+				 ( empty($_POST["BranchID"]) ? "کلیه شعبه ها" : $branches[$_POST["BranchID"]]) .
+				"<br>" . "دوره سال " .
 				$_SESSION["accounting"]["CycleID"] .
 				"</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 

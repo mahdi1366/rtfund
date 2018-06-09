@@ -73,6 +73,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$CostCode_bank = FindCostID("101");
 	$CostCode_commitment = FindCostID("200-" . $LoanObj->_BlockCode . "-51");
 	$CostCode_todiee = FindCostID("200-". $LoanObj->_BlockCode."-01");
+	$CostCode_delayCheque = FindCostID("190-436");
 	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
@@ -118,10 +119,10 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$FirstStep = false;
 		$firstPayObj = new LON_payments($dt[0]["SourceID3"]);
 		
-		/*$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0),group_concat(LocalNo) docs
+		$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0),group_concat(LocalNo) docs
 			from ACC_DocItems join ACC_docs using(DocID) 
-			where CostID=? AND TafsiliID=? AND sourceID=?";
-		$param = array($CostCode_todiee, $LoanPersonTafsili, $ReqObj->RequestID);
+			where CostID=? AND TafsiliID=? ";
+		$param = array($CostCode_todiee, $LoanPersonTafsili);
 		if($LoanMode == "Agent")
 		{
 			$query .= " AND TafsiliID2=?";
@@ -134,7 +135,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 				. number_format($dt[0][0]) . "\n ریال می باشد که کمتر از مبلغ این مرحله از پرداخت وام می باشد"
 				. "<br>\n [ شماره اسناد : " . $dt[0]["docs"] . " ]");
 			return false;
-		}*/
+		}
 	}	
 	//---------------- add doc header --------------------
 	if($DocID == "")
@@ -358,6 +359,56 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 				return false;
 			}
 		}
+		if($PartObj->DelayReturn == "CHEQUE")
+		{
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_delayCheque;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $TotalFundDelay;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $LoanPersonTafsili;
+			if($LoanMode == "Agent")
+			{
+				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+				$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			}
+			else
+			{
+				unset($itemObj->TafsiliType2);
+				unset($itemObj->TafsiliID2);
+			}
+			$itemObj->details = " تنفس صندوق وام شماره" . $ReqObj->RequestID;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+				return false;
+			}
+		}
+		if($PartObj->AgentDelayReturn == "CHEQUE")
+		{
+			unset($itemObj->ItemID);
+			$itemObj->CostID = $CostCode_delayCheque;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $TotalAgentDelay;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $LoanPersonTafsili;
+			if($LoanMode == "Agent")
+			{
+				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+				$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			}
+			else
+			{
+				unset($itemObj->TafsiliType2);
+				unset($itemObj->TafsiliID2);
+			}
+			$itemObj->details = " تنفس سرمایه گذار وام شماره" . $ReqObj->RequestID;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+				return false;
+			}
+		}
 	}
 	//------------------------ کارمزد---------------------	
 	if($PartObj->MaxFundWage > 0 && $PartObj->WageReturn == "CUSTOMER")
@@ -488,11 +539,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	if($PartObj->AgentReturn == "CUSTOMER" && $PartObj->CustomerWage > $PartObj->FundWage)
 		$BankItemAmount -= $TotalAgentWage;
 	
-	if($PartObj->DelayReturn == "CUSTOMER")
+	if($PartObj->DelayReturn == "CUSTOMER" || $PartObj->DelayReturn == "CHEQUE")
 		$BankItemAmount -= $TotalFundDelay;
-	if($PartObj->AgentDelayReturn == "CUSTOMER")
+	if($PartObj->AgentDelayReturn == "CUSTOMER" || $PartObj->DelayReturn == "CHEQUE")
 		$BankItemAmount -= $TotalAgentDelay;
-
+	
 	$itemObj->CreditorAmount = $BankItemAmount;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	$itemObj->TafsiliID = $BankTafsili;
@@ -699,7 +750,8 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$CostCode_todiee = FindCostID("200-".$LoanObj->_BlockCode."-01");
 	$CostCode_FundComit_wage = FindCostID("721-".$LoanObj->_BlockCode."-52-03");
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
-	
+	$CostCode_delayCheque = FindCostID("190-436");
+		
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
 	
@@ -733,7 +785,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	//--------------------------------------------------------
 	$payments = LON_payments::Get(" AND RequestID=?", array($PartObj->RequestID), " order by PayDate");
 	$payments = $payments->fetchAll();
-	//------------------ nfind tafsilis ---------------
+	//------------------ find tafsilis ---------------
 	$LoanPersonTafsili = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);
 	if(!$LoanPersonTafsili)
 	{
@@ -766,9 +818,9 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	if(count($dt) > 0)
 	{
 		$FirstStep = false;
-		/*$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0)
-			from ACC_DocItems where CostID=? AND TafsiliID=? AND sourceID=? AND TafsiliID2=?";
-		$param = array($CostCode_todiee, $LoanPersonTafsili, $ReqObj->RequestID, $ReqPersonTafsili);
+		$query = "select ifnull(sum(CreditorAmount-DebtorAmount),0)
+			from ACC_DocItems where CostID=? AND TafsiliID=? AND TafsiliID2=?";
+		$param = array($CostCode_todiee, $LoanPersonTafsili, $ReqPersonTafsili);
 	
 		$dt = PdoDataAccess::runquery($query, $param);
 		if($dt[0][0]*1 < $PayAmount)
@@ -776,7 +828,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 			ExceptionHandler::PushException("حساب تودیعی این مشتری"
 					. number_format($dt[0][0]) . " ریال می باشد که کمتر از مبلغ این مرحله از پرداخت وام می باشد");
 			return false;
-		}*/
+		}
 	}
 	//---------------- compute wage --------------------------
 	$InstallmentWage = 0;
@@ -906,12 +958,59 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 		unset($itemObj->TafsiliID2);
 		$itemObj->Add($pdo);
 	}
+	//----------------------------- delay --------------------------------
+	$endDelayDate = DateModules::AddToGDate($PartObj->PartDate, $PartObj->DelayDays*1, $PartObj->DelayMonths*1);
+	$DelayDuration = DateModules::GDateMinusGDate($endDelayDate, $PartObj->PartDate)+1;
+	$CustomerDelay = round($PayAmount*$PartObj->DelayPercent*$DelayDuration/36500);
+	$FundDelay = round($PayAmount*$PartObj->FundWage*$DelayDuration/36500);
+	$AgentDelay = round($PayAmount*($PartObj->DelayPercent - $PartObj->FundWage)*$DelayDuration/36500);		
+	
+	if($PartObj->DelayReturn == "CHEQUE" && $FundDelay > 0)
+	{
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_delayCheque;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $FundDelay;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $LoanPersonTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
+		$itemObj->details = " تنفس صندوق وام شماره" . $ReqObj->RequestID;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+			return false;
+		}
+	}
+	if($PartObj->AgentDelayReturn == "CHEQUE" && $AgentDelay > 0)
+	{
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CostCode_delayCheque;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $AgentDelay;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $LoanPersonTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
+		$itemObj->details = " تنفس سرمایه گذار وام شماره" . $ReqObj->RequestID;
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
+			return false;
+		}
+	}
 	// ----------------------------- bank --------------------------------
+	$BankAmount = $PayAmount - $AgentWage;
+	if($PartObj->DelayReturn == "CHEQUE")
+		$BankAmount -= $FundDelay;
+	if($PartObj->AgentDelayReturn == "CHEQUE")
+		$BankAmount -= $AgentDelay;
+	
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
 	$itemObj->CostID = $CostCode_bank;
 	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = $PayAmount - $AgentWage;
+	$itemObj->CreditorAmount = $BankAmount;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
 	$itemObj->TafsiliID = $BankTafsili;
 	$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
@@ -926,11 +1025,10 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	
 	$itemObj->locked = "YES";
 	//---------- ردیف های تضمین  ----------
-	
 	$dt = PdoDataAccess::runquery("select * from DMS_documents 
 		join BaseInfo b on(InfoID=DocType AND TypeID=8)
 		join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
-		where b.param1=1 AND ObjectType='loan' AND ObjectID=?", array($ReqObj->RequestID));
+		where IsConfirm='YES' AND b.param1=1 AND ObjectType='loan' AND ObjectID=?", array($ReqObj->RequestID));
 	$SumAmount = 0;
 	$countAmount = 0;
 	
@@ -999,7 +1097,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$chequeObj = new ACC_DocCheques();
 	$chequeObj->DocID = $obj->DocID;
 	$chequeObj->CheckDate = $PayObj->PayDate;
-	$chequeObj->amount = $PayAmount - $AgentWage;
+	$chequeObj->amount = $BankAmount;
 	$chequeObj->CheckNo = $ChequeNo;
 	$chequeObj->AccountID = $AccountID;
 	$chequeObj->TafsiliID = $LoanPersonTafsili;
@@ -3055,40 +3153,36 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 	
 	if($PreStatus !== false && $PreStatus["param1"] != "" && $PreStatus["param2"] != "")
 	{
-		unset($itemObj->ItemID);
-		$itemObj->DocID = $obj->DocID;
+		unset($itemObj->ItemID);		
 		$itemObj->CostID = $PreStatus["param1"];
 		$itemObj->CreditorAmount = $__ChequeAmount;
 		$itemObj->DebtorAmount = 0;
-		$itemObj->TafsiliType = TAFTYPE_ChequeStatus;
-		$itemObj->TafsiliID = FindTafsiliID($PreStatus["InfoID"], TAFTYPE_ChequeStatus);
+		$itemObj->TafsiliID2 = FindTafsiliID($PreStatus["InfoID"], TAFTYPE_ChequeStatus);
 		$itemObj->Add($pdo);
 
 		unset($itemObj->ItemID);
 		$itemObj->CostID = $PreStatus["param2"];
 		$itemObj->CreditorAmount = 0;
 		$itemObj->DebtorAmount = $__ChequeAmount;
-		$itemObj->TafsiliType = TAFTYPE_ChequeStatus;
-		$itemObj->TafsiliID = FindTafsiliID($PreStatus["InfoID"], TAFTYPE_ChequeStatus);
+		$itemObj->TafsiliID2 = FindTafsiliID($PreStatus["InfoID"], TAFTYPE_ChequeStatus);
 		$itemObj->Add($pdo);
 	}
-	unset($itemObj->ItemID);
-	$itemObj->DocID = $obj->DocID;
-	$itemObj->CostID = $CurStatus["param1"];
-	$itemObj->CreditorAmount = 0;
-	$itemObj->DebtorAmount = $__ChequeAmount;
-	$itemObj->TafsiliType = TAFTYPE_ChequeStatus;
-	$itemObj->TafsiliID = FindTafsiliID($CurStatus["InfoID"], TAFTYPE_ChequeStatus);
-	$itemObj->Add($pdo);
+	if($CurStatus["param1"] != "" && $CurStatus["param2"] != "")
+	{
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CurStatus["param1"];
+		$itemObj->CreditorAmount = 0;
+		$itemObj->DebtorAmount = $__ChequeAmount;
+		$itemObj->TafsiliID2 = FindTafsiliID($CurStatus["InfoID"], TAFTYPE_ChequeStatus);
+		$itemObj->Add($pdo);
 
-	unset($itemObj->ItemID);
-	$itemObj->CostID = $CurStatus["param2"];
-	$itemObj->CreditorAmount = $__ChequeAmount;
-	$itemObj->DebtorAmount = 0;
-	$itemObj->TafsiliType = TAFTYPE_ChequeStatus;
-	$itemObj->TafsiliID = FindTafsiliID($CurStatus["InfoID"], TAFTYPE_ChequeStatus);
-	$itemObj->Add($pdo);
-	
+		unset($itemObj->ItemID);
+		$itemObj->CostID = $CurStatus["param2"];
+		$itemObj->CreditorAmount = $__ChequeAmount;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->TafsiliID2 = FindTafsiliID($CurStatus["InfoID"], TAFTYPE_ChequeStatus);
+		$itemObj->Add($pdo);
+	}
 	//--------------------------------------------------------------
 	/*
 	if($InChequeObj->ChequeStatus == INCOMECHEQUE_NOTVOSUL)
@@ -3253,7 +3347,7 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 		if(ExceptionHandler::GetExceptionCount() > 0)
 			return false;
 
-		return true;
+		return $obj->DocID;
 	}
 	//............................................................
 /*
@@ -3286,7 +3380,7 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 	
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
-	return true;
+	return $obj->DocID;
 }
 
 function EditIncomeCheque($InChequeObj, $newAmount, $pdo){

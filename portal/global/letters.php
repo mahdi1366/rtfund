@@ -38,6 +38,7 @@ $col->width = 100;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->width = 750;
+$dg->height = 500;
 $dg->title = "لیست نامه های مربوط به شما";
 $dg->DefaultSortField = "LetterDate";
 $dg->autoExpandColumn = "LetterTitle";

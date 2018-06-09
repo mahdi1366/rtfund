@@ -33,6 +33,7 @@ $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetBac
 $dg->addColumn("", "BackPayID","", true);
 $dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "PayTypeDesc","", true);
+$dg->addColumn("", "DocID","", true);
 $dg->addColumn("", "LocalNo","", true);
 $dg->addColumn("", "StatusID","", true);
 $dg->addColumn("", "ChequeStatus","", true);
@@ -310,12 +311,15 @@ LoanPay.RegDocRender = function(v,p,r){
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 	else if(r.data.StatusID == "<?= ACC_STEPID_RAW ?>")
-		return r.data.LocalNo + "<div align='center' title='ویرایش سند' class='edit' "+
+		return "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+ 
+			r.data.LocalNo + "</a>" + "<div align='center' title='ویرایش سند' class='edit' "+
 		"onclick='LoanPayObject.BeforeRegisterDoc(2);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 	else
-		return r.data.LocalNo;
+		return "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+ 
+			r.data.LocalNo + "</a>";
+	
 }
 
 var LoanPayObject = new LoanPay();

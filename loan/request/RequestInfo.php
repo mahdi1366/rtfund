@@ -75,7 +75,8 @@ $dg->addColumn("", "BackPayComputeDesc","", true);
 
 $dg->addColumn("", "AllPay","", true);
 $dg->addColumn("", "LastPay","", true);
-$dg->addColumn("", "TotalCustomerDelay","", true);
+$dg->addColumn("", "FundDelay","", true);
+$dg->addColumn("", "AgentDelay","", true);
 $dg->addColumn("", "TotalCustomerWage","", true);
 $dg->addColumn("", "TotalAgentWage","", true);
 $dg->addColumn("", "TotalFundWage","", true);
@@ -136,22 +137,23 @@ if(isset($_SESSION["USER"]["framework"]))
 	<div id="PartForm"></div>
 	<div id="SendForm"></div>
 	<div id="summaryDIV" style="display:none">
-		<div style="float:right"><table style="width:200px" class="summary">
+		<div style="float:right">
+			<table style="width:200px" class="summary">
 			<tr>
 				<td style="width:70px;background-color: #dfe8f6;">مبلغ هر قسط</td>
-				<td style="background-color: #dfe8f6;">سود دوره تنفس</td>
+				<td style="background-color: #dfe8f6;">سود تنفس صندوق</td>
 			</tr>
 			<tr>
 				<td><div id="SUM_InstallmentAmount" class="blueText">&nbsp;</div></td>
-				<td><div id="SUM_Delay" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_FundDelay" class="blueText">&nbsp;</div></td>
 			</tr>
 			<tr>
 				<td style="background-color: #dfe8f6;">مبلغ قسط آخر</td>
-				<td style="background-color: #dfe8f6;">خالص پرداختی</td>
+				<td style="background-color: #dfe8f6;">سود تنفس سرمایه گذار</td>
 			</tr>
 			<tr>
 				<td><div id="SUM_LastInstallmentAmount" class="blueText">&nbsp;</div></td>
-				<td><div id="SUM_NetAmount" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_AgentDelay" class="blueText">&nbsp;</div></td>
 			</tr>			
 		</table></div>
 		<div style="float:right"><table style="width:190px" class="summary">
@@ -166,6 +168,10 @@ if(isset($_SESSION["USER"]["framework"]))
 			<tr id="TR_AgentWage">
 				<td style="direction:rtl;background-color: #dfe8f6;">سهم سرمایه گذار</td>
 				<td><div id="SUM_AgentWage" class="blueText">&nbsp;</div></td>
+			</tr>
+			<tr>
+				<td style="background-color: #dfe8f6;">خالص پرداختی</td>
+				<td><div id="SUM_NetAmount" class="blueText">&nbsp;</div></td>
 			</tr>
 		</table></div>
 		<div style="float:right"><table id="div_yearly" style="width:190px" class="summary">

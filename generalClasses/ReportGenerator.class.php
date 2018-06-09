@@ -851,15 +851,10 @@ class ReportGenerator {
 	
 	function GetColumnCheckboxList($columns = 1){
 		
-		$columnCount = ceil( count($this->columns)/$columns );
-		
-		$div = "<div style='float:right;height:100%'>";
 		$returnStr = "";
 		$index = 0;
 		foreach($this->columns as $row)
 		{
-			if($index % $columnCount == 0)
-				$returnStr .= ($index == 1 ? "" : "</div>") . $div;
 			$title = $row->header;
 			$field = $row->field;
 			$returnStr .= "<div style=padding-left:10px>"
@@ -872,7 +867,7 @@ class ReportGenerator {
 			$index++;
 		}
 		
-		return $returnStr . "</div>";
+		return $returnStr;
 	}
 	
 	private static function FunctionName($func){
@@ -898,7 +893,10 @@ class ReportGenerator {
 			},
 			items : [{
 				xtype : "container",
-				html : "' . $this->GetColumnCheckboxList(3) . '"
+				height : 157,
+				width : 250,	
+				autoScroll : true,
+				html : "' . $this->GetColumnCheckboxList(1) . '"
 			},{
 				xtype : "fieldset",
 				title : "ایجاد ستون سفارشی",
@@ -906,7 +904,7 @@ class ReportGenerator {
 				layout : "vbox",
 				items : [{
 					xtype : "combo",
-					width : 150,
+					width : 220,
 					store : new Ext.data.SimpleStore({
 						data : [
 							["sum", "مجموع"],
@@ -920,7 +918,7 @@ class ReportGenerator {
 					displayField : "value",
 					valueField : "id",
 					itemId : "rpcmp_newfield_func"
-				},'.$this->CreateColumnCombo("","rpcmp_newfield","width : 150") .',
+				},'.$this->CreateColumnCombo("","rpcmp_newfield","width : 220") .',
 				{
 					xtype : "button",
 					text : "اضافه ستون",
@@ -956,7 +954,7 @@ class ReportGenerator {
 				}]				
 			},{
 				xtype : "multiselect",
-				width : 160,
+				width : 220,
 				itemId : "rpcmp_newfield_mullti",
 				height : 150,
 				store: new Ext.data.Store({

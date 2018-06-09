@@ -15,6 +15,91 @@ TestLoan.prototype = {
 
 function TestLoan(){
 	
+	this.RequestPanel = new Ext.form.Panel({
+		renderTo : this.get("main"),
+		frame : true,
+		style : "margin: 10px 0 10px",
+		bodyStyle : "text-align:right;padding:5px",
+		layout : "hbox",
+		defaults : {
+			labelWidth :120
+		},
+		width : 750,
+		items :[{
+			xtype : "combo",
+			store: new Ext.data.Store({
+				proxy:{
+					type: 'jsonp',
+					url: this.address_prefix + '../request/request.data.php?task=SelectAllRequests2',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields :  ['loanFullname','PartAmount',"RequestID","PartDate", "ReqDate","RequestID",{
+					name : "fullTitle",
+					convert : function(value,record){
+						return "[ " + record.data.RequestID + " ] " + 
+							record.data.loanFullname + "  به مبلغ  " + 
+							Ext.util.Format.Money(record.data.PartAmount) + " مورخ " + 
+							MiladiToShamsi(record.data.PartDate);
+					}
+				}]				
+			}),
+			displayField: 'fullTitle',
+			pageSize : 10,
+			valueField : "RequestID",
+			width : 600,
+			tpl: new Ext.XTemplate(
+				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
+				'<td style="padding:7px">کد وام</td>',
+				'<td style="padding:7px">وام گیرنده</td>',
+				'<td style="padding:7px">مبلغ وام</td>',
+				'<td style="padding:7px">تاریخ پرداخت</td> </tr>',
+				'<tpl for=".">',
+					'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
+					'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">{loanFullname}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">',
+						'{[Ext.util.Format.Money(values.PartAmount)]}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.PartDate)]}</td> </tr>',
+				'</tpl>',
+				'</table>'
+			),
+			name : "RequestID"
+		},{
+			xtype : "button",
+			border : true,
+			text : "بارگذاری اطلاعات وام",
+			iconCls : "report",
+			handler : function(combo,records){
+				
+				TestLoanObject.ReqPartStore.load({
+					params : {
+						RequestID : TestLoanObject.RequestPanel.down("[name=RequestID]").getValue(),
+						IsLast : "true"
+					},
+					callback : function(){
+						me = TestLoanObject;
+						record = this.getAt(0);
+						me.InfoPanel.loadRecord(this.getAt(0));
+						
+						me.InfoPanel.down("[name=PartDate]").setValue(MiladiToShamsi(record.data.PartDate));
+					}
+				});
+			}	
+		}]
+	});
+	
+	this.ReqPartStore =  new Ext.data.Store({
+		proxy:{
+			type: 'jsonp',
+			url: this.address_prefix + '../request/request.data.php?task=GetRequestParts',
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		},
+		fields :  ['PartDate','PartAmount',"InstallmentCount","IntervalType", "PayInterval","DelayMonths",
+		'DelayDays','ForfeitPercent',"CustomerWage","FundWage", "WageReturn","DelayReturn",
+		'PayCompute','MaxFundWage',"AgentReturn","AgentDelayReturn", "DelayPercent","PayDuration",
+		"ComputeMode","BackPayCompute"]
+	});
+	
 	this.InfoPanel = new Ext.form.Panel({
 		width : 700,
 		frame : true,
@@ -209,8 +294,10 @@ function TestLoan(){
 			url: this.address_prefix + "../request/request.data.php?task=GetRequestParts&RequestID=0",
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["PartAmount","AllPay","LastPay","TotalCustomerDelay","TotalCustomerWage","TotalAgentWage","TotalFundWage","WageYear1",
-					"WageYear2","WageYear3","WageYear4"],
+		fields : ["PartAmount","AllPay","LastPay","AgentDelay","FundDelay",
+					"TotalCustomerWage","TotalAgentWage","TotalFundWage","WageYear1",
+					"WageYear2","WageYear3","WageYear4",
+					"WageReturn","DelayReturn","AgentReturn","AgentDelayReturn"],
 		listeners :{
 			load : function(){
 				me = TestLoanObject;
@@ -226,7 +313,8 @@ function TestLoan(){
 
 				me.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.AllPay);
 				me.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.LastPay);
-				me.get("SUM_Delay").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerDelay);
+				me.get("SUM_FundDelay").innerHTML = Ext.util.Format.Money(record.data.FundDelay);
+				me.get("SUM_AgentDelay").innerHTML = Ext.util.Format.Money(record.data.AgentDelay);
 				me.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerWage);
 				me.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.TotalFundWage);
 				me.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(record.data.TotalAgentWage);
@@ -235,8 +323,10 @@ function TestLoan(){
 				me.get("SUM_Wage_3Year").innerHTML = Ext.util.Format.Money(record.data.WageYear3);
 				me.get("SUM_Wage_4Year").innerHTML = Ext.util.Format.Money(record.data.WageYear4);
 				me.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
-					(record.data.DelayReturn == "CUSTOMER" ? record.data.TotalCustomerDelay : 0) - 
-					(record.data.WageReturn == "CUSTOMER" ? record.data.TotalCustomerWage : 0));
+					(record.data.DelayReturn == "CUSTOMER" ? record.data.FundDelay*1 : 0) - 
+					(record.data.AgentDelayReturn == "CUSTOMER" ? record.data.AgentDelay : 0) - 
+					(record.data.WageReturn == "CUSTOMER" ? record.data.TotalFundWage : 0) - 
+					(record.data.AgentWageReturn == "CUSTOMER" ? record.data.TotalAgentWage : 0));
 			}
 		}
 	});
@@ -288,14 +378,14 @@ TestLoan.prototype.SavePart = function(){
 	}
 </style>
 <center>
-	<br>
+	<div id="main"></div>
 	<div id="divPanel"></div>
 	<div id="divPanel2"></div>
 	<div id="summaryDIV">
 		<table style="width:700px" class="summary">
 			<tr>
 				<td style="width:70px;background-color: #dfe8f6;">مبلغ هر قسط</td>
-				<td style="background-color: #dfe8f6;">سود دوره تنفس</td>
+				<td style="background-color: #dfe8f6;">  سود تنفس صندوق</td>
 				<td style="width:90px;direction:rtl;background-color: #dfe8f6;">کارمزد وام</td>
 				<td><div id="SUM_TotalWage" class="blueText">&nbsp;</div></td>
 				<td style="direction:rtl;width:85px;background-color: #dfe8f6;">کارمزد سال اول</td>
@@ -303,7 +393,7 @@ TestLoan.prototype.SavePart = function(){
 			</tr>
 			<tr>
 				<td><div id="SUM_InstallmentAmount" class="blueText">&nbsp;</div></td>
-				<td><div id="SUM_Delay" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_FundDelay" class="blueText">&nbsp;</div></td>
 				<td style="direction:rtl;background-color: #dfe8f6;">سهم صندوق</td>
 				<td><div id="SUM_FundWage" class="blueText">&nbsp;</div></td>
 				<td style="direction:rtl;background-color: #dfe8f6;">کارمزد سال دوم</td>
@@ -311,7 +401,7 @@ TestLoan.prototype.SavePart = function(){
 			</tr>
 			<tr>
 				<td style="background-color: #dfe8f6;">مبلغ قسط آخر</td>
-				<td style="background-color: #dfe8f6;">خالص پرداختی</td>
+				<td style="background-color: #dfe8f6;">تنفس سرمایه گذار</td>
 				<td style="direction:rtl;background-color: #dfe8f6;">سهم سرمایه گذار</td>
 				<td><div id="SUM_AgentWage" class="blueText">&nbsp;</div></td>
 				<td style="direction:rtl;background-color: #dfe8f6;">کارمزد سال سوم</td>
@@ -319,9 +409,9 @@ TestLoan.prototype.SavePart = function(){
 			</tr>
 			<tr>
 				<td><div id="SUM_LastInstallmentAmount" class="blueText">&nbsp;</div></td>
+				<td><div id="SUM_AgentDelay" class="blueText">&nbsp;</div></td>
+				<td style="background-color: #dfe8f6;">خالص پرداختی</td>
 				<td><div id="SUM_NetAmount" class="blueText">&nbsp;</div></td>
-				<td></td>
-				<td></td>
 				<td style="direction:rtl;background-color: #dfe8f6;">کارمزد سال چهارم</td>
 				<td><div id="SUM_Wage_4Year" class="blueText">&nbsp;</div></td>
 			</tr>			

@@ -24,6 +24,7 @@ class ACC_IncomeCheques extends OperationClass{
 	public $description;
 	public $EqualizationID;
 	public $PayedDate;
+	public $LoanRequestID;
 	
 	function __construct($id = '') {
 		

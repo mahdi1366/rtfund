@@ -142,15 +142,15 @@ function MyMessage(){
 	this.newMessageWin = new Ext.window.Window({
 		title : "ایجاد پیام جدید",
 		width : 500,			
-		height : 300,
-		modal : true,
+		height : 340,
+		modal : true, 
 		bodyStyle : "background-color:white;",
 		closeAction : "hide",
 		items : new Ext.form.Panel({
 			defaults : {
 				width : 450
 			},
-			items : [{
+			items : [{ 
 				xtype : "textfield",
 				fieldLabel : "عنوان پیام",
 				name : "MsgTitle",

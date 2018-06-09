@@ -343,7 +343,7 @@ function GetExtraLoanAmount($PartObj, $TotalFundWage, $TotalCustomerWage, $Total
 
 //....................
 
-function ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate = "", $ComputeWage = 'YES'){
+function ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate = "", $ComputeWage = 'YES', $WithWage = true){
 	
 	if(!empty($ComputeDate))
 	{
@@ -428,6 +428,8 @@ function ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate = 
 		$x = round(($amount-$makhrag)/$lastMakhrag);
 	}
 
+	if(!$WithWage)
+		return $installmentArray;
 	//-------  update installment Amounts ------------
 	$TotalAmount = 0;
 	for($i=0; $i<count($installmentArray);$i++)
@@ -436,10 +438,10 @@ function ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate = 
 			$installmentArray[$i]["InstallmentAmount"] = $x*$installmentArray[$i]["percent"];
 		else if($i == count($installmentArray)-1)
 			$installmentArray[$i]["InstallmentAmount"] = $x;
-		
+
 		$TotalAmount += $installmentArray[$i]["InstallmentAmount"];
 	}
-
+	
 	//------ compute wages of installments -----------
 	$TotalWage = $TotalAmount - $partObj->PartAmount;
 	for($i=0; $i < count($installmentArray); $i++)

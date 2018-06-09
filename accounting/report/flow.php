@@ -67,7 +67,11 @@ function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 		$where .= " AND b1.GroupID = :gid";
 		$whereParam[":gid"] = $_REQUEST["GroupID"];
 	}
-
+	if(!empty($_REQUEST["CostID"]))
+	{
+		$where .= " AND di.CostID = :costid";
+		$whereParam[":costid"] = $_REQUEST["CostID"];
+	}
 	if(!empty($_REQUEST["level1"]))
 	{
 		$where .= " AND b1.BlockID = :bf1";
@@ -117,14 +121,14 @@ function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 		}
 		else
 		{
-			$where .= " AND di.TafsiliID2 = :tid ";
-			$whereParam[":tid"] = $_REQUEST["TafsiliID2"];
+			$where .= " AND di.TafsiliID2 = :tid2 ";
+			$whereParam[":tid2"] = $_REQUEST["TafsiliID2"];
 		}
 	}
 	if(!empty($_REQUEST["TafsiliType2"]))
 	{
-		$where .= " AND di.TafsiliType2 = :tt ";
-		$whereParam[":tt"] = $_REQUEST["TafsiliType2"];
+		$where .= " AND di.TafsiliType2 = :tt2 ";
+		$whereParam[":tt2"] = $_REQUEST["TafsiliType2"];
 	}
 	if(!empty($_REQUEST["fromLocalNo"]))
 	{
@@ -250,15 +254,15 @@ function ListData($IsDashboard = false){
 	
 	$dataTable = GetData();
 	
-	//if($_SESSION["USER"]["UserName"] == "admin")
-	//	echo PdoDataAccess::GetLatestQueryString ();
+	if($_SESSION["USER"]["UserName"] == "admin")
+		echo PdoDataAccess::GetLatestQueryString ();
 	
 	$col = $rpg->addColumn("شماره سند", "LocalNo", "PrintDocRender");
 	$col->ExcelRender = false;
 	//$rpg->addColumn("کد حساب", "CostCode");
 	$rpg->addColumn("شرح حساب", "CostDesc");
 	$rpg->addColumn("تفصیلی", "TafsiliDesc");
-	$rpg->addColumn("تفصیلی", "TafsiliDesc2");
+	$rpg->addColumn("تفصیلی2", "TafsiliDesc2");
 	$rpg->addColumn("تاریخ سند", "DocDate","ReportDateRender");
 	$rpg->addColumn("شرح", "detail");	
 	
@@ -277,13 +281,20 @@ function ListData($IsDashboard = false){
 	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
+		
+		$dt = PdoDataAccess::runquery("select * from BSC_branches");
+		$branches = array();
+		foreach($dt as $row)
+			$branches[ $row["BranchID"] ] = $row["BranchName"];
+		
 		echo
 		"<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 					گزارش گردش حساب ها 
 					 <br> ".
-				 $_SESSION["accounting"]["BranchName"]. "<br>" . "دوره سال " .
+				 ( empty($_POST["BranchID"]) ? "کلیه شعبه ها" : $branches[$_POST["BranchID"]]) .
+				"<br>" . "دوره سال " .
 				$_SESSION["accounting"]["CycleID"] .
 				"</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 

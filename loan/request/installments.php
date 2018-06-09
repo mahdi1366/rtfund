@@ -608,9 +608,15 @@ Installment.prototype.AddInstallments = function(){
 				fieldLabel : "مانده اصل وام در تاریخ فوق"
 			},{
 				xtype : "checkbox",
+				name : 'WithWage',
+				width : 230,
+				checked : true,
+				boxLabel : "کارمزد تغییر زمان اقساط محاسبه شود"
+			},{
+				xtype : "checkbox",
 				name : 'ComputeWage',
 				width : 230,
-				boxLabel : "بعد از محاسبه کارمزد به مبلغ قسط اضافه شود"
+				boxLabel : "کارمزد هر قسط به مبلغ وارد شده اضافه گردد."
 			},{
 				xtype : "container",
 				layout :{
@@ -741,6 +747,7 @@ Installment.prototype.ComputeManualInstallments = function(){
 			ComputeDate : this.formPanel.down("[itemId=CMP_remain]").getValue() ?
 								this.formPanel.down("[name=ComputeDate]").getRawValue() : "",
 			ComputeWage : this.formPanel.down("[name=ComputeWage]").getValue() ? "YES" : "NO",
+			WithWage : this.formPanel.down("[name=WithWage]").getValue() ? "YES" : "NO",
 			records : items
 		},
 		

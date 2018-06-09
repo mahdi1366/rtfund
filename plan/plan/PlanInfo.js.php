@@ -153,7 +153,7 @@ function PlanInfo(){
 	
 	this.itemsPanel = new Ext.panel.Panel({
 		bodyStyle : 'padding:4px;',
-		height : this.portal ? 381 : 470,
+		height : this.portal ? 355 : 470, 
 		width: 758,
 		autoScroll : true
 	});

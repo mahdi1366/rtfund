@@ -70,8 +70,9 @@ function StartPage(){
 		new Ext.panel.Panel({
 			renderTo : this.get("div_letters"),
 			width: 770,
+			maxHeight : 500,
 			border : false,
-			autoHeight : true,
+			//autoHeight : true,
 			style : "margin-bottom:10px",
 			loader : {
 				url : "global/letters.php",

@@ -15,7 +15,10 @@ function ReqPersonRender($row,$value){
 function RealRender($row, $value){
 	return $value == "YES" ? "حقیقی" : "حقوقی";
 }
-	
+function IsFreeRender($row, $value){
+	return $value == "YES" ? "*" : "";
+}
+
 $page_rpg = new ReportGenerator("mainForm","LoanReport_totalObj");
 $page_rpg->addColumn("شماره وام", "RRequestID");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
@@ -28,6 +31,7 @@ $col = $page_rpg->addColumn("تاریخ خاتمه", "EndReqDate");
 $col->type = "date";	
 $page_rpg->addColumn("سند خاتمه", "EndDocNo");
 $page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
+$page_rpg->addColumn("وام بالاعوض", "IsFree", "IsFreeRender");
 $page_rpg->addColumn("مشتری", "LoanFullname");
 $page_rpg->addColumn("حوزه فعالیت", "DomainDesc");
 $page_rpg->addColumn("نوع", "IsReal", "RealRender");
@@ -62,7 +66,10 @@ $page_rpg->addColumn("جمع مبلغ اقساط سررسید شده", "installm
 $page_rpg->addColumn("مبلغ آخرین پرداخت", "LastPayAmount");
 $page_rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount");
 $page_rpg->addColumn("مانده قابل پرداخت", "remainder");
-$page_rpg->addColumn("مبلغ تاخیر کل", "ForfeitAmount");
+$page_rpg->addColumn("مبلغ تاخیر", "ForfeitAmount");
+$page_rpg->addColumn("تاخیر کل وام", "TotalForfeitAmount");
+$page_rpg->addColumn("جمع اقساط تا تاریخ موثر", "EffectiveInstallmentAmounts");
+$page_rpg->addColumn("جمع پرداخت های مشتری تا تاریخ موثر", "EffectiveBackPayAmounts");
 
 function MakeWhere(&$where, &$pay_where, &$whereParam){
 
@@ -100,6 +107,12 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 		{
 			InputValidation::validate($value, InputValidation::Pattern_NumComma);
 			$where .= " AND SubAgentID in(" . $value . ")";
+			continue;
+		}
+		if($key == "EffectiveDate")
+		{
+			$whereParam[":effectiveDate"] = !empty($_POST["EffectiveDate"]) ? 
+			DateModules::shamsi_to_miladi($_POST["EffectiveDate"], "-") : DateModules::Now();
 			continue;
 		}
 		
@@ -157,8 +170,8 @@ function GetData($mode = "list"){
 	$userFields = ReportGenerator::UserDefinedFields();
 	$whereParam = array();
 	MakeWhere($where, $pay_where, $whereParam);
-	
-	$query = "select r.*,l.*,p.*,
+		
+	$query = "select r.*,l.LoanDesc,p.*,
 				r.RequestID as RRequestID,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				
@@ -187,7 +200,9 @@ function GetData($mode = "list"){
 				MaxPayDate,
 				ifnull(LastPayAmount,0) LastPayAmount,
 				t5.amount installmentsToNow,
-				tazamin".
+				tazamin,
+				t6.amount EffectiveInstallmentAmounts,
+				t7.amount EffectiveBackPayAmounts".
 				($mode == "list" && $userFields != "" ? "," . $userFields : "")."
 				
 			from LON_requests r
@@ -216,6 +231,7 @@ function GetData($mode = "list"){
 				where 1=1 $pay_where
 				group by RequestID			
 			)t_pay on(r.RequestID=t_pay.RequestID)
+			
 			left join (
 				select RequestID,sum(PayAmount) TotalPayAmount , max(PayDate) MaxPayDate
 				from LON_BackPays
@@ -224,24 +240,31 @@ function GetData($mode = "list"){
 					AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . "
 				group by RequestID			
 			)t1 on(r.RequestID=t1.RequestID)
+			
 			left join (
 				select RequestID,sum(InstallmentAmount) TotalInstallmentAmount 
 				from LON_installments
 				where  history='NO' AND IsDelayed='NO'
 				group by RequestID			
 			)t2 on(r.RequestID=t2.RequestID)
+			
 			left join (
 				select RequestID,max(InstallmentDate) MaxInstallmentDate
 				from LON_installments
 				where history='NO' AND IsDelayed='NO'
 				group by RequestID			
 			)inst on(r.RequestID=inst.RequestID)
+			
 			left join (
 				select RequestID,PayAmount LastPayAmount from LON_BackPays
 				join (	select RequestID,max(BackPayID) BackPayID 
-						from LON_BackPays group by RequestID)t using(BackPayID,RequestID) 
+						from LON_BackPays left join ACC_IncomeCheques i using(IncomeChequeID)
+						where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+							AND PayType<>".BACKPAY_PAYTYPE_CORRECT."
+						group by RequestID)t using(BackPayID,RequestID) 
 				group by RequestID
 			)t3 on(r.RequestID=t3.RequestID)
+			
 			left join (
 				select ObjectID,group_concat(title,' به شماره سريال ',num, ' و مبلغ ', 
 					format(amount,2) separator '<br>') tazamin
@@ -257,11 +280,28 @@ function GetData($mode = "list"){
 				)t
 				group by ObjectID
 			)t4 on(t4.ObjectID=r.RequestID)
+			
 			left join (
 				select RequestID,sum(InstallmentAmount) amount from LON_installments
-				where InstallmentDate<= " . PDONOW . "
+				where history='NO' AND IsDelayed='NO' AND InstallmentDate<= " . PDONOW . "
 				group by RequestID
 			)t5 on(r.RequestID=t5.RequestID)
+			
+			left join (
+				select RequestID,sum(InstallmentAmount) amount from LON_installments
+				where history='NO' AND IsDelayed='NO' AND InstallmentDate <= :effectiveDate
+				group by RequestID
+			)t6 on(r.RequestID=t6.RequestID)
+			
+			left join (
+				select RequestID,sum(PayAmount) amount
+				from LON_BackPays left join ACC_IncomeCheques i using(IncomeChequeID)
+				where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+							AND PayType<>".BACKPAY_PAYTYPE_CORRECT." 
+							AND PayDate <= :effectiveDate
+				group by RequestID
+			)t7 on(r.RequestID=t7.RequestID)
+			
 			where 1=1 " . $where;
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
@@ -272,8 +312,8 @@ function GetData($mode = "list"){
 	$query = PdoDataAccess::GetLatestQueryString();
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		///BeginReport();
-		//print_r(ExceptionHandler::PopAllExceptions());
+		BeginReport();
+		print_r(ExceptionHandler::PopAllExceptions());
 		//echo $query;
 		
 	}
@@ -285,6 +325,7 @@ function GetData($mode = "list"){
 		$TotalRemain = LON_requests::GetTotalRemainAmount($dataTable[$i]["RequestID"], $ComputeArr);
 		$dataTable[$i]["remainder"] = $TotalRemain;
 		$dataTable[$i]["ForfeitAmount"] = $ComputeArr[count($ComputeArr)-1]["ForfeitAmount"];
+		$dataTable[$i]["TotalForfeitAmount"] = LON_requests::GetTotalForfeitAmount($dataTable[$i]["RequestID"], $ComputeArr);
 	}
 	
 	return $dataTable; 
@@ -295,6 +336,11 @@ function ListData($IsDashboard = false){
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
 	$rpg->mysql_resource = GetData();
+	
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		ExceptionHandler::PopAllExceptions();
+	}
 	
 	function endedRender($row,$value){
 		return ($value == "YES") ? "خاتمه" : "جاری";
@@ -309,6 +355,7 @@ function ListData($IsDashboard = false){
 	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
+	$rpg->addColumn("وام بالاعوض", "IsFree", "IsFreeRender");
 	$rpg->addColumn("تاریخ خاتمه", "EndReqDate", "ReportDateRender");
 	$rpg->addColumn("سند خاتمه", "EndDocNo");
 	
@@ -358,7 +405,19 @@ function ListData($IsDashboard = false){
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	
-	$col = $rpg->addColumn("مبلغ تاخیر کل", "ForfeitAmount", "ReportMoneyRender");
+	$col = $rpg->addColumn("مبلغ تاخیر", "ForfeitAmount", "ReportMoneyRender");
+	$col->ExcelRender = false;
+	$col->EnableSummary();
+	
+	$col = $rpg->addColumn("تاخیر کل وام", "TotalForfeitAmount", "ReportMoneyRender");
+	$col->ExcelRender = false;
+	$col->EnableSummary();
+	
+	$col = $rpg->addColumn("جمع اقساط تا تاریخ موثر", "EffectiveInstallmentAmounts", "ReportMoneyRender");
+	$col->ExcelRender = false;
+	$col->EnableSummary();
+	
+	$col = $rpg->addColumn("جمع پرداخت های مشتری تا تاریخ موثر", "EffectiveBackPayAmounts", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	
@@ -677,6 +736,14 @@ function LoanReport_total()
 			xtype : "shdatefield",
 			name : "toEndReqDate",
 			fieldLabel : "تا تاریخ"
+		},{
+			xtype : "shdatefield",
+			name : "EffectiveDate",
+			fieldLabel : "تاریخ موثر",
+			value : '<?= DateModules::shNow() ?>'
+		},{
+			xtype : "container",
+			html : "جمع اقساط و جمع پرداخت های مشتری تا تاریخ موثر نیز محاسبه می گردد."
 		},{
 			xtype : "fieldset",
 			title : "اطلاعات مشتری",

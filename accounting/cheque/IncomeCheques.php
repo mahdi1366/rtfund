@@ -204,7 +204,7 @@ IncomeCheque.prototype.MakeFilterPanel = function(){
 IncomeCheque.prototype.MakeLoanPanel = function(){
 
 	return {
-		title : "واریز قسط وام",
+		title : "واریز گروهی اقسط وام",
 		items : [{
 			xtype : "combo",
 			store: new Ext.data.Store({
@@ -1125,6 +1125,22 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 					columns : 1
 				},
 				items :[{
+					xtype : "container",
+					layout : "hbox",
+					items : [{
+						xtype : "radio",						
+						boxLabel : "بابت اقساط وام",
+						name : "ChequeFor",
+						inputValue : "INSTALLMENT",
+						checked : true,
+						style : "margin-left : 10px"
+					},{
+						xtype : "radio",
+						boxLabel : "بابت تنفس وام",
+						name : "ChequeFor",
+						inputValue : "Delay"
+					}]
+				},{
 					xtype : "combo",
 					fieldLabel : "انتخاب وام",
 					store: new Ext.data.Store({

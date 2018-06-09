@@ -36,7 +36,6 @@ function data_uri($content, $mime) {
 }
 
 $address_prefix = getenv("DOCUMENT_ROOT");
-$js_prefix_address = implode("/" , 
-		array_splice(preg_split('/\//', $_SERVER["SCRIPT_NAME"]),0,
-		count(preg_split('/\//', $_SERVER["SCRIPT_NAME"]))-1)) . "/";
+$temp = preg_split('/\//', $_SERVER["SCRIPT_NAME"]);
+$js_prefix_address = implode("/" , array_splice($temp,0,count($temp)-1)) . "/";
 ?>

@@ -201,7 +201,8 @@ class LON_requests extends PdoDataAccess{
 		return $dt[0]["PayDate"];
 	}
 	
-	static function FreeDobellWageComputeInstallment($partObj, $installmentArray, $ComputeDate = "", $ComputeWage = 'YES'){
+	static function FreeDobellWageComputeInstallment($partObj, $installmentArray, $ComputeDate = "", 
+			$ComputeWage = 'YES'){
 
 		if(!empty($ComputeDate))
 		{
@@ -1084,6 +1085,21 @@ class LON_requests extends PdoDataAccess{
 		
 	}
 	
+	static function GetTotalForfeitAmount($RequestID, $computeArr=null){
+		
+		$dt = array();
+		if($computeArr == null)
+			$computeArr = self::ComputePayments($RequestID, $dt);
+		
+		if(count($computeArr) == 0)
+			return 0;
+		$total = 0;
+		foreach($computeArr as $row)
+			$total += $row["CurForfeitAmount"]*1;
+		
+		return $total;		
+	}
+	
 	/**
 	 *
 	 * @param int $RequestID
@@ -1676,6 +1692,7 @@ class LON_BackPays extends PdoDataAccess{
 				i.ChequeStatus,
 				t.TafsiliDesc ChequeStatusDesc,
 				bi.InfoDesc PayTypeDesc, 				
+				d.DocID,
 				d.LocalNo,
 				d.StatusID
 			from LON_BackPays p

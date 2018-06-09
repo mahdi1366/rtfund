@@ -36,7 +36,7 @@ $grid = $dg->makeGrid_returnObjects();
 
 ?>
 <script>
-	
+
 VoteForms.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
@@ -92,46 +92,25 @@ function VoteForms()
 	this.grid.render(this.get("div_grid"));
 	
 	this.FormWin = new Ext.window.Window({
-		width : 700,
+		width : 800,
 		title : "تکمیل فرم نظر سنجی",
 		height : 500,
-		items : [ new Ext.form.Panel({
-			itemId : "form",
-			border : false
-		}),{
-			xtype : "hidden",
-			name : "FormID"
-		}],
+		loader : {
+			url : this.address_prefix + "FormInfo.php",
+			scripts : true
+		},
 		autoScroll : true,
 		bodyStyle : "background-color:white",
 		modal : true,
 		closeAction : "hide",
 		buttons :[{
-			text : "تایید نهایی نظر سنجی",
-			itemId : "saveBtn",
-			iconCls : "tick",
-			handler : function(){
-				VoteFormsObject.SaveFilledForm();
-			}
-		},{
 			text : "بازگشت",
 			iconCls : "undo",
 			handler : function(){this.up('window').hide();}
 		}]
 	});
 	Ext.getCmp(this.TabID).add(this.FormWin);
-	
-	this.ItemsStore = new Ext.data.Store({
-		fields: ['FormID','ItemID','ItemType',"ItemTitle", 'ItemValues', 'GroupID', 'GroupDesc'],
-		proxy: {
-			type: 'jsonp',
-			url: this.address_prefix + "../../office/vote/vote.data.php?task=SelectItems",
-			reader: {
-				root: 'rows',
-				totalProperty: 'totalCount'
-			}
-		}
-	});
+
 }
 
 VoteForms.viewRender = function(v,p,r){
@@ -143,171 +122,27 @@ VoteForms.viewRender = function(v,p,r){
 
 VoteFormsObject = new VoteForms();
 
-VoteForms.MakeForm = function(store, readOnly){
-	
-	VoteFormsObject.FormWin.down("[name=FormID]").setValue(store.getAt(0).data.FormID);
-	parent = VoteFormsObject.FormWin.down('[itemId=form]');
-	parent.removeAll();
-
-	var CurGroupID = 0;
-	for(i=0; i<store.getCount(); i++)
-	{
-		record = store.getAt(i);
-		if(CurGroupID !== record.data.GroupID)
-		{
-			parent.add({
-				xtype : "fieldset",
-				title : record.data.GroupDesc,
-				itemId : "Group_" + record.data.GroupID,
-				layout : {
-					type : "table",
-					columns : 2
-				}
-			});
-			fsparent = parent.down("[itemId=Group_" + record.data.GroupID + "]");
-			CurGroupID = record.data.GroupID;
-		}
-
-		if(record.data.ItemType === "combo")
-		{
-			arr = record.data.ItemValues.split("#");
-			data = [];
-			for(j=0;j<arr.length;j++)
-				data.push([ arr[j] ]);
-
-			fsparent.add({
-				store : new Ext.data.SimpleStore({
-					fields : ['value'],
-					data : data
-				}),
-				xtype: record.data.ItemType,
-				value : record.data.ItemValue,
-				valueField : "value",
-				displayField : "value",
-				readOnly : readOnly,
-				name : "elem_" + record.data.ItemID,
-				fieldLabel : record.data.ItemTitle,
-				colspan : 2
-			});
-		}
-		else if(record.data.ItemType === "radio")
-		{
-			fsparent.add({
-				xtype : "displayfield",
-				width : 400,
-				value : record.data.ItemTitle
-			});
-			var items = new Array();
-			arr = record.data.ItemValues.split("#");
-			for(j=0; j<arr.length; j++)
-				items.push({
-					boxLabel : arr[j],
-					inputValue : arr[j],
-					readOnly : readOnly,
-					name : "elem_" + record.data.ItemID,
-					checked : arr[j] == record.data.ItemValue ? true : false,
-					width : 100
-				});
-			fsparent.add({
-				xtype : "radiogroup",
-				items : items
-			});
-		}
-		else
-		{
-			if(record.data.ItemType === "textarea")
-			{
-				fsparent.add({
-					xtype : "displayfield",
-					readOnly : readOnly,
-					value : record.data.ItemTitle,
-					colspan : 2,
-					width : 650
-				});
-			}
-			fsparent.add({
-				xtype: record.data.ItemType,
-				fieldLabel : record.data.ItemTitle,
-				style : record.data.ItemType == 'displayfield' ? "line-height: 30px;" : "",
-				name : "elem_" + record.data.ItemID,
-				hideTrigger : record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield' ? true : false,
-				value : record.data.ItemValue,
-				colspan : 2,
-				width : 650
-			});
-		}
-	}
-}
-
 VoteForms.prototype.FillForm = function(FormID){
 	
-	this.FormWin.down("[itemId=saveBtn]").show();
 	this.FormWin.show();
-	this.ItemsStore.load({
+	this.FormWin.loader.load({
 		params : {
+			ExtTabID : this.FormWin.getEl().id,
+			parentObj : "VoteFormsObject",
 			FormID : FormID
-		},
-		callback : function(){
-			VoteForms.MakeForm(this, false);
-		}
-	});	
-}
-
-VoteForms.prototype.SaveFilledForm = function(){
-
-	mask = new Ext.LoadMask(this.FormWin, {msg:'در حال ذخیره سازی ...'});
-	mask.show();
-	
-	this.FormWin.down('[itemId=form]').getForm().submit({
-		url : this.address_prefix + "../../office/vote/vote.data.php",
-		method : "post",
-		params : {
-			task : "SaveFilledForm",
-			FormID : this.FormWin.down('[name=FormID]').getValue()
-		},
-		
-		success : function(){
-			mask.hide();
-			VoteFormsObject.FormWin.hide();
-			VoteFormsObject.NewVoteFormsStore.load();
-			VoteFormsObject.grid.getStore().load();
-		},
-		
-		failure : function(){
-			mask.hide();
 		}
 	});
-
 }
 
 VoteForms.prototype.PreviewForm = function(){
 	
-	if(!this.ValuesStore)
-	{
-		this.ValuesStore = new Ext.data.Store({
-			fields: ['ItemID','ItemValue','ItemType',"ItemTitle", 'ItemValues', 'GroupID', 'GroupDesc'],
-			proxy: {
-				type: 'jsonp',
-				url: this.address_prefix + "../../office/vote/vote.data.php?task=FilledItemsValues",
-				reader: {
-					root: 'rows',
-					totalProperty: 'totalCount'
-				}
-			}
-		});
-	}
-	
 	var record = this.grid.getSelectionModel().getLastSelected();
-	this.FormWin.down("[itemId=saveBtn]").hide();
-	this.FormWin.show();
 	
-	this.ValuesStore.load({
+	this.FormWin.show();
+	this.FormWin.loader.load({
 		params : {
+			ExtTabID : this.FormWin.getEl().id,
 			FormID : record.data.FormID
-		},
-		callback : function(){
-			
-			VoteForms.MakeForm(this,true);
 		}
 	});
 }

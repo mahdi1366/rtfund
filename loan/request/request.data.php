@@ -370,7 +370,12 @@ function GetRequestParts(){
 	}
 	
 	$RequestID = $_REQUEST["RequestID"];
-	$dt = LON_ReqParts::SelectAll("RequestID=?", array($RequestID));
+	
+	$where = "";
+	if(!empty($_REQUEST["IsLast"]))
+		$where .= " AND  IsHistory='NO' ";
+	
+	$dt = LON_ReqParts::SelectAll("RequestID=?". $where, array($RequestID));
 	
 	$CostCode_commitment = 165; // 200-05
 	for($i=0; $i < count($dt);$i++)
@@ -415,7 +420,8 @@ function GetRequestParts(){
 				$dt[$i]["WageYear" . ($index++)] = $row;
 			
 			$res = LON_requests::GetDelayAmounts($PartObj->RequestID, $PartObj);
-			$dt[$i]["TotalCustomerDelay"] = $res["CustomerDelay"];
+			$dt[$i]["FundDelay"] = $res["FundDelay"];
+			$dt[$i]["AgentDelay"] = $res["AgentDelay"];			
 		}
 	}
 	
@@ -596,6 +602,7 @@ function EndRequest(){
 		echo Response::createObjectiveResponse(false, "خطا در تغییر درخواست");
 		die();
 	}
+	ChangeStatus($ReqObj->RequestID,$ReqObj->StatusID,"", false, $pdo);		
 	
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
@@ -697,13 +704,8 @@ function DefrayRequest(){
 			die();
 		}
 	}
-	$ReqObj->StatusID = 95;
-	if(!$ReqObj->EditRequest($pdo))
-	{
-		$pdo->rollback();
-		echo Response::createObjectiveResponse(false, "خطا در تغییر درخواست");
-		die();
-	}
+	
+	ChangeStatus($ReqObj->RequestID,LON_REQ_STATUS_DEFRAY,"", false, $pdo);
 	
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
@@ -1204,6 +1206,16 @@ function DeletePay(){
 		echo Response::createObjectiveResponse(false, "خطا در حذف ردیف پرداخت");
 		die();
 	}
+	
+	PdoDataAccess::runquery("delete from LON_BackPays where RequestID=? AND PayType=? AND PayBillNo=?",
+			array($PayObj->RequestID, BACKPAY_PAYTYPE_CORRECT, $PayObj->BackPayID), $pdo);
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "خطا در حذف ردیف های اصلاحی");
+		die();
+	}
+			
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
 	die();
@@ -2000,6 +2012,7 @@ function ComputeManualInstallments(){
 	$RequestID = $_POST["RequestID"];
 	$ComputeDate = $_POST["ComputeDate"];
 	$ComputeWage = $_POST["ComputeWage"];
+	$WithWage = $_POST["WithWage"] == "YES" ? true : false;
 	
 	$items = json_decode(stripcslashes($_REQUEST["records"]));
 	$installmentArray = array();
@@ -2012,8 +2025,12 @@ function ComputeManualInstallments(){
 	$installmentArray = ExtraModules::array_sort($installmentArray, "InstallmentDate");
 		
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
-	//$installmentArray = ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate, $ComputeWage);
-	$installmentArray = LON_requests::FreeDobellWageComputeInstallment($partObj, $installmentArray, $ComputeDate, $ComputeWage);
+	if($partObj->ComputeMode == "NEW")
+		$installmentArray = LON_requests::FreeDobellWageComputeInstallment($partObj, $installmentArray, 
+			$ComputeDate, $ComputeWage);
+	else
+		$installmentArray = ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate, 
+				$ComputeWage, $WithWage);
 	
 	//........................
 
@@ -2027,7 +2044,7 @@ function ComputeManualInstallments(){
 		$obj->RequestID = $RequestID;
 		$obj->InstallmentDate = DateModules::shamsi_to_miladi($installmentArray[$i]["InstallmentDate"]);
 		$obj->InstallmentAmount = $installmentArray[$i]["InstallmentAmount"];
-		$obj->wage = $installmentArray[$i]["wage"];
+		$obj->wage = isset($installmentArray[$i]["wage"]) ? $installmentArray[$i]["wage"] : 0;
 		if(!$obj->AddInstallment($pdo))
 		{
 			$pdo->rollBack();

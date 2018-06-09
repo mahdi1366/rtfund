@@ -453,11 +453,13 @@ function SaveNewPlan(){
 		
 		PLN_plans::ChangeStatus($obj->PlanID, $obj->StepID , "", true);
 	}
-	else
+	else if(isset($_SESSION["USER"]["framework"]))
 	{
 		$obj->PlanID = $PlanID;
 		$result = $obj->EditPlan();
 	}
+	else
+		$result = true;
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, $obj->PlanID);
 	die();	

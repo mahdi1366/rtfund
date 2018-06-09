@@ -382,8 +382,8 @@ TaskRequest.prototype.ActionTask = function(){
 	if(!this.commentWin)
 	{
 		this.commentWin = new Ext.window.Window({
-			width : 412,
-			height : 220,
+			width : 412, 
+			height : 300,
 			modal : true,
 			title : "اقدام کار",
 			bodyStyle : "background-color:white",

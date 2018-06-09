@@ -81,6 +81,8 @@ class ATN_traffic extends OperationClass
 			//echo PdoDataAccess::GetLatestQueryString();
 		}
 		//............ Reset wrong hourly off and mission requests .............
+		if(count($dt) == 0)
+			return;
 		$currentDate = $dt[0]["TrafficDate"];
 		$index = 0;
 		for($i=0; $i<count($dt); $i++)
@@ -284,7 +286,7 @@ class ATN_traffic extends OperationClass
 			$extra = 0;
 			$durAbsense = 0;
 
-			if($returnArr[$i]["TrafficTime"] != "")
+			if($returnArr[$i]["TrafficTime"] != "" && $returnArr[$i]["ReqType"] != "OFF")
 			{
 				if(strtotime($returnArr[$i]["TrafficTime"]) > strtotime($returnArr[$i]["FromTime"]))
 					$firstAbsence = strtotime($returnArr[$i]["TrafficTime"]) - strtotime($returnArr[$i]["FromTime"]);
@@ -315,7 +317,9 @@ class ATN_traffic extends OperationClass
 					$index++;
 					//-------------------------------------
 					$startOff = strtotime($returnArr[$i]["TrafficTime"]);
+					$startOff = max(strtotime($returnArr[$i]["TrafficTime"]), strtotime($returnArr[$i]["FromTime"]));
 					$endOff = strtotime($returnArr[$i]["EndTime"]);
+					$endOff = min(strtotime($returnArr[$i]["EndTime"]), strtotime($returnArr[$i]["ToTime"]));
 					
 					if($returnArr[$i]["ReqType"] == "OFF")
 						$Off += $endOff - $startOff;
@@ -398,6 +402,7 @@ class ATN_traffic extends OperationClass
 							$min = min($firstAbsence,$extra);
 							$extra -= $min;
 							$firstAbsence -= $min;
+							$Absence -= $Absence > 0 ? $min : 0;
 						}
 						if($lastAbsence > 0)
 						{

@@ -111,13 +111,18 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 					me.companyPanel.down("[itemId=Cmp_FundRule]").setValue(true);
 				else
 					me.companyPanel.down("[itemId=Cmp_AgentRule]").setValue(true);
+				
 				if(record.data.guarantees != null)
 				{
 					arr = record.data.guarantees.split(",");
 					for(i=0; i<arr.length; i++)
 						if(arr[i] != "")
-							me.companyPanel.down("[name=guarantee_" + arr[i] + "]").setValue(true);
+							try{
+								me.companyPanel.down("[name=guarantee_" + arr[i] + "]").setValue(true);
+							}
+							catch {}
 				}
+				
 				//..........................................................
 				var R1 = false;
 				if(record.data.LoanPersonID > 0)
@@ -361,6 +366,7 @@ RequestInfo.prototype.MakePartsPanel = function(){
 					renderer : function(v){
 						if(v == "CUSTOMER") return "هنگام پرداخت وام";
 						if(v == "INSTALLMENT") return 'طی اقساط';
+						if(v == "CHEQUE") return 'چک';
 					}
 				},{
 					name : "DelayReturn",
@@ -368,6 +374,7 @@ RequestInfo.prototype.MakePartsPanel = function(){
 					renderer : function(v){
 						if(v == "CUSTOMER") return "هنگام پرداخت وام";
 						if(v == "INSTALLMENT") return 'طی اقساط';
+						if(v == "CHEQUE") return 'چک';
 					}
 				},{
 					colspan : 3,
@@ -1773,6 +1780,11 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						boxLabel : "طی اقساط",
 						name : "DelayReturn",
 						inputValue : "INSTALLMENT"
+					},{
+						xtype : "radio",
+						boxLabel : "چک",
+						name : "DelayReturn",
+						inputValue : "CHEQUE"
 					}]
 				},{
 					xtype : "fieldset",
@@ -1809,6 +1821,11 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						boxLabel : "طی اقساط",
 						name : "AgentDelayReturn",
 						inputValue : "INSTALLMENT"
+					},{
+						xtype : "radio",
+						boxLabel : "چک",
+						name : "AgentDelayReturn",
+						inputValue : "CHEQUE"
 					}]
 				},{
 					xtype : "fieldset",
@@ -2020,7 +2037,8 @@ RequestInfo.prototype.LoadSummary = function(record){
 	
 	this.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.AllPay);
 	this.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.LastPay);
-	this.get("SUM_Delay").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerDelay);
+	this.get("SUM_FundDelay").innerHTML = Ext.util.Format.Money(record.data.FundDelay);
+	this.get("SUM_AgentDelay").innerHTML = Ext.util.Format.Money(record.data.AgentDelay);
 	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerWage);
 	this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.TotalFundWage);
 	this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(record.data.TotalAgentWage);
@@ -2029,8 +2047,10 @@ RequestInfo.prototype.LoadSummary = function(record){
 	this.get("SUM_Wage_3Year").innerHTML = Ext.util.Format.Money(record.data.WageYear3);
 	this.get("SUM_Wage_4Year").innerHTML = Ext.util.Format.Money(record.data.WageYear4);
 	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
-		(record.data.DelayReturn == "CUSTOMER" ? record.data.TotalCustomerDelay : 0) - 
-		(record.data.WageReturn == "CUSTOMER" ? record.data.TotalCustomerWage : 0));	
+		(record.data.DelayReturn == "CUSTOMER" ? record.data.FundDelay*1 : 0) - 
+		(record.data.AgentDelayReturn == "CUSTOMER" ? record.data.AgentDelay : 0) - 
+		(record.data.WageReturn == "CUSTOMER" ? record.data.TotalFundWage : 0) - 
+		(record.data.AgentWageReturn == "CUSTOMER" ? record.data.TotalAgentWage : 0));
 }
 
 //.........................................................
