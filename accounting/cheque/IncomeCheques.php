@@ -52,7 +52,7 @@ $col->width = 80;*/
 if($accessObj->EditFlag)
 {
 	$dg->addButton("", "اضافه چک", "add", "function(){IncomeChequeObject.AddCheque();}");
-	$dg->addButton("", "اضافه چکهای اقساط", "add", "function(){IncomeChequeObject.AddLoanCheque();}");
+	$dg->addButton("", "اضافه چکهای وام", "add", "function(){IncomeChequeObject.AddLoanCheque();}");
 	$dg->addButton("", "ویرایش چک", "edit", "function(){IncomeChequeObject.beforeEdit();}");
 	$dg->addButton("", "تغییر وضعیت", "refresh", "function(){IncomeChequeObject.beforeChangeStatus();}");
 	$dg->addButton("", "برگشت عملیات", "undo", "function(){IncomeChequeObject.ReturnLatestOperation();}");
@@ -1150,6 +1150,7 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 							reader: {root: 'rows',totalProperty: 'totalCount'}
 						},
 						fields :  ['PartAmount',"IsEnded","RequestID","PartDate","loanFullname",
+							"DelayReturn","AgentDelayReturn",
 							"InstallmentAmount","ReqFullName","LoanDesc","totalRemain",{
 							name : "fullTitle",
 							convert : function(value,record){
@@ -1165,6 +1166,17 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 					name : "RequestID",
 					valueField : "RequestID",
 					width : 850,
+					listeners : {
+						select : function(combo,records){
+							if(records[0].data.DelayReturn != "CHEQUE" && 
+								records[0].data.AgentDelayReturn != "CHEQUE")
+							{
+								Ext.MessageBox.alert("ERROR", "نوع پرداخت تنفس وام انتخابی چک نمی باشد");
+								this.setValue();
+								return false;
+							}
+						}
+					},
 					tpl: new Ext.XTemplate(
 						'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
 						'<td style="padding:7px">کد </td>',
