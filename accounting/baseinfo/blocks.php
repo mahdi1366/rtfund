@@ -33,6 +33,7 @@ for ($i = 0; $i < count($temp); $i++) {
     $BlockGrid->addColumn('', "BlockID", "", true);
     $BlockGrid->addColumn('', "LevelID", "", true);
     $BlockGrid->addColumn('', "IsActive", "", true);
+	$BlockGrid->addColumn('', "MainCostCode", "", true);
 
     $col = $BlockGrid->addColumn('کد', "BlockCode");
     $col->width = 80;
@@ -54,9 +55,15 @@ for ($i = 0; $i < count($temp); $i++) {
 	
 	if ($temp[$i]["HasEssence"]) {
         $col = $BlockGrid->addColumn('ماهیت', "essence");
-        $col->width = 150;
+        $col->width = 100;
 		if($accessObj->AddFlag || $accessObj->EditFlag)
 			$col->editor = ColumnEditor::ComboBox($Essence, 'val', 'name');
+		
+		$col = $BlockGrid->addColumn('کد حساب انتقالی', "MainCostID");
+		$col->renderer = "function(v,p,r){return r.data.MainCostCode}";
+        $col->width = 200;
+		if($accessObj->AddFlag || $accessObj->EditFlag)
+			$col->editor = "BlockObj.accountCombo";
     }
 
 	if($accessObj->AddFlag)

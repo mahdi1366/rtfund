@@ -35,8 +35,11 @@ switch($task)
 	case "removeChecks":
 	case "RegisterCheck":
 	case "UpdateChecks":
+		
 	case "RegisterEndDoc":
 	case "RegisterStartDoc":
+	case "RegisterCloseDoc":
+		
 	case "ComputeDoc":
 	case "GetAccountSummary":
 	case "GetAccountFlow":
@@ -641,6 +644,109 @@ function UpdateChecks(){
 }
 
 //..........................
+
+function RegisterCloseDoc(){
+	
+	$dt = PdoDataAccess::runquery("select * from ACC_docs where DocType=" . DOCTYPE_CLOSECYCLE . " 
+		AND BranchID=? AND CycleID=?", 
+			array($_SESSION["accounting"]["CycleID"],$_SESSION["accounting"]["BranchID"]));
+	if(count($dt) > 0)
+	{
+		echo Response::createObjectiveResponse(false, "سند بستن حساب های موقت در این دوره قبلا صادر شده است");
+		die();
+	}
+	
+	$LocalNo = $_POST["LocalNo"];
+	if($LocalNo != "")
+	{
+		$dt = PdoDataAccess::runquery("select * from ACC_docs 
+			where BranchID=? AND CycleID=? AND LocalNo=?" , 
+
+			array($_SESSION["accounting"]["BranchID"], 
+				$_SESSION["accounting"]["CycleID"], 
+				$LocalNo));
+
+		if(count($dt) > 0)
+		{
+			echo Response::createObjectiveResponse(false, "شماره سند وارد شده موجود می باشد");
+			die();
+		}
+	}
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	//---------------- account header doc --------------------
+	$obj = new ACC_docs();
+	$obj->LocalNo = $LocalNo;
+	$obj->RegDate = PDONOW;
+	$obj->regPersonID = $_SESSION['USER']["PersonID"];
+	$obj->DocDate = PDONOW;
+	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
+	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
+	$obj->description = "سند بستن حساب های موقت";
+	$obj->DocType = DOCTYPE_CLOSECYCLE;
+	$result = $obj->Add($pdo);
+
+	if (!$result) {
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+		die();
+	}
+		
+	PdoDataAccess::runquery("
+		insert into ACC_DocItems(DocID,CostID,DebtorAmount,CreditorAmount,locked)
+		select $obj->DocID,MainCostID,
+			if( sum(DebtorAmount-CreditorAmount)>0, sum(DebtorAmount-CreditorAmount), 0 ),
+			if( sum(CreditorAmount-DebtorAmount)>0, sum(CreditorAmount-DebtorAmount), 0 ),
+			1
+		from ACC_DocItems i
+		join ACC_CostCodes c using(CostID)
+		join ACC_blocks b1 on(level1=BlockID AND MainCostID>0)
+		join ACC_docs using(DocID)
+		where CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+			AND BranchID = " . $_SESSION["accounting"]["BranchID"] . "
+			
+		group by MainCostID
+		having sum(CreditorAmount-DebtorAmount)<>0
+	", array(), $pdo);
+	
+	PdoDataAccess::runquery("
+		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
+			DebtorAmount,CreditorAmount,locked)
+		select $obj->DocID,i.CostID,i.TafsiliType,i.TafsiliID,i.TafsiliType2,i.TafsiliID2,
+			if( sum(CreditorAmount-DebtorAmount)>0, sum(CreditorAmount-DebtorAmount), 0 ),
+			if( sum(DebtorAmount-CreditorAmount)>0, sum(DebtorAmount-CreditorAmount), 0 ),
+			1
+		from ACC_DocItems i
+		join ACC_CostCodes c using(CostID)
+		join ACC_blocks b1 on(level1=BlockID AND MainCostID>0)
+		join ACC_docs using(DocID)
+		where CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+			AND BranchID = " . $_SESSION["accounting"]["BranchID"] . "
+			
+		group by i.CostID,i.TafsiliID,i.TafsiliID2	
+		having sum(CreditorAmount-DebtorAmount)<>0
+	", array(), $pdo);
+	
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		$pdo->rollBack();
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo Response::createObjectiveResponse(false, "خطا در اضافه ردیف ها");
+		die();
+	}
+	
+	if(PdoDataAccess::AffectedRows($pdo) == 0)
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "ردیفی برای صدور سند بستن حسابها یافت نشد");
+		die();
+	}
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
 
 function RegisterEndDoc(){
 	

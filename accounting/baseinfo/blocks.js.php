@@ -19,6 +19,24 @@ Block.prototype = {
 
 function Block(){
 
+	this.accountCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+				name : "fullDesc",
+				convert : function(value,record){
+					return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+				}				
+			}],
+			proxy: {
+				type: 'jsonp',
+				url: this.address_prefix + 'baseinfo.data.php?task=SelectCostCode',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			}
+		}),
+		valueField : "CostID",
+		displayField : "fullDesc"
+	});
+	
 	this.mainTab = new Ext.TabPanel({
 		renderTo: this.get("mainTab"),
 		width : 800,
