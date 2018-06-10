@@ -1116,7 +1116,7 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 	{
 		this.LoanChequeWin = new Ext.window.Window({
 			width : 900,
-			height : 430,
+			height : 450,
 			modal : true,
 			closeAction : "hide",
 			items : new Ext.form.Panel({
