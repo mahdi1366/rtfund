@@ -1168,7 +1168,8 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 					width : 850,
 					listeners : {
 						select : function(combo,records){
-							if(records[0].data.DelayReturn != "CHEQUE" && 
+							if(this.LoanChequeWin.down("[name=ChequeFor]").getValue() == "Delay" && 
+								records[0].data.DelayReturn != "CHEQUE" && 
 								records[0].data.AgentDelayReturn != "CHEQUE")
 							{
 								Ext.MessageBox.alert("ERROR", "نوع پرداخت تنفس وام انتخابی چک نمی باشد");
