@@ -1137,6 +1137,7 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 					},{
 						xtype : "radio",
 						boxLabel : "بابت تنفس وام",
+						itemId : "RadioDelay",
 						name : "ChequeFor",
 						inputValue : "Delay"
 					}]
@@ -1168,7 +1169,7 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 					width : 850,
 					listeners : {
 						select : function(combo,records){
-							if(IncomeChequeObject.LoanChequeWin.down("[name=ChequeFor]").getValue() == "Delay" && 
+							if(IncomeChequeObject.LoanChequeWin.down("[itemId=RadioDelay]").getValue() && 
 								records[0].data.DelayReturn != "CHEQUE" && 
 								records[0].data.AgentDelayReturn != "CHEQUE")
 							{
