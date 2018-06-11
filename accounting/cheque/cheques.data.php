@@ -666,6 +666,11 @@ function SaveStatus(){
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	$obj->TypeID = 4;
 	
+	if(!isset($obj->param1))
+		$obj->param1 = PDONULL;
+	if(!isset($obj->param2))
+		$obj->param2 = PDONULL;
+	
 	if($obj->InfoID*1 == 0)
 	{
 		$pdo = PdoDataAccess::getPdoObject();

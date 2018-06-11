@@ -129,6 +129,9 @@ function SaveBlockData() {
 	if($block->LevelID > 1)
 		$block->BlockCode = str_pad($block->BlockCode, 2, '0', STR_PAD_LEFT);		
 	
+	if(!isset($block->MainCostID))
+		$block->MainCostID = PDONULL;
+	
     $newFlag = false;
     if ($block->BlockID == '') {
         $res = $block->AddBlock();
