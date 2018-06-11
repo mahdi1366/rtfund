@@ -359,12 +359,12 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 				return false;
 			}
 		}
-		if($PartObj->DelayReturn == "CHEQUE")
+		if($PartObj->DelayReturn == "CHEQUE" && $TotalFundDelay > 0)
 		{
 			unset($itemObj->ItemID);
 			$itemObj->CostID = $CostCode_delayCheque;
-			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $TotalFundDelay;
+			$itemObj->DebtorAmount = $TotalFundDelay;
+			$itemObj->CreditorAmount = 0;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $LoanPersonTafsili;
 			if($LoanMode == "Agent")
@@ -384,12 +384,12 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 				return false;
 			}
 		}
-		if($PartObj->AgentDelayReturn == "CHEQUE")
+		if($PartObj->AgentDelayReturn == "CHEQUE" && $TotalAgentDelay > 0)
 		{
 			unset($itemObj->ItemID);
 			$itemObj->CostID = $CostCode_delayCheque;
-			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $TotalAgentDelay;
+			$itemObj->DebtorAmount = $TotalAgentDelay;
+			$itemObj->CreditorAmount = 0;
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $LoanPersonTafsili;
 			if($LoanMode == "Agent")
@@ -539,10 +539,10 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	if($PartObj->AgentReturn == "CUSTOMER" && $PartObj->CustomerWage > $PartObj->FundWage)
 		$BankItemAmount -= $TotalAgentWage;
 	
-	if($PartObj->DelayReturn == "CUSTOMER" || $PartObj->DelayReturn == "CHEQUE")
+	/*if($PartObj->DelayReturn == "CUSTOMER" || $PartObj->DelayReturn == "CHEQUE")
 		$BankItemAmount -= $TotalFundDelay;
 	if($PartObj->AgentDelayReturn == "CUSTOMER" || $PartObj->DelayReturn == "CHEQUE")
-		$BankItemAmount -= $TotalAgentDelay;
+		$BankItemAmount -= $TotalAgentDelay;*/
 	
 	$itemObj->CreditorAmount = $BankItemAmount;
 	$itemObj->TafsiliType = TAFTYPE_BANKS;
@@ -647,60 +647,8 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$itemObj->CreditorAmount = $SumAmount;	
 			$itemObj->Add($pdo);
 
-			/*unset($itemObj->ItemID);
-			$itemObj->CostID = $CostCode_guaranteeCount;
-			$itemObj->DebtorAmount = $countAmount;
-			$itemObj->CreditorAmount = 0;	
-			$itemObj->Add($pdo);
-
-			unset($itemObj->ItemID);
-			$itemObj->CostID = $CostCode_guaranteeCount2;
-			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $countAmount;
-			$itemObj->Add($pdo);*/
 		}
 	}
-	//----------- cheques of installments -------------------------
-	/*if($FirstStep)
-	{		
-		$dt = PdoDataAccess::runquery("
-			SELECT PayAmount,BackPayID,ChequeNo
-				FROM LON_BackPays
-				where RequestID=? AND ChequeNo>0",	array($ReqObj->RequestID), $pdo);
-		
-		$SumAmount = 0;
-		foreach($dt as $row)
-		{
-			unset($itemObj->ItemID);
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
-			$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
-			$itemObj->DebtorAmount = $row["PayAmount"];
-			$itemObj->CreditorAmount = 0;
-			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $LoanPersonTafsili;
-			$itemObj->SourceType = DOCTYPE_DOCUMENT;
-			$itemObj->SourceID = $row["BackPayID"];
-			$itemObj->details = "چک قسط به شماره " . $row["ChequeNo"];
-			$itemObj->Add($pdo);
-			
-			$SumAmount += $row["PayAmount"]*1;
-			$countAmount++;
-		}
-		if($SumAmount > 0)
-		{
-			unset($itemObj->ItemID);
-			unset($itemObj->TafsiliType);
-			unset($itemObj->TafsiliID);
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
-			unset($itemObj->details);
-			$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
-			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $SumAmount;	
-			$itemObj->Add($pdo);
-		}
-	}*/
 	//---------------------------------------------------------
 	//------ ایجاد چک ------
 	
@@ -969,8 +917,8 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	{
 		unset($itemObj->ItemID);
 		$itemObj->CostID = $CostCode_delayCheque;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $FundDelay;
+		$itemObj->DebtorAmount = $FundDelay;
+		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $LoanPersonTafsili;
 		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
@@ -986,8 +934,8 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	{
 		unset($itemObj->ItemID);
 		$itemObj->CostID = $CostCode_delayCheque;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $AgentDelay;
+		$itemObj->DebtorAmount = $AgentDelay;
+		$itemObj->CreditorAmount = 0;
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $LoanPersonTafsili;
 		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
@@ -1001,10 +949,10 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	}
 	// ----------------------------- bank --------------------------------
 	$BankAmount = $PayAmount - $AgentWage;
-	if($PartObj->DelayReturn == "CHEQUE")
+	/*if($PartObj->DelayReturn == "CHEQUE")
 		$BankAmount -= $FundDelay;
 	if($PartObj->AgentDelayReturn == "CHEQUE")
-		$BankAmount -= $AgentDelay;
+		$BankAmount -= $AgentDelay;*/
 	
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
