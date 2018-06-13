@@ -10,6 +10,7 @@ define("Default_BranchID", "3");
 define("DOCTYPE_STARTCYCLE", "1");
 define("DOCTYPE_NORMAL", "2");
 define("DOCTYPE_ENDCYCLE", "3");
+define("DOCTYPE_CLOSECYCLE", "25");
 define("DOCTYPE_LOAN_PAYMENT", "4");
 define("DOCTYPE_INSTALLMENT_PAYMENT", "5");
 define("DOCTYPE_END_REQUEST", "6");

@@ -1116,7 +1116,7 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 	{
 		this.LoanChequeWin = new Ext.window.Window({
 			width : 900,
-			height : 370,
+			height : 430,
 			modal : true,
 			closeAction : "hide",
 			items : new Ext.form.Panel({
@@ -1137,6 +1137,7 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 					},{
 						xtype : "radio",
 						boxLabel : "بابت تنفس وام",
+						itemId : "RadioDelay",
 						name : "ChequeFor",
 						inputValue : "Delay"
 					}]
@@ -1168,7 +1169,8 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 					width : 850,
 					listeners : {
 						select : function(combo,records){
-							if(records[0].data.DelayReturn != "CHEQUE" && 
+							if(IncomeChequeObject.LoanChequeWin.down("[itemId=RadioDelay]").getValue() && 
+								records[0].data.DelayReturn != "CHEQUE" && 
 								records[0].data.AgentDelayReturn != "CHEQUE")
 							{
 								Ext.MessageBox.alert("ERROR", "نوع پرداخت تنفس وام انتخابی چک نمی باشد");

@@ -84,31 +84,32 @@ function SelectBlocks() {
 	}
 	
 	
-    $where = "IsActive='YES' AND LevelID=:LevelID";
+    $where = "b.IsActive='YES' AND b.LevelID=:LevelID";
     $param = array();
     $param[':LevelID'] = $_REQUEST['level'];
 
     if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
-        $where .= ' and ' . $field . ' like :' . $field;
+        $where .= ' and b.' . $field . ' like :' . $field;
         $param[':' . $field] = '%' . $_REQUEST['query'] . '%';
     }
 	
 	if(!isset($_REQUEST['fields']) && !empty($_REQUEST['query']))
 	{
-		$where .= " AND ( BlockDesc like :qu or BlockCode like :qu)";
+		$where .= " AND ( b.BlockDesc like :qu or b.BlockCode like :qu)";
 		$param[':qu'] = '%' . $_REQUEST['query'] . '%';
 	}
 	
 	if(!empty($_REQUEST['BlockID']))
 	{
-		$where .= " AND BlockID=:b";
+		$where .= " AND b.BlockID=:b";
 		$param[':b'] = $_REQUEST['BlockID'];
 	}
 	
-    $where .= " order by BlockCode*1";
+    $where .= " order by b.BlockCode*1";
 
     $list = ACC_blocks::GetAll($where, $param);
+	print_r(ExceptionHandler::PopAllExceptions());
     $count = $list->rowCount();
 
     if (isset($_GET["start"]) && !isset($_GET["All"]))
@@ -127,6 +128,9 @@ function SaveBlockData() {
 
 	if($block->LevelID > 1)
 		$block->BlockCode = str_pad($block->BlockCode, 2, '0', STR_PAD_LEFT);		
+	
+	if(!isset($block->MainCostID))
+		$block->MainCostID = PDONULL;
 	
     $newFlag = false;
     if ($block->BlockID == '') {

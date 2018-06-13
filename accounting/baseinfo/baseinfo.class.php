@@ -41,6 +41,7 @@ class ACC_blocks extends PdoDataAccess{
 	public $BlockDesc;
 	public $essence;
 	public $GroupID;
+	public $MainCostID;
 
     function __construct($BlockID = "")
     {
@@ -50,7 +51,15 @@ class ACC_blocks extends PdoDataAccess{
 
     static function GetAll($where = "",$whereParam = array())
     {
-	    $query = "select b.* from ACC_blocks b";
+	    $query = "select b.* , concat('[',c1.CostCode,']',concat_ws('-',b11.blockDesc,b12.blockDesc,b13.blockDesc,b14.blockDesc)) MainCostCode
+					from ACC_blocks b
+					left join ACC_CostCodes c1 on(c1.CostID=b.MainCostID)
+					left join ACC_blocks b11 on(c1.level1=b11.blockID)
+					left join ACC_blocks b12 on(c1.level2=b12.blockID)
+					left join ACC_blocks b13 on(c1.level3=b13.blockID)
+					left join ACC_blocks b14 on(c1.level4=b14.blockID)
+					
+				 ";
 	    $query .= ($where != "") ? " where " . $where : "";
 	    return parent::runquery_fetchMode($query, $whereParam);
     }

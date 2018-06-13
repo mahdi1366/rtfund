@@ -32,7 +32,7 @@ function CloseOpenDoc()
 		frame : true,
 		bodyStyle : "text-align:right;padding:5px",
 		title : "صدور سند افتتاحیه و اختتامیه",
-		width : 350,
+		width : 450,
 		items :[{
 			xtype : "numberfield",
 			name : "LocalNo",
@@ -43,6 +43,33 @@ function CloseOpenDoc()
 			html : "توجه : در صورتیکه شماره سند را وارد نکنید، شماره آخرین سند در نظر گرفته می شود"
 		}],
 		buttons : [{
+			text : "صدور سند بستن حسابهای موقت",
+			disabled : this.AddAccess ? false : true,
+			iconCls : "account",
+			handler : function()
+			{
+				mask = new Ext.LoadMask(this.up('form'), {msg:'در حال ذخيره سازي...'});
+				mask.show();
+				
+				var form = this.up('form').getForm();
+				form.submit({
+					clientValidation: true,
+					url: CloseOpenDocObj.address_prefix + 'doc.data.php?task=RegisterCloseDoc',
+					success: function(fp, o) {
+						if(o.result.success)
+							Ext.MessageBox.alert("","سند با موفقیت صادر شد");
+						else
+							Ext.MessageBox.alert("",o.result.data);
+						
+						mask.hide();
+					},
+					failure : function(fp, o){
+						Ext.MessageBox.alert("",o.result.data);
+						mask.hide();
+					}
+				});
+			}	
+		},{
 			text : "صدور سند اختتامیه",
 			disabled : this.AddAccess ? false : true,
 			iconCls : "account",

@@ -444,6 +444,11 @@ function SaveLoanCheque(){
 		
 		if($_POST["ChequeFor"] == "INSTALLMENT")
 		{
+			if(!$obj->Add($pdo))
+			{
+				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+				die();
+			}
 			//................. add back pays ........................
 			$bobj = new LON_BackPays();
 			$bobj->PayDate = $obj->ChequeDate;
@@ -465,13 +470,13 @@ function SaveLoanCheque(){
 				$obj->TafsiliType2 = TAFTYPE_PERSONS;
 				$obj->TafsiliID2 = FindTafsiliID($ReqObj->ReqPersonID, TAFTYPE_PERSONS);
 			}
-		}
+			if(!$obj->Add($pdo))
+			{
+				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+				die();
+			}
+		}	
 		
-		if(!$obj->Add($pdo))
-		{
-			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
-			die();
-		}
 		//.......................................................
 		ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, $obj->ChequeStatus, $pdo);
 		//--------------------------------------------
@@ -665,6 +670,11 @@ function SaveStatus(){
 	$obj = new BaseInfo();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	$obj->TypeID = 4;
+	
+	if(!isset($obj->param1))
+		$obj->param1 = PDONULL;
+	if(!isset($obj->param2))
+		$obj->param2 = PDONULL;
 	
 	if($obj->InfoID*1 == 0)
 	{
