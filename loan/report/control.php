@@ -99,8 +99,7 @@ function GetData(){
 				acc.AccRemain AccRemain2,
 				tod.CostID TodieeCostID,
 				tod.Remain Todiee,
-				ifnull(acc.AccRemain,0) - ifnull(i.sumInstallments,0) + ifnull(b.sumbackpays,0) diff,
-				abs(ifnull(acc.AccRemain,0) - ifnull(i.sumInstallments,0) + ifnull(b.sumbackpays,0)) absDiff,
+				abs(ifnull(acc.AccRemain,0) - ifnull(i.sumInstallments,0) + ifnull(b.sumbackpays,0)) diff,
 				0 diff2
 				
 				". ($userFields != "" ? "," . $userFields : "")."
@@ -156,7 +155,7 @@ function GetData(){
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
 	$query .= $group == "" ? " group by r.RequestID" : " group by " . $group;
-	$query .= $group == "" ? " order by absDiff desc" : " order by " . $group;		
+	$query .= $group == "" ? " order by diff desc" : " order by " . $group;		
 	
 	$dt = PdoDataAccess::runquery($query, $whereParam);
 	
