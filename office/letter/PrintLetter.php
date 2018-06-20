@@ -10,7 +10,6 @@ $LetterID = !empty($_REQUEST["LetterID"]) ? $_REQUEST["LetterID"] : "";
 if(empty($LetterID))
 	die();
 
-echo "------------";
 $LetterObj = new OFC_letters($LetterID);
 
 $letterYear = substr(DateModules::miladi_to_shamsi($LetterObj->LetterDate),0,4);

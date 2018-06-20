@@ -28,6 +28,7 @@ $dg->addColumn("","IsActive","string", true);
 $dg->addColumn("","ShareNo","string", true);
 $dg->addColumn("","SmsNo","string", true);
 $dg->addColumn("","IsConfirm","string", true);
+$dg->addColumn("","AttCode","string", true);
 
 $col = $dg->addColumn("نام و نام خانوادگی","fullname","string");
 

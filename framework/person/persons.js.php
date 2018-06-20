@@ -160,8 +160,14 @@ function Person()
 			hideTrigger : true,
 			labelWidth : 100,
 			width : 235,
-			colspan : 2,
 			fieldLabel : "شماره دفتر سهام"
+		},{
+			xtype : "numberfield",
+			name : "AttCode",
+			hideTrigger : true,
+			labelWidth : 150,
+			width : 235,
+			fieldLabel : "کد دستگاه حضور و غیاب"
 		},{
 			xtype : "fieldset",
 			colspan : 2,

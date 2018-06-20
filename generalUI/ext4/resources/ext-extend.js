@@ -3245,6 +3245,11 @@ Ext.override(Ext.form.field.HtmlEditor,{
             text: 'تغییر رنگ متن انتخابی',
             cls: Ext.baseCSSPrefix + 'html-editor-tip'
         },
+		justifyfull : {
+            title: 'مرتب چین',
+            text: '',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
         justifyleft : {
             title: 'چپ چین',
             text: 'انتقال متن به سمت چپ',
@@ -3433,6 +3438,7 @@ Ext.override(Ext.form.field.HtmlEditor,{
         if (me.enableAlignments) {
             items.push(
                 '-',
+				btn('justifyfull'),
                 btn('justifyright'),
                 btn('justifycenter'),
                 btn('justifyleft')
@@ -3492,10 +3498,47 @@ Ext.override(Ext.form.field.HtmlEditor,{
 
         me.toolbar = toolbar;
     },
+	updateToolbar: function() {
+        var me = this,
+            btns, doc, name, fontSelect;
+        if (me.readOnly) {
+            return;
+        }
+        if (!me.activated) {
+            me.onFirstFocus();
+            return;
+        }
+        btns = me.getToolbar().items.map;
+        doc = me.getDoc();
+        if (me.enableFont && !Ext.isSafari2) {
+            name = (doc.queryCommandValue('FontName') || me.defaultFont).toLowerCase();
+            fontSelect = me.fontSelect.dom;
+            if (name !== fontSelect.value) {
+                fontSelect.value = name;
+            }
+        }
+        function updateButtons() {
+            for (var i = 0, l = arguments.length, name; i < l; i++) {
+                name = arguments[i];
+                btns[name].toggle(doc.queryCommandState(name));
+            }
+        }
+        if(me.enableFormat){
+            updateButtons('bold', 'italic', 'underline');
+        }
+        if(me.enableAlignments){
+            updateButtons('justifyfull','justifyright', 'justifycenter', 'justifyleft');
+        }
+        if(!Ext.isSafari2 && me.enableLists){
+            updateButtons('insertorderedlist', 'insertunorderedlist');
+        }
+        Ext.menu.Manager.hideAll();
+        me.syncValue();
+    },
 	getDocMarkup: function() {
         var me = this,
             h = me.iframeEl.getHeight() - me.iframePad * 2;
-        return Ext.String.format('<html><head><link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" /><style type="text/css">body{border:0;margin:0;padding:{0}px;height:{1}px;box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box;cursor:text}</style></head><body style=direction:rtl></body></html>', me.iframePad, h);
+        return Ext.String.format('<html><head><link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" /><style type="text/css">body{border:0;margin:0;padding:{0}px;height:{1}px;box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box;cursor:text}</style></head><body style=direction:rtl></body></html>', me.iframePad, h);	
     }
 });
 
