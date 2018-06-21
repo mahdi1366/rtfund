@@ -8,11 +8,25 @@ require_once inc_dataReader;
 require_once inc_response;
 require_once 'shift.class.php';
 
-$task = $_REQUEST["task"];
+$task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 switch ($task) {
 
-	default : 
-		eval($task. "();");
+	case "GetAllShifts":
+	case "SaveShift":
+	case "DeleteShift":
+	case "GetAllPersonShifts":
+	case "SavePersonShift":
+	case "DeletePersonShift":
+	case "GetAllHolidays":
+	case "SaveHoliday":
+	case "DeleteHoliday":
+	case "ImportHolidaysFromExcel":
+	case "GetAllSettings":
+	case "SaveSetting":
+	case "DeleteSetting":
+		
+	case "StartFlow":
+		$task();
 }
 
 function GetAllShifts() {
