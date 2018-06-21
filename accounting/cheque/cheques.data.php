@@ -319,7 +319,7 @@ function ChangeChequeStatus(){
 	
 	if($Status == INCOMECHEQUE_VOSUL && isset($_POST["UpdateLoanBackPay"]) && $obj->PayedDate != "")
 	{
-		$dt = $obj->GetBackPays($pdo);
+		$dt = $obj->GetBackPays($pdo); 
 		foreach($dt as $row)
 		{
 			$PayObj = new LON_BackPays($row["BackPayID"]);
