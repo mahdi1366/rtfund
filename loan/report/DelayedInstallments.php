@@ -29,6 +29,8 @@ if(!empty($_REQUEST["print"]))
 	$col = $rpg->addColumn("وام گیرنده", "LoanPersonName");
 	$col = $rpg->addColumn("تضامین", "tazamin");
 	$col = $rpg->addColumn("تاریخ آخرین قسط", "LastInstallmentDate","ReportDateRender");
+	$col = $rpg->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate","ReportDateRender");
+	
 	$col = $rpg->addColumn("سررسید", "InstallmentDate","ReportDateRender");
 	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount", "ReportMoneyRender");
 	$col->EnableSummary();
@@ -81,6 +83,7 @@ if(!empty($_REQUEST["EXCEL"]))
 	$rpt->addColumn("شماره پیامک", "SmsNo");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("تاریخ آخرین قسط", "LastInstallmentDate","ReportDateRender");
+	$rpt->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate","ReportDateRender");
 	$rpt->addColumn("سررسید", "InstallmentDate","ReportDateRender");
 	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
 	$rpt->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");

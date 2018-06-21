@@ -317,6 +317,23 @@ function ChangeChequeStatus(){
 		$obj->PayedDate = $_POST["PayedDate"];
 	$result = $obj->Edit($pdo);
 	
+	if($Status == INCOMECHEQUE_VOSUL && isset($_POST["UpdateLoanBackPay"]) && $obj->PayedDate != "")
+	{
+		$dt = $obj->GetBackPays($pdo);
+		foreach($dt as $row)
+		{
+			$PayObj = new LON_BackPays($row["BackPayID"]);
+			$PayObj->PayDate = $obj->PayedDate;
+			$result = $PayObj->Edit($pdo);
+			if(!$result)
+			{
+				$pdo->rollback();
+				echo Response::createObjectiveResponse(false, "خطا در بروزرسانی تاریخ پرداخت مشتری");
+				die();
+			}	
+		}
+	}
+	
 	//--------------- get DocID ------------------
 	$DocID = "";
 	if(!empty($_POST["LocalNo"]))

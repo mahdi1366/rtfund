@@ -35,9 +35,9 @@ $col = $dg->addColumn("تاریخ چک", "ChequeDate", GridColumn::ColumnType_da
 $col->width = 80;
 
 $col = $dg->addColumn("تاریخ وصول", "PayedDate", GridColumn::ColumnType_date);
-$col->editor = ColumnEditor::SHDateField(true);
+/*$col->editor = ColumnEditor::SHDateField(true);
 $dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(){return IncomeChequeObject.SavePayedDate();}";
+$dg->rowEditOkHandler = "function(){return IncomeChequeObject.SavePayedDate();}";*/
 $col->width = 80;
 
 $col = $dg->addColumn("مبلغ چک", "ChequeAmount", GridColumn::ColumnType_money);
@@ -584,9 +584,15 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 				listeners : {
 					select : function(){
 						if(this.getValue() == <?= INCOMECHEQUE_VOSUL ?>)
+						{
 							this.up('window').down("[name=PayedDate]").enable();
+							this.up('window').down("[name=UpdateLoanBackPay]").enable();
+						}
 						else
+						{
 							this.up('window').down("[name=PayedDate]").disable();
+							this.up('window').down("[name=UpdateLoanBackPay]").disable();
+						}
 						
 					}
 				}
@@ -594,6 +600,12 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 				xtype : "shdatefield",
 				name : "PayedDate",
 				fieldLabel : "تاریخ وصول",
+				disabled : true
+			},{
+				xtype : "checkbox",
+				name : "UpdateLoanBackPay",
+				checked : true,
+				boxLabel : "تاریخ پرداخت مشتری بر اساس تاریخ وصول به روزرسانی شود",
 				disabled : true
 			}],
 			closeAction : "hide",
@@ -901,6 +913,8 @@ IncomeCheque.prototype.ChangeStatus = function(){
 	if(StatusID == "<?= INCOMECHEQUE_VOSUL ?>")
 	{
 		params.PayedDate = this.commentWin.down("[name=PayedDate]").getRawValue();
+		params.UpdateLoanBackPay = this.commentWin.down("[name=UpdateLoanBackPay]").getValue();
+		
 		params = mergeObjects(params, this.BankWin.down('form').getForm().getValues());
 	}	
 	

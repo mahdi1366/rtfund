@@ -1416,7 +1416,8 @@ function GetDelayedInstallments($returnData = false){
 				InstallmentDate,
 				BranchName,
 				tazamin,
-				t1.LastInstallmentDate
+				t1.LastInstallmentDate,
+				t3.MaxPayDate
 				
 			from LON_installments i
 			join LON_requests r using(RequestID)
@@ -1444,6 +1445,15 @@ function GetDelayedInstallments($returnData = false){
 				)t
 				group by ObjectID
 			)t2 on(t2.ObjectID=r.RequestID)
+			
+			left join (
+				select RequestID,sum(PayAmount) TotalPayAmount , max(PayDate) MaxPayDate
+				from LON_BackPays
+				left join ACC_IncomeCheques i using(IncomeChequeID)
+				where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+					AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . "
+				group by RequestID			
+			)t3 on(r.RequestID=t3.RequestID)
 			
 			where InstallmentDate between :fromdate AND :todate AND IsHistory='NO' AND IsEnded='NO' ";
 	

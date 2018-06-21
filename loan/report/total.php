@@ -256,12 +256,12 @@ function GetData($mode = "list"){
 			)inst on(r.RequestID=inst.RequestID)
 			
 			left join (
-				select RequestID,PayAmount LastPayAmount from LON_BackPays
-				join (	select RequestID,max(BackPayID) BackPayID 
+				select RequestID,sum(PayAmount) LastPayAmount from LON_BackPays
+				join (	select RequestID,max(PayDate) PayDate 
 						from LON_BackPays left join ACC_IncomeCheques i using(IncomeChequeID)
 						where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
 							AND PayType<>".BACKPAY_PAYTYPE_CORRECT."
-						group by RequestID)t using(BackPayID,RequestID) 
+						group by RequestID)t using(PayDate,RequestID) 
 				group by RequestID
 			)t3 on(r.RequestID=t3.RequestID)
 			
