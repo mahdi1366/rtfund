@@ -563,7 +563,7 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 	{
 		this.commentWin = new Ext.window.Window({
 			width : 414,
-			height : 125,
+			height : 150,
 			modal : true,
 			bodyStyle : "background-color:white",
 			items : [{
