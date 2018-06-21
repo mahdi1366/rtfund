@@ -520,6 +520,67 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		}
 		$itemObj->Add($pdo);
 	}
+	//---------- ردیف های تضمین  ----------
+	
+	$dt = PdoDataAccess::runquery("select * from DMS_documents 
+		join BaseInfo b on(InfoID=DocType AND TypeID=8)
+		join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
+		where IsConfirm='YES' AND b.param1=1 AND ObjectType='loan' AND ObjectID=?", array($ReqObj->RequestID));
+	$SumAmount = 0;
+	$countAmount = 0;
+	
+	if(count($dt) == 0)
+	{
+		$dt = PdoDataAccess::runquery("
+			SELECT d.DocumentID, dv.ParamValue, InfoDesc as DocTypeDesc,t.ParamValue as DocNo
+				FROM DMS_DocParamValues dv
+				join DMS_DocParams using(ParamID)
+				join DMS_documents d using(DocumentID)
+				join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
+				left join (
+					select d.DocumentID,ParamValue
+					from DMS_DocParamValues join DMS_DocParams using(ParamID)
+					join DMS_documents d using(DocumentID)
+					where Keytitle='no' and ObjectType='loan'
+					group by DocumentID
+				) t on(d.DocumentID=t.DocumentID)
+				
+			where IsConfirm='YES' AND b.param1=1 AND paramType='currencyfield' AND ObjectType='loan' AND ObjectID=?",
+			array($ReqObj->RequestID), $pdo);
+		
+		foreach($dt as $row)
+		{
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			$itemObj->CostID = $CostCode_guaranteeAmount_zemanati;
+			$itemObj->DebtorAmount = $row["ParamValue"];
+			$itemObj->CreditorAmount = 0;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $LoanPersonTafsili;
+			$itemObj->SourceType = DOCTYPE_DOCUMENT;
+			$itemObj->SourceID = $row["DocumentID"];
+			$itemObj->details = $row["DocTypeDesc"] . " به شماره " . $row["DocNo"];
+			$itemObj->Add($pdo);
+			
+			$SumAmount += $row["ParamValue"]*1;
+			$countAmount++;
+		}
+		if($SumAmount > 0)
+		{
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliID);
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			unset($itemObj->details);
+			$itemObj->CostID = $CostCode_guaranteeAmount2_zemanati;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $SumAmount;	
+			$itemObj->Add($pdo);
+
+		}
+	}
 	// ----------------------------- bank --------------------------------
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
@@ -588,66 +649,15 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 		$itemObj->Add($pdo);
 	}
-	//---------- ردیف های تضمین  ----------
 	
-	$dt = PdoDataAccess::runquery("select * from DMS_documents 
-		join BaseInfo b on(InfoID=DocType AND TypeID=8)
-		join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
-		where IsConfirm='YES' AND b.param1=1 AND ObjectType='loan' AND ObjectID=?", array($ReqObj->RequestID));
-	$SumAmount = 0;
-	$countAmount = 0;
-	
-	if(count($dt) == 0)
+	//---------------------------------------------------------
+	$dt = PdoDataAccess::runquery("select sum(DebtorAmount) dsum, sum(CreditorAmount) csum
+		from ACC_DocItems where DocID=?", array($obj->DocID), $pdo);
+	if($dt[0]["dsum"] != $dt[0]["csum"])
 	{
-		$dt = PdoDataAccess::runquery("
-			SELECT d.DocumentID, dv.ParamValue, InfoDesc as DocTypeDesc,t.ParamValue as DocNo
-				FROM DMS_DocParamValues dv
-				join DMS_DocParams using(ParamID)
-				join DMS_documents d using(DocumentID)
-				join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
-				left join (
-					select d.DocumentID,ParamValue
-					from DMS_DocParamValues join DMS_DocParams using(ParamID)
-					join DMS_documents d using(DocumentID)
-					where Keytitle='no' and ObjectType='loan'
-					group by DocumentID
-				) t on(d.DocumentID=t.DocumentID)
-				
-			where IsConfirm='YES' AND b.param1=1 AND paramType='currencyfield' AND ObjectType='loan' AND ObjectID=?",
-			array($ReqObj->RequestID), $pdo);
-		
-		foreach($dt as $row)
-		{
-			unset($itemObj->ItemID);
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
-			$itemObj->CostID = $CostCode_guaranteeAmount_zemanati;
-			$itemObj->DebtorAmount = $row["ParamValue"];
-			$itemObj->CreditorAmount = 0;
-			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $LoanPersonTafsili;
-			$itemObj->SourceType = DOCTYPE_DOCUMENT;
-			$itemObj->SourceID = $row["DocumentID"];
-			$itemObj->details = $row["DocTypeDesc"] . " به شماره " . $row["DocNo"];
-			$itemObj->Add($pdo);
-			
-			$SumAmount += $row["ParamValue"]*1;
-			$countAmount++;
-		}
-		if($SumAmount > 0)
-		{
-			unset($itemObj->ItemID);
-			unset($itemObj->TafsiliType);
-			unset($itemObj->TafsiliID);
-			unset($itemObj->TafsiliType2);
-			unset($itemObj->TafsiliID2);
-			unset($itemObj->details);
-			$itemObj->CostID = $CostCode_guaranteeAmount2_zemanati;
-			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $SumAmount;	
-			$itemObj->Add($pdo);
-
-		}
+		$BankRow->CreditorAmount += $dt[0]["dsum"] - $dt[0]["csum"];
+		$BankItemAmount = $BankRow->CreditorAmount;
+		$BankRow->Edit($pdo);
 	}
 	//---------------------------------------------------------
 	//------ ایجاد چک ------
@@ -666,14 +676,6 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$chequeObj->description = " پرداخت وام شماره " . $ReqObj->RequestID;
 	$chequeObj->Add($pdo);
 	
-	//---------------------------------------------------------
-	$dt = PdoDataAccess::runquery("select sum(DebtorAmount) dsum, sum(CreditorAmount) csum
-		from ACC_DocItems where DocID=?", array($obj->DocID), $pdo);
-	if($dt[0]["dsum"] != $dt[0]["csum"])
-	{
-		$BankRow->CreditorAmount += $dt[0]["dsum"] - $dt[0]["csum"];
-		$BankRow->Edit($pdo);
-	}
 	//---------------------------------------------------------
 	
 	if(ExceptionHandler::GetExceptionCount() > 0)
@@ -947,31 +949,6 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 			return false;
 		}
 	}
-	// ----------------------------- bank --------------------------------
-	$BankAmount = $PayAmount - $AgentWage;
-	/*if($PartObj->DelayReturn == "CHEQUE")
-		$BankAmount -= $FundDelay;
-	if($PartObj->AgentDelayReturn == "CHEQUE")
-		$BankAmount -= $AgentDelay;*/
-	
-	$itemObj = new ACC_DocItems();
-	$itemObj->DocID = $obj->DocID;
-	$itemObj->CostID = $CostCode_bank;
-	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = $BankAmount;
-	$itemObj->TafsiliType = TAFTYPE_BANKS;
-	$itemObj->TafsiliID = $BankTafsili;
-	$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-	$itemObj->TafsiliID2 = $AccountTafsili;
-	$itemObj->locked = "NO";
-	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
-	$itemObj->SourceID = $ReqObj->RequestID;
-	$itemObj->SourceID2 = $PartObj->PartID;
-	$itemObj->SourceID3 = $PayObj->PayID;
-	$itemObj->Add($pdo);
-	$BankRow = clone $itemObj;
-	
-	$itemObj->locked = "YES";
 	//---------- ردیف های تضمین  ----------
 	$dt = PdoDataAccess::runquery("select * from DMS_documents 
 		join BaseInfo b on(InfoID=DocType AND TypeID=8)
@@ -1035,6 +1012,41 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 			$itemObj->Add($pdo);*/
 		}
 	}
+	// ----------------------------- bank --------------------------------
+	$BankAmount = $PayAmount - $AgentWage;
+	/*if($PartObj->DelayReturn == "CHEQUE")
+		$BankAmount -= $FundDelay;
+	if($PartObj->AgentDelayReturn == "CHEQUE")
+		$BankAmount -= $AgentDelay;*/
+	
+	$itemObj = new ACC_DocItems();
+	$itemObj->DocID = $obj->DocID;
+	$itemObj->CostID = $CostCode_bank;
+	$itemObj->DebtorAmount = 0;
+	$itemObj->CreditorAmount = $BankAmount;
+	$itemObj->TafsiliType = TAFTYPE_BANKS;
+	$itemObj->TafsiliID = $BankTafsili;
+	$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
+	$itemObj->TafsiliID2 = $AccountTafsili;
+	$itemObj->locked = "NO";
+	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
+	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID2 = $PartObj->PartID;
+	$itemObj->SourceID3 = $PayObj->PayID;
+	$itemObj->Add($pdo);
+	$BankRow = clone $itemObj;
+	
+	$itemObj->locked = "YES";
+		
+	//---------------------------------------------------------
+	$dt = PdoDataAccess::runquery("select sum(DebtorAmount) dsum, sum(CreditorAmount) csum
+		from ACC_DocItems where DocID=?", array($obj->DocID), $pdo);
+	if($dt[0]["dsum"] != $dt[0]["csum"])
+	{
+		$BankRow->CreditorAmount += $dt[0]["dsum"] - $dt[0]["csum"];
+		$BankAmount = $BankRow->CreditorAmount ;
+		$BankRow->Edit($pdo);
+	}
 	//---------------------------------------------------------
 	//------ ایجاد چک ------
 	
@@ -1051,15 +1063,6 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$chequeObj->TafsiliID = $LoanPersonTafsili;
 	$chequeObj->description = " پرداخت وام شماره " . $ReqObj->RequestID;
 	$chequeObj->Add($pdo);
-	
-	//---------------------------------------------------------
-	$dt = PdoDataAccess::runquery("select sum(DebtorAmount) dsum, sum(CreditorAmount) csum
-		from ACC_DocItems where DocID=?", array($obj->DocID), $pdo);
-	if($dt[0]["dsum"] != $dt[0]["csum"])
-	{
-		$BankRow->CreditorAmount += $dt[0]["dsum"] - $dt[0]["csum"];
-		$BankRow->Edit($pdo);
-	}
 	
 	//---------------------------------------------------------
 	

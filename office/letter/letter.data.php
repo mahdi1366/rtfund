@@ -478,6 +478,7 @@ function SignLetter(){
 		
 		$obj->IsSigned = "YES";
 		$obj->SignPostID = $PersonObj->_PostID;
+		$obj->LetterDate = PDONOW;
 		$result = $obj->EditLetter();
 	}
 	
