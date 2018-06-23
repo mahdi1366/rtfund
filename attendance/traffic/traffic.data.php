@@ -318,15 +318,16 @@ function ImportTrafficsFromExcel(){
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
+	$errors = "";
+	
 	for ($i = 1; $i < $data->sheets[0]['numRows']; $i++) 
 	{
 		$row = $data->sheets[0]['cells'][$i];
 		$dt = PdoDataAccess::runquery("select PersonID from BSC_persons where AttCode=?", array($row[2]));
 		if(count($dt) == 0)
 		{
-			$pdo->rollBack();
-			echo Response::createObjectiveResponse(false, "کد عضو " . $row[2] . " در ذینفعان یافت نشد.");
-			die();
+			$errors .= "کد عضو " . $row[2] . " در ذینفعان یافت نشد." . "<br>";
+			continue;
 		}
 		
 		$obj = new ATN_traffic();
@@ -334,45 +335,49 @@ function ImportTrafficsFromExcel(){
 		$obj->TrafficDate = DateModules::shamsi_to_miladi($row[0], "-");
 		$obj->IsSystemic = 'NO'; 
 		$obj->IsActive = "YES";
-		
-		$dt = PdoDataAccess::runquery("select * from ATN_traffic where PersonID=? AND TrafficDate=?", array(
-			$obj->PersonID, $obj->TrafficDate 
-		));
-		if(count($dt) > 0)
-		{
-			$pdo->rollBack();
-			echo Response::createObjectiveResponse(false, "برای ردیف " . ($i+1) . " قبلا تردد در سیستم ثبت شده است");
-			die();
-		}
 			
 		if(isset($row[4]) && trim($row[4]) != "")
 		{
 			$obj->TrafficTime = $row[4];
-			$result = $obj->Add($pdo);
-			if(!$result)
+			
+			$dt = PdoDataAccess::runquery("select * from ATN_traffic where PersonID=? AND TrafficDate=? AND TrafficTime=?", array(
+				$obj->PersonID, $obj->TrafficDate , $obj->TrafficTime));
+			if(count($dt) > 0)
 			{
-				$pdo->rollBack();
-				echo Response::createObjectiveResponse(false, "خطا در ذخیره ردیف ورود " . ($i+1));
-				die();
+				$errors .= "برای ردیف " . ($i+1) . "با ساعت ".$obj->TrafficTime." قبلا تردد در سیستم ثبت شده است" . "<br>";
+			}
+			else
+			{
+				$result = $obj->Add($pdo);
+				if(!$result)
+				{
+					$errors .=  "خطا در ذخیره ردیف ورود " . ($i+1) . "<br>";
+				}
 			}
 		}
 		if(isset($row[5]) && trim($row[5]) != "")
 		{
 			unset($obj->TrafficID);
 			$obj->TrafficTime = $row[5];
-			$result = $obj->Add($pdo);
-			if(!$result)
+			
+			$dt = PdoDataAccess::runquery("select * from ATN_traffic where PersonID=? AND TrafficDate=? AND TrafficTime=?", array(
+				$obj->PersonID, $obj->TrafficDate , $obj->TrafficTime));
+			if(count($dt) > 0)
 			{
-				$pdo->rollBack();
-				echo Response::createObjectiveResponse(false, "خطا در ذخیره ردیف خروج " . ($i+1));
-				die();
+				$errors .= "برای ردیف " . ($i+1) . "با ساعت ".$obj->TrafficTime." قبلا تردد در سیستم ثبت شده است" . "<br>";
+			}
+			else
+			{
+				$result = $obj->Add($pdo);
+				if(!$result)
+				{
+					$errors .=  "خطا در ذخیره ردیف ورود " . ($i+1) . "<br>";
+				}
 			}
 		}
-		
-		
 	}
 	$pdo->commit();
-	echo Response::createObjectiveResponse(true, "");
+	echo Response::createObjectiveResponse($errors == "", $errors);
 	die();
 }
 ?>
