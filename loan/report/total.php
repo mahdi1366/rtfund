@@ -160,6 +160,9 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 			$where .= $where_temp;
 		$whereParam[":$key"] = $value;
 	}
+	
+	if(!isset($whereParam[":effectiveDate"]))
+		$whereParam[":effectiveDate"] = DateModules::Now();
 }	
 	
 function GetData($mode = "list"){
