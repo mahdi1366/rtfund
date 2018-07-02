@@ -75,19 +75,15 @@ class ATN_traffic extends OperationClass
 			)t2
 			order by  TrafficDate,TrafficTime,ReqType";
 		$dt = PdoDataAccess::runquery($query, array(":p" => $PersonID, ":sd" => $StartDate, ":ed" => $EndDate));
-		//print_r(ExceptionHandler::PopAllExceptions());
 		if($_SESSION["USER"]["UserName"] == "admin")
 		{
 			//echo PdoDataAccess::GetLatestQueryString();
 		}
 		//............ Reset wrong hourly off and mission requests .............
-		if(count($dt) == 0)
-			return;
 		$currentDate = $dt[0]["TrafficDate"];
 		$index = 0;
 		for($i=0; $i<count($dt); $i++)
 		{
-			
 			if($dt[$i]["ReqType"] == "" || $dt[$i]["ReqType"] == "CORRECT" )
 			{
 				if($currentDate == $dt[$i]["TrafficDate"])
@@ -95,7 +91,10 @@ class ATN_traffic extends OperationClass
 				else
 					$index = 1;
 			}				
-				
+			
+			if(FridayIsHoliday && DateModules::GetWeekDay($dt[$i]["TrafficDate"], "N") == "5")
+				continue;
+			
 			if($dt[$i]["ReqType"] == "OFF" || $dt[$i]["ReqType"] == "MISSION")
 			{
 				if($index == 1 && $i+1 < count($dt) && $dt[$i+1]["TrafficDate"] == $currentDate && 
@@ -317,10 +316,12 @@ class ATN_traffic extends OperationClass
 					$index++;
 					//-------------------------------------
 					$startOff = strtotime($returnArr[$i]["TrafficTime"]);
-					$startOff = max(strtotime($returnArr[$i]["TrafficTime"]), strtotime($returnArr[$i]["FromTime"]));
 					$endOff = strtotime($returnArr[$i]["EndTime"]);
-					$endOff = min(strtotime($returnArr[$i]["EndTime"]), strtotime($returnArr[$i]["ToTime"]));
-					
+					if(!$returnArr[$i]["holiday"])
+					{
+						$startOff = max(strtotime($returnArr[$i]["TrafficTime"]), strtotime($returnArr[$i]["FromTime"]));
+						$endOff = min(strtotime($returnArr[$i]["EndTime"]), strtotime($returnArr[$i]["ToTime"]));
+					}
 					if($returnArr[$i]["ReqType"] == "OFF")
 						$Off += $endOff - $startOff;
 					else
