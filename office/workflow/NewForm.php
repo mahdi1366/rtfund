@@ -8,17 +8,76 @@ require_once 'form.data.php';
 require_once 'form.class.php';
 require_once inc_dataGrid;
 
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
 if (!empty($_REQUEST['FormID']))
     $FormID = $_REQUEST['FormID'];
 else
     $FormID = GetEmptyFormID();
 
+//------------------------------------------------------------------------------
+
+$dg = new sadaf_datagrid("dg",$js_prefix_address . "form.data.php?task=SelectGroups&FormID=" . $FormID,"");
+
+$dg->addColumn("","GroupID","string", true);
+$dg->addColumn("","FormID","string", true);
+
+$col = $dg->addColumn("ترتیب","ordering","string");
+$col->width = 50;
+
+$col = $dg->addColumn("عنوان گروه","GroupDesc","string");
+$col->editor = ColumnEditor::TextField();
+
+$col = $dg->addColumn("","","");
+$col->renderer = "WFM_NewForm.GroupupRender";
+$col->sortable = false;
+$col->width = 30;
+
+$col = $dg->addColumn("","","");
+$col->renderer = "WFM_NewForm.GroupdownRender";
+$col->sortable = false;
+$col->width = 30;
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("حذف","","");
+	$col->renderer = "WFM_NewForm.deleteGroupRender";
+	$col->sortable = false;
+	$col->width = 40;
+}
+if($accessObj->AddFlag){
+	
+	$dg->addButton = true;
+	$dg->addHandler = "function(){WFM_NewFormObj.AddGroup();}";
+
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(v,p,r){return WFM_NewFormObj.saveGroup(v,p,r);}";
+}
+$dg->height = 140;
+$dg->width = 500;
+$dg->DefaultSortField = "ordering";
+$dg->DefaultSortDir = "ASC";
+$dg->autoExpandColumn = "GroupDesc";
+$dg->editorGrid = true;
+$dg->EnablePaging = false;
+$dg->EnableSearch = false;
+$dg->emptyTextOfHiddenColumns = true;
+$GroupGrid = $dg->makeGrid_returnObjects();
+
+//------------------------------------------------------------------------------
+
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "form.data.php?task=selectFormItems&NotGlobal=true", "div_dg");
 
 $dg->addColumn("", "FormID", "", true);
-$dg->addColumn("", "ordering", "");
+$dg->addColumn("", "ordering", "", true);
+$dg->addColumn("","GroupDesc","string", true);
 
-$col = $dg->addColumn("شماره ", "FormItemID");
+$col = $dg->addColumn("گروه","GroupID","string");
+$col->renderer = "function(v,p,r){return r.data.GroupDesc;}";
+$col->editor = "this.FormGroupCombo";
+
+$col = $dg->addColumn("شماره ", "FormItemID", "", true);
 $col->width = 50;
 
 $col = $dg->addColumn("عنوان", "ItemName");
@@ -48,6 +107,9 @@ $col->renderer = "function(v,p,r){return WFM_NewForm.deleteRender(v,p,r);}";
 $col->width = 50;
 
 $dg->addButton("", " ایجاد", "add", "function(){WFM_NewFormObj.AddFormItem();}");
+
+$dg->EnableGrouping = true;
+$dg->DefaultGroupField = "GroupID";
 
 $dg->DefaultSortField = "FormItemID";
 $dg->DefaultSortDir = "desc";
@@ -103,6 +165,22 @@ function WFM_NewForm() {
 		allowBlank : false
 	});
 
+	this.FormGroupCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			fields: ["GroupID", "GroupDesc"],
+			proxy : {
+				type: 'jsonp',
+				url : this.address_prefix + "form.data.php?task=SelectGroups&FormID=" + this.FormID,
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			}
+		}),
+		valueField: "GroupID",
+		displayField: "GroupDesc",
+		allowBlank : false
+	});
+	
+	this.GroupGrid = <?= $GroupGrid ?>;
+	
 	this.grid = <?= $grid ?>;
 	this.grid.plugins[0].on("beforeedit", function(editor,e){
 		if(e.record.data.FormID == "0")
@@ -119,58 +197,6 @@ function WFM_NewForm() {
 	
 	this.BuildForms();
 	this.LoadForm();
-}
-
-WFM_NewForm.upRender = function(v,p,r){
-	store = WFM_NewFormObj.grid.getStore();
-	record = store.getAt(0);
-	if(r.data.ordering == record.data.ordering)
-		return "";
-	return "<div align='center' title='حذف ' class='up' onclick='WFM_NewFormObj.moveStep(-1);' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";
-}
-
-WFM_NewForm.downRender = function(v,p,r){
-	store = WFM_NewFormObj.grid.getStore();
-	record = store.getAt(store.getCount()-1);
-	if(r.data.ordering == record.data.ordering)
-		return "";
-	return "<div align='center' title='حذف ' class='down' onclick='WFM_NewFormObj.moveStep(1);' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";
-}
-
-WFM_NewForm.prototype.moveStep = function(direction){
-	var record = this.grid.getSelectionModel().getLastSelected();
-	
-    mask = new Ext.LoadMask(this.itemWin, {msg:'در حال ذخیره سازی ...'});
-	mask.show();
-
-	Ext.Ajax.request({
-		params: {
-			task: 'MoveItem',
-			FormID : this.FormID,
-			FormItemID : record.data.FormItemID,
-			direction : direction
-		},
-		url: this.address_prefix + 'form.data.php',
-		method: 'POST',
-
-		success: function(response){
-			mask.hide();
-			var st = Ext.decode(response.responseText);
-			if(st.success)
-			{
-				WFM_NewFormObj.grid.getStore().load();
-			}
-			else
-			{
-				Ext.MessageBox.alert("Error",st.data);
-			}
-		},
-		failure: function(){}
-	});
 }
 
 WFM_NewForm.prototype.LoadForm = function(){
@@ -360,8 +386,6 @@ WFM_NewForm.prototype.BuildForms = function(){
 	CKEDITOR.add;
 }
 
-WFM_NewFormObj = new WFM_NewForm();
-
 WFM_NewForm.prototype.SaveForm = function(){
 
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg: 'در حال ذخیره سازی ...'});
@@ -385,6 +409,201 @@ WFM_NewForm.prototype.SaveForm = function(){
 	});
 }
 
+//.....................................................
+
+WFM_NewForm.deleteGroupRender = function(v,p,r){
+	return "<div align='center' title='حذف ' class='remove' onclick='WFM_NewFormObj.DeleteGroup();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+WFM_NewForm.GroupupRender = function(v,p,r){
+	
+	if(r.data.ordering == "1")
+		return "";
+	return "<div align='center' title='up' class='up' onclick='WFM_NewFormObj.moveGroup(-1);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+WFM_NewForm.GroupdownRender = function(v,p,r){
+	
+	store = WFM_NewFormObj.GroupGrid.getStore();
+	record = store.getAt(store.getCount()-1);
+	if(r.data.ordering == record.data.ordering)
+		return "";
+	return "<div align='center' title='down' class='down' onclick='WFM_NewFormObj.moveGroup(1);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+WFM_NewForm.prototype.AddGroup = function(){
+	
+	var modelClass = this.GroupGrid.getStore().model;
+	var record = new modelClass({
+		FormID : this.FormID,
+		GroupID : "",
+		GroupDesc : ""
+	});
+
+	this.GroupGrid.plugins[0].cancelEdit();
+	this.GroupGrid.getStore().insert(0, record);
+	this.GroupGrid.plugins[0].startEdit(0, 0);
+}
+
+WFM_NewForm.prototype.saveGroup = function(store,record){
+	
+    mask = new Ext.LoadMask(this.GroupGrid, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		params: {
+			task: 'SaveGroup',
+			record : Ext.encode(record.data)
+		},
+		url: this.address_prefix +'form.data.php',
+		method: 'POST',
+
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+			if(st.success)
+			{
+				WFM_NewFormObj.GroupGrid.getStore().load();
+			}
+			else
+			{
+				Ext.MessageBox.alert("Error",st.data);
+			}
+		},
+		failure: function(){}
+	});
+}
+
+WFM_NewForm.prototype.moveGroup = function(direction){
+	
+	var record = this.GroupGrid.getSelectionModel().getLastSelected();
+	
+    mask = new Ext.LoadMask(this.GroupGrid, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		params: {
+			task: 'MoveGroup',
+			FormID : record.data.FormID,
+			GroupID : record.data.GroupID,
+			ordering : record.data.ordering,
+			direction : direction
+		},
+		url: this.address_prefix + 'form.data.php',
+		method: 'POST',
+
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+			if(st.success)
+			{
+				WFM_NewFormObj.GroupGrid.getStore().load();
+			}
+			else
+			{
+				Ext.MessageBox.alert("Error",st.data);
+			}
+		},
+		failure: function(){}
+	});
+}
+
+WFM_NewForm.prototype.DeleteGroup = function(){
+	
+	var record = this.GroupGrid.getSelectionModel().getLastSelected();
+	
+	Ext.MessageBox.confirm("", "در صورت حذف کلیه آیتم های این گروه حذف می شوند.آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		me = WFM_NewFormObj;
+		
+		Ext.Ajax.request({
+		  	url : me.address_prefix + "form.data.php",
+		  	method : "POST",
+		  	params : {
+		  		task : "DeleteGroup",
+		  		GroupID : record.data.GroupID
+		  	},
+		  	success : function(response)
+		  	{
+				result = Ext.decode(response.responseText);
+				if(result.success)
+				{
+					WFM_NewFormObj.ItemsGrid.getStore().load();
+					WFM_NewFormObj.GroupGrid.getStore().load();
+				}
+				else
+				{
+					if(result.data == "")
+						Ext.MessageBox.alert("ERROR", "عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("ERROR", result.data);
+				}
+		  	}
+		});
+	});
+}
+
+//.....................................................
+
+WFM_NewForm.upRender = function(v,p,r,rowIndex){
+	
+	store = WFM_NewFormObj.grid.getStore();
+	if(rowIndex == 0 || store.getAt(rowIndex-1).data.GroupID != r.data.GroupID)
+		return "";
+	return "<div align='center' title='up' class='up' onclick='WFM_NewFormObj.moveStep(-1);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+WFM_NewForm.downRender = function(v,p,r, rowIndex){
+	store = WFM_NewFormObj.grid.getStore();
+	record = store.getAt(store.getCount()-1);
+	if(rowIndex+1 == store.getCount() || store.getAt(rowIndex+1).data.GroupID != r.data.GroupID)
+		return "";
+	return "<div align='center' title='down' class='down' onclick='WFM_NewFormObj.moveStep(1);' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+WFM_NewForm.prototype.moveStep = function(direction){
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+    mask = new Ext.LoadMask(this.itemWin, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		params: {
+			task: 'MoveItem',
+			FormID : this.FormID,
+			FormItemID : record.data.FormItemID,
+			direction : direction
+		},
+		url: this.address_prefix + 'form.data.php',
+		method: 'POST',
+
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+			if(st.success)
+			{
+				WFM_NewFormObj.grid.getStore().load();
+			}
+			else
+			{
+				Ext.MessageBox.alert("Error",st.data);
+			}
+		},
+		failure: function(){}
+	});
+}
+
 WFM_NewForm.prototype.ManageItems = function(){
 
 	this.grid.getStore().proxy.extraParams = {
@@ -395,10 +614,11 @@ WFM_NewForm.prototype.ManageItems = function(){
 		this.itemWin = new Ext.window.Window({
 			width : 800,
 			title : "آیتم های الگو",
-			height : 520,
+			bodyStyle : "background-color:white;text-align:-moz-center",
+			height : 660,
 			modal : true,
 			closeAction : "hide",
-			items : [this.grid],
+			items : [this.GroupGrid,this.grid],
 			buttons :[{
 				text : "پیش نمایش",
 				iconCls : "view",
@@ -534,8 +754,12 @@ WFM_NewForm.prototype.PreviewForm = function(){
 	this.requestWin.loader.load({
 		params : {
 			ExtTabID : this.requestWin.getEl().id,
-			FormID : this.FormID
+			FormID : this.FormID,
+			preview : true
 		}
 	});
 }
+
+WFM_NewFormObj = new WFM_NewForm();
+
 </script>

@@ -61,6 +61,32 @@ class WFM_forms extends OperationClass {
         return $CorrectContent;
     }
 }
+class WFM_FormGroups extends OperationClass {
+
+	const TableName = "WFM_FormGroups";
+	const TableKey = "GroupID"; 
+	
+	public $GroupID;
+	public $FormID;
+	public $GroupDesc;
+	public $ordering;
+	
+	function Remove($pdo = null) {
+		
+		$dt = PdoDataAccess::runquery("select FormID from WFM_RequestItems join WFM_FormItems using(FormItemID)"
+			. " where GroupID=?", array($this->GroupID), $pdo);
+		if(count($dt) > 0)
+		{ 
+			ExceptionHandler::PushException("این گروه در فرمها تکمیل شده است و قادر به حذف آن نمی باشید");
+			return false;
+		}		
+		
+		PdoDataAccess::runquery("delete from WFM_FormItems where GroupID=?",
+			array($this->GroupID), $pdo);
+		
+		return parent::Remove($pdo);
+	}
+}
 
 class WFM_FormItems extends OperationClass {
     
@@ -69,6 +95,7 @@ class WFM_FormItems extends OperationClass {
 
     public $FormItemID; 
 	public $FormID;
+	public $GroupID;
     public $ItemName;
     public $ItemType;
 	public $ComboValues;
@@ -80,15 +107,24 @@ class WFM_FormItems extends OperationClass {
 		if(!isset($params[":StepRowID"]))
 			$params[":StepRowID"] = -1;
 		return PdoDataAccess::runquery_fetchMode("  
-			select fi.* , if(fa.FormItemID is null, 'NO', 'YES') access
-			from WFM_FormItems fi left join WFM_FormAccess fa on(fi.FormItemID=fa.FormItemID AND fa.StepRowID=:StepRowID)
+			select fi.* , if(fa.FormItemID is null, 'NO', 'YES') access,fg.GroupDesc
+			from WFM_FormItems fi 
+			left join WFM_FormGroups fg using(GroupID)
+			left join WFM_FormAccess fa on(fi.FormItemID=fa.FormItemID AND fa.StepRowID=:StepRowID)
 			where 1=1 " . $where, $params);
 	}
 	
     public function Remove($pdo = null){
         
-		$this->IsActive = "NO";
-		return $this->Edit($pdo);
+		$dt = PdoDataAccess::runquery("select FormID from WFM_RequestItems join WFM_FormItems using(FormItemID)"
+			. " where FormItemID=?", array($this->FormItemID), $pdo);
+		if(count($dt) > 0)
+		{ 
+			$this->IsActive = "NO";
+			return $this->Edit($pdo);
+		}		
+		
+		return parent::Remove($pdo);
     }    
 }
 

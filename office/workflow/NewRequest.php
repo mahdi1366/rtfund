@@ -32,6 +32,7 @@ WFM_NewRequest.prototype = {
 	RequestID : "<?= $RequestID ?>",
 	FormID : "<?= $FormID ?>",
 	StepRowID : "<?= $StepRowID ?>",
+	preview : <?= isset($_REQUEST["preview"]) ? "true" : "false" ?>,
 	
 	ItemsMmask : null,
 	
@@ -48,54 +49,14 @@ function WFM_NewRequest() {
 		border : false,
 		width: 700,
 		height : 550,
-		fieldDefaults: {
-			labelWidth: 100
-		},
 		renderTo: this.get("SelectTplComboDIV"),
 		items: [{
-			xtype: 'combo',
-			fieldLabel: 'انتخاب فرم',
-			itemId: 'FormID',
-			store: new Ext.data.Store({
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + 'form.data.php?task=SelectValidForms',
-					reader: {root: 'rows', totalProperty: 'totalCount'}
-				},
-				fields: ['FormID', 'FormTitle', 'FormContent'],
-				autoLoad : true
-			}),
-			queryMode : "local",
-			displayField: 'FormTitle',
-			valueField: "FormID",
-			name : "FormID",	
-			value : this.FormID,
-			queryMode : "local",
-			allowBlank : false,
-			listConfig: {
-				loadingText: 'در حال جستجو...',
-				emptyText: 'فاقد اطلاعات',
-				itemCls: "search-item"
-			},
-			width: 350,
-			listeners: {
-				select: function (combo, records) {
-					this.collapse();
-					WFM_NewRequestObj.FormSelect(records[0].data.FormID);
-				}
-			}
-		},{
-			xtype: "fieldset",
-			title : "آیتم های فرم",
+			xtype: "container",
 			itemId: "FormItems",
-			width : 680,
+			width : 700,
 			style : "text-align:right",
-			height : 480,
-			autoScroll: true,
-			defaults: {
-				labelWidth: 150,
-				width : 600
-			}
+			height : 500,
+			autoScroll: true
 		},{
 			xtype: "hidden",
 			itemId: "RequestID",
@@ -103,7 +64,8 @@ function WFM_NewRequest() {
 			value : this.RequestID
 		}],
 		buttons: [{
-			text: "  ذخیره",
+			text: "ذخیره",
+			hidden : this.preview,
 			itemId : "btn_save",
 			handler: function () {
 				WFM_NewRequestObj.SaveRequest(false);
@@ -120,7 +82,7 @@ function WFM_NewRequest() {
 	});
 	
 	this.FormItemsStore = new Ext.data.Store({
-		fields: ['FormItemID',"FormID", 'ItemName', 'ItemType', "ComboValues", "access"],
+		fields: ['FormItemID',"GroupID","GroupDesc","FormID", 'ItemName', 'ItemType', "ComboValues", "access"],
 		proxy: {
 			type: 'jsonp',
 			url: this.address_prefix + "form.data.php?task=selectFormItems&NotGlobal=true&StepRowID=" + this.StepRowID,
@@ -143,13 +105,8 @@ function WFM_NewRequest() {
 	
 	if(this.RequestID > 0)
 		this.LoadRequest();
-	else if(this.FormID*1 > 0)
-	{
-		this.MainForm.getComponent("FormID").setValue(this.FormID);
+	else
 		this.FormSelect(this.FormID);
-		//this.MainForm.down("[itemId=btn_save]").hide();
-		//this.MainForm.down("[itemId=btn_view]").hide();
-	}
 }
 
 WFM_NewRequest.prototype.FormSelect = function(FormID){
@@ -166,8 +123,6 @@ WFM_NewRequest.prototype.FormSelect = function(FormID){
 }
 
 WFM_NewRequest.prototype.LoadRequest = function(){
-	
-	this.MainForm.down("[itemId=FormID]").disable();
 	
 	fieldset = this.MainForm.down("[itemId=FormItems]");
 	this.ItemsMmask = new Ext.LoadMask(fieldset, {msg:'در حال بارگذاری...'});
@@ -190,7 +145,7 @@ WFM_NewRequest.prototype.LoadRequest = function(){
 				return;
 			}				
 			me.FormItemsStore.load({
-				params : {FormID : this.getAt(0).data.FormID},
+				params : {FormID : me.FormID},
 				callback : function(){
 					me = WFM_NewRequestObj;
 					me.ShowTplItemsForm();	
@@ -237,7 +192,7 @@ WFM_NewRequest.prototype.SaveRequest = function (print) {
 		url: this.address_prefix + 'form.data.php?task=SaveRequest',
 		method: 'POST',
 		params : {
-			FormID : this.MainForm.down("[itemId=FormID]").getValue()
+			FormID : this.FormID
 		},
 		
 		success: function (form,action) {
@@ -263,22 +218,45 @@ WFM_NewRequest.prototype.SaveRequest = function (print) {
 WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 
 	this.MainForm.getComponent("FormItems").removeAll();
-
+	var CurGroupID = 0;
+	var parent = null;
 	for(i=0; i<this.FormItemsStore.getCount(); i++)
 	{
 		record = this.FormItemsStore.getAt(i);
 		if(record.data.ItemType == "" || record.data.FormID == "0")
 			continue;
 		
-		parent = this.MainForm.getComponent("FormItems");
-
+		if(CurGroupID != record.data.GroupID)
+		{
+			this.MainForm.getComponent("FormItems").add({
+				xtype : "fieldset",
+				title : record.data.GroupDesc,
+				itemId : "Group_" + record.data.GroupID,
+				width : 680,
+				defaults : {labelWidth:200}
+			});
+			parent = this.MainForm.down("[itemId=Group_" + record.data.GroupID + "]");
+			CurGroupID = record.data.GroupID;
+		}
+		//...........................................
 		if(record.data.ItemType == "combo")
 		{
 			arr = record.data.ComboValues.split("#");
 			data = [];
 			for(j=0;j<arr.length;j++)
-				data.push([ arr[j] ]);
-
+				if(arr[j] != "")
+					data.push([ arr[j] ]);
+			
+			titleInLine = false;
+			if(record.data.ItemName.length > 40)
+			{
+				parent.add({
+					xtype : "displayfield",
+					value : record.data.ItemName,
+					anchor : "100%"
+				});
+				titleInLine = true;
+			}
 			parent.add({
 				store : new Ext.data.SimpleStore({
 					fields : ['value'],
@@ -288,11 +266,13 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 				valueField : "value",
 				disabled : record.data.access == "NO" ? true : false,
 				displayField : "value",
+				width : 610,
 				itemId: 'ReqItem_' + record.data.FormItemID,
 				name: 'ReqItem_' + record.data.FormItemID,
-				fieldLabel : record.data.ItemName
+				fieldLabel : titleInLine ? "" : record.data.ItemName
 			});
 		}
+		//...........................................
 		else if(record.data.ItemType == "checkbox")
 		{
 			if(record.data.ComboValues == null)
@@ -307,44 +287,56 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 			}
 			else
 			{
-				/*if(i%2 > 0 && i != 0)
-				{
-					parent.add({
-						xtype : "container"
-					});
-				}*/
+				parent.add({
+					xtype : "displayfield",
+					value : record.data.ItemName,
+					anchor : "100%"
+				});
 				var items = new Array();
 				arr = record.data.ComboValues.split("#");
 				for(j=0; j<arr.length; j++)
-					items.push({
-						boxLabel : arr[j],
-						name : "ReqItem_" + record.data.FormItemID + "_checkbox_" + j,
-						itemId : "ReqItem_" + record.data.FormItemID + "_checkbox_" + j
-					});
+					if(arr[j] != "")
+						items.push({
+							boxLabel : arr[j],
+							name : "ReqItem_" + record.data.FormItemID + "_checkbox_" + j,
+							itemId : "ReqItem_" + record.data.FormItemID + "_checkbox_" + j
+						});
 				parent.add({
-					fieldLabel : record.data.ItemName,
 					xtype : "checkboxgroup",
 					items : items,
 					width : 610,
 					columns : 1,				
-					//colspan : 2,
 					disabled : record.data.access == "NO" ? true : false
 				});
 			}
 		}			
+		//...........................................
 		else
 		{
+			titleInLine = false;
+			if(record.data.ItemType === "textarea" || record.data.ItemName.length > 40)
+			{
+				parent.add({
+					xtype : "displayfield",
+					value : record.data.ItemName,
+					anchor : "100%"
+				});
+				titleInLine = true;
+			}
 			item = {
 				xtype: record.data.ItemType,
 				itemId: 'ReqItem_' + record.data.FormItemID,
 				name: 'ReqItem_' + record.data.FormItemID,
-				fieldLabel : record.data.ItemName,
+				fieldLabel : titleInLine ? "" : record.data.ItemName,
 				disabled : record.data.access == "NO" ? true : false,
 			};
 			if(record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield')
 				item.hideTrigger =  true;
-			if(record.data.ItemType == 'textarea')
+			if(record.data.ItemType == 'textarea' || record.data.ItemType == 'textfield')
+			{
 				item.rows = 2;
+				item.width = 650;
+			}
 			if(new Array('numberfield','currencyfield','shdatefield').indexOf(record.data.ItemType) >= 0)
 				item.width = 400;
 			

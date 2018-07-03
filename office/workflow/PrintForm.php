@@ -8,14 +8,14 @@ require_once 'form.class.php';
 require_once 'form.class.php';
 
 $ReqObj = new WFM_requests($_REQUEST['RequestID']);
+$FormID = $ReqObj->FormID>0 ? $ReqObj->FormID : $_REQUEST["FormID"];
 
-$temp = WFM_FormItems::Get(" AND FormID=0");
+$temp = WFM_FormItems::Get(" AND fi.FormID in(0,:fid)", array(":fid" => $FormID));
 $ReqItems = $temp->fetchAll();
 $ReqItemsStore = array();
 foreach ($ReqItems as $it) {
     $ReqItemsStore[$it['FormItemID']] = $it;
 }
-
 
 $content = $ReqObj->ReqContent;
 if($ReqObj->ReqContent == "" && !empty($_REQUEST["FormID"]))
@@ -28,30 +28,30 @@ $res = explode(WFM_forms::TplItemSeperator, $content);
 
 $ReqItems = WFM_RequestItems::Get(" AND RequestID=?", array($ReqObj->RequestID));
 $ReqItems = $ReqItems->fetchAll();
-
 $ValuesStore = array();
 foreach ($ReqItems as $row) 
 {
-	$ValuesStore[$row['FormItemID']] = $row['ItemValue'];
-			
 	if($row["ItemType"] == "shdatefield")
 		$ValuesStore[$row['FormItemID']] = DateModules::miladi_to_shamsi($row['ItemValue']);
-	if($row["ItemType"] == "currencyfield")
+	else if($row["ItemType"] == "currencyfield")
 		$ValuesStore[$row['FormItemID']] = number_format($row['ItemValue']*1);
-	if($row["ItemType"] == "checkbox")
+	else if($row["ItemType"] == "checkbox")
 	{
 		if($row["ComboValues"] != "")
 		{
 			$arr = explode("#", $row["ComboValues"]);
 			if(!isset($ValuesStore[$row['FormItemID']]))
-				$ValuesStore[$row['FormItemID']] = "";
-			$ValuesStore[$row['FormItemID']] .= "<br>● " . $arr[$row['ItemValue']*1];
+				$ValuesStore[$row['FormItemID']] = "● " . $arr[$row['ItemValue']*1];
+			else
+				$ValuesStore[$row['FormItemID']] .= "<br>" . "● " . $arr[$row['ItemValue']*1];
 		}
 		else
 		{
 			$ValuesStore[$row['FormItemID']] = "√";
 		}
 	}
+	else
+		$ValuesStore[$row['FormItemID']] = $row['ItemValue'];
 }
 
 $dt = WFM_requests::FullSelect(" AND RequestID=?", array($ReqObj->RequestID));

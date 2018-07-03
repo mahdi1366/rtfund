@@ -24,6 +24,10 @@ switch($task)
 	case "deleteForm":
 	case "PrepareContentToEdit":
 	case "CopyForm":
+	case "SelectGroups":
+	case "SaveGroup":
+	case "DeleteGroup":
+	case "MoveGroup":
 	case "MoveItem":
 	case "SelectValidForms":
 	case "SelectMyRequests":
@@ -64,23 +68,23 @@ function SelectForms() {
 
 function selectFormItems() {
 	
-	$where = "";
+	$where = " AND fi.IsActive='YES'";
 	$params = array();
 	
 	$params[":StepRowID"] = !isset($_REQUEST["StepRowID"]) ? "-1" : $_REQUEST["StepRowID"];
 	
 	if(!empty($_REQUEST["FormID"]))
 	{
-		$where .= " AND FormID in(0,:t)";
+		$where .= " AND fi.FormID in(0,:t)";
 		$params[":t"] = $_REQUEST["FormID"];
 	}
 	
 	if(!empty($_REQUEST["NotGlobal"]))
-		$where .= " AND FormID >0";
+		$where .= " AND fi.FormID >0";
 	
-    $temp = WFM_FormItems::Get($where . " order by if(FormID=0,1,0),ordering", $params);
+    $temp = WFM_FormItems::Get($where . " order by if(fi.FormID=0,1,0),fg.ordering,fi.ordering", $params);
 	
-	//echo PdoDataAccess::GetLatestQueryString();
+	print_r(ExceptionHandler::PopAllExceptions());
 	
 	if(!empty($_REQUEST["limit"]))
 		$res = PdoDataAccess::fetchAll ($temp, $_GET["start"], $_GET["limit"]);
@@ -185,7 +189,7 @@ function GetFormTitle() {
 function deleteFormItem() {
 
 	$obj = new WFM_FormItems($_POST['FormItemID']);
-	$result = $obj->Remove($pdo);
+	$result = $obj->Remove();
 	
 	echo Response::createObjectiveResponse($result, "");
 	die();
@@ -224,8 +228,8 @@ function PrepareContentToEdit($content){
     for ($i = 0; $i < count($arr); $i++) {
         $FormItemID = $arr[$i];
         if (is_numeric($FormItemID)) {
-            $RevContent .= WFM_forms::TplItemSeperator . 
-				$FormItemID . '--' . $ItemsArr[$FormItemID] . WFM_forms::TplItemSeperator;
+			if(isset($ItemsArr[$FormItemID]))
+				$RevContent .= WFM_forms::TplItemSeperator . $FormItemID . '--' . $ItemsArr[$FormItemID] . WFM_forms::TplItemSeperator;
         } else {
             $RevContent .= $FormItemID;
         }
@@ -265,6 +269,66 @@ function CopyForm(){
 	}
 	
 	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+//----------------------------------
+
+function SelectGroups(){
+	
+	$dt = WFM_FormGroups::Get(" AND FormID=? order by ordering", array($_GET["FormID"]));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveGroup(){
+	
+	$obj = new WFM_FormGroups();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if($obj->GroupID > 0)
+		$result = $obj->Edit();
+	else
+	{
+		$dt = PdoDataAccess::runquery("select ifnull(max(ordering),0) 
+			from WFM_FormGroups where FormID=?", array($obj->FormID));
+		$obj->ordering = $dt[0][0]*1 + 1;
+		
+		$result = $obj->Add();
+	}
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteGroup(){
+	
+	$obj = new WFM_FormGroups($_POST["GroupID"]);
+	$result =  $obj->Remove();
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();
+}
+
+function MoveGroup(){
+	
+	$FormID = $_POST["FormID"];
+	$GroupID = $_POST["GroupID"];
+	$ordering = $_POST["ordering"];
+	$direction = $_POST["direction"];
+	
+	$direction = $direction == "-1" ? "-1" : "+1";
+	
+	PdoDataAccess::runquery("update WFM_FormGroups 
+		set ordering=ordering $direction
+		where FormID=? AND GroupID=?",
+			array($FormID, $GroupID));
+		
+	PdoDataAccess::runquery("update WFM_FormGroups 
+			set ordering=? 
+			where FormID=? AND GroupID<>? AND ordering=? ",
+			array($ordering, $FormID, $GroupID, $ordering*1 + $direction*1));
+	
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
@@ -502,9 +566,11 @@ function SelectAccessFromItems(){
 	$StepRowID = $_REQUEST["StepRowID"];
 	
 	$dt = PdoDataAccess::runquery("
-		SELECT fi.FormItemID,ItemName, if(StepRowID is null,'NO','YES') access,AccessID
-		FROM WFM_FormItems fi left join WFM_FormAccess fa on(fi.FormItemID=fa.FormItemID AND fa.StepRowiD=?)
-		where FormID=? order by ordering", array($StepRowID, $FormID));
+		SELECT fi.FormItemID,fi.GroupID,ItemName, if(StepRowID is null,'NO','YES') access,AccessID,fg.GroupDesc
+		FROM WFM_FormItems fi 
+			left join WFM_FormGroups fg using(GroupID) 
+			left join WFM_FormAccess fa on(fi.FormItemID=fa.FormItemID AND fa.StepRowiD=?)
+		where fi.FormID=? order by fg.ordering,fi.ordering", array($StepRowID, $FormID));
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();

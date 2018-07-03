@@ -142,7 +142,8 @@ WFM_form.prototype.EditItem = function () {
 	
 	record = WFM_formObject.grid.getSelectionModel().getLastSelected();
 	framework.OpenPage(this.address_prefix + "NewForm.php", "ویرایش فرم",
-			{FormID: record.data.FormID});
+			{FormID: record.data.FormID,
+			MenuID: <?= $_POST["MenuID"]?>});
 }
 
 WFM_form.prototype.RemoveForm = function () {

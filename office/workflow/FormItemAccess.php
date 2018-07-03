@@ -16,6 +16,8 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "form.data.php?task=SelectAc
 
 $dg->addColumn("", "access", "", true);
 $dg->addColumn("", "AccessID", "", true);
+$dg->addColumn("", "GroupID", "", true);
+$dg->addColumn("", "GroupDesc", "", true);
 
 $col = $dg->addColumn("", "FormItemID");
 $col->renderer = "WFM_FormAccess.CheckRender";
@@ -28,6 +30,10 @@ $dg->addButton("", "حذف همه", "cross", "function(){WFM_FormAccessObject.Ch
 
 $dg->DefaultSortField = "ordering";
 $dg->autoExpandColumn = "ItemName";
+
+$dg->EnableGrouping = true;
+$dg->DefaultGroupField = "GroupID";
+$dg->groupHeaderTpl = "{[values.rows[0].data.GroupDesc]}";
 
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;

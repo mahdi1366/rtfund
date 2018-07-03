@@ -892,7 +892,8 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 		unset($itemObj->TafsiliID2);
 		$itemObj->Add($pdo);
 	}
-	if($PartObj->CustomerWage*1 <= $PartObj->FundWage*1 && $PartObj->WageReturn == "CUSTOMER")
+	$FundWage = 0;
+	if($PartObj->FundWage*1 > 0 && $PartObj->WageReturn == "CUSTOMER")
 	{
 		$FundWage = $PayAmount*$PartObj->FundWage/100;
 		
@@ -998,27 +999,11 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $SumAmount;	
 			$itemObj->Add($pdo);
-
-			/*unset($itemObj->ItemID);
-			$itemObj->CostID = $CostCode_guaranteeCount;
-			$itemObj->DebtorAmount = $countAmount;
-			$itemObj->CreditorAmount = 0;	
-			$itemObj->Add($pdo);
-
-			unset($itemObj->ItemID);
-			$itemObj->CostID = $CostCode_guaranteeCount2;
-			$itemObj->DebtorAmount = 0;
-			$itemObj->CreditorAmount = $countAmount;
-			$itemObj->Add($pdo);*/
 		}
 	}
 	// ----------------------------- bank --------------------------------
-	$BankAmount = $PayAmount - $AgentWage;
-	/*if($PartObj->DelayReturn == "CHEQUE")
-		$BankAmount -= $FundDelay;
-	if($PartObj->AgentDelayReturn == "CHEQUE")
-		$BankAmount -= $AgentDelay;*/
-	
+	$BankAmount = $PayAmount - $AgentWage - $FundWage;
+		
 	$itemObj = new ACC_DocItems();
 	$itemObj->DocID = $obj->DocID;
 	$itemObj->CostID = $CostCode_bank;
