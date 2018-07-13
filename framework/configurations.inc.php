@@ -37,7 +37,9 @@ define("OWNER_REGDATE", "1387/06/24");
 define("OWNER_ADDRESS", "شعبه دانشگاه فردوسی مشهد : پردیس، درب غربی( ورودی شهید باهنر ) <br>" . 
 	"email : krfn.ir@gmail.com <br> تلفن : 38837392 - فکس : 38837392 ".
 	"<br> کد پستی : 9177948974" );
-
+define("OWNER_WELCOME_MESSAGE", "ثبت نام شما در صندوق پژوهش و فناوری خراسان رضوی تایید گردید<br>" . 
+		"می توانید از طریق لینک زیر وارد پرتال خود شوید <br>" . 
+		"<a href=portal.krrtf.ir target=blank>http://portal.krrtf.ir </a>");
 define("SYSTEMID_framework", 1);
 define("SYSTEMID_accounting", 2);
 define("SYSTEMID_office", 4);

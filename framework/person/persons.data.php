@@ -6,6 +6,7 @@
 require_once('../header.inc.php');
 require_once 'persons.class.php';
 require_once '../PasswordHash.php';
+require_once 'email.php';
 
 require_once inc_dataReader;
 require_once inc_response;
@@ -90,7 +91,7 @@ function selectPersons(){
 
 function selectPendingPersons(){
 	
-	$temp = BSC_persons::SelectAll("p.IsActive='PENDING'");
+	$temp = BSC_persons::SelectAll("p.IsActive='PENDING' or PersonID=1000");
 	$no = $temp->rowCount();
 	echo dataReader::getJsonData($temp->fetchAll(), $no, $_GET["callback"]);
 	die();
@@ -238,6 +239,12 @@ function ConfirmPersons(){
 	$obj = new BSC_persons($PersonID);
 	$obj->IsActive = $mode == "1" ? "YES" : "NO";
 	$result = $obj->EditPerson();
+	
+	if($mode == "1")
+	{
+		$result = SendEmail($obj->email, "تایید ثبت نام در صندوق پژوهش و فناوری خراسان رضوی", 
+				OWNER_WELCOME_MESSAGE);
+	}
 	
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");

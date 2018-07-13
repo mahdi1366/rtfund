@@ -96,11 +96,29 @@ for ($i = 0; $i < count($menus); $i++) {
 							<i class="fas fa-home"></i>صفحه نخست</div>
 						<div class="HeaderMenu" onclick="window.open('http://krrtf.ir')"><i class="fab fa-internet-explorer"></i>سایت صندوق</div>
 						<div class="HeaderMenu"><i class="fas fa-question "></i>راهنمای استفاده از خدمات</div>
-						<div class="HeaderMenu"><i class="fas fa-phone "></i>تماس با ما</div>
+						<div class="HeaderMenu" onclick="portal.OpenPage('/portal/contact.php')"><i class="fas fa-phone "></i>تماس با ما</div>
 					</td>
 					<td width="100px" align="center" style="vertical-align: middle;font-weight: bold">
 						<?= DateModules::shNow(); ?><br>
-						<?= date("H:i") ?>
+						<div id="portal_clock"></div>
+						<script>
+							function startTime() {
+								var today = new Date();
+								var h = today.getHours();
+								var m = today.getMinutes();
+								var s = today.getSeconds();
+								m = checkTime(m);
+								s = checkTime(s);
+								document.getElementById('portal_clock').innerHTML =
+								h + ":" + m + ":" + s;
+								var t = setTimeout(startTime, 500);
+							}
+							function checkTime(i) {
+								if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+								return i;
+							}
+							startTime();
+						</script>
 					</td>
 					<td width="100px"><img style="margin-top:5px;width:90px;" 
 										   src="/framework/icons/logo-small.png"></td>
