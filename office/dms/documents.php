@@ -75,6 +75,10 @@ switch($ObjectType)
 		if($obj->ReqStatus == ATN_STEPID_RAW)
 			$access = true;
 		break;
+	//......................................................
+	case "BeneficiaryDocs":
+		$access = true;
+		break;
 }
 //------------------------------------------------------
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "dms.data.php?" .

@@ -9,7 +9,7 @@ require_once inc_phpExcelReader;
 if(empty($_REQUEST["ObjectID"]))
 	die();
 
-$ObjectID = (int)$_REQUEST["ObjectID"];
+$ObjectID = $_REQUEST["ObjectID"];
 $DocumentID = isset($_REQUEST["DocumentID"]) ? (int)$_REQUEST["DocumentID"] : "";
 $RowID = isset($_REQUEST["RowID"]) ? (int)$_REQUEST["RowID"] : "";
 $DocTypes = isset($_REQUEST["DocType"]) ? $_REQUEST["DocType"] : "";
