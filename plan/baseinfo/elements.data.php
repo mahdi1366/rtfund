@@ -12,8 +12,15 @@ require_once 'elements.class.php';
 $task = $_REQUEST["task"];
 switch ($task) {
 		
-	default : 
-		eval($task. "();");
+	case "SelectScopes":
+	case "SaveGroup":
+	case "DeleteGroup":
+	case "selectGroupElements":
+	case "SaveElement":
+	case "DeleteElement":
+	case "selectGroups":
+	case "SelectElements":
+		$task();
 }
 
 function SelectScopes(){
@@ -46,7 +53,7 @@ function SaveGroup(){
 		$reslt = $obj->Add();
 	
 	//print_r(ExceptionHandler::PopAllExceptions());	
-	echo Response::createObjectiveResponse($reslt, "");
+	echo Response::createObjectiveResponse($reslt, $obj->GroupID);
 	die();
 }
 
@@ -62,7 +69,7 @@ function DeleteGroup(){
 
 function selectGroupElements(){
 	
-	$dt = PLN_Elements::Get(" AND IsActive='YES' AND GroupID=? AND ParentID=?", 
+	$dt = PLN_Elements::Get(" AND IsActive='YES' AND GroupID=? AND ParentID=? ", 
 		array($_REQUEST["GroupID"], $_REQUEST["ParentID"]));
 	$dt = $dt->fetchAll();
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
@@ -105,7 +112,8 @@ function DeleteElement(){
 function selectGroups(){
 	
 	$filled = !isset($_REQUEST["filled"]) ? "" : $_REQUEST["filled"];
-	$PlanID = $_REQUEST["PlanID"];
+	$PlanID = (int)$_REQUEST["PlanID"];
+	$FormType = (int)$_REQUEST["FormType"];
 	
 	$nodes = PdoDataAccess::runquery("select g.ParentID, g.GroupID id, g.GroupDesc text , 'true' leaf ,
 		'javascript:void(0)' href, 'false' expanded, '' iconCls , 
@@ -126,9 +134,10 @@ function selectGroups(){
 			where PlanID=:p AND p.RowID =t.RowID AND p.GroupID=t.GroupID
 			group by GroupID
 		)t on(g.GroupID=t.GroupID)
+		where FormType=:ft
 		group by g.GroupID
 		" . ($filled == "true" ? " having count(pi.RowID)>0 " : "") . "
-	", array(":p" => $PlanID));
+	", array(":ft" => $FormType,":p" => $PlanID));
 		
 	$returnArr = array(); 
 	$refArr = array();

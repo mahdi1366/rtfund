@@ -9,6 +9,7 @@ require_once inc_dataReader;
 require_once inc_response;
 require_once 'plan.class.php';
 require_once '../baseinfo/elements.class.php';
+require_once 'TreeModules.class.php';
 
 $task = $_REQUEST["task"];
 switch ($task) {
@@ -23,23 +24,24 @@ function selectGroups(){
 	$filled = $filled == "true" ? true : false;
 	
 	$PlanID = $_REQUEST["PlanID"];
+	$FormType = $_REQUEST["FormType"];
 	
 	$where = "";
-	$params = array(":p" => $PlanID);
+	$params = array(":p" => $PlanID,":ft" => $FormType);
 	
 	$planObj = new PLN_plans($PlanID);
 	if(isset($_SESSION["USER"]["portal"]) && $_SESSION["USER"]["PersonID"] == $planObj->PersonID)
-		$where .= " AND g4.CustomerRelated='YES'";
+		$where .= " AND g.CustomerRelated='YES'";
 	if(!empty($_REQUEST["ScopeID"]))
 	{
-		$where .= " AND g4.ScopeID=:sc";
+		$where .= " AND g.ScopeID=:sc";
 		$params[":sc"] = $_REQUEST["ScopeID"];
 	}
 	
 	$nodes = PdoDataAccess::runquery("select 
-			g4.ParentID,
-			g4.GroupID id, 
-			g4.GroupDesc text , 
+			g.ParentID parentid,
+			g.GroupID id, 
+			g.GroupDesc text , 
 			'true' leaf ,
 			'javascript:void(0)' href, 
 			'true' expanded, 
@@ -50,35 +52,26 @@ function selectGroups(){
 						   else '' end
 			) cls,
 			ifnull(ActDesc,'') qtip,
-			g3.GroupID g3,
-			g3.GroupDesc g3Desc,
-			g2.GroupID g2,
-			g2.GroupDesc g2Desc,
-			g1.GroupID g1,
-			g1.GroupDesc g1Desc,
-			g0.GroupID g0,
-			g0.GroupDesc g0Desc
+			g.ParentID
 		
-		FROM PLN_groups g4
-			join PLN_Elements e on(e.ParentID=0 AND g4.GroupID=e.GroupID)
-			left join PLN_groups g3 on(g4.ParentID=g3.GroupID)
-			left join PLN_groups g2 on(g3.ParentID=g2.GroupID)
-			left join PLN_groups g1 on(g2.ParentID=g1.GroupID)
-			left join PLN_groups g0 on(g1.ParentID=g0.GroupID)			
-			
-		left join PLN_PlanItems pi on(pi.PlanID=:p AND e.ElementID=pi.ElementID)
-		left join (
-			select p.GroupID,ActType,ActDesc from PLN_PlanSurvey p,
-				(select GroupID,max(RowID) RowID from PLN_PlanSurvey where PlanID=:p AND GroupID>0
-				group by GroupID)t
-			where PlanID=:p AND p.RowID =t.RowID AND p.GroupID=t.GroupID
-			group by GroupID
-		)t on(g4.GroupID=t.GroupID)
-		where 1=1 $where
-		group by g4.GroupID
+		FROM PLN_groups g
+			left join PLN_Elements e on(e.ParentID=0 AND g.GroupID=e.GroupID)
+			left join PLN_PlanItems pi on(pi.PlanID=:p AND e.ElementID=pi.ElementID)
+			left join (
+				select p.GroupID,ActType,ActDesc from PLN_PlanSurvey p,
+					(select GroupID,max(RowID) RowID from PLN_PlanSurvey where PlanID=:p AND GroupID>0
+					group by GroupID)t
+				where PlanID=:p AND p.RowID =t.RowID AND p.GroupID=t.GroupID
+				group by GroupID
+			)t on(g.GroupID=t.GroupID)
+		where g.FormType=:ft  $where
+		group by g.GroupID
 		" . ($filled ? " having count(pi.RowID)>0 " : "") . "
 	", $params);
-		
+	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes);
+	echo json_encode($returnArr);
+	die();
+	
 	$returnArr = array(); 
 	$refArr = array();
 	
@@ -185,7 +178,7 @@ function selectGroups(){
 			$i--;
 		}
 	}
-	///print_r($returnArr);die();
+	print_r($returnArr);die();
 	echo json_encode($returnArr);
 	die();
 }
@@ -375,6 +368,12 @@ function SelectAllPlans(){
 	
 	$param = array();
 	$where = "1=1 ";
+	if(!empty($_REQUEST["FormType"]))
+	{
+		$where .= " AND FormType=:ft";
+		$param[":ft"] = $_REQUEST["FormType"];
+	}
+	
 	if(!empty($_REQUEST["PlanID"]))
 	{
 		$where .= " AND PlanID=:pid";
@@ -448,7 +447,7 @@ function SaveNewPlan(){
 		else
 			$obj->PersonID = $_SESSION["USER"]["PersonID"];		
 		$obj->RegDate = PDONOW;
-		$obj->StepID = !isset($_SESSION["USER"]["framework"]) ? STEPID_RAW : STEPID_CUSTOMER_SEND;
+		$obj->StepID = STEPID_RAW;
 		$result = $obj->AddPlan();
 		
 		PLN_plans::ChangeStatus($obj->PlanID, $obj->StepID , "", true);

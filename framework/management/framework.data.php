@@ -13,7 +13,7 @@ if(!empty($_REQUEST["task"]))
 	$_REQUEST["task"]();
 
 function selectSystems(){
-	$temp = PdoDataAccess::runquery("select * from FRW_systems");
+	$temp = PdoDataAccess::runquery("select * from FRW_systems order by ordering");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -29,7 +29,7 @@ function SaveSystem(){
 		$result = $obj->EditSystem();
 	else 
 		$result = $obj->AddSystem();
-	
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }

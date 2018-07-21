@@ -9,6 +9,7 @@ PlanInfo.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 	MenuID : "<?= $_POST["MenuID"] ?>",
 
+	FormType : <?= $PlanObj->FormType ?>,
 	PlanID : <?= $PlanID ?>,
 	PlanRecord : null,
 	User : '<?= $User ?>',
@@ -128,7 +129,7 @@ function PlanInfo(){
 				store: new Ext.data.TreeStore({
 					proxy: {
 						type: 'ajax',
-						url: this.address_prefix + 'plan.data.php?task=selectGroups&PlanID=' + this.PlanID +
+						url: this.address_prefix + 'plan.data.php?task=selectGroups&FormType=' + this.FormType + '&PlanID=' + this.PlanID +
 							"&ScopeID=" + this.Scopes[i].id
 					}					
 				}),

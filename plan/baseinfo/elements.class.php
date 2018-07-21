@@ -9,7 +9,8 @@ class PLN_groups extends OperationClass
 {
 	const TableName = "PLN_groups";
 	const TableKey = "GroupID";
-		
+	
+	public $FormType;
 	public $GroupID;
 	public $ParentID;
 	public $GroupDesc;
@@ -23,7 +24,7 @@ class PLN_groups extends OperationClass
 		if(count($dt) > 0)
 			return false;
 		
-		parent::Remove($pdo);
+		return parent::Remove($pdo);
 	}
 }
 

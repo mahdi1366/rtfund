@@ -13,6 +13,11 @@ $col = $dg->addColumn("کد","SystemID","string");
 $col->editor = ColumnEditor::NumberField();
 $col->width = 50;
 
+$col = $dg->addColumn("ترتیب","ordering","string");
+$col->editor = ColumnEditor::NumberField();
+$col->sortable = false;
+$col->width = 60;
+
 $col = $dg->addColumn("عنوان سیستم","SysName","string");
 $col->editor = ColumnEditor::TextField();
 $col->sortable = false;
