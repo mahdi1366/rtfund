@@ -1764,7 +1764,7 @@ class LON_BackPays extends PdoDataAccess{
 		
 		return LON_BackPays::SelectAll(" RequestID=? 
 			AND if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-			AND PayType<>" . BACKPAY_PAYTYPE_CORRECT, array($RequestID));
+			/*AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . "*/", array($RequestID));
 	}
 }
 
