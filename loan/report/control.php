@@ -123,7 +123,6 @@ function GetData(){
 				select RequestID, sum(PayAmount) sumbackpays from LON_BackPays 
 				left join ACC_IncomeCheques i using(IncomeChequeID)
 				where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-				AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . " 
 				group by RequestID
 			) b on(r.RequestID=b.RequestID)
 			

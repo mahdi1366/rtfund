@@ -1451,7 +1451,6 @@ function GetDelayedInstallments($returnData = false){
 				from LON_BackPays
 				left join ACC_IncomeCheques i using(IncomeChequeID)
 				where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-					AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . "
 				group by RequestID			
 			)t3 on(r.RequestID=t3.RequestID)
 			

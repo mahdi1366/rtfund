@@ -72,9 +72,8 @@ function MakeWhere(&$where, &$whereParam){
 		$whereParam[":$key"] = $value;
 	}
 
-	$where .= isset($_POST["IsEndedInclude"]) ? 
-			" AND r.StatusID in('".LON_REQ_STATUS_CONFIRM."','".LON_REQ_STATUS_ENDED."')" : 
-			" AND r.StatusID in('".LON_REQ_STATUS_CONFIRM."')";
+	$where .= isset($_POST["IsEndedInclude"]) ? " AND IsEnded='YES'" : "";
+			
 }	
 
 function GetData(){

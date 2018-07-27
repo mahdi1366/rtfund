@@ -114,8 +114,7 @@ function GetData(){
 				group by SourceID,SourceID2
 			)d on(d.SourceID=r.RequestID AND d.SourceID2=BackPayID )
 
-			where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-					AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . $where ;
+			where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)" . $where ;
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
 	$query .= $group == "" ? " group by b.BackPayID" : " group by " . $group;
