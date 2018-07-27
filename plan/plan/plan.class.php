@@ -10,6 +10,7 @@ require_once getenv("DOCUMENT_ROOT") . '/office/dms/dms.class.php';
 class PLN_plans extends PdoDataAccess
 {
 	public $PlanID;
+	public $FormType;
 	public $PlanDesc;
 	public $LoanID;
 	public $PersonID;

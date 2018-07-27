@@ -12,6 +12,10 @@ require_once 'plan.class.php';
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
+if(!isset($_REQUEST["FormType"]))
+	die();
+$FormType = $_REQUEST["FormType"];
+
 $framework = isset($_SESSION["USER"]["framework"]);
 
 if(!$framework)
@@ -37,7 +41,7 @@ else
 }
 //.............................................
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "plan.data.php?task=SelectMyPlans", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "plan.data.php?task=SelectMyPlans&FormType=" . $FormType, "grid_div");
 
 $dg->addColumn("", "StepID", "", true);
 
@@ -82,6 +86,7 @@ NewPlan.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 	MenuID : "<?= $_POST["MenuID"] ?>",
 	
+	FormType : <?= $FormType?>,
 	PlanID : <?= $PlanID ?>,
 	PlanDesc : '<?= $PlanDesc ?>',
 	LoanID : '<?= $LoanID ?>',
@@ -159,6 +164,10 @@ function NewPlan(){
 				xtype : "hidden",
 				name : "PlanID",
 				value : this.PlanID
+			},{
+				xtype : "hidden",
+				name : "FormType",
+				value : this.FormType				
 			}]
 		});
 	}
@@ -213,6 +222,7 @@ NewPlan.prototype.SaveNewPlan = function(){
 		params : {
 			task : "SaveNewPlan",
 			PlanID : this.PlanID,
+			FormType : this.FormType,
 			PlanDesc : this.planFS.down("[name=PlanDesc]").getValue(),
 			LoanID : this.planFS.down("[name=LoanID]").getValue(),
 			PersonID : this.framework ? this.planFS.down("[name=PersonID]").getValue() : ""

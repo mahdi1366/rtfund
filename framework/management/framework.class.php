@@ -11,7 +11,8 @@ class FRW_systems extends PdoDataAccess {
 	public $SysName;
 	public $SysPath;
 	public $SysIcon;
-	public $IsActive;
+	public $ordering;
+	public $IsActive;	
 
 	public function __construct($SystemID = "") {
 		if ($SystemID == "")

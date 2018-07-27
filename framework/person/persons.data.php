@@ -91,7 +91,7 @@ function selectPersons(){
 
 function selectPendingPersons(){
 	
-	$temp = BSC_persons::SelectAll("p.IsActive='PENDING' or PersonID=1000");
+	$temp = BSC_persons::SelectAll("p.IsActive='PENDING'");
 	$no = $temp->rowCount();
 	echo dataReader::getJsonData($temp->fetchAll(), $no, $_GET["callback"]);
 	die();

@@ -9,6 +9,9 @@ require_once inc_dataGrid;
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
+if(!isset($_REQUEST["FormType"]))
+	die();
+$FormType = $_REQUEST["FormType"];
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "elements.data.php?task=selectGroupElements&ParentID=0", "grid_div");
 
@@ -46,7 +49,7 @@ $grid1 = $dg->makeGrid_returnObjects();
 
 //..............................................................................
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "elements.data.php?task=selectGroupElements", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "elements.data.php?task=selectGroupElements&FormType=" . $FormType, "grid_div");
 
 $dg->addColumn("", "GroupID", "", true);
 $dg->addColumn("", "ParentID", "", true);
@@ -92,8 +95,11 @@ $grid2 = $dg->makeGrid_returnObjects();
 <script>
 
 PlanElements.prototype = {
+	
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
+
+	FormType : "<?= $FormType ?>",
 
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
@@ -124,7 +130,7 @@ function PlanElements(){
 		store: new Ext.data.TreeStore({
 			proxy: {
 				type: 'ajax',
-				url: this.address_prefix + 'elements.data.php?task=selectGroups&PlanID=0'
+				url: this.address_prefix + 'elements.data.php?task=selectGroups&PlanID=0&FormType=' + this.FormType
 			}					
 		}),
 		root: {id: 'src', text : "سرفصل های اطلاعات"},
@@ -193,6 +199,11 @@ function PlanElements(){
 					xtype : "hidden",
 					name : "ParentID",
 					itemId : "ParentID"
+				},{
+					xtype : "hidden",
+					name : "FormType",
+					itemId : "FormType",
+					value : this.FormType
 				}],
 			buttons :[{
 					text : "ذخیره",
@@ -211,7 +222,7 @@ function PlanElements(){
 	
 	this.HFormWin = new Ext.window.Window({
 		width : 500,
-		height : 250,
+		height : 340,
 		modal : true,
 		closeAction : "hide",
 		items : new Ext.FormPanel({
@@ -279,7 +290,7 @@ function PlanElements(){
 	//................................................................
 	this.DFormWin = new Ext.window.Window({
 		width : 500,
-		height : 390,
+		height : 500,
 		modal : true,
 		closeAction : "hide",
 		items : new Ext.FormPanel({
@@ -419,6 +430,7 @@ PlanElements.prototype.BeforeSaveGroup = function(mode)
 	this.infoWin.down('form').getForm().reset();
 
 	this.infoWin.show();
+	console.log(record);
 	this.infoWin.down('form').getComponent("ParentID").setValue(record.data.id);
 	
 	if(mode == "edit")
@@ -453,13 +465,14 @@ PlanElements.prototype.SaveGroup = function(){
 			if(mode == "new")
 			{
 				ParentID = PlanElementsObject.infoWin.down('form').getComponent("ParentID").getValue();
-				if(ParentID == "source")
+				if(ParentID == "0")
 					Parent = PlanElementsObject.tree.getRootNode()
 				else
 					Parent = PlanElementsObject.tree.getRootNode().findChild("id",ParentID,true);
 				Parent.set('leaf', false);
 				Parent.appendChild({
 					id : action.result.data,
+					href : 'javascript:void(0)',
 					text :  PlanElementsObject.infoWin.down('form').getComponent("GroupDesc").getValue(),
 					leaf : true
 				});  

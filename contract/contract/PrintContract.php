@@ -72,21 +72,26 @@ $signs = CNT_ContractSigns::Get(" AND ContractID=? order by description", array(
 			<tr>
 				<td  class="mainTD" colspan="3" style="padding:0;height:80px;padding-right:20px;">
 					<?
-						if(count($signs) > 0)
-							$width = round(100/count($signs));
 						$groups_arr = array();
+						for($i=0; $i<count($signs); $i++)
+							if(!isset($groups_arr[ $signs[$i]["description"] ]))
+								$groups_arr[ $signs[$i]["description"] ] = $signs[$i]["description"];
+
+						if(count($groups_arr) > 0)
+							$width = round(100/count($groups_arr));
 						
+						$cur_group = "";
 						for($i=0; $i<count($signs); $i++)
 						{
 							$row = $signs[$i];
-							
-							if(!isset($groups_arr[ $row["description"] ]))
+							if($cur_group != $groups_arr[ $row["description"] ])
 							{
 								if($i > 0)
 									echo "</fieldset>";
 								echo "<fieldset style='float:right;width:45%;font-weight:bold'><legend>" . $row["description"] . "</legend>";
-								$groups_arr[ $row["description"] ] = true;
+								$cur_group = $groups_arr[ $row["description"] ];
 							}
+							
 							echo "<div style='float:right;width:50%;font-weight:bold'>
 									" . $row["fullname"] . $row["SignerName"] . "
 									<br>

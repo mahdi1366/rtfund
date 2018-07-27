@@ -20,6 +20,7 @@ if(empty($_REQUEST["PlanID"]))
 $PlanID = $_REQUEST["PlanID"];
 $PlanObj = new PLN_plans($PlanID);
 $ExpertStatusDesc = '';
+
 //-----------------------------------------------------
 $ScopeWhere = "";
 $dt = PLN_experts::Get(" AND PlanID=? AND e.PersonID=?", array($PlanID, $_SESSION["USER"]["PersonID"]));
