@@ -239,8 +239,7 @@ function GetData($mode = "list"){
 				select RequestID,sum(PayAmount) TotalPayAmount , max(PayDate) MaxPayDate
 				from LON_BackPays
 				left join ACC_IncomeCheques i using(IncomeChequeID)
-				where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-					AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . "
+				where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)					
 				group by RequestID			
 			)t1 on(r.RequestID=t1.RequestID)
 			
@@ -300,8 +299,7 @@ function GetData($mode = "list"){
 				select RequestID,sum(PayAmount) amount
 				from LON_BackPays left join ACC_IncomeCheques i using(IncomeChequeID)
 				where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-							AND PayType<>".BACKPAY_PAYTYPE_CORRECT." 
-							AND PayDate <= :effectiveDate
+						AND PayDate <= :effectiveDate 
 				group by RequestID
 			)t7 on(r.RequestID=t7.RequestID)
 			

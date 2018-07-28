@@ -407,7 +407,6 @@ class LON_requests extends PdoDataAccess{
 				left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 				where RequestID=:r AND 
 					if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-					/*AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . "*/
 			union All
 				select 0 id,'pay' type, CostDate RecordDate, -1*CostAmount RecordAmount,0, CostDesc details, 0
 				from LON_costs 
@@ -681,7 +680,6 @@ class LON_requests extends PdoDataAccess{
 				left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 				where RequestID=:r AND 
 					if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-					/*AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . "*/
 			union All
 				select 0 id,'pay' type, CostDate RecordDate, -1*CostAmount RecordAmount,0, CostDesc details, 0
 				from LON_costs 
@@ -1238,7 +1236,6 @@ class LON_Computes extends PdoDataAccess{
 				left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 				where RequestID=:r AND 
 					if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-					AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . "
 			union All
 				select 0 id,'pay' type, CostDate RecordDate, -1*CostAmount RecordAmount
 				from LON_costs 
@@ -1763,8 +1760,8 @@ class LON_BackPays extends PdoDataAccess{
 	static function GetRealPaid($RequestID){
 		
 		return LON_BackPays::SelectAll(" RequestID=? 
-			AND if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-			/*AND PayType<>" . BACKPAY_PAYTYPE_CORRECT . "*/", array($RequestID));
+			AND if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)"
+			, array($RequestID));
 	}
 }
 
