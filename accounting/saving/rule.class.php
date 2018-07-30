@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // create Date: 95.03
 //---------------------------
-
+ 
 class ACC_SavingRules extends OperationClass {
 
 	const TableName = "ACC_SavingRules";
