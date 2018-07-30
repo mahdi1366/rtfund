@@ -164,7 +164,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
             {
 				if(me.AddAccess)
                     this.Menu.add({
-                        text: 'ایجاد فعالیت',
+                        text: 'ایجاد فرایند',
                         iconCls: 'add',
                         handler: function () {
                             ProcessObject.BeforeSaveProcess("new", "group");
@@ -175,12 +175,28 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
             {
 				if(me.AddAccess)
                     this.Menu.add({
-                        text: 'ایجاد چرخه',
+                        text: 'ایجاد زیر فرایند',
                         iconCls: 'add',
                         handler: function () {
                             ProcessObject.BeforeSaveProcess("new", "process");
                         }
                     });
+				if(me.AddAccess)
+                    this.Menu.add({
+                        text: 'ویرایش فرایند',
+                        iconCls: 'edit',
+                        handler: function () {
+                            ProcessObject.BeforeSaveProcess("edit", "group");
+                        }
+                    });
+				if(me.RemoveAccess)
+					this.Menu.add({
+						text: 'حذف فرایند',
+						iconCls: 'remove',
+						handler: function () {
+							ProcessObject.DeleteProcess("process");
+						}
+					});
             } 
 			else if (record.parentNode.parentNode.data.id == "source")
             {
@@ -194,7 +210,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
                     });
 				if(me.EditAccess)
 					this.Menu.add({
-						text: 'ویرایش چرخه',
+						text: 'ویرایش زیر فرایند',
 						iconCls: 'edit',
 						handler: function () {
 							ProcessObject.BeforeSaveProcess("edit", "process");
@@ -202,7 +218,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 					});
 				if(me.RemoveAccess)
 					this.Menu.add({
-						text: 'حذف چرخه',
+						text: 'حذف زیر فرایند',
 						iconCls: 'remove',
 						handler: function () {
 							ProcessObject.DeleteProcess("process");
@@ -267,10 +283,10 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 
         this.infoWin.down('form').getForm().reset();
         this.infoWin.down('form').getComponent("EventID").show();
-
-        if (mode == "new" && record.data.id == "source")
+console.log(record);
+        if (mode == "new" && (record.data.id == "source" || record.parentNode.data.id == "source"))
             this.infoWin.down('form').getComponent("EventID").hide();
-        if (mode == "edit" && (record.data.id == "source" || record.parentNode.data.id == "source"))
+        if (mode == "edit" && (record.parentNode.data.id == "source" || record.parentNode.parentNode.data.id == "source"))
             this.infoWin.down('form').getComponent("EventID").hide();
 
         this.infoWin.show();
@@ -305,7 +321,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 
         if (record.childNodes.length != 0)
         {
-            alert("ابتدا فعالیتهای این گروه را حذف کنید");
+            Ext.MessageBox.alert("خطا","ابتدا زیر فرایندهای این گروه را حذف کنید");
             return;
         }
         if (!confirm("آیا مایل به حذف می باشید؟"))

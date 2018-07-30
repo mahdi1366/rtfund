@@ -56,14 +56,13 @@ function WFM_MyRequests(){
 	
 	this.mainPanel = new Ext.form.FormPanel({
 		frame: true,
-		bodyStyle : "padding:10px",
+		bodyStyle : "padding:5px",
 		renderTo : this.get("mainForm"),
 		title: 'فرم ها',
-		width: 500,
-		layout : {
-			type : "table",
-			columns : 2
-		}
+		width: 600,
+		height : 200,
+		autoScroll : true,
+		layout : "vbox"
 	});	
 		
 	this.NewVoteFormsStore = new Ext.data.Store({
