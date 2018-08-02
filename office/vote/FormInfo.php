@@ -16,7 +16,7 @@ $readOnly = count($dt) > 0 ? true : false;
 	
 ?>
 <script>
-var x;	
+
 VoteFormInfo.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	parentObj : <?= $parentObj ?>,
@@ -49,7 +49,7 @@ function VoteFormInfo()
 	if(this.readOnly)
 	{
 		this.ItemsStore = new Ext.data.Store({
-			fields: ['ItemID','ItemValue','ItemType',"ItemTitle", 'ItemValues', 'GroupID', 'GroupDesc'],
+			fields: ['ItemID','FilledValue','ItemType',"ItemTitle", 'ItemValues', 'GroupID', 'GroupDesc'],
 			proxy: {
 				type: 'jsonp',
 				url: this.address_prefix + "../../office/vote/vote.data.php?task=FilledItemsValues&PersonID=" + 
@@ -127,7 +127,7 @@ VoteFormInfo.prototype.MakeForm = function(store){
 					data : data
 				}),
 				xtype: record.data.ItemType,
-				value : record.data.ItemValue,
+				value : record.data.FilledValue,
 				valueField : "value",
 				displayField : "value",
 				readOnly : this.readOnly, 
@@ -151,7 +151,7 @@ VoteFormInfo.prototype.MakeForm = function(store){
 					readOnly : this.readOnly,
 					width : Math.round(750/arr.length),
 					name : "elem_" + record.data.ItemID,
-					checked : arr[j] == record.data.ItemValue ? true : false
+					checked : arr[j] == record.data.FilledValue ? true : false
 				}); 
 			fsparent.add({
 				xtype : "radiogroup",
@@ -177,7 +177,7 @@ VoteFormInfo.prototype.MakeForm = function(store){
 				style : record.data.ItemType == 'displayfield' ? "line-height: 30px" : "",
 				name : "elem_" + record.data.ItemID,
 				hideTrigger : record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield' ? true : false,
-				value : record.data.ItemValue,
+				value : record.data.ItemType == 'displayfield'? record.data.ItemValues :  record.data.FilledValue,
 				width : 700
 			});
 		}
@@ -217,7 +217,7 @@ VoteFormInfo.prototype.PreviewForm = function(){
 	if(!this.ValuesStore)
 	{
 		this.ValuesStore = new Ext.data.Store({
-			fields: ['ItemID','ItemValue','ItemType',"ItemTitle", 'ItemValues', 'GroupID', 'GroupDesc'],
+			fields: ['ItemID','FilledValue','ItemType',"ItemTitle", 'ItemValues', 'GroupID', 'GroupDesc'],
 			proxy: {
 				type: 'jsonp',
 				url: this.address_prefix + "../../office/vote/vote.data.php?task=FilledItemsValues",

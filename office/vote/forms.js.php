@@ -264,10 +264,14 @@ VOT_Form.prototype.PreviewForm = function(){
 	if(!this.PreviewWin)
 	{
 		this.PreviewWin = new Ext.window.Window({
-			width : 700,
+			width : 800,
 			title : "پیش نمایش",
 			height : 500,
 			autoScroll : true,
+			loader : {
+				url : this.address_prefix + "FormInfo.php",
+				scripts : true
+			},
 			bodyStyle : "background-color:white",
 			modal : true,
 			closeAction : "hide",
@@ -277,115 +281,19 @@ VOT_Form.prototype.PreviewForm = function(){
 				handler : function(){this.up('window').hide();}
 			}]
 		});
-		Ext.getCmp(this.TabID).add(this.PreviewWin);
-		
-		this.ItemsStore = new Ext.data.Store({
-			fields: ['ItemID','ItemType',"ItemTitle", 'ItemValues', 'GroupID', 'GroupDesc'],
-			proxy: {
-				type: 'jsonp',
-				url: this.address_prefix + "vote.data.php?task=SelectItems",
-				reader: {
-					root: 'rows',
-					totalProperty: 'totalCount'
-				}
-			}
-		});
+		Ext.getCmp(this.TabID).add(this.PreviewWin);	
 	}
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
 	
 	this.PreviewWin.show();
-	this.ItemsStore.load({
+	this.PreviewWin.loader.load({
 		params : {
+			ExtTabID : this.PreviewWin.getEl().id,
+			parentObj : "VOT_FormObject",
 			FormID : record.data.FormID
-		},
-		callback : function(){
-			VOT_FormObject.PreviewWin.removeAll();
-			
-			var CurGroupID = 0;
-			var parent = null;
-			for(i=0; i<this.getCount(); i++)
-			{
-				record = this.getAt(i);
-				if(CurGroupID != record.data.GroupID)
-				{
-					VOT_FormObject.PreviewWin.add({
-						xtype : "fieldset",
-						title : record.data.GroupDesc,
-						itemId : "Group_" + record.data.GroupID,
-						layout : {
-							type : "table",
-							columns : 2
-						}
-					});
-					parent = VOT_FormObject.PreviewWin.down("[itemId=Group_" + record.data.GroupID + "]");
-					CurGroupID = record.data.GroupID;
-				}
-				if(record.data.ItemType == "combo")
-				{
-					arr = record.data.ItemValues.split("#");
-					data = [];
-					for(j=0;j<arr.length;j++)
-						data.push([ arr[j] ]);
-					
-					parent.add({
-						store : new Ext.data.SimpleStore({
-							fields : ['value'],
-							data : data
-						}),
-						xtype: record.data.ItemType,
-						valueField : "value",
-						displayField : "value",
-						fieldLabel : record.data.ItemTitle,
-						colspan : 2
-					});
-				}
-				else if(record.data.ItemType == "radio")
-				{
-					parent.add({
-						xtype : "displayfield",
-						width : 400,
-						value : record.data.ItemTitle
-					});
-					var items = new Array();
-					arr = record.data.ItemValues.split("#");
-					for(j=0; j<arr.length; j++)
-						items.push({
-							boxLabel : arr[j],
-							name : "radio_" + record.data.ItemID,
-							width : 100
-						});
-					parent.add({
-						xtype : "radiogroup",
-						items : items
-					});
-				}
-				else
-				{
-					if(record.data.ItemType == "textarea")
-					{
-						parent.add({
-							xtype : "displayfield",
-							value : record.data.ItemTitle,
-							colspan : 2,
-							width : 650
-						});
-					}
-					parent.add({
-						xtype: record.data.ItemType,
-						fieldLabel : record.data.ItemTitle,
-						hideTrigger : record.data.ItemType == 'numberfield' || 
-							record.data.ItemType == 'currencyfield' ? true : false,
-						value : record.data.ItemValues,
-						colspan : 2,
-						width : 650
-					});
-				}
-			}
 		}
 	});
-	
-	
 }
 
 //----------------------------------------------------------

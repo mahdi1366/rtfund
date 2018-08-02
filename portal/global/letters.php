@@ -6,7 +6,7 @@
 require_once getenv("DOCUMENT_ROOT") . '/portal/header.inc.php';
 require_once inc_dataGrid;
 require_once inc_component;
-
+ 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "global.data.php?task=CustomerLetters" , "grid_div");
 
 $dg->addColumn("", "LetterID", "", true);

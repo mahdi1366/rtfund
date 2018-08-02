@@ -355,7 +355,7 @@ function SelectChart1Data(){
 	$GroupID = $_GET["GroupID"];
 	
 	$dt = PdoDataAccess::runquery("
-		select  fi.*,f.ItemValue,GroupWeight
+		select  fi.*,f.FilledValue,GroupWeight
 		from VOT_FilledItems f join VOT_FormItems fi using(ItemID)
 			join VOT_FormGroups using(GroupID)
 			join BSC_persons using(PersonID)
@@ -387,7 +387,7 @@ function SelectChart1Data(){
 			$ItemWeight = $row["weight"]*1;
 		}
 		
-		$index = array_search($row["ItemValue"], $valuesArr);
+		$index = array_search($row["FilledValue"], $valuesArr);
 		$weight = isset($weightsArr[$index]) ? $weightsArr[$index] : 1;
 		$total += $weight*(100 - $index*$factor);
 		$totalCount += $weight;
