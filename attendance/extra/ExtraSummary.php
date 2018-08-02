@@ -197,7 +197,7 @@ ExtraSummary.prototype.SaveSummary = function(){
 	Ext.Ajax.request({
 		url: this.address_prefix + 'extra.data.php?task=SaveExtraSummary',
 		method: 'POST',
-		form : "mainForm",
+		form : this.get("ExtraMainForm"),
 		params  :{
 			SummaryYear : this.SummaryYear,
 			SummaryMonth : this.SummaryMonth
@@ -231,7 +231,7 @@ ExtraSummary.prototype.ConfirmSummary = function(){
 		Ext.Ajax.request({
 			url: me.address_prefix + 'extra.data.php?task=ConfirmSummary',
 			method: 'POST',
-			form : "mainForm",
+			form : this.get("ExtraMainForm"),
 			params  :{
 				SummaryYear : me.SummaryYear,
 				SummaryMonth : me.SummaryMonth
@@ -257,7 +257,7 @@ ExtraSummary.prototype.ConfirmSummary = function(){
 
 </script>
 <center>
-    <form id="mainForm">
+    <form id="ExtraMainForm">
         <br>
         <div id="div_Years"></div>
         <br>

@@ -39,15 +39,16 @@ function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 	
 	if(isset($_REQUEST["taraz"])){
 
-		/*if(!isset($_REQUEST["IncludeStart"]))
-			$where .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;*/
-
-		if(!isset($_REQUEST["IncludeEnd"]))
-			$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
-
 		$where .= " AND d.CycleID=:c" ;
 			$whereParam[":c"] = $_SESSION["accounting"]["CycleID"];
 	}
+	
+	if(!isset($_REQUEST["IncludeStart"]))
+			$where .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;
+
+		if(!isset($_REQUEST["IncludeEnd"]))
+			$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
+	
 	if(!empty($_REQUEST["CycleID"]))
 	{
 		$where .= " AND d.CycleID=:c" ;
@@ -254,9 +255,6 @@ function ListData($IsDashboard = false){
 	
 	$dataTable = GetData();
 	
-	if($_SESSION["USER"]["UserName"] == "admin")
-		echo PdoDataAccess::GetLatestQueryString ();
-	
 	$col = $rpg->addColumn("شماره سند", "LocalNo", "PrintDocRender");
 	$col->ExcelRender = false;
 	//$rpg->addColumn("کد حساب", "CostCode");
@@ -281,6 +279,9 @@ function ListData($IsDashboard = false){
 	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
+		
+		//if($_SESSION["USER"]["UserName"] == "admin")
+		//	echo PdoDataAccess::GetLatestQueryString ();
 		
 		$dt = PdoDataAccess::runquery("select * from BSC_branches");
 		$branches = array();
@@ -636,6 +637,14 @@ function AccReport_flow()
 			xtype : "container",
 			colspan : 2,
 			html : "<input type=checkbox name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
+		},{
+			xtype : "container",
+			colspan : 2,
+			html : "<input type=checkbox name=IncludeStart> گزارش شامل اسناد افتتاحیه باشد"
+		},{
+			xtype : "container",
+			colspan : 2,
+			html : "<input type=checkbox name=IncludeEnd> گزارش شامل اسناد اختتامیه باشد"
 		},{
 			xtype : "fieldset",
 			title : "ستونهای گزارش",
