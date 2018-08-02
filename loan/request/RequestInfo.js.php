@@ -1583,8 +1583,24 @@ RequestInfo.prototype.ReturnEndRequest = function(){
 
 //.........................................................
 
-RequestInfo.prototype.PartInfo = function(EditMode){
+RequestInfo.prototype.BeforeAddPart = function(){
 	
+	if(this.grid.getStore().totalCount > 0)
+	{
+		Ext.MessageBox.confirm("","با ایجاد شرایط جدید سند حسابداری اختلاف صادر می گردد.<br>" + 
+			"آیا مایل به ایجاد شرایط جدید می باشید؟", function(btn){
+				if(btn == "no")
+					return false;
+				
+				RequestInfoObject.PartInfo(false);
+			});
+	}
+	else
+		RequestInfoObject.PartInfo(false);
+}
+
+RequestInfo.prototype.PartInfo = function(EditMode){
+
 	if(!this.PartWin)
 	{
 		this.PartWin = new Ext.window.Window({
@@ -1941,6 +1957,8 @@ RequestInfo.prototype.SavePart = function(){
 			RequestID : this.RequestID
 		},
 		success: function(form,action){
+			if(action.result.data != "")
+				Ext.MessageBox.alert("",action.result.data);
 			mask.hide();
 			RequestInfoObject.grid.getStore().load();
 			RequestInfoObject.PartWin.hide();

@@ -142,6 +142,7 @@ VoteForms.prototype.PreviewForm = function(){
 	this.FormWin.loader.load({
 		params : {
 			ExtTabID : this.FormWin.getEl().id,
+			parentObj : "VoteFormsObject",
 			FormID : record.data.FormID
 		}
 	});

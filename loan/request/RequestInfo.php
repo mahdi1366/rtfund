@@ -95,7 +95,7 @@ $col->sortable = false;
 if(!$ReadOnly)
 {
 	if($User == "Staff" && $accessObj->EditFlag)
-		$dg->addButton("addPart", "ایجاد شرایط", "add", "function(){RequestInfoObject.PartInfo(false);}");
+		$dg->addButton("addPart", "ایجاد شرایط", "add", "function(){RequestInfoObject.BeforeAddPart();}");
 	
 	$col = $dg->addColumn("", "PartID");
 	$col->renderer = "RequestInfo.OperationRender";

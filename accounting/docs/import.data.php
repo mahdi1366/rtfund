@@ -1789,7 +1789,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
 	
-	return true;
+	return $obj;
 }
 
 function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=""){
@@ -1987,7 +1987,7 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
 	
-	return true;
+	return $obj;
 }
 //---------------------------------------------------------------
 function RegisterChangeInstallmentWage($DocID, $ReqObj,$PartObj, $InstallmentObj, $newDate, $wage, $pdo){

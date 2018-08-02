@@ -431,6 +431,7 @@ function GetRequestParts(){
 
 function SavePart(){
 	
+	$msg = "";
 	$obj = new LON_ReqParts();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
@@ -459,7 +460,14 @@ function SavePart(){
 			$OldDocID = count($dt)>0 ? $dt[0]["DocID"] : 0;
 			
 			$result = $obj->EditPart($pdo);
-			$result = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo, $OldDocID);
+			$DiffDoc = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo, $OldDocID);
+			if($DiffDoc == false)
+			{
+				echo PdoDataAccess::GetLatestQueryString();
+				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+				die();
+			}
+			$msg = "سند اختلاف با شماره " . $DiffDoc->LocalNo . " با موفقیت صادر گردید.";
 			ComputeInstallments($obj->RequestID, true, $pdo);
 		}		
 		else
@@ -480,7 +488,14 @@ function SavePart(){
 					$partobj->EditPart($pdo);
 				}
 			}
-			$result = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo);
+			$DiffDoc = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo);
+			if($DiffDoc == false)
+			{
+				echo PdoDataAccess::GetLatestQueryString();
+				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+				die();
+			}
+			$msg = "سند اختلاف با شماره " . $DiffDoc->LocalNo . " با موفقیت صادر گردید.";
 			ComputeInstallments($obj->RequestID, true, $pdo);
 		}		
 	}
@@ -492,7 +507,7 @@ function SavePart(){
 		die();
 	}
 	$pdo->commit();
-	echo Response::createObjectiveResponse(true, "");
+	echo Response::createObjectiveResponse(true, $msg);
 	die();
 }
 
