@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // Create Date:	94.06
 //-------------------------
- 
+
 Tafsili.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : '<?= $js_prefix_address ?>',

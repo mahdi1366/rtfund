@@ -51,7 +51,20 @@ if(isset($_REQUEST["show"]))
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.StatusID != " . ACC_STEPID_RAW;
 	
-	$query .= " group by if(DocType=".DOCTYPE_ENDCYCLE.",2,1),DocDate,ItemID ";
+	//------------------- group statement -----------------
+	$query .= " group by if(DocType=".DOCTYPE_ENDCYCLE.",2,1),DocDate,cc.CostCode";
+	
+	if(isset($_REQUEST["TafsiliGroup"]) && isset($_REQUEST["Tafsili2Group"]))
+		$query .= ",ItemID";
+	else{
+		
+		if(isset($_REQUEST["TafsiliGroup"]))
+			$query .= ",TafsiliID";
+		else if(isset($_REQUEST["Tafsili2Group"]))
+			$query .= ",TafsiliID2";
+	}
+	//-----------------------------------------------------
+	
 	$query .= " order by if(DocType=".DOCTYPE_ENDCYCLE.",2,1),DocDate,if(DebtorAmount<>0,0,1),cc.CostCode";
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
@@ -211,6 +224,14 @@ function AccReport_printDocs()
 			xtype : "container",
 			colspan : 2,
 			html : "<input type=checkbox name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
+		},{
+			xtype : "container",
+			colspan : 2,
+			html : "<input type=checkbox name=TafsiliGroup>به تفکیک تفصیلی 1"
+		},{
+			xtype : "container",
+			colspan : 2,
+			html : "<input type=checkbox name=Tafsili2Group> به تفکیک تفصیلی 2"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",
