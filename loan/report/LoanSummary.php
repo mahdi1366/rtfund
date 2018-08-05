@@ -146,39 +146,59 @@ BeginReport();
 					<td>ردیف</td>
 					<td>تاریخ پرداخت</td>
 					<td>نوع پرداخت</td>
+					<td>بابت</td>
 					<td>وضعیت چک</td>
 					<td>مبلغ</td>
 					<td>شماره فیش/پیگیری/چک</td>
 				</tr>
 				<?
-					$dt = LON_BackPays::SelectAll("RequestID=? order by PayDate", array($RequestID));
-					$index = 1;
-					$sum = 0;
-					foreach($dt as $row)
-					{
-						$color = $row["PayType"] == BACKPAY_PAYTYPE_CHEQUE && $row["ChequeStatus"] != INCOMECHEQUE_VOSUL ? "gray" : "black";
-						
-						echo "<tr><td>" . $index++ . 
-							"</td><td>" . DateModules::miladi_to_shamsi($row["PayDate"]) .
-							"</td><td>" . $row["PayTypeDesc"] . 
-							"</td><td>" . $row["ChequeStatusDesc"] . 							
-							"</td><td style=color:$color>" . number_format($row["PayAmount"]) . "</td>" . 
-							"</td><td>" . $row["PayBillNo"] . $row["PayRefNo"] . $row["ChequeNo"] . 
-							"</td></tr>";
-						
-						if($row["PayType"] != BACKPAY_PAYTYPE_CHEQUE)
+				ini_set("display_errors", "On");
+				$index = 1;
+				$sum = 0;
+				require_once '../../accounting/cheque/cheque.class.php';
+				$dt = ACC_IncomeCheques::Get(" AND LoanRequestID=? order by ChequeDate", array($RequestID));
+				$dt = $dt->fetchAll();
+				foreach($dt as $row)
+				{
+					$color = $row["ChequeStatus"] != INCOMECHEQUE_VOSUL ? "gray" : "black";
+
+					echo "<tr><td>" . $index++ . 
+						"</td><td>" . DateModules::miladi_to_shamsi($row["ChequeDate"]) .
+						"</td><td> چک" .
+						"</td><td>تنفس" .  
+						"</td><td>" . $row["ChequeStatusDesc"] . 							
+						"</td><td style=color:$color>" . number_format($row["ChequeAmount"]) . "</td>" . 
+						"</td><td>" . $row["ChequeNo"] . 
+						"</td></tr>";
+				}
+				//----------------------------------------------
+				$dt = LON_BackPays::SelectAll("RequestID=? order by PayDate", array($RequestID));
+				foreach($dt as $row)
+				{
+					$color = $row["PayType"] == BACKPAY_PAYTYPE_CHEQUE && $row["ChequeStatus"] != INCOMECHEQUE_VOSUL ? "gray" : "black";
+
+					echo "<tr><td>" . $index++ . 
+						"</td><td>" . DateModules::miladi_to_shamsi($row["PayDate"]) .
+						"</td><td>" . $row["PayTypeDesc"] . 
+						"</td><td>قسط" .  
+						"</td><td>" . $row["ChequeStatusDesc"] . 							
+						"</td><td style=color:$color>" . number_format($row["PayAmount"]) . "</td>" . 
+						"</td><td>" . $row["PayBillNo"] . $row["PayRefNo"] . $row["ChequeNo"] . 
+						"</td></tr>";
+
+					if($row["PayType"] != BACKPAY_PAYTYPE_CHEQUE)
+						$sum += $row["PayAmount"]*1;
+					else if($row["ChequeStatus"] == INCOMECHEQUE_VOSUL)
 							$sum += $row["PayAmount"]*1;
-						else if($row["ChequeStatus"] == INCOMECHEQUE_VOSUL)
-								$sum += $row["PayAmount"]*1;
-					}
+				}
 				?>
 				<tr class="TBLheader">
-					<td colspan="4" align="left">جمع پرداختی: </td>
+					<td colspan="5" align="left">جمع پرداختی: </td>
 					<td colspan="2"><?= number_format($sum) ?></td>
 				</tr>
 			</table>
 			<br>
-		</td>
+		</td> 
 	</tr>
 </table>	
 </center>

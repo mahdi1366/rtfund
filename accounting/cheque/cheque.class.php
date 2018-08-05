@@ -33,14 +33,14 @@ class ACC_IncomeCheques extends OperationClass{
 		parent::__construct($id);
 	}
 	
-	static function Get($where = "", $param = array()){
+	static function Get($where = "", $param = array(), $pdo = null){
 		
 		$query = "
 			SELECT o.*,
 				cc.CostCode,
 				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) CostDesc,
 				b.BankDesc, 
-				bi2.InfoDesc ChequeStatusDesc,
+				t.TafsiliDesc ChequeStatusDesc,
 				d.LocalNo,
 				d.StatusID
 			
@@ -53,14 +53,14 @@ class ACC_IncomeCheques extends OperationClass{
 			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
 
 			left join ACC_banks b on(ChequeBank=BankID)
-			left join BaseInfo bi2 on(bi2.TypeID=16 AND bi2.InfoID=o.ChequeStatus)
+			left join ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_ChequeStatus." AND t.TafsiliID=ChequeStatus)
 			
 			left join ACC_DocItems di on(SourceID=IncomeChequeID AND SourceType=" . DOCTYPE_INCOMERCHEQUE . ")
 			left join ACC_docs d on(di.DocID=d.DocID)
 			
 			where 1=1 " . $where;
 		
-		return parent::runquery_fetchMode($query, $param);
+		return parent::runquery_fetchMode($query, $param, $pdo);
 	}
 	
 	static function AddToHistory($IncomeChequeID, $status, $pdo = null, $details = ""){
