@@ -155,7 +155,8 @@ function WFM_NewForm() {
 				{"id": "textarea", "name": "متن بلند"},
 				{"id": "shdatefield", "name": "تاریخ"},
 				{"id": "combo", "name": "لیستی"},
-				{"id": "checkbox", "name": "انتخابی"}
+				{"id": "checkbox", "name": "انتخابی"},
+				{"id": "loan", "name": "وام های فرد"}
 			]
 		}),
 		emptyText: 'انتخاب ...',

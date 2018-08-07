@@ -113,8 +113,48 @@ VoteFormInfo.prototype.MakeForm = function(store){
 			CurGroupID = record.data.GroupID;
 			Index = 1;
 		}
-
-		if(record.data.ItemType === "combo")
+		if(record.data.ItemType === "loan")
+		{
+			fsparent.add({
+				xtype : "combo",
+				store: new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: '/loan/request/request.data.php?task=SelectMyRequests&mode=customer',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ['PartAmount',"RequestID","ReqAmount","ReqDate", "RequestID", "CurrentRemain","IsEnded",{
+						name : "fullTitle",
+						convert : function(value,record){
+							return "کد وام : " + record.data.RequestID + " به مبلغ " + 
+								Ext.util.Format.Money(record.data.ReqAmount) + " مورخ " + 
+								MiladiToShamsi(record.data.ReqDate);
+						}
+					}]
+				}),
+				width : 600,
+				displayField: 'fullTitle',
+				valueField : "RequestID",
+				tpl: new Ext.XTemplate(
+					'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
+					'<td style="padding:7px">کد وام</td>',
+					'<td style="padding:7px">مبلغ وام</td>',
+					'<td style="padding:7px">تاریخ پرداخت</td> </tr>',
+					'<tpl for=".">',
+						'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
+						'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
+						'<td style="border-left:0;border-right:0" class="search-item">',
+							'{[Ext.util.Format.Money(values.ReqAmount)]}</td>',
+						'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.ReqDate)]}</td> </tr>',
+					'</tpl>',
+					'</table>'
+				),
+				readOnly : this.readOnly, 
+				name : "elem_" + record.data.ItemID,
+				fieldLabel : Index + ") " + record.data.ItemTitle
+			});
+		}
+		else if(record.data.ItemType === "combo")
 		{
 			arr = record.data.ItemValues.split("#");
 			data = [];

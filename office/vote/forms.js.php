@@ -27,6 +27,7 @@ function VOT_Form(){
 				{"id": "combo", "name": "لیستی"},
 				{"id": "displayfield", "name": "نمایشی"},
 				{"id": "radio", "name": "گزینه ایی"},
+				{"id": "loan", "name": "وام های فرد"}
 			]
 		}),
 		emptyText: 'انتخاب ...',
