@@ -4,7 +4,7 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 94.06
 //-----------------------------
- 
+
 class ACC_docs extends PdoDataAccess {
 
 	public $DocID;

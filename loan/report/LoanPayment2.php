@@ -200,7 +200,7 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg->generateReport();
 	
-	echo "<br>" . $report2;	
+	//echo "<br>" . $report2;	
 	
 	die();
 }

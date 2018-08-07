@@ -71370,7 +71370,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
             text: 'Change the color of the selected text.',
             cls: Ext.baseCSSPrefix + 'html-editor-tip'
         },
-		justifyleft : {
+        justifyleft : {
             title: 'Align Text Left',
             text: 'Align text to the left.',
             cls: Ext.baseCSSPrefix + 'html-editor-tip'
