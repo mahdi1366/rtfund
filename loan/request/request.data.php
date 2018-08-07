@@ -910,10 +910,19 @@ function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false, $pdo2
 	
 	for($i=0; $i < $partObj->InstallmentCount; $i++)
 	{
-		$monthplus = $paymentPeriod + $partObj->DelayMonths*1 + ($i+1)*$partObj->PayInterval*1;
-			
 		$installmentDate = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
-		$installmentDate = DateModules::AddToJDate($installmentDate, 0, $monthplus);
+		$monthplus = $paymentPeriod + $partObj->DelayMonths*1;
+		$dayplus = 0;
+		
+		if($partObj->DelayDays*1 > 0)
+			$dayplus += $partObj->DelayDays*1;
+		
+		if($partObj->IntervalType == "MONTH")
+			$monthplus += ($i+1)*$partObj->PayInterval*1;
+		else
+			$dayplus += ($i+1)*$partObj->PayInterval*1;
+
+		$installmentDate = DateModules::AddToJDate($installmentDate, + $dayplus, $monthplus);
 		$installmentDate = DateModules::shamsi_to_miladi($installmentDate);
 			
 		$obj2 = new LON_installments();

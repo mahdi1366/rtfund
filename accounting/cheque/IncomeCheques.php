@@ -25,6 +25,12 @@ $dg->addColumn("", "EqualizationID", "", true);
 $col = $dg->addColumn("صاحب چک", "fullname", "");
 
 $col = $dg->addColumn("حساب", "CostDesc");
+$col->width = 150;
+
+$col = $dg->addColumn("بانک", "BankDesc");
+$col->width = 100;
+
+$col = $dg->addColumn("شعبه", "ChequeBranch");
 $col->width = 100;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo");
@@ -71,7 +77,6 @@ $col->width = 40;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 400;
-$dg->width = 850;
 $dg->title = "چک های دریافتی";
 $dg->DefaultSortField = "ChequeDate";
 $dg->DefaultSortDir = "Desc";
@@ -1480,6 +1485,6 @@ IncomeCheque.prototype.beforeEdit = function(){
 		<div id="div_form"></div>
 	</form>
 	<br>
-	<div id="div_grid"></div>
+	<div style="width: 98%" id="div_grid"></div>
 	ردیف های زرد رنگ چک هایی هستند که از طریق مغایرت تایید شده اند
 </center>
