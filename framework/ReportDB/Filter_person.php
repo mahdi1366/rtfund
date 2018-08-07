@@ -1,5 +1,12 @@
 <script type="text/javascript">
-	
+
+if (typeof framework == 'undefined')
+{
+	FrameWorkClass.prototype = {};
+	function FrameWorkClass(){};
+	var framework = new FrameWorkClass();
+}
+
 framework.PersonFilterList = [{
 	xtype : "container",
 	colspan : 2,

@@ -80,7 +80,7 @@ function selectPersons(){
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	
-	if(!empty($_REQUEST["EmptyRow"]))
+	if(!empty($_REQUEST["EmptyRow"]) && empty($_REQUEST["PersonID"]))
 	{
 		$temp = array_merge(array(array("PersonID" => 0, "fullname" => "منابع داخلی")), $temp);
 	}

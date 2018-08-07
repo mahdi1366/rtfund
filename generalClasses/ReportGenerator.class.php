@@ -1013,7 +1013,7 @@ class ReportGenerator {
 		
 		$colStr = array();
 		foreach($this->columns as $row)
-			$colStr[] = '["'.$row->field.'", "'.$row->header.'", "'.$row->type.'"]';
+			$colStr[] = '["'.$row->queryField.'", "'.$row->header.'", "'.$row->type.'"]';
 			
 		$str = '{
 			xtype : "combo",
@@ -1216,6 +1216,7 @@ class ReportColumn {
 	public $header;
 	public $GroupHeader = "";
 	public $field;
+	public $queryField;
 	
 	public $renderFunction;
 	public $renderParams;
@@ -1239,6 +1240,7 @@ class ReportColumn {
 	public function ReportColumn($header, $field, $renderFunction = "", $renderParams = "") {
 		$this->header = $header;
 		$this->field = $field;
+		$this->queryField = $field;
 		$this->renderFunction = $renderFunction;
 		$this->renderParams = $renderParams;
 		$this->HaveSum = -1;

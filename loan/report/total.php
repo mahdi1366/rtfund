@@ -20,7 +20,9 @@ function IsFreeRender($row, $value){
 }
 
 $page_rpg = new ReportGenerator("mainForm","LoanReport_totalObj");
-$page_rpg->addColumn("شماره وام", "RRequestID");
+$col = $page_rpg->addColumn("شماره وام", "RRequestID");
+$col->queryField = "r.RequestID";
+
 $page_rpg->addColumn("نوع وام", "LoanDesc");
 $page_rpg->addColumn("عنوان طرح", "PlanTitle");	
 $page_rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
@@ -311,11 +313,11 @@ function GetData($mode = "list"){
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	$query = PdoDataAccess::GetLatestQueryString();
-	if($_SESSION["USER"]["UserName"] == "admin")
+	if($_SESSION["USER"]["UserName"] == "park")
 	{
 		BeginReport();
 		print_r(ExceptionHandler::PopAllExceptions());
-		//echo $query;
+		echo PdoDataAccess::GetLatestQueryString();
 		
 	}
 	
@@ -337,11 +339,6 @@ function ListData($IsDashboard = false){
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
 	$rpg->mysql_resource = GetData();
-	
-	if($_SESSION["USER"]["UserName"] == "admin")
-	{
-		ExceptionHandler::PopAllExceptions();
-	}
 	
 	function endedRender($row,$value){
 		return ($value == "YES") ? "خاتمه" : "جاری";
@@ -475,7 +472,7 @@ if(isset($_REQUEST["dashboard_show"]))
 }
 require_once getenv("DOCUMENT_ROOT") . '/framework/ReportDB/Filter_person.php';
 ?>
-
+<script type="text/javascript" src="/generalUI/ReportGenerator.js"></script>
 <script>
 LoanReport_total.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
@@ -508,7 +505,7 @@ function LoanReport_total()
 		},
 		bodyStyle : "text-align:right;padding:5px",
 		title : "گزارش کلی وام ها",
-		width : 780,
+		width : 760,
 		items :[{
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({
@@ -799,6 +796,30 @@ function LoanReport_total()
 			}			
 		}]
 	});
+	
+	if(<?= isset($_SESSION["USER"]["portal"])? "true" : "false" ?>)
+	{
+		this.formPanel.down("[hiddenName=ReqPersonID]").getStore().load({
+			params : {
+				PersonID : "<?= $_SESSION["USER"]["PersonID"] ?>"
+			},
+			callback : function(){
+				me = LoanReport_totalObj;
+				me.formPanel.add({
+					xtype : "hidden",
+					name : "ReqPersonID",
+					value : this.getAt(0).data.PersonID
+				});
+				me.formPanel.down("[hiddenName=ReqPersonID]").setValue(this.getAt(0).data.PersonID);
+				me.formPanel.down("[hiddenName=ReqPersonID]").disable();
+				
+				el = me.formPanel.down("[itemId=cmp_subAgent]");
+				el.getStore().proxy.extraParams["PersonID"] = this.getAt(0).data.PersonID;
+				el.getStore().load();
+			}
+		});
+	
+	}
 	
 	this.formPanel.getEl().addKeyListener(Ext.EventObject.ENTER, function(keynumber,e){
 		
