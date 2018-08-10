@@ -135,7 +135,11 @@ WFM_MyRequests.prototype.AddNewRequest = function(RequestID, FormID){
 		params : {
 			ExtTabID : this.requestWin.getEl().id,
 			RequestID : RequestID,
-			FormID : FormID
+			FormID : FormID,
+			parentHandler : function(){
+				WFM_MyRequestsObject.requestWin.hide();
+				WFM_MyRequestsObject.grid.getStore().load();
+			}
 		}
 	});
 	

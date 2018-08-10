@@ -472,6 +472,13 @@ function SaveRequest() {
 		$result = $ReqItemsObj->Add($pdo);
 	}
 	
+	if(isset($_REQUEST["sending"]) && $_REQUEST["sending"] == "true")
+	{
+		$FlowID = $formObj->FlowID;
+		$ObjectID = $ReqObj->RequestID;
+		$result = WFM_FlowRows::StartFlow($FlowID, $ObjectID);
+	}
+	
 	if(!$result)
 	{
 		$pdo->rollBack();

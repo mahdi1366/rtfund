@@ -28,6 +28,7 @@ WFM_NewRequest.prototype = {
 	TabID: '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix: "<?= $js_prefix_address ?>",
 	TplItemSeperator: "<?= WFM_forms::TplItemSeperator ?>",
+	parentHandler : <?= !empty($_REQUEST["parentHandler"]) ? $_REQUEST["parentHandler"] : "function(){}" ?>,
 	
 	RequestID : "<?= $RequestID ?>",
 	FormID : "<?= $FormID ?>",
@@ -64,18 +65,24 @@ function WFM_NewRequest() {
 			value : this.RequestID
 		}],
 		buttons: [{
-			text: "ذخیره",
+			text: "ذخیره موقت",
 			hidden : this.preview,
-			itemId : "btn_save",
 			handler: function () {
-				WFM_NewRequestObj.SaveRequest(false);
+				WFM_NewRequestObj.SaveRequest(false, false);
 			},
 			iconCls: "save"
+		},{
+			text: "ذخیره و ارسال فرم",
+			hidden : this.preview,
+			handler: function () {
+				WFM_NewRequestObj.SaveRequest(false, true);
+			},
+			iconCls: "send"
 		}, {
 			text: "  مشاهده",
 			itemId : "btn_view",
 			handler: function () {
-				WFM_NewRequestObj.SaveRequest(true);
+				WFM_NewRequestObj.SaveRequest(true, false);
 			},
 			iconCls: "print"
 		}]
@@ -179,7 +186,7 @@ WFM_NewRequest.prototype.LoadRequest = function(){
 
 var WFM_NewRequestObj = new WFM_NewRequest();
 
-WFM_NewRequest.prototype.SaveRequest = function (print) {
+WFM_NewRequest.prototype.SaveRequest = function (print, sending) {
 
 	if(!this.MainForm.getForm().isValid())
 		return;
@@ -192,7 +199,8 @@ WFM_NewRequest.prototype.SaveRequest = function (print) {
 		url: this.address_prefix + 'form.data.php?task=SaveRequest',
 		method: 'POST',
 		params : {
-			FormID : this.FormID
+			FormID : this.FormID,
+			sending : sending
 		},
 		
 		success: function (form,action) {
@@ -204,9 +212,11 @@ WFM_NewRequest.prototype.SaveRequest = function (print) {
 				var RequestID = WFM_NewRequestObj.MainForm.getComponent('RequestID').getValue();
 				window.open(WFM_NewRequestObj.address_prefix + 'PrintForm.php?RequestID=' + RequestID);
 			}
-			
-			WFM_MyRequestsObject.requestWin.hide();
-			WFM_MyRequestsObject.grid.getStore().load();
+			if(sending)
+			{
+				Ext.MessageBox.alert("", "فرم شما با موفقیت ارسال گردید");
+			}
+			WFM_NewRequestObj.parentHandler();
 		},
 		failure : function(form,action){
 			mask.hide();

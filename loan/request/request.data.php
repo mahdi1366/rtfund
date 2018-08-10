@@ -81,6 +81,8 @@ switch($task)
 	case "emptyDataTable":
 	case "ComputeManualInstallments":
 	case "selectBackPayComputes":
+		
+	case "CustomerDefrayRequest":
 		$task();
 }
 
@@ -2099,4 +2101,59 @@ function selectBackPayComputes(){
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
+
+//------------------------------------------------
+
+function GetDefrayVoteForm($RequestID){
+	
+	$dt = PdoDataAccess::runquery("
+		SELECT FormID FROM VOT_FilledItems
+			join VOT_FilledForms f using(FormID)
+			join VOT_FormItems using(ItemID)
+			where f.PersonID=? AND f.FormID=".DEFRAYLOAN_VOTEFORM." AND ItemType='loan' AND FilledValue=?", 
+			array($_SESSION["USER"]["PersonID"],  $RequestID));	
+	return $dt;
+}
+
+function GetDefrayWFMForm($RequestID){
+	
+	$dt = PdoDataAccess::runquery("
+		SELECT RequestID,FlowID FROM WFM_requests 
+			join WFM_forms using(FormID)
+			join WFM_RequestItems using(RequestID)
+			join WFM_FormItems using(FormItemID)
+		where FormID=".DEFRAYLOAN_WFMFORM." AND PersonID=? AND ItemType='loan' AND ItemValue=?", 
+		array($_SESSION["USER"]["PersonID"],  $RequestID));
+	return $dt;
+}
+
+function CustomerDefrayRequest(){
+	
+	$RequestID = (int)$_POST["RequestID"];
+	
+	$dt = GetDefrayVoteForm($RequestID);	
+	if(count($dt) == 0)
+	{
+		echo Response::createObjectiveResponse(false, "ابتدا باید از قسمت نظرسنجی فرم مربوطه را تکمیل کنید");
+		die();
+	}
+	
+	$dt = GetDefrayWFMForm($RequestID);
+	if(count($dt) == 0)
+	{
+		echo Response::createObjectiveResponse(true,"");
+		die();
+	}
+	
+	$arr = WFM_FlowRows::GetFlowInfo($dt[0]["FlowID"], $dt[0]["RequestID"]);
+	if($arr["IsStarted"])
+	{
+		echo Response::createObjectiveResponse(false, "درخواست تسویه حساب شما برای این وام قبلا ارسال شده است");
+		die();
+	}
+	
+	echo Response::createObjectiveResponse(true,$dt[0]["RequestID"]);
+	die();
+}
+
 ?>
