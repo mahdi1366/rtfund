@@ -5,7 +5,7 @@
 //-------------------------
 require_once('../header.inc.php');
 require_once 'request.data.php';
-
+ 
 ?>
 <script type="text/javascript">
 
@@ -154,8 +154,9 @@ DefrayRequest.prototype.FillVote = function(){
 	this.FormWin.loader.load({
 		params : {
 			ExtTabID : this.FormWin.getEl().id,
-			parentObj : "DefrayRequestObject.FormWin",
-			FormID : "<?= DEFRAYLOAN_VOTEFORM ?>"
+			parentObj : "DefrayRequestObject",
+			FormID : "<?= DEFRAYLOAN_VOTEFORM ?>",
+			LoanRequestID : this.PartPanel.down("[itemId=RequestID]").getValue()
 		}
 	});
 }
@@ -193,6 +194,7 @@ DefrayRequest.prototype.FillWfmForm = function(WfmReqID){
 			ExtTabID : this.wfmWin.getEl().id,
 			FormID : "<?= DEFRAYLOAN_WFMFORM ?>",
 			RequestID : WfmReqID,
+			LoanRequestID : this.PartPanel.down("[itemId=RequestID]").getValue(),
 			parentHandler : function(){
 				DefrayRequestObject.wfmWin.hide();
 			}

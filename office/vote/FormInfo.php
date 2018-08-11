@@ -14,6 +14,7 @@ $dt = PdoDataAccess::runquery("select * from VOT_FilledForms where FormID=? AND 
 	$FormID, $PersonID));
 $readOnly = count($dt) > 0 ? true : false;
 	
+$LoanRequestID = !empty($_REQUEST["LoanRequestID"]) ? $_REQUEST["LoanRequestID"] : "0";
 ?>
 <script>
 
@@ -24,6 +25,7 @@ VoteFormInfo.prototype = {
 
 	FormID : "<?= $FormID ?>",
 	readOnly : <?= $readOnly ? "true" : "false" ?>,
+	LoanRequestID : <?= $LoanRequestID?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -81,10 +83,22 @@ function VoteFormInfo()
 	this.ItemsStore.load({
 		params : {
 			FormID : this.FormID
-		},
+		}, 
 		callback : function(){
 			VoteFormInfoObject.MakeForm(this);
 			VoteFormInfoObject.FormWinMask.hide();
+			
+			if(VoteFormInfoObject.LoanRequestID*1 > 0)
+			{
+				VoteFormInfoObject.LoanCmp.getStore().load({
+					params : {
+						RequestID : VoteFormInfoObject.LoanRequestID
+					},
+					callback : function(){
+						VoteFormInfoObject.LoanCmp.setValue(this.getAt(0).data.RequestID)
+					}
+				});
+			}
 		}
 	});	
 }
@@ -115,8 +129,7 @@ VoteFormInfo.prototype.MakeForm = function(store){
 		}
 		if(record.data.ItemType === "loan")
 		{
-			fsparent.add({
-				xtype : "combo",
+			this.LoanCmp = new Ext.form.ComboBox({
 				store: new Ext.data.Store({
 					proxy:{
 						type: 'jsonp',
@@ -153,6 +166,7 @@ VoteFormInfo.prototype.MakeForm = function(store){
 				name : "elem_" + record.data.ItemID,
 				fieldLabel : Index + ") " + record.data.ItemTitle
 			});
+			fsparent.add(this.LoanCmp);
 		}
 		else if(record.data.ItemType === "combo")
 		{

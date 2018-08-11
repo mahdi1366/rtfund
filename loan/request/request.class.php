@@ -1893,7 +1893,7 @@ class LON_events extends OperationClass {
         parent::__construct($id);
     }
 
-	static function Get($where = '', $whereParams = array()) {
+	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		
 		return PdoDataAccess::runquery_fetchMode("
 			select e.*, concat_ws(' ',p1.CompanyName,p1.fname,p1.lname) RegFullname, 
@@ -1901,7 +1901,7 @@ class LON_events extends OperationClass {
 			from LON_events e 
 				left join BSC_persons p1 on(p1.PersonID=RegPersonID)
 				left join BSC_persons p2 on(p2.PersonID=FollowUpPersonID)
-			where 1=1 " . $where, $whereParams);
+			where 1=1 " . $where, $whereParams, $pdo);
 	}
 	
 }
@@ -1926,13 +1926,13 @@ class LON_costs extends OperationClass{
 		parent::__construct($id);
 	}
 	
-	static function Get($where = '', $whereParams = array()) {
+	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		
 		return PdoDataAccess::runquery_fetchMode("
 			select c.*,d.LocalNo from LON_costs c
 			left join ACC_DocItems di on(c.CostID=di.SourceID2 AND di.SourceType=17)
 			left join ACC_docs d using(DocID)
-			where 1=1 " . $where . " group by CostID", $whereParams);
+			where 1=1 " . $where . " group by CostID", $whereParams, $pdo);
 	}
 	
 	function GetAccDoc(){

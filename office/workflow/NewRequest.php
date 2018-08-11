@@ -21,8 +21,16 @@ else
 
 $StepRowID = empty($_REQUEST["StepRowID"]) ? 0 : $_REQUEST["StepRowID"];
 
+$LoanRequestID = !empty($_REQUEST["LoanRequestID"]) ? $_REQUEST["LoanRequestID"] : "0";
+
 ?>
 <script type="text/javascript">
+function merge(obj1,obj2){
+    var obj3 = {};
+    for (var attrname in obj1) { obj3[attrname] = obj1[attrname]; }
+    for (var attrname in obj2) { obj3[attrname] = obj2[attrname]; }
+    return obj3;
+}
 
 WFM_NewRequest.prototype = {
 	TabID: '<?= $_REQUEST["ExtTabID"] ?>',
@@ -34,6 +42,8 @@ WFM_NewRequest.prototype = {
 	FormID : "<?= $FormID ?>",
 	StepRowID : "<?= $StepRowID ?>",
 	preview : <?= isset($_REQUEST["preview"]) ? "true" : "false" ?>,
+	
+	LoanRequestID : <?= $LoanRequestID?>,
 	
 	ItemsMmask : null,
 	
@@ -110,10 +120,26 @@ function WFM_NewRequest() {
 		fields: ['ReqItemID', 'RequestID','FormID', 'FormItemID', 'ItemValue', 'ItemType', "ComboValues"]
 	});
 	
-	if(this.RequestID > 0)
-		this.LoadRequest();
-	else
-		this.FormSelect(this.FormID);
+	this.ColumnsStore = new Ext.data.Store({
+		proxy: {
+			type: 'jsonp',
+			url: this.address_prefix + 'form.data.php?task=selectGridColumns&FormID=' + this.FormID,
+			reader: {root: 'rows', totalProperty: 'totalCount'}
+		},
+		fields: ['FormItemID', 'ColumnID','ItemName', 'ItemType', "ComboValues", "EditorProperties", "properties"],
+		autoLoad : true
+	});
+	
+	var t = setInterval(function(){
+		if(!WFM_NewRequestObj.ColumnsStore.isLoading())
+		{
+			clearInterval(t);
+			if(WFM_NewRequestObj.RequestID > 0)
+				WFM_NewRequestObj.LoadRequest();
+			else
+				WFM_NewRequestObj.FormSelect(WFM_NewRequestObj.FormID);
+		}
+	}, 1000);
 }
 
 WFM_NewRequest.prototype.FormSelect = function(FormID){
@@ -159,6 +185,8 @@ WFM_NewRequest.prototype.LoadRequest = function(){
 					for(i=0; i<me.ReqItemsStore.getCount(); i++){
 						record = me.ReqItemsStore.getAt(i); 
 						switch(record.data.ItemType){
+							case "grid":
+								continue;
 							case "shdatefield" :
 								me.MainForm.getComponent("FormItems").
 									down('[name=ReqItem_' + record.data.FormItemID + "]").setValue(MiladiToShamsi(record.data.ItemValue));
@@ -215,14 +243,212 @@ WFM_NewRequest.prototype.SaveRequest = function (print, sending) {
 			if(sending)
 			{
 				Ext.MessageBox.alert("", "فرم شما با موفقیت ارسال گردید");
+				WFM_NewRequestObj.parentHandler();
 			}
-			WFM_NewRequestObj.parentHandler();
+			WFM_NewRequestObj.RequestID = action.result.data;
 		},
 		failure : function(form,action){
 			mask.hide();
 			Ext.MessageBox.alert('', 'خطا در اجرای عملیات');
 		}
 	});
+}
+
+WFM_NewRequest.prototype.MakeGrid = function (SrcRecord){
+
+	var fields = new Array();
+	var columns = [ 
+		{dataIndex : "ReqItemID",hidden : true},
+		{dataIndex : "ColumnID",hidden : true},
+		{dataIndex : "ItemValue",hidden : true}];
+	
+	for(var i=0; i<this.ColumnsStore.totalCount; i++)
+	{
+		record = this.ColumnsStore.getAt(i);
+		if(record.data.FormItemID != SrcRecord.data.FormItemID)
+			continue;
+		
+		var editor = {xtype : record.data.ItemType};
+		if(record.data.ElementType == "datefield")
+			editor.format = "Y/m/d";
+		if(record.data.ItemType == "combo")
+		{
+			arr = record.data.ComboValues.split("#");
+			data = [];
+			for(j=0;j<arr.length;j++)
+				data.push([ arr[j] ]);
+			editor.store = new Ext.data.SimpleStore({
+				fields : ['value'],
+				data : data
+			});
+			editor.displayField = "value";
+			editor.valueField = "value";
+		}
+
+		if(record.data.EditorProperties != null)
+			eval("editor = merge(editor,{" + record.data.EditorProperties + "});");
+
+		NewColumn = {
+			menuDisabled : true,
+			sortable : false,	
+			text : record.data.ItemName,
+			dataIndex : "column_" + record.data.ColumnID,
+			editor : editor						
+		};
+		if(record.data.ItemType == "currencyfield")
+		{
+			NewColumn.type = "numbercolumn";
+			NewColumn.renderer = Ext.util.Format.Money;
+			NewColumn.summaryType = "sum";
+			NewColumn.summaryRenderer = Ext.util.Format.Money;
+		}	
+		if(record.data.ItemType == "currencyfield" || 
+			record.data.ItemType == "numberfield")
+			NewColumn.editor.hideTrigger = "true";
+
+		if(record.data.properties != null)
+			eval("NewColumn = merge(NewColumn,{" + record.data.properties + "});");
+
+		columns.push(NewColumn);
+		if(record.data.ItemType == "currencyfield")
+			fields.push({name : "column_" + record.data.ColumnID, type : "int"});
+		else
+			fields.push("column_" + record.data.ColumnID);
+	}
+	
+	NewElement = {
+		xtype : "grid",
+		title : SrcRecord.data.ItemName,
+		features: [{ftype: 'summary'}],
+		viewConfig: {
+			stripeRows: true,
+			enableTextSelection: true
+		},					
+		selType : 'rowmodel',
+		bbar: new Ext.ExtraBar({store: Ext.getCmp(Ext.id),displayInfo: true}),
+		scroll: 'vertical', 
+		store : new Ext.data.Store({
+			proxy:{
+				type: 'jsonp',
+				url: this.address_prefix + "form.data.php?task=SelectGridRows",
+				reader: {root: 'rows',totalProperty: 'totalCount'},
+				extraParams : {
+					RequestID : this.RequestID,
+					FormItemID : SrcRecord.data.FormItemID					
+				}							
+			},
+			fields : ["ReqItemID", "RequestID", "FormItemID"].concat(fields),
+			autoLoad : true,
+			listeners : {
+				update : function(store,record){
+					
+					if(WFM_NewRequestObj.RequestID*1 == 0)
+						WFM_NewRequestObj.SaveRequest(false, false);
+					
+					var t = setInterval(function(){
+						if(WFM_NewRequestObj.RequestID*1 > 0)
+						{
+							clearInterval(t);
+							record.data.RequestID = WFM_NewRequestObj.RequestID;
+							store.proxy.extraParams.RequestID = WFM_NewRequestObj.RequestID;
+							
+							mask = new Ext.LoadMask(WFM_NewRequestObj.MainForm, {msg:'در حال ذخيره سازي...'});
+							mask.show();    
+							Ext.Ajax.request({
+								url:  WFM_NewRequestObj.address_prefix + 'form.data.php?task=SaveGridRow',
+								params:{
+									record : Ext.encode(record.data)
+								},
+								method: 'POST',
+								success: function(response,option){
+									mask.hide();
+									store.load();
+								},
+								failure: function(){}
+							});
+						}
+					}, 1000);
+					
+					return true;
+				}
+			}
+		}),
+		columns: columns,
+		listeners : {
+			beforerender : function(){
+				var ExtraToolbar = this.getDockedItems('extrabar');
+				if(ExtraToolbar.length > 0)
+					ExtraToolbar[0].bind(this.getStore());
+				}
+		}
+	};
+
+	if(SrcRecord.data.access == "YES")
+	{
+		NewElement.plugins = [new Ext.grid.plugin.RowEditing()];
+		NewElement.tbar = [{
+			text : "ایجاد ردیف",
+			iconCls : "add",
+			handler : function(){
+				var grid = this.up('grid');
+				var modelClass = grid.getStore().model;
+				var record = new modelClass({
+					ReqItemID : null,
+					RequestID : WFM_NewRequestObj.RequestID,
+					FormItemID : grid.getStore().proxy.extraParams.FormItemID
+				});
+				grid.plugins[0].cancelEdit();
+				grid.getStore().insert(0, record);
+				grid.plugins[0].startEdit(0, 0);
+			}
+		},'-',{
+			text : "ویرایش ردیف",
+			iconCls : "edit",
+			handler : function(){
+				var grid = this.up('grid');
+				var record = grid.getSelectionModel().getLastSelected();
+				if(record == null)
+				{
+					Ext.MessageBox.alert("","ابتدا ردیف مورد نظر را انتخاب کنید");
+					return;
+				}
+				grid.plugins[0].startEdit(grid.getStore().indexOf(record),0);
+			}
+		},'-',{
+			text : "حذف ردیف",
+			iconCls : "remove",
+			handler : function(){
+				var grid = this.up('grid');
+				var record = grid.getSelectionModel().getLastSelected();
+				if(record == null)
+				{
+					Ext.MessageBox.alert("","ابتدا ردیف مورد نظر را انتخاب کنید");
+					return;
+				}
+
+				Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟",function(btn){
+					if(btn == "no")
+						return;
+					var mask = new Ext.LoadMask(WFM_NewRequestObj.MainForm, {msg:'در حال ذخيره سازي...'});
+					mask.show();    
+					Ext.Ajax.request({
+						url:  WFM_NewRequestObj.address_prefix + 'form.data.php?task=DeleteGridRow',
+						params:{
+							ReqItemID : record.data.ReqItemID
+						},
+						method: 'POST',
+						success: function(response,option){
+							mask.hide();
+							grid.getStore().load();
+						},
+						failure: function(){}
+					});
+				});
+			}
+		}];
+	}
+	
+	return NewElement;
 }
 
 WFM_NewRequest.prototype.ShowTplItemsForm = function () {
@@ -251,8 +477,7 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 		//...........................................
 		if(record.data.ItemType === "loan")
 		{
-			parent.add({
-				xtype : "combo",
+			this.LoanCmp = new Ext.form.ComboBox({
 				store: new Ext.data.Store({
 					proxy:{
 						type: 'jsonp',
@@ -290,6 +515,18 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 				name: 'ReqItem_' + record.data.FormItemID,
 				fieldLabel : titleInLine ? "" : record.data.ItemName
 			});
+			parent.add(this.LoanCmp);
+			if(this.LoanRequestID*1 > 0)
+			{
+				this.LoanCmp.getStore().load({
+					params : {
+						RequestID : this.LoanRequestID
+					},
+					callback : function(){
+						WFM_NewRequestObj.LoanCmp.setValue(this.getAt(0).data.RequestID)
+					}
+				});
+			}
 		}
 		else if(record.data.ItemType == "combo")
 		{
@@ -363,6 +600,10 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 			}
 		}			
 		//...........................................
+		else if(record.data.ItemType == "grid")
+		{
+			parent.add(this.MakeGrid(record));
+		}
 		else
 		{
 			titleInLine = false;

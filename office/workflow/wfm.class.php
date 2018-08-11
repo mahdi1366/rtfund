@@ -521,12 +521,13 @@ class WFM_FlowStepPersons extends OperationClass {
 	public $StepRowID;
 	public $PersonID;
 	
-	static function Get($where = '', $whereParams = array()) {
+	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		
 		return parent::runquery_fetchMode("select fp.*, concat_ws(' ',fname,lname,CompanyName) fullname 
 			from WFM_FlowStepPersons fp join BSC_persons p using(PersonID)
-			where 1=1 " . $where, $whereParams);
+			where 1=1 " . $where, $whereParams, $pdo);
 	}
 }
+
 
 ?>

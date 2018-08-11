@@ -272,7 +272,7 @@ function SelectNewVoteForms(){
 					if(f.IsSupporter='YES',f.IsSupporter=p.IsSupporter,1=0) OR
 					if(f.IsExpert='YES',f.IsExpert=p.IsExpert,1=0) ) 
 			end)
-		where ff.FormID is null
+		where ff.FormID is null AND ".PDONOW." between StartDate AND EndDate
 		group by f.FormID", array(":pid" => $_SESSION["USER"]["PersonID"]));
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);

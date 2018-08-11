@@ -15,6 +15,14 @@ switch($task)
 {
 	case "SelectForms":
 	case "selectFormItems":
+	
+	case "selectGridColumns":
+	case "saveColumn":
+	case "deleteColumn":
+	case "SelectGridRows":
+	case "SaveGridRow":
+	case "DeleteGridRow":
+		
 	case "GetEmptyFormID":
 	case "SaveForm":
 	case "saveFormItem":
@@ -94,6 +102,131 @@ function selectFormItems() {
     echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
     die();
 }
+
+//----------------------------------------------------------
+function selectGridColumns() {
+	
+	$where = "";
+	if(!empty($_REQUEST["FormItemID"]))
+	{
+		$where .= " AND FormItemID=?";
+		$params = array($_REQUEST["FormItemID"]);
+	}
+	if(!empty($_REQUEST["FormID"]))
+	{
+		$where .= " AND FormID=?";
+		$params = array($_REQUEST["FormID"]);
+	}
+	
+    $temp = WFM_FormGridColumns::Get($where . " order by ordering", $params);
+	$res = PdoDataAccess::fetchAll ($temp, $_GET["start"], $_GET["limit"]);
+	
+    echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+    die();
+}
+
+function saveColumn(){
+	
+	$obj = new WFM_FormGridColumns();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if (!empty($obj->ColumnID)) 
+		$result = $obj->Edit();
+	else 
+		$result = $obj->Add();
+		
+	if(!$result)
+	{
+		print_r(ExceptionHandler::PopAllExceptions());
+		//echo PdoDataAccess::GetLatestQueryString();
+		echo Response::createObjectiveResponse(false, "");
+		die();
+	}
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function deleteColumn(){
+	
+	$obj = new WFM_FormGridColumns($_POST['ColumnID']);
+	$result = $obj->Remove();	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function SelectGridRows(){
+	
+	$RequestID = $_REQUEST["RequestID"];
+	$FormItemID = $_REQUEST["FormItemID"];
+	
+	$dt = WFM_RequestItems::Get(" AND RequestID=? AND FormItemID=?", array($RequestID, $FormItemID));
+	$dt = $dt->fetchAll();
+	for($i=0; $i < count($dt); $i++)
+	{
+		$p = xml_parser_create();
+		xml_parse_into_struct($p, $dt[$i]["ItemValue"], $vals);
+		xml_parser_free($p);
+		
+		foreach($vals as $element)
+		{
+			if(strpos($element["tag"],"COLUMN_") !== false)
+				$dt[$i][strtolower($element["tag"]) ] = empty($element["value"]) ? "" : $element["value"];
+		}		
+		unset($dt[$i]["ItemValue"]);
+	}	
+		
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function SaveGridRow(){
+	
+	$obj = new WFM_RequestItems();
+	
+	$st = stripslashes(stripslashes($_POST["record"]));
+	$data = json_decode($st);
+
+	$obj->RequestID = $data->RequestID;
+	$obj->ReqItemID = $data->ReqItemID;
+	$obj->FormItemID = $data->FormItemID;
+
+	$xml = new SimpleXMLElement('<root/>');
+	$elems = array_keys(get_object_vars($data));
+	foreach($elems as $el)
+	{
+		if(strpos($el, "column_") === false)
+			continue;
+		$str = $data->$el;
+
+		if(strlen($str) > 10 && substr($str,10) == "T00:00:00")
+			$str = substr($str,0,10);	
+
+		if(strlen($str) == 10 && $str[4] == "-" && $str[7] == "-")
+			$str = preg_replace('/\-/', "/", $str);
+
+		$xml->addChild($el, $str);
+	}
+	$obj->ItemValue = $xml->asXML();
+	//print_r($obj);
+	if((int)$obj->ReqItemID > 0)
+		$result = $obj->Edit();
+	else
+		$result = $obj->Add();
+
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteGridRow(){
+	$RowID = $_POST["ReqItemID"];
+	$obj = new WFM_RequestItems($RowID);
+	$result = $obj->Remove();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//----------------------------------------------------------
 
 function GetEmptyFormID() {
 	

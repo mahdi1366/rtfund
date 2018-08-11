@@ -188,13 +188,13 @@ class DMS_packages extends OperationClass
 	public $PackNo;
 	public $PersonID;
 	
-	static function Get($where = '', $whereParams = array()) {
+	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		
 		return parent::runquery_fetchMode("
 			select d.* , concat_ws(' ',fname,lname,CompanyName) fullname
 			from DMS_packages d
 			left join BSC_persons p using(PersonID)
-			where 1=1 " . $where, $whereParams);		
+			where 1=1 " . $where, $whereParams, $pdo);		
 	}
 	
 	static function GetPackNo($BranchID){

@@ -25,12 +25,60 @@ if($ReqObj->ReqContent == "" && !empty($_REQUEST["FormID"]))
 }
 $res = explode(WFM_forms::TplItemSeperator, $content);
 
+function printGrid($record, $xmlDataArr){
+	
+	$returnVal = "";
+	$columns = WFM_FormGridColumns::Get(" AND FormItemID=?", array($record["FormItemID"]));
+	$columns = $columns->fetchAll();
+	$returnVal .= "<center><table class=form border=1><caption>" . $record["ItemName"] . "</caption><tr>";
+	foreach($columns as $col)
+		$returnVal .= "<td class=titles>" . $col["ItemName"] . "</td>";
+	$returnVal .= "</tr>";
+	
+	foreach($xmlDataArr as $xmlData)
+	{
+		$vals = array();
+		$p = xml_parser_create();
+		xml_parse_into_struct($p, $xmlData, $vals);
+		xml_parser_free($p);
+
+		$rowValues = array();
+		foreach($vals as $element)
+			if(strpos($element["tag"],"COLUMN_") !== false)
+				$rowValues[ str_replace("COLUMN_","",$element["tag"]) ] = 
+						empty($element["value"]) ? "" : $element["value"];
+
+		foreach($columns as $col)
+		{
+			$returnVal .= "<td class=values>";
+			if($col["ItemType"] == "currencyfield")
+			{
+				$value = $rowValues[ $col["ColumnID"] ]*1;
+				$returnVal .= number_format($value);
+			}
+			else
+				$returnVal .= $rowValues[ $col["ColumnID"] ];
+			$returnVal .= "</td>";
+		}
+		$returnVal .= "</tr>";	
+	}
+	$returnVal .= "</table></center><br>";
+	return $returnVal;
+}
+
 
 $ReqItems = WFM_RequestItems::Get(" AND RequestID=?", array($ReqObj->RequestID));
 $ReqItems = $ReqItems->fetchAll();
 $ValuesStore = array();
 foreach ($ReqItems as $row) 
 {
+	if($row["ItemType"] == "grid")
+	{
+		if(!isset($ValuesStore[$row['FormItemID']]))
+			$ValuesStore[$row['FormItemID']] = array();
+		$ValuesStore[$row['FormItemID']][] = $row['ItemValue'];
+		continue;
+	}
 	if($row["ItemType"] == "shdatefield")
 		$ValuesStore[$row['FormItemID']] = DateModules::miladi_to_shamsi($row['ItemValue']);
 	else if($row["ItemType"] == "currencyfield")
@@ -63,6 +111,11 @@ if (substr($ReqObj->ReqContent, 0, 3) == WFM_forms::TplItemSeperator) {
 $st = '';
 for ($i = 0; $i < count($res); $i++) {
     if ($i % 2 != 0) {
+		if($ReqItemsStore[ $res[$i] ]["ItemType"] == "grid")
+		{
+			$st .= printGrid($ReqItemsStore[ $res[$i] ],$ValuesStore[$res[$i]]);
+			continue;
+		}
 		if(isset($ValuesStore[$res[$i]]))
 		{
 			$st .= nl2br($ValuesStore[$res[$i]]);
@@ -104,7 +157,12 @@ for ($i = 0; $i < count($res); $i++) {
 			}
 		table { page-break-inside:auto; }
 		tr    { page-break-after:auto }
-		
+	body{font-family: Nazanin;font-size:12pt;}
+	.form{margin-top:10px;width:98%;border-collapse: collapse;text-align: justify; direction: rtl}
+	.form caption{border: 1px solid #777; border-bottom: 0px;}
+	.form td{padding:0 4px 0 4px;}
+	.titles{background-color: #eee;font-weight: bold;text-align: center;}
+	.values{text-align: center;}
 	</style>
 </head>
 

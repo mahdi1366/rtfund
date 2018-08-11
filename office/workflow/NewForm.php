@@ -101,6 +101,11 @@ $col->renderer = "WFM_NewForm.downRender";
 $col->sortable = false;
 $col->width = 30;
 
+$col = $dg->addColumn("","","");
+$col->renderer = "WFM_NewForm.gridListRender";
+$col->sortable = false;
+$col->width = 30;
+
 $col = $dg->addColumn("حذف", "FormItemID", "string");
 $col->sortable = false;
 $col->renderer = "function(v,p,r){return WFM_NewForm.deleteRender(v,p,r);}";
@@ -115,13 +120,67 @@ $dg->DefaultSortField = "FormItemID";
 $dg->DefaultSortDir = "desc";
 $dg->autoExpandColumn = "ComboValues";
 $dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(v,p,r){ return WFM_NewFormObj.SaveItem(v,p,r);}";
+$dg->rowEditOkHandler = "function(store, record){ return WFM_NewFormObj.SaveItem(store, record);}";
 
 $dg->width = 790;
 $dg->height = 460;
 $dg->pageSize = 20;
 
 $grid = $dg->makeGrid_returnObjects();
+
+//..............................................................................
+
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "form.data.php?task=selectGridColumns", "grid_div");
+
+$dg->addColumn("", "ColumnID", "", true);
+$dg->addColumn("", "FormItemID", "", true);
+
+$col = $dg->addColumn("ترتیب", "ordering", "");
+$col->editor = ColumnEditor::NumberField();
+$col->width = 60;
+
+$col = $dg->addColumn("عنوان آیتم". 
+	'<span style="float:right;width:16px;height: 16px;margin:2px;cursor:pointer" class=add '.
+	'onclick=WFM_NewFormObj.AddColumn()></span>', "ItemName", "");
+$col->width = 200;
+$col->editor = ColumnEditor::TextField();
+$col->sortable = false;
+
+$col = $dg->addColumn("نوع آیتم", "ItemType", "");
+$col->editor = "this.ColumnTypeCombo";
+$col->width = 100;
+
+$col = $dg->addColumn("مشخصات ادیتور", "EditorProperties", "");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 150;
+$col->ellipsis = 20;
+
+$col = $dg->addColumn("مشخصات", "properties", "");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 150;
+$col->ellipsis = 20;
+
+$col = $dg->addColumn("مقادیر", "ComboValues", "");
+$col->editor = ColumnEditor::TextField(true);
+$col->ellipsis = 50;
+
+$col = $dg->addColumn("", "", "");
+$col->renderer = "WFM_NewForm.ColumnOperationRender";
+$col->width = 50;
+
+$dg->enableRowEdit = true;
+$dg->rowEditOkHandler = "function(store, record){ return WFM_NewFormObj.SaveColumn(store, record);}";
+
+$dg->emptyTextOfHiddenColumns = true;
+$dg->height = 300;
+$dg->width = 780;
+$dg->DefaultSortField = "ordering";
+$dg->autoExpandColumn = "ComboValues";
+$dg->EnablePaging = false;
+$dg->HeaderMenu = false;
+$dg->EnableSearch = false;
+
+$ColumnsGrid = $dg->makeGrid_returnObjects();
 ?>
 
 <br>
@@ -156,7 +215,28 @@ function WFM_NewForm() {
 				{"id": "shdatefield", "name": "تاریخ"},
 				{"id": "combo", "name": "لیستی"},
 				{"id": "checkbox", "name": "انتخابی"},
+				{"id": "grid", "name": "گرید"},	
 				{"id": "loan", "name": "وام های فرد"}
+			]
+		}),
+		emptyText: 'انتخاب ...',
+		name: "name",
+		valueField: "id",
+		displayField: "name",
+		allowBlank : false
+	});
+	
+	this.ColumnTypeCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			fields: ["id", "name"],
+			data: [
+				{"id": "numberfield", "name": "عدد"},
+				{"id": "currencyfield", "name": "مبلغ"},
+				{"id": "textfield", "name": "متن کوتاه"},
+				{"id": "textarea", "name": "متن بلند"},
+				{"id": "shdatefield", "name": "تاریخ"},
+				{"id": "combo", "name": "لیستی"},
+				{"id": "checkbox", "name": "انتخابی"}
 			]
 		}),
 		emptyText: 'انتخاب ...',
@@ -195,6 +275,8 @@ function WFM_NewForm() {
 			html : "توجه : لطفا مقادیر مختلف لیست را با # جدا کنید"
 		}]
 	});
+	
+	this.gridColumnsGrid = <?= $ColumnsGrid ?>;
 	
 	this.BuildForms();
 	this.LoadForm();
@@ -572,6 +654,122 @@ WFM_NewForm.downRender = function(v,p,r, rowIndex){
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
+
+//.....................................................
+
+WFM_NewForm.gridListRender = function(v,p,r,rowIndex){
+	
+	if(r.data.ItemType != "grid")
+		return "";
+	return "<div align='center' title='ستون های گرید' class='list' "+
+		"onclick='WFM_NewFormObj.GridColumns();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+WFM_NewForm.ColumnOperationRender  = function(v,p,r,rowIndex){
+	
+	return  "<div align='center' title='حذف' class='remove' "+
+		"onclick='WFM_NewFormObj.DeleteColumn();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16'></div>";
+}
+
+WFM_NewForm.prototype.GridColumns = function(){
+
+	if(!this.gridItemWin)
+	{
+		this.gridItemWin = new Ext.window.Window({
+			width : 800,
+			title : "ستون های گرید",
+			bodyStyle : "background-color:white;text-align:-moz-center",
+			height : 350,
+			modal : true,
+			closeAction : "hide",
+			items : [this.gridColumnsGrid]
+			
+		});
+		Ext.getCmp(this.TabID).add(this.gridItemWin);
+	}
+	else
+		this.gridColumnsGrid.getStore().load();
+
+	this.gridItemWin.show();
+	this.gridItemWin.center();
+	
+	record = this.grid.getSelectionModel().getLastSelected();
+	this.gridColumnsGrid.getStore().proxy.extraParams.FormItemID = record.data.FormItemID;
+	this.gridColumnsGrid.getStore().load();
+}
+
+WFM_NewForm.prototype.AddColumn = function () {
+
+	var modelClass = this.gridColumnsGrid.getStore().model;
+	var record = new modelClass({
+		FormItemID: this.gridColumnsGrid.getStore().proxy.extraParams.FormItemID,
+		ColumnID : 0
+	});
+	this.gridColumnsGrid.plugins[0].cancelEdit();
+	this.gridColumnsGrid.getStore().insert(0, record);
+	this.gridColumnsGrid.plugins[0].startEdit(0, 0);
+	this.gridColumnsGrid.columns[1].getEditor().focus();
+}
+
+WFM_NewForm.prototype.SaveColumn = function(store, record){
+
+	mask = new Ext.LoadMask(this.gridColumnsGrid, {msg: 'در حال ذخیره سازی ...'});
+	mask.show();
+	Ext.Ajax.request({
+		url: this.address_prefix + 'form.data.php?task=saveColumn',
+		method: 'POST',
+		params: {
+			record: Ext.encode(record.data)
+		},
+		success: function (response) {
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+			if (st.success)
+				WFM_NewFormObj.gridColumnsGrid.getStore().load();
+			else
+				Ext.MessageBox.alert("خطا", st.data);
+		},
+		failure: function () {
+			mask.hide();
+		}
+	});
+}
+
+WFM_NewForm.prototype.DeleteColumn = function(){  
+
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+
+		me = WFM_NewFormObj;
+		mask = new Ext.LoadMask(me.gridColumnsGrid, {msg: 'در حال ذخیره سازی ...'});
+		mask.show();
+		Ext.Ajax.request({
+			url: me.address_prefix + 'form.data.php?task=deleteColumn',
+			method: 'POST',
+			params: {
+				ColumnID : me.gridColumnsGrid.getSelectionModel().getLastSelected().data.ColumnID
+			},
+
+			success: function(response){
+				mask.hide();
+				var st = Ext.decode(response.responseText);
+				if(st.success)
+				{
+					WFM_NewFormObj.gridColumnsGrid.getStore().load();
+				}
+			},
+			failure: function(){}
+		});
+	})
+
+};
+
+//.....................................................
 
 WFM_NewForm.prototype.moveStep = function(direction){
 	var record = this.grid.getSelectionModel().getLastSelected();

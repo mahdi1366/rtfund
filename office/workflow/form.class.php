@@ -61,6 +61,7 @@ class WFM_forms extends OperationClass {
         return $CorrectContent;
     }
 }
+
 class WFM_FormGroups extends OperationClass {
 
 	const TableName = "WFM_FormGroups";
@@ -155,6 +156,28 @@ class WFM_FormAccess extends OperationClass {
     public $StepRowID;
 }
 
+class WFM_FormGridColumns extends OperationClass {
+
+	const TableName = "WFM_FormGridColumns";
+	const TableKey = "ColumnID"; 
+	
+	public $ColumnID;
+	public $FormItemID;
+	public $ordering;
+	public $ItemName;
+	public $ItemType;
+	public $EditorProperties;
+	public $properties;
+	public $ComboValues;
+	
+	static function Get($where = '', $whereParams = array(), $pdo = null) {
+		
+		$query = "select c.* from WFM_FormGridColumns c join WFM_FormItems using(FormItemID)"
+				. " where 1=1" . $where;
+		return PdoDataAccess::runquery_fetchMode($query, $whereParams, $pdo);
+	}
+	
+}
 //..........................................................
 
 class WFM_requests extends OperationClass {
@@ -266,10 +289,12 @@ class WFM_RequestItems extends OperationClass {
 	
     public static function RemoveAll($RequestID, $pdo = null) {
 		
-        return parent::delete(static::TableName, "RequestID=:RequestID", 
-				array(":RequestID" => $RequestID), $pdo);
+		$query = "delete ri from WFM_RequestItems ri
+			join WFM_FormItems fi using(FormItemID)
+			where ItemType<>'grid' AND RequestID=:RequestID " ;
+		
+        return parent::runquery($query,array(":RequestID" => $RequestID), $pdo);
 	}
 }
-
 
 ?>

@@ -2103,20 +2103,25 @@ function selectBackPayComputes(){
 }
 
 //------------------------------------------------
-
-function GetDefrayVoteForm($RequestID){
 	
+function CustomerDefrayRequest(){
+	ini_set("display_errors","On"); 
+	$RequestID = (int)$_POST["RequestID"];
+	
+	//-------------- GetDefrayVoteForm -----------------
 	$dt = PdoDataAccess::runquery("
-		SELECT FormID FROM VOT_FilledItems
+		SELECT f.FormID FROM VOT_FilledItems
 			join VOT_FilledForms f using(FormID)
 			join VOT_FormItems using(ItemID)
 			where f.PersonID=? AND f.FormID=".DEFRAYLOAN_VOTEFORM." AND ItemType='loan' AND FilledValue=?", 
-			array($_SESSION["USER"]["PersonID"],  $RequestID));	
-	return $dt;
-}
-
-function GetDefrayWFMForm($RequestID){
+			array($_SESSION["USER"]["PersonID"],  $RequestID));
+	if(count($dt) == 0)
+	{
+		echo Response::createObjectiveResponse(false, "ابتدا باید  فرم نظرسنجی فرم مربوطه را تکمیل کنید");
+		die();
+	}
 	
+	//---------------- GetDefrayWFMForm ---------------
 	$dt = PdoDataAccess::runquery("
 		SELECT RequestID,FlowID FROM WFM_requests 
 			join WFM_forms using(FormID)
@@ -2124,21 +2129,6 @@ function GetDefrayWFMForm($RequestID){
 			join WFM_FormItems using(FormItemID)
 		where FormID=".DEFRAYLOAN_WFMFORM." AND PersonID=? AND ItemType='loan' AND ItemValue=?", 
 		array($_SESSION["USER"]["PersonID"],  $RequestID));
-	return $dt;
-}
-
-function CustomerDefrayRequest(){
-	
-	$RequestID = (int)$_POST["RequestID"];
-	
-	$dt = GetDefrayVoteForm($RequestID);	
-	if(count($dt) == 0)
-	{
-		echo Response::createObjectiveResponse(false, "ابتدا باید از قسمت نظرسنجی فرم مربوطه را تکمیل کنید");
-		die();
-	}
-	
-	$dt = GetDefrayWFMForm($RequestID);
 	if(count($dt) == 0)
 	{
 		echo Response::createObjectiveResponse(true,"");

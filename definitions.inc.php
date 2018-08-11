@@ -138,8 +138,8 @@ define("ACC_STEPID_RAW", "100");
 define("ACC_STEPID_CONFIRM", "200");
 
 
-define("DEFRAYLOAN_VOTEFORM", "5");
-define("DEFRAYLOAN_WFMFORM", "1");
+define("DEFRAYLOAN_VOTEFORM", "9");
+define("DEFRAYLOAN_WFMFORM", "16");
 
 define("FILE_FRAMEWORK_PICS",getenv("DOCUMENT_ROOT") . "/storage/framework/");
 

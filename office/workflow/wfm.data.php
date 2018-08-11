@@ -405,4 +405,7 @@ function RemoveStepPersons(){
 	die();
 }
 
+//--------------------------------------
+
+function WFM_FormGridColumns(){}
 ?>
