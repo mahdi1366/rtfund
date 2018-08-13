@@ -5,17 +5,17 @@
 //-----------------------------
 
 require_once '../header.inc.php';
-require_once inc_dataGrid;
+require_once inc_dataGrid; 
 require_once inc_dataReader;
 
 //................  GET ACCESS  .....................
-$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]); 
 //...................................................
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "cheques.data.php?task=selectIncomeCheques", "grid_div");
 
 $dg->addColumn("", "IncomeChequeID", "", true);
-$dg->addColumn("", "BackPayID", "", true);
+$dg->addColumn("", "BackPayID", "", true);  
 $dg->addColumn("", "ChequeStatus", "", true);
 $dg->addColumn("", "BankDesc", "", true);
 $dg->addColumn("", "ChequeBranch", "", true);
@@ -25,6 +25,9 @@ $dg->addColumn("", "EqualizationID", "", true);
 $col = $dg->addColumn("صاحب چک", "fullname", "");
 
 $col = $dg->addColumn("حساب", "CostDesc");
+$col->width = 150;
+
+$col = $dg->addColumn("شعبه اخذ وام", "BranchName");
 $col->width = 150;
 
 $col = $dg->addColumn("بانک", "BankDesc");

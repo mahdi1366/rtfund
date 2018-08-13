@@ -80,7 +80,7 @@ function selectIncomeCheques() {
 	$param = array();
 	
 	MakeWhere($where, $param);
-	
+	  
 	$query = "
 		select i.*,
 			case when i.CostID is null OR LoanRequestID is not null 
@@ -89,7 +89,8 @@ function selectIncomeCheques() {
 			case when i.CostID is null then group_concat(concat_ws('-', bb1.blockDesc, bb2.blockDesc) SEPARATOR '<br>') 
 				else concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) end CostDesc,
 			b.BankDesc, 
-			t3.TafsiliDesc ChequeStatusDesc
+			t3.TafsiliDesc ChequeStatusDesc,
+			br.BranchName
 			/*,t.docs*/
 			
 		from ACC_IncomeCheques i
@@ -104,6 +105,7 @@ function selectIncomeCheques() {
 			left join LON_requests r on(
 			if(bp.RequestID is null,i.LoanRequestID=r.RequestID,bp.RequestID=r.RequestID))
 			left join LON_loans l using(LoanID)
+			left join BSC_branches br using(BranchID)
 			left join ACC_CostCodes cc2 on(cc2.level1=" . BLOCKID_LOAN . " AND cc2.level2=l.blockID)
 			left join ACC_blocks bb1 on(cc2.level1=bb1.BlockID)
 			left join ACC_blocks bb2 on(cc2.level2=bb2.BlockID)
