@@ -22,7 +22,7 @@ if(isset($_REQUEST["task"]))
 
 function selectPersons(){
 	
-	$where = "p.IsActive in ('YES','PENDING')";
+	$where = "1=1";
 	$param = array();
 	
 	if(!empty($_REQUEST["UserType"]))
@@ -72,6 +72,13 @@ function selectPersons(){
 		$where .= " AND IsConfirm = :e "; 
 		$param[":e"] = $_REQUEST["IsConfirm"];
 	}
+	if(!empty($_REQUEST["IsActive"]))
+	{
+		$where .= " AND IsActive = :i "; 
+		$param[":i"] = $_REQUEST["IsActive"];
+	}
+	else
+		$where .= " AND p.IsActive in ('YES','PENDING')";
 	
 	if(!empty($_REQUEST["full"]))
 		$temp = BSC_persons::SelectAll($where . dataReader::makeOrder(), $param);
@@ -231,8 +238,8 @@ function changePass(){
 	die();
 }
 
-function ConfirmPersons(){
-	
+function ConfirmPendingPerson(){
+	$error = "";
 	$PersonID = $_POST["PersonID"];
 	$mode = $_POST["mode"];
 	
@@ -243,11 +250,14 @@ function ConfirmPersons(){
 	if($mode == "1")
 	{
 		$result = SendEmail($obj->email, "تایید ثبت نام در صندوق پژوهش و فناوری خراسان رضوی", 
-				OWNER_WELCOME_MESSAGE);
+				OWNER_WELCOME_MESSAGE,array(), $error);
+		if($error != "")
+			$error = "ارسال ایمیل به دلیل زیر انجام نشد: <br>" . $error;
 	}
 	
 	//print_r(ExceptionHandler::PopAllExceptions());
-	echo Response::createObjectiveResponse($result, "");
+	ob_clean();
+	echo Response::createObjectiveResponse($result, $error);
 	die();
 }
 
