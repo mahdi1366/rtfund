@@ -6,6 +6,8 @@
 
 require_once '../header.inc.php';
 require_once inc_dataGrid;
+require_once 'form.data.php';
+require_once inc_component;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "form.data.php?task=SelectMyRequests", "grid_div");
 
@@ -26,7 +28,9 @@ $col->width = 130;
 $col = $dg->addColumn("وضعیت", "StepDesc", "");
 $col->width = 100;
 
-$dg->addButton("", "ایجاد فرم جدید", "add", "function(){WFM_MyRequestsObject.AddNewRequest(0);}");
+$dg->addObject("this.AddFromObj");
+
+//$dg->addButton("", "ایجاد فرم جدید", "add", "function(){WFM_MyRequestsObject.AddNewRequest(0);}");
 
 $col = $dg->addColumn('عملیات', '', 'string');
 $col->renderer = "WFM_MyRequests.OperationRender";
@@ -47,6 +51,8 @@ WFM_MyRequests.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	NewFormList : <?= common_component::PHPArray_to_JSSimpleArray(SelectValidForms(true)) ?>,
+
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -54,46 +60,24 @@ WFM_MyRequests.prototype = {
 
 function WFM_MyRequests(){
 	
-	this.mainPanel = new Ext.form.FormPanel({
-		frame: true,
-		bodyStyle : "padding:5px",
-		renderTo : this.get("mainForm"),
-		title: 'فرم ها',
-		width: 600,
-		height : 200,
-		autoScroll : true,
-		layout : "vbox"
-	});	
-		
-	this.NewVoteFormsStore = new Ext.data.Store({
-		proxy:{
-			type: 'jsonp',
-			url: this.address_prefix + "form.data.php?task=SelectValidForms",
-			reader: {root: 'rows',totalProperty: 'totalCount'}
-		},
-		fields : ["FormID","FormTitle"],
-		autoLoad : true,
-		listeners :{
-			load : function(){
-				
-				WFM_MyRequestsObject.mainPanel.removeAll();
-				for(i=0; i<this.totalCount; i++)
-				{
-					WFM_MyRequestsObject.mainPanel.add({
-						xtype : "button",
-						style : "margin:5px ",
-						itemId : this.getAt(i).data.FormID,
-						border : true,
-						iconCls : "add",
-						text : "ایجاد " + this.getAt(i).data.FormTitle,
-						handler : function(){ 
-							WFM_MyRequestsObject.AddNewRequest("",this.itemId);
-						}
-					});
-				}
+	menu = [];
+	for(i=0; i<this.NewFormList.length; i++)
+	{
+		menu.push({						
+			text: this.NewFormList[i][2],
+			iconCls : "form",
+			itemId : this.NewFormList[i][1],
+			handler : function(){
+				WFM_MyRequestsObject.AddNewRequest("", this.itemId);
 			}
-		}
+		})
+	}
+	this.AddFromObj = Ext.button.Button({
+		text: 'ایجاد فرم جدید',
+		iconCls: 'add'	,
+		menu : menu
 	});	
+	
 	
 	this.grid = <?= $grid ?>;
 	this.grid.getView().getRowClass = function(record, index)

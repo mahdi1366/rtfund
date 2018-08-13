@@ -116,7 +116,7 @@ function SavePerson(){
 		$obj->UserPass = $hasher->HashPassword(md5("123456"));
 	}
 	
-	if(isset($_SESSION["USER"]["framework"]))
+	if(isset($_REQUEST["adminMode"]) && $_REQUEST["adminMode"] == true)
 	{
 		$obj->IsAgent = !isset($_POST["IsAgent"]) ? "NO" : "YES";
 		$obj->IsCustomer = !isset($_POST["IsCustomer"]) ? "NO" : "YES";

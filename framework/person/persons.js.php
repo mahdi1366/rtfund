@@ -332,6 +332,9 @@ Person.prototype.saveData = function()
 		IsUpload : true,
 		url : this.address_prefix + 'persons.data.php?task=SavePerson',
 		method : "POST",
+		params : {
+			adminMode : true
+		},
 		
 		success : function(form,action){
 			mask.hide();
