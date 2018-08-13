@@ -8,6 +8,7 @@ PersonInfo.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
+	portal : <?= isset($_SESSION["USER"]["portal"]) ? "true" : "false" ?>,
 	PersonID : <?= $PersonID ?>,
 
 	get : function(elementID){
@@ -170,12 +171,14 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			xtype : "textfield",
 			fieldLabel: 'نام',
 			allowBlank : false,
+			readOnly : this.portal,
 			beforeLabelTextTpl: required,
 			name: 'fname'
 		},{
 			xtype : "textfield",
 			fieldLabel: 'نام خانوادگی',
 			allowBlank : false,
+			readOnly : this.portal,
 			beforeLabelTextTpl: required,
 			name: 'lname'
 		},{
@@ -196,6 +199,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			maskRe: /[\d\-]/,
 			fieldLabel: 'کد ملی',
 			allowBlank : false,
+			readOnly : this.portal,
 			beforeLabelTextTpl: required,
 			name: 'NationalID'
 		},{
@@ -216,6 +220,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			regex: /^\d{11}$/,
 			maskRe: /[\d\-]/,
 			fieldLabel: 'تلفن همراه',
+			readOnly : this.portal,
 			name: 'mobile'
 		},{
 			xtype : "textarea",
@@ -266,6 +271,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			xtype : "textfield",
 			beforeLabelTextTpl: required,
 			fieldLabel: 'نام شرکت',
+			readOnly : this.portal,
 			width : 510,
 			name: 'CompanyName',
 			colspan : 2
@@ -275,6 +281,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			maskRe: /[\d\-]/,
 			allowBlank : false,
 			fieldLabel: 'شناسه ملی',
+			readOnly : this.portal,
 			beforeLabelTextTpl: required,
 			name: 'NationalID'
 		},{
@@ -399,6 +406,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			xtype : "numberfield",
 			name : "SmsNo",
 			hideTrigger : true,
+			readOnly : this.portal,
 			fieldLabel : "شماره دریافت پیامک"
 		},{
 			xtype : "checkbox",
