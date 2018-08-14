@@ -22,7 +22,7 @@ if($Image[0][0] == "")
 	die();
 }
 
-header('Content-type: image/jpg');
+header('Content-type: image');
 header('Pragma: no-cache');
 header('Expires: 0');
 header('Cache-Control: must-revalidate, post-check=0, pre-check=0');

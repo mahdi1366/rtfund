@@ -513,7 +513,7 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 				width : 610,
 				itemId: 'ReqItem_' + record.data.FormItemID,
 				name: 'ReqItem_' + record.data.FormItemID,
-				fieldLabel : titleInLine ? "" : record.data.ItemName
+				fieldLabel : record.data.ItemName
 			});
 			parent.add(this.LoanCmp);
 			if(this.LoanRequestID*1 > 0)

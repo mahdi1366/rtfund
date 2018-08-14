@@ -49,6 +49,24 @@ function Person()
 					me.grid.getStore().proxy.extraParams["IsConfirm"] = "NO";
 					me.grid.getStore().loadPage(1);
 				}
+			},{
+				text: "افراد منتظر تایید ثبت نام",
+				group: 'filter',
+				checked: true,
+				handler : function(){
+					me = PersonObject;
+					me.grid.getStore().proxy.extraParams["IsActive"] = "PENDING";
+					me.grid.getStore().loadPage(1);
+				}
+			},{
+				text: "افراد تایید نشده ثبت نام",
+				group: 'filter',
+				checked: true,
+				handler : function(){
+					me = PersonObject;
+					me.grid.getStore().proxy.extraParams["IsActive"] = "NO";
+					me.grid.getStore().loadPage(1);
+				}
 			}]
 		}
 	});	
@@ -267,7 +285,10 @@ Person.deleteRender = function(v,p,r)
 Person.editRender = function(v,p,r)
 {
 	if(r.data.IsActive == "NO")
-		return "";
+		return  "<div align='center' title='تایید ثبت نام' class='tick2' "+
+		"onclick='PersonObject.ConfirmPending();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
 	return "<div align='center' title='ویرایش کاربر' class='edit' onclick='PersonObject.Editing();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
@@ -332,6 +353,9 @@ Person.prototype.saveData = function()
 		IsUpload : true,
 		url : this.address_prefix + 'persons.data.php?task=SavePerson',
 		method : "POST",
+		params : {
+			adminMode : true
+		},
 		
 		success : function(form,action){
 			mask.hide();
@@ -466,6 +490,43 @@ Person.prototype.Confirm = function()
 		});
 		
 	});
+}
+
+Person.prototype.ConfirmPending = function(mode){
+	
+	message = "آیا مایل به تایید می باشید؟";
+	Ext.MessageBox.confirm("",message, function(btn){
+		if(btn == "no")
+			return;
+		me = PersonObject;
+		record = me.grid.getSelectionModel().getLastSelected();
+	
+		mask = new Ext.LoadMask(me.grid,{msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'persons.data.php',
+			method: "POST",
+			params: {
+				task: "ConfirmPendingPerson",
+				PersonID : record.data.PersonID,
+				mode : "1"
+			},
+			success: function(response){
+				mask.hide();
+				var st = Ext.decode(response.responseText);
+				PersonObject.grid.getStore().load();
+				if(!st.success)					
+				{
+					if(st.data == "")
+						Ext.MessageBox.alert("ERROR", "خطا در اجرای عملیات");
+					else
+						Ext.MessageBox.alert("ERROR", st.data);
+				}
+			},
+			failure: function(){}
+		});
+	})	
 }
 
 </script>

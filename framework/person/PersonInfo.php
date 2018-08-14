@@ -73,5 +73,13 @@ require_once 'PersonInfo.js.php';
 </style>
 <br>
 <center>
-<div id="mainForm"><div>
+<div><div id="mainForm"></div></div>
+<div>
+تغییر مشخصات زیر فقط از طریق کارشناسان صندوق امکان پذیر می باشد:
+<br>
+اشخاص حقیقی : نام- نام خانوادگی  - کد ملی - شماره موبایل
+<br>
+اشخاص حقوقی : نام شرکت - شناسه اقتصادی - شماره پیامک
+
+</div>
 </center>

@@ -175,8 +175,10 @@ $index = rand(0, count($pics)-1);
 							document.getElementById("RegisterErrorDiv").innerHTML = "با این کدملی / شناسه ملی قبلا ثبت نام انجام شده است";
 							break;
 						case "true":
-							document.getElementById("RegisterErrorDiv").style.display = "none";
-							window.location = "index.php";
+							document.getElementById("RegisterErrorDiv").innerHTML = 
+									"ثبت نام شما با موفقیت انجام شد. نتیجه از طریق ایمیل بعد از حداکثر یک روز کاری به شما اطلاع داده خواهد شد";
+							document.getElementById("RegisterErrorDiv").className = "success";
+							//window.location = "index.php";
 					}
 				}
 			}
@@ -366,6 +368,23 @@ $index = rand(0, count($pics)-1);
 		background-color: #fff;
 		color: #000;
 		padding: 10px;
+		line-height: 2em;
+		-webkit-border-radius: .3em;
+		-moz-border-radius: .3em;
+		border-radius: .3em;
+	}
+	
+	.loginDiv .success{
+		background-color: lawngreen !important;
+		height: 50px;
+		color: white !important;
+		font-size: 12px;
+		font-weight: bold;
+		text-align: justify;
+		margin-bottom: 20px;
+		background-color: #fff;
+		color: #000;
+		padding: 4px;
 		line-height: 2em;
 		-webkit-border-radius: .3em;
 		-moz-border-radius: .3em;

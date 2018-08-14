@@ -201,7 +201,7 @@ FrameworkStartPage.prototype.ConfirmPerson = function(mode){
 			url: me.address_prefix +'person/persons.data.php',
 			method: "POST",
 			params: {
-				task: "ConfirmPersons",
+				task: "ConfirmPendingPerson",
 				PersonID : record.data.PersonID,
 				mode : mode
 			},

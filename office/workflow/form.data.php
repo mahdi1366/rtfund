@@ -489,10 +489,10 @@ function MoveItem(){
 }
 //------------------------------------------------------------------------------
 
-function SelectValidForms(){
+function SelectValidForms($returnMode = false){
 	
 	$dt = PdoDataAccess::runquery("
-		select f.* from WFM_forms f
+		select f.FormID,f.FormTitle from WFM_forms f
 		left join WFM_FormPersons fp on(fp.FormID=f.FormID)
 		join BSC_persons p on(
 			case when fp.FormID is not null then fp.PersonID=:pid AND p.PersonID=fp.PersonID
@@ -508,7 +508,8 @@ function SelectValidForms(){
 		where f.IsActive='YES'
 		group by f.FormID
 		", array(":pid" => $_SESSION["USER"]["PersonID"]));
-	
+	if($returnMode)
+		return $dt;
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
