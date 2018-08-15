@@ -33,6 +33,7 @@ for ($i = 0; $i < count($temp); $i++) {
     $BlockGrid->addColumn('', "BlockID", "", true);
     $BlockGrid->addColumn('', "LevelID", "", true);
     $BlockGrid->addColumn('', "IsActive", "", true);
+	$BlockGrid->addColumn('', "IsNew", "", true);
 	$BlockGrid->addColumn('', "MainCostCode", "", true);
 
     $col = $BlockGrid->addColumn('کد', "BlockCode");
@@ -97,6 +98,12 @@ for ($i = 0; $i < count($temp); $i++) {
 				return BlockObj.AddAccess;
 			return BlockObj.EditAccess;
 		});
+		BlockObj.grid<?= $i ?>.getView().getRowClass = function(record, index)
+		{
+			if(record.data.IsNew == "YES")
+				return "yellowRow";
+		}	
+		
 		
 		BlockObj.mainTab.add({
 			title:"<?= $levelTitle ?>",

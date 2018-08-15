@@ -47,6 +47,7 @@ switch ($task) {
 	case "SelectCycles":
 	case "SaveCycle":
 	case "GetBanks":
+	case "ReplaceCostCodes":
 		$task();
 };
 
@@ -726,4 +727,22 @@ function GetBanks(){
 	die();
 }
 
+function ReplaceCostCodes(){
+	
+	$OLD_CostID = $_POST["OLD_CostID"];
+	$NEW_CostID = $_POST["NEW_CostID"];
+	
+	PdoDataAccess::runquery("update ACC_DocItems join ACC_docs using(DocID)
+		set CostID=:new 
+		where BranchID=:b AND CycleID=:c AND costID=:old ", array(
+			":c" => $_SESSION["accounting"]["CycleID"], 
+			":b" => $_SESSION["accounting"]["BranchID"],
+			":old" => $OLD_CostID,
+			":new" => $NEW_CostID
+		));
+	
+	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, 
+			PdoDataAccess::AffectedRows());
+	die();
+}
 ?>

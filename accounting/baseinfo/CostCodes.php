@@ -13,6 +13,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 $dg_cost = new sadaf_datagrid('cost',$js_prefix_address."baseinfo.data.php?task=SelectCostCode&All=true",'divCost');
 
 $dg_cost->addcolumn('','IsActive',"",true);
+$dg_cost->addcolumn('','IsNew',"",true);
 $dg_cost->addcolumn('','CostID',"",true);
 $dg_cost->addcolumn('','CostCode',"",true);
 $dg_cost->addcolumn('','level1',"",true);
@@ -87,6 +88,8 @@ require_once 'CostCode.js.php';
 		this.grid=<?= $dgCost?>;
 		this.grid.getView().getRowClass = function(record, index)
 		{
+			if(record.data.IsNew == "YES")
+				return "yellowRow";
 			if(record.data.IsActive == "NO")
 				return "pinkRow";
 		}	
