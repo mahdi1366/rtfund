@@ -3,7 +3,7 @@
 // developer:	Sh.Jafarkhani
 // Date:		92.07
 //---------------------------
-require_once '../header.inc.php';
+require_once '../header.inc.php'; 
 
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
@@ -148,22 +148,6 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 							handler: function(){ EventObject.DeleteEvent("group"); }
 
 					});
-				
-				this.Menu.add({
-					text: 'ردیف های رویداد',
-					iconCls: 'list',
-					handler: function () {
-						var record = EventObject.tree.getSelectionModel().getSelection()[0];
-						framework.OpenPage(ProcessObject.address_prefix + "EventRows.php?EventID="
-								+ record.raw.EventID, "ردیف های رویداد" + record.raw.EventID,
-								{
-									MenuID : "<?= $_POST["MenuID"] ?>",
-									EventID: record.raw.EventID,
-									EventTitle: record.raw.EventTitle
-
-								});
-					}
-				});
             }
             else
             {
@@ -186,6 +170,21 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
                         }
 
                     });
+				this.Menu.add({
+					text: 'ردیف های رویداد',
+					iconCls: 'list',
+					handler: function () {
+						var record = EventObject.tree.getSelectionModel().getSelection()[0];
+						framework.OpenPage(EventObject.address_prefix + "EventRows.php?EventID="
+								+ record.raw.EventID, "ردیف های رویداد" + record.raw.EventID,
+								{
+									MenuID : "<?= $_POST["MenuID"] ?>",
+									EventID: record.raw.EventID,
+									EventTitle: record.raw.EventTitle
+
+								});
+					}
+				}); 
             }
 			
             var coords = e.getXY();

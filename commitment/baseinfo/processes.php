@@ -50,39 +50,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
                         itemId: "ProcessTitle",
                         fieldLabel: "عنوان",
                         anchor: "100%"
-                    }, {
-                        xtype: "combo",
-                        itemId: "EventID",
-                        anchor: "100%",
-                        fieldLabel: "رویداد مالی",
-                        store: new Ext.data.Store({
-                            fields: ['EventID', 'EventTitle'],
-                            proxy: {
-                                type: 'jsonp',
-                                url: this.address_prefix + "baseinfo.data.php?task=GetAllEvents",
-                                reader: {root: 'rows', totalProperty: 'totalCount'}
-                            }
-                        }),
-                        tpl: new Ext.XTemplate(
-                                '<table cellspacing="0" width="99%">'
-                                , '<tpl for=".">'
-                                , '<tr class="search-item">'
-                                , '<td height="23px">{EventID}</td>'
-                                , '<td>{EventTitle}</td></tr>'
-                                , '</tpl>'
-                                , '</table>'),
-                        listConfig: {
-                            loadingText: 'در حال جستجو...',
-                            emptyText: 'فاقد اطلاعات',
-                            itemCls: "search-item"
-                        },
-                        name: 'EventID',
-                        valueField: 'EventID',
-                        displayField: 'EventTitle',
-                        typeAhead: false,
-                        pageSize: 20,
-                        queryDelay: 0
-                    }, {
+                    },{
                         xtype: "textfield",
                         fieldLabel: "توضیحات",
                         name: "description",
@@ -160,116 +128,35 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 
             this.Menu = new Ext.menu.Menu();
 
-            if (record.data.id == "source")
+			if(me.AddAccess)
+				this.Menu.add({
+					text: 'ایجاد گره جدید',
+					iconCls: 'add',
+					handler: function () {
+						ProcessObject.BeforeSaveProcess("new");
+					}
+				});
+			
+            if (record.data.id != "source")
             {
-				if(me.AddAccess)
+				if(me.EditAccess)
                     this.Menu.add({
-                        text: 'ایجاد فرایند',
-                        iconCls: 'add',
-                        handler: function () {
-                            ProcessObject.BeforeSaveProcess("new", "group");
-                        }
-                    });
-            } 
-			else if (record.parentNode.data.id == "source")
-            {
-				if(me.AddAccess)
-                    this.Menu.add({
-                        text: 'ایجاد زیر فرایند',
-                        iconCls: 'add',
-                        handler: function () {
-                            ProcessObject.BeforeSaveProcess("new", "process");
-                        }
-                    });
-				if(me.AddAccess)
-                    this.Menu.add({
-                        text: 'ویرایش فرایند',
+                        text: 'ویرایش گره',
                         iconCls: 'edit',
                         handler: function () {
-                            ProcessObject.BeforeSaveProcess("edit", "group");
+                            ProcessObject.BeforeSaveProcess("edit");
                         }
                     });
 				if(me.RemoveAccess)
 					this.Menu.add({
-						text: 'حذف فرایند',
+						text: 'حذف گره',
 						iconCls: 'remove',
 						handler: function () {
 							ProcessObject.DeleteProcess("process");
 						}
 					});
             } 
-			else if (record.parentNode.parentNode.data.id == "source")
-            {
-				if(me.AddAccess)
-                    this.Menu.add({
-                        text: 'ایجاد مرحله',
-                        iconCls: 'add',
-                        handler: function () {
-                            ProcessObject.BeforeSaveProcess("new", "process");
-                        }
-                    });
-				if(me.EditAccess)
-					this.Menu.add({
-						text: 'ویرایش زیر فرایند',
-						iconCls: 'edit',
-						handler: function () {
-							ProcessObject.BeforeSaveProcess("edit", "process");
-						}
-					});
-				if(me.RemoveAccess)
-					this.Menu.add({
-						text: 'حذف زیر فرایند',
-						iconCls: 'remove',
-						handler: function () {
-							ProcessObject.DeleteProcess("process");
-						}
-					});
-            } 
-			else if (record.parentNode.parentNode.parentNode.data.id == "source")
-            {
-				if(me.EditAccess)
-					this.Menu.add({
-						text: 'ویرایش مرحله',
-						iconCls: 'edit',
-						handler: function () {
-							ProcessObject.BeforeSaveProcess("edit", "process");
-						}
-					});
-				if(me.RemoveAccess)
-					this.Menu.add({
-						text: 'حذف مرحله',
-						iconCls: 'remove',
-						handler: function () {
-							ProcessObject.DeleteProcess("process");
-						}
-					});
-            } 
-			else
-            {
-				if(me.AddAccess || me.EditAccess)
-				{
-					this.Menu.add({
-						text: 'ردیف های رویداد مرحله',
-						iconCls: 'list',
-						handler: function () {
-							var record = ProcessObject.tree.getSelectionModel().getSelection()[0];
-							if (record.raw.EventID == "0" || record.raw.EventID == "" || record.raw.EventID == null)
-							{
-								Ext.MessageBox.alert("", "چرخه فاقد رویداد مالی می باشد");
-								return;
-							}
-							framework.OpenPage(ProcessObject.address_prefix + "EventRows.php?EventID="
-									+ record.raw.EventID, "ردیف های رویداد" + record.raw.EventID,
-									{
-										MenuID : "<?= $_POST["MenuID"] ?>",
-										EventID: record.raw.EventID,
-										EventTitle: record.raw.EventTitle
-
-									});
-						}
-					});
-				}
-            }
+						
             var coords = e.getXY();
             this.Menu.showAt([coords[0] - 120, coords[1]]);
         });
@@ -277,18 +164,11 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 
     var ProcessObject = new Process();
 
-    Process.prototype.BeforeSaveProcess = function (mode, obj)
+    Process.prototype.BeforeSaveProcess = function (mode)
     {
         var record = this.tree.getSelectionModel().getSelection()[0];
 
         this.infoWin.down('form').getForm().reset();
-        this.infoWin.down('form').getComponent("EventID").show();
-console.log(record);
-        if (mode == "new" && (record.data.id == "source" || record.parentNode.data.id == "source"))
-            this.infoWin.down('form').getComponent("EventID").hide();
-        if (mode == "edit" && (record.parentNode.data.id == "source" || record.parentNode.parentNode.data.id == "source"))
-            this.infoWin.down('form').getComponent("EventID").hide();
-
         this.infoWin.show();
 
         if (mode == "edit")
@@ -298,20 +178,10 @@ console.log(record);
             this.infoWin.down('form').getComponent("ProcessID").setValue(record.data.id);
             this.infoWin.down('form').getComponent("description").setValue(record.raw.description);
             this.infoWin.down('form').getComponent("old_ProcessID").setValue(record.data.id);
-            //this.infoWin.down('form').getComponent("tafsilis").setValue(record.raw.tafsilis);			
-
-            if (record.raw.EventID > 0)
-                this.infoWin.down('form').getComponent("EventID").getStore().load({
-                    params: {EventID: record.raw.EventID},
-                    callback: function () {
-                        ProcessObject.infoWin.down('form').getComponent("EventID").select(this.getAt(0));
-                    }
-                });
+            
         } else {
-            if (obj == "process")
-                this.infoWin.down('form').getComponent("ParentID").setValue(record.data.id);
-            else
-                this.infoWin.down('form').getComponent("ParentID").setValue(0);
+            this.infoWin.down('form').getComponent("ParentID").setValue(
+					record.data.id == "source" ? "0" : record.data.id);
         }
     }
 

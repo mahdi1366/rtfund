@@ -68,7 +68,7 @@ function selectGroups(){
 		group by g.GroupID
 		" . ($filled ? " having count(pi.RowID)>0 " : "") . "
 	", $params);
-	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes);
+	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes, "parentid");
 	echo json_encode($returnArr);
 	die();
 	

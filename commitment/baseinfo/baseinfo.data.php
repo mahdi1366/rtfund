@@ -8,7 +8,7 @@ require_once 'baseinfo.class.php';
 require_once 'TreeModules.class.php';
 require_once(inc_response);
 require_once(inc_dataReader);
-
+	
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 
 switch ($task) {
@@ -78,11 +78,6 @@ function GetProcessTree() {
 			select ProcessID id, concat('[',ProcessID,'] ',ProcessTitle) text, ParentID, EventID,'' EventTitle,
 				ProcessID,ProcessTitle,description
 			from COM_processes where IsActive='YES'
-				union all 
-			select concat(ProcessID,'-',EventID) id , concat('[',EventID,'] ',EventTitle) text, ProcessID ParentID, EventID,EventTitle,
-				'','',''
-			from COM_processes p
-			join COM_events using(EventID)
 			where p.IsActive='YES'");
 	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes);
 	echo json_encode($returnArr);
@@ -144,46 +139,12 @@ function DeleteEvent() {
 
 function GetEventsTree() {
 
-	$nodes = COM_events::SelectEvents("IsActive='YES'");
-
-	$ref_cur_level_nodes = array();
-	$returnArray = array();
-	
-	for ($i = 0; $i < count($nodes); $i++) {
-		
-		$nodes[$i]["leaf"] = "true";
-		$nodes[$i]["title"] = "[" . $nodes[$i]["EventID"] . "] " . $nodes[$i]["EventTitle"];
-		
-		
-		if($nodes[$i]["ParentID"] == "0")
-		{
-			$returnArray[] = $nodes[$i];			
-			$ref_cur_level_nodes[$nodes[$i]['EventID']] = & $returnArray[ count($returnArray)-1 ];
-		}
-		else
-		{
-			$parent = & $ref_cur_level_nodes[ $nodes[$i]["ParentID"] ];
-			if (!isset($parent["children"])) {
-				$parent["children"] = array();
-				$parent["leaf"] = "false";
-			}
-			
-			$parent["children"][] = $nodes[$i];
-			$ref_cur_level_nodes[$nodes[$i]["EventID"]] = & $parent["children"][ count($parent["children"])-1 ];
-		}
-	}
-
-	$str = json_encode($returnArray);
-
-	$str = str_replace('"children"', 'children', $str);
-	$str = str_replace('"leaf"', 'leaf', $str);
-	$str = str_replace('"title"', 'text', $str);
-	$str = str_replace('"EventID"', 'id', $str);
-	$str = str_replace('"EventTitle"', 'EventTitle', $str);
-	$str = str_replace('"true"', 'true', $str);
-	$str = str_replace('"false"', 'false', $str);
-	
-	echo $str;
+	$nodes = PdoDataAccess::runquery("
+			select concat('[',EventID,'] ',EventTitle) text, e.*
+			from COM_events e
+			where e.IsActive='YES'");
+	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes, "ParentID", "EventID", "text");
+	echo json_encode($returnArr);
 	die();
 }
 
