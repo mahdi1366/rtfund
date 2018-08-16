@@ -126,6 +126,7 @@ class ACC_CostCodes extends PdoDataAccess {
     public $CostCode;
 	public $TafsiliType;
 	public $TafsiliType2;
+	public $TafsiliType3;
 	public $IsBlockable;
 	public $CostGroupID;
 
@@ -285,7 +286,8 @@ class ACC_CostCodes extends PdoDataAccess {
                     concat_ws('-',b1.blockdesc,b2.blockdesc,b3.blockdesc,b4.blockdesc) as CostDesc,
 					bf1.InfoDesc TafsiliTypeDesc,
 					bf2.InfoDesc TafsiliTypeDesc2,
-					bf3.InfoDesc CostGroupDesc
+					bf3.InfoDesc TafsiliTypeDesc3,
+					bf4.InfoDesc CostGroupDesc
 					
                     from ACC_CostCodes as cc
 					left join ACC_blocks b1 on(b1.BlockID=cc.Level1)
@@ -294,8 +296,9 @@ class ACC_CostCodes extends PdoDataAccess {
                     left join ACC_blocks b3 on(b3.BlockID=cc.Level3)
 					left join ACC_blocks b4 on(b4.BlockID=cc.Level4)
 					left join BaseInfo bf1 on(bf1.TypeID=2 AND cc.TafsiliType=bf1.InfoID)
-					left join BaseInfo bf2 on(bf2.TypeID=2 AND cc.TafsiliType2=bf2.InfoID)
-					left join BaseInfo bf3 on(bf3.TypeID=80 AND cc.CostGroupID=bf3.InfoID)";
+					left join BaseInfo bf2 on(bf2.TypeID=2 AND cc.TafsiliType2=bf2.InfoID) 
+					left join BaseInfo bf3 on(bf3.TypeID=2 AND cc.TafsiliType3=bf3.InfoID)
+					left join BaseInfo bf4 on(bf4.TypeID=80 AND cc.CostGroupID=bf4.InfoID)";
         if ($where != '') 
             $query .= ' where ' . $where;
 

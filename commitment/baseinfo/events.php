@@ -132,6 +132,22 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 							handler: function(){ EventObject.DeleteEvent("group"); }
 
 					});
+				
+				this.Menu.add({
+					text: 'ردیف های رویداد',
+					iconCls: 'list',
+					handler: function () {
+						var record = EventObject.tree.getSelectionModel().getSelection()[0];
+						framework.OpenPage(ProcessObject.address_prefix + "EventRows.php?EventID="
+								+ record.raw.EventID, "ردیف های رویداد" + record.raw.EventID,
+								{
+									MenuID : "<?= $_POST["MenuID"] ?>",
+									EventID: record.raw.EventID,
+									EventTitle: record.raw.EventTitle
+
+								});
+					}
+				});
             }
             else
             {

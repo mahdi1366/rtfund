@@ -21,6 +21,7 @@ $dg_cost->addcolumn('','level2',"",true);
 $dg_cost->addcolumn('','level3',"",true);
 $dg_cost->addcolumn('','TafsiliType',"",true);
 $dg_cost->addcolumn('','TafsiliType2',"",true);
+$dg_cost->addcolumn('','TafsiliType3',"",true);
 $dg_cost->addcolumn('','IsBlockable',"",true);
 $dg_cost->addcolumn('','CostGroupID',"",true);
 
@@ -38,13 +39,16 @@ $col->width = 120;
 $col = $dg_cost->addcolumn("جزء معین", "LevelTitle3");
 $col->width = 100;
 
-$col = $dg_cost->addcolumn("جزء معین2", "LevelTitle4");
-$col->width = 100;
+/*$col = $dg_cost->addcolumn("جزء معین2", "LevelTitle4");
+$col->width = 100;*/
 
 $col = $dg_cost->addcolumn("گروه تفصیلی", "TafsiliTypeDesc");
 $col->width = 100;
 
 $col = $dg_cost->addcolumn("گروه تفصیلی2", "TafsiliTypeDesc2");
+$col->width = 100;
+
+$col = $dg_cost->addcolumn("گروه تفصیلی3", "TafsiliTypeDesc3");
 $col->width = 100;
 
 $col = $dg_cost->addcolumn('گروه حساب','CostGroupDesc');
