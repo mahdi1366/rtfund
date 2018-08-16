@@ -75,11 +75,10 @@ function DeleteProcess() {
 function GetProcessTree() {
 
 	$nodes = PdoDataAccess::runquery("
-			select ProcessID id, concat('[',ProcessID,'] ',ProcessTitle) text, ParentID, EventID,'' EventTitle,
-				ProcessID,ProcessTitle,description
-			from COM_processes where IsActive='YES'
+			select *, concat('[',ProcessID,'] ',ProcessTitle) text
+			from COM_processes p
 			where p.IsActive='YES'");
-	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes);
+	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes,"ParentID","ProcessID","text");
 	echo json_encode($returnArr);
 	die();
 }
