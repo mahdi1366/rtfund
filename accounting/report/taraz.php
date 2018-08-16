@@ -388,7 +388,10 @@ function GetData(&$rpg){
 		
 	$query .= " order by b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode,di.TafsiliID,di.TafsiliID2";
 
-	return PdoDataAccess::runquery($query, $whereParam);
+	$dt = PdoDataAccess::runquery($query, $whereParam);
+	if($_SESSION["USER"]["UserName"] == "admin")
+		echo PdoDataAccess::GetLatestQueryString ();
+	return $dt;
 }
 
 function ListData($IsDashboard = false){

@@ -87,9 +87,25 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
                 },
                 proxy: {
                     type: 'ajax',
-                    url: this.address_prefix + "baseinfo.data.php?task=GetTreeNodes"
+                    url: this.address_prefix + "baseinfo.data.php?task=GetEventsTree"
                 }
             })
+        });
+		
+		this.tree.getDockedItems('toolbar[dock="top"]')[0].add({
+            xtype: "button",
+            iconCls: "print",
+            text: "چاپ",
+            handler: function () {
+                Ext.ux.Printer.print(EventObject.tree);
+            }
+        }, '-', {
+            xtype: "button",
+            iconCls: "refresh",
+            text: "بازگذاری مجدد",
+            handler: function () {
+                EventObject.tree.getStore().load();
+            }
         });
 
         this.tree.on("itemcontextmenu", function (view, record, item, index, e)

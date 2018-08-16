@@ -21,6 +21,7 @@ switch ($task) {
 	case 'GetAllEvents':
 	case 'DeleteEvent':
 	case 'SaveEvent':
+	case "GetEventsTree":
 
 	case "selectEventRows":
 	case "saveEventRow":
