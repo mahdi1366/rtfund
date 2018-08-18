@@ -48,6 +48,12 @@ switch ($task) {
 	case "SaveCycle":
 	case "GetBanks":
 	case "ReplaceCostCodes":
+		
+	
+	case "selectParams":
+	case "saveParam":
+	case "deleteParams":
+		
 		$task();
 };
 
@@ -719,7 +725,6 @@ function SaveCycle(){
 
 //---------------------------------------------
 
-
 function GetBanks(){
 	
 	$dt = PdoDataAccess::runquery("select * from ACC_banks");
@@ -745,4 +750,44 @@ function ReplaceCostCodes(){
 			PdoDataAccess::AffectedRows());
 	die();
 }
+
+//---------------------------------------------
+
+function selectParams() {
+	
+	$temp = ACC_CostCodeParams::Get(" AND IsActive='YES' AND CostID=?" . 
+			dataReader::makeOrder(), array($_REQUEST["CostID"]));
+	
+	$res = $temp->fetchAll();
+    echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+    die();
+}
+
+function saveParam() {
+	
+	$obj = new ACC_CostCodeParams();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST['record']);
+	
+	if($obj->ParamType == "currencyfield")
+		$obj->KeyTitle = "amount";
+	if($obj->ParamType == "shdatefield")
+		$obj->KeyTitle = "date";
+	
+	if ($obj->ParamID > 0) 
+		$obj->Edit();
+	 else 
+		$obj->Add();
+
+	echo Response::createObjectiveResponse(true, '');
+	die();
+}
+
+function deleteParam() {
+
+	$obj = new ACC_CostCodeParams($_POST['ParamID']);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, '');
+	die();
+}
+
 ?>

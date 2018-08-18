@@ -54,6 +54,11 @@ $col->width = 100;
 $col = $dg_cost->addcolumn('گروه حساب','CostGroupDesc');
 $col->width = 120;
 
+$col = $dg_cost->addColumn("آیتم ها", "");
+$col->sortable = false;
+$col->renderer = "function(v,p,r){return CostCode.ParamRender(v,p,r,2);}";
+$col->width = 50;
+
 if($accessObj->EditFlag	)
 {
 	$col=$dg_cost->addcolumn('ویرایش','','string');

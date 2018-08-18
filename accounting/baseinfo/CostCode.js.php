@@ -297,8 +297,7 @@ CostCode.prototype.RemoveCosts = function(){
 	});
 }
 
-CostCode.prototype.PrintCost = function()
-{        
+CostCode.prototype.PrintCost = function(){        
 	window.open(this.address_prefix + "PrintCostCode.php");
 }
 
@@ -430,6 +429,54 @@ CostCode.prototype.ActiveCost = function(){
 			},
 			failure: function(){}
 		});
+	});
+}
+
+//............................................................
+
+CostCode.ParamRender = function(v,p,r, gridIndex){
+	
+	if(r.data.IsActive == "NO")
+		return "";
+	return "<div align='center' title='لیست آیتم ها' class='list' "+
+		"onclick='CostCodeObj.LoadParams();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+
+CostCode.prototype.LoadParams = function(){
+
+	if(!this.ParamWin)
+	{
+		this.ParamWin = new Ext.window.Window({
+			width : 600,
+			title : "آیتم های الگو",
+			height : 520,
+			modal : true,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "CostCodeParams.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.ParamWin);
+	}
+
+	this.ParamWin.show();
+	this.ParamWin.center();
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.ParamWin.loader.load({
+		params : {
+			ExtTabID : this.ParamWin.getEl().id,
+			CostID : record.data.CostID
+		}
 	});
 }
 

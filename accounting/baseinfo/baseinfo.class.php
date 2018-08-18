@@ -307,6 +307,26 @@ class ACC_CostCodes extends PdoDataAccess {
 
 }
 
+class ACC_CostCodeParams extends OperationClass
+{
+	const TableName = "ACC_CostCodeParams";
+	const TableKey = "ParamID";
+	
+	public $CostID;
+	public $ParamID;
+	public $ParamDesc;
+	public $ParamType;
+	public $KeyTitle;
+	public $ParamValues;
+	public $IsActive;
+	
+	function Remove($pdo = null) {
+		
+		$this->IsActive = "NO";
+		return $this->Edit();
+	}
+}
+
 class ACC_tafsilis extends PdoDataAccess{
 	
 	public $TafsiliID;
