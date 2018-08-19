@@ -1,7 +1,7 @@
 <?php
 //---------------------------
 // developer:	Sh.Jafarkhani
-// Date:		92.07
+// Date:		97.05
 //---------------------------
 require_once '../header.inc.php';
 //................  GET ACCESS  .....................
@@ -155,6 +155,13 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 							ProcessObject.DeleteProcess("process");
 						}
 					});
+				this.Menu.add({
+					text: 'جدول تسهیم',
+					iconCls: 'list',
+					handler: function () {
+						ProcessObject.OpenSharing();
+					}
+				});
             } 
 						
             var coords = e.getXY();
@@ -164,8 +171,8 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 
     var ProcessObject = new Process();
 
-    Process.prototype.BeforeSaveProcess = function (mode)
-    {
+    Process.prototype.BeforeSaveProcess = function (mode){
+		
         var record = this.tree.getSelectionModel().getSelection()[0];
 
         this.infoWin.down('form').getForm().reset();
@@ -237,35 +244,40 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
         });
     }
 
-    Process.prototype.TableInfo = function () {
+    Process.prototype.OpenSharing = function () {
 
-        if (!this.TableInfoWin)
+        if (!this.SharingWin)
         {
-            this.TableInfoWin = new Ext.window.Window({
-                title: 'اطلاعات منبع فرایند',
+            this.SharingWin = new Ext.window.Window({
+                title: 'جدول تسهیم',
                 modal: true,
-                width: 600,
-                height: 600,
+                width: 900,
+                height: 500,
+				autoScroll : true,
+				bodyStyle : "background-color:white",
                 closeAction: "hide",
                 loader: {
-                    url: this.address_prefix + "ProcessTable.php",
+                    url: this.address_prefix + "sharing.php",
                     params: {
-                        parentObj: "ProcessObject.TableInfoWin"
+                        parentObj: "ProcessObject.SharingWin"
                     },
                     method: "POST",
                     scripts: true
                 }
             });
         }
-
+		this.SharingWin.show();
         var record = this.tree.getSelectionModel().getSelection()[0];
-        this.TableInfoWin.loader.load({params: {
-                ProcessID: record.data.id
-            }});
-        this.TableInfoWin.show();
+        this.SharingWin.loader.load({
+			params: {
+				ExtTabID : this.SharingWin.getEl().dom.id,
+				MenuID : <?= $_POST["MenuID"] ?>,
+				ProcessID: record.data.id
+            }
+		});
+        
     }
 
-</script>
 </script>
 <div style="margin: 10" align="center">
 	<div id="tree-div"></div>

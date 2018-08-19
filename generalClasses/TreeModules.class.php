@@ -33,6 +33,11 @@ class TreeModulesclass
 			else
 			{
 				$parent = & $refArr[ $node["parentId"] ];
+				if(!$parent)
+				{
+					ExceptionHandler::PushException("پدر گره با کد " . $node["id"] . " یافت نشد.");
+					return false;		
+				}
 				if (!isset($parent["children"])) {
 					$parent["children"] = array();
 					$parent["leaf"] = "false";

@@ -23,10 +23,16 @@ switch ($task) {
 	case 'SaveEvent':
 	case "GetEventsTree":
 
+	case "selectComputeGroups":
+	case "selectComputeItems":
 	case "selectEventRows":
 	case "saveEventRow":
 	case "DeleteEventRow":
-		
+	
+	case "selectBases":
+	case "selectSharing":
+	case "saveSharing":
+	case "DeleteSharing":
 		$task();
 }
 
@@ -77,7 +83,7 @@ function GetProcessTree() {
 	$nodes = PdoDataAccess::runquery("
 			select *, concat('[',ProcessID,'] ',ProcessTitle) text
 			from COM_processes p
-			where p.IsActive='YES'");
+			where p.IsActive='YES' order by ParentID,ProcessID");
 	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes,"ParentID","ProcessID","text");
 	echo json_encode($returnArr);
 	die();
@@ -149,6 +155,22 @@ function GetEventsTree() {
 
 //------------------------------------------------------------------------------
 
+function selectComputeGroups(){
+	
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=83 AND IsActive='YES'");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function selectComputeItems(){
+	
+	$param1 = $_REQUEST["param1"];
+	$dt = PdoDataAccess::runquery("select * from BaseInfo 
+		where typeID=84 AND IsActive='YES' AND param1=?", array($param1));
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
 function selectEventRows(){
 
 	$where = "EventID=? ";
@@ -186,6 +208,7 @@ function saveEventRow(){
 		die();	
 	}
 	//--------- edit row ------------
+	$OldRowID = $obj->RowID;
 	unset($obj->RowID);
 	//unset($obj->ChangeDesc);
 	if(!$obj->InsertEventRow($pdo))
@@ -196,7 +219,7 @@ function saveEventRow(){
 	}
 	
 	$obj2 = new COM_EventRows();
-	$obj2->NewRowID = $obj->RowID;
+	$obj2->NewRowID = $OldRowID;
 	$obj2->RowID = $_POST["RowID"];
 	$obj2->IsActive = 'NO';
 	$obj2->ChangeDesc = $_POST["ChangeDesc"];
@@ -222,6 +245,50 @@ function DeleteEventRow(){
 	$obj->IsActive = 'NO';
 	$res = $obj->UpdateEventRow();
 	
+	echo Response::createObjectiveResponse($res, "");
+	die();
+}
+
+//------------------------------------------------
+
+function selectBases(){
+	$list = PdoDataAccess::runquery("select * from BaseInfo where TypeID=85 AND IsActive='YES'");
+	echo dataReader::getJsonData($list, count($list), $_GET['callback']);
+	die();
+}
+
+function selectSharing(){
+
+	$where = " AND s.ProcessID=? ";
+	if(!isset($_REQUEST["AllHistory"]) || $_REQUEST["AllHistory"] == "false")
+		$where .= " AND s.IsActive='YES'";
+		
+	$where .= " order by CostCode,IsActive desc,ChangeDate";
+	
+	$list = COM_sharing::Get($where, array($_REQUEST["ProcessID"]));
+	echo dataReader::getJsonData($list->fetchAll(), $list->rowCount(), $_GET['callback']);
+	die();
+}
+
+function saveSharing(){
+	
+	$obj = new COM_sharing();
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	
+	if(empty($obj->ShareID))
+		$result = $obj->Add();
+	else
+		$result = $obj->Edit();
+	
+	echo Response::createObjectiveResponse($result, "");
+	die();	
+}
+
+function DeleteSharing(){
+	
+	$obj = new COM_sharing($_POST["ShareID"]);
+	$obj->ChangeDesc = $_POST["ChangeDesc"];
+	$res = $obj->Remove();	
 	echo Response::createObjectiveResponse($res, "");
 	die();
 }

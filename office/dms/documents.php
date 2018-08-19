@@ -79,6 +79,20 @@ switch($ObjectType)
 	case "BeneficiaryDocs":
 		$access = true;
 		break;
+	//......................................................
+	case "wfm":
+		require_once '../workflow/form.class.php';
+		require_once '../workflow/wfm.class.php';
+		$obj = new WFM_requests($ObjectID);
+		$arr = WFM_FlowRows::GetFlowInfo($obj->_FlowID, $obj->RequestID);
+		
+		if($_SESSION["USER"]["IsCustomer"] == "YES" && 
+				$_SESSION["USER"]["PersonID"] == $obj->PersonID 
+				&& (!$arr["IsStarted"] || $arr["ResendEnable"]) )
+			$access = true;
+		if($_SESSION["USER"]["IsStaff"] == "YES" && isset($_SESSION["USER"]["framework"]))
+			$access = true;
+		break;
 }
 //------------------------------------------------------
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "dms.data.php?" .
@@ -198,6 +212,8 @@ function ManageDocument(){
 			xtype : "combo",
 			fieldLabel : "گروه مدرک",
 			allowBlank : false,
+			colspan : 2,
+			width : 500,
 			name : "param1",
 			itemId : "DocTypeGroupCombo",
 			store: new Ext.data.Store({
@@ -225,6 +241,8 @@ function ManageDocument(){
 		},{
 			xtype : "combo",
 			fieldLabel : "مدرک",
+			colspan : 2,
+			width : 500,
 			allowBlank : false,
 			itemId : "DocTypeCombo",
 			name : "DocType",

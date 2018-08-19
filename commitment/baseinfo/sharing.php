@@ -1,13 +1,84 @@
-<script type="text/javascript">
-    //-----------------------------
-    //	Programmer	: Sh.Jafarkhani
-    //	Date		: 97.05
-    //-----------------------------
+<?php
+//---------------------------
+//	Programmer	: Sh.Jafarkhani
+//	Date		: 97.05
+//---------------------------
 
-    EventRows.prototype = {
+require_once "../header.inc.php";
+require_once inc_dataGrid;
+$ProcessID = (int) $_POST["ProcessID"];
+
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
+
+$dg = new sadaf_datagrid("dg2", $js_prefix_address . "baseinfo.data.php?task=selectSharing&ProcessID=" . $ProcessID, "div_detail_dg");
+
+$dg->addColumn(" ", "ShareID", "", true);
+$dg->addColumn(" ", "ProcessID", "", true);
+$dg->addColumn(" ", "CostID", "", true);
+$dg->addColumn(" ", "PostID", "", true);
+$dg->addColumn(" ", "BaseID", "", true);
+$dg->addColumn(" ", "PostID", "", true);
+
+$dg->addColumn(" ", "IsActive", "", true);
+$dg->addColumn(" ", "ChangeDate", "", true);
+$dg->addColumn(" ", "changePersonName", "", true);
+
+$col = $dg->addColumn("نوع ارتباط", "ShareType");
+$col->renderer = "function(v){ return v== 'SHARE' ? 'تسهیم' : 'تخصیص'}";
+$col->width = 60;
+
+$col = $dg->addColumn(" کد حساب ", "CostCode");
+$col->width = 65;
+
+$col = $dg->addColumn(" عنوان حساب ", "CostDesc");
+
+$col = $dg->addColumn("مبنای تسهیم", "BaseDesc");
+$col->width = 120;
+$col->ellipsis = 40; 
+
+$col = $dg->addColumn("مقدار تسهیم", "BaseValue");
+$col->width = 120;
+$col->ellipsis = 40; 
+
+$col = $dg->addColumn("پست سازمانی", "PostName");
+$col->width = 100;
+
+$col = $dg->addColumn("توضیحات", "ChangeDesc");
+$col->width = 150;
+$col->renderer = "COM_share.ChangeRender";
+if ($accessObj->AddFlag)
+    $dg->addButton("", "ایجاد ردیف", "add", "function(v,p,r){ return COM_shareObj.AddItem(v,p,r);}");
+
+$col = $dg->addColumn("عملیات", "PlanID");
+$col->renderer = "COM_share.OperationRender";
+$col->width = 60;
+
+$dg->addObject('this.HistoryObj');
+
+$dg->PrintButton = true;
+
+$dg->DefaultSortField = "ShareID";
+$dg->autoExpandColumn = "CostDesc";
+$dg->DefaultSortDir = "DESC";
+$dg->EnableRowNumber = false;
+$dg->EnableSearch = false;
+$dg->height = 460;
+$dg->emptyTextOfHiddenColumns = true;
+$dg->EnablePaging = false;
+$itemsgrid = $dg->makeGrid_returnObjects();
+?>
+<style type="text/css">
+    .docInfo td{height:20px;}
+    .blue{ color: #1E4685; font-weight:bold;}
+</style>
+<script type="text/javascript">
+
+    COM_share.prototype = {
 		TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 		address_prefix : "<?= $js_prefix_address ?>",
-		EventID : <?= $EventID?>,
+		ProcessID : <?= $ProcessID?>,
 		
 		AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 		EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
@@ -18,31 +89,29 @@
         }
     };
     
-    function EventRows(){
-		
-		new Ext.form.FieldSet({
-			renderTo : this.get("div_Event"),
-			width : 600,
-			bodyStyle : "padding : 10px",
-			items : [{
-				xtype : "displayfield",
-				labelWidth : 50,
-				fieldLabel : "رویداد",
-				value : "[<?= $_POST["EventID"]?>] <?= $_POST["EventTitle"]?>",
-				fieldCls : "blueText"
-			}]
-		});
+    function COM_share(){
 		
 		this.HistoryObj = Ext.button.Button({
 			xtype: "button",
 			text : "سابقه تغییرات", 
 			enableToggle : true,
 			handler : function(){
-				me = EventRowsObj<?= $random?>;
+				me = COM_shareObj;
 				me.itemGrid.getStore().proxy.extraParams["AllHistory"] = this.pressed ? "true" : "false";
 				me.itemGrid.getStore().load();
 			}
 		});
+		
+		this.itemGrid = <?= $itemsgrid ?>;
+		this.itemGrid.getView().getRowClass = function (record, index)
+		{
+			if (record.data.IsActive == "NO")
+				return "pinkRow";
+			if (record.data.ChangeDate != null)
+				return "greenRow";
+			return "";
+		};
+		this.itemGrid.render(this.get("div_detail_dg"));
 		
 		this.formPanel = new Ext.form.Panel({
 			applyTo : this.get("DIV_formPanel"),
@@ -56,13 +125,13 @@
 			items : [{
 				xtype : "combo",
 				store :  new Ext.data.Store({
-					data : [{id : "DEBTOR", title : "بدهکار"},{id : "CREDITOR", title : "بستانکار"}],
+					data : [{id : "SHARE", title : "تسهیم"},{id : "ALLOC", title : "تخصیص"}],
 					fields : ['id','title']
 				}),
 				valueField : "id",
 				displayField : "title",
-				name : "CostType",
-				fieldLabel : "ماهیت حساب",
+				name : "ShareType",
+				fieldLabel : "نوع ارتباط",
 				width : 250
 			},{
 				xtype : "combo",
@@ -86,92 +155,47 @@
 				itemId : "CostID",
 				name : "CostID",
 				valueField : "CostID",
-				displayField : "fullDesc",
-				listeners : {
-					select : function(combo,records){
-						me = EventRowsObj<?= $random ?>;
-						me.formPanel.down("[name=TafsiliType]").setValue(records[0].data.TafsiliType);
-						me.formPanel.down("[name=TafsiliType2]").setValue(records[0].data.TafsiliType2);
-
-					}
-				}
+				displayField : "fullDesc"
 			},{
 				xtype : "combo",
-				name : "TafsiliType",
-				fieldLabel : "گروه تفصیلی",
-				store :  new Ext.data.Store({
-					proxy: {type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					fields:["InfoID","InfoDesc"],
-					autoLoad : true
-				}),
-				valueField : "InfoID",
-				queryMode : 'local',
-				displayField : "InfoDesc"
-			},{
-				xtype : "combo",
-				name : "TafsiliType2",
-				fieldLabel : "گروه تفصیلی2",
-				store :  new Ext.data.Store({
-					proxy: {type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					fields:["InfoID","InfoDesc"],
-					autoLoad : true
-				}),
-				valueField : "InfoID",
-				queryMode : 'local',
-				displayField : "InfoDesc"
-			},{
-				xtype : "combo",
-				fieldLabel : "گروه محاسبات",
+				fieldLabel : "مبنای تسهیم",
 				allowBlank : true,
 				store: new Ext.data.Store({
 					fields:["InfoID","InfoDesc"],
 					proxy: {
 						type: 'jsonp',
-						url: this.address_prefix + 'baseinfo.data.php?task=selectComputeGroups',
+						url: this.address_prefix + 'baseinfo.data.php?task=selectBases',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
 					autoLoad : true
 				}),
 				typeAhead: false,
 				queryMode : "local",
-				valueField : "InfoID",
-				displayField : "InfoDesc",
-				listeners : {
-					change : function(combo,records){
-						me = EventRowsObj<?= $random ?>;
-						el = me.formPanel.getComponent("ComputeItemID");
-						el.setValue();
-						el.getStore().proxy.extraParams.param1 = this.getValue();
-						el.getStore().load();
-					}
-				}
-			},{
-				xtype : "combo",
-				fieldLabel : "آیتم محاسباتی",
-				itemId : "ComputeItemID",
-				name : "ComputeItemID",
-				store: new Ext.data.Store({
-					fields:["InfoID","InfoDesc"],
-					proxy: {
-						type: 'jsonp',
-						url: this.address_prefix + 'baseinfo.data.php?task=selectComputeItems',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					}
-				}),
-				queryMode : "local",
-				typeAhead: false,
+				name : "BaseID",
 				valueField : "InfoID",
 				displayField : "InfoDesc"
 			},{
 				xtype : "textfield",
-				fieldLabel : "مبنای صدور سند",
-				name : "DocDesc"
+				fieldLabel : "مقدار تسهیم",
+				name : "BaseValue"
+			},{
+				xtype : "combo",
+				fieldLabel : "پست سازمانی",
+				allowBlank : true,
+				store: new Ext.data.Store({
+					fields:["PostID","PostName"],
+					proxy: {
+						type: 'jsonp',
+						url: '/framework/baseInfo/baseInfo.data.php?task=SelectPosts',
+						reader: {root: 'rows',totalProperty: 'totalCount'} 
+					},
+					autoLoad : true
+				}),
+				typeAhead: false,
+				queryMode : "local",
+				name : "PostID",
+				valueField : "PostID",
+				displayField : "PostName"
 			},{
 				xtype : "textarea",
 				fieldLabel : "توضیحات تغییر ردیف",
@@ -179,54 +203,44 @@
 				allowBlank : false
 			},{
 				xtype : "hidden",
-				name : "RowID"
+				name : "ShareID"
 			},{
 				xtype : "hidden",
-				name : "EventID",
-				value : this.EventID
+				name : "ProcessID",
+				value : this.ProcessID
 			}],
 			buttons : [{
 				text : "ذخیره",
 				iconCls : "save",
-				handler : function(){ 
-					me = EventRowsObj<?= $random?>;
-					me.SaveItem();}
+				handler : function(){COM_shareObj.SaveItem();}
 			},{
 				text : "انصراف",
 				iconCls : "undo",
-				handler : function(){
-					me = EventRowsObj<?= $random?>;
-					me.formPanel.hide();
-				}
+				handler : function(){COM_shareObj.formPanel.hide();}
 			}]
 		});
 
     }
     
-	var randomIndex = Math.floor((Math.random() * 100) + 1); 
-	
-    EventRowsObj<?= $random ?> = new EventRows();
-    
-	EventRows.OperationRender = function(v,p,r){
+	COM_share.OperationRender = function(v,p,r){
 	
 		if(r.data.IsActive == 'NO')
 			return "";
-        if(EventRowsObj<?= $random ?>.EditAccess)
+        if(COM_shareObj.EditAccess)
 			var st = "<table><tr>"+
-			"<td><div title='ویرایش ردیف' class='edit' onclick='EventRowsObj<?= $random?>.EditRow();' " +
+			"<td><div title='ویرایش ردیف' class='edit' onclick='COM_shareObj.EditRow();' " +
 			"style='background-repeat:no-repeat;background-position:center;" +
 			"cursor:pointer;width:25px;height:16'></div></td>";
-        if(EventRowsObj<?= $random ?>.RemoveAccess)
-			st += "<td><div title='حذف' class='remove' onclick='EventRowsObj<?= $random?>.RemoveItem();'" +
+        if(COM_shareObj.RemoveAccess)
+			st += "<td><div title='حذف' class='remove' onclick='COM_shareObj.RemoveItem();'" +
 			"style='cursor:pointer;background-repeat:no-repeat;background-position:center;" +
 			"width:25px;height:16'></div></td>";
-		return st + "</tr></table>";
-	
+		return st + "</tr></table>";	
 	}
 	
-	EventRows.ChangeRender = function(v,p,r){
+	COM_share.ChangeRender = function(v,p,r){
 	
-		var str = 'data-qtip="نحوه تعیین قیمت : <b> ' + r.data.PriceDesc + '</b><br> مبنای صدور سند : <b>' + r.data.DocDesc + "</b>";
+		var str = 'data-qtip="';
 		
 		if(r.data.ChangeDate != null)
 			str += '<br> توضیحات : <b>' + r.data.ChangeDesc 
@@ -238,19 +252,19 @@
 		return v;	
 	}
 	
-    EventRows.prototype.AddItem = function()
-    {
+    COM_share.prototype.AddItem = function(){
+		
         this.formPanel.getForm().reset();
         this.formPanel.show();
         this.formPanel.center();
     }
 	
-	EventRows.prototype.EditRow = function()
-    {
+	COM_share.prototype.EditRow = function(){
+		
 		mask = new Ext.LoadMask(this.formPanel, {msg:'در حال حذف ...'});
 		mask.show();
 			
-		me = EventRowsObj<?= $random ?>;
+		me = COM_shareObj;
 		var record = me.itemGrid.getSelectionModel().getLastSelected();
 
         this.formPanel.getForm().loadRecord(record);
@@ -259,7 +273,7 @@
 		this.formPanel.getComponent("CostID").getStore().load({
 			callback : function(){ 
 				mask.hide(); 
-				me = EventRowsObj<?= $random ?>;
+				me = COM_shareObj;
 				me.formPanel.getComponent("CostID").getStore().proxy.extraParams["CostID"] = "";
 			}
 		});
@@ -268,21 +282,21 @@
         this.formPanel.center();
     }
 
-    EventRows.prototype.SaveItem = function(store,record){
+    COM_share.prototype.SaveItem = function(store,record){
 		
         mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخیره سازی ...'});
         mask.show();
 
 		this.formPanel.getForm().submit({
 			clientValidation: true,
-			url: this.address_prefix + 'baseinfo.data.php?task=saveEventRow',
+			url: this.address_prefix + 'baseinfo.data.php?task=saveSharing',
             method: 'POST',
 			
 			success : function(form,action){
 				mask.hide();
                 if(action.result.success)
                 {
-					me = EventRowsObj<?= $random?>;
+					me = COM_shareObj;
 					me.formPanel.hide();
                     me.itemGrid.getStore().load();
 					if(action.result.data != "")
@@ -297,7 +311,7 @@
 		});
     }
        
-	EventRows.prototype.RemoveItem = function(){
+	COM_share.prototype.RemoveItem = function(){
 	
 		if(!this.RemoveItemWin)
 		{
@@ -321,17 +335,17 @@
 						iconCls : "remove",
 						handler : function(){
 
-							var me = EventRowsObj<?= $random?>;
+							var me = COM_shareObj;
 							mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
 							mask.show();
 
 							var record = me.itemGrid.getSelectionModel().getLastSelected();
 
 							Ext.Ajax.request({
-								url: me.address_prefix + 'baseinfo.data.php?task=DeleteEventRow',
+								url: me.address_prefix + 'baseinfo.data.php?task=DeleteSharing',
 								method: 'POST',
 								params: {
-									RowID : record.data.RowID,
+									ShareID : record.data.ShareID,
 									ChangeDesc : this.up('form').down("[name=ChangeDesc]").getValue()
 								},
 
@@ -340,7 +354,7 @@
 									var st = Ext.decode(response.responseText);
 									if(st.success)
 									{
-										me = EventRowsObj<?= $random?>;
+										me = COM_shareObj;
 										me.RemoveItemWin.hide();
 										me.itemGrid.getStore().load();
 									}
@@ -356,7 +370,7 @@
 						text : "انصراف",
 						iconCls : "undo",
 						handler : function(){
-							var me = EventRowsObj<?= $random?>;
+							var me = COM_shareObj;
 							me.RemoveItemWin.hide();
 						}
 					}]//end of buttons
@@ -366,4 +380,16 @@
 		this.RemoveItemWin.show();
     }
        
+	COM_shareObj = new COM_share();
 </script>
+<center>
+    <form id="mainForm">
+        <div align="right"><div id="DIV_formPanel" align="right"></div></div>
+        <div id="div_detail_dg" style="width:100%;"></div>
+    </form>
+</center>
+
+
+
+
+

@@ -191,6 +191,7 @@ class WFM_requests extends OperationClass {
     public $RegDate;
 	public $ReqContent;
 
+	public $_FlowID;
 	public $_FormTitle;
 	public $_PersonName;
     
@@ -199,7 +200,8 @@ class WFM_requests extends OperationClass {
         if ($id != ''){
             parent::FillObject($this, "
 					select r.* ,  f.FormTitle as _FormTitle,
-						concat_ws(' ',fname,lname,CompanyName) _PersonName
+						concat_ws(' ',fname,lname,CompanyName) _PersonName,
+						f.FlowID _FlowID
                     from WFM_requests r
                     left join WFM_forms f using(FormID) 
 					left join BSC_persons using(PersonID)

@@ -99,6 +99,68 @@ class COM_processes extends PdoDataAccess {
 
 }
 
+class COM_sharing extends OperationClass {
+	
+	const TableName = "COM_sharing";
+	const TableKey = "ShareID"; 
+ 
+    public $ProcessID;
+    public $ShareID;
+    public $CostID;
+    public $ShareType;
+	public $BaseID;
+	public $BaseValue;
+	public $PostID;
+	
+	public $IsActive;
+    public $ChangeDate;
+    public $ChangeDesc;
+    public $ChangePersonID;
+	
+	static function Get($where = '', $param = array(), $pdo = null) {
+
+        $query = " select s.*,
+					concat_ws('-',cb1.blockDesc,cb2.blockDesc,cb3.blockDesc) CostDesc,
+					concat_ws('',cb1.blockCode,cb2.blockCode,cb3.blockCode) CostCode,
+					concat_ws(' ',fname,lname,CompanyName) changePersonName,
+					bf.InfoDesc BaseDesc,
+					p.PostName
+					
+			from COM_sharing s 
+			left join BSC_persons on(PersonID=ChangePersonID)
+			join  ACC_CostCodes cc using(CostID)
+			left join ACC_blocks cb1 on(cb1.blockID=cc.level1)
+			left join ACC_blocks cb2 on(cb2.blockID=cc.level2)
+			left join ACC_blocks cb3 on(cb3.blockID=cc.level3)
+			left join BaseInfo bf on(bf.TypeID=85 AND bf.InfoID=BaseID)
+			left join BSC_posts p on(s.PostID=p.PostID)
+			
+			where 1=1 " . $where;
+
+        return parent::runquery_fetchMode($query, $param, $pdo);
+    }
+	
+	function Add($pdo = null) {
+		
+		$this->ChangeDate = PDONOW;
+        $this->ChangePersonID =(int) $_SESSION["USER"]["PersonID"];
+		return parent::Add($pdo);
+	}
+	
+	function Edit($pdo = null) {
+		
+		$this->ChangeDate = PDONOW;
+        $this->ChangePersonID =(int) $_SESSION["USER"]["PersonID"];
+		return parent::Edit($pdo);
+	}
+	
+	function Remove($pdo = null) {
+		
+		$this->IsActive = "NO";
+		return $this->Edit($pdo);
+	}
+}
+
 class COM_events extends PdoDataAccess {
 
     public $EventID;
@@ -192,6 +254,7 @@ class COM_EventRows extends PdoDataAccess {
     public $NewRowID;
     public $ChangeDesc;
     public $ChangePersonID;
+	public $ComputeItemID;
 
     function __construct() {
         $this->DT_RowID = DataMember::CreateDMA(DataMember::Pattern_Num);
@@ -216,7 +279,8 @@ class COM_EventRows extends PdoDataAccess {
 					bf2.InfoDesc TafsiliType2Desc,
 					concat_ws('-',cb1.blockDesc,cb2.blockDesc,cb3.blockDesc) CostDesc,
 					concat_ws('',cb1.blockCode,cb2.blockCode,cb3.blockCode) CostCode,
-					concat_ws(' ',fname,lname,CompanyName) changePersonName
+					concat_ws(' ',fname,lname,CompanyName) changePersonName,
+					concat(bf4.InfoDesc,' - ',bf3.InfoDesc) ComputeItemDesc
 					
 			from COM_EventRows er 
 			left join BSC_persons on(PersonID=ChangePersonID)
@@ -225,7 +289,9 @@ class COM_EventRows extends PdoDataAccess {
 			join  ACC_CostCodes cc using(CostID)
 			left join ACC_blocks cb1 on(cb1.blockID=cc.level1)
 			left join ACC_blocks cb2 on(cb2.blockID=cc.level2)
-			left join ACC_blocks cb3 on(cb3.blockID=cc.level3)";
+			left join ACC_blocks cb3 on(cb3.blockID=cc.level3)
+			left join BaseInfo bf3 on(bf3.TypeID=84 AND bf3.InfoID=er.ComputeItemID)
+			left join BaseInfo bf4 on(bf4.TypeID=83 AND bf3.param1=bf4.InfoID)";
 
         if ($where != '')
             $query .= ' where ' . $where;
@@ -268,26 +334,5 @@ class COM_EventRows extends PdoDataAccess {
 
         return true;
     }
-
-    static function DeleteEventRow($RowID) {
-
-        parent::delete("COM_EventRows", "RowID=:EID", array(':EID' =>(int) $RowID));
-        if (parent::AffectedRows() == 0)
-            $res = parent::runquery("update COM_EventRows set IsActive='NO' where RowID=:EID", array(':EID' =>(int) $RowID));
-
-        if ($res === false)
-            return false;
-
-        if (parent::AffectedRows()) {
-
-            $daObj = new DataAudit();
-            $daObj->ActionType = DataAudit::Action_delete;
-            $daObj->MainObjectID = $RowID;
-            $daObj->TableName = "COM_EventRows";
-            $daObj->execute();
-        }
-        return true;
-    }
-
 }
 ?>

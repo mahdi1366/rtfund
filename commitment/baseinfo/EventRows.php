@@ -1,7 +1,7 @@
 <?php
 //---------------------------
 //	Programmer	: Sh.Jafarkhani
-//	Date		: 94.01
+//	Date		: 97.05
 //---------------------------
 
 require_once "../header.inc.php";
@@ -26,6 +26,7 @@ $dg->addColumn(" ", "ChangeDate", "", true);
 $dg->addColumn(" ", "changePersonName", "", true);
 $dg->addColumn(" ", "PriceDesc", "", true);
 $dg->addColumn(" ", "DocDesc", "", true);
+$dg->addColumn(" ", "ComputeItemID", "", true);
 
 $col = $dg->addColumn("ماهیت", "CostType");
 $col->renderer = "function(v){ return v== 'DEBTOR' ? 'بدهکار' : 'بستانکار'}";
@@ -43,6 +44,10 @@ $col = $dg->addColumn("گروه تفصیلی2", "TafsiliType2Desc");
 $col->width = 120;
 
 $col = $dg->addColumn("مبنای صدور سند", "DocDesc");
+$col->width = 120;
+$col->ellipsis = 40; 
+
+$col = $dg->addColumn("آیتم محاسباتی", "ComputeItemDesc");
 $col->width = 120;
 $col->ellipsis = 40; 
 
@@ -66,7 +71,6 @@ $dg->DefaultSortDir = "DESC";
 $dg->EnableRowNumber = false;
 $dg->EnableSearch = false;
 $dg->height = 500;
-$dg->width = 900;
 $dg->emptyTextOfHiddenColumns = true;
 $dg->EnablePaging = false;
 $itemsgrid = $dg->makeGrid_returnObjects();
@@ -94,7 +98,7 @@ $itemsgrid = $dg->makeGrid_returnObjects();
         <div id="div_Event"></div>
         <div align="right"><div id="DIV_formPanel" align="right"></div></div>
         <br>
-        <div id="div_detail_dg" style="width:100%; padding-left: 10px;padding-right: 10px"></div>
+        <div id="div_detail_dg" style="width:97%; padding-left: 10px;padding-right: 10px"></div>
     </form>
 </center>
 

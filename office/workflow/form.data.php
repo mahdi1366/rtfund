@@ -119,6 +119,7 @@ function selectGridColumns() {
 	}
 	
     $temp = WFM_FormGridColumns::Get($where . " order by ordering", $params);
+	print_r(ExceptionHandler::PopAllExceptions());
 	$res = PdoDataAccess::fetchAll ($temp, $_GET["start"], $_GET["limit"]);
 	
     echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
@@ -531,10 +532,13 @@ function SelectMyRequests() {
 	for($i=0; $i < count($res);$i++)
 	{
 		$arr = WFM_FlowRows::GetFlowInfo($res[$i]["FlowID"], $res[$i]["RequestID"]);
+		
 		$res[$i]["IsStarted"] = $arr["IsStarted"] ? "YES" : "NO";
 		$res[$i]["IsEnded"] = $arr["IsEnded"] ? "YES" : "NO";
 		$res[$i]["JustStarted"] = $arr["JustStarted"] ? "YES" : "NO";
+		$res[$i]["ActionType"] = $arr["ActionType"];
 		$res[$i]["StepDesc"] = $arr["StepDesc"];
+		$res[$i]["ResendEnable"] = $arr["ResendEnable"] ? "YES" : "NO";		
 	}
 	
     echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);

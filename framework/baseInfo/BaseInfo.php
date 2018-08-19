@@ -21,6 +21,29 @@ $col->width = 100;
 $col = $dg->addColumn("شرح", "InfoDesc", "");
 $col->editor = ColumnEditor::TextField();
 
+if($_SESSION["USER"]["UserName"] =="admin")
+{
+	$col = $dg->addColumn("param1", "param1", "");
+	$col->editor = ColumnEditor::TextField(true);
+
+	$col = $dg->addColumn("param2", "param2", "");
+	$col->editor = ColumnEditor::TextField(true);
+
+	$col = $dg->addColumn("param3", "param3", "");
+	$col->editor = ColumnEditor::TextField(true);
+	
+	$col = $dg->addColumn("param4", "param4", "");
+	$col->editor = ColumnEditor::TextField(true);
+	
+	$col = $dg->addColumn("param5", "param5", "");
+	$col->editor = ColumnEditor::TextField(true);
+	
+	$col = $dg->addColumn("param6", "param6", "");
+	$col->editor = ColumnEditor::TextField(true);
+	
+	$col = $dg->addColumn("param7", "param7", "");
+	$col->editor = ColumnEditor::TextField(true);
+}
 if($accessObj->AddFlag)
 {
 	$dg->addButton = true;
@@ -37,8 +60,9 @@ $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(){return BaseInfoObject.SaveBaseInfo();}";
 
 $dg->title = "لیست اطلاعات";
-$dg->height = 500;
-$dg->width = 500;
+$dg->height = 400;
+if($_SESSION["USER"]["UserName"] != "admin")
+	$dg->width = 500;
 $dg->DefaultSortField = "InfoDesc";
 $dg->autoExpandColumn = "InfoDesc";
 $dg->emptyTextOfHiddenColumns = true;
@@ -52,7 +76,7 @@ $grid = $dg->makeGrid_returnObjects();
         <br>
         <div id="div_selectGroup"></div>
         <br>
-        <div id="div_grid"></div>
+        <div id="div_grid" style="width:95%"></div>
     </form>
 </center>
 <script>

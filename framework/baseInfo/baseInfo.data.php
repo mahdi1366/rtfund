@@ -231,7 +231,10 @@ function GetAccessBranches(){
 
 function SelectBaseTypes(){
 	
-	$temp = PdoDataAccess::runquery("select * from BaseTypes where editable='YES'");
+	$where = "editable='YES'";
+	if($_SESSION["USER"]["UserName"] =="admin")
+		$where = "1=1";
+	$temp = PdoDataAccess::runquery("select * from BaseTypes where " . $where);
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }

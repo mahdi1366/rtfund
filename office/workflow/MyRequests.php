@@ -15,6 +15,8 @@ $dg->addColumn("", "FlowID", "", true);
 $dg->addColumn("", "IsStarted", "", true);
 $dg->addColumn("", "IsEnded", "", true);
 $dg->addColumn("", "JustStarted", "", true);
+$dg->addColumn("", "ActionType", "", true);
+$dg->addColumn("", "ResendEnable", "", true);
 
 $col = $dg->addColumn("شماره درخواست", "RequestID", "");
 $col->width = 100;
@@ -84,6 +86,8 @@ function WFM_MyRequests(){
 	{
 		if(record.data.IsEnded == "YES")
 			return "greenRow";
+		if(record.data.ActionType == "REJECT")
+			return "pinkRow";
 		return "";
 	}	
 
@@ -148,7 +152,7 @@ WFM_MyRequests.prototype.OperationMenu = function(e){
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
 	
-	if(record.data.IsStarted == "NO")
+	if(record.data.IsStarted == "NO" || record.data.ResendEnable == "YES")
 	{
 		op_menu.add({text: 'ویرایش فرم',iconCls: 'edit', 
 		handler : function(){
@@ -166,6 +170,10 @@ WFM_MyRequests.prototype.OperationMenu = function(e){
 		op_menu.add({text: 'برگشت فرم',iconCls: 'return',
 		handler : function(){ return WFM_MyRequestsObject.ReturnStartFlow(); }});
 	}
+	
+	op_menu.add({text: 'پیوست های فرم',iconCls: 'attach', 
+		handler : function(){ return WFM_MyRequestsObject.ManageDocuments('wfm'); }});
+	
 	op_menu.add({text: 'سابقه گردش فرم',iconCls: 'history', 
 		handler : function(){ return WFM_MyRequestsObject.ShowHistory(); }});
 		
@@ -245,7 +253,11 @@ WFM_MyRequests.prototype.StartFlow = function(){
 			},
 			success: function(response){
 				mask.hide();
-				WFM_MyRequestsObject.grid.getStore().load();
+				res = Ext.decode(response.responseText);
+				if(!res.success)
+					Ext.MessageBox.alert("Error", res.data);
+				else
+					WFM_MyRequestsObject.grid.getStore().load();
 			}
 		});
 	});
@@ -311,6 +323,43 @@ WFM_MyRequests.prototype.ShowHistory = function(){
 	this.HistoryWin.loader.load({
 		params : {
 			FlowID : record.data.FlowID,
+			ObjectID : record.data.RequestID
+		}
+	});
+}
+
+WFM_MyRequests.prototype.ManageDocuments = function(ObjectType){
+
+	if(!this.documentWin)
+	{
+		this.documentWin = new Ext.window.Window({
+			width : 720,
+			height : 440,
+			modal : true,
+			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
+			closeAction : "hide",
+			loader : {
+				url : "/office/dms/documents.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.documentWin);
+	}
+
+	this.documentWin.show();
+	this.documentWin.center();
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.documentWin.loader.load({
+		scripts : true,
+		params : {
+			ExtTabID : this.documentWin.getEl().id,
+			ObjectType : ObjectType,
 			ObjectID : record.data.RequestID
 		}
 	});

@@ -51,6 +51,12 @@ $grid = $dg->makeGrid_returnObjects();
 ?>
 <script>
 MyFormObject.grid = <?= $grid ?>;
+MyFormObject.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.ActionType == "REJECT")
+			return "pinkRow";
+		return "";
+	}	
 MyFormObject.grid.render(MyFormObject.get("DivGrid"));
 </script>
 <center><br>
