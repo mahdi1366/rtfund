@@ -20,7 +20,7 @@ print_r(ExceptionHandler::PopAllExceptions());
 die();*/
 ?>
 <META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">
-<?
+<?php
 if(isset($_POST["submit"]))
 {
 	merging($_POST["main"],$_POST["sub"]);
