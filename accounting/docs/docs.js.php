@@ -148,6 +148,26 @@ function AccDocs(){
 				width : 200
 			}]
 	}); 
+
+	//--------------------------------------------------------------------------
+	
+	this.ParamsStore = new Ext.data.Store({
+		fields:["DocType","ParamID","ParamDesc","ParamType"],
+		proxy: {
+			type: 'jsonp',
+			url: this.address_prefix + 'doc.data.php?task=selectCostParams',
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		}
+	});
+	
+	this.paramValuesStore = new Ext.data.Store({
+		fields:["ParamID","ParamValue"],
+		proxy: {
+			type: 'jsonp',
+			url: this.address_prefix + 'doc.data.php?task=selectParamValues',
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		}
+	});
 }
 
 AccDocs.prototype.operationhMenu = function(e){
@@ -323,7 +343,8 @@ AccDocs.prototype.makeDetailWindow = function(){
 					fieldLabel : "کد حساب",
 					colspan : 2,
 					store: new Ext.data.Store({
-						fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+						fields:["CostID","CostCode","CostDesc", 
+							"TafsiliType","TafsiliType2","TafsiliType3",{
 							name : "fullDesc",
 							convert : function(value,record){
 								return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
@@ -345,22 +366,7 @@ AccDocs.prototype.makeDetailWindow = function(){
 					},
 					listeners :{
 						select : function(combo,records){
-							if(records[0].data.TafsiliType != null)
-							{
-								AccDocsObject.detailWin.down("[name=TafsiliType]").setValue(records[0].data.TafsiliType);
-								combo = AccDocsObject.detailWin.down("[name=TafsiliID]");
-								combo.setValue();
-								combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType;
-								combo.getStore().load();
-							}
-							if(records[0].data.TafsiliType2 != null)
-							{
-								AccDocsObject.detailWin.down("[name=TafsiliType2]").setValue(records[0].data.TafsiliType2);
-								combo = AccDocsObject.detailWin.down("[name=TafsiliID2]");
-								combo.setValue();
-								combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType2;
-								combo.getStore().load();
-							}
+							AccDocsObject.SelectCostIDHandler(records[0]);
 						}
 					}
 				},{
@@ -496,6 +502,64 @@ AccDocs.prototype.makeDetailWindow = function(){
 					valueField : "TafsiliID",
 					displayField : "fullDesc"
 				},{
+					xtype : "combo",
+					fieldLabel : "گروه تفصیلی 3",
+					store: new Ext.data.Store({
+						fields:["InfoID","InfoDesc"],
+						proxy: {
+							type: 'jsonp',
+							url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						autoLoad : true
+					}),
+					typeAhead: false,
+					queryMode : "local",
+					name : "TafsiliType3",
+					valueField : "InfoID",
+					displayField : "InfoDesc",
+					listeners : {
+						select : function(combo,records){
+							combo = AccDocsObject.detailWin.down("[name=TafsiliID3]");
+							combo.setValue();
+							combo.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
+							combo.getStore().load();
+						}
+					}
+				},{
+					xtype : "combo",
+					fieldLabel : "تفصیلی 3",
+					width : 350,
+					store: new Ext.data.Store({
+						fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
+							name : "fullDesc",
+							convert : function(v,r){
+								return "[" + r.data.TafsiliCode + "]" + r.data.TafsiliDesc;
+							}
+						}],
+						proxy: {
+							type: 'jsonp',
+							url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						listeners : {
+							beforeload : function(store){
+								if(!store.proxy.extraParams.TafsiliType)
+								{
+									group = AccDocsObject.detailWin.down("[name=TafsiliType2]").getValue();
+									if(group == "")
+										return false;
+									this.proxy.extraParams["TafsiliType"] = group;
+								}
+							}
+						}
+					}),
+					typeAhead: false,
+					pageSize : 10,
+					name : "TafsiliID3",
+					valueField : "TafsiliID",
+					displayField : "fullDesc"
+				},{
 					xtype : "currencyfield",
 					fieldLabel : "مبلغ بدهکار",
 					name : "DebtorAmount",
@@ -511,6 +575,13 @@ AccDocs.prototype.makeDetailWindow = function(){
 					name : "details",
 					colspan : 2,
 					width : 610
+				},{
+					xtype : "fieldset",
+					colspan : 2,
+					title : "آیتم های اطلاعاتی مربوط به کد حساب",
+					itemId : "ParamsFS",
+					layout : "column",
+					columns : 2
 				},{
 					xtype : "hidden",
 					name : "ItemID"
@@ -532,13 +603,87 @@ AccDocs.prototype.makeDetailWindow = function(){
 			]
 		})
 	});
+	Ext.getCmp(this.TabID).add(this.detailWin);
+}
+
+AccDocs.prototype.SelectCostIDHandler = function(record){
+
+	if(record.data.TafsiliType != null)
+	{
+		this.detailWin.down("[name=TafsiliType]").setValue(record.data.TafsiliType);
+		combo = this.detailWin.down("[name=TafsiliID]");
+		combo.setValue();
+		combo.getStore().proxy.extraParams["TafsiliType"] = record.data.TafsiliType;
+		combo.getStore().load();
+	}
+	if(record.data.TafsiliType2 != null)
+	{
+		this.detailWin.down("[name=TafsiliType2]").setValue(record.data.TafsiliType2);
+		combo = this.detailWin.down("[name=TafsiliID2]");
+		combo.setValue();
+		combo.getStore().proxy.extraParams["TafsiliType"] = record.data.TafsiliType2;
+		combo.getStore().load();
+	}
+	if(record.data.TafsiliType3 != null)
+	{
+		this.detailWin.down("[name=TafsiliType3]").setValue(record.data.TafsiliType3);
+		combo = this.detailWin.down("[name=TafsiliID3]");
+		combo.setValue();
+		combo.getStore().proxy.extraParams["TafsiliType"] = record.data.TafsiliType3;
+		combo.getStore().load();
+	}
+	//-------------- make params -----------------	
+	CostID = record.data.CostID;
+	var ParamsFS = this.detailWin.down('form').getComponent("ParamsFS");
+	ParamsFS.removeAll();
 	
+	mask = new Ext.LoadMask(ParamsFS, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+	this.ParamsStore.load({
+		params : {
+			CostID : CostID
+		},
+		callback : function(){
+			for(var i=0; i<this.totalCount; i++)
+			{
+				record = this.getAt(i);
+				var ParamsFS = AccDocsObject.detailWin.down('form').getComponent("ParamsFS");
+				ParamsFS.add({
+					xtype : record.data.ParamType,
+					name : "Param" + record.data.ParamID,
+					fieldLabel : record.data.ParamDesc,
+					hideTrigger : (record.data.ParamType == "numberfield" || 
+						record.data.ParamType == "currencyfield" ? true : false)
+				});				
+			}
+			ItemID = AccDocsObject.detailWin.down("[name=ItemID]").getValue();
+			if(ItemID*1 > 0)
+			{
+				AccDocsObject.paramValuesStore.load({
+					params : {
+						ItemID : ItemID
+					},
+					callback : function(){
+						this.each(function(record){
+							el = AccDocsObject.detailWin.down("[name=Param" + 
+								record.data.ParamID + "]");
+							if(el)
+								el.setValue(record.data.ParamValue);
+						});
+						mask.hide();
+					}
+				});
+			}
+			else
+				mask.hide();
+		}
+	});
 }
 
 var AccDocsObject = new AccDocs();
 
-AccDocs.docRender = function(v,p,record)
-{
+AccDocs.docRender = function(v,p,record){
+
 	SubjectDesc = record.data.SubjectDesc == null ? "" : record.data.SubjectDesc;
 	description = record.data.description == null ? "" : record.data.description;
 	
@@ -556,8 +701,7 @@ AccDocs.docRender = function(v,p,record)
 		"</table>";
 }
 
-AccDocs.prototype.afterHeaderLoad = function(store)
-{
+AccDocs.prototype.afterHeaderLoad = function(store){
 	if(store.getAt(0))
 	{
 		AccDocsObject.itemGrid.show();
@@ -573,8 +717,7 @@ AccDocs.prototype.afterHeaderLoad = function(store)
 		AccDocsObject.itemGrid.hide();
 }
 
-AccDocs.prototype.AddDoc = function()
-{
+AccDocs.prototype.AddDoc = function(){
 	this.docWin.down("form").getForm().reset();
 	this.docWin.show();
 	this.docWin.center();
@@ -596,8 +739,7 @@ AccDocs.prototype.AddDoc = function()
 	});
 }
 
-AccDocs.prototype.CopyDoc = function(mode)
-{
+AccDocs.prototype.CopyDoc = function(mode){
 	var record = this.grid.getStore().getAt(0);
 	if(!record)
 		return;
@@ -619,8 +761,7 @@ AccDocs.prototype.CopyDoc = function(mode)
 	});
 }
 
-AccDocs.prototype.BeforeTotalConfirmDoc = function()
-{
+AccDocs.prototype.BeforeTotalConfirmDoc = function(){
 	if(!this.totalConfirmWin)
 	{
 		this.totalConfirmWin = new Ext.window.Window({
@@ -702,8 +843,7 @@ AccDocs.prototype.TotalConfirmDoc = function(){
 	});
 }
 
-AccDocs.prototype.EditDoc = function()
-{
+AccDocs.prototype.EditDoc = function(){
 	AccDocsObject.docWin.down("form").getForm().reset();
 	this.docWin.show();
 	this.docWin.center();
@@ -739,8 +879,7 @@ AccDocs.prototype.SaveDoc = function(){
 	});
 }
 
-AccDocs.prototype.RemoveDoc = function()
-{
+AccDocs.prototype.RemoveDoc = function(){
 	var record = this.grid.getStore().getAt(0);
 
 	if(record.data.DocStatus == "DELETED")
@@ -788,8 +927,7 @@ AccDocs.prototype.RemoveDoc = function()
 	});
 }
 
-AccDocs.prototype.StartFlow = function()
-{
+AccDocs.prototype.StartFlow = function(){
 	var record = this.grid.getStore().getAt(0);
 
 	var r = this.itemGrid.getStore().getProxy().getReader().jsonData;
@@ -867,8 +1005,7 @@ AccDocs.prototype.ReturnStartFlow = function(){
 	});
 }
 
-AccDocs.prototype.archiveDoc = function()
-{
+AccDocs.prototype.archiveDoc = function(){
 	var record = this.grid.getStore().getAt(0);
 
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال قطعی کردن سند ...'});
@@ -889,8 +1026,7 @@ AccDocs.prototype.archiveDoc = function()
 	});
 }
 
-AccDocs.prototype.PrintDoc = function()
-{
+AccDocs.prototype.PrintDoc = function(){
 	window.open(this.address_prefix + "print_doc.php?DocID=" + 
 		this.grid.getStore().getAt(0).data.DocID);
 }
@@ -993,8 +1129,8 @@ AccDocs.prototype.Documents = function(ObjectType){
 
 //.........................................................
 
-AccDocs.prototype.check_deleteRender = function()
-{
+AccDocs.prototype.check_deleteRender = function(){
+	
 	var record = AccDocsObject.grid.getStore().getAt(0);
 	if(record.data.StatusID == "<?= ACC_STEPID_RAW ?>" || (record.data.StepID == "1" && record.data.ActionType == "REJECT"))
 		return  "<div title='حذف اطلاعات' class='remove' onclick='AccDocsObject.check_remove();' " +
@@ -1003,8 +1139,8 @@ AccDocs.prototype.check_deleteRender = function()
 	return "";
 }
 
-AccDocs.prototype.check_Add = function()
-{
+AccDocs.prototype.check_Add = function(){
+	
 	var record = this.grid.getStore().getAt(0);
 	if(!(record.data.StatusID == "<?= ACC_STEPID_RAW ?>" || (record.data.StepID == "1" && record.data.ActionType == "REJECT")))
 		return;
@@ -1019,8 +1155,8 @@ AccDocs.prototype.check_Add = function()
 	this.checkGrid.plugins[0].startEdit(0, 0);
 }
 
-AccDocs.prototype.check_Save = function(store,record)
-{
+AccDocs.prototype.check_Save = function(store,record){
+	
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 
@@ -1051,8 +1187,8 @@ AccDocs.prototype.check_Save = function(store,record)
 	});
 }
 
-AccDocs.prototype.check_remove = function()
-{
+AccDocs.prototype.check_remove = function(){
+	
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
 		
 		if(btn == "no")
@@ -1107,8 +1243,8 @@ AccDocs.prototype.printCheck = function(){
 }
 //.........................................................
 
-AccDocs.prototype.showDetail = function(record)
-{
+AccDocs.prototype.showDetail = function(record){
+	
 	this.mainTab.setActiveTab(0);
 	this.itemGrid.getStore().proxy.extraParams["DocID"] = record.data.DocID;
 	this.itemGrid.getStore().on("load", function(store){
@@ -1181,8 +1317,8 @@ AccDocs.prototype.beforeRowEdit = function(record){
 	}
 }
 
-AccDocs.deleteitemRender = function(v,p,record)
-{
+AccDocs.deleteitemRender = function(v,p,record){
+	
 	if(<?= $_SESSION["USER"]["UserName"] == "admin" ? "false" : "true" ?>)
 	{
 		if(record.data.locked == "YES")
@@ -1203,14 +1339,17 @@ AccDocs.deleteitemRender = function(v,p,record)
 		"cursor:pointer;height:16;width:16px;float:left'></div>";
 }
 
-AccDocs.prototype.AddItem = function()
-{
+AccDocs.prototype.AddItem = function(){
+
 	record = this.grid.getStore().getAt(0);
-	if(!(record.data.StatusID == "<?= ACC_STEPID_RAW ?>" || (record.data.StepID == "1" && record.data.ActionType == "REJECT")))
+	if(!(record.data.StatusID == "<?= ACC_STEPID_RAW ?>" || 
+			(record.data.StepID == "1" && record.data.ActionType == "REJECT")))
 		return;
 	
 	this.detailWin.show();
 	this.detailWin.down('panel').getForm().reset();
+	var ParamsFS = this.detailWin.down('form').getComponent("ParamsFS");
+	ParamsFS.removeAll();
 	
 	this.detailWin.getEl().addKeyListener(Ext.EventObject.ENTER, function(keynumber,e){
 		
@@ -1222,8 +1361,8 @@ AccDocs.prototype.AddItem = function()
 	return;
 }
 
-AccDocs.prototype.EditItem = function()
-{
+AccDocs.prototype.EditItem = function(){
+	
 	if(<?= $_SESSION["USER"]["UserName"] == "admin" ? "false" : "true" ?>)
 	{
 		record = this.grid.getStore().getAt(0);
@@ -1232,9 +1371,7 @@ AccDocs.prototype.EditItem = function()
 	}
 		
 	var record = this.itemGrid.getSelectionModel().getLastSelected();
-	this.detailWin.down('panel').loadRecord(record);
 	this.detailWin.show();
-	
 	this.detailWin.getEl().addKeyListener(Ext.EventObject.ENTER, function(keynumber,e){
 		
 		AccDocsObject.SaveItem();
@@ -1274,6 +1411,9 @@ AccDocs.prototype.EditItem = function()
 		{
 			clearInterval(t);
 			mask.hide();
+			AccDocsObject.detailWin.down('panel').loadRecord(record);
+			AccDocsObject.SelectCostIDHandler(
+					AccDocsObject.detailWin.down("[name=CostID]").getStore().getAt(0));
 			AccDocsObject.beforeRowEdit(record);
 		}
 	}, 1000);
@@ -1281,8 +1421,8 @@ AccDocs.prototype.EditItem = function()
 	
 }
 
-AccDocs.prototype.SaveItem = function(store,record)
-{
+AccDocs.prototype.SaveItem = function(store,record){
+
 	if(this.detailWin.down('[name=DebtorAmount]').getValue() == null &&
 		this.detailWin.down('[name=CreditorAmount]').getValue() == null)
 	{
@@ -1352,8 +1492,8 @@ AccDocs.prototype.SaveItem = function(store,record)
 	
 }
 
-AccDocs.prototype.removeItem = function()
-{
+AccDocs.prototype.removeItem = function(){
+	
 	var record = this.itemGrid.getSelectionModel().getLastSelected();
 
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){

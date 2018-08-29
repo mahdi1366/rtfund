@@ -342,6 +342,8 @@ class ACC_DocItems extends PdoDataAccess {
 	public $TafsiliID;
 	public $TafsiliType2;
 	public $TafsiliID2;
+	public $TafsiliType3;
+	public $TafsiliID3;
 	public $DebtorAmount;
 	public $CreditorAmount;
 	public $details;
@@ -365,7 +367,9 @@ class ACC_DocItems extends PdoDataAccess {
 		$query = "select si.*,cc.CostCode,
 			concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) CostDesc,
 			t.TafsiliDesc,bi.InfoDesc TafsiliGroupDesc,
-			t2.TafsiliDesc as Tafsili2Desc,bi2.InfoDesc Tafsili2GroupDesc
+			t2.TafsiliDesc as Tafsili2Desc,bi2.InfoDesc Tafsili2GroupDesc,
+			t3.TafsiliDesc as Tafsili3Desc,bi3.InfoDesc Tafsili3GroupDesc,
+			paramValues
 		from ACC_DocItems si
 			left join ACC_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(cc.level1=b1.blockID)
@@ -374,8 +378,17 @@ class ACC_DocItems extends PdoDataAccess {
 			left join ACC_blocks b4 on(cc.level4=b4.blockID)
 			left join BaseInfo bi on(si.TafsiliType=InfoID AND TypeID=2)
 			left join BaseInfo bi2 on(si.TafsiliType2=bi2.InfoID AND bi2.TypeID=2)
+			left join BaseInfo bi3 on(si.TafsiliType3=bi3.InfoID AND bi3.TypeID=2)
 			left join ACC_tafsilis t on(t.TafsiliID=si.TafsiliID)
 			left join ACC_tafsilis t2 on(t2.TafsiliID=si.TafsiliID2)
+			left join ACC_tafsilis t3 on(t3.TafsiliID=si.TafsiliID3)
+			
+			left join (select ItemID,
+				group_concat(concat_ws(' ',ParamDesc,':',ParamValue) SEPARATOR '<br>') paramValues 
+				from ACC_CostCodeParamValues
+				join ACC_CostCodeParams using(ParamID)
+				group by ItemID
+			)t on(si.ItemID=t.ItemID)
 			";
 		$query .= ($where != "") ? " where " . $where : "";
 		return parent::runquery_fetchMode($query, $whereParam);
@@ -502,6 +515,23 @@ class ACC_DocItems extends PdoDataAccess {
 			}
 		}	
 		return true;
+	}
+}
+
+class ACC_CostCodeParamValues extends OperationClass{
+	
+	const TableName = "ACC_CostCodeParamValues";
+	const TableKey = "ItemID";
+	
+	public $ItemID;
+	public $ParamID;
+	public $ParamValue;
+	
+	static function RemoveAll($ItemID = "")
+	{
+		if(empty($ItemID))
+			return false;
+		return parent::runquery("delete from ACC_CostCodeParamValues where ItemID=?", $ItemID);
 	}
 }
 

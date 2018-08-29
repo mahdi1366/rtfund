@@ -8,7 +8,7 @@ CostCode.prototype={
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : "<?= $js_prefix_address ?>",
 
-	levelCount : 4,
+	levelCount : 3,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -21,7 +21,7 @@ function CostCode(){
 		xtype : "hiddenfield",
 		name : "CostID"
 	});
-	this.levelTitles = new Array("حساب کل","معین","جزءمعین","جزءمعین2");
+	this.levelTitles = new Array("حساب کل","معین","جزءمعین"/*,"جزءمعین2"*/);
 	for(var i=0; i < this.levelCount; i++)
 	{
 		levelCombos.push({
@@ -141,6 +141,25 @@ function CostCode(){
 					fields:["InfoID","InfoDesc"],
 					proxy: {
 						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad : true
+				}),
+				typeAhead: false,
+				name : "TafsiliType3",
+				width: 500,
+				fieldLabel : "گروه تفصیلی3",
+				queryMode : "local",
+				style : "margin-left : 50px",
+				valueField : "InfoID",
+				displayField : "InfoDesc"
+			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["InfoID","InfoDesc"],
+					proxy: {
+						type: 'jsonp',
 						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectCostGroups',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					}
@@ -221,37 +240,6 @@ CostCode.prototype.BeforeSaveCost = function(EditMode){
 		this.formPanel.down("[itemId=fs_level]").hide();
 		this.formPanel.down("[name=CostID]").setValue(record.data.CostID);
 		this.formPanel.loadRecord(record);
-		
-		/*mask = new Ext.LoadMask(this.formPanel, {msg:'در حال ذخيره سازي...'});
-		mask.show();
-		
-		this.formPanel.down("[name=CostID]").setValue(record.data.CostID);
-		this.formPanel.down("[name=TafsiliType]").setValue(record.data.TafsiliType);
-		this.formPanel.down("[name=TafsiliType2]").setValue(record.data.TafsiliType2);
-		this.formPanel.down("[name=IsBlockable]").setValue(record.data.IsBlockable =="YES" ? true : false);
-		
-		for(var i=0; i < CostCodeObj.levelCount; i++)
-		{
-			if(record.get("level" + (i+1)) == null)
-				continue;
-			eval("R"+(i+1)+" = this.formPanel.down('[name=level"+(i+1)+"]').getStore().load({ " +
-				"params : {BlockID : record.data.level"+(i+1)+"}, " +
-				"callback : function(records){"+
-					"CostCodeObj.formPanel.down('[name=level"+(i+1)+"]').select(records[0]);}" +
-			"});");			
-		}
-		LoadStr = "1==1";
-		for(var i=0; i < CostCodeObj.levelCount; i++)
-			LoadStr += " || !R"+(i+1)+".isLoading()";
-		
-		var t = setInterval(function(){
-			eval("cond = " + LoadStr);
-			if(cond)
-			{
-				clearInterval(t);
-				mask.hide();
-			}
-		}, 1000);*/
 	}	
 	else
 		this.formPanel.down("[itemId=fs_level]").show();
@@ -309,8 +297,7 @@ CostCode.prototype.RemoveCosts = function(){
 	});
 }
 
-CostCode.prototype.PrintCost = function()
-{        
+CostCode.prototype.PrintCost = function(){        
 	window.open(this.address_prefix + "PrintCostCode.php");
 }
 
@@ -442,6 +429,54 @@ CostCode.prototype.ActiveCost = function(){
 			},
 			failure: function(){}
 		});
+	});
+}
+
+//............................................................
+
+CostCode.ParamRender = function(v,p,r, gridIndex){
+	
+	if(r.data.IsActive == "NO")
+		return "";
+	return "<div align='center' title='لیست آیتم ها' class='list' "+
+		"onclick='CostCodeObj.LoadParams();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+
+CostCode.prototype.LoadParams = function(){
+
+	if(!this.ParamWin)
+	{
+		this.ParamWin = new Ext.window.Window({
+			width : 600,
+			title : "آیتم های الگو",
+			height : 520,
+			modal : true,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "CostCodeParams.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.ParamWin);
+	}
+
+	this.ParamWin.show();
+	this.ParamWin.center();
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.ParamWin.loader.load({
+		params : {
+			ExtTabID : this.ParamWin.getEl().id,
+			CostID : record.data.CostID
+		}
 	});
 }
 

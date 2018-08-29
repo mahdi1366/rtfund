@@ -29,7 +29,9 @@ $soapclient = new soapclient2('https://pec.shaparak.ir/pecpaymentgateway/EShopSe
 if (!$err = $soapclient->getError())
 	$soapProxy = $soapclient->getProxy();
 if ( (!$soapclient) OR ($err = $soapclient->getError()) ) {
-    echo $err . "<br />" ;
+	echo BeginReport();
+    echo "<center><br><br>" . 
+			"سرویس بانک در حال حاضر از دسترس خارج است" . "<br><br></center>" ;
 	die();
 } 
 

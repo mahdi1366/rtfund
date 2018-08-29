@@ -47,6 +47,13 @@ switch ($task) {
 	case "SelectCycles":
 	case "SaveCycle":
 	case "GetBanks":
+	case "ReplaceCostCodes":
+		
+	
+	case "selectParams":
+	case "saveParam":
+	case "deleteParams":
+		
 		$task();
 };
 
@@ -718,11 +725,68 @@ function SaveCycle(){
 
 //---------------------------------------------
 
-
 function GetBanks(){
 	
 	$dt = PdoDataAccess::runquery("select * from ACC_banks");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function ReplaceCostCodes(){
+	
+	$OLD_CostID = $_POST["OLD_CostID"];
+	$NEW_CostID = $_POST["NEW_CostID"];
+	
+	PdoDataAccess::runquery("update ACC_DocItems join ACC_docs using(DocID)
+		set CostID=:new 
+		where BranchID=:b AND CycleID=:c AND costID=:old ", array(
+			":c" => $_SESSION["accounting"]["CycleID"], 
+			":b" => $_SESSION["accounting"]["BranchID"],
+			":old" => $OLD_CostID,
+			":new" => $NEW_CostID
+		));
+	
+	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, 
+			PdoDataAccess::AffectedRows());
+	die();
+}
+
+//---------------------------------------------
+
+function selectParams() {
+	
+	$temp = ACC_CostCodeParams::Get(" AND IsActive='YES' AND CostID=?" . 
+			dataReader::makeOrder(), array($_REQUEST["CostID"]));
+	
+	$res = $temp->fetchAll();
+    echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+    die();
+}
+
+function saveParam() {
+	
+	$obj = new ACC_CostCodeParams();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST['record']);
+	
+	if($obj->ParamType == "currencyfield")
+		$obj->KeyTitle = "amount";
+	if($obj->ParamType == "shdatefield")
+		$obj->KeyTitle = "date";
+	
+	if ($obj->ParamID > 0) 
+		$obj->Edit();
+	 else 
+		$obj->Add();
+
+	echo Response::createObjectiveResponse(true, '');
+	die();
+}
+
+function deleteParam() {
+
+	$obj = new ACC_CostCodeParams($_POST['ParamID']);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, '');
 	die();
 }
 

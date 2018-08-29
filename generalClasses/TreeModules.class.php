@@ -10,7 +10,8 @@ class TreeModulesclass
 	 * 
 	 * @param array $dataTable : this array should have at least id,parentid,text and id should be unique
 	 */
-	static function MakeHierarchyArray($dataTable, $idFieldName = "id", $textFieldName = "text")
+	static function MakeHierarchyArray($dataTable, 
+			$parentFieldName = "ParentID", $idFieldName = "id", $textFieldName = "text")
 	{
 		$nodes = array();
 		$refArr = array();
@@ -21,20 +22,17 @@ class TreeModulesclass
 			$node["level"] = 1;
 			$node["id"] = $node[$idFieldName];
 			$node["text"] = $node[$textFieldName];
-			
-			//------------------------------------------------------------------
-			$NewNode = array_change_key_case($node, CASE_LOWER);
-			$ParentID = isset($NewNode["parentid"]) ? $NewNode["parentid"] : 0;
+			$node["parentId"] = $node[$parentFieldName];
 			//------------------------------------------------------------------
 			
-			if($ParentID == "0")
+			if($node["parentId"] == "0")
 			{
 				$nodes[] = $node;
 				$refArr[$node["id"]] = & $nodes[ count($nodes)-1 ];				
 			}
 			else
 			{
-				$parent = & $refArr[ $ParentID ];
+				$parent = & $refArr[ $node["parentId"] ];
 				if (!isset($parent["children"])) {
 					$parent["children"] = array();
 					$parent["leaf"] = "false";

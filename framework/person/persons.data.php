@@ -7,7 +7,7 @@ require_once('../header.inc.php');
 require_once 'persons.class.php';
 require_once '../PasswordHash.php';
 require_once 'email.php';
-
+			
 require_once inc_dataReader;
 require_once inc_response;
 

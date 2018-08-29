@@ -10,7 +10,6 @@ class COM_processes extends PdoDataAccess {
     public $ParentID;
     public $ProcessTitle;
     public $IsActive;
-    public $EventID;
     public $description;
 
     function __construct() {

@@ -68,10 +68,13 @@ $dg->addColumn("","CostID","",true);
 $dg->addColumn("","CostCode","",true);
 $dg->addColumn("","TafsiliType","",true);
 $dg->addColumn("","TafsiliType2","",true);
+$dg->addColumn("","TafsiliType3","",true);
 $dg->addColumn("","TafsiliDesc","",true);
 $dg->addColumn("","TafsiliGroupDesc","",true);
 $dg->addColumn("","Tafsili2Desc","",true);
 $dg->addColumn("","Tafsili2GroupDesc","",true);
+$dg->addColumn("","Tafsili3Desc","",true);
+$dg->addColumn("","Tafsili3GroupDesc","",true);
 $dg->addColumn("", "locked", "", true);
 
 $col = $dg->addColumn("ردیف","ItemID","", true);
@@ -88,7 +91,7 @@ $col = $dg->addColumn("تفصیلی", "TafsiliID");
 //$col->editor = "AccDocsObject.tafsiliCombo";
 $col->renderer = "function(v,p,r){p.tdAttr = \"data-qtip='\" + r.data.TafsiliGroupDesc + \"'\";".
 		"return r.data.TafsiliDesc;}";
-$col->width = 150;
+$col->width = 110;
 
 /*$col = $dg->addColumn("گروه تفصیلی2", "TafsiliType2");
 $col->editor = "AccDocsObject.tafsili2GroupCombo";
@@ -99,7 +102,13 @@ $col = $dg->addColumn("تفصیلی2", "TafsiliID2");
 //$col->editor = "AccDocsObject.tafsili2Combo";
 $col->renderer = "function(v,p,r){p.tdAttr = \"data-qtip='\" + r.data.Tafsili2GroupDesc + \"'\";".
 		"return r.data.Tafsili2Desc;}";
-$col->width = 150;
+$col->width = 110;
+
+$col = $dg->addColumn("تفصیلی3", "TafsiliID3");
+//$col->editor = "AccDocsObject.tafsili2Combo";
+$col->renderer = "function(v,p,r){p.tdAttr = \"data-qtip='\" + r.data.Tafsili3GroupDesc + \"'\";".
+		"return r.data.Tafsili3Desc;}";
+$col->width = 110;
 
 $col = $dg->addColumn("بدهکار", "DebtorAmount", GridColumn::ColumnType_money);
 //$col->editor = ColumnEditor::CurrencyField(true, "cmp_DebtorAmount");
@@ -111,8 +120,13 @@ $col->width = 90;
 
 $col = $dg->addColumn("جزئیات", "details");
 //$col->editor = ColumnEditor::TextField(true, "cmp_details");
-$col->width = 180;
+$col->width = 100;
 $col->ellipsis = 50;
+
+$col = $dg->addColumn("آیتم های اطلاعاتی", "paramValues");
+$col->width = 130;
+$col->ellipsis = 50;
+
 
 if($accessObj->RemoveFlag)
 {

@@ -49,6 +49,9 @@ switch($task)
 	case "SaveCostBlock":
 	case "DeleteCostBlock":
 		
+	case "selectCostParams":
+	case "selectParamValues":
+		
 		$task();
 		die();
 }
@@ -397,6 +400,10 @@ function saveDocItem() {
 		$obj->TafsiliType2 = PDONULL;
 	if($obj->TafsiliID2 == "")
 		$obj->TafsiliID2 = PDONULL;
+	if($obj->TafsiliType3 == "")
+		$obj->TafsiliType3 = PDONULL;
+	if($obj->TafsiliID3 == "")
+		$obj->TafsiliID3 = PDONULL;
 	
 	if ($obj->ItemID == "")
 	{
@@ -408,6 +415,21 @@ function saveDocItem() {
 		$return = $obj->Edit();
 	}
 
+	//-------------- params ------------------
+	ACC_CostCodeParamValues::RemoveAll($obj->ItemID);
+	$arr = array_keys($_POST);
+	foreach($arr as $key)
+	{
+		if(strpos($key, "Param") !== false)
+		{
+			$paramObj = new ACC_CostCodeParamValues();
+			$paramObj->ItemID = $obj->ItemID;
+			$paramObj->ParamID = substr($key,5);
+			$paramObj->ParamValue = $_POST[$key];
+			$paramObj->Add();
+		}
+	}
+	//-------------------------------------------
 	if (!$return) {
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
@@ -712,8 +734,10 @@ function RegisterCloseDoc(){
 	
 	PdoDataAccess::runquery("
 		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
+			TafsiliType3,TafsiliID3,
 			DebtorAmount,CreditorAmount,locked)
 		select $obj->DocID,i.CostID,i.TafsiliType,i.TafsiliID,i.TafsiliType2,i.TafsiliID2,
+			i.TafsiliType3,i.TafsiliID3,
 			if( sum(CreditorAmount-DebtorAmount)>0, sum(CreditorAmount-DebtorAmount), 0 ),
 			if( sum(DebtorAmount-CreditorAmount)>0, sum(DebtorAmount-CreditorAmount), 0 ),
 			1
@@ -798,8 +822,10 @@ function RegisterEndDoc(){
 	
 	PdoDataAccess::runquery("
 		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
+			TafsiliType3,TafsiliID3,
 			DebtorAmount,CreditorAmount,locked)
 		select $obj->DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
+			TafsiliType3,TafsiliID3,
 			if( sum(CreditorAmount-DebtorAmount)>0, sum(CreditorAmount-DebtorAmount), 0 ),
 			if( sum(DebtorAmount-CreditorAmount)>0, sum(DebtorAmount-CreditorAmount), 0 ),
 			1
@@ -889,8 +915,10 @@ function RegisterStartDoc(){
 	
 	PdoDataAccess::runquery("
 		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
+			TafsiliType3,TafsiliID3,
 			DebtorAmount,CreditorAmount,locked)
 		select $obj->DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
+			TafsiliType3,TafsiliID3,
 			if( sum(DebtorAmount-CreditorAmount)>0, sum(DebtorAmount-CreditorAmount), 0 ),
 			if( sum(CreditorAmount-DebtorAmount)>0, sum(CreditorAmount-DebtorAmount), 0 ),
 			1
@@ -1082,4 +1110,20 @@ function DeleteCostBlock(){
 	die();
 }
 
+//...................................
+
+function selectCostParams(){
+	
+	$dt = ACC_CostCodeParams::Get(" AND CostID=? AND IsActive='YES'",array($_GET["CostID"]));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function selectParamValues(){
+	
+	$dt = PdoDataAccess::runquery("select * from ACC_CostCodeParamValues where ItemID=?", 
+			array($_GET["ItemID"]));
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
 ?>

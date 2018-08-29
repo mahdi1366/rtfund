@@ -13,6 +13,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 $dg_cost = new sadaf_datagrid('cost',$js_prefix_address."baseinfo.data.php?task=SelectCostCode&All=true",'divCost');
 
 $dg_cost->addcolumn('','IsActive',"",true);
+$dg_cost->addcolumn('','IsNew',"",true);
 $dg_cost->addcolumn('','CostID',"",true);
 $dg_cost->addcolumn('','CostCode',"",true);
 $dg_cost->addcolumn('','level1',"",true);
@@ -20,6 +21,7 @@ $dg_cost->addcolumn('','level2',"",true);
 $dg_cost->addcolumn('','level3',"",true);
 $dg_cost->addcolumn('','TafsiliType',"",true);
 $dg_cost->addcolumn('','TafsiliType2',"",true);
+$dg_cost->addcolumn('','TafsiliType3',"",true);
 $dg_cost->addcolumn('','IsBlockable',"",true);
 $dg_cost->addcolumn('','CostGroupID',"",true);
 
@@ -37,8 +39,8 @@ $col->width = 120;
 $col = $dg_cost->addcolumn("جزء معین", "LevelTitle3");
 $col->width = 100;
 
-$col = $dg_cost->addcolumn("جزء معین2", "LevelTitle4");
-$col->width = 100;
+/*$col = $dg_cost->addcolumn("جزء معین2", "LevelTitle4");
+$col->width = 100;*/
 
 $col = $dg_cost->addcolumn("گروه تفصیلی", "TafsiliTypeDesc");
 $col->width = 100;
@@ -46,8 +48,16 @@ $col->width = 100;
 $col = $dg_cost->addcolumn("گروه تفصیلی2", "TafsiliTypeDesc2");
 $col->width = 100;
 
+$col = $dg_cost->addcolumn("گروه تفصیلی3", "TafsiliTypeDesc3");
+$col->width = 100;
+
 $col = $dg_cost->addcolumn('گروه حساب','CostGroupDesc');
 $col->width = 120;
+
+$col = $dg_cost->addColumn("آیتم ها", "");
+$col->sortable = false;
+$col->renderer = "function(v,p,r){return CostCode.ParamRender(v,p,r,2);}";
+$col->width = 50;
 
 if($accessObj->EditFlag	)
 {
@@ -87,6 +97,8 @@ require_once 'CostCode.js.php';
 		this.grid=<?= $dgCost?>;
 		this.grid.getView().getRowClass = function(record, index)
 		{
+			if(record.data.IsNew == "YES")
+				return "yellowRow";
 			if(record.data.IsActive == "NO")
 				return "pinkRow";
 		}	
