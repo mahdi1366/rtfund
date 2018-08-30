@@ -218,11 +218,13 @@ class WFM_requests extends OperationClass {
 				r.PersonID,
 				r.RegDate,
 				f.FormTitle,
-				concat_ws(' ',fname,lname,CompanyName) fullname
+				concat_ws(' ',fname,lname,CompanyName) fullname,
+				b.param4
 			
 			from WFM_requests r
 			join WFM_forms f using(FormID) 
 			join BSC_persons using(PersonID)
+			join BaseInfo b on(b.TypeID=11 AND b.InfoID=5)
 			
 			where 1=1 " . $where . $order, $whereParams);
     }
