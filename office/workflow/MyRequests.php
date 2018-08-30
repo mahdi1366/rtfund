@@ -17,6 +17,7 @@ $dg->addColumn("", "IsEnded", "", true);
 $dg->addColumn("", "JustStarted", "", true);
 $dg->addColumn("", "ActionType", "", true);
 $dg->addColumn("", "ResendEnable", "", true);
+$dg->addColumn("", "param4", "", true);
 
 $col = $dg->addColumn("شماره درخواست", "RequestID", "");
 $col->width = 100;
@@ -172,7 +173,7 @@ WFM_MyRequests.prototype.OperationMenu = function(e){
 	}
 	
 	op_menu.add({text: 'پیوست های فرم',iconCls: 'attach', 
-		handler : function(){ return WFM_MyRequestsObject.ManageDocuments('wfm'); }});
+		handler : function(){ return WFM_MyRequestsObject.ManageDocuments(); }});
 	
 	op_menu.add({text: 'سابقه گردش فرم',iconCls: 'history', 
 		handler : function(){ return WFM_MyRequestsObject.ShowHistory(); }});
@@ -328,7 +329,7 @@ WFM_MyRequests.prototype.ShowHistory = function(){
 	});
 }
 
-WFM_MyRequests.prototype.ManageDocuments = function(ObjectType){
+WFM_MyRequests.prototype.ManageDocuments = function(){
 
 	if(!this.documentWin)
 	{
@@ -359,7 +360,7 @@ WFM_MyRequests.prototype.ManageDocuments = function(ObjectType){
 		scripts : true,
 		params : {
 			ExtTabID : this.documentWin.getEl().id,
-			ObjectType : ObjectType,
+			ObjectType : record.data.param4,
 			ObjectID : record.data.RequestID
 		}
 	});
