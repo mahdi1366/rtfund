@@ -1480,7 +1480,8 @@ function GetDelayedInstallments($returnData = false){
 				group by RequestID			
 			)t3 on(r.RequestID=t3.RequestID)
 			
-			where InstallmentDate between :fromdate AND :todate AND IsHistory='NO' AND IsEnded='NO' ";
+			where r.StatusID=" . LON_REQ_STATUS_CONFIRM . " AND InstallmentDate between :fromdate AND :todate 
+				AND IsHistory='NO' AND IsEnded='NO' ";
 	
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
