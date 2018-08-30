@@ -4799,7 +4799,7 @@ function RegisterSalaryDoc($PObj, $pdo){
 			select 
 				t.TafsiliID,
 				sum(pit.pay_value + pit.diff_value_coef * pit.diff_pay_value
-					- pit.get_value + pit.diff_value_coef * pit.diff_get_value
+					- (pit.get_value + pit.diff_value_coef * pit.diff_get_value)
 				) as amount
 
 			FROM HRM_payments p
