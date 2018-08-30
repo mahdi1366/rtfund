@@ -9,8 +9,8 @@ require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php'
 
 if(empty($_REQUEST["RequestID"]))
 {
-echo "دسترسی نامعتبر است.";
-die();
+	echo "دسترسی نامعتبر است.";
+	die();
 }
 
 $PayObj = new ACC_EPays();
