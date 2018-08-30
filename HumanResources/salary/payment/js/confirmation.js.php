@@ -64,11 +64,11 @@ function Confirm()
 		 }], 
 		buttons : [{
 			iconCls : "tick",
-			text : "سند حقوق",
+			text : "سند محاسبه حقوق",
 			handler : function(){ConfirmObject.Save(this, 2);}
 		},{
 			iconCls : "cross",
-			text : "برگشت سند پرداخت",
+			text : "برگشت سند محسابه",
 			handler : function(){ConfirmObject.Save(this, 1);}
 		},'->',{
 			iconCls : "tick",
@@ -76,7 +76,7 @@ function Confirm()
 			handler : function(){ConfirmObject.Save(this, 4);}
 		},{
 			iconCls : "cross",
-			text : "برگشت پرداخت پرداخت",
+			text : "برگشت سند پرداخت",
 			handler : function(){ConfirmObject.Save(this, 3);}
 		}]
 	});	
