@@ -80,7 +80,7 @@ switch($ObjectType)
 		$access = true;
 		break;
 	//......................................................
-	case "wfm":
+	case "form":
 		require_once '../workflow/form.class.php';
 		require_once '../workflow/wfm.class.php';
 		$obj = new WFM_requests($ObjectID);
