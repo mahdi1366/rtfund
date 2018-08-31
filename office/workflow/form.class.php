@@ -23,6 +23,7 @@ class WFM_forms extends OperationClass {
 	public $IsSupporter;
 	public $IsExpert;
 	public $IsAgent;
+	public $SmsSend;
 
     public function Remove($pdo = null){
         $res = parent::runquery("select count(*) from WFM_requests where FormID = ? limit 1",
@@ -99,6 +100,7 @@ class WFM_FormItems extends OperationClass {
 	public $GroupID;
     public $ItemName;
     public $ItemType;
+	public $FieldName;
 	public $ComboValues;
 	public $ordering;
 	public $IsActive;
@@ -108,10 +110,13 @@ class WFM_FormItems extends OperationClass {
 		if(!isset($params[":StepRowID"]))
 			$params[":StepRowID"] = -1;
 		return PdoDataAccess::runquery_fetchMode("  
-			select fi.* , if(fa.FormItemID is null, 'NO', 'YES') access,fg.GroupDesc
+			select fi.* , if(fa.FormItemID is null, 'NO', 'YES') access,
+				fg.GroupDesc,
+				f2.ItemType DisplayType,f2.FieldName as DisplayField,f2.ItemName as DisplayDesc
 			from WFM_FormItems fi 
 			left join WFM_FormGroups fg using(GroupID)
 			left join WFM_FormAccess fa on(fi.FormItemID=fa.FormItemID AND fa.StepRowID=:StepRowID)
+			left join WFM_FormItems f2 on(f2.FormID=0 AND f2.FormItemID=fi.FieldName)
 			where 1=1 " . $where, $params);
 	}
 	
@@ -191,6 +196,7 @@ class WFM_requests extends OperationClass {
     public $RegDate;
 	public $ReqContent;
 
+	public $_SmsSend;
 	public $_FlowID;
 	public $_FormTitle;
 	public $_PersonName;
@@ -201,7 +207,8 @@ class WFM_requests extends OperationClass {
             parent::FillObject($this, "
 					select r.* ,  f.FormTitle as _FormTitle,
 						concat_ws(' ',fname,lname,CompanyName) _PersonName,
-						f.FlowID _FlowID
+						f.FlowID _FlowID,
+						f.SmsSend _SmsSend
                     from WFM_requests r
                     left join WFM_forms f using(FormID) 
 					left join BSC_persons using(PersonID)
@@ -228,16 +235,12 @@ class WFM_requests extends OperationClass {
 			
 			where 1=1 " . $where . $order, $whereParams);
     }
-	
-	public static function FullSelect($where = '', $whereParams = array(), $order = "") {
+
+	public static function GlobalInfoRecord($PersonID, $RequestID = 0){
 		
-        return parent::runquery_fetchMode("
-			select r.RequestID,
-				r.FormID,
-				f.FlowID,
-				r.PersonID,
-				r.RegDate,
-				f.FormTitle,
+		$returnDT = parent::runquery("
+			select 
+				concat_ws(' ',fname,lname,CompanyName) fullname,
 				p.CompanyName,
 				p.NationalID,
 				p.EconomicID,
@@ -260,16 +263,35 @@ class WFM_requests extends OperationClass {
 				p.FatherName,
 				p.ShNo
 			
-			from WFM_requests r
-			join WFM_forms f using(FormID) 
-			join BSC_persons p using(PersonID)
+			from BSC_persons p
 			left join BaseInfo b1 on(b1.typeID=14 and b1.InfoID=CompanyType)
 			left join BSC_ActDomain d using(DomainID)
 			left join BaseInfo b2 on(b2.typeID=15 and b2.InfoID=p.CityID)
 			
-			where 1=1 " . $where . $order, $whereParams);
-    }
-	
+			where p.PersonID=:p", array(":p" => $PersonID));
+		$returnDT = $returnDT[0];
+		
+		//-------------- request info ---------------------
+		if($RequestID == 0)
+		{
+			$returnDT["RequestID"] = "";
+			$returnDT["FormTitle"] = "";
+		}
+		else
+		{
+			$temp = self::Get(" AND RequestID=?", array($RequestID));
+			$returnDT = array_merge($returnDT, $temp->fetch());
+		}
+		
+		//--------------- deposite info ---------------------
+		require_once '../../accounting/docs/doc.class.php';
+		$amount = ACC_docs::GetPureRemainOfSaving($PersonID, BRANCH_UM);
+		$returnDT["UmSavingAmount"] = $amount;
+		$amount = ACC_docs::GetPureRemainOfSaving($PersonID, BRANCH_PARK);
+		$returnDT["ParkSavingAmount"] = $amount;
+		
+		return $returnDT;
+	}			
 }
 
 class WFM_RequestItems extends OperationClass {

@@ -231,7 +231,6 @@ function searchPerson() {
 	}
 
 	$temp = manage_person::SelectPerson($where, $whereParam, $include_new_persons, $show_All_history);
- 
 
 
 	$no = count($temp);

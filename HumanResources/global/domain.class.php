@@ -355,7 +355,7 @@ class manage_domains
     }
     public static function GETALL_Payment_Type()
     {    
-         $query = " select * from BaseInfo where TypeID = 72 ";	
+         $query = " select * from BaseInfo where TypeID = 72  ";	
 		
          return PdoDataAccess::runquery($query);        
     }
@@ -1121,6 +1121,32 @@ class manage_domains
 
 		if(!empty($extraRow))
 			$obj->datasource = array_merge(array(array("country_id" => "-1", "ptitle" => $extraRow)),$obj->datasource);
+		$return = $obj->bind_dropdown($selectedID);
+		
+		return $return;		
+		
+	}
+	
+	 public static function DRP_detectives($dropdownName, $slaveDropName = "", $selectedID = "", 
+    	$extraRow = "", $width = "", $formName = "")
+	{
+		$query = "select DetID ,detectiveName from HRM_Detectives ";
+		
+		$obj = new AutoComplete_DROPDOWN();
+
+		$temp = PdoDataAccess::runquery($query);
+				
+		$obj->datasource = $temp;
+		$obj->valuefield = "%DetID%";
+		$obj->textfield = "%detectiveName%";
+		$obj->width = $width;
+		$obj->Style = 'class="x-form-text x-form-field" style="width:'.$width.'" ';
+		$obj->id = $dropdownName;
+		$obj->slaveID = $slaveDropName;
+		$obj->formName = $formName;
+
+		if(!empty($extraRow))
+			$obj->datasource = array_merge(array(array("DetID" => "-1", "detectiveName" => $extraRow)),$obj->datasource);
 		$return = $obj->bind_dropdown($selectedID);
 		
 		return $return;		

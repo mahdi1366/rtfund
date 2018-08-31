@@ -34,7 +34,7 @@
 
 		this.personCombo = new Ext.form.ComboBox({
 			store: personStore,
-			queryMode : "local",
+		//	queryMode : "local",
 			emptyText: 'جستجوي كارمند بر اساس نام و نام خانوادگي ...',
 			typeAhead: false,
 			listConfig: {

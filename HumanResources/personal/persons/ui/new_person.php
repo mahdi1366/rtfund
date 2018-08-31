@@ -53,6 +53,9 @@ else
 //--------------------------------------------------------------------
 $drp_issue_countries = manage_domains::DRP_Countries("country_id","",$obj->country_id,"","70");
 $drp_nationality = manage_domains::DRP_Countries("nationality","",$obj->nationality,"","157");
+
+$drp_detective = manage_domains::DRP_detectives("detectiveID","",$obj->detectiveID,"","157");
+
 $drp_banks = manage_domains::DRP_banks("bank_id",$staffInfo->bank_id,"width:150 px","-");
      
 	$dg = new sadaf_datagrid("includeHistory",$js_prefix_address . "../../staff/data/staff_include_history.data.php?task=selectIncludeHistory&PID=".$personID  ,
@@ -389,6 +392,26 @@ require_once '../js/new_person.js.php';
 							<td width="25%">
 							<input type="text" id="insure_no" name="insure_no" class="x-form-text x-form-field" style="width: 100px"
 								   value="<?= $obj->insure_no ?>">
+							</td>
+						<td width="25%">
+							کارگاه: 
+							</td>
+							<td width="20%"><?= $drp_detective ?></td>
+						</tr>
+						<tr>
+							<td width="40%">
+					پست بیمه تامین اجتماعی:
+							</td>
+							<td width="30%">
+							<input type="text" id="InsurePost" name="InsurePost" class="x-form-text x-form-field" style="width: 200px"
+								   value="<?= $obj->InsurePost ?>">
+							</td>
+							<td width="10%">
+				کد شغل:
+							</td>
+							<td width="20%">
+							<input type="text" id="JobCode" name="JobCode" class="x-form-text x-form-field" style="width: 80px"
+								   value="<?= $obj->JobCode ?>">
 							</td>
 						</tr>
                                                 <tr>

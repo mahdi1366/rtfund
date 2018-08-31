@@ -48,7 +48,7 @@ function UploadPayFiles()
 				{
 					xtype : "combo",
 					store :  new Ext.data.Store({
-					fields : ["InfoID","Title"],
+					fields : ["InfoID","InfoDesc"], 
 					proxy : {
 								type: 'jsonp',
 								url : this.address_prefix + "../../../global/domain.data.php?task=searchPayType",
@@ -59,7 +59,7 @@ function UploadPayFiles()
 							}
 											}),
 					valueField : "InfoID",
-					displayField : "Title",
+					displayField : "InfoDesc",
 					hiddenName : "PayType",
 					inputId: "PayType" , 
 					fieldLabel : "نوع پرداخت",
@@ -70,7 +70,7 @@ function UploadPayFiles()
 					},
 					width:300
 				},
-				{
+				/*{
 					xtype : "trigger",
 					name : "sid",
 					inputId:"sid",
@@ -85,7 +85,8 @@ function UploadPayFiles()
 					} ,											
 					width:230,
 					triggerCls:'x-form-search-trigger'
-				},{
+				},*/
+                                {
 					xtype : "filefield",
 					name : "attach",
 					fieldLabel : "فایل Excel ",
@@ -99,7 +100,7 @@ function UploadPayFiles()
 				mask.show();
 
 
- /* Ext.Ajax.request({
+                                /* Ext.Ajax.request({
 					form:UploadPayFilesObj.get('mainForm'),
 					url: UploadPayFilesObj.address_prefix + '../data/non_salary_import.data.php?task=InsertData',
 					method : "POST",                                                                                

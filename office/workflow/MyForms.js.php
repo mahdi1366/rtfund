@@ -175,30 +175,6 @@ MyForm.prototype.FormInfo = function(){
 	}); 	
 }
 
-MyForm.prototype.SaveLoanRequest = function(){
-	
-	mask = new Ext.LoadMask(this.LoanInfoWin, {msg:'در حال ذخيره سازي...'});
-	mask.show();  
-	this.LoanInfoWin.down('form').getForm().submit({
-		clientValidation: true,
-		url: this.address_prefix + 'request.data.php?task=SaveLoanRequest' , 
-		method: "POST",
-		params : {
-			RequestID : this.grid.getSelectionModel().getLastSelected().data.RequestID
-		},
-		
-		success : function(form,action){
-			mask.hide();
-			MyFormObject.LoanInfoWin.hide();
-			MyFormObject.grid.getStore().load();
-		},
-		failure : function(){
-			mask.hide();
-			//Ext.thisssageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
-		}
-	});
-}
-
 MyForm.prototype.ShowHistory = function(){
 
 	if(!this.HistoryWin)

@@ -3,7 +3,7 @@
 //	Programmer	: SH.Jafarkhani
 //	Date		: 94.08
 //-----------------------------
-
+			
 class WFM_flows extends PdoDataAccess {
 
 	public $FlowID;
@@ -462,14 +462,39 @@ class WFM_FlowRows extends PdoDataAccess {
 			where fr.FlowID=? AND ObjectID=? 
 			order by RowID desc limit 1", array($FlowID, $ObjectID));
 		
+		$StepDesc = "";
+		if(count($dt) > 0)
+		{
+			$StepDesc = ($dt[0]["ActionType"] == "REJECT" ? "رد " : "") . $dt[0]["StepDesc"];
+			if($dt[0]["StepID"] == 0)
+			{
+				if($dt[0]["ActionType"] == "REJECT")
+					$StepDesc = "برگشت فرم";
+				else
+					$StepDesc = "ارسال فرم";
+			}
+			$JustStarted = $dt[0]["StepID"] == "0" && $dt[0]["ActionType"] == "CONFIRM" ? true : false;
+			
+			$SendEnable = false;
+			if($dt[0]["ActionType"] == "REJECT" && $dt[0]["StepID"] == "1")
+				$SendEnable = true;
+			if($dt[0]["ActionType"] == "REJECT" && $dt[0]["StepID"] == "0")
+				$SendEnable = true;
+		}
+		else
+		{
+			$StepDesc = "خام";
+			$JustStarted = false;
+			$SendEnable = true;
+		}
+		
 		return array(
 			"IsStarted" => count($dt) > 0 ? true : false,
 			"ActionType" => count($dt) > 0 ? $dt[0]["ActionType"] : "",
 			"IsEnded" => count($dt) > 0 && $dt[0]["IsEnded"] == "YES" ? true : false,
-			"ResendEnable" => count($dt) > 0 && $dt[0]["ActionType"] == "REJECT" && $dt[0]["StepID"] == "1" ? true : false,
-			"JustStarted" => count($dt) > 0 && $dt[0]["StepRowID"] == "" ? true : false ,
-			"StepDesc" => count($dt) > 0 ? ($dt[0]["StepDesc"] == "" ? "شروع گردش" : 
-					($dt[0]["ActionType"] == "REJECT" ? "رد " : "") . $dt[0]["StepDesc"]) : "خام"
+			"SendEnable" => $SendEnable,
+			"JustStarted" => $JustStarted ,
+			"StepDesc" => $StepDesc
 		);
 	}
 	

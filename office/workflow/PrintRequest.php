@@ -6,7 +6,7 @@
 require_once '../header.inc.php';
 require_once 'form.class.php';
 require_once 'form.class.php';
-
+ 
 $ReqObj = new WFM_requests($_REQUEST['RequestID']);
 $FormID = $ReqObj->FormID>0 ? $ReqObj->FormID : $_REQUEST["FormID"];
 
@@ -66,7 +66,6 @@ function printGrid($record, $xmlDataArr){
 	return $returnVal;
 }
 
-
 $ReqItems = WFM_RequestItems::Get(" AND RequestID=?", array($ReqObj->RequestID));
 $ReqItems = $ReqItems->fetchAll();
 $ValuesStore = array();
@@ -79,6 +78,14 @@ foreach ($ReqItems as $row)
 		$ValuesStore[$row['FormItemID']][] = $row['ItemValue'];
 		continue;
 	}
+	if($row["ItemType"] == "branch")
+	{
+		require_once '../../framework/baseInfo/baseInfo.class.php';
+		$branchObj = new BSC_branches($row['ItemValue']);
+		$ValuesStore[$row['FormItemID']] = $branchObj->BranchName;
+		continue;
+	}
+	
 	if($row["ItemType"] == "shdatefield")
 		$ValuesStore[$row['FormItemID']] = DateModules::miladi_to_shamsi($row['ItemValue']);
 	else if($row["ItemType"] == "currencyfield")
@@ -102,8 +109,7 @@ foreach ($ReqItems as $row)
 		$ValuesStore[$row['FormItemID']] = $row['ItemValue'];
 }
 
-$dt = WFM_requests::FullSelect(" AND RequestID=?", array($ReqObj->RequestID));
-$RequestRecord = $dt->fetch();
+$GlobalInfoRecord = WFM_requests::GlobalInfoRecord($ReqObj->PersonID, $ReqObj->RequestID);
 
 if (substr($ReqObj->ReqContent, 0, 3) == WFM_forms::TplItemSeperator) {
     $res = array_merge(array(''), $res);
@@ -123,11 +129,11 @@ for ($i = 0; $i < count($res); $i++) {
 		else if(isset($ReqItemsStore[ $res[$i] ]["FieldName"]))
 		{
 			if($ReqItemsStore[ $res[$i] ]["ItemType"] == "shdatefield")
-				$st .= DateModules::miladi_to_shamsi($RequestRecord [ $ReqItemsStore[ $res[$i] ]["FieldName"] ]);
+				$st .= DateModules::miladi_to_shamsi($GlobalInfoRecord [ $ReqItemsStore[ $res[$i] ]["FieldName"] ]);
 			else if($ReqItemsStore[ $res[$i] ]["ItemType"] == "currencyfield")
-				$st .= number_format($RequestRecord [ $ReqItemsStore[ $res[$i] ]["FieldName"] ]);
+				$st .= number_format($GlobalInfoRecord [ $ReqItemsStore[ $res[$i] ]["FieldName"] ]);
 			else
-				$st .= $RequestRecord [ $ReqItemsStore[ $res[$i] ]["FieldName"] ];
+				$st .= $GlobalInfoRecord [ $ReqItemsStore[ $res[$i] ]["FieldName"] ];
 		}
     } else {
         $st .= $res[$i];

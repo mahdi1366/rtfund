@@ -17,17 +17,17 @@ function GetInfo(){
 	$obj = new BSC_persons($_SESSION["USER"]["PersonID"]);
 
 	$PT_Array = array();
-	if($obj->IsStaff)
+	if($obj->IsStaff == "YES")
 		$PT_Array[] = "'Staff'";
-	if($obj->IsCustomer)
+	if($obj->IsCustomer == "YES")
 		$PT_Array[] = "'Customer'";
-	if($obj->IsShareholder)
+	if($obj->IsShareholder == "YES")
 		$PT_Array[] = "'Shareholder'";
-	if($obj->IsAgent)
+	if($obj->IsAgent == "YES")
 		$PT_Array[] = "'Agent'";
-	if($obj->IsSupporter)
+	if($obj->IsSupporter == "YES")
 		$PT_Array[] = "'Supporter'";
-	if($obj->IsExpert)
+	if($obj->IsExpert == "YES")
 		$PT_Array[] = "'Expert'";
 
 	$files = PdoDataAccess::runquery("select DocumentID,ObjectID,DocDesc,b1.infoDesc DocTypeDesc,b2.infoDesc param1Title

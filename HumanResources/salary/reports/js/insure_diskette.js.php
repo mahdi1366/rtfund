@@ -120,7 +120,42 @@
 						itemCls: "search-item"
 					},
 					width: 300
-				}, {
+				},
+                                {
+					xtype: "combo",
+					colspan: 3,
+					store: new Ext.data.Store({
+						fields: ["DetID", "detectiveName"],
+						proxy: {
+							type: 'jsonp',
+							url: this.address_prefix + "../../../global/domain.data.php?task=searchDetectives",
+							reader: {
+								root: 'rows',
+								totalProperty: 'totalCount'
+							}
+						}
+						,
+						autoLoad: true,
+						listeners: {
+							load: function () {
+								InsureDiskObject.formPanel.down("[itemId=DetectID]").setValue("1");
+							}
+						}
+
+					}),
+					valueField: "DetID",
+					displayField: "detectiveName",
+					hiddenName: "DetectID",
+					itemId: "DetectID",
+					fieldLabel: "کارگاه &nbsp;",
+					listConfig: {
+						loadingText: 'در حال جستجو...',
+						emptyText: 'فاقد اطلاعات',
+						itemCls: "search-item"
+					},
+					width: 300
+				},
+                                {
 					xtype: "trigger",
 					fieldLabel: 'حوزه فعالیت',
 					name: 'DomainDesc',

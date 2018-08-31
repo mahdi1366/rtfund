@@ -31,9 +31,9 @@ class manage_payments extends PdoDataAccess
 	{
 	   
 		$query = " select  p.staff_id ,p.pay_year , p.pay_month ,p.payment_type , concat(bi.InfoDesc,'  ',p.pay_year ) pay_year_month ,
-						   SUM(pi.pay_value + pi.diff_pay_value) pay_sum,
-						   SUM(pi.get_value + pi.diff_get_value) get_sum,
-						   SUM(pi.pay_value + pi.diff_pay_value - pi.get_value - pi.diff_get_value) pure_pay , w.ouid , bu.UnitName full_unit_title 
+						   SUM(pi.pay_value + (pi.diff_pay_value * diff_value_coef )) pay_sum,
+						   SUM(pi.get_value + (pi.diff_get_value * diff_value_coef )) get_sum,
+						   SUM(pi.pay_value + (pi.diff_pay_value * diff_value_coef ) - pi.get_value - (pi.diff_get_value * diff_value_coef ) ) pure_pay , w.ouid , bu.UnitName full_unit_title 
 
 												from HRM_payments p inner join HRM_staff s
 																					     on p.staff_id = s.staff_id
@@ -71,9 +71,6 @@ class manage_payments extends PdoDataAccess
 		$whereParam[":pid"] = $personid;
 			
 		$tmp = PdoDataAccess::runquery($query ,$whereParam);
-		
-
-	
 
 			return $tmp ; 
 	}
@@ -117,13 +114,7 @@ class manage_payments extends PdoDataAccess
 	function Add($pdo="",$DB="")
 	{		
 		
-			/* $qry = "select person_type from staff where staff_id =".$this->staff_id ; 
-			$res = parent::runquery($qry) ; 
-			if($res[0]['person_type'] == 1 || $res[0]['person_type'] == 2 || $res[0]['person_type'] == 3 )
-				$DB = "hrms." ; 
-			else $DB = "hrms_sherkati.";  */ 
-			
-			$result = parent::insert($DB."payments", $this,$pdo);
+		$result = parent::insert("HRM_payments", $this,$pdo);
 		//echo PdoDataAccess::GetLatestQueryString() ; die();
 			if($result === false)
 			{ 
@@ -134,7 +125,7 @@ class manage_payments extends PdoDataAccess
 			$daObj->ActionType = DataAudit::Action_add;		
 			$daObj->MainObjectID = $this->pay_month ;
 			$daObj->SubObjectID = $this->staff_id ; 
-			$daObj->TableName = "payments";
+			$daObj->TableName = "HRM_payments";
 			$daObj->execute($pdo);   
 
 			return true  ; 

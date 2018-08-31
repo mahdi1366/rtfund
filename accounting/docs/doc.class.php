@@ -330,6 +330,42 @@ class ACC_docs extends PdoDataAccess {
 				<br><br><br><br>
 		';
 	}
+	
+	static function GetPureRemainOfSaving($PersonID, $BranchID){
+		
+		//------------- find Tafsili -----------------
+		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_PERSONS .  
+				" AND ObjectID=?", array($PersonID));
+		if(count($dt) == 0)
+		{
+			ExceptionHandler::PushException("تفصیلی فرد مربوطه یافت نشد.");
+			return false;
+		}
+		$TafsiliID = $dt[0]["TafsiliID"];
+		
+		//------------- find saving remain -----------------
+		$dt = PdoDataAccess::runquery("
+				select ifnull(sum(CreditorAmount-DebtorAmount),0) amount
+				from ACC_DocItems join ACC_docs using(DocID)
+				join ACC_cycles using(CycleID)
+				where TafsiliType=:tt AND TafsiliID=:t AND BranchID=:b 
+					AND CycleYear=:y AND CostID=:cost
+				group by TafsiliID", 
+			array(
+				":y" => substr(DateModules::shNow(),0,4),
+				":b" => $BranchID,
+				":cost" => COSTID_saving,
+				":tt" => TAFTYPE_PERSONS,
+				":t" => $TafsiliID
+		));
+		$SavingAmount = count($dt) == 0 ? 0 : $dt[0][0];
+		
+		//------------- minus block accounts -----------------
+		$BlockedAmount = ACC_CostBlocks::GetBlockAmount(COSTID_saving, TAFTYPE_PERSONS, $TafsiliID);
+
+		//------------------------------------------------
+		return $SavingAmount*1 - $BlockedAmount*1;
+	}
 
 }
 

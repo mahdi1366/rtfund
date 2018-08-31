@@ -72,6 +72,7 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "form.data.php?task=selectFo
 $dg->addColumn("", "FormID", "", true);
 $dg->addColumn("", "ordering", "", true);
 $dg->addColumn("","GroupDesc","string", true);
+$dg->addColumn("","DisplayDesc","string", true);
 
 $col = $dg->addColumn("گروه","GroupID","string");
 $col->renderer = "function(v,p,r){return r.data.GroupDesc;}";
@@ -86,10 +87,15 @@ $col->width = 200;
 
 $col = $dg->addColumn("نوع", "ItemType");
 $col->editor = "this.ItemTypeCombo";
+$col->renderer = "WFM_NewForm.ItemTypeRender";
+
+$col = $dg->addColumn("مقدار", "FieldName");
+$col->editor = "this.FieldNameCombo";
+$col->renderer = "function(v,p,r){return r.data.DisplayDesc}";
+$col->width = 160;
 
 $col = $dg->addColumn("مقادیر لیست", "ComboValues");
 $col->editor = ColumnEditor::TextField(true);
-
 
 $col = $dg->addColumn("","","");
 $col->renderer = "WFM_NewForm.upRender";
@@ -122,8 +128,8 @@ $dg->autoExpandColumn = "ComboValues";
 $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(store, record){ return WFM_NewFormObj.SaveItem(store, record);}";
 
-$dg->width = 790;
-$dg->height = 460;
+$dg->width = 990;
+$dg->height = 390;
 $dg->pageSize = 20;
 
 $grid = $dg->makeGrid_returnObjects();
@@ -216,14 +222,24 @@ function WFM_NewForm() {
 				{"id": "combo", "name": "لیستی"},
 				{"id": "checkbox", "name": "انتخابی"},
 				{"id": "grid", "name": "گرید"},	
-				{"id": "loan", "name": "وام های فرد"}
+				{"id": "loan", "name": "وام های فرد"},
+				{"id": "branch", "name": "شعبه های صندوق"},
+				{"id": "displayfield", "name": "نمایشی"}
 			]
 		}),
 		emptyText: 'انتخاب ...',
 		name: "name",
 		valueField: "id",
 		displayField: "name",
-		allowBlank : false
+		allowBlank : false,
+		listeners : {
+			select : function(){
+				if(this.getValue() == "displayfield")
+					WFM_NewFormObj.FieldNameCombo.enable();
+				else
+					WFM_NewFormObj.FieldNameCombo.disable();
+			}
+		}
 	});
 	
 	this.ColumnTypeCombo = new Ext.form.ComboBox({
@@ -244,6 +260,23 @@ function WFM_NewForm() {
 		valueField: "id",
 		displayField: "name",
 		allowBlank : false
+	});
+	
+	this.FieldNameCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			proxy: {
+				type: 'jsonp',
+				url: this.address_prefix + 'form.data.php?task=selectFormItems&FormID=0',
+				reader: {root: 'rows', totalProperty: 'totalCount'}
+			},
+			fields: ['FormItemID', "FormID", 'ItemName', 'ItemType'],
+			pageSize : 9
+		}),
+		typeAhead : true,
+		disabled  :true,
+		displayField: 'ItemName',
+		valueField: "FormItemID",
+		pageSize : 9
 	});
 
 	this.FormGroupCombo = new Ext.form.ComboBox({
@@ -294,7 +327,7 @@ WFM_NewForm.prototype.LoadForm = function(){
 				"&EditContent=true&FormID=" + this.FormID,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["FormID","FormTitle", "content", "FlowID", 
+		fields : ["FormID","FormTitle", "content", "FlowID", "SmsSend",
 			"IsStaff", "IsCustomer", "IsShareholder", "IsSupporter", "IsExpert", "IsAgent"],
 		autoLoad : true,
 		listeners : {
@@ -303,7 +336,6 @@ WFM_NewForm.prototype.LoadForm = function(){
 				//..........................................................
 				record = this.getAt(0);
 				me.formPanel.loadRecord(record);
-				
 				CKEDITOR.instances.FormEditor.on('instanceReady', function( ev ) {
 					ev.editor.setData(record.data.content);
 					mask.hide();										
@@ -343,7 +375,7 @@ WFM_NewForm.prototype.BuildForms = function(){
 				store: new Ext.data.Store({
 					proxy: {
 						type: 'jsonp',
-						url: this.address_prefix + 'form.data.php?task=selectFormItems'+
+						url: this.address_prefix + 'form.data.php?task=selectFormItems&CreateMode=true'+
 							'&FormID=' + this.FormID,
 						reader: {root: 'rows', totalProperty: 'totalCount'}
 					},
@@ -382,6 +414,7 @@ WFM_NewForm.prototype.BuildForms = function(){
 				handler : function(){WFM_NewFormObj.ManageItems();}
 			},{
 				xtype : "fieldset",
+				rowspan : 2,
 				title : " ذینفع",
 				layout : "hbox",
 				defaults : {style : "margin-right : 10px"},
@@ -440,6 +473,13 @@ WFM_NewForm.prototype.BuildForms = function(){
 				name : "FlowID",
 				width: 400
 			},{
+				xtype : "checkbox",
+				colspan : 2,
+				name : "SmsSend",
+				inputValue : "YES",
+				style : "margin-right:80px",
+				boxLabel : "ارسال فرم با تاییدیه پیامک باشد"
+			},{
 				xtype : "container",
 				colspan : 3,
 				html : "<div id=FormEditor></div>"
@@ -451,7 +491,7 @@ WFM_NewForm.prototype.BuildForms = function(){
 		buttons: [{
 				iconCls: "print",
 				text: " پیش نمایش",
-				handler: function () { window.open(WFM_NewFormObj.address_prefix + "PrintForm.php?RequestID=0&FormID=" + WFM_NewFormObj.FormID);}
+				handler: function () { window.open(WFM_NewFormObj.address_prefix + "PrintRequest.php?RequestID=0&FormID=" + WFM_NewFormObj.FormID);}
 			},'->',{
 				iconCls: "save",
 				text: " ذخیره",
@@ -771,6 +811,17 @@ WFM_NewForm.prototype.DeleteColumn = function(){
 
 //.....................................................
 
+WFM_NewForm.ItemTypeRender = function(v,p,r,rowIndex){
+	
+	store = WFM_NewFormObj.ItemTypeCombo.getStore();
+	for(var i=0; i<store.totalCount; i++)
+	{
+		record = store.getAt(i);
+		if(record.data.id == v)
+			return record.data.name;
+	}
+}
+
 WFM_NewForm.prototype.moveStep = function(direction){
 	var record = this.grid.getSelectionModel().getLastSelected();
 	
@@ -811,10 +862,10 @@ WFM_NewForm.prototype.ManageItems = function(){
 	if(!this.itemWin)
 	{
 		this.itemWin = new Ext.window.Window({
-			width : 800,
+			width : 1000,
 			title : "آیتم های الگو",
 			bodyStyle : "background-color:white;text-align:-moz-center",
-			height : 660,
+			height : 600,
 			modal : true,
 			closeAction : "hide",
 			items : [this.GroupGrid,this.grid],

@@ -5,9 +5,10 @@
 //---------------------------
 
 require_once("../../../header.inc.php");
-//require_once  "/home/krrtfir/public_html/HumanResources/global/sisW2D.php";
+require_once  "/home/krrtfir/public_html/HumanResources/global/sisW2D.php";
+define("InsureDIRPATH", "/home/krrtfir/public_html/HumanResources/upload/");
 //require_once "/home/krrtfir/public_html/generalClasses/pear/DB/dbase.php" ;
-
+//ini_set("display_errors", "On");
 // این گزارش مورد بررسی مجدد قرار گیرد چون در صفحه مربوطه تغییراتی اعمال شده است .................
 //die();
  
@@ -23,7 +24,7 @@ require_once("../../../header.inc.php");
 		.reportGenerator .header1 {color: white;font-weight: bold;background-color:#465E86}		
 		.reportGenerator td {border: 1px solid #555555;height: 20px;}
 </style>		
-<?
+<?php
 	}
 /*اولین حکم بعد از این حکم را استخراج می کند*/
 	function get_next_writ($execute_date,$staff_id)
@@ -45,48 +46,43 @@ require_once("../../../header.inc.php");
 	
 function onCalcField(&$rec)
 {
-
-	if(empty($rec['work_sheet'])) {
-	/*	$DT = PdoDataAccess::runquery('SELECT MAX(DISTINCT pai.param4) work_days,
-									   s.person_type
-								 FROM  payment_items pai
-									  INNER JOIN salary_item_types sit
-											ON (pai.salary_item_type_id = sit.salary_item_type_id)
-									  INNER JOIN staff s	
-											ON (pai.staff_id = s.staff_id)
-								 WHERE pai.pay_year = '.$_POST['pay_year'].' AND
-									  pai.pay_month = '.$_POST['pay_month'].' AND
-									  pai.payment_type = '.$_POST['PayType'].' AND
-									  pai.staff_id = '.$rec['staff_id'].' AND
-									  sit.compute_place = '.SALARY_ITEM_COMPUTE_PLACE_WRIT.'
-								 GROUP BY s.staff_id') ; 	
-								 
-	    if( $DT[0]['work_days'] > 1 ) */
+	
+	if(empty($rec['work_sheet']) || $rec['work_sheet'] == 0 ) {
+ 
 			$DT[0]['work_days'] = 1 ; 
 			 
 	    $work_days = $DT[0]['work_days'];
 		$person_type = $DT[0]['person_type'];
+	
+	/*	$work_days *= 
+		DateModules::DaysOfMonth($rec['pay_month'],$rec['pay_year']);	 */
 		
-		$work_days *= DateModules::DaysOfMonth($rec['pay_month'],$rec['pay_year']);		       	
+		if($rec['pay_month'] < 7 ) 
+		$work_days *= 31 ; 
+		else if ($rec['pay_month'] > 7 && $rec['pay_month'] < 12 ) 
+		$work_days *= 30 ; 
+		else $work_days *= 29 ; 
+
 		$rec['work_sheet'] = $work_days;			 
 	    
 	}
 	
-	$rec['work_sheet'] = 31 ;
-	
+		
 	if(!empty($rec['work_sheet']))
 			$rec['work_sheet'] = round($rec['work_sheet']) ;
 
-		$rec['daily_fee'] = $rec['monthly_fee'] / $rec['work_sheet'];
+		$rec['daily_fee'] = round($rec['monthly_fee'] / $rec['work_sheet']);
+		
+		
 
-		$rec['monthly_premium'] = $rec['monthly_insure_include'] - $rec['monthly_fee'];
+		$rec['monthly_premium'] = $rec['monthly_fee'] - $rec['monthly_insure_include']   ;
 		$rec['other_gets'] = $rec['gets'] - $rec['worker_insure_include'];
 		return true;
 }			
 
 function copyDbfFiles() {
 
-    $from_path = "/home/krrtfir/public_html/HumanResources/upload/dbf/" ;
+        $from_path = "/home/krrtfir/public_html/HumanResources/upload/dbf/" ;
 	$to_path = "/home/krrtfir/public_html/HumanResources/upload/" ;
 	$this_path = getcwd();
 	
@@ -149,15 +145,16 @@ if(isset($_REQUEST["task"]))
 							                                pit.pay_month = p.pay_month AND pit.staff_id = p.staff_id AND
 															pit.payment_type = p.payment_type)
 							INNER JOIN HRM_writs w ON ( p.writ_id = w.writ_id AND
-														p.writ_ver = w.writ_ver AND p.staff_id = w.staff_id )							
+														p.writ_ver = w.writ_ver AND p.staff_id = w.staff_id )			 INNER JOIN HRM_staff s ON p.staff_id = s.staff_id 
+                                                        INNER JOIN HRM_persons pr ON s.PersonID = pr.PersonID				
 							LEFT JOIN BSC_jobs bj ON bj.JobID = w.job_id
 							
 				WHERE pit.pay_year = ".$_POST['pay_year']." AND
-					  pit.pay_month = ".$_POST['pay_month']." AND
+					  pit.pay_month = ".$_POST['pay_month']." AND 
+					  pr.detectiveID =  ".$_POST['DetectID']." AND 
 					  pit.salary_item_type_id IN(7) AND 
 					  pit.get_value <> 0 ".$WhereUnit ; 	
 	PdoDataAccess::runquery($query) ; 	
-	
 	
 	PdoDataAccess::runquery("ALTER TABLE HRM_temp_insure_include ADD INDEX(staff_id)") ; 		
 
@@ -180,18 +177,19 @@ if(isset($_REQUEST["task"]))
   ps.country_id,
   ps.birth_date,
   ps.national_code,
-  po.PostName job_title,
+  ps.InsurePost job_title, ps.JobCode JobCode ,
   w.contract_start_date, w.contract_end_date,
-  w.issue_date, w.ouid, w.salary_pay_proc,
+  ps.issue_date, w.ouid, w.salary_pay_proc,
   w.person_type, c.ptitle country_title , pa.pay_year, pa.pay_month,
   pa.start_date, pa.end_date,
-  '4000976046' daily_work_place_no,
+  /*'4000976046'*/ 	hd.detectiveCode  daily_work_place_no,
   '-' cost_center_id ,
-  'صندوق پژوهش و فن آوری استان خراسان رضوی' detective_name,
-  '-' detective_address,
+  /*'صندوق پژوهش و فن آوری استان خراسان رضوی'*/ hd.detectiveName detective_name,
+  'میدان آزادی دانشگاه فردوسی' detective_address,
   '-' collective_security_branch,
-  '-' employer_name,
-  '-' work_sheet ,
+  'صندوق دانشگاه' employer_name,
+  SUM(CASE WHEN (pai.salary_item_type_id = 1 )
+   THEN (pai.param7) ELSE '-'  END) work_sheet,
   '-' description ,
    SUM(pai.pay_value + pai.diff_pay_value * pai.diff_value_coef) monthly_fee,
    SUM(pai.pay_value + pai.diff_pay_value * pai.diff_value_coef) pay,
@@ -230,10 +228,11 @@ if(isset($_REQUEST["task"]))
      LEFT OUTER JOIN HRM_staff s ON (w.staff_id = s.staff_id)
 
      LEFT OUTER JOIN HRM_persons ps ON (ps.PersonID = s.PersonID)
+     LEFT JOIN HRM_Detectives hd ON hd.DetID = ps.detectiveID 
      LEFT OUTER JOIN HRM_countries c ON (ps.country_id = c.country_id)
      LEFT OUTER JOIN HRM_salary_item_types sit ON(pai.salary_item_type_id = sit.salary_item_type_id)
 	 
-	 LEFT JOIN BSC_jobs bj ON bj.PersonID = ps.RefPersonID
+	 LEFT JOIN BSC_jobs bj ON bj.PersonID = ps.RefPersonID AND w.job_id = bj.JobID
 	 LEFT join BSC_posts po ON po.PostID= bj.PostID
 
       where (pa.pay_year = ".$_POST['pay_year']." ) AND (pa.pay_month = ".$_POST['pay_month']." ) AND pa.payment_type= ".$_POST['PayType']." 
@@ -245,7 +244,7 @@ if(isset($_REQUEST["task"]))
                w.contract_start_date,w.contract_end_date, w.ouid, w.salary_pay_proc,
                pa.start_date, pa.end_date  ");
 									 
-						
+//	echo   PdoDataAccess::GetLatestQueryString() ; 		die()			 ; 
 								  
 	PdoDataAccess::runquery('ALTER TABLE HRM_temp_insure_list ADD INDEX(staff_id);');
 	
@@ -268,7 +267,7 @@ if(isset($_REQUEST["task"]))
 					pay_year,
 					pay_month,
 					start_date,
-					end_date,
+					end_date,JobCode,
 					daily_work_place_no,cost_center_id,
 					detective_name,
 					detective_address,
@@ -276,25 +275,25 @@ if(isset($_REQUEST["task"]))
 				    employer_name,
 					work_sheet ,issue_date,
 					description ,
-					monthly_fee,
-					pay,
-					monthly_insure_include,
-					worker_insure_include,
-					employer_insure_value,
-					unemployment_insure_value,
+					round(monthly_fee) monthly_fee ,
+					round(pay) pay ,
+					round(monthly_insure_include) monthly_insure_include ,
+					round(worker_insure_include) worker_insure_include ,
+					round(employer_insure_value) employer_insure_value ,
+					round(unemployment_insure_value) unemployment_insure_value ,
 					gets,
 					pure_pay 
 				
 				from HRM_temp_insure_list s
 				where  (pay_year = ".$_POST['pay_year'].") AND
-					   (pay_month = ".$_POST['pay_month'].") 
+					   (pay_month = ".$_POST['pay_month'].")  
 					  
-				order by pay_year,pay_month,daily_work_place_no,plname,pfname " ; 
+				order by pay_year,pay_month,daily_work_place_no,plname,pfname   
+                                 " ; 
 									
 		$res = PdoDataAccess::runquery($query) ; 	
-
-
-
+/*echo PdoDataAccess::GetLatestQueryString() ;
+die(); */
 		$qry = " select bi.Title month_title 
                         from  Basic_Info bi 
                                 where  bi.typeid = 78 AND InfoID = ".$_POST["pay_month"] ; 
@@ -309,9 +308,18 @@ if(isset($_REQUEST["task"]))
 		$monthly_premium = $monthly_insure_include = $pay = $worker_insure_include =$other_gets = 0 ; 
 		$pure_pay = $employer_insure_value = $unemployment_insure_value = 0  ; 
 		$record = "" ;	
+                copyDbfFiles();
+                
+                $cnv = new sisW2DFormatConvertor();
+                
 		for($i=0;$i<count($res);$i++){
 			
 		onCalcField($res[$i]) ;
+                
+                while (list($key, $value) = each($res[$i]))
+                        $res[$i][$key] = str_replace(array("ی", "ی", "ک", "ك", "ؤ"), array("ي", "ي", "ك", "ك", "و"), $res[$i][$key]);
+
+                
 		if($res[$i]['sex'] == 1 )
 				$sex = 'مرد';
 			else
@@ -331,7 +339,7 @@ if(isset($_REQUEST["task"]))
 					$contract_start_date = NULL;
 					
 			}
-			else $contract_start_date = NULL;
+			else $contract_start_date = NULL; // '1397/01/01';
 		 	
 			unset($arr);
 			if($res[$i]['contract_end_date'] != '0000-00-00')
@@ -350,37 +358,41 @@ if(isset($_REQUEST["task"]))
 				}
 			
 			} else
-			$contract_end_date = NULL;
-			
-			
-			$record .=		$res[$i]['daily_work_place_no'].",".
-							substr($_POST['pay_year'],2,2).",".
-	    					$_POST['pay_month'].",NULL,".
-							$res[$i]['insure_no'].",".
-	    					$res[$i]['pfname'].",".
-	    					$res[$i]['plname'].",".
-	    					$res[$i]['father_name'].",".
-	    					$res[$i]['idcard_no'].",".
-	    					$res[$i]['city_title'].",".
-	    					substr(DateModules::Miladi_to_Shamsi($res[$i]['issue_date']),2).",".
-							substr(DateModules::Miladi_to_Shamsi($res[$i]['birth_date']),2).",".				
-	    					$sex.",".
-	    					$res[$i]['country_title'].",".
-	    					$res[$i]['job_title'].",".
-	    					substr($contract_start_date,2).",".
-	    					substr($contract_end_date,2).",".
-	    					round($res[$i]['work_sheet']).",".
-	    					round($res[$i]['daily_fee']).",".
-	    					round($res[$i]['monthly_fee']).",".
-	    					round($res[$i]['monthly_premium']).",".
-	    					round($res[$i]['monthly_insure_include']).",".
-	    					round($res[$i]['pay']).",".
-	    					round($res[$i]['worker_insure_include']).",".							                          
-	    					NULL.",". /* نرخ پورسانتاژ */
-	    					NULL.",".  /* DSW_JOB */
-							$res[$i]['national_code']."\r\n";	 
-							
-							
+			$contract_end_date = NULL; //'1397/12/29';
+
+		$record = array($res[$i]['daily_work_place_no'],
+                                substr($_POST['pay_year'], 2, 2),
+                                $_POST["pay_month"]*1 ,
+                                1,
+                                $cnv->correctDigitDir($res[$i]['insure_no']),
+                                $cnv->convertStringMs2Dos(iconv('UTF-8', 'WINDOWS-1256', $res[$i]['pfname'])),
+                                $cnv->convertStringMs2Dos(iconv('UTF-8', 'WINDOWS-1256', $res[$i]['plname'])),
+                                $cnv->convertStringMs2Dos(iconv('UTF-8', 'WINDOWS-1256', $res[$i]['father_name'])),
+                                $cnv->convertStringMs2Dos(iconv('UTF-8', 'WINDOWS-1256', $res[$i]['idcard_no'])),
+                                $cnv->convertStringMs2Dos(iconv('UTF-8', 'WINDOWS-1256', $res[$i]['city_title'])),
+                                substr(DateModules::Miladi_to_Shamsi($res[$i]['issue_date']),0,4).''.substr(DateModules::Miladi_to_Shamsi($res[$i]['issue_date']),5,2).''.substr(DateModules::Miladi_to_Shamsi($res[$i]['issue_date']),8,2),
+                                substr(DateModules::Miladi_to_Shamsi($res[$i]['birth_date']),0,4).''.substr(DateModules::Miladi_to_Shamsi($res[$i]['birth_date']),5,2).''.substr(DateModules::Miladi_to_Shamsi($res[$i]['birth_date']),8,2),
+                                $cnv->convertStringMs2Dos(iconv('UTF-8', 'WINDOWS-1256', $sex)),
+                                $cnv->convertStringMs2Dos(iconv('UTF-8', 'WINDOWS-1256', $res[$i]['country_title'])),
+                                $cnv->convertStringMs2Dos(iconv('UTF-8', 'WINDOWS-1256', $res[$i]['job_title'])) ,                                 
+                                substr($contract_start_date,0,4).''.
+                                substr($contract_start_date,5,2).''.
+                                substr($contract_start_date,8,2) ,
+                                substr($contract_end_date,0,4).''.
+                                substr($contract_end_date,5,2).''.
+                                substr($contract_end_date,8,2),
+                                round($res[$i]['work_sheet']),
+                                round($res[$i]['daily_fee']),
+                                round($res[$i]['monthly_fee']),
+                                round($res[$i]['monthly_premium']),
+                                round($res[$i]['monthly_insure_include']),
+                                round($res[$i]['pay']),
+                                round($res[$i]['worker_insure_include']),
+                                27,
+                                $cnv->convertStringMs2Dos(iconv('UTF-8', 'WINDOWS-1256', $res[$i]['JobCode'])),/* DSW_JOB */
+                                substr($res[$i]['national_code'],0,10));	 
+						//	echo "***"; die();
+	
 			$counter++;
 			$work_sheet += $res[$i]['work_sheet'];
 			$daily_fee += $res[$i]['daily_fee']; 
@@ -391,57 +403,74 @@ if(isset($_REQUEST["task"]))
 			$worker_insure_include += $res[$i]['worker_insure_include'];
 			$employer_insure_value += $res[$i]['employer_insure_value']; 
 			$unemployment_insure_value += $res[$i]['unemployment_insure_value']; 
+                        
+                        $file = "DSKWOR00.DBF";
+                       /* if (file_exists(InsureDIRPATH.$file)) {
+                                     unlink(InsureDIRPATH.$file);
+                                }*/
+                        
+			$db_path = InsureDIRPATH . $file ;
+			$dbi = dbase_open($db_path, 2);
+			dbase_add_record($dbi, $record);
+			dbase_close($dbi);
 			
 			}
 			
 			if(empty($_GET['TypeDisk'])) {
 			
-				$file = "DSKWOR00".$_POST["pay_year"].str_pad($_POST["pay_month"], 2, "0", STR_PAD_LEFT).".TXT";
-								
-				$filename = "../../../tempDir/".$file ;
-				$fp=fopen($filename,'w');
-				fwrite($fp ,$record);
-				fclose($fp);
-
+				$file = "DSKWOR00.DBF";
+				
 				header('Content-disposition: filename="'.$file.'"');
 				header('Content-type: application/file');
 				header('Pragma: no-cache');
 				header('Expires: 0');
 				header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-				header('Pragma: public');
+				header('Pragma: public'); 
 
-				echo file_get_contents("../../../tempDir/".$file);
+				echo file_get_contents(InsureDIRPATH.$file);
 				die() ; 
 				
 			}	
 			else if($_GET['TypeDisk'] == 'KAR'){
 			
-			
-			
-			$record2 = $res[0]['daily_work_place_no'].",".
-    				   $res[0]['detective_name'].",".
-    				   $res[0]['employer_name'].",".
-    				   $res[0]['detective_address'].",1,".
-    				   substr($_POST['pay_year'],2,2).",".
-    				   $_POST['pay_month'].",NULL,'ليست اصلي مشمول بيمه',".    					
-    					$counter.",".
-    					round($work_sheet).",".
-    					round($daily_fee).",".
-    					round($monthly_fee).",".
-    					round($monthly_premium).",".
-    					round($monthly_insure_include).",".
-    					round($pay).",".
-    					round($worker_insure_include).",".                     
-    					round($employer_insure_value).",".
-    					round($unemployment_insure_value).",'27',NULL, NULL "  ; 
-						
-						
-			    $file = "DSKKAR00".$_POST["pay_year"].str_pad($_POST["pay_month"], 2, "0", STR_PAD_LEFT).".TXT";
-								
-				$filename = "../../../tempDir/".$file ;
-				$fp=fopen($filename,'w');
-				fwrite($fp ,$record2);
-				fclose($fp);
+	
+	
+			$t1 = 'ليست اصلي مشمول بيمه' ; 
+                        
+			$record2 = array($res[0]['daily_work_place_no'],
+    				   $cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$res[0]['detective_name'])),
+    				   $cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$res[0]['employer_name'])),
+    				   $cnv->convertDigitDosEnToFa($cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256',$res[0]['detective_address']))),                                 
+                                   1,
+    				   substr($_POST['pay_year'], 2, 2),
+    				   $_POST["pay_month"] * 1 ,
+                                   NULL,
+                                   $cnv->convertStringMs2Dos(iconv('UTF-8','WINDOWS-1256','ليست اصلي مشمول بيمه')),     					
+                                   $counter,
+                                    round($work_sheet),
+                                    round($daily_fee),
+                                    round($monthly_fee),
+                                    round($monthly_premium),
+                                    round($monthly_insure_include),
+                                    round($pay),
+                                    round($worker_insure_include),                    
+                                    round($employer_insure_value),
+                                    round($unemployment_insure_value),
+                                   /* (round($worker_insure_include) + round($employer_insure_value)),*/
+                                    '27',
+                                     0,
+                                     0 ) ; 
+                        
+                                $file = "DSKKAR00.DBF" ;
+                             /*   if (file_exists(InsureDIRPATH.$file)) {
+                                     unlink(InsureDIRPATH.$file);
+                                }  */                              
+                               
+                                $db_path = InsureDIRPATH.$file ;
+                                $dbi = dbase_open($db_path,2);
+                                dbase_add_record($dbi, $record2);
+                                dbase_close($dbi); 
+
 
 				header('Content-disposition: filename="'.$file.'"');
 				header('Content-type: application/file');
@@ -450,7 +479,7 @@ if(isset($_REQUEST["task"]))
 				header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
 				header('Pragma: public');
 
-				echo file_get_contents("../../../tempDir/".$file);
+				echo file_get_contents(InsureDIRPATH.$file);
 				die() ; 
     					
 			}
@@ -561,8 +590,8 @@ if(isset($_REQUEST["task"]))
 					$qry = " select  count(*) cn
 								from writs
 									where execute_date > '".$res[$i]['contract_end_date']."' and staff_id = ".$res[$i]['staff_id']."
-							 order by execute_date
-							 limit 1 " ; 
+							 order by execute_date limit 1
+							" ; 
 					$NWRes = PdoDataAccess::runquery($qry) ; 
 					
 						if($NWRes[0]['cn'] == 0 && $res[$i]['salary_pay_proc'] == 1 )									
@@ -623,86 +652,7 @@ if(isset($_REQUEST["task"]))
 				  <td colspan='4'>&nbsp;</td></tr></table></center>" ;
 	
 	}
-/*	elseif( $_REQUEST["task"] == 'ApprovedForm' ) 
-	{
-		
-		$man_counter = $woman_counter =$work_sheet = $daily_fee = $monthly_fee = 0 ; 
-		$monthly_premium = $monthly_insure_include = $pay = $worker_insure_include =$other_gets = 0 ; 
-		$pure_pay = $employer_insure_value = $unemployment_insure_value = 0  ; 
-		
-		for($i=0;$i< count($res) ;$i++)
-		{
-			if($res[$i]['sex'] == 1 )
-				$man_counter++;
-				
-			if($res[$i]['sex'] == 2 )
-				$woman_counter++;
-				
-			$pay += $res[$i]['pay'] ; 
-			$monthly_insure_include += $res[$i]['monthly_insure_include'] ; 
-			$worker_insure_include += $res[$i]['worker_insure_include'] ;
-			$employer_insure_value += $res[$i]['employer_insure_value'] ;
-			$unemployment_insure_value += $res[$i]['unemployment_insure_value'] ;			
-						
-			
-		}
-	
-		echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';		     
-	
 
-		echo '<center><table  class="reportGenerator" style="text-align: right;width:85%!important;font-weight:bold;" cellpadding="4" cellspacing="0">
-			 <tr>					
-				<td align="center" colspan="2" style="height: 500; vertical-align: top;font-size:14px"><div style="margin-top: 10px;">رسید شعبه</div>
-				  <div style="position: relative; top: 80%; width: 280px; left: -15%;">نام و امضاء متصدي دريافت و مهر شعبه</div>
-				</td>
-			 </tr> 
-			 <tr>					
-				<td colspan="2" style="vertical-align: top;">
-					خلاصه وضعيت صورت دستمزد و مزاياي کارکنان کارگاه &nbsp; '.$res[0]['detective_name'].'<br><br> شماره کارگاه &nbsp; '.$res[0]['daily_work_place_no'].'
-					<br><br> به پيوست  1  حلقه ديسکت مربوط به دستمزد، حقوق و مزاياي ماهانه جاري&nbsp;
-					<img src="/HumanResources/img/checkbox_on.gif"> معوق 
-					<img src="/HumanResources/img/checkbox_off.gif">متمم 
-					<img src="/HumanResources/img/checkbox_off.gif"> پورسانتاژ 
-					<img src="/HumanResources/img/checkbox_off.gif"> جانباز 
-					<img src="/HumanResources/img/checkbox_off.gif"> معلول 
-					<img src="/HumanResources/img/checkbox_off.gif"><br><br>
-					کارکنان اين کارگاه در ماه &nbsp; '.$monthTitle.' &nbsp; سال &nbsp;'.$_POST['pay_year'].'که خلاصه وضعيت آن به شرح زير است : <br><br>
-					جهت منظور نمودن در سيستم مکانيزه و دریافت رسيد تحويل مي گردد : <br><br>
-					تعداد بيمه شدگان : مرد &nbsp; '.$man_counter.' نفر و زن  &nbsp;'.$woman_counter.'&nbsp;نفر، جمعا '.($man_counter + $woman_counter) .' &nbsp; نفر <br><br>
-					
-				</td>
-			 </tr>
-			 <tr>
-				 <td> جمع دستمزد و مزاياي مشمول و غير مشمول کسر حق بيمه ماه </td><td align="left">'.number_format(round($pay), 0, '.', ',').'&nbsp; ریال &nbsp;</td>
-				 <tr>
-				 <td> جمع دستمزد و مزاياي مشمول کسر حق بيمه ماه </td><td align="left">'.number_format(round($monthly_insure_include), 0, '.', ',').'&nbsp; ریال &nbsp;</td>
-			 </tr>
-			 <tr>
-				 <td> جمع حق بيمه سهم بيمه شده </td><td align="left" >'.number_format(round($worker_insure_include), 0, '.', ',').'&nbsp; ریال &nbsp;</td>
-			 </tr>
-			 <tr>
-				 <td> جمع حق بيمه سهم کارفرما </td><td align="left" >'.number_format(round($employer_insure_value), 0, '.', ',').'&nbsp; ریال &nbsp;</td>
-			 </tr>
-			 <tr>
-				 <td> جمع حق بيمه بيکاري </td><td align="left" >'.number_format(round($unemployment_insure_value), 0, '.', ',').'&nbsp; ریال &nbsp;</td>
-			 </tr>
-			 <tr>
-				 <td> 4% حق بيمه مشاغل سخت </td><td align="left" >&nbsp;</td>
-			 </tr>
-			 <tr>
-				 <td>جمع کل حق بيمه و بيمه بيکاري</td><td align="left" >'.number_format(round($worker_insure_include + $employer_insure_value + $unemployment_insure_value ), 0, '.', ',').'&nbsp; ریال &nbsp;</td>				 
-			 </tr>
-			 <tr>
-				<td colspan="2" style="height: 200px" >
-				<div style="position: relative; top: -30%; width:600px;">ضمنا متعهد مي گردد اطلاعات ذخيره شده در ديسکتهاي فوق عينا مربوط به مندرجات بشرح فوق مي باشد.</div>
-				<div style="position: relative; top: -15%; width: 280px; left: -25%;"> مهر و امضاء کارفرما/نماينده قانوني کارفرما </div>
-				</td>
-			 </tr>
-			 </tr>
-			 ' ; 
-		 die() ; 
-				
-	}	*/
 		
 }
 ?>

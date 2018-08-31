@@ -40,7 +40,7 @@ class manage_salary_item_type extends PdoDataAccess
 	public $Param2CostID;
 	public $Param3CostID;
 	public $Param4CostID;
-	
+	public $SessionItem;
 	public $available_for;
 	public $backpay_include;
 	public $month_length_effect;

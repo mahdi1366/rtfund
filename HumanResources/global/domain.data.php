@@ -91,7 +91,10 @@ switch ($task) {
 		 searchDetective() ; 
 		 
 	case "searchSalaryItemTypes":
-		searchSalaryItemTypes() ; 
+		searchSalaryItemTypes() ;
+		
+		case "searchDetectives" :
+		    searchDetectives();
 }
 
 function searchWritTypes()
@@ -457,9 +460,23 @@ function searchPayType()
     $dt = array();
 	if(!empty($_REQUEST["extraRowText"]))
 	{
-		$dt[] = array(array("InfoID" => $_REQUEST["extraRowID"], "Title" => $_REQUEST["extraRowText"]));
+		$dt[] = array(array("InfoID" => $_REQUEST["extraRowID"], "InfoDesc" => $_REQUEST["extraRowText"]));
 	}
-	$dt = array_merge($dt, PdoDataAccess::runquery(" SELECT InfoID,InfoDesc FROM BaseInfo where typeid = 72  and InfoID in (1,2,3) " )); 
+	$dt = array_merge($dt, PdoDataAccess::runquery(" SELECT InfoID,InfoDesc FROM BaseInfo where typeid = 72   " )); 
+
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
+function searchDetectives()
+{
+   
+    $dt = array();
+	if(!empty($_REQUEST["extraRowText"]))
+	{
+		$dt[] = array(array("DetID" => $_REQUEST["extraRowID"], "detectiveName" => $_REQUEST["extraRowText"]));
+	}
+	$dt = array_merge($dt, PdoDataAccess::runquery(" SELECT DetID,detectiveName FROM HRM_Detectives  " )); 
 
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();

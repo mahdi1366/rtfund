@@ -93,6 +93,8 @@ class manage_payment_cancel extends PdoDataAccess
 	    						  '((pit.staff_id IS NOT NULL AND '.$this->where_clause.') OR '.
 	    						  '('.$this->writ_where.'))' .$this->__WHERE ,$this->__WHEREPARAM ); 
 	    						  
+	    						  
+                        
 		parent::runquery('ALTER TABLE temp_cancel_limit_staff ADD INDEX(staff_id);');
 		
 		$this->end_date =  DateModules::shamsi_to_miladi($this->year.'/'.$this->month.'/'.DateModules::DaysOfMonth($this->year, $this->month)) ;  
@@ -119,7 +121,7 @@ class manage_payment_cancel extends PdoDataAccess
 				    		 	   p.payment_type = '.$this->payment_type.' AND
 				    		 	   p.state = '.PAYMENT_STATE_FINAL.';'); 
 								   
-	   
+	    
 		
 	}
 	
@@ -367,20 +369,18 @@ class manage_payment_cancel extends PdoDataAccess
 		$pdo = parent::getPdoObject();
 		$pdo->beginTransaction();
 		
-		if($this->payment_type == 1 ) {
+		//if($this->payment_type == 1 ) {
 			$this->prepare_wheres();
 			$this->init();
 	 
 			$this->ins_commited_staff(); 
-		//	$this->ins_last_flow_not_fich();
-		//	$this->fail_log(); 
+	
 			$this->remove_from_limit_staff();		
 			$this->remove_payment_items();
 			$this->remove_payment_writs();
 			$this->remove_payments();			
-			//$this->remove_temp_subtract_flow(); 
-		//	$this->update_person_dependent_support();
-		}
+		
+		//}
 		
 		
 		if(parent::GetExceptionCount() > 0 )

@@ -51,7 +51,7 @@ class manage_person extends PdoDataAccess
 	public $role_student;
 	public $role_staff;
 	public $role_part_time_teacher;
-	public $role_burse;
+	public $InsurePost;
 	public $role_other;
 	public $person_type;
 	public $comment;
@@ -59,7 +59,8 @@ class manage_person extends PdoDataAccess
 	public $OtherPerson ; 
 	public $picture ;
 public $RefPersonID ;
-
+public $detectiveID ;
+public $JobCode ;
 
 
 	function __construct($PersonID = "", $staff_id = "")

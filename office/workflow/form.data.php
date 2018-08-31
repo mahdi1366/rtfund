@@ -49,6 +49,9 @@ switch($task)
 	case "SelectAccessFromItems":
 	case "ChangeFormAccess":
 	case "ChangeTotalFormAccess":
+		
+	case "CheckConfirmationCode":
+		
 		$task();
 }
 
@@ -81,7 +84,7 @@ function selectFormItems() {
 	
 	$params[":StepRowID"] = !isset($_REQUEST["StepRowID"]) ? "-1" : $_REQUEST["StepRowID"];
 	
-	if(!empty($_REQUEST["FormID"]))
+	if(isset($_REQUEST["FormID"]))
 	{
 		$where .= " AND fi.FormID in(0,:t)";
 		$params[":t"] = $_REQUEST["FormID"];
@@ -90,14 +93,40 @@ function selectFormItems() {
 	if(!empty($_REQUEST["NotGlobal"]))
 		$where .= " AND fi.FormID >0";
 	
+	if(isset($_REQUEST["CreateMode"]))
+	{
+		$where .= " AND if(fi.ItemType='displayfield' AND fi.FieldName is not null,1=0,1=1)";
+	}
+	
     $temp = WFM_FormItems::Get($where . " order by if(fi.FormID=0,1,0),fg.ordering,fi.ordering", $params);
-	
-	print_r(ExceptionHandler::PopAllExceptions());
-	
 	if(!empty($_REQUEST["limit"]))
 		$res = PdoDataAccess::fetchAll ($temp, $_GET["start"], $_GET["limit"]);
 	else
 		$res = $temp->fetchAll();
+	
+	if(!empty($_REQUEST["RequestMode"]))
+	{
+		if(!empty($_REQUEST["RequestID"]))
+		{
+			$ReqObj = new WFM_requests($_REQUEST["RequestID"]);
+			$PersonID = $ReqObj->PersonID;
+			$RequestID = $_REQUEST["RequestID"];
+		}
+		else
+		{
+			$PersonID = $_SESSION["USER"]["PersonID"];
+			$RequestID = 0;
+		}
+		$PersonalInfo = WFM_requests::GlobalInfoRecord($PersonID, $RequestID);
+		for($i=0; $i<count($res); $i++)
+		{
+			if($res[$i]["FieldName"] != "" && isset($PersonalInfo[ $res[$i]["DisplayField"] ]))
+				$res[$i]["DisplayValue"] = $PersonalInfo[ $res[$i]["DisplayField"] ];
+			else
+				$res[$i]["DisplayValue"] = "";
+		}
+	}
+	//echo PdoDataAccess::GetLatestQueryString();
 	
     echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
     die();
@@ -258,6 +287,7 @@ function SaveForm() {
 	$obj->IsSupporter = $obj->IsSupporter ? "YES" : "NO";
 	$obj->IsExpert = $obj->IsExpert ? "YES" : "NO";
 	$obj->IsAgent = $obj->IsAgent ? "YES" : "NO";
+	$obj->SmsSend = $obj->SmsSend ? "YES" : "NO";
 	
 	if ($_POST['FormID'] > 0) {
 		$obj->FormID = $_POST['FormID'];
@@ -538,7 +568,7 @@ function SelectMyRequests() {
 		$res[$i]["JustStarted"] = $arr["JustStarted"] ? "YES" : "NO";
 		$res[$i]["ActionType"] = $arr["ActionType"];
 		$res[$i]["StepDesc"] = $arr["StepDesc"];
-		$res[$i]["ResendEnable"] = $arr["ResendEnable"] ? "YES" : "NO";		
+		$res[$i]["SendEnable"] = $arr["SendEnable"] ? "YES" : "NO";		
 	}
 	
     echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
@@ -609,32 +639,134 @@ function SaveRequest() {
 		}
 		$result = $ReqItemsObj->Add($pdo);
 	}
-	
-	if(isset($_REQUEST["sending"]) && $_REQUEST["sending"] == "true")
-	{
-		$FlowID = $formObj->FlowID;
-		$ObjectID = $ReqObj->RequestID;
-		$result = WFM_FlowRows::StartFlow($FlowID, $ObjectID);
-	}
-	
 	if(!$result)
 	{
 		$pdo->rollBack();
-        print_r(ExceptionHandler::PopAllExceptions());
-        //echo PdoDataAccess::GetLatestQueryString();
-        echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+        echo Response::createObjectiveResponse(false, "خطا در ذخیره اطلاعات");
         die();
 	}
-	
 	$pdo->commit();
+	
+	//------------------ sending form --------------------
+	
+	if(isset($_REQUEST["sending"]) && $_REQUEST["sending"] == "true")
+	{
+		if($formObj->SmsSend == "YES")
+		{
+			$SmsNo = SendConfirmationCode($ReqObj->RequestID);
+			if(!$SmsNo)
+			{
+				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+				die();
+			}
+			echo Response::createObjectiveResponse(true, $ReqObj->RequestID . "-" . $SmsNo);
+			die();
+		}
+		else
+		{
+			$FlowID = $formObj->FlowID;
+			$ObjectID = $ReqObj->RequestID;
+			$result = WFM_FlowRows::StartFlow($FlowID, $ObjectID);
+			if(!$result)
+			{
+				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+				die();
+			}
+		}
+	}
+	
 	echo Response::createObjectiveResponse(true, $ReqObj->RequestID);
 	die();
+}
+
+function SendConfirmationCode($RequestID){
+	
+	$ReqObj = new WFM_requests($RequestID);
+	require_once '../../framework/person/persons.class.php';
+	$PersonObj = new BSC_persons($ReqObj->PersonID);
+	
+	if($PersonObj->SmsNo == "")
+	{
+		ExceptionHandler::PushException("با توجه به اینکه ارسال این فرم فقط از طریق تایید کد امنیتی از طریق پیامک می باشد و شماره پیامک شما در سیستم ثبت نشده است،" . 
+			" لطفا جهت ثبت شماره پیامک خود با صندوق تماس حاصل فرمایید.");
+		return false;
+	}
+	if(isset($_SESSION["ConfirmCode"]))
+	{
+		if(time() - $_SESSION["ConfirmCode"]["time"]*1 < 600)
+		{
+			return $PersonObj->SmsNo;
+		}
+		unset($_SESSION["ConfirmCode"]);
+	}
+	
+	$ConfirmCode = rand(111111, 999999);
+	$_SESSION["ConfirmCode"] = array(
+		"time" => time(),
+		"code" => $ConfirmCode,
+		"tries" => 0
+	);
+	require_once 'sms.php';
+	$result = ariana2_sendSMS($PersonObj->SmsNo, $ConfirmCode, "number", $SendError);
+	//$result = true;
+	if(!$result)
+	{
+		ExceptionHandler::PushException ("خطا در ارسال پیامک");
+		unset($_SESSION["ConfirmCode"]);
+		return false;
+	}
+	
+	return $PersonObj->SmsNo;
+}
+
+function CheckConfirmationCode(){
+	
+	$RequestID = (int)$_REQUEST["RequestID"];
+	$code = (int)$_REQUEST["code"];
+	
+	if(empty($_SESSION["ConfirmCode"]))
+	{
+		echo Response::createObjectiveResponse(false, "ExpireCode");
+		die();
+	}
+	if(time() - $_SESSION["ConfirmCode"]["time"]*1 > 600)
+	{
+		unset($_SESSION["ConfirmCode"]);
+		echo Response::createObjectiveResponse(false, "ExpireCode");
+		die();
+	}
+	if($_SESSION["ConfirmCode"]["code"] != $code)
+	{
+		if($_SESSION["ConfirmCode"]["tries"] == 3)
+		{
+			unset($_SESSION["ConfirmCode"]);
+			echo Response::createObjectiveResponse(false, "MaxTry");
+			die();
+		}
+		$_SESSION["ConfirmCode"]["tries"]++;
+		echo Response::createObjectiveResponse(false, "WrongeCode");
+		die();
+	}
+	else
+	{
+		$ReqObj = new WFM_requests($RequestID);
+		$result = WFM_FlowRows::StartFlow($ReqObj->_FlowID, $ReqObj->RequestID);
+		if(!$result)
+		{
+			echo Response::createObjectiveResponse(false, "خطا در ارسال فرم");
+			die();
+		}
+		unset($_SESSION["ConfirmCode"]);
+		echo Response::createObjectiveResponse(true, "");
+		die();
+	}	
 }
 
 function GetRequestItems() {
 	
     $res = WFM_RequestItems::Get(" AND RequestID=?", array($_REQUEST['RequestID']));
-    echo dataReader::getJsonData($res->fetchAll(),$res->rowCount(), $_GET["callback"]);
+	$res = $res->fetchAll();
+    echo dataReader::getJsonData($res,count($res), $_GET["callback"]);
     die();
 }
 

@@ -16,7 +16,7 @@ $dg->addColumn("", "IsStarted", "", true);
 $dg->addColumn("", "IsEnded", "", true);
 $dg->addColumn("", "JustStarted", "", true);
 $dg->addColumn("", "ActionType", "", true);
-$dg->addColumn("", "ResendEnable", "", true);
+$dg->addColumn("", "SendEnable", "", true);
 $dg->addColumn("", "param4", "", true);
 
 $col = $dg->addColumn("شماره درخواست", "RequestID", "");
@@ -101,7 +101,8 @@ WFM_MyRequests.prototype.AddNewRequest = function(RequestID, FormID){
 	{
 		this.requestWin = new Ext.window.Window({
 			width : 740,
-			height : 660, 
+			height : 500,
+			autoScroll : true,
 			modal : true,
 			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
 			closeAction : "hide",
@@ -153,7 +154,7 @@ WFM_MyRequests.prototype.OperationMenu = function(e){
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
 	
-	if(record.data.IsStarted == "NO" || record.data.ResendEnable == "YES")
+	if(record.data.SendEnable == "YES")
 	{
 		op_menu.add({text: 'ویرایش فرم',iconCls: 'edit', 
 		handler : function(){
@@ -163,8 +164,6 @@ WFM_MyRequests.prototype.OperationMenu = function(e){
 		op_menu.add({text: 'حذف فرم',iconCls: 'remove', 
 		handler : function(){ WFM_MyRequestsObject.DeleteRequest();  }});
 	
-		op_menu.add({text: 'ارسال فرم',iconCls: 'send', 
-		handler : function(){ return WFM_MyRequestsObject.StartFlow(); }});
 	}
 	if(record.data.JustStarted == "YES")
 	{
@@ -182,7 +181,7 @@ WFM_MyRequests.prototype.OperationMenu = function(e){
 		handler : function(){ 
 			me = WFM_MyRequestsObject;
 			record = me.grid.getSelectionModel().getLastSelected();
-			window.open(me.address_prefix + 'PrintForm.php?RequestID=' + record.data.RequestID);
+			window.open(me.address_prefix + 'PrintRequest.php?RequestID=' + record.data.RequestID);
 	}});
 	
 	op_menu.showAt(e.pageX-120, e.pageY);
@@ -226,39 +225,6 @@ WFM_MyRequests.prototype.DeleteRequest = function(){
 				}
 
 				WFM_MyRequestsObject.grid.getStore().load();
-			}
-		});
-	});
-}
-
-WFM_MyRequests.prototype.StartFlow = function(){
-	
-	Ext.MessageBox.confirm("","آیا مایل به شروع گردش فرم می باشید؟",function(btn){
-		
-		if(btn == "no")
-			return;
-		
-		me = WFM_MyRequestsObject;
-		var record = me.grid.getSelectionModel().getLastSelected();
-	
-		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
-		mask.show();
-
-		Ext.Ajax.request({
-			url: '/office/workflow/wfm.data.php',
-			method: "POST",
-			params: {
-				task: "StartFlow",
-				FlowID : record.data.FlowID,
-				ObjectID : record.data.RequestID
-			},
-			success: function(response){
-				mask.hide();
-				res = Ext.decode(response.responseText);
-				if(!res.success)
-					Ext.MessageBox.alert("Error", res.data);
-				else
-					WFM_MyRequestsObject.grid.getStore().load();
 			}
 		});
 	});

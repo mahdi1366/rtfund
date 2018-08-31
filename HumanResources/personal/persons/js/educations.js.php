@@ -67,7 +67,7 @@ function PersonEducation()
 	});
 
 
-	this.StudyFieldCombo = new Ext.form.field.ComboBox({
+/*	this.StudyFieldCombo = new Ext.form.field.ComboBox({
 		store : this.store1,
 		width : 200,
 		typeAhead: false,
@@ -95,7 +95,7 @@ function PersonEducation()
 		valueField : "sbid",
 		hiddenName : "sbid",
 		applyTo : this.get("sbid")
-	});
+	}); */
 
 //.................................................................
 
@@ -114,7 +114,7 @@ function PersonEducation()
 	});
 
 
-	this.store4 = new Ext.data.Store({
+	/*this.store4 = new Ext.data.Store({
 		fields : ["country_id","university_id","ptitle"],
 		proxy : {
 			type: 'jsonp',
@@ -124,7 +124,7 @@ function PersonEducation()
 				totalProperty: 'totalCount'
 			}
 		}
-	});
+	}); */
 
 
 	this.CountryCombo = new Ext.form.field.ComboBox({
@@ -146,7 +146,7 @@ function PersonEducation()
 		}
 	});
 
-	this.UniversityCombo = new Ext.form.field.ComboBox({
+	/*this.UniversityCombo = new Ext.form.field.ComboBox({
 		store : this.store4,
 		width : 300,
 		typeAhead: false,
@@ -155,7 +155,7 @@ function PersonEducation()
 		valueField : "university_id",
 		hiddenName : "university_id",
 		applyTo : this.get("university_id")
-	});
+	}); */
 
 	this.afterLoad();
 }
@@ -192,22 +192,24 @@ PersonEducation.prototype.editEducInfo = function(record)
 	this.form.doc_date.value = MiladiToShamsi(record.data.doc_date);
 	this.form.georgian_doc_date.value = record.data.doc_date;
 	this.form.certificated.checked = (record.data.certificated ==1)? true : false ;
-	this.StudyFieldCombo.setValue(record.data.sfid);
+	/*this.StudyFieldCombo.setValue(record.data.sfid);
 	this.store2.load({
 				params:{sfid:PersonEducationObject.StudyFieldCombo.getValue()},
 				callback:function(){
 					PersonEducationObject.StudyBranchCombo.setValue(record.data.sbid);
 				}
-			});
+			}); */
 	this.CountryCombo.setValue(record.data.country_id);
-    this.store4.load({
+   /* this.store4.load({
 				params:{country_id:PersonEducationObject.CountryCombo.getValue()},
 				callback:function(){
 					PersonEducationObject.UniversityCombo.setValue(record.data.university_id);
 				}
-			});
+			}); */
 
 	this.form.grade.value = record.data.grade;
+	this.form.sfid.value = record.data.sf_ptitle;
+	this.form.university_id.value = record.data.u_ptitle;
 	this.form.burse.checked = (record.data.burse ==1)? true : false ;
 	this.form.thesis_ptitle.value = record.data.thesis_ptitle;
 	this.form.thesis_etitle.value = record.data.thesis_etitle;

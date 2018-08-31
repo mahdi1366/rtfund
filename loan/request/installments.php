@@ -267,7 +267,14 @@ function Installment()
 		}*/,{
 			xtype : "button",
 			border : true,
-			itemId : "cmp_ayande",
+			hidden : <?= $_SESSION["USER"]["UserName"] == "admin" ? "false" : "true" ?>,
+			style : "margin-right:10px",
+			text : "پرداخت الکترونیک بانک تجارت",
+			iconCls : "epay",
+			handler : function(){ InstallmentObject.PayInstallment_tejarat(); }
+		},{
+			xtype : "button",
+			border : true,
 			style : "margin-right:10px",
 			text : "پرداخت الکترونیک بانک آینده",
 			iconCls : "epay",
@@ -324,6 +331,18 @@ Installment.prototype.PayInstallment_ayande = function(){
 		return;
 
 	window.open(this.address_prefix + "../../portal/epayment-ayande/epayment_step1.php?RequestID=" + 
+		RequestID + "&amount=" + PayAmount);	
+}
+
+Installment.prototype.PayInstallment_tejarat = function(){
+	
+	RequestID = this.PartPanel.down("[itemId=RequestID]").getValue();
+	PayAmount = this.PayPanel.down("[itemId=PayAmount]").getValue();
+	
+	if(PayAmount == "")
+		return;
+
+	window.open(this.address_prefix + "../../portal/epayment-tejarat/epayment_step1.php?RequestID=" + 
 		RequestID + "&amount=" + PayAmount);	
 }
 

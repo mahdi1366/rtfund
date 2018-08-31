@@ -12,11 +12,14 @@ if (!empty($_REQUEST['RequestID']))
 	$RequestID = $_REQUEST['RequestID'];
 	$ReqObj = new WFM_requests($RequestID);
 	$FormID = $ReqObj->FormID;
+	$SmsSend = $ReqObj->_SmsSend == "YES" ? true : false;
 }
 else
 {
 	$RequestID = "";
 	$FormID = !empty($_REQUEST['FormID']) ? $_REQUEST['FormID'] : "";
+	$formObj = new WFM_forms($FormID);
+	$SmsSend = $formObj->SmsSend == "YES" ? true : false;
 }
 
 $StepRowID = empty($_REQUEST["StepRowID"]) ? 0 : $_REQUEST["StepRowID"];
@@ -40,6 +43,7 @@ WFM_NewRequest.prototype = {
 	
 	RequestID : "<?= $RequestID ?>",
 	FormID : "<?= $FormID ?>",
+	SmsSend : <?= $SmsSend ? "true" : "false"  ?>,
 	StepRowID : "<?= $StepRowID ?>",
 	preview : <?= isset($_REQUEST["preview"]) ? "true" : "false" ?>,
 	
@@ -59,15 +63,14 @@ function WFM_NewRequest() {
 		frame: false,
 		border : false,
 		width: 700,
-		height : 550,
+		autoHeight : true,
+		minHeight : 200,
 		renderTo: this.get("SelectTplComboDIV"),
 		items: [{
 			xtype: "container",
 			itemId: "FormItems",
 			width : 700,
-			style : "text-align:right",
-			height : 500,
-			autoScroll: true
+			style : "text-align:right"
 		},{
 			xtype: "hidden",
 			itemId: "RequestID",
@@ -99,10 +102,12 @@ function WFM_NewRequest() {
 	});
 	
 	this.FormItemsStore = new Ext.data.Store({
-		fields: ['FormItemID',"GroupID","GroupDesc","FormID", 'ItemName', 'ItemType', "ComboValues", "access"],
+		fields: ['FormItemID',"GroupID","GroupDesc","FormID", 'ItemName',
+			"DisplayType","DisplayField","DisplayValue", 'ItemType', "ComboValues", "access"],
 		proxy: {
 			type: 'jsonp',
-			url: this.address_prefix + "form.data.php?task=selectFormItems&NotGlobal=true&StepRowID=" + this.StepRowID,
+			url: this.address_prefix + "form.data.php?task=selectFormItems"+
+					"&RequestID=" + this.RequestID + "&RequestMode=true&NotGlobal=true&StepRowID=" + this.StepRowID,
 			reader: {
 				root: 'rows',
 				totalProperty: 'totalCount'
@@ -183,7 +188,7 @@ WFM_NewRequest.prototype.LoadRequest = function(){
 					me = WFM_NewRequestObj;
 					me.ShowTplItemsForm();	
 					for(i=0; i<me.ReqItemsStore.getCount(); i++){
-						record = me.ReqItemsStore.getAt(i); 
+						record = me.ReqItemsStore.getAt(i);
 						switch(record.data.ItemType){
 							case "grid":
 								continue;
@@ -233,25 +238,121 @@ WFM_NewRequest.prototype.SaveRequest = function (print, sending) {
 		
 		success: function (form,action) {
 			mask.hide();
+			st = action.result.data.split("-");
+			WFM_NewRequestObj.RequestID = st[0];
 			
-			WFM_NewRequestObj.MainForm.getComponent('RequestID').setValue(action.result.data);
+			WFM_NewRequestObj.MainForm.getComponent('RequestID').setValue(WFM_NewRequestObj.RequestID);
 			if (print) 
 			{
-				var RequestID = WFM_NewRequestObj.MainForm.getComponent('RequestID').getValue();
-				window.open(WFM_NewRequestObj.address_prefix + 'PrintForm.php?RequestID=' + RequestID);
+				window.open(WFM_NewRequestObj.address_prefix + 'PrintRequest.php?RequestID=' + 
+						WFM_NewRequestObj.RequestID);
 			}
 			if(sending)
 			{
-				Ext.MessageBox.alert("", "فرم شما با موفقیت ارسال گردید");
-				WFM_NewRequestObj.parentHandler();
+				if(!WFM_NewRequestObj.SmsSend)
+				{
+					Ext.MessageBox.alert("", "فرم شما با موفقیت ارسال گردید");
+					WFM_NewRequestObj.parentHandler();
+				}
+				else
+					WFM_NewRequestObj.ConfirmSms(WFM_NewRequestObj.RequestID, st[1]);
 			}
-			WFM_NewRequestObj.RequestID = action.result.data;
+			
 		},
 		failure : function(form,action){
 			mask.hide();
-			Ext.MessageBox.alert('', 'خطا در اجرای عملیات');
+			if(action.result.data != "")
+				Ext.MessageBox.alert('', action.result.data);
+			else
+				Ext.MessageBox.alert('', 'خطا در اجرای عملیات');
 		}
 	});
+}
+
+WFM_NewRequest.prototype.ConfirmSms = function (RequestID, SmsNo){
+
+	if(!this.SmsWin)
+	{
+		this.SmsWin = new Ext.window.Window({
+			width : 400,
+			title : "تایید کد امنیتی",
+			bodyStyle : "background-color:white;text-align:-moz-center",
+			height : 250,
+			modal : true,
+			closeAction : "hide",
+			items : [{
+				xtype : "container",
+				style : "font-size: 18px; color: darkcyan; margin: 10px 20px 10px 20px;",
+				html : "با توجه به دلایل امنیتی ارسال این فرم با تایید کد امنیتی می باشد، یک کد شش رقمی به شماره پیامک ثبت شده شما در سیستم ارسال گردید لطفا کد دریافتی را در باکس زیر وارد کنید"
+			},{
+				xtype : "displayfield",
+				fieldLabel : "شماره پیامک ارسالی",
+				style : "text-align:center;font-size:20px;color: darkcyan;font-weight:bold",
+				fieldStyle : "text-align:center;font-size:20px;color: darkcyan;font-weight:bold",
+				itemId : "SmsNo",
+				value : SmsNo
+			},{
+				xtype : "numberfield",
+				name : "code",
+				hideTrigger : true,
+				height : 30,
+				fieldStyle : "text-align:center;font-size:20px;color: darkcyan;font-weight:bold"
+			},{
+				xtype : "button",
+				width : 150,
+				style : "font-size:20px",
+				text : "ارسال کد امنیتی",
+				handler : function(){
+					me = WFM_NewRequestObj;
+					mask = new Ext.LoadMask(me.SmsWin, {msg:'در حال ذخيره سازي...'});
+					mask.show();
+					Ext.Ajax.request({
+						url: me.address_prefix + 'form.data.php?task=CheckConfirmationCode',
+						method: 'POST',
+						params : {
+							RequestID : RequestID,
+							code : me.SmsWin.down("[name=code]").getValue()
+						},
+						success: function (response) {
+							mask.hide();
+							res = Ext.decode(response.responseText);
+							if(res.success)
+							{
+								Ext.MessageBox.alert("", "فرم شما با موفقیت ارسال گردید");
+								WFM_NewRequestObj.SmsWin.hide();
+								WFM_NewRequestObj.parentHandler();
+							}
+							else
+							{
+								switch(res.data){
+									case "ExpireCode":
+										Ext.MessageBox.alert('ERROR', "اعتبار کد ارسالی به پایان رسیده است.");
+										WFM_NewRequestObj.SmsWin.hide();
+										break;
+									case "MaxTry":
+										Ext.MessageBox.alert('ERROR', "شما بیش از حد مجاز کد اشتباه وارد کرده اید");
+										WFM_NewRequestObj.SmsWin.hide();
+										break;
+									case "WrongeCode":
+										Ext.MessageBox.alert('ERROR', "کد وارد شده مطابق با کد ارسالی نیست");
+										WFM_NewRequestObj.SmsWin.down("[name=code]").setValue();
+										break;
+									default:
+										Ext.MessageBox.alert('ERROR', res.data);
+								}								
+							}
+						}
+					});
+				}
+			}]
+			
+		});
+		Ext.getCmp(this.TabID).add(this.SmsWin);
+	}
+	this.SmsWin.show();
+	this.SmsWin.center();
+	this.SmsWin.down("[name=code]").setValue();
+	this.SmsWin.down("[itemId=SmsNo]").setValue(SmsNo);
 }
 
 WFM_NewRequest.prototype.MakeGrid = function (SrcRecord){
@@ -528,6 +629,28 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 				});
 			}
 		}
+		else if(record.data.ItemType === "branch")
+		{ 
+			parent.add({
+				xtype : "combo",
+				store: new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: '/framework/baseInfo/baseInfo.data.php?task=SelectBranches',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ["BranchID","BranchName"],
+					autoLoad : true
+				}),
+				displayField: 'BranchName',
+				valueField : "BranchID",
+				disabled : record.data.access == "NO" ? true : false,
+				width : 400,
+				itemId: 'ReqItem_' + record.data.FormItemID,
+				name: 'ReqItem_' + record.data.FormItemID,
+				fieldLabel : record.data.ItemName
+			});
+		}		
 		else if(record.data.ItemType == "combo")
 		{
 			arr = record.data.ComboValues.split("#");
@@ -621,7 +744,7 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 				itemId: 'ReqItem_' + record.data.FormItemID,
 				name: 'ReqItem_' + record.data.FormItemID,
 				fieldLabel : titleInLine ? "" : record.data.ItemName,
-				disabled : record.data.access == "NO" ? true : false,
+				disabled : record.data.access == "NO" && record.data.ItemType !== "displayfield" ? true : false,
 			};
 			if(record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield')
 				item.hideTrigger =  true;
@@ -633,6 +756,13 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 			if(new Array('numberfield','currencyfield','shdatefield').indexOf(record.data.ItemType) >= 0)
 				item.width = 400;
 			
+			if(record.data.ItemType == "displayfield")
+			{
+				item.value = record.data.DisplayField != null ? record.data.DisplayValue : record.data.ComboValues;
+				if(record.data.DisplayType == "currencyfield")
+					item.value = Ext.util.Format.Money(item.value) + " ریال"
+			}
+			
 			parent.add(item);
 		}
 	}
@@ -640,52 +770,6 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 	this.ItemsMmask.hide();
 }
 
-WFM_NewRequest.prototype.getShdatefield = function (fieldname, ren) {
-	return new Ext.form.SHDateField(
-			{
-				name: fieldname,
-				width: 150,
-				format: 'Y/m/d',
-				renderTo: WFM_NewRequestObj.get(ren)
-			}
-	);
-};
-
-WFM_NewRequest.prototype.ContractDocuments = function(ObjectType){
-
-	if(!this.documentWin)
-	{
-		this.documentWin = new Ext.window.Window({
-			width : 720,
-			height : 440,
-			modal : true,
-			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
-			closeAction : "hide",
-			loader : {
-				url : "/office/dms/documents.php",
-				scripts : true
-			},
-			buttons :[{
-				text : "بازگشت",
-				iconCls : "undo",
-				handler : function(){this.up('window').hide();}
-			}]
-		});
-		Ext.getCmp(this.TabID).add(this.documentWin);
-	}
-
-	this.documentWin.show();
-	this.documentWin.center();
-
-	this.documentWin.loader.load({
-		scripts : true,
-		params : {
-			ExtTabID : this.documentWin.getEl().id,
-			ObjectType : ObjectType,
-			ObjectID : this.RequestID
-		}
-	});
-}
 
 </script>
 <br>

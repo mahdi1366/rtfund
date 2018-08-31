@@ -2981,21 +2981,21 @@ $resDay = $totalDayWrt -  $totalDaySar  ;
 		}
 
 
-           //............. فوق العاده کار با اشعه ......................
+           //............. حق سنوات....................
 		
 		private function  compute_salary_item2_75 ($writ_rec){
-	           // param1  ضریب اشعه 
+	          
 	          $qry = " select sum(value) sv
-					from writ_salary_items
+					from HRM_writ_salary_items
 								where staff_id = ".$writ_rec['staff_id']." and writ_id = ".$writ_rec['writ_id']." and 
-									  writ_ver = ".$writ_rec['writ_ver']." and salary_item_type_id in (10364,10365,10366,10367,10369) " ; 
+									  writ_ver = ".$writ_rec['writ_ver']." and salary_item_type_id in (1,17,2,4,3,9) " ; 
 		  
 		  $resVal = PdoDataAccess::runquery($qry); 
 		  
-                   if(empty($this->param1))
-			  $this->param1 = 0.3 ;
- 
-		  $value = $resVal[0]['sv'] * $this->param1 ;
+                
+		  $this->param1 = $resVal[0]['sv']  ;
+          $this->param2 = 365   ;
+		  $value =($resVal[0]['sv'] / $this->param2 ) * 30 ;
 		  
 		
 		  return $value ;

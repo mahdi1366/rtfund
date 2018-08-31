@@ -34,7 +34,7 @@ switch ($task) {
 
 function searchSessionItem() {
 
-	$where = " (1=1) AND salary_item_type_id in (13,14,15,16)  ";
+	$where = " (1=1) AND SessionItem = 1  ";
 	$whereParam = array();
 		
 	$no = manage_salary_item_type::Count($where, $whereParam);
@@ -169,6 +169,8 @@ function savesalaryItem() {
 	    $obj->retired_include = (isset($_POST['retired_include'])) ? $_POST['retired_include'] : 0;
 	    $obj->pension_include = (isset($_POST['pension_include'])) ? $_POST['pension_include'] : 0; 
 		$obj->month_length_effect = (isset($_POST['month_length_effect'])) ? $_POST['month_length_effect'] : 0;
+		
+		$obj->user_data_entry = (isset($_POST['SessionItem'])) ? $_POST['SessionItem'] : 0;
 		
 		if(empty($_POST['validity_start_date']))
 			unset($obj->validity_start_date);

@@ -66,9 +66,9 @@ class manage_person_education extends PdoDataAccess
 	{ 
 		$query = " select pe.PersonID,
                           pe.row_no,  
-                          sf.ptitle sf_ptitle,
-                          sb.ptitle sb_ptitle,
-                          u.ptitle  u_ptitle,
+                          pe.sfid sf_ptitle,
+                          '' sb_ptitle,
+                          pe.university_id  u_ptitle,
                           c.ptitle c_ptitle,
                           pe.doc_date,
                           pe.grade,
@@ -86,9 +86,9 @@ class manage_person_education extends PdoDataAccess
                           pe.thesis_etitle
                      
 		           from HRM_person_educations  pe
-                             LEFT OUTER JOIN HRM_study_branchs sb ON((pe.sbid = sb.sbid) AND (pe.sfid = sb.sfid))
+                            /* LEFT OUTER JOIN HRM_study_branchs sb ON((pe.sbid = sb.sbid) AND (pe.sfid = sb.sfid))
                              LEFT OUTER JOIN HRM_study_fields sf ON(pe.sfid = sf.sfid)
-                             LEFT OUTER JOIN HRM_universities u ON((pe.university_id = u.university_id) AND (pe.country_id = u.country_id))
+                             LEFT OUTER JOIN HRM_universities u ON((pe.university_id = u.university_id) AND (pe.country_id = u.country_id))*/
                              LEFT OUTER JOIN HRM_countries c ON(pe.country_id = c.country_id)
                              LEFT JOIN BaseInfo bi1 ON(bi1.InfoID = pe.education_level AND bi1.TypeID = 56 )
                              LEFT JOIN BaseInfo bi2 ON(bi2.InfoID = pe.burse AND bi2.TypeID = 57)
@@ -98,7 +98,7 @@ class manage_person_education extends PdoDataAccess
 		$query .= ($where != "") ? " AND " . $where : "";
 		
 		$temp = parent::runquery($query, $whereParam);
-		
+
 		return $temp;
 	}
 	 		

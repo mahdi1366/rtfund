@@ -13,10 +13,9 @@ $dg = new sadaf_datagrid("educ",$js_prefix_address . "../data/education.data.php
 
 $dg->addColumn("شماره پرسنلی","PersonID","int",true);
 $dg->addColumn("کدمقطع","education_level","int",true);
-$dg->addColumn("کد رشته","sfid","int",true);
-$dg->addColumn("کد گرایش","sbid","int",true);
+
 $dg->addColumn("کدکشور","country_id","int",true);
-$dg->addColumn("کد دانشگاه","university_id","int",true);
+
 $dg->addColumn("تاریخ شمسی","doc_date","string",true);
 $dg->addColumn("تائید مدرک","certificated","int",true);
 $dg->addColumn("بورس ","burse","int",true);
@@ -120,17 +119,13 @@ var PersonEducationObject = new PersonEducation();
 		<td width="25%">
 		رشته : 
 		</td>
-		<td width="75%" colspan="3"><input type="text" id="sfid" ></td>
+		<td width="75%" colspan="3">
+		    
+		    <input type="text" id="sfid" name="sfid" class="x-form-text x-form-field" style="width: 100%" >
+		     </td>
 		
 	</tr>
 	
-	<tr>
-		<td width="25%">
-		گرايش : 
-		</td>
-		<td width="75%" colspan="3"><input type="text" id="sbid"></td>
-		
-	</tr>
 	
 	<tr>
 		<td width="25%">
@@ -141,9 +136,8 @@ var PersonEducationObject = new PersonEducation();
 	<tr>
 		<td width="25%">
 		دانشگاه :
-		</td>
-		<td width="75%" colspan="3"><input type="text" id="university_id"></td>
-		
+		</td>	<td width="75%" colspan="3">
+			<input type="text" id="university_id" name="university_id" class="x-form-text x-form-field" style="width: 100%" > </td>
 	</tr>
 	<tr>
 		<td width="25%">

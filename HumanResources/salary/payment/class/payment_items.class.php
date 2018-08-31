@@ -45,13 +45,8 @@ class manage_payment_items extends PdoDataAccess
 
 	function Add($pdo="",$DB="")
 	{
-		/*$qry = "select person_type from staff where staff_id =".$this->staff_id ; 
-		$res = parent::runquery($qry) ; 
-		if($res[0]['person_type'] == 1 || $res[0]['person_type'] == 2 || $res[0]['person_type'] == 3 )
-			$DB = "hrms." ; 
-		else $DB = "hrms_sherkati."; */
-			
-		$result = parent::insert($DB."payment_items", $this,$pdo);
+		
+		$result = parent::insert("HRM_payment_items", $this,$pdo);
 
 		if($result === false)
 		{ 
@@ -61,7 +56,7 @@ class manage_payment_items extends PdoDataAccess
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;		
 		$daObj->MainObjectID = $this->staff_id;
-		$daObj->TableName = "payment_items";
+		$daObj->TableName = "HRM_payment_items";
 		$daObj->execute($pdo);   
 
 		return true  ; 
@@ -69,15 +64,10 @@ class manage_payment_items extends PdoDataAccess
 	}
 	
 	function Edit($pdo="",$DB="") {
-		
-		/*$qry = "select person_type from staff where staff_id =".$this->staff_id ; 
-		$res = parent::runquery($qry) ; 
-		if($res[0]['person_type'] == 1 || $res[0]['person_type'] == 2 || $res[0]['person_type'] == 3 )
-			$DB = "hrms." ; 
-		else $DB = "hrms_sherkati."; */
-             
-		$result = parent::update($DB."payment_items", $this," pay_year=".$this->pay_year." and pay_month=".$this->pay_month." and 
-															   staff_id=".$this->staff_id." and payment_type =".$this->payment_type ,array(),$pdo );
+	
+		$result = parent::update("HRM_payment_items", $this,
+		      " pay_year=".$this->pay_year." and pay_month=".$this->pay_month." and 														   staff_id=".$this->staff_id." and 
+		           payment_type =".$this->payment_type ,array(),$pdo );
 		if ($result === false)
 		return false;	
 
