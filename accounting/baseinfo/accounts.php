@@ -124,7 +124,7 @@ $CHK_status=array(array('val'=>'YES','name'=>' فعال'),
 $col = $ChequeBook_Grid->addColumn('وضعیت','IsActive',GridColumn::ColumnType_string);
 $col->editor = ColumnEditor::ComboBox($CHK_status,'val','name');
 $col->width = 80;
-
+ 
 if($accessObj->AddFlag)
 {
 	$ChequeBook_Grid->addButton = true;
@@ -133,7 +133,11 @@ if($accessObj->AddFlag)
 $ChequeBook_Grid->enableRowEdit = true;
 $ChequeBook_Grid->rowEditOkHandler = "function(){return AccountObj.SaveChequeData();}";
 
-$col=$ChequeBook_Grid->addColumn('عملیات', '', 'string');
+$col=$ChequeBook_Grid->addColumn('کپی', '', 'string');
+$col->renderer = "Account.CopyChequeRender";
+$col->width = 30;
+
+$col=$ChequeBook_Grid->addColumn('حذف', '', 'string');
 $col->renderer = "Account.RemoveCheque";
 $col->width = 50;
 

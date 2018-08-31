@@ -34,10 +34,10 @@ switch ($task) {
 	case "SelectAccounts":
 	case "SaveAccount":
 	case "DeleteAccount":
-	case "CopySetting":
+	case "CopyCheque":
 	case "SelectCheques":
 	case "SaveCheque":
-	case "deleteCheque":
+	case "DeleteCheque":
 	case "EnableChequeBook":
 	case "SelectChequeStatuses":
 	case "SelectACCRoles":
@@ -539,34 +539,6 @@ function DeleteAccount() {
     die();
 }
 
-function CopySetting() {
-	
-    $res_sc = cheques::SelectChequeBooks(" accountid=? and isactive='YES' ", array($_POST['SelectAccountID']));
-    if (count($res_sc) == 0) {
-        Response::createObjectiveResponse(false, 'حساب انتخاب شده دسته چک فعال دارای تنظیمات چک ندارد');
-        die();
-    }
-    $sel_ChequeBookID = $res_sc[0]['ChequeBookID'];
-    $output_filename = "../../checkBuilder/output/" . $sel_ChequeBookID . ".html";
-    $background_filename = "../../checkBuilder/backgrounds/" . $sel_ChequeBookID . ".jpg";
-    if (!file_exists($output_filename) || !file_exists($background_filename)) {
-        Response::createObjectiveResponse(false, 'حساب انتخاب شده دسته چک فعال دارای تنظیمات چک ندارد');
-        die();
-    }
-    $res_c = cheques::SelectChequeBooks(" accountid=? and isactive='YES' ", array($_POST['AccountID']));
-    $ChequeBookID = $res_c[0]['ChequeBookID'];
-    $target_output = "../../checkBuilder/output/" . $ChequeBookID . ".html";
-    $target_background = "../../checkBuilder/backgrounds/" . $ChequeBookID . ".jpg";
-    $fp = fopen($target_output, "w");
-    fwrite($fp, file_get_contents($output_filename, "r"));
-    fclose($fp);
-    $fp = fopen($target_background, "w");
-    fwrite($fp, file_get_contents($background_filename, "r"));
-    fclose($fp);
-    Response::createObjectiveResponse(true, '');
-    die();
-}
-
 //----------------------------------------------
 
 function SelectCheques() {
@@ -632,7 +604,7 @@ function SaveCheque() {
 	die();
 }
 
-function deleteCheque() {
+function DeleteCheque() {
 	
 	$ChequeBook = new ACC_ChequeBooks($_POST['CBId']);
 	$res = $ChequeBook->DeleteCheque();
@@ -652,6 +624,32 @@ function EnableChequeBook() {
 	die();
 }
 
+function CopyCheque() {
+	
+    $ChObj = new ACC_ChequeBooks($_POST['ChequeBookID']);
+	unset($ChObj->ChequeBookID);
+	$ChObj->MaxNo = 0;
+	$ChObj->MinNo = 0;
+	$ChObj->SerialNo = "کپی " . $ChObj->SerialNo;
+	$ChObj->InsertCheque();
+	
+    $src_file = "checkBuilder/output/" . $_POST['ChequeBookID'] . ".html";
+    $src_background = "checkBuilder/backgrounds/" . $_POST['ChequeBookID'] . ".jpg";
+
+	$output_filename = "checkBuilder/output/" . $ChObj->ChequeBookID . ".html";
+    $output_background = "checkBuilder/backgrounds/" . $ChObj->ChequeBookID . ".jpg";	
+	
+    $fp = fopen($output_filename, "w");
+    fwrite($fp, file_get_contents($src_file, "r"));
+    fclose($fp);
+	
+    $fp = fopen($output_background, "w");
+    fwrite($fp, file_get_contents($src_background, "r"));
+    fclose($fp);
+	
+    Response::createObjectiveResponse(true, '');
+    die();
+}
 //----------------------------------------------
 
 function SelectChequeStatuses() {

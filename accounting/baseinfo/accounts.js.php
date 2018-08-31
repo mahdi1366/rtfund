@@ -196,11 +196,6 @@ Account.sendIdAcc = function(value, p, record)
 	if(record.data.IsActive == "NO")
 		return st;
 
-	if(AccountObj.AddAccess)
-	st += "<div  title='کپی تنظیمات' class='copy' onclick='AccountObj.CopySetting();' " +
-		"style='float:left;background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:33%;height:16'></div>" ;
-
 	if(AccountObj.RemoveAccess)
 		st += "<div  title='حذف اطلاعات' class='remove' onclick='AccountObj.RemoveAcc();' " +
 		"style='float:left;background-repeat:no-repeat;background-position:center;" +
@@ -249,25 +244,6 @@ Account.prototype.RemoveAcc=function(){
 		});
 }
 
-Account.prototype.CopySetting = function(){
-
-	var record = this.AccGrid.getSelectionModel().getLastSelected();
-	Ext.Ajax.request({
-		url: AccountObj.address_prefix  +'baseinfo.data.php?task=CopySetting',
-		method : "POST",
-		params : {
-			AccountID : record.data.AccountID
-		},
-		success : function(form,action){
-			alert('عملیات با موفقیت انجام شد');
-			AccountObj.AccGrid.getStore().load();
-		},
-		failure : function(form,action){
-			alert(action.result.data);
-		}
-	});
-}
-
 //------------------------------------------------------------------------------
 Account.prototype.NewRowCheque=function(){
 
@@ -312,9 +288,16 @@ Account.prototype.SaveChequeData = function(store,record){
 		failure: function(){alert(st.data);}
 	});
 }
-
-Account.RemoveCheque = function(value, p, record)
-{
+Account.CopyChequeRender = function(value, p, record){
+	
+	if(AccountObj.AddAccess)
+		return "<div  title='کپی دسته چک' class='copy' onclick='AccountObj.CopyCheque();' " +
+		"style='text-align:center;background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:16px;height:16'></div>" ;
+}
+	
+Account.RemoveCheque = function(value, p, record){
+	
 	if(record.data.IsActive == "NO" && AccountObj.EditAccess)
 		return  "<div  title='فعال کردن دسته چک' class='tick' onclick='AccountObj.EnableCheque();' " +
 		"style='float:left;background-repeat:no-repeat;background-position:center;" +
@@ -393,6 +376,32 @@ Account.prototype.SetChequePrint = function(){
 
 	var record = this.CheqGrid.getSelectionModel().getLastSelected();
 	window.open(this.address_prefix + "checkBuilder/index.php?ChequeBookID=" + record.data.ChequeBookID);
+}
+
+Account.prototype.CopyCheque = function(){
+ 
+	Ext.MessageBox.confirm("","آیا مایل به کپی دسته چک می باشید؟",function(btn){
+		if(btn == "no")
+			return;
+
+		me = AccountObj;
+		var record = me.CheqGrid.getSelectionModel().getLastSelected();
+
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخيره سازي...'});
+		mask.show();
+		
+		Ext.Ajax.request({
+			url: me.address_prefix  +'baseinfo.data.php?task=CopyCheque',
+			method : "POST",
+			params : {
+				ChequeBookID : record.data.ChequeBookID
+			},
+			success : function(){
+				mask.hide();
+				AccountObj.CheqGrid.getStore().load();
+			}
+		});
+	});
 }
 
 //------------------------------------------------------------------------------

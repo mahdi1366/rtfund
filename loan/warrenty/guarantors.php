@@ -30,10 +30,10 @@ $col = $dg->addColumn("نوع فرد", "PersonType", "");
 $col->renderer = "function(v){return v == 'GUARANTOR' ? 'ضامن' : 'وثیقه گذار';}";
 $col->width = 120;
 
-$col = $dg->addColumn("نام و نام خانوادگی", "fullname", "");
+$col = $dg->addColumn("نام و نام خانوادگی/شرکت", "fullname", "");
 $col->width = 140;
 
-$col = $dg->addColumn("کدملی", "NationalCode");
+$col = $dg->addColumn("کدملی/شناسه ملی", "NationalCode");
 $col->width = 100;
 
 $col = $dg->addColumn("موبایل", "mobile");
