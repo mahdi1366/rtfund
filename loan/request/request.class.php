@@ -507,6 +507,9 @@ class LON_requests extends PdoDataAccess{
 			{
 				$refInstallments[ $record["id"] ]["ForfeitDays"] = $tempForReturnArr["ForfeitDays"];
 				$refInstallments[ $record["id"] ]["CurForfeitAmount"] = $tempForReturnArr["CurForfeitAmount"];
+				$refInstallments[ $record["id"] ]["remainder"] = min(
+						$refInstallments[ $record["id"] ]["InstallmentAmount"],
+						$tempForReturnArr["TotalRemainder"]);
 				$refInstallments[ $record["id"] ]["TotalRemainder"] = $tempForReturnArr["TotalRemainder"];
 			}
 		}
@@ -811,6 +814,9 @@ class LON_requests extends PdoDataAccess{
 			{
 				$refInstallments[ $record["id"] ]["ForfeitDays"] = $tempForReturnArr["ForfeitDays"];
 				$refInstallments[ $record["id"] ]["CurForfeitAmount"] = $tempForReturnArr["CurForfeitAmount"];
+				$refInstallments[ $record["id"] ]["remainder"] = min(
+						$refInstallments[ $record["id"] ]["InstallmentAmount"],
+						$tempForReturnArr["TotalRemainder"]);
 				$refInstallments[ $record["id"] ]["TotalRemainder"] = $tempForReturnArr["TotalRemainder"];
 			}
 		}
