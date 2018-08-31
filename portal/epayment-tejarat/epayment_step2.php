@@ -104,8 +104,8 @@ function RegDoc($RequestID, $amount, $PayRefNo){
 		return false;
 
 	$CostID = 253; // bank
-	$TafsiliID = 3049; // ayande
-	$TafsiliID2 = 3052; // kootahmodat
+	$TafsiliID = 2135; // tejarat
+	$TafsiliID2 = 1946; // jari
 	$CenterAccount = false;
 	$BranchID = "";
 	$FirstCostID = "";
@@ -139,10 +139,10 @@ function RegDoc($RequestID, $amount, $PayRefNo){
 }
 
 $result = "";
-if (!isset($_POST["resultCode"])) {
+if (!isset($_REQUEST["resultCode"])) {
 	$result = "تراکنش بی نتیجه";
 }
-else if ($_POST["resultCode"] == 100) {
+else if ($_REQUEST["resultCode"] == 100) {
 
 	$referenceId = isset($_POST['referenceId']) ? $_POST['referenceId'] : 0;
 	
@@ -152,7 +152,7 @@ else if ($_POST["resultCode"] == 100) {
 	$params['referenceNumber'] = $referenceId;
 	$params['sha1Key'] = BANK_TEJARAT_SHALKEY;
 	
-	$dt = PdoDataAccess::runquery("select * from ACC_EPays where authority=?", array($params['token']));
+	$dt = PdoDataAccess::runquery("select * from ACC_EPays where PayID=?", array($_POST['paymentId']));
 	if(count($dt) == 0)
 	{
 		$result = "خطا در انتقال پارامترهای بانک";
@@ -166,8 +166,8 @@ else if ($_POST["resultCode"] == 100) {
 		
 		if (floatval($result) > 0 && floatval($result) == floatval($_SESSION['amount']) )
 		{	
-			//Payment verfed and OK !
-			$PayObj->StatusCode = $status;
+			$PayObj->StatusCode = $_REQUEST["resultCode"];
+			$PayObj->PayRefNo = $referenceId;
 			$PayObj->Edit();
 			$DocRegResult = RegDoc($PayObj->RequestID, $PayObj->amount, $referenceId);
 			if(!$DocRegResult)

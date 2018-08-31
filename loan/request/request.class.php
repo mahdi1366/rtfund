@@ -391,6 +391,11 @@ class LON_requests extends PdoDataAccess{
 		$installments = PdoDataAccess::runquery("select * from 
 			LON_installments where RequestID=? AND history='NO' order by InstallmentDate", 
 			array($RequestID), $pdo);
+		
+		$refInstallments = array();
+		for($i=0; $i<count($installments); $i++)
+			$refInstallments[ $installments[$i]["InstallmentID"] ] = &$installments[$i];
+		
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 
 		$returnArr = array();
@@ -497,6 +502,13 @@ class LON_requests extends PdoDataAccess{
 			
 			if($record["type"] == "pay" && $tempForReturnArr["ActionAmount"] > 0)
 				$ComputePayRows[] = $tempForReturnArr;
+			
+			if($record["type"] == "installment")
+			{
+				$refInstallments[ $record["id"] ]["ForfeitDays"] = $tempForReturnArr["ForfeitDays"];
+				$refInstallments[ $record["id"] ]["CurForfeitAmount"] = $tempForReturnArr["CurForfeitAmount"];
+				$refInstallments[ $record["id"] ]["TotalRemainder"] = $tempForReturnArr["TotalRemainder"];
+			}
 		}
 
 		//............. pay rows of each installment ..............
@@ -664,6 +676,11 @@ class LON_requests extends PdoDataAccess{
 		$installments = PdoDataAccess::runquery("select * from 
 			LON_installments where RequestID=? AND history='NO' order by InstallmentDate", 
 			array($RequestID), $pdo);
+		
+		$refInstallments = array();
+		for($i=0; $i<count($installments); $i++)
+			$refInstallments[ $installments[$i]["InstallmentID"] ] = &$installments[$i];
+		
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 
 		$returnArr = array();
@@ -789,6 +806,13 @@ class LON_requests extends PdoDataAccess{
 			
 			if($record["type"] == "pay" && $tempForReturnArr["ActionAmount"] > 0)
 				$ComputePayRows[] = $tempForReturnArr;
+			
+			if($record["type"] == "installment")
+			{
+				$refInstallments[ $record["id"] ]["ForfeitDays"] = $tempForReturnArr["ForfeitDays"];
+				$refInstallments[ $record["id"] ]["CurForfeitAmount"] = $tempForReturnArr["CurForfeitAmount"];
+				$refInstallments[ $record["id"] ]["TotalRemainder"] = $tempForReturnArr["TotalRemainder"];
+			}
 		}
 
 		//............. pay rows of each installment ..............

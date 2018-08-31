@@ -7,7 +7,7 @@ require_once("../header.inc.php");
 require_once 'nusoap.php';
 require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
 
-ini_set("display_errors", "Off");
+ini_set("display_errors", "On");
 
 if(empty($_REQUEST["RequestID"]))
 {
@@ -26,7 +26,7 @@ $_SESSION['merchantId'] = BANK_TEJARAT_MERCHANTID;
 $_SESSION['sha1Key'] = BANK_TEJARAT_SHALKEY;
 $_SESSION['admin_email'] = BANK_TEJARAT_ADMINEMAIL;
 $_SESSION['amount'] = $PayObj->amount;
-$_SESSION['PayOrderId'] = $obj->PaymentID;
+$_SESSION['PayOrderId'] = $PayObj->PayID;
 
 $revertURL = "http://portal.krrtf.ir/portal/epayment-tejarat/epayment_step2.php";
 
@@ -34,19 +34,17 @@ $client = new SoapClient('https://ikc.shaparak.ir/XToken/Tokens.xml', array('soa
 
 $params['amount'] = $PayObj->amount;
 $params['merchantId'] = BANK_TEJARAT_MERCHANTID;
-$params['invoiceNo'] = $obj->PaymentID;
-$params['paymentId'] = $obj->PaymentID;
-$params['specialPaymentId'] = $obj->PaymentID;
+$params['invoiceNo'] = $PayObj->PayID;
+$params['paymentId'] = $PayObj->PayID;
+$params['specialPaymentId'] = $PayObj->PayID;
 $params['revertURL'] = $revertURL;
 $params['description'] = "";
 $result = $client->__soapCall("MakeToken", array($params));
 $_SESSION['token'] = $result->MakeTokenResult->token;
 $data['token'] = $_SESSION['token'];
 $data['merchantId'] = BANK_TEJARAT_MERCHANTID;
-redirect_post('https://ikc.shaparak.ir/TPayment/Payment/index',$data);
 
-$PayObj->authority = $result->MakeTokenResult->token;
-$PayObj->Edit();
+redirect_post('https://ikc.shaparak.ir/TPayment/Payment/index',$data);
 
 function redirect_post($url, array $data)
 {

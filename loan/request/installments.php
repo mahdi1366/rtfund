@@ -49,7 +49,7 @@ if($framework)
 	$col->renderer = "function(v,p,r){return r.data.InstallmentAmount - r.data.wage;}";
 }
 
-$col = $dg->addColumn("مانده قسط", "remainder", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مانده قسط", "TotalRemainder", GridColumn::ColumnType_money);
 $col->width = 120;
 
 if($framework)
@@ -267,7 +267,7 @@ function Installment()
 		}*/,{
 			xtype : "button",
 			border : true,
-			hidden : <?= $_SESSION["USER"]["UserName"] == "admin" ? "false" : "true" ?>,
+			hidden : <?= $_SESSION["USER"]["UserName"] == "jannati" ? "false" : "true" ?>,
 			style : "margin-right:10px",
 			text : "پرداخت الکترونیک بانک تجارت",
 			iconCls : "epay",
