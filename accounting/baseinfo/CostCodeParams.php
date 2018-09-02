@@ -13,6 +13,9 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "baseinfo.data.php?task=sele
 $dg->addColumn("", "ParamID", "", true);
 $dg->addColumn("", "CostID", "", true);
 
+$col = $dg->addColumn("ترتیب", "ordering");
+$col->editor = ColumnEditor::NumberField();
+
 $col = $dg->addColumn("عنوان", "ParamDesc");
 $col->editor = ColumnEditor::TextField();
 
@@ -30,7 +33,7 @@ $col->width = 50;
 
 $dg->addButton("", " ایجاد", "add", "function(){ACC_CostCodeParamsObj.AddParam();}");
 
-$dg->DefaultSortField = "ParamID";
+$dg->DefaultSortField = "ordering";
 $dg->DefaultSortDir = "desc";
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;
