@@ -14,7 +14,7 @@ switch ($task) {
 
 	case "SelectBlocks":
 	case "SaveBlockData":
-	case "deleteBlock":
+	case "DeleteBlock":
 	case "getLastID":
 	case "SelectCostCode":
 	case "SelectBlockableCostCode":
@@ -164,7 +164,7 @@ function SaveBlockData() {
     die();
 }
 
-function deleteBlock() {
+function DeleteBlock() {
 
     $res = ACC_blocks::RemoveBlock($_POST["BlockID"]);
     Response::createObjectiveResponse($res, '');
