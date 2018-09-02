@@ -63,14 +63,14 @@
 				displayField : "title",
 				name : "CostType",
 				fieldLabel : "ماهیت حساب",
-				width : 250
+				width : 250 
 			},{
 				xtype : "combo",
 				width : 385,
 				fieldLabel : "حساب مربوطه",
 				colspan : 2,
 				store: new Ext.data.Store({
-					fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+					fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2","TafsiliType3",{
 						name : "fullDesc",
 						convert : function(value,record){
 							return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
@@ -92,7 +92,7 @@
 						me = EventRowsObj<?= $random ?>;
 						me.formPanel.down("[name=TafsiliType]").setValue(records[0].data.TafsiliType);
 						me.formPanel.down("[name=TafsiliType2]").setValue(records[0].data.TafsiliType2);
-
+						me.formPanel.down("[name=TafsiliType3]").setValue(records[0].data.TafsiliType3);
 					}
 				}
 			},{
@@ -114,6 +114,21 @@
 				xtype : "combo",
 				name : "TafsiliType2",
 				fieldLabel : "گروه تفصیلی2",
+				store :  new Ext.data.Store({
+					proxy: {type: 'jsonp',
+						url: '/accounting/baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields:["InfoID","InfoDesc"],
+					autoLoad : true
+				}),
+				valueField : "InfoID",
+				queryMode : 'local',
+				displayField : "InfoDesc"
+			},{
+				xtype : "combo",
+				name : "TafsiliType3",
+				fieldLabel : "گروه تفصیلی3",
 				store :  new Ext.data.Store({
 					proxy: {type: 'jsonp',
 						url: '/accounting/baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
