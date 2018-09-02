@@ -983,6 +983,7 @@ WFM_NewForm.prototype.PreviewForm = function(){
 		this.requestWin = new Ext.window.Window({
 			width : 740,
 			height : 660, 
+			autoScroll : true,
 			modal : true,
 			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
 			closeAction : "hide",
