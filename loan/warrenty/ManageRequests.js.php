@@ -506,7 +506,7 @@ WarrentyRequest.prototype.ReturnStartFlow = function(){
 			return;
 		
 		me = WarrentyRequestObject;
-		var record = me.grid.getStore().getAt(0);
+		var record = me.grid.getSelectionModel().getLastSelected();
 	
 		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
 		mask.show();

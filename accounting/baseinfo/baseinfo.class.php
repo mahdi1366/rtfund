@@ -314,6 +314,7 @@ class ACC_CostCodeParams extends OperationClass
 	
 	public $CostID;
 	public $ParamID;
+	public $ordering;
 	public $ParamDesc;
 	public $ParamType;
 	public $KeyTitle;
