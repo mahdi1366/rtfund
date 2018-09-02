@@ -241,6 +241,9 @@ WFM_NewRequest.prototype.SaveRequest = function (print, sending) {
 			st = action.result.data.split("-");
 			WFM_NewRequestObj.RequestID = st[0];
 			
+			if(WFM_MyRequestsObject)
+				WFM_MyRequestsObject.grid.getStore().load();
+			
 			WFM_NewRequestObj.MainForm.getComponent('RequestID').setValue(WFM_NewRequestObj.RequestID);
 			if (print) 
 			{
@@ -419,6 +422,7 @@ WFM_NewRequest.prototype.MakeGrid = function (SrcRecord){
 	
 	NewElement = {
 		xtype : "grid",
+		minHeight : 160,
 		title : SrcRecord.data.ItemName,
 		features: [{ftype: 'summary'}],
 		viewConfig: {
