@@ -637,7 +637,7 @@ AccDocs.prototype.SelectCostIDHandler = function(record){
 	var ParamsFS = this.detailWin.down('form').getComponent("ParamsFS");
 	ParamsFS.removeAll();
 	
-	mask = new Ext.LoadMask(ParamsFS, {msg:'در حال ذخیره سازی ...'});
+	mask = new Ext.LoadMask(ParamsFS, {msg:'در حال بارگذاری ...'});
 	mask.show();
 	this.ParamsStore.load({
 		params : {

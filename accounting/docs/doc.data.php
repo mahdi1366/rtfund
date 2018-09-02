@@ -1115,7 +1115,8 @@ function DeleteCostBlock(){
 
 function selectCostParams(){
 	
-	$dt = ACC_CostCodeParams::Get(" AND CostID=? AND IsActive='YES'",array($_GET["CostID"]));
+	$dt = ACC_CostCodeParams::Get(" AND CostID=? AND IsActive='YES' order by ordering",
+			array($_GET["CostID"]));
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
 }
