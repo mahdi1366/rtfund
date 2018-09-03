@@ -4935,7 +4935,11 @@ function RegisterPaySalaryDoc($PObj, $pdo){
 		ExceptionHandler::PushException("سند حقوق این ماه هنوز صادر نشده است");
 		return false;
 	};
-	$TotalAmount = $dt[0]["amount"] ;
+	//------------------ get CostCodes -------------------
+	$dt = PdoDataAccess::runquery("select * from HRM_CostCodes");
+	$CostCodes = array();
+	foreach($dt as $row)
+		$CostCodes[ $row["RowType"] ] = $row["CostID"];
 	//---------------------------------------------
 	
 	$DocObj = new ACC_docs();
@@ -4952,47 +4956,96 @@ function RegisterPaySalaryDoc($PObj, $pdo){
 		return false;
 	}
 	
-	$query = "
-		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,
-			details,locked,SourceType,SourceID,SourceID2)
-		
-		select ".$DocObj->DocID.",
-			di.CostID,
-			di.TafsiliType,
-			di.TafsiliID,
-			di.CreditorAmount,
-			0,
-			di.details,
+	PdoDataAccess::runquery("
+		insert into ACC_DocItems(DocID,CostID,details,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,
+			locked,SourceType,SourceID,SourceID2)
+
+		select $DocObj->DocID,
+			".$CostCodes["PurePay"].",
+			'".$DocObj->description ."',
+			".TAFTYPE_PERSONS.",
+			TafsiliID,
+			if(amount>0,amount,0), 
+			if(amount<0,-1*amount,0),
 			'YES',
 			".DOCTYPE_SALARY_PAY.",
-			SourceID,
-			SourceID2
-		from ACC_DocItems di join ACC_docs using(DocID)
-		where SourceType=".DOCTYPE_SALARY." AND SourceID=? AND SourceID2=? 
-			AND CreditorAmount>0 AND CycleID=" . $CycleID;
-	PdoDataAccess::runquery($query, array($PObj->payment_type, $PObj->pay_month),$pdo);
+			".$PObj->payment_type.",
+			".$PObj->pay_month."
+
+		from (
+			select 
+				t.TafsiliID,
+				sum(pit.pay_value + pit.diff_value_coef * pit.diff_pay_value
+					- (pit.get_value + pit.diff_value_coef * pit.diff_get_value)
+				) as amount
+
+			FROM HRM_payments p
+				JOIN HRM_payment_items pit
+					ON(p.pay_year = pit.pay_year AND p.pay_month = pit.pay_month AND
+					p.staff_id = pit.staff_id AND p.payment_type = pit.payment_type)
+				JOIN HRM_salary_item_types sit using(salary_item_type_id)				
+				JOIN HRM_staff s ON s.staff_id = p.staff_id
+				join HRM_persons p1 on(p1.PersonID=s.PersonID)
+				join BSC_persons p2 on(p1.RefPersonID=p2.PersonID)
+				JOIN ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_PERSONS." AND ObjectID=p2.PersonID)
+					
+			WHERE p.pay_year = :py and p.pay_month = :pm and p.payment_type = :pt
+			group by TafsiliID
+		)t 
+		where amount<>0", array(":py" => $PObj->pay_year, ":pm" => $PObj->pay_month, ":pt" => $PObj->payment_type), $pdo);
 	
 	//----------------------- add bank row -----------------------
 	$CostCode_bank = FindCostID("101");
-	$itemObj = new ACC_DocItems();
-	$itemObj->DocID = $DocObj->DocID;
-	$itemObj->CostID = $CostCode_bank;
-	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = $TotalAmount;
-	$itemObj->TafsiliType = TAFTYPE_BANKS;
-	$itemObj->TafsiliType2 = TAFTYPE_ACCOUNTS;
-	$itemObj->locked = "NO";
-	$itemObj->SourceType = DOCTYPE_SALARY_PAY;
-	$itemObj->SourceID = $PObj->payment_type;
-	$itemObj->SourceID2 = $PObj->pay_month;
-	$itemObj->Add($pdo);
+	PdoDataAccess::runquery("
+		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,
+			locked,SourceType,SourceID,SourceID2)
+
+		select $DocObj->DocID,
+			CreditorCostID,
+			TafsiliType,
+			TafsiliID,
+			if(amount<0,-1*amount,0),
+			if(amount>0,amount,0), 
+			locked,
+			".DOCTYPE_SALARY_PAY.",
+			".$PObj->payment_type.",
+			".$PObj->pay_month."
+
+		from (
+			select 
+				if(pc.CostID is not null,".TAFTYPE_PERSONS.", null) TafsiliType,
+				if(pc.CostID is not null,t.TafsiliID, null) TafsiliID,
+				ifnull(pc.CostID,$CostCode_bank) CreditorCostID,
+				if(pc.CostID is not null,'YES', 'NO') locked,
+				sum(pit.pay_value + pit.diff_value_coef * pit.diff_pay_value
+					- (pit.get_value + pit.diff_value_coef * pit.diff_get_value)
+				) as amount
+				
+
+			FROM HRM_payments p
+				JOIN HRM_payment_items pit
+					ON(p.pay_year = pit.pay_year AND p.pay_month = pit.pay_month AND
+					p.staff_id = pit.staff_id AND p.payment_type = pit.payment_type)
+				JOIN HRM_salary_item_types sit using(salary_item_type_id)				
+				JOIN HRM_staff s ON s.staff_id = p.staff_id
+				left JOIN HRM_StaffPaidCostCode pc on(s.staff_id=pc.StaffID AND j2g(p.pay_year,p.pay_month,29) between StartDate AND EndDate)
+				join HRM_persons p1 on(p1.PersonID=s.PersonID)
+				join BSC_persons p2 on(p1.RefPersonID=p2.PersonID)
+				JOIN ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_PERSONS." AND ObjectID=p2.PersonID)
+					
+			WHERE p.pay_year = :py and p.pay_month = :pm and p.payment_type = :pt
+			group by TafsiliType,TafsiliID,CreditorCostID
+		)t 
+		where amount<>0", array(":py" => $PObj->pay_year, ":pm" => $PObj->pay_month, ":pt" => $PObj->payment_type), $pdo);
 	
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
+		print_r(ExceptionHandler::PopAllExceptions());
 		$pdo->rollBack();
 		ExceptionHandler::PushException("خطا در صدور سند");
 		return false;
 	}
+	$pdo->commit();
 	return true;
 }
 
