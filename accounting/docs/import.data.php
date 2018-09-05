@@ -4913,6 +4913,7 @@ function ReturnSalaryDoc($PObj, $pdo){
 
 function RegisterPaySalaryDoc($PObj, $pdo){
 	
+	ini_set("display_errors", "On");
 	$CycleID = $PObj->pay_year;
 	CheckCloseCycle($CycleID);
 	
@@ -5041,11 +5042,9 @@ function RegisterPaySalaryDoc($PObj, $pdo){
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
 		print_r(ExceptionHandler::PopAllExceptions());
-		$pdo->rollBack();
 		ExceptionHandler::PushException("خطا در صدور سند");
 		return false;
 	}
-	$pdo->commit();
 	return true;
 }
 
