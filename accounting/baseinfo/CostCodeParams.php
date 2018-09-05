@@ -34,8 +34,8 @@ $col->width = 50;
 $dg->addButton("", " ایجاد", "add", "function(){ACC_CostCodeParamsObj.AddParam();}");
 
 $dg->DefaultSortField = "ordering";
-$dg->DefaultSortDir = "desc";
-$dg->EnablePaging = false;
+$dg->DefaultSortDir = "asc";
+$dg->EnablePaging = false; 
 $dg->EnableSearch = false;
 $dg->autoExpandColumn = "ParamDesc";
 $dg->enableRowEdit = true;

@@ -12,7 +12,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 $random = rand();
 require_once 'EventRows.js.php';
-
+ 
 $dg = new sadaf_datagrid("dg2", $js_prefix_address . "baseinfo.data.php?task=selectEventRows&EventID=" . $EventID, "div_detail_dg");
 
 $dg->addColumn(" ", "RowID", "", true);
@@ -20,6 +20,7 @@ $dg->addColumn(" ", "EventID", "", true);
 $dg->addColumn(" ", "CostID", "", true);
 $dg->addColumn(" ", "TafsiliType", "", true);
 $dg->addColumn(" ", "TafsiliType2", "", true);
+$dg->addColumn(" ", "TafsiliType3", "", true);
 $dg->addColumn(" ", "CostDesc", "", true);
 $dg->addColumn(" ", "IsActive", "", true);
 $dg->addColumn(" ", "ChangeDate", "", true);
@@ -38,10 +39,13 @@ $col->width = 65;
 $col = $dg->addColumn(" عنوان حساب ", "CostDesc");
 
 $col = $dg->addColumn("گروه تفصیلی", "TafsiliTypeDesc");
-$col->width = 120;
+$col->width = 100; 
 
 $col = $dg->addColumn("گروه تفصیلی2", "TafsiliType2Desc");
-$col->width = 120;
+$col->width = 100;
+
+$col = $dg->addColumn("گروه تفصیلی3", "TafsiliType3Desc");
+$col->width = 100;
 
 $col = $dg->addColumn("مبنای صدور سند", "DocDesc");
 $col->width = 120;

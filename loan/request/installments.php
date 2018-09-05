@@ -267,7 +267,6 @@ function Installment()
 		}*/,{
 			xtype : "button",
 			border : true,
-			hidden : <?= $_SESSION["USER"]["UserName"] == "jannati" ? "false" : "true" ?>,
 			style : "margin-right:10px",
 			text : "پرداخت الکترونیک بانک تجارت",
 			iconCls : "epay",

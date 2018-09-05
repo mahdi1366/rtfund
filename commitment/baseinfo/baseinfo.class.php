@@ -239,7 +239,7 @@ class COM_events extends PdoDataAccess {
     }
 
 }
-
+ 
 class COM_EventRows extends PdoDataAccess {
 
     public $RowID;
@@ -247,6 +247,7 @@ class COM_EventRows extends PdoDataAccess {
     public $CostID;
     public $TafsiliType;
 	public $TafsiliType2;
+	public $TafsiliType3;
     public $CostType;
     public $DocDesc;
     public $IsActive;
