@@ -277,6 +277,7 @@ class COM_EventRows extends PdoDataAccess {
         $query = " select er.*,
 					bf.InfoDesc TafsiliTypeDesc,
 					bf2.InfoDesc TafsiliType2Desc,
+					bf3.InfoDesc TafsiliType3Desc,
 					concat_ws('-',cb1.blockDesc,cb2.blockDesc,cb3.blockDesc) CostDesc,
 					concat_ws('',cb1.blockCode,cb2.blockCode,cb3.blockCode) CostCode,
 					concat_ws(' ',fname,lname,CompanyName) changePersonName,
@@ -286,6 +287,7 @@ class COM_EventRows extends PdoDataAccess {
 			left join BSC_persons on(PersonID=ChangePersonID)
 			left join BaseInfo bf on(bf.TypeID=2 AND bf.InfoID=er.TafsiliType)
 			left join BaseInfo bf2 on(bf2.TypeID=2 AND bf2.InfoID=er.TafsiliType2)
+			left join BaseInfo bf3 on(bf3.TypeID=2 AND bf3.InfoID=er.TafsiliType3)
 			join  ACC_CostCodes cc using(CostID)
 			left join ACC_blocks cb1 on(cb1.blockID=cc.level1)
 			left join ACC_blocks cb2 on(cb2.blockID=cc.level2)
