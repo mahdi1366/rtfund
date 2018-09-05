@@ -125,8 +125,6 @@ $col->ellipsis = 50;
 
 $col = $dg->addColumn("آیتم های اطلاعاتی", "paramValues");
 $col->width = 130;
-$col->ellipsis = 50;
-
 
 if($accessObj->RemoveFlag)
 {

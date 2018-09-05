@@ -444,14 +444,13 @@ CostCode.ParamRender = function(v,p,r, gridIndex){
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
-
 CostCode.prototype.LoadParams = function(){
 
 	if(!this.ParamWin)
 	{
 		this.ParamWin = new Ext.window.Window({
 			width : 600,
-			title : "آیتم های الگو",
+			title : "آیتم های کد حساب",
 			height : 520,
 			modal : true,
 			closeAction : "hide",
@@ -480,5 +479,89 @@ CostCode.prototype.LoadParams = function(){
 	});
 }
 
+CostCode.prototype.CopyParams = function(){
+	
+	if(!this.CopyParamWin)
+	{
+		this.CopyParamWin = new Ext.window.Window({
+			width : 700,
+			title : "کپی آیتم های کد حساب",
+			height : 100,
+			modal : true,
+			closeAction : "hide",
+			items : new Ext.form.Panel({
+				items :[{
+					xtype : "combo",
+					fieldLabel : "کد حساب مبدا برای کپی آیتم ها",
+					labelWidth : 150,
+					width : 680,
+					store: new Ext.data.Store({
+						fields:["CostID","CostCode","CostDesc",{
+							name : "fullDesc",
+							convert : function(value,record){
+								return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
+							}				
+						}],
+						proxy: {
+							type: 'jsonp',
+							url: this.address_prefix + 'baseinfo.data.php?task=SelectCostCode',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						}
+					}),
+					typeAhead: false,
+					name : "Dst_CostID",
+					valueField : "CostID",
+					displayField : "fullDesc"
+				},{
+					xtype : "hidden",
+					name : "Src_CostID"
+				}]
+			}),
+			buttons :[{
+				text : "کپی آیتم ها",
+				iconCls : "copy",
+				handler : function(){
+					me = CostCodeObj;
+					mask = new Ext.LoadMask(me.CopyParamWin, {msg:'در حال ذخيره سازي...'});
+					mask.show();
+					me.CopyParamWin.down('form').getForm().submit({
+						clientValidation: true,
+						url: CostCodeObj.address_prefix + 'baseinfo.data.php?task=CopyParams',
+						method: "POST",
+						success: function (form, action) {
+							mask.hide();
+							CostCodeObj.CopyParamWin.hide();
+							Ext.MessageBox.alert("خطا", "عملیات مورد نظر با موفقیت انجام شد");
+						},
+						failure: function (form, action)
+						{
+							mask.hide();
+							if(action.result.data == "")
+								Ext.MessageBox.alert("خطا", "عملیات مورد نظر با شکست مواجه شد");
+							else
+								Ext.MessageBox.alert("خطا", action.result.data);
+						}
+					});
+				}
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.CopyParamWin);
+	}
+
+	var record = this.grid.getSelectionModel().getLastSelected();
+	if(!record)
+	{
+		Ext.MessageBox.alert("","ابتدا کد حسابی که می خواهید آیتم های آن را از کد حساب دیگری کپی کنید انتخاب کنید");
+		return;
+	}
+	
+	this.CopyParamWin.show();
+	this.CopyParamWin.center();
+	this.CopyParamWin.down("[name=Src_CostID]").setValue(record.data.CostID);
+}
 
 </script>
