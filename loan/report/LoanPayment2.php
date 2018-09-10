@@ -77,6 +77,7 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg->addColumn("مانده اقساط", "TotalRemainder","ReportMoneyRender");
 	
+	
 	$rpg->mysql_resource = $ComputeArr;
 	BeginReport();
 	echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>

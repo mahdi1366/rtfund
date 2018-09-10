@@ -121,7 +121,7 @@ function GetData(){
 		$MainRow = &$dataTable[$index];
 		$MainRow["PayedDate"] = "";
 		$MainRow["PayedAmount"] = "";
-		$MainRow["forfeit"] = 0;
+		$MainRow["forfeit"] = 0;	
 		$MainRow["TotalRemainder"] = $MainRow["InstallmentAmount"];
 	
 		if(!isset($computeArr[ $MainRow["RequestID"] ]))

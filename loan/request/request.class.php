@@ -682,7 +682,10 @@ class LON_requests extends PdoDataAccess{
 		
 		$refInstallments = array();
 		for($i=0; $i<count($installments); $i++)
-			$refInstallments[ $installments[$i]["InstallmentID"] ] = &$installments[$i];
+		{
+			$installments[$i]["remainder"] = $installments[$i]["InstallmentAmount"];
+			$refInstallments[ $installments[$i]["InstallmentID"] ] = &$installments[$i];			
+		}
 		
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 
@@ -814,9 +817,6 @@ class LON_requests extends PdoDataAccess{
 			{
 				$refInstallments[ $record["id"] ]["ForfeitDays"] = $tempForReturnArr["ForfeitDays"];
 				$refInstallments[ $record["id"] ]["CurForfeitAmount"] = $tempForReturnArr["CurForfeitAmount"];
-				$refInstallments[ $record["id"] ]["remainder"] = min(
-						$refInstallments[ $record["id"] ]["InstallmentAmount"],
-						$tempForReturnArr["TotalRemainder"]);
 				$refInstallments[ $record["id"] ]["TotalRemainder"] = $tempForReturnArr["TotalRemainder"];
 			}
 		}
@@ -902,8 +902,8 @@ class LON_requests extends PdoDataAccess{
 						$InstallmentRow["ActionDate"];
 				if($InstallmentRow["ActionDate"] > $StartDate)
 					$StartDate = $InstallmentRow["ActionDate"];
-				if(!$PayRecord)
-					$StartDate = $InstallmentRow["ActionDate"];
+				//if(!$PayRecord)
+				//	$StartDate = $InstallmentRow["ActionDate"];
 				
 				$ToDate = $PayRecord ? $PayRecord["ActionDate"] : DateModules::Now();
 				if($ToDate > DateModules::Now())
@@ -936,6 +936,9 @@ class LON_requests extends PdoDataAccess{
 					"PayedDate" => $PayRecord ? DateModules::miladi_to_shamsi($PayRecord["ActionDate"]) : '',
 					"PayedAmount" => number_format($SavePayedAmount)
 				);
+				
+				$refInstallments[ $InstallmentRow["InstallmentID"] ]["remainder"] -= $SavePayedAmount;
+				
 				if($PayRecord && $PayRecord["ActionAmount"] == 0)
 				{
 					$PayRecord = $payIndex < count($ComputePayRows) ? $ComputePayRows[$payIndex++] : null;
@@ -1219,11 +1222,11 @@ class LON_requests extends PdoDataAccess{
 		return $TotalShouldPay<0 ? 0 : $TotalShouldPay;
 	}
 	
-        /**
-	 * تاریخ اولین قسطی که پرداخت نشده است
+    /**
+	 * تاریخ اولین قسطی که کامل پرداخت نشده است
 	 * @param type $RequestID
 	 * @param type $computeArr
-	 * @return type 
+	 * @return gdate 
 	 */
 	static function GetMinPayedInstallmentDate($RequestID, $computeArr=null){
 		
@@ -1241,6 +1244,23 @@ class LON_requests extends PdoDataAccess{
 				if($remain > 0)
 					return $row["ActionDate"];
 			}
+		return null;
+	}
+	
+	/**
+	 * رکورد اولین قسطی که اصلا پرداخت نشده است
+	 * @param type $RequestID
+	 * @param type $computeArr
+	 * @return gdate 
+	 */
+	static function GetNonPayedInstallmentRow($RequestID, $computeArr=null, $installments = array()){
+		
+		if($computeArr == null)
+			$computeArr = self::ComputePayments($RequestID, $installments);
+	
+		foreach($installments as $row)
+			if(isset($row["remainder"]) && $row["remainder"] == $row["InstallmentAmount"])
+				return $row;
 		return null;
 	}
 }
