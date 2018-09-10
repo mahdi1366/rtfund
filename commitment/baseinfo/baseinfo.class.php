@@ -274,25 +274,27 @@ class COM_EventRows extends PdoDataAccess {
     }
 
     static function SelectAll($where = '', $param = array()) {
-
+ 
         $query = " select er.*,
 					bf.InfoDesc TafsiliTypeDesc,
 					bf2.InfoDesc TafsiliType2Desc,
+					bf3.InfoDesc TafsiliType3Desc,
 					concat_ws('-',cb1.blockDesc,cb2.blockDesc,cb3.blockDesc) CostDesc,
 					concat_ws('',cb1.blockCode,cb2.blockCode,cb3.blockCode) CostCode,
 					concat_ws(' ',fname,lname,CompanyName) changePersonName,
-					concat(bf4.InfoDesc,' - ',bf3.InfoDesc) ComputeItemDesc
+					concat(bf11.InfoDesc,' - ',bf10.InfoDesc) ComputeItemDesc
 					
 			from COM_EventRows er 
 			left join BSC_persons on(PersonID=ChangePersonID)
 			left join BaseInfo bf on(bf.TypeID=2 AND bf.InfoID=er.TafsiliType)
 			left join BaseInfo bf2 on(bf2.TypeID=2 AND bf2.InfoID=er.TafsiliType2)
+			left join BaseInfo bf3 on(bf3.TypeID=2 AND bf3.InfoID=er.TafsiliType3)
 			join  ACC_CostCodes cc using(CostID)
 			left join ACC_blocks cb1 on(cb1.blockID=cc.level1)
 			left join ACC_blocks cb2 on(cb2.blockID=cc.level2)
 			left join ACC_blocks cb3 on(cb3.blockID=cc.level3)
-			left join BaseInfo bf3 on(bf3.TypeID=84 AND bf3.InfoID=er.ComputeItemID)
-			left join BaseInfo bf4 on(bf4.TypeID=83 AND bf3.param1=bf4.InfoID)";
+			left join BaseInfo bf10 on(bf10.TypeID=84 AND bf10.InfoID=er.ComputeItemID)
+			left join BaseInfo bf11 on(bf11.TypeID=83 AND bf10.param1=bf11.InfoID)";
 
         if ($where != '')
             $query .= ' where ' . $where;

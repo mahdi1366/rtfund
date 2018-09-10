@@ -77,6 +77,7 @@ if($accessObj->AddFlag)
 	$dg_cost->addButton = true;
 	$dg_cost->addHandler = 'function(){return CostCodeObj.BeforeSaveCost(false);}';
 }
+$dg_cost->addButton('', 'کپی آیتم ها', 'copy', 'function(e){ return CostCodeObj.CopyParams(); }');
 $dg_cost->addButton('prn__btn', 'چاپ کد حسابها', 'print', 'function(e){ return CostCodeObj.PrintCost(); }');
 
 $dg_cost->title = 'کدینگ حساب';

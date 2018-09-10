@@ -52,7 +52,8 @@ switch ($task) {
 	
 	case "selectParams":
 	case "saveParam":
-	case "deleteParams":
+	case "deleteParam":
+	case "CopyParams":
 		
 		$task();
 };
@@ -788,4 +789,20 @@ function deleteParam() {
 	die();
 }
 
+function CopyParams(){
+	
+	$SRC_CostID = (int)$_POST["Src_CostID"];
+	$DST_CostID = (int)$_POST["Dst_CostID"];
+	
+	PdoDataAccess::runquery("
+		insert into ACC_CostCodeParams(CostID,ordering,ParamDesc,ParamType,KeyTitle,ParamValues)
+		select :src,ordering,ParamDesc,ParamType,KeyTitle,ParamValues
+		from ACC_CostCodeParams where CostID=:dst
+	",array(
+		":dst" => $DST_CostID,
+		":src" => $SRC_CostID
+	));
+	echo Response::createObjectiveResponse(true, '');
+	die();
+}
 ?>

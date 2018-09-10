@@ -152,7 +152,7 @@ function AccDocs(){
 	//--------------------------------------------------------------------------
 	
 	this.ParamsStore = new Ext.data.Store({
-		fields:["DocType","ParamID","ParamDesc","ParamType"],
+		fields:["DocType","ParamID","ParamDesc","ParamType", "ParamValues"],
 		proxy: {
 			type: 'jsonp',
 			url: this.address_prefix + 'doc.data.php?task=selectCostParams',
@@ -648,13 +648,37 @@ AccDocs.prototype.SelectCostIDHandler = function(record){
 			{
 				record = this.getAt(i);
 				var ParamsFS = AccDocsObject.detailWin.down('form').getComponent("ParamsFS");
+				
+				if(record.data.ParamType == "combo")
+				{
+					arr = record.data.ParamValues.split("#");
+					data = [];
+					for(j=0;j<arr.length;j++)
+						if(arr[j] != "")
+							data.push([ arr[j] ]);
+					
+					ParamsFS.add({
+						xtype : record.data.ParamType,
+						name : "Param" + record.data.ParamID,
+						fieldLabel : record.data.ParamDesc,
+						store : new Ext.data.SimpleStore({
+							fields : ['value'],
+							data : data
+						}),
+						valueField : "value",
+						displayField : "value"
+					});							
+				}
+			else
+			{
 				ParamsFS.add({
 					xtype : record.data.ParamType,
 					name : "Param" + record.data.ParamID,
 					fieldLabel : record.data.ParamDesc,
 					hideTrigger : (record.data.ParamType == "numberfield" || 
 						record.data.ParamType == "currencyfield" ? true : false)
-				});				
+				});			
+			}
 			}
 			ItemID = AccDocsObject.detailWin.down("[name=ItemID]").getValue();
 			if(ItemID*1 > 0)
