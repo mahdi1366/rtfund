@@ -20,56 +20,34 @@ $PayObj->PersonID = $_SESSION["USER"]["PersonID"];
 $PayObj->RequestID = $_REQUEST["RequestID"];
 $PayObj->Add();
 
+ini_set ( "soap.wsdl_cache_enabled", "0" );
+$wsdl_url = "https://pec.shaparak.ir/NewIPGServices/Sale/SaleService.asmx?WSDL";
 $callbackUrl = "http://portal.krrtf.ir/portal/epayment-ayande/epayment_step2.php";
 $amount = $_REQUEST["amount"];
 $pin = BANK_AYANDEH_PIN;
 $orderId = $PayObj->PayID;
 
-$soapclient = new soapclient2('https://pec.shaparak.ir/pecpaymentgateway/EShopService.asmx?wsdl','wsdl');
-if (!$err = $soapclient->getError())
-	$soapProxy = $soapclient->getProxy();
-if ( (!$soapclient) OR ($err = $soapclient->getError()) ) {
-	echo BeginReport();
-    echo "<center><br><br>" . 
-			"سرویس بانک در حال حاضر از دسترس خارج است" . "<br><br></center>" ;
-	die();
-} 
-
-$authority = 0 ;  // default authority
-$status = 1 ;	// default status
-$params = array(
-			'pin' => $pin,
-			'amount' => $amount,
-			'orderId' => $orderId,
-			'callbackUrl' => $callbackUrl,
-			'authority' => $authority,
-			'status' => $status
-		  );
-$sendParams = array($params) ;
-$res = $soapclient->call('PinPaymentRequest', $sendParams);
-
-$authority = $res['authority'];
-$status = $res['status'];
-
-if ( ($authority) and ($status==0) )  {
-	// this is succcessfull connection
-	$PayObj->authority = $authority;
-	$PayObj->Edit();
-	$parsURL = "https://pec.shaparak.ir/pecpaymentgateway/?au=" . $authority ;
-	header("location:" . $parsURL);
-	die();
-
-} else {
-	// this is unsucccessfull connection
-	echo "<p dir=LTR>";
-	if ($err = $soapclient->getError()) {
-		echo "ERROR = $err <br /> " ;
-  }
-  echo "$authority <br />" ;
-  echo "$status <br />" ;
-  echo "$orderId <br />" ;
-  echo "Couldn't get proper authority key " ;
-  echo "</p>";
-
+$params = array (
+	"LoginAccount" => $pin,
+	"Amount" => $amount,
+	"OrderId" => $orderId,
+	"CallBackUrl" => $callbackUrl 
+);
+$client = new SoapClient ( $wsdl_url );
+try {
+	$result = $client->SalePaymentRequest ( array (
+			"requestData" => $params 
+	) );
+	if ($result->SalePaymentRequestResult->Token && $result->SalePaymentRequestResult->Status === 0) {
+		header ( "Location: https://pec.shaparak.ir/NewIPG/?Token=" . $result->SalePaymentRequestResult->Token ); /* Redirect browser */
+		exit ();
+	}
+	elseif ( $result->SalePaymentRequestResult->Status  != '0') {
+		$err_msg = "(<strong> کد خطا : " . $result->SalePaymentRequestResult->Status . "</strong>) " .
+		 $result->SalePaymentRequestResult->Message ;
+	} 
+} catch ( Exception $ex ) {
+	$err_msg =  $ex->getMessage()  ; 
 }
+
 ?>

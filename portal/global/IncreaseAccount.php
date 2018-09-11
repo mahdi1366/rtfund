@@ -47,14 +47,6 @@ function IncreaseAccount()
 		},{
 			xtype : "button",
 			border : true,
-			disabled : true,
-			style : "margin-right:10px",
-			text : "پرداخت الکترونیک بانک اقتصاد نوین",
-			iconCls : "epay",
-			handler : function(){ IncreaseAccountObject.Pay1(); }
-		},{
-			xtype : "button",
-			border : true,
 			itemId : "cmp_ayande",
 			style : "margin-right:10px",
 			text : "پرداخت الکترونیک بانک آینده",

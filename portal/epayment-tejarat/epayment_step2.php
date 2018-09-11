@@ -112,12 +112,12 @@ function RegDoc($RequestID, $amount, $PayRefNo){
 	$SecondCostID = "";
 
 	$ReqObj = new LON_requests($obj->RequestID);
-	if($ReqObj->BranchID != "3") // این درگاه مخصوص دانشگاه است و وام های شعبه های دیگر باید با حساب مرکز ثبت شوند
+	if($ReqObj->BranchID != "4") // این درگاه مخصوص پارک است و وام های شعبه های دیگر باید با حساب مرکز ثبت شوند
 	{
 		$CenterAccount = true;
-		$BranchID = "3";
-		$FirstCostID = 205;
-		$SecondCostID = 17;
+		$BranchID = "4";
+		$FirstCostID = 453; // شعبه پارک
+		$SecondCostID = 17; // حساب مرکز
 	}
 
 	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);

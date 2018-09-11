@@ -11,8 +11,14 @@ require_once 'nusoap.php';
 
 ini_set("display_errors", "On");
 
-$authority = $_REQUEST['au'];
-$status = $_REQUEST['SwRespCode'];
+$PIN = BANK_AYANDEH_PIN;
+$wsdl_url = "https://pec.shaparak.ir/NewIPGServices/Confirm/ConfirmService.asmx?WSDL";
+$Token = $_REQUEST ["Token"];
+$status = $_REQUEST ["status"];
+$OrderId = $_REQUEST ["OrderId"];
+$TerminalNo = $_REQUEST ["TerminalNo"];
+$Amount = $_REQUEST ["Amount"];
+$RRN = $_REQUEST ["RRN"];
 
 function RegDoc($RequestID, $amount,  $PayRefNo){
 	
@@ -71,7 +77,7 @@ function RegDoc($RequestID, $amount,  $PayRefNo){
 	return true;
 }
 
-$dt = PdoDataAccess::runquery("select * from ACC_EPays where authority=?", array($authority));
+$dt = PdoDataAccess::runquery("select * from ACC_EPays where PayID=?", array($OrderId));
 if(count($dt) == 0)
 {
 	$result = "خطا در انتقال پارامترهای بانک";
@@ -79,57 +85,44 @@ if(count($dt) == 0)
 else
 {
 	$PayObj = new ACC_EPays($dt[0]["PayID"]);
-	if ($status == 0) 
+	
+	if ($RRN > 0 && $status == 0)
 	{
-		$soapclient = new soapclient2('https://pec.shaparak.ir/pecpaymentgateway/EShopService.asmx?wsdl','wsdl');
-		if ( (!$soapclient) OR ($err = $soapclient->getError()) ) 
-		{
-			// this is unsucccessfull connection
-			$result = "خطا در اتصال به بانک";
-		} 
-		else 
-		{
-			$invoiceNumber = 0;
-			$status = 1 ;   // default status
-			$params = array(
-					'pin' => BANK_AYANDEH_PIN,
-					'authority' => $authority,
-					'status' => $status ,
-					'invoiceNumber' => $invoiceNumber ) ; // to see if we can change it
-			$sendParams = array($params) ;
-			$res = $soapclient->call('PaymentEnquiry', $sendParams);
-			$status = $res["status"];
-			$invoiceNumber = $res["invoiceNumber"];
-			
-			$PayObj->StatusCode = $status;
-			$PayObj->Edit();
-			
-			if ($status == 0) {
-				// this is a succcessfull payment	
-				$DocRegResult = RegDoc($PayObj->RequestID, $PayObj->amount, $invoiceNumber);
-				if(!$DocRegResult)
-				{
-					$PayObj->error = json_encode(ExceptionHandler::PopAllExceptions());
-					$PayObj->Edit();
-				}
-				
-				$result = "پرداخت الكترونيكي شما به درستي انجام گرفت. شماره رسيد بانكي زير براي شما صادر گرديده است: </p>";
-				$result .= "<table width=80% align=center border=1 cellspacing=0 cellpadding=5 dir=rtl>
-					<tr>
-						<td>مبلغ پرداختي: </td>
-						<td><b>" . number_format($PayObj->amount) . "</b> ریال  </td>
-					</tr>
-					<tr>
-						<td> شماره پیگیری: </td>
-						<td dir=ltr align=right><b>" . $invoiceNumber . "</b></td>
-					</tr>
-				</table>";				
-
-			} else {
-
-				$result = "<br> عملیات پرداخت قسط به درستی ثبت نگردیده است. " . 
-					"<br> وجه کسر شده حداکثر تا 72 ساعت به حساب شما برگشت خواهد شد." ;
+		$params = array (
+				"LoginAccount" => $PIN,
+				"Token" => $Token 
+		);
+		$client = new SoapClient ( $wsdl_url );
+		try {
+			$rss = $client->ConfirmPayment ( array ("requestData" => $params ) );
+			if ($rss->ConfirmPaymentResult->Status != '0') {
+				/*$err_msg = "(<strong> کد خطا : " . $rss->ConfirmPaymentResult->Status . "</strong>) " .
+		 		 $rss->ConfirmPaymentResult->Message ;*/
+				$result = "خطا در اتصال به بانک";
 			}
+			// this is a succcessfull payment	
+			$DocRegResult = RegDoc($PayObj->RequestID, $PayObj->amount, $RRN);
+			if(!$DocRegResult)
+			{
+				$PayObj->error = json_encode(ExceptionHandler::PopAllExceptions());
+				$PayObj->Edit();
+			}
+
+			$result = "پرداخت الكترونيكي شما به درستي انجام گرفت. شماره رسيد بانكي زير براي شما صادر گرديده است: </p>";
+			$result .= "<table width=80% align=center border=1 cellspacing=0 cellpadding=5 dir=rtl>
+				<tr>
+					<td>مبلغ پرداختي: </td>
+					<td><b>" . number_format($PayObj->amount) . "</b> ریال  </td>
+				</tr>
+				<tr>
+					<td> شماره پیگیری: </td>
+					<td dir=ltr align=right><b>" . $RRN . "</b></td>
+				</tr>
+			</table>";	
+			
+		} catch ( Exception $ex ) {
+			$result = "<br> عملیات پرداخت قسط به درستی ثبت نگردیده است. " . 
+					"<br> وجه کسر شده حداکثر تا 72 ساعت به حساب شما برگشت خواهد شد." ;
 		}
 	}
 	else
