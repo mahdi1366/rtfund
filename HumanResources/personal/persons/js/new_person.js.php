@@ -184,6 +184,30 @@ function Person()
 					}
 					  }
 						},
+                                                {
+					 itemId: 'CostCode'
+					,title: 'کد حساب پرداختی'
+					,style: 'padding:5px'
+					,height:700
+					,loader:{
+						url: this.address_prefix + "staff_CostCode_history.php",
+						scripts:true
+					}
+					,disabled: (this.personInfoForm.PersonID.value == "") ? true : false
+					,listeners: {activate: function(tab){
+						if(tab.isLoaded)
+							return;
+						tab.loader.load({
+							 params : {
+								Q0 : PersonObject.personInfoForm.PersonID.value,
+								Q1 : PersonObject.personInfoForm.PersonID.value,
+								Q2 : PersonObject.personInfoForm.PersonID.value
+								
+							}
+						});
+					}
+					  }
+						},
 						{
 						 itemId: 'salaryReceipt'
 						,title: 'فیش حقوقی'
