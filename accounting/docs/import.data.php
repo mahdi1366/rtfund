@@ -1633,6 +1633,10 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		$itemObj->DocID = $obj->DocID;
 		$itemObj->CostID = $CostCode_Loan;
 		$itemObj->DebtorAmount = $ExtraAmount;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $LoanPersonTafsili;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 		$itemObj->CreditorAmount = 0;	
 		$itemObj->locked = "NO";
 		$itemObj->SourceID = $ReqObj->RequestID;
@@ -1856,7 +1860,9 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 	$itemObj->SourceID = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $NewPartObj->PartID;
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
-	$itemObj->TafsiliID = $ReqPersonTafsili;
+	$itemObj->TafsiliID = $LoanPersonTafsili;
+	$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+	$itemObj->TafsiliID2 = $ReqPersonTafsili;
 	//--------------------------------------------------------
 	// compute the differnce of wage of CUSTOMER
 	$PreviousAgentWage = 0;
