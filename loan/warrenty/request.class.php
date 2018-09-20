@@ -66,7 +66,7 @@ class WAR_requests extends OperationClass
 				BranchName,
 				if(lst.RequestID=r.RequestID, 'YES', 'NO') IsCurrent,
 				concat(if(fr.ActionType='REJECT','رد ',''),sp.StepDesc) StepDesc,
-				if(sp.StepID=1 AND fr.ActionType='REJECT', 'YES', 'NO') ResendEnable,
+				if(sp.StepID=1 AND fr.ActionType='REJECT', 'YES', 'NO') SendEnable,
 				fr.ActionType
 				
 			from WAR_requests r 

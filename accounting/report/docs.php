@@ -353,7 +353,7 @@ function AccReport_docs()
 		},{
 			xtype : "container",
 			colspan : 2,
-			html : "<input type=checkbox name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
+			html : "<input type=checkbox checked name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
 		},{
 			xtype : "fieldset",
 			title : "ستونهای گزارش",

@@ -19,6 +19,7 @@ $dg->addColumn(" ", "ProcessID", "", true);
 $dg->addColumn(" ", "CostID", "", true);
 $dg->addColumn(" ", "PostID", "", true);
 $dg->addColumn(" ", "BaseID", "", true);
+$dg->addColumn(" ", "MethodID", "", true);
 $dg->addColumn(" ", "PostID", "", true);
 
 $dg->addColumn(" ", "IsActive", "", true);
@@ -33,6 +34,10 @@ $col = $dg->addColumn(" کد حساب ", "CostCode");
 $col->width = 65;
 
 $col = $dg->addColumn(" عنوان حساب ", "CostDesc");
+
+$col = $dg->addColumn("روش تسهیم", "MethodDesc");
+$col->width = 100;
+$col->ellipsis = 40; 
 
 $col = $dg->addColumn("مبنای تسهیم", "BaseDesc");
 $col->width = 120;
@@ -156,6 +161,24 @@ $itemsgrid = $dg->makeGrid_returnObjects();
 				name : "CostID",
 				valueField : "CostID",
 				displayField : "fullDesc"
+			},{
+				xtype : "combo",
+				fieldLabel : "روش تسهیم",
+				allowBlank : true,
+				store: new Ext.data.Store({
+					fields:["InfoID","InfoDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + 'baseinfo.data.php?task=selectMethods',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad : true
+				}),
+				typeAhead: false,
+				queryMode : "local",
+				name : "MethodID",
+				valueField : "InfoID",
+				displayField : "InfoDesc"
 			},{
 				xtype : "combo",
 				fieldLabel : "مبنای تسهیم",

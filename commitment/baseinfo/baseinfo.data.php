@@ -30,6 +30,7 @@ switch ($task) {
 	case "DeleteEventRow":
 	
 	case "selectBases":
+	case "selectMethods":
 	case "selectSharing":
 	case "saveSharing":
 	case "DeleteSharing":
@@ -257,6 +258,12 @@ function selectBases(){
 	die();
 }
 
+function selectMethods(){
+	$list = PdoDataAccess::runquery("select * from BaseInfo where TypeID=86 AND IsActive='YES'");
+	echo dataReader::getJsonData($list, count($list), $_GET['callback']);
+	die();
+}
+
 function selectSharing(){
 
 	$where = " AND s.ProcessID=? ";
@@ -280,6 +287,7 @@ function saveSharing(){
 	else
 		$result = $obj->Edit();
 	
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();	
 }

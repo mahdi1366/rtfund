@@ -40,6 +40,8 @@ function GetData(){
 			case when i.CostID is null then group_concat(concat_ws('-', bb1.blockDesc, bb2.blockDesc) SEPARATOR '<br>') 
 				else concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) end CostDesc,
 			b.BankDesc, 
+			r.RequestID,
+			br.BranchName,
 			t3.TafsiliDesc ChequeStatusDesc	,LoanPersonID	".
 				($userFields != "" ? "," . $userFields : "")."	
 			
@@ -54,6 +56,7 @@ function GetData(){
 			
 			left join LON_BackPays bp using(IncomeChequeID)
 			left join LON_requests r using(RequestID)
+			left join BSC_branches br using(BranchID)
 			left join LON_loans l using(LoanID)
 			left join ACC_CostCodes cc2 on(cc2.level1=" . BLOCKID_LOAN . " AND cc2.level2=l.blockID)
 			left join ACC_blocks bb1 on(cc2.level1=bb1.BlockID)
@@ -159,6 +162,8 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("موبایل", "mobile");
 	$rpg->addColumn("شماره پیامک", "SmsNo");
 	$rpg->addColumn("حساب", "CostDesc");
+	$rpg->addColumn("شماره وام", "RequestID");
+	$rpg->addColumn("شعبه وام", "BranchName");
 	$rpg->addColumn("معرف", "ReqFullname");	
 	$rpg->addColumn("شماره چک", "ChequeNo");
 	$rpg->addColumn("تاریخ چک", "ChequeDate","ReportDateRender");

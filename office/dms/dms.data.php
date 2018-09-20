@@ -230,6 +230,18 @@ function selectParamValues(){
 	die();
 }
 
+function SearchLetters(){
+	
+	$params = array(":lt" => "%" . $_REQUEST["query"] . "%");
+	$list = PdoDataAccess::runquery_fetchMode("select LetterID,LetterTitle 
+			from OFC_letters 
+			where AccessType=1 AND LetterTitle like :lt", $params);
+	$no = $list->rowCount();
+	$list = PdoDataAccess::fetchAll($list, $_GET["start"], $_GET["limit"]);
+    echo dataReader::getJsonData($list, $no, $_GET['callback']);
+    die();
+}
+
 //.................................................
 
 function SaveDocType(){

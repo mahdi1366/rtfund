@@ -236,7 +236,7 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 	record = this.grid.getSelectionModel().getLastSelected();
 	var op_menu = new Ext.menu.Menu();
 	
-	if(record.data.StatusID == "<?= WAR_STEPID_RAW ?>" || record.data.ResendEnable == "YES")
+	if(record.data.StatusID == "<?= WAR_STEPID_RAW ?>" || record.data.SendEnable == "YES")
 	{
 		if(this.EditAccess)
 		{

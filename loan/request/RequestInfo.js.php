@@ -219,7 +219,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 		op_menu.showAt(e.pageX-120, e.pageY);
 		return;
 	}
-	if(record.data.IsStarted == "NO" || record.data.ResendEnable == "YES")
+	if(record.data.IsStarted == "NO" || record.data.SendEnable == "YES")
 	{
 		if(record.data.StatusID == "70")
 			op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
@@ -367,6 +367,7 @@ RequestInfo.prototype.MakePartsPanel = function(){
 						if(v == "CUSTOMER") return "هنگام پرداخت وام";
 						if(v == "INSTALLMENT") return 'طی اقساط';
 						if(v == "CHEQUE") return 'چک';
+						if(v == "NEXTYEARCHEQUE") return 'چک سالهای بعد';
 					}
 				},{
 					name : "DelayReturn",
@@ -375,6 +376,7 @@ RequestInfo.prototype.MakePartsPanel = function(){
 						if(v == "CUSTOMER") return "هنگام پرداخت وام";
 						if(v == "INSTALLMENT") return 'طی اقساط';
 						if(v == "CHEQUE") return 'چک';
+						if(v == "NEXTYEARCHEQUE") return 'چک سالهای بعد';
 					}
 				},{
 					colspan : 3,
@@ -1585,7 +1587,7 @@ RequestInfo.prototype.ReturnEndRequest = function(){
 
 RequestInfo.prototype.BeforeAddPart = function(){
 	
-	if(this.grid.getStore().totalCount > 0)
+	if(this.grid.getStore().totalCount > 0) 
 	{
 		Ext.MessageBox.confirm("","با ایجاد شرایط جدید سند حسابداری اختلاف صادر می گردد.<br>" + 
 			"آیا مایل به ایجاد شرایط جدید می باشید؟", function(btn){
@@ -1798,9 +1800,14 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						inputValue : "INSTALLMENT"
 					},{
 						xtype : "radio",
-						boxLabel : "چک",
+						boxLabel : "چک برای کل مبلغ",
 						name : "DelayReturn",
 						inputValue : "CHEQUE"
+					},{
+						xtype : "radio",
+						boxLabel : "چک برای سالهای بعد",
+						name : "DelayReturn",
+						inputValue : "NEXTYEARCHEQUE"
 					}]
 				},{
 					xtype : "fieldset",
@@ -1839,9 +1846,14 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						inputValue : "INSTALLMENT"
 					},{
 						xtype : "radio",
-						boxLabel : "چک",
+						boxLabel : "چک برای کل مبلغ",
 						name : "AgentDelayReturn",
 						inputValue : "CHEQUE"
+					},{
+						xtype : "radio",
+						boxLabel : "چک برای سالهای بعد",
+						name : "AgentDelayReturn",
+						inputValue : "NEXTYEARCHEQUE"
 					}]
 				},{
 					xtype : "fieldset",

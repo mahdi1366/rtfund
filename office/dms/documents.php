@@ -88,7 +88,7 @@ switch($ObjectType)
 		
 		if($_SESSION["USER"]["IsCustomer"] == "YES" && 
 				$_SESSION["USER"]["PersonID"] == $obj->PersonID 
-				&& (!$arr["IsStarted"] || $arr["ResendEnable"]) )
+				&& (!$arr["IsStarted"] || $arr["SendEnable"]) )
 			$access = true;
 		if($_SESSION["USER"]["IsStaff"] == "YES" && isset($_SESSION["USER"]["framework"]))
 			$access = true;
@@ -178,7 +178,7 @@ ManageDocument.prototype = {
 function ManageDocument(){
 	
 	this.ParamsStore = new Ext.data.Store({
-		fields:["DocType","ParamID","ParamDesc","ParamType"],
+		fields:["DocType","ParamID","ParamDesc","ParamType", "KeyTitle"],
 		proxy: {
 			type: 'jsonp',
 			url: this.address_prefix + 'dms.data.php?task=selectAllParams',
@@ -278,13 +278,40 @@ function ManageDocument(){
 					me.ParamsStore.each(function(record){
 						if(DocType == record.data.DocType)
 						{
-							ParamsFS.add({
-								xtype : record.data.ParamType,
-								name : "Param" + record.data.ParamID,
-								fieldLabel : record.data.ParamDesc,
-								hideTrigger : (record.data.ParamType == "numberfield" || 
-									record.data.ParamType == "currencyfield" ? true : false)
-							});
+							if(record.data.KeyTitle == "LetterNo")
+							{
+								ParamsFS.add({
+									xtype : "combo",
+									colspan : 2,
+									width : 500,
+									store : new Ext.data.SimpleStore({
+										proxy: {
+											type: 'jsonp',
+											url: me.address_prefix + 'dms.data.php?' +
+												"task=SearchLetters",
+											reader: {root: 'rows',totalProperty: 'totalCount'}
+										},
+										fields : ['LetterID','LetterTitle',
+											{name : "fullDesc",	convert : function(value,record){
+													return "[" + record.data.LetterID + "] " + record.data.LetterTitle
+											} }
+]
+									}),
+									displayField : "fullDesc",
+									valueField : "LetterID",
+									name : "Param" + record.data.ParamID,
+									fieldLabel : record.data.ParamDesc
+									
+								});
+							}
+							else
+								ParamsFS.add({
+									xtype : record.data.ParamType,
+									name : "Param" + record.data.ParamID,
+									fieldLabel : record.data.ParamDesc,
+									hideTrigger : (record.data.ParamType == "numberfield" || 
+										record.data.ParamType == "currencyfield" ? true : false)
+								});
 						}
 					});
 					

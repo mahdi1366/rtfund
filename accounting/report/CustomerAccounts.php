@@ -357,7 +357,7 @@ function AccReport_CustomerAccount()
 			}]
 		},{
 			xtype : "container",
-			html : "<input type=checkbox name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
+			html : "<input type=checkbox checked name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
 		}],
 		buttons : [{
 			text : "گزارش خلاصه",

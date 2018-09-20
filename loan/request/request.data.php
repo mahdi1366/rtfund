@@ -399,7 +399,7 @@ function GetRequestParts(){
 		$result = WFM_FlowRows::GetFlowInfo(FLOWID_LOAN, $dt[$i]["PartID"]);
 		$dt[$i]["IsStarted"] = $result["IsStarted"] ? "YES" : "NO";
 		$dt[$i]["IsEnded"] = $result["IsEnded"] ? "YES" : "NO";
-		$dt[$i]["ResendEnable"] = $result["ResendEnable"] ? "YES" : "NO";		
+		$dt[$i]["SendEnable"] = $result["SendEnable"] ? "YES" : "NO";		
 		
 		//--------------- computes ------------------
 		$installments = ComputeInstallments($dt[$i]["RequestID"], false, null, true);

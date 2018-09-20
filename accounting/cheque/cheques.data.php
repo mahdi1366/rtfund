@@ -67,8 +67,6 @@ function MakeWhere(&$where , &$param){
 	//.........................................................
 	if (isset($_GET["fields"]) && !empty($_GET["query"])) {
 		$field = $_GET["fields"];
-		$field = $field == "fullname" ? "case when i.CostID is null then 
-			t2.TafsiliDesc else t1.TafsiliDesc end" : $field;
 		$where .= " AND " . $field . " like :f";
 		$param[":f"] = "%" . $_GET["query"] . "%";
 	}
@@ -82,46 +80,52 @@ function selectIncomeCheques() {
 	MakeWhere($where, $param);
 	  
 	$query = "
-		select i.*,
-			case when i.CostID is null OR LoanRequestID is not null 
-			then group_concat(concat('[ وام ',r.RequestID,'] ',t2.TafsiliDesc) SEPARATOR '<br>')
-				else t1.TafsiliDesc end fullname,
-			case when i.CostID is null then group_concat(concat_ws('-', bb1.blockDesc, bb2.blockDesc) SEPARATOR '<br>') 
-				else concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) end CostDesc,
-			b.BankDesc, 
-			t3.TafsiliDesc ChequeStatusDesc,
-			br.BranchName
-			/*,t.docs*/
-			
-		from ACC_IncomeCheques i
+		select t.*,b.BankDesc, t3.TafsiliDesc ChequeStatusDesc
+		from
+		(
+			select i.*,
+				group_concat(concat_ws(' ','[ وام ',r.RequestID,']',p.CompanyName,p.fname,p.lname) 
+					SEPARATOR '<br>') as fullname,
+					group_concat(l.LoanDesc SEPARATOR '<br>') CostDesc,
+					br.BranchName
+			from ACC_IncomeCheques i
+			join LON_BackPays bp using(IncomeChequeID)
+			join LON_requests r on(bp.RequestID=r.RequestID)
+			join BSC_persons p on(p.PersonID=r.LoanPersonID)
+			join LON_loans l using(LoanID)
+			join BSC_branches br using(BranchID)
+			group by i.IncomeChequeID
+
+		union all
+
+			select i.*,group_concat(concat_ws(' ','[ وام ',r.RequestID,']',p.CompanyName,p.fname,p.lname) 
+					SEPARATOR '<br>') as fullname,
+					group_concat(l.LoanDesc SEPARATOR '<br>') CostDesc,
+					br.BranchName
+			from ACC_IncomeCheques i
+			join LON_requests r on(i.LoanRequestID=r.RequestID)
+			join BSC_persons p on(p.PersonID=r.LoanPersonID)
+			join LON_loans l using(LoanID)
+			join BSC_branches br using(BranchID)
+			group by i.IncomeChequeID
+
+		union all
+
+			select i.*,t1.TafsiliDesc fullname,
+				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) CostDesc, ''
+			from ACC_IncomeCheques i
 			left join ACC_tafsilis t1 using(TafsiliID)
 			left join ACC_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
 			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
 			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
-			
-			left join LON_BackPays bp using(IncomeChequeID)
-			left join LON_requests r on(
-			if(bp.RequestID is null,i.LoanRequestID=r.RequestID,bp.RequestID=r.RequestID))
-			left join LON_loans l using(LoanID)
-			left join BSC_branches br using(BranchID)
-			left join ACC_CostCodes cc2 on(cc2.level1=" . BLOCKID_LOAN . " AND cc2.level2=l.blockID)
-			left join ACC_blocks bb1 on(cc2.level1=bb1.BlockID)
-			left join ACC_blocks bb2 on(cc2.level2=bb2.BlockID)
-			left join ACC_tafsilis t2 on(t2.TafsiliType=".TAFTYPE_PERSONS." AND t2.ObjectID=LoanPersonID)
-		
+			group by i.IncomeChequeID
+		)t
+
 		left join ACC_banks b on(ChequeBank=BankID)
-		left join ACC_tafsilis t3 on(t3.TafsiliType=".TAFTYPE_ChequeStatus." AND t3.TafsiliID=ChequeStatus)
-		/*left join (
-			select SourceID, group_concat(distinct LocalNo) docs
-			from ACC_DocItems join ACC_docs using(DocID)
-			where SourceType='" . DOCTYPE_INCOMERCHEQUE . "' 
-			group by SourceID
-		)t on(i.IncomeChequeID=t.SourceID)*/
-		
-		where " . $where . " 
-		group by i.IncomeChequeID";
+		left join ACC_tafsilis t3 on(t3.TafsiliType=7 AND t3.TafsiliID=ChequeStatus)
+		where " . $where ;
 	
 	//.........................................................
 	$query .= dataReader::makeOrder();

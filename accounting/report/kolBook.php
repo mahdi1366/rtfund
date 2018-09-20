@@ -220,7 +220,7 @@ function AccReport_kolBook()
 		},{
 			xtype : "container",
 			colspan : 2,
-			html : "<input type=checkbox name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
+			html : "<input type=checkbox checked name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",

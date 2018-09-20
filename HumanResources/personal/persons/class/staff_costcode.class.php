@@ -9,9 +9,10 @@ class manage_StaffPaidCostCode extends PdoDataAccess {
 
     public $SPID;
     public $StaffID;
-    public $StartDate;
+    public $StartDate; 
     public $EndDate;
     public $CostID;
+	public $BranchID;
 
     public function __construct($staff_id = "") {
 
@@ -121,10 +122,12 @@ class manage_StaffPaidCostCode extends PdoDataAccess {
 
         $query = "  select sth.*  , 
 						cc.CostCode,
+						b.BranchName,
 						concat_ws(' - ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc) CostDesc
                     from HRM_StaffPaidCostCode sth 
                         inner join HRM_staff s on sth.StaffID = s.staff_id 
                         inner join HRM_persons p on p.personid = s.personid
+						left join BSC_branches b using(BranchID)
 						left join ACC_CostCodes cc using(CostID)
 						left join ACC_blocks b1 on(level1=b1.BlockID)
 						left join ACC_blocks b2 on(level2=b2.BlockID)
