@@ -5058,8 +5058,8 @@ function RegisterPaySalaryDoc($PObj, $pdo){
 	}
 	//----------------------- add bank row -----------------------
 	$CostCode_bank = FindCostID("101");
-	$MarkazCostID = 17;
-	$FerdowsiCostID = 205;
+	$ParkCostID = COSTID_BRANCH_PARK;
+	$FerdowsiCostID = COSTID_BRANCH_UM;
 		
 	PdoDataAccess::runquery("
 		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,
@@ -5083,7 +5083,7 @@ function RegisterPaySalaryDoc($PObj, $pdo){
 				case when pc.CostID is null then null
 					 else if(pc.BranchID=:b,t.TafsiliID, null) end TafsiliID,				
 				case when pc.CostID is null then $CostCode_bank
-					 else if(pc.BranchID=:b,pc.CostID,$MarkazCostID) end CreditorCostID,
+					 else if(pc.BranchID=:b,pc.CostID,$ParkCostID) end CreditorCostID,
 				if(pc.CostID is not null,'YES', 'NO') locked,
 				sum(pit.pay_value + pit.diff_value_coef * pit.diff_pay_value
 					- (pit.get_value + pit.diff_value_coef * pit.diff_get_value)
