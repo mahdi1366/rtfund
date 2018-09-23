@@ -49,8 +49,8 @@ if($_POST['State']== 'OK') {
 				{
 					$CenterAccount = true;
 					$BranchID = "3";
-					$FirstCostID = 205;
-					$SecondCostID = 17;
+					$FirstCostID = COSTID_BRANCH_UM;
+					$SecondCostID = COSTID_BRANCH_PARK;
 				}
 				
 				$PersonObj = new BSC_persons($ReqObj->ReqPersonID);

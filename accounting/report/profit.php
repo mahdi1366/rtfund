@@ -27,22 +27,22 @@ function MakeData(){
 		}
 		if(!empty($_POST["TafsiliType"]))
 		{
-			$where .= " AND TafsiliType=:tt";
+			$where .= " AND di.TafsiliType=:tt";
 			$params[":tt"] = $_POST["TafsiliType"];
 		}
 		if(!empty($_POST["TafsiliID"]))
 		{
-			$where .= " AND TafsiliID=:tid";
+			$where .= " AND di.TafsiliID=:tid";
 			$params[":tid"] = $_POST["TafsiliID"];
 		}
 		if(!empty($_POST["TafsiliType2"]))
 		{
-			$where .= " AND TafsiliType2=:tt2";
+			$where .= " AND di.TafsiliType2=:tt2";
 			$params[":tt2"] = $_POST["TafsiliType2"];
 		}
 		if(!empty($_POST["TafsiliID2"]))
 		{
-			$where .= " AND TafsiliID2=:tid2";
+			$where .= " AND di.TafsiliID2=:tid2";
 			$params[":tid2"] = $_POST["TafsiliID2"];
 		}
 		if(!empty($_POST["CostID"]))
@@ -57,10 +57,21 @@ function MakeData(){
 			$params2 = $params;
 			$params2[":startDate"] = $StartDate;
 			$dt = PdoDataAccess::runquery("
-				select TafsiliID,CostID,sum(CreditorAmount-DebtorAmount) amount
-				from ACC_DocItems join ACC_docs using(DocID)
+				select 
+					group_concat( distinct
+						concat_ws(' - ' , b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode,
+							b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc)
+					SEPARATOR '<br>') CostDescs,
+					sum(CreditorAmount-DebtorAmount) amount
+					
+				from ACC_DocItems di join ACC_docs using(DocID)
+				join ACC_CostCodes cc using(CostID)
+				join ACC_blocks b1 on(level1=b1.BlockID)
+				left join ACC_blocks b2 on(level2=b2.BlockID)
+				left join ACC_blocks b3 on(level3=b3.BlockID)
+				left join ACC_blocks b4 on(level4=b4.BlockID)
 				where DocDate <= :startDate " . $where . " 
-				group by CostID", $params2);
+				", $params2);
 			
 			if(count($dt) > 0)
 			{
@@ -90,8 +101,17 @@ function MakeData(){
 		
 		$dt = PdoDataAccess::runquery("
 			select DocDate,group_concat(details SEPARATOR '<br>') DocDesc,
+					group_concat( distinct
+						concat_ws(' - ' , b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode,
+							b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc)
+					SEPARATOR '<br>') CostDescs,
 					sum(CreditorAmount-DebtorAmount) amount
-			from ACC_DocItems join ACC_docs using(DocID)
+			from ACC_DocItems di join ACC_docs using(DocID)
+			join ACC_CostCodes cc using(CostID)
+			join ACC_blocks b1 on(level1=b1.BlockID)
+			left join ACC_blocks b2 on(level2=b2.BlockID)
+			left join ACC_blocks b3 on(level3=b3.BlockID)
+			left join ACC_blocks b4 on(level4=b4.BlockID)
 			where 1=1 " . $where . "
 				
 			group by DocDate
@@ -161,6 +181,7 @@ function MakeData(){
 		echo "<table border=1>
 			<tr id=header>
 				<td>تاریخ</td>
+				<td>کدهای حساب</td>
 				<td>شرح</td>
 				<td>مبلغ گردش</td>
 				<td>مانده حساب</td>
@@ -178,6 +199,7 @@ function MakeData(){
 			$sumProfit += $row["profit"]*1;
 			echo "<tr>
 					<td>" . DateModules::miladi_to_shamsi($row["row"]["DocDate"]) . "</td>
+					<td>" . $row["row"]["CostDescs"] . "</td>
 					<td>" . $row["row"]["DocDesc"] . "</td>
 					<td>" . number_format($row["row"]["amount"]) . "</td>
 					<td>" . number_format($amount) . "</td>
@@ -306,7 +328,6 @@ function AccReport_profit()
 				autoLoad : true
 			}),
 			queryMode : "local",
-			allowBlank : false,
 			hiddenName : "CostID",
 			valueField : "CostID",
 			displayField : "fullDesc",

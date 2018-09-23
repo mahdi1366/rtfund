@@ -118,6 +118,39 @@ $dg->autoExpandColumn = "details";
 
 $grid = $dg->makeGrid_returnObjects();
 
+//-----------------------------------------------
+require_once '../../accounting/cheque/cheque.class.php';
+$dt = ACC_IncomeCheques::Get(" AND LoanRequestID=? order by ChequeDate", array($RequestID));
+$dt = $dt->fetchAll();
+$DelayCheques = "";
+$index = 1;
+foreach($dt as $row)
+{
+	if($DelayCheques == "")
+		$DelayCheques = '<table width="98%" border="1" style="background-color:white;border-collapse: collapse;">
+				<caption style="text-align: center;border: 1px solid black;background-color: gold;font-weight: bold;">چک های تنفس</caption>
+				<tr class="TBLheader">
+					<td>ردیف</td>
+					<td>تاریخ پرداخت</td>
+					<td>نوع پرداخت</td>
+					<td>بابت</td>
+					<td>وضعیت چک</td>
+					<td>مبلغ</td>
+					<td>شماره چک</td>
+				</tr>';
+	
+	$color = $row["ChequeStatus"] != INCOMECHEQUE_VOSUL ? "gray" : "black";
+
+	$DelayCheques .= "<tr><td>" . $index++ . 
+		"</td><td>" . DateModules::miladi_to_shamsi($row["ChequeDate"]) .
+		"</td><td> چک" .
+		"</td><td>تنفس" .  
+		"</td><td>" . $row["ChequeStatusDesc"] . 							
+		"</td><td style=color:$color>" . number_format($row["ChequeAmount"]) . "</td>" . 
+		"</td><td>" . $row["ChequeNo"] . 
+		"</td></tr>";
+}
+$DelayCheques .= "</table>";
 ?>
 <script type="text/javascript">
 
@@ -851,6 +884,7 @@ LoanPay.prototype.BeforeSaveGroupPay = function(){
 
 </script>
 <center>
+	<?= $DelayCheques ?>
 	<div id="div_loans"></div>
 	<div style="display:none;color : red;font-weight: bold" id="DiVEnded">
 		 این وام خاتمه یافته و قادر به تغییر در پرداخت های آن نمی باشید
@@ -859,4 +893,6 @@ LoanPay.prototype.BeforeSaveGroupPay = function(){
 	ردیف های زرد رنگ ردیف هایی هستند که از طریق مغایرت بانکی تایید شده اند
 	<br>
 	ردیف های سبز رنگ ردیف هایی هستند که از طریق پرداخت گروهی ثبت شده اند
+	<br>
+	
 </center>

@@ -108,6 +108,7 @@ class COM_sharing extends OperationClass {
     public $ShareID;
     public $CostID;
     public $ShareType;
+	public $MethodID;
 	public $BaseID;
 	public $BaseValue;
 	public $PostID;
@@ -121,9 +122,10 @@ class COM_sharing extends OperationClass {
 
         $query = " select s.*,
 					concat_ws('-',cb1.blockDesc,cb2.blockDesc,cb3.blockDesc) CostDesc,
-					concat_ws('',cb1.blockCode,cb2.blockCode,cb3.blockCode) CostCode,
+					cc.CostCode,
 					concat_ws(' ',fname,lname,CompanyName) changePersonName,
 					bf.InfoDesc BaseDesc,
+					bf2.InfoDesc MethodDesc,
 					p.PostName
 					
 			from COM_sharing s 
@@ -133,6 +135,8 @@ class COM_sharing extends OperationClass {
 			left join ACC_blocks cb2 on(cb2.blockID=cc.level2)
 			left join ACC_blocks cb3 on(cb3.blockID=cc.level3)
 			left join BaseInfo bf on(bf.TypeID=85 AND bf.InfoID=BaseID)
+			left join BaseInfo bf2 on(bf2.TypeID=86 AND bf2.InfoID=MethodID)
+			
 			left join BSC_posts p on(s.PostID=p.PostID)
 			
 			where 1=1 " . $where;

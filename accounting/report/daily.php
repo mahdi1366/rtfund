@@ -245,7 +245,7 @@ function AccReport_daily()
 		},{
 			xtype : "container",
 			colspan : 2,
-			html : "&nbsp;<input type=checkbox name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
+			html : "&nbsp;<input type=checkbox checked name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",

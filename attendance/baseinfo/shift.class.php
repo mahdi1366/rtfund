@@ -28,9 +28,9 @@ class ATN_shifts extends OperationClass
 			PdoDataAccess::FillObject ($this, "select *	from ATN_shifts where ShiftID=?", array($ShiftID));
 	}
 	
-	function Remove(){
+	function Remove($pdo = null){
 		
-		parent::Remove();
+		parent::Remove($pdo);
 		
 	}
 }

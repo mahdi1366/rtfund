@@ -1199,6 +1199,20 @@ function EmailLetter(){
 	$mpdf->WriteHTML($html);
 	$mpdf->Output("letter.pdf", "F");
 	
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		header('Content-disposition:inline; filename=file.pdf');
+		header('Content-type: application/pdf');
+		header('Pragma: no-cache');
+		header('Expires: 0');
+		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+		header('Pragma: public');
+		header("Content-Transfer-Encoding: binary");
+
+		echo file_get_contents("letter.pdf");
+		die();	
+	}
+	
 	//------------ email letter ------------------------
 	require_once 'email.php';
 	$attachmnets = array(

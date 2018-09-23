@@ -116,8 +116,8 @@ function RegDoc($RequestID, $amount, $PayRefNo){
 	{
 		$CenterAccount = true;
 		$BranchID = "4";
-		$FirstCostID = 453; // شعبه پارک
-		$SecondCostID = 17; // حساب مرکز
+		$FirstCostID = COSTID_BRANCH_PARK; //شعبه پارک
+		$SecondCostID = COSTID_BRANCH_UM; // شعبه فردوسی
 	}
 
 	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);

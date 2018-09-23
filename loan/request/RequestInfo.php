@@ -53,7 +53,7 @@ $dg->addColumn("", "FundWage","", true);
 
 $dg->addColumn("", "IsStarted","", true);
 $dg->addColumn("", "IsEnded","", true);
-$dg->addColumn("", "ResendEnable", "", true);
+$dg->addColumn("", "SendEnable", "", true);
 
 $dg->addColumn("", "IsPaid","", true);
 $dg->addColumn("", "WageReturn","", true);
@@ -94,7 +94,7 @@ $col->sortable = false;
 
 if(!$ReadOnly)
 {
-	if($User == "Staff" && $accessObj->EditFlag)
+	if($User == "Staff" && $accessObj->EditFlag) 
 		$dg->addButton("addPart", "ایجاد شرایط", "add", "function(){RequestInfoObject.BeforeAddPart();}");
 	
 	$col = $dg->addColumn("", "PartID");

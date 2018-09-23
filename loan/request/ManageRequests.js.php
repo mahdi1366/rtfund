@@ -490,9 +490,10 @@ ManageRequest.prototype.LoadBackPays = function(){
 	if(!this.PayWin)
 	{
 		this.PayWin = new Ext.window.Window({
-			width : 870,
+			width : 890,
 			title : "لیست پرداخت های مشتری",
 			height : 410,
+			autoScroll : true,
 			modal : true,
 			loader : {
 				url : this.address_prefix + "BackPays.php",

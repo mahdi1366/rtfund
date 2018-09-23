@@ -1,4 +1,8 @@
 <?php
+//-----------------------------
+//	Programmer	: SH.Jafarkhani
+//	Date		: 97.06
+//-----------------------------
 
 require_once '../header.inc.php';
 require_once "../request/request.class.php";
@@ -56,6 +60,9 @@ function MakeWhere(&$where, &$whereParam){
 				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 			continue;
 
+		if($key == "ForfeitDays")
+			continue;
+		
 		$prefix = "";
 		switch($key)
 		{
@@ -180,18 +187,13 @@ function GetData(){
 		if((int)$ReqInfoArray[$currentRequestID]["remain"] == 0)
 			continue;
 		
-		
-		
-		if($_POST["DelayDays"]*1 > 0)
-		{
-			$delayDeys = DateModules::GDateMinusGDate(DateModules::now(), $MinDate);
-			if($delayDeys != $_POST["DelayDays"]*1)
-				continue;
-		}
-
 		$row["TotalRemainder"] = $remain;
 		$row["PureRemain"] = $PureRemain;
 		$row["ForfeitDays"] = $ReqInfoArray[$currentRequestID]["NonPayedRow"]["ForfeitDays"];
+		
+		if($_POST["ForfeitDays"]*1 > 0 && $row["ForfeitDays"] != $_POST["ForfeitDays"])
+			continue;
+
 		$result[] = $row;
 	}
 	
@@ -204,7 +206,12 @@ function ListData($IsDashboard = false){
 	$rpt->excel = !empty($_POST["excel"]);
 	$rpt->mysql_resource = GetData();
 	
-	$rpt->addColumn("کد وام", "RequestID");
+	function LoanReportRender($row,$value){
+		return "<a href='javascript:void();' onclick=window.open('LoanPayment2.php?show=true&RequestID=" . 
+				$value . "') >" . $value . "</a>";
+	}
+	
+	$rpt->addColumn("کد وام", "RequestID", "LoanReportRender");
 	$rpt->addColumn("شعبه وام", "BranchName");
 	$rpt->addColumn("نوع وام", "LoanDesc");
 	$rpt->addColumn("تضامین", "tazamin");
@@ -439,7 +446,7 @@ function LoanReport_DelayedInstalls()
 			fieldLabel : "تا مبلغ قسط"
 		},{
 			xtype : "textfield",
-			name : "DelayDays",
+			name : "ForfeitDays",
 			colspan : 2,
 			hideTrigger : true,
 			labelWidth : 300,

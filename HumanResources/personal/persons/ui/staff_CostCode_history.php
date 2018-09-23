@@ -19,17 +19,23 @@ $dg->addColumn("", "SPID", "", true);
 //$dg->addColumn("", "personid", "", true);
 $dg->addColumn("", "CostCode", "", true);
 $dg->addColumn("", "CostDesc", "", true);
+$dg->addColumn("", "BranchName", "", true);
 
 $col = $dg->addColumn("شماره شناسایی", "StaffID", "int");
 $col->width = 90;
 
 $col = $dg->addColumn("تاريخ شروع", "StartDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
-$col->width = 120;
+$col->width = 100;
 
 $col = $dg->addColumn("تاريخ پايان", "EndDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField(true);
-$col->width = 120;
+$col->width = 100;
+
+$col = $dg->addColumn("شعبه", "BranchID", GridColumn::ColumnType_string);
+$col->renderer = "function(v,p,r){return r.data.BranchName}";
+$col->editor = "this.branchCombo";
+$col->width = 150; 
 
 $col = $dg->addColumn("کد حساب", "CostID", GridColumn::ColumnType_string);
 $col->renderer = "function(v,p,r){return '[' + r.data.CostCode + '] ' + r.data.CostDesc}";
@@ -62,6 +68,21 @@ require_once '../js/staff_costcode.js.php';
 <script>
     StaffCostCode.prototype.afterLoad = function ()
     {
+		this.branchCombo = new Ext.form.ComboBox({
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: '/framework/baseInfo/baseInfo.data.php?' +
+						"task=SelectBranches",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['BranchID','BranchName'],
+				autoLoad : true					
+			}),
+			queryMode : 'local',
+			displayField : "BranchName",
+			valueField : "BranchID"
+		});
 		this.accountCombo = new Ext.form.ComboBox({
 			store: new Ext.data.Store({
 				fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{

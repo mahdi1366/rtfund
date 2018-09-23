@@ -36,7 +36,7 @@ $dg->addColumn("", "IsCurrent", "", true);
 $dg->addColumn("", "SavePercent", "", true);
 $dg->addColumn("", "SubjectDesc", "", true);
 $dg->addColumn("", "SubjectNO", "", true);
-$dg->addColumn("", "ResendEnable", "", true);
+$dg->addColumn("", "SendEnable", "", true);
 $dg->addColumn("", "ActionType", "", true);
 
 $col = $dg->addColumn("شعبه", "BranchName");

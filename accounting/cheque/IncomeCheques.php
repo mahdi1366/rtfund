@@ -1193,7 +1193,9 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 						select : function(combo,records){
 							if(IncomeChequeObject.LoanChequeWin.down("[itemId=RadioDelay]").getValue() && 
 								records[0].data.DelayReturn != "CHEQUE" && 
-								records[0].data.AgentDelayReturn != "CHEQUE")
+								records[0].data.AgentDelayReturn != "CHEQUE" && 
+								records[0].data.DelayReturn != "NEXTYEARCHEQUE" && 
+								records[0].data.AgentDelayReturn != "NEXTYEARCHEQUE")
 							{
 								Ext.MessageBox.alert("ERROR", "نوع پرداخت تنفس وام انتخابی چک نمی باشد");
 								this.setValue();
