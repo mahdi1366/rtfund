@@ -3027,9 +3027,6 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 	
 	$CycleID = $_SESSION["accounting"]["CycleID"];
 	
-	//------------- get CostCodes --------------------
-	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
-	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
 	//-------------------- BranchID -----------------------
 	$BackPays = $InChequeObj->GetBackPays($pdo);
 	if(count($BackPays) > 0)
@@ -3125,44 +3122,10 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 		$itemObj->TafsiliID2 = FindTafsiliID($CurStatus["InfoID"], TAFTYPE_ChequeStatus);
 		$itemObj->Add($pdo);
 	}
-	//--------------------------------------------------------------
-	/*
-	if($InChequeObj->ChequeStatus == INCOMECHEQUE_NOTVOSUL)
-	{ 
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
-		$itemObj->DebtorAmount = $__ChequeAmount;
-		$itemObj->CreditorAmount = 0;		
-		
-		$itemObj->Add($pdo);
-
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $__ChequeAmount;
-		$itemObj->Add($pdo);		
-		
-		if(ExceptionHandler::GetExceptionCount() > 0)
-			return false;
-
-		return $obj->DocID;
-	}*/
 	//............................................................
 	
 	if($InChequeObj->ChequeStatus == INCOMECHEQUE_VOSUL)
 	{
-		/*unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
-		$itemObj->DebtorAmount = $__ChequeAmount;
-		$itemObj->CreditorAmount = 0;
-		$itemObj->Add($pdo);
-
-		unset($itemObj->ItemID);
-		$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $__ChequeAmount;
-		$itemObj->Add($pdo);
-		*/
 		if(count($BackPays) > 0)
 		{
 			foreach($BackPays as $row)
@@ -3270,14 +3233,16 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 			}
 			
 			unset($itemObj->ItemID);
+			$CostCodeObj = new ACC_CostCodes($InChequeObj->CostID);
+			
 			$itemObj->locked = "YES";
 			$itemObj->DocID = $obj->DocID;
 			$itemObj->CostID = $InChequeObj->CostID;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $__ChequeAmount;
-			$itemObj->TafsiliType = $InChequeObj->TafsiliType;
+			$itemObj->TafsiliType = $CostCodeObj->TafsiliType;
 			$itemObj->TafsiliID = $InChequeObj->TafsiliID;
-			$itemObj->TafsiliType2 = $InChequeObj->TafsiliType2;
+			$itemObj->TafsiliType2 = $CostCodeObj->TafsiliType2;
 			$itemObj->TafsiliID2 = $InChequeObj->TafsiliID2;
 			if(!$itemObj->Add($pdo))
 			{
