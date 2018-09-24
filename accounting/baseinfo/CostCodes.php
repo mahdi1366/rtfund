@@ -81,7 +81,6 @@ $dg_cost->addButton('', 'کپی آیتم ها', 'copy', 'function(e){ return Cos
 $dg_cost->addButton('prn__btn', 'چاپ کد حسابها', 'print', 'function(e){ return CostCodeObj.PrintCost(); }');
 
 $dg_cost->title = 'کدینگ حساب';
-$dg_cost->width = 1000;
 $dg_cost->pageSize = 19;
 $dg_cost->height = 500;
 $dg_cost->autoExpandColumn = "LevelTitle1";
@@ -114,5 +113,5 @@ require_once 'CostCode.js.php';
 	<div><div id="mainform"></div>
 	<br>	
 	</div>
-	<div id="divCost"></div>
+	<div style='width:98%' id="divCost"></div>
 </center>
