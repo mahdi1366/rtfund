@@ -4795,6 +4795,7 @@ function RegisterSalaryDoc($PObj, $pdo){
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
 		$pdo->rollBack();
+		//print_r(ExceptionHandler::PopAllExceptions());
 		ExceptionHandler::PushException("خطا در بازیابی و اضافه رکورد ها از سیستم حقوق");
 		return false;
 	}
