@@ -1,5 +1,20 @@
 if(typeof DraftLetterObject == "object") ...
 --------------------------------------------------------------------------------
+tpl: new Ext.XTemplate(
+	'<table class=gridCombo cellspacing="0" >',
+		'<tr>',
+			'<th>عنوان مرکز رفاهی</th>',
+			'<th>استان</th>',
+			'<th>شهر</th></tr>',
+	'<tpl for=".">',
+		'<tr class="x-boundlist-item">',
+			'<td>{title}</td>',
+			'<td>{stateTitle}</td>',
+			'<td>{cityTitle}</td>',
+		'</tr>',
+	'</tpl>',
+	'</table>'),
+--------------------------------------------------------------------------------
 '<tpl for=".">',
 	'<tpl if="globality == \'GLOBAL\'">',
 	'<tr class="x-boundlist-item" style="border-left:0;border-right:0;background-color:#FCFCB6">',

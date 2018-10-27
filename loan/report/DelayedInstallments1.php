@@ -224,7 +224,7 @@ LoanReport_DelayedInstallments.prototype.PayReport = function(){
 }
 
 LoanReport_DelayedInstallments.print = function(){
-	window.open(LoanReport_DelayedInstallmentsObj.address_prefix + "DelayedInstallments.php?print=true"+
+	window.open(LoanReport_DelayedInstallmentsObj.address_prefix + "DelayedInstallments1.php?print=true"+
 		"&FromDate=" + LoanReport_DelayedInstallmentsObj.DateFS.getComponent("FromDate").getRawValue()+
 		"&ToDate=" + LoanReport_DelayedInstallmentsObj.DateFS.getComponent("ToDate").getRawValue());
 }
@@ -233,7 +233,7 @@ LoanReport_DelayedInstallments.excel = function(){
 	
 	me = LoanReport_DelayedInstallmentsObj;
 	window.open(LoanReport_DelayedInstallmentsObj.address_prefix + 
-		"DelayedInstallments.php?EXCEL=true" +
+		"DelayedInstallments1.php?EXCEL=true" +
 		"&FromDate=" + me.DateFS.getComponent("FromDate").getRawValue()+
 		"&ToDate=" + me.DateFS.getComponent("ToDate").getRawValue());
 }
@@ -242,7 +242,7 @@ LoanReport_DelayedInstallments.NoticeExcel = function(){
 	
 	me = LoanReport_DelayedInstallmentsObj;
 	window.open(LoanReport_DelayedInstallmentsObj.address_prefix + 
-		"DelayedInstallments.php?NTC_EXCEL=true" +
+		"DelayedInstallments1.php?NTC_EXCEL=true" +
 		"&FromDate=" + me.DateFS.getComponent("FromDate").getRawValue()+
 		"&ToDate=" + me.DateFS.getComponent("ToDate").getRawValue());
 }

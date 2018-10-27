@@ -297,56 +297,67 @@ function SelectAllForms(){
 
 function ChangeStatus(){
 	
+	$RowIDs = array();
+    foreach ($_POST as $key => $value)
+        if (strpos($key, "chk_RowID_") !== false)
+            $RowIDs[] = str_replace("chk_RowID_", "", $key);
+	if(count($RowIDs) == 0)
+		$RowIDs[] = $_POST["RowID"];
+	
 	$pdo = PdoDataAccess::getPdoObject();
-	$pdo->beginTransaction();
 	
-	$mode = $_REQUEST["mode"];
-	$SourceObj = new WFM_FlowRows($_POST["RowID"]);
-	$FlowObj = new WFM_flows($SourceObj->FlowID);
-	
-	$newObj = new WFM_FlowRows();
-	$newObj->FlowID = $SourceObj->FlowID;
-	$newObj->ObjectID = $SourceObj->ObjectID;
-	$newObj->PersonID = $_SESSION["USER"]["PersonID"];
-	$newObj->ActionType = $mode;
-	$newObj->ActionDate = PDONOW;
-	$newObj->ActionComment = $_POST["ActionComment"];
-	//.............................................
-	if(isset($_POST["StepID"]))
-		$StepID = $_POST["StepID"];
-	else 
-		$StepID = $SourceObj->ActionType == "CONFIRM" ? $SourceObj->_StepID+1 : $SourceObj->_StepID-1;
-	
-	//.............................................
-	if($newObj->ActionType == "CONFIRM")
+	$errors = "";
+	foreach($RowIDs as $RowID)
 	{
-		$dt = PdoDataAccess::runquery("select Max(StepID) maxStepID from WFM_FlowSteps 
-			where IsActive='YES' AND FlowID=? AND IsOuter='NO'" , array($newObj->FlowID));
-		if($dt[0][0] == $StepID)
-			$newObj->IsEnded = "YES";
-	}
+		$pdo->beginTransaction();
 	
-	//.............................................
-	$result = $newObj->AddFlowRow($StepID, $pdo);	
-	if(!$result)
-	{
-		$pdo->rollBack();
-		echo Response::createObjectiveResponse($result, "2");
-		die();
-	}
-	
-	if($newObj->IsEnded == "YES")
-		$result = WFM_FlowRows::EndObjectFlow($FlowObj->_ObjectType, $newObj->ObjectID, $pdo);
+		$mode = $_REQUEST["mode"];
+		$SourceObj = new WFM_FlowRows($RowID);
+		$FlowObj = new WFM_flows($SourceObj->FlowID);
 
-	if(!$result)
-	{
-		$pdo->rollBack();
-		echo Response::createObjectiveResponse($result, "3");
-		die();
+		$newObj = new WFM_FlowRows();
+		$newObj->FlowID = $SourceObj->FlowID;
+		$newObj->ObjectID = $SourceObj->ObjectID;
+		$newObj->PersonID = $_SESSION["USER"]["PersonID"];
+		$newObj->ActionType = $mode;
+		$newObj->ActionDate = PDONOW;
+		$newObj->ActionComment = $_POST["ActionComment"];
+		//.............................................
+		if(isset($_POST["StepID"]))
+			$StepID = $_POST["StepID"];
+		else 
+			$StepID = $SourceObj->ActionType == "CONFIRM" ? $SourceObj->_StepID+1 : $SourceObj->_StepID-1;
+
+		//.............................................
+		if($newObj->ActionType == "CONFIRM")
+		{
+			$dt = PdoDataAccess::runquery("select Max(StepID) maxStepID from WFM_FlowSteps 
+				where IsActive='YES' AND FlowID=? AND IsOuter='NO'" , array($newObj->FlowID));
+			if($dt[0][0] == $StepID)
+				$newObj->IsEnded = "YES";
+		}
+		//.............................................
+		$result = $newObj->AddFlowRow($StepID, $pdo);	
+		if(!$result)
+		{
+			$pdo->rollBack();
+			$errors .= "خطا 1در ردیف " . $RowID . "<br>";
+			continue;
+		}
+
+		if($newObj->IsEnded == "YES")
+			$result = WFM_FlowRows::EndObjectFlow($FlowObj->_ObjectType, $newObj->ObjectID, $pdo);
+
+		if(!$result)
+		{
+			$pdo->rollBack();
+			$errors .= "خطا2 در ردیف " . $RowID . "<br>";
+			continue;
+		}
+		$pdo->commit();
 	}
 	
-	$pdo->commit();
-	echo Response::createObjectiveResponse($result, "");
+	echo Response::createObjectiveResponse($errors == "", $errors);
 	die();
 }
 

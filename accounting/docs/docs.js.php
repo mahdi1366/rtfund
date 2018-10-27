@@ -229,6 +229,9 @@ AccDocs.prototype.operationhMenu = function(e){
 			handler : function(){ return AccDocsObject.BeforeTotalConfirmDoc(); } });
 
 		}*/
+		op_menu.add({text: 'ارسال گروهی اسناد',iconCls: 'tick', 
+			handler : function(){ return AccDocsObject.BeforeGroupStartFlow(); } });
+
 	}
     if(record != null)           
 	{
@@ -785,11 +788,11 @@ AccDocs.prototype.CopyDoc = function(mode){
 	});
 }
 
-AccDocs.prototype.BeforeTotalConfirmDoc = function(){
+AccDocs.prototype.BeforeGroupStartFlow = function(){
 	if(!this.totalConfirmWin)
 	{
 		this.totalConfirmWin = new Ext.window.Window({
-			title: 'تایید گروهی اسناد',
+			title: 'ارسال گروهی اسناد',
 			modal : true,
 			width: 400,
 			closeAction : "hide",
@@ -826,9 +829,9 @@ AccDocs.prototype.BeforeTotalConfirmDoc = function(){
 					}],
 				buttons : [
 					{
-						text : "تایید گروهی اسناد",
+						text : "ارسال گروهی اسناد",
 						iconCls : "tick",
-						handler : function(){ AccDocsObject.TotalConfirmDoc();	}
+						handler : function(){ AccDocsObject.GroupStartFlow();	}
 					},{
 						text : "انصراف",
 						iconCls : "undo",
@@ -845,20 +848,25 @@ AccDocs.prototype.BeforeTotalConfirmDoc = function(){
 	this.totalConfirmWin.center();
 }
 
-AccDocs.prototype.TotalConfirmDoc = function(){
+AccDocs.prototype.GroupStartFlow = function(){
 	
+	mask = new Ext.LoadMask(this.totalConfirmWin, {msg:'در حال ارسال اسناد ...'});
+	mask.show();
+		
 	this.totalConfirmWin.down('form').getForm().submit({
 		clientValidation: true,
-		url: AccDocsObject.address_prefix + 'doc.data.php?task=TotalConfirm',
+		url: AccDocsObject.address_prefix + 'doc.data.php?task=GroupStartFlow',
 		method : "POST",
 
 		success : function(form,action){
+			mask.hide();
 			AccDocsObject.totalConfirmWin.hide();
 			AccDocsObject.grid.getStore().load();
 			Ext.MessageBox.alert("","عملیات مورد نظر با موفقیت انجام گردید");
 		},
 		failure : function(form,action)
 		{
+			mask.hide();
 			if(action.result.data != "")
 				Ext.MessageBox.alert("Error",action.result.data);
 			else

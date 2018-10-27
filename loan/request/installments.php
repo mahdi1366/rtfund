@@ -44,6 +44,7 @@ $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::Column
 
 if($framework)
 {
+	$col = $dg->addColumn("کارمزد قسط", "InstallmentWage", GridColumn::ColumnType_money);
 	$col = $dg->addColumn("کارمزد", "wage", GridColumn::ColumnType_money);
 	$col = $dg->addColumn("اصل", "", GridColumn::ColumnType_money);
 	$col->renderer = "function(v,p,r){return r.data.InstallmentAmount - r.data.wage;}";

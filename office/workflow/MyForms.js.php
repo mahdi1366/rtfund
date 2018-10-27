@@ -33,6 +33,19 @@ MyForm.OperationRender = function(value, p, record){
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 
+MyForm.ChooseRender = function(v,p,r){
+		
+	return "<input type=checkbox name='chk_RowID_" + r.data.RowID + "' id='chk_RowID_" + r.data.RowID + "'>";
+}
+
+MyForm.CheckAll = function(checkAllElem){
+	
+	elems = MyFormObject.get("mainForm").getElementsByTagName("input");
+	for(i=0; i<elems.length; i++)
+		if(elems[i].id.indexOf("chk_RowID_") != -1)
+			elems[i].checked = checkAllElem.checked;
+}
+
 MyForm.prototype.OperationMenu = function(e){
 
 	record = this.grid.getSelectionModel().getLastSelected();
@@ -112,9 +125,10 @@ MyForm.prototype.ChangeStatus = function(mode, ActionComment){
 	Ext.Ajax.request({
 		methos : "post",
 		url : this.address_prefix + "wfm.data.php",
+		form : this.get("mainForm"),
 		params : {
 			task : "ChangeStatus",
-			RowID : record.data.RowID,
+			RowID : record ? record.data.RowID : "",
 			mode : mode,
 			ActionComment : ActionComment
 		},

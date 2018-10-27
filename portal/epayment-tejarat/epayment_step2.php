@@ -105,7 +105,7 @@ function RegDoc($RequestID, $amount, $PayRefNo){
 
 	$CostID = 253; // bank
 	$TafsiliID = 2135; // tejarat
-	$TafsiliID2 = 1946; // jari
+	$TafsiliID2 = 1947; // short-time 
 	$CenterAccount = false;
 	$BranchID = "";
 	$FirstCostID = "";

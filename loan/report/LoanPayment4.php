@@ -132,8 +132,9 @@ if(isset($_REQUEST["show"]))
 							</b></td>
 					</tr>
 					<tr>
-						<td> محاسبه  بازپرداخت:</td>
-						<td><b><?= $partObj->_BackPayComputeDesc ?></b></td>
+						<td>درصد دیرکرد: </td>
+						<td><b><?= $partObj->ForfeitPercent ?> %
+							</b></td>
 					</tr>
 				</table>
 			</td>
@@ -150,11 +151,6 @@ if(isset($_REQUEST["show"]))
 					<tr>
 						<td> کارمزد وام:  </td>
 						<td><b><?= $partObj->CustomerWage ?> %</b></td>
-					</tr>
-					<tr>
-						<td>درصد دیرکرد: </td>
-						<td><b><?= $partObj->ForfeitPercent ?> %
-							</b></td>
 					</tr>
 				</table>
 			</td>

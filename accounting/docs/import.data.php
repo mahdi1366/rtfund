@@ -3467,7 +3467,7 @@ function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow 
 		{
 			$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
 				join ACC_DocItems using(DocID)
-				where CycleID=? AND DocID>=? AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
+				where CycleID=? AND DocDate<=? AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
 				AND StatusID <> ".ACC_STEPID_CONFIRM."
 				AND TafsiliID=?", array($_SESSION["accounting"]["CycleID"] ,$LatestComputeDate,$TafsiliID));
 			if(count($dt) > 0 && $dt[0][0] != "")

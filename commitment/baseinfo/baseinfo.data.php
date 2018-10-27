@@ -148,7 +148,8 @@ function GetEventsTree() {
 	$nodes = PdoDataAccess::runquery("
 			select concat('[',EventID,'] ',EventTitle) text, e.*
 			from COM_events e
-			where e.IsActive='YES'");
+			where e.IsActive='YES'
+			order by ParentID,EventID");
 	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes, "ParentID", "EventID", "text");
 	echo json_encode($returnArr);
 	die();

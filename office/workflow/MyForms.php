@@ -22,6 +22,11 @@ $dg->addColumn("", "parameter", "", true);
 $dg->addColumn("", "target", "", true);
 $dg->addColumn("", "param4", "", true);
 
+$col = $dg->addColumn('<input type=checkbox onclick=MyForm.CheckAll(this)>', "", "");
+$col->renderer = "function(v,p,r){return MyForm.ChooseRender(v,p,r);}";
+$col->width = 30;
+$col->sortable = false;
+
 $col = $dg->addColumn("نوع فرم دریافتی", "ObjectTypeDesc", "");
 $col->width = 130;
 
@@ -41,8 +46,11 @@ $col->renderer = "MyForm.OperationRender";
 $col->width = 50;
 $col->align = "center";
 
+$dg->addButton("", "تایید گروهی", "tick2", "function(){return MyFormObject.beforeChangeStatus('CONFIRM');}");
+
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 500;
+$dg->HeaderMenu = false;
 $dg->width = 770;
 $dg->title = "فرم های رسیده";
 $dg->DefaultSortField = "ActionDate";
@@ -59,8 +67,11 @@ MyFormObject.grid.getView().getRowClass = function(record, index)
 	}	
 MyFormObject.grid.render(MyFormObject.get("DivGrid"));
 </script>
-<center><br>
-	<div id="DivGrid"></div>
-	<br>
-	<div id="LoanInfo"></div>
+<center>
+	<form id="mainForm">
+		<br>
+		<div id="DivGrid"></div>
+		<br>
+		<div id="LoanInfo"></div>
+	</form>
 </center>

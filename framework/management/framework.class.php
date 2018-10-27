@@ -334,6 +334,19 @@ class FRW_tasks extends PdoDataAccess {
 	}
 }
 
+class FRW_TaskItems extends OperationClass {
+
+	const TableName = "FRW_TaskItems";
+	const TableKey = "RowID"; 
+ 
+	public $RowID;
+	public $TaskID;
+	public $PersonID;
+	public $DescDate;
+	public $description;
+
+}
+
 class FRW_phonebook extends OperationClass {
 	
 	const TableName = "FRW_phonebook";

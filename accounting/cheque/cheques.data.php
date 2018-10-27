@@ -115,7 +115,7 @@ function selectIncomeCheques() {
 				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) CostDesc, ''
 			from ACC_IncomeCheques i
 			left join ACC_tafsilis t1 using(TafsiliID)
-			left join ACC_CostCodes cc using(CostID)
+			join ACC_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
 			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)

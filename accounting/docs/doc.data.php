@@ -23,7 +23,7 @@ switch($task)
 	case "CopyDoc":
 	case "GetLastLocalNo":
 	case "GetSearchCount":
-	case "TotalConfirm":
+	case "GroupStartFlow":
 		
 	case "selectDocItems":
 	case "saveDocItem":
@@ -82,6 +82,7 @@ function selectDocs() {
 	}
 	$where .= dataReader::makeOrder();
 	$temp = ACC_docs::GetAll($where, $whereParam);
+	//echo PdoDataAccess::GetLatestQueryString();
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	echo dataReader::getJsonData($temp, $no, $_GET ["callback"]);
@@ -274,7 +275,7 @@ function GetSearchCount() {
     die();
 }
 
-function TotalConfirm(){
+function GroupStartFlow(){
 	
 	if(ACC_cycles::IsClosed())
 	{
@@ -308,21 +309,23 @@ function TotalConfirm(){
 		$param[":tl"] = $_POST["ToNo"];
 	}
 	
-	$dt = PdoDataAccess::runquery("select DocID from ACC_docs 
-		where StatusID=".ACC_STEPID_RAW." AND CycleID=:c AND BranchID=:b " . $where, $param);
+	$dt = PdoDataAccess::runquery("select DocID from ACC_docs d
+		join ACC_DocItems di using(DocID)
+		where StatusID=".ACC_STEPID_RAW." AND CycleID=:c AND BranchID=:b " . $where . "
+		group by d.DocID
+		having sum(DebtorAmount)=sum(CreditorAmount) ", $param);
 	if(count($dt) == 0)
 	{
 		echo Response::createObjectiveResponse(false, "هیچ سندی یافت نشد");
 		die();
 	}
 	
+	require_once '../../office/workflow/wfm.class.php';
 	foreach($dt as $row)
 	{
-		$obj = new ACC_docs();
-		$obj->DocID = $row["DocID"];
-		$obj->StatusID = ACC_STEPID_CONFIRM;
-		$obj->Edit();
-		ACC_DocHistory::AddLog($obj->DocID, "تایید سند");
+		$FlowID = FLOWID_ACCDOC;
+		$ObjectID = $row["DocID"];
+		WFM_FlowRows::StartFlow($FlowID, $ObjectID);
 	}
 	
 	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");

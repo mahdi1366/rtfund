@@ -203,8 +203,8 @@ function GetData(&$rpg){
 				(!empty($_REQUEST["BranchID"]) ? "&BranchID=" . $_REQUEST["BranchID"] : "") .
 				(!empty($_REQUEST["CycleID"]) ? "&CycleID=" . $_REQUEST["CycleID"] : "") .
 				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
-				(!empty($_REQUEST["IncludeStart"]) ? "&IncludeStart=1" : "") .
-				(!empty($_REQUEST["IncludeEnd"]) ? "&IncludeEnd=1" : "") .
+				(!empty($_REQUEST["IncludeStart"]) ? "&IncludeStart=1" : "&IncludeStart=0") .
+				(!empty($_REQUEST["IncludeEnd"]) ? "&IncludeEnd=1" : "&IncludeEnd=0") .
 				"');\" href=javascript:void(0)>" . $value . "</a>";
 	}
 	function showDocs2($row, $value){
@@ -240,10 +240,10 @@ function GetData(&$rpg){
 		{
 			$where .= " AND d.StatusID != " . ACC_STEPID_RAW;
 		}
-		/*if(empty($_REQUEST["IncludeStart"]))
+		if(empty($_REQUEST["IncludeStart"]))
 		{
 			$where .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;
-		}*/
+		}
 		if(empty($_REQUEST["IncludeEnd"]))
 		{
 			$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
@@ -390,7 +390,10 @@ function GetData(&$rpg){
 
 	$dt = PdoDataAccess::runquery($query, $whereParam);
 	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		BeginReport();
 		echo PdoDataAccess::GetLatestQueryString ();
+	}
 	return $dt;
 }
 
@@ -486,7 +489,11 @@ function ListData($IsDashboard = false){
 			. DateModules::shNow() . "<br>";
 		if(!empty($_POST["fromDate"]))
 		{
-			echo "<br>گزارش از تاریخ : " . $_POST["fromDate"] . ($_POST["toDate"] != "" ? " - " . $_POST["toDate"] : "");
+			echo "<br> گزارش از تاریخ : " . $_POST["fromDate"];
+		}
+		if(!empty($_POST["toDate"]))
+		{
+			echo "<br> گزارش تا تاریخ: " . $_POST["toDate"] ;
 		}
 		echo "</td></tr></table>";
 	}
@@ -748,6 +755,7 @@ function AccReport_taraz()
 			xtype : "container",
 			colspan : 2,
 			html : "<input type=checkbox checked name=IncludeRaw id=IncludeRaw> گزارش شامل اسناد خام نیز باشد." + "<br>" +
+				"<input type=checkbox name=IncludeStart id=IncludeStart> گزارش شامل سند افتتاحیه باشد." + "<br>" + 	
 				"<input type=checkbox name=IncludeEnd id=IncludeEnd> گزارش شامل سند اختتامیه باشد."
 		}];
 	this.formPanel = new Ext.form.Panel({

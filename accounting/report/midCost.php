@@ -12,19 +12,11 @@ if(isset($_REQUEST["show"]))
 	function MakeData(){
 		
 		$CostID = $_POST["CostID"];
-		$TafsiliType = $_POST["TafsiliType"];
-		$TafsiliID = $_POST["TafsiliID"];
-		$BranchID = $_POST["BranchID"];
 		$StartDate = $_POST["StartDate"];
 		$EndDate = empty($_POST["EndDate"]) ? DateModules::Now() : $_POST["EndDate"];
-		$CycleID = $_POST["CycleID"];
 		//------------ get sum  ----------------
-		$params = array(
-				":cycle" => $CycleID,
-				":tt" => $TafsiliType, 
-				":tid" => $TafsiliID, 
-				":cid" => $CostID, 
-				":bid" => $BranchID);
+		$where = $where2 = "";
+		$params = array(":cid" => $CostID);
 		
 		$query = "
 			select DocDate,CostCode,TafsiliDesc,sum(CreditorAmount-DebtorAmount) amount
@@ -33,30 +25,59 @@ if(isset($_REQUEST["show"]))
 				join ACC_tafsilis t using(TafsiliType,TafsiliID)
 				join ACC_CostCodes cc using(CostID)
 
-			where ((di.TafsiliType=:tt AND TafsiliID =:tid) OR (di.TafsiliType2=:tt AND TafsiliID2 =:tid))
-				AND di.CostID = :cid";
+			where di.CostID = :cid";
 		if(!empty($CycleID))
 		{
-			$query .= " AND CycleID = :cycle";
+			$where .= " AND CycleID = :cycle";
+			$where2 .= " AND CycleID = :cycle";
 			$params[":cycle"] = $CycleID;
 		}
 		if(!empty($BranchID))
 		{
-			$query .= " AND BranchID= :bid";
+			$where .= " AND BranchID= :bid";
+			$where2 .= " AND BranchID= :bid";
 			$params[":bid"] = $BranchID;
 		}
 		if(!empty($StartDate))
 		{
-			$query .= " AND DocDate >= :sdate";
+			$where .= " AND DocDate >= :sdate";
+			$where2 .= " AND DocDate < :sdate";
 			$params[":sdate"] = DateModules::shamsi_to_miladi($StartDate, "-");
 		}
 		if(!empty($EndDate))
 		{
-			$query .= " AND DocDate <= :edate";
+			$where .= " AND DocDate <= :edate";
 			$params[":edate"] = DateModules::shamsi_to_miladi($EndDate, "-");
 		}
+		if(!empty($_POST["TafsiliID"]))
+		{
+			$where .= " AND di.TafsiliID = :tid";
+			$where2 .= " AND di.TafsiliID = :tid";
+			$params[":tid"] = $_POST["TafsiliID"];
+		}
+		if(!empty($_POST["TafsiliID2"]))
+		{
+			$where .= " AND di.TafsiliID2 = :tid2";
+			$where2 .= " AND di.TafsiliID2 = :tid2";
+			$params[":tid2"] = $_POST["TafsiliID2"];
+		}
+		if(!isset($_REQUEST["IncludeRaw"]))
+		{
+			$where .= " AND d.StatusID != " . ACC_STEPID_RAW;
+			$where2 .= " AND d.StatusID != " . ACC_STEPID_RAW;
+		}
+		if(!isset($_REQUEST["IncludeStart"]))
+		{
+			$where .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;
+			$where2 .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;
+		}
+		if(!isset($_REQUEST["IncludeEnd"]))
+		{
+			$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
+			$where2 .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
+		}
 		
-		$query .= " group by DocDate order by DocDate";
+		$query .= $where . " group by DocDate order by DocDate";
 		
 		$dt = PdoDataAccess::runquery($query, $params);
 		//echo PdoDataAccess::GetLatestQueryString();
@@ -67,17 +88,36 @@ if(isset($_REQUEST["show"]))
 			echo $msg;
 			die();
 		}
+		//------------ get the remainder amount -------------
+		$remainder = 0;
+		if($StartDate != "")
+		{
+			$params2 = $params;
+			unset($params2[":edate"]);
+			$dt2 = PdoDataAccess::runquery("
+				select DocDate,CostCode,TafsiliDesc,sum(CreditorAmount-DebtorAmount) amount
+				from ACC_DocItems di
+					join ACC_docs d using(DocID)
+					join ACC_tafsilis t using(TafsiliType,TafsiliID)
+					join ACC_CostCodes cc using(CostID)
+
+				where di.CostID = :cid " . $where2 , $params2);
+			if(count($dt2) > 0)
+			{
+				$remainder = $dt2[0]["amount"];
+			}
+		}		
 		//------------ get the Deposite amount -------------
 		$TraceArr = array();
-		$remain = $dt[0]["amount"]*1;
+		$remain = $dt[0]["amount"]*1  + $remainder;
 		$totalDays = 0;
 		$totalAmount = 0;
 		$TraceArr[] = array(
 			"TafsiliDesc" => $dt[0]["TafsiliDesc"],
 			"CostCode" => $dt[0]["CostCode"],
 			"Date" => $dt[0]["DocDate"],
-			"amount" => $dt[0]["amount"],
-			"remain" => $dt[0]["amount"],
+			"amount" => $dt[0]["amount"]*1,
+			"remain" => $dt[0]["amount"]*1 + $remainder,
 			"days" => 0,
 			"average" => 0
 		);
@@ -134,21 +174,25 @@ if(isset($_REQUEST["show"]))
 	if(!$rpg->excel)
 	{
 		BeginReport();
-		$rpg->headerContent = 
+		echo
 		"<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 					گزارش میانگین حساب
-					 <br> کد حساب : " . $rpg->mysql_resource[0]["CostCode"] . 
+					 <br> کد حساب : [ " . $rpg->mysql_resource[0]["CostCode"] . " ]" .
 					"<br>تفصیلی :  " . $rpg->mysql_resource[0]["TafsiliDesc"] .
 				"</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
 			. DateModules::shNow() . "<br>";
-		if(!empty($_POST["fromDate"]))
+		if(!empty($_POST["StartDate"]))
 		{
-			$rpg->headerContent .= "<br>گزارش از تاریخ : " . $_POST["fromDate"] . ($_POST["toDate"] != "" ? " - " . $_POST["toDate"] : "");
+			echo "<br>گزارش از تاریخ : " . $_POST["StartDate"];
 		}
-		$rpg->headerContent .= "</td></tr></table>";
+		if(!empty($_POST["EndDate"]))
+		{
+			echo "<br>گزارش تا تاریخ : " . $_POST["EndDate"];
+		}
+		echo "</td></tr></table>";
 	}
 	
 	$rpg->generateReport();
@@ -273,7 +317,6 @@ function AccReport_mid()
 			xtype : "combo",
 			displayField : "InfoDesc",
 			fieldLabel : "گروه تفصیلی",
-			allowBlank : false,
 			valueField : "InfoID",
 			hiddenName : "TafsiliType",
 			queryMode : 'local',
@@ -313,6 +356,48 @@ function AccReport_mid()
 				}
 			})
 		},{
+			xtype : "combo",
+			displayField : "InfoDesc",
+			fieldLabel : "گروه تفصیلی2",
+			valueField : "InfoID",
+			hiddenName : "TafsiliType2",
+			queryMode : 'local',
+			store : new Ext.data.Store({
+				fields:['InfoID','InfoDesc'],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				autoLoad : true
+			}),
+			listeners : {
+				select : function(combo,records){
+					el = AccReport_midObj.formPanel.down("[itemId=cmp_tafsiliID2]");
+					el.setValue();
+					el.enable();
+					el.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
+					el.getStore().load();
+				}
+			}
+		},{
+			xtype : "combo",
+			displayField : "TafsiliDesc",
+			fieldLabel : "تفصیلی2",
+			allowBlank : false,
+			disabled : true,
+			valueField : "TafsiliID",
+			itemId : "cmp_tafsiliID2",
+			hiddenName : "TafsiliID2",
+			store : new Ext.data.Store({
+				fields:["TafsiliID","TafsiliDesc"],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				}
+			})
+		},{
 			xtype : "shdatefield",
 			name : "StartDate",
 			fieldLabel : "از تاریخ"
@@ -320,6 +405,18 @@ function AccReport_mid()
 			xtype : "shdatefield",
 			name : "EndDate",
 			fieldLabel : "تا تاریخ"
+		},{
+			xtype : "container",
+			colspan : 2,
+			html : "<input type=checkbox checked name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
+		},{
+			xtype : "container",
+			colspan : 2,
+			html : "<input type=checkbox name=IncludeStart> گزارش شامل اسناد افتتاحیه باشد"
+		},{
+			xtype : "container",
+			colspan : 2,
+			html : "<input type=checkbox name=IncludeEnd> گزارش شامل اسناد اختتامیه باشد"
 		}],
 		buttons : [{
 			text : "گزارش ساز",

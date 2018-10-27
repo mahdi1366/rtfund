@@ -39,8 +39,10 @@ function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 	
 	if(isset($_REQUEST["taraz"])){
 
-		$where .= " AND d.CycleID=:c" ;
-			$whereParam[":c"] = $_SESSION["accounting"]["CycleID"];
+		if($_REQUEST["IncludeStart"] == "0")
+			$where .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;
+		if($_REQUEST["IncludeEnd"] == "0")
+			$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
 	}
 	else
 	{
@@ -203,8 +205,8 @@ function GetData(){
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	
-	if($_SESSION["USER"]["UserName"] == "admin")
-		echo PdoDataAccess::GetLatestQueryString ();
+	//if($_SESSION["USER"]["UserName"] == "admin")
+	//	echo PdoDataAccess::GetLatestQueryString ();
 	//-------------------------- previous remaindar ----------------------------
 	if(!empty($_REQUEST["fromDate"]))
 	{

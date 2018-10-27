@@ -161,12 +161,14 @@ Letter.prototype.BuildForms = function(){
 								if(this.checked)
 								{
 									this.up('form').down("[name=InnerLetterNo]").enable();
-									this.up('form').down("[name=InnerLetterDate]").enable();							
+									this.up('form').down("[name=InnerLetterDate]").enable();	
+									this.up('form').down("[name=SignerPersonID]").disable();
 								}
 								else
 								{
 									this.up('form').down("[name=InnerLetterNo]").disable();
 									this.up('form').down("[name=InnerLetterDate]").disable();
+									this.up('form').down("[name=SignerPersonID]").enable();
 								}
 
 							}

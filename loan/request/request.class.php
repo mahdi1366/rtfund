@@ -215,8 +215,7 @@ class LON_requests extends PdoDataAccess{
 			$FirstPay = self::GetFirstPayDate($partObj->RequestID);
 			$ComputeDate = DateModules::miladi_to_shamsi($FirstPay);
 			$amount = self::GetLoanPureAmount($partObj->RequestID, $partObj, true);
-			$TotalPureAmount = $amount;
-			
+			$TotalPureAmount = $amount;			
 		}
 		//------------- compute percents of each installment amount ----------------
 		$zarib = 1;
@@ -260,6 +259,42 @@ class LON_requests extends PdoDataAccess{
 		else
 			$x = round($amount*$zarib);
 
+		//----------- minus wages that paid at first ------------
+		if($partObj->WageReturn == "CUSTOMER" || $partObj->AgentReturn == "CUSTOMER")
+		{
+			$TotalAmount = 0;
+			$zarib = 0;
+			for($i=0; $i<count($installmentArray);$i++)
+			{
+				if($ComputeWage == "YES")
+				{
+					$a = $x*$installmentArray[$i]["percent"];
+					$zarib += $installmentArray[$i]["percent"];
+				}
+				else if($i == count($installmentArray)-1)
+				{
+					$a = $x;				
+					$zarib += 1;
+				}
+				
+				$TotalAmount += $a;
+			}
+			$TotalWage = $TotalAmount - $TotalPureAmount;
+			if($partObj->WageReturn == "CUSTOMER")
+			{
+				$fundZarib = $partObj->FundWage/$partObj->CustomerWage;
+				$TotalWage -= $TotalWage*$fundZarib;
+			}
+			if($partObj->AgentReturn == "CUSTOMER")
+			{
+				$agentZarib = ($partObj->CustomerWage-$partObj->FundWage)/$partObj->CustomerWage;
+				$TotalWage -= $TotalWage*$agentZarib;
+			}
+			
+			$x2 = $x - $TotalWage/$zarib;
+		}
+		else
+			$x2 = $x;
 		//-------  update installment Amounts ------------
 		$TotalAmount = 0;
 		for($i=0; $i<count($installmentArray);$i++)
@@ -271,7 +306,6 @@ class LON_requests extends PdoDataAccess{
 
 			$TotalAmount += $installmentArray[$i]["InstallmentAmount"];
 		}
-
 		//------ compute wages of installments -----------
 		$difference = 0;
 		$TotalWage = $TotalAmount - $TotalPureAmount;
@@ -285,7 +319,36 @@ class LON_requests extends PdoDataAccess{
 			$TotalAmount -= $installmentArray[$i]["InstallmentAmount"];
 			$TotalWage -= $installmentArray[$i]["wage"];
 			$ComputeDate  = $installmentArray[$i]["InstallmentDate"];
+		}
+		//---------- minus wages that paid at first ---------------
+		for($i=0; $i < count($installmentArray); $i++)
+		{
+			$installmentArray[$i]["InstallmentWage"] = $installmentArray[$i]["wage"];
 			
+			$fundZarib = $partObj->FundWage/$partObj->CustomerWage;
+			$agentZarib = ($partObj->CustomerWage-$partObj->FundWage)/$partObj->CustomerWage;
+			
+			$fundwage = $installmentArray[$i]["wage"]*$fundZarib;
+			$agentwage = $installmentArray[$i]["wage"]*$agentZarib;
+			
+			if($partObj->WageReturn == "CUSTOMER")
+			{
+				$installmentArray[$i]["InstallmentWage"] -= $fundwage;
+				$installmentArray[$i]["InstallmentAmount"] -= $fundwage;
+			}
+			if($partObj->AgentReturn == "CUSTOMER")
+			{
+				$installmentArray[$i]["InstallmentWage"] -= $agentwage;
+				$installmentArray[$i]["InstallmentAmount"] -= $agentwage;
+			}
+			
+			$installmentArray[$i]["InstallmentWage"] = round($installmentArray[$i]["InstallmentWage"]);
+			$installmentArray[$i]["InstallmentAmount"] = round($installmentArray[$i]["InstallmentAmount"]);
+			
+		}
+		//---------- rounding up installments -------------
+		for($i=0; $i < count($installmentArray); $i++)
+		{
 			if($i < count($installmentArray)-1)
 			{
 				$a = $installmentArray[$i]["InstallmentAmount"];
@@ -295,7 +358,7 @@ class LON_requests extends PdoDataAccess{
 			else
 			{
 				$installmentArray[$i]["InstallmentAmount"] -= $difference;
-			}
+			}	
 		}
 		//------------------------------------------------	
 		return $installmentArray;
@@ -305,18 +368,18 @@ class LON_requests extends PdoDataAccess{
 		
 		$PartObj = $PartObj == null ? LON_ReqParts::GetValidPartObj($RequestID) : $PartObj;
 		
-		if($PartObj->ComputeMode == "NEW" )
+		/*if($PartObj->ComputeMode == "NEW" )
 		{
 			return array(
 				"CustomerDelay" => 0,
 				"FundDelay" => 0,
 				"AgentDelay" => 0
 			);
-		}			
+		}	*/		
 		
 		$endDelayDate = DateModules::AddToGDate($PartObj->PartDate, $PartObj->DelayDays*1, $PartObj->DelayMonths*1);
 		$DelayDuration = DateModules::GDateMinusGDate($endDelayDate, $PartObj->PartDate)+1;
-		if($PartObj->DelayDays*1 > 0)
+		if($PartObj->DelayDays*1 > 0 || $PartObj->ComputeMode == "NEW")
 		{
 			$CustomerDelay = round($PartObj->PartAmount*$PartObj->DelayPercent*$DelayDuration/36500);
 			$FundDelay = round($PartObj->PartAmount*$PartObj->FundWage*$DelayDuration/36500);
@@ -442,6 +505,7 @@ class LON_requests extends PdoDataAccess{
 					"totalwage" => count($x)>0 ? $x["totalwage"] : 0,
 					"totalLateWage" => count($x)>0 ? $x["totalLateWage"] : 0,
 					"totalLateForfeit" => count($x)>0 ? $x["totalLateForfeit"] : 0,
+					"CurForfeitAmount" => 0,
 				
 					"TotalRemainder" => count($x)>0 ? $x["TotalRemainder"] : 0
 				);	
@@ -468,8 +532,8 @@ class LON_requests extends PdoDataAccess{
 						$tempForReturnArr["TotalRemainder"] += abs($record["RecordAmount"]*1);
 						$record["RecordAmount"] = 0;
 					}
-					$tempForReturnArr["TotalRemainder"] -= $record["RecordAmount"]*1;
 					self::BackPayCompute($obj, $tempForReturnArr, $record, $records, $i);
+					$tempForReturnArr["TotalRemainder"] -= $record["RecordAmount"]*1;
 				}
 			}
 			
@@ -643,6 +707,9 @@ class LON_requests extends PdoDataAccess{
 	
 	static function BackPayCompute($partObj, &$returnArr, &$curRecord, $records, $index){
 		
+		$totalRemain = $returnArr["TotalRemainder"];
+		$RecordAmount = $curRecord["RecordAmount"];
+		
 		if($curRecord["type"] == "installment")
 		{
 			if($returnArr["TotalRemainder"] >= 0)
@@ -655,7 +722,34 @@ class LON_requests extends PdoDataAccess{
 			$curRecord["RecordAmount"] = abs($temp);
 		}
 		
+		//------ base on percent
+		if($totalRemain == 0)
+			return;
 		
+		if($curRecord["type"] == "installment")
+		{
+			$totalRemain = abs($totalRemain);
+			$share_pure = round($totalRemain*($returnArr["totalpure"]/$RecordAmount));
+			$share_wage = round($totalRemain*($returnArr["totalwage"]/$RecordAmount));
+			$share_LateWage = round($totalRemain*($returnArr["totalLateWage"]/$RecordAmount));
+			$share_LateForfeit = $returnArr["totalLateWage"] == 0 ? 0 :
+					$totalRemain - $share_pure - $share_wage - $share_LateWage;
+		}
+		else
+		{
+			$share_pure = round($RecordAmount*($returnArr["totalpure"]/$totalRemain));
+			$share_wage = round($RecordAmount*($returnArr["totalwage"]/$totalRemain));
+			$share_LateWage = round($RecordAmount*($returnArr["totalLateWage"]/$totalRemain));
+			$share_LateForfeit = $returnArr["totalLateWage"] == 0 ? 0 :
+					$curRecord["RecordAmount"] - $share_pure - $share_wage - $share_LateWage;
+		}
+		
+		$returnArr["totalpure"] -= min($share_pure,$returnArr["totalpure"]);
+		$returnArr["totalwage"] -= min($share_wage,$returnArr["totalwage"]);
+		$returnArr["totalLateWage"] -= min($share_LateWage,$returnArr["totalLateWage"]);
+		$returnArr["totalLateForfeit"] -= min($share_LateForfeit,$returnArr["totalLateForfeit"]);
+		return;
+		//------ base on pure/wage/forfeit order
 		for($i=1; $i<=4; $i++)
 		{
 			$min = min($returnArr["total" . $partObj->{"_param" . $i}], $curRecord["RecordAmount"]*1);
@@ -1638,7 +1732,8 @@ class LON_installments extends PdoDataAccess{
 	public $RequestID;
 	public $InstallmentDate;
 	public $InstallmentAmount;
-	public $wage;
+	public $InstallmentWage;
+	public $wage;	
 	public $IsDelayed;
 	public $history;
 			

@@ -807,6 +807,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 			$obj->RequestID = $RequestID;
 			$obj->InstallmentDate = DateModules::shamsi_to_miladi($installmentArray[$i]["InstallmentDate"]);
 			$obj->InstallmentAmount = $installmentArray[$i]["InstallmentAmount"];
+			$obj->InstallmentWage = isset($installmentArray[$i]["InstallmentWage"]) ? $installmentArray[$i]["InstallmentWage"] : 0;
 			$obj->wage = $installmentArray[$i]["wage"];
 			if(!$obj->AddInstallment($pdo))
 			{
@@ -856,14 +857,18 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 			if(!$obj2->AddInstallment($pdo))
 			{
 				$pdo->rollBack();
-				echo Response::createObjectiveResponse(false, "");
+				echo Response::createObjectiveResponse(false, "2");
 				die();
 			}
 		}
 	}
 	
 	if($returnMode)
+	{
+		if($pdo2 == null)
+			$pdo->commit();	
 		return true;
+	}
 	
 	$pdo->commit();	
 	echo Response::createObjectiveResponse(true, "");

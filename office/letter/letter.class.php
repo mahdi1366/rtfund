@@ -117,13 +117,15 @@ class OFC_letters extends PdoDataAccess{
 		 
 		$query = "select s.*,l.*, 
 				concat_ws(' ',fname, lname,CompanyName) FromPersonName,
-				if(count(DocumentID) > 0,'YES','NO') hasAttach,
+				if(t.cnt > 0,'YES','NO') hasAttach,
 				substr(s.SendDate,1,10) _SendDate
 				
 			from OFC_send s
 				join OFC_letters l using(LetterID)
 				join BSC_persons p on(s.FromPersonID=p.PersonID)
-				left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
+				left  join (select ObjectID,count(DocumentID) cnt 
+							from DMS_documents where ObjectType='letterAttach' group by ObjectID )t
+					on(t.ObjectID = .s.LetterID)
 				left join OFC_send s2 on(s2.LetterID=s.LetterID AND s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
 			where s2.SendID is null AND s.ToPersonID=:tpid " . $where . "
 			group by SendID";
