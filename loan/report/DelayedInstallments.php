@@ -207,8 +207,10 @@ function ListData($IsDashboard = false){
 	$rpt->mysql_resource = GetData();
 	
 	function LoanReportRender($row,$value){
-		return "<a href='javascript:void();' onclick=window.open('LoanPayment2.php?show=true&RequestID=" . 
-				$value . "') >" . $value . "</a>";
+		if($row["ComputeMode"] == "BANK")
+			return "<a href=LoanPayment.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
+		else
+			return "<a href=LoanPaymentNew.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
 	}
 	
 	$rpt->addColumn("کد وام", "RequestID", "LoanReportRender");

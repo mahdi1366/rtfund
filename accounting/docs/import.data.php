@@ -2291,16 +2291,6 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	$totalBackPay = $PartObj->PartAmount*1 + 
 		GetExtraLoanAmount($PartObj,$TotalFundWage,$TotalCustomerWage,$TotalAgentWage,$TotalFundDelay, $TotalAgentDelay);
 			
-	$FundDelayShare = $AgentDelayShare = $FundWageShare = 0;
-	if($PartObj->DelayReturn == "INSTALLMENT")
-		$FundDelayShare = round($TotalFundDelay*$PayObj->PayAmount/$totalBackPay);
-	if($PartObj->AgentDelayReturn == "INSTALLMENT")
-		$AgentDelayShare = round($TotalAgentDelay*$PayObj->PayAmount/$totalBackPay);
-	if($PartObj->WageReturn == "INSTALLMENT")
-		$FundWageShare = round($TotalFundWage*$PayObj->PayAmount/$totalBackPay);
-	if($PartObj->AgentReturn == "INSTALLMENT")	
-		$AgentWageShare = round($TotalAgentWage*$PayObj->PayAmount/$totalBackPay);
-
 	//----------------- get total remain ---------------------
 	PdoDataAccess::runquery("delete from LON_BackPays 
 		where RequestID=? AND PayType=? AND PayBillNo=?", 
@@ -2501,19 +2491,56 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		unset($itemObj->TafsiliID);
 		unset($itemObj->TafsiliType2);
 		unset($itemObj->TafsiliID2);
-		$itemObj->details = "مبلغ تاخیر وام شماره " . $ReqObj->RequestID ;
-		$itemObj->CostID = $CostCode_wage;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $forfeitAmount;
-		if(!$itemObj->Add($pdo))
+		
+		$forfeitPercent = $PartObj->ForfeitPercent*1 + $PartObj->LatePercent*1;
+		$FundForfeit = round(($PartObj->FundForfeitPercent/$forfeitPercent)*$forfeitAmount);
+		$AgentForfeit = $forfeitAmount - $FundForfeit;
+		
+		if($FundForfeit > 0)
 		{
-			ExceptionHandler::PushException("خطا در ایجاد ردیف سپرده");
-			return false;
+			$itemObj->details = "مبلغ تاخیر وام شماره " . $ReqObj->RequestID ;
+			$itemObj->CostID = $CostCode_wage;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $FundForfeit;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف سپرده");
+				return false;
+			}
 		}
+		if($AgentForfeit > 0)
+		{
+			unset($itemObj->ItemID);
+			$itemObj->details = "مبلغ تاخیر وام شماره " . $ReqObj->RequestID ;
+			$itemObj->CostID = $CostCode_deposite;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $AgentForfeit;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $ReqPersonTafsili;
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف سپرده");
+				return false;
+			}
+		}
+		
 		$PayObj->PayAmount -= $forfeitAmount;
 	}
 	if($PayObj->PayAmount == 0)
 		return ExceptionHandler::GetExceptionCount() == 0;
+	
+	//------------------- compute shares of payed minus forfeit ----------------
+	
+	$FundDelayShare = $AgentDelayShare = $FundWageShare = 0;
+	if($PartObj->DelayReturn == "INSTALLMENT")
+		$FundDelayShare = round($TotalFundDelay*$PayObj->PayAmount/$totalBackPay);
+	if($PartObj->AgentDelayReturn == "INSTALLMENT")
+		$AgentDelayShare = round($TotalAgentDelay*$PayObj->PayAmount/$totalBackPay);
+	if($PartObj->WageReturn == "INSTALLMENT")
+		$FundWageShare = round($TotalFundWage*$PayObj->PayAmount/$totalBackPay);
+	if($PartObj->AgentReturn == "INSTALLMENT")	
+		$AgentWageShare = round($TotalAgentWage*$PayObj->PayAmount/$totalBackPay);
+	
 	//------------------- delay amount ---------------------
 	if($PartObj->DelayReturn == "INSTALLMENT" && $LoanMode == "Agent" && $FundDelayShare > 0)
 	{

@@ -782,7 +782,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 				$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0)
 			);
 		}
-		$installmentArray = LON_requests::FreeDobellWageComputeInstallment($obj, $installmentArray);
+		$installmentArray = LON_requests::ComputeInstallment_TanzilFormula($obj, $installmentArray);
 		if(!$installmentArray)
 		{
 			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
@@ -807,7 +807,6 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 			$obj->RequestID = $RequestID;
 			$obj->InstallmentDate = DateModules::shamsi_to_miladi($installmentArray[$i]["InstallmentDate"]);
 			$obj->InstallmentAmount = $installmentArray[$i]["InstallmentAmount"];
-			$obj->InstallmentWage = isset($installmentArray[$i]["InstallmentWage"]) ? $installmentArray[$i]["InstallmentWage"] : 0;
 			$obj->wage = $installmentArray[$i]["wage"];
 			if(!$obj->AddInstallment($pdo))
 			{
@@ -2067,7 +2066,7 @@ function ComputeManualInstallments(){
 		
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	if($partObj->ComputeMode == "NEW")
-		$installmentArray = LON_requests::FreeDobellWageComputeInstallment($partObj, $installmentArray, 
+		$installmentArray = LON_requests::ComputeInstallment_TanzilFormula($partObj, $installmentArray, 
 			$ComputeDate, $ComputeWage);
 	else
 		$installmentArray = ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate, 

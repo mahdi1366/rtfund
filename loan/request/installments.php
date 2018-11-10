@@ -44,7 +44,6 @@ $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::Column
 
 if($framework)
 {
-	$col = $dg->addColumn("کارمزد قسط", "InstallmentWage", GridColumn::ColumnType_money);
 	$col = $dg->addColumn("کارمزد", "wage", GridColumn::ColumnType_money);
 	$col = $dg->addColumn("اصل", "", GridColumn::ColumnType_money);
 	$col->renderer = "function(v,p,r){return r.data.InstallmentAmount - r.data.wage;}";
@@ -443,9 +442,9 @@ Installment.prototype.SaveInstallment = function(store, record){
 Installment.prototype.PayReport = function(mode){
 
 	if(mode == 'old')
-		window.open(this.address_prefix + "../report/LoanPayment2.php?show=true&RequestID=" + this.RequestID);
+		window.open(this.address_prefix + "../report/LoanPayment.php?show=true&RequestID=" + this.RequestID);
 	else 
-		window.open(this.address_prefix + "../report/LoanPayment4.php?show=true&RequestID=" + this.RequestID);
+		window.open(this.address_prefix + "../report/LoanPaymentNew.php?show=true&RequestID=" + this.RequestID);
 }
 
 Installment.prototype.DelayInstallments = function(){

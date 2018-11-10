@@ -137,9 +137,9 @@ function showReport(){
 	}
 	function reportRender($row, $value){
 		if($row["ComputeMode"] == "BANK")
-			return "<a href=LoanPayment2.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
+			return "<a href=LoanPayment.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
 		else
-			return "<a href=LoanPayment4.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
+			return "<a href=LoanPaymentNew.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
 	}
 
 	$col = $rpg->addColumn("شماره وام", "RequestID", "reportRender");

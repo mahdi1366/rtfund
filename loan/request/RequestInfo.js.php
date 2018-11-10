@@ -88,7 +88,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 					me.grid.getStore().load();
 					me.mask.hide();
 					return;
-				}			
+				}	
 				//..........................................................
 				record = this.getAt(0);
 				me.RequestRecord = record;
@@ -318,9 +318,9 @@ RequestInfo.prototype.MakePartsPanel = function(){
 					fieldLabel: 'تعداد اقساط',
 					name: 'InstallmentCount'
 				},{
-					fieldLabel: 'درصد دیرکرد',
-					name: 'ForfeitPercent',
-					renderer : function(v){ return v + " %"}
+					fieldLabel: 'دوره پرداخت',
+					name: 'PayDuration',
+					renderer : function(v){ return v + " ماه"}
 				},{
 					fieldLabel: 'کارمزد تنفس',
 					name: 'DelayPercent',
@@ -334,25 +334,38 @@ RequestInfo.prototype.MakePartsPanel = function(){
 					name: 'FundWage',
 					renderer : function(v){ return v + " %"}
 				},{
+					fieldLabel: 'کارمزد تاخیر',
+					name: "LatePercent",
+					renderer : function(v){ return v + " %"}
+				},{
+					fieldLabel: 'درصد جریمه',
+					name: 'ForfeitPercent'	,		
+					renderer : function(v){ return v + " %"}
+				},{
+					fieldLabel: 'جریمه صندوق',
+					name: 'FundForfeitPercent'	,		
+					renderer : function(v){ return v + " %"}
+				},{
 					name : "WageReturn",
-					fieldLabel: 'پرداخت کارمزد',
+					fieldLabel: 'کارمزد صندوق',
 					renderer : function(v){
 						if(v == "CUSTOMER") return "هنگام پرداخت وام";
 						if(v == "AGENT") return 'سپرده سرمایه گذار';
 						if(v == "INSTALLMENT") return 'طی اقساط';
 					}
 				},{
-					name : "PayCompute",
-					fieldLabel: 'محاسبه پرداخت',
+					name : "DelayReturn",
+					fieldLabel: 'تنفس صندوق',
 					renderer : function(v){
-						if(v == "forfeit") return "ابتدا کسر جریمه";
-						if(v == "installment") return 'ابتدا کسر قسط';
+						if(v == "CUSTOMER") return "هنگام پرداخت وام";
+						if(v == "INSTALLMENT") return 'طی اقساط';
+						if(v == "CHEQUE") return 'چک';
+						if(v == "NEXTYEARCHEQUE") return 'چک سالهای بعد';
 					}
 				},{
-					name : "MaxFundWage",
-					labelWidth : 110,
-					fieldLabel: 'سقف کارمزد صندوق',
-					renderer : function(v){ return Ext.util.Format.Money(v)	}
+					fieldLabel: 'درصد بخشش',
+					name: 'ForgivePercent'	,		
+					renderer : function(v){ return v + " %"}
 				},{
 					name : "AgentReturn",
 					fieldLabel: 'کارمزد سرمایه گذار',
@@ -370,20 +383,16 @@ RequestInfo.prototype.MakePartsPanel = function(){
 						if(v == "NEXTYEARCHEQUE") return 'چک سالهای بعد';
 					}
 				},{
-					name : "DelayReturn",
-					fieldLabel: 'پرداخت تنفس',
-					renderer : function(v){
-						if(v == "CUSTOMER") return "هنگام پرداخت وام";
-						if(v == "INSTALLMENT") return 'طی اقساط';
-						if(v == "CHEQUE") return 'چک';
-						if(v == "NEXTYEARCHEQUE") return 'چک سالهای بعد';
-					}
-				},{
+					name : "MaxFundWage",
+					labelWidth : 110,
+					fieldLabel: 'سقف کارمزد صندوق',
+					renderer : function(v){ return Ext.util.Format.Money(v)	}
+				}/*,{
 					colspan : 3,
 					name : "BackPayComputeDesc",
 					width : 500,
 					fieldLabel: 'محاسبه پرداخت'
-				},{
+				}*/,{
 					colspan : 3,
 					xtype : "container",
 					width : 580,
@@ -1708,21 +1717,39 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					fieldLabel: 'تعداد اقساط',
 					name: 'InstallmentCount'
 				},{
-					fieldLabel: 'درصد دیرکرد',
-					name: 'ForfeitPercent'
+					fieldLabel: 'کارمزد تنفس',
+					name: 'DelayPercent',
+					afterSubTpl : "%"
 				},{
 					fieldLabel: 'کارمزد مشتری',
-					name: 'CustomerWage'	
+					name: 'CustomerWage',
+					afterSubTpl : "%"	
 				},{
 					fieldLabel: 'کارمزد صندوق',
-					name: 'FundWage'
+					name: 'FundWage',
+					afterSubTpl : "%"
 				},{
-					fieldLabel: 'کارمزد تنفس',
-					name: 'DelayPercent'					
+					fieldLabel: 'کارمزد تاخیر',
+					name: 'LatePercent',
+					afterSubTpl : "%"
+				},{
+					fieldLabel: 'درصد بخشش',
+					name: 'ForgivePercent',
+					afterSubTpl : "%"
+				},{
+					fieldLabel: 'درصد دیرکرد',
+					name: 'ForfeitPercent',
+					afterSubTpl : "%"
+				},{
+					fieldLabel: 'سهم صندوق از دیرکرد',
+					name: 'FundForfeitPercent',
+					afterSubTpl : "%",
+					labelStyle : "font-size:11px"
 				},{
 					fieldLabel: 'دوره پرداخت(ماه)',
 					name: 'PayDuration',
-					allowBlank : true
+					allowBlank : true,
+					colspan : 2
 				},{
 					xtype : "fieldset",
 					colspan : 2,
@@ -1740,7 +1767,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						boxLabel : "فرمول تنزیل هر قسط",
 						name : "ComputeMode",
 						inputValue : "NEW"
-					},{
+					}/*,{
 						xtype : "combo",
 						width : 400,
 						store : new Ext.data.SimpleStore({
@@ -1757,7 +1784,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						displayField : "InfoDesc",
 						valueField : "InfoID",
 						name : "BackPayCompute"						
-					}]
+					}*/]
 				},{
 					xtype : "fieldset",
 					itemId : "fs_WageCompute",

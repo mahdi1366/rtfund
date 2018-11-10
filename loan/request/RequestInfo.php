@@ -48,6 +48,10 @@ $dg->addColumn("", "PayInterval","", true);
 $dg->addColumn("", "DelayMonths","", true);
 $dg->addColumn("", "DelayDays","", true);
 $dg->addColumn("", "ForfeitPercent","", true);
+$dg->addColumn("", "DelayPercent","", true);
+$dg->addColumn("", "LatePercent","", true);
+$dg->addColumn("", "FundForfeitPercent","", true);
+$dg->addColumn("", "ForgivePercent","", true);
 $dg->addColumn("", "CustomerWage","", true);
 $dg->addColumn("", "FundWage","", true);
 
@@ -65,7 +69,6 @@ $dg->addColumn("", "ReqPersonID","", true);
 $dg->addColumn("", "AgentReturn","", true);
 $dg->addColumn("", "AgentDelayReturn","", true);
 $dg->addColumn("", "IsDocRegister","", true);
-$dg->addColumn("", "DelayPercent","", true);
 $dg->addColumn("", "IsHistory","", true);
 $dg->addColumn("", "PayDuration","", true);
 $dg->addColumn("", "details","", true);

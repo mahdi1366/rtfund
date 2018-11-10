@@ -224,9 +224,10 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("وضعیت", "StatusDesc");
 	
 	function LoanRemainRender($row, $value){
-		
-		return "<a target=_blank href='LoanPayment2.php?show=true&RequestID=". $row["RequestID"]. "' >" . 
-				number_format($value) . "</a>";
+		if($row["ComputeMode"] == "BANK")
+			return "<a href=LoanPayment.php?show=tru&RequestID=" . $row["RequestID"] . " target=blank >" . number_format($value) . "</a>";
+		else
+			return "<a href=LoanPaymentNew.php?show=tru&RequestID=" . $row["RequestID"] . " target=blank >" . number_format($value) . "</a>";
 	}
 	$col = $rpg->addColumn("باقیمانده وام (اقساط - پرداخت مشتری )", "LoanRemain", "LoanRemainRender");
 	$col->ExcelRender = false;

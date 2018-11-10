@@ -126,6 +126,7 @@ if(!empty($_REQUEST["NTC_EXCEL"]))
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "../request/request.data.php?task=GetDelayedInstallments","grid_div");
 
 $dg->addColumn("", "RequestID","", true);
+$dg->addColumn("", "ComputeMode","", true);
 
 $col = $dg->addColumn("کد وام", "RequestID","");
 $col->width = 50;
@@ -219,8 +220,10 @@ function LoanReport_DelayedInstallments()
 LoanReport_DelayedInstallments.prototype.PayReport = function(){
 
 	record = this.grid.getSelectionModel().getLastSelected();
-	window.open(this.address_prefix + "../report/LoanPayment2.php?show=true&RequestID=" + 
-		record.data.RequestID);
+	if(record.data.ComputeMode == "NEW")
+		window.open(this.address_prefix + "../report/LoanPaymentNew.php?show=true&RequestID=" + record.data.RequestID);
+	else
+		window.open(this.address_prefix + "../report/LoanPayment.php?show=true&RequestID=" + record.data.RequestID);
 }
 
 LoanReport_DelayedInstallments.print = function(){

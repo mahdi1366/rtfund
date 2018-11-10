@@ -731,7 +731,7 @@ LoanPay.prototype.DeletePay = function(){
 
 LoanPay.prototype.PayReport2 = function(){
 
-	window.open(this.address_prefix + "../report/LoanPayment2.php?show=true&RequestID=" + this.RequestID);
+	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&RequestID=" + this.RequestID);
 }
 
 LoanPay.prototype.AddToGroupPay = function(e ,loanFullname, RequestID, InstallmentAmount){

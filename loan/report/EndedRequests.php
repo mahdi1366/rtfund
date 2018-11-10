@@ -12,6 +12,7 @@ require_once inc_dataGrid;
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "../request/request.data.php?task=GetEndedRequests","grid_div");
 
 $dg->addColumn("", "PartID","", true);
+$dg->addColumn("", "ComputeMode","", true);
 
 $col = $dg->addColumn("کد وام", "RequestID","");
 $col->width = 50;
@@ -63,7 +64,10 @@ LoanReport_EndedRequestsObj = new LoanReport_EndedRequests();
 LoanReport_EndedRequests.prototype.PayReport = function(){
 
 	record = this.grid.getSelectionModel().getLastSelected();
-	window.open(this.address_prefix + "../report/LoanPayment2.php?show=true&RequestID=" + record.data.RequestID);
+	if(record.data.ComputeMode == "NEW")
+		window.open(this.address_prefix + "../report/LoanPaymentNew.php?show=true&RequestID=" + record.data.RequestID);
+	else
+		window.open(this.address_prefix + "../report/LoanPayment.php?show=true&RequestID=" + record.data.RequestID);
 }
 
 </script>

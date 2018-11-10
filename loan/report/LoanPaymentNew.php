@@ -132,6 +132,10 @@ if(isset($_REQUEST["show"]))
 							</b></td>
 					</tr>
 					<tr>
+						<td> کارمزد وام:  </td>
+						<td><b><?= $partObj->CustomerWage ?> %</b></td>
+					</tr>
+					<tr>
 						<td>درصد دیرکرد: </td>
 						<td><b><?= $partObj->ForfeitPercent ?> %
 							</b></td>
@@ -149,8 +153,18 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= $partObj->DelayMonths  ?>ماه و  <?= $partObj->DelayDays ?> روز</b></td>
 					</tr>
 					<tr>
-						<td> کارمزد وام:  </td>
-						<td><b><?= $partObj->CustomerWage ?> %</b></td>
+						<td>نحوه محاسبه :</td>
+						<td><b><?= $partObj->PayCompute == "installment" ? "ابتدا اقساط" : "ابتدا جرائم" ?></b></td>
+					</tr>
+					<tr>
+						<td>کارمزد تاخیر :</td>
+						<td><b><?= $partObj->LatePercent ?> %
+							</b></td>
+					</tr>
+					<tr>
+						<td>درصد بخشش : </td>
+						<td><b><?= $partObj->ForgivePercent ?> %
+							</b></td>
 					</tr>
 				</table>
 			</td>
@@ -184,9 +198,9 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= $TotalRemain?></b></td>
 					</tr>
 					<? if($ReqObj->ReqPersonID != SHEKOOFAI){ ?>
-					<tr>
-						<td>مبلغ قابل پرداخت در صورت تسویه وام :</td>
-						<td><b><?= $DefrayAmount ?></b></td>
+			 		<tr>
+						<!--<td>مبلغ قابل پرداخت در صورت تسویه وام :</td>
+						<td><b><?= $DefrayAmount ?></b></td>-->
 						<td></td><td></td>
 					</tr>
 					<? } ?>
@@ -218,7 +232,7 @@ LoanReport_payments.prototype.showReport = function(btn, e)
 	this.form = this.get("mainForm")
 	this.form.target = "_blank";
 	this.form.method = "POST";
-	this.form.action =  this.address_prefix + "LoanPayment2.php?show=true";
+	this.form.action =  this.address_prefix + "LoanPaymentNew.php?show=true";
 	this.form.submit();
 	this.get("excel").value = "";
 	return;
