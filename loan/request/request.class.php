@@ -218,7 +218,12 @@ class LON_requests extends PdoDataAccess{
 			$ComputeDate = DateModules::miladi_to_shamsi($FirstPay);
 			$partObj->FirstTotalWage = 0;
 			$amount = self::GetPurePayedAmount($partObj->RequestID, $partObj, true);
+			if($amount === false)
+			{
+				return false;
+			}
 			$TotalPureAmount = $amount;
+			
 		}
 		//------------- compute percents of each installment amount ----------------
 		$zarib = 1;
@@ -361,6 +366,15 @@ class LON_requests extends PdoDataAccess{
 		$PartObj = $PartObj == null ? LON_ReqParts::GetValidPartObj($RequestID) : $PartObj;
 		$endDelayDate = DateModules::AddToGDate($PartObj->PartDate, $PartObj->DelayDays*1, $PartObj->DelayMonths*1);
 		$DelayDuration = DateModules::GDateMinusGDate($endDelayDate, $PartObj->PartDate)+1;
+		
+		if($PartObj->DelayPercent == 0)
+		{
+			return array(
+				"CustomerDelay" => 0,
+				"FundDelay" => 0,
+				"AgentDelay" => 0
+			);
+		}
 		
 		$fundZarib = $PartObj->FundWage/$PartObj->DelayPercent;
 			
@@ -543,8 +557,14 @@ class LON_requests extends PdoDataAccess{
 					$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
 					$tempForReturnArr["ForfeitDays"] = $forfeitDays;
 					
-					$ForfeitPercent -= min($obj->ForfeitPercent, $obj->ForgivePercent);
-					$LatePercent -= $obj->ForgivePercent - min($obj->ForfeitPercent, $obj->ForgivePercent);
+					$forgivePercent = $obj->ForgivePercent*1;
+					$ForfeitPercent = $obj->ForfeitPercent - min($obj->ForfeitPercent, $forgivePercent);
+					$forgivePercent -= min($obj->ForfeitPercent, $forgivePercent);
+					$LatePercent = $obj->LatePercent;
+					if($forgivePercent > 0)
+						$LatePercent = $obj->LatePercent - $forgivePercent;
+					if($LatePercent < 0)
+						$LatePercent = 0;
 							
 					$LateWage = round($tempForReturnArr["totalpure"]*$LatePercent*$forfeitDays/36500);
 					$LateForfeit = round($tempForReturnArr["totalpure"]*$ForfeitPercent*$forfeitDays/36500);
@@ -608,7 +628,7 @@ class LON_requests extends PdoDataAccess{
 					$ToDate = DateModules::Now();
 				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
 				
-				$ForfeitPercent -= min($obj->ForfeitPercent, $obj->ForgivePercent);
+				$ForfeitPercent = $obj->ForfeitPercent - min($obj->ForfeitPercent, $obj->ForgivePercent);
 				$CurForfeit = round($amount*$ForfeitPercent*$forfeitDays/36500);
 				
 				if($CurForfeit < 0)
