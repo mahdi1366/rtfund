@@ -411,7 +411,6 @@ Ext.define('ImageViewer', {
     }
 });
 
-
 Ext.define('MultiImageViewer', {
     extend: 'ImageViewer',
 
@@ -523,3 +522,159 @@ Ext.define('MultiImageViewer', {
         return true;
     }
 });
+
+Ext.define('ImageGallery', {
+    extend: 'Ext.Panel',
+
+    layout: {
+        type: 'vbox',
+        align: 'stretch'
+    },
+	
+    config: {
+		cls: 'galleria',
+        isMoving: false,
+        imageWidth: null,
+        imageHeight: null,
+        originalImageWidth: null,
+        originalImageHeight: null,
+        clickX: null,
+        clickY: null,
+        lastMarginX: null,
+        lastMarginY: null,
+        rotation: 0
+    },
+	height : 300,
+	width : 600,
+	galleria_image: null,
+	thumnail_list: null,
+	nav_left: null,
+	nav_right: null,
+	current_image_index: 0,
+
+    initComponent: function () {
+        var me = this;
+		
+		me.items = [{
+			xtype : "container",
+			itemId : "galleria_imageContainer",
+			cls : "galleria-image-container",
+			height : this.height-65,
+			items : [{
+				xtype : "image",
+				itemId : "galleria_image"				
+			}]
+		},{
+			xtype: 'panel',
+			layout: 'hbox',
+			style: 'border: 1px solid #D0D0D0;margin-top:5px',	
+			items : [{
+				xtype: 'button',
+				itemId: 'nav_right',
+				cls: 'galleria-image-nav-right',
+				style: 'border:0'
+			},{
+				xtype : "container",
+				flex : 1,
+				style : "text-align:left",
+				items :{
+					xtype: 'dataview',
+					itemId : "thumnail_list",
+					cls : "galleria-dataview",
+					itemSelector: 'div.x-list-item',
+					autoScroll : true,
+					selectedItemCls: 'gallery-image-selected',
+					store : me.store,
+					tpl  : Ext.create('Ext.XTemplate',
+						'<tpl for=".">',
+							'<div class=x-list-item>',
+								'<img src={url} />',
+							'</div>',
+						'</tpl>'
+					)
+				}
+			},{
+				xtype: 'button',
+				itemId: 'nav_left',
+				cls: 'galleria-image-nav-left',
+				style: 'border:0'
+			}]
+		}];
+				
+		me.callParent();	
+		this.galleria_imageContainer = this.down('[itemId=galleria_imageContainer]');
+		this.galleria_image = this.down('image[itemId=galleria_image]');
+		this.thumnail_list = this.down('[itemId=thumnail_list]');
+
+		this.nav_left = this.down('button[itemId=nav_left]');
+		this.nav_right = this.down('button[itemId=nav_right]');
+
+		this.thumnail_list.on('itemclick', this.onChangeImage, this);
+		this.nav_left.on('click', this.onNavLeft, this);
+		this.nav_right.on('click', this.onNavRight, this);
+		
+    },
+	constructor: function () {
+        this.callParent(arguments);
+        if(this.store.totalCount > 0){
+			this.thumnail_list.select(0);
+			this.moveSelection();
+		}
+    },
+    initEvents: function () {
+        var me = this;
+        me.callParent();
+    },
+	selectFirst : function(){
+		if(this.store.totalCount > 0)
+			this.thumnail_list.select(0);
+	},
+	onNavLeft: function (btn, e, eOpts) {
+		this.current_image_index--;
+		if (this.current_image_index < 0)
+			this.current_image_index = this.thumnail_list.getStore().data.length - 1;
+
+		this.moveSelection(btn, e, eOpts);
+	},
+	onNavRight: function (btn, e, eOpts) {
+		this.current_image_index++;
+		if (this.current_image_index > this.thumnail_list.getStore().data.length - 1)
+			this.current_image_index = 0;
+
+		this.moveSelection(btn, e, eOpts);
+	},
+	moveSelection: function (btn, e, eOpts) {
+			
+		this.thumnail_list.select(this.current_image_index);
+		this.galleria_image.setSrc(this.thumnail_list.getStore().getAt(this.current_image_index).data.url);
+		
+		el = this.thumnail_list.getEl();
+		el.setLeft(this.current_image_index*(-50));
+		this.stretchOptimally();
+	},
+	onChangeImage: function (view, record, item, index, e, eOpts) {
+		this.current_image_index = index;
+		this.galleria_image.setSrc(record.data.url);
+		this.stretchOptimally();
+	},
+	stretchOptimally: function () {
+        var me = this,
+            image = me.galleria_image,
+            containerSize = {
+				height : this.galleria_imageContainer.getHeight(),
+				width : this.galleria_imageContainer.getWidth()
+			};
+
+		var d = this.galleria_image.getEl().dom;
+		if (d.naturalWidth/containerSize.width > d.naturalHeight/containerSize.height) 
+		{
+            me.galleria_image.setWidth(containerSize.width);
+			me.galleria_image.setHeight((containerSize.width/d.naturalWidth)*d.naturalHeight);
+        } else {
+			me.galleria_image.setHeight(containerSize.height);
+			me.galleria_image.setWidth((containerSize.height/d.naturalHeight)*d.naturalWidth);
+        }
+    }
+});
+
+

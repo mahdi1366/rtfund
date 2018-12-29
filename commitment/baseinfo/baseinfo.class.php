@@ -252,6 +252,9 @@ class COM_EventRows extends PdoDataAccess {
     public $TafsiliType;
 	public $TafsiliType2;
 	public $TafsiliType3;
+	public $Tafsili;
+	public $Tafsili2;
+	public $Tafsili3;
     public $CostType;
     public $DocDesc;
     public $IsActive;
@@ -286,7 +289,10 @@ class COM_EventRows extends PdoDataAccess {
 					concat_ws('-',cb1.blockDesc,cb2.blockDesc,cb3.blockDesc) CostDesc,
 					concat_ws('',cb1.blockCode,cb2.blockCode,cb3.blockCode) CostCode,
 					concat_ws(' ',fname,lname,CompanyName) changePersonName,
-					concat(bf11.InfoDesc,' - ',bf10.InfoDesc) ComputeItemDesc
+					concat(bf11.InfoDesc,' - ',bf10.InfoDesc) ComputeItemDesc,
+					t1.InfoDesc TafsiliDesc,
+					t2.InfoDesc Tafsili2Desc,
+					t3.InfoDesc Tafsili3Desc
 					
 			from COM_EventRows er 
 			left join BSC_persons on(PersonID=ChangePersonID)
@@ -298,7 +304,11 @@ class COM_EventRows extends PdoDataAccess {
 			left join ACC_blocks cb2 on(cb2.blockID=cc.level2)
 			left join ACC_blocks cb3 on(cb3.blockID=cc.level3)
 			left join BaseInfo bf10 on(bf10.TypeID=84 AND bf10.InfoID=er.ComputeItemID)
-			left join BaseInfo bf11 on(bf11.TypeID=83 AND bf10.param1=bf11.InfoID)";
+			left join BaseInfo bf11 on(bf11.TypeID=83 AND bf10.param1=bf11.InfoID)
+			
+			left join BaseInfo t1 on(t1.TypeID=87 AND t1.InfoID=er.Tafsili)
+			left join BaseInfo t2 on(t2.TypeID=87 AND t2.InfoID=er.Tafsili2)
+			left join BaseInfo t3 on(t3.TypeID=87 AND t3.InfoID=er.Tafsili3)";
 
         if ($where != '')
             $query .= ' where ' . $where;

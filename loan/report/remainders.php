@@ -89,8 +89,11 @@ function showReport(){
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 		where IsEnded='NO' $where
-		group by r.RequestID 
+		group by r.RequestID ,p.PartID
 		order by r.RequestID", $whereParam);
+	
+	//if($_SESSION["USER"]["UserName"] == "admin")
+	//	echo PdoDataAccess::GetLatestQueryString();
 	
 	$returnArr = array();
 	foreach($dt as $row)
@@ -425,6 +428,21 @@ function LoanReport_remainders()
 			xtype : "shdatefield",
 			name : "toEndReqDate",
 			fieldLabel : "تا تاریخ"
+		},{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				data : [
+					["BANK" , "فرمول بانک مرکزی" ],
+					["NEW" , "فرمول تنزیل اقساط" ]
+				],
+				fields : ['id','value']
+			}),
+			displayField : "value",
+			valueField : "id",
+			fieldLabel : "فرمول محاسبه",
+			queryMode : 'local',
+			width : 370,
+			hiddenName : "ComputeMode"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",

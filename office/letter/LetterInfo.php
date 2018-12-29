@@ -59,7 +59,7 @@ if($LetterObj->LetterType == "OUTCOME" && $LetterObj->IsSigned == "NO")
 	if($dt->rowCount()>0)
 		$editable = true;
 }
-if($LetterObj->LetterType == "INCOME")
+if($LetterObj->LetterType == "INCOME" || $LetterObj->LetterType == "INNER")
 {
 	$editable = true;
 }
@@ -78,13 +78,12 @@ $dg->addColumn("", "SendDate", "", true);
 
 $col = $dg->addColumn("", "SendComment");
 $col->renderer = "LetterInfo.CommentsRender";
-$col->width = 200;
 
 $dg->autoExpandColumn = "SendComment";
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 470;
 $dg->disableFooter = true;
-$dg->width = 200;
+$dg->width = 400;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $grid = $dg->makeGrid_returnObjects();

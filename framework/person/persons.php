@@ -17,6 +17,7 @@ $dg->addColumn("PID","PersonID","string");
 $dg->addColumn("","IsReal","string", true);
 $dg->addColumn("","fname","string", true);
 $dg->addColumn("","lname","string", true);
+$dg->addColumn("","sex","string", true);
 $dg->addColumn("","NationalID","string", true);
 $dg->addColumn("","CompanyName","string", true);
 $dg->addColumn("","EconomicID","string", true);
@@ -120,6 +121,8 @@ PersonObject.grid.getView().getRowClass = function(record)
 }
 PersonObject.grid.on("itemdblclick", function(view, record){
 			
+		if(record.data.IsActive == "NO")
+			return;
 		framework.OpenPage("/framework/person/PersonInfo.php", "اطلاعات ذینفع", 
 		{
 			PersonID : record.data.PersonID

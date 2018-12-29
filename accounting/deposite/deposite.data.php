@@ -18,10 +18,11 @@ if(!empty($task))
 function selectDeposites() {
 	
 	$temp = PdoDataAccess::runquery_fetchMode("
-		select TafsiliID,CostID,concat_ws('-',b1.BlockDesc,b2.BlockDesc) CostDesc,
+		select b.BranchID,BranchName, TafsiliID,CostID,concat_ws('-',b1.BlockDesc,b2.BlockDesc) CostDesc,
 			sum(CreditorAmount-DebtorAmount) amount,TafsiliDesc
 		from ACC_DocItems 
 			join ACC_docs using(DocID)
+			join BSC_branches b using(BranchID)
 			join ACC_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(b1.BlockID=cc.level1)
 			left join ACC_blocks b2 on(b2.BlockID=cc.level2)
@@ -30,8 +31,7 @@ function selectDeposites() {
 		where /*StatusID != ".ACC_STEPID_RAW." */ 1=1
 			AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
 			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-			AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
-		group by TafsiliID,CostID");
+		group by BranchID,TafsiliID,CostID");
 	
 	$dt = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	//echo PdoDataAccess::GetLatestQueryString();
@@ -41,21 +41,27 @@ function selectDeposites() {
 
 function DepositeProfit(){
 	
-	$Tafsilis = array();
+	$TafsiliArr = array();
 	$keys = array_keys($_POST);
 	foreach($keys as $key)
 		if(strpos($key, "chk_") !== false)
-			$Tafsilis[] = substr($key, 4)*1;
+		{
+			$arr = preg_split("/_/", $key);
+			$TafsiliArr[] = array(
+				"BranchID" =>  $arr[1],
+				"CostID" =>  $arr[2],
+				"TafsiliID" => $arr[3]
+			);
+		}
 	
-	if(count($Tafsilis) == 0)
+	if(count($TafsiliArr) == 0)
 	{
 		echo Response::createObjectiveResponse(false, "هیچ ردیفی انتخاب نشده است");
 		die();
 	}
 		
 	$ToDate = DateModules::shamsi_to_miladi($_POST["ToDate"]);
-	
-	ComputeDepositeProfit($ToDate, $Tafsilis);
+	ComputeDepositeProfit($ToDate, $TafsiliArr);
 	die();
 }
 

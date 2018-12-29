@@ -25,6 +25,7 @@ $signs = CNT_ContractSigns::Get(" AND ContractID=? order by description", array(
 			/* this affects the margin in the printer settings */ 
 			margin: 10mm 0mm 10mm 0mm;  
 		} 
+		table td {font-size: 14px;page-break-inside: avoid !important;}
     </style>
     <style type="text/css">
         body {font-family: nazanin;font-size: 10pt;margin: 20px}
@@ -35,10 +36,10 @@ $signs = CNT_ContractSigns::Get(" AND ContractID=? order by description", array(
 			text-align: justify; 
 			line-height : 2;}
 		table caption{background-color: #ccc;font-family: titr;font-size: 13px;}	
-		table th {background-color: #ddd;font-size: 12px;font-weight: bold}
-		table td {font-size: 14px;}
-		table { page-break-inside:auto; }
-		tr    { /*page-break-inside:avoid;*/ page-break-after:auto }
+		table th {background-color: #ddd;font-size: 12px;font-weight: bold; page-break-inside: avoid}
+		table td {font-size: 14px;page-break-inside: avoid !important;}
+		/*table tr {page-break-inside: avoid !important;}*/
+		
 		thead { display:table-header-group }
 		tfoot { display:table-footer-group;  }
 		

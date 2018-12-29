@@ -139,6 +139,11 @@ PartPayment.DocRender = function(v,p,r){
 	return "<div align='center' title='صدور سند' class='send' "+
 		"onclick='PartPaymentObject.BeforeRegDoc(1);' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>" + 
+		
+		"<div align='center' title='صدور سند تعهدی' class='send2' "+
+		"onclick='PartPaymentObject.BeforeRegDoc(1);' " +
+		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
 

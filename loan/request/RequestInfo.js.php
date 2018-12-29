@@ -922,7 +922,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.companyPanel.down("[itemId=cmp_payments]").show();			
 		}		
 		
-		this.companyPanel.down("[name=BranchID]").setValue(1);
+		this.companyPanel.down("[name=BranchID]").setValue(0); 
 		this.companyPanel.down("[name=BranchID]").hide();	
 		
 		this.companyPanel.doLayout();
@@ -1025,7 +1025,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.PartsPanel.down("[name=FundWage]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=WageReturn]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=ComputeMode]").getEl().dom.style.display = "none";
-			this.PartsPanel.down("[name=PayCompute]").getEl().dom.style.display = "none";
+			//this.PartsPanel.down("[name=PayCompute]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=MaxFundWage]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=AgentReturn]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=AgentDelayReturn]").getEl().dom.style.display = "none";

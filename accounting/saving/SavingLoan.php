@@ -124,14 +124,22 @@ function SavingLoan()
 			}),
 			fieldLabel : "شعبه",
 			queryMode : 'local',
-			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
 			displayField : "BranchName",
 			valueField : "BranchID",
-			name : "BranchID"
+			name : "BranchID",
+			listeners :{
+				select : function(combo,records){
+					personCombo = SavingLoanObject.MainPanel.down("[name=PersonID]");
+					personCombo.getStore().proxy.extraParams.BranchID = records[0].data.BranchID;
+					personCombo.getStore().load();
+					personCombo.enable();
+				}
+			}
 		},{
 			xtype : "combo",
 			width : 450,
 			fieldLabel : "انتخاب فرد",
+			disabled : true,
 			pageSize : 20,
 			store: new Ext.data.Store({
 				proxy:{

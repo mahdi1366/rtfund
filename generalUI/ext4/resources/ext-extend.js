@@ -2952,6 +2952,7 @@ Ext.apply(Ext.form.Panel.prototype, {
         }
     }
 });
+
 //***********************************************************
 //************* fix autoHeight of Components ****************
 //***********************************************************
@@ -3286,6 +3287,12 @@ Ext.override(Ext.form.field.HtmlEditor,{
             cls: Ext.baseCSSPrefix + 'html-editor-tip'
         }
     },
+	getDocMarkup: function() {
+        var me = this,
+            h = me.iframeEl.getHeight() - me.iframePad * 2;
+        return Ext.String.format('<html><head><style type="text/css">body{border:0;margin:0;padding:{0}px;height:{1}px;box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box;cursor:text}</style></head><body dir=rtl></body></html>', me.iframePad, h);
+    },
+
 	createToolbar : function(editor){
         var me = this,
             items = [], i,
@@ -4788,6 +4795,8 @@ Ext.define('Ext.ux.RowExpander', {
      * (defaults to <tt>false</tt>).
      */
     selectRowOnExpand: false,
+	
+	defaultExpand: false,
 
     rowBodyTrSelector: '.x-grid-rowbody-tr',
     rowBodyHiddenCls: 'x-grid-row-body-hidden',
@@ -4880,6 +4889,7 @@ Ext.define('Ext.ux.RowExpander', {
         if (orig[id+'-tdAttr']) {
             o[id+'-tdAttr'] += orig[id+'-tdAttr'];
         }
+		
         return o;
     },
 
@@ -4937,6 +4947,13 @@ Ext.define('Ext.ux.RowExpander', {
             this.recordsExpanded[record.internalId] = false;
             this.view.fireEvent('collapsebody', rowNode, record, nextBd.dom);
         }
+
+
+        // If Grid is auto-heighting itself, then perform a component layhout to accommodate the new height
+        if (!grid.isFixedHeight()) {
+            grid.doComponentLayout();
+        }
+        this.view.up('gridpanel').invalidateScroller();
     },
 
     onDblClick: function(view, cell, rowIdx, cellIndex, e) {
@@ -4957,11 +4974,11 @@ Ext.define('Ext.ux.RowExpander', {
             draggable: false,
             hideable: false,
             menuDisabled: true,
-            cls: Ext.baseCSSPrefix + 'grid-header-special',
+            cls: ' x-grid-header-special',
             renderer: function(value, metadata) {
-                metadata.tdCls = Ext.baseCSSPrefix + 'grid-cell-special';
+                metadata.tdCls = ' x-grid-cell-special';
 
-                return '<div class="' + Ext.baseCSSPrefix + 'grid-row-expander">&#160;</div>';
+                return '<div class="x-grid-row-expander">&#160;</div>';
             },
             processEvent: function(type, view, cell, recordIndex, cellIndex, e) {
                 if (type == "mousedown" && e.getTarget('.x-grid-row-expander')) {
@@ -4973,8 +4990,9 @@ Ext.define('Ext.ux.RowExpander', {
         };
     }
 });
+
 //***********************************************************
-//**************** FormSerializer  **************************
+//******************* FormSerializer  ***********************
 //***********************************************************
 /*    @Author    Henry Paradiz    henry.paradiz at gmail dot com *    
  *    Ext.FormSerializer
@@ -5287,7 +5305,7 @@ Ext.override(Ext.chart.theme.Base, {
         });
     }
 });
- 
+
 //***********************************************************
 //**********************  Tree combo ************************
 //***********************************************************
@@ -5351,7 +5369,7 @@ Ext.define('Ext.ux.TreeCombo',
 	displayField: 'text',
 	valueField: 'id',
 	treeWidth: 300,
-	matchFieldWidth: false,
+	matchFieldWidth: true,
 	treeHeight: 400,
 	masN: 0,
 	hiddenName: '',    
@@ -5520,6 +5538,8 @@ Ext.define('Ext.ux.TreeCombo',
 	setValue: function(valueInit)
 	{
 		if(typeof valueInit == 'undefined') return;
+		if(valueInit == null)
+			valueInit = "";
 		
 		var	me = this,
 			tree = this.tree,
@@ -5720,6 +5740,7 @@ Ext.define('Ext.ux.TreeCombo',
 		if(me.canSelectFolders == true && me.multiselect == true) me.checkParentNodes(node.parentNode);
 		
 		me.setRecordsValue(view, record, item, index, e, eOpts, treeCombo);
+		me.fireEvent('select', me, me.records);
 	},
 	fixIds: function()
 	{
@@ -5777,7 +5798,17 @@ Ext.override(Ext.form.field.ComboBox, {
 			input.value = "";
 		for (i = 0; i < valueCount; i++) 
             input.value += values[i] + (i+1 < valueCount ? "," : "" );
-        
+        /*while (childrenCount > valueCount) {
+            dom.removeChild(childNodes[0]);
+            -- childrenCount;
+        }
+        while (childrenCount < valueCount) {
+            dom.appendChild(input.cloneNode(true));
+            ++ childrenCount;
+        }
+        for (i = 0; i < valueCount; i++) {
+            childNodes[i].value = values[i];
+        }*/
     }
 });
 Ext.define('Ext.ux.CheckCombo',
@@ -5926,3 +5957,4 @@ Ext.define('Ext.ux.CheckCombo',
 		}    
     }
 });
+

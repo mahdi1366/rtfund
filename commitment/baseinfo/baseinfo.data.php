@@ -28,6 +28,7 @@ switch ($task) {
 	case "selectEventRows":
 	case "saveEventRow":
 	case "DeleteEventRow":
+	case 'selectEventTafsilis':
 	
 	case "selectBases":
 	case "selectMethods":
@@ -248,6 +249,13 @@ function DeleteEventRow(){
 	$res = $obj->UpdateEventRow();
 	
 	echo Response::createObjectiveResponse($res, "");
+	die();
+}
+
+function selectEventTafsilis(){
+	
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=87 AND IsActive='YES' ");
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
 

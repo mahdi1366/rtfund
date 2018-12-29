@@ -1,5 +1,4 @@
 <?php
-ALTER TABLE `main_rtfund`.`LON_installments` DROP COLUMN `InstallmentWage`;
+ALTER TABLE ACC_docs ADD COLUMN `EventID` INTEGER UNSIGNED COMMENT 'کد رویداد' AFTER `imp_AccDocNo`
 
-ALTER TABLE `main_rtfund`.`LON_ReqParts` ADD COLUMN `FirstTotalWage` DECIMAL(13) NOT NULL DEFAULT 0 AFTER `BackPayCompute`;
-
+ALTER TABLE ACC_UserState MODIFY COLUMN `BranchID` SMALLINT(5) UNSIGNED DEFAULT NULL

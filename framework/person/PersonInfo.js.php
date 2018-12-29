@@ -39,7 +39,7 @@ function PersonInfo()
 			url: this.address_prefix + "persons.data.php?task=selectPersons&full=true&PersonID=" + this.PersonID ,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["IsReal","fname","lname","CompanyName","UserName","NationalID","CityID",
+		fields : ["IsReal","fname","lname","sex","CompanyName","UserName","NationalID","CityID",
 			"EconomicID","PhoneNo","mobile","address","email","RegNo","RegDate","RegPlace",
 			"CompanyType","AccountNo","DomainID","WebSite","IsGovermental","DomainDesc",
 			"FatherName","ShNo","IsStaff","IsCustomer","IsSupporter","IsShareholder",
@@ -182,6 +182,19 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			beforeLabelTextTpl: required,
 			name: 'lname'
 		},{
+			xtype : "combo",
+			fieldLabel : "جنسیت",
+			name : "sex",
+			store : new Ext.data.SimpleStore({
+				data : [
+					["MALE" , "مرد" ],
+					["FEMALE" , "زن" ]
+				],
+				fields : ['id','value']
+			}),
+			displayField : "value",
+			valueField : "id"
+		},{
 			xtype : "textfield",
 			fieldLabel: 'نام پدر',
 			allowBlank : false,
@@ -203,14 +216,6 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			beforeLabelTextTpl: required,
 			name: 'NationalID'
 		},{
-			xtype : "trigger",
-			fieldLabel: 'حوزه فعالیت',
-			name: 'DomainDesc',	
-			triggerCls:'x-form-search-trigger',
-			onTriggerClick : function(){
-				PersonInfoObject.ActDomainLOV();
-			}
-		},{
 			xtype : "textfield",
 			maskRe: /[\d\-]/,
 			fieldLabel: 'شماره تلفن',
@@ -222,6 +227,15 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			fieldLabel: 'تلفن همراه',
 			readOnly : this.portal,
 			name: 'mobile'
+		},{
+			xtype : "trigger",
+			fieldLabel: 'حوزه فعالیت',
+			colspan : 2,
+			name: 'DomainDesc',	
+			triggerCls:'x-form-search-trigger',
+			onTriggerClick : function(){
+				PersonInfoObject.ActDomainLOV();
+			}
 		},{
 			xtype : "textarea",
 			fieldLabel: 'آدرس',

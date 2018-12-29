@@ -782,7 +782,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 			remove:true
 		});
 		framework = new FrameWorkClass();
-		//framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
+		framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
 		if(framework.CalendarReminders > 0)
 		{
 			framework.ShowCalendarReminderWindow();
@@ -851,11 +851,11 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 			background-color : #999;opacity: 0.7;filter: alpha(opacity=70);-moz-opacity: 0.7; /* mozilla */"></div>
 		</div>
 		<!--------------------------------------------------------------------->
-		<div class="blueText accinfoBox" id="framework_accDiv" style="height: 80px;" 
+		<div class="blueText accinfoBox" id="framework_accDiv" style="height: 60px;" 
 			 onclick="framework.OpenPage('../accounting/baseinfo/UserState.php','تعیین شعبه و دوره')">
 			<div style="padding-top:6px">دوره مالی : <?= $_SESSION["accounting"]["CycleYear"]?> 
 				<br>شعبه : <?= $_SESSION["accounting"]["BranchName"]?>
-			</div>
+		</div>
 		</div>
 		<!--------------------------------------------------------------------->
 	</body>

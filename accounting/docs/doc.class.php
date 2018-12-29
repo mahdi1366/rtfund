@@ -19,6 +19,7 @@ class ACC_docs extends PdoDataAccess {
 	public $SubjectID;
 	public $description;
 	public $regPersonID;
+	public $EventID;
 
 	function __construct($DocID = "", $pdo = null) {
 
@@ -31,16 +32,19 @@ class ACC_docs extends PdoDataAccess {
 
 	static function GetAll($where = "", $whereParam = array()) {
 
-		$query = "select sd.*, concat_ws(' ',fname,lname,CompanyName) as regPerson, 
+		$query = "select sd.*, 
+				bch.BranchName,
+				concat_ws(' ',fname,lname,CompanyName) as regPerson, 
 				b.InfoDesc SubjectDesc,b2.InfoDesc DocTypeDesc,
 				fs.StepID,
 				fr.ActionType
 			
 			from ACC_docs sd
+			left join BSC_branches bch using(BranchID)
 			left join BaseInfo b on(b.TypeID=73 AND b.InfoID=SubjectID)
 			left join BaseInfo b2 on(b2.TypeID=9 AND b2.InfoID=DocType)
 			left join BSC_persons p on(regPersonID=PersonID)
-			join WFM_FlowSteps fs on(fs.FlowID=".FLOWID_ACCDOC." AND fs.StepID=sd.StatusID)
+			left join WFM_FlowSteps fs on(fs.FlowID=".FLOWID_ACCDOC." AND fs.StepID=sd.StatusID)
 			left join WFM_FlowRows fr on(fr.IsLastRow='YES' AND fr.FlowID=fs.FlowID AND fr.StepRowID=fs.StepRowID AND fr.ObjectID=sd.DocID)
 		";
 
@@ -110,7 +114,7 @@ class ACC_docs extends PdoDataAccess {
 			$pdo2->beginTransaction();
 
 		if ($this->LocalNo == "")
-			$this->LocalNo = parent::GetLastID("ACC_docs", "LocalNo", "CycleID=? AND BranchID=?", array($this->CycleID, $this->BranchID), $pdo2) + 1;
+			$this->LocalNo = parent::GetLastID("ACC_docs", "LocalNo", "CycleID=?", array($this->CycleID), $pdo2) + 1;
 
 		if (!$this->Trigger($pdo2)) {
 			if ($pdo == null)
@@ -201,8 +205,8 @@ class ACC_docs extends PdoDataAccess {
 
 	static function GetLastLocalNo() {
 
-		$no = parent::GetLastID("ACC_docs", "LocalNo", "CycleID=? AND BranchID=?", 
-				array($_SESSION["accounting"]["CycleID"], $_SESSION["accounting"]["BranchID"]));
+		$no = parent::GetLastID("ACC_docs", "LocalNo", "CycleID=?", 
+				array($_SESSION["accounting"]["CycleID"]));
 
 		return $no + 1;
 	}
@@ -541,7 +545,7 @@ class ACC_DocItems extends PdoDataAccess {
 			$dt = PdoDataAccess::runquery("select LocalNo from ACC_docs join ACC_DocItems using(DocID) where 
 				TafsiliID=? AND
 				DocDate>=? AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-				AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
+				AND BranchID=" . $hobj->BranchID . "
 				AND DocType=" . DOCTYPE_DEPOSIT_PROFIT, array($this->TafsiliID, $hobj->DocDate));
 			if(count($dt) > 0)
 			{

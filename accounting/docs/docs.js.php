@@ -13,7 +13,6 @@ AccDocs.prototype = {
 	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
 
 	CycleIsOpen : true,
-	Role : "<?= $Role ?>",
 	FlowID : <?= FLOWID_ACCDOC ?>,
 	
 	get : function(elementID){
@@ -212,23 +211,6 @@ AccDocs.prototype.operationhMenu = function(e){
 				handler : function(){ return AccDocsObject.ReturnStartFlow(); }});
 			}
 		}
-		/*if(record != null && record.data.StatusID == "<?= ACC_STEPID_CONFIRM ?>" && this.EditAccess)
-		{
-			if(this.Role == "<?= ACCROLE_MANAGER ?>")
-			{
-				op_menu.add({text: 'برگشت از تایید',iconCls: 'undo', 
-				handler : function(){ return AccDocsObject.UndoConfirmDoc(); } });
-			
-				op_menu.add({text: 'قطعی کردن سند',iconCls: 'archive', 
-				handler : function(){ return AccDocsObject.archiveDoc(); } });
-			}
-		}
-		if(this.Role == "<?= ACCROLE_MANAGER ?>")
-		{
-			op_menu.add({text: 'تایید گروهی اسناد',iconCls: 'tick', 
-			handler : function(){ return AccDocsObject.BeforeTotalConfirmDoc(); } });
-
-		}*/
 		op_menu.add({text: 'ارسال گروهی اسناد',iconCls: 'tick', 
 			handler : function(){ return AccDocsObject.BeforeGroupStartFlow(); } });
 
@@ -279,7 +261,25 @@ AccDocs.prototype.makeInfoWindow = function(){
 					width : 60,
 					value : "<?= DateModules::shNow() ?>",
 					fieldLabel: "تاریخ سند",
-					name : "DocDate"
+					name : "DocDate",
+					allowBlank : false
+				},{
+					xtype : "combo",
+					store : new Ext.data.Store({
+						proxy:{
+							type: 'jsonp',
+							url: '/framework/baseInfo/baseInfo.data.php?task=SelectBranches',
+							reader: {root: 'rows',totalProperty: 'totalCount'}
+						},
+						fields :  ["BranchID", "BranchName"],
+						autoLoad : true
+					}),
+					queryMode : "local",
+					displayField: 'BranchName',
+					valueField : "BranchID",
+					name : "BranchID",
+					fieldLabel : "شعبه سند",
+					allowBlank : false
 				},{
 					xtype : "combo",
 					store : new Ext.data.Store({
@@ -717,13 +717,14 @@ AccDocs.docRender = function(v,p,record){
 	return "<table class='docInfo' width=100%>"+
 		"<tr>"+
 			"<td width=25%>شماره سند : <span class='blueText'>" + record.data.LocalNo + "</td>" +
-			"<td width=25%>ثبت کننده سند : <span class='blueText'>" + record.data.regPerson + "</td>" +
 			"<td width=25%>تاریخ سند : <span class='blueText'>" + MiladiToShamsi(record.data.DocDate) + "</td>" +
 			"<td width=25%>نوع سند : <span class='blueText'>" + record.data.DocTypeDesc + "</td>" +
+			"<td width=25%>ثبت کننده سند : <span class='blueText'>" + record.data.regPerson + "</td>" +
 		"</tr>" + 
 		"<tr>" +			
+			"<td>شعبه : <span class='blueText'>" + record.data.BranchName + "</td>" +
 			"<td>موضوع : <span class='blueText'>" + SubjectDesc + "</td>" +
-			"<td colspan=3>توضیحات : <span class='blueText' colspan=5>" + description + "</td>" +
+			"<td colspan=3>توضیحات : <span class='blueText' colspan=4>" + description + "</td>" +
 		"</tr>" +
 		"</table>";
 }
@@ -888,12 +889,16 @@ AccDocs.prototype.EditDoc = function(){
 
 AccDocs.prototype.SaveDoc = function(){
 	
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+		
 	this.docWin.down('form').getForm().submit({
 		clientValidation: true,
 		url: AccDocsObject.address_prefix + 'doc.data.php?task=saveDoc',
 		method : "POST",
 
 		success : function(form,action){
+			mask.hide();
 			AccDocsObject.docWin.hide();
 			AccDocsObject.grid.getStore().proxy.extraParams["query"] = "";
 			if(AccDocsObject.docWin.down("[name=DocID]").getValue() != "")
@@ -903,6 +908,7 @@ AccDocs.prototype.SaveDoc = function(){
 		},
 		failure : function(form,action)
 		{
+			mask.hide();
 			if(action.result.data != "")
 				Ext.MessageBox.alert("Error",action.result.data);
 			else
@@ -1497,7 +1503,9 @@ AccDocs.prototype.SaveItem = function(store,record){
 					Ext.MessageBox.alert("Error",st.data);
 				}
 			},
-			failure: function(){}
+			failure: function(){
+				mask.hide();
+			}
 		});
 	}
 	else

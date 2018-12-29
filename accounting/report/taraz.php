@@ -755,7 +755,7 @@ function AccReport_taraz()
 			xtype : "container",
 			colspan : 2,
 			html : "<input type=checkbox checked name=IncludeRaw id=IncludeRaw> گزارش شامل اسناد خام نیز باشد." + "<br>" +
-				"<input type=checkbox name=IncludeStart id=IncludeStart> گزارش شامل سند افتتاحیه باشد." + "<br>" + 	
+				"<input type=checkbox name=IncludeStart checked=true id=IncludeStart> گزارش شامل سند افتتاحیه باشد." + "<br>" + 	
 				"<input type=checkbox name=IncludeEnd id=IncludeEnd> گزارش شامل سند اختتامیه باشد."
 		}];
 	this.formPanel = new Ext.form.Panel({

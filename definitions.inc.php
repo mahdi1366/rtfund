@@ -4,7 +4,7 @@ define("BRANCH_UM", "3");
 define("BRANCH_PARK", "4");
 
 define("Default_Agent_Loan", "9");
-define("Default_BranchID", "3");
+define("Default_BranchID", "3"); 
 
 //................. TypeID = 9 .....................
 define("DOCTYPE_STARTCYCLE", "1");
@@ -32,6 +32,8 @@ define("DOCTYPE_WARRENTY_CANCEL", "21");
 define("DOCTYPE_SALARY", "22");
 define("DOCTYPE_SALARY_PAY", "24");
 define("DOCTYPE_EDITINCOMECHEQUE", "23");
+define("DOCTYPE_EXECUTE_EVENT", "26");
+
 //............  TypeID=2 ....................
 define("TAFTYPE_PERSONS", "1");
 define("TAFTYPE_YEARS", "2");
@@ -39,6 +41,10 @@ define("TAFTYPE_ACCOUNTS", "3");
 define("TAFTYPE_SUBAGENT", "4");
 define("TAFTYPE_BANKS", "6");
 define("TAFTYPE_ChequeStatus", "7");
+
+define("TAFSILITYPE_LOAN", "104");
+
+//...............................
 
 define("COSTID_ShortDeposite", "66"); // 210-01
 define("COSTID_Todiee", "63");
@@ -54,7 +60,7 @@ define("COSTID_saving", "65");
 define("COSTID_current", "202");
 define("COSTID_BRANCH_PARK", "17"); // 499 park branch
 define("COSTID_BRANCH_UM", "205"); // 900 um branch
-
+define("COSTID_DepositeProfit", "416");
 
 define("ShareBaseAmount", "1100000");
 

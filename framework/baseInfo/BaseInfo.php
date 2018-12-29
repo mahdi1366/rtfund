@@ -17,11 +17,15 @@ $dg->addColumn("", "IsActive", "", true);
 
 $col = $dg->addColumn("کد", "InfoID");
 $col->width = 100;
+if($_SESSION["USER"]["UserName"] =="admin" )
+{
+	$col->editor = ColumnEditor::NumberField();
+}
 
 $col = $dg->addColumn("شرح", "InfoDesc", "");
 $col->editor = ColumnEditor::TextField();
 
-if($_SESSION["USER"]["UserName"] =="admin")
+if($_SESSION["USER"]["UserName"] =="admin" )
 {
 	$col = $dg->addColumn("param1", "param1", "");
 	$col->editor = ColumnEditor::TextField(true);
@@ -188,6 +192,7 @@ BaseInfo.prototype.SaveBaseInfo = function(index){
 		method: "POST",
 		params: {
 			task: "SaveBaseInfo",
+			OldInfoID : (record.raw) ? record.raw.InfoID : 0,
 			record: Ext.encode(record.data)
 		},
 		success: function(response){

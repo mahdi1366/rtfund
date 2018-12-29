@@ -119,8 +119,11 @@ $index = rand(0, count($pics)-1);
 						case "WrongPassword":
 							document.getElementById("LoginErrorDiv").innerHTML = "رمز عبور وارد شده صحیح نمی باشد";
 							break;
-						case "InActiveUser":
+						case "PendingUser":
 							document.getElementById("LoginErrorDiv").innerHTML = "کلمه کاربری شما هنوز در صندوق فعال نشده است";
+							break;
+						case "InActiveUser":
+							document.getElementById("LoginErrorDiv").innerHTML = "کلمه کاربری شما غیر فعال شده است";
 							break;
 						
 						case "true":

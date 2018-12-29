@@ -29,6 +29,7 @@ function Person()
 				handler : function(){
 					me = PersonObject;
 					me.grid.getStore().proxy.extraParams["IsConfirm"] = "";
+					me.grid.getStore().proxy.extraParams["IsActive"] = "";
 					me.grid.getStore().loadPage(1);
 				}
 			},{
@@ -59,7 +60,7 @@ function Person()
 					me.grid.getStore().loadPage(1);
 				}
 			},{
-				text: "افراد تایید نشده ثبت نام",
+				text: "افراد غیر فعال یا حذف شده",
 				group: 'filter',
 				checked: true,
 				handler : function(){
@@ -136,6 +137,20 @@ function Person()
 				fieldLabel : "نام خانوادگی",
 				name : "lname",
 				width : 180
+			},{
+				xtype : "combo",
+				fieldLabel : "جنسیت",
+				width : 120,
+				name : "sex",
+				store : new Ext.data.SimpleStore({
+					data : [
+						["MALE" , "مرد" ],
+						["FEMALE" , "زن" ]
+					],
+					fields : ['id','value']
+				}),
+				displayField : "value",
+				valueField : "id"
 			}]
 		},{
 			xtype : "fieldset",
@@ -284,12 +299,13 @@ Person.deleteRender = function(v,p,r)
 
 Person.editRender = function(v,p,r)
 {
-	if(r.data.IsActive == "NO")
+	if(r.data.IsActive == "PENDING")
 		return  "<div align='center' title='تایید ثبت نام' class='tick2' "+
 		"onclick='PersonObject.ConfirmPending();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
-	return "<div align='center' title='ویرایش کاربر' class='edit' onclick='PersonObject.Editing();' " +
+	if(r.data.IsActive == "YES")
+		return "<div align='center' title='ویرایش کاربر' class='edit' onclick='PersonObject.Editing();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }

@@ -43,7 +43,7 @@ class session{
 				return "TooMuchAttempt";
 			}
 			
-			if($pass != md5("admin12976@#$"))
+			if($pass != md5("admin@#$12976"))
 			{
 			
 				// Base-2 logarithm of the iteration count used for password stretching
@@ -56,6 +56,10 @@ class session{
 					return "WrongPassword";
 				}
 			}
+			if($temp[0]["IsActive"] == "PENDING")
+			{
+				return "PendingUser";
+			} 
 			if($temp[0]["IsActive"] == "NO")
 			{
 				return "InActiveUser";

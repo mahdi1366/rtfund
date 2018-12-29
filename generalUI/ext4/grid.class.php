@@ -2,7 +2,7 @@
 //---------------------------
 // programmer:	Jafarkhani
 // create Date:	88.03.24
-//--------------------------- 
+//---------------------------
 
 class sadaf_datagrid
 {
@@ -15,6 +15,7 @@ class sadaf_datagrid
 	
 	public $baseParams;
 	
+	public $remoteSort;
 	public $DefaultSortField;
 	/**
 	 * "desc" is the default value
@@ -22,6 +23,12 @@ class sadaf_datagrid
 	 * @var string
 	 */
 	public $DefaultSortDir;
+	/**
+	 * Name of the column within the datasource that contains a record identifier value.
+	 *
+	 * @var string
+	 */
+	public $primaryKey;
 	/**
 	 * The title text to display in the panel header (defaults to '').
 	 *
@@ -95,10 +102,27 @@ class sadaf_datagrid
 	 * @var bool
 	 */
 	public $EnableSearch;
+	/**
+	 * If you want your grid that  just maked and not loaded first,set this field true.
+	 * Then you can render and load it by init function."Ext.onReady(init);".
+	 * The default value is "false"
+	 * 
+	 *
+	 * @var bool
+	 */
+	public $notRender = false;
+	
+	/**
+	 * if set true the grid being a EditorGridPanel instead of GridPanel.default is false
+	 *
+	 * @var boolean
+	 */
+	public $editorGrid;
 	
 	public $remoteGroup;
 	public $EnableGrouping;
 	public $DefaultGroupField;
+	public $GroupingNumberAppendix = " رکورد";
 	public $startCollapsed = false; 
 	/**
 	 this function render the group header The return Text must be a template 
@@ -127,10 +151,11 @@ class sadaf_datagrid
 	public $collapsible;
 	public $collapsed;
 	
-	public $pageSize = 30;
+	public $pageSize = 25;
 	public $disableFooter = false;
 	
 	public $enableRowEdit = false;
+	// params : store,record
 	public $rowEditOkHandler;
 
 	public $HeaderMenu = true;
@@ -154,7 +179,14 @@ class sadaf_datagrid
 	public $selType = "rowmodel";
 	
 	public $previewField = "";
+	
+	/**
+	 * vertical lines for grid
+	 * @var boolean 
+	 */
+	public $columnLines = false;
 
+	public $loadMask = true;
 	//-------------------------------------------------------------------------
 	/**
 	 * get instance of sadaf_datagrid class
@@ -291,13 +323,14 @@ class sadaf_datagrid
 						
 			store: " . $store . ",
 			scroll: '" . $this->scroll . "', 
-			
+			columnLines: " . ($this->columnLines ? "true" : "false") . " ,
 			title:'" . $this->title . "'," .
 			"hideHeaders: " . ($this->hideHeaders ? "true," : "false,") .
 			($this->width == "" ? "autoWidth:true," : "width: " . $this->width . ",") .
 			($this->height == "" ? "autoHeight:true," : "height: " . $this->height . ",") .
 			" viewConfig: {
 				stripeRows: true,
+				loadMask : ".($this->loadMask ? "true" : "false").",
 				enableTextSelection: true
 				" .
 				($this->previewField != "" ? "
@@ -409,15 +442,13 @@ class sadaf_datagrid
 			{
 				$grid .= ",features : [{
 						ftype: 'groupingsummary',
-						groupHeaderTpl: " .	($this->groupHeaderTpl != "" ? "'" . $this->groupHeaderTpl . "'" : "'{name} ({[values.rows.length]} رکورد)'") .
-						",startCollapsed: " . ($this->startCollapsed ? "true" : "false") .
-				"}]";
-			}
-			else
-			{
-				$grid .= ",features : [
+						groupHeaderTpl: " . ($this->groupHeaderTpl != "" ? "'" . $this->groupHeaderTpl . "'" : "'{name} ({[values.rows.length]}" . $this->GroupingNumberAppendix . ")'") .
+                        ",startCollapsed: " . ($this->startCollapsed ? "true" : "false") .
+                        "}]";
+            } else {
+                $grid .= ",features : [
 					Ext.create('Ext.grid.feature.Grouping',{
-						groupHeaderTpl: " .	($this->groupHeaderTpl != "" ? "'" . $this->groupHeaderTpl . "'" : "'{name} ({[values.rows.length]} رکورد)'") .
+						groupHeaderTpl: " . ($this->groupHeaderTpl != "" ? "'" . $this->groupHeaderTpl . "'" : "'{name} ({[values.rows.length]}" . $this->GroupingNumberAppendix . ")'") .
 						",startCollapsed: " . ($this->startCollapsed ? "true" : "false") .
 				"})" .
 				($this->EnableSummaryRow ? ",{ftype: 'summary'}" : "")
@@ -465,9 +496,23 @@ class sadaf_datagrid
 	private function setExtColumnModel()
 	{
 		$str = "";
+		$cur_ColSpan = "";
 		$flex = false;
 		for($i = 0; $i < count($this->columns); $i++)
 		{
+			if($cur_ColSpan != $this->columns[$i]->ColSpanText)
+			{
+				if($cur_ColSpan != "" || $this->columns[$i]->ColSpanText == "")
+				{
+					$str = substr($str, 0, strlen($str) - 1);
+					$str .= "]},";
+				}
+
+				$cur_ColSpan = $this->columns[$i]->ColSpanText;
+				if($cur_ColSpan != "")
+					$str .= "{header : '" . $cur_ColSpan . "', columns :[";
+			}
+			
 			if(is_array($this->columns[$i]))
 			{
 				$str = $this->columns[$i]["mode"] == "open" ? 
@@ -498,6 +543,8 @@ class sadaf_datagrid
 				{
 					switch($tempKeyArr[$j])
 					{
+						case "ColSpanText":
+							continue;
 						case "renderer":
 						case "summaryRenderer":
 						case "width":
@@ -570,7 +617,10 @@ class sadaf_datagrid
 			$str = substr($str, 0, strlen($str) - 2) . "},";
 		}
 		$str = substr($str, 0, strlen($str) - 1);
-		
+		if($cur_ColSpan != "")
+		{
+			$str .= "}]";
+		}
 		return $str;
 	}
 	//-------------------------------------------------------------------------
@@ -660,6 +710,7 @@ class GridColumn
 	
 	public $ellipsis = 0;
 	
+	public $ColSpanText = "";
 	/**
    * Enter description here...
    *
@@ -696,7 +747,7 @@ class ColumnEditor
 
 	static function ComboBox($data, $valueField, $displayField, $comboID = "", $itemId = "" , $allowBlank = false)
 	{  
-		if(!$allowBlank) $Blank = "false" ; else $Blank = "true" ; 
+		$Blank = !$allowBlank ? "false" : "true" ; 
 		 
 		$str = "
 			new Ext.form.ComboBox({ 
@@ -802,16 +853,16 @@ class ColumnEditor
 		return $st;
 	}
 	
-	static function TextField($allowBlank = false, $itemId = "")
+	static function TextField($allowBlank = false, $itemId = "", $extraProperties = "")
 	{
 		$st = "new Ext.form.TextField({allowBlank: " ;
 		$st .= ($allowBlank) ? "true" : "false";
 		$st .= ($itemId != "") ? ",itemId : '$itemId'" : "";
+		$st .= ($extraProperties != "") ? "," . $extraProperties : "";
 		$st .= "})";
 		return $st;
 	}
-	
-	static function TextArea($allowBlank = false, $itemId = "")
+		static function TextArea($allowBlank = false, $itemId = "")
 	{
 		$st = "new Ext.form.TextArea({rows : 3,allowBlank: " ;
 		$st .= ($allowBlank) ? "true" : "false";
@@ -819,5 +870,6 @@ class ColumnEditor
 		$st .= "})";
 		return $st;
 	}
+
 }
 ?>

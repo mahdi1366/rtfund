@@ -469,6 +469,9 @@ class common_component
 
 	static function PHPArray_to_JSSimpleArray($datasource)
 	{
+		if(!is_array($datasource))
+			return "[]";
+		
 		if(count($datasource) == 0)
 			return "[]";
 			
@@ -505,6 +508,27 @@ class common_component
 				$output .= self::PHPArray_to_JSObject($value);
 			else
 				$output .= "'" . $value . "'";
+			$output .= ",";
+		}
+		$output = substr($output,0,strlen($output)-1) . (!is_numeric($key) ? "}" : "]");
+		return $output;
+	}
+	static function PHPObject_to_JSObject($obj)
+	{
+		if(!$obj)
+			return "{}";
+			
+		$output = "";
+		$obj = (array) $obj;
+		foreach ($obj as $key => $value)
+		{
+			if(is_array($value) || $value === null)
+				continue;
+			if($output == "")
+				$output = !is_numeric($key) ? "{" : "[";
+				
+			$output .= !is_numeric($key) ? $key . ":" : "";
+			$output .= "'" . $value . "'";
 			$output .= ",";
 		}
 		$output = substr($output,0,strlen($output)-1) . (!is_numeric($key) ? "}" : "]");

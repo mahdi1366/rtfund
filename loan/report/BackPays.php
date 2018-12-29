@@ -104,7 +104,7 @@ function GetData(){
 			left join LON_loans l using(LoanID)
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=b.PayType)
 			left join ACC_IncomeCheques i using(IncomeChequeID)
-			join BSC_branches using(BranchID)
+			join BSC_branches br on(br.BranchID=r.BranchID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 			
@@ -121,9 +121,12 @@ function GetData(){
 	$query .= $group == "" ? " order by PayDate" : " order by " . $group;
 	
 	$dataTable = PdoDataAccess::runquery_fetchMode($query, $whereParam);
-	$query = PdoDataAccess::GetLatestQueryString();
-	//print_r(ExceptionHandler::PopAllExceptions());
 	
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		$query = PdoDataAccess::GetLatestQueryString();
+		print_r(ExceptionHandler::PopAllExceptions());
+	}
 	return $dataTable;
 }
 	

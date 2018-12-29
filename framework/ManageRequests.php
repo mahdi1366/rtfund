@@ -97,7 +97,6 @@ $col = $dgh->addColumn("ایجاد کننده", "RegPersonName");
 $col->width = 110;
 
 $col = $dgh->addColumn("عنوان", "title");
-$col->renderer = "function(v,p,r){ return TaskRequestObj.DescRender(v,p,r);}";
 
 $col = $dgh->addColumn("زمان ایجاد", "CreateDate", GridColumn::ColumnType_datetime);
 $col->width = 120;
@@ -114,6 +113,7 @@ $col->renderer = "function(v,p,r){ return TaskRequestObj.OperationRender(v,p,r);
 $col->width = 60;
 
 $dgh->addObject('this.FilterObj');
+$dgh->addPlugin("this.RequestDetails");
 
 $dgh->addButton("", "ایجاد درخواست جدید", "add", "function(){TaskRequestObj.AddTask();}");
 
@@ -136,35 +136,6 @@ $dgh->EnableSearch = false;
 $dgh->pageSize = 15;
 $grid = $dgh->makeGrid_returnObjects();
 
-//-------------------------------------------------------
-
-$dgh = new sadaf_datagrid("dg",$js_prefix_address . "ManageRequests.php?task=SelectItems","div_dg");
-
-$dgh->addColumn("", "TaskID","",true);
-$dgh->addColumn("", "RowID","",true);
-$dgh->addColumn("", "PersonID","",true);
-
-$col = $dgh->addColumn("ارسال کننده", "RegPersonName");
-$col->width = 110;
-
-$col = $dgh->addColumn("زمان ارسال", "DescDate", "", GridColumn::ColumnType_datetime);
-
-$col = $dgh->addColumn("زمان ایجاد", "CreateDate", GridColumn::ColumnType_datetime);
-$col->width = 120;
-
-$col = $dgh->addColumn("توضیحات", "description");
-
-
-$dgh->addButton("", "پاسخ", "add", "function(){TaskRequestObj.AddTaskItem();}");
-
-$dgh->width = 850;
-$dgh->DefaultSortField = "DescDate";
-$dgh->autoExpandColumn = "description";
-$dgh->DefaultSortDir = "DESC";
-$dgh->height = 450;
-$dgh->emptyTextOfHiddenColumns = true;
-$dgh->EnableSearch = false;
-$ItemsGrid = $dgh->makeGrid_returnObjects();
 ?>
 <style type="text/css">
 .pinkRow, .pinkRow td,.pinkRow div{ background-color:#FFB8C9 !important;}
@@ -182,6 +153,14 @@ TaskRequest.prototype = {
 
 function TaskRequest()
 {
+	this.RequestDetails = {
+		ptype: 'rowexpander',
+		rowBodyTpl : [
+			'<hr>','توضیحات: {details}<br>',
+			'پاسخ پشتیبان: {[values.DoneDesc == null ? "" : values.DoneDesc]}'
+		]
+	};
+	
 	this.FilterObj = Ext.button.Button({
 		text: 'فیلتر لیست',
 		iconCls: 'list',

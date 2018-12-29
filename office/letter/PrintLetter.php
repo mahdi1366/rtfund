@@ -55,8 +55,8 @@ if($LetterObj->LetterType == "INNER")
 }
 if($LetterObj->LetterType == "OUTCOME")
 {
-	$content .= $LetterObj->OrgPost . " " . $LetterObj->organization . "<br>" ;
-	$content .= " موضوع : " . $LetterObj->LetterTitle . "<br><br></b>";
+	$content .= $LetterObj->organization  . "<br>" . $LetterObj->OrgPost . "<br>" ;
+	$content .= "موضوع: " . $LetterObj->LetterTitle . "<br><br></b>";
 	$content .= str_replace("\r\n", "", $LetterObj->context);
 	
 	if(isset($_POST["sign"]))
@@ -71,14 +71,14 @@ foreach($dt as $row)
 {
 	if($row["FromPersonID"] != $LetterObj->PersonID || $row["IsCopy"] == "NO")
 		continue;	
-	$content .= "<b>" . "رونوشت : " . ($row["sex"] == "MALE" ? "جناب آقای " : "سرکار خانم ") . 
+	$content .= "<b>" . "رونوشت: " . ($row["sex"] == "MALE" ? "جناب آقای " : "سرکار خانم ") . 
 			$row['ToPersonName'] . "<br></b>";
 }
 
 if($LetterObj->OuterCopies != "")
 {
 	$LetterObj->OuterCopies = str_replace("\r\n", " , ", $LetterObj->OuterCopies);
-	$content .= "<br><b> رونوشت : " . $LetterObj->OuterCopies . "</b><br>";
+	$content .= "<br><b>رونوشت: " . $LetterObj->OuterCopies . "</b><br>";
 }
 ?>
 <html>
@@ -212,22 +212,22 @@ if($LetterObj->OuterCopies != "")
 					<thead>
 					<tr style="height:150px">
 						<td align="center" style="width:200px;">
-							<img  src="/framework/icons/logo.jpg" style="width:150px">
+							<img  src="/framework/icons/logo.jpg" style="width:120px">
 						</td>
 						<td align="center" style="font-family: titr;font-size: 14px;">
-							<b>بسمه تعالی</b>
+							<b>به نام خداوند جان و خرد</b>
 						</td>
 						<td style="width:200px;line-height: 25px;">
-						شماره نامه : <b>  <?= "<span dir=ltr>" . $letterYear . "-" . $LetterObj->LetterID."</span>" ?></b>
-						<br>تاریخ نامه : <b><?= DateModules::miladi_to_shamsi($LetterObj->LetterDate) ?></b>
+						شماره نامه :<b><?= "<span dir=ltr>" . $letterYear . "-" . $LetterObj->LetterID."</span>" ?></b>
+						<br>تاریخ نامه: <b><?= DateModules::miladi_to_shamsi($LetterObj->LetterDate) ?></b>
 						<?if($LetterObj->LetterType == "INCOME"){?> 
-						<br>شماره نامه وارده : <b><?= $LetterObj->InnerLetterNo ?></b>
-						<br>تاریخ نامه وارده : <b><?= DateModules::miladi_to_shamsi($LetterObj->InnerLetterDate)?></b>
+						<br>شماره نامه وارده: <b><?= $LetterObj->InnerLetterNo ?></b>
+						<br>تاریخ نامه وارده: <b><?= DateModules::miladi_to_shamsi($LetterObj->InnerLetterDate)?></b>
 						<?}?>
 						<?if($LetterObj->RefLetterID != ""){
 							$refObj = new OFC_letters($LetterObj->RefLetterID);
 							$RefletterYear = substr(DateModules::miladi_to_shamsi($refObj->LetterDate),0,4);
-							echo "<br>عطف به نامه : <b><span dir=ltr>" . 
+							echo "<br>عطف به نامه: <b><span dir=ltr>" . 
 								$RefletterYear . "-" . $LetterObj->RefLetterID. "</span></b>";
 						}
 						?>
@@ -248,12 +248,12 @@ if($LetterObj->OuterCopies != "")
 							<br><hr><br><br>
 							<div style="width:100%">
 								<div style="float:right;" class="tripleFooter">
-									<div style="float:right;width:20%;font-family: titr"> گیرنده : </div>
+									<div style="float:right;width:20%;font-family: titr">گیرنده: </div>
 									<div style="float:left;width:80%;">
 										<?= hebrevc($LetterObj->PostalAddress) ?></div>
 								</div>
 								<div style="float:left;" class="tripleFooter">
-									<div style="float:right;width:18%;font-family: titr"> فرستنده : </div>
+									<div style="float:right;width:18%;font-family: titr">فرستنده: </div>
 									<div style="float:left;width:82%;font-size: 11pt !important;">
 										<?= SoftwareName ?><br>
 										<?= OWNER_ADDRESS ?><br>
@@ -273,22 +273,22 @@ if($LetterObj->OuterCopies != "")
 					<thead>
 					<tr style="height:150px">
 						<td align="center" style="width:200px;">
-							<img  src="/framework/icons/logo.jpg" style="width:150px">
+							<img  src="/framework/icons/logo.jpg" style="width:120px">
 						</td>
 						<td align="center" style="font-family: titr;font-size: 14px;">
-							<b>بسمه تعالی</b>
+							<b>به نام خداوند جان و خرد</b>
 						</td>
 						<td style="width:200px;line-height: 25px;">
-						شماره نامه : <b>  <?= "<span dir=ltr>" . $letterYear . "-" . $LetterObj->LetterID."</span>" ?></b>
-						<br>تاریخ نامه : <b><?= DateModules::miladi_to_shamsi($LetterObj->LetterDate) ?></b>
+						شماره نامه:<b> <?= "<span dir=ltr>" . $letterYear . "-" . $LetterObj->LetterID."</span>" ?></b>
+						<br>تاریخ نامه: <b><?= DateModules::miladi_to_shamsi($LetterObj->LetterDate) ?></b>
 						<?if($LetterObj->LetterType == "INCOME"){?> 
-						<br>شماره نامه وارده : <b><?= $LetterObj->InnerLetterNo ?></b>
-						<br>تاریخ نامه وارده : <b><?= DateModules::miladi_to_shamsi($LetterObj->InnerLetterDate)?></b>
+						<br>شماره نامه وارده: <b><?= $LetterObj->InnerLetterNo ?></b>
+						<br>تاریخ نامه وارده: <b><?= DateModules::miladi_to_shamsi($LetterObj->InnerLetterDate)?></b>
 						<?}?>
 						<?if($LetterObj->RefLetterID != ""){
 							$refObj = new OFC_letters($LetterObj->RefLetterID);
 							$RefletterYear = substr(DateModules::miladi_to_shamsi($refObj->LetterDate),0,4);
-							echo "<br>عطف به نامه : <b><span dir=ltr>" . 
+							echo "<br>عطف به نامه: <b><span dir=ltr>" . 
 								$RefletterYear . "-" . $LetterObj->RefLetterID. "</span></b>";
 						}
 						?>
@@ -308,14 +308,14 @@ if($LetterObj->OuterCopies != "")
 					<tr style="height:150px;">
 						<td colspan="3" style="padding-right:30px;padding-left: 30px;">
 							<hr>
-							<b>نشانی :</b><br>
-							<b>شعبه پارک علم و فناوری خراسان : </b> مشهد، کیلومتر 12 جاده قوچان، روبروی شیر پگاه
-							<b> تلفن : 5003441 - فکس : 5003409 </b>
+							<b>نشانی:</b><br>
+							<b>شعبه پارک علم و فناوری خراسان: </b> مشهد، کیلومتر 12 جاده قوچان، روبروی شیر پگاه
+							<b>تلفن: 5003441 - فکس: 5003409 </b>
 							<br>
-							<b>شعبه دانشگاه فردوسی مشهد : </b>پردیس، درب غربی( ورودی شهید باهنر ) 
-							<b>تلفن : 38837392 - فکس : 38837392</b>
-							<br>سایت : <b>www.krrtf.ir</b>
-							<br>ایمیل : <b>krfn.ir@gmail.com</b>
+							<b>شعبه دانشگاه فردوسی مشهد: </b>پردیس، درب غربی( ورودی شهید باهنر ) 
+							<b>تلفن: 38837392 - فکس: 38837392</b>
+							<br>سایت: <b>www.krrtf.ir</b>
+							<br>ایمیل: <b>krfn.ir@gmail.com</b>
 						</td>
 					</tr>
 					</tfoot>

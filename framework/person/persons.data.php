@@ -22,6 +22,7 @@ if(isset($_REQUEST["task"]))
 
 function selectPersons(){
 	
+	ini_set("display_errors", "On");
 	$where = "1=1";
 	$param = array();
 	
@@ -72,14 +73,16 @@ function selectPersons(){
 		$where .= " AND IsConfirm = :e "; 
 		$param[":e"] = $_REQUEST["IsConfirm"];
 	}
-	if(!empty($_REQUEST["IsActive"]))
+	if(empty($_REQUEST["IncludeInactive"]))
 	{
-		$where .= " AND IsActive = :i "; 
-		$param[":i"] = $_REQUEST["IsActive"];
+		if(!empty($_REQUEST["IsActive"]))
+		{
+			$where .= " AND p.IsActive = :i "; 
+			$param[":i"] = $_REQUEST["IsActive"];
+		}
+		else
+			$where .= " AND p.IsActive in ('YES','PENDING')";
 	}
-	else
-		$where .= " AND p.IsActive in ('YES','PENDING')";
-	
 	if(!empty($_REQUEST["full"]))
 		$temp = BSC_persons::SelectAll($where . dataReader::makeOrder(), $param);
 	else

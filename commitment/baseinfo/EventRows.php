@@ -21,6 +21,13 @@ $dg->addColumn(" ", "CostID", "", true);
 $dg->addColumn(" ", "TafsiliType", "", true);
 $dg->addColumn(" ", "TafsiliType2", "", true);
 $dg->addColumn(" ", "TafsiliType3", "", true);
+$dg->addColumn(" ", "Tafsili", "", true);
+$dg->addColumn(" ", "Tafsili2", "", true);
+$dg->addColumn(" ", "Tafsili3", "", true);
+$dg->addColumn(" ", "TafsiliDesc", "", true);
+$dg->addColumn(" ", "Tafsili2Desc", "", true);
+$dg->addColumn(" ", "Tafsili3Desc", "", true);
+
 $dg->addColumn(" ", "CostDesc", "", true);
 $dg->addColumn(" ", "IsActive", "", true);
 $dg->addColumn(" ", "ChangeDate", "", true);
@@ -39,12 +46,15 @@ $col->width = 65;
 $col = $dg->addColumn(" عنوان حساب ", "CostDesc");
 
 $col = $dg->addColumn("گروه تفصیلی", "TafsiliTypeDesc");
+$col->renderer = "function(v,p,r){return v + '/' + (r.data.TafsiliDesc != null ? r.data.TafsiliDesc : '-');}";
 $col->width = 100; 
 
 $col = $dg->addColumn("گروه تفصیلی2", "TafsiliType2Desc");
+$col->renderer = "function(v,p,r){return v + '/' + (r.data.TafsiliDesc2 != null ? r.data.TafsiliDesc2 : '-');}";
 $col->width = 100;
 
 $col = $dg->addColumn("گروه تفصیلی3", "TafsiliType3Desc");
+$col->renderer = "function(v,p,r){return v + '/' + (r.data.TafsiliDesc3 != null ? r.data.TafsiliDesc3 : '-');}";
 $col->width = 100;
 
 $col = $dg->addColumn("مبنای صدور سند", "DocDesc");

@@ -152,6 +152,12 @@ foreach($dt as $row)
 }
 $DelayCheques .= "</table>";
 ?>
+<style>
+	.TBLheader{
+		background-color: gainsboro;
+		font-weight: bold;
+	}
+</style>
 <script type="text/javascript">
 
 LoanPay.prototype = {

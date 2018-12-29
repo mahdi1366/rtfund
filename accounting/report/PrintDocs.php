@@ -53,15 +53,25 @@ if(isset($_REQUEST["show"]))
 	
 	//------------------- group statement -----------------
 	$query .= " group by if(DocType=".DOCTYPE_ENDCYCLE.",2,1),DocDate,cc.CostCode";
-	
 	if(isset($_REQUEST["TafsiliGroup"]) && isset($_REQUEST["Tafsili2Group"]))
+	{
 		$query .= ",ItemID";
+		$colspan = 5;
+	}
 	else{
 		
 		if(isset($_REQUEST["TafsiliGroup"]))
-			$query .= ",TafsiliID";
+		{
+			$query .= ",di.TafsiliID";
+			$colspan = 4;
+		}
 		else if(isset($_REQUEST["Tafsili2Group"]))
-			$query .= ",TafsiliID2";
+		{
+			$query .= ",di.TafsiliID2";
+			$colspan = 4;
+		}
+		else
+			$colspan = 3;
 	}
 	//-----------------------------------------------------
 	
@@ -69,7 +79,9 @@ if(isset($_REQUEST["show"]))
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	BeginReport();
-	//echo PdoDataAccess::GetLatestQueryString();
+	
+	//if($_SESSION["USER"]["UserName"] == "admin")
+	//	echo PdoDataAccess::GetLatestQueryString();
 	echo '
 		<style>
 			@media print {.pageBreak {page-break-after:always;height:1px;} }
@@ -94,7 +106,7 @@ if(isset($_REQUEST["show"]))
 			if($index > 1)
 			{
 				echo '<tr class="header">
-					<td colspan="5">جمع : 
+					<td colspan="'.$colspan.'">جمع : 
 					' . ($CSUM != $DSUM ? "<span style=color:red>سند تراز نمی باشد</span>" :
 					CurrencyModulesclass::CurrencyToString($CSUM) . " ریال " ) . '</td>
 
@@ -106,25 +118,22 @@ if(isset($_REQUEST["show"]))
 						<div align="center" style="float:right;width:50%;" class=SignTbl>
 						امضاء مسئول حسابداری
 						</div>
-
 						<div align="center" style="float:left;width:50%;" class=SignTbl>
 						امضاء مدیر عامل
-						</div>
-						<br><br><br><br>
+						</div>						
 				';
 				echo "<div class=pageBreak></div>";
 			}
 			echo '<table class="DocTbl" border="1" cellspacing="0" cellpadding="2">
 				<thead>
 				<tr>
-					<td colspan=7>
+					<td colspan='.($colspan+2).'>
 						<table style="width:100%">
 						<tr>
-						<td style="width:25%"><img src="/framework/icons/logo.jpg" style="width:100px" /></td>
+						<td style="width:25%"><img src="/framework/icons/logo.jpg" style="width:70px" /></td>
 						<td style="height: 60px;font-family:titr;font-size:16px" align="center">سند حسابداری</td>
-						<td style="width:25%" align="center" >شماره سریال : 
-						'. $index .'<br>تاریخ سند :
-						'. DateModules::miladi_to_shamsi($row["DocDate"]).'</td>
+						<td style="width:25%" align="center" >شماره سریال :'. $index .
+							'<br>تاریخ سند :'. DateModules::miladi_to_shamsi($row["DocDate"]).'</td>
 						</tr>
 						</table>
 					</td>
@@ -132,10 +141,10 @@ if(isset($_REQUEST["show"]))
 				<tr class="header">
 					<td align="center" >کد حساب</td>
 					<td align="center" >شرح حساب</td>
-					<td align="center" >شرح ردیف</td>
-					<td align="center" >تفصیلی</td>
-					<td align="center" >تفصیلی2</td>
-					<td align="center" >بدهکار</td>
+					<td align="center" >شرح ردیف</td>' . 
+					(isset($_REQUEST["TafsiliGroup"]) ? '<td align="center" >تفصیلی</td>' : '') .
+					(isset($_REQUEST["Tafsili2Group"]) ? '<td align="center" >تفصیلی2</td>' : '') .
+					'<td align="center" >بدهکار</td>
 					<td align="center" >بستانکار</td>
 				</tr>
 				</thead>';
@@ -147,15 +156,15 @@ if(isset($_REQUEST["show"]))
 		echo "<tr>
 				<td >" . $row["CostCode"] . "</td>
 				<td >" . $row["CostDesc"] . "</td>
-				<td >" . $row["details"] . "</td>	
-				<td >" . $row["TafsiliDesc"] . "</td>
-				<td >" . $row["TafsiliDesc2"] . "</td>
-				<td >" . number_format($row["DSUM"]) . "</td>
+				<td >" . $row["details"] . "</td>" . 
+				(isset($_REQUEST["TafsiliGroup"]) ? "<td >" . $row["TafsiliDesc"] . "</td>" : "") .
+				(isset($_REQUEST["Tafsili2Group"]) ? "<td >" . $row["TafsiliDesc2"] . "</td>" : "") .
+				"<td >" . number_format($row["DSUM"]) . "</td>
 				<td >" . number_format($row["CSUM"]) . "</td>
 			</tr>";
 	}
 	echo '<tr class="header">
-		<td colspan="5">جمع : 
+		<td colspan="' . $colspan . '">جمع : 
 		' . ($CSUM != $DSUM ? "<span style=color:red>سند تراز نمی باشد</span>" :
 		CurrencyModulesclass::CurrencyToString($CSUM) . " ریال " ) . '</td>
 
@@ -207,7 +216,7 @@ function AccReport_printDocs()
 			columns :2
 		},
 		bodyStyle : "text-align:right;padding:5px",
-		title : "گزارش اسناد",
+		title : "چاپ تجمیعی اسناد",
 		defaults : {
 			labelWidth :120
 		},

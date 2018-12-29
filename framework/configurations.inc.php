@@ -9,8 +9,9 @@ class sys_config{
 	          "driver"   => "mysql",
 	          "host"     => "localhost",
 	          "database" => "main_rtfund",
+			  //"database" => "framewor_rtfund",
 	          "user"     => "root",
-	          "pass"     => "1297"
+	          "pass"     => ""
 	 );
 }
 
@@ -43,7 +44,7 @@ define("OWNER_ADDRESS", "شعبه دانشگاه فردوسی مشهد : پرد�
 	"<br> کد پستی : 9177948974" );
 define("OWNER_WELCOME_MESSAGE", "ثبت نام شما در صندوق پژوهش و فناوری خراسان رضوی تایید گردید<br>" . 
 		"می توانید از طریق لینک زیر وارد پرتال خود شوید <br>" . 
-		"<a href=portal.krrtf.ir target=blank>http://portal.krrtf.ir </a>");
+		"<a href=http://portal.krrtf.ir target=blank>http://portal.krrtf.ir </a>");
 define("SYSTEMID_framework", 1);
 define("SYSTEMID_accounting", 2);
 define("SYSTEMID_office", 4);

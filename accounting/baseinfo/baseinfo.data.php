@@ -714,6 +714,9 @@ function SaveCycle(){
 	$obj = new ACC_cycles();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
+	if($obj->IsClosed != "YES")
+		unset($obj->IsClosed);
+	
 	if(empty($obj->CycleID))
 		$result = $obj->Add();
 	else
@@ -738,9 +741,8 @@ function ReplaceCostCodes(){
 	
 	PdoDataAccess::runquery("update ACC_DocItems join ACC_docs using(DocID)
 		set CostID=:new 
-		where BranchID=:b AND CycleID=:c AND costID=:old ", array(
+		where CycleID=:c AND costID=:old ", array(
 			":c" => $_SESSION["accounting"]["CycleID"], 
-			":b" => $_SESSION["accounting"]["BranchID"],
 			":old" => $OLD_CostID,
 			":new" => $NEW_CostID
 		));

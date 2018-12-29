@@ -9,27 +9,22 @@ require_once inc_dataGrid;
 
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
-
-require_once '../baseinfo/baseinfo.class.php';
-$Role = ACC_roles::GetUserRole($_SESSION["USER"]["PersonID"]);
-if($Role == "")
-{
-	echo "<center class=blueText><br><b>سمت شما برای مدیریت اسناد حسابداری تعریف نشده است.
-		لطفا با مسئول سیستم تماس بگیرید</b>";
-	die();
-}
 //...................................................
 require_once 'docs.js.php';
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "doc.data.php?task=selectDocs","div_dg");
 
 $dg->addColumn("کد سند","DocID","",true);
+$dg->addColumn("","BranchID","",true);
 $dg->addColumn("","DocStatus","",true);
+$dg->addColumn("شعبه سند","BranchName","",true);
 $dg->addColumn("تاریخ سند","DocDate","",true);
 $dg->addColumn("تاریخ ثبت","RegDate","",true);
 $dg->addColumn("توضیحات","description","",true);
 $dg->addColumn("کد سند","LocalNo","",true);
 $dg->addColumn("نوع سند","DocType","",true);
+
+
 $dg->addColumn("ثبت کننده سند","regPerson","",true);
 $dg->addColumn("","SubjectDesc","",true);
 $dg->addColumn("","SubjectID","",true);
@@ -223,10 +218,8 @@ $checksgrid = $dgh->makeGrid_returnObjects();
 
 //-----------------------------------------
 
-$whereParam = array(":cid" => $_SESSION["accounting"]["CycleID"], 
-					":b" => $_SESSION["accounting"]["BranchID"]);
-$dt = PdoDataAccess::runquery("select ifnull(count(*),0) from ACC_docs where CycleID=:cid AND BranchID=:b", $whereParam);
-
+$whereParam = array(":cid" => $_SESSION["accounting"]["CycleID"]);
+$dt = PdoDataAccess::runquery("select ifnull(count(*),0) from ACC_docs where CycleID=:cid ", $whereParam);
 $docsCount = $dt[0][0];
 
 ?>

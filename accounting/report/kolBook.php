@@ -17,8 +17,7 @@ if(isset($_REQUEST["show"]))
 			b1.BlockDesc kol_desc,
 			DocType,
 			DocDate,
-			if(DocType in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE."), DocDate, 
-			substr(g2j(DocDate),6,2)  ) DocDate2,
+			substr(g2j(DocDate),6,2) DocMonth,
 			di.details,
 			di.details,
 			sum(DebtorAmount) DSUM, 
@@ -58,11 +57,16 @@ if(isset($_REQUEST["show"]))
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.StatusID != " . ACC_STEPID_RAW;
 	
+	if($_POST["ReportDate"] == "month")
+		$groupDate = "if(DocType in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE."), DocDate, substr(g2j(DocDate),6,2)  )";
+	else
+		$groupDate = "DocDate";
+	
 	$query .= " group by if ( DocType not in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE.") , 2, DocType),
-						 if(DocType in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE."), DocDate, substr(g2j(DocDate),6,2)  ),
+						 if(DocType in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE."), DocDate, $groupDate ),
 						 b1.BlockDesc ";
 	$query .= " order by b1.BlockCode, if ( DocType not in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE.") , 2, DocType),
-						if(DocType in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE."), DocDate, substr(g2j(DocDate),6,2)  ),
+						if(DocType in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_STARTCYCLE."), DocDate, $groupDate  ),
 						if(DebtorAmount>0,0,1),b1.BlockCode,DSUM,CSUM";
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
@@ -82,32 +86,32 @@ if(isset($_REQUEST["show"]))
 	if(!$rpg->excel)
 	{
 		BeginReport();
-		$rpg->headerContent = 
+		echo 
 		"<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 					گزارش دفتر کل
 					 <br> ".
-				 $_SESSION["accounting"]["BranchName"]. "<br>" . "دوره سال " .
-				$_SESSION["accounting"]["CycleID"] .
+				 "دوره سال " . $_SESSION["accounting"]["CycleID"] .
 				"</td>
-				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
+				<td width='200px' align='center' style='font-family:nazanin;font-size:13px'>تاریخ تهیه گزارش : " 
 			. DateModules::shNow() . "<br>";
 		if(!empty($_POST["fromDate"]))
 		{
-			$rpg->headerContent .= "<br>گزارش از تاریخ : " . $_POST["fromDate"] . ($_POST["toDate"] != "" ? " - " . $_POST["toDate"] : "");
+			echo "<br>گزارش از تاریخ : " . $_POST["fromDate"] . ($_POST["toDate"] != "" ? " - " . $_POST["toDate"] : "");
 		}
-		$rpg->headerContent .= "</td></tr></table>";
+		echo "</td></tr></table>";
 	}
 
 	function DocDateRender($row, $value){
 		
-		if($row["DocType"] == DOCTYPE_STARTCYCLE || $row["DocType"] == DOCTYPE_ENDCYCLE)
+		if($row["DocType"] == DOCTYPE_STARTCYCLE || $row["DocType"] == DOCTYPE_ENDCYCLE || $_POST["ReportDate"] == "day")
 			return DateModules::miladi_to_shamsi ($value);
 		
-		$DocDate = DateModules::miladi_to_shamsi($row["DocDate"]);
+		$DocDate = DateModules::miladi_to_shamsi($value);
 		$year = DateModules::GetYear($DocDate);
-		return $year . "/" . $value . "/" . DateModules::DaysOfMonth($year,$value*1);
+		$month = DateModules::GetMonth($DocDate);
+		return $year . "/" . $month . "/" . DateModules::DaysOfMonth($year,$month*1);
 	}
 	
 	function RemainRender(&$row, $value, $x, $prevRow){
@@ -131,7 +135,7 @@ if(isset($_REQUEST["show"]))
 		if($row["DocType"] == DOCTYPE_ENDCYCLE)
 			return "اختتامیه";
 		
-		return DateModules::GetMonthName($row["DocDate2"]*1);
+		return DateModules::GetMonthName($row["DocMonth"]*1);
 	}
 	
 	$rpg->addColumn("کل", "kol_code");
@@ -142,7 +146,7 @@ if(isset($_REQUEST["show"]))
 	$rpg->groupPerPage = true;
 	$rpg->GroupSortSource = false;
 	
-	$rpg->addColumn("تاریخ سند", "DocDate2", "DocDateRender");
+	$rpg->addColumn("تاریخ سند", "DocDate", "DocDateRender");
 	$rpg->addColumn("شرح سند", "DocType", "DocDescRender");
 	$col = $rpg->addColumn("بدهکار", "DSUM", "ReportMoneyRender");
 	$col->EnableSummary();
@@ -220,7 +224,13 @@ function AccReport_kolBook()
 		},{
 			xtype : "container",
 			colspan : 2,
-			html : "<input type=checkbox checked name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
+			html : "<input type=checkbox checked name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد" 
+		},{
+			xtype : "fieldset",
+			title : "گزارش بر اساس",
+			colspan : 2,
+			html : 	"<input type=radio checked name=ReportDate value='month'>ماهانه" + "&nbsp;&nbsp;&nbsp; " + 
+					"<input type=radio name=ReportDate value='day'>روزانه" + "&nbsp;&nbsp;&nbsp; "
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",

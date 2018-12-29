@@ -44,7 +44,7 @@ function MakeWhere(&$where, &$whereParam){
 				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 			continue;
 
-		if($key == "IsEndedInclude" || $key == "ZeroRemain")
+		if($key == "IsEndedInclude" || $key == "RemainStatus")
 			continue;
 
 		$prefix = "";
@@ -164,11 +164,8 @@ function GetData(){
 		}
 	}
 	
-	if(!empty($_POST["ZeroRemain"]))
+	if($_POST["RemainStatus"] != "all")
 	{
-		if($_SESSION["USER"]["UserName"] == "admin")
-		{
-		}
 		$currentIns = $returnArr[0]["InstallmentID"];
 		$tempArr = array();
 		$returnArr2 = array();
@@ -179,10 +176,25 @@ function GetData(){
 			
 			if($i+1 == count($returnArr) || $returnArr[$i+1]["InstallmentID"] != $currentIns)
 			{
-				if($returnArr[$i]["TotalRemainder"] == 0)
-					$returnArr2 = array_merge ($returnArr2, $tempArr);
+				switch($_POST["RemainStatus"])
+				{
+					case "paid":
+						if($returnArr[$i]["TotalRemainder"] < $returnArr[$i]["InstallmentAmount"])
+							$returnArr2 = array_merge ($returnArr2, $tempArr);
+						break;
+					case "notPaid":
+						if($returnArr[$i]["TotalRemainder"] >= $returnArr[$i]["InstallmentAmount"])
+							$returnArr2 = array_merge ($returnArr2, $tempArr);
+						break;
+					case "fullPaid":
+						if($returnArr[$i]["TotalRemainder"] == 0)
+							$returnArr2 = array_merge ($returnArr2, $tempArr);
+						break;
+				}
+				
 				$tempArr = array();
-				$currentIns = $returnArr[$i+1]["InstallmentID"];
+				if($i+1 < count($returnArr))
+					$currentIns = $returnArr[$i+1]["InstallmentID"];
 			}
 		}
 		
@@ -428,6 +440,24 @@ function LoanReport_installments()
 			valueField : "BranchID",
 			hiddenName : "BranchID"
 		},{
+			xtype : "combo",
+			width : 370,
+			colspan : 2, 
+			store : new Ext.data.SimpleStore({
+				data : [
+					["all" , "همه موارد" ],
+					["notPaid" , "هیچ مقداری از قسط پرداخت نشده است" ],
+					["paid" , "مقداری از قسط یا کل آن پرداخت شده است" ],
+					["fullPaid" , "قسط کامل پرداخت شده است" ]
+				],
+				fields : ['id','value']
+			}),
+			displayField : "value",
+			valueField : "id",
+			hiddenName : "RemainStatus",
+			fieldLabel : "وضعیت قسط",
+			value : "all"
+		},{
 			xtype : "numberfield",
 			name : "fromRequestID",
 			hideTrigger : true,
@@ -459,10 +489,6 @@ function LoanReport_installments()
 			xtype : "container",
 			colspan : 2,
 			html : "<input type=checkbox name=IsEndedInclude >  گزارش شامل وام های خاتمه یافته نیز باشد"
-		},{
-			xtype : "container",
-			colspan : 2,
-			html : "<input type=checkbox name=ZeroRemain >  قسط کامل پرداخت شده باشد"
 		},{
 			xtype : "fieldset",
 			title : "ستونهای گزارش",

@@ -57,9 +57,9 @@ switch($task)
 }
 
 function selectDocs() {
-	$where = " sd.CycleID=:cid AND sd.BranchID=:b ";
-	$whereParam = array(":cid" => $_SESSION["accounting"]["CycleID"], 
-						":b" => $_SESSION["accounting"]["BranchID"]);
+	$where = " sd.CycleID=:cid ";
+	$whereParam = array(":cid" => $_SESSION["accounting"]["CycleID"]);
+	
 	if (isset($_GET["fields"]) && !empty($_GET["query"])) {
 		switch ($_GET["fields"]) {
 			case "DocID":
@@ -94,7 +94,6 @@ function saveDoc() {
 	$obj = new ACC_docs();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
-	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
 
 	if ($obj->DocID == "") {
 		$obj->RegDate = DateModules::Now();
@@ -113,10 +112,6 @@ function saveDoc() {
 		die();
 	}
 
-	/*$dt = PdoDataAccess::runquery("select count(*) from ACC_docs where DocID<? 
-		AND CycleID=" . $_SESSION["accounting"]["CycleID"] . 
-		" AND BranchID=" . $_SESSION["accounting"]["BranchID"] , array($obj->DocID));
-	echo Response::createObjectiveResponse(true, $dt[0][0] + 1);*/
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
@@ -210,13 +205,14 @@ function CopyDoc(){
 	}
 	
 	$RefDocID = $_POST["DocID"];
+	$RefDocObj = new ACC_docs($RefDocID);
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
 	$hobj = new ACC_docs();
 	$hobj->CycleID = $_SESSION["accounting"]["CycleID"];
-	$hobj->BranchID = $_SESSION["accounting"]["BranchID"];
+	$hobj->BranchID = $RefDocObj->BranchID;
 	$hobj->RegDate = DateModules::Now();
 	$hobj->regPersonID = $_SESSION['USER']["PersonID"];
 	$hobj->DocDate = PDONOW;
@@ -264,10 +260,9 @@ function GetSearchCount() {
     
 	$query = "select count(*) as CurrentPage 
 		from ACC_docs dh
-		where BranchID=:b AND CycleID=:c AND LocalNo < :n ";
+		where CycleID=:c AND LocalNo < :n ";
 	
     $param = array(":c" => $_SESSION["accounting"]["CycleID"], 
-					":b" => $_SESSION["accounting"]["BranchID"],
 					":n" => $_REQUEST['Number']);
 	
 	$dt = PdoDataAccess::runquery($query, $param);
@@ -285,8 +280,7 @@ function GroupStartFlow(){
 	
 	$where = "";
 	$param = array(
-		":c" => $_SESSION["accounting"]["CycleID"],
-		":b" => $_SESSION["accounting"]["BranchID"]
+		":c" => $_SESSION["accounting"]["CycleID"]
 	);
 	if(!empty($_POST["FromDate"]))
 	{
@@ -311,7 +305,7 @@ function GroupStartFlow(){
 	
 	$dt = PdoDataAccess::runquery("select DocID from ACC_docs d
 		join ACC_DocItems di using(DocID)
-		where StatusID=".ACC_STEPID_RAW." AND CycleID=:c AND BranchID=:b " . $where . "
+		where StatusID=".ACC_STEPID_RAW." AND CycleID=:c " . $where . "
 		group by d.DocID
 		having sum(DebtorAmount)=sum(CreditorAmount) ", $param);
 	if(count($dt) == 0)
@@ -672,9 +666,11 @@ function UpdateChecks(){
 
 function RegisterCloseDoc(){
 	
+	$BranchID = $_REQUEST["BranchID"];
+	
 	$dt = PdoDataAccess::runquery("select * from ACC_docs where DocType=" . DOCTYPE_CLOSECYCLE . " 
 		AND BranchID=? AND CycleID=?", 
-			array($_SESSION["accounting"]["CycleID"],$_SESSION["accounting"]["BranchID"]));
+			array($BranchID, $_SESSION["accounting"]["CycleID"]));
 	if(count($dt) > 0)
 	{
 		echo Response::createObjectiveResponse(false, "سند بستن حساب های موقت در این دوره قبلا صادر شده است");
@@ -687,7 +683,7 @@ function RegisterCloseDoc(){
 		$dt = PdoDataAccess::runquery("select * from ACC_docs 
 			where BranchID=? AND CycleID=? AND LocalNo=?" , 
 
-			array($_SESSION["accounting"]["BranchID"], 
+			array($BranchID, 
 				$_SESSION["accounting"]["CycleID"], 
 				$LocalNo));
 
@@ -707,7 +703,7 @@ function RegisterCloseDoc(){
 	$obj->regPersonID = $_SESSION['USER']["PersonID"];
 	$obj->DocDate = PDONOW;
 	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
-	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
+	$obj->BranchID = $BranchID;
 	$obj->description = "سند بستن حساب های موقت";
 	$obj->DocType = DOCTYPE_CLOSECYCLE;
 	$result = $obj->Add($pdo);
@@ -729,11 +725,11 @@ function RegisterCloseDoc(){
 		join ACC_blocks b1 on(level1=BlockID AND MainCostID>0)
 		join ACC_docs using(DocID)
 		where CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-			AND BranchID = " . $_SESSION["accounting"]["BranchID"] . "
+			AND BranchID = ?
 			
 		group by MainCostID
 		having sum(CreditorAmount-DebtorAmount)<>0
-	", array(), $pdo);
+	", array($BranchID), $pdo);
 	
 	PdoDataAccess::runquery("
 		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
@@ -749,11 +745,11 @@ function RegisterCloseDoc(){
 		join ACC_blocks b1 on(level1=BlockID AND MainCostID>0)
 		join ACC_docs using(DocID)
 		where CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-			AND BranchID = " . $_SESSION["accounting"]["BranchID"] . "
+			AND BranchID = ?
 			
 		group by i.CostID,i.TafsiliID,i.TafsiliID2	
 		having sum(CreditorAmount-DebtorAmount)<>0
-	", array(), $pdo);
+	", array($BranchID), $pdo);
 	
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
@@ -777,9 +773,11 @@ function RegisterCloseDoc(){
 
 function RegisterEndDoc(){
 	
+	$BranchID = $_REQUEST["BranchID"];
+	
 	$dt = PdoDataAccess::runquery("select * from ACC_docs where DocType=" . DOCTYPE_ENDCYCLE . " 
 		AND BranchID=? AND CycleID=?", 
-			array($_SESSION["accounting"]["CycleID"],$_SESSION["accounting"]["BranchID"]));
+			array($BranchID, $_SESSION["accounting"]["CycleID"]));
 	if(count($dt) > 0)
 	{
 		echo Response::createObjectiveResponse(false, "سند اختتامیه در این دوره قبلا صادر شده است");
@@ -792,7 +790,7 @@ function RegisterEndDoc(){
 		$dt = PdoDataAccess::runquery("select * from ACC_docs 
 			where BranchID=? AND CycleID=? AND LocalNo=?" , 
 
-			array($_SESSION["accounting"]["BranchID"], 
+			array($BranchID, 
 				$_SESSION["accounting"]["CycleID"], 
 				$LocalNo));
 
@@ -812,7 +810,7 @@ function RegisterEndDoc(){
 	$obj->regPersonID = $_SESSION['USER']["PersonID"];
 	$obj->DocDate = PDONOW;
 	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
-	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
+	$obj->BranchID = $BranchID;
 	$obj->description = "سند اختتامیه";
 	$obj->DocType = DOCTYPE_ENDCYCLE;
 	$result = $obj->Add($pdo);
@@ -835,10 +833,10 @@ function RegisterEndDoc(){
 		from ACC_DocItems i
 		join ACC_docs using(DocID)
 		where CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-			AND BranchID = " . $_SESSION["accounting"]["BranchID"] . "
+			AND BranchID = ?
 		group by CostID,TafsiliID,TafsiliID2	
 		having sum(CreditorAmount-DebtorAmount)<>0
-	", array(), $pdo);
+	", array($BranchID), $pdo);
 	
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
@@ -861,9 +859,11 @@ function RegisterEndDoc(){
 
 function RegisterStartDoc(){
 	
+	$BranchID = $_REQUEST["BranchID"];
+	
 	$dt = PdoDataAccess::runquery("select * from ACC_docs where DocType=" . DOCTYPE_STARTCYCLE . "
 		AND BranchID=? AND CycleID=?", 
-			array($_SESSION["accounting"]["CycleID"],$_SESSION["accounting"]["BranchID"]));
+			array($BranchID,$_SESSION["accounting"]["CycleID"]));
 	if(count($dt) > 0)
 	{
 		echo Response::createObjectiveResponse(false, "سند افتتاحیه در این دوره قبلا صادر شده است");
@@ -876,7 +876,7 @@ function RegisterStartDoc(){
 		$dt = PdoDataAccess::runquery("select * from ACC_docs 
 			where BranchID=? AND CycleID=? AND LocalNo=?" , 
 
-			array($_SESSION["accounting"]["BranchID"], 
+			array($BranchID, 
 				$_SESSION["accounting"]["CycleID"], 
 				$LocalNo));
 
@@ -904,7 +904,7 @@ function RegisterStartDoc(){
 	$obj->regPersonID = $_SESSION['USER']["PersonID"];
 	$obj->DocDate = PDONOW;
 	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
-	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
+	$obj->BranchID = $BranchID;
 	$obj->description = "سند افتتاحیه";
 	$obj->DocType = DOCTYPE_STARTCYCLE;
 	$result = $obj->Add($pdo);
@@ -929,10 +929,10 @@ function RegisterStartDoc(){
 		join ACC_docs using(DocID)
 		where DocType <> ".DOCTYPE_ENDCYCLE." 
 			AND CycleID=" . ($_SESSION["accounting"]["CycleID"]-1) . "
-			AND BranchID = " . $_SESSION["accounting"]["BranchID"] . "
+			AND BranchID = ?
 		group by CostID,TafsiliID,TafsiliID2	
 		having sum(CreditorAmount-DebtorAmount)<>0
-	", array(), $pdo);
+	", array($BranchID), $pdo);
 	
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
@@ -971,7 +971,12 @@ function ComputeDoc(){
 function GetAccountSummary($ReturnMode = false, $BranchID = "", $where = "", $param = array()){
 	
 	$param[":c"] = $_SESSION["accounting"]["CycleID"];
-	$param[":b"] = $BranchID != "" ? $BranchID : $_SESSION["accounting"]["BranchID"];
+	
+	if($BranchID != "")
+	{
+		$where .= " AND b.BranchID = :b";
+		$param[":b"] = $BranchID;
+	}
 	
 	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
 	{
@@ -980,7 +985,7 @@ function GetAccountSummary($ReturnMode = false, $BranchID = "", $where = "", $pa
 	}	
 	
 	$temp = PdoDataAccess::runquery_fetchMode("
-		select t.TafsiliID,t.TafsiliDesc, 
+		select b.BranchID,BranchName,t.TafsiliID,t.TafsiliDesc, 
 			ifnull(pasandaz.amount,0) pasandaz,
 			ifnull(kootah.amount,0) kootah,
 			ifnull(boland.amount,0) boland,
@@ -988,29 +993,30 @@ function GetAccountSummary($ReturnMode = false, $BranchID = "", $where = "", $pa
 			packNo
 			
 		from ACC_tafsilis t 
+			join BSC_branches b
 			left join BSC_persons p on(t.TafsiliType=".TAFTYPE_PERSONS." AND t.ObjectID=p.PersonID)
-			left join DMS_packages pk on(pk.BranchID=:b AND pk.PersonID=p.PersonID)
+			left join DMS_packages pk on(b.BranchID=pk.BranchID AND pk.PersonID=p.PersonID)
 
-			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
+			left join (select BranchID,TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 						from ACC_DocItems join ACC_docs using(DocID)
-						where TafsiliType=".TAFTYPE_PERSONS." AND BranchID=:b AND CycleID=:c AND CostID=".COSTID_saving."
-						group by TafsiliID
-			)pasandaz on(pasandaz.TafsiliID=t.TafsiliID)
-			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
+						where TafsiliType=".TAFTYPE_PERSONS." AND CycleID=:c AND CostID=".COSTID_saving."
+						group by BranchID,TafsiliID
+			)pasandaz on(b.BranchID=pasandaz.BranchID AND pasandaz.TafsiliID=t.TafsiliID)
+			left join (select BranchID,TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 						from ACC_DocItems join ACC_docs using(DocID)
-						where TafsiliType=".TAFTYPE_PERSONS." AND BranchID=:b AND CycleID=:c AND CostID=".COSTID_ShortDeposite."
-						group by TafsiliID
-			)kootah on(kootah.TafsiliID=t.TafsiliID)
-			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
+						where TafsiliType=".TAFTYPE_PERSONS." AND CycleID=:c AND CostID=".COSTID_ShortDeposite."
+						group by BranchID,TafsiliID
+			)kootah on(b.BranchID=kootah.BranchID AND kootah.TafsiliID=t.TafsiliID)
+			left join (select BranchID,TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 						from ACC_DocItems join ACC_docs using(DocID)
-						where TafsiliType=".TAFTYPE_PERSONS." AND BranchID=:b AND CycleID=:c AND CostID=".COSTID_LongDeposite."
-						group by TafsiliID
-			)boland on(boland.TafsiliID=t.TafsiliID)
-			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
+						where TafsiliType=".TAFTYPE_PERSONS." AND CycleID=:c AND CostID=".COSTID_LongDeposite."
+						group by BranchID,TafsiliID
+			)boland on(b.BranchID=boland.BranchID AND boland.TafsiliID=t.TafsiliID)
+			left join (select BranchID,TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 						from ACC_DocItems join ACC_docs using(DocID)
-						where TafsiliType=".TAFTYPE_PERSONS." AND BranchID=:b AND CycleID=:c AND CostID=".COSTID_current."
-						group by TafsiliID
-			)jari on(jari.TafsiliID=t.TafsiliID)
+						where TafsiliType=".TAFTYPE_PERSONS." AND CycleID=:c AND CostID=".COSTID_current."
+						group by BranchID,TafsiliID
+			)jari on(b.BranchID=jari.BranchID AND jari.TafsiliID=t.TafsiliID)
 		where TafsiliType=" . TAFTYPE_PERSONS . $where . dataReader::makeOrder(), $param);
 	
 	if($ReturnMode)
@@ -1027,24 +1033,25 @@ function GetAccountFlow() {
 	
 	$CostID = $_REQUEST["BaseCostID"];
 	$TafsiliID = $_REQUEST["TafsiliID"];
+	$BranchID = $_REQUEST["BranchID"];
 	
 	$query = "select d.*,di.*
 		from ACC_DocItems di
 			join ACC_docs d using(DocID)
-		where d.BranchID=:b AND d.CycleID=:c
-			AND di.CostID=:cost AND di.TafsiliType = :t AND di.TafsiliID=:tid " . dataReader::makeOrder();
+		where d.BranchID=:branch AND d.CycleID=:cycle
+			AND di.CostID=:cost AND di.TafsiliType = :ttype AND di.TafsiliID=:tid " . dataReader::makeOrder();
 	
 	$param = array(
-		":c" => $_SESSION["accounting"]["CycleID"],
-		":b" => $_SESSION["accounting"]["BranchID"],
+		":cycle" => $_SESSION["accounting"]["CycleID"],
+		":branch" => $BranchID,
 		":cost" => $CostID,
-		":t" => TAFTYPE_PERSONS,
+		":ttype" => TAFTYPE_PERSONS,
 		":tid" => $TafsiliID
 	);
 	
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
 	$no = $temp->rowCount();
-	
+	//echo PdoDataAccess::GetLatestQueryString();
 	//------------------------------------------------
 	$BlockedAmount = ACC_CostBlocks::GetBlockAmount($CostID, TAFTYPE_PERSONS, $TafsiliID);
 	//------------------------------------------------
@@ -1054,6 +1061,7 @@ function GetAccountFlow() {
 
 function RegisterInOutDoc() {
 	
+	$BranchID = $_REQUEST["BranchID"];
 	$BaseCostID = $_REQUEST["BaseCostID"];
 	$BaseTafsiliID = $_REQUEST["BaseTafsiliID"];
 	$mode = $_POST["mode"]*1;
@@ -1062,7 +1070,7 @@ function RegisterInOutDoc() {
 	$CostID = $_POST["CostID"];
 	$CostObj = new ACC_CostCodes($_POST["CostID"]);
 	
-	$result = RegisterInOutAccountDoc($_SESSION["accounting"]["BranchID"], $_POST["amount"], $mode, $description, 
+	$result = RegisterInOutAccountDoc($BranchID, $_POST["amount"], $mode, $description, 
 			$BaseCostID, TAFTYPE_PERSONS, $BaseTafsiliID, "", "", 
 			$CostID, $CostObj->TafsiliType, $_POST["TafsiliID"], $CostObj->TafsiliType2, $_POST["TafsiliID2"]);
 	

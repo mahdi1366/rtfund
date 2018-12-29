@@ -501,6 +501,20 @@ function IncomeCheque(){
 				columns : 2
 			},
 			items :[{
+				xtype : "combo",
+				store : new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: '/framework/baseInfo/baseInfo.data.php?task=SelectBranches',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ["BranchID", "BranchName"]
+				}),
+				displayField: 'BranchName',
+				valueField : "BranchID",
+				name : "BranchID",
+				fieldLabel : "شعبه ثبت سند"
+			},{
 				xtype : "shdatefield",
 				name : "ChequeDate",
 				allowBlank : false,

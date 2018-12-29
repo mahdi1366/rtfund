@@ -34,6 +34,7 @@ $col->align = "center";*/
 
 $col = $dg->addColumn("بسته شده", "IsClosed", "string");
 $col->renderer = "function(v){if(v == 'YES') return '*';}";
+$col->editor = ColumnEditor::CheckField("", "YES");
 $col->sortable = false;
 $col->width = 70;
 

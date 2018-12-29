@@ -158,6 +158,7 @@ for ($i = 0; $i < count($menus); $i++) {
 	<script type="text/javascript" src="/generalUI/ext4/ux/CurrencyField.js"></script>
 	<script type="text/javascript" src="/generalUI/ext4/ux/grid/ExtraBar.js"></script>
 	<script type="text/javascript" src="/generalUI/ext4/ux/ImageViewer.js"></script>
+	<script type="text/javascript" src="/generalUI/pdfobject.js"></script>
 	<script>
 			var required = '<span style="color:red;font-weight:bold" data-qtip="فیلد اجباری">*</span>';
 			var portal;

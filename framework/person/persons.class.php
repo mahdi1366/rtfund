@@ -12,6 +12,7 @@ class BSC_persons extends PdoDataAccess{
 	public $IsReal;
 	public $fname;
 	public $lname;
+	public $sex; 
 	public $CompanyName;
 	public $NationalID;
 	public $EconomicID;
@@ -161,8 +162,8 @@ class BSC_persons extends PdoDataAccess{
 	static function DeletePerson($PersonID){
 		
 		PdoDataAccess::runquery("update BSC_persons set IsActive='NO' where PersonID=?", array($PersonID));
-		PdoDataAccess::runquery("update ACC_tafsilis set IsActive='NO' 
-			where TafsiliType=1 AND ObjectID=?", array($PersonID));
+		/*PdoDataAccess::runquery("update ACC_tafsilis set IsActive='NO' 
+			where TafsiliType=1 AND ObjectID=?", array($PersonID));*/
 
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_delete;

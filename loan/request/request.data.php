@@ -252,11 +252,7 @@ function SelectAllRequests(){
 		$where .= " AND RequestID=:r";
 		$param[":r"] = $_REQUEST["RequestID"];
 	}
-	else if($_SESSION["USER"]["IsStaff"] == "YES")
-	{
-		$branches = FRW_access::GetAccessBranches();
-		$where .= " AND BranchID in(" . implode(",", $branches) . ")";
-	}
+	
 	$param = array();
 	
 	if(!empty($_REQUEST["RequestID"]))
@@ -785,6 +781,8 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 		$installmentArray = LON_requests::ComputeInstallment_TanzilFormula($obj, $installmentArray);
 		if(!$installmentArray)
 		{
+			if($returnMode)
+				return false;
 			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 			die();
 		}
@@ -855,6 +853,8 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 			$obj2->InstallmentAmount = $i == $obj->InstallmentCount*1-1 ? $LastPay : $allPay;
 			if(!$obj2->AddInstallment($pdo))
 			{
+				if($returnMode)
+					return false;
 				$pdo->rollBack();
 				echo Response::createObjectiveResponse(false, "2");
 				die();
@@ -946,10 +946,13 @@ function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false, $pdo2
 	}
 	
 	if($returnMode)
+	{
+		if($pdo2 == null)
+			$pdo->commit();	
 		return true;
+	}
 	
-	$pdo->commit();
-	
+	$pdo->commit();	
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }

@@ -112,6 +112,24 @@
 				displayField : "InfoDesc"
 			},{
 				xtype : "combo",
+				fieldLabel : "تفصیلی",
+				itemId : "Tafsili",
+				name : "Tafsili",
+				store: new Ext.data.Store({
+					fields:["InfoID","InfoDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + 'baseinfo.data.php?task=selectEventTafsilis',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad : true
+				}),
+				queryMode : "local",
+				typeAhead: false,
+				valueField : "InfoID",
+				displayField : "InfoDesc"
+			},{
+				xtype : "combo",
 				name : "TafsiliType2",
 				fieldLabel : "گروه تفصیلی2",
 				store :  new Ext.data.Store({
@@ -127,6 +145,24 @@
 				displayField : "InfoDesc"
 			},{
 				xtype : "combo",
+				fieldLabel : "تفصیلی2",
+				itemId : "Tafsili2",
+				name : "Tafsili2",
+				store: new Ext.data.Store({
+					fields:["InfoID","InfoDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + 'baseinfo.data.php?task=selectEventTafsilis',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad : true
+				}),
+				queryMode : "local",
+				typeAhead: false,
+				valueField : "InfoID",
+				displayField : "InfoDesc"
+			},{
+				xtype : "combo",
 				name : "TafsiliType3",
 				fieldLabel : "گروه تفصیلی3",
 				store :  new Ext.data.Store({
@@ -139,6 +175,24 @@
 				}),
 				valueField : "InfoID",
 				queryMode : 'local',
+				displayField : "InfoDesc"
+			},{
+				xtype : "combo",
+				fieldLabel : "تفصیلی3",
+				itemId : "Tafsili3",
+				name : "Tafsili3",
+				store: new Ext.data.Store({
+					fields:["InfoID","InfoDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + 'baseinfo.data.php?task=selectEventTafsilis',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad : true
+				}),
+				queryMode : "local",
+				typeAhead: false,
+				valueField : "InfoID",
 				displayField : "InfoDesc"
 			},{
 				xtype : "combo",

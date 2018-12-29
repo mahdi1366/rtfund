@@ -9,7 +9,7 @@ require_once inc_dataReader;
 require_once 'letter/letter.class.php';
 require_once 'workflow/wfm.class.php';
 
-$dt = OFC_letters::SelectReceivedLetters(" AND s.IsSeen='NO'");
+$dt = OFC_letters::SelectReceivedLetters(" AND s.IsDeleted='NO' AND s.IsSeen='NO'");
 $NewReceived = $dt->rowCount();
 
 $dt = OFC_letters::SelectDraftLetters();

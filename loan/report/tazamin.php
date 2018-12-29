@@ -1,7 +1,7 @@
 <?php
 //-------------------------
 // programmer:	Jafarkhani
-// Create Date:	94.12
+// Create Date:	97.09
 //-------------------------
 
 require_once '../header.inc.php';
@@ -20,6 +20,12 @@ function IsFreeRender($row, $value){
 }
 
 $page_rpg = new ReportGenerator("mainForm","LoanReport_totalObj");
+
+$page_rpg->addColumn("نوع تضمین", "DocumentTitle");
+$page_rpg->addColumn("شماره سریال", "DocumentNo");
+$page_rpg->addColumn("مبلغ تضمین", "DocumentAmount");
+$page_rpg->addColumn("سایر اطلاعات تضمین", "DocumentOtherInfo");
+
 $col = $page_rpg->addColumn("شماره وام", "RRequestID");
 $col->queryField = "r.RequestID";
 
@@ -56,7 +62,6 @@ $page_rpg->addColumn("کارمزد مشتری", "CustomerWage");
 $page_rpg->addColumn("کارمزد صندوق", "FundWage");
 $page_rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
 $page_rpg->addColumn("شماره قدیم", "imp_VamCode");
-$page_rpg->addColumn("تضامین", "tazamin");
 $page_rpg->addColumn("وضعیت", "StatusDesc");
 $page_rpg->addColumn("جمع اقساط", "TotalInstallmentAmount");
 $col = $page_rpg->addColumn("تاریخ آخرین قسط", "MaxInstallmentDate");
@@ -70,8 +75,6 @@ $page_rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount");
 $page_rpg->addColumn("مانده قابل پرداخت", "remainder");
 $page_rpg->addColumn("مبلغ تاخیر", "ForfeitAmount");
 $page_rpg->addColumn("تاخیر کل وام", "TotalForfeitAmount");
-$page_rpg->addColumn("جمع اقساط تا تاریخ موثر", "EffectiveInstallmentAmounts");
-$page_rpg->addColumn("جمع پرداخت های مشتری تا تاریخ موثر", "EffectiveBackPayAmounts");
 
 function MakeWhere(&$where, &$pay_where, &$whereParam){
 
@@ -109,12 +112,6 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 		{
 			InputValidation::validate($value, InputValidation::Pattern_NumComma);
 			$where .= " AND SubAgentID in(" . $value . ")";
-			continue;
-		}
-		if($key == "EffectiveDate")
-		{
-			$whereParam[":effectiveDate"] = !empty($_POST["EffectiveDate"]) ? 
-			DateModules::shamsi_to_miladi($_POST["EffectiveDate"], "-") : DateModules::Now();
 			continue;
 		}
 		
@@ -163,8 +160,6 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 		$whereParam[":$key"] = $value;
 	}
 	
-	if(!isset($whereParam[":effectiveDate"]))
-		$whereParam[":effectiveDate"] = DateModules::Now();
 }	
 	
 function GetData($mode = "list"){
@@ -176,7 +171,14 @@ function GetData($mode = "list"){
 	$whereParam = array();
 	MakeWhere($where, $pay_where, $whereParam);
 		
-	$query = "select r.*,l.LoanDesc,p.*,
+	$query = "select
+		
+				b1.InfoDesc DocumentTitle,
+				t_params.DocumentNo,
+				t_params.DocumentAmount,
+				t_params.DocumentOtherInfo,
+				
+				r.*,l.LoanDesc,p.*,
 				r.RequestID as RRequestID,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				
@@ -204,13 +206,24 @@ function GetData($mode = "list"){
 				MaxInstallmentDate,
 				MaxPayDate,
 				ifnull(LastPayAmount,0) LastPayAmount,
-				t5.amount installmentsToNow,
-				tazamin,
-				t6.amount EffectiveInstallmentAmounts,
-				t7.amount EffectiveBackPayAmounts".
+				t5.amount installmentsToNow".
 				($mode == "list" && $userFields != "" ? "," . $userFields : "")."
 				
-			from LON_requests r
+			from DMS_documents d
+			join BaseInfo b1 on(InfoID=d.DocType AND TypeID=8)
+			left join ( 
+				select DocumentID,
+					group_concat(if(KeyTitle='no',paramValue,'') separator '') DocumentNo,
+					group_concat(if(KeyTitle='amount',paramValue,'') separator '') DocumentAmount,
+					group_concat(if((KeyTitle<>'amount' AND KeyTitle<>'no') or KeyTitle is null,
+						concat(ParamDesc,' : ', paramValue, '<br>'),'') separator '') DocumentOtherInfo
+					from DMS_DocParamValues 
+					join DMS_DocParams using(ParamID)
+					group by DocumentID 
+				)t_params on(t_params.DocumentID=d.DocumentID)
+			
+			join LON_requests r on(d.ObjectID=r.RequestID)
+				
 			join LON_ReqParts p on(r.RequestID=p.RequestID AND p.IsHistory='NO')
 			left join LON_loans l using(LoanID)
 			left join BSC_SubAgents sb on(sb.SubID=SubAgentID)
@@ -270,54 +283,24 @@ function GetData($mode = "list"){
 			)t3 on(r.RequestID=t3.RequestID)
 			
 			left join (
-				select ObjectID,group_concat(title,' به شماره سريال ',num, ' و مبلغ ', 
-					format(amount,2) separator '<br>') tazamin
-				from (	
-					select ObjectID,InfoDesc title,group_concat(if(KeyTitle='no',paramValue,'') separator '') num,
-					group_concat(if(KeyTitle='amount',paramValue,'') separator '') amount
-					from DMS_documents d
-					join BaseInfo b1 on(InfoID=d.DocType AND TypeID=8)
-					join DMS_DocParamValues dv  using(DocumentID)
-					join DMS_DocParams using(ParamID)
-				    where ObjectType='loan' AND b1.param1=1
-					group by ObjectID, DocumentID
-				)t
-				group by ObjectID
-			)t4 on(t4.ObjectID=r.RequestID)
-			
-			left join (
 				select RequestID,sum(InstallmentAmount) amount from LON_installments
 				where history='NO' AND IsDelayed='NO' AND InstallmentDate<= " . PDONOW . "
 				group by RequestID
 			)t5 on(r.RequestID=t5.RequestID)
 			
-			left join (
-				select RequestID,sum(InstallmentAmount) amount from LON_installments
-				where history='NO' AND IsDelayed='NO' AND InstallmentDate <= :effectiveDate
-				group by RequestID
-			)t6 on(r.RequestID=t6.RequestID)
-			
-			left join (
-				select RequestID,sum(PayAmount) amount
-				from LON_BackPays left join ACC_IncomeCheques i using(IncomeChequeID)
-				where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-						AND PayDate <= :effectiveDate 
-				group by RequestID
-			)t7 on(r.RequestID=t7.RequestID)
-			
-			where 1=1 " . $where;
+			where d.ObjectType='loan' AND b1.param1=1 " . $where;
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
-	$query .= $group == "" || $mode == "chart" ? " group by r.RequestID" : " group by " . $group;
+	$query .= $group == "" || $mode == "chart" ? " group by d.DocumentID" : " group by " . $group;
 	$query .= $group == "" || $mode == "chart" ? " order by r.RequestID" : " order by " . $group;	
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
 	$query = PdoDataAccess::GetLatestQueryString();
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		BeginReport();
-		print_r(ExceptionHandler::PopAllExceptions());
-		echo PdoDataAccess::GetLatestQueryString();
+		//BeginReport();
+		//print_r(ExceptionHandler::PopAllExceptions());
+		//echo PdoDataAccess::GetLatestQueryString();
 		
 	}
 	
@@ -327,8 +310,16 @@ function GetData($mode = "list"){
 		$ComputeArr = LON_requests::ComputePayments($dataTable[$i]["RequestID"], $dt);
 		$TotalRemain = LON_requests::GetTotalRemainAmount($dataTable[$i]["RequestID"], $ComputeArr);
 		$dataTable[$i]["remainder"] = $TotalRemain;
-		$dataTable[$i]["ForfeitAmount"] = $ComputeArr[count($ComputeArr)-1]["ForfeitAmount"];
-		$dataTable[$i]["TotalForfeitAmount"] = LON_requests::GetTotalForfeitAmount($dataTable[$i]["RequestID"], $ComputeArr);
+		if(count($ComputeArr) > 0)
+		{
+			$dataTable[$i]["ForfeitAmount"] = $ComputeArr[count($ComputeArr)-1]["ForfeitAmount"];
+			$dataTable[$i]["TotalForfeitAmount"] = LON_requests::GetTotalForfeitAmount($dataTable[$i]["RequestID"], $ComputeArr);
+		}
+		else
+		{
+			$dataTable[$i]["ForfeitAmount"] = 0;
+			$dataTable[$i]["TotalForfeitAmount"] = 0;
+		}
 	}
 	
 	return $dataTable; 
@@ -345,6 +336,12 @@ function ListData($IsDashboard = false){
 	}
 	
 	$rpg->addColumn("شماره وام", "RRequestID");
+	
+	$rpg->addColumn("نوع تضمین", "DocumentTitle");
+	$rpg->addColumn("شماره سریال", "DocumentNo");
+	$rpg->addColumn("مبلغ تضمین", "DocumentAmount", "ReportMoneyRender");
+	$rpg->addColumn("سایر اطلاعات تضمین", "DocumentOtherInfo");
+		
 	$rpg->addColumn("نوع وام", "LoanDesc");
 	$rpg->addColumn("عنوان طرح", "PlanTitle");	
 	$rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
@@ -384,7 +381,6 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
 	$rpg->addColumn("شماره قدیم", "imp_VamCode");
 	//$rpg->addColumn("جاری/خاتمه", "IsEnded", "endedRender");
-	$rpg->addColumn("تضامین", "tazamin");
 	$rpg->addColumn("وضعیت", "StatusDesc");
 	$col = $rpg->addColumn("جمع اقساط", "TotalInstallmentAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
@@ -408,14 +404,6 @@ function ListData($IsDashboard = false){
 	$col->EnableSummary();
 	
 	$col = $rpg->addColumn("تاخیر کل وام", "TotalForfeitAmount", "ReportMoneyRender");
-	$col->ExcelRender = false;
-	$col->EnableSummary();
-	
-	$col = $rpg->addColumn("جمع اقساط تا تاریخ موثر", "EffectiveInstallmentAmounts", "ReportMoneyRender");
-	$col->ExcelRender = false;
-	$col->EnableSummary();
-	
-	$col = $rpg->addColumn("جمع پرداخت های مشتری تا تاریخ موثر", "EffectiveBackPayAmounts", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	
@@ -488,7 +476,7 @@ LoanReport_total.prototype.showReport = function(btn, e)
 	this.form = this.get("mainForm")
 	this.form.target = "_blank";
 	this.form.method = "POST";
-	this.form.action =  this.address_prefix + "total.php?show=true";
+	this.form.action =  this.address_prefix + "tazamin.php?show=true";
 	this.form.submit();
 	this.get("excel").value = "";
 	return;
@@ -727,22 +715,6 @@ function LoanReport_total()
 				"<input name=IsEnded type=radio value='NO' > جاری &nbsp;&nbsp;" +
 				"<input name=IsEnded type=radio value='' checked > هردو " 
 		},{
-			xtype : "combo",
-			store : new Ext.data.SimpleStore({
-				data : [
-					["BANK" , "فرمول بانک مرکزی" ],
-					["NEW" , "فرمول تنزیل اقساط" ]
-				],
-				fields : ['id','value']
-			}),
-			displayField : "value",
-			valueField : "id",
-			fieldLabel : "فرمول محاسبه",
-			queryMode : 'local',
-			width : 370,
-			hiddenName : "ComputeMode",
-			colspan : 2
-		},{
 			xtype : "shdatefield",
 			name : "fromEndReqDate",
 			fieldLabel : "تاریخ خاتمه از"
@@ -750,26 +722,6 @@ function LoanReport_total()
 			xtype : "shdatefield",
 			name : "toEndReqDate",
 			fieldLabel : "تا تاریخ"
-		},{
-			xtype : "shdatefield",
-			name : "EffectiveDate",
-			fieldLabel : "تاریخ موثر",
-			value : '<?= DateModules::shNow() ?>'
-		},{
-			xtype : "container",
-			html : "جمع اقساط و جمع پرداخت های مشتری تا تاریخ موثر نیز محاسبه می گردد."
-		},{
-			xtype : "fieldset",
-			title : "اطلاعات مشتری",
-			colspan : 2,
-			layout : {
-				type : "table",
-				columns : 2
-			},
-			defaults : {
-				width : 350
-			},
-			items : framework.PersonFilterList
 		},{
 			xtype : "fieldset",
 			title : "ستونهای گزارش",
@@ -851,7 +803,7 @@ LoanReport_total.prototype.ShowChart = function()
 	this.form = this.get("mainForm")
 	this.form.target = "_blank";
 	this.form.method = "POST";
-	this.form.action =  this.address_prefix + "total.php?chart=true";
+	this.form.action =  this.address_prefix + "tazamin.php?chart=true";
 	this.form.submit();
 	return;
 }

@@ -19,7 +19,7 @@ function showSummary(){
 	$rpg->excel = !empty($_POST["excel"]);
 
 	$param = array();
-	$where = " AND (pasandaz.amount>0 or kootah.amount>0 or	boland.amount>0 or jari.amount>0)";
+	$where = " AND (pasandaz.amount<>0 or kootah.amount<>0 or boland.amount<>0 or jari.amount<>0)";
 	if(!empty($_POST["TafsiliID"]))
 	{
 		$where .= " AND t.TafsiliID=:t";
@@ -27,6 +27,8 @@ function showSummary(){
 	}
 	$rpg->mysql_resource = GetAccountSummary(true, $_POST["BranchID"], $where, $param);
 
+	//echo PdoDataAccess::GetLatestQueryString();
+	
 	$rpg->addColumn("تفصیلی", "TafsiliDesc");
 	$rpg->addColumn("شماره پرونده", "packNo");
 	if(isset($_POST["savingCost"]))	
@@ -323,7 +325,6 @@ function AccReport_CustomerAccount()
 			fieldLabel : "شعبه",
 			queryMode : 'local',
 			allowBlank : false,
-			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
 			displayField : "BranchName",
 			valueField : "BranchID",
 			hiddenName : "BranchID"
@@ -352,7 +353,7 @@ function AccReport_CustomerAccount()
 				xtype: "container",
 				html : "<input type=checkbox name=savingCost> حساب پس انداز &nbsp;&nbsp;&nbsp;" +
 					"<input type=checkbox name=shortCost> حساب کوتاه مدت &nbsp;&nbsp;&nbsp;" +
-					"<input type=checkbox name=LongCost> حساب بلند مدت &nbsp;&nbsp;&nbsp;" +
+					"<input type=checkbox name=longCost> حساب بلند مدت &nbsp;&nbsp;&nbsp;" +
 					"<input type=checkbox name=currentCost> حساب جاری &nbsp;&nbsp;&nbsp;" 
 			}]
 		},{

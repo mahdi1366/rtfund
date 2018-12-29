@@ -10,6 +10,7 @@ class ACC_IncomeCheques extends OperationClass{
 	const TableKey = "IncomeChequeID";
 	
 	public $IncomeChequeID;
+	public $BranchID;
 	public $CostID;
 	public $TafsiliType;
 	public $TafsiliID;
@@ -40,9 +41,7 @@ class ACC_IncomeCheques extends OperationClass{
 				cc.CostCode,
 				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) CostDesc,
 				b.BankDesc, 
-				t.TafsiliDesc ChequeStatusDesc,
-				d.LocalNo,
-				d.StatusID
+				t.TafsiliDesc ChequeStatusDesc
 			
 			FROM ACC_IncomeCheques o
 
@@ -54,9 +53,6 @@ class ACC_IncomeCheques extends OperationClass{
 
 			left join ACC_banks b on(ChequeBank=BankID)
 			left join ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_ChequeStatus." AND t.TafsiliID=ChequeStatus)
-			
-			left join ACC_DocItems di on(SourceID=IncomeChequeID AND SourceType=" . DOCTYPE_INCOMERCHEQUE . ")
-			left join ACC_docs d on(di.DocID=d.DocID)
 			
 			where 1=1 " . $where;
 		

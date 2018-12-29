@@ -337,11 +337,11 @@ class BaseInfo extends PdoDataAccess {
 		return true;	
     }
 
-    function Edit($pdo = null){
+    function Edit($OldInfoID = "", $pdo = null){
 		
 	    $whereParams = array();
 	    $whereParams[":tid"] = $this->TypeID;
-		$whereParams[":fid"] = $this->InfoID;
+		$whereParams[":fid"] = $OldInfoID;
 
 	    if( parent::update("BaseInfo",$this," TypeID=:tid and InfoID=:fid", $whereParams, $pdo) === false )
 		    return false;

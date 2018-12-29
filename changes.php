@@ -1,6 +1,6 @@
 <?php
 require_once "framework/header.inc.php";
-
+ 
 /*require_once("framework/PasswordHash.php");
 $dt = PdoDataAccess::runquery("select * from BSC_persons 
 	where (UserName='' or UserName is null) AND NationalID<>''");

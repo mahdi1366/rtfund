@@ -29,7 +29,7 @@ function selectPersons() {
 			
 	$param = array(
 		":c" => $_SESSION["accounting"]["CycleID"],
-		":b" => $_SESSION["accounting"]["BranchID"],
+		":b" => $_REQUEST["BranchID"],
 		":cost" => COSTID_saving,
 		":t" => TAFTYPE_PERSONS
 	);
@@ -51,6 +51,8 @@ function selectPersons() {
 
 function GetSavingFlow() {
 	
+	die();
+	//-------------- not used
 	$query = "select d.*,di.*
 		from ACC_DocItems di
 			join ACC_docs d using(DocID)

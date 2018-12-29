@@ -146,9 +146,7 @@ function ListData($IsDashboard = false){
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 					گزارش چک های پرداختی
-					 <br> ".
-				 $_SESSION["accounting"]["BranchName"]. "<br>" . "دوره سال " .
-				$_SESSION["accounting"]["CycleID"] .
+					 <br> "."دوره سال " . $_SESSION["accounting"]["CycleID"] .
 				"</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
 			. DateModules::shNow() . "<br>";

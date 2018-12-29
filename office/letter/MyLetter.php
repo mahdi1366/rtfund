@@ -13,12 +13,10 @@ $task = "";
 if($mode == "receive")
 {
 	require_once 'letter.data.php';
-	$summary = ReceivedSummary();
 	$task = "SelectReceivedLetters";
 }
 if($mode == "send")
 {
-	$summary = array();
 	$task = "SelectSendedLetters";
 }
 
@@ -32,8 +30,9 @@ $dg->addColumn("", "IsDeleted", "", true);
 $dg->addColumn("", "SendID", "", true);
 $dg->addColumn("", "_SendDate", "", true);
 $dg->addColumn("", "ResponseTimeout", "", true);
-
+$dg->addColumn("", "organization", "", true);
 $dg->addColumn("", "SendComment", "", true);
+$dg->addColumn("", "SenderDelete", "", true);
 
 $col = $dg->addColumn("<img src=/office/icons/LetterType.gif>", "LetterType", "");
 $col->renderer = "MyLetter.LetterTypeRender";
@@ -60,13 +59,18 @@ else
 $col->renderer = "function(v,p,r){ p.tdAttr = 'data-qtip=\"' + r.data.SendComment + '\"'; return v;}";
 $col->width = 150;
 
+$col = $dg->addColumn("فرستنده/گیرنده نامه", "OrgPost", "");
+$col->renderer = "function(v,p,r){return (v == null ? '-' : v) + ' ' + (r.data.organization == null ? '' : r.data.organization);}";
+$col->width = 250;
+
 $col = $dg->addColumn("عملیات", "");
 $col->renderer = "function(v,p,r){return MyLetter.OperationRender(v,p,r);}";
 $col->width = 100;
 
+$dg->addObject("this.deletedBtnObj");
+
 if($mode == "receive")
 {
-	$dg->addObject("this.deletedBtnObj");
 	$dg->addButton("", "خوانده نشده", "view", "function(){MyLetterObject.UnSeen();}");
 }
 
@@ -79,7 +83,6 @@ else
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 490;
-$dg->width = 640;
 $dg->title = $mode == "send" ? "نامه های ارسالی" : "نامه های دریافتی";
 $dg->DefaultSortField = "_SendDate";
 $dg->autoExpandColumn = "LetterTitle";
@@ -92,7 +95,6 @@ MyLetter.prototype = {
 	address_prefix : "<?= $js_prefix_address?>",
 
 	mode : '<?= $mode ?>',
-	summary : <?= common_component::PHPArray_to_JSArray($summary) ?>,
 		
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -117,7 +119,9 @@ function MyLetter(){
 	{
 		if(record.data.IsSeen == "NO")
 			return "yellowRow";
-		if(record.data.IsDeleted == "YES")
+		if(MyLetterObject.mode == "receive" && record.data.IsDeleted == "YES")
+			return "pinkRow";
+		if(MyLetterObject.mode == "send" && record.data.SenderDelete == "YES")
 			return "pinkRow";
 		return "";
 	}	
@@ -129,61 +133,80 @@ function MyLetter(){
 			SendID : record.data.SendID
 		});
 	});
+	this.grid.getStore().on("load",function(){
+		if(MyLetterObject.SummaryStore != undefined)
+		MyLetterObject.SummaryStore.load();
+	})
+	
 	if(this.mode == "send")
 	{
 		this.grid.render(this.get("DivPanel"));
 		return;
 	}
-	ButtonItems = new Array();
-	for(i=0; i<this.summary.length; i++)
-		ButtonItems.push({
-			xtype : "button",
-			width : 130,
-			height : 50,
-			autoScroll : true,
-			enableToggle : true,
-			scale : "large",
-			style : "margin-bottom:10px",	
-			itemId : this.summary[i].SendType,
-			text : this.summary[i].SendTypeDesc + "<br><div style=float:right>" + " تعداد : " + 
-				this.summary[i].totalCnt + "</div><div style=float:left>" + "جدید : " + (this.summary[i].newCnt*1>0 ? "<b>" : "") + 
-				"( " + this.summary[i].newCnt + " )" + (this.summary[i].newCnt*1>0 ? "<b>" : "") + "</div>",
-			handler : function(){
-				
-				for(i=0; i<MyLetterObject.summary.length; i++)
-					if(MyLetterObject.summary[i].SendType != this.itemId)
-						MyLetterObject.panel.down("[itemId=" + MyLetterObject.summary[i].SendType + "]").toggle(false);
-				
-				MyLetterObject.grid.getStore().proxy.extraParams.SendType = this.itemId;
-				if(MyLetterObject.grid.rendered)
-					MyLetterObject.grid.getStore().loadPage(1);
-				else
-					MyLetterObject.panel.add(MyLetterObject.grid);
-				
-			}
-		});
 	
 	this.panel = new Ext.panel.Panel({
 		renderTo : this.get("DivPanel"),
 		//border : false,
-		layout : "column",
+		layout : "hbox",
 		height : 500,
-		columns : 2,
-		style : " ",
-		width : 800,
 		items : [{
+			xtype : "container",
+			flex : 1,
+			html : "<div id=div_grid width=100%></div>"
+		},{
 			xtype : "container",
 			width : 150,
 			autoScroll : true,
 			height: 500,
 			style : "border-left : 1px solid #99bce8;margin-left:5px",
 			layout : "vbox",
-			itemId : "cmp_buttons",
-			items : ButtonItems
+			itemId : "cmp_buttons"
 		}]
-	});
+	});	
 	
+	this.SummaryStore = new Ext.data.Store({
+		proxy : {
+			type: 'jsonp',
+			url: this.address_prefix + "letter.data.php?task=ReceivedSummary",
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		},
+		fields : ["SendType","SendTypeDesc","totalCnt","newCnt"],
+		autoLoad : true,
+		listeners : {
+			load : function(){
+				me = MyLetterObject;
+				//..........................................................
+				me.panel.down("[itemId=cmp_buttons]").removeAll();
+				for(var i=0; i<this.totalCount; i++)
+				{
+					record = this.getAt(i);
+					me.panel.down("[itemId=cmp_buttons]").add({
+						xtype : "button",
+						width : 130,
+						height : 50,
+						autoScroll : true,
+						enableToggle : true,
+						scale : "large",
+						style : "margin-bottom:10px",	
+						itemId : record.data.SendType,
+						text : record.data.SendTypeDesc + "<br><div style=float:right>" + " تعداد : " + 
+							record.data.totalCnt + "</div><div style=float:left>" + "جدید : " + (record.data.newCnt*1>0 ? "<b>" : "") + 
+							"( " + record.data.newCnt + " )" + (record.data.newCnt*1>0 ? "<b>" : "") + "</div>",
+						handler : function(){MyLetterObject.LoadLetters(this)}
+					});
+				}
+			}
+		}
+	}); 
+}
+MyLetter.prototype.LoadLetters = function(btn){
 	
+	btn.toggle(false);
+	this.grid.getStore().proxy.extraParams.SendType = btn.itemId;
+	if(this.grid.rendered)
+		this.grid.getStore().loadPage(1);
+	else
+		this.grid.render(this.get("div_grid"));
 }
 
 MyLetter.LetterTypeRender = function(v,p,r){
@@ -241,7 +264,19 @@ MyLetter.OperationRender = function(v,p,r){
 			" onclick='MyLetterObject.DeleteSend(1);' " +
 			"style='background-repeat:no-repeat;background-position:center;" +
 			"cursor:pointer;float:right;width:20px;height:16'></div>" : ""
-		) ;
+		) + 
+		(MyLetterObject.mode == "send" && r.data.SenderDelete == "NO" ? 
+			"<div  title='حذف از کارتابل' class='remove' " +
+			" onclick='MyLetterObject.DeleteSender(0);' " +
+			"style='background-repeat:no-repeat;background-position:center;" +
+			"cursor:pointer;float:right;width:20px;height:16'></div>" : ""
+		) +
+		(MyLetterObject.mode == "send" && r.data.SenderDelete == "YES" ? 
+			"<div  title='اضافه به کارتابل' class='add' " +
+			" onclick='MyLetterObject.DeleteSender(1);' " +
+			"style='background-repeat:no-repeat;background-position:center;" +
+			"cursor:pointer;float:right;width:20px;height:16'></div>" : ""
+		);
 }
 
 MyLetter.prototype.LetterInfo = function(){
@@ -319,32 +354,74 @@ MyLetter.prototype.ReturnLetter = function(){
 
 MyLetter.prototype.DeleteSend = function(mode){
 	
-	mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg:'در حال ذخیره سازی ...'});
-	mask.show();
-	
-	Ext.Ajax.request({
-		url : this.address_prefix + "letter.data.php?task=DeleteSend",
-		method : "post",
-		params : {
-			mode : mode,
-			SendID : this.grid.getSelectionModel().getLastSelected().data.SendID,
-			LetterID : this.grid.getSelectionModel().getLastSelected().data.LetterID
-		},
+	var msg = mode == 0 ? "آیا مایل به حذف از کارتابل می باشید؟" : "آیا مایل به برگشت به کارتابل می باشید؟";
+	Ext.MessageBox.confirm("",msg, function(btn){
+		if(btn == "no")
+			return;
 		
-		success : function(response){
-			mask.hide();
-			result = Ext.decode(response.responseText);
-			if(result.success)
-				MyLetterObject.grid.getStore().load();
-			else
-			{	
-				if(result.data == "IsSeen")
-					Ext.MessageBox.alert("Error", "نامه توسط گیرنده دیده شده و قابل برگشت نمی باشد");
+		me = MyLetterObject;
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID),{msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url : me.address_prefix + "letter.data.php?task=DeleteSend",
+			method : "post",
+			params : {
+				mode : mode,
+				SendID : me.grid.getSelectionModel().getLastSelected().data.SendID,
+				LetterID : me.grid.getSelectionModel().getLastSelected().data.LetterID
+			},
+
+			success : function(response){
+				mask.hide();
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					MyLetterObject.grid.getStore().load();
 				else
-					Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+				{	
+					if(result.data == "IsSeen")
+						Ext.MessageBox.alert("Error", "نامه توسط گیرنده دیده شده و قابل برگشت نمی باشد");
+					else
+						Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+				}
 			}
-		}
-	})
+		})
+	});
+}
+
+MyLetter.prototype.DeleteSender = function(mode){
+	
+	var msg = mode == 0 ? "آیا مایل به حذف از کارتابل می باشید؟" : "آیا مایل به برگشت به کارتابل می باشید؟";
+	Ext.MessageBox.confirm("",msg, function(btn){
+		if(btn == "no")
+			return;
+		
+		me = MyLetterObject;
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID),{msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url : me.address_prefix + "letter.data.php?task=DeleteSender",
+			method : "post",
+			params : {
+				mode : mode,
+				SendID : me.grid.getSelectionModel().getLastSelected().data.SendID,
+				LetterID : me.grid.getSelectionModel().getLastSelected().data.LetterID
+			},
+
+			success : function(response){
+				mask.hide();
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					MyLetterObject.grid.getStore().load();
+				else
+				{	
+					Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+				}
+			}
+		})
+	});
 }
 
 MyLetter.prototype.ShowHistory = function(){
@@ -385,7 +462,7 @@ MyLetter.prototype.ShowHistory = function(){
 
 MyLetter.prototype.AfterSend = function(){
 
-	this.grid.getStore().load();
+	MyLetterObject.grid.getStore().load();
 }
 
 MyLetter.prototype.UnSeen = function(){
@@ -421,4 +498,4 @@ MyLetter.prototype.UnSeen = function(){
 }
 </script>
 	<br>
-	<div id="DivPanel" style="margin-right:8px;"></div>
+	<div id="DivPanel" style="margin-right:8px;width:98%"></div>

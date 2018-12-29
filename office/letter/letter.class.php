@@ -179,28 +179,28 @@ class OFC_letters extends PdoDataAccess{
 			$content .= "<div style=margin-right:30px;float:right;width:200px>"
 					. "<img  src='/framework/icons/logo.jpg' style='width:150px'></div>";
 		}
-		$content .= "<div style=margin-left:30px;float:left;width:150px;line-height:15px >شماره نامه : " . 
+		$content .= "<div style=margin-left:30px;float:left;width:150px;line-height:15px >شماره نامه: " . 
 			"<span dir=ltr>" . $letterYear . "-" . $this->LetterID . "</span>". 
-			"<br>تاریخ نامه : " . DateModules::miladi_to_shamsi($this->LetterDate) . 
+			"<br>تاریخ نامه: " . DateModules::miladi_to_shamsi($this->LetterDate) . 
 			($this->AccessType == OFC_ACCESSTYPE_SECRET ? "<br>دسترسی : محرمانه" : "");
 
 		if($this->LetterType == "INCOME")
 		{
-			$content .= "<br>شماره نامه وارده : " . $this->InnerLetterNo;
-			$content .= "<br>تاریخ نامه وارده : " . DateModules::miladi_to_shamsi($this->InnerLetterDate);
+			$content .= "<br>شماره نامه وارده: " . $this->InnerLetterNo;
+			$content .= "<br>تاریخ نامه وارده: " . DateModules::miladi_to_shamsi($this->InnerLetterDate);
 		}
 
 		if($this->RefLetterID != "")
 		{
 			$refObj = new OFC_letters($this->RefLetterID);
 			$RefletterYear = substr(DateModules::miladi_to_shamsi($refObj->LetterDate),0,4);
-			$content .= "<br>عطف به نامه : <a href=javascript:void(0) onclick=LetterInfo.OpenRefLetter(" . 
+			$content .= "<br>عطف به نامه: <a href=javascript:void(0) onclick=LetterInfo.OpenRefLetter(" . 
 				$this->RefLetterID . ")>".
 				"<span dir=ltr>" . $RefletterYear . "-" . $this->RefLetterID. "</span></a>";
 		}
 		$content .= "</div></div><br><br>";
 
-		$content .= "<b><br><div align=center>بسمه تعالی</div>";
+		$content .= "<b><br><div align=center>به نام خداوند جان و خرد</div>";
 
 		//------------- daily tip ---------------
 		$dt = PdoDataAccess::runquery("select * from OFC_DailyTips where :ld >= FromDate and :ld <= ToDate",
@@ -223,6 +223,7 @@ class OFC_letters extends PdoDataAccess{
 				left join BSC_persons p3 on(l.SignerPersonID=p3.PersonID)
 				left join BSC_posts po on(l.SignPostID=po.PostID)
 			where LetterID=? 
+			group by p2.PersonID
 			order by SendID
 			", array($this->LetterID));
 
@@ -307,6 +308,7 @@ class OFC_send extends PdoDataAccess{
 	public $IsCopy;
 	public $ResponseTimeout;
 	public $FollowUpDate;
+	public $SenderDelete;
 
     function __construct($SendID = ""){
 		
@@ -507,7 +509,8 @@ class OFC_MessageReceivers extends OperationClass{
 	
 	static function GetNewMessageReceiveCount(){
 		
-		$dt = PdoDataAccess::runquery("select SendID from OFC_MessageReceivers where IsSeen='NO' AND 
+		$dt = PdoDataAccess::runquery("select SendID from OFC_MessageReceivers 
+			where IsSeen='NO' AND IsDeleted='NO' AND
 			PersonID=" . $_SESSION["USER"]["PersonID"]);
 		return count($dt);
 	}

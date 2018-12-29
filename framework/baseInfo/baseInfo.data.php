@@ -253,7 +253,7 @@ function SaveBaseInfo(){
 	$obj = new BaseInfo();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 
-	if($obj->InfoID*1 == 0)
+	if($obj->InfoID*1 == 0 || $_POST["OldInfoID"]*1 == 0)
 	{
 		$pdo = PdoDataAccess::getPdoObject();
 		$pdo->beginTransaction();
@@ -265,7 +265,7 @@ function SaveBaseInfo(){
 		$pdo->commit();
 	}
 	else
-		$obj->Edit();
+		$obj->Edit($_POST["OldInfoID"]);
 
 	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
 	die();

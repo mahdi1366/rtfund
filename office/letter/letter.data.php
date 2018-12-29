@@ -131,12 +131,13 @@ function ReceivedSummary(){
 	$temp = PdoDataAccess::runquery("
 		select s.SendType,InfoDesc SendTypeDesc, count(*) totalCnt, sum(if(s.IsSeen='NO',1,0)) newCnt
 		from OFC_send s
-			join BaseInfo on(TypeID=12 AND SendType=InfoID)
+			left join BaseInfo on(TypeID=12 AND SendType=InfoID)
 			left join OFC_send s2 on(s2.LetterID=s.LetterID AND s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
 		where s2.SendID is null AND s.IsDeleted='NO' AND s.ToPersonID=" . $_SESSION["USER"]["PersonID"] . "
 		group by s.SendType");		
 	
-	return $temp;
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
 }
 
 function SelectReceivedLetters(){
@@ -157,6 +158,7 @@ function SelectReceivedLetters(){
 		
 		$field = $_GET["fields"];
 		$field = $field == "FromPersonName" ? "concat_ws(' ',fname, lname,CompanyName)" : $field;
+		$field = $field == "LetterID" ? "l.LetterID" : $field;
 		
 		$where .= " AND ".$field." like :f";
 		$param[":f"] = "%" . $_GET["query"] . "%";
@@ -173,8 +175,11 @@ function SelectReceivedLetters(){
 
 function SelectSendedLetters(){
 	
-	$where = " AND 1=1 ";
+	$where = " AND s.SenderDelete='NO'";
 	$param = array();
+	
+	if(isset($_REQUEST["deleted"]) && $_REQUEST["deleted"] == "true")
+		$where = " AND s.SenderDelete='YES'";
 	
 	if (isset($_GET["fields"]) && !empty($_GET["query"])) {
 		
@@ -677,6 +682,21 @@ function DeleteSend(){
 	if($obj->ToPersonID == $_SESSION["USER"]["PersonID"])
 	{
 		$obj->IsDeleted = $mode == "1" ? "NO" : "YES";
+		$obj->EditSend();
+	}	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function DeleteSender(){
+	
+	$mode = $_POST["mode"];
+	$LetterID = $_POST["LetterID"];
+	$SendID = $_POST["SendID"];
+	$obj = new OFC_send($SendID);	
+	if($obj->FromPersonID == $_SESSION["USER"]["PersonID"])
+	{
+		$obj->SenderDelete = $mode == "1" ? "NO" : "YES";
 		$obj->EditSend();
 	}	
 	echo Response::createObjectiveResponse(true, "");

@@ -13,7 +13,14 @@ if(!empty($_REQUEST["task"]))
 	$_REQUEST["task"]();
 
 function selectSystems(){
-	$temp = PdoDataAccess::runquery("select * from FRW_systems order by ordering");
+	
+	$where = "";
+	if(isset($_REQUEST["ExcludePortal"]))
+	{
+		$where = " AND SystemID<>1000";
+	}
+	
+	$temp = PdoDataAccess::runquery("select * from FRW_systems where 1=1 ".$where." order by ordering");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }

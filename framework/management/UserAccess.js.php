@@ -32,7 +32,7 @@ function Access()
 				autoLoad : true,
 				proxy:{
 					type: 'jsonp',
-					url: this.address_prefix + 'framework.data.php?task=selectSystems',
+					url: this.address_prefix + 'framework.data.php?task=selectSystems&ExcludePortal=true',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				fields :  ['SystemID','SysName']

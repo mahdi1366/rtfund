@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // create Date:	95.04
 //---------------------------
- 
+  
 require_once '../header.inc.php';
 require_once(inc_response);
 require_once inc_dataReader;
@@ -93,7 +93,7 @@ function selectIncomeCheques() {
 			join LON_requests r on(bp.RequestID=r.RequestID)
 			join BSC_persons p on(p.PersonID=r.LoanPersonID)
 			join LON_loans l using(LoanID)
-			join BSC_branches br using(BranchID)
+			join BSC_branches br on(r.BranchID=br.BranchID)
 			group by i.IncomeChequeID
 
 		union all
@@ -106,14 +106,15 @@ function selectIncomeCheques() {
 			join LON_requests r on(i.LoanRequestID=r.RequestID)
 			join BSC_persons p on(p.PersonID=r.LoanPersonID)
 			join LON_loans l using(LoanID)
-			join BSC_branches br using(BranchID)
+			join BSC_branches br on(r.BranchID=br.BranchID)
 			group by i.IncomeChequeID
 
 		union all
 
 			select i.*,t1.TafsiliDesc fullname,
-				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) CostDesc, ''
+				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) CostDesc,br.BranchName
 			from ACC_IncomeCheques i
+			left join BSC_branches br on(i.BranchID=br.BranchID)
 			left join ACC_tafsilis t1 using(TafsiliID)
 			join ACC_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
@@ -181,7 +182,7 @@ function SaveChequeStatus(){
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }
-
+ 
 function DeleteChequeStatuses(){
 	
 	PdoDataAccess::runquery("delete from ACC_ChequeStatuses where RowID=?", 
@@ -234,6 +235,13 @@ function SaveIncomeCheque(){
 			$bobj->PayType = BACKPAY_PAYTYPE_CHEQUE;
 			$bobj->IsGroup = "YES";
 			$bobj->Add($pdo);
+			
+			if($obj->BranchID == "")
+			{
+				$ReqObj = new LON_requests($RequestID);
+				$obj->BranchID = $ReqObj->BranchID;
+				$obj->Edit($pdo);
+			}
 		}
 	}
 	//.......................................................
@@ -244,18 +252,12 @@ function SaveIncomeCheque(){
 	$DocID = "";
 	if(!empty($_POST["LocalNo"]))
 	{
-		$BackPays = $obj->GetBackPays($pdo);
-		if(count($BackPays) > 0)
-			$FirstBranchID = $BackPays[0]["BranchID"];
-		else
-			$FirstBranchID = $_SESSION["accounting"]["BranchID"];
-		
-		$dt = PdoDataAccess::runquery("select DocID,StatusID from ACC_docs where LocalNo=? AND BranchID=?",
-			array($_POST["LocalNo"], $FirstBranchID));
+		$dt = PdoDataAccess::runquery("select DocID,StatusID from ACC_docs where LocalNo=? AND CycleID=?",
+			array($_POST["LocalNo"], $_SESSION["accounting"]["CycleID"]));
 		if(count($dt) == 0)
 		{
 			$pdo->rollback();
-			echo Response::createObjectiveResponse(false, "شماره سند در شعبه مربوطه یافت نشد");
+			echo Response::createObjectiveResponse(false, "شماره سند یافت نشد");
 			die();
 		}	
 		if($dt[0]["StatusID"] != ACC_STEPID_RAW)
@@ -348,7 +350,7 @@ function ChangeChequeStatus(){
 		if(count($BackPays) > 0)
 			$FirstBranchID = $BackPays[0]["BranchID"];
 		else
-			$FirstBranchID = $_SESSION["accounting"]["BranchID"];
+			$FirstBranchID = $obj->BranchID;
 		
 		$dt = PdoDataAccess::runquery("select DocID,StatusID from ACC_docs where LocalNo=? AND BranchID=?
 			AND CycleID=?",
@@ -454,6 +456,8 @@ function ReturnLatestOperation($returnMode = false){
 
 function SaveLoanCheque(){
 	
+	$ReqObj = new LON_requests($_POST["RequestID"]);
+	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	$DocID = "";
@@ -464,6 +468,7 @@ function SaveLoanCheque(){
 		$obj = new ACC_IncomeCheques();
 		PdoDataAccess::FillObjectByJsonData($obj, $cheque);
 		$obj->ChequeStatus = INCOMECHEQUE_NOTVOSUL;
+		$obj->BranchID = $ReqObj->BranchID;
 		
 		if($_POST["ChequeFor"] == "INSTALLMENT")
 		{
@@ -483,7 +488,6 @@ function SaveLoanCheque(){
 		}
 		else
 		{
-			$ReqObj = new LON_requests($_POST["RequestID"]);
 			$obj->CostID = FindCostID("190-436");
 			$obj->LoanRequestID = $_POST["RequestID"];
 			$obj->TafsiliType = TAFTYPE_PERSONS;
@@ -601,11 +605,10 @@ function selectOutcomeCheques(){
 		join ACC_banks bb using(BankID)
 		join BaseInfo b on(b.typeID=4 AND b.infoID=CheckStatus)
 
-		where CycleID=:c AND BranchID=:b";
+		where CycleID=:c ";
 
 	$whereParam = array(
-		":c" => $_SESSION["accounting"]["CycleID"],
-		":b" => $_SESSION["accounting"]["BranchID"]
+		":c" => $_SESSION["accounting"]["CycleID"]
 	);
 	if(!empty($_POST["FromDocNo"]))
 	{

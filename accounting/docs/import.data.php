@@ -3110,12 +3110,6 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 	
 	$CycleID = $_SESSION["accounting"]["CycleID"];
 	
-	//-------------------- BranchID -----------------------
-	$BackPays = $InChequeObj->GetBackPays($pdo);
-	if(count($BackPays) > 0)
-		$FirstBranchID = $BackPays[0]["BranchID"];
-	else
-		$FirstBranchID = $_SESSION["accounting"]["BranchID"];
 	//---------------- add doc header --------------------
 	if($DocID == "")
 	{		
@@ -3124,7 +3118,7 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 		$obj->regPersonID = $_SESSION['USER']["PersonID"];
 		$obj->DocDate = PDONOW;
 		$obj->CycleID = $CycleID;
-		$obj->BranchID = $FirstBranchID;
+		$obj->BranchID = $InChequeObj->BranchID;
 		$obj->DocType = DOCTYPE_INCOMERCHEQUE;
 		$obj->description = "چک شماره " . $InChequeObj->ChequeNo;
 		if(!$obj->Add($pdo))
@@ -3209,6 +3203,7 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 	
 	if($InChequeObj->ChequeStatus == INCOMECHEQUE_VOSUL)
 	{
+		$BackPays = $InChequeObj->GetBackPays($pdo);
 		if(count($BackPays) > 0)
 		{
 			foreach($BackPays as $row)
@@ -3384,19 +3379,13 @@ function EditIncomeCheque($InChequeObj, $newAmount, $pdo){
 	//------------- get CostCodes --------------------
 	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
 	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
-	//-------------------- BranchID -----------------------
-	$BackPays = $InChequeObj->GetBackPays($pdo);
-	if(count($BackPays) > 0)
-		$FirstBranchID = $BackPays[0]["BranchID"];
-	else
-		$FirstBranchID = $_SESSION["accounting"]["BranchID"];
 	//---------------- add doc header --------------------
 	$obj = new ACC_docs();
 	$obj->RegDate = PDONOW;
 	$obj->regPersonID = $_SESSION['USER']["PersonID"];
 	$obj->DocDate = PDONOW;
 	$obj->CycleID = $CycleID;
-	$obj->BranchID = $FirstBranchID;
+	$obj->BranchID = $InChequeObj->BranchID;
 	$obj->DocType = DOCTYPE_EDITINCOMECHEQUE;
 	$obj->description = "چک شماره " . $InChequeObj->ChequeNo;
 	if(!$obj->Add($pdo))
@@ -3459,290 +3448,292 @@ function EditIncomeCheque($InChequeObj, $newAmount, $pdo){
 }
 
 //---------------------------------------------------------------
+function ComputeCostProfit($BranchID, $CostID, $TafsiliID, $FromDate, $ToDate){
+	
+	//------------ get percents ------------------------
+	$percents = PdoDataAccess::runquery_fetchMode("select * from ACC_DepositePercents 
+		where TafsiliID=? AND ToDate>? order by FromDate",array($TafsiliID, $FromDate));
+	if($percents->rowCount() == 0)
+	{
+		echo Response::createObjectiveResponse(false, "در بازه مربوطه درصد سود تفصیلی " . $TafsiliID . " تعریف نشده است");
+		die();
+	}
+	$percentRecord = $percents->fetch();
+	//------------ get last remain of deposites ----------------
+	$dt = PdoDataAccess::runquery("select TafsiliID,CostID,sum(CreditorAmount-DebtorAmount) amount
+		from ACC_DocItems join ACC_docs using(DocID)
+		where DocDate <= :fd 
+			AND CostID =:c
+			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+			AND BranchID= :b
+			AND TafsiliID= :t
+		group by TafsiliID,CostID", array(
+			":fd" => $FromDate,
+			":c" => $CostID,
+			":b" => $BranchID,
+			":t" => $TafsiliID));
+	
+	$TraceArr = array();
+	if(count($dt) > 0)
+	{
+		$dt[0]["DocDate"] = $FromDate;
+		$dt[0]["DocDesc"] = "مانده قبل";
+		$TraceArr[] = array(
+			"row" => $dt[0],
+			"remainAmount" => $dt[0]["amount"],
+			"EndDate" => $FromDate,
+			"percent" => $percentRecord["percent"],
+			"ReturnPercent" => $percentRecord["ReturnPercent"],
+			"MaxAmount" => $percentRecord["MaxAmount"],
+			"profit" => 0,
+			"ReturnProfit" => 0,
+			"days" => 0
+		);
+		$DepositeAmount = array(
+			"amount" => $dt[0]["amount"],
+			"lastDate" => $FromDate,
+			"profit" => 0,
+			"ReturnProfit" => 0
+		);
+	}
+	else
+	{
+		$DepositeAmount = array(
+			"amount" => 0,
+			"lastDate" => $FromDate,
+			"profit" => 0,
+			"ReturnProfit" => 0
+		);
+	}	
 
-function ComputeDepositeProfit($ToDate, $Tafsilis, $ReportMode = false, $IsFlow = false){
+	//------------ get the Deposite amount -------------
+	$dt = PdoDataAccess::runquery("
+		select CostID,TafsiliID,DocDate,group_concat(details SEPARATOR '<br>') DocDesc,
+		sum(CreditorAmount-DebtorAmount) amount
+		from ACC_DocItems 
+			join ACC_docs using(DocID)
+		where CostID =:c
+			AND DocDate > :fd AND DocDate <= :td
+			AND TafsiliID=:taf
+			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+			AND BranchID=:b
+		group by DocDate
+		order by DocDate", 
+			array(":c" => $CostID,
+				":fd" => $FromDate, 
+				":td" => $ToDate, 
+				":taf" => $TafsiliID, 
+				":b" => $BranchID));
+
+	$prevDays = 0;
+	for($i=0; $i<count($dt)+1; $i++)
+	{
+		if(!$percentRecord)
+		{
+			echo Response::createObjectiveResponse(false, "در بازه مربوطه درصد سود تفصیلی تعریف نشده است");
+			die();	
+		}
+		if($i < count($dt))
+		{
+			$row = $dt[$i];			
+			$EndDate = $row["DocDate"];
+			if($row["DocDate"] > $percentRecord["ToDate"])
+			{
+				$EndDate = $percentRecord["ToDate"];
+			}
+		}
+		else
+		{
+			$row = array("amount" => 0);
+			$EndDate = $ToDate;
+		}
+		
+		$lastDate = $DepositeAmount["lastDate"];
+		$days = DateModules::GDateMinusGDate($EndDate, $lastDate);
+		if($row["amount"]*1 < 0)
+		{
+			$days--;
+			$days += $prevDays;
+			$prevDays = 1;
+		}
+		else
+		{
+			$days += $prevDays;
+			$prevDays = 0;
+		}
+		
+		//-------------- compute profits ----------------
+		$profit = 0;
+		$returnProfit = 0;
+		$amount = $DepositeAmount["amount"];
+		if($percentRecord["MaxAmount"]*1 > 0 && $amount < $percentRecord["MaxAmount"]*1)
+			$returnProfit = ($percentRecord["MaxAmount"]*1 - $amount) * $days * 
+					$percentRecord["ReturnPercent"] /(36500);
+		else
+			$profit = $amount * $days * $percentRecord["percent"] /(36500);
+		//-----------------------------------------------
+
+		$DepositeAmount["profit"] += $profit;
+		$DepositeAmount["ReturnProfit"] += $returnProfit;
+		$DepositeAmount["lastDate"] = $EndDate;	
+		if($i < count($dt) && $row["DocDate"] != $TraceArr[count($TraceArr)-1]["row"]["DocDate"])
+			$DepositeAmount["amount"] += $row["amount"];
+
+		$TraceArr[count($TraceArr)-1]["days"] = $days;
+		$TraceArr[count($TraceArr)-1]["profit"] = $profit;
+		$TraceArr[count($TraceArr)-1]["ReturnProfit"] = $returnProfit;
+
+		if($i >= count($dt))
+			break;
+		
+		$TraceArr[] = array(
+			"row" => $row,
+			"remainAmount" => $DepositeAmount["amount"],
+			"EndDate" => $EndDate,
+			"percent" => $percentRecord["percent"],
+			"ReturnPercent" => $percentRecord["ReturnPercent"],
+			"MaxAmount" => $percentRecord["MaxAmount"],
+			"days" => 0,
+			"profit" => 0,
+			"ReturnProfit" => 0
+		);
+		
+
+		if($row["DocDate"] > $percentRecord["ToDate"])
+		{
+			$percentRecord = $percents->fetch();
+			$i--;
+		}			
+	}
+	
+	return array($DepositeAmount, $TraceArr);
+}
+
+function ComputeDepositeProfit($ToDate, $TafsiliArr, $ReportMode = false, $IsFlow = false){
 	
 	if(!$ReportMode)
 		CheckCloseCycle();
-	
-	//-----------------------------------------------------
-	$DepositeAmount = array(
-		COSTID_ShortDeposite => array(),
-		COSTID_LongDeposite => array()
-	);
+
+	$FirstYearDay = DateModules::shamsi_to_miladi($_SESSION["accounting"]["CycleID"] . "-01-01", "-");	
 	$TraceArr = array();
-	foreach($Tafsilis as $TafsiliID)
+	$DepositeArr = array();
+	
+	for($i=0; $i<count($TafsiliArr); $i++)
 	{
+		$CostID = $TafsiliArr[$i]["CostID"];
+		$BranchID = $TafsiliArr[$i]["BranchID"];
+		$TafsiliID = $TafsiliArr[$i]["TafsiliID"];
+		$DocItemCostID = COSTID_DepositeProfit;
 		//-------------- get latest deposite compute -------------
-		$FirstYearDay = DateModules::shamsi_to_miladi($_SESSION["accounting"]["CycleID"] . "-01-01", "-");
 		if(!$IsFlow)
 		{
 			$dt = PdoDataAccess::runquery("select max(SourceID)
 				from ACC_docs join ACC_DocItems using(DocID)
 				where DocType=" . DOCTYPE_DEPOSIT_PROFIT . " 
 					AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-					AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "	
-					AND TafsiliID=?
-				order by DocID desc", array($TafsiliID));
+					AND CostID =:c
+					AND BranchID=:b
+					AND TafsiliID=:t
+				order by DocID desc", array(
+					":c" => $DocItemCostID, 
+					":b" => $BranchID, 
+					":t" => $TafsiliID));
+			
 			$LatestComputeDate = count($dt)==0 || $dt[0][0] == "" ? $FirstYearDay : $dt[0][0];
 		}
 		else
-			$LatestComputeDate = $FirstYearDay;		
+			$LatestComputeDate = $FirstYearDay;	
 
 		//----------- check for all docs confirm --------------
 		if(!$ReportMode)
 		{
 			$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
 				join ACC_DocItems using(DocID)
-				where CycleID=? AND DocDate<=? AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
-				AND StatusID <> ".ACC_STEPID_CONFIRM."
-				AND TafsiliID=?", array($_SESSION["accounting"]["CycleID"] ,$LatestComputeDate,$TafsiliID));
+				where CycleID=:cycle AND DocDate<=:d AND BranchID=:b AND CostID=:c
+				AND StatusID <> ".ACC_STEPID_CONFIRM."	AND TafsiliID=:t", 
+					array(
+						":cycle" => $_SESSION["accounting"]["CycleID"] ,
+						":d" => $LatestComputeDate,
+						":b" => $BranchID,
+						":c" => $DocItemCostID,
+						":t" => $TafsiliID));
+			
 			if(count($dt) > 0 && $dt[0][0] != "")
 			{
-				echo Response::createObjectiveResponse(false, "اسناد با شماره های [" . $dt[0][0] . "] تایید نشده اند و قادر به صدور سند سود سپرده نمی باشید.");
+				echo Response::createObjectiveResponse(false, "اسناد با شماره های [" . $dt[0][0] . 
+						"] تایید نشده اند و قادر به صدور سند سود سپرده نمی باشید.");
 				die();
 			}
 		}
-		//------------ get percents ------------------------
-		$percents = PdoDataAccess::runquery_fetchMode("select * from ACC_DepositePercents 
-			where TafsiliID=? AND ToDate>? order by FromDate",array($TafsiliID, $LatestComputeDate));
-		if($percents->rowCount() == 0)
-		{
-			echo Response::createObjectiveResponse(false, "در بازه مربوطه درصد سود تفصیلی " . $TafsiliID . " تعریف نشده است");
-			die();
-		}
-		$percentRecord = $percents->fetch();
-		//------------ get sum of deposites ----------------
-		$dt = PdoDataAccess::runquery("select TafsiliID,CostID,sum(CreditorAmount-DebtorAmount) amount
-			from ACC_DocItems join ACC_docs using(DocID)
-			where DocDate <= ? 
-				AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
-				AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-				AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
-				AND TafsiliID=?
-			group by TafsiliID,CostID", array($LatestComputeDate,$TafsiliID));
-
-		foreach($dt as $row)
-		{
-			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] = $row["amount"];
-			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $LatestComputeDate;
-			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] = 0;
-			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["ReturnProfit"] = 0;
-			
-			$row["DocDate"] = $LatestComputeDate;
-			$row["DocDesc"] = "مانده قبل";
-			$TraceArr[ $row["TafsiliID"] ][] = array(
-				"row" => $row,
-				"percent" => $percentRecord["percent"],
-				"ReturnPercent" => $percentRecord["ReturnPercent"],
-				"MaxAmount" => $percentRecord["MaxAmount"],
-				"profit" => 0,
-				"ReturnProfit" => 0,
-				"days" => 0
-			);
-		}
-		//------------ get the Deposite amount -------------
-		$dt = PdoDataAccess::runquery("
-			select CostID,TafsiliID,DocDate,group_concat(details SEPARATOR '<br>') DocDesc,
-			sum(CreditorAmount-DebtorAmount) amount
-			from ACC_DocItems 
-				join ACC_docs using(DocID)
-			where CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
-				AND DocDate > ? AND DocDate <= ?
-				AND TafsiliID=?
-				AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-				AND BranchID=" . $_SESSION["accounting"]["BranchID"] . "
-			group by DocDate
-			order by DocDate", 
-				array($LatestComputeDate, $ToDate, $TafsiliID));
+		//----------------------------------------------------------
 		
-		$prevDays = 0;
-		for($i=0; $i<count($dt); $i++)
-		{
-			if(!$percentRecord)
-			{
-				echo Response::createObjectiveResponse(false, "در بازه مربوطه درصد سود تفصیلی تعریف نشده است");
-				die();	
-			}
-			$row = $dt[$i];			
-			if(!isset($DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"]))
-			{
-				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $FirstYearDay;
-				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] = 0;
-				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] = 0;
-				$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["ReturnProfit"] = 0;
-				
-			}
-			$lastDate = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"];
-			$EndDate = $row["DocDate"];
-			if($row["DocDate"] > $percentRecord["ToDate"])
-			{
-				$EndDate = $percentRecord["ToDate"];
-			}
-			
-			$days = DateModules::GDateMinusGDate($EndDate, $lastDate);
-			if($row["amount"]*1 < 0)
-			{
-				$days--;
-				$days += $prevDays;
-				$prevDays = 1;
-			}
-			else
-			{
-				$days += $prevDays;
-				$prevDays = 0;
-			}
-			
-			//-------------- compute profits ----------------
-			$profit = 0;
-			$returnProfit = 0;
-			$amount = $DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"];
-			if($percentRecord["MaxAmount"]*1 > 0 && $amount < $percentRecord["MaxAmount"]*1)
-				$returnProfit = ($percentRecord["MaxAmount"]*1 - $amount) * $days * 
-						$percentRecord["ReturnPercent"] /(36500);
-			else
-				$profit = $amount * $days * $percentRecord["percent"] /(36500);
-			//-----------------------------------------------
-			
-			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["profit"] += $profit;
-			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["ReturnProfit"] += $returnProfit;
-			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["amount"] += $row["amount"];
-			$DepositeAmount[ $row["CostID"] ][ $row["TafsiliID"] ]["lastDate"] = $EndDate;	
-			
-			$arr = &$TraceArr[ $row["TafsiliID"] ];
-			$arr[count($arr)-1]["days"] = $days;
-			$arr[count($arr)-1]["profit"] = $profit;
-			$arr[count($arr)-1]["ReturnProfit"] = $returnProfit;
-			
-			$TraceArr[ $row["TafsiliID"] ][] = array(
-				"row" => $row,
-				"percent" => $percentRecord["percent"],
-				"ReturnPercent" => $percentRecord["ReturnPercent"],
-				"MaxAmount" => $percentRecord["MaxAmount"],
-				"days" => 0,
-				"profit" => 0,
-				"ReturnProfit" => 0
-			);
-			
-			if($row["DocDate"] > $percentRecord["ToDate"])
-			{
-				$percentRecord = $percents->fetch();
-				$i--;
-			}			
-		}
-		
-		//--------------------- compute untill toDate ------------------------------
-		foreach($DepositeAmount[ COSTID_ShortDeposite ] as $tafsili => &$row)
-		{
-			$days = DateModules::GDateMinusGDate($ToDate, $row["lastDate"]);
-			$days += $prevDays;
-			//-------------- compute profits ----------------
-			$profit = 0;
-			$returnProfit = 0;
-			$amount = $row["amount"];
-			if($percentRecord["MaxAmount"]*1 > 0 && $amount < $percentRecord["MaxAmount"]*1)
-				$returnProfit = ($percentRecord["MaxAmount"]*1 - $amount) * $days * 
-						$percentRecord["ReturnPercent"] /(36500);
-			else
-				$profit = $amount * $days * $percentRecord["percent"] /(36500);
-			//-----------------------------------------------
-			
-			$row["profit"] += $profit;
-			$row["ReturnProfit"] += $returnProfit;
-
-			$arr = &$TraceArr[ $tafsili ];
-			$arr[count($arr)-1]["days"] = $days;
-			$arr[count($arr)-1]["profit"] = $profit;
-			$arr[count($arr)-1]["ReturnProfit"] = $returnProfit;
-		}
-		foreach($DepositeAmount[ COSTID_LongDeposite ] as $tafsili => &$row)
-		{
-			$days = DateModules::GDateMinusGDate($ToDate, $row["lastDate"]);
-			$days += $prevDays;
-			//-------------- compute profits ----------------
-			$profit = 0;
-			$returnProfit = 0;
-			$amount = $row["amount"];
-			if($percentRecord["MaxAmount"]*1 > 0 && $amount < $percentRecord["MaxAmount"]*1)
-				$returnProfit = ($percentRecord["MaxAmount"]*1 - $amount) * $days * 
-						$percentRecord["ReturnPercent"] /(36500);
-			else
-				$profit = $amount * $days * $percentRecord["percent"] /(36500);
-			//-----------------------------------------------
-			
-			$row["profit"] += $profit;
-			$row["ReturnProfit"] += $returnProfit;
-
-			$arr = &$TraceArr[ $tafsili ];
-			$arr[count($arr)-1]["days"] = $days;
-			$arr[count($arr)-1]["profit"] = $profit;
-			$arr[count($arr)-1]["ReturnProfit"] = $returnProfit;
-		}
+		$result = ComputeCostProfit($BranchID, $CostID, $TafsiliID, $LatestComputeDate, $ToDate);
+		$TraceArr = array_merge($TraceArr, $result[1]);	
+		$TafsiliArr[$i]["deposite"] = $result[0];
 	}
+	
 	if($ReportMode)
 		return $TraceArr;
 		
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	//--------------- add doc header ------------------
-	$obj = new ACC_docs();
-	$obj->RegDate = PDONOW;
-	$obj->regPersonID = $_SESSION['USER']["PersonID"];
-	$obj->DocDate = PDONOW;
-	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
-	$obj->BranchID = $_SESSION["accounting"]["BranchID"];
-	$obj->DocType = DOCTYPE_DEPOSIT_PROFIT;
-	$obj->description = "محاسبه سود سپرده تا تاریخ " . DateModules::miladi_to_shamsi($ToDate);
-	
-	if(!$obj->Add($pdo))
+	$docs = array();
+	foreach($TafsiliArr as $row)
 	{
-		echo Response::createObjectiveResponse(false, "خطا در ایجاد سند");
-		die();
-	}
-	
-	//---------------- add DocItems -------------------
-
-	foreach($DepositeAmount as $CostID => $DepRow)
-	{
-		$CostID = $CostID == COSTID_ShortDeposite ? 416 : $CostID;
-		foreach($DepRow as $TafsiliID => $itemrow)
+		if(!isset($docs[$row["BranchID"]]))
 		{
-			$amount = $itemrow["profit"]*1 - $itemrow["ReturnProfit"]*1;
-			
-			$itemObj = new ACC_DocItems();
-			$itemObj->DocID = $obj->DocID;
-			$itemObj->CostID = $CostID;
-			$itemObj->CreditorAmount = $amount > 0 ? $amount : 0;
-			$itemObj->DebtorAmount = $amount < 0 ? abs($amount) : 0;
-			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $TafsiliID;
-			$itemObj->locked = "YES";
-			$itemObj->details = "سود سپرده تا تاریخ " . DateModules::miladi_to_shamsi($ToDate);
-			$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
-			$itemObj->SourceID = $ToDate;
-			if(!$itemObj->Add($pdo))
+			//--------------- add doc header ------------------
+			$obj = new ACC_docs();
+			$obj->RegDate = PDONOW;
+			$obj->regPersonID = $_SESSION['USER']["PersonID"];
+			$obj->DocDate = PDONOW;
+			$obj->CycleID = $_SESSION["accounting"]["CycleID"];
+			$obj->BranchID = $row["BranchID"];
+			$obj->DocType = DOCTYPE_DEPOSIT_PROFIT;
+			$obj->description = "محاسبه سود سپرده تا تاریخ " . DateModules::miladi_to_shamsi($ToDate);
+			if(!$obj->Add($pdo))
 			{
-				echo Response::createObjectiveResponse(false, "خطا در ایجاد ردیف اول سند");
+				echo Response::createObjectiveResponse(false, "خطا در ایجاد سند");
 				die();
 			}
-			
-			$itemObj = new ACC_DocItems();
-			$itemObj->DocID = $obj->DocID;
-			$itemObj->CostID = $amount > 0 ? COSTID_Wage : COSTID_DepositeWage;
-			$itemObj->DebtorAmount= $amount > 0 ? $amount : 0;
-			$itemObj->CreditorAmount = $amount < 0 ? abs($amount) : 0;
-			$itemObj->locked = "YES";
-			$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
-			$itemObj->TafsiliType = TAFTYPE_PERSONS;
-			$itemObj->TafsiliID = $TafsiliID;
-			if(!$itemObj->Add($pdo))
-			{
-				echo Response::createObjectiveResponse(false, "خطا در ایجاد ردیف دوم سند");
-				die();
-			}	
+			$docs[ $row["BranchID"] ] = $obj;
 		}
-	}
+		
+		$amount = $row["deposite"]["profit"]*1 - $row["deposite"]["ReturnProfit"]*1;
+		
+		$itemObj = new ACC_DocItems();
+		$itemObj->DocID = $docs[ $row["BranchID"] ]->DocID;
+		$itemObj->CostID = $DocItemCostID;
+		$itemObj->CreditorAmount = $amount > 0 ? $amount : 0;
+		$itemObj->DebtorAmount = $amount < 0 ? abs($amount) : 0;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $row["TafsiliID"];
+		$itemObj->locked = "YES";
+		$itemObj->details = "سود سپرده تا تاریخ " . DateModules::miladi_to_shamsi($ToDate);
+		$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
+		$itemObj->SourceID = $ToDate;
+		if(!$itemObj->Add($pdo))
+		{
+			echo Response::createObjectiveResponse(false, "خطا در ایجاد ردیف اول سند");
+			die();
+		}
+
+		$itemObj = new ACC_DocItems();
+		$itemObj->DocID = $docs[ $row["BranchID"] ]->DocID;
+		$itemObj->CostID = $amount > 0 ? COSTID_Wage : COSTID_DepositeWage;
+		$itemObj->DebtorAmount= $amount > 0 ? $amount : 0;
+		$itemObj->CreditorAmount = $amount < 0 ? abs($amount) : 0;
+		$itemObj->locked = "YES";
+		$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
+		$itemObj->TafsiliType = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID = $row["TafsiliID"];
+		if(!$itemObj->Add($pdo))
+		{
+			echo Response::createObjectiveResponse(false, "خطا در ایجاد ردیف دوم سند");
+			die();
+		}			
+	}	
 
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, $obj->LocalNo);

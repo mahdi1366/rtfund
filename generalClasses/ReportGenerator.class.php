@@ -311,13 +311,13 @@ class ReportGenerator {
 			
 			if ($this->headerContent != "")
 			{
-				$this->pageRecordCounter++;
-				$this->pageRecordCounter++;
+				//$this->pageRecordCounter++;
+				//$this->pageRecordCounter++;
 				echo $this->headerContent;
 			}
 			else if ($this->header != "") {
 				echo "<center><span style='font-family:titr,b titr;'>" . $this->header . "</span><center>";
-				$this->pageRecordCounter++;
+				//$this->pageRecordCounter++;
 			}
 			
 		}
@@ -400,8 +400,8 @@ class ReportGenerator {
 		if($secondRow != "")
 			echo "<tr bgcolor = '$this->header_color'>" . $secondRow . "</tr>";
 		
-		$this->pageRecordCounter++;
-		$this->pageRecordCounter++;
+		//$this->pageRecordCounter++;
+		//$this->pageRecordCounter++;
 	}
 
 	/**
@@ -478,14 +478,14 @@ class ReportGenerator {
 			echo "<tr><td style=font-family:".$this->fontFamily.";font-size:".$this->fontSize.
 					"; colspan=" . count($this->columns) . " align=left>";
 			echo "صفحه " . $this->pageCount . "</td></tr>";
-			$this->pageRecordCounter++;
+			//$this->pageRecordCounter++;
 		}
 		if ($this->footerContent != "")
 		{
 			echo "<tr><td colspan=" . count($this->columns) . " >";
 			echo $this->footerContent;
 			echo "</td></tr>";
-			$this->pageRecordCounter++;
+			//$this->pageRecordCounter++;
 		}
 		
 		echo "</table>";
@@ -627,7 +627,7 @@ class ReportGenerator {
 				}
 			}
 			echo "</tr>";
-			$this->pageRecordCounter++;
+			//$this->pageRecordCounter++;
 		}
 	}
 
@@ -1261,7 +1261,7 @@ function ReportMoneyRender($row, $value){
 		if(!empty($_REQUEST["excel"]))
 			return $value;
 		else
-			return number_format($value);
+			return number_format($value*1);
 	}
 	
 function ReportDateRender($row, $value){

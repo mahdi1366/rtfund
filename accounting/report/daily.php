@@ -120,7 +120,7 @@ if(isset($_REQUEST["show"]))
 	
 	$rpg = new ReportGenerator();
 	$rpg->rowNumber = true;
-	$rpg->page_size = $_POST["PageRecord"]*1 + 4;
+	$rpg->page_size = $_POST["PageRecord"]*1 ;
 	$rpg->paging = true;
 	$rpg->excel = !empty($_POST["excel"]);
 	$rpg->mysql_resource = $dataTable;
@@ -132,10 +132,9 @@ if(isset($_REQUEST["show"]))
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 					گزارش دفتر روزنامه
 					 <br> ".
-				 $_SESSION["accounting"]["BranchName"]. "<br>" . "دوره سال " .
-				$_SESSION["accounting"]["CycleID"] .
+				"دوره سال " . $_SESSION["accounting"]["CycleID"] .
 				"</td>
-				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
+				<td width='200px' align='center' style='font-family:nazanin;font-size:13px'>تاریخ تهیه گزارش : " 
 			. DateModules::shNow() . "<br>";
 		if(!empty($_POST["fromDate"]))
 		{

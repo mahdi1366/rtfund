@@ -65,7 +65,7 @@ class LON_requests extends PdoDataAccess{
 				BranchName
 			from LON_requests r
 			left join LON_loans l using(LoanID)
-			join BSC_branches using(BranchID)
+			left join BSC_branches using(BranchID)
 			left join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
@@ -411,6 +411,7 @@ class LON_requests extends PdoDataAccess{
 	static function GetWageAmounts($RequestID, $PartObj = null){
 		
 		$PartObj = $PartObj == null ? LON_ReqParts::GetValidPartObj($RequestID) : $PartObj;
+		$PartObj->MaxFundWage = $PartObj->MaxFundWage*1;
 		
 		$MaxWage = max($PartObj->CustomerWage*1 , $PartObj->FundWage);
 		$CustomerFactor =	$MaxWage == 0 ? 0 : $PartObj->CustomerWage/$MaxWage;
@@ -439,18 +440,32 @@ class LON_requests extends PdoDataAccess{
 		}
 		
 		//...................................
-		$years = YearWageCompute($PartObj, $TotalWage*1, $YearMonths);
-		$FundYears = array();
-		foreach($years as $year => $amount)
-			$FundYears[$year] = round($FundFactor*$amount);
+		if($PartObj->MaxFundWage > 0)
+		{
+			if($PartObj->WageReturn == "INSTALLMENT")
+				$FundYears = YearWageCompute($PartObj, $PartObj->MaxFundWage, $YearMonths);
+			else 
+				$FundYears = array();
+		}	
+		else
+		{
+			$years = YearWageCompute($PartObj, $TotalWage*1, $YearMonths);
+			$FundYears = array();
+			foreach($years as $year => $amount)
+				$FundYears[$year] = round($FundFactor*$amount);
+		}	
+		
 		$AgentYears = array();
 		foreach($years as $year => $amount)
 			$AgentYears[$year] = round($amount - $FundYears[$year]);
 		//...................................
 		
+		$FundWage = $PartObj->MaxFundWage > 0 ? $PartObj->MaxFundWage : round($TotalWage*$FundFactor);
+		$AgentWage = $PartObj->MaxFundWage > 0 ? $TotalWage - $PartObj->MaxFundWage : round($TotalWage*$AgentFactor);
+		
 		return array(
-			"FundWage" => round($TotalWage*$FundFactor),
-			"AgentWage" => round($TotalWage*$AgentFactor),
+			"FundWage" => $FundWage,
+			"AgentWage" => $AgentWage,
 			"CustomerWage" => round($TotalWage*$CustomerFactor),
 			"FundWageYears" => $FundYears,
 			"AgentWageYears" => $AgentYears
@@ -690,7 +705,7 @@ class LON_requests extends PdoDataAccess{
 		if($totalRemain == 0)
 			return;
 		
-		if($curRecord["type"] == "installment")
+		if($curRecord["type"] == "installment" && $RecordAmount > 0)
 		{
 			$totalRemain = abs($totalRemain);
 			$share_pure = round($totalRemain*($returnArr["totalpure"]/$RecordAmount));
@@ -1035,12 +1050,12 @@ class LON_requests extends PdoDataAccess{
 	 * @param type $TanzilCompute
 	 * @return boolean
 	 */
-	static function GetPurePayedAmount($RequestID, $PartObj = null,$TanzilCompute = false)
+	static function GetPurePayedAmount($RequestID, $PartObj = null)
 	{
 		$PartObj = $PartObj == null ? LON_ReqParts::GetValidPartObj($RequestID) : $PartObj;
 		/*@var $PartObj LON_ReqParts */
 		
-		if(!$TanzilCompute)
+		if($PartObj->ComputeMode != "NEW")
 		{
 			return $PartObj->PartAmount*1;
 		}
@@ -1685,7 +1700,7 @@ class LON_payments extends OperationClass{
 	public $RequestID;
 	public $PayType;
 	public $PayDate;
-	public $PayAmount;
+	public $PayAmount; 
 	
 	function __construct($PayID = "") {
 		
@@ -1703,7 +1718,7 @@ class LON_payments extends OperationClass{
 			left join ACC_DocItems di on(di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
 				AND di.SourceID=p.RequestID AND di.SourceID3=p.PayID) 
 			left join ACC_docs d on(di.DocID=d.DocID)
-			where 1=1 " . $where . 
+			where 1=1 " . $where .  
 			" group by p.PayID " . $order, $whereParams);
 	}
 	
