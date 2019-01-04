@@ -23,7 +23,7 @@ else
 	die();
 	 
 $query = "select fr.* ,fs.StepID, fs.IsOuter,bf.*,
-				ifnull(fr.StepDesc, ifnull(fs.StepDesc,'شروع گردش')) StepDesc,
+				ifnull(fr.StepDesc, ifnull(fs.StepDesc,'ارسال اولیه')) StepDesc,
 				concat_ws(' ',fname, lname,CompanyName) fullname
 			from WFM_FlowRows fr
 			join WFM_flows f using(FlowID)

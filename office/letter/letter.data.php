@@ -367,11 +367,19 @@ function SaveLetter($dieing = true) {
 		$Letter->PersonID = $_SESSION["USER"]["PersonID"];
 		$Letter->LetterDate = PDONOW;
 		$Letter->RegDate = PDONOW;
+		
+		if($Letter->PersonID == $Letter->SignerPersonID)
+			$Letter->IsSigned = "YES";
+		
         $res = $Letter->AddLetter();
     }
     else
+	{
+		if($Letter->PersonID == $Letter->SignerPersonID)
+			$Letter->IsSigned = "YES";
         $res = $Letter->EditLetter();
-
+	}
+	
 	if(!empty($_FILES["PageFile"]["tmp_name"]))
 	{
 		$st = preg_split("/\./", $_FILES ['PageFile']['name']);

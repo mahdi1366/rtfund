@@ -479,7 +479,7 @@ TrafficRequests.prototype.OperationMenu = function(e){
 			op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
 			handler : function(){ return TrafficRequestsObject.DeleteRequest(); }});
 	
-		op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
+		op_menu.add({text: 'ارسال درخواست',iconCls: 'refresh',
 			handler : function(){ return TrafficRequestsObject.StartFlow(); }});
 	}
 	if(record.data.StepID == "1" && record.data.ActionType == "REJECT")
@@ -488,7 +488,7 @@ TrafficRequests.prototype.OperationMenu = function(e){
 			op_menu.add({text: 'ویرایش درخواست',iconCls: 'edit', 
 			handler : function(){ return TrafficRequestsObject.BeforeAddRequest("edit"); }});
 	
-		op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
+		op_menu.add({text: 'ارسال درخواست',iconCls: 'refresh',
 			handler : function(){ return TrafficRequestsObject.StartFlow(); }});
 	}
 	if(record.data.ReqStatus == "0")
@@ -925,7 +925,7 @@ TrafficRequests.prototype.ArchiveRequest = function(){
 
 TrafficRequests.prototype.StartFlow = function(){
 	
-	Ext.MessageBox.confirm("","آیا مایل به شروع گردش می باشید؟",function(btn){
+	Ext.MessageBox.confirm("","آیا مایل به ارسال درخواست می باشید؟",function(btn){
 		
 		if(btn == "no")
 			return;

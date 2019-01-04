@@ -222,7 +222,7 @@ RequestInfo.prototype.OperationMenu = function(e){
 	if(record.data.IsStarted == "NO" || record.data.SendEnable == "YES")
 	{
 		if(record.data.StatusID == "70")
-			op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
+			op_menu.add({text: 'ارسال درخواست',iconCls: 'refresh',
 			handler : function(){ return RequestInfoObject.StartFlow(); }});
 		if(this.EditAccess )
 			op_menu.add({text: 'ویرایش',iconCls: 'edit', 
@@ -2187,7 +2187,7 @@ RequestInfo.prototype.LoadBackPays = function(){
 
 RequestInfo.prototype.StartFlow = function(){
 	
-	Ext.MessageBox.confirm("","آیا مایل به شروع گردش تایید پرداخت شرایط می باشید؟",function(btn){
+	Ext.MessageBox.confirm("","آیا مایل به ارسال شرایط پرداخت جهت تایید می باشید؟",function(btn){
 		
 		if(btn == "no")
 			return;

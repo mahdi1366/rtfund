@@ -56,7 +56,7 @@ function SaveFlow(){
 		$obj2 = new WFM_FlowSteps();
 		$obj2->FlowID = $obj->FlowID;
 		$obj2->StepID = "0";
-		$obj2->StepDesc = "شروع گردش";
+		$obj2->StepDesc = "ارسال اولیه";
 		$obj2->IsOuter = "YES";
 		$obj2->AddFlowStep();
 		//--------------------------------------------
@@ -83,7 +83,7 @@ function selectFlowSteps(){
 	$StartArr = array($dt[0]);
 	$StartArr[0]["StepRowID"] = 0;
 	$StartArr[0]["StepID"] = 0;
-	$StartArr[0]["StepDesc"] = "شروع گردش";
+	$StartArr[0]["StepDesc"] = "ارسال اولیه";
 	
 	$dt = array_merge($StartArr, $dt);
 	
@@ -104,6 +104,13 @@ function SaveStep(){
 	
 	$obj = new WFM_FlowSteps();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if($obj->PersonID == null)
+		$obj->PersonID = PDONULL;
+	if($obj->PostID == null)
+		$obj->PostID = PDONULL;
+	if($obj->JobID == null)
+		$obj->JobID = PDONULL;
 	
 	if($obj->StepRowID > 0)
 		$result = $obj->EditFlowStep();
@@ -199,7 +206,7 @@ function SelectAllForms(){
 	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
 	{
 		$field = $_GET["fields"] == "ObjectDesc" ? $ObjectDesc : $_GET["fields"];
-		$field = $_GET["fields"] == "StepDesc" ? "ifnull(fs.StepDesc,'شروع گردش')" : $field;
+		$field = $_GET["fields"] == "StepDesc" ? "ifnull(fs.StepDesc,'ارسال اولیه')" : $field;
 		$field = $_GET["fields"] == "ObjectTypeDesc" ? "b.InfoDesc" : $field;
 		$where .= " AND $field like :fld";
 		$param[":fld"] = "%" . $_GET["query"] . "%";
@@ -247,7 +254,7 @@ function SelectAllForms(){
 	//--------------------------------------------------------
 	$query = "select fr.*,f.FlowDesc, 
 					b.InfoDesc ObjectTypeDesc,
-					concat(if(fr.ActionType='REJECT','رد ',''),ifnull(fr.StepDesc,'شروع گردش')) StepDesc,
+					concat(if(fr.ActionType='REJECT','رد ',''),ifnull(fr.StepDesc,'ارسال اولیه')) StepDesc,
 					if(p.IsReal='YES',concat(p.fname, ' ',p.lname),p.CompanyName) fullname,
 					$ObjectDesc ObjectDesc,
 					b.param1 url,

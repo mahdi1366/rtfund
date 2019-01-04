@@ -198,7 +198,7 @@ AccDocs.prototype.operationhMenu = function(e){
 					op_menu.add({text: 'ویرایش سند',iconCls: 'edit', 
 						handler : function(){ return AccDocsObject.EditDoc(); } });
 
-					op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
+					op_menu.add({text: 'ارسال سند',iconCls: 'refresh',
 						handler : function(){ return AccDocsObject.StartFlow(); }});
 				}
 				if(this.RemoveAccess /*&& this.grid.getStore().currentPage == this.grid.getStore().totalCount*/)
@@ -973,7 +973,7 @@ AccDocs.prototype.StartFlow = function(){
 	
 	if(r[0] != r[1])
 	{
-		Ext.MessageBox.alert("","به دلیل تراز نبودن سند قادر به شروع گردش آن نمی باشید");
+		Ext.MessageBox.alert("","به دلیل تراز نبودن سند قادر به ارسال سند نمی باشید");
 		return
 	}
 	
@@ -982,7 +982,7 @@ AccDocs.prototype.StartFlow = function(){
 		Ext.MessageBox.alert("","سند فاقد مبلغ می باشد");
 		return
 	}
-	Ext.MessageBox.confirm("","آیا مایل به شروع گردش می باشید؟", function(btn){
+	Ext.MessageBox.confirm("","آیا مایل به ارسال سند می باشید؟", function(btn){
 		if(btn == "no")
 			return;
 		

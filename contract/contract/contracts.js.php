@@ -37,7 +37,7 @@ ManageContracts.prototype.OperationMenu = function (e)
 
 	if(record.data.StatusID == "<?= CNT_STEPID_RAW ?>")
 	{
-		op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
+		op_menu.add({text: 'ارسال قرارداد',iconCls: 'refresh',
 		handler : function(){ return ManageContractsObj.StartFlow(); }});
 		
 		if(this.EditAccess)
@@ -50,7 +50,7 @@ ManageContracts.prototype.OperationMenu = function (e)
 	}	
 	if(record.data.StepID == "1" && record.data.ActionType == "REJECT")
 	{
-		op_menu.add({text: 'شروع گردش فرم',iconCls: 'refresh',
+		op_menu.add({text: 'ارسال قرارداد',iconCls: 'refresh',
 		handler : function(){ return ManageContractsObj.StartFlow(); }});
 		
 		if(this.EditAccess)
@@ -198,7 +198,7 @@ ManageContracts.prototype.ShowSigns = function(){
 
 ManageContracts.prototype.StartFlow = function(){
 	
-	Ext.MessageBox.confirm("","آیا مایل به شروع گردش قرارداد می باشید؟",function(btn){
+	Ext.MessageBox.confirm("","آیا مایل به ارسال قرارداد می باشید؟",function(btn){
 		
 		if(btn == "no")
 			return;

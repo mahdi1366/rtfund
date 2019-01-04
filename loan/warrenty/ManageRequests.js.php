@@ -240,19 +240,19 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 	{
 		if(this.EditAccess)
 		{
-			op_menu.add({text: 'شروع گردش',iconCls: 'refresh',
+			op_menu.add({text: 'ارسال ضمانت نامه',iconCls: 'refresh',
 			handler : function(){ return WarrentyRequestObject.StartFlow(); }});
 		
-			op_menu.add({text: 'ویرایش درخواست',iconCls: 'edit', 
+			op_menu.add({text: 'ویرایش ضمانت نامه',iconCls: 'edit', 
 			handler : function(){ return WarrentyRequestObject.editRequest(); }});
 		}
 		if(this.RemoveAccess)
-			op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
+			op_menu.add({text: 'حذف ضمانت نامه',iconCls: 'remove', 
 			handler : function(){ return WarrentyRequestObject.deleteRequest(); }});
 	}
 	else
 	{
-		op_menu.add({text: 'اطلاعات درخواست',iconCls: 'info', 
+		op_menu.add({text: 'اطلاعات ضمانت نامه',iconCls: 'info', 
 			handler : function(){ return WarrentyRequestObject.InfoRequest(); }});
 	}
 	
@@ -472,7 +472,7 @@ WarrentyRequest.prototype.WarrentyDocuments = function(ObjectType){
 
 WarrentyRequest.prototype.StartFlow = function(){
 	
-	Ext.MessageBox.confirm("","آیا مایل به شروع گردش ضمانت نامه می باشید؟",function(btn){
+	Ext.MessageBox.confirm("","آیا مایل به ارسال ضمانت نامه می باشید؟",function(btn){
 		
 		if(btn == "no")
 			return;

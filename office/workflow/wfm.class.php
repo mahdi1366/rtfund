@@ -365,7 +365,7 @@ class WFM_FlowRows extends PdoDataAccess {
 		$newObj->PersonID = $_SESSION["USER"]["PersonID"];
 		$newObj->ActionType = "REJECT";
 		$newObj->ActionDate = PDONOW;
-		$newObj->ActionComment = "برگشت شروع گردش";
+		$newObj->ActionComment = "برگشت ارسال اولیه";
 		$newObj->AddFlowRow("0", $pdo);	
 		
 		//-------------------------------------------------------
@@ -523,7 +523,7 @@ class WFM_FlowRows extends PdoDataAccess {
 		//--------------------------------------------------------
 		$query = "select fr.*,f.FlowDesc, 
 						b.InfoDesc ObjectTypeDesc,
-						ifnull(fr.StepDesc,'شروع گردش') StepDesc,
+						ifnull(fr.StepDesc,'ارسال اولیه') StepDesc,
 						if(p.IsReal='YES',concat(p.fname, ' ',p.lname),p.CompanyName) fullname,
 						b.param1 url,
 						b.param2 parameter

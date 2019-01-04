@@ -244,7 +244,7 @@ ManageForm.prototype.SetStatus = function(record){
 
 ManageForm.prototype.ReturnStartFlow = function(record){
 	
-	Ext.MessageBox.confirm("","آیا مایل به برگشت شروع گردش می باشید؟", function(btn){
+	Ext.MessageBox.confirm("","آیا مایل به برگشت ارسال اولیه می باشید؟", function(btn){
 		
 		if(btn == "no")
 			return;
