@@ -18,11 +18,10 @@ if(!empty($task))
 function selectDeposites() {
 	
 	$temp = PdoDataAccess::runquery_fetchMode("
-		select b.BranchID,BranchName, TafsiliID,CostID,concat_ws('-',b1.BlockDesc,b2.BlockDesc) CostDesc,
+		select TafsiliID,CostID,concat_ws('-',b1.BlockDesc,b2.BlockDesc) CostDesc,
 			sum(CreditorAmount-DebtorAmount) amount,TafsiliDesc
 		from ACC_DocItems 
 			join ACC_docs using(DocID)
-			join BSC_branches b using(BranchID)
 			join ACC_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(b1.BlockID=cc.level1)
 			left join ACC_blocks b2 on(b2.BlockID=cc.level2)
@@ -31,7 +30,7 @@ function selectDeposites() {
 		where /*StatusID != ".ACC_STEPID_RAW." */ 1=1
 			AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
 			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-		group by BranchID,TafsiliID,CostID");
+		group by TafsiliID,CostID");
 	
 	$dt = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	//echo PdoDataAccess::GetLatestQueryString();
@@ -48,9 +47,8 @@ function DepositeProfit(){
 		{
 			$arr = preg_split("/_/", $key);
 			$TafsiliArr[] = array(
-				"BranchID" =>  $arr[1],
-				"CostID" =>  $arr[2],
-				"TafsiliID" => $arr[3]
+				"CostID" =>  $arr[1],
+				"TafsiliID" => $arr[2]
 			);
 		}
 	

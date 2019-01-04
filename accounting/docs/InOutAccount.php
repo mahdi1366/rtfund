@@ -14,12 +14,11 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "doc.data.php?task=GetAccountSummary", "grid_div");
 
 $dg->addColumn("", "TafsiliID","", true);
-$dg->addColumn("", "BranchID","", true);
 
 $col = $dg->addColumn("تفصیلی", "TafsiliDesc","");
 
-$col = $dg->addColumn("شعبه", "BranchName","");
-$col->width = 150;
+/*$col = $dg->addColumn("شعبه", "BranchName","");
+$col->width = 150;*/
 
 $col = $dg->addColumn("پس انداز", "pasandaz",  GridColumn::ColumnType_money);
 $col->renderer = "InOutAccount.AccountDetailRender";
@@ -55,7 +54,6 @@ $col = $dg->addColumn("شماره سند", "LocalNo","");
 $col->width = 60;
 
 $dg->addColumn("", "DocID","", true);
-$dg->addColumn("", "BranchID","", true);
 $dg->addColumn("", "ItemID","", true);
 $dg->addColumn("", "TafsiliID","", true);
 $dg->addColumn("", "CostID","", true);
@@ -108,9 +106,9 @@ InOutAccount.prototype = {
 	}
 };
 
-InOutAccount.AccountDetailRender = function(v,p,r,index, col){
+InOutAccount.AccountDetailRender = function(v,p,r,rowIndex, colIndex,store){
 	
-	return "<a href='javascript:void(1)' onclick='InOutAccountObject.LoadAccountDetail(" +col+ ")'>" 
+	return "<a href='javascript:void(1)' onclick='InOutAccountObject.LoadAccountDetail(" +colIndex+ ")'>" 
 		+ Ext.util.Format.Money(v) + "</a>";
 }
 
@@ -175,15 +173,14 @@ InOutAccount.prototype.LoadAccountDetail = function(col){
 	CostID = "";
 	switch(col)
 	{
-		case 4 : CostID = <?= COSTID_saving ?>; break;
-		case 5 : CostID = <?= COSTID_ShortDeposite ?>; break;
-		case 6 : CostID = <?= COSTID_LongDeposite ?>; break;
-		case 7 : CostID = <?= COSTID_current ?>; break;
+		case 2 : CostID = <?= COSTID_saving ?>; break;
+		case 3 : CostID = <?= COSTID_ShortDeposite ?>; break;
+		case 4 : CostID = <?= COSTID_LongDeposite ?>; break;
+		case 5 : CostID = <?= COSTID_current ?>; break;
 	}
 
 	this.grid.getStore().proxy.extraParams.BaseCostID = CostID;
 	this.grid.getStore().proxy.extraParams.TafsiliID = record.data.TafsiliID;
-	this.grid.getStore().proxy.extraParams.BranchID = record.data.BranchID;
 	if(this.grid.rendered)
 		this.grid.getStore().load();
 	else
@@ -345,7 +342,6 @@ InOutAccount.prototype.SaveOperation = function(){
 		params: {
 			task: "RegisterInOutDoc",
 			mode : this.mode,
-			BranchID : this.grid.getStore().proxy.extraParams.BranchID,
 			BaseCostID : this.grid.getStore().proxy.extraParams.BaseCostID,
 			BaseTafsiliID : this.grid.getStore().proxy.extraParams.TafsiliID,
 			CostID : this.mainWin.down("[name=CostID]").getValue(),

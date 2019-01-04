@@ -1268,23 +1268,17 @@ function RegisterBackPayDoc(){
 			$_POST["CostID"], 
 			$_POST["TafsiliID"], 
 			$_POST["TafsiliID2"], 
-			isset($_POST["CenterAccount"]) ? true : false,
-			$_POST["BranchID"],
-			$_POST["FirstCostID"],
-			$_POST["SecondCostID"], $pdo);
+			$pdo);
 	else
 		$result = RegisterCustomerPayDoc(null, $obj, 
 			$_POST["CostID"], 
 			$_POST["TafsiliID"], 
 			$_POST["TafsiliID2"], 
-			isset($_POST["CenterAccount"]) ? true : false,
-			$_POST["BranchID"],
-			$_POST["FirstCostID"],
-			$_POST["SecondCostID"], $pdo);
+			$pdo);
 	if(!$result)
 	{
 		$pdo->rollback();
-		//print_r(ExceptionHandler::PopAllExceptions());
+		print_r(ExceptionHandler::PopAllExceptions());
 		echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
 		die();
 	}
@@ -1323,19 +1317,13 @@ function EditBackPayDoc(){
 				$_POST["CostID"], 
 				$_POST["TafsiliID"], 
 				$_POST["TafsiliID2"], 
-				isset($_POST["CenterAccount"]) ? true : false,
-				$_POST["BranchID"],
-				$_POST["FirstCostID"],
-				$_POST["SecondCostID"], $pdo);
+				$pdo);
 	else
 		$result = RegisterCustomerPayDoc($DocObj, $obj, 
 				$_POST["CostID"], 
 				$_POST["TafsiliID"], 
 				$_POST["TafsiliID2"], 
-				isset($_POST["CenterAccount"]) ? true : false,
-				$_POST["BranchID"],
-				$_POST["FirstCostID"],
-				$_POST["SecondCostID"], $pdo);
+				$pdo);
 	
 	if(!$result)
 	{
@@ -1382,19 +1370,13 @@ function GroupSavePay(){
 				$_POST["CostID"], 
 				$_POST["TafsiliID"], 
 				$_POST["TafsiliID2"], 
-				isset($_POST["CenterAccount"]) ? true : false,
-				$_POST["BranchID"],
-				$_POST["FirstCostID"],
-				$_POST["SecondCostID"], $pdo, true);
+				$pdo, true);
 		else
 			$result = RegisterCustomerPayDoc($DocObj, $obj, 
 				$_POST["CostID"], 
 				$_POST["TafsiliID"], 
 				$_POST["TafsiliID2"], 
-				isset($_POST["CenterAccount"]) ? true : false,
-				$_POST["BranchID"],
-				$_POST["FirstCostID"],
-				$_POST["SecondCostID"], $pdo, true);
+				$pdo, true);
 		
 		if(!$result)
 		{

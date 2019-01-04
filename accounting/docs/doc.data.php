@@ -968,15 +968,9 @@ function ComputeDoc(){
 
 //.................................
 
-function GetAccountSummary($ReturnMode = false, $BranchID = "", $where = "", $param = array()){
+function GetAccountSummary($ReturnMode = false, $where = "", $param = array()){
 	
 	$param[":c"] = $_SESSION["accounting"]["CycleID"];
-	
-	if($BranchID != "")
-	{
-		$where .= " AND b.BranchID = :b";
-		$param[":b"] = $BranchID;
-	}
 	
 	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
 	{
@@ -985,38 +979,35 @@ function GetAccountSummary($ReturnMode = false, $BranchID = "", $where = "", $pa
 	}	
 	
 	$temp = PdoDataAccess::runquery_fetchMode("
-		select b.BranchID,BranchName,t.TafsiliID,t.TafsiliDesc, 
+		select t.TafsiliID,t.TafsiliDesc, 
 			ifnull(pasandaz.amount,0) pasandaz,
 			ifnull(kootah.amount,0) kootah,
 			ifnull(boland.amount,0) boland,
-			ifnull(jari.amount,0) jari,
-			packNo
+			ifnull(jari.amount,0) jari			
 			
 		from ACC_tafsilis t 
-			join BSC_branches b
 			left join BSC_persons p on(t.TafsiliType=".TAFTYPE_PERSONS." AND t.ObjectID=p.PersonID)
-			left join DMS_packages pk on(b.BranchID=pk.BranchID AND pk.PersonID=p.PersonID)
-
-			left join (select BranchID,TafsiliID,sum(CreditorAmount-DebtorAmount) amount
+			
+			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 						from ACC_DocItems join ACC_docs using(DocID)
 						where TafsiliType=".TAFTYPE_PERSONS." AND CycleID=:c AND CostID=".COSTID_saving."
-						group by BranchID,TafsiliID
-			)pasandaz on(b.BranchID=pasandaz.BranchID AND pasandaz.TafsiliID=t.TafsiliID)
-			left join (select BranchID,TafsiliID,sum(CreditorAmount-DebtorAmount) amount
+						group by TafsiliID
+			)pasandaz on(pasandaz.TafsiliID=t.TafsiliID)
+			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 						from ACC_DocItems join ACC_docs using(DocID)
 						where TafsiliType=".TAFTYPE_PERSONS." AND CycleID=:c AND CostID=".COSTID_ShortDeposite."
-						group by BranchID,TafsiliID
-			)kootah on(b.BranchID=kootah.BranchID AND kootah.TafsiliID=t.TafsiliID)
-			left join (select BranchID,TafsiliID,sum(CreditorAmount-DebtorAmount) amount
+						group by TafsiliID
+			)kootah on(kootah.TafsiliID=t.TafsiliID)
+			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 						from ACC_DocItems join ACC_docs using(DocID)
 						where TafsiliType=".TAFTYPE_PERSONS." AND CycleID=:c AND CostID=".COSTID_LongDeposite."
-						group by BranchID,TafsiliID
-			)boland on(b.BranchID=boland.BranchID AND boland.TafsiliID=t.TafsiliID)
-			left join (select BranchID,TafsiliID,sum(CreditorAmount-DebtorAmount) amount
+						group by TafsiliID
+			)boland on(boland.TafsiliID=t.TafsiliID)
+			left join (select TafsiliID,sum(CreditorAmount-DebtorAmount) amount
 						from ACC_DocItems join ACC_docs using(DocID)
 						where TafsiliType=".TAFTYPE_PERSONS." AND CycleID=:c AND CostID=".COSTID_current."
-						group by BranchID,TafsiliID
-			)jari on(b.BranchID=jari.BranchID AND jari.TafsiliID=t.TafsiliID)
+						group by TafsiliID
+			)jari on(jari.TafsiliID=t.TafsiliID)
 		where TafsiliType=" . TAFTYPE_PERSONS . $where . dataReader::makeOrder(), $param);
 	
 	if($ReturnMode)
@@ -1033,17 +1024,15 @@ function GetAccountFlow() {
 	
 	$CostID = $_REQUEST["BaseCostID"];
 	$TafsiliID = $_REQUEST["TafsiliID"];
-	$BranchID = $_REQUEST["BranchID"];
 	
 	$query = "select d.*,di.*
 		from ACC_DocItems di
 			join ACC_docs d using(DocID)
-		where d.BranchID=:branch AND d.CycleID=:cycle
+		where d.CycleID=:cycle
 			AND di.CostID=:cost AND di.TafsiliType = :ttype AND di.TafsiliID=:tid " . dataReader::makeOrder();
 	
 	$param = array(
 		":cycle" => $_SESSION["accounting"]["CycleID"],
-		":branch" => $BranchID,
 		":cost" => $CostID,
 		":ttype" => TAFTYPE_PERSONS,
 		":tid" => $TafsiliID
@@ -1061,7 +1050,6 @@ function GetAccountFlow() {
 
 function RegisterInOutDoc() {
 	
-	$BranchID = $_REQUEST["BranchID"];
 	$BaseCostID = $_REQUEST["BaseCostID"];
 	$BaseTafsiliID = $_REQUEST["BaseTafsiliID"];
 	$mode = $_POST["mode"]*1;
@@ -1070,7 +1058,7 @@ function RegisterInOutDoc() {
 	$CostID = $_POST["CostID"];
 	$CostObj = new ACC_CostCodes($_POST["CostID"]);
 	
-	$result = RegisterInOutAccountDoc($BranchID, $_POST["amount"], $mode, $description, 
+	$result = RegisterInOutAccountDoc($_POST["amount"], $mode, $description, 
 			$BaseCostID, TAFTYPE_PERSONS, $BaseTafsiliID, "", "", 
 			$CostID, $CostObj->TafsiliType, $_POST["TafsiliID"], $CostObj->TafsiliType2, $_POST["TafsiliID2"]);
 	

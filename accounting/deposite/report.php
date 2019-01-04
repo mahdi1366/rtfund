@@ -16,7 +16,6 @@ if(isset($_REQUEST["IsFlow"]) && $_REQUEST["IsFlow"] == "true")
 else
 	$ToDate = DateModules::shamsi_to_miladi($_REQUEST["ToDate"]);
 
-$BranchID = $_REQUEST["BranchID"];
 $CostID = $_REQUEST["CostID"];
 
 echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl">';
@@ -29,7 +28,7 @@ echo "<style>
 	</style>";
 
 $TraceArr = ComputeDepositeProfit($ToDate, 
-		array(array("TafsiliID" => $_REQUEST["TafsiliID"], "BranchID" => $BranchID,	"CostID" => $CostID)), 
+		array(array("TafsiliID" => $_REQUEST["TafsiliID"],"CostID" => $CostID)), 
 		true, $IsFlow);
 $dataTable = $TraceArr;
 

@@ -21,7 +21,6 @@ $RRN = $_REQUEST ["RRN"];
 
 function RegDoc($PayObj){
 	
-	$BranchID = 3;
 	$BaseCostID = $PayObj->CostID;
 	$PersonTafsili = FindTafsiliID($PayObj->PersonID, TAFTYPE_PERSONS);
 	
@@ -29,7 +28,7 @@ function RegDoc($PayObj){
 	$TafsiliID = 3049; // ayande
 	$TafsiliID2 = 3052; // kootahmodat 
 	
-	return RegisterInOutAccountDoc($BranchID, $PayObj->amount, 1, "پرداخت الکترونیک به شماره رهگیری " . 
+	return RegisterInOutAccountDoc($PayObj->amount, 1, "پرداخت الکترونیک به شماره رهگیری " . 
 			$PayObj->PayRefNo,
 			$BaseCostID, TAFTYPE_PERSONS, $PersonTafsili, "", "", 
 			$CostID, TAFTYPE_BANKS, $TafsiliID, TAFTYPE_ACCOUNTS, $TafsiliID2, true);

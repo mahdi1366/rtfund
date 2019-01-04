@@ -92,8 +92,6 @@ function Equalization_UpdateChecks(){
     $data->setRowColOffset(0);
 	$data->read($_FILES["attach"]["tmp_name"]);
 	//----------- insert DocHeader --------------------
-	$DocID_UM = "";
-	$DocID_PARK = "";
 	$successCount = 0;
 	for ($i = 1; $i <= $data->sheets[0]['numRows']; $i++) 
 	{
@@ -141,43 +139,10 @@ function Equalization_UpdateChecks(){
 			ACC_IncomeCheques::AddToHistory($inChequeObj->IncomeChequeID, $inChequeObj->ChequeStatus, $pdo);
 			//---------------------------------------------------------
 			
-			$CenterAccount = false;
-			$BranchID = "";
-			$FirstCostID = "";
-			$SecondCostID = "";
-			$DocID = $DocID_UM;
+			$DocID = "";
 			if($BackPayObj)
-			{
 				$ReqObj = new LON_requests($BackPayObj->RequestID);
-				if($ReqObj->BranchID != BRANCH_UM) // این درگاه مخصوص دانشگاه است و وام های شعبه های دیگر باید با حساب مرکز ثبت شوند
-				{
-					$CenterAccount = true;
-					$BranchID = "3";
-					$FirstCostID = 205;
-					$SecondCostID = 17;
-					if($DocID_PARK == "")
-					{
-						$obj = new ACC_docs();
-						$obj->RegDate = PDONOW;
-						$obj->regPersonID = $_SESSION['USER']["PersonID"];
-						$obj->DocDate = PDONOW;
-						$obj->CycleID =  $_SESSION["accounting"]["CycleID"];
-						$obj->BranchID = BRANCH_PARK;
-						$obj->DocType = DOCTYPE_EQUALCHECKS;
-						$obj->description = "مغایرت گیری بانکی / به روز رسانی چک ها ";
-						if(!$obj->Add($pdo))
-						{
-							ExceptionHandler::PushException("خطا در ایجاد سند");
-							return false;
-						}
-						$DocID_PARK = $obj->DocID;
-						
-					}
-					$DocID = $DocID_PARK;
-				}
-				else
-					$DocID = $DocID_UM;
-			}
+			
 			if($DocID == "")
 			{
 				$obj = new ACC_docs();
@@ -198,8 +163,7 @@ function Equalization_UpdateChecks(){
 			}
 			
 			
-			RegisterOuterCheque($DocID, $inChequeObj, $pdo, COSTID_Bank, $TafsiliID, $TafsiliID2, 
-					$CenterAccount, $BranchID, $FirstCostID, $SecondCostID);
+			RegisterOuterCheque($DocID, $inChequeObj, $pdo, COSTID_Bank, $TafsiliID, $TafsiliID2);
 			//---------------------------------------------------------
 			$successCount++;
 			

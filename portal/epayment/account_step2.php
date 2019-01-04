@@ -39,27 +39,14 @@ if($_POST['State']== 'OK') {
 				$CostID = 253; // bank
 				$TafsiliID = 2132; // eghtesadnovin
 				$TafsiliID2 = 1; // jari
-				$CenterAccount = false;
-				$BranchID = "";
-				$FirstCostID = "";
-				$SecondCostID = "";
 				
 				$ReqObj = new LON_requests($obj->RequestID);
-				if($ReqObj->BranchID != "3") // این درگاه مخصوص دانشگاه است و وام های شعبه های دیگر باید با حساب مرکز ثبت شوند
-				{
-					$CenterAccount = true;
-					$BranchID = "3";
-					$FirstCostID = COSTID_BRANCH_UM;
-					$SecondCostID = COSTID_BRANCH_PARK;
-				}
 				
 				$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 				if($PersonObj->IsSupporter == "YES")
-					$res = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, 
-							$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo);
+					$res = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, $pdo);
 				else
-					$res = RegisterCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, 
-							$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo);
+					$res = RegisterCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2,  $pdo);
 
 				if(!$res)
 					$error = true;

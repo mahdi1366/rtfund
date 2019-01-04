@@ -106,27 +106,14 @@ function RegDoc($RequestID, $amount, $PayRefNo){
 	$CostID = 253; // bank
 	$TafsiliID = 2135; // tejarat
 	$TafsiliID2 = 1947; // short-time 
-	$CenterAccount = false;
-	$BranchID = "";
-	$FirstCostID = "";
-	$SecondCostID = "";
-
+	
 	$ReqObj = new LON_requests($obj->RequestID);
-	if($ReqObj->BranchID != "4") // این درگاه مخصوص پارک است و وام های شعبه های دیگر باید با حساب مرکز ثبت شوند
-	{
-		$CenterAccount = true;
-		$BranchID = "4";
-		$FirstCostID = COSTID_BRANCH_PARK; //شعبه پارک
-		$SecondCostID = COSTID_BRANCH_UM; // شعبه فردوسی
-	}
-
+	
 	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
 	if($PersonObj->IsSupporter == "YES")
-		$res = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, 
-				$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo);
+		$res = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, $pdo);
 	else
-		$res = RegisterCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, 
-				$CenterAccount, $BranchID, $FirstCostID, $SecondCostID, $pdo);
+		$res = RegisterCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, $pdo);
 
 	if(!$res)
 	{

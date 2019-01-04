@@ -25,12 +25,11 @@ function showSummary(){
 		$where .= " AND t.TafsiliID=:t";
 		$param[":t"] = $_POST["TafsiliID"];
 	}
-	$rpg->mysql_resource = GetAccountSummary(true, $_POST["BranchID"], $where, $param);
+	$rpg->mysql_resource = GetAccountSummary(true, $where, $param);
 
 	//echo PdoDataAccess::GetLatestQueryString();
 	
 	$rpg->addColumn("تفصیلی", "TafsiliDesc");
-	$rpg->addColumn("شماره پرونده", "packNo");
 	if(isset($_POST["savingCost"]))	
 	{
 		$col = $rpg->addColumn("پس انداز", "pasandaz","ReportMoneyRender");
@@ -311,24 +310,6 @@ function AccReport_CustomerAccount()
 		},
 		width : 600,
 		items :[{
-			xtype : "combo",
-			width : 400,
-			store : new Ext.data.SimpleStore({
-				proxy: {
-					type: 'jsonp',
-					url: "/accounting/global/domain.data.php?task=GetAccessBranches",
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				fields : ['BranchID','BranchName'],
-				autoLoad : true					
-			}),
-			fieldLabel : "شعبه",
-			queryMode : 'local',
-			allowBlank : false,
-			displayField : "BranchName",
-			valueField : "BranchID",
-			hiddenName : "BranchID"
-		},{
 			xtype : "combo",
 			width : 400,
 			displayField : "TafsiliDesc",

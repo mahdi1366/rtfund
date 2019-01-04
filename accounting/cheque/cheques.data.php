@@ -374,10 +374,6 @@ function ChangeChequeStatus(){
 		$CostID, 
 		$TafsiliID,
 		$TafsiliID2,
-		isset($_POST["CenterAccount"]) ? true : false,
-		$BranchID,
-		$FirstCostID,
-		$SecondCostID, 
 		$PreStatus);
 	if(!$result)
 	{

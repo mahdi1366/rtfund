@@ -15,14 +15,10 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "deposite.data.php?task=selectDeposites", "grid_div", "mainForm");
 
 $dg->addColumn("", "CostID", "", true);
-$dg->addColumn("", "BranchID", "", true);
 
 $col = $dg->addColumn('<input type=checkbox onclick=Deposite.CheckAll(this)>', "TafsiliID", "");
 $col->renderer = "Deposite.SelectRender";
 $col->sortable = false;
-
-$col = $dg->addColumn("شعبه", "BranchName");
-$col->width = 200;
 
 $col = $dg->addColumn("حساب", "CostDesc");
 $col->width = 200;
@@ -64,8 +60,8 @@ Deposite.prototype = {
 };
 
 Deposite.SelectRender = function(v,p,r){
-	return "<input type=checkbox id=chk_" + r.data.BranchID + "_" + r.data.CostID + "_" + v + 
-			" name=chk_" + r.data.BranchID + "_" + r.data.CostID + "_" + v + " >";
+	return "<input type=checkbox id=chk_" + r.data.CostID + "_" + v + 
+			" name=chk_" + r.data.CostID + "_" + v + " >";
 }
 
 Deposite.ReportRender = function(v,p,r){
@@ -155,7 +151,7 @@ Deposite.prototype.BeforeComputeProfit = function(ReportMode){
 				return;
 			window.open(DepositeObject.address_prefix +  
 				"report.php?CostID=" + record.data.CostID + "&TafsiliID=" + 
-				record.data.TafsiliID + "&BranchID=" + record.data.BranchID + "&ToDate=" + 
+				record.data.TafsiliID + "&ToDate=" + 
 				DepositeObject.DateWin.down("[name=ToDate]").getRawValue());
 			DepositeObject.DateWin.hide();
 		});
@@ -177,7 +173,7 @@ Deposite.prototype.ComputeProfit = function(flow){
 		}
 		window.open(DepositeObject.address_prefix +  
 			"report.php?CostID=" + record.data.CostID + "&TafsiliID=" + 
-			record.data.TafsiliID + "&BranchID=" + record.data.BranchID + "&IsFlow=true");
+			record.data.TafsiliID + "&IsFlow=true");
 		return;
 	}
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال محاسبه و صدور سند ...'});
