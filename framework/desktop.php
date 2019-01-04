@@ -127,10 +127,10 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 		<div id="loading-mask"></div>
 		<div id="loading">
 			<div class="loading-indicator">در حال بارگذاری سیستم . . .
-				<img src="/generalUI/ext4/resources/themes/icons/loading-balls.gif" style="margin-right:8px;" align="absmiddle"/></div>
+				<img src="/generalUI/icons/loading-balls.gif" style="margin-right:8px;" align="absmiddle"/></div>
 		</div>
 
-		<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/icons.css" />
+		<link rel="stylesheet" type="text/css" href="/generalUI/icons/icons.css" />
 		<link rel="stylesheet" type="text/css" href="/generalUI/fonts/fonts.css" />
 		<script type="text/javascript" src="/generalUI/ext4/resources/ext-all.js"></script>
 

@@ -289,7 +289,8 @@ class COM_EventRows extends PdoDataAccess {
 					concat_ws('-',cb1.blockDesc,cb2.blockDesc,cb3.blockDesc) CostDesc,
 					concat_ws('',cb1.blockCode,cb2.blockCode,cb3.blockCode) CostCode,
 					concat_ws(' ',fname,lname,CompanyName) changePersonName,
-					concat(bf11.InfoDesc,' - ',bf10.InfoDesc) ComputeItemDesc,
+					concat(bf11.InfoDesc,' - ',bf10.InfoDesc) ComputeItemFullDesc,
+					bf10.InfoDesc ComputeItemDesc,
 					t1.InfoDesc TafsiliDesc,
 					t2.InfoDesc Tafsili2Desc,
 					t3.InfoDesc Tafsili3Desc

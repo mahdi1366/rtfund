@@ -150,6 +150,10 @@ define("ACC_STEPID_CONFIRM", "200");
 define("DEFRAYLOAN_VOTEFORM", "9");
 define("DEFRAYLOAN_WFMFORM", "16");
 
+//------------ events ---------------
+define("EVENT_LOAN_PAYMENT", "1010101");
+
+
 define("FILE_FRAMEWORK_PICS",getenv("DOCUMENT_ROOT") . "/storage/framework/");
 
 function BeginReport() {

@@ -61,7 +61,7 @@ $col = $dg->addColumn("مبنای صدور سند", "DocDesc");
 $col->width = 120;
 $col->ellipsis = 40; 
 
-$col = $dg->addColumn("آیتم محاسباتی", "ComputeItemDesc");
+$col = $dg->addColumn("آیتم محاسباتی", "ComputeItemFullDesc");
 $col->width = 120;
 $col->ellipsis = 40; 
 

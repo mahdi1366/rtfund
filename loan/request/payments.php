@@ -139,12 +139,12 @@ PartPayment.DocRender = function(v,p,r){
 	return "<div align='center' title='صدور سند' class='send' "+
 		"onclick='PartPaymentObject.BeforeRegDoc(1);' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>" + 
+		"cursor:pointer;width:50%;height:16'></div>" + 
 		
-		"<div align='center' title='صدور سند تعهدی' class='send2' "+
-		"onclick='PartPaymentObject.BeforeRegDoc(1);' " +
-		"style='float:right;background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";
+		"<div align='center' title='صدور سند تعهدی' class='cheque' "+
+		"onclick='PartPaymentObject.ExecuteEvent()' " +
+		"style='float:left;background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:50%;height:16'></div>";
 }
 
 PartPaymentObject = new PartPayment();
@@ -385,6 +385,18 @@ PartPayment.prototype.ReturnPayPartDoc = function(){
 		});
 	});
 }
+
+PartPayment.prototype.ExecuteEvent = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+
+
+	framework.ExecuteEvent(<?= EVENT_LOAN_PAYMENT ?>,{
+		RequestID : this.RequestID,
+		PayID : record.data.PayID
+	});
+}
+
 
 </script>
 <center>

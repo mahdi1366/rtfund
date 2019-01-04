@@ -230,6 +230,45 @@ framework.centerPanel.items.get(FrameworkStartPageObject.TabID).on("activate", f
 	framework.ReloadTab(FrameworkStartPageObject.TabID);
 });
 		
+FrameWorkClass.prototype.ExecuteEvent = function(EventID, params){
+	
+	if(!this.EventWindow)
+	{
+		this.EventWindow = new Ext.window.Window({
+			width : 1000,
+			renderTo : document.body,
+			title : "اجرای رویداد مالی",
+			height : 520,
+			modal : true,
+			closeAction : "hide",
+			loader : {
+				url : "../commitment/ExecuteEvent.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+	}
+
+	this.EventWindow.show();
+	this.EventWindow.center();
+	
+	baseParams = {
+		ExtTabID : this.EventWindow.getEl().id,
+		EventID : EventID
+	};
+	
+	this.EventWindow.loader.load({
+		params : {
+			ExtTabID : this.EventWindow.getEl().id,
+			EventID : EventID
+		}
+	});
+}
+		
 </script>
 <table style="margin:10px">
 	<tr>
