@@ -61,9 +61,6 @@ function SaveProcess() {
 	PdoDataAccess::FillObjectByArray($processObj, $_POST);
 	$processObj->IsActive = 'YES';
 
-	if($processObj->EventID == "")
-		$processObj->EventID = PDONULL;
-	
 	if ($_POST["old_ProcessID"] == '')
 		$res = $processObj->InsertProcess();
 	else

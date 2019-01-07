@@ -148,7 +148,8 @@ class CNT_contracts extends OperationClass {
 		//---------------------- installment Info --------------------------
 		if($this->LoanRequestID > 0)
 		{
-			$dt = PdoDataAccess::runquery("select * from LON_installments where RequestID=?",
+			$dt = PdoDataAccess::runquery("select * from LON_installments "
+					. " where history='NO' AND IsDelayed='NO' AND RequestID=?",
 				array($this->LoanRequestID));
 			if(count($dt) > 0)
 			{

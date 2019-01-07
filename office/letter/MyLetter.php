@@ -65,7 +65,7 @@ $col->width = 250;
 
 $col = $dg->addColumn("عملیات", "");
 $col->renderer = "function(v,p,r){return MyLetter.OperationRender(v,p,r);}";
-$col->width = 100;
+$col->width = 120; 
 
 $dg->addObject("this.deletedBtnObj");
 

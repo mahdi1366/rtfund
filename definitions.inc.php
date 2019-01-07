@@ -43,7 +43,9 @@ define("TAFTYPE_SUBAGENT", "4");
 define("TAFTYPE_BANKS", "6");
 define("TAFTYPE_ChequeStatus", "7");
 
+define("TAFSILITYPE_PERSON", "107");
 define("TAFSILITYPE_LOAN", "104");
+define("TAFSILITYPE_PROCESS", "106");
 
 //...............................
 
@@ -152,7 +154,7 @@ define("DEFRAYLOAN_VOTEFORM", "9");
 define("DEFRAYLOAN_WFMFORM", "16");
 
 //------------ events ---------------
-define("EVENT_LOAN_PAYMENT", "1010101");
+define("EVENT_LOAN_PAYMENT", 1010101);
 
 
 define("FILE_FRAMEWORK_PICS",getenv("DOCUMENT_ROOT") . "/storage/framework/");

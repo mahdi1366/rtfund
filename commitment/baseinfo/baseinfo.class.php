@@ -4,6 +4,8 @@
 // Date:		97.05
 //---------------------------
 
+require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
+
 class COM_processes extends PdoDataAccess {
 
     public $ProcessID;
@@ -55,6 +57,13 @@ class COM_processes extends PdoDataAccess {
         $daObj->TableName = "COM_processes";
         $daObj->execute();
 
+		$obj = new ACC_tafsilis();
+		$obj->ObjectID = $this->ProcessID;
+		$obj->TafsiliCode = $this->ProcessID;
+		$obj->TafsiliDesc = $this->ProcessTitle;
+		$obj->TafsiliType = TAFSILITYPE_PROCESS;
+		$obj->AddTafsili();
+		
         return true;
     }
 
@@ -73,28 +82,36 @@ class COM_processes extends PdoDataAccess {
         $daObj->MainObjectID = $old_ProcessID;
         $daObj->TableName = "COM_processes";
         $daObj->execute();
+		
+		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis "
+				. "where ObjectID=? AND TafsiliType=" . TAFSILITYPE_PROCESS, array($old_ProcessID));
+		
+		if(count($dt) == 0)
+		{
+			$obj = new ACC_tafsilis();
+			$obj->ObjectID = $this->ProcessID;
+			$obj->TafsiliCode = $this->ProcessID;
+			$obj->TafsiliDesc =  $this->ProcessTitle;
+			$obj->TafsiliType = TAFSILITYPE_PROCESS;
+			$obj->AddTafsili();
+		}
+		else
+		{
+			$obj = new ACC_tafsilis($dt[0]["TafsiliID"]);
+			$obj->ObjectID = $this->ProcessID;
+			$obj->TafsiliCode = $this->ProcessID;
+			$obj->TafsiliDesc = $this->LoanDesc;
+			$obj->EditTafsili();
+		}
 
         return true;
     }
 
     static function DeleteProcess($ProcessID) {
 
-        parent::delete("COM_processes", "ProcessID=:EID", array(':EID' =>(int) $ProcessID));
-        if (parent::AffectedRows() == 0)
-            $res = parent::runquery("update COM_processes set IsActive='NO' where ProcessID=:EID", array(':EID' =>(int) $ProcessID));
-
-        if ($res === false)
-            return false;
-
-        if (parent::AffectedRows()) {
-
-            $daObj = new DataAudit();
-            $daObj->ActionType = DataAudit::Action_delete;
-            $daObj->MainObjectID = $ProcessID;
-            $daObj->TableName = "COM_processes";
-            $daObj->execute();
-        }
-        return true;
+		$obj = new COM_processes($ProcessID);
+		$obj->IsActive = "NO";
+		return $obj->UpdateProcess($obj->ProcessID);
     }
 
 }

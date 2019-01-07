@@ -237,6 +237,7 @@ FrameWorkClass.prototype.ExecuteEvent = function(EventID, params){
 		this.EventWindow = new Ext.window.Window({
 			width : 1000,
 			renderTo : document.body,
+			bodyStyle : "background-color : white",
 			title : "اجرای رویداد مالی",
 			height : 520,
 			modal : true,
@@ -260,12 +261,9 @@ FrameWorkClass.prototype.ExecuteEvent = function(EventID, params){
 		ExtTabID : this.EventWindow.getEl().id,
 		EventID : EventID
 	};
-	
+	params = mergeObjects(baseParams, params);
 	this.EventWindow.loader.load({
-		params : {
-			ExtTabID : this.EventWindow.getEl().id,
-			EventID : EventID
-		}
+		params : params
 	});
 }
 		

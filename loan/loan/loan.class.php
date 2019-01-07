@@ -4,7 +4,7 @@
 // create Date: 94.06
 //---------------------------
 
-require_once getenv("DOCUMENT_ROOT") . "/accounting/baseinfo/baseinfo.class.php";
+require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
 
 class LON_loans extends PdoDataAccess
 {
@@ -44,20 +44,27 @@ class LON_loans extends PdoDataAccess
 			return false;
 		$this->LoanID = parent::InsertID();
 				
-		$blockObj = new ACC_blocks();
+		/*$blockObj = new ACC_blocks();
 		$blockObj->BlockCode = $this->LoanID;
 		$blockObj->BlockDesc = $this->LoanDesc;
 		$blockObj->LevelID = "2";
 		$blockObj->AddBlock();
 		
 		$this->BlockID = $blockObj->BlockID;
-		$this->EditLoan();
-		
+		$this->EditLoan();*/
+				
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;	
 		$daObj->MainObjectID = $this->LoanID;
 		$daObj->TableName = "LON_loans";
 		$daObj->execute();
+		
+		$obj = new ACC_tafsilis();
+		$obj->ObjectID = $this->LoanID;
+		$obj->TafsiliCode = $this->LoanID;
+		$obj->TafsiliDesc = $this->LoanDesc;
+		$obj->TafsiliType = TAFSILITYPE_LOAN;
+		$obj->AddTafsili();
 		
 		return true;
 	}
@@ -67,16 +74,37 @@ class LON_loans extends PdoDataAccess
 	 	if( parent::update("LON_loans",$this," LoanID=:l", array(":l" => $this->LoanID)) === false )
 	 		return false;
 
-		$obj = new LON_loans($this->LoanID);
+		/*$obj = new LON_loans($this->LoanID);
 		$blockObj = new ACC_blocks($obj->BlockID);
 		$blockObj->BlockDesc = $this->LoanDesc;
-		$blockObj->EditBlock();
+		$blockObj->EditBlock();*/
 		
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_update;
 		$daObj->MainObjectID = $this->LoanID;
 		$daObj->TableName = "LON_loans";
 		$daObj->execute();
+		
+		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis "
+				. "where ObjectID=? AND TafsiliType=" . TAFSILITYPE_LOAN, array($this->LoanID));
+		
+		if(count($dt) == 0)
+		{
+			$obj = new ACC_tafsilis();
+			$obj->ObjectID = $this->LoanID;
+			$obj->TafsiliCode = $this->LoanID;
+			$obj->TafsiliDesc =  $this->LoanDesc;
+			$obj->TafsiliType = TAFSILITYPE_LOAN;
+			$obj->AddTafsili();
+		}
+		else
+		{
+			$obj = new ACC_tafsilis($dt[0]["TafsiliID"]);
+			$obj->TafsiliCode = $this->LoanID;
+			$obj->TafsiliDesc = $this->LoanDesc;
+			$obj->EditTafsili();
+		}
+		
 	 	return true;
     }
 	

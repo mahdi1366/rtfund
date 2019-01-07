@@ -121,7 +121,9 @@ function GetData(){
 			join BSC_branches using(BranchID)
 			left join (
 				select RequestID, max(InstallmentDate) LastInstallmentDate 
-				from LON_installments group by RequestID
+				from LON_installments
+				where history='NO' AND IsDelayed='NO'
+				group by RequestID
 			)t1 on(i.RequestID=t1.RequestID)
 			left join (
 				select ObjectID,group_concat(title,' به شماره سريال ',num, ' و مبلغ ', 

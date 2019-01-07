@@ -19,10 +19,29 @@ class ExecuteEvent {
 	public $Sources;
 	public $tafsilis = array();
 	
-	function __construct($EventID, $BranchID) {
+	function __construct($EventID, $BranchID = "") {
 	
 		$this->EventID = $EventID;
-		$this->BranchID = $BranchID;
+		$this->BranchID = $BranchID == "" ? BRANCH_BASE : $BranchID;
+		
+		switch($this->EventID)
+		{
+			case EVENT_LOAN_PAYMENT:
+				$this->EventFunction = "EventComputeItems::PayLoan";
+		}
+	}
+	
+	function SetSources($sourceIDs){
+		
+		switch($this->EventID)
+		{
+			case EVENT_LOAN_PAYMENT:
+				$ReqObj = new LON_requests((int)$sourceIDs[0]);
+				$PartObj = new LON_ReqParts((int)$sourceIDs[1]);
+				$PayObj = new LON_payments((int)$sourceIDs[2]);
+				$this->EventFunctionParams = array($ReqObj, $PartObj, $PayObj);
+				$this->Sources = $sourceIDs;
+		}
 	}
 
 	function RegisterEventDoc($pdo = null){
@@ -36,9 +55,11 @@ class ExecuteEvent {
 			$this->pdo = &$pdo;
 
 		$eventRows = PdoDataAccess::runquery("
-			select * from COM_EventRows er join CON_events e using(EventID) 
+			select * from COM_EventRows er 
+				join COM_events e using(EventID) 
+				join  ACC_CostCodes cc using(CostID)
 			where er.EventID=? AND er.IsActive='YES'
-			Order by RowID", 
+			order by CostType,CostCode", 
 			array($this->EventID), $this->pdo);
 
 		if(count($eventRows) == 0)
@@ -47,7 +68,7 @@ class ExecuteEvent {
 			return false;
 		}
 
-		if($this->DocObj)
+		if(!$this->DocObj)
 		{
 			$this->DocObj = new ACC_docs();
 			$this->DocObj->RegDate = PDONOW;
@@ -61,13 +82,15 @@ class ExecuteEvent {
 		}
 
 		//----------------------- add doc items -------------------
-		foreach ($eventRows as $event)
+		foreach ($eventRows as $eventRow)
 		{
 			//-- insert DocHeaders if at least one row would be added --
 			if(empty($this->DocObj->DocID))
 			{
 				if(!$this->DocObj->Add($pdo))
 				{
+					if($pdo == null)
+						$this->pdo->rollBack();
 					ExceptionHandler::PushException("خطا در ایجاد سند");
 					return false;
 				}
@@ -76,13 +99,15 @@ class ExecuteEvent {
 
 			$obj = new ACC_DocItems();
 			$obj->DocID = $this->DocObj->DocID;
-			$result = self::FillItemObject($event, $obj);	
+			$obj->CostID = $eventRow["CostID"];
+			$result = self::FillItemObject($eventRow, $obj);	
 			if(!$result)
 				continue;
 
 			if(!$obj->Add($this->pdo))
 			{
-				$this->pdo->rollBack();
+				if($pdo == null)
+					$this->pdo->rollBack();
 				ExceptionHandler::PushException("خطا در صدور ردیف های سند تعهدی");
 				return false;
 			}
@@ -94,18 +119,32 @@ class ExecuteEvent {
 		return true;
 	}
 	
-	private function FillItemObject($event, &$obj, $amountRow = ""){
+	private function FillItemObject($eventRow, &$obj){
 		
 		/*@var $obj ACC_DocItems */
 		
 		//------------------ set amounts ------------------------
-		$fn = $this->EventFunction;
-		$amount = $fn($event["ComputeItemID"], $this->EventFunctionParams)*1;
+		if($eventRow["ComputeItemID"]*1 > 0)
+		{
+			$amount = call_user_func($this->EventFunction,
+					$eventRow["ComputeItemID"], $this->EventFunctionParams);
+			$obj->locked = "YES";
+		}
+		else
+		{
+			if($eventRow["CostType"] == "DEBTOR")
+				$amount = isset($_POST["DebtorAmount_" . $eventRow["RowID"]]) ? 
+					$_POST["DebtorAmount_" . $eventRow["RowID"]] : 0;
+			else
+				$amount = isset($_POST["CreditorAmount_" . $eventRow["RowID"]]) ? 
+					$_POST["CreditorAmount_" . $eventRow["RowID"]] : 0;
+			$amount = preg_replace("/,/", "", $amount);
+		}
 		if($amount == 0)
 			return false;
 		
-		$obj->DebtorAmount = $event["CostType"] == "DEBTOR" ? $amount : 0;
-		$obj->CreditorAmount = $event["CostType"] == "CREDITOR" ? $amount : 0;
+		$obj->DebtorAmount = $eventRow["CostType"] == "DEBTOR" ? $amount : 0;
+		$obj->CreditorAmount = $eventRow["CostType"] == "CREDITOR" ? $amount : 0;
 		if($obj->DebtorAmount < 0)
 		{
 			$obj->CreditorAmount = -1*$obj->DebtorAmount;
@@ -118,43 +157,43 @@ class ExecuteEvent {
 		}	
 		
 		//---------------- set tafsilis --------------------
-		if($event["tafsili"]*1 > 0)
+		if($eventRow["Tafsili"]*1 > 0)
 		{
-			$result = EventComputeItems::GetTafsilis($event["tafsili"]*1, $this->EventFunctionParams);
+			$result = EventComputeItems::GetTafsilis($eventRow["Tafsili"]*1, $this->EventFunctionParams);
 			$obj->TafsiliType = $result[0];
 			$obj->TafsiliID = $result[1];
 		}
 		else
 		{
-			$obj->TafsiliType = $event["TafsiliType"];
-			if(!empty($this->tafsilis[ $obj->TafsiliType ]))
-				$obj->TafsiliID = $this->tafsilis[ $obj->TafsiliType ];
+			$obj->TafsiliType = $eventRow["TafsiliType"];
+			if(!empty($_POST["TafsiliID_" . $eventRow["RowID"]]))
+				$obj->TafsiliID = $_POST["TafsiliID_" . $eventRow["RowID"]];
 		}
 		
-		if($event["tafsili2"]*1 > 0)
+		if($eventRow["Tafsili2"]*1 > 0)
 		{
-			$result = EventComputeItems::GetTafsilis($event["tafsili2"]*1, $this->EventFunctionParams);
+			$result = EventComputeItems::GetTafsilis($eventRow["Tafsili2"]*1, $this->EventFunctionParams);
 			$obj->TafsiliType2 = $result[0];
 			$obj->TafsiliID2 = $result[1];
 		}
 		else
 		{
-			$obj->TafsiliType2 = $event["TafsiliType2"];
-			if(!empty($this->tafsilis[ $obj->TafsiliType2 ]))
-				$obj->TafsiliID2 = $this->tafsilis[ $obj->TafsiliType2 ];
+			$obj->TafsiliType2 = $eventRow["TafsiliType2"];
+			if(!empty($_POST["TafsiliID2_" . $eventRow["RowID"]]))
+				$obj->TafsiliID = $_POST["TafsiliID2_" . $eventRow["RowID"]];
 		}
 		
-		if($event["tafsili3"]*1 > 0)
+		if($eventRow["Tafsili3"]*1 > 0)
 		{
-			$result = EventComputeItems::GetTafsilis($event["tafsili3"]*1, $this->EventFunctionParams);
+			$result = EventComputeItems::GetTafsilis($eventRow["Tafsili3"]*1, $this->EventFunctionParams);
 			$obj->TafsiliType3 = $result[0];
 			$obj->TafsiliID3 = $result[1];
 		}
 		else
 		{
-			$obj->TafsiliType3 = $event["TafsiliType3"];
-			if(!empty($this->tafsilis[ $obj->TafsiliType3 ]))
-				$obj->TafsiliID3 = $this->tafsilis[ $obj->TafsiliType3 ];
+			$obj->TafsiliType3 = $eventRow["TafsiliType3"];
+			if(!empty($_POST["TafsiliID3_" . $eventRow["RowID"]]))
+				$obj->TafsiliID = $_POST["TafsiliID3_" . $eventRow["RowID"]];
 		}
 		
 		//------------------- set SourceIDs  ---------------------
@@ -167,4 +206,25 @@ class ExecuteEvent {
 		return true;
 	}
 
+	static function GetRegisteredDoc($EventID, $SourceIDs){
+	
+		$params = array(":e" => $EventID);
+		$query = "select LocalNo 
+				from ACC_DocItems join ACC_docs using(DocID)
+				where EventID=:e ";
+
+		if(!is_array($SourceIDs))
+			$SourceIDs = array($SourceIDs);
+
+		$index = 0;
+		foreach($SourceIDs as $sourceID)
+		{
+			$query .= " AND SourceID" . ($index==0 ? "" : $index+1) . "=:s". $index;
+			$params[":s" . $index] = $sourceID;
+			$index++;
+		}
+
+		$dt = PdoDataAccess::runquery($query, $params);
+		return count($dt) > 0 ? $dt[0]["LocalNo"] : false;
+	}
 }

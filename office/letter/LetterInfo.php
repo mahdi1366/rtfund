@@ -83,7 +83,6 @@ $dg->autoExpandColumn = "SendComment";
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 470;
 $dg->disableFooter = true;
-$dg->width = 400;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $grid = $dg->makeGrid_returnObjects();
@@ -103,13 +102,13 @@ LetterInfo.prototype = {
 		return findChild(this.TabID, elementID);
 	}
 };
-
+var aaa;
 function LetterInfo(){
 	
 	if(!this.ReadOnly)
 	{
 		this.grid = <?= $grid ?>;
-		this.grid.render(this.get("div_grid"));
+		//this.grid.render(this.get("div_grid"));
 	}
 	buttons = new Array();
 	if(!this.ReadOnly)
@@ -177,12 +176,13 @@ function LetterInfo(){
 		},'-');
 	}
 	this.tabPanel = new Ext.TabPanel({
-		renderTo: this.get("mainForm"),
+		//renderTo: this.get("mainForm"),
 		activeTab: 0,
 		plain:true,
 		height : 490,
 		autoHeight : true,
-		width: 600,
+		autoWidth : true,
+		//width: 600,
 		defaults:{
 			autoWidth : true            
 		},
@@ -209,7 +209,7 @@ function LetterInfo(){
 				method : "post",
 				text: "در حال بار گذاری...",
 				scripts : true
-			},
+			}, 
 			listeners : {
 				activate : function(){
 					if(this.loader.isLoaded)
@@ -332,8 +332,37 @@ function LetterInfo(){
 					me.DocumentID + "&ObjectID=" + me.LetterID);
 			}
 		});
-		
 	}
+	
+	new Ext.panel.Panel({
+		renderTo : this.get("div_view"),
+		bodyStyle : "background-color:white",
+		layout:'border',
+		autoHeight : true,
+		height : 490,
+		frame : false,
+		border : false,
+		items:[{
+			region:'west',
+			title:'ارجاعات',
+			split:true,
+			width: 400,
+			margins:'20 0 5 5',
+			minSize: 200,
+			maxSize: 400,
+			collapsible: true,
+			items: this.grid,
+			listeners : {
+				resize : function(){ aaa = this;
+					this.items.items[0].doLayout();
+				}				
+			}
+		},{
+			region:'center',
+			border : false,
+			items: [this.tabPanel]
+		}]
+	});
 }
 
 LetterInfo.CommentsRender = function(v,p,r){
@@ -484,9 +513,9 @@ LetterInfo.prototype.copyLetter = function(){
 		border: 1px solid #bbb;
 		border-radius: 10px;
 		background: -webkit-linear-gradient(left, #fff 50%, #eee); /* For Safari 5.1 to 6.0 */
-		background: -o-linear-gradient(right, #fff 50%, #eee); /* For Opera 11.1 to 12.0 */
-		background: -moz-linear-gradient(right, #fff 50%, #eee); /* For Firefox 3.6 to 15 */
-		background: linear-gradient(right, #fff 50%, #eee); /* Standard syntax */
+		background: -o-linear-gradient(left, #fff 50%, #eee); /* For Opera 11.1 to 12.0 */
+		background: -moz-linear-gradient(left, #fff 50%, #eee); /* For Firefox 3.6 to 15 */
+		background: linear-gradient(left, #fff 50%, #eee); /* Standard syntax */
 		box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.2), 0 4px 20px 0 rgba(0, 0, 0, 0.19);
 	} 
 	.LetterContent li {
@@ -506,10 +535,5 @@ LetterInfo.prototype.copyLetter = function(){
 		}
 </style>
 	<br>
-	<table>
-		<tr>
-			<td><div style="margin-right : 8px" id="mainForm"></div></td>
-			<td style="vertical-align: top;padding-top:20px"><div style="" id="div_grid"></div></td>
-		</tr>
-	</table>
+	<div id="div_view"></div>
 	

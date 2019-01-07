@@ -4,6 +4,8 @@
 // create Date: 94.06
 //---------------------------
 
+require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
+		
 class BSC_persons extends PdoDataAccess{
 	
 	public $PersonID;
@@ -60,9 +62,9 @@ class BSC_persons extends PdoDataAccess{
 			PdoDataAccess::FillObject ($this, 
 					"select p.*, po.PostID _PostID 
 						from BSC_persons p 
-						left join BSC_jobs j using(PersonID)
+						left join BSC_jobs j on(p.PersonID=j.PersonID AND j.IsMain='YES')
 						left join BSC_posts po on(j.PostID=po.PostID)
-					where PersonID=?", array($PersonID));
+					where p.PersonID=?", array($PersonID));
 	}
 	
 	static function SelectAll($where = "", $param = array()){
@@ -105,12 +107,11 @@ class BSC_persons extends PdoDataAccess{
 		$daObj->TableName = "BSC_persons";
 		$daObj->execute();
 		
-		require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
 		$obj = new ACC_tafsilis();
 		$obj->ObjectID = $this->PersonID;
 		$obj->TafsiliCode = $this->PersonID;
 		$obj->TafsiliDesc = trim($this->fname . " " . $this->lname . " " . $this->CompanyName);
-		$obj->TafsiliType = "1";
+		$obj->TafsiliType = TAFSILITYPE_PERSON;
 		$obj->AddTafsili();
 		
 		return true;
@@ -137,15 +138,15 @@ class BSC_persons extends PdoDataAccess{
 		$daObj->TableName = "BSC_persons";
 		$daObj->execute();
 		
-		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where ObjectID=? AND TafsiliType=1", array($this->PersonID));
-		require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
+		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis "
+				. "where ObjectID=? AND TafsiliType=" . TAFSILITYPE_PERSON, array($this->PersonID));
 		if(count($dt) == 0)
 		{
 			$obj = new ACC_tafsilis();
 			$obj->ObjectID = $this->PersonID;
 			$obj->TafsiliCode = $this->PersonID;
 			$obj->TafsiliDesc =  trim($this->fname . " " . $this->lname . " " . $this->CompanyName);
-			$obj->TafsiliType = "1";
+			$obj->TafsiliType = TAFSILITYPE_PERSON;
 			$obj->AddTafsili();
 		}
 		else

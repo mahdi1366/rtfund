@@ -208,7 +208,7 @@ function SelectAllRequests2(){
 		join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
 		join BSC_persons p1 on(LoanPersonID=PersonID)
 		left join BSC_persons p2 on(p2.PersonID=ReqPersonID)
-		left join LON_installments i on(i.RequestID=p.RequestID)		
+		left join LON_installments i on(i.history='NO' AND i.IsDelayed='NO' AND i.RequestID=p.RequestID)		
 		left join LON_loans using(LoanID)
 		where 1=1";
 	if(!empty($_REQUEST["query"]))
@@ -746,7 +746,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 	/*$dt = PdoDataAccess::runquery("select * from ACC_DocItems
 		join LON_installments on(SourceID=RequestID AND SourceID2=InstallmentID)
 		where SourceType=" . DOCTYPE_INSTALLMENT_CHANGE . " AND SourceID=? AND 
-			history='NO'", array($RequestID));
+			history='NO' AND IsDelayed='NO'", array($RequestID));
 	if(count($dt) > 0)
 	{
 		if($returnMode)
@@ -757,7 +757,8 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 	}*/
 	//------------------------------------------------------
 	if(!$ReturnAmounts)
-		PdoDataAccess::runquery("delete from LON_installments where RequestID=? AND history='NO'", array($RequestID));
+		PdoDataAccess::runquery("delete from LON_installments "
+				. "where RequestID=? AND history='NO' AND IsDelayed='NO'", array($RequestID));
 	//-----------------------------------------------
 	$obj2 = new LON_requests($RequestID);
 	if($obj2->ReqPersonID == SHEKOOFAI)
@@ -1469,7 +1470,9 @@ function GetDelayedInstallments($returnData = false){
 				group by RequestID			
 			)t3 on(r.RequestID=t3.RequestID)
 			
-			where r.StatusID=" . LON_REQ_STATUS_CONFIRM . " AND InstallmentDate between :fromdate AND :todate 
+			where i.history='NO' AND i.IsDelayed='NO'
+				AND r.StatusID=" . LON_REQ_STATUS_CONFIRM . " 
+				AND InstallmentDate between :fromdate AND :todate 
 				AND IsHistory='NO' AND IsEnded='NO' ";
 	
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
@@ -2061,7 +2064,8 @@ function ComputeManualInstallments(){
 
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
-	PdoDataAccess::runquery("delete from LON_installments where RequestID=? AND history='NO'", array($RequestID), $pdo);
+	PdoDataAccess::runquery("delete from LON_installments "
+			. "where RequestID=? AND history='NO' AND IsDelayed='NO'", array($RequestID), $pdo);
 	
 	for($i=0; $i < count($installmentArray); $i++)
 	{

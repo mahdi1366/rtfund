@@ -50,7 +50,7 @@ $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 490;
 $dg->width = 780;
 $dg->title = "پیام های دریافتی";
-$dg->DefaultSortField = "MsgDate";
+$dg->DefaultSortField = "_MsgDate";
 $dg->autoExpandColumn = "MsgDesc";
 $grid = $dg->makeGrid_returnObjects();	
 ?>

@@ -187,7 +187,67 @@ class LON_requests extends PdoDataAccess{
 	}
 	
 	//-------------------------------------
+	static function YearWageCompute($PartObj, $TotalWage, $YearMonths){
+
+		/*@var $PartObj LON_ReqParts */
+
+		$startDate = DateModules::miladi_to_shamsi($PartObj->PartDate);
+		$startDate = DateModules::AddToJDate($startDate, $PartObj->DelayDays, $PartObj->DelayMonths); 
+		$startDate = preg_split('/[\-\/]/',$startDate);
+		$PayMonth = $startDate[1]*1;
+
+		$FirstYearInstallmentCount = floor((12 - $PayMonth)/(12/$YearMonths));
+		$FirstYearInstallmentCount = $PartObj->InstallmentCount < $FirstYearInstallmentCount ? 
+				$PartObj->InstallmentCount : $FirstYearInstallmentCount;
+		$MidYearInstallmentCount = floor(($PartObj->InstallmentCount-$FirstYearInstallmentCount) / $YearMonths);
+		$MidYearInstallmentCount = $MidYearInstallmentCount < 0 ? 0 : $MidYearInstallmentCount;
+		$LastYeatInstallmentCount = ($PartObj->InstallmentCount-$FirstYearInstallmentCount) % $YearMonths;
+		$LastYeatInstallmentCount = $LastYeatInstallmentCount < 0 ? 0 : $LastYeatInstallmentCount;
+		$F9 = $PartObj->InstallmentCount*(12/$YearMonths);
+
+		$yearNo = 1;
+		$StartYear = $startDate[0]*1;
+		$returnArr = array();
+		while(true)
+		{
+			if($yearNo > $MidYearInstallmentCount+2)
+				break;
+
+			$BeforeMonths = 0;
+			if($yearNo == 2)
+				$BeforeMonths = $FirstYearInstallmentCount;
+			else if($yearNo > 2)
+				$BeforeMonths = $FirstYearInstallmentCount + ($yearNo-2)*$YearMonths;
+
+			$curMonths = $FirstYearInstallmentCount;
+			if($yearNo > 1 && $yearNo <= $MidYearInstallmentCount+1)
+				$curMonths = $YearMonths;
+			else if($yearNo > $MidYearInstallmentCount+1)
+				$curMonths = $LastYeatInstallmentCount;
+
+			$BeforeMonths = $BeforeMonths*(12/$YearMonths);
+			$curMonths = $curMonths*(12/$YearMonths);
+
+			$val = (((($F9-$BeforeMonths)*($F9-$BeforeMonths+1))-
+				($F9-$BeforeMonths-$curMonths)*($F9-$BeforeMonths-$curMonths+1)))/($F9*($F9+1))*$TotalWage;
+
+			$returnArr[ $StartYear ] = $val;
+			$StartYear++;
+			$yearNo++;
+		}
+
+		return $returnArr;
+	}
 	
+	static function Tanzil($amount, $wage, $Date, $StartDate)
+	{
+		$Date = DateModules::miladi_to_shamsi($Date);
+		$StartDate = DateModules::miladi_to_shamsi($StartDate);
+		$days = DateModules::JDateMinusJDate($Date, $StartDate)+1;
+
+		return $amount/(1+($wage*$days/36500));
+	}
+	//-------------------------------------
 	static function GetFirstPayDate($RequestID){
 		
 		$dt = PdoDataAccess::runquery("select * from LON_payments where RequestID=? order by PayDate",
@@ -382,7 +442,7 @@ class LON_requests extends PdoDataAccess{
 		{
 			
 			$CustomerDelay = round($PartObj->PartAmount - 
-					Tanzil($PartObj->PartAmount, $PartObj->DelayPercent, $endDelayDate, $PartObj->PartDate));
+					self::Tanzil($PartObj->PartAmount, $PartObj->DelayPercent, $endDelayDate, $PartObj->PartDate));
 			$FundDelay = round($fundZarib*$CustomerDelay);
 			$AgentDelay = $CustomerDelay - round($fundZarib*$CustomerDelay);
 		}
@@ -443,13 +503,13 @@ class LON_requests extends PdoDataAccess{
 		if($PartObj->MaxFundWage > 0)
 		{
 			if($PartObj->WageReturn == "INSTALLMENT")
-				$FundYears = YearWageCompute($PartObj, $PartObj->MaxFundWage, $YearMonths);
+				$FundYears = self::YearWageCompute($PartObj, $PartObj->MaxFundWage, $YearMonths);
 			else 
 				$FundYears = array();
 		}	
 		else
 		{
-			$years = YearWageCompute($PartObj, $TotalWage*1, $YearMonths);
+			$years = self::YearWageCompute($PartObj, $TotalWage*1, $YearMonths);
 			$FundYears = array();
 			foreach($years as $year => $amount)
 				$FundYears[$year] = round($FundFactor*$amount);
@@ -475,8 +535,10 @@ class LON_requests extends PdoDataAccess{
 	
 	static function ComputePayments2($RequestID, &$installments, $pdo = null){
 
-		$installments = PdoDataAccess::runquery("select * from 
-			LON_installments where RequestID=? AND history='NO' order by InstallmentDate", 
+		$installments = PdoDataAccess::runquery("
+			select * from LON_installments 
+			where RequestID=? AND history='NO' AND IsDelayed='NO'
+			order by InstallmentDate", 
 			array($RequestID), $pdo);
 		
 		$refInstallments = array();
@@ -750,7 +812,7 @@ class LON_requests extends PdoDataAccess{
 	static function ComputePayments($RequestID, &$installments, $pdo = null){
 
 		$installments = PdoDataAccess::runquery("select * from 
-			LON_installments where RequestID=? AND history='NO' order by InstallmentDate", 
+			LON_installments where RequestID=? AND history='NO' AND IsDelayed='NO' order by InstallmentDate", 
 			array($RequestID), $pdo);
 		
 		$refInstallments = array();
@@ -1070,7 +1132,7 @@ class LON_requests extends PdoDataAccess{
 		$amount = $dt[0]["PayAmount"];
 		for($i=1; $i<count($dt); $i++)
 		{ 
-			$amount += Tanzil($dt[$i]["PayAmount"], $PartObj->CustomerWage, $dt[$i]["PayDate"], 
+			$amount += self::Tanzil($dt[$i]["PayAmount"], $PartObj->CustomerWage, $dt[$i]["PayDate"], 
 					$dt[0]["PayDate"]);
 		}
 		

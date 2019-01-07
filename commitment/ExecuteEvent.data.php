@@ -7,296 +7,128 @@ require_once '../header.inc.php';
 require_once(inc_response);
 require_once(inc_dataReader);
 require_once './baseinfo/baseinfo.class.php';
+require_once '../loan/request/request.class.php';
+require_once './ComputeItems.class.php';
+require_once './ExecuteEvent.class.php';
 	
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 
 switch ($task) {
 	
 	case "selectEventRows":
-	case "ExecuteEvent":
+	case "RegisterEventDoc":
 	
 		$task();
 }
 
 function selectEventRows(){
 	
+	$EventID = $_REQUEST["EventID"]*1;
 	$where = " er.IsActive='YES' AND EventID=? ";
 	$where .= " order by CostType,CostCode";
+	$list = COM_EventRows::SelectAll($where, array($EventID));
 	
-	$list = COM_EventRows::SelectAll($where, array($_REQUEST["EventID"]));
+	//-------------- set source objects ----------------
+	$SourceObjects = array();
+	$fn = "";
+	switch($EventID)
+	{
+		case EVENT_LOAN_PAYMENT:
+			$ReqObj = new LON_requests((int)$_REQUEST["RequestID"]);
+			$PartObj = LON_ReqParts::GetValidPartObj($ReqObj->RequestID);
+			$PayObj = new LON_payments((int)$_REQUEST["PayID"]);
+			$SourceObjects = array($ReqObj, $PartObj, $PayObj);
+			$fn = "EventComputeItems::PayLoan";
+	}
+	//--------------- get compute items values -----------
+	$computedValues = array();
+	for($i=0; $i < count($list); $i++)
+	{
+		if($list[$i]["ComputeItemID"]*1 > 0 && $fn != "")
+		{
+			if(isset($computedValues[ $list[$i]["ComputeItemID"] ]))
+				$value = $computedValues[ $list[$i]["ComputeItemID"] ];
+			else
+			{
+				$value = call_user_func($fn, $list[$i]["ComputeItemID"], $SourceObjects);
+			}
+			$computedValues[ $list[$i]["ComputeItemID"] ] = $value;
+			
+			if($list[$i]["CostType"] == "DEBTOR")
+				$list[$i]["DebtorAmount"] = $value;
+			else
+				$list[$i]["CreditorAmount"] = $value;
+		}
+		if($list[$i]["Tafsili"]*1 > 0)
+		{
+			$res = EventComputeItems::GetTafsilis($list[$i]["Tafsili"],$SourceObjects);
+			$list[$i]["TafsiliValue1"] = $res[2];
+		}
+		if($list[$i]["Tafsili2"]*1 > 0)
+		{
+			$res = EventComputeItems::GetTafsilis($list[$i]["Tafsili2"],$SourceObjects);
+			$list[$i]["TafsiliValue2"] = $res[2];
+		}
+		if($list[$i]["Tafsili3"]*1 > 0)
+		{
+			$res = EventComputeItems::GetTafsilis($list[$i]["Tafsili3"],$SourceObjects);
+			$list[$i]["TafsiliValue3"] = $res[2];
+		}
+	}
+	
 	//print_r(ExceptionHandler::PopAllExceptions());
 	//echo PdoDataAccess::GetLatestQueryString();
 	echo dataReader::getJsonData($list, count($list), $_GET['callback']);
 	die();
 }
 
-
-
-
-
-
-
-
-
-
-
-function SelectProcesses(){
+function RegisterEventDoc(){
 	
-	$where = "1=1";
-	$param = array();
-	
-	if(isset($_REQUEST["ParentID"]))
-	{
-		$where .= " AND p.ParentID=:pid";
-		$param[":pid"] = (int)$_REQUEST["ParentID"];
-	}
-	
-	$dt = COM_processes::SelectProcesss($where, $param,isset($_REQUEST["hasChild"]));
-	
-	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
-	die();		
-}
-
-function SaveProcess() {
-
-	$processObj = new COM_processes();
-	PdoDataAccess::FillObjectByArray($processObj, $_POST);
-	$processObj->IsActive = 'YES';
-
-	if($processObj->EventID == "")
-		$processObj->EventID = PDONULL;
-	
-	if ($_POST["old_ProcessID"] == '')
-		$res = $processObj->InsertProcess();
-	else
-		$res = $processObj->UpdateProcess((int)$_POST["old_ProcessID"]);
-
-	Response::createObjectiveResponse($res, $processObj->ProcessID);
-	die();
-}
-
-function DeleteProcess() {
-
-	$res = COM_processes::DeleteProcess((int)$_POST['ProcessID']);
-	echo Response::createResponse($res, "");
-	die();
-}
-
-function GetProcessTree() {
-
-	$nodes = PdoDataAccess::runquery("
-			select *, concat('[',ProcessID,'] ',ProcessTitle) text
-			from COM_processes p
-			where p.IsActive='YES' order by ParentID,ProcessID");
-	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes,"ParentID","ProcessID","text");
-	echo json_encode($returnArr);
-	die();
-}
-
-//------------------------------------------------------------------------------
-
-function GetAllEvents() {
-	
-	$where = '1=1';
-	$param = array();
-             if (!InputValidation::validate($_POST['query'], InputValidation::Pattern_FaEnAlphaNum, false)) {
-                echo dataReader::getJsonData(array(), 0, $_GET["callback"]);
-                die();
-           }
-        
-	if(!empty($_REQUEST["query"]))
-	{
-		$where .= " AND ( EventTitle like :q or EventID like :q)";
-		$param[":q"] = "%" . $_REQUEST["query"] . "%";
-	}
-	
-	if(!empty($_REQUEST["EventID"]))
-	{
-		$where .= " AND EventID =:eid";
-		$param[":eid"] =(int) $_REQUEST["EventID"];
-	}
-	
-	if(!isset($_REQUEST["all"]))
-		$where .= " AND ParentID>0";
-
-	$list = COM_events::SelectEvents($where, $param);
-	echo dataReader::getJsonData($list, count($list), $_GET['callback']);
-	die();
-}
-
-function SaveEvent() {
-
-	$eventObj = new COM_events();
-	PdoDataAccess::FillObjectByArray($eventObj, $_POST);
-	$eventObj->IsActive = 'YES';
-
-	if ($_POST["old_EventID"] == '')
-		$res = $eventObj->InsertEvent();
-	else
-		$res = $eventObj->UpdateEvent((int)$_POST["old_EventID"]);
-
-	Response::createObjectiveResponse($res, $eventObj->EventID);
-	die();
-}
-
-function DeleteEvent() {
-
-	$res = COM_events::DeleteEvent((int)$_POST['EventID']);
-	echo Response::createResponse($res, "");
-	die();
-}
-
-function GetEventsTree() {
-
-	$nodes = PdoDataAccess::runquery("
-			select concat('[',EventID,'] ',EventTitle) text, e.*
-			from COM_events e
-			where e.IsActive='YES'
-			order by ParentID,EventID");
-	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes, "ParentID", "EventID", "text");
-	echo json_encode($returnArr);
-	die();
-}
-
-//------------------------------------------------------------------------------
-
-function selectComputeGroups(){
-	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=83 AND IsActive='YES'");
-	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
-	die();
-}
-
-function selectComputeItems(){
-	
-	$param1 = $_REQUEST["param1"];
-	$dt = PdoDataAccess::runquery("select * from BaseInfo 
-		where typeID=84 AND IsActive='YES' AND param1=?", array($param1));
-	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
-	die();
-}
-
-
-function saveEventRow(){
+	$EventID = (int)$_POST["EventID"];
+	$SourceIDs = $_POST["SourcesArr"];
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	$obj = new COM_EventRows();
-	PdoDataAccess::FillObjectByArray($obj, $_POST);
-	
-	//------ add new Row -------------
-	if(empty($obj->RowID))
-	{
-		if(!$obj->InsertEventRow($pdo))
-		{
-			$pdo->rollBack();
-			echo Response::createObjectiveResponse(false, "");
-			die();
-		}
-		$pdo->commit();
-		echo Response::createObjectiveResponse(true, "");
-		die();	
-	}
-	//--------- edit row ------------
-	$OldRowID = $obj->RowID;
-	unset($obj->RowID);
-	//unset($obj->ChangeDesc);
-	if(!$obj->InsertEventRow($pdo))
+	$obj = new ExecuteEvent($EventID);
+	$obj->SetSources($SourceIDs);
+	$result = $obj->RegisterEventDoc($pdo);
+	if(!$result)
 	{
 		$pdo->rollBack();
-		echo Response::createObjectiveResponse(false, "");
-		die();
-	}
-	
-	$obj2 = new COM_EventRows();
-	$obj2->NewRowID = $OldRowID;
-	$obj2->RowID = $_POST["RowID"];
-	$obj2->IsActive = 'NO';
-	$obj2->ChangeDesc = $_POST["ChangeDesc"];
-	if(!$obj2->UpdateEventRow($pdo))
-	{
-		$pdo->rollBack();
-		echo Response::createObjectiveResponse(false, "");
+		print_r(ExceptionHandler::PopAllExceptions());
+		Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
 	}
 	
 	$pdo->commit();
-	echo Response::createObjectiveResponse(true, "");
-	die();	
-}
-
-function DeleteEventRow(){
-	
-	$obj = new COM_EventRows();
-	$obj->RowID = $_POST["RowID"];
-	$obj->ChangeDesc = $_POST["ChangeDesc"];
-	$obj->ChangeDate = PDONOW;
-	$obj->ChangePersonID = $_SESSION["USER"]["PersonID"];
-	$obj->IsActive = 'NO';
-	$res = $obj->UpdateEventRow();
-	
-	echo Response::createObjectiveResponse($res, "");
+	Response::createObjectiveResponse(true, "سند شماره " . $obj->DocObj->LocalNo . " با موفقیت صادر گردید");
 	die();
-}
-
-function selectEventTafsilis(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=87 AND IsActive='YES' ");
-	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
-	die();
-}
-
-//------------------------------------------------
-
-function selectBases(){
-	$list = PdoDataAccess::runquery("select * from BaseInfo where TypeID=85 AND IsActive='YES'");
-	echo dataReader::getJsonData($list, count($list), $_GET['callback']);
-	die();
-}
-
-function selectMethods(){
-	$list = PdoDataAccess::runquery("select * from BaseInfo where TypeID=86 AND IsActive='YES'");
-	echo dataReader::getJsonData($list, count($list), $_GET['callback']);
-	die();
-}
-
-function selectSharing(){
-
-	$where = " AND s.ProcessID=? ";
-	if(!isset($_REQUEST["AllHistory"]) || $_REQUEST["AllHistory"] == "false")
-		$where .= " AND s.IsActive='YES'";
-		
-	$where .= " order by CostCode,IsActive desc,ChangeDate";
+	/*
+	//-------------- ایجاد چک --------------------
 	
-	$list = COM_sharing::Get($where, array($_REQUEST["ProcessID"]));
-	echo dataReader::getJsonData($list->fetchAll(), $list->rowCount(), $_GET['callback']);
-	die();
+	$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_ACCOUNTS . 
+			" AND TafsiliID=? ", array($AccountTafsili));
+	$AccountID = (count($dt) > 0) ? $dt[0]["ObjectID"] : "";
+	
+	$chequeObj = new ACC_DocCheques();
+	$chequeObj->DocID = $obj->DocObj->DocID;
+	$chequeObj->CheckDate = $PayObj->PayDate;
+	$chequeObj->amount = EventComputeItems::PayLoan(3, $obj->EventFunctionParams);
+	$chequeObj->TafsiliID = EventComputeItems::GetTafsilis(EventComputeItems::Tafsili_LoanPersonID, TAFTYPE_PERSONS);
+	$chequeObj->CheckNo = $ChequeNo;
+	$chequeObj->AccountID = $AccountID ;
+	$chequeObj->description = " پرداخت وام شماره " . $ReqObj->RequestID;
+	$chequeObj->Add($pdo);
+	
+	//---------------------------------------------------------
+	
+	if(ExceptionHandler::GetExceptionCount() > 0)
+		return false;
+	
+	return $obj->DocObj->DocID;*/
+	
 }
-
-function saveSharing(){
-	
-	$obj = new COM_sharing();
-	PdoDataAccess::FillObjectByArray($obj, $_POST);
-	
-	if(empty($obj->ShareID))
-		$result = $obj->Add();
-	else
-		$result = $obj->Edit();
-	
-	//print_r(ExceptionHandler::PopAllExceptions());
-	echo Response::createObjectiveResponse($result, "");
-	die();	
-}
-
-function DeleteSharing(){
-	
-	$obj = new COM_sharing($_POST["ShareID"]);
-	$obj->ChangeDesc = $_POST["ChangeDesc"];
-	$res = $obj->Remove();	
-	echo Response::createObjectiveResponse($res, "");
-	die();
-}
-
 
 ?>

@@ -4950,9 +4950,9 @@ Ext.define('Ext.ux.RowExpander', {
 
 
         // If Grid is auto-heighting itself, then perform a component layhout to accommodate the new height
-        if (!grid.isFixedHeight()) {
+        //if (!grid.isFixedHeight()) {
             grid.doComponentLayout();
-        }
+        //}
         this.view.up('gridpanel').invalidateScroller();
     },
 
@@ -5091,6 +5091,58 @@ Ext.override(Ext.data.Store, {
 
         // update the view index after the store data is sorted by groups
         grid.getView().updateIndexes();
+    },
+	getSum: function(records, field) {
+        var total = 0,
+            i = 0,
+            len = records.length;
+        for (; i < len; ++i) {
+            total += records[i].get(field)*1;
+        }
+        return total;
+    },
+    getMin: function(records, field) {
+        var i = 1,
+            len = records.length,
+            value, min;
+        if (len > 0) {
+            min = records[0].get(field)*1;
+        }
+        for (; i < len; ++i) {
+            value = records[i].get(field)*1;
+            if (value < min) {
+                min = value;
+            }
+        }
+        return min;
+    },
+    getMax: function(records, field) {
+        var i = 1,
+            len = records.length,
+            value,
+            max;
+        if (len > 0) {
+            max = records[0].get(field)*1;
+        }
+        for (; i < len; ++i) {
+            value = records[i].get(field)*1;
+            if (value > max) {
+                max = value;
+            }
+        }
+        return max;
+    },
+    getAverage: function(records, field) {
+		 var i = 0,
+            len = records.length,
+            sum = 0;
+        if (records.length > 0) {
+            for (; i < len; ++i) {
+                sum += records[i].get(field)*1;
+            }
+            return sum / len;
+        }
+        return 0;
     }
 });
 

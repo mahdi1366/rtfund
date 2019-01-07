@@ -369,14 +369,22 @@ function SaveLetter($dieing = true) {
 		$Letter->RegDate = PDONOW;
 		
 		if($Letter->PersonID == $Letter->SignerPersonID)
+		{
+			$PersonObj = new BSC_persons($obj->SignerPersonID);
 			$Letter->IsSigned = "YES";
+			$Letter->SignPostID = $PersonObj->_PostID;
+		}
 		
         $res = $Letter->AddLetter();
     }
     else
 	{
 		if($Letter->PersonID == $Letter->SignerPersonID)
+		{
+			$PersonObj = new BSC_persons($obj->SignerPersonID);
 			$Letter->IsSigned = "YES";
+			$Letter->SignPostID = $PersonObj->_PostID;
+		}
         $res = $Letter->EditLetter();
 	}
 	
@@ -969,8 +977,8 @@ function SelectMyMessages(){
 	
 	$param = array(":p" => $_SESSION["USER"]["PersonID"]);
 	
-	$dt = PdoDataAccess::runquery_fetchMode($query, $param);
-	print_r(ExceptionHandler::PopAllExceptions());
+	$dt = PdoDataAccess::runquery_fetchMode($query . dataReader::makeOrder(), $param);
+	//echo PdoDataAccess::GetLatestQueryString();
 	$cnt = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	

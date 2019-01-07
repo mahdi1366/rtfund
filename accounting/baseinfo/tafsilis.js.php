@@ -23,8 +23,6 @@ function Tafsili(){
 		renderTo: this.get("div_selectGroup"),
 		title: "انتخاب گروه",
 		width: 400,
-		collapsible : true,
-		collapsed : false,
 		frame: true,
 		bodyCfg: {style: "background-color:white"},
 		items : [{
@@ -35,13 +33,27 @@ function Tafsili(){
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
 					autoLoad : true,
-					fields : ['InfoID','InfoDesc']
+					fields : ['InfoID','InfoDesc','param1']
 				}),
 				valueField : "InfoID",
 				queryMode : "local",
 				name : "TafsiliType",
 				displayField : "InfoDesc",
-				fieldLabel : "انتخاب گروه"
+				fieldLabel : "انتخاب گروه",
+				listeners : {
+					select : function(combo,records){
+						if(records[0].data.param1 == "1")
+						{
+							TafsiliObject.groupPnl.down("[itemId=cmp_removeGroup]").disable();
+							TafsiliObject.grid.down("[itemId=btn_add]").disable();
+						}
+						else
+						{
+							TafsiliObject.groupPnl.down("[itemId=cmp_removeGroup]").enable();
+							TafsiliObject.grid.down("[itemId=btn_add]").enable();
+						}						
+					}
+				}
 			},{
 				xtype : "fieldset",
 				collapsible: true,
@@ -115,7 +127,6 @@ Tafsili.prototype.LoadTafsilis = function(){
 		this.grid.render(this.get("grid_div"));
 	
 	this.grid.show();
-	this.groupPnl.collapse();
 }
 
 Tafsili.DeleteRender = function(v,p,r){

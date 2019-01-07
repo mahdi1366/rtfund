@@ -49,19 +49,19 @@ $col = $dg->addColumn("گروه تفصیلی", "TafsiliTypeDesc");
 $col->renderer = "function(v,p,r){return v + '/' + (r.data.TafsiliDesc != null ? r.data.TafsiliDesc : '-');}";
 $col->width = 100; 
 
-$col = $dg->addColumn("گروه تفصیلی2", "TafsiliType2Desc");
-$col->renderer = "function(v,p,r){return v + '/' + (r.data.TafsiliDesc2 != null ? r.data.TafsiliDesc2 : '-');}";
+$col = $dg->addColumn("گروه تفصیلی2", "TafsiliType2Desc"); 
+$col->renderer = "function(v,p,r){return v + '/' + (r.data.Tafsili2Desc != null ? r.data.Tafsili2Desc : '-');}";
 $col->width = 100;
 
 $col = $dg->addColumn("گروه تفصیلی3", "TafsiliType3Desc");
-$col->renderer = "function(v,p,r){return v + '/' + (r.data.TafsiliDesc3 != null ? r.data.TafsiliDesc3 : '-');}";
+$col->renderer = "function(v,p,r){return v + '/' + (r.data.Tafsili3Desc != null ? r.data.Tafsili3Desc : '-');}";
 $col->width = 100;
 
 $col = $dg->addColumn("مبنای صدور سند", "DocDesc");
 $col->width = 120;
 $col->ellipsis = 40; 
 
-$col = $dg->addColumn("آیتم محاسباتی", "ComputeItemFullDesc");
+$col = $dg->addColumn("آیتم محاسباتی", "ComputeItemDesc");
 $col->width = 120;
 $col->ellipsis = 40; 
 

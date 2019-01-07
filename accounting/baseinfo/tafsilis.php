@@ -28,8 +28,7 @@ $col->editor = ColumnEditor::TextField();
 
 if($accessObj->AddFlag)
 {
-	$dg->addButton = true;
-	$dg->addHandler = "function(){TafsiliObject.AddTafsili();}";
+	$dg->addButton("btn_add","ایجاد","add", "function(){TafsiliObject.AddTafsili();}");
 }
 if($accessObj->RemoveFlag)
 {
@@ -44,7 +43,8 @@ $dg->rowEditOkHandler = "function(){return TafsiliObject.SaveTafsili();}";
 $dg->title = "لیست تفصیلی ها";
 $dg->height = 500;
 $dg->width = 750;
-$dg->DefaultSortField = "TafsiliDesc";
+$dg->DefaultSortField = "TafsiliCode";
+$dg->DefaultSortDir = "ASC";
 $dg->autoExpandColumn = "TafsiliDesc";
 $grid = $dg->makeGrid_returnObjects();
 

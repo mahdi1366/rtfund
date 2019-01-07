@@ -6,11 +6,11 @@
 
 class EventComputeItems {
 	
-	static function PayLoan($ItemID, $params){
+	static function PayLoan($ItemID, $SourceObjects){
 		
-		$ReqObj = $params[0];
-		$PartObj = $params[1];
-		$PayObj = $params[2];
+		$ReqObj = $SourceObjects[0];
+		$PartObj = $SourceObjects[1];
+		$PayObj = $SourceObjects[2];
 		/* @var $ReqObj LON_requests */
 		/* @var $PartObj LON_ReqParts */
 		/* @var $PayObj LON_payments */
@@ -66,7 +66,7 @@ class EventComputeItems {
 	
 	//--------------------------------------------------------
 	
-	static function FindTafsiliID($TafsiliType, $TafsiliCode){
+	static function FindTafsili($TafsiliType, $TafsiliCode){
 
 		if($TafsiliType == TAFTYPE_PERSONS)
 			$dt = PdoDataAccess::runquery("select * from ACC_tafsilis "
@@ -83,7 +83,7 @@ class EventComputeItems {
 			return false;
 		}
 
-		return $dt[0]["TafsiliID"];
+		return array("TafsiliID" => $dt[0]["TafsiliID"], "TafsiliDesc" => $dt[0]["TafsiliDesc"]);
 	}
 
 	const Tafsili_LoanPersonID = 1;
@@ -94,20 +94,23 @@ class EventComputeItems {
 		
 		switch($tafsili)
 		{
-			case Tafsili_LoanPersonID : //وام گیرنده
+			case self::Tafsili_LoanPersonID : //وام گیرنده
 				$ReqObj = $params[0];
 				/* @var $ReqObj LON_requests */
-				return array(TAFTYPE_PERSONS, self::FindTafsiliID(TAFTYPE_PERSONS, $ReqObj->LoanPersonID));
+				$res = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->LoanPersonID);
+				return array(TAFTYPE_PERSONS, $res["TafsiliID"], $res["TafsiliDesc"]);
 				
-			case Tafsili_ReqPersonID : //سرمایه گذار
+			case self::Tafsili_ReqPersonID : //سرمایه گذار
 				$ReqObj = $params[0];
 				/* @var $ReqObj LON_requests */
-				return array(TAFTYPE_PERSONS, self::FindTafsiliID(TAFTYPE_PERSONS, $ReqObj->ReqPersonID));
+				$res = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->ReqPersonID);
+				return array(TAFTYPE_PERSONS, $res["TafsiliID"], $res["TafsiliDesc"]);
 				
-			case Tafsili_LoanID : //نوع وام
+			case self::Tafsili_LoanID : //نوع وام
 				$ReqObj = $params[0];
 				/* @var $ReqObj LON_requests */
-				return array(TAFSILITYPE_LOAN, self::FindTafsiliID(TAFSILITYPE_LOAN, $ReqObj->LoanID));
+				$res = self::FindTafsili(TAFSILITYPE_LOAN, $ReqObj->LoanID);
+				return array(TAFSILITYPE_LOAN, $res["TafsiliID"], $res["TafsiliDesc"]);
 		}
 	}
 }
