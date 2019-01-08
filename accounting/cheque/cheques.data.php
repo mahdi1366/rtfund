@@ -484,7 +484,7 @@ function SaveLoanCheque(){
 		}
 		else
 		{
-			$obj->CostID = FindCostID("190-436");
+			$obj->CostID = COSTID_GetDelay;
 			$obj->LoanRequestID = $_POST["RequestID"];
 			$obj->TafsiliType = TAFTYPE_PERSONS;
 			$obj->TafsiliID = FindTafsiliID($ReqObj->LoanPersonID, TAFTYPE_PERSONS);

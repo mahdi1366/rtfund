@@ -53,7 +53,7 @@ define("COSTID_ShortDeposite", "66"); // 210-01
 define("COSTID_Todiee", "63");
 define("COSTID_LongDeposite", "119");
 define("COSTID_Fund", "1");
-define("COSTID_Wage", "19"); // 550
+define("COSTID_Wage", "470"); // 550
 define("COSTID_DepositeWage", "418"); // 750-09
 define("COSTID_Bank", "253");
 define("COSTID_share", "313"); 
@@ -64,6 +64,7 @@ define("COSTID_current", "202");
 define("COSTID_BRANCH_PARK", "17"); // 499 park branch
 define("COSTID_BRANCH_UM", "205"); // 900 um branch
 define("COSTID_DepositeProfit", "416");
+define("COSTID_GetDelay", "444");
 
 define("ShareBaseAmount", "1100000");
 

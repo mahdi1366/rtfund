@@ -73,7 +73,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$CostCode_bank = FindCostID("101");
 	$CostCode_commitment = FindCostID("200-" . $LoanObj->_BlockCode . "-51");
 	$CostCode_todiee = FindCostID("200-". $LoanObj->_BlockCode."-01");
-	$CostCode_delayCheque = FindCostID("190-436");
+	$CostCode_delayCheque = COSTID_GetDelay;
 	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
@@ -727,7 +727,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$CostCode_todiee = FindCostID("200-".$LoanObj->_BlockCode."-01");
 	$CostCode_FundComit_wage = FindCostID("721-".$LoanObj->_BlockCode."-52-03");
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
-	$CostCode_delayCheque = FindCostID("190-436");
+	$CostCode_delayCheque = COSTID_GetDelay;
 		
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");

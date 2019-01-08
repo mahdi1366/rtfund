@@ -205,10 +205,11 @@ function GetData(&$rpg){
 				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
 				(!empty($_REQUEST["IncludeStart"]) ? "&IncludeStart=1" : "&IncludeStart=0") .
 				(!empty($_REQUEST["IncludeEnd"]) ? "&IncludeEnd=1" : "&IncludeEnd=0") .
+				(!empty($_REQUEST["RemainOnly"]) ? "&RemainOnly=1" : "&RemainOnly=0") .				
 				"');\" href=javascript:void(0)>" . $value . "</a>";
 	}
 	function showDocs2($row, $value){
-		if($value == "")
+		if($value == "") 
 			$value = "-----";
 		
 		return "<a onclick=\"window.open('flow.php?taraz=true&show=true&taraz=true".
@@ -226,6 +227,7 @@ function GetData(&$rpg){
 				(!empty($_REQUEST["BranchID"]) ? "&BranchID=" . $_REQUEST["BranchID"] : "") .
 				(!empty($_REQUEST["CycleID"]) ? "&CycleID=" . $_REQUEST["CycleID"] : "") .
 				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
+				(!empty($_REQUEST["RemainOnly"]) ? "&RemainOnly=1" : "") .		
 				"');\" href=javascript:void(0)>" . $value . "</a>";
 	}
 	
@@ -385,7 +387,14 @@ function GetData(&$rpg){
 	
 	$query = $select . $from . " where 1=1 " . $where;
 	$query .= $group != "" ? " group by " . $group : "";
-		
+	
+	//------------ make having ----------------
+	if(!empty($_REQUEST["RemainOnly"]))
+	{
+		$query .= " having bdAmount<>bsAmount ";
+	}
+	//-----------------------------------------
+	
 	$query .= " order by b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode,di.TafsiliID,di.TafsiliID2";
 
 	$dt = PdoDataAccess::runquery($query, $whereParam);
@@ -558,6 +567,7 @@ function ListData($IsDashboard = false){
 	<input type="hidden" name="BranchID" value="<?= !empty($_REQUEST["BranchID"]) ? $_REQUEST["BranchID"] : "" ?>">
 	<input type="hidden" name="CycleID" value="<?= !empty($_REQUEST["CycleID"]) ? $_REQUEST["CycleID"] : "" ?>">
 	<input type="hidden" name="resultColumns" value="<?= $_REQUEST["resultColumns"] ?>">
+	<input type="hidden" name="RemainOnly" value="<?= !empty($_REQUEST["RemainOnly"]) ? $_REQUEST["RemainOnly"] : "" ?>">
 	
 	<input type="hidden" name="level1s" id="level1s" value="<?= $_POST["level1s"] ?>">
 	<input type="hidden" name="level2s" id="level2s" value="<?= $_POST["level2s"] ?>">
@@ -756,7 +766,8 @@ function AccReport_taraz()
 			colspan : 2,
 			html : "<input type=checkbox checked name=IncludeRaw id=IncludeRaw> گزارش شامل اسناد خام نیز باشد." + "<br>" +
 				"<input type=checkbox name=IncludeStart checked=true id=IncludeStart> گزارش شامل سند افتتاحیه باشد." + "<br>" + 	
-				"<input type=checkbox name=IncludeEnd id=IncludeEnd> گزارش شامل سند اختتامیه باشد."
+				"<input type=checkbox name=IncludeEnd id=IncludeEnd> گزارش شامل سند اختتامیه باشد."+ "<br>" + 
+				"<input type=checkbox name=RemainOnly id=RemainOnly> گزارش فقط حساب های مانده دار را لیست کند"
 		}];
 	this.formPanel = new Ext.form.Panel({
 		renderTo : this.get("main"),

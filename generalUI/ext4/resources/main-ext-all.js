@@ -74113,7 +74113,7 @@ Ext.define('Ext.view.Table', {
         if (this.getRowClass) {
             for (; j < jln; j++) {
                 rowParams = {};
-                preppedRecords[j].rowCls = this.getRowClass(records[j], j, rowParams, this.store);
+                preppedRecords[j].rowCls += " " + this.getRowClass(records[j], j, rowParams, this.store);
             }
         }
         for (; i < ln; i++) {

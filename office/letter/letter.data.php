@@ -367,24 +367,10 @@ function SaveLetter($dieing = true) {
 		$Letter->PersonID = $_SESSION["USER"]["PersonID"];
 		$Letter->LetterDate = PDONOW;
 		$Letter->RegDate = PDONOW;
-		
-		if($Letter->PersonID == $Letter->SignerPersonID)
-		{
-			$PersonObj = new BSC_persons($obj->SignerPersonID);
-			$Letter->IsSigned = "YES";
-			$Letter->SignPostID = $PersonObj->_PostID;
-		}
-		
         $res = $Letter->AddLetter();
     }
     else
 	{
-		if($Letter->PersonID == $Letter->SignerPersonID)
-		{
-			$PersonObj = new BSC_persons($obj->SignerPersonID);
-			$Letter->IsSigned = "YES";
-			$Letter->SignPostID = $PersonObj->_PostID;
-		}
         $res = $Letter->EditLetter();
 	}
 	
@@ -426,7 +412,18 @@ function SaveLetter($dieing = true) {
 		fwrite($fp, substr(fread(fopen($_FILES['PageFile']['tmp_name'], 'r'), 
 				$_FILES ['PageFile']['size']),200) );
 		fclose($fp);
-	}	
+	}
+
+	//------------- sign if regPerson and SignPerson are the same --------------
+	$obj = new OFC_letters($Letter->LetterID);
+	if($obj->PersonID == $obj->SignerPersonID && $obj->PersonID == $_SESSION["USER"]["PersonID"])
+	{
+		$PersonObj = new BSC_persons($obj->SignerPersonID);
+		$obj->IsSigned = "YES";
+		$obj->SignPostID = $PersonObj->_PostID;
+		$obj->EditLetter();
+	}
+	//--------------------------------------------------------------------------
 	
 	if($dieing)
 	{

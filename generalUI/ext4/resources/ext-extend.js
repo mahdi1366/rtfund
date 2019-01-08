@@ -4796,8 +4796,6 @@ Ext.define('Ext.ux.RowExpander', {
      */
     selectRowOnExpand: false,
 	
-	defaultExpand: false,
-
     rowBodyTrSelector: '.x-grid-rowbody-tr',
     rowBodyHiddenCls: 'x-grid-row-body-hidden',
     rowCollapsedCls: 'x-grid-row-collapsed',
@@ -4990,6 +4988,7 @@ Ext.define('Ext.ux.RowExpander', {
         };
     }
 });
+
 
 //***********************************************************
 //******************* FormSerializer  ***********************

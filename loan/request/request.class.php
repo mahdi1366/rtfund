@@ -187,6 +187,23 @@ class LON_requests extends PdoDataAccess{
 	}
 	
 	//-------------------------------------
+	static function ComputeWage($PartAmount, $CustomerWagePercent, $InstallmentCount, $IntervalType, $PayInterval){
+	
+		if($PayInterval == 0)
+			return 0;
+
+		if($CustomerWagePercent == 0)
+			return 0;
+
+		if($IntervalType == "DAY")
+			$PayInterval = $PayInterval/30;
+
+		$R = ($CustomerWagePercent/12)*$PayInterval;
+		$F7 = $PartAmount;
+		$F9 = $InstallmentCount;
+		return ((($F7*$R*pow(1+$R,$F9))/(pow(1+$R,$F9)-1))*$F9)-$F7;
+	}
+
 	static function YearWageCompute($PartObj, $TotalWage, $YearMonths){
 
 		/*@var $PartObj LON_ReqParts */
@@ -494,7 +511,7 @@ class LON_requests extends PdoDataAccess{
 		}
 		else
 		{
-			$TotalWage = round(ComputeWage($PartObj->PartAmount, $MaxWage/100, 
+			$TotalWage = round(self::ComputeWage($PartObj->PartAmount, $MaxWage/100, 
 					$PartObj->InstallmentCount, 
 					$PartObj->IntervalType, $PartObj->PayInterval));	
 		}

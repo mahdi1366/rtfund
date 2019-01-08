@@ -26,6 +26,7 @@ switch($EventID)
 if(count($SourcesArr)>0)
 {
 	$LocalNo = ExecuteEvent::GetRegisteredDoc($EventID, $SourcesArr);
+	//print_r(ExceptionHandler::PopAllExceptions());
 	if($LocalNo !== false)
 	{
 		echo "<center><br><h1>" . 

@@ -3,6 +3,7 @@
 // developer:	Sh.Jafarkhani
 // Date:		97.10
 //---------------------------
+ini_set("display_errors", "On");
 require_once '../header.inc.php';
 require_once(inc_response);
 require_once(inc_dataReader);
@@ -22,7 +23,7 @@ switch ($task) {
 }
 
 function selectEventRows(){
-	
+	ini_set("display_errors", "On");
 	$EventID = $_REQUEST["EventID"]*1;
 	$where = " er.IsActive='YES' AND EventID=? ";
 	$where .= " order by CostType,CostCode";
