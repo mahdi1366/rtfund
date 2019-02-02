@@ -13,7 +13,7 @@ $lastDate = $dt[0][0];
 //------------------------------------------
 
 $SystemID = 1000; // portal
-
+ 
 $menus = FRW_access::getPortalMenus($SystemID);
 
 //------------- one sended loans ---------------------
@@ -141,7 +141,7 @@ for ($i = 0; $i < count($menus); $i++) {
 							</td>
 						<td align="left">
 							<img style='width: 22px; vertical-align: middle; margin-top: 10px;cursor: pointer' 
-							src='/framework/icons/exit.png' onclick="portal.OpenPage('/portal/logout.php');" /> 
+							src='/framework/icons/exit.png' onclick="portal.OpenPage('/framework/logout.php');" /> 
 						</td>
 					</tr>
 				</table>

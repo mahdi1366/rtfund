@@ -20,10 +20,7 @@ require_once getenv("DOCUMENT_ROOT") . '/framework/session.php';
 session::sec_session_start();
 if(!session::checkLogin())
 {
-	if(isset($_REQUEST["portal"]))
-		echo "<script>window.location='/portal/login.php';</script>";
-	else
-		echo "<script>window.location='/framework/login.php';</script>";
+	echo "<script>window.location='/framework/login.php';</script>";
 	die();
 } 
 

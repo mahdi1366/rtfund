@@ -23,7 +23,7 @@ switch ($task) {
 }
 
 function selectEventRows(){
-	ini_set("display_errors", "On");
+	
 	$EventID = $_REQUEST["EventID"]*1;
 	$where = " er.IsActive='YES' AND EventID=? ";
 	$where .= " order by CostType,CostCode";
@@ -40,6 +40,14 @@ function selectEventRows(){
 			$PayObj = new LON_payments((int)$_REQUEST["PayID"]);
 			$SourceObjects = array($ReqObj, $PartObj, $PayObj);
 			$fn = "EventComputeItems::PayLoan";
+			break;
+		case EVENT_LOAN_BACKPAY:
+			$ReqObj = new LON_requests((int)$_REQUEST["RequestID"]);
+			$PartObj = LON_ReqParts::GetValidPartObj($ReqObj->RequestID);
+			$BackPayObj = new LON_BackPays((int)$_REQUEST["BackPayID"]);
+			$SourceObjects = array($ReqObj, $PartObj, $BackPayObj);
+			$fn = "EventComputeItems::LoanBackPay";
+			break;
 	}
 	//--------------- get compute items values -----------
 	$computedValues = array();

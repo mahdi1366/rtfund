@@ -550,7 +550,7 @@ class LON_requests extends PdoDataAccess{
 	}
 	//-------------------------------------
 	
-	static function ComputePayments2($RequestID, &$installments, $pdo = null){
+	static function NewComputePayments($RequestID, &$installments, $pdo = null){
 
 		$installments = PdoDataAccess::runquery("
 			select * from LON_installments 
@@ -802,6 +802,11 @@ class LON_requests extends PdoDataAccess{
 					$curRecord["RecordAmount"] - $share_pure - $share_wage - $share_LateWage;
 		}
 		
+		$returnArr["share_pure"] = $share_pure;
+		$returnArr["share_wage"] = $share_wage;
+		$returnArr["share_LateWage"] = $share_LateWage;
+		$returnArr["share_LateForfeit"] = $share_LateForfeit;
+		
 		$returnArr["totalpure"] -= min($share_pure,$returnArr["totalpure"]);
 		$returnArr["totalwage"] -= min($share_wage,$returnArr["totalwage"]);
 		$returnArr["totalLateWage"] -= min($share_LateWage,$returnArr["totalLateWage"]);
@@ -828,6 +833,10 @@ class LON_requests extends PdoDataAccess{
 	
 	static function ComputePayments($RequestID, &$installments, $pdo = null){
 
+		$obj = LON_ReqParts::GetValidPartObj($RequestID);
+		if($obj->ComputeMode == "NEW")
+			return self::NewComputePayments($RequestID, $installments, $pdo);
+		
 		$installments = PdoDataAccess::runquery("select * from 
 			LON_installments where RequestID=? AND history='NO' AND IsDelayed='NO' order by InstallmentDate", 
 			array($RequestID), $pdo);
@@ -839,7 +848,7 @@ class LON_requests extends PdoDataAccess{
 			$refInstallments[ $installments[$i]["InstallmentID"] ] = &$installments[$i];			
 		}
 		
-		$obj = LON_ReqParts::GetValidPartObj($RequestID);
+		
 
 		$returnArr = array();
 		$records = PdoDataAccess::runquery("
@@ -1139,24 +1148,36 @@ class LON_requests extends PdoDataAccess{
 			return $PartObj->PartAmount*1;
 		}
 		
-		$dt = LON_payments::Get(" AND RequestID=?", array($PartObj->RequestID));
+		$dt = LON_payments::Get(" AND RequestID=?", array($PartObj->RequestID), ' order by PayDate desc');
 		$dt = $dt->fetchAll();
 		if(count($dt) == 0)
 		{
 			ExceptionHandler::PushException("مراحل پرداخت را وارد نکرده اید");
 			return false;
 		}
-		$amount = $dt[0]["PayAmount"];
+		/*$amount = $dt[0]["PayAmount"];
 		for($i=1; $i<count($dt); $i++)
 		{ 
 			$amount += self::Tanzil($dt[$i]["PayAmount"], $PartObj->CustomerWage, $dt[$i]["PayDate"], 
 					$dt[0]["PayDate"]);
+		}*/
+		
+		$amount = 0;
+		for($i=0; $i<count($dt); $i++)
+		{
+			if($i == count($dt)-1)
+			{
+				$amount += $dt[$i]["PayAmount"]*1;
+				break;
+			}
+			$amount = self::Tanzil($amount + $dt[$i]["PayAmount"]*1, $PartObj->CustomerWage, $dt[$i]["PayDate"], 
+					$dt[$i+1]["PayDate"]);
 		}
 		
 		$result = self::GetDelayAmounts($RequestID, $PartObj);
-		if($PartObj->DelayReturn == "CUSTOMER")
+		if($PartObj->DelayReturn != "INSTALLMENT")
 			$amount -= $result["FundDelay"];
-		if($PartObj->AgentDelayReturn == "CUSTOMER")
+		if($PartObj->AgentDelayReturn != "INSTALLMENT")
 			$amount -= $result["AgentDelay"];
 		
 		if($PartObj->FirstTotalWage*1 > 0)

@@ -31,7 +31,7 @@ function GetData(){
 	";
 	$params = array();
 	
-	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	if(session::IsPortal() && isset($_REQUEST["dashboard_show"]))
 	{
 		$where .= " AND (p1.PersonID=" . $_SESSION["USER"]["PersonID"] .
 			" OR p2.PersonID=" . $_SESSION["USER"]["PersonID"] . ")";

@@ -21,6 +21,14 @@ switch($EventID)
 			"PartID" => LON_ReqParts::GetValidPartObj($_POST["RequestID"])->PartID,
 			"PayID" => $_POST["PayID"]);
 		$SourceIDs = "&RequestID=" . $_POST["RequestID"] . "&PayID=" . $_POST["PayID"];
+		break;
+	case EVENT_LOAN_BACKPAY:
+		$SourcesArr = array(
+			"RequestID" => $_POST["RequestID"],
+			"PartID" => LON_ReqParts::GetValidPartObj($_POST["RequestID"])->PartID,
+			"BackPayID" => $_POST["BackPayID"]);
+		$SourceIDs = "&RequestID=" . $_POST["RequestID"] . "&BackPayID=" . $_POST["BackPayID"];
+		break;
 }
 
 if(count($SourcesArr)>0)

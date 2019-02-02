@@ -33,7 +33,7 @@ if($dt->rowCount() > 0)
 }
 else
 {
-	if(isset($_SESSION["USER"]["framework"]))
+	if(session::IsFramework())
 		$User = "Admin";
 	
 	else
@@ -54,7 +54,7 @@ if($_SESSION["USER"]["IsCustomer"] == "YES" &&
 		($PlanObj->StepID == STEPID_RAW || $PlanObj->StepID == STEPID_RETURN_TO_CUSTOMER))
 	$readOnly = false;
 
-if(isset($_SESSION["USER"]["framework"]) && $PlanObj->StepID != STEPID_SEND_SUPPORTER && $accessObj->EditFlag)
+if(session::IsFramework() && $PlanObj->StepID != STEPID_SEND_SUPPORTER && $accessObj->EditFlag)
 	$readOnly = false;
 
 if(isset($_POST["ReadOnly"]) && $_POST["ReadOnly"] == "true")
@@ -63,7 +63,7 @@ if(isset($_POST["ReadOnly"]) && $_POST["ReadOnly"] == "true")
 //-----------------------------------------------------
 require_once 'PlanInfo.js.php';
 
-if(isset($_SESSION["USER"]["framework"]))
+if(session::IsFramework())
 	echo "<br>";
 ?>
 <style>

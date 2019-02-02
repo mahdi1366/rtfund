@@ -19,7 +19,7 @@ require_once getenv("DOCUMENT_ROOT") . '/framework/session.php';
 session::sec_session_start();
 if(!session::checkLogin())
 {
-	echo "<script>window.location='/portal/login.php';</script>";
+	echo "<script>window.location='http://framework.krrtf.ir/framework/login.php';</script>";
 	die();
 }
 

@@ -4,6 +4,7 @@
 // create Date:	94.10
 //---------------------------
 require_once '../header.inc.php';
+ini_set("display_errors", "On");
 require_once(inc_response);
 require_once inc_dataReader;
 require_once 'letter.class.php';
@@ -166,6 +167,7 @@ function SelectReceivedLetters(){
 	
 	$dt = OFC_letters::SelectReceivedLetters($where, $param);
 	//echo PdoDataAccess::GetLatestQueryString();
+	//print_r(ExceptionHandler::PopAllExceptions());
 	$cnt = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	
@@ -1232,7 +1234,7 @@ function EmailLetter(){
 	$mpdf->WriteHTML($html);
 	$mpdf->Output("letter.pdf", "F");
 	
-	if($_SESSION["USER"]["UserName"] == "admin")
+	/*if($_SESSION["USER"]["UserName"] == "admin")
 	{
 		header('Content-disposition:inline; filename=file.pdf');
 		header('Content-type: application/pdf');
@@ -1244,7 +1246,7 @@ function EmailLetter(){
 
 		echo file_get_contents("letter.pdf");
 		die();	
-	}
+	}*/
 	
 	//------------ email letter ------------------------
 	require_once 'email.php';

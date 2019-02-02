@@ -27,7 +27,7 @@ $page_rpg->addColumn("نسخه", "version");
 
 function MakeWhere(&$where, &$whereParam){
 
-	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	if(session::IsPortal() && isset($_REQUEST["dashboard_show"]))
 	{
 		$where .= " AND r.PersonID=" . $_SESSION["USER"]["PersonID"];
 	}

@@ -322,7 +322,7 @@ function SaveFilledForm(){
 
 function FilledItemsValues(){
 	
-	if(isset($_SESSION["USER"]["framework"]) && !empty($_REQUEST["PersonID"]))
+	if(session::IsFramework() && !empty($_REQUEST["PersonID"]))
 		$PersonID = $_REQUEST["PersonID"];
 	else
 		$PersonID = $_SESSION["USER"]["PersonID"];

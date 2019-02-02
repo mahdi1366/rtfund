@@ -11,10 +11,9 @@ require_once inc_dataGrid;
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
-$framework = isset($_SESSION["USER"]["framework"]);
 $RequestID = 0;
 $editable = false;
-if($framework)
+if(session::IsFramework())
 {
 	if(!empty($_POST["RequestID"]))
 	{
@@ -100,7 +99,7 @@ if($editable && $accessObj->AddFlag)
 		$col->width = 35;
 	}
 }
-if($framework)
+if(session::IsFramework())
 {
 	$dg->addButton("", "گزارش پرداخت", "report", 
 			"function(){LoanPayObject.PayReport2();}");
@@ -168,7 +167,6 @@ LoanPay.prototype = {
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
 	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
 	
-	framework : <?= $framework ? "true" : "false" ?>,
 	RequestID : <?= $RequestID ?>,
 	PartRecord : null,
 	

@@ -22,7 +22,6 @@ $col = $dg->addColumn("عنوان پیغام", "MsgTitle", "");
 $col->width = 150;
 
 $col = $dg->addColumn("متن پیغام", "MsgDesc", "");
-$col->ellipsis = 200;
 
 $col = $dg->addColumn("فرستنده", "FromPersonName", "");
 $col->renderer = "MyMessage.SenderRender";

@@ -442,13 +442,15 @@ class sadaf_datagrid
 			{
 				$grid .= ",features : [{
 						ftype: 'groupingsummary',
-						groupHeaderTpl: " . ($this->groupHeaderTpl != "" ? "'" . $this->groupHeaderTpl . "'" : "'{name} ({[values.rows.length]}" . $this->GroupingNumberAppendix . ")'") .
+						groupHeaderTpl: " . ($this->groupHeaderTpl != "" ? "'" . $this->groupHeaderTpl . "'" : 
+							"'{[values.rows[0].data.".$this->DefaultGroupField."]} ({[values.rows.length]}" . $this->GroupingNumberAppendix . ")'") .
                         ",startCollapsed: " . ($this->startCollapsed ? "true" : "false") .
                         "}]";
             } else {
                 $grid .= ",features : [
 					Ext.create('Ext.grid.feature.Grouping',{
-						groupHeaderTpl: " . ($this->groupHeaderTpl != "" ? "'" . $this->groupHeaderTpl . "'" : "'{name} ({[values.rows.length]}" . $this->GroupingNumberAppendix . ")'") .
+						groupHeaderTpl: " . ($this->groupHeaderTpl != "" ? "'" . $this->groupHeaderTpl . "'" : 
+							"'{[values.rows[0].data.".$this->DefaultGroupField."]} ({[values.rows.length]}" . $this->GroupingNumberAppendix . ")'") .
 						",startCollapsed: " . ($this->startCollapsed ? "true" : "false") .
 				"})" .
 				($this->EnableSummaryRow ? ",{ftype: 'summary'}" : "")

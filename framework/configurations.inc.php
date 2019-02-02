@@ -16,7 +16,7 @@ class sys_config{
 }
 
 class smtp_config{
-	public static $server = "panther.mrservers.net";
+	public static $server = "dns1.mashhadhost.com";
 	public static $username = "admin@krrtf.ir";
 	public static $password = "Heag7j35Y2";
 	public static $FromAddress = "admin@krrtf.ir";
@@ -45,14 +45,5 @@ define("OWNER_ADDRESS", "شعبه دانشگاه فردوسی مشهد : پرد�
 define("OWNER_WELCOME_MESSAGE", "ثبت نام شما در صندوق پژوهش و فناوری خراسان رضوی تایید گردید<br>" . 
 		"می توانید از طریق لینک زیر وارد پرتال خود شوید <br>" . 
 		"<a href=http://portal.krrtf.ir target=blank>http://portal.krrtf.ir </a>");
-define("SYSTEMID_framework", 1);
-define("SYSTEMID_accounting", 2);
-define("SYSTEMID_office", 4);
-define("SYSTEMID_loan", 6);
-define("SYSTEMID_dms", 7);
-define("SYSTEMID_plan", 9);
-define("SYSTEMID_hrms", 10);
-define("SYSTEMID_attendance", 11);
-define("SYSTEMID_contract", 12);
-define("SYSTEMID_portal", 1000);
+
 ?>

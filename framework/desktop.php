@@ -318,6 +318,11 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 					},
 					items :[<?= $menuStr ?>, '->', {
 						xtype : "button",						
+						icon : "icons/portal.png",
+						scale: 'medium',
+						handler : function(){window.open("/portal/index.php", "ورود به پورتال");}
+					},{
+						xtype : "button",						
 						icon : "icons/home.png",
 						scale: 'medium',
 						handler : function(){framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");}

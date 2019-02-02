@@ -38,7 +38,7 @@ $col->summaryType = GridColumn::SummeryType_sum;
 $col->summaryRenderer = "function(v){return Ext.util.Format.Money(v);}";
 $col->align = "center";
 
-if(isset($_SESSION["USER"]["framework"]))
+if(session::IsFramework())
 {
 	$col = $dg->addColumn("شماره سند حسابداری", "LocalNo");
 	$col->align = "center";
@@ -137,8 +137,8 @@ PartPayment.DocRender = function(v,p,r){
 		return st;
 	}
 	return "<div align='center' title='صدور سند' class='send' "+
-		/*"onclick='PartPaymentObject.BeforeRegDoc(1);' " +*/
-		"onclick='PartPaymentObject.ExecuteEvent();' " +
+		"onclick='PartPaymentObject.BeforeRegDoc(1);' " +
+		/*"onclick='PartPaymentObject.ExecuteEvent();' " +*/ 
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }

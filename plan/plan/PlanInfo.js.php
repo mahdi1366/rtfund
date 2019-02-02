@@ -13,7 +13,7 @@ PlanInfo.prototype = {
 	PlanID : <?= $PlanID ?>,
 	PlanRecord : null,
 	User : '<?= $User ?>',
-	portal : <?= isset($_REQUEST["portal"]) ? "true" : "false" ?>,
+	portal : <?= session::IsPortal() ? "true" : "false" ?>,
 	readOnly : <?= $readOnly ? "true" : "false" ?>,
 	
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,

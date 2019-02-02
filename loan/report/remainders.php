@@ -99,11 +99,7 @@ function showReport(){
 	foreach($dt as $row)
 	{
 		$RequestID = $row["RequestID"];
-		if($row["ComputeMode"] == "BANK")
-			$ComputeArr = LON_requests::ComputePayments($RequestID, $dt);
-		else
-			$ComputeArr = LON_requests::ComputePayments2($RequestID, $dt);
-
+		$ComputeArr = LON_requests::ComputePayments($RequestID, $dt);
 		$PureArr = LON_requests::ComputePures($RequestID);
 		//............ get remain untill now ......................
 		$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr);
@@ -139,10 +135,7 @@ function showReport(){
 		if($value == "NEW") return 'فرمول تنزیل اقساط';
 	}
 	function reportRender($row, $value){
-		if($row["ComputeMode"] == "BANK")
-			return "<a href=LoanPayment.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
-		else
-			return "<a href=LoanPaymentNew.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
+		return "<a href=LoanPayment.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
 	}
 
 	$col = $rpg->addColumn("شماره وام", "RequestID", "reportRender");

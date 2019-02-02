@@ -16,7 +16,7 @@ $PersonID = "";
 if(!empty($_REQUEST["reportOnly"]))
 {
 	$reportOnly = true;
-	if(isset($_SESSION["USER"]["portal"]))
+	if(session::IsPortal())
 		$PersonID = $_SESSION["USER"]["PersonID"];
 	else
 		$PersonID = $_POST["PersonID"];

@@ -19,7 +19,7 @@ $AddAccess = true;
 $DelAccess = true;
 $DelAccess = $LetterObj->IsSigned == "YES" ? false : true;
 $DelAccess = $SendID != "0" ? true : $DelAccess;
-$AddAccess = isset($_SESSION["USER"]["portal"]) ? false : $AddAccess;
+$AddAccess = session::IsPortal() ? false : $AddAccess;
 
 //------------------------------------------------------
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "../dms/dms.data.php?" .

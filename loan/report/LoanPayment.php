@@ -14,6 +14,11 @@ if(isset($_REQUEST["show"]))
 	$RequestID = $_REQUEST["RequestID"];
 	$ReqObj = new LON_requests($RequestID);
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
+	if($partObj->ComputeMode == "NEW")
+	{
+		require_once './LoanPaymentNew.php';
+		die();
+	}
 	//............ get total loan amount ......................
 	$TotalAmount = LON_requests::GetTotalReturnAmount($RequestID, $partObj);
 	//............ get remain untill now ......................

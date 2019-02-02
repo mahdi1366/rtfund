@@ -29,7 +29,7 @@ $page_rpg->addColumn("مانده قسط", "TotalRemainder");
 
 function MakeWhere(&$where, &$whereParam){
 
-	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	if(session::IsPortal() && isset($_REQUEST["dashboard_show"]))
 	{
 		if($_REQUEST["DashboardType"] == "shareholder" || $_REQUEST["DashboardType"] == "agent")
 			$where .= " AND ReqPersonID=" . $_SESSION["USER"]["PersonID"];

@@ -25,9 +25,6 @@ if(isset($_POST["UserName"]))
 		die();
 	}
 	
-	$_SESSION['USER']["framework"] = true;
-	unset($_SESSION['USER']["portal"]);
-	
 	echo "true";
 	die();
 }

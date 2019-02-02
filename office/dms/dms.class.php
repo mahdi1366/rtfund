@@ -16,6 +16,8 @@ class DMS_documents extends PdoDataAccess
 	public $RegPersonID;
 	public $ConfirmPersonID;
 	public $RejectDesc;
+	public $DocMode;
+	public $place;
 			
 	function __construct($DocumentID = "") {
 		
@@ -30,14 +32,64 @@ class DMS_documents extends PdoDataAccess
 				concat(p1.fname, ' ', p1.lname) confirmfullname,
 				concat(p2.fname, ' ', p2.lname) regfullname,
 				b2.infoDesc param1Title	,b1.param1,
-				if(count(df.RowID) >0,'true','false') HaveFile
+				if(count(df.RowID) >0,'true','false') HaveFile,
+				b3.infoDesc PlaceDesc,
+				bf.InfoDesc ObjectDesc,bf.param1,bf.param2,bf.param3
 			from DMS_documents d	
 			left join DMS_DocFiles df using(DocumentID)
 			join BaseInfo b1 on(InfoID=d.DocType AND TypeID=8)
+			join BaseInfo bf on(bf.TypeID=11 AND d.ObjectType=bf.param4)
 			left join  BaseInfo b2 on(b1.param1=b2.InfoID AND b2.TypeID=7)
 			left join BSC_persons p1 on(p1.PersonID=d.ConfirmPersonID)
 			left join BSC_persons p2 on(p2.PersonID=d.RegPersonID)
+			left join BaseInfo b3 on(b3.InfoID=d.place AND b3.TypeID=87)
+			
 			where " . $where . " group by d.DocumentID", $param);
+	}
+	
+	static function SelectFullPackage($PackageID){
+		
+		return PdoDataAccess::runquery("
+			select d.*, b1.infoDesc DocTypeDesc, df.RowID,
+				concat(p1.fname, ' ', p1.lname) confirmfullname,
+				concat(p2.fname, ' ', p2.lname) regfullname,
+				b2.infoDesc param1Title	,b1.param1,
+				if(count(df.RowID) >0,'true','false') HaveFile,
+				b3.infoDesc PlaceDesc,
+				bf.InfoDesc ObjectDesc,bf.param1,bf.param2,bf.param3
+			from DMS_documents d
+			
+			join (
+				select d.DocumentID 
+				from DMS_packages pa			
+				left join LON_requests lr on(pa.PersonID=lr.LoanPersonID)
+				left join WAR_requests wr on(pa.PersonID=wr.PersonID)
+				left join CNT_contracts cc on(pa.PersonID=cc.PersonID)
+				left join PLN_plans pp on(pa.PersonID=pp.PersonID)
+				left join WFM_requests wfr on(pa.PersonID=wfr.PersonID)
+				join DMS_documents d on(
+					d.ObjectType='person' AND d.ObjectID=pa.PersonID or
+					d.ObjectType='loan' AND d.ObjectID=lr.RequestID or
+					d.ObjectType='warrenty' AND d.ObjectID=wr.RequestID or
+					d.ObjectType='contract' AND d.ObjectID=cc.ContractID or
+					d.ObjectType='plan' AND d.ObjectID=pp.PlanID or
+					d.ObjectType='form' AND d.ObjectID=wfr.RequestID or
+					d.ObjectType='package' AND d.ObjectID=pa.PackageID
+				)
+				where PackageID=:p 
+				group by d.DocumentID
+			)t on(t.DocumentID=d.DocumentID)
+
+			left join DMS_DocFiles df on(d.DocumentID=df.DocumentID)
+			join BaseInfo b1 on(InfoID=d.DocType AND TypeID=8)
+			join BaseInfo bf on(bf.TypeID=11 AND d.ObjectType=bf.param4)
+			left join  BaseInfo b2 on(b1.param1=b2.InfoID AND b2.TypeID=7)
+			left join BSC_persons p1 on(p1.PersonID=d.ConfirmPersonID)
+			left join BSC_persons p2 on(p2.PersonID=d.RegPersonID)
+			left join BaseInfo b3 on(b3.InfoID=d.place AND b3.TypeID=87)
+			group by d.DocumentID
+			
+			", array(":p" => $PackageID));
 	}
 	
 	function AddDocument(){
@@ -231,6 +283,7 @@ class DMS_PackageItems extends OperationClass
 	public $PackageID;
 	public $ObjectType;
 	public $ObjectID;
+	public $ItemType;
 	
 	static function Get($where = '', $whereParams = array(), $order = "") {
 		

@@ -90,8 +90,12 @@ switch($ObjectType)
 				$_SESSION["USER"]["PersonID"] == $obj->PersonID 
 				&& (!$arr["IsStarted"] || $arr["SendEnable"]) )
 			$access = true;
-		if($_SESSION["USER"]["IsStaff"] == "YES" && isset($_SESSION["USER"]["framework"]))
+		if($_SESSION["USER"]["IsStaff"] == "YES" && session::IsFramework())
 			$access = true;
+		break;
+	//......................................................
+	case "package":
+		$access = true;
 		break;
 }
 //------------------------------------------------------
@@ -107,18 +111,36 @@ $dg->addColumn("", "param1Title", "", true);
 $dg->addColumn("", "DocTypeDesc", "", true);
 $dg->addColumn("", "param1", "", true);
 $dg->addColumn("", "DocType", "", true);
-
-$col = $dg->addColumn("گروه مدرک", "param1Title", "");
-$col->width = 100;
+$dg->addColumn("", "DocMode", "", true);
+$dg->addColumn("", "place", "", true);
+$dg->addColumn("", "param1Title", "", true);
+$dg->addColumn("", "ObjectDesc", "", true);
+$dg->addColumn("", "param1", "", true);
+$dg->addColumn("", "param2", "", true);
+$dg->addColumn("", "param3", "", true);
 
 $col = $dg->addColumn("مدرک", "DocTypeDesc", "");
-$col->width = 120;
+$col->width = 80;
 
 $col = $dg->addColumn("اطلاعات مدرک", "paramValues", "");
 $col->renderer = "ManageDocument.ParamValueRender";
-$col->width = 150;
+$col->width = 130;
 
 $col = $dg->addColumn("عنوان مدرک ارسالی", "DocDesc", "");
+
+if($ObjectType == "package")
+{
+	$col = $dg->addColumn("نسخه", "DocMode", "");
+	$col->renderer = "function(v,p,r){return v == 'ELEC' ? 'الکترونیک' : 'کاغذی';}";
+	$col->width = 60;
+	
+	$col = $dg->addColumn("محل نگهداری", "PlaceDesc", "");
+	$col->width = 100;
+	
+	$col = $dg->addColumn("آیتم وابسته", "ObjectDesc", "");
+	$col->renderer = "function(v,p,r){return ManageDocument.ObjectRender(v,p,r)}";
+	$col->width = 90;
+}
 
 $col = $dg->addColumn("فایل", "HaveFile", "");
 $col->renderer = "function(v,p,r){return ManageDocument.FileRender(v,p,r)}";
@@ -142,7 +164,7 @@ if($access)
 	$dg->rowEditOkHandler = "function(){return ManageDocumentObject.SaveDocument();}";
 }
 
-if(isset($_SESSION["USER"]["framework"]))
+if(session::IsFramework())
 {
 	$col = $dg->addColumn("تایید/رد", "", "");
 	$col->renderer = "function(v,p,r){return ManageDocument.ConfirmRender(v,p,r)}";
@@ -151,9 +173,20 @@ if(isset($_SESSION["USER"]["framework"]))
 	$dg->addButton("", "برگشت از تایید", "return", "function(){ManageDocumentObject.UnConfirm();}");
 }
 
+$dg->EnableGrouping = true;
+$dg->DefaultGroupField = "param1Title";
+
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 330;
-$dg->width = 690;
+
+if($ObjectType == "package")
+{
+	$dg->height = 400;
+}
+else
+{
+	$dg->height = 330;
+	$dg->width = 690;
+}
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "DocTypeDesc";
@@ -346,6 +379,47 @@ function ManageDocument(){
 			fieldLabel : "شرح مدرک",
 			colspan : 2,
 			name : "DocDesc"
+		},{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				data : [
+					['ELEC' , "الکترونیکی" ],
+					['PAPER' , "کاغذی" ]
+				],
+				fields : ['id','value']
+			}),
+			displayField : "value",
+			fieldLabel : "وضعیت مدرک",
+			valueField : "id",
+			name : "DocMode",
+			hidden : <?= session::IsFramework() ? "false" : "true" ?>,
+			value : "ELEC",
+			listeners : {
+				select : function(combo,records){
+					if(this.getValue() == "PAPER")
+						this.up("form").down("[name=place]").enable();
+					else
+						this.up("form").down("[name=place]").disable();
+				}
+			}
+		},{
+			xtype : "combo",
+			name : "place",
+			hidden : <?= session::IsFramework() ? "false" : "true" ?>,
+			disabled : true,
+			fieldLabel : "محل نگهداری",
+			store: new Ext.data.Store({
+				fields:["InfoID","InfoDesc"],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + 'dms.data.php?task=selectPlaces',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				autoLoad : true
+			}),
+			queryMode : "local",
+			displayField : "InfoDesc",
+			valueField : "InfoID"
 		},{
 			xtype : "fieldset",
 			colspan : 2,
@@ -546,6 +620,10 @@ ManageDocument.prototype.EditDocument = function(){
 	this.formPanel.getForm().reset();
 	this.formPanel.down("[name=DocumentID]").setValue(record.data.DocumentID);
 	this.formPanel.loadRecord(record);	
+	if(record.data.DocMode == "PAPER")
+		this.formPanel.down("[name=place]").enable();
+	else
+		this.formPanel.down("[name=place]").disable();
 }
 
 ManageDocument.prototype.SaveDocument = function(){
@@ -616,7 +694,31 @@ ManageDocument.prototype.DeleteDocument = function(){
 	});
 }
 
-<?if(isset($_SESSION["USER"]["framework"])){?>
+ManageDocument.ObjectRender = function(v,p,r){
+	
+	if(r.data.param1 == "0" || r.data.param1 == "")
+		return v;
+	return "<a href=javascript:void(0) onclick=ManageDocumentObject.ObjectInfo("+
+			r.data.DocumentID+")" + " >" + v + "[" + r.data.ObjectID + "]" + "</a>";		
+}
+
+ManageDocument.prototype.ObjectInfo = function(DocumentID){
+	
+	var index = this.grid.getStore().find("DocumentID", DocumentID);
+	var record = this.grid.getStore().getAt(index);
+	
+	//e.stopImmediatePropagation();
+	
+	if(record.data.param3 == "1")
+		window.open(record.data.param1 + "?" + record.data.param2 + "=" + record.data.ObjectID);
+	else
+	{
+		eval("param={" + record.data.param2 + ": " + record.data.ObjectID + "}");
+		framework.OpenPage(record.data.param1, "اطلاعات " + record.data.ObjectDesc, param);
+	}
+}
+
+<?if(session::IsFramework()){?>
 
 ManageDocument.ConfirmRender = function(v,p,r){
 	

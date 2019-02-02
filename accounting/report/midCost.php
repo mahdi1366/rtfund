@@ -12,8 +12,18 @@ if(isset($_REQUEST["show"]))
 	function MakeData(){
 		
 		$CostID = $_POST["CostID"];
-		$StartDate = $_POST["StartDate"];
-		$EndDate = empty($_POST["EndDate"]) ? DateModules::Now() : $_POST["EndDate"];
+		if(empty($_POST["StartDate"]))
+		{
+			$FirstDayOfYear = empty($_POST["CycleID"]) ? "" : 
+					DateModules::shamsi_to_miladi($_POST["CycleID"] . "01/01", "-");
+			$StartDate = empty($_POST["CycleID"]) ? "" : 
+				( isset($_REQUEST["IncludeStart"]) ? "" : $FirstDayOfYear );
+		}
+		else
+			$StartDate = DateModules::shamsi_to_miladi($_POST["StartDate"], "-");
+		
+		$EndDate = empty($_POST["EndDate"]) ? DateModules::Now() : 
+						DateModules::shamsi_to_miladi($_POST["EndDate"], "-");
 		//------------ get sum  ----------------
 		$where = $where2 = "";
 		$params = array(":cid" => $CostID);
@@ -26,28 +36,28 @@ if(isset($_REQUEST["show"]))
 				join ACC_CostCodes cc using(CostID)
 
 			where di.CostID = :cid";
-		if(!empty($CycleID))
+		if(!empty($_POST["CycleID"]))
 		{
 			$where .= " AND CycleID = :cycle";
 			$where2 .= " AND CycleID = :cycle";
-			$params[":cycle"] = $CycleID;
+			$params[":cycle"] = $_POST["CycleID"];
 		}
-		if(!empty($BranchID))
+		if(!empty($_POST["BranchID"]))
 		{
 			$where .= " AND BranchID= :bid";
 			$where2 .= " AND BranchID= :bid";
-			$params[":bid"] = $BranchID;
+			$params[":bid"] = $_POST["BranchID"];
 		}
 		if(!empty($StartDate))
 		{
 			$where .= " AND DocDate >= :sdate";
 			$where2 .= " AND DocDate < :sdate";
-			$params[":sdate"] = DateModules::shamsi_to_miladi($StartDate, "-");
+			$params[":sdate"] = $StartDate;
 		}
 		if(!empty($EndDate))
 		{
 			$where .= " AND DocDate <= :edate";
-			$params[":edate"] = DateModules::shamsi_to_miladi($EndDate, "-");
+			$params[":edate"] = $EndDate;
 		}
 		if(!empty($_POST["TafsiliID"]))
 		{
@@ -66,7 +76,7 @@ if(isset($_REQUEST["show"]))
 			$where .= " AND d.StatusID != " . ACC_STEPID_RAW;
 			$where2 .= " AND d.StatusID != " . ACC_STEPID_RAW;
 		}
-		if(!isset($_REQUEST["IncludeStart"]))
+		/*if(!isset($_REQUEST["IncludeStart"]))
 		{
 			$where .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;
 			$where2 .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;
@@ -76,7 +86,7 @@ if(isset($_REQUEST["show"]))
 			$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
 			$where2 .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
 		}
-		
+		*/
 		$query .= $where . " group by DocDate order by DocDate";
 		
 		$dt = PdoDataAccess::runquery($query, $params);
@@ -106,7 +116,12 @@ if(isset($_REQUEST["show"]))
 			{
 				$remainder = $dt2[0]["amount"];
 			}
-		}		
+		}	
+		if($_SESSION["USER"]["UserName"] == "admin")
+		{
+			echo PdoDataAccess::GetLatestQueryString();
+			echo "<bR>" . $remainder;
+		}
 		//------------ get the Deposite amount -------------
 		$TraceArr = array();
 		$remain = $dt[0]["amount"]*1  + $remainder;
@@ -409,7 +424,7 @@ function AccReport_mid()
 			xtype : "container",
 			colspan : 2,
 			html : "<input type=checkbox checked name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
-		},{
+		}/*,{
 			xtype : "container",
 			colspan : 2,
 			html : "<input type=checkbox name=IncludeStart> گزارش شامل اسناد افتتاحیه باشد"
@@ -417,7 +432,7 @@ function AccReport_mid()
 			xtype : "container",
 			colspan : 2,
 			html : "<input type=checkbox name=IncludeEnd> گزارش شامل اسناد اختتامیه باشد"
-		}],
+		}*/],
 		buttons : [{
 			text : "گزارش ساز",
 			iconCls : "db",

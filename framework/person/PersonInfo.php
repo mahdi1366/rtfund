@@ -7,7 +7,7 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-if(isset($_SESSION["USER"]["portal"]))
+if(session::IsPortal())
 {
 	$portal = true;
 	$PersonID = $_SESSION["USER"]["PersonID"];

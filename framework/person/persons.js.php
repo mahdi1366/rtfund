@@ -239,6 +239,12 @@ function Person()
                 inputValue: 'YES'
 			}]
 		},{
+			xtype : "checkbox",
+			name : "IsSigner",
+			colspan : 2,
+			boxLabel : "فرد صاحب امضا است",
+			inputValue : "YES"
+		},{
 			xtype : "container",
 			colspan : 2,
 			layout : "hbox",

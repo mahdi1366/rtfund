@@ -8,7 +8,7 @@ PersonInfo.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 
-	portal : <?= isset($_SESSION["USER"]["portal"]) ? "true" : "false" ?>,
+	portal : <?= session::IsPortal() ? "true" : "false" ?>,
 	PersonID : <?= $PersonID ?>,
 
 	get : function(elementID){

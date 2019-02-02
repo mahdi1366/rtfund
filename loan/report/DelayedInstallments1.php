@@ -220,10 +220,7 @@ function LoanReport_DelayedInstallments()
 LoanReport_DelayedInstallments.prototype.PayReport = function(){
 
 	record = this.grid.getSelectionModel().getLastSelected();
-	if(record.data.ComputeMode == "NEW")
-		window.open(this.address_prefix + "../report/LoanPaymentNew.php?show=true&RequestID=" + record.data.RequestID);
-	else
-		window.open(this.address_prefix + "../report/LoanPayment.php?show=true&RequestID=" + record.data.RequestID);
+	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&RequestID=" + record.data.RequestID);
 }
 
 LoanReport_DelayedInstallments.print = function(){

@@ -4,21 +4,21 @@
 //	Date		: 94.06
 //-----------------------------
 
-require_once 'configurations.inc.php';
+require_once getenv("DOCUMENT_ROOT") . '/framework/configurations.inc.php';
 set_include_path(get_include_path() . PATH_SEPARATOR . getenv("DOCUMENT_ROOT") . "/generalClasses");
 require_once 'PDODataAccess.class.php';
 require_once 'DataAudit.class.php';
-require_once 'PasswordHash.php';
+require_once getenv("DOCUMENT_ROOT") . '/framework/PasswordHash.php';
 require_once '../definitions.inc.php';
 
 require_once getenv("DOCUMENT_ROOT") . '/framework/session.php';
-
 session::sec_session_start();
 
 $task = empty($_REQUEST["task"]) ? "" : $_REQUEST["task"];
 switch($task)
 {
 	case "login": login();die();
+	case "register": register();die();
 	case "forget": forget();die();
 }
 
@@ -27,17 +27,43 @@ function login(){
 	$user = $_POST["UserName"];
 	$pass = $_POST["md5Pass"];
 	
-	$result = session::login($user, $pass);			
+	$result = session::login($user, $pass);
 	if($result !== true)
 	{
 		echo $result;
 		die();
 	}
 	
-	$_SESSION['USER']["framework"] = true;
-	unset($_SESSION['USER']["portal"]);
+	if($_SESSION['USER']["IsStaff"] == "YES")
+	{
+		//$_SESSION['USER']["framework"] = true;
+		//unset($_SESSION['USER']["portal"]);
+		echo "/framework/desktop.php";
+		die();
+	}
+	else
+	{
+		//unset($_SESSION['USER']["framework"]);
+		//$_SESSION['USER']["portal"] = true;
+		echo "/portal/index.php";
+		die();
+	}
+}
+function register(){
+	require_once getenv("DOCUMENT_ROOT") . '/framework/person/persons.class.php';
 	
-	echo "true";
+	$user = $_POST["UserName"];
+	$pass = $_POST["md5Pass"];
+	$NationalID = $_POST["NationalID"];	
+	
+	$return = session::register($user, $pass, $NationalID);
+	if($return === true)
+	{
+		$result = session::login($user, $pass);
+		echo "true";
+		die();
+	}
+	echo $return;
 	die();
 }
 function forget(){
@@ -66,6 +92,7 @@ function forget(){
 	}
 }
 //........................................
+
 $pics = PdoDataAccess::runquery("select PicID,FileType from FRW_pics where SourceType='login'");
 $index = rand(0, count($pics)-1);
 ?>
@@ -119,16 +146,13 @@ $index = rand(0, count($pics)-1);
 						case "WrongPassword":
 							document.getElementById("LoginErrorDiv").innerHTML = "رمز عبور وارد شده صحیح نمی باشد";
 							break;
-						case "PendingUser":
+						case "InActiveUser":
 							document.getElementById("LoginErrorDiv").innerHTML = "کلمه کاربری شما هنوز در صندوق فعال نشده است";
 							break;
-						case "InActiveUser":
-							document.getElementById("LoginErrorDiv").innerHTML = "کلمه کاربری شما غیر فعال شده است";
-							break;
 						
-						case "true":
+						default :
 							document.getElementById("LoginErrorDiv").style.display = "none";
-							window.location = "desktop.php";
+							window.location = xmlhttp.responseText;
 					}
 				}
 			}
@@ -136,6 +160,60 @@ $index = rand(0, count($pics)-1);
 			xmlhttp.open("POST","login.php?task=login",true);
 			document.getElementById("ajax-loading").style.display = "block";
 			xmlhttp.send(new FormData(document.getElementById("LoginForm")));
+		}
+		
+		function RegisterFN()
+		{
+			document.getElementById("md5Pass2").value = MD5(document.getElementById('password1').value);
+			if(document.getElementById("NationalID").value == "")
+			{
+				document.getElementById("NationalID").setCustomValidity("ورود کد ملی/شناسه ملی الزامی است");
+				document.getElementById("RegisterErrorDiv").innerHTML = "تکمیل کد ملی / شناسه ملی الزامی است";
+				document.getElementById("RegisterErrorDiv").style.display = "block";
+				return;
+			}
+			xmlhttp.onreadystatechange = function()
+			{
+				if (xmlhttp.readyState==4 && xmlhttp.status==200)
+				{
+					document.getElementById("ajax-loading").style.display = "none";
+					document.getElementById("RegisterErrorDiv").style.display = "block";
+					switch(xmlhttp.responseText)
+					{
+						case "DuplicateUserName":
+							document.getElementById("RegisterErrorDiv").innerHTML = "کلمه کاربری انتخابی شما قبلا استفاده شده است";
+							break;
+						case "DuplicateNationalID":
+							document.getElementById("RegisterErrorDiv").innerHTML = "با این کدملی / شناسه ملی قبلا ثبت نام انجام شده است";
+							break;
+						case "true":
+							document.getElementById("RegisterErrorDiv").innerHTML = 
+									"ثبت نام شما با موفقیت انجام شد. نتیجه از طریق ایمیل بعد از حداکثر یک روز کاری به شما اطلاع داده خواهد شد";
+							document.getElementById("RegisterErrorDiv").className = "success";
+							//window.location = "index.php";
+					}
+				}
+			}
+
+			xmlhttp.open("POST","login.php?task=register",true);
+			document.getElementById("ajax-loading").style.display = "block";
+			xmlhttp.send(new FormData(document.getElementById("RegisterForm")));
+		}
+				
+		function Register(registerMode){
+		
+			document.getElementById("loginDIV").style.display = registerMode ? "none" : "block";
+			document.getElementById("registerDIV").style.display = registerMode ? "block" : "none";
+		}
+		
+		function ChangePersonType(elem){
+			document.getElementById("fname").style.display = elem.value == "YES" ? "block" : "none";
+			document.getElementById("lname").style.display = elem.value == "YES" ? "block" : "none";
+			document.getElementById("CompanyName").style.display = elem.value == "YES" ? "none" : "block";
+			
+			document.getElementById("fname").required = elem.value == "YES" ? "required" : "";
+			document.getElementById("lname").required = elem.value == "YES" ? "required" : "";
+			document.getElementById("CompanyName").required = elem.value == "YES" ? "" : "required";
 		}
 		
 		function ConfirmPassword(input) {
@@ -245,12 +323,12 @@ $index = rand(0, count($pics)-1);
 		}
 		
 	</script>
-	<style>
+	 <style>
 	body, td, div, button{
 		font-family: irsans;
 	}
 	header{
-		background: url("management/ShowFile.php?PicID=<?= $pics[$index]["PicID"] ?>") center center no-repeat;
+		background: url("../framework/management/ShowFile.php?PicID=<?= $pics[$index]["PicID"] ?>") center center no-repeat;
 		width: 100%;
 		height: 95vh; 
 		overflow: hidden;
@@ -302,6 +380,23 @@ $index = rand(0, count($pics)-1);
 		background-color: #fff;
 		color: #000;
 		padding: 10px;
+		line-height: 2em;
+		-webkit-border-radius: .3em;
+		-moz-border-radius: .3em;
+		border-radius: .3em;
+	}
+	
+	.loginDiv .success{
+		background-color: lawngreen !important;
+		height: 50px;
+		color: white !important;
+		font-size: 12px;
+		font-weight: bold;
+		text-align: justify;
+		margin-bottom: 20px;
+		background-color: #fff;
+		color: #000;
+		padding: 4px;
 		line-height: 2em;
 		-webkit-border-radius: .3em;
 		-moz-border-radius: .3em;
@@ -452,8 +547,8 @@ $index = rand(0, count($pics)-1);
 		50% { transform: rotate(180deg); opacity: 1; }
 		to { transform: rotate(360deg); opacity: 0.2; }
 	} 
-	</style>
-  </head>
+  </style>
+  </head> 
   <body dir="rtl" style="margin:0">
 	  <div id="ajax-loading"><div><span>&nbsp;&nbsp;&nbsp;</span></div></div>
 	  <header>
@@ -473,9 +568,37 @@ $index = rand(0, count($pics)-1);
 			</div>
 			<div class="footer">
 				<div onclick="ForgetPass(1);" class="forget">◄&nbsp;رمز عبور را فراموش کرده ام </div>
+				<div onclick="Register(true)" class="register">۞  ثبت نام در سامانه</div>
 			</div>
 		</div>
-		
+		  
+		<div class="loginDiv" id="registerDIV" style="display:none;" align="right">
+			<div class="title">ثبت نام در پرتال</div>
+			<div class="body">
+				<div class="error" id="RegisterErrorDiv" style="display:none"></div>
+				<form method="post" id="RegisterForm" onsubmit="return RegisterFN();">
+					<div style="margin-bottom:10px;direction:rtl;font-size: 13px;color:white">
+						<input type="radio" id="isReal" name="IsReal" value="YES" onclick="ChangePersonType(this);" checked> شخص حقیقی
+						<input type="radio" id="noReal" name="IsReal" value="NO" onclick="ChangePersonType(this);" value="LEGAL"> شخص حقوقی
+					</div>
+					<input type="text" name="fname" class="textfield2" id="fname" placeholder="نام ..." required="required" dir="rtl"/>
+					<input type="text" name="lname" class="textfield2" id="lname" placeholder="نام خانوادگی ..." required="required" dir="rtl"/>
+					<input type="text" name="CompanyName" style="display:none" class="textfield2" id="CompanyName" 
+						   placeholder="نام شرکت ..." dir="rtl"/>
+					<input type="email" name="email" id="email" class="textfield2" placeholder="پست الکترونیک ..." required="required" dir="ltr"/>
+					<input type="text" name="NationalID" id="NationalID" class="textfield2" placeholder="کد ملی/ شناسه ملی ..." required="required" dir="ltr"/>
+					<div id="UserNameDiv2"><input type="text" id="UserName2" name="UserName" class="textfield2" 
+							placeholder="کلمه کاربری ..." required="required" dir="ltr"/></div>
+					<input type="password" class="textfield2" id="password1" placeholder="رمز عبور ..." required="required" dir="ltr"/>
+					<input type="password" class="textfield2" id="password2" placeholder="تکرار رمز عبور ..." required="required" 
+						   dir="ltr" oninput="ConfirmPassword(this)"/><br>
+					<input type="hidden" id="md5Pass2" name="md5Pass">
+					<button type="button" onclick="RegisterFN()" class="btn"> ثبت نام </button>					
+				</form>
+			</div>
+			<div class="footer"><div align="left" style="cursor: pointer;" onclick="BackToLogin()">بازگشت</div></div>
+		</div>	
+		  
 		<div class="loginDiv" id="forgetDIV" style="display:none">
 			<div class="title">بازیابی کلمه عبور</div>
 			<div class="body">
@@ -494,6 +617,7 @@ $index = rand(0, count($pics)-1);
 			</div>
 			<div class="footer"><div align="left" style="cursor: pointer;" onclick="BackToLogin()">بازگشت</div></div>
 		</div>
+				
 		<div class="footerDiv" align="center">
 			<table width="90%">
 				<tr>
@@ -504,5 +628,5 @@ $index = rand(0, count($pics)-1);
 			</table>
 		</div>
 	</header>
-  </body>
+</body>
 </html>

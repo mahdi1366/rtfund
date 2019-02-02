@@ -14,6 +14,7 @@ $frameworkAccess = false;
 $AttendanceAccess = false;
 $LoanAccess = false;
 $PlanAccess = false;
+$personAccess = false;
 
 $systems = FRW_access::getAccessSystems();
 foreach($systems as $row)
@@ -27,6 +28,14 @@ foreach($systems as $row)
 	}
 }
 
+$menus = FRW_access::getAccessMenus(SYSTEMID_framework);
+foreach($menus as $row)
+{
+	switch($row["MenuID"])
+	{
+		case MENUID_persons: $personAccess = true; break;
+	}
+}
 //....................................................
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "person/persons.data.php?task=selectPendingPersons");
@@ -87,7 +96,7 @@ function FrameworkStartPage(){
 		}
     });
 	
-	<?if($frameworkAccess){?>
+	<?if($personAccess){?>
 	this.grid1 = <?= $grid1 ?>;
 	new Ext.panel.Panel({
 		renderTo : this.get("panel2"),

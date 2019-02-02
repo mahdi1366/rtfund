@@ -10,7 +10,7 @@ require_once inc_dataGrid;
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess(empty($_POST["MenuID"]) ? "0" : $_POST["MenuID"]);
 //...................................................
-if(!empty($_SESSION["USER"]["portal"]))
+if(session::IsPortal())
 {
 	$accessObj->AddFlag = true;
 	$accessObj->EditFlag = true;
@@ -20,7 +20,7 @@ if(!empty($_SESSION["USER"]["portal"]))
 $RequestID = !empty($_POST["RequestID"]) ? $_POST["RequestID"] : 0;
 $ReadOnly = isset($_REQUEST["ReadOnly"]) && $_REQUEST["ReadOnly"] == "true" ? true : false;
 
-if(isset($_SESSION["USER"]["framework"]))
+if(session::IsFramework())
 	$User = "Staff";
 else
 {
@@ -120,7 +120,7 @@ $grid = $dg->makeGrid_returnObjects();
 
 require_once 'RequestInfo.js.php';
 
-if(isset($_SESSION["USER"]["framework"]))
+if(session::IsFramework())
 	echo "<br>";
 ?>
 <style>

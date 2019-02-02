@@ -6,7 +6,7 @@
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 
-if(isset($_SESSION["USER"]["framework"]))
+if(session::IsFramework())
 	$User = "Staff";
 else
 {

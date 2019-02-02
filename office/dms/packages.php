@@ -44,13 +44,8 @@ $col->sortable = false;
 $col->renderer = "function(v,p,r){return Package.itemsRender(v,p,r);}";
 $col->width = 30;
 
-/*$col = $dg->addColumn("", "");
-$col->sortable = false;
-$col->renderer = "function(v,p,r){return Package.reportRender(v,p,r);}";
-$col->width = 30;*/			
-
 $dg->title = "لیست پرونده ها";
-$dg->height = 500;
+$dg->height = 400;
 $dg->width = 380;
 $dg->DefaultSortField = "PackNo";
 $dg->DefaultSortDir = "ASC";
@@ -106,8 +101,7 @@ $dg->groupHeaderTpl = " <table width=100% >" .
 	"</tr>" .        
 	"</table>";
 
-$dg->height = 500;
-$dg->width = 400;
+$dg->height = 400;
 $dg->DefaultSortField = "ObjectID";
 $dg->DefaultSortDir = "ASC";
 $dg->autoExpandColumn = "paramValues";
@@ -118,14 +112,12 @@ $grid2 = $dg->makeGrid_returnObjects();
 ?>
 <center>
     <form id="mainForm">
-        <br>
         <div id="div_selectBranch"></div>
-        <br>
-        <table>
+        <table width="98%">
 			<tr>
 				<td style="width:350px"><div id="grid_div"></div></td>
 				<td>&nbsp;</td>
-				<td style="width:400px"><div id="grid2_div"></div></td>
+				<td><div id="grid2_div"></div></td>
 			</tr>
 		</table>
     </form>
@@ -161,51 +153,6 @@ function Package(){
 		itemId : "cmp_PersonID"
 	});
 	
-	this.itemWin = new Ext.window.Window({
-		width : 300,
-		height : 130,
-		modal : true,
-		closeAction : "hide",
-		items : new Ext.FormPanel({
-			items : [{
-				xtype : "combo",
-				store: new Ext.data.Store({
-					proxy:{
-						type: 'jsonp',
-						url: this.address_prefix + 'dms.data.php?task=selectObjectTypes',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					fields :  ['InfoID','InfoDesc']
-				}),
-				fieldLabel : "آیتم مربوطه",
-				displayField: 'InfoDesc',
-				name : "ObjectType",
-				valueField : "InfoID"				
-			},{
-				xtype : "numberfield",
-				fieldLabel : "شماره آیتم",
-				name : "ObjectID",
-				hideTrigger : true,
-				fieldStyle : "direction:ltr"
-			},{
-				xtype : "hidden",
-				name : "PackageID"
-			}]
-		}),
-		buttons :[{
-			text : "ذخیره",
-			iconCls : "save",
-			handler : function(){
-				PackageObject.SavePackageItem();
-			} 
-		},{
-			text : "انصراف",
-			iconCls : "undo",
-			handler : function(){this.up('window').hide();}
-		}]
-	});
-	Ext.getCmp(this.TabID).add(this.itemWin);
-	
 	//...................................................
 	
 	this.grid = <?= $grid ?>;
@@ -218,15 +165,21 @@ function Package(){
 		
 		return true;
 	});
-	this.itemGrid = <?= $grid2 ?>;
-	this.itemGrid.getView().getRowClass = function(record, index)
-	{
-		if(record.data.IsConfirm == "YES")
-			return "greenRow";
-		if(record.data.IsConfirm == "NO")
-			return "pinkRow";
-		return "";
-	}
+		
+	//...................................................
+	
+	this.docPanel = new Ext.panel.Panel({
+		border : false,
+		autoWidth : true,
+		minHeight : 200,
+		minWidth : 200,
+		autoHeight : true,
+		renderTo : this.get("grid2_div"),
+		loader : {
+			url : this.address_prefix + "documents.php",
+			scripts : true
+		}
+	});
 	
 	//...................................................
 	
@@ -259,7 +212,7 @@ function Package(){
 					else
 						PackageObject.grid.render(PackageObject.get("grid_div"));
 					
-					PackageObject.itemGrid.hide();
+					PackageObject.docPanel.hide();
 				}
 			}
 		}]
@@ -314,8 +267,7 @@ Package.prototype.SavePackage = function(){
 	});
 }
 
-Package.DeleteRender = function(v,p,r)
-{
+Package.DeleteRender = function(v,p,r){
 	if(PackageObject.RemoveAccess)	
 		return "<div align='center' title='حذف' class='remove' "+
 		"onclick='PackageObject.DeletePackage();' " +
@@ -324,8 +276,7 @@ Package.DeleteRender = function(v,p,r)
 
 }
 
-Package.itemsRender = function(v,p,r)
-{
+Package.itemsRender = function(v,p,r){
 	return "<div align='center' title='لیست آیتم ها' class='list' "+
 		"onclick='PackageObject.LoadItems();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
@@ -333,17 +284,8 @@ Package.itemsRender = function(v,p,r)
 
 }
 
-Package.reportRender = function(v,p,r)
-{
-	return "<div align='center' title='گزارش حساب پس انداز' class='report' "+
-		"onclick='PackageObject.SavingShow();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";
-
-}
-
-Package.prototype.DeletePackage = function()
-{
+Package.prototype.DeletePackage = function(){
+	
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
 		if(btn == "no")
 			return;
@@ -365,139 +307,32 @@ Package.prototype.DeletePackage = function()
 			success: function(response,option){
 				mask.hide();
 				PackageObject.grid.getStore().load();
-				PackageObject.itemGrid.hide();
+				PackageObject.docPanel.hide();
 			},
 			failure: function(){}
 		});
 	});
 }
 
-Package.prototype.LoadItems = function()
-{
-	var record = this.grid.getSelectionModel().getLastSelected();
-	
-	this.itemGrid.getStore().proxy.extraParams.PackageID = record.data.PackageID;
-		
-	if(this.itemGrid.rendered)
-		this.itemGrid.getStore().load();
-	else
-		this.itemGrid.render(this.get("grid2_div"));
-	this.itemGrid.show();
-}
-
-Package.prototype.SavingShow = function(){
-	
-	if(!this.SavingWin)
-	{
-		this.SavingWin = new Ext.window.Window({
-			width : 790,
-			height : 540,
-			modal : true,
-			closeAction : "hide",
-			loader : {
-				url : "/accounting/saving/SavingLoan.php",
-				scripts : true
-			},
-			buttons :[{
-				text : "بازگشت",
-				iconCls : "undo",
-				handler : function(){this.up('window').hide();}
-			}]
-		});
-		Ext.getCmp(this.TabID).add(this.SavingWin);
-	}
+Package.prototype.LoadItems = function(){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
-	this.SavingWin.show();	
-	this.SavingWin.center();
-	this.SavingWin.loader.load({
+	
+	this.docPanel.loader.load({
 		params : {
-			reportOnly : true,
-			ExtTabID : this.SavingWin.getEl().id,
-			PersonID : record.data.PersonID
+			ExtTabID : this.docPanel.getEl().id,
+			ObjectType : "package",
+			ObjectID : record.data.PackageID
 		}
 	});
+	this.docPanel.show();
+	return;
 }
 
 //.................................................
 
-Package.prototype.AddPackageItem = function(){
-
-	this.itemWin.down('form').getForm().reset();
-	this.itemWin.down('[name=PackageID]').setValue(this.itemGrid.getStore().proxy.extraParams.PackageID);
-	this.itemWin.show();	
-}
-
-Package.FileRender = function(v,p,r){
+Package.prototype.ObjectInfo = function(e,RowID){
 	
-	if(v == "false")
-		return "";
-	
-	return "<div align='center' title='مشاهده فایل' class='attach' "+
-		"onclick='Package.ShowFile(" + r.data.DocumentID + "," + r.data.ObjectID + ");' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16;float:right'></div>";
-}
-
-Package.ShowFile = function(DocumentID, ObjectID){
-	
-	window.open("/office/dms/ShowFile.php?DocumentID=" + DocumentID + "&ObjectID=" + ObjectID);
-}
-
-Package.prototype.SavePackageItem = function(){
-
-	mask = new Ext.LoadMask(this.itemWin, {msg:'در حال ذخیره سازی...'});
-	mask.show();
-	this.itemWin.down('form').submit({
-		url: this.address_prefix + 'dms.data.php?task=SavePackageItem',
-		method : "POST",
-
-		success : function(form,action){      
-			mask.hide();
-			PackageObject.itemWin.hide();
-			PackageObject.itemGrid.getStore().load();
-		},
-		failure : function(form,action){
-			mask.hide();
-			if(action.result.data == "")
-				Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
-			else
-				Ext.MessageBox.alert("Error", action.result.data);
-		}
-	});
-}
-
-Package.prototype.DeletePackageItem = function(e,RowID)
-{
-	e.stopImmediatePropagation();	
-	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
-		if(btn == "no")
-			return;
-		
-		me = PackageObject;
-		
-		mask = new Ext.LoadMask(me.itemGrid, {msg:'در حال حذف ...'});
-		mask.show();
-
-		Ext.Ajax.request({
-			url: me.address_prefix + 'dms.data.php',
-			params:{
-				task: "DeletePackageItem",
-				RowID : RowID
-			},
-			method: 'POST',
-
-			success: function(response,option){
-				mask.hide();
-				PackageObject.itemGrid.getStore().load();
-			},
-			failure: function(){}
-		});
-	});
-}
-
-Package.prototype.ObjectInfo = function(e,RowID)
-{
 	var index = this.itemGrid.getStore().find("RowID", RowID);
 	var record = this.itemGrid.getStore().getAt(index);
 	e.stopImmediatePropagation();

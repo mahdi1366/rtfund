@@ -3667,12 +3667,11 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	//--------------- check pasandaz remaindar -----------------
 	$dt = PdoDataAccess::runquery("select sum(CreditorAmount-DebtorAmount) remain
 		from ACC_DocItems join ACC_docs using(DocID) where CycleID=? AND CostID=?
-			AND TafsiliType=? AND TafsiliID=? AND BranchID=?", array(
+			AND TafsiliType=? AND TafsiliID=?", array(
 				$CycleID,
 				$CostCode_pasandaz,
 				TAFTYPE_PERSONS,
-				$PersonTafsili,
-				$ReqObj->BranchID
+				$PersonTafsili
 			));
 	if(!$IsExtend && $WageCost == $CostCode_pasandaz && $dt[0][0]*1 < $ReqObj->amount*$ReqObj->SavePercent/100)
 	{
@@ -3700,12 +3699,11 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		{
 			$dt = PdoDataAccess::runquery("select sum(CreditorAmount-DebtorAmount) remain
 			from ACC_DocItems join ACC_docs using(DocID) where CycleID=? AND CostID=?
-				AND TafsiliType=? AND TafsiliID=? AND BranchID=?", array(
+				AND TafsiliType=? AND TafsiliID=?", array(
 					$CycleID,
 					$Block_CostID,
 					TAFTYPE_PERSONS,
-					$PersonTafsili,
-					$ReqObj->BranchID
+					$PersonTafsili
 				));
 		}
 		$amount = $ReqObj->amount*1;

@@ -102,7 +102,7 @@ function SaveLoanRequest(){
 	$obj->guarantees = implode(",", $obj->guarantees);
 	$obj->IsFree = isset($_POST["IsFree"]) ? "YES" : "NO";	
 	//------------------------------------------------------
-	if(isset($_SESSION["USER"]["portal"]))
+	if(session::IsPortal())
 	{
 		if($_SESSION["USER"]["IsAgent"] == "YES" || $_SESSION["USER"]["IsSupporter"] == "YES"
 				|| $_SESSION["USER"]["IsShareholder"] == "YES")
@@ -192,7 +192,12 @@ function SelectMyRequests(){
 	if($_SESSION["USER"]["IsCustomer"] == "YES" && $_REQUEST["mode"] == "customer")
 	{
 		for($i=0; $i<count($dt); $i++)
-			$dt[$i]["CurrentRemain"] = LON_requests::GetCurrentRemainAmount($dt[$i]["RequestID"]);
+		{
+			$temp = array();
+			$ComputeArr = LON_requests::ComputePayments($dt[$i]["RequestID"], $temp);
+			$dt[$i]["CurrentRemain"] = LON_requests::GetCurrentRemainAmount($dt[$i]["RequestID"], $ComputeArr);
+			$dt[$i]["TotalRemain"] = LON_requests::GetTotalRemainAmount($dt[$i]["RequestID"], $ComputeArr);
+		}
 	}
 	
 	echo dataReader::getJsonData($dt, $count, $_GET["callback"]);
@@ -218,7 +223,7 @@ function SelectAllRequests2(){
 		$params[":f1"] = $_REQUEST["query"] ;
 	}
 	
-	if(isset($_SESSION["USER"]["portal"]))
+	if(session::IsPortal())
 		$query .= " AND ( LoanPersonID=" . $_SESSION["USER"]["PersonID"] . 
 			" or ReqPersonID  = " . $_SESSION["USER"]["PersonID"] . " )";
 	
@@ -1279,8 +1284,9 @@ function RegisterBackPayDoc(){
 	if(!$result)
 	{
 		$pdo->rollback();
-		print_r(ExceptionHandler::PopAllExceptions());
-		echo Response::createObjectiveResponse(false, "خطا در صدور سند حسابداری");
+		$msg = ExceptionHandler::GetExceptionsToString();
+		$msg = is_array($msg) ? "خطا در صدور سند حسابداری" : $msg;
+		echo Response::createObjectiveResponse(false, $msg);
 		die();
 	}
 	
@@ -1483,7 +1489,7 @@ function GetDelayedInstallments($returnData = false){
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
     }
 	
-	if(isset($_SESSION["USER"]["portal"]))
+	if(session::IsPortal())
 		$query .= " AND ( LoanPersonID=" . $_SESSION["USER"]["PersonID"] . 
 			" or ReqPersonID  = " . $_SESSION["USER"]["PersonID"] . " )";
 	

@@ -30,6 +30,8 @@ $dg->addColumn("","ShareNo","string", true);
 $dg->addColumn("","SmsNo","string", true);
 $dg->addColumn("","IsConfirm","string", true);
 $dg->addColumn("","AttCode","string", true);
+$dg->addColumn("","IsSigner","string", true);
+
 
 $col = $dg->addColumn("نام و نام خانوادگی","fullname","string");
 

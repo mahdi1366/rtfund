@@ -78,7 +78,7 @@ function GetSavingFlow() {
 
 function GetSavingLoanInfo($ReportMode = false){
 	
-	if(isset($_SESSION["USER"]["portal"]))
+	if(session::IsPortal())
 		$PersonID = $_SESSION["USER"]["PersonID"];
 	else
 		$PersonID = $_REQUEST["PersonID"];

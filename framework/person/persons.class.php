@@ -49,6 +49,7 @@ class BSC_persons extends PdoDataAccess{
 	
 	public $ShareNo;
 	public $AttCode;
+	public $IsSigner;
 	
 	public $IsActive;
 	public $_PostID;

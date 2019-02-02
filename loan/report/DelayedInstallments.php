@@ -45,7 +45,7 @@ $page_rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
 
 function MakeWhere(&$where, &$whereParam){
 
-	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	if(session::IsPortal() && isset($_REQUEST["dashboard_show"]))
 	{
 		if($_REQUEST["DashboardType"] == "shareholder" || $_REQUEST["DashboardType"] == "agent")
 			$where .= " AND ReqPersonID=" . $_SESSION["USER"]["PersonID"];
@@ -209,10 +209,7 @@ function ListData($IsDashboard = false){
 	$rpt->mysql_resource = GetData();
 	
 	function LoanReportRender($row,$value){
-		if($row["ComputeMode"] == "BANK")
-			return "<a href=LoanPayment.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
-		else
-			return "<a href=LoanPaymentNew.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
+		return "<a href=LoanPayment.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
 	}
 	
 	$rpt->addColumn("کد وام", "RequestID", "LoanReportRender");

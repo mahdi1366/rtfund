@@ -17,7 +17,7 @@ $FormType = $_REQUEST["FormType"];
 
 require_once 'ManagePlans.js.php';
 
-$portal = isset($_SESSION["USER"]["portal"]) ? true : false;
+$portal = session::IsPortal() ? true : false;
 $expert = isset($_REQUEST["expert"]) ? true : false;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "plan.data.php?task=SelectAllPlans&FormType=" . $FormType . 

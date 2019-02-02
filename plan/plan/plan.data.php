@@ -30,7 +30,7 @@ function selectGroups(){
 	$params = array(":p" => $PlanID,":ft" => $FormType);
 	
 	$planObj = new PLN_plans($PlanID);
-	if(isset($_SESSION["USER"]["portal"]) && $_SESSION["USER"]["PersonID"] == $planObj->PersonID)
+	if(session::IsPortal() && $_SESSION["USER"]["PersonID"] == $planObj->PersonID)
 		$where .= " AND g.CustomerRelated='YES'";
 	if(!empty($_REQUEST["ScopeID"]))
 	{
@@ -380,7 +380,7 @@ function SelectAllPlans(){
 		$param[":pid"] = $_REQUEST["PlanID"];
 	}
 	
-	if(isset($_SESSION["USER"]["portal"]))
+	if(session::IsPortal())
 	{
 		if($_SESSION["USER"]["IsExpert"] == "YES")
 		{
@@ -442,7 +442,7 @@ function SaveNewPlan(){
 	
 	if($PlanID*1 == 0)
 	{
-		if(isset($_SESSION["USER"]["framework"]))
+		if(session::IsFramework())
 			$obj->PersonID = $_POST["PersonID"];
 		else
 			$obj->PersonID = $_SESSION["USER"]["PersonID"];		
@@ -452,7 +452,7 @@ function SaveNewPlan(){
 		
 		PLN_plans::ChangeStatus($obj->PlanID, $obj->StepID , "", true);
 	}
-	else if(isset($_SESSION["USER"]["framework"]))
+	else if(session::IsFramework())
 	{
 		$obj->PlanID = $PlanID;
 		$result = $obj->EditPlan();
@@ -479,7 +479,7 @@ function ChangeStatus(){
 	$obj = new PLN_plans($PlanID);
 	
 	//-------------------- control valid operation -----------------------
-	if($_SESSION["USER"]["IsCustomer"] == "YES" && isset($_SESSION["USER"]["portal"]) && 
+	if($_SESSION["USER"]["IsCustomer"] == "YES" && session::IsPortal() && 
 		$obj->PersonID != $_SESSION["USER"]["PersonID"])
 	{
 		Response::createObjectiveResponse(false, "");
@@ -510,10 +510,10 @@ function ChangeStatus(){
 	}
 	//--------------------------------------------------------------------
 	
-	if($_SESSION["USER"]["IsCustomer"] == "YES" && isset($_SESSION["USER"]["portal"]))
+	if($_SESSION["USER"]["IsCustomer"] == "YES" && session::IsPortal())
 		$StepID = STEPID_CUSTOMER_SEND;
 	
-	if(isset($_SESSION["USER"]["framework"]) && $StepID == STEPID_CONFIRM)
+	if(session::IsFramework() && $StepID == STEPID_CONFIRM)
 	{
 		$dt = PdoDataAccess::runquery("
 			select p.GroupID,ActType from PLN_PlanSurvey p,

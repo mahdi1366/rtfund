@@ -25,7 +25,7 @@ function SelectReports() {
 		$params[] = $_REQUEST["MenuID"];
 	}
 	
-	if(isset($_SESSION["USER"]["framework"]))
+	if(session::IsFramework())
 	{
 		if(isset($_REQUEST["dashboard"]))
 			$where .= " AND IsManagerDashboard='YES'";

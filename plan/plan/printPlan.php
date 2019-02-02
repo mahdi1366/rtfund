@@ -13,7 +13,7 @@ if(empty($_REQUEST["PlanID"]))
 
 $PlanID = $_REQUEST["PlanID"];
 //-----------------------------------------------------
-if(isset($_SESSION["USER"]["framework"]))
+if(session::IsFramework())
 	$User = "Staff";
 else
 {

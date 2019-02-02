@@ -1,5 +1,20 @@
 <?php
 
+define("SYSTEMID_framework", 1);
+define("SYSTEMID_accounting", 2);
+define("SYSTEMID_office", 4);
+define("SYSTEMID_loan", 6);
+define("SYSTEMID_dms", 7);
+define("SYSTEMID_plan", 9);
+define("SYSTEMID_hrms", 10);
+define("SYSTEMID_attendance", 11);
+define("SYSTEMID_contract", 12);
+define("SYSTEMID_portal", 1000);
+
+define("MENUID_persons", 6);
+
+//.................................................
+
 define("BRANCH_BASE", "3");
 define("BRANCH_UM", "3");
 define("BRANCH_PARK", "4");
@@ -156,6 +171,7 @@ define("DEFRAYLOAN_WFMFORM", "16");
 
 //------------ events ---------------
 define("EVENT_LOAN_PAYMENT", 1010101);
+define("EVENT_LOAN_BACKPAY", 1010102);
 
 
 define("FILE_FRAMEWORK_PICS",getenv("DOCUMENT_ROOT") . "/storage/framework/");

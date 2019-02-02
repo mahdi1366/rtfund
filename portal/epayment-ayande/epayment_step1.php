@@ -22,7 +22,7 @@ $PayObj->Add();
 
 ini_set ( "soap.wsdl_cache_enabled", "0" );
 $wsdl_url = "https://pec.shaparak.ir/NewIPGServices/Sale/SaleService.asmx?WSDL";
-$callbackUrl = "http://portal.krrtf.ir/portal/epayment-ayande/epayment_step2.php";
+$callbackUrl = "http://framework.krrtf.ir/portal/epayment-ayande/epayment_step2.php";
 $amount = $_REQUEST["amount"];
 $pin = BANK_AYANDEH_PIN;
 $orderId = $PayObj->PayID;

@@ -449,7 +449,7 @@ class ACC_DocItems extends PdoDataAccess {
 
 			if ($temp[0][0] * 1 - $BlockedAmount < $this->DebtorAmount * 1) {
 				ExceptionHandler::PushException("مبلغ وارد شده بیشتر از مبلغ قابل برداشت می باشد " .
-						"<br>مبلغ قابل برداشت : " . ($temp[0][0] * 1 - $BlockedAmount));
+						"<br>مبلغ قابل برداشت : " . ($temp[0][0] * 1 - $BlockedAmount) . "<br>");
 				return false;
 			}
 		}

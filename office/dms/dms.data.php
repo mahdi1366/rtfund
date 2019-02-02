@@ -36,9 +36,12 @@ function SelectAll(){
 	{
 		$where .= " AND RegPersonID=" . $_SESSION["USER"]["PersonID"];
 	}
-		
-	$temp = DMS_documents::SelectAll($where, $param);
 	
+	if(!empty($_REQUEST["ObjectType"]) && $_REQUEST["ObjectType"] == "package")
+		$temp = DMS_documents::SelectFullPackage($_REQUEST["ObjectID"]);
+	else
+		$temp = DMS_documents::SelectAll($where, $param);
+	print_r(ExceptionHandler::PopAllExceptions());
 	for($i=0; $i<count($temp); $i++)
 	{
 		$temp[$i]["paramValues"] = "";
@@ -59,6 +62,8 @@ function SelectAll(){
 		if($temp[$i]["paramValues"] != "")
 			$temp[$i]["paramValues"] = substr($temp[$i]["paramValues"], 0 , strlen($temp[$i]["paramValues"])-4);
 	}
+	
+	
 	
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
@@ -89,6 +94,9 @@ function SaveDocument() {
 	$obj->ObjectID2 = isset($_POST["ObjectID2"]) ? $_POST["ObjectID2"] : "0";
 	$obj->ObjectType = $_POST["ObjectType"];
 
+	if($obj->DocMode == "ELEC")
+		$obj->place = PDONULL;
+	
 	if (empty($obj->DocumentID))
 		$result = $obj->AddDocument();
 	else
@@ -479,4 +487,12 @@ function deleteDocParam() {
 	die();
 }
 
+//.................................................
+
+function selectPlaces(){
+	
+	$list = PdoDataAccess::runquery("select * from BaseInfo where typeID=87 AND IsActive='YES'");
+	echo dataReader::getJsonData($list, count($list), $_GET["callback"]);
+	die();
+}
 ?>

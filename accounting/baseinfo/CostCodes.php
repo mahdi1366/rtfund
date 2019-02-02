@@ -84,6 +84,8 @@ $dg_cost->title = 'کدینگ حساب';
 $dg_cost->pageSize = 19;
 $dg_cost->height = 500;
 $dg_cost->autoExpandColumn = "LevelTitle1";
+$dg_cost->DefaultSortField = "CostCode";
+$dg_cost->DefaultSortDir = "ASC";
 $dgCost = $dg_cost->makeGrid_returnObjects();
 
 require_once 'CostCode.js.php';

@@ -53,15 +53,16 @@ if(count($doc) > 0)
 $imageslist = json_encode($imageslist);
 //..............................................................................
 $editable = false;
-if($LetterObj->LetterType == "OUTCOME" && $LetterObj->IsSigned == "NO")
+if($LetterObj->IsSigned == "NO")
 {
 	$dt = OFC_letters::SelectReceivedLetters(" AND l.LetterID=:lid", array(":lid"=>$LetterID));
 	if($dt->rowCount()>0)
 		$editable = true;
 }
-if($LetterObj->LetterType == "INCOME" || $LetterObj->LetterType == "INNER")
+else
 {
-	$editable = true;
+	if($_SESSION["USER"]["PersonID"] == $LetterObj->SignerPersonID)
+		$editable = true;
 }
 //..............................................................................
 $signing = false;

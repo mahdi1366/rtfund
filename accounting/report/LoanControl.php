@@ -62,7 +62,8 @@ function LoanReport(){
 			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
 			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
 			
-		where CycleID=? AND DocType<>".DOCTYPE_ENDCYCLE." AND cc.level2 = ? " . $where . "
+		where CycleID=? AND DocType not in(".DOCTYPE_ENDCYCLE.",".DOCTYPE_CLOSECYCLE.") 
+			AND cc.level2 = ? " . $where . "
 		
 		group by di.CostID 
 		order by cc.CostCode" ,$param);

@@ -31,7 +31,7 @@ $page_rpg->addColumn("مانده", "CreditorAmount", "TotalRemainRender");
 	
 function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 	
-	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	if(session::IsPortal() && isset($_REQUEST["dashboard_show"]))
 	{
 		$where .= " AND (t.TafsiliType=".TAFTYPE_PERSONS." AND t.ObjectID=" . $_SESSION["USER"]["PersonID"] .
 			" OR t2.TafsiliType=".TAFTYPE_PERSONS." AND t2.ObjectID=" . $_SESSION["USER"]["PersonID"] . ")";
@@ -42,7 +42,7 @@ function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 		if($_REQUEST["IncludeStart"] == "0")
 			$where .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;
 		if($_REQUEST["IncludeEnd"] == "0")
-			$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
+			$where .= " AND d.DocType not in(" . DOCTYPE_ENDCYCLE . "," . DOCTYPE_CLOSECYCLE . ")";
 	}
 	else
 	{
@@ -50,7 +50,7 @@ function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 			$where .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;
 
 		if(!isset($_REQUEST["IncludeEnd"]))
-			$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
+			$where .= " AND d.DocType not in(" . DOCTYPE_ENDCYCLE . "," . DOCTYPE_CLOSECYCLE . ")";
 	}
 	if(!empty($_REQUEST["CycleID"]))
 	{

@@ -29,7 +29,7 @@ $page_rpg->addColumn("تطبیق با اصل", "diff2");
 
 function MakeWhere(&$where, &$whereParam){
 
-	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	if(session::IsPortal() && isset($_REQUEST["dashboard_show"]))
 	{
 		if($_REQUEST["DashboardType"] == "shareholder" || $_REQUEST["DashboardType"] == "agent")
 			$where .= " AND ReqPersonID=" . $_SESSION["USER"]["PersonID"];
@@ -224,10 +224,7 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("وضعیت", "StatusDesc");
 	
 	function LoanRemainRender($row, $value){
-		if($row["ComputeMode"] == "BANK")
-			return "<a href=LoanPayment.php?show=tru&RequestID=" . $row["RequestID"] . " target=blank >" . number_format($value) . "</a>";
-		else
-			return "<a href=LoanPaymentNew.php?show=tru&RequestID=" . $row["RequestID"] . " target=blank >" . number_format($value) . "</a>";
+		return "<a href=LoanPayment.php?show=tru&RequestID=" . $row["RequestID"] . " target=blank >" . number_format($value) . "</a>";
 	}
 	$col = $rpg->addColumn("باقیمانده وام (اقساط - پرداخت مشتری )", "LoanRemain", "LoanRemainRender");
 	$col->ExcelRender = false;

@@ -233,7 +233,7 @@ function GetData(&$rpg){
 	
 	function MakeWhere(&$where, &$whereParam){
  
-		if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+		if(session::IsPortal() && isset($_REQUEST["dashboard_show"]))
 		{
 			$where .= " AND (t.TafsiliType=".TAFTYPE_PERSONS." AND t.ObjectID=" . $_SESSION["USER"]["PersonID"] .
 				" OR t2.TafsiliType=".TAFTYPE_PERSONS." AND t2.ObjectID=" . $_SESSION["USER"]["PersonID"] . ")";
@@ -248,7 +248,7 @@ function GetData(&$rpg){
 		}
 		if(empty($_REQUEST["IncludeEnd"]))
 		{
-			$where .= " AND d.DocType != " . DOCTYPE_ENDCYCLE;
+			$where .= " AND d.DocType not in(" . DOCTYPE_ENDCYCLE . "," . DOCTYPE_CLOSECYCLE . ")";
 		}
 		if(!empty($_REQUEST["CostGroupID"]))
 		{

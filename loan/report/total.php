@@ -75,7 +75,7 @@ $page_rpg->addColumn("جمع پرداخت های مشتری تا تاریخ مو
 
 function MakeWhere(&$where, &$pay_where, &$whereParam){
 
-	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	if(session::IsPortal() && isset($_REQUEST["dashboard_show"]))
 	{
 		if($_REQUEST["DashboardType"] == "shareholder" || $_REQUEST["DashboardType"] == "agent")
 			$where .= " AND ReqPersonID=" . $_SESSION["USER"]["PersonID"];
@@ -813,7 +813,7 @@ function LoanReport_total()
 		}]
 	});
 	
-	if(<?= isset($_SESSION["USER"]["portal"])? "true" : "false" ?>)
+	if(<?= session::IsPortal() ? "true" : "false" ?>)
 	{
 		this.formPanel.down("[hiddenName=ReqPersonID]").getStore().load({
 			params : {

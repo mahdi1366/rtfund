@@ -15,8 +15,32 @@ if(isset($_REQUEST["task"]))
 {
 	switch ($_REQUEST["task"])
 	{
-		default : 
-			eval($_REQUEST["task"] . "();");
+		case "selectPersons":
+		case "selectSignerPersons":
+		case "selectPendingPersons":
+		case "SavePerson":
+		case "DeletePerson":
+		case "ResetPass":
+		case "selectPosts":
+		case "changePass":
+		case "ConfirmPendingPerson":
+		case "selectCompanyTypes":
+		case "ResetAttempt":
+			
+		case "SelectSigners":
+		case "SaveSigner":
+		case "DeleteSigner":
+			
+		case "SelectLicenses":
+		case "SaveLicense":
+		case "DeleteLicense":
+		case "ConfirmLicense":
+			
+		case "selectCities":
+		case "selectSubAgents":
+		case "ConfirmPerson":
+			
+			call_user_func($_REQUEST["task"]);
 	}
 }
 
@@ -99,6 +123,18 @@ function selectPersons(){
 	die();
 }
 
+function selectSignerPersons(){
+	
+	$where = " IsSigner='YES' AND IsStaff='YES' AND IsActive='YES'";
+	$temp = BSC_persons::MinSelect($where);
+	print_r(ExceptionHandler::PopAllExceptions());
+	$no = $temp->rowCount();
+	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
+	
+	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
+	die();
+}
+
 function selectPendingPersons(){
 	
 	$temp = BSC_persons::SelectAll("p.IsActive='PENDING'");
@@ -115,8 +151,7 @@ function SavePerson(){
 	$obj->IsScienceBase = !isset($_POST["IsScienceBase"]) ? "NO" : "YES";
 	unset($obj->PersonPic);
 	
-	
-	if(isset($_SESSION["USER"]["portal"]))
+	if(session::IsPortal())
 		$obj->PersonID = $_SESSION["USER"]["PersonID"];
 	
 	if(empty($obj->PersonID))
@@ -134,6 +169,8 @@ function SavePerson(){
 		$obj->IsShareholder = !isset($_POST["IsShareholder"]) ? "NO" : "YES";
 		$obj->IsSupporter = !isset($_POST["IsSupporter"]) ? "NO" : "YES";
 		$obj->IsExpert = !isset($_POST["IsExpert"]) ? "NO" : "YES";
+		
+		$obj->IsSigner = !isset($_POST["IsSigner"]) ? "NO" : "YES";
 	}
 	if($obj->PersonID > 0)
 		$result = $obj->EditPerson();
@@ -284,7 +321,7 @@ function ResetAttempt(){
 function SelectSigners(){
 	
 	$where = "PersonID=?";
-	if(isset($_SESSION["USER"]["portal"]))
+	if(session::IsPortal())
 		$param = array($_SESSION["USER"]["PersonID"]);
 	else
 		$param = array($_REQUEST["PersonID"]);
@@ -299,7 +336,7 @@ function SaveSigner(){
 	$obj = new BSC_OrgSigners();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
-	if(isset($_SESSION["USER"]["portal"]))
+	if(session::IsPortal())
 		$obj->PersonID = $_SESSION["USER"]["PersonID"];
 	
 	if($obj->RowID > 0)
@@ -322,7 +359,7 @@ function DeleteSigner(){
 
 function SelectLicenses(){
 	$where = "PersonID=?";
-	if(isset($_SESSION["USER"]["portal"]))
+	if(session::IsPortal())
 		$param = array($_SESSION["USER"]["PersonID"]);
 	else
 		$param = array($_REQUEST["PersonID"]);
@@ -337,7 +374,7 @@ function SaveLicense(){
 	$obj = new BSC_licenses();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
-	if(isset($_SESSION["USER"]["portal"]))
+	if(session::IsPortal())
 		$obj->PersonID = $_SESSION["USER"]["PersonID"];
 	
 	$obj->IsConfirm = "NOTSET";

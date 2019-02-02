@@ -11,10 +11,11 @@ require_once inc_dataGrid;
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
-$framework = isset($_SESSION["USER"]["framework"]);
 $RequestID = 0;
 $editable = false;
-if($framework)
+$DefrayMode = false;
+$TotalRemain = 0;
+if(session::IsFramework())
 {
 	if(empty($_POST["RequestID"]))
 		die();
@@ -25,6 +26,16 @@ if($framework)
 	if($ReqObj->IsEnded == "NO")
 		$editable = true;
 }	
+else
+{
+	if(!empty($_POST["RequestID"]))
+		$RequestID = $_POST["RequestID"];
+	$DefrayMode = isset($_POST["DefrayMode"]) ? true : false;
+	if($DefrayMode)
+	{
+		$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID);
+	}
+}
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetInstallments","grid_div");
 
@@ -42,7 +53,7 @@ $col->width = 80;
 $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::ColumnType_money);
 //$col->editor = ColumnEditor::CurrencyField();
 
-if($framework)
+if(session::IsFramework())
 {
 	$col = $dg->addColumn("کارمزد", "wage", GridColumn::ColumnType_money);
 	$col = $dg->addColumn("اصل", "", GridColumn::ColumnType_money);
@@ -52,7 +63,7 @@ if($framework)
 $col = $dg->addColumn("مانده قسط", "remainder", GridColumn::ColumnType_money);
 $col->width = 120;
 
-if($framework)
+if(session::IsFramework())
 {
 	$col = $dg->addColumn("وضعیت تمدید", "IsDelayed");
 	$col->renderer = "function(v,p,r){ return v == 'YES' ? 'تمدید شده' : '';}";
@@ -75,10 +86,9 @@ if($editable && $accessObj->EditFlag)
 	$dg->addButton("", "تغییر اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
 }
 
-if($framework)
+if(session::IsFramework())
 {
-	$dg->addButton("cmp_report2", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport('old');}");
-	$dg->addButton("cmp_report3", "گزارش پرداخت جدید", "report", "function(){InstallmentObject.PayReport('new');}");
+	$dg->addButton("cmp_report2", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport();}");
 }
 $dg->height = 377;
 $dg->width = 755;
@@ -127,8 +137,9 @@ Installment.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 	
-	framework : <?= $framework ? "true" : "false" ?>,
+	framework : <?= session::IsFramework() ? "true" : "false" ?>,
 	RequestID : <?= $RequestID ?>,
+	DefrayMode : <?= $DefrayMode ? "true" : "false" ?>,
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -210,28 +221,7 @@ function Installment()
 			itemId : "RequestID",
 			listeners :{
 				select : function(combo,records){
-					
-					me = InstallmentObject;
-					me.grid.getStore().proxy.extraParams = {
-						RequestID : this.getValue()
-					};
-					if(!me.grid.rendered)
-						me.grid.render(me.get("div_grid"));
-					else
-						me.grid.getStore().load();
-					if(records[0].data.IsEnded == "YES")
-					{
-						Ext.MessageBox.alert("","این وام خاتمه یافته است");
-						return;
-					}
-					
-					me.RequestID = this.getValue();
-					
-					me.PayPanel.show();
-					me.PayPanel.down("[itemId=PayCode]").setValue(
-						LoanRFID(records[0].data.RequestID));
-				
-					me.PayPanel.down("[itemId=PayAmount]").setValue(records[0].data.CurrentRemain);	
+					InstallmentObject.SelectLoan(records[0]);					
 				}
 			}
 		}]
@@ -285,6 +275,46 @@ function Installment()
 			cls : "blueText"
 		}]
 	});
+	
+	if(this.RequestID != 0)
+	{
+		this.PartPanel.down("[itemId=RequestID]").getStore().load({
+			params : {
+				RequestID : this.RequestID
+			},
+			callback : function(){
+				record = this.getAt(0);
+				InstallmentObject.PartPanel.down("[itemId=RequestID]").setValue(record.data.RequestID);
+				InstallmentObject.SelectLoan(record);
+				if(InstallmentObject.DefrayMode)
+					InstallmentObject.PayPanel.down("[itemId=PayAmount]").setValue(<?= $TotalRemain ?>); 
+			}
+		});
+	}
+}
+
+Installment.prototype.SelectLoan = function(record){
+
+	this.grid.getStore().proxy.extraParams = {
+		RequestID : record.data.RequestID
+	};
+	if(!this.grid.rendered)
+		this.grid.render(this.get("div_grid"));
+	else
+		this.grid.getStore().load();
+	if(record.data.IsEnded == "YES")
+	{
+		Ext.MessageBox.alert("","این وام خاتمه یافته است");
+		return;
+	}
+
+	this.RequestID = record.data.RequestID;
+
+	this.PayPanel.show();
+	this.PayPanel.down("[itemId=PayCode]").setValue(
+		LoanRFID(record.data.RequestID));
+
+	this.PayPanel.down("[itemId=PayAmount]").setValue(record.data.CurrentRemain);	
 }
 
 Installment.HistoryRender = function(v,p,r){
@@ -439,12 +469,9 @@ Installment.prototype.SaveInstallment = function(store, record){
 	});
 }
 
-Installment.prototype.PayReport = function(mode){
+Installment.prototype.PayReport = function(){
 
-	if(mode == 'old')
-		window.open(this.address_prefix + "../report/LoanPayment.php?show=true&RequestID=" + this.RequestID);
-	else 
-		window.open(this.address_prefix + "../report/LoanPaymentNew.php?show=true&RequestID=" + this.RequestID);
+	window.open(this.address_prefix + "../report/LoanPayment.php?show=true&RequestID=" + this.RequestID);
 }
 
 Installment.prototype.DelayInstallments = function(){

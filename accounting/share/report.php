@@ -7,7 +7,7 @@
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 
-if(isset($_SESSION["USER"]["portal"]))
+if(session::IsPortal())
 {
 	$_SESSION["accounting"]["CycleID"] = substr(DateModules::shNow(),0,4);
 } 

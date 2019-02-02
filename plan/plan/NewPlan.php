@@ -16,7 +16,7 @@ if(!isset($_REQUEST["FormType"]))
 	die();
 $FormType = $_REQUEST["FormType"];
 
-$framework = isset($_SESSION["USER"]["framework"]);
+$framework = session::IsFramework();
 
 if(!$framework)
 {
@@ -96,7 +96,7 @@ NewPlan.prototype = {
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
 	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
 	
-	framework : <?= isset($_SESSION["USER"]["framework"]) ? "true" : "false" ?>,
+	framework : <?= session::IsFramework() ? "true" : "false" ?>,
 	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);

@@ -32,7 +32,7 @@ $col->renderer = "function(v,p,r){return License.commentRender(v,p,r)}";
 $col->align = "center";
 $col->width = 60;
 
-if(isset($_SESSION["USER"]["framework"]))
+if(session::IsFramework())
 {
 	$col = $dg->addColumn("تایید/رد", "", "");
 	$col->renderer = "function(v,p,r){return License.ConfirmRender(v,p,r)}";
@@ -79,6 +79,8 @@ License.prototype = {
 
 License.deleteRender = function(v,p,r)
 {
+	if(r.data.IsConfirm == "YES")
+		return "";
 	return "<div align='center' title='حذف ' class='remove' onclick='LicenseObject.Deleting();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
@@ -95,6 +97,12 @@ function License()
 			return "pinkRow";
 		return "";
 	}
+	this.grid.plugins[0].on("beforeedit",function(rowEditor,e){
+
+		var record = LicenseObject.grid.getStore().getAt(e.rowIdx);
+		if(record.data.IsConfirm == "YES")
+			return false;
+	});
 	this.grid.addDocked({
 		xtype: 'toolbar',
 		dock: 'bottom',
@@ -190,7 +198,7 @@ License.prototype.Deleting = function()
 
 }
 
-<?if(isset($_SESSION["USER"]["framework"])){?>
+<?if(session::IsFramework()){?>
 
 License.ConfirmRender = function(v,p,r){
 	

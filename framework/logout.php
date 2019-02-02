@@ -10,5 +10,5 @@ session::logout();
 
 ?>
 <script>
-	window.location = "login.php";
+	window.location = "/framework/login.php";
 </script>

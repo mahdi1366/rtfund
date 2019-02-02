@@ -40,7 +40,8 @@ function DefrayRequest()
 					url: this.address_prefix + 'request.data.php?task=SelectMyRequests&mode=customer',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['PartAmount',"RequestID","ReqAmount","ReqDate", "RequestID", "CurrentRemain","IsEnded",{
+				fields :  ['PartAmount',"RequestID","ReqAmount","ReqDate", "RequestID", 
+							"CurrentRemain", "TotalRemain","IsEnded",{
 					name : "fullTitle",
 					convert : function(value,record){
 						return "کد وام : " + record.data.RequestID + " به مبلغ " + 
@@ -56,13 +57,19 @@ function DefrayRequest()
 				'<table cellspacing="0" width="100%"><tr class="x-grid-header-ct" style="height: 23px;">',
 				'<td style="padding:7px">کد وام</td>',
 				'<td style="padding:7px">مبلغ وام</td>',
-				'<td style="padding:7px">تاریخ پرداخت</td> </tr>',
+				'<td style="padding:7px">تاریخ پرداخت</td>',
+				'<td style="padding:7px">مانده تا انتها</td>',
+				' </tr>',
 				'<tpl for=".">',
 					'<tr class="x-boundlist-item" style="border-left:0;border-right:0">',
 					'<td style="border-left:0;border-right:0" class="search-item">{RequestID}</td>',
 					'<td style="border-left:0;border-right:0" class="search-item">',
 						'{[Ext.util.Format.Money(values.ReqAmount)]}</td>',
-					'<td style="border-left:0;border-right:0" class="search-item">{[MiladiToShamsi(values.ReqDate)]}</td> </tr>',
+					'<td style="border-left:0;border-right:0" class="search-item">',
+						'{[MiladiToShamsi(values.ReqDate)]}</td>',
+					'<td style="border-left:0;border-right:0" class="search-item">',
+						'{[Ext.util.Format.Money(values.TotalRemain)]}</td>',
+					'</tr>',
 				'</tpl>',
 				'</table>'
 			),
@@ -70,11 +77,27 @@ function DefrayRequest()
 			listeners :{
 				select : function(combo,records){
 					
-					/*if(records[0].data.IsEnded == "YES")
+					if(records[0].data.IsEnded == "YES")
 					{
 						Ext.MessageBox.alert("","این وام خاتمه یافته است");
+						combo.setValue();
 						return;
-					}*/
+					}
+					if(records[0].data.TotalRemain*1 > 0)
+					{
+						Ext.MessageBox.confirm("","تنها زمانی قادر به ارسال فرم تسویه می باشید که مبلغ باقیمانده وام را پرداخت نمایید" + 
+							"<br>"+"آیا مایل به پرداخت مانده وام می باشید ؟", function(btn){
+								if(btn == "no")
+									return;
+								portal.OpenPage('../loan/request/installments.php',{
+									RequestID : records[0].data.RequestID,
+									DefrayMode : true
+								});
+							});
+							
+						combo.setValue();
+						return;
+					}
 					
 					DefrayRequestObject.VoteBtn.enable();
 					DefrayRequestObject.WfmBtn.enable();

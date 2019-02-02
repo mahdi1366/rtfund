@@ -70,7 +70,7 @@ function GetData(){
 		where 1=1 ";
 	
 	//.........................................................
-	if(isset($_SESSION["USER"]["portal"]) && isset($_REQUEST["dashboard_show"]))
+	if(session::IsPortal() && isset($_REQUEST["dashboard_show"]))
 	{
 		if($_REQUEST["DashboardType"] == "shareholder" || $_REQUEST["DashboardType"] == "agent")
 			$where .= " AND r.ReqPersonID=" . $_SESSION["USER"]["PersonID"];

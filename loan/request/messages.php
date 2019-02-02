@@ -36,7 +36,7 @@ $col->width = 90;
 $col = $dgh->addColumn("زمان اقدام", "DoneDate", GridColumn::ColumnType_datetime);
 $col->width = 120;
 
-if(isset($_SESSION["USER"]["portal"]) )
+if(session::IsPortal() )
 {
 	$dgh->addButton("", "ایجاد پیام جدید", "add", "function(){LoanMessagesObj.AddMessage();}");
 	$dgh->enableRowEdit = true;
@@ -47,7 +47,7 @@ if(isset($_SESSION["USER"]["portal"]) )
 	$col->width = 60;
 }
 
-if(isset($_SESSION["USER"]["framework"]))
+if(session::IsFramework())
 {
 	$col = $dgh->addColumn("", "");
 	$col->renderer = "function(v,p,r){ return LoanMessagesObj.ActionRender(v,p,r);}";
