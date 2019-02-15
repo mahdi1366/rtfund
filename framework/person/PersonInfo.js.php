@@ -43,7 +43,7 @@ function PersonInfo()
 			"EconomicID","PhoneNo","mobile","address","email","RegNo","RegDate","RegPlace",
 			"CompanyType","AccountNo","DomainID","WebSite","IsGovermental","DomainDesc",
 			"FatherName","ShNo","IsStaff","IsCustomer","IsSupporter","IsShareholder",
-			"IsAgent","IsExpert", "SmsNo","IsScienceBase","ScinceEndDate"],
+			"IsAgent","IsExpert", "SmsNo","IsScienceBase","ScinceEndDate","PostalCode"],
 		autoLoad : true,
 		listeners :{
 			load : function(){

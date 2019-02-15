@@ -149,6 +149,7 @@ function GetEventsTree() {
 			where e.IsActive='YES'
 			order by ParentID,EventID");
 	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes, "ParentID", "EventID", "text");
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo json_encode($returnArr);
 	die();
 }

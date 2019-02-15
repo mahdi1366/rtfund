@@ -58,9 +58,11 @@ class FRW_systems extends PdoDataAccess {
 
 }
 
-class FRW_Menus extends PdoDataAccess {
+class FRW_Menus extends OperationClass {
 
-	public $SystemID;
+	const TableName = "FRW_Menus";
+	const TableKey = "MenuID"; 
+	
 	public $MenuID;
 	public $ParentID;
 	public $MenuDesc;
@@ -68,6 +70,13 @@ class FRW_Menus extends PdoDataAccess {
 	public $ordering;
 	public $icon;
 	public $MenuPath;
+	
+	public $IsStaff;
+	public $IsCustomer;
+	public $IsShareholder;
+	public $IsAgent;
+	public $IsExpert;
+	public $IsSupporter;
 
 	public function __construct($MenuID = "") {
 		if ($MenuID == "")
@@ -151,53 +160,38 @@ class FRW_access extends PdoDataAccess {
 	public $EditFlag;
 	public $RemoveFlag;
 
-	static function getAccessMenus($SystemID) {
+	static function getAccessMenus() {
 		
 		return parent::runquery("
-			select g.MenuID GroupID, g.MenuDesc GroupDesc, g.icon GroupIcon, m.*, s.*
+			select m.*
 			from FRW_menus m 
-			join FRW_menus g on(m.ParentID=g.MenuID)
-			join FRW_systems s on(m.SystemID=s.SystemID)
 			left join FRW_AccessGroupList gl on(gl.PersonID=:p)
 			join FRW_access a on((a.personID=:p or a.groupID=gl.GroupID) and m.MenuID=a.MenuID)
-			where m.ParentID>0 AND m.IsActive='YES' AND m.SystemID=:s
+			where m.MenuPath<>'' AND m.IsActive='YES'
 			group by m.MenuID
-			order by g.ordering,m.ordering", 
-			array(":s" => $SystemID, ":p" => $_SESSION["USER"]["PersonID"]));
+			order by m.ordering", 
+			array(":p" => $_SESSION["USER"]["PersonID"]));
 	}
 	
-	static function getPortalMenus($SystemID) {
+	static function getPortalMenus() {
 		
 		return parent::runquery("
-			select g.MenuID GroupID, g.MenuDesc GroupDesc, m.*, s.*
+			select g.MenuID GroupID, g.MenuDesc GroupDesc, m.*
 			from FRW_menus m 
 			join FRW_menus g on(m.ParentID=g.MenuID)
-			join FRW_systems s on(m.SystemID=s.SystemID)
-			join BSC_persons a on(a.PersonID=" . $_SESSION["USER"]["PersonID"] . " and 
+      join FRW_menus g0 on(g.ParentID=g0.MenuID)
+			join BSC_persons a on(a.PersonID=" . $_SESSION["USER"]["PersonID"] . " and
 				(
-					if(g.IsCustomer='YES',a.IsCustomer='YES',0=1) OR 
-					if(g.IsShareholder='YES',a.IsShareholder='YES',0=1) OR 
+					if(g.IsCustomer='YES',a.IsCustomer='YES',0=1) OR
+					if(g.IsShareholder='YES',a.IsShareholder='YES',0=1) OR
 					if(g.IsStaff='YES',a.IsStaff='YES',0=1)	OR
 					if(g.IsAgent='YES',a.IsAgent='YES',0=1)	OR
 					if(g.IsExpert='YES',a.IsExpert='YES',0=1)	OR
-					if(g.IsSupporter='YES',a.IsSupporter='YES',0=1)	
+					if(g.IsSupporter='YES',a.IsSupporter='YES',0=1)
 				)
 			)
-			
-			where m.ParentID>0 AND a.IsActive='YES' AND m.IsActive='YES' AND m.SystemID=?
-			order by g.ordering,m.ordering", array($SystemID));
-	}
-
-	static function getAccessSystems() {
-		return parent::runquery("
-			select s.*, group_concat(MenuDesc ORDER BY MenuDesc SEPARATOR '<br>' ) menuNames
-			from FRW_access a
-			join FRW_menus using(MenuID)
-			join FRW_systems s using(SystemID)
-			
-			where a.PersonID=" . $_SESSION["USER"]["PersonID"] . "
-			group by SystemID
-			order by s.ordering");
+			where m.IsActive='YES' AND g0.MenuID=".MENUID_portal."
+			order by g.ordering,m.ordering");
 	}
 
 	static function selectAccess($SystemID, $GroupID, $PersonID) {

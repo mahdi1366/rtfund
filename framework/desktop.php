@@ -6,69 +6,24 @@
 
 require_once ('header.inc.php');
 require_once 'management/framework.class.php';
+require_once 'TreeModules.class.php';
 
-$systems = FRW_access::getAccessSystems();
-$menuStr = "";
+//.......................................................
+global $accessMenu;
+$accessMenu = array();
+$menus = FRW_access::getAccessMenus();
+foreach($menus as $row)
+	$accessMenu[ $row["MenuID"] ] = true;
 
-foreach($systems as $sysRow)
-{
-	$menuStr .= "{text: '" . $sysRow["SysName"] . "',arrowCls:'none',icon : 'icons/app.png'";
 
-	if($sysRow["SystemID"] == "2")
-	{
-		$dt = PdoDataAccess::runquery("
-			select * from ACC_UserState 
-				join BSC_branches using(BranchID)
-				join ACC_cycles using(CycleID)
-			where PersonID=?", array($_SESSION["USER"]["PersonID"]));
-
-		if(count($dt) > 0)
-		{
-			$_SESSION["accounting"]["BranchID"] = $dt[0]["BranchID"];
-			$_SESSION["accounting"]["CycleID"] = $dt[0]["CycleID"];
-			$_SESSION["accounting"]["CycleYear"] = $dt[0]["CycleYear"];
-			$_SESSION["accounting"]["BranchName"] = $dt[0]["BranchName"];
-			$_SESSION["accounting"]["DefaultBankTafsiliID"] = $dt[0]["DefaultBankTafsiliID"];
-			$_SESSION["accounting"]["DefaultAccountTafsiliID"] = $dt[0]["DefaultAccountTafsiliID"];
-		}
-	}
+function recursiveCreateMenu($row){
+	$icon = empty($row['icon']) ? "/generalUI/ext4/resources/themes/icons/star.gif" : 
+				"/generalUI/ext4/resources/themes/icons/" . $row['icon'];
 	
-	$menus = FRW_access::getAccessMenus($sysRow["SystemID"]);
-	if(count($menus) > 0)
-		$menuStr .= ",menu : {xtype : 'menu',bodyStyle: 'background:white !important;',onClick: function(e){
-                    var t;
-                    if(t = this.findTargetItem(e)){
-                        if(t.menu){
-                            t.expandMenu();
-                        }else{
-                            t.onClick(e);
-                            this.fireEvent('click', this, t, e);
-                        }
-                    }
-                },items:[";
-	//........................................................
-	$groupArr = array();
-	foreach($menus as $row)
+	if(!isset($row["children"]))
 	{
-		if (!isset($groupArr[ $row["GroupID"] ] )) 
-		{
-			if(count($groupArr) > 0)
-			{
-				$menuStr = substr($menuStr, 0, strlen($menuStr) - 1);
-				$menuStr .= "]}},";
-			}
-			$icon = $row['GroupIcon'];
-			$icon = (!$icon) ? "/generalUI/ext4/resources/themes/icons/star.gif" : 
-				"/generalUI/ext4/resources/themes/icons/$icon";
-			$menuStr .= "{text : '" . $row["GroupDesc"] . "', icon: '" . $icon . "', menu :{bodyStyle: 'background:white !important;',items:[";
-			$groupArr[$row["GroupID"] ] = true;
-		}
-		
-		$icon = $row['icon'];
-		$icon = (!$icon) ? "/generalUI/ext4/resources/themes/icons/star.gif" : 
-			"/generalUI/ext4/resources/themes/icons/$icon";
-		$link_path = "/" .$row['SysPath'] . "/" . $row['MenuPath'];
 		//--------- extract params --------------
+		$link_path = $row['MenuPath'];
 		$param = "{";
 		$param .= "MenuID : " . $row['MenuID'] . ",";
 		if (strpos($link_path, "?") !== false) {
@@ -80,28 +35,90 @@ foreach($systems as $sysRow)
 		}
 		$param = substr($param, 0, strlen($param) - 1);
 		$param .= "}";
-		//---------------------------------------		
-
-		$menuStr .= "{
-			text: '" . $row["MenuDesc"] . "',
+		//---------------------------------------
+		global $accessMenu;
+		if(!isset($accessMenu[ $row["MenuID"] ]))
+			return "{
+			text: '".$row["MenuDesc"]."',
+			disabled : true,
+			icon: '".$icon."'
+		}";	
+		
+		return "{
+			text: '".$row["MenuDesc"]."',
 			handler: function(){
 				framework.OpenPage('" . $link_path . "','" . $row["MenuDesc"] . "'," . $param . ");
 			},
-			icon: '" . $icon . "'
-		},";
+			icon: '".$icon."'
+		}";
 	}
-	$menuStr .= "]}}";
-	//........................................................
-	if(count($menus) > 0)
-		$menuStr .= "]}";
 	
-	$menuStr .= "},'-',";
+	$childsArr  = array();
+	foreach($row["children"] as $child)
+		$childsArr[] = recursiveCreateMenu($child);
+	
+	if($row["ParentID"] == "0")
+	{
+		return "{
+			text: '".$row["MenuDesc"]."',
+			arrowCls:'none',
+			icon : 'icons/app.png',
+			menu : {
+				xtype : 'menu',
+				bodyStyle: 'background:white !important;',
+				onClick: function(e){
+                    var t;
+                    if(t = this.findTargetItem(e)){
+                        if(t.menu){
+                            t.expandMenu();
+                        }else{
+                            t.onClick(e);
+                            this.fireEvent('click', this, t, e);
+                        }
+                    }
+                },
+				items:[".implode(",", $childsArr)."]
+			}
+		}";
+	}
+	return "{
+		text : '".$row["MenuDesc"]."',
+			icon: '".$icon."',
+			menu :{
+				bodyStyle: 'background:white !important;',
+				items:[".implode(",", $childsArr)."]
+			}
+		}";	
 }
-if ($menuStr != "") {
-	$menuStr = substr($menuStr, 0, strlen($menuStr) - 1);
-}
+$menueArr  = array();
+$dataTable = FRW_Menus::Get(" order by ParentID,ordering ");
+$returnArr = TreeModulesclass::MakeHierarchyArray($dataTable->fetchAll(), "ParentID", "MenuID", "MenuDesc");
 
-//------------------------------------------------------------------------------
+foreach($returnArr as $mainMenu)
+{
+	if($mainMenu["MenuID"]*1 == MENUID_portal)
+		continue;
+	$menueArr[] = recursiveCreateMenu($mainMenu);
+}
+$menuStr = implode(",", $menueArr);
+
+//.......................................................
+
+$dt = PdoDataAccess::runquery("
+	select * from ACC_UserState join BSC_branches using(BranchID) join ACC_cycles using(CycleID)
+	where PersonID=?", array($_SESSION["USER"]["PersonID"]));
+
+if(count($dt) > 0)
+{
+	$_SESSION["accounting"]["BranchID"] = $dt[0]["BranchID"];
+	$_SESSION["accounting"]["CycleID"] = $dt[0]["CycleID"];
+	$_SESSION["accounting"]["CycleYear"] = $dt[0]["CycleYear"];
+	$_SESSION["accounting"]["BranchName"] = $dt[0]["BranchName"];
+	$_SESSION["accounting"]["DefaultBankTafsiliID"] = $dt[0]["DefaultBankTafsiliID"];
+	$_SESSION["accounting"]["DefaultAccountTafsiliID"] = $dt[0]["DefaultAccountTafsiliID"];
+}
+//......................................................
+
 $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 
 ?>
@@ -325,12 +342,12 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 						xtype : "button",						
 						icon : "icons/home.png",
 						scale: 'medium',
-						handler : function(){framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");}
+						handler : function(){framework.OpenPage("framework/StartPage.php", "صفحه اصلی");}
 					},{
 						xtype : "button",
 						icon : "icons/exit.png",
 						scale: 'medium',
-						handler : function(){framework.OpenPage("/framework/logout.php");}
+						handler : function(){framework.OpenPage("framework/logout.php");}
 					}]
 				}
 			}]
@@ -544,11 +561,13 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 	{
 		var list = url.split("/");
 		var list2 = new Array();
-		for(var i=1; i<list.length; i++)
+		for(var i=0; i<list.length; i++)
 		{
+			if(list[i] == "")
+				continue;
 			if(list[i] == "..")
 				list2.pop();
-			else
+			else 
 				list2.push(list[i]);
 		}
 
@@ -787,7 +806,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 			remove:true
 		});
 		framework = new FrameWorkClass();
-		framework.OpenPage("/framework/StartPage.php", "صفحه اصلی");
+		framework.OpenPage("framework/StartPage.php", "صفحه اصلی");
 		if(framework.CalendarReminders > 0)
 		{
 			framework.ShowCalendarReminderWindow();

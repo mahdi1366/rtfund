@@ -126,13 +126,12 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 							handler: function(){ EventObject.BeforeSaveEvent("new", "group"); }
 					});
             }
-            else if (record.parentNode.data.id == "source")
-            {  
-                if(me.AddAccess)
+			else if(record.parentNode.data.id == "source" ){
+				if(me.AddAccess)
 					this.Menu.add({
-						text: 'ایجاد رویداد',
+					text: 'ایجاد گروه رویداد',
 							iconCls: 'add',
-							handler: function(){ EventObject.BeforeSaveEvent("new", "event"); }
+							handler: function(){ EventObject.BeforeSaveEvent("new", "group"); }
 					});
 				if(me.EditAccess)
 					this.Menu.add({
@@ -148,7 +147,30 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 							handler: function(){ EventObject.DeleteEvent("group"); }
 
 					});
-            }
+			}
+			else if(record.parentNode.parentNode.data.id == "source")
+			{
+				if(me.EditAccess)
+					this.Menu.add({
+						text: 'ویرایش گروه',
+							iconCls: 'edit',
+							handler: function(){ EventObject.BeforeSaveEvent("edit", "group"); }
+
+					});
+				if(me.RemoveAccess)
+					this.Menu.add({
+						text: 'حذف گروه',
+							iconCls: 'remove',
+							handler: function(){ EventObject.DeleteEvent("group"); }
+
+					});
+				if(me.AddAccess)
+					this.Menu.add({
+						text: 'ایجاد رویداد',
+							iconCls: 'add',
+							handler: function(){ EventObject.BeforeSaveEvent("new", "event"); }
+					});
+			}
             else
             {
 				if(me.EditAccess)
@@ -176,11 +198,11 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 					handler: function () {
 						var record = EventObject.tree.getSelectionModel().getSelection()[0];
 						framework.OpenPage(EventObject.address_prefix + "EventRows.php?EventID="
-								+ record.raw.EventID, "ردیف های رویداد" + record.raw.EventID,
+								+ record.data.id, "ردیف های رویداد" + record.data.id,
 								{
 									MenuID : "<?= $_POST["MenuID"] ?>",
-									EventID: record.raw.EventID,
-									EventTitle: record.raw.EventTitle
+									EventID: record.data.id,
+									EventTitle: record.data.text
 
 								});
 					}
@@ -190,6 +212,21 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
             var coords = e.getXY();
             this.Menu.showAt([coords[0] - 120, coords[1]]);
         });
+		
+		this.tree.on("itemdblclick", function (view, record, item, index, e){
+			if(record.parentNode.parentNode.parentNode.data.id == "source")
+			{
+				framework.OpenPage(EventObject.address_prefix + "EventRows.php?EventID="
+						+ record.data.id, "ردیف های رویداد" + record.data.id,
+						{
+							MenuID : "<?= $_POST["MenuID"] ?>",
+							EventID: record.data.id,
+							EventTitle: record.data.text
+
+						});
+			}
+		});
+		
     }
 
     var EventObject = new Event();
@@ -209,40 +246,10 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
             this.infoPanel.getComponent("EventID").setValue(record.data.id);
             this.infoPanel.getComponent("old_EventID").setValue(record.data.id);
         } else {
-            if (obj == "event")
-                this.infoPanel.getComponent("ParentID").setValue(record.data.id);
-            else
-                this.infoPanel.getComponent("ParentID").setValue(0);
+            this.infoPanel.getComponent("ParentID").setValue(record.data.id == "source" ? 0 : record.data.id);
         }
     }
-    Event.prototype.CheckList = function (mode, obj)
-    {
-        var record = this.tree.getSelectionModel().getSelection()[0];
-        
-        this.CheckListWin = new Ext.window.Window({
-                title: 'چک لیست',
-                modal: true,
-                width: 550,
-                height: 470,
-                closeAction: "hide",
-                loader: {
-                    url: this.address_prefix + "../../../../framework_management/CheckList/CheckListItems.php",
-                    params: {
-                        parentObj: "EventObject.CheckListWin",
-                        parentForm: "EventObject.tree",
-                        SourceID: record.data.id,
-                        SourceID2: 0,
-                        SourceID3: 0,
-                        CheckListID:1
-                    },
-                    method: "POST",
-                    scripts: true
-                }
-            });
-        
-        this.CheckListWin.loader.load();
-        this.CheckListWin.show();
-    }
+   
     Event.prototype.DeleteEvent = function () {
 
         var record = this.tree.getSelectionModel().getSelection()[0];

@@ -21,7 +21,7 @@ function CostCode(){
 		xtype : "hiddenfield",
 		name : "CostID"
 	});
-	this.levelTitles = new Array("حساب کل","معین","جزءمعین"/*,"جزءمعین2"*/);
+	this.levelTitles = new Array("حساب کل","معین1","معین2");
 	for(var i=0; i < this.levelCount; i++)
 	{
 		levelCombos.push({

@@ -6,6 +6,7 @@
 require_once('../header.inc.php');
 require_once 'framework.class.php';
 require_once '../person/persons.class.php';
+require_once 'TreeModules.class.php';
 require_once inc_dataReader;
 require_once inc_response;
 
@@ -42,6 +43,18 @@ function SaveSystem(){
 }
 
 //--------------------------------------------------
+
+function SelectMenuNodes(){
+	
+	$dataTable = PdoDataAccess::runquery("
+		select m.* , concat('[',ordering,'] ',MenuID,' ',MenuDesc) MenuTitle,/*'true' expanded,*/
+			concat('/generalUI/icons/',m.icon) icon, m.icon SrcIcon
+		from FRW_menus m 
+		order by ParentID,ordering ");
+	$returnArr = TreeModulesclass::MakeHierarchyArray($dataTable, "ParentID", "MenuID", "MenuTitle", true);
+	echo json_encode($returnArr);
+	die();
+}
 
 function GellMenus(){
 	$temp = FRW_Menus::GetAllMenus($_GET["SystemID"]);
@@ -104,6 +117,17 @@ function DeleteMenu(){
 	die();
 }
 
+function SelectPersonAndGroups(){
+	
+	$temp = PdoDataAccess::runquery("
+		select 'group' type, concat('g_',GroupID) id, GroupDesc title from FRW_AccessGroups
+		UNION All
+		select 'person' type, concat('p_',PersonID) id, concat_ws(' ',fname,lname,CompanyName) title 
+		from BSC_persons where IsStaff='YES' AND IsActive='YES'
+		" );
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
 //--------------------------------------------------
 
 function selectAccess(){
@@ -116,18 +140,37 @@ function selectAccess(){
 	die();
 }
 
-function SavePersonAccess(){
+function SelectAccessMenuNodes(){
+	
+	$groupID = $_REQUEST["GroupID"];
+	$PersonID = $_REQUEST["PersonID"];
+	
+	$dataTable = PdoDataAccess::runquery("
+		select m.* , concat('[',ordering,'] ',MenuDesc) MenuTitle,'true' expanded,
+			concat('/generalUI/icons/',m.icon) icon,a.ViewFlag,a.AddFlag,a.EditFlag,a.RemoveFlag
+		from FRW_menus m 
+		left join FRW_access a on((a.personID=:p or a.groupID=:g) and m.MenuID=a.MenuID)
+		where m.MenuID<>".MENUID_portal."
+		group by m.MenuID
+		order by ParentID,ordering ", array(":p"=>$PersonID, ":g"=>$groupID));
+	
+	$returnArr = TreeModulesclass::MakeHierarchyArray($dataTable, "ParentID", "MenuID", "MenuTitle",true);
+	echo json_encode($returnArr);
+	die();
+}
+
+function SaveAccess(){
 	
 	$keys = array_keys($_POST);
-	$GroupID = empty($_REQUEST["GroupID"]) ? 0 : $_REQUEST["GroupID"];
-	$PersonID = empty($_REQUEST["PersonID"]) ? 0 : $_REQUEST["PersonID"];
+	$GroupID = $_REQUEST["GroupID"];
+	$PersonID = $_REQUEST["PersonID"];
 
 	$pdo = PdoDataAccess::getPdoObject();
 	/*@var $pdo PDO*/
 	$pdo->beginTransaction();
 	PdoDataAccess::runquery("delete a from FRW_access a join FRW_menus using(MenuID) "
-			. " where SystemID=? AND PersonID=? AND GroupID=?",
-		array($_POST["SystemID"],$PersonID,$GroupID));
+			. " where PersonID=? AND GroupID=?",
+		array($PersonID,$GroupID));
 	
 	for($i=0; $i < count($keys); $i++)
 	{

@@ -11,7 +11,8 @@ class TreeModulesclass
 	 * @param array $dataTable : this array should have at least id,parentid,text and id should be unique
 	 */
 	static function MakeHierarchyArray($dataTable, 
-			$parentFieldName = "ParentID", $idFieldName = "id", $textFieldName = "text")
+			$parentFieldName = "ParentID", $idFieldName = "id", $textFieldName = "text",
+			$ignoreErrors = false)
 	{
 		$nodes = array();
 		$refArr = array();
@@ -36,7 +37,10 @@ class TreeModulesclass
 				if(!$parent)
 				{
 					ExceptionHandler::PushException("پدر گره با کد " . $node["id"] . " یافت نشد.");
-					return false;		
+					if(!$ignoreErrors)
+						return false;
+					else
+						continue;
 				}
 				if (!isset($parent["children"])) {
 					$parent["children"] = array();

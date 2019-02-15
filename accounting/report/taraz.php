@@ -23,9 +23,8 @@ $page_rpg = new ReportGenerator("mainForm","AccReport_tarazObj");
 $page_rpg->addColumn("گروه حساب", "CostGroupDesc");
 $page_rpg->addColumn("گروه", "level0Desc");
 $page_rpg->addColumn("کل", "level1Desc");
-$page_rpg->addColumn("معین", "level2Desc");
-$page_rpg->addColumn("جزءمعین", "level3Desc");
-$page_rpg->addColumn("جزءمعین2", "level4Desc");
+$page_rpg->addColumn("معین1", "level2Desc");
+$page_rpg->addColumn("معین2", "level3Desc");
 $page_rpg->addColumn("تفصیلی", "TafsiliDesc");
 $page_rpg->addColumn("تفصیلی2", "TafsiliDesc2");
 $page_rpg->addColumn("گردش بدهکار", "bdAmount" , "ReportMoneyRender");
@@ -126,22 +125,15 @@ function GetData(&$rpg){
 	if($level >= "l2")
 	{
 		$group .= ",cc.level2"; 
-		$col = $rpg->addColumn("کد معین", "level2Code");
-		$col = $rpg->addColumn("معین", "level2Desc", $level =="l2" ? "levelRender" : "");
+		$col = $rpg->addColumn("کد معین1", "level2Code");
+		$col = $rpg->addColumn("معین1", "level2Desc", $level =="l2" ? "levelRender" : "");
 		$col->ExcelRender = false;
 	}
 	if($level >= "l3")
 	{
 		$group .= ",cc.level3"; 
-		$col = $rpg->addColumn("کد جزء معین", "level3Code");
-		$col = $rpg->addColumn("جزء معین", "level3Desc", $level =="l3" ? "levelRender" : "");
-		$col->ExcelRender = false;
-	}
-	if($level >= "l4")
-	{
-		$group .= ",cc.level4"; 
-		$col = $rpg->addColumn("کد جزء معین2", "level4Code");
-		$col = $rpg->addColumn("جزء معین2", "level4Desc", $level =="l4" ? "levelRender" : "");
+		$col = $rpg->addColumn("کد معین2", "level3Code");
+		$col = $rpg->addColumn("معین2", "level3Desc", $level =="l3" ? "levelRender" : "");
 		$col->ExcelRender = false;
 	}
 	if($level == "l5")
@@ -412,9 +404,8 @@ function ListData($IsDashboard = false){
 	$levelsDescArr = array(
 		"l0" => "گروه",
 		"l1" => "کل",
-		"l2" => "معین",
-		"l3" => "جزء معین",
-		"l4" => "جزء معین2",
+		"l2" => "معین1",
+		"l3" => "معین2",
 		"l5" => "تفصیلی",
 		"l6" => "تفصیلی2",		
 		"g" => "گروه حساب"
@@ -920,9 +911,8 @@ function AccReport_taraz()
 							"<input type='radio' name='level' id='level-g' value='g' > گروه حساب<br>" + 
 							"<input type='radio' name='level' id='level-l0' value='l0' > گروه<br>" + 
 							"<input type='radio' name='level' id='level-l1' value='l1' checked> کل <br>" + 
-							"<input type='radio' name='level' id='level-l2' value='l2' > معین  <br>" + 
-							"<input type='radio' name='level' id='level-l3' value='l3' > جزء معین <br>" + 
-							"<input type='radio' name='level' id='level-l4' value='l4' > جزء معین 2<br>" + 
+							"<input type='radio' name='level' id='level-l2' value='l2' > معین  1<br>" + 
+							"<input type='radio' name='level' id='level-l3' value='l3' > معین  2<br>" + 
 							"<input type='radio' name='level' id='level-l5' value='l5' > تفصیلی<br>" + 
 							"<input type='radio' name='level' id='level-l6' value='l6' > تفصیلی 2" 			
 				}]

@@ -11,6 +11,7 @@ define("SYSTEMID_attendance", 11);
 define("SYSTEMID_contract", 12);
 define("SYSTEMID_portal", 1000);
 
+define("MENUID_portal", 1000);
 define("MENUID_persons", 6);
 
 //.................................................
@@ -161,6 +162,11 @@ define("OFC_ROLE_SECRET", "1");
 define("ATN_STEPID_RAW", "100");
 define("ATN_STEPID_CONFIRM", "200");
 
+//------------ meeting ------------
+define("MTG_STATUSID_RAW", "1");
+define("MTG_STATUSID_DONE", "2");
+define("MTG_STATUSID_CANCLE", "3");
+
 //------------ acc doc ------------
 define("ACC_STEPID_RAW", "100");
 define("ACC_STEPID_CONFIRM", "200");
@@ -173,6 +179,11 @@ define("DEFRAYLOAN_WFMFORM", "16");
 define("EVENT_LOAN_PAYMENT", 1010101);
 define("EVENT_LOAN_BACKPAY", 1010102);
 
+//------------- TypeIDs -----------
+define("TYPEID_MeetingType", 88);
+define("TYPEID_MeetingStatusID", 89);
+
+define("POSTID_MODIRAMEL", 77);
 
 define("FILE_FRAMEWORK_PICS",getenv("DOCUMENT_ROOT") . "/storage/framework/");
 

@@ -489,7 +489,7 @@ function AccReport_flow()
 		},{
 			xtype : "combo",
 			displayField : "BlockDesc",
-			fieldLabel : "معین",
+			fieldLabel : "معین1",
 			valueField : "BlockID",
 			itemId : "cmp_level2",
 			queryMode : "local",
@@ -516,7 +516,7 @@ function AccReport_flow()
 		},{
 			xtype : "combo",
 			displayField : "BlockDesc",
-			fieldLabel : "جزء معین",
+			fieldLabel : "2معین",
 			valueField : "BlockID",
 			itemId : "cmp_level3",
 			queryMode : "local",

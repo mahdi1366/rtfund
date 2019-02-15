@@ -1,126 +1,303 @@
 <?php
-//-------------------------
-// programmer:	Jafarkhani
-// Create Date:	94.06
-//-------------------------
-require_once('../header.inc.php');
-require_once inc_dataGrid;
-
-require_once 'menus.js.php';
-
-$dg = new sadaf_datagrid("dg",$js_prefix_address . "framework.data.php?task=GellMenus","grid_div","mainForm");
-
-$dg->addColumn("", "GroupDesc", "", true);
-$dg->addColumn("", "MenuID", "", true);
-$dg->addColumn("", "SystemID", "", true);
-$dg->addColumn("", "GroupSystemID", "", true);
-$dg->addColumn("", "GroupOrder", "", true);
-$dg->addColumn("", "GroupIcon", "", true);
-
-$dg->EnableGrouping = true;
-$dg->DefaultGroupField = "GroupID";
-$dg->groupHeaderTpl = " <table class=infoTbl width=100% >" . 
-		"<tr><td width=20px> " .
-				"<div title=ایجاد onclick=MenuObject.AddMenu(event,{[values.rows[0].data.GroupID]},{[values.rows[0].data.GroupSystemID]}); class=add " .
-				"style=background-repeat:no-repeat;background-position:center;cursor:pointer;width:100%;height:16></div></td>" .
-			"<td width=20px><div title=ویرایش onclick=MenuObject.EditMenu(event,{[values.rows[0].data.GroupID]}); class=edit " .
-				"style=background-repeat:no-repeat;background-position:center;cursor:pointer;width:100%;height:16></div></td>" .
-			"<td>منوی اصلی : <span class=blueText>{[values.rows[0].data.GroupDesc]} [ ترتیب : {[values.rows[0].data.GroupOrder]} ] " .
-			"[ icon : {[values.rows[0].data.GroupIcon]} ]</span>".
-		"</td><td  width=20px>" .
-			"<div title=حذف onclick=MenuObject.DeleteMenu({[values.rows[0].data.GroupID]},event); class=remove " .
-				"style=background-repeat:no-repeat;background-position:center;cursor:pointer;width:100%;height:16></div>" . 
-		"</td></tr>" .        
-        "</table>";
-
-
-$col = $dg->addColumn("گروه", "GroupID", "string");
-$col->renderer = "function(v,p,r){return r.data.GroupDesc}";
-$col->editor = "MenuObject.GroupCombo";
-$col->sortable = false;
-
-$col = $dg->addColumn("عنوان", "MenuDesc", "string");
-$col->editor = ColumnEditor::TextField();
-$col->sortable = false;
-
-$col = $dg->addColumn("مسیر", "MenuPath", "string");
-$col->editor = "MenuObject.PathField";
-$col->sortable = false;
-$col->align = "left";
-$col->renderer = "function(v){return '<div style=direction:ltr>' + v + '</div>'; }";
-$col->width = 250;
-
-$col = $dg->addColumn("آیکون", "icon", "string");
-$col->editor = ColumnEditor::TextField(true);
-$col->sortable = false;
-$col->width = 80;
-
-$col = $dg->addColumn("ترتیب", "ordering", "string");
-$col->editor = ColumnEditor::NumberField();
-$col->sortable = false;
-$col->width = 60;
-$col->align = "center";
-
-$col = $dg->addColumn("وضعیت", "IsActive", "string");
-$col->editor = ColumnEditor::ComboBox(array(array("id"=>"YES", "title"=>'فعال'),array("id"=>'NO', "title"=>'غیرفعال')), "id", "title");
-$col->sortable = false;
-$col->width = 60;
-$col->align = "center";
-
-$dg->addObject('
-	{text : "عنوان منوی اصلی : "},
-	{xtype: "textfield",itemId: "GroupDesc",width: 120, enableKeyEvents: true},
-	{xtype: "displayfield",text : "ترتیب : "},
-	{xtype: "textfield",itemId: "GroupOrder",width: 100, enableKeyEvents: true},
-	{xtype: "displayfield",text : "آیکون : "},
-	{xtype: "textfield",itemId: "GroupIcon",width: 100, enableKeyEvents: true},
-	{xtype: "hidden",itemId: "GroupID", enableKeyEvents: true},
-	{text : "", handler : function(){ MenuObject.EditMenu(null,null);}, iconCls: "clear"},
-	{text : "ذخیره منوی اصلی", handler : function(){ MenuObject.SaveGroup();}, iconCls: "save"}');
-
-$col = $dg->addColumn("حذف", "");
-$col->sortable = false;
-$col->renderer = "Menu.deleteRender";
-$col->width = 55;
-
-$dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(store,record,option){ MenuObject.SaveMenu(store,record,option);}";
-
-$dg->height = 500;
-$dg->width = 750;
-$dg->emptyTextOfHiddenColumns = true;
-$dg->EnableSearch = false;
-$dg->EnablePaging = false;
-$dg->DefaultSortField = "MenuID";
-$dg->DefaultSortDir = "DESC";
-$dg->title = "منوهای اصلی و فرعی";
-$dg->autoExpandColumn = "MenuDesc";
-$dg->notRender = true;
-$grid = $dg->makeGrid_returnObjects();
+//-----------------------------
+// programmer: SH.Jafarkhani
+// create Date: 97.11
+//-----------------------------
+require_once '../header.inc.php';
 
 ?>
-
 <script>
-	
-MenuObject.PathField = new Ext.form.TextField({
-	allowBlank : false,
-	fieldStyle : "direction:ltr"
-})
-	
-MenuObject.grid = <?= $grid?>;
-MenuObject.grid.plugins[0].on("beforeedit", function(editor,e){
-		if(e.record.data.MenuID == null || e.record.data.MenuID == "")
-			return false;
+FRW_menu.prototype = {
+	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
+	address_prefix : "<?= $js_prefix_address ?>",
+
+	get : function(elementID){
+		return findChild(this.TabID, elementID);
+	}
+};
+
+function FRW_menu()
+{
+	this.tree = Ext.create('Ext.tree.Panel', {
+		title : "منوهای سیستم",
+		tbar : [],
+        store: new Ext.data.TreeStore({
+			proxy: {
+				type: 'ajax',
+				url: this.address_prefix + 'framework.data.php?task=SelectMenuNodes'
+			},
+			root: {
+				text: "منوهای سیستم",
+				id: 'src',
+				expanded: true
+			}
+		}),
+        width: 750,
+        height: 500,
+        renderTo: this.get("div_tree")
+    });
+
+	this.tree.getDockedItems('toolbar[dock="top"]')[0].add({
+            xtype: "button",
+            iconCls: "print",
+            text: "چاپ",
+            handler: function () {
+                Ext.ux.Printer.print(FRW_menuObject.tree);
+            }
+        }, '-', {
+            xtype: "button",
+            iconCls: "refresh",
+            text: "بازگذاری مجدد",
+            handler: function () {
+                FRW_menuObject.tree.getStore().load();
+            }
+        });
+		
+	this.tree.on("itemcontextmenu", function(view, record, item, index, e)
+	{
+		me = FRW_menuObject;
+		
+		if(me.SelectMode)
+			return;
+			
+		e.stopEvent();
+		e.preventDefault();
+		view.select(index);
+
+		me.Menu = new Ext.menu.Menu();
+		me.Menu.add({
+			text: 'ایجاد گروه منو',
+			iconCls: 'add',
+			handler : function(){FRW_menuObject.BeforeSave(false,false);}
+		},{
+			text: 'ایجاد منو عملیاتی',
+			iconCls: 'add',
+			handler : function(){FRW_menuObject.BeforeSave(false,true);}
+		});
+
+		if(record.data.id != "src")
+		{
+				me.Menu.add({
+					text: 'ویرایش عنوان',
+					iconCls: 'edit',
+					handler : function(){FRW_menuObject.BeforeSave(true);}
+				});
+
+				me.Menu.add({
+					text: 'حذف سطح',
+					iconCls: 'remove',
+					handler : function(){FRW_menuObject.DeleteMenu();}
+				});
+		}
+
+		var coords = e.getXY();
+		me.Menu.showAt([coords[0]-120, coords[1]]);
 	});
+}
 
-//MenuObject.grid.plugins[0].down("[itemId=cmp_path]")
+var FRW_menuObject = new FRW_menu();
 
-//Ext.getCmp("title").on("keydown", function(elem,e){if(e.getKey() == 13)AddMenu();});
-//Ext.get("elementTitle").addKeyListener(13, function(){AddElement();});	
+FRW_menu.prototype.BeforeSave = function(EditMode,IsMenu){
+
+	if(!this.infoWin)
+	{
+		this.infoWin = new Ext.window.Window({
+            applyTo: this.get("NewWIN"),
+            modal : true,
+            title: "زیر سطح",
+            width : 550,
+            closeAction : "hide",
+            items : new Ext.form.Panel({
+                bodyStyle : "text-align:right;padding:5px",
+                items :[{
+					xtype : "textfield",
+					name : "MenuDesc",
+					itemId : "MenuDesc",
+					fieldLabel : "عنوان",
+					anchor : "100%"
+				},{
+					xtype : "numberfield",
+					name : "ordering",
+					itemId : "ordering",
+					fieldLabel : "ترتیب",
+					hideTrigger : true
+				},{
+					xtype : "textfield",
+					name : "icon",
+					itemId : "icon",
+					style : "direction:ltr",
+					fieldLabel : "icon",
+					anchor : "100%"
+				},{
+					xtype : "textfield",
+					name : "MenuPath",
+					style : "direction:ltr",
+					itemId : "MenuPath",
+					fieldLabel : "path",
+					anchor : "100%"
+				},{
+					xtype : "fieldset",
+					colspan : 2,
+					itemId : "FS_UserTypes",
+					title : "نوع ذینفع",
+					layout : "hbox",
+					defaults : {style : "margin-right : 20px"},
+					items :[{
+						xtype : "checkbox",
+						boxLabel: 'همکاران صندوق',
+						name: 'IsStaff',
+						inputValue: 'YES'
+					},{
+						xtype : "checkbox",
+						boxLabel: 'مشتری',
+						name: 'IsCustomer',
+						inputValue: 'YES'
+					},{
+						xtype : "checkbox",
+						boxLabel: 'سهامدار',
+						name: 'IsShareholder',
+						inputValue: 'YES'
+					},{
+						xtype : "checkbox",
+						boxLabel: 'سرمایه گذار',
+						name: 'IsAgent',
+						inputValue: 'YES'
+					},{
+						xtype : "checkbox",
+						boxLabel: 'حامی',
+						name: 'IsSupporter',
+						inputValue: 'YES'
+					},{
+						xtype : "checkbox",
+						boxLabel: 'کارشناس خارج از صندوق',
+						name: 'IsExpert',
+						inputValue: 'YES'
+					}]
+				},{
+					xtype : "hidden",
+					itemId : "ParentID",
+					name : "ParentID"
+				},{
+					xtype : "hidden",
+					itemId : "MenuID",
+					name : "MenuID"
+				}],
+                buttons :[{
+					text : "ذخیره",
+					handler : function(){FRW_menuObject.SaveMenu();},
+					iconCls : "save"
+				},{
+					text : "انصراف",
+					handler : function(){
+						this.up('window').hide();
+					},
+					iconCls : "undo"
+				}]
+            })
+        });
+	}
+	
+	var record = this.tree.getSelectionModel().getSelection()[0];
+	this.infoWin.down('form').getForm().reset();
+	this.infoWin.show();
+	this.infoWin.down('form').getComponent("ParentID").setValue(record.data.id);
+
+	this.infoWin.down("[itemId=FS_UserTypes]").hide();
+	if(EditMode)
+	{
+		this.infoWin.down('form').getComponent("MenuID").setValue(record.data.id);
+		this.infoWin.down('form').getComponent("MenuDesc").setValue(record.raw.MenuDesc);
+		this.infoWin.down('form').getComponent("ParentID").setValue(record.data.parentId);
+		this.infoWin.down('form').getComponent("ordering").setValue(record.raw.ordering);
+		this.infoWin.down('form').getComponent("icon").setValue(record.raw.SrcIcon);
+		this.infoWin.down('form').getComponent("MenuPath").setValue(record.raw.MenuPath);
+		
+		if(record.raw.MenuPath != null)
+			IsMenu = true;
+		
+		if(record.parentNode.data.id == "1000")
+		{
+			this.infoWin.down("[itemId=FS_UserTypes]").show();
+			this.infoWin.down("[name=IsStaff]").setValue(record.raw.IsStaff);
+			this.infoWin.down("[name=IsCustomer]").setValue(record.raw.IsCustomer);
+			this.infoWin.down("[name=IsShareholder]").setValue(record.raw.IsShareholder);
+			this.infoWin.down("[name=IsAgent]").setValue(record.raw.IsAgent);
+			this.infoWin.down("[name=IsExpert]").setValue(record.raw.IsExpert);
+			this.infoWin.down("[name=IsSupporter]").setValue(record.raw.IsSupporter);
+		}
+	}
+	else
+	{
+		if(record.data.id == "1000")
+			this.infoWin.down("[itemId=FS_UserTypes]").show();
+	}
+	
+	if(IsMenu)
+		this.infoWin.down("[itemId=MenuPath]").show();
+	else
+		this.infoWin.down("[itemId=MenuPath]").hide();
+	
+	this.infoWin.down('form').getComponent("MenuDesc").focus();
+}
+ 
+FRW_menu.prototype.SaveMenu = function(){
+
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
+	mask.show();
+
+	this.infoWin.down('form').getForm().submit({
+		clientValidation: true,
+		url: this.address_prefix + 'framework.data.php?task=SaveMenu',
+		method : "POST",
+
+		success : function(form,action){                
+
+			me = FRW_menuObject;
+			me.tree.getStore().load();
+			me.infoWin.down('form').getForm().reset();
+			me.infoWin.hide();
+			mask.hide();
+
+		},
+		failure : function(form,action)
+		{
+			Ext.MessageBox.alert("Error","عملیات مورد نظر با شکست مواجه شد");
+			mask.hide();
+		}
+	});
+}
+
+FRW_menu.prototype.DeleteMenu = function(){
+	
+	me = FRW_menuObject;
+	var record = me.tree.getSelectionModel().getSelection()[0];
+	if(record.hasChildNodes())
+	{
+		Ext.MessageBox.alert("","این سطح دارای زیر سطح می باشد و قادر به حذف آن نمی باشید.");
+		return;
+	}
+	Ext.Ajax.request({
+		url : me.address_prefix + "framework.data.php",
+		method : "POST",
+		params : {
+			task : "DeleteMenu",
+			MenuID : record.data.id
+		},
+		success : function(response){
+			result = Ext.decode(response.responseText);
+			if(!result.success)
+			{
+				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+				return;
+			}				
+			record.remove();
+		}
+	});
+		
+}
+
 </script>
-<center>
-	<br>
-	<div id="div_systems"></div>
-	<br>
+<div id="div_body" style="margin: 10px">
+	<div id="div_tree"></div>
 	<div id="div_grid"></div>
-</center>
+</div>

@@ -33,26 +33,23 @@ $col->width = 80;
 
 $col = $dg_cost->addcolumn("کل", "LevelTitle1");
 
-$col = $dg_cost->addcolumn("معین", "LevelTitle2");
+$col = $dg_cost->addcolumn("معین1", "LevelTitle2");
 $col->width = 120;
 
-$col = $dg_cost->addcolumn("جزء معین", "LevelTitle3");
+$col = $dg_cost->addcolumn("معین2", "LevelTitle3");
 $col->width = 100;
 
-/*$col = $dg_cost->addcolumn("جزء معین2", "LevelTitle4");
-$col->width = 100;*/
-
-$col = $dg_cost->addcolumn("گروه تفصیلی", "TafsiliTypeDesc");
+$col = $dg_cost->addcolumn("تفصیلی1", "TafsiliTypeDesc");
 $col->width = 100;
 
-$col = $dg_cost->addcolumn("گروه تفصیلی2", "TafsiliTypeDesc2");
+$col = $dg_cost->addcolumn("تفصیلی2", "TafsiliTypeDesc2");
 $col->width = 100;
 
-$col = $dg_cost->addcolumn("گروه تفصیلی3", "TafsiliTypeDesc3");
+$col = $dg_cost->addcolumn("تفصیلی3", "TafsiliTypeDesc3");
 $col->width = 100;
 
-$col = $dg_cost->addcolumn('گروه حساب','CostGroupDesc');
-$col->width = 120;
+/*$col = $dg_cost->addcolumn('گروه حساب','CostGroupDesc');
+$col->width = 120;*/
 
 $col = $dg_cost->addColumn("آیتم ها", "");
 $col->sortable = false;

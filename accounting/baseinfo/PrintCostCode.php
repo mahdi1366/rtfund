@@ -18,8 +18,8 @@ $rpg = new ReportGenerator();
 $rpg->addColumn("کد حساب", "CostCode");
 $rpg->addColumn("گروه حساب", "LevelTitle0");
 $rpg->addColumn("حساب کل", "LevelTitle1");
-$rpg->addColumn("معین", "LevelTitle2");
-$rpg->addColumn("جزء معین", "LevelTitle3");
+$rpg->addColumn("معین1", "LevelTitle2");
+$rpg->addColumn("معین2", "LevelTitle3");
 
 $rpg->mysql_resource = $dataTable;
 $rpg->generateReport();

@@ -236,12 +236,12 @@ NewPlan.prototype.SaveNewPlan = function(){
 				if(NewPlanObject.framework)
 				{
 					framework.CloseTab(NewPlanObject.TabID);
-					framework.OpenPage("/plan/plan/PlanInfo.php", "جداول اطلاعاتی طرح", {
+					framework.OpenPage("plan/plan/PlanInfo.php", "جداول اطلاعاتی طرح", {
 						MenuID : NewPlanObject.MenuID,
 						PlanID : result.data});
 				}	
 				else
-					portal.OpenPage("/plan/plan/PlanInfo.php", {
+					portal.OpenPage("plan/plan/PlanInfo.php", {
 						MenuID : NewPlanObject.MenuID,
 						PlanID : result.data});
 			}

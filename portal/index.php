@@ -12,9 +12,7 @@ $dt = PdoDataAccess::runquery("select max(AttemptTime) from FRW_LoginAttempts wh
 $lastDate = $dt[0][0];
 //------------------------------------------
 
-$SystemID = 1000; // portal
- 
-$menus = FRW_access::getPortalMenus($SystemID);
+$menus = FRW_access::getPortalMenus();
 
 //------------- one sended loans ---------------------
 //51,209
@@ -48,7 +46,7 @@ for ($i = 0; $i < count($menus); $i++) {
 	}
 
 	$icon = $menus[$i]['icon'];
-	$link_path = "/" . $menus[$i]['SysPath'] . "/" . $menus[$i]['MenuPath'];
+	$link_path = "../" . $menus[$i]['MenuPath'];
 	$param = "{";
 	$param .= "MenuID : " . $menus[$i]['MenuID'] . ",";
 

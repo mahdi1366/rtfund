@@ -438,9 +438,14 @@ class ACC_DocItems extends PdoDataAccess {
 
 		if (!isset($this->TafsiliType) || !isset($this->TafsiliID))
 			return true;
+		
 		$BlockedAmount = ACC_CostBlocks::GetBlockAmount($this->CostID, $this->TafsiliType, $this->TafsiliID, $pdo);
 
 		if ($BlockedAmount > 0) {
+			
+			if ($this->DebtorAmount*1 === 0)
+				return true;
+			
 			$temp = PdoDataAccess::runquery("select ifnull(sum(CreditorAmount-DebtorAmount),0) remain
 				from ACC_DocItems join ACC_docs using(DocID)
 				where CycleID=? AND CostID=? AND TafsiliType=? AND TafsiliID=? AND ItemID<>?", array(

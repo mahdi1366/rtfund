@@ -56,7 +56,7 @@ function GetData(){
 			
 			left join LON_BackPays bp using(IncomeChequeID)
 			left join LON_requests r using(RequestID)
-			left join BSC_branches br using(BranchID)
+			left join BSC_branches br on(i.BranchID=br.BranchID)
 			left join LON_loans l using(LoanID)
 			left join ACC_CostCodes cc2 on(cc2.level1=" . BLOCKID_LOAN . " AND cc2.level2=l.blockID)
 			left join ACC_blocks bb1 on(cc2.level1=bb1.BlockID)
@@ -179,8 +179,12 @@ function ListData($IsDashboard = false){
 	
 	$rpg->mysql_resource = GetData();
 	
-//	if($_SESSION["USER"]["UserName"] == "admin")
-//		echo PdoDataAccess::GetLatestQueryString ();
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		BeginReport();
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo PdoDataAccess::GetLatestQueryString ();
+	}
 	
 	if(!$rpg->excel && !$IsDashboard)
 	{

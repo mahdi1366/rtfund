@@ -210,7 +210,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 
 	if($PartObj->DelayReturn == "INSTALLMENT")
 		$extraAmount += $TotalFundDelay;
-	if($TotalAgentDelay > 0 && $PartObj->AgentDelayReturn == "INSTALLMENT")
+	if($PartObj->AgentDelayReturn == "INSTALLMENT")
 		$extraAmount += $TotalAgentDelay;
 	
 	if($FirstStep)
@@ -4100,7 +4100,7 @@ function EndWarrantyDoc($ReqObj, $pdo){
 	$DocObj->BranchID = $ReqObj->BranchID;
 	$DocObj->DocType = DOCTYPE_WARRENTY_END;
 	$DocObj->description = "خاتمه ضمانت نامه " . $ReqObj->_TypeDesc . " به شماره " . 
-			$ReqObj->RequestID . " به نام " . $ReqObj->_fullname;
+			$ReqObj->RefRequestID . " به نام " . $ReqObj->_fullname;
 
 	if(!$DocObj->Add($pdo))
 	{
@@ -4247,7 +4247,7 @@ function CancelWarrantyDoc($ReqObj, $extradays, $pdo){
 	$DocObj->BranchID = $ReqObj->BranchID;
 	$DocObj->DocType = DOCTYPE_WARRENTY_CANCEL;
 	$DocObj->description = "ابطال ضمانت نامه " . $ReqObj->_TypeDesc . " به شماره " . 
-			$ReqObj->RequestID . " به نام " . $ReqObj->_fullname;
+			$ReqObj->RefRequestID . " به نام " . $ReqObj->_fullname;
 
 	if(!$DocObj->Add($pdo))
 	{
@@ -4301,7 +4301,7 @@ function CancelWarrantyDoc($ReqObj, $extradays, $pdo){
 			return false;
 		}
 		unset($itemObj->ItemID);
-		$itemObj->details = "برگشت کارمزد ضمانت نامه شماره " . $ReqObj->RequestID;
+		$itemObj->details = "برگشت کارمزد ضمانت نامه شماره " . $ReqObj->RefRequestID;
 		$itemObj->CostID = $Year == $curYear ? $CostCode_wage : $CostCode_FutureWage;
 		$itemObj->DebtorAmount = min($amount, $RemainWage);
 		$itemObj->CreditorAmount = 0;

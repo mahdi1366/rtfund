@@ -97,6 +97,10 @@ switch($ObjectType)
 	case "package":
 		$access = true;
 		break;
+	//......................................................
+	case "meeting":
+		$access = true;
+		break;
 }
 //------------------------------------------------------
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "dms.data.php?" .

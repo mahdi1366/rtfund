@@ -78,8 +78,10 @@ PortalClass.prototype.formatUrl = function(url)
 {
 	var list = url.split("/");
 	var list2 = new Array();
-	for(var i=1; i<list.length; i++)
+	for(var i=0; i<list.length; i++)
 	{
+		if(list[i] == "")
+			continue;
 		if(list[i] == "..")
 			list2.pop();
 		else

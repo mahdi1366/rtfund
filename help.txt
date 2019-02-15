@@ -16,12 +16,12 @@ tpl: new Ext.XTemplate(
 	'</tpl>',
 	'</table>'),
 --------------------------------------------------------------------------------
-'<tpl for=".">',
+tpl : new Ext.XTemplate( '<tpl for=".">',
 	'<tpl if="globality == \'GLOBAL\'">',
 	'<tr class="x-boundlist-item" style="border-left:0;border-right:0;background-color:#FCFCB6">',
 	'<tpl else>',
 	'<tr class="x-boundlist-item" style="border-left:0;border-right:0;">',
-	'</tpl>',
+	'</tpl>')
 --------------------------------------------------------------------------------
 p.tdAttr = "data-qtip='text'"
 --------------------------------------------------------------------------------
