@@ -188,12 +188,14 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			xtype : "textfield",
 			fieldLabel: 'نام خانوادگی',
 			allowBlank : false,
-			readOnly : this.portal && PersonRecord.data.IsActive == "YES",
 			beforeLabelTextTpl: required,
+			readOnly : this.portal && PersonRecord.data.IsActive == "YES",			
 			name: 'lname'
 		},{
 			xtype : "combo",
 			fieldLabel : "جنسیت",
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			name : "sex",
 			store : new Ext.data.SimpleStore({
 				data : [
@@ -228,6 +230,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 		},{
 			xtype : "textfield",
 			maskRe: /[\d\-]/,
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			fieldLabel: 'شماره تلفن',
 			name: 'PhoneNo'
 		},{
@@ -235,6 +239,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			regex: /^\d{11}$/,
 			maskRe: /[\d\-]/,
 			fieldLabel: 'تلفن همراه',
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			readOnly : this.portal && PersonRecord.data.IsActive == "YES",
 			name: 'mobile'
 		},{
@@ -249,11 +255,15 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 		},{
 			xtype : "textarea",
 			fieldLabel: 'آدرس',
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			name: 'address', 
 			rowspan : 4
 		},{
 			xtype : "numberfield",
 			name : "PostalCode",
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			fieldLabel : "کد پستی",
 			hideTrigger : true
 		},{
@@ -264,6 +274,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 		},{
 			xtype : "textfield",
 			vtype : "email",
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			fieldLabel: 'پست الکترونیک',
 			name: 'email',
 			fieldStyle : "direction:ltr"
@@ -355,6 +367,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 				"showImage.php?PersonID="+this.PersonID+"&v="+this.TabID+"' /></center>"
 		},{
 			xtype : "textfield",
+			allowBlank : false,
 			beforeLabelTextTpl: required,
 			fieldLabel: 'نام شرکت',
 			readOnly : this.portal && PersonRecord.data.IsActive == "YES",
@@ -374,6 +387,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			xtype : "textfield",
 			regex: /^\d{12}$/,
 			maskRe: /[\d\-]/,
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			fieldLabel: 'کد اقتصادی',
 			name: 'EconomicID'
 		},{
@@ -410,6 +425,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			valueField : "InfoID",
 			queryMode : "local",
 			fieldLabel: 'نوع شرکت',
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			name: 'CompanyType'
 		},{
 			xtype : "combo",
@@ -423,6 +440,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			displayField : "title",
 			valueField : "id",
 			fieldLabel: 'مالکیت شرکت',
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			name: 'IsGovermental'
 		},{
 			xtype : "trigger",
@@ -436,6 +455,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			xtype : "textfield",
 			maskRe: /[\d\-]/,
 			fieldLabel: 'شماره تلفن',
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			name: 'PhoneNo'
 		},{
 			xtype : "textfield",
@@ -447,6 +468,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			xtype : "combo",
 			fieldLabel : "شهر",
 			name : "CityID",
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			store : new Ext.data.SimpleStore({
 				proxy: {
 					type: 'jsonp',
@@ -467,6 +490,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 		},{
 			xtype : "textarea",
 			fieldLabel: 'آدرس',
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			rows : 2,
 			name: 'address',
 			rowspan : 2
@@ -474,6 +499,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			xtype : "textfield",
 			vtype : "email",
 			fieldLabel: 'پست الکترونیک',
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			name: 'email',
 			fieldStyle : "direction:ltr"
 		},{
@@ -486,6 +513,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 		},{
 			xtype : "numberfield",
 			name : "PostalCode",
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			fieldLabel : "کد پستی",
 			hideTrigger : true
 		},{
@@ -493,6 +522,8 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			regex: /^\d{11}$/,
 			maskRe: /[\d\-]/,
 			name : "mobile",
+			allowBlank : false,
+			beforeLabelTextTpl: required,
 			readOnly : this.portal && PersonRecord.data.IsActive == "YES",
 			fieldLabel : "شماره دریافت پیامک"
 		},{
