@@ -181,6 +181,7 @@ class WFM_FlowRows extends PdoDataAccess {
 	public $FlowID;
 	public $StepRowID;
 	public $ObjectID;
+	public $ObjectID2;
 	public $PersonID;
 	public $ActionDate;
 	public $ActionType;
@@ -222,9 +223,11 @@ class WFM_FlowRows extends PdoDataAccess {
 			case "4":
 				PdoDataAccess::runquery("update WAR_requests set StatusID=? where RequestID=?",
 					array($StepID, $this->ObjectID ));
+				break;
 			case "8":
 				PdoDataAccess::runquery("update ACC_docs set StatusID=? where DocID=?",
 					array($StepID, $this->ObjectID ));
+				break;
 			case "9":
 			case "10":
 			case "11":
@@ -234,13 +237,15 @@ class WFM_FlowRows extends PdoDataAccess {
 			case "15":				
 				PdoDataAccess::runquery("update ATN_requests set ReqStatus=? where RequestID=?",
 					array($StepID, $this->ObjectID ));
+				break;
 		}
 	}
 	
 	function AddFlowRow($StepID , $pdo = null) {
 		
-		PdoDataAccess::runquery("update WFM_FlowRows set IsLastRow='NO' where FlowID=? AND ObjectID=?", 
-				array($this->FlowID, $this->ObjectID), $pdo);
+		PdoDataAccess::runquery("update WFM_FlowRows set IsLastRow='NO' "
+				. " where FlowID=? AND ObjectID=? AND ObjectID2=?", 
+				array($this->FlowID, $this->ObjectID, $this->ObjectID2), $pdo);
 		
 		//.......... get StepRowID ...................
 		$dt = PdoDataAccess::runquery("select StepRowID, StepDesc from WFM_FlowSteps 
@@ -267,7 +272,6 @@ class WFM_FlowRows extends PdoDataAccess {
 		$daObj->MainObjectID = $this->RowID;
 		$daObj->TableName = "WFM_FlowRows";
 		$daObj->execute($pdo);
-
 		
 		return true;
 	}
@@ -291,7 +295,7 @@ class WFM_FlowRows extends PdoDataAccess {
 		return $obj->AddFlowRow($StepID, $pdo);
 	}
 	
-	static function EndObjectFlow($ObjectType, $ObjectID, $pdo = null){
+	static function EndObjectFlow($ObjectType, $ObjectID, $ObjectID2, $pdo = null){
 		
 		switch($ObjectType)
 		{
@@ -326,6 +330,29 @@ class WFM_FlowRows extends PdoDataAccess {
 				PdoDataAccess::runquery("update ATN_requests set ReqStatus=? where RequestID=?", 
 					array($EndStepID, $ObjectID), $pdo);
 				return ExceptionHandler::GetExceptionCount() == 0;
+			case "process":
+				switch($ObjectID)
+				{
+					case PROCESS_REGISTRATION :
+						PdoDataAccess::runquery("update BSC_persons set IsActive='YES' where PersonID=?",
+									array($ObjectID2));
+						require_once 'sms.php';
+						require_once '../../framework/person/persons.class.php';
+						$personObj = new BSC_persons($ObjectID2);
+						if($personObj->mobile == "")
+						{
+							ExceptionHandler::PushException ("ارسال پیامک به دلیل عدم تکمیل شماره پیامک مشتری انجام نگردید");
+						}
+						else
+						{
+							$SendError = "";
+							$context = "ثبت نام شما در پورتال " . SoftwareName . " تایید گردید";
+							$result = ariana2_sendSMS($personObj->mobile, $context, "number", $SendError);
+							if(!$result)
+								ExceptionHandler::PushException ("ارسال پیامک به دلیل خطای زیر انجام نگردید" . "[" . $SendError . "]");
+						}
+						return true;
+				}
 		}
 		
 		return true;
@@ -345,23 +372,25 @@ class WFM_FlowRows extends PdoDataAccess {
 		return true;
 	}
 	
-	static function StartFlow($FlowID, $ObjectID){
+	static function StartFlow($FlowID, $ObjectID, $objectID2 = 0){
 		
 		$obj = new WFM_FlowRows();
 		$obj->FlowID = $FlowID;
 		$obj->StepRowID = PDONULL;
 		$obj->ObjectID = $ObjectID;
+		$obj->ObjectID2 = $objectID2;
 		$obj->PersonID = $_SESSION["USER"]["PersonID"];		
 		$obj->ActionDate = PDONOW;
 		$obj->ActionType = "CONFIRM";
 		return $obj->AddFlowRow(0);		
 	}
 	
-	static function ReturnStartFlow($FlowID, $ObjectID, $pdo = null){
+	static function ReturnStartFlow($FlowID, $ObjectID, $objectID2 = 0, $pdo = null){
 		
 		$newObj = new WFM_FlowRows();
 		$newObj->FlowID = $FlowID;
 		$newObj->ObjectID = $ObjectID;
+		$newObj->ObjectID2 = $ObjectID2;
 		$newObj->PersonID = $_SESSION["USER"]["PersonID"];
 		$newObj->ActionType = "REJECT";
 		$newObj->ActionDate = PDONOW;
@@ -404,7 +433,7 @@ class WFM_FlowRows extends PdoDataAccess {
 		
 	}
 	
-	static function DeleteAllFlow($FlowID, $ObjectID){
+	static function DeleteAllFlow($FlowID, $ObjectID, $objectID2=0){
 		
 		switch($FlowID*1)
 		{
@@ -436,37 +465,37 @@ class WFM_FlowRows extends PdoDataAccess {
 		return ExceptionHandler::GetExceptionCount() == 0;
 	}
 	
-	static function IsFlowStarted($FlowID, $ObjectID){
+	static function IsFlowStarted($FlowID, $ObjectID, $objectID2=0){
 		
 		$dt = PdoDataAccess::runquery("select * from WFM_FlowRows "
-			. "where FlowID=? AND ObjectID=?", array($FlowID, $ObjectID));
+			. "where FlowID=? AND ObjectID=? AND objectID2=?", array($FlowID, $ObjectID, $objectID2));
 		
 		return (count($dt) > 0);
 	}
 	
-	static function IsFlowEnded($FlowID, $ObjectID){
+	static function IsFlowEnded($FlowID, $ObjectID, $objectID2=0){
 		
 		$dt = PdoDataAccess::runquery("select IsEnded from WFM_FlowRows 
-			where FlowID=? AND ObjectID=? AND ActionType='CONFIRM'
-			order by RowID desc", array($FlowID, $ObjectID));
+			where FlowID=? AND ObjectID=? AND objectID2=? AND ActionType='CONFIRM'
+			order by RowID desc", array($FlowID, $ObjectID, $objectID2));
 		
 		if(count($dt) > 0 && $dt[0][0] == "YES")
 			return true;
 		return false;
 	}
 	
-	static function GetFlowInfo($FlowID, $ObjectID){
+	static function GetFlowInfo($FlowID, $ObjectID, $objectID2=0){
 		
 		$dt = PdoDataAccess::runquery("select * from WFM_FlowRows fr
 			join WFM_FlowSteps sp on(sp.FlowID=fr.FlowID AND fr.StepRowID=sp.StepRowID)
-			where fr.FlowID=? AND ObjectID=? 
-			order by RowID desc limit 1", array($FlowID, $ObjectID));
+			where fr.FlowID=? AND ObjectID=? AND objectID2=? AND fr.IsLastRow='YES'
+			", array($FlowID, $ObjectID, $objectID2));
 		
 		$StepDesc = "";
 		if(count($dt) > 0)
 		{
 			$StepDesc = ($dt[0]["ActionType"] == "REJECT" ? "رد " : "") . $dt[0]["StepDesc"];
-			if($dt[0]["StepID"] == 0)
+			if($dt[0]["StepID"] == "0")
 			{
 				if($dt[0]["ActionType"] == "REJECT")
 					$StepDesc = "برگشت فرم";
@@ -491,6 +520,7 @@ class WFM_FlowRows extends PdoDataAccess {
 		return array(
 			"IsStarted" => count($dt) > 0 ? true : false,
 			"ActionType" => count($dt) > 0 ? $dt[0]["ActionType"] : "",
+			"ActionComment" => count($dt) > 0 ? $dt[0]["ActionComment"] : "" ,
 			"IsEnded" => count($dt) > 0 && $dt[0]["IsEnded"] == "YES" ? true : false,
 			"SendEnable" => $SendEnable,
 			"JustStarted" => $JustStarted ,

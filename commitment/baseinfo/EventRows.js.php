@@ -97,105 +97,6 @@
 				}
 			},{
 				xtype : "combo",
-				name : "TafsiliType",
-				fieldLabel : "گروه تفصیلی",
-				store :  new Ext.data.Store({
-					proxy: {type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					fields:["InfoID","InfoDesc"],
-					autoLoad : true
-				}),
-				valueField : "InfoID",
-				queryMode : 'local',
-				displayField : "InfoDesc"
-			},{
-				xtype : "combo",
-				fieldLabel : "تفصیلی",
-				itemId : "Tafsili",
-				name : "Tafsili",
-				store: new Ext.data.Store({
-					fields:["InfoID","InfoDesc"],
-					proxy: {
-						type: 'jsonp',
-						url: this.address_prefix + 'baseinfo.data.php?task=selectEventTafsilis',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					autoLoad : true
-				}),
-				queryMode : "local",
-				typeAhead: false,
-				valueField : "InfoID",
-				displayField : "InfoDesc"
-			},{
-				xtype : "combo",
-				name : "TafsiliType2",
-				fieldLabel : "گروه تفصیلی2",
-				store :  new Ext.data.Store({
-					proxy: {type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					fields:["InfoID","InfoDesc"],
-					autoLoad : true
-				}),
-				valueField : "InfoID",
-				queryMode : 'local',
-				displayField : "InfoDesc"
-			},{
-				xtype : "combo",
-				fieldLabel : "تفصیلی2",
-				itemId : "Tafsili2",
-				name : "Tafsili2",
-				store: new Ext.data.Store({
-					fields:["InfoID","InfoDesc"],
-					proxy: {
-						type: 'jsonp',
-						url: this.address_prefix + 'baseinfo.data.php?task=selectEventTafsilis',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					autoLoad : true
-				}),
-				queryMode : "local",
-				typeAhead: false,
-				valueField : "InfoID",
-				displayField : "InfoDesc"
-			},{
-				xtype : "combo",
-				name : "TafsiliType3",
-				fieldLabel : "گروه تفصیلی3",
-				store :  new Ext.data.Store({
-					proxy: {type: 'jsonp',
-						url: '/accounting/baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					fields:["InfoID","InfoDesc"],
-					autoLoad : true
-				}),
-				valueField : "InfoID",
-				queryMode : 'local',
-				displayField : "InfoDesc"
-			},{
-				xtype : "combo",
-				fieldLabel : "تفصیلی3",
-				itemId : "Tafsili3",
-				name : "Tafsili3",
-				store: new Ext.data.Store({
-					fields:["InfoID","InfoDesc"],
-					proxy: {
-						type: 'jsonp',
-						url: this.address_prefix + 'baseinfo.data.php?task=selectEventTafsilis',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					autoLoad : true
-				}),
-				queryMode : "local",
-				typeAhead: false,
-				valueField : "InfoID",
-				displayField : "InfoDesc"
-			},{
-				xtype : "combo",
 				fieldLabel : "گروه محاسبات",
 				allowBlank : true,
 				store: new Ext.data.Store({
@@ -244,8 +145,7 @@
 			},{
 				xtype : "textarea",
 				fieldLabel : "توضیحات تغییر ردیف",
-				name : "ChangeDesc",
-				allowBlank : false
+				name : "ChangeDesc"
 			},{
 				xtype : "hidden",
 				name : "RowID"

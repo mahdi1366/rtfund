@@ -80,7 +80,6 @@ if(!empty($_REQUEST["EXCEL"]))
 	$rpt->addColumn("معرف", "ReqPersonName");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("موبایل", "mobile");
-	$rpt->addColumn("شماره پیامک", "SmsNo");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("تاریخ آخرین قسط", "LastInstallmentDate","ReportDateRender");
 	$rpt->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate","ReportDateRender");
@@ -114,7 +113,6 @@ if(!empty($_REQUEST["NTC_EXCEL"]))
 	$rpt->addColumn("معرف", "ReqPersonName");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("موبایل", "mobile");
-	$rpt->addColumn("شماره پیامک", "SmsNo");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("سررسید", "InstallmentDate","ReportDateRender");
 	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");

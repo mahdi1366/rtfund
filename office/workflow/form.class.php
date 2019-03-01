@@ -24,7 +24,8 @@ class WFM_forms extends OperationClass {
 	public $IsExpert;
 	public $IsAgent;
 	public $SmsSend;
-
+	public $SendOnce;
+	
     public function Remove($pdo = null){
         $res = parent::runquery("select count(*) from WFM_requests where FormID = ? limit 1",
 				array($this->FormID),$pdo);
@@ -257,7 +258,6 @@ class WFM_requests extends OperationClass {
 				p.address,
 				p.email,
 				p.AccountNo,
-				p.SmsNo,
 				p.fname,
 				p.lname,
 				p.FatherName,

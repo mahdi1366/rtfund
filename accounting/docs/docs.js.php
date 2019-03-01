@@ -158,15 +158,6 @@ function AccDocs(){
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		}
 	});
-	
-	this.paramValuesStore = new Ext.data.Store({
-		fields:["ParamID","ParamValue"],
-		proxy: {
-			type: 'jsonp',
-			url: this.address_prefix + 'doc.data.php?task=selectParamValues',
-			reader: {root: 'rows',totalProperty: 'totalCount'}
-		}
-	});
 }
 
 AccDocs.prototype.operationhMenu = function(e){
@@ -374,33 +365,8 @@ AccDocs.prototype.makeDetailWindow = function(){
 					}
 				},{
 					xtype : "combo",
-					fieldLabel : "گروه تفصیلی",
-					store: new Ext.data.Store({
-						fields:["InfoID","InfoDesc"],
-						proxy: {
-							type: 'jsonp',
-							url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
-							reader: {root: 'rows',totalProperty: 'totalCount'}
-						},
-						autoLoad : true
-					}),
-					typeAhead: false,
-					queryMode : "local",
-					name : "TafsiliType",
-					valueField : "InfoID",
-					displayField : "InfoDesc",
-					listeners : {
-						select : function(combo,records){
-							combo = AccDocsObject.detailWin.down("[name=TafsiliID]");
-							combo.setValue();
-							combo.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
-							combo.getStore().load();
-						}
-					}
-				},
-				{
-					xtype : "combo",
 					width : 350,
+					colspan: 2,
 					fieldLabel : "تفصیلی",
 					store: new Ext.data.Store({
 						fields:["TafsiliID","TafsiliCode","TafsiliDesc",{
@@ -426,21 +392,6 @@ AccDocs.prototype.makeDetailWindow = function(){
 							}							
 						}
 					}),
-					listeners : { 
-						change : function(){
-							t1 = this.getStore().proxy.extraParams["TafsiliType"];
-							combo = AccDocsObject.detailWin.down("[name=TafsiliID2]");
-							
-							if(t1 == <?= TAFTYPE_BANKS ?>)
-							{
-								combo.setValue();
-								combo.getStore().proxy.extraParams["ParentTafsili"] = this.getValue();
-								combo.getStore().load();
-							}			
-							else
-								combo.getStore().proxy.extraParams["ParentTafsili"] = "";
-						}
-					},
 					typeAhead: false,
 					pageSize : 10,
 					name : "TafsiliID",
@@ -448,31 +399,7 @@ AccDocs.prototype.makeDetailWindow = function(){
 					displayField : "fullDesc"
 				},{
 					xtype : "combo",
-					fieldLabel : "گروه تفصیلی 2",
-					store: new Ext.data.Store({
-						fields:["InfoID","InfoDesc"],
-						proxy: {
-							type: 'jsonp',
-							url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
-							reader: {root: 'rows',totalProperty: 'totalCount'}
-						},
-						autoLoad : true
-					}),
-					typeAhead: false,
-					queryMode : "local",
-					name : "TafsiliType2",
-					valueField : "InfoID",
-					displayField : "InfoDesc",
-					listeners : {
-						select : function(combo,records){
-							combo = AccDocsObject.detailWin.down("[name=TafsiliID2]");
-							combo.setValue();
-							combo.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
-							combo.getStore().load();
-						}
-					}
-				},{
-					xtype : "combo",
+					colspan: 2,
 					fieldLabel : "تفصیلی 2",
 					width : 350,
 					store: new Ext.data.Store({
@@ -506,31 +433,7 @@ AccDocs.prototype.makeDetailWindow = function(){
 					displayField : "fullDesc"
 				},{
 					xtype : "combo",
-					fieldLabel : "گروه تفصیلی 3",
-					store: new Ext.data.Store({
-						fields:["InfoID","InfoDesc"],
-						proxy: {
-							type: 'jsonp',
-							url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
-							reader: {root: 'rows',totalProperty: 'totalCount'}
-						},
-						autoLoad : true
-					}),
-					typeAhead: false,
-					queryMode : "local",
-					name : "TafsiliType3",
-					valueField : "InfoID",
-					displayField : "InfoDesc",
-					listeners : {
-						select : function(combo,records){
-							combo = AccDocsObject.detailWin.down("[name=TafsiliID3]");
-							combo.setValue();
-							combo.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
-							combo.getStore().load();
-						}
-					}
-				},{
-					xtype : "combo",
+					colspan: 2,
 					fieldLabel : "تفصیلی 3",
 					width : 350,
 					store: new Ext.data.Store({
@@ -613,7 +516,6 @@ AccDocs.prototype.SelectCostIDHandler = function(record){
 
 	if(record.data.TafsiliType != null)
 	{
-		this.detailWin.down("[name=TafsiliType]").setValue(record.data.TafsiliType);
 		combo = this.detailWin.down("[name=TafsiliID]");
 		combo.setValue();
 		combo.getStore().proxy.extraParams["TafsiliType"] = record.data.TafsiliType;
@@ -621,7 +523,6 @@ AccDocs.prototype.SelectCostIDHandler = function(record){
 	}
 	if(record.data.TafsiliType2 != null)
 	{
-		this.detailWin.down("[name=TafsiliType2]").setValue(record.data.TafsiliType2);
 		combo = this.detailWin.down("[name=TafsiliID2]");
 		combo.setValue();
 		combo.getStore().proxy.extraParams["TafsiliType"] = record.data.TafsiliType2;
@@ -629,7 +530,6 @@ AccDocs.prototype.SelectCostIDHandler = function(record){
 	}
 	if(record.data.TafsiliType3 != null)
 	{
-		this.detailWin.down("[name=TafsiliType3]").setValue(record.data.TafsiliType3);
 		combo = this.detailWin.down("[name=TafsiliID3]");
 		combo.setValue();
 		combo.getStore().proxy.extraParams["TafsiliType"] = record.data.TafsiliType3;
@@ -1287,8 +1187,8 @@ AccDocs.prototype.showDetail = function(record){
 	this.itemGrid.getStore().proxy.extraParams["DocID"] = record.data.DocID;
 	this.itemGrid.getStore().on("load", function(store){
 		
-		var r = store.getProxy().getReader().jsonData;
-		r = r.message.split(',');
+		var message = store.getProxy().getReader().jsonData;
+		r = message.message.split(',');
 		AccDocsObject.summaryFS.getComponent("cmp_bd").setValue(Ext.util.Format.Money(r[0]) + "  ریال");
 		AccDocsObject.summaryFS.getComponent("cmp_bs").setValue(Ext.util.Format.Money(r[1]) + "  ریال");
 		if(r[0] == r[1])
@@ -1322,20 +1222,10 @@ AccDocs.prototype.beforeRowEdit = function(record){
 		this.detailWin.down("[name=CreditorAmount]").disable();
 		this.detailWin.down("[name=details]").disable();
 		
-		if(record.data.TafsiliType != null)
-			this.detailWin.down("[name=TafsiliType]").disable();
-		else
-			this.detailWin.down("[name=TafsiliType]").enable();
-		
 		if(record.data.TafsiliID != null)
 			this.detailWin.down("[name=TafsiliID]").disable();
 		else
 			this.detailWin.down("[name=TafsiliID]").enable();
-		
-		if(record.data.TafsiliType2 != null)
-			this.detailWin.down("[name=TafsiliType2]").disable();
-		else
-			this.detailWin.down("[name=TafsiliType2]").enable();
 		
 		if(record.data.TafsiliID2 != null)
 			this.detailWin.down("[name=TafsiliID2]").disable();
@@ -1348,9 +1238,7 @@ AccDocs.prototype.beforeRowEdit = function(record){
 		this.detailWin.down("[name=DebtorAmount]").enable();
 		this.detailWin.down("[name=CreditorAmount]").enable();
 		this.detailWin.down("[name=details]").enable();
-		this.detailWin.down("[name=TafsiliType]").enable();
 		this.detailWin.down("[name=TafsiliID]").enable();
-		this.detailWin.down("[name=TafsiliType2]").enable();
 		this.detailWin.down("[name=TafsiliID2]").enable();
 	}
 }
@@ -1443,9 +1331,18 @@ AccDocs.prototype.EditItem = function(){
 		R3 = this.detailWin.down("[name=TafsiliID2]").getStore().load({
 			params : { TafsiliID : record.data.TafsiliID2}
 		});
+	}//....................................................
+	R4 = false;
+	if(record.data.TafsiliType3 != "" && record.data.TafsiliID3 != "")
+	{
+		this.detailWin.down("[name=TafsiliID3]").getStore().proxy.extraParams.TafsiliType = 
+			record.data.TafsiliType3;
+		R4 = this.detailWin.down("[name=TafsiliID3]").getStore().load({
+			params : { TafsiliID : record.data.TafsiliID3}
+		});
 	}
 	var t = setInterval(function(){
-		if(!R1.isLoading() && (!R2 || !R2.isLoading()) && (!R3 || !R3.isLoading()))
+		if(!R1.isLoading() && (!R2 || !R2.isLoading()) && (!R3 || !R3.isLoading()) && (!R4 || !R4.isLoading()))
 		{
 			clearInterval(t);
 			mask.hide();

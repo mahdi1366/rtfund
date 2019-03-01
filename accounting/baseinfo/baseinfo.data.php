@@ -206,7 +206,7 @@ function SelectCostCode() {
                 $param[":f3"] = $_REQUEST['query'] . "%";
             }
         } else {
-            $where .= " AND ( concat_ws(' ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) like :f4";
+            $where .= " AND ( concat_ws(' ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc) like :f4";
             $where .= " OR CostCode like :f5 )";
             $param[":f4"] = "%" . $_REQUEST['query'] . "%";
             $param[":f5"] = $_REQUEST['query'] . "%";
@@ -756,9 +756,7 @@ function ReplaceCostCodes(){
 
 function selectParams() {
 	
-	$temp = ACC_CostCodeParams::Get(" AND IsActive='YES' AND CostID=?" . 
-			dataReader::makeOrder(), array($_REQUEST["CostID"]));
-	
+	$temp = ACC_CostCodeParams::Get(dataReader::makeOrder());
 	$res = $temp->fetchAll();
     echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
     die();

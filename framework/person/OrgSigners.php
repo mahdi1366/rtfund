@@ -6,7 +6,7 @@
 require_once("../header.inc.php");
 require_once inc_dataGrid;
 
-$PersonID = $_REQUEST["PersonID"];
+$PersonID = session::IsPortal() ? $_SESSION["USER"]["PersonID"] : $_REQUEST["PersonID"];
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . 
 		"persons.data.php?task=SelectSigners&PersonID=" . $PersonID,"div_grid_user");
@@ -42,9 +42,10 @@ $dg->addPlugin("{
             ptype: 'rowexpander',
             rowBodyTpl : [
 				'<p><b>شماره شناسنامه : </b> {ShNo}&nbsp;&nbsp;&nbsp;&nbsp;',
-				'<b>کد ملی : </b>{NationalID}&nbsp;&nbsp;&nbsp;&nbsp;<b>صادره از : </b>{ShPlace}</p>',
-				'<p><b>آدرس : </b> {address}&nbsp;&nbsp;&nbsp;&nbsp;<b>کد پستی : </b>{PostalCode}</p>',
-				'<p><b>ایمیل : </b> {email}</p>',
+				'<b>کد ملی : </b>{NationalID}&nbsp;&nbsp;&nbsp;&nbsp;',
+				'<b>صادره از : </b>{ShPlace}&nbsp;&nbsp;&nbsp;&nbsp;',
+				'<b>ایمیل : </b> {email}</p>',
+				'<p><b>آدرس : </b> {address}&nbsp;&nbsp;&nbsp;&nbsp;<b>کد پستی : </b>{PostalCode}</p>'
             ]
         }");
 

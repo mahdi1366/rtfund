@@ -408,8 +408,8 @@ class ACC_DocItems extends PdoDataAccess {
 			concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) CostDesc,
 			t.TafsiliDesc,bi.InfoDesc TafsiliGroupDesc,
 			t2.TafsiliDesc as Tafsili2Desc,bi2.InfoDesc Tafsili2GroupDesc,
-			t3.TafsiliDesc as Tafsili3Desc,bi3.InfoDesc Tafsili3GroupDesc,
-			paramValues
+			t3.TafsiliDesc as Tafsili3Desc,bi3.InfoDesc Tafsili3GroupDesc
+			
 		from ACC_DocItems si
 			left join ACC_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(cc.level1=b1.blockID)
@@ -423,12 +423,6 @@ class ACC_DocItems extends PdoDataAccess {
 			left join ACC_tafsilis t2 on(t2.TafsiliID=si.TafsiliID2)
 			left join ACC_tafsilis t3 on(t3.TafsiliID=si.TafsiliID3)
 			
-			left join (select ItemID,
-				group_concat(concat_ws(' ',ParamDesc,':',ParamValue) SEPARATOR '<br>') paramValues 
-				from ACC_CostCodeParamValues
-				join ACC_CostCodeParams using(ParamID)
-				group by ItemID
-			)t on(si.ItemID=t.ItemID)
 			";
 		$query .= ($where != "") ? " where " . $where : "";
 		return parent::runquery_fetchMode($query, $whereParam);
@@ -563,9 +557,9 @@ class ACC_DocItems extends PdoDataAccess {
 	}
 }
 
-class ACC_CostCodeParamValues extends OperationClass{
+class ACC_CostCodeParamItems extends OperationClass{
 	
-	const TableName = "ACC_CostCodeParamValues";
+	const TableName = "ACC_CostCodeParamItems";
 	const TableKey = "ItemID";
 	
 	public $ItemID;

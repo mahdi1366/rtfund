@@ -27,7 +27,6 @@ $dg->addColumn("","email","string", true);
 $dg->addColumn("","address","string", true);
 $dg->addColumn("","IsActive","string", true);
 $dg->addColumn("","ShareNo","string", true);
-$dg->addColumn("","SmsNo","string", true);
 $dg->addColumn("","IsConfirm","string", true);
 $dg->addColumn("","AttCode","string", true);
 $dg->addColumn("","IsSigner","string", true);

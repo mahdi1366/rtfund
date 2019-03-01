@@ -117,13 +117,13 @@ function DefrayRequest()
 		renderTo : this.get("btn_wfm"),
 		disabled : true,
 		text : "تکمیل فرم",
-		handler : function(){ DefrayRequestObject.SendRequest(); }
+		handler : function(){ DefrayRequestObject.OpenWfmForm(); }
 	});
 }
 
 var DefrayRequestObject = new DefrayRequest();
 
-DefrayRequest.prototype.SendRequest = function(){
+DefrayRequest.prototype.OpenWfmForm = function(){
 	
 	mask = new Ext.LoadMask(this.PartPanel, {msg:'در حال ذخیره سازی ...'});
 	mask.show();

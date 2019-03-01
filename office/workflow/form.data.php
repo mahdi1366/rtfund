@@ -288,6 +288,7 @@ function SaveForm() {
 	$obj->IsExpert = $obj->IsExpert ? "YES" : "NO";
 	$obj->IsAgent = $obj->IsAgent ? "YES" : "NO";
 	$obj->SmsSend = $obj->SmsSend ? "YES" : "NO";
+	$obj->SendOnce = $obj->SendOnce ? "YES" : "NO";
 	
 	if ($_POST['FormID'] > 0) {
 		$obj->FormID = $_POST['FormID'];
@@ -653,13 +654,13 @@ function SaveRequest() {
 	{
 		if($formObj->SmsSend == "YES")
 		{
-			$SmsNo = SendConfirmationCode($ReqObj->RequestID);
-			if(!$SmsNo)
+			$mobile = SendConfirmationCode($ReqObj->RequestID);
+			if(!$mobile)
 			{
 				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 				die();
 			}
-			echo Response::createObjectiveResponse(true, $ReqObj->RequestID . "-" . $SmsNo);
+			echo Response::createObjectiveResponse(true, $ReqObj->RequestID . "-" . $mobile);
 			die();
 		}
 		else
@@ -685,7 +686,7 @@ function SendConfirmationCode($RequestID){
 	require_once '../../framework/person/persons.class.php';
 	$PersonObj = new BSC_persons($ReqObj->PersonID);
 	
-	if($PersonObj->SmsNo == "")
+	if($PersonObj->mobile == "")
 	{
 		ExceptionHandler::PushException("با توجه به اینکه ارسال این فرم فقط از طریق تایید کد امنیتی از طریق پیامک می باشد و شماره پیامک شما در سیستم ثبت نشده است،" . 
 			" لطفا جهت ثبت شماره پیامک خود با صندوق تماس حاصل فرمایید.");
@@ -695,7 +696,7 @@ function SendConfirmationCode($RequestID){
 	{
 		if(time() - $_SESSION["ConfirmCode"]["time"]*1 < 600)
 		{
-			return $PersonObj->SmsNo;
+			return $PersonObj->mobile;
 		}
 		unset($_SESSION["ConfirmCode"]);
 	}
@@ -707,7 +708,7 @@ function SendConfirmationCode($RequestID){
 		"tries" => 0
 	);
 	require_once 'sms.php';
-	$result = ariana2_sendSMS($PersonObj->SmsNo, $ConfirmCode, "number", $SendError);
+	$result = ariana2_sendSMS($PersonObj->mobile, $ConfirmCode, "number", $SendError);
 	//$result = true;
 	if(!$result)
 	{
@@ -716,7 +717,7 @@ function SendConfirmationCode($RequestID){
 		return false;
 	}
 	
-	return $PersonObj->SmsNo;
+	return $PersonObj->mobile;
 }
 
 function CheckConfirmationCode(){

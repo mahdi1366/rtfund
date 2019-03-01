@@ -46,7 +46,6 @@ $page_rpg->addColumn("نوع", "IsReal", "RealRender");
 $page_rpg->addColumn("کدملی/شناسه ملی", "NationalID");
 $page_rpg->addColumn("تلفن", "PhoneNo");
 $page_rpg->addColumn("همراه", "mobile");
-$page_rpg->addColumn("شماره پیامک", "SmsNo");
 $page_rpg->addColumn("آدرس", "address");
 $page_rpg->addColumn("ایمیل", "email");
 $page_rpg->addColumn("وب سایت", "WebSite");
@@ -112,6 +111,12 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 		{
 			InputValidation::validate($value, InputValidation::Pattern_NumComma);
 			$where .= " AND SubAgentID in(" . $value . ")";
+			continue;
+		}
+		if($key == "DocType")
+		{
+			InputValidation::validate($value, InputValidation::Pattern_NumComma);
+			$where .= " AND DocType in(" . $value . ")";
 			continue;
 		}
 		
@@ -187,7 +192,6 @@ function GetData($mode = "list"){
 				p2.NationalID,
 				p2.PhoneNo,
 				p2.mobile,
-				p2.SmsNo,
 				p2.address,
 				p2.email,
 				p2.WebSite,
@@ -361,7 +365,6 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("کدملی/شناسه ملی", "NationalID");
 	$rpg->addColumn("تلفن", "PhoneNo");
 	$rpg->addColumn("همراه", "mobile");
-	$rpg->addColumn("شماره پیامک", "SmsNo");
 	$rpg->addColumn("آدرس", "address");
 	$rpg->addColumn("ایمیل", "email");
 	$rpg->addColumn("وب سایت", "WebSite");
@@ -722,6 +725,24 @@ function LoanReport_total()
 			xtype : "shdatefield",
 			name : "toEndReqDate",
 			fieldLabel : "تا تاریخ"
+		},{
+			xtype : "checkcombo",
+			fieldLabel : "نوع تضمین",
+			hiddenName: "DocType",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../request/request.data.php?' +
+						"task=GetTazminDocTypes",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['InfoID','InfoDesc'],
+				autoLoad : true					
+			}),
+			displayField : "InfoDesc",
+			valueField : "InfoID",
+			width : 370,
+			colspan : 2
 		},{
 			xtype : "fieldset",
 			title : "ستونهای گزارش",

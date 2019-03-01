@@ -21,6 +21,14 @@ $rpg->addColumn("حساب کل", "LevelTitle1");
 $rpg->addColumn("معین1", "LevelTitle2");
 $rpg->addColumn("معین2", "LevelTitle3");
 
+$rpg->addColumn("تفصیلی1", "TafsiliTypeDesc");
+$rpg->addColumn("تفصیلی2", "TafsiliTypeDesc2");
+$rpg->addColumn("تفصیلی3", "TafsiliTypeDesc3");
+
+$rpg->addColumn('آیتم اطلاعاتی1','param1Desc');
+$rpg->addColumn('آیتم اطلاعاتی2','param2Desc');
+$rpg->addColumn('آیتم اطلاعاتی3','param3Desc');
+
 $rpg->mysql_resource = $dataTable;
 $rpg->generateReport();
 die();

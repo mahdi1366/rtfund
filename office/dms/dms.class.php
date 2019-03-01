@@ -31,9 +31,11 @@ class DMS_documents extends PdoDataAccess
 			select d.*, b1.infoDesc DocTypeDesc, df.RowID,
 				concat(p1.fname, ' ', p1.lname) confirmfullname,
 				concat(p2.fname, ' ', p2.lname) regfullname,
-				b2.infoDesc param1Title	,b1.param1,
+				b1.param1 as DocTypeGroup,
+				b2.infoDesc DocTypeGroupDesc,
 				if(count(df.RowID) >0,'true','false') HaveFile,
 				b3.infoDesc PlaceDesc,
+				
 				bf.InfoDesc ObjectDesc,bf.param1,bf.param2,bf.param3
 			from DMS_documents d	
 			left join DMS_DocFiles df using(DocumentID)
@@ -53,7 +55,8 @@ class DMS_documents extends PdoDataAccess
 			select d.*, b1.infoDesc DocTypeDesc, df.RowID,
 				concat(p1.fname, ' ', p1.lname) confirmfullname,
 				concat(p2.fname, ' ', p2.lname) regfullname,
-				b2.infoDesc param1Title	,b1.param1,
+				b1.param1 as DocTypeGroup,
+				b2.infoDesc DocTypeGroupDesc,
 				if(count(df.RowID) >0,'true','false') HaveFile,
 				b3.infoDesc PlaceDesc,
 				bf.InfoDesc ObjectDesc,bf.param1,bf.param2,bf.param3

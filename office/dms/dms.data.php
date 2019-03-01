@@ -7,6 +7,7 @@ require_once('header.inc.php');
 require_once inc_dataReader;
 require_once inc_response;
 require_once 'dms.class.php';
+require_once '../../framework/baseInfo/baseInfo.class.php';
 
 $task = $_REQUEST["task"];
 if(!empty($task)) 
@@ -209,7 +210,15 @@ function UnConfirmDocument(){
 
 function selectDocTypeGroups(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=7 AND IsActive='YES'");
+	if(!empty($_REQUEST["ObjectType"]) &&  $_REQUEST["ObjectType"] != "package")
+		$dt = PdoDataAccess::runquery ("
+			select b.* from BaseInfo b " .
+			(session::IsPortal() ? " join BaseInfo b2 on(b2.param2=1 AND b2.TypeID=8 AND b.InfoID=b2.param1)" : "") . " 
+			where b.typeID=7 AND b.IsActive='YES' AND (b.param1='0' or b.param1=:ot or b.param2=:ot)
+			group by b.InfoID", array(":ot" => $_REQUEST["ObjectType"]));
+	else
+		$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=7 AND IsActive='YES'");
+	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -257,23 +266,22 @@ function SaveDocType(){
 	$st = stripslashes(stripslashes($_POST["record"]));
 	$data = json_decode($st);
 
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$obj = new BaseInfo();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	if($obj->TypeID == "8")
+		$obj->param2 = $data->param2 == "1" ? "1" : "0"; 
+		
 	if($data->InfoID*1 == 0)
 	{
-		$pdo = PdoDataAccess::getPdoObject();
-		$pdo->beginTransaction();
-	
-		$data->InfoID = PdoDataAccess::GetLastID("BaseInfo", "InfoID", "TypeID=?", array($data->TypeID), $pdo);
-		$data->InfoID = $data->InfoID*1 + 1;
-		
-		PdoDataAccess::runquery("insert into BaseInfo(TypeID,InfoID,InfoDesc,param1) values(?,?,?,?)",
-			array($data->TypeID, $data->InfoID, $data->InfoDesc, $data->param1), $pdo);
-		
-		$pdo->commit();
+		$result = $obj->Add($pdo);
 	}
 	else
-		PdoDataAccess::runquery("update BaseInfo set InfoDesc=? where TypeID=? AND InfoID=?",
-			array($data->InfoDesc, $data->TypeID, $data->InfoID));	
+		$result = $obj->Edit($obj->InfoID, $pdo);
 
+	$pdo->commit();
 	echo Response::createObjectiveResponse(ExceptionHandler::GetExceptionCount() == 0, "");
 	die();
 }

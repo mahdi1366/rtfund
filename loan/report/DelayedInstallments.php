@@ -101,7 +101,7 @@ function GetData(){
 	
 	$query = "select p.*,
 				l.LoanDesc,
-				r.RequestID,LoanPersonID,p1.mobile,p1.SmsNo,
+				r.RequestID,LoanPersonID,p1.mobile,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) LoanPersonName,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) ReqPersonName,
 				InstallmentAmount,
@@ -219,7 +219,6 @@ function ListData($IsDashboard = false){
 	$rpt->addColumn("معرف", "ReqPersonName");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("موبایل", "mobile");
-	$rpt->addColumn("شماره پیامک", "SmsNo");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("تاریخ آخرین قسط", "LastInstallmentDate","ReportDateRender");
 	$rpt->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate","ReportDateRender");

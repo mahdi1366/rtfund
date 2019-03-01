@@ -170,39 +170,31 @@ function SelectAllForms(){
 
 	$ObjectDesc = 
 		"case 
-			when b.param4='loan' then concat_ws(' ','وام شماره',lp.RequestID,'به مبلغ',
+			when b.param4='loan' 
+				then concat_ws(' ','وام شماره',lp.RequestID,'به مبلغ',
 				PartAmount,'مربوط به',if(pp.IsReal='YES',concat(pp.fname, ' ', pp.lname),pp.CompanyName))
 				
-			when b.param4='contract' then concat_ws(' ','قرارداد شماره',c.ContractID,cp.CompanyName,cp.fname,cp.lname)
+			when b.param4='contract' 
+				then concat_ws(' ','قرارداد شماره',c.ContractID,cp.CompanyName,cp.fname,cp.lname)
 			
-			when b.param4='warrenty' then concat_ws(' ','ضمانت نامه [',wr.RefRequestID,'] ', 
+			when b.param4='warrenty' 
+				then concat_ws(' ','ضمانت نامه [',wr.RefRequestID,'] ', 
 				wp.CompanyName,wp.fname,wp.lname, 'به مبلغ ',
 				format(wr.amount,0),'از تاریخ',g2j(wr.StartDate),'تا تاریخ',g2j(wr.EndDate))
 			
-			when b.param4='form' then concat_ws(' ',wfmf.FormTitle,'به شماره',wfmr.RequestID)
+			when b.param4='form' 
+				then concat_ws(' ',wfmf.FormTitle,'به شماره فرم ',wfmr.RequestID)
+			
+			when b.param4='process' then 
+				concat_ws(' ','فرایند ',process.ProcessTitle,pperson.CompanyName,pperson.fname,pperson.lname)
 			
 			when b.param4 in('CORRECT','DayOFF','OFF','DayMISSION','MISSION','EXTRA','CHANGE_SHIFT')
 				then concat_ws(' ','درخواست ',ap.CompanyName,ap.fname,ap.lname,'مربوط به تاریخ', g2j(ar.FromDate))
 				
-			when b.param4='accdoc' then concat_ws(' ','سند شماره',ad.LocalNo,adb.BranchName)
-			
+			when b.param4='accdoc' 
+				then concat_ws(' ','سند شماره',ad.LocalNo,adb.BranchName)
 		end";
-	$ObjectID = 
-		"case b.param4
-			when 'loan'			then lp.RequestID				
-			when 'contract'		then c.ContractID			
-			when 'warrenty'		then wr.RefRequestID
-			when 'form'			then wfmr.RequestID
-			when 'CORRECT'		then ar.RequestID
-			when 'DayOFF'		then ar.RequestID
-			when 'OFF'			then ar.RequestID
-			when 'DayMISSION'	then ar.RequestID
-			when 'MISSION'		then ar.RequestID
-			when 'EXTRA'		then ar.RequestID
-			when 'CHANGE_SHIFT'	then ar.RequestID
-			when 'accdoc'		then ad.DocID
-		end";
-	
+		
 	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
 	{
 		$field = $_GET["fields"] == "ObjectDesc" ? $ObjectDesc : $_GET["fields"];
@@ -251,8 +243,25 @@ function SelectAllForms(){
 		}
 		$where = substr($where, 0, strlen($where)-2) . ")";
 	}
+	//---------------  sended forms --------------------------
+	$join = $select = "";
+	if(!empty($_GET["SendForms"]) && $_GET["SendForms"] == "true")
+	{
+		$select = ",fr2.ActionDate SendActionDate";
+		$join = " join (
+					select f.FlowID,ObjectID,ObjectID2,f.ActionDate
+					from WFM_FlowRows f join WFM_FlowSteps s using(StepRowID)
+					where s.StepID<>0 AND f.PersonID=". $_SESSION["USER"]["PersonID"]." 
+						AND (f.IsEnded='YES' OR f.IsLastRow='NO')
+						
+				)fr2 on(fr2.FlowID=fr.FlowID
+						AND fr2.ObjectID=fr.ObjectID
+						AND fr2.ObjectID2=fr.ObjectID2 )";
+	}
 	//--------------------------------------------------------
+	
 	$query = "select fr.*,f.FlowDesc, 
+					f.ObjectType,
 					b.InfoDesc ObjectTypeDesc,
 					concat(if(fr.ActionType='REJECT','رد ',''),ifnull(fr.StepDesc,'ارسال اولیه')) StepDesc,
 					if(p.IsReal='YES',concat(p.fname, ' ',p.lname),p.CompanyName) fullname,
@@ -260,12 +269,12 @@ function SelectAllForms(){
 					b.param1 url,
 					b.param2 parameter,
 					b.param3 target,
-					b.param4,
-					$ObjectID ObjectID
+					b.param4
+					$select
 	
-				from WFM_FlowRows fr
+				from WFM_FlowRows fr $join
 				
-				join WFM_flows f using(FlowID)
+				join WFM_flows f on(f.FlowID=fr.FlowID)
 				join BaseInfo b on(b.TypeID=11 AND b.InfoID=f.ObjectType)
 				left join WFM_FlowSteps fs on(fr.StepRowID=fs.StepRowID)
 				join BSC_persons p on(fr.PersonID=p.PersonID)
@@ -285,6 +294,9 @@ function SelectAllForms(){
 				left join WFM_requests wfmr on(b.param4='form' AND wfmr.RequestID=fr.ObjectID)
 				left join WFM_forms wfmf on(wfmr.FormID=wfmf.FormID)	
 	
+				left join BSC_processes process on(b.param4='process' AND process.ProcessID=fr.ObjectID)
+				left join BSC_persons pperson on(pperson.PersonID=fr.ObjectID2)	
+
 				left join ATN_requests ar on(b.param4=ar.ReqType AND ar.RequestID=fr.ObjectID)
 				left join BSC_persons ap on(ap.PersonID=ar.PersonID)
 	
@@ -293,10 +305,25 @@ function SelectAllForms(){
 	
 				where fr.IsLastRow='YES' " . $where . dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
-	//echo PdoDataAccess::GetLatestQueryString();
-	//print_r(ExceptionHandler::PopAllExceptions());
+//	/echo PdoDataAccess::GetLatestQueryString();
+	print_r(ExceptionHandler::PopAllExceptions());
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
+	
+	//----------------- get loan RequestID -----------------------
+	for($i=0; $i<count($temp); $i++)
+	{
+		if($temp[$i]["param4"] != "form")
+		{
+			$temp[$i]["LoanRequestID"] = 0;
+			continue;
+		}
+		$dt = PdoDataAccess::runquery("SELECT ItemValue 
+            FROM WFM_RequestItems join WFM_FormItems using(FormItemID)
+            where ItemType='loan'  AND RequestID=?", array($temp[$i]['ObjectID']));
+		$temp[$i]["LoanRequestID"] = count($dt) > 0 ? $dt[0][0] : "0";			
+	}
+	//------------------------------------------------------------
 	
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
 	die();
@@ -325,6 +352,7 @@ function ChangeStatus(){
 		$newObj = new WFM_FlowRows();
 		$newObj->FlowID = $SourceObj->FlowID;
 		$newObj->ObjectID = $SourceObj->ObjectID;
+		$newObj->ObjectID2 = $SourceObj->ObjectID2;
 		$newObj->PersonID = $_SESSION["USER"]["PersonID"];
 		$newObj->ActionType = $mode;
 		$newObj->ActionDate = PDONOW;
@@ -353,8 +381,12 @@ function ChangeStatus(){
 		}
 
 		if($newObj->IsEnded == "YES")
-			$result = WFM_FlowRows::EndObjectFlow($FlowObj->_ObjectType, $newObj->ObjectID, $pdo);
-
+			$result = WFM_FlowRows::EndObjectFlow($FlowObj->_ObjectType, 
+					$newObj->ObjectID, $newObj->ObjectID2, $pdo);
+		
+		$errors .= ExceptionHandler::GetExceptionsToString();
+		ExceptionHandler::PopAllExceptions();
+		
 		if(!$result)
 		{
 			$pdo->rollBack();
@@ -382,7 +414,8 @@ function ReturnStartFlow(){
 	
 	$FlowID = $_REQUEST["FlowID"];
 	$ObjectID = $_REQUEST["ObjectID"];
-	$result = WFM_FlowRows::ReturnStartFlow($FlowID, $ObjectID);
+	$objectID2 = isset($_REQUEST["ObjectID2"]) ? $_REQUEST["ObjectID2"] : 0;
+	$result = WFM_FlowRows::ReturnStartFlow($FlowID, $ObjectID, $objectID2);
 	
 	echo Response::createObjectiveResponse($result, "");
 	die();

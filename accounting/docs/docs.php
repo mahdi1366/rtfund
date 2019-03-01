@@ -77,21 +77,11 @@ $col = $dg->addColumn("ردیف","ItemID","", true);
 $col = $dg->addColumn("سرفصل حساب", "CostDesc");
 $col->renderer = "function(v,p,r){return '[' + r.data.CostCode + '] ' + v;}";
 
-/*$col = $dg->addColumn("گروه تفصیلی", "TafsiliType");
-$col->editor = "AccDocsObject.tafsiliGroupCombo";
-$col->renderer = "function(v,p,r){return r.data.TafsiliGroupDesc;}";
-$col->width = 100;*/
-
 $col = $dg->addColumn("تفصیلی", "TafsiliID");
 //$col->editor = "AccDocsObject.tafsiliCombo";
 $col->renderer = "function(v,p,r){p.tdAttr = \"data-qtip='\" + r.data.TafsiliGroupDesc + \"'\";".
 		"return r.data.TafsiliDesc;}";
 $col->width = 110;
-
-/*$col = $dg->addColumn("گروه تفصیلی2", "TafsiliType2");
-$col->editor = "AccDocsObject.tafsili2GroupCombo";
-$col->renderer = "function(v,p,r){return r.data.Tafsili2GroupDesc;}";
-$col->width = 100;*/
 
 $col = $dg->addColumn("تفصیلی2", "TafsiliID2");
 //$col->editor = "AccDocsObject.tafsili2Combo";

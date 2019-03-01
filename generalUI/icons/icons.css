@@ -5,6 +5,7 @@
 
 #button-grid 	.x-panel-body {border:1px solid #99bbe8;border-top:0 none;}
 .blueText		{color: #0D6EB2;font-weight: bold;}
+.redText		{color: #FF0000;font-weight: bold;}
 .icon-grid		{background-image:url('/generalUI/icons/grid.gif') !important;}
 .add			{background-image:url('/generalUI/icons/add.gif') !important;}
 .arrow_left		{background-image:url('/generalUI/icons/arrow-left.gif') !important;}

@@ -16,11 +16,11 @@ $dg->addColumn("", "TypeID", "", true);
 $dg->addColumn("", "IsActive", "", true);
 
 $col = $dg->addColumn("کد", "InfoID");
-$col->width = 100;
-if($_SESSION["USER"]["UserName"] =="admin" )
-{
+$col->width = 50; 
+//if($_SESSION["USER"]["UserName"] =="admin" )
+//{
 	$col->editor = ColumnEditor::NumberField();
-}
+//}
 
 $col = $dg->addColumn("شرح", "InfoDesc", "");
 $col->editor = ColumnEditor::TextField();
@@ -29,24 +29,31 @@ if($_SESSION["USER"]["UserName"] =="admin" )
 {
 	$col = $dg->addColumn("param1", "param1", "");
 	$col->editor = ColumnEditor::TextField(true);
-
+	$col->width = 80;
+	
 	$col = $dg->addColumn("param2", "param2", "");
 	$col->editor = ColumnEditor::TextField(true);
+	$col->width = 80;
 
 	$col = $dg->addColumn("param3", "param3", "");
 	$col->editor = ColumnEditor::TextField(true);
+	$col->width = 80;
 	
 	$col = $dg->addColumn("param4", "param4", "");
 	$col->editor = ColumnEditor::TextField(true);
+	$col->width = 80;
 	
 	$col = $dg->addColumn("param5", "param5", "");
 	$col->editor = ColumnEditor::TextField(true);
+	$col->width = 80;
 	
 	$col = $dg->addColumn("param6", "param6", "");
 	$col->editor = ColumnEditor::TextField(true);
+	$col->width = 80;
 	
 	$col = $dg->addColumn("param7", "param7", "");
 	$col->editor = ColumnEditor::TextField(true);
+	$col->width = 80;
 }
 if($accessObj->AddFlag)
 {
@@ -58,13 +65,13 @@ if($accessObj->RemoveFlag)
 	$col = $dg->addColumn("غیر فعال", "");
 	$col->sortable = false;
 	$col->renderer = "function(v,p,r){return BaseInfo.DeleteRender(v,p,r);}";
-	$col->width = 70;
+	$col->width = 40;
 }
 $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(){return BaseInfoObject.SaveBaseInfo();}";
 
 $dg->title = "لیست اطلاعات";
-$dg->height = 400;
+$dg->height = 460;
 if($_SESSION["USER"]["UserName"] != "admin")
 	$dg->width = 500;
 $dg->DefaultSortField = "InfoDesc";
@@ -77,10 +84,12 @@ $grid = $dg->makeGrid_returnObjects();
 ?>
 <center>
     <form id="mainForm">
-        <br>
-        <div id="div_selectGroup"></div>
-        <br>
-        <div id="div_grid" style="width:95%"></div>
+		<table style="margin: 10px; width:98%" >
+			<tr>
+				<td width="300px"><div id="div_selectGroup"></div></td>
+				<td><div id="div_grid" style="width:100%"></div></td>
+			</tr>
+		</table>
     </form>
 </center>
 <script>
@@ -117,42 +126,75 @@ function BaseInfo(){
 	}
 	
 	this.groupPnl = new Ext.form.Panel({
-		renderTo: this.get("div_selectGroup"),
-		title: "انتخاب گروه",
-		width: 400,
-		collapsible : true,
-		collapsed : false,
+		title: "گروه های اطلاعات دامین",
+		width : 300,
+		autoHeight : true,
+		applyTo : this.get("div_selectGroup"),
 		frame: true,
-		bodyCfg: {style: "background-color:white"},
+		tbar : [{
+			text : "ایجاد",
+			iconCls : "add",
+			//hidden : true,
+			handler : function(){
+				
+				Ext.MessageBox.prompt('', 'عنوان  :', function(btn, text){
+					if(btn == "cancel")
+						return;
+					BaseInfoObject.SaveType(text);
+				});
+			}
+		}],
 		items : [{
 			xtype : "combo",
 			store : new Ext.data.SimpleStore({
 				proxy: {type: 'jsonp',
-					url: this.address_prefix + 'baseInfo.data.php?task=SelectBaseTypes',
+					url: this.address_prefix + 'baseInfo.data.php?task=SelectBaseTypeGroups',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				autoLoad : true,
-				fields : ['TypeID','TypeDesc']
+				fields : ['InfoID','InfoDesc']
+			}),
+			valueField : "InfoID",
+			queryMode : "local",
+			width : 290,
+			name : "GroupID",
+			displayField : "InfoDesc",
+			listeners : {
+				select : function(combo,records){
+					ms = BaseInfoObject.groupPnl.down("[name=TypeID]");
+					ms.getStore().proxy.extraParams.GroupID = this.getValue();
+					ms.getStore().load();
+				}
+			}
+		},{
+			xtype : "multiselect",
+			store : new Ext.data.SimpleStore({
+				proxy: {type: 'jsonp',
+					url: this.address_prefix + 'baseInfo.data.php?task=SelectBaseTypes',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},				
+				fields : ['TypeID','TypeDesc',{
+						name : "title", convert(value,record){ 
+							return "[" + record.data.TypeID + "] " + record.data.TypeDesc;}
+				}]
 			}),
 			valueField : "TypeID",
 			queryMode : "local",
-			width : 380,
+			autoWidth : true,
+			autoScroll : true,
+			height : 400,
 			name : "TypeID",
-			displayField : "TypeDesc",
-			fieldLabel : "انتخاب گروه",
-			listeners :{
-				select : function(){
-					BaseInfoObject.grid.getStore().proxy.extraParams = {
-						TypeID : this.getValue()
-					};
-					if(BaseInfoObject.grid.rendered)
-						BaseInfoObject.grid.getStore().load();
-					else
-						BaseInfoObject.grid.render(BaseInfoObject.get("div_grid"));
-				}
-			}
+			displayField : "title"
 		}]
-	});	
+	});
+	
+	this.groupPnl.down("[name=TypeID]").boundList.on('itemdblclick', function(view, record){
+		BaseInfoObject.grid.getStore().proxy.extraParams.TypeID = record.data.TypeID;
+		if(BaseInfoObject.grid.rendered)
+			BaseInfoObject.grid.getStore().load();
+		else
+			BaseInfoObject.grid.render(BaseInfoObject.get("div_grid"));
+	});
 }
 
 var BaseInfoObject = new BaseInfo();	
@@ -172,7 +214,7 @@ BaseInfo.prototype.AddBaseInfo = function(){
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
 		InfoID: 0,
-		TypeID : this.groupPnl.down("[name=TypeID]").getValue(),
+		TypeID : this.grid.getStore().proxy.extraParams.TypeID,
 		BaseInfoCode: null
 	});
 
@@ -242,6 +284,38 @@ BaseInfo.prototype.DeleteBaseInfo = function(){
 			},
 			failure: function(){}
 		});
+	});
+}
+
+BaseInfo.prototype.SaveType = function(text){
+
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		url: this.address_prefix +'baseInfo.data.php',
+		method: "POST",
+		params: {
+			task: "SaveBaseType",
+			GroupID : this.groupPnl.down("[name=GroupID]").getValue(),
+			TypeDesc : text
+		},
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+			if(st.success)
+			{   
+				BaseInfoObject.groupPnl.down("[name=TypeID]").getStore().load();
+			}
+			else
+			{
+				if(st.data == "")
+					alert("خطا در اجرای عملیات");
+				else
+					alert(st.data);
+			}
+		},
+		failure: function(){}
 	});
 }
 

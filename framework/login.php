@@ -52,15 +52,12 @@ function login(){
 function register(){
 	require_once getenv("DOCUMENT_ROOT") . '/framework/person/persons.class.php';
 	
-	$user = $_POST["UserName"];
-	$pass = $_POST["md5Pass"];
-	$NationalID = $_POST["NationalID"];	
-	
-	$return = session::register($user, $pass, $NationalID);
+	$obj = new BSC_persons();
+	$return = session::register($obj);
 	if($return === true)
 	{
-		$result = session::login($user, $pass);
-		echo "true";
+		$result = session::login($obj->UserName, $_POST["md5Pass"]);
+		echo "/portal/index.php";
 		die();
 	}
 	echo $return;
@@ -186,11 +183,12 @@ $index = rand(0, count($pics)-1);
 						case "DuplicateNationalID":
 							document.getElementById("RegisterErrorDiv").innerHTML = "با این کدملی / شناسه ملی قبلا ثبت نام انجام شده است";
 							break;
-						case "true":
-							document.getElementById("RegisterErrorDiv").innerHTML = 
+						default:
+							/*document.getElementById("RegisterErrorDiv").innerHTML = 
 									"ثبت نام شما با موفقیت انجام شد. نتیجه از طریق ایمیل بعد از حداکثر یک روز کاری به شما اطلاع داده خواهد شد";
-							document.getElementById("RegisterErrorDiv").className = "success";
-							//window.location = "index.php";
+							document.getElementById("RegisterErrorDiv").className = "success";*/
+							document.getElementById("RegisterErrorDiv").style.display = "none";
+							window.location = xmlhttp.responseText;
 					}
 				}
 			}
@@ -404,7 +402,7 @@ $index = rand(0, count($pics)-1);
 	}
 	
 	.loginDiv .body{
-		background-color: rgba(255,255,255,.33);
+		background-color: rgba(0,0,0,.5);
 		border: 1px solid rgba(0,0,0,.22);
 		border-top-width: 1px;
 		border-top-style: solid;
@@ -581,14 +579,13 @@ $index = rand(0, count($pics)-1);
 						<input type="radio" id="isReal" name="IsReal" value="YES" onclick="ChangePersonType(this);" checked> شخص حقیقی
 						<input type="radio" id="noReal" name="IsReal" value="NO" onclick="ChangePersonType(this);" value="LEGAL"> شخص حقوقی
 					</div>
-					<input type="text" name="fname" class="textfield2" id="fname" placeholder="نام ..." required="required" dir="rtl"/>
-					<input type="text" name="lname" class="textfield2" id="lname" placeholder="نام خانوادگی ..." required="required" dir="rtl"/>
-					<input type="text" name="CompanyName" style="display:none" class="textfield2" id="CompanyName" 
-						   placeholder="نام شرکت ..." dir="rtl"/>
+					<input type="text" name="fname" class="textfield2" id="fname" placeholder="...نام" required="required" style="text-align: right;" dir="rtl"/>
+					<input type="text" name="lname" class="textfield2" id="lname" placeholder="...نام خانوادگی" required="required" style="text-align: right;" dir="rtl"/>
+					<input type="text" name="CompanyName" class="textfield2" id="CompanyName" style="display:none;text-align: right;" placeholder="نام شرکت ..." dir="rtl"/>
+					<input type="text" name="mobile" id="mobile" class="textfield2" placeholder="تلفن همراه ..." required="required" dir="ltr"/>
 					<input type="email" name="email" id="email" class="textfield2" placeholder="پست الکترونیک ..." required="required" dir="ltr"/>
 					<input type="text" name="NationalID" id="NationalID" class="textfield2" placeholder="کد ملی/ شناسه ملی ..." required="required" dir="ltr"/>
-					<div id="UserNameDiv2"><input type="text" id="UserName2" name="UserName" class="textfield2" 
-							placeholder="کلمه کاربری ..." required="required" dir="ltr"/></div>
+					<div id="UserNameDiv2"><input type="text" id="UserName2" name="UserName" class="textfield2" placeholder="کلمه کاربری ..." required="required" dir="ltr"/></div>
 					<input type="password" class="textfield2" id="password1" placeholder="رمز عبور ..." required="required" dir="ltr"/>
 					<input type="password" class="textfield2" id="password2" placeholder="تکرار رمز عبور ..." required="required" 
 						   dir="ltr" oninput="ConfirmPassword(this)"/><br>

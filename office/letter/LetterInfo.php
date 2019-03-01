@@ -354,8 +354,12 @@ function LetterInfo(){
 			collapsible: true,
 			items: this.grid,
 			listeners : {
-				resize : function(){ aaa = this;
-					this.items.items[0].doLayout();
+				resize : function(){ 
+					if(typeof LetterInfoObject == "object" && LetterInfoObject.grid)
+					{
+						//this.items.items[0].doLayout();
+						LetterInfoObject.grid.doLayout();
+					}
 				}				
 			}
 		},{

@@ -39,7 +39,10 @@ class PdoDataAccess extends ExceptionHandler
       	$ar_kaf = "ك";
       	$fa_kaf = "ک";
       	$trans = array($ar_ya => $fa_ya , $ar_kaf => $fa_kaf, "¬" => " ");
-      	
+      	/*
+		 * update ACC_blocks set BlockDesc = replace(blockDesc,'ي','ی')
+		 * update ACC_blocks set BlockDesc = replace(blockDesc,'ك','ک')
+		 */
       	return strtr($query, $trans);
 	}
 	

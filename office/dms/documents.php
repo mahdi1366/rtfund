@@ -15,7 +15,7 @@ $access = false;
 switch($ObjectType)
 {
 	case "person" : 
-		if($ObjectID == "")
+		if($ObjectID == "" )
 			$ObjectID = $_SESSION["USER"]["PersonID"];
 		if($_SESSION["USER"]["PersonID"] == $ObjectID)
 			$access = true;
@@ -111,14 +111,13 @@ $dg->addColumn("", "ObjectType", "", true);
 $dg->addColumn("", "ObjectID", "", true);
 $dg->addColumn("", "IsConfirm", "", true);
 $dg->addColumn("", "RegPersonID", "", true);
-$dg->addColumn("", "param1Title", "", true);
-$dg->addColumn("", "DocTypeDesc", "", true);
 $dg->addColumn("", "param1", "", true);
 $dg->addColumn("", "DocType", "", true);
 $dg->addColumn("", "DocMode", "", true);
 $dg->addColumn("", "place", "", true);
-$dg->addColumn("", "param1Title", "", true);
 $dg->addColumn("", "ObjectDesc", "", true);
+$dg->addColumn("", "DocTypeGroup", "", true);
+$dg->addColumn("", "DocTypeGroupDesc", "", true);
 $dg->addColumn("", "param1", "", true);
 $dg->addColumn("", "param2", "", true);
 $dg->addColumn("", "param3", "", true);
@@ -152,9 +151,9 @@ $col->align = "center";
 $col->width = 30;
 
 $col = $dg->addColumn("توضیحات کارشناس", "RejectDesc", "");
-$col->renderer = "function(v,p,r){return ManageDocument.commentRender(v,p,r)}";
+//$col->renderer = "function(v,p,r){return ManageDocument.commentRender(v,p,r)}";
 $col->align = "center";
-$col->width = 60;
+$col->width = 120;
 
 if($access)
 {
@@ -178,7 +177,7 @@ if(session::IsFramework())
 }
 
 $dg->EnableGrouping = true;
-$dg->DefaultGroupField = "param1Title";
+$dg->DefaultGroupField = "DocTypeGroupDesc";
 
 $dg->emptyTextOfHiddenColumns = true;
 
@@ -189,7 +188,7 @@ if($ObjectType == "package")
 else
 {
 	$dg->height = 330;
-	$dg->width = 690;
+	//$dg->width = 690;
 }
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
@@ -204,6 +203,9 @@ ManageDocument.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"]?>',
 	address_prefix : "<?= $js_prefix_address?>",
 	access : <?= $access ? "true" : "false" ?>,
+	
+	ObjectType : "<?= $ObjectType ?>",
+	ObjectID : "<?= $ObjectID ?>",
 	
 	pageIndex : 1,
 	
@@ -251,13 +253,13 @@ function ManageDocument(){
 			allowBlank : false,
 			colspan : 2,
 			width : 500,
-			name : "param1",
+			name : "DocTypeGroup",
 			itemId : "DocTypeGroupCombo",
 			store: new Ext.data.Store({
 				fields:["InfoID","InfoDesc"],
 				proxy: {
 					type: 'jsonp',
-					url: this.address_prefix + 'dms.data.php?task=selectDocTypeGroups',
+					url: this.address_prefix + 'dms.data.php?task=selectDocTypeGroups&ObjectType=' + this.ObjectType,
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				autoLoad : true
@@ -624,6 +626,12 @@ ManageDocument.prototype.EditDocument = function(){
 	this.formPanel.getForm().reset();
 	this.formPanel.down("[name=DocumentID]").setValue(record.data.DocumentID);
 	this.formPanel.loadRecord(record);	
+	
+	this.formPanel.getComponent("DocTypeCombo").getStore().proxy.extraParams["GroupID"] = record.data.DocTypeGroup;
+	this.formPanel.getComponent("DocTypeCombo").getStore().load({
+		callback : function(){ ManageDocumentObject.formPanel.getComponent("DocTypeCombo").setValue(record.data.DocType) }
+	});
+	
 	if(record.data.DocMode == "PAPER")
 		this.formPanel.down("[name=place]").enable();
 	else
@@ -642,8 +650,8 @@ ManageDocument.prototype.SaveDocument = function(){
 		isUpload : true,
 		params: {
 			task: "SaveDocument",
-			ObjectID : '<?= $ObjectID ?>',
-			ObjectType : '<?= $ObjectType ?>'
+			ObjectID : this.ObjectID,
+			ObjectType : this.ObjectType,
 		},
 		success: function(form,action){
 			mask.hide();
@@ -663,8 +671,8 @@ ManageDocument.prototype.SaveDocument = function(){
 			}
 		},
 		failure: function(form,action){
-			Ext.MessageBox.alert("Error",action.result.data);
 			mask.hide();
+			Ext.MessageBox.alert("Error",action.result.data);			
 		}
 	});
 }
@@ -864,5 +872,5 @@ ManageDocumentObject = new ManageDocument();
 	<div id="MainForm"></div>
 </center>
 <div>
-	<div id="div_grid"><div>
+	<div style="width:100%" id="div_grid"></div>
 </div>

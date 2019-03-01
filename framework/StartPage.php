@@ -7,6 +7,28 @@
 require_once 'header.inc.php';
 require_once 'management/framework.class.php';
 require_once inc_dataGrid;
+
+$dg = new sadaf_datagrid("dg",$js_prefix_address . "person/persons.data.php?task=selectPendingPersons");
+
+$dg->addColumn("","PersonID","string", true);
+
+$col = $dg->addColumn("نام و نام خانوادگی","fullname","string");
+
+$col = $dg->addColumn("موبایل","mobile","string");
+$col->width = 100;
+
+$col = $dg->addColumn("نام كاربري","UserName","string");
+$col->width = 120;
+
+$dg->height = 190;
+$dg->width = 450;
+$dg->EnableSearch = false;
+$dg->EnablePaging = false;
+$dg->DefaultSortField = "PersonID";
+$dg->title = "کاربران جدیدی که ثبت نام کرده اند";
+$dg->autoExpandColumn = "fullname";
+$dg->emptyTextOfHiddenColumns = true;
+$grid1 = $dg->makeGrid_returnObjects();
 ?>
 <script>
 

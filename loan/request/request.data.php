@@ -25,6 +25,7 @@ switch($task)
 	case "DeleteRequest":
 	case "ChangeRequestStatus":
 	case "GetAllStatuses":	
+	case "GetTazminDocTypes":
 		
 	case "GetRequestParts":
 	case "SavePart":
@@ -358,6 +359,13 @@ function ChangeRequestStatus(){
 function GetAllStatuses(){
 	
 	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=5 and param1=0");
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
+function GetTazminDocTypes(){
+	
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=8 and param1=1");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -1431,7 +1439,7 @@ function GetDelayedInstallments($returnData = false){
 	$param = array(":todate" => $ToDate, ":fromdate" => $FromDate);
 	$query = "select p.*,
 				l.LoanDesc,
-				r.RequestID,LoanPersonID,p1.mobile,p1.SmsNo,
+				r.RequestID,LoanPersonID,p1.mobile,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) LoanPersonName,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) ReqPersonName,
 				InstallmentAmount,
@@ -2105,7 +2113,7 @@ function selectBackPayComputes(){
 //------------------------------------------------
 	
 function CustomerDefrayRequest(){
-	ini_set("display_errors","On"); 
+	
 	$RequestID = (int)$_POST["RequestID"];
 	
 	//-------------- GetDefrayVoteForm -----------------
@@ -2123,12 +2131,13 @@ function CustomerDefrayRequest(){
 	
 	//---------------- GetDefrayWFMForm ---------------
 	$dt = PdoDataAccess::runquery("
-		SELECT RequestID,FlowID FROM WFM_requests 
+		SELECT RequestID,FlowID FROM WFM_requests r
 			join WFM_forms using(FormID)
 			join WFM_RequestItems using(RequestID)
 			join WFM_FormItems using(FormItemID)
-		where FormID=".DEFRAYLOAN_WFMFORM." AND PersonID=? AND ItemType='loan' AND ItemValue=?", 
+		where r.FormID=".DEFRAYLOAN_WFMFORM." AND r.PersonID=? AND ItemType='loan' AND ItemValue=?", 
 		array($_SESSION["USER"]["PersonID"],  $RequestID));
+	
 	if(count($dt) == 0)
 	{
 		echo Response::createObjectiveResponse(true,"");
@@ -2138,7 +2147,8 @@ function CustomerDefrayRequest(){
 	$arr = WFM_FlowRows::GetFlowInfo($dt[0]["FlowID"], $dt[0]["RequestID"]);
 	if($arr["IsStarted"])
 	{
-		echo Response::createObjectiveResponse(false, "درخواست تسویه حساب شما برای این وام قبلا ارسال شده است");
+		echo Response::createObjectiveResponse(false, "درخواست تسویه حساب شما برای این وام قبلا ارسال شده است" . 
+				"<br>برای اطلاع از وضعیت درخواست خود می توانید به منوی مدیریت فرم ها در قسمت اطلاعات شخصی مراجعه کنید");
 		die();
 	}
 	

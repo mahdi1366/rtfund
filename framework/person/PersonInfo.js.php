@@ -10,6 +10,7 @@ PersonInfo.prototype = {
 
 	portal : <?= session::IsPortal() ? "true" : "false" ?>,
 	PersonID : <?= $PersonID ?>,
+	justInfoTab : <?= $justInfoTab ? "true" : "false" ?>,
 
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
@@ -18,19 +19,7 @@ PersonInfo.prototype = {
 
 function PersonInfo()
 {
-	this.FileCmp = new Ext.form.File({
-		name : "FileType"
-	});
-	
-	this.grid = <?= $grid ?>;
-	this.grid.getView().getRowClass = function(record, index)
-	{
-		if(record.data.IsConfirm == "YES")
-			return "greenRow";
-		return "";
-	}
-
-	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال بارگذاري...'});
     mask.show();    
 	
 	this.store = new Ext.data.Store({
@@ -43,7 +32,7 @@ function PersonInfo()
 			"EconomicID","PhoneNo","mobile","address","email","RegNo","RegDate","RegPlace",
 			"CompanyType","AccountNo","DomainID","WebSite","IsGovermental","DomainDesc",
 			"FatherName","ShNo","IsStaff","IsCustomer","IsSupporter","IsShareholder",
-			"IsAgent","IsExpert", "SmsNo","IsScienceBase","ScinceEndDate","PostalCode"],
+			"IsAgent","IsExpert", "fax","PostalCode","PresenterID","IsActive"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -54,105 +43,126 @@ function PersonInfo()
 				PersonInfoObject.mainPanel.loadRecord(record);
 				if(record.data.IsReal == "NO")
 				{
-					PersonInfoObject.mainPanel.down("[name=IsScienceBase]").setValue(record.data.IsScienceBase == "YES");
-					PersonInfoObject.mainPanel.down("[name=ScinceEndDate]").setValue(MiladiToShamsi(record.data.ScinceEndDate));
+					PersonInfoObject.mainPanel.down("[name=RegDate]").setValue( MiladiToShamsi(record.data.RegDate) );
 				}
+				
+				mask.hide();    
+				
+				if(PersonInfoObject.justInfoTab)
+					return;
+				
 				PersonInfoObject.tabPanel.down("[itemId=tab_info]").add(PersonInfoObject.mainPanel);
 				
 				if(record.data.IsReal == "YES")
 					PersonInfoObject.tabPanel.down("[itemId=tab_signers]").destroy();
-				else
-				{
-					PersonInfoObject.tabPanel.down("[name=RegDate]").setValue(
-					MiladiToShamsi(record.data.RegDate) );
-				}
-				
-				mask.hide();    
 			}
 		}
 	});	
 	
-	this.tabPanel = new Ext.TabPanel({
-		renderTo: this.get("mainForm"),
-		activeTab: 0,
-		plain:true,
-		autoScroll : true,
-		autoHeight: true, 
-		width: 750,
-		defaults:{
+	if(!this.justInfoTab)
+	{
+		this.tabPanel = new Ext.TabPanel({
+			renderTo: this.get("mainForm"),
+			activeTab: 0,
+			plain:true,
+			autoScroll : true,
 			autoHeight: true, 
-			autoWidth : true            
-		},
-		items:[{
-			title : "اطلاعات پایه",
-			itemId : "tab_info"
-		},{
-			title : "مدارک",
-			style : "padding:0 20px 0 20px",		
-			itemId : "cmp_documents",						
-			loader : {
-				url : "../../office/dms/documents.php",
-				scripts : true
+			width: 750,
+			defaults:{
+				autoHeight: true, 
+				autoWidth : true            
 			},
-			listeners :{
-				activate : function(){
-					if(this.loader.isLoaded)
-						return;
-					this.loader.load({
-						scripts : true,
-						params : {
-							ObjectID : PersonInfoObject.PersonID,
-							ExtTabID : this.id,
-							ObjectType : "person"
-						}
-					});
+			items:[{
+				title : "اطلاعات پایه",
+				itemId : "tab_info"
+			},{
+				title : "مدارک",
+				style : "padding:0 20px 0 20px",		
+				itemId : "cmp_documents",						
+				loader : {
+					url : "../../office/dms/documents.php",
+					scripts : true
+				},
+				listeners :{
+					activate : function(){
+						if(this.loader.isLoaded)
+							return;
+						this.loader.load({
+							scripts : true,
+							params : {
+								ObjectID : PersonInfoObject.PersonID,
+								ExtTabID : this.id,
+								ObjectType : "person"
+							}
+						});
+					}
 				}
-			}
-		},{
-			title : "صاحبین امضاء",
-			itemId : "tab_signers",
-			style : "padding:5px",
-			loader : {
-				url : this.address_prefix + "OrgSigners.php",
-				scripts : true
-			},
-			listeners :{
-				activate : function(){
-					if(this.loader.isLoaded)
-						return;
-					this.loader.load({
-						scripts : true,
-						params : {
-							ExtTabID : this.id,
-							PersonID : PersonInfoObject.PersonID
-						}
-					});
+			},{
+				title : "صاحبین امضاء",
+				itemId : "tab_signers",
+				style : "padding:5px",
+				loader : {
+					url : this.address_prefix + "OrgSigners.php",
+					scripts : true
+				},
+				listeners :{
+					activate : function(){
+						if(this.loader.isLoaded)
+							return;
+						this.loader.load({
+							scripts : true,
+							params : {
+								ExtTabID : this.id,
+								PersonID : PersonInfoObject.PersonID
+							}
+						});
+					}
 				}
-			}
-		},{
-			title : "مجوز ها",
-			itemId : "tab_licenses",
-			style : "padding:5px",
-			loader : {
-				url : this.address_prefix + "licenses.php",
-				scripts : true
-			},
-			listeners :{
-				activate : function(){
-					if(this.loader.isLoaded)
-						return;
-					this.loader.load({
-						scripts : true,
-						params : {
-							ExtTabID : this.id,
-							PersonID : PersonInfoObject.PersonID
-						}
-					});
+			},{
+				title : "مجوز ها",
+				itemId : "tab_licenses",
+				style : "padding:5px",
+				loader : {
+					url : this.address_prefix + "licenses.php",
+					scripts : true
+				},
+				listeners :{
+					activate : function(){
+						if(this.loader.isLoaded)
+							return;
+						this.loader.load({
+							scripts : true,
+							params : {
+								ExtTabID : this.id,
+								PersonID : PersonInfoObject.PersonID
+							}
+						});
+					}
 				}
-			}
-		}]
-	});	
-	
+			},{
+				title : "اعتبار سنجی",
+				itemId : "tab_agreement",
+				style : "padding:5px",
+				loader : {
+					url : this.address_prefix + "Agreement.php",
+					scripts : true
+				},
+				listeners :{
+					activate : function(){
+						if(this.loader.isLoaded)
+							return;
+						this.loader.load({
+							scripts : true,
+							params : {
+								ExtTabID : this.id,
+								PersonID : PersonInfoObject.PersonID
+							}
+						});
+					}
+				}
+			}]
+		});	
+	}
 	
 }
 
@@ -165,20 +175,20 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			colspan : 2,
 			height : 160,
 			width : 700,
-			html : "<center><img class='PersonPicStyle' src='"+this.address_prefix+
+			html : "<center><img id=img_PersonPic class='PersonPicStyle' src='"+this.address_prefix+
 				"showImage.php?PersonID="+this.PersonID+"' /></center>"
 		},{
 			xtype : "textfield",
 			fieldLabel: 'نام',
 			allowBlank : false,
-			readOnly : this.portal,
+			readOnly : this.portal && PersonRecord.data.IsActive == "YES",
 			beforeLabelTextTpl: required,
 			name: 'fname'
 		},{
 			xtype : "textfield",
 			fieldLabel: 'نام خانوادگی',
 			allowBlank : false,
-			readOnly : this.portal,
+			readOnly : this.portal && PersonRecord.data.IsActive == "YES",
 			beforeLabelTextTpl: required,
 			name: 'lname'
 		},{
@@ -212,7 +222,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			maskRe: /[\d\-]/,
 			fieldLabel: 'کد ملی',
 			allowBlank : false,
-			readOnly : this.portal,
+			readOnly : this.portal && PersonRecord.data.IsActive == "YES",
 			beforeLabelTextTpl: required,
 			name: 'NationalID'
 		},{
@@ -225,11 +235,11 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			regex: /^\d{11}$/,
 			maskRe: /[\d\-]/,
 			fieldLabel: 'تلفن همراه',
-			readOnly : this.portal,
+			readOnly : this.portal && PersonRecord.data.IsActive == "YES",
 			name: 'mobile'
 		},{
 			xtype : "trigger",
-			fieldLabel: 'حوزه فعالیت',
+			fieldLabel: 'حوزه فناوری',
 			colspan : 2,
 			name: 'DomainDesc',	
 			triggerCls:'x-form-search-trigger',
@@ -239,7 +249,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 		},{
 			xtype : "textarea",
 			fieldLabel: 'آدرس',
-			name: 'address',
+			name: 'address', 
 			rowspan : 4
 		},{
 			xtype : "numberfield",
@@ -269,6 +279,68 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			name : "PersonPic",
 			fieldLabel : "تصویر"
 		},{
+			xtype : "combo",
+			fieldLabel : "معرفی کننده",
+			name : "PresenterID",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + 'persons.data.php?task=selectPresenters',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['InfoID','InfoDesc'],
+				autoLoad : true					
+			}),
+			displayField : "InfoDesc",
+			queryMode : 'local',
+			valueField : "InfoID"
+		},{
+			xtype : "checklist",
+			title : "شرایط خاص مشتری حقیقی",
+			mapFn: function(storeItem) {
+                return {
+                    xtype:'checkbox',
+                    boxLabel: storeItem.get("InfoDesc"),
+                    name: storeItem.get("chname"),
+                    inputValue: 1,
+					checked : storeItem.get("checked") == "true"
+                };
+            },
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + 'persons.data.php?task=selectPersonInfoTypes&TypeID=92&PersonID=' + this.PersonID,
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['TypeID','InfoID','InfoDesc','checked',{
+					name : "chname",convert(value,record){return "info_" + record.data.TypeID + "_" + record.data.InfoID}
+				}],
+				autoLoad : true					
+			})
+		},{
+			xtype : "checklist",
+			title : "خدمت درخواستی",
+			mapFn: function(storeItem) {
+                return {
+                    xtype:'checkbox',
+                    boxLabel: storeItem.get("InfoDesc"),
+                    name: storeItem.get("chname"),
+                    inputValue: 1,
+					checked : storeItem.get("checked") == "true"
+                };
+            },
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + 'persons.data.php?task=selectPersonInfoTypes&TypeID=93&PersonID=' + this.PersonID,
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['TypeID','InfoID','InfoDesc','checked',{
+					name : "chname",convert(value,record){return "info_" + record.data.TypeID + "_" + record.data.InfoID}
+				}],
+				autoLoad : true					
+			})
+		},{
 			xtype : "hidden",
 			name : "DomainID",
 			colspan : 2
@@ -279,13 +351,13 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			colspan : 2,
 			height : 160,
 			width : 700,
-			html : "<center><img class='PersonPicStyle' src='"+this.address_prefix+
+			html : "<center><img id=img_PersonPic class='PersonPicStyle' src='"+this.address_prefix+
 				"showImage.php?PersonID="+this.PersonID+"&v="+this.TabID+"' /></center>"
 		},{
 			xtype : "textfield",
 			beforeLabelTextTpl: required,
 			fieldLabel: 'نام شرکت',
-			readOnly : this.portal,
+			readOnly : this.portal && PersonRecord.data.IsActive == "YES",
 			width : 510,
 			name: 'CompanyName',
 			colspan : 2
@@ -295,7 +367,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			maskRe: /[\d\-]/,
 			allowBlank : false,
 			fieldLabel: 'شناسه ملی',
-			readOnly : this.portal,
+			readOnly : this.portal && PersonRecord.data.IsActive == "YES",
 			beforeLabelTextTpl: required,
 			name: 'NationalID'
 		},{
@@ -354,7 +426,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			name: 'IsGovermental'
 		},{
 			xtype : "trigger",
-			fieldLabel: 'حوزه فعالیت',
+			fieldLabel: 'حوزه فناوری',
 			name: 'DomainDesc',	
 			triggerCls:'x-form-search-trigger',
 			onTriggerClick : function(){
@@ -370,7 +442,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			regex: /^\d{11}$/,
 			maskRe: /[\d\-]/,
 			fieldLabel: 'تلفن دورنگار',
-			name: 'mobile'
+			name: 'fax'
 		},{
 			xtype : "combo",
 			fieldLabel : "شهر",
@@ -417,32 +489,78 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			fieldLabel : "کد پستی",
 			hideTrigger : true
 		},{
-			xtype : "numberfield",
-			name : "SmsNo",
-			hideTrigger : true,
-			readOnly : this.portal,
+			xtype : "textfield",
+			regex: /^\d{11}$/,
+			maskRe: /[\d\-]/,
+			name : "mobile",
+			readOnly : this.portal && PersonRecord.data.IsActive == "YES",
 			fieldLabel : "شماره دریافت پیامک"
-		},{
-			xtype : "checkbox",
-			name : "IsScienceBase",
-			boxLabel : "شرکت دانش بنیان است.",
-			listeners : {
-				change : function(){
-					if(this.checked)
-						PersonInfoObject.mainPanel.down("[name=ScinceEndDate]").enable();
-					else
-						PersonInfoObject.mainPanel.down("[name=ScinceEndDate]").disable();
-				}
-			}
-		},{
-			xtype : "shdatefield",
-			name : "ScinceEndDate",
-			disabled : true,
-			fieldLabel : "تاریخ اعتبار دانش بنیان"
 		},{
 			xtype : "filefield",
 			name : "PersonPic",
 			fieldLabel : "لوگوی شرکت"
+		},{
+			xtype : "combo",
+			fieldLabel : "معرفی کننده",
+			name : "PresenterID",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + 'persons.data.php?task=selectPresenters',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['InfoID','InfoDesc'],
+				autoLoad : true					
+			}),
+			displayField : "InfoDesc",
+			queryMode : 'local',
+			valueField : "InfoID"
+		},{
+			xtype : "checklist",
+			title : "شرایط خاص مشتری حقوقی",
+			mapFn: function(storeItem) {
+                return {
+                    xtype:'checkbox',
+                    boxLabel: storeItem.get("InfoDesc"),
+                    name: storeItem.get("chname"),
+                    inputValue: 1,
+					checked : storeItem.get("checked") == "true"
+                };
+            },
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + 'persons.data.php?task=selectPersonInfoTypes&TypeID=91&PersonID=' + this.PersonID,
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['TypeID','InfoID','InfoDesc','checked',{
+					name : "chname",convert(value,record){return "info_" + record.data.TypeID + "_" + record.data.InfoID}
+				}],
+				autoLoad : true					
+			})
+		},{
+			xtype : "checklist",
+			title : "خدمت درخواستی",
+			mapFn: function(storeItem) {
+                return {
+                    xtype:'checkbox',
+                    boxLabel: storeItem.get("InfoDesc"),
+                    name: storeItem.get("chname"),
+                    inputValue: 1,
+					checked : storeItem.get("checked") == "true"
+                };
+            },
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + 'persons.data.php?task=selectPersonInfoTypes&TypeID=93&PersonID=' + this.PersonID,
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['TypeID','InfoID','InfoDesc','checked',{
+					name : "chname",convert(value,record){return "info_" + record.data.TypeID + "_" + record.data.InfoID}
+				}],
+				autoLoad : true					
+			})
 		},{
 			xtype : "hidden",
 			name : "DomainID",
@@ -452,6 +570,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 	this.mainPanel = new Ext.form.FormPanel({
 		width: 750,
 		frame : true,
+		renderTo: this.justInfoTab ? this.get("mainForm") : "",
 		layout : {
 			type : "table",
 			columns : 2
@@ -480,7 +599,7 @@ PersonInfo.prototype.ActDomainLOV = function(){
 			autoScroll : true,
 			width : 420,
 			height : 420,
-			title : "حوزه فعالیت",
+			title : "حوزه فناوری",
 			closeAction : "hide",
 			loader : {
 				url : this.address_prefix + "../baseInfo/ActDomain.php?mode=adding",
@@ -503,10 +622,6 @@ PersonInfo.prototype.ActDomainLOV = function(){
 			}
 		}
 	});
-	
-
-	/*showLOV(this.address_prefix + "DocCreditLOV.php?OrderID=" + record.data.OrderID 
-					+ "&DocID=" + record.data.DocID + "&UnitID=" + record.data.UnitID, 900, 550);*/
 }
 
 PersonInfo.prototype.SaveData = function() {
@@ -526,6 +641,7 @@ PersonInfo.prototype.SaveData = function() {
 		success : function(form,result){
 			mask.hide();
 			Ext.MessageBox.alert("","اطلاعات با موفقیت ذخیره شد");
+			document.getElementById("img_PersonPic").src = document.getElementById("img_PersonPic").src + "&" + new Date().getTime();
 		},
 		failure : function(form,result){
 			mask.hide();

@@ -10,7 +10,7 @@ require_once 'TreeModules.class.php';
 require_once inc_dataReader;
 require_once inc_response;
 
-if(!empty($_REQUEST["task"]))
+if(!empty($_REQUEST["task"])) 
 	$_REQUEST["task"]();
 
 function selectSystems(){
@@ -57,7 +57,7 @@ function SelectMenuNodes(){
 }
 
 function GellMenus(){
-	$temp = FRW_Menus::GetAllMenus($_GET["SystemID"]);
+	$temp = FRW_menus::GetAllMenus($_GET["SystemID"]);
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -76,7 +76,7 @@ function selectMenuGroups(){
 function SaveMenu(){
 	if(isset($_POST["record"]))
 	{
-		$obj = new FRW_Menus();
+		$obj = new FRW_menus();
 		PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 		
 		$st = stripslashes(stripslashes($_POST["record"]));
@@ -88,7 +88,7 @@ function SaveMenu(){
 	}
 	else
 	{
-		$obj = new FRW_Menus();
+		$obj = new FRW_menus();
 		PdoDataAccess::FillObjectByArray($obj, $_POST);
 		if(isset($_POST["MenuID"]) && $_POST["MenuID"] > 0)
 			$res = $obj->EditMenu();
@@ -112,7 +112,7 @@ function DeleteMenu(){
 		echo Response::createObjectiveResponse(false, "این منو دارای زیر منو بوده و قابل حذف نمی باشد");
 		die();
 	}
-	$res = FRW_Menus::DeleteMenu($_POST["MenuID"]);
+	$res = FRW_menus::DeleteMenu($_POST["MenuID"]);
 	echo Response::createObjectiveResponse($res, "");
 	die();
 }
@@ -149,7 +149,8 @@ function SelectAccessMenuNodes(){
 		select m.* , concat('[',ordering,'] ',MenuDesc) MenuTitle,'true' expanded,
 			concat('/generalUI/icons/',m.icon) icon,a.ViewFlag,a.AddFlag,a.EditFlag,a.RemoveFlag
 		from FRW_menus m 
-		left join FRW_access a on((a.personID=:p or a.groupID=:g) and m.MenuID=a.MenuID)
+		left join FRW_access a on(((a.personID=:p && a.groupID=0)or(a.personID=0 && a.groupID=:g))
+			and m.MenuID=a.MenuID)
 		where m.MenuID<>".MENUID_portal."
 		group by m.MenuID
 		order by ParentID,ordering ", array(":p"=>$PersonID, ":g"=>$groupID));

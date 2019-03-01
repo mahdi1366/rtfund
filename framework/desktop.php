@@ -7,7 +7,7 @@
 require_once ('header.inc.php');
 require_once 'management/framework.class.php';
 require_once 'TreeModules.class.php';
-
+ini_set("display_errors", "On");
 //.......................................................
 global $accessMenu;
 $accessMenu = array();
@@ -17,8 +17,8 @@ foreach($menus as $row)
 
 
 function recursiveCreateMenu($row){
-	$icon = empty($row['icon']) ? "/generalUI/ext4/resources/themes/icons/star.gif" : 
-				"/generalUI/ext4/resources/themes/icons/" . $row['icon'];
+	$icon = empty($row['icon']) ? "/generalUI/icons/star.gif" : 
+				"/generalUI/icons/" . $row['icon'];
 	
 	if(!isset($row["children"]))
 	{
@@ -91,7 +91,7 @@ function recursiveCreateMenu($row){
 		}";	
 }
 $menueArr  = array();
-$dataTable = FRW_Menus::Get(" order by ParentID,ordering ");
+$dataTable = FRW_menus::Get(" order by ParentID,ordering ");
 $returnArr = TreeModulesclass::MakeHierarchyArray($dataTable->fetchAll(), "ParentID", "MenuID", "MenuDesc");
 
 foreach($returnArr as $mainMenu)

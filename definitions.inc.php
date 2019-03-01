@@ -12,6 +12,7 @@ define("SYSTEMID_contract", 12);
 define("SYSTEMID_portal", 1000);
 
 define("MENUID_portal", 1000);
+define("MENUID_loans", 16);
 define("MENUID_persons", 6);
 
 //.................................................
@@ -59,9 +60,10 @@ define("TAFTYPE_SUBAGENT", "4");
 define("TAFTYPE_BANKS", "6");
 define("TAFTYPE_ChequeStatus", "7");
 
-define("TAFSILITYPE_PERSON", "107");
-define("TAFSILITYPE_LOAN", "104");
-define("TAFSILITYPE_PROCESS", "106");
+define("TAFSILITYPE_PERSON", "200");
+define("TAFSILITYPE_LOAN", "130");
+define("TAFSILITYPE_PROCESS", "150");
+define("TAFSILITYPE_BRANCH", "300");
 
 //...............................
 
@@ -184,6 +186,9 @@ define("TYPEID_MeetingType", 88);
 define("TYPEID_MeetingStatusID", 89);
 
 define("POSTID_MODIRAMEL", 77);
+
+//------------ Processes ----------
+define("PROCESS_REGISTRATION", "1030102");
 
 define("FILE_FRAMEWORK_PICS",getenv("DOCUMENT_ROOT") . "/storage/framework/");
 

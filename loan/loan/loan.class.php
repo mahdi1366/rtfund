@@ -28,7 +28,7 @@ class LON_loans extends PdoDataAccess
 		
 		if($LoanID != "")
 			PdoDataAccess::FillObject ($this, "select l.*,b.BlockCode _BlockCode
-				from LON_loans l join ACC_blocks b using(BlockID) where LoanID=?", array($LoanID));
+				from LON_loans l left join ACC_blocks b using(BlockID) where LoanID=?", array($LoanID));
 	}
 	
 	static function SelectAll($where = "", $param = array()){
@@ -84,6 +84,9 @@ class LON_loans extends PdoDataAccess
 		$daObj->MainObjectID = $this->LoanID;
 		$daObj->TableName = "LON_loans";
 		$daObj->execute();
+		
+		if($this->IsActive == "NO")
+			return true;
 		
 		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis "
 				. "where ObjectID=? AND TafsiliType=" . TAFSILITYPE_LOAN, array($this->LoanID));

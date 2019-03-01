@@ -184,11 +184,6 @@ function Person()
 			name: 'mobile'
 		},{
 			xtype : "numberfield",
-			name : "SmsNo",
-			hideTrigger : true,
-			fieldLabel : "شماره دریافت پیامک"
-		},{
-			xtype : "numberfield",
 			name : "ShareNo",
 			hideTrigger : true,
 			labelWidth : 100,
@@ -200,6 +195,7 @@ function Person()
 			hideTrigger : true,
 			labelWidth : 150,
 			width : 235,
+			colspan : 2,
 			fieldLabel : "کد دستگاه حضور و غیاب"
 		},{
 			xtype : "fieldset",

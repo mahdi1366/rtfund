@@ -23,38 +23,32 @@ $dg_cost->addcolumn('','TafsiliType',"",true);
 $dg_cost->addcolumn('','TafsiliType2',"",true);
 $dg_cost->addcolumn('','TafsiliType3',"",true);
 $dg_cost->addcolumn('','IsBlockable',"",true);
-$dg_cost->addcolumn('','CostGroupID',"",true);
-
-/*$col = $dg_cost->addcolumn('گروه حساب','LevelTitle0');
-$col->width = 120;*/
+$dg_cost->addcolumn('','param1',"",true);
+$dg_cost->addcolumn('','param2',"",true);
+$dg_cost->addcolumn('','param3',"",true);
 
 $col = $dg_cost->addcolumn('کد حساب','CostCode');
-$col->width = 80;
+$col->width = 60;
+
+$col = $dg_cost->addcolumn('گروه حساب','LevelTitle0');
 
 $col = $dg_cost->addcolumn("کل", "LevelTitle1");
 
 $col = $dg_cost->addcolumn("معین1", "LevelTitle2");
-$col->width = 120;
 
 $col = $dg_cost->addcolumn("معین2", "LevelTitle3");
-$col->width = 100;
 
 $col = $dg_cost->addcolumn("تفصیلی1", "TafsiliTypeDesc");
-$col->width = 100;
 
 $col = $dg_cost->addcolumn("تفصیلی2", "TafsiliTypeDesc2");
-$col->width = 100;
 
 $col = $dg_cost->addcolumn("تفصیلی3", "TafsiliTypeDesc3");
-$col->width = 100;
 
-/*$col = $dg_cost->addcolumn('گروه حساب','CostGroupDesc');
-$col->width = 120;*/
+$col = $dg_cost->addcolumn('آیتم اطلاعاتی1','param1Desc');
 
-$col = $dg_cost->addColumn("آیتم ها", "");
-$col->sortable = false;
-$col->renderer = "function(v,p,r){return CostCode.ParamRender(v,p,r,2);}";
-$col->width = 50;
+$col = $dg_cost->addcolumn('آیتم اطلاعاتی2','param2Desc');
+
+$col = $dg_cost->addcolumn('آیتم اطلاعاتی3','param3Desc');
 
 if($accessObj->EditFlag	)
 {
@@ -74,7 +68,7 @@ if($accessObj->AddFlag)
 	$dg_cost->addButton = true;
 	$dg_cost->addHandler = 'function(){return CostCodeObj.BeforeSaveCost(false);}';
 }
-$dg_cost->addButton('', 'کپی آیتم ها', 'copy', 'function(e){ return CostCodeObj.CopyParams(); }');
+
 $dg_cost->addButton('prn__btn', 'چاپ کد حسابها', 'print', 'function(e){ return CostCodeObj.PrintCost(); }');
 
 $dg_cost->title = 'کدینگ حساب';

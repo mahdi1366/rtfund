@@ -56,10 +56,6 @@ class session{
 					return "WrongPassword";
 				}
 			}
-			if($temp[0]["IsActive"] == "PENDING")
-			{
-				return "PendingUser";
-			} 
 			if($temp[0]["IsActive"] == "NO")
 			{
 				return "InActiveUser";
@@ -149,34 +145,22 @@ class session{
 		session_destroy();
 	}
 	
-	static function register($user, $pass ,$NationalID){
+	static function register(&$obj){
 		
-		$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($user));
+		PdoDataAccess::FillObjectByArray($obj, $_POST);
+		
+		$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($obj->UserName));
 		if(count($temp) > 0)
 		{
 			return "DuplicateUserName";
 		}
-		$temp = PdoDataAccess::runquery("select * from BSC_persons where NationalID=?", array($NationalID));
+		$temp = PdoDataAccess::runquery("select * from BSC_persons where NationalID=?", array($obj->NationalID));
 		if(count($temp) > 0)
 		{
 			return "DuplicateNationalID";
 		}
 
 		define("SYSTEMID", "1000");
-		
-		$hash_cost_log2 = 8;	
-		$hasher = new PasswordHash($hash_cost_log2, true);
-
-		$obj = new BSC_persons();
-		PdoDataAccess::FillObjectByArray($obj, $_POST);
-		$obj->UserPass = $hasher->HashPassword($pass);
-		$obj->IsCustomer = "YES";
-		$obj->AddPerson();
-
-		$temp = PdoDataAccess::runquery("select * from BSC_persons where UserName=?", array($user));
-		$_SESSION['USER'] = $temp[0];
-		//$_SESSION['USER']["framework"] = true;
-		//$_SESSION['USER']["portal"] = true;
 		//..........................................................
 		if (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))
 			if ( strlen($_SERVER['HTTP_X_FORWARDED_FOR']) > 15 )
@@ -186,9 +170,14 @@ class session{
 		else
 			$_SESSION['LIPAddress'] = $_SERVER['REMOTE_ADDR'];
 		//..........................................................
+		
+		$hash_cost_log2 = 8;	
+		$hasher = new PasswordHash($hash_cost_log2, true);		
+		$obj->UserPass = $hasher->HashPassword($_POST["md5Pass"]);
+		$obj->IsCustomer = "YES";
+		$obj->AddPerson();
+		
 		return true;
-
-
 	}
 	
 	static function getEmail($userName, $coded = false){

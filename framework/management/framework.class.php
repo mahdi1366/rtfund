@@ -56,11 +56,11 @@ class FRW_systems extends PdoDataAccess {
 		return true;
 	}
 
-}
+} 
 
-class FRW_Menus extends OperationClass {
+class FRW_menus extends OperationClass {
 
-	const TableName = "FRW_Menus";
+	const TableName = "FRW_menus";
 	const TableKey = "MenuID"; 
 	
 	public $MenuID;

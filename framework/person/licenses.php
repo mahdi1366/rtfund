@@ -6,7 +6,7 @@
 require_once("../header.inc.php");
 require_once inc_dataGrid;
 
-$PersonID = $_REQUEST["PersonID"];
+$PersonID = session::IsPortal() ? $_SESSION["USER"]["PersonID"] : $_REQUEST["PersonID"];
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . 
 		"persons.data.php?task=SelectLicenses&PersonID=" . $PersonID,"div_grid_user");
@@ -25,12 +25,12 @@ $col->width = 150;
 
 $col = $dg->addColumn("تاریخ اعتبار","ExpDate",  GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
-$col->width = 150;
+$col->width = 80;
 
 $col = $dg->addColumn("توضیحات کارشناس", "RejectDesc", "");
 $col->renderer = "function(v,p,r){return License.commentRender(v,p,r)}";
 $col->align = "center";
-$col->width = 60;
+$col->width = 150;
 
 if(session::IsFramework())
 {
@@ -56,7 +56,7 @@ $dg->width = 730;
 $dg->DefaultSortField = "LicenseID";
 $dg->autoExpandColumn = "title";
 $dg->editorGrid = true;
-$dg->title = "صاحبان امضاء";
+$dg->title = "مجوز ها/ گواهینامه ها";
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;
 $grid = $dg->makeGrid_returnObjects();
@@ -110,7 +110,8 @@ function License()
 			xtype: 'container', 
 			width : 680,
 			html : "ردیف های سبز رنگ ردیف های تایید شده و برابر اصل شده توسط صندوق بوده و قابل تغییر نمی باشند"+
-				"<br>ردیف های قرمز ردیف های رد شده توسط صندوق می باشند"
+				"<br>ردیف های قرمز ردیف های رد شده توسط صندوق می باشند"+
+				"<br>جهت ویرایش روی ردیف مورد نظر دبل کلیک نمایید"
 		}
     ]});
 	this.grid.render(this.get("div_grid"));
@@ -118,14 +119,10 @@ function License()
 
 License.commentRender = function(v,p,r){
 		
-	if(v == "" || v == null)
-		v = "فاقد توضیحات";
+	if(v == null)
+		return "";
 	
-	p.tdAttr = 'data-qtip=\"' + v.replace(/\n/g, "<br>") + '\"';
-	
-	return "<div align='center' title='توضیحات کارشناس' class='comment' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16;float:right'></div>";
+	return v.replace(/\n/g, "<br>");
 }
 
 var LicenseObject = new License();

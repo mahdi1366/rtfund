@@ -109,7 +109,7 @@ function CostCode(){
 					autoLoad : true
 				}),
 				name : "TafsiliType",
-				fieldLabel : "گروه تفصیلی",
+				fieldLabel : "تفصیلی1",
 				typeAhead: false,
 				width: 500,
 				style : "margin-left : 50px",
@@ -130,7 +130,7 @@ function CostCode(){
 				typeAhead: false,
 				name : "TafsiliType2",
 				width: 500,
-				fieldLabel : "گروه تفصیلی2",
+				fieldLabel : "تفصیلی2",
 				queryMode : "local",
 				style : "margin-left : 50px",
 				valueField : "InfoID",
@@ -149,7 +149,7 @@ function CostCode(){
 				typeAhead: false,
 				name : "TafsiliType3",
 				width: 500,
-				fieldLabel : "گروه تفصیلی3",
+				fieldLabel : "تفصیلی3",
 				queryMode : "local",
 				style : "margin-left : 50px",
 				valueField : "InfoID",
@@ -157,20 +157,57 @@ function CostCode(){
 			},{
 				xtype : "combo",
 				store: new Ext.data.Store({
-					fields:["InfoID","InfoDesc"],
+					fields:["ParamID","ParamDesc"],
 					proxy: {
 						type: 'jsonp',
-						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectCostGroups',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=selectParams',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
-					}
+					},
+					autoLoad : true
 				}),
 				typeAhead: false,
-				name : "CostGroupID",
+				name : "param1",
 				width: 500,
-				fieldLabel : "گروه حساب",
+				fieldLabel : "آیتم اطلاعاتی1",
 				style : "margin-left : 50px",
-				valueField : "InfoID",
-				displayField : "InfoDesc"
+				valueField : "ParamID",
+				displayField : "ParamDesc"
+			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["ParamID","ParamDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=selectParams',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad : true
+				}),
+				typeAhead: false,
+				name : "param2",
+				width: 500,
+				fieldLabel : "آیتم اطلاعاتی2",
+				style : "margin-left : 50px",
+				valueField : "ParamID",
+				displayField : "ParamDesc"
+			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					fields:["ParamID","ParamDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=selectParams',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad : true
+				}),
+				typeAhead: false,
+				name : "param3",
+				width: 500,
+				fieldLabel : "آیتم اطلاعاتی3",
+				style : "margin-left : 50px",
+				valueField : "ParamID",
+				displayField : "ParamDesc"
 			},{
 				xtype : "checkbox",
 				inputValue : "YES",

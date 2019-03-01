@@ -50,7 +50,7 @@ switch($task)
 	case "DeleteCostBlock":
 		
 	case "selectCostParams":
-	case "selectParamValues":
+	case "selectParamItems":
 		
 		$task();
 		die();
@@ -368,7 +368,7 @@ function selectDocItems() {
 	$where .= dataReader::makeOrder();
 
 	$temp = ACC_DocItems::GetAll($where, $whereParam);
-	//print_r(ExceptionHandler::PopAllExceptions());
+	print_r(ExceptionHandler::PopAllExceptions());
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	//..........................................................................
@@ -389,18 +389,17 @@ function saveDocItem() {
 	$obj = new ACC_DocItems();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 
-	if($obj->TafsiliType == "")
-		$obj->TafsiliType = PDONULL;
 	if($obj->TafsiliID == "")
 		$obj->TafsiliID = PDONULL;
-	if($obj->TafsiliType2 == "")
-		$obj->TafsiliType2 = PDONULL;
 	if($obj->TafsiliID2 == "")
 		$obj->TafsiliID2 = PDONULL;
-	if($obj->TafsiliType3 == "")
-		$obj->TafsiliType3 = PDONULL;
 	if($obj->TafsiliID3 == "")
 		$obj->TafsiliID3 = PDONULL;
+	
+	$costObj = new ACC_CostCodes($obj->CostID);
+	$obj->TafsiliType = $costObj->TafsiliType;
+	$obj->TafsiliType2 = $costObj->TafsiliType2;
+	$obj->TafsiliType3 = $costObj->TafsiliType3;
 	
 	if ($obj->ItemID == "")
 	{
@@ -412,21 +411,6 @@ function saveDocItem() {
 		$return = $obj->Edit();
 	}
 
-	//-------------- params ------------------
-	ACC_CostCodeParamValues::RemoveAll($obj->ItemID);
-	$arr = array_keys($_POST);
-	foreach($arr as $key)
-	{
-		if(strpos($key, "Param") !== false)
-		{
-			$paramObj = new ACC_CostCodeParamValues();
-			$paramObj->ItemID = $obj->ItemID;
-			$paramObj->ParamID = substr($key,5);
-			$paramObj->ParamValue = $_POST[$key];
-			$paramObj->Add();
-		}
-	}
-	//-------------------------------------------
 	if (!$return) {
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
@@ -1114,16 +1098,17 @@ function DeleteCostBlock(){
 
 function selectCostParams(){
 	
-	$dt = ACC_CostCodeParams::Get(" AND CostID=? AND IsActive='YES' order by ordering",
+	$dt = PdoDataAccess::runquery_fetchMode("select p.* from ACC_CostCodeParams p,ACC_CostCodes c
+			where c.CostID=? AND p.ParamID in(c.param1,c.param2,c.param3) ",
 			array($_GET["CostID"]));
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
 }
 
-function selectParamValues(){
+function selectParamItems(){
 	
-	$dt = PdoDataAccess::runquery("select * from ACC_CostCodeParamValues where ItemID=?", 
-			array($_GET["ItemID"]));
+	$dt = PdoDataAccess::runquery("select * from ACC_CostCodeParamItems where ParamID=?", 
+			array($_GET["ParamID"]));
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

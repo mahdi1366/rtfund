@@ -646,6 +646,12 @@ class sadaf_datagrid
 		$this->CurrencyStringRowDataIndex = $summaryColumnIndex;
 	}
 
+	static function checkRender($checkValue = "1", $crossShow = false){
+		return "function(v,p,r){ ".
+					"if(v == '".$checkValue."') return '<img src=/generalUI/icons/tick.gif>';".
+				($crossShow ? " else return '<img src=/generalUI/icons/cross.gif>';" : "").
+				" }";
+	}
 }
 
 class GridColumn

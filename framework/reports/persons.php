@@ -18,7 +18,7 @@ $page_rpg->addColumn("نام پدر", "FatherName");
 $page_rpg->addColumn("شماره شناسنامه", "ShNo");
 $page_rpg->addColumn("تلفن", "PhoneNo");
 $page_rpg->addColumn("همراه", "mobile");
-$page_rpg->addColumn("شماره پیامک", "SmsNo");
+$page_rpg->addColumn("شماره دورنگار", "fax");
 $page_rpg->addColumn("آدرس", "address");
 $page_rpg->addColumn("ایمیل", "email");
 $page_rpg->addColumn("وب سایت", "WebSite");
@@ -95,7 +95,7 @@ function ListDate($IsDashboard = false){
 	$rpg->addColumn("شماره شناسنامه", "ShNo");
 	$rpg->addColumn("تلفن", "PhoneNo");
 	$rpg->addColumn("همراه", "mobile");
-	$rpg->addColumn("شماره پیامک", "SmsNo");
+	$rpg->addColumn("شماره دورنگار", "fax");
 	$rpg->addColumn("آدرس", "address");
 	$rpg->addColumn("ایمیل", "email");
 	$rpg->addColumn("وب سایت", "WebSite");

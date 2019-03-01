@@ -4,6 +4,14 @@
 //	Date		: 1394.10
 //-----------------------------
 require_once "header.inc.php";
+require_once '../framework/person/persons.class.php';
+
+$personObj = new BSC_persons($_SESSION["USER"]["PersonID"]);
+if($personObj->IsActive == "PENDING")
+{
+	header("location: ../process/registration.php?ExtTabID=" . $_REQUEST["ExtTabID"]);
+	die();
+}
 
 $IsStaff = $_SESSION["USER"]["IsStaff"] == "YES";
 $IsCustomer = $_SESSION["USER"]["IsCustomer"] == "YES";

@@ -32,13 +32,11 @@ class BSC_persons extends PdoDataAccess{
 	public $FatherName;
 	public $ShNo;
 	public $CityID;
-	public $SmsNo;
+	public $fax;
 	public $DomainID;
 	public $PersonSign;
 	public $PersonPic;
 	public $PostalCode;
-	public $IsScienceBase;
-	public $ScinceEndDate;
 	
 	public $IsCustomer;
 	public $IsShareholder;
@@ -50,9 +48,13 @@ class BSC_persons extends PdoDataAccess{
 	public $ShareNo;
 	public $AttCode;
 	public $IsSigner;
+	public $PresenterID;
+	public $Agreement;
+	public $RegisterProcessStep;
 	
 	public $IsActive;
 	public $_PostID;
+	public $_fullname;
 			
 	function __construct($PersonID = "") {
 		
@@ -61,7 +63,7 @@ class BSC_persons extends PdoDataAccess{
 		
 		if($PersonID != "")
 			PdoDataAccess::FillObject ($this, 
-					"select p.*, po.PostID _PostID 
+					"select p.*, po.PostID _PostID ,concat_ws(' ',fname,lname,CompanyName) _fullname
 						from BSC_persons p 
 						left join BSC_jobs j on(p.PersonID=j.PersonID AND j.IsMain='YES')
 						left join BSC_posts po on(j.PostID=po.PostID)
@@ -81,7 +83,8 @@ class BSC_persons extends PdoDataAccess{
 	static function MinSelect($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery_fetchMode("
-			select p.PersonID, concat_ws(' ',fname,lname,CompanyName) fullname
+			select p.PersonID, concat_ws(' ',fname,lname,CompanyName) fullname,
+				p.UserName,p.mobile
 			from BSC_persons p
 			where " . $where, $param);
 	}
@@ -340,4 +343,19 @@ class BSC_licenses extends PdoDataAccess{
 	
 }
 
+class BSC_PersonInfo extends OperationClass{
+	
+	const TableName = "BSC_PersonInfo";
+	const TableKey = "RowID"; 
+	
+	public $RowID;
+	public $PersonID;
+	public $TypeID;
+	public $InfoID;
+	
+	static function RemoveAll($personID){
+		PdoDataAccess::runquery("delete from BSC_PersonInfo where PersonID=?", array((int)$personID));
+		return;
+	}
+}
 ?>

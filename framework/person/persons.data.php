@@ -26,6 +26,7 @@ if(isset($_REQUEST["task"]))
 		case "ConfirmPendingPerson":
 		case "selectCompanyTypes":
 		case "ResetAttempt":
+		case "confirmAgreement":
 			
 		case "SelectSigners":
 		case "SaveSigner":
@@ -37,8 +38,11 @@ if(isset($_REQUEST["task"]))
 		case "ConfirmLicense":
 			
 		case "selectCities":
+		case "selectPresenters":
 		case "selectSubAgents":
+		case "selectPersonInfoTypes":
 		case "ConfirmPerson":
+		case "SendRegisterProcess":
 			
 			call_user_func($_REQUEST["task"]);
 	}
@@ -137,7 +141,7 @@ function selectSignerPersons(){
 
 function selectPendingPersons(){
 	
-	$temp = BSC_persons::SelectAll("p.IsActive='PENDING'");
+	$temp = BSC_persons::MinSelect(" p.IsActive='PENDING'");
 	$no = $temp->rowCount();
 	echo dataReader::getJsonData($temp->fetchAll(), $no, $_GET["callback"]);
 	die();
@@ -148,7 +152,6 @@ function SavePerson(){
 	$obj = new BSC_persons();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
-	$obj->IsScienceBase = !isset($_POST["IsScienceBase"]) ? "NO" : "YES";
 	unset($obj->PersonPic);
 	
 	if(session::IsPortal())
@@ -220,6 +223,24 @@ function SavePerson(){
 		PdoDataAccess::runquery_photo("update BSC_persons set PersonSign=:pdata where PersonID=:p", 
 				array(":pdata" => fread(fopen($_FILES['PersonSign']['tmp_name'], 'r' ),$_FILES['PersonSign']['size'])), 
 				array(":p" => $obj->PersonID));
+	}
+	//---------------------------------------------
+	if(!isset($_REQUEST["adminMode"]))
+	{
+		BSC_PersonInfo::RemoveAll($obj->PersonID);
+		
+		foreach($_POST as $key => $value)
+		{
+			if(substr($key,0,5) == "info_")
+			{
+				$arr = preg_split('/_/', $key);
+				$infoObj = new BSC_PersonInfo();
+				$infoObj->PersonID = $obj->PersonID;
+				$infoObj->TypeID = (int)$arr[1];
+				$infoObj->InfoID = (int)$arr[2];
+				$infoObj->Add();
+			}
+		}
 	}
 	//---------------------------------------------
 	//print_r(ExceptionHandler::PopAllExceptions()); 
@@ -316,6 +337,14 @@ function ResetAttempt(){
 	die();
 }
 
+function confirmAgreement(){
+	
+	$obj = new BSC_persons($_SESSION["USER"]["PersonID"]);
+	$obj->Agreement = "YES";
+	$result = $obj->EditPerson();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 //............................................................
 
 function SelectSigners(){
@@ -420,10 +449,29 @@ function selectCities(){
 	die();
 }
 
+function selectPresenters(){
+	
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where typeID=90 AND IsActive='YES' order by InfoDesc");
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
 function selectSubAgents(){
 	
 	$PersonID = isset($_REQUEST["PersonID"]) ? $_REQUEST["PersonID"] : $_SESSION["USER"]["PersonID"];
 	$temp = PdoDataAccess::runquery("select * from BSC_SubAgents where PersonID=?", array($PersonID));
+	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+	die();
+}
+
+function selectPersonInfoTypes(){
+	
+	$TypeID = (int)$_REQUEST["TypeID"];
+	$PersonID = isset($_REQUEST["PersonID"]) ? $_REQUEST["PersonID"] : $_SESSION["USER"]["PersonID"];
+	$temp = PdoDataAccess::runquery("select b.*,if(p.RowID is null,'false','true') checked
+			from BaseInfo b left 
+			join BSC_PersonInfo p on(p.PersonID=:p AND b.TypeID=p.TypeID AND b.InfoID=p.InfoID)
+			 where b.TypeID=:t order by InfoID", array(":t" => $TypeID, ":p" => $PersonID));
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -435,6 +483,17 @@ function ConfirmPerson(){
 	PdoDataAccess::runquery("update BSC_persons set IsConfirm='YES' where PersonID=?", array($PersonID));
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function SendRegisterProcess(){
+	
+	require_once '../baseInfo/baseInfo.class.php';
+	require_once "../../office/workflow/wfm.class.php";
+
+	$pObj = new BSC_processes(PROCESS_REGISTRATION);
+	$result = WFM_FlowRows::StartFlow($pObj->FlowID, $_SESSION["USER"]["PersonID"]);
+	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 ?>

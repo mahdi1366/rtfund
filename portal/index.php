@@ -5,69 +5,80 @@
 //-----------------------------
 require_once "header.inc.php";
 require_once $address_prefix . '/framework/management/framework.class.php';
-
+require_once $address_prefix . '/framework/person/persons.class.php';
 //---------------- last login --------------
 $dt = PdoDataAccess::runquery("select max(AttemptTime) from FRW_LoginAttempts where PersonID=?",
 		array($_SESSION["USER"]["PersonID"]));
 $lastDate = $dt[0][0];
-//------------------------------------------
-
-$menus = FRW_access::getPortalMenus();
-
-//------------- one sended loans ---------------------
-//51,209
-$Menu51 = false;
-for($i=0; $i < count($menus); $i++)
-{
-	if($menus[$i]["MenuID"] == "51")
-		$Menu51 = true;
+//--------------- pending user --------------------
+$personObj = new BSC_persons($_SESSION["USER"]["PersonID"]);
+if($personObj->IsActive == "NO")
+	die();
+if($personObj->IsActive == "PENDING")
+	$menuStr = "";
+else
+	$menuStr = CreateMenuStr();
 	
-	if($menus[$i]["MenuID"] == "209")
+function CreateMenuStr(){
+	$menus = FRW_access::getPortalMenus();
+
+	//------------- one sended loans ---------------------
+	//51,209
+	$Menu51 = false;
+	for($i=0; $i < count($menus); $i++)
 	{
-		if($Menu51)
-			$menus = array_merge(array_slice($menus, 0, $i-1) , array_slice ($menus, $i+1) );
-		break;
+		if($menus[$i]["MenuID"] == "51")
+			$Menu51 = true;
+
+		if($menus[$i]["MenuID"] == "209")
+		{
+			if($Menu51)
+				$menus = array_merge(array_slice($menus, 0, $i-1) , array_slice ($menus, $i+1) );
+			break;
+		}
 	}
-}
-//----------------------------------------------------
+	//----------------------------------------------------
 
-$groupArr = array();
-$menuStr = "";
+	$groupArr = array();
+	$menuStr = "";
 
-$colors = array("1E8BC3", "F86924", "FF9F00", "35BC7A");
-$colorIndex = 0;
+	$colors = array("1E8BC3", "F86924", "FF9F00", "35BC7A");
+	$colorIndex = 0;
 
-for ($i = 0; $i < count($menus); $i++) {
-	
-	if (!isset($groupArr[ $menus[$i]["GroupID"] ] )) {
-		
-		$menuStr .= '<div class="menuHeaders">' . $menus[$i]["GroupDesc"] . '</div>';		
-		$groupArr[ $menus[$i]["GroupID"] ] = true;
+	for ($i = 0; $i < count($menus); $i++) {
+
+		if (!isset($groupArr[ $menus[$i]["GroupID"] ] )) {
+
+			$menuStr .= '<div class="menuHeaders">' . $menus[$i]["GroupDesc"] . '</div>';		
+			$groupArr[ $menus[$i]["GroupID"] ] = true;
+		}
+
+		$icon = $menus[$i]['icon'];
+		$link_path = "../" . $menus[$i]['MenuPath'];
+		$param = "{";
+		$param .= "MenuID : " . $menus[$i]['MenuID'] . ",";
+
+		//--------- extract params --------------
+		if (strpos($link_path, "?") !== false) {
+			$arr = preg_split('/\?/', $link_path);
+			$link_path = $arr[0];
+			$arr = preg_split('/\&/', $arr[1]);
+			for ($k = 0; $k < count($arr); $k++)
+				$param .= str_replace("=", ":'", $arr[$k]) . "',";
+		}
+		$param = substr($param, 0, strlen($param) - 1);
+		//---------------------------------------
+		$param .= "}";
+
+		$menuStr .= '<div class="menuItem" onclick="portal.OpenPage(\'' . $link_path . "'," . $param . ');"> 
+						<i style="color:#' . $colors[$colorIndex] . '" class="menuIcon fas fa-' . $icon . '"></i>
+						<div class="menuText">' . $menus[$i]["MenuDesc"] . '</div>
+				   </div>';
+
+		$colorIndex = $colorIndex+1 == count($colors) ? 0 : $colorIndex+1;
 	}
-
-	$icon = $menus[$i]['icon'];
-	$link_path = "../" . $menus[$i]['MenuPath'];
-	$param = "{";
-	$param .= "MenuID : " . $menus[$i]['MenuID'] . ",";
-
-	//--------- extract params --------------
-	if (strpos($link_path, "?") !== false) {
-		$arr = preg_split('/\?/', $link_path);
-		$link_path = $arr[0];
-		$arr = preg_split('/\&/', $arr[1]);
-		for ($k = 0; $k < count($arr); $k++)
-			$param .= str_replace("=", ":'", $arr[$k]) . "',";
-	}
-	$param = substr($param, 0, strlen($param) - 1);
-	//---------------------------------------
-	$param .= "}";
 	
-	$menuStr .= '<div class="menuItem" onclick="portal.OpenPage(\'' . $link_path . "'," . $param . ');"> 
-					<i style="color:#' . $colors[$colorIndex] . '" class="menuIcon fas fa-' . $icon . '"></i>
-					<div class="menuText">' . $menus[$i]["MenuDesc"] . '</div>
-			   </div>';
-	
-	$colorIndex = $colorIndex+1 == count($colors) ? 0 : $colorIndex+1;
+	return $menuStr;
 }
 
 ?>
@@ -148,7 +159,7 @@ for ($i = 0; $i < count($menus); $i++) {
 		</div>
 		<div class="copyright" style="font-family: tahoma" align=center>کلیه حقوق مادی و معنوی این پورتال محفوظ می باشد</div>          
 	</center>
-	<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/icons.css" />
+	<link rel="stylesheet" type="text/css" href="/generalUI/icons/icons.css" />
 	<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-rtl.css" />
 	<script type="text/javascript" src="/generalUI/ext4/resources/ext-all.js"></script>
 	<script type="text/javascript" src="/generalUI/ext4/resources/ext-extend.js"></script>

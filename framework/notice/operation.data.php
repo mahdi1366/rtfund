@@ -97,15 +97,15 @@ function SaveOperation(){
 		$context = $row["context"];
 		switch($obj->SendType){
 			case "SMS" :
-				$SmsNo = $row["SmsNo"];
-				if($SmsNo == "")
+				$mobile = $row["mobile"];
+				if($mobile == "")
 				{
 					ExceptionHandler::PushException ("فاقد شماره پیامک");
 				}
 				else
 				{
 					$SendError = "";
-					$result = ariana2_sendSMS($SmsNo, $context, "number", $SendError);
+					$result = ariana2_sendSMS($mobile, $context, "number", $SendError);
 					if(!$result)
 						ExceptionHandler::PushException ("خطا در ارسال پیامک" . "[" . $SendError . "]");
 				}

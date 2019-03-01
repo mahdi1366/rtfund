@@ -6009,3 +6009,40 @@ Ext.define('Ext.ux.CheckCombo',
     }
 });
 
+//***********************************************************
+//**********************  CheckList *************************
+//***********************************************************
+Ext.define('Ext.ux.CheckList', {
+    extend: 'Ext.form.FieldSet',
+    alias: 'widget.checklist',
+    layout: {
+        type: 'table'
+    },
+    frame: true,
+	frameHeader: false,
+	columns : 1,
+   initComponent : function(){
+        var me = this,
+            cols = me.columns;
+        if (cols) {
+            me.layout = Ext.apply({}, {columns: cols}, me.layout);
+        }
+        var me = this;
+		if (!me.store) throw "No store defined for StoreCheckboxGroup";
+		if (!me.mapFn) throw "No mapFn defined for StoreCheckboxGroup";
+		if (me.items) throw "Items may not be defined for StoreCheckboxGroup; we get them from the store!";
+		var checklistStore = me.store, // <-- using the required "store" property
+			renderCheckboxes = function() {
+				me.removeAll();
+				me.add(
+				checklistStore.getRange().map(me.mapFn)); // <-- using the required "mapFn" property
+			};
+		checklistStore.on({
+			load: renderCheckboxes, // <-------- binding the
+			update: renderCheckboxes, // <------ function to
+			datachanged: renderCheckboxes, // <- the store
+			filterchange: renderCheckboxes // <- events
+		});
+        me.callParent(arguments);
+    }
+});

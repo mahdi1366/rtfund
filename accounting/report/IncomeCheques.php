@@ -10,7 +10,7 @@ require_once "ReportGenerator.class.php";
 $page_rpg = new ReportGenerator("mainForm","AccReport_IncomeChequeObj");
 $page_rpg->addColumn("صاحب چک", "fullname");
 $page_rpg->addColumn("موبایل", "mobile");
-$page_rpg->addColumn("شماره پیامک", "SmsNo");
+$page_rpg->addColumn("شماره پیامک", "mobile");
 $page_rpg->addColumn("حساب", "CostDesc");
 $page_rpg->addColumn("معرف", "ReqFullname");	
 $page_rpg->addColumn("شماره چک", "ChequeNo");
@@ -33,8 +33,6 @@ function GetData(){
 				else t1.TafsiliDesc end fullname,
 			case when i.CostID is null then group_concat(ifnull(p0.mobile,'') SEPARATOR '<br>')
 				else p2.mobile end mobile,
-			case when i.CostID is null then group_concat(ifnull(p0.SmsNo,'') SEPARATOR '<br>')
-				else p2.SmsNo end SmsNo,
 			case when i.CostID is null then group_concat(concat_ws(' ',p1.fname,p1.lname,p1.CompanyName,'-',sa.SubDesc) SEPARATOR '<br>')
 				else '' end ReqFullname,
 			case when i.CostID is null then group_concat(concat_ws('-', bb1.blockDesc, bb2.blockDesc) SEPARATOR '<br>') 
@@ -160,7 +158,6 @@ function ListData($IsDashboard = false){
 	
 	$rpg->addColumn("صاحب چک", "fullname");
 	$rpg->addColumn("موبایل", "mobile");
-	$rpg->addColumn("شماره پیامک", "SmsNo");
 	$rpg->addColumn("حساب", "CostDesc");
 	$rpg->addColumn("شماره وام", "RequestID");
 	$rpg->addColumn("شعبه وام", "BranchName");

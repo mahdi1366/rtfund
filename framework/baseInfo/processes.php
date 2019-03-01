@@ -117,10 +117,10 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
                 },
                 proxy: {
                     type: 'ajax',
-                    url: this.address_prefix + "baseinfo.data.php?task=GetProcessTree"
+                    url: this.address_prefix + "baseInfo.data.php?task=GetProcessTree"
                 }
             })
-        });
+        }); 
 
         this.tree.getDockedItems('toolbar[dock="top"]')[0].add({
             xtype: "button",
@@ -232,7 +232,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
                 task: 'DeleteProcess',
                 ProcessID: record.data.id
             },
-            url: this.address_prefix + 'baseinfo.data.php',
+            url: this.address_prefix + 'baseInfo.data.php',
             method: 'POST',
             success: function (response) {
                 mask.hide();
@@ -247,7 +247,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 
         this.infoWin.down('form').getForm().submit({
             clientValidation: true,
-            url: this.address_prefix + 'baseinfo.data.php?task=SaveProcess',
+            url: this.address_prefix + 'baseInfo.data.php?task=SaveProcess',
             method: "POST",
 
             success: function (form, action) {

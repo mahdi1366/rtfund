@@ -4,6 +4,9 @@
 // create Date: 94.06
 //---------------------------
 
+require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
+
+
 class BSC_units extends PdoDataAccess {
 	public $UnitID;
 	public $ParentID;
@@ -325,6 +328,12 @@ class BaseInfo extends PdoDataAccess {
 	
 	function Add($pdo = null){
 		
+		if(empty($this->InfoID))
+		{ 
+			$this->InfoID = PdoDataAccess::GetLastID("BaseInfo", "InfoID", "TypeID=?", array($this->TypeID), $pdo);
+			$this->InfoID = $this->InfoID*1 + 1;
+		}
+		
 		if( parent::insert("BaseInfo", $this, $pdo) === false )
 		    return false;
 
@@ -341,7 +350,7 @@ class BaseInfo extends PdoDataAccess {
 		
 	    $whereParams = array();
 	    $whereParams[":tid"] = $this->TypeID;
-		$whereParams[":fid"] = $OldInfoID;
+		$whereParams[":fid"] = $OldInfoID == "" ? $this->InfoID : $OldInfoID;
 
 	    if( parent::update("BaseInfo",$this," TypeID=:tid and InfoID=:fid", $whereParams, $pdo) === false )
 		    return false;
@@ -380,5 +389,188 @@ class BaseInfo extends PdoDataAccess {
 		return $this->Edit();
     }
 
+}
+
+class BSC_processes extends OperationClass {
+
+	const TableName = "BSC_processes";
+	const TableKey = "ProcessID"; 
+ 
+    public $ProcessID;
+    public $ParentID;
+    public $ProcessTitle;
+    public $IsActive;
+    public $description;
+	public $FlowID;
+	
+	public function __construct($id = '') {
+		
+		$this->DT_ProcessID = DataMember::CreateDMA(DataMember::Pattern_Num);
+        $this->DT_ParentID = DataMember::CreateDMA(DataMember::Pattern_Num);
+        $this->DT_ProcessTitle = DataMember::CreateDMA(DataMember::Pattern_FaEnAlphaNum);
+        $this->DT_EventID = DataMember::CreateDMA(DataMember::Pattern_Num);
+        $this->DT_IsActive = DataMember::CreateDMA(DataMember::Pattern_EnAlphaNum);
+        $this->DT_description = DataMember::CreateDMA(DataMember::Pattern_FaEnAlphaNum);
+		
+		parent::__construct($id);
+	}
+	
+    static function SelectProcesss($where = '', $param = array(), $hasChid = false) {
+
+        $query = " select p.*, e.EventTitle
+				from BSC_processes p";
+
+        if ($hasChid)
+            $query .= " join BSC_processes p2 on(p.ProcessID=p2.ParentID)";
+
+        $query .= " left join COM_events e on(e.EventID=p.EventID)";
+
+        if ($where != '')
+            $query .= ' where ' . $where;
+
+        //if($hasChid)
+        $query .= " group by p.ProcessID";
+
+        $res = parent::runquery($query, $param);
+
+        return $res;
+    }
+
+    function InsertProcess() {
+
+        if (!parent::insert("BSC_processes", $this))
+            return false;
+
+        $this->ProcessID = parent::InsertID();
+
+        $daObj = new DataAudit();
+        $daObj->ActionType = DataAudit::Action_add;
+        $daObj->MainObjectID = $this->ProcessID;
+        $daObj->TableName = "BSC_processes";
+        $daObj->execute();
+
+		$obj = new ACC_tafsilis();
+		$obj->ObjectID = $this->ProcessID;
+		$obj->TafsiliCode = $this->ProcessID;
+		$obj->TafsiliDesc = $this->ProcessTitle;
+		$obj->TafsiliType = TAFSILITYPE_PROCESS;
+		$obj->AddTafsili();
+		
+        return true;
+    }
+
+    function UpdateProcess($old_ProcessID) {
+
+        if (!parent::update("BSC_processes", $this, 'ProcessID=:EID', array(':EID' => (int)$old_ProcessID)))
+            return false;
+
+        if ($old_ProcessID != $this->ProcessID) {
+            PdoDataAccess::runquery("update BSC_processes set parentID=:new where parentID=:old",
+                    array(":new" =>(int) $this->ProcessID, ":old" =>(int) $old_ProcessID));
+        }
+
+        $daObj = new DataAudit();
+        $daObj->ActionType = DataAudit::Action_update;
+        $daObj->MainObjectID = $old_ProcessID;
+        $daObj->TableName = "BSC_processes";
+        $daObj->execute();
+		
+		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis "
+				. "where ObjectID=? AND TafsiliType=" . TAFSILITYPE_PROCESS, array($old_ProcessID));
+		
+		if(count($dt) == 0)
+		{
+			$obj = new ACC_tafsilis();
+			$obj->ObjectID = $this->ProcessID;
+			$obj->TafsiliCode = $this->ProcessID;
+			$obj->TafsiliDesc =  $this->ProcessTitle;
+			$obj->TafsiliType = TAFSILITYPE_PROCESS;
+			$obj->AddTafsili();
+		}
+		else
+		{
+			$obj = new ACC_tafsilis($dt[0]["TafsiliID"]);
+			$obj->ObjectID = $this->ProcessID;
+			$obj->TafsiliCode = $this->ProcessID;
+			$obj->TafsiliDesc = $this->LoanDesc;
+			$obj->EditTafsili();
+		}
+
+        return true;
+    }
+
+    static function DeleteProcess($ProcessID) {
+
+		$obj = new BSC_processes($ProcessID);
+		$obj->IsActive = "NO";
+		return $obj->UpdateProcess($obj->ProcessID);
+    }
+
+}
+
+class COM_sharing extends OperationClass {
+	
+	const TableName = "COM_sharing";
+	const TableKey = "ShareID"; 
+ 
+    public $ProcessID;
+    public $ShareID;
+    public $CostID;
+    public $ShareType;
+	public $MethodID;
+	public $BaseID;
+	public $BaseValue;
+	public $PostID;
+	
+	public $IsActive;
+    public $ChangeDate;
+    public $ChangeDesc;
+    public $ChangePersonID;
+	
+	static function Get($where = '', $param = array(), $pdo = null) {
+
+        $query = " select s.*,
+					concat_ws('-',cb1.blockDesc,cb2.blockDesc,cb3.blockDesc) CostDesc,
+					cc.CostCode,
+					concat_ws(' ',fname,lname,CompanyName) changePersonName,
+					bf.InfoDesc BaseDesc,
+					bf2.InfoDesc MethodDesc,
+					p.PostName
+					
+			from COM_sharing s 
+			left join BSC_persons on(PersonID=ChangePersonID)
+			join  ACC_CostCodes cc using(CostID)
+			left join ACC_blocks cb1 on(cb1.blockID=cc.level1)
+			left join ACC_blocks cb2 on(cb2.blockID=cc.level2)
+			left join ACC_blocks cb3 on(cb3.blockID=cc.level3)
+			left join BaseInfo bf on(bf.TypeID=85 AND bf.InfoID=BaseID)
+			left join BaseInfo bf2 on(bf2.TypeID=86 AND bf2.InfoID=MethodID)
+			
+			left join BSC_posts p on(s.PostID=p.PostID)
+			
+			where 1=1 " . $where;
+
+        return parent::runquery_fetchMode($query, $param, $pdo);
+    }
+	
+	function Add($pdo = null) {
+		
+		$this->ChangeDate = PDONOW;
+        $this->ChangePersonID =(int) $_SESSION["USER"]["PersonID"];
+		return parent::Add($pdo);
+	}
+	
+	function Edit($pdo = null) {
+		
+		$this->ChangeDate = PDONOW;
+        $this->ChangePersonID =(int) $_SESSION["USER"]["PersonID"];
+		return parent::Edit($pdo);
+	}
+	
+	function Remove($pdo = null) {
+		
+		$this->IsActive = "NO";
+		return $this->Edit($pdo);
+	}
 }
 ?>

@@ -327,7 +327,7 @@ WFM_NewForm.prototype.LoadForm = function(){
 				"&EditContent=true&FormID=" + this.FormID,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["FormID","FormTitle", "content", "FlowID", "SmsSend",
+		fields : ["FormID","FormTitle", "content", "FlowID", "SmsSend","SendOnce",
 			"IsStaff", "IsCustomer", "IsShareholder", "IsSupporter", "IsExpert", "IsAgent"],
 		autoLoad : true,
 		listeners : {
@@ -414,7 +414,7 @@ WFM_NewForm.prototype.BuildForms = function(){
 				handler : function(){WFM_NewFormObj.ManageItems();}
 			},{
 				xtype : "fieldset",
-				rowspan : 2,
+				rowspan : 3,
 				title : " ذینفع",
 				layout : "hbox",
 				defaults : {style : "margin-right : 10px"},
@@ -479,6 +479,13 @@ WFM_NewForm.prototype.BuildForms = function(){
 				inputValue : "YES",
 				style : "margin-right:80px",
 				boxLabel : "ارسال فرم با تاییدیه پیامک باشد"
+			},{
+				xtype : "checkbox",
+				colspan : 2,
+				name : "SendOnce",
+				inputValue : "YES",
+				style : "margin-right:80px",
+				boxLabel : "متقاضی فقط یکبار قادر به ارسال این فرم باشد"
 			},{
 				xtype : "container",
 				colspan : 3,

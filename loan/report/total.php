@@ -40,7 +40,6 @@ $page_rpg->addColumn("نوع", "IsReal", "RealRender");
 $page_rpg->addColumn("کدملی/شناسه ملی", "NationalID");
 $page_rpg->addColumn("تلفن", "PhoneNo");
 $page_rpg->addColumn("همراه", "mobile");
-$page_rpg->addColumn("شماره پیامک", "SmsNo");
 $page_rpg->addColumn("آدرس", "address");
 $page_rpg->addColumn("ایمیل", "email");
 $page_rpg->addColumn("وب سایت", "WebSite");
@@ -185,7 +184,6 @@ function GetData($mode = "list"){
 				p2.NationalID,
 				p2.PhoneNo,
 				p2.mobile,
-				p2.SmsNo,
 				p2.address,
 				p2.email,
 				p2.WebSite,
@@ -364,7 +362,6 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("کدملی/شناسه ملی", "NationalID");
 	$rpg->addColumn("تلفن", "PhoneNo");
 	$rpg->addColumn("همراه", "mobile");
-	$rpg->addColumn("شماره پیامک", "SmsNo");
 	$rpg->addColumn("آدرس", "address");
 	$rpg->addColumn("ایمیل", "email");
 	$rpg->addColumn("وب سایت", "WebSite");

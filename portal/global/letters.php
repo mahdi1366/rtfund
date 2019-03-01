@@ -77,10 +77,10 @@ PortalLettersObject = new PortalLetters();
 
 PortalLetters.OperationRender = function(v,p,r){
 	
-	return "<div  title='اطلاعات نامه' class='info2' "+
-		" onclick='PortalLettersObject.LetterInfo();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:20px;height:16'></div>" ;
+	return '<div class="x-btn x-btn-default-small x-icon-text-right x-btn-icon-text-right x-btn-default-small-icon-text-right">'+
+  		'<button type="button" onclick=PortalLettersObject.LetterInfo() class="x-btn-center">'+
+		'<span class="x-btn-inner"">اطلاعات نامه</span>'+
+		'<span class="x-btn-icon info"></span></button></div>';
 }
 
 PortalLetters.prototype.LetterInfo = function(){
@@ -90,7 +90,7 @@ PortalLetters.prototype.LetterInfo = function(){
 		this.LetterWin = new Ext.window.Window({
 			title: 'اطلاعات نامه',
 			modal : true,
-			width: 630,
+			width: 1024, 
 			height : 580,
 			closeAction : "hide",
 			loader : {

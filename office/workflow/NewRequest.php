@@ -241,7 +241,7 @@ WFM_NewRequest.prototype.SaveRequest = function (print, sending) {
 			st = action.result.data.split("-");
 			WFM_NewRequestObj.RequestID = st[0];
 			
-			if(WFM_MyRequestsObject)
+			if(typeof DraftLetterObject == "object")
 				WFM_MyRequestsObject.grid.getStore().load();
 			
 			WFM_NewRequestObj.MainForm.getComponent('RequestID').setValue(WFM_NewRequestObj.RequestID);
@@ -272,7 +272,7 @@ WFM_NewRequest.prototype.SaveRequest = function (print, sending) {
 	});
 }
 
-WFM_NewRequest.prototype.ConfirmSms = function (RequestID, SmsNo){
+WFM_NewRequest.prototype.ConfirmSms = function (RequestID, mobile){
 
 	if(!this.SmsWin)
 	{
@@ -292,8 +292,8 @@ WFM_NewRequest.prototype.ConfirmSms = function (RequestID, SmsNo){
 				fieldLabel : "شماره پیامک ارسالی",
 				style : "text-align:center;font-size:20px;color: darkcyan;font-weight:bold",
 				fieldStyle : "text-align:center;font-size:20px;color: darkcyan;font-weight:bold",
-				itemId : "SmsNo",
-				value : SmsNo
+				itemId : "mobile",
+				value : mobile
 			},{
 				xtype : "numberfield",
 				name : "code",
@@ -355,7 +355,7 @@ WFM_NewRequest.prototype.ConfirmSms = function (RequestID, SmsNo){
 	this.SmsWin.show();
 	this.SmsWin.center();
 	this.SmsWin.down("[name=code]").setValue();
-	this.SmsWin.down("[itemId=SmsNo]").setValue(SmsNo);
+	this.SmsWin.down("[itemId=mobile]").setValue(mobile);
 }
 
 WFM_NewRequest.prototype.MakeGrid = function (SrcRecord){

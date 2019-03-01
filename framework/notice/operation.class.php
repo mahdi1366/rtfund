@@ -32,7 +32,7 @@ class NTC_persons extends OperationClass
 
 	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		return PdoDataAccess::runquery_fetchMode("
-			select n.*,p.SmsNo,p.email from NTC_persons n 
+			select n.*,p.mobile,p.email from NTC_persons n 
 			join BSC_persons p using(PersonID) where 1=1 " . $where, $whereParams, $pdo);
 	}
 }

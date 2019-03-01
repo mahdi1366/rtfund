@@ -12,13 +12,22 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "dms.data.php?task=selectDocTypeGroups", "grid_div");
 
 $dg->addColumn("", "TypeID", "", true);
-$dg->addColumn("", "param1", "", true);
 
 $col = $dg->addColumn("کد", "InfoID");
-$col->width = 100;
+$col->width = 40;
 
 $col = $dg->addColumn("شرح", "InfoDesc", "");
 $col->editor = ColumnEditor::TextField();
+
+$dt = PdoDataAccess::runquery("select * from BaseInfo where TYpeID=11");
+$col = $dg->addColumn("آیتم اطلاعاتی", "param1", "");
+$col->editor = ColumnEditor::ComboBox($dt,"param4","InfoDesc","","", true);
+$col->width = 90;
+
+$dt = PdoDataAccess::runquery("select * from BaseInfo where TYpeID=11");
+$col = $dg->addColumn("آیتم اطلاعاتی", "param2", "");
+$col->editor = ColumnEditor::ComboBox($dt,"param4","InfoDesc","","", true);
+$col->width = 90;
 
 if($accessObj->AddFlag)
 {
@@ -44,8 +53,7 @@ $dg->rowEditOkHandler = "function(){
 	return DocTypeObject.SaveDocType(record);}";
 
 $dg->title = "لیست گروه مدارک";
-$dg->height = 200;
-$dg->width = 500;
+$dg->height = 450;
 $dg->DefaultSortField = "InfoDesc";
 $dg->autoExpandColumn = "InfoDesc";
 $dg->emptyTextOfHiddenColumns = true;
@@ -58,13 +66,22 @@ $grid1 = $dg->makeGrid_returnObjects();
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "dms.data.php?task=selectDocTypes", "grid_div");
 
 $dg->addColumn("", "TypeID", "", true);
-$dg->addColumn("", "param1", "", true);
+
+$col = $dg->addColumn("گروه", "param1");
+$col->editor = ColumnEditor::NumberField();
+$col->width = 40;
 
 $col = $dg->addColumn("کد", "InfoID");
-$col->width = 60;
+$col->width = 40;
 
 $col = $dg->addColumn("شرح", "InfoDesc", "");
 $col->editor = ColumnEditor::TextField();
+
+$col = $dg->addColumn("دسترسی پرتال", "param2", "");
+$col->renderer = sadaf_datagrid::checkRender();
+$col->editor = ColumnEditor::CheckField("", "1");
+$col->align = "center";
+$col->width = 50;
 
 $col = $dg->addColumn("آیتم ها", "");
 $col->sortable = false;
@@ -90,8 +107,8 @@ $dg->rowEditOkHandler = "function(){
 	return DocTypeObject.SaveDocType(record);}";
 
 $dg->title = "لیست اطلاعات";
-$dg->height = 300;
-$dg->width = 500;
+$dg->height = 450;
+$dg->width = 400;
 $dg->DefaultSortField = "InfoDesc";
 $dg->autoExpandColumn = "InfoDesc";
 $dg->emptyTextOfHiddenColumns = true;
@@ -101,10 +118,12 @@ $grid2 = $dg->makeGrid_returnObjects();
 
 ?>
 <center>
-	<br>
-	<div id="div_grid"></div>
-	<br>
-	<div id="div_grid2"></div>
+	<table width="98%" style="margin:10px">
+		<tr>
+			<td style="padding-left: 10px"><div id="div_grid"></div></td>
+			<td width="400px"><div id="div_grid2"></div></td>
+		</tr>
+	</table>
 </center>
 <script>
 

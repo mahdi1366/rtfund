@@ -8,7 +8,7 @@ require_once '../header.inc.php';
 require_once inc_dataGrid;
 
 //................  GET ACCESS  .....................
-$accessObj = FRW_access::GetAccess(empty($_POST["MenuID"]) ? "0" : $_POST["MenuID"]);
+$accessObj = FRW_access::GetAccess(MENUID_loans);
 //...................................................
 if(session::IsPortal())
 {
