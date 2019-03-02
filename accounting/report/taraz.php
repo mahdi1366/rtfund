@@ -25,6 +25,7 @@ $page_rpg->addColumn("گروه", "level0Desc");
 $page_rpg->addColumn("کل", "level1Desc");
 $page_rpg->addColumn("معین1", "level2Desc");
 $page_rpg->addColumn("معین2", "level3Desc");
+$page_rpg->addColumn("معین3", "level4Desc");
 $page_rpg->addColumn("تفصیلی", "TafsiliDesc");
 $page_rpg->addColumn("تفصیلی2", "TafsiliDesc2");
 $page_rpg->addColumn("گردش بدهکار", "bdAmount" , "ReportMoneyRender");
@@ -60,15 +61,13 @@ function GetData(&$rpg){
 		bi2.InfoDesc TafsiliTypeDesc2,
 		t2.TafsiliDesc TafsiliDesc2,
 		t2.TafsiliCode TafsiliCode2,
-		bi3.InfoDesc CostGroupDesc,
-		
+				
 		b1.GroupID as level0,
 		cc.level1,
 		cc.level2,
 		cc.level3,
 		cc.level4,
-		cc.CostGroupID ,
-
+		
 		di.TafsiliType,
 		di.TafsiliType2,
 		di.TafsiliID,
@@ -89,7 +88,6 @@ function GetData(&$rpg){
 				left join ACC_tafsilis t using(TafsiliID)
 				left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)
 				left join ACC_tafsilis t2 on(t2.TafsiliID=di.TafsiliID2)
-				left join BaseInfo bi3 on(bi3.TypeID=80 AND cc.CostGroupID=bi3.InfoID)
 				
 				left join (
 					select CycleID,CostID,di.TafsiliID,di.TafsiliID2,sum(DebtorAmount) StartCycleDebtor,
@@ -102,12 +100,6 @@ function GetData(&$rpg){
 				)tdt on(d.CycleID=tdt.CycleID AND di.CostID=tdt.CostID AND di.TafsiliID=tdt.TafsiliID AND di.TafsiliID2=tdt.TafsiliID2)
 	";
 	$group = "";
-	if($level == "g")
-	{
-		$col = $rpg->addColumn("گروه حساب", "CostGroupDesc", "CostGroupRender" );
-		$group = "cc.CostGroupID";
-		$col->ExcelRender = false;
-	}
 	if($level >= "l0")
 	{
 		$col = $rpg->addColumn("کد گروه", "level0Code");
@@ -134,6 +126,13 @@ function GetData(&$rpg){
 		$group .= ",cc.level3"; 
 		$col = $rpg->addColumn("کد معین2", "level3Code");
 		$col = $rpg->addColumn("معین2", "level3Desc", $level =="l3" ? "levelRender" : "");
+		$col->ExcelRender = false;
+	}
+	if($level >= "l4")
+	{
+		$group .= ",cc.level4"; 
+		$col = $rpg->addColumn("کد معین3", "level4Code");
+		$col = $rpg->addColumn("معین3", "level4Desc", $level =="l4" ? "levelRender" : "");
 		$col->ExcelRender = false;
 	}
 	if($level == "l5")
@@ -393,6 +392,7 @@ function GetData(&$rpg){
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
 		BeginReport();
+		print_r(ExceptionHandler::PopAllExceptions());
 		echo PdoDataAccess::GetLatestQueryString ();
 	}
 	return $dt;
@@ -406,9 +406,9 @@ function ListData($IsDashboard = false){
 		"l1" => "کل",
 		"l2" => "معین1",
 		"l3" => "معین2",
+		"l4" => "معین3",
 		"l5" => "تفصیلی",
-		"l6" => "تفصیلی2",		
-		"g" => "گروه حساب"
+		"l6" => "تفصیلی2"
 		);
 	$dt = PdoDataAccess::runquery("select * from BSC_branches");
 	$branches = array();
@@ -913,6 +913,7 @@ function AccReport_taraz()
 							"<input type='radio' name='level' id='level-l1' value='l1' checked> کل <br>" + 
 							"<input type='radio' name='level' id='level-l2' value='l2' > معین  1<br>" + 
 							"<input type='radio' name='level' id='level-l3' value='l3' > معین  2<br>" + 
+							"<input type='radio' name='level' id='level-l4' value='l4' > معین  3<br>" + 
 							"<input type='radio' name='level' id='level-l5' value='l5' > تفصیلی<br>" + 
 							"<input type='radio' name='level' id='level-l6' value='l6' > تفصیلی 2" 			
 				}]

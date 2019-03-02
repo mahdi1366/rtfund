@@ -20,6 +20,7 @@ $rpg->addColumn("گروه حساب", "LevelTitle0");
 $rpg->addColumn("حساب کل", "LevelTitle1");
 $rpg->addColumn("معین1", "LevelTitle2");
 $rpg->addColumn("معین2", "LevelTitle3");
+$rpg->addColumn("معین3", "LevelTitle4");
 
 $rpg->addColumn("تفصیلی1", "TafsiliTypeDesc");
 $rpg->addColumn("تفصیلی2", "TafsiliTypeDesc2");

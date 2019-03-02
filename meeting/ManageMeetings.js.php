@@ -32,6 +32,10 @@ function Meetings(){
 			return "";
 		}	
 	this.grid.render(this.get("DivGrid"));
+	
+	framework.centerPanel.items.get(this.TabID).on("activate", function(){
+		MeetingsObject.grid.getStore().load();
+	});
 }
 
 Meetings.OpenMeeting = function(MeetingID){
@@ -70,9 +74,6 @@ Meetings.prototype.OperationMenu = function(e){
 			Meetings.OpenMeeting(record.data.MeetingID);
 	}});	
 	
-	op_menu.add({text: 'مدارک جلسه',iconCls: 'attach', 
-		handler : function(){ return MeetingsObject.MeetingDocuments(); }});
-
 	op_menu.add({text: 'چاپ دعوتنامه',iconCls: 'print', 
 		handler : function(){ 
 			record = MeetingsObject.grid.getSelectionModel().getLastSelected();

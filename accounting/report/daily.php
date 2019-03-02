@@ -220,6 +220,7 @@ function AccReport_daily()
 			html : "<input type=radio checked name=ReportLevel value='level1'>کل" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
 					"<input type=radio name=ReportLevel value='level2'>معین1" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
 					"<input type=radio name=ReportLevel value='level3'>معین2" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
+					"<input type=radio name=ReportLevel value='level4'>معین3" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
 					"<input type=radio name=ReportLevel value='level5'>تفصیلی" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
 					"<input type=radio name=ReportLevel value='level6'>تفصیلی2" + "<br><br>" + 
 					

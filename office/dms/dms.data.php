@@ -227,7 +227,8 @@ function selectDocTypes(){
 	
 	$groupID = $_REQUEST["GroupID"];
 	$dt = PdoDataAccess::runquery("select * from BaseInfo 
-		where typeID=8 AND IsActive='YES' AND param1=?", array($groupID));
+		where typeID=8 AND IsActive='YES' AND param1=? " . 
+		(session::IsPortal() ? " AND param2=1" : ""), array($groupID));
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

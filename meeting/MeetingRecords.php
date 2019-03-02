@@ -4,12 +4,15 @@
 //-------------------------
 require_once('../header.inc.php');
 require_once inc_dataGrid;
+require_once 'meeting.class.php';
 
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
-$MeetingID = $_REQUEST["MeetingID"];
+$MeetingID = (int)$_REQUEST["MeetingID"];
+$obj = new MTG_meetings($MeetingID);
+$readOnly = $obj->StatusID == MTG_STATUSID_RAW ? false : true;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "meeting.data.php?task=GetMeetingRecords"
 		. "&MeetingID=" . $MeetingID, "grid_div");
@@ -25,25 +28,25 @@ $col = $dg->addColumn("موضوع", "subject", "");
 $col = $dg->addColumn("مسئول اجرا", "fullname", "");
 $col->width = 180;
 
-$col = $dg->addColumn("تاریخ پیگیری", "FollowUpDate", "", GridColumn::ColumnType_date);
+$col = $dg->addColumn("تاریخ پیگیری", "FollowUpDate", GridColumn::ColumnType_date);
 $col->width = 80;
 
 $col = $dg->addColumn("وضعیت", "RecordStatus", "");
 $col->renderer = "MTG_MeetingRecords.StatusRender";
 $col->width = 80;
 
-if($accessObj->AddFlag)
+if($accessObj->AddFlag && !$readOnly)
 {
 	$dg->addButton("", "ایجاد مصوبه", "add", "function(){MTG_MeetingRecordsObject.AddRecord();}");
 }
-if($accessObj->EditFlag)
+if($accessObj->EditFlag && !$readOnly)
 {
 	$col = $dg->addColumn("ویرایش", "");
 	$col->sortable = false;
 	$col->renderer = "function(v,p,r){return MTG_MeetingRecords.EditRender(v,p,r);}";
 	$col->width = 50;
 }
-if($accessObj->RemoveFlag)
+if($accessObj->RemoveFlag && !$readOnly)
 {
 	$col = $dg->addColumn("حذف", "");
 	$col->sortable = false;
@@ -51,10 +54,11 @@ if($accessObj->RemoveFlag)
 	$col->width = 50;
 }
 
+$dg->addButton("", "چاپ مصوبه ها", "print", "function(){MTG_MeetingRecordsObject.PrintRecords();}");
+
 $dg->addPlugin("this.Details");
 
-$dg->height = 365;
-$dg->width = 770;
+$dg->height = 377;
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;
 $dg->DefaultSortField = "RecordID";
@@ -132,7 +136,7 @@ function MTG_MeetingRecords(){
 				}),
 				displayField: 'fullname',
 				valueField : "PersonID",
-				allowBlank : false
+				allowBlank : true
 			},{
 				xtype : "shdatefield",
 				name : "FollowUpDate",
@@ -262,6 +266,12 @@ MTG_MeetingRecords.prototype.EditRecord = function(){
 	record = this.grid.getSelectionModel().getLastSelected();
 	this.formWindow.show();
 	this.formPanel.getForm().loadRecord(record);
+	this.formPanel.down("[name=FollowUpDate]").setValue(MiladiToShamsi(record.data.FollowUpDate))
+}
+
+MTG_MeetingRecords.prototype.PrintRecords = function(){
+	
+	window.open(this.address_prefix + "PrintRecords.php?MeetingID=" + this.MeetingID);
 }
 
 var MTG_MeetingRecordsObject = new MTG_MeetingRecords();	

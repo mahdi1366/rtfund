@@ -81,52 +81,53 @@ MyRequestObject = new MyRequest();
 
 MyRequest.OperationRender = function(v,p,record){
 
-	var str = "";
-		
-	if(MyRequestObject.User == "Customer" && record.data.StatusID == "60")
-	{
-		str += "<div  title='دلیل رد مدارک' class='comment' onclick='MyRequestObject.ShowComment();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
-	}		
-	if(MyRequestObject.User == "Customer" && record.data.LoanID > 0 && record.data.StatusID == "10")
-	{
-		str += "<div  title='اطلاعات وام' class='info2' onclick='MyRequestObject.EditRequest(false);' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
-	}
-	else
-		str += "<div  title='اطلاعات وام' class='info2' onclick='MyRequestObject.EditRequest(true);' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
-	
-	if(MyRequestObject.User == "Agent" && record.data.StatusID == "1")
-	{
-		str += "<div  title='حذف درخواست' class='remove' onclick='MyRequestObject.DeleteRequest();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
-	}
-	else
-		str += "<div  title='ارسال پیغام' class='comment' onclick='MyRequestObject.ShowMessages();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
-	
-	if(MyRequestObject.User == "Agent" && record.data.StatusID == "10")
-	{
-		str += "<div  title='برگشت درخواست' class='return' onclick='MyRequestObject.ChangeStatus(11);' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
-	}
-	
-	str += "<div  title='چاپ کاردکس' class='print' onclick='MyRequestObject.PrintLoanSummary();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
+	return '<div class="x-btn x-btn-default-small x-icon-text-right x-btn-icon-text-right x-btn-default-small-icon-text-right">'+
+  		'<button type="button" onclick=MyRequestObject.OperationMenu(event) class="x-btn-center">'+
+		'<span class="x-btn-inner"">عملیات</span>'+
+		'<span class="x-btn-icon setting"></span></button></div>';
+}
 
-	str += "<div  title='سابقه' class='history' onclick='MyRequestObject.ShowHistory();' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:16px;height:16;float:right;margin-left:5px'></div>";
+MyRequest.prototype.OperationMenu = function(e){
+
+	record = this.grid.getSelectionModel().getLastSelected();
+	var op_menu = new Ext.menu.Menu();
 	
-	return str;
+	if(this.User == "Customer" && record.data.StatusID == "60")
+	{
+		op_menu.add({text: 'دلیل رد مدارک',iconCls: 'comment', 
+			handler : function(){ return MyRequestObject.ShowComment(); }});
+	}		
+	if(this.User == "Customer" && record.data.LoanID > 0 && record.data.StatusID == "10")
+	{
+		op_menu.add({text: 'اطلاعات وام',iconCls: 'info2', 
+			handler : function(){ return MyRequestObject.EditRequest(false); }});
+	}
+	else
+		op_menu.add({text: 'اطلاعات وام',iconCls: 'info2', 
+			handler : function(){ return MyRequestObject.EditRequest(true); }});
+	
+	if(this.User == "Agent" && record.data.StatusID == "1")
+	{
+		op_menu.add({text: 'حذف درخواست',iconCls: 'remove', 
+			handler : function(){ return MyRequestObject.DeleteRequest(); }});
+	}
+	else
+		op_menu.add({text: 'ارسال پیغام',iconCls: 'comment', 
+			handler : function(){ return MyRequestObject.ShowMessages(); }});
+	
+	if(this.User == "Agent" && record.data.StatusID == "10")
+	{
+		op_menu.add({text: 'برگشت درخواست',iconCls: 'return', 
+			handler : function(){ return MyRequestObject.ChangeStatus(11); }});
+	}
+	
+	op_menu.add({text: 'چاپ کاردکس',iconCls: 'print', 
+			handler : function(){ return MyRequestObject.PrintLoanSummary(); }});
+		
+	op_menu.add({text: 'سابقه',iconCls: 'history', 
+			handler : function(){ return MyRequestObject.ShowHistory(); }});
+	
+	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
 MyRequest.prototype.EditRequest = function(HavePart){

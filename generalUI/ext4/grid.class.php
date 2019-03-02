@@ -652,6 +652,14 @@ class sadaf_datagrid
 				($crossShow ? " else return '<img src=/generalUI/icons/cross.gif>';" : "").
 				" }";
 	}
+	
+	static function buttonRender($text, $icon, $handler){
+		
+		return '<div class="x-btn x-btn-default-small x-icon-text-right x-btn-icon-text-right x-btn-default-small-icon-text-right">'.
+  		'<button type="button" onclick="'.$handler.'" class="x-btn-center">'.
+		'<span class="x-btn-inner"">'.$text.'</span>'.
+		'<span class="x-btn-icon '.$icon.'"></span></button></div>';
+	}
 }
 
 class GridColumn

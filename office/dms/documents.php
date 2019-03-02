@@ -99,7 +99,9 @@ switch($ObjectType)
 		break;
 	//......................................................
 	case "meeting":
-		$access = true;
+		require_once '../../meeting/meeting.class.php';
+		$obj = new MTG_meetings($ObjectID);
+		$access = $obj->StatusID == MTG_STATUSID_RAW ? true : false;
 		break;
 }
 //------------------------------------------------------
@@ -167,7 +169,7 @@ if($access)
 	$dg->rowEditOkHandler = "function(){return ManageDocumentObject.SaveDocument();}";
 }
 
-if(session::IsFramework())
+if(session::IsFramework() && $access)
 {
 	$col = $dg->addColumn("تایید/رد", "", "");
 	$col->renderer = "function(v,p,r){return ManageDocument.ConfirmRender(v,p,r)}";

@@ -80,7 +80,7 @@ $col->width = 130;
 
 $col = $dg->addColumn("شخص مربوطه", "PersonID", "string");
 $col->renderer = "function(v,p,r){return r.data.fullname;}";
-$col->editor = "WFMObject.PersonCombo";
+$col->editor = "this.PersonCombo";
 $col->width = 130;
 
 $col = $dg->addColumn("","","");

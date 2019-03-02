@@ -4,12 +4,15 @@
 //-------------------------
 require_once('../header.inc.php');
 require_once inc_dataGrid;
+require_once 'meeting.class.php';
 
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
-$MeetingID = $_REQUEST["MeetingID"];
+$MeetingID = (int)$_REQUEST["MeetingID"];
+$obj = new MTG_meetings($MeetingID);
+$readOnly = $obj->StatusID == MTG_STATUSID_RAW ? false : true;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "meeting.data.php?task=GetMeetingPersons"
 		. "&MeetingID=" . $MeetingID, "grid_div");
@@ -29,9 +32,9 @@ $col->width = 120;
 $col = $dg->addColumn("وضعیت حضور", "IsPresent", "");
 $col->renderer = "MTG_MeetingPersons.AttendRender";
 $col->align = "center";
-$col->width = 60;
+$col->width = 80;
 
-if($accessObj->AddFlag)
+if($accessObj->AddFlag && !$readOnly)
 {
 	$dg->addButton("", "ایجاد مهمان از ذینفعان", "add", "function(){MTG_MeetingPersonsObject.AddPerson();}");
 	$dg->addButton("", "ایجاد مهمان خارجی", "add", "function(){MTG_MeetingPersonsObject.AddGuest();}");
@@ -39,7 +42,7 @@ if($accessObj->AddFlag)
 	$dg->enableRowEdit = true ;
 	$dg->rowEditOkHandler = "function(v,p,r){ return MTG_MeetingPersonsObject.Save(v,p,r);}";
 }
-if($accessObj->RemoveFlag)
+if($accessObj->RemoveFlag && !$readOnly)
 {
 	$col = $dg->addColumn("حذف", "");
 	$col->sortable = false;
@@ -67,6 +70,7 @@ MTG_MeetingPersons.prototype = {
 	address_prefix : '<?= $js_prefix_address ?>',
 
 	MeetingID : "<?= $MeetingID ?>",
+	readOnly : <?= $readOnly ? "true" : "false"?>,
 	
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
@@ -96,11 +100,14 @@ function MTG_MeetingPersons(){
 	});
 	
 	this.grid = <?= $grid ?>;
-	this.grid.plugins[0].on("beforeedit", function(editor,e){
-		if(e.record.data.RowID > 0)
-			return false;
-		return MTG_MeetingPersonsObject.AddAccess;
-	});
+	if(!this.readOnly)
+	{
+		this.grid.plugins[0].on("beforeedit", function(editor,e){
+			if(e.record.data.RowID > 0)
+				return false;
+			return MTG_MeetingPersonsObject.AddAccess;
+		});
+	}
 	this.grid.render(this.get("grid_div"));
 }
 

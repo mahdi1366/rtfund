@@ -516,7 +516,7 @@ function AccReport_flow()
 		},{
 			xtype : "combo",
 			displayField : "BlockDesc",
-			fieldLabel : "2معین",
+			fieldLabel : "معین2",
 			valueField : "BlockID",
 			itemId : "cmp_level3",
 			queryMode : "local",
@@ -526,6 +526,25 @@ function AccReport_flow()
 				proxy: {
 					type: 'jsonp',
 					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=3',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				autoLoad : true
+			}),
+			tpl: this.blockTpl
+		},{
+			xtype : "combo",
+			colspan : 2,
+			displayField : "BlockDesc",
+			fieldLabel : "معین3",
+			valueField : "BlockID",
+			itemId : "cmp_level4",
+			queryMode : "local",
+			hiddenName : "level4",
+			store : new Ext.data.Store({
+				fields:["BlockID","BlockCode","BlockDesc"],
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&level=4',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
 				autoLoad : true

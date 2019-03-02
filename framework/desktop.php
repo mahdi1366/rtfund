@@ -7,7 +7,6 @@
 require_once ('header.inc.php');
 require_once 'management/framework.class.php';
 require_once 'TreeModules.class.php';
-ini_set("display_errors", "On");
 //.......................................................
 global $accessMenu;
 $accessMenu = array();

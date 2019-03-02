@@ -18,7 +18,7 @@ $rpt = new ReportGenerator();
 $rpt->mysql_resource = MTG_MeetingRecords::Get("and MeetingID=?", array($MeetingID));
 
 function titleRender($row,$value){
-	return $value . "<br>" . $row["details"];
+	return "<span dir=ltr>" . $value . "<br>" . hebrevc($row["details"]) . "</div>";
 }
 $col = $rpt->addColumn("مصوبه", "subject");
 $col->renderFunction = "titleRender";
@@ -79,7 +79,7 @@ $absents = $absents->fetchAll();
 					<td colspan="3">
 						<table width="100%" style="border: 1px solid black">
 							<tr>
-								<td>شماره جلسه:<b> <?= $MeetingObj->MeetingID ?></b></td>
+								<td>شماره جلسه:<b> <?= $MeetingObj->MeetingNo ?></b></td>
 								<td>تاریخ جلسه: <b><?= DateModules::miladi_to_shamsi($MeetingObj->MeetingDate) ?></b></td>
 								<td>ساعت شروع: <b><?= substr($MeetingObj->StartTime,0,5) ?></b></td>
 								<td>ساعت پایان: <b><?= substr($MeetingObj->EndTime,0,5) ?></b></td>

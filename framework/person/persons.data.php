@@ -50,7 +50,6 @@ if(isset($_REQUEST["task"]))
 
 function selectPersons(){
 	
-	ini_set("display_errors", "On");
 	$where = "1=1";
 	$param = array();
 	

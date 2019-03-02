@@ -94,7 +94,7 @@ function SelectAllMeetings(){
 		$param[":m"] = $_REQUEST["MeetingID"]*1;
 	}
 	
-	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
+	if (!empty($_REQUEST['fields']) && !empty($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
 		$field = $field == "fullname" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;
 		$field = $field == "StatusDesc" ? "b1.InfoDesc" : $field;
@@ -106,7 +106,7 @@ function SelectAllMeetings(){
 		
 	$where .= dataReader::makeOrder();
 	$dt = MTG_meetings::Get($where, $param);
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 	//echo PdoDataAccess::GetLatestQueryString();
 	$count = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);	
@@ -118,16 +118,24 @@ function SaveMeeting(){
 	$obj = new MTG_meetings();
     pdoDataAccess::FillObjectByArray($obj, $_POST);
 	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
 	if ($obj->MeetingID == '')
 	{
-		$res = $obj->Add();
+		$res = $obj->Add($pdo);
 		
 		PdoDataAccess::runquery("insert into MTG_MeetingPersons(MeetingID,PersonID,AttendType) 
 			select ". $obj->MeetingID.", PersonID,'MEMBER' from MTG_MeetingTypePersons where MeetingType=?",
-			array($obj->MeetingType));
+			array($obj->MeetingType), $pdo);
 	}
     else
-        $res = $obj->Edit();
+        $res = $obj->Edit($pdo);
+	
+	if($res)
+		$pdo->commit();
+	else
+		$pdo->rollBack();
 	
 	Response::createObjectiveResponse($res, $res ? $obj->MeetingID : "");
 	die();
@@ -143,6 +151,17 @@ function DeleteMeeting(){
 }
 
 function ChangeMeetingStatus(){
+	
+	if($_POST["StatusID"] == MTG_STATUSID_DONE)
+	{
+		$dt = MTG_MeetingPersons::Get(" AND MeetingID=? AND IsPresent='NOTSET'", 
+				array((int)$_POST["MeetingID"]));
+		if($dt->rowCount() > 0)
+		{
+			echo Response::createObjectiveResponse(false, "تا زمانیکه وضعیت حضور کلیه اعضای جلسه تعیین نشده قادر به تغییر وضعیت جلسه نمی باشید.");
+			die();
+		}
+	}
 	
 	$obj = new MTG_meetings((int)$_POST["MeetingID"]);
 	$obj->StatusID = $_POST["StatusID"];
@@ -190,52 +209,181 @@ function SetPresent(){
 
 function GetMeetingAgendas(){
 	
-	$dt = MTG_MeetingAgendas::Get(" AND ma.MeetingID=? " . dataReader::makeOrder(), array($_REQUEST["MeetingID"]));
+	$dt = MTG_agendas::Get(" AND a.MeetingID=? " . dataReader::makeOrder(), array($_REQUEST["MeetingID"]));
 	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount());
 	die();
 }
 
-function SaveMeetingAgenda(){
+function SaveAgenda(){
 	
 	$obj = new MTG_agendas();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
+	if($obj->MeetingID*1 > 0)
+	{
+		$mobj = new MTG_meetings($obj->MeetingID);
+		$obj->MeetingType = $mobj->MeetingType;
+	}
+	
 	if($obj->AgendaID*1 > 0)
 		$result = $obj->Edit();
 	else
-	{
 		$result = $obj->Add();
-		if($result)
-		{
-			$st = stripslashes(stripslashes($_POST["record"]));
-			$data = json_decode($st);
 
-			$obj2 = new MTG_MeetingAgendas();
-			$obj2->MeetingID = $data->MeetingID;
-			$obj2->AgendaID = $obj->AgendaID;
-			$obj2->Add();
-		}
-	}
+	print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
 function RemoveAgenda(){
 	
-	$obj = new MTG_Agendas($_REQUEST["AgendaID"]);
+	$obj = new MTG_agendas($_REQUEST["AgendaID"]);
 	$result = $obj->Remove();
-	
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
+function GetRemainAgendas(){
+	
+	$Mobj = new MTG_meetings((int)$_REQUEST["MeetingID"]);
+	
+	$dt = PdoDataAccess::runquery_fetchMode("
+		select a.* ,if(mp.PersonID=0,mp.fullname,concat_ws(' ',p2.fname,p2.lname,p2.CompanyName)) fullname
+			from MTG_agendas a
+			join MTG_meetings m using(MeetingID)
+			left join MTG_agendas a2 on(a.AgendaID=a2.RefAgendaID)
+			left join MTG_MeetingPersons mp on(a.PersonRowID=mp.RowID)
+			left join BSC_persons p2 on(mp.PersonID=p2.PersonID)
+		where a2.AgendaID is null AND a.IsDone='NO' 
+			AND m.StatusID<>".MTG_STATUSID_RAW." AND a.MeetingID<>? AND a.MeetingType=?", 
+			array($Mobj->MeetingID, $Mobj->MeetingType));
+	print_r(ExceptionHandler::PopAllExceptions());
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount());
+	die();
+}
+
+function AddRecordToAgenda(){
+	
+	$Robj = new MTG_MeetingRecords((int)$_POST["RecordID"]);
+	$Mobj = new MTG_meetings($Robj->MeetingID);
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$obj = new MTG_agendas();
+	$obj->MeetingType = $Mobj->MeetingType;
+	$obj->MeetingID = $_POST["MeetingID"];
+	$obj->RecordID = $Robj->RecordID;
+	$obj->PresentTime = $_POST["PresentTime"];
+	$obj->title = "(مصوبه جلسه " . $Robj->MeetingID . " ) " . $Robj->subject;
+	
+	$dt = PdoDataAccess::runquery("select * from MTG_MeetingPersons where MeetingID=? AND PersonID=?",
+			array($obj->MeetingID, $Robj->PersonID));
+	if(count($dt) > 0)
+		$obj->PersonRowID = $dt[0]["PersonRowID"];
+	else
+	{
+		$pobj = new MTG_MeetingPersons();
+		$pobj->MeetingID = $obj->MeetingID;
+		$pobj->PersonID = $Robj->PersonID;
+		$pobj->AttendType = 'GUEST';
+		if(!$pobj->Add($pdo))
+		{
+			$pdo->rollBack();
+			echo Response::createObjectiveResponse(false, "خطا در ایجاد شرکت کننده");
+			die();
+		}
+		$obj->PersonRowID = $pobj->RowID;
+	}
+	
+	if(!$obj->Add($pdo))
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "خطا در ایجاد دعوتنامه");
+		die();
+	}
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function AddRemainAgendaToAgenda(){
+	
+	$obj = new MTG_agendas((int)$_POST["AgendaID"]);
+	$pobj = new MTG_MeetingPersons($obj->PersonRowID);
+	
+	$obj2 = new MTG_agendas();
+	PdoDataAccess::FillObjectByObject($obj, $obj2);
+	unset($obj2->AgendaID);
+	$obj2->MeetingID = (int)$_POST["MeetingID"];
+	$obj2->RefAgendaID = $obj->AgendaID;
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$dt = PdoDataAccess::runquery("select * from MTG_MeetingPersons where MeetingID=? AND fullname=? AND PersonID=?",
+			array($obj2->MeetingID, $pobj->fullname, $pobj->PersonID));
+	if(count($dt) > 0)
+		$obj2->PersonRowID = $dt[0]["PersonRowID"];
+	else
+	{
+		unset($pobj->RowID);
+		unset($pobj->IsPresent);
+		unset($pobj->AttendType);
+		$pobj->MeetingID = $obj2->MeetingID;
+		if(!$pobj->Add($pdo))
+		{
+			$pdo->rollBack();
+			echo Response::createObjectiveResponse(false, "خطا در ایجاد شرکت کننده");
+			die();
+		}
+		$obj2->PersonRowID = $pobj->RowID;
+	}
+	
+	if(!$obj2->Add($pdo))
+	{
+		$pdo->rollBack();
+		echo Response::createObjectiveResponse(false, "خطا در ایجاد دعوتنامه");
+		die();
+	}
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function GetNotDoneAgendas(){
+	
+	$dt = PdoDataAccess::runquery_fetchMode("
+		select a.*,m.MeetingID,m.MeetingNo,
+				case when a.PersonID>0 then concat_ws(' ',p.fname,p.lname,p.CompanyName) 
+				else if(mp.PersonID=0,mp.fullname,concat_ws(' ',p2.fname,p2.lname,p2.CompanyName)) end fullname
+			from MTG_agendas a
+			left join BSC_persons p using(PersonID)	
+			left join MTG_meetings m using(MeetingID)
+			left join MTG_agendas a2 on(a.AgendaID=a2.RefAgendaID)
+			left join MTG_MeetingPersons mp on(a.PersonRowID=mp.RowID)
+			left join BSC_persons p2 on(mp.PersonID=p2.PersonID)
+		where a2.AgendaID is null AND a.IsDone=?", array($_REQUEST["IsDone"]));
+	print_r(ExceptionHandler::PopAllExceptions());
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount());
+	die();
+}
+
+function DoneAgenda(){
+	
+	$obj = new MTG_agendas((int)$_POST["AgendaID"]);
+	$obj->IsDone = "YES";
+	$result = $obj->Edit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 //-------------------------------------
 
 function GetMeetingRecords(){
 	
 	$dt = MTG_MeetingRecords::Get(" AND MeetingID=? " . dataReader::makeOrder(), array($_REQUEST["MeetingID"]));
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount());
 	die();
 }
@@ -260,5 +408,21 @@ function RemoveMeetingRecords(){
 	die();
 }
 
+function GetDueDateRecords(){
+	
+	$Mobj = new MTG_meetings((int)$_REQUEST["MeetingID"]);
+	
+	$dt = PdoDataAccess::runquery_fetchMode("
+		select r.*,concat_ws(' ',fname,lname,CompanyName) fullname
+			from MTG_MeetingRecords r
+			join MTG_meetings m using(MeetingID)
+			left join MTG_agendas a on(a.MeetingID=? AND a.RecordID=r.RecordID)
+			left join BSC_persons p on(r.PersonID=p.PersonID)
+		where a.AgendaID is null AND m.MeetingType=?
+			AND FollowUpDate<>'0000-00-00' AND FollowUpDate <= ?",
+			array($Mobj->MeetingID, $Mobj->MeetingType, $Mobj->MeetingDate));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount());
+	die();
+}
 
 ?>

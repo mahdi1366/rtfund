@@ -58,10 +58,12 @@ function MeetingInfo(){
 				me.MeetingPanel.loadRecord(record);
 				me.MeetingPanel.down("[name=StartTime]").setValue(record.data.StartTime.substr(0,5));
 				me.MeetingPanel.down("[name=EndTime]").setValue(record.data.EndTime.substr(0,5));			
+				me.MeetingPanel.down("[name=MeetingDate]").setValue(MiladiToShamsi(record.data.MeetingDate));			
 				MeetingInfoObject.mask.hide();
 				//..........................................................
 				me.TabPanel.down("[itemId=persons_tab]").enable();	
 				me.TabPanel.down("[itemId=agendas_tab]").enable();	
+				me.TabPanel.down("[itemId=records_tab]").enable();	
 				me.TabPanel.down("[itemId=attach_tab]").enable();
 			}
 			
@@ -81,37 +83,31 @@ function MeetingInfo(){
 MeetingInfo.prototype.BuildForms = function(){
 	
 	StatusID = this.store.totalCount == undefined ? "-1" : this.store.getAt(0).data.StatusID;
+	readOnly = StatusID == "<?= MTG_STATUSID_RAW ?>" || StatusID == "-1" ? false : true;
 	
 	this.TabPanel = new Ext.TabPanel({
 		renderTo : this.get("mainForm"),
 		width : 780,
-		height : 430,
+		autoHeight: true,
 		plain:true,
 		tbar : [{
 			text : "جلسه برگزار شده است",
 			iconCls : "tick",
-			hidden : StatusID == "<?= MTG_STATUSID_RAW ?>" ? false : true,
+			hidden : readOnly,
 			handler : function(){ MeetingInfoObject.ChangeMeetingStatus("<?= MTG_STATUSID_DONE ?>"); }
 		},{
 			text : "جلسه کنسل شده است",
 			iconCls : "cross",
-			hidden : StatusID == "<?= MTG_STATUSID_RAW ?>" ? false : true,
+			hidden : readOnly,
 			handler : function(){ MeetingInfoObject.ChangeMeetingStatus("<?= MTG_STATUSID_CANCLE ?>"); }
 		},{
-			text : "چاپ دعوتنامه ها",
-			iconCls : "print",
-			handler : function(){
-				me = MeetingInfoObject;
-				window.open(me.address_prefix + "PrintAgendas.php?MeetingID=" + me.MeetingID);
-			}
+			text : "جلسه برگزار شده است و اطلاعات جلسه قابل تغییر نمی باشند",
+			iconCls : "tick",
+			hidden : StatusID == "<?= MTG_STATUSID_DONE ?>" ? false : true
 		},{
-			text : "چاپ مصوبه ها",
-			iconCls : "print",
-			disabled : StatusID == "<?= MTG_STATUSID_DONE ?>" ? false : true,
-			handler : function(){
-				me = MeetingInfoObject;
-				window.open(me.address_prefix + "PrintRecords.php?MeetingID=" + me.MeetingID);
-			}
+			text : "جلسه کنسل شده است و اطلاعات جلسه قابل تغییر نمی باشند",
+			iconCls : "cross",
+			hidden : StatusID == "<?= MTG_STATUSID_CANCLE ?>" ? false : true
 		}],
 		items :[{
 			title : "اطلاعات جلسه",
@@ -128,6 +124,7 @@ MeetingInfo.prototype.BuildForms = function(){
 				width: 780,
 				items : [{
 					xtype : "combo",
+					readOnly : readOnly,
 					name : "MeetingType",
 					store: new Ext.data.Store({
 						proxy:{
@@ -145,11 +142,13 @@ MeetingInfo.prototype.BuildForms = function(){
 					allowBlank : false
 				},{
 					xtype : "textfield",
+					readOnly : readOnly,
 					fieldLabel : "مکان برگزاری",
 					name : "place",
 					allowBlank : false
 				},{
 					xtype : "shdatefield",
+					readOnly : readOnly,
 					name : "MeetingDate",
 					fieldLabel : "تاریخ جلسه",
 					allowBlank : false
@@ -158,6 +157,7 @@ MeetingInfo.prototype.BuildForms = function(){
 					layout : "hbox",
 					items : [{
 						xtype : "timefield",
+						readOnly : readOnly,
 						name : "StartTime",
 						format : "H:i",
 						hideTrigger : true,
@@ -168,6 +168,7 @@ MeetingInfo.prototype.BuildForms = function(){
 						allowBlank : false
 					},{
 						xtype : "timefield",
+						readOnly : readOnly,
 						name : "EndTime",
 						fieldLabel : "تا ساعت",
 						hideTrigger : true,
@@ -180,6 +181,7 @@ MeetingInfo.prototype.BuildForms = function(){
 					}]
 				},{
 					xtype : "textarea",
+					readOnly : readOnly,
 					name : "details",
 					rows : 4,
 					colspan : 2,
@@ -187,6 +189,7 @@ MeetingInfo.prototype.BuildForms = function(){
 					fieldLabel : "توضیحات"
 				},{
 					xtype : "combo",
+					readOnly : readOnly,
 					name : "secretary",
 					store: new Ext.data.Store({
 						proxy:{
@@ -205,6 +208,7 @@ MeetingInfo.prototype.BuildForms = function(){
 				}],
 				buttons : [{
 					text : "ذخیره",
+					hidden : readOnly,
 					iconCls : "save",
 					handler : function(){
 						MeetingInfoObject.SaveMeetingInfo(false);
@@ -239,7 +243,7 @@ MeetingInfo.prototype.BuildForms = function(){
 			itemId : "agendas_tab",
 			disabled : true,
 			loader : {
-				url : this.address_prefix + "agendas.php",
+				url : this.address_prefix + "MeetingAgendas.php",
 				method: "POST",
 				text: "در حال بار گذاری...",
 				scripts : true
@@ -260,7 +264,7 @@ MeetingInfo.prototype.BuildForms = function(){
 		},{
 			title : "مصوبه ها",
 			itemId : "records_tab",
-			disabled : StatusID == "<?= MTG_STATUSID_DONE ?>" ? false : true,
+			disabled : true,
 			loader : {
 				url : this.address_prefix + "MeetingRecords.php",
 				method: "POST",
@@ -346,26 +350,37 @@ MeetingInfo.prototype.SaveMeetingInfo = function(SendFile){
 
 MeetingInfo.prototype.ChangeMeetingStatus = function(StatusID){
 
-	mask = new Ext.LoadMask(this.TabPanel, {msg:'در حال ذخيره سازي...'});
-	mask.show();  
-	
-	Ext.Ajax.request({
-		url: this.address_prefix + 'meeting.data.php?task=ChangeMeetingStatus' , 
-		method: "POST",
-		params : {
-			MeetingID : this.MeetingID,
-			StatusID : StatusID
-		},
+	message = "در صورت تغییر وضعیت جلسه دیگر قادر به تغییر در هیچ یک از اطلاعات جلسه نمی باشید.<br>" +
+			"آیا مایل به ادامه می باشید؟";
+	Ext.MessageBox.confirm("",message, function(btn){
+		if(btn == "no")
+			return;
 		
-		success : function(){
-			mask.hide();
-			me = MeetingInfoObject;
-			me.TabPanel.down("[itemId=records_tab]").enable();
-		},
-		failure : function(){
-			mask.hide();
-			Ext.MessageBox.alert("Error", action.result.data);
-		}
+		me = MeetingInfoObject;
+		mask = new Ext.LoadMask(me.TabPanel, {msg:'در حال ذخيره سازي...'});
+		mask.show();  
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'meeting.data.php?task=ChangeMeetingStatus' , 
+			method: "POST",
+			params : {
+				MeetingID : me.MeetingID,
+				StatusID : StatusID
+			},
+
+			success : function(response){
+				mask.hide();
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					framework.ReloadTab(MeetingInfoObject.TabID);
+				else
+					Ext.MessageBox.alert("Error", result.data);
+			},
+			failure : function(){
+				mask.hide();
+				Ext.MessageBox.alert("Error", action.result.data);
+			}
+		});
 	});
 }
 </script>

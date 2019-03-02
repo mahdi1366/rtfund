@@ -38,6 +38,8 @@ $col = $dg_cost->addcolumn("معین1", "LevelTitle2");
 
 $col = $dg_cost->addcolumn("معین2", "LevelTitle3");
 
+$col = $dg_cost->addcolumn("معین3", "LevelTitle4");
+
 $col = $dg_cost->addcolumn("تفصیلی1", "TafsiliTypeDesc");
 
 $col = $dg_cost->addcolumn("تفصیلی2", "TafsiliTypeDesc2");

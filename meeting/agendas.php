@@ -1,26 +1,35 @@
 <?php
 //-------------------------
-// Create Date:	97.11
+// Create Date:	97.12
 //-------------------------
 require_once('../header.inc.php');
 require_once inc_dataGrid;
+require_once 'meeting.class.php';
 
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
-$MeetingID = $_REQUEST["MeetingID"];
-
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "meeting.data.php?task=GetMeetingAgendas", "grid_div");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "meeting.data.php?task=GetNotDoneAgendas", "grid_div");
 
 $dg->addColumn("", "AgendaID", "", true);
 $dg->addColumn("", "MeetingID", "", true);
 $dg->addColumn("", "fullname", "", true);
+$dg->addColumn("", "IsDone", "", true);
+
+$col = $dg->addColumn("نوع جلسه", "MeetingType", "");
+$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=".TYPEID_MeetingType." AND IsActive='YES'");
+$col->editor = ColumnEditor::ComboBox($dt,"InfoID","InfoDesc");
+$col->width = 130;
+
+$col = $dg->addColumn("شماره جلسه", "MeetingNo", "");
+$col->align = "center";
+$col->width = 80;
 
 $col = $dg->addColumn("عنوان", "title", "");
 $col->editor = ColumnEditor::TextField();
 
-$col = $dg->addColumn("ارائه دهنده", "PersonRowID", "");
+$col = $dg->addColumn("ارائه دهنده", "PersonID", "");
 $col->renderer="function(v,p,r){return r.data.fullname;}";
 $col->editor = "this.PersonCombo";
 $col->width = 200;
@@ -30,6 +39,8 @@ $col->editor = ColumnEditor::NumberField();
 $col->align = "center";
 $col->width = 70;
 
+$dg->addObject("this.FilterObj");
+
 if($accessObj->AddFlag)
 {
 	$dg->addButton("", "ایجاد دعوتنامه جدید", "add", "function(){MTG_agendaObject.AddAgenda();}");
@@ -37,14 +48,24 @@ if($accessObj->AddFlag)
 	$dg->rowEditOkHandler = "function(v,p,r){ return MTG_agendaObject.Save(v,p,r);}";
 }
 
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("حذف", "");
+	$col->sortable = false;
+	$col->renderer = "function(v,p,r){return MTG_agenda.DeleteRender(v,p,r);}";
+	$col->width = 50;
+}
 
-$col = $dg->addColumn("حذف", "");
-$col->sortable = false;
-$col->renderer = "function(v,p,r){return MTG_agenda.DeleteRender(v,p,r);}";
-$col->width = 50;
+if($accessObj->EditFlag)
+{
+	$col = $dg->addColumn("", "");
+	$col->sortable = false;
+	$col->renderer = "function(v,p,r){return MTG_agenda.DoneRender(v,p,r);}";
+	$col->width = 80;
+}
 
-$dg->height = 365;
-$dg->width = 770;
+$dg->height = 500;
+$dg->title = "مدیریت دعوتنامه ها";
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;
 $dg->DefaultSortField = "AgendaID";
@@ -56,7 +77,7 @@ $grid = $dg->makeGrid_returnObjects();
 
 ?>
 <center>
-        <div id="grid_div"></div>
+	<div id="grid_div" style="margin: 10px"></div>
 </center>
 <script>
 
@@ -64,8 +85,6 @@ MTG_agenda.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : '<?= $js_prefix_address ?>',
 
-	MeetingID : "<?= $MeetingID ?>",
-	
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
 	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
@@ -77,26 +96,60 @@ MTG_agenda.prototype = {
 
 function MTG_agenda(){
 	
+	this.FilterObj = Ext.button.Button({
+		text: 'فیلتر لیست',
+		iconCls: 'list',
+		menu: {
+			xtype: 'menu',
+			plain: true,
+			showSeparator : true,
+			items: [{
+				text: "دعوتنامه های انجام نشده",
+				group: 'filter',
+				checked: true,
+				handler : function(){
+					me = MTG_agendaObject;
+					me.grid.getStore().proxy.extraParams.IsDone = "NO";
+					me.grid.getStore().loadPage(1);
+				}
+			},{
+				text: "دعوتنامه های انجام شده",
+				group: 'filter',
+				checked: true,
+				handler : function(){
+					me = MTG_agendaObject;
+					me.grid.getStore().proxy.extraParams.IsDone = "YES";
+					me.grid.getStore().loadPage(1);
+				}
+			}]
+		}
+	});	
+	
 	this.PersonCombo = new Ext.form.ComboBox({
 		store: new Ext.data.Store({
 			proxy:{
 				type: 'jsonp',
-				url: this.address_prefix + 'meeting.data.php?task=GetMeetingPersons&MeetingID=' + this.MeetingID,
+				url: '/framework/person/persons.data.php?task=selectPersons',
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
-			fields :  ['RowID','fullname']
+			fields :  ['PersonID','fullname']
 		}),
 		displayField: 'fullname',
-		valueField : "RowID",
-		allowBlank : false,
-		hiddenName : "PersonRowID",
+		valueField : "PersonID",
+		allowBlank : true,
 		width : 400
 	});
 	
 	this.grid = <?= $grid ?>;
-	this.grid.getStore().proxy.extraParams.MeetingID = this.MeetingID;
+	this.grid.getStore().proxy.extraParams.IsDone = "NO";
+	this.grid.getView().getRowClass = function(record)
+	{
+		if(record.data.IsDone == "YES")
+			return "greenRow";
+		return "";
+	}
 	this.grid.plugins[0].on("beforeedit", function(editor,e){
-		if(e.record.data.RowID > 0)
+		if(e.record.data.MeetingID*1 > 0 || e.record.data.IsDone == "YES")
 			return false;
 		return MTG_agendaObject.AddAccess;
 	});
@@ -105,6 +158,10 @@ function MTG_agenda(){
 
 MTG_agenda.DeleteRender = function(v,p,r){
 	
+	if(r.data.IsDone == "YES")
+		return "";
+	if(r.data.MeetingID*1 > 0)
+		return "";
 	return "<div align='center' title='حذف' class='remove' "+
 	"onclick='MTG_agendaObject.DeleteAgenda();' " +
 	"style='background-repeat:no-repeat;background-position:center;" +
@@ -116,7 +173,7 @@ MTG_agenda.prototype.Save = function(store,record,op){
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});
 	mask.show();    
 	Ext.Ajax.request({
-		url: this.address_prefix + 'meeting.data.php?task=SaveMeetingAgenda',
+		url: this.address_prefix + 'meeting.data.php?task=SaveAgenda',
 		params:{
 			record : Ext.encode(record.data)
 		},
@@ -152,6 +209,8 @@ MTG_agenda.prototype.DeleteAgenda = function(){
 			success: function(response,option){
 				mask.hide();
 				MTG_agendaObject.grid.getStore().load();
+				MTG_agendaObject.RemainAgendaGrid.getStore().load();
+				MTG_agendaObject.RecordGrid.getStore().load();
 			},
 			failure: function(){}
 		});
@@ -162,8 +221,8 @@ MTG_agenda.prototype.AddAgenda = function(){
 	
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
-		AgendaID:null,
-		MeetingID : this.grid.getStore().proxy.extraParams.MeetingID,
+		AgendaID: null,
+		MeetingID : 0,
 		PersonID : null
 
 	});
@@ -171,6 +230,39 @@ MTG_agenda.prototype.AddAgenda = function(){
 	this.grid.getStore().insert(0, record);
 	this.grid.plugins[0].startEdit(0, 0);
 }
+
+MTG_agenda.prototype.PrintAgenda = function(){
+	
+	window.open(this.address_prefix + "PrintAgendas.php?MeetingID=" + this.MeetingID);
+}
+
+MTG_agenda.DoneRender = function(v,p,r){
+	if(r.data.IsDone == "YES")
+		return "";
+	return '<?= sadaf_datagrid::buttonRender("انجام شد", "tick", "MTG_agendaObject.DoneAgenda()") ?>';
+}
+
+MTG_agenda.prototype.DoneAgenda = function(store,record,op){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخيره سازي...'});
+	mask.show();    
+	
+	Ext.Ajax.request({
+		url: this.address_prefix + 'meeting.data.php?task=DoneAgenda',
+		params:{
+			AgendaID : record.data.AgendaID
+		},
+		method: 'POST',
+		success: function(response,option){
+			mask.hide();
+			MTG_agendaObject.grid.getStore().load();
+		},
+		failure: function(){}
+	});
+}
+
 
 var MTG_agendaObject = new MTG_agenda();	
 

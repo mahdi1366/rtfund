@@ -3,9 +3,9 @@
 //	Date		: 97.11
 //-----------------------------
 require_once '../header.inc.php';
-require_once './meeting.class.php';
+require_once 'meeting.class.php';
 require_once inc_reportGenerator;
-
+ini_set("display_errors", "On");
 $MeetingID = !empty($_REQUEST["MeetingID"]) ? (int)$_REQUEST["MeetingID"] : "";
 if(empty($MeetingID))
 	die();
@@ -13,7 +13,7 @@ if(empty($MeetingID))
 $MeetingObj = new MTG_meetings($MeetingID);
 
 $rpt = new ReportGenerator();
-$rpt->mysql_resource = MTG_MeetingAgendas::Get("and ma.MeetingID=?", array($MeetingID));
+$rpt->mysql_resource = MTG_agendas::Get("and a.MeetingID=?", array($MeetingID));
 
 $rpt->addColumn("دستور جلسه", "title");
 $col = $rpt->addColumn("ارائه دهنده", "fullname");
@@ -49,7 +49,7 @@ $col->align = "center";
 						<b>به نام خداوند جان و خرد</b>
 					</td>
 					<td style="width:200px;line-height: 25px;">
-					شماره جلسه:<b> <?= $MeetingObj->MeetingID ?></b>
+					شماره جلسه:<b> <?= $MeetingObj->MeetingNo ?></b>
 					<br>تاریخ جلسه: <b><?= DateModules::miladi_to_shamsi($MeetingObj->MeetingDate) ?></b>
 					</td>
 				</tr>

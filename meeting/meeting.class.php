@@ -27,6 +27,7 @@ class MTG_meetings extends OperationClass {
 	const TableKey = "MeetingID"; 
 	
 	public $MeetingID;
+	public $MeetingNo;
 	public $MeetingType;
 	public $StatusID;
 	public $place;
@@ -49,7 +50,7 @@ class MTG_meetings extends OperationClass {
 					concat_ws(' ',fname,lname,CompanyName) _secretaryName
 				from MTG_meetings m 
 				join BaseInfo b on(MeetingType=InfoID and TypeID=".TYPEID_MeetingType.")
-				join BSC_persons p on(p.PersonID=m.secretary)
+				left join BSC_persons p on(p.PersonID=m.secretary)
 				where MeetingID=?
 				", array($id));
 		}
@@ -62,10 +63,18 @@ class MTG_meetings extends OperationClass {
 				b1.InfoDesc StatusDesc,
 				b2.InfoDesc MeetingTypeDesc
 			from MTG_meetings m 
-			join BSC_persons p on(p.PersonID=m.secretary)
+			left join BSC_persons p on(p.PersonID=m.secretary)
 			join BaseInfo b1 on(b1.TypeID=".TYPEID_MeetingStatusID." AND b1.InfoID=StatusID)
 			join BaseInfo b2 on(b2.TypeID=".TYPEID_MeetingType." AND b2.InfoID=MeetingType)
 			where 1=1 " . $where, $whereParams);
+	}
+	
+	function Add($pdo = null) {
+		
+		$this->MeetingNo = parent::GetLastID("MTG_meetings", "MeetingNo", "MeetingType=?", 
+				array($this->MeetingType), $pdo) + 1;
+		
+		return parent::Add($pdo);
 	}
 	
 	function Remove($pdo = null) {
@@ -103,6 +112,10 @@ class MTG_agendas extends OperationClass{
 	const TableKey = "AgendaID"; 
 	
 	public $AgendaID;
+	public $MeetingID;
+	public $RefAgendaID;
+	public $RecordID;
+	public $MeetingType;
 	public $title;
 	public $PersonRowID;
 	public $PersonID;
@@ -116,37 +129,6 @@ class MTG_agendas extends OperationClass{
 				case when a.PersonID>0 then concat_ws(' ',p.fname,p.lname,p.CompanyName) 
 				else if(mp.PersonID=0,mp.fullname,concat_ws(' ',p2.fname,p2.lname,p2.CompanyName)) end fullname
 			from MTG_agendas a 
-				left join BSC_persons p using(PersonID)
-				left join MTG_MeetingPersons mp on(PersonRowID=mp.RowID)
-				left join BSC_persons p2 on(mp.PersonID=p2.PersonID)
-				
-			where 1=1 " . $where, $whereParams);
-	}
-	
-	function Remove($pdo = null) {
-		
-		PdoDataAccess::runquery("delete from MTG_MeetingAgendas where AgendaID=?", array($this->AgendaID));
-		return parent::Remove($pdo);
-	}
-}
-
-class MTG_MeetingAgendas extends OperationClass{
-	
-	const TableName = "MTG_MeetingAgendas";
-	const TableKey = "RowID"; 
-	
-	public $RowID;
-	public $MeetingID;
-	public $AgendaID;
-	
-	static function Get($where = '', $whereParams = array()) {
-		
-		return parent::runquery_fetchMode("
-			select a.*,ma.MeetingID,
-				case when a.PersonID>0 then concat_ws(' ',p.fname,p.lname,p.CompanyName) 
-				else if(mp.PersonID=0,mp.fullname,concat_ws(' ',p2.fname,p2.lname,p2.CompanyName)) end fullname
-			from MTG_MeetingAgendas ma 
-				join MTG_agendas a using(AgendaID)
 				left join BSC_persons p using(PersonID)
 				left join MTG_MeetingPersons mp on(PersonRowID=mp.RowID)
 				left join BSC_persons p2 on(mp.PersonID=p2.PersonID)
@@ -180,7 +162,7 @@ class MTG_MeetingRecords extends OperationClass{
 		
 		return parent::runquery_fetchMode("
 			select mr.*, concat_ws(' ',fname,lname,CompanyName) fullname 
-			from MTG_MeetingRecords mr join BSC_persons p using(PersonID)
+			from MTG_MeetingRecords mr left join BSC_persons p using(PersonID)
 			where 1=1 " . $where, $whereParams);
 	}
 }

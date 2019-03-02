@@ -21,7 +21,8 @@ $temp = array(
 	array("LevelID" => 0, "LevelTitle" => "گروه حساب", "HasEssence" => false, "HasGroup" => false),
 	array("LevelID" => 1, "LevelTitle" => "حساب کل", "HasEssence" => true, "HasGroup" => true),
 	array("LevelID" => 2, "LevelTitle" => "حساب معین1", "HasEssence" => false, "HasGroup" => false),
-	array("LevelID" => 3, "LevelTitle" => "حساب معین2", "HasEssence" => false, "HasGroup" => false)
+	array("LevelID" => 3, "LevelTitle" => "حساب معین2", "HasEssence" => false, "HasGroup" => false),
+	array("LevelID" => 4, "LevelTitle" => "حساب معین3", "HasEssence" => false, "HasGroup" => false)
 );
 for ($i = 0; $i < count($temp); $i++) {
     $levelID = $temp[$i]['LevelID'];

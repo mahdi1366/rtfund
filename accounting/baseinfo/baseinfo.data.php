@@ -8,7 +8,7 @@ require_once '../header.inc.php';
 require_once(inc_response);
 require_once inc_dataReader;
 require_once 'baseinfo.class.php';
-
+ini_set("display_errors", "On");
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 switch ($task) {
 
@@ -206,7 +206,7 @@ function SelectCostCode() {
                 $param[":f3"] = $_REQUEST['query'] . "%";
             }
         } else {
-            $where .= " AND ( concat_ws(' ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc) like :f4";
+            $where .= " AND ( concat_ws(' ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) like :f4";
             $where .= " OR CostCode like :f5 )";
             $param[":f4"] = "%" . $_REQUEST['query'] . "%";
             $param[":f5"] = $_REQUEST['query'] . "%";

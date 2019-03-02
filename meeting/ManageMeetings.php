@@ -20,7 +20,7 @@ $dg->addColumn("", "EndTime", "", true);
 $col = $dg->addColumn("نوع جلسه", "MeetingTypeDesc");
 $col->width = 120;
 
-$col = $dg->addColumn("شماره جلسه", "MeetingID", "");
+$col = $dg->addColumn("شماره جلسه", "MeetingNo", "");
 $col->width = 100;
 
 $col = $dg->addColumn("تاریخ جلسه", "MeetingDate", GridColumn::ColumnType_date);

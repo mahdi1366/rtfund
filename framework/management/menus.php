@@ -78,7 +78,7 @@ function FRW_menu()
 		if(record.data.id != "src")
 		{
 				me.Menu.add({
-					text: 'ویرایش عنوان',
+					text: 'ویرایش',
 					iconCls: 'edit',
 					handler : function(){FRW_menuObject.BeforeSave(true);}
 				});
@@ -253,10 +253,33 @@ FRW_menu.prototype.SaveMenu = function(){
 		success : function(form,action){                
 
 			me = FRW_menuObject;
-			me.tree.getStore().load();
+			//me.tree.getStore().load();
 			me.infoWin.down('form').getForm().reset();
 			me.infoWin.hide();
 			mask.hide();
+			
+			MenuID = me.infoWin.down('form').getComponent("MenuID").getValue();
+			mode = MenuID == "" ? "new" : "edit";
+			if(mode == "new")
+			{
+				ParentID = me.infoWin.down('form').getComponent("ParentID").getValue();
+				if(ParentID == "source")
+					Parent = me.tree.getRootNode();
+				else
+					Parent = me.tree.getRootNode().findChild("id",ParentID,true);
+				Parent.set('leaf', false);
+				Parent.appendChild({
+					id : action.result.data,
+					text :  me.infoWin.down('form').getComponent("MenuDesc").getValue(),
+					leaf : true
+				});  
+				Parent.expand();
+			}
+			else
+			{
+				node = me.tree.getRootNode().findChild("id", MenuID, true);
+				node.set('text', me.infoWin.down('form').getComponent("MenuDesc").getValue());
+			}
 
 		},
 		failure : function(form,action)
