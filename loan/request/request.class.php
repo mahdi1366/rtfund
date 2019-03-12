@@ -1058,6 +1058,11 @@ class LON_requests extends PdoDataAccess{
 		return $returnArr;
 	}
 	
+	/**
+	 * جدول دوم محسابه مرحله ایی اصل و کارمزد تا انتها که باید به صفر برسد
+	 * @param type $RequestID
+	 * @return array
+	 */
 	static function ComputePures($RequestID){
 		
 		$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
