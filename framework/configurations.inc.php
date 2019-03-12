@@ -8,10 +8,10 @@ class sys_config{
 	 public static $db_server = array (
 	          "driver"   => "mysql",
 	          "host"     => "localhost",
-	          "database" => "main_rtfund",
-			  //"database" => "framewor_rtfund",
+	          //"database" => "main_rtfund",
+			  "database" => "framewor_rtfund",
 	          "user"     => "root",
-	          "pass"     => ""
+	          "pass"     => "1297"
 	 );
 }
 

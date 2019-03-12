@@ -36,6 +36,11 @@ $col->align = "center";
 
 if(!$ReadOnly)
 {
+	$col = $dg->addColumn("پیامک", "");
+	$col->sortable = false;
+	$col->renderer = "function(v,p,r){return LetterCustomers.SmsRender(v,p,r);}";
+	$col->width = 35;
+	
 	$col = $dg->addColumn("ایمیل", "");
 	$col->sortable = false;
 	$col->renderer = "function(v,p,r){return LetterCustomers.EmailRender(v,p,r);}";
@@ -126,6 +131,16 @@ LetterCustomers.EmailRender = function(v,p,r){
 	
 	return "<div align='center' title='ارسال نامه به ایمیل ذینفع' class='email' "+
 		"onclick='LetterCustomersObject.Email();' " +
+		"style='float:right;background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:18px;height:16'></div>";
+}
+
+LetterCustomers.SmsRender = function(v,p,r){
+	
+	if(r.data.IsHide == "YES")
+		return "";
+	return "<div align='center' title='ارسال پیامک به ایمیل ذینفع' class='letter' "+
+		"onclick='LetterCustomersObject.Sms();' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:18px;height:16'></div>";
 }
@@ -236,6 +251,44 @@ LetterCustomers.prototype.Email = function(){
 				result = Ext.decode(response.responseText);
 				if(result.success)
 					Ext.MessageBox.alert("","نامه با موفقیت ارسال شد");
+				else if(result.data == "")
+					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+				else
+					Ext.MessageBox.alert("",result.data);
+				mask.hide();
+				
+			},
+			failure: function(){}
+		});
+	});
+}
+
+LetterCustomers.prototype.Sms = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به ارسال پیامک به ذینفع می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = LetterCustomersObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+		
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال ارسال پیامک ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'letter.data.php',
+			params:{
+				task: "SmsCustomer",
+				RowID  : record.data.RowID,
+				LetterID : record.data.LetterID,
+				PersonID : record.data.PersonID
+			},
+			method: 'POST',
+
+			success: function(response,option){ 
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					Ext.MessageBox.alert("","پیامک با موفقیت ارسال شد");
 				else if(result.data == "")
 					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
 				else

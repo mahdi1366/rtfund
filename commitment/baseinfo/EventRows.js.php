@@ -28,7 +28,7 @@
 				xtype : "displayfield",
 				labelWidth : 50,
 				fieldLabel : "رویداد",
-				value : "[<?= $_POST["EventID"]?>] <?= $_POST["EventTitle"]?>",
+				value : "<?= $EventObj->EventTitle ?>", 
 				fieldCls : "blueText"
 			}]
 		});

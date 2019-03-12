@@ -44,16 +44,20 @@ class OFC_letters extends PdoDataAccess{
 	
 	static function FullSelect($where = "",$whereParam = array(), $OrderBy = "", $RefInclude= false){
 		
-	    $query = "select l.*,concat(p1.fname,' ',p1.lname) RegName,
-				concat(p4.fname,' ',p4.lname) signer " . 
-				($RefInclude ? ",s.SendDate,s.SendComment,	
+	    $query = "select l.LetterID,l.LetterType,l.LetterDate,l.LetterTitle,
+				concat(p1.fname,' ',p1.lname) RegName,
+				concat(p4.fname,' ',p4.lname) signer,
+				if(t.cnt > 0,'YES','NO') hasAttach" . 
+				($RefInclude ? ",s.SendID,s.SendDate,s.SendComment,	
 				concat(p2.fname,' ',p2.lname) sender,
 				concat(p3.fname,' ',p3.lname) receiver" : "") . " 
 				
 			from OFC_letters l 
 			join BSC_persons p1 on(l.PersonID=p1.PersonID)
 			left join BSC_persons p4 on(l.SignerPersonID=p4.PersonID)
-			left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=l.LetterID)
+			left  join (select ObjectID,count(DocumentID) cnt 
+					from DMS_documents where ObjectType='letterAttach' group by ObjectID )t
+			on(t.ObjectID = l.LetterID)
 			left join OFC_LetterCustomers lc on(l.LetterID=lc.LetterID)";
 			
 		if($RefInclude)
@@ -125,7 +129,7 @@ class OFC_letters extends PdoDataAccess{
 				join BSC_persons p on(s.FromPersonID=p.PersonID)
 				left  join (select ObjectID,count(DocumentID) cnt 
 							from DMS_documents where ObjectType='letterAttach' group by ObjectID )t
-					on(t.ObjectID = .s.LetterID)
+					on(t.ObjectID = s.LetterID)
 				left join OFC_send s2 on(s2.LetterID=s.LetterID AND s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
 			where s2.SendID is null AND s.ToPersonID=:tpid " . $where . "
 			group by SendID";

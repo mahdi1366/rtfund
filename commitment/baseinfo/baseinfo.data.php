@@ -24,6 +24,7 @@ switch ($task) {
 	case "saveEventRow":
 	case "DeleteEventRow":
 	case 'selectEventTafsilis':
+	case "CopyEventRows":
 	
 		$task();
 }
@@ -85,16 +86,33 @@ function DeleteEvent() {
 function GetEventsTree() {
 
 	$nodes = PdoDataAccess::runquery("
-			select concat('[',EventID,'] ',EventTitle) text, e.*
+			select concat('[',ordering,'] ',EventTitle) text, e.*
 			from COM_events e
 			where e.IsActive='YES'
-			order by ParentID,EventID");
+			order by ParentID,ordering");
 	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes, "ParentID", "EventID", "text");
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo json_encode($returnArr);
 	die();
 }
 
+function CopyEventRows(){
+	
+	$SRC_EventID = (int)$_POST["Src_EventID"];
+	$DST_EventID = (int)$_POST["Dst_EventID"];
+	
+	PdoDataAccess::runquery("
+		insert into COM_EventRows(EventID,CostID,CostType,DocDesc,ComputeItemID)
+		select :dst,CostID,CostType,DocDesc,ComputeItemID
+		from COM_EventRows where EventID=:src AND IsActive='YES'
+	",array(
+		":dst" => $DST_EventID,
+		":src" => $SRC_EventID
+	));
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse(true, PdoDataAccess::AffectedRows());
+	die();
+}
 //------------------------------------------------------------------------------
 
 function selectComputeGroups(){

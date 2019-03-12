@@ -199,10 +199,12 @@ function MyLetter(){
 		}
 	}); 
 }
+
 MyLetter.prototype.LoadLetters = function(btn){
 	
 	btn.toggle(false);
 	this.grid.getStore().proxy.extraParams.SendType = btn.itemId;
+	this.grid.setTitle(btn.text.split('<br>')[0]);
 	if(this.grid.rendered)
 		this.grid.getStore().loadPage(1);
 	else

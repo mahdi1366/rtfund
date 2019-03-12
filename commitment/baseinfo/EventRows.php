@@ -5,8 +5,11 @@
 //---------------------------
 
 require_once "../header.inc.php";
+require_once './baseinfo.class.php';
 require_once inc_dataGrid;
 $EventID = (int) $_POST["EventID"];
+$EventObj = new COM_events($EventID);
+
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................

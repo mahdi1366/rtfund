@@ -103,8 +103,8 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 					me.grid.down("[itemId=addPart]").hide();
 				}
 				//..........................................................
-				if(record.data.AgentGuarantee == "YES")
-					me.companyPanel.down("[name=AgentGuarantee]").setValue(true);
+				//if(record.data.AgentGuarantee == "YES")
+				//	me.companyPanel.down("[name=AgentGuarantee]").setValue(true);
 				if(record.data.FundGuarantee == "YES")
 					me.companyPanel.down("[name=FundGuarantee]").setValue(true);
 				if(record.data.FundRules == "YES")
@@ -582,23 +582,22 @@ RequestInfo.prototype.BuildForms = function(){
 			itemId : "setting",
 			items :[{
 				xtype : "checkbox",
+				fieldStyle : "margin-right : 4px",
 				boxLabel : "وام بلاعوض می باشد",
 				inputValue : "YES",
 				name : "IsFree"
-			},{
-				xtype : "container",
-				html : "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-			},{
+			},/*{
 				xtype : "checkbox",
 				name : "AgentGuarantee",
 				value : "YES",
 				boxLabel : "با ضمانت سرمایه گذار"
-			},{
+			}و*/{
 				xtype : "checkbox",
 				name : "FundGuarantee",
+				fieldStyle : "margin-right : 25px",
 				value : "YES",
 				colspan : 2,
-				boxLabel : "با ضمانت صندوق"
+				boxLabel : "ضمانت اقساط وام با صندوق می باشد"
 			}]
 		},{
 			xtype : "container",
@@ -904,7 +903,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.companyPanel.down("[name=BorrowerDesc]").hide();
 			this.companyPanel.down("[name=BorrowerID]").hide();
 			this.companyPanel.down("[name=BorrowerMobile]").hide();			
-			this.companyPanel.down("[name=AgentGuarantee]").hide();
+			//this.companyPanel.down("[name=AgentGuarantee]").hide();
 			this.companyPanel.down("[name=FundGuarantee]").hide();
 			this.PartsPanel.hide();
 		}
@@ -1010,7 +1009,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.companyPanel.down("[name=BorrowerMobile]").hide();
 			this.companyPanel.down("[name=ReqDetails]").hide();
 			this.companyPanel.down("[itemId=cmp_save]").hide();
-			this.companyPanel.down("[name=AgentGuarantee]").hide();
+			//this.companyPanel.down("[name=AgentGuarantee]").hide();
 			this.companyPanel.down("[name=FundGuarantee]").hide();
 			this.companyPanel.down("[itemId=cmp_events]").hide();
 			this.companyPanel.down("[itemId=cmp_costs]").hide();

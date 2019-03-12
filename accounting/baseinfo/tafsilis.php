@@ -163,7 +163,7 @@ Tafsili.prototype.SaveTafsiliType = function(text){
 
 Tafsili.prototype.LoadTafsilis = function(){
 
-	this.TafsiliType = this.groupPnl.down('[name=TafsiliType]').getValue();
+	this.TafsiliType = this.groupPnl.down('[name=TafsiliType]').getValue()[0];
 
 	this.grid.getStore().proxy.extraParams.TafsiliType = this.TafsiliType;
 
@@ -190,7 +190,7 @@ Tafsili.prototype.AddTafsili = function(){
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({
 		TafsiliID: null,
-		TafsiliType : this.groupPnl.down("[name=TafsiliType]").getValue(),
+		TafsiliType : this.grid.getStore().proxy.extraParams.TafsiliType,
 		TafsiliCode: null
 	});
 

@@ -12,12 +12,17 @@ class COM_events extends PdoDataAccess {
     public $ParentID;
     public $EventTitle;
     public $IsActive;
+	public $ordering;
 
-    function __construct() {
+    function __construct($id = "") {
         $this->DT_EventID = DataMember::CreateDMA(DataMember::Pattern_Num);
         $this->DT_ParentID = DataMember::CreateDMA(DataMember::Pattern_Num);
         $this->DT_EventTitle = DataMember::CreateDMA(DataMember::Pattern_FaEnAlphaNum);
         $this->DT_IsActive = DataMember::CreateDMA(DataMember::Pattern_EnAlphaNum);
+		
+		if ($id != '') {
+            parent::FillObject($this, "select * from COM_events where EventID =:id", array(":id" => $id));
+        }
     }
 
     static function SelectEvents($where = '', $param = array()) {

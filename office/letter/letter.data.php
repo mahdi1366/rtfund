@@ -1286,6 +1286,30 @@ function EmailLetter(){
 	die();
 }
 
+function SmsCustomer(){
+	
+	require_once 'sms.php';
+	
+	$PersonID = $_POST["PersonID"];
+	$PObj = new BSC_persons($PersonID);
+	if($PObj->mobile == "")
+	{
+		echo Response::createObjectiveResponse(false, "مشتری فاقد شماره موبایل یا شماره پیامک می باشد.");
+		die();
+	}
+	else
+	{
+		$SendError = "";
+		$context = "نامه ایی از طرف" . SoftwareName . " برای شما ارسال شده است. جهت مشاهده به پرتال خود مراجعه نمایید" . 
+				"http://framework.krrtf.ir";
+		$result = ariana2_sendSMS($PObj->mobile, $context, "number", $SendError);
+		if(!$result)
+			ExceptionHandler::PushException ("ارسال پیامک به دلیل خطای زیر انجام نگردید" . "[" . $SendError . "]");
+	}
+	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
 //.............................................
 
 function SelectOFCRoles(){

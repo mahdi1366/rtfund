@@ -38,8 +38,8 @@ foreach($alarms as $row)
 {
 	$query = $row["QueryString"];
 	$query .= " AND DATE_ADD(".$row["DateField"].", INTERVAL ".
-			(($row["compute"] == "BEFORE" ? 1 : -1)*$row["days"])." DAY) = substr(".PDONOW.",1,10)";
-	
+			(($row["compute"] == "BEFORE" ? -1 : 1)*$row["days"])." DAY) = substr(".PDONOW.",1,10)";
+			
 	$temp = PdoDataAccess::runquery($query);
 	if(count($temp) == 0)
 		continue;
