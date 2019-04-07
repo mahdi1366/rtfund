@@ -4,6 +4,7 @@
 //-----------------------------
 require_once '../header.inc.php';
 require_once './meeting.class.php';
+require_once '../framework/baseInfo/baseInfo.class.php';
 require_once inc_reportGenerator;
 
 $MeetingID = !empty($_REQUEST["MeetingID"]) ? (int)$_REQUEST["MeetingID"] : "";
@@ -16,20 +17,26 @@ $MeetingObj = new MTG_meetings($MeetingID);
 
 $rpt = new ReportGenerator();
 $rpt->mysql_resource = MTG_MeetingRecords::Get("and MeetingID=?", array($MeetingID));
+$rpt->header_color = "white";
+$rpt->header_alignment = "center";
+$rpt->rowNumber = false;
 
 function titleRender($row,$value){
 	return "<span dir=ltr>" . $value . "<br>" . hebrevc($row["details"]) . "</div>";
 }
-$col = $rpt->addColumn("مصوبه", "subject");
+$col = $rpt->addColumn("خلاصه مصوبات", "subject");
 $col->renderFunction = "titleRender";
+
 $col = $rpt->addColumn("مسئول پیگیری یا اجرا", "fullname");
 $col->align = "center";
 $col = $rpt->addColumn("مهلت انجام", "FollowUpDate", "ReportDateRender");
 $col->align = "center";
-/*function emptyRender($row, $value){
-	return $value;
+
+function emptyRender($row, $value){
+	return "";
 }
-$col = $rpt->addColumn("شرح مستندات", "subject", "emptyRender");*/
+$col = $rpt->addColumn("شرح مستندات", "subject", "emptyRender");
+$col->align = "center";
 
 //..........................................
 
@@ -50,19 +57,19 @@ $absents = $absents->fetchAll();
 			  width:20cm;
 			}
 		  }
-		.meetingInfo{width:20cm;height : 100%;}
-		td { padding:2px; font-family: Nazanin; font-size: 12pt; line-height: 25px;}
+		.meetingInfo{width:20cm;height : 100%;border-collapse: collapse}
+		td { font-family: Nazanin; font-size: 12pt; line-height: 25px; }
 		#footer {width:20cm;}
 		#footer td{ border: 1px solid black; text-align: center}
 		#presents td{text-align: right; border-color: white;}
 	</style>	
 	<body dir="rtl">
 		<center>
-			<table class="meetingInfo">
+			<table class="meetingInfo" cellpadding="0" cellspacing="0">
 				<thead>
-				<tr style="height:150px">
-					<td align="right" style="width:250px;">
-						<img  src="/framework/icons/logo.jpg" style="width:120px">
+				<tr style="height:70px;border: 1px solid black">
+					<td align="right" style="width:60px;">
+						<img  src="/framework/icons/logo.jpg" style="width:60px">
 					</td>
 					<td align="center" style="font-family: titr;font-size: 14px;">
 						<b>به نام خداوند جان و خرد</b>
@@ -71,20 +78,20 @@ $absents = $absents->fetchAll();
 						<br>
 						<?= SoftwareName ?>
 					</td>
-					<td style="width:150px;line-height: 25px;"></td>
+					<td style="width:60px;line-height: 25px;"></td>
 				</tr>
 				</thead>
 				<!------------------------------------------------------>
-				<tr id="subHeader">
+				<tr style="height:65px;border: 1px solid black">
 					<td colspan="3">
-						<table width="100%" style="border: 1px solid black">
+						<table width="100%">
 							<tr>
 								<td>شماره جلسه:<b> <?= $MeetingObj->MeetingNo ?></b></td>
 								<td>تاریخ جلسه: <b><?= DateModules::miladi_to_shamsi($MeetingObj->MeetingDate) ?></b></td>
 								<td>ساعت شروع: <b><?= substr($MeetingObj->StartTime,0,5) ?></b></td>
 								<td>ساعت پایان: <b><?= substr($MeetingObj->EndTime,0,5) ?></b></td>
 							</tr>
-							<tr id="subHeader" style="height:30px">
+							<tr style="height:30px;">
 								<td colspan="4">مکان برگزاری: <b><?= $MeetingObj->place ?></b></td>
 							</tr>	
 						</table>
@@ -106,11 +113,11 @@ $absents = $absents->fetchAll();
 			<div id="footer">
 				<table width="100%" style="border-collapse: collapse">
 					<tr style="height: 30px; background-color: #eee">
-						<td>نام و نام خانوادگی و امضا حاضرین</td>
+						<td colspan="2">نام و نام خانوادگی و امضا حاضرین</td>
 						<td>غایبین</td>
-						<td>دبیر جلسه</td>
 					</tr>
 					<tr style="height: 100px">
+						<td style="width:100px;background-color: #eee">اعضای جلسه</td>
 						<td>
 							<table id="presents" width="100%">
 							<?
@@ -125,13 +132,25 @@ $absents = $absents->fetchAll();
 							?>
 							</table>
 						</td>
-						<td>
+						<td rowspan="3">
 							<?
 							foreach($absents as $row)
 								echo $row["fullname"] . "<br>";
 							?>
 						</td>
-						<td><?= $MeetingObj->_secretaryName ?></td>
+					</tr>
+					<tr>
+						<td style="background-color: #eee">مدیر عامل</td>
+						<td style="text-align: right;">
+							<?
+								$personObj = BSC_jobs::GetModirAmelPerson();
+								echo $personObj->_fullname;
+							?>
+						</td>
+					</tr>
+					<tr>
+						<td style="background-color: #eee">دبیر جلسه</td>
+						<td style="text-align: right;"><?= $MeetingObj->_secretaryName ?></td>
 					</tr>
 				</table>
 			</div>

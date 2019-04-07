@@ -22,7 +22,7 @@ $rpg->addColumn("معین1", "LevelTitle2");
 $rpg->addColumn("معین2", "LevelTitle3");
 $rpg->addColumn("معین3", "LevelTitle4");
 
-$rpg->addColumn("تفصیلی1", "TafsiliTypeDesc");
+$rpg->addColumn("تفصیلی1", "TafsiliTypeDesc1");
 $rpg->addColumn("تفصیلی2", "TafsiliTypeDesc2");
 $rpg->addColumn("تفصیلی3", "TafsiliTypeDesc3");
 

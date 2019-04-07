@@ -338,7 +338,7 @@ AccDocs.prototype.makeDetailWindow = function(){
 					colspan : 2,
 					store: new Ext.data.Store({
 						fields:["CostID","CostCode","CostDesc", 
-							"TafsiliType","TafsiliType2","TafsiliType3",{
+							"TafsiliType1","TafsiliType2","TafsiliType3",{
 							name : "fullDesc",
 							convert : function(value,record){
 								return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
@@ -514,11 +514,11 @@ AccDocs.prototype.makeDetailWindow = function(){
 
 AccDocs.prototype.SelectCostIDHandler = function(record){
 
-	if(record.data.TafsiliType != null)
+	if(record.data.TafsiliType1 != null)
 	{
 		combo = this.detailWin.down("[name=TafsiliID]");
 		combo.setValue();
-		combo.getStore().proxy.extraParams["TafsiliType"] = record.data.TafsiliType;
+		combo.getStore().proxy.extraParams["TafsiliType"] = record.data.TafsiliType1;
 		combo.getStore().load();
 	}
 	if(record.data.TafsiliType2 != null)
@@ -535,79 +535,7 @@ AccDocs.prototype.SelectCostIDHandler = function(record){
 		combo.getStore().proxy.extraParams["TafsiliType"] = record.data.TafsiliType3;
 		combo.getStore().load();
 	}
-	//-------------- make params -----------------	
-	CostID = record.data.CostID;
-	var ParamsFS = this.detailWin.down('form').getComponent("ParamsFS");
-	ParamsFS.removeAll();
-	
-	mask = new Ext.LoadMask(ParamsFS, {msg:'در حال بارگذاری ...'});
-	mask.show();
-	this.ParamsStore.load({
-		params : {
-			CostID : CostID
-		},
-		callback : function(){
-			for(var i=0; i<this.totalCount; i++)
-			{
-				record = this.getAt(i);
-				var ParamsFS = AccDocsObject.detailWin.down('form').getComponent("ParamsFS");
-				
-				if(record.data.ParamType == "combo")
-				{
-					arr = record.data.ParamValues.split("#");
-					data = [];
-					for(j=0;j<arr.length;j++)
-						if(arr[j] != "")
-							data.push([ arr[j] ]);
-					
-					ParamsFS.add({
-						xtype : record.data.ParamType,
-						name : "Param" + record.data.ParamID,
-						fieldLabel : record.data.ParamDesc,
-						store : new Ext.data.SimpleStore({
-							fields : ['value'],
-							data : data
-						}),
-						valueField : "value",
-						displayField : "value"
-					});							
-				}
-			else
-			{
-				ParamsFS.add({
-					xtype : record.data.ParamType,
-					name : "Param" + record.data.ParamID,
-					fieldLabel : record.data.ParamDesc,
-					hideTrigger : (record.data.ParamType == "numberfield" || 
-						record.data.ParamType == "currencyfield" ? true : false)
-				});			
-			}
-			}
-			ItemID = AccDocsObject.detailWin.down("[name=ItemID]").getValue();
-			if(ItemID*1 > 0)
-			{
-				AccDocsObject.paramValuesStore.load({
-					params : {
-						ItemID : ItemID
-					},
-					callback : function(){
-						this.each(function(record){
-							el = AccDocsObject.detailWin.down("[name=Param" + 
-								record.data.ParamID + "]");
-							if(el)
-								el.setValue(record.data.ParamValue);
-						});
-						mask.hide();
-					}
-				});
-			}
-			else
-				mask.hide();
-		}
-	});
 }
-
-var AccDocsObject = new AccDocs();
 
 AccDocs.docRender = function(v,p,record){
 
@@ -1181,6 +1109,27 @@ AccDocs.prototype.printCheck = function(){
 }
 //.........................................................
 
+AccDocs.Param1Render = function(v,p,r){
+	if(r.data.paramDesc1 == null)
+		return '';
+	return r.data.paramDesc1 + ':<br>' + 
+		(r.data.ParamValue1 ? r.data.ParamValue1 : v );
+}
+
+AccDocs.Param2Render = function(v,p,r){
+	if(r.data.paramDesc2 == null)
+		return '';
+	return r.data.paramDesc2 + ':<br>' + 
+		(r.data.ParamValue2 ? r.data.ParamValue2 : v );
+}
+
+AccDocs.Param3Render = function(v,p,r){
+	if(r.data.paramDesc3 == null)
+		return '';
+	return r.data.paramDesc3 + ':<br>' + 
+		(r.data.ParamValue3 ? r.data.ParamValue3 : v );
+}
+
 AccDocs.prototype.showDetail = function(record){
 	
 	this.mainTab.setActiveTab(0);
@@ -1331,7 +1280,8 @@ AccDocs.prototype.EditItem = function(){
 		R3 = this.detailWin.down("[name=TafsiliID2]").getStore().load({
 			params : { TafsiliID : record.data.TafsiliID2}
 		});
-	}//....................................................
+	}
+	//....................................................
 	R4 = false;
 	if(record.data.TafsiliType3 != "" && record.data.TafsiliID3 != "")
 	{
@@ -1341,6 +1291,45 @@ AccDocs.prototype.EditItem = function(){
 			params : { TafsiliID : record.data.TafsiliID3}
 		});
 	}
+	//--------------------------- make params ----------------------
+	var ParamsFS = this.detailWin.down('form').getComponent("ParamsFS");
+	ParamsFS.removeAll();
+	for(i=1; i<=3; i++)
+	{
+		if(record.data["paramType" + i] == "combo")
+		{
+			ParamsFS.add({
+				xtype : "combo",
+				name : "param" + i,
+				fieldLabel : record.data["paramDesc" + i],
+				store : new Ext.data.Store({
+					fields:["id","title"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + 'doc.data.php?task=selectParamItems&ParamID=' +
+							record.data["ParamID" + i],
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad: true
+				}),
+				valueField : "id",
+				value : record.data["param" + i],
+				displayField : "title"
+			});							
+		}
+		else
+		{
+			ParamsFS.add({
+				xtype : record.data["paramType" + i],
+				name : "param" + i,
+				fieldLabel : record.data["paramDesc" + i],
+				value : record.data["param" + i],
+				hideTrigger : (record.data["paramType" + i] == "numberfield" || 
+					record.data["paramType" + i] == "currencyfield" ? true : false)
+			});			
+		}
+	}
+	//....................................................
 	var t = setInterval(function(){
 		if(!R1.isLoading() && (!R2 || !R2.isLoading()) && (!R3 || !R3.isLoading()) && (!R4 || !R4.isLoading()))
 		{
@@ -1467,5 +1456,7 @@ AccDocs.prototype.removeItem = function(){
 }
 
 //-----------------------------------------------------------
+
+var AccDocsObject = new AccDocs();
 
 </script>

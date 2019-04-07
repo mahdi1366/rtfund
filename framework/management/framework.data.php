@@ -149,7 +149,7 @@ function SelectAccessMenuNodes(){
 		select m.* , concat('[',ordering,'] ',MenuDesc) MenuTitle,'true' expanded,
 			concat('/generalUI/icons/',m.icon) icon,a.ViewFlag,a.AddFlag,a.EditFlag,a.RemoveFlag
 		from FRW_menus m 
-		left join FRW_access a on(((a.personID=:p && a.groupID=0)or(a.personID=0 && a.groupID=:g))
+		left join FRW_access a on(((a.personID=:p AND a.groupID=0)or(a.personID=0 AND a.groupID=:g))
 			and m.MenuID=a.MenuID)
 		where m.MenuID<>".MENUID_portal."
 		group by m.MenuID
@@ -169,9 +169,10 @@ function SaveAccess(){
 	$pdo = PdoDataAccess::getPdoObject();
 	/*@var $pdo PDO*/
 	$pdo->beginTransaction();
-	PdoDataAccess::runquery("delete a from FRW_access a join FRW_menus using(MenuID) "
-			. " where PersonID=? AND GroupID=?",
-		array($PersonID,$GroupID));
+	PdoDataAccess::runquery("delete from FRW_access "
+			. " where (PersonID=? AND GroupID=0) OR (PersonID=0 AND GroupID=?)",
+		array($PersonID,$GroupID), $pdo);
+	echo PdoDataAccess::GetLatestQueryString();
 	
 	for($i=0; $i < count($keys); $i++)
 	{
@@ -296,6 +297,19 @@ function SelectCalendarEvents(){
 	$params = array();
 	$where = " AND PersonID=" . $_SESSION["USER"]["PersonID"];
 	
+	if(!empty($_REQUEST["start"]))
+	{
+		$start = preg_split('/-/', $_REQUEST["start"]);
+		$start = $start[2]. "-" . $start[0]. "-" . $start[1];
+		
+		$end = preg_split('/-/', $_REQUEST["end"]);
+		$end = $end[2]. "-" . $end[0]. "-" . $end[1];
+	
+		$where .= " AND ( (StartDate between :s AND :e) OR (EndDate between :s AND :e) )";
+		$params[":s"] = $start;
+		$params[":e"] = $end;
+	}
+	
 	if(!empty($_GET["fields"]) && !empty($_GET["query"]))
 	{
 		$where .= " AND " . $_GET["fields"] . " like ?";
@@ -305,6 +319,10 @@ function SelectCalendarEvents(){
 	$where .= dataReader::makeOrder();
 	
 	$res = FRW_CalendarEvents::Get($where,$params);	
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		//echo PdoDataAccess::GetLatestQueryString();
+	}
 	echo dataReader::getJsonData($res->fetchAll(), $res->rowCount(), $_GET["callback"]);
 	die();
 }
@@ -445,7 +463,7 @@ function SelectFollowUps(){
 		where FollowUpDate= substr(" . PDONOW . ",1,10) AND FollowUpPersonID=:p" 
 		
 	, array(":p" => $_SESSION["USER"]["PersonID"]));
-	
+	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();			
 }

@@ -398,19 +398,19 @@ function ReturnLatestOperation($returnMode = false){
 	$pdo->beginTransaction();
 	
 	$dt = PdoDataAccess::runquery("select max(DocID) docID from ACC_DocItems di
-		where SourceType=" . DOCTYPE_INCOMERCHEQUE . " AND SourceID=?",	
+		where SourceType=" . DOCTYPE_INCOMERCHEQUE . " AND SourceID1=?",	
 			array($OuterObj->IncomeChequeID), $pdo);
 	$DocID = $dt[0][0];	
 	
 	if($DocID > 0)
 	{
 		$temp = PdoDataAccess::runquery("select TafsiliID2 from ACC_DocItems where DocID<>? AND 
-		SourceType=? AND SourceID=? order by DocID desc", 
+		SourceType=? AND SourceID1=? order by DocID desc", 
 			array($DocID, DOCTYPE_INCOMERCHEQUE, $OuterObj->IncomeChequeID));
 		$OuterObj->ChequeStatus = count($temp)>0 ? $temp[0][0] : INCOMECHEQUE_NOTVOSUL;
 		
 		PdoDataAccess::runquery("delete from ACC_DocItems 
-			where DocID=? AND SourceType=" . DOCTYPE_INCOMERCHEQUE . " AND SourceID=?",	
+			where DocID=? AND SourceType=" . DOCTYPE_INCOMERCHEQUE . " AND SourceID1=?",	
 				array($DocID, $OuterObj->IncomeChequeID), $pdo);
 		
 		PdoDataAccess::runquery("delete from ACC_DocItems 

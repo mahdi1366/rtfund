@@ -66,7 +66,7 @@ Letter.prototype.LoadLetter = function(){
 		},
 		fields : ["LetterID","LetterType","LetterTitle","SubjectID","summary","context",
 			"keywords","AccessType","OuterSendType","SignerPersonID", "organization",
-			"OrgPost","InnerLetterNo","InnerLetterDate","OuterCopies","IsSigned"],
+			"OrgPost","InnerLetterNo","InnerLetterDate","OuterCopies","IsSigned", "ProcessID"],
 		autoLoad : true,
 		listeners : {
 			load : function(){
@@ -321,6 +321,26 @@ Letter.prototype.BuildForms = function(){
 					width : 740,
 					fieldLabel : "<span>" + "کلید واژه" + "</span><button class='x-btn help' "+
 						"style='border:0;background-color:white' data-qtip='برای جداسازی از # استفاده کنید'>"
+				},{
+					xtype : "treecombo",
+					fieldLabel : "فرایند",
+					colspan : 2,
+					width : 740,
+					name : "ProcessID",
+					selectChildren: true,
+					canSelectFolders: false,
+					multiselect : false,
+					store : new Ext.data.TreeStore({
+						proxy: {
+							type: 'ajax',
+							url: '/framework/baseInfo/baseInfo.data.php?task=GetProcessTree' 
+						},
+						root: {
+							text: "فرایندها",
+							id: 'src',
+							expanded: true
+						}
+					})					
 				},{
 					xtype : "textarea",
 					name : "PostalAddress",

@@ -277,9 +277,11 @@ function SaveBaseInfo(){
 		$pdo = PdoDataAccess::getPdoObject();
 		$pdo->beginTransaction();
 	
-		$obj->InfoID = PdoDataAccess::GetLastID("BaseInfo", "InfoID", "TypeID=?", array($obj->TypeID), $pdo);
-		$obj->InfoID = $obj->InfoID*1 + 1;
-		
+		if($obj->InfoID*1 == 0)
+		{
+			$obj->InfoID = PdoDataAccess::GetLastID("BaseInfo", "InfoID", "TypeID=?", array($obj->TypeID), $pdo);
+			$obj->InfoID = $obj->InfoID*1 + 1;
+		}
 		$obj->Add($pdo);		
 		$pdo->commit();
 	}

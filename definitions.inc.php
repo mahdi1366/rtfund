@@ -173,13 +173,31 @@ define("MTG_STATUSID_CANCLE", "3");
 define("ACC_STEPID_RAW", "100");
 define("ACC_STEPID_CONFIRM", "200");
 
+define("ACC_COST_PARAM_LOAN_RequestID", "3");
+define("ACC_COST_PARAM_LOAN_LastInstallmentDate", "4");
+define("ACC_COST_PARAM_LOAN_LEVEL", "105");
+
 
 define("DEFRAYLOAN_VOTEFORM", "9");
 define("DEFRAYLOAN_WFMFORM", "16");
 
 //------------ events ---------------
-define("EVENT_LOAN_PAYMENT", 1010101);
-define("EVENT_LOAN_BACKPAY", 1010102);
+define("EVENT_LOAN_ALLOCATE", 131);
+
+define("EVENT_LOANCONTRACT_innerSource", 132);
+define("EVENT_LOANCONTRACT_agentSource_committal", 134);
+define("EVENT_LOANCONTRACT_agentSource_non_committal", 133);
+
+define("EVENT_LOANPAYMENT_innerSource", 141);
+define("EVENT_LOANPAYMENT_agentSource", 143);
+
+define("EVENT_LOANBACKPAY_innerSource", 152);
+define("EVENT_LOANBACKPAY_agentSource_committal", 156);
+define("EVENT_LOANBACKPAY_agentSource_non_committal", 154);
+
+define("EVENT_LOANDAILY_innerSource", 161);
+define("EVENT_LOANDAILY_agentSource_committal", 1722);
+define("EVENT_LOANDAILY_agentSource_non_committal", 1723);
 
 //------------- TypeIDs -----------
 define("TYPEID_MeetingType", 88);

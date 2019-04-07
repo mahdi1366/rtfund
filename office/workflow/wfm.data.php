@@ -26,9 +26,9 @@ function SelectAllFlows(){
 	$dt = WFM_flows::GetAll($where, $param);
 	$no = $dt->rowCount();
 	
-	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+	//$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	
-	echo dataReader::getJsonData($dt, $no, $_GET["callback"]);
+	echo dataReader::getJsonData($dt->fetchAll(), $no, $_GET["callback"]);
 	die();
 }
 
@@ -183,7 +183,7 @@ function SelectAllForms(){
 				format(wr.amount,0),'از تاریخ',g2j(wr.StartDate),'تا تاریخ',g2j(wr.EndDate))
 			
 			when b.param4='form' 
-				then concat_ws(' ',wfmf.FormTitle,'به شماره فرم ',wfmr.RequestID)
+				then concat_ws(' ',wfmf.FormTitle,'به شماره فرم ',wfmr.RequestNo) 
 			
 			when b.param4='process' then 
 				concat_ws(' ','فرایند ',process.ProcessTitle,pperson.CompanyName,pperson.fname,pperson.lname)

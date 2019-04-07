@@ -11,6 +11,7 @@ require_once inc_component;
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "form.data.php?task=SelectMyRequests", "grid_div");
 
+$dg->addColumn("", "RequestID", "", true);
 $dg->addColumn("", "FlowID", "", true);
 $dg->addColumn("", "IsStarted", "", true);
 $dg->addColumn("", "IsEnded", "", true);
@@ -19,7 +20,7 @@ $dg->addColumn("", "ActionType", "", true);
 $dg->addColumn("", "SendEnable", "", true);
 $dg->addColumn("", "param4", "", true);
 
-$col = $dg->addColumn("شماره درخواست", "RequestID", "");
+$col = $dg->addColumn("شماره درخواست", "RequestNo", "");
 $col->width = 100;
 $col->align = "center";
 

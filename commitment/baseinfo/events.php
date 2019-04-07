@@ -100,20 +100,28 @@ function Event() {
 	});
 
 	this.tree.getDockedItems('toolbar[dock="top"]')[0].add({
-		xtype: "button",
-		iconCls: "print",
-		text: "چاپ",
-		handler: function () {
-			Ext.ux.Printer.print(EventObject.tree);
+			xtype: "button",
+			iconCls: "print",
+			text: "چاپ",
+			handler: function () {
+				Ext.ux.Printer.print(EventObject.tree);
+			}
+		}, '-', {
+			xtype: "button",
+			iconCls: "refresh",
+			text: "بازگذاری مجدد",
+			handler: function () {
+				EventObject.tree.getStore().load();
+			}
+		},{
+			xtype: "button",
+			iconCls: "cross",
+			text: "خطای ثبت های اتومات",
+			handler: function () {
+				window.open('../../storage/loanDaily.html');
+			}
 		}
-	}, '-', {
-		xtype: "button",
-		iconCls: "refresh",
-		text: "بازگذاری مجدد",
-		handler: function () {
-			EventObject.tree.getStore().load();
-		}
-	});
+	);
 
 	this.tree.on("itemcontextmenu", function (view, record, item, index, e)
 	{
@@ -381,7 +389,11 @@ Event.prototype.ShowCopyWin = function(){
 			buttons :[{
 				text : "کپی ردیف های رویداد",
 				iconCls : "copy",
-				handler : function(){ EventObject.CopyEventRows();}
+				handler : function(){ EventObject.CopyEventRows(0);}
+			},{
+				text : "کپی وارونه ردیف های رویداد",
+				iconCls : "copy",
+				handler : function(){ EventObject.CopyEventRows(1);}
 			},{
 				text : "بازگشت",
 				iconCls : "undo",
@@ -395,7 +407,7 @@ Event.prototype.ShowCopyWin = function(){
 	this.CopyWin.center();
 }
 
-Event.prototype.CopyEventRows = function(){
+Event.prototype.CopyEventRows = function(mode){
 	
 	var record = this.tree.getSelectionModel().getSelection()[0];
 	
@@ -407,7 +419,8 @@ Event.prototype.CopyEventRows = function(){
 		method: "POST",
 		params : {
 			Src_EventID : this.CopyWin.down("[name=Src_EventID]").getValue(),
-			Dst_EventID : record.data.id
+			Dst_EventID : record.data.id,
+			mode : mode
 		},
 		success: function (response) {
 			mask.hide();

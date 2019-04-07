@@ -99,7 +99,7 @@ class ACC_IncomeCheques extends OperationClass{
 			select DocID
 			from ACC_DocItems join ACC_docs using(DocID)
 			where SourceType in(" . DOCTYPE_INCOMERCHEQUE . ",".DOCTYPE_EDITINCOMECHEQUE.")
-			AND SourceID=?", array($this->IncomeChequeID));
+			AND SourceID1=?", array($this->IncomeChequeID));
 		return count($dt) > 0;
 	}
 }

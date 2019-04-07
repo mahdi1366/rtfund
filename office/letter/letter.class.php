@@ -26,6 +26,7 @@ class OFC_letters extends PdoDataAccess{
 	public $AccessType;
 	public $keywords;
 	public $PostalAddress;
+	public $ProcessID;
 
     function __construct($LetterID = ""){
 		$this->DT_LetterDate = DataMember::CreateDMA(DataMember::DT_DATE);
@@ -281,7 +282,14 @@ class OFC_letters extends PdoDataAccess{
 			$this->OuterCopies = str_replace("\r\n", " , ", $this->OuterCopies);
 			$content .= "<br><b> رونوشت خارج از سازمان : <br>" . hebrevc($this->OuterCopies) . "</b><br>";
 		}
-
+		
+		if($this->ProcessID*1 > 0)
+		{
+			require_once '../../framework/baseInfo/baseInfo.class.php';
+			$pObj = new BSC_processes($this->ProcessID);
+			$content .= "<br><b> فرایند: " . $pObj->ProcessTitle . "</b><br>";
+		}
+		
 		return $content;
 	}
 	

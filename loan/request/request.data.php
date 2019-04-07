@@ -208,7 +208,7 @@ function SelectMyRequests(){
 function SelectAllRequests2(){
 	
 	$params = array();
-	$query = "select p.*,r.IsEnded, concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) loanFullname,
+	$query = "select p.*,r.ReqPersonID,r.IsEnded, concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) loanFullname,
 				i.InstallmentAmount,LoanDesc,concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) ReqFullName
 		from LON_requests r 
 		join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
@@ -255,23 +255,16 @@ function SelectAllRequests(){
 	$where = "1=1 ";
 	if(!empty($_REQUEST["RequestID"]))
 	{
-		$where .= " AND RequestID=:r";
+		$where .= " AND r.RequestID=:r";
 		$param[":r"] = $_REQUEST["RequestID"];
 	}
-	
-	$param = array();
-	
-	if(!empty($_REQUEST["RequestID"]))
-	{
-		$where .= " AND RequestID=:r";
-		$param[":r"] = $_REQUEST["RequestID"];
-	}
-	
+		
 	if (isset($_REQUEST['fields']) && isset($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
 		$field = $field == "ReqFullname" ? "concat_ws(' ',p1.fname,p1.lname,p1.CompanyName)" : $field;
 		$field = $field == "LoanFullname" ? "concat_ws(' ',p2.fname,p2.lname,p2.CompanyName,BorrowerDesc)" : $field;
 		$field = $field == "StatusDesc" ? "bi.InfoDesc" : $field;
+		$field = $field == "RequestID" ? "r.RequestID" : $field;
 		
         $where .= ' and ' . $field . ' like :fld';
         $param[':fld'] = '%' . $_REQUEST['query'] . '%';
@@ -394,14 +387,14 @@ function GetRequestParts(){
 		$temp = PdoDataAccess::runquery("select ifnull(sum(CreditorAmount),0)
 			from ACC_DocItems join ACC_docs using(DocID) where 
 			 CostID=? AND SourceType=" . DOCTYPE_LOAN_PAYMENT . " AND 
-			SourceID=? AND SourceID2=? AND StatusID = " . ACC_STEPID_CONFIRM, 
+			SourceID1=? AND SourceID2=? AND StatusID = " . ACC_STEPID_CONFIRM, 
 			array($CostCode_commitment, $dt[$i]["RequestID"], $dt[$i]["PartID"]));
 		$dt[$i]["IsPaid"] = $temp[0][0] == $dt[$i]["PartAmount"] ? "YES" : "NO"; 		
 		
 		$temp = PdoDataAccess::runquery("select count(*)
 			from ACC_DocItems join ACC_docs using(DocID) where 
 			 CostID=? AND SourceType=" . DOCTYPE_LOAN_PAYMENT . "  
-				 AND StatusID=".ACC_STEPID_CONFIRM." AND SourceID=? AND SourceID2=? ", 
+				 AND StatusID=".ACC_STEPID_CONFIRM." AND SourceID1=? AND SourceID2=? ", 
 			array($CostCode_commitment, $dt[$i]["RequestID"], $dt[$i]["PartID"]));
 		$dt[$i]["IsDocRegister"] = $temp[0][0]*1 > 0 ? "YES" : "NO"; 	
 		
@@ -459,7 +452,7 @@ function SavePart(){
 			$dt = PdoDataAccess::runquery("select DocID,LocalNo,CycleDesc,StatusID 
 				from ACC_DocItems join ACC_docs using(DocID)
 				join ACC_cycles using(CycleID)
-				where DocType=" . DOCTYPE_LOAN_DIFFERENCE ." AND SourceID=? AND SourceID2=?",
+				where DocType=" . DOCTYPE_LOAN_DIFFERENCE ." AND SourceID1=? AND SourceID2=?",
 				array($obj->RequestID, $obj->PartID));
 			
 			if(count($dt) > 0 && $dt[0]["StatusID"] != ACC_STEPID_RAW)
@@ -528,7 +521,7 @@ function DeletePart(){
 	
 	$dt = PdoDataAccess::runquery("select * from ACC_DocItems join ACC_docs using(DocID)
 		where SourceType=" . DOCTYPE_LOAN_DIFFERENCE . "
-		AND SourceID=? AND SourceID2=?", array($obj->RequestID, $obj->PartID));
+		AND SourceID1=? AND SourceID2=?", array($obj->RequestID, $obj->PartID));
 	
 	if(count($dt) > 0 && $dt[0]["StatusID"] != ACC_STEPID_RAW)
 	{
@@ -1741,7 +1734,7 @@ function RetPayPartDoc($ReturnMode = false, $pdo = null){
 	if(count($temp) > 0)
 	{
 		$dt = PdoDataAccess::runquery("select * from ACC_DocItems where CostID=? AND DebtorAmount>0 
-			AND SourceType=? AND SourceID=?",
+			AND SourceType=? AND SourceID1=?",
 			array($CostCode_todiee, DOCTYPE_LOAN_PAYMENT, $PayObj->RequestID));
 		if(count($dt) > 0)
 		{

@@ -12,7 +12,7 @@ if(isset($_REQUEST["task"]))
 	switch ($_REQUEST["task"])
 	{
 		case "SendRegisterProcess":
-		
+		case "RunDaily":
 			call_user_func($_REQUEST["task"]);
 	}
 }
@@ -25,6 +25,13 @@ function SendRegisterProcess(){
 	$pObj = new BSC_processes(PROCESS_REGISTRATION);
 	$result = WFM_FlowRows::StartFlow($pObj->FlowID, PROCESS_REGISTRATION, $_SESSION["USER"]["PersonID"]);
 	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function RunDaily(){
+	
+	require_once './RunAutoProcesses.php';
+	echo Response::createObjectiveResponse(true, "");
 	die();
 }
 ?>

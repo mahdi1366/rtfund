@@ -8,8 +8,8 @@ class sys_config{
 	 public static $db_server = array (
 	          "driver"   => "mysql",
 	          "host"     => "localhost",
-	          //"database" => "main_rtfund",
-			  "database" => "framewor_rtfund",
+	          //"database" => "krrtfir_rtfund",
+			 "database" => "framewor_rtfund",
 	          "user"     => "root",
 	          "pass"     => "1297"
 	 );
@@ -46,4 +46,6 @@ define("OWNER_WELCOME_MESSAGE", "ثبت نام شما در صندوق پژوهش
 		"می توانید از طریق لینک زیر وارد پرتال خود شوید <br>" . 
 		"<a href=http://portal.krrtf.ir target=blank>http://portal.krrtf.ir </a>");
 
+define("DOCUMENT_ROOT", "D:/0projects/rtfund");
+//define("DOCUMENT_ROOT", "/home/framewor/public_html");
 ?>

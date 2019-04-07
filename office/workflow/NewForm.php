@@ -8,10 +8,6 @@ require_once 'form.data.php';
 require_once 'form.class.php';
 require_once inc_dataGrid;
 
-//................  GET ACCESS  .....................
-$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
-//...................................................
-
 if (!empty($_REQUEST['FormID']))
     $FormID = $_REQUEST['FormID'];
 else
@@ -39,21 +35,18 @@ $col = $dg->addColumn("","","");
 $col->renderer = "WFM_NewForm.GroupdownRender";
 $col->sortable = false;
 $col->width = 30;
-if($accessObj->RemoveFlag)
-{
-	$col = $dg->addColumn("حذف","","");
-	$col->renderer = "WFM_NewForm.deleteGroupRender";
-	$col->sortable = false;
-	$col->width = 40;
-}
-if($accessObj->AddFlag){
-	
-	$dg->addButton = true;
-	$dg->addHandler = "function(){WFM_NewFormObj.AddGroup();}";
 
-	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(v,p,r){return WFM_NewFormObj.saveGroup(v,p,r);}";
-}
+$col = $dg->addColumn("حذف","","");
+$col->renderer = "WFM_NewForm.deleteGroupRender";
+$col->sortable = false;
+$col->width = 40;
+	
+$dg->addButton = true;
+$dg->addHandler = "function(){WFM_NewFormObj.AddGroup();}";
+
+$dg->enableRowEdit = true;
+$dg->rowEditOkHandler = "function(v,p,r){return WFM_NewFormObj.saveGroup(v,p,r);}";
+
 $dg->height = 140;
 $dg->width = 500;
 $dg->DefaultSortField = "ordering";

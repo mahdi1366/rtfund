@@ -86,7 +86,7 @@ function DeleteEvent() {
 function GetEventsTree() {
 
 	$nodes = PdoDataAccess::runquery("
-			select concat('[',ordering,'] ',EventTitle) text, e.*
+			select concat('[',EventID,'][',ordering,'] ',EventTitle) text, e.*
 			from COM_events e
 			where e.IsActive='YES'
 			order by ParentID,ordering");
@@ -100,10 +100,13 @@ function CopyEventRows(){
 	
 	$SRC_EventID = (int)$_POST["Src_EventID"];
 	$DST_EventID = (int)$_POST["Dst_EventID"];
+	$mode = (int)$_POST["mode"];
 	
 	PdoDataAccess::runquery("
 		insert into COM_EventRows(EventID,CostID,CostType,DocDesc,ComputeItemID)
-		select :dst,CostID,CostType,DocDesc,ComputeItemID
+		select :dst,CostID,
+				" . ($mode == 0 ? "CostType" : "case when CostType='DEBTOR' then 'CREDITOR' else 'DEBTOR' end") . " 
+				,DocDesc,ComputeItemID
 		from COM_EventRows where EventID=:src AND IsActive='YES'
 	",array(
 		":dst" => $DST_EventID,

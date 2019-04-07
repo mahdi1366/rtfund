@@ -87,7 +87,7 @@ function process_registration(){
 				xtype: "container",
 				cls : "blueText",
 				html: '<img src="/generalUI/icons/arrow-left.gif" style="vertical-align: middle;"/>' + 
-					 "لطفا اطلاعات فرم زیر را برای متقاضی حقیقی/ حقوقی  تکمیل نمایید"
+					 "لطفا فرم زیر را برای متقاضی حقیقی/حقوقی تکیل نمایید.تکمیل موارد ستاره‌دار الزامی می‌باشد."
 			},{
 				xtype : "panel",
 				border: false,
@@ -130,13 +130,12 @@ function process_registration(){
 			items : [{
 				xtype: "container",
 				cls : "blueText",
-				style : "text-align:right",
-				html: 	'<img src="/generalUI/icons/arrow-left.gif" style="vertical-align: middle;"/>' +
-						"پیوست تصویر نامه درخواست رسمی الزامی می باشد"+"<Br>"+
-						'<img src="/generalUI/icons/arrow-left.gif" style="vertical-align: middle;"/>' +
+				style : "text-align:right; padding-right:5px",
+				html: 	"لطفا مدارک زیر را بارگذاری نمایید" + "<br>" +
+					'<font color=red>*  </font>' +
+						" پیوست تصویر نامه درخواست رسمی"+"<Br>"+
 						"پیوست طرح توجیهی در صورت وجود "+"<Br>"+
-						'<img src="/generalUI/icons/arrow-left.gif" style="vertical-align: middle;"/>' +
-						"پیوست تصویر نامه معرفی متقاضی الزامی می باشد (" + 
+						"پیوست تصویر نامه معرفی متقاضی(" + 
 						"در صورت دانش بنیان بودن شرکت یا داشتن گواهی ثبت اختراع در خصوص محصول/ خدمات موضوع طرح، الزامی نمی باشد.)"
 			},{
 				xtype : "panel",
@@ -153,7 +152,9 @@ function process_registration(){
 				xtype: "container",
 				cls : "blueText",
 				html: '<img src="/generalUI/icons/arrow-left.gif" style="vertical-align: middle;"/>' +
-						"لیست کلیه مجوز های خود را وارد نمایید" + "<br>&nbsp;"
+						"فهرست کلیه مجوزها و گواهینامه‌های مرتبط با طرح خود را بارگداری نمایید." + "<br>&nbsp;"  +
+						"مجوزها از قبیل مجوز موسسه فناور، پارک علم و فناوری، مجوز فعالیت و مجوزهای صنفی، گواهینامه ثبت اختراع، گواهی نامه صلاحیت و ...) " + 
+						"<br>&nbsp;"
 			},{
 				xtype : "panel",
 				border: false,

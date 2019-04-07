@@ -1300,7 +1300,7 @@ function SmsCustomer(){
 	else
 	{
 		$SendError = "";
-		$context = "نامه ایی از طرف" . SoftwareName . " برای شما ارسال شده است. جهت مشاهده به پرتال خود مراجعه نمایید" . 
+		$context = "یک نامه جدید در پرتال صندوق پژوهش و فناوری شما وارد شده است \n\n" . 
 				"http://framework.krrtf.ir";
 		$result = ariana2_sendSMS($PObj->mobile, $context, "number", $SendError);
 		if(!$result)

@@ -654,7 +654,7 @@ WarrentyRequest.prototype.BeforeRegDoc = function(mode){
 				xtype : "combo",
 				width : 385,
 				store: new Ext.data.Store({
-					fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+					fields:["CostID","CostCode","CostDesc", "TafsiliType1","TafsiliType2",{
 						name : "fullDesc",
 						convert : function(value,record){
 							return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
@@ -674,7 +674,7 @@ WarrentyRequest.prototype.BeforeRegDoc = function(mode){
 					select : function(combo,records){
 						me = WarrentyRequestObject;
 						me.BankWin.down("[itemId=TafsiliID]").setValue();
-						me.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
+						me.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType1;
 						me.BankWin.down("[itemId=TafsiliID]").getStore().load();
 
 						me.BankWin.down("[itemId=TafsiliID2]").setValue();

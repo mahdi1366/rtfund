@@ -63,7 +63,7 @@ function SelectForms() {
         $where = " AND FormID = :FormID";
         $whereParams[':FormID'] = $_REQUEST['FormID'];
     }
-    $temp = WFM_forms::Get($where, $whereParams);
+    $temp = WFM_forms::ListForms($where, $whereParams);
     $res = PdoDataAccess::fetchAll($temp, $_GET['start'], $_GET['limit']);
 	
 	if(!empty($_REQUEST['FormID']) && isset($_REQUEST["EditContent"]))

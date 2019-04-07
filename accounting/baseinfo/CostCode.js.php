@@ -108,7 +108,7 @@ function CostCode(){
 					},
 					autoLoad : true
 				}),
-				name : "TafsiliType",
+				name : "TafsiliType1",
 				fieldLabel : "تفصیلی1",
 				typeAhead: false,
 				width: 500,

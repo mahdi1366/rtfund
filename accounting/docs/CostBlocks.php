@@ -108,7 +108,7 @@ function CostBlock(){
 			xtype : "combo",
 			fieldLabel : "کد حساب",
 			store: new Ext.data.Store({
-				fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+				fields:["CostID","CostCode","CostDesc", "TafsiliType1","TafsiliType2",{
 					name : "fullDesc",
 					convert : function(value,record){
 						return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
@@ -131,12 +131,12 @@ function CostBlock(){
 			},
 			listeners :{
 				select : function(combo,records){
-					if(records[0].data.TafsiliType != null)
+					if(records[0].data.TafsiliType1 != null)
 					{
-						CostBlockObject.formPanel.down("[name=TafsiliType]").setValue(records[0].data.TafsiliType);
+						CostBlockObject.formPanel.down("[name=TafsiliType]").setValue(records[0].data.TafsiliType1);
 						combo = CostBlockObject.formPanel.down("[name=TafsiliID]");
 						combo.setValue();
-						combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType;
+						combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType1;
 						combo.getStore().load();
 					}
 				}

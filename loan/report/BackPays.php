@@ -108,11 +108,11 @@ function GetData(){
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
 			
-			left join ( select d.LocalNo,SourceID,SourceID2
+			left join ( select d.LocalNo,SourceID1,SourceID2
 				from ACC_DocItems di join ACC_docs d on(di.DocID=d.DocID)
 				where SourceType in(".DOCTYPE_INSTALLMENT_PAYMENT.")
-				group by SourceID,SourceID2
-			)d on(d.SourceID=r.RequestID AND d.SourceID2=BackPayID )
+				group by SourceID1,SourceID2
+			)d on(d.SourceID1=r.RequestID AND d.SourceID2=BackPayID )
 
 			where if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)" . $where ;
 	

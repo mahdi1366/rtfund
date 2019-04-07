@@ -149,12 +149,12 @@ FrameWorkClass.prototype.ExecuteEvent = function(EventID, params){
 	if(!this.EventWindow)
 	{
 		this.EventWindow = new Ext.window.Window({
-			width : 1000,
+			width : 1200, 
 			renderTo : document.body,
 			bodyStyle : "background-color : white",
 			title : "اجرای رویداد مالی",
 			height : 520,
-			modal : true,
+			//modal : true,
 			closeAction : "hide",
 			loader : {
 				url : "../commitment/ExecuteEvent.php",
@@ -175,9 +175,13 @@ FrameWorkClass.prototype.ExecuteEvent = function(EventID, params){
 		ExtTabID : this.EventWindow.getEl().id,
 		EventID : EventID
 	};
-	params = mergeObjects(baseParams, params);
+	if(params.constructor === Array)
+	{
+		for(i=0; i<params.length; i++)
+			baseParams["SourceID" + (i+1)] = params[i];
+	}
 	this.EventWindow.loader.load({
-		params : params
+		params : baseParams
 	});
 }
 		

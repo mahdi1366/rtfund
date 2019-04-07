@@ -518,7 +518,8 @@ class ReportGenerator {
 				style='padding:2px;direction:" . $this->columns[$i]->direction . ";" . $this->columns[$i]->style . 
 					($this->columns[$i]->hidden ? ";display:none;" : "") . 
 					(strpos($this->columns[$i]->field,"VerticalSum_") !== false ? "background-color:" . $this->summaryRow_color : "") .
-					"' border='$this->border' align='" . $this->columns[$i]->align . "'>
+					"' border='$this->border' align='" . 
+						($this->columns[$i]->align == "" ? "right" : $this->columns[$i]->align) . "'>
 				<font color = '$this->body_textcolor' style='font-size:".$this->fontSize."'>&nbsp;";
 
 			$val = "";
@@ -1244,7 +1245,7 @@ class ReportColumn {
 		$this->renderFunction = $renderFunction;
 		$this->renderParams = $renderParams;
 		$this->HaveSum = -1;
-		$this->align = "right";
+		$this->align = "";
 		$this->direction = "rtl";
 		$this->SumRener = "";
 	}

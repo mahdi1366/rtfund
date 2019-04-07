@@ -21,7 +21,7 @@ function Block(){
 
 	this.accountCombo = new Ext.form.ComboBox({
 		store: new Ext.data.Store({
-			fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+			fields:["CostID","CostCode","CostDesc", "TafsiliType1","TafsiliType2",{
 				name : "fullDesc",
 				convert : function(value,record){
 					return "[ " + record.data.CostCode + " ] " + record.data.CostDesc

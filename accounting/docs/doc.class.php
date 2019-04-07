@@ -389,9 +389,14 @@ class ACC_DocItems extends PdoDataAccess {
 	public $details;
 	public $locked;
 	public $SourceType;
-	public $SourceID;
+	public $SourceID1;
 	public $SourceID2;
 	public $SourceID3;
+	public $SourceID4;
+	
+	public $param1;
+	public $param2;
+	public $param3;
 	
 	public $_CostCode;
 
@@ -408,7 +413,26 @@ class ACC_DocItems extends PdoDataAccess {
 			concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) CostDesc,
 			t.TafsiliDesc,bi.InfoDesc TafsiliGroupDesc,
 			t2.TafsiliDesc as Tafsili2Desc,bi2.InfoDesc Tafsili2GroupDesc,
-			t3.TafsiliDesc as Tafsili3Desc,bi3.InfoDesc Tafsili3GroupDesc
+			t3.TafsiliDesc as Tafsili3Desc,bi3.InfoDesc Tafsili3GroupDesc,
+			p1.paramDesc paramDesc1,
+			p2.paramDesc paramDesc2,
+			p3.paramDesc paramDesc3,
+			p1.paramType paramType1,
+			p2.paramType paramType2,
+			p3.paramType paramType3,
+			p1.ParamID ParamID1,
+			p2.ParamID ParamID2,
+			p3.ParamID ParamID3,
+			p1.SrcTable SrcTable1,
+			p2.SrcTable SrcTable2,
+			p3.SrcTable SrcTable3,
+			p1.SrcDisplayField as SrcDisplayField1,
+			p2.SrcDisplayField as SrcDisplayField2,
+			p3.SrcDisplayField as SrcDisplayField3,
+			p1.SrcValueField as SrcValueField1,
+			p2.SrcValueField as SrcValueField2,
+			p3.SrcValueField as SrcValueField3
+			
 			
 		from ACC_DocItems si
 			left join ACC_CostCodes cc using(CostID)
@@ -422,6 +446,10 @@ class ACC_DocItems extends PdoDataAccess {
 			left join ACC_tafsilis t on(t.TafsiliID=si.TafsiliID)
 			left join ACC_tafsilis t2 on(t2.TafsiliID=si.TafsiliID2)
 			left join ACC_tafsilis t3 on(t3.TafsiliID=si.TafsiliID3)
+			
+			left join ACC_CostCodeParams p1 on(p1.ParamID=cc.param1)
+			left join ACC_CostCodeParams p2 on(p2.ParamID=cc.param2)
+			left join ACC_CostCodeParams p3 on(p3.ParamID=cc.param3)
 			
 			";
 		$query .= ($where != "") ? " where " . $where : "";

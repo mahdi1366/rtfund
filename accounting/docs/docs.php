@@ -72,6 +72,22 @@ $dg->addColumn("","Tafsili3Desc","",true);
 $dg->addColumn("","Tafsili3GroupDesc","",true);
 $dg->addColumn("", "locked", "", true);
 
+$dg->addColumn("", "paramDesc1", "", true);
+$dg->addColumn("", "paramDesc2", "", true);
+$dg->addColumn("", "paramDesc3", "", true);
+
+$dg->addColumn("", "paramType1", "", true);
+$dg->addColumn("", "paramType2", "", true);
+$dg->addColumn("", "paramType3", "", true);
+
+$dg->addColumn("", "ParamID1", "", true);
+$dg->addColumn("", "ParamID2", "", true);
+$dg->addColumn("", "ParamID3", "", true);
+
+$dg->addColumn("", "ParamValue1", "", true);
+$dg->addColumn("", "ParamValue2", "", true);
+$dg->addColumn("", "ParamValue3", "", true);
+
 $col = $dg->addColumn("ردیف","ItemID","", true);
 
 $col = $dg->addColumn("سرفصل حساب", "CostDesc");
@@ -108,8 +124,17 @@ $col = $dg->addColumn("جزئیات", "details");
 $col->width = 100;
 $col->ellipsis = 50;
 
-$col = $dg->addColumn("آیتم های اطلاعاتی", "paramValues");
-$col->width = 130;
+$col = $dg->addColumn("آیتم1", "param1");
+$col->renderer = "AccDocs.Param1Render";
+$col->width = 70;
+
+$col = $dg->addColumn("آیتم2", "param2");
+$col->renderer = "AccDocs.Param2Render";
+$col->width = 70;
+
+$col = $dg->addColumn("آیتم3", "param3");
+$col->renderer = "AccDocs.Param3Render";
+$col->width = 70;
 
 if($accessObj->RemoveFlag)
 {

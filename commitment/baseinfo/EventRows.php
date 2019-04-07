@@ -25,6 +25,7 @@ $dg->addColumn(" ", "IsActive", "", true);
 $dg->addColumn(" ", "ChangeDate", "", true);
 $dg->addColumn(" ", "changePersonName", "", true);
 $dg->addColumn(" ", "PriceDesc", "", true);
+$dg->addColumn(" ", "ComputeGroup", "", true);
 $dg->addColumn(" ", "ComputeItemID", "", true);
 
 $col = $dg->addColumn("ماهیت", "CostType");

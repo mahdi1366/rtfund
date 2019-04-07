@@ -70,7 +70,7 @@
 				fieldLabel : "حساب مربوطه",
 				colspan : 2,
 				store: new Ext.data.Store({
-					fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2","TafsiliType3",{
+					fields:["CostID","CostCode","CostDesc", "TafsiliType1","TafsiliType2","TafsiliType3",{
 						name : "fullDesc",
 						convert : function(value,record){
 							return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
@@ -90,7 +90,7 @@
 				listeners : {
 					select : function(combo,records){
 						me = EventRowsObj<?= $random ?>;
-						me.formPanel.down("[name=TafsiliType]").setValue(records[0].data.TafsiliType);
+						me.formPanel.down("[name=TafsiliType1]").setValue(records[0].data.TafsiliType1);
 						me.formPanel.down("[name=TafsiliType2]").setValue(records[0].data.TafsiliType2);
 						me.formPanel.down("[name=TafsiliType3]").setValue(records[0].data.TafsiliType3);
 					}
@@ -111,6 +111,7 @@
 				typeAhead: false,
 				queryMode : "local",
 				valueField : "InfoID",
+				name : "ComputeGroup",
 				displayField : "InfoDesc",
 				listeners : {
 					change : function(combo,records){

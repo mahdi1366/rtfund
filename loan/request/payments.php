@@ -137,8 +137,8 @@ PartPayment.DocRender = function(v,p,r){
 		return st;
 	}
 	return "<div align='center' title='صدور سند' class='send' "+
-		"onclick='PartPaymentObject.BeforeRegDoc(1);' " +
-		/*"onclick='PartPaymentObject.ExecuteEvent();' " +*/ 
+		/*"onclick='PartPaymentObject.BeforeRegDoc(1);' " +*/
+		"onclick='PartPaymentObject.ExecuteEvent();' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }
@@ -386,11 +386,27 @@ PartPayment.prototype.ExecuteEvent = function(){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
 
-
-	framework.ExecuteEvent(<?= EVENT_LOAN_PAYMENT ?>,{
-		RequestID : this.RequestID,
-		PayID : record.data.PayID
+	var loanStore = new Ext.data.Store({
+		proxy:{
+			type: 'jsonp',
+			url: this.address_prefix + "request.data.php?task=SelectAllRequests&RequestID=" + record.data.RequestID,
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		},
+		fields : ["RequestID","ReqPersonID","PartID"]
 	});
+	loanStore.load({
+		callback : function(){
+			var eventID = "";
+			ReqRecord = this.getAt(0);
+			if(ReqRecord.data.ReqPersonID*1 > 0)
+				eventID = "<?= EVENT_LOANPAYMENT_agentSource ?>";
+			else
+				eventID = "<?= EVENT_LOANPAYMENT_innerSource ?>";
+			
+			framework.ExecuteEvent(eventID, new Array(
+				ReqRecord.data.RequestID,ReqRecord.data.PartID,record.data.PayID));
+		}
+	})
 }
 
 

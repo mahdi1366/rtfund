@@ -248,8 +248,8 @@ function GetData($mode = "list"){
 			left join (
 				select RequestID,sum(PayAmount) SumPayments 
 				from LON_payments 
-				join (select SourceID,SourceID3 from ACC_DocItems where SourceType=".DOCTYPE_LOAN_PAYMENT." group by SourceID,SourceID3)t 
-					on(t.SourceID=RequestID AND t.SourceID3=PayID)
+				join (select SourceID1,SourceID3 from ACC_DocItems where SourceType=".DOCTYPE_LOAN_PAYMENT." group by SourceID1,SourceID3)t 
+					on(t.SourceID1=RequestID AND t.SourceID3=PayID)
 				where 1=1 $pay_where
 				group by RequestID			
 			)t_pay on(r.RequestID=t_pay.RequestID)

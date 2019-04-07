@@ -346,7 +346,7 @@ IncomeCheque.prototype.MakeCostPanel = function(){
 			fieldLabel : "کد حساب",
 			colspan : 2,
 			store: new Ext.data.Store({
-				fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+				fields:["CostID","CostCode","CostDesc", "TafsiliType1","TafsiliType2",{
 					name : "fullDesc",
 					convert : function(value,record){
 						return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
@@ -368,12 +368,12 @@ IncomeCheque.prototype.MakeCostPanel = function(){
 			},
 			listeners :{
 				select : function(combo,records){
-					if(records[0].data.TafsiliType != null)
+					if(records[0].data.TafsiliType1 != null)
 					{
 						combo = IncomeChequeObject.ChequeInfoWin.down("[name=TafsiliID]");
 						combo.enable();
 						combo.setValue();
-						combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType;
+						combo.getStore().proxy.extraParams["TafsiliType"] = records[0].data.TafsiliType1;
 						combo.getStore().load();
 
 						combo = IncomeChequeObject.ChequeInfoWin.down("[name=TafsiliID2]");
@@ -734,7 +734,7 @@ IncomeCheque.prototype.AccountInfoWin = function(){
 					fieldLabel : "حساب مربوطه",
 					colspan : 2,
 					store: new Ext.data.Store({
-						fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+						fields:["CostID","CostCode","CostDesc", "TafsiliType1","TafsiliType2",{
 							name : "fullDesc",
 							convert : function(value,record){
 								return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
@@ -753,10 +753,10 @@ IncomeCheque.prototype.AccountInfoWin = function(){
 					listeners : {
 						select : function(combo,records){
 							me = IncomeChequeObject;
-							if(records[0].data.TafsiliType != null)
+							if(records[0].data.TafsiliType1 != null)
 							{
 								me.BankWin.down("[itemId=TafsiliID]").setValue();
-								me.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
+								me.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType1;
 								me.BankWin.down("[itemId=TafsiliID]").getStore().load();
 							}
 							if(records[0].data.TafsiliType2 != null)

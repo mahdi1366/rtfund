@@ -50,7 +50,7 @@ if($accessObj->RemoveFlag && !$readOnly)
 	$col->width = 50;
 }
 $dg->height = 200;
-$dg->title = "لیست دعوتنامه های این جلسه";
+$dg->title = "بررسی درخواست‌های واصله";
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;
 $dg->DefaultSortField = "AgendaID";
@@ -79,7 +79,7 @@ $col->align = "center";
 $col->width = 80;
 
 $dg->height = 200;
-$dg->title = "مصوبات جلسات قبل سررسید شده";
+$dg->title = "پیگیری مصوبات گذشته";
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 //$dg->disableFooter = true;
@@ -111,7 +111,7 @@ $col->align = "center";
 $col->width = 80;
 
 $dg->height = 200;
-$dg->title = "دعوتنامه های مانده از جلسات قبل";
+$dg->title = "موارد باقی‌مانده از جلسه گذشته";
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 //$dg->disableFooter = true;

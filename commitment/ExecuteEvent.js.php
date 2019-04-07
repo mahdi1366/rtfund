@@ -20,15 +20,22 @@ function ExecuteEvent(){
 	this.RowDetails = {
 		ptype: 'rowexpander',
 		rowBodyTpl : [
-			'<hr>','عنوان حساب: <span class=blueText>{CostDesc}</span><br>',
-			'آیتم محاسباتی: <span class=blueText>',
-				'{[values.ComputeItemDesc == null ? "---" : values.ComputeItemDesc]}</span><br>',			
-			'گروه تفصیلی: <span class=blueText>{TafsiliTypeDesc} - ',
-				'{[values.TafsiliDesc == null ? "" : values.TafsiliDesc]}</span><br>',
-			'گروه تفصیلی2: <span class=blueText>{TafsiliType2Desc} - ',
-				'{[values.Tafsili2Desc == null ? "" : values.Tafsili2Desc]}</span><br>',
-			'گروه تفصیلی3: <span class=blueText>{TafsiliType3Desc} - ',
-				'{[values.Tafsili3Desc == null ? "" : values.Tafsili3Desc]}</span><br>',
+			'<hr><table width=100%>',
+			'<tr><td colspan=2>عنوان حساب: <span class=blueText>{CostDesc}</span></td>',
+				'<td>آیتم محاسباتی: <span class=blueText>',
+				'{[values.ComputeItemDesc == null ? "---" : values.ComputeItemDesc]}</span></td>',			
+			'</tr>',
+			'<tr>',
+				'<td>گروه تفصیلی1: <span class=blueText>{TafsiliTypeDesc1}</span></td>',
+				'<td>گروه تفصیلی2: <span class=blueText>{TafsiliTypeDesc2}</span></td>',
+				'<td>گروه تفصیلی3: <span class=blueText>{TafsiliTypeDesc3}</span></td>',
+			'</tr>',
+			'<tr>',
+				'<td>آیتم1: <span class=blueText>{param1Desc}</span></td>',
+				'<td>آیتم2: <span class=blueText>{param2Desc}</span></td>',
+				'<td>آیتم3: <span class=blueText>{param3Desc}</span></td>',
+			'</tr>',
+			'</table>'
 		]
 	};
 
@@ -37,6 +44,23 @@ function ExecuteEvent(){
 		for(var i=0; i<this.totalCount; i++)
 		{
 			record = this.getAt(i);
+			
+			new Ext.form.TextField({
+				renderTo : ExecuteEventObj.get("param1_" + record.data.RowID),
+				name :  "param1_" + record.data.RowID,
+				width : 80
+			});
+			new Ext.form.TextField({
+				renderTo : ExecuteEventObj.get("param2_" + record.data.RowID),
+				name :  "param2_" + record.data.RowID,
+				width : 80
+			});
+			new Ext.form.TextField({
+				renderTo : ExecuteEventObj.get("param3_" + record.data.RowID),
+				name :  "param3_" + record.data.RowID,
+				width : 80
+			});
+				
 			if(record.data.ComputeItemID*1 == 0)
 			{
 				new Ext.form.CurrencyField({
@@ -46,14 +70,14 @@ function ExecuteEvent(){
 					hideTrigger : true,
 					name :  record.data.CostType == "DEBTOR" ? 
 						"DebtorAmount_" + record.data.RowID : "CreditorAmount_" + record.data.RowID,
-					width : 120
+					width : 90
 				});
 			}
 			if(record.data.Tafsili == "0" && record.data.TafsiliType*1 > 0)
 			{
 				new Ext.form.ComboBox({
 					renderTo : ExecuteEventObj.get("TafsiliID1_" + record.data.RowID),
-					width : 170,
+					width : 140,
 					store: new Ext.data.Store({
 						fields:["TafsiliID","TafsiliDesc"],
 						proxy: {
@@ -77,7 +101,7 @@ function ExecuteEvent(){
 			{
 				new Ext.form.ComboBox({
 					renderTo : ExecuteEventObj.get("TafsiliID2_" + record.data.RowID),
-					width : 170,
+					width : 140,
 					store: new Ext.data.Store({
 						fields:["TafsiliID","TafsiliDesc"],
 						proxy: {
@@ -101,7 +125,7 @@ function ExecuteEvent(){
 			{
 				new Ext.form.ComboBox({
 					renderTo : ExecuteEventObj.get("TafsiliID3_" + record.data.RowID),
-					width : 170,
+					width : 140,
 					store: new Ext.data.Store({
 						fields:["TafsiliID","TafsiliDesc"],
 						proxy: {
@@ -141,25 +165,59 @@ ExecuteEvent.CreditorAmountRenderer = function(v,p,r){
 	else
 		return "<div id=CreditorAmount_" + r.data.RowID + "></div>";
 }
+//.................................................
+
+ExecuteEvent.Param1Renderer = function(v,p,r){
+	if( r.data.paramDesc1 == null)
+		return '';
+	if( v !== null)
+		return r.data.paramDesc1 + ":<br>" + (r.data.ParamValue1 ? r.data.ParamValue1 : v);
+	
+	return r.data.paramDesc1 + ":<br><div id=param1_" + r.data.RowID + "></div>";
+}
+ExecuteEvent.Param2Renderer = function(v,p,r){
+	if( r.data.paramDesc2 == null)
+		return '';
+	if( v !== null)
+		return r.data.paramDesc2 + ":<br>" + (r.data.ParamValue2 ? r.data.ParamValue2 : v);
+	
+	return r.data.paramDesc2 + ":<br><div id=param2_" + r.data.RowID + "></div>";
+}
+ExecuteEvent.Param3Renderer = function(v,p,r){
+	if( r.data.paramDesc3 == null)
+		return '';
+	if( v !== null)
+		return r.data.paramDesc3 + ":<br>" + (r.data.ParamValue3 ? r.data.ParamValue3 : v);
+	
+	return r.data.paramDesc3 + ":<br><div id=param3_" + r.data.RowID + "></div>";
+}
+//.................................................
 
 ExecuteEvent.TafsiliRenderer1 = function(v,p,r){
-	if(v == "0" && r.data.TafsiliType*1 > 0)
-		return "<div id=TafsiliID1_" + r.data.RowID + "></div>";
+	if(r.data.TafsiliType1 == null || r.data.TafsiliType1 == undefined || r.data.TafsiliType1*1 == 0)
+			return '';
+	if(v == "0" )
+		return r.data.TafsiliTypeDesc1 + "<br><div id=TafsiliID1_" + r.data.RowID + "></div>";
 	else
-		return r.data.TafsiliValue1;
+		return r.data.TafsiliTypeDesc1 + ":<br>" + r.data.TafsiliDesc1;
 }
 ExecuteEvent.TafsiliRenderer2 = function(v,p,r){
-	if(v == "0" && r.data.TafsiliType2 != "0")
-		return "<div id=TafsiliID2_" + r.data.RowID + "></div>";
+	if(r.data.TafsiliType2 == null || r.data.TafsiliType2 == undefined || r.data.TafsiliType2*1 == 0)
+		return '';
+	if(v == "0")
+		return r.data.TafsiliTypeDesc2 + "<br><div id=TafsiliID2_" + r.data.RowID + "></div>";
 	else
-		return r.data.TafsiliValue2;
+		return r.data.TafsiliTypeDesc2 + ":<br>" + r.data.TafsiliDesc2;
 }
 ExecuteEvent.TafsiliRenderer3 = function(v,p,r){
-	if(v == "0" && r.data.TafsiliType3 != "0")
-		return "<div id=TafsiliID3_" + r.data.RowID + "></div>";
+	if(r.data.TafsiliType3 == null || r.data.TafsiliType3 == undefined || r.data.TafsiliType3*1 == 0)
+		return '';
+	if(v == "0")
+		return r.data.TafsiliTypeDesc3 + "<br><div id=TafsiliID3_" + r.data.RowID + "></div>";
 	else
-		return r.data.TafsiliValue3;
+		return r.data.TafsiliTypeDesc3 + ":<br>" + r.data.TafsiliDesc3;
 }
+//.................................................
 
 ExecuteEventObj = new ExecuteEvent();
 

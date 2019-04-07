@@ -102,7 +102,7 @@ function GetData(){
 			join BSC_branches using(BranchID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
-			left join ACC_DocItems di on(di.SourceType=".DOCTYPE_LOAN_PAYMENT." AND di.SourceID=py.RequestID AND di.SourceID3=py.PayID)
+			left join ACC_DocItems di on(di.SourceType=".DOCTYPE_LOAN_PAYMENT." AND di.SourceID1=py.RequestID AND di.SourceID3=py.PayID)
 			left join ACC_docs dh on(di.DocID=dh.DocID)
 			where 1=1 " . $where;
 	

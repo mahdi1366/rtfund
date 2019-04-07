@@ -112,7 +112,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	//------------ find the number step to pay ---------------
 	$FirstStep = true;
 	$dt = PdoDataAccess::runquery("select * from ACC_DocItems where SourceType=" .
-			DOCTYPE_LOAN_PAYMENT . " AND SourceID=? order by SourceID3", 
+			DOCTYPE_LOAN_PAYMENT . " AND SourceID1=? order by SourceID3", 
 			array($ReqObj->RequestID));
 	if(count($dt) > 0)
 	{
@@ -190,7 +190,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	}
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
-	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID1 = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
 	$itemObj->SourceID3 = $PayObj->PayID;
 	
@@ -551,7 +551,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	
 	$dt = PdoDataAccess::runquery("select * from DMS_documents 
 		join BaseInfo b on(InfoID=DocType AND TypeID=8)
-		join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
+		join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID1=DocumentID)
 		where IsConfirm='YES' AND b.param1=1 AND ObjectType='loan' AND ObjectID=?", array($ReqObj->RequestID));
 	$SumAmount = 0;
 	$countAmount = 0;
@@ -586,7 +586,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $LoanPersonTafsili;
 			$itemObj->SourceType = DOCTYPE_DOCUMENT;
-			$itemObj->SourceID = $row["DocumentID"];
+			$itemObj->SourceID1 = $row["DocumentID"];
 			$itemObj->details = $row["DocTypeDesc"] . " به شماره " . $row["DocNo"];
 			$itemObj->Add($pdo);
 			
@@ -639,7 +639,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$itemObj->TafsiliID2 = $AccountTafsili;
 	$itemObj->locked = "NO";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
-	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID1 = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
 	$itemObj->SourceID3 = $PayObj->PayID;
 	$itemObj->Add($pdo);
@@ -790,7 +790,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	//------------ find the number step to pay ---------------
 	$FirstStep = true;
 	$dt = PdoDataAccess::runquery("select * from ACC_DocItems 
-		where SourceType='".DOCTYPE_LOAN_PAYMENT."' AND SourceID=? AND SourceID2=?", 
+		where SourceType='".DOCTYPE_LOAN_PAYMENT."' AND SourceID1=? AND SourceID2=?", 
 			array($ReqObj->RequestID, $PartObj->PartID));
 	if(count($dt) > 0)
 	{
@@ -821,7 +821,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$itemObj->TafsiliID2 = $ReqPersonTafsili;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
-	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID1 = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
 	$itemObj->SourceID3 = $PayObj->PayID;
 	
@@ -883,7 +883,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$itemObj->TafsiliID = $ReqPersonTafsili;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
-	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID1 = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
 	$itemObj->SourceID3 = $PayObj->PayID;
 	$itemObj->Add($pdo);
@@ -897,7 +897,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$itemObj->TafsiliID = $ReqPersonTafsili;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
-	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID1 = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
 	$itemObj->SourceID3 = $PayObj->PayID;
 	$itemObj->Add($pdo);
@@ -1005,7 +1005,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	//---------- ردیف های تضمین  ----------
 	$dt = PdoDataAccess::runquery("select * from DMS_documents 
 		join BaseInfo b on(InfoID=DocType AND TypeID=8)
-		join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
+		join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID1=DocumentID)
 		where IsConfirm='YES' AND b.param1=1 AND ObjectType='loan' AND ObjectID=?", array($ReqObj->RequestID));
 	$SumAmount = 0;
 	$countAmount = 0;
@@ -1032,7 +1032,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $LoanPersonTafsili;
 			$itemObj->SourceType = DOCTYPE_DOCUMENT;
-			$itemObj->SourceID = $row["DocumentID"];
+			$itemObj->SourceID1 = $row["DocumentID"];
 			$itemObj->details = $row["DocTypeDesc"];
 			$itemObj->Add($pdo);
 			
@@ -1071,7 +1071,7 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$itemObj->TafsiliID2 = $AccountTafsili;
 	$itemObj->locked = "NO";
 	$itemObj->SourceType = DOCTYPE_LOAN_PAYMENT;
-	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID1 = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PartObj->PartID;
 	$itemObj->SourceID3 = $PayObj->PayID;
 	$itemObj->Add($pdo);
@@ -1205,7 +1205,7 @@ function RegisterLoanCost($CostObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
 	}
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_COST;
-	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID1 = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $CostObj->CostID;
 	$itemObj->CostID = $CostCode_Loan;
 	$itemObj->DebtorAmount = $CostObj->CostAmount*1 > 0 ? $CostObj->CostAmount : 0;
@@ -1222,7 +1222,7 @@ function RegisterLoanCost($CostObj, $CostID, $TafsiliID, $TafsiliID2, $pdo){
 	$itemObj->CostID = $CostID;
 	$itemObj->DebtorAmount = $CostObj->CostAmount*1 < 0 ? abs($CostObj->CostAmount) : 0;
 	$itemObj->CreditorAmount = $CostObj->CostAmount*1 > 0 ? $CostObj->CostAmount : 0;
-	$itemObj->TafsiliType = $CostCodeObj->TafsiliType;
+	$itemObj->TafsiliType = $CostCodeObj->TafsiliType1;
 	if($TafsiliID != "")
 		$itemObj->TafsiliID = $TafsiliID;
 	$itemObj->TafsiliType2 = $CostCodeObj->TafsiliType2;
@@ -1425,7 +1425,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	}
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_DIFFERENCE;
-	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID1 = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $NewPartObj->PartID;
 	
 	$NewExtraAmount = GetExtraLoanAmount($NewPartObj, 
@@ -1695,7 +1695,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 		$itemObj->CreditorAmount = 0;	
 		$itemObj->locked = "NO";
-		$itemObj->SourceID = $ReqObj->RequestID;
+		$itemObj->SourceID1 = $ReqObj->RequestID;
 		$itemObj->SourceID2 = $NewPartObj->PartID;
 		
 		if(!$itemObj->Add($pdo))
@@ -1798,7 +1798,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		$itemObj->CreditorAmount = $diffFundWageShare > 0 ? $diffFundWageShare : 0;	
 		$itemObj->locked = "YES";
 		$itemObj->details = "اختلاف پرداخت های مشتری وام شماره " . $ReqObj->RequestID;
-		$itemObj->SourceID = $ReqObj->RequestID;
+		$itemObj->SourceID1 = $ReqObj->RequestID;
 		$itemObj->SourceID2 = $NewPartObj->PartID;		
 		if(!$itemObj->Add($pdo))
 		{
@@ -1814,7 +1814,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 			$itemObj->CreditorAmount = $diffFundWageShare < 0 ? abs($diffFundWageShare) : 0;
 			$itemObj->locked = "YES";
 			$itemObj->details = "اختلاف پرداخت های مشتری وام شماره " . $ReqObj->RequestID;
-			$itemObj->SourceID = $ReqObj->RequestID;
+			$itemObj->SourceID1 = $ReqObj->RequestID;
 			$itemObj->SourceID2 = $NewPartObj->PartID;		
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $ReqPersonTafsili;
@@ -1834,7 +1834,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 			$itemObj->CreditorAmount = $diffFundWageShare < 0 ? abs($diffFundWageShare) : 0;
 			$itemObj->locked = "YES";
 			$itemObj->details = "اختلاف پرداخت های مشتری وام شماره " . $ReqObj->RequestID;
-			$itemObj->SourceID = $ReqObj->RequestID;
+			$itemObj->SourceID1 = $ReqObj->RequestID;
 			$itemObj->SourceID2 = $NewPartObj->PartID;		
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $LoanPersonTafsili;
@@ -1913,7 +1913,7 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 	$itemObj->DocID = $obj->DocID;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_LOAN_DIFFERENCE;
-	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID1 = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $NewPartObj->PartID;
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $LoanPersonTafsili;
@@ -2123,7 +2123,7 @@ function RegisterChangeInstallmentWage($DocID, $ReqObj,$PartObj, $InstallmentObj
 	}
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_INSTALLMENT_CHANGE;
-	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID1 = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $InstallmentObj->InstallmentID;
 	
 	//...............Loan ..............................
@@ -2191,7 +2191,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	if($DocObj == null)
 	{
 		$dt = PdoDataAccess::runquery("select * from ACC_DocItems where SourceType=" . 
-			DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID=? AND SourceID2=?" , 
+			DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID1=? AND SourceID2=?" , 
 			array($ReqObj->RequestID, $PayObj->BackPayID));
 		if(count($dt) > 0)
 		{
@@ -2330,7 +2330,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	}
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_INSTALLMENT_PAYMENT;
-	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID1 = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PayObj->BackPayID;
 	
 	//---------------- loan -----------------
@@ -2356,7 +2356,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	$itemObj->CostID = $CostID;
 	$itemObj->DebtorAmount= $PayObj->PayAmount + $ExtraPay;
 	$itemObj->CreditorAmount = 0;
-	$itemObj->TafsiliType = $CostObj->TafsiliType;
+	$itemObj->TafsiliType = $CostObj->TafsiliType1;
 	if($TafsiliID != "")
 		$itemObj->TafsiliID = $TafsiliID;
 	$itemObj->TafsiliType2 = $CostObj->TafsiliType2;
@@ -2586,7 +2586,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 	if($DocObj == null)
 	{
 		$dt = PdoDataAccess::runquery("select * from ACC_DocItems where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " 
-			AND SourceID=? AND SourceID2=?" , array($ReqObj->RequestID, $PayObj->BackPayID));
+			AND SourceID1=? AND SourceID2=?" , array($ReqObj->RequestID, $PayObj->BackPayID));
 		if(count($dt) > 0)
 		{
 			ExceptionHandler::PushException("سند این ردیف پرداخت قبلا صادر شده است");
@@ -2687,7 +2687,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 	$itemObj->TafsiliID2 = $ReqPersonTafsili;
 	$itemObj->locked = "YES";
 	$itemObj->SourceType = DOCTYPE_INSTALLMENT_PAYMENT;
-	$itemObj->SourceID = $ReqObj->RequestID;
+	$itemObj->SourceID1 = $ReqObj->RequestID;
 	$itemObj->SourceID2 = $PayObj->BackPayID;
 	
 	//---------------- loan -----------------
@@ -2744,7 +2744,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 	$itemObj->CostID = $PayObj->PayType == "3" ? $CostCode_fund : $CostCode_bank;
 	$itemObj->DebtorAmount= $PayObj->PayAmount + $ExtraPay;
 	$itemObj->CreditorAmount = 0;
-	$itemObj->TafsiliType = $CostObj->TafsiliType;
+	$itemObj->TafsiliType = $CostObj->TafsiliType1;
 	if($TafsiliID != "")
 		$itemObj->TafsiliID = $TafsiliID;
 	$itemObj->TafsiliType2 = $CostObj->TafsiliType2;
@@ -2788,7 +2788,7 @@ function ReturnCustomerPayDoc($PayObj, $pdo, $EditMode = false){
 	$dt = PdoDataAccess::runquery("select d.DocID,LocalNo,CycleDesc
 		from ACC_DocItems d join ACC_docs using(DocID) join ACC_cycles using(CycleID)
 		where StatusID <> ".ACC_STEPID_RAW." 
-			AND SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID=? AND SourceID2=?",
+			AND SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID1=? AND SourceID2=?",
 		array($PayObj->RequestID, $PayObj->BackPayID), $pdo);
 	if(count($dt) > 0)
 	{
@@ -2799,13 +2799,13 @@ function ReturnCustomerPayDoc($PayObj, $pdo, $EditMode = false){
 	//..........................................................................
 	
 	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
-		where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID=? AND SourceID2=?",
+		where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID1=? AND SourceID2=?",
 		array($PayObj->RequestID, $PayObj->BackPayID), $pdo);
 	if(count($dt) == 0)
 		return true;
 	
 	PdoDataAccess::runquery("delete from ACC_DocItems 
-		where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID=? AND SourceID2=?",
+		where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " AND SourceID1=? AND SourceID2=?",
 		array($PayObj->RequestID, $PayObj->BackPayID), $pdo);
 	
 	if(!$EditMode)
@@ -2894,7 +2894,7 @@ function RegisterEndRequestDoc($ReqObj, $pdo){
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $LoanPersonTafsili;
 			$itemObj->SourceType = DOCTYPE_DOCUMENT;
-			$itemObj->SourceID = $row["DocumentID"];
+			$itemObj->SourceID1 = $row["DocumentID"];
 			$itemObj->details = $row["DocTypeDesc"];
 			$itemObj->Add($pdo);
 			
@@ -3009,7 +3009,7 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 	$itemObj->TafsiliType2 = TAFTYPE_ChequeStatus;
 	$itemObj->TafsiliID2 = $InChequeObj->ChequeStatus;
 	$itemObj->SourceType = $__SourceType;
-	$itemObj->SourceID = $__ChequeID;
+	$itemObj->SourceID1 = $__ChequeID;
 	$itemObj->details = "چک شماره " . $InChequeObj->ChequeNo;
 	
 	//............ register status related rows .........................
@@ -3088,7 +3088,7 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 			$itemObj->CostID = $CostID;
 			$itemObj->DebtorAmount= $__ChequeAmount;
 			$itemObj->CreditorAmount = 0;
-			$itemObj->TafsiliType = $CostObj->TafsiliType;
+			$itemObj->TafsiliType = $CostObj->TafsiliType1;
 			if($TafsiliID != "")
 				$itemObj->TafsiliID = $TafsiliID;
 			$itemObj->TafsiliType2 = $CostObj->TafsiliType2;
@@ -3109,7 +3109,7 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 			$itemObj->CostID = $InChequeObj->CostID;
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $__ChequeAmount;
-			$itemObj->TafsiliType = $CostCodeObj->TafsiliType;
+			$itemObj->TafsiliType = $CostCodeObj->TafsiliType1;
 			$itemObj->TafsiliID = $InChequeObj->TafsiliID;
 			$itemObj->TafsiliType2 = $CostCodeObj->TafsiliType2;
 			$itemObj->TafsiliID2 = $InChequeObj->TafsiliID2;
@@ -3137,7 +3137,7 @@ function RegisterOuterCheque($DocID, $InChequeObj, $pdo, $CostID ="", $TafsiliID
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $__TafsiliID;
 		$itemObj->SourceType = $__SourceType;
-		$itemObj->SourceID = $__ChequeID;
+		$itemObj->SourceID1 = $__ChequeID;
 		$itemObj->details = "چک شماره " . $InChequeObj->ChequeNo;
 		$itemObj->Add($pdo);
 
@@ -3205,7 +3205,7 @@ function EditIncomeCheque($InChequeObj, $newAmount, $pdo){
 	$itemObj->TafsiliType2 = TAFTYPE_ChequeStatus;
 	$itemObj->TafsiliID2 = INCOMECHEQUE_EDIT;
 	$itemObj->SourceType = $__SourceType;
-	$itemObj->SourceID = $__ChequeID;
+	$itemObj->SourceID1 = $__ChequeID;
 	$itemObj->details = "چک شماره " . $InChequeObj->ChequeNo;
 	
 	unset($itemObj->ItemID);
@@ -3413,7 +3413,7 @@ function ComputeDepositeProfit($ToDate, $TafsiliArr, $ReportMode = false, $IsFlo
 		//-------------- get latest deposite compute -------------
 		if(!$IsFlow)
 		{
-			$dt = PdoDataAccess::runquery("select max(SourceID)
+			$dt = PdoDataAccess::runquery("select max(SourceID1)
 				from ACC_docs join ACC_DocItems using(DocID)
 				where DocType=" . DOCTYPE_DEPOSIT_PROFIT . " 
 					AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
@@ -3490,7 +3490,7 @@ function ComputeDepositeProfit($ToDate, $TafsiliArr, $ReportMode = false, $IsFlo
 		$itemObj->locked = "YES";
 		$itemObj->details = "سود سپرده تا تاریخ " . DateModules::miladi_to_shamsi($ToDate);
 		$itemObj->SourceType = DOCTYPE_DEPOSIT_PROFIT;
-		$itemObj->SourceID = $ToDate;
+		$itemObj->SourceID1 = $ToDate;
 		if(!$itemObj->Add($pdo))
 		{
 			echo Response::createObjectiveResponse(false, "خطا در ایجاد ردیف اول سند");
@@ -3749,7 +3749,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $PersonTafsili;
 	$itemObj->SourceType = DOCTYPE_WARRENTY;
-	$itemObj->SourceID = $ReqObj->RefRequestID;
+	$itemObj->SourceID1 = $ReqObj->RefRequestID;
 	$itemObj->SourceID2 = $ReqObj->RequestID;
 	$itemObj->locked = "YES";
 	
@@ -3849,7 +3849,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		$blockObj->IsLock = "YES";
 		$blockObj->EndDate = $ReqObj->EndDate;
 		$blockObj->SourceType = DOCTYPE_WARRENTY;
-		$blockObj->SourceID = $ReqObj->RequestID;
+		$blockObj->SourceID1 = $ReqObj->RequestID;
 		$blockObj->details = "بابت ضمانت نامه شماره " . $ReqObj->RefRequestID;
 		if(!$blockObj->Add())
 		{
@@ -3860,7 +3860,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	}
 	if($IsExtend && $preObj->amount*1 <> $ReqObj->amount*1 && $ReqObj->IsBlock == "YES")
 	{
-		$dt = PdoDataAccess::runquery("select * from ACC_blocks where SourceType=? AND SourceID=?",
+		$dt = PdoDataAccess::runquery("select * from ACC_blocks where SourceType=? AND SourceID1=?",
 				array(DOCTYPE_WARRENTY, $ReqObj->RequestID));
 		if(count($dt) > 0)
 		{
@@ -3878,7 +3878,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		$blockObj->IsLock = "YES";
 		$blockObj->EndDate = $ReqObj->EndDate;
 		$blockObj->SourceType = DOCTYPE_WARRENTY;
-		$blockObj->SourceID = $ReqObj->RequestID;
+		$blockObj->SourceID1 = $ReqObj->RequestID;
 		$blockObj->details = "بابت ضمانت نامه شماره " . $ReqObj->RefRequestID;
 		if(!$blockObj->Add())
 		{
@@ -3902,7 +3902,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 		unset($itemObj->ItemID);
 		unset($itemObj->TafsiliType);
 		unset($itemObj->TafsiliID);
-		$itemObj->SourceID = $IsExtend ? $ReqObj->RefRequestID : $ReqObj->RequestID;
+		$itemObj->SourceID1 = $IsExtend ? $ReqObj->RefRequestID : $ReqObj->RequestID;
 		$itemObj->SourceID2 = $ReqObj->RequestID;
 		$itemObj->SourceID3 = $row["CostID"];
 		$itemObj->details = $row["CostDesc"];
@@ -3962,13 +3962,13 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 	$itemObj->CostID = $WageCost;
 	$itemObj->DebtorAmount = $TAMOUNT < 0 ? 0 : $TAMOUNT;
 	$itemObj->CreditorAmount = $TAMOUNT < 0 ? abs($TAMOUNT) : 0;
-	$itemObj->TafsiliType = $CostObj->TafsiliType;
+	$itemObj->TafsiliType = $CostObj->TafsiliType1;
 	if($TafsiliID != "")
 		$itemObj->TafsiliID = $TafsiliID;
 	$itemObj->TafsiliType2 = $CostObj->TafsiliType2;
 	if($TafsiliID2 != "")
 		$itemObj->TafsiliID2 = $TafsiliID2;
-	$itemObj->SourceID = $IsExtend ? $ReqObj->RefRequestID : $ReqObj->RequestID;
+	$itemObj->SourceID1 = $IsExtend ? $ReqObj->RefRequestID : $ReqObj->RequestID;
 	$itemObj->SourceID2 = $ReqObj->RequestID;
 	if(!$itemObj->Add($pdo))
 	{
@@ -3987,7 +3987,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 				join DMS_DocParams using(ParamID)
 				join DMS_documents d using(DocumentID)
 				join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
-				left join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
+				left join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID1=DocumentID)
 			where ItemID is null AND b.param1=1 AND 
 				paramType='currencyfield' AND ObjectType='warrenty' AND ObjectID=?",array($ReqObj->RequestID), $pdo);
 
@@ -4000,7 +4000,7 @@ function RegisterWarrantyDoc($ReqObj, $WageCost, $TafsiliID, $TafsiliID2,$Block_
 			$itemObj->TafsiliType = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID = $PersonTafsili;
 			$itemObj->SourceType = DOCTYPE_DOCUMENT;
-			$itemObj->SourceID = $row["DocumentID"];
+			$itemObj->SourceID1 = $row["DocumentID"];
 			$itemObj->details = $row["DocTypeDesc"];
 			$itemObj->Add($pdo);
 
@@ -4052,7 +4052,7 @@ function ReturnWarrantyDoc($ReqObj, $pdo, $EditMode = false){
 		return true;
 	
 	PdoDataAccess::runquery("delete from ACC_CostBlocks 
-			where SourceType=" . DOCTYPE_WARRENTY . " AND SourceID=?",
+			where SourceType=" . DOCTYPE_WARRENTY . " AND SourceID1=?",
 			array($ReqObj->RequestID), $pdo);
 	
 	if($EditMode)
@@ -4113,7 +4113,7 @@ function EndWarrantyDoc($ReqObj, $pdo){
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $PersonTafsili;
 	$itemObj->SourceType = DOCTYPE_WARRENTY_END;
-	$itemObj->SourceID = $ReqObj->RefRequestID;
+	$itemObj->SourceID1 = $ReqObj->RefRequestID;
 	$itemObj->SourceID2 = $ReqObj->RequestID;
 	$itemObj->locked = "YES";
 	
@@ -4158,7 +4158,7 @@ function EndWarrantyDoc($ReqObj, $pdo){
 	//---------------------------- block Cost ----------------------------
 	if($ReqObj->IsBlock == "YES")
 	{
-		$dt = PdoDataAccess::runquery("select * from ACC_blocks where SourceType=? AND SourceID=?",
+		$dt = PdoDataAccess::runquery("select * from ACC_blocks where SourceType=? AND SourceID1=?",
 				array(DOCTYPE_WARRENTY, $ReqObj->RequestID));
 		if(count($dt) > 0)
 		{
@@ -4175,7 +4175,7 @@ function EndWarrantyDoc($ReqObj, $pdo){
 			join DMS_DocParams using(ParamID)
 			join DMS_documents d using(DocumentID)
 			join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
-			left join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID=DocumentID)
+			left join ACC_DocItems on(SourceType=" . DOCTYPE_DOCUMENT . " AND SourceID1=DocumentID)
 		where ItemID is null AND b.param1=1 AND 
 			paramType='currencyfield' AND ObjectType='warrenty' AND ObjectID=?",array($ReqObj->RefRequestID), $pdo);
 
@@ -4188,7 +4188,7 @@ function EndWarrantyDoc($ReqObj, $pdo){
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $PersonTafsili;
 		$itemObj->SourceType = DOCTYPE_DOCUMENT;
-		$itemObj->SourceID = $row["DocumentID"];
+		$itemObj->SourceID1 = $row["DocumentID"];
 		$itemObj->details = $row["DocTypeDesc"];
 		$itemObj->Add($pdo);
 
@@ -4260,7 +4260,7 @@ function CancelWarrantyDoc($ReqObj, $extradays, $pdo){
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $PersonTafsili;
 	$itemObj->SourceType = DOCTYPE_WARRENTY_CANCEL;
-	$itemObj->SourceID = $ReqObj->RefRequestID;
+	$itemObj->SourceID1 = $ReqObj->RefRequestID;
 	$itemObj->SourceID2 = $ReqObj->RequestID;
 	$itemObj->locked = "YES";
 	//------------------- compute wage ------------------
@@ -4319,7 +4319,7 @@ function CancelWarrantyDoc($ReqObj, $extradays, $pdo){
 	$itemObj->TafsiliType = TAFTYPE_PERSONS;
 	$itemObj->TafsiliID = $PersonTafsili;
 	$itemObj->SourceType = DOCTYPE_WARRENTY_END;
-	$itemObj->SourceID = $ReqObj->RefRequestID;
+	$itemObj->SourceID1 = $ReqObj->RefRequestID;
 	$itemObj->SourceID2 = $ReqObj->RequestID;
 	$itemObj->locked = "YES";
 	
@@ -4364,7 +4364,7 @@ function CancelWarrantyDoc($ReqObj, $extradays, $pdo){
 	//---------------------------- block Cost ----------------------------
 	if($ReqObj->IsBlock == "YES")
 	{
-		$dt = PdoDataAccess::runquery("select * from ACC_blocks where SourceType=? AND SourceID=?",
+		$dt = PdoDataAccess::runquery("select * from ACC_blocks where SourceType=? AND SourceID1=?",
 				array(DOCTYPE_WARRENTY, $ReqObj->RequestID));
 		if(count($dt) > 0)
 		{
@@ -4393,7 +4393,7 @@ function CancelWarrantyDoc($ReqObj, $extradays, $pdo){
 		$itemObj->TafsiliType = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID = $PersonTafsili;
 		$itemObj->SourceType = DOCTYPE_DOCUMENT;
-		$itemObj->SourceID = $row["DocumentID"];
+		$itemObj->SourceID1 = $row["DocumentID"];
 		$itemObj->details = $row["DocTypeDesc"];
 		$itemObj->Add($pdo);
 
@@ -4484,7 +4484,7 @@ function RegisterSalaryDoc($PObj, $pdo){
 	//................. check register before .................
 
 	$query = "select * from ACC_DocItems di join ACC_docs using(DocID)
-		where SourceType=".DOCTYPE_SALARY." AND SourceID=? AND SourceID2=? AND CycleID=" . $CycleID;
+		where SourceType=".DOCTYPE_SALARY." AND SourceID1=? AND SourceID2=? AND CycleID=" . $CycleID;
 	$dt = PdoDataAccess::runquery($query, array($PObj->payment_type, $PObj->pay_month));
 	
 	if(count($dt) > 0)
@@ -4531,7 +4531,7 @@ function RegisterSalaryDoc($PObj, $pdo){
 	//----------------- add Doc items ------------------------
 	PdoDataAccess::runquery("
 		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,
-			details,locked,SourceType,SourceID,SourceID2)
+			details,locked,SourceType,SourceID1,SourceID2)
 
 		select $DocObj->DocID,
 			CostID,
@@ -4603,7 +4603,7 @@ function RegisterSalaryDoc($PObj, $pdo){
 	PdoDataAccess::runquery("
 		insert into ACC_DocItems(DocID,CostID,details,
 			TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,
-			locked,SourceType,SourceID,SourceID2)
+			locked,SourceType,SourceID1,SourceID2)
 
 		select $DocObj->DocID,
 			".$CostCodes["PurePay"].",
@@ -4652,7 +4652,7 @@ function RegisterSalaryDoc($PObj, $pdo){
 		PdoDataAccess::runquery("
 			insert into ACC_DocItems(DocID,CostID,details,
 				DebtorAmount,CreditorAmount,
-				locked,SourceType,SourceID,SourceID2)
+				locked,SourceType,SourceID1,SourceID2)
 
 			select $DocObj->DocID,
 				Param".$i."CostID,
@@ -4699,7 +4699,7 @@ function ReturnSalaryDoc($PObj, $pdo){
 	//..........................................................................
 	$dt = PdoDataAccess::runquery("select DocID,LocalNo,CycleDesc 
 			from ACC_docs join ACC_DocItems using(DocID) join ACC_cycles using(CycleID)
-			where StatusID <> ".ACC_STEPID_RAW." AND SourceType=" . DOCTYPE_SALARY . " AND SourceID=? AND SourceID2=?",
+			where StatusID <> ".ACC_STEPID_RAW." AND SourceType=" . DOCTYPE_SALARY . " AND SourceID1=? AND SourceID2=?",
 	array($PObj->payment_type, $PObj->pay_month), $pdo);
 	if(count($dt) > 0)
 	{
@@ -4709,7 +4709,7 @@ function ReturnSalaryDoc($PObj, $pdo){
 	}
 	$dt = PdoDataAccess::runquery("select DocID,LocalNo,CycleDesc 
 			from ACC_docs join ACC_DocItems using(DocID) join ACC_cycles using(CycleID)
-			where SourceType=" . DOCTYPE_SALARY_PAY . " AND SourceID=? AND SourceID2=?",
+			where SourceType=" . DOCTYPE_SALARY_PAY . " AND SourceID1=? AND SourceID2=?",
 	array($PObj->payment_type, $PObj->pay_month), $pdo);
 	if(count($dt) > 0)
 	{
@@ -4721,13 +4721,13 @@ function ReturnSalaryDoc($PObj, $pdo){
 	//..........................................................................
 	
 	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
-		where SourceType=" . DOCTYPE_SALARY . " AND SourceID=? AND SourceID2=?",
+		where SourceType=" . DOCTYPE_SALARY . " AND SourceID1=? AND SourceID2=?",
 		array($PObj->payment_type, $PObj->pay_month), $pdo);
 	if(count($dt) == 0)
 		return true;
 	
 	PdoDataAccess::runquery("delete from ACC_DocItems 
-		where SourceType=" . DOCTYPE_SALARY . " AND SourceID=? AND SourceID2=?",
+		where SourceType=" . DOCTYPE_SALARY . " AND SourceID1=? AND SourceID2=?",
 		array($PObj->payment_type, $PObj->pay_month), $pdo);
 
 	return ACC_docs::Remove($dt[0][0], $pdo);
@@ -4740,7 +4740,7 @@ function RegisterPaySalaryDoc($PObj, $pdo){
 	CheckCloseCycle($CycleID);
 	
 	$query = "select LocalNo from ACC_DocItems di join ACC_docs using(DocID)
-		where SourceType=".DOCTYPE_SALARY_PAY." AND SourceID=? AND SourceID2=? AND CycleID=" . $CycleID;
+		where SourceType=".DOCTYPE_SALARY_PAY." AND SourceID1=? AND SourceID2=? AND CycleID=" . $CycleID;
 	$dt = PdoDataAccess::runquery($query, array($PObj->payment_type, $PObj->pay_month));
 	if(count($dt) > 0)
 	{
@@ -4750,7 +4750,7 @@ function RegisterPaySalaryDoc($PObj, $pdo){
 	};
 	
 	$query = "select sum(CreditorAmount) amount from ACC_DocItems di join ACC_docs using(DocID)
-		where SourceType=".DOCTYPE_SALARY." AND SourceID=? AND SourceID2=? AND CycleID=" . $CycleID;
+		where SourceType=".DOCTYPE_SALARY." AND SourceID1=? AND SourceID2=? AND CycleID=" . $CycleID;
 	$dt = PdoDataAccess::runquery($query, array($PObj->payment_type, $PObj->pay_month));
 	
 	if($dt[0]["amount"] == 0)
@@ -4781,7 +4781,7 @@ function RegisterPaySalaryDoc($PObj, $pdo){
 	
 	PdoDataAccess::runquery("
 		insert into ACC_DocItems(DocID,CostID,details,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,
-			locked,SourceType,SourceID,SourceID2)
+			locked,SourceType,SourceID1,SourceID2)
 
 		select $DocObj->DocID,
 			".$CostCodes["PurePay"].",
@@ -4829,7 +4829,7 @@ function RegisterPaySalaryDoc($PObj, $pdo){
 		
 	PdoDataAccess::runquery("
 		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,
-			locked,SourceType,SourceID,SourceID2)
+			locked,SourceType,SourceID1,SourceID2)
 
 		select $DocObj->DocID,
 			CreditorCostID,
@@ -4917,7 +4917,7 @@ function RegisterPaySalaryDoc($PObj, $pdo){
 		
 		PdoDataAccess::runquery("
 		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,DebtorAmount,CreditorAmount,
-			locked,SourceType,SourceID,SourceID2)
+			locked,SourceType,SourceID1,SourceID2)
 
 		select $DocObj2->DocID,
 			CreditorCostID,
@@ -4970,7 +4970,7 @@ function RegisterPaySalaryDoc($PObj, $pdo){
 		$itemObj->CostID = $FerdowsiCostID;
 		$itemObj->DebtorAmount = $totalParkAmount;
 		$itemObj->SourceType = DOCTYPE_SALARY_PAY;
-		$itemObj->SourceID = $PObj->payment_type;
+		$itemObj->SourceID1 = $PObj->payment_type;
 		$itemObj->SourceID2 = $PObj->pay_month;
 		if(!$itemObj->Add($pdo))
 		{
@@ -4999,7 +4999,7 @@ function ReturnPaySalaryDoc($PObj, $pdo){
 	$dt = PdoDataAccess::runquery("select DocID,LocalNo,CycleDesc from ACC_docs 
 			join ACC_DocItems using(DocID) join ACC_cycles using(CycleID)
 			where StatusID <> ".ACC_STEPID_RAW." AND SourceType=" . DOCTYPE_SALARY_PAY . 
-			" AND SourceID=? AND SourceID2=?",
+			" AND SourceID1=? AND SourceID2=?",
 	array($PObj->payment_type, $PObj->pay_month), $pdo);
 	if(count($dt) > 0)
 	{
@@ -5010,13 +5010,13 @@ function ReturnPaySalaryDoc($PObj, $pdo){
 	//..........................................................................
 	
 	$dt = PdoDataAccess::runquery("select DocID from ACC_DocItems 
-		where SourceType=" . DOCTYPE_SALARY_PAY . " AND SourceID=? AND SourceID2=?",
+		where SourceType=" . DOCTYPE_SALARY_PAY . " AND SourceID1=? AND SourceID2=?",
 		array($PObj->payment_type, $PObj->pay_month), $pdo);
 	if(count($dt) == 0)
 		return true;
 	
 	PdoDataAccess::runquery("delete from ACC_DocItems 
-		where SourceType=" . DOCTYPE_SALARY_PAY . " AND SourceID=? AND SourceID2=?",
+		where SourceType=" . DOCTYPE_SALARY_PAY . " AND SourceID1=? AND SourceID2=?",
 		array($PObj->payment_type, $PObj->pay_month), $pdo);
 
 	foreach($dt as $row)

@@ -4,7 +4,7 @@
 // create Date: 94.06
 //---------------------------
 
-require_once getenv("DOCUMENT_ROOT") . '/office/dms/dms.class.php';
+require_once DOCUMENT_ROOT . '/office/dms/dms.class.php';
 
 class LON_requests extends PdoDataAccess{
 	
@@ -58,12 +58,13 @@ class LON_requests extends PdoDataAccess{
 	static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery_fetchMode("
-			select r.*,l.*,
+			select r.*,l.*,p.PartID,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
 				bi.InfoDesc StatusDesc,
 				BranchName
 			from LON_requests r
+			join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
 			left join LON_loans l using(LoanID)
 			left join BSC_branches using(BranchID)
 			left join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
@@ -567,11 +568,11 @@ class LON_requests extends PdoDataAccess{
 		$returnArr = array();
 		$records = PdoDataAccess::runquery("
 			select * from (
-				select InstallmentID id,'installment' type, 
+				select InstallmentID id,0 BackPayID,'installment' type, 
 				InstallmentDate RecordDate,InstallmentAmount RecordAmount,0 PayType, '' details, wage
 				from LON_installments where RequestID=:r AND history='NO' AND IsDelayed='NO'
 			union All
-				select 0 id, 'pay' type, substr(p.PayDate,1,10) RecordDate, PayAmount RecordAmount, PayType,
+				select 0 id,BackPayID, 'pay' type, substr(p.PayDate,1,10) RecordDate, PayAmount RecordAmount, PayType,
 					if(PayType=" . BACKPAY_PAYTYPE_CORRECT . ",p.details,'') details,0
 				from LON_BackPays p
 				left join ACC_IncomeCheques i using(IncomeChequeID)
@@ -579,7 +580,7 @@ class LON_requests extends PdoDataAccess{
 				where RequestID=:r AND 
 					if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
 			union All
-				select 0 id,'pay' type, CostDate RecordDate, -1*CostAmount RecordAmount,0, CostDesc details, 0
+				select 0 id,0 BackPayID,'pay' type, CostDate RecordDate, -1*CostAmount RecordAmount,0, CostDesc details, 0
 				from LON_costs 
 				where RequestID=:r AND CostAmount<>0
 			)t
@@ -593,6 +594,7 @@ class LON_requests extends PdoDataAccess{
 			$x = $tempForReturnArr;
 			$tempForReturnArr = array(
 					"InstallmentID" => $record["id"],
+					"BackPayID" => $record["BackPayID"],
 					"details" => $record["details"],
 					"ActionType" => $record["type"],
 					"ActionDate" => $record["RecordDate"],
@@ -780,26 +782,36 @@ class LON_requests extends PdoDataAccess{
 			$curRecord["RecordAmount"] = abs($temp);
 		}
 		
-		//------ base on percent
-		if($totalRemain == 0)
-			return;
-		
-		if($curRecord["type"] == "installment" && $RecordAmount > 0)
+		//---------------- base on percent ------------------
+		if($totalRemain == 0) // pay is first record
 		{
-			$totalRemain = abs($totalRemain);
-			$share_pure = round($totalRemain*($returnArr["totalpure"]/$RecordAmount));
-			$share_wage = round($totalRemain*($returnArr["totalwage"]/$RecordAmount));
-			$share_LateWage = round($totalRemain*($returnArr["totalLateWage"]/$RecordAmount));
-			$share_LateForfeit = $returnArr["totalLateWage"] == 0 ? 0 :
-					$totalRemain - $share_pure - $share_wage - $share_LateWage;
+			$curRecord = $records[$index+1];
+			$totalRemain = $curRecord["RecordAmount"]*1;
+			$share = $curRecord["RecordAmount"]*1 - $curRecord["wage"];
+			$share_pure = round($RecordAmount*($share/$totalRemain));
+			$share_wage = round($RecordAmount*($curRecord["wage"]/$totalRemain));
+			$share_LateWage = 0;
+			$share_LateForfeit = 0;
 		}
 		else
 		{
-			$share_pure = round($RecordAmount*($returnArr["totalpure"]/$totalRemain));
-			$share_wage = round($RecordAmount*($returnArr["totalwage"]/$totalRemain));
-			$share_LateWage = round($RecordAmount*($returnArr["totalLateWage"]/$totalRemain));
-			$share_LateForfeit = $returnArr["totalLateWage"] == 0 ? 0 :
-					$curRecord["RecordAmount"] - $share_pure - $share_wage - $share_LateWage;
+			if($curRecord["type"] == "installment" && $RecordAmount > 0)
+			{
+				$totalRemain = abs($totalRemain);
+				$share_pure = round($totalRemain*($returnArr["totalpure"]/$RecordAmount));
+				$share_wage = round($totalRemain*($returnArr["totalwage"]/$RecordAmount));
+				$share_LateWage = round($totalRemain*($returnArr["totalLateWage"]/$RecordAmount));
+				$share_LateForfeit = $returnArr["totalLateWage"] == 0 ? 0 :
+						$totalRemain - $share_pure - $share_wage - $share_LateWage;
+			}
+			else
+			{
+				$share_pure = round($RecordAmount*($returnArr["totalpure"]/$totalRemain));
+				$share_wage = round($RecordAmount*($returnArr["totalwage"]/$totalRemain));
+				$share_LateWage = round($RecordAmount*($returnArr["totalLateWage"]/$totalRemain));
+				$share_LateForfeit = $returnArr["totalLateWage"] == 0 ? 0 :
+						$curRecord["RecordAmount"] - $share_pure - $share_wage - $share_LateWage;
+			}
 		}
 		
 		$returnArr["share_pure"] = $share_pure;
@@ -1200,6 +1212,40 @@ class LON_requests extends PdoDataAccess{
 	}
 	
 	/**
+	 مبلغ قابل پرداخت به مشتری
+	 * @param type $RequestID
+	 * @param type $PartObj
+	 * @param type $TanzilCompute
+	 * @return boolean
+	 */
+	static function GetPayedAmount($RequestID, $PartObj = null)
+	{
+		$PartObj = $PartObj == null ? LON_ReqParts::GetValidPartObj($RequestID) : $PartObj;
+		/*@var $PartObj LON_ReqParts */
+		
+		$amount = $PartObj->PartAmount*1;
+		
+		$result = self::GetDelayAmounts($RequestID, $PartObj);
+		if($PartObj->DelayReturn == "CUSTOMER")
+			$amount -= $result["FundDelay"];
+		if($PartObj->AgentDelayReturn == "CUSTOMER")
+			$amount -= $result["AgentDelay"];
+		
+		if($PartObj->FirstTotalWage*1 > 0)
+			$amount -= $PartObj->FirstTotalWage*1;
+		else if($PartObj->WageReturn == "CUSTOMER" || $PartObj->AgentReturn == "CUSTOMER")
+		{
+			$result = self::GetWageAmounts($RequestID, $PartObj);
+			if($PartObj->WageReturn == "CUSTOMER")
+				$amount -= $result["FundWage"];
+			if($PartObj->AgentReturn == "CUSTOMER")
+				$amount -= $result["AgentWage"];
+		}
+		
+		return round($amount);		
+	}
+	
+	/**
 	 * loan amount + delay if in installment + wage if in installment
 	 */
 	static function GetTotalReturnAmount($RequestID, $PartObj = null , $TanzilCompute = false){
@@ -1405,6 +1451,42 @@ class LON_requests extends PdoDataAccess{
 			if(isset($row["remainder"]) && $row["remainder"] == $row["InstallmentAmount"])
 				return $row;
 		return null;
+	}
+	
+	/**
+	 * طبقه تسهیلات را برمی گرداند
+	 * @param int $RequestID
+	 */
+	static function GetRequestLevel($RequestID){
+		
+		$ComputeDate = "";
+		$dt = LON_BackPays::GetRealPaid($RequestID);
+		if(count($dt) == 0)
+		{
+			$dt = LON_installments::GetValidInstallments($RequestID);
+			if(count($dt) == 0)
+				$ComputeDate = DateModules::Now();
+			else
+				$ComputeDate = $dt[0]["InstallmentDate"];
+		}
+		else
+		{
+			$ComputeDate = $dt[ count($dt)-1 ]["PayDate"];
+		}
+		
+		$diff = DateModules::GDateMinusGDate(DateModules::Now(), $ComputeDate);
+		if($diff < 0)
+			$diffInMonth = 0;
+		else
+			$diffInMonth = round($diff/30);
+		
+		$levels = PdoDataAccess::runquery("select * from ACC_CostCodeParamItems where ParamID=" . 
+				ACC_COST_PARAM_LOAN_LEVEL);
+		foreach($levels as $row)
+		{
+			if($diffInMonth >= $row["f1"]*1 && $diffInMonth <= $row["f2"]*1)
+				return $row["ItemID"];
+		}
 	}
 }
 
@@ -1640,7 +1722,7 @@ class LON_installments extends PdoDataAccess{
 			join LON_requests r using(RequestID)
 			join LON_ReqParts p on(r.RequestID=p.RequestID AND p.IsHistory='NO')
 			left join ACC_DocItems on(SourceType=" .DOCTYPE_INSTALLMENT_CHANGE. "
-				AND SourceID=i.RequestID AND SourceID2=i.InstallmentID)
+				AND SourceID1=i.RequestID AND SourceID2=i.InstallmentID)
 			left join ACC_docs using(DocID)
 			where " . $where . " group by i.InstallmentID", $param);
 	}
@@ -1677,9 +1759,21 @@ class LON_installments extends PdoDataAccess{
 	static function GetValidInstallments($RequestID, $pdo = null){
 		
 		return PdoDataAccess::runquery("select * from 
-			LON_installments where RequestID=? AND history='NO' AND IsDelayed='NO'", 
+			LON_installments where RequestID=? AND history='NO' AND IsDelayed='NO'
+			order by InstallmentDate", 
 			array($RequestID), $pdo);
 		
+	}
+	
+	static function GetLastInstallmentObj($RequestID){
+		
+		$obj = new LON_installments();
+		PdoDataAccess::FillObject($obj, "
+			select *
+			from LON_installments
+			where RequestID=?
+			order by InstallmentDate desc limit 1", array($RequestID));
+		return $obj;
 	}
 }
 
@@ -1728,7 +1822,7 @@ class LON_BackPays extends PdoDataAccess{
 			left join ACC_IncomeCheques i using(IncomeChequeID)
 			left join ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_ChequeStatus." AND t.TafsiliID=ChequeStatus)
 			
-			left join ACC_DocItems di on(SourceID=RequestID AND SourceID2=BackPayID AND SourceType in(8,5))
+			left join ACC_DocItems di on(SourceID1=RequestID AND SourceID2=BackPayID AND SourceType in(8,5))
 			left join ACC_docs d on(di.DocID=d.DocID)
 			
 			where " . $where . " group by BackPayID " . $order, $param);
@@ -1782,7 +1876,7 @@ class LON_BackPays extends PdoDataAccess{
 		
 		$dt = PdoDataAccess::runquery("
 			select DocID from ACC_DocItems where SourceType=" . DOCTYPE_INSTALLMENT_PAYMENT . " 
-			AND SourceID=? AND SourceID2=?" , array($obj->RequestID, $obj->BackPayID), $pdo);
+			AND SourceID1=? AND SourceID2=?" , array($obj->RequestID, $obj->BackPayID), $pdo);
 		if(count($dt) == 0)
 			return 0;
 		return $dt[0][0];
@@ -1791,7 +1885,8 @@ class LON_BackPays extends PdoDataAccess{
 	static function GetRealPaid($RequestID){
 		
 		return LON_BackPays::SelectAll(" RequestID=? 
-			AND if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)"
+			AND if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+			order by PayDate"
 			, array($RequestID));
 	}
 }
@@ -1821,7 +1916,7 @@ class LON_payments extends OperationClass{
 		return parent::runquery_fetchMode("select p.*,d.DocID,d.LocalNo,d.StatusID 
 			from LON_payments p
 			left join ACC_DocItems di on(di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
-				AND di.SourceID=p.RequestID AND di.SourceID3=p.PayID) 
+				AND di.SourceID1=p.RequestID AND di.SourceID3=p.PayID) 
 			left join ACC_docs d on(di.DocID=d.DocID)
 			where 1=1 " . $where .  
 			" group by p.PayID " . $order, $whereParams);
@@ -1864,7 +1959,7 @@ class LON_payments extends OperationClass{
 		$dt = parent::runquery("select d.DocID
 			from LON_payments p
 			left join ACC_DocItems di on(di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
-				AND SourceID=p.RequestID AND SourceID3=p.PayID) 
+				AND SourceID1=p.RequestID AND SourceID3=p.PayID) 
 			left join ACC_docs d on(di.DocID=d.DocID)
 			where p.PayID=? ", array($PayID));
 		return count($dt) > 0 ? $dt[0][0] : 0;
@@ -1970,7 +2065,7 @@ class LON_costs extends OperationClass{
 		
 		$dt = PdoDataAccess::runquery("select d.* 
 			from ACC_DocItems di join ACC_docs d using(DocID) 
-			where SourceID=? AND SourceID2=? AND SourceType=17
+			where SourceID1=? AND SourceID2=? AND SourceType=17
 			group by DocID", array($this->RequestID, $this->CostID));
 		
 		return count($dt) > 0 ? $dt[0] : false;

@@ -305,7 +305,7 @@ function GetRequestPeriods(){
 	
 	$RequestID = $_REQUEST["RequestID"];
 	$temp = PdoDataAccess::runquery("select p.*,DocID,LocalNo  from WAR_periods p
-		left join ACC_DocItems on(SourceType='" . DOCTYPE_WARRENTY . "' AND SourceID=RequestID)
+		left join ACC_DocItems on(SourceType='" . DOCTYPE_WARRENTY . "' AND SourceID1=RequestID)
 		left join ACC_docs using(DocID)	
 		where RequestID=?", array($RequestID));
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);

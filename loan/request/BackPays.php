@@ -344,7 +344,8 @@ LoanPay.RegDocRender = function(v,p,r){
 	
 	if(r.data.LocalNo == null)
 		return "<div align='center' title='صدور سند' class='send' "+
-		"onclick='LoanPayObject.BeforeRegisterDoc(1);' " +
+		/*"onclick='LoanPayObject.BeforeRegisterDoc(1);' " +*/
+		"onclick='LoanPayObject.ExecuteEvent();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 	else if(r.data.StatusID == "<?= ACC_STEPID_RAW ?>")
@@ -380,7 +381,7 @@ LoanPay.prototype.BeforeRegisterDoc = function(mode){
 					fieldLabel : "حساب مربوطه",
 					colspan : 2,
 					store: new Ext.data.Store({
-						fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+						fields:["CostID","CostCode","CostDesc", "TafsiliType1","TafsiliType2",{
 							name : "fullDesc",
 							convert : function(value,record){
 								return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
@@ -401,7 +402,7 @@ LoanPay.prototype.BeforeRegisterDoc = function(mode){
 							me = LoanPayObject;
 							
 							me.BankWin.down("[itemId=TafsiliID]").setValue();
-							me.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType;
+							me.BankWin.down("[itemId=TafsiliID]").getStore().proxy.extraParams.TafsiliType = records[0].data.TafsiliType1;
 							me.BankWin.down("[itemId=TafsiliID]").getStore().load();
 
 							
@@ -813,6 +814,38 @@ LoanPay.prototype.BeforeSaveGroupPay = function(){
 	this.groupWin.down("[itemId=GroupList]").bindStore(this.GroupPaysTitles);
 	this.groupWin.show();
 	this.groupWin.center();
+}
+
+LoanPay.prototype.ExecuteEvent = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+
+	var loanStore = new Ext.data.Store({
+		proxy:{
+			type: 'jsonp',
+			url: this.address_prefix + "request.data.php?task=SelectAllRequests&RequestID=" + record.data.RequestID,
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		},
+		fields : ["RequestID","ReqPersonID","PartID","FundGuarantee"]
+	});
+	loanStore.load({
+		callback : function(){
+			var eventID = "";
+			ReqRecord = this.getAt(0);
+			if(ReqRecord.data.ReqPersonID*1 > 0)
+			{
+				if(ReqRecord.data.FundGuarantee == "YES")
+					eventID = "<?= EVENT_LOANBACKPAY_agentSource_committal ?>";
+				else
+					eventID = "<?= EVENT_LOANBACKPAY_agentSource_non_committal ?>";
+			}
+			else
+				eventID = "<?= EVENT_LOANBACKPAY_innerSource ?>";
+				
+			framework.ExecuteEvent(eventID, new Array(
+				ReqRecord.data.RequestID,ReqRecord.data.PartID,record.data.BackPayID));
+		}
+	})
 }
 
 </script>

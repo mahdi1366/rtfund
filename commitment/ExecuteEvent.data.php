@@ -25,70 +25,108 @@ switch ($task) {
 function selectEventRows(){
 	
 	$EventID = $_REQUEST["EventID"]*1;
+	$eObj = new ExecuteEvent($EventID);
+	
 	$where = " er.IsActive='YES' AND EventID=? ";
 	$where .= " order by CostType,CostCode";
 	$list = COM_EventRows::SelectAll($where, array($EventID));
 	
 	//-------------- set source objects ----------------
-	$SourceObjects = array();
-	$fn = "";
-	switch($EventID)
-	{
-		case EVENT_LOAN_PAYMENT:
-			$ReqObj = new LON_requests((int)$_REQUEST["RequestID"]);
-			$PartObj = LON_ReqParts::GetValidPartObj($ReqObj->RequestID);
-			$PayObj = new LON_payments((int)$_REQUEST["PayID"]);
-			$SourceObjects = array($ReqObj, $PartObj, $PayObj);
-			$fn = "EventComputeItems::PayLoan";
-			break;
-		case EVENT_LOAN_BACKPAY:
-			$ReqObj = new LON_requests((int)$_REQUEST["RequestID"]);
-			$PartObj = LON_ReqParts::GetValidPartObj($ReqObj->RequestID);
-			$BackPayObj = new LON_BackPays((int)$_REQUEST["BackPayID"]);
-			$SourceObjects = array($ReqObj, $PartObj, $BackPayObj);
-			$fn = "EventComputeItems::LoanBackPay";
-			break;
-	}
+	$SourcesArr = array();
+	if(!empty($_REQUEST["SourceID1"]))
+		$SourcesArr[] = $_REQUEST["SourceID1"];
+	if(!empty($_REQUEST["SourceID2"]))
+		$SourcesArr[] = $_REQUEST["SourceID2"];
+	if(!empty($_REQUEST["SourceID3"]))
+		$SourcesArr[] = $_REQUEST["SourceID3"];
+	
 	//--------------- get compute items values -----------
-	$computedValues = array();
+	$returnArr = array();
 	for($i=0; $i < count($list); $i++)
 	{
-		if($list[$i]["ComputeItemID"]*1 > 0 && $fn != "")
+		$result = EventComputeItems::SetSpecialTafsilis($eObj->EventID, $list[$i], $SourcesArr);
+		$list[$i]["TafsiliID1"] = $result[0]["TafsiliID"];
+		$list[$i]["TafsiliDesc1"] = $result[0]["TafsiliDesc"];
+		$list[$i]["TafsiliID2"] = $result[1]["TafsiliID"];
+		$list[$i]["TafsiliDesc2"] = $result[1]["TafsiliDesc"];
+		$list[$i]["TafsiliID3"] = $result[2]["TafsiliID"];
+		$list[$i]["TafsiliDesc3"] = $result[2]["TafsiliDesc"];
+		
+		$obj = new ACC_DocItems();
+		$result = EventComputeItems::SetParams($eObj->EventID, $list[$i], $SourcesArr, $obj);
+		$list[$i]["param1"] = $obj->param1;
+		$list[$i]["param2"] = $obj->param2;
+		$list[$i]["param3"] = $obj->param3;
+			
+		if($list[$i]["ComputeItemID"]*1 > 0 && $eObj->EventFunction != "")
 		{
-			if(isset($computedValues[ $list[$i]["ComputeItemID"] ]))
-				$value = $computedValues[ $list[$i]["ComputeItemID"] ];
-			else
+			$value = call_user_func($eObj->EventFunction, $list[$i]["ComputeItemID"], $SourcesArr);
+			
+			if(is_array($value))
 			{
-				$value = call_user_func($fn, $list[$i]["ComputeItemID"], $SourceObjects);
+				if(isset($value["amount"]))
+				{
+					if($list[$i]["CostType"] == "DEBTOR")
+						$list[$i]["DebtorAmount"] = $value["amount"];
+					else
+						$list[$i]["CreditorAmount"] = $value["amount"];
+					
+					foreach($value as $k => $v)
+							$list[$i][$k] = $v;
+					
+					SetParamValues($list[$i]);
+					$returnArr[] = $list[$i];
+				}
+				else
+				{
+					foreach($value as $val)
+					{
+						if(is_array($val) && isset($val["amount"]))
+							$amount = $val["amount"];
+						else
+							$amount = $val;
+						
+						if($list[$i]["CostType"] == "DEBTOR")
+							$list[$i]["DebtorAmount"] = $amount;
+						else
+							$list[$i]["CreditorAmount"] = $amount;
+						
+						foreach($val as $k => $v)
+							$list[$i][$k] = $v;
+						
+						SetParamValues($list[$i]);
+						$returnArr[] = $list[$i];
+					}
+				}
+				continue;
 			}
-			$computedValues[ $list[$i]["ComputeItemID"] ] = $value;
 			
 			if($list[$i]["CostType"] == "DEBTOR")
 				$list[$i]["DebtorAmount"] = $value;
 			else
 				$list[$i]["CreditorAmount"] = $value;
 		}
-		if($list[$i]["Tafsili"]*1 > 0)
-		{
-			$res = EventComputeItems::GetTafsilis($list[$i]["Tafsili"],$SourceObjects);
-			$list[$i]["TafsiliValue1"] = $res[2];
-		}
-		if($list[$i]["Tafsili2"]*1 > 0)
-		{
-			$res = EventComputeItems::GetTafsilis($list[$i]["Tafsili2"],$SourceObjects);
-			$list[$i]["TafsiliValue2"] = $res[2];
-		}
-		if($list[$i]["Tafsili3"]*1 > 0)
-		{
-			$res = EventComputeItems::GetTafsilis($list[$i]["Tafsili3"],$SourceObjects);
-			$list[$i]["TafsiliValue3"] = $res[2];
-		}
+		SetParamValues($list[$i]);
+		$returnArr[] = $list[$i];
 	}
 	
 	//print_r(ExceptionHandler::PopAllExceptions());
 	//echo PdoDataAccess::GetLatestQueryString();
-	echo dataReader::getJsonData($list, count($list), $_GET['callback']);
+	echo dataReader::getJsonData($returnArr, count($returnArr), $_GET['callback']);
 	die();
+}
+function SetParamValues(&$list){
+	for($j=1; $j<=3; $j++)
+	{
+		if(!empty($list["SrcTable" . $j]))
+		{
+			$dt = PdoDataAccess::runquery("select ". $list["SrcDisplayField" . $j] . " as title " .
+				" from " . $list["SrcTable" . $j] . 
+				" where " . $list["SrcValueField" . $j] . "=?", array($list["param" . $j]));
+			if(count($dt) > 0)
+				$list["ParamValue" . $j] = $dt[0]["title"];
+		}
+	}
 }
 
 function RegisterEventDoc(){
@@ -100,7 +138,7 @@ function RegisterEventDoc(){
 	$pdo->beginTransaction();
 	
 	$obj = new ExecuteEvent($EventID);
-	$obj->SetSources($SourceIDs);
+	$obj->Sources = $SourceIDs;
 	$result = $obj->RegisterEventDoc($pdo);
 	if(!$result)
 	{

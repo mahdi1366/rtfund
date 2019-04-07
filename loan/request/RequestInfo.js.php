@@ -71,7 +71,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 			url: this.address_prefix + "request.data.php?task=SelectAllRequests&RequestID=" + this.RequestID,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["RequestID","BranchID","LoanID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
+		fields : ["RequestID","PartID","BranchID","LoanID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
 					"BorrowerMobile","guarantees","AgentGuarantee","FundGuarantee","StatusID","DocumentDesc","IsFree",
 					"imp_GirandehCode","imp_VamCode","IsEnded","SubAgentID","PlanTitle","RuleNo","FundRules"],
@@ -773,6 +773,24 @@ RequestInfo.prototype.BuildForms = function(){
 				}
 			}]
 		},'->',{
+			text : "رویدادهای مالی",
+			hidden : true,
+			iconCls : "account",
+			itemId : "cmp_accevents",
+			menu :[{
+				text : 'اجرای رویداد تخصیص وام به مشتری',
+				iconCls : "send",
+				handler : function(){ 
+					framework.ExecuteEvent(<?= EVENT_LOAN_ALLOCATE?>, 
+						new Array(RequestInfoObject.RequestRecord.data.RequestID,
+									RequestInfoObject.RequestRecord.data.PartID));
+				}
+			},{
+				text : 'اجرای رویداد عقد قرارداد با مشتری',
+				iconCls : "send",
+				handler : function(){ RequestInfoObject.ExecuteEvent(); }
+			}]
+		},{
 			text : 'ویرایش شرایط پرداخت',
 			hidden : true,
 			iconCls : "edit",
@@ -1001,6 +1019,8 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.companyPanel.down("[itemId=cmp_costs]").show();
 			this.companyPanel.down("[itemId=cmp_checklist]").show();			
 			this.companyPanel.down("[itemId=cmp_processes]").show();	
+			this.companyPanel.down("[itemId=cmp_accevents]").show();	
+			
 		}	
 		if(this.User == "Customer")
 		{
@@ -2431,4 +2451,19 @@ RequestInfo.prototype.ShowCheckList = function(){
 	});
 }
 
+RequestInfo.prototype.ExecuteEvent = function(){
+	
+	var eventID = "";
+	if(this.RequestRecord.data.ReqPersonID*1 == 0)
+		eventID = "<?= EVENT_LOANCONTRACT_innerSource ?>";
+	else
+	{
+		if(this.RequestRecord.data.FundGuarantee == "YES")
+			eventID = "<?= EVENT_LOANCONTRACT_agentSource_committal ?>";
+		else
+			eventID = "<?= EVENT_LOANCONTRACT_agentSource_non_committal ?>";
+	}
+
+	framework.ExecuteEvent(eventID, new Array(this.RequestRecord.data.RequestID,this.RequestRecord.data.PartID));
+}
 </script>

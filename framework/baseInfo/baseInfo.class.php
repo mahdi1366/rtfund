@@ -4,8 +4,8 @@
 // create Date: 94.06
 //---------------------------
 
-require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
-
+require_once DOCUMENT_ROOT . '/accounting/baseinfo/baseinfo.class.php';
+require_once DOCUMENT_ROOT . '/framework/person/persons.class.php';
 
 class BSC_units extends PdoDataAccess {
 	public $UnitID;
@@ -143,6 +143,15 @@ class BSC_jobs extends OperationClass {
 		if(!$this->CheckUniqueMainJob())
 			return false;
 		return parent::Edit($pdo);
+	}
+	
+	static public function GetModirAmelPerson(){
+		
+		$dt = PdoDataAccess::runquery("select PersonID from BSC_jobs where PostID=? AND IsMain='YES'",
+				array(POSTID_MODIRAMEL));
+		if(count($dt) == 0)
+			return new BSC_persons();
+		return new BSC_persons($dt[0]["PersonID"]);
 	}
 }
 

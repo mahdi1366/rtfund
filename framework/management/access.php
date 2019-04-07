@@ -4,7 +4,7 @@
 // create Date: 97.11
 //-----------------------------
 require_once '../header.inc.php';
-
+ 
 ?>
 <script>
 FRW_access.prototype = {
@@ -111,8 +111,10 @@ function FRW_access()
             width : 390,
             dataIndex: 'MenuDesc'
         },{
-            text: 'دسترسی کامل',
+            text: 'دسترسی کامل' + '<br><input type=checkbox onclick=FRW_access.CheckAll("fullChk",this)>',
 			align: 'center',
+			menuDisabled : true,
+			sortable : false,
             width : 80,
             dataIndex: 'ViewFlag',
 			renderer : function(v,p,r){
@@ -126,8 +128,10 @@ function FRW_access()
 				return str;
 			}
         },{
-            text: 'مشاهده',
+            text: 'مشاهده' + '<br><input type=checkbox onclick=FRW_access.CheckAll("viewChk",this)>',
 			align: 'center',
+			menuDisabled : true,
+			sortable : false,
             width : 60,
             dataIndex: 'ViewFlag',
 			renderer : function(v,p,r){
@@ -141,8 +145,10 @@ function FRW_access()
 				return str;
 			}
         },{
-            text: 'ایجاد',
+            text: 'ایجاد' + '<br><input type=checkbox onclick=FRW_access.CheckAll("addChk",this)>',
 			align: 'center',
+			menuDisabled : true,
+			sortable : false,
             width : 60,
             dataIndex: 'AddFlag',
 			renderer : function(v,p,r){
@@ -156,8 +162,10 @@ function FRW_access()
 				return str;
 			}
         },{
-            text: 'ویرایش',
+            text: 'ویرایش' + '<br><input type=checkbox onclick=FRW_access.CheckAll("editChk",this)>',
 			align: 'center',
+			menuDisabled : true,
+			sortable : false,
             width : 60,
             dataIndex: 'EditFlag',
 			renderer : function(v,p,r){
@@ -171,8 +179,10 @@ function FRW_access()
 				return str;
 			}
         },{
-            text: 'حذف',
+            text: 'حذف' + '<br><input type=checkbox onclick=FRW_access.CheckAll("removeChk",this)>',
 			align: 'center',
+			menuDisabled : true,
+			sortable : false,
             width : 60,
             dataIndex: 'RemoveFlag',
 			renderer : function(v,p,r){
@@ -188,8 +198,6 @@ function FRW_access()
         }]
     });
 }
-
-var FRW_accessObject = new FRW_access();
 
 FRW_access.prototype.checkViewFlag = function(elem,MenuID)
 {
@@ -228,6 +236,14 @@ FRW_access.prototype.ViewFlagClick = function(elem,MenuID)
 	}
 }
 
+FRW_access.CheckAll = function(prefix,elem){
+	
+	elems = FRW_accessObject.get("MainForm").getElementsByTagName("input");
+	for(i=0; i<elems.length; i++)
+		if(elems[i].id.indexOf(prefix) != -1)
+			elems[i].checked = elem.checked;
+}
+
 FRW_access.prototype.saveAction = function()
 {
 	var mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg: 'در حال ذخيره اطلاعات ...'});
@@ -248,6 +264,9 @@ FRW_access.prototype.saveAction = function()
 		}
 	});
 }
+
+var FRW_accessObject = new FRW_access();
+
 </script>
 <form id="MainForm">
 <table style="margin: 10px" >

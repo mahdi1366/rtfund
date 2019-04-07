@@ -43,6 +43,13 @@ class WFM_forms extends OperationClass {
         return parent::Remove($pdo);
     }    
     
+	static function ListForms($where = "", $params = array(), $pdo = null){
+		
+		return parent::runquery_fetchMode("select w.*,'' FormContent, FlowDesc"
+				. " from WFM_forms w join WFM_flows using(FlowID) where 1=1 " . $where, $params, $pdo);
+		
+	} 
+
 	static function CorrectFormContentItems($content) {
 		
         $contentsArr = explode(self::TplItemSeperator, $content);
@@ -193,6 +200,7 @@ class WFM_requests extends OperationClass {
 
     public $RequestID;
     public $FormID;
+	public $RequestNo;
     public $PersonID;
     public $RegDate;
 	public $ReqContent;
@@ -221,6 +229,7 @@ class WFM_requests extends OperationClass {
 		
         return parent::runquery_fetchMode("
 			select r.RequestID,
+				r.RequestNo,
 				r.FormID,
 				f.FlowID,
 				r.PersonID,
@@ -236,6 +245,21 @@ class WFM_requests extends OperationClass {
 			
 			where 1=1 " . $where . $order, $whereParams);
     }
+
+	public function Add($pdo = null) {
+		
+		if ($this->RequestNo == "")
+		{
+			$firstDayOfYear = DateModules::shamsi_to_miladi(DateModules::GetYear(DateModules::shNow()) . "-01-01");
+			$result = parent::GetLastID("WFM_requests", "RequestNo", "FormID=? AND RegDate>=?", 
+					array($this->FormID, $firstDayOfYear), $pdo);
+			$startNo = DateModules::GetYear(DateModules::shNow())*10000;
+			$this->RequestNo = $result == 0 ? $startNo+1 : $result+1;
+		}
+		
+		return parent::Add($pdo);
+	}
+
 
 	public static function GlobalInfoRecord($PersonID, $RequestID = 0){
 		

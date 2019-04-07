@@ -99,7 +99,7 @@ class PdoDataAccess extends ExceptionHandler
 	 * @param array $record
 	 * @return 
 	 */
-	public static function FillObjectByArray($obj, $record)
+	public static function FillObjectByArray(&$obj, $record)
 	{
 		$keys = array_keys(get_object_vars($obj));
 
@@ -161,7 +161,7 @@ class PdoDataAccess extends ExceptionHandler
 	 *
 	 * @return boolean
 	 */
-	public static function FillObject($obj, $query, $whereParams = array(), $pdoObject = null)
+	public static function FillObject(&$obj, $query, $whereParams = array(), $pdoObject = null)
 	{
 		$PDO_Obj = $pdoObject != null ? $pdoObject : self::getPdoObject();
 		/*@var $PDO_Obj PDO*/

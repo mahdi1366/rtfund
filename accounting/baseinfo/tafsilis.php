@@ -24,6 +24,12 @@ $col->width = 100;
 $col = $dg->addColumn("عنوان تفصیلی", "TafsiliDesc", "");
 $col->editor = ColumnEditor::TextField();
 
+if($_SESSION["USER"]["UserName"] == "admin")
+{
+	$col = $dg->addColumn("[ObjectID", "ObjectID", "");
+	$col->editor = ColumnEditor::NumberField(true);
+}
+
 if($accessObj->AddFlag)
 {
 	$dg->addButton("btn_add","ایجاد","add", "function(){TafsiliObject.AddTafsili();}");

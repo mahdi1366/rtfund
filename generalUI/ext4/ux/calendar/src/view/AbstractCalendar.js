@@ -312,8 +312,9 @@ Ext.define('Ext.calendar.view.AbstractCalendar', {
                 if (evtsInView.getCount() > 0) {
                     var evts = evtsInView.filterBy(function(rec) {
                         var startDt = Ext.SHDate.clearTime(rec.data[Ext.calendar.data.EventMappings.StartDate.name], true),
-                            startsOnDate = dt.getTime() == startDt.getTime(),
-                            spansFromPrevView = (w == 0 && d == 0 && (dt.XDate > rec.data[Ext.calendar.data.EventMappings.StartDate.name].XDate));
+							srcDt = Ext.SHDate.clearTime(dt),
+                            startsOnDate = srcDt.getTime() == startDt.getTime(),
+                            spansFromPrevView = (w == 0 && d == 0 && (srcDt.XDate > rec.data[Ext.calendar.data.EventMappings.StartDate.name].XDate));
                             
                         return startsOnDate || spansFromPrevView;
                     },

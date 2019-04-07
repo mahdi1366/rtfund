@@ -182,7 +182,7 @@ for ($i = 0; $i < count($res); $i++) {
 					<br>ثبت کننده : <?= $ReqObj->_PersonName ?>
 				</td>
 				<td width=140px style='text-align:center;'>
-					شماره درخواست :  <?= $ReqObj->RequestID ?><br>
+					شماره درخواست :  <?= $ReqObj->RequestNo ?><br> 
 					تاریخ ثبت :  <?= DateModules::miladi_to_shamsi($ReqObj->RegDate) ?>					
 				</td>
 			</tr>

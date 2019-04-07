@@ -6,6 +6,7 @@
  
 require_once '../header.inc.php';
 require_once '../global/ManageReport.class.php';
+require_once '../../framework/baseInfo/baseInfo.class.php';
 require_once inc_CurrencyModule;
 
 $CycleID = isset($_SESSION["accounting"]) ? 
@@ -75,6 +76,7 @@ td {
 }
 </style>
 <?
+	$personObj = BSC_jobs::GetModirAmelPerson();
 	for($i=0; $i<count($dataTable);$i++)
 	{
 		echo "<div class=page><table width=100%>
@@ -119,9 +121,11 @@ td {
 				</td>
 			</tr>
 			<tr>
-				<td style=padding-right:40px align=center>رسول عبدالهی<br> مدیر عامل</td>
+				<td style=padding-right:40px align=center>" . $personObj->_fullname . "
+				<br> مدیر عامل</td>
 				<td align=center>مهر صندوق</td>
-				<td style=padding-left:40px align=center>دکتر مرتضی خادمی<br> رئیس هیات مدیره</td>
+				<td style=padding-left:40px align=center>دکتر مرتضی خادمی<br> 
+				رئیس هیات مدیره</td>
 			</tr>
 		</table></div>";
 		

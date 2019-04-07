@@ -19,7 +19,7 @@ $dg_cost->addcolumn('','CostCode',"",true);
 $dg_cost->addcolumn('','level1',"",true);
 $dg_cost->addcolumn('','level2',"",true);
 $dg_cost->addcolumn('','level3',"",true);
-$dg_cost->addcolumn('','TafsiliType',"",true);
+$dg_cost->addcolumn('','TafsiliType1',"",true);
 $dg_cost->addcolumn('','TafsiliType2',"",true);
 $dg_cost->addcolumn('','TafsiliType3',"",true);
 $dg_cost->addcolumn('','IsBlockable',"",true);
@@ -40,7 +40,7 @@ $col = $dg_cost->addcolumn("معین2", "LevelTitle3");
 
 $col = $dg_cost->addcolumn("معین3", "LevelTitle4");
 
-$col = $dg_cost->addcolumn("تفصیلی1", "TafsiliTypeDesc");
+$col = $dg_cost->addcolumn("تفصیلی1", "TafsiliTypeDesc1");
 
 $col = $dg_cost->addcolumn("تفصیلی2", "TafsiliTypeDesc2");
 

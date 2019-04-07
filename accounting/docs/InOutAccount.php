@@ -203,7 +203,7 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 				xtype : "combo",
 				width : 380,
 				store: new Ext.data.Store({
-					fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+					fields:["CostID","CostCode","CostDesc", "TafsiliType1","TafsiliType2",{
 						name : "fullDesc",
 						convert : function(value,record){
 							return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
@@ -222,11 +222,11 @@ InOutAccount.prototype.BeforeOperation = function(mode){
 				listeners : {
 					select : function(combo,records){
 						me = InOutAccountObject;
-						if(records[0].data.TafsiliType != null)
+						if(records[0].data.TafsiliType1 != null)
 						{
 							me.mainWin.down("[name=TafsiliID]").setValue();
 							me.mainWin.down("[name=TafsiliID]").getStore().proxy.extraParams.TafsiliType = 
-								records[0].data.TafsiliType;
+								records[0].data.TafsiliType1;
 							me.mainWin.down("[name=TafsiliID]").getStore().load();
 						}
 						if(records[0].data.TafsiliType2 != null)

@@ -15,11 +15,11 @@ $query = "select h.*,
 				left join ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_ChequeStatus." AND StatusID=TafsiliID) 
 				join BSC_persons using(PersonID) 
 				left join (
-					select SourceID, TafsiliID2, group_concat(distinct LocalNo) docs
+					select SourceID1, TafsiliID2, group_concat(distinct LocalNo) docs
 					from ACC_DocItems join ACC_docs using(DocID)
 					where SourceType in(" . DOCTYPE_INCOMERCHEQUE . ",".DOCTYPE_EDITINCOMECHEQUE.")
-					group by SourceID, TafsiliID2
-				)t on(h.IncomeChequeID=t.SourceID AND h.StatusID=t.TafsiliID2)
+					group by SourceID1, TafsiliID2
+				)t on(h.IncomeChequeID=t.SourceID1 AND h.StatusID=t.TafsiliID2)
 				where h.IncomeChequeID=?
 			order by RowID ";
 $Logs = PdoDataAccess::runquery($query, array($IncomeChequeID));

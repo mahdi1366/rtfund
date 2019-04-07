@@ -236,7 +236,7 @@ function CopyDoc(){
 		unset($obj->ItemID);
 		$obj->locked = "NO";
 		unset($obj->SourceType);	
-		unset($obj->SourceID);
+		unset($obj->SourceID1);
 		unset($obj->SourceID2);
 		unset($obj->SourceID3);
 		$obj->Add($pdo);
@@ -363,14 +363,40 @@ function selectDocItems() {
 					concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) like :cd)";
 				$whereParam[":cd"] = "%" . $_GET["query"] . "%";
 				break;
+			
+			default:
+				
+				$field = $_GET["fields"];
+				$field = $field == "param1" ? "si.param1" : $field;
+				$field = $field == "param2" ? "si.param2" : $field;
+				$field = $field == "param3" ? "si.param3" : $field;
+				
+				$where .= " AND " . $field . " like :f";
+				$whereParam[":f"] = "%" . $_GET["query"] . "%";
 		}
 	}
 	$where .= dataReader::makeOrder();
 
 	$temp = ACC_DocItems::GetAll($where, $whereParam);
-	print_r(ExceptionHandler::PopAllExceptions());
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
+
+	//............. fill paramValues ........................
+	for($i=0; $i<count($temp); $i++)
+	{
+		for($j=1; $j<=3; $j++)
+		{
+			if(!empty($temp[$i]["SrcTable" . $j]))
+			{
+				$dt = PdoDataAccess::runquery("select ". $temp[$i]["SrcDisplayField" . $j] . " as title " .
+					" from " . $temp[$i]["SrcTable" . $j] . 
+					" where " . $temp[$i]["SrcValueField" . $j] . "=?", array($temp[$i]["param" . $j]));
+				print_r(ExceptionHandler::PopAllExceptions());
+				if(count($dt) > 0)
+					$temp[$i]["ParamValue" . $j] = $dt[0]["title"];
+			}
+		}
+	}
 	//..........................................................................
 	$dt = PdoDataAccess::runquery("
 		select sum(DebtorAmount) bd,sum(CreditorAmount) bs
@@ -1044,7 +1070,7 @@ function RegisterInOutDoc() {
 	
 	$result = RegisterInOutAccountDoc($_POST["amount"], $mode, $description, 
 			$BaseCostID, TAFTYPE_PERSONS, $BaseTafsiliID, "", "", 
-			$CostID, $CostObj->TafsiliType, $_POST["TafsiliID"], $CostObj->TafsiliType2, $_POST["TafsiliID2"]);
+			$CostID, $CostObj->TafsiliType1, $_POST["TafsiliID"], $CostObj->TafsiliType2, $_POST["TafsiliID2"]);
 	
 	echo Response::createObjectiveResponse($result,  ExceptionHandler::GetExceptionsToString());
 	die();
@@ -1107,8 +1133,18 @@ function selectCostParams(){
 
 function selectParamItems(){
 	
-	$dt = PdoDataAccess::runquery("select * from ACC_CostCodeParamItems where ParamID=?", 
+	$dt = PdoDataAccess::runquery("select * from ACC_CostCodeParams where ParamID=?", 
 			array($_GET["ParamID"]));
+	if($dt[0]["SrcTable"] != "")
+	{
+		$dt = PdoDataAccess::runquery("select ".$dt[0]["SrcValueField"]." as id, "
+			.$dt[0]["SrcDisplayField"] . " as title from " . $dt[0]["SrcTable"]);
+	}
+	else
+		$dt = PdoDataAccess::runquery("select ItemID as id,ParamValue as title"
+				. " from ACC_CostCodeParamItems where ParamID=?", 
+			array($_GET["ParamID"]));
+	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

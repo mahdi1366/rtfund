@@ -313,7 +313,7 @@ function AccReport_profit()
 			fieldLabel : "کد حساب",
 			colspan : 2,
 			store: new Ext.data.Store({
-				fields:["CostID","CostCode","CostDesc", "TafsiliType","TafsiliType2",{
+				fields:["CostID","CostCode","CostDesc", "TafsiliType1","TafsiliType2",{
 					name : "fullDesc",
 					convert : function(value,record){
 						return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
