@@ -859,17 +859,16 @@ class LON_requests extends PdoDataAccess{
 			$installments[$i]["remainder"] = $installments[$i]["InstallmentAmount"];
 			$refInstallments[ $installments[$i]["InstallmentID"] ] = &$installments[$i];			
 		}
-		
-		
 
 		$returnArr = array();
 		$records = PdoDataAccess::runquery("
 			select * from (
-				select InstallmentID id,'installment' type, 
+				select InstallmentID id,'installment' type, 0 BackPayID,
 				InstallmentDate RecordDate,InstallmentAmount RecordAmount,0 PayType, '' details, wage
 				from LON_installments where RequestID=:r AND history='NO' AND IsDelayed='NO'
 			union All
-				select BackPayID id, 'pay' type, substr(p.PayDate,1,10) RecordDate, PayAmount RecordAmount, PayType,
+				select BackPayID id, 'pay' type, BackPayID
+					substr(p.PayDate,1,10) RecordDate, PayAmount RecordAmount, PayType,
 					if(PayType=" . BACKPAY_PAYTYPE_CORRECT . ",p.details,'') details,0
 				from LON_BackPays p
 				left join ACC_IncomeCheques i using(IncomeChequeID)
@@ -877,7 +876,8 @@ class LON_requests extends PdoDataAccess{
 				where RequestID=:r AND 
 					if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
 			union All
-				select 0 id,'pay' type, CostDate RecordDate, -1*CostAmount RecordAmount,0, CostDesc details, 0
+				select 0 id,'pay' type, 0 BackPayID
+					CostDate RecordDate, -1*CostAmount RecordAmount,0, CostDesc details, 0
 				from LON_costs 
 				where RequestID=:r AND CostAmount<>0
 			)t
@@ -891,6 +891,7 @@ class LON_requests extends PdoDataAccess{
 			$record = $records[$i];
 			$tempForReturnArr = array(
 					"InstallmentID" => $record["id"],
+					"BackPayID" => $record["BackPayID"],
 					"details" => $record["details"],
 					"ActionType" => $record["type"],
 					"ActionDate" => $record["RecordDate"],
@@ -1812,7 +1813,7 @@ class LON_BackPays extends PdoDataAccess{
 			select p.*,
 				i.ChequeNo,
 				i.ChequeStatus,
-				t.TafsiliDesc ChequeStatusDesc,
+				t.InfoDesc ChequeStatusDesc,
 				bi.InfoDesc PayTypeDesc, 				
 				d.DocID,
 				d.LocalNo,
@@ -1820,10 +1821,11 @@ class LON_BackPays extends PdoDataAccess{
 			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			left join ACC_IncomeCheques i using(IncomeChequeID)
-			left join ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_ChequeStatus." AND t.TafsiliID=ChequeStatus)
+			left join BaseInfo t on(t.TypeID=4 AND t.InfoID=ChequeStatus)
 			
-			left join ACC_DocItems di on(SourceID1=RequestID AND SourceID2=BackPayID AND SourceType in(8,5))
-			left join ACC_docs d on(di.DocID=d.DocID)
+			left join ACC_ChequeHistory ch on(ch.IncomeChequeID = p.IncomeChequeID 
+				AND ch.StatusID=" . INCOMECHEQUE_VOSUL . ")
+			left join ACC_docs d on(ch.DocID=d.DocID)
 			
 			where " . $where . " group by BackPayID " . $order, $param);
 	}

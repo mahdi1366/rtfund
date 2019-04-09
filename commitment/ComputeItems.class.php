@@ -4,6 +4,10 @@
 //	Date		: 97.09
 //-----------------------------
 
+require_once DOCUMENT_ROOT . '/loan/request/request.class.php';
+require_once DOCUMENT_ROOT . '/accounting/cheque/cheque.class.php';
+
+
 class EventComputeItems {
 	
 	static function LoanAllocate($ItemID, $SourceObjects){
@@ -219,20 +223,26 @@ class EventComputeItems {
 		$t1 = array("TafsiliID" => "", "TafsiliDesc" => "");
 		$t2 = array("TafsiliID" => "", "TafsiliDesc" => "");
 		$t3 = array("TafsiliID" => "", "TafsiliDesc" => "");
+						
 		switch($EventID)
 		{
 			case EVENT_LOAN_ALLOCATE:
 			case EVENT_LOANPAYMENT_agentSource:
 			case EVENT_LOANPAYMENT_innerSource:
-			case EVENT_LOANBACKPAY_innerSource:
-			case EVENT_LOANBACKPAY_agentSource_committal:
-			case EVENT_LOANBACKPAY_agentSource_non_committal:
+			case EVENT_LOANBACKPAY_innerSource_cheque:
+			case EVENT_LOANBACKPAY_innerSource_non_cheque:
+			case EVENT_LOANBACKPAY_agentSource_committal_cheque:
+			case EVENT_LOANBACKPAY_agentSource_committal_non_cheque:
+			case EVENT_LOANBACKPAY_agentSource_non_committal_cheque:
+			case EVENT_LOANBACKPAY_agentSource_non_committal_non_cheque:
 			case EVENT_LOANCONTRACT_innerSource:
 			case EVENT_LOANCONTRACT_agentSource_committal:
 			case EVENT_LOANCONTRACT_agentSource_non_committal:
 			case EVENT_LOANDAILY_innerSource:
 			case EVENT_LOANDAILY_agentSource_committal:
 			case EVENT_LOANDAILY_agentSource_non_committal:
+			case EVENT_LOANDCHEQUE_agentSource:
+			case EVENT_LOANCONTRACT_innerSource:
 				
 				$ReqObj = new LON_requests($params[0]);
 				/* @var $ReqObj LON_requests */
@@ -250,41 +260,33 @@ class EventComputeItems {
 	
 	static function SetParams($EventID, $EventRow, $params, &$obj){
 		
-		switch($EventID)
-		{
-			case EVENT_LOANPAYMENT_agentSource:
-			case EVENT_LOANPAYMENT_innerSource:
-				
-			case EVENT_LOANBACKPAY_innerSource:
-			case EVENT_LOANBACKPAY_agentSource_committal:
-			case EVENT_LOANBACKPAY_agentSource_non_committal:
-				
-			case EVENT_LOANCONTRACT_innerSource:
-			case EVENT_LOANCONTRACT_agentSource_committal:
-			case EVENT_LOANCONTRACT_agentSource_non_committal:
-				
-			case EVENT_LOANDAILY_innerSource:
-			case EVENT_LOANDAILY_agentSource_committal:
-			case EVENT_LOANDAILY_agentSource_non_committal:
-				
-				$ReqObj = new LON_requests($params[0]);
-		}
 		for($i=1; $i<=3; $i++)
 		{
 			switch($EventRow["param" . $i])
 			{
 				case ACC_COST_PARAM_LOAN_RequestID : //شماره تسهيلات
-					$obj->{ "param" . $i } = $ReqObj->RequestID;
+					$obj->{ "param" . $i } = $params[0];
 					break;
 				case ACC_COST_PARAM_LOAN_LastInstallmentDate : //سررسيد اقساط
-					$iObj = LON_installments::GetLastInstallmentObj($ReqObj->RequestID);
+					$iObj = LON_installments::GetLastInstallmentObj($params[0]);
 					$obj->{ "param" . $i } = DateModules::miladi_to_shamsi($iObj->InstallmentDate);
 					break;
 				case ACC_COST_PARAM_LOAN_LEVEL : // طبقه تسهيلات
-					$obj->{ "param" . $i } = LON_requests::GetRequestLevel($ReqObj->RequestID);
+					$obj->{ "param" . $i } = LON_requests::GetRequestLevel($params[0]);
+					break;
+				
+				case ACC_COST_PARAM_CHEQUE_date:
+					$IncChequObj = new ACC_IncomeCheques($params[1]);
+					$obj->{ "param" . $i } = DateModules::miladi_to_shamsi($IncChequObj->ChequeDate);
+					break;
+				
+				case ACC_COST_PARAM_BANK:
+					$IncChequObj = new ACC_IncomeCheques($params[1]);
+					$obj->{ "param" . $i } = $IncChequObj->ChequeBank;
 					break;
 			}
 		}
+		
 		foreach($_POST as $key => $val)
 		{
 			if(strpos($key, "param1_") !== false && $EventRow["RowID"] == preg_replace("/param1_/","",$key))

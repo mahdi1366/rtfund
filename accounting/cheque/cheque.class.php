@@ -41,7 +41,7 @@ class ACC_IncomeCheques extends OperationClass{
 				cc.CostCode,
 				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) CostDesc,
 				b.BankDesc, 
-				t.TafsiliDesc ChequeStatusDesc
+				t.InfoDesc ChequeStatusDesc
 			
 			FROM ACC_IncomeCheques o
 
@@ -52,21 +52,23 @@ class ACC_IncomeCheques extends OperationClass{
 			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
 
 			left join ACC_banks b on(ChequeBank=BankID)
-			left join ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_ChequeStatus." AND t.TafsiliID=ChequeStatus)
+			left join BaseInfo t on(t.TypeID=4 AND t.InfoID=ChequeStatus)
 			
 			where 1=1 " . $where;
 		
 		return parent::runquery_fetchMode($query, $param, $pdo);
 	}
 	
-	static function AddToHistory($IncomeChequeID, $status, $pdo = null, $details = ""){
+	static function AddToHistory($IncomeChequeID, $status, $DocID = "", $pdo = null, $details = ""){
 		
-		PdoDataAccess::runquery("insert into ACC_ChequeHistory(IncomeChequeID,StatusID,PersonID,ATS,details)
-			values(?,?,?,now(),?)", array(
+		PdoDataAccess::runquery("
+			insert into ACC_ChequeHistory(IncomeChequeID,StatusID,PersonID,ATS,details,DocID)
+			values(?,?,?,now(),?,?)", array(
 				$IncomeChequeID,
 				$status,
 				$_SESSION["USER"]["PersonID"],
-				$details
+				$details,
+				$DocID
 			),$pdo);
 	}
 
@@ -93,14 +95,34 @@ class ACC_IncomeCheques extends OperationClass{
 				array($this->IncomeChequeID), $pdo);
 	}
 	
-	function HasDoc(){
+	function HasDoc($pdo = null){
 		
 		$dt = PdoDataAccess::runquery("
+			select DocID
+			from ACC_ChequeHistory join ACC_docs using(DocID)
+			where IncomeChequeID=?", array($this->IncomeChequeID), $pdo);
+		return count($dt) > 0;
+		
+		/*$dt = PdoDataAccess::runquery("
 			select DocID
 			from ACC_DocItems join ACC_docs using(DocID)
 			where SourceType in(" . DOCTYPE_INCOMERCHEQUE . ",".DOCTYPE_EDITINCOMECHEQUE.")
 			AND SourceID1=?", array($this->IncomeChequeID));
-		return count($dt) > 0;
+		return count($dt) > 0;*/
+	}
+	
+	function DeleteDocs($pdo = null){
+		
+		$dt = PdoDataAccess::runquery("
+			delete di FROM ACC_DocItems di join ACC_docs d using(docID)
+			join ACC_ChequeHistory using(DocID)
+			where IncomeChequeID=? AND d.StatusID = " . ACC_STEPID_RAW, array($this->IncomeChequeID),$pdo);
+		
+		$dt = PdoDataAccess::runquery("
+			delete d FROM ACC_docs d 
+			join ACC_ChequeHistory using(DocID)
+			where IncomeChequeID=? AND d.StatusID = " . ACC_STEPID_RAW, array($this->IncomeChequeID),$pdo);
+		
 	}
 }
 

@@ -13,6 +13,7 @@ class COM_events extends PdoDataAccess {
     public $EventTitle;
     public $IsActive;
 	public $ordering;
+	public $IsSystemic;
 
     function __construct($id = "") {
         $this->DT_EventID = DataMember::CreateDMA(DataMember::Pattern_Num);

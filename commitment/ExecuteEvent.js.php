@@ -153,6 +153,7 @@ function ExecuteEvent(){
 }
 
 ExecuteEvent.DebtorAmountRenderer = function(v,p,r){
+	p.tdAttr =  "data-qtip='" + (r.data.ComputeItemDesc == null ? "---" : r.data.ComputeItemDesc) + "'";
 	if(r.data.ComputeItemID*1 > 0)
 		return Ext.util.Format.Money(v);
 	else
@@ -160,6 +161,7 @@ ExecuteEvent.DebtorAmountRenderer = function(v,p,r){
 }
 
 ExecuteEvent.CreditorAmountRenderer = function(v,p,r){
+	p.tdAttr =  "data-qtip='" + (r.data.ComputeItemDesc == null ? "---" : r.data.ComputeItemDesc) + "'";
 	if(r.data.ComputeItemID*1 > 0)
 		return Ext.util.Format.Money(v);
 	else

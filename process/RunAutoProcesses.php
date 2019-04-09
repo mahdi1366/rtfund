@@ -21,7 +21,7 @@ require_once '../office/dms/dms.class.php';
 require_once '../loan/request/request.class.php';
 require_once '../commitment/ExecuteEvent.class.php';
 
-if(empty($_POST["ComputeDate"]))
+if(empty($_POST["manual"]))
 {
 	define("SYSTEMID", 1);
 	session_start();
@@ -30,19 +30,39 @@ if(empty($_POST["ComputeDate"]))
 	$_SESSION["accounting"]["CycleID"] = DateModules::GetYear(DateModules::shNow());
 }
 
-$where = "";
-$params = array();
-$query = "
+if(!empty($_POST["manual"]))
+{
+	$params = array();
+	$query = "
+	select * 
+	from LON_requests  r
+	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
+	, jdate d
+	where ComputeMode='NEW' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
+		AND d.Jdate between :sd AND :ed
+		" ;
+	if(!empty($_POST["RequestID"]))
+	{
+		$query .= " AND  r.RequestID=:r";
+		$params[":r"] = (int)$_POST["RequestID"];
+	}
+	$params[":sd"] = $_POST["FromComputeDate"];
+	$params[":ed"] = $_POST["ToComputeDate"];	
+	
+	$reqs = PdoDataAccess::runquery($query, $params);
+}
+else
+{
+	$query = "
 	select * 
 	from LON_requests  r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
 	where ComputeMode='NEW' AND StatusID=" . LON_REQ_STATUS_CONFIRM;
-if(!empty($_POST["RequestID"]))
-{
-	$query .= " AND  r.RequestID=:r";
-	$params[":r"] = (int)$_POST["RequestID"];
+	
+	$reqs = PdoDataAccess::runquery($query);
 }
-$reqs = PdoDataAccess::runquery($query, $params);
+
+//........................................................
 
 $objArr = array(
 	EVENT_LOANDAILY_innerSource => null, 

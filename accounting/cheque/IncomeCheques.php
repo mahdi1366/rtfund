@@ -596,11 +596,11 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 						url: this.address_prefix + 'cheques.data.php?task=selectValidChequeStatuses',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
-					fields :  ['TafsiliID',"TafsiliDesc"]
+					fields :  ['InfoID',"InfoDesc"]
 				}),
 				queryMode : "local",
-				displayField: 'TafsiliDesc',
-				valueField : "TafsiliID",
+				displayField: 'InfoDesc',
+				valueField : "InfoID",
 				width : 400,
 				name : "DstID",
 				listeners : {
@@ -657,9 +657,9 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 	
 	this.commentWin.down("[itemId=btn_save]").setHandler(function(){
 		status = this.up('window').down("[name=DstID]").getValue();
-		if(status == "<?= INCOMECHEQUE_VOSUL ?>")
+		/*if(status == "<?= INCOMECHEQUE_VOSUL ?>")
 			IncomeChequeObject.AccountInfoWin();
-		else
+		else*/
 			IncomeChequeObject.ChangeStatus();
 	});
 		
@@ -866,42 +866,34 @@ IncomeCheque.prototype.ChangeStatus = function(){
 		params.PayedDate = this.commentWin.down("[name=PayedDate]").getRawValue();
 		params.UpdateLoanBackPay = this.commentWin.down("[name=UpdateLoanBackPay]").getValue();
 		
-		params = mergeObjects(params, this.BankWin.down('form').getForm().getValues());
+		//params = mergeObjects(params, this.BankWin.down('form').getForm().getValues());
 	}	
 	
 	if(StatusID == null || StatusID == "")
 		return;
 	
-	Ext.MessageBox.prompt("","شماره سند <br>[در صورتی که شماره سند را وارد نکنید سند جدید ایجاد می گردد]" , function(btn, DocNo){
-		if(btn == "cancel")
-			return "";
-		
-		params.LocalNo = DocNo;
-		me = IncomeChequeObject;
-		
-		IncomeChequeObject.commentWin.hide();		
-		mask = new Ext.LoadMask(me.grid, {msg:'در حال تغییر وضعیت ...'});
-		mask.show();
+	this.commentWin.hide();		
+	mask = new Ext.LoadMask(this.grid, {msg:'در حال تغییر وضعیت ...'});
+	mask.show();
 
-		Ext.Ajax.request({
-			methos : "post",
-			url : me.address_prefix + "cheques.data.php",
-			params : params,
+	Ext.Ajax.request({
+		methos : "post",
+		url : this.address_prefix + "cheques.data.php",
+		params : params,
 
-			success : function(response){
-				mask.hide();
+		success : function(response){
+			mask.hide();
 
-				result = Ext.decode(response.responseText);
-				if(result.success)
-					IncomeChequeObject.grid.getStore().load();
-				else if(result.data != "")
-					Ext.MessageBox.alert("",result.data);
-				else
-					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+			result = Ext.decode(response.responseText);
+			if(result.success)
+				IncomeChequeObject.grid.getStore().load();
+			else if(result.data != "")
+				Ext.MessageBox.alert("",result.data);
+			else
+				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
 
 
-			}
-		});
+		}
 	});
 }
 
@@ -1338,7 +1330,7 @@ IncomeCheque.prototype.beforeEdit = function(){
 	{
 		this.editWin = new Ext.window.Window({
 			width : 414,
-			height : 220,
+			height : 250,
 			modal : true,
 			bodyStyle : "background-color:white",
 			items : [{

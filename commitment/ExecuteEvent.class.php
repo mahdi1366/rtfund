@@ -21,6 +21,8 @@ class ExecuteEvent {
 	public $tafsilis = array();
 	public $ComputedItems = array();
 	
+	public $AllRowsAmount = 0;
+	
 	function __construct($EventID, $BranchID = "") {
 	
 		$this->EventID = $EventID;
@@ -39,9 +41,12 @@ class ExecuteEvent {
 				$this->EventFunction = "EventComputeItems::PayLoan";
 				break;
 			
-			case EVENT_LOANBACKPAY_innerSource:
-			case EVENT_LOANBACKPAY_agentSource_committal:
-			case EVENT_LOANBACKPAY_agentSource_non_committal:
+			case EVENT_LOANBACKPAY_innerSource_cheque:
+			case EVENT_LOANBACKPAY_innerSource_non_cheque:
+			case EVENT_LOANBACKPAY_agentSource_committal_cheque:
+			case EVENT_LOANBACKPAY_agentSource_committal_non_cheque:
+			case EVENT_LOANBACKPAY_agentSource_non_committal_cheque:
+			case EVENT_LOANBACKPAY_agentSource_non_committal_non_cheque:
 				$this->EventFunction = "EventComputeItems::LoanBackPay";
 				break;
 			
@@ -149,10 +154,10 @@ class ExecuteEvent {
 			{
 				if($eventRow["CostType"] == "DEBTOR")
 					$amount = isset($_POST["DebtorAmount_" . $eventRow["RowID"]]) ? 
-						$_POST["DebtorAmount_" . $eventRow["RowID"]] : 0;
+						$_POST["DebtorAmount_" . $eventRow["RowID"]] : $this->AllRowsAmount;
 				else
 					$amount = isset($_POST["CreditorAmount_" . $eventRow["RowID"]]) ? 
-						$_POST["CreditorAmount_" . $eventRow["RowID"]] : 0;
+						$_POST["CreditorAmount_" . $eventRow["RowID"]] : $this->AllRowsAmount;
 				$amount = preg_replace("/,/", "", $amount);
 			}
 		}

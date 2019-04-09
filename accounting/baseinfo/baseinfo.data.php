@@ -197,14 +197,19 @@ function SelectCostCode() {
     $where = isset($_REQUEST["All"]) ? "1=1" : "cc.IsActive='YES' ";
 
     if (!empty($_REQUEST['query'])) {
-        if (isset($_REQUEST['fields'])) {
-            if (strpos($_REQUEST['fields'], "LevelTitle") !== false) {
-                $where .= " AND " . str_replace("LevelTitle", "b", $_REQUEST['fields']) . ".BlockDesc like :f1";
-                $param[":f1"] = "%" . $_REQUEST['query'] . "%";
-            } else if ($_REQUEST["fields"] == "CostCode") {
-                $where .= " AND CostCode like :f3";
-                $param[":f3"] = $_REQUEST['query'] . "%";
-            }
+        if (isset($_REQUEST['fields'])) 
+		{
+			$field = $_REQUEST['fields'];
+			$field = strpos($_REQUEST['fields'], "LevelTitle") !== false ? 
+						str_replace("LevelTitle", "b", $_REQUEST['fields']) . ".BlockDesc" : $field;
+			
+			$field = $field == "TafsiliTypeDesc1" ? "bf1.InfoDesc"  : $field;
+			$field = $field == "TafsiliTypeDesc2" ? "bf2.InfoDesc"  : $field;
+			$field = $field == "TafsiliTypeDesc3" ? "bf3.InfoDesc"  : $field;
+			
+			$where .= " AND " . $field . " like :q";
+            $param[":q"] = $_REQUEST['query'] . "%";
+            
         } else {
             $where .= " AND ( concat_ws(' ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) like :f4";
             $where .= " OR CostCode like :f5 )";

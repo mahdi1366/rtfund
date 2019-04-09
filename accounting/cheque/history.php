@@ -1,6 +1,6 @@
 <?php
 //---------------------------
-// programmer:	Jafarkhani
+// programmer:	Jafarkhani 
 // create Date:	95.08
 //---------------------------
 require_once ("../header.inc.php");
@@ -10,16 +10,11 @@ $IncomeChequeID = $_POST["IncomeChequeID"];
 
 $query = "select h.*,
 				concat_ws(' ',fname, lname,CompanyName) fullname , 
-				t.TafsiliDesc StatusDesc, docs
+				bf.InfoDesc StatusDesc, LocalNo
 			from ACC_ChequeHistory h 
-				left join ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_ChequeStatus." AND StatusID=TafsiliID) 
+				left join BaseInfo bf on(bf.TypeID=4 AND bf.InfoID=StatusID)
 				join BSC_persons using(PersonID) 
-				left join (
-					select SourceID1, TafsiliID2, group_concat(distinct LocalNo) docs
-					from ACC_DocItems join ACC_docs using(DocID)
-					where SourceType in(" . DOCTYPE_INCOMERCHEQUE . ",".DOCTYPE_EDITINCOMECHEQUE.")
-					group by SourceID1, TafsiliID2
-				)t on(h.IncomeChequeID=t.SourceID1 AND h.StatusID=t.TafsiliID2)
+				left join ACC_docs d on(d.DocID=h.DocID)
 				where h.IncomeChequeID=?
 			order by RowID ";
 $Logs = PdoDataAccess::runquery($query, array($IncomeChequeID));
@@ -41,7 +36,7 @@ else
 			<td  >" . $Logs[$i]["fullname"] . "</td>
 			<td >" . substr($Logs[$i]["ATS"], 11) . " " . 
 								DateModules::miladi_to_shamsi($Logs[$i]["ATS"]) . "</td>
-			<td>سند " . $Logs[$i]["docs"] . "</td>
+			<td>سند " . $Logs[$i]["LocalNo"] . "</td>
 			<td>".$Logs[$i]["details"]."</td>
 			
 		</tr>";

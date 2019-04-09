@@ -38,6 +38,7 @@ $dg->addColumn("", "StatusID","", true);
 $dg->addColumn("", "ChequeStatus","", true);
 $dg->addColumn("", "IsGroup","", true);
 $dg->addColumn("", "EqualizationID","", true);
+$dg->addColumn("", "IncomeChequeID","", true);
 
 if($editable)
 {
@@ -336,11 +337,10 @@ LoanPay.DeleteRender = function(v,p,r){
 
 LoanPay.RegDocRender = function(v,p,r){
 	
-	if(	<?= $_SESSION["USER"]["UserName"] == "admin" ? "false" : "true" ?> && (	
-		r.data.PayType == "<?= BACKPAY_PAYTYPE_CHEQUE ?>" 
+	if(	r.data.PayType == "<?= BACKPAY_PAYTYPE_CHEQUE ?>" 
 		||  r.data.PayType == "<?= BACKPAY_PAYTYPE_EPAY ?>"
-		||  r.data.PayType == "<?= BACKPAY_PAYTYPE_CORRECT ?>"))
-		return r.data.LocalNo;
+		||  r.data.PayType == "<?= BACKPAY_PAYTYPE_CORRECT ?>")
+		return st = "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+r.data.LocalNo+"</a>";
 	
 	if(r.data.LocalNo == null)
 		return "<div align='center' title='صدور سند' class='send' "+
@@ -835,12 +835,27 @@ LoanPay.prototype.ExecuteEvent = function(){
 			if(ReqRecord.data.ReqPersonID*1 > 0)
 			{
 				if(ReqRecord.data.FundGuarantee == "YES")
-					eventID = "<?= EVENT_LOANBACKPAY_agentSource_committal ?>";
+				{
+					if(record.data.IncomeChequeID*1 > 0)
+						eventID = "<?= EVENT_LOANBACKPAY_agentSource_committal_cheque ?>";
+					else
+						eventID = "<?= EVENT_LOANBACKPAY_agentSource_committal_non_cheque ?>";
+				}
 				else
-					eventID = "<?= EVENT_LOANBACKPAY_agentSource_non_committal ?>";
+				{
+					if(record.data.IncomeChequeID*1 > 0)
+						eventID = "<?= EVENT_LOANBACKPAY_agentSource_non_committal_cheque ?>";
+					else
+						eventID = "<?= EVENT_LOANBACKPAY_agentSource_non_committal_non_cheque ?>";
+				}
 			}
 			else
-				eventID = "<?= EVENT_LOANBACKPAY_innerSource ?>";
+			{
+				if(record.data.IncomeChequeID*1 > 0)
+					eventID = "<?= EVENT_LOANBACKPAY_innerSource_cheque ?>";
+				else
+					eventID = "<?= EVENT_LOANBACKPAY_innerSource_non_cheque ?>";
+			}
 				
 			framework.ExecuteEvent(eventID, new Array(
 				ReqRecord.data.RequestID,ReqRecord.data.PartID,record.data.BackPayID));

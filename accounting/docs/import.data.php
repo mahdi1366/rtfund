@@ -3164,12 +3164,19 @@ function EditIncomeCheque($InChequeObj, $newAmount, $pdo){
 	CheckCloseCycle();
 	
 	/*@var $InChequeObj ACC_IncomeCheques */
-	
 	$CycleID = $_SESSION["accounting"]["CycleID"];
 	
-	//------------- get CostCodes --------------------
-	$CostCode_guaranteeAmount_daryafti = FindCostID("904-04");
-	$CostCode_guaranteeAmount2_daryafti = FindCostID("905-04");
+	$temp = PdoDataAccess::runquery("
+		select ch.*
+		from ACC_ChequeHistory ch 
+		join ACC_docs using(DocID)
+		where IncomeChequeID=? order by RowID desc", $InChequeObj->IncomeChequeID);
+	if(count($temp) == 0)
+	{
+		ExceptionHandler::PushException("سند ثبت چک یافت نشد");
+		return false;
+	}
+	
 	//---------------- add doc header --------------------
 	$obj = new ACC_docs();
 	$obj->RegDate = PDONOW;
@@ -3178,60 +3185,37 @@ function EditIncomeCheque($InChequeObj, $newAmount, $pdo){
 	$obj->CycleID = $CycleID;
 	$obj->BranchID = $InChequeObj->BranchID;
 	$obj->DocType = DOCTYPE_EDITINCOMECHEQUE;
-	$obj->description = "چک شماره " . $InChequeObj->ChequeNo;
+	$obj->description = "تغییر چک شماره " . $InChequeObj->ChequeNo;
 	if(!$obj->Add($pdo))
 	{
 		ExceptionHandler::PushException("خطا در ایجاد سند");
 		return false;
 	}
-	//----------------- add Doc items ------------------------
 	
-	$__ChequeAmount = $InChequeObj->ChequeAmount;
-	$__ChequeID = $InChequeObj->IncomeChequeID;
-	$__TafsiliID = $InChequeObj->TafsiliID;
-	if($__TafsiliID == "")
+	$dt = PdoDataAccess::runquery("select * from ACC_DocItems where DocID=?", array($temp[0]["DocID"]));
+	foreach($dt as $row)
 	{
-		$dt = $InChequeObj->GetBackPays();
-		if(count($dt) == 1)
-			$__TafsiliID = $dt[0]["TafsiliID"];
+		$dobj = new ACC_DocItems();
+		PdoDataAccess::FillObjectByArray($dobj, $row);
+
+		$temp = $dobj->DebtorAmount;
+		$dobj->DebtorAmount = $dobj->CreditorAmount;
+		$dobj->CreditorAmount = $temp;
+		$dobj->DocID = $obj->DocID;
+		unset($dobj->ItemID);
+		$dobj->Add($pdo);
 	}
-	$__SourceType = DOCTYPE_EDITINCOMECHEQUE;
+	foreach($dt as $row)
+	{
+		$dobj = new ACC_DocItems();
+		PdoDataAccess::FillObjectByArray($dobj, $row);
+		$dobj->DebtorAmount = $dobj->DebtorAmount*1 > 0 ? $newAmount : 0;
+		$dobj->CreditorAmount = $dobj->CreditorAmount*1 > 0 ? $newAmount : 0;
+		$dobj->DocID = $obj->DocID;
+		unset($dobj->ItemID);
+		$dobj->Add($pdo);
+	}
 	
-	$itemObj = new ACC_DocItems();
-	$itemObj->DocID = $obj->DocID;
-	$itemObj->locked = "YES";
-	$itemObj->TafsiliType = TAFTYPE_PERSONS;
-	$itemObj->TafsiliID = $__TafsiliID;
-	$itemObj->TafsiliType2 = TAFTYPE_ChequeStatus;
-	$itemObj->TafsiliID2 = INCOMECHEQUE_EDIT;
-	$itemObj->SourceType = $__SourceType;
-	$itemObj->SourceID1 = $__ChequeID;
-	$itemObj->details = "چک شماره " . $InChequeObj->ChequeNo;
-	
-	unset($itemObj->ItemID);
-	$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
-	$itemObj->CreditorAmount = $__ChequeAmount;
-	$itemObj->DebtorAmount = 0;		
-	$itemObj->Add($pdo);
-
-	unset($itemObj->ItemID);
-	$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
-	$itemObj->CreditorAmount = 0;
-	$itemObj->DebtorAmount = $__ChequeAmount;
-	$itemObj->Add($pdo);	
-	
-	unset($itemObj->ItemID);
-	$itemObj->CostID = $CostCode_guaranteeAmount_daryafti;
-	$itemObj->DebtorAmount = $newAmount;
-	$itemObj->CreditorAmount = 0;		
-	$itemObj->Add($pdo);
-
-	unset($itemObj->ItemID);
-	$itemObj->CostID = $CostCode_guaranteeAmount2_daryafti;
-	$itemObj->DebtorAmount = 0;
-	$itemObj->CreditorAmount = $newAmount;
-	$itemObj->Add($pdo);	
-
 	if(ExceptionHandler::GetExceptionCount() > 0)
 		return false;
 

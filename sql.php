@@ -31,12 +31,8 @@ insert into ACC_tafsilis(TafsiliCode,TafsiliType,TafsiliDesc,ObjectID)
 		select ProcessID,106,ProcessTitle,ProcessID from BSC_processes
 */
 
-	 ALTER TABLE `WFM_requests` ADD COLUMN `RequestNo` INTEGER UNSIGNED NOT NULL AFTER `FormID`;
-
-ALTER TABLE `OFC_letters` ADD COLUMN `ProcessID` INTEGER UNSIGNED NOT NULL DEFAULT 0 AFTER `PostalAddress`;
-
-ALTER TABLE `framewor_rtfund`.`BaseTypes` MODIFY COLUMN `SystemID` INTEGER UNSIGNED DEFAULT NULL,
- MODIFY COLUMN `editable` ENUM('YES','NO') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'YES';
 
 ALTER TABLE `framewor_rtfund`.`ACC_CostCodeParamItems` ADD COLUMN `f1` VARCHAR(45) AFTER `ParamValue`,
  ADD COLUMN `f2` VARCHAR(45) AFTER `f1`;
+
+ALTER TABLE `framewor_rtfund`.`ACC_ChequeHistory` ADD COLUMN `DocID` INTEGER UNSIGNED DEFAULT 0 AFTER `details`;

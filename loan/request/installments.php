@@ -192,7 +192,8 @@ function Installment()
 					url: this.address_prefix + 'request.data.php?task=SelectMyRequests&mode=customer',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields :  ['PartAmount',"RequestID","ReqAmount","ReqDate", "RequestID", "CurrentRemain","IsEnded",{
+				fields :  ['PartAmount',"RequestID","ReqAmount","ReqDate", "RequestID", "CurrentRemain",
+							"IsEnded","StatusID",{
 					name : "fullTitle",
 					convert : function(value,record){
 						return "کد وام : " + record.data.RequestID + " به مبلغ " + 
@@ -307,7 +308,12 @@ Installment.prototype.SelectLoan = function(record){
 		Ext.MessageBox.alert("","این وام خاتمه یافته است");
 		return;
 	}
-
+	if(record.data.StatusID != "<?= LON_REQ_STATUS_CONFIRM ?>")
+	{
+		Ext.MessageBox.alert("","این وام هنوز در صندوق تایید نشده است");
+		return;
+	}
+	
 	this.RequestID = record.data.RequestID;
 
 	this.PayPanel.show();

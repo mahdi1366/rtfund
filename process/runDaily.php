@@ -40,8 +40,14 @@ function process_rundaily(){
 			hideTrigger : true
 		},{
 			xtype : "shdatefield",
-			fieldLabel : "تاریخ",
-			name : "ComputeDate"
+			fieldLabel : "از تاریخ",
+			name : "FromComputeDate",
+			allowBlank : false
+		},{
+			xtype : "shdatefield",
+			fieldLabel : "تا تاریخ",
+			name : "ToComputeDate",
+			allowBlank : false
 		}],
 		buttons: [{
 			text: 'اجرا',
@@ -54,6 +60,9 @@ function process_rundaily(){
 }
 
 process_rundaily.prototype.Run = function(){
+	
+	if(!this.wizardPanel.getForm().isValid())
+		return;
 	
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg:'در حال ذخیره سازی ...'});
 	mask.show();

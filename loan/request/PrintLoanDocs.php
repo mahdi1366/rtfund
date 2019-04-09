@@ -80,13 +80,13 @@ if($type == "checks")
 		select p.*,i.*,
 				b.BankDesc, 
 				bi.InfoDesc PayTypeDesc, 
-				t.TafsiliDesc ChequeStatusDesc
+				t.InfoDesc ChequeStatusDesc
 
 			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			left join ACC_IncomeCheques i using(IncomeChequeID)
 			left join ACC_banks b on(ChequeBank=BankID)
-			left join ACC_tafsilis t on(t.TafsiliType=" . TAFTYPE_ChequeStatus . " AND t.TafsiliID=i.ChequeStatus)
+			left join BaseInfo t on(t.TypeID=4 AND t.InfoID=i.ChequeStatus)
 		where p.RequestID=? AND PayType=9",	array($ReqObj->RequestID));
 
 	//print_r(ExceptionHandler::PopAllExceptions());

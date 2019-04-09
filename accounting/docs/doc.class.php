@@ -5,6 +5,8 @@
 //	Date		: 94.06
 //-----------------------------
 
+require_once DOCUMENT_ROOT . "/commitment/baseinfo/baseinfo.class.php";
+
 class ACC_docs extends PdoDataAccess {
 
 	public $DocID;
@@ -172,6 +174,15 @@ class ACC_docs extends PdoDataAccess {
 		if ($temp[0]["IsClosed"] == "YES") {
 			ExceptionHandler::PushException("دوره مربوطه بسته شده و سند قابل حذف نمی باشد.");
 			return false;
+		}
+		if($temp[0]["EventID"]*1 > 0)
+		{
+			$eobj = new COM_events($temp[0]["EventID"]);
+			if($eobj->IsSystemic == "YES")
+			{
+				ExceptionHandler::PushException("اسنادی که به صورت اتومات صادر می شوند باید از زیر سیستم مربوطه حذف گردند");
+				return false;
+			}
 		}
 
 		if ($pdo == null) {

@@ -176,6 +176,8 @@ define("ACC_STEPID_CONFIRM", "200");
 define("ACC_COST_PARAM_LOAN_RequestID", "3");
 define("ACC_COST_PARAM_LOAN_LastInstallmentDate", "4");
 define("ACC_COST_PARAM_LOAN_LEVEL", "105");
+define("ACC_COST_PARAM_CHEQUE_date", "95");
+define("ACC_COST_PARAM_BANK", "1");
 
 
 define("DEFRAYLOAN_VOTEFORM", "9");
@@ -191,13 +193,19 @@ define("EVENT_LOANCONTRACT_agentSource_non_committal", 133);
 define("EVENT_LOANPAYMENT_innerSource", 141);
 define("EVENT_LOANPAYMENT_agentSource", 143);
 
-define("EVENT_LOANBACKPAY_innerSource", 152);
-define("EVENT_LOANBACKPAY_agentSource_committal", 156);
-define("EVENT_LOANBACKPAY_agentSource_non_committal", 154);
+define("EVENT_LOANBACKPAY_innerSource_cheque", 151);
+define("EVENT_LOANBACKPAY_innerSource_non_cheque", 152);
+define("EVENT_LOANBACKPAY_agentSource_committal_cheque", 155);
+define("EVENT_LOANBACKPAY_agentSource_committal_non_cheque", 156);
+define("EVENT_LOANBACKPAY_agentSource_non_committal_cheque", 153);
+define("EVENT_LOANBACKPAY_agentSource_non_committal_non_cheque", 154);
 
 define("EVENT_LOANDAILY_innerSource", 161);
 define("EVENT_LOANDAILY_agentSource_committal", 1722);
 define("EVENT_LOANDAILY_agentSource_non_committal", 1723);
+
+define("EVENT_LOANDCHEQUE_innerSource", 1718);
+define("EVENT_LOANDCHEQUE_agentSource", 1719);
 
 //------------- TypeIDs -----------
 define("TYPEID_MeetingType", 88);
