@@ -51,6 +51,10 @@ class BSC_persons extends PdoDataAccess{
 	public $PresenterID;
 	public $Agreement;
 	public $RegisterProcessStep;
+	public $LastChangeNo;
+	public $LastChangeDate;
+	public $BirthDate;
+	public $ShRegPlace;
 	
 	public $IsActive;
 	public $_PostID;
@@ -60,6 +64,8 @@ class BSC_persons extends PdoDataAccess{
 		
 		$this->DT_RegDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_ScinceEndDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_LastChangeDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_BirthDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($PersonID != "")
 			PdoDataAccess::FillObject ($this, 

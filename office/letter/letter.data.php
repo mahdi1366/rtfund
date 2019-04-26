@@ -506,6 +506,31 @@ function SignLetter(){
 	die();
 }
 
+function GroupSignLetter(){
+	
+	foreach($_POST as $key=>$val)
+	{
+		if(strpos($key, "chk_") !== false)
+		{
+			$SendID = preg_replace("/chk_/", "", $key);
+			$sobj = new OFC_send($SendID);	
+			$obj = new OFC_letters($sobj->LetterID);
+			if($obj->SignerPersonID == $_SESSION["USER"]["PersonID"])
+			{
+				$PersonObj = new BSC_persons($obj->SignerPersonID);
+
+				$obj->IsSigned = "YES";
+				$obj->SignPostID = $PersonObj->_PostID;
+				$obj->LetterDate = PDONOW;
+				$result = $obj->EditLetter();
+			}
+		}
+	}
+		
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
 function CopyLetter(){
 	
 	$baseObj = new OFC_letters($_POST["LetterID"]);
@@ -691,7 +716,6 @@ function ReturnSend(){
 function DeleteSend(){
 	
 	$mode = $_POST["mode"];
-	$LetterID = $_POST["LetterID"];
 	$SendID = $_POST["SendID"];
 	$obj = new OFC_send($SendID);	
 	if($obj->ToPersonID == $_SESSION["USER"]["PersonID"])
@@ -703,10 +727,29 @@ function DeleteSend(){
 	die();
 }
 
+function GroupDeleteSend(){
+	
+	foreach($_POST as $key=>$val)
+	{
+		if(strpos($key, "chk_") !== false)
+		{
+			$SendID = preg_replace("/chk_/", "", $key);
+			$obj = new OFC_send($SendID);	
+			if($obj->ToPersonID == $_SESSION["USER"]["PersonID"])
+			{
+				$obj->IsDeleted = "YES";
+				$obj->EditSend();
+			}	
+		}
+	}
+	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
 function DeleteSender(){
 	
 	$mode = $_POST["mode"];
-	$LetterID = $_POST["LetterID"];
 	$SendID = $_POST["SendID"];
 	$obj = new OFC_send($SendID);	
 	if($obj->FromPersonID == $_SESSION["USER"]["PersonID"])
@@ -714,6 +757,26 @@ function DeleteSender(){
 		$obj->SenderDelete = $mode == "1" ? "NO" : "YES";
 		$obj->EditSend();
 	}	
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
+
+function GroupDeleteSender(){
+	
+	foreach($_POST as $key=>$val)
+	{
+		if(strpos($key, "chk_") !== false)
+		{
+			$SendID = preg_replace("/chk_/", "", $key);
+			$obj = new OFC_send($SendID);	
+			if($obj->FromPersonID == $_SESSION["USER"]["PersonID"])
+			{
+				$obj->SenderDelete = "YES";
+				$obj->EditSend();
+			}	
+		}
+	}
+	
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }

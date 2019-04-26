@@ -17,10 +17,10 @@ $dg->addColumn("", "IsActive", "", true);
 
 $col = $dg->addColumn("کد", "InfoID");
 $col->width = 50; 
-//if($_SESSION["USER"]["UserName"] =="admin" )
-//{
+if($_SESSION["USER"]["UserName"] =="admin" )
+{
 	$col->editor = ColumnEditor::NumberField();
-//}
+}
 
 $col = $dg->addColumn("شرح", "InfoDesc", "");
 $col->editor = ColumnEditor::TextField();

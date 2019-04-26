@@ -34,6 +34,11 @@ $dg->addColumn("", "organization", "", true);
 $dg->addColumn("", "SendComment", "", true);
 $dg->addColumn("", "SenderDelete", "", true);
 
+$col = $dg->addColumn('<input type=checkbox onclick=MyLetter.CheckAll(this)>', "TafsiliID", "");
+$col->renderer = "MyLetter.SelectRender";
+$col->sortable = false;
+$col->width = 25;
+
 $col = $dg->addColumn("<img src=/office/icons/LetterType.gif>", "LetterType", "");
 $col->renderer = "MyLetter.LetterTypeRender";
 $col->width = 30;
@@ -44,6 +49,10 @@ $col->width = 30;
 
 $col = $dg->addColumn("فوری", "IsUrgent", "");
 $col->renderer = "function(v,p,r){if(v == 'YES') return '<img width=16px src=/office/icons/light.gif>';}";
+$col->width = 30;
+
+$col = $dg->addColumn("امضاء", "IsSigned", "");
+$col->renderer = "function(v,p,r){if(v == 'YES') return '<img width=16px src=/generalUI/icons/sign.png>';}";
 $col->width = 30;
 
 $col = $dg->addColumn("شماره", "LetterID", "");
@@ -72,7 +81,12 @@ $dg->addObject("this.deletedBtnObj");
 if($mode == "receive")
 {
 	$dg->addButton("", "خوانده نشده", "view", "function(){MyLetterObject.UnSeen();}");
+	$dg->addButton("", "امضاء نامه های انتخابی", "sign", "function(){MyLetterObject.GroupSignLetter();}");
+	$dg->addButton("", "حذف نامه های انتخابی", "remove", "function(){MyLetterObject.GroupDeleteSend();}");
+	
 }
+else
+	$dg->addButton("", "حذف نامه های انتخابی", "remove", "function(){MyLetterObject.GroupDeleteSender();}");
 
 $dg->EnableGrouping = true;
 $dg->DefaultGroupField = "_SendDate";
@@ -83,6 +97,7 @@ else
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 490;
+$dg->HeaderMenu = false;
 $dg->title = $mode == "send" ? "نامه های ارسالی" : "نامه های دریافتی";
 $dg->DefaultSortField = "_SendDate";
 $dg->autoExpandColumn = "LetterTitle";
@@ -209,6 +224,18 @@ MyLetter.prototype.LoadLetters = function(btn){
 		this.grid.getStore().loadPage(1);
 	else
 		this.grid.render(this.get("div_grid"));
+}
+
+MyLetter.SelectRender = function(v,p,r){
+	return "<input type=checkbox id=chk_" + r.data.SendID + " name=chk_" + r.data.SendID + " >";
+}
+
+MyLetter.CheckAll = function(checkAllElem){
+	
+	elems = MyLetterObject.get("mainForm").getElementsByTagName("input");
+	for(i=0; i<elems.length; i++)
+		if(elems[i].id.indexOf("chk_") != -1)
+			elems[i].checked = checkAllElem.checked;
 }
 
 MyLetter.LetterTypeRender = function(v,p,r){
@@ -498,6 +525,88 @@ MyLetter.prototype.UnSeen = function(){
 		}
 	})
 }
+
+MyLetter.prototype.GroupDeleteSend = function(){
+	
+	var msg = "آیا مایل به حذف از کارتابل می باشید؟";
+	Ext.MessageBox.confirm("",msg, function(btn){
+		if(btn == "no")
+			return;
+		
+		me = MyLetterObject;
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID),{msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url : me.address_prefix + "letter.data.php?task=GroupDeleteSend",
+			form : me.get("mainForm"),
+			method : "post",
+			
+			success : function(response){
+				mask.hide();
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					MyLetterObject.grid.getStore().load();
+			}
+		})
+	});
+}
+
+MyLetter.prototype.GroupDeleteSender = function(mode){
+	
+	var msg = "آیا مایل به حذف از کارتابل می باشید؟";
+	Ext.MessageBox.confirm("",msg, function(btn){
+		if(btn == "no")
+			return;
+		
+		me = MyLetterObject;
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID),{msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url : me.address_prefix + "letter.data.php?task=GroupDeleteSender",
+			form : me.get("mainForm"),
+			method : "post",
+			
+			success : function(response){
+				mask.hide();
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					MyLetterObject.grid.getStore().load();
+			}
+		})
+	});
+}
+
+MyLetter.prototype.GroupSignLetter = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به امضا می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		me = MyLetterObject;
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخيره سازي...'});
+		mask.show();  
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'letter.data.php?task=GroupSignLetter' , 
+			method: "POST",
+			form : me.get("mainForm"),
+
+			success : function(response){
+				mask.hide();
+				MyLetterObject.grid.getStore().load();
+			},
+			failure : function(){
+				mask.hide();
+			}
+		});
+	})
+	
+}
 </script>
-	<br>
+<br>
+<form id="mainForm">
 	<div id="DivPanel" style="margin-right:8px;width:98%"></div>
+</form>

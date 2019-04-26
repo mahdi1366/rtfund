@@ -19,7 +19,7 @@ class FRW_reports extends OperationClass{
 	
 	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		
-		$query = "select r.*, concat(SysPath,'/',MenuPath) reportPath
+		$query = "select r.*, concat(MenuPath) reportPath
 			from FRW_reports r
 			join FRW_menus using(MenuID)
 			join FRW_systems using(SystemID)

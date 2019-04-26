@@ -1752,9 +1752,10 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					name: 'LatePercent',
 					afterSubTpl : "%"
 				},{
-					fieldLabel: 'درصد بخشش',
-					name: 'ForgivePercent',
-					afterSubTpl : "%"
+					fieldLabel: 'دوره پرداخت(ماه)',
+					name: 'PayDuration',
+					allowBlank : true,
+					colspan : 2
 				},{
 					fieldLabel: 'درصد دیرکرد',
 					name: 'ForfeitPercent',
@@ -1765,27 +1766,23 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					afterSubTpl : "%",
 					labelStyle : "font-size:11px"
 				},{
-					fieldLabel: 'دوره پرداخت(ماه)',
-					name: 'PayDuration',
-					allowBlank : true,
-					colspan : 2
-				},{
 					xtype : "fieldset",
 					colspan : 2,
 					style : "margin-right:10px",
 					width : 450,
+					hidden : true,
 					title : "نحوه محاسبه کارمزد و اقساط",
 					items : [{
 						xtype : "radio",
 						boxLabel : "فرمول جدید بانک مرکزی",
 						name : "ComputeMode",
-						inputValue : "BANK",
-						checked : true
+						inputValue : "BANK"
 					},{
 						xtype : "radio",						
 						boxLabel : "فرمول تنزیل هر قسط",
 						name : "ComputeMode",
-						inputValue : "NEW"
+						inputValue : "NEW",
+						checked : true
 					}/*,{
 						xtype : "combo",
 						width : 400,
@@ -1808,7 +1805,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					xtype : "fieldset",
 					itemId : "fs_WageCompute",
 					title : "نحوه دریافت کارمزد صندوق",
-					width : 240,
+					width : 220,
 					style : "margin-right:10px",
 					items : [{
 						xtype : "radio",
@@ -1829,37 +1826,9 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					}]
 				},{
 					xtype : "fieldset",
-					itemId : "fs_DelayCompute",
-					title : "نحوه دریافت تنفس صندوق",
-					width : 200,
-					style : "margin-right:10px",
-					items : [{
-						xtype : "radio",						
-						boxLabel : "هنگام پرداخت وام",
-						name : "DelayReturn",
-						inputValue : "CUSTOMER",
-						checked : true
-					},{
-						xtype : "radio",
-						boxLabel : "طی اقساط",
-						name : "DelayReturn",
-						inputValue : "INSTALLMENT"
-					},{
-						xtype : "radio",
-						boxLabel : "چک برای کل مبلغ",
-						name : "DelayReturn",
-						inputValue : "CHEQUE"
-					},{
-						xtype : "radio",
-						boxLabel : "چک برای سالهای بعد",
-						name : "DelayReturn",
-						inputValue : "NEXTYEARCHEQUE"
-					}]
-				},{
-					xtype : "fieldset",
 					itemId : "fs_AgentWageCompute",
 					title : "نحوه دریافت کارمزد سرمایه گذار",
-					width : 240,
+					width : 220,
 					style : "margin-right:10px",
 					items : [{
 						xtype : "radio",
@@ -1875,21 +1844,49 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					}]
 				},{
 					xtype : "fieldset",
+					itemId : "fs_DelayCompute",
+					title : "نحوه دریافت تنفس صندوق",
+					width : 220,
+					style : "margin-right:10px",
+					items : [{
+						xtype : "radio",						
+						boxLabel : "هنگام پرداخت وام",
+						name : "DelayReturn",
+						inputValue : "CUSTOMER"
+					},{
+						xtype : "radio",
+						boxLabel : "طی اقساط",
+						name : "DelayReturn",
+						inputValue : "INSTALLMENT",
+						checked : true
+					},{
+						xtype : "radio",
+						boxLabel : "چک برای کل مبلغ",
+						name : "DelayReturn",
+						inputValue : "CHEQUE"
+					},{
+						xtype : "radio",
+						boxLabel : "چک برای سالهای بعد",
+						name : "DelayReturn",
+						inputValue : "NEXTYEARCHEQUE"
+					}]
+				},{
+					xtype : "fieldset",
 					itemId : "fs_AgentDelayCompute",
 					title : "نحوه دریافت تنفس سرمایه گذار",
-					width : 200,
+					width : 220,
 					style : "margin-right:10px",
 					items : [{
 						xtype : "radio",						
 						boxLabel : "هنگام پرداخت وام",
 						name : "AgentDelayReturn",
-						inputValue : "CUSTOMER",
-						checked : true
+						inputValue : "CUSTOMER"
 					},{
 						xtype : "radio",
 						boxLabel : "طی اقساط",
 						name : "AgentDelayReturn",
-						inputValue : "INSTALLMENT"
+						inputValue : "INSTALLMENT",
+						checked : true
 					},{
 						xtype : "radio",
 						boxLabel : "چک برای کل مبلغ",
@@ -1901,7 +1898,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						name : "AgentDelayReturn",
 						inputValue : "NEXTYEARCHEQUE"
 					}]
-				},{
+				},/*{
 					xtype : "fieldset",
 					colspan :2,
 					width : 450,
@@ -1935,7 +1932,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						xtype : "container",
 						html : "این کارمزد بر اساس نحوه دریافت کارمزد محاسبه می گردد."
 					}]
-				},{
+				},*/{
 					xtype : "hidden",
 					name : "PartID"
 				}]				
@@ -2118,15 +2115,7 @@ RequestInfo.prototype.LoadSummary = function(record){
 	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerWage);
 	this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.TotalFundWage);
 	this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(record.data.TotalAgentWage);
-	this.get("SUM_Wage_1Year").innerHTML = Ext.util.Format.Money(record.data.WageYear1);
-	this.get("SUM_Wage_2Year").innerHTML = Ext.util.Format.Money(record.data.WageYear2);
-	this.get("SUM_Wage_3Year").innerHTML = Ext.util.Format.Money(record.data.WageYear3);
-	this.get("SUM_Wage_4Year").innerHTML = Ext.util.Format.Money(record.data.WageYear4);
-	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
-		(record.data.DelayReturn == "CUSTOMER" ? record.data.FundDelay*1 : 0) - 
-		(record.data.AgentDelayReturn == "CUSTOMER" ? record.data.AgentDelay : 0) - 
-		(record.data.WageReturn == "CUSTOMER" ? record.data.TotalFundWage : 0) - 
-		(record.data.AgentWageReturn == "CUSTOMER" ? record.data.TotalAgentWage : 0));
+	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.SUM_NetAmount);
 }
 
 //.........................................................

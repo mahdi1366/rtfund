@@ -42,7 +42,7 @@ function SelectAll(){
 		$temp = DMS_documents::SelectFullPackage($_REQUEST["ObjectID"]);
 	else
 		$temp = DMS_documents::SelectAll($where, $param);
-	print_r(ExceptionHandler::PopAllExceptions());
+	
 	for($i=0; $i<count($temp); $i++)
 	{
 		$temp[$i]["paramValues"] = "";

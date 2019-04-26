@@ -32,7 +32,12 @@ $col = $page_rpg->addColumn("سررسید", "InstallmentDate");
 $col->type = "date";
 $page_rpg->addColumn("مبلغ قسط", "InstallmentAmount");
 $page_rpg->addColumn("قابل پرداخت معوقه", "TotalRemainder");
-$page_rpg->addColumn("اصل و کارمزد معوقه", "PureRemain");
+
+$rpt->addColumn("اصل وام معوقه", "remain_pure","ReportMoneyRender");
+$rpt->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender");
+$rpt->addColumn("کارمزد تاخیر معوقه", "remain_late","ReportMoneyRender");
+$rpt->addColumn("جریمه معوقه", "remain_pnlt","ReportMoneyRender");
+
 $page_rpg->addColumn("شرح", "PartDesc");
 $page_rpg->addColumn("مبلغ پرداخت", "PartAmount");
 $page_rpg->addColumn("ماه تنفس", "DelayMonths");
@@ -171,12 +176,15 @@ function GetData(){
 			
 			$temp = array();
 			$computeArr = LON_requests::ComputePayments($row["RequestID"], $temp);
-			$remain = LON_requests::GetCurrentRemainAmount($row["RequestID"],$computeArr);
-			$PureRemain = LON_requests::GetCurrentRemainAmount($row["RequestID"],$computeArr, false);
+			$remain = LON_Computes::GetCurrentRemainAmount($row["RequestID"],$computeArr);
+			$RemainArr = LON_Computes::GetRemainAmounts($row["RequestID"],$computeArr);
 			$NonPayedRecord = LON_requests::GetNonPayedInstallmentRow($row["RequestID"],$computeArr, $temp);
 			$ReqInfoArray[$currentRequestID] = array(
 				"remain" => $remain,
-				"PureRemain" => $PureRemain,
+				"remain_pure" => $RemainArr["remain_pure"],
+				"remain_wage" => $RemainArr["remain_wage"],
+				"remain_late" => $RemainArr["remain_late"],
+				"remain_pnlt" => $RemainArr["remain_pnlt"],
 				"NonPayedRow" => $NonPayedRecord
 			);
 		}
@@ -190,7 +198,10 @@ function GetData(){
 			continue;
 		
 		$row["TotalRemainder"] = $remain;
-		$row["PureRemain"] = $PureRemain;
+		$row["remain_pure"] = $RemainArr["remain_pure"];
+		$row["remain_wage"] = $RemainArr["remain_wage"];
+		$row["remain_late"] = $RemainArr["remain_late"];
+		$row["remain_pnlt"] = $RemainArr["remain_pnlt"];
 		$row["ForfeitDays"] = $ReqInfoArray[$currentRequestID]["NonPayedRow"]["ForfeitDays"];
 		
 		if($_POST["ForfeitDays"]*1 > 0 && $row["ForfeitDays"] != $_POST["ForfeitDays"])
@@ -226,7 +237,12 @@ function ListData($IsDashboard = false){
 	$rpt->addColumn("تعداد روز تاخیر", "ForfeitDays");
 	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
 	$rpt->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");
-	$rpt->addColumn("اصل و کارمزد معوقه", "PureRemain","ReportMoneyRender");
+	
+	$rpt->addColumn("اصل وام معوقه", "remain_pure","ReportMoneyRender");
+	$rpt->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender");
+	$rpt->addColumn("کارمزد تاخیر معوقه", "remain_late","ReportMoneyRender");
+	$rpt->addColumn("جریمه معوقه", "remain_pnlt","ReportMoneyRender");
+	
 	$rpt->addColumn("مبلغ وام", "PartAmount", "ReportMoneyRender");
 	$rpt->addColumn("شرح", "PartDesc");
 	$rpt->addColumn("ماه تنفس", "DelayMonths");

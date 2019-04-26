@@ -73,13 +73,14 @@ $objArr = array(
 $pdo = PdoDataAccess::getPdoObject();
 $pdo->beginTransaction();
 	
-$ComputeDate = !empty($_POST["ComputeDate"]) ? 
-		DateModules::shamsi_to_miladi($_POST["ComputeDate"],"-") : DateModules::Now();
+$ComputeDate = !empty($_POST["manual"]) ? null : DateModules::Now();
 echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8"><body dir=rtl>';
 echo "<br>****************************<BR>" . DateModules::miladi_to_shamsi($ComputeDate) . 
 		"<br>****************************<br>";
 foreach($reqs as $row)
 {
+	$ComputeDate = !empty($_POST["manual"]) ? $row["gdate"] : DateModules::Now();
+	
 	$eventID = "";
 	if($row["ReqPersonID"]*1 == 0)
 		$eventID = EVENT_LOANDAILY_innerSource;

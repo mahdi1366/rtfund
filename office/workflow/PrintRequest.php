@@ -173,15 +173,14 @@ for ($i = 0; $i < count($res); $i++) {
 </head>
 
 <body dir="rtl">
-    <table style='border:2px dashed #AAAAAA;border-collapse:collapse;width:100%;height:100%' align='center'>
+    <table style='border-collapse:collapse;width:100%;height:100%' align='center'>
 		<thead>
 			<tr style="height:80px">
-				<td width=110px><img style="width:110px" src='/framework/icons/logo.jpg'></td>
+				<td width=200px><img style="width:110px" src='/framework/icons/logo.jpg'></td>
 				<td align='center' style='font-family:Titr;font-size:14px;text-align:center !important;'>
-					<?= $ReqObj->_FormTitle ?>
-					<br>ثبت کننده : <?= $ReqObj->_PersonName ?>
+					<?= $ReqObj->_FormTitle ?>					
 				</td>
-				<td width=140px style='text-align:center;'>
+				<td width=200px style='text-align:center;'>
 					شماره درخواست :  <?= $ReqObj->RequestNo ?><br> 
 					تاریخ ثبت :  <?= DateModules::miladi_to_shamsi($ReqObj->RegDate) ?>					
 				</td>

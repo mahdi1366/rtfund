@@ -83,10 +83,7 @@ $dg->addColumn("", "AgentDelay","", true);
 $dg->addColumn("", "TotalCustomerWage","", true);
 $dg->addColumn("", "TotalAgentWage","", true);
 $dg->addColumn("", "TotalFundWage","", true);
-$dg->addColumn("", "WageYear1","", true);
-$dg->addColumn("", "WageYear2","", true);
-$dg->addColumn("", "WageYear3","", true);
-$dg->addColumn("", "WageYear4","", true);
+$dg->addColumn("", "SUM_NetAmount","", true);
 
 $dg->addColumn("", "LocalNo","", true);
 $dg->addColumn("", "DocDate","", true);
@@ -132,6 +129,7 @@ if(session::IsFramework())
 		border: 1px solid #b5b8c8;
 		line-height: 21px;
 		direction: ltr;
+		text-align: center;
 		padding: 0 5px;
 	}
 </style>
@@ -141,9 +139,9 @@ if(session::IsFramework())
 	<div id="SendForm"></div>
 	<div id="summaryDIV" style="display:none">
 		<div style="float:right">
-			<table style="width:200px" class="summary">
+			<table style="width:250px" class="summary">
 			<tr>
-				<td style="width:70px;background-color: #dfe8f6;">مبلغ هر قسط</td>
+				<td style="width:100px;background-color: #dfe8f6;">مبلغ هر قسط</td>
 				<td style="background-color: #dfe8f6;">سود تنفس صندوق</td>
 			</tr>
 			<tr>
@@ -159,7 +157,8 @@ if(session::IsFramework())
 				<td><div id="SUM_AgentDelay" class="blueText">&nbsp;</div></td>
 			</tr>			
 		</table></div>
-		<div style="float:right"><table style="width:190px" class="summary">
+		<div style="float:right">
+			<table style="width:250px" class="summary">
 			<tr>
 				<td style="width:90px;direction:rtl;background-color: #dfe8f6;">کارمزد وام</td>
 				<td><div id="SUM_TotalWage" class="blueText">&nbsp;</div></td>
@@ -173,26 +172,8 @@ if(session::IsFramework())
 				<td><div id="SUM_AgentWage" class="blueText">&nbsp;</div></td>
 			</tr>
 			<tr>
-				<td style="background-color: #dfe8f6;">خالص پرداختی</td>
+				<td style="direction:rtl;background-color: #dfe8f6;">خالص پرداختی</td>
 				<td><div id="SUM_NetAmount" class="blueText">&nbsp;</div></td>
-			</tr>
-		</table></div>
-		<div style="float:right"><table id="div_yearly" style="width:190px" class="summary">
-			<tr>
-				<td style="direction:rtl;width:85px;background-color: #dfe8f6;">کارمزد سال اول</td>
-				<td><div id="SUM_Wage_1Year" class="blueText">&nbsp;</div></td>
-			</tr>
-			<tr>
-				<td style="direction:rtl;background-color: #dfe8f6;">کارمزد سال دوم</td>
-				<td><div id="SUM_Wage_2Year" class="blueText">&nbsp;</div></td>
-			</tr>
-			<tr>
-				<td style="direction:rtl;background-color: #dfe8f6;">کارمزد سال سوم</td>
-				<td><div id="SUM_Wage_3Year" class="blueText">&nbsp;</div></td>
-			</tr>
-			<tr>
-				<td style="direction:rtl;background-color: #dfe8f6;">کارمزد سال چهارم</td>
-				<td><div id="SUM_Wage_4Year" class="blueText">&nbsp;</div></td>
 			</tr>
 		</table></div>
 	</div> 

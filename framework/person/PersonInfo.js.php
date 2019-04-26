@@ -32,7 +32,8 @@ function PersonInfo()
 			"EconomicID","PhoneNo","mobile","address","email","RegNo","RegDate","RegPlace",
 			"CompanyType","AccountNo","DomainID","WebSite","IsGovermental","DomainDesc",
 			"FatherName","ShNo","IsStaff","IsCustomer","IsSupporter","IsShareholder",
-			"IsAgent","IsExpert", "fax","PostalCode","PresenterID","IsActive"],
+			"IsAgent","IsExpert", "fax","PostalCode","PresenterID","IsActive",
+			"LastChangeNo","LastChangeDate","BirthDate","ShRegPlace"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -44,7 +45,10 @@ function PersonInfo()
 				if(record.data.IsReal == "NO")
 				{
 					PersonInfoObject.mainPanel.down("[name=RegDate]").setValue( MiladiToShamsi(record.data.RegDate) );
+					PersonInfoObject.mainPanel.down("[name=LastChangeDate]").setValue( MiladiToShamsi(record.data.LastChangeDate) );
 				}
+				else
+					PersonInfoObject.mainPanel.down("[name=BirthDate]").setValue( MiladiToShamsi(record.data.BirthDate) );
 				
 				mask.hide();    
 				
@@ -218,6 +222,18 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			allowBlank : false,
 			beforeLabelTextTpl: required,
 			name: 'ShNo'
+		},{
+			xtype : "textfield",
+			fieldLabel: 'محل صدور شناسنامه',
+			allowBlank : false,
+			beforeLabelTextTpl: required,
+			name: 'ShRegPlace'
+		},{
+			xtype : "shdatefield",
+			fieldLabel: 'تاریخ تولد',
+			allowBlank : false,
+			beforeLabelTextTpl: required,
+			name: 'BirthDate'
 		},{
 			xtype : "textfield",
 			regex: /^\d{10}$/,
@@ -428,6 +444,19 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			allowBlank : false,
 			beforeLabelTextTpl: required,
 			name: 'CompanyType'
+		},{
+			xtype : "numberfield",
+			allowBlank : false,
+			hideTrigger : true,
+			beforeLabelTextTpl: required,
+			fieldLabel: 'شماره آخرین آگهی تغییرات',
+			name: 'LastChangeNo'
+		},{
+			xtype : "shdatefield",
+			allowBlank : false,
+			beforeLabelTextTpl: required,
+			fieldLabel: 'تاریخ آخرین آگهی تغییرات',
+			name: 'LastChangeDate'
 		},{
 			xtype : "combo",
 			store: new Ext.data.SimpleStore({

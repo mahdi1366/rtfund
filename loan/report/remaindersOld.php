@@ -99,11 +99,11 @@ function showReport(){
 	foreach($dt as $row)
 	{
 		$RequestID = $row["RequestID"];
-		$ComputeArr = LON_Computes::NewComputePayments($RequestID);
+		$ComputeArr = LON_requests::ComputePayments($RequestID);
 		$PureArr = LON_requests::ComputePures($RequestID);
 		//............ get remain untill now ......................
-		$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);
-		$TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
+		$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr);
+		$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID, $ComputeArr);
 		//$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
 
 		$returnArr[] = array(
@@ -438,19 +438,6 @@ function LoanReport_remainders()
 			hiddenName : "ComputeMode"
 		}],
 		buttons : [{
-			text : "گزارش قدیم",
-			handler : function(){
-				me = LoanReport_remaindersObj;
-				me.form = me.get("mainForm");
-				me.form.target = "_blank";
-				me.form.method = "POST";
-				me.form.action =  me.address_prefix + "remaindersOld.php?show=true";
-				me.form.submit();
-				me.get("excel").value = "";
-				return;
-			},
-			iconCls : "report"
-		},'->',{
 			text : "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),
 			iconCls : "report"

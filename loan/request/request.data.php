@@ -196,7 +196,7 @@ function SelectMyRequests(){
 		{
 			$temp = array();
 			$ComputeArr = LON_requests::ComputePayments($dt[$i]["RequestID"], $temp);
-			$dt[$i]["CurrentRemain"] = LON_requests::GetCurrentRemainAmount($dt[$i]["RequestID"], $ComputeArr);
+			$dt[$i]["CurrentRemain"] = LON_Computes::GetCurrentRemainAmount($dt[$i]["RequestID"], $ComputeArr);
 			$dt[$i]["TotalRemain"] = LON_requests::GetTotalRemainAmount($dt[$i]["RequestID"], $ComputeArr);
 		}
 	}
@@ -271,7 +271,7 @@ function SelectAllRequests(){
     }
 	if(!empty($_REQUEST['query']) && empty($_REQUEST["fields"]))
 	{
-		$where .= " AND ( concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) like :f or RequestID = :f1 )";
+		$where .= " AND ( concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) like :f or r.RequestID = :f1 )";
 		$param[":f"] = "%" . $_REQUEST["query"] . "%";
 		$param[":f1"] = $_REQUEST["query"] ;
 	}
@@ -418,14 +418,12 @@ function GetRequestParts(){
 			$dt[$i]["TotalCustomerWage"] = $result["CustomerWage"];
 			$dt[$i]["TotalAgentWage"] = $result["AgentWage"];
 			$dt[$i]["TotalFundWage"] = $result["FundWage"];
-			$FundYears = $result["FundWageYears"];
-			$index = 1;
-			foreach($FundYears as $row)
-				$dt[$i]["WageYear" . ($index++)] = $row;
 			
 			$res = LON_requests::GetDelayAmounts($PartObj->RequestID, $PartObj);
 			$dt[$i]["FundDelay"] = $res["FundDelay"];
 			$dt[$i]["AgentDelay"] = $res["AgentDelay"];			
+			
+			$dt[$i]["SUM_NetAmount"] = LON_requests::GetPayedAmount($PartObj->RequestID);
 		}
 	}
 	
@@ -736,9 +734,23 @@ function DefrayRequest(){
 function GetInstallments(){
 	
 	$RequestID = $_REQUEST["RequestID"];
-	
-	$temp = array();
-	$Compute = LON_requests::ComputePayments($RequestID, $temp);
+	$temp = LON_installments::SelectAll(" i.RequestID=?", array($RequestID));
+
+	$refArray = array();
+	$ComputeArr = LON_Computes::NewComputePayments($RequestID);
+	foreach($ComputeArr as $row)
+		if($row["type"] == "installment")
+			$refArray[ $row["id"] ] = &$row;
+		
+	for($i=0; $i<count($temp); $i++)
+	{
+		if(isset($refArray[ $temp[$i]["InstallmentID"] ]))
+		{
+			$src = $refArray[  $temp[$i]["InstallmentID"]  ];
+			$temp[$i]["remain"] = $src["remain_pure"] + $src["remain_wage"] + 
+					$src["remain_late"] + $src["remain_pnlt"];
+		}
+	}
 	
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
@@ -1516,13 +1528,16 @@ function GetDelayedInstallments($returnData = false){
 		}
 		$temp = array();
 		$computeArr = LON_requests::ComputePayments($row["RequestID"], $temp);
-		$remain = LON_requests::GetCurrentRemainAmount($row["RequestID"],$computeArr);
-		$PureRemain = LON_requests::GetCurrentRemainAmount($row["RequestID"],$computeArr, false);
+		$remain = LON_Computes::GetCurrentRemainAmount($row["RequestID"],$computeArr);
+		$RemainArr = LON_Computes::GetRemainAmounts($row["RequestID"],$computeArr);
 		$MinDate = LON_requests::GetMinPayedInstallmentDate($row["RequestID"],$computeArr);
 		if($remain > 0 && $MinDate != null)
 		{
 			$row["TotalRemainder"] = $remain;
-			$row["PureRemain"] = $PureRemain;
+			$row["remain_pure"] = $RemainArr["remain_pure"];
+			$row["remain_wage"] = $RemainArr["remain_wage"];
+			$row["remain_late"] = $RemainArr["remain_late"];
+			$row["remain_pnlt"] = $RemainArr["remain_pnlt"];
 			//$row["InstallmentDate"] = $MinDate;
 			$result[] = $row;
 			$currentRequestID = $row["RequestID"];

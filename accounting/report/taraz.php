@@ -67,6 +67,9 @@ function GetData(&$rpg){
 		cc.level2,
 		cc.level3,
 		cc.level4,
+		cc.param1 CostParam1,
+		cc.param2 CostParam2,
+		cc.param3 CostParam3,
 		
 		di.TafsiliType,
 		di.TafsiliType2,
@@ -338,6 +341,11 @@ function GetData(&$rpg){
 			$where .= " AND di.TafsiliID2=:tid2";
 			$whereParam[":tid2"] = $_POST["TafsiliID2"];
 		}
+		if(!empty($_POST["TafsiliID3"]))
+		{
+			$where .= " AND di.TafsiliID3=:tid3";
+			$whereParam[":tid3"] = $_POST["TafsiliID3"];
+		}
 		if(!empty($_REQUEST["fromLocalNo"]))
 		{
 			$where .= " AND d.LocalNo >= :lo1 ";
@@ -357,6 +365,23 @@ function GetData(&$rpg){
 		{
 			$where .= " AND d.DocDate <= :q2 ";
 			$whereParam[":q2"] = DateModules::shamsi_to_miladi($_POST["toDate"], "-");
+		}
+		
+		$index = 1;
+		foreach($_POST as $key => $val)
+		{
+			if(strpos($key, "paramID") === false || empty($val))
+				continue;
+			
+			$ParamID = preg_replace("/paramID/", "", $key);
+			$where .= " AND (
+					if(cc.param1 = :pid$index, di.param1=:pval$index, 1=0) OR
+					if(cc.param2 = :pid$index, di.param2=:pval$index, 1=0) OR
+					if(cc.param3 = :pid$index, di.param3=:pval$index, 1=0) 
+				)";
+			$whereParam[":pid$index"] = $ParamID;
+			$whereParam[":pval$index"] = $val;
+			$index++;
 		}
 	}
 		
@@ -391,9 +416,9 @@ function GetData(&$rpg){
 	$dt = PdoDataAccess::runquery($query, $whereParam);
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		BeginReport();
-		print_r(ExceptionHandler::PopAllExceptions());
-		echo PdoDataAccess::GetLatestQueryString ();
+		//BeginReport();
+		//print_r(ExceptionHandler::PopAllExceptions());
+		//echo PdoDataAccess::GetLatestQueryString ();
 	}
 	return $dt;
 }
@@ -636,148 +661,75 @@ AccReport_taraz.prototype.showReport = function(btn, e)
 
 function AccReport_taraz()
 {
-	this.filterItems = [{
-			xtype : "combo",
-			displayField : "InfoDesc",
-			fieldLabel : "گروه حساب",
-			valueField : "InfoID",
-			colspan : 2,
-			hiddenName : "CostGroupID",
-			store : new Ext.data.Store({
-				fields:['InfoID','InfoDesc'],
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectCostGroups',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				autoLoad : true
-			})
-		},{
-			xtype : "combo",
-			displayField : "InfoDesc",
-			fieldLabel : "گروه تفصیلی",
-			valueField : "InfoID",
-			hiddenName : "TafsiliGroup",
-			store : new Ext.data.Store({
-				fields:['InfoID','InfoDesc'],
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				autoLoad : true
-			}),
-			listeners : {
-				select : function(combo,records){
-					el = AccReport_tarazObj.formPanel.down("[itemId=cmp_tafsiliID]");
-					el.enable();
-					el.setValue();
-					el.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
-					el.getStore().load();
+	paramsStore = new Ext.data.SimpleStore({
+		fields:["ParamID","ParamDesc","ParamType"],
+		proxy: {
+			type: 'jsonp',
+			url: this.address_prefix + '../docs/doc.data.php?task=selectAllParams',
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		},
+		autoLoad: true,
+		listeners : {
+			load : function(){
+				var ParamsFS = AccReport_tarazObj.formPanel.down("[itemId=FS_params]");
+				for(i=0; i< this.totalCount; i++)
+				{
+					record = this.getAt(i);
+					if(record.data.ParamType == "combo")
+					{
+						ParamsFS.add({
+							xtype : "combo",
+							hiddenName : "paramID" + record.data.ParamID,
+							fieldLabel : record.data.ParamDesc,
+							store : new Ext.data.Store({
+								fields:["id","title"],
+								proxy: {
+									type: 'jsonp',
+									url: AccReport_tarazObj.address_prefix + 
+										'../docs/doc.data.php?task=selectParamItems&ParamID=' +
+										record.data.ParamID,
+									reader: {root: 'rows',totalProperty: 'totalCount'}
+								},
+								autoLoad: true
+							}),
+							valueField : "id",
+							displayField : "title"
+						});							
+					}
+					else
+					{
+						ParamsFS.add({
+							xtype : record.data.ParamType,
+							name : "paramID" + record.data.ParamID,
+							fieldLabel : record.data.ParamDesc,
+							hideTrigger : (record.data.ParamType == "numberfield" || 
+								record.data.ParamType == "currencyfield" ? true : false)
+						});			
+					}
 				}
 			}
-		},{
-			xtype : "combo",
-			displayField : "TafsiliDesc",
-			fieldLabel : "تفصیلی",
-			disabled : true,
-			valueField : "TafsiliID",
-			itemId : "cmp_tafsiliID",
-			hiddenName : "TafsiliID",
-			
-			store : new Ext.data.Store({
-				fields:["TafsiliID","TafsiliDesc"],
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				}
-			}) 
-		},{
-			xtype : "combo",
-			displayField : "InfoDesc",
-			fieldLabel : "گروه تفصیلی2",
-			valueField : "InfoID",
-			hiddenName : "TafsiliGroup2",
-			store : new Ext.data.Store({
-				fields:['InfoID','InfoDesc'],
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				autoLoad : true
-			}),
-			listeners : {
-				select : function(combo,records){
-					el = AccReport_tarazObj.formPanel.down("[itemId=cmp_tafsiliID2]");
-					el.enable();
-					el.setValue();
-					el.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
-					el.getStore().load();
-				}
-			}
-		},{
-			xtype : "combo",
-			displayField : "TafsiliDesc",
-			fieldLabel : "تفصیلی2",
-			disabled : true,
-			valueField : "TafsiliID",
-			itemId : "cmp_tafsiliID2",
-			hiddenName : "TafsiliID2",
-			
-			store : new Ext.data.Store({
-				fields:["TafsiliID","TafsiliDesc"],
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				}
-			})
-		},{
-			xtype : "numberfield",
-			hideTrigger : true,
-			name : "fromLocalNo",
-			fieldLabel : "از سند شماره"
-		},{
-			xtype : "numberfield",
-			hideTrigger : true,
-			name : "toLocalNo",
-			fieldLabel : "تا سند شماره"
-		},{
-			xtype : "shdatefield",
-			name : "fromDate",
-			fieldLabel : "از تاریخ"
-		},{
-			xtype : "shdatefield",
-			name : "toDate",
-			fieldLabel : "تا تاریخ"
-		},{
-			xtype : "container",
-			colspan : 2,
-			html : "<input type=checkbox checked name=IncludeRaw id=IncludeRaw> گزارش شامل اسناد خام نیز باشد." + "<br>" +
-				"<input type=checkbox name=IncludeStart checked=true id=IncludeStart> گزارش شامل سند افتتاحیه باشد." + "<br>" + 	
-				"<input type=checkbox name=IncludeEnd id=IncludeEnd> گزارش شامل سند اختتامیه باشد."+ "<br>" + 
-				"<input type=checkbox name=RemainOnly id=RemainOnly> گزارش فقط حساب های مانده دار را لیست کند"
-		}];
+		}
+	});
+	
+	
 	this.formPanel = new Ext.form.Panel({
 		renderTo : this.get("main"),
 		frame : true,
 		layout :{
 			type : "table",
-			columns :4
+			columns :2
 		},
 		bodyStyle : "text-align:right;padding:5px",
 		title : "گزارش تراز",
 		defaults : {
 			labelWidth :75,
-			width : 240,
+			width : 400,
 			style : "margin-left:15px"
 		},
-		width : 800,
+		width : 940,
 		items :[{
 			xtype : "combo",
-			colspan : 4,
+			colspan : 2,
 			width : 400,
 			store : new Ext.data.SimpleStore({
 				proxy: {
@@ -796,7 +748,7 @@ function AccReport_taraz()
 			hiddenName : "BranchID"
 		},{
 			xtype : "combo",
-			colspan : 4,
+			colspan : 2,
 			width : 400,
 			store : new Ext.data.SimpleStore({
 				proxy: {
@@ -814,18 +766,8 @@ function AccReport_taraz()
 			valueField : "CycleID",
 			hiddenName : "CycleID"
 		},{
-			xtype : "displayfield",
-			fieldLabel : "گروه"
-		},{
-			xtype : "displayfield",
-			fieldLabel : "کل"			
-		},{
-			xtype : "displayfield",
-			fieldLabel : "معین",
-			colspan : 2
-		},{
-			xtype : "multiselect",
-			height : 195,
+			xtype : "checkcombo",
+			fieldLabel : "گروه حساب",
 			valueField : "BlockID",
 			displayField : "BlockDesc",
 			itemId : "cmp_level0",
@@ -841,8 +783,8 @@ function AccReport_taraz()
 				autoLoad : true
 			})
 		},{
-			xtype : "multiselect",
-			height : 195,
+			xtype : "checkcombo",
+			fieldLabel : "حساب کل",
 			name : "multi_level1",
 			valueField : "BlockID",
 			displayField : "full",
@@ -860,9 +802,8 @@ function AccReport_taraz()
 				autoLoad : true
 			})
 		},{
-			xtype : "multiselect",
-			height : 195,
-			colspan : 2,
+			xtype : "checkcombo",
+			fieldLabel : "حساب معین1",
 			name : "multi_level2",
 			valueField : "BlockID",
 			displayField : "full",
@@ -880,60 +821,347 @@ function AccReport_taraz()
 				autoLoad : true
 			})
 		},{
-			xtype : "container",
-			colspan : 4,
-			width : 500,
-			cls : "blueText",
-			html : "* " + "با نگه داشتن کلید CTRL می توانید چندین مورد را انتخاب کنید" + "<br>&nbsp;"
+			xtype : "checkcombo",
+			fieldLabel : "حساب معین2",
+			name : "multi_level3",
+			valueField : "BlockID",
+			displayField : "full",
+			itemId : "cmp_level3",
+			store : new Ext.data.Store({
+				fields:["BlockID","BlockCode","BlockDesc",
+					{name : "full", 
+					convert: function(v,r){return "[" + r.data.BlockCode + "] " + r.data.BlockDesc }}],
+				
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectBlocks&All=true&level=3',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				autoLoad : true
+			})
 		},{
-			xtype : "container",
-			colspan : 4,
+			xtype : "numberfield",
+			hideTrigger : true,
+			width : 250,
+			name : "fromLocalNo",
+			fieldLabel : "از سند شماره"
+		},{
+			xtype : "numberfield",
+			hideTrigger : true,
+			width : 250,
+			name : "toLocalNo",
+			fieldLabel : "تا سند شماره"
+		},{
+			xtype : "shdatefield",
+			name : "fromDate",
+			width : 250,
+			fieldLabel : "از تاریخ"
+		},{
+			xtype : "shdatefield",
+			name : "toDate",
+			width : 250,
+			fieldLabel : "تا تاریخ"
+		},{
+			xtype : "fieldset",
+			title : "تنظیمات تفصیلی",
+			width : 500,
 			layout : {
 				type : "table",
-				columns : 3
+				columns : 2
+			},	
+			defaults : {
+				labelWidth :75
 			},
-			items :[{
-				xtype : "container",
-				layout : {
-					type : "table",
-					columns : 2
-				},
-				style : "margin-left:5px",
-				items : this.filterItems
+			items : [{
+				xtype : "combo",
+				displayField : "InfoDesc",
+				fieldLabel : "گروه تفصیلی1",
+				valueField : "InfoID",
+				hiddenName : "TafsiliGroup",
+				store : new Ext.data.Store({
+					fields:['InfoID','InfoDesc'],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad : true
+				}),
+				listeners : {
+					select : function(combo,records){
+						el = AccReport_tarazObj.formPanel.down("[itemId=cmp_tafsiliID]");
+						el.enable();
+						el.setValue();
+						el.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
+						el.getStore().load();
+					}
+				}
 			},{
-				xtype : "container",
-				layout : "column",
-				width : 120,
+				xtype : "combo",
+				displayField : "TafsiliDesc",
+				fieldLabel : "تفصیلی1",
+				disabled : true,
+				valueField : "TafsiliID",
+				itemId : "cmp_tafsiliID",
+				hiddenName : "TafsiliID",
+
+				store : new Ext.data.Store({
+					fields:["TafsiliID","TafsiliDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}) 
+			},{
+				xtype : "fieldset",
+				colspan : 2,
+				disabled : true,
+				title : "نوع ذینفع",
+				layout : "hbox",
+				defaults : {style : "margin-right : 20px"},
 				items :[{
-					xtype : "container",
-					style : "margin-left:10px",
-					html :  "<div align=center>تراز بر اساس </div><hr>" +
-							"<input type='radio' name='level' id='level-g' value='g' > گروه حساب<br>" + 
-							"<input type='radio' name='level' id='level-l0' value='l0' > گروه<br>" + 
-							"<input type='radio' name='level' id='level-l1' value='l1' checked> کل <br>" + 
-							"<input type='radio' name='level' id='level-l2' value='l2' > معین  1<br>" + 
-							"<input type='radio' name='level' id='level-l3' value='l3' > معین  2<br>" + 
-							"<input type='radio' name='level' id='level-l4' value='l4' > معین  3<br>" + 
-							"<input type='radio' name='level' id='level-l5' value='l5' > تفصیلی<br>" + 
-							"<input type='radio' name='level' id='level-l6' value='l6' > تفصیلی 2" 			
+					xtype : "checkbox",
+					boxLabel: 'کارکنان',
+					name: 'IsStaff',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'مشتری',
+					name: 'IsCustomer',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'سهامدار',
+					name: 'IsShareholder',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'سرمایه گذار',
+					name: 'IsAgent',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'حامی',
+					name: 'IsSupporter',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'کارشناس',
+					name: 'IsExpert',
+					inputValue: 'YES'
 				}]
 			},{
-				xtype : "container",
-				layout : "column",
-				width : 120,
+				xtype : "combo",
+				displayField : "InfoDesc",
+				fieldLabel : "گروه تفصیلی2",
+				valueField : "InfoID",
+				hiddenName : "TafsiliGroup2",
+				store : new Ext.data.Store({
+					fields:['InfoID','InfoDesc'],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad : true
+				}),
+				listeners : {
+					select : function(combo,records){
+						el = AccReport_tarazObj.formPanel.down("[itemId=cmp_tafsiliID2]");
+						el.enable();
+						el.setValue();
+						el.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
+						el.getStore().load();
+					}
+				}
+			},{
+				xtype : "combo",
+				displayField : "TafsiliDesc",
+				fieldLabel : "تفصیلی2",
+				disabled : true,
+				valueField : "TafsiliID",
+				itemId : "cmp_tafsiliID2",
+				hiddenName : "TafsiliID2",
+
+				store : new Ext.data.Store({
+					fields:["TafsiliID","TafsiliDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				})
+			},{
+				xtype : "fieldset",
+				colspan : 2,
+				disabled : true,
+				title : "نوع ذینفع",
+				layout : "hbox",
+				defaults : {style : "margin-right : 20px"},
 				items :[{
-					xtype : "container",
-					style : "margin-left:10px",
-					html :  "<div align=center>ستون های تراز</div><hr>" +
-							"<input type='radio' name='resultColumns' id='resultColumns-2' value='2' >دوستونی<br>" + 
-							"<input type='radio' name='resultColumns' id='resultColumns-4' value='4' checked>چهارستونی <br>" + 
-							"<input type='radio' name='resultColumns' id='resultColumns-6' value='6' >شش ستونی"
+					xtype : "checkbox",
+					boxLabel: 'کارکنان',
+					name: 'IsStaff',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'مشتری',
+					name: 'IsCustomer',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'سهامدار',
+					name: 'IsShareholder',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'سرمایه گذار',
+					name: 'IsAgent',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'حامی',
+					name: 'IsSupporter',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'کارشناس',
+					name: 'IsExpert',
+					inputValue: 'YES'
+				}]
+			},{
+				xtype : "combo",
+				displayField : "InfoDesc",
+				fieldLabel : "گروه تفصیلی3",
+				valueField : "InfoID",
+				hiddenName : "TafsiliGroup3",
+				store : new Ext.data.Store({
+					fields:['InfoID','InfoDesc'],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectTafsiliGroups',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad : true
+				}),
+				listeners : {
+					select : function(combo,records){
+						el = AccReport_tarazObj.formPanel.down("[itemId=cmp_tafsiliID3]");
+						el.enable();
+						el.setValue();
+						el.getStore().proxy.extraParams["TafsiliType"] = this.getValue();
+						el.getStore().load();
+					}
+				}
+			},{
+				xtype : "combo",
+				displayField : "TafsiliDesc",
+				fieldLabel : "تفصیلی3",
+				disabled : true,
+				valueField : "TafsiliID",
+				itemId : "cmp_tafsiliID3",
+				hiddenName : "TafsiliID3",
+
+				store : new Ext.data.Store({
+					fields:["TafsiliID","TafsiliDesc"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}) 
+			},{
+				xtype : "fieldset",
+				colspan : 2,
+				disabled : true,
+				title : "نوع ذینفع",
+				layout : "hbox",
+				defaults : {style : "margin-right : 20px"},
+				items :[{
+					xtype : "checkbox",
+					boxLabel: 'کارکنان',
+					name: 'IsStaff',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'مشتری',
+					name: 'IsCustomer',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'سهامدار',
+					name: 'IsShareholder',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'سرمایه گذار',
+					name: 'IsAgent',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'حامی',
+					name: 'IsSupporter',
+					inputValue: 'YES'
+				},{
+					xtype : "checkbox",
+					boxLabel: 'کارشناس',
+					name: 'IsExpert',
+					inputValue: 'YES'
 				}]
 			}]
 		},{
 			xtype : "fieldset",
+			title : "تنظیمات آیتمها",
+			height : 330,
+			autoScroll : true,
+			itemId : "FS_params"
+		},{
+			xtype : "fieldset",
+			title : "تنظیمات گزارش",
+			width : 920,
+			colspan :2,
+			defaults : {
+				style : "margin-left : 20px"
+			},
+			layout : "column",
+			items : [{
+				xtype : "container",
+				html :  "تراز بر اساس: "
+			},{
+				xtype : "container",
+				html :  "<input type='radio' name='level' id='level-l0' value='l0' > گروه" + "<br>" +  
+					"<input type='radio' name='level' id='level-l1' value='l1' checked> کل " 		
+			},{
+				xtype : "container",
+				html :  "<input type='radio' name='level' id='level-l2' value='l2' > معین  1" + "<br>" +  
+					"<input type='radio' name='level' id='level-l3' value='l3' > معین  2" + "<br>" +  
+					"<input type='radio' name='level' id='level-l4' value='l4' > معین  3"
+			},{
+				xtype : "container",
+				html : "<input type='radio' name='level' id='level-l5' value='l5' > تفصیلی1" + "<br>" +  
+					"<input type='radio' name='level' id='level-l6' value='l6' >تفصیلی 2" + "<br>" +  
+					"<input type='radio' name='level' id='level-l6' value='l6' >تفصیلی 3"
+			},{
+				xtype : "container",
+				html : "ستون های تراز: "
+			},{
+				xtype : "container",
+				html : 
+					"<input type='radio' name='resultColumns' id='resultColumns-2' value='2' >دوستونی" + "<br>" +  
+					"<input type='radio' name='resultColumns' id='resultColumns-4' value='4' checked>چهارستونی " + "<br>" +  
+					"<input type='radio' name='resultColumns' id='resultColumns-6' value='6' >شش ستونی"
+			},{
+				xtype : "container",
+				html : "<input type=checkbox checked name=IncludeRaw id=IncludeRaw> گزارش شامل اسناد خام نیز باشد." + "<br>" +
+					"<input type=checkbox name=IncludeStart checked=true id=IncludeStart> گزارش شامل سند افتتاحیه باشد." + "<br>" + 	
+					"<input type=checkbox name=IncludeEnd id=IncludeEnd> گزارش شامل سند اختتامیه باشد."+ "<br>" + 
+					"<input type=checkbox name=RemainOnly id=RemainOnly> گزارش فقط حساب های مانده دار را لیست کند"
+			}]
+		},{
+			xtype : "fieldset",
 			colspan :4,
-			width : 730,
+			width : 920,
 			title : "رسم نمودار",
 			items : [<?= $page_rpg->GetChartItems("AccReport_tarazObj","mainForm","taraz.php", 
 					"AccReport_tarazObj.BeforeSubmit") ?>]

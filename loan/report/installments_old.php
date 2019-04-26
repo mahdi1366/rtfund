@@ -10,7 +10,7 @@ function ReqPersonRender($row,$value){
 }
 	
 $page_rpg = new ReportGenerator("mainForm","LoanReport_installmentsObj");
-$page_rpg->addColumn("شماره وام", "RRequestID");
+$page_rpg->addColumn("شماره وام", "RequestID");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
 $page_rpg->addColumn("معرفی کننده", "ReqFullname", "ReqPersonRender");
 $col = $page_rpg->addColumn("تاریخ درخواست", "ReqDate");
@@ -25,7 +25,7 @@ $page_rpg->addColumn("مبلغ تاخیر", "forfeit");
 $col = $page_rpg->addColumn("تاریخ پرداخت", "PayedDate");
 $col->type = "date";
 $page_rpg->addColumn("مبلغ پرداخت", "PayedAmount");
-$page_rpg->addColumn("مانده قسط", "remain");
+$page_rpg->addColumn("مانده قسط", "TotalRemainder");
 
 function MakeWhere(&$where, &$whereParam){
 
@@ -87,7 +87,6 @@ function GetData(){
 	MakeWhere($where, $whereParam);
 	
 	$query = "select i.*,r.*,l.*,p.*,
-				r.RequestID as RRequestID,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
 				BranchName".
@@ -110,16 +109,11 @@ function GetData(){
 	
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		print_r(ExceptionHandler::PopAllExceptions());
-		//echo PdoDataAccess::GetLatestQueryString();
+		echo PdoDataAccess::GetLatestQueryString();
 	}
 	
 	//.....................................
-	if(empty($_POST["IsPayRowsInclude"]))
-	{
-		$returnArr = $dataTable;
-		return $returnArr;
-	}
+	
 	$computeArr = array();
 	$returnArr = array();
 	for($index=0; $index<count($dataTable); $index++)
@@ -128,64 +122,44 @@ function GetData(){
 		$MainRow["PayedDate"] = "";
 		$MainRow["PayedAmount"] = "";
 		$MainRow["forfeit"] = 0;	
-		$MainRow["remain"] = $MainRow["InstallmentAmount"];
-
+		$MainRow["TotalRemainder"] = $MainRow["InstallmentAmount"];
+	
 		if(!isset($computeArr[ $MainRow["RequestID"] ]))
 		{
 			$dt = array();
 			$computeArr[ $MainRow["RequestID"] ] = array(
-				"compute" => LON_Computes::NewComputePayments($MainRow["RequestID"], $dt),
+				"compute" => LON_requests::ComputePayments($MainRow["RequestID"], $dt),
 				"computIndex" => 0,
 				"PayIndex" => 0
 				);
 		}
 		$ref = & $computeArr[ $MainRow["RequestID"] ];
-
+		
 		for(; $ref["computIndex"] < count($ref["compute"]); $ref["computIndex"]++)
 		{
 			$row = $ref["compute"][$ref["computIndex"]];
-			if($row["type"] != "installment")
+			if($row["ActionType"] != "installment")
 				continue;
-			if($row["id"] == $MainRow["InstallmentID"])
+			if($row["InstallmentID"] == $MainRow["InstallmentID"])
 			{
-				$MainRow["pure"] = $row["pure"];
-				$MainRow["wage"] = $row["wage"];
-
 				for($k=0; $k < count($row["pays"]); $k++)
 				{  
 					$payRow = $row["pays"][$k];
-
-					$MainRow["pay_pure"] = $payRow["pay_pure"];
-					$MainRow["pay_wage"] = $payRow["pay_wage"];
-					$MainRow["late"] = $payRow["late"];
-					$MainRow["pnlt"] = $payRow["pnlt"];
-					$MainRow["PnltDays"] = $payRow["PnltDays"];
-					$MainRow["EarlyDays"] = $payRow["EarlyDays"];
-					$MainRow["EarlyAmount"] = $payRow["EarlyAmount"];
+					
+					$MainRow["forfeit"] = $payRow["forfeit"];
+					$MainRow["ForfeitDays"] = $payRow["ForfeitDays"];
 					$MainRow["PayedDate"] = $payRow["PayedDate"];
 					$MainRow["PayedAmount"] = $payRow["PayedAmount"];
-					$MainRow["remain"] = $payRow["remain"];
+					$MainRow["TotalRemainder"] = $payRow["remain"];
 					$returnArr[] = $MainRow;
 				}
-
+				
 				if(count($row["pays"]) == 0)
-				{
-					$MainRow["pay_pure"] = 0;
-					$MainRow["pay_wage"] = 0;
-					$MainRow["late"] = 0;
-					$MainRow["pnlt"] = 0;
-					$MainRow["PnltDays"] = 0;
-					$MainRow["EarlyDays"] = 0;
-					$MainRow["EarlyAmount"] = 0;
-					$MainRow["PayedDate"] = 0;
-					$MainRow["PayedAmount"] = 0;
-					$MainRow["remain"] = 0;
 					$returnArr[] = $MainRow;
-				}
-
+				
 				$ref["computIndex"]++;
 				break;
-
+				
 			}
 		}
 	}
@@ -205,15 +179,15 @@ function GetData(){
 				switch($_POST["RemainStatus"])
 				{
 					case "paid":
-						if($returnArr[$i]["remain"] < $returnArr[$i]["InstallmentAmount"])
+						if($returnArr[$i]["TotalRemainder"] < $returnArr[$i]["InstallmentAmount"])
 							$returnArr2 = array_merge ($returnArr2, $tempArr);
 						break;
 					case "notPaid":
-						if($returnArr[$i]["remain"] >= $returnArr[$i]["InstallmentAmount"])
+						if($returnArr[$i]["TotalRemainder"] >= $returnArr[$i]["InstallmentAmount"])
 							$returnArr2 = array_merge ($returnArr2, $tempArr);
 						break;
 					case "fullPaid":
-						if($returnArr[$i]["remain"] == 0)
+						if($returnArr[$i]["TotalRemainder"] == 0)
 							$returnArr2 = array_merge ($returnArr2, $tempArr);
 						break;
 				}
@@ -240,7 +214,7 @@ function ListData($IsDashboard = false){
 		return ($value == "YES") ? "خاتمه" : "جاری";
 	}
 	
-	$col = $rpg->addColumn("شماره وام", "RRequestID");
+	$col = $rpg->addColumn("شماره وام", "RequestID");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("نوع وام", "LoanDesc");
@@ -271,29 +245,21 @@ function ListData($IsDashboard = false){
 	$col->rowspanByFields = array("RequestID","InstallmentDate");
 	$col->EnableSummary();
 	
-	if(!empty($_POST["IsPayRowsInclude"]))
-	{
-		$col = $rpg->addColumn("اصل", "pure", "ReportMoneyRender");
-		$col->rowspaning = true;
-		$col->rowspanByFields = array("RequestID","InstallmentDate");
-		$col->EnableSummary();
-
-		$col = $rpg->addColumn("کارمزد", "wage", "ReportMoneyRender");
-		$col->rowspaning = true;
-		$col->rowspanByFields = array("RequestID","InstallmentDate");
-		$col->EnableSummary();
 	
+	$col = $rpg->addColumn("روز تاخیر", "ForfeitDays");	
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID","InstallmentDate");
 	
-		$col = $rpg->addColumn("پرداخت از اصل", "pay_pure", "ReportMoneyRender");	
-		$col = $rpg->addColumn("پرداخت از کارمزد", "pay_wage", "ReportMoneyRender");	
-		$col = $rpg->addColumn("کارمزد تاخیر", "late", "ReportMoneyRender");	
-		$col = $rpg->addColumn("جریمه", "pnlt", "ReportMoneyRender");	
-		$col = $rpg->addColumn("روز تعجیل", "EarlyDays");	
-		$col = $rpg->addColumn("مبلغ تعجیل", "EarlyAmount", "ReportMoneyRender");	
-		$rpg->addColumn("تاریخ پرداخت", "PayedDate");
-		$rpg->addColumn("مبلغ پرداخت", "PayedAmount");
-		$col = $rpg->addColumn("مانده قسط", "remain", "ReportMoneyRender");
-	}
+	$col = $rpg->addColumn("مبلغ تاخیر", "forfeit", "ReportMoneyRender");	
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID","InstallmentDate");
+	$col->EnableSummary();
+	
+	$rpg->addColumn("تاریخ پرداخت", "PayedDate");
+	$rpg->addColumn("مبلغ پرداخت", "PayedAmount");
+	$col = $rpg->addColumn("مانده قسط", "TotalRemainder", "ReportMoneyRender");
+	$col->EnableSummary();
+	
 	
 	if(!$rpg->excel && !$IsDashboard)
 	{
@@ -523,10 +489,6 @@ function LoanReport_installments()
 			xtype : "container",
 			colspan : 2,
 			html : "<input type=checkbox name=IsEndedInclude >  گزارش شامل وام های خاتمه یافته نیز باشد"
-		},{
-			xtype : "container",
-			colspan : 2,
-			html : "<input type=checkbox name=IsPayRowsInclude >  گزارش شامل ردیف های پرداخت هر قسط نیز باشد"
 		},{
 			xtype : "fieldset",
 			title : "ستونهای گزارش",

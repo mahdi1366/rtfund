@@ -458,11 +458,11 @@ class LON_requests extends PdoDataAccess{
 			
 		if($PartObj->ComputeMode == "NEW" )
 		{
-			
 			$CustomerDelay = round($PartObj->PartAmount - 
-					self::Tanzil($PartObj->PartAmount, $PartObj->DelayPercent, $endDelayDate, $PartObj->PartDate));
-			$FundDelay = round($fundZarib*$CustomerDelay);
-			$AgentDelay = $CustomerDelay - round($fundZarib*$CustomerDelay);
+				self::Tanzil($PartObj->PartAmount, $PartObj->DelayPercent, $endDelayDate, $PartObj->PartDate));
+			
+			$FundDelay = $PartObj->DelayReturn == "INSTALLMENT" ? 0 : round($fundZarib*$CustomerDelay);
+			$AgentDelay = $PartObj->AgentDelayReturn == "INSTALLMENT" ? 0 : $CustomerDelay - round($fundZarib*$CustomerDelay);
 		}
 		else
 		{
@@ -550,225 +550,10 @@ class LON_requests extends PdoDataAccess{
 		);
 	}
 	//-------------------------------------
-	
-	static function NewComputePayments($RequestID, &$installments, $pdo = null){
-
-		$installments = PdoDataAccess::runquery("
-			select * from LON_installments 
-			where RequestID=? AND history='NO' AND IsDelayed='NO'
-			order by InstallmentDate", 
-			array($RequestID), $pdo);
-		
-		$refInstallments = array();
-		for($i=0; $i<count($installments); $i++)
-			$refInstallments[ $installments[$i]["InstallmentID"] ] = &$installments[$i];
-		
-		$obj = LON_ReqParts::GetValidPartObj($RequestID);
-
-		$returnArr = array();
-		$records = PdoDataAccess::runquery("
-			select * from (
-				select InstallmentID id,0 BackPayID,'installment' type, 
-				InstallmentDate RecordDate,InstallmentAmount RecordAmount,0 PayType, '' details, wage
-				from LON_installments where RequestID=:r AND history='NO' AND IsDelayed='NO'
-			union All
-				select 0 id,BackPayID, 'pay' type, substr(p.PayDate,1,10) RecordDate, PayAmount RecordAmount, PayType,
-					if(PayType=" . BACKPAY_PAYTYPE_CORRECT . ",p.details,'') details,0
-				from LON_BackPays p
-				left join ACC_IncomeCheques i using(IncomeChequeID)
-				left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
-				where RequestID=:r AND 
-					if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-			union All
-				select 0 id,0 BackPayID,'pay' type, CostDate RecordDate, -1*CostAmount RecordAmount,0, CostDesc details, 0
-				from LON_costs 
-				where RequestID=:r AND CostAmount<>0
-			)t
-			order by substr(RecordDate,1,10), RecordAmount desc" , array(":r" => $RequestID), $pdo);
-		
-		$ComputePayRows = array();
-		$tempForReturnArr = array();
-		for($i=0; $i < count($records); $i++)
-		{
-			$record = $records[$i];
-			$x = $tempForReturnArr;
-			$tempForReturnArr = array(
-					"InstallmentID" => $record["id"],
-					"BackPayID" => $record["BackPayID"],
-					"details" => $record["details"],
-					"ActionType" => $record["type"],
-					"ActionDate" => $record["RecordDate"],
-					"ActionAmount" => $record["RecordAmount"]*1,
-					"ForfeitDays" => 0,
-					
-					"pure" => 0,
-					"wage" => 0,
-					"LateWage" => 0,
-					"LateForfeit" => 0,
-				
-					"totalpure" => count($x)>0 ? $x["totalpure"] : 0,
-					"totalwage" => count($x)>0 ? $x["totalwage"] : 0,
-					"totalLateWage" => count($x)>0 ? $x["totalLateWage"] : 0,
-					"totalLateForfeit" => count($x)>0 ? $x["totalLateForfeit"] : 0,
-					"CurForfeitAmount" => 0,
-				
-					"TotalRemainder" => count($x)>0 ? $x["TotalRemainder"] : 0
-				);	
-			if($record["type"] == "installment")
-			{
-				$tempForReturnArr["pure"] = $record["RecordAmount"]*1 - $record["wage"]*1;
-				$tempForReturnArr["wage"] = $record["wage"]*1;
-				
-				$tempForReturnArr["totalpure"] += $tempForReturnArr["pure"];
-				$tempForReturnArr["totalwage"] += $tempForReturnArr["wage"];
-				
-				self::BackPayCompute($obj, $tempForReturnArr, $record, $records, $i);
-			}
-			if($record["type"] == "pay")
-			{
-				if($record["PayType"] == BACKPAY_PAYTYPE_CORRECT)
-				{
-					$tempForReturnArr["TotalRemainder"] += $record["RecordAmount"]*1;
-				}
-				else
-				{
-					if($record["RecordAmount"]*1 < 0)
-					{
-						$tempForReturnArr["TotalRemainder"] += abs($record["RecordAmount"]*1);
-						$record["RecordAmount"] = 0;
-					}
-					self::BackPayCompute($obj, $tempForReturnArr, $record, $records, $i);
-					$tempForReturnArr["TotalRemainder"] -= $record["RecordAmount"]*1;
-				}
-			}
-			
-			$StartDate = $record["RecordDate"];
-			$ToDate = $i+1 < count($records) ? $records[$i+1]["RecordDate"] : DateModules::Now();
-			if($ToDate > DateModules::Now())
-				$ToDate = DateModules::Now();
-			if($StartDate < $ToDate)
-			{
-				if($tempForReturnArr["totalpure"] > 0)
-				{
-					$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
-					$tempForReturnArr["ForfeitDays"] = $forfeitDays;
-					
-					$forgivePercent = $obj->ForgivePercent*1;
-					$ForfeitPercent = $obj->ForfeitPercent - min($obj->ForfeitPercent, $forgivePercent);
-					$forgivePercent -= min($obj->ForfeitPercent, $forgivePercent);
-					$LatePercent = $obj->LatePercent;
-					if($forgivePercent > 0)
-						$LatePercent = $obj->LatePercent - $forgivePercent;
-					if($LatePercent < 0)
-						$LatePercent = 0;
-							
-					$LateWage = round($tempForReturnArr["totalpure"]*$LatePercent*$forfeitDays/36500);
-					$LateForfeit = round($tempForReturnArr["totalpure"]*$ForfeitPercent*$forfeitDays/36500);
-					
-					$tempForReturnArr["LateWage"] = $LateWage;
-					$tempForReturnArr["totalLateWage"] += $LateWage;
-					
-					$tempForReturnArr["LateForfeit"] = $LateForfeit;
-					$tempForReturnArr["totalLateForfeit"] += $LateForfeit;
-					
-					$tempForReturnArr["TotalRemainder"] += $LateWage + $LateForfeit;
-				}
-			}
-
-			$tempForReturnArr["pays"] = array();
-			$returnArr[] = $tempForReturnArr;
-			
-			if($record["type"] == "pay" && $tempForReturnArr["ActionAmount"] > 0)
-				$ComputePayRows[] = $tempForReturnArr;
-			
-			if($record["type"] == "installment")
-			{
-				$refInstallments[ $record["id"] ]["ForfeitDays"] = $tempForReturnArr["ForfeitDays"];
-				$refInstallments[ $record["id"] ]["CurForfeitAmount"] = $tempForReturnArr["CurForfeitAmount"];
-				$refInstallments[ $record["id"] ]["remainder"] = min(
-						$refInstallments[ $record["id"] ]["InstallmentAmount"],
-						$tempForReturnArr["TotalRemainder"]);
-				$refInstallments[ $record["id"] ]["TotalRemainder"] = $tempForReturnArr["TotalRemainder"];
-			}
-		}
-
-		//............. pay rows of each installment ..............
-		$payIndex = 0;
-		while(true)
-		{
-			$PayRecord = $payIndex < count($ComputePayRows) ? $ComputePayRows[$payIndex++] : null;
-			if(!$PayRecord || $PayRecord["ActionAmount"] > 0)
-				break;
-		}
-		
-		for($i=0; $i < count($returnArr); $i++)
-		{
-			$InstallmentRow = &$returnArr[$i];
-			if($InstallmentRow["ActionType"] != "installment")
-				continue;
-			
-			$amount = $InstallmentRow["ActionAmount"]*1;
-			
-			while($amount > 0)
-			{
-				$StartDate = count($InstallmentRow["pays"]) > 0 ?
-						$InstallmentRow["pays"][count($InstallmentRow["pays"])-1]["G-PayedDate"] :
-						$InstallmentRow["ActionDate"];
-				if($InstallmentRow["ActionDate"] > $StartDate)
-					$StartDate = $InstallmentRow["ActionDate"];
-				if(!$PayRecord)
-					$StartDate = $InstallmentRow["ActionDate"];
-				
-				$ToDate = $PayRecord ? $PayRecord["ActionDate"] : DateModules::Now();
-				if($ToDate > DateModules::Now())
-					$ToDate = DateModules::Now();
-				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
-				
-				$ForfeitPercent = $obj->ForfeitPercent - min($obj->ForfeitPercent, $obj->ForgivePercent);
-				$CurForfeit = round($amount*$ForfeitPercent*$forfeitDays/36500);
-				
-				if($CurForfeit < 0)
-				{
-					$forfeitDays = 0;
-					$CurForfeit = 0;
-				}
-				
-				$SavePayedAmount = $PayRecord ? $PayRecord["ActionAmount"] : 0;
-				$SaveAmount = $amount;
-				if($PayRecord && $obj->PayCompute == "forfeit")
-					$PayRecord["ActionAmount"] -= min($CurForfeit,$PayRecord["ActionAmount"]);
-							
-				$payAmount = $PayRecord ? $PayRecord["ActionAmount"] : $amount;
-				
-				$min = min($amount,$payAmount);
-				$amount -= $min;
-				if($PayRecord)
-					$PayRecord["ActionAmount"] -= $min;
-				
-				$InstallmentRow["pays"][] = array(
-					"ForfeitDays" => $forfeitDays,
-					"forfeit" => $CurForfeit,
-					"remain" => $PayRecord ? $amount : $SaveAmount ,
-					"G-PayedDate" => $PayRecord ? $PayRecord["ActionDate"] : '',
-					"PayedDate" => $PayRecord ? DateModules::miladi_to_shamsi($PayRecord["ActionDate"]) : '',
-					"PayedAmount" => number_format($SavePayedAmount)
-				);
-				if($PayRecord && $PayRecord["ActionAmount"] == 0)
-				{
-					$PayRecord = $payIndex < count($ComputePayRows) ? $ComputePayRows[$payIndex++] : null;
-				}
-			}
-		}
-			
-		//.........................................................
-		
-		return $returnArr;
-	}
-	
-	static function BackPayCompute($partObj, &$returnArr, &$curRecord, $records, $index){
+	static function BackPayCompute($partObj, &$returnArr, $curRecord, $records, $index){
 		
 		$totalRemain = $returnArr["TotalRemainder"];
-		$RecordAmount = $curRecord["RecordAmount"];
+		$RecordAmount = $curRecord["RecordAmount"]*1;
 		
 		if($curRecord["type"] == "installment")
 		{
@@ -780,38 +565,51 @@ class LON_requests extends PdoDataAccess{
 			$temp = $returnArr["TotalRemainder"];
 			$returnArr["TotalRemainder"] += $curRecord["RecordAmount"]*1;
 			$curRecord["RecordAmount"] = abs($temp);
+			return;
 		}
 		
 		//---------------- base on percent ------------------
 		if($totalRemain == 0) // pay is first record
 		{
-			$curRecord = $records[$index+1];
-			$totalRemain = $curRecord["RecordAmount"]*1;
-			$share = $curRecord["RecordAmount"]*1 - $curRecord["wage"];
-			$share_pure = round($RecordAmount*($share/$totalRemain));
-			$share_wage = round($RecordAmount*($curRecord["wage"]/$totalRemain));
+			$i = $index+1;
+			$share_pure = 0;
+			$share_wage = 0;
+			while($i < count($records))
+			{
+				$share = $records[$i]["RecordAmount"]*1 - $records[$i]["wage"];
+				if($share < 0)
+				{
+					$share_pure += $share;
+					$share_wage += min($records[$i]["wage"],$RecordAmount);
+					$RecordAmount -= min($records[$i]["wage"],$RecordAmount);
+				}
+				else if($RecordAmount > $records[$i]["RecordAmount"]*1) 
+				{
+					$share_pure += $records[$i]["RecordAmount"]*1 - $records[$i]["wage"];
+					$share_wage += $records[$i]["wage"];
+					$RecordAmount -= $records[$i]["RecordAmount"]*1;
+				}
+				else
+				{
+					$total = $records[$i]["RecordAmount"]*1;
+					$share = $total - $records[$i]["wage"];
+					$share_pure += round($RecordAmount*($share/$total));
+					$share_wage += round($RecordAmount*($records[$i]["wage"]/$total));
+					break;
+				}
+				$i++;
+			}
+
 			$share_LateWage = 0;
 			$share_LateForfeit = 0;
 		}
 		else
 		{
-			if($curRecord["type"] == "installment" && $RecordAmount > 0)
-			{
-				$totalRemain = abs($totalRemain);
-				$share_pure = round($totalRemain*($returnArr["totalpure"]/$RecordAmount));
-				$share_wage = round($totalRemain*($returnArr["totalwage"]/$RecordAmount));
-				$share_LateWage = round($totalRemain*($returnArr["totalLateWage"]/$RecordAmount));
-				$share_LateForfeit = $returnArr["totalLateWage"] == 0 ? 0 :
-						$totalRemain - $share_pure - $share_wage - $share_LateWage;
-			}
-			else
-			{
-				$share_pure = round($RecordAmount*($returnArr["totalpure"]/$totalRemain));
-				$share_wage = round($RecordAmount*($returnArr["totalwage"]/$totalRemain));
-				$share_LateWage = round($RecordAmount*($returnArr["totalLateWage"]/$totalRemain));
-				$share_LateForfeit = $returnArr["totalLateWage"] == 0 ? 0 :
-						$curRecord["RecordAmount"] - $share_pure - $share_wage - $share_LateWage;
-			}
+			$share_pure = round($RecordAmount*($returnArr["totalpure"]/$totalRemain));
+			$share_wage = round($RecordAmount*($returnArr["totalwage"]/$totalRemain));
+			$share_LateWage = round($RecordAmount*($returnArr["totalLateWage"]/$totalRemain));
+			$share_LateForfeit = $returnArr["totalLateWage"] == 0 ? 0 :
+					$curRecord["RecordAmount"] - $share_pure - $share_wage - $share_LateWage;
 		}
 		
 		$returnArr["share_pure"] = $share_pure;
@@ -819,11 +617,12 @@ class LON_requests extends PdoDataAccess{
 		$returnArr["share_LateWage"] = $share_LateWage;
 		$returnArr["share_LateForfeit"] = $share_LateForfeit;
 		
-		$returnArr["totalpure"] -= min($share_pure,$returnArr["totalpure"]);
-		$returnArr["totalwage"] -= min($share_wage,$returnArr["totalwage"]);
-		$returnArr["totalLateWage"] -= min($share_LateWage,$returnArr["totalLateWage"]);
-		$returnArr["totalLateForfeit"] -= min($share_LateForfeit,$returnArr["totalLateForfeit"]);
+		$returnArr["totalpure"] -= $share_pure;//min($share_pure,$returnArr["totalpure"]);
+		$returnArr["totalwage"] -= $share_wage;//min($share_wage,$returnArr["totalwage"]);
+		$returnArr["totalLateWage"] -= $share_LateWage;//min($share_LateWage,$returnArr["totalLateWage"]);
+		$returnArr["totalLateForfeit"] -= $share_LateForfeit;//min($share_LateForfeit,$returnArr["totalLateForfeit"]);
 		return;
+		
 		//------ base on pure/wage/forfeit order
 		for($i=1; $i<=4; $i++)
 		{
@@ -847,7 +646,7 @@ class LON_requests extends PdoDataAccess{
 
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 		if($obj->ComputeMode == "NEW")
-			return self::NewComputePayments($RequestID, $installments, $pdo);
+			return LON_Computes::NewComputePayments($RequestID, $pdo);
 		
 		$installments = PdoDataAccess::runquery("select * from 
 			LON_installments where RequestID=? AND history='NO' AND IsDelayed='NO' order by InstallmentDate", 
@@ -867,7 +666,7 @@ class LON_requests extends PdoDataAccess{
 				InstallmentDate RecordDate,InstallmentAmount RecordAmount,0 PayType, '' details, wage
 				from LON_installments where RequestID=:r AND history='NO' AND IsDelayed='NO'
 			union All
-				select BackPayID id, 'pay' type, BackPayID
+				select BackPayID id, 'pay' type, BackPayID,
 					substr(p.PayDate,1,10) RecordDate, PayAmount RecordAmount, PayType,
 					if(PayType=" . BACKPAY_PAYTYPE_CORRECT . ",p.details,'') details,0
 				from LON_BackPays p
@@ -876,7 +675,7 @@ class LON_requests extends PdoDataAccess{
 				where RequestID=:r AND 
 					if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
 			union All
-				select 0 id,'pay' type, 0 BackPayID
+				select 0 id,'pay' type, 0 BackPayID,
 					CostDate RecordDate, -1*CostAmount RecordAmount,0, CostDesc details, 0
 				from LON_costs 
 				where RequestID=:r AND CostAmount<>0
@@ -1493,19 +1292,326 @@ class LON_requests extends PdoDataAccess{
 
 class LON_Computes extends PdoDataAccess{
 	
-	static function GetCurrentRemainAmount($RequestID, $computeArr=null){
+	static function NewComputePayments($RequestID,$pdo = null){
+
+		$obj = LON_ReqParts::GetValidPartObj($RequestID);
+
+		$returnArr = array();
+		$records = PdoDataAccess::runquery("
+			select * from (
+				select InstallmentID id,0 BackPayID,'installment' type, 
+				InstallmentDate RecordDate,InstallmentAmount RecordAmount,0 PayType, '' details, wage
+				from LON_installments where RequestID=:r AND history='NO' AND IsDelayed='NO'
+			union All
+				select 0 id,BackPayID, 'pay' type, substr(p.PayDate,1,10) RecordDate, PayAmount RecordAmount, PayType,
+					if(PayType=" . BACKPAY_PAYTYPE_CORRECT . ",p.details,'') details,0
+				from LON_BackPays p
+				left join ACC_IncomeCheques i using(IncomeChequeID)
+				left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
+				where RequestID=:r AND 
+					if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+			union All
+				select 0 id,0 BackPayID,'installment' type, CostDate RecordDate, 
+					0 RecordAmount,0, CostDesc details, CostAmount wage
+				from LON_costs 
+				where RequestID=:r AND CostAmount>0
+			union All
+				select 0 id,0 BackPayID,'pay' type, CostDate RecordDate, 
+					abs(CostAmount) RecordAmount,0, CostDesc details, 0 wage
+				from LON_costs 
+				where RequestID=:r AND CostAmount<0
+			)t
+			order by substr(RecordDate,1,10),type, RecordAmount desc" , array(":r" => $RequestID), $pdo);
+		
+		$PayRecords = array();
+		for($i=0; $i < count($records); $i++)
+		{
+			if($records[$i]["type"] == "installment")
+			{
+				if($records[$i]["id"] != "0")
+					$records[$i]["pure"] = $records[$i]["RecordAmount"]*1 - $records[$i]["wage"]*1;
+				else
+					$records[$i]["pure"] = 0;
+				$records[$i]["wage"] = $records[$i]["wage"]*1;
+				$records[$i]["late"] = 0;
+				$records[$i]["pnlt"] = 0;
+				$records[$i]["early"] = 0;
+				
+				$records[$i]["remain_pure"] = $records[$i]["pure"] > 0 ? $records[$i]["pure"] : 0;
+				$records[$i]["remain_wage"] = $records[$i]["wage"] + 
+						($records[$i]["pure"] < 0 ? $records[$i]["pure"] : 0);
+				$records[$i]["remain_late"] = 0;
+				$records[$i]["remain_pnlt"] = 0;
+				
+				$records[$i]["pays"] = array();
+			}
+			if($records[$i]["type"] == "pay")
+			{
+				$records[$i]["remainPayAmount"] = $records[$i]["RecordAmount"]*1;
+				$records[$i]["pure"] = 0;
+				$records[$i]["wage"] = 0;
+				$records[$i]["late"] = 0;
+				$records[$i]["pnlt"] = 0;
+				$records[$i]["early"] = 0;			
+				$records[$i]["remain_pure"] = 0;
+				$records[$i]["remain_wage"] = 0;
+				$records[$i]["remain_late"] = 0;
+				$records[$i]["remain_pnlt"] = 0;				
+				
+				$PayRecords[] = &$records[$i];
+			}
+		}		
+		
+		$installmentIndex = 0;
+		$payIndex = 0;
+		if(count($PayRecords) > 0)
+			$PayRecord = &$PayRecords[$payIndex++];
+		else
+			$PayRecord = null;
+		$total_pure = $total_wage = $total_late = $total_pnlt = 0;
+		$earlyRemain = 0;
+		
+		for($i=0; $i < count($records); $i++)
+		{
+			if($records[$i]["type"] == "installment")
+			{
+				if($records[$i]["remain_pure"] == 0 && $records[$i]["remain_wage"] == 0 &&
+						$records[$i]["remain_late"] == 0 && $records[$i]["remain_pnlt"] == 0)
+					continue;
+				$diffDays = DateModules::GDateMinusGDate($PayRecord ? $PayRecord["RecordDate"] : DateModules::Now(),
+														 $records[$i]["RecordDate"]);
+				if($diffDays > 0)
+				{
+					$forgivePercent = $obj->ForgivePercent*1;
+					$ForfeitPercent = $obj->ForfeitPercent - min($obj->ForfeitPercent, $forgivePercent);
+					$forgivePercent -= min($obj->ForfeitPercent, $forgivePercent);
+					$LatePercent = $obj->LatePercent;
+					if($forgivePercent > 0)
+						$LatePercent = $obj->LatePercent - $forgivePercent;
+					if($LatePercent < 0)
+						$LatePercent = 0;
+
+					if($records[$i]["remain_pure"] != $records[$i]["pure"] && count($records[$i]["pays"])>0)
+					{
+						$pays = $records[$i]["pays"];
+						$toDate = DateModules::shamsi_to_miladi($pays[ count($pays)-1 ]["PayedDate"],"-");
+						$diffDays = DateModules::GDateMinusGDate(
+								$PayRecord ? $PayRecord["RecordDate"] : DateModules::Now(), 
+								max($toDate,$records[$i]["RecordDate"]));
+					}
+					else
+					{
+						$records[$i]["late"] = 0;
+						$records[$i]["pnlt"] = 0;
+						$records[$i]["remain_late"] = 0;
+						$records[$i]["remain_pnlt"] = 0;
+					}
+					
+					if($records[$i]["remain_pure"] > 0)
+					{
+						$Late = round($records[$i]["remain_pure"]*$LatePercent*$diffDays/36500);
+						$Pnlt = round($records[$i]["remain_pure"]*$ForfeitPercent*$diffDays/36500);
+
+						$records[$i]["late"] += $Late;
+						$records[$i]["pnlt"] += $Pnlt;
+						$records[$i]["remain_late"] += $Late;
+						$records[$i]["remain_pnlt"] += $Pnlt;
+					}
+					$total_pure += $records[$i]["remain_pure"];
+					$total_wage += $records[$i]["remain_wage"];
+					$total_late += $records[$i]["remain_late"];
+					$total_pnlt += $records[$i]["remain_pnlt"];
+					
+					if(!$PayRecord && $records[$i]["remain_pure"] > 0)
+					{
+						$records[$i]["pays"][] = array(
+							"EarlyDays" => 0,
+							"EarlyAmount" => 0,
+							"PnltDays" => $diffDays,
+							"late" => $Late,
+							"pnlt" => $Pnlt,
+							"pay_pure" => 0,
+							"pay_wage" => 0,
+							"remain" => $records[$i]["remain_pure"] + $records[$i]["remain_wage"] + 
+										$records[$i]["remain_late"] + $records[$i]["remain_pnlt"],
+							"PayedDate" => DateModules::shNow(),
+							"PayedAmount" => 0
+						);
+					}
+				}
+				else if($PayRecord)
+				{
+					$total = $records[$i]["remain_pure"] + $records[$i]["remain_wage"];
+					if($total > 0)
+					{
+					
+						$tmp = min($PayRecord["remainPayAmount"], $total);
+						$pure = round($tmp*$records[$i]["remain_pure"]/$total);
+						$EarlyPercent = $obj->CustomerWage*1 - 3;
+						$EarlyPercent = $EarlyPercent < 0 ? 0 : $EarlyPercent; 
+						$EarlyAmount = $records[$i]["remain_pure"] > 0 ?
+								round($pure*$EarlyPercent*abs($diffDays)/36500) : 0;
+						$records[$i]["remain_pure"] -= $EarlyAmount;
+
+						$total = $records[$i]["remain_pure"] + $records[$i]["remain_wage"];
+						$tmp = min($PayRecord["remainPayAmount"], $total);
+						$pure = round($tmp*$records[$i]["remain_pure"]/$total);
+						$wage = round($tmp*$records[$i]["remain_wage"]/$total);
+
+						$records[$i]["early"] += $EarlyAmount;
+						$records[$i]["remain_pure"] -= $pure;
+						$records[$i]["remain_wage"] -= $wage;
+
+						$records[$i]["pays"][] = array(
+							"EarlyDays" => abs($diffDays),
+							"EarlyAmount" => $EarlyAmount,
+							"pay_pure" => $pure,
+							"pay_wage" => $wage,
+							"PnltDays" => 0,
+							"late" => 0,
+							"pnlt" => 0,
+							"remain" => $records[$i]["remain_pure"] + $records[$i]["remain_wage"] ,
+							"PayedDate" => DateModules::miladi_to_shamsi($PayRecord["RecordDate"]),
+							"PayedAmount" => number_format($tmp)
+						);
+
+						$PayRecord["early"] += $EarlyAmount;
+						$PayRecord["remainPayAmount"] -= $tmp;
+						$PayRecord["pure"] += $pure;
+						$PayRecord["wage"] += $wage;
+					}
+					
+					$total_pure += $records[$i]["remain_pure"];
+					$total_wage += $records[$i]["remain_wage"];
+					$total_late += $records[$i]["remain_late"];
+					$total_pnlt += $records[$i]["remain_pnlt"];
+					
+					if($PayRecord["remainPayAmount"] <= 0)
+					{
+						if(count($PayRecords) > 0)
+							$PayRecord = &$PayRecords[$payIndex++];
+						else
+							$PayRecord = null;
+						$i--;						
+					}
+				}
+				
+				continue;
+			}				
+				
+			if($records[$i]["type"] != "pay" || $records[$i]["RecordAmount"]*1 <= 0)
+				continue;
+			
+			if($records[$i]["remainPayAmount"] == 0)
+				continue;
+			
+			if($PayRecord["BackPayID"] != $records[$i]["BackPayID"])
+				continue;
+			 
+			$PayRecord = &$records[$i];			
+			$payAmount = $PayRecord["remainPayAmount"];
+			$total = $total_pure + $total_wage + $total_late + $total_pnlt;
+			if($total == 0)
+				continue;
+			$newPayAmount = min($payAmount, $total);
+			
+			$remainPure = round($newPayAmount*$total_pure/$total);
+			$remainWage = round($newPayAmount*$total_wage/$total);
+			$remainLate = round($newPayAmount*$total_late/$total);
+			$remainPnlt = round($newPayAmount*$total_pnlt/$total);
+			
+			$remainInstallmentIndex = 0;
+			for($j=0; $j<$i; $j++)
+			{
+				if($records[$j]["type"] != "installment")
+					continue;
+			
+				$minPure = min($remainPure,$records[$j]["remain_pure"]);
+				$minWage = min($remainWage,$records[$j]["remain_wage"]);
+				$minLate = min($remainLate,$records[$j]["remain_late"]);
+				$minPnlt = min($remainPnlt,$records[$j]["remain_pnlt"]);
+				
+				if($minPure == 0 && $minWage == 0 && $minLate == 0 && $minPnlt == 0) 
+				{
+					$remainInstallmentIndex++;
+					continue;
+				}				
+				$records[$j]["remain_pure"] -= $minPure;
+				$records[$j]["remain_wage"] -= $minWage;
+				$records[$j]["remain_late"] -= $minLate;
+				$records[$j]["remain_pnlt"] -= $minPnlt;
+				
+				$PayRecord["pure"] += $minPure;
+				$PayRecord["wage"] += $minWage;
+				$PayRecord["late"] += $minLate;
+				$PayRecord["pnlt"] += $minPnlt;
+				
+				$remainPure -= $minPure;
+				$remainWage -= $minWage;
+				$remainLate -= $minLate;
+				$remainPnlt -= $minPnlt;
+				
+				$records[$j]["pays"][] = array(
+					"EarlyDays" => 0,
+					"EarlyAmount" => 0,
+					"PnltDays" => $diffDays,
+					"late" => $minLate,
+					"pnlt" => $minPnlt,
+					"pay_pure" => $minPure,
+					"pay_wage" => $minWage,
+					"remain" => $records[$j]["remain_pure"] + $records[$j]["remain_wage"] + 
+								$records[$j]["remain_late"] + $records[$j]["remain_pnlt"],
+					"PayedDate" => DateModules::miladi_to_shamsi($PayRecord["RecordDate"]),
+					"PayedAmount" => $minPure + $minWage + $minLate + $minPnlt
+				);
+				
+				if($records[$j]["remain_pure"] == 0 && $records[$j]["remain_wage"] == 0 &&
+						$records[$j]["remain_late"] == 0 && $records[$j]["remain_pnlt"] == 0)
+					$remainInstallmentIndex = $j;
+				
+				if($remainPure == 0 && $remainWage == 0 && $remainLate == 0 && $remainPnlt == 0)
+					break;
+			}			
+			$PayRecord["remainPayAmount"] -= $newPayAmount;
+			if($PayRecord["remainPayAmount"] == 0)
+			{
+				$sum = $PayRecord["pure"] + $PayRecord["wage"] + $PayRecord["late"] +
+					$PayRecord["pnlt"] + $PayRecord["early"];
+				if($sum != $PayRecord["RecordAmount"])
+					$PayRecord["wage"] += $PayRecord["RecordAmount"] - $sum;
+				
+				$i = $remainInstallmentIndex-1;
+				if(count($PayRecords) > 0)
+					$PayRecord = &$PayRecords[$payIndex++];
+				else
+					$PayRecord = null;
+			}
+			$total_pure = $total_wage = $total_late = $total_pnlt = 0;
+		}
+		
+		return $records;
+	}
+
+	/**
+	 * مانده قابل پرداخت معوقه وام
+	 * @param type $RequestID
+	 * @param type $computeArr
+	 * @param type $forfeitInclude
+	 * @return type
+	 */
+	static function GetCurrentRemainAmount($RequestID, $computeArr=null, $forfeitInclude = true){
 		
 		$dt = array();
 		if($computeArr == null)
-			$computeArr = self::ComputePayments($RequestID, $dt);
+			$computeArr = self::NewComputePayments($RequestID, $dt);
 		
 		$CurrentRemain = 0;
 		foreach($computeArr as $row)
 		{
-			if($row["ActionDate"] <= DateModules::Now())
+			if($row["RecordDate"] <= DateModules::Now())
 			{
-				$amount = $row["TotalRemainder"]*1;
-				$CurrentRemain = $amount < 0 ? 0 : $amount;
+				$CurrentRemain += $row["remain_pure"]*1 + $row["remain_wage"]*1 + 
+									$row["remain_late"]*1 + $row["remain_pnlt"]*1;
 			}
 			else
 				break;
@@ -1513,50 +1619,65 @@ class LON_Computes extends PdoDataAccess{
 		return $CurrentRemain;
 	}
 	
+	/**
+	 * مانده های معوقه وام
+	 * @param type $RequestID
+	 * @param type $computeArr
+	 * @param type $forfeitInclude
+	 * @return type
+	 */
+	static function GetRemainAmounts($RequestID, $computeArr=null, $forfeitInclude = true){
+		
+		$dt = array();
+		if($computeArr == null)
+			$computeArr = self::NewComputePayments($RequestID, $dt);
+		
+		$result = array(
+			"remain_pure" => 0,
+			"remain_wage" => 0,
+			"remain_late" => 0,
+			"remain_pnlt" => 0
+		);
+		foreach($computeArr as $row)
+		{
+			if($row["ActionDate"] <= DateModules::Now())
+			{
+				$result["remain_pure"] += $row["remain_pure"]*1;
+				$result["remain_wage"] += $row["remain_wage"]*1;
+				$result["remain_late"] += $row["remain_late"]*1;
+				$result["remain_pnlt"] += $row["remain_pnlt"]*1;
+			}
+			else
+				break;
+		}
+		return $result;
+	}
+	
+	/**
+	 * کل مانده وام
+	 * @param type $RequestID
+	 * @param type $computeArr
+	 * @return int
+	 */
 	static function GetTotalRemainAmount($RequestID, $computeArr=null){
 		
 		$dt = array();
 		if($computeArr == null)
-			$computeArr = self::ComputePayments($RequestID, $dt);
+			$computeArr = self::NewComputePayments($RequestID, $dt);
 		
-		if(count($computeArr) == 0)
-			return 0;
-		return $computeArr[count($computeArr)-1]["TotalRemainder"]*1;
-		
-	}
-	
-	static function GetDefrayAmount($RequestID, $computeArr=null, $PureArr = null, $ComputeDate = ""){
-
-		$dt = LON_requests::GetPureAmount($RequestID, $computeArr, $PureArr, $ComputeDate);
-		$EndingAmount = $dt["PureAmount"];
-		$EndingInstallment = $dt["LastInstallmentID"];
-		//----------------------
-		for($i=count($computeArr)-1; $i != 0;$i--)
+		$totalRemain = 0;
+		foreach($computeArr as $row)
 		{
-			$row = $computeArr[$i];
-			
-			if($i == count($computeArr)-1 && $row["InstallmentID"] == 0)
-			{
-				$EndingAmount = $row["TotalRemainder"];
-				break;
-			}
-			
-			if($row["InstallmentID"] == $EndingInstallment || $EndingInstallment == 0)
-			{
-				$EndingAmount += $row["TotalRemainder"];
-				//echo $row["TotalRemainder"] . "<br>";
-				break;
-			}
-			
-			if($row["ActionType"] == "pay")
-			{
-				$EndingAmount += $row["TotalRemainder"];
-				break;
-			}
+			if($row["type"] == "installment")
+				$totalRemain += $row["remain_pure"]*1 + $row["remain_wage"]*1 + 
+							$row["remain_late"]*1 + $row["remain_pnlt"]*1;
+			else
+				$totalRemain -= $row["remainPayAmount"]*1;
+				
 		}
-		return $EndingAmount;
+		return $totalRemain;
+		
 	}
-	
 }
 
 class LON_ReqParts extends PdoDataAccess{

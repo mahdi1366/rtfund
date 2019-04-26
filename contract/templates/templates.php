@@ -3,8 +3,6 @@
 //	Programmer	: Fatemipour
 //	Date		: 94.09
 //-----------------------------
-ini_set("display_errors", "On");
-
 require_once '../header.inc.php';
 require_once inc_dataGrid;
 

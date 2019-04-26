@@ -246,7 +246,8 @@ function SaveIncomeCheque(){
 			
 			//--------------- execute event ----------------
 			$ReqObj = new LON_requests($RequestID);
-			$EventID = $ReqObj->ReqPersonID*1 > 0 ? EVENT_LOANDCHEQUE_agentSource : EVENT_LOANDCHEQUE_innerSource;
+			$EventID = $ReqObj->ReqPersonID*1 > 0 ? EVENT_LOANDCHEQUE_agentSource : 
+													EVENT_LOANDCHEQUE_innerSource;
 
 			$eventobj = new ExecuteEvent($EventID);
 			$eventobj->Sources = array($RequestID, $obj->IncomeChequeID);

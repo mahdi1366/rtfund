@@ -50,6 +50,7 @@ switch($task)
 	case "DeleteCostBlock":
 		
 	case "selectCostParams":
+	case "selectAllParams":
 	case "selectParamItems":
 		
 		$task();
@@ -423,7 +424,7 @@ function saveDocItem() {
 		$obj->TafsiliID3 = PDONULL;
 	
 	$costObj = new ACC_CostCodes($obj->CostID);
-	$obj->TafsiliType = $costObj->TafsiliType;
+	$obj->TafsiliType = $costObj->TafsiliType1;
 	$obj->TafsiliType2 = $costObj->TafsiliType2;
 	$obj->TafsiliType3 = $costObj->TafsiliType3;
 	
@@ -1127,6 +1128,13 @@ function selectCostParams(){
 	$dt = PdoDataAccess::runquery_fetchMode("select p.* from ACC_CostCodeParams p,ACC_CostCodes c
 			where c.CostID=? AND p.ParamID in(c.param1,c.param2,c.param3) ",
 			array($_GET["CostID"]));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function selectAllParams(){
+	
+	$dt = PdoDataAccess::runquery_fetchMode("select * from ACC_CostCodeParams ");
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
 }

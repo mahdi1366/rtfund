@@ -51,6 +51,20 @@ class EventComputeItems {
 					return $result["AgentWage"];
 				if($ItemID == 15)
 					return $result["FundWage"];
+			
+			case 16 : //مبلغ تنفس
+			case 17 : //سهم اصل از تنفس
+			case 18 : //سهم کارمزد از تنفس
+				$result = LON_requests::GetDelayAmounts($ReqObj->RequestID, $PartObj);
+				$wage = LON_requests::GetWageAmounts($ReqObj->RequestID, $PartObj);
+				if($ItemID == 16)
+					return $result["CustomerDelay"];
+				if($ItemID == 17)
+					return round($result["CustomerDelay"]*$PartObj->PartAmount/
+						($wage["CustomerWage"]*1 + $PartObj->PartAmount*1));
+				if($ItemID == 18)
+					return $result["CustomerDelay"]*1 - round($result["CustomerDelay"]*$PartObj->PartAmount/
+						($wage["CustomerWage"]*1 + $PartObj->PartAmount*1));
 				
 			case 6 : // مبلغ تضمین
 				$dt =  array();
@@ -116,21 +130,21 @@ class EventComputeItems {
 			case 41 :  // کارمزد تعجیل سهم صندوق
 			case 42 :  // کارمزد تعجیل سهم سرمایه گذار
 				$dt = array();
-				$ComputeArr = LON_requests::ComputePayments($ReqObj->RequestID, $dt);
+				$ComputeArr = LON_Computes::NewComputePayments($ReqObj->RequestID, $dt);
 				foreach($ComputeArr as $row)
 				{
-					if($row["ActionType"] != "pay" || $row["BackPayID"] != $BackPayObj->BackPayID)
+					if($row["type"] != "pay" || $row["BackPayID"] != $BackPayObj->BackPayID)
 						continue;
 					
 					switch($ItemID)
 					{
 						case 31:
-							return $row["share_pure"];
+							return $row["pure"];
 						case 33:
 						case 34:
 							$wagePercent = $PartObj->CustomerWage;
-							$FundWage = round(($PartObj->FundWage/$wagePercent)*$row["share_wage"]);
-							$AgentWage = $row["share_wage"] - $FundWage;
+							$FundWage = round(($PartObj->FundWage/$wagePercent)*$row["wage"]);
+							$AgentWage = $row["wage"] - $FundWage;
 							if($ItemID == 34)
 								return $FundWage;
 							if($ItemID == 33)
@@ -139,8 +153,8 @@ class EventComputeItems {
 						case 36:
 							if($PartObj->LatePercent*1 == 0)
 								return 0;
-							$lateAmount = $row["share_LateWage"];
-							$FundLate = round(($PartObj->FundForfeitPercent/$PartObj->LatePercent)*$lateAmount);
+							$lateAmount = $row["late"];
+							$FundLate = round(($PartObj->FundWage/$PartObj->LatePercent)*$lateAmount);
 							$AgentLate = $lateAmount - $FundLate;
 							if($ItemID == 36)
 								return $FundLate;
@@ -150,13 +164,22 @@ class EventComputeItems {
 						case 38:	
 							if($PartObj->ForfeitPercent*1 == 0)
 								return 0;
-							$forfeitAmount = $row["share_LateForfeit"];
+							$forfeitAmount = $row["pnlt"];
 							$FundForfeit = round(($PartObj->FundForfeitPercent/$PartObj->ForfeitPercent)*$forfeitAmount);
 							$AgentForfeit = $forfeitAmount - $FundForfeit;
 							if($ItemID == 38)
 								return $FundForfeit;
 							if($ItemID == 37)
 								return $AgentForfeit;
+						case 41:
+						case 42:	
+							$earlyAmount = $row["early"];
+							$FundEarly = round(($PartObj->FundWage/$PartObj->CustomerWage)*$earlyAmount);
+							$AgentEarly = $earlyAmount - $FundEarly;
+							if($ItemID == 41)
+								return $FundEarly;
+							if($ItemID == 42)
+								return $AgentEarly;
 							
 					}
 				}
@@ -179,7 +202,7 @@ class EventComputeItems {
 		$LastPureAmount = $PureArr[0]["totalPure"];
 		for($i=1; $i < count($PureArr);$i++)
 		{
-			if($PureArr[$i]["InstallmentDate"] < $ComputeDate)
+			if($PureArr[$i]["InstallmentDate"] <= $ComputeDate)
 				continue;
 			$LastPureAmount = $PureArr[$i-1]["totalPure"];
 			break;

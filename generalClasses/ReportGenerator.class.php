@@ -614,10 +614,13 @@ class ReportGenerator {
 					} else {
 						$val = $this->columns[$i]->HaveSum;
 					}
-					if (is_int($val))
-						echo number_format($val, 0);
-					else if (is_float($val))
-						echo number_format($val, 2);					 
+					if(is_int($val) || is_float($val))
+					{
+						if(($val*100) % 100 == 0)
+							echo number_format($val, 0);
+						else
+							echo number_format($val, 2);
+					}					 
 					else
 						echo $val;
 					//-------------------------------

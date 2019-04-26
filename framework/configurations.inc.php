@@ -9,7 +9,7 @@ class sys_config{
 	          "driver"   => "mysql",
 	          "host"     => "localhost",
 	          //"database" => "krrtfir_rtfund",
-			 "database" => "framewor_rtfund",
+			  "database" => "framewor_rtfund",
 	          "user"     => "root",
 	          "pass"     => "1297"
 	 );

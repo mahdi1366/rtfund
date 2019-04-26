@@ -18,11 +18,11 @@ if(isset($_REQUEST["show"]))
 	$TotalAmount = LON_requests::GetTotalReturnAmount($RequestID, $partObj, true);
 	//............ get remain untill now ......................
 	$dt = array();
-	$ComputeArr = LON_Computes::NewComputePayments($RequestID, $dt);
+	$ComputeArr = LON_requests::ComputePayments($RequestID, $dt);
 	$PureArr = LON_requests::ComputePures($RequestID);
 	//............ get remain untill now ......................
-	$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);
-	$TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
+	$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr);
+	$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID, $ComputeArr);
 	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
 	//............. get total payed .............................
 	$dt = LON_BackPays::GetRealPaid($RequestID);
@@ -46,57 +46,38 @@ if(isset($_REQUEST["show"]))
 	$rpg = new ReportGenerator();
 		
 	function RowColorRender($row){
-		return $row["type"] == "pay" ? "#fcfcb6" : "";
+		return $row["ActionType"] == "pay" ? "#fcfcb6" : "";
 	}
 	$rpg->rowColorRender = "RowColorRender";
 	
 	
 	function ActionRender($row, $value){
 		if($value == "installment")
-		{
-			if($row["id"] == "0")
-				return  $row["details"];
 			return "قسط" ;
-		}
+		if($row["ActionAmount"]*1 < 0)
+			return  $row["details"];
 		return "پرداخت " . $row["details"];
 	}
-	$rpg->addColumn("نوع عملیات", "type", "ActionRender");
+	$rpg->addColumn("نوع عملیات", "ActionType", "ActionRender");
 		
-	$rpg->addColumn("تاریخ عملیات", "RecordDate","ReportDateRender");
+	$rpg->addColumn("تاریخ عملیات", "ActionDate","ReportDateRender");
 
-	$rpg->addColumn("مبلغ", "RecordAmount","ReportMoneyRender");
+	$rpg->addColumn("مبلغ", "ActionAmount","ReportMoneyRender");
 	
 	$rpg->addColumn("اصل مبلغ", "pure","ReportMoneyRender");
 	$rpg->addColumn("کارمزد", "wage","ReportMoneyRender");
 	
-	$rpg->addColumn("کارمزد تاخیر", "late","ReportMoneyRender");
-	$rpg->addColumn("جریمه", "pnlt","ReportMoneyRender");
+	$rpg->addColumn("تعداد روز تاخیر", "ForfeitDays");
 	
-	$rpg->addColumn("تخفیف تعجیل", "early","ReportMoneyRender");
+	$rpg->addColumn("کارمزد تاخیر", "LateWage","ReportMoneyRender");
+	$rpg->addColumn("جریمه", "LateForfeit","ReportMoneyRender");
 	
-	function RemainsRender($row, $value){
-		if($row["type"] == "pay")
-			return 0;
-		return number_format($value);
-	}
-	$col = $rpg->addColumn("مانده اصل", "remain_pure","RemainsRender");
-	$col->EnableSummary();
-	$col = $rpg->addColumn("مانده کارمزد", "remain_wage","RemainsRender");
-	$col->EnableSummary();
-	$col = $rpg->addColumn("مانده کارمزد تاخیر", "remain_late","RemainsRender");
-	$col->EnableSummary();
-	$col = $rpg->addColumn("مانده جریمه", "remain_pnlt","RemainsRender");
-	$col->EnableSummary();
+	$rpg->addColumn("مانده اصل", "totalpure","ReportMoneyRender");
+	$rpg->addColumn("مانده کارمزد", "totalwage","ReportMoneyRender");
+	$rpg->addColumn("مانده کارمزد تاخیر", "totalLateWage","ReportMoneyRender");
+	$rpg->addColumn("مانده جریمه", "totalLateForfeit","ReportMoneyRender");
 	
-	function totalRemainRender($row){
-		if($row["type"] == "installment")
-			return number_format($row["remain_pure"]*1 + $row["remain_wage"]*1 + 
-					$row["remain_late"]*1 + $row["remain_pnlt"]*1);
-		else
-			return number_format($row["remainPayAmount"]);
-	}
-	$col = $rpg->addColumn("مانده", "remain_pure","totalRemainRender");
-	$col->EnableSummary(true);
+	$rpg->addColumn("مانده کل", "TotalRemainder","ReportMoneyRender");
 	
 	$rpg->mysql_resource = $ComputeArr;
 	BeginReport();

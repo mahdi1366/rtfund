@@ -21,10 +21,10 @@ if(session::IsFramework())
 
 		$ReqObj = new LON_requests($RequestID);
 		if($ReqObj->IsEnded == "NO")
-			$editable = true;
+			$editable = $accessObj->EditFlag;
 	}
 	else
-		$editable = true;
+		$editable = $accessObj->AddFlag;
 }	
 
 $dg = new sadaf_datagrid("dg",$js_prefix_address . "request.data.php?task=GetBackPays","grid_div");
@@ -194,6 +194,7 @@ function LoanPay()
 	}	
 
 	if(this.AddAccess && this.grid.plugins[0] != undefined)
+	{
 		this.grid.plugins[0].on("beforeedit", function(editor,e){
 			
 			if(LoanPayObject.PartRecord != null && LoanPayObject.PartRecord.data.IsEnded == "YES")
@@ -202,18 +203,19 @@ function LoanPay()
 			if(e.record.data.BackPayID == null)
 				return true;
 			
-			if(e.record.data.PayType == "<?= BACKPAY_PAYTYPE_CHEQUE ?>" && e.record.data.ChequeStatus != "1")
+			if(e.record.data.PayType == "<?= BACKPAY_PAYTYPE_CHEQUE ?>")
 				return false;
 				
 			if(e.record.data.PayType == "<?= BACKPAY_PAYTYPE_EPAY ?>" || 
 				e.record.data.PayType == "<?= BACKPAY_PAYTYPE_CORRECT ?>")
 				return false;
 			
-			if(e.record.data.StatusID != "<?= ACC_STEPID_RAW ?>")
+			if(e.record.data.StatusID != null && e.record.data.StatusID != "<?= ACC_STEPID_RAW ?>")
 				return false;
 			
 			return true;			
 		});
+	}
 		
 	if(this.RequestID > 0)
 	{

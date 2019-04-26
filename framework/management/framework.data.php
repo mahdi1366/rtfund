@@ -463,7 +463,7 @@ function SelectFollowUps(){
 		where FollowUpDate= substr(" . PDONOW . ",1,10) AND FollowUpPersonID=:p" 
 		
 	, array(":p" => $_SESSION["USER"]["PersonID"]));
-	print_r(ExceptionHandler::PopAllExceptions());
+	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();			
 }

@@ -8,7 +8,7 @@ require_once 'header.inc.php';
 require_once inc_dataGrid;
 
 $ObjectType = $_POST["ObjectType"];
-$ObjectID = isset($_POST["ObjectID"]) ? $_POST["ObjectID"] : "";
+$ObjectID = isset($_POST["ObjectID"]) ? $_POST["ObjectID"] : 0;
 
 //---------------- RECOGNIZE ACCESS --------------------
 $access = false;
@@ -77,6 +77,8 @@ switch($ObjectType)
 		break;
 	//......................................................
 	case "BeneficiaryDocs":
+	case "orgdoc":
+	case "package":
 		$access = true;
 		break;
 	//......................................................
@@ -92,10 +94,6 @@ switch($ObjectType)
 			$access = true;
 		if($_SESSION["USER"]["IsStaff"] == "YES" && session::IsFramework())
 			$access = true;
-		break;
-	//......................................................
-	case "package":
-		$access = true;
 		break;
 	//......................................................
 	case "meeting":
@@ -181,9 +179,12 @@ if(session::IsFramework() && $access)
 $dg->EnableGrouping = true;
 $dg->DefaultGroupField = "DocTypeGroupDesc";
 
+if($ObjectType == "orgdoc")
+	$dg->DefaultGroupField = "DocTypeDesc";
+
 $dg->emptyTextOfHiddenColumns = true;
 
-if($ObjectType == "package")
+if($ObjectType == "package" || $ObjectType == "orgdoc")
 {
 	$dg->height = 400;
 }

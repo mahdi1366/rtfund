@@ -6,7 +6,7 @@
 require_once 'header.inc.php';
 require_once inc_phpExcelReader;
 
-if(empty($_REQUEST["ObjectID"]))
+if($_REQUEST["ObjectID"] == "")
 	die();
 
 $ObjectID = $_REQUEST["ObjectID"];
@@ -32,7 +32,6 @@ if(!empty($DocumentID))
 	$params[":d"] = (int)$DocumentID;
 
 $dt = PdoDataAccess::runquery($query, $params);
-
 if(count($dt) == 0)
 	die();
 

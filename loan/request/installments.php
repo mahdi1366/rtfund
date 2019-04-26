@@ -60,7 +60,7 @@ if(session::IsFramework())
 	$col->renderer = "function(v,p,r){return r.data.InstallmentAmount - r.data.wage;}";
 }
 
-$col = $dg->addColumn("مانده قسط", "remainder", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مانده قسط", "remain", GridColumn::ColumnType_money);
 $col->width = 120;
 
 if(session::IsFramework())
