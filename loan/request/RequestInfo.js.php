@@ -282,6 +282,7 @@ RequestInfo.prototype.MakePartsPanel = function(){
 					renderer : function(v){
 						if(v == "BANK") return "فرمول بانک مرکزی";
 						if(v == "NEW") return 'فرمول تنزیل اقساط';
+						if(v == "NOAVARI") return 'فرمول صندوق نوآوری';
 					}
 				},{
 					name : "details",
@@ -1767,10 +1768,9 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 					labelStyle : "font-size:11px"
 				},{
 					xtype : "fieldset",
-					colspan : 2,
+					colspan : 3,
 					style : "margin-right:10px",
 					width : 450,
-					hidden : true,
 					title : "نحوه محاسبه کارمزد و اقساط",
 					items : [{
 						xtype : "radio",
@@ -1783,6 +1783,11 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						name : "ComputeMode",
 						inputValue : "NEW",
 						checked : true
+					},{
+						xtype : "radio",						
+						boxLabel : "فرمول صندوق نوآوری",
+						name : "ComputeMode",
+						inputValue : "NOAVARI"
 					}/*,{
 						xtype : "combo",
 						width : 400,
@@ -1993,12 +1998,12 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 
 RequestInfo.prototype.SavePart = function(){
 
-	if(this.PartWin.down('[name=MaxFundWage]').getValue()*1 > 0 && 
+	/*if(this.PartWin.down('[name=MaxFundWage]').getValue()*1 > 0 && 
 		this.PartWin.down('[name=FundWage]').getValue()*1 > 0 )
 	{
 		Ext.MessageBox.alert("Error","در صورتی که سقف کارمزد صندوق را تعیین می کنید باید کارمزد صندوق را صفر نمایید");
 		return;
-	}
+	}*/
 
 	mask = new Ext.LoadMask(this.PartWin, {msg:'در حال ذخیره سازی ...'});
 	mask.show();

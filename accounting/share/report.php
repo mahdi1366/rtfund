@@ -22,7 +22,7 @@ $query = "select sum(CreditorAmount-DebtorAmount) amount,
 		join ACC_docs using(DocID)
 		join ACC_tafsilis using(TafsiliID)
 		join BSC_persons on(ObjectID=PersonID)
-	where CostID=" . COSTID_share . /*" AND CycleID=" . $_SESSION["accounting"]["CycleID"] . */
+	where CostID=" . COSTID_share . " AND CycleID=" . $_SESSION["accounting"]["CycleID"] . 
 	" group by TafsiliID having shareCount > 0";
 
 $query .= " order by amount desc";

@@ -3,15 +3,23 @@
 	
 /*	
 insert into ACC_tafsilis(TafsiliCode,TafsiliType,TafsiliDesc,ObjectID) 
-		select PersonID,107,concat_ws(' ',fname,lname,CompanyName),PersonID from BSC_persons
-		
-insert into ACC_tafsilis(TafsiliCode,TafsiliType,TafsiliDesc,ObjectID) 
-		select LoanID,104,LoanDesc,LoanID from LON_loans
+		select PersonID,200,concat_ws(' ',fname,lname,CompanyName),PersonID from BSC_persons
+
+update LON_requests left join ACC_tafsilis on(TafsiliType=130 and ObjectID=LoanID)
+set LoanID=9
+where TafsiliID is null
 
 insert into ACC_tafsilis(TafsiliCode,TafsiliType,TafsiliDesc,ObjectID) 
-		select ProcessID,106,ProcessTitle,ProcessID from BSC_processes
+		select ProcessID,150,ProcessTitle,ProcessID from BSC_processes
 */
 
+/**/
 
+ALTER TABLE `framewor_rtfund`.`LON_ReqParts` 
+		MODIFY COLUMN `ComputeMode` ENUM('BANK','NEW','NOAVARI') NOT NULL DEFAULT 'BANK';
+
+update LON_ReqParts join LON_requests using(RequestID)
+set ComputeMode='NOAVARI'
+where ReqPersonID=1003;
 
 ALTER TABLE `framewor_rtfund`.`ACC_ChequeHistory` ADD COLUMN `DocID` INTEGER UNSIGNED DEFAULT 0 AFTER `details`;

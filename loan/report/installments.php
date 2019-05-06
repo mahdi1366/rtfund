@@ -44,7 +44,7 @@ function MakeWhere(&$where, &$whereParam){
 				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 			continue;
 
-		if($key == "IsEndedInclude" || $key == "RemainStatus")
+		if($key == "IsEndedInclude" || $key == "IsPayRowsInclude" || $key == "RemainStatus")
 			continue;
 
 		$prefix = "";

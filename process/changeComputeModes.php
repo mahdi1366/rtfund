@@ -1,6 +1,6 @@
 <?php
 
-require_once 'request.data.php';
+require_once '../loan/request/request.data.php';
 ini_set("display_errors", "On");
 
 $dt = PdoDataAccess::runquery("select RequestID from LON_requests where StatusID=70 "

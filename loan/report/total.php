@@ -64,11 +64,19 @@ $col = $page_rpg->addColumn("تاریخ آخرین پرداخت", "MaxPayDate");
 $col->type = "date";
 $page_rpg->addColumn("جمع مبلغ اقساط سررسید شده", "installmentsToNow");
 
-$page_rpg->addColumn("مبلغ آخرین پرداخت", "LastPayAmount");
-$page_rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount");
-$page_rpg->addColumn("مانده قابل پرداخت", "remainder");
-$page_rpg->addColumn("مبلغ تاخیر", "ForfeitAmount");
-$page_rpg->addColumn("تاخیر کل وام", "TotalForfeitAmount");
+$col = $page_rpg->addColumn("مبلغ آخرین پرداخت", "LastPayAmount");
+$col->IsQueryField = false;
+$col = $page_rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount");
+$col->IsQueryField = false;
+$col = $page_rpg->addColumn("مانده قابل پرداخت", "remainder");
+$col->IsQueryField = false;
+$col = $page_rpg->addColumn("کارمزد تاخیر", "LateAmount");
+$col->IsQueryField = false;
+$col = $page_rpg->addColumn("جریمه تاخیر", "ForfeitAmount");
+$col->IsQueryField = false;
+$col = $page_rpg->addColumn("کل جریمه تاخیر از ابتدا", "TotalForfeitAmount");
+$col->IsQueryField = false;
+
 $page_rpg->addColumn("جمع اقساط تا تاریخ موثر", "EffectiveInstallmentAmounts");
 $page_rpg->addColumn("جمع پرداخت های مشتری تا تاریخ موثر", "EffectiveBackPayAmounts");
 
@@ -313,9 +321,9 @@ function GetData($mode = "list"){
 	$query = PdoDataAccess::GetLatestQueryString();
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		BeginReport();
-		print_r(ExceptionHandler::PopAllExceptions());
-		echo PdoDataAccess::GetLatestQueryString();
+		////BeginReport();
+		//print_r(ExceptionHandler::PopAllExceptions());
+		//echo PdoDataAccess::GetLatestQueryString();
 		
 	}
 	
@@ -326,6 +334,7 @@ function GetData($mode = "list"){
 		$TotalRemain = LON_requests::GetTotalRemainAmount($dataTable[$i]["RequestID"], $ComputeArr);
 		$dataTable[$i]["remainder"] = $TotalRemain;
 		$dataTable[$i]["ForfeitAmount"] = $ComputeArr[count($ComputeArr)-1]["ForfeitAmount"];
+		$dataTable[$i]["LateAmount"] = $ComputeArr[count($ComputeArr)-1]["LateAmount"];
 		$dataTable[$i]["TotalForfeitAmount"] = LON_requests::GetTotalForfeitAmount($dataTable[$i]["RequestID"], $ComputeArr);
 	}
 	
@@ -341,8 +350,12 @@ function ListData($IsDashboard = false){
 	function endedRender($row,$value){
 		return ($value == "YES") ? "خاتمه" : "جاری";
 	}
+	function reportRender($row, $value){
+		return "<a href=LoanPayment.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
+	}
 	
-	$rpg->addColumn("شماره وام", "RRequestID");
+	$col = $rpg->addColumn("شماره وام", "RRequestID", "reportRender");
+	$col->ExcelRender = false; 
 	$rpg->addColumn("نوع وام", "LoanDesc");
 	$rpg->addColumn("عنوان طرح", "PlanTitle");	
 	$rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
@@ -400,11 +413,15 @@ function ListData($IsDashboard = false){
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	
-	$col = $rpg->addColumn("مبلغ تاخیر", "ForfeitAmount", "ReportMoneyRender");
+	$col = $rpg->addColumn("کارمزد تاخیر", "LateAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	
-	$col = $rpg->addColumn("تاخیر کل وام", "TotalForfeitAmount", "ReportMoneyRender");
+	$col = $rpg->addColumn("جریمه تاخیر", "ForfeitAmount", "ReportMoneyRender");
+	$col->ExcelRender = false;
+	$col->EnableSummary();
+	
+	$col = $rpg->addColumn("کل جریمه تاخیر از ابتدا", "TotalForfeitAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	
@@ -728,7 +745,8 @@ function LoanReport_total()
 			store : new Ext.data.SimpleStore({
 				data : [
 					["BANK" , "فرمول بانک مرکزی" ],
-					["NEW" , "فرمول تنزیل اقساط" ]
+					["NEW" , "فرمول تنزیل اقساط" ],
+					["NOAVARI", 'فرمول صندوق نوآوری']
 				],
 				fields : ['id','value']
 			}),

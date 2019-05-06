@@ -18,11 +18,11 @@ $temp = PdoDataAccess::runquery("select * from BaseInfo where
 	InfoID<>".INCOMECHEQUE_EDIT." AND TypeID=4");
 
 $col = $dgh->addColumn("وضعیت مبدا", "SrcID");
-$col->editor = ColumnEditor::ComboBox($temp, "TafsiliID", "TafsiliDesc");
+$col->editor = ColumnEditor::ComboBox($temp, "InfoID", "InfoDesc");
 
 $col=$dgh->addColumn("وضعیت مقصد", "DstID");
-$col->editor = ColumnEditor::ComboBox($temp, "TafsiliID", "TafsiliDesc");
-$col->width = 200;
+$col->editor = ColumnEditor::ComboBox($temp, "InfoID", "InfoDesc");
+$col->width = 200; 
 
 if($accessObj->RemoveFlag)
 {

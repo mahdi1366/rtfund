@@ -8,10 +8,10 @@ require_once('../header.inc.php');
 require_once inc_dataReader;
 require_once inc_response;
 require_once 'request.class.php';
-require_once getenv("DOCUMENT_ROOT") . '/loan/loan/loan.class.php';
-require_once "../../office/workflow/wfm.class.php";
-require_once '../../accounting/docs/import.data.php';
-require_once '../../framework/person/persons.class.php';
+require_once DOCUMENT_ROOT . '/loan/loan/loan.class.php';
+require_once DOCUMENT_ROOT . "/office/workflow/wfm.class.php";
+require_once DOCUMENT_ROOT . '/accounting/docs/import.data.php';
+require_once DOCUMENT_ROOT . '/framework/person/persons.class.php';
 require_once 'compute.inc.php';
 
 $task = isset($_REQUEST["task"]) ? $_REQUEST["task"] : "";
@@ -126,7 +126,7 @@ function SaveLoanRequest(){
 	}
 	else if(empty($obj->RequestID))
 	{
-		$obj->LoanID = Default_Agent_Loan;
+		$obj->LoanID = empty($obj->LoanID) ? Default_Agent_Loan : $obj->LoanID;
 		$obj->StatusID = LON_REQ_STATUS_RAW;
 	}
 	if(empty($obj->RequestID))
@@ -447,7 +447,7 @@ function SavePart(){
 	{
 		if(!$firstPart)
 		{
-			$dt = PdoDataAccess::runquery("select DocID,LocalNo,CycleDesc,StatusID 
+			/*$dt = PdoDataAccess::runquery("select DocID,LocalNo,CycleDesc,StatusID 
 				from ACC_DocItems join ACC_docs using(DocID)
 				join ACC_cycles using(CycleID)
 				where DocType=" . DOCTYPE_LOAN_DIFFERENCE ." AND SourceID1=? AND SourceID2=?",
@@ -460,9 +460,9 @@ function SavePart(){
 				die();
 			}
 			$OldDocID = count($dt)>0 ? $dt[0]["DocID"] : 0;
-			
+			*/
 			$result = $obj->EditPart($pdo);
-			$DiffDoc = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo, $OldDocID);
+			/*$DiffDoc = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo, $OldDocID);
 			if($DiffDoc == false)
 			{
 				echo PdoDataAccess::GetLatestQueryString();
@@ -470,7 +470,7 @@ function SavePart(){
 				die();
 			}
 			$msg = "سند اختلاف با شماره " . $DiffDoc->LocalNo . " با موفقیت صادر گردید.";
-			ComputeInstallments($obj->RequestID, true, $pdo);
+			ComputeInstallments($obj->RequestID, true, $pdo);*/
 		}		
 		else
 			$result = $obj->EditPart($pdo);
@@ -762,8 +762,8 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 	
 	//------------------- check for docs -------------------
 	/*$dt = PdoDataAccess::runquery("select * from ACC_DocItems
-		join LON_installments on(SourceID=RequestID AND SourceID2=InstallmentID)
-		where SourceType=" . DOCTYPE_INSTALLMENT_CHANGE . " AND SourceID=? AND 
+		join LON_installments on(SourceID1=RequestID AND SourceID2=InstallmentID)
+		where SourceType=" . DOCTYPE_INSTALLMENT_CHANGE . " AND SourceID1=? AND 
 			history='NO' AND IsDelayed='NO'", array($RequestID));
 	if(count($dt) > 0)
 	{
@@ -788,6 +788,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 	{
 		$jdate = DateModules::miladi_to_shamsi($obj->PartDate);
 		$jdate = DateModules::AddToJDate($jdate, $obj->DelayDays, $obj->DelayMonths);
+		$installmentArray = array();
 		for($i=0; $i < $obj->InstallmentCount; $i++)
 		{
 			$installmentArray[] = array(
@@ -797,7 +798,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 				$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0)
 			);
 		}
-		$installmentArray = LON_requests::ComputeInstallment_TanzilFormula($obj, $installmentArray);
+		$installmentArray = LON_Computes::ComputeInstallment($obj, $installmentArray);
 		if(!$installmentArray)
 		{
 			if($returnMode)
@@ -2076,7 +2077,7 @@ function ComputeManualInstallments(){
 		
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	if($partObj->ComputeMode == "NEW")
-		$installmentArray = LON_requests::ComputeInstallment_TanzilFormula($partObj, $installmentArray, 
+		$installmentArray = LON_Computes::ComputeInstallment($partObj, $installmentArray, 
 			$ComputeDate, $ComputeWage);
 	else
 		$installmentArray = ComputeNonEqualInstallment($partObj, $installmentArray, $ComputeDate, 

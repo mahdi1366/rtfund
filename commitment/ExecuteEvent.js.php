@@ -10,6 +10,14 @@ ExecuteEvent.prototype = {
 	EventID : <?= $EventID?>,
 	SourcesArr : <?= common_component::PHPArray_to_JSObject($SourcesArr) ?>,
 
+	fieldClasses : {
+		combo : "ComboBox",
+		textfield : "TextField",
+		numberfield : "NumberField",
+		shdatefield : "SHDateField",
+		currencyfield : "CurrencyField"
+	},
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
@@ -41,25 +49,47 @@ function ExecuteEvent(){
 
 	this.grid = <?=  $grid?>;
 	this.grid.getStore().on("load", function(){
+		
 		for(var i=0; i<this.totalCount; i++)
 		{
 			record = this.getAt(i);
-			
-			new Ext.form.TextField({
-				renderTo : ExecuteEventObj.get("param1_" + record.data.RowID),
-				name :  "param1_" + record.data.RowID,
-				width : 80
-			});
-			new Ext.form.TextField({
-				renderTo : ExecuteEventObj.get("param2_" + record.data.RowID),
-				name :  "param2_" + record.data.RowID,
-				width : 80
-			});
-			new Ext.form.TextField({
-				renderTo : ExecuteEventObj.get("param3_" + record.data.RowID),
-				name :  "param3_" + record.data.RowID,
-				width : 80
-			});
+			for(j=1; j<=3; j++)
+			{
+				if(record.data["paramType" + j] == null)
+					record.data["paramType" + j] = "textfield";
+				
+				if(record.data["paramType" + j] == "combo")
+				{
+					new Ext.form.field.Base({
+						xtype : "combo",
+						renderTo : ExecuteEventObj.get("param" + j + "_" + record.data.RowID),
+						name :  "param" + j + "_" + record.data.RowID,
+						width : 80,
+						store : new Ext.data.Store({
+							fields:["id","title"],
+							proxy: {
+								type: 'jsonp',
+								url: ExecuteEventObj.address_prefix + 'doc.data.php?task=selectParamItems&ParamID=' +
+									record.data["ParamID" + j],
+								reader: {root: 'rows',totalProperty: 'totalCount'}
+							},
+							autoLoad: true
+						}),
+						valueField : "id",						
+						displayField : "title"
+					});							
+				}
+				else
+				{
+					new Ext.form[ ExecuteEventObj.fieldClasses[ record.data["paramType" + j] ] ]({
+						width : 80,
+						renderTo : ExecuteEventObj.get("param" + j + "_" + record.data.RowID),
+						name :  "param" + j + "_" + record.data.RowID,
+						hideTrigger : (record.data["paramType" + j] == "numberfield" || 
+							record.data["paramType" + j] == "currencyfield" ? true : false)
+					});			
+				}
+			}
 				
 			if(record.data.ComputeItemID*1 == 0)
 			{

@@ -232,12 +232,30 @@ class ACC_docs extends PdoDataAccess {
 		select	concat_ws(' - ',b1.BlockDesc, b2.BlockDesc, b3.BlockDesc, b4.BlockDesc) CostDesc,
 			cc.CostCode,
 			BranchName,
-			b.InfoDesc TafsiliType,
-			t.TafsiliDesc,
+			b.InfoDesc TafsiliType,	t.TafsiliDesc,
 			t2.TafsiliDesc TafsiliDesc2,
+			t3.TafsiliDesc TafsiliDesc3,
 			di.details,
+			di.param1 ParamValue1,
+			di.param2 ParamValue2,
+			di.param3 ParamValue3,
 			sum(DebtorAmount) DSUM, 
-			sum(CreditorAmount) CSUM
+			sum(CreditorAmount) CSUM,
+			p1.paramDesc paramDesc1,
+			p2.paramDesc paramDesc2,
+			p3.paramDesc paramDesc3,
+			p1.ParamID ParamID1,
+			p2.ParamID ParamID2,
+			p3.ParamID ParamID3,
+			p1.SrcTable SrcTable1,
+			p2.SrcTable SrcTable2,
+			p3.SrcTable SrcTable3,
+			p1.SrcDisplayField as SrcDisplayField1,
+			p2.SrcDisplayField as SrcDisplayField2,
+			p3.SrcDisplayField as SrcDisplayField3,
+			p1.SrcValueField as SrcValueField1,
+			p2.SrcValueField as SrcValueField2,
+			p3.SrcValueField as SrcValueField3
 			
 		from ACC_DocItems di
 			join ACC_docs d using(docID)
@@ -250,11 +268,30 @@ class ACC_docs extends PdoDataAccess {
 			left join BaseInfo b on(di.TafsiliType=InfoID AND TypeID=2)
 			left join ACC_tafsilis t on(t.TafsiliID=di.TafsiliID)
 			left join ACC_tafsilis t2 on(t2.TafsiliID=di.TafsiliID2)
+			left join ACC_tafsilis t3 on(t3.TafsiliID=di.TafsiliID3)
+			left join ACC_CostCodeParams p1 on(p1.ParamID=cc.param1)
+			left join ACC_CostCodeParams p2 on(p2.ParamID=cc.param2)
+			left join ACC_CostCodeParams p3 on(p3.ParamID=cc.param3)
 			
 		where di.DocID=?
 		/*group by if(DebtorAmount<>0,0,1),di.CostID,di.TafsiliID*/group by itemID
 		order by if(DebtorAmount<>0,0,1),cc.CostCode", array($docID));
 
+		for($i=0; $i<count($temp); $i++)
+		{
+			for($j=1; $j<=3; $j++)
+			{
+				if(!empty($temp[$i]["SrcTable" . $j]))
+				{
+					$dt = PdoDataAccess::runquery("select ". $temp[$i]["SrcDisplayField" . $j] . " as title " .
+						" from " . $temp[$i]["SrcTable" . $j] . 
+						" where " . $temp[$i]["SrcValueField" . $j] . "=?", array($temp[$i]["ParamValue" . $j]));
+					if(count($dt) > 0)
+						$temp[$i]["ParamValue" . $j] = $dt[0]["title"];
+				}
+			}
+		}
+		
 		echo '
 			<style>
 				.DocTbl{width:98%;border-collapse: collapse; }
@@ -265,7 +302,7 @@ class ACC_docs extends PdoDataAccess {
 			<table class="DocTbl" border="1" cellspacing="0" cellpadding="2">
 				<thead>
 				<tr>
-					<td colspan=7>
+					<td colspan=11>
 						<table style="width:100%">
 						<tr>
 						<td style="width:25%"><img src="/framework/icons/logo.jpg" style="width:100px" /></td>
@@ -282,8 +319,12 @@ class ACC_docs extends PdoDataAccess {
 					<td align="center" >کد حساب</td>
 					<td align="center" >شرح حساب</td>
 					<td align="center" >شرح ردیف</td>
-					<td align="center" >تفصیلی</td>
+					<td align="center" >تفصیلی1</td>
 					<td align="center" >تفصیلی2</td>
+					<td align="center" >تفصیلی3</td>
+					<td align="center" >آیتم1</td>
+					<td align="center" >آیتم2</td>
+					<td align="center" >آیتم3</td>
 					<td align="center" >بدهکار</td>
 					<td align="center" >بستانکار</td>
 				</tr>
@@ -300,13 +341,20 @@ class ACC_docs extends PdoDataAccess {
 					<td >" . $temp[$i]["details"] . "</td>	
 					<td >" . $temp[$i]["TafsiliDesc"] . "</td>
 					<td >" . $temp[$i]["TafsiliDesc2"] . "</td>
+					<td >" . $temp[$i]["TafsiliDesc3"] . "</td>
+					<td >" . ($temp[$i]["paramDesc1"] != "" ? $temp[$i]["paramDesc1"] . " : " . 
+							$temp[$i]["ParamValue1"] : "") . "</td>
+					<td >" . ($temp[$i]["paramDesc2"] != "" ? $temp[$i]["paramDesc2"] . " : " . 
+							$temp[$i]["ParamValue2"] : "") . "</td>
+					<td >" . ($temp[$i]["paramDesc3"] != "" ? $temp[$i]["paramDesc3"] . " : " . 
+							$temp[$i]["ParamValue3"] : "") . "</td>
 					<td >" . number_format($temp[$i]["DSUM"]) . "</td>
 					<td >" . number_format($temp[$i]["CSUM"]) . "</td>
 				</tr>";
 		}
 
 		echo '<tr class="header">
-					<td colspan="5">جمع : 
+					<td colspan="9">جمع : 
 					' . ($CSUM != $DSUM ? "<span style=color:red>سند تراز نمی باشد</span>" :
 				CurrencyModulesclass::CurrencyToString($CSUM) . " ریال " ) . '</td>
 
@@ -314,7 +362,7 @@ class ACC_docs extends PdoDataAccess {
 					<td>' . number_format($CSUM, 0, '.', ',') . '</td>
 				</tr>
 				<tr>
-					<td colspan="7">شرح سند : ' . $DocObject->description . '
+					<td colspan="11">شرح سند : ' . $DocObject->description . '
 					</td>
 				</tr>';
 		//------------------------------------------------------
@@ -323,7 +371,7 @@ class ACC_docs extends PdoDataAccess {
 		$dt = ACC_DocCheques::GetAll("DocID=?", array($docID));
 		for ($i = 0; $i < count($dt); $i++) {
 			echo "<tr style='height:60px;vertical-align:middle'>
-			<td colspan=7>" . "چک شماره " . "<b>" . $dt[$i]["CheckNo"] . "</b>" . " بانک " .
+			<td colspan=11>" . "چک شماره " . "<b>" . $dt[$i]["CheckNo"] . "</b>" . " بانک " .
 			"<b>" . $dt[$i]["BankDesc"] . "</b>" . " شماره حساب " .
 			"<b>" . $dt[$i]["AccountNo"] . "</b>" . " مورخ " .
 			"<b>" . DateModules::miladi_to_shamsi($dt[$i]["CheckDate"]) . "</b>" . " به مبلغ " .

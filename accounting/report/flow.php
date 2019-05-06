@@ -39,9 +39,9 @@ function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 	
 	if(isset($_REQUEST["taraz"])){
 
-		if($_REQUEST["IncludeStart"] == "0")
+		if(!isset($_REQUEST["IncludeStart"]))
 			$where .= " AND d.DocType != " . DOCTYPE_STARTCYCLE;
-		if($_REQUEST["IncludeEnd"] == "0")
+		if(!isset($_REQUEST["IncludeEnd"]))
 			$where .= " AND d.DocType not in(" . DOCTYPE_ENDCYCLE . "," . DOCTYPE_CLOSECYCLE . ")";
 	}
 	else

@@ -149,14 +149,14 @@ class BSC_persons extends PdoDataAccess{
 		$daObj->execute();
 		
 		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis "
-				. "where ObjectID=? AND TafsiliType=" . TAFTYPE_PERSONS, array($this->PersonID));
+				. "where ObjectID=? AND TafsiliType=" . TAFSILITYPE_PERSON, array($this->PersonID));
 		if(count($dt) == 0)
 		{
 			$obj = new ACC_tafsilis();
 			$obj->ObjectID = $this->PersonID;
 			$obj->TafsiliCode = $this->PersonID;
 			$obj->TafsiliDesc =  trim($this->fname . " " . $this->lname . " " . $this->CompanyName);
-			$obj->TafsiliType = TAFTYPE_PERSONS;
+			$obj->TafsiliType = TAFSILITYPE_PERSON;
 			$obj->AddTafsili();
 		}
 		else

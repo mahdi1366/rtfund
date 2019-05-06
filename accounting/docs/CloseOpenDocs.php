@@ -36,7 +36,6 @@ function CloseOpenDoc()
 		items :[{
 			xtype : "combo",
 			width : 400,
-			allowBlank : false,
 			store : new Ext.data.Store({
 				proxy:{
 					type: 'jsonp',
@@ -91,7 +90,7 @@ function CloseOpenDoc()
 			iconCls : "account",
 			handler : function()
 			{
-				var mask = new Ext.LoadMask(this.up('form'), {msg:'در حال ذخيره سازي...'});
+				mask = new Ext.LoadMask(this.up('form'), {msg:'در حال ذخيره سازي...'});
 				mask.show();
 				
 				var form = this.up('form').getForm();

@@ -94,16 +94,17 @@ function showReport(){
 	
 	//if($_SESSION["USER"]["UserName"] == "admin")
 	//	echo PdoDataAccess::GetLatestQueryString();
-	
+	ini_set("display_errors", "On");
 	$returnArr = array();
 	foreach($dt as $row)
 	{
 		$RequestID = $row["RequestID"];
-		$ComputeArr = LON_Computes::NewComputePayments($RequestID);
+		$ComputeArr = LON_requests::ComputePayments($RequestID, $dt);
 		$PureArr = LON_requests::ComputePures($RequestID);
+		
 		//............ get remain untill now ......................
-		$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);
-		$TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
+		$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr);
+		$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID, $ComputeArr);
 		//$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
 
 		$returnArr[] = array(
@@ -133,6 +134,7 @@ function showReport(){
 	function ComputeRender($row,$value){
 		if($value == "BANK") return "فرمول بانک مرکزی";
 		if($value == "NEW") return 'فرمول تنزیل اقساط';
+		if($value == "NOAVARI") return 'فرمول صندوق نوآوری';
 	}
 	function reportRender($row, $value){
 		return "<a href=LoanPayment.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
@@ -144,9 +146,9 @@ function showReport(){
 	$rpg->addColumn("مشتری", "LoanFullname");
 	$rpg->addColumn('مبنای محاسبه', "ComputeMode", "ComputeRender");
 	$rpg->addColumn("مبلغ وام", "PartAmount","ReportMoneyRender");
-	$rpg->addColumn("مانده قابل پرداخت معوقه", "CurrentRemain", "MoneyRender");
-	$rpg->addColumn("مانده تا انتها", "TotalRemain", "MoneyRender");
-	$rpg->addColumn("مبلغ قابل پرداخت در صورت تسویه وام ", "DefrayAmount", "MoneyRender");
+	$rpg->addColumn("مانده قابل پرداخت معوقه", "CurrentRemain", "ReportMoneyRender");
+	$rpg->addColumn("مانده تا انتها", "TotalRemain", "ReportMoneyRender");
+	$rpg->addColumn("مبلغ قابل پرداخت در صورت تسویه وام ", "DefrayAmount", "ReportMoneyRender");
 	
 	if(!$rpg->excel)
 	{
@@ -426,7 +428,8 @@ function LoanReport_remainders()
 			store : new Ext.data.SimpleStore({
 				data : [
 					["BANK" , "فرمول بانک مرکزی" ],
-					["NEW" , "فرمول تنزیل اقساط" ]
+					["NEW" , "فرمول تنزیل اقساط" ],
+					["NOAVARI", 'فرمول صندوق نوآوری']
 				],
 				fields : ['id','value']
 			}),
@@ -438,19 +441,6 @@ function LoanReport_remainders()
 			hiddenName : "ComputeMode"
 		}],
 		buttons : [{
-			text : "گزارش قدیم",
-			handler : function(){
-				me = LoanReport_remaindersObj;
-				me.form = me.get("mainForm");
-				me.form.target = "_blank";
-				me.form.method = "POST";
-				me.form.action =  me.address_prefix + "remaindersOld.php?show=true";
-				me.form.submit();
-				me.get("excel").value = "";
-				return;
-			},
-			iconCls : "report"
-		},'->',{
 			text : "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),
 			iconCls : "report"

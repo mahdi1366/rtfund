@@ -22,16 +22,6 @@ $col->width = 50;
 $col = $dg->addColumn("شرح", "InfoDesc", "");
 $col->editor = ColumnEditor::TextField();
 
-$col = $dg->addColumn("کد حساب بدهکار", "param1", "");
-$col->renderer = "function(v,p,r){return r.data.bed_CostCode}";
-$col->editor = "this.accountCombo";
-$col->width = 250;
-
-$col = $dg->addColumn("کد حساب بستانکار", "param2", "");
-$col->renderer = "function(v,p,r){return r.data.bes_CostCode}";
-$col->editor = "this.accountCombo2";
-$col->width = 250;
-
 if($accessObj->AddFlag)
 {
 	$dg->addButton = true;

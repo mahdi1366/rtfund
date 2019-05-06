@@ -94,11 +94,9 @@ define("INCOMECHEQUE_NOTVOSUL", "3001");
 define("INCOMECHEQUE_FLOW_VOSUL", "3002");
 define("INCOMECHEQUE_VOSUL", "3003");
 define("INCOMECHEQUE_BARGASHTI", "3004");
-define("INCOMECHEQUE_EBTAL", "3006");
-define("INCOMECHEQUE_MOSTARAD", "3008");
-define("INCOMECHEQUE_BARGHASHTI_MOSTARAD", "3009");
-define("INCOMECHEQUE_MAKHDOOSH", "3010");
 define("INCOMECHEQUE_CHANGE", "3011");
+define("INCOMECHEQUE_SANDOGHAMANAT", "3012");
+define("INCOMECHEQUE_BARGASHTI_HOGHUGHI", "3013");
 define("INCOMECHEQUE_EDIT", "3333");
 
 //............  TypeID=6 ....................
@@ -204,9 +202,18 @@ define("EVENT_LOANDAILY_innerSource", 161);
 define("EVENT_LOANDAILY_agentSource_committal", 1722);
 define("EVENT_LOANDAILY_agentSource_non_committal", 1723);
 
-define("EVENT_LOANDCHEQUE_innerSource", 1718);
-define("EVENT_LOANDCHEQUE_agentSource", 1719);
-
+define("EVENT_LOANCHEQUE_innerSource", 1766);
+define("EVENT_LOANCHEQUE_agentSource", 1772);
+define("EVENT_CHEQUE_SANDOGHAMANAT_inner", 1768);
+define("EVENT_CHEQUE_SANDOGHAMANAT_agent", 1773);
+define("EVENT_CHEQUE_SENDTOBANK_inner", 1769);
+define("EVENT_CHEQUE_SENDTOBANK_agent", 1774);
+define("EVENT_CHEQUE_SENDTOBANKFROMAMANAT_inner", 1778);
+define("EVENT_CHEQUE_SENDTOBANKFROMAMANAT_agent", 1777);
+define("EVENT_CHEQUE_BARGASHT_inner", 1770);
+define("EVENT_CHEQUE_BARGASHT_agent", 1775);
+define("EVENT_CHEQUE_BARGASHTHOGHUGHI_inner", 1771);
+define("EVENT_CHEQUE_BARGASHTHOGHUGHI_agent", 1776);
 //------------- TypeIDs -----------
 define("TYPEID_MeetingType", 88);
 define("TYPEID_MeetingStatusID", 89);

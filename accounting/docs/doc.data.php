@@ -784,7 +784,7 @@ function RegisterCloseDoc(){
 
 function RegisterEndDoc(){
 	
-	$BranchID = $_REQUEST["BranchID"];
+	$BranchID = empty($_REQUEST["BranchID"]) ? BRANCH_UM : $_REQUEST["BranchID"];
 	
 	$dt = PdoDataAccess::runquery("select * from ACC_docs where DocType=" . DOCTYPE_ENDCYCLE . " 
 		AND BranchID=? AND CycleID=?", 
@@ -835,17 +835,19 @@ function RegisterEndDoc(){
 	PdoDataAccess::runquery("
 		insert into ACC_DocItems(DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
 			TafsiliType3,TafsiliID3,
-			DebtorAmount,CreditorAmount,locked)
+			DebtorAmount,CreditorAmount,locked,
+			param1,param2,param3)
 		select $obj->DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
 			TafsiliType3,TafsiliID3,
 			if( sum(CreditorAmount-DebtorAmount)>0, sum(CreditorAmount-DebtorAmount), 0 ),
 			if( sum(DebtorAmount-CreditorAmount)>0, sum(DebtorAmount-CreditorAmount), 0 ),
-			1
+			1,
+			param1,param2,param3
 		from ACC_DocItems i
 		join ACC_docs using(DocID)
 		where CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 			AND BranchID = ?
-		group by CostID,TafsiliID,TafsiliID2	
+		group by CostID,TafsiliID,TafsiliID2,TafsiliID3,param1,param2,param3
 		having sum(CreditorAmount-DebtorAmount)<>0
 	", array($BranchID), $pdo);
 	

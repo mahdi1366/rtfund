@@ -4,7 +4,7 @@
 // Date:		97.05
 //---------------------------
 
-require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
+require_once DOCUMENT_ROOT . '/accounting/baseinfo/baseinfo.class.php';
 
 class COM_events extends PdoDataAccess {
 
@@ -145,6 +145,12 @@ class COM_EventRows extends PdoDataAccess {
 					p1.SrcTable SrcTable1,
 					p2.SrcTable SrcTable2,
 					p3.SrcTable SrcTable3,
+					p1.paramType paramType1,
+					p2.paramType paramType2,
+					p3.paramType paramType3,
+					p1.ParamID ParamID1,
+					p2.ParamID ParamID2,
+					p3.ParamID ParamID3,
 					p1.SrcDisplayField as SrcDisplayField1,
 					p2.SrcDisplayField as SrcDisplayField2,
 					p3.SrcDisplayField as SrcDisplayField3,

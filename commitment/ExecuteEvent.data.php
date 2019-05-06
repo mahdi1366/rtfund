@@ -30,7 +30,7 @@ function selectEventRows(){
 	$where = " er.IsActive='YES' AND EventID=? ";
 	$where .= " order by CostType,CostCode";
 	$list = COM_EventRows::SelectAll($where, array($EventID));
-	
+
 	//-------------- set source objects ----------------
 	$SourcesArr = array();
 	if(!empty($_REQUEST["SourceID1"]))
@@ -115,6 +115,7 @@ function selectEventRows(){
 	echo dataReader::getJsonData($returnArr, count($returnArr), $_GET['callback']);
 	die();
 }
+
 function SetParamValues(&$list){
 	for($j=1; $j<=3; $j++)
 	{
@@ -132,7 +133,7 @@ function SetParamValues(&$list){
 function RegisterEventDoc(){
 	
 	$EventID = (int)$_POST["EventID"];
-	$SourceIDs = $_POST["SourcesArr"];
+	$SourceIDs = isset($_POST["SourcesArr"]) ? $_POST["SourcesArr"] : array();
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();

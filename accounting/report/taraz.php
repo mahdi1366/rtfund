@@ -61,6 +61,8 @@ function GetData(&$rpg){
 		bi2.InfoDesc TafsiliTypeDesc2,
 		t2.TafsiliDesc TafsiliDesc2,
 		t2.TafsiliCode TafsiliCode2,
+		t3.TafsiliDesc TafsiliDesc3,
+		t3.TafsiliCode TafsiliCode3,
 				
 		b1.GroupID as level0,
 		cc.level1,
@@ -75,6 +77,7 @@ function GetData(&$rpg){
 		di.TafsiliType2,
 		di.TafsiliID,
 		di.TafsiliID2,
+		di.TafsiliID3,
 		
 		tdt.StartCycleDebtor,
 		tdt.StartCycleCreditor
@@ -91,6 +94,7 @@ function GetData(&$rpg){
 				left join ACC_tafsilis t using(TafsiliID)
 				left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)
 				left join ACC_tafsilis t2 on(t2.TafsiliID=di.TafsiliID2)
+				left join ACC_tafsilis t3 on(t3.TafsiliID=di.TafsiliID3)
 				
 				left join (
 					select CycleID,CostID,di.TafsiliID,di.TafsiliID2,sum(DebtorAmount) StartCycleDebtor,
@@ -141,15 +145,39 @@ function GetData(&$rpg){
 	if($level == "l5")
 	{
 		$group .= ",di.TafsiliID";
-		$col = $rpg->addColumn("کد تفصیلی", "TafsiliCode");
-		$col = $rpg->addColumn("تفصیلی", "TafsiliDesc", "showDocs");
+		$col = $rpg->addColumn("کد تفصیلی1", "TafsiliCode");
+		$col = $rpg->addColumn("تفصیلی1", "TafsiliDesc", "levelRender");
+		$col->ExcelRender = false;
+		
+		$group .= ",di.TafsiliID2";
+		$col = $rpg->addColumn("کد تفصیلی2", "TafsiliCode2");
+		$col = $rpg->addColumn("تفصیلی2", "TafsiliDesc2", "levelRender");
+		$col->ExcelRender = false;
+		
+		$group .= ",di.TafsiliID3";
+		$col = $rpg->addColumn("کد تفصیلی3", "TafsiliCode3");
+		$col = $rpg->addColumn("تفصیلی3", "TafsiliDesc3", "levelRender");
 		$col->ExcelRender = false;
 	}
 	if($level == "l6")
 	{
+		$group .= ",di.TafsiliID";
+		$col = $rpg->addColumn("کد تفصیلی", "TafsiliCode");
+		$col = $rpg->addColumn("تفصیلی", "TafsiliDesc", "levelRender");
+		$col->ExcelRender = false;
+	}
+	if($level == "l7")
+	{
 		$group .= ",di.TafsiliID2";
 		$col = $rpg->addColumn("کد تفصیلی2", "TafsiliCode2");
-		$col = $rpg->addColumn("تفصیلی2", "TafsiliDesc2", "showDocs2");
+		$col = $rpg->addColumn("تفصیلی2", "TafsiliDesc2", "levelRender");
+		$col->ExcelRender = false;
+	}
+	if($level == "l8")
+	{
+		$group .= ",di.TafsiliID3";
+		$col = $rpg->addColumn("کد تفصیلی3", "TafsiliCode3");
+		$col = $rpg->addColumn("تفصیلی3", "TafsiliDesc3", "levelRender");
 		$col->ExcelRender = false;
 	}
 		
@@ -165,64 +193,9 @@ function GetData(&$rpg){
 				($level >= "l1" ? $row["level1"] : "") . "','" . 
 				($level >= "l2" ? $row["level2"] : "") . "','" . 
 				($level >= "l3" ? $row["level3"] : ""). "','" . 
-				($level == "l4" ? $row["level4"] : ""). "') "." 
+				($level >= "l4" ? $row["level4"] : ""). "','" . 
+				($level >= "l5" ? $row["TafsiliID"]. "','".$row["TafsiliID2"]. "','".$row["TafsiliID3"] : ""). "') "." 
 				href='javascript:void(0);'>" . $value . "</a>";
-	}
-	
-	function CostGroupRender($row, $value){
-		
-		if($value == "")
-			$value = "-----";
-		
-		return "<a onclick=changeLevel('l3','','','','','','','',".$row["CostGroupID"].") 
-				href='javascript:void(0);'>" . $value . "</a>";
-	}
-	
-	function showDocs($row, $value){
-		if($value == "")
-			$value = "-----";
-		
-		return "<a onclick=\"window.open('flow.php?show=true&taraz=true".
-				"&level1=" . $row["level1"] . 
-				"&level2=" . $row["level2"] . 
-				"&level3=" . $row["level3"] . 
-				"&level4=" . $row["level4"] . 
-				"&TafsiliID=" . $row["TafsiliID"] .
-				(!empty($_REQUEST["fromDate"]) ? "&fromDate=" . $_REQUEST["fromDate"] : "") . 
-				(!empty($_REQUEST["toDate"]) ? "&toDate=" . $_REQUEST["toDate"] : "") .
-				(!empty($_REQUEST["fromLocalNo"]) ? "&fromLocalNo=" . $_REQUEST["fromLocalNo"] : "") . 
-				(!empty($_REQUEST["TafsiliID"]) ? "&TafsiliID=" . $_REQUEST["TafsiliID"] : "") . 
-				(!empty($_REQUEST["TafsiliType"]) ? "&TafsiliType=" . $_REQUEST["TafsiliType"] : "") . 
-				(!empty($_REQUEST["toLocalNo"]) ? "&toLocalNo=" . $_REQUEST["toLocalNo"] : "") .
-				(!empty($_REQUEST["BranchID"]) ? "&BranchID=" . $_REQUEST["BranchID"] : "") .
-				(!empty($_REQUEST["CycleID"]) ? "&CycleID=" . $_REQUEST["CycleID"] : "") .
-				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
-				(!empty($_REQUEST["IncludeStart"]) ? "&IncludeStart=1" : "&IncludeStart=0") .
-				(!empty($_REQUEST["IncludeEnd"]) ? "&IncludeEnd=1" : "&IncludeEnd=0") .
-				(!empty($_REQUEST["RemainOnly"]) ? "&RemainOnly=1" : "&RemainOnly=0") .				
-				"');\" href=javascript:void(0)>" . $value . "</a>";
-	}
-	function showDocs2($row, $value){
-		if($value == "") 
-			$value = "-----";
-		
-		return "<a onclick=\"window.open('flow.php?taraz=true&show=true&taraz=true".
-				"&level1=" . $row["level1"] . 
-				"&level2=" . $row["level2"] . 
-				"&level3=" . $row["level3"] . 
-				"&level4=" . $row["level4"] . 
-				"&TafsiliID2=" . $row["TafsiliID2"] .
-				(!empty($_POST["fromDate"]) ? "&fromDate=" . $_POST["fromDate"] : "") . 
-				(!empty($_POST["toDate"]) ? "&toDate=" . $_POST["toDate"] : "") .
-				(!empty($_REQUEST["fromLocalNo"]) ? "&fromLocalNo=" . $_REQUEST["fromLocalNo"] : "") . 
-				(!empty($_REQUEST["toLocalNo"]) ? "&toLocalNo=" . $_REQUEST["toLocalNo"] : "") .
-				(!empty($_REQUEST["TafsiliID"]) ? "&TafsiliID=" . $_REQUEST["TafsiliID"] : "") . 
-				(!empty($_REQUEST["TafsiliType"]) ? "&TafsiliType=" . $_REQUEST["TafsiliType"] : "") . 
-				(!empty($_REQUEST["BranchID"]) ? "&BranchID=" . $_REQUEST["BranchID"] : "") .
-				(!empty($_REQUEST["CycleID"]) ? "&CycleID=" . $_REQUEST["CycleID"] : "") .
-				(!empty($_REQUEST["IncludeRaw"]) ? "&IncludeRaw=1" : "") .
-				(!empty($_REQUEST["RemainOnly"]) ? "&RemainOnly=1" : "") .		
-				"');\" href=javascript:void(0)>" . $value . "</a>";
 	}
 	
 	function MakeWhere(&$where, &$whereParam){
@@ -535,14 +508,31 @@ function ListData($IsDashboard = false){
 	$rpg->generateReport();
 	?>
 	<script>
-		function changeLevel(curlevel,level0,level1,level2,level3,level4,TafsiliID,TafsiliID2,CostGroupID)
+		function changeLevel(curlevel,level0,level1,level2,level3,level4,TafsiliID,TafsiliID2,TafsiliID3)
 		{
+			var form = document.getElementById("subForm");
+			if(curlevel >= "l5")
+				form.action = "flow.php?show=true&taraz=true";
+			else
+				form.action = "taraz.php?show=true";
+			form.target = "_blank";
+			while (form.firstChild) {
+				form.removeChild(form.firstChild);
+			}
+			
+			<?foreach($_POST as $key => $val){?>
+				var el = document.createElement("input");
+				el.type = "hidden";
+				el.name = "<?= $key ?>";
+				el.id = "<?= $key ?>";
+				el.value = "<?= $val ?>";
+				form.append(el);
+			<?}?>
+			
 			nextLevel = (curlevel.substring(1)*1);
 			nextLevel = nextLevel+1;
-				
-			var form = document.getElementById("subForm");
-			form.action = "taraz.php?show=true&level=" + "l" + nextLevel;
-			form.target = "_blank";
+			document.getElementById("level").value = "l" + nextLevel;
+			
 			if(curlevel >= "l0" && level0 != '')
 				form.action += "&level0=" + level0;
 			if(curlevel >= "l1" && level1 != '')
@@ -559,35 +549,30 @@ function ListData($IsDashboard = false){
 					form.action += "&TafsiliID=" + TafsiliID;
 				if(TafsiliID2 != '')
 					form.action += "&TafsiliID2=" + TafsiliID2;
+				if(TafsiliID3 != '')
+					form.action += "&TafsiliID3=" + TafsiliID3;
 			}
-			
-			if(CostGroupID != undefined)
-				form.action += "&CostGroupID=" + CostGroupID;
-			
+			if(curlevel == "l6")
+			{
+				if(TafsiliID != '')
+					form.action += "&TafsiliID=" + TafsiliID;
+			}
+			if(curlevel == "l7")
+			{
+				if(TafsiliID2 != '')
+					form.action += "&TafsiliID2=" + TafsiliID2;
+			}
+			if(curlevel == "l8")
+			{
+				if(TafsiliID3 != '')
+					form.action += "&TafsiliID3=" + TafsiliID3;
+			}
 			form.submit();
 			return;
 		}
 	</script>
 	<form id="subForm" method="POST" target="blank">
-	<input type="hidden" name="fromDate" value="<?= !empty($_REQUEST["fromDate"]) ? $_REQUEST["fromDate"] : "" ?>">
-	<input type="hidden" name="toDate" value="<?= !empty($_REQUEST["toDate"]) ? $_REQUEST["toDate"] : "" ?>">
-	<input type="hidden" name="fromLocalNo" value="<?= !empty($_REQUEST["fromLocalNo"]) ? $_REQUEST["fromLocalNo"] : "" ?>">
-	<input type="hidden" name="TafsiliID" value="<?= !empty($_REQUEST["TafsiliID"]) ? $_REQUEST["TafsiliID"] : "" ?>">
-	<input type="hidden" name="TafsiliType" value="<?= !empty($_REQUEST["TafsiliType"]) ? $_REQUEST["TafsiliType"] : "" ?>">
-	<input type="hidden" name="TafsiliID2" value="<?= !empty($_REQUEST["TafsiliID2"]) ? $_REQUEST["TafsiliID2"] : "" ?>">
-	<input type="hidden" name="TafsiliType2" value="<?= !empty($_REQUEST["TafsiliType2"]) ? $_REQUEST["TafsiliType2"] : "" ?>">
-	<input type="hidden" name="toLocalNo" value="<?= !empty($_REQUEST["toLocalNo"]) ? $_REQUEST["toLocalNo"] : "" ?>">
-	<input type="hidden" name="IncludeRaw" value="<?= !empty($_REQUEST["IncludeRaw"]) ? $_REQUEST["IncludeRaw"] : "" ?>">
-	<input type="hidden" name="IncludeStart" value="<?= !empty($_REQUEST["IncludeStart"]) ? $_REQUEST["IncludeStart"] : "" ?>">
-	<input type="hidden" name="IncludeEnd" value="<?= !empty($_REQUEST["IncludeEnd"]) ? $_REQUEST["IncludeEnd"] : "" ?>">
-	<input type="hidden" name="BranchID" value="<?= !empty($_REQUEST["BranchID"]) ? $_REQUEST["BranchID"] : "" ?>">
-	<input type="hidden" name="CycleID" value="<?= !empty($_REQUEST["CycleID"]) ? $_REQUEST["CycleID"] : "" ?>">
-	<input type="hidden" name="resultColumns" value="<?= $_REQUEST["resultColumns"] ?>">
-	<input type="hidden" name="RemainOnly" value="<?= !empty($_REQUEST["RemainOnly"]) ? $_REQUEST["RemainOnly"] : "" ?>">
 	
-	<input type="hidden" name="level1s" id="level1s" value="<?= $_POST["level1s"] ?>">
-	<input type="hidden" name="level2s" id="level2s" value="<?= $_POST["level2s"] ?>">
-	<input type="hidden" name="level3s" id="level3s" value="<?= $_POST["level3s"] ?>">
 	</form>
 	<?
 	echo $redirect;
@@ -630,29 +615,12 @@ AccReport_taraz.prototype = {
 	}
 }
 
-AccReport_taraz.prototype.BeforeSubmit = function(){
-	
-	this.get("level0s").value = this.formPanel.down("[itemId=cmp_level0]").getValue();
-	this.get("level1s").value = this.formPanel.down("[itemId=cmp_level1]").getValue();
-	this.get("level2s").value = this.formPanel.down("[itemId=cmp_level2]").getValue();
-}
-
 AccReport_taraz.prototype.showReport = function(btn, e)
 {
 	this.form = this.get("mainForm")
 	this.form.target = "_blank";
 	this.form.method = "POST";
 	this.form.action =  this.address_prefix + "taraz.php?show=true";
-	
-	AccReport_tarazObj.BeforeSubmit();
-	/*this.get("level2s").value = "";
-	this.formPanel.down('[itemId=cmp_level2]').getStore().each(function(r){
-		AccReport_tarazObj.get("level2s").value += r.data.BlockID + ",";
-	});
-	this.get("level3s").value = "";
-	this.formPanel.down('[itemId=cmp_level3]').getStore().each(function(r){
-		AccReport_tarazObj.get("level3s").value += r.data.BlockID + ",";
-	});*/
 	
 	this.form.submit();
 	this.get("excel").value = "";
@@ -742,7 +710,6 @@ function AccReport_taraz()
 			}),
 			fieldLabel : "شعبه",
 			queryMode : 'local',
-			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
 			displayField : "BranchName",
 			valueField : "BranchID",
 			hiddenName : "BranchID"
@@ -772,6 +739,7 @@ function AccReport_taraz()
 			displayField : "BlockDesc",
 			itemId : "cmp_level0",
 			name : "multi_level0",
+			hiddenName : "level0s",
 			store : new Ext.data.Store({
 				fields:["BlockID","BlockCode","BlockDesc"],
 				
@@ -789,6 +757,7 @@ function AccReport_taraz()
 			valueField : "BlockID",
 			displayField : "full",
 			itemId : "cmp_level1",
+			hiddenName : "level1s",
 			store : new Ext.data.Store({
 				fields:["BlockID","BlockCode","BlockDesc",
 					{name : "full", 
@@ -808,6 +777,7 @@ function AccReport_taraz()
 			valueField : "BlockID",
 			displayField : "full",
 			itemId : "cmp_level2",
+			hiddenName : "level2s",
 			store : new Ext.data.Store({
 				fields:["BlockID","BlockCode","BlockDesc",
 					{name : "full", 
@@ -827,6 +797,7 @@ function AccReport_taraz()
 			valueField : "BlockID",
 			displayField : "full",
 			itemId : "cmp_level3",
+			hiddenName : "level3s",
 			store : new Ext.data.Store({
 				fields:["BlockID","BlockCode","BlockDesc",
 					{name : "full", 
@@ -1207,8 +1178,4 @@ AccReport_tarazObj = new AccReport_taraz();
 		<div id="main" ></div>
 	</center>
 	<input type="hidden" name="excel" id="excel">
-	<input type="hidden" name="level0s" id="level0s">
-	<input type="hidden" name="level1s" id="level1s">
-	<input type="hidden" name="level2s" id="level2s">
-	<input type="hidden" name="level3s" id="level3s">
 </form>

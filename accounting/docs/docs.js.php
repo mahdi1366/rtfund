@@ -178,6 +178,8 @@ AccDocs.prototype.operationhMenu = function(e){
 				handler : function(){ return AccDocsObject.CopyDoc(1); }})
 			op_menu.add({text: 'کپی وارونه سند',iconCls: 'copy', 
 				handler : function(){ return AccDocsObject.CopyDoc(2); }})
+			op_menu.add({text: 'اجرای رویداد',iconCls: 'process', 
+				handler : function(){ return AccDocsObject.ExeEvent(); }})
 		}
 		
 		if(record != null) 
@@ -1453,6 +1455,59 @@ AccDocs.prototype.removeItem = function(){
 			failure: function(){}
 		});
 	});
+}
+
+AccDocs.prototype.ExeEvent = function(){
+	
+	if(!this.EventWin)
+	{
+		this.EventWin = new Ext.window.Window({
+			width : 700,
+			title : "اجرای رویداد",
+			height : 100,
+			modal : true,
+			closeAction : "hide",
+			items : [{
+				xtype : "combo",
+				fieldLabel : "انتخاب رویداد",
+				labelWidth : 150,
+				width : 680,
+				store: new Ext.data.Store({
+					fields:["EventID","EventTitle",{
+							name : "fullDesc",
+							convert : function(value,record){
+								return "[ " + record.data.EventID + " ] " + record.data.EventTitle
+							}				
+						}],
+					proxy: {
+						type: 'jsonp',
+						url: '/commitment/baseinfo/baseinfo.data.php?task=GetAllEvents',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					}
+				}),
+				typeAhead: false,
+				name : "EventID",
+				valueField : "EventID",
+				displayField : "fullDesc"
+			}],
+			buttons :[{
+				text : "اجرای رویداد",
+				iconCls : "process",
+				handler : function(){ 
+					EventID = this.up('window').down("[name=EventID]").getValue();
+					framework.ExecuteEvent(EventID, new Array());
+				}
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.EventWin);
+	}
+	
+	this.EventWin.show();
+	this.EventWin.center();
 }
 
 //-----------------------------------------------------------

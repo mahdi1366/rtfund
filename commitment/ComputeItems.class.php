@@ -10,6 +10,9 @@ require_once DOCUMENT_ROOT . '/accounting/cheque/cheque.class.php';
 
 class EventComputeItems {
 	
+	static $LoanBackPayArray = array();
+	static $LoanPuresArray = array();
+	
 	static function LoanAllocate($ItemID, $SourceObjects){
 		
 		$ReqObj = new LON_requests((int)$SourceObjects[0]);
@@ -129,8 +132,16 @@ class EventComputeItems {
 			case 38 :  // جریمه تاخیر سهم صندوق
 			case 41 :  // کارمزد تعجیل سهم صندوق
 			case 42 :  // کارمزد تعجیل سهم سرمایه گذار
-				$dt = array();
-				$ComputeArr = LON_Computes::NewComputePayments($ReqObj->RequestID, $dt);
+			case 43 :  // اضافه پرداختی
+				
+				if(isset(self::$LoanBackPayArray[ $ReqObj->RequestID ]))
+					$ComputeArr = self::$LoanBackPayArray[ $ReqObj->RequestID ];
+				else 
+				{
+					$ComputeArr = LON_Computes::NewComputePayments($ReqObj->RequestID);
+					self::$LoanBackPayArray[ $ReqObj->RequestID ] = $ComputeArr;
+				}
+				
 				foreach($ComputeArr as $row)
 				{
 					if($row["type"] != "pay" || $row["BackPayID"] != $BackPayObj->BackPayID)
@@ -154,7 +165,7 @@ class EventComputeItems {
 							if($PartObj->LatePercent*1 == 0)
 								return 0;
 							$lateAmount = $row["late"];
-							$FundLate = round(($PartObj->FundWage/$PartObj->LatePercent)*$lateAmount);
+							$FundLate = round(($PartObj->FundWage/$PartObj->CustomerWage)*$lateAmount);
 							$AgentLate = $lateAmount - $FundLate;
 							if($ItemID == 36)
 								return $FundLate;
@@ -181,6 +192,8 @@ class EventComputeItems {
 							if($ItemID == 42)
 								return $AgentEarly;
 							
+						case 43:	
+							return $row["remainPayAmount"];
 					}
 				}
 		}		
@@ -198,20 +211,50 @@ class EventComputeItems {
 		if($PartObj->CustomerWage*1 == 0 || $PartObj->ComputeMode != "NEW" )
 			return 0; 
 		
-		$PureArr = LON_requests::ComputePures($ReqObj->RequestID);
-		$LastPureAmount = $PureArr[0]["totalPure"];
-		for($i=1; $i < count($PureArr);$i++)
+		if(isset(self::$LoanPuresArray[ $ReqObj->RequestID ]))
+			$PureArr = self::$LoanPuresArray[ $ReqObj->RequestID ];
+		else 
 		{
-			if($PureArr[$i]["InstallmentDate"] <= $ComputeDate)
+			$PureArr = LON_requests::ComputePures($ReqObj->RequestID);
+			self::$LoanPuresArray[ $ReqObj->RequestID ] = $PureArr;
+		}
+		
+		$totalPayPaySum = 0;
+		$paysWage = 0;
+		$firstInstallment = true;
+		$LastPureAmount = $PureArr[0]["totalPure"];
+		for($i=0; $i < count($PureArr);$i++)
+		{
+			if($PureArr[$i]["InstallmentAmount"] == 0 && $i>0)
+			{
+				$days = DateModules::GDateMinusGDate($PureArr[$i]["InstallmentDate"], $PureArr[$i-1]["InstallmentDate"]);
+				$paysWage += $totalPayPaySum*$days*$PartObj->CustomerWage/36500;
+			}
+			
+			if($PureArr[$i]["InstallmentAmount"] == 0)
+				$totalPayPaySum += $PureArr[$i]["totalPure"];
+				
+			if($PureArr[$i]["InstallmentDate"] < $ComputeDate)
+			{
+				$firstInstallment = $PureArr[$i]["InstallmentAmount"]*1 > 0 ? false : true;
 				continue;
+			}
+			
+			if($i == 0)
+				return 0;
+			
 			$LastPureAmount = $PureArr[$i-1]["totalPure"];
+			
+			if($PureArr[$i]["InstallmentAmount"] > 0)
+			{
+				$LastPureAmount += $firstInstallment ? $paysWage : 0;
+				$firstInstallment = false;
+			}
 			break;
 		}
 		if($i == count($PureArr))
 			return 0;
 		
-		//$fromDate = $i == 1 ? $PartObj->PartDate : $PureArr[$i-1]["InstallmentDate"];
-		//$days = DateModules::GDateMinusGDate($ComputeDate, $fromDate);
 		$wage = round($LastPureAmount*$PartObj->CustomerWage/36500);
 		
 		$wagePercent = $PartObj->CustomerWage;
@@ -264,7 +307,7 @@ class EventComputeItems {
 			case EVENT_LOANDAILY_innerSource:
 			case EVENT_LOANDAILY_agentSource_committal:
 			case EVENT_LOANDAILY_agentSource_non_committal:
-			case EVENT_LOANDCHEQUE_agentSource:
+			case EVENT_LOANCHEQUE_agentSource:
 			case EVENT_LOANCONTRACT_innerSource:
 				
 				$ReqObj = new LON_requests($params[0]);
@@ -283,33 +326,35 @@ class EventComputeItems {
 	
 	static function SetParams($EventID, $EventRow, $params, &$obj){
 		
-		for($i=1; $i<=3; $i++)
-		{
-			switch($EventRow["param" . $i])
+		if(count($params) > 0)
+		{	
+			for($i=1; $i<=3; $i++)
 			{
-				case ACC_COST_PARAM_LOAN_RequestID : //شماره تسهيلات
-					$obj->{ "param" . $i } = $params[0];
-					break;
-				case ACC_COST_PARAM_LOAN_LastInstallmentDate : //سررسيد اقساط
-					$iObj = LON_installments::GetLastInstallmentObj($params[0]);
-					$obj->{ "param" . $i } = DateModules::miladi_to_shamsi($iObj->InstallmentDate);
-					break;
-				case ACC_COST_PARAM_LOAN_LEVEL : // طبقه تسهيلات
-					$obj->{ "param" . $i } = LON_requests::GetRequestLevel($params[0]);
-					break;
-				
-				case ACC_COST_PARAM_CHEQUE_date:
-					$IncChequObj = new ACC_IncomeCheques($params[1]);
-					$obj->{ "param" . $i } = DateModules::miladi_to_shamsi($IncChequObj->ChequeDate);
-					break;
-				
-				case ACC_COST_PARAM_BANK:
-					$IncChequObj = new ACC_IncomeCheques($params[1]);
-					$obj->{ "param" . $i } = $IncChequObj->ChequeBank;
-					break;
+				switch($EventRow["param" . $i])
+				{
+					case ACC_COST_PARAM_LOAN_RequestID : //شماره تسهيلات
+						$obj->{ "param" . $i } = $params[0];
+						break;
+					case ACC_COST_PARAM_LOAN_LastInstallmentDate : //سررسيد اقساط
+						$iObj = LON_installments::GetLastInstallmentObj($params[0]);
+						$obj->{ "param" . $i } = DateModules::miladi_to_shamsi($iObj->InstallmentDate);
+						break;
+					case ACC_COST_PARAM_LOAN_LEVEL : // طبقه تسهيلات
+						$obj->{ "param" . $i } = LON_requests::GetRequestLevel($params[0]);
+						break;
+
+					case ACC_COST_PARAM_CHEQUE_date:
+						$IncChequObj = new ACC_IncomeCheques($params[1]);
+						$obj->{ "param" . $i } = DateModules::miladi_to_shamsi($IncChequObj->ChequeDate);
+						break;
+
+					case ACC_COST_PARAM_BANK:
+						$IncChequObj = new ACC_IncomeCheques($params[1]);
+						$obj->{ "param" . $i } = $IncChequObj->ChequeBank;
+						break;
+				}
 			}
 		}
-		
 		foreach($_POST as $key => $val)
 		{
 			if(strpos($key, "param1_") !== false && $EventRow["RowID"] == preg_replace("/param1_/","",$key))

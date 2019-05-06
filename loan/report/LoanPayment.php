@@ -14,7 +14,7 @@ if(isset($_REQUEST["show"]))
 	$RequestID = $_REQUEST["RequestID"];
 	$ReqObj = new LON_requests($RequestID);
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
-	if($partObj->ComputeMode == "NEW")
+	if($partObj->ComputeMode == "NEW" || $partObj->ComputeMode == "NOAVARI" )
 	{
 		require_once './LoanPaymentNew.php';
 		die();
@@ -76,9 +76,13 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("مبلغ", "ActionAmount","ReportMoneyRender");
 	
 	$rpg->addColumn("تعداد روز تاخیر", "ForfeitDays");
-	$rpg->addColumn("مبلغ تاخیر", "CurForfeitAmount","ReportMoneyRender");
 	
-	$rpg->addColumn("تاخیر کل", "ForfeitAmount","ReportMoneyRender");
+	$rpg->addColumn("کارمزد تاخیر", "CurLateAmount","ReportMoneyRender");
+	
+	$rpg->addColumn("جریمه تاخیر", "CurForfeitAmount","ReportMoneyRender");
+	
+	$rpg->addColumn("کارمزد تاخیر کل", "LateAmount","ReportMoneyRender");
+	$rpg->addColumn("جریمه تاخیر کل", "ForfeitAmount","ReportMoneyRender");
 	
 	$rpg->addColumn("مانده اقساط", "TotalRemainder","ReportMoneyRender");
 	

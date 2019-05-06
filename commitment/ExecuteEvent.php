@@ -80,6 +80,14 @@ $dg->addColumn("", "ParamValue1", "", true);
 $dg->addColumn("", "ParamValue2", "", true);
 $dg->addColumn("", "ParamValue3", "", true);
 
+$dg->addColumn("", "paramType1", "", true);
+$dg->addColumn("", "paramType2", "", true);
+$dg->addColumn("", "paramType3", "", true);
+
+$dg->addColumn("", "ParamID1", "", true);
+$dg->addColumn("", "ParamID2", "", true);
+$dg->addColumn("", "ParamID3", "", true);
+
 $col = $dg->addColumn(" کد حساب ", "CostCode");
 $col->width = 80; 
 

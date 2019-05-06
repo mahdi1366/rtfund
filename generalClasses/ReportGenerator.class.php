@@ -846,6 +846,10 @@ class ReportGenerator {
 			if(strpos($key, self::$FieldPrefix) !== false)
 			{
 				$field = str_replace(self::$FieldPrefix, "", $key);
+				
+				if(isset($_POST["notQueryField_" . $field]))
+					continue;
+				
 				$tempColumns[ $_POST[self::$OrderPrefix . $field ] ] = $field;
 			}
 		
@@ -866,7 +870,9 @@ class ReportGenerator {
 					. "id='".self::$OrderPrefix.$field."'>"
 					. "<input onclick=ReportGenerator.setOrder(this,'".$this->MainForm."',".$this->ObjectName.") "
 					. "type=checkbox name='".self::$FieldPrefix.$field."' id='".self::$FieldPrefix.$field."'>"
-					. $title.
+					. $title
+					. (!$row->IsQueryField ?  
+						"<input type=hidden name='notQueryField_".$field."' >" : "") .
 				"</div>";
 			$index++;
 		}
@@ -1240,6 +1246,7 @@ class ReportColumn {
 	public $ExcelRender = true;
 	
 	public $type = "string"; // string or date
+	public $IsQueryField = true;
 
 	public function ReportColumn($header, $field, $renderFunction = "", $renderParams = "") {
 		$this->header = $header;

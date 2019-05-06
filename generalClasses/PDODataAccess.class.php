@@ -341,6 +341,10 @@ class PdoDataAccess extends ExceptionHandler
 	{
 		$PDO_Obj = $pdoObject != null ? $pdoObject : self::getPdoObject();
 		/*@var $PDO_Obj PDO*/
+		
+		if(!is_array($whereParams))
+			$whereParams = array($whereParams);
+		
 		//-------------------
 		$mainQuery = $query;
 		$statement = $PDO_Obj->prepare(self::CorrectFarsiString($query));

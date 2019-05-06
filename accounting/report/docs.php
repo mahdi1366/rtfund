@@ -29,6 +29,7 @@ function GetData(){
 					($userFields != "" ? "," . $userFields : "")."
 			from ACC_docs d
 			join ACC_DocItems di using(docID)
+			join ACC_CostCodes cc using(CostID)
 			left join ACC_tafsilis t on(di.TafsiliID=t.TafsiliID)
 			left join ACC_tafsilis t2 on(di.TafsiliID2=t2.TafsiliID)
 			join BSC_persons p on(RegPersonID=PersonID)
@@ -46,6 +47,11 @@ function GetData(){
 		$query .= " AND BranchID=:b";
 		$whereParam[":b"] = $_POST["BranchID"];
 	}	
+	if(!empty($_POST["CycleID"]))
+	{
+		$query .= " AND CycleID=:c";
+		$whereParam[":c"] = $_POST["CycleID"];
+	}
 	if(!empty($_POST["DocType"]))
 	{
 		$query .= " AND DocType=:dt";
@@ -114,6 +120,23 @@ function GetData(){
 	
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$query .= " AND d.StatusID != " . ACC_STEPID_RAW;
+	
+	$index = 1;
+	foreach($_POST as $key => $val)
+	{
+		if(strpos($key, "paramID") === false || empty($val))
+			continue;
+
+		$ParamID = preg_replace("/paramID/", "", $key);
+		$query .= " AND (
+				if(cc.param1 = :pid$index, di.param1=:pval$index, 1=0) OR
+				if(cc.param2 = :pid$index, di.param2=:pval$index, 1=0) OR
+				if(cc.param3 = :pid$index, di.param3=:pval$index, 1=0) 
+			)";
+		$whereParam[":pid$index"] = $ParamID;
+		$whereParam[":pval$index"] = $val;
+		$index++;
+	}
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
 	$query .= $group == "" ? " group by DocID" : " group by " . $group;
@@ -270,10 +293,28 @@ function AccReport_docs()
 			}),
 			fieldLabel : "شعبه",
 			queryMode : 'local',
-			value : "<?= !isset($_SESSION["accounting"]["BranchID"]) ? "" : $_SESSION["accounting"]["BranchID"] ?>",
 			displayField : "BranchName",
 			valueField : "BranchID",
 			hiddenName : "BranchID"
+		},{
+			xtype : "combo",
+			colspan : 2,
+			width : 400,
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: "/accounting/global/domain.data.php?task=SelectCycles",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['CycleID','CycleDesc'],
+				autoLoad : true					
+			}),
+			fieldLabel : "دوره",
+			queryMode : 'local',
+			value : "<?= !isset($_SESSION["accounting"]["CycleID"]) ? "" : $_SESSION["accounting"]["CycleID"] ?>",
+			displayField : "CycleDesc",
+			valueField : "CycleID",
+			hiddenName : "CycleID"
 		},{
 			xtype : "combo",
 			colspan : 2,
@@ -356,6 +397,14 @@ function AccReport_docs()
 			html : "<input type=checkbox checked name=IncludeRaw> گزارش شامل اسناد پیش نویس نیز باشد"
 		},{
 			xtype : "fieldset",
+			title : "تنظیمات آیتمها",
+			height : 330,
+			width : 300,
+			autoScroll : true,
+			colspan : 2,
+			itemId : "FS_params"
+		},{
+			xtype : "fieldset",
 			title : "ستونهای گزارش",
 			colspan :2,
 			items :[<?= $page_rpg->ReportColumns() ?>]
@@ -395,6 +444,56 @@ function AccReport_docs()
 				AccReport_docsObj.get("mainForm").reset();
 			}			
 		}]
+	});
+	
+	paramsStore = new Ext.data.SimpleStore({
+		fields:["ParamID","ParamDesc","ParamType"],
+		proxy: {
+			type: 'jsonp',
+			url: this.address_prefix + '../docs/doc.data.php?task=selectAllParams',
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		},
+		autoLoad: true,
+		listeners : {
+			load : function(){
+				var ParamsFS = AccReport_docsObj.formPanel.down("[itemId=FS_params]");
+				for(i=0; i< this.totalCount; i++)
+				{
+					record = this.getAt(i);
+					if(record.data.ParamType == "combo")
+					{
+						ParamsFS.add({
+							xtype : "combo",
+							hiddenName : "paramID" + record.data.ParamID,
+							fieldLabel : record.data.ParamDesc,
+							store : new Ext.data.Store({
+								fields:["id","title"],
+								proxy: {
+									type: 'jsonp',
+									url: AccReport_docsObj.address_prefix + 
+										'../docs/doc.data.php?task=selectParamItems&ParamID=' +
+										record.data.ParamID,
+									reader: {root: 'rows',totalProperty: 'totalCount'}
+								},
+								autoLoad: true
+							}),
+							valueField : "id",
+							displayField : "title"
+						});							
+					}
+					else
+					{
+						ParamsFS.add({
+							xtype : record.data.ParamType,
+							name : "paramID" + record.data.ParamID,
+							fieldLabel : record.data.ParamDesc,
+							hideTrigger : (record.data.ParamType == "numberfield" || 
+								record.data.ParamType == "currencyfield" ? true : false)
+						});			
+					}
+				}
+			}
+		}
 	});
 }
 

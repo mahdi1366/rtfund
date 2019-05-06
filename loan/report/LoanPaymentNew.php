@@ -172,8 +172,8 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= $partObj->DelayMonths  ?>ماه و  <?= $partObj->DelayDays ?> روز</b></td>
 					</tr>
 					<tr>
-						<td>نحوه محاسبه :</td>
-						<td><b><?= $partObj->PayCompute == "installment" ? "ابتدا اقساط" : "ابتدا جرائم" ?></b></td>
+						<td></td>
+						<td><b></b></td>
 					</tr>
 					<tr>
 						<td>کارمزد تاخیر :</td>

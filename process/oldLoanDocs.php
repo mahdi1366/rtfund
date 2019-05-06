@@ -8,22 +8,26 @@ require_once '../header.inc.php';
 require_once '../commitment/ExecuteEvent.class.php';
 require_once '../loan/request/request.class.php';
 
+ini_set('max_execution_time', 3000);
+ini_set('memory_limit','1000M');
+
 $reqs = PdoDataAccess::runquery(" select r.RequestID from LON_requests r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
-	where r.RequestID=534 AND ComputeMode='NEW' AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM );
+	where PartDate<'2019-03-21' /*AND r.RequestID=534*/ AND
+		ComputeMode='NEW' AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM );
 
 $pdo = PdoDataAccess::getPdoObject();
-$pdo->beginTransaction();
 
 foreach($reqs as $requset)
 {
+	$pdo->beginTransaction();
 	echo "-------------- " . $requset["RequestID"] . " -----------------<br>";
-	flush();
-	ob_flush();
+	ob_flush();flush();
+	
 	$reqObj = new LON_requests($requset["RequestID"]);
 	$partObj = LON_ReqParts::GetValidPartObj($requset["RequestID"]);
 	
-	//----------------- رویداد عقد قرارداد
+	//----------------- رویداد عقد قرارداد----------------------------
 	if($reqObj->ReqPersonID*1 == 0)
 		$EventID = EVENT_LOANCONTRACT_innerSource;
 	else
@@ -45,9 +49,8 @@ foreach($reqs as $requset)
 		$pdo->rollBack();
 		continue;
 	}
-	flush();
-	ob_flush();
-	//---------------- رویدادهای پرداخت وام
+	ob_flush();flush();
+	//---------------- رویدادهای پرداخت وام----------------------------
 	if($reqObj->ReqPersonID*1 > 0)
 		$EventID = EVENT_LOANPAYMENT_agentSource;
 	else
@@ -67,9 +70,8 @@ foreach($reqs as $requset)
 		$pdo->rollBack();
 		continue;
 	}
-	flush();
-	ob_flush();
-	//---------------  رویدادهای بازپرداخت
+	ob_flush();flush();
+	//---------------  رویدادهای بازپرداخت----------------------------
 	$backpays = LON_BackPays::GetRealPaid($reqObj->RequestID);
 	$DocObj = null;
 	foreach($backpays as $bpay)
@@ -111,13 +113,16 @@ foreach($reqs as $requset)
 		$pdo->rollBack();
 		continue;
 	}
-	flush();
-	ob_flush();
-	//---------------  رویدادهای روزانه
-	$params = array();
-	$days = PdoDataAccess::runquery("select * from jdate where Jdate between ? AND '1397/12/29'", 
-			DateModules::miladi_to_shamsi($pays[0]["PayDate"])) ;
-	if($reqObj->ReqPersonID*1 > 0)
+	ob_flush();flush();
+	//---------------  رویدادهای روزانه----------------------------
+	/*$params = array();
+	$days = PdoDataAccess::runquery_fetchMode("select * from jdate where Jdate between ? AND '1397/12/29'", 
+			DateModules::miladi_to_shamsi($partObj->PartDate), $pdo);
+	echo "days : " . $days->rowCount() . "<br>";
+	ob_flush();flush();
+	echo " ";
+	ob_flush();flush();
+	if($reqObj->ReqPersonID*1 == 0)
 		$EventID = EVENT_LOANDAILY_innerSource;
 	else
 	{
@@ -127,8 +132,7 @@ foreach($reqs as $requset)
 			$EventID = EVENT_LOANDAILY_agentSource_non_committal;
 	}
 	$EventObj = new ExecuteEvent($EventID);
-		
-	foreach($days as $day)
+	while($day = $days->fetch())
 	{
 		$EventObj->Sources = array($reqObj->RequestID, $partObj->PartID, $day["gdate"]);
 		$result = $EventObj->RegisterEventDoc($pdo);
@@ -140,10 +144,12 @@ foreach($reqs as $requset)
 		$pdo->rollBack();
 		continue;
 	}
-	flush();
-	ob_flush();
-	
+	ob_flush();flush();
+	*/
 	//--------------------------------------------------
 	$pdo->commit();
+	
+	EventComputeItems::$LoanBackPayArray = array();
+	EventComputeItems::$LoanPuresArray = array();
 }
 ?>
