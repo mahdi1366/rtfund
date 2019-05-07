@@ -19,7 +19,12 @@ $dg->addColumn("", "MsgDate", "", true);
 
 $col = $dg->addColumn("عنوان پیغام", "MsgTitle", "");
 //$col->renderer = "MyMessage.TitleRender";
-$col->width = 150;
+$col->width = 200;
+
+$col = $dg->addColumn("ساعت دریافت", "_MsgTime", "");
+//$col->renderer = "MyMessage.TitleRender";
+$col->width = 80;
+$col->align = "center";
 
 $col = $dg->addColumn("متن پیغام", "MsgDesc", "");
 
@@ -47,7 +52,6 @@ $dg->groupHeaderTpl = "تاریخ پیغام : {[MiladiToShamsi(values.rows[0].d
 $dg->EnableSearch = false;
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 490;
-$dg->width = 780;
 $dg->title = "پیام های دریافتی";
 $dg->DefaultSortField = "_MsgDate";
 $dg->autoExpandColumn = "MsgDesc";
@@ -338,6 +342,5 @@ MyMessage.prototype.DeleteMessage = function(){
 }
 
 </script>
-<br>
-<div id="DivGrid" style="margin-right:8px;"></div>
+<div id="DivGrid" style="margin:8px;"></div>
 با دبل کلیک روی هر ردیف، پیام مورد نظر مشاهده شده می شود.

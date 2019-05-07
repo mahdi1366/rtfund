@@ -791,8 +791,8 @@ function RegisterEndDoc(){
 			array($BranchID, $_SESSION["accounting"]["CycleID"]));
 	if(count($dt) > 0)
 	{
-		echo Response::createObjectiveResponse(false, "سند اختتامیه در این دوره قبلا صادر شده است");
-		die();
+		///echo Response::createObjectiveResponse(false, "سند اختتامیه در این دوره قبلا صادر شده است");
+		//die();
 	}
 	
 	$LocalNo = $_POST["LocalNo"];
@@ -839,14 +839,15 @@ function RegisterEndDoc(){
 			param1,param2,param3)
 		select $obj->DocID,CostID,TafsiliType,TafsiliID,TafsiliType2,TafsiliID2,
 			TafsiliType3,TafsiliID3,
-			if( sum(CreditorAmount-DebtorAmount)>0, sum(CreditorAmount-DebtorAmount), 0 ),
+			
 			if( sum(DebtorAmount-CreditorAmount)>0, sum(DebtorAmount-CreditorAmount), 0 ),
+			if( sum(CreditorAmount-DebtorAmount)>0, sum(CreditorAmount-DebtorAmount), 0 ),
 			1,
 			param1,param2,param3
 		from ACC_DocItems i
 		join ACC_docs using(DocID)
 		where CycleID=" . $_SESSION["accounting"]["CycleID"] . "
-			AND BranchID = ?
+			AND BranchID = ? AND DocID>1070
 		group by CostID,TafsiliID,TafsiliID2,TafsiliID3,param1,param2,param3
 		having sum(CreditorAmount-DebtorAmount)<>0
 	", array($BranchID), $pdo);

@@ -13,8 +13,9 @@ ini_set('memory_limit','1000M');
 
 $reqs = PdoDataAccess::runquery(" select r.RequestID from LON_requests r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
-	where PartDate<'2019-03-21' /*AND r.RequestID=534*/ AND
-		ComputeMode='NEW' AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM );
+	where PartDate<'2018-03-21' AND r.RequestID >=1274
+		AND ComputeMode='NEW' AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
+		order by RequestID");
 
 $pdo = PdoDataAccess::getPdoObject();
 
@@ -28,7 +29,7 @@ foreach($reqs as $requset)
 	$partObj = LON_ReqParts::GetValidPartObj($requset["RequestID"]);
 	
 	//----------------- رویداد عقد قرارداد----------------------------
-	if($reqObj->ReqPersonID*1 == 0)
+	/*if($reqObj->ReqPersonID*1 == 0)
 		$EventID = EVENT_LOANCONTRACT_innerSource;
 	else
 	{
@@ -55,7 +56,8 @@ foreach($reqs as $requset)
 		$EventID = EVENT_LOANPAYMENT_agentSource;
 	else
 		$EventID = EVENT_LOANPAYMENT_innerSource;
-	$pays = PdoDataAccess::runquery("select * from LON_payments where RequestID=?", array($reqObj->RequestID));
+	$pays = PdoDataAccess::runquery("select * from LON_payments "
+			. " where PayDate<'2018-03-21' AND RequestID=?", array($reqObj->RequestID));
 	
 	$eventobj = new ExecuteEvent($EventID);
 	foreach($pays as $pay)
@@ -72,7 +74,10 @@ foreach($reqs as $requset)
 	}
 	ob_flush();flush();
 	//---------------  رویدادهای بازپرداخت----------------------------
-	$backpays = LON_BackPays::GetRealPaid($reqObj->RequestID);
+	$backpays = LON_BackPays::SelectAll(" RequestID=? AND PayDate<'2018-03-21'
+			AND if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+			order by PayDate"
+			, array($reqObj->RequestID));
 	$DocObj = null;
 	foreach($backpays as $bpay)
 	{
@@ -113,10 +118,10 @@ foreach($reqs as $requset)
 		$pdo->rollBack();
 		continue;
 	}
-	ob_flush();flush();
+	ob_flush();flush();*/
 	//---------------  رویدادهای روزانه----------------------------
-	/*$params = array();
-	$days = PdoDataAccess::runquery_fetchMode("select * from jdate where Jdate between ? AND '1397/12/29'", 
+	$params = array();
+	$days = PdoDataAccess::runquery_fetchMode("select * from jdate where Jdate between ? AND '1396/12/29'", 
 			DateModules::miladi_to_shamsi($partObj->PartDate), $pdo);
 	echo "days : " . $days->rowCount() . "<br>";
 	ob_flush();flush();
@@ -145,7 +150,7 @@ foreach($reqs as $requset)
 		continue;
 	}
 	ob_flush();flush();
-	*/
+	
 	//--------------------------------------------------
 	$pdo->commit();
 	

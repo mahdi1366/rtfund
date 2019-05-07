@@ -504,4 +504,45 @@ function selectPlaces(){
 	echo dataReader::getJsonData($list, count($list), $_GET["callback"]);
 	die();
 }
+
+//............................................
+
+function GetEvents(){
+	
+	$temp = DMS_PackageEvents::Get("AND PackageID=?", array($_REQUEST["PackageID"]));
+	//print_r(ExceptionHandler::PopAllExceptions());
+	$res = $temp->fetchAll();
+	echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveEvents(){
+	
+	$obj = new DMS_PackageEvents();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if(empty($obj->FollowUpPersonID))
+		$obj->FollowUpPersonID = $_SESSION["USER"]["PersonID"];
+	
+	if(empty($obj->EventID))
+	{
+		$obj->RegPersonID = $_SESSION["USER"]["PersonID"];
+		$result = $obj->Add();
+	}
+	else
+		$result = $obj->Edit();
+	
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();
+}
+
+function DeleteEvents(){
+	
+	$obj = new DMS_PackageEvents();
+	$obj->EventID = $_POST["EventID"];
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();	
+}
+
 ?>

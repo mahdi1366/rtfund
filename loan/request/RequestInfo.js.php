@@ -2168,7 +2168,7 @@ RequestInfo.prototype.LoadBackPays = function(){
 	if(!this.PayWin)
 	{
 		this.PayWin = new Ext.window.Window({
-			width : 870,
+			width : 1000,
 			title : "لیست پرداخت های مشتری",
 			height : 410,
 			modal : true,
@@ -2338,7 +2338,7 @@ RequestInfo.prototype.ShowEvents = function(){
 			title: 'رویدادهای مرتبط با وام',
 			modal : true,
 			autoScroll : true,
-			width: 800, 
+			width: 1000, 
 			height : 400,
 			bodyStyle : "background-color:white",
 			closeAction : "hide",

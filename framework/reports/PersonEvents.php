@@ -5,17 +5,13 @@ require_once "ReportGenerator.class.php";
 
 if(isset($_REQUEST["show"]))
 {
+	$where = "";
 	$param = array();
 	$param[":p"] = $_POST["PersonID"];
 	
-	$query = "
-		select 'loan' type, 'رویداد وام' title, RequestID ObjectID, EventTitle description,EventDate,LetterID
-		from LON_events join LON_requests using(RequestID)
-		where LoanPersonID=:p
-		";
 	if(!empty($_POST["fromDate"]))
 	{
-		$query .= " AND EventDate >= :fd";
+		$where .= " AND EventDate >= :fd";
 		$param[":fd"] = DateModules::shamsi_to_miladi($_POST["fromDate"], "-");
 	}
 	if(!empty($_POST["toDate"]))
@@ -23,6 +19,20 @@ if(isset($_REQUEST["show"]))
 		$query .= " AND EventDate <= :td";
 		$param[":td"] = DateModules::shamsi_to_miladi($_POST["toDate"], "-");
 	}
+	
+	$query = "
+		select 'loan' type, 'رویداد وام' title, RequestID ObjectID, 
+			EventTitle description,EventDate,LetterID
+		from LON_events join LON_requests using(RequestID)
+		where LoanPersonID=:p $where
+		
+		union all 
+		
+		select 'package' type, 'رویداد پرونده' title, PackageID ObjectID, 
+			EventTitle description,EventDate,LetterID
+		from DMS_PackageEvents join DMS_packages using(PackageID)
+		where PersonID=:p $where
+		";
 	
 	$dataTable = PdoDataAccess::runquery($query, $param);
 	

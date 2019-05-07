@@ -41,7 +41,7 @@ $col->width = 35;
 
 $col = $dg->addColumn("", "");
 $col->sortable = false;
-$col->renderer = "function(v,p,r){return Package.itemsRender(v,p,r);}";
+$col->renderer = "function(v,p,r){return Package.OperationRender(v,p,r);}";
 $col->width = 30;
 
 $dg->title = "لیست پرونده ها";
@@ -127,7 +127,8 @@ $grid2 = $dg->makeGrid_returnObjects();
 Package.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : '<?= $js_prefix_address ?>',
-
+	MenuID : "<?= $_POST["MenuID"] ?>",
+	
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
 	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
@@ -276,12 +277,24 @@ Package.DeleteRender = function(v,p,r){
 
 }
 
-Package.itemsRender = function(v,p,r){
-	return "<div align='center' title='لیست آیتم ها' class='list' "+
-		"onclick='PackageObject.LoadItems();' " +
+Package.OperationRender = function(v,p,r){
+	return "<div  title='عملیات' class='setting' onclick='PackageObject.OperationMenu(event);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
+}
 
+Package.prototype.OperationMenu = function(e){
+
+	record = this.grid.getSelectionModel().getLastSelected();
+	var op_menu = new Ext.menu.Menu();
+
+	op_menu.add({text: 'محتویات پرونده',iconCls: 'list', 
+		handler : function(){ return PackageObject.LoadItems(); }});
+	
+	op_menu.add({text: 'رویدادها',iconCls: 'task', 
+		handler : function(){ return PackageObject.ShowEvents(); }});
+	
+	op_menu.showAt(e.pageX-120, e.pageY);
 }
 
 Package.prototype.DeletePackage = function(){
@@ -327,6 +340,44 @@ Package.prototype.LoadItems = function(){
 	});
 	this.docPanel.show();
 	return;
+}
+
+Package.prototype.ShowEvents = function(){
+
+	if(!this.EventsWin)
+	{   
+		this.EventsWin = new Ext.window.Window({
+			title: 'رویدادهای مرتبط با پرونده',
+			modal : true,
+			autoScroll : true,
+			width: 1000,
+			height : 400,
+			bodyStyle : "background-color:white",
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "events.php",
+				scripts : true
+			},
+			buttons : [{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){
+					this.up('window').hide();
+				}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.EventsWin);
+	}
+	this.EventsWin.show();
+	this.EventsWin.center();	
+	record = this.grid.getSelectionModel().getLastSelected();
+	this.EventsWin.loader.load({
+		params : {
+			ExtTabID : this.EventsWin.getEl().id,
+			PackageID : record.data.PackageID,
+			MenuID : this.MenuID
+		}
+	});
 }
 
 //.................................................

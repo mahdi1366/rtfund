@@ -460,7 +460,13 @@ function SelectFollowUps(){
 		
 		select 'loan' type, 'رویداد وام' title, RequestID, EventTitle
 		from LON_events 
-		where FollowUpDate= substr(" . PDONOW . ",1,10) AND FollowUpPersonID=:p" 
+		where FollowUpDate= substr(" . PDONOW . ",1,10) AND FollowUpPersonID=:p
+		
+		union all
+		
+		select 'package' type, 'رویداد پرونده' title, PackageID, EventTitle
+		from DMS_PackageEvents 
+		where FollowUpDate= substr(" . PDONOW . ",1,10) AND FollowUpPersonID=:p"  
 		
 	, array(":p" => $_SESSION["USER"]["PersonID"]));
 	

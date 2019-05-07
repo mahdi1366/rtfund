@@ -1018,7 +1018,8 @@ function SelectMyMessages(){
 	
 	if($_REQUEST["mode"] == "receive")
 	{
-		$query = "select m.*,r.* ,concat(fname,' ',lname) FromPersonName, substr(MsgDate,1,10) _MsgDate
+		$query = "select m.*,r.* ,concat(fname,' ',lname) FromPersonName, 
+				substr(MsgDate,1,10) _MsgDate,substr(MsgDate,11,6) _MsgTime
 			from OFC_messages m join OFC_MessageReceivers r using(MessageID)
 				join BSC_persons p on(m.PersonID=p.PersonID)
 			where r.PersonID=:p";
@@ -1028,7 +1029,8 @@ function SelectMyMessages(){
 	}
 	else
 	{
-		$query = "select m.*,r.* ,concat(fname,' ',lname) ToPersonName, substr(MsgDate,1,10) _MsgDate
+		$query = "select m.*,r.* ,concat(fname,' ',lname) ToPersonName, 
+				substr(MsgDate,1,10) _MsgDate,substr(MsgDate,11,6) _MsgTime
 			from OFC_messages m join OFC_MessageReceivers r using(MessageID)
 			join BSC_persons p on(r.PersonID=p.PersonID)
 			where m.PersonID=:p";

@@ -59,6 +59,9 @@ FolowUps.prototype.OpenObject = function(ObjectID, type){
 		case "loan":
 			framework.OpenPage("/loan/request/RequestInfo.php", "اطلاعات درخواست", {RequestID : ObjectID});
 			break;
+		case "package":
+			framework.OpenPage("/office/dms/packages.php", "مدیریت پرونده ها",{MenuID : 116});
+			break;
 	}
 	
 }

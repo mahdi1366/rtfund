@@ -422,7 +422,7 @@ ManageRequest.prototype.ShowEvents = function(){
 			title: 'رویدادهای مرتبط با طرح',
 			modal : true,
 			autoScroll : true,
-			width: 800,
+			width: 1000,
 			height : 400,
 			bodyStyle : "background-color:white",
 			closeAction : "hide",
@@ -490,7 +490,7 @@ ManageRequest.prototype.LoadBackPays = function(){
 	if(!this.PayWin)
 	{
 		this.PayWin = new Ext.window.Window({
-			width : 890,
+			width : 1000,
 			title : "لیست پرداخت های مشتری",
 			height : 410,
 			autoScroll : true,

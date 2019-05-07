@@ -49,12 +49,12 @@ if($editable)
 else
 	$col = $dg->addColumn("نحوه پرداخت", "PayTypeDesc");
 	
-$col->width = 80;
+$col->width = 120;
 
 $col = $dg->addColumn("تاریخ", "PayDate", GridColumn::ColumnType_date);
 if($editable)
 	$col->editor = ColumnEditor::SHDateField();
-$col->width = 70;
+$col->width = 90;
 
 $col = $dg->addColumn("مبلغ پرداخت", "PayAmount", GridColumn::ColumnType_money);
 if($editable)
@@ -67,10 +67,10 @@ $col->width = 100;
 $col = $dg->addColumn("شماره فیش", "PayBillNo");
 if($editable)
 	$col->editor = ColumnEditor::TextField(true);
-$col->width = 60;
+$col->width = 100;
 
 $col = $dg->addColumn("شماره چک", "ChequeNo", "string");
-$col->width = 60;
+$col->width = 100;
 
 $col = $dg->addColumn("وضعیت چک", "ChequeStatusDesc", "");
 $col->width = 80;
@@ -107,7 +107,6 @@ if(session::IsFramework())
 }
 
 $dg->height = 377;
-$dg->width = 855;
 $dg->emptyTextOfHiddenColumns = true;
 $dg->EnableSearch = false;
 $dg->HeaderMenu = false;
