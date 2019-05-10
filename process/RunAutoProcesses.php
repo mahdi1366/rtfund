@@ -67,7 +67,12 @@ else
 $objArr = array(
 	EVENT_LOANDAILY_innerSource => null, 
 	EVENT_LOANDAILY_agentSource_committal => null,
-	EVENT_LOANDAILY_agentSource_non_committal => null
+	EVENT_LOANDAILY_agentSource_non_committal => null,
+	
+	EVENT_LOANDAILY_innerLate => null, 
+	EVENT_LOANDAILY_agentlate => null, 
+	EVENT_LOANDAILY_innerPenalty => null, 
+	EVENT_LOANDAILY_agentPenalty => null
 );
 
 $pdo = PdoDataAccess::getPdoObject();
@@ -82,14 +87,24 @@ foreach($reqs as $row)
 	$ComputeDate = !empty($_POST["manual"]) ? $row["gdate"] : DateModules::Now();
 	
 	$eventID = "";
+	$LateEvent = "";
+	$PenaltyEvent = "";
+	
 	if($row["ReqPersonID"]*1 == 0)
+	{
 		$eventID = EVENT_LOANDAILY_innerSource;
+		$LateEvent = EVENT_LOANDAILY_innerLate;
+		$PenaltyEvent = EVENT_LOANDAILY_innerPenalty;
+	}
 	else
 	{
 		if($row["FundGuarantee"] == "YES")
 			$eventID = EVENT_LOANDAILY_agentSource_committal;
 		else
 			$eventID = EVENT_LOANDAILY_agentSource_non_committal;
+		
+		$LateEvent = EVENT_LOANDAILY_agentLate;
+		$PenaltyEvent = EVENT_LOANDAILY_agentPenalty;
 	}
 	
 	if($objArr[$eventID] != null)
@@ -98,7 +113,6 @@ foreach($reqs as $row)
 		$objArr[$eventID] = new ExecuteEvent($eventID);
 		$obj = &$objArr[$eventID];
 	}
-	
 	$obj->Sources = array($row["RequestID"], $row["PartID"] , $ComputeDate);
 	$result = $obj->RegisterEventDoc($pdo);
 	if(!$result || ExceptionHandler::GetExceptionCount() > 0)
@@ -108,6 +122,41 @@ foreach($reqs as $row)
 		print_r(ExceptionHandler::PopAllExceptions());
 		echo "\n--------------------------------------------\n";
 	}
+	
+	
+	if($objArr[$LateEvent] != null)
+		$obj = &$objArr[$LateEvent];
+	else {
+		$objArr[$LateEvent] = new ExecuteEvent($LateEvent);
+		$obj = &$objArr[$LateEvent];
+	}
+	$obj->Sources = array($row["RequestID"], $row["PartID"] , $ComputeDate);
+	$result = $obj->RegisterEventDoc($pdo);
+	if(!$result || ExceptionHandler::GetExceptionCount() > 0)
+	{
+		echo "وام " .  $row["RequestID"] . " : <br>";
+		echo ExceptionHandler::GetExceptionsToString("<br>");
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo "\n--------------------------------------------\n";
+	}
+	
+	
+	if($objArr[$PenaltyEvent] != null)
+		$obj = &$objArr[$PenaltyEvent];
+	else {
+		$objArr[$PenaltyEvent] = new ExecuteEvent($PenaltyEvent);
+		$obj = &$objArr[$PenaltyEvent];
+	}
+	$obj->Sources = array($row["RequestID"], $row["PartID"] , $ComputeDate);
+	$result = $obj->RegisterEventDoc($pdo);
+	if(!$result || ExceptionHandler::GetExceptionCount() > 0)
+	{
+		echo "وام " .  $row["RequestID"] . " : <br>";
+		echo ExceptionHandler::GetExceptionsToString("<br>");
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo "\n--------------------------------------------\n";
+	}
+
 }
 $pdo->commit();	
 

@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // create Date: 97.12
 //---------------------------
-
+ 
 require_once '../header.inc.php';
 require_once '../commitment/ExecuteEvent.class.php';
 require_once '../loan/request/request.class.php';
@@ -11,12 +11,15 @@ require_once '../loan/request/request.class.php';
 ini_set('max_execution_time', 3000);
 ini_set('memory_limit','1000M');
 
+$GToDate = '2018-03-21'; //1397/01/01
+//$GToDate = '2019-03-21'; //1398/01/01
+
 $reqs = PdoDataAccess::runquery(" select r.RequestID from LON_requests r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
-	where PartDate<'2018-03-21' AND r.RequestID >=1274
+	where PartDate<'$GToDate' 
 		AND ComputeMode='NEW' AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
 		order by RequestID");
-
+//print_r(ExceptionHandler::PopAllExceptions());
 $pdo = PdoDataAccess::getPdoObject();
 
 foreach($reqs as $requset)
@@ -57,7 +60,7 @@ foreach($reqs as $requset)
 	else
 		$EventID = EVENT_LOANPAYMENT_innerSource;
 	$pays = PdoDataAccess::runquery("select * from LON_payments "
-			. " where PayDate<'2018-03-21' AND RequestID=?", array($reqObj->RequestID));
+			. " where PayDate<'$GToDate' AND RequestID=?", array($reqObj->RequestID));
 	
 	$eventobj = new ExecuteEvent($EventID);
 	foreach($pays as $pay)
@@ -72,9 +75,43 @@ foreach($reqs as $requset)
 		$pdo->rollBack();
 		continue;
 	}
-	ob_flush();flush();
+	ob_flush();flush();*/
+	//---------------  رویدادهای دریافت چک----------------------------
+	/*$result = true;
+	$cheques = PdoDataAccess::runquery(
+			"select * from LON_BackPays
+				join ACC_IncomeCheques i using(IncomeChequeID) 
+				where RequestID=? AND PayDate<'$GToDate'			
+			order by PayDate"
+			, array($reqObj->RequestID));
+	$DocObj = null;
+	foreach($cheques as $bpay)
+	{
+		if($reqObj->ReqPersonID*1 > 0)
+			$EventID = EVENT_LOANCHEQUE_agentSource;
+		else
+			$EventID = EVENT_LOANCHEQUE_innerSource;
+		
+		$eventobj = new ExecuteEvent($EventID);
+		$eventobj->Sources = array($reqObj->RequestID, $bpay["IncomeChequeID"]);
+		$eventobj->DocObj = $DocObj;
+		$eventobj->AllRowsAmount = $bpay["PayAmount"];
+		$result = $eventobj->RegisterEventDoc($pdo);
+		$DocObj = $eventobj->DocObj;
+	}
+	echo "دریافت چک : " . ($result ? "true" : "false") . "<br>";
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		print_r(ExceptionHandler::PopAllExceptions());
+		$pdo->rollBack();
+		continue;
+	}
+	ob_flush();flush();*/
 	//---------------  رویدادهای بازپرداخت----------------------------
-	$backpays = LON_BackPays::SelectAll(" RequestID=? AND PayDate<'2018-03-21'
+	/*$backpays = PdoDataAccess::runquery(
+			"select * from LON_BackPays
+				left join ACC_IncomeCheques i using(IncomeChequeID) 
+				where RequestID=? AND PayDate<'$GToDate'
 			AND if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
 			order by PayDate"
 			, array($reqObj->RequestID));
@@ -120,8 +157,8 @@ foreach($reqs as $requset)
 	}
 	ob_flush();flush();*/
 	//---------------  رویدادهای روزانه----------------------------
-	$params = array();
-	$days = PdoDataAccess::runquery_fetchMode("select * from jdate where Jdate between ? AND '1396/12/29'", 
+	/*$params = array();
+	$days = PdoDataAccess::runquery_fetchMode("select * from jdate where Jdate between ? AND '1397/12/29'", 
 			DateModules::miladi_to_shamsi($partObj->PartDate), $pdo);
 	echo "days : " . $days->rowCount() . "<br>";
 	ob_flush();flush();
@@ -150,11 +187,54 @@ foreach($reqs as $requset)
 		continue;
 	}
 	ob_flush();flush();
+	*/
+	//---------------  رویدادهای روزانه تاخیر و جریمه----------------------------
 	
+	$computeArr = LON_Computes::NewComputePayments($reqObj->RequestID, $GToDate);
+	$totalLate = 0;
+	$totalPenalty = 0;
+	foreach($computeArr as $row)
+	{
+		if($row["type"] == "installment")
+		{
+			$totalLate += $row["late"]*1;
+			$totalPenalty += $row["pnlt"]*1;
+		}
+	}
+	
+	$EventID = $reqObj->ReqPersonID*1 == 0 ? EVENT_LOANDAILY_innerLate : EVENT_LOANDAILY_agentlate;
+	$EventObj = new ExecuteEvent($EventID);
+	$EventObj->AllRowsAmount = $totalLate;
+	$EventObj->Sources = array($reqObj->RequestID, $partObj->PartID, $GToDate);
+	if($EventObj->AllRowsAmount > 0)
+		$result = $EventObj->RegisterEventDoc($pdo);
+	echo "شناسایی کارمزد تاخیر : " . ($result ? "true" : "false") . "<br>";
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		print_r(ExceptionHandler::PopAllExceptions());
+		$pdo->rollBack();
+		continue;
+	}
+	ob_flush();flush();
+	
+	$EventID = $reqObj->ReqPersonID*1 == 0 ? EVENT_LOANDAILY_innerPenalty : EVENT_LOANDAILY_agentPenalty;
+	$EventObj = new ExecuteEvent($EventID);
+	$EventObj->AllRowsAmount = $totalPenalty;
+	$EventObj->Sources = array($reqObj->RequestID, $partObj->PartID, $GToDate);
+	if($EventObj->AllRowsAmount > 0)
+		$result = $EventObj->RegisterEventDoc($pdo);
+	echo "شناسایی کارمزد تاخیر : " . ($result ? "true" : "false") . "<br>";
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		print_r(ExceptionHandler::PopAllExceptions());
+		$pdo->rollBack();
+		continue;
+	}
+	ob_flush();flush();
 	//--------------------------------------------------
 	$pdo->commit();
 	
-	EventComputeItems::$LoanBackPayArray = array();
+	EventComputeItems::$LoanComputeArray = array();
 	EventComputeItems::$LoanPuresArray = array();
 }
 ?>

@@ -10,7 +10,7 @@ require_once DOCUMENT_ROOT . '/accounting/cheque/cheque.class.php';
 
 class EventComputeItems {
 	
-	static $LoanBackPayArray = array();
+	static $LoanComputeArray = array();
 	static $LoanPuresArray = array();
 	
 	static function LoanAllocate($ItemID, $SourceObjects){
@@ -134,12 +134,12 @@ class EventComputeItems {
 			case 42 :  // کارمزد تعجیل سهم سرمایه گذار
 			case 43 :  // اضافه پرداختی
 				
-				if(isset(self::$LoanBackPayArray[ $ReqObj->RequestID ]))
-					$ComputeArr = self::$LoanBackPayArray[ $ReqObj->RequestID ];
+				if(isset(self::$LoanComputeArray[ $ReqObj->RequestID ]))
+					$ComputeArr = self::$LoanComputeArray[ $ReqObj->RequestID ];
 				else 
 				{
 					$ComputeArr = LON_Computes::NewComputePayments($ReqObj->RequestID);
-					self::$LoanBackPayArray[ $ReqObj->RequestID ] = $ComputeArr;
+					self::$LoanComputeArray[ $ReqObj->RequestID ] = $ComputeArr;
 				}
 				
 				foreach($ComputeArr as $row)
@@ -208,63 +208,113 @@ class EventComputeItems {
 		$PartObj = new LON_ReqParts((int)$SourceObjects[1]);
 		$ComputeDate = $SourceObjects[2];
 		
-		if($PartObj->CustomerWage*1 == 0 || $PartObj->ComputeMode != "NEW" )
-			return 0; 
+		if($ItemID == "80" || $ItemID == "81")
+		{
+
+			if($PartObj->CustomerWage*1 == 0 || $PartObj->ComputeMode != "NEW" )
+				return 0; 
+
+			if(isset(self::$LoanPuresArray[ $ReqObj->RequestID ]))
+				$PureArr = self::$LoanPuresArray[ $ReqObj->RequestID ];
+			else 
+			{
+				$PureArr = LON_requests::ComputePures($ReqObj->RequestID);
+				self::$LoanPuresArray[ $ReqObj->RequestID ] = $PureArr;
+			}
+
+			$totalPayPaySum = 0;
+			$paysWage = 0;
+			$firstInstallment = true;
+			$LastPureAmount = $PureArr[0]["totalPure"];
+			for($i=0; $i < count($PureArr);$i++)
+			{
+				if($PureArr[$i]["InstallmentAmount"] == 0 && $i>0)
+				{
+					$days = DateModules::GDateMinusGDate($PureArr[$i]["InstallmentDate"], $PureArr[$i-1]["InstallmentDate"]);
+					$paysWage += $totalPayPaySum*$days*$PartObj->CustomerWage/36500;
+				}
+
+				if($PureArr[$i]["InstallmentAmount"] == 0)
+					$totalPayPaySum += $PureArr[$i]["totalPure"];
+
+				if($PureArr[$i]["InstallmentDate"] < $ComputeDate)
+				{
+					$firstInstallment = $PureArr[$i]["InstallmentAmount"]*1 > 0 ? false : true;
+					continue;
+				}
+
+				if($i == 0)
+					return 0;
+
+				$LastPureAmount = $PureArr[$i-1]["totalPure"];
+
+				if($PureArr[$i]["InstallmentAmount"] > 0)
+				{
+					$LastPureAmount += $firstInstallment ? $paysWage : 0;
+					$firstInstallment = false;
+				}
+				break;
+			}
+			if($i == count($PureArr))
+				return 0;
+
+			$wage = round($LastPureAmount*$PartObj->CustomerWage/36500);
+
+			$wagePercent = $PartObj->CustomerWage;
+			$FundWage = round(($PartObj->FundWage/$wagePercent)*$wage);
+			$AgentWage = $wage - $FundWage;
+
+			if($ItemID == "80")
+				return $FundWage;
+			if($ItemID == "81")
+				return $AgentWage;
+		}
 		
-		if(isset(self::$LoanPuresArray[ $ReqObj->RequestID ]))
-			$PureArr = self::$LoanPuresArray[ $ReqObj->RequestID ];
+		$Today = DateModules::Now();
+		$Yesterday = DateModules::AddToGDate($Today, -1);
+		
+		if(isset(self::$LoanComputeArray[ $ReqObj->RequestID ][ $Today ]))
+		{
+			$todayArr = self::$LoanComputeArray[ $ReqObj->RequestID ][ $Today ];
+			$yesterdayArr = self::$LoanComputeArray[ $ReqObj->RequestID ][ $Yesterday ];
+		}
 		else 
 		{
-			$PureArr = LON_requests::ComputePures($ReqObj->RequestID);
-			self::$LoanPuresArray[ $ReqObj->RequestID ] = $PureArr;
+			$todayArr = LON_Computes::GetRemainAmounts($ReqObj->RequestID);
+			$yesterdayArr = LON_Computes::GetRemainAmounts($ReqObj->RequestID, null, $Yesterday);
+			
+			self::$LoanComputeArray[ $ReqObj->RequestID ][$Today] = $todayArr;
+			self::$LoanComputeArray[ $ReqObj->RequestID ][$Yesterday] = $yesterdayArr;
 		}
 		
-		$totalPayPaySum = 0;
-		$paysWage = 0;
-		$firstInstallment = true;
-		$LastPureAmount = $PureArr[0]["totalPure"];
-		for($i=0; $i < count($PureArr);$i++)
+		switch($ItemID*1)
 		{
-			if($PureArr[$i]["InstallmentAmount"] == 0 && $i>0)
-			{
-				$days = DateModules::GDateMinusGDate($PureArr[$i]["InstallmentDate"], $PureArr[$i-1]["InstallmentDate"]);
-				$paysWage += $totalPayPaySum*$days*$PartObj->CustomerWage/36500;
-			}
-			
-			if($PureArr[$i]["InstallmentAmount"] == 0)
-				$totalPayPaySum += $PureArr[$i]["totalPure"];
-				
-			if($PureArr[$i]["InstallmentDate"] < $ComputeDate)
-			{
-				$firstInstallment = $PureArr[$i]["InstallmentAmount"]*1 > 0 ? false : true;
-				continue;
-			}
-			
-			if($i == 0)
-				return 0;
-			
-			$LastPureAmount = $PureArr[$i-1]["totalPure"];
-			
-			if($PureArr[$i]["InstallmentAmount"] > 0)
-			{
-				$LastPureAmount += $firstInstallment ? $paysWage : 0;
-				$firstInstallment = false;
-			}
-			break;
+			case 82 : 
+				if($PartObj->CustomerWage == 0)
+					return 0;
+				$late = $todayArr["remain_late"] - $yesterdayArr["remain_late"];
+				 $fundLate = round(($PartObj->FundWage/$PartObj->CustomerWage)*$late);
+				return $fundLate;
+			case 83 : 
+				if($PartObj->CustomerWage == 0)
+					return 0;
+				$late = $todayArr["remain_late"] - $yesterdayArr["remain_late"];
+				 $fundLate = round(($PartObj->FundWage/$PartObj->CustomerWage)*$late);
+				return $late - $fundLate;
+			case 84 : 
+				if($PartObj->ForfeitPercent == 0)
+					return 0;
+				$penalty = $todayArr["remain_pnlt"] - $yesterdayArr["remain_pnlt"];
+				$fundPenalty = round(($PartObj->FundForfeitPercent/$PartObj->ForfeitPercent)*$penalty);
+				return $fundPenalty;
+			case 85 : 
+				if($PartObj->ForfeitPercent == 0)
+					return 0;
+				$penalty = $todayArr["remain_pnlt"] - $yesterdayArr["remain_pnlt"];
+				$fundPenalty = round(($PartObj->FundForfeitPercent/$PartObj->ForfeitPercent)*$penalty);
+				return $penalty - $fundPenalty;
 		}
-		if($i == count($PureArr))
-			return 0;
-		
-		$wage = round($LastPureAmount*$PartObj->CustomerWage/36500);
-		
-		$wagePercent = $PartObj->CustomerWage;
-		$FundWage = round(($PartObj->FundWage/$wagePercent)*$wage);
-		$AgentWage = $wage - $FundWage;
-		
-		if($ItemID == "80")
-			return $FundWage;
-		if($ItemID == "81")
-			return $AgentWage;
+
 	}
 	
 	//--------------------------------------------------------
@@ -286,9 +336,9 @@ class EventComputeItems {
 	
 	static function SetSpecialTafsilis($EventID, $EventRow, $params){
 		
-		$t1 = array("TafsiliID" => "", "TafsiliDesc" => "");
-		$t2 = array("TafsiliID" => "", "TafsiliDesc" => "");
-		$t3 = array("TafsiliID" => "", "TafsiliDesc" => "");
+		$t1 = array("TafsiliID" => "0", "TafsiliDesc" => "");
+		$t2 = array("TafsiliID" => "0", "TafsiliDesc" => "");
+		$t3 = array("TafsiliID" => "0", "TafsiliDesc" => "");
 						
 		switch($EventID)
 		{
@@ -307,11 +357,18 @@ class EventComputeItems {
 			case EVENT_LOANDAILY_innerSource:
 			case EVENT_LOANDAILY_agentSource_committal:
 			case EVENT_LOANDAILY_agentSource_non_committal:
+			case EVENT_LOANDAILY_agentlate:
+			case EVENT_LOANDAILY_innerLate:
+			case EVENT_LOANDAILY_agentPenalty:
+			case EVENT_LOANDAILY_innerPenalty:
 			case EVENT_LOANCHEQUE_agentSource:
 			case EVENT_LOANCONTRACT_innerSource:
 				
 				$ReqObj = new LON_requests($params[0]);
 				/* @var $ReqObj LON_requests */
+				
+				if(in_array($EventRow["CostCode"],array("3030101","1010101")) !== false)
+					return array($t1,$t2,$t3);
 				
 				if($EventRow["TafsiliType1"] == TAFSILITYPE_LOAN)
 					$t1 = self::FindTafsili(TAFSILITYPE_LOAN, $ReqObj->LoanID);

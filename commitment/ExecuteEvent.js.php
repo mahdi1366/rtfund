@@ -60,8 +60,7 @@ function ExecuteEvent(){
 				
 				if(record.data["paramType" + j] == "combo")
 				{
-					new Ext.form.field.Base({
-						xtype : "combo",
+					new Ext.form[ ExecuteEventObj.fieldClasses[ record.data["paramType" + j] ] ]({
 						renderTo : ExecuteEventObj.get("param" + j + "_" + record.data.RowID),
 						name :  "param" + j + "_" + record.data.RowID,
 						width : 80,
@@ -69,7 +68,7 @@ function ExecuteEvent(){
 							fields:["id","title"],
 							proxy: {
 								type: 'jsonp',
-								url: ExecuteEventObj.address_prefix + 'doc.data.php?task=selectParamItems&ParamID=' +
+								url: ExecuteEventObj.address_prefix + '../accounting/docs/doc.data.php?task=selectParamItems&ParamID=' +
 									record.data["ParamID" + j],
 								reader: {root: 'rows',totalProperty: 'totalCount'}
 							},
@@ -103,7 +102,7 @@ function ExecuteEvent(){
 					width : 90
 				});
 			}
-			if(record.data.Tafsili == "0" && record.data.TafsiliType*1 > 0)
+			if(record.data.TafsiliID1 == "0" && record.data.TafsiliType1*1 > 0)
 			{
 				new Ext.form.ComboBox({
 					renderTo : ExecuteEventObj.get("TafsiliID1_" + record.data.RowID),
@@ -112,11 +111,8 @@ function ExecuteEvent(){
 						fields:["TafsiliID","TafsiliDesc"],
 						proxy: {
 							type: 'jsonp',
-							url: this.address_prefix + '../baseinfo/baseinfo.data.php',
-							params : {
-								task : "GetAllTafsilis",
-								TafsiliType : record.data.TafsiliType
-							},
+							url: ExecuteEventObj.address_prefix + '../accounting/baseinfo/baseinfo.data.php?'+
+								'task=GetAllTafsilis&TafsiliType='+record.data.TafsiliType1,
 							reader: {root: 'rows',totalProperty: 'totalCount'}
 						}
 					}),
@@ -127,7 +123,7 @@ function ExecuteEvent(){
 					displayField : "TafsiliDesc"
 				});
 			}
-			if(record.data.Tafsili2 == "0" && record.data.TafsiliType2*1 > 0)
+			if(record.data.TafsiliID2 == "0" && record.data.TafsiliType2*1 > 0)
 			{
 				new Ext.form.ComboBox({
 					renderTo : ExecuteEventObj.get("TafsiliID2_" + record.data.RowID),
@@ -136,11 +132,8 @@ function ExecuteEvent(){
 						fields:["TafsiliID","TafsiliDesc"],
 						proxy: {
 							type: 'jsonp',
-							url: this.address_prefix + '../baseinfo/baseinfo.data.php',
-							params : {
-								task : "GetAllTafsilis",
-								TafsiliType : record.data.TafsiliType
-							},
+							url: ExecuteEventObj.address_prefix + '../accounting/baseinfo/baseinfo.data.php?'+
+								'task=GetAllTafsilis&TafsiliType='+record.data.TafsiliType2,
 							reader: {root: 'rows',totalProperty: 'totalCount'}
 						}
 					}),
@@ -151,7 +144,7 @@ function ExecuteEvent(){
 					displayField : "TafsiliDesc"
 				});
 			}
-			if(record.data.Tafsili3 == "0" && record.data.TafsiliType3*1 > 0)
+			if(record.data.TafsiliID3 == "0" && record.data.TafsiliType3*1 > 0)
 			{
 				new Ext.form.ComboBox({
 					renderTo : ExecuteEventObj.get("TafsiliID3_" + record.data.RowID),
@@ -160,11 +153,8 @@ function ExecuteEvent(){
 						fields:["TafsiliID","TafsiliDesc"],
 						proxy: {
 							type: 'jsonp',
-							url: this.address_prefix + '../baseinfo/baseinfo.data.php',
-							params : {
-								task : "GetAllTafsilis",
-								TafsiliType : record.data.TafsiliType
-							},
+							url: ExecuteEventObj.address_prefix + '../accounting/baseinfo/baseinfo.data.php?'+
+								'task=GetAllTafsilis&TafsiliType='+record.data.TafsiliType3,
 							reader: {root: 'rows',totalProperty: 'totalCount'}
 						}
 					}),
@@ -228,7 +218,7 @@ ExecuteEvent.Param3Renderer = function(v,p,r){
 ExecuteEvent.TafsiliRenderer1 = function(v,p,r){
 	if(r.data.TafsiliType1 == null || r.data.TafsiliType1 == undefined || r.data.TafsiliType1*1 == 0)
 			return '';
-	if(v == "0" )
+	if(v == "0" || v == null || v == undefined)
 		return r.data.TafsiliTypeDesc1 + "<br><div id=TafsiliID1_" + r.data.RowID + "></div>";
 	else
 		return r.data.TafsiliTypeDesc1 + ":<br>" + r.data.TafsiliDesc1;
@@ -236,7 +226,7 @@ ExecuteEvent.TafsiliRenderer1 = function(v,p,r){
 ExecuteEvent.TafsiliRenderer2 = function(v,p,r){
 	if(r.data.TafsiliType2 == null || r.data.TafsiliType2 == undefined || r.data.TafsiliType2*1 == 0)
 		return '';
-	if(v == "0")
+	if(v == "0" || v == null || v == undefined)
 		return r.data.TafsiliTypeDesc2 + "<br><div id=TafsiliID2_" + r.data.RowID + "></div>";
 	else
 		return r.data.TafsiliTypeDesc2 + ":<br>" + r.data.TafsiliDesc2;
@@ -244,7 +234,7 @@ ExecuteEvent.TafsiliRenderer2 = function(v,p,r){
 ExecuteEvent.TafsiliRenderer3 = function(v,p,r){
 	if(r.data.TafsiliType3 == null || r.data.TafsiliType3 == undefined || r.data.TafsiliType3*1 == 0)
 		return '';
-	if(v == "0")
+	if(v == "0" || v == null || v == undefined)
 		return r.data.TafsiliTypeDesc3 + "<br><div id=TafsiliID3_" + r.data.RowID + "></div>";
 	else
 		return r.data.TafsiliTypeDesc3 + ":<br>" + r.data.TafsiliDesc3;

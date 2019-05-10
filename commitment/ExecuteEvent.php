@@ -36,11 +36,11 @@ if(count($SourcesArr)>0)
 	$LocalNo = ExecuteEvent::GetRegisteredDoc($EventID, $SourcesArr);
 	if($LocalNo !== false)
 	{
-		echo "<center><br><h1>" . 
+		/*echo "<center><br><h1>" . 
 				"رویداد مربوط به شرایط انتخابی شما قبلا در سند شماره " . $LocalNo . 
 				" صادر شده و قادر به صدور مجدد سند نمی باشید" . 
 				"</h1></center>";
-		die();
+		die();*/
 	}
 }
 

@@ -8,6 +8,10 @@ insert into ACC_tafsilis(TafsiliCode,TafsiliType,TafsiliDesc,ObjectID)
 update LON_requests left join ACC_tafsilis on(TafsiliType=130 and ObjectID=LoanID)
 set LoanID=9
 where TafsiliID is null
+ * 
+insert into ACC_tafsilis(TafsiliCode,TafsiliType,TafsiliDesc,ObjectID) 
+select AccountID,200,concat(BankDesc,' - ',AccountDesc),AccountID
+from ACC_accounts join ACC_banks using(BankID)
 
 insert into ACC_tafsilis(TafsiliCode,TafsiliType,TafsiliDesc,ObjectID) 
 		select ProcessID,150,ProcessTitle,ProcessID from BSC_processes

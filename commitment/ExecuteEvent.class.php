@@ -53,6 +53,10 @@ class ExecuteEvent {
 			case EVENT_LOANDAILY_innerSource:
 			case EVENT_LOANDAILY_agentSource_committal:
 			case EVENT_LOANDAILY_agentSource_non_committal:
+			/*case EVENT_LOANDAILY_innerLate:
+			case EVENT_LOANDAILY_agentlate:
+			case EVENT_LOANDAILY_innerPenalty:
+			case EVENT_LOANDAILY_agentPenalty:*/
 				$this->EventFunction = "EventComputeItems::LoanDaily";
 				break;			
 		}
@@ -121,6 +125,17 @@ class ExecuteEvent {
 		$obj->CostID = $eventRow["CostID"];
 		$obj->locked = "YES";
 		//------------------ set amounts ------------------------
+		if($this->AllRowsAmount*1 > 0)
+		{
+			if($eventRow["CostType"] == "DEBTOR")
+				$amount = isset($_POST["DebtorAmount_" . $eventRow["RowID"]]) ? 
+					$_POST["DebtorAmount_" . $eventRow["RowID"]] : $this->AllRowsAmount;
+			else
+				$amount = isset($_POST["CreditorAmount_" . $eventRow["RowID"]]) ? 
+					$_POST["CreditorAmount_" . $eventRow["RowID"]] : $this->AllRowsAmount;
+			$amount = preg_replace("/,/", "", $amount);
+		}
+		
 		if($amount == null) 
 		{
 			if($eventRow["ComputeItemID"]*1 > 0)
@@ -149,16 +164,6 @@ class ExecuteEvent {
 						return true;
 					}
 				}
-			}
-			else
-			{
-				if($eventRow["CostType"] == "DEBTOR")
-					$amount = isset($_POST["DebtorAmount_" . $eventRow["RowID"]]) ? 
-						$_POST["DebtorAmount_" . $eventRow["RowID"]] : $this->AllRowsAmount;
-				else
-					$amount = isset($_POST["CreditorAmount_" . $eventRow["RowID"]]) ? 
-						$_POST["CreditorAmount_" . $eventRow["RowID"]] : $this->AllRowsAmount;
-				$amount = preg_replace("/,/", "", $amount);
 			}
 		}
 		else 
