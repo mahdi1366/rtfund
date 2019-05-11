@@ -361,6 +361,7 @@ class EventComputeItems {
 			case EVENT_LOANDAILY_innerLate:
 			case EVENT_LOANDAILY_agentPenalty:
 			case EVENT_LOANDAILY_innerPenalty:
+			case EVENT_LOANCHEQUE_payed:
 			case EVENT_LOANCHEQUE_agentSource:
 			case EVENT_LOANCONTRACT_innerSource:
 				

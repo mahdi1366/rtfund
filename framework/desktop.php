@@ -313,7 +313,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 				border : false,
 				layout: 'fit',
 				height : 100,
-				html : "<div style='background-color: #fdfdfd;background-image: url(http://www.transparenttextures.com/patterns/subtle-grey.png);" +
+				html : "<div style='background-color: #fdfdfd;background-image: url(icons/grayStrips.jpg);" +
 					"font-family:IranNastaliq; font-size: 35px;color : #5883af;text-shadow: 2px 2px 4px #85ab38;padding-right:10px;height:100%' >" + 
 					"<?= SoftwareName ?>"+
 					"<div class='blueText UserInfoBox'>" + 
@@ -362,7 +362,7 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 			maxSize: 180,
 			resizable : false,
 			fill: true,	  
-			bodyStyle : "background-color: #fdfdfd;background-image: url(http://www.transparenttextures.com/patterns/subtle-grey.png);text-align:center",
+			bodyStyle : "background-color: #fdfdfd;background-image: url(icons/grayStrips.jpg);text-align:center",
 			defaults : {
 				hideCollapseTool : true
 			},

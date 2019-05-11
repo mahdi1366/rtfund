@@ -1272,7 +1272,11 @@ function ReportMoneyRender($row, $value){
 		if(!empty($_REQUEST["excel"]))
 			return $value;
 		else
+		{
+			if($value*1 < 0)
+				return "<font color=red>" . number_format($value) . "</font>";
 			return number_format($value*1);
+		}
 	}
 	
 function ReportDateRender($row, $value){

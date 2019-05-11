@@ -206,6 +206,7 @@ define("EVENT_LOANDAILY_agentlate", 1725);
 define("EVENT_LOANDAILY_innerPenalty", 1726);
 define("EVENT_LOANDAILY_agentPenalty", 1727);
 
+define("EVENT_LOANCHEQUE_payed", 1755);
 define("EVENT_LOANCHEQUE_innerSource", 1766);
 define("EVENT_LOANCHEQUE_agentSource", 1772);
 define("EVENT_CHEQUE_SANDOGHAMANAT_inner", 1768);

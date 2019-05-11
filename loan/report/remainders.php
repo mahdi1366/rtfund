@@ -26,7 +26,9 @@ function MakeWhere(&$where, &$whereParam){
 				strpos($key, "checkcombo") !== false || 
 				strpos($key, "treecombo") !== false || 
 				strpos($key, "reportcolumn_fld") !== false || 
-				strpos($key, "reportcolumn_ord") !== false)
+				strpos($key, "reportcolumn_ord") !== false ||
+				
+				$key == "ComputeDate")
 			continue;
 		
 		if($key == "SubAgentID")
@@ -99,9 +101,10 @@ function showReport(){
 	foreach($dt as $row)
 	{
 		$RequestID = $row["RequestID"];
-		$ComputeArr = LON_requests::ComputePayments($RequestID, $dt);
+		$ComputeDate = !empty($_POST["ComputeDate"]) ? 
+				DateModules::shamsi_to_miladi($_POST["ComputeDate"],"-") : DateModules::Now();
+		$ComputeArr = LON_Computes::NewComputePayments($RequestID, $ComputeDate);
 		$PureArr = LON_requests::ComputePures($RequestID);
-		
 		//............ get remain untill now ......................
 		$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr);
 		$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID, $ComputeArr);
@@ -439,6 +442,10 @@ function LoanReport_remainders()
 			queryMode : 'local',
 			width : 370,
 			hiddenName : "ComputeMode"
+		},{
+			xtype : "shdatefield",
+			fieldLabel : "محاسبه تا تاریخ",
+			name : "ComputeDate"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",

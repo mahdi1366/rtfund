@@ -22,6 +22,8 @@ $reqs = PdoDataAccess::runquery(" select r.RequestID from LON_requests r
 //print_r(ExceptionHandler::PopAllExceptions());
 $pdo = PdoDataAccess::getPdoObject();
 
+$PayDocObj = null;
+
 foreach($reqs as $requset)
 {
 	$pdo->beginTransaction();
@@ -53,7 +55,7 @@ foreach($reqs as $requset)
 		$pdo->rollBack();
 		continue;
 	}
-	ob_flush();flush();
+	ob_flush();flush();*/
 	//---------------- رویدادهای پرداخت وام----------------------------
 	if($reqObj->ReqPersonID*1 > 0)
 		$EventID = EVENT_LOANPAYMENT_agentSource;
@@ -62,11 +64,17 @@ foreach($reqs as $requset)
 	$pays = PdoDataAccess::runquery("select * from LON_payments "
 			. " where PayDate<'$GToDate' AND RequestID=?", array($reqObj->RequestID));
 	
-	$eventobj = new ExecuteEvent($EventID);
+	$eventobj = new ExecuteEvent(EVENT_LOANCHEQUE_payed);
+	//$eventobj = new ExecuteEvent($EventID);
 	foreach($pays as $pay)
 	{
+		//$eventobj->Sources = array($reqObj->RequestID, $partObj->PartID, $pay["PayID"]);
+		//$result = $eventobj->RegisterEventDoc($pdo);
+		$eventobj->DocObj = $PayDocObj;
 		$eventobj->Sources = array($reqObj->RequestID, $partObj->PartID, $pay["PayID"]);
-		$result = $eventobj->RegisterEventDoc($pdo);
+		$eventobj->AllRowsAmount = $pay["PayAmount"];
+		$result = $eventobj->RegisterEventDoc($pdo);		
+		$PayDocObj = $eventobj->DocObj;
 	}
 	echo "پرداخت وام : " . ($result ? "true" : "false") . "<br>";
 	if(ExceptionHandler::GetExceptionCount() > 0)
@@ -75,7 +83,8 @@ foreach($reqs as $requset)
 		$pdo->rollBack();
 		continue;
 	}
-	ob_flush();flush();*/
+	
+	ob_flush();flush();
 	//---------------  رویدادهای دریافت چک----------------------------
 	/*$result = true;
 	$cheques = PdoDataAccess::runquery(
@@ -189,7 +198,7 @@ foreach($reqs as $requset)
 	ob_flush();flush();
 	*/
 	//---------------  رویدادهای روزانه تاخیر و جریمه----------------------------
-	
+	/*
 	$computeArr = LON_Computes::NewComputePayments($reqObj->RequestID, $GToDate);
 	$totalLate = 0;
 	$totalPenalty = 0;
@@ -230,7 +239,7 @@ foreach($reqs as $requset)
 		$pdo->rollBack();
 		continue;
 	}
-	ob_flush();flush();
+	ob_flush();flush();*/
 	//--------------------------------------------------
 	$pdo->commit();
 	
