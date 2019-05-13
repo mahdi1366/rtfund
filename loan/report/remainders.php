@@ -148,9 +148,12 @@ function showReport(){
 	$rpg->addColumn("معرفی کننده", "ReqFullname","ReqPersonRender");
 	$rpg->addColumn("مشتری", "LoanFullname");
 	$rpg->addColumn('مبنای محاسبه', "ComputeMode", "ComputeRender");
-	$rpg->addColumn("مبلغ وام", "PartAmount","ReportMoneyRender");
-	$rpg->addColumn("مانده قابل پرداخت معوقه", "CurrentRemain", "ReportMoneyRender");
-	$rpg->addColumn("مانده تا انتها", "TotalRemain", "ReportMoneyRender");
+	$col = $rpg->addColumn("مبلغ وام", "PartAmount","ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpg->addColumn("مانده قابل پرداخت معوقه", "CurrentRemain", "ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpg->addColumn("مانده تا انتها", "TotalRemain", "ReportMoneyRender");
+	$col->EnableSummary();
 	$rpg->addColumn("مبلغ قابل پرداخت در صورت تسویه وام ", "DefrayAmount", "ReportMoneyRender");
 	
 	if(!$rpg->excel)
