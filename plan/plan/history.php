@@ -46,7 +46,7 @@ if(!empty($_POST["GroupID"]))
 									DateModules::miladi_to_shamsi($Logs[$i]["ActDate"]) . "</td>
 				<td><div style='cursor:pointer' class='qtip-target' data-qtip='" . 
 					$Logs[$i]["ActDesc"] . "'>" .
-					String::ellipsis($Logs[$i]["ActDesc"], 48). "</div></td>
+					str_ellipsis($Logs[$i]["ActDesc"], 48). "</div></td>
 			</tr>";
 
 		}

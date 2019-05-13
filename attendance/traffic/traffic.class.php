@@ -17,7 +17,7 @@ class ATN_traffic extends OperationClass
 	public $IsActive;
 	public $RequestID;
 	
-	static function Get($where = '', $whereParams = array()) {
+	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		
 		$query = "select t.*,s.ShiftTitle , s.FromTime,s.ToTime
 			
@@ -526,7 +526,7 @@ class ATN_requests extends OperationClass
 			where RequestID=?", array($id));
 	}
 	
-	static function Get($where = '', $whereParams = array()) {
+	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		
 		$query = "select t.*,concat(p1.fname,' ',p1.lname) fullname,
 				bf1.InfoDesc GoMeanDesc,bf2.InfoDesc ReturnMeanDesc,bf3.InfoDesc OffTypeDesc,

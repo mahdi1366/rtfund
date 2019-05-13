@@ -41,7 +41,7 @@ else
 			<td  width=150px>" . number_format($Logs[$i]["amount"],0,'.',',') . "</td>
 			<td width=110px>" . DateModules::miladi_to_shamsi($Logs[$i]["flow_date"]) . "</td>
 			<td><div style='cursor:pointer' class='qtip-target' data-qtip='" . $Logs[$i]["comments"] . "'>" .
-				String::ellipsis($Logs[$i]["comments"], 48). "</div></td>
+				str_ellipsis($Logs[$i]["comments"], 48). "</div></td>
 		</tr>";
 		
 		$sum += $Logs[$i]["amount"];

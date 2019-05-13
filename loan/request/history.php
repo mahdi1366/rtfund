@@ -36,7 +36,7 @@ else
 								DateModules::miladi_to_shamsi($Logs[$i]["ActDate"]) . "</td>
 			<td><div style='cursor:pointer' class='qtip-target' data-qtip='" . 
 				$Logs[$i]["StepComment"] . "'>" .
-				String::ellipsis($Logs[$i]["StepComment"], 48). "</div></td>
+				str_ellipsis($Logs[$i]["StepComment"], 48). "</div></td>
 		</tr>";
 	}
 }

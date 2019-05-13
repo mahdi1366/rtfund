@@ -542,37 +542,35 @@ define('NUMBER_THOUSANDS_POINT', ',');
 define('NUMBER_NEGATIVE_VIEW',	 'N-'); // N- or (N)
 
 
-class String{
-	
-	static function lastIndexOf($haystack , $needle){
+function str_ellipsis($value, $length, $word = true) {
 		
-		$str = strrev($haystack);
-		$index = strpos($str, $needle);
-		if($index === false)
-			return false;
-		
-		return strlen($haystack) - $index - 1;
-	}
-	
-	static function ellipsis($value, $length, $word = true) {
-		
-		if ($value && strlen($value) > $length)
-		{
-			if ($word) {
-				$vs = substr($value, 0, $length - 2);
-				$index = max(array(	self::lastIndexOf($vs, " "), 
-									self::lastIndexOf($vs, "."), 
-									self::lastIndexOf($vs, "?"), 
-									self::lastIndexOf($vs, "!")));
-				if ($index !== false)
-					return substr($value, 0, $index) . "...";
-				else
-					return substr($value, 0, $length - 3) . "...";
-			}
-			return substr($value, 0, $length - 3) . "...";
+	if ($value && strlen($value) > $length)
+	{
+		if ($word) {
+			$vs = substr($value, 0, $length - 2);
+			$index = max(array(str_lastIndexOf($vs, " "), 
+								str_lastIndexOf($vs, "."), 
+								str_lastIndexOf($vs, "?"), 
+								str_lastIndexOf($vs, "!")));
+			if ($index !== false)
+				return substr($value, 0, $index) . "...";
+			else
+				return substr($value, 0, $length - 3) . "...";
 		}
-		return $value;
+		return substr($value, 0, $length - 3) . "...";
 	}
+	return $value;
 }
+
+function str_lastIndexOf($haystack , $needle){
+
+	$str = strrev($haystack);
+	$index = strpos($str, $needle);
+	if($index === false)
+		return false;
+
+	return strlen($haystack) - $index - 1;
+}
+	
 
 ?>
