@@ -30,9 +30,8 @@ if(!session::checkLogin())
 define("SYSTEMID", 6);
 
 $address_prefix = getenv("DOCUMENT_ROOT");
-$js_prefix_address = implode("/" , 
-		array_splice(preg_split('/\//', $_SERVER["SCRIPT_NAME"]),0,
-		count(preg_split('/\//', $_SERVER["SCRIPT_NAME"]))-1)) . "/";
+$script = preg_split('/\//', $_SERVER["SCRIPT_NAME"]);
+$js_prefix_address = implode("/" , array_splice($script,0,	count($script)-1)) . "/";
 
 if(isset($_REQUEST["framework"]))
 {
