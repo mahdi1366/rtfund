@@ -882,9 +882,9 @@ class LON_requests extends PdoDataAccess{
 		$amount = 0;
 		
 		$result = self::GetDelayAmounts($RequestID, $PartObj);
-		if($PartObj->DelayReturn == "CUSTOMER")
+		if($PartObj->DelayReturn != "INSTALLMENT")
 			$amount += $result["FundDelay"];
-		if($PartObj->AgentDelayReturn == "CUSTOMER")
+		if($PartObj->AgentDelayReturn != "INSTALLMENT")
 			$amount += $result["AgentDelay"];
 		
 		if($PartObj->FirstTotalWage*1 > 0)
