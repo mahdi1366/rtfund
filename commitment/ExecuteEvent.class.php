@@ -72,8 +72,6 @@ class ExecuteEvent {
 		else
 			$this->pdo = &$pdo;
 
-		$this->ComputedItems = array();
-			
 		$eventRows = PdoDataAccess::runquery("
 			select * from COM_EventRows er 
 				join COM_events e using(EventID) 

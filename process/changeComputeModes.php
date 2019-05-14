@@ -4,7 +4,7 @@ require_once '../loan/request/request.data.php';
 ini_set("display_errors", "On");
 
 $dt = PdoDataAccess::runquery("select RequestID from LON_requests where StatusID=70 "
-		. "and ReqPersonID not in(1003,1004,2051,1762,1825)");
+		. "and ReqPersonID not in(1003,2051)");
 flush();
 ob_flush();
 $i=0;
