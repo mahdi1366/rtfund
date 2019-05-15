@@ -17,7 +17,7 @@ $GToDate = '2019-03-21'; //1398/01/01
 
 $reqs = PdoDataAccess::runquery(" select r.RequestID from LON_requests r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
-	where PartDate<'$GToDate' AND r.RequestID >=685
+	where PartDate<'$GToDate' /*AND r.RequestID = 17*/
 		AND ComputeMode='NEW' AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
 		order by RequestID");
 
@@ -36,14 +36,14 @@ foreach($reqs as $requset)
 	
 	$DocObj[ $reqObj->RequestID ] = null;
 	
-//	Allocate($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-//	Contract($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-//	Payment($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-//	PaymentCheque($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-//	BackPayCheques($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-//	BackPay($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	Allocate($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	Contract($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	Payment($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	PaymentCheque($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	BackPayCheques($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	BackPay($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
 	DailyIncome($reqObj, $partObj, $pdo);
-//	DailyWage($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	DailyWage($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
 	
 	//--------------------------------------------------
 	$pdo->commit();
@@ -67,7 +67,6 @@ function Allocate($reqObj , $partObj, &$DocObj, $pdo){
 	$result = $eventobj->RegisterEventDoc($pdo);
 	if($result)
 		$DocObj = $eventobj->DocObj;
-	
 	echo "تخصیص وام : " . ($result ? "true" : "false") . "<br>";
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
@@ -76,6 +75,7 @@ function Allocate($reqObj , $partObj, &$DocObj, $pdo){
 		return;
 	}
 	ob_flush();flush();
+	
 }
 
 /**
@@ -101,7 +101,6 @@ function Contract($reqObj , $partObj, &$DocObj, $pdo){
 	$result = $eventobj->RegisterEventDoc($pdo);
 	if($result)
 		$DocObj = $eventobj->DocObj;
-	
 	echo "عقد قرارداد : " . ($result ? "true" : "false") . "<br>";
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
@@ -167,7 +166,7 @@ function PaymentCheque($reqObj , $partObj, &$DocObj, $pdo){
 		$eventobj->DocObj = $DocObj;
 		$eventobj->Sources = array($reqObj->RequestID, $partObj->PartID, $pay["PayID"]);
 		$eventobj->AllRowsAmount = $pay["PayAmount"];
-		$result = $eventobj->RegisterEventDoc($pdo);	
+		$result = $eventobj->RegisterEventDoc($pdo);		
 		if($result)
 			$DocObj = $eventobj->DocObj;
 	}
@@ -223,7 +222,7 @@ function BackPayCheques($reqObj , $partObj, &$DocObj, $pdo){
  */
 function BackPay($reqObj , $partObj, &$DocObj, $pdo){
 	global $GToDate;
-	
+	$result = true;
 	$backpays = PdoDataAccess::runquery(
 			"select * from LON_BackPays
 				left join ACC_IncomeCheques i using(IncomeChequeID) 
@@ -279,7 +278,7 @@ function BackPay($reqObj , $partObj, &$DocObj, $pdo){
  */
 function DailyIncome($reqObj , $partObj, $pdo){
 	
-	$days = PdoDataAccess::runquery_fetchMode("select * from jdate where Jdate between ? AND '1397/12/29'", 
+	$days = PdoDataAccess::runquery_fetchMode("select * from jdate where Jdate between ? AND '1396/12/29'", 
 			DateModules::miladi_to_shamsi($partObj->PartDate), $pdo);
 	echo "days : " . $days->rowCount() . "<br>";
 	ob_flush();flush();
@@ -295,11 +294,15 @@ function DailyIncome($reqObj , $partObj, $pdo){
 			$EventID = EVENT_LOANDAILY_agentSource_non_committal;
 	}
 	$EventObj = new ExecuteEvent($EventID);
+	$EventObj->ComputedItems[ "80" ] = 0;
+	$EventObj->ComputedItems[ "81" ] = 0;
 	while($day = $days->fetch())
 	{
 		$EventObj->Sources = array($reqObj->RequestID, $partObj->PartID, $day["gdate"]);
-		$result = $EventObj->RegisterEventDoc($pdo);
+		$EventObj->ComputedItems[ 80 ] += EventComputeItems::LoanDaily("80",$EventObj->Sources)*1;
+		$EventObj->ComputedItems[ 81 ] += EventComputeItems::LoanDaily("81",$EventObj->Sources)*1;
 	}
+	$result = $EventObj->RegisterEventDoc($pdo);
 	echo "روزانه : " . ($result ? "true" : "false") . "<br>";
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
@@ -316,7 +319,7 @@ function DailyIncome($reqObj , $partObj, $pdo){
 function DailyWage($reqObj , $partObj, &$DocObj, $pdo){
 	
 	global $GToDate;	
-	
+	$result = true;
 	$computeArr = LON_Computes::NewComputePayments($reqObj->RequestID, $GToDate);
 	$totalLate = 0;
 	$totalPenalty = 0;

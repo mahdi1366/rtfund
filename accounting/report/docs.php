@@ -145,6 +145,7 @@ function GetData(){
 	$query .= $group == "" ? " order by DocDate,LocalNo" : " order by " . $group;
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
+	
 	return $dataTable;
 }
 
