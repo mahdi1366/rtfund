@@ -58,6 +58,8 @@ foreach($reqs as $requset)
 function Allocate($reqObj , $partObj, &$DocObj, $pdo){
 	
 	global $GToDate;
+	if($reqObj->ReqPersonID*1 == 0)
+		return;
 	
 	$EventID = EVENT_LOAN_ALLOCATE;
 
