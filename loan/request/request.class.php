@@ -471,11 +471,13 @@ class LON_requests extends PdoDataAccess{
 		}
 	}
 	
-	static function ComputePayments($RequestID, &$installments, $pdo = null){
+	static function ComputePayments($RequestID, &$installments, $ToDate = null, $pdo = null){
 
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 		if($obj->ComputeMode == "NEW")
 			return LON_Computes::NewComputePayments($RequestID, null, $pdo);
+		
+		$ToDate = $ToDate == null ? DateModules::Now() : $ToDate;
 		
 		$installments = PdoDataAccess::runquery("select * from 
 			LON_installments where RequestID=? AND history='NO' AND IsDelayed='NO' order by InstallmentDate", 
@@ -503,13 +505,14 @@ class LON_requests extends PdoDataAccess{
 				left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 				where RequestID=:r AND 
 					if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+					AND PayDate <= :tdate
 			union All
 				select 0 id,'pay' type, 0 BackPayID,
 					CostDate RecordDate, -1*CostAmount RecordAmount,0, CostDesc details, 0
 				from LON_costs 
-				where RequestID=:r AND CostAmount<>0
+				where RequestID=:r AND CostAmount<>0 AND CostDate <= :tdate
 			)t
-			order by substr(RecordDate,1,10), RecordAmount desc" , array(":r" => $RequestID), $pdo);
+			order by substr(RecordDate,1,10), RecordAmount desc" , array(":r" => $RequestID, ":tdate" => $ToDate), $pdo);
 		
 		$TotalLate = 0;
 		$TotalForfeit = 0;
@@ -610,9 +613,9 @@ class LON_requests extends PdoDataAccess{
 			}
 			
 			$StartDate = $record["RecordDate"];
-			$ToDate = $i+1 < count($records) ? $records[$i+1]["RecordDate"] : DateModules::Now();
-			if($ToDate > DateModules::Now())
-				$ToDate = DateModules::Now();
+			$ToDate = $i+1 < count($records) ? $records[$i+1]["RecordDate"] : $ToDate;
+			if($ToDate > $ToDate)
+				$ToDate = $ToDate;
 			if($StartDate < $ToDate && $TotalRemainder > 0)
 			{
 				if($TotalRemainder > 0)
@@ -673,9 +676,9 @@ class LON_requests extends PdoDataAccess{
 				//if(!$PayRecord)
 				//	$StartDate = $InstallmentRow["ActionDate"];
 				
-				$ToDate = $PayRecord ? $PayRecord["ActionDate"] : DateModules::Now();
-				if($ToDate > DateModules::Now())
-					$ToDate = DateModules::Now();
+				$ToDate = $PayRecord ? $PayRecord["ActionDate"] : $ToDate;
+				if($ToDate > $ToDate)
+					$ToDate = $ToDate;
 				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
 				$percent = $obj->ForfeitPercent*1 + $obj->LatePercent*1 - $obj->ForgivePercent*1;
 				$percent = $percent < 0 ? 0 : $percent;
