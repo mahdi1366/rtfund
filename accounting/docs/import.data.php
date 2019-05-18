@@ -2297,7 +2297,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	
 	require_once getenv("DOCUMENT_ROOT") . '/loan/request/request.class.php';
 	$dt = array();
-	$returnArr = LON_requests::ComputePayments($PayObj->RequestID, $dt, $pdo);
+	$returnArr = LON_requests::ComputePayments($PayObj->RequestID, $dt, null, $pdo);
 	$remain = LON_requests::GetTotalRemainAmount($PayObj->RequestID, $returnArr);
 	$ExtraPay = 0;
 	if($remain < 0)
