@@ -19,6 +19,9 @@ insert into ACC_tafsilis(TafsiliCode,TafsiliType,TafsiliDesc,ObjectID)
 
 /**/
 
+ALTER TABLE `framewor_rtfund`.`LON_requests` 
+ADD COLUMN `EndingDate` DATE NOT NULL DEFAULT '0000-00-00' AFTER `FundRules`;
+
 ALTER TABLE `framewor_rtfund`.`LON_ReqParts` 
 		MODIFY COLUMN `ComputeMode` ENUM('BANK','NEW','NOAVARI') NOT NULL DEFAULT 'BANK';
 
@@ -27,3 +30,5 @@ set ComputeMode='NOAVARI'
 where ReqPersonID=1003;
 
 ALTER TABLE `framewor_rtfund`.`ACC_ChequeHistory` ADD COLUMN `DocID` INTEGER UNSIGNED DEFAULT 0 AFTER `details`;
+
+	
