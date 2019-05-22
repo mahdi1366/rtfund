@@ -320,7 +320,7 @@ WFM_NewForm.prototype.LoadForm = function(){
 				"&EditContent=true&FormID=" + this.FormID,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["FormID","FormTitle", "content", "FlowID", "SmsSend","SendOnce",
+		fields : ["FormID","FormTitle", "content", "FlowID", "SmsSend","SendOnce", "DescItemID",
 			"IsStaff", "IsCustomer", "IsShareholder", "IsSupporter", "IsExpert", "IsAgent"],
 		autoLoad : true,
 		listeners : {
@@ -479,6 +479,26 @@ WFM_NewForm.prototype.BuildForms = function(){
 				inputValue : "YES",
 				style : "margin-right:80px",
 				boxLabel : "متقاضی فقط یکبار قادر به ارسال این فرم باشد"
+			},{
+				xtype: 'combo',
+				colspan : 3,
+				labelWidth : 220,
+				fieldLabel: 'آیتم مشخصه فرم برای نمایش در لیست فرم ها',
+				store: new Ext.data.Store({
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + 'form.data.php?task=selectFormItems&NotGlobal=true'+
+							'&FormID=' + this.FormID,
+						reader: {root: 'rows', totalProperty: 'totalCount'}
+					},
+					fields: ['FormItemID', "FormID", 'ItemName', 'ItemType'],
+					autoLoad : true					
+				}),
+				displayField: 'ItemName',
+				pageSize : 10,
+				valueField: "FormItemID",
+				name : "DescItemID",
+				width: 450				
 			},{
 				xtype : "container",
 				colspan : 3,

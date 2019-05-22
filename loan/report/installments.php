@@ -146,7 +146,8 @@ function GetData(){
 	
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		print_r(ExceptionHandler::PopAllExceptions());
+		ini_set("display_errors", "On");
+		//print_r(ExceptionHandler::PopAllExceptions());
 		//echo PdoDataAccess::GetLatestQueryString();
 	}
 	
@@ -168,8 +169,9 @@ function GetData(){
 
 		if(!isset($computeArr[ $MainRow["RequestID"] ]))
 		{
+			$dt = array();
 			$computeArr[ $MainRow["RequestID"] ] = array(
-				"compute" => LON_Computes::NewComputePayments($MainRow["RequestID"]),
+				"compute" => LON_requests::ComputePayments($MainRow["RequestID"], $dt),
 				"computIndex" => 0,
 				"PayIndex" => 0
 				);
@@ -179,6 +181,31 @@ function GetData(){
 		for(; $ref["computIndex"] < count($ref["compute"]); $ref["computIndex"]++)
 		{
 			$row = $ref["compute"][$ref["computIndex"]];
+			if($row["ActionType"] != "installment")
+				continue;
+			if($row["InstallmentID"] == $MainRow["InstallmentID"])
+			{
+				for($k=0; $k < count($row["pays"]); $k++)
+				{  
+					$payRow = $row["pays"][$k];
+					
+					$MainRow["forfeit"] = $payRow["forfeit"];
+					$MainRow["ForfeitDays"] = $payRow["ForfeitDays"];
+					$MainRow["PayedDate"] = $payRow["PayedDate"];
+					$MainRow["PayedAmount"] = $payRow["PayedAmount"];
+					$MainRow["TotalRemainder"] = $payRow["remain"];
+					$returnArr[] = $MainRow;
+				}
+				
+				if(count($row["pays"]) == 0)
+					$returnArr[] = $MainRow;
+				
+				$ref["computIndex"]++;
+				break;
+				
+			}
+		
+			/*$row = $ref["compute"][$ref["computIndex"]];
 			if($row["type"] != "installment")
 				continue;
 			if($row["id"] == $MainRow["InstallmentID"])
@@ -221,7 +248,7 @@ function GetData(){
 				$ref["computIndex"]++;
 				break;
 
-			}
+			}*/
 		}
 	}
 	
@@ -301,20 +328,18 @@ function ListData($IsDashboard = false){
 	$col->rowspanByFields = array("RequestID");
 	
 	
-$col = $page_rpg->addColumn("تاریخ درخواست", "ReqDate");
-$col->type = "date";
-$page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
-$page_rpg->addColumn("مشتری", "LoanFullname");
-$page_rpg->addColumn("شعبه", "BranchName");
-$page_rpg->addColumn("مبلغ تایید شده", "PartAmount");
-$page_rpg->addColumn("مبلغ پرداخت شده", "SumPayments");
-$page_rpg->addColumn("تعداد اقساط", "InstallmentCount");
-$page_rpg->addColumn("تنفس(ماه)", "DelayMonths");
-$page_rpg->addColumn("کارمزد مشتری", "CustomerWage");
-$page_rpg->addColumn("کارمزد صندوق", "FundWage");
-$page_rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
-$page_rpg->addColumn("تضامین", "tazamin");
-	
+	$rpg->addColumn("مبلغ درخواست", "ReqAmount", "ReportMoneyRender");
+	$rpg->addColumn("مشتری", "LoanFullname");
+	$rpg->addColumn("شعبه", "BranchName");
+	$rpg->addColumn("مبلغ تایید شده", "PartAmount", "ReportMoneyRender");
+	$rpg->addColumn("مبلغ پرداخت شده", "SumPayments", "ReportMoneyRender");
+	$rpg->addColumn("تعداد اقساط", "InstallmentCount");
+	$rpg->addColumn("تنفس(ماه)", "DelayMonths");
+	$rpg->addColumn("کارمزد مشتری", "CustomerWage");
+	$rpg->addColumn("کارمزد صندوق", "FundWage");
+	$rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
+	$rpg->addColumn("تضامین", "tazamin");
+
 	
 	$col = $rpg->addColumn("تاریخ قسط", "InstallmentDate", "ReportDateRender");
 	$col->rowspaning = true;
