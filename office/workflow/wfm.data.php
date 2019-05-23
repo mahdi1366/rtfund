@@ -183,7 +183,7 @@ function SelectAllForms(){
 				format(wr.amount,0),'از تاریخ',g2j(wr.StartDate),'تا تاریخ',g2j(wr.EndDate))
 			
 			when b.param4='form' 
-				then concat_ws(' ',wfmf.FormTitle,'به شماره فرم ',wfmr.RequestNo) 
+				then concat_ws(' ',wfmf.FormTitle,'به شماره فرم ',wfmr.RequestNo,if(wfmf.DescItemID>0,concat('[ ',wfi.ItemName,' : ',wri.ItemValue,' ]'),'')) 
 			
 			when b.param4='process' then 
 				concat_ws(' ','فرایند ',process.ProcessTitle,pperson.CompanyName,pperson.fname,pperson.lname)
@@ -293,6 +293,8 @@ function SelectAllForms(){
 
 				left join WFM_requests wfmr on(b.param4='form' AND wfmr.RequestID=fr.ObjectID)
 				left join WFM_forms wfmf on(wfmr.FormID=wfmf.FormID)	
+				left join WFM_FormItems wfi on(wfi.FormID=wfmf.FormID AND wfi.FormItemID=wfmf.DescItemID)
+				left join WFM_RequestItems wri on(wri.RequestID=wfmr.RequestID AND wri.FormItemID=wfmf.DescItemID)
 	
 				left join BSC_processes process on(b.param4='process' AND process.ProcessID=fr.ObjectID)
 				left join BSC_persons pperson on(pperson.PersonID=fr.ObjectID2)	

@@ -25,7 +25,10 @@ $page_rpg->addColumn("معرف", "ReqPersonName");
 $page_rpg->addColumn("وام گیرنده", "LoanPersonName");
 $page_rpg->addColumn("تضامین", "tazamin");
 $page_rpg->addColumn("وضعیت", "StatusDesc");
-$col = $page_rpg->addColumn("تاریخ آخرین قسط", "LastInstallmentDate");
+
+$col = $page_rpg->addColumn("سررسید اولین قسط", "FirstInstallmentDate");
+$col->type = "date";
+$col = $page_rpg->addColumn("سررسید آخرین قسط", "LastInstallmentDate");
 $col->type = "date";
 $col = $page_rpg->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate");
 $col->type = "date";
@@ -117,6 +120,7 @@ function GetData(){
 				bi.InfoDesc StatusDesc,
 				tazamin,
 				t1.LastInstallmentDate,
+				t1.FirstInstallmentDate,
 				t3.MaxPayDate" .
 				($userFields != "" ? "," . $userFields : "")."
 				
@@ -128,7 +132,7 @@ function GetData(){
 			join LON_ReqParts p on(p.RequestID=r.RequestID AND p.IsHistory='NO')
 			join BSC_branches using(BranchID)
 			left join (
-				select RequestID, max(InstallmentDate) LastInstallmentDate 
+				select RequestID, max(InstallmentDate) LastInstallmentDate , min(InstallmentDate) FirstInstallmentDate
 				from LON_installments
 				where history='NO' AND IsDelayed='NO'
 				group by RequestID
@@ -165,7 +169,7 @@ function GetData(){
 	$dt = PdoDataAccess::runquery_fetchMode($query, $whereParam);
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		//print_r(ExceptionHandler::PopAllExceptions());
+		print_r(ExceptionHandler::PopAllExceptions());
 		//echo PdoDataAccess::GetLatestQueryString();
 	}
 	$ComputeDate = !empty($_POST["ComputeDate"]) ? 
@@ -180,6 +184,26 @@ function GetData(){
 		
 		if($remain == 0)
 			continue;
+		
+		$delayedInstallmentsCount = 0;
+		if($row["ComputeMode"] == "NEW")
+		{
+			
+		}
+		else
+		{
+			foreach($computeArr as $irow)
+			{
+				if($irow["ActionType"] == "installment")
+				{
+					if($irow["pays"][ count($irow["pays"])-1 ]["remain"]*1 > 0)
+						$delayedInstallmentsCount++;
+				}
+			}
+		}
+		$row["delayedInstallmentsCount"] = $delayedInstallmentsCount;
+		
+		
 		if($row["ComputeMode"] == "NEW")
 		{
 			$row["remain_pure"] = $RemainArr["remain_pure"];
@@ -222,10 +246,15 @@ function ListData($IsDashboard = false){
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("وضعیت", "StatusDesc");
 	$rpt->addColumn("تاریخ خاتمه", "EndingDate", "ReportDateRender");
-	$rpt->addColumn("تاریخ آخرین قسط", "LastInstallmentDate","ReportDateRender");
+	
+	$rpt->addColumn("سررسید اولین قسط", "FirstInstallmentDate","ReportDateRender");
+	$rpt->addColumn("سررسید آخرین قسط", "LastInstallmentDate","ReportDateRender");
 	$rpt->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate","ReportDateRender");
 	
-	$rpt->addColumn("قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");	
+	$rpt->addColumn("تعداد اقساط معوق", "delayedInstallmentsCount");
+	
+	
+	$rpt->addColumn("مانده قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");	
 	$rpt->addColumn("اصل وام معوقه", "remain_pure","ReportMoneyRender");
 	$rpt->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender");
 	$rpt->addColumn("مانده اصل و کارمزد", "remain_loan","ReportMoneyRender");
@@ -249,7 +278,7 @@ function ListData($IsDashboard = false){
 		echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family: titr;font-size:15px'>
-					گزارش وامهای وام ها 
+					گزارش وامهای معوق
 				</td>
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
 			. DateModules::shNow() . "<br>";
@@ -457,8 +486,8 @@ function LoanReport_DelayedInstalls()
 			xtype : "container",
 			html : "وضعیت خاتمه&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
 				"<input name=IsEnded type=radio value='YES' > خاتمه یافته &nbsp;&nbsp;" +
-				"<input name=IsEnded type=radio value='NO' > جاری &nbsp;&nbsp;" +
-				"<input name=IsEnded type=radio value='' checked > هردو " 
+				"<input name=IsEnded type=radio value='NO' checked> جاری &nbsp;&nbsp;" +
+				"<input name=IsEnded type=radio value=''  > هردو " 
 		},{
 			xtype : "fieldset",
 			title : "ستونهای گزارش",

@@ -8,19 +8,19 @@ require_once '../header.inc.php';
 require_once '../commitment/ExecuteEvent.class.php';
 require_once '../loan/request/request.class.php';
 
-ini_set('max_execution_time', 3000);
-ini_set('memory_limit','2000M');
+ini_set('max_execution_time', 30000);
+ini_set('memory_limit','1000M');
 
 global $GToDate;
-$GToDate = '2018-03-21'; //1397/01/01
-//$GToDate = '2019-03-21'; //1398/01/01
+//$GToDate = '2018-03-21'; //1397/01/01
+$GToDate = '2019-03-21'; //1398/01/01
 
 $reqs = PdoDataAccess::runquery(" select r.RequestID from LON_requests r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
 	where PartDate<'$GToDate' /*AND r.RequestID = 17*/
 		AND ComputeMode='NEW' AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
 		order by RequestID");
-//print_r(ExceptionHandler::PopAllExceptions());
+
 $pdo = PdoDataAccess::getPdoObject();
 
 $DocObj = array();
@@ -58,6 +58,8 @@ foreach($reqs as $requset)
 function Allocate($reqObj , $partObj, &$DocObj, $pdo){
 	
 	global $GToDate;
+	if($reqObj->ReqPersonID*1 == 0)
+		return;
 	
 	$EventID = EVENT_LOAN_ALLOCATE;
 
@@ -190,8 +192,7 @@ function BackPayCheques($reqObj , $partObj, &$DocObj, $pdo){
 	$cheques = PdoDataAccess::runquery(
 			"select * from LON_BackPays
 				join ACC_IncomeCheques i using(IncomeChequeID) 
-				where RequestID=? 
-			order by PayDate"
+				where RequestID=? order by PayDate"
 			, array($reqObj->RequestID));
 	foreach($cheques as $bpay)
 	{
@@ -229,8 +230,8 @@ function BackPay($reqObj , $partObj, &$DocObj, $pdo){
 				left join ACC_IncomeCheques i using(IncomeChequeID) 
 				where RequestID=? AND PayDate<'$GToDate'
 			AND if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-			order by PayDate"
-			, array($reqObj->RequestID));
+			order by PayDate", array($reqObj->RequestID));
+	
 	foreach($backpays as $bpay)
 	{
 		if($reqObj->ReqPersonID*1 > 0)
@@ -278,8 +279,6 @@ function BackPay($reqObj , $partObj, &$DocObj, $pdo){
  * رویدادهای روزانه
  */
 function DailyIncome($reqObj , $partObj, $pdo){
-	
-	global $GToDate;
 	
 	$days = PdoDataAccess::runquery_fetchMode("select * from jdate where Jdate between ? AND '1396/12/29'", 
 			DateModules::miladi_to_shamsi($partObj->PartDate), $pdo);

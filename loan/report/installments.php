@@ -13,11 +13,20 @@ $page_rpg = new ReportGenerator("mainForm","LoanReport_installmentsObj");
 $page_rpg->addColumn("شماره وام", "RRequestID");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
 $page_rpg->addColumn("معرفی کننده", "ReqFullname", "ReqPersonRender");
+$page_rpg->addColumn("زیرواحد سرمایه گذار", "SubDesc");
 $col = $page_rpg->addColumn("تاریخ درخواست", "ReqDate");
 $col->type = "date";
 $page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
 $page_rpg->addColumn("مشتری", "LoanFullname");
 $page_rpg->addColumn("شعبه", "BranchName");
+$page_rpg->addColumn("مبلغ تایید شده", "PartAmount");
+$page_rpg->addColumn("مبلغ پرداخت شده", "SumPayments");
+$page_rpg->addColumn("تعداد اقساط", "InstallmentCount");
+$page_rpg->addColumn("تنفس(ماه)", "DelayMonths");
+$page_rpg->addColumn("کارمزد مشتری", "CustomerWage");
+$page_rpg->addColumn("کارمزد صندوق", "FundWage");
+$page_rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
+$page_rpg->addColumn("تضامین", "tazamin");
 $col = $page_rpg->addColumn("تاریخ قسط", "InstallmentDate");
 $col->type = "date";
 $page_rpg->addColumn("مبلغ قسط", "InstallmentAmount");
@@ -87,6 +96,9 @@ function GetData(){
 	MakeWhere($where, $whereParam);
 	
 	$query = "select i.*,r.*,l.*,p.*,
+				sb.SubDesc,
+				tazamin,
+				SumPayments,
 				r.RequestID as RRequestID,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
@@ -95,11 +107,35 @@ function GetData(){
 				
 			from LON_installments i
 			join LON_requests r using(RequestID)
+			left join BSC_SubAgents sb on(sb.SubID=SubAgentID)
 			join LON_ReqParts p on(r.RequestID=p.RequestID AND p.IsHistory='NO')
 			left join LON_loans l using(LoanID)
 			join BSC_branches using(BranchID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
+			left join (
+				select ObjectID,group_concat(title,' به شماره سريال ',num, ' و مبلغ ', 
+					format(amount,2) separator '<br>') tazamin
+				from (	
+					select ObjectID,InfoDesc title,group_concat(if(KeyTitle='no',paramValue,'') separator '') num,
+					group_concat(if(KeyTitle='amount',paramValue,'') separator '') amount
+					from DMS_documents d
+					join BaseInfo b1 on(InfoID=d.DocType AND TypeID=8)
+					join DMS_DocParamValues dv  using(DocumentID)
+					join DMS_DocParams using(ParamID)
+				    where ObjectType='loan' AND b1.param1=1
+					group by ObjectID, DocumentID
+				)t
+				group by ObjectID
+			)t2 on(t2.ObjectID=r.RequestID)
+			left join (
+				select RequestID,sum(PayAmount) SumPayments 
+				from LON_payments 
+				join (select SourceID1,SourceID3 from ACC_DocItems where SourceType=".DOCTYPE_LOAN_PAYMENT." group by SourceID1,SourceID3)t 
+					on(t.SourceID1=RequestID AND t.SourceID3=PayID)
+				where 1=1 $pay_where
+				group by RequestID			
+			)t_pay on(r.RequestID=t_pay.RequestID)
 			where i.history='NO' AND i.IsDelayed='NO' " . $where;
 	
 	$group = ReportGenerator::GetSelectedColumnsStr();
@@ -110,7 +146,8 @@ function GetData(){
 	
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		print_r(ExceptionHandler::PopAllExceptions());
+		ini_set("display_errors", "On");
+		//print_r(ExceptionHandler::PopAllExceptions());
 		//echo PdoDataAccess::GetLatestQueryString();
 	}
 	
@@ -132,8 +169,9 @@ function GetData(){
 
 		if(!isset($computeArr[ $MainRow["RequestID"] ]))
 		{
+			$dt = array();
 			$computeArr[ $MainRow["RequestID"] ] = array(
-				"compute" => LON_Computes::NewComputePayments($MainRow["RequestID"]),
+				"compute" => LON_requests::ComputePayments($MainRow["RequestID"], $dt),
 				"computIndex" => 0,
 				"PayIndex" => 0
 				);
@@ -143,6 +181,31 @@ function GetData(){
 		for(; $ref["computIndex"] < count($ref["compute"]); $ref["computIndex"]++)
 		{
 			$row = $ref["compute"][$ref["computIndex"]];
+			if($row["ActionType"] != "installment")
+				continue;
+			if($row["InstallmentID"] == $MainRow["InstallmentID"])
+			{
+				for($k=0; $k < count($row["pays"]); $k++)
+				{  
+					$payRow = $row["pays"][$k];
+					
+					$MainRow["forfeit"] = $payRow["forfeit"];
+					$MainRow["ForfeitDays"] = $payRow["ForfeitDays"];
+					$MainRow["PayedDate"] = $payRow["PayedDate"];
+					$MainRow["PayedAmount"] = $payRow["PayedAmount"];
+					$MainRow["TotalRemainder"] = $payRow["remain"];
+					$returnArr[] = $MainRow;
+				}
+				
+				if(count($row["pays"]) == 0)
+					$returnArr[] = $MainRow;
+				
+				$ref["computIndex"]++;
+				break;
+				
+			}
+		
+			/*$row = $ref["compute"][$ref["computIndex"]];
 			if($row["type"] != "installment")
 				continue;
 			if($row["id"] == $MainRow["InstallmentID"])
@@ -185,7 +248,7 @@ function GetData(){
 				$ref["computIndex"]++;
 				break;
 
-			}
+			}*/
 		}
 	}
 	
@@ -247,6 +310,8 @@ function ListData($IsDashboard = false){
 	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("معرفی کننده", "ReqFullname");
 	$col->rowspaning = true;
+	$col = $rpg->addColumn("زیرواحد سرمایه گذار", "SubDesc");
+	
 	$col->rowspanByFields = array("RequestID");
 	$col = $rpg->addColumn("تاریخ درخواست", "ReqDate", "ReportDateRender");
 	$col->rowspaning = true;
@@ -261,6 +326,20 @@ function ListData($IsDashboard = false){
 	$col = $rpg->addColumn("شعبه", "BranchName");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
+	
+	
+	$rpg->addColumn("مبلغ درخواست", "ReqAmount", "ReportMoneyRender");
+	$rpg->addColumn("مشتری", "LoanFullname");
+	$rpg->addColumn("شعبه", "BranchName");
+	$rpg->addColumn("مبلغ تایید شده", "PartAmount", "ReportMoneyRender");
+	$rpg->addColumn("مبلغ پرداخت شده", "SumPayments", "ReportMoneyRender");
+	$rpg->addColumn("تعداد اقساط", "InstallmentCount");
+	$rpg->addColumn("تنفس(ماه)", "DelayMonths");
+	$rpg->addColumn("کارمزد مشتری", "CustomerWage");
+	$rpg->addColumn("کارمزد صندوق", "FundWage");
+	$rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
+	$rpg->addColumn("تضامین", "tazamin");
+
 	
 	$col = $rpg->addColumn("تاریخ قسط", "InstallmentDate", "ReportDateRender");
 	$col->rowspaning = true;

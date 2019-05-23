@@ -471,7 +471,7 @@ class LON_requests extends PdoDataAccess{
 		}
 	}
 	
-	static function ComputePayments($RequestID, &$installments, $ComputeDate = null, $pdo = null){
+	static function ComputePayments($RequestID, &$installments, $ToDate = null, $pdo = null){
 
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 		if($obj->ComputeMode == "NEW")
@@ -506,6 +506,7 @@ class LON_requests extends PdoDataAccess{
 				left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 				where RequestID=:r AND PayDate <= :tdate AND
 					if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
+					AND PayDate <= :tdate
 			union All
 				select 0 id,'pay' type, 0 BackPayID,
 					CostDate RecordDate, -1*CostAmount RecordAmount,0, CostDesc details, 0
