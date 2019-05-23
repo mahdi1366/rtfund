@@ -471,11 +471,14 @@ class LON_requests extends PdoDataAccess{
 		}
 	}
 	
-	static function ComputePayments($RequestID, &$installments, $pdo = null){
+	static function ComputePayments($RequestID, &$installments, $ComputeDate = null, $pdo = null){
 
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 		if($obj->ComputeMode == "NEW")
 			return LON_Computes::NewComputePayments($RequestID, null, $pdo);
+		
+		$ComputeDate = $ComputeDate == null ? DateModules::Now() : 
+			DateModules::shamsi_to_miladi($ComputeDate,"-");
 		
 		$installments = PdoDataAccess::runquery("select * from 
 			LON_installments where RequestID=? AND history='NO' AND IsDelayed='NO' order by InstallmentDate", 
@@ -501,15 +504,16 @@ class LON_requests extends PdoDataAccess{
 				from LON_BackPays p
 				left join ACC_IncomeCheques i using(IncomeChequeID)
 				left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
-				where RequestID=:r AND 
+				where RequestID=:r AND PayDate <= :tdate AND
 					if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
 			union All
 				select 0 id,'pay' type, 0 BackPayID,
 					CostDate RecordDate, -1*CostAmount RecordAmount,0, CostDesc details, 0
 				from LON_costs 
-				where RequestID=:r AND CostAmount<>0
+				where RequestID=:r AND CostAmount<>0 AND CostDate <= :tdate
 			)t
-			order by substr(RecordDate,1,10), RecordAmount desc" , array(":r" => $RequestID), $pdo);
+			order by substr(RecordDate,1,10), RecordAmount desc" , 
+				array(":r" => $RequestID, ":tdate" => $ComputeDate), $pdo);
 		
 		$TotalLate = 0;
 		$TotalForfeit = 0;
@@ -610,9 +614,9 @@ class LON_requests extends PdoDataAccess{
 			}
 			
 			$StartDate = $record["RecordDate"];
-			$ToDate = $i+1 < count($records) ? $records[$i+1]["RecordDate"] : DateModules::Now();
-			if($ToDate > DateModules::Now())
-				$ToDate = DateModules::Now();
+			$ToDate = $i+1 < count($records) ? $records[$i+1]["RecordDate"] : $ComputeDate;
+			if($ToDate > $ComputeDate)
+				$ToDate = $ComputeDate;
 			if($StartDate < $ToDate && $TotalRemainder > 0)
 			{
 				if($TotalRemainder > 0)
@@ -673,9 +677,9 @@ class LON_requests extends PdoDataAccess{
 				//if(!$PayRecord)
 				//	$StartDate = $InstallmentRow["ActionDate"];
 				
-				$ToDate = $PayRecord ? $PayRecord["ActionDate"] : DateModules::Now();
-				if($ToDate > DateModules::Now())
-					$ToDate = DateModules::Now();
+				$ToDate = $PayRecord ? $PayRecord["ActionDate"] : $ComputeDate;
+				if($ToDate > $ComputeDate)
+					$ToDate = $ComputeDate;
 				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
 				$percent = $obj->ForfeitPercent*1 + $obj->LatePercent*1 - $obj->ForgivePercent*1;
 				$percent = $percent < 0 ? 0 : $percent;
@@ -942,20 +946,22 @@ class LON_requests extends PdoDataAccess{
 		return $amount + $extraAmount + $PartObj->FirstTotalWage;		
 	}
 	
-	static function GetCurrentRemainAmount($RequestID, $computeArr=null, $forfeitInclude = true){
+	static function GetCurrentRemainAmount($RequestID, $computeArr=null, $ToDate = null, $forfeitInclude = true){
+		
+		$ToDate = $ToDate == null ? DateModules::Now() : DateModules::shamsi_to_miladi($ToDate,"-");;
 		
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 		if($obj->ComputeMode == "NEW" || $obj->ComputeMode == "NOAVARI")
-			return LON_Computes::GetCurrentRemainAmount($RequestID,$computeArr);
+			return LON_Computes::GetCurrentRemainAmount($RequestID,$computeArr, $ToDate);
 		
 		$dt = array();
 		if($computeArr == null)
-			$computeArr = self::ComputePayments($RequestID, $dt);
+			$computeArr = self::ComputePayments($RequestID, $dt, $ToDate);
 		
 		$CurrentRemain = 0;
 		foreach($computeArr as $row)
 		{
-			if($row["ActionDate"] <= DateModules::Now())
+			if($row["ActionDate"] <= $ToDate)
 			{
 				$amount = $row["TotalRemainder"]*1 + $row["LateAmount"]*1;
 				if($forfeitInclude) 
@@ -968,6 +974,37 @@ class LON_requests extends PdoDataAccess{
 		return $CurrentRemain;
 	}
 	
+	static function GetRemainAmounts($RequestID, $computeArr=null, $ToDate = null, $forfeitInclude = true){
+		
+		$ToDate = $ToDate == null ? DateModules::Now() : DateModules::shamsi_to_miladi($ToDate,"-");;
+		
+		$obj = LON_ReqParts::GetValidPartObj($RequestID);
+		if($obj->ComputeMode == "NEW" || $obj->ComputeMode == "NOAVARI")
+			return LON_Computes::GetRemainAmounts($RequestID,$computeArr, $ToDate);
+		
+		$dt = array();
+		if($computeArr == null)
+			$computeArr = self::ComputePayments($RequestID, $dt, $ToDate);
+		
+		$LateAmount = $ForfeitAmount = $TotalRemainder = 0;
+		foreach($computeArr as $row)
+		{
+			if($row["ActionDate"] <= $ToDate)
+			{
+				$LateAmount = $row["LateAmount"]*1;
+				$ForfeitAmount = $row["ForfeitAmount"]*1;
+				$TotalRemainder = $row["TotalRemainder"]*1;
+			}
+			else
+				break;
+		}
+		return array(
+			"remain_late" => $LateAmount,
+			"remain_pnlt" => $ForfeitAmount,
+			"remain_total" => $TotalRemainder
+		);
+	}
+		
 	static function GetTotalRemainAmount($RequestID, $computeArr=null){
 		
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
@@ -1379,7 +1416,7 @@ class LON_Computes extends PdoDataAccess{
 
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 		
-		$ToDate = $ToDate == null ? DateModules::Now() : $ToDate;
+		$ToDate = $ToDate == null ? DateModules::Now() : DateModules::shamsi_to_miladi($ToDate,"-");;
 		
 		$returnArr = array();
 		$records = PdoDataAccess::runquery("
@@ -1693,18 +1730,20 @@ class LON_Computes extends PdoDataAccess{
 	 * مانده قابل پرداخت معوقه وام
 	 * @param type $RequestID
 	 * @param type $computeArr
-	 * @param type $forfeitInclude
+	 * @param type $ToDate
 	 * @return type
 	 */
-	static function GetCurrentRemainAmount($RequestID, $computeArr=null, $forfeitInclude = true){
+	static function GetCurrentRemainAmount($RequestID, $computeArr=null, $ToDate = true){
+		
+		$ToDate = $ToDate == null ? DateModules::Now() : DateModules::shamsi_to_miladi($ToDate,"-");;
 		
 		if($computeArr == null)
-			$computeArr = self::NewComputePayments($RequestID);
+			$computeArr = self::NewComputePayments($RequestID, $ToDate);
 		
 		$CurrentRemain = 0;
 		foreach($computeArr as $row)
 		{
-			if($row["RecordDate"] <= DateModules::Now())
+			if($row["RecordDate"] <= $ToDate)
 			{
 				$CurrentRemain += $row["remain_pure"]*1 + $row["remain_wage"]*1 + 
 									$row["remain_late"]*1 + $row["remain_pnlt"]*1;
@@ -1724,7 +1763,7 @@ class LON_Computes extends PdoDataAccess{
 	 */
 	static function GetRemainAmounts($RequestID, $computeArr=null, $ToDate = null){
 		
-		$ToDate = $ToDate == null ? DateModules::Now() : $ToDate;
+		$ToDate = $ToDate == null ? DateModules::Now() : DateModules::shamsi_to_miladi($ToDate,"-");;
 		
 		if($computeArr == null)
 			$computeArr = self::NewComputePayments($RequestID, $ToDate);

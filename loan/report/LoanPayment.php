@@ -18,15 +18,19 @@ if(isset($_REQUEST["show"]))
 	{
 		require_once './LoanPaymentNew.php';
 		die();
-	}
+	} 
 	//............ get total loan amount ......................
 	$TotalAmount = LON_requests::GetTotalReturnAmount($RequestID, $partObj);
 	//............ get remain untill now ......................
 	$dt = array();
-	$ComputeArr = LON_requests::ComputePayments($RequestID, $dt);
+	$ComputeDate = !empty($_REQUEST["ComputeDate"]) ? 
+			DateModules::shamsi_to_miladi($_REQUEST["ComputeDate"],"-") :
+			DateModules::now();
+	
+	$ComputeArr = LON_requests::ComputePayments($RequestID, $dt, $ComputeDate);
 	$PureArr = LON_requests::ComputePures($RequestID);
 	//............ get remain untill now ......................
-	$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr);
+	$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr, $ComputeDate);
 	$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID, $ComputeArr);
 	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
 	//............. get total payed .............................
