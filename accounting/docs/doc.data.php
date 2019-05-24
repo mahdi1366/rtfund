@@ -379,6 +379,7 @@ function selectDocItems() {
 	$where .= dataReader::makeOrder();
 
 	$temp = ACC_DocItems::GetAll($where, $whereParam);
+	print_r(ExceptionHandler::PopAllExceptions());
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 

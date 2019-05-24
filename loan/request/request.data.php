@@ -196,7 +196,7 @@ function SelectMyRequests(){
 		{
 			$temp = array();
 			$ComputeArr = LON_requests::ComputePayments($dt[$i]["RequestID"], $temp);
-			$dt[$i]["CurrentRemain"] = LON_Computes::GetCurrentRemainAmount($dt[$i]["RequestID"], $ComputeArr);
+			$dt[$i]["CurrentRemain"] = LON_requests::GetCurrentRemainAmount($dt[$i]["RequestID"], $ComputeArr);
 			$dt[$i]["TotalRemain"] = LON_requests::GetTotalRemainAmount($dt[$i]["RequestID"], $ComputeArr);
 		}
 	}
@@ -288,7 +288,7 @@ function SelectAllRequests(){
 	
 	$where .= dataReader::makeOrder();
 	$dt = LON_requests::SelectAll($where, $param);
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 	//echo PdoDataAccess::GetLatestQueryString();
 	$count = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);	
@@ -367,6 +367,7 @@ function GetTazminDocTypes(){
 
 function GetRequestParts(){
 	
+	ini_set("display_errors","On");
 	if(!isset($_REQUEST["RequestID"] ))
 	{
 		echo dataReader::getJsonData(array(), 0, $_GET["callback"]);
@@ -458,7 +459,7 @@ function SavePart(){
 				echo Response::createObjectiveResponse(false, "سند اختلاف به شماره ".$dt[0]["LocalNo"]."در ".
 						$dt[0]["CycleDesc"]." تایید شده و قادر به صدور مجدد نمی باشید");
 				die();
-			}
+			} 
 			$OldDocID = count($dt)>0 ? $dt[0]["DocID"] : 0;
 			*/
 			$result = $obj->EditPart($pdo);
@@ -478,7 +479,6 @@ function SavePart(){
 	else
 	{
 		$result = $obj->AddPart($pdo);
-		
 		if(!$firstPart)
 		{
 			foreach($dt as $row)
@@ -493,7 +493,7 @@ function SavePart(){
 			$DiffDoc = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo);
 			if($DiffDoc == false)
 			{
-				echo PdoDataAccess::GetLatestQueryString();
+				//echo PdoDataAccess::GetLatestQueryString();
 				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 				die();
 			}
@@ -734,24 +734,33 @@ function DefrayRequest(){
 function GetInstallments(){
 	
 	$RequestID = $_REQUEST["RequestID"];
+	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	$temp = LON_installments::SelectAll(" i.RequestID=?", array($RequestID));
-
-	$refArray = array();
-	$ComputeArr = LON_Computes::NewComputePayments($RequestID);
-	foreach($ComputeArr as $row)
-		if($row["type"] == "installment")
-			$refArray[ $row["id"] ] = &$row;
-		
-	for($i=0; $i<count($temp); $i++)
+	
+	if($partObj->ComputeMode == "NEW")
 	{
-		if(isset($refArray[ $temp[$i]["InstallmentID"] ]))
+		$refArray = array();
+		$ComputeArr = LON_Computes::NewComputePayments($RequestID);
+		foreach($ComputeArr as $row)
+			if($row["type"] == "installment")
+				$refArray[ $row["id"] ] = &$row;
+
+		for($i=0; $i<count($temp); $i++)
 		{
-			$src = $refArray[  $temp[$i]["InstallmentID"]  ];
-			$temp[$i]["remain"] = $src["remain_pure"] + $src["remain_wage"] + 
-					$src["remain_late"] + $src["remain_pnlt"];
+			if(isset($refArray[ $temp[$i]["InstallmentID"] ]))
+			{
+				$src = $refArray[  $temp[$i]["InstallmentID"]  ];
+				$temp[$i]["remain"] = $src["remain_pure"] + $src["remain_wage"] + 
+						$src["remain_late"] + $src["remain_pnlt"];
+			}
 		}
 	}
-	
+	else
+	{
+		$temp = array();
+		$Compute = LON_requests::ComputePayments($RequestID, $temp);
+	}
+		
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -1535,6 +1544,7 @@ function GetDelayedInstallments($returnData = false){
 		if($remain > 0 && $MinDate != null)
 		{
 			$row["TotalRemainder"] = $remain;
+			//$row["PureRemain"] = $PureRemain;
 			$row["remain_pure"] = $RemainArr["remain_pure"];
 			$row["remain_wage"] = $RemainArr["remain_wage"];
 			$row["remain_late"] = $RemainArr["remain_late"];
@@ -1586,7 +1596,7 @@ function GetEndedRequests(){
 
 function GetPartPayments(){
 	
-	$dt = LON_payments::Get(" AND RequestID=? ", array($_REQUEST["RequestID"]),dataReader::makeOrder());
+	$dt = LON_payments::FullSelect(" AND p.RequestID=? ", array($_REQUEST["RequestID"]),dataReader::makeOrder());
 	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
@@ -1632,13 +1642,13 @@ function RegPayPartDoc($ReturnMode = false, $pdo = null){
 	//-------------------------------------------------------------
 	
 	//---------- check for previous payments docs registered --------------
-	$dt = LON_payments::Get(" AND RequestID=? AND PayDate<? AND d.DocID is null",
+	/*$dt = LON_payments::FullSelect(" AND RequestID=? AND PayDate<? AND d.DocID is null",
 			array($PayObj->RequestID, $PayObj->PayDate));
 	if($dt->rowCount() > 0)
 	{
 		echo Response::createObjectiveResponse(false, "تا سند مراحل قبلی پرداخت صادر نشود قادر به صدور سند این مرحله نمی باشید");
 		die();	
-	}
+	}*/
 	//---------------------------------------------------------------------
 	if($pdo == null)
 	{

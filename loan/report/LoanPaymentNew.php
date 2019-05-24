@@ -18,7 +18,7 @@ if(isset($_REQUEST["show"]))
 	$TotalAmount = LON_requests::GetTotalReturnAmount($RequestID, $partObj, true);
 	//............ get remain untill now ......................
 	$ComputeArr = LON_Computes::NewComputePayments($RequestID);
-	$PureArr = LON_requests::ComputePures($RequestID);
+	$PureArr = LON_Computes::ComputePures($RequestID); 
 	//............ get remain untill now ......................
 	$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);
 	$TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);

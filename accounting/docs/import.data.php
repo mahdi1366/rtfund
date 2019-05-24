@@ -627,9 +627,9 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	if($PartObj->AgentReturn == "CUSTOMER" && $PartObj->CustomerWage > $PartObj->FundWage)
 		$BankItemAmount -= $TotalAgentWage;
 	
-	if($PartObj->DelayReturn == "CUSTOMER")
+	if($PartObj->DelayReturn != "INSTALLMENT")
 		$BankItemAmount -= $TotalFundDelay;
-	if($PartObj->AgentDelayReturn == "CUSTOMER")
+	if($PartObj->AgentDelayReturn != "INSTALLMENT")
 		$BankItemAmount -= $TotalAgentDelay;
 	
 	$itemObj->CreditorAmount = $BankItemAmount;
@@ -1055,9 +1055,9 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	}
 	// ----------------------------- bank --------------------------------
 	$BankAmount = $PayAmount - $AgentWage - $FundWage;
-	if($PartObj->DelayReturn == "CUSTOMER")
+	if($PartObj->DelayReturn != "INSTALLMENT")
 		$BankAmount -= $FundDelay;
-	if($PartObj->AgentDelayReturn == "CUSTOMER")
+	if($PartObj->AgentDelayReturn != "INSTALLMENT")
 		$BankAmount -= $AgentDelay;
 		
 	$itemObj = new ACC_DocItems();
@@ -1470,7 +1470,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	$curYear = substr(DateModules::shNow(), 0, 4)*1;
 	if($LoanMode == "Agent")
 	{
-		if($NewPartObj->AgentDelayReturn == "CUSTOMER")
+		if($NewPartObj->AgentDelayReturn != "INSTALLMENT")
 		{
 			unset($itemObj->ItemID);
 			unset($itemObj->TafsiliType2);
@@ -1586,7 +1586,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 			ExceptionHandler::PushException("خطا در ایجاد ردیف کارمزد تنفس");
 			return false;
 		}
-		if($NewPartObj->DelayReturn == "CUSTOMER")
+		if($NewPartObj->DelayReturn != "INSTALLMENT")
 			$ExtraAmount += $value;
 		
 		$prevYear = 0;

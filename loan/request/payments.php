@@ -26,6 +26,7 @@ $dg->addColumn("", "PayID","", true);
 $dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "StatusID","", true);
 $dg->addColumn("", "DocID","", true);
+$dg->addColumn("", "ComputeMode","", true);
 
 $col = $dg->addColumn("تاریخ پرداخت", "PayDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
@@ -36,6 +37,23 @@ $col->editor = ColumnEditor::CurrencyField();
 $col->width = 120;
 $col->summaryType = GridColumn::SummeryType_sum;
 $col->summaryRenderer = "function(v){return Ext.util.Format.Money(v);}";
+$col->align = "center";
+
+$col = $dg->addColumn("تنفس قدیم صندوق", "OldFundDelayAmount", GridColumn::ColumnType_money);
+$col->width = 120;
+$col->summaryType = GridColumn::SummeryType_sum;
+$col->summaryRenderer = "function(v){return Ext.util.Format.Money(v);}";
+$col->align = "center";
+
+$col = $dg->addColumn("تنفس قدیم سرمایه گذار", "OldAgentDelayAmount", GridColumn::ColumnType_money);
+$col->width = 120;
+$col->summaryType = GridColumn::SummeryType_sum;
+$col->summaryRenderer = "function(v){return Ext.util.Format.Money(v);}";
+$col->align = "center";
+
+$col = $dg->addColumn("پرداخت به مشتری", "PayAmount", GridColumn::ColumnType_money);
+$col->width = 120;
+$col->renderer = "PartPayment.RemainRender";
 $col->align = "center";
 
 if(session::IsFramework())
@@ -65,7 +83,6 @@ $dg->EnableSummaryRow = true;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 270;
-$dg->width = 410;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "PayDate";
@@ -104,6 +121,15 @@ function PartPayment()
 	
 }
 
+PartPayment.RemainRender = function(v,p,r){
+	amount = r.data.PayAmount*1;
+	if(r.data.OldFundDelayAmount*1 > 0)
+		amount -= r.data.OldFundDelayAmount*1;
+	if(r.data.OldAgentDelayAmount*1 > 0)
+		amount -= r.data.OldAgentDelayAmount*1;
+	return Ext.util.Format.Money(amount);
+}
+
 PartPayment.DeleteRender = function(v,p,r){
 	
 	if(r.data.LocalNo != "" && r.data.LocalNo != null)
@@ -118,8 +144,8 @@ PartPayment.DocRender = function(v,p,r){
 	
 	st = "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+v+"</a>";
 	
-	if(PartPaymentObject.StatusID != "<?= LON_REQ_STATUS_CONFIRM ?>")
-		return st;
+	//if(PartPaymentObject.StatusID != "<?= LON_REQ_STATUS_CONFIRM ?>")
+	//	return st;
 	if(r.data.LocalNo != "" && r.data.LocalNo != null)
 	{
 		if(r.data.StatusID == "<?= ACC_STEPID_RAW ?>")
@@ -136,9 +162,14 @@ PartPayment.DocRender = function(v,p,r){
 		}
 		return st;
 	}
-	return "<div align='center' title='صدور سند' class='send' "+
-		/*"onclick='PartPaymentObject.BeforeRegDoc(1);' " +*/
+	if(r.data.ComputeMode == "NEW")
+		return "<div align='center' title='صدور سند' class='send' "+
 		"onclick='PartPaymentObject.ExecuteEvent();' " +
+		"style='float:right;background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+	else
+		return "<div align='center' title='صدور سند' class='send' "+
+		"onclick='PartPaymentObject.BeforeRegDoc(1);' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 }

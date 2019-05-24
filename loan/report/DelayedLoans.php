@@ -169,7 +169,7 @@ function GetData(){
 	$dt = PdoDataAccess::runquery_fetchMode($query, $whereParam);
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		print_r(ExceptionHandler::PopAllExceptions());
+		//print_r(ExceptionHandler::PopAllExceptions());
 		//echo PdoDataAccess::GetLatestQueryString();
 	}
 	$ComputeDate = !empty($_POST["ComputeDate"]) ? 

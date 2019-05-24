@@ -525,7 +525,7 @@ ManageRequest.prototype.LoadPayments = function(){
 	if(!this.PaymentWin)
 	{
 		this.PaymentWin = new Ext.window.Window({
-			width : 422,
+			width : 800 ,
 			title : "مراحل پرداخت",
 			height : 305,
 			modal : true,
