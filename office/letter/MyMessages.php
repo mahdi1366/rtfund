@@ -170,7 +170,7 @@ function MyMessage(){
 				store: new Ext.data.Store({
 					proxy:{
 						type: 'jsonp',
-						url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
+						url: this.address_prefix + 'letter.data.php?task=SendToMessageList',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
 					fields :  ['PersonID','fullname']
@@ -178,6 +178,29 @@ function MyMessage(){
 				fieldLabel : "گیرنده",
 				displayField: 'fullname',
 				valueField : "PersonID"				
+			},{
+				xtype : "combo",
+				itemId : "ToPersonID",
+				store: new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: this.address_prefix + 'letter.data.php?task=SendToMessageList',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ['type','id','name']
+				}),
+				tpl : new Ext.XTemplate(
+					'<tpl for=".">',
+						'<tpl if="type == \'Group\'">',
+							'<div class="x-boundlist-item" style="background-color:#fcfcb6">{name}</div>',
+						'<tpl else>',
+							'<div class="x-boundlist-item">{name}</div>',
+						'</tpl>',						
+					'</tpl>'
+				),
+				fieldLabel : "ارجاع به",
+				displayField: 'name',
+				valueField : "id"				
 			},{
 				xtype : "container",
 				layout : "hbox",
@@ -191,8 +214,8 @@ function MyMessage(){
 						record = el.getStore().getAt(el.getStore().find("PersonID", el.getValue()));
 						
 						me.ReceiversStore.add({
-							fullname : record.data.fullname,
-							PersonID : record.data.PersonID
+							fullname : record.data.name,
+							PersonID : record.data.id
 						});
 
 						el.setValue();
