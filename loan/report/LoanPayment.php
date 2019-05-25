@@ -139,19 +139,21 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= DateModules::miladi_to_shamsi($partObj->PartDate) ?></b></td>
 					</tr>
 					<tr>
-						<td>فاصله اقساط: </td>
-						<td><b><?= $partObj->PayInterval . ($partObj->IntervalType == "DAY" ? "روز" : "ماه") ?>
-							</b></td>
-					</tr>
-					<tr>
 						<td> کارمزد وام:  </td>
 						<td><b><?= $partObj->CustomerWage ?> %</b></td>
 					</tr>
+					<? if(session::IsFramework()) {?>
+					<tr>
+						<td>فاصله اقساط: </td>
+						<td><b><?= $partObj->PayInterval . ($partObj->IntervalType == "DAY" ? "روز" : "ماه") ?>
+							</b></td>
+					</tr>					
 					<tr>
 						<td>درصد دیرکرد: </td>
 						<td><b><?= $partObj->ForfeitPercent ?> %
 							</b></td>
 					</tr>
+					<?}?>
 				</table>
 			</td>
 			<td>
@@ -164,6 +166,7 @@ if(isset($_REQUEST["show"]))
 						<td>مدت تنفس :  </td>
 						<td><b><?= $partObj->DelayMonths  ?>ماه و  <?= $partObj->DelayDays ?> روز</b></td>
 					</tr>
+					<? if(session::IsFramework()) {?>
 					<tr>
 						<td>نحوه محاسبه :</td>
 						<td><b><?= $partObj->PayCompute == "installment" ? "ابتدا اقساط" : "ابتدا جرائم" ?></b></td>
@@ -178,6 +181,7 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= $partObj->ForgivePercent ?> %
 							</b></td>
 					</tr>
+					<?}?>
 				</table>
 			</td>
 			<td>
@@ -187,11 +191,13 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= number_format($partObj->PartAmount) ?> ریال
 							</b></td>
 					</tr>
+					<? if(session::IsFramework()) {?>
 					<tr>
 						<td>جمع وام و کارمزد : </td>
 						<td><b><?= number_format($TotalAmount) ?> ریال
 							</b></td>
 					</tr>
+					<?}?>
 					<tr>
 						<td>جمع کل پرداختی تاکنون : </td>
 						<td><b><?= number_format($totalPayed) ?> ریال
