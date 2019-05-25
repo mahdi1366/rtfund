@@ -69,7 +69,7 @@ if(!$IsSend)
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 480;
 $dg->HeaderMenu = false;
-$dg->title = "فرم های رسیده";
+$dg->title = $IsSend ? "فرم های ارسالی" : "فرم های رسیده";
 $dg->DefaultSortField = "ActionDate";
 $dg->autoExpandColumn = "ObjectDesc";
 $grid = $dg->makeGrid_returnObjects();
