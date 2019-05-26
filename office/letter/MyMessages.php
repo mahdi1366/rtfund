@@ -173,20 +173,6 @@ function MyMessage(){
 						url: this.address_prefix + 'letter.data.php?task=SendToMessageList',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
-					fields :  ['PersonID','fullname']
-				}),
-				fieldLabel : "گیرنده",
-				displayField: 'fullname',
-				valueField : "PersonID"				
-			},{
-				xtype : "combo",
-				itemId : "ToPersonID",
-				store: new Ext.data.Store({
-					proxy:{
-						type: 'jsonp',
-						url: this.address_prefix + 'letter.data.php?task=SendToMessageList',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
 					fields :  ['type','id','name']
 				}),
 				tpl : new Ext.XTemplate(
@@ -211,7 +197,7 @@ function MyMessage(){
 					handler : function(){
 						me = MyMessageObject;
 						el = me.newMessageWin.down("[itemId=ToPersonID]");
-						record = el.getStore().getAt(el.getStore().find("PersonID", el.getValue()));
+						record = el.getStore().getAt(el.getStore().find("id", el.getValue()));
 						
 						me.ReceiversStore.add({
 							fullname : record.data.name,
