@@ -23,6 +23,7 @@ if(isset($_REQUEST["show"]))
 	$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);
 	$TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
 	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
+	$remains = LON_requests::GetRemainAmounts($RequestID, $ComputeArr);
 	//............. get total payed .............................
 	$dt = LON_BackPays::GetRealPaid($RequestID);
 	$totalPayed = 0;
@@ -205,8 +206,11 @@ if(isset($_REQUEST["show"]))
 					<? if(session::IsFramework()) {?>
 					<tr>
 						<td>جمع وام و کارمزد : </td>
-						<td><b><?= number_format($TotalAmount) ?> ریال
-							</b></td>
+						<td><b><?= number_format($TotalAmount) ?> ریال							</b></td>
+					</tr>
+					<tr>
+						<td>مانده جریمه تاخیر: </td>
+						<td><b><?= number_format($remains["remain_pnlt"]) ?> ریال							</b></td>
 					</tr>
 					<?}?>
 				</table>
