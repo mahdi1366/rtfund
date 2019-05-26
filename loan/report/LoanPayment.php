@@ -33,6 +33,7 @@ if(isset($_REQUEST["show"]))
 	$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr, $ComputeDate);
 	$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID, $ComputeArr);
 	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
+	$remains = LON_requests::GetRemainAmounts($RequestID, $ComputeArr);
 	//............. get total payed .............................
 	$dt = LON_BackPays::GetRealPaid($RequestID);
 	$totalPayed = 0;
@@ -191,18 +192,23 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= number_format($partObj->PartAmount) ?> ریال
 							</b></td>
 					</tr>
+					<tr>
+						<td>جمع کل پرداختی تاکنون : </td>
+						<td><b><?= number_format($totalPayed) ?> ریال
+							</b></td>
+					</tr>
 					<? if(session::IsFramework()) {?>
 					<tr>
 						<td>جمع وام و کارمزد : </td>
 						<td><b><?= number_format($TotalAmount) ?> ریال
 							</b></td>
 					</tr>
-					<?}?>
 					<tr>
-						<td>جمع کل پرداختی تاکنون : </td>
-						<td><b><?= number_format($totalPayed) ?> ریال
-							</b></td>
+						<td>مانده جریمه تاخیر: </td>
+						<td><b><?= number_format($remains["remain_pnlt"]) ?> ریال							</b></td>
 					</tr>
+					<?}?>
+					
 				</table>
 			</td>
 			<td style="font-family: nazanin; font-size: 18px; font-weight: bold;line-height: 23px;">
