@@ -919,30 +919,6 @@ class LON_requests extends PdoDataAccess{
 		return round($amount);		
 	}
 	
-	/**
-	 * loan amount + delay if in installment + wage if in installment
-	 */
-	static function GetTotalReturnAmount($RequestID, $PartObj = null , $TanzilCompute = false){
-		
-		$PartObj = $PartObj == null ? LON_ReqParts::GetValidPartObj($RequestID) : $PartObj;
-		
-		$extraAmount = 0;
-		$result = self::GetWageAmounts($RequestID, $PartObj);
-		if($PartObj->WageReturn == "INSTALLMENT")
-			$extraAmount += $result["FundWage"];
-		if($PartObj->AgentReturn == "INSTALLMENT")
-			$extraAmount += $result["AgentWage"];
-		
-		$result = self::GetDelayAmounts($RequestID, $PartObj);
-		if($PartObj->DelayReturn == "INSTALLMENT")
-			$extraAmount += $result["FundDelay"];
-		if($PartObj->AgentDelayReturn == "INSTALLMENT")
-			$extraAmount += $result["AgentDelay"];
-		
-		$amount = self::GetPurePayedAmount($RequestID, $PartObj , $TanzilCompute);		
-		return $amount + $extraAmount + $PartObj->FirstTotalWage;		
-	}
-	
 	static function GetCurrentRemainAmount($RequestID, $computeArr=null, $ToDate = null, $forfeitInclude = true){
 		
 		$ToDate = $ToDate == null ? DateModules::Now() : DateModules::shamsi_to_miladi($ToDate,"-");;
@@ -1729,7 +1705,7 @@ class LON_Computes extends PdoDataAccess{
 	 * @param type $ToDate
 	 * @return type
 	 */
-	static function GetCurrentRemainAmount($RequestID, $computeArr=null, $ToDate = true){
+	static function GetCurrentRemainAmount($RequestID, $computeArr=null, $ToDate = null){
 		
 		$ToDate = $ToDate == null ? DateModules::Now() : DateModules::shamsi_to_miladi($ToDate,"-");;
 		
@@ -2072,6 +2048,18 @@ class LON_installments extends PdoDataAccess{
 			where RequestID=?
 			order by InstallmentDate desc limit 1", array($RequestID));
 		return $obj;
+	}
+	
+		/**
+	 * loan amount + delay if in installment + wage if in installment
+	 */
+	static function GetTotalInstallmentsAmount($RequestID){
+		
+		$dt = self::GetValidInstallments($RequestID);
+		$amount = 0;
+		foreach($dt as $row)
+			$amount += $row["InstallmentAmount"];
+		return $amount;
 	}
 }
 

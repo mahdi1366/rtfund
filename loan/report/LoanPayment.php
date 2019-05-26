@@ -8,7 +8,7 @@ require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 require_once '../request/request.class.php';
 require_once '../request/request.data.php';
-ini_set("display_errors", "On");
+
 if(isset($_REQUEST["show"]))
 {
 	$RequestID = $_REQUEST["RequestID"];
@@ -20,7 +20,7 @@ if(isset($_REQUEST["show"]))
 		die();
 	} 
 	//............ get total loan amount ......................
-	$TotalAmount = LON_requests::GetTotalReturnAmount($RequestID, $partObj);
+	$TotalAmount = LON_installments::GetTotalInstallmentsAmount($RequestID);
 	//............ get remain untill now ......................
 	$dt = array();
 	$ComputeDate = !empty($_REQUEST["ComputeDate"]) ? 

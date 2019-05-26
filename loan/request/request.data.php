@@ -367,7 +367,6 @@ function GetTazminDocTypes(){
 
 function GetRequestParts(){
 	
-	ini_set("display_errors","On");
 	if(!isset($_REQUEST["RequestID"] ))
 	{
 		echo dataReader::getJsonData(array(), 0, $_GET["callback"]);
@@ -760,7 +759,7 @@ function GetInstallments(){
 		$temp = array();
 		$Compute = LON_requests::ComputePayments($RequestID, $temp);
 	}
-		
+	
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -845,7 +844,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 	}
 	else
 	{
-		$TotalAmount = LON_requests::GetTotalReturnAmount($RequestID, $obj);
+		$TotalAmount = LON_installments::GetTotalInstallmentsAmount($RequestID);
 		$allPay = ComputeInstallmentAmount($TotalAmount,$obj->InstallmentCount, $obj->PayInterval);
 
 		if($obj->InstallmentCount > 1)
