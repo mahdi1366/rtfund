@@ -14,6 +14,7 @@ $page_rpg->addColumn("شماره وام", "RRequestID");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
 $page_rpg->addColumn("معرفی کننده", "ReqFullname", "ReqPersonRender");
 $page_rpg->addColumn("زیرواحد سرمایه گذار", "SubDesc");
+$page_rpg->addColumn("وضعیت", "StatusDesc");
 $col = $page_rpg->addColumn("تاریخ درخواست", "ReqDate");
 $col->type = "date";
 $page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
@@ -96,6 +97,7 @@ function GetData(){
 	MakeWhere($where, $whereParam);
 	
 	$query = "select i.*,r.*,l.*,p.*,
+				bi.InfoDesc StatusDesc,
 				sb.SubDesc,
 				tazamin,
 				SumPayments,
@@ -107,6 +109,7 @@ function GetData(){
 				
 			from LON_installments i
 			join LON_requests r using(RequestID)
+			left join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=r.StatusID)
 			left join BSC_SubAgents sb on(sb.SubID=SubAgentID)
 			join LON_ReqParts p on(r.RequestID=p.RequestID AND p.IsHistory='NO')
 			left join LON_loans l using(LoanID)
@@ -305,24 +308,36 @@ function ListData($IsDashboard = false){
 	$col = $rpg->addColumn("شماره وام", "RRequestID");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
+	
 	$col = $rpg->addColumn("نوع وام", "LoanDesc");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
+	
 	$col = $rpg->addColumn("معرفی کننده", "ReqFullname");
 	$col->rowspaning = true;
-	$col = $rpg->addColumn("زیرواحد سرمایه گذار", "SubDesc");
-	
 	$col->rowspanByFields = array("RequestID");
+	
+	$col = $rpg->addColumn("زیرواحد سرمایه گذار", "SubDesc");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	
+	$col = $rpg->addColumn("وضعیت", "StatusDesc");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RequestID");
+	
 	$col = $rpg->addColumn("تاریخ درخواست", "ReqDate", "ReportDateRender");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
+	
 	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "ReportMoneyRender");
 	$col->EnableSummary();
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
+	
 	$col = $rpg->addColumn("مشتری", "LoanFullname");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
+	
 	$col = $rpg->addColumn("شعبه", "BranchName");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RequestID");
