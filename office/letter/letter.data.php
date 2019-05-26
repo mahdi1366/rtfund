@@ -1090,9 +1090,9 @@ function SaveMessage(){
 	$receivers = json_decode($_POST["receivers"]);
 	$arr = array();
 	$toPersonArr = array();
-	foreach($receivers as $PersonID)
+	foreach($receivers as $toPersonID)
 	{
-		if(strpos($PersonID,"p_") !== false)
+		if(strpos($toPersonID,"p_") !== false)
 		{
 			$personID = substr($toPersonID, 2);
 			if(isset($toPersonArr[ $personID ]))
@@ -1101,7 +1101,7 @@ function SaveMessage(){
 			$toPersonArr[ $personID ] = true;
 		}
 		else {
-			$GroupID = substr($PersonID, 2);
+			$GroupID = substr($toPersonID, 2);
 			$dt = PdoDataAccess::runquery("select * from FRW_AccessGroupList where GroupID=?", array($GroupID));
 			foreach($dt as $row)
 			{
