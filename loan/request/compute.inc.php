@@ -139,6 +139,8 @@ function ComputeWageOfSHekoofa($partObj){
 	
 	$payments = LON_payments::Get(" AND RequestID=?", array($partObj->RequestID), " order by PayDate");
 	$payments = $payments->fetchAll();
+	if(count($payments) == 0)
+		return 0;
 	//--------------- total pay months -------------
 	$firstPay = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
 	//$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);

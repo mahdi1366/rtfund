@@ -96,6 +96,7 @@ function GetData(){
 	MakeWhere($where, $whereParam);
 	
 	$query = "select i.*,r.*,l.*,p.*,
+				i.InstallmentAmount - i.wage as pure,
 				sb.SubDesc,
 				tazamin,
 				SumPayments,
@@ -133,7 +134,7 @@ function GetData(){
 				from LON_payments 
 				join (select SourceID1,SourceID3 from ACC_DocItems where SourceType=".DOCTYPE_LOAN_PAYMENT." group by SourceID1,SourceID3)t 
 					on(t.SourceID1=RequestID AND t.SourceID3=PayID)
-				where 1=1 $pay_where
+				where 1=1 
 				group by RequestID			
 			)t_pay on(r.RequestID=t_pay.RequestID)
 			where i.history='NO' AND i.IsDelayed='NO' " . $where;
@@ -173,27 +174,33 @@ function GetData(){
 			$computeArr[ $MainRow["RequestID"] ] = array(
 				"compute" => LON_requests::ComputePayments($MainRow["RequestID"], $dt),
 				"computIndex" => 0,
-				"PayIndex" => 0
-				);
+				"partObj" => LON_ReqParts::GetValidPartObj($MainRow["RequestID"])
+			);
 		}
 		$ref = & $computeArr[ $MainRow["RequestID"] ];
 
 		for(; $ref["computIndex"] < count($ref["compute"]); $ref["computIndex"]++)
 		{
 			$row = $ref["compute"][$ref["computIndex"]];
-			if($row["ActionType"] != "installment")
+			if($row["type"] != "installment")
 				continue;
 			if($row["InstallmentID"] == $MainRow["InstallmentID"])
 			{
 				for($k=0; $k < count($row["pays"]); $k++)
 				{  
 					$payRow = $row["pays"][$k];
+					$MainRow = array_merge($MainRow, $payRow);
 					
-					$MainRow["forfeit"] = $payRow["forfeit"];
-					$MainRow["ForfeitDays"] = $payRow["ForfeitDays"];
-					$MainRow["PayedDate"] = $payRow["PayedDate"];
-					$MainRow["PayedAmount"] = $payRow["PayedAmount"];
-					$MainRow["TotalRemainder"] = $payRow["remain"];
+					if($ref["partObj"]->ComputeMode != "NEW")
+					{
+						$MainRow["pay_pure"] = $MainRow["PayedAmount"];
+						$MainRow["pay_wage"] = 0;
+						$MainRow["pnlt"] = $MainRow["forfeit"];
+						$MainRow["EarlyDays"] = 0;
+						$MainRow["EarlyAmount"] = 0;
+						 
+					}
+					
 					$returnArr[] = $MainRow;
 				}
 				
@@ -202,53 +209,7 @@ function GetData(){
 				
 				$ref["computIndex"]++;
 				break;
-				
 			}
-		
-			/*$row = $ref["compute"][$ref["computIndex"]];
-			if($row["type"] != "installment")
-				continue;
-			if($row["id"] == $MainRow["InstallmentID"])
-			{
-				$MainRow["pure"] = $row["pure"];
-				$MainRow["wage"] = $row["wage"];
-
-				for($k=0; $k < count($row["pays"]); $k++)
-				{  
-					$payRow = $row["pays"][$k];
-
-					$MainRow["pay_pure"] = $payRow["pay_pure"];
-					$MainRow["pay_wage"] = $payRow["pay_wage"];
-					$MainRow["late"] = $payRow["late"];
-					$MainRow["pnlt"] = $payRow["pnlt"];
-					$MainRow["PnltDays"] = $payRow["PnltDays"];
-					$MainRow["EarlyDays"] = $payRow["EarlyDays"];
-					$MainRow["EarlyAmount"] = $payRow["EarlyAmount"];
-					$MainRow["PayedDate"] = $payRow["PayedDate"];
-					$MainRow["PayedAmount"] = $payRow["PayedAmount"];
-					$MainRow["remain"] = $payRow["remain"];
-					$returnArr[] = $MainRow;
-				}
-
-				if(count($row["pays"]) == 0)
-				{
-					$MainRow["pay_pure"] = 0;
-					$MainRow["pay_wage"] = 0;
-					$MainRow["late"] = 0;
-					$MainRow["pnlt"] = 0;
-					$MainRow["PnltDays"] = 0;
-					$MainRow["EarlyDays"] = 0;
-					$MainRow["EarlyAmount"] = 0;
-					$MainRow["PayedDate"] = 0;
-					$MainRow["PayedAmount"] = 0;
-					$MainRow["remain"] = 0;
-					$returnArr[] = $MainRow;
-				}
-
-				$ref["computIndex"]++;
-				break;
-
-			}*/
 		}
 	}
 	
@@ -302,75 +263,108 @@ function ListData($IsDashboard = false){
 		return ($value == "YES") ? "خاتمه" : "جاری";
 	}
 	
-	$col = $rpg->addColumn("شماره وام", "RRequestID");
+	function LoanReportRender($row,$value){
+		return "<a href=LoanPayment.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
+	}
+	
+	$col = $rpg->addColumn("شماره وام", "RRequestID", "LoanReportRender");
+	$col->ExcelRender = false;
 	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
+	$col->rowspanByFields = array("RRequestID");
+	
 	$col = $rpg->addColumn("نوع وام", "LoanDesc");
 	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
+	$col->rowspanByFields = array("RRequestID");
+	
 	$col = $rpg->addColumn("معرفی کننده", "ReqFullname");
 	$col->rowspaning = true;
-	$col = $rpg->addColumn("زیرواحد سرمایه گذار", "SubDesc");
+	$col->rowspanByFields = array("RRequestID");
 	
-	$col->rowspanByFields = array("RequestID");
+	$col = $rpg->addColumn("زیرواحد سرمایه گذار", "SubDesc");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RRequestID");
+	
+
 	$col = $rpg->addColumn("تاریخ درخواست", "ReqDate", "ReportDateRender");
 	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
+	$col->rowspanByFields = array("RRequestID");
+	
 	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "ReportMoneyRender");
 	$col->EnableSummary();
 	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
+	$col->rowspanByFields = array("RRequestID");
+	
 	$col = $rpg->addColumn("مشتری", "LoanFullname");
 	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
+	$col->rowspanByFields = array("RRequestID");
+	
 	$col = $rpg->addColumn("شعبه", "BranchName");
 	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID");
+	$col->rowspanByFields = array("RRequestID");
 	
+	$col = $rpg->addColumn("مبلغ تایید شده", "PartAmount", "ReportMoneyRender");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RRequestID");
 	
-	$rpg->addColumn("مبلغ درخواست", "ReqAmount", "ReportMoneyRender");
-	$rpg->addColumn("مشتری", "LoanFullname");
-	$rpg->addColumn("شعبه", "BranchName");
-	$rpg->addColumn("مبلغ تایید شده", "PartAmount", "ReportMoneyRender");
-	$rpg->addColumn("مبلغ پرداخت شده", "SumPayments", "ReportMoneyRender");
-	$rpg->addColumn("تعداد اقساط", "InstallmentCount");
-	$rpg->addColumn("تنفس(ماه)", "DelayMonths");
-	$rpg->addColumn("کارمزد مشتری", "CustomerWage");
-	$rpg->addColumn("کارمزد صندوق", "FundWage");
-	$rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
-	$rpg->addColumn("تضامین", "tazamin");
-
+	$col = $rpg->addColumn("مبلغ پرداخت شده", "SumPayments", "ReportMoneyRender");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RRequestID");
+	
+	$col = $rpg->addColumn("تعداد اقساط", "InstallmentCount");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RRequestID");
+	
+	$col = $rpg->addColumn("تنفس(ماه)", "DelayMonths");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RRequestID");
+	
+	$col = $rpg->addColumn("کارمزد مشتری", "CustomerWage");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RRequestID");
+	
+	$col = $rpg->addColumn("کارمزد صندوق", "FundWage");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RRequestID");
+	
+	$col = $rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RRequestID");
+	
+	$col = $rpg->addColumn("تضامین", "tazamin");
+	$col->rowspaning = true;
+	$col->rowspanByFields = array("RRequestID");
+	
 	
 	$col = $rpg->addColumn("تاریخ قسط", "InstallmentDate", "ReportDateRender");
 	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID","InstallmentDate");
+	$col->rowspanByFields = array("RRequestID","InstallmentDate");
+	
 	$col = $rpg->addColumn("مبلغ قسط", "InstallmentAmount", "ReportMoneyRender");
 	$col->rowspaning = true;
-	$col->rowspanByFields = array("RequestID","InstallmentDate");
+	$col->rowspanByFields = array("RRequestID","InstallmentDate");
 	$col->EnableSummary();
 	
 	if(!empty($_POST["IsPayRowsInclude"]))
 	{
 		$col = $rpg->addColumn("اصل", "pure", "ReportMoneyRender");
 		$col->rowspaning = true;
-		$col->rowspanByFields = array("RequestID","InstallmentDate");
+		$col->rowspanByFields = array("RRequestID","InstallmentDate");
 		$col->EnableSummary();
 
 		$col = $rpg->addColumn("کارمزد", "wage", "ReportMoneyRender");
 		$col->rowspaning = true;
-		$col->rowspanByFields = array("RequestID","InstallmentDate");
+		$col->rowspanByFields = array("RRequestID","InstallmentDate");
 		$col->EnableSummary();
-	
-	
-		$col = $rpg->addColumn("پرداخت از اصل", "pay_pure", "ReportMoneyRender");	
-		$col = $rpg->addColumn("پرداخت از کارمزد", "pay_wage", "ReportMoneyRender");	
-		$col = $rpg->addColumn("کارمزد تاخیر", "late", "ReportMoneyRender");	
-		$col = $rpg->addColumn("جریمه", "pnlt", "ReportMoneyRender");	
-		$col = $rpg->addColumn("روز تعجیل", "EarlyDays");	
-		$col = $rpg->addColumn("مبلغ تعجیل", "EarlyAmount", "ReportMoneyRender");	
-		$rpg->addColumn("تاریخ پرداخت", "PayedDate");
-		$rpg->addColumn("مبلغ پرداخت", "PayedAmount");
-		$col = $rpg->addColumn("مانده قسط", "remain", "ReportMoneyRender");
+		
+		$rpg->addColumn("تاریخ پرداخت", "PayedDate", "ReportDateRender");
+		$rpg->addColumn("مبلغ پرداخت", "PayedAmount", "ReportMoneyRender");
+		$rpg->addColumn("پرداخت از اصل", "pay_pure", "ReportMoneyRender");	
+		$rpg->addColumn("پرداخت از کارمزد", "pay_wage", "ReportMoneyRender");	
+		$rpg->addColumn("کارمزد تاخیر", "late", "ReportMoneyRender");	
+		$rpg->addColumn("جریمه", "pnlt", "ReportMoneyRender");	
+		$rpg->addColumn("روز تعجیل", "EarlyDays");	
+		$rpg->addColumn("مبلغ تعجیل", "EarlyAmount", "ReportMoneyRender");	
+		$rpg->addColumn("مانده قسط", "remain", "ReportMoneyRender");
 	}
 	
 	if(!$rpg->excel && !$IsDashboard)

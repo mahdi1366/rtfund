@@ -88,7 +88,7 @@ function NewLoanRequest()
 		}
 	});*/
 	
-	this.grid = <?= $grid ?>;
+	/*this.grid = <?= $grid ?>;
 	this.grid.on("itemclick", function(){
 		record = NewLoanRequestObject.grid.getSelectionModel().getLastSelected();
 		NewLoanRequestObject.mainPanel.loadRecord(record);
@@ -98,7 +98,7 @@ function NewLoanRequest()
 		NewLoanRequestObject.mainPanel.down("[name=ReqAmount]").setValue(record.data.MaxAmount);
 		NewLoanRequestObject.mainPanel.down("[name=PayInterval]").setValue(record.data.PayInterval + " " + 
 			(record.data.IntervalType == "DAY" ? "روز" : "ماه"));
-	});
+	});*/
 	
 	/*this.grid.getStore().on("beforeload", function(){
 		if(this.proxy.extraParams.GroupID == null)
@@ -109,7 +109,9 @@ function NewLoanRequest()
 		renderTo : this.get("mainForm"),
 		width: 770,
 		border : 0,
-		items: [{
+		frame : true,
+		title : "درخواست تسهیلات",
+		items: [/*{
 			xtype : "fieldset",
 			title : "انتخاب وام درخواستی",
 			layout : "column",
@@ -166,7 +168,7 @@ function NewLoanRequest()
 					contentEl : this.get("summaryDIV")
 				}]
 			}]
-		},{
+		},*/{
 			xtype : "fieldset",
 			title : "جزئیات درخواست",
 			items : [{
@@ -211,11 +213,11 @@ function NewLoanRequest()
 			itemId : "saveBtn",
 			handler: function() {
 				
-				if(!NewLoanRequestObject.grid.getSelectionModel().getLastSelected())
+				/*if(!NewLoanRequestObject.grid.getSelectionModel().getLastSelected())
 				{
 					Ext.MessageBox.alert("","لطفا وام مورد نظر خود را با کلیک بر روی عنوان وام انتخاب نمایید.");
 					return;
-				}
+				}*/
 				
 				me = NewLoanRequestObject;
 				mask = new Ext.LoadMask(me.mainPanel, {msg:'در حال ذخيره سازي...'});
@@ -224,9 +226,9 @@ function NewLoanRequest()
 					clientValidation: true,
 					url: me.address_prefix + '../../loan/request/request.data.php?task=SaveLoanRequest' , 
 					method: "POST",
-					params : {
+					/*params : {
 						LoanID : NewLoanRequestObject.grid.getSelectionModel().getLastSelected().data.LoanID
-					},
+					},*/
 					success : function(form,action){
 						mask.hide();
 						me = NewLoanRequestObject;
@@ -419,7 +421,7 @@ NewLoanRequest.prototype.LoadSummary = function(record){
 		padding: 0 5px;
 	}
 	</style>
-	<div id="summaryDIV">
+	<!--<div id="summaryDIV">
 		<div style="float:right">
 			<table style="width:500px" class="summary">
 			<tr>
@@ -435,5 +437,5 @@ NewLoanRequest.prototype.LoadSummary = function(record){
 				<td><div id="SUM_NetAmount" class="blueText">&nbsp;</div></td>
 			</tr>
 		</table></div>		
-	</div> 
+	</div> -->
 </center>

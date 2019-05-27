@@ -187,6 +187,7 @@ function SelectMyRequests(){
     }
 	
 	$dt = LON_requests::SelectAll($where . dataReader::makeOrder(), $param);
+	print_r(ExceptionHandler::PopAllExceptions());
 	$count = $dt->rowCount();
 	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
 	
@@ -194,6 +195,8 @@ function SelectMyRequests(){
 	{
 		for($i=0; $i<count($dt); $i++)
 		{
+			if($dt[$i]["PartID"]*1 == 0)
+				continue;
 			$temp = array();
 			$ComputeArr = LON_requests::ComputePayments($dt[$i]["RequestID"], $temp);
 			$dt[$i]["CurrentRemain"] = LON_requests::GetCurrentRemainAmount($dt[$i]["RequestID"], $ComputeArr);
@@ -313,6 +316,8 @@ function DeleteRequest(){
 
 function ChangeStatus($RequestID, $StatusID, $StepComment = "", $LogOnly = false, $pdo = null, $UpdateOnly = false){
 	
+	if(empty($StatusID))
+		return true;
 	if(!$LogOnly)
 	{
 		$obj = new LON_requests();
@@ -1597,7 +1602,7 @@ function GetEndedRequests(){
 function GetPartPayments(){
 	
 	$dt = LON_payments::FullSelect(" AND p.RequestID=? ", array($_REQUEST["RequestID"]),dataReader::makeOrder());
-	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
 }

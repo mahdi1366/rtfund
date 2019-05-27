@@ -17,6 +17,14 @@ switch ($task) {
 	case "SaveBudget":
 	case "DeleteBudget":
 	case "ActivateBudget":
+	
+	case "GetBudgetCostCodes":
+	case "SaveBudgetCostCode":
+	case "RemoveBudgetCostCode":
+		
+	case "SelectBudgetAllocs":
+	case "SaveBudgetAlloc":	
+	case "DeleteBudgetAlloc":
 		
 		$task();
 };
@@ -73,6 +81,80 @@ function ActivateBudget(){
 	$obj = new ACC_budgets($_POST["BudgetID"]*1);
 	$obj->IsActive = "YES";
 	$result = $obj->Edit();
+    Response::createObjectiveResponse($result, '');
+    die();
+}
+
+//...................................
+
+function GetBudgetCostCodes(){
+	
+	$dt = ACC_BudgetCostCodes::Get(" AND BudgetID=?", array($_REQUEST["BudgetID"]));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount());
+	die();
+}
+
+function SaveBudgetCostCode(){
+	
+	$obj = new ACC_BudgetCostCodes();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	$result = $obj->Add();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function RemoveBudgetCostCode(){
+	
+	$obj = new ACC_BudgetCostCodes($_REQUEST["RowID"]);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+//...................................
+
+function SelectBudgetAllocs() {
+
+    $where = " AND IsActive='YES'";
+    $param = array();
+
+    if (!empty($_REQUEST['query'])) {
+		$field = isset($_REQUEST['fields']) ? $_REQUEST['fields'] : "BudgetDesc";
+        $where .= ' and ' . $field . ' like :' . $field;
+        $param[':' . $field] = '%' . $_REQUEST['query'] . '%';
+    }
+
+	$list = ACC_BudgetAlloc::Get($where . dataReader::makeOrder(), $param);
+	print_r(ExceptionHandler::PopAllExceptions());
+    $count = $list->rowCount();
+
+    if (isset($_GET["start"]) && !isset($_GET["All"]))
+        $list = PdoDataAccess::fetchAll($list, $_GET["start"], $_GET["limit"]);
+    else
+        $list = $list->fetchAll();
+
+    echo dataReader::getJsonData($list, $count, $_GET['callback']);
+    die();
+}
+
+function SaveBudgetAlloc() {
+
+    $obj = new ACC_BudgetAlloc();
+    pdoDataAccess::FillObjectByArray($obj, $_POST);
+
+    if ($obj->AllocID == '')
+        $result = $obj->Add();
+    else
+        $result = $obj->Edit();
+	
+    Response::createObjectiveResponse($result, "");
+    die();
+}
+
+function DeleteBudgetAlloc() {
+
+	$obj = new ACC_BudgetAlloc($_POST["AllocID"]*1);
+	$result = $obj->Remove();
     Response::createObjectiveResponse($result, '');
     die();
 }
