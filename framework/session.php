@@ -242,7 +242,8 @@ class session{
 	}
 	
 	static function IsFramework(){
-		
+		if(empty($_SERVER["HTTP_REFERER"]))
+			return false;
 		if(strpos($_SERVER["HTTP_REFERER"], "framework/desktop.php") !== false)
 			return true;
 		return false;

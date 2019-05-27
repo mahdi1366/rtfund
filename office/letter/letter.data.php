@@ -1026,6 +1026,25 @@ function DeleteTemplate(){
 
 //..............................................
 
+function SendToMessageList(){
+	
+	$param = array(":q" => "%" . $_REQUEST["query"] . "%");
+	
+	$query = "select 'Person' type, concat('p_',PersonID)  id, concat_ws(' ',fname,lname,CompanyName) name
+			from BSC_persons where IsStaff='YES'				
+			
+			union All 
+			
+				select 'Group' type, concat('g_',GroupID) id, GroupDesc name
+				from FRW_AccessGroups
+			
+			order by type,name";
+	
+	$dt = PdoDataAccess::runquery($query, $param);
+	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+	die();
+}
+
 function SelectMyMessages(){
 	
 	if($_REQUEST["mode"] == "receive")
@@ -1081,11 +1100,37 @@ function SaveMessage(){
 	}
 	
 	$receivers = json_decode($_POST["receivers"]);
-	foreach($receivers as $PersonID)
+	$arr = array();
+	$toPersonArr = array();
+	foreach($receivers as $toPersonID)
+	{
+		if(strpos($toPersonID,"p_") !== false)
+		{
+			$personID = substr($toPersonID, 2);
+			if(isset($toPersonArr[ $personID ]))
+				continue;
+			$arr[] = $personID;
+			$toPersonArr[ $personID ] = true;
+		}
+		else {
+			$GroupID = substr($toPersonID, 2);
+			$dt = PdoDataAccess::runquery("select * from FRW_AccessGroupList where GroupID=?", array($GroupID));
+			foreach($dt as $row)
+			{
+				if(!isset($toPersonArr[ $row["PersonID"] ]))
+				{
+					$arr[] = $row["PersonID"];
+					$toPersonArr[ $row["PersonID"] ] = true;
+				}
+			}
+		}
+	}
+	
+	for($i=0; $i<count($arr); $i++)
 	{
 		$obj2 = new OFC_MessageReceivers();
 		$obj2->MessageID = $obj->MessageID;
-		$obj2->PersonID = $PersonID;
+		$obj2->PersonID = $arr[$i];
 		$obj2->Add($pdo);
 	}
 	

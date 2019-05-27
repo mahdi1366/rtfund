@@ -14,6 +14,7 @@ $page_rpg->addColumn("شماره وام", "RRequestID");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
 $page_rpg->addColumn("معرفی کننده", "ReqFullname", "ReqPersonRender");
 $page_rpg->addColumn("زیرواحد سرمایه گذار", "SubDesc");
+$page_rpg->addColumn("وضعیت", "StatusDesc");
 $col = $page_rpg->addColumn("تاریخ درخواست", "ReqDate");
 $col->type = "date";
 $page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
@@ -108,6 +109,7 @@ function GetData(){
 				
 			from LON_installments i
 			join LON_requests r using(RequestID)
+			left join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=r.StatusID)
 			left join BSC_SubAgents sb on(sb.SubID=SubAgentID)
 			join LON_ReqParts p on(r.RequestID=p.RequestID AND p.IsHistory='NO')
 			left join LON_loans l using(LoanID)

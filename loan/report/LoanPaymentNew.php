@@ -15,7 +15,7 @@ if(isset($_REQUEST["show"]))
 	$ReqObj = new LON_requests($RequestID);
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	//............ get total loan amount ......................
-	$TotalAmount = LON_requests::GetTotalReturnAmount($RequestID, $partObj, true);
+	$TotalAmount = LON_installments::GetTotalInstallmentsAmount($RequestID);
 	//............ get remain untill now ......................
 	$ComputeArr = LON_Computes::NewComputePayments($RequestID);
 	$PureArr = LON_Computes::ComputePures($RequestID); 
@@ -23,6 +23,7 @@ if(isset($_REQUEST["show"]))
 	$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);
 	$TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
 	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
+	$remains = LON_requests::GetRemainAmounts($RequestID, $ComputeArr);
 	//............. get total payed .............................
 	$dt = LON_BackPays::GetRealPaid($RequestID);
 	$totalPayed = 0;
@@ -149,6 +150,7 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= $partObj->PayInterval . ($partObj->IntervalType == "DAY" ? "روز" : "ماه") ?>
 							</b></td>
 					</tr>
+					<? if(session::IsFramework()) {?>
 					<tr>
 						<td> کارمزد وام:  </td>
 						<td><b><?= $partObj->CustomerWage ?> %</b></td>
@@ -158,6 +160,7 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= $partObj->ForfeitPercent ?> %
 							</b></td>
 					</tr>
+					<?}?>
 				</table>
 			</td>
 			<td>
@@ -174,6 +177,7 @@ if(isset($_REQUEST["show"]))
 						<td></td>
 						<td><b></b></td>
 					</tr>
+					<? if(session::IsFramework()) {?>
 					<tr>
 						<td>کارمزد تاخیر :</td>
 						<td><b><?= $partObj->LatePercent ?> %
@@ -184,6 +188,7 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= $partObj->ForgivePercent ?> %
 							</b></td>
 					</tr>
+					<?}?>
 				</table>
 			</td>
 			<td>
@@ -194,15 +199,20 @@ if(isset($_REQUEST["show"]))
 							</b></td>
 					</tr>
 					<tr>
-						<td>جمع وام و کارمزد : </td>
-						<td><b><?= number_format($TotalAmount) ?> ریال
-							</b></td>
-					</tr>
-					<tr>
 						<td>جمع کل پرداختی تاکنون : </td>
 						<td><b><?= number_format($totalPayed) ?> ریال
 							</b></td>
 					</tr>
+					<? if(session::IsFramework()) {?>
+					<tr>
+						<td>جمع وام و کارمزد : </td>
+						<td><b><?= number_format($TotalAmount) ?> ریال							</b></td>
+					</tr>
+					<tr>
+						<td>مانده جریمه تاخیر: </td>
+						<td><b><?= number_format($remains["remain_pnlt"]) ?> ریال							</b></td>
+					</tr>
+					<?}?>
 				</table>
 			</td>
 			<td style="font-family: nazanin; font-size: 18px; font-weight: bold;line-height: 23px;">

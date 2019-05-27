@@ -8,7 +8,7 @@ require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
 require_once '../request/request.class.php';
 require_once '../request/request.data.php';
-ini_set("display_errors", "On");
+
 if(isset($_REQUEST["show"]))
 {
 	$RequestID = $_REQUEST["RequestID"];
@@ -20,7 +20,7 @@ if(isset($_REQUEST["show"]))
 		die();
 	} 
 	//............ get total loan amount ......................
-	$TotalAmount = LON_requests::GetTotalReturnAmount($RequestID, $partObj);
+	$TotalAmount = LON_installments::GetTotalInstallmentsAmount($RequestID);
 	//............ get remain untill now ......................
 	$dt = array();
 	$ComputeDate = !empty($_REQUEST["ComputeDate"]) ? 
@@ -33,6 +33,7 @@ if(isset($_REQUEST["show"]))
 	$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr, $ComputeDate);
 	$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID, $ComputeArr);
 	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
+	$remains = LON_requests::GetRemainAmounts($RequestID, $ComputeArr);
 	//............. get total payed .............................
 	$dt = LON_BackPays::GetRealPaid($RequestID);
 	$totalPayed = 0;
@@ -139,19 +140,21 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= DateModules::miladi_to_shamsi($partObj->PartDate) ?></b></td>
 					</tr>
 					<tr>
-						<td>فاصله اقساط: </td>
-						<td><b><?= $partObj->PayInterval . ($partObj->IntervalType == "DAY" ? "روز" : "ماه") ?>
-							</b></td>
-					</tr>
-					<tr>
 						<td> کارمزد وام:  </td>
 						<td><b><?= $partObj->CustomerWage ?> %</b></td>
 					</tr>
+					<? if(session::IsFramework()) {?>
+					<tr>
+						<td>فاصله اقساط: </td>
+						<td><b><?= $partObj->PayInterval . ($partObj->IntervalType == "DAY" ? "روز" : "ماه") ?>
+							</b></td>
+					</tr>					
 					<tr>
 						<td>درصد دیرکرد: </td>
 						<td><b><?= $partObj->ForfeitPercent ?> %
 							</b></td>
 					</tr>
+					<?}?>
 				</table>
 			</td>
 			<td>
@@ -164,6 +167,7 @@ if(isset($_REQUEST["show"]))
 						<td>مدت تنفس :  </td>
 						<td><b><?= $partObj->DelayMonths  ?>ماه و  <?= $partObj->DelayDays ?> روز</b></td>
 					</tr>
+					<? if(session::IsFramework()) {?>
 					<tr>
 						<td>نحوه محاسبه :</td>
 						<td><b><?= $partObj->PayCompute == "installment" ? "ابتدا اقساط" : "ابتدا جرائم" ?></b></td>
@@ -178,6 +182,7 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= $partObj->ForgivePercent ?> %
 							</b></td>
 					</tr>
+					<?}?>
 				</table>
 			</td>
 			<td>
@@ -188,15 +193,22 @@ if(isset($_REQUEST["show"]))
 							</b></td>
 					</tr>
 					<tr>
+						<td>جمع کل پرداختی تاکنون : </td>
+						<td><b><?= number_format($totalPayed) ?> ریال
+							</b></td>
+					</tr>
+					<? if(session::IsFramework()) {?>
+					<tr>
 						<td>جمع وام و کارمزد : </td>
 						<td><b><?= number_format($TotalAmount) ?> ریال
 							</b></td>
 					</tr>
 					<tr>
-						<td>جمع کل پرداختی تاکنون : </td>
-						<td><b><?= number_format($totalPayed) ?> ریال
-							</b></td>
+						<td>مانده جریمه تاخیر: </td>
+						<td><b><?= number_format($remains["remain_pnlt"]) ?> ریال							</b></td>
 					</tr>
+					<?}?>
+					
 				</table>
 			</td>
 			<td style="font-family: nazanin; font-size: 18px; font-weight: bold;line-height: 23px;">

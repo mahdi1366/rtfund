@@ -15,7 +15,7 @@ $RequestID = 0;
 $editable = false;
 $DefrayMode = false;
 $TotalRemain = 0;
-if(session::IsFramework())
+if(session::IsFramework()) 
 {
 	if(empty($_POST["RequestID"]))
 		die();
