@@ -708,9 +708,8 @@ class LON_requests extends PdoDataAccess{
 				if($ToDate > $ComputeDate)
 					$ToDate = $ComputeDate;
 				$forfeitDays = DateModules::GDateMinusGDate($ToDate,$StartDate);
-				$percent = $obj->ForfeitPercent*1 + $obj->LatePercent*1 - $obj->ForgivePercent*1;
-				$percent = $percent < 0 ? 0 : $percent;
-				$CurForfeit = round($amount*$percent*$forfeitDays/36500);
+				$CurLate = round($amount*$obj->LatePercent*$forfeitDays/36500);
+				$CurForfeit = round($amount*$obj->ForfeitPercent*1*$forfeitDays/36500);
 				if($CurForfeit < 0)
 				{
 					$forfeitDays = 0;
@@ -931,7 +930,7 @@ class LON_requests extends PdoDataAccess{
 		$ToDate = $ToDate == null ? DateModules::Now() : DateModules::shamsi_to_miladi($ToDate,"-");;
 		
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
-		if($obj->ComputeMode == "NEW" || $obj->ComputeMode == "NOAVARI")
+		if($obj->ComputeMode == "NEW")
 			return LON_Computes::GetCurrentRemainAmount($RequestID,$computeArr, $ToDate);
 		
 		$dt = array();
@@ -959,7 +958,7 @@ class LON_requests extends PdoDataAccess{
 		$ToDate = $ToDate == null ? DateModules::Now() : DateModules::shamsi_to_miladi($ToDate,"-");;
 		
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
-		if($obj->ComputeMode == "NEW" || $obj->ComputeMode == "NOAVARI")
+		if($obj->ComputeMode == "NEW")
 			return LON_Computes::GetRemainAmounts($RequestID,$computeArr, $ToDate);
 		
 		$dt = array();
@@ -988,7 +987,7 @@ class LON_requests extends PdoDataAccess{
 	static function GetTotalRemainAmount($RequestID, $computeArr=null){
 		
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
-		if($obj->ComputeMode == "NEW" || $obj->ComputeMode == "NOAVARI")
+		if($obj->ComputeMode == "NEW" )
 			return LON_Computes::GetTotalRemainAmount($RequestID);
 		
 		$dt = array();
