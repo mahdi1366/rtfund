@@ -869,6 +869,18 @@ function AddLetterToFolder(){
 	$FolderID = $_POST["FolderID"];
 	
 	PdoDataAccess::runquery("insert into OFC_ArchiveItems values(?,?)", array($FolderID, $LetterID));
+	
+	$dt = PdoDataAccess::runquery("select SendID from OFC_send where ToPersonID=? AND LetterID=?", 
+			array($_SESSION["USER"]["PersonID"], $LetterID));
+	if(count($dt) > 0)
+	{
+		foreach($dt as $row)
+		{
+			$obj = new OFC_send($row["SendID"]);	
+			$obj->IsDeleted = "YES";
+			$obj->EditSend();
+		}
+	}
 	echo Response::createObjectiveResponse(true, "");
 	die();
 }

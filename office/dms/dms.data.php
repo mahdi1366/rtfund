@@ -545,4 +545,46 @@ function DeleteEvents(){
 	die();	
 }
 
+function CreateZip(){
+
+	$where = "";
+	$param = array();
+	
+	if(!empty($_REQUEST["ObjectType"]))
+	{
+		$where .= " AND ObjectType=:st";
+		$param[":st"] = $_REQUEST["ObjectType"];
+	}
+	if(!empty($_REQUEST["ObjectID"]))
+	{
+		$where .= " AND ObjectID=:sid";
+		$param[":sid"] = $_REQUEST["ObjectID"];
+	}
+	if(!empty($_REQUEST["ObjectID2"]))
+	{
+		$where .= " AND ObjectID2=:oid2";
+		$param[":oid2"] = $_REQUEST["ObjectID2"];
+	}
+	$temp = PdoDataAccess::runquery("
+		select * from DMS_DocFiles join DMS_documents d	using(DocumentID)
+			where 1=1 " . $where, $param);
+	
+	$zip = new ZipArchive();
+	$filename = DOCUMENT_ROOT . "/storage/files.zip";
+	if ($zip->open($filename, ZipArchive::CREATE)!==TRUE) {
+		Response::createObjectiveResponse(false, "can not create zip file");
+		die();
+	}
+	$index = 1;
+	foreach($temp as $row)
+	{
+		$FileContent = $row["FileContent"] . 
+			file_get_contents(DOCUMENT_ROOT . "/storage/documents/" . $row["RowID"] . "." . $row["FileType"]);
+	
+		$zip->addFromString("file". $index++ . "." . $row["FileType"], $FileContent);
+	}
+	$zip->close();
+	Response::createObjectiveResponse(true, "");
+	die();
+}
 ?>

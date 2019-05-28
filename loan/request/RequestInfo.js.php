@@ -74,7 +74,8 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 		fields : ["RequestID","PartID","BranchID","LoanID","BranchName","ReqPersonID","ReqFullname","LoanPersonID",
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
 					"BorrowerMobile","guarantees","AgentGuarantee","FundGuarantee","StatusID","DocumentDesc","IsFree",
-					"imp_GirandehCode","imp_VamCode","IsEnded","SubAgentID","PlanTitle","RuleNo","FundRules"],
+					"imp_GirandehCode","imp_VamCode","IsEnded","SubAgentID","PlanTitle","RuleNo","FundRules",
+					"DomainID","DomainDesc"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -200,6 +201,39 @@ RequestInfo.OperationRender = function(v,p,record){
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:16px;float:right;height:16'></div>";*/
 	}
+}
+
+RequestInfo.prototype.ActDomainLOV = function(){
+		
+	if(!this.DomainWin)
+	{
+		this.DomainWin = new Ext.window.Window({
+			autoScroll : true,
+			width : 420,
+			height : 420,
+			title : "حوزه فناوری",
+			closeAction : "hide",
+			loader : {
+				url : "/framework/baseInfo/ActDomain.php?mode=adding",
+				scripts : true
+			}
+		});
+		
+		Ext.getCmp(this.TabID).add(this.DomainWin);
+	}
+	
+	this.DomainWin.show();
+	
+	this.DomainWin.loader.load({
+		params : {
+			ExtTabID : this.DomainWin.getEl().dom.id,
+			parent : "RequestInfoObject.DomainWin",
+			selectHandler : function(id, name){
+				RequestInfoObject.companyPanel.down("[name=DomainDesc]").setValue(name);
+				RequestInfoObject.companyPanel.down("[name=DomainID]").setValue(id);
+			}
+		}
+	});
 }
 
 RequestInfo.prototype.OperationMenu = function(e){
@@ -572,14 +606,32 @@ RequestInfo.prototype.BuildForms = function(){
 			}),
 			fieldLabel : "شعبه اخذ وام",
 			queryMode : 'local',
+			colspan : 2,
 			allowBlank : false,
 			hidden : true,
 			displayField : "BranchName",
 			valueField : "BranchID",
 			name : "BranchID"
 		},{
+			xtype : "trigger",
+			colspan : 2,
+			width : 700,
+			fieldLabel: 'حوزه فناوری',
+			name: 'DomainDesc',	
+			triggerCls:'x-form-search-trigger',
+			onTriggerClick : function(){
+				RequestInfoObject.ActDomainLOV();
+			},
+			listeners : {
+				blur : function(){
+					if(this.getValue() == "")
+						RequestInfoObject.companyPanel.down("[name=DomainID]").setValue();
+				}
+			}
+		},{
 			xtype : "container",
 			layout : "hbox",
+			colspan : 2,
 			itemId : "setting",
 			items :[{
 				xtype : "checkbox",
@@ -601,8 +653,12 @@ RequestInfo.prototype.BuildForms = function(){
 				boxLabel : "ضمانت اقساط وام با صندوق می باشد"
 			}]
 		},{
+			xtype : "hidden",
+			name : "DomainID"
+		},{
 			xtype : "container",
 			hidden : true,
+			colspan : 2,
 			itemId : "oldInfo",
 			width : 300,
 			items : [{
@@ -1044,15 +1100,15 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			
 			this.PartsPanel.down("[name=FundWage]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=WageReturn]").getEl().dom.style.display = "none";
-			this.PartsPanel.down("[name=ComputeMode]").getEl().dom.style.display = "none";
+			//this.PartsPanel.down("[name=ComputeMode]").getEl().dom.style.display = "none";
 			//this.PartsPanel.down("[name=PayCompute]").getEl().dom.style.display = "none";
-			this.PartsPanel.down("[name=MaxFundWage]").getEl().dom.style.display = "none";
+//			this.PartsPanel.down("[name=MaxFundWage]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=AgentReturn]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=AgentDelayReturn]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=DelayReturn]").getEl().dom.style.display = "none";
 			this.get("TR_FundWage").style.display = "none";
 			this.get("TR_AgentWage").style.display = "none";
-			this.get("div_yearly").style.display = "none";
+//			this.get("div_yearly").style.display = "none";
 			this.companyPanel.down("[itemId=cmp_menu]").hide();
 			this.companyPanel.down("toolbar").insert(0,this.attachButtons);
 
@@ -1145,6 +1201,13 @@ RequestInfo.prototype.CustomizeForm = function(record){
 RequestInfoObject = new RequestInfo();
 
 RequestInfo.prototype.SaveRequest = function(mode){
+
+	if(this.companyPanel.down("[name=ReqPersonID]").getValue()*1 == 0 &&
+		this.companyPanel.down("[name=LoanID]").getValue()*1 == 9)
+	{
+		Ext.MessageBox.alert("Error", "برای وام های عاملیت انتخاب معرفی کننده الزامی است");
+		return;
+	}
 
 	mask = new Ext.LoadMask(this.companyPanel, {msg:'در حال ذخيره سازي...'});
 	mask.show();  

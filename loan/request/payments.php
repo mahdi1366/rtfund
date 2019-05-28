@@ -39,13 +39,13 @@ $col->summaryType = GridColumn::SummeryType_sum;
 $col->summaryRenderer = "function(v){return Ext.util.Format.Money(v);}";
 $col->align = "center";
 
-$col = $dg->addColumn("تنفس قدیم صندوق", "OldFundDelayAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("تنفس صندوق", "OldFundDelayAmount", GridColumn::ColumnType_money);
 $col->width = 120;
 $col->summaryType = GridColumn::SummeryType_sum;
 $col->summaryRenderer = "function(v){return Ext.util.Format.Money(v);}";
 $col->align = "center";
 
-$col = $dg->addColumn("تنفس قدیم سرمایه گذار", "OldAgentDelayAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("تنفس سرمایه گذار", "OldAgentDelayAmount", GridColumn::ColumnType_money);
 $col->width = 120;
 $col->summaryType = GridColumn::SummeryType_sum;
 $col->summaryRenderer = "function(v){return Ext.util.Format.Money(v);}";
@@ -144,8 +144,8 @@ PartPayment.DocRender = function(v,p,r){
 	
 	st = "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+v+"</a>";
 	
-	//if(PartPaymentObject.StatusID != "<?= LON_REQ_STATUS_CONFIRM ?>")
-	//	return st;
+	if(PartPaymentObject.StatusID != "<?= LON_REQ_STATUS_CONFIRM ?>")
+		return st;
 	if(r.data.LocalNo != "" && r.data.LocalNo != null)
 	{
 		if(r.data.StatusID == "<?= ACC_STEPID_RAW ?>")

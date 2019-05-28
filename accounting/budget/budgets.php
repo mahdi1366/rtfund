@@ -38,7 +38,8 @@ if($accessObj->RemoveFlag)
 
 $col = $dg->addcolumn('کدهای حساب','','string');
 $col->renderer = "ACC_budget.CostRender";
-$col->width=60;
+$col->width=80;
+$col->align = "center";
 
 $dg->height = 350;
 $dg->width = 500;
@@ -81,9 +82,9 @@ ACC_budget.RemoveRender = function(value,p,record){
 
 ACC_budget.CostRender = function(value,p,record){
 	
-		return  "<div  title='کدهای حساب بودجه' class='list' onclick='ACC_budgetObject.ShowCosts();' " +
-		"style='float:left;background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:50%;height:16'></div>";	
+		return  "<div  title='کدهای حساب بودجه' class='list' onclick='ACC_budgetObject.ShowCostCodes();' " +
+		"style=';background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";	
 }
 
 ACC_budget.prototype.Adding = function(){
@@ -196,8 +197,40 @@ ACC_budget.prototype.Activate = function(){
 	});
 }
 
-ACC_budget.prototype.ShowCosts = function(){
+ACC_budget.prototype.ShowCostCodes = function(){
+
+	var record = this.grid.getSelectionModel().getLastSelected();
 	
+	if(!this.CostCodeWin)
+	{
+		this.CostCodeWin = new Ext.window.Window({
+			width : 765,
+			title : "کدهای حساب متصل به بودجه",
+			bodyStyle : "background-color:white;text-align:-moz-center",
+			height : 565,
+			modal : true,
+			closeAction : "hide",
+			loader : {
+				url : this.address_prefix + "BudgetCostCodes.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.CostCodeWin);
+	}
+	this.CostCodeWin.show();
+	this.CostCodeWin.center();
+	this.CostCodeWin.loader.load({
+		params : { 
+			ExtTabID : this.CostCodeWin.getEl().id,
+			MenuID : <?= $_REQUEST["MenuID"] ?>,
+			BudgetID : record.data.BudgetID
+		}
+	});
 }
 
 var ACC_budgetObject = new ACC_budget();

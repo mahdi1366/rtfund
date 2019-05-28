@@ -31,6 +31,7 @@ class LON_requests extends PdoDataAccess{
 	public $PlanTitle;
 	public $RuleNo;
 	public $FundRules;
+	public $DomainID;
 	
 	public $_LoanDesc;
 	public $_LoanPersonFullname;
@@ -39,6 +40,8 @@ class LON_requests extends PdoDataAccess{
 	public $_SubAgentDesc;
 	
 	function __construct($RequestID = "") {
+		
+		$this->DT_DomainID = DataMember::CreateDMA(DataMember::DT_INT, 0);
 		
 		if($RequestID != "")
 			PdoDataAccess::FillObject ($this, "
@@ -62,8 +65,10 @@ class LON_requests extends PdoDataAccess{
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
 				bi.InfoDesc StatusDesc,
-				BranchName
+				BranchName,
+				DomainDesc
 			from LON_requests r
+			left join BSC_ActDomain using(DomainID)
 			left join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
 			left join LON_loans l using(LoanID)
 			left join BSC_branches using(BranchID)
@@ -547,6 +552,7 @@ class LON_requests extends PdoDataAccess{
 					"InstallmentID" => $record["id"],
 					"BackPayID" => $record["BackPayID"],
 					"details" => $record["details"],
+					"type" => $record["type"],
 					"ActionType" => $record["type"],
 					"ActionDate" => $record["RecordDate"],
 					"ActionAmount" => $record["RecordAmount"]*1,
@@ -726,10 +732,11 @@ class LON_requests extends PdoDataAccess{
 				$InstallmentRow["pays"][] = array(
 					"ForfeitDays" => $forfeitDays,
 					"forfeit" => $CurForfeit,
+					"late" => $CurLate,
 					"remain" => $PayRecord ? $amount : $SaveAmount ,
 					"G-PayedDate" => $PayRecord ? $PayRecord["ActionDate"] : '',
-					"PayedDate" => $PayRecord ? DateModules::miladi_to_shamsi($PayRecord["ActionDate"]) : '',
-					"PayedAmount" => number_format($SavePayedAmount)
+					"PayedDate" => $PayRecord ? $PayRecord["ActionDate"] : '',
+					"PayedAmount" => $SavePayedAmount
 				);
 				
 				$refInstallments[ $InstallmentRow["InstallmentID"] ]["remainder"] -= $SavePayedAmount;
@@ -1427,6 +1434,8 @@ class LON_Computes extends PdoDataAccess{
 		{
 			if($records[$i]["type"] == "installment")
 			{
+				$records[$i]["InstallmentID"] = $records[$i]["id"];
+				
 				if($records[$i]["id"] != "0")
 					$records[$i]["pure"] = $records[$i]["RecordAmount"]*1 - $records[$i]["wage"]*1;
 				else
@@ -1445,6 +1454,7 @@ class LON_Computes extends PdoDataAccess{
 			}
 			if($records[$i]["type"] == "pay")
 			{
+				$records[$i]["BackPayID"] = $records[$i]["id"];
 				$records[$i]["remainPayAmount"] = $records[$i]["RecordAmount"]*1;
 				$records[$i]["pure"] = 0;
 				$records[$i]["wage"] = 0;
@@ -2200,9 +2210,13 @@ class LON_payments extends OperationClass{
 	
 	static function Get($where = '', $whereParams = array(), $order = "") {
 		
-		return parent::runquery_fetchMode("select *
-			from LON_payments 
-			where 1=1 " . $where . $order, $whereParams);
+		return parent::runquery_fetchMode("select p.*,d.DocID,d.LocalNo,d.StatusID 
+			from LON_payments p
+			left join ACC_DocItems di on(di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
+				AND di.SourceID1=p.RequestID AND di.SourceID3=p.PayID) 
+			left join ACC_docs d on(di.DocID=d.DocID)
+			where 1=1 " . $where .  
+			" group by p.PayID " . $order, $whereParams);
 	}
 	
 	static function FullSelect($where = '', $whereParams = array(), $order = "") {

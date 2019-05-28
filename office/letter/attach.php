@@ -54,6 +54,8 @@ if($AddAccess || $DelAccess)
 	$col->width = 60;
 }
 
+$dg->addButton("", "دانلود کلیه فایل ها", "archive", "ManageDocument.ZipDownload");
+
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 310;
 $dg->width = 600;
@@ -242,6 +244,44 @@ ManageDocument.prototype.DeleteDocument = function(){
 		});
 	});
 }
+
+ManageDocument.ZipDownload  = function(){
+	
+	me = ManageDocumentObject;
+	
+	mask = new Ext.LoadMask(Ext.getCmp(me.TabID),{msg:'در حال آماده سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		url: me.address_prefix +  '../dms/dms.data.php',
+		method: "POST",
+		isUpload : true,
+		params: {
+			task: "CreateZip",
+			ObjectID : me.LetterID,
+			ObjectType : 'letterAttach'
+		},
+		success: function(response){
+			mask.hide();
+			result = Ext.decode(response.responseText);
+			if(result.success)
+			{   
+				window.open("/storage/files.zip");
+			}
+			else
+			{
+				if(result.data == "")
+					alert("خطا در اجرای عملیات");
+				else
+					alert(result.data);
+			}
+		},
+		failure: function(){
+			mask.hide();
+		}
+	});
+}
+ 
 
 ManageDocumentObject = new ManageDocument();
 
