@@ -198,6 +198,7 @@ function GetData(){
 						$MainRow["pay_pure"] = $MainRow["PayedAmount"];
 						$MainRow["pay_wage"] = 0;
 						$MainRow["pnlt"] = $MainRow["forfeit"];
+						//$MainRow["PnltDays"] = $MainRow["ForfeitDays"];
 						$MainRow["EarlyDays"] = 0;
 						$MainRow["EarlyAmount"] = 0;
 						 
@@ -359,9 +360,11 @@ function ListData($IsDashboard = false){
 		$col->EnableSummary();
 		
 		$rpg->addColumn("تاریخ پرداخت", "PayedDate", "ReportDateRender");
-		$rpg->addColumn("مبلغ پرداخت", "PayedAmount", "ReportMoneyRender");
+		$col =$rpg->addColumn("مبلغ پرداخت", "PayedAmount", "ReportMoneyRender");
+		$col->EnableSummary();
 		$rpg->addColumn("پرداخت از اصل", "pay_pure", "ReportMoneyRender");	
 		$rpg->addColumn("پرداخت از کارمزد", "pay_wage", "ReportMoneyRender");	
+		$rpg->addColumn("روز تاخیر", "PnltDays");	
 		$rpg->addColumn("کارمزد تاخیر", "late", "ReportMoneyRender");	
 		$rpg->addColumn("جریمه", "pnlt", "ReportMoneyRender");	
 		$rpg->addColumn("روز تعجیل", "EarlyDays");	
