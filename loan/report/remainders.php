@@ -103,13 +103,23 @@ function showReport(){
 		$RequestID = $row["RequestID"];
 		$ComputeDate = !empty($_POST["ComputeDate"]) ? 
 				DateModules::shamsi_to_miladi($_POST["ComputeDate"],"-") : DateModules::Now();
-		$ComputeArr = LON_Computes::NewComputePayments($RequestID, $ComputeDate);
+		
+		$ComputeArr = LON_requests::ComputePayments($RequestID, $ComputeDate);
 		$PureArr = LON_requests::ComputePures($RequestID);
 		//............ get remain untill now ......................
 		$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr);
 		$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID, $ComputeArr);
 		//$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
-
+		
+		
+		/*$ComputeArr = LON_Computes::NewComputePayments($RequestID, $ComputeDate);
+		$PureArr = LON_Computes::ComputePures($RequestID);
+		//............ get remain untill now ......................
+		$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);
+		$TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
+		*/
+		
+		
 		$returnArr[] = array(
 			"RequestID" => $RequestID,
 			"ComputeMode" => $row["ComputeMode"],

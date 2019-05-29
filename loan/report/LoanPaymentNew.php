@@ -17,13 +17,13 @@ if(isset($_REQUEST["show"]))
 	//............ get total loan amount ......................
 	$TotalAmount = LON_installments::GetTotalInstallmentsAmount($RequestID);
 	//............ get remain untill now ......................
-	$ComputeArr = LON_Computes::NewComputePayments($RequestID);
+	$ComputeArr = LON_requests::ComputePayments2($RequestID);
 	$PureArr = LON_Computes::ComputePures($RequestID); 
 	//............ get remain untill now ......................
 	$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);
 	$TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
-	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
-	$remains = LON_requests::GetRemainAmounts($RequestID, $ComputeArr);
+	$DefrayAmount = 0;//LON_Computes::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
+	$remains = LON_Computes::GetRemainAmounts($RequestID, $ComputeArr);
 	//............. get total payed .............................
 	$dt = LON_BackPays::GetRealPaid($RequestID);
 	$totalPayed = 0;

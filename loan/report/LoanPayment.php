@@ -17,7 +17,7 @@ if(isset($_REQUEST["show"]))
 	$ReqObj = new LON_requests($RequestID);
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	if($partObj->ComputeMode == "NEW" )
-	{
+	{ 
 		require_once './LoanPaymentNew.php';
 		die();
 	} 
