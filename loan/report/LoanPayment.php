@@ -29,13 +29,13 @@ if(isset($_REQUEST["show"]))
 			DateModules::shamsi_to_miladi($_REQUEST["ComputeDate"],"-") :
 			DateModules::now();
 	
-	$ComputeArr = LON_requests::ComputePayments($RequestID, $dt, $ComputeDate);
+	$ComputeArr = LON_requests::ComputePayments($RequestID, $ComputeDate);
 	$PureArr = LON_requests::ComputePures($RequestID);
 	//............ get remain untill now ......................
-	$CurrentRemain = LON_requests::GetCurrentRemainAmount($RequestID, $ComputeArr, $ComputeDate);
-	$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID, $ComputeArr);
+	$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr, $ComputeDate);
+	$TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
 	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
-	$remains = LON_requests::GetRemainAmounts($RequestID, $ComputeArr);
+	$remains = LON_Computes::GetRemainAmounts($RequestID, $ComputeArr);
 	//............. get total payed .............................
 	$dt = LON_BackPays::GetRealPaid($RequestID);
 	$totalPayed = 0;

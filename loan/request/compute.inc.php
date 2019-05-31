@@ -249,13 +249,13 @@ function ComputeWagesAndDelays($PartObj, $PayAmount, $StartDate, $PayDate){
 	//.................................
 	$TotalWage = round(ComputeWage($PayAmount, $MaxWage/100, $PartObj->InstallmentCount, 
 			$PartObj->IntervalType, $PartObj->PayInterval));	
-	$dt = LON_installments::GetValidInstallments($PartObj->RequestID);
+	/*$dt = LON_installments::GetValidInstallments($PartObj->RequestID);
 	if(count($dt)>0 && $dt[0]["wage"]*1 > 0)
 	{
 		$TotalWage = 0;
 		foreach($dt as $row)
 			$TotalWage += $row["wage"]*1;
-	}
+	}*/
 	//.................................
 	
 	$CustomerFactor =	$MaxWage == 0 ? 0 : $PartObj->CustomerWage/$MaxWage;

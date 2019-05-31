@@ -141,7 +141,6 @@ class EventComputeItems {
 					$ComputeArr = LON_Computes::NewComputePayments($ReqObj->RequestID);
 					self::$LoanComputeArray[ $ReqObj->RequestID ] = $ComputeArr;
 				}
-				
 				foreach($ComputeArr as $row)
 				{
 					if($row["type"] != "pay" || $row["BackPayID"] != $BackPayObj->BackPayID)

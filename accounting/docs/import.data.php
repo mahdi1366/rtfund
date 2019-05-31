@@ -1954,7 +1954,7 @@ function RegisterDifferncePartsDoc_Supporter($ReqObj, $NewPartObj, $pdo, $DocID=
 	}
 	//--------------------------------------------------------
 	// compute the extra pay
-	$remain = LON_requests::GetTotalRemainAmount($NewPartObj->RequestID);
+	$remain = LON_Computes::GetTotalRemainAmount($NewPartObj->RequestID);
 	$extraPay = 0;
 	if($remain < 0)
 	{
@@ -2296,9 +2296,8 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		array($ReqObj->RequestID, BACKPAY_PAYTYPE_CORRECT, $PayObj->BackPayID));
 	
 	require_once getenv("DOCUMENT_ROOT") . '/loan/request/request.class.php';
-	$dt = array();
-	$returnArr = LON_requests::ComputePayments($PayObj->RequestID, $dt, null, $pdo);
-	$remain = LON_requests::GetTotalRemainAmount($PayObj->RequestID, $returnArr);
+	$returnArr = LON_requests::ComputePayments($PayObj->RequestID, null, $pdo);
+	$remain = LON_Computes::GetTotalRemainAmount($PayObj->RequestID, $returnArr);
 	$ExtraPay = 0;
 	if($remain < 0)
 	{
@@ -2409,11 +2408,9 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	}
 	//------------------ forfeit amount -----------------------
 	for($j=0; $j < count($returnArr); $j++)
-		if($returnArr[$j]["ActionType"] == "pay" && $returnArr[$j]["InstallmentID"] == $PayObj->BackPayID)
+		if($returnArr[$j]["type"] == "pay" && $returnArr[$j]["BackPayID"] == $PayObj->BackPayID)
 			break;
-	$forfeitAmount = $returnArr[ $j-1 ]["ForfeitAmount"]*1 - 
-			$returnArr[ $j ]["ForfeitAmount"]*1 + $returnArr[ $j ]["CurForfeitAmount"]*1;		
-	$forfeitAmount = min($forfeitAmount, $PayObj->PayAmount);
+	$forfeitAmount = $returnArr[$j]["pnlt"] + $returnArr[$j]["late"];
 	if($forfeitAmount > 0 && $LoanMode == "Agent")
 	{
 		unset($itemObj->ItemID);
@@ -2657,7 +2654,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		array($ReqObj->RequestID, BACKPAY_PAYTYPE_CORRECT, $PayObj->BackPayID));
 	
 	require_once getenv("DOCUMENT_ROOT") . '/loan/request/request.class.php';
-	$remain = LON_requests::GetTotalRemainAmount($PayObj->RequestID);
+	$remain = LON_Computes::GetTotalRemainAmount($PayObj->RequestID);
 	$ExtraPay = 0;
 	if($remain < 0)
 	{

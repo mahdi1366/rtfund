@@ -199,8 +199,8 @@ function SelectMyRequests(){
 				continue;
 			$temp = array();
 			$ComputeArr = LON_requests::ComputePayments($dt[$i]["RequestID"], $temp);
-			$dt[$i]["CurrentRemain"] = LON_requests::GetCurrentRemainAmount($dt[$i]["RequestID"], $ComputeArr);
-			$dt[$i]["TotalRemain"] = LON_requests::GetTotalRemainAmount($dt[$i]["RequestID"], $ComputeArr);
+			$dt[$i]["CurrentRemain"] = LON_Computes::GetCurrentRemainAmount($dt[$i]["RequestID"], $ComputeArr);
+			$dt[$i]["TotalRemain"] = LON_Computes::GetTotalRemainAmount($dt[$i]["RequestID"], $ComputeArr);
 		}
 	}
 	
@@ -245,7 +245,7 @@ function SelectAllRequests2(){
 	
 	//--------------- remain of each loan ------------------
 	for($i=0; $i<count($dt);$i++)
-		$dt[$i]["totalRemain"] = LON_requests::GetTotalRemainAmount($dt[$i]["RequestID"]);
+		$dt[$i]["totalRemain"] = LON_Computes::GetTotalRemainAmount($dt[$i]["RequestID"]);
 	//-------------------------------------------------------
 	
 	echo dataReader::getJsonData($dt, $cnt, $_GET["callback"]);
@@ -575,7 +575,7 @@ function GetRequestTotalRemainder(){
 	
 	$remain = 0;
 	$RequestID = $_REQUEST["RequestID"];
-	$remain = LON_requests::GetTotalRemainAmount($RequestID);	
+	$remain = LON_Computes::GetTotalRemainAmount($RequestID);	
 	echo Response::createObjectiveResponse(true, $remain);
 	die();
 }
@@ -593,7 +593,7 @@ function EndRequest(){
 	$pureAmount = LON_requests::GetDefrayAmount($RequestID, $computeArr);
 	if($pureAmount == 0)
 	{
-		$remain = LON_requests::GetTotalRemainAmount($RequestID, $computeArr);
+		$remain = LON_Computes::GetTotalRemainAmount($RequestID, $computeArr);
 		
 		$obj = new LON_costs();
 		$obj->CostDate = PDONOW;
@@ -687,8 +687,7 @@ function ReturnEndRequest(){
 function GetDefrayAmount(){
 	
 	$RequestID = (int)$_REQUEST["RequestID"];
-	$dt = array();
-	$computeArr = LON_requests::ComputePayments($RequestID, $dt);
+	$computeArr = LON_requests::ComputePayments($RequestID);
 	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $computeArr);
 	echo Response::createObjectiveResponse(true, $DefrayAmount);
 	die();
@@ -702,7 +701,7 @@ function DefrayRequest(){
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	$remain = LON_requests::GetTotalRemainAmount($RequestID);
+	$remain = LON_Computes::GetTotalRemainAmount($RequestID);
 	if($remain > 0)
 	{		
 		$obj = new LON_costs();
@@ -738,31 +737,22 @@ function DefrayRequest(){
 function GetInstallments(){
 	
 	$RequestID = $_REQUEST["RequestID"];
-	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	$temp = LON_installments::SelectAll(" i.RequestID=?", array($RequestID));
 	
-	if($partObj->ComputeMode == "NEW")
-	{
-		$refArray = array();
-		$ComputeArr = LON_Computes::NewComputePayments($RequestID);
-		foreach($ComputeArr as $row)
-			if($row["type"] == "installment")
-				$refArray[ $row["id"] ] = &$row;
+	$refArray = array();
+	$ComputeArr = LON_requests::ComputePayments($RequestID);
+	foreach($ComputeArr as $row)
+		if($row["type"] == "installment")
+			$refArray[ $row["id"] ] = &$row;
 
-		for($i=0; $i<count($temp); $i++)
-		{
-			if(isset($refArray[ $temp[$i]["InstallmentID"] ]))
-			{
-				$src = $refArray[  $temp[$i]["InstallmentID"]  ];
-				$temp[$i]["remain"] = $src["remain_pure"] + $src["remain_wage"] + 
-						$src["remain_late"] + $src["remain_pnlt"];
-			}
-		}
-	}
-	else
+	for($i=0; $i<count($temp); $i++)
 	{
-		$temp = array();
-		$Compute = LON_requests::ComputePayments($RequestID, $temp);
+		if(isset($refArray[ $temp[$i]["InstallmentID"] ]))
+		{
+			$src = $refArray[  $temp[$i]["InstallmentID"]  ];
+			$temp[$i]["remain"] = $src["remain_pure"] + $src["remain_wage"] + 
+					$src["remain_late"] + $src["remain_pnlt"];
+		}
 	}
 	
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
@@ -1021,8 +1011,7 @@ function DelayInstallments(){
 	}
 	else
 	{
-		$dt = array();
-		LON_requests::ComputePayments($RequestID, $dt);
+		$dt = LON_requests::ComputePayments($RequestID);
 	}
 	
 	$prevExtraAmount = 0;
@@ -1540,8 +1529,7 @@ function GetDelayedInstallments($returnData = false){
 			$result[] = $row;
 			continue;
 		}
-		$temp = array();
-		$computeArr = LON_requests::ComputePayments($row["RequestID"], $temp);
+		$computeArr = LON_requests::ComputePayments($row["RequestID"]);
 		$remain = LON_Computes::GetCurrentRemainAmount($row["RequestID"],$computeArr);
 		$RemainArr = LON_Computes::GetRemainAmounts($row["RequestID"],$computeArr);
 		$MinDate = LON_requests::GetMinPayedInstallmentDate($row["RequestID"],$computeArr);
@@ -1584,7 +1572,7 @@ function GetEndedRequests(){
 	$result = array();
 	while($row = $dt->fetch())
 	{
-		$remain = LON_requests::GetTotalRemainAmount($row["RequestID"]);
+		$remain = LON_Computes::GetTotalRemainAmount($row["RequestID"]);
 		if($remain == 0)
 			$result[] = $row;
 	}

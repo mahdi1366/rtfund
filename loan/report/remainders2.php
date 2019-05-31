@@ -104,7 +104,7 @@ function showReport(){
 		$ComputeDate = !empty($_POST["ComputeDate"]) ? 
 				DateModules::shamsi_to_miladi($_POST["ComputeDate"],"-") : DateModules::Now();
 		
-		$ComputeArr = LON_requests::ComputePayments($RequestID, $ComputeDate);
+		$ComputeArr = LON_requests::ComputePayments2($RequestID, $ComputeDate);
 		//............ get remain untill now ......................
 		$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);
 		$TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
@@ -193,17 +193,6 @@ LoanReport_remainders.prototype.showReport = function(btn, e)
 	this.form.target = "_blank";
 	this.form.method = "POST";
 	this.form.action =  this.address_prefix + "remainders.php?show=true";
-	this.form.submit();
-	this.get("excel").value = "";
-	return;
-}
-
-LoanReport_remainders.prototype.showReport2 = function(btn, e)
-{
-	this.form = this.get("mainForm")
-	this.form.target = "_blank";
-	this.form.method = "POST";
-	this.form.action =  this.address_prefix + "remainders2.php?show=true";
 	this.form.submit();
 	this.get("excel").value = "";
 	return;
@@ -461,10 +450,6 @@ function LoanReport_remainders()
 			name : "ComputeDate"
 		}],
 		buttons : [{
-			text : "مشاهده گزارش2",
-			handler : Ext.bind(this.showReport2,this),
-			iconCls : "report"
-		},'->',{
 			text : "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),
 			iconCls : "report"

@@ -329,12 +329,12 @@ function GetData($mode = "list"){
 	
 	for($i=0; $i< count($dataTable); $i++)
 	{
-		$dt = array();
-		$ComputeArr = LON_requests::ComputePayments($dataTable[$i]["RequestID"], $dt);
-		$TotalRemain = LON_requests::GetTotalRemainAmount($dataTable[$i]["RequestID"], $ComputeArr);
+		$ComputeArr = LON_requests::ComputePayments($dataTable[$i]["RequestID"]);
+		$TotalRemain = LON_Computes::GetTotalRemainAmount($dataTable[$i]["RequestID"], $ComputeArr);
+		$remains = LON_Computes::GetRemainAmounts($dataTable[$i]["RequestID"], $ComputeArr);
 		$dataTable[$i]["remainder"] = $TotalRemain;
-		$dataTable[$i]["ForfeitAmount"] = $ComputeArr[count($ComputeArr)-1]["ForfeitAmount"];
-		$dataTable[$i]["LateAmount"] = $ComputeArr[count($ComputeArr)-1]["LateAmount"];
+		$dataTable[$i]["ForfeitAmount"] = $remains['remain_pnlt'];
+		$dataTable[$i]["LateAmount"] = $remains["remain_late"];
 		$dataTable[$i]["TotalForfeitAmount"] = LON_requests::GetTotalForfeitAmount($dataTable[$i]["RequestID"], $ComputeArr);
 	}
 	

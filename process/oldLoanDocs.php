@@ -17,7 +17,7 @@ $GToDate = '2019-03-21'; //1398/01/01
 
 $reqs = PdoDataAccess::runquery(" select r.RequestID from LON_requests r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
-	where PartDate<'$GToDate' /*AND r.RequestID = 17*/
+	where PartDate<'$GToDate' AND r.RequestID >= ".$_REQUEST["ReqID"]."
 		AND ComputeMode='NEW' AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
 		order by RequestID");
 
@@ -37,13 +37,20 @@ foreach($reqs as $requset)
 	$DocObj[ $reqObj->RequestID ] = null;
 	
 	Allocate($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	$DocObj[ $reqObj->RequestID ] = null;
 	Contract($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	$DocObj[ $reqObj->RequestID ] = null;
 	Payment($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	$DocObj[ $reqObj->RequestID ] = null;
 	PaymentCheque($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	$DocObj[ $reqObj->RequestID ] = null;
 	BackPayCheques($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	$DocObj[ $reqObj->RequestID ] = null;
 	BackPay($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	$DocObj[ $reqObj->RequestID ] = null;
 	DailyIncome($reqObj, $partObj, $pdo);
 	DailyWage($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	$DocObj[ $reqObj->RequestID ] = null;
 	
 	//--------------------------------------------------
 	$pdo->commit();

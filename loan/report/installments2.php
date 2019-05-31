@@ -200,7 +200,7 @@ function GetData(){
 					$payRow = $row["pays"][$k];
 					$MainRow = array_merge($MainRow, $payRow);
 					
-					if($ref["partObj"]->ComputeMode != "NEW")
+					/*if($ref["partObj"]->ComputeMode != "NEW")
 					{
 						$MainRow["pay_pure"] = $MainRow["PayedAmount"];
 						$MainRow["pay_wage"] = 0;
@@ -209,13 +209,28 @@ function GetData(){
 						$MainRow["EarlyDays"] = 0;
 						$MainRow["EarlyAmount"] = 0;
 						 
-					}
+					}*/
 					
 					$returnArr[] = $MainRow;
 				}
 				
 				if(count($row["pays"]) == 0)
+				{
+					$MainRow["pay_pure"] = 0;
+					$MainRow["pay_wage"] = 0;
+					$MainRow["pay_late"] = 0;
+					$MainRow["pay_pnlt"] = 0;
+					$MainRow["EarlyDays"] = 0;
+					$MainRow["EarlyAmount"] = 0;
+					$MainRow["PnltDays"] = 0;
+					$MainRow["cur_late"] = 0;
+					$MainRow["cur_pnlt"] = 0;
+					$MainRow["remain_pure"] = 0;
+					$MainRow["remain_wage"] = 0;
+					$MainRow["remain_late"] = 0;
+					$MainRow["remain_pnlt"] = 0;
 					$returnArr[] = $MainRow;
+				}
 				
 				$ref["computIndex"]++;
 				break;
@@ -282,7 +297,7 @@ function ListData($IsDashboard = false){
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RRequestID");
 	
-	$col = $rpg->addColumn("نوع وام", "LoanDesc");
+	/*$col = $rpg->addColumn("نوع وام", "LoanDesc");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RRequestID");
 	
@@ -343,7 +358,7 @@ function ListData($IsDashboard = false){
 	$col = $rpg->addColumn("تضامین", "tazamin");
 	$col->rowspaning = true;
 	$col->rowspanByFields = array("RRequestID");
-	
+	*/
 	
 	$col = $rpg->addColumn("تاریخ قسط", "InstallmentDate", "ReportDateRender");
 	$col->rowspaning = true;
@@ -369,13 +384,22 @@ function ListData($IsDashboard = false){
 		$rpg->addColumn("تاریخ پرداخت", "PayedDate", "ReportDateRender");
 		$col =$rpg->addColumn("مبلغ پرداخت", "PayedAmount", "ReportMoneyRender");
 		$col->EnableSummary();
-		$rpg->addColumn("پرداخت از اصل", "pay_pure", "ReportMoneyRender");	
-		$rpg->addColumn("پرداخت از کارمزد", "pay_wage", "ReportMoneyRender");	
-		$rpg->addColumn("روز تاخیر", "PnltDays");	
-		$rpg->addColumn("کارمزد تاخیر", "late", "ReportMoneyRender");	
-		$rpg->addColumn("جریمه", "pnlt", "ReportMoneyRender");	
 		$rpg->addColumn("روز تعجیل", "EarlyDays");	
 		$rpg->addColumn("مبلغ تعجیل", "EarlyAmount", "ReportMoneyRender");	
+		$rpg->addColumn("روز تاخیر", "PnltDays");
+		$rpg->addColumn("کارمزد تاخیر", "cur_late", "ReportMoneyRender");	
+		$rpg->addColumn("جریمه", "cur_pnlt", "ReportMoneyRender");	
+		
+		$rpg->addColumn("پرداخت از اصل", "pay_pure", "ReportMoneyRender");	
+		$rpg->addColumn("پرداخت از کارمزد", "pay_wage", "ReportMoneyRender");	
+		$rpg->addColumn("پرداخت از کارمزد تاخیر", "pay_late", "ReportMoneyRender");	
+		$rpg->addColumn("پرداخت از جریمه", "pay_pnlt", "ReportMoneyRender");	
+		
+		$rpg->addColumn("مانده اصل", "remain_pure", "ReportMoneyRender");	
+		$rpg->addColumn("مانده کارمزد", "remain_wage", "ReportMoneyRender");	
+		$rpg->addColumn("مانده کارمزد تاخیر", "remain_late", "ReportMoneyRender");	
+		$rpg->addColumn("مانده جریمه", "remain_pnlt", "ReportMoneyRender");	
+		
 		$rpg->addColumn("مانده قسط", "remain", "ReportMoneyRender");
 	}
 	
@@ -445,16 +469,6 @@ LoanReport_installments.prototype.showReport = function(btn, e)
 	this.form.target = "_blank";
 	this.form.method = "POST";
 	this.form.action =  this.address_prefix + "installments.php?show=true";
-	this.form.submit();
-	this.get("excel").value = "";
-	return;
-}
-LoanReport_installments.prototype.showReport2 = function(btn, e)
-{
-	this.form = this.get("mainForm")
-	this.form.target = "_blank";
-	this.form.method = "POST";
-	this.form.action =  this.address_prefix + "installments2.php?show=true";
 	this.form.submit();
 	this.get("excel").value = "";
 	return;
@@ -641,10 +655,6 @@ function LoanReport_installments()
 						"mainForm",
 						"formPanel"
 						);}
-		},{
-			text : "مشاهده گزارش",
-			handler : Ext.bind(this.showReport2,this),
-			iconCls : "report"
 		},'->',{
 			text : "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),

@@ -177,10 +177,9 @@ function GetData(){
 	$result = array();
 	while($row = $dt->fetch())
 	{
-		$temp = array();
-		$computeArr = LON_requests::ComputePayments($row["RequestID"], $temp, $ComputeDate);
-		$remain = LON_requests::GetCurrentRemainAmount($row["RequestID"],$computeArr, $ComputeDate);
-		$RemainArr = LON_requests::GetRemainAmounts($row["RequestID"],$computeArr, $ComputeDate);
+		$computeArr = LON_requests::ComputePayments($row["RequestID"], $ComputeDate);
+		$remain = LON_Computes::GetCurrentRemainAmount($row["RequestID"],$computeArr, $ComputeDate);
+		$RemainArr = LON_Computes::GetRemainAmounts($row["RequestID"],$computeArr, $ComputeDate);
 		
 		if($remain == 0)
 			continue;
@@ -194,7 +193,7 @@ function GetData(){
 		{
 			foreach($computeArr as $irow)
 			{
-				if($irow["ActionType"] == "installment")
+				if($irow["type"] == "installment")
 				{
 					if($irow["pays"][ count($irow["pays"])-1 ]["remain"]*1 > 0)
 						$delayedInstallmentsCount++;

@@ -310,20 +310,13 @@ function GetData($mode = "list"){
 	
 	for($i=0; $i< count($dataTable); $i++)
 	{
-		$dt = array();
-		$ComputeArr = LON_requests::ComputePayments($dataTable[$i]["RequestID"], $dt);
-		$TotalRemain = LON_requests::GetTotalRemainAmount($dataTable[$i]["RequestID"], $ComputeArr);
+		$ComputeArr = LON_requests::ComputePayments($dataTable[$i]["RequestID"]);
+		$TotalRemain = LON_Computes::GetTotalRemainAmount($dataTable[$i]["RequestID"], $ComputeArr);
+		$remains = LON_Computes::GetRemainAmounts($dataTable[$i]["RequestID"], $ComputeArr);
+		
 		$dataTable[$i]["remainder"] = $TotalRemain;
-		if(count($ComputeArr) > 0)
-		{
-			$dataTable[$i]["ForfeitAmount"] = $ComputeArr[count($ComputeArr)-1]["ForfeitAmount"];
-			$dataTable[$i]["TotalForfeitAmount"] = LON_requests::GetTotalForfeitAmount($dataTable[$i]["RequestID"], $ComputeArr);
-		}
-		else
-		{
-			$dataTable[$i]["ForfeitAmount"] = 0;
-			$dataTable[$i]["TotalForfeitAmount"] = 0;
-		}
+		$dataTable[$i]["ForfeitAmount"] = $remains["remain_pnlt"];
+		$dataTable[$i]["TotalForfeitAmount"] = LON_requests::GetTotalForfeitAmount($dataTable[$i]["RequestID"], $ComputeArr);
 	}
 	
 	return $dataTable; 

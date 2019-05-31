@@ -33,7 +33,7 @@ else
 	$DefrayMode = isset($_POST["DefrayMode"]) ? true : false;
 	if($DefrayMode)
 	{
-		$TotalRemain = LON_requests::GetTotalRemainAmount($RequestID);
+		$TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID);
 	}
 }
 

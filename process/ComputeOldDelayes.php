@@ -22,6 +22,22 @@ foreach($dt as $row)
 		PdoDataAccess::runquery("update LON_payments set OldAgentDelayAmount=? where PayID=?", array(
 			$result["TotalAgentDelay"], $row["PayID"]));
 	
+	$TotalFundWage = $result["TotalFundWage"];
+	$TotalCustomerWage = $result["TotalAgentWage"];
+	if($row["WageReturn"] == "CUSTOMER")
+	{
+		if($row["MaxFundWage"]*1 > 0)
+			PdoDataAccess::runquery("update LON_payments set OldFundWage=? where PayID=?", 
+				array($row["MaxFundWage"], $row["PayID"]));
+		else 
+			PdoDataAccess::runquery("update LON_payments set OldFundWage=? where PayID=?", 
+					array($result["TotalFundWage"], $row["PayID"]));
+	}
+	if($row["AgentReturn"] == "CUSTOMER" && $row["CustomerWage"]*1 > $row["FundWage"]*1)
+		PdoDataAccess::runquery("update LON_payments set OldAgentWage=? where PayID=?", 
+					array($result["TotalAgentWage"], $row["PayID"]));
+	
+	
 	print_r(ExceptionHandler::PopAllExceptions());
 	echo "<br>";
 	flush();
