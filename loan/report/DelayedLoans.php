@@ -169,7 +169,7 @@ function GetData(){
 	$dt = PdoDataAccess::runquery_fetchMode($query, $whereParam);
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		//print_r(ExceptionHandler::PopAllExceptions());
+		print_r(ExceptionHandler::PopAllExceptions());
 		//echo PdoDataAccess::GetLatestQueryString();
 	}
 	$ComputeDate = !empty($_POST["ComputeDate"]) ? 
@@ -185,36 +185,18 @@ function GetData(){
 			continue;
 		
 		$delayedInstallmentsCount = 0;
-		if($row["ComputeMode"] == "NEW")
+		foreach($computeArr as $irow)
 		{
-			
-		}
-		else
-		{
-			foreach($computeArr as $irow)
+			if($irow["type"] == "installment")
 			{
-				if($irow["type"] == "installment")
-				{
-					if($irow["pays"][ count($irow["pays"])-1 ]["remain"]*1 > 0)
-						$delayedInstallmentsCount++;
-				}
+				if($irow["pays"][ count($irow["pays"])-1 ]["remain"]*1 > 0)
+					$delayedInstallmentsCount++;
 			}
 		}
 		$row["delayedInstallmentsCount"] = $delayedInstallmentsCount;
-		
-		
-		if($row["ComputeMode"] == "NEW")
-		{
-			$row["remain_pure"] = $RemainArr["remain_pure"];
-			$row["remain_wage"] = $RemainArr["remain_wage"];
-			$row["remain_loan"] = $RemainArr["remain_pure"]*1 + $RemainArr["remain_wage"]*1;
-		}
-		else
-		{
-			$row["remain_pure"] = 0;
-			$row["remain_wage"] = 0;
-			$row["remain_loan"] = $RemainArr["remain_total"];
-		}
+		$row["remain_pure"] = $RemainArr["remain_pure"];
+		$row["remain_wage"] = $RemainArr["remain_wage"];
+		$row["remain_loan"] = $RemainArr["remain_pure"]*1 + $RemainArr["remain_wage"]*1;
 		$row["remain_late"] = $RemainArr["remain_late"];
 		$row["remain_pnlt"] = $RemainArr["remain_pnlt"];
 		$row["TotalRemainder"] = $remain;
@@ -450,6 +432,24 @@ function LoanReport_DelayedInstalls()
 			valueField : "BranchID",
 			hiddenName : "BranchID"
 		},{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../request/request.data.php?' +
+						"task=GetAllStatuses",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['InfoID','InfoDesc'],
+				autoLoad : true					
+			}),
+			fieldLabel : "وضعیت وام",
+			queryMode : 'local',
+			width : 370,
+			displayField : "InfoDesc",
+			valueField : "InfoID",
+			hiddenName : "StatusID"
+		},{
 			xtype : "numberfield",
 			name : "fromRequestID",
 			hideTrigger : true,
@@ -459,24 +459,6 @@ function LoanReport_DelayedInstalls()
 			name : "toRequestID",
 			hideTrigger : true,
 			fieldLabel : "تا شماره"
-		},{
-			xtype : "shdatefield",
-			name : "fromInstallmentDate",
-			fieldLabel : "تاریخ قسط از"
-		},{
-			xtype : "shdatefield",
-			name : "toInstallmentDate",
-			fieldLabel : "تا تاریخ"
-		},{
-			xtype : "currencyfield",
-			name : "fromInstallmentAmount",
-			hideTrigger : true,
-			fieldLabel : "از مبلغ قسط"
-		},{
-			xtype : "currencyfield",
-			name : "toInstallmentAmount",
-			hideTrigger : true,
-			fieldLabel : "تا مبلغ قسط"
 		},{
 			xtype : "shdatefield",
 			name : "ComputeDate",

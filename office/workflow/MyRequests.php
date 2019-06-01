@@ -191,7 +191,7 @@ WFM_MyRequests.prototype.OperationMenu = function(e){
 WFM_MyRequests.prototype.DeleteRequest = function(){
 	
 	record = this.grid.getSelectionModel().getLastSelected();
-	if(record.data.IsStarted == "YES")
+	if(record.data.IsStarted == "YES" && record.data.SendEnable == "NO")
 	{
 		Ext.MessageBox.alert("Error","فرم دارای گردش بوده و قابل حذف نمی باشد");
 		return;
@@ -336,7 +336,10 @@ WFM_MyRequests.prototype.ManageDocuments = function(){
 WFM_MyRequestsObject = new WFM_MyRequests();
 
 </script>
-<center>
+<center><BR>
+	<font color="red"><b>
+	جهت امکان گردش درخواست های پشتیبانی و تایید آنها توسط مدیر عامل محترم لطفا از قسمت ایجاد فرم، فرم پشتیبانی سیستم را پر کرده و ارسال نمایید.
+	</b></font>
 	<div id="mainForm"></div><BR>
 	<div id="DivGrid"></div>
 	توجه : ردیف های سبز رنگ ردیف هایی هستند که فرایند گردش آنها خاتمه یافته است

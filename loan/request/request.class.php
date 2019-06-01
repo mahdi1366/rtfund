@@ -2412,6 +2412,25 @@ class LON_BackPays extends PdoDataAccess{
 			select p.*,
 		 		i.ChequeNo,
 				i.ChequeStatus,
+				t.TafsiliDesc ChequeStatusDesc,
+				bi.InfoDesc PayTypeDesc, 				
+				d.DocID,
+				d.LocalNo,
+				d.StatusID
+			from LON_BackPays p
+			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
+			left join ACC_IncomeCheques i using(IncomeChequeID)
+			left join ACC_tafsilis t on(t.TafsiliType=".TAFTYPE_ChequeStatus." AND t.TafsiliID=ChequeStatus)
+			
+			left join ACC_DocItems di on(SourceID1=RequestID AND SourceID2=BackPayID AND SourceType in(8,5))
+			left join ACC_docs d on(di.DocID=d.DocID)
+			
+			where " . $where . " group by BackPayID " . $order, $param);
+			
+		/*return PdoDataAccess::runquery("
+			select p.*,
+		 		i.ChequeNo,
+				i.ChequeStatus,
 				t.InfoDesc ChequeStatusDesc,
 				bi.InfoDesc PayTypeDesc, 				
 				d.DocID,
@@ -2426,7 +2445,7 @@ class LON_BackPays extends PdoDataAccess{
 				AND ch.StatusID=" . INCOMECHEQUE_VOSUL . ")
 			left join ACC_docs d on(ch.DocID=d.DocID)
 			
-			where " . $where . " group by BackPayID " . $order, $param);
+			where " . $where . " group by BackPayID " . $order, $param);*/
 	}
 	
 	function Add($pdo = null){
@@ -2514,6 +2533,14 @@ class LON_payments extends OperationClass{
 	
 	static function Get($where = '', $whereParams = array(), $order = "") {
 		
+		return parent::runquery_fetchMode("select p.*,d.DocID,d.LocalNo,d.StatusID 
+			from LON_payments p
+			left join ACC_DocItems di on(di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
+				AND di.SourceID1=p.RequestID AND di.SourceID3=p.PayID) 
+			left join ACC_docs d on(di.DocID=d.DocID)
+			where 1=1 " . $where .  
+			" group by p.PayID " . $order, $whereParams);
+			
 		return parent::runquery_fetchMode("
 			select p.*,d.DocID,d.LocalNo,d.StatusID,
 				PayAmount - ifnull(OldFundDelayAmount,0) 

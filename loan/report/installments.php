@@ -163,20 +163,11 @@ function GetData(){
 	}
 	
 	//.....................................
-	if(empty($_POST["IsPayRowsInclude"]))
-	{
-		$returnArr = $dataTable;
-		return $returnArr;
-	}
 	$computeArr = array();
 	$returnArr = array();
 	for($index=0; $index<count($dataTable); $index++)
 	{
 		$MainRow = &$dataTable[$index];
-		$MainRow["PayedDate"] = "";
-		$MainRow["PayedAmount"] = "";
-		$MainRow["forfeit"] = 0;	
-		$MainRow["remain"] = $MainRow["InstallmentAmount"];
 
 		if(!isset($computeArr[ $MainRow["RequestID"] ]))
 		{
@@ -187,77 +178,86 @@ function GetData(){
 			);
 		}
 		$ref = & $computeArr[ $MainRow["RequestID"] ];
-
 		for(; $ref["computIndex"] < count($ref["compute"]); $ref["computIndex"]++)
 		{
 			$row = $ref["compute"][$ref["computIndex"]];
 			if($row["type"] != "installment")
 				continue;
-			if($row["InstallmentID"] == $MainRow["InstallmentID"])
-			{
-				for($k=0; $k < count($row["pays"]); $k++)
-				{  
-					$payRow = $row["pays"][$k];
-					$MainRow = array_merge($MainRow, $payRow);
-					
-					if($ref["partObj"]->ComputeMode != "NEW")
-					{
-						$MainRow["pay_pure"] = $MainRow["PayedAmount"];
-						$MainRow["pay_wage"] = 0;
-						$MainRow["pnlt"] = $MainRow["forfeit"];
-						$MainRow["PnltDays"] = $MainRow["ForfeitDays"];
-						$MainRow["EarlyDays"] = 0;
-						$MainRow["EarlyAmount"] = 0;
-						 
-					}
-					
-					$returnArr[] = $MainRow;
-				}
-				
-				if(count($row["pays"]) == 0)
-					$returnArr[] = $MainRow;
-				
-				$ref["computIndex"]++;
-				break;
-			}
-		}
-	}
-	
-	if($_POST["RemainStatus"] != "all")
-	{
-		$currentIns = $returnArr[0]["InstallmentID"];
-		$tempArr = array();
-		$returnArr2 = array();
-		for($i=0; $i<count($returnArr); $i++)
-		{
-			if($currentIns == $returnArr[$i]["InstallmentID"])
-				$tempArr[] = $returnArr[$i];
 			
-			if($i+1 == count($returnArr) || $returnArr[$i+1]["InstallmentID"] != $currentIns)
+			//........................................................
+			if($row["InstallmentID"] == $MainRow["InstallmentID"])
 			{
 				switch($_POST["RemainStatus"])
 				{
 					case "paid":
-						if($returnArr[$i]["remain"] < $returnArr[$i]["InstallmentAmount"])
-							$returnArr2 = array_merge ($returnArr2, $tempArr);
+						if(count($row["pays"]) == 0)
+							continue;
 						break;
 					case "notPaid":
-						if($returnArr[$i]["remain"] >= $returnArr[$i]["InstallmentAmount"])
-							$returnArr2 = array_merge ($returnArr2, $tempArr);
+						if(count($row["pays"]) > 0)
+							continue;
 						break;
 					case "fullPaid":
-						if($returnArr[$i]["remain"] == 0)
-							$returnArr2 = array_merge ($returnArr2, $tempArr);
+						if( $row["pays"][ count($row["pays"])-1 ]["remain"]*1 > 0)
+							continue;
 						break;
 				}
 				
-				$tempArr = array();
-				if($i+1 < count($returnArr))
-					$currentIns = $returnArr[$i+1]["InstallmentID"];
+				//........................................................
+				
+				$MainRow["InstallmentRemain"] = $MainRow["InstallmentAmount"];
+				$MainRow["SumPayedAmount"] = 0;
+				$MainRow["SumLate"] = 0;
+				$MainRow["SumPnlt"] = 0;
+				if(count($row["pays"]) > 0)
+				{
+					$MainRow["InstallmentRemain"] = $row["pays"][ count($row["pays"])-1 ]["remain"];
+					
+					foreach($row["pays"] as $prow)
+					{
+						$MainRow["SumPayedAmount"] += $prow["PayedAmount"]*1;
+						$MainRow["SumLate"] += $prow["cur_late"]*1;
+						$MainRow["SumPnlt"] += $prow["cur_pnlt"]*1;
+					}
+				}
+
+				//........................................................
+				
+				if(isset($_POST["IsPayRowsInclude"]))
+				{
+					for($k=0; $k < count($row["pays"]); $k++)
+					{  
+						$payRow = $row["pays"][$k];
+						$MainRow = array_merge($MainRow, $payRow);
+						$returnArr[] = $MainRow;
+					}
+					if(count($row["pays"]) == 0)
+					{
+						$MainRow["pay_pure"] = 0;
+						$MainRow["pay_wage"] = 0;
+						$MainRow["pay_late"] = 0;
+						$MainRow["pay_pnlt"] = 0;
+						$MainRow["EarlyDays"] = 0;
+						$MainRow["EarlyAmount"] = 0;
+						$MainRow["PnltDays"] = 0;
+						$MainRow["cur_late"] = 0;
+						$MainRow["cur_pnlt"] = 0;
+						$MainRow["remain_pure"] = 0;
+						$MainRow["remain_wage"] = 0;
+						$MainRow["remain_late"] = 0;
+						$MainRow["remain_pnlt"] = 0;
+						$returnArr[] = $MainRow;
+					}
+				}
+				else
+				{
+					$returnArr[] = $MainRow;
+				}
+
+				$ref["computIndex"]++;
+				break;
 			}
 		}
-		
-		return $returnArr2;
 	}
 	
 	return $returnArr;
@@ -354,7 +354,30 @@ function ListData($IsDashboard = false){
 	$col->rowspanByFields = array("RRequestID","InstallmentDate");
 	$col->EnableSummary();
 	
-	if(!empty($_POST["IsPayRowsInclude"]))
+	if(empty($_POST["IsPayRowsInclude"]))
+	{
+		$col = $rpg->addColumn("کارمزد تاخیر", "SumLate", "ReportMoneyRender");
+		$col->rowspaning = true;
+		$col->rowspanByFields = array("RRequestID","InstallmentDate");
+		$col->EnableSummary();
+		
+		$col = $rpg->addColumn("جریمه", "SumPnlt", "ReportMoneyRender");
+		$col->rowspaning = true;
+		$col->rowspanByFields = array("RRequestID","InstallmentDate");
+		$col->EnableSummary();
+		
+		$col = $rpg->addColumn("پرداخت مشتری", "SumPayedAmount", "ReportMoneyRender");
+		$col->rowspaning = true;
+		$col->rowspanByFields = array("RRequestID","InstallmentDate");
+		$col->EnableSummary();
+
+		$col = $rpg->addColumn("مانده قسط", "InstallmentRemain", "ReportMoneyRender");
+		$col->rowspaning = true;
+		$col->rowspanByFields = array("RRequestID","InstallmentDate");
+		$col->EnableSummary();
+	
+	}
+	else
 	{
 		$col = $rpg->addColumn("اصل", "pure", "ReportMoneyRender");
 		$col->rowspaning = true;
@@ -369,13 +392,22 @@ function ListData($IsDashboard = false){
 		$rpg->addColumn("تاریخ پرداخت", "PayedDate", "ReportDateRender");
 		$col =$rpg->addColumn("مبلغ پرداخت", "PayedAmount", "ReportMoneyRender");
 		$col->EnableSummary();
-		$rpg->addColumn("پرداخت از اصل", "pay_pure", "ReportMoneyRender");	
-		$rpg->addColumn("پرداخت از کارمزد", "pay_wage", "ReportMoneyRender");	
-		$rpg->addColumn("روز تاخیر", "PnltDays");	
-		$rpg->addColumn("کارمزد تاخیر", "late", "ReportMoneyRender");	
-		$rpg->addColumn("جریمه", "pnlt", "ReportMoneyRender");	
 		$rpg->addColumn("روز تعجیل", "EarlyDays");	
 		$rpg->addColumn("مبلغ تعجیل", "EarlyAmount", "ReportMoneyRender");	
+		$rpg->addColumn("روز تاخیر", "PnltDays");
+		$rpg->addColumn("کارمزد تاخیر", "cur_late", "ReportMoneyRender");	
+		$rpg->addColumn("جریمه", "cur_pnlt", "ReportMoneyRender");	
+		
+		$rpg->addColumn("پرداخت از اصل", "pay_pure", "ReportMoneyRender");	
+		$rpg->addColumn("پرداخت از کارمزد", "pay_wage", "ReportMoneyRender");	
+		$rpg->addColumn("پرداخت از کارمزد تاخیر", "pay_late", "ReportMoneyRender");	
+		$rpg->addColumn("پرداخت از جریمه", "pay_pnlt", "ReportMoneyRender");	
+		
+		$rpg->addColumn("مانده اصل", "remain_pure", "ReportMoneyRender");	
+		$rpg->addColumn("مانده کارمزد", "remain_wage", "ReportMoneyRender");	
+		$rpg->addColumn("مانده کارمزد تاخیر", "remain_late", "ReportMoneyRender");	
+		$rpg->addColumn("مانده جریمه", "remain_pnlt", "ReportMoneyRender");	
+		
 		$rpg->addColumn("مانده قسط", "remain", "ReportMoneyRender");
 	}
 	
@@ -445,16 +477,6 @@ LoanReport_installments.prototype.showReport = function(btn, e)
 	this.form.target = "_blank";
 	this.form.method = "POST";
 	this.form.action =  this.address_prefix + "installments.php?show=true";
-	this.form.submit();
-	this.get("excel").value = "";
-	return;
-}
-LoanReport_installments.prototype.showReport2 = function(btn, e)
-{
-	this.form = this.get("mainForm")
-	this.form.target = "_blank";
-	this.form.method = "POST";
-	this.form.action =  this.address_prefix + "installments2.php?show=true";
 	this.form.submit();
 	this.get("excel").value = "";
 	return;
@@ -563,10 +585,27 @@ function LoanReport_installments()
 			fieldLabel : "شعبه اخذ وام",
 			queryMode : 'local',
 			width : 370,
-			colspan : 2,
 			displayField : "BranchName",
 			valueField : "BranchID",
 			hiddenName : "BranchID"
+		},{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: this.address_prefix + '../request/request.data.php?' +
+						"task=GetAllStatuses",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['InfoID','InfoDesc'],
+				autoLoad : true					
+			}),
+			fieldLabel : "وضعیت وام",
+			queryMode : 'local',
+			width : 370,
+			displayField : "InfoDesc",
+			valueField : "InfoID",
+			hiddenName : "StatusID"
 		},{
 			xtype : "combo",
 			width : 370,
@@ -641,10 +680,6 @@ function LoanReport_installments()
 						"mainForm",
 						"formPanel"
 						);}
-		},{
-			text : "مشاهده گزارش",
-			handler : Ext.bind(this.showReport2,this),
-			iconCls : "report"
 		},'->',{
 			text : "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),

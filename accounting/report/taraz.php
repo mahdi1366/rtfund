@@ -1127,7 +1127,7 @@ function AccReport_taraz()
 				html : "<input type=checkbox checked name=IncludeRaw id=IncludeRaw> گزارش شامل اسناد خام نیز باشد." + "<br>" +
 					"<input type=checkbox name=IncludeStart checked=true id=IncludeStart> گزارش شامل سند افتتاحیه باشد." + "<br>" + 	
 					"<input type=checkbox name=IncludeEnd id=IncludeEnd> گزارش شامل سند اختتامیه باشد."+ "<br>" + 
-					"<input type=checkbox name=RemainOnly id=RemainOnly> گزارش فقط حساب های مانده دار را لیست کند"
+					"<input type=checkbox name=RemainOnly id=RemainOnly checked> گزارش فقط حساب های مانده دار را لیست کند"
 			}]
 		},{
 			xtype : "fieldset",

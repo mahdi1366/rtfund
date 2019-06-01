@@ -390,12 +390,13 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 					}	
 				},{
 					xtype : "button",
-					tooltip : "درخواست پشتیبانی",
+					tooltip : "فرم های من",
 					scale: 'large',
 					iconCls : "framework-comment",
 					style : "margin: 2px; height:35px",
 					handler : function(){
-						framework.OpenPage('../framework/ManageRequests.php','درخواست پشتیبانی');
+						//framework.OpenPage('../framework/ManageRequests.php','درخواست پشتیبانی');
+						framework.OpenPage('../office/workflow/MyRequests.php','فرم ها من');
 					}	
 				},{
 					xtype : "button",

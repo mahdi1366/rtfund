@@ -6,35 +6,23 @@
 
 require_once '../header.inc.php';
 require_once "ReportGenerator.class.php";
-require_once '../request/request.class.php';
+require_once '../request/request.class.php'; 
 require_once '../request/request.data.php';
-
-//ini_set("display_errors", "On");
 
 if(isset($_REQUEST["show"]))
 {
 	$RequestID = $_REQUEST["RequestID"];
 	$ReqObj = new LON_requests($RequestID);
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
-	if($partObj->ComputeMode == "NEW" )
-	{ 
-		require_once './LoanPaymentNew.php';
-		die();
-	} 
 	//............ get total loan amount ......................
 	$TotalAmount = LON_installments::GetTotalInstallmentsAmount($RequestID);
 	//............ get remain untill now ......................
-	$dt = array();
-	$ComputeDate = !empty($_REQUEST["ComputeDate"]) ? 
-			DateModules::shamsi_to_miladi($_REQUEST["ComputeDate"],"-") :
-			DateModules::now();
-	
-	$ComputeArr = LON_requests::ComputePayments($RequestID, $ComputeDate);
-	$PureArr = LON_requests::ComputePures($RequestID);
+	$ComputeArr = LON_requests::ComputePayments($RequestID);
+	$PureArr = LON_Computes::ComputePures($RequestID); 
 	//............ get remain untill now ......................
-	$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr, $ComputeDate);
+	$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);
 	$TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
-	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
+	$DefrayAmount = 0;//LON_Computes::GetDefrayAmount($RequestID, $ComputeArr, $PureArr);
 	$remains = LON_Computes::GetRemainAmounts($RequestID, $ComputeArr);
 	//............. get total payed .............................
 	$dt = LON_BackPays::GetRealPaid($RequestID);
@@ -48,12 +36,6 @@ if(isset($_REQUEST["show"]))
 		$TotalRemain = "وام خاتمه یافته";
 		$DefrayAmount = "وام خاتمه یافته";
 	}
-	else if($ReqObj->StatusID == LON_REQ_STATUS_DEFRAY)
-	{
-		$CurrentRemain = "وام تسویه شده";
-		$TotalRemain = "وام تسویه شده";
-		$DefrayAmount = "وام تسویه شده";
-	}
 	else
 	{
 		$CurrentRemain = number_format($CurrentRemain) . " ریال";
@@ -64,35 +46,57 @@ if(isset($_REQUEST["show"]))
 	$rpg = new ReportGenerator();
 		
 	function RowColorRender($row){
-		return $row["ActionType"] == "pay" ? "#fcfcb6" : "";
+		return $row["type"] == "pay" ? "#fcfcb6" : "";
 	}
 	$rpg->rowColorRender = "RowColorRender";
 	
 	
 	function ActionRender($row, $value){
 		if($value == "installment")
+		{
+			if($row["id"] == "0")
+				return  $row["details"];
 			return "قسط" ;
-		if($row["ActionAmount"]*1 < 0)
-			return  $row["details"];
+		}
 		return "پرداخت " . $row["details"];
 	}
-	$rpg->addColumn("نوع عملیات", "ActionType", "ActionRender");
+	$rpg->addColumn("نوع عملیات", "type", "ActionRender");
 		
-	$rpg->addColumn("تاریخ عملیات", "ActionDate","ReportDateRender");
+	$rpg->addColumn("تاریخ عملیات", "RecordDate","ReportDateRender");
 
-	$rpg->addColumn("مبلغ", "ActionAmount","ReportMoneyRender");
+	$rpg->addColumn("مبلغ", "RecordAmount","ReportMoneyRender");
 	
-	$rpg->addColumn("تعداد روز تاخیر", "ForfeitDays");
+	$rpg->addColumn("اصل مبلغ", "pure","ReportMoneyRender");
+	$rpg->addColumn("کارمزد", "wage","ReportMoneyRender");
 	
-	$rpg->addColumn("کارمزد تاخیر", "CurLateAmount","ReportMoneyRender");
+	$rpg->addColumn("کارمزد تاخیر", "late","ReportMoneyRender");
+	$rpg->addColumn("جریمه", "pnlt","ReportMoneyRender");
 	
-	$rpg->addColumn("جریمه تاخیر", "CurForfeitAmount","ReportMoneyRender");
+	$rpg->addColumn("تخفیف تعجیل", "early","ReportMoneyRender");
 	
-	$rpg->addColumn("کارمزد تاخیر کل", "LateAmount","ReportMoneyRender");
-	$rpg->addColumn("جریمه تاخیر کل", "ForfeitAmount","ReportMoneyRender");
+	function RemainsRender($row, $value){
+		if($row["type"] == "pay")
+			return 0;
+		return number_format($value);
+	}
+	$col = $rpg->addColumn("مانده اصل", "remain_pure","RemainsRender");
+	$col->EnableSummary();
+	$col = $rpg->addColumn("مانده کارمزد", "remain_wage","RemainsRender");
+	$col->EnableSummary();
+	$col = $rpg->addColumn("مانده کارمزد تاخیر", "remain_late","RemainsRender");
+	$col->EnableSummary();
+	$col = $rpg->addColumn("مانده جریمه", "remain_pnlt","RemainsRender");
+	$col->EnableSummary();
 	
-	$rpg->addColumn("مانده اقساط", "TotalRemainder","ReportMoneyRender");
-	
+	function totalRemainRender($row){
+		if($row["type"] == "installment")
+			return number_format($row["remain_pure"]*1 + $row["remain_wage"]*1 + 
+					$row["remain_late"]*1 + $row["remain_pnlt"]*1);
+		else
+			return number_format($row["remainPayAmount"]);
+	}
+	$col = $rpg->addColumn("مانده", "remain_pure","totalRemainRender");
+	$col->EnableSummary(true);
 	
 	$rpg->mysql_resource = $ComputeArr;
 	BeginReport();
@@ -142,15 +146,15 @@ if(isset($_REQUEST["show"]))
 						<td><b><?= DateModules::miladi_to_shamsi($partObj->PartDate) ?></b></td>
 					</tr>
 					<tr>
-						<td> کارمزد وام:  </td>
-						<td><b><?= $partObj->CustomerWage ?> %</b></td>
-					</tr>
-					<? if(session::IsFramework()) {?>
-					<tr>
 						<td>فاصله اقساط: </td>
 						<td><b><?= $partObj->PayInterval . ($partObj->IntervalType == "DAY" ? "روز" : "ماه") ?>
 							</b></td>
-					</tr>					
+					</tr>
+					<? if(session::IsFramework()) {?>
+					<tr>
+						<td> کارمزد وام:  </td>
+						<td><b><?= $partObj->CustomerWage ?> %</b></td>
+					</tr>
 					<tr>
 						<td>درصد دیرکرد: </td>
 						<td><b><?= $partObj->ForfeitPercent ?> %
@@ -169,11 +173,11 @@ if(isset($_REQUEST["show"]))
 						<td>مدت تنفس :  </td>
 						<td><b><?= $partObj->DelayMonths  ?>ماه و  <?= $partObj->DelayDays ?> روز</b></td>
 					</tr>
-					<? if(session::IsFramework()) {?>
 					<tr>
-						<td>نحوه محاسبه :</td>
-						<td><b><?= $partObj->PayCompute == "installment" ? "ابتدا اقساط" : "ابتدا جرائم" ?></b></td>
+						<td></td>
+						<td><b></b></td>
 					</tr>
+					<? if(session::IsFramework()) {?>
 					<tr>
 						<td>کارمزد تاخیر :</td>
 						<td><b><?= $partObj->LatePercent ?> %
@@ -202,15 +206,13 @@ if(isset($_REQUEST["show"]))
 					<? if(session::IsFramework()) {?>
 					<tr>
 						<td>جمع وام و کارمزد : </td>
-						<td><b><?= number_format($TotalAmount) ?> ریال
-							</b></td>
+						<td><b><?= number_format($TotalAmount) ?> ریال							</b></td>
 					</tr>
 					<tr>
 						<td>مانده جریمه تاخیر: </td>
 						<td><b><?= number_format($remains["remain_pnlt"]) ?> ریال							</b></td>
 					</tr>
 					<?}?>
-					
 				</table>
 			</td>
 			<td style="font-family: nazanin; font-size: 18px; font-weight: bold;line-height: 23px;">
@@ -237,9 +239,8 @@ if(isset($_REQUEST["show"]))
 	<?
 	
 	$rpg->generateReport();
-	
-	//echo "<br>" . $report2;	
-	
+	if($partObj->ComputeMode == "NEW")
+		echo "<br>" . $report2;	
 	die();
 }
 ?>
@@ -258,7 +259,7 @@ LoanReport_payments.prototype.showReport = function(btn, e)
 	this.form = this.get("mainForm")
 	this.form.target = "_blank";
 	this.form.method = "POST";
-	this.form.action =  this.address_prefix + "LoanPayment.php?show=true";
+	this.form.action =  this.address_prefix + "LoanPaymentNew.php?show=true";
 	this.form.submit();
 	this.get("excel").value = "";
 	return;

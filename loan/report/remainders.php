@@ -198,17 +198,6 @@ LoanReport_remainders.prototype.showReport = function(btn, e)
 	return;
 }
 
-LoanReport_remainders.prototype.showReport2 = function(btn, e)
-{
-	this.form = this.get("mainForm")
-	this.form.target = "_blank";
-	this.form.method = "POST";
-	this.form.action =  this.address_prefix + "remainders2.php?show=true";
-	this.form.submit();
-	this.get("excel").value = "";
-	return;
-}
-
 function LoanReport_remainders()
 {		
 	this.formPanel = new Ext.form.Panel({
@@ -461,10 +450,6 @@ function LoanReport_remainders()
 			name : "ComputeDate"
 		}],
 		buttons : [{
-			text : "مشاهده گزارش2",
-			handler : Ext.bind(this.showReport2,this),
-			iconCls : "report"
-		},'->',{
 			text : "مشاهده گزارش",
 			handler : Ext.bind(this.showReport,this),
 			iconCls : "report"
