@@ -40,9 +40,9 @@ $col->align = "center";
 
 //..........................................
 
-$presents = MTG_MeetingPersons::Get(" AND IsPresent='YES'");
+$presents = MTG_MeetingPersons::Get(" AND MeetingID=? AND IsPresent='YES'", array($MeetingID));
 $presents = $presents->fetchAll();
-$absents = MTG_MeetingPersons::Get(" AND IsPresent='NO'");
+$absents = MTG_MeetingPersons::Get(" AND MeetingID=? AND IsPresent='NO'", array($MeetingID));
 $absents = $absents->fetchAll();
 ?>
 <html>

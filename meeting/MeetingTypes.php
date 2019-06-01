@@ -125,7 +125,7 @@ function MeetingType(){
 		store: new Ext.data.Store({
 			proxy:{
 				type: 'jsonp',
-				url: '/framework/person/persons.data.php?task=selectPersons',
+				url: '/framework/person/persons.data.php?task=selectPersons&IncludeInactive=true',
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
 			fields :  ['PersonID','fullname']

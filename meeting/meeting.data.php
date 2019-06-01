@@ -94,6 +94,13 @@ function SelectAllMeetings(){
 		$param[":m"] = $_REQUEST["MeetingID"]*1;
 	}
 	
+	if(!empty($_REQUEST["MeetingType"]))
+	{
+		$where .= " AND MeetingType=:mt";
+		$param[":mt"] = $_REQUEST["MeetingType"]*1;
+	}
+	
+	
 	if (!empty($_REQUEST['fields']) && !empty($_REQUEST['query'])) {
         $field = $_REQUEST['fields'];
 		$field = $field == "fullname" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;

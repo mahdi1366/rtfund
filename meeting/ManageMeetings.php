@@ -42,6 +42,8 @@ $col->align = "center";
 
 $dg->addButton("", "ایجاد جلسه جدید", "add", "function(){Meetings.OpenMeeting(0)}");
 
+$dg->addObject('this.FilterObj');
+
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 500;
 $dg->width = 800;
@@ -52,9 +54,10 @@ $grid = $dg->makeGrid_returnObjects();
 
 //----------------------------------------------
 
+$MeetingTypes = PdoDataAccess::runquery("select * from BaseInfo where typeID=".TYPEID_MeetingType." AND IsActive='YES'");
+
 require_once 'ManageMeetings.js.php';
 ?>
-<center><br>
-	<div id="rejectedDIV"></div>
-	<div id="DivGrid"></div>	
-</center>
+<form id="mainForm">
+	<div id="DivPanel" style="margin-right:8px;width:98%"></div>
+</form>

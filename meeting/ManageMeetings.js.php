@@ -19,25 +19,89 @@ Meetings.prototype = {
 
 function Meetings(){
 	
+	this.panel = new Ext.panel.Panel({
+		renderTo : this.get("DivPanel"),
+		//border : false,
+		layout : "hbox",
+		height : 500,
+		items : [{
+			xtype : "container",
+			flex : 1,
+			html : "<div id=div_grid width=100%></div>"
+		},{
+			xtype : "container",
+			width : 150,
+			autoScroll : true,
+			height: 500,
+			style : "border-left : 1px solid #99bce8;margin-left:5px",
+			layout : "vbox",
+			itemId : "cmp_buttons"
+		}]
+	});	
+	/*
+	new Ext.data.Store({
+		proxy : {
+			type: 'jsonp',
+			url: this.address_prefix + "meeting.data.php?task=selectMeetingTypes",
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		},
+		fields : ["InfoID","InfoDesc"],
+		autoLoad : true,
+		listeners : {
+			load : function(){alert(1);
+				me = MeetingsObject;
+				//..........................................................
+				me.panel.down("[itemId=cmp_buttons]").removeAll();
+				for(var i=0; i<this.totalCount; i++)
+				{
+					record = this.getAt(i);
+					me.panel.down("[itemId=cmp_buttons]").add({
+						xtype : "button",
+						width : 130,
+						height : 50,
+						autoScroll : true,
+						enableToggle : true,
+						scale : "large",
+						style : "margin-bottom:10px",	
+						itemId : record.data.InfoID,
+						text : record.data.InfoDesc,
+						handler : function(){Meetings.LoadGrid(this)}
+					});
+				}
+			}
+		}
+	}); */
+		
 	this.grid = <?= $grid ?>;
 	this.grid.on("itemdblclick", function(view, record){
 		Meetings.OpenMeeting(record.data.MeetingID);
 	});	
-	this.grid.getView().getRowClass = function(record, index)
-		{
-			if(record.data.StatusID == "<?= MTG_STATUSID_DONE ?>")
-				return "greenRow";
-			if(record.data.StatusID == "<?= MTG_STATUSID_CANCLE ?>")
-				return "pinkRow";
-			return "";
-		}	
-	this.grid.render(this.get("DivGrid"));
+	/*this.grid.getView().getRowClass = function(record, index)
+	{
+		if(record.data.StatusID == "<?= MTG_STATUSID_DONE ?>")
+			return "greenRow";
+		if(record.data.StatusID == "<?= MTG_STATUSID_CANCLE ?>")
+			return "pinkRow";
+		return "";
+	}	*/
+	//this.grid.render(this.get("DivGrid"));
 	
 	framework.centerPanel.items.get(this.TabID).on("activate", function(){
 		MeetingsObject.grid.getStore().load();
 	});
 }
 
+Meetings.LoadGrid = function(btn){
+	
+	btn.toggle(false);
+	MeetingsObject.grid.getStore().proxy.extraParams.MeetingType = btn.itemId;
+	MeetingsObject.grid.setTitle(btn.text);
+	if(MeetingsObject.grid.rendered)
+		MeetingsObject.grid.getStore().loadPage(1);
+	else
+		MeetingsObject.grid.render(MeetingsObject.get("div_grid"));
+}
+		
 Meetings.OpenMeeting = function(MeetingID){
 	
 	framework.OpenPage("/meeting/MeetingInfo.php", "اطلاعات جلسه", 
