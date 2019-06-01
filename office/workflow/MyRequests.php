@@ -24,7 +24,10 @@ $col = $dg->addColumn("شماره درخواست", "RequestNo", "");
 $col->width = 100;
 $col->align = "center";
 
-$col = $dg->addColumn("نوع فرم", "FormTitle", "");
+$col = $dg->addColumn("نوع فرم", "FormTitle", ""); 
+$col->width = 120;
+
+$col = $dg->addColumn("عنوان فرم", "formTitleValue", ""); 
 
 $col = $dg->addColumn("تاریخ ایجاد", "RegDate", GridColumn::ColumnType_datetime);
 $col->width = 130;
@@ -43,10 +46,9 @@ $col->align = "center";
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 500;
-$dg->width = 750;
 $dg->title = "فرم های من";
 $dg->DefaultSortField = "RegDate";
-$dg->autoExpandColumn = "FormTitle";
+$dg->autoExpandColumn = "formTitleValue";
 $grid = $dg->makeGrid_returnObjects();
 ?>
 <script>
@@ -340,7 +342,6 @@ WFM_MyRequestsObject = new WFM_MyRequests();
 	<font color="red"><b>
 	جهت امکان گردش درخواست های پشتیبانی و تایید آنها توسط مدیر عامل محترم لطفا از قسمت ایجاد فرم، فرم پشتیبانی سیستم را پر کرده و ارسال نمایید.
 	</b></font>
-	<div id="mainForm"></div><BR>
-	<div id="DivGrid"></div>
+	<div style="margin: 10px" id="DivGrid"></div>
 	توجه : ردیف های سبز رنگ ردیف هایی هستند که فرایند گردش آنها خاتمه یافته است
 </center>

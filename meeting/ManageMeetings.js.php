@@ -38,7 +38,7 @@ function Meetings(){
 			itemId : "cmp_buttons"
 		}]
 	});	
-	/*
+	
 	new Ext.data.Store({
 		proxy : {
 			type: 'jsonp',
@@ -48,7 +48,7 @@ function Meetings(){
 		fields : ["InfoID","InfoDesc"],
 		autoLoad : true,
 		listeners : {
-			load : function(){alert(1);
+			load : function(){
 				me = MeetingsObject;
 				//..........................................................
 				me.panel.down("[itemId=cmp_buttons]").removeAll();
@@ -70,20 +70,20 @@ function Meetings(){
 				}
 			}
 		}
-	}); */
+	}); 
 		
 	this.grid = <?= $grid ?>;
 	this.grid.on("itemdblclick", function(view, record){
 		Meetings.OpenMeeting(record.data.MeetingID);
 	});	
-	/*this.grid.getView().getRowClass = function(record, index)
+	this.grid.getView().getRowClass = function(record, index)
 	{
 		if(record.data.StatusID == "<?= MTG_STATUSID_DONE ?>")
 			return "greenRow";
 		if(record.data.StatusID == "<?= MTG_STATUSID_CANCLE ?>")
 			return "pinkRow";
 		return "";
-	}	*/
+	}	
 	//this.grid.render(this.get("DivGrid"));
 	
 	framework.centerPanel.items.get(this.TabID).on("activate", function(){

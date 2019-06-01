@@ -14,7 +14,8 @@ if(!empty($task))
 
 function selectMeetingTypes(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=".TYPEID_MeetingType." AND IsActive='YES'");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=".TYPEID_MeetingType.
+			" AND IsActive='YES' order by InfoID");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

@@ -278,7 +278,11 @@ MyForm.prototype.FormInfo = function(){
 	
 	params = {
 		ExtTabID : this.FormInfoWindow.getEl().id ,
-		ReadOnly : true
+		ReadOnly : true,
+		parentHandler : function(){
+			MyFormObject.FormInfoWindow.hide();
+			MyFormObject.grid.getStore().load();
+		}
 	};
 	
 	arr = record.data.parameter.split(",");

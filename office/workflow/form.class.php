@@ -114,7 +114,7 @@ class WFM_FormItems extends OperationClass {
 	public $ordering;
 	public $IsActive;
     
-	static function Get($where = "", $params = array())
+	static function Get($where = "", $params = array(), $pdo = null)
 	{
 		if(!isset($params[":StepRowID"]))
 			$params[":StepRowID"] = -1;
@@ -152,7 +152,7 @@ class WFM_FormPersons extends OperationClass {
 	public $FormID;
 	public $PersonID;
 	
-	static function Get($where = '', $whereParams = array()) {
+	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		
 		return parent::runquery_fetchMode("select fp.*, concat_ws(' ',fname,lname,CompanyName) fullname 
 			from WFM_FormPersons fp join BSC_persons p using(PersonID)
@@ -237,12 +237,15 @@ class WFM_requests extends OperationClass {
 				r.RegDate,
 				f.FormTitle,
 				concat_ws(' ',fname,lname,CompanyName) fullname,
-				b.param4
+				b.param4,
+				if(f.DescItemID>0,concat(wfi.ItemName,' : ',wri.ItemValue),'') formTitleValue
 			
 			from WFM_requests r
 			join WFM_forms f using(FormID) 
 			join BSC_persons using(PersonID)
 			join BaseInfo b on(b.TypeID=11 AND b.InfoID=5)
+			left join WFM_FormItems wfi on(wfi.FormID=f.FormID AND wfi.FormItemID=f.DescItemID)
+			left join WFM_RequestItems wri on(wri.RequestID=r.RequestID AND wri.FormItemID=f.DescItemID)
 			
 			where 1=1 " . $where . $order, $whereParams);
     }
@@ -260,7 +263,6 @@ class WFM_requests extends OperationClass {
 		
 		return parent::Add($pdo);
 	}
-
 
 	public static function GlobalInfoRecord($PersonID, $RequestID = 0){
 		
@@ -304,7 +306,7 @@ class WFM_requests extends OperationClass {
 		}
 		else
 		{
-			$temp = self::Get(" AND RequestID=?", array($RequestID));
+			$temp = self::Get(" AND r.RequestID=?", array($RequestID));
 			$returnDT = array_merge($returnDT, $temp->fetch());
 		}
 		
@@ -317,6 +319,44 @@ class WFM_requests extends OperationClass {
 		
 		return $returnDT;
 	}			
+	
+	static function ConfirmRequest($RequestID, $mode = "CONFIRM", $pdo = null){
+		
+		$ReqObj = new WFM_requests($RequestID);
+		$flowRowObj = WFM_FlowRows::GetlatestFlowRow($ReqObj->_FlowID, $RequestID);
+		$FlowObj = new WFM_flows($ReqObj->_FlowID);
+
+		$newObj = new WFM_FlowRows();
+		$newObj->FlowID = $ReqObj->_FlowID;
+		$newObj->ObjectID = $RequestID;
+		$newObj->ObjectID2 = 0;
+		$newObj->PersonID = $_SESSION["USER"]["PersonID"];
+		$newObj->ActionType = $mode;
+		$newObj->ActionDate = PDONOW;
+		//.............................................
+		$StepID = $mode == "CONFIRM" ? $flowRowObj->_StepID+1 : $flowRowObj->_StepID-1;
+		//.............................................
+		if($mode == "CONFIRM")
+		{
+			$dt = PdoDataAccess::runquery("select Max(StepID) maxStepID from WFM_FlowSteps 
+				where IsActive='YES' AND FlowID=? AND IsOuter='NO'" , array($newObj->FlowID), $pdo);
+			if($dt[0][0] == $StepID)
+				$newObj->IsEnded = "YES";
+		}
+		//.............................................
+		$result = $newObj->AddFlowRow($StepID, $pdo);	
+		if(!$result)
+			return false;
+
+		if($newObj->IsEnded == "YES")
+			$result = WFM_FlowRows::EndObjectFlow($FlowObj->_ObjectType, 
+					$newObj->ObjectID, $newObj->ObjectID2, $pdo);
+		
+		if(!$result)
+			return false;
+		
+		return true;
+	}
 }
 
 class WFM_RequestItems extends OperationClass {
@@ -329,7 +369,7 @@ class WFM_RequestItems extends OperationClass {
     public $FormItemID;
     public $ItemValue;
 
-	static public function Get($where="", $param=array()){
+	static public function Get($where="", $param=array(), $pdo = null){
 		
 		$query = "select ri.*,fi.* from WFM_RequestItems ri
 			join WFM_requests r using(RequestID)

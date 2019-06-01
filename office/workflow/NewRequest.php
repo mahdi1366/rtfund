@@ -6,6 +6,7 @@
  
 require_once '../header.inc.php';
 require_once 'form.class.php';
+require_once 'wfm.class.php';
 
 if (!empty($_REQUEST['RequestID'])) 
 {
@@ -13,6 +14,8 @@ if (!empty($_REQUEST['RequestID']))
 	$ReqObj = new WFM_requests($RequestID);
 	$FormID = $ReqObj->FormID;
 	$SmsSend = $ReqObj->_SmsSend == "YES" ? true : false;
+	$flowInfo = WFM_FlowRows::GetFlowInfo($ReqObj->_FlowID, $ReqObj->RequestID);
+	$StepRowID = $flowInfo["StepRowID"];
 }
 else
 {
@@ -20,9 +23,8 @@ else
 	$FormID = !empty($_REQUEST['FormID']) ? $_REQUEST['FormID'] : "";
 	$formObj = new WFM_forms($FormID);
 	$SmsSend = $formObj->SmsSend == "YES" ? true : false;
+	$StepRowID = 0;
 }
-
-$StepRowID = empty($_REQUEST["StepRowID"]) ? 0 : $_REQUEST["StepRowID"];
 
 $LoanRequestID = !empty($_REQUEST["LoanRequestID"]) ? $_REQUEST["LoanRequestID"] : "0";
 

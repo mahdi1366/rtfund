@@ -597,7 +597,7 @@ function SaveRequest() {
 	{
 		$result = $ReqObj->Edit($pdo);
 		/* removing values of contract items */
-		WFM_RequestItems::RemoveAll($ReqObj->RequestID, $pdo);
+		//WFM_RequestItems::RemoveAll($ReqObj->RequestID, $pdo);
 	}
 
 	if(!$result)
@@ -638,7 +638,7 @@ function SaveRequest() {
 			default :
 				$ReqItemsObj->ItemValue = $val;
 		}
-		$result = $ReqItemsObj->Add($pdo);
+		$result = $ReqItemsObj->ReplaceRecord($pdo);
 	}
 	if(!$result)
 	{
@@ -665,9 +665,12 @@ function SaveRequest() {
 		}
 		else
 		{
-			$FlowID = $formObj->FlowID;
-			$ObjectID = $ReqObj->RequestID;
-			$result = WFM_FlowRows::StartFlow($FlowID, $ObjectID);
+			$dt = WFM_FlowRows::GetFlowInfo($formObj->FlowID, $ReqObj->RequestID);
+			if(!$dt["IsStarted"])
+				$result = WFM_FlowRows::StartFlow($formObj->FlowID, $ReqObj->RequestID);
+			else
+				$result = WFM_requests::ConfirmRequest ($ReqObj->RequestID);
+			
 			if(!$result)
 			{
 				echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());

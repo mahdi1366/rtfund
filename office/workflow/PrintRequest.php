@@ -6,7 +6,8 @@
 require_once '../header.inc.php';
 require_once 'form.class.php';
 require_once 'form.class.php';
- 
+ini_set("display_errors", "On");
+
 $ReqObj = new WFM_requests($_REQUEST['RequestID']);
 $FormID = $ReqObj->FormID>0 ? $ReqObj->FormID : $_REQUEST["FormID"];
 
@@ -147,14 +148,14 @@ for ($i = 0; $i < count($res); $i++) {
         .noPrint {display:none;}
 		@page  
 		{ 
-			size: auto;   /* auto is the initial value */ 
-
+			/*size: auto;*/   /* auto is the initial value */ 
+			size: 7in 9.25in;
 			/* this affects the margin in the printer settings */ 
 			margin: 2mm;  
 		} 
     </style>
     <style type="text/css">
-        body {margin: 2mm}
+        body {margin: 2mm;font-family: Nazanin;font-size:12pt;}
         td	 {
 			padding : 0 10px 0 10px;
 			font-family: nazanin;
@@ -163,7 +164,6 @@ for ($i = 0; $i < count($res); $i++) {
 			}
 		table { page-break-inside:auto; }
 		tr    { page-break-after:auto }
-	body{font-family: Nazanin;font-size:12pt;}
 	.form{margin-top:10px;width:98%;border-collapse: collapse;text-align: justify; direction: rtl}
 	.form caption{border: 1px solid #777; border-bottom: 0px;}
 	.form td{padding:0 4px 0 4px;}
@@ -173,7 +173,7 @@ for ($i = 0; $i < count($res); $i++) {
 </head>
 
 <body dir="rtl">
-    <table style='border-collapse:collapse;width:100%;height:100%' align='center'>
+    <table style='border-collapse:collapse;width: 7in;' align='center'>
 		<thead>
 			<tr style="height:80px">
 				<td width=200px><img style="width:110px" src='/framework/icons/logo.jpg'></td>

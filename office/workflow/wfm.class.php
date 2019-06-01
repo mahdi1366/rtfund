@@ -518,6 +518,7 @@ class WFM_FlowRows extends PdoDataAccess {
 		}
 		
 		return array(
+			"StepRowID" => count($dt) > 0 ? $dt[0]["StepRowID"] : 0,
 			"IsStarted" => count($dt) > 0 ? true : false,
 			"ActionType" => count($dt) > 0 ? $dt[0]["ActionType"] : "",
 			"ActionComment" => count($dt) > 0 ? $dt[0]["ActionComment"] : "" ,
@@ -528,6 +529,14 @@ class WFM_FlowRows extends PdoDataAccess {
 		);
 	}
 	
+	static function GetlatestFlowRow($FlowID, $ObjectID, $objectID2=0){
+		
+		$dt = PdoDataAccess::runquery("select * from WFM_FlowRows fr
+			where fr.FlowID=? AND ObjectID=? AND objectID2=? AND fr.IsLastRow='YES'
+			", array($FlowID, $ObjectID, $objectID2));
+		return count($dt) == 0 ? null : new WFM_FlowRows($dt[0]["RowID"]);
+	}
+		
 	static function SelectReceivedForms($where="", $params = array()){
 		
 		$dt = PdoDataAccess::runquery("select FlowID,StepID 
