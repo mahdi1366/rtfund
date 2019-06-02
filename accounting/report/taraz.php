@@ -149,7 +149,7 @@ function GetData(&$rpg){
 		$col = $rpg->addColumn("تفصیلی1", "TafsiliDesc", "levelRender");
 		$col->ExcelRender = false;
 		
-		$group .= ",di.TafsiliID2";
+		/*$group .= ",di.TafsiliID2";
 		$col = $rpg->addColumn("کد تفصیلی2", "TafsiliCode2");
 		$col = $rpg->addColumn("تفصیلی2", "TafsiliDesc2", "levelRender");
 		$col->ExcelRender = false;
@@ -157,23 +157,16 @@ function GetData(&$rpg){
 		$group .= ",di.TafsiliID3";
 		$col = $rpg->addColumn("کد تفصیلی3", "TafsiliCode3");
 		$col = $rpg->addColumn("تفصیلی3", "TafsiliDesc3", "levelRender");
-		$col->ExcelRender = false;
+		$col->ExcelRender = false;*/
 	}
 	if($level == "l6")
-	{
-		$group .= ",di.TafsiliID";
-		$col = $rpg->addColumn("کد تفصیلی", "TafsiliCode");
-		$col = $rpg->addColumn("تفصیلی", "TafsiliDesc", "levelRender");
-		$col->ExcelRender = false;
-	}
-	if($level == "l7")
 	{
 		$group .= ",di.TafsiliID2";
 		$col = $rpg->addColumn("کد تفصیلی2", "TafsiliCode2");
 		$col = $rpg->addColumn("تفصیلی2", "TafsiliDesc2", "levelRender");
 		$col->ExcelRender = false;
 	}
-	if($level == "l8")
+	if($level == "l7")
 	{
 		$group .= ",di.TafsiliID3";
 		$col = $rpg->addColumn("کد تفصیلی3", "TafsiliCode3");
@@ -406,7 +399,8 @@ function ListData($IsDashboard = false){
 		"l3" => "معین2",
 		"l4" => "معین3",
 		"l5" => "تفصیلی",
-		"l6" => "تفصیلی2"
+		"l6" => "تفصیلی2",
+		"l7" => "تفصیلی3"
 		);
 	$dt = PdoDataAccess::runquery("select * from BSC_branches");
 	$branches = array();
@@ -547,26 +541,18 @@ function ListData($IsDashboard = false){
 			{
 				if(TafsiliID != '')
 					form.action += "&TafsiliID=" + TafsiliID;
-				if(TafsiliID2 != '')
-					form.action += "&TafsiliID2=" + TafsiliID2;
-				if(TafsiliID3 != '')
-					form.action += "&TafsiliID3=" + TafsiliID3;
 			}
 			if(curlevel == "l6")
 			{
 				if(TafsiliID != '')
-					form.action += "&TafsiliID=" + TafsiliID;
+					form.action += "&TafsiliID2=" + TafsiliID2;
 			}
 			if(curlevel == "l7")
 			{
 				if(TafsiliID2 != '')
-					form.action += "&TafsiliID2=" + TafsiliID2;
-			}
-			if(curlevel == "l8")
-			{
-				if(TafsiliID3 != '')
 					form.action += "&TafsiliID3=" + TafsiliID3;
 			}
+			
 			form.submit();
 			return;
 		}
@@ -1110,9 +1096,9 @@ function AccReport_taraz()
 					"<input type='radio' name='level' id='level-l4' value='l4' > معین  3"
 			},{
 				xtype : "container",
-				html : "<input type='radio' name='level' id='level-l5' value='l5' > تفصیلی1" + "<br>" +  
-					"<input type='radio' name='level' id='level-l6' value='l6' >تفصیلی 2" + "<br>" +  
-					"<input type='radio' name='level' id='level-l6' value='l6' >تفصیلی 3"
+				html :  "<input type='radio' name='level' id='level-l5' value='l5' > تفصیلی1" + "<br>" +  
+						"<input type='radio' name='level' id='level-l6' value='l6' >تفصیلی 2" + "<br>" +  
+						"<input type='radio' name='level' id='level-l7' value='l7' >تفصیلی 3"
 			},{
 				xtype : "container",
 				html : "ستون های تراز: "

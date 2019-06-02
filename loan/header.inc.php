@@ -29,6 +29,8 @@ if(!session::checkLogin())
 
 define("SYSTEMID", 6);
 
+//ini_set("display_errors", "On");
+
 $address_prefix = getenv("DOCUMENT_ROOT");
 $script = preg_split('/\//', $_SERVER["SCRIPT_NAME"]);
 $js_prefix_address = implode("/" , array_splice($script,0,	count($script)-1)) . "/";

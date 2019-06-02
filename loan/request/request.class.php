@@ -1040,7 +1040,7 @@ class LON_requests extends PdoDataAccess{
 						"pay_pnlt" => 0,
 						"remain" => $records[$i]["remain_pure"] + $records[$i]["remain_wage"] ,
 						"PayedDate" => $PayRecord["RecordDate"],
-						"PayedAmount" => number_format($tmp)
+						"PayedAmount" => $tmp
 					);
 
 					$PayRecord["early"] += $EarlyAmount;
@@ -1919,7 +1919,7 @@ class LON_Computes extends PdoDataAccess{
 						"pay_pnlt" => 0,
 						"remain" => $records[$i]["remain_pure"] + $records[$i]["remain_wage"] ,
 						"PayedDate" => $PayRecord["RecordDate"],
-						"PayedAmount" => number_format($tmp)
+						"PayedAmount" => $tmp
 						
 					);
 

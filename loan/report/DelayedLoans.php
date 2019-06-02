@@ -173,7 +173,7 @@ function GetData(){
 		//echo PdoDataAccess::GetLatestQueryString();
 	}
 	$ComputeDate = !empty($_POST["ComputeDate"]) ? 
-			DateModules::shamsi_to_miladi($_POST["ComputeDate"]) : DateModules::now();
+			DateModules::shamsi_to_miladi($_POST["ComputeDate"],"-") : DateModules::now();
 	$result = array();
 	while($row = $dt->fetch())
 	{
@@ -187,9 +187,9 @@ function GetData(){
 		$delayedInstallmentsCount = 0;
 		foreach($computeArr as $irow)
 		{
-			if($irow["type"] == "installment")
+			if($irow["type"] == "installment" && $irow["InstallmentID"]*1 > 0)
 			{
-				if($irow["pays"][ count($irow["pays"])-1 ]["remain"]*1 > 0)
+				if($irow["RecordDate"] <= $ComputeDate && (count($irow["pays"]) == 0 || $irow["pays"][ count($irow["pays"])-1 ]["remain"]*1 > 0))
 					$delayedInstallmentsCount++;
 			}
 		}
@@ -427,7 +427,6 @@ function LoanReport_DelayedInstalls()
 			fieldLabel : "شعبه اخذ وام",
 			queryMode : 'local',
 			width : 370,
-			colspan : 2,
 			displayField : "BranchName",
 			valueField : "BranchID",
 			hiddenName : "BranchID"
