@@ -1851,24 +1851,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						boxLabel : "فرمول صندوق نوآوری",
 						name : "ComputeMode",
 						inputValue : "NOAVARI"
-					}/*,{
-						xtype : "combo",
-						width : 400,
-						store : new Ext.data.SimpleStore({
-							proxy: {
-								type: 'jsonp',
-								url: this.address_prefix + 'request.data.php?' +
-									"task=selectBackPayComputes",
-								reader: {root: 'rows',totalProperty: 'totalCount'}
-							},
-							fields : ['InfoID','InfoDesc'],
-							autoLoad : true
-						}),
-						fieldLabel : "محاسبه بازپرداخت",
-						displayField : "InfoDesc",
-						valueField : "InfoID",
-						name : "BackPayCompute"						
-					}*/]
+					}]
 				},{
 					xtype : "fieldset",
 					itemId : "fs_WageCompute",

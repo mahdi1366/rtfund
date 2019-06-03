@@ -409,7 +409,7 @@ function GetRequestParts(){
 		$dt[$i]["SendEnable"] = $result["SendEnable"] ? "YES" : "NO";		
 		
 		//--------------- computes ------------------
-		$installments = ComputeInstallments($dt[$i]["RequestID"], false, null, true);
+		$installments = ComputeInstallments($dt[$i]["RequestID"], true, null, true);
 		$dt[$i]["AllPay"] =  $installments["AllPay"];
 		$dt[$i]["LastPay"] =  $installments["LastPay"];
 		
@@ -423,10 +423,6 @@ function GetRequestParts(){
 			$dt[$i]["TotalCustomerWage"] = $result["CustomerWage"];
 			$dt[$i]["TotalAgentWage"] = $result["AgentWage"];
 			$dt[$i]["TotalFundWage"] = $result["FundWage"];
-			$FundYears = $result["FundWageYears"];
-			$index = 1;
-			foreach($FundYears as $row)
-				$dt[$i]["WageYear" . ($index++)] = $row;
 			
 			$res = LON_requests::GetDelayAmounts($PartObj->RequestID, $PartObj);
 			$dt[$i]["FundDelay"] = $res["FundDelay"];
@@ -509,6 +505,22 @@ function SavePart(){
 			ComputeInstallments($obj->RequestID, true, $pdo);
 		}		
 	}
+	
+	//---------------- copy payments for test loan -----------------------------
+	if($obj->RequestID == 0)
+	{
+		PdoDataAccess::runquery("delete from LON_payments where RequestID=0");
+		$dt = PdoDataAccess::runquery("select * from LON_payments where RequestID=?", array($_REQUEST["SourceRequestID"]));
+		foreach($dt as $row)
+		{
+			$pobj = new LON_payments();
+			PdoDataAccess::FillObjectByArray($pobj, $row);
+			$pobj->RequestID = 0;
+			$pobj->PayID = "";
+			$pobj->Add();
+		}
+	}
+	//--------------------------------------------------------------------------
 
 	if(!$result)
 	{
@@ -843,7 +855,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 	}
 	else
 	{
-		$TotalAmount = LON_installments::GetTotalInstallmentsAmount($RequestID);
+		$TotalAmount = LON_requests::GetPayedAmount($RequestID);
 		$allPay = ComputeInstallmentAmount($TotalAmount,$obj->InstallmentCount, $obj->PayInterval);
 
 		if($obj->InstallmentCount > 1)
