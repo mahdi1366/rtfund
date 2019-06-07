@@ -177,7 +177,7 @@ function GetData(){
 	$result = array();
 	while($row = $dt->fetch())
 	{
-		$computeArr = LON_requests::ComputePayments($row["RequestID"], $ComputeDate);
+		$computeArr = LON_Computes::ComputePayments($row["RequestID"], $ComputeDate);
 		$remain = LON_Computes::GetCurrentRemainAmount($row["RequestID"],$computeArr, $ComputeDate);
 		$RemainArr = LON_Computes::GetRemainAmounts($row["RequestID"],$computeArr, $ComputeDate);
 		

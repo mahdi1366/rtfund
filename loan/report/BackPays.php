@@ -44,6 +44,9 @@ function MakeWhere(&$where, &$whereParam){
 				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 			continue;
 		
+		if($key == "IsInstallmentRowsInclude")
+			continue;
+		
 		if($key == "fromPayDate")
 		{
 			$value = DateModules::shamsi_to_miladi($value, "-");
@@ -127,7 +130,107 @@ function GetData(){
 		$query = PdoDataAccess::GetLatestQueryString();
 		print_r(ExceptionHandler::PopAllExceptions());
 	}
-	return $dataTable;
+	
+	if(empty($_POST["IsPayRowsInclude"]))
+		return $dataTable;
+	//.....................................
+	$computeArr = array();
+	$returnArr = array();
+	for($index=0; $index<count($dataTable); $index++)
+	{
+		$MainRow = &$dataTable[$index];
+
+		if(!isset($computeArr[ $MainRow["RequestID"] ]))
+		{
+			$computeArr[ $MainRow["RequestID"] ] = array(
+				"compute" => LON_Computes::ComputePayments($MainRow["RequestID"]),
+				"partObj" => LON_ReqParts::GetValidPartObj($MainRow["RequestID"])
+			);
+		}
+		$ref = & $computeArr[ $MainRow["RequestID"] ];
+		for($i=0; $i < count($ref["compute"]["pays"]); $i++)
+		{
+			if($ref["compute"]["pays"][$i]["BackPayID"] != "installment")
+				continue;
+			
+			//........................................................
+			if($row["InstallmentID"] == $MainRow["InstallmentID"])
+			{
+				switch($_POST["RemainStatus"])
+				{
+					case "paid":
+						if(count($row["pays"]) == 0)
+							continue;
+						break;
+					case "notPaid":
+						if(count($row["pays"]) > 0)
+							continue;
+						break;
+					case "fullPaid":
+						if( $row["pays"][ count($row["pays"])-1 ]["remain"]*1 > 0)
+							continue;
+						break;
+				}
+				
+				//........................................................
+				
+				$MainRow["InstallmentRemain"] = $MainRow["InstallmentAmount"];
+				$MainRow["SumPayedAmount"] = 0;
+				$MainRow["SumLate"] = 0;
+				$MainRow["SumPnlt"] = 0;
+				if(count($row["pays"]) > 0)
+				{
+					$MainRow["InstallmentRemain"] = $row["pays"][ count($row["pays"])-1 ]["remain"];
+					
+					foreach($row["pays"] as $prow)
+					{
+						$MainRow["SumPayedAmount"] += $prow["PayedAmount"]*1;
+						$MainRow["SumLate"] += $prow["cur_late"]*1;
+						$MainRow["SumPnlt"] += $prow["cur_pnlt"]*1;
+					}
+				}
+
+				//........................................................
+				
+				if(isset($_POST["IsPayRowsInclude"]))
+				{
+					for($k=0; $k < count($row["pays"]); $k++)
+					{  
+						$payRow = $row["pays"][$k];
+						$MainRow = array_merge($MainRow, $payRow);
+						$returnArr[] = $MainRow;
+					}
+					if(count($row["pays"]) == 0)
+					{
+						$MainRow["pay_pure"] = 0;
+						$MainRow["pay_wage"] = 0;
+						$MainRow["pay_late"] = 0;
+						$MainRow["pay_pnlt"] = 0;
+						$MainRow["EarlyDays"] = 0;
+						$MainRow["EarlyAmount"] = 0;
+						$MainRow["PnltDays"] = 0;
+						$MainRow["cur_late"] = 0;
+						$MainRow["cur_pnlt"] = 0;
+						$MainRow["remain_pure"] = 0;
+						$MainRow["remain_wage"] = 0;
+						$MainRow["remain_late"] = 0;
+						$MainRow["remain_pnlt"] = 0;
+						$MainRow["PayedAmount"] = 0;
+						$returnArr[] = $MainRow;
+					}
+				}
+				else
+				{
+					$returnArr[] = $MainRow;
+				}
+
+				$ref["computIndex"]++;
+				break;
+			}
+		}
+	}
+	
+	return $returnArr;
 }
 	
 function ListDate($IsDashboard = false){
@@ -367,6 +470,10 @@ function LoanReport_Backays()
 			name : "toPayAmount",
 			hideTrigger : true,
 			fieldLabel : "تا مبلغ"
+		},{
+			xtype : "container",
+			colspan : 2,
+			html : "<input type=checkbox name=IsInstallmentRowsInclude >  گزارش شامل ردیف های اقساط مربوط به هر پرداخت نیز باشد"
 		},{
 			xtype : "fieldset",
 			colspan :2,

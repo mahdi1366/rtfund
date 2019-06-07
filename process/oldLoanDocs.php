@@ -329,7 +329,7 @@ function DailyWage($reqObj , $partObj, &$DocObj, $pdo){
 	
 	global $GToDate;	
 	$result = true;
-	$computeArr = LON_Computes::NewComputePayments($reqObj->RequestID, $GToDate);
+	$computeArr = LON_Computes::ComputePayments($reqObj->RequestID, $GToDate);
 	$totalLate = 0;
 	$totalPenalty = 0;
 	foreach($computeArr as $row)

@@ -198,7 +198,7 @@ function SelectMyRequests(){
 			if($dt[$i]["PartID"]*1 == 0)
 				continue;
 			$temp = array();
-			$ComputeArr = LON_requests::ComputePayments($dt[$i]["RequestID"], $temp);
+			$ComputeArr = LON_Computes::ComputePayments($dt[$i]["RequestID"], $temp);
 			$dt[$i]["CurrentRemain"] = LON_Computes::GetCurrentRemainAmount($dt[$i]["RequestID"], $ComputeArr);
 			$dt[$i]["TotalRemain"] = LON_Computes::GetTotalRemainAmount($dt[$i]["RequestID"], $ComputeArr);
 		}
@@ -593,7 +593,7 @@ function EndRequest(){
 	$pdo->beginTransaction();
 	
 	$dt = array();
-	$computeArr = LON_requests::ComputePayments($RequestID, $dt);
+	$computeArr = LON_Computes::ComputePayments($RequestID, $dt);
 	$pureAmount = LON_requests::GetDefrayAmount($RequestID, $computeArr);
 	if($pureAmount == 0)
 	{
@@ -691,7 +691,7 @@ function ReturnEndRequest(){
 function GetDefrayAmount(){
 	
 	$RequestID = (int)$_REQUEST["RequestID"];
-	$computeArr = LON_requests::ComputePayments($RequestID);
+	$computeArr = LON_Computes::ComputePayments($RequestID);
 	$DefrayAmount = LON_requests::GetDefrayAmount($RequestID, $computeArr);
 	echo Response::createObjectiveResponse(true, $DefrayAmount);
 	die();
@@ -744,7 +744,7 @@ function GetInstallments(){
 	$temp = LON_installments::SelectAll(" i.RequestID=?", array($RequestID));
 	
 	$refArray = array();
-	$ComputeArr = LON_requests::ComputePayments($RequestID);
+	$ComputeArr = LON_Computes::ComputePayments($RequestID);
 	foreach($ComputeArr as $row)
 		if($row["type"] == "installment")
 			$refArray[ $row["id"] ] = &$row;
@@ -1015,7 +1015,7 @@ function DelayInstallments(){
 	}
 	else
 	{
-		$dt = LON_requests::ComputePayments($RequestID);
+		$dt = LON_Computes::ComputePayments($RequestID);
 	}
 	
 	$prevExtraAmount = 0;
@@ -1533,7 +1533,7 @@ function GetDelayedInstallments($returnData = false){
 			$result[] = $row;
 			continue;
 		}
-		$computeArr = LON_requests::ComputePayments($row["RequestID"]);
+		$computeArr = LON_Computes::ComputePayments($row["RequestID"]);
 		$remain = LON_Computes::GetCurrentRemainAmount($row["RequestID"],$computeArr);
 		$RemainArr = LON_Computes::GetRemainAmounts($row["RequestID"],$computeArr);
 		$MinDate = LON_requests::GetMinPayedInstallmentDate($row["RequestID"],$computeArr);

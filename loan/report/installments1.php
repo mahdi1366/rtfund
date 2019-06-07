@@ -181,7 +181,7 @@ function GetData(){
 		if(!isset($computeArr[ $MainRow["RequestID"] ]))
 		{
 			$computeArr[ $MainRow["RequestID"] ] = array(
-				"compute" => LON_requests::ComputePayments($MainRow["RequestID"]),
+				"compute" => LON_Computes::ComputePayments($MainRow["RequestID"]),
 				"computIndex" => 0,
 				"partObj" => LON_ReqParts::GetValidPartObj($MainRow["RequestID"])
 			);

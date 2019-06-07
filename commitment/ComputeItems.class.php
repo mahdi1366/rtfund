@@ -138,7 +138,7 @@ class EventComputeItems {
 					$ComputeArr = self::$LoanComputeArray[ $ReqObj->RequestID ];
 				else 
 				{
-					$ComputeArr = LON_Computes::NewComputePayments($ReqObj->RequestID);
+					$ComputeArr = LON_Computes::ComputePayments($ReqObj->RequestID);
 					self::$LoanComputeArray[ $ReqObj->RequestID ] = $ComputeArr;
 				}
 				foreach($ComputeArr as $row)

@@ -172,7 +172,7 @@ function GetData(){
 		if(!isset($computeArr[ $MainRow["RequestID"] ]))
 		{
 			$computeArr[ $MainRow["RequestID"] ] = array(
-				"compute" => LON_requests::ComputePayments($MainRow["RequestID"]),
+				"compute" => LON_Computes::ComputePayments($MainRow["RequestID"]),
 				"computIndex" => 0,
 				"partObj" => LON_ReqParts::GetValidPartObj($MainRow["RequestID"])
 			);
@@ -246,6 +246,7 @@ function GetData(){
 						$MainRow["remain_wage"] = 0;
 						$MainRow["remain_late"] = 0;
 						$MainRow["remain_pnlt"] = 0;
+						$MainRow["PayedAmount"] = 0;
 						$returnArr[] = $MainRow;
 					}
 				}

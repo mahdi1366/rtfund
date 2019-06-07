@@ -310,7 +310,7 @@ function GetData($mode = "list"){
 	
 	for($i=0; $i< count($dataTable); $i++)
 	{
-		$ComputeArr = LON_requests::ComputePayments($dataTable[$i]["RequestID"]);
+		$ComputeArr = LON_Computes::ComputePayments($dataTable[$i]["RequestID"]);
 		$TotalRemain = LON_Computes::GetTotalRemainAmount($dataTable[$i]["RequestID"], $ComputeArr);
 		$remains = LON_Computes::GetRemainAmounts($dataTable[$i]["RequestID"], $ComputeArr);
 		

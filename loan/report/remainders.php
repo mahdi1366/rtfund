@@ -104,7 +104,7 @@ function showReport(){
 		$ComputeDate = !empty($_POST["ComputeDate"]) ? 
 				DateModules::shamsi_to_miladi($_POST["ComputeDate"],"-") : DateModules::Now();
 		
-		$ComputeArr = LON_requests::ComputePayments($RequestID, $ComputeDate);
+		$ComputeArr = LON_Computes::ComputePayments($RequestID, $ComputeDate);
 		//............ get remain untill now ......................
 		$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);
 		$TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
