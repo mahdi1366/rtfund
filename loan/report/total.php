@@ -335,9 +335,9 @@ function GetData($mode = "list"){
 		$dataTable[$i]["remainder"] = $TotalRemain;
 		$dataTable[$i]["ForfeitAmount"] = $remains['remain_pnlt'];
 		$dataTable[$i]["LateAmount"] = $remains["remain_late"];
-		$dataTable[$i]["TotalForfeitAmount"] = LON_requests::GetTotalForfeitAmount($dataTable[$i]["RequestID"], $ComputeArr);
+		$dataTable[$i]["TotalForfeitAmount"] = LON_Computes::GetTotalForfeitAmount($dataTable[$i]["RequestID"], $ComputeArr);
 	}
-	
+			
 	return $dataTable; 
 }
 

@@ -1626,7 +1626,8 @@ class LON_Computes extends PdoDataAccess{
 						"pay_pnlt" => 0,
 						"remain" => $records[$i]["remain_pure"] + $records[$i]["remain_wage"] ,
 						"PayedDate" => $PayRecord["RecordDate"],
-						"PayedAmount" => number_format($tmp)
+						"PayedAmount" => $tmp
+						
 					);
 
 					$PayRecord["early"] += $EarlyAmount;
@@ -2264,8 +2265,8 @@ class LON_payments extends OperationClass{
 	
 	static function Get($where = '', $whereParams = array(), $order = "") {
 		
-		return parent::runquery_fetchMode("select p.*,d.DocID,d.LocalNo,d.StatusID 
-			
+		return parent::runquery_fetchMode("select p.*,d.DocID,d.LocalNo,d.StatusID ,
+			p.PayAmount - p.OldFundDelayAmount - p.OldAgentDelayAmount - p.OldFundWage - p.OldAgentWage PurePayAmount
 			from LON_payments p
 			left join ACC_DocItems di on(di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
 				AND di.SourceID1=p.RequestID AND di.SourceID3=p.PayID) 

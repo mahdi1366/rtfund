@@ -79,9 +79,10 @@ function TestLoan(){
 					callback : function(){
 						me = TestLoanObject;
 						record = this.getAt(0);
-						me.InfoPanel.loadRecord(this.getAt(0));
-						
+						me.InfoPanel.loadRecord(record);
 						me.InfoPanel.down("[name=PartDate]").setValue(MiladiToShamsi(record.data.PartDate));
+						me.InfoPanel.down("[name=SourceRequestID]").setValue(record.data.RequestID);						
+						me.SavePart();
 					}
 				});
 			}	
@@ -94,8 +95,8 @@ function TestLoan(){
 			url: this.address_prefix + '../request/request.data.php?task=GetRequestParts',
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields :  ['PartDate','PartAmount',"InstallmentCount","IntervalType", "PayInterval","DelayMonths",
-		'DelayDays','ForfeitPercent',"CustomerWage","FundWage", "WageReturn","DelayReturn",
+		fields :  ['RequestID','PartDate','PartAmount',"InstallmentCount","IntervalType", "PayInterval","DelayMonths",
+		'DelayDays','ForfeitPercent',"CustomerWage","FundWage", "WageReturn","DelayReturn", "LatePercent",
 		'PayCompute','MaxFundWage',"AgentReturn","AgentDelayReturn", "DelayPercent","PayDuration",
 		"ComputeMode","BackPayCompute"]
 	});
@@ -106,17 +107,39 @@ function TestLoan(){
 		renderTo : this.get("divPanel"),
 		layout : {
 			type : "table",
-			columns : 3
+			columns : 2
 		},
 		defaults : {
 			xtype : "numberfield",
-			labelWidth : 80,
 			hideTrigger : true,
 			width : 150,
 			labelWidth : 90,
 			allowBlank : false
 		},				
 		items :[{
+			xtype : "fieldset",
+			colspan : 2,
+			style : "margin-right:10px",
+			width : 450,
+			title : "نحوه محاسبه کارمزد و اقساط",
+			items : [{
+				xtype : "radio",
+				boxLabel : "فرمول جدید بانک مرکزی",
+				name : "ComputeMode",
+				inputValue : "BANK"
+			},{
+				xtype : "radio",						
+				boxLabel : "فرمول تنزیل هر قسط",
+				name : "ComputeMode",
+				inputValue : "NEW",
+				checked : true
+			},{
+				xtype : "radio",						
+				boxLabel : "فرمول صندوق نوآوری",
+				name : "ComputeMode",
+				inputValue : "NOAVARI"
+			}]
+		},{
 			xtype : "currencyfield",
 			name : "PartAmount",
 			fieldLabel : "مبلغ پرداخت",
@@ -127,10 +150,6 @@ function TestLoan(){
 			allowBlank : true,
 			hideTrigger : false,
 			fieldLabel : "تاریخ پرداخت",
-			width : 200
-		},{
-			fieldLabel: 'تعداد اقساط',
-			name: 'InstallmentCount',
 			width : 200
 		},{
 			xtype : "container",
@@ -178,17 +197,24 @@ function TestLoan(){
 				afterSubTpl : "روز"
 			}]
 		},{
-			fieldLabel: 'درصد دیرکرد',
-			name: 'ForfeitPercent'
+			fieldLabel: 'تعداد اقساط',
+			name: 'InstallmentCount',
+			width : 200
 		},{
 			fieldLabel: 'کارمزد مشتری',
 			name: 'CustomerWage'	
 		},{
+			fieldLabel: 'کارمزد تنفس',
+			name: 'DelayPercent'
+		},{
 			fieldLabel: 'کارمزد صندوق',
 			name: 'FundWage'
 		},{
-			fieldLabel: 'کارمزد تنفس',
-			name: 'DelayPercent'
+			fieldLabel: 'کارمزد تاخیر',
+			name: 'LatePercent'
+		},{
+			fieldLabel: 'درصد جریمه',
+			name: 'ForfeitPercent'
 		},{
 			xtype : "fieldset",
 			itemId : "fs_WageCompute",
@@ -227,24 +253,6 @@ function TestLoan(){
 			}]
 		},{
 			xtype : "fieldset",
-			itemId : "fs_AgentDelayCompute",
-			title : "نحوه دریافت تنفس سرمایه گذار",
-			width : 220,
-			style : "margin-right:10px",
-			items : [{
-				xtype : "radio",						
-				boxLabel : "هنگام پرداخت وام",
-				name : "AgentDelayReturn",
-				inputValue : "CUSTOMER",
-				checked : true
-			},{
-				xtype : "radio",
-				boxLabel : "طی اقساط",
-				name : "AgentDelayReturn",
-				inputValue : "INSTALLMENT"
-			}]
-		},{
-			xtype : "fieldset",
 			itemId : "fs_AgentWageCompute",
 			title : "نحوه دریافت کارمزد سرمایه گذار",
 			width : 220,
@@ -263,26 +271,31 @@ function TestLoan(){
 			}]
 		},{
 			xtype : "fieldset",
-			colspan :2,
-			width : 400,
+			itemId : "fs_AgentDelayCompute",
+			title : "نحوه دریافت تنفس سرمایه گذار",
+			width : 220,
 			style : "margin-right:10px",
-			itemId : "fs_MaxFundWage",
 			items : [{
-				xtype : "currencyfield",
-				hideTrigger : true,
-				labelWidth : 120,
-				value : 0,
-				fieldLabel : "سقف کارمزد صندوق",
-				name : "MaxFundWage"
+				xtype : "radio",						
+				boxLabel : "هنگام پرداخت وام",
+				name : "AgentDelayReturn",
+				inputValue : "CUSTOMER",
+				checked : true
 			},{
-				xtype : "container",
-				html : "این کارمزد بر اساس نحوه دریافت کارمزد محاسبه می گردد."
+				xtype : "radio",
+				boxLabel : "طی اقساط",
+				name : "AgentDelayReturn",
+				inputValue : "INSTALLMENT"
 			}]
 		},{
 			xtype : "hidden",
 			name : "PartID",
 			value : 0
-		}],buttons : [{
+		},{
+			xtype : "hidden",
+			name : "SourceRequestID"
+		}],
+		buttons : [{
 			text : "محاسبه",
 			handler : function(){ TestLoanObject.SavePart();}
 		}]				
@@ -295,22 +308,13 @@ function TestLoan(){
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
 		fields : ["PartAmount","AllPay","LastPay","AgentDelay","FundDelay",
-					"TotalCustomerWage","TotalAgentWage","TotalFundWage","WageYear1",
-					"WageYear2","WageYear3","WageYear4",
+					"TotalCustomerWage","TotalAgentWage","TotalFundWage","SUM_NetAmount",
 					"WageReturn","DelayReturn","AgentReturn","AgentDelayReturn"],
 		listeners :{
 			load : function(){
 				me = TestLoanObject;
 				record = this.getAt(0);
-				if(record.data.ReqPersonID == "<?= SHEKOOFAI ?>")
-				{
-					me.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.AllPay);
-					me.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.LastPay);
-					me.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerWage);
-					me.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount);	
-					return;
-				}
-
+				
 				me.get("SUM_InstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.AllPay);
 				me.get("SUM_LastInstallmentAmount").innerHTML = Ext.util.Format.Money(record.data.LastPay);
 				me.get("SUM_FundDelay").innerHTML = Ext.util.Format.Money(record.data.FundDelay);
@@ -318,15 +322,7 @@ function TestLoan(){
 				me.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerWage);
 				me.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.TotalFundWage);
 				me.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(record.data.TotalAgentWage);
-				me.get("SUM_Wage_1Year").innerHTML = Ext.util.Format.Money(record.data.WageYear1);
-				me.get("SUM_Wage_2Year").innerHTML = Ext.util.Format.Money(record.data.WageYear2);
-				me.get("SUM_Wage_3Year").innerHTML = Ext.util.Format.Money(record.data.WageYear3);
-				me.get("SUM_Wage_4Year").innerHTML = Ext.util.Format.Money(record.data.WageYear4);
-				me.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.PartAmount - 
-					(record.data.DelayReturn == "CUSTOMER" ? record.data.FundDelay*1 : 0) - 
-					(record.data.AgentDelayReturn == "CUSTOMER" ? record.data.AgentDelay : 0) - 
-					(record.data.WageReturn == "CUSTOMER" ? record.data.TotalFundWage : 0) - 
-					(record.data.AgentWageReturn == "CUSTOMER" ? record.data.TotalAgentWage : 0));
+				me.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.SUM_NetAmount);
 			}
 		}
 	});
@@ -335,13 +331,6 @@ function TestLoan(){
 TestLoanObject = new TestLoan();
 
 TestLoan.prototype.SavePart = function(){
-
-	if(this.InfoPanel.down('[name=MaxFundWage]').getValue()*1 > 0 && 
-		this.InfoPanel.down('[name=FundWage]').getValue()*1 > 0 )
-	{
-		Ext.MessageBox.alert("Error","در صورتی که سقف کارمزد صندوق را تعیین می کنید باید کارمزد صندوق را صفر نمایید");
-		return;
-	}
 
 	mask = new Ext.LoadMask(this.InfoPanel, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
@@ -384,36 +373,28 @@ TestLoan.prototype.SavePart = function(){
 	<div id="summaryDIV">
 		<table style="width:700px" class="summary">
 			<tr>
-				<td style="width:70px;background-color: #dfe8f6;">مبلغ هر قسط</td>
-				<td style="background-color: #dfe8f6;">  سود تنفس صندوق</td>
-				<td style="width:90px;direction:rtl;background-color: #dfe8f6;">کارمزد وام</td>
-				<td><div id="SUM_TotalWage" class="blueText">&nbsp;</div></td>
-				<td style="direction:rtl;width:85px;background-color: #dfe8f6;">کارمزد سال اول</td>
-				<td><div id="SUM_Wage_1Year" class="blueText">&nbsp;</div></td>
+				<td style="width:25%;background-color: #dfe8f6;">مبلغ هر قسط</td>
+				<td style="width:25%;background-color: #dfe8f6;">  سود تنفس صندوق</td>
+				<td style="width:25%;direction:rtl;background-color: #dfe8f6;">کارمزد وام</td>
+				<td style="width:25%;"><div id="SUM_TotalWage" class="blueText">&nbsp;</div></td>
 			</tr>
 			<tr>
 				<td><div id="SUM_InstallmentAmount" class="blueText">&nbsp;</div></td>
 				<td><div id="SUM_FundDelay" class="blueText">&nbsp;</div></td>
 				<td style="direction:rtl;background-color: #dfe8f6;">سهم صندوق</td>
 				<td><div id="SUM_FundWage" class="blueText">&nbsp;</div></td>
-				<td style="direction:rtl;background-color: #dfe8f6;">کارمزد سال دوم</td>
-				<td><div id="SUM_Wage_2Year" class="blueText">&nbsp;</div></td>
 			</tr>
 			<tr>
 				<td style="background-color: #dfe8f6;">مبلغ قسط آخر</td>
 				<td style="background-color: #dfe8f6;">تنفس سرمایه گذار</td>
 				<td style="direction:rtl;background-color: #dfe8f6;">سهم سرمایه گذار</td>
 				<td><div id="SUM_AgentWage" class="blueText">&nbsp;</div></td>
-				<td style="direction:rtl;background-color: #dfe8f6;">کارمزد سال سوم</td>
-				<td><div id="SUM_Wage_3Year" class="blueText">&nbsp;</div></td>
 			</tr>
 			<tr>
 				<td><div id="SUM_LastInstallmentAmount" class="blueText">&nbsp;</div></td>
 				<td><div id="SUM_AgentDelay" class="blueText">&nbsp;</div></td>
 				<td style="background-color: #dfe8f6;">خالص پرداختی</td>
 				<td><div id="SUM_NetAmount" class="blueText">&nbsp;</div></td>
-				<td style="direction:rtl;background-color: #dfe8f6;">کارمزد سال چهارم</td>
-				<td><div id="SUM_Wage_4Year" class="blueText">&nbsp;</div></td>
 			</tr>			
 		</table>
 	</div> 
