@@ -246,6 +246,8 @@ function GetData(){
 						$MainRow["remain_wage"] = 0;
 						$MainRow["remain_late"] = 0;
 						$MainRow["remain_pnlt"] = 0;
+						$MainRow["remain"] = $MainRow["InstallmentAmount"];
+						$MainRow["PayedDate"] = "";
 						$MainRow["PayedAmount"] = 0;
 						$returnArr[] = $MainRow;
 					}
