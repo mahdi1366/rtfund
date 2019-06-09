@@ -259,7 +259,7 @@ LoanReport_payments.prototype.showReport = function(btn, e)
 	this.form = this.get("mainForm")
 	this.form.target = "_blank";
 	this.form.method = "POST";
-	this.form.action =  this.address_prefix + "LoanPaymentNew.php?show=true";
+	this.form.action =  this.address_prefix + "LoanPayment.php?show=true";
 	this.form.submit();
 	this.get("excel").value = "";
 	return;
