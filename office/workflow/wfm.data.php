@@ -307,8 +307,8 @@ function SelectAllForms(){
 	
 				where fr.IsLastRow='YES' " . $where . dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
-//	/echo PdoDataAccess::GetLatestQueryString();
-	print_r(ExceptionHandler::PopAllExceptions());
+	//echo PdoDataAccess::GetLatestQueryString();
+	//print_r(ExceptionHandler::PopAllExceptions());
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
 	

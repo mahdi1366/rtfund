@@ -35,6 +35,11 @@ $col = $dg->addColumn("وضعیت", "RecordStatus", "");
 $col->renderer = "MTG_MeetingRecords.StatusRender";
 $col->width = 80;
 
+$col = $dg->addColumn("ابلاغ", "");
+$col->sortable = false;
+$col->renderer = "function(v,p,r){return MTG_MeetingRecords.LetterRender(v,p,r);}";
+$col->width = 50;
+
 if($accessObj->AddFlag && !$readOnly)
 {
 	$dg->addButton("", "ایجاد مصوبه", "add", "function(){MTG_MeetingRecordsObject.AddRecord();}");
@@ -78,6 +83,8 @@ MTG_MeetingRecords.prototype = {
 	address_prefix : '<?= $js_prefix_address ?>',
 
 	MeetingID : "<?= $MeetingID ?>",
+	LetterPersons : new Array(),
+	LetterPersonNames : new Array(),
 	
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
@@ -193,6 +200,14 @@ MTG_MeetingRecords.EditRender = function(v,p,r){
 	"cursor:pointer;width:100%;height:16'></div>";
 }
 
+MTG_MeetingRecords.LetterRender = function(v,p,r){
+	
+	return "<div align='center' title='ابلاغ مصوبه' class='letter' "+
+	"onclick='MTG_MeetingRecordsObject.ShowLetterWindow();' " +
+	"style='background-repeat:no-repeat;background-position:center;" +
+	"cursor:pointer;width:100%;height:16'></div>";
+}
+
 MTG_MeetingRecords.StatusRender = function(v,p,r){
 	
 	switch(v)
@@ -272,6 +287,132 @@ MTG_MeetingRecords.prototype.EditRecord = function(){
 MTG_MeetingRecords.prototype.PrintRecords = function(){
 	
 	window.open(this.address_prefix + "PrintRecords.php?MeetingID=" + this.MeetingID);
+}
+
+MTG_MeetingRecords.prototype.ShowLetterWindow = function(){
+	
+	if(!this.LetterWin)
+	{
+		this.LetterWin = new Ext.Window({
+			width : 500,
+			title : "ابلاغ مصوبه",
+			autoHeight : true,
+			modal : true,
+			items : [{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ['PersonID','fullname']
+				}),
+				fieldLabel : "کاربر",
+				displayField: 'fullname',
+				valueField : "PersonID",
+				name : "PersonID",
+				width : 480
+			},{
+				xtype : "container",
+				layout : "hbox",
+				style : "margin-right:110px",
+				items : [{
+					xtype : "button",
+					text : "اضافه به لیست",
+					iconCls : "add",
+					handler : function(){
+						me = MTG_MeetingRecordsObject;
+						PersonComp = me.LetterWin.down('[name=PersonID]');
+						PersonRecord = PersonComp.getStore().getAt( 
+								PersonComp.getStore().find("PersonID", PersonComp.getValue()) );
+
+						me.LetterPersons.push(PersonRecord.data.PersonID);
+						me.LetterPersonNames.push(new Array(PersonRecord.data.fullname));
+						me.LetterWin.down("[itemId=GroupList]").bindStore(me.LetterPersonNames);
+						PersonComp.setValue();
+					}
+				},{
+					xtype : "button",
+					text : "حذف از لیست",
+					iconCls : "cross",
+					handler : function(){
+
+						me = MTG_MeetingRecordsObject;
+						el = me.LetterWin.down("[itemId=GroupList]");
+						index = el.getStore().indexOf(el.getSelected()[0]);
+						if(index >= 0)
+						{
+							me.LetterPersons.splice(index,1);
+							me.LetterPersonNames.splice(index,1);
+							el.clearValue();
+							el.bindStore(me.LetterPersonNames);
+						}
+					}
+				}]
+			},{
+				xtype : "multiselect",
+				itemId : "GroupList",
+				store : this.LetterPersonNames,
+				height : 100,
+				width : 480
+			}],
+			buttons : [{
+				text : "ارسال نامه",
+				iconCls : "send",
+				handler : function(){ MTG_MeetingRecordsObject.SendLetter(); }
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.LetterWin);
+	}
+	
+	this.LetterWin.show();
+	this.LetterWin.center();
+}
+
+MTG_MeetingRecords.prototype.SendLetter = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به ابلاغ نامه مصوبه می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = MTG_MeetingRecordsObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'meeting.data.php',
+			params:{
+				task: "SendRecordLetter",
+				RecordID : record.data.RecordID,
+				persons : Ext.encode(me.LetterPersons)
+			},
+			method: 'POST',
+
+			success: function(response){
+				res = Ext.decode(response.responseText);
+				mask.hide();
+				if(res.success)
+				{
+					MTG_MeetingRecordsObject.LetterWin.hide();
+					Ext.MessageBox.alert("","نامه ابلاغ مصوبه با موفقیت به افراد مورد نظر ارسال گردید");
+				}
+				else if(res.data == "")
+					Ext.MessageBox.alert("",res.data);
+				else
+					Ext.MessageBox.alert("Error","عملیات مورد نظر با شکست مواجه گردید");
+					
+			},
+			failure: function(){}
+		});
+	});
 }
 
 var MTG_MeetingRecordsObject = new MTG_MeetingRecords();	
