@@ -99,11 +99,14 @@ LetterInfo.prototype = {
 	ReadOnly : <?= $ReadOnly ? "true" : "false" ?>,
 	DocumentID : <?= $DocumentID ?>,
 	
+	SendID : <?= !empty($_REQUEST["SendID"]) ? $_REQUEST["SendID"] : 0 ?>,
+	mode : "<?= !empty($_REQUEST["mode"]) ? $_REQUEST["mode"] : "" ?>",
+	
 	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
 };
-var aaa;
+
 function LetterInfo(){
 	
 	if(!this.ReadOnly)
@@ -175,6 +178,13 @@ function LetterInfo(){
 			iconCls : "copy",
 			handler : function(){ LetterInfoObject.copyLetter();}
 		},'-');
+		
+		if(this.SendID > 0)
+			buttons.push({
+				text : "حذف نامه",
+				iconCls : "remove",
+				handler : function(){ LetterInfoObject.DeleteSend();}
+			});
 	}
 	this.tabPanel = new Ext.TabPanel({
 		//renderTo: this.get("mainForm"),
@@ -506,6 +516,40 @@ LetterInfo.prototype.copyLetter = function(){
 	});
 
 	
+}
+
+LetterInfo.prototype.DeleteSend = function(){
+	
+	var msg = "آیا مایل به حذف از کارتابل می باشید؟";
+	Ext.MessageBox.confirm("",msg, function(btn){
+		if(btn == "no")
+			return;
+		
+		me = LetterInfoObject;
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID),{msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url : me.address_prefix + "letter.data.php",
+			method : "post",
+			params : {
+				task : me.mode == "receive" ? "DeleteSend" : "DeleteSender",
+				mode : 0,
+				SendID : me.SendID,
+				LetterID : me.LetterID
+			},
+
+			success : function(response){
+				mask.hide();
+				result = Ext.decode(response.responseText);
+				if(result.success)
+				{
+					framework.CloseTab(LetterInfoObject.TabID);
+				}
+			}
+		})
+	});
 }
 </script>
 <style>

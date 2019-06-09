@@ -395,8 +395,11 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 					iconCls : "framework-comment",
 					style : "margin: 2px; height:35px",
 					handler : function(){
-						//framework.OpenPage('../framework/ManageRequests.php','درخواست پشتیبانی');
+						<? if($_SESSION["USER"]["UserName"] == "admin"){ ?>
+						framework.OpenPage('../framework/ManageRequests.php','درخواست پشتیبانی');
+						<?}else{?>
 						framework.OpenPage('../office/workflow/MyRequests.php','فرم ها من');
+						<?}?>
 					}	
 				},{
 					xtype : "button",
