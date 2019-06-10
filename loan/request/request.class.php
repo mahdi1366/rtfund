@@ -910,6 +910,35 @@ class LON_requests extends PdoDataAccess{
 	}
 	
 	/**
+	 مبالغی که به پرداختی به مشتری باید اضافه گردد.
+	 * @param type $RequestID
+	 * @param type $PartObj
+	 * @param type $TanzilCompute
+	 * @return boolean
+	 */
+	static function TotalAddedToPayAmount($RequestID, $PartObj = null)
+	{
+		$PartObj = $PartObj == null ? LON_ReqParts::GetValidPartObj($RequestID) : $PartObj;
+		/*@var $PartObj LON_ReqParts */
+		
+		$amount = 0;
+		
+		$result = self::GetDelayAmounts($RequestID, $PartObj);
+		if($PartObj->DelayReturn == "INSTALLMENT")
+			$amount += $result["FundDelay"];
+		if($PartObj->AgentDelayReturn == "INSTALLMENT")
+			$amount += $result["AgentDelay"];
+		
+		$result = self::GetWageAmounts($RequestID, $PartObj);
+		if($PartObj->WageReturn == "INSTALLMENT")
+			$amount += $result["FundWage"];
+		if($PartObj->AgentReturn == "INSTALLMENT")
+			$amount += $result["AgentWage"];
+		
+		return round($amount);		
+	}
+	
+	/**
 	 مبلغ قابل پرداخت به مشتری
 	 * @param type $RequestID
 	 * @param type $PartObj
@@ -920,9 +949,12 @@ class LON_requests extends PdoDataAccess{
 	{
 		$PartObj = $PartObj == null ? LON_ReqParts::GetValidPartObj($RequestID) : $PartObj;
 		/*@var $PartObj LON_ReqParts */
+		if($PartObj->ComputeMode == "NEW")
+			$amount = $PartObj->PartAmount*1 - self::TotalSubtractsOfPayAmount($RequestID, $PartObj);
+		else
+			$amount = $PartObj->PartAmount*1 - self::TotalSubtractsOfPayAmount($RequestID, $PartObj) 
+											 + self::TotalAddedToPayAmount($RequestID, $PartObj);
 		
-		$amount = $PartObj->PartAmount*1 - self::TotalSubtractsOfPayAmount($RequestID, $PartObj);
-				
 		return round($amount);		
 	}
 	
@@ -1318,17 +1350,17 @@ class LON_Computes extends PdoDataAccess{
 				where p.RequestID=:r 
 					AND p.PayType<>" . BACKPAY_PAYTYPE_CORRECT . " 
 					AND if(p.PayType=".BACKPAY_PAYTYPE_CHEQUE.",i.ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
-					AND p.PayDate <= :tdate
+					AND substr(p.PayDate,1,10) <= :tdate
 			union All
 				select 0 id, 'installment' type, CostDate RecordDate, 
 					0 RecordAmount,0, CostDesc details, CostAmount wage
 				from LON_costs 
-				where RequestID=:r AND CostAmount>0 AND CostDate <= :tdate
+				where RequestID=:r AND CostAmount>0 AND substr(CostDate,1,10) <= :tdate
 			union All
 				select 0 id,'pay' type, CostDate RecordDate, 
 					abs(CostAmount) RecordAmount,0, CostDesc details, 0 wage
 				from LON_costs 
-				where RequestID=:r AND CostAmount<0 AND CostDate <= :tdate
+				where RequestID=:r AND CostAmount<0 AND substr(CostDate,1,10) <= :tdate
 			)t
 			order by substr(RecordDate,1,10),type, RecordAmount desc" , 
 				
