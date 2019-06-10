@@ -90,51 +90,31 @@ Ext.override(Ext.grid.GridPanel ,{
     downloadExcelXml: function(includeHidden, title) {
 
         if (!title) title = this.title;
+		me = this;
+		this.allStore = Object.create(this.store);
+		this.allStore.pageSize = 10000;
+		this.allStore.events = {};
+		this.mask = new Ext.LoadMask(this, {msg:'در حال ذخیره سازی ...'});
+		this.mask.show();
+		this.allStore.load({
+			callback : function(){
+				
+				var vExportContent = me.getExcelXml(includeHidden, title);
+				var location = 'data:application/vnd.ms-excel;base64,' + Base64.encode(vExportContent);
 
-        var vExportContent = this.getExcelXml(includeHidden, title);
+				var gridEl = me.getEl();
 
-        var location = 'data:application/vnd.ms-excel;base64,' + Base64.encode(vExportContent);
+				var el = Ext.DomHelper.append(gridEl, {
+					tag: "a",
+					download: title + "-" + Ext.Date.format(new Date(), 'Y-m-d Hi') + '.xls',
+					href: location
+				});
 
-        /* 
-          dynamically create and anchor tag to force download with suggested filename 
-          note: download attribute is Google Chrome specific
-        */
-		
-        if (Ext.isChrome) {
-            var gridEl = this.getEl();
-
-            var el = Ext.DomHelper.append(gridEl, {
-                tag: "a",
-                download: title + "-" + Ext.Date.format(new Date(), 'Y-m-d Hi') + '.xls',
-                href: location
-            });
-
-            el.click();
-
-            Ext.fly(el).destroy();
-
-        } else {
-
-            var form = this.down('form#uploadForm');
-            if (form) {
-                form.destroy();
-            }
-            form = this.add({
-                xtype: 'form',
-                itemId: 'uploadForm',
-                hidden: true,
-                standardSubmit: true,
-                url: 'http://webapps.figleaf.com/dataservices/Excel.cfc?method=echo&mimetype=application/vnd.ms-excel&filename=' + escape(title + ".xls"),
-                items: [{
-                    xtype: 'hiddenfield',
-                    name: 'data',
-                    value: vExportContent
-                }]
-            });
-
-            form.getForm().submit();
-
-        }
+				el.click();
+				Ext.fly(el).destroy();
+				me.mask.hide();
+			}
+		});
     },
 
     /*
@@ -189,7 +169,7 @@ Ext.override(Ext.grid.GridPanel ,{
 
 
             '<Style ss:ID="even">',
-            '<Interior ss:Color="#CCFFFF" ss:Pattern="Solid" />',
+            '<Interior ss:Color="white" ss:Pattern="Solid" />',
             '</Style>',
 
 
@@ -207,7 +187,7 @@ Ext.override(Ext.grid.GridPanel ,{
             '</Style>',
 
             '<Style ss:ID="odd">',
-            '<Interior ss:Color="#CCCCFF" ss:Pattern="Solid" />',
+            '<Interior ss:Color="#eeeeee" ss:Pattern="Solid" />',
             '</Style>',
 
             '<Style ss:ID="groupSeparator">',
@@ -241,7 +221,7 @@ Ext.override(Ext.grid.GridPanel ,{
 
     getModelField: function(fieldName) {
 
-        var fields = this.store.model.getFields();
+        var fields = this.allStore.model.getFields();
         for (var i = 0; i < fields.length; i++) {
             if (fields[i].name === fieldName) {
                 return fields[i];
@@ -303,33 +283,8 @@ Ext.override(Ext.grid.GridPanel ,{
                         '<Data ss:Type="String">' + cm[i].text + '</Data>' +
                         '<NamedCell ss:Name="Print_Titles"></NamedCell></Cell>';
 
-
-                    var fld = this.getModelField(cm[i].dataIndex);
-                    switch (fld.type.type) {
-                        case "int":
-                            cellType.push("Number");
-                            cellTypeClass.push("int");
-                            break;
-                        case "float":
-                            cellType.push("Number");
-                            cellTypeClass.push("float");
-                            break;
-
-                        case "bool":
-
-                        case "boolean":
-                            cellType.push("String");
-                            cellTypeClass.push("");
-                            break;
-                        case "date":
-                            cellType.push("DateTime");
-                            cellTypeClass.push("date");
-                            break;
-                        default:
-                            cellType.push("String");
-                            cellTypeClass.push("");
-                            break;
-                    }
+					cellType.push("String");
+                    cellTypeClass.push("");
                 }
             }
         }
@@ -343,14 +298,14 @@ Ext.override(Ext.grid.GridPanel ,{
         // Generate worksheet header details.
 
         // determine number of rows
-        var numGridRows = this.store.getCount() + 2;
-        if (!Ext.isEmpty(this.store.groupField) || this.store.groupers.items.length > 0) {
-            numGridRows = numGridRows + this.store.getGroups().length;
+        var numGridRows = this.allStore.getCount() + 2;
+        if (!Ext.isEmpty(this.allStore.groupField) || this.allStore.groupers.items.length > 0) {
+            numGridRows = numGridRows + this.allStore.getGroups().length;
         }
 
         // create header for worksheet
         var t = ''.concat(
-            '<Worksheet ss:Name="' + theTitle + '">',
+            '<Worksheet ss:Name="' + theTitle + '" ss:RightToLeft="1" >',
 
             '<Names>',
             '<NamedRange ss:Name="Print_Titles" ss:RefersTo="=\'' + theTitle + '\'!R1:R2">',
@@ -373,14 +328,14 @@ Ext.override(Ext.grid.GridPanel ,{
         // Generate the data rows from the data in the Store
         var groupVal = "";
         var groupField = "";
-        if (this.store.groupers.keys.length > 0) {
-            groupField = this.store.groupers.keys[0];
+        if (this.allStore.groupers.keys.length > 0) {
+            groupField = this.allStore.groupers.keys[0];
         }
-        for (var i = 0, it = this.store.data.items, l = it.length; i < l; i++) {
+        for (var i = 0, it = this.allStore.data.items, l = it.length; i < l; i++) {
 
             if (!Ext.isEmpty(groupField)) {
-                if (groupVal != this.store.getAt(i).get(groupField)) {
-                    groupVal = this.store.getAt(i).get(groupField);
+                if (groupVal != this.allStore.getAt(i).get(groupField)) {
+                    groupVal = this.allStore.getAt(i).get(groupField);
                     t += this.generateEmptyGroupRow(groupField, groupVal, cellType, includeHidden);
                 }
             }
@@ -391,15 +346,12 @@ Ext.override(Ext.grid.GridPanel ,{
             for (var j = 0; j < colCount; j++) {
                 if (cm[j].xtype != 'actioncolumn' && (cm[j].dataIndex != '') && (includeHidden || !cm[j].hidden)) {
                     var v = r[cm[j].dataIndex];
-                    if (cellType[k] !== "None") {
-                        t += '<Cell ss:StyleID="' + cellClass + cellTypeClass[k] + '"><Data ss:Type="' + cellType[k] + '">';
-                        if (cellType[k] == 'DateTime') {
-                            t += Ext.Date.format(v, 'Y-m-d');
-                        } else {
-                            t += v;
-                        }
-                        t += '</Data></Cell>';
-                    }
+                    if(cm[j].renderer)
+						v = cm[j].renderer(v);
+                    
+					t += '<Cell ss:StyleID="' + cellClass + cellTypeClass[k] + '"><Data ss:Type="' + cellType[k] + '">';
+					t += v;
+					t += '</Data></Cell>';
                     k++;
                 }
             }
