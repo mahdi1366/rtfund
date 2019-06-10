@@ -7,6 +7,8 @@ require_once('../header.inc.php');
 require_once inc_dataReader;
 require_once inc_response;
 require_once 'meeting.class.php';
+require_once '../office/letter/letter.class.php';
+require_once '../framework/person/persons.class.php';
 
 $task = $_REQUEST["task"];
 if(!empty($task)) 
@@ -144,7 +146,7 @@ function SaveMeeting(){
 		$pdo->commit();
 	else
 		$pdo->rollBack();
-	
+	//sprint_r(ExceptionHandler::PopAllExceptions());
 	Response::createObjectiveResponse($res, $res ? $obj->MeetingID : "");
 	die();
 	
@@ -433,4 +435,65 @@ function GetDueDateRecords(){
 	die();
 }
 
+function SendRecordLetter(){
+	
+	$RecordID = $_POST["RecordID"];
+	$recObj = new MTG_MeetingRecords($RecordID);
+	$metObj = new MTG_meetings($recObj->MeetingID);
+	$personsArr = json_decode($_POST["persons"]);
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$LetterObj = new OFC_letters();
+	$LetterObj->LetterType = "INNER";
+	$LetterObj->LetterTitle = "مصوبه جلسه " . $metObj->MeetingNo . " " . $metObj->_MeetingTypeDesc . " : " . 
+			$recObj->subject;
+	$LetterObj->LetterDate = PDONOW;
+	$LetterObj->RegDate = PDONOW;
+	$LetterObj->PersonID = $_SESSION["USER"]["PersonID"];
+	$LetterObj->context = $recObj->details;
+	if(!$LetterObj->AddLetter($pdo))
+	{
+		echo Response::createObjectiveResponse(false, "خطا در ثبت  نامه");
+		die();
+	}
+	//---------------------------------------	
+	foreach($personsArr as $PersonID)
+	{
+		$personObj = new BSC_persons($PersonID);
+		if($personObj->IsStaff == "YES")
+		{
+			$SendObj = new OFC_send();
+			$SendObj->LetterID = $LetterObj->LetterID;
+			$SendObj->FromPersonID = $LetterObj->PersonID;
+			$SendObj->ToPersonID = $PersonID;
+			$SendObj->SendDate = PDONOW;
+			$SendObj->SendType = 1;
+			if(!$SendObj->AddSend($pdo))
+			{
+				$pdo->rollBack();
+				echo Response::createObjectiveResponse(false, "خطا در ارسال  نامه");
+				die();
+			}
+		}
+		else
+		{
+			$Cobj = new OFC_LetterCustomers();
+			$Cobj->LetterID = $LetterObj->LetterID;
+			$Cobj->PersonID = $PersonID;
+			$Cobj->IsHide = "NO";
+			$Cobj->LetterTitle = $LetterObj->LetterTitle;
+			if(!$Cobj->Add($pdo))
+			{
+				$pdo->rollBack();
+				echo Response::createObjectiveResponse(false, "خطا در ارسال  نامه");
+				die();
+			}
+		}
+	}	
+	$pdo->commit();
+	echo Response::createObjectiveResponse(true, "");
+	die();
+}
 ?>

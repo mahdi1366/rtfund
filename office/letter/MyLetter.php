@@ -145,7 +145,8 @@ function MyLetter(){
 		framework.OpenPage("/office/letter/LetterInfo.php", "مشخصات نامه", 
 		{
 			LetterID : record.data.LetterID,
-			SendID : record.data.SendID
+			SendID : record.data.SendID,
+			mode : MyLetterObject.mode
 		});
 	});
 	this.grid.getStore().on("load",function(){
@@ -314,7 +315,8 @@ MyLetter.prototype.LetterInfo = function(){
 	framework.OpenPage("/office/letter/LetterInfo.php", "مشخصات نامه", 
 		{
 			LetterID : record.data.LetterID,
-			SendID : record.data.SendID
+			SendID : record.data.SendID,
+			mode : this.mode
 		});
 }
 
