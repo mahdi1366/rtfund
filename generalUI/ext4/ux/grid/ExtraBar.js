@@ -27,6 +27,13 @@ Ext.define('Ext.toolbar.ExtraBar', {
             iconCls: Ext.baseCSSPrefix + 'tbar-loading',
             handler: me.doRefresh,
             scope: me
+        },'-',{
+            itemId: 'excel',
+            tooltip: "خروجی اکسل",
+            overflowText: "خروجی اکسل",
+            iconCls: 'excel',
+            handler: function(){this.up().downloadExcelXml();},
+            scope: me
         }];
     },
    initComponent : function(){
