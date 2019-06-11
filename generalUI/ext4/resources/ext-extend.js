@@ -3650,16 +3650,21 @@ Ext.override(Ext.toolbar.Paging,{
             disabled: true,
             handler: me.moveFirst,
             scope: me
-        },
-        '-',
-        {
+        },'-',{
             itemId: 'refresh',
             tooltip: me.refreshText,
             overflowText: me.refreshText,
             iconCls: Ext.baseCSSPrefix + 'tbar-loading',
             handler: me.doRefresh,
             scope: me
-        }];
+        },'-',{
+			itemId: 'excel',
+            tooltip: "خروجی اکسل",
+            overflowText: "خروجی اکسل",
+            iconCls: 'excel',
+            handler: function(){this.up().downloadExcelXml();},
+            scope: me
+		}];
     }
 });
     
@@ -4796,6 +4801,8 @@ Ext.define('Ext.ux.RowExpander', {
      */
     selectRowOnExpand: false,
 	
+	defaultExpand: false,
+
     rowBodyTrSelector: '.x-grid-rowbody-tr',
     rowBodyHiddenCls: 'x-grid-row-body-hidden',
     rowCollapsedCls: 'x-grid-row-collapsed',
@@ -4840,15 +4847,13 @@ Ext.define('Ext.ux.RowExpander', {
                 ftype: 'rowbody',
                 columnId: this.getHeaderId(),
                 recordsExpanded: this.recordsExpanded,
-                rowBodyHiddenCls: this.rowBodyHiddenCls,
-                rowCollapsedCls: this.rowCollapsedCls,
+                rowBodyHiddenCls: this.defaultExpand ? "" : this.rowBodyHiddenCls,
+                rowCollapsedCls: this.defaultExpand ? "" : this.rowCollapsedCls,
                 getAdditionalData: this.getRowBodyFeatureData,
                 getRowBodyContents: function(data) {
                     return rowBodyTpl.applyTemplate(data);
                 }
-            },{
-                ftype: 'rowwrap'
-            }];
+            },{ftype: 'rowwrap'}];
 
         if (grid.features) {
             grid.features = features.concat(grid.features);

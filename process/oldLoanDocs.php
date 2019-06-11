@@ -8,19 +8,20 @@ require_once '../header.inc.php';
 require_once '../commitment/ExecuteEvent.class.php';
 require_once '../loan/request/request.class.php';
 
+ini_set("display_errors", "On");
 ini_set('max_execution_time', 30000);
 ini_set('memory_limit','1000M');
 
 global $GToDate;
-//$GToDate = '2018-03-21'; //1397/01/01
-$GToDate = '2019-03-21'; //1398/01/01
+//$GToDate = '2018-03-20'; //1396/12/29
+$GToDate = '2019-03-20'; //1397/12/29
 
 $reqs = PdoDataAccess::runquery(" select r.RequestID from LON_requests r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
-	where PartDate<'$GToDate' AND r.RequestID >= ".$_REQUEST["ReqID"]."
+	where PartDate<='$GToDate' " . (!empty($_REQUEST["ReqID"]) ? " AND r.RequestID >= ".$_REQUEST["ReqID"] : "" ) . "
 		AND ComputeMode='NEW' AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
 		order by RequestID");
-
+//echo PdoDataAccess::GetLatestQueryString();
 $pdo = PdoDataAccess::getPdoObject();
 
 $DocObj = array();
@@ -54,7 +55,7 @@ foreach($reqs as $requset)
 	
 	//--------------------------------------------------
 	$pdo->commit();
-	
+	memo
 	EventComputeItems::$LoanComputeArray = array();
 	EventComputeItems::$LoanPuresArray = array();
 }
@@ -133,7 +134,7 @@ function Payment($reqObj , $partObj, &$DocObj, $pdo){
 		$EventID = EVENT_LOANPAYMENT_innerSource;
 	
 	$pays = PdoDataAccess::runquery("select * from LON_payments "
-			. " where PayDate<'$GToDate' AND RequestID=?", array($reqObj->RequestID));
+			. " where PayDate<='$GToDate' AND RequestID=?", array($reqObj->RequestID));
 	
 	$eventobj = new ExecuteEvent($EventID);
 	foreach($pays as $pay)
@@ -162,7 +163,7 @@ function PaymentCheque($reqObj , $partObj, &$DocObj, $pdo){
 	global $GToDate;
 	
 	$pays = PdoDataAccess::runquery("select * from LON_payments "
-			. " where PayDate<'$GToDate' AND RequestID=?", array($reqObj->RequestID));
+			. " where PayDate<='$GToDate' AND RequestID=?", array($reqObj->RequestID));
 	
 	if($reqObj->ReqPersonID*1 > 0)
 		$EventID = EVENT_LOANPAYMENT_agentSource;
@@ -235,7 +236,7 @@ function BackPay($reqObj , $partObj, &$DocObj, $pdo){
 	$backpays = PdoDataAccess::runquery(
 			"select * from LON_BackPays
 				left join ACC_IncomeCheques i using(IncomeChequeID) 
-				where RequestID=? AND PayDate<'$GToDate'
+				where RequestID=? AND PayDate<='$GToDate'
 			AND if(PayType=" . BACKPAY_PAYTYPE_CHEQUE . ",ChequeStatus=".INCOMECHEQUE_VOSUL.",1=1)
 			order by PayDate", array($reqObj->RequestID));
 	
@@ -287,7 +288,10 @@ function BackPay($reqObj , $partObj, &$DocObj, $pdo){
  */
 function DailyIncome($reqObj , $partObj, $pdo){
 	
-	$days = PdoDataAccess::runquery_fetchMode("select * from jdate where Jdate between ? AND '1396/12/29'", 
+	global $GToDate;
+	$JToDate = DateModules::miladi_to_shamsi($GToDate);
+	 
+	$days = PdoDataAccess::runquery_fetchMode("select * from jdate where Jdate between ? AND '".$JToDate."'", 
 			DateModules::miladi_to_shamsi($partObj->PartDate), $pdo);
 	echo "days : " . $days->rowCount() . "<br>";
 	ob_flush();flush();

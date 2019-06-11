@@ -90,7 +90,7 @@ Ext.override(Ext.grid.GridPanel ,{
     downloadExcelXml: function(includeHidden, title) {
 
         if (!title) title = this.title;
-		me = this;
+		excelMe = this;
 		this.allStore = Object.create(this.store);
 		this.allStore.pageSize = 10000;
 		this.allStore.events = {};
@@ -99,10 +99,10 @@ Ext.override(Ext.grid.GridPanel ,{
 		this.allStore.load({
 			callback : function(){
 				
-				var vExportContent = me.getExcelXml(includeHidden, title);
+				var vExportContent = excelMe.getExcelXml(includeHidden, title);
 				var location = 'data:application/vnd.ms-excel;base64,' + Base64.encode(vExportContent);
 
-				var gridEl = me.getEl();
+				var gridEl = excelMe.getEl();
 
 				var el = Ext.DomHelper.append(gridEl, {
 					tag: "a",
@@ -112,7 +112,7 @@ Ext.override(Ext.grid.GridPanel ,{
 
 				el.click();
 				Ext.fly(el).destroy();
-				me.mask.hide();
+				excelMe.mask.hide();
 			}
 		});
     },
@@ -278,6 +278,10 @@ Ext.override(Ext.grid.GridPanel ,{
                     cellTypeClass.push("");
                     ++visibleColumnCountReduction;
                 } else {
+					
+					if(cm[i].text.indexOf("<") != -1)
+						cm[i].text = "";
+					
                     colXml += '<Column ss:AutoFitWidth="1" ss:Width="' + w + '" />';
                     headerXml += '<Cell ss:StyleID="headercell">' +
                         '<Data ss:Type="String">' + cm[i].text + '</Data>' +
@@ -347,7 +351,13 @@ Ext.override(Ext.grid.GridPanel ,{
                 if (cm[j].xtype != 'actioncolumn' && (cm[j].dataIndex != '') && (includeHidden || !cm[j].hidden)) {
                     var v = r[cm[j].dataIndex];
                     if(cm[j].renderer)
-						v = cm[j].renderer(v);
+					{
+						v = cm[j].renderer(v,'',it[i]);
+						if(v == undefined)
+							v = "";
+						if(v.indexOf("<") != -1)
+							v = r[cm[j].dataIndex];
+					}
                     
 					t += '<Cell ss:StyleID="' + cellClass + cellTypeClass[k] + '"><Data ss:Type="' + cellType[k] + '">';
 					t += v;
@@ -374,6 +384,8 @@ Ext.override(Ext.grid.GridPanel ,{
             '</WorksheetOptions>',
             '</Worksheet>'
         );
+
+		result.xml = result.xml.replace(/>/g,'>\n');
         return result;
     }
 });

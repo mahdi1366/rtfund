@@ -382,9 +382,9 @@ function GetData(&$rpg){
 	$dt = PdoDataAccess::runquery($query, $whereParam);
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		//BeginReport();
+		BeginReport();
 		//print_r(ExceptionHandler::PopAllExceptions());
-		//echo PdoDataAccess::GetLatestQueryString ();
+		echo PdoDataAccess::GetLatestQueryString ();
 	}
 	return $dt;
 }

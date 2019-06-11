@@ -1495,7 +1495,6 @@ class LON_Computes extends PdoDataAccess{
 				$total_pnlt += $records[$i]["remain_pnlt"];
 			}
 			//------------ minus pay from previous installments ------------------
-			$payAmount = $PayRecord["remainPayAmount"];
 			$total = $total_pure + $total_wage + $total_late + $total_pnlt;
 			if($total > 0)
 			{
@@ -1503,36 +1502,36 @@ class LON_Computes extends PdoDataAccess{
 				{
 					if($obj->PayCompute == "installment")
 					{
-						$remainPure = min($payAmount, $total_pure);
-						$payAmount -= min($payAmount, $total_pure);
-						$remainWage = min($payAmount, $total_wage);
-						$payAmount -= min($payAmount, $total_wage);
-						$remainLate = min($payAmount, $total_late);
-						$payAmount -= min($payAmount, $total_late);
-						$remainPnlt = min($payAmount, $total_pnlt);
-						$payAmount -= min($payAmount, $total_pnlt);
+						$remainPure = min($PayRecord["remainPayAmount"], $total_pure);
+						$PayRecord["remainPayAmount"] -= min($PayRecord["remainPayAmount"], $total_pure);
+						$remainWage = min($PayRecord["remainPayAmount"], $total_wage);
+						$PayRecord["remainPayAmount"] -= min($PayRecord["remainPayAmount"], $total_wage);
+						$remainLate = min($PayRecord["remainPayAmount"], $total_late);
+						$PayRecord["remainPayAmount"] -= min($PayRecord["remainPayAmount"], $total_late);
+						$remainPnlt = min($PayRecord["remainPayAmount"], $total_pnlt);
+						$PayRecord["remainPayAmount"] -= min($PayRecord["remainPayAmount"], $total_pnlt);
 					}
 					else
 					{
-						$remainPnlt = min($payAmount, $total_pnlt);
-						$payAmount -= min($payAmount, $total_pnlt);
-						$remainLate = min($payAmount, $total_late);
-						$payAmount -= min($payAmount, $total_late);
-						$remainWage = min($payAmount, $total_wage);
-						$payAmount -= min($payAmount, $total_wage);
-						$remainPure = min($payAmount, $total_pure);
-						$payAmount -= min($payAmount, $total_pure);
+						$remainPnlt = min($PayRecord["remainPayAmount"], $total_pnlt);
+						$PayRecord["remainPayAmount"] -= min($PayRecord["remainPayAmount"], $total_pnlt);
+						$remainLate = min($PayRecord["remainPayAmount"], $total_late);
+						$PayRecord["remainPayAmount"] -= min($PayRecord["remainPayAmount"], $total_late);
+						$remainWage = min($PayRecord["remainPayAmount"], $total_wage);
+						$PayRecord["remainPayAmount"] -= min($PayRecord["remainPayAmount"], $total_wage);
+						$remainPure = min($PayRecord["remainPayAmount"], $total_pure);
+						$PayRecord["remainPayAmount"] -= min($PayRecord["remainPayAmount"], $total_pure);
 					}
 				}
 				else
 				{
-					$payAmount = min($payAmount, $total);
+					$minPay = min($PayRecord["remainPayAmount"], $total);
+					$PayRecord["remainPayAmount"] -= $minPay;
 			
-					$remainPure = round($payAmount*$total_pure/$total);
-					$remainWage = round($payAmount*$total_wage/$total);
-					$remainLate = round($payAmount*$total_late/$total);
-					$remainPnlt = round($payAmount*$total_pnlt/$total);
-
+					$remainPure = round($minPay*$total_pure/$total);
+					$remainWage = round($minPay*$total_wage/$total);
+					$remainLate = round($minPay*$total_late/$total);
+					$remainPnlt = round($minPay*$total_pnlt/$total);
 				}
 				
 				
@@ -1590,7 +1589,6 @@ class LON_Computes extends PdoDataAccess{
 					if($remainPure == 0 && $remainWage == 0 && $remainLate == 0 && $remainPnlt == 0)
 						break;
 				}			
-				$PayRecord["remainPayAmount"] = $payAmount;
 				if($PayRecord["remainPayAmount"] == 0)
 				{
 					$sum = $PayRecord["pure"] + $PayRecord["wage"] + $PayRecord["late"] +
