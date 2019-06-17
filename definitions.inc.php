@@ -100,6 +100,7 @@ define("INCOMECHEQUE_BARGASHTI_HOGHUGHI", "3013");
 define("INCOMECHEQUE_EDIT", "3333");
 
 //............  TypeID=6 ....................
+define("BACKPAY_PAYTYPE_SUBSALARY", "3");
 define("BACKPAY_PAYTYPE_EPAY", "4");
 define("BACKPAY_PAYTYPE_CHEQUE", "9");
 define("BACKPAY_PAYTYPE_CORRECT", "100");
