@@ -44,14 +44,14 @@ class LON_loans extends PdoDataAccess
 			return false;
 		$this->LoanID = parent::InsertID();
 				
-		/*$blockObj = new ACC_blocks();
+		$blockObj = new ACC_blocks();
 		$blockObj->BlockCode = $this->LoanID;
 		$blockObj->BlockDesc = $this->LoanDesc;
 		$blockObj->LevelID = "2";
 		$blockObj->AddBlock();
 		
 		$this->BlockID = $blockObj->BlockID;
-		$this->EditLoan();*/
+		$this->EditLoan();
 				
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;	
@@ -59,12 +59,12 @@ class LON_loans extends PdoDataAccess
 		$daObj->TableName = "LON_loans";
 		$daObj->execute();
 		
-		$obj = new ACC_tafsilis();
+		/*$obj = new ACC_tafsilis();
 		$obj->ObjectID = $this->LoanID;
 		$obj->TafsiliCode = $this->LoanID;
 		$obj->TafsiliDesc = $this->LoanDesc;
 		$obj->TafsiliType = TAFSILITYPE_LOAN;
-		$obj->AddTafsili();
+		$obj->AddTafsili();*/ 
 		
 		return true;
 	}
