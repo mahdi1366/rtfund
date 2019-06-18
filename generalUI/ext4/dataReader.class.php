@@ -2,26 +2,23 @@
 
 class dataReader
 {
-	static function getJsonData($dataSource, $countOfRows, $callback = "", $message = "")
+	static function getJsonData($dataSource, $countOfRows = "", $callback = "", $message = "")
 	{
+		//header("content-type: application/javascript");
 		
 		if($callback == "" && isset($_GET["callback"]))
 			$callback = $_GET["callback"];
 		
 		if($dataSource instanceof ADORecordSet)
 			$dataSource = $dataSource->GetRows();
-/*
-		$dataSource2 = array_slice($dataSource, $start, $limit);
-
-		$str = $callback . '({"totalCount":"' . count($dataSource) . '","' .
-				'rows":' . json_encode($dataSource2) . '});';
-
-		return $str;*/
 			
 		if($countOfRows == "")
 			$countOfRows = count($dataSource);
-			
-		$str = $callback . '({"totalCount":"' . $countOfRows . '","' .
+		
+		if(!preg_match('/^([A-Za-z0-9]|[\.])*$/i', $callback))
+			return "";		
+		
+		$str = $callback . '({"totalCount":"' . (int)$countOfRows . '","' .
 				'rows":' . json_encode($dataSource);
 		
 		if($message !== "")
@@ -45,13 +42,39 @@ class dataReader
 		
 		$str = " order by ";
 		for($i=0; $i < count($arr); $i++)
+		{
+			if(!preg_match('/^([A-Za-z0-9]|[\._])*$/i', $arr[$i]->property))
+				return "";
+			if(strtolower($arr[$i]->direction) != "asc" && strtolower($arr[$i]->direction) != "desc")
+				return "";
+			
 			if($arr[$i]->property != "")
 				$str .= $arr[$i]->property . " " . $arr[$i]->direction . ",";
+		}
 		$str = substr($str, 0, strlen($str)-1);
 		
 		return $str == " order by" ? "" : $str;
 	}
 
+	/**
+	 * return "new Ext.data.Store(..." for Store in Ext
+	 *
+	 * @param string $url example: testPage.php?task=readData
+	 * @param string $fields example: 'id','name','count'
+	 */
+	static function OLDMakeStoreObject($url,$fields)
+	{
+		echo "new Ext.data.Store({
+		        proxy: new Ext.data.ScriptTagProxy({
+		            url: '" . $url . "'
+		        }),       
+		        reader: new Ext.data.JsonReader({
+		            root: 'rows',
+		            totalProperty: 'totalCount'}, 
+		            [" . $fields . "])
+		    	});";
+	}
+	
 	/**
 	 * return "new Ext.data.Store(..." for Store in Ext
 	 *

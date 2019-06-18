@@ -239,7 +239,7 @@ MeetingInfo.prototype.BuildForms = function(){
 				}
 			}
 		},{
-			title : "دعوتنامه ها",
+			title : "دستورات جلسه",
 			itemId : "agendas_tab",
 			disabled : true,
 			loader : {

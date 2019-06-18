@@ -2484,7 +2484,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		$itemObj->CreditorAmount = $FundDelayShare;
 		if(!$itemObj->Add($pdo))
 		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
+			ExceptionHandler::PushException("خطا در ایجاد ردیف تنفس");
 			return false;
 		}
 		$PayObj->PayAmount = $PayObj->PayAmount - $FundDelayShare;
@@ -2508,7 +2508,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 		$itemObj->TafsiliID = $ReqPersonTafsili;
 		if(!$itemObj->Add($pdo))
 		{
-			ExceptionHandler::PushException("خطا در ایجاد سند");
+			ExceptionHandler::PushException("خطا در ایجاد تنفس وام سرمایه گذار");
 			return false;
 		}
 		$PayObj->PayAmount = $PayObj->PayAmount - $AgentDelayShare;
@@ -2694,7 +2694,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 	$itemObj->CreditorAmount = $PayObj->PayAmount;
 	if(!$itemObj->Add($pdo))
 	{
-		ExceptionHandler::PushException("خطا در ایجاد سند");
+		ExceptionHandler::PushException("خطا در ایجاد ردیف وام");
 		return false;
 	}
 	
@@ -2714,7 +2714,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 	}
 	if(!$itemObj->Add($pdo))
 	{
-		ExceptionHandler::PushException("خطا در ایجاد سند");
+		ExceptionHandler::PushException("خطا در ایجاد ردیف واریزی");
 		return false;
 	}
 
@@ -2725,7 +2725,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 	$itemObj->CreditorAmount = 0;
 	if(!$itemObj->Add($pdo))
 	{
-		ExceptionHandler::PushException("خطا در ایجاد سند");
+		ExceptionHandler::PushException("خطا در ایجاد ردیف تعهد مشتری");
 		return false;
 	}
 
@@ -2738,7 +2738,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 	unset($itemObj->TafsiliID2);
 	unset($itemObj->TafsiliID);
 	$itemObj->locked = "NO";
-	$itemObj->CostID = $PayObj->PayType == "3" ? $CostCode_fund : $CostCode_bank;
+	$itemObj->CostID = $CostObj->CostID;
 	$itemObj->DebtorAmount= $PayObj->PayAmount + $ExtraPay;
 	$itemObj->CreditorAmount = 0;
 	$itemObj->TafsiliType = $CostObj->TafsiliType1;
@@ -2749,7 +2749,7 @@ function RegisterSHRTFUNDCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $
 		$itemObj->TafsiliID2 = $TafsiliID2;
 	if(!$itemObj->Add($pdo))
 	{
-		ExceptionHandler::PushException("خطا در ایجاد سند");
+		ExceptionHandler::PushException("خطا در ایجاد ردیف بانک");
 		return false;
 	}
 	

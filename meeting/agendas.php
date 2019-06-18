@@ -43,7 +43,7 @@ $dg->addObject("this.FilterObj");
 
 if($accessObj->AddFlag)
 {
-	$dg->addButton("", "ایجاد دعوتنامه جدید", "add", "function(){MTG_agendaObject.AddAgenda();}");
+	$dg->addButton("", "ایجاد دستور جلسه جدید", "add", "function(){MTG_agendaObject.AddAgenda();}");
 	$dg->enableRowEdit = true ;
 	$dg->rowEditOkHandler = "function(v,p,r){ return MTG_agendaObject.Save(v,p,r);}";
 }
@@ -65,7 +65,7 @@ if($accessObj->EditFlag)
 }
 
 $dg->height = 500;
-$dg->title = "مدیریت دعوتنامه ها";
+$dg->title = "مدیریت دستورات جلسه";
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;
 $dg->DefaultSortField = "AgendaID";
@@ -104,7 +104,7 @@ function MTG_agenda(){
 			plain: true,
 			showSeparator : true,
 			items: [{
-				text: "دعوتنامه های انجام نشده",
+				text: "دستور جلسه انجام نشده",
 				group: 'filter',
 				checked: true,
 				handler : function(){
@@ -113,7 +113,7 @@ function MTG_agenda(){
 					me.grid.getStore().loadPage(1);
 				}
 			},{
-				text: "دعوتنامه های انجام شده",
+				text: "دستور جلسه انجام شده",
 				group: 'filter',
 				checked: true,
 				handler : function(){
