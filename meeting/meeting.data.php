@@ -310,7 +310,7 @@ function AddRecordToAgenda(){
 	if(!$obj->Add($pdo))
 	{
 		$pdo->rollBack();
-		echo Response::createObjectiveResponse(false, "خطا در ایجاد دعوتنامه");
+		echo Response::createObjectiveResponse(false, "خطا در ایجاد دستور جلسه");
 		die();
 	}
 	$pdo->commit();
@@ -354,7 +354,7 @@ function AddRemainAgendaToAgenda(){
 	if(!$obj2->Add($pdo))
 	{
 		$pdo->rollBack();
-		echo Response::createObjectiveResponse(false, "خطا در ایجاد دعوتنامه");
+		echo Response::createObjectiveResponse(false, "خطا در ایجاد دستور جلسه");
 		die();
 	}
 	$pdo->commit();

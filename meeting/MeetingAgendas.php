@@ -35,7 +35,7 @@ $col->width = 70;
 
 if($accessObj->AddFlag && !$readOnly)
 {
-	$dg->addButton("", "ایجاد دعوتنامه جدید", "add", "function(){MTG_MeetingAgendaObject.AddAgenda();}");
+	$dg->addButton("", "ایجاد دستور جلسه جدید", "add", "function(){MTG_MeetingAgendaObject.AddAgenda();}");
 	$dg->enableRowEdit = true ;
 	$dg->rowEditOkHandler = "function(v,p,r){ return MTG_MeetingAgendaObject.Save(v,p,r);}";
 }
@@ -49,8 +49,14 @@ if($accessObj->RemoveFlag && !$readOnly)
 	$col->renderer = "function(v,p,r){return MTG_MeetingAgenda.DeleteRender(v,p,r);}";
 	$col->width = 50;
 }
+
+$col = $dg->addColumn("پیوست", "");
+$col->sortable = false;
+$col->renderer = "function(v,p,r){return MTG_MeetingAgenda.attachRender(v,p,r);}";
+$col->width = 50;
+
 $dg->height = 200;
-$dg->title = "بررسی درخواست‌های واصله";
+$dg->title = "دستورات جلسه";
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;
 $dg->DefaultSortField = "AgendaID";
@@ -111,7 +117,7 @@ $col->align = "center";
 $col->width = 80;
 
 $dg->height = 200;
-$dg->title = "موارد باقی‌مانده از جلسه گذشته";
+$dg->title = "موارد باقیمانده از جلسه گذشته";
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 //$dg->disableFooter = true;
@@ -182,6 +188,14 @@ MTG_MeetingAgenda.DeleteRender = function(v,p,r){
 	
 	return "<div align='center' title='حذف' class='remove' "+
 	"onclick='MTG_MeetingAgendaObject.DeleteAgenda();' " +
+	"style='background-repeat:no-repeat;background-position:center;" +
+	"cursor:pointer;width:100%;height:16'></div>";
+}
+
+MTG_MeetingAgenda.attachRender = function(v,p,r){
+	
+	return "<div align='center' title='پیوست' class='attach' "+
+	"onclick='MTG_MeetingAgendaObject.AgendaDocuments();' " +
 	"style='background-repeat:no-repeat;background-position:center;" +
 	"cursor:pointer;width:100%;height:16'></div>";
 }
@@ -321,6 +335,42 @@ MTG_MeetingAgenda.prototype.AddRemainAgenda = function(){
 	});
 }
 
+MTG_MeetingAgenda.prototype.AgendaDocuments = function(){
+
+	if(!this.documentWin)
+	{
+		this.documentWin = new Ext.window.Window({
+			width : 720,
+			height : 440,
+			modal : true,
+			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
+			closeAction : "hide",
+			loader : {
+				url : "../../office/dms/documents.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.documentWin);
+	}
+
+	this.documentWin.show();
+	this.documentWin.center();
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.documentWin.loader.load({
+		scripts : true,
+		params : {
+			ExtTabID : this.documentWin.getEl().id,
+			ObjectType : 'meetingaganda',
+			ObjectID : record.data.AgandaID
+		}
+	});
+}
 
 var MTG_MeetingAgendaObject = new MTG_MeetingAgenda();	
 
