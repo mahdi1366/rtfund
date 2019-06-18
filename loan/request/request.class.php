@@ -1271,8 +1271,8 @@ class LON_Computes extends PdoDataAccess{
 		if(count($pays) > 1)
 		{
 			$pays = array_reverse($pays);
-			//$result = LON_requests::GetDelayAmounts($partObj->RequestID, $partObj);
 			$total = 0;
+			$totalZ = 0;
 			for($i=0; $i<count($pays)-1; $i++)
 			{
 				if($i == 0)
@@ -1281,7 +1281,9 @@ class LON_Computes extends PdoDataAccess{
 					$total += $pays[$i]["PurePayAmount"];
 				
 				$days = DateModules::GDateMinusGDate($pays[$i+1]["PayDate"], $pays[$i]["PayDate"]);
-				$paymentWage += $total*$partObj->CustomerWage*$days/36500;
+				$Z = ($total + $totalZ)*$partObj->CustomerWage*$days/36500;
+				$totalZ += $Z;
+				$paymentWage += $Z;
 			}
 		}
 		$paymentWage = round($paymentWage);
@@ -1456,22 +1458,16 @@ class LON_Computes extends PdoDataAccess{
 							{
 								$records[$i]["remain_late"] -= $records[$i]["late"];
 								$records[$i]["remain_pnlt"] -= $records[$i]["pnlt"];
-								$records[$i]["late"] = 0;
-								$records[$i]["pnlt"] = 0;
 							}
 							else if($obj->PayCompute == "forfeit")
 							{
 								$records[$i]["remain_late"] -= $records[$i]["late"];
 								$records[$i]["remain_pnlt"] -= $records[$i]["pnlt"];
-								$records[$i]["late"] = 0;
-								$records[$i]["pnlt"] = 0;
 							}
 						}
 					}
 					else
 					{
-						$records[$i]["late"] = 0;
-						$records[$i]["pnlt"] = 0;
 						$records[$i]["remain_late"] = 0;
 						$records[$i]["remain_pnlt"] = 0;
 					}
@@ -1857,6 +1853,7 @@ class LON_Computes extends PdoDataAccess{
 		$pays = LON_payments::Get(" AND p.RequestID=?", array($RequestID), " order by PayDate");
 		$pays = $pays->fetchAll();
 		$totalPure = 0;
+		$totalZ = 0;
 		for($i=0; $i<count($pays); $i++)
 		{
 			$totalPure += $pays[$i]["PurePayAmount"]/* - ($i==0 ? $extra : 0)*/;
@@ -1865,8 +1862,12 @@ class LON_Computes extends PdoDataAccess{
 				"InstallmentAmount" => 0,
 				"wage" => 0,
 				"pure" => 0,
-				"totalPure" => $totalPure
+				"totalPure" => $totalPure + $totalZ
 			);
+			$days = DateModules::GDateMinusGDate(
+				$i+1 <count($pays) ? $pays[$i+1]["PayDate"] : $temp[0]["InstallmentDate"],
+				$pays[$i]["PayDate"]);
+			$totalZ += ($totalPure + $totalZ)*$days*$PartObj->CustomerWage/36500;
 		}
 		
 		for($i=0; $i< count($temp); $i++)

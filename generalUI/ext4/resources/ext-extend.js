@@ -3584,6 +3584,7 @@ Ext.override(Ext.toolbar.Paging,{
     nextText : 'صفحه بعد',
     lastText : 'آخرین صفحه',
     refreshText : 'Refresh',
+	ExcelButton : true,
 	
 	getPagingItems: function() {
         var me = this;
@@ -3659,6 +3660,7 @@ Ext.override(Ext.toolbar.Paging,{
             scope: me
         },'-',{
 			itemId: 'excel',
+			hidden : !this.ExcelButton,
             tooltip: "خروجی اکسل",
             overflowText: "خروجی اکسل",
             iconCls: 'excel',

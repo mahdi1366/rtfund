@@ -53,6 +53,7 @@ $dg->PageSizeChange = false;
 $dg->EnableRowNumber = false;
 $dg->hideHeaders = true;
 $dg->EnableSearch = false;
+$dg->ExcelButton = false;
 $grid = $dg->makeGrid_returnObjects();
 
 //--------------------------------------------

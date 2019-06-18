@@ -187,6 +187,7 @@ class sadaf_datagrid
 	public $columnLines = false;
 
 	public $loadMask = true;
+	public $ExcelButton = true;
 	//-------------------------------------------------------------------------
 	/**
 	 * get instance of sadaf_datagrid class
@@ -383,17 +384,21 @@ class sadaf_datagrid
 		
 		if($this->EnablePaging)
 		{
-			$grid .= ",bbar: new Ext.PagingToolbar({store:Ext.getCmp(Ext.id),";
-			if($this->PageSizeChange)
-				$grid .= "plugins: [new Ext.ux.PageSizePlugin()],";
-			$grid .= "  pageSize: $this->pageSize,
-			            displayInfo: true
-			       	})";
+			$grid .= ",bbar: 
+				new Ext.PagingToolbar({
+					ExcelButton : " . ($this->ExcelButton ? "true" : "false") . ",
+					store:Ext.getCmp(Ext.id)," . 
+					($this->PageSizeChange ? " 
+					plugins: [new Ext.ux.PageSizePlugin()]," : "") . " 
+					pageSize: $this->pageSize,
+			        displayInfo: true
+			    })";
 		}
 		else if(!$this->disableFooter)
 		{	
 			$grid .=  ",bbar: new Ext.ExtraBar({
 			        	store: Ext.getCmp(Ext.id),
+						ExcelButton : " . ($this->ExcelButton ? "true" : "false") . ",
 			            displayInfo: true			            
 			       		})";
 		}	

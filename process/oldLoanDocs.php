@@ -10,15 +10,16 @@ require_once '../loan/request/request.class.php';
 
 ini_set("display_errors", "On");
 ini_set('max_execution_time', 30000);
-ini_set('memory_limit','1000M');
+ini_set('memory_limit','2000M');
 
 global $GToDate;
-//$GToDate = '2018-03-20'; //1396/12/29
-$GToDate = '2019-03-20'; //1397/12/29
+$GToDate = '2018-03-20'; //1396/12/29
+//$GToDate = '2019-03-20'; //1397/12/29
 
 $reqs = PdoDataAccess::runquery(" select r.RequestID from LON_requests r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
-	where PartDate<='$GToDate' " . (!empty($_REQUEST["ReqID"]) ? " AND r.RequestID >= ".$_REQUEST["ReqID"] : "" ) . "
+	where PartDate<='$GToDate' 	" . 
+		(!empty($_REQUEST["ReqID"]) ? " AND r.RequestID >= ".$_REQUEST["ReqID"] : "" ) . "
 		AND ComputeMode='NEW' AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
 		order by RequestID");
 //echo PdoDataAccess::GetLatestQueryString();
@@ -37,25 +38,25 @@ foreach($reqs as $requset)
 	
 	$DocObj[ $reqObj->RequestID ] = null;
 	
-	Allocate($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-	$DocObj[ $reqObj->RequestID ] = null;
-	Contract($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-	$DocObj[ $reqObj->RequestID ] = null;
-	Payment($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-	$DocObj[ $reqObj->RequestID ] = null;
-	PaymentCheque($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-	$DocObj[ $reqObj->RequestID ] = null;
-	BackPayCheques($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-	$DocObj[ $reqObj->RequestID ] = null;
-	BackPay($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-	$DocObj[ $reqObj->RequestID ] = null;
-	DailyIncome($reqObj, $partObj, $pdo);
+//	Allocate($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+//	$DocObj[ $reqObj->RequestID ] = null;
+//	Contract($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+//	$DocObj[ $reqObj->RequestID ] = null;
+//	Payment($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+//	$DocObj[ $reqObj->RequestID ] = null;
+//	PaymentCheque($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+//	$DocObj[ $reqObj->RequestID ] = null;
+//	BackPayCheques($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+//	$DocObj[ $reqObj->RequestID ] = null;
+//	BackPay($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+//	$DocObj[ $reqObj->RequestID ] = null;
+//	DailyIncome($reqObj, $partObj, $pdo);
 	DailyWage($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
 	$DocObj[ $reqObj->RequestID ] = null;
 	
 	//--------------------------------------------------
 	$pdo->commit();
-	memo
+
 	EventComputeItems::$LoanComputeArray = array();
 	EventComputeItems::$LoanPuresArray = array();
 }
@@ -136,9 +137,9 @@ function Payment($reqObj , $partObj, &$DocObj, $pdo){
 	$pays = PdoDataAccess::runquery("select * from LON_payments "
 			. " where PayDate<='$GToDate' AND RequestID=?", array($reqObj->RequestID));
 	
-	$eventobj = new ExecuteEvent($EventID);
 	foreach($pays as $pay)
 	{
+		$eventobj = new ExecuteEvent($EventID);
 		$eventobj->DocObj = $DocObj;
 		$eventobj->Sources = array($reqObj->RequestID, $partObj->PartID, $pay["PayID"]);
 		$result = $eventobj->RegisterEventDoc($pdo);
@@ -163,16 +164,11 @@ function PaymentCheque($reqObj , $partObj, &$DocObj, $pdo){
 	global $GToDate;
 	
 	$pays = PdoDataAccess::runquery("select * from LON_payments "
-			. " where PayDate<='$GToDate' AND RequestID=?", array($reqObj->RequestID));
+			. " where PayDate<='$GToDate' AND RequestID=?", array($reqObj->RequestID));	
 	
-	if($reqObj->ReqPersonID*1 > 0)
-		$EventID = EVENT_LOANPAYMENT_agentSource;
-	else
-		$EventID = EVENT_LOANPAYMENT_innerSource;
-		
-	$eventobj = new ExecuteEvent(EVENT_LOANCHEQUE_payed);
 	foreach($pays as $pay)
 	{
+		$eventobj = new ExecuteEvent(EVENT_LOANCHEQUE_payed);
 		$eventobj->DocObj = $DocObj;
 		$eventobj->Sources = array($reqObj->RequestID, $partObj->PartID, $pay["PayID"]);
 		$eventobj->AllRowsAmount = $pay["PayAmount"];
@@ -336,53 +332,61 @@ function DailyWage($reqObj , $partObj, &$DocObj, $pdo){
 	$computeArr = LON_Computes::ComputePayments($reqObj->RequestID, $GToDate);
 	$totalLate = 0;
 	$totalPenalty = 0;
+	
 	foreach($computeArr as $row)
 	{
-		if($row["type"] == "installment")
+		if($row["type"] == "installment" && $row["InstallmentID"]*1 > 0 && count($row["pays"])>0)
 		{
-			$totalLate += $row["late"]*1;
-			$totalPenalty += $row["pnlt"]*1;
+			foreach($row["pays"] as $pay)
+			{
+				$totalLate += $pay["cur_late"]*1;
+				$totalPenalty += $pay["cur_pnlt"]*1;
+			}
 		}
 	}
-	
-	$EventID = $reqObj->ReqPersonID*1 == 0 ? EVENT_LOANDAILY_innerLate : EVENT_LOANDAILY_agentlate;
-	$EventObj = new ExecuteEvent($EventID);
-	$EventObj->DocObj = $DocObj;
-	$EventObj->AllRowsAmount = $totalLate;
-	$EventObj->Sources = array($reqObj->RequestID, $partObj->PartID, $GToDate);
-	if($EventObj->AllRowsAmount > 0)
+	$EventObj1 = new ExecuteEvent($reqObj->ReqPersonID*1 == 0 ? EVENT_LOANDAILY_innerLate : 
+																EVENT_LOANDAILY_agentlate);
+	$EventObj1->ComputedItems[ 82 ] = round(($partObj->FundWage/$partObj->CustomerWage)*$totalLate);
+	$EventObj1->ComputedItems[ 83 ] = $totalLate - round(($partObj->FundWage/$partObj->CustomerWage)*$totalLate);
+	if($EventObj1->ComputedItems[ 82 ] > 0 || $EventObj1->ComputedItems[ 83 ] > 0)
 	{
-		$result = $EventObj->RegisterEventDoc($pdo);
+		$EventObj1->DocObj = $DocObj;
+		$EventObj1->Sources = array($reqObj->RequestID, $partObj->PartID, $GToDate);
+		$result = $EventObj1->RegisterEventDoc($pdo);
 		if($result)
-			$DocObj = $EventObj->DocObj;
+			$DocObj = $EventObj1->DocObj;
+		echo "شناسایی کارمزد تاخیر : " . ($result ? "true" : "false"). "<br>"; 
+		if(ExceptionHandler::GetExceptionCount() > 0)
+		{
+			print_r(ExceptionHandler::PopAllExceptions());
+			$pdo->rollBack();
+			return;
+		}
+		ob_flush();flush();
 	}
-	echo "شناسایی کارمزد تاخیر : " . ($result ? "true" : "false") . "<br>";
-	if(ExceptionHandler::GetExceptionCount() > 0)
-	{
-		print_r(ExceptionHandler::PopAllExceptions());
-		$pdo->rollBack();
-		return;
-	}
-	ob_flush();flush();
+	//-----------------------------------------------------
+	$EventObj2 = new ExecuteEvent($reqObj->ReqPersonID*1 == 0 ? EVENT_LOANDAILY_innerPenalty : 
+																EVENT_LOANDAILY_agentPenalty);
+	$EventObj2->ComputedItems[ 84 ] = $partObj->ForfeitPercent == 0? 0 :
+			round(($partObj->FundForfeitPercent/$partObj->ForfeitPercent)*$totalPenalty);
+	$EventObj2->ComputedItems[ 85 ] = $partObj->ForfeitPercent == 0? 0 : 
+			$totalPenalty - round(($partObj->FundForfeitPercent/$partObj->ForfeitPercent)*$totalPenalty);
 	
-	$EventID = $reqObj->ReqPersonID*1 == 0 ? EVENT_LOANDAILY_innerPenalty : EVENT_LOANDAILY_agentPenalty;
-	$EventObj = new ExecuteEvent($EventID);
-	$EventObj->DocObj = $DocObj;
-	$EventObj->AllRowsAmount = $totalPenalty;
-	$EventObj->Sources = array($reqObj->RequestID, $partObj->PartID, $GToDate);
-	if($EventObj->AllRowsAmount > 0)
+	if($EventObj2->ComputedItems[ 84 ] > 0 || $EventObj2->ComputedItems[ 85 ] > 0)
 	{
-		$result = $EventObj->RegisterEventDoc($pdo);
+		$EventObj2->DocObj = $DocObj;
+		$EventObj2->Sources = array($reqObj->RequestID, $partObj->PartID, $GToDate);
+		$result = $EventObj2->RegisterEventDoc($pdo);
 		if($result)
-			$DocObj = $EventObj->DocObj;
+			$DocObj = $EventObj2->DocObj;
+		echo "شناسایی جریمه تاخیر : " . ($result ? "true" : "false") . "<br>";
+		if(ExceptionHandler::GetExceptionCount() > 0)
+		{
+			print_r(ExceptionHandler::PopAllExceptions());
+			$pdo->rollBack();
+			return;
+		}
+		ob_flush();flush();
 	}
-	echo "شناسایی جریمه تاخیر : " . ($result ? "true" : "false") . "<br>";
-	if(ExceptionHandler::GetExceptionCount() > 0)
-	{
-		print_r(ExceptionHandler::PopAllExceptions());
-		$pdo->rollBack();
-		return;
-	}
-	ob_flush();flush();
 }
 ?>

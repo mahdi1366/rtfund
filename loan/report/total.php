@@ -51,9 +51,12 @@ $page_rpg->addColumn("مبلغ تایید شده", "PartAmount");
 $page_rpg->addColumn("مبلغ پرداخت شده", "SumPayments");
 $page_rpg->addColumn("تعداد اقساط", "InstallmentCount");
 $page_rpg->addColumn("تنفس(ماه)", "DelayMonths");
+$page_rpg->addColumn("دوره پرداخت", "PayDuration");
 $page_rpg->addColumn("کارمزد مشتری", "CustomerWage");
 $page_rpg->addColumn("کارمزد صندوق", "FundWage");
-$page_rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
+$page_rpg->addColumn("کارمزد تاخیر", "LatePercent");
+$page_rpg->addColumn("درصد جریمه", "ForfeitPercent");
+$page_rpg->addColumn("سهم جریمه صندوق", "FundForfeitPercent");
 $page_rpg->addColumn("شماره قدیم", "imp_VamCode");
 $page_rpg->addColumn("تضامین", "tazamin");
 $page_rpg->addColumn("وضعیت", "StatusDesc");
@@ -389,9 +392,13 @@ function ListData($IsDashboard = false){
 	$col->EnableSummary();
 	$rpg->addColumn("تعداد اقساط", "InstallmentCount");
 	$rpg->addColumn("تنفس(ماه)", "DelayMonths");
+	$rpg->addColumn("دوره پرداخت", "PayDuration");
 	$rpg->addColumn("کارمزد مشتری", "CustomerWage");
 	$rpg->addColumn("کارمزد صندوق", "FundWage");
-	$rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
+	$rpg->addColumn("کارمزد تاخیر", "LatePercent");
+	$rpg->addColumn("درصد جریمه", "ForfeitPercent");
+	$rpg->addColumn("سهم جریمه صندوق", "FundForfeitPercent");
+	
 	$rpg->addColumn("شماره قدیم", "imp_VamCode");
 	//$rpg->addColumn("جاری/خاتمه", "IsEnded", "endedRender");
 	$rpg->addColumn("تضامین", "tazamin");

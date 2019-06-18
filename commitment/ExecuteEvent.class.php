@@ -9,7 +9,7 @@ require_once "ComputeItems.class.php";
 
 class ExecuteEvent {
 	
-	private $pdo;
+	private $pdo; 
 	public $EventID;
 	public $BranchID;
 	
@@ -53,10 +53,10 @@ class ExecuteEvent {
 			case EVENT_LOANDAILY_innerSource:
 			case EVENT_LOANDAILY_agentSource_committal:
 			case EVENT_LOANDAILY_agentSource_non_committal:
-			/*case EVENT_LOANDAILY_innerLate:
+			case EVENT_LOANDAILY_innerLate:
 			case EVENT_LOANDAILY_agentlate:
 			case EVENT_LOANDAILY_innerPenalty:
-			case EVENT_LOANDAILY_agentPenalty:*/
+			case EVENT_LOANDAILY_agentPenalty:
 				$this->EventFunction = "EventComputeItems::LoanDaily";
 				break;			
 		}
@@ -122,6 +122,7 @@ class ExecuteEvent {
 		$obj->DocID = $this->DocObj->DocID;
 		$obj->CostID = $eventRow["CostID"];
 		$obj->locked = "YES";
+		
 		//------------------ set amounts ------------------------
 		if($this->AllRowsAmount*1 > 0)
 		{

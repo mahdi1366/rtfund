@@ -17,7 +17,8 @@ if(isset($_REQUEST["show"]))
 	//............ get total loan amount ......................
 	$TotalAmount = LON_installments::GetTotalInstallmentsAmount($RequestID);
 	//............ get remain untill now ......................
-	$ComputeArr = LON_Computes::ComputePayments($RequestID);
+	$ComputeDate = !empty($_REQUEST["ComputeDate"]) ? $_REQUEST["ComputeDate"] : "";
+	$ComputeArr = LON_Computes::ComputePayments($RequestID, $ComputeDate);
 	$PureArr = LON_Computes::ComputePures($RequestID); 
 	//............ get remain untill now ......................
 	$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);

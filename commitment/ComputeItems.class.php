@@ -200,7 +200,7 @@ class EventComputeItems {
 	}
 	
 	static function LoanDaily($ItemID, $SourceObjects){
-		
+						
 		require_once '../loan/request/request.class.php';
 		
 		$ReqObj = new LON_requests((int)$SourceObjects[0]);
@@ -221,42 +221,15 @@ class EventComputeItems {
 				self::$LoanPuresArray[ $ReqObj->RequestID ] = $PureArr;
 			}
 
-			$totalPayPaySum = 0;
-			$paysWage = 0;
-			$firstInstallment = true;
-			$LastPureAmount = $PureArr[0]["totalPure"];
-			for($i=0; $i < count($PureArr);$i++)
+			$LastPureAmount = 0;
+			for($i=1; $i < count($PureArr);$i++)
 			{
-				if($PureArr[$i]["InstallmentAmount"] == 0 && $i>0)
+				if($ComputeDate < $PureArr[$i]["InstallmentDate"])
 				{
-					$days = DateModules::GDateMinusGDate($PureArr[$i]["InstallmentDate"], $PureArr[$i-1]["InstallmentDate"]);
-					$paysWage += $totalPayPaySum*$days*$PartObj->CustomerWage/36500;
+					$LastPureAmount = $PureArr[$i-1]["totalPure"];
+					break;
 				}
-
-				if($PureArr[$i]["InstallmentAmount"] == 0)
-					$totalPayPaySum += $PureArr[$i]["totalPure"];
-
-				if($PureArr[$i]["InstallmentDate"] < $ComputeDate)
-				{
-					$firstInstallment = $PureArr[$i]["InstallmentAmount"]*1 > 0 ? false : true;
-					continue;
-				}
-
-				if($i == 0)
-					return 0;
-
-				$LastPureAmount = $PureArr[$i-1]["totalPure"];
-
-				if($PureArr[$i]["InstallmentAmount"] > 0)
-				{
-					$LastPureAmount += $firstInstallment ? $paysWage : 0;
-					$firstInstallment = false;
-				}
-				break;
 			}
-			if($i == count($PureArr))
-				return 0;
-
 			$wage = round($LastPureAmount*$PartObj->CustomerWage/36500);
 
 			$wagePercent = $PartObj->CustomerWage;

@@ -219,6 +219,9 @@ define("EVENT_CHEQUE_BARGASHT_inner", 1770);
 define("EVENT_CHEQUE_BARGASHT_agent", 1775);
 define("EVENT_CHEQUE_BARGASHTHOGHUGHI_inner", 1771);
 define("EVENT_CHEQUE_BARGASHTHOGHUGHI_agent", 1776);
+
+//------------- CostCode params -----------
+define("CostCode_param_loan", "3");
 //------------- TypeIDs -----------
 define("TYPEID_MeetingType", 88);
 define("TYPEID_MeetingStatusID", 89);

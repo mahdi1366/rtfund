@@ -17,6 +17,8 @@ Ext.define('Ext.toolbar.ExtraBar', {
 	displayMsg : 'تعداد رکورد ها : {2}',
     emptyMsg : 'هيچ ركوردي وجود ندارد',
     refreshText : "Refresh",
+	ExcelButton : true,
+	
     getPagingItems: function() {
         var me = this;
         return ['-',
@@ -29,6 +31,7 @@ Ext.define('Ext.toolbar.ExtraBar', {
             scope: me
         },'-',{
             itemId: 'excel',
+			hidden : !this.ExcelButton,
             tooltip: "خروجی اکسل",
             overflowText: "خروجی اکسل",
             iconCls: 'excel',
