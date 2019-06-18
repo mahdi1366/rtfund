@@ -101,6 +101,18 @@ switch($ObjectType)
 		$obj = new MTG_meetings($ObjectID);
 		$access = $obj->StatusID == MTG_STATUSID_RAW ? true : false;
 		break;
+	case "meetingagenda":
+		require_once '../../meeting/meeting.class.php';
+		$aobj = new MTG_agendas($ObjectID);
+		$obj = new MTG_meetings($aobj->MeetingID);
+		$access = $aobj->MeetingID == "" || $obj->StatusID == MTG_STATUSID_RAW ? true : false;
+		break;
+	case "meetingrecord":
+		require_once '../../meeting/meeting.class.php';
+		$robj = new MTG_MeetingRecords($ObjectID);
+		$obj = new MTG_meetings($robj->MeetingID);
+		$access = $obj->StatusID == MTG_STATUSID_RAW ? true : false;
+		break;
 }
 //------------------------------------------------------
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "dms.data.php?" .

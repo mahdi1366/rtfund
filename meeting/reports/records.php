@@ -32,7 +32,7 @@ function MakeWhere(&$where, &$whereParam){
 				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 			continue;
 		
-		$prefix = "";
+		$prefix = "mr.";
 		
 		if($key == "fromFollowUpDate" || $key == "toFollowUpDate")
 			$value = DateModules::shamsi_to_miladi($value, "-");
@@ -42,8 +42,8 @@ function MakeWhere(&$where, &$whereParam){
 		else if(strpos($key, "to") === 0)
 			$where .= " AND " . $prefix . substr($key,2) . " <= :$key";
 		else
-			$where .= " AND " . $prefix . $key . " = :$key";
-		$whereParam[":$key"] = $value;
+			$where .= " AND " . $prefix . $key . " like :$key";
+		$whereParam[":$key"] = "%" . $value . "%";
 	}
 }	
 
@@ -70,7 +70,7 @@ function GetData(){
 	
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		echo PdoDataAccess::GetLatestQueryString();
+		//echo PdoDataAccess::GetLatestQueryString();
 		print_r(ExceptionHandler::PopAllExceptions());
 	}
 	return $dataTable;
@@ -180,7 +180,10 @@ function MeetingReport_records()
 		},
 		bodyStyle : "text-align:right;padding:5px",
 		title : "گزارش مصوبات",
-		width : 600,
+		width : 700,
+		defaults : {
+			width : 300
+		},
 		items :[{
 			xtype : "combo",
 			hiddenName : "MeetingType",
@@ -211,6 +214,19 @@ function MeetingReport_records()
 			}),
 			displayField: 'fullname',
 			valueField : "PersonID"
+		},{
+			xtype : "textfield",
+			name : "subject",
+			fieldLabel : "موضوع"
+		},{
+			xtype : "textfield",
+			name : "keywords",
+			fieldLabel : "کلمات کلیدی"
+		},{
+			xtype : "textfield",
+			name : "details",
+			colspan : 2,
+			fieldLabel : "شرح مصوبه"
 		},{
 			xtype : "shdatefield",
 			name : "fromFollowUpDate",

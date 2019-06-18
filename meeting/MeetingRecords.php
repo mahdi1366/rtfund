@@ -35,6 +35,11 @@ $col = $dg->addColumn("وضعیت", "RecordStatus", "");
 $col->renderer = "MTG_MeetingRecords.StatusRender";
 $col->width = 80;
 
+$col = $dg->addColumn("پیوست", "");
+$col->sortable = false;
+$col->renderer = "function(v,p,r){return MTG_MeetingRecords.attachRender(v,p,r);}";
+$col->width = 50;
+
 $col = $dg->addColumn("ابلاغ", "");
 $col->sortable = false;
 $col->renderer = "function(v,p,r){return MTG_MeetingRecords.LetterRender(v,p,r);}";
@@ -122,7 +127,7 @@ function MTG_MeetingRecords(){
 				xtype : "textarea",
 				name : "details",
 				width : 550,
-				fieldLabel : "توضیحات",
+				fieldLabel : "شرح مصوبه",
 				rows : 4
 			},{
 				xtype : "textfield",
@@ -204,6 +209,14 @@ MTG_MeetingRecords.LetterRender = function(v,p,r){
 	
 	return "<div align='center' title='ابلاغ مصوبه' class='letter' "+
 	"onclick='MTG_MeetingRecordsObject.ShowLetterWindow();' " +
+	"style='background-repeat:no-repeat;background-position:center;" +
+	"cursor:pointer;width:100%;height:16'></div>";
+}
+
+MTG_MeetingRecords.attachRender = function(v,p,r){
+	
+	return "<div align='center' title='پیوست' class='attach' "+
+	"onclick='MTG_MeetingRecordsObject.RecordDocuments();' " +
 	"style='background-repeat:no-repeat;background-position:center;" +
 	"cursor:pointer;width:100%;height:16'></div>";
 }
@@ -299,6 +312,10 @@ MTG_MeetingRecords.prototype.ShowLetterWindow = function(){
 			autoHeight : true,
 			modal : true,
 			items : [{
+				xtype : "textfield",
+				name : "subject",
+				fieldLabel : "عنوان"
+			},{
 				xtype : "combo",
 				store: new Ext.data.Store({
 					proxy:{
@@ -392,7 +409,8 @@ MTG_MeetingRecords.prototype.SendLetter = function(){
 			params:{
 				task: "SendRecordLetter",
 				RecordID : record.data.RecordID,
-				persons : Ext.encode(me.LetterPersons)
+				persons : Ext.encode(me.LetterPersons),
+				subject : me.LetterWin.down("[name=subject]").getValue()
 			},
 			method: 'POST',
 
@@ -412,6 +430,43 @@ MTG_MeetingRecords.prototype.SendLetter = function(){
 			},
 			failure: function(){}
 		});
+	});
+}
+
+MTG_MeetingRecords.prototype.RecordDocuments = function(){
+
+	if(!this.documentWin)
+	{
+		this.documentWin = new Ext.window.Window({
+			width : 720,
+			height : 440,
+			modal : true,
+			bodyStyle : "background-color:white;padding: 0 10px 0 10px",
+			closeAction : "hide",
+			loader : {
+				url : "../../office/dms/documents.php",
+				scripts : true
+			},
+			buttons :[{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		Ext.getCmp(this.TabID).add(this.documentWin);
+	}
+
+	this.documentWin.show();
+	this.documentWin.center();
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.documentWin.loader.load({
+		scripts : true,
+		params : {
+			ExtTabID : this.documentWin.getEl().id,
+			ObjectType : 'meetingrecord',
+			ObjectID : record.data.RecordID
+		}
 	});
 }
 

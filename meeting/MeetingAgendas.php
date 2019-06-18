@@ -40,7 +40,8 @@ if($accessObj->AddFlag && !$readOnly)
 	$dg->rowEditOkHandler = "function(v,p,r){ return MTG_MeetingAgendaObject.Save(v,p,r);}";
 }
 
-$dg->addButton("", "چاپ دعوتنامه ها", "print", "function(){MTG_MeetingAgendaObject.PrintAgenda();}");
+$dg->addButton("", "چاپ دعوتنامه", "print", "function(){MTG_MeetingAgendaObject.PrintAgenda();}");
+$dg->addButton("", "ابلاغ دعوتنامه", "letter", "function(){MTG_MeetingAgendaObject.ShowLetterWindow();}");
 
 if($accessObj->RemoveFlag && !$readOnly)
 {
@@ -141,6 +142,9 @@ MTG_MeetingAgenda.prototype = {
 
 	MeetingID : "<?= $MeetingID ?>",
 	readOnly : <?= $readOnly ? "true" : "false"?>,
+	
+	LetterPersons : new Array(),
+	LetterPersonNames : new Array(),
 	
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
@@ -335,6 +339,138 @@ MTG_MeetingAgenda.prototype.AddRemainAgenda = function(){
 	});
 }
 
+MTG_MeetingAgenda.prototype.ShowLetterWindow = function(){
+	
+	if(!this.LetterWin)
+	{
+		this.LetterWin = new Ext.Window({
+			width : 500,
+			title : "ابلاغ دعوتنامه",
+			autoHeight : true,
+			modal : true,
+			items : [{
+				xtype : "textfield",
+				name : "subject",
+				fieldLabel : "عنوان"
+			},{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ['PersonID','fullname']
+				}),
+				fieldLabel : "کاربر",
+				displayField: 'fullname',
+				valueField : "PersonID",
+				name : "PersonID",
+				width : 480
+			},{
+				xtype : "container",
+				layout : "hbox",
+				style : "margin-right:110px",
+				items : [{
+					xtype : "button",
+					text : "اضافه به لیست",
+					iconCls : "add",
+					handler : function(){
+						me = MTG_MeetingAgendaObject;
+						PersonComp = me.LetterWin.down('[name=PersonID]');
+						PersonRecord = PersonComp.getStore().getAt( 
+								PersonComp.getStore().find("PersonID", PersonComp.getValue()) );
+
+						me.LetterPersons.push(PersonRecord.data.PersonID);
+						me.LetterPersonNames.push(new Array(PersonRecord.data.fullname));
+						me.LetterWin.down("[itemId=GroupList]").bindStore(me.LetterPersonNames);
+						PersonComp.setValue();
+					}
+				},{
+					xtype : "button",
+					text : "حذف از لیست",
+					iconCls : "cross",
+					handler : function(){
+
+						me = MTG_MeetingAgendaObject;
+						el = me.LetterWin.down("[itemId=GroupList]");
+						index = el.getStore().indexOf(el.getSelected()[0]);
+						if(index >= 0)
+						{
+							me.LetterPersons.splice(index,1);
+							me.LetterPersonNames.splice(index,1);
+							el.clearValue();
+							el.bindStore(me.LetterPersonNames);
+						}
+					}
+				}]
+			},{
+				xtype : "multiselect",
+				itemId : "GroupList",
+				store : this.LetterPersonNames,
+				height : 100,
+				width : 480
+			}],
+			buttons : [{
+				text : "ارسال نامه",
+				iconCls : "send",
+				handler : function(){ MTG_MeetingAgendaObject.SendLetter(); }
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.LetterWin);
+	}
+	
+	this.LetterWin.show();
+	this.LetterWin.center();
+}
+
+MTG_MeetingAgenda.prototype.SendLetter = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به ابلاغ نامه دعوتنامه می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = MTG_MeetingAgendaObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'meeting.data.php',
+			params:{
+				task: "SendAgendaLetter",
+				MeetingID : record.data.MeetingID,
+				persons : Ext.encode(me.LetterPersons),
+				subject : me.LetterWin.down("[name=subject]").getValue()
+			},
+			method: 'POST',
+
+			success: function(response){
+				res = Ext.decode(response.responseText);
+				mask.hide();
+				if(res.success)
+				{
+					MTG_MeetingAgendaObject.LetterWin.hide();
+					Ext.MessageBox.alert("","نامه ابلاغ دعوتنامه با موفقیت به افراد مورد نظر ارسال گردید");
+				}
+				else if(res.data == "")
+					Ext.MessageBox.alert("",res.data);
+				else
+					Ext.MessageBox.alert("Error","عملیات مورد نظر با شکست مواجه گردید");
+					
+			},
+			failure: function(){}
+		});
+	});
+}
+
+
 MTG_MeetingAgenda.prototype.AgendaDocuments = function(){
 
 	if(!this.documentWin)
@@ -366,8 +502,8 @@ MTG_MeetingAgenda.prototype.AgendaDocuments = function(){
 		scripts : true,
 		params : {
 			ExtTabID : this.documentWin.getEl().id,
-			ObjectType : 'meetingaganda',
-			ObjectID : record.data.AgandaID
+			ObjectType : 'meetingagenda',
+			ObjectID : record.data.AgendaID
 		}
 	});
 }
