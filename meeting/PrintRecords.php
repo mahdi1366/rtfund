@@ -22,7 +22,7 @@ $rpt->header_alignment = "center";
 $rpt->rowNumber = false;
 
 function titleRender($row,$value){
-	return "<span dir=ltr>" . $value . "<br>" . hebrevc($row["details"]) . "</div>";
+	return "<span>" . $value . "<br>" . nl2br($row["details"]) . "</div>";
 }
 $col = $rpt->addColumn("خلاصه مصوبات", "subject");
 $col->renderFunction = "titleRender";
@@ -61,7 +61,8 @@ $absents = $absents->fetchAll();
 		td { font-family: Nazanin; font-size: 12pt; line-height: 25px; }
 		#footer {width:20cm;}
 		#footer td{ border: 1px solid black; text-align: center}
-		#presents td{text-align: right; border-color: white;}
+		#presents td{text-align: right; border-color: white; height: 80px;
+		   background-size: 200px; background-repeat: no-repeat; background-position: center left;}
 	</style>	
 	<body dir="rtl">
 		<center>
@@ -121,11 +122,23 @@ $absents = $absents->fetchAll();
 						<td>
 							<table id="presents" width="100%">
 							<?
+							function data_uri($content, $mime) {
+								$base64 = base64_encode($content);
+								return ('data:' . $mime . ';base64,' . $base64);
+							}
 							for($i=0; $i<count($presents); $i++)
 							{
+								$signPic = "";
+								if($presents[$i]["IsSign"] == "YES")
+								{
+									$personObj = new BSC_persons($presents[$i]["PersonID"]);
+									if($personObj->PersonSign != "")
+										$signPic = "style=\"background-image:url('" . data_uri($personObj->PersonSign,'image/jpeg') . "')\"";
+								}
+								
 								if($i % 2 == 0)
 									echo "<tr>";
-								echo "<td>" . $presents[$i]["fullname"] . "</td>";
+								echo "<td $signPic>" . $presents[$i]["fullname"] . "</td>";
 								if($i % 2 != 0)
 									echo "</tr>";
 							}
