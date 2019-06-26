@@ -36,6 +36,7 @@ class MTG_meetings extends OperationClass {
 	public $EndTime;
 	public $details;
 	public $secretary;
+	public $InPortal;
 	
 	public $_MeetingTypeDesc;
 	public $_secretaryName;

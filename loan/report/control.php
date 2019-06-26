@@ -50,6 +50,9 @@ function MakeWhere(&$where, &$whereParam){
 
 		if($key == "IsEndedInclude" || $key == "ZeroRemain")
 			continue;
+		
+		if($key == "fromDoc" || $key == "toDoc" || $key == "ComputeDate")
+			continue;
 
 		$prefix = "";
 		switch($key)
@@ -92,7 +95,9 @@ function GetData(){
 	$query = "select r.RequestID,r.*,l.*,p.*,bi.InfoDesc StatusDesc,
 				concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) ReqFullname,
 				concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) LoanFullname,
-				BranchName				
+				BranchName,
+				t_pay.SumPayments,
+				t.TafsiliID
 				
 			from LON_requests r 
 			left join BaseInfo bi on(bi.TypeID=5 AND bi.InfoID=StatusID)
@@ -101,6 +106,12 @@ function GetData(){
 			join BSC_branches using(BranchID)
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
+			join ACC_tafsilis t on(t.TafsiliType=".TAFSILITYPE_PERSON." AND t.ObjectID=r.LoanPersonID)
+			left join (
+				select RequestID,sum(PayAmount) SumPayments 
+				from LON_payments 
+				group by RequestID			
+			)t_pay on(r.RequestID=t_pay.RequestID)
 			
 			where 1=1 " . $where . " order by r.RequestID";
 	
@@ -111,23 +122,27 @@ function GetData(){
 	global $c_dt;
 	$c_dt = PdoDataAccess::runquery("
 		select CostID,CostCode,concat(CostCode,'<br>',concat_ws(' - ' , b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc)) CostDesc,b1.essence
-		from ACC_DocItems join ACC_docs using(DocID)
+		from ACC_DocItems 
+		join ACC_docs using(DocID)
 		join ACC_CostCodes cc using(CostID)
 		join ACC_blocks b1 on(level1=b1.BlockID)
 		left join ACC_blocks b2 on(level2=b2.BlockID)
 		left join ACC_blocks b3 on(level3=b3.BlockID)
 		left join ACC_blocks b4 on(level4=b4.BlockID)
 		where CycleID=" . $_SESSION["accounting"]["CycleID"] . " AND 
-		(cc.param1 = ".ACC_COST_PARAM_LOAN_RequestID." or cc.param2=".ACC_COST_PARAM_LOAN_RequestID." or cc.param3=".ACC_COST_PARAM_LOAN_RequestID.")
-		group by CostID");
+		(cc.param1 = ".ACC_COST_PARAM_LOAN_RequestID." or "
+			. "cc.param2=".ACC_COST_PARAM_LOAN_RequestID." or "
+			. "cc.param3=".ACC_COST_PARAM_LOAN_RequestID.")
+		 group by CostID");
 	//-------------------------------------------------------
 	for($i=0; $i<count($dt); $i++){
 		
 		$row = &$dt[$i];	
 		
-		$computeArr = LON_Computes::ComputePayments($row["RequestID"]);
-		$remain = LON_Computes::GetCurrentRemainAmount($row["RequestID"],$computeArr);
-		$RemainArr = LON_Computes::GetRemainAmounts($row["RequestID"],$computeArr);
+		$ComputeDate = !empty($_REQUEST["ComputeDate"]) ? $_REQUEST["ComputeDate"] : "";
+		$computeArr = LON_Computes::ComputePayments($row["RequestID"],$ComputeDate);
+		$remain = LON_Computes::GetCurrentRemainAmount($row["RequestID"],$computeArr, $ComputeDate);
+		$RemainArr = LON_Computes::GetRemainAmounts($row["RequestID"],$computeArr, $ComputeDate);
 		
 		$row["remain_pure"] = $RemainArr["remain_pure"];
 		$row["remain_wage"] = $RemainArr["remain_wage"];
@@ -135,6 +150,18 @@ function GetData(){
 		$row["remain_pnlt"] = $RemainArr["remain_pnlt"];
 		$row["TotalRemainder"] = $remain;
 		
+		$where = "";
+		$params = array(":r"=>$row["RequestID"]);
+		if(!empty($_POST["fromDoc"]))
+		{
+			$where .= " AND LocalNo >= :fdoc";
+			$params[":fdoc"] = $_POST["fromDoc"];
+		}
+		if(!empty($_POST["toDoc"]))
+		{
+			$where .= " AND LocalNo <= :tdoc";
+			$params[":tdoc"] = $_POST["toDoc"];
+		}
 		$cv_dt = PdoDataAccess::runquery("
 			select CostID,CostCode,sum(CreditorAmount-DebtorAmount) remainCost
 				from ACC_DocItems di join ACC_docs using(DocID)
@@ -144,8 +171,8 @@ function GetData(){
 						if(cc.param1=".ACC_COST_PARAM_LOAN_RequestID.",di.param1=:r,1=0) OR
 						if(cc.param2=".ACC_COST_PARAM_LOAN_RequestID.",di.param2=:r,1=0) OR
 						if(cc.param3=".ACC_COST_PARAM_LOAN_RequestID.",di.param3=:r,1=0)
-					)						
-				group by CostID", array(":r"=>$row["RequestID"]));
+					)" . $where . "						
+				group by CostID", $params);
 		$cv_ref = array();
 		foreach($cv_dt as $cv_row)
 			$cv_ref[ $cv_row["CostID"] ] = $cv_row["remainCost"];
@@ -169,7 +196,7 @@ function ListData($IsDashboard = false){
 	$rpg->mysql_resource = GetData();
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		print_r(ExceptionHandler::PopAllExceptions());
+		//print_r(ExceptionHandler::PopAllExceptions());
 		//echo PdoDataAccess::GetLatestQueryString();
 	}
 	function endedRender($row,$value){
@@ -180,14 +207,19 @@ function ListData($IsDashboard = false){
 		return "<a href=LoanPayment.php?show=tru&RequestID=" . $row["RequestID"] . " target=blank >" . number_format($value) . "</a>";
 	}
 	$col = $rpg->addColumn("شماره وام", "RequestID", "LoanRender");
+	$col->ExcelRender = false;
 	$col = $rpg->addColumn("نوع وام", "LoanDesc");
 	$col = $rpg->addColumn("معرفی کننده", "ReqFullname");
 	$col = $rpg->addColumn("مشتری", "LoanFullname");
+	$col = $rpg->addColumn("تفصیلی مشتری", "TafsiliID");
+	
 	$col = $rpg->addColumn("شعبه", "BranchName");
 	$rpg->addColumn("وضعیت", "StatusDesc");
 	$col = $rpg->addColumn("تاریخ درخواست", "ReqDate", "ReportDateRender");
 	
 	$col = $rpg->addColumn("مبلغ درخواست", "ReqAmount", "ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpg->addColumn("مبلغ پرداختی", "SumPayments", "ReportMoneyRender");
 	$col->EnableSummary();
 		
 	$col = $rpg->addColumn("کل مانده وام", "TotalRemainder", "ReportMoneyRender");
@@ -395,6 +427,16 @@ function LoanReport_control()
 			hideTrigger : true,
 			fieldLabel : "تا شماره"
 		},{
+			xtype : "numberfield",
+			name : "fromDoc",
+			hideTrigger : true,
+			fieldLabel : "شماره سند از"
+		},{
+			xtype : "numberfield",
+			name : "toDoc",
+			hideTrigger : true,
+			fieldLabel : "تا شماره"
+		},{
 			xtype : "shdatefield",
 			name : "fromReqDate",
 			fieldLabel : "تاریخ وام از"
@@ -402,6 +444,10 @@ function LoanReport_control()
 			xtype : "shdatefield",
 			name : "toReqDate",
 			fieldLabel : "تا تاریخ وام"
+		},{
+			xtype : "shdatefield",
+			name : "ComputeDate",
+			fieldLabel : "محاسبه تا تاریخ"
 		},{
 			xtype : "container",
 			colspan : 2,

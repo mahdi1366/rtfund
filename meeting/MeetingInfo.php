@@ -50,7 +50,7 @@ function MeetingInfo(){
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
 		fields : ["MeetingID","MeetingType","place","MeetingDate","StartTime","EndTime",
-			"details","secretary","StatusID"],
+			"details","secretary","StatusID","InPortal"],
 		
 		listeners : {
 			load : function(){
@@ -213,6 +213,12 @@ MeetingInfo.prototype.BuildForms = function(){
 					displayField: 'fullname',
 					valueField : "PersonID",
 					colspan : 2
+				},{
+					xtype : "checkbox",
+					readOnly : readOnly,
+					name : "InPortal",
+					inputValue : "YES",
+					boxLabel : "نمایش دعوتنامه در پورتال برای شرکت کنندگان در جلسه"
 				}],
 				buttons : [{
 					text : "ذخیره",

@@ -228,7 +228,7 @@ FRW_menu.prototype.BeforeSave = function(EditMode,IsMenu){
 	}
 	else
 	{
-		if(record.data.id == "1000")
+		if(record.parentNode.data.id == "1000")
 			this.infoWin.down("[itemId=FS_UserTypes]").show();
 	}
 	

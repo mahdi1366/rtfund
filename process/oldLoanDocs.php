@@ -13,14 +13,14 @@ ini_set('max_execution_time', 30000);
 ini_set('memory_limit','2000M');
 
 global $GToDate;
-$GToDate = '2018-03-20'; //1396/12/29
-//$GToDate = '2019-03-20'; //1397/12/29
+//$GToDate = '2018-03-20'; //1396/12/29
+$GToDate = '2019-03-20'; //1397/12/29
 
 $reqs = PdoDataAccess::runquery_fetchMode(" select r.RequestID from LON_requests r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
-	where PartDate<='$GToDate' 	" . 
+	where PartDate<='$GToDate'  " . 
 		(!empty($_REQUEST["ReqID"]) ? " AND r.RequestID >= ".$_REQUEST["ReqID"] : "" ) . "
-		AND ComputeMode='NEW' AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
+		AND ComputeMode<>'NEW' AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
 		order by RequestID");
 //echo PdoDataAccess::GetLatestQueryString();
 $pdo = PdoDataAccess::getPdoObject();
@@ -216,6 +216,123 @@ function BackPayCheques($reqObj , $partObj, &$DocObj, $pdo){
 			$DocObj = $eventobj->DocObj;
 	}
 	echo "دریافت چک : " . ($result ? "true" : "false") . "<br>";
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		print_r(ExceptionHandler::PopAllExceptions());
+		$pdo->rollBack();
+		return;
+	}
+	ob_flush();flush();
+	//--------------در جریان وصول------------------------
+	$cheques = PdoDataAccess::runquery(
+			"select * from LON_BackPays
+				join ACC_IncomeCheques i using(IncomeChequeID) 
+				where RequestID=? AND ChequeStatus <>".INCOMECHEQUE_NOTVOSUL." order by PayDate"
+			, array($reqObj->RequestID));
+	foreach($cheques as $bpay)
+	{
+		if($reqObj->ReqPersonID*1 > 0)
+			$EventID = EVENT_CHEQUE_SENDTOBANK_agent;
+		else
+			$EventID = EVENT_CHEQUE_SENDTOBANK_inner;
+		
+		$eventobj = new ExecuteEvent($EventID);
+		$eventobj->Sources = array($reqObj->RequestID, $bpay["IncomeChequeID"]);
+		$eventobj->DocObj = $DocObj;
+		$eventobj->AllRowsAmount = $bpay["PayAmount"];
+		$result = $eventobj->RegisterEventDoc($pdo);
+		if($result)
+			$DocObj = $eventobj->DocObj;
+	}
+	echo " چکهای درجریان وصول : " . ($result ? "true" : "false") . "<br>";
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		print_r(ExceptionHandler::PopAllExceptions());
+		$pdo->rollBack();
+		return;
+	}
+	ob_flush();flush();
+	//--------------برگشتی------------------------
+	$cheques = PdoDataAccess::runquery(
+			"select * from LON_BackPays
+				join ACC_IncomeCheques i using(IncomeChequeID) 
+				where RequestID=? AND ChequeStatus=".INCOMECHEQUE_BARGASHTI." order by PayDate"
+			, array($reqObj->RequestID));
+	foreach($cheques as $bpay)
+	{
+		if($reqObj->ReqPersonID*1 > 0)
+			$EventID = EVENT_CHEQUE_BARGASHT_agent;
+		else
+			$EventID = EVENT_CHEQUE_BARGASHT_inner;
+		
+		$eventobj = new ExecuteEvent($EventID);
+		$eventobj->Sources = array($reqObj->RequestID, $bpay["IncomeChequeID"]);
+		$eventobj->DocObj = $DocObj;
+		$eventobj->AllRowsAmount = $bpay["PayAmount"];
+		$result = $eventobj->RegisterEventDoc($pdo);
+		if($result)
+			$DocObj = $eventobj->DocObj;
+	}
+	echo " چکهای برگشتی : " . ($result ? "true" : "false") . "<br>";
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		print_r(ExceptionHandler::PopAllExceptions());
+		$pdo->rollBack();
+		return;
+	}
+	ob_flush();flush();
+	//----------------مسترد و تعویض----------------------------
+	$cheques = PdoDataAccess::runquery(
+			"select * from LON_BackPays
+				join ACC_IncomeCheques i using(IncomeChequeID) 
+				where RequestID=? AND ChequeStatus in(".INCOMECHEQUE_CHANGE.",".INCOMECHEQUE_MOSTARAD.")
+				order by PayDate"
+			, array($reqObj->RequestID));
+	foreach($cheques as $bpay)
+	{
+		if($reqObj->ReqPersonID*1 > 0)
+			$EventID = EVENT_CHEQUE_MOSTARAD_agent;
+		else
+			$EventID = EVENT_CHEQUE_MOSTARAD_inner;
+		
+		$eventobj = new ExecuteEvent($EventID);
+		$eventobj->Sources = array($reqObj->RequestID, $bpay["IncomeChequeID"]);
+		$eventobj->DocObj = $DocObj;
+		$eventobj->AllRowsAmount = $bpay["PayAmount"];
+		$result = $eventobj->RegisterEventDoc($pdo);
+		if($result)
+			$DocObj = $eventobj->DocObj;
+	}
+	echo " چکهای مسترد : " . ($result ? "true" : "false") . "<br>";
+	if(ExceptionHandler::GetExceptionCount() > 0)
+	{
+		print_r(ExceptionHandler::PopAllExceptions());
+		$pdo->rollBack();
+		return;
+	}
+	ob_flush();flush();
+	//-------------------برگشتی مسترد-------------------------
+	$cheques = PdoDataAccess::runquery(
+			"select * from LON_BackPays
+				join ACC_IncomeCheques i using(IncomeChequeID) 
+				where RequestID=? AND ChequeStatus=".INCOMECHEQUE_BARGASHTI_MOSTARAD." order by PayDate"
+			, array($reqObj->RequestID));
+	foreach($cheques as $bpay)
+	{
+		if($reqObj->ReqPersonID*1 > 0)
+			$EventID = EVENT_CHEQUE_BARGASHTMOSTARAD_agent;
+		else
+			$EventID = EVENT_CHEQUE_BARGASHTMOSTARAD_inner;
+		
+		$eventobj = new ExecuteEvent($EventID);
+		$eventobj->Sources = array($reqObj->RequestID, $bpay["IncomeChequeID"]);
+		$eventobj->DocObj = $DocObj;
+		$eventobj->AllRowsAmount = $bpay["PayAmount"];
+		$result = $eventobj->RegisterEventDoc($pdo);
+		if($result)
+			$DocObj = $eventobj->DocObj;
+	}
+	echo " چکهای برگشتی مسترد : " . ($result ? "true" : "false") . "<br>";
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
 		print_r(ExceptionHandler::PopAllExceptions());

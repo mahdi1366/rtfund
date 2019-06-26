@@ -969,6 +969,7 @@ function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false, $pdo2
 		$obj2 = new LON_installments();
 		$obj2->RequestID = $RequestID;
 		$obj2->InstallmentDate = $installmentDate;
+		$obj2->wage = round($totalWage/$partObj->InstallmentCount);
 		$obj2->InstallmentAmount = round($partObj->PartAmount/$partObj->InstallmentCount) + 
 				round($totalWage/$partObj->InstallmentCount);
 		

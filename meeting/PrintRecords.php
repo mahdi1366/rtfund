@@ -61,8 +61,8 @@ $absents = $absents->fetchAll();
 		td { font-family: Nazanin; font-size: 12pt; line-height: 25px; }
 		#footer {width:20cm;}
 		#footer td{ border: 1px solid black; text-align: center}
-		#presents td{text-align: right; border-color: white; height: 80px;
-		   background-size: 200px; background-repeat: no-repeat; background-position: center left;}
+		#presents td{text-align: right; border-color: white; width:50%}
+		#presents td img{width: 150px; vertical-align: middle;}
 	</style>	
 	<body dir="rtl">
 		<center>
@@ -133,12 +133,12 @@ $absents = $absents->fetchAll();
 								{
 									$personObj = new BSC_persons($presents[$i]["PersonID"]);
 									if($personObj->PersonSign != "")
-										$signPic = "style=\"background-image:url('" . data_uri($personObj->PersonSign,'image/jpeg') . "')\"";
+										$signPic = "<img src='" . data_uri($personObj->PersonSign,'image/jpeg') . "' />";
 								}
 								
 								if($i % 2 == 0)
 									echo "<tr>";
-								echo "<td $signPic>" . $presents[$i]["fullname"] . "</td>";
+								echo "<td>" . $presents[$i]["fullname"] . $signPic . "</td>";
 								if($i % 2 != 0)
 									echo "</tr>";
 							}

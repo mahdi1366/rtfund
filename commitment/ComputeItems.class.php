@@ -63,11 +63,17 @@ class EventComputeItems {
 				if($ItemID == 16)
 					return $result["CustomerDelay"];
 				if($ItemID == 17)
-					return round($result["CustomerDelay"]*$PartObj->PartAmount/
-						($wage["CustomerWage"]*1 + $PartObj->PartAmount*1));
+				{
+					return $result["CustomerDelay"];
+					/*return round($result["CustomerDelay"]*$PartObj->PartAmount/
+						($wage["CustomerWage"]*1 + $PartObj->PartAmount*1));*/
+				}
 				if($ItemID == 18)
-					return $result["CustomerDelay"]*1 - round($result["CustomerDelay"]*$PartObj->PartAmount/
-						($wage["CustomerWage"]*1 + $PartObj->PartAmount*1));
+				{
+					return 0;
+					/*return $result["CustomerDelay"]*1 - round($result["CustomerDelay"]*$PartObj->PartAmount/
+						($wage["CustomerWage"]*1 + $PartObj->PartAmount*1));*/
+				}
 				
 			case 6 : // مبلغ تضمین
 				$dt =  array();
@@ -210,17 +216,27 @@ class EventComputeItems {
 		if($ItemID == "80" || $ItemID == "81")
 		{
 
-			if($PartObj->CustomerWage*1 == 0 || $PartObj->ComputeMode != "NEW" )
+			if($PartObj->CustomerWage*1 == 0 || 
+				( $PartObj->ComputeMode != "NEW" && $PartObj->ComputeMode != "NOAVARI"))
 				return 0; 
 
 			if(isset(self::$LoanPuresArray[ $ReqObj->RequestID ]))
 				$PureArr = self::$LoanPuresArray[ $ReqObj->RequestID ];
 			else 
 			{
-				$PureArr = LON_requests::ComputePures($ReqObj->RequestID);
-				self::$LoanPuresArray[ $ReqObj->RequestID ] = $PureArr;
+				$result = LON_requests::GetWageAmounts($ReqObj->RequestID);
+				if($result["CustomerWage"] == 0)
+					self::$LoanPuresArray[ $ReqObj->RequestID ] = 0;
+				else
+				{
+					$PureArr = LON_requests::ComputePures($ReqObj->RequestID);
+					self::$LoanPuresArray[ $ReqObj->RequestID ] = $PureArr;
+				}
 			}
 
+			if($PureArr === 0)
+				return 0;
+			
 			$LastPureAmount = 0;
 			for($i=1; $i < count($PureArr);$i++)
 			{

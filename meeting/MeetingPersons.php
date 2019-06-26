@@ -5,9 +5,12 @@
 require_once('../header.inc.php');
 require_once inc_dataGrid;
 require_once 'meeting.class.php';
-
+ini_set("display_errors", "On");
 //................  GET ACCESS  .....................
-$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+if(session::IsFramework())
+	$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+else
+	$accessObj = FRW_access::GetAccess(0);
 //...................................................
 
 $MeetingID = (int)$_REQUEST["MeetingID"];
@@ -31,6 +34,11 @@ $col->width = 120;
 
 $col = $dg->addColumn("وضعیت حضور", "IsPresent", "");
 $col->renderer = "MTG_MeetingPersons.AttendRender";
+$col->align = "center";
+$col->width = 80;
+
+$col = $dg->addColumn("وضعیت امضاء", "IsSign", "");
+$col->renderer = sadaf_datagrid::booleanRender("YES","sign.png","");
 $col->align = "center";
 $col->width = 80;
 

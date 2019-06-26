@@ -651,6 +651,13 @@ class sadaf_datagrid
 		$this->CurrencyStringRowDataIndex = $summaryColumnIndex;
 	}
 
+	static function booleanRender($trueValue = "YES", $trueIcon = "tick.gif", $falseIcon = "cross.gif"){
+		return "function(v,p,r){ ".
+					"if(v == '".$trueValue."') return '<img src=/generalUI/icons/".$trueIcon.">';".
+				($falseIcon != "" ? " else return '<img src=/generalUI/icons/".$falseIcon.">';" : "").
+				" }";
+	}
+	
 	static function checkRender($checkValue = "1", $crossShow = false){
 		return "function(v,p,r){ ".
 					"if(v == '".$checkValue."') return '<img src=/generalUI/icons/tick.gif>';".

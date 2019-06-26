@@ -168,6 +168,14 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("جمع بدهکار", "bdSum","ReportMoneyRender");
 	$rpg->addColumn("جمع بسنانکار", "bsSum","ReportMoneyRender");
 	
+	if(isset($_POST["NotTaraz"]))
+	{
+		function diffRender($row, $val){
+			return number_format($row["bdSum"]*1 - $row["bsSum"]*1);
+		}
+		$rpg->addColumn("اختلاف", "bsSum","diffRender");
+	}	
+	
 	$rpg->rowColorRender = "RowColorRender";
 	function RowColorRender($row){
 		if($row["StatusID"] == ACC_STEPID_RAW)

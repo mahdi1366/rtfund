@@ -97,6 +97,8 @@ define("INCOMECHEQUE_BARGASHTI", "3004");
 define("INCOMECHEQUE_CHANGE", "3011");
 define("INCOMECHEQUE_SANDOGHAMANAT", "3012");
 define("INCOMECHEQUE_BARGASHTI_HOGHUGHI", "3013");
+define("INCOMECHEQUE_MOSTARAD", "3008");
+define("INCOMECHEQUE_BARGASHTI_MOSTARAD", "3009");
 define("INCOMECHEQUE_EDIT", "3333");
 
 //............  TypeID=6 ....................
@@ -220,6 +222,10 @@ define("EVENT_CHEQUE_BARGASHT_inner", 1770);
 define("EVENT_CHEQUE_BARGASHT_agent", 1775);
 define("EVENT_CHEQUE_BARGASHTHOGHUGHI_inner", 1771);
 define("EVENT_CHEQUE_BARGASHTHOGHUGHI_agent", 1776);
+define("EVENT_CHEQUE_MOSTARAD_inner", 1781);
+define("EVENT_CHEQUE_MOSTARAD_agent", 1779);
+define("EVENT_CHEQUE_BARGASHTMOSTARAD_inner", 1782);
+define("EVENT_CHEQUE_BARGASHTMOSTARAD_agent", 1780);
 
 //------------- CostCode params -----------
 define("CostCode_param_loan", "3");

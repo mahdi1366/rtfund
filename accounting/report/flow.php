@@ -164,6 +164,23 @@ function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 		$where .= " AND di.details like :det ";
 		$whereParam[":det"] = "%" . $_REQUEST["details"] . "%";
 	}
+	
+	$index = 1;
+	foreach($_POST as $key => $val)
+	{
+		if(strpos($key, "paramID") === false || empty($val))
+			continue;
+
+		$ParamID = preg_replace("/paramID/", "", $key);
+		$where .= " AND (
+				if(cc.param1 = :pid$index, di.param1=:pval$index, 1=0) OR
+				if(cc.param2 = :pid$index, di.param2=:pval$index, 1=0) OR
+				if(cc.param3 = :pid$index, di.param3=:pval$index, 1=0) 
+			)";
+		$whereParam[":pid$index"] = $ParamID;
+		$whereParam[":pval$index"] = $val;
+		$index++;
+	}
 }	
 	
 function GetData(){
@@ -204,7 +221,7 @@ function GetData(){
 	$query .= $group == "" ? " order by d.DocDate" : " order by " . $group;	
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
-	
+	//print_r(ExceptionHandler::PopAllExceptions());
 	//if($_SESSION["USER"]["UserName"] == "admin")
 	//	echo PdoDataAccess::GetLatestQueryString ();
 	//-------------------------- previous remaindar ----------------------------

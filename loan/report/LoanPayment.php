@@ -113,25 +113,23 @@ if(isset($_REQUEST["show"]))
 	
 	//..........................................................
 	$report2 = "";
-	if($ReqObj->ReqPersonID != SHEKOOFAI)
-	{
-		//..........................................................
-		$rpg2 = new ReportGenerator();
-		$rpg2->mysql_resource = $PureArr;
+	//..........................................................
+	$rpg2 = new ReportGenerator();
+	$rpg2->mysql_resource = $PureArr;
 
-		$col = $rpg2->addColumn("تاریخ قسط", "InstallmentDate","ReportDateRender");
-		$col = $rpg2->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
-		$col->EnableSummary();
-		$col = $rpg2->addColumn("بهره قسط", "wage","ReportMoneyRender");
-		$col->EnableSummary();
-		$col = $rpg2->addColumn("اصل قسط", "pure","ReportMoneyRender");
-		$col->EnableSummary();
-		$col = $rpg2->addColumn("مانده اصل وام", "totalPure","ReportMoneyRender");
-		ob_start();
-		$rpg2->generateReport();
-		$report2 = ob_get_clean();
-		//..........................................................
-	}
+	$col = $rpg2->addColumn("تاریخ قسط", "InstallmentDate","ReportDateRender");
+	$col = $rpg2->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpg2->addColumn("بهره قسط", "wage","ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpg2->addColumn("اصل قسط", "pure","ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpg2->addColumn("مانده اصل وام", "totalPure","ReportMoneyRender");
+	ob_start();
+	$rpg2->generateReport();
+	$report2 = ob_get_clean();
+	//..........................................................
+	
 	?>
 	<table style="border:2px groove #9BB1CD;border-collapse:collapse;width:100%;font-family: nazanin;
 		   font-size: 16px;line-height: 20px;">
@@ -240,8 +238,7 @@ if(isset($_REQUEST["show"]))
 	<?
 	
 	$rpg->generateReport();
-	if($partObj->ComputeMode == "NEW")
-		echo "<br>" . $report2;	
+	echo "<br>" . $report2;	
 	die();
 }
 ?>
@@ -273,7 +270,7 @@ function LoanReport_payments()
 		frame : true,
 		layout :{
 			type : "table",
-			columns :2
+			columns :1 
 		},
 		bodyStyle : "text-align:right;padding:5px",
 		title : "گزارش پرداخت وام",
@@ -321,6 +318,10 @@ function LoanReport_payments()
 				'</table>'
 			),
 			itemId : "RequestID"
+		},{
+			xtype : "shdatefield",
+			name : "ComputeDate",
+			fieldLabel : "محاسبه تا تاریخ"
 		}],
 		buttons : [{
 			text : "مشاهده گزارش",

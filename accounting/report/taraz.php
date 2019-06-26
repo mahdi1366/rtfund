@@ -384,7 +384,7 @@ function GetData(&$rpg){
 	{
 		BeginReport();
 		//print_r(ExceptionHandler::PopAllExceptions());
-		echo PdoDataAccess::GetLatestQueryString ();
+		//echo PdoDataAccess::GetLatestQueryString ();
 	}
 	return $dt;
 }

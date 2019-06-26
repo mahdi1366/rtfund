@@ -271,7 +271,7 @@ class LON_requests extends PdoDataAccess{
 		$DelayDuration = DateModules::GDateMinusGDate($endDelayDate, $PartObj->PartDate)+1;
 		$CustomerDelay = $FundDelay = $AgentDelay = 0;
 		
-		if($PartObj->DelayPercent == 0)
+		if($PartObj->DelayPercent == 0 || $PartObj->ComputeMode == "NOAVARI")
 		{
 			return array(
 				"CustomerDelay" => 0,
@@ -282,7 +282,7 @@ class LON_requests extends PdoDataAccess{
 		
 		$fundZarib = $PartObj->FundWage/$PartObj->DelayPercent;
 			
-		if($PartObj->ComputeMode == "NEW" )
+		if($PartObj->ComputeMode == "NEW") 
 		{
 			$dt = LON_payments::Get(" AND RequestID=?", array($RequestID));
 			$oldFundDelayAmount = $oldAgentDelayAmount = 0;
@@ -357,7 +357,7 @@ class LON_requests extends PdoDataAccess{
 			$YearMonths = 12;
 		
 		$TotalWage = 0;
-		if($PartObj->ComputeMode == "NEW")
+		if($PartObj->ComputeMode == "NEW" || $PartObj->ComputeMode == "NOAVARI")
 		{
 			$dt = LON_installments::GetValidInstallments($PartObj->RequestID);
 			if(count($dt)>0)
@@ -762,7 +762,7 @@ class LON_requests extends PdoDataAccess{
 		
 		$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
 		
-		if($PartObj->ComputeMode == "NEW")
+		if($PartObj->ComputeMode == "NEW" || $PartObj->ComputeMode == "NOAVARI")
 			return LON_Computes::ComputePures ($RequestID);
 		
 		$temp = LON_installments::GetValidInstallments($RequestID);
@@ -1434,15 +1434,15 @@ class LON_Computes extends PdoDataAccess{
 				}
 				else
 				{
-					if($obj->ComputeMode == "NEW")
-					{
-						$records[$i]["pure"] = $records[$i]["RecordAmount"]*1 - $records[$i]["wage"]*1;
-						$records[$i]["wage"] = $records[$i]["wage"]*1;
-					}
-					else
+					if($obj->ComputeMode == "BANK")
 					{
 						$records[$i]["pure"] = $records[$i]["RecordAmount"]*1;
 						$records[$i]["wage"] = 0;
+					}
+					else
+					{
+						$records[$i]["pure"] = $records[$i]["RecordAmount"]*1 - $records[$i]["wage"]*1;
+						$records[$i]["wage"] = $records[$i]["wage"]*1;						
 					}
 				}
 				$records[$i]["late"] = 0;
@@ -1505,12 +1505,15 @@ class LON_Computes extends PdoDataAccess{
 						
 						if($pays[ count($pays)-1 ]["PayedDate"] != $PayRecords[$j-1]["RecordDate"])
 						{
-							if($obj->ComputeMode == "NEW")
+							if($obj->ComputeMode == "BANK")
 							{
-								$records[$i]["remain_late"] -= $records[$i]["late"];
-								$records[$i]["remain_pnlt"] -= $records[$i]["pnlt"];
+								if($obj->PayCompute == "forfeit")
+								{
+									$records[$i]["remain_late"] -= $records[$i]["late"];
+									$records[$i]["remain_pnlt"] -= $records[$i]["pnlt"];
+								}
 							}
-							else if($obj->PayCompute == "forfeit")
+							else
 							{
 								$records[$i]["remain_late"] -= $records[$i]["late"];
 								$records[$i]["remain_pnlt"] -= $records[$i]["pnlt"];
@@ -1545,7 +1548,7 @@ class LON_Computes extends PdoDataAccess{
 			$total = $total_pure + $total_wage + $total_late + $total_pnlt;
 			if($total > 0)
 			{
-				if($obj->ComputeMode != "NEW")
+				if($obj->ComputeMode == "BANK")
 				{
 					if($obj->PayCompute == "installment")
 					{
@@ -1656,9 +1659,13 @@ class LON_Computes extends PdoDataAccess{
 				$total = $records[$k]["remain_pure"] + $records[$k]["remain_wage"];
 				if($total > 0)
 				{
-					if($obj->ComputeMode == "NEW")
+					if($obj->ComputeMode == "BANK")
 					{
-					
+						$diffDays = 0;
+						$EarlyAmount = 0;
+					}
+					else
+					{
 						$diffDays = DateModules::GDateMinusGDate($records[$k]["RecordDate"],$PayRecord["RecordDate"]);
 						$tmp = min($PayRecord["remainPayAmount"], $total);
 						$pure = round($tmp*$records[$k]["remain_pure"]/$total);
@@ -1670,11 +1677,6 @@ class LON_Computes extends PdoDataAccess{
 							$records[$k]["remain_wage"] -= $EarlyAmount;
 						else
 							$records[$k]["remain_pure"] -= $EarlyAmount;
-					}
-					else
-					{
-						$diffDays = 0;
-						$EarlyAmount = 0;
 					}
 					$total = $records[$k]["remain_pure"] + $records[$k]["remain_wage"];
 					$tmp = min($PayRecord["remainPayAmount"], $total);
@@ -1742,14 +1744,17 @@ class LON_Computes extends PdoDataAccess{
 				
 				if($pays[ count($pays)-1 ]["PayedDate"] != $PayRecords[count($PayRecords)-1]["RecordDate"])
 				{
-					if($obj->ComputeMode == "NEW")
+					if($obj->ComputeMode == "BANK")
 					{
-						$records[$i]["remain_late"] -= $records[$i]["late"];
-						$records[$i]["remain_pnlt"] -= $records[$i]["pnlt"];
-						$records[$i]["late"] = 0;
-						$records[$i]["pnlt"] = 0;
+						if($obj->PayCompute == "forfeit")
+						{	
+							$records[$i]["remain_late"] -= $records[$i]["late"];
+							$records[$i]["remain_pnlt"] -= $records[$i]["pnlt"];
+							$records[$i]["late"] = 0;
+							$records[$i]["pnlt"] = 0;
+						}
 					}
-					else if($obj->PayCompute == "forfeit")
+					else
 					{	
 						$records[$i]["remain_late"] -= $records[$i]["late"];
 						$records[$i]["remain_pnlt"] -= $records[$i]["pnlt"];
@@ -2221,7 +2226,7 @@ class LON_BackPays extends PdoDataAccess{
 		$temp = preg_split("/order by/", $where);
 		$where = $temp[0];
 		$order = count($temp) > 1 ? " order by " . $temp[1] : "";
-		
+		/*
 		return PdoDataAccess::runquery("
 			select p.*,
 		 		i.ChequeNo,
@@ -2240,8 +2245,8 @@ class LON_BackPays extends PdoDataAccess{
 			left join ACC_docs d on(di.DocID=d.DocID)
 			
 			where " . $where . " group by BackPayID " . $order, $param);
-			
-		/*return PdoDataAccess::runquery("
+			*/
+		return PdoDataAccess::runquery("
 			select p.*,
 		 		i.ChequeNo,
 				i.ChequeStatus,
@@ -2259,7 +2264,7 @@ class LON_BackPays extends PdoDataAccess{
 				AND ch.StatusID=" . INCOMECHEQUE_VOSUL . ")
 			left join ACC_docs d on(ch.DocID=d.DocID)
 			
-			where " . $where . " group by BackPayID " . $order, $param);*/
+			where " . $where . " group by BackPayID " . $order, $param);
 	}
 	
 	function Add($pdo = null){
