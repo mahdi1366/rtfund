@@ -29,17 +29,17 @@ $col->align = "center";
 	</style>
 	<style>
 		.header td{background-color: #cccccc; font-weight: bold;size: 12px;}
-		td { font-family: Nazanin; font-size: 12pt; line-height: 25px; padding: 3px;}
-		table { page-break-inside:auto }
-		tr    { /*page-break-inside:avoid;*/ page-break-after:auto }
-		thead { display:table-header-group }
-		tfoot { display:table-footer-group }
-		.info {font-weight: bold; text-decoration: underline}
+		.agenda td { font-family: Nazanin; font-size: 12pt; line-height: 25px; padding: 3px;}
+		.agenda { page-break-inside:auto }
+		.agenda tr    { /*page-break-inside:avoid;*/ page-break-after:auto }
+		.agenda thead { display:table-header-group }
+		.agenda tfoot { display:table-footer-group }
+		.infotext {font-weight: bold; text-decoration: underline}
 	</style>	
 	<body dir="rtl">
 		<center>
 			<div>
-			<table style="width:19cm;height:100%">
+				<table class="agenda" style="width:19cm;height:100%">
 				<thead>
 				<tr style="height:150px">
 					<td align="center" style="width:200px;">
@@ -67,9 +67,9 @@ $col->align = "center";
 						<br>
 						بدینوسیله از جنابعالی دعوت مینماید در جلسه‌ای
 						که در تاریخ 
-						<span class="info"><?= DateModules::miladi_to_shamsi($MeetingObj->MeetingDate) ?></span>
-						ساعت <span class="info"><?= substr($MeetingObj->StartTime,0,5) ?></span>
-						در محل <span class="info"><?= $MeetingObj->place ?></span>
+						<span class="infotext"><?= DateModules::miladi_to_shamsi($MeetingObj->MeetingDate) ?></span>
+						ساعت <span class="infotext"><?= substr($MeetingObj->StartTime,0,5) ?></span>
+						در محل <span class="infotext"><?= $MeetingObj->place ?></span>
 						تشکیل خواهد شد شرکت فرمایید.
 						<br>
 						پیشاپیش از حضور به‌موقع شما سپاسگزارم.

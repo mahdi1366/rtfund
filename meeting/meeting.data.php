@@ -501,10 +501,14 @@ function SendRecordLetter(){
 
 function SendAgendaLetter(){
 	
-	$RecordID = $_POST["RecordID"];
-	$recObj = new MTG_MeetingRecords($RecordID);
-	$metObj = new MTG_meetings($recObj->MeetingID);
+	$MeetingID = $_POST["MeetingID"];
+	$metObj = new MTG_meetings($MeetingID);
 	$personsArr = json_decode($_POST["persons"]);
+	
+	ob_start();
+	require_once './PrintAgendas.php';
+	$content = ob_get_contents();
+	ob_clean();
 	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
@@ -513,11 +517,11 @@ function SendAgendaLetter(){
 	$LetterObj->LetterType = "INNER";
 	$LetterObj->LetterTitle = 
 		$_POST["subject"] != "" ? $_POST["subject"] :
-			"مصوبه جلسه " . $metObj->MeetingNo . " " . $metObj->_MeetingTypeDesc . " : " . $recObj->subject;
+			"دعتنامه جلسه " . $metObj->MeetingNo . " " . $metObj->_MeetingTypeDesc;
 	$LetterObj->LetterDate = PDONOW;
 	$LetterObj->RegDate = PDONOW;
 	$LetterObj->PersonID = $_SESSION["USER"]["PersonID"];
-	$LetterObj->context = $recObj->details;
+	$LetterObj->context = $content;
 	if(!$LetterObj->AddLetter($pdo))
 	{
 		echo Response::createObjectiveResponse(false, "خطا در ثبت  نامه");

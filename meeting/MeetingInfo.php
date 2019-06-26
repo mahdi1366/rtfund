@@ -384,8 +384,4 @@ MeetingInfo.prototype.ChangeMeetingStatus = function(StatusID){
 	});
 }
 </script>
-<center>
-	<br>
-	<div id="mainForm"></div>
-	<div id="div_grid"></div>
-</center>
+<div style="margin: 10px" id="mainForm"></div>

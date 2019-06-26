@@ -22,7 +22,7 @@ $rpt->header_alignment = "center";
 $rpt->rowNumber = false;
 
 function titleRender($row,$value){
-	return "<span dir=ltr>" . $value . "<br>" . hebrevc($row["details"]) . "</div>";
+	return "<span dir=ltr>" . $value . "<br>" . nl2br($row["details"] ). "</div>";
 }
 $col = $rpt->addColumn("خلاصه مصوبات", "subject");
 $col->renderFunction = "titleRender";

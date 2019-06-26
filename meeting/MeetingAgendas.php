@@ -436,7 +436,6 @@ MTG_MeetingAgenda.prototype.SendLetter = function(){
 			return;
 		
 		me = MTG_MeetingAgendaObject;
-		var record = me.grid.getSelectionModel().getLastSelected();
 		
 		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
 		mask.show();
@@ -445,7 +444,7 @@ MTG_MeetingAgenda.prototype.SendLetter = function(){
 			url: me.address_prefix + 'meeting.data.php',
 			params:{
 				task: "SendAgendaLetter",
-				MeetingID : record.data.MeetingID,
+				MeetingID : me.MeetingID,
 				persons : Ext.encode(me.LetterPersons),
 				subject : me.LetterWin.down("[name=subject]").getValue()
 			},
