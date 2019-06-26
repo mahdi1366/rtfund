@@ -41,7 +41,9 @@ if($accessObj->AddFlag && !$readOnly)
 }
 
 $dg->addButton("", "چاپ دعوتنامه", "print", "function(){MTG_MeetingAgendaObject.PrintAgenda();}");
-$dg->addButton("", "ابلاغ دعوتنامه", "letter", "function(){MTG_MeetingAgendaObject.ShowLetterWindow();}");
+
+if(session::IsFramework())
+	$dg->addButton("", "ابلاغ دعوتنامه", "letter", "function(){MTG_MeetingAgendaObject.ShowLetterWindow();}");
 
 if($accessObj->RemoveFlag && !$readOnly)
 {
@@ -56,7 +58,7 @@ $col->sortable = false;
 $col->renderer = "function(v,p,r){return MTG_MeetingAgenda.attachRender(v,p,r);}";
 $col->width = 50;
 
-$dg->height = 200;
+$dg->height = !$readOnly ? 200 : 400;
 $dg->title = "دستورات جلسه";
 $dg->EnablePaging = false;
 $dg->EnableSearch = false;
@@ -347,6 +349,7 @@ MTG_MeetingAgenda.prototype.ShowLetterWindow = function(){
 			width : 500,
 			title : "ابلاغ دعوتنامه",
 			autoHeight : true,
+			closeAction : "hide",
 			modal : true,
 			items : [{
 				xtype : "textfield",

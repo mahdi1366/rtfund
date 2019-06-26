@@ -40,11 +40,13 @@ $col->sortable = false;
 $col->renderer = "function(v,p,r){return MTG_MeetingRecords.attachRender(v,p,r);}";
 $col->width = 50;
 
-$col = $dg->addColumn("ابلاغ", "");
-$col->sortable = false;
-$col->renderer = "function(v,p,r){return MTG_MeetingRecords.LetterRender(v,p,r);}";
-$col->width = 50;
-
+if(session::IsFramework())
+{
+	$col = $dg->addColumn("ابلاغ", "");
+	$col->sortable = false;
+	$col->renderer = "function(v,p,r){return MTG_MeetingRecords.LetterRender(v,p,r);}";
+	$col->width = 50;
+}
 if($accessObj->AddFlag && !$readOnly)
 {
 	$dg->addButton("", "ایجاد مصوبه", "add", "function(){MTG_MeetingRecordsObject.AddRecord();}");
@@ -116,6 +118,7 @@ function MTG_MeetingRecords(){
 		width : 600,
 		autoHeight : true,
 		modal : true,
+		closeAction : "hide",
 		items : this.formPanel = new Ext.form.FormPanel({
 			items :[{
 				xtype : "textfield",
@@ -310,6 +313,7 @@ MTG_MeetingRecords.prototype.ShowLetterWindow = function(){
 			width : 500,
 			title : "ابلاغ مصوبه",
 			autoHeight : true,
+			closeAction : "hide",
 			modal : true,
 			items : [{
 				xtype : "textfield",

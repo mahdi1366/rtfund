@@ -1127,6 +1127,57 @@ class LON_requests extends PdoDataAccess{
 	}
 }
 
+class LON_NOAVARI_compute extends PdoDataAccess{
+	
+	static function ComputeWage($partObj){
+	
+		$payments = LON_payments::Get(" AND RequestID=?", array($partObj->RequestID), " order by PayDate");
+		$payments = $payments->fetchAll();
+		if(count($payments) == 0)
+			return 0;
+		//--------------- total pay months -------------
+		$firstPay = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
+		$paymentPeriod = $partObj->PayDuration*1;
+		if($paymentPeriod == 0)
+		{
+			$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
+			$paymentPeriod = DateModules::GetDiffInMonth($firstPay, $LastPay);
+		}
+		//----------------------------------------------
+		$totalWage = 0;
+		$wages = array();
+		foreach($payments as $row)
+		{
+			$wages[] = array();
+			$wageindex = count($wages)-1;
+			for($i=0; $i < $partObj->InstallmentCount; $i++)
+			{
+				$installmentDate = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
+				$monthplus = $paymentPeriod + $partObj->DelayMonths*1;
+				$dayplus = 0;
+
+				if($partObj->DelayDays*1 > 0)
+					$dayplus += $partObj->DelayDays*1;
+
+				if($partObj->IntervalType == "MONTH")
+					$monthplus += ($i+1)*$partObj->PayInterval*1;
+				else
+					$dayplus += ($i+1)*$partObj->PayInterval*1;
+
+				$installmentDate = DateModules::AddToJDate($installmentDate, + $dayplus, $monthplus);
+				$installmentDate = DateModules::shamsi_to_miladi($installmentDate);
+				$jdiff = DateModules::GDateMinusGDate($installmentDate, $row["PayDate"]);
+
+				$wage = round(($row["PayAmount"]/$partObj->InstallmentCount)*$jdiff*$partObj->CustomerWage/36500);
+				$wages[$wageindex][] = $wage;
+				$totalWage += $wage;
+			}
+		}
+
+		return $totalWage;
+	}
+}
+
 class LON_Computes extends PdoDataAccess{
 	
 	static function ComputeInstallment($partObj, $installmentArray, $ComputeDate = "", $ComputeWage = 'YES'){

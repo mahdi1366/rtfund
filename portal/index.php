@@ -70,8 +70,9 @@ function CreateMenuStr(){
 		//---------------------------------------
 		$param .= "}";
 
+		$icon = strpos($icon, "far") !== false ? $icon : "fas fa-" . $icon; 
 		$menuStr .= '<div class="menuItem" onclick="portal.OpenPage(\'' . $link_path . "'," . $param . ');"> 
-						<i style="color:#' . $colors[$colorIndex] . '" class="menuIcon fas fa-' . $icon . '"></i>
+						<i style="color:#' . $colors[$colorIndex] . '" class="menuIcon ' . $icon . '"></i>
 						<div class="menuText">' . $menus[$i]["MenuDesc"] . '</div>
 				   </div>';
 

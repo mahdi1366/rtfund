@@ -18,7 +18,12 @@ function compareObject(o1, o2){
 	return true;
 }
 
-PortalClass.prototype = {};
+PortalClass.prototype = {
+	
+	loaded_itemURL : "",
+	loaded_params : {}
+	
+};
 
 function PortalClass()
 {
@@ -47,10 +52,24 @@ PortalClass.prototype.OpenPage = function(itemURL, params)
 	params.ExtTabID = id;
 	params.portal = 1;
 	
+	this.loaded_itemURL = itemURL;
+	this.loaded_params = params;
+	
 	this.mainPanel.loader.load({
-		url: itemURL,
+		url: this.loaded_itemURL,
 		method: "POST",
-		params : params,
+		params : this.loaded_params,
+		text: "در حال بار گذاری...",
+		scripts: true
+	});	
+}
+
+PortalClass.prototype.ReloadTab = function()
+{
+	this.mainPanel.loader.load({
+		url: this.loaded_itemURL,
+		method: "POST",
+		params : this.loaded_params,
 		text: "در حال بار گذاری...",
 		scripts: true
 	});	

@@ -215,7 +215,7 @@ FRW_menu.prototype.BeforeSave = function(EditMode,IsMenu){
 		if(record.raw.MenuPath != null)
 			IsMenu = true;
 		
-		if(record.parentNode.data.id == "1000")
+		if(record.parentNode.parentNode.data.id == "1000")
 		{
 			this.infoWin.down("[itemId=FS_UserTypes]").show();
 			this.infoWin.down("[name=IsStaff]").setValue(record.raw.IsStaff);

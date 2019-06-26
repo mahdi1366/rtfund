@@ -798,7 +798,10 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 				. "where RequestID=? AND history='NO' AND IsDelayed='NO'", array($RequestID));
 	//-----------------------------------------------
 	$obj2 = new LON_requests($RequestID);
-	if($obj2->ReqPersonID == SHEKOOFAI)
+	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
+	
+	//if($obj2->ComputeMode == SHEKOOFAI)
+	if($partObj->ComputeMode == "NOAVARI")
 		return ComputeInstallmentsShekoofa($RequestID, $returnMode, $pdo2, $ReturnAmounts);
 	//-----------------------------------------------
 	$obj = LON_ReqParts::GetValidPartObj($RequestID);
@@ -925,19 +928,12 @@ function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false, $pdo2
 		return true;
 	//--------------- total pay months -------------
 	$firstPay = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
-	//$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
-	//$paymentPeriod = DateModules::GetDiffInMonth($firstPay, $LastPay);
 	$paymentPeriod = $partObj->PayDuration*1;
-	if($paymentPeriod == 0)
-	{
-		$LastPay = DateModules::miladi_to_shamsi($payments[count($payments)-1]["PayDate"]);
-		$paymentPeriod = DateModules::GetDiffInMonth($firstPay, $LastPay);
-	}
 	//----------------------------------------------	
 	if($partObj->AgentReturn == "CUSTOMER")
 		$totalWage = 0;
 	else
-		$totalWage = ComputeWageOfSHekoofa($partObj);
+		$totalWage = LON_NOAVARI_compute::ComputeWage($partObj);
 	
 	if($ReturnAmounts)
 	{

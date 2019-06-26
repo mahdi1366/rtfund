@@ -9,7 +9,7 @@
 .icon-grid		{background-image:url('/generalUI/icons/grid.gif') !important;}
 .add			{background-image:url('/generalUI/icons/add.gif') !important;}
 .arrow_left		{background-image:url('/generalUI/icons/arrow-left.gif') !important;}
-.arrow_right		{background-image:url('/generalUI/icons/arrow-right.gif') !important;}
+.arrow_right	{background-image:url('/generalUI/icons/arrow-right.gif') !important;}
 .arrow_up		{background-image:url('/generalUI/icons/arrow-up.gif') !important;}
 .arrow_down		{background-image:url('/generalUI/icons/arrow-down.gif') !important;}
 .option			{background-image:url('/generalUI/icons/plugin.gif') !important;}
@@ -82,7 +82,7 @@
 .pinkRow .x-grid-cell,.pinkRow .x-grid-rowwrap-div, .pinkRow {background-color: #FFB8C9; }
 .greenRow .x-grid-cell,.greenRow .x-grid-rowwrap-div, .greenRow	 {background-color: #D0F7E2; }
 .yellowRow .x-grid-cell,.yellowRow .x-grid-rowwrap-div, .yellowRow {background-color: #FCFCB6; }
-.violetRow .x-grid-cell,.violetRow .x-grid-rowwrap-div, .yellowRow {background-color: #E7DBFF; }
+.violetRow .x-grid-cell,.violetRow .x-grid-rowwrap-div, .violetRow {background-color: #E7DBFF; }
 .orangeRow .x-grid-cell,.orangeRow .x-grid-rowwrap-div {background-color: #FFD9B3; }
 .ltrDir {direction:ltr}
 .rtlDir {direction:rtl}

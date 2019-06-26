@@ -16,7 +16,7 @@ global $GToDate;
 $GToDate = '2018-03-20'; //1396/12/29
 //$GToDate = '2019-03-20'; //1397/12/29
 
-$reqs = PdoDataAccess::runquery(" select r.RequestID from LON_requests r
+$reqs = PdoDataAccess::runquery_fetchMode(" select r.RequestID from LON_requests r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
 	where PartDate<='$GToDate' 	" . 
 		(!empty($_REQUEST["ReqID"]) ? " AND r.RequestID >= ".$_REQUEST["ReqID"] : "" ) . "
@@ -27,7 +27,7 @@ $pdo = PdoDataAccess::getPdoObject();
 
 $DocObj = array();
 
-foreach($reqs as $requset)
+while($requset=$reqs->fetch())
 {
 	$pdo->beginTransaction();
 	echo "-------------- " . $requset["RequestID"] . " -----------------<br>";
@@ -38,19 +38,19 @@ foreach($reqs as $requset)
 	
 	$DocObj[ $reqObj->RequestID ] = null;
 	
-//	Allocate($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-//	$DocObj[ $reqObj->RequestID ] = null;
-//	Contract($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-//	$DocObj[ $reqObj->RequestID ] = null;
-//	Payment($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-//	$DocObj[ $reqObj->RequestID ] = null;
-//	PaymentCheque($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-//	$DocObj[ $reqObj->RequestID ] = null;
-//	BackPayCheques($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-//	$DocObj[ $reqObj->RequestID ] = null;
-//	BackPay($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-//	$DocObj[ $reqObj->RequestID ] = null;
-//	DailyIncome($reqObj, $partObj, $pdo);
+	Allocate($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	$DocObj[ $reqObj->RequestID ] = null;
+	Contract($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	$DocObj[ $reqObj->RequestID ] = null;
+	Payment($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	$DocObj[ $reqObj->RequestID ] = null;
+	PaymentCheque($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	$DocObj[ $reqObj->RequestID ] = null;
+	BackPayCheques($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	$DocObj[ $reqObj->RequestID ] = null;
+	BackPay($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	$DocObj[ $reqObj->RequestID ] = null;
+	DailyIncome($reqObj, $partObj, $pdo);
 	DailyWage($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
 	$DocObj[ $reqObj->RequestID ] = null;
 	
@@ -60,7 +60,9 @@ foreach($reqs as $requset)
 	EventComputeItems::$LoanComputeArray = array();
 	EventComputeItems::$LoanPuresArray = array();
 }
-
+/*$arr = get_defined_vars();
+print_r($arr);
+die();*/
 /**
  * رویداد تخصیص 
  */

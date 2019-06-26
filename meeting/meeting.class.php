@@ -69,6 +69,22 @@ class MTG_meetings extends OperationClass {
 			where 1=1 " . $where, $whereParams);
 	}
 	
+	static function MyMeetings($personID, $where = '', $whereParams = array()) {
+		
+		$whereParams[":personid"] = $personID;
+		return parent::runquery_fetchMode("
+			select m.*, concat_ws(' ',fname,lname,CompanyName) fullname ,
+				b1.InfoDesc StatusDesc,
+				b2.InfoDesc MeetingTypeDesc,
+				mp.IsSign,mp.IsPresent
+			from MTG_meetings m 
+			left join BSC_persons p on(p.PersonID=m.secretary)
+			join BaseInfo b1 on(b1.TypeID=".TYPEID_MeetingStatusID." AND b1.InfoID=StatusID)
+			join BaseInfo b2 on(b2.TypeID=".TYPEID_MeetingType." AND b2.InfoID=MeetingType)
+			join MTG_MeetingPersons mp on(mp.PersonID=:personid AND mp.MeetingID=m.MeetingID)
+			where 1=1 " . $where, $whereParams);
+	}
+	
 	function Add($pdo = null) {
 		
 		$this->MeetingNo = parent::GetLastID("MTG_meetings", "MeetingNo", "MeetingType=?", 
@@ -96,6 +112,7 @@ class MTG_MeetingPersons extends OperationClass{
 	public $fullname;
 	public $AttendType;
 	public $IsPresent;
+	public $IsSign;
 	
 	static function Get($where = '', $whereParams = array()) {
 		
@@ -103,6 +120,13 @@ class MTG_MeetingPersons extends OperationClass{
 			select mp.*, if(mp.personID=0,mp.fullname,concat_ws(' ',fname,lname,CompanyName)) fullname 
 			from MTG_MeetingPersons mp left join BSC_persons p using(PersonID)
 			where 1=1 " . $where, $whereParams);
+	}
+	
+	static function GetMeetingPersonObj($PersonID, $MeetingID){
+		
+		$dt = PdoDataAccess::runquery("select * from MTG_MeetingPersons where PersonID=? AND MeetingID=?", 
+			array($PersonID, $MeetingID));
+		return new MTG_MeetingPersons(count($dt)>0 ? $dt[0]["RowID"] : 0);
 	}
 }
 

@@ -4,8 +4,11 @@
 //-----------------------------
 require_once '../header.inc.php';
 require_once inc_dataGrid;
+require_once 'meeting.class.php';
 
 $MeetingID = !empty($_POST["MeetingID"]) ? $_POST["MeetingID"] : "";
+
+$MPObj = MTG_MeetingPersons::GetMeetingPersonObj($_SESSION["USER"]["PersonID"], $MeetingID);
 
 //................  GET ACCESS  .....................
 if(isset($_POST["MenuID"]))
@@ -100,6 +103,11 @@ MeetingInfo.prototype.BuildForms = function(){
 			iconCls : "cross",
 			hidden : readOnly,
 			handler : function(){ MeetingInfoObject.ChangeMeetingStatus("<?= MTG_STATUSID_CANCLE ?>"); }
+		},{
+			text : "تایید و امضاء مصوبات",
+			iconCls : "sign",
+			hidden : <?= session::IsPortal() && $MPObj->IsPresent == "YES" && $MPObj->IsSign == "NO" ? "false" : "true" ?>,
+			handler : function(){ MeetingInfoObject.SignRecords(); }
 		},{
 			text : "جلسه برگزار شده است و اطلاعات جلسه قابل تغییر نمی باشند",
 			iconCls : "tick",
@@ -383,5 +391,40 @@ MeetingInfo.prototype.ChangeMeetingStatus = function(StatusID){
 		});
 	});
 }
+
+MeetingInfo.prototype.SignRecords = function(StatusID){
+
+	message = "بعد از تایید و امضاء مصوبات جلسه دیگر قادر به برگشت عملیات فوق نمی باشید.<br> آیا مایل به امضاء می باشید؟";
+	Ext.MessageBox.confirm("",message, function(btn){
+		if(btn == "no")
+			return;
+		
+		me = MeetingInfoObject;
+		mask = new Ext.LoadMask(me.TabPanel, {msg:'در حال ذخيره سازي...'});
+		mask.show();  
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'meeting.data.php?task=SignRecords' , 
+			method: "POST",
+			params : {
+				MeetingID : me.MeetingID
+			},
+
+			success : function(response){
+				mask.hide();
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					portal.ReloadTab(MeetingInfoObject.TabID);
+				else
+					Ext.MessageBox.alert("Error", result.data);
+			},
+			failure : function(){
+				mask.hide();
+				Ext.MessageBox.alert("Error", action.result.data);
+			}
+		});
+	});
+}
+
 </script>
 <div style="margin: 10px" id="mainForm"></div>

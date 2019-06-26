@@ -11,8 +11,41 @@ require_once '../office/letter/letter.class.php';
 require_once '../framework/person/persons.class.php';
 
 $task = $_REQUEST["task"];
-if(!empty($task)) 
-	$task();
+switch($task)
+{
+	case "selectMeetingTypes":
+	case "SaveMeetingType":
+	case "DeleteMeetingType":
+	case "GetMeetingTypePersons":
+	case "SaveMeetingTypePerson":
+	case "RemoveMeetingTypePersons":
+	case "SelectAllMeetings":
+	case "SaveMeeting":
+	case "DeleteMeeting":
+	case "ChangeMeetingStatus":
+	case "GetMeetingPersons":
+	case "SaveMeetingPerson":
+	case "RemoveMeetingPersons":
+	case "SetPresent":
+	case "GetMeetingAgendas":
+	case "SaveAgenda":
+	case "RemoveAgenda":
+	case "GetRemainAgendas":
+	case "AddRecordToAgenda":
+	case "AddRemainAgendaToAgenda":
+	case "GetNotDoneAgendas":
+	case "DoneAgenda":
+	case "GetMeetingRecords":
+	case "SaveMeetingRecord":
+	case "RemoveMeetingRecords":
+	case "GetDueDateRecords":
+	case "SendRecordLetter":
+	case "SendAgendaLetter":
+	case "SelectMyMeetings":
+	case "SignRecords":
+				
+		$task();
+}
 
 function selectMeetingTypes(){
 	
@@ -566,5 +599,42 @@ function SendAgendaLetter(){
 	die();
 }
 
+//--------------------------------------
+
+function SelectMyMeetings(){
+	
+	$param = array();
+	$where = " AND m.StatusID=" . MTG_STATUSID_DONE ;
+	
+	if (!empty($_REQUEST['fields']) && !empty($_REQUEST['query'])) {
+        $field = $_REQUEST['fields'];
+		$field = $field == "fullname" ? "concat_ws(' ',fname,lname,CompanyName)" : $field;
+		$field = $field == "StatusDesc" ? "b1.InfoDesc" : $field;
+		$field = $field == "MeetingTypeDesc" ? "b2.InfoDesc" : $field;
+		
+        $where .= ' and ' . $field . ' like :fld';
+        $param[':fld'] = '%' . $_REQUEST['query'] . '%';
+    }
+	
+		
+	$where .= dataReader::makeOrder();
+	$dt = MTG_meetings::MyMeetings($_SESSION["USER"]["PersonID"] ,$where, $param);
+	//print_r(ExceptionHandler::PopAllExceptions());
+	//echo PdoDataAccess::GetLatestQueryString();
+	$count = $dt->rowCount();
+	$dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);	
+	echo dataReader::getJsonData($dt, $count, $_GET["callback"]);
+	die();
+}
+
+function SignRecords(){
+	
+	$MeetingID = $_POST["MeetingID"];
+	$MPObj = MTG_MeetingPersons::GetMeetingPersonObj($_SESSION["USER"]["PersonID"], $MeetingID);
+	$MPObj->IsSign = "YES";
+	$result = $MPObj->Edit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
 
 ?>
