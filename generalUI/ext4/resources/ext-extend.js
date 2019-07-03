@@ -6053,3 +6053,91 @@ Ext.define('Ext.ux.CheckList', {
         me.callParent(arguments);
     }
 });
+
+// +++++ Store Data Change Event Handling - START
+
+Ext.SDCEH = {};
+Ext.SDCEH.tableToStoreMap = []; // 2d array which specifies which table belongs to which stores
+
+Ext.SDCEH.registerStore = function (store, tableNames) {
+    if (store) {
+        if (tableNames && Array.isArray(tableNames) && tableNames.length > 0) {
+            for (var i = 0; i < tableNames.length; i++) {
+                var tableName = tableNames[i];
+                if (!Ext.SDCEH.tableToStoreMap[tableName]) {
+                    Ext.SDCEH.tableToStoreMap[tableName] = [];
+                }
+                if (!Ext.SDCEH.tableToStoreMap[tableName].includes(store)) {
+                    var previouslyAddedStoreIndex = Ext.SDCEH.tableToStoreMap[tableName].findIndex((item) => {
+                        if (item.proxy.url != store.proxy.url) {
+                            return false;
+                        }
+                        if (item.proxy.extraParams.length != store.proxy.extraParams.length) {
+                            return false;
+                        }
+                        for (var j = 0; j < Object.keys(item.proxy.extraParams).length; j++) {
+                            var key = Object.keys(item.proxy.extraParams)[j];
+                            if (!store.proxy.extraParams[key] || item.proxy.extraParams[key] != store.proxy.extraParams[key]) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    });
+                    if (previouslyAddedStoreIndex >= 0) {
+                        Ext.SDCEH.tableToStoreMap[tableName][previouslyAddedStoreIndex] = store;
+                    } else {
+                        Ext.SDCEH.tableToStoreMap[tableName].push(store);
+                    }
+                }
+            }
+        }
+    }
+}
+
+Ext.SDCEH.unregisterStore = function (store) {
+    for (var i = 0; i < Ext.SDCEH.tableToStoreMap.length; i++) {
+        var tableToStoreMapping = Ext.SDCEH.tableToStoreMap[i];
+        if (tableToStoreMapping && Ext.SDCEH.tableToStoreMap.length > 0) {
+            // remove store from map row
+            for (var j = 0; j < tableToStoreMapping.length; j++) {
+                if (store == tableToStoreMapping[j]) {
+                    tableToStoreMapping.splice(j, 1);
+                }
+            }
+        }
+        if (!tableToStoreMapping || tableToStoreMapping.length <= 0) {
+            // remove map row
+            Ext.SDCEH.tableToStoreMap.splice(i);
+        }
+    }
+}
+
+Ext.SDCEH.notifyTablesChanges = function (tableNames) {
+    if (tableNames && Array.isArray(tableNames) && tableNames.length > 0) {
+        var storesToReload = [];
+        for (var i = 0; i < tableNames.length; i++) {
+            var tableName = tableNames[i];
+            if (Ext.SDCEH.tableToStoreMap[tableName] && Ext.SDCEH.tableToStoreMap[tableName].length > 0) {
+                for (var j = 0; j < Ext.SDCEH.tableToStoreMap[tableName].length; j++) {
+                    var storeToReload = Ext.SDCEH.tableToStoreMap[tableName][j];
+                    if (!storesToReload.includes(storeToReload)) {
+                        storesToReload.push(storeToReload);
+                    }
+                }
+            }
+        }
+//        console.log('stores to reload: ', storesToReload);
+        for (var i = 0; i < storesToReload.length; i++) {
+            var storeToReload = storesToReload[i];
+            if (storeToReload) {
+                try {
+                    storeToReload.load();
+                } catch (err) {
+                    console.log("error while loading store: ", storeToReload);
+                }
+            }
+        }
+    }
+}
+
+// ----- Store Data Change Event Handling - END

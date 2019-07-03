@@ -1959,7 +1959,7 @@ class LON_Computes extends PdoDataAccess{
 		$total = 0;
 		foreach($computeArr as $row)
 			if($row["type"] == "installment")
-				$total += $row["remain_pnlt"]*1;
+				$total += $row["pnlt"]*1;
 		
 		return $total;		
 	}

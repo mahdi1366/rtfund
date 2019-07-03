@@ -332,7 +332,8 @@ function GetData($mode = "list"){
 	
 	for($i=0; $i< count($dataTable); $i++)
 	{
-		$ComputeArr = LON_Computes::ComputePayments($dataTable[$i]["RequestID"]);
+		$ComputeDate = !empty($_POST["EffectiveDate"]) ? $_POST["EffectiveDate"] : null;
+		$ComputeArr = LON_Computes::ComputePayments($dataTable[$i]["RequestID"], $ComputeDate);
 		$TotalRemain = LON_Computes::GetTotalRemainAmount($dataTable[$i]["RequestID"], $ComputeArr);
 		$remains = LON_Computes::GetRemainAmounts($dataTable[$i]["RequestID"], $ComputeArr);
 		$dataTable[$i]["remainder"] = $TotalRemain;
@@ -416,15 +417,21 @@ function ListData($IsDashboard = false){
 	$col = $rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
-	$col = $rpg->addColumn("مانده قابل پرداخت", "remainder", "ReportMoneyRender");
+	
+	function EndRender($row,$value){
+		if($row["IsEnded"] == "YES" || $row["StatusID"] == LON_REQ_STATUS_ENDED || $row["StatusID"] == LON_REQ_STATUS_DEFRAY)
+			return 0;
+		return number_format($value);
+	}
+	$col = $rpg->addColumn("مانده قابل پرداخت", "remainder", "EndRender");
+	//$col->ExcelRender = false;
+	$col->EnableSummary();
+	
+	$col = $rpg->addColumn("مانده کارمزد تاخیر", "LateAmount", "EndRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	
-	$col = $rpg->addColumn("کارمزد تاخیر", "LateAmount", "ReportMoneyRender");
-	$col->ExcelRender = false;
-	$col->EnableSummary();
-	
-	$col = $rpg->addColumn("جریمه تاخیر", "ForfeitAmount", "ReportMoneyRender");
+	$col = $rpg->addColumn("مانده جریمه تاخیر", "ForfeitAmount", "EndRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	
