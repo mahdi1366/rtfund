@@ -616,7 +616,7 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 					'</tpl>',
 					'</table>'
 				),
-				disabled : record.data.access == "NO" ? true : false,
+				readOnly : record.data.access == "NO" ? true : false,
 				width : 610,
 				itemId: 'ReqItem_' + record.data.FormItemID,
 				name: 'ReqItem_' + record.data.FormItemID,
@@ -650,7 +650,7 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 				}),
 				displayField: 'BranchName',
 				valueField : "BranchID",
-				disabled : record.data.access == "NO" ? true : false,
+				readOnly : record.data.access == "NO" ? true : false,
 				width : 400,
 				itemId: 'ReqItem_' + record.data.FormItemID,
 				name: 'ReqItem_' + record.data.FormItemID,
@@ -682,7 +682,7 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 				}),
 				xtype: record.data.ItemType,
 				valueField : "value",
-				disabled : record.data.access == "NO" ? true : false,
+				readOnly : record.data.access == "NO" ? true : false,
 				displayField : "value",
 				width : 610,
 				itemId: 'ReqItem_' + record.data.FormItemID,
@@ -700,7 +700,7 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 					xtype : "checkbox",
 					name : "ReqItem_" + record.data.FormItemID,
 					itemId : "ReqItem_" + record.data.FormItemID,
-					disabled : record.data.access == "NO" ? true : false
+					readOnly : record.data.access == "NO" ? true : false
 				});
 			}
 			else
@@ -724,7 +724,7 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 					items : items,
 					width : 610,
 					columns : 1,				
-					disabled : record.data.access == "NO" ? true : false
+					readOnly : record.data.access == "NO" ? true : false
 				});
 			}
 		}			
@@ -750,7 +750,7 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 				itemId: 'ReqItem_' + record.data.FormItemID,
 				name: 'ReqItem_' + record.data.FormItemID,
 				fieldLabel : titleInLine ? "" : record.data.ItemName,
-				disabled : record.data.access == "NO" && record.data.ItemType !== "displayfield" ? true : false,
+				readOnly : record.data.access == "NO" && record.data.ItemType !== "displayfield" ? true : false,
 			};
 			if(record.data.ItemType == 'numberfield' || record.data.ItemType == 'currencyfield')
 				item.hideTrigger =  true;

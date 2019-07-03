@@ -410,11 +410,18 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("تاریخ آخرین قسط", "MaxInstallmentDate", "ReportDateRender");
 	$rpg->addColumn("جمع مبلغ اقساط سررسید شده", "installmentsToNow", "ReportMoneyRender");
 	
+	$col = $rpg->addColumn("جمع اقساط تا تاریخ موثر", "EffectiveInstallmentAmounts", "ReportMoneyRender");
+	$col->ExcelRender = false;
+	$col->EnableSummary();
 
 	$rpg->addColumn("تاریخ آخرین پرداخت", "MaxPayDate", "ReportDateRender");
 	$rpg->addColumn("مبلغ آخرین پرداخت", "LastPayAmount", "ReportMoneyRender");
 	
-	$col = $rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount", "ReportMoneyRender");
+	$col = $rpg->addColumn("جمع کل پرداختی مشتری", "TotalPayAmount", "ReportMoneyRender");
+	$col->ExcelRender = false;
+	$col->EnableSummary();
+	
+	$col = $rpg->addColumn("جمع پرداخت های مشتری تا تاریخ موثر", "EffectiveBackPayAmounts", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	
@@ -438,15 +445,7 @@ function ListData($IsDashboard = false){
 	$col = $rpg->addColumn("کل جریمه تاخیر از ابتدا", "TotalForfeitAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
-	
-	$col = $rpg->addColumn("جمع اقساط تا تاریخ موثر", "EffectiveInstallmentAmounts", "ReportMoneyRender");
-	$col->ExcelRender = false;
-	$col->EnableSummary();
-	
-	$col = $rpg->addColumn("جمع پرداخت های مشتری تا تاریخ موثر", "EffectiveBackPayAmounts", "ReportMoneyRender");
-	$col->ExcelRender = false;
-	$col->EnableSummary();
-	
+		
 	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();

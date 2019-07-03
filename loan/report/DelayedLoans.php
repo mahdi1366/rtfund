@@ -119,8 +119,10 @@ function GetData(){
 				BranchName,
 				bi.InfoDesc StatusDesc,
 				tazamin,
+				t1.InstallmentAmount,
 				t1.LastInstallmentDate,
 				t1.FirstInstallmentDate,
+				t3.TotalPayAmount,
 				t3.MaxPayDate" .
 				($userFields != "" ? "," . $userFields : "")."
 				
@@ -132,7 +134,7 @@ function GetData(){
 			join LON_ReqParts p on(p.RequestID=r.RequestID AND p.IsHistory='NO')
 			join BSC_branches using(BranchID)
 			left join (
-				select RequestID, max(InstallmentDate) LastInstallmentDate , min(InstallmentDate) FirstInstallmentDate
+				select RequestID,InstallmentAmount, max(InstallmentDate) LastInstallmentDate , min(InstallmentDate) FirstInstallmentDate
 				from LON_installments
 				where history='NO' AND IsDelayed='NO'
 				group by RequestID
@@ -180,6 +182,7 @@ function GetData(){
 		$computeArr = LON_Computes::ComputePayments($row["RequestID"], $ComputeDate);
 		$remain = LON_Computes::GetCurrentRemainAmount($row["RequestID"],$computeArr, $ComputeDate);
 		$RemainArr = LON_Computes::GetRemainAmounts($row["RequestID"],$computeArr, $ComputeDate);
+		$totalRemain = LON_Computes::GetTotalRemainAmount($row["RequestID"],$computeArr);
 		
 		if($remain == 0)
 			continue;
@@ -199,7 +202,11 @@ function GetData(){
 		$row["remain_loan"] = $RemainArr["remain_pure"]*1 + $RemainArr["remain_wage"]*1;
 		$row["remain_late"] = $RemainArr["remain_late"];
 		$row["remain_pnlt"] = $RemainArr["remain_pnlt"];
-		$row["TotalRemainder"] = $remain;
+		$row["CurrentRemainder"] = $remain;
+		$row["TotalRemainder"] = $totalRemain;
+		
+		$TotalAmount = LON_installments::GetTotalInstallmentsAmount($row["RequestID"]);
+		$row["TotalLoanAmount"] = $TotalAmount;
 		$result[] = $row;
 	}
 	
@@ -228,21 +235,10 @@ function ListData($IsDashboard = false){
 	$rpt->addColumn("وضعیت", "StatusDesc");
 	$rpt->addColumn("تاریخ خاتمه", "EndingDate", "ReportDateRender");
 	
-	$rpt->addColumn("سررسید اولین قسط", "FirstInstallmentDate","ReportDateRender");
-	$rpt->addColumn("سررسید آخرین قسط", "LastInstallmentDate","ReportDateRender");
-	$rpt->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate","ReportDateRender");
-	
-	$rpt->addColumn("تعداد اقساط معوق", "delayedInstallmentsCount");
-	
-	
-	$rpt->addColumn("مانده قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");	
-	$rpt->addColumn("اصل وام معوقه", "remain_pure","ReportMoneyRender");
-	$rpt->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender");
-	$rpt->addColumn("مانده اصل و کارمزد", "remain_loan","ReportMoneyRender");
-	$rpt->addColumn("کارمزد تاخیر معوقه", "remain_late","ReportMoneyRender");
-	$rpt->addColumn("جریمه معوقه", "remain_pnlt","ReportMoneyRender");
-	
 	$rpt->addColumn("مبلغ وام", "PartAmount", "ReportMoneyRender");
+	$col = $rpt->addColumn("جمع وام و کارمزد", "TotalLoanAmount", "ReportMoneyRender");
+	$col->EnableSummary();
+	
 	$rpt->addColumn("شرح", "PartDesc");
 	$rpt->addColumn("ماه تنفس", "DelayMonths");
 	$rpt->addColumn("روز تنفس", "DelayDays");
@@ -252,6 +248,32 @@ function ListData($IsDashboard = false){
 	$rpt->addColumn("کارمزد صندوق", "FundWage");
 	$rpt->addColumn("درصد دیرکرد", "ForfeitPercent");
 	
+	$rpt->addColumn("سررسید اولین قسط", "FirstInstallmentDate","ReportDateRender");
+	$rpt->addColumn("سررسید آخرین قسط", "LastInstallmentDate","ReportDateRender");
+	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
+	$rpt->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate","ReportDateRender");
+	
+	$col = $rpt->addColumn("جمع پرداختی مشتری", "TotalPayAmount", "ReportMoneyRender");
+	$col->ExcelRender = false;
+	$col->EnableSummary();
+	
+	$col = $rpt->addColumn("تعداد اقساط معوق", "delayedInstallmentsCount");
+	$col->EnableSummary();
+	$col = $rpt->addColumn("مانده تا انتها", "TotalRemainder","ReportMoneyRender");	
+	$col->EnableSummary();
+	$col = $rpt->addColumn("مانده قابل پرداخت معوقه", "CurrentRemainder","ReportMoneyRender");	
+	$col->EnableSummary();
+	$col = $rpt->addColumn("اصل وام معوقه", "remain_pure","ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpt->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpt->addColumn("مانده اصل و کارمزد", "remain_loan","ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpt->addColumn("کارمزد تاخیر معوقه", "remain_late","ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpt->addColumn("جریمه معوقه", "remain_pnlt","ReportMoneyRender");
+	$col->EnableSummary();
+
 	
 	if(!$rpt->excel && !$IsDashboard)
 	{

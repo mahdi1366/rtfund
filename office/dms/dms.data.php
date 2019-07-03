@@ -557,8 +557,8 @@ function CreateZip(){
 	}
 	if(!empty($_REQUEST["ObjectID"]))
 	{
-		$where .= " AND ObjectID=:sid";
-		$param[":sid"] = $_REQUEST["ObjectID"];
+		$where .= " AND ObjectID=:oid";
+		$param[":oid"] = $_REQUEST["ObjectID"];
 	}
 	if(!empty($_REQUEST["ObjectID2"]))
 	{
@@ -571,7 +571,7 @@ function CreateZip(){
 	
 	$zip = new ZipArchive();
 	$filename = DOCUMENT_ROOT . "/storage/files.zip";
-	if ($zip->open($filename, ZipArchive::CREATE)!==TRUE) {
+	if ($zip->open($filename, ZipArchive::OVERWRITE)!==TRUE) {
 		Response::createObjectiveResponse(false, "can not create zip file");
 		die();
 	}
@@ -580,7 +580,7 @@ function CreateZip(){
 	{
 		$FileContent = $row["FileContent"] . 
 			file_get_contents(DOCUMENT_ROOT . "/storage/documents/" . $row["RowID"] . "." . $row["FileType"]);
-	
+		
 		$zip->addFromString("file". $index++ . "." . $row["FileType"], $FileContent);
 	}
 	$zip->close();
