@@ -900,9 +900,9 @@ class LON_requests extends PdoDataAccess{
 		else if($PartObj->WageReturn == "CUSTOMER" || $PartObj->AgentReturn == "CUSTOMER")
 		{
 			$result = self::GetWageAmounts($RequestID, $PartObj);
-			if($PartObj->WageReturn == "CUSTOMER")
+			if($PartObj->WageReturn != "INSTALLMENT")
 				$amount += $result["FundWage"];
-			if($PartObj->AgentReturn == "CUSTOMER")
+			if($PartObj->AgentReturn != "INSTALLMENT")
 				$amount += $result["AgentWage"];
 		}
 		
@@ -952,8 +952,7 @@ class LON_requests extends PdoDataAccess{
 		if($PartObj->ComputeMode == "NEW")
 			$amount = $PartObj->PartAmount*1 - self::TotalSubtractsOfPayAmount($RequestID, $PartObj);
 		else
-			$amount = $PartObj->PartAmount*1 - self::TotalSubtractsOfPayAmount($RequestID, $PartObj) 
-											 + self::TotalAddedToPayAmount($RequestID, $PartObj);
+			$amount = $PartObj->PartAmount*1 + self::TotalAddedToPayAmount($RequestID, $PartObj);
 		
 		return round($amount);		
 	}
