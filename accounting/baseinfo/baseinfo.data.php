@@ -221,7 +221,7 @@ function SelectCostCode() {
         $where.=" and cc.CostID=:CostID ";
         $param[':CostID'] = $_REQUEST['CostID'];
     }
-    $where .= dataReader::makeOrder();
+    $where .= dataReader::makeOrder() == "" ? " order by CostCode" : dataReader::makeOrder();
 
     $list = ACC_CostCodes::SelectCost($where, $param);
     print_r(ExceptionHandler::PopAllExceptions());

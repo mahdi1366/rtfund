@@ -181,7 +181,7 @@ function SaveMeeting(){
 		$pdo->commit();
 	else
 		$pdo->rollBack();
-	//sprint_r(ExceptionHandler::PopAllExceptions());
+	//print_r(ExceptionHandler::PopAllExceptions());
 	Response::createObjectiveResponse($res, $res ? $obj->MeetingID : "");
 	die();
 	

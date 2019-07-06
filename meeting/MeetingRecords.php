@@ -22,6 +22,7 @@ $dg->addColumn("", "MeetingID", "", true);
 $dg->addColumn("", "PersonID", "", true);
 $dg->addColumn("", "details", "", true);
 $dg->addColumn("", "keywords", "", true);
+$dg->addColumn("", "PreRecordNo", "", true); /*New Edition*/
 
 $col = $dg->addColumn("موضوع", "subject", "");
 
@@ -132,7 +133,16 @@ function MTG_MeetingRecords(){
 				width : 550,
 				fieldLabel : "شرح مصوبه",
 				rows : 4
-			},{
+			},
+                {
+                    xtype : "textfield",
+                    name : "PreRecordNo",
+                    width : 550,
+                    fieldLabel : "شماره مصوبه قبلی",
+                    allowBlank : true
+                }
+                ,
+                {
 				xtype : "textfield",
 				name : "keywords",
 				width : 550,

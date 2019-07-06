@@ -175,6 +175,7 @@ class MTG_MeetingRecords extends OperationClass{
 	public $FollowUpDate;
 	public $RecordStatus;
 	public $keywords;
+	public $PreRecordNo;
 	
 	public function __construct($id = '') {
 		

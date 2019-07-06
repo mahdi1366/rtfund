@@ -136,6 +136,9 @@ function SaveDocument() {
 		if(empty($file["tmp_name"]))
 			continue;
 		
+		$st = preg_split("/\./", $file["name"]);
+		$extension = strtolower($st [count($st) - 1]);
+		
 		$obj2 = new DMS_DocFiles();
 		$obj2->DocumentID = $obj->DocumentID;
 		$obj2->PageNo = str_replace("FileType_", "", $name);

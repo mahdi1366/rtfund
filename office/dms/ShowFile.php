@@ -71,7 +71,7 @@ foreach($dt as $file)
 	echo "<div style='width:100%;' align=center><hr>صفحه " . $file["PageNo"] . "<hr></div>";
 	if($file["FileType"] == "pdf")
 	{
-		echo "<div id=pdf_DIV_" . $file["RowID"] . " style='height:500px'></div></br>";
+		echo "<div id=pdf_DIV_" . $file["RowID"] . " style='height:100%'></div></br>";
 		echo '<script>var options = {
 				pdfOpenParams: {
 					navpanes: 0,

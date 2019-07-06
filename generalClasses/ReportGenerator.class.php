@@ -195,7 +195,7 @@ class ReportGenerator {
 			$this->AllRowCount = $this->mysql_resource->RowCount();
 			while ($row = $this->mysql_resource->fetch()) {
 				$this->GroupOperation($index, $row);
-				$this->DrawRow($row, $index);
+				$this->DrawRow($row ,$index);
 				$index++;
 				$this->PrevRecord = $row;
 				if($this->flushReport)
@@ -329,7 +329,7 @@ class ReportGenerator {
 
 		}//..............................................
 		echo "</caption>";
-		echo "<tr bgcolor = '$this->header_color'>";
+		echo "<thead> <tr class='breakPage' bgcolor = '$this->header_color'>";            //New Edition
 
 		// row number ---------------------------
 		if ($this->rowNumber)
@@ -396,7 +396,7 @@ class ReportGenerator {
 			if ($this->columns[$i]->HaveSum != -1)
 				$this->EnableSumRow = true;
 		}
-		echo "</tr>";
+		echo "</tr> </thead>";            //New Edition
 		if($secondRow != "")
 			echo "<tr bgcolor = '$this->header_color'>" . $secondRow . "</tr>";
 		
@@ -507,15 +507,18 @@ class ReportGenerator {
 						border='$this->border' align='center'>
 				<font color = '$this->body_textcolor' style='font-size:".$this->fontSize."'>&nbsp;";
 			echo ($index + 1) . "</font></td>";
+
+            		$row['number']=$index+1;
 		}
+
 		//----------------------------------------
 		for ($i = 0; $i < count($this->columns); $i++) {
 			//Now Draw Data
-			
+            		$row['number']=$index+1;
 			$this->columns[$i]->direction = "rtl";
 			
-			echo "<td height=21px id='col_" . $this->columns[$i]->field . "_" . ($index + 1) .  "' 
-				style='padding:2px;direction:" . $this->columns[$i]->direction . ";" . $this->columns[$i]->style . 
+			echo "<td  height=21px id='col_" . $this->columns[$i]->field . "_" . ($index + 1) .  "' 
+				style='text-align:justify;text-indent:-4px;padding:2px;padding-right:5px;padding-left:5px;min-width: 70px;direction:" . $this->columns[$i]->direction . ";" . $this->columns[$i]->style .
 					($this->columns[$i]->hidden ? ";display:none;" : "") . 
 					(strpos($this->columns[$i]->field,"VerticalSum_") !== false ? "background-color:" . $this->summaryRow_color : "") .
 					"' border='$this->border' align='" . 
