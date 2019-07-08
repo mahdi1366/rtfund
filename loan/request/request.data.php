@@ -810,6 +810,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 	{
 		$jdate = DateModules::miladi_to_shamsi($obj->PartDate);
 		$jdate = DateModules::AddToJDate($jdate, $obj->DelayDays, $obj->DelayMonths);
+		$jdate = DateModules::AddToJDate($jdate, 0, $obj->PayDuration*1);
 		$installmentArray = array();
 		for($i=0; $i < $obj->InstallmentCount; $i++)
 		{
@@ -875,7 +876,6 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 
 		$jdate = DateModules::miladi_to_shamsi($obj->PartDate);
 		$jdate = DateModules::AddToJDate($jdate, $obj->DelayDays, $obj->DelayMonths);
-
 		if($pdo2 == null)
 		{
 			$pdo = PdoDataAccess::getPdoObject();
