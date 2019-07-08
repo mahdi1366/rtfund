@@ -1839,6 +1839,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						xtype : "radio",
 						boxLabel : "فرمول جدید بانک مرکزی",
 						name : "ComputeMode",
+						disabled : true,
 						inputValue : "BANK"
 					},{
 						xtype : "radio",						
