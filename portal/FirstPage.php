@@ -35,13 +35,17 @@ $letterShow = count($list) > 0;
 
 //--------------- news -----------------
 require_once '../framework/management/framework.class.php';
-$temp = FRW_news::Get(" AND substr(now(),1,10)>= StartDate  AND substr(now(),1,10)<= StartDate");
+$temp = FRW_news::Get(" AND substr(now(),1,10)>= StartDate  AND substr(now(),1,10)<= EndDate");
 $temp = $temp->fetchAll();
-
 $returnStr = "";
 foreach($temp as $row)
-	$returnStr .= '<a href="javascript:void()" onclick="StartPageObject.ShowNews(' . $row["NewsID"] . ')" >' . 
-		'&nbsp;&nbsp;<font style="color:#17C5FF;font-size:11px">◄</font>&nbsp;' . ($row["NewsTitle"]) . "</a><br>"; 
+{
+	/*$returnStr .= '<a href="javascript:void()" onclick="StartPageObject.ShowNews(' . $row["NewsID"] . ')" >' . 
+		'&nbsp;&nbsp;<font style="color:#17C5FF;font-size:11px">◄</font>&nbsp;' . ($row["NewsTitle"]) . "</a><br>"; */
+	
+	$returnStr .= '<font style="color:#17C5FF;">◄&nbsp;' . $row["NewsTitle"] . 
+			"</font><div style='width:100%;padding-right:20px'> ".$row["context"]."</div><br>"; 
+}
 ?>
 <script>
 
@@ -70,7 +74,8 @@ function StartPage(){
 		width: 750,
 		border : false,
 		autoHeight : true,
-		style : "margin-bottom:10px;text-align:right;"		
+		style : "margin-bottom:10px;text-align:right;",
+		bodyStyle : "padding:10px"
 	});
 	
 	if(<?= $letterShow ? "true" : "false"?>)
