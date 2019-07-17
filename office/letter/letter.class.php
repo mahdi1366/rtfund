@@ -123,15 +123,19 @@ class OFC_letters extends PdoDataAccess{
 		$query = "select s.*,l.*, 
 				concat_ws(' ',fname, lname,CompanyName) FromPersonName,
 				if(t.cnt > 0,'YES','NO') hasAttach,
-				substr(s.SendDate,1,10) _SendDate
+				substr(s.SendDate,1,10) _SendDate,
+				InfoDesc SendTypeDesc
 				
 			from OFC_send s
+				left join BaseInfo b on(b.TypeID=12 AND s.SendType=InfoID)
 				join OFC_letters l using(LetterID)
 				join BSC_persons p on(s.FromPersonID=p.PersonID)
 				left  join (select ObjectID,count(DocumentID) cnt 
 							from DMS_documents where ObjectType='letterAttach' group by ObjectID )t
 					on(t.ObjectID = s.LetterID)
 				left join OFC_send s2 on(s2.LetterID=s.LetterID AND s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
+				
+				
 			where s2.SendID is null AND s.ToPersonID=:tpid " . $where . "
 			group by SendID";
 		$param[":tpid"] = $_SESSION["USER"]["PersonID"];
@@ -327,6 +331,7 @@ class OFC_send extends PdoDataAccess{
 		$this->DT_SendDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_ResponseTimeout = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_FollowUpDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_SendType = DataMember::CreateDMA(DataMember::DT_INT, "1");
 		
 		if($SendID != "")
 			parent::FillObject($this, "select * from OFC_send where SendID=?", array($SendID));
@@ -339,6 +344,9 @@ class OFC_send extends PdoDataAccess{
     }
 	
     function AddSend($pdo = null){
+		
+		$this->SendType = empty($this->SendType) ? "1" : $this->SendType;
+		
 	    if( parent::insert("OFC_send", $this, $pdo) === false )
 		    return false;
 
