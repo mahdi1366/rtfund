@@ -137,12 +137,19 @@ function CustomerLetters($returnMode = false){
 function ReceivedSummary(){
 	
 	$temp = PdoDataAccess::runquery("
-		select s.SendType,InfoDesc SendTypeDesc, count(*) totalCnt, sum(if(s.IsSeen='NO',1,0)) newCnt
-		from OFC_send s
-			left join BaseInfo on(TypeID=12 AND SendType=InfoID)
-			left join OFC_send s2 on(s2.LetterID=s.LetterID AND s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
-		where s2.SendID is null AND s.IsDeleted='NO' AND s.ToPersonID=" . $_SESSION["USER"]["PersonID"] . "
-		group by s.SendType");		
+		select s.SendType,InfoDesc SendTypeDesc, sum(if(s.IsDeleted='NO',1,0)) totalCnt, sum(if(s.IsSeen='NO' AND s.IsDeleted='NO',1,0)) newCnt
+        from OFC_send s
+            left join BaseInfo b on(TypeID=12 AND SendType=InfoID)
+            left join OFC_send s2 on(s2.LetterID=s.LetterID AND s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
+        where s2.SendID is null  AND s.ToPersonID=" . $_SESSION["USER"]["PersonID"] . "
+        group by b.InfoID
+        
+        union all
+        
+        select 0 SendType,'کلیه نامه ها' SendTypeDesc, sum(if(s.IsDeleted='NO',1,0)) totalCnt, sum(if(s.IsSeen='NO' AND s.IsDeleted='NO',1,0)) newCnt
+        from OFC_send s
+            left join OFC_send s2 on(s2.LetterID=s.LetterID AND s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
+        where s2.SendID is null  AND s.ToPersonID=" . $_SESSION["USER"]["PersonID"]);		
 	
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
