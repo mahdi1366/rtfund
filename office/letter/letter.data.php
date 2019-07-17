@@ -25,6 +25,13 @@ function SelectLetter() {
 		$where .= " AND LetterID=:lid";
 		$param[":lid"] = $_REQUEST["LetterID"];
 	}
+	
+	if(!empty($_REQUEST["query"]))
+	{
+		$where .= " AND ( LetterID= :q or LetterTitle like :q2 )";
+		$param[":q"] = $_REQUEST["query"];
+		$param[":q2"] = "%" .  $_REQUEST["query"] . "%";
+	}
 
     $list = OFC_letters::GetAll($where, $param);
     echo dataReader::getJsonData($list, count($list), $_GET['callback']);

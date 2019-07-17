@@ -26,7 +26,7 @@ if(!session::checkLogin())
 }
 
 define("SYSTEMID", 4);
-ini_set("display_errors", "On");
+
 function data_uri($content, $mime) {
     $base64 = base64_encode($content);
     return ('data:' . $mime . ';base64,' . $base64);

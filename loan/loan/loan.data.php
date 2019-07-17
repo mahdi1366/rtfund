@@ -32,6 +32,14 @@ function SelectLoanGroups(){
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
+/* NEW Create */
+function SelectAllLoanSources(){
+
+    $temp = PdoDataAccess::runquery("select * from LON_sources"); 
+    echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
+    die();
+}
+/* END NEW Create */
 
 function DeleteGroup(){
 	

@@ -32,7 +32,18 @@ class LON_requests extends PdoDataAccess{
 	public $RuleNo;
 	public $FundRules;
 	public $DomainID;
-	
+
+	/* New Add Fields */
+	public $LetterID;
+	public $SourceID;
+	public $ExpertPersonID;
+	public $DocReceiveDate;
+	public $DocRequestDate;
+	public $MeetingDate;
+	public $VisitDate;
+	public $WorkgroupDiscussDate;
+	/*END New Add Fields */
+
 	public $_LoanDesc;
 	public $_LoanPersonFullname;
 	public $_ReqPersonFullname;
@@ -42,6 +53,14 @@ class LON_requests extends PdoDataAccess{
 	function __construct($RequestID = "") {
 		
 		$this->DT_DomainID = DataMember::CreateDMA(DataMember::DT_INT, 0);
+
+		// change shamsi date to miladi date for save miladi date in database
+		$this->DT_ReqDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_DocReceiveDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_DocRequestDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_MeetingDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_VisitDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		$this->DT_WorkgroupDiscussDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		
 		if($RequestID != "")
 			PdoDataAccess::FillObject ($this, "
