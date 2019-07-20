@@ -227,15 +227,17 @@ MyLetter.prototype.LoadLetters = function(btn){
 	this.grid.getStore().proxy.extraParams.SendType = btn.itemId;
 	this.grid.setTitle(btn.text.split('<br>')[0]);
 	var col = this.grid.columns.findObject('dataIndex','SendTypeDesc');
-	if(btn.itemId == "0")
-		col.show();
-	else
-		col.hide();
-
+	
 	if(this.grid.rendered)
 		this.grid.getStore().loadPage(1);
 	else
 		this.grid.render(this.get("div_grid"));
+	
+	if(btn.itemId == "0")
+		col.show();
+	else
+		col.hide();
+	
 }
 
 MyLetter.SelectRender = function(v,p,r){
