@@ -35,7 +35,7 @@ $letterShow = count($list) > 0;
 
 //--------------- news -----------------
 require_once '../framework/management/framework.class.php';
-$temp = FRW_news::Get(" AND substr(now(),1,10)>= StartDate  AND substr(now(),1,10)<= EndDate");
+$temp = FRW_news::ShowNews();
 $temp = $temp->fetchAll();
 $returnStr = "";
 foreach($temp as $row)
