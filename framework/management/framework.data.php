@@ -545,6 +545,13 @@ function SaveNews(){
 	$obj = new FRW_news();
 	$obj->FillObjectByArray($obj, $_POST);
 	
+	$obj->IsStaff = $obj->IsStaff ? "YES" : "NO";
+	$obj->IsCustomer = $obj->IsCustomer ? "YES" : "NO";
+	$obj->IsShareholder = $obj->IsShareholder ? "YES" : "NO";
+	$obj->IsSupporter = $obj->IsSupporter ? "YES" : "NO";
+	$obj->IsExpert = $obj->IsExpert ? "YES" : "NO";
+	$obj->IsAgent = $obj->IsAgent ? "YES" : "NO";
+	
 	if(empty($obj->NewsID))
 		$result = $obj->Add();
 	else
