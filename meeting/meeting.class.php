@@ -176,6 +176,8 @@ class MTG_MeetingRecords extends OperationClass{
 	public $RecordStatus;
 	public $keywords;
 	public $PreRecordNo;
+    public $descriptionDocs; /* New Create */
+
 	
 	public function __construct($id = '') {
 		
@@ -186,10 +188,31 @@ class MTG_MeetingRecords extends OperationClass{
 	
 	static function Get($where = '', $whereParams = array()) {
 		
-		return parent::runquery_fetchMode("
-			select mr.*, concat_ws(' ',fname,lname,CompanyName) fullname 
-			from MTG_MeetingRecords mr left join BSC_persons p using(PersonID)
-			where 1=1 " . $where, $whereParams);
-	}
+		return parent::runquery_fetchMode("select  t.*, GROUP_CONCAT(PersonName SEPARATOR ',') AS fullname FROM
+			(select mr.*, concat_ws(' ',fname,lname,CompanyName) PersonName 
+			from MTG_MeetingRecords mr 
+			left JOIN MTG_RecordExecutors op using(RecordID)	
+			left join BSC_persons p on(p.PersonID=op.PersonID)
+		    where 1=1  " . $where .") t GROUP BY RecordID " , $whereParams);
+    }
+
+}
+
+class MTG_RecordExecutors extends OperationClass{
+
+	const TableName = "MTG_RecordExecutors";
+	const TableKey = "ExecutorID"; 
+	
+    public $ExecutorID;
+    public $RecordID;
+    public $PersonID;
+
+	static function RemoveAll($RecordID, $pdo = null) {
+		
+        PdoDataAccess::runquery("delete from MTG_RecordExecutors where RecordID=?", array($RecordID));
+        return ExceptionHandler::GetExceptionCount() == 0;
+    }
+
+
 }
 ?>

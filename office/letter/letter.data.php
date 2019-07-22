@@ -141,7 +141,7 @@ function ReceivedSummary(){
         from OFC_send s
             left join BaseInfo b on(TypeID=12 AND SendType=InfoID)
             left join OFC_send s2 on(s2.LetterID=s.LetterID AND s2.SendID>s.SendID AND s2.FromPersonID=s.ToPersonID)
-        where s2.SendID is null  AND s.ToPersonID=" . $_SESSION["USER"]["PersonID"] . "
+        where s2.SendID is null AND s.IsDeleted='NO' AND s.ToPersonID=" . $_SESSION["USER"]["PersonID"] . "
         group by b.InfoID
         
         union all

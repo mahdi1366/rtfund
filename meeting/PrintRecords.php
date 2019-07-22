@@ -43,7 +43,7 @@ $col->align = "center";
 function emptyRender($row, $value){
 	return "";
 }
-$col = $rpt->addColumn("شرح مستندات", "subject", "emptyRender");
+$col = $rpt->addColumn("شرح مستندات", "descriptionDocs", "emptyRender");
 $col->align = "center";
 
 //..........................................
