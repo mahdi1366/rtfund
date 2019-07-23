@@ -29,6 +29,17 @@ $dg->title = "کاربران جدیدی که ثبت نام کرده اند";
 $dg->autoExpandColumn = "fullname";
 $dg->emptyTextOfHiddenColumns = true;
 $grid1 = $dg->makeGrid_returnObjects();
+
+//--------------- news -----------------
+$temp = FRW_news::ShowNews();
+$temp = $temp->fetchAll();
+$returnStr = "";
+foreach($temp as $row)
+{
+	$returnStr .= '<font style="color:#17C5FF;">◄&nbsp;' . $row["NewsTitle"] . 
+			"</font><div style='width:100%;padding-right:20px'> ".$row["context"]."</div><br>"; 
+}
+
 ?>
 <script>
 
@@ -43,7 +54,19 @@ FrameworkStartPage.prototype = {
 
 function FrameworkStartPage(){
 	
-	 new Ext.panel.Panel({
+	new Ext.panel.Panel({
+		renderTo : this.get("div_news"),
+		title : "اعلان ها",
+		frame : true,
+		contentEl : this.get("div_newsContent"),
+		width: 800,
+		border : false,
+		autoHeight : true,
+		style : "margin:10px 0 0 0;text-align:right;",
+		bodyStyle : "padding:10px"
+	});
+	
+	new Ext.panel.Panel({
 		renderTo : this.get("panel1"),
 		title : "اتوماسیون اداری",
         width: 220,
@@ -63,6 +86,7 @@ function FrameworkStartPage(){
 	this.grid1 = <?= $grid1 ?>;
 	new Ext.panel.Panel({
 		renderTo : this.get("panel2"),
+		width : 460,
 		items : this.grid1,
 		frame : true
 	});
@@ -193,6 +217,13 @@ FrameWorkClass.prototype.ExecuteEvent = function(EventID, params){
 		<td><div id="panel3"></div></td>
 		<td width="10px"></td>
 		<td><div id="panel2"></div></td>
+	</tr>
+	<tr>
+		<td colspan="5">
+			<div id="div_news">
+				<div id="div_newsContent"><?= $returnStr ?></div>
+			</div>
+		</td>
 	</tr>
 	<tr>
 		<td id="panelNotes" colspan="5">&nbsp;</td>
