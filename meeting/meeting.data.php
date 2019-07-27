@@ -51,8 +51,7 @@ switch($task)
 
 function selectMeetingTypes(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=".TYPEID_MeetingType.
-			" AND IsActive='YES' order by InfoID");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=".TYPEID_MeetingType." AND IsActive='YES' order by InfoID");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -131,12 +130,19 @@ function SelectAllMeetings(){
 		$where .= " AND MeetingID=:m";
 		$param[":m"] = $_REQUEST["MeetingID"]*1;
 	}
+
 	
-	if(!empty($_REQUEST["MeetingType"]))
+	if(!empty($_REQUEST["param1"]))
+	{
+		$where .= " AND b2.param1=:p";
+		$param[":p"] = $_REQUEST["param1"];
+	}
+	else if(!empty($_REQUEST["MeetingType"]))
 	{
 		$where .= " AND MeetingType=:mt";
 		$param[":mt"] = $_REQUEST["MeetingType"]*1;
 	}
+		
 	
 	
 	if (!empty($_REQUEST['fields']) && !empty($_REQUEST['query'])) {
