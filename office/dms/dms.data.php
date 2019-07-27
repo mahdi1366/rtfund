@@ -590,4 +590,25 @@ function CreateZip(){
 	Response::createObjectiveResponse(true, "");
 	die();
 }
+
+function SearchInternalDocuments(){
+	ini_set("display_errors", "On");
+	$where = "";
+	$param = array();
+	
+	if(!empty($_GET["query"]))
+	{
+		$where .= " AND ( DocDesc like :q or InfoDesc like :q)";
+		$param[":q"] = "%" . $_GET["query"] . "%";
+	}
+	
+	$temp = PdoDataAccess::runquery_fetchMode("select DocumentID,DocDesc,InfoDesc groupDesc from DMS_documents join BaseInfo on(InfoID=DocType and Typeid=8)
+			where param1=17 ". $where, $param);
+	
+	$res = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
+	echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+	die();
+}
+
+
 ?>
