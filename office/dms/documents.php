@@ -354,8 +354,46 @@ function ManageDocument(){
 									displayField : "fullDesc",
 									valueField : "LetterID",
 									name : "Param" + record.data.ParamID,
-									fieldLabel : record.data.ParamDesc
-									
+									fieldLabel : record.data.ParamDesc									
+								});
+							}
+							else if(record.data.KeyTitle == "DocumentID")
+							{
+								ParamsFS.add({
+									xtype : "combo",
+									colspan : 2,
+									width : 500,
+									store : new Ext.data.SimpleStore({
+										proxy: {
+											type: 'jsonp',
+											url: me.address_prefix + 'dms.data.php?' +
+												"task=SearchInternalDocuments",
+											reader: {root: 'rows',totalProperty: 'totalCount'}
+										},
+										fields : ['DocumentID','DocDesc','groupDesc']
+									}),
+									tpl: new Ext.XTemplate(
+										'<table class=gridCombo cellspacing="0" >',
+											'<tr>',
+												'<th>گروه</th>',
+												'<th>عنوان مدرک</th>',
+											'</tr>',
+										'<tpl for=".">',
+											'<tr class="x-boundlist-item">',
+												'<td>{groupDesc}</td>',
+												'<td>{DocDesc}</td>',
+											'</tr>',
+										'</tpl>',
+										'</table>'),
+									displayField : "DocDesc",
+									valueField : "DocumentID",
+									name : "Param" + record.data.ParamID,
+									fieldLabel : record.data.ParamDesc,
+									listeners : {
+										select : function(el,records){
+											this.up('form').down("[name=DocDesc]").setValue(records[0].data.DocDesc);
+										}
+									}
 								});
 							}
 							else
@@ -560,9 +598,13 @@ ManageDocument.OpenLetter = function(LetterID){
 
 ManageDocument.ParamValueRender = function(v,p,r){
 	
-	if(r.data.DocType != "<?= DMS_DOCTYPE_LETTER ?>")
-		return v;
-	return "<a href=javascript:void() onclick=ManageDocument.OpenLetter("+v+");>شماره نامه : "+v+"</a>";
+	if(r.data.DocType == "<?= DMS_DOCTYPE_LETTER ?>")
+		return "<a href=javascript:void() onclick=ManageDocument.OpenLetter("+v+");>شماره نامه : "+v+"</a>";
+		
+	if(r.data.DocType == "<?= DMS_DOCTYPE_Documents ?>")
+		return "<a href=/office/dms/ShowFile.php?DocumentID="+v+"&ObjectID=0 target=_blank>"+v+"</a>";
+	return v;
+	
 }
 
 ManageDocument.ShowFile = function(DocumentID, ObjectID){

@@ -98,7 +98,8 @@ Ext.override(Ext.grid.GridPanel ,{
 		this.mask.show();
 		this.allStore.load({
 			callback : function(){
-				
+				excelMe.mask.hide();
+			
 				var vExportContent = excelMe.getExcelXml(includeHidden, title);
 				var location = 'data:application/vnd.ms-excel;base64,' + Base64.encode(vExportContent);
 
@@ -127,7 +128,7 @@ Ext.override(Ext.grid.GridPanel ,{
     getExcelXml: function(includeHidden, title) {
 
         var theTitle = title || this.title;
-
+		theTitle =  theTitle == "" ? "---" : theTitle;
         var worksheet = this.createWorksheet(includeHidden, theTitle);
         var totalWidth = this.columns.length;
 
@@ -281,6 +282,7 @@ Ext.override(Ext.grid.GridPanel ,{
 					
 					if(cm[i].text.indexOf("<") != -1)
 						cm[i].text = "";
+					cm[i].text = cm[i].text.replace(/<br>/g, " ");
 					
                     colXml += '<Column ss:AutoFitWidth="1" ss:Width="' + w + '" />';
                     headerXml += '<Cell ss:StyleID="headercell">' +
@@ -353,11 +355,13 @@ Ext.override(Ext.grid.GridPanel ,{
                     if(cm[j].renderer)
 					{
 						v = cm[j].renderer(v,'',it[i]);
-						if(v == undefined)
-							v = "";
-						if(v.indexOf("<") != -1)
-							v = r[cm[j].dataIndex];
 					}
+					
+					if(v == undefined)
+						v = "";
+					
+					v = $('<p>' + v + '</p>').text();
+			
                     
 					t += '<Cell ss:StyleID="' + cellClass + cellTypeClass[k] + '"><Data ss:Type="' + cellType[k] + '">';
 					t += v;

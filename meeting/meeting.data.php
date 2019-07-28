@@ -189,7 +189,7 @@ function SaveMeeting(){
 	else
 		$pdo->rollBack();
 	//print_r(ExceptionHandler::PopAllExceptions());
-	Response::createObjectiveResponse($res, $res ? $obj->MeetingID : "");
+	Response::createObjectiveResponse($res, $res ? "{MeetingID:" . $obj->MeetingID . ",MeetingNo:" . $obj->MeetingNo . "}" : "");
 	die();
 	
 }
@@ -494,7 +494,7 @@ function GetDueDateRecords(){
 			left join MTG_agendas a on(a.MeetingID=? AND a.RecordID=r.RecordID)
 			left join BSC_persons p on(r.PersonID=p.PersonID)
 		where a.AgendaID is null AND m.MeetingType=?
-			AND FollowUpDate<>'0000-00-00' AND FollowUpDate <= ?",
+			AND FollowUpDate<>'0000-00-00' AND FollowUpDate <= ?" . dataReader::makeOrder(),
 			array($Mobj->MeetingID, $Mobj->MeetingType, $Mobj->MeetingDate));
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount());
 	die();

@@ -55,7 +55,7 @@ function SelectAll(){
 			if($row["ParamType"] == "currencyfield")
 				$value = number_format($value*1);
 			
-			if($row["DocType"] == DMS_DOCTYPE_LETTER)
+			if($row["DocType"] == DMS_DOCTYPE_LETTER || $row["DocType"] == DMS_DOCTYPE_Documents)
 				$temp[$i]["paramValues"] .= $value . "<br>";
 			else
 				$temp[$i]["paramValues"] .= $row["ParamDesc"] . " : " . $value . "<br>";

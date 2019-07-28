@@ -49,7 +49,7 @@ function MeetingInfo(){
 			url: this.address_prefix + "meeting.data.php?task=SelectAllMeetings&MeetingID=" + this.MeetingID,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["MeetingID","MeetingType","place","MeetingDate","StartTime","EndTime",
+		fields : ["MeetingID","MeetingNo","MeetingType","place","MeetingDate","StartTime","EndTime",
 			"details","secretary","StatusID","InPortal"],
 		
 		listeners : {
@@ -131,6 +131,12 @@ MeetingInfo.prototype.BuildForms = function(){
 				},
 				width: 780,
 				items : [{
+					xtype : "numberfield",
+					name : "MeetingNo",
+					fieldLabel : "شماره جلسه",
+					hideTrigger : true,
+					colspan : 2
+				},{
 					xtype : "combo",
 					readOnly : readOnly,
 					name : "MeetingType",
@@ -345,7 +351,9 @@ MeetingInfo.prototype.SaveMeetingInfo = function(SendFile){
 		success : function(form,action){
 			mask.hide();
 			me = MeetingInfoObject;
-			me.MeetingID = action.result.data;
+			result = action.result.data;
+			me.MeetingID = result.MeetingID;
+			me.MeetingPanel.down("[name=MeetingNo]").setValue(result.MeetingNo);
 			
 			/*me.TabPanel.down("[itemId=pagesView]").getStore().proxy.extraParams = {
 				MeetingID : me.MeetingID
@@ -357,7 +365,7 @@ MeetingInfo.prototype.SaveMeetingInfo = function(SendFile){
 		},
 		failure : function(form,action){
 			mask.hide();
-			Ext.MessageBox.alert("Error", action.result.data);
+			Ext.MessageBox.alert("Error", action.result.data == "" ? "شماره جلسه وارد شده تکراری است" : action.result.data);
 		}
 	});
 }

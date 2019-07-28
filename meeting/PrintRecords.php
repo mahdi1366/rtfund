@@ -69,10 +69,9 @@ $absents = $absents->fetchAll();
 
         }
 
-
-table tbody tr td[id*="col_fullname"]{
-    text-align: center !important;
-}
+		table tbody tr td[id*="col_fullname"]{
+			text-align: center !important;
+		}
         tr .breakPage{
 
             page-break-before: always!important;

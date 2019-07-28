@@ -15,9 +15,10 @@ function ReqPersonRender($row,$value){
 function intervslRender($row, $value){
 	return $value . ($row["IntervalType"] == "DAY" ? " روز" : " ماه");
 }
-
 	
 $page_rpg = new ReportGenerator("mainForm","LoanReport_DelayedInstallsObj");
+
+
 $page_rpg->addColumn("شماره وام", "RequestID");
 $page_rpg->addColumn("شعبه وام", "BranchName");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
@@ -32,10 +33,10 @@ $col = $page_rpg->addColumn("سررسید آخرین قسط", "LastInstallmentDa
 $col->type = "date";
 $col = $page_rpg->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate");
 $col->type = "date";
-$col = $page_rpg->addColumn("قابل پرداخت معوقه", "TotalRemainder");
+$col = $page_rpg->addColumn("مانده کل تا انتها", "TotalRemainder");
 $col->IsQueryField = false;
 
-$col = $page_rpg->addColumn("اصل وام معوقه", "remain_pure","ReportMoneyRender");
+$col = $page_rpg->addColumn("مانده اصل وام تا انتها", "remain_pure","ReportMoneyRender");
 $col->IsQueryField = false;
 $col = $page_rpg->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender");
 $col->IsQueryField = false;
@@ -122,6 +123,7 @@ function GetData(){
 				t1.InstallmentAmount,
 				t1.LastInstallmentDate,
 				t1.FirstInstallmentDate,
+				t4.TotalInstallmentAmount,
 				t3.TotalPayAmount,
 				t3.MaxPayDate" .
 				($userFields != "" ? "," . $userFields : "")."
@@ -163,6 +165,13 @@ function GetData(){
 				group by RequestID			
 			)t3 on(r.RequestID=t3.RequestID)
 			
+			left join (
+				select RequestID,sum(InstallmentAmount) TotalInstallmentAmount 
+				from LON_installments
+				where  history='NO' AND IsDelayed='NO'
+				group by RequestID			
+			)t4 on(r.RequestID=t4.RequestID)
+			
 			where 1=1 " . $where . "
 		
 			group by r.RequestID
@@ -183,7 +192,7 @@ function GetData(){
 		$remain = LON_Computes::GetCurrentRemainAmount($row["RequestID"],$computeArr, $ComputeDate);
 		$RemainArr = LON_Computes::GetRemainAmounts($row["RequestID"],$computeArr, $ComputeDate);
 		$totalRemain = LON_Computes::GetTotalRemainAmount($row["RequestID"],$computeArr);
-		
+
 		if($remain == 0)
 			continue;
 		
@@ -204,7 +213,7 @@ function GetData(){
 		$row["remain_pnlt"] = $RemainArr["remain_pnlt"];
 		$row["CurrentRemainder"] = $remain;
 		$row["TotalRemainder"] = $totalRemain;
-		
+
 		$TotalAmount = LON_installments::GetTotalInstallmentsAmount($row["RequestID"]);
 		$row["TotalLoanAmount"] = $TotalAmount;
 		$result[] = $row;
@@ -222,7 +231,7 @@ function ListData($IsDashboard = false){
 	function LoanReportRender($row,$value){
 		return "<a href=LoanPayment.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
 	}
-	
+
 	$col = $rpt->addColumn("کد وام", "RequestID", "LoanReportRender");
 	$col->ExcelRender = false;
 	$rpt->addColumn("شعبه وام", "BranchName");
@@ -253,17 +262,17 @@ function ListData($IsDashboard = false){
 	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
 	$rpt->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate","ReportDateRender");
 	
-	$col = $rpt->addColumn("جمع پرداختی مشتری", "TotalPayAmount", "ReportMoneyRender");
+	$col = $rpt->addColumn("جمع کل پرداختی تاکنون", "TotalPayAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();
 	
 	$col = $rpt->addColumn("تعداد اقساط معوق", "delayedInstallmentsCount");
 	$col->EnableSummary();
-	$col = $rpt->addColumn("مانده تا انتها", "TotalRemainder","ReportMoneyRender");	
+	$col = $rpt->addColumn("مانده کل تا انتها", "TotalRemainder","ReportMoneyRender");	
 	$col->EnableSummary();
 	$col = $rpt->addColumn("مانده قابل پرداخت معوقه", "CurrentRemainder","ReportMoneyRender");	
 	$col->EnableSummary();
-	$col = $rpt->addColumn("اصل وام معوقه", "remain_pure","ReportMoneyRender");
+	$col = $rpt->addColumn("مانده اصل وام تا انتها", "remain_pure","ReportMoneyRender");
 	$col->EnableSummary();
 	$col = $rpt->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender");
 	$col->EnableSummary();
@@ -273,7 +282,6 @@ function ListData($IsDashboard = false){
 	$col->EnableSummary();
 	$col = $rpt->addColumn("جریمه معوقه", "remain_pnlt","ReportMoneyRender");
 	$col->EnableSummary();
-
 	
 	if(!$rpt->excel && !$IsDashboard)
 	{
