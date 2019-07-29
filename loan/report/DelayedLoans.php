@@ -26,27 +26,15 @@ $page_rpg->addColumn("معرف", "ReqPersonName");
 $page_rpg->addColumn("وام گیرنده", "LoanPersonName");
 $page_rpg->addColumn("تضامین", "tazamin");
 $page_rpg->addColumn("وضعیت", "StatusDesc");
-
-$col = $page_rpg->addColumn("سررسید اولین قسط", "FirstInstallmentDate");
+$col = $page_rpg->addColumn("تاریخ خاتمه", "EndingDate");
 $col->type = "date";
-$col = $page_rpg->addColumn("سررسید آخرین قسط", "LastInstallmentDate");
-$col->type = "date";
-$col = $page_rpg->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate");
-$col->type = "date";
-$col = $page_rpg->addColumn("مانده کل تا انتها", "TotalRemainder");
-$col->IsQueryField = false;
+$page_rpg->addColumn("معرف", "ReqPersonName");
+$page_rpg->addColumn("وام گیرنده", "LoanPersonName");
+$page_rpg->addColumn("موبایل", "mobile");
 
-$col = $page_rpg->addColumn("مانده اصل وام تا انتها", "remain_pure","ReportMoneyRender");
-$col->IsQueryField = false;
-$col = $page_rpg->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender");
-$col->IsQueryField = false;
-$col = $page_rpg->addColumn("کارمزد تاخیر معوقه", "remain_late","ReportMoneyRender");
-$col->IsQueryField = false;
-$col = $page_rpg->addColumn("جریمه معوقه", "remain_pnlt","ReportMoneyRender");
-$col->IsQueryField = false;
-
+$page_rpg->addColumn("مبلغ وام", "PartAmount");
+$page_rpg->addColumn("جمع وام و کارمزد", "TotalLoanAmount");
 $page_rpg->addColumn("شرح", "PartDesc");
-$page_rpg->addColumn("مبلغ پرداخت", "PartAmount");
 $page_rpg->addColumn("ماه تنفس", "DelayMonths");
 $page_rpg->addColumn("روز تنفس", "DelayDays");
 $page_rpg->addColumn("فاصله اقساط", "PayInterval", "intervslRender");
@@ -54,6 +42,24 @@ $page_rpg->addColumn("تعداد اقساط", "InstallmentCount");
 $page_rpg->addColumn("کارمزد مشتری", "CustomerWage");
 $page_rpg->addColumn("کارمزد صندوق", "FundWage");
 $page_rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
+
+$col = $page_rpg->addColumn("سررسید اولین قسط", "FirstInstallmentDate"); $col->type = "date";
+$col = $page_rpg->addColumn("سررسید آخرین قسط", "LastInstallmentDate"); $col->type = "date";
+$col = $page_rpg->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
+$col = $page_rpg->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate"); $col->type = "date";
+$col = $page_rpg->addColumn("مانده کل تا انتها", "TotalRemainder");	$col->IsQueryField = false;
+$col = $page_rpg->addColumn("جمع کل پرداختی تاکنون", "TotalPayAmount", "ReportMoneyRender");
+$col = $page_rpg->addColumn("تعداد اقساط معوق", "delayedInstallmentsCount"); $col->IsQueryField = false;
+
+$col = $page_rpg->addColumn("مانده کل تا انتها", "TotalRemainder","ReportMoneyRender");	 $col->IsQueryField = false;
+$col = $page_rpg->addColumn("مانده قابل پرداخت معوقه", "CurrentRemainder","ReportMoneyRender");	$col->IsQueryField = false;
+
+$col = $page_rpg->addColumn("مانده اصل وام تا انتها", "remain_pure","ReportMoneyRender"); $col->IsQueryField = false;
+$col = $page_rpg->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender"); $col->IsQueryField = false;
+$col = $page_rpg->addColumn("مانده اصل و کارمزد", "remain_loan","ReportMoneyRender"); $col->IsQueryField = false;
+$col = $page_rpg->addColumn("کارمزد تاخیر معوقه", "remain_late","ReportMoneyRender"); $col->IsQueryField = false;
+$col = $page_rpg->addColumn("جریمه معوقه", "remain_pnlt","ReportMoneyRender"); $col->IsQueryField = false;
+	
 
 function MakeWhere(&$where, &$whereParam){
 
@@ -240,7 +246,6 @@ function ListData($IsDashboard = false){
 	$rpt->addColumn("معرف", "ReqPersonName");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("موبایل", "mobile");
-	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("وضعیت", "StatusDesc");
 	$rpt->addColumn("تاریخ خاتمه", "EndingDate", "ReportDateRender");
 	
