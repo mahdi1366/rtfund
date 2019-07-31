@@ -100,6 +100,7 @@ switch($ObjectType)
 		require_once '../../meeting/meeting.class.php';
 		$obj = new MTG_meetings($ObjectID);
 		$access = $obj->StatusID == MTG_STATUSID_RAW ? true : false;
+		$access = true;
 		break;
 	case "meetingagenda":
 		require_once '../../meeting/meeting.class.php';
