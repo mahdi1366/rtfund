@@ -28,8 +28,6 @@ $page_rpg->addColumn("تضامین", "tazamin");
 $page_rpg->addColumn("وضعیت", "StatusDesc");
 $col = $page_rpg->addColumn("تاریخ خاتمه", "EndingDate");
 $col->type = "date";
-$page_rpg->addColumn("معرف", "ReqPersonName");
-$page_rpg->addColumn("وام گیرنده", "LoanPersonName");
 $page_rpg->addColumn("موبایل", "mobile");
 
 $page_rpg->addColumn("مبلغ وام", "PartAmount");
@@ -47,7 +45,6 @@ $col = $page_rpg->addColumn("سررسید اولین قسط", "FirstInstallmentD
 $col = $page_rpg->addColumn("سررسید آخرین قسط", "LastInstallmentDate"); $col->type = "date";
 $col = $page_rpg->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
 $col = $page_rpg->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate"); $col->type = "date";
-$col = $page_rpg->addColumn("مانده کل تا انتها", "TotalRemainder");	$col->IsQueryField = false;
 $col = $page_rpg->addColumn("جمع کل پرداختی تاکنون", "TotalPayAmount", "ReportMoneyRender");
 $col = $page_rpg->addColumn("تعداد اقساط معوق", "delayedInstallmentsCount"); $col->IsQueryField = false;
 
