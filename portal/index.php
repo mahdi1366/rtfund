@@ -98,67 +98,89 @@ function CreateMenuStr(){
 			<img src="/generalUI/ext4/resources/themes/icons/loading-balls.gif" style="margin-right:8px;" align="absmiddle"/></div>
 	</div>
 	<center>
-		<div class="portalHeader">
-			<table width="100%" style="height: 100%">
-				<tr>
-					<td style="vertical-align: bottom;padding-bottom:20px">
-						<div class="HeaderMenu" onclick="portal.OpenPage('/portal/FirstPage.php')">
-							<i class="fas fa-home"></i>صفحه نخست</div>
-						<div class="HeaderMenu" onclick="window.open('http://krrtf.ir')"><i class="fab fa-internet-explorer"></i>سایت صندوق</div>
-						<div class="HeaderMenu"><i class="fas fa-question "></i>راهنمای استفاده از خدمات</div>
-						<div class="HeaderMenu" onclick="portal.OpenPage('/portal/contact.php')"><i class="fas fa-phone "></i>تماس با ما</div>
-					</td>
-					<td width="100px" align="center" style="vertical-align: middle;font-weight: bold">
-						<?= DateModules::shNow(); ?><br>
-						<div id="portal_clock"></div>
-						<script>
-							function startTime() {
-								var today = new Date();
-								var h = today.getHours();
-								var m = today.getMinutes();
-								var s = today.getSeconds();
-								m = checkTime(m);
-								s = checkTime(s);
-								document.getElementById('portal_clock').innerHTML =
-								h + ":" + m + ":" + s;
-								var t = setTimeout(startTime, 500);
-							}
-							function checkTime(i) {
-								if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
-								return i;
-							}
-							startTime();
-						</script>
-					</td>
-					<td width="100px"><img style="margin-top:5px;width:90px;" 
-										   src="/framework/icons/logo-small.png"></td>
+		<table style="width:1024px;height:100%">
+			 <thead>
+				<tr style="border-bottom: 1px solid white;height: 100px">
+					<th colspan="2">
+						<div class="portalHeader">
+							<table width="100%" style="height: 100%">
+								<tr>
+									<td style="vertical-align: bottom;padding-bottom:20px">
+										<div class="HeaderMenu" onclick="portal.OpenPage('/portal/FirstPage.php')">
+											<i class="fas fa-home"></i>صفحه نخست</div>
+										<div class="HeaderMenu" onclick="window.open('http://krrtf.ir')"><i class="fab fa-internet-explorer"></i>سایت صندوق</div>
+										<div class="HeaderMenu"><i class="fas fa-question "></i>راهنمای استفاده از خدمات</div>
+										<div class="HeaderMenu" onclick="portal.OpenPage('/portal/contact.php')"><i class="fas fa-phone "></i>تماس با ما</div>
+									</td>
+									<td width="100px" align="center" style="vertical-align: middle;font-weight: bold">
+										<?= DateModules::shNow(); ?><br>
+										<div id="portal_clock"></div>
+										<script>
+											function startTime() {
+												var today = new Date();
+												var h = today.getHours();
+												var m = today.getMinutes();
+												var s = today.getSeconds();
+												m = checkTime(m);
+												s = checkTime(s);
+												document.getElementById('portal_clock').innerHTML =
+												h + ":" + m + ":" + s;
+												var t = setTimeout(startTime, 500);
+											}
+											function checkTime(i) {
+												if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+												return i;
+											}
+											startTime();
+										</script>
+									</td>
+									<td width="100px"><img style="margin-top:5px;width:90px;" 
+														   src="/framework/icons/logo-small.png"></td>
+								</tr>
+							</table>
+						</div>
+					</th>
 				</tr>
-			</table>
-		</div>
-		<div class="PortalMain">
-			<div id="mainPortalFrame" class="mainFrame" ></div>
-			<div align='center' class="UserInfoBox">
-				<?= $_SESSION['USER']["fullname"] ?> خوش آمدید.					
-				<br>
-				<img class='PortalPersonPicStyle' 
-					 src="/framework/person/showImage.php?PersonID=<?= $_SESSION['USER']["PersonID"]?>" />
-				<table width="90%" style="margin-bottm:5px;">
-					<tr>
-						<td align="right" style="color:white">آخرین ورود <br> 
-							<font style="color: #FAC570">
-							<?= substr($lastDate,10) ?> - <?= DateModules::miladi_to_shamsi($lastDate) ?>
-							</font>
-							</td>
-						<td align="left">
-							<img style='width: 22px; vertical-align: middle; margin-top: 10px;cursor: pointer' 
-							src='/framework/icons/exit.png' onclick="portal.OpenPage('/framework/logout.php');" /> 
-						</td>
-					</tr>
-				</table>
-			</div>
-			<div class="menu" ><?= $menuStr?></div>
-		</div>
-		<div class="copyright" style="font-family: tahoma" align=center>کلیه حقوق مادی و معنوی این پورتال محفوظ می باشد</div>          
+			  </thead>
+			<tr>
+				<td style="height: 120px;border-left: 1px solid #ddd">
+					<div align='center' class="UserInfoBox">
+						<?= $_SESSION['USER']["fullname"] ?> خوش آمدید.					
+						<br>
+						<img class='PortalPersonPicStyle' 
+							 src="/framework/person/showImage.php?PersonID=<?= $_SESSION['USER']["PersonID"]?>" />
+						<table width="90%" style="margin-bottm:5px;">
+							<tr>
+								<td align="right" style="color:white">آخرین ورود <br> 
+									<font style="color: #FAC570">
+									<?= substr($lastDate,10) ?> - <?= DateModules::miladi_to_shamsi($lastDate) ?>
+									</font>
+									</td>
+								<td align="left">
+									<img style='width: 22px; vertical-align: middle; margin-top: 10px;cursor: pointer' 
+									src='/framework/icons/exit.png' onclick="portal.OpenPage('/framework/logout.php');" /> 
+								</td>
+							</tr>
+						</table>
+					</div>
+				</td>
+				<td rowspan="2" style="background-color: white;vertical-align: top;min-height: 500px">
+					<div id="mainPortalFrame" class="mainFrame"></div>
+				</td>
+			</tr>
+			<tr>
+				<td style="background-color: white;vertical-align: top;border-left: 1px solid #ddd">
+					<div class="menu" ><?= $menuStr?></div>
+				</td>
+			</tr>
+			<tfoot>
+				<tr>
+					<td colspan="2"><div class="copyright" style="font-family: tahoma" align=center>کلیه حقوق مادی و معنوی این پورتال محفوظ می باشد</div></td>
+				  </tr>
+			</tfoot>
+		</table>
+		
+		
 	</center>
 	<link rel="stylesheet" type="text/css" href="/generalUI/icons/icons.css" />
 	<link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-rtl.css" />
