@@ -90,7 +90,7 @@ class VOT_FormItems extends OperationClass {
 	public $weight;
 	public $ValueWeights;
 	
-	static function Get($where = '', $whereParams = array()) {
+	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		
 		return parent::runquery_fetchMode("select f.*,GroupDesc 
 			from VOT_FormItems f join VOT_FormGroups g using(GroupID)
@@ -120,7 +120,7 @@ class VOT_FormPersons extends OperationClass {
 	public $FormID;
 	public $PersonID;
 	
-	static function Get($where = '', $whereParams = array()) {
+	static function Get($where = '', $whereParams = array(), $pdo = null) {
 		
 		return parent::runquery_fetchMode("
 			select fp.*, concat_ws(' ',fname,lname,CompanyName) fullname 
