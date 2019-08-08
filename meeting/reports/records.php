@@ -36,11 +36,21 @@ function MakeWhere(&$where, &$whereParam){
 		
 		if($key == "fromFollowUpDate" || $key == "toFollowUpDate")
 			$value = DateModules::shamsi_to_miladi($value, "-");
+		if($key == "MeetingType" )
+			$prefix = "m.";
 		
 		if(strpos($key, "from") === 0)
+		{
 			$where .= " AND " . $prefix . substr($key,4) . " >= :$key";
+			$whereParam[":$key"] = $value;
+			continue;
+		}
 		else if(strpos($key, "to") === 0)
+		{
 			$where .= " AND " . $prefix . substr($key,2) . " <= :$key";
+			$whereParam[":$key"] = $value;
+			continue;
+		}
 		else
 			$where .= " AND " . $prefix . $key . " like :$key";
 		$whereParam[":$key"] = "%" . $value . "%";
@@ -82,8 +92,8 @@ function ListDate($IsDashboard = false){
 	$rpg->excel = !empty($_POST["excel"]);
 	$rpg->mysql_resource = GetData();
 	
-	//if($_SESSION["USER"]["UserName"] == "admin")
-	//	echo PdoDataAccess::GetLatestQueryString ();
+	if($_SESSION["USER"]["UserName"] == "admin")
+		echo PdoDataAccess::GetLatestQueryString ();
 		
 	$rpg->addColumn("نوع جلسه", "MeetingTypeDesc");
 	$rpg->addColumn("شماره جلسه", "MeetingNo");

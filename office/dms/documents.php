@@ -358,6 +358,32 @@ function ManageDocument(){
 									
 								});
 							}
+							else if(record.data.KeyTitle == "DocumentID")
+							{
+								ParamsFS.add({
+									xtype : "combo",
+									colspan : 2,
+									width : 500,
+									store : new Ext.data.SimpleStore({
+										proxy: {
+											type: 'jsonp',
+											url: me.address_prefix + 'dms.data.php?' +
+												"task=SearchLetters",
+											reader: {root: 'rows',totalProperty: 'totalCount'}
+										},
+										fields : ['LetterID','LetterTitle',
+											{name : "fullDesc",	convert : function(value,record){
+													return "[" + record.data.LetterID + "] " + record.data.LetterTitle
+											} }
+]
+									}),
+									displayField : "fullDesc",
+									valueField : "LetterID",
+									name : "Param" + record.data.ParamID,
+									fieldLabel : record.data.ParamDesc
+									
+								});
+							}								
 							else
 								ParamsFS.add({
 									xtype : record.data.ParamType,

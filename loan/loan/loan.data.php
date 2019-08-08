@@ -77,8 +77,7 @@ function GetAllLoans() {
 
 	$temp = LON_loans::SelectAll($where, $whereParam);
 	$no = $temp->rowCount();
-	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
-
+	$temp = $temp->fetchAll();
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
 	die();
 }
