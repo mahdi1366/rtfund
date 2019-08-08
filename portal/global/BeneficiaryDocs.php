@@ -109,6 +109,8 @@ function BeneficiaryDocs()
 							itemId : "fs_" + record.data.ObjectID,
 							title : "فایل های مرتبط با " + title,
 							style : "text-align:right",
+							minHeight: 200,
+							autoHeight : true,
 							width : 600
 						});
 						parent = me.mainPanel.down("[itemId=fs_" + record.data.ObjectID + "]");
@@ -119,10 +121,12 @@ function BeneficiaryDocs()
 						style : "margin-top : 5px",
 						html : "<a target=blank href=/office/dms/ShowFile.php?ObjectID=" + record.data.ObjectID + "&DocumentID=" + record.data.DocumentID + ">" +
 								" <img src=../../framework/icons/document.png style=vertical-align:middle />&nbsp;&nbsp;" + 
-								record.data.param1Title + " - " + record.data.DocTypeDesc + 
-								(record.data.DocDesc != "" ? " : " + record.data.DocDesc : "") +
+								/*record.data.param1Title + " - " + record.data.DocTypeDesc + */
+								(record.data.DocDesc != "" ? record.data.DocDesc : "") +
 								"</a>"
 					});
+					
+					parent.doLayout();
 				}
 			}
 		}

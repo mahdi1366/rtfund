@@ -44,14 +44,14 @@ switch($task)
 	case "SelectMyMeetings":
 	case "SignRecords":
 	case "SelectMyMeetingAgendas":
+	case "SendRecordsLetter":
 				
 		$task();
 }
 
 function selectMeetingTypes(){
 	
-	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=".TYPEID_MeetingType.
-			" AND IsActive='YES' order by InfoID");
+	$dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=".TYPEID_MeetingType." AND IsActive='YES' order by InfoID");
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }
@@ -130,12 +130,19 @@ function SelectAllMeetings(){
 		$where .= " AND MeetingID=:m";
 		$param[":m"] = $_REQUEST["MeetingID"]*1;
 	}
+
 	
-	if(!empty($_REQUEST["MeetingType"]))
+	if(!empty($_REQUEST["param1"]))
+	{
+		$where .= " AND b2.param1=:p";
+		$param[":p"] = $_REQUEST["param1"];
+	}
+	else if(!empty($_REQUEST["MeetingType"]))
 	{
 		$where .= " AND MeetingType=:mt";
 		$param[":mt"] = $_REQUEST["MeetingType"]*1;
 	}
+		
 	
 	
 	if (!empty($_REQUEST['fields']) && !empty($_REQUEST['query'])) {
@@ -181,8 +188,8 @@ function SaveMeeting(){
 		$pdo->commit();
 	else
 		$pdo->rollBack();
-	//sprint_r(ExceptionHandler::PopAllExceptions());
-	Response::createObjectiveResponse($res, $res ? $obj->MeetingID : "");
+	//print_r(ExceptionHandler::PopAllExceptions());
+	Response::createObjectiveResponse($res, $res ? "{MeetingID:" . $obj->MeetingID . ",MeetingNo:" . $obj->MeetingNo . "}" : "");
 	die();
 	
 }
@@ -429,7 +436,7 @@ function DoneAgenda(){
 function GetMeetingRecords(){
 	
 	$dt = MTG_MeetingRecords::Get(" AND MeetingID=? " . dataReader::makeOrder(), array($_REQUEST["MeetingID"]));
-	//print_r(ExceptionHandler::PopAllExceptions());
+	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount());
 	die();
 }
@@ -438,20 +445,42 @@ function SaveMeetingRecord(){
 	
 	$obj = new MTG_MeetingRecords();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
+
 	if($obj->RecordID*1 > 0)
 		$result = $obj->Edit();
 	else 
 		$result = $obj->Add();
+	
+    $personsArr = json_decode($_POST["persons"]);
+    foreach($personsArr as $PersonID)
+    {
+        $pdo = PdoDataAccess::getPdoObject();
+        $responseObj = new MTG_RecordExecutors();
+        $responseObj->RecordID = $obj->RecordID;
+        $responseObj->PersonID = $PersonID;
+        $responseObj->Add($pdo);
+    }
+    
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
 function RemoveMeetingRecords(){
 	
-	$obj = new MTG_MeetingRecords($_REQUEST["RecordID"]);
+	$obj = new MTG_MeetingRecords((int)$_REQUEST["RecordID"]);
 	$result = $obj->Remove();
+	if($result)
+		MTG_RecordExecutors::RemoveAll((int)$_REQUEST["RecordID"]);
+	
 	echo Response::createObjectiveResponse($result, "");
 	die();
+}
+
+function RemoveAllRecordExecutors(){
+
+    $result = MTG_RecordExecutors::RemoveAll((int)$_REQUEST["RecordID"]);
+    return Response::createObjectiveResponse($result, "");
+    die();
 }
 
 function GetDueDateRecords(){
@@ -465,7 +494,7 @@ function GetDueDateRecords(){
 			left join MTG_agendas a on(a.MeetingID=? AND a.RecordID=r.RecordID)
 			left join BSC_persons p on(r.PersonID=p.PersonID)
 		where a.AgendaID is null AND m.MeetingType=?
-			AND FollowUpDate<>'0000-00-00' AND FollowUpDate <= ?",
+			AND FollowUpDate<>'0000-00-00' AND FollowUpDate <= ?" . dataReader::makeOrder(),
 			array($Mobj->MeetingID, $Mobj->MeetingType, $Mobj->MeetingDate));
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount());
 	die();
@@ -506,6 +535,7 @@ function SendRecordLetter(){
 			$SendObj->FromPersonID = $LetterObj->PersonID;
 			$SendObj->ToPersonID = $PersonID;
 			$SendObj->SendDate = PDONOW;
+            $SendObj->SendComment = json_decode($_POST["eerjaa"]);  /*  New Create   */
 			$SendObj->SendType = 1;
 			if(!$SendObj->AddSend($pdo))
 			{
@@ -532,6 +562,99 @@ function SendRecordLetter(){
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
 	die();
+}
+
+function SendRecordsLetter(){
+
+    $MeetingID = $_POST["MeetingID"];
+    $metObj = new MTG_meetings($MeetingID);
+    $personsArr = json_decode($_POST["persons"]);
+
+    $pdo = PdoDataAccess::getPdoObject();
+    $pdo->beginTransaction();
+
+    $LetterObj = new OFC_letters();
+    $LetterObj->LetterType = "INNER";
+    $LetterObj->LetterTitle =" صورتجلسه " . $metObj->MeetingNo . " " . $metObj->_MeetingTypeDesc ;
+    $LetterObj->LetterDate = PDONOW;
+    $LetterObj->RegDate = PDONOW;
+    $LetterObj->PersonID = $_SESSION["USER"]["PersonID"];
+    $LetterObj->context='<table class="letterTable" style="border-collapse: collapse;width: 100%;1px solid #dddddd;"> <tr>
+
+<th style="border: 1px solid;text-align: center;font-weight: bold;">خلاصه مصوبه</th>
+<th style="border: 1px solid;text-align: center;font-weight: bold;">مسوول پیگیری</th>
+<th style="border: 1px solid;text-align: center;font-weight: bold;">مهلت انجام</th>
+<th style="border: 1px solid;text-align: center;font-weight: bold;">شرح مستندات</th>
+</tr>';
+
+    $dt = MTG_MeetingRecords::Get(" AND MeetingID=? " . dataReader::makeOrder(), $_POST["MeetingID"]);
+    $resps=$dt->fetchAll();
+    foreach ($resps as $resp){
+        $recordid=$resp['RecordID'];
+        $recObj = new MTG_MeetingRecords($recordid);
+        if ((isset($recObj->approved))&& !empty($recObj->approved)){
+            $approved='مصوبه '.$recObj->approved.' ';
+        }else{
+            $approved='';
+        }
+        $personName = MTG_MeetingRecords::Get(" AND RecordID=? " . dataReader::makeOrder(), $recordid);
+        $NamePerson= $personName->fetchAll();
+        $LetterObj->context .=  '<tr>
+
+<th style="border: 1px solid;text-align: justify;padding: 1px 5px;">'.$approved.'(موضوع: '.$recObj->subject.')'."&nbsp".$recObj->details.'</th>
+<th style="border: 1px solid;text-align: center;">'.$NamePerson[0]['fullname'].'</th>
+<th style="border: 1px solid;text-align: center;">'.DateModules::miladi_to_shamsi($recObj->FollowUpDate).'</th>
+<th style="border: 1px solid;text-align: center;">'.$recObj->descriptionDocs.'</th>
+</tr>';
+        /* $LetterObj->context .=  'موضوع مصوبه: '.'<b>'.$recObj->subject.'</b>'.'<br>';
+         $LetterObj->context .= $recObj->details.'< >';*/
+    }
+    $LetterObj->context .='</table>';
+
+    if(!$LetterObj->AddLetter($pdo))
+    {
+        echo Response::createObjectiveResponse(false, "خطا در ثبت  نامه");
+        die();
+    }
+    //---------------------------------------
+    foreach($personsArr as $PersonID)
+    {
+        $personObj = new BSC_persons($PersonID);
+        if($personObj->IsStaff == "YES")
+        {
+
+            $SendObj = new OFC_send();
+            $SendObj->LetterID = $LetterObj->LetterID;
+            $SendObj->FromPersonID = $LetterObj->PersonID;
+            $SendObj->ToPersonID = $PersonID;
+            $SendObj->SendDate = PDONOW;
+            $SendObj->SendComment = json_decode($_POST["eerjaa"]);
+            $SendObj->SendType = 1;
+            if(!$SendObj->AddSend($pdo))
+            {
+                $pdo->rollBack();
+                echo Response::createObjectiveResponse(false, "خطا در ارسال  نامه");
+                die();
+            }
+        }
+        else
+        {
+            $Cobj = new OFC_LetterCustomers();
+            $Cobj->LetterID = $LetterObj->LetterID;
+            $Cobj->PersonID = $PersonID;
+            $Cobj->IsHide = "NO";
+            $Cobj->LetterTitle = $LetterObj->LetterTitle;
+            if(!$Cobj->Add($pdo))
+            {
+                $pdo->rollBack();
+                echo Response::createObjectiveResponse(false, "خطا در ارسال  نامه");
+                die();
+            }
+        }
+    }
+    $pdo->commit();
+    echo Response::createObjectiveResponse(true, "");
+    die();
 }
 
 function SendAgendaLetter(){

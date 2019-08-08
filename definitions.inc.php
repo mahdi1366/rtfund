@@ -154,6 +154,7 @@ define("CNT_STEPID_RAW", "100");
 define("CNT_STEPID_CONFIRM", "110");
 
 define("DMS_DOCTYPE_LETTER", "63");
+define("DMS_DOCTYPE_Documents", "131");
 
 //-------------- office ---------------
 define("OFC_ACCESSTYPE_NORMAL", "1");

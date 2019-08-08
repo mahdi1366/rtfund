@@ -45,6 +45,7 @@ if(!$AddMode)
 	$dg->emptyTextOfHiddenColumns = true;
 	$dg->height = 300;
 	$dg->width = 750;
+	$dg->title = "نامه های";
 	$dg->DefaultSortField = "LetterDate";
 	$dg->autoExpandColumn = "LetterTitle";
 	$grid = $dg->makeGrid_returnObjects();
@@ -379,6 +380,7 @@ LetterArchive.prototype.LoadLetters = function(){
 	}
 	this.grid.getStore().proxy.extraParams.FolderID = record.data.id;
 	this.grid.getStore().load();
+	this.grid.setTitle("نامه های پوشه " + "<b>" + record.data.text + "</b>");
 }
 
 </script>

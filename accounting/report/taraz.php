@@ -41,14 +41,20 @@ function GetData(&$rpg){
 	global $level;
 	$level = empty($_REQUEST["level"]) ? "l1" : $_REQUEST["level"];
 	
-	$select = "select 
-		sum(di.DebtorAmount) bdAmount,
-		sum(di.CreditorAmount) bsAmount,
+	$query = "select 
+		sum(di.DebtorAmount) DebtorAmount,
+		sum(di.CreditorAmount) CreditorAmount,
 		b0.BlockDesc level0Desc,
 		b1.BlockDesc level1Desc,
 		b2.BlockDesc level2Desc,
 		b3.BlockDesc level3Desc,
 		b4.BlockDesc level4Desc,
+		
+		b0.BlockCode BlockCode0,
+		b1.BlockCode BlockCode1,
+		b2.BlockCode BlockCode2,
+		b3.BlockCode BlockCode3,
+		b4.BlockCode BlockCode4,
 		
 		b0.BlockCode level0Code,
 		b1.BlockCode level1Code,
@@ -79,39 +85,39 @@ function GetData(&$rpg){
 		di.TafsiliID2,
 		di.TafsiliID3,
 		
-		tdt.StartCycleDebtor,
-		tdt.StartCycleCreditor
-		";
-	$from = " from ACC_DocItems di 
-				join ACC_docs d using(DocID)
-				join ACC_CostCodes cc using(CostID)
-				join ACC_blocks b1 on(level1=b1.BlockID)
-				left join ACC_blocks b0 on(b1.GroupID=b0.BlockID)
-				left join ACC_blocks b2 on(level2=b2.BlockID)
-				left join ACC_blocks b3 on(level3=b3.BlockID)
-				left join ACC_blocks b4 on(level4=b4.BlockID)
-				left join BaseInfo b on(TypeID=2 AND di.TafsiliType=InfoID)
-				left join ACC_tafsilis t using(TafsiliID)
-				left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)
-				left join ACC_tafsilis t2 on(t2.TafsiliID=di.TafsiliID2)
-				left join ACC_tafsilis t3 on(t3.TafsiliID=di.TafsiliID3)
-				
-				left join (
-					select CycleID,CostID,di.TafsiliID,di.TafsiliID2,sum(DebtorAmount) StartCycleDebtor,
-							sum(CreditorAmount) StartCycleCreditor
-					from ACC_DocItems di join ACC_docs using(DocID)
-					where DocType=1 " .
-					(!empty($_POST["CycleID"]) ? " AND CycleID=:c" : "") . 
-					(!empty($_POST["BranchID"]) ? " AND BranchID=:b" : "") . "	
-					group by CostID,TafsiliID,TafsiliID2
-				)tdt on(d.CycleID=tdt.CycleID AND di.CostID=tdt.CostID AND di.TafsiliID=tdt.TafsiliID AND di.TafsiliID2=tdt.TafsiliID2)
+		(tdt.StartCycleDebtor) StartDebtorAmount,
+		(tdt.StartCycleCreditor) StartCreditorAmount
+		
+		from ACC_DocItems di 
+			join ACC_docs d using(DocID)
+			join ACC_CostCodes cc using(CostID)
+			join ACC_blocks b1 on(level1=b1.BlockID)
+			left join ACC_blocks b0 on(b1.GroupID=b0.BlockID)
+			left join ACC_blocks b2 on(level2=b2.BlockID)
+			left join ACC_blocks b3 on(level3=b3.BlockID)
+			left join ACC_blocks b4 on(level4=b4.BlockID)
+			left join BaseInfo b on(TypeID=2 AND di.TafsiliType=InfoID)
+			left join ACC_tafsilis t using(TafsiliID)
+			left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)
+			left join ACC_tafsilis t2 on(t2.TafsiliID=di.TafsiliID2)
+			left join ACC_tafsilis t3 on(t3.TafsiliID=di.TafsiliID3)
+
+			left join (
+				select CycleID,CostID,di.TafsiliID,di.TafsiliID2,sum(DebtorAmount) StartCycleDebtor,
+						sum(CreditorAmount) StartCycleCreditor
+				from ACC_DocItems di join ACC_docs using(DocID)
+				where DocType=1 " .
+				(!empty($_POST["CycleID"]) ? " AND CycleID=:c" : "") . 
+				(!empty($_POST["BranchID"]) ? " AND BranchID=:b" : "") . "	
+				group by CostID,TafsiliID,TafsiliID2
+			)tdt on(d.CycleID=tdt.CycleID AND di.CostID=tdt.CostID AND di.TafsiliID=tdt.TafsiliID AND di.TafsiliID2=tdt.TafsiliID2)
 	";
 	$group = "";
 	if($level >= "l0")
 	{
 		$col = $rpg->addColumn("کد گروه", "level0Code");
 		$col = $rpg->addColumn("گروه", "level0Desc",$level =="l0" ? "levelRender" : "");
-		$group = "b1.GroupID";
+		$group = "tbl.GroupID";
 		$col->ExcelRender = false;
 	}
 	if($level >= "l1")
@@ -119,32 +125,32 @@ function GetData(&$rpg){
 		$col = $rpg->addColumn("کد کل", "level1Code");
 		$col = $rpg->addColumn("کل", "level1Desc",$level =="l1" ? "levelRender" : "");
 		$col->ExcelRender = false;
-		$group = "cc.level1";
+		$group = "tbl.level1";
 	}
 	if($level >= "l2")
 	{
-		$group .= ",cc.level2"; 
+		$group .= ",tbl.level2"; 
 		$col = $rpg->addColumn("کد معین1", "level2Code");
 		$col = $rpg->addColumn("معین1", "level2Desc", $level =="l2" ? "levelRender" : "");
 		$col->ExcelRender = false;
 	}
 	if($level >= "l3")
 	{
-		$group .= ",cc.level3"; 
+		$group .= ",tbl.level3"; 
 		$col = $rpg->addColumn("کد معین2", "level3Code");
 		$col = $rpg->addColumn("معین2", "level3Desc", $level =="l3" ? "levelRender" : "");
 		$col->ExcelRender = false;
 	}
 	if($level >= "l4")
 	{
-		$group .= ",cc.level4"; 
+		$group .= ",tbl.level4"; 
 		$col = $rpg->addColumn("کد معین3", "level4Code");
 		$col = $rpg->addColumn("معین3", "level4Desc", $level =="l4" ? "levelRender" : "");
 		$col->ExcelRender = false;
 	}
 	if($level == "l5")
 	{
-		$group .= ",di.TafsiliID";
+		$group .= ",tbl.TafsiliID";
 		$col = $rpg->addColumn("کد تفصیلی1", "TafsiliCode");
 		$col = $rpg->addColumn("تفصیلی1", "TafsiliDesc", "levelRender");
 		$col->ExcelRender = false;
@@ -161,14 +167,14 @@ function GetData(&$rpg){
 	}
 	if($level == "l6")
 	{
-		$group .= ",di.TafsiliID2";
+		$group .= ",tbl.TafsiliID2";
 		$col = $rpg->addColumn("کد تفصیلی2", "TafsiliCode2");
 		$col = $rpg->addColumn("تفصیلی2", "TafsiliDesc2", "levelRender");
 		$col->ExcelRender = false;
 	}
 	if($level == "l7")
 	{
-		$group .= ",di.TafsiliID3";
+		$group .= ",tbl.TafsiliID3";
 		$col = $rpg->addColumn("کد تفصیلی3", "TafsiliCode3");
 		$col = $rpg->addColumn("تفصیلی3", "TafsiliDesc3", "levelRender");
 		$col->ExcelRender = false;
@@ -367,7 +373,16 @@ function GetData(&$rpg){
 	
 	MakeWhere($where, $whereParam);
 	
-	$query = $select . $from . " where 1=1 " . $where;
+	$query = "select tbl.*,
+					sum(DebtorAmount) bdAmount,
+					sum(CreditorAmount) bsAmount,
+					sum(StartDebtorAmount) StartCycleDebtor,
+					sum(StartCreditorAmount)StartCycleCreditor
+			from ( " .
+			$query . "
+			where 1=1 " . $where . " 
+			group by di.CostID,di.TafsiliID,di.TafsiliID2)tbl			
+	";
 	$query .= $group != "" ? " group by " . $group : "";
 	
 	//------------ make having ----------------
@@ -377,14 +392,14 @@ function GetData(&$rpg){
 	}
 	//-----------------------------------------
 	
-	$query .= " order by b1.BlockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode,di.TafsiliID,di.TafsiliID2";
+	$query .= " order by tbl.BlockCode1,tbl.BlockCode2,tbl.BlockCode3,tbl.BlockCode4,tbl.TafsiliID,tbl.TafsiliID2";
 
 	$dt = PdoDataAccess::runquery($query, $whereParam);
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
 		BeginReport();
-		//print_r(ExceptionHandler::PopAllExceptions());
-		//echo PdoDataAccess::GetLatestQueryString ();
+		print_r(ExceptionHandler::PopAllExceptions());
+		echo PdoDataAccess::GetLatestQueryString ();
 	}
 	return $dt;
 }

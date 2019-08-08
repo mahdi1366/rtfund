@@ -22,6 +22,8 @@ $dg->addColumn("", "MeetingID", "", true);
 $dg->addColumn("", "PersonID", "", true);
 $dg->addColumn("", "details", "", true);
 $dg->addColumn("", "keywords", "", true);
+$dg->addColumn("", "PreRecordNo", "", true); /*New Edition*/
+$dg->addColumn("", "descriptionDocs", "", true);  /*New Create*/
 
 $col = $dg->addColumn("موضوع", "subject", "");
 
@@ -67,6 +69,7 @@ if($accessObj->RemoveFlag && !$readOnly)
 }
 
 $dg->addButton("", "چاپ مصوبه ها", "print", "function(){MTG_MeetingRecordsObject.PrintRecords();}");
+$dg->addButton("", "ابلاغ مصوبه ها", "send", "function(){MTG_MeetingRecordsObject.ShowAllLetterWindow();}"); /* New Create */
 
 $dg->addPlugin("this.Details");
 
@@ -90,8 +93,12 @@ MTG_MeetingRecords.prototype = {
 	address_prefix : '<?= $js_prefix_address ?>',
 
 	MeetingID : "<?= $MeetingID ?>",
+	
 	LetterPersons : new Array(),
 	LetterPersonNames : new Array(),
+	
+	RecordPersons : new Array(),
+	ReordPersonNames : new Array(),
 	
 	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
 	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
@@ -132,31 +139,103 @@ function MTG_MeetingRecords(){
 				width : 550,
 				fieldLabel : "شرح مصوبه",
 				rows : 4
-			},{
+			},
+                {
+                    xtype : "textfield",
+                    name : "PreRecordNo",
+                    width : 550,
+                    fieldLabel : "شماره مصوبه قبلی",
+                    allowBlank : true
+                }
+                ,
+                {
 				xtype : "textfield",
 				name : "keywords",
 				width : 550,
 				fieldLabel : "کلمات کلیدی"
 			},{
-				xtype : "combo",
-				name : "PersonID",
-				fieldLabel : "مسئول اجرا",
-				store: new Ext.data.Store({
-					proxy:{
-						type: 'jsonp',
-						url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					fields :  ['PersonID','fullname']
-				}),
-				displayField: 'fullname',
-				valueField : "PersonID",
-				allowBlank : true
+                    xtype : "combo",
+                    store: new Ext.data.Store({
+                        proxy:{
+                            type: 'jsonp',
+                            url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
+                            reader: {root: 'rows',totalProperty: 'totalCount'}
+                        },
+                        fields :  ['PersonID','fullname']
+                    }),
+                    fieldLabel : "مسئول اجرا",
+                    displayField: 'fullname',
+                    valueField : "PersonID",
+                    name : "PersonID",
+                    width : 480,
+                    allowBlank : true
+            },{
+				xtype : "container",
+				layout : "hbox",
+				style : "margin-right:110px",
+				items : [{
+					xtype : "button",
+					text : "اضافه به لیست",
+					iconCls : "add",
+					handler : function(){
+						me = MTG_MeetingRecordsObject;
+						PersonComp = me.formWindow.down('[name=PersonID]');
+						PersonRecord = PersonComp.getStore().getAt(
+							PersonComp.getStore().find("PersonID", PersonComp.getValue()) );
+
+						me.RecordPersons.push(PersonRecord.data.PersonID);
+						me.ReordPersonNames.push(new Array(PersonRecord.data.fullname));
+						me.formWindow.down("[itemId=GroupList]").bindStore(me.ReordPersonNames);
+						PersonComp.setValue();
+					}
+				},{
+					xtype : "button",
+					text : "حذف از لیست",
+					iconCls : "cross",
+					handler : function(){
+
+						me = MTG_MeetingRecordsObject;
+						el = me.formWindow.down("[itemId=GroupList]");
+						index = el.getStore().indexOf(el.getSelected()[0]);
+						if(index >= 0)
+						{
+							me.RecordPersons.splice(index,1);
+							me.ReordPersonNames.splice(index,1);
+							el.clearValue();
+							el.bindStore(me.ReordPersonNames);
+						}
+					}
+				},{
+					/*New Create*/
+					xtype : "button",
+					text : "حذف تمامی مسوولین اجرای سابق",
+					iconCls : "cross",
+					handler : function(){ MTG_MeetingRecordsObject.DeleteExecutors();
+						this.up('window').hide();
+					}
+				}]
 			},{
+				xtype : "multiselect",
+				itemId : "GroupList",
+				store : this.ReordPersonNames,
+				height : 100,
+				width : 480
+			}
+			/* New Create */
+			,{
 				xtype : "shdatefield",
 				name : "FollowUpDate",
 				fieldLabel : "تاریخ پیگیری"
-			},{
+			}
+			/*New Create*/
+			,{
+				xtype : "textfield",
+				name : "descriptionDocs",
+				width : 550,
+				fieldLabel : "شرح مستندات"
+			}
+             /*END New Create*/
+			,{
 				xtype : "combo",
 				name : "RecordStatus",
 				fieldLabel : "وضعیت",
@@ -238,12 +317,19 @@ MTG_MeetingRecords.prototype.Save = function(){
 	
 	if(!this.formPanel.getForm().isValid())
 		return;
-	
+    
+    me = MTG_MeetingRecordsObject;
+    
 	mask = new Ext.LoadMask(this.formWindow, {msg:'در حال ذخيره سازي...'});
 	mask.show();  
 	
 	this.formPanel.getForm().submit({
 		url: this.address_prefix + 'meeting.data.php?task=SaveMeetingRecord',
+        /*New Create*/
+        params:{
+            persons : Ext.encode(me.RecordPersons)
+        },
+        /*END New Create*/
 		method: 'POST',
 		success: function(){
 			mask.hide();
@@ -286,10 +372,42 @@ MTG_MeetingRecords.prototype.DeleteRecord = function(){
 	});
 }
 
+MTG_MeetingRecords.prototype.DeleteExecutors = function(){
+
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+
+		me = MTG_MeetingRecordsObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix + 'meeting.data.php',
+			params:{
+				task: "RemoveAllRecordExecutors",
+				RecordID : record.data.RecordID
+			},
+			method: 'POST',
+
+			success: function(){
+				mask.hide();
+				MTG_MeetingRecordsObject.grid.getStore().load();
+			},
+			failure: function(){}
+		});
+	});
+}
+
 MTG_MeetingRecords.prototype.AddRecord = function(){
 	
 	this.formWindow.show();
 	this.formPanel.getForm().reset();
+	this.RecordPersons = new Array();
+	this.ReordPersonNames = new Array();
+	this.formWindow.down("[itemId=GroupList]").bindStore(this.ReordPersonNames);
 }
 
 MTG_MeetingRecords.prototype.EditRecord = function(){
@@ -374,10 +492,22 @@ MTG_MeetingRecords.prototype.ShowLetterWindow = function(){
 			},{
 				xtype : "multiselect",
 				itemId : "GroupList",
-				store : this.LetterPersonNames,
+				store : this.ReordPersonNames,
 				height : 100,
 				width : 480
-			}],
+			},
+
+                {
+                    xtype : "textarea",
+                    emptyText : "شرح ارجاع",
+                    fieldLabel: 'شرح ارجاع',
+                    ItemId: 'textId',
+                    name : "eerjaa",
+                    rowspan : 5,
+                    rows : 6,
+                    width :270,
+                }
+			],
 			buttons : [{
 				text : "ارسال نامه",
 				iconCls : "send",
@@ -395,6 +525,106 @@ MTG_MeetingRecords.prototype.ShowLetterWindow = function(){
 	this.LetterWin.show();
 	this.LetterWin.center();
 }
+      /* New Create */  
+MTG_MeetingRecords.prototype.ShowAllLetterWindow = function(){
+
+	if(!this.LetterForAllWin)
+	{
+		this.LetterForAllWin = new Ext.Window({
+			width : 500,
+			title : "ابلاغ مصوبه",
+			autoHeight : true,
+			modal : true,
+			items : [{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					fields :  ['PersonID','fullname']
+				}),
+				fieldLabel : "کاربر",
+				displayField: 'fullname',
+				valueField : "PersonID",
+				name : "PersonID",
+				width : 480
+			},{
+				xtype : "container",
+				layout : "hbox",
+				style : "margin-right:110px",
+				items : [{
+					xtype : "button",
+					text : "اضافه به لیست",
+					iconCls : "add",
+					handler : function(){
+						me = MTG_MeetingRecordsObject;
+						PersonComp = me.LetterForAllWin.down('[name=PersonID]');
+						PersonRecord = PersonComp.getStore().getAt(
+							PersonComp.getStore().find("PersonID", PersonComp.getValue()) );
+
+						me.LetterPersons.push(PersonRecord.data.PersonID);
+						me.LetterPersonNames.push(new Array(PersonRecord.data.fullname));
+						me.LetterForAllWin.down("[itemId=GroupList]").bindStore(me.LetterPersonNames);
+						PersonComp.setValue();
+					}
+				},{
+					xtype : "button",
+					text : "حذف از لیست",
+					iconCls : "cross",
+					handler : function(){
+
+						me = MTG_MeetingRecordsObject;
+						el = me.LetterForAllWin.down("[itemId=GroupList]");
+						index = el.getStore().indexOf(el.getSelected()[0]);
+						if(index >= 0)
+						{
+							me.LetterPersons.splice(index,1);
+							me.LetterPersonNames.splice(index,1);
+							el.clearValue();
+							el.bindStore(me.LetterPersonNames);
+						}
+					}
+				}]
+			},{
+				xtype : "multiselect",
+				itemId : "GroupList",
+				store : this.ReordPersonNames,
+				height : 100,
+				width : 480
+			},
+
+				{
+					xtype : "textarea",
+					emptyText : "شرح ارجاع",
+					fieldLabel: 'شرح ارجاع',
+					itemId: 'textId',
+					name : "eerjaa",
+					rowspan : 5,
+					rows : 6,
+					width :270,
+				}
+
+			],
+			buttons : [{
+				text : "ارسال نامه",
+				iconCls : "send",
+				handler : function(){ MTG_MeetingRecordsObject.SendAllLetter(); }
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+
+		Ext.getCmp(this.TabID).add(this.LetterForAllWin);
+
+	}
+
+	this.LetterForAllWin.show();
+	this.LetterForAllWin.center();
+}
 
 MTG_MeetingRecords.prototype.SendLetter = function(){
 	
@@ -405,16 +635,17 @@ MTG_MeetingRecords.prototype.SendLetter = function(){
 		me = MTG_MeetingRecordsObject;
 		var record = me.grid.getSelectionModel().getLastSelected();
 		
-		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ارسال نامه ...'});
 		mask.show();
-
+        textareaValue = this.LetterWin.down('[itemId=textId]').getValue(); /* New Create */
 		Ext.Ajax.request({
 			url: me.address_prefix + 'meeting.data.php',
 			params:{
 				task: "SendRecordLetter",
 				RecordID : record.data.RecordID,
 				persons : Ext.encode(me.LetterPersons),
-				subject : me.LetterWin.down("[name=subject]").getValue()
+				subject : me.LetterWin.down("[name=subject]").getValue(),
+                eerjaa : Ext.encode(textareaValue) /* New Create */
 			},
 			method: 'POST',
 
@@ -436,6 +667,47 @@ MTG_MeetingRecords.prototype.SendLetter = function(){
 		});
 	});
 }
+/* New Create */  
+MTG_MeetingRecords.prototype.SendAllLetter = function(){
+
+	Ext.MessageBox.confirm("","آیا مایل به ابلاغ نامه مصوبه ها می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+
+		me = MTG_MeetingRecordsObject;
+
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ارسال نامه ...'});
+		mask.show();
+
+		textareaValue = me.LetterForAllWin.down('[itemId=textId]').getValue();
+		Ext.Ajax.request({
+			url: me.address_prefix + 'meeting.data.php',
+			params:{
+				task: "SendRecordsLetter",
+				MeetingID : me.MeetingID,
+				persons : Ext.encode(me.LetterPersons),
+				eerjaa : Ext.encode(textareaValue)
+			},
+			method: 'POST',
+
+			success: function(response){
+				res = Ext.decode(response.responseText);
+				mask.hide();
+				if(res.success)
+				{
+					MTG_MeetingRecordsObject.LetterForAllWin.hide();
+					Ext.MessageBox.alert("","نامه ابلاغ مصوبه با موفقیت به افراد مورد نظر ارسال گردید");
+				}
+
+				else
+					Ext.MessageBox.alert("Error","عملیات مورد نظر با شکست مواجه گردید");
+
+			},
+			failure: function(){}
+		});
+	});
+};
+/* END New Create */
 
 MTG_MeetingRecords.prototype.RecordDocuments = function(){
 

@@ -36,13 +36,13 @@ a:active {
 }
 
 .portalHeader { 
-				width:1024px;
-				height:100px;
-				overflow: hidden;
-				clear:both;
-				background-color: #018e9f;
-				text-align:left;
-			}
+	width:1024px;
+	height:100px;
+	overflow: hidden;
+	clear:both;
+	background-color: #018e9f;
+	text-align:left;
+}
 .portalHeader td{
 	color: white;
 	font-size: 16px;
@@ -65,6 +65,7 @@ a:active {
 	clear:both;
 	margin-top:2px;
 	text-align:left;
+	height : 84%;
 }
 .UserInfoBox{
 	line-height: 22px; 
@@ -72,7 +73,7 @@ a:active {
 	font-size: 14px;
 	color : white;
 	background-color: #018e9f;
-	width : 220px;
+	width : 224px;
 	padding: 0 5px 0 5px;
     font-weight: bold;
 }
@@ -84,19 +85,17 @@ a:active {
 }
 .mainFrame{
     width:800px;
-	border : 1px solid #ddd;
+	height : 100%;
 	background-color: white;
     margin-left:0px;
-    margin-top:0px;
+    margin-top:20px;
 	margin-bottom: 3px;
-    float:left;
     text-align:center;
 	padding: 3px;
 }
 
 .menu{
     width:224px;
-	border : 1px solid #ddd;
     margin-left:0px;
     margin-top:0px;
     float:left;
@@ -104,9 +103,7 @@ a:active {
     text-align:right;
 	padding-right: 10px;
 	background-color: white;
-	height: 411px;
-	overflow-y: scroll;
-	overflow-x: hidden;
+	height: 81%;
 }
 .menuHeaders{
     border-bottom: 1px solid #800000;
@@ -149,17 +146,15 @@ a:active {
 
 
 .copyright{
-    width:1024px;
-    height:67px;
-    clear:both;
+	bottom: 0;
+    width:100%;
     margin-top:0px;
     background-color: #282F33;
 	text-align:center;
     height:44px;
     padding-top:11px;
-    display:inline-block;
     color:#ffffff;
     font-size:12px;
     font-family:Arial, 'Times New Roman',Times, serif;
-     line-height:30px;
+    line-height:30px;
 }

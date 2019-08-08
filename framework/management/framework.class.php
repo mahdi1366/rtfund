@@ -473,6 +473,13 @@ class FRW_news extends OperationClass {
     public $context;
 	public $StartDate;
 	public $EndDate;
+	
+	public $IsStaff;
+	public $IsCustomer;
+	public $IsShareholder;
+	public $IsSupporter;
+	public $IsExpert;
+	public $IsAgent;
 
     function __construct($PicID = '')
     {
@@ -482,5 +489,22 @@ class FRW_news extends OperationClass {
         parent::__construct($PicID);
     }
 
+	static function ShowNews(){
+		
+		return parent::runquery_fetchMode("
+			select n.*
+			from FRW_news n
+			join BSC_persons a on(a.PersonID=" . $_SESSION["USER"]["PersonID"] . " and
+				(
+					if(n.IsCustomer='YES',a.IsCustomer='YES',0=1) OR
+					if(n.IsShareholder='YES',a.IsShareholder='YES',0=1) OR
+					if(n.IsStaff='YES',a.IsStaff='YES',0=1)	OR
+					if(n.IsAgent='YES',a.IsAgent='YES',0=1)	OR
+					if(n.IsExpert='YES',a.IsExpert='YES',0=1)	OR
+					if(n.IsSupporter='YES',a.IsSupporter='YES',0=1)
+				)
+			)
+			where (n.StartDate is null or substr(now(),1,10)>= n.StartDate ) AND (n.EndDate is null or substr(now(),1,10)<= n.EndDate)");
+	}
 }
 ?>

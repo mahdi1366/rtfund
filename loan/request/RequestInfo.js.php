@@ -75,7 +75,9 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 					"LoanFullname","ReqDate","ReqAmount","ReqDetails","BorrowerDesc","BorrowerID",
 					"BorrowerMobile","guarantees","AgentGuarantee","FundGuarantee","StatusID","DocumentDesc","IsFree",
 					"imp_GirandehCode","imp_VamCode","IsEnded","SubAgentID","PlanTitle","RuleNo","FundRules",
-					"DomainID","DomainDesc"],
+					"DomainID","DomainDesc",
+            		"LetterID","SourceID","ExpertPersonID","DocRequestDate","DocReceiveDate",
+					"MeetingDate","VisitDate","WorkgroupDiscussDate"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -104,6 +106,14 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 					me.grid.down("[itemId=addPart]").hide();
 				}
 				//..........................................................
+
+				// set Miladi date to shamsi date
+				me.companyPanel.down("[name=DocRequestDate]").setValue(MiladiToShamsi(record.data.DocRequestDate));
+				me.companyPanel.down("[name=DocReceiveDate]").setValue(MiladiToShamsi(record.data.DocReceiveDate));
+				me.companyPanel.down("[name=MeetingDate]").setValue(MiladiToShamsi(record.data.MeetingDate));
+				me.companyPanel.down("[name=VisitDate]").setValue(MiladiToShamsi(record.data.VisitDate));
+				me.companyPanel.down("[name=WorkgroupDiscussDate]").setValue(MiladiToShamsi(record.data.WorkgroupDiscussDate));
+
 				//if(record.data.AgentGuarantee == "YES")
 				//	me.companyPanel.down("[name=AgentGuarantee]").setValue(true);
 				if(record.data.FundGuarantee == "YES")
@@ -140,6 +150,7 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 				}	
 				var R2 = false;
 				var R3 = false;
+				var R4 = false;
 				if(record.data.ReqPersonID > 0)
 				{
 					R2 = me.companyPanel.down("[name=ReqPersonID]").getStore().load({
@@ -159,10 +170,23 @@ RequestInfo.prototype.LoadRequestInfo = function(){
 						callback : function(){
 						}
 					});					
-				}				
+				}
+				if(record.data.LetterID > 0)
+				{
+					R4 = me.companyPanel.down("[name=LetterID]").getStore().load({
+						params : {
+							LetterID : record.data.LetterID
+						},
+						callback : function(){
+							if(this.getCount() > 0)
+								me.companyPanel.down("[name=LetterID]").setValue(this.getAt(0).data.LetterID);
+						}
+					});
+								
+				}
 				//..........................................................
 				var t = setInterval(function(){
-					if((!R1 || !R1.isLoading()) && (!R2 || !R2.isLoading()) && (!R3 || !R3.isLoading()))
+					if((!R1 || !R1.isLoading()) && (!R2 || !R2.isLoading()) && (!R3 || !R3.isLoading()) && (!R4 || !R4.isLoading()))
 					{
 						clearInterval(t);
 						me.CustomizeForm(record);
@@ -765,11 +789,106 @@ RequestInfo.prototype.BuildForms = function(){
 			fieldLabel : "عنوان طرح",
 			name : "PlanTitle"
 		},{
-		xtype : "textfield",
+			xtype : "textfield",
 			fieldLabel : "شماره مصوبه",
 			name : "RuleNo"
+		},{
+			xtype : "combo",
+			name : "LetterID",
+			colspan : 2,
+			width : 700,
+			store: new Ext.data.Store({
+				proxy:{
+					type: 'jsonp',
+					url: '/office/letter/letter.data.php?task=SelectLetter',
+					reader: {root: 'rows', totalProperty: 'totalCount'}
+				},
+				fields :  ['LetterID','LetterTitle',{
+						name : 'LetterDate',
+						convert : function(v){return MiladiToShamsi(v);}
+					},{
+						name : "fulltitle", 
+						convert: function(v,r){
+							return '['+r.data.LetterID + '] ' + r.data.LetterTitle + ' [ ' + r.data.LetterDate + ' ]'; } 
+					}],
+				pageSize : 20
+			}),
+			pageSize : 20,
+			fieldLabel : "شماره نامه",
+			displayField: 'fulltitle',
+			valueField : "LetterID",
+			tpl: new Ext.XTemplate(
+				'<table class=gridCombo cellspacing="0" >',
+					'<tr>',
+						'<th>شماره نامه</th>',
+						'<th>عنوان نامه</th>',
+						'<th>تاریخ نامه</th>',
+					'</tr>',
+				'<tpl for=".">',
+					'<tr class="x-boundlist-item">',
+						'<td>{LetterID}</td>',
+						'<td>{LetterTitle}</td>',
+						'<td>{LetterDate}</td>',
+					'</tr>',
+				'</tpl>',
+				'</table>')
+		},{
+			xtype : "combo",
+			store: new Ext.data.Store({
+				proxy:{
+					type: 'jsonp',
+					url: this.address_prefix + '../loan/loan.data.php?task=SelectAllLoanSources',
+					reader: {root: 'rows', totalProperty: 'totalCount'}
+				},
+				fields :  ['SourceID', 'SourceName'],
+				autoLoad : true
+			}),
+			queryMode : "local",
+			fieldLabel : "منابع پرداخت",
+			displayField: 'SourceName',
+			valueField : "SourceID",
+			name : "SourceID",
+			allowBlank : true
+		},{
+			xtype : "combo",
+			store: new Ext.data.Store({
+				proxy:{
+					type:'jsonp',
+					url:this.address_prefix + '../../framework/person/persons.data.php?task=selectPersons&UserTypes=IsStaff',
+					reader: {root: 'rows', totalProperty: 'totalCount'}
+				},
+				fields :  ['PersonID', 'fullname'],
+				autoLoad : true
+			}),
+			queryMode : "local",
+			fieldLabel : "کارشناس",
+			displayField: 'fullname',
+			valueField : "PersonID",
+			name : "ExpertPersonID"
+		},{
+			xtype : "shdatefield",
+			name : "DocRequestDate",
+			fieldLabel : "تاریخ درخواست مدارک"
+		},{
+			xtype : "shdatefield",
+			name : "DocReceiveDate",
+			fieldLabel : "تاریخ دریافت مدارک"
+		},{
+			xtype : "shdatefield",
+			name : "MeetingDate",
+			fieldLabel : "تاریخ جلسه"
+		},{
+			xtype : "shdatefield",
+			name : "VisitDate",
+			fieldLabel : "تاریخ بازدید"
+		},{
+			xtype : "shdatefield",
+			name : "WorkgroupDiscussDate",
+			fieldLabel : "تاریخ طرح در کارگروه"
 		},
-		this.PartsPanel
+
+
+    this.PartsPanel
 		],
 		tbar :[{
 			text : "پیوست ها",
@@ -1100,15 +1219,15 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			
 			this.PartsPanel.down("[name=FundWage]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=WageReturn]").getEl().dom.style.display = "none";
-			//this.PartsPanel.down("[name=ComputeMode]").getEl().dom.style.display = "none";
+			this.PartsPanel.down("[name=ComputeMode]").getEl().dom.style.display = "none";
 			//this.PartsPanel.down("[name=PayCompute]").getEl().dom.style.display = "none";
-//			this.PartsPanel.down("[name=MaxFundWage]").getEl().dom.style.display = "none";
+			this.PartsPanel.down("[name=MaxFundWage]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=AgentReturn]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=AgentDelayReturn]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=DelayReturn]").getEl().dom.style.display = "none";
 			this.get("TR_FundWage").style.display = "none";
 			this.get("TR_AgentWage").style.display = "none";
-//			this.get("div_yearly").style.display = "none";
+			this.get("div_yearly").style.display = "none";
 			this.companyPanel.down("[itemId=cmp_menu]").hide();
 			this.companyPanel.down("toolbar").insert(0,this.attachButtons);
 
@@ -1839,6 +1958,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						xtype : "radio",
 						boxLabel : "فرمول جدید بانک مرکزی",
 						name : "ComputeMode",
+						disabled : true,
 						inputValue : "BANK"
 					},{
 						xtype : "radio",						
@@ -1851,7 +1971,24 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						boxLabel : "فرمول صندوق نوآوری",
 						name : "ComputeMode",
 						inputValue : "NOAVARI"
-					}]
+					}/*,{
+						xtype : "combo",
+						width : 400,
+						store : new Ext.data.SimpleStore({
+							proxy: {
+								type: 'jsonp',
+								url: this.address_prefix + 'request.data.php?' +
+									"task=selectBackPayComputes",
+								reader: {root: 'rows',totalProperty: 'totalCount'}
+							},
+							fields : ['InfoID','InfoDesc'],
+							autoLoad : true
+						}),
+						fieldLabel : "محاسبه بازپرداخت",
+						displayField : "InfoDesc",
+						valueField : "InfoID",
+						name : "BackPayCompute"						
+					}*/]
 				},{
 					xtype : "fieldset",
 					itemId : "fs_WageCompute",
@@ -1949,7 +2086,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						name : "AgentDelayReturn",
 						inputValue : "NEXTYEARCHEQUE"
 					}]
-				},/*{
+				},{
 					xtype : "fieldset",
 					colspan :2,
 					width : 450,
@@ -1983,7 +2120,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						xtype : "container",
 						html : "این کارمزد بر اساس نحوه دریافت کارمزد محاسبه می گردد."
 					}]
-				},*/{
+				},{
 					xtype : "hidden",
 					name : "PartID"
 				}]				
@@ -2044,12 +2181,12 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 
 RequestInfo.prototype.SavePart = function(){
 
-	/*if(this.PartWin.down('[name=MaxFundWage]').getValue()*1 > 0 && 
+	if(this.PartWin.down('[name=MaxFundWage]').getValue()*1 > 0 && 
 		this.PartWin.down('[name=FundWage]').getValue()*1 > 0 )
 	{
 		Ext.MessageBox.alert("Error","در صورتی که سقف کارمزد صندوق را تعیین می کنید باید کارمزد صندوق را صفر نمایید");
 		return;
-	}*/
+	}
 
 	mask = new Ext.LoadMask(this.PartWin, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
@@ -2166,6 +2303,10 @@ RequestInfo.prototype.LoadSummary = function(record){
 	this.get("SUM_TotalWage").innerHTML = Ext.util.Format.Money(record.data.TotalCustomerWage);
 	this.get("SUM_FundWage").innerHTML = Ext.util.Format.Money(record.data.TotalFundWage);
 	this.get("SUM_AgentWage").innerHTML = Ext.util.Format.Money(record.data.TotalAgentWage);
+	this.get("SUM_Wage_1Year").innerHTML = Ext.util.Format.Money(record.data.WageYear1);
+	this.get("SUM_Wage_2Year").innerHTML = Ext.util.Format.Money(record.data.WageYear2);
+	this.get("SUM_Wage_3Year").innerHTML = Ext.util.Format.Money(record.data.WageYear3);
+	this.get("SUM_Wage_4Year").innerHTML = Ext.util.Format.Money(record.data.WageYear4);
 	this.get("SUM_NetAmount").innerHTML = Ext.util.Format.Money(record.data.SUM_NetAmount);
 }
 

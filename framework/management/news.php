@@ -10,41 +10,78 @@ require_once inc_dataGrid;
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
-$dgh = new sadaf_datagrid("dgh1",$js_prefix_address."framework.data.php?task=SelectNews","div_dg");
+$dg = new sadaf_datagrid("dgh1",$js_prefix_address."framework.data.php?task=SelectNews","div_dg");
 
-$dgh->addColumn("","NewsID",'string',true);
+$dg->addColumn("","NewsID",'string',true);
 
-$col = $dgh->addColumn("عنوان", "NewsTitle");
+$col = $dg->addColumn("عنوان", "NewsTitle");
 
-$col=$dgh->addColumn("تاریخ شروع", "StartDate", GridColumn::ColumnType_date);
+$col=$dg->addColumn("تاریخ شروع", "StartDate", GridColumn::ColumnType_date);
 $col->width = 80;
 
-$col=$dgh->addColumn("تاریخ پایان", "EndDate", GridColumn::ColumnType_date);
+$col=$dg->addColumn("تاریخ پایان", "EndDate", GridColumn::ColumnType_date);
 $col->width = 80;
 
-$col=$dgh->addColumn("ویرایش", "context");
+$col = $dg->addColumn("<font style=font-size:10px>کاربر</font>","IsStaff","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>مشتری</font>","IsCustomer","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>سهامدار</font>","IsShareholder","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>سرمایه گذار</font>","IsAgent","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>حامی</font>","IsSupporter","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$col = $dg->addColumn("<font style=font-size:10px>کارشناس</font>","IsExpert","string");
+$col->renderer = "function(v){return (v=='YES') ? '٭' : '';}";
+$col->editor = ColumnEditor::CheckField("","YES");
+$col->align = "center";
+$col->width = 35;
+
+$dg->addPlugin("this.Details");
+
+$col=$dg->addColumn("ویرایش", "context");
 $col->renderer="FRW_news.ContextRender";
 $col->width = 40;
 
 if($accessObj->AddFlag)
 {
-	$dgh->addButton("", "ایجاد اعلان جدید", "add", "function(){FRW_newsObject.Add();}");
+	$dg->addButton("", "ایجاد اعلان جدید", "add", "function(){FRW_newsObject.Add();}");
 }
 if($accessObj->RemoveFlag)
 {
-	$col = $dgh->addColumn("حذف", "", "string");
+	$col = $dg->addColumn("حذف", "", "string");
 	$col->renderer = "FRW_news.deleteRender";
 	$col->width = 40;
 }
-$dgh->emptyTextOfHiddenColumns=true;
-$dgh->width = 780;
-$dgh->DefaultSortField = "NewsTitle";
-$dgh->DefaultSortDir = "ASC";
-$dgh->height = 400;
-$dgh->EnableSearch = false;
-$dgh->EnablePaging = false;
-$dgh->pageSize=12;
-$grid = $dgh->makeGrid_returnObjects();
+$dg->emptyTextOfHiddenColumns=true;
+$dg->DefaultSortField = "NewsTitle";
+$dg->DefaultSortDir = "ASC";
+$dg->height = 400;
+$dg->EnableSearch = false;
+$dg->EnablePaging = false;
+$dg->pageSize=12;
+$grid = $dg->makeGrid_returnObjects();
 ?>
 <script>
 
@@ -63,16 +100,24 @@ FRW_news.prototype = {
 
 function FRW_news()
 {
+	this.Details = {
+		ptype: 'rowexpander',
+		rowBodyTpl : [
+			'<hr>','{context}'
+		]
+	};
+	
 	this.formPanel = new Ext.form.Panel({
 		renderTo : this.get("div_form"),
 		frame : true,
+		hidden : true,
 		title : "اطلاعات اعلان",
 		width : 700,	
 		layout : {
 			type : "table",
 			columns : 2
 		},		
-		height : 300,
+		height : 400,
 		items : [{
 			xtype : "textfield",
 			fieldLabel : "عنوان اعلان",
@@ -86,6 +131,43 @@ function FRW_news()
 			xtype : "shdatefield",
 			name : "EndDate",
 			fieldLabel : "تاریخ پایان"
+		},{
+			xtype : "fieldset",
+			colspan : 2,
+			title : " ذینفع",
+			layout : "hbox",
+			defaults : {style : "margin-right : 10px"},
+			items :[{
+				xtype : "checkbox",
+				boxLabel: 'همکاران صندوق',
+				name: 'IsStaff',
+				inputValue: 'YES'
+			},{
+				xtype : "checkbox",
+				boxLabel: 'مشتری',
+				name: 'IsCustomer',
+				inputValue: 'YES'
+			},{
+				xtype : "checkbox",
+				boxLabel: 'سهامدار',
+				name: 'IsShareholder',
+				inputValue: 'YES'
+			},{
+				xtype : "checkbox",
+				boxLabel: 'سرمایه گذار',
+				name: 'IsAgent',
+				inputValue: 'YES'
+			},{
+				xtype : "checkbox",
+				boxLabel: 'حامی',
+				name: 'IsSupporter',
+				inputValue: 'YES'
+			},{
+				xtype : "checkbox",
+				boxLabel: 'کارشناس',
+				name: 'IsExpert',
+				inputValue: 'YES'
+			}]
 		},{
 			xtype : "container",
 			colspan : 2,
@@ -114,9 +196,17 @@ function FRW_news()
 						me = FRW_newsObject;
 						me.grid.getStore().load();
 						me.formPanel.getForm().reset();
+						me.formPanel.hide();
 						mask.hide();
 					}
 				});
+			}
+		},{
+			text : "انصراف",
+			iconCls : "undo",
+			handler : function(){
+				me = FRW_newsObject;
+				me.formPanel.hide();
 			}
 		}]
 	});
@@ -136,7 +226,7 @@ function FRW_news()
 
 FRW_news.deleteRender = function(value, p, record)
 {
-	return "<div  title='حذف اطلاعات' class='remove' onclick='FRW_newsObject.DeleteTemplate();' " +
+	return "<div  title='حذف اطلاعات' class='remove' onclick='FRW_newsObject.Delete();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:20px;height:16'></div>";
 }
@@ -154,6 +244,7 @@ FRW_news.prototype.Add = function(){
 	
 	this.formPanel.getForm().reset();
 	CKEDITOR.instances.FrameworkNewsEditor.setData();
+	this.formPanel.show();
 }
 
 FRW_news.prototype.ShowForm = function(){
@@ -167,10 +258,11 @@ FRW_news.prototype.ShowForm = function(){
 		ev.editor.setData(record.data.context);
 	});			
 	CKEDITOR.instances.FrameworkNewsEditor.setData(record.data.context);
+	this.formPanel.show();
 
 }
 
-FRW_news.prototype.DeleteTemplate = function()
+FRW_news.prototype.Delete = function()
 {    
 	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
 		
@@ -204,7 +296,7 @@ FRW_news.prototype.DeleteTemplate = function()
 <center>
 	<div id="div_form"></div>
 	<br>
-	<div id="div_dg"></div>
+	<div style="margin:10px;width:98%" id="div_dg"></div>
 </center>
 
 

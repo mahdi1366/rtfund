@@ -45,7 +45,7 @@ function Meetings(){
 			url: this.address_prefix + "meeting.data.php?task=selectMeetingTypes",
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["InfoID","InfoDesc"],
+		fields : ["InfoID","InfoDesc","param1","param2"],
 		autoLoad : true,
 		listeners : {
 			load : function(){
@@ -55,18 +55,42 @@ function Meetings(){
 				for(var i=0; i<this.totalCount; i++)
 				{
 					record = this.getAt(i);
-					me.panel.down("[itemId=cmp_buttons]").add({
-						xtype : "button",
-						width : 130,
-						height : 50,
-						autoScroll : true,
-						enableToggle : true,
-						scale : "large",
-						style : "margin-bottom:10px",	
-						itemId : record.data.InfoID,
-						text : record.data.InfoDesc,
-						handler : function(){Meetings.LoadGrid(this)}
-					});
+					if(record.data.param1 != "")
+					{
+						btn = me.panel.down("[itemId=g_" + record.data.param1 + "]");
+						if(!btn)
+						{
+							btn = me.panel.down("[itemId=cmp_buttons]").add({
+								xtype : "button",
+								width : 130,
+								height : 50,
+								autoScroll : true,
+								scale : "large",
+								style : "margin-bottom:10px",	
+								itemId : "g_" + record.data.param1,
+								text : record.data.param2,
+								menu : []
+							});
+						}
+						
+						btn.menu.add({
+							itemId : record.data.InfoID,
+							text : record.data.InfoDesc,
+							handler : function(){Meetings.LoadGrid(this)}
+						});
+					}
+					else
+						me.panel.down("[itemId=cmp_buttons]").add({
+							xtype : "button",
+							width : 130,
+							height : 50,
+							autoScroll : true,
+							scale : "large",
+							style : "margin-bottom:10px",	
+							itemId : record.data.InfoID + "_" + record.data.param1,
+							text : record.data.param1 != "" ? record.data.param1 : record.data.InfoDesc,
+							handler : function(){Meetings.LoadGrid(this)}
+						});
 				}
 			}
 		}
@@ -93,8 +117,8 @@ function Meetings(){
 
 Meetings.LoadGrid = function(btn){
 	
-	btn.toggle(false);
 	MeetingsObject.grid.getStore().proxy.extraParams.MeetingType = btn.itemId;
+	
 	MeetingsObject.grid.setTitle(btn.text);
 	if(MeetingsObject.grid.rendered)
 		MeetingsObject.grid.getStore().loadPage(1);

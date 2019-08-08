@@ -59,6 +59,9 @@ $col = $dg->addColumn("شماره", "LetterID", "");
 $col->width = 60;
 $col->align = "center";
 
+$col = $dg->addColumn("نوع ارجاع", "SendTypeDesc", "");
+$col->width = 120;
+
 $col = $dg->addColumn("موضوع نامه", "LetterTitle", "");
 $col->renderer = "MyLetter.TitleRender";
 if($mode == "receive")
@@ -162,9 +165,10 @@ function MyLetter(){
 	
 	this.panel = new Ext.panel.Panel({
 		renderTo : this.get("DivPanel"),
-		//border : false,
+		border : false,
 		layout : "hbox",
-		height : 500,
+		autoHeight : true,
+		
 		items : [{
 			xtype : "container",
 			flex : 1,
@@ -173,7 +177,8 @@ function MyLetter(){
 			xtype : "container",
 			width : 150,
 			autoScroll : true,
-			height: 500,
+			autoHeight : true,
+				border : true,
 			style : "border-left : 1px solid #99bce8;margin-left:5px",
 			layout : "vbox",
 			itemId : "cmp_buttons"
@@ -221,10 +226,18 @@ MyLetter.prototype.LoadLetters = function(btn){
 	btn.toggle(false);
 	this.grid.getStore().proxy.extraParams.SendType = btn.itemId;
 	this.grid.setTitle(btn.text.split('<br>')[0]);
+	var col = this.grid.columns.findObject('dataIndex','SendTypeDesc');
+	
 	if(this.grid.rendered)
 		this.grid.getStore().loadPage(1);
 	else
 		this.grid.render(this.get("div_grid"));
+	
+	if(btn.itemId == "0")
+		col.show();
+	else
+		col.hide();
+	
 }
 
 MyLetter.SelectRender = function(v,p,r){

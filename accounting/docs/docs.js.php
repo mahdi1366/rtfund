@@ -350,8 +350,10 @@ AccDocs.prototype.makeDetailWindow = function(){
 							type: 'jsonp',
 							url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=SelectCostCode',
 							reader: {root: 'rows',totalProperty: 'totalCount'}
-						}
+						},
+						pageSize : 25
 					}),
+					pageSize : 25,
 					typeAhead: false,
 					name : "CostID",
 					valueField : "CostID",

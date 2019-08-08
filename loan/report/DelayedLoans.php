@@ -15,9 +15,10 @@ function ReqPersonRender($row,$value){
 function intervslRender($row, $value){
 	return $value . ($row["IntervalType"] == "DAY" ? " روز" : " ماه");
 }
-
 	
 $page_rpg = new ReportGenerator("mainForm","LoanReport_DelayedInstallsObj");
+
+
 $page_rpg->addColumn("شماره وام", "RequestID");
 $page_rpg->addColumn("شعبه وام", "BranchName");
 $page_rpg->addColumn("نوع وام", "LoanDesc");
@@ -25,27 +26,13 @@ $page_rpg->addColumn("معرف", "ReqPersonName");
 $page_rpg->addColumn("وام گیرنده", "LoanPersonName");
 $page_rpg->addColumn("تضامین", "tazamin");
 $page_rpg->addColumn("وضعیت", "StatusDesc");
-
-$col = $page_rpg->addColumn("سررسید اولین قسط", "FirstInstallmentDate");
+$col = $page_rpg->addColumn("تاریخ خاتمه", "EndingDate");
 $col->type = "date";
-$col = $page_rpg->addColumn("سررسید آخرین قسط", "LastInstallmentDate");
-$col->type = "date";
-$col = $page_rpg->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate");
-$col->type = "date";
-$col = $page_rpg->addColumn("قابل پرداخت معوقه", "TotalRemainder");
-$col->IsQueryField = false;
+$page_rpg->addColumn("موبایل", "mobile");
 
-$col = $page_rpg->addColumn("اصل وام معوقه", "remain_pure","ReportMoneyRender");
-$col->IsQueryField = false;
-$col = $page_rpg->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender");
-$col->IsQueryField = false;
-$col = $page_rpg->addColumn("کارمزد تاخیر معوقه", "remain_late","ReportMoneyRender");
-$col->IsQueryField = false;
-$col = $page_rpg->addColumn("جریمه معوقه", "remain_pnlt","ReportMoneyRender");
-$col->IsQueryField = false;
-
+$page_rpg->addColumn("مبلغ وام", "PartAmount");
+$page_rpg->addColumn("جمع وام و کارمزد", "TotalLoanAmount");
 $page_rpg->addColumn("شرح", "PartDesc");
-$page_rpg->addColumn("مبلغ پرداخت", "PartAmount");
 $page_rpg->addColumn("ماه تنفس", "DelayMonths");
 $page_rpg->addColumn("روز تنفس", "DelayDays");
 $page_rpg->addColumn("فاصله اقساط", "PayInterval", "intervslRender");
@@ -53,6 +40,23 @@ $page_rpg->addColumn("تعداد اقساط", "InstallmentCount");
 $page_rpg->addColumn("کارمزد مشتری", "CustomerWage");
 $page_rpg->addColumn("کارمزد صندوق", "FundWage");
 $page_rpg->addColumn("درصد دیرکرد", "ForfeitPercent");
+
+$col = $page_rpg->addColumn("سررسید اولین قسط", "FirstInstallmentDate"); $col->type = "date";
+$col = $page_rpg->addColumn("سررسید آخرین قسط", "LastInstallmentDate"); $col->type = "date";
+$col = $page_rpg->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
+$col = $page_rpg->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate"); $col->type = "date";
+$col = $page_rpg->addColumn("جمع کل پرداختی تاکنون", "TotalPayAmount", "ReportMoneyRender");
+$col = $page_rpg->addColumn("تعداد اقساط معوق", "delayedInstallmentsCount"); $col->IsQueryField = false;
+
+$col = $page_rpg->addColumn("مانده کل تا انتها", "TotalRemainder","ReportMoneyRender");	 $col->IsQueryField = false;
+$col = $page_rpg->addColumn("مانده قابل پرداخت معوقه", "CurrentRemainder","ReportMoneyRender");	$col->IsQueryField = false;
+
+$col = $page_rpg->addColumn("مانده اصل وام تا انتها", "remain_pure","ReportMoneyRender"); $col->IsQueryField = false;
+$col = $page_rpg->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender"); $col->IsQueryField = false;
+$col = $page_rpg->addColumn("مانده اصل و کارمزد", "remain_loan","ReportMoneyRender"); $col->IsQueryField = false;
+$col = $page_rpg->addColumn("کارمزد تاخیر معوقه", "remain_late","ReportMoneyRender"); $col->IsQueryField = false;
+$col = $page_rpg->addColumn("جریمه معوقه", "remain_pnlt","ReportMoneyRender"); $col->IsQueryField = false;
+	
 
 function MakeWhere(&$where, &$whereParam){
 
@@ -119,8 +123,11 @@ function GetData(){
 				BranchName,
 				bi.InfoDesc StatusDesc,
 				tazamin,
+				t1.InstallmentAmount,
 				t1.LastInstallmentDate,
 				t1.FirstInstallmentDate,
+				t4.TotalInstallmentAmount,
+				t3.TotalPayAmount,
 				t3.MaxPayDate" .
 				($userFields != "" ? "," . $userFields : "")."
 				
@@ -132,7 +139,7 @@ function GetData(){
 			join LON_ReqParts p on(p.RequestID=r.RequestID AND p.IsHistory='NO')
 			join BSC_branches using(BranchID)
 			left join (
-				select RequestID, max(InstallmentDate) LastInstallmentDate , min(InstallmentDate) FirstInstallmentDate
+				select RequestID,InstallmentAmount, max(InstallmentDate) LastInstallmentDate , min(InstallmentDate) FirstInstallmentDate
 				from LON_installments
 				where history='NO' AND IsDelayed='NO'
 				group by RequestID
@@ -161,6 +168,13 @@ function GetData(){
 				group by RequestID			
 			)t3 on(r.RequestID=t3.RequestID)
 			
+			left join (
+				select RequestID,sum(InstallmentAmount) TotalInstallmentAmount 
+				from LON_installments
+				where  history='NO' AND IsDelayed='NO'
+				group by RequestID			
+			)t4 on(r.RequestID=t4.RequestID)
+			
 			where 1=1 " . $where . "
 		
 			group by r.RequestID
@@ -180,7 +194,8 @@ function GetData(){
 		$computeArr = LON_Computes::ComputePayments($row["RequestID"], $ComputeDate);
 		$remain = LON_Computes::GetCurrentRemainAmount($row["RequestID"],$computeArr, $ComputeDate);
 		$RemainArr = LON_Computes::GetRemainAmounts($row["RequestID"],$computeArr, $ComputeDate);
-		
+		$totalRemain = LON_Computes::GetTotalRemainAmount($row["RequestID"],$computeArr);
+
 		if($remain == 0)
 			continue;
 		
@@ -199,7 +214,11 @@ function GetData(){
 		$row["remain_loan"] = $RemainArr["remain_pure"]*1 + $RemainArr["remain_wage"]*1;
 		$row["remain_late"] = $RemainArr["remain_late"];
 		$row["remain_pnlt"] = $RemainArr["remain_pnlt"];
-		$row["TotalRemainder"] = $remain;
+		$row["CurrentRemainder"] = $remain;
+		$row["TotalRemainder"] = $totalRemain;
+
+		$TotalAmount = LON_installments::GetTotalInstallmentsAmount($row["RequestID"]);
+		$row["TotalLoanAmount"] = $TotalAmount;
 		$result[] = $row;
 	}
 	
@@ -215,7 +234,7 @@ function ListData($IsDashboard = false){
 	function LoanReportRender($row,$value){
 		return "<a href=LoanPayment.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
 	}
-	
+
 	$col = $rpt->addColumn("کد وام", "RequestID", "LoanReportRender");
 	$col->ExcelRender = false;
 	$rpt->addColumn("شعبه وام", "BranchName");
@@ -224,25 +243,13 @@ function ListData($IsDashboard = false){
 	$rpt->addColumn("معرف", "ReqPersonName");
 	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("موبایل", "mobile");
-	$rpt->addColumn("وام گیرنده", "LoanPersonName");
 	$rpt->addColumn("وضعیت", "StatusDesc");
 	$rpt->addColumn("تاریخ خاتمه", "EndingDate", "ReportDateRender");
 	
-	$rpt->addColumn("سررسید اولین قسط", "FirstInstallmentDate","ReportDateRender");
-	$rpt->addColumn("سررسید آخرین قسط", "LastInstallmentDate","ReportDateRender");
-	$rpt->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate","ReportDateRender");
-	
-	$rpt->addColumn("تعداد اقساط معوق", "delayedInstallmentsCount");
-	
-	
-	$rpt->addColumn("مانده قابل پرداخت معوقه", "TotalRemainder","ReportMoneyRender");	
-	$rpt->addColumn("اصل وام معوقه", "remain_pure","ReportMoneyRender");
-	$rpt->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender");
-	$rpt->addColumn("مانده اصل و کارمزد", "remain_loan","ReportMoneyRender");
-	$rpt->addColumn("کارمزد تاخیر معوقه", "remain_late","ReportMoneyRender");
-	$rpt->addColumn("جریمه معوقه", "remain_pnlt","ReportMoneyRender");
-	
 	$rpt->addColumn("مبلغ وام", "PartAmount", "ReportMoneyRender");
+	$col = $rpt->addColumn("جمع وام و کارمزد", "TotalLoanAmount", "ReportMoneyRender");
+	$col->EnableSummary();
+	
 	$rpt->addColumn("شرح", "PartDesc");
 	$rpt->addColumn("ماه تنفس", "DelayMonths");
 	$rpt->addColumn("روز تنفس", "DelayDays");
@@ -252,6 +259,31 @@ function ListData($IsDashboard = false){
 	$rpt->addColumn("کارمزد صندوق", "FundWage");
 	$rpt->addColumn("درصد دیرکرد", "ForfeitPercent");
 	
+	$rpt->addColumn("سررسید اولین قسط", "FirstInstallmentDate","ReportDateRender");
+	$rpt->addColumn("سررسید آخرین قسط", "LastInstallmentDate","ReportDateRender");
+	$rpt->addColumn("مبلغ قسط", "InstallmentAmount","ReportMoneyRender");
+	$rpt->addColumn("تاریخ آخرین پرداخت مشتری", "MaxPayDate","ReportDateRender");
+	
+	$col = $rpt->addColumn("جمع کل پرداختی تاکنون", "TotalPayAmount", "ReportMoneyRender");
+	$col->ExcelRender = false;
+	$col->EnableSummary();
+	
+	$col = $rpt->addColumn("تعداد اقساط معوق", "delayedInstallmentsCount");
+	$col->EnableSummary();
+	$col = $rpt->addColumn("مانده کل تا انتها", "TotalRemainder","ReportMoneyRender");	
+	$col->EnableSummary();
+	$col = $rpt->addColumn("مانده قابل پرداخت معوقه", "CurrentRemainder","ReportMoneyRender");	
+	$col->EnableSummary();
+	$col = $rpt->addColumn("مانده اصل وام تا انتها", "remain_pure","ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpt->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpt->addColumn("مانده اصل و کارمزد", "remain_loan","ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpt->addColumn("کارمزد تاخیر معوقه", "remain_late","ReportMoneyRender");
+	$col->EnableSummary();
+	$col = $rpt->addColumn("جریمه معوقه", "remain_pnlt","ReportMoneyRender");
+	$col->EnableSummary();
 	
 	if(!$rpt->excel && !$IsDashboard)
 	{
