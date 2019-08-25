@@ -162,15 +162,16 @@ PartPayment.DocRender = function(v,p,r){
 		}
 		return st;
 	}
+	if(r.data.ComputeMode == "NEW")
 		return "<div align='center' title='صدور سند' class='send' "+
 		"onclick='PartPaymentObject.ExecuteEvent();' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
-	/*else
+	else
 		return "<div align='center' title='صدور سند' class='send' "+
 		"onclick='PartPaymentObject.BeforeRegDoc(1);' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";*/
+		"cursor:pointer;width:100%;height:16'></div>";
 }
 
 PartPaymentObject = new PartPayment();
