@@ -341,6 +341,7 @@ RequestInfo.prototype.MakePartsPanel = function(){
 						if(v == "BANK") return "فرمول بانک مرکزی";
 						if(v == "NEW") return 'فرمول تنزیل اقساط';
 						if(v == "NOAVARI") return 'فرمول صندوق نوآوری';
+						if(v == "PERCENT") return 'فرمول درصدی';
 					}
 				},{
 					name : "details",
@@ -1971,6 +1972,11 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						boxLabel : "فرمول صندوق نوآوری",
 						name : "ComputeMode",
 						inputValue : "NOAVARI"
+					},{
+						xtype : "radio",						
+						boxLabel : "فرمول درصدی",
+						name : "ComputeMode",
+						inputValue : "PERCENT"
 					}/*,{
 						xtype : "combo",
 						width : 400,

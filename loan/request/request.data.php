@@ -456,7 +456,7 @@ function SavePart(){
 	{
 		if(!$firstPart)
 		{
-			/*$dt = PdoDataAccess::runquery("select DocID,LocalNo,CycleDesc,StatusID 
+			$dt = PdoDataAccess::runquery("select DocID,LocalNo,CycleDesc,StatusID 
 				from ACC_DocItems join ACC_docs using(DocID)
 				join ACC_cycles using(CycleID)
 				where DocType=" . DOCTYPE_LOAN_DIFFERENCE ." AND SourceID1=? AND SourceID2=?",
@@ -469,9 +469,9 @@ function SavePart(){
 				die();
 			} 
 			$OldDocID = count($dt)>0 ? $dt[0]["DocID"] : 0;
-			*/
+			
 			$result = $obj->EditPart($pdo);
-			/*$DiffDoc = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo, $OldDocID);
+			$DiffDoc = RegisterDifferncePartsDoc($obj->RequestID,$obj->PartID, $pdo, $OldDocID);
 			if($DiffDoc == false)
 			{
 				echo PdoDataAccess::GetLatestQueryString();
@@ -479,7 +479,7 @@ function SavePart(){
 				die();
 			}
 			$msg = "سند اختلاف با شماره " . $DiffDoc->LocalNo . " با موفقیت صادر گردید.";
-			ComputeInstallments($obj->RequestID, true, $pdo);*/
+			ComputeInstallments($obj->RequestID, true, $pdo);
 		}		
 		else
 			$result = $obj->EditPart($pdo);
@@ -804,7 +804,6 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 	$obj2 = new LON_requests($RequestID);
 	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	
-	//if($obj2->ComputeMode == SHEKOOFAI)
 	if($partObj->ComputeMode == "NOAVARI")
 		return ComputeInstallmentsShekoofa($RequestID, $returnMode, $pdo2, $ReturnAmounts);
 	//-----------------------------------------------
@@ -897,6 +896,10 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 				$obj->IntervalType == "MONTH" ? $obj->PayInterval*($i+1) : 0);
 
 			$obj2->InstallmentAmount = $i == $obj->InstallmentCount*1-1 ? $LastPay : $allPay;
+			
+			if($obj->ComputeMode == "PERCENT")
+				$obj2->wage = $obj2->InstallmentAmount - $obj->PartAmount/$obj->InstallmentCount;
+			
 			if(!$obj2->AddInstallment($pdo))
 			{
 				if($returnMode)
@@ -1651,13 +1654,13 @@ function RegPayPartDoc($ReturnMode = false, $pdo = null){
 	//-------------------------------------------------------------
 	
 	//---------- check for previous payments docs registered --------------
-	/*$dt = LON_payments::FullSelect(" AND RequestID=? AND PayDate<? AND d.DocID is null",
+	$dt = LON_payments::Get(" AND RequestID=? AND PayDate<? AND d.DocID is null",
 			array($PayObj->RequestID, $PayObj->PayDate));
 	if($dt->rowCount() > 0)
 	{
 		echo Response::createObjectiveResponse(false, "تا سند مراحل قبلی پرداخت صادر نشود قادر به صدور سند این مرحله نمی باشید");
 		die();	
-	}*/
+	}
 	//---------------------------------------------------------------------
 	if($pdo == null)
 	{

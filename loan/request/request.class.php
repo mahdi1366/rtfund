@@ -406,20 +406,28 @@ class LON_requests extends PdoDataAccess{
 		
 		//...................................
 		
+		//...................................
+		
 		$TotalWage = 0;
-		if($PartObj->ComputeMode == "NEW" || $PartObj->ComputeMode == "NOAVARI")
+		switch($PartObj->ComputeMode)
 		{
-			$dt = LON_installments::GetValidInstallments($PartObj->RequestID);
-			if(count($dt)>0)
-				foreach($dt as $row)
-					$TotalWage += $row["wage"]*1;
-		}
-		else
-		{
-			$TotalWage = round(self::ComputeWage( $PayAmount,
+			case "NEW":
+			case "NOAVARI":
+				$dt = LON_installments::GetValidInstallments($PartObj->RequestID);
+				if(count($dt)>0)
+					foreach($dt as $row)
+						$TotalWage += $row["wage"]*1;
+				break;
+				
+			case "BANK":
+				$TotalWage = round(self::ComputeWage( $PayAmount,
 					$PartObj->CustomerWage*1/100, 
 					$PartObj->InstallmentCount, 
 					$PartObj->IntervalType, $PartObj->PayInterval));	
+				break;
+			
+			case "PERCENT":
+				$TotalWage = $PayAmount*$PartObj->CustomerWage/100;
 		}
 		
 		//...................................

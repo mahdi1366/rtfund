@@ -100,6 +100,7 @@ CheckValues.prototype.BeforeSave = function(checked){
 	this.commentWin.down("[itemId=btn_save]").setHandler(function(){
 		CheckValuesObject.Save(checked,
 			this.up('window').down("[name=description]").getValue());});
+		
 	this.commentWin.show();
 	this.commentWin.center();
 }
@@ -107,7 +108,11 @@ CheckValues.prototype.BeforeSave = function(checked){
 CheckValues.prototype.Save = function(checked, description){
 
 	var record = this.grid.getSelectionModel().getLastSelected();
-	
+	if(record == null)
+	{
+		this.commentWin.hide();
+		return;
+	}
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 
