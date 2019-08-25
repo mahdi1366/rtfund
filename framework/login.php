@@ -100,7 +100,7 @@ $index = rand(0, count($pics)-1);
 	<meta http-equiv="expires" content="now">
 	<meta http-equiv="pragma" content="no-cache">
     <title>نرم افزار <?= SoftwareName?></title>
-	<? require_once 'md5.php'; ?>
+	<?php require_once 'md5.php'; ?>
 	<script>
 		var xmlhttp;
 		if (window.XMLHttpRequest)

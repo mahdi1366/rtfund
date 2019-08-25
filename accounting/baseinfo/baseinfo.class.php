@@ -132,6 +132,8 @@ class ACC_CostCodes extends PdoDataAccess {
 	public $param2;
 	public $param3;
 	
+	
+	
 	public $IsBlockable;
 
     function __construct($CstID = '') {
@@ -292,9 +294,17 @@ class ACC_CostCodes extends PdoDataAccess {
 					bf2.InfoDesc TafsiliTypeDesc2,
 					bf3.InfoDesc TafsiliTypeDesc3,
 					
-					p1.paramDesc param1Desc,
-					p2.paramDesc param2Desc,
-					p3.paramDesc param3Desc
+					p1.paramDesc ParamDesc1,
+					p2.paramDesc ParamDesc2,
+					p3.paramDesc ParamDesc3,
+					
+					p1.paramID ParamID1,
+					p2.paramID ParamID2,
+					p3.paramID ParamID3,
+					
+					p1.paramType ParamType1,
+					p2.paramType ParamType2,
+					p3.paramType ParamType3
 										
                     from ACC_CostCodes as cc
 					left join ACC_blocks b1 on(b1.BlockID=cc.Level1)
@@ -324,20 +334,25 @@ class ACC_CostCodeParams extends OperationClass
 	const TableName = "ACC_CostCodeParams";
 	const TableKey = "ParamID";
 	
-	public $CostID;
 	public $ParamID;
-	public $ordering;
 	public $ParamDesc;
-	public $ParamType;
-	public $KeyTitle;
-	public $ParamValues;
-	public $IsActive;
-	
-	function Remove($pdo = null) {
-		
-		$this->IsActive = "NO";
-		return $this->Edit();
-	}
+	public $ParamType;	
+	public $SrcTable;		
+	public $SrcValueField;
+	public $SrcDisplayField;
+	public $SrcWhere;
+}
+ 
+class ACC_CostCodeParamItems extends OperationClass
+{
+	const TableName = "ACC_CostCodeParamItems";
+	const TableKey = "ItemID";
+
+	public $ItemID;
+	public $ParamID;
+	public $ParamValue;
+	public $f1;	
+	public $f2;	
 }
 
 class ACC_tafsilis extends PdoDataAccess{

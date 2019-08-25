@@ -361,7 +361,7 @@ function selectDocItems() {
 				break;
 			case "CostDesc":
 				$where .= " AND (cc.CostCode like :cd or 
-					concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) like :cd)";
+					concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc) like :cd)";
 				$whereParam[":cd"] = "%" . $_GET["query"] . "%";
 				break;
 			
@@ -377,25 +377,41 @@ function selectDocItems() {
 		}
 	}
 	$where .= dataReader::makeOrder();
+	$no = ACC_DocItems::GetAllCount($where, $whereParam);
 
-	$temp = ACC_DocItems::GetAll($where, $whereParam);
-	print_r(ExceptionHandler::PopAllExceptions());
-	$no = $temp->rowCount();
-	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
-
+	$temp = ACC_DocItems::GetAll($where . " limit " . $_REQUEST["start"] . "," . $_REQUEST["limit"], $whereParam);
+	//print_r(ExceptionHandler::PopAllExceptions());
+	$temp = $temp->fetchAll();
 	//............. fill paramValues ........................
 	for($i=0; $i<count($temp); $i++)
 	{
+		$CostObj = new ACC_CostCodes($temp[$i]["CostID"]);
+		
 		for($j=1; $j<=3; $j++)
 		{
-			if(!empty($temp[$i]["SrcTable" . $j]))
+			$temp[$i]["paramDesc" . $j] = "";
+			$temp[$i]["ParamValue" . $j] = "";
+			
+			if($CostObj->{"param" . $j} == "" || $temp[$i]["param" . $j] == "")
+				continue;
+			
+			$paramObj = new ACC_CostCodeParams($CostObj->{"param" . $j});
+			$temp[$i]["paramDesc" . $j] = $paramObj->ParamDesc;
+					
+			if(!empty($paramObj->SrcTable))
 			{
-				$dt = PdoDataAccess::runquery("select ". $temp[$i]["SrcDisplayField" . $j] . " as title " .
-					" from " . $temp[$i]["SrcTable" . $j] . 
-					" where " . $temp[$i]["SrcValueField" . $j] . "=?", array($temp[$i]["param" . $j]));
-				print_r(ExceptionHandler::PopAllExceptions());
+				$dt = PdoDataAccess::runquery("select ". $paramObj->SrcDisplayField . " as title " .
+					" from " . $paramObj->SrcTable . 
+					" where " . $paramObj->SrcValueField . "=?", array($temp[$i]["param" . $j]));
 				if(count($dt) > 0)
 					$temp[$i]["ParamValue" . $j] = $dt[0]["title"];
+			}
+			else if($paramObj->ParamType == "combo")
+			{
+				$dt = PdoDataAccess::runquery("select ParamValue as title " .
+					" from ACC_CostCodeParamItems where ItemID=?", array($temp[$i]["param" . $j]));
+				if(count($dt) > 0)
+					$temp[$i]["ParamValue" . $j] = $dt[0]["title"]; 
 			}
 		}
 	}
@@ -415,30 +431,38 @@ function selectDocItems() {
 function saveDocItem() {
 
 	$obj = new ACC_DocItems();
-	PdoDataAccess::FillObjectByArray($obj, $_POST);
-
-	if($obj->TafsiliID == "")
-		$obj->TafsiliID = PDONULL;
-	if($obj->TafsiliID2 == "")
-		$obj->TafsiliID2 = PDONULL;
-	if($obj->TafsiliID3 == "")
-		$obj->TafsiliID3 = PDONULL;
-	
-	$costObj = new ACC_CostCodes($obj->CostID);
-	$obj->TafsiliType = $costObj->TafsiliType1;
-	$obj->TafsiliType2 = $costObj->TafsiliType2;
-	$obj->TafsiliType3 = $costObj->TafsiliType3;
-	
-	if ($obj->ItemID == "")
+	if(isset($_POST["record"]))
 	{
-		$return = $obj->Add();
-		ACC_DocHistory::AddLog($obj->DocID, "ایجاد ردیف سند");
+		PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+		$return = $obj->Edit();
 	}
 	else
 	{
-		$return = $obj->Edit();
-	}
+		PdoDataAccess::FillObjectByArray($obj, $_POST);
 
+		if($obj->TafsiliID == "")
+			$obj->TafsiliID = PDONULL;
+		if($obj->TafsiliID2 == "")
+			$obj->TafsiliID2 = PDONULL;
+		if($obj->TafsiliID3 == "")
+			$obj->TafsiliID3 = PDONULL;
+
+		$costObj = new ACC_CostCodes($obj->CostID);
+		$obj->TafsiliType = $costObj->TafsiliType1;
+		$obj->TafsiliType2 = $costObj->TafsiliType2;
+		$obj->TafsiliType3 = $costObj->TafsiliType3;
+
+		if ($obj->ItemID == "")
+		{
+			$return = $obj->Add();
+			ACC_DocHistory::AddLog($obj->DocID, "ایجاد ردیف سند");
+		}
+		else
+		{
+			$return = $obj->Edit();
+		}
+	}
+	//print_r(ExceptionHandler::PopAllExceptions());
 	if (!$return) {
 		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 		die();
@@ -1149,13 +1173,14 @@ function selectParamItems(){
 	if($dt[0]["SrcTable"] != "")
 	{
 		$dt = PdoDataAccess::runquery("select ".$dt[0]["SrcValueField"]." as id, "
-			.$dt[0]["SrcDisplayField"] . " as title from " . $dt[0]["SrcTable"]);
+			.$dt[0]["SrcDisplayField"] . " as title from " . $dt[0]["SrcTable"]
+			. ($dt[0]["SrcWhere"] != "" ? " where " . $dt[0]["SrcWhere"] : ""));
 	}
 	else
 		$dt = PdoDataAccess::runquery("select ItemID as id,ParamValue as title"
 				. " from ACC_CostCodeParamItems where ParamID=?", 
 			array($_GET["ParamID"]));
-	
+
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

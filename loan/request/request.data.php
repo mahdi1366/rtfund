@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // create Date: 94.06
 //-------------------------
-
+//ini_set("display_errors", "On");
 require_once('../header.inc.php');
 require_once inc_dataReader;
 require_once inc_response;
@@ -423,6 +423,10 @@ function GetRequestParts(){
 			$dt[$i]["TotalCustomerWage"] = $result["CustomerWage"];
 			$dt[$i]["TotalAgentWage"] = $result["AgentWage"];
 			$dt[$i]["TotalFundWage"] = $result["FundWage"];
+			$FundYears = $result["FundWageYears"];
+			$index = 1;
+			foreach($FundYears as $row)
+				$dt[$i]["WageYear" . ($index++)] = $row;
 			
 			$res = LON_requests::GetDelayAmounts($PartObj->RequestID, $PartObj);
 			$dt[$i]["FundDelay"] = $res["FundDelay"];
@@ -1715,7 +1719,7 @@ function editPayPartDoc(){
 		echo Response::createObjectiveResponse(false, PdoDataAccess::GetExceptionsToString());
 		die();
 	}
-	if($PersonObj->IsSupporter == "YES")
+	if($partobj->ComputeMode == "NOAVARI")
 		$result = RegisterSHRTFUNDPayPartDoc($ReqObj, $partobj, $PayObj, 
 				$_POST["BankTafsili"], $_POST["AccountTafsili"], $_POST["ChequeNo"], $pdo, $DocObj->DocID);
 	else

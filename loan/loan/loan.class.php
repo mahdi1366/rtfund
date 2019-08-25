@@ -23,12 +23,16 @@ class LON_loans extends PdoDataAccess
 	public $IsPlan;
 	public $IsActive;
 	public $_BlockCode;
+	public $_SepordeCode;
 			
 	function __construct($LoanID = "") {
 		
 		if($LoanID != "")
-			PdoDataAccess::FillObject ($this, "select l.*,b.BlockCode _BlockCode
-				from LON_loans l left join ACC_blocks b using(BlockID) where LoanID=?", array($LoanID));
+			PdoDataAccess::FillObject ($this, "select l.*,b.BlockCode _BlockCode,bi.param1 _SepordeCode
+				from LON_loans l 
+				join BaseInfo bi on(bi.TypeID=1 AND bi.InfoID=l.GroupID)
+				left join ACC_blocks b using(BlockID) 
+				where LoanID=?", array($LoanID));
 	}
 	
 	static function SelectAll($where = "", $param = array()){
@@ -44,14 +48,14 @@ class LON_loans extends PdoDataAccess
 			return false;
 		$this->LoanID = parent::InsertID();
 				
-		$blockObj = new ACC_blocks();
+		/*$blockObj = new ACC_blocks();
 		$blockObj->BlockCode = $this->LoanID;
 		$blockObj->BlockDesc = $this->LoanDesc;
 		$blockObj->LevelID = "2";
 		$blockObj->AddBlock();
 		
 		$this->BlockID = $blockObj->BlockID;
-		$this->EditLoan();
+		$this->EditLoan();*/
 				
 		$daObj = new DataAudit();
 		$daObj->ActionType = DataAudit::Action_add;	
@@ -59,12 +63,12 @@ class LON_loans extends PdoDataAccess
 		$daObj->TableName = "LON_loans";
 		$daObj->execute();
 		
-		/*$obj = new ACC_tafsilis();
+		$obj = new ACC_tafsilis();
 		$obj->ObjectID = $this->LoanID;
 		$obj->TafsiliCode = $this->LoanID;
 		$obj->TafsiliDesc = $this->LoanDesc;
 		$obj->TafsiliType = TAFSILITYPE_LOAN;
-		$obj->AddTafsili();*/ 
+		$obj->AddTafsili();
 		
 		return true;
 	}

@@ -69,7 +69,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$CostCode_agent_wage = FindCostID("730");
 	$CostCode_agent_FutureWage = FindCostID("740");
 	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
-	$CostCode_deposite = FindCostID("210-01");
+	$CostCode_deposite = FindCostID("210-" . $LoanObj->_SepordeCode);
 	$CostCode_bank = FindCostID("101");
 	$CostCode_commitment = FindCostID("200-" . $LoanObj->_BlockCode . "-51");
 	$CostCode_todiee = FindCostID("200-". $LoanObj->_BlockCode."-01");
@@ -163,19 +163,19 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 	$AgentFactor = $MaxWage == 0 ? 0 : ($PartObj->CustomerWage-$PartObj->FundWage)/$MaxWage;
 	
 	$firstPayDate = $FirstStep ? $PayObj->PayDate : $firstPayObj->PayDate;
-	$result = ComputeWagesAndDelays($PartObj, $PayAmount, $firstPayDate, $PayObj->PayDate);
-	$TotalFundWage = $result["TotalFundWage"];
-	$TotalAgentWage = $result["TotalAgentWage"];
-	$TotalCustomerWage = $result["TotalCustomerWage"];
-	$FundYears = $result["FundWageYears"];
-	$AgentYears = $result["AgentWageYears"];
 	
-	$TotalFundDelay = $result["TotalFundDelay"];
-	$TotalAgentDelay = $result["TotalAgentDelay"];
-	$TotalCustomerDelay = $result["TotalCustomerDelay"];
-	$CustomerYearDelays = $result["CustomerYearDelays"];
-	$FundYearDelays =  $result["FundYearDelays"];
-	$AgentYearDelays =  $result["AgentYearDelays"];
+	$result = LON_requests::GetWageAmounts($PartObj->RequestID, $PartObj, $PayAmount);
+	$TotalFundWage = $result["FundWage"];
+	$TotalAgentWage = $result["AgentWage"];
+	$TotalCustomerWage = $result["CustomerWage"];
+	
+	$result2 = LON_requests::GetDelayAmounts($PartObj->RequestID, $PartObj, $PayObj);
+	$TotalFundDelay = $result2["FundDelay"];
+	$TotalAgentDelay = $result2["AgentDelay"];
+	$TotalCustomerDelay = $result2["CustomerDelay"];
+	$CustomerYearDelays = $result2["CustomerYearDelays"];
+	$FundYearDelays =  $result2["FundYearDelays"];
+	$AgentYearDelays =  $result2["AgentYearDelays"];
 	///...........................................................
 	$curYear = substr(DateModules::miladi_to_shamsi($PayObj->PayDate), 0, 4)*1;
 	//----------------- add Doc items ------------------------
@@ -445,13 +445,25 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$itemObj->CostID = $CostCode_wage;
 		$itemObj->DebtorAmount = 0;
 		$itemObj->CreditorAmount = $PartObj->MaxFundWage;
-		$itemObj->TafsiliType = TAFTYPE_YEARS;
-		$itemObj->TafsiliID = $YearTafsili;
 		$itemObj->Add($pdo);
 	}
 	else
 	{
-		foreach($FundYears as $Year => $amount)
+		if($TotalFundWage > 0)
+		{
+			unset($itemObj->ItemID);
+			$itemObj->details = "کارمزد وام شماره " . $ReqObj->RequestID;
+			$itemObj->CostID = $CostCode_wage;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $TotalFundWage;
+			if($LoanMode == "Agent")
+			{
+				$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+				$itemObj->TafsiliID2 = $ReqPersonTafsili;
+			}
+			$itemObj->Add($pdo);
+		}		
+		/*foreach($FundYears as $Year => $amount)
 		{	
 			if($amount <= 0)
 				continue;
@@ -475,7 +487,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			}
 			$itemObj->Add($pdo);
 			
-			if($PartObj->FundWage*1 > $PartObj->CustomerWage)
+			if($PartObj->WageReturn != "AGENT" && $PartObj->FundWage*1 > $PartObj->CustomerWage)
 			{
 				unset($itemObj->ItemID);
 				$itemObj->details = "اختلاف کارمزد وام شماره " . $ReqObj->RequestID;
@@ -491,7 +503,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 				}
 				$itemObj->Add($pdo);
 			}
-		}
+		}*/
 		
 		if($PartObj->WageReturn == "AGENT")
 		{
@@ -506,10 +518,32 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			unset($itemObj->TafsiliID2);
 			$itemObj->Add($pdo);
 		}
+		else if($PartObj->FundWage > $PartObj->CustomerWage)
+		{
+			unset($itemObj->ItemID);
+			$itemObj->details = " کارمزد وام شماره " . $ReqObj->RequestID;
+			$itemObj->CostID = $CostCode_deposite;
+			$itemObj->DebtorAmount = $TotalFundWage - $TotalCustomerWage;
+			$itemObj->CreditorAmount = 0;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $ReqPersonTafsili;
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			$itemObj->Add($pdo);
+		}
+			
 	}
-	if($LoanMode == "Agent" && $PartObj->AgentReturn == "INSTALLMENT")
+	if($LoanMode == "Agent" && $PartObj->AgentReturn == "INSTALLMENT" && $TotalAgentWage > 0)
 	{
-		foreach($AgentYears as $Year => $amount)
+		unset($itemObj->ItemID);
+		$itemObj->details = "سهم کارمزد وام شماره " . $ReqObj->RequestID;
+		$itemObj->CostID = $CostCode_agent_wage;
+		$itemObj->DebtorAmount = 0;
+		$itemObj->CreditorAmount = $amount;
+		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
+		$itemObj->TafsiliID2 = $ReqPersonTafsili;
+		$itemObj->Add($pdo);
+		/*foreach($AgentYears as $Year => $amount)
 		{
 			if($amount <= 0)
 				continue;
@@ -529,7 +563,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 			$itemObj->TafsiliID2 = $ReqPersonTafsili;
 			$itemObj->Add($pdo);
-		}
+		}*/
 	}
 	if($LoanMode == "Agent" && $PartObj->AgentReturn == "CUSTOMER" && $PartObj->CustomerWage > $PartObj->FundWage)
 	{
@@ -728,7 +762,8 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 	$CostCode_FundComit_wage = FindCostID("721-".$LoanObj->_BlockCode."-52-03");
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
 	$CostCode_delayCheque = COSTID_GetDelay;
-		
+	$CostCode_deposite = FindCostID("210-" . $LoanObj->_SepordeCode);
+	
 	$CostCode_guaranteeAmount_zemanati = FindCostID("904-02");
 	$CostCode_guaranteeAmount2_zemanati = FindCostID("905-02");
 	
@@ -920,21 +955,37 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 		$itemObj->Add($pdo);
 	}
 	$FundWage = 0;
-	if($PartObj->FundWage*1 > 0 && $PartObj->WageReturn == "CUSTOMER")
+	if($PartObj->FundWage*1 > 0)
 	{
-		$FundWage = $PayAmount*$PartObj->FundWage/100;
-		
-		unset($itemObj->ItemID);
-		unset($itemObj->TafsiliType);
-		unset($itemObj->TafsiliID);
-		$itemObj->CostID = $CostCode_wage;
-		$itemObj->TafsiliType = TAFTYPE_PERSONS;
-		$itemObj->TafsiliID = $ReqPersonTafsili;
-		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $FundWage;
-		unset($itemObj->TafsiliType2);
-		unset($itemObj->TafsiliID2);
-		$itemObj->Add($pdo);
+		if($PartObj->WageReturn == "AGENT")
+		{
+			$FundWage = $PayAmount*$PartObj->FundWage/100;
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliID);
+			$itemObj->CostID = $CostCode_deposite;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $ReqPersonTafsili;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $FundWage;
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			$itemObj->Add($pdo);
+		}
+		else if($PartObj->WageReturn == "CUSTOMER")
+		{
+			unset($itemObj->ItemID);
+			unset($itemObj->TafsiliType);
+			unset($itemObj->TafsiliID);
+			$itemObj->CostID = $CostCode_wage;
+			$itemObj->TafsiliType = TAFTYPE_PERSONS;
+			$itemObj->TafsiliID = $ReqPersonTafsili;
+			$itemObj->DebtorAmount = 0;
+			$itemObj->CreditorAmount = $FundWage;
+			unset($itemObj->TafsiliType2);
+			unset($itemObj->TafsiliID2);
+			$itemObj->Add($pdo);
+		}
 	}
 	//----------------------------- delay --------------------------------
 	$endDelayDate = DateModules::AddToGDate($PartObj->PartDate, $PartObj->DelayDays*1, $PartObj->DelayMonths*1);
@@ -1054,7 +1105,9 @@ function RegisterSHRTFUNDPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $A
 		}
 	}
 	// ----------------------------- bank --------------------------------
-	$BankAmount = $PayAmount - $AgentWage - $FundWage;
+	$BankAmount = $PayAmount - $AgentWage;
+	if($PartObj->AgentReturn != "INSTALLENT" && $PartObj->AgentReturn != "AGENT")
+		$BankAmount -= $FundWage;
 	if($PartObj->DelayReturn != "INSTALLMENT")
 		$BankAmount -= $FundDelay;
 	if($PartObj->AgentDelayReturn != "INSTALLMENT")
@@ -1263,7 +1316,7 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	$CostCode_FutureWage = FindCostID("760" . "-" . $LoanObj->_BlockCode);
 	$CostCode_agent_wage = FindCostID("730");
 	$CostCode_agent_FutureWage = FindCostID("740");
-	$CostCode_deposite = FindCostID("210-01");
+	$CostCode_deposite = FindCostID("210-" . $LoanObj->_SepordeCode);
 	$CostCode_todiee = FindCostID("200-". $LoanObj->_BlockCode."-01");
 	//------------------------------------------------
 	$CycleID = $_SESSION["accounting"]["CycleID"];
@@ -2205,7 +2258,7 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	//------------- get CostCodes --------------------
 	$LoanObj = new LON_loans($ReqObj->LoanID);
 	$CostCode_Loan = FindCostID("110" . "-" . $LoanObj->_BlockCode);
-	$CostCode_deposite = FindCostID("210-01");
+	$CostCode_deposite = FindCostID("210-" . $LoanObj->_SepordeCode);
 	$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
 	$CostCode_commitment = FindCostID("200-" . $LoanObj->_BlockCode . "-51");
 	
@@ -2279,14 +2332,16 @@ function RegisterCustomerPayDoc($DocObj, $PayObj, $CostID, $TafsiliID, $TafsiliI
 	}
 	//----------------------compute -----------------------
 	
-	$firstPayDate = $PartObj->PartDate;
 	$PayObj->PayAmount = $PayObj->PayAmount*1;
-	$result = ComputeWagesAndDelays($PartObj, $PartObj->PartAmount, $firstPayDate, $PartObj->PartDate);
-	$TotalFundWage = $result["TotalFundWage"];
-	$TotalCustomerWage = $result["TotalFundWage"];
-	$TotalAgentWage = $result["TotalAgentWage"];
-	$TotalFundDelay = $result["TotalFundDelay"];
-	$TotalAgentDelay = $result["TotalAgentDelay"];
+	$result = LON_requests::GetWageAmounts($PartObj->RequestID, $PartObj);
+	$TotalFundWage = $result["FundWage"];
+	$TotalAgentWage = $result["AgentWage"];
+	$TotalCustomerWage = $result["CustomerWage"];
+	
+	$result2 = LON_requests::GetDelayAmounts($PartObj->RequestID, $PartObj);
+	$TotalFundDelay = $result2["FundDelay"];
+	$TotalAgentDelay = $result2["AgentDelay"];
+	
 	$totalBackPay = $PartObj->PartAmount*1 + 
 		GetExtraLoanAmount($PartObj,$TotalFundWage,$TotalCustomerWage,$TotalAgentWage,$TotalFundDelay, $TotalAgentDelay);
 			

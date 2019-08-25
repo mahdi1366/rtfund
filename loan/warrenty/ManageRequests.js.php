@@ -108,8 +108,12 @@ function WarrentyRequest(){
 		},{
 			xtype : "textfield",
 			fieldLabel : "شماره قرارداد",
-			colspan : 2,
 			name : "SubjectNO"
+		},{
+			xtype : "numberfield",
+			hideTrigger : true,
+			fieldLabel : "کد سپاص",
+			name : "SepasCode"			
 		},{
 			xtype : "textfield",
 			fieldLabel : "موضوع قرارداد",

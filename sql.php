@@ -1,5 +1,20 @@
 <?php
 
+/*
+insert into ACC_DocItems(DocID, CostID, TafsiliType, TafsiliID, TafsiliType2, TafsiliID2, TafsiliType3, TafsiliID3, 
+  DebtorAmount, CreditorAmount, details, locked, SourceType, SourceID1, SourceID2, SourceID3, SourceID4, param1, 
+  param2, param3, OldCostCode) 
+  select 9212, CostID, TafsiliType, TafsiliID, TafsiliType2, TafsiliID2, TafsiliType3, TafsiliID3, DebtorAmount, 
+  CreditorAmount, details, locked, SourceType, SourceID1, SourceID2, SourceID3, SourceID4, param1, param2, param3, 
+  OldCostCode from ACC_DocItems where DocID=4292
+ 
+select cc.CostID,CostCode from ACC_CostCodes cc join ACC_blocks b1 on(cc.level1=b1.blockID) 
+join ACC_blocks b0 on(b1.GroupID=b0.BlockID)
+left join ACC_DocItems di on(di.DocID=9212 AND di.CostID=cc.CostID)
+where b0.blockCode not in(6,7,8) AND di.ItemID is null
+  
+  
+ */
 	
 /*	
 insert into ACC_tafsilis(TafsiliCode,TafsiliType,TafsiliDesc,ObjectID) 

@@ -564,8 +564,7 @@ function CopyLetter(){
 
 function UnSeen(){
 	
-	$obj = new OFC_send();
-	$obj->SendID = $_POST["SendID"];
+	$obj = new OFC_send($_POST["SendID"]);
 	$obj->IsSeen = "NO";
 	$result = $obj->EditSend();
 	echo Response::createObjectiveResponse($result, "");
@@ -620,10 +619,6 @@ function SendLetter(){
 	
 	SaveLetter(false);
 	
-	$LetterID = $_POST["LetterID"];
-	$LetterObj = new OFC_letters($LetterID);
-	$toPersonArr = array();
-	
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
@@ -634,71 +629,90 @@ function SendLetter(){
 		$obj->IsSeen = "YES";
 		$obj->EditSend($pdo);
 	}
-	$arr = array_keys($_POST);
-	foreach($arr as $key)
+	
+	$sendArr = json_decode($_POST["SendIDArr"]);
+	if(empty($sendArr))
+		$sendArr[] = $_POST["SendID"];
+
+	foreach($sendArr as $SendID)
 	{
-		if(strpos($key, "ToPersonID") === false)
-			continue;
-		
-		$index = preg_split("/_/", $key);
-		$index = $index[0];
-		$toPersonID = $_POST[$key];
-		
-		//------------------------
-		$arr = array();
-		if(strpos($toPersonID,"p_") !== false)
+		if($SendID == "0")
 		{
-			$personID = substr($toPersonID, 2);
-			if(isset($toPersonArr[ $personID ]))
+			$LetterObj = new OFC_letters($_POST["LetterID"]);
+		}
+		else
+		{
+			$SendObj = new OFC_send($SendID);
+			$LetterObj = new OFC_letters($SendObj->LetterID);
+		}
+		
+		$toPersonArr = array();
+		foreach($_POST as $key => $value)
+		{
+			if(strpos($key, "ToPersonID") === false)
 				continue;
-			$arr[] = $personID;
-			$toPersonArr[ $personID ] = true;
-		}
-		else {
-			$GroupID = substr($toPersonID, 2);
-			$dt = PdoDataAccess::runquery("select * from FRW_AccessGroupList where GroupID=?", array($GroupID));
-			foreach($dt as $row)
-				if(!isset($toPersonArr[ $row["PersonID"] ]))
-				{
-					$arr[] = $row["PersonID"];
-					$toPersonArr[ $row["PersonID"] ] = true;
-				}
-		}
-		//------------------------
-		for($i=0; $i<count($arr); $i++)
-		{
-			if($LetterObj->AccessType == OFC_ACCESSTYPE_SECRET)
+
+			$index = preg_split("/_/", $key);
+			$index = $index[0];
+			$toPersonID = $value;
+
+			//------------------------
+			$arr = array();
+			if(strpos($toPersonID,"p_") !== false)
 			{
-				if(!OFC_roles::UserHasRole($arr[$i], OFC_ROLE_SECRET))
+				$personID = substr($toPersonID, 2);
+				if(isset($toPersonArr[ $personID ]))
+					continue;
+				$arr[] = $personID;
+				$toPersonArr[ $personID ] = true;
+			}
+			else {
+				$GroupID = substr($toPersonID, 2);
+				$dt = PdoDataAccess::runquery("select * from FRW_AccessGroupList where GroupID=?", array($GroupID));
+				foreach($dt as $row)
+				{
+					if(!isset($toPersonArr[ $row["PersonID"] ]))
+					{
+						$arr[] = $row["PersonID"];
+						$toPersonArr[ $row["PersonID"] ] = true;
+					}
+				}
+			}
+			//------------------------
+			for($i=0; $i<count($arr); $i++)
+			{
+				if($LetterObj->AccessType == OFC_ACCESSTYPE_SECRET)
+				{
+					if(!OFC_roles::UserHasRole($arr[$i], OFC_ROLE_SECRET))
+					{
+						$pdo->rollBack();
+						echo Response::createObjectiveResponse(false, "نامه محرمانه را تنها به افرادی که دسترسی نامه محرمانه دارند می توانید ارسال کنید");
+						die();
+					}
+				}
+
+				$obj = new OFC_send();
+				$obj->LetterID = $LetterObj->LetterID;
+				$obj->FromPersonID = $_SESSION["USER"]["PersonID"];
+				$obj->ToPersonID = $arr[$i];
+				$obj->SendDate = PDONOW;
+				$obj->SendType = $_POST[$index . "_SendType"];
+				$obj->ResponseTimeout = $_POST[$index . "_ResponseTimeout"];
+				$obj->FollowUpDate = $_POST[$index . "_FollowUpDate"];
+				$obj->IsUrgent = $_POST[$index . "_IsUrgent"];
+				$obj->IsCopy = isset($_POST[$index . "_IsCopy"]) ? "YES" : "NO";
+				$obj->SendComment = $_POST[$index . "_SendComment"];
+				$obj->SendComment = $obj->SendComment == "شرح ارجاع" ? "" : $obj->SendComment;
+				if(!$obj->AddSend($pdo))
 				{
 					$pdo->rollBack();
-					echo Response::createObjectiveResponse(false, "نامه محرمانه را تنها به افرادی که دسترسی نامه محرمانه دارند می توانید ارسال کنید");
+					print_r(ExceptionHandler::PopAllExceptions());
+					echo Response::createObjectiveResponse(false, "");
 					die();
 				}
 			}
-			
-			$obj = new OFC_send();
-			$obj->LetterID = $LetterID;
-			$obj->FromPersonID = $_SESSION["USER"]["PersonID"];
-			$obj->ToPersonID = $arr[$i];
-			$obj->SendDate = PDONOW;
-			$obj->SendType = $_POST[$index . "_SendType"];
-			$obj->ResponseTimeout = $_POST[$index . "_ResponseTimeout"];
-			$obj->FollowUpDate = $_POST[$index . "_FollowUpDate"];
-			$obj->IsUrgent = $_POST[$index . "_IsUrgent"];
-			$obj->IsCopy = isset($_POST[$index . "_IsCopy"]) ? "YES" : "NO";
-			$obj->SendComment = $_POST[$index . "_SendComment"];
-			$obj->SendComment = $obj->SendComment == "شرح ارجاع" ? "" : $obj->SendComment;
-			if(!$obj->AddSend($pdo))
-			{
-				$pdo->rollBack();
-				print_r(ExceptionHandler::PopAllExceptions());
-				echo Response::createObjectiveResponse(false, "");
-				die();
-			}
 		}
 	}
-	
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
 	die();

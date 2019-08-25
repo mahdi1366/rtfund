@@ -1,180 +1,303 @@
 <?php
-//-----------------------------
-//	Programmer	: Fatemipour
-//	Date		: 96.02
-//-----------------------------
-require_once '../header.inc.php';
+//-------------------------
+// programmer:	Jafarkhani
+// Create Date:	98.06
+//-------------------------
+require_once('../header.inc.php');
 require_once inc_dataGrid;
 
-$CostID = $_REQUEST['CostID'];
+//................  GET ACCESS  .....................
+$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
+//...................................................
 
-$dg = new sadaf_datagrid("dg", $js_prefix_address . "baseinfo.data.php?task=selectParams&CostID=" . $CostID, "div_dg");
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "baseinfo.data.php?task=selectParamItems", "grid_div");
 
-$dg->addColumn("", "ParamID", "", true);
-$dg->addColumn("", "CostID", "", true);
+$dg->addColumn("", "ItemID", "", true);
 
-$col = $dg->addColumn("ترتیب", "ordering");
-$col->editor = ColumnEditor::NumberField();
-
-$col = $dg->addColumn("عنوان", "ParamDesc");
+$col = $dg->addColumn("عنوان آیتم", "ParamValue");
 $col->editor = ColumnEditor::TextField();
 
-$col = $dg->addColumn("نوع", "ParamType");
-$col->editor = "this.ParamTypeCombo";
 
-$col = $dg->addColumn("مقادیر لیست", "ParamValues");
+$col = $dg->addColumn("پارامتر اول", "f1", "");
 $col->editor = ColumnEditor::TextField(true);
 $col->width = 100;
 
-$col = $dg->addColumn("حذف", "", "string");
-$col->sortable = false;
-$col->renderer = "function(v,p,r){return ACC_CostCodeParams.deleteRender(v,p,r);}";
-$col->width = 50;
+$col = $dg->addColumn("پارامتر دوم", "f2", "");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 100;
 
-$dg->addButton("", " ایجاد", "add", "function(){ACC_CostCodeParamsObj.AddParam();}");
-
-$dg->DefaultSortField = "ordering";
-$dg->DefaultSortDir = "asc";
-$dg->EnablePaging = false; 
-$dg->EnableSearch = false;
-$dg->autoExpandColumn = "ParamDesc";
+if($accessObj->AddFlag)
+{
+	$dg->addButton("btn_add","ایجاد","add", "function(){CostCodeParamItemObject.AddItem();}");
+}
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn("عملیات", "ParamID");
+	$col->sortable = false;
+	$col->renderer = "function(v,p,r){return CostCodeParamItem.DeleteRender(v,p,r);}";
+	$col->width = 50;
+}
 $dg->enableRowEdit = true;
-$dg->rowEditOkHandler = "function(v,p,r){ return ACC_CostCodeParamsObj.SaveParam(v,p,r);}";
+$dg->rowEditOkHandler = "function(){return CostCodeParamItemObject.SaveItem();}";
 
-$dg->width = 590;
+$dg->title = "لیست تفصیلی ها";
 $dg->height = 460;
-$dg->pageSize = 20;
-
+$dg->DefaultSortField = "ItemID";
+$dg->DefaultSortDir = "ASC";
+$dg->autoExpandColumn = "ParamValue";
+$dg->EnablePaging = false;
+$dg->EnableSearch = false;
 $grid = $dg->makeGrid_returnObjects();
+
 ?>
 <center>
-    <div id="div_grid"></div>    
+    <form id="mainForm">
+		<table style="margin: 10px; width:98%" >
+			<tr>
+				<td width="300px"><div id="div_selectGroup"></div></td>
+				<td><div id="div_grid" style="width:100%"></div></td>
+			</tr>
+		</table>
+    </form>
 </center>
-<script type='text/javascript'>
-	
-ACC_CostCodeParams.prototype = {
-	TabID: '<?= $_REQUEST["ExtTabID"] ?>',
-	TplItemSeperator: '#',
-	address_prefix: "<?= $js_prefix_address ?>",
-	
-	CostID : <?= $CostID ?>,
-	
-	get: function (elementID) {
+<script>
+
+CostCodeParamItem.prototype = { 
+	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
+	address_prefix : '<?= $js_prefix_address ?>',
+
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+
+	get : function(elementID){
 		return findChild(this.TabID, elementID);
 	}
-};
+}
 
-function ACC_CostCodeParams() {
+function CostCodeParamItem(){
 
-	this.ParamTypeCombo = new Ext.form.ComboBox({
-		store: new Ext.data.Store({
-			fields: ["id", "name"],
-			data: [
-				{"id": "numberfield", "name": "عدد"},
-				{"id": "currencyfield", "name": "مبلغ"},
-				{"id": "textfield", "name": "متن کوتاه"},
-				{"id": "textarea", "name": "متن بلند"},
-				{"id": "shdatefield", "name": "تاریخ"},
-				{"id": "combo", "name": "لیستی"}
-			]
-		}),
-		emptyText: 'انتخاب ...',
-		name: "name",
-		valueField: "id",
-		displayField: "name",
-		allowBlank : false
-	});
-	
 	this.grid = <?= $grid ?>;
-	this.grid.addDocked({
-		xtype : "toolbar", 
-		dock : "bottom", 
-		items :[{
-			xtype : "container",
-			html : "توجه : لطفا مقادیر مختلف لیست را با # جدا کنید"
+	
+	this.groupPnl = new Ext.form.Panel({
+		title: "آیتم های کد حساب",
+		width : 300,
+		autoHeight : true,
+		applyTo : this.get("div_selectGroup"),
+		frame: true,
+		tbar : [{
+			text : "ایجاد",
+			iconCls : "add",
+			hidden : this.AddAccess ? false : true,
+			handler : function(){
+				
+				Ext.MessageBox.prompt('', 'عنوان  :', function(btn, text){
+					if(btn == "cancel")
+						return;
+					CostCodeParamItemObject.SaveParam(text);
+				});
+			}
+		},{
+			text : "حذف گروه",
+			hidden : this.RemoveAccess ? false : true,
+			itemId : "cmp_removeGroup",
+			iconCls : "remove",
+			handler : function(){
+				CostCodeParamItemObject.DeleteParam(this.up('form').down('[name=ParamID]').getValue());
+			}
+		}],
+		items : [{
+			xtype : "multiselect",
+			store : new Ext.data.SimpleStore({
+				proxy: {type: 'jsonp',
+					url: this.address_prefix + 'baseinfo.data.php?task=selectParams',
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},				
+				fields : ['ParamID','ParamDesc','SrcTable'],
+				autoLoad : true
+			}),
+			valueField : "ParamID",
+			queryMode : "local",
+			autoWidth : true,
+			autoScroll : true,
+			height : 400,
+			name : "ParamID",
+			displayField : "ParamDesc"
 		}]
 	});
-	this.grid.render(this.get("div_grid"));
-}
-
-ACC_CostCodeParams.prototype.AddParam = function () {
-
-	var modelClass = this.grid.getStore().model;
-	var record = new modelClass({
-		ParamID: 0,
-		CostID : this.CostID
+	
+	this.groupPnl.down("[name=ParamID]").boundList.on('itemdblclick', function(view, record){
+		CostCodeParamItemObject.LoadCostCodeParamItems(record); 
 	});
-	this.grid.plugins[0].cancelEdit();
-	this.grid.getStore().insert(0, record);
-	this.grid.plugins[0].startEdit(0, 0);
-	this.grid.columns[1].getEditor().focus();
 }
 
-ACC_CostCodeParams.prototype.SaveParam = function (store, record) {
-
-	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg: 'در حال ذخیره سازی ...'});
+CostCodeParamItem.prototype.SaveParam = function(text){
+	
+	var mask = new Ext.LoadMask(this.groupPnl,{msg: 'در حال ذخیره سازی ...'});
 	mask.show();
+
 	Ext.Ajax.request({
-		url: this.address_prefix + 'baseinfo.data.php?task=saveParam',
-		method: 'POST',
+		method : "POST",
+		url: this.address_prefix + "baseinfo.data.php",
 		params: {
-			record: Ext.encode(record.data)
+			task: "SaveParam",
+			ParamDesc: text
 		},
-		success: function (response) {
+		success: function(response){
 			mask.hide();
-			var st = Ext.decode(response.responseText);
-			if (st.success)
-			{
-				ACC_CostCodeParamsObj.grid.getStore().load();
-			}
-			else
-			{
-				Ext.MessageBox.alert("خطا", st.data);
-			}
-		},
-		failure: function () {
-			mask.hide();
+			CostCodeParamItemObject.groupPnl.down("[name=ParamID]").getStore().load();
 		}
 	});
 }
 
-ACC_CostCodeParams.deleteRender = function(v,p,r){
+CostCodeParamItem.prototype.LoadCostCodeParamItems = function(record){
+
+	this.ParamID = record.data.ParamID;
+
+	this.grid.getStore().proxy.extraParams.ParamID = this.ParamID;
+
+	if(this.grid.rendered)
+		this.grid.getStore().load();
+	else
+		this.grid.render(this.get("div_grid"));
 	
-	return  "<div title='حذف اطلاعات' class='remove' onclick='ACC_CostCodeParamsObj.removeParam();' " +
+	this.grid.show();
+	if(record.data.SrcTable != null)
+	{
+		this.grid.down("[itemId=btn_add]").hide();
+		this.grid.columns.findObject('dataIndex','ParamID').hide();
+	}
+	else
+	{
+		this.grid.down("[itemId=btn_add]").show();
+		this.grid.columns.findObject('dataIndex','ParamID').show();
+	}
+}
+
+CostCodeParamItem.DeleteRender = function(v,p,r){
+	
+	if(r.data.ObjectID*1 > 0)
+		return "";
+	return "<div align='center' title='حذف' class='remove' "+
+		"onclick='CostCodeParamItemObject.DeleteCostCodeParamItem();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;height:16'></div>";
-};
+		"cursor:pointer;width:100%;height:16'></div>";
+}
 
-ACC_CostCodeParams.prototype.removeParam = function(){  
+CostCodeParamItem.prototype.AddItem = function(){
 
-	Ext.MessageBox.confirm("","آیا مایل به حذف پارامتر می باشید؟", function(btn){
+	var modelClass = this.grid.getStore().model;
+	var record = new modelClass({
+		CostCodeParamItemID: null,
+		ParamID : this.grid.getStore().proxy.extraParams.ParamID,
+		CostCodeParamItemCode: null
+	});
+
+	this.grid.plugins[0].cancelEdit();
+	this.grid.getStore().insert(0, record);
+	this.grid.plugins[0].startEdit(0, 0);
+}
+
+CostCodeParamItem.prototype.SaveItem = function(index){
+
+	var record = this.grid.getSelectionModel().getLastSelected();
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		url: this.address_prefix +'baseinfo.data.php',
+		method: "POST",
+		params: {
+			task: "saveParamItem",
+			record: Ext.encode(record.data)
+		},
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+
+			if(st.success)
+			{   
+				CostCodeParamItemObject.grid.getStore().load();
+			}
+			else
+			{
+				if(st.data == "")
+					alert("خطا در اجرای عملیات");
+				else
+					alert(st.data);
+			}
+		},
+		failure: function(){}
+	});
+}
+
+CostCodeParamItem.prototype.DeleteParam = function(ParamID){
+	
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
 		if(btn == "no")
 			return;
-
-		me = ACC_CostCodeParamsObj;
-		mask = new Ext.LoadMask(me.grid, {msg: 'در حال ذخیره سازی ...'});
+		
+		me = CostCodeParamItemObject;
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
 		mask.show();
-		Ext.Ajax.request({
-			url: me.address_prefix + 'baseinfo.data.php?task=deleteParam',
-			method: 'POST',
-			params: {
-				ParamID : me.grid.getSelectionModel().getLastSelected().data.ParamID
-			},
 
-			success: function(response){
+		Ext.Ajax.request({
+			url: me.address_prefix + 'baseinfo.data.php',
+			params:{
+				task: "DeleteParam",
+				ParamID : ParamID
+			},
+			method: 'POST',
+
+			success: function(response,option){
 				mask.hide();
-				var st = Ext.decode(response.responseText);
-				if(st.success)
+				sd = Ext.decode(response.responseText);
+
+				if(sd.success)
 				{
-					ACC_CostCodeParamsObj.grid.getStore().load();
+					CostCodeParamItemObject.groupPnl.down('[name=ParamID]').getStore().load();
+					CostCodeParamItemObject.grid.hide();
+				}	
+				else
+				{
+					Ext.MessageBox.alert("Error",sd.data);
 				}
 			},
 			failure: function(){}
 		});
-	})
+	});
+}
 
-};
+CostCodeParamItem.prototype.DeleteCostCodeParamItem = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		
+		me = CostCodeParamItemObject;
+		var record = me.grid.getSelectionModel().getLastSelected();
+		
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال حذف ...'});
+		mask.show();
 
-ACC_CostCodeParamsObj = new ACC_CostCodeParams();
+		Ext.Ajax.request({
+			url: me.address_prefix + 'baseinfo.data.php',
+			params:{
+				task: "DeleteParamItem",
+				ItemID : record.data.ItemID
+			},
+			method: 'POST',
+
+			success: function(response,option){
+				mask.hide();
+				CostCodeParamItemObject.grid.getStore().load();
+			},
+			failure: function(){}
+		});
+	});
+}
+
+var CostCodeParamItemObject = new CostCodeParamItem();	
 
 </script>

@@ -32,7 +32,7 @@ class WAR_requests extends OperationClass
 	public $BranchID;
 	public $RegisterAmount;
 	public $SavePercent;
-	
+	public $SepasCode;
 	
 	public $_fullname;
 	public $_TypeDesc;
@@ -126,7 +126,7 @@ class WAR_costs extends OperationClass
 	public $CostCodeID;
 	public $CostType;
 
-	public static function Get($where = '', $whereParams = array()) {
+	public static function Get($where = '', $whereParams = array(), $pdo = null) {
 		
 		$query = "select c.*,cc.CostCode , 
 				concat_ws(' - ',b1.BlockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) CostCodeDesc
@@ -138,7 +138,7 @@ class WAR_costs extends OperationClass
 			left join ACC_blocks b4 on(level4=b4.BlockID)
 			where 1=1 " . $where;
 		
-		return PdoDataAccess::runquery_fetchMode($query, $whereParams);
+		return PdoDataAccess::runquery_fetchMode($query, $whereParams, $pdo);
 	}
 }
 

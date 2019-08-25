@@ -54,6 +54,7 @@ $dg->EnableRowNumber = false;
 $dg->hideHeaders = true;
 $dg->EnableSearch = false;
 $dg->ExcelButton = false;
+$dg->collapsible = true;
 $grid = $dg->makeGrid_returnObjects();
 
 //--------------------------------------------
@@ -76,14 +77,6 @@ $dg->addColumn("", "locked", "", true);
 $dg->addColumn("", "paramDesc1", "", true);
 $dg->addColumn("", "paramDesc2", "", true);
 $dg->addColumn("", "paramDesc3", "", true);
-
-$dg->addColumn("", "paramType1", "", true);
-$dg->addColumn("", "paramType2", "", true);
-$dg->addColumn("", "paramType3", "", true);
-
-$dg->addColumn("", "ParamID1", "", true);
-$dg->addColumn("", "ParamID2", "", true);
-$dg->addColumn("", "ParamID3", "", true);
 
 $dg->addColumn("", "ParamValue1", "", true);
 $dg->addColumn("", "ParamValue2", "", true);
@@ -113,29 +106,33 @@ $col->renderer = "function(v,p,r){p.tdAttr = \"data-qtip='\" + r.data.Tafsili3Gr
 $col->width = 110;
 
 $col = $dg->addColumn("بدهکار", "DebtorAmount", GridColumn::ColumnType_money);
-//$col->editor = ColumnEditor::CurrencyField(true, "cmp_DebtorAmount");
+$col->editor = ColumnEditor::CurrencyField(true, "cmp_DebtorAmount");
 $col->width = 90;
 
 $col = $dg->addColumn("بستانکار", "CreditorAmount", GridColumn::ColumnType_money);
-//$col->editor = ColumnEditor::CurrencyField(true, "cmp_CreditorAmount");
+$col->editor = ColumnEditor::CurrencyField(true, "cmp_CreditorAmount");
 $col->width = 90;
 
-$col = $dg->addColumn("جزئیات", "details");
+/*$col = $dg->addColumn("جزئیات", "details");
 //$col->editor = ColumnEditor::TextField(true, "cmp_details");
 $col->width = 100;
-$col->ellipsis = 50;
+$col->ellipsis = 50;*/
 
 $col = $dg->addColumn("آیتم1", "param1");
 $col->renderer = "AccDocs.Param1Render";
-$col->width = 70;
+$col->width = 110;
 
 $col = $dg->addColumn("آیتم2", "param2");
 $col->renderer = "AccDocs.Param2Render";
-$col->width = 70;
+$col->width = 110;
 
 $col = $dg->addColumn("آیتم3", "param3");
 $col->renderer = "AccDocs.Param3Render";
-$col->width = 70;
+$col->width = 110;
+
+$col = $dg->addColumn("کدحساب قدیم", "OldCostCode");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 90;
 
 if($accessObj->RemoveFlag)
 {
@@ -150,14 +147,15 @@ if($accessObj->AddFlag)
 	$dg->addButton("", "ایجاد ردیف سند", "add", "function(v,p,r){ return AccDocsObject.AddItem(v,p,r);}");
 }
 
-//$dg->enableRowEdit = true ;
-//$dg->rowEditOkHandler = "function(store,record){ return AccDocsObject.SaveItem(store,record);}";
+$dg->enableRowEdit = true ;
+$dg->rowEditOkHandler = "function(store,record){ return AccDocsObject.SaveItem(store,record);}";
 
 $dg->DefaultSortField = "ItemID";
 $dg->autoExpandColumn = "CostDesc";
 $dg->DefaultSortDir = "ASC";
 $dg->emptyTextOfHiddenColumns = true;
-$dg->height = 320;
+//$dg->height = 320;
+$dg->pageSize = 15;
 $itemsgrid = $dg->makeGrid_returnObjects();
 //---------------------------------------------------
 $dgh = new sadaf_datagrid("dg",$js_prefix_address."doc.data.php?task=selectCheques","div_dg");

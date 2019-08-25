@@ -28,7 +28,7 @@ function AccDocs(){
 	this.makeDetailWindow();
 	//--------------------------------------------------------------------------
 	
-	this.checkTafsiliCombo = new Ext.form.ComboBox({
+	/*this.checkTafsiliCombo = new Ext.form.ComboBox({
 		store: new Ext.data.Store({
 			fields:["TafsiliID","TafsiliDesc"],
 			proxy: {
@@ -62,7 +62,7 @@ function AccDocs(){
 		valueField : "AccountID",
 		displayField : "AccountDesc"
 	});
-	
+	*/
 	this.ChequeStatusCombo = new Ext.form.ComboBox({
 		store: new Ext.data.Store({
 			autoLoad : true,
@@ -340,7 +340,10 @@ AccDocs.prototype.makeDetailWindow = function(){
 					colspan : 2,
 					store: new Ext.data.Store({
 						fields:["CostID","CostCode","CostDesc", 
-							"TafsiliType1","TafsiliType2","TafsiliType3",{
+							"TafsiliType1","TafsiliType2","TafsiliType3",
+							"ParamID1","ParamID2","ParamID3",
+							"ParamType1","ParamType2","ParamType3",
+							"ParamDesc1","ParamDesc2","ParamDesc3",{
 							name : "fullDesc",
 							convert : function(value,record){
 								return "[ " + record.data.CostCode + " ] " + record.data.CostDesc
@@ -538,6 +541,45 @@ AccDocs.prototype.SelectCostIDHandler = function(record){
 		combo.setValue();
 		combo.getStore().proxy.extraParams["TafsiliType"] = record.data.TafsiliType3;
 		combo.getStore().load();
+	}
+	
+	var ParamsFS = this.detailWin.down('form').getComponent("ParamsFS");
+	ParamsFS.removeAll();
+	for(i=1; i<=3; i++)
+	{
+		if(record.data["ParamType" + i] == "combo")
+		{
+			ParamsFS.add({
+				xtype : "combo",
+				itemId : "Cmp_param" + i,
+				name : "param" + i,
+				fieldLabel : record.data["ParamDesc" + i],
+				store : new Ext.data.Store({
+					fields:["id","title"],
+					proxy: {
+						type: 'jsonp',
+						url: this.address_prefix + 'doc.data.php?task=selectParamItems&ParamID=' +
+							record.data["ParamID" + i],
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					autoLoad: true
+				}),
+				queryMode : "local",
+				valueField : "id",
+				displayField : "title"
+			});							
+		}
+		else
+		{
+			ParamsFS.add({
+				itemId : "Cmp_param" + i,
+				xtype : record.data["ParamType" + i],
+				name : "param" + i,
+				fieldLabel : record.data["ParamDesc" + i],
+				hideTrigger : (record.data["paramType" + i] == "numberfield" || 
+					record.data["paramType" + i] == "currencyfield" ? true : false)
+			});			
+		}
 	}
 }
 
@@ -1116,21 +1158,21 @@ AccDocs.prototype.printCheck = function(){
 AccDocs.Param1Render = function(v,p,r){
 	if(r.data.paramDesc1 == null)
 		return '';
-	return r.data.paramDesc1 + ':<br>' + 
+	return r.data.paramDesc1 + ':' + 
 		(r.data.ParamValue1 ? r.data.ParamValue1 : v );
 }
 
 AccDocs.Param2Render = function(v,p,r){
 	if(r.data.paramDesc2 == null)
 		return '';
-	return r.data.paramDesc2 + ':<br>' + 
+	return r.data.paramDesc2 + ':' + 
 		(r.data.ParamValue2 ? r.data.ParamValue2 : v );
 }
 
 AccDocs.Param3Render = function(v,p,r){
 	if(r.data.paramDesc3 == null)
 		return '';
-	return r.data.paramDesc3 + ':<br>' + 
+	return r.data.paramDesc3 + ':' + 
 		(r.data.ParamValue3 ? r.data.ParamValue3 : v );
 }
 
@@ -1295,44 +1337,7 @@ AccDocs.prototype.EditItem = function(){
 			params : { TafsiliID : record.data.TafsiliID3}
 		});
 	}
-	//--------------------------- make params ----------------------
-	var ParamsFS = this.detailWin.down('form').getComponent("ParamsFS");
-	ParamsFS.removeAll();
-	for(i=1; i<=3; i++)
-	{
-		if(record.data["paramType" + i] == "combo")
-		{
-			ParamsFS.add({
-				xtype : "combo",
-				name : "param" + i,
-				fieldLabel : record.data["paramDesc" + i],
-				store : new Ext.data.Store({
-					fields:["id","title"],
-					proxy: {
-						type: 'jsonp',
-						url: this.address_prefix + 'doc.data.php?task=selectParamItems&ParamID=' +
-							record.data["ParamID" + i],
-						reader: {root: 'rows',totalProperty: 'totalCount'}
-					},
-					autoLoad: true
-				}),
-				valueField : "id",
-				value : record.data["param" + i],
-				displayField : "title"
-			});							
-		}
-		else
-		{
-			ParamsFS.add({
-				xtype : record.data["paramType" + i],
-				name : "param" + i,
-				fieldLabel : record.data["paramDesc" + i],
-				value : record.data["param" + i],
-				hideTrigger : (record.data["paramType" + i] == "numberfield" || 
-					record.data["paramType" + i] == "currencyfield" ? true : false)
-			});			
-		}
-	}
+	
 	//....................................................
 	var t = setInterval(function(){
 		if(!R1.isLoading() && (!R2 || !R2.isLoading()) && (!R3 || !R3.isLoading()) && (!R4 || !R4.isLoading()))
@@ -1342,6 +1347,12 @@ AccDocs.prototype.EditItem = function(){
 			AccDocsObject.detailWin.down('panel').loadRecord(record);
 			AccDocsObject.SelectCostIDHandler(
 					AccDocsObject.detailWin.down("[name=CostID]").getStore().getAt(0));
+			
+			fs = AccDocsObject.detailWin.down('form').getComponent("ParamsFS");
+			fs.down("[itemId=Cmp_param1]").setValue(record.data["param1"]);
+			fs.down("[itemId=Cmp_param2]").setValue(record.data["param2"]);
+			fs.down("[itemId=Cmp_param3]").setValue(record.data["param3"]);
+			
 			AccDocsObject.beforeRowEdit(record);
 		}
 	}, 1000);
@@ -1351,24 +1362,6 @@ AccDocs.prototype.EditItem = function(){
 
 AccDocs.prototype.SaveItem = function(store,record){
 
-	if(this.detailWin.down('[name=DebtorAmount]').getValue() == null &&
-		this.detailWin.down('[name=CreditorAmount]').getValue() == null)
-	{
-		Ext.MessageBox.alert("","ورود مبلغ بدهکار یا بستانکار الزامی است");
-		return;
-	}
-	if(this.detailWin.down('[name=DebtorAmount]').getValue()*1 > 0 &&
-		this.detailWin.down('[name=CreditorAmount]').getValue()*1 > 0)
-	{
-		Ext.MessageBox.alert("","امکان ورود هم مبلغ بدهکار و هم بستانکار ممکن نمی باشد");
-		return;
-	}
-	if(this.detailWin.down('[name=CostID]').getValue() == null)
-	{
-		Ext.MessageBox.alert("","ورود کد حساب الزامی است");
-		return;
-	}
-	
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 
@@ -1400,6 +1393,23 @@ AccDocs.prototype.SaveItem = function(store,record){
 	}
 	else
 	{
+		if(this.detailWin.down('[name=DebtorAmount]').getValue() == null &&
+			this.detailWin.down('[name=CreditorAmount]').getValue() == null)
+		{
+			Ext.MessageBox.alert("","ورود مبلغ بدهکار یا بستانکار الزامی است");
+			return;
+		}
+		if(this.detailWin.down('[name=DebtorAmount]').getValue()*1 > 0 &&
+			this.detailWin.down('[name=CreditorAmount]').getValue()*1 > 0)
+		{
+			Ext.MessageBox.alert("","امکان ورود هم مبلغ بدهکار و هم بستانکار ممکن نمی باشد");
+			return;
+		}
+		if(this.detailWin.down('[name=CostID]').getValue() == null)
+		{
+			Ext.MessageBox.alert("","ورود کد حساب الزامی است");
+			return;
+		}
 		this.detailWin.down('panel').getForm().submit({
 			url: this.address_prefix + 'doc.data.php?task=saveDocItem',
 			method: 'POST',

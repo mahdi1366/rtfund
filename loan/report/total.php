@@ -71,7 +71,11 @@ $col = $page_rpg->addColumn("مبلغ آخرین پرداخت", "LastPayAmount")
 $col->IsQueryField = false;
 $col = $page_rpg->addColumn("جمع پرداختی مشتری", "TotalPayAmount");
 $col->IsQueryField = false;
-$col = $page_rpg->addColumn("مانده قابل پرداخت", "remainder");
+$col = $page_rpg->addColumn("مانده کل تا انتها", "remainder");
+$col->IsQueryField = false;
+$col = $page_rpg->addColumn("مانده تا انتها بدون احتساب جریمه دیرکرد", "TotalNonPenaltyRemainder");
+$col->IsQueryField = false;
+$col = $page_rpg->addColumn("طبقه وام", "LoanLevel");
 $col->IsQueryField = false;
 $col = $page_rpg->addColumn("کارمزد تاخیر", "LateAmount");
 $col->IsQueryField = false;
@@ -340,6 +344,15 @@ function GetData($mode = "list"){
 		$dataTable[$i]["ForfeitAmount"] = $remains['remain_pnlt'];
 		$dataTable[$i]["LateAmount"] = $remains["remain_late"];
 		$dataTable[$i]["TotalForfeitAmount"] = LON_Computes::GetTotalForfeitAmount($dataTable[$i]["RequestID"], $ComputeArr);
+		
+		//---------------
+		$computeArr2 = LON_Computes::ComputePayments($dataTable[$i]["RequestID"], $ComputeDate, null, false);
+		$remain = LON_Computes::GetTotalRemainAmount($dataTable[$i]["RequestID"], $computeArr2);
+		$dataTable[$i]["TotalNonPenaltyRemainder"] = $remain;
+		//-----------------
+		
+		$record = LON_requests::GetRequestLevel($dataTable[$i]["RequestID"]);
+		$dataTable[$i]["LoanLevel"] = $record["ParamValue"];
 	}
 			
 	return $dataTable; 
@@ -430,9 +443,17 @@ function ListData($IsDashboard = false){
 			return 0;
 		return number_format($value);
 	}
-	$col = $rpg->addColumn("مانده قابل پرداخت", "remainder", "EndRender");
-	//$col->ExcelRender = false;
+	$col = $rpg->addColumn("مانده کل تا انتها", "remainder", "EndRender");
 	$col->EnableSummary();
+	
+	function TotalNonPenaltyRemainderRender($row,$value){
+		return "<a href=LoanPayment.php?show=tru&RequestID=" . $row["RequestID"] . 
+				"&ComputePenalty=false target=blank >" . number_format($value) . "</a>";
+	}
+	$col = $rpg->addColumn("مانده تا انتها بدون احتساب جریمه دیرکرد", "TotalNonPenaltyRemainder","TotalNonPenaltyRemainderRender");
+	$col->EnableSummary();
+	
+	$col = $rpg->addColumn("طبقه وام", "LoanLevel");
 	
 	$col = $rpg->addColumn("مانده کارمزد تاخیر", "LateAmount", "EndRender");
 	$col->ExcelRender = false;

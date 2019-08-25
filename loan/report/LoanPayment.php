@@ -18,7 +18,9 @@ if(isset($_REQUEST["show"]))
 	$TotalAmount = LON_installments::GetTotalInstallmentsAmount($RequestID);
 	//............ get remain untill now ......................
 	$ComputeDate = !empty($_REQUEST["ComputeDate"]) ? $_REQUEST["ComputeDate"] : "";
-	$ComputeArr = LON_Computes::ComputePayments($RequestID, $ComputeDate);
+	$ComputePenalty = !empty($_REQUEST["ComputePenalty"]) && $_REQUEST["ComputePenalty"] == "false" ? 
+			false : true;
+	$ComputeArr = LON_Computes::ComputePayments($RequestID, $ComputeDate, null, $ComputePenalty);
 	$PureArr = LON_Computes::ComputePures($RequestID); 
 	//............ get remain untill now ......................
 	$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);
@@ -204,8 +206,8 @@ if(isset($_REQUEST["show"]))
 					</tr>
 					<? if(session::IsFramework()) {?>
 					<tr>
-						<td>جمع وام و کارمزد : </td>
-						<td><b><?= number_format($TotalAmount) ?> ریال							</b></td>
+						<td>مانده بدهی تا امروز : </td>
+						<td><b><?= $CurrentRemain ?></b></td>
 					</tr>
 					<tr>
 						<td>مانده جریمه تاخیر: </td>
@@ -216,10 +218,6 @@ if(isset($_REQUEST["show"]))
 			</td>
 			<td style="font-family: nazanin; font-size: 18px; font-weight: bold;line-height: 23px;">
 				<table>
-					<tr>
-						<td>مانده قابل پرداخت معوقه : </td>
-						<td><b><?= $CurrentRemain ?></b></td>
-					</tr>
 					<tr>
 						<td>مانده تا انتها : </td>
 						<td><b><?= $TotalRemain?></b></td>

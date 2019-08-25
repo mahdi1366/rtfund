@@ -187,6 +187,9 @@ function GetData(){
 			//........................................................
 			if($row["InstallmentID"] == $MainRow["InstallmentID"])
 			{
+				$MainRow["remain"] =  count($row["pays"])>0 ? $row["pays"][ count($row["pays"])-1 ]["remain"]*1 : 
+										$MainRow["InstallmentAmount"];
+				
 				switch($_POST["RemainStatus"])
 				{
 					case "paid":
@@ -204,23 +207,15 @@ function GetData(){
 				}
 				
 				//........................................................
-				
-				$MainRow["InstallmentRemain"] = $MainRow["InstallmentAmount"];
 				$MainRow["SumPayedAmount"] = 0;
 				$MainRow["SumLate"] = 0;
 				$MainRow["SumPnlt"] = 0;
-				if(count($row["pays"]) > 0)
+				foreach($row["pays"] as $prow)
 				{
-					$MainRow["InstallmentRemain"] = $row["pays"][ count($row["pays"])-1 ]["remain"];
-					
-					foreach($row["pays"] as $prow)
-					{
-						$MainRow["SumPayedAmount"] += $prow["PayedAmount"]*1;
-						$MainRow["SumLate"] += $prow["cur_late"]*1;
-						$MainRow["SumPnlt"] += $prow["cur_pnlt"]*1;
-					}
+					$MainRow["SumPayedAmount"] += $prow["PayedAmount"]*1;
+					$MainRow["SumLate"] += $prow["cur_late"]*1;
+					$MainRow["SumPnlt"] += $prow["cur_pnlt"]*1;
 				}
-
 				//........................................................
 				
 				if(isset($_POST["IsPayRowsInclude"]))
@@ -246,7 +241,6 @@ function GetData(){
 						$MainRow["remain_wage"] = 0;
 						$MainRow["remain_late"] = 0;
 						$MainRow["remain_pnlt"] = 0;
-						$MainRow["remain"] = $MainRow["InstallmentAmount"];
 						$MainRow["PayedDate"] = "";
 						$MainRow["PayedAmount"] = 0;
 						$returnArr[] = $MainRow;
@@ -374,7 +368,7 @@ function ListData($IsDashboard = false){
 		$col->rowspanByFields = array("RRequestID","InstallmentDate");
 		$col->EnableSummary();
 
-		$col = $rpg->addColumn("مانده قسط", "InstallmentRemain", "ReportMoneyRender");
+		$col = $rpg->addColumn("مانده قسط", "remain", "ReportMoneyRender");
 		$col->rowspaning = true;
 		$col->rowspanByFields = array("RRequestID","InstallmentDate");
 		$col->EnableSummary();
