@@ -23,12 +23,12 @@ $rpt->rowNumber = true;
 
 function titleRender($row,$value){
 
-    if ((isset($row["approved"]))&& !empty($row["approved"])){
-        $approved='مصوبه '.$row["approved"].' ';
+    if ($row["PreRecordNo"] != ""){
+        $title = "";
     }else{
-        $approved='';
+        $title = 'موضوع: '.$value;
     }
-	return "<span dir=rtl>" . $approved  .'(موضوع: '.$value.')'."&nbsp". $row["details"] . "</div>";
+	return "<span dir=rtl>" . $title . "&nbsp". $row["details"] . "</div>";
     /*return "<span dir=rtl>" .$row["number"] .'- '. $approved .'(موضوع: '.$value.')'."&nbsp". $row["details"] . "</div>";*/
 
 }
@@ -40,10 +40,7 @@ $col->align = "center";
 $col = $rpt->addColumn("مهلت انجام", "FollowUpDate", "ReportDateRender");
 $col->align = "center";
 
-function emptyRender($row, $value){
-	return "";
-}
-$col = $rpt->addColumn("شرح مستندات", "descriptionDocs", "emptyRender");
+$col = $rpt->addColumn("شرح مستندات", "descriptionDocs");
 $col->align = "center";
 
 //..........................................
@@ -116,13 +113,13 @@ $absents = $absents->fetchAll();
                     <td colspan="3" style="padding-right: 10px;">
                         <table width="100%">
                             <tr>
-                                <td>شماره جلسه:<b> <?= $MeetingObj->MeetingNo ?></b></td>
-                                <td>تاریخ جلسه: <b><?= DateModules::miladi_to_shamsi($MeetingObj->MeetingDate) ?></b></td>
-                                <td>ساعت شروع: <b><?= substr($MeetingObj->StartTime,0,5) ?></b></td>
-                                <td>ساعت پایان: <b><?= substr($MeetingObj->EndTime,0,5) ?></b></td>
+                                <td><b>شماره جلسه:</b> <?= $MeetingObj->MeetingNo ?></td>
+                                <td><b>تاریخ جلسه: </b><?= DateModules::miladi_to_shamsi($MeetingObj->MeetingDate) ?></td>
+                                <td><b>ساعت شروع: </b><?= substr($MeetingObj->StartTime,0,5) ?></td>
+                                <td><b>ساعت پایان: </b><?= substr($MeetingObj->EndTime,0,5) ?></td>
                             </tr>
                             <tr style="height:30px;">
-                                <td colspan="4">مکان برگزاری: <b><?= $MeetingObj->place ?></b></td>
+                                <td colspan="4"><b>مکان برگزاری: </b><?= $MeetingObj->place ?></td>
                             </tr>
                         </table>
                     </td>
@@ -147,11 +144,11 @@ $absents = $absents->fetchAll();
 			<div id="footer">
 				<table width="100%" style="border-collapse: collapse">
 					<tr style="height: 30px; background-color: #eee">
-						<td colspan="2">نام و نام خانوادگی و امضا حاضرین</td>
-						<td>غایبین</td>
+						<td colspan="2" style="font-weight: bold">نام و نام خانوادگی و امضا حاضرین</td>
+						<td style="font-weight: bold">غایبین</td>
 					</tr>
 					<tr style="height: 100px">
-						<td style="width:100px;background-color: #eee">اعضای جلسه</td>
+						<td style="width:100px;background-color: #eee;font-weight: bold">اعضای جلسه</td>
 						<td>
 							<table id="presents" width="100%">
 							<?
@@ -186,7 +183,7 @@ $absents = $absents->fetchAll();
 						</td>
 					</tr>
 					<tr>
-						<td style="background-color: #eee">مدیر عامل</td>
+						<td style="background-color: #eee;font-weight: bold">مدیر عامل</td>
 						<td style="text-align: right;padding-right: 5px;">
 							<?
 								$personObj = BSC_jobs::GetModirAmelPerson();
@@ -195,7 +192,7 @@ $absents = $absents->fetchAll();
 						</td>
 					</tr>
 					<tr>
-						<td style="background-color: #eee">دبیر جلسه</td>
+						<td style="background-color: #eee;font-weight: bold">دبیر جلسه</td>
 						<td style="text-align: right;padding-right: 5px;"><?= $MeetingObj->_secretaryName ?></td>
 					</tr>
 				</table>

@@ -46,11 +46,11 @@ $col = $dg_cost->addcolumn("تفصیلی2", "TafsiliTypeDesc2");
 
 $col = $dg_cost->addcolumn("تفصیلی3", "TafsiliTypeDesc3");
 
-$col = $dg_cost->addcolumn('آیتم اطلاعاتی1','param1Desc');
+$col = $dg_cost->addcolumn('آیتم اطلاعاتی1','ParamDesc1');
 
-$col = $dg_cost->addcolumn('آیتم اطلاعاتی2','param2Desc');
+$col = $dg_cost->addcolumn('آیتم اطلاعاتی2','ParamDesc2');
 
-$col = $dg_cost->addcolumn('آیتم اطلاعاتی3','param3Desc');
+$col = $dg_cost->addcolumn('آیتم اطلاعاتی3','ParamDesc3');
 
 if($accessObj->EditFlag	)
 {

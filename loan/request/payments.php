@@ -162,6 +162,7 @@ PartPayment.DocRender = function(v,p,r){
 		}
 		return st;
 	}
+	
 	if(r.data.ComputeMode == "NEW")
 		return "<div align='center' title='صدور سند' class='send' "+
 		"onclick='PartPaymentObject.ExecuteEvent();' " +

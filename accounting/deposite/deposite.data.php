@@ -28,7 +28,7 @@ function selectDeposites() {
 			join ACC_tafsilis using(TafsiliID)
 		
 		where /*StatusID != ".ACC_STEPID_RAW." */ 1=1
-			AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ")
+			AND CostID in(" . COSTID_ShortDeposite . "," . COSTID_LongDeposite . ", ".COSTID_SupportDeposite.")
 			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
 		group by TafsiliID,CostID");
 	

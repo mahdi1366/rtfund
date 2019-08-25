@@ -147,7 +147,7 @@ class PdoDataAccess extends ExceptionHandler
 			if(is_int($src_keys[$i]))
 				continue;
 			
-			if($index !== false && !isset($destinationObj->$src_keys[$i]))
+			if($index !== false && !isset($destinationObj->{ $src_keys[$i] }))
 				$destinationObj->{ $src_keys[$i] } = $sourceObj->{ $src_keys[$i] };
 		}
 		return true;

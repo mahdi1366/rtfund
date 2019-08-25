@@ -93,11 +93,14 @@ for ($i = 0; $i < count($contentArr); $i++) {
 	<body dir="rtl">
 	<center> 
 		<div class=page>
-			<div class=title style="height: 250px">
+			<div class=title style="height: 220px">
 				<br>
 				<?= $ReqObj->_TypeDesc ?>
 				<br><?= DateModules::miladi_to_shamsi($ReqObj->StartDate) ?>
 				<div style="line-height: 15px;padding-right:20px"><?= $ReqObj->RefRequestID ?></div>				
+			</div>
+			<div style="font-family: titr;font-size: 15px;text-align: left;margin-left: 50px;">کد سپاص : 
+				<?= $ReqObj->SepasCode ?>
 			</div>
 			<div class='context' style="height: 600px">
 				<?= $content ?>

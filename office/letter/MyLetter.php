@@ -84,8 +84,9 @@ $dg->addObject("this.deletedBtnObj");
 if($mode == "receive")
 {
 	$dg->addButton("", "خوانده نشده", "view", "function(){MyLetterObject.UnSeen();}");
-	$dg->addButton("", "امضاء نامه های انتخابی", "sign", "function(){MyLetterObject.GroupSignLetter();}");
-	$dg->addButton("", "حذف نامه های انتخابی", "remove", "function(){MyLetterObject.GroupDeleteSend();}");
+	$dg->addButton("", "امضاء گروهی", "sign", "function(){MyLetterObject.GroupSignLetter();}");
+	$dg->addButton("", "ارجاع گروهی", "sendLetter", "function(){MyLetterObject.SendLetter(true);}");
+	$dg->addButton("", "حذف گروهی", "remove", "function(){MyLetterObject.GroupDeleteSend();}");
 	
 }
 else
@@ -123,7 +124,7 @@ function MyLetter(){
 	
 	this.deletedBtnObj = Ext.button.Button({
 		xtype: "button",
-		text : "مشاهده نامه های حذف شده", 
+		text : "نامه های حذف شده", 
 		iconCls : "list",
 		enableToggle : true,
 		handler : function(){
@@ -280,7 +281,7 @@ MyLetter.OperationRender = function(v,p,r){
 		"cursor:pointer;float:right;width:20px;height:16'></div>" + 
 		
 		"<div  title='ارجاع نامه' class='sendLetter' "+
-		" onclick='MyLetterObject.SendLetter();' " +
+		" onclick='MyLetterObject.SendLetter(false);' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;float:right;width:20px;height:16'></div>" + 
 		
@@ -333,7 +334,7 @@ MyLetter.prototype.LetterInfo = function(){
 		});
 }
 
-MyLetter.prototype.SendLetter = function(){
+MyLetter.prototype.SendLetter = function(grouping){
 	
 	if(!this.SendingWin)
 	{
@@ -355,6 +356,15 @@ MyLetter.prototype.SendLetter = function(){
 	this.SendingWin.show();
 	this.SendingWin.center();
 	
+	sendIDArr = new Array();
+	if(grouping)
+	{
+		elems = MyLetterObject.get("mainForm").getElementsByTagName("input");
+		for(i=0; i<elems.length; i++)
+			if(elems[i].id.indexOf("chk_") != -1 && elems[i].checked)
+				sendIDArr.push( elems[i].id.replace("chk_","") );
+	}
+	
 	this.SendingWin.loader.load({
 		scripts : true,
 		params : {
@@ -362,7 +372,8 @@ MyLetter.prototype.SendLetter = function(){
 			parent : "MyLetterObject.SendingWin",
 			AfterSendHandler : "MyLetterObject.AfterSend",
 			LetterID : this.grid.getSelectionModel().getLastSelected().data.LetterID,
-			SendID : this.grid.getSelectionModel().getLastSelected().data.SendID
+			SendIDArr : grouping ? Ext.encode(sendIDArr) : "",
+			SendID : !grouping ? this.grid.getSelectionModel().getLastSelected().data.SendID : ""
 		}
 	});
 }

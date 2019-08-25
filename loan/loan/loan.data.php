@@ -85,8 +85,7 @@ function GetAllLoans() {
 
 	$temp = LON_loans::SelectAll($where, $whereParam);
 	$no = $temp->rowCount();
-	$temp = PdoDataAccess::fetchAll($temp, $_GET["start"], $_GET["limit"]);
-
+	$temp = $temp->fetchAll();
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
 	die();
 }
@@ -106,16 +105,16 @@ function SaveLoan() {
 		
 		$result = $obj->AddLoan($pdo);
 		
-		$CostCodesArr = array(
-			array(8, $obj->BlockID),				/*110-?*/
-			array(28, $obj->BlockID, 120),			/*721-?-51*/
-			array(28, $obj->BlockID, 121, 213),		/*721-?-52-01*/
-			array(28, $obj->BlockID, 121, 214),		/*721-?-52-02*/
-			array(28, $obj->BlockID, 121, 215),		/*721-?-52-03*/
-			array(11, $obj->BlockID, 211),			/*200-?-01*/
-			array(11, $obj->BlockID, 120),			/*200-?-51*/
-			array(40, $obj->BlockID),				/*750-?*/
-			array(41, $obj->BlockID)				/*760-?*/
+		/*$CostCodesArr = array(
+			array(8, $obj->BlockID),				// 110-?
+			array(28, $obj->BlockID, 120),			// 721-?-51
+			array(28, $obj->BlockID, 121, 213),		// 721-?-52-01
+			array(28, $obj->BlockID, 121, 214),		// 721-?-52-02
+			array(28, $obj->BlockID, 121, 215),		// 721-?-52-03
+			array(11, $obj->BlockID, 211),			// 200-?-01
+			array(11, $obj->BlockID, 120),			// 200-?-51
+			array(40, $obj->BlockID),				// 750-?
+			array(41, $obj->BlockID)				// 60-
 		);
 		
 		foreach($CostCodesArr as $row)
@@ -125,7 +124,7 @@ function SaveLoan() {
 				$Cobj->{"level" . ($i+1)} = $row[$i];
 			
 			$Cobj->InsertCost($pdo);
-		}
+		}*/
 		
 		if(ExceptionHandler::GetExceptionCount() > 0)
 		{

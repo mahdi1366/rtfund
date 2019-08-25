@@ -49,7 +49,9 @@ $col = $page_rpg->addColumn("جمع کل پرداختی تاکنون", "TotalPay
 $col = $page_rpg->addColumn("تعداد اقساط معوق", "delayedInstallmentsCount"); $col->IsQueryField = false;
 
 $col = $page_rpg->addColumn("مانده کل تا انتها", "TotalRemainder","ReportMoneyRender");	 $col->IsQueryField = false;
+$col = $page_rpg->addColumn("مانده تا انتها بدون احتساب جریمه دیرکرد", "TotalNonPenaltyRemainder","ReportMoneyRender");	 $col->IsQueryField = false;
 $col = $page_rpg->addColumn("مانده قابل پرداخت معوقه", "CurrentRemainder","ReportMoneyRender");	$col->IsQueryField = false;
+$col = $page_rpg->addColumn("طبقه وام", "LoanLevel"); $col->IsQueryField = false;
 
 $col = $page_rpg->addColumn("مانده اصل وام تا انتها", "remain_pure","ReportMoneyRender"); $col->IsQueryField = false;
 $col = $page_rpg->addColumn("کارمزد معوقه", "remain_wage","ReportMoneyRender"); $col->IsQueryField = false;
@@ -75,7 +77,7 @@ function MakeWhere(&$where, &$whereParam){
 				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 			continue;
 
-		if($key == "ForfeitDays" || $key == "ComputeDate")
+		if($key == "ForfeitDays" || $key == "ComputeDate" || $key == "RemainPercent" || $key == "ItemID")
 			continue;
 		
 		$prefix = "";
@@ -199,6 +201,9 @@ function GetData(){
 		if($remain == 0)
 			continue;
 		
+		if($remain < $row["InstallmentAmount"]*$_POST["RemainPercent"]/100)
+			continue;
+		
 		$delayedInstallmentsCount = 0;
 		foreach($computeArr as $irow)
 		{
@@ -219,6 +224,21 @@ function GetData(){
 
 		$TotalAmount = LON_installments::GetTotalInstallmentsAmount($row["RequestID"]);
 		$row["TotalLoanAmount"] = $TotalAmount;
+		
+		//---------------
+		$computeArr2 = LON_Computes::ComputePayments($row["RequestID"], $ComputeDate, null, false);
+		$remain = LON_Computes::GetTotalRemainAmount($row["RequestID"], $computeArr2);
+		$row["TotalNonPenaltyRemainder"] = $remain;
+		//-----------------
+		
+		$record = LON_requests::GetRequestLevel($row["RequestID"]);
+		$row["LoanLevel"] = $record["ParamValue"];
+		if(!empty($_POST["ItemID"]))
+		{
+			if($record["ItemID"] != $_POST["ItemID"])
+				continue;
+		}
+		
 		$result[] = $row;
 	}
 	
@@ -270,8 +290,23 @@ function ListData($IsDashboard = false){
 	
 	$col = $rpt->addColumn("تعداد اقساط معوق", "delayedInstallmentsCount");
 	$col->EnableSummary();
-	$col = $rpt->addColumn("مانده کل تا انتها", "TotalRemainder","ReportMoneyRender");	
+	
+	function TotalRemainderRender($row,$value){
+		return "<a href=LoanPayment.php?show=tru&RequestID=" . $row["RequestID"] . 
+				" target=blank >" . number_format($value) . "</a>";
+	}
+	$col = $rpt->addColumn("مانده کل تا انتها", "TotalRemainder","TotalRemainderRender");	
 	$col->EnableSummary();
+	
+	function TotalNonPenaltyRemainderRender($row,$value){
+		return "<a href=LoanPayment.php?show=tru&RequestID=" . $row["RequestID"] . 
+				"&ComputePenalty=false target=blank >" . number_format($value) . "</a>";
+	}
+	$col = $rpt->addColumn("مانده تا انتها بدون احتساب جریمه دیرکرد", "TotalNonPenaltyRemainder","TotalNonPenaltyRemainderRender");
+	$col->EnableSummary();
+	
+	$col = $rpt->addColumn("طبقه وام", "LoanLevel");
+	
 	$col = $rpt->addColumn("مانده قابل پرداخت معوقه", "CurrentRemainder","ReportMoneyRender");	
 	$col->EnableSummary();
 	$col = $rpt->addColumn("مانده اصل وام تا انتها", "remain_pure","ReportMoneyRender");
@@ -493,6 +528,7 @@ function LoanReport_DelayedInstalls()
 		},{
 			xtype : "shdatefield",
 			name : "ComputeDate",
+			labelWidth : 120,
 			fieldLabel : "محاسبه معوقات تا تاریخ"
 		},{
 			xtype : "container",
@@ -500,6 +536,35 @@ function LoanReport_DelayedInstalls()
 				"<input name=IsEnded type=radio value='YES' > خاتمه یافته &nbsp;&nbsp;" +
 				"<input name=IsEnded type=radio value='NO' checked> جاری &nbsp;&nbsp;" +
 				"<input name=IsEnded type=radio value=''  > هردو " 
+		},{
+			xtype : "combo",
+			store : new Ext.data.SimpleStore({
+				proxy: {
+					type: 'jsonp',
+					url: '/accounting/baseinfo/baseinfo.data.php?' +
+						"task=selectParamItems&ParamID=105",
+					reader: {root: 'rows',totalProperty: 'totalCount'}
+				},
+				fields : ['ItemID','ParamValue'],
+				autoLoad : true					
+			}),
+			fieldLabel : "سطح مطالباتی وام",
+			queryMode : 'local',
+			width : 370,
+			displayField : "ParamValue",
+			valueField : "ItemID",
+			hiddenName : "ItemID"
+		},{
+			xtype : "numberfield",
+			maxValue : 100,
+			minValue : 0,
+			value : 0,
+			colspan : 2,
+			hideTrigger : true,
+			fieldLabel : "درصدی از مبلغ قسط که اگر مانده باشد، وام معوق در نظر گرفته نشود",
+			labelWidth : 320,
+			width : 360,
+			name : "RemainPercent"
 		},{
 			xtype : "fieldset",
 			title : "ستونهای گزارش",

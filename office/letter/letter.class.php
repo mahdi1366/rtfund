@@ -157,11 +157,12 @@ class OFC_letters extends PdoDataAccess{
 	
 	static function SelectSendedLetters($where = "", $param = array()){
 		
-		$query = "select s.*,l.*, 
+		$query = "select s.*,l.*, InfoDesc SendTypeDesc,
 				concat_ws(' ',fname, lname,CompanyName) ToPersonName,
 				if(count(DocumentID) > 0,'YES','NO') hasAttach,
 				substr(s.SendDate,1,10) _SendDate
 			from OFC_send s
+				left join BaseInfo b on(b.TypeID=12 AND s.SendType=InfoID)
 				join OFC_letters l using(LetterID)
 				join BSC_persons p on(s.ToPersonID=p.PersonID)
 				left join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)

@@ -70,6 +70,7 @@ define("TAFSILITYPE_BRANCH", "300");
 define("COSTID_ShortDeposite", "66"); // 210-01
 define("COSTID_Todiee", "63");
 define("COSTID_LongDeposite", "119");
+define("COSTID_SupportDeposite", "487");
 define("COSTID_Fund", "1");
 define("COSTID_Wage", "470"); // 550
 define("COSTID_DepositeWage", "418"); // 750-09

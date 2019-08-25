@@ -457,6 +457,8 @@ class ACC_DocItems extends PdoDataAccess {
 	public $param2;
 	public $param3;
 	
+	public $OldCostCode;
+	
 	public $_CostCode;
 
 	function __construct($itemID = "") {
@@ -466,17 +468,44 @@ class ACC_DocItems extends PdoDataAccess {
 					. "ACC_CostCodes c using(CostID) where ItemID=?", array($itemID));
 	}
 
+	static function GetAllCount($where = "", $whereParam = array()) {
+
+		$query = "select ifnull(count(*),0)
+			
+			from ACC_DocItems si
+			join ACC_CostCodes cc using(CostID)
+			join ACC_blocks b1 on(cc.level1=b1.blockID)
+			join ACC_blocks b2 on(cc.level2=b2.blockID)
+			join ACC_blocks b3 on(cc.level3=b3.blockID)
+			
+			/*left join BaseInfo bi on(si.TafsiliType=InfoID AND TypeID=2)
+			left join BaseInfo bi2 on(si.TafsiliType2=bi2.InfoID AND bi2.TypeID=2)
+			left join BaseInfo bi3 on(si.TafsiliType3=bi3.InfoID AND bi3.TypeID=2)
+			left join ACC_tafsilis t on(t.TafsiliID=si.TafsiliID)
+			left join ACC_tafsilis t2 on(t2.TafsiliID=si.TafsiliID2)
+			left join ACC_tafsilis t3 on(t3.TafsiliID=si.TafsiliID3)
+			
+			left join ACC_CostCodeParams p1 on(p1.ParamID=cc.param1)
+			left join ACC_CostCodeParams p2 on(p2.ParamID=cc.param2)
+			left join ACC_CostCodeParams p3 on(p3.ParamID=cc.param3)*/
+			
+			";
+		$query .= ($where != "") ? " where " . $where : "";
+		$dt = parent::runquery($query, $whereParam);
+		return $dt[0][0];
+	}
+	
 	static function GetAll($where = "", $whereParam = array()) {
 
 		$query = "select si.*,cc.CostCode,
-			concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) CostDesc,
+			concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc) CostDesc,
 			t.TafsiliDesc,bi.InfoDesc TafsiliGroupDesc,
 			t2.TafsiliDesc as Tafsili2Desc,bi2.InfoDesc Tafsili2GroupDesc,
-			t3.TafsiliDesc as Tafsili3Desc,bi3.InfoDesc Tafsili3GroupDesc,
+			t3.TafsiliDesc as Tafsili3Desc,bi3.InfoDesc Tafsili3GroupDesc/*,
 			p1.paramDesc paramDesc1,
 			p2.paramDesc paramDesc2,
 			p3.paramDesc paramDesc3,
-			p1.paramType paramType1,
+			p1.paramType paramType1, 
 			p2.paramType paramType2,
 			p3.paramType paramType3,
 			p1.ParamID ParamID1,
@@ -490,25 +519,26 @@ class ACC_DocItems extends PdoDataAccess {
 			p3.SrcDisplayField as SrcDisplayField3,
 			p1.SrcValueField as SrcValueField1,
 			p2.SrcValueField as SrcValueField2,
-			p3.SrcValueField as SrcValueField3
+			p3.SrcValueField as SrcValueField3*/
 			
 			
 		from ACC_DocItems si
-			left join ACC_CostCodes cc using(CostID)
-			left join ACC_blocks b1 on(cc.level1=b1.blockID)
-			left join ACC_blocks b2 on(cc.level2=b2.blockID)
-			left join ACC_blocks b3 on(cc.level3=b3.blockID)
-			left join ACC_blocks b4 on(cc.level4=b4.blockID)
+			join ACC_CostCodes cc using(CostID)
+			join ACC_blocks b1 on(cc.level1=b1.blockID)
+			join ACC_blocks b2 on(cc.level2=b2.blockID)
+			join ACC_blocks b3 on(cc.level3=b3.blockID)
+			
 			left join BaseInfo bi on(si.TafsiliType=InfoID AND TypeID=2)
 			left join BaseInfo bi2 on(si.TafsiliType2=bi2.InfoID AND bi2.TypeID=2)
 			left join BaseInfo bi3 on(si.TafsiliType3=bi3.InfoID AND bi3.TypeID=2)
+			
 			left join ACC_tafsilis t on(t.TafsiliID=si.TafsiliID)
 			left join ACC_tafsilis t2 on(t2.TafsiliID=si.TafsiliID2)
 			left join ACC_tafsilis t3 on(t3.TafsiliID=si.TafsiliID3)
 			
-			left join ACC_CostCodeParams p1 on(p1.ParamID=cc.param1)
+			/*left join ACC_CostCodeParams p1 on(p1.ParamID=cc.param1)
 			left join ACC_CostCodeParams p2 on(p2.ParamID=cc.param2)
-			left join ACC_CostCodeParams p3 on(p3.ParamID=cc.param3)
+			left join ACC_CostCodeParams p3 on(p3.ParamID=cc.param3)*/
 			
 			";
 		$query .= ($where != "") ? " where " . $where : "";
@@ -641,23 +671,6 @@ class ACC_DocItems extends PdoDataAccess {
 			}
 		}	
 		return true;
-	}
-}
-
-class ACC_CostCodeParamItems extends OperationClass{
-	
-	const TableName = "ACC_CostCodeParamItems";
-	const TableKey = "ItemID";
-	
-	public $ItemID;
-	public $ParamID;
-	public $ParamValue;
-	
-	static function RemoveAll($ItemID = "")
-	{
-		if(empty($ItemID))
-			return false;
-		return parent::runquery("delete from ACC_CostCodeParamValues where ItemID=?", $ItemID);
 	}
 }
 

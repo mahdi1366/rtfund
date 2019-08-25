@@ -415,7 +415,8 @@ LetterInfo.prototype.SendWindowShow = function(){
 			ExtTabID : this.SendingWin.getEl().id,
 			parent : "LetterInfoObject.SendingWin",
 			AfterSendHandler : "LetterInfoObject.AfterSend" ,			
-			LetterID : this.LetterID
+			LetterID : this.LetterID,
+			SendID : this.SendID
 		}
 	});
 }

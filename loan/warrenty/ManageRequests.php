@@ -38,6 +38,7 @@ $dg->addColumn("", "SubjectDesc", "", true);
 $dg->addColumn("", "SubjectNO", "", true);
 $dg->addColumn("", "SendEnable", "", true);
 $dg->addColumn("", "ActionType", "", true);
+$dg->addColumn("", "SepasCode", "", true);
 
 $col = $dg->addColumn("شعبه", "BranchName");
 $col->width = 120;

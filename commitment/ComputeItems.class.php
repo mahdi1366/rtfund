@@ -386,7 +386,8 @@ class EventComputeItems {
 						$obj->{ "param" . $i } = DateModules::miladi_to_shamsi($iObj->InstallmentDate);
 						break;
 					case ACC_COST_PARAM_LOAN_LEVEL : // طبقه تسهيلات
-						$obj->{ "param" . $i } = LON_requests::GetRequestLevel($params[0]);
+						$record = LON_requests::GetRequestLevel($params[0]);
+						$obj->{ "param" . $i } = $record["ItemID"];
 						break;
 
 					case ACC_COST_PARAM_CHEQUE_date:

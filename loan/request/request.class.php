@@ -406,6 +406,8 @@ class LON_requests extends PdoDataAccess{
 		
 		//...................................
 		
+		//...................................
+		
 		$TotalWage = 0;
 		switch($PartObj->ComputeMode)
 		{

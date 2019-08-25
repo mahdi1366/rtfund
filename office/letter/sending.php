@@ -9,8 +9,8 @@ if(empty($_POST["LetterID"]))
 	die();
 
 $LetterID = $_POST["LetterID"];
-
 $SendID = !empty($_POST["SendID"]) ? $_POST["SendID"] : "0";
+$SendIDArr = !empty($_POST["SendIDArr"]) ? $_POST["SendIDArr"] : "[]";
 ?>
 <script>
 
@@ -23,6 +23,7 @@ SendLetter.prototype = {
 	
 	LetterID : <?= $LetterID ?>,
 	SendID : '<?= $SendID ?>',
+	SendIDArr : '<?= $SendIDArr ?>',
 	index : 1,
 
 	get : function(elementID){
@@ -73,7 +74,7 @@ function SendLetter(){
 			items : this.mainPanel
 		}, {
 			title : "درج پیوست",
-			//hidden : this.SendID == 0 ? true : false,
+			hidden : this.SendID*1 > 0 ? false : true,
 			loader : {
 				url : this.address_prefix + "attach.php",
 				method: "POST",
@@ -229,7 +230,8 @@ SendLetter.prototype.SendingLetter = function(){
 		params: {
 			task: "SendLetter",
 			LetterID : this.LetterID,
-			SendID : this.SendID
+			SendID : this.SendID,
+			SendIDArr : this.SendIDArr
 		},
 		success: function(form,action){
 			mask.hide();

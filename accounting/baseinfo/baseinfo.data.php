@@ -8,7 +8,7 @@ require_once '../header.inc.php';
 require_once(inc_response);
 require_once inc_dataReader;
 require_once 'baseinfo.class.php';
-ini_set("display_errors", "On");
+
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 switch ($task) {
 
@@ -52,8 +52,12 @@ switch ($task) {
 	
 	case "selectParams":
 	case "saveParam":
-	case "deleteParam":
+	case "DeleteParam":
 	case "CopyParams":
+		
+	case "selectParamItems":
+	case "saveParamItem":
+	case "DeleteParamItem":
 		
 		$task();
 };
@@ -311,6 +315,9 @@ function SaveCostCode() {
 		unset($cc->level2);
 		unset($cc->level3);
 		unset($cc->level4);
+		$cc->param1 = empty($cc->param1) ? 0 : $cc->param1;
+		$cc->param2 = empty($cc->param2) ? 0 : $cc->param2;
+		$cc->param3 = empty($cc->param3) ? 0 : $cc->param3;
 		$res = $cc->UpdateCost();
 	}
 
@@ -760,22 +767,17 @@ function ReplaceCostCodes(){
 //---------------------------------------------
 
 function selectParams() {
-	
+
 	$temp = ACC_CostCodeParams::Get(dataReader::makeOrder());
 	$res = $temp->fetchAll();
     echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
     die();
 }
 
-function saveParam() {
+function SaveParam(){
 	
 	$obj = new ACC_CostCodeParams();
-	PdoDataAccess::FillObjectByJsonData($obj, $_POST['record']);
-	
-	if($obj->ParamType == "currencyfield")
-		$obj->KeyTitle = "amount";
-	if($obj->ParamType == "shdatefield")
-		$obj->KeyTitle = "date";
+	PdoDataAccess::FillObjectByArray($obj, $_POST);
 	
 	if ($obj->ParamID > 0) 
 		$obj->Edit();
@@ -786,7 +788,39 @@ function saveParam() {
 	die();
 }
 
-function deleteParam() {
+function selectParamItems() {
+	
+	$obj = new ACC_CostCodeParams($_REQUEST["ParamID"]);
+	if($obj->SrcTable != "")
+	{
+		$temp = PdoDataAccess::runquery_fetchMode("select ".$obj->SrcValueField . " as ItemID, "
+			.$obj->SrcDisplayField . " as ParamValue from " . $obj->SrcTable
+			. ($obj->SrcWhere != "" ? " where " . $obj->SrcWhere : ""));
+	}
+	else
+	{
+		$temp = ACC_CostCodeParamItems::Get(" AND ParamID=?" . dataReader::makeOrder(), $_REQUEST["ParamID"]);
+	}
+	
+	$res = $temp->fetchAll();
+    echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+    die();
+}
+
+function saveParamItem() {
+	
+	$obj = new ACC_CostCodeParamItems();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST['record']);
+	if ((int)$obj->ItemID > 0) 
+		$result = $obj->Edit();
+	 else 
+		$result = $obj->Add();
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse($result , '');
+	die();
+}
+
+function DeleteParam() { 
 
 	$obj = new ACC_CostCodeParams($_POST['ParamID']);
 	$result = $obj->Remove();
@@ -810,4 +844,13 @@ function CopyParams(){
 	echo Response::createObjectiveResponse(true, '');
 	die();
 }
+
+function DeleteParamItem() {
+
+	$obj = new ACC_CostCodeParamItems($_POST['ItemID']);
+	$result = $obj->Remove();
+	echo Response::createObjectiveResponse($result, '');
+	die();
+}
+
 ?>
