@@ -5,13 +5,21 @@ ini_set("display_errors", "On");
 ini_set('max_execution_time', 30000);
 ini_set('memory_limit','2000M');
 
-$dt = PdoDataAccess::runquery("select cc.CostID, CostCode, cc.param1,cc.param2,cc.param3
-from ACC_CostCodes cc join ACC_blocks b1 on(cc.level1=b1.blockID) 
-join ACC_blocks b0 on(b1.GroupID=b0.BlockID)
-left join ACC_DocItems di on(di.DocID=9212 AND di.CostID=cc.CostID)
+if(empty($_REQUEST["CostID"]))
+{
+	$dt = PdoDataAccess::runquery("select cc.CostID, CostCode, cc.param1,cc.param2,cc.param3, cc.ObjectType2
+	from ACC_CostCodes cc join ACC_blocks b1 on(cc.level1=b1.blockID) 
+	join ACC_blocks b0 on(b1.GroupID=b0.BlockID)
+	left join ACC_DocItems di on(di.DocID=4292 AND di.CostID=cc.CostID)
 
-where di.ItemID is null AND b0.blockCode not in(6,7,8) AND not(cc.param1=3 or cc.param2=3 or cc.param3=3)");
-
+	where di.ItemID is null AND b0.blockCode not in(6,7,8) AND not(cc.param1=3 or cc.param2=3 or cc.param3=3)");
+}
+else
+{
+	$dt = PdoDataAccess::runquery("select cc.CostID, CostCode, cc.param1,cc.param2,cc.param3, cc.ObjectType2
+	from ACC_CostCodes cc 
+	where CostID=?", $_REQUEST["CostID"]);
+}
 $i=0;
 echo "Total Codes : " . count($dt) . "<br>";
 flush();
@@ -24,6 +32,8 @@ foreach($dt as $row)
 	
 	$selectStr = "";
 	$fromStr = "";
+	$whereStr = ""; 
+	
 	switch($row["param1"])
 	{
 		case "1" : 
@@ -69,6 +79,41 @@ foreach($dt as $row)
 			$fromStr .= " left join ACC_CostCodeParamItems ci3 on(cc.param3=ci3.paramID)";
 			break;
 	}
+	
+	switch($row["ObjectType2"])
+	{
+		case "account" : 
+		case "fund":
+		case "paper":
+		case "share":
+		case "project":	
+			$fromStr .= " left join ACC_tafsilis t2 on(cc.TafsiliType2=t2.TafsiliType AND t2.ObjectType='".$row["ObjectType2"]."')";
+			break;
+		
+		case "customer":
+			$fromStr .= " left join ACC_tafsilis t2 on(cc.TafsiliType2=t2.TafsiliType)
+							left join BSC_persons p on(t2.ObjectID=p.PersonID)";
+			$whereStr .= " AND p.IsCustomer='YES'";
+			break;
+		case "agent":
+			$fromStr .= " left join ACC_tafsilis t2 on(cc.TafsiliType2=t2.TafsiliType)
+							left join BSC_persons p on(t2.ObjectID=p.PersonID)";
+			$whereStr .= " AND p.IsAgent='YES'";
+			break;
+		case 'staff':
+			$fromStr .= " left join ACC_tafsilis t2 on(cc.TafsiliType2=t2.TafsiliType)
+							left join BSC_persons p on(t2.ObjectID=p.PersonID)";
+			$whereStr .= " AND p.IsStaff='YES'";
+			break;
+		case 'shareholder':
+			$fromStr .= " left join ACC_tafsilis t2 on(cc.TafsiliType2=t2.TafsiliType)
+							left join BSC_persons p on(t2.ObjectID=p.PersonID)";
+			$whereStr .= " AND p.IsShareholder='YES'";
+			break;
+		default :
+			$fromStr .= " left join ACC_tafsilis t2 on(cc.TafsiliType2=t2.TafsiliType )";
+			break;
+	}
 	$query = "
 		insert into ACC_DocItems(DocID, CostID, TafsiliType, 
 			TafsiliID, TafsiliType2, TafsiliID2, TafsiliType3, TafsiliID3, 
@@ -79,12 +124,12 @@ foreach($dt as $row)
            $selectStr
 		from ACC_CostCodes cc
 		left join ACC_tafsilis t1 on(cc.TafsiliType1=t1.TafsiliType)
-		left join ACC_tafsilis t2 on(cc.TafsiliType2=t2.TafsiliType)
 		left join ACC_tafsilis t3 on(cc.TafsiliType3=t3.TafsiliType)
 		" . $fromStr . 
-		" where cc.CostID=?";
+		" where cc.CostID=? " . $whereStr;
 	
 	PdoDataAccess::runquery($query, $row["CostID"]);
+	//echo PdoDataAccess::GetLatestQueryString();
 	echo PdoDataAccess::AffectedRows();
 	echo "<br>";
 	flush();

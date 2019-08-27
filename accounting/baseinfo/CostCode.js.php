@@ -209,6 +209,18 @@ function CostCode(){
 				valueField : "ParamID",
 				displayField : "ParamDesc"
 			},{
+				xtype : "textfield",
+				name : "ObjectType1",
+				fieldLabel : "ObjectType1"
+			},{
+				xtype : "textfield",
+				name : "ObjectType2",
+				fieldLabel : "ObjectType2"
+			},{
+				xtype : "textfield",
+				name : "ObjectType3",
+				fieldLabel : "ObjectType3"
+			},{
 				xtype : "checkbox",
 				inputValue : "YES",
 				boxLabel : "این حساب قابل بلوکه شدن است",

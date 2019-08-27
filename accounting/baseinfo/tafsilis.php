@@ -28,6 +28,9 @@ if($_SESSION["USER"]["UserName"] == "admin")
 {
 	$col = $dg->addColumn("[ObjectID", "ObjectID", "");
 	$col->editor = ColumnEditor::NumberField(true);
+	
+	$col = $dg->addColumn("[ObjectType", "ObjectType", "");
+	$col->editor = ColumnEditor::TextField(true);
 }
 
 if($accessObj->AddFlag)

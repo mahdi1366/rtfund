@@ -132,6 +132,9 @@ class ACC_CostCodes extends PdoDataAccess {
 	public $param2;
 	public $param3;
 	
+	public $ObjectType1;
+	public $ObjectType2;
+	public $ObjectType3;
 	
 	
 	public $IsBlockable;
@@ -363,6 +366,7 @@ class ACC_tafsilis extends PdoDataAccess{
 	public $TafsiliDesc;
 	public $IsActive;
 	public $ObjectID;
+	public $ObjectType;
 			
 	function __construct($TafsiliID = "") {
 		
