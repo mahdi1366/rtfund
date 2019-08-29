@@ -144,7 +144,8 @@ function selectIncomeCheques() {
 
 function SelectIncomeChequeStatuses() {
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4 AND IsActive='YES'");
+	//$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4 AND IsActive='YES'");
+	$temp = PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=7");
 	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
 	die();
 }
