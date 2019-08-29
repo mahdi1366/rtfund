@@ -307,6 +307,61 @@ class EventComputeItems {
 	
 	//--------------------------------------------------------
 	
+	static function RegisterWarrenty($ItemID, $SourceObjects){
+		
+		$ReqObj = new WAR_requests((int)$SourceObjects[0]);
+				
+		switch($ItemID){
+			
+			case 100 : // مبلغ تعهد ضمانتنامه
+				return $ReqObj->amount;
+				
+			case 101 : 
+				$days = DateModules::GDateMinusGDate($ReqObj->EndDate,$ReqObj->StartDate);
+				$days -= 1;
+				$TotalWage = round($days*$ReqObj->amount*(1-$ReqObj->SavePercent/100)*$ReqObj->wage/36500);	
+				return $TotalWage + $ReqObj->RegisterAmount*1;
+				
+			case 103 :
+				return  $ReqObj->amount*$ReqObj->SavePercent/100;
+				
+			case 110 : 
+				$dt =  array();
+				$returnArray = array();
+				if(count($dt) == 0)
+				{
+					$dt = PdoDataAccess::runquery("
+						SELECT DocumentID, ParamValue, InfoDesc as DocTypeDesc,t.ParamValue as DocNo
+						FROM DMS_DocParamValues
+						join DMS_DocParams using(ParamID)
+						join DMS_documents d using(DocumentID)
+						join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
+						left join (
+							select d.DocumentID,ParamValue
+							from DMS_DocParamValues join DMS_DocParams using(ParamID)
+							join DMS_documents d using(DocumentID)
+							where Keytitle='no' and ObjectType='loan'
+							group by DocumentID
+						) t on(d.DocumentID=t.DocumentID)
+
+						where IsConfirm='YES' AND b.param1=1 AND 
+						paramType='currencyfield' AND ObjectType='warrenty' AND ObjectID=?",
+						array($ReqObj->RequestID));
+
+					foreach($dt as $row)
+					{
+						$returnArray[] = array(
+							"amount" => $row["ParamValue"],
+							"param1" => $row["DocNo"],
+							"SourceID4" => $row["DocumentID"]);
+					}
+					return $returnArray;
+				}
+		}	
+	}
+	
+	//--------------------------------------------------------
+	
 	static function FindTafsili($TafsiliType, $ObjectID){
 
 		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis "

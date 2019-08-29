@@ -3,7 +3,7 @@
 // programmer:	Jafarkhani
 // create Date:	95.04
 //---------------------------
-   
+  
 require_once '../header.inc.php';
 require_once(inc_response);
 require_once inc_dataReader;
@@ -81,6 +81,55 @@ function selectIncomeCheques() {
 	MakeWhere($where, $param);
 	  
 	$query = "
+		select t.*,b.BankDesc, t3.TafsiliDesc ChequeStatusDesc
+		from
+		(
+			select i.*,
+				group_concat(concat_ws(' ','[ وام ',r.RequestID,']',p.CompanyName,p.fname,p.lname) 
+					SEPARATOR '<br>') as fullname,
+					group_concat(l.LoanDesc SEPARATOR '<br>') CostDesc,
+					br.BranchName
+			from ACC_IncomeCheques i
+			join LON_BackPays bp using(IncomeChequeID)
+			join LON_requests r on(bp.RequestID=r.RequestID)
+			join BSC_persons p on(p.PersonID=r.LoanPersonID)
+			join LON_loans l using(LoanID)
+			join BSC_branches br on(r.BranchID=br.BranchID)
+			group by i.IncomeChequeID
+
+		union all
+
+			select i.*,group_concat(concat_ws(' ','[ وام ',r.RequestID,']',p.CompanyName,p.fname,p.lname) 
+					SEPARATOR '<br>') as fullname,
+					group_concat(l.LoanDesc SEPARATOR '<br>') CostDesc,
+					br.BranchName
+			from ACC_IncomeCheques i
+			join LON_requests r on(i.LoanRequestID=r.RequestID)
+			join BSC_persons p on(p.PersonID=r.LoanPersonID)
+			join LON_loans l using(LoanID)
+			join BSC_branches br on(r.BranchID=br.BranchID)
+			group by i.IncomeChequeID
+
+		union all
+
+			select i.*,t1.TafsiliDesc fullname, 
+				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) CostDesc,br.BranchName
+			from ACC_IncomeCheques i
+			left join BSC_branches br on(i.BranchID=br.BranchID)
+			left join ACC_tafsilis t1 using(TafsiliID)
+			join ACC_CostCodes cc using(CostID)
+			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
+			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
+			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
+			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
+			group by i.IncomeChequeID
+		)t
+
+		left join ACC_banks b on(ChequeBank=BankID)
+		left join ACC_tafsilis t3 on(t3.TafsiliType=7 AND t3.TafsiliID=ChequeStatus)
+		where " . $where ;
+	/*
+		$query = "
 		select t.*,b.BankDesc, bf.InfoDesc ChequeStatusDesc
 		from
 		(
@@ -128,7 +177,7 @@ function selectIncomeCheques() {
 		left join ACC_banks b on(ChequeBank=BankID)
 		left join BaseInfo bf on(bf.TypeID=4 AND bf.InfoID=ChequeStatus)
 		where " . $where ;
-	
+		*/
 	//.........................................................
 	$query .= dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
@@ -146,6 +195,28 @@ function SelectIncomeChequeStatuses() {
 	
 	//$temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4 AND IsActive='YES'");
 	$temp = PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=7");
+	/*
+	$temp = PdoDataAccess::runquery("
+		select b.* , 
+		concat('[',c1.CostCode,']',concat_ws('-',b11.blockDesc,b12.blockDesc,b13.blockDesc,b14.blockDesc)) 
+			bed_CostCode, 
+		concat('[',c2.CostCode,']',concat_ws('-',b21.blockDesc,b22.blockDesc,b23.blockDesc,b24.blockDesc)) 
+			bes_CostCode 
+		from BaseInfo b 
+		left join ACC_CostCodes c1 on(c1.CostID=b.param1)
+		left join ACC_blocks b11 on(c1.level1=b11.blockID)
+		left join ACC_blocks b12 on(c1.level2=b12.blockID)
+		left join ACC_blocks b13 on(c1.level3=b13.blockID)
+		left join ACC_blocks b14 on(c1.level4=b14.blockID)
+		
+		left join ACC_CostCodes c2 on(c2.CostID=b.param2)
+		left join ACC_blocks b21 on(c1.level1=b21.blockID)
+		left join ACC_blocks b22 on(c2.level2=b22.blockID)
+		left join ACC_blocks b23 on(c2.level3=b23.blockID)
+		left join ACC_blocks b24 on(c2.level4=b24.blockID)
+		
+		where TypeID=4 AND b.IsActive='YES'");
+		*/
 	echo dataReader::getJsonData($temp, count($temp), $_GET['callback']);
 	die();
 }
@@ -177,9 +248,15 @@ function selectValidChequeStatuses(){
 	
 	$SrcID = $_REQUEST["SrcID"];
 	$temp = PdoDataAccess::runquery("
+		select TafsiliID,TafsiliDesc
+		from ACC_tafsilis join ACC_ChequeStatuses on(SrcID=? AND DstID=TafsiliID)
+		where TafsiliType=" . TAFTYPE_ChequeStatus, array($SrcID));
+	/*
+	$temp = PdoDataAccess::runquery("
 		select InfoID,InfoDesc
 		from BaseInfo join ACC_ChequeStatuses on(SrcID=? AND DstID=InfoID)
 		where TypeID=4", array($SrcID));
+	*/
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }

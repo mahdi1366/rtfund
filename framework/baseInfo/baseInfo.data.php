@@ -260,9 +260,18 @@ function SelectBaseTypeGroups(){
 
 function SelectBaseInfo(){
 	
-	$temp = PdoDataAccess::runquery("select * from BaseInfo where typeID=? ",
-		array($_REQUEST["TypeID"]));
-
+	$where = " typeID=:t ";
+	$param = array(":t" => $_REQUEST["TypeID"]);
+	
+	if(!empty($_REQUEST["fields"]) && !empty($_REQUEST["query"]))
+	{
+		$where .= " AND ".$_REQUEST["fields"]." like :d";
+		$param[":d"] = "%" . $_REQUEST["query"] . "%";
+		
+	}	
+	
+	$temp = PdoDataAccess::runquery("select * from BaseInfo where " . $where, $param);
+	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }

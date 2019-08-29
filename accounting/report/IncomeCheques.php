@@ -40,7 +40,8 @@ function GetData(){
 			b.BankDesc, 
 			r.RequestID,
 			br.BranchName,
-			t3.InfoDesc ChequeStatusDesc	,LoanPersonID	".
+			t3.TafsiliDesc ChequeStatusDesc	,LoanPersonID	".
+			/*t3.InfoDesc ChequeStatusDesc	,LoanPersonID	".*/
 				($userFields != "" ? "," . $userFields : "")."	
 			
 		from ACC_IncomeCheques i
@@ -64,7 +65,8 @@ function GetData(){
 			left join BSC_SubAgents sa on(sa.SubID=r.SubAgentID)
 				
 			left join ACC_banks b on(ChequeBank=BankID)
-			left join BaseInfo t3 on(t3.TypeID=4 AND t3.InfoID=ChequeStatus)
+			left join ACC_tafsilis t3 on(t3.TafsiliType=".TAFTYPE_ChequeStatus." AND t3.TafsiliID=ChequeStatus)
+			/*left join BaseInfo t3 on(t3.TypeID=4 AND t3.InfoID=ChequeStatus)*/
 		where 1=1 ";
 	
 	//.........................................................
@@ -365,14 +367,14 @@ function AccReport_IncomeCheque()
 					url: this.address_prefix + '../cheque/cheques.data.php?task=SelectIncomeChequeStatuses',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields : ['InfoID','InfoDesc'],
+				fields : ['TafsiliID','TafsiliDesc'],
 				autoLoad : true
 			}),
 			fieldLabel : "وضعیت چک",
-			displayField : "InfoDesc",
+			displayField : "TafsiliDesc",
 			queryMode : "local",
 			colspan : 2,
-			valueField : "InfoID",
+			valueField : "TafsiliID",
 			hiddenName :"ChequeStatus"
 		},{
 			xtype : "fieldset",

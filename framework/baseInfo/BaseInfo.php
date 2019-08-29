@@ -12,7 +12,7 @@ $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "baseInfo.data.php?task=SelectBaseInfo", "grid_div");
 
-$dg->addColumn("", "TypeID", "", true);
+$dg->addColumn("گروه", "TypeID", "", true);
 $dg->addColumn("", "IsActive", "", true);
 
 $col = $dg->addColumn("کد", "InfoID");
@@ -77,7 +77,6 @@ if($_SESSION["USER"]["UserName"] != "admin")
 $dg->DefaultSortField = "InfoDesc";
 $dg->autoExpandColumn = "InfoDesc";
 $dg->emptyTextOfHiddenColumns = true;
-$dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $grid = $dg->makeGrid_returnObjects();
 

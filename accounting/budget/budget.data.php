@@ -8,6 +8,8 @@ require_once '../header.inc.php';
 require_once(inc_response);
 require_once inc_dataReader;
 require_once './budget.class.php';
+require_once 'TreeModules.class.php';
+
 //ini_set("display_errors", "On");
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
@@ -17,6 +19,7 @@ switch ($task) {
 	case "SaveBudget":
 	case "DeleteBudget":
 	case "ActivateBudget":
+	case "GetBudgetTree":
 	
 	case "GetBudgetCostCodes":
 	case "SaveBudgetCostCode":
@@ -56,7 +59,7 @@ function SelectBudgets() {
 function SaveBudget() {
 
     $obj = new ACC_budgets();
-    pdoDataAccess::FillObjectByJsonData($obj, $_POST['record']);
+    pdoDataAccess::FillObjectByArray($obj, $_POST);
 
     if ($obj->BudgetID == '')
         $result = $obj->Add();
@@ -83,6 +86,17 @@ function ActivateBudget(){
 	$result = $obj->Edit();
     Response::createObjectiveResponse($result, '');
     die();
+}
+
+function GetBudgetTree() {
+
+	$nodes = PdoDataAccess::runquery("
+			select * from ACC_budgets  where IsActive='YES'
+			order by ParentID,BudgetDesc");
+	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes, "ParentID", "BudgetID", "BudgetDesc");
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo json_encode($returnArr);
+	die();
 }
 
 //...................................

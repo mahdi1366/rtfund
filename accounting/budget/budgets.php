@@ -1,242 +1,254 @@
 <?php
-//-----------------------------
-//	Programmer	: SH.Jafarkhani
-//	Date		: 98.03
-//-----------------------------
-require_once("../header.inc.php");
-require_once inc_dataGrid;
- 
+//---------------------------
+// developer:	Sh.Jafarkhani
+// Date:		97.05
+//---------------------------
+require_once '../header.inc.php'; 
+
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
-$dg = new sadaf_datagrid("dg",$js_prefix_address . "budget.data.php?task=SelectBudgets","div_grid_user");
-
-$dg->addColumn("","BudgetID","", true);
-$dg->addcolumn('','IsActive',"",true);
-
-$col = $dg->addColumn("عنوان بودجه","BudgetDesc","string");
-$col->editor = ColumnEditor::TextField();
-$col->sortable = false;
-
-if($accessObj->AddFlag)
-{
-	$dg->addButton = true;
-	$dg->addHandler = "function(){ACC_budgetObject.Adding();}";
-}
-if($accessObj->AddFlag || $accessObj->EditFlag)
-{
-	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(v,p,r){return ACC_budgetObject.saveData(v,p,r);}";
-}
-if($accessObj->RemoveFlag)
-{
-	$col = $dg->addcolumn('حذف','','string');
-	$col->renderer = "ACC_budget.RemoveRender";
-	$col->width=40;
-}
-
-$col = $dg->addcolumn('کدهای حساب','','string');
-$col->renderer = "ACC_budget.CostRender";
-$col->width=80;
-$col->align = "center";
-
-$dg->height = 350;
-$dg->width = 500;
-$dg->DefaultSortField = "BudgetID";
-$dg->DefaultSortDir = "ASC";
-$dg->autoExpandColumn = "BudgetDesc";
-$dg->editorGrid = true;
-$dg->title = "بودجه ها";
-$dg->EnablePaging = false;
-$dg->EnableSearch = false;
-$grid = $dg->makeGrid_returnObjects();
 ?>
-<script>
-ACC_budget.prototype = {
-	TabID : '<?= $_REQUEST["ExtTabID"]?>',
-	address_prefix : "<?= $js_prefix_address?>",
+<script type="text/javascript">
+ACC_budgets.prototype = {
+	TabID: '<?= $_REQUEST["ExtTabID"] ?>',
+	address_prefix: "<?= $js_prefix_address ?>",
 
-	get : function(elementID){
+	AddAccess : <?= $accessObj->AddFlag ? "true" : "false" ?>,
+	EditAccess : <?= $accessObj->EditFlag ? "true" : "false" ?>,
+	RemoveAccess : <?= $accessObj->RemoveFlag ? "true" : "false" ?>,
+
+	get: function (elementID) {
 		return findChild(this.TabID, elementID);
 	}
 };
 
-function ACC_budget()
-{
-	this.grid = <?= $grid?>;
-	this.grid.render(this.get("div_grid"));
-}
+function ACC_budgets() {
 
-ACC_budget.RemoveRender = function(value,p,record){
-	
-	if(record.data.IsActive == "YES")
-		return  "<div  title='حذف اطلاعات' class='remove' onclick='ACC_budgetObject.Remove();' " +
-		"style='float:left;background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:50%;height:16'></div>";	
-	else
-		return  "<div  title='فعال سازی اطلاعات' class='undo' onclick='ACC_budgetObject.Activate();' " +
-		"style='float:left;background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:50%;height:16'></div>";	
-}
-
-ACC_budget.CostRender = function(value,p,record){
-	
-		return  "<div  title='کدهای حساب بودجه' class='list' onclick='ACC_budgetObject.ShowCostCodes();' " +
-		"style=';background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";	
-}
-
-ACC_budget.prototype.Adding = function(){
-	
-	var modelClass = this.grid.getStore().model;
-	var record = new modelClass({
-		BudgetID : ""
+	this.infoPanel = new Ext.form.Panel({
+		applyTo: this.get("NewPnl"),
+		title: "اطلاعات بودجه",
+		bodyStyle: "text-align:right;padding:5px",
+		frame: true,
+		hidden: true,
+		width: 300,
+		items: [{
+				xtype: "hidden",
+				name: "BudgetID",
+				itemId: "BudgetID",
+				fieldLabel: "کد",
+				labelWidth: 40,
+				hideTrigger: true
+			},{
+				xtype: "textarea",
+				name: "BudgetDesc",
+				itemId: "BudgetDesc",
+				fieldLabel: "عنوان",
+				labelWidth: 40,
+				rows: 5,
+				width: 280
+			}, {
+				xtype: "hidden",
+				itemId: "ParentID",
+				name: "ParentID"
+			}, {
+				xtype: "hidden",
+				itemId: "old_BudgetID",
+				name: "old_BudgetID"
+			}],
+		buttons: [{
+				text: "ذخیره",
+				handler: function () {
+					ACC_budgetsObject.SaveBudgets();
+				},
+				iconCls: "save"
+			}, {
+				text: "انصراف",
+				handler: function () {
+					ACC_budgetsObject.infoPanel.hide();
+				},
+				iconCls: "undo"
+			}]
 	});
 
-	this.grid.plugins[0].cancelEdit();
-	this.grid.getStore().insert(0, record);
-	this.grid.plugins[0].startEdit(0, 0);
+	this.tree = new Ext.tree.Panel({
+		renderTo: this.get('tree-div'),
+		frame: true,
+		width: 600,
+		height: 600,
+		title: "بودجه ها",
+		plugins: [new Ext.tree.Search()],
+		store: new Ext.data.TreeStore({
+			root: {
+				id: "source",
+				text: "گروه های بودجه",
+				expanded: true
+			},
+			proxy: {
+				type: 'ajax',
+				url: this.address_prefix + "budget.data.php?task=GetBudgetTree"
+			}
+		})
+	});
+
+	this.tree.getDockedItems('toolbar[dock="top"]')[0].add({
+			xtype: "button",
+			iconCls: "print",
+			text: "چاپ",
+			handler: function () {
+				Ext.ux.Printer.print(ACC_budgetsObject.tree);
+			}
+		}, '-', {
+			xtype: "button",
+			iconCls: "refresh",
+			text: "بازگذاری مجدد",
+			handler: function () {
+				ACC_budgetsObject.tree.getStore().load();
+			}
+		}
+	);
+
+	this.tree.on("itemcontextmenu", function (view, record, item, index, e)
+	{
+		e.stopEvent();
+		e.preventDefault();
+		view.select(index);
+		me = ACC_budgetsObject;
+
+		this.Menu = new Ext.menu.Menu();
+
+		if(me.AddAccess)
+			this.Menu.add({
+				text: 'ایجاد رکورد',
+				iconCls: 'add',
+				handler: function(){ ACC_budgetsObject.BeforeSaveBbudgets("new"); }
+			});
+		if (record.data.id != "source")
+		{   
+			if(me.EditAccess)
+				this.Menu.add({
+					text: 'ویرایش رکورد',
+					iconCls: 'edit',
+					handler: function(){ ACC_budgetsObject.BeforeSaveBbudgets("edit"); }
+
+				});
+			
+			if(me.RemoveAccess)
+				this.Menu.add({
+					text: 'حذف رکورد',
+					iconCls: 'remove',
+					handler: function(){ ACC_budgetsObject.DeleteBudgets(); }
+
+				});
+		}
+	
+		var coords = e.getXY();
+		this.Menu.showAt([coords[0] - 120, coords[1]]);
+	});
 }
 
-ACC_budget.prototype.saveData = function(store,record){
-	
-    mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخیره سازی ...'});
+var ACC_budgetsObject = new ACC_budgets();
+
+ACC_budgets.prototype.BeforeSaveBbudgets = function (mode, obj){
+
+	var record = this.tree.getSelectionModel().getSelection()[0];
+
+	this.infoPanel.getForm().reset();
+	this.infoPanel.show();
+
+	if (mode == "edit")
+	{
+		this.infoPanel.getComponent("ParentID").setValue(record.raw.ParentID);
+		this.infoPanel.getComponent("BudgetDesc").setValue(record.raw.BudgetDesc);
+		this.infoPanel.getComponent("BudgetID").setValue(record.data.id);
+	} 
+	else 
+	{
+		this.infoPanel.getComponent("ParentID").setValue(record.data.id == "source" ? 0 : record.data.id);
+	}
+}
+
+ACC_budgets.prototype.DeleteBudgets = function () {
+
+	var record = this.tree.getSelectionModel().getSelection()[0];
+
+	if (record.childNodes.length != 0)
+	{
+		Ext.MessageBox.alert("Error","ابتدا رکوردهای این گروه را حذف کنید");
+		return;
+	}
+	if (!confirm("آیا مایل به حذف می باشید؟"))
+		return;
+
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg: 'در حال ذخيره سازي...'});
 	mask.show();
 
 	Ext.Ajax.request({
 		params: {
-			task: 'SaveBudget',
-			record : Ext.encode(record.data)
+			task: 'DeleteBudget',
+			BudgetID: record.data.id
 		},
-		url: this.address_prefix +'budget.data.php',
+		url: this.address_prefix + 'budget.data.php',
 		method: 'POST',
-
-		success: function(response){
+		success: function (response) {
 			mask.hide();
-			var st = Ext.decode(response.responseText);
-			if(st.success)
-			{
-				ACC_budgetObject.grid.getStore().load();
-			}
-			else
-			{
-				alert(st.data);
-			}
+			record.remove();
 		},
-		failure: function(){
-			mask.hide();
+		failure: function () {}
+	});
+
+}
+
+ACC_budgets.prototype.SaveBudgets = function () {
+
+	this.infoPanel.getForm().submit({
+		clientValidation: true,
+		url: this.address_prefix + 'budget.data.php?task=SaveBudget',
+		method: "POST",
+
+		success: function (form, action) {
+
+			mode = ACC_budgetsObject.infoPanel.getComponent("BudgetID").getValue() == "" ? "new" : "edit";
+
+			BudgetID = ACC_budgetsObject.infoPanel.getComponent("BudgetID").getValue();
+			ParentID = ACC_budgetsObject.infoPanel.getComponent("ParentID").getValue();
+			if (ParentID != "0")
+				Parent = ACC_budgetsObject.tree.getRootNode().findChild("id", ParentID, true);
+			else
+				Parent = ACC_budgetsObject.tree.getRootNode();
+
+			if (mode == "new")
+			{
+				Parent.set('leaf', false);
+				Parent.appendChild({
+					id: action.result.data,
+					text: ACC_budgetsObject.infoPanel.getComponent("BudgetDesc").getValue(),
+					leaf: true
+				});
+			} else
+			{
+				ACC_budgetsObject.tree.getRootNode().findChild("id", BudgetID, true).
+						set('text', ACC_budgetsObject.infoPanel.getComponent("BudgetDesc").getValue());
+			}
+
+			ACC_budgetsObject.infoPanel.getForm().reset();
+			ACC_budgetsObject.infoPanel.hide();
+
+		},
+		failure: function (form, action)
+		{
+			alert("کد وارد شده تکراری می باشد");
 		}
 	});
 }
-
-ACC_budget.prototype.Remove = function(){
-
-	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟",function(btn){
-		if(btn == "no")
-			return;
-		
-		me = ACC_budgetObject;
-		var record = me.grid.getSelectionModel().getLastSelected();
-
-		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخيره سازي...'});
-		mask.show();
-
-		Ext.Ajax.request({
-			params: {
-				task: 'DeleteBudget',
-				BudgetID: record.data.BudgetID
-			},
-			url:  me.address_prefix +'budget.data.php',
-			method: 'POST',
-			success: function(response){
-				mask.hide();
-				var st = Ext.decode(response.responseText);
-				if(st.data == "conflict")
-					alert('این آیتم در جای دیگری استفاده شده و قابل حذف نمی باشد.');
-				else
-					ACC_budgetObject.grid.getStore().load();
-			},
-			failure: function(){}
-		});
-	});
-}
-
-ACC_budget.prototype.Activate = function(){
-
-	Ext.MessageBox.confirm("","آیا مایل به فعال شدن مجدد می باشید؟",function(btn){
-		if(btn == "no")
-			return;
-		
-		me = ACC_budgetObject;
-		var record = me.grid.getSelectionModel().getLastSelected();
-
-		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخيره سازي...'});
-		mask.show();
-
-		Ext.Ajax.request({
-			params: {
-				task: 'ActivateBudget',
-				BudgetID: record.data.BudgetID
-			},
-			url:  me.address_prefix +'budget.data.php',
-			method: 'POST',
-			success: function(response){
-				mask.hide();
-				var result = Ext.decode(response.responseText);
-				if(result.success)
-					ACC_budgetObject.grid.getStore().load();
-				else if(result.data != "")
-					Ext.MessageBox.alert("",result.data);
-				else
-					Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه گردید");
-					
-			},
-			failure: function(){}
-		});
-	});
-}
-
-ACC_budget.prototype.ShowCostCodes = function(){
-
-	var record = this.grid.getSelectionModel().getLastSelected();
-	
-	if(!this.CostCodeWin)
-	{
-		this.CostCodeWin = new Ext.window.Window({
-			width : 765,
-			title : "کدهای حساب متصل به بودجه",
-			bodyStyle : "background-color:white;text-align:-moz-center",
-			height : 565,
-			modal : true,
-			closeAction : "hide",
-			loader : {
-				url : this.address_prefix + "BudgetCostCodes.php",
-				scripts : true
-			},
-			buttons :[{
-				text : "بازگشت",
-				iconCls : "undo",
-				handler : function(){this.up('window').hide();}
-			}]
-		});
-		Ext.getCmp(this.TabID).add(this.CostCodeWin);
-	}
-	this.CostCodeWin.show();
-	this.CostCodeWin.center();
-	this.CostCodeWin.loader.load({
-		params : { 
-			ExtTabID : this.CostCodeWin.getEl().id,
-			MenuID : <?= $_REQUEST["MenuID"] ?>,
-			BudgetID : record.data.BudgetID
-		}
-	});
-}
-
-var ACC_budgetObject = new ACC_budget();
 
 </script>
-<center>
-	<br>
-	<div id="div_grid"></div>
-</center>
+<table width="750px" style="margin:10px">
+	<tr>
+		<td valign="top" width="40%"><div id="tree-div"></div></td>
+		<td valign="top" style="padding-right : 20px">
+			<div id="NewPnl" class="x-hide-display"></div>
+		</td>
+	</tr>
+</table>

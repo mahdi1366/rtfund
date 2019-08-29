@@ -10,9 +10,9 @@ class ACC_budgets extends OperationClass {
 	const TableKey = "BudgetID";     
 	
 	public $BudgetID;
+	public $ParentID;
 	public $BudgetDesc;
 	public $IsActive;
-	
 }
 
 class ACC_BudgetCostCodes extends OperationClass {
