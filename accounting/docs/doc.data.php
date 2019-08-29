@@ -330,6 +330,9 @@ function GroupStartFlow(){
 //............................
 
 function selectDocItems() {
+	
+	ini_set("display_errors", "On");
+	
 	$where = "DocID=:did";
 	$whereParam = array(":did" => $_REQUEST["DocID"]);
 
@@ -380,10 +383,10 @@ function selectDocItems() {
 	$no = ACC_DocItems::GetAllCount($where, $whereParam);
 
 	$temp = ACC_DocItems::GetAll($where . " limit " . $_REQUEST["start"] . "," . $_REQUEST["limit"], $whereParam);
-	//print_r(ExceptionHandler::PopAllExceptions());
+	print_r(ExceptionHandler::PopAllExceptions());
 	$temp = $temp->fetchAll();
 	//............. fill paramValues ........................
-	for($i=0; $i<count($temp); $i++)
+	/*for($i=0; $i<count($temp); $i++)
 	{
 		$CostObj = new ACC_CostCodes($temp[$i]["CostID"]);
 		
@@ -414,7 +417,7 @@ function selectDocItems() {
 					$temp[$i]["ParamValue" . $j] = $dt[0]["title"]; 
 			}
 		}
-	}
+	}*/
 	//..........................................................................
 	$dt = PdoDataAccess::runquery("
 		select sum(DebtorAmount) bd,sum(CreditorAmount) bs

@@ -42,6 +42,7 @@ function GetData(&$rpg){
 	$level = empty($_REQUEST["level"]) ? "l1" : $_REQUEST["level"];
 	
 	$query = "select 
+		di.CostID,
 		sum(di.DebtorAmount) DebtorAmount,
 		sum(di.CreditorAmount) CreditorAmount,
 		b0.BlockDesc level0Desc,
@@ -148,10 +149,16 @@ function GetData(&$rpg){
 		$col = $rpg->addColumn("معین3", "level4Desc", $level =="l4" ? "levelRender" : "");
 		$col->ExcelRender = false;
 	}
-	if($level == "l5")
+	if($level == "l5" || $level == "l6")
 	{
+		function uniqueRender($row,$val){
+			return $row["CostID"] . "-" . ($row["TafsiliID"] == "" ? 0 :$row["TafsiliID"]) . "-" . 
+					($row["TafsiliID2"] == "" ? 0 :$row["TafsiliID2"]);
+		}
+		$col = $rpg->addColumn("کد یکتا", "CostID", "uniqueRender");
+		
 		$group .= ",tbl.TafsiliID";
-		$col = $rpg->addColumn("کد تفصیلی1", "TafsiliCode");
+		$col = $rpg->addColumn("کد تفصیلی1", "TafsiliID");
 		$col = $rpg->addColumn("تفصیلی1", "TafsiliDesc", "levelRender");
 		$col->ExcelRender = false;
 		
@@ -168,7 +175,7 @@ function GetData(&$rpg){
 	if($level == "l6")
 	{
 		$group .= ",tbl.TafsiliID2";
-		$col = $rpg->addColumn("کد تفصیلی2", "TafsiliCode2");
+		$col = $rpg->addColumn("کد تفصیلی2", "TafsiliID2");
 		$col = $rpg->addColumn("تفصیلی2", "TafsiliDesc2", "levelRender");
 		$col->ExcelRender = false;
 	}
@@ -397,9 +404,9 @@ function GetData(&$rpg){
 	$dt = PdoDataAccess::runquery($query, $whereParam);
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		BeginReport();
+		/*BeginReport();
 		print_r(ExceptionHandler::PopAllExceptions());
-		echo PdoDataAccess::GetLatestQueryString ();
+		echo PdoDataAccess::GetLatestQueryString ();*/
 	}
 	return $dt;
 }

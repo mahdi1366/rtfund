@@ -1,19 +1,43 @@
 <?php
 
 /*
-insert into ACC_DocItems(DocID, CostID, TafsiliType, TafsiliID, TafsiliType2, TafsiliID2, TafsiliType3, TafsiliID3, 
-  DebtorAmount, CreditorAmount, details, locked, SourceType, SourceID1, SourceID2, SourceID3, SourceID4, param1, 
-  param2, param3, OldCostCode) 
-  select 9212, CostID, TafsiliType, TafsiliID, TafsiliType2, TafsiliID2, TafsiliType3, TafsiliID3, DebtorAmount, 
-  CreditorAmount, details, locked, SourceType, SourceID1, SourceID2, SourceID3, SourceID4, param1, param2, param3, 
-  OldCostCode from ACC_DocItems where DocID=4292
- 
-select cc.CostID,CostCode from ACC_CostCodes cc join ACC_blocks b1 on(cc.level1=b1.blockID) 
-join ACC_blocks b0 on(b1.GroupID=b0.BlockID)
-left join ACC_DocItems di on(di.DocID=9212 AND di.CostID=cc.CostID)
-where b0.blockCode not in(6,7,8) AND di.ItemID is null
-  
-  
+select  
+si.ItemID,
+b0.blockCode,b0.blockDesc,
+b1.blockCode,b1.blockDesc,
+b2.blockCode,b2.blockDesc,
+b3.blockCode,b3.blockDesc,
+
+bi.InfoDesc TafsiliGroupDesc,t.TafsiliDesc,
+bi2.InfoDesc Tafsili2GroupDesc,t2.TafsiliDesc as Tafsili2Desc,
+bi3.InfoDesc Tafsili3GroupDesc,t3.TafsiliDesc as Tafsili3Desc,
+
+p1.paramDesc paramDesc1,si.param1,
+p2.paramDesc paramDesc2,si.param2,
+p3.paramDesc paramDesc3,si.param3
+
+		from ACC_DocItems si
+			join ACC_CostCodes cc using(CostID)
+            
+			join ACC_blocks b1 on(cc.level1=b1.blockID)
+            join ACC_blocks b0 on(b1.GroupID=b0.blockID)
+			join ACC_blocks b2 on(cc.level2=b2.blockID)
+			join ACC_blocks b3 on(cc.level3=b3.blockID)
+			
+			left join BaseInfo bi on(si.TafsiliType=InfoID AND TypeID=2)
+			left join BaseInfo bi2 on(si.TafsiliType2=bi2.InfoID AND bi2.TypeID=2)
+			left join BaseInfo bi3 on(si.TafsiliType3=bi3.InfoID AND bi3.TypeID=2)
+			
+			left join ACC_tafsilis t on(t.TafsiliID=si.TafsiliID)
+			left join ACC_tafsilis t2 on(t2.TafsiliID=si.TafsiliID2)
+			left join ACC_tafsilis t3 on(t3.TafsiliID=si.TafsiliID3)
+			
+			left join ACC_CostCodeParams p1 on(p1.ParamID=cc.param1)
+			left join ACC_CostCodeParams p2 on(p2.ParamID=cc.param2)
+			left join ACC_CostCodeParams p3 on(p3.ParamID=cc.param3)
+            
+            where DocID=9212
+
  */
 	
 /*	

@@ -52,6 +52,11 @@ $col = $dg_cost->addcolumn('آیتم اطلاعاتی2','ParamDesc2');
 
 $col = $dg_cost->addcolumn('آیتم اطلاعاتی3','ParamDesc3');
 
+//$col = $dg_cost->addcolumn('ObjectType1','ObjectType1');
+$col = $dg_cost->addcolumn('ObjectType2','ObjectType2');
+//$col = $dg_cost->addcolumn('ObjectType3','ObjectType3');
+
+
 if($accessObj->EditFlag	)
 {
 	$col=$dg_cost->addcolumn('ویرایش','','string');
@@ -75,7 +80,8 @@ $dg_cost->addButton('prn__btn', 'چاپ کد حسابها', 'print', 'function(e
 
 $dg_cost->title = 'کدینگ حساب';
 $dg_cost->pageSize = 19;
-$dg_cost->height = 500;
+$dg_cost->pageSize = 12;
+//$dg_cost->height = 500;
 $dg_cost->autoExpandColumn = "LevelTitle1";
 $dg_cost->DefaultSortField = "CostCode";
 $dg_cost->DefaultSortDir = "ASC";
