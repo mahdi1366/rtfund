@@ -76,10 +76,10 @@ function GetData(){
 			$where .= " AND r.LoanPersonID=" . $_SESSION["USER"]["PersonID"];
 	}
 	
-	if($_POST["ChequeStatus"] != INCOMECHEQUE_CHANGE)
+	/*if($_POST["ChequeStatus"] != INCOMECHEQUE_CHANGE)
 	{
 		$query .= " AND ChequeStatus <> " . INCOMECHEQUE_CHANGE;
-	}
+	}*/
 	if(!empty($_POST["FromNo"]))
 	{
 		$query .= " AND ChequeNo >= :cfn";
