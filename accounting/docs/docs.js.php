@@ -608,12 +608,12 @@ AccDocs.prototype.afterHeaderLoad = function(store){
 	{
 		AccDocsObject.itemGrid.show();
 		AccDocsObject.showDetail(store.getAt(0));
-		AccDocsObject.checkTafsiliCombo.getStore().load({
+		/*AccDocsObject.checkTafsiliCombo.getStore().load({
 			params :{ DocID : store.getAt(0).data.DocID}
 		});
 		AccDocsObject.accountCombo.getStore().load({
 			params :{ DocID : store.getAt(0).data.DocID}
-		});
+		});*/
 	}
 	else
 		AccDocsObject.itemGrid.hide();
@@ -1379,7 +1379,7 @@ AccDocs.prototype.SaveItem = function(store,record){
 				var st = Ext.decode(response.responseText);
 				if(st.success)
 				{
-					AccDocsObject.itemGrid.getStore().load();
+					//AccDocsObject.itemGrid.getStore().load();
 				}
 				else
 				{

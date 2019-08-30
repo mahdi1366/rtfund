@@ -112,6 +112,36 @@ class WAR_requests extends OperationClass
 			return 0;
 		return $dt[0][0];
 	}
+	
+	static function EventTrigger_cancel($SourceObjects){
+		
+		$ReqObj = new WAR_requests((int)$SourceObjects[0]);
+		$ReqObj->StatusID = WAR_STEPID_CANCEL;
+		$ReqObj->CancelDate = DateModules::shamsi_to_miladi($SourceObjects[2]);
+		return $ReqObj->Edit();
+	}
+	
+	static function EventTrigger_reduce($SourceObjects){
+		
+		$ReqObj = new WAR_requests((int)$SourceObjects[0]);
+		
+		$newObj = new WAR_requests();
+		PdoDataAccess::FillObjectByObject($ReqObj, $newObj);
+		unset($newObj->RequestID);
+		$newObj->StatusID = WAR_STEPID_RAW;
+		$newObj->version = "EXTEND";
+		$newObj->RefRequestID = $ReqObj->RefRequestID;
+		$newObj->StartDate = DateModules::shamsi_to_miladi($SourceObjects[2]);
+		$newObj->EndDate = $ReqObj->EndDate;
+		$newObj->amount = (int)$SourceObjects[1];
+		if(!$newObj->Add())
+			return false;
+		
+		$ReqObj->StatusID = WAR_STEPID_REDUCE;
+		$ReqObj->EndDate = DateModules::shamsi_to_miladi($SourceObjects[2]);
+		return $ReqObj->Edit();
+	}
+
 }
 
 class WAR_costs extends OperationClass

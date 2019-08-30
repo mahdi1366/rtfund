@@ -31,14 +31,14 @@ $dg->emptyTextOfHiddenColumns = true;
 $grid1 = $dg->makeGrid_returnObjects();
 
 //--------------- news -----------------
-$temp = FRW_news::ShowNews();
+/*$temp = FRW_news::ShowNews();
 $temp = $temp->fetchAll();
 $returnStr = "";
 foreach($temp as $row)
 {
 	$returnStr .= '<font style="color:#17C5FF;">◄&nbsp;' . $row["NewsTitle"] . 
 			"</font><div style='width:100%;padding-right:20px'> ".$row["context"]."</div><br>"; 
-}
+}*/
 
 ?>
 <script>
@@ -168,7 +168,10 @@ framework.centerPanel.items.get(FrameworkStartPageObject.TabID).on("activate", f
 	framework.ReloadTab(FrameworkStartPageObject.TabID);
 });
 		
-FrameWorkClass.prototype.ExecuteEvent = function(EventID, params){
+FrameWorkClass.prototype.ExecuteEvent = function(EventID, params, CallbackFn){
+	
+	if(arguments.length == 2)
+		CallbackFn = Ext.emptyFn;
 	
 	if(!this.EventWindow)
 	{
@@ -197,7 +200,8 @@ FrameWorkClass.prototype.ExecuteEvent = function(EventID, params){
 	
 	baseParams = {
 		ExtTabID : this.EventWindow.getEl().id,
-		EventID : EventID
+		EventID : EventID,
+		CallbackFn : CallbackFn
 	};
 	if(params.constructor === Array)
 	{

@@ -270,26 +270,21 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 	{
 		if(record.data.DocID == "" || record.data.DocID == null)
 			op_menu.add({text: 'صدور سند',iconCls: 'send',
-			handler : function(){ return WarrentyRequestObject.BeforeRegDoc(1); }});
-		else if(record.data.DocStatusID == "<?= ACC_STEPID_RAW ?>")
-		{
-			op_menu.add({text: 'اصلاح سند',iconCls: 'edit',
-			handler : function(){ return WarrentyRequestObject.BeforeRegDoc(2); }});
-
-			op_menu.add({text: 'برگشت سند',iconCls: 'undo',
-			handler : function(){ return WarrentyRequestObject.ReturnWarrentyDoc(); }})
-		}
-
+			handler : function(){ return WarrentyRequestObject.ExecuteRegEvent();/*BeforeRegDoc(1);*/ }});
+	
 		if(record.data.IsCurrent == "YES")
 		{
 			op_menu.add({text: 'خاتمه ضمانت نامه',iconCls: 'finish',
-				handler : function(){ return WarrentyRequestObject.EndWarrentyDoc(); }})
+				handler : function(){ return WarrentyRequestObject.ExecuteEndEvent(); }})
 
 			op_menu.add({text: 'ابطال ضمانت نامه',iconCls: 'cross',
-				handler : function(){ return WarrentyRequestObject.BeforeCancelWarrentyDoc(); }})
+				handler : function(){ return WarrentyRequestObject.BeforeCancelWarrenty(); }})
 
 			op_menu.add({text: 'تمدید ضمانت نامه',iconCls: 'delay',
-				handler : function(){ return WarrentyRequestObject.BeforeExtendWarrentyDoc(); }})
+				handler : function(){ return WarrentyRequestObject.BeforeExtendWarrenty(); }})
+			
+			op_menu.add({text: 'تقلیل ضمانت نامه',iconCls: 'arrow_down',
+				handler : function(){ return WarrentyRequestObject.BeforeReduceWarrenty(); }})
 		}
 	}
 	if(this.EditAccess && record.data.StatusID == "<?= WAR_STEPID_CANCEL ?>" && record.data.IsCurrent == "YES")
@@ -910,46 +905,6 @@ WarrentyRequest.prototype.EndWarrentyDoc = function(){
 	});
 }
 
-WarrentyRequest.prototype.BeforeCancelWarrentyDoc = function(){
-
-	if(!this.CancelWin)
-	{
-		this.CancelWin = new Ext.window.Window({
-			width : 400,
-			height : 120,
-			closeAction : "hide",
-			items : new Ext.form.Panel({
-				items : [{
-					xtype : "numberfield",
-					name : "extradays",
-					labelWidth : 200,
-					hideTrigger : true,
-					fieldLabel : "تعداد روز مازاد کارمزد",
-					allowBlank : false,
-					value : 30
-				},{
-					xtype : "shdatefield",
-					name : "CancelDate",
-					labelWidth : 200,
-					allowBlank : false,
-					fieldLabel : "تاریخ ابطال ضمانت نامه"
-				}]
-			}),
-			buttons :[{
-				text : "ابطال",
-				iconCls : "cross",
-				handler : function(){WarrentyRequestObject.CancelWarrentyDoc();}
-			},{
-				text : "انصراف",
-				iconCls : "undo",
-				handler : function(){ this.up('window').hide(); }
-			}]
-		});
-	}
-	this.CancelWin.show();
-	this.CancelWin.center();
-}
-
 WarrentyRequest.prototype.CancelWarrentyDoc = function(){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
@@ -1065,7 +1020,60 @@ WarrentyRequest.prototype.BeforeExtendWarrentyDoc = function(){
 	this.ExtendWin.center();
 }
 
-WarrentyRequest.prototype.ExtendWarrentyDoc = function(){
+//.......................................
+
+WarrentyRequest.prototype.BeforeExtendWarrenty = function(){
+
+	if(!this.ExtendWin)
+	{
+		this.ExtendWin = new Ext.window.Window({
+			width : 300,
+			height : 200,
+			closeAction : "hide",
+			items : new Ext.form.Panel({
+				width : 290,
+				items : [{
+					xtype : "currencyfield",
+					name : "amount",
+					allowBlank : false,
+					hideTrigger : true,
+					fieldLabel : "مبلغ ضمانت نامه"
+				},{
+					xtype : "shdatefield",
+					name : "EndDate",
+					allowBlank : false,
+					fieldLabel : "تاریخ پایان"
+				},{
+					xtype : "numberfield",
+					allowBlank : false,
+					fieldLabel : "کارمزد",
+					name : "wage",
+					width : 150,
+					afterSubTpl : "%",
+					hideTrigger : true
+				},{
+					xtype : "currencyfield",
+					name : "RegisterAmount",
+					hideTrigger : true,
+					fieldLabel : "کارمزد صدور"
+				}],
+				buttons :[{
+					text : "تمدید",
+					iconCls : "delay",
+					handler : function(){WarrentyRequestObject.ExtendWarrenty();}
+				},{
+					text : "انصراف",
+					iconCls : "undo",
+					handler : function(){ this.up('window').hide(); }
+				}]
+			})
+		});
+	}
+	this.ExtendWin.show();
+	this.ExtendWin.center();
+}
+
+WarrentyRequest.prototype.ExtendWarrenty = function(){
 
 	var record = this.grid.getSelectionModel().getLastSelected();
 
@@ -1213,4 +1221,189 @@ WarrentyRequest.prototype.LoanGuarantors = function(){
 	});
 }
 
+//.........................................................
+
+WarrentyRequest.prototype.BeforeCancelWarrenty = function(){
+
+	if(!this.CancelWin)
+	{
+		this.CancelWin = new Ext.window.Window({
+			width : 400,
+			height : 120,
+			closeAction : "hide",
+			items : new Ext.form.Panel({
+				items : [{
+					xtype : "numberfield",
+					name : "extradays",
+					labelWidth : 200,
+					hideTrigger : true,
+					fieldLabel : "تعداد روز مازاد کارمزد",
+					allowBlank : false,
+					value : 30
+				},{
+					xtype : "shdatefield",
+					name : "CancelDate",
+					labelWidth : 200,
+					allowBlank : false,
+					fieldLabel : "تاریخ ابطال ضمانت نامه"
+				}]
+			}),
+			buttons :[{
+				text : "ابطال",
+				iconCls : "cross",
+				handler : function(){WarrentyRequestObject.ExecuteCancelEvent();}
+			},{
+				text : "انصراف",
+				iconCls : "undo",
+				handler : function(){ this.up('window').hide(); }
+			}]
+		});
+	}
+	this.CancelWin.show();
+	this.CancelWin.center();
+}
+
+WarrentyRequest.prototype.BeforeReduceWarrenty = function(){
+
+	if(!this.ReduceWin)
+	{
+		this.ReduceWin = new Ext.window.Window({
+			width : 400,
+			height : 120,
+			closeAction : "hide",
+			items : new Ext.form.Panel({
+				items : [{
+					xtype : "currencyfield",
+					name : "newAmount",
+					labelWidth : 200,
+					hideTrigger : true,
+					fieldLabel : "مبلغ جدید ضمانتنامه",
+					allowBlank : false
+				},{
+					xtype : "shdatefield",
+					name : "ReduceDate",
+					labelWidth : 200,
+					allowBlank : false,
+					fieldLabel : "تاریخ تقلیل ضمانت نامه"
+				}]
+			}),
+			buttons :[{
+				text : "تقلیل",
+				iconCls : "cross",
+				handler : function(){WarrentyRequestObject.ExecuteReduceEvent();}
+			},{
+				text : "انصراف",
+				iconCls : "undo",
+				handler : function(){ this.up('window').hide(); }
+			}]
+		});
+	}
+	this.ReduceWin.show();
+	this.ReduceWin.center();
+}
+
+WarrentyRequest.prototype.ExecuteRegEvent = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+	if(record.data.RefRequestID != record.data.RequestID)
+		return this.ExecuteExtendEvent();
+	
+	switch(record.data.TypeID)
+	{
+		case "2" : eventID= "<?= EVENT_WAR_REG_2 ?>";break;
+		case "3" : eventID= "<?= EVENT_WAR_REG_3 ?>";break;
+		case "4" : eventID= "<?= EVENT_WAR_REG_4 ?>";break;
+		case "6" : eventID= "<?= EVENT_WAR_REG_6 ?>";break;
+		case "7" : eventID= "<?= EVENT_WAR_REG_7 ?>";break;
+		default  : eventID= "<?= EVENT_WAR_REG_other ?>";break;
+	}
+	framework.ExecuteEvent(eventID, new Array(record.data.RequestID));
+}
+
+WarrentyRequest.prototype.ExecuteEndEvent = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	switch(record.data.TypeID)
+	{
+		case "2" : eventID= "<?= EVENT_WAR_END_2 ?>";break;
+		case "3" : eventID= "<?= EVENT_WAR_END_3 ?>";break;
+		case "4" : eventID= "<?= EVENT_WAR_END_4 ?>";break;
+		case "6" : eventID= "<?= EVENT_WAR_END_6 ?>";break;
+		case "7" : eventID= "<?= EVENT_WAR_END_7 ?>";break;
+		default  : eventID= "<?= EVENT_WAR_END_other ?>";break;
+	}
+	framework.ExecuteEvent(eventID, new Array(record.data.RequestID));
+}
+
+WarrentyRequest.prototype.ExecuteCancelEvent = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	switch(record.data.TypeID)
+	{
+		case "2" : eventID= "<?= EVENT_WAR_CANCEL_2 ?>";break;
+		case "3" : eventID= "<?= EVENT_WAR_CANCEL_3 ?>";break;
+		case "4" : eventID= "<?= EVENT_WAR_CANCEL_4 ?>";break;
+		case "6" : eventID= "<?= EVENT_WAR_CANCEL_6 ?>";break;
+		case "7" : eventID= "<?= EVENT_WAR_CANCEL_7 ?>";break;
+		default  : eventID= "<?= EVENT_WAR_CANCEL_other ?>";break;
+	}
+	framework.ExecuteEvent(eventID, new Array(
+			record.data.RequestID,
+			this.CancelWin.down('[name=extradays]').getValue(),
+			this.CancelWin.down('[name=CancelDate]').getRawValue()
+	),"WarrentyRequestObject.AfterExecuteEvent");
+}
+
+WarrentyRequest.prototype.ExecuteReduceEvent = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	switch(record.data.TypeID)
+	{
+		case "2" : eventID= "<?= EVENT_WAR_SUB_2 ?>";break;
+		case "3" : eventID= "<?= EVENT_WAR_SUB_3 ?>";break;
+		case "4" : eventID= "<?= EVENT_WAR_SUB_4 ?>";break;
+		case "6" : eventID= "<?= EVENT_WAR_SUB_6 ?>";break;
+		case "7" : eventID= "<?= EVENT_WAR_SUB_7 ?>";break;
+		default  : eventID= "<?= EVENT_WAR_SUB_other ?>";break;
+	}
+	framework.ExecuteEvent(eventID, new Array(
+			record.data.RequestID,
+			this.ReduceWin.down('[name=newAmount]').getValue(),
+			this.ReduceWin.down('[name=ReduceDate]').getRawValue()
+	),"WarrentyRequestObject.AfterExecuteEvent");
+}
+
+WarrentyRequest.prototype.ExecuteExtendEvent = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	switch(record.data.TypeID)
+	{
+		case "2" : eventID= "<?= EVENT_WAR_EXTEND_2 ?>";break;
+		case "3" : eventID= "<?= EVENT_WAR_EXTEND_3 ?>";break;
+		case "4" : eventID= "<?= EVENT_WAR_EXTEND_4 ?>";break;
+		case "6" : eventID= "<?= EVENT_WAR_EXTEND_6 ?>";break;
+		case "7" : eventID= "<?= EVENT_WAR_EXTEND_7 ?>";break;
+		default  : eventID= "<?= EVENT_WAR_EXTEND_other ?>";break;
+	}
+	framework.ExecuteEvent(eventID, new Array(
+			record.data.RefRequestID,
+			record.data.RequestID
+			
+	),"WarrentyRequestObject.AfterExecuteEvent");
+}
+
+
+WarrentyRequest.prototype.AfterExecuteEvent = function(){
+	
+	this.grid.getStore().load();
+	if(this.CancelWin)
+		this.CancelWin.hide();
+	
+	if(this.ReduceWin)
+		this.ReduceWin.hide();
+	
+	if(this.ExtendWin)
+		this.ExtendWin.hide();
+}
 </script>

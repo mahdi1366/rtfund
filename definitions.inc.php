@@ -150,6 +150,7 @@ define("WAR_STEPID_RAW", "100");
 define("WAR_STEPID_CONFIRM", "110");
 define("WAR_STEPID_END", "120");
 define("WAR_STEPID_CANCEL", "130");
+define("WAR_STEPID_REDUCE", "140");
 
 define("CNT_STEPID_RAW", "100");
 define("CNT_STEPID_CONFIRM", "110");
@@ -228,6 +229,41 @@ define("EVENT_CHEQUE_MOSTARAD_inner", 1781);
 define("EVENT_CHEQUE_MOSTARAD_agent", 1779);
 define("EVENT_CHEQUE_BARGASHTMOSTARAD_inner", 1782);
 define("EVENT_CHEQUE_BARGASHTMOSTARAD_agent", 1780);
+
+define("EVENT_WAR_REG_2", 1797);
+define("EVENT_WAR_REG_3", 1809);
+define("EVENT_WAR_REG_4", 1810);
+define("EVENT_WAR_REG_6", 1811);
+define("EVENT_WAR_REG_7", 1812);
+define("EVENT_WAR_REG_other", 1813);
+
+define("EVENT_WAR_CANCEL_2", 1814);
+define("EVENT_WAR_CANCEL_3", 1815);
+define("EVENT_WAR_CANCEL_4", 1816);
+define("EVENT_WAR_CANCEL_6", 1817);
+define("EVENT_WAR_CANCEL_7", 1818);
+define("EVENT_WAR_CANCEL_other", 1819);
+
+define("EVENT_WAR_END_2", 1820);
+define("EVENT_WAR_END_3", 1821);
+define("EVENT_WAR_END_4", 1822);
+define("EVENT_WAR_END_6", 1823);
+define("EVENT_WAR_END_7", 1824);
+define("EVENT_WAR_END_other", 1825);
+
+define("EVENT_WAR_EXTEND_2", 1839);
+define("EVENT_WAR_EXTEND_3", 1840);
+define("EVENT_WAR_EXTEND_4", 1841);
+define("EVENT_WAR_EXTEND_6", 1842);
+define("EVENT_WAR_EXTEND_7", 1843);
+define("EVENT_WAR_EXTEND_other", 1844);
+
+define("EVENT_WAR_SUB_2", 1826);
+define("EVENT_WAR_SUB_3", 1827);
+define("EVENT_WAR_SUB_4", 1828);
+define("EVENT_WAR_SUB_6", 1829);
+define("EVENT_WAR_SUB_7", 1830);
+define("EVENT_WAR_SUB_other", 1831);
 
 //------------- CostCode params -----------
 define("CostCode_param_loan", "3");

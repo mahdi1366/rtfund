@@ -16,6 +16,8 @@ class ExecuteEvent {
 	public $DocObj;
 	
 	public $EventFunction;
+	public $TriggerFunction = "";
+	public $AfterTriggerFunction = "";
 	public $EventFunctionParams;
 	public $Sources;
 	public $tafsilis = array();
@@ -59,6 +61,45 @@ class ExecuteEvent {
 			case EVENT_LOANDAILY_agentPenalty:
 				$this->EventFunction = "EventComputeItems::LoanDaily";
 				break;			
+
+			case EVENT_WAR_CANCEL_2:
+			case EVENT_WAR_CANCEL_3:
+			case EVENT_WAR_CANCEL_4:
+			case EVENT_WAR_CANCEL_6:
+			case EVENT_WAR_CANCEL_7:
+			case EVENT_WAR_CANCEL_other:
+				$this->TriggerFunction = "WAR_requests::EventTrigger_cancel";
+				$this->EventFunction = "EventComputeItems::Warrenty";
+				break;	
+			case EVENT_WAR_REG_2:
+			case EVENT_WAR_REG_3:
+			case EVENT_WAR_REG_4:
+			case EVENT_WAR_REG_6:
+			case EVENT_WAR_REG_7:
+			case EVENT_WAR_REG_other:
+			case EVENT_WAR_END_2:
+			case EVENT_WAR_END_3:
+			case EVENT_WAR_END_4:
+			case EVENT_WAR_END_6:
+			case EVENT_WAR_END_7:
+			case EVENT_WAR_END_other:
+			case EVENT_WAR_EXTEND_2:
+			case EVENT_WAR_EXTEND_3:
+			case EVENT_WAR_EXTEND_4:
+			case EVENT_WAR_EXTEND_6:
+			case EVENT_WAR_EXTEND_7:
+			case EVENT_WAR_EXTEND_other:
+				$this->EventFunction = "EventComputeItems::Warrenty";
+				break;	
+			case EVENT_WAR_SUB_2:
+			case EVENT_WAR_SUB_3:
+			case EVENT_WAR_SUB_4:
+			case EVENT_WAR_SUB_6:
+			case EVENT_WAR_SUB_7:
+			case EVENT_WAR_SUB_other:
+				$this->AfterTriggerFunction = "WAR_requests::EventTrigger_reduce";				
+				$this->EventFunction = "EventComputeItems::Warrenty";
+				break;	
 		}
 	}
 	
@@ -86,6 +127,15 @@ class ExecuteEvent {
 			return false;
 		}
 
+		//------------------ run trigger --------------------
+		if($this->TriggerFunction != "")
+			if(!call_user_func($this->TriggerFunction, $this->Sources))
+			{
+				ExceptionHandler::PushException("خطا در اجرای  Trigger");
+				return false;
+			}
+		//---------------------------------------------------
+		
 		if(!$this->DocObj)
 		{
 			$this->DocObj = new ACC_docs();
@@ -109,8 +159,15 @@ class ExecuteEvent {
 				return false;
 			}
 		}
-		//....................................................
-
+		//------------------ run trigger --------------------
+		if($this->AfterTriggerFunction != "")
+			if(!call_user_func($this->AfterTriggerFunction, $this->Sources))
+			{
+				ExceptionHandler::PushException("خطا در اجرای  Trigger");	
+				return false;
+			}
+		//---------------------------------------------------
+		
 		if($pdo == null)
 			$this->pdo->commit();
 		return true;

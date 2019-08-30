@@ -54,7 +54,7 @@ $dg->EnableRowNumber = false;
 $dg->hideHeaders = true;
 $dg->EnableSearch = false;
 $dg->ExcelButton = false;
-$dg->collapsible = true;
+//$dg->collapsible = true;
 $grid = $dg->makeGrid_returnObjects();
 
 //--------------------------------------------

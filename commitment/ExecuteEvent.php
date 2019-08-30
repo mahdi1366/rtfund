@@ -11,25 +11,20 @@ require_once './baseinfo/baseinfo.class.php';
 
 $EventID = $_POST["EventID"]*1;
 $Eobj = new COM_events($EventID);
+$CallbackFn = $_POST["CallbackFn"] == "" ? "function(){}" : $_POST["CallbackFn"];
 
 $SourcesArr = array();
 $SourceIDs = "";
 
-if(!empty($_POST["SourceID1"]))
+for($i=1; $i<=5; $i++)
 {
-	$SourcesArr[] = $_POST["SourceID1"];
-	$SourceIDs .= "&SourceID1=" . $_POST["SourceID1"];
+	if(!empty($_POST["SourceID" . $i]))
+	{
+		$SourcesArr[] = $_POST["SourceID" . $i];
+		$SourceIDs .= "&SourceID".$i."=" . $_POST["SourceID" . $i];
+	}	
 }
-if(!empty($_POST["SourceID2"]))
-{
-	$SourcesArr[] = $_POST["SourceID2"];
-	$SourceIDs .= "&SourceID2=" . $_POST["SourceID2"];
-}
-if(!empty($_POST["SourceID3"]))
-{
-	$SourcesArr[] = $_POST["SourceID3"];
-	$SourceIDs .= "&SourceID3=" . $_POST["SourceID3"];
-}
+
 
 if(count($SourcesArr)>0)
 {

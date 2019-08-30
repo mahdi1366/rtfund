@@ -6,6 +6,7 @@
 
 require_once DOCUMENT_ROOT . '/loan/request/request.class.php';
 require_once DOCUMENT_ROOT . '/accounting/cheque/cheque.class.php';
+require_once DOCUMENT_ROOT . '/loan/warrenty/request.class.php';
 
 
 class EventComputeItems {
@@ -307,7 +308,7 @@ class EventComputeItems {
 	
 	//--------------------------------------------------------
 	
-	static function RegisterWarrenty($ItemID, $SourceObjects){
+	static function Warrenty($ItemID, $SourceObjects){
 		
 		$ReqObj = new WAR_requests((int)$SourceObjects[0]);
 				
@@ -316,23 +317,22 @@ class EventComputeItems {
 			case 100 : // مبلغ تعهد ضمانتنامه
 				return $ReqObj->amount;
 				
-			case 101 : 
-				$days = DateModules::GDateMinusGDate($ReqObj->EndDate,$ReqObj->StartDate);
-				$days -= 1;
+			case 101 : // کارمزد ضمانتنامه
+				$days = DateModules::GDateMinusGDate($ReqObj->EndDate,$ReqObj->StartDate)-1;
 				$TotalWage = round($days*$ReqObj->amount*(1-$ReqObj->SavePercent/100)*$ReqObj->wage/36500);	
 				return $TotalWage + $ReqObj->RegisterAmount*1;
 				
-			case 103 :
+			case 103 : //مبلغ سپرده
 				return  $ReqObj->amount*$ReqObj->SavePercent/100;
 				
-			case 110 : 
+			case 110 : // تضامین
 				$dt =  array();
 				$returnArray = array();
 				if(count($dt) == 0)
 				{
 					$dt = PdoDataAccess::runquery("
-						SELECT DocumentID, ParamValue, InfoDesc as DocTypeDesc,t.ParamValue as DocNo
-						FROM DMS_DocParamValues
+						SELECT d.DocumentID, dv.ParamValue, InfoDesc as DocTypeDesc,t.ParamValue as DocNo
+						FROM DMS_DocParamValues dv
 						join DMS_DocParams using(ParamID)
 						join DMS_documents d using(DocumentID)
 						join BaseInfo b on(InfoID=d.DocType AND TypeID=8)
@@ -340,7 +340,7 @@ class EventComputeItems {
 							select d.DocumentID,ParamValue
 							from DMS_DocParamValues join DMS_DocParams using(ParamID)
 							join DMS_documents d using(DocumentID)
-							where Keytitle='no' and ObjectType='loan'
+							where Keytitle='no' and ObjectType='warrenty'
 							group by DocumentID
 						) t on(d.DocumentID=t.DocumentID)
 
@@ -357,9 +357,58 @@ class EventComputeItems {
 					}
 					return $returnArray;
 				}
-		}	
-	}
-	
+				break;
+				
+			case 120 : // کارمزد برگشتی از ابطال
+				$ReqObj->CancelDate = DateModules::shamsi_to_miladi($SourceObjects[2]);
+				
+				$extradays = $ItemID == 120 ? (int)$SourceObjects[1] : 0;		
+				$days = DateModules::GDateMinusGDate($ReqObj->EndDate,$ReqObj->StartDate)-1;
+				$TotalWage = round($days*$ReqObj->amount*(1-($ReqObj->SavePercent/100))*$ReqObj->wage/36500);	
+				
+				$days = DateModules::GDateMinusGDate($ReqObj->CancelDate,$ReqObj->StartDate);
+				$days += $extradays*1;
+				$NewWage = round($days*$ReqObj->amount*(1-($ReqObj->SavePercent/100))*$ReqObj->wage/36500);	
+
+				$RemainWage = $TotalWage-$NewWage;
+				return $RemainWage;
+				
+			case 122 : // کارمزد برگشتی از تقلیل
+				$EndDate = DateModules::shamsi_to_miladi($SourceObjects[2]);
+				$newAmount = (int)$SourceObjects[1];
+				
+				$days = DateModules::GDateMinusGDate($ReqObj->EndDate,$ReqObj->StartDate)-1;
+				$TotalWage = round($days*$ReqObj->amount*(1-($ReqObj->SavePercent/100))*$ReqObj->wage/36500);	
+				
+				$days = DateModules::GDateMinusGDate($EndDate,$ReqObj->StartDate)-1;
+				$Wage1 = round($days*$ReqObj->amount*(1-($ReqObj->SavePercent/100))*$ReqObj->wage/36500);	
+				
+				$days = DateModules::GDateMinusGDate($ReqObj->EndDate,$EndDate)-1;
+				$Wage2 = round($days*$newAmount*(1-($ReqObj->SavePercent/100))*$ReqObj->wage/36500);	
+
+				$RemainWage = $TotalWage-$Wage1-$Wage2;
+				return $RemainWage;
+			
+			case 123 : //اختلاف مبلغ ضمانتنامه در صورت تقلیل
+				$newAmount = (int)$SourceObjects[1];
+				return $ReqObj->amount - $newAmount;
+				
+			case 124 : //اختلاف مبلغ سپرده در صورت تقلیل
+				$newAmount = (int)$SourceObjects[1];
+				return $ReqObj->amount*$ReqObj->SavePercent/100 - $newAmount*$ReqObj->SavePercent/100;
+			
+			case 125 : // مبلغ تمدید ضمانتنامه
+				$newObj = new WAR_requests((int)$SourceObjects[1]);
+				return $newObj->amount;
+				
+			case 126 : // کارمزد تمدید ضمانتنامه
+				$newObj = new WAR_requests((int)$SourceObjects[1]);
+				$days = DateModules::GDateMinusGDate($newObj->EndDate,$newObj->StartDate)-1;
+				$TotalWage = round($days*$newObj->amount*(1-$newObj->SavePercent/100)*$newObj->wage/36500);	
+				return $TotalWage + $newObj->RegisterAmount*1;
+		}
+	} 
+			
 	//--------------------------------------------------------
 	
 	static function FindTafsili($TafsiliType, $ObjectID){
@@ -420,6 +469,43 @@ class EventComputeItems {
 					$t2 = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->LoanPersonID);
 				if($EventRow["TafsiliType3"] == TAFSILITYPE_PERSON && $ReqObj->ReqPersonID*1 > 0)
 					$t3 = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->ReqPersonID);
+				break;
+				
+			case EVENT_WAR_REG_2:
+			case EVENT_WAR_REG_3:
+			case EVENT_WAR_REG_4:
+			case EVENT_WAR_REG_6:
+			case EVENT_WAR_REG_7:
+			case EVENT_WAR_REG_other:
+			case EVENT_WAR_CANCEL_2:
+			case EVENT_WAR_CANCEL_3:
+			case EVENT_WAR_CANCEL_4:
+			case EVENT_WAR_CANCEL_6:
+			case EVENT_WAR_CANCEL_7:
+			case EVENT_WAR_CANCEL_other:
+			case EVENT_WAR_END_2:
+			case EVENT_WAR_END_3:
+			case EVENT_WAR_END_4:
+			case EVENT_WAR_END_6:
+			case EVENT_WAR_END_7:
+			case EVENT_WAR_END_other:
+			case EVENT_WAR_EXTEND_2:
+			case EVENT_WAR_EXTEND_3:
+			case EVENT_WAR_EXTEND_4:
+			case EVENT_WAR_EXTEND_6:
+			case EVENT_WAR_EXTEND_7:
+			case EVENT_WAR_EXTEND_other:
+			case EVENT_WAR_SUB_2:
+			case EVENT_WAR_SUB_3:
+			case EVENT_WAR_SUB_4:
+			case EVENT_WAR_SUB_6:
+			case EVENT_WAR_SUB_7:
+			case EVENT_WAR_SUB_other:
+				$ReqObj = new WAR_requests($params[0]);
+				if($EventRow["TafsiliType1"] == TAFSILITYPE_PERSON)
+					$t1 = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->PersonID);
+				if($EventRow["TafsiliType2"] == TAFSILITYPE_PERSON)
+					$t2 = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->PersonID);
 				break;
 		}
 		return array($t1,$t2,$t3);

@@ -8,6 +8,7 @@ ExecuteEvent.prototype = {
 	TabID : '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix : "<?= $js_prefix_address ?>",
 	EventID : <?= $EventID?>,
+	CallbackFn : "<?= $CallbackFn ?>",
 	SourcesArr : <?= common_component::PHPArray_to_JSObject($SourcesArr) ?>,
 
 	fieldClasses : {
@@ -269,6 +270,7 @@ ExecuteEvent.prototype.RegisterEventDoc = function(){
 				{
 					Ext.MessageBox.alert("", result.data);
 					framework.EventWindow.hide();
+					eval(ExecuteEventObj.CallbackFn + "();");
 				}
 				else
 				{

@@ -24,6 +24,8 @@ switch ($task) {
 
 function selectEventRows(){
 	
+	ini_set("display_errors", "On");
+	
 	$EventID = $_REQUEST["EventID"]*1;
 	$eObj = new ExecuteEvent($EventID);
 	
