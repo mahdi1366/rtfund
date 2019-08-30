@@ -4717,7 +4717,9 @@ function RegisterSalaryDoc($PObj, $pdo){
 			where amount<>0", array(":py" => $PObj->pay_year, ":pm" => $PObj->pay_month, 
 				":pt" => $PObj->payment_type), $pdo);
 	}	
-	 
+	//-------------------------- pay loans ---------------------------
+	//RegisterCustomerPayDoc()
+	//----------------------------------------------------------------
 	if(ExceptionHandler::GetExceptionCount() > 0)
 	{
 		$pdo->rollBack();
