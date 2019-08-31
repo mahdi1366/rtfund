@@ -21,7 +21,7 @@ $rpt->header_color = "white";
 $rpt->header_alignment = "center";
 $rpt->rowNumber = true;
 
-function titleRender($row,$value){
+function subjectRender($row,$value){
 
     if ($row["PreRecordNo"] != ""){
         $title = "";
@@ -33,7 +33,7 @@ function titleRender($row,$value){
 
 }
 $col = $rpt->addColumn("خلاصه مصوبات", "subject");
-$col->renderFunction = "titleRender";
+$col->renderFunction = "subjectRender";
 
 $col = $rpt->addColumn("مسئول پیگیری یا اجرا", "fullname");
 $col->align = "center";
