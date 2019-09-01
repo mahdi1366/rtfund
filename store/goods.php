@@ -45,8 +45,10 @@ function STO_goods() {
 				name: "GoodName",
 				itemId: "GoodName",
 				fieldLabel: "عنوان",
+				width: 480
 			},{
 				xtype: "combo",
+				width: 480,
 				fieldLabel: "مقیاس",
 				itemId: 'ScaleID',
 				store: new Ext.data.Store({
@@ -54,13 +56,13 @@ function STO_goods() {
 						url: this.address_prefix + 'store.data.php?task=SelectGoodScales',
 						reader: {root: 'rows', totalProperty: 'totalCount'}
 					},
-					fields: ['id', 'title'],
+					fields: ['InfoID', 'InfoDesc'],
 					autoLoad: true
 				}),
 				queryMode: 'local',
-				valueField: "id",
+				valueField: "InfoID",
 				name: "ScaleID",
-				displayField: "title"
+				displayField: "InfoDesc"
 			},{
 				xtype: "fieldset",
 				title: "اطلاعات استهلاک",
