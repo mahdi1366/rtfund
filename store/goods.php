@@ -41,13 +41,10 @@ function STO_goods() {
 				labelWidth: 40,
 				hideTrigger: true
 			},{
-				xtype: "textarea",
+				xtype: "textfield",
 				name: "GoodName",
 				itemId: "GoodName",
 				fieldLabel: "عنوان",
-				labelWidth: 40,
-				rows: 5,
-				width: 280
 			},{
 				xtype: "combo",
 				fieldLabel: "مقیاس",
@@ -162,7 +159,7 @@ function STO_goods() {
 			this.Menu.add({
 				text: 'ایجاد رکورد',
 				iconCls: 'add',
-				handler: function(){ STO_goodsObject.BeforeSaveBbudgets("new"); }
+				handler: function(){ STO_goodsObject.BeforeSave("new"); }
 			});
 		if (record.data.id != "source")
 		{   
@@ -170,7 +167,7 @@ function STO_goods() {
 				this.Menu.add({
 					text: 'ویرایش رکورد',
 					iconCls: 'edit',
-					handler: function(){ STO_goodsObject.BeforeSaveBbudgets("edit"); }
+					handler: function(){ STO_goodsObject.BeforeSave("edit"); }
 
 				});
 			
@@ -190,7 +187,7 @@ function STO_goods() {
 
 var STO_goodsObject = new STO_goods();
 
-STO_goods.prototype.BeforeSaveBbudgets = function (mode, obj){
+STO_goods.prototype.BeforeSave = function (mode, obj){
 
 	var record = this.tree.getSelectionModel().getSelection()[0];
 
