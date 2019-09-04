@@ -4,10 +4,56 @@
 // Date:		98.06
 //---------------------------
 require_once '../header.inc.php'; 
-
+require_once inc_dataGrid;
 //................  GET ACCESS  .....................
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
+
+$VariableType_ComboData = array(
+    array("type" => "textfield", "name" => "متنی"),
+    array("type" => "numberfield", "name" => "عددی"),
+    array("type" => "currencyfield", "name" => "مبلغ"), // todo
+    array("type" => "checkbox", "name" => "انتخابی"),
+    array("type" => "combobox", "name" => "لیستی"),
+    array("type" => "filefield", "name" => "فایل"),
+    array("type" => "textarea", "name" => "متن طولاتی"),
+    array("type" => "timefield", "name" => "ساعت"),
+    array("type" => "shdatefield", "name" => "تاریخ"));
+
+$dg = new sadaf_datagrid("atts_grid", $js_prefix_address . "store.data.php?task=SelectProperties");
+
+$col = $dg->addColumn("", "PropertyID", "", true);
+$col = $dg->addColumn("", "GoodID", "", true);
+$col = $dg->addColumn("", "IsActive", "", true);
+
+$col = $dg->addColumn("نام ویژگی", "PropertyTitle", "");
+$col->editor = ColumnEditor::TextField();
+
+$col = $dg->addColumn(" نوع", "PropertyType", "");
+$col->editor = ColumnEditor::ComboBox( $VariableType_ComboData, 'type','name' );
+$col->width = 100;
+
+$col = $dg->addColumn("مقادیر", "PropertyValues");
+$col->editor = ColumnEditor::TextField(true);
+$col->width = 120;
+
+$dg->addButton = true;
+$dg->addHandler = "function(){STO_goodsObject.AddProperty();}";
+
+$dg->enableRowEdit = true;
+$dg->rowEditOkHandler = "function(store,record){STO_goodsObject.SaveProperty(store,record);}";
+
+// $dg->deleteButton = true;
+
+$col = $dg->addColumn("حذف", "", "string");
+$col->renderer = "function(v,p,r){return STO_goods.DeleteRender(v,p,r);}";
+
+$dg->autoExpandColumn = "PropertyTitle";
+$col->width = 70;
+$dg->height = 400;
+$dg->EnablePaging = false;
+$dg->EnableSearch = false;
+$grid = $dg->makeGrid_returnObjects();
 
 ?>
 <script type="text/javascript">
@@ -148,8 +194,7 @@ function STO_goods() {
 		}
 	);
 
-	this.tree.on("itemcontextmenu", function (view, record, item, index, e)
-	{
+	this.tree.on("itemcontextmenu", function (view, record, item, index, e){
 		e.stopEvent();
 		e.preventDefault();
 		view.select(index);
@@ -180,11 +225,36 @@ function STO_goods() {
 					handler: function(){ STO_goodsObject.DeleteGoods(); }
 
 				});
+			
+			if(me.EditAccess)
+				this.Menu.add({
+					text: 'مدیریت مشخصه ها',
+					iconCls: 'list',
+					handler: function(){ STO_goodsObject.ShowProperties(); }
+
+				});
 		}
 	
 		var coords = e.getXY();
 		this.Menu.showAt([coords[0] - 120, coords[1]]);
 	});
+	
+	this.grid = <?= $grid ?>;
+	this.PropertiesWin = new Ext.window.Window({
+		width : 600,
+		title : "آیتم های فرم",
+		bodyStyle : "background-color:white;text-align:-moz-center",
+		height : 450,
+		modal : true,
+		closeAction : "hide",
+		items : this.grid,
+		buttons :[{
+			text : "بازگشت",
+			iconCls : "undo",
+			handler : function(){this.up('window').hide();}
+		}]
+	});
+	Ext.getCmp(this.TabID).add(this.PropertiesWin);
 }
 
 var STO_goodsObject = new STO_goods();
@@ -278,6 +348,104 @@ STO_goods.prototype.SaveGood = function () {
 		failure: function (form, action)
 		{
 		}
+	});
+}
+
+STO_goods.prototype.ShowProperties = function(){
+	
+	var record = this.tree.getSelectionModel().getSelection()[0];
+	this.grid.getStore().proxy.extraParams.GoodID = record.data.id;
+	this.grid.getStore().load();    
+	this.PropertiesWin.show();      
+}
+
+STO_goods.DeleteRender = function(v,p,r){
+	
+	return "<div align='center' title='حذف ' class='remove' onclick='STO_goodsObject.DeleteProperty();' " +
+		"style='background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+STO_goods.prototype.AddProperty = function(){
+	
+	var record = this.tree.getSelectionModel().getSelection()[0];	
+	
+	var modelClass = this.grid.getStore().model;
+	var record = new modelClass({
+		GoodID : record.data.id,
+		PropertyID : "",
+		PropertyTitle : "",
+		PropertyType : ""
+	});
+
+	this.grid.plugins[0].cancelEdit();
+	this.grid.getStore().insert(0, record);
+	this.grid.plugins[0].startEdit(0, 0);
+}
+
+STO_goods.prototype.SaveProperty = function(store,record){
+	
+    mask = new Ext.LoadMask(this.PropertiesWin, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		params: {
+			task: 'SaveProperty',
+			record : Ext.encode(record.data)
+		},
+		url: this.address_prefix +'store.data.php',
+		method: 'POST',
+
+		success: function(response){
+			mask.hide();
+			var st = Ext.decode(response.responseText);
+			if(st.success)
+			{
+				STO_goodsObject.grid.getStore().load();
+			}
+			else
+			{
+				Ext.MessageBox.alert("Error",st.data);
+			}
+		},
+		failure: function(){}
+	});
+}
+
+STO_goods.prototype.DeleteProperty = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	Ext.MessageBox.confirm("", "آیا مایل به حذف می باشید؟", function(btn){
+		if(btn == "no")
+			return;
+		me = STO_goodsObject;
+		
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال حذف ...'});
+		mask.show();
+		
+		Ext.Ajax.request({
+		  	url : me.address_prefix + "store.data.php",
+		  	method : "POST",
+		  	params : {
+		  		task : "DeleteProperty",
+		  		PropertyID : record.data.PropertyID
+		  	},
+		  	success : function(response)
+		  	{
+				mask.hide();
+				result = Ext.decode(response.responseText);
+				if(result.success)
+					STO_goodsObject.grid.getStore().load();
+				else
+				{
+					if(result.data == "")
+						Ext.MessageBox.alert("ERROR", "عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("ERROR", result.data);
+				}
+					
+		  	}
+		});
 	});
 }
 

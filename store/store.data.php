@@ -21,6 +21,10 @@ switch ($task) {
 	case "GetGoodsTree":
 	case "SelectGoodScales":
 		
+	case "SelectProperties":
+	case "SaveProperty":
+	case "DeleteProperty":
+		
 		$task();
 };
 
@@ -57,7 +61,7 @@ function SaveGood() {
         $result = $obj->Add();
     else
         $result = $obj->Edit();
-	
+	//print_r(ExceptionHandler::PopAllExceptions());
     Response::createObjectiveResponse($result, "");
     die();
 }
@@ -88,6 +92,37 @@ function SelectGoodScales(){
 	echo dataReader::getJsonData($list, count($list), $_GET['callback']);
     die();
 } 
+
 //...................................
+
+function SelectProperties(){
+	
+	$dt = STO_GoodProperties::Get(" AND GoodID=? AND IsActive='YES'", array($_GET["GoodID"]));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveProperty(){
+	
+	$obj = new STO_GoodProperties();
+	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	
+	if($obj->PropertyID > 0)
+		$result = $obj->Edit();
+	else
+		$result = $obj->Add();
+
+	//print_r(ExceptionHandler::PopAllExceptions());
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function DeleteProperty(){
+	
+	$obj = new STO_GoodProperties($_POST["PropertyID"]);
+	$result =  $obj->Remove();
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+	die();
+}
 
 ?>
