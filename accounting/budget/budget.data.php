@@ -66,7 +66,7 @@ function SaveBudget() {
     else
         $result = $obj->Edit();
 	
-    Response::createObjectiveResponse($result, "");
+    Response::createObjectiveResponse($result, $obj->BudgetID);
     die();
 }
 
@@ -93,7 +93,7 @@ function GetBudgetTree() {
 	$nodes = PdoDataAccess::runquery("
 			select * from ACC_budgets  where IsActive='YES'
 			order by ParentID,BudgetDesc");
-	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes, "ParentID", "BudgetID", "BudgetDesc");
+	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes, "ParentID", "BudgetID", "BudgetDesc", true);
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo json_encode($returnArr);
 	die();

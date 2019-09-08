@@ -167,6 +167,10 @@ if(isset($_REQUEST["show"]))
 			<td>
 				<table>
 					<tr>
+						<td>شماره وام:</td>
+						<td><b><?= $ReqObj->RequestID ?></b></td>
+					</tr>
+					<tr>
 						<td>معرفی کننده :</td>
 						<td><b><?= $ReqObj->_ReqPersonFullname ?></b></td>
 					</tr>

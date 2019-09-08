@@ -19,6 +19,7 @@ $dg->addColumn("", "CostID", "", true);
 $col = $dg->addColumn('<input type=checkbox onclick=Deposite.CheckAll(this)>', "TafsiliID", "");
 $col->renderer = "Deposite.SelectRender";
 $col->sortable = false;
+$col->width = 40;
 
 $col = $dg->addColumn("حساب", "CostDesc");
 $col->width = 200;
@@ -125,6 +126,18 @@ Deposite.prototype.BeforeComputeProfit = function(ReportMode){
 				labelWidth : 200,
 				fieldLabel : "محاسبه سود تا تاریخ",
 				name : "ToDate"
+			},{
+				xtype : "combo",
+				store : new Ext.data.SimpleStore({
+					data : [
+						['Daily' , "محاسبه روزانه" ],
+						['Monthly' , "محاسبه ماهانه" ]
+					],
+					fields : ['id','value']
+				}),
+				displayField : "value",
+				valueField : "id",
+				name : "ComputeFn"
 			}],
 			closeAction : "hide",
 			buttons : [{

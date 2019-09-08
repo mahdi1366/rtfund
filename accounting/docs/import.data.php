@@ -3432,6 +3432,163 @@ function ComputeCostProfit($CostID, $TafsiliID, $FromDate, $ToDate){
 	return array($DepositeAmount, $TraceArr);
 }
 
+function ComputeProfitMonthly($CostID, $TafsiliID, $FromDate, $ToDate){
+	
+	//------------ get percents ------------------------
+	$percents = PdoDataAccess::runquery_fetchMode("select * from ACC_DepositePercents 
+		where TafsiliID=? AND ToDate>? order by FromDate",array($TafsiliID, $FromDate));
+	if($percents->rowCount() == 0)
+	{
+		echo Response::createObjectiveResponse(false, "در بازه مربوطه درصد سود تفصیلی " . $TafsiliID . " تعریف نشده است");
+		die();
+	}
+	$percentRecord = $percents->fetch();
+	//------------ get last remain of deposites ----------------
+	$dt = PdoDataAccess::runquery("select TafsiliID,CostID,sum(CreditorAmount-DebtorAmount) amount
+		from ACC_DocItems join ACC_docs using(DocID)
+		where DocDate <= :fd 
+			AND CostID =:c
+			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+			AND TafsiliID= :t
+		group by TafsiliID,CostID", array(
+			":fd" => $FromDate,
+			":c" => $CostID,
+			":t" => $TafsiliID));
+	
+	$TraceArr = array();
+	if(count($dt) > 0)
+	{
+		$dt[0]["DocDate"] = $FromDate;
+		$dt[0]["DocDesc"] = "مانده قبل";
+		$TraceArr[] = array(
+			"row" => $dt[0],
+			"remainAmount" => $dt[0]["amount"],
+			"EndDate" => $FromDate,
+			"percent" => $percentRecord["percent"],
+			"ReturnPercent" => $percentRecord["ReturnPercent"],
+			"MaxAmount" => $percentRecord["MaxAmount"],
+			"profit" => 0,
+			"ReturnProfit" => 0,
+			"days" => 0
+		);
+		$DepositeAmount = array(
+			"amount" => $dt[0]["amount"],
+			"lastDate" => $FromDate,
+			"profit" => 0,
+			"ReturnProfit" => 0
+		);
+	}
+	else
+	{
+		$DepositeAmount = array(
+			"amount" => 0,
+			"lastDate" => $FromDate,
+			"profit" => 0,
+			"ReturnProfit" => 0
+		);
+	}	
+
+	//------------ get the Deposite amount -------------
+	$dt = PdoDataAccess::runquery("
+		select CostID,TafsiliID,DocDate,group_concat(details SEPARATOR '<br>') DocDesc,
+		sum(CreditorAmount-DebtorAmount) amount
+		from ACC_DocItems 
+			join ACC_docs using(DocID)
+		where CostID =:c
+			AND DocDate > :fd AND DocDate <= :td
+			AND TafsiliID=:taf
+			AND CycleID=" . $_SESSION["accounting"]["CycleID"] . "
+		group by DocDate
+		order by DocDate", 
+			array(":c" => $CostID,
+				":fd" => $FromDate, 
+				":td" => $ToDate, 
+				":taf" => $TafsiliID));
+
+	$prevDays = 0;
+	for($i=0; $i<count($dt)+1; $i++)
+	{
+		if(!$percentRecord)
+		{
+			echo Response::createObjectiveResponse(false, "در بازه مربوطه درصد سود تفصیلی تعریف نشده است");
+			die();	
+		}
+		if($i < count($dt))
+		{
+			$row = $dt[$i];			
+			$EndDate = $row["DocDate"];
+			if($row["DocDate"] > $percentRecord["ToDate"])
+			{
+				$EndDate = $percentRecord["ToDate"];
+			}
+		}
+		else
+		{
+			$row = array("amount" => 0);
+			$EndDate = $ToDate;
+		}
+		
+		$lastDate = $DepositeAmount["lastDate"];
+		$days = DateModules::GDateMinusGDate($EndDate, $lastDate);
+		if($row["amount"]*1 < 0)
+		{
+			$days--;
+			$days += $prevDays;
+			$prevDays = 1;
+		}
+		else
+		{
+			$days += $prevDays;
+			$prevDays = 0;
+		}
+		
+		//-------------- compute profits ----------------
+		$profit = 0;
+		$returnProfit = 0;
+		$amount = $DepositeAmount["amount"];
+		if($percentRecord["MaxAmount"]*1 > 0 && $amount < $percentRecord["MaxAmount"]*1)
+			$returnProfit = ($percentRecord["MaxAmount"]*1 - $amount) * $days * 
+					$percentRecord["ReturnPercent"] /(36500);
+		else
+			$profit = $amount * $days * $percentRecord["percent"] /(36500);
+		//-----------------------------------------------
+
+		$DepositeAmount["profit"] += $profit;
+		$DepositeAmount["ReturnProfit"] += $returnProfit;
+		$DepositeAmount["lastDate"] = $EndDate;	
+		if($i < count($dt) && $row["DocDate"] != $TraceArr[count($TraceArr)-1]["row"]["DocDate"])
+			$DepositeAmount["amount"] += $row["amount"];
+
+		$TraceArr[count($TraceArr)-1]["days"] = $days;
+		$TraceArr[count($TraceArr)-1]["profit"] = $profit;
+		$TraceArr[count($TraceArr)-1]["ReturnProfit"] = $returnProfit;
+
+		if($i >= count($dt))
+			break;
+		
+		$TraceArr[] = array(
+			"row" => $row,
+			"remainAmount" => $DepositeAmount["amount"],
+			"EndDate" => $EndDate,
+			"percent" => $percentRecord["percent"],
+			"ReturnPercent" => $percentRecord["ReturnPercent"],
+			"MaxAmount" => $percentRecord["MaxAmount"],
+			"days" => 0,
+			"profit" => 0,
+			"ReturnProfit" => 0
+		);
+		
+
+		if($row["DocDate"] > $percentRecord["ToDate"])
+		{
+			$percentRecord = $percents->fetch();
+			$i--;
+		}			
+	}
+	
+	return array($DepositeAmount, $TraceArr);
+}
+
 function ComputeDepositeProfit($ToDate, $TafsiliArr, $ReportMode = false, $IsFlow = false){
 	
 	if(!$ReportMode)

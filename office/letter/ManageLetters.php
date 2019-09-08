@@ -232,9 +232,13 @@ function ManageLetter(){
 		},{
 			xtype : "textfield",
 			name : "context",
-			colspan : 3,
+			colspan : 2,
 			width : 520,
 			fieldLabel : "متن نامه"
+		},{
+			xtype : "textfield",
+			name : "RefLetterID",
+			fieldLabel : "نامه عطف"
 		},{
 			xtype : "textfield",
 			name : "keywords",
