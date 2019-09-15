@@ -25,6 +25,11 @@ switch ($task) {
 	case "SaveProperty":
 	case "DeleteProperty":
 		
+	case "SelectAllAssets":	
+	case "selectPropertyValues":
+	case "SaveAsset":
+	case "DeleteAsset":
+	
 		$task();
 };
 
@@ -38,6 +43,12 @@ function SelectGoods() {
         $where .= ' and ' . $field . ' like :' . $field;
         $param[':' . $field] = '%' . $_REQUEST['query'] . '%';
     }
+	
+	if(!empty($_GET["GoodID"]))
+	{
+		$where .= " AND GoodID=:g";
+		$param[":g"] = (int)$_GET["GoodID"];
+	}
 
 	$list = STO_goods::Get($where . dataReader::makeOrder(), $param);
 	print_r(ExceptionHandler::PopAllExceptions());
@@ -97,7 +108,16 @@ function SelectGoodScales(){
 
 function SelectProperties(){
 	
-	$dt = STO_GoodProperties::Get(" AND GoodID=? AND IsActive='YES'", array($_GET["GoodID"]));
+	$where = " AND IsActive='YES'";
+	$params = array();
+	
+	if(!empty($_GET["GoodID"]))
+	{
+		$where .= " AND GoodID=?";
+		$params[] = (int)$_GET["GoodID"];
+	}
+	
+	$dt = STO_GoodProperties::Get($where, $params);
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
 }
@@ -123,6 +143,77 @@ function DeleteProperty(){
 	$result =  $obj->Remove();
 	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
 	die();
+}
+
+//...................................
+
+function SelectAllAssets() {
+
+    $where = "";
+    $param = array();
+
+    if (!empty($_REQUEST['query'])) {
+		$field = isset($_REQUEST['fields']) ? $_REQUEST['fields'] : "BudgetDesc";
+        $where .= ' and ' . $field . ' like :' . $field;
+        $param[':' . $field] = '%' . $_REQUEST['query'] . '%';
+    }
+
+	$list = STO_Assets::Get($where . dataReader::makeOrder(), $param);
+	print_r(ExceptionHandler::PopAllExceptions());
+    $count = $list->rowCount();
+
+    if (isset($_GET["start"]) && !isset($_GET["All"]))
+        $list = PdoDataAccess::fetchAll($list, $_GET["start"], $_GET["limit"]);
+    else
+        $list = $list->fetchAll();
+
+    echo dataReader::getJsonData($list, $count, $_GET['callback']);
+    die();
+}
+
+function selectPropertyValues(){
+	
+	$dt = STO_AssetProperties::Get(" AND AssetID=?", array((int)$_REQUEST["AssetID"]));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
+
+function SaveAsset() {
+
+    $obj = new STO_Assets();
+    pdoDataAccess::FillObjectByArray($obj, $_POST);
+
+    if ($obj->AssetID == '')
+	{
+		$obj->StatusID = STO_STEPID_RAW;
+		$result = $obj->Add();
+	}
+    else
+        $result = $obj->Edit();
+	
+	//-------------- params ------------------
+	PdoDataAccess::runquery("delete from STO_AssetProperties where AssetID=?", array($obj->AssetID));
+	$arr = array_keys($_POST);
+	foreach($arr as $key)
+	{
+		if(strpos($key, "Property_") !== false)
+		{
+			PdoDataAccess::runquery("insert into STO_AssetProperties values(?,?,?)",
+				array($obj->AssetID, preg_replace("/Property_/", "", $key), $_POST[$key] ));
+		}
+	}
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
+    Response::createObjectiveResponse($result, "");
+    die();
+}
+
+function DeleteAsset() {
+
+	$obj = new STO_Assets($_POST["AssetID"]*1);
+	$result = $obj->remove();
+    Response::createObjectiveResponse($result, '');
+    die();
 }
 
 ?>

@@ -452,20 +452,27 @@ class STO_GoodProperties extends OperationClass {
 }
 
 
-class Asset extends PdoDataAccess {
+class STO_Assets extends OperationClass {
 
+	const TableName = "STO_Assets";
+	const TableKey = "AssetID"; 
+	
     public $AssetID;
+	public $BranchID;
     public $LabelNo;
     public $GoodID;
     public $RegDate;
-    public $amount;
-    public $StatusCode;
-    public $IsOuter;
+	public $amount;
+    public $details;
+    public $BuyDate;
+    public $StatusID;
 
     function __construct($AssetID = "") {
-        if ($AssetID != "")
-            parent::FillObject($this, "select * from STO_assets where AssetID=?", array($AssetID));
-    }
+	
+		$this->DT_BuyDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		
+        return parent::__construct();
+	}
 
     static function CreateAssetPersonsTMPTable($where = '', $JoinCond = ' 1=1 ') {
         parent::runquery("
@@ -502,46 +509,15 @@ class Asset extends PdoDataAccess {
         //parent::runquery("ALTER TABLE STO_TMPAssetPlaces ADD INDEX(AssetID)");
     }
 
-    static function GetAll($where = "", $whereParam = array(), $FullInfo = false) {
-        $query = "select a.*, GoodName, bf.title StatusDesc, 
-				g.depreciateType,g.depreciateRatio"
-                . ($FullInfo == true ? ",GN.Name as OldGoodName,pl.PlaceID,pl.PlaceTitle, a.PersonID, concat(per.pfname,' ',per.plname) as PersonName, GROUP_CONCAT(PropertyTitle, ':', PropertyValue SEPARATOR ',') properties, aoi.*   " : "" ) . " ,a.AssetID
+    static function Get($where = "", $whereParam = array(), $pdo = null) {
+		
+        $query = "select a.*, GoodName, bf.InfoDesc StatusDesc
 			from STO_assets a
 			join STO_goods g using(GoodID)
-			join STO_BaseInfo bf on(TypeID=3 AND bf.InfoID=a.StatusCode)
-			";
-        /* مشخصات هر دارایی را هم برگرداند */
-        if ($FullInfo) {
-            //Asset::CreateAssetPersonsTMPTable("where a.UnitID = " . $_SESSION["STOREUSER"]["UnitID"], " a.UnitID = " . $_SESSION["STOREUSER"]["UnitID"]);
-            //Asset::CreateAssetPlacesTMPTable("where a.UnitID = " . $_SESSION["STOREUSER"]["UnitID"], " a.UnitID = " . $_SESSION["STOREUSER"]["UnitID"]);
-
-            /* مشخصات دارایی */
-            $query .= " LEFT JOIN STO_AssetProperties ap on (ap.AssetID = a.AssetID)
-                        LEFT JOIN STO_GoodProperties gp on (gp.PropertyID = ap.PropertyID) ";
-            /* تحویل گیرنده */
-            /* $query .= " LEFT JOIN STO_TMPAssetPersons per on (per.AssetID = a.AssetID) "
-              . " LEFT JOIN STO_TMPAssetPlaces pl on (pl.AssetID = a.AssetID) "; */
-            $query .= " LEFT JOIN STO_places pl on (pl.PlaceID = a.PlaceID)
-                        LEFT JOIN hrmstotal.persons per on (per.PersonId = a.PersonID) ";
-            /* Old Info */
-            $query .= " left JOIN STO_AssetsOldInfo aoi ON (a.AssetID = aoi.AssetID) "
-                    . " left join goods.MainGood on (goods.MainGood.Label = aoi.OldLabel and IF(aoi.OldLabelId>0 , goods.MainGood.id = aoi.OldLabelID ,1=1) and
-                    (goods.MainGood.FormNo = aoi.OldFormNo      
-                    OR
-                    (goods.MainGood.FormNo != aoi.OldFormNo and goods.MainGood.OldFormNo = aoi.OldFormNo))
-                    and goods.MainGood.UnitID =  ( Select OldUnitID FROM STO_units where STO_units.UnitID= " . $_SESSION['STOREUSER']['UnitID'] . ")
-                        and (goods.MainGood.removeReason='' or goods.MainGood.removeReason='-1')
-                    )
-                    left join goods.GoodNames GN on (goods.MainGood.GoodId = GN.id) 
-            ";            
-        }        
-        if (isset($whereParam[':DocID'])){
-            $query .= " join STO_AssetDocItems adi on (adi.AssetID = a.AssetID) ";
-        }
-        $query .= ($where != "") ? " where " . $where : "";
-        $query .= " group by a.AssetID ";
-        $query .= dataReader::makeOrder();
-        return parent::runquery_fetchMode($query, $whereParam);
+			join BaseInfo bf on(TypeID=95 AND bf.InfoID=a.StatusID)
+			where 1=1 " . $where;
+        
+        return parent::runquery_fetchMode($query, $whereParam, $pdo);
     }
 
     static function IsValidLabelNo($labelNo, $UnitID = '') {
@@ -686,20 +662,6 @@ class Asset extends PdoDataAccess {
         return false;
     }
 
-    static function remove($where = '1=1', $whereParams = array(), $pdo = null) {
-        $q = "delete from STO_assets where $where";
-        if (parent::runquery($q, $whereParams, $pdo) === false) {
-            echo "**";
-            print_r(parent::PopAllExceptions());
-            return false;
-        }
-        $daObj = new DataAudit();
-        $daObj->ActionType = DataAudit::Action_delete;
-        $daObj->MainObjectID = PdoDataAccess::InsertID($pdo);
-        $daObj->TableName = "STO_assets";
-        $daObj->execute($pdo);
-        return true;
-    }
 
     static function AreAssetsRemoveable($assets, $pdo = null) {
         $res = parent::runquery("select count(*) from STO_AssetDocItems where AssetID in ($assets)", array(), $pdo);
@@ -835,71 +797,7 @@ class Asset extends PdoDataAccess {
         return $obj->Edit($pdo);
     }
 
-    function Add($DocID = "", $ReceiptID = "", $pdo = null, $FakeDate = false) {
-        if (!parent::insert("STO_assets", $this, $pdo))
-            return false;
-
-        $this->AssetID = parent::InsertID($pdo);
-
-        $daObj = new DataAudit();
-        $daObj->ActionType = DataAudit::Action_add;
-        $daObj->MainObjectID = $this->AssetID;
-        $daObj->TableName = "STO_assets";
-        $daObj->execute($pdo);
-
-
-        //--------- add asset doc ---------------
-        if ($DocID != -1) {
-            if ($DocID != "") {
-                $obj = new AssetDoc($DocID);
-                if ($obj->DocStatus == "ACC_CONFIRM") {
-                    ExceptionHandler::PushException("AccConfirmError");
-                    return false;
-                }
-            }
-
-            if ($DocID == "" || empty($obj->DocID)) {
-                $obj = new AssetDoc();
-                $obj->DocDate = $FakeDate == false ? PDONOW : $FakeDate;
-                $obj->RegDate = PDONOW;
-                $obj->DocMode = "inner";
-                $obj->ReceiptID = $ReceiptID;
-                $obj->DocType = 1;
-                $obj->DocStatus = 'CONFIRM';
-                $obj->RegPersonID = $_SESSION["User"]->PersonID;
-                $obj->UnitID = $_SESSION["STOREUSER"]["UnitID"];
-                $obj->PeriodID = $_SESSION["STOREUSER"]["PeriodID"];
-                if (!$obj->Add($pdo))
-                    return false;
-            }
-            $dobj = new STO_AssetDocItems();
-            $dobj->AssetID = $this->AssetID;
-            $dobj->DocID = $obj->DocID;
-            $dobj->StatusCode = 1;
-            if (!empty($_REQUEST['description']))
-                $dobj->description = $_REQUEST['description'];
-            if (!$dobj->Add($pdo))
-                return false;
-        }
-        //----------------------------------------
-        return $obj->DocID;
-    }
-
-    function Edit($pdo = null) {
-        $whereParams = array();
-        $whereParams[":aid"] = $this->AssetID;
-
-        if (parent::update("STO_assets", $this, " AssetID=:aid", $whereParams, $pdo) === false)
-            return false;
-
-        $daObj = new DataAudit();
-        $daObj->ActionType = DataAudit::Action_update;
-        $daObj->MainObjectID = $this->AssetID;
-        $daObj->TableName = "STO_assets";
-        $daObj->execute();
-        return true;
-    }
-
+   
     function CopyAsset($ToLabelNo, $DocID, $pdo = null) {
         $SameAsset = new Asset($this->AssetID);
         unset($SameAsset->AssetID);
@@ -1176,56 +1074,27 @@ class Asset extends PdoDataAccess {
 
 }
 
-class STO_AssetProperties extends PdoDataAccess {
+class STO_AssetProperties extends OperationClass {
 
+	const TableName = "STO_AssetProperties";
+	const TableKey = "AssetID"; 
+	
     public $AssetID;
     public $PropertyID;
     public $PropertyValue;
 
-    function Add($pdo = null) {
-        if (parent::insert("STO_AssetProperties", $this, $pdo) === false)
-            return false;
+}
 
-        $daObj = new DataAudit();
-        $daObj->ActionType = DataAudit::Action_add;
-        $daObj->MainObjectID = $this->AssetID;
-        $daObj->SubObjectID = $this->PropertyID;
-        $daObj->TableName = "STO_assets";
-        $daObj->execute();
-        return true;
-    }
-
-    static function removeAll($AssetID, $pdo = null) {
-        parent::delete("STO_AssetProperties", "AssetID=?", array($AssetID), $pdo);
-    }
-
-    static function remove($where = '1=1', $whereParams = array(), $pdo = null) {
-        $q = "delete from STO_AssetProperties where $where";
-        if (parent::runquery($q, $whereParams, $pdo) === false) {
-            echo "**";
-            print_r(parent::PopAllExceptions());
-            return false;
-        }
-        $daObj = new DataAudit();
-        $daObj->ActionType = DataAudit::Action_delete;
-        $daObj->MainObjectID = PdoDataAccess::InsertID($pdo);
-        $daObj->TableName = "STO_AssetProperties";
-        $daObj->execute($pdo);
-        return true;
-    }
-
-    function copyAssetProperties($ToAssetID, $pdo = null) {
-        $properties = parent::runquery("SELECT * FROM STO_AssetProperties where AssetID = ?", array($this->AssetID));
-        $New = new STO_AssetProperties();
-        $New->AssetID = $ToAssetID;
-        foreach ($properties as $property) {
-            $New->PropertyID = $property['PropertyID'];
-            $New->PropertyValue = $property['PropertyValue'];
-            if (!$New->Add($pdo))
-                return false;
-        }
-        return true;
-    }
-
+class STO_AssetFlow extends OperationClass{
+	
+	const TableName = "STO_AssetFlow";
+	const TableKey = "FlowID"; 
+	
+	public $FlowID;
+	public $AssetID;
+	public $ActDate;
+	public $ActPersonID;
+	public $StatusID;
+	public $IsUsable;	
 }
 ?>

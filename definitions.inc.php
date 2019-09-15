@@ -187,6 +187,9 @@ define("ACC_COST_PARAM_BANK", "1");
 define("DEFRAYLOAN_VOTEFORM", "9");
 define("DEFRAYLOAN_WFMFORM", "16");
 
+//---------- typeID=95 ------------
+define("STO_STEPID_RAW", "1");
+
 //------------ events ---------------
 define("EVENT_LOAN_ALLOCATE", 131);
 
