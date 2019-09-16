@@ -222,7 +222,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$itemObj->CostID = $CostCode_Loan;
 		$itemObj->DebtorAmount = $amount;
 		$itemObj->CreditorAmount = 0;
-		$itemObj->Add($pdo);
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد ردیف وام");
+			return false;
+		}
 		
 		if($PartObj->PartAmount != $PayAmount)
 		{
@@ -238,7 +242,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			}
 			$itemObj->DebtorAmount = 0;
 			$itemObj->CreditorAmount = $PartObj->PartAmount*1 - $PayAmount;
-			$itemObj->Add($pdo);
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف تودیعی" . "200-". $LoanObj->_BlockCode."-01");
+				return false;
+			}
 		}
 	}
 	else
@@ -250,7 +258,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 			$itemObj->CostID = $CostCode_Loan;
 			$itemObj->DebtorAmount = $extraAmount;
 			$itemObj->CreditorAmount = 0;
-			$itemObj->Add($pdo);
+			if(!$itemObj->Add($pdo))
+			{
+				ExceptionHandler::PushException("خطا در ایجاد ردیف برگشت وام");
+				return false;
+			}
 		}
 		
 		unset($itemObj->ItemID);
@@ -262,7 +274,11 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$itemObj->TafsiliID = $LoanPersonTafsili;
 		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID2 = $ReqPersonTafsili;
-		$itemObj->Add($pdo);
+		if(!$itemObj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد ردیف برگشت تودیعی");
+			return false;
+		}
 	}
 	//------------------------ delay -------------------------------
 	$totalAgentYearAmount = 0;

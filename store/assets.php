@@ -15,6 +15,7 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "store.data.php?task=SelectA
 
 $dg->addColumn("", "AssetID", "", true);
 $dg->addColumn("", "GoodID", "", true);
+$dg->addColumn("", "BranchID", "", true);
 $dg->addColumn("", "StatusID", "", true);
 
 $col = $dg->addColumn("شماره پلاک", "LabelNo");
@@ -29,10 +30,10 @@ $col->width = 100;
 $col = $dg->addColumn("جزئیات", "details");
 
 $col = $dg->addColumn("تاریخ خرید", "BuyDate", GridColumn::ColumnType_date);
-$col->width = 70;
+$col->width = 100;
 
-$col = $dg->addColumn("وضعیت", "StepDesc", "");
-$col->width = 80;
+$col = $dg->addColumn("وضعیت", "StatusDesc", "");
+$col->width = 120;
 
 $col = $dg->addColumn('عملیات', '', 'string');
 $col->renderer = "STO_Asset.OperationRender";
@@ -49,6 +50,54 @@ $dg->title = "لیست اموال";
 $dg->DefaultSortField = "LabelNo";
 $dg->autoExpandColumn = "details";
 $grid = $dg->makeGrid_returnObjects();
+		
+//-------------------------------------------------------------
+		
+$dg = new sadaf_datagrid("dg", $js_prefix_address . "store.data.php?task=SelectAllAssetFlow");
+
+$dg->addColumn("", "AssetID", "", true);
+$dg->addColumn("", "FlowID", "", true);
+$dg->addColumn("", "StatusDesc", "", true);
+
+$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=95");
+$col = $dg->addColumn("وضعیت", "StatusID", "");
+$col->editor = ColumnEditor::ComboBox($dt, "InfoID", "InfoDesc");
+$col->renderer = "function(v,p,r){return r.data.StatusDesc;}";
+$col->width = 120;
+
+$col = $dg->addColumn("تاریخ عملیات", "ActDate", GridColumn::ColumnType_date);
+$col->width = 100;
+
+$col = $dg->addColumn("عامل", "ActFullname");
+$col->width = 100;
+
+$col = $dg->addColumn("درحال بهره برداری", "IsUasable");
+$col->renderer = sadaf_datagrid::checkRender();
+$col->width = 100;
+
+$col = $dg->addColumn("مبلغ جدید", "NewAmount", GridColumn::ColumnType_money);
+$col->width = 100;
+
+$col = $dg->addColumn("تحویل گیرنده", "ReceiverFullName");
+$col->width = 100;
+
+$col = $dg->addColumn("توضیحات", "details");
+
+$col = $dg->addColumn('عملیات', '', 'string');
+$col->renderer = "STO_Asset.OperationRender";
+$col->width = 50;
+$col->align = "center";
+
+if($accessObj->AddFlag)
+	$dg->addButton("", "ایجاد گردش جدید", "add", "function(){STO_AssetObject.AddNewFlow();}");
+
+$dg->emptyTextOfHiddenColumns = true;
+$dg->height = 400;
+$dg->width = 800;
+$dg->title = "گردش اموال";
+$dg->DefaultSortField = "FlowID";
+$dg->autoExpandColumn = "details";
+$grid2 = $dg->makeGrid_returnObjects();
 ?>
 <script>
 //-----------------------------
@@ -73,6 +122,17 @@ function STO_Asset(){
 	
 	this.grid = <?= $grid ?>;
 	this.grid.render(this.get("DivGrid"));
+	this.grid.on("itemdblclick", function(view, record){
+		
+		me = STO_AssetObject;
+		me.FlowGrid.getStore().proxy.extraParams.AssetID = record.data.AssetID;
+		if(!me.FlowGrid.rendered)
+			me.FlowGrid.render(me.get("DivGridFlow"));
+		else
+			me.FlowGrid.getStore().load();
+	});
+	
+	this.FlowGrid = <?= $grid2 ?>;
 	
 	this.ParamsStore = new Ext.data.Store({
 		fields:["GoodID","PropertyID","PropertyTitle","PropertyType", "PropertyValues"],
@@ -126,7 +186,7 @@ function STO_Asset(){
 		},{
 			xtype : "textfield",
 			fieldLabel : "شماره پلاک",
-			name : "SubjectNO",
+			name : "LabelNo",
 			colspan : 2
 		},{
 			xtype : "combo",
@@ -147,7 +207,7 @@ function STO_Asset(){
 			fieldLabel : "کالا",
 			listeners :{
 				select : function(combo,records){
-					STO_AssetObject.LoadProperties(records[0]);
+					STO_AssetObject.LoadProperties(records[0].data.GoodID);
 				}
 			}
 		},{
@@ -167,6 +227,12 @@ function STO_Asset(){
 			itemId : "ParamsFS",
 			layout : "column",
 			columns : 2
+		},{
+			xtype : "textarea",
+			name : "details",
+			fieldLabel : "جزئیات",
+			colspan : 2,
+			width : 600
 		},{
 			xtype : "hidden",
 			name : "AssetID"
@@ -221,11 +287,8 @@ STO_Asset.prototype.OperationMenu = function(e){
 	{
 	}
 	
-	op_menu.add({text: 'چاپ ضمانت نامه',iconCls: 'print',
-			handler : function(){ return STO_AssetObject.Print(); }});
-	
 	op_menu.add({text: 'مدارک اموال',iconCls: 'attach', 
-		handler : function(){ return STO_AssetObject.WarrentyDocuments('asset'); }});
+		handler : function(){ return STO_AssetObject.Documents('asset'); }});
 
 	op_menu.add({text: 'سابقه اموال',iconCls: 'history', 
 		handler : function(){ return STO_AssetObject.ShowHistory(); }});
@@ -277,6 +340,9 @@ STO_Asset.prototype.LoadProperties = function(GoodID){
 	AssetID = this.MainPanel.down("[name=AssetID]").getValue();
 	if(AssetID > 0)
 	{
+		pmask = new Ext.LoadMask(this.MainPanel, {msg:'در حال بارگذاری ...'});
+		pmask.show();
+		
 		this.PropertyValuesStore.load({
 			params : {
 				AssetID : AssetID
@@ -284,9 +350,11 @@ STO_Asset.prototype.LoadProperties = function(GoodID){
 			callback : function(){
 				store = STO_AssetObject.PropertyValuesStore;
 				store.each(function(record){
-					me.MainPanel.down("[name=Property_" + 
+					STO_AssetObject.MainPanel.down("[name=Property_" + 
 						record.data.PropertyID + "]").setValue(record.data.PropertyValue);
 				});
+				
+				pmask.hide();
 			}
 		});
 	}					
@@ -379,7 +447,7 @@ STO_Asset.prototype.SaveAsset = function(){
 	});
 }
 
-STO_Asset.prototype.WarrentyDocuments = function(ObjectType){
+STO_Asset.prototype.Documents = function(ObjectType){
 
 	if(!this.documentWin)
 	{
@@ -490,6 +558,6 @@ STO_AssetObject = new STO_Asset();
 </script>
 <center><br>
 	<div><div id="AssetInfo"></div></div>
-	<br>
+	<div id="DivGridFlow" style="margin: 10px 0 10px"></div>
 	<div id="DivGrid" style="width: 98%"></div>	
 </center>

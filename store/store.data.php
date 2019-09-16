@@ -30,6 +30,8 @@ switch ($task) {
 	case "SaveAsset":
 	case "DeleteAsset":
 	
+	case "SelectAllAssetFlow":
+		
 		$task();
 };
 
@@ -187,6 +189,7 @@ function SaveAsset() {
 	{
 		$obj->StatusID = STO_STEPID_RAW;
 		$result = $obj->Add();
+		STO_AssetFlow::AddFlow($obj->AssetID, $obj->StatusID);
 	}
     else
         $result = $obj->Edit();
@@ -210,10 +213,35 @@ function SaveAsset() {
 
 function DeleteAsset() {
 
-	$obj = new STO_Assets($_POST["AssetID"]*1);
+	$obj = new STO_Assets((int)$_POST["AssetID"]);
 	$result = $obj->remove();
     Response::createObjectiveResponse($result, '');
     die();
 }
 
+//...................................
+
+function SelectAllAssetFlow(){
+	
+	$where = "";
+    $param = array();
+
+    if (!empty($_REQUEST['query'])) {
+		$field = isset($_REQUEST['fields']) ? $_REQUEST['fields'] : "BudgetDesc";
+        $where .= ' and ' . $field . ' like :' . $field;
+        $param[':' . $field] = '%' . $_REQUEST['query'] . '%';
+    }
+
+	$list = STO_AssetFlow::Get($where . dataReader::makeOrder(), $param);
+	print_r(ExceptionHandler::PopAllExceptions());
+    $count = $list->rowCount();
+
+    if (isset($_GET["start"]) && !isset($_GET["All"]))
+        $list = PdoDataAccess::fetchAll($list, $_GET["start"], $_GET["limit"]);
+    else
+        $list = $list->fetchAll();
+
+    echo dataReader::getJsonData($list, $count, $_GET['callback']);
+    die();
+}
 ?>
