@@ -72,13 +72,16 @@ $col = $dg->addColumn("عامل", "ActFullname");
 $col->width = 100;
 
 $col = $dg->addColumn("درحال بهره برداری", "IsUasable");
+$col->editor = ColumnEditor::CheckField();
 $col->renderer = sadaf_datagrid::checkRender();
 $col->width = 100;
 
 $col = $dg->addColumn("مبلغ جدید", "NewAmount", GridColumn::ColumnType_money);
+$col->editor = ColumnEditor::CurrencyField(true);
 $col->width = 100;
 
 $col = $dg->addColumn("تحویل گیرنده", "ReceiverFullName");
+$col->editor = "this.PersonCombo";
 $col->width = 100;
 
 $col = $dg->addColumn("توضیحات", "details");
@@ -130,6 +133,21 @@ function STO_Asset(){
 			me.FlowGrid.render(me.get("DivGridFlow"));
 		else
 			me.FlowGrid.getStore().load();
+	});
+	
+	this.PersonCombo = new Ext.form.ComboBox({
+		store: new Ext.data.Store({
+			proxy:{
+				type: 'jsonp',
+				url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
+				reader: {root: 'rows',totalProperty: 'totalCount'}
+			},
+			fields :  ['PersonID','fullname']
+		}),
+		fieldLabel : "کاربر",
+		displayField: 'fullname',
+		valueField : "PersonID",
+		width : 400
 	});
 	
 	this.FlowGrid = <?= $grid2 ?>;
