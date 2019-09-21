@@ -31,6 +31,8 @@ switch ($task) {
 	case "DeleteAsset":
 	
 	case "SelectAllAssetFlow":
+	case "SaveFlow":
+	case "DeleteFlow":
 		
 		$task();
 };
@@ -223,14 +225,16 @@ function DeleteAsset() {
 
 function SelectAllAssetFlow(){
 	
-	$where = "";
-    $param = array();
+	$where = " AND af.IsActive='YES' AND AssetID=:a";
+    $param = array(":a" => $_REQUEST["AssetID"]);
 
     if (!empty($_REQUEST['query'])) {
 		$field = isset($_REQUEST['fields']) ? $_REQUEST['fields'] : "BudgetDesc";
         $where .= ' and ' . $field . ' like :' . $field;
         $param[':' . $field] = '%' . $_REQUEST['query'] . '%';
     }
+	
+	
 
 	$list = STO_AssetFlow::Get($where . dataReader::makeOrder(), $param);
 	print_r(ExceptionHandler::PopAllExceptions());
@@ -244,4 +248,34 @@ function SelectAllAssetFlow(){
     echo dataReader::getJsonData($list, $count, $_GET['callback']);
     die();
 }
+
+function SaveFlow() {
+
+    $obj = new STO_AssetFlow();
+    pdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	$obj->IsUsable = $obj->IsUsable == "true" ? "YES" : "NO";
+	
+	
+    if ($obj->FlowID == '')
+	{
+		$obj->ActDate = PDONOW;
+		$obj->ActPersonID = $_SESSION["USER"]["PersonID"];
+		$result = $obj->Add();
+	}
+    else
+        $result = $obj->Edit();
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
+    Response::createObjectiveResponse($result, "");
+    die();
+}
+
+function DeleteFlow() {
+
+	$obj = new STO_AssetFlow((int)$_POST["FlowID"]);
+	$result = $obj->remove();
+    Response::createObjectiveResponse($result, '');
+    die();
+}
+
 ?>

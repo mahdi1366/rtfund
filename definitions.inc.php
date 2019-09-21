@@ -189,7 +189,7 @@ define("DEFRAYLOAN_WFMFORM", "16");
 
 //---------- typeID=95 ------------
 define("STO_STEPID_RAW", "1");
-
+define("STO_STEPID_DEPRICATE", "4");
 //------------ events ---------------
 define("EVENT_LOAN_ALLOCATE", 131);
 

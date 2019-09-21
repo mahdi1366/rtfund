@@ -56,8 +56,10 @@ $grid = $dg->makeGrid_returnObjects();
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "store.data.php?task=SelectAllAssetFlow");
 
 $dg->addColumn("", "AssetID", "", true);
+$dg->addColumn("", "IsLock", "", true);
 $dg->addColumn("", "FlowID", "", true);
 $dg->addColumn("", "StatusDesc", "", true);
+$dg->addColumn("", "ReceiverFullName", "", true);
 
 $dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=95");
 $col = $dg->addColumn("وضعیت", "StatusID", "");
@@ -71,34 +73,50 @@ $col->width = 100;
 $col = $dg->addColumn("عامل", "ActFullname");
 $col->width = 100;
 
-$col = $dg->addColumn("درحال بهره برداری", "IsUasable");
-$col->editor = ColumnEditor::CheckField();
-$col->renderer = sadaf_datagrid::checkRender();
-$col->width = 100;
-
-$col = $dg->addColumn("مبلغ جدید", "NewAmount", GridColumn::ColumnType_money);
-$col->editor = ColumnEditor::CurrencyField(true);
-$col->width = 100;
-
-$col = $dg->addColumn("تحویل گیرنده", "ReceiverFullName");
-$col->editor = "this.PersonCombo";
-$col->width = 100;
-
-$col = $dg->addColumn("توضیحات", "details");
-
-$col = $dg->addColumn('عملیات', '', 'string');
-$col->renderer = "STO_Asset.OperationRender";
-$col->width = 50;
+$col = $dg->addColumn("بهره برداری", "IsUsable");
+$col->editor = ColumnEditor::CheckField("", "YES");
+$col->renderer = sadaf_datagrid::checkRender('YES');
+$col->width = 70;
 $col->align = "center";
 
+$col = $dg->addColumn("مبلغ", "amount", GridColumn::ColumnType_money);
+$col->editor = ColumnEditor::CurrencyField(true);
+$col->width = 90;
+
+$col = $dg->addColumn("مبلغ استهلاک", "DepreciationAmount", GridColumn::ColumnType_money);
+$col->width = 90;
+$col->summaryType = 'sum';
+
+$col = $dg->addColumn("تحویل گیرنده", "ReceiverPersonID");
+$col->renderer = "function(v,p,r){return r.data.ReceiverFullName;}";
+$col->editor = "this.PersonCombo";
+$col->width = 150;
+
+$col = $dg->addColumn("توضیحات", "details");
+$col->editor = ColumnEditor::TextArea(true);
+
 if($accessObj->AddFlag)
+{
 	$dg->addButton("", "ایجاد گردش جدید", "add", "function(){STO_AssetObject.AddNewFlow();}");
+	$dg->enableRowEdit = true;
+	$dg->rowEditOkHandler = "function(v,p,r){ return STO_AssetObject.SaveFlow(v,p,r);}";
+}
+
+if($accessObj->RemoveFlag)
+{
+	$col = $dg->addColumn('عملیات', '', 'string');
+	$col->renderer = "STO_Asset.DeleteFlowRender";
+	$col->width = 50;
+	$col->align = "center";
+}
+
+$dg->EnableSummaryRow = true;
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 400;
-$dg->width = 800;
+$dg->width = 900;
 $dg->title = "گردش اموال";
-$dg->DefaultSortField = "FlowID";
+$dg->DefaultSortField = "ActDate";
 $dg->autoExpandColumn = "details";
 $grid2 = $dg->makeGrid_returnObjects();
 ?>
@@ -142,15 +160,27 @@ function STO_Asset(){
 				url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
-			fields :  ['PersonID','fullname']
+			fields :  ['PersonID','fullname'],
+			autoLoad : true
 		}),
-		fieldLabel : "کاربر",
 		displayField: 'fullname',
-		valueField : "PersonID",
-		width : 400
+		valueField : "PersonID"
 	});
 	
 	this.FlowGrid = <?= $grid2 ?>;
+	this.FlowGrid.plugins[0].on("beforeedit",function(rowEditor,e){
+	
+		var record = STO_AssetObject.FlowGrid.getStore().getAt(e.rowIdx);
+		if(record.data.IsLock == "YES")
+			return false;
+		return true;
+	});
+	this.FlowGrid.getView().getRowClass = function (record, index)
+	{
+		if (record.data.IsLock == "YES")
+			return "violetRow";
+		return "";
+	}
 	
 	this.ParamsStore = new Ext.data.Store({
 		fields:["GoodID","PropertyID","PropertyTitle","PropertyType", "PropertyValues"],
@@ -572,6 +602,82 @@ STO_Asset.prototype.deleteAsset = function(){
 	});
 }
 
+STO_Asset.DeleteFlowRender = function(v,p,r){
+	
+	if (r.data.IsLock == "YES")
+		return "";
+	
+	return "<div align='center' title='حذف' class='remove' "+
+	"onclick='STO_AssetObject.DeleteFlow();' " +
+	"style='background-repeat:no-repeat;background-position:center;" +
+	"cursor:pointer;width:100%;height:16'></div>";
+}
+
+STO_Asset.prototype.DeleteFlow = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایل به حذف می باشید؟",function(btn){
+		if(btn == "no")
+			return;
+		
+		me = STO_AssetObject;
+		record = me.FlowGrid.getSelectionModel().getLastSelected();
+		
+		mask = new Ext.LoadMask(me.FlowGrid, {msg:'در حال ذخيره سازي...'});
+		mask.show();  
+
+		Ext.Ajax.request({
+			methos : "post",
+			url : me.address_prefix + "store.data.php",
+			params : {
+				task : "DeleteFlow",
+				FlowID : record.data.FlowID
+			},
+
+			success : function(response){
+				result = Ext.decode(response.responseText);
+				mask.hide();
+				if(result.success)
+				{
+					STO_AssetObject.FlowGrid.getStore().load();
+				}
+				else
+					Ext.MessageBox.alert("Error",result.data);
+			}
+		});
+	});
+}
+
+STO_Asset.prototype.AddNewFlow = function(){
+	
+	var modelClass = this.FlowGrid.getStore().model;
+	var record = new modelClass({
+		AssetID : this.FlowGrid.getStore().proxy.extraParams.AssetID,
+		FlowID : null,
+		IsLock : "NO"
+
+	});
+	this.FlowGrid.plugins[0].cancelEdit();
+	this.FlowGrid.getStore().insert(0, record);
+	this.FlowGrid.plugins[0].startEdit(0, 0);
+}
+
+STO_Asset.prototype.SaveFlow = function(store,record,op){
+	
+	mask = new Ext.LoadMask(this.FlowGrid, {msg:'در حال ذخيره سازي...'});
+	mask.show();    
+	Ext.Ajax.request({
+		url: this.address_prefix + 'store.data.php?task=SaveFlow',
+		params:{
+			record : Ext.encode(record.data)
+		},
+		method: 'POST',
+		success: function(response,option){
+			mask.hide();
+			STO_AssetObject.FlowGrid.getStore().load();
+		},
+		failure: function(){}
+	});
+}
 STO_AssetObject = new STO_Asset();
 </script>
 <center><br>
