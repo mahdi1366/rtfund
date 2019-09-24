@@ -184,11 +184,9 @@ $index = rand(0, count($pics)-1);
 							document.getElementById("RegisterErrorDiv").innerHTML = "با این کدملی / شناسه ملی قبلا ثبت نام انجام شده است";
 							break;
 						default:
-							/*document.getElementById("RegisterErrorDiv").innerHTML = 
-									"ثبت نام شما با موفقیت انجام شد. نتیجه از طریق ایمیل بعد از حداکثر یک روز کاری به شما اطلاع داده خواهد شد";
-							document.getElementById("RegisterErrorDiv").className = "success";*/
+							
 							document.getElementById("RegisterErrorDiv").style.display = "none";
-							window.location = xmlhttp.responseText;
+							//window.location = xmlhttp.responseText;
 					}
 				}
 			}
