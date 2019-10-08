@@ -84,14 +84,7 @@ insert into ACC_tafsilis(TafsiliCode,TafsiliType,TafsiliDesc,ObjectID)
         select b1.ProcessID,150,b1.ProcessTitle,b1.ProcessID 
  *		from BSC_processes b1 left join BSC_processes b2 on(b2.parentID=b1.ProcessID) where b2.ProcessID is null
  * 
-update LON_requests left join ACC_tafsilis on(TafsiliType=130 and ObjectID=LoanID)
-set LoanID=9
-where TafsiliID is null
- * 
- * 
-update LON_ReqParts join LON_requests using(RequestID)
-set ComputeMode='NOAVARI'
-where ReqPersonID in(1003,2051);
+
 */
 
 

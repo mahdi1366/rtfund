@@ -430,6 +430,23 @@ class ACC_docs extends PdoDataAccess {
 		return $SavingAmount*1 - $BlockedAmount*1;
 	}
 
+	static function GetRemainOfCost($CostID, $TafsiliID, $TafsiliID2, $Date){
+		
+		$dt = PdoDataAccess::runquery("
+				select ifnull(sum(CreditorAmount-DebtorAmount),0) amount
+				from ACC_DocItems join ACC_docs using(DocID)
+				where CycleID=:cycle AND CostID=:cost AND TafsiliID=:t AND TafsiliID2=:t2
+					AND DocDate <= :date
+				group by TafsiliID", 
+			array(
+				":cycle" => $_SESSION["accounting"]["CycleID"],
+				":cost" => $CostID,
+				":t" => $TafsiliID,
+				":t" => $TafsiliID2,
+				":date" => $Date
+		));
+		return count($dt) == 0 ? 0 : $dt[0][0];
+	}
 }
 
 class ACC_DocItems extends PdoDataAccess {

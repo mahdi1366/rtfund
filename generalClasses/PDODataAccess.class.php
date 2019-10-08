@@ -11,7 +11,7 @@
 
 define("PDONULL", "%pdonull%");
 //define("PDONOW", "now()");
-define("PDONOW", "ADDTIME(now(), '02:30:00') ");
+define("PDONOW", "ADDTIME(now(), '01:30:00') ");
 
 define("DEBUGQUERY", false);
 require_once 'ExceptionHandler.class.php';
@@ -1143,6 +1143,23 @@ abstract class OperationClass extends PdoDataAccess {
         return true;
     }
 
+	public function ReplaceRecord($pdo = null) {
+
+        if (!parent::replace(static::TableName, $this, $pdo))
+		{
+			ExceptionHandler::PushException(self::ERR_Add);
+			return false;
+		}
+
+        $daObj = new DataAudit();
+        $daObj->ActionType = DataAudit::Action_replace;
+        $daObj->MainObjectID = $this->{static::TableKey};
+        $daObj->TableName = static::TableName;
+        $daObj->execute();
+
+        return true;
+    }
+    
 	public function BeforeRemoveTrigger($pdo = null){
 		return true;
 	}

@@ -1465,7 +1465,7 @@ class LON_Computes extends PdoDataAccess{
 			for($i=0; $i<count($pays)-1; $i++)
 			{
 				if($i == 0)
-					$total += $pays[$i]["PurePayAmount"];// - $result["CustomerDelay"];
+					$total += $pays[$i]["PurePayAmount"] ;//- $result["CustomerDelay"];
 				else
 					$total += $pays[$i]["PurePayAmount"];
 				
@@ -2492,15 +2492,6 @@ class LON_payments extends OperationClass{
 	
 	static function Get($where = '', $whereParams = array(), $order = "") {
 		
-		return parent::runquery_fetchMode("select p.*,d.DocID,d.LocalNo,d.StatusID ,
-			p.PayAmount - p.OldFundDelayAmount - p.OldAgentDelayAmount - p.OldFundWage - p.OldAgentWage PurePayAmount
-			from LON_payments p
-			left join ACC_DocItems di on(di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
-				AND di.SourceID1=p.RequestID AND di.SourceID3=p.PayID) 
-			left join ACC_docs d on(di.DocID=d.DocID)
-			where 1=1 " . $where .  
-			" group by p.PayID " . $order, $whereParams);
-			
 		return parent::runquery_fetchMode("
 			select p.*,d.DocID,d.LocalNo,d.StatusID,
 				PayAmount - ifnull(OldFundDelayAmount,0) 
