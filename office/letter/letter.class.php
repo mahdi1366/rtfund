@@ -302,7 +302,7 @@ class OFC_letters extends PdoDataAccess{
 		
 		$dt = PdoDataAccess::runquery( "select LetterID				
 			from OFC_letters l 
-				join DMS_documents on(ObjectType='letterAttach' AND ObjectID=s.LetterID)
+				join DMS_documents on(ObjectType='letterAttach' AND ObjectID=l.LetterID)
 			where l.LetterID=?", array($LetterID));
 
 		return count($dt) > 0;

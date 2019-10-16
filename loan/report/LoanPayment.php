@@ -21,6 +21,10 @@ if(isset($_REQUEST["show"]))
 	$ComputePenalty = !empty($_REQUEST["ComputePenalty"]) && $_REQUEST["ComputePenalty"] == "false" ? 
 			false : true;
 	$ComputeArr = LON_Computes::ComputePayments($RequestID, $ComputeDate, null, $ComputePenalty);
+	
+	//if($_SESSION['USER']["UserName"] == "admin")
+	//	print_r($ComputeArr);
+	
 	$PureArr = LON_Computes::ComputePures($RequestID); 
 	//............ get remain untill now ......................
 	$CurrentRemain = LON_Computes::GetCurrentRemainAmount($RequestID, $ComputeArr);
@@ -72,8 +76,8 @@ if(isset($_REQUEST["show"]))
 	$rpg->addColumn("اصل مبلغ", "pure","ReportMoneyRender");
 	$rpg->addColumn("کارمزد", "wage","ReportMoneyRender");
 	
-	$rpg->addColumn("کارمزد تاخیر", "late","ReportMoneyRender");
-	$rpg->addColumn("جریمه", "pnlt","ReportMoneyRender");
+	$rpg->addColumn("کارمزد تاخیر", "totallate","ReportMoneyRender");
+	$rpg->addColumn("جریمه", "totalpnlt","ReportMoneyRender");
 	
 	$rpg->addColumn("تخفیف تعجیل", "early","ReportMoneyRender");
 	

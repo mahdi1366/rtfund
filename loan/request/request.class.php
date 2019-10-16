@@ -1588,6 +1588,8 @@ class LON_Computes extends PdoDataAccess{
 				$records[$i]["late"] = 0;
 				$records[$i]["pnlt"] = 0;
 				$records[$i]["early"] = 0;
+				$records[$i]["totallate"] = 0;
+				$records[$i]["totalpnlt"] = 0;
 				
 				$records[$i]["remain_pure"] = $records[$i]["pure"];
 				$records[$i]["remain_wage"] = $records[$i]["wage"];
@@ -1605,6 +1607,8 @@ class LON_Computes extends PdoDataAccess{
 				$records[$i]["late"] = 0;
 				$records[$i]["pnlt"] = 0;
 				$records[$i]["early"] = 0;			
+				$records[$i]["totallate"] = 0;
+				$records[$i]["totalpnlt"] = 0;
 				$records[$i]["remain_pure"] = 0;
 				$records[$i]["remain_wage"] = 0;
 				$records[$i]["remain_late"] = 0;
@@ -1673,6 +1677,8 @@ class LON_Computes extends PdoDataAccess{
 
 						$records[$i]["late"] = $Late;
 						$records[$i]["pnlt"] = $Pnlt;
+						$records[$i]["totallate"] += $Late;
+						$records[$i]["totalpnlt"] += $Pnlt;
 						$records[$i]["remain_late"] += $Late;
 						$records[$i]["remain_pnlt"] += $Pnlt;
 						$records[$i]["LastDiffDays"] = $diffDays;
@@ -1748,6 +1754,8 @@ class LON_Computes extends PdoDataAccess{
 					$PayRecord["wage"] += $minWage;
 					$PayRecord["late"] += $minLate;
 					$PayRecord["pnlt"] += $minPnlt;
+					$PayRecord["totallate"] += $minLate;
+					$PayRecord["totalpnlt"] += $minPnlt;
 
 					$remainPure -= $minPure;
 					$remainWage -= $minWage;
@@ -1918,6 +1926,8 @@ class LON_Computes extends PdoDataAccess{
 
 				$records[$i]["late"] = $Late;
 				$records[$i]["pnlt"] = $Pnlt;
+				$records[$i]["totallate"] += $Late;
+				$records[$i]["totalpnlt"] += $Pnlt;
 				$records[$i]["remain_late"] += $Late;
 				$records[$i]["remain_pnlt"] += $Pnlt;
 			

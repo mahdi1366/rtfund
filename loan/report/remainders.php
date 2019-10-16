@@ -139,7 +139,9 @@ function showReport(){
 		if($value == "NOAVARI") return 'فرمول صندوق نوآوری';
 	}
 	function reportRender($row, $value){
-		return "<a href=LoanPayment.php?show=tru&RequestID=" . $value . " target=blank >" . $value . "</a>";
+		return "<a href=LoanPayment.php?show=tru&RequestID=" . $value .
+			(!empty($_POST["ComputeDate"]) ? "&ComputeDate=" . $_POST["ComputeDate"] : '') . 
+			" target=blank >" . $value . "</a>";
 	}
 
 	$col = $rpg->addColumn("شماره وام", "RequestID", "reportRender");

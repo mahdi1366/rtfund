@@ -213,7 +213,8 @@ function GetData($mode = "list"){
 				BranchName,
 				SumPayments,
 				TotalPayAmount,
-				TotalInstallmentAmount,
+				t2.TotalInstallmentAmount,
+				t2.TotalInstallmentAmount - p.PartAmount as totalWage,
 				MaxInstallmentDate,
 				MaxPayDate,
 				ifnull(LastPayAmount,0) LastPayAmount,
@@ -417,6 +418,11 @@ function ListData($IsDashboard = false){
 	//$rpg->addColumn("جاری/خاتمه", "IsEnded", "endedRender");
 	$rpg->addColumn("تضامین", "tazamin");
 	$rpg->addColumn("وضعیت", "StatusDesc");
+	
+	$col = $rpg->addColumn("کارمزد وام", "totalWage", "ReportMoneyRender");
+	$col->ExcelRender = false;
+	$col->EnableSummary();
+	
 	$col = $rpg->addColumn("جمع اقساط", "TotalInstallmentAmount", "ReportMoneyRender");
 	$col->ExcelRender = false;
 	$col->EnableSummary();

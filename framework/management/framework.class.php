@@ -179,7 +179,7 @@ class FRW_access extends PdoDataAccess {
 			select g.MenuID GroupID, g.MenuDesc GroupDesc, m.*
 			from FRW_menus m 
 			join FRW_menus g on(m.ParentID=g.MenuID)
-      join FRW_menus g0 on(g.ParentID=g0.MenuID)
+			join FRW_menus g0 on(g.ParentID=g0.MenuID)
 			join BSC_persons a on(a.PersonID=" . $_SESSION["USER"]["PersonID"] . " and
 				(
 					if(g.IsCustomer='YES',a.IsCustomer='YES',0=1) OR
