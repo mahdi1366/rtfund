@@ -76,14 +76,13 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
 		}
 		else 
 		{
-			$dataTable[$i]["Off"] = TimeModules::ShowTime($SUM["Off"]);
-			$dataTable[$i]["firstAbsence"] = TimeModules::ShowTime($SUM["firstAbsence"]);
-			$dataTable[$i]["lastAbsence"] = TimeModules::ShowTime($SUM["lastAbsence"]);
-			$dataTable[$i]["absence"] = TimeModules::ShowTime($SUM["absence"]);
+			$dataTable[$i]["Off"] =  TimeModules::SecondsToTime($SUM["Off"]);
+			$dataTable[$i]["firstAbsence"] = TimeModules::SecondsToTime($SUM["firstAbsence"]);
+			$dataTable[$i]["lastAbsence"] = TimeModules::SecondsToTime($SUM["lastAbsence"]);
+			$dataTable[$i]["absence"] = TimeModules::SecondsToTime($SUM["absence"]);
 			$dataTable[$i]["DailyOff_1"] = $SUM["DailyOff_1"] ;
 			$dataTable[$i]["DailyOff_2"] = $SUM["DailyOff_2"] ;
 			$dataTable[$i]["DailyOff_3"] = $SUM["DailyOff_3"] ;
-			$dataTable[$i]["DailyMission"] = $SUM["DailyMission"] ;
 			$dataTable[$i]["DailyAbsence"] = $SUM["DailyAbsence"] ;
 		}
         
@@ -114,7 +113,7 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
 	echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" ><body dir="rtl"><center>';
 
 	//.........................................
-	echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:50%'><tr>
+	echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' width='100px' ></td>
 				<td align='center' style='font-family:b titr;font-size:15px'>گزارش ذخیره مرخصی کارکنان" .
 	"<br><br> " . $CurrentYear . " </td>				
@@ -124,7 +123,7 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
 
 
 
-	echo '<table  class="reportGenerator" style="text-align: right;width:50%!important" cellpadding="4" cellspacing="0">			
+	echo '<table  class="reportGenerator" style="text-align: right;width:100%!important" cellpadding="4" cellspacing="0">			
 			 <tr class="header">								
 			 <td>شماره شناسایی </td>	
 			 <td>نام</td> 
@@ -161,12 +160,13 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
 					<td>" . number_format(( $dataTable[$i]['sv'] ), 0, '.', ',') . "</td>
 					<td>" . number_format(( ($dataTable[$i]['sv'] / 30 ) * ($dataTable[$i]["AllowedLeave"] - $dataTable[$i]["UsedLeave"]  ) ), 0, '.', ',') . "</td>
 					
-					<td>" . $dataTable[$i]['Off'] . "</td>
-					<td>" . $dataTable[$i]['firstAbsence'] . "</td>
-					<td>" . $dataTable[$i]['lastAbsence'] . "</td>
-					<td>" . $dataTable[$i]['absence'] . "</td>
+					<td>" . TimeModules::ShowTime($dataTable[$i]['Off']) . "</td>
+					<td>" . TimeModules::ShowTime($dataTable[$i]['firstAbsence']) . "</td>
+					<td>" . TimeModules::ShowTime($dataTable[$i]['lastAbsence']) . "</td>
+					<td>" . TimeModules::ShowTime($dataTable[$i]['absence']) . "</td>
 					<td>" . $dataTable[$i]['DailyOff_1'] . "</td>
 					<td>" . $dataTable[$i]['DailyOff_3'] . "</td>
+					<td>" . $dataTable[$i]['DailyAbsence'] . "</td>
 				</tr>";
 				
 	}	
