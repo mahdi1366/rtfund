@@ -1011,15 +1011,15 @@ class LON_requests extends PdoDataAccess{
 		$amount = 0;
 		
 		$result = self::GetDelayAmounts($RequestID, $PartObj);
-		if($PartObj->DelayReturn == "INSTALLMENT")
+		if($PartObj->DelayReturn != "INSTALLMENT")
 			$amount += $result["FundDelay"];
-		if($PartObj->AgentDelayReturn == "INSTALLMENT")
+		if($PartObj->AgentDelayReturn != "INSTALLMENT")
 			$amount += $result["AgentDelay"];
 		
 		$result = self::GetWageAmounts($RequestID, $PartObj);
-		if($PartObj->WageReturn == "INSTALLMENT")
+		if($PartObj->WageReturn != "INSTALLMENT")
 			$amount += $result["FundWage"];
-		if($PartObj->AgentReturn == "INSTALLMENT")
+		if($PartObj->AgentReturn != "INSTALLMENT")
 			$amount += $result["AgentWage"];
 		
 		return round($amount);		
@@ -1039,7 +1039,7 @@ class LON_requests extends PdoDataAccess{
 		if($PartObj->ComputeMode == "NEW")
 			$amount = $PartObj->PartAmount*1 - self::TotalSubtractsOfPayAmount($RequestID, $PartObj);
 		else
-			$amount = $PartObj->PartAmount*1 + self::TotalAddedToPayAmount($RequestID, $PartObj);
+			$amount = $PartObj->PartAmount*1 - self::TotalSubtractsOfPayAmount($RequestID, $PartObj);
 		
 		return round($amount);		
 	}
