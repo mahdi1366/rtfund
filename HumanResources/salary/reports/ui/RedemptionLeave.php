@@ -67,35 +67,38 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
 					
      
     for($i=0;$i<count($dataTable);$i++){
+		
         $SUM = ATN_traffic::Compute($SD, $TD, $dataTable[$i]["RefPersonID"], false);
         if($SUM === false)
 		{
 			$dataTable[$i]["UsedLeave"] = 0 ; 
+			$dataTable[$i]["UsedLeave"] = 0 ; 
 		}
 		else 
-        $dataTable[$i]["UsedLeave"] = $SUM["DailyOff_2"] ;
+		{
+			$dataTable[$i]["Off"] = TimeModules::ShowTime($SUM["Off"]);
+			$dataTable[$i]["firstAbsence"] = TimeModules::ShowTime($SUM["firstAbsence"]);
+			$dataTable[$i]["lastAbsence"] = TimeModules::ShowTime($SUM["lastAbsence"]);
+			$dataTable[$i]["absence"] = TimeModules::ShowTime($SUM["absence"]);
+			$dataTable[$i]["DailyOff_1"] = $SUM["DailyOff_1"] ;
+			$dataTable[$i]["DailyOff_2"] = $SUM["DailyOff_2"] ;
+			$dataTable[$i]["DailyOff_3"] = $SUM["DailyOff_3"] ;
+			$dataTable[$i]["DailyMission"] = $SUM["DailyMission"] ;
+			$dataTable[$i]["DailyAbsence"] = $SUM["DailyAbsence"] ;
+		}
         
         if($dataTable[$i]["emp_mode"] == 3 || $dataTable[$i]["emp_mode"] == 4 ){
-            
             if($TD < $dataTable[$i]["lastDate"])
                $dataTable[$i]["lastDate"] = $TD;
-          
-            
         }
         else 
-               $dataTable[$i]["lastDate"] = $TD ;
+            $dataTable[$i]["lastDate"] = $TD ;
              
-           
-         unset($arr);      
-         $arr = preg_split('/\//',DateModules::miladi_to_shamsi($dataTable[$i]["lastDate"]) );
-         $TotalDay = ($arr[1] - 1 ) * 30.4375 + $arr[2] ;
-         $dataTable[$i]["AllowedLeave"]  =  round(( 30 * $TotalDay ) / 365) ; 	
-        
+        unset($arr);      
+        $arr = preg_split('/\//',DateModules::miladi_to_shamsi($dataTable[$i]["lastDate"]) );
+        $TotalDay = ($arr[1] - 1 ) * 30.4375 + $arr[2] ;
+        $dataTable[$i]["AllowedLeave"]  =  round(( 30 * $TotalDay ) / 365) ; 	
     }
-    
-   
-    
-    
 		
 	?>													
 		
@@ -128,11 +131,20 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
 			 <td>نام خانوادگی</td>
 			 <td>مرخصی سالانه </td>
 			 <td>تا تاریخ</td>
-			 <td>مرخصی مجاز </td>
-			 <td>مرخصی استفاده شده </td>
+			 <td>مرخصی استحقاقی مجاز </td>
+			 
+			 <td>مرخصی استحقاقی </td>
 			 <td>مانده مرخصی  </td>
 			 <td>مبلغ حکم  </td>
 			 <td>مبلغ مانده مرخصی  </td>
+			 
+			 <td>مرخصی ساعتی</td>
+			 <th>تاخیر</th>
+			<th>تعجیل</th>
+			<th>غیبت</th>
+			<th>مرخصی استعلاجی</th>
+			<th>مرخصی بدون حقوق</th>
+			<th>غیبت روزانه</th>
 			 </tr>';
 
 	for ($i = 0; $i < count($dataTable); $i++) {
@@ -144,10 +156,17 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
 					<td> 30 </td>
 					<td>" . DateModules::miladi_to_shamsi($dataTable[$i]["lastDate"]) . "</td>	 
 					<td>" . $dataTable[$i]["AllowedLeave"] . "</td>	
-					<td>" . $dataTable[$i]["UsedLeave"] . "</td>	
-					<td>" . ($dataTable[$i]["AllowedLeave"] - $dataTable[$i]["UsedLeave"]  )  . "</td>	
+					<td>" . $dataTable[$i]["DailyOff_2"] . "</td>	
+					<td>" . ($dataTable[$i]["AllowedLeave"] - $dataTable[$i]["DailyOff_2"]  )  . "</td>	
 					<td>" . number_format(( $dataTable[$i]['sv'] ), 0, '.', ',') . "</td>
 					<td>" . number_format(( ($dataTable[$i]['sv'] / 30 ) * ($dataTable[$i]["AllowedLeave"] - $dataTable[$i]["UsedLeave"]  ) ), 0, '.', ',') . "</td>
+					
+					<td>" . $dataTable[$i]['Off'] . "</td>
+					<td>" . $dataTable[$i]['firstAbsence'] . "</td>
+					<td>" . $dataTable[$i]['lastAbsence'] . "</td>
+					<td>" . $dataTable[$i]['absence'] . "</td>
+					<td>" . $dataTable[$i]['DailyOff_1'] . "</td>
+					<td>" . $dataTable[$i]['DailyOff_3'] . "</td>
 				</tr>";
 				
 	}	
