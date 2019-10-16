@@ -997,13 +997,13 @@ class LON_requests extends PdoDataAccess{
 	}
 	
 	/**
-	 مبالغی که به پرداختی به مشتری باید اضافه گردد.
+	 مبالغی که به باز پرداخت  مشتری باید اضافه گردد.
 	 * @param type $RequestID
 	 * @param type $PartObj
 	 * @param type $TanzilCompute
 	 * @return boolean
 	 */
-	static function TotalAddedToPayAmount($RequestID, $PartObj = null)
+	static function TotalAddedToBackPay($RequestID, $PartObj = null)
 	{
 		$PartObj = $PartObj == null ? LON_ReqParts::GetValidPartObj($RequestID) : $PartObj;
 		/*@var $PartObj LON_ReqParts */
@@ -1011,15 +1011,15 @@ class LON_requests extends PdoDataAccess{
 		$amount = 0;
 		
 		$result = self::GetDelayAmounts($RequestID, $PartObj);
-		if($PartObj->DelayReturn != "INSTALLMENT")
+		if($PartObj->DelayReturn == "INSTALLMENT")
 			$amount += $result["FundDelay"];
-		if($PartObj->AgentDelayReturn != "INSTALLMENT")
+		if($PartObj->AgentDelayReturn == "INSTALLMENT")
 			$amount += $result["AgentDelay"];
 		
 		$result = self::GetWageAmounts($RequestID, $PartObj);
-		if($PartObj->WageReturn != "INSTALLMENT")
+		if($PartObj->WageReturn == "INSTALLMENT")
 			$amount += $result["FundWage"];
-		if($PartObj->AgentReturn != "INSTALLMENT")
+		if($PartObj->AgentReturn == "INSTALLMENT")
 			$amount += $result["AgentWage"];
 		
 		return round($amount);		
