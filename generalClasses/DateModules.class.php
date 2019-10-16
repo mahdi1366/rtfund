@@ -89,7 +89,7 @@ class DateModules
 		//.....................
 		$yy=substr($date,0,4);
 		if($yy > 1900)
-			return $date;
+			return preg_replace ('/[\-\/]/', $seperator, $date);
 
 		$mm=substr($date,5,2);
 		$dd=substr($date,8,2);

@@ -78,8 +78,7 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
         $SUM = ATN_traffic::Compute($SD, $dataTable[$i]["lastDate"] , $dataTable[$i]["RefPersonID"], false);
         if($SUM === false)
 		{
-			$dataTable[$i]["UsedLeave"] = 0 ; 
-			$dataTable[$i]["UsedLeave"] = 0 ; 
+			echo "خطا در بازیابی اطلاعات حضور و غیاب";die();
 		}
 		else 
 		{
