@@ -24,8 +24,8 @@ if (isset($_REQUEST["show"])) {
 		}
 	}
 
-
-	$query = "		
+$SD = DateModules::Shamsi_to_Miladi($_POST['pay_year'].'/'.$_POST['pay_month'].'/01');
+	$query = "		select * from ( 
 				SELECT  p.staff_id, p.pay_year,p.pay_month, pr.pfname ,pr.plname , s.account_no , 					   
 						SUM(if( sit.effect_type = 1 , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef) , 0 )) PayVal , 
 						SUM(if( sit.effect_type = 2 , (pit.get_value + pit.diff_get_value * pit.diff_value_coef) , 0 )) GetVal
@@ -44,13 +44,20 @@ if (isset($_REQUEST["show"])) {
 										
 									INNER JOIN HRM_salary_item_types sit 
 										ON (pit.salary_item_type_id = sit.salary_item_type_id)
+										
+										 LEFT JOIN (
+select StaffID
+from HRM_StaffPaidCostCode
+where StartDate <= :SD and EndDate >= :SD
 
-				where p.pay_year = " . $_POST['pay_year'] . " and p.pay_month = " . $_POST['pay_month'] . " and p.payment_type = " . $_POST['PayType'] . "
+                                    ) tb  ON  s.staff_id = tb.StaffID 
 
-				group by p.staff_id ,p.pay_year,p.pay_month ";
+				where p.pay_year = :PY and p.pay_month = :PM and p.payment_type = :PT AND   tb.StaffID IS NULL
+
+				group by p.staff_id ,p.pay_year,p.pay_month ) t where PayVal > 0  ";
 
 
-	$dataTable = PdoDataAccess::runquery($query);
+	$dataTable = PdoDataAccess::runquery($query,array(":SD" => $SD , ":PY" => $_POST['pay_year'] , ":PM" => $_POST['pay_month'] , ":PT" => $_POST['PayType'] ));
 	
 	?>
 	<style>

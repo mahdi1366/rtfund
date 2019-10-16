@@ -11,12 +11,11 @@ if (isset($_REQUEST["show"])) {
 	$keys = array_keys($_POST);
 	$WhereCost = $WherePT = $WhereBT = $WhereEmpstate = "";
 	$arr = "";
-        
-        $gh = 0 ; // قراردادی ها        
-        $G2 = 0 ; // عضو هیات مدیره 
-        $G3= 0 ; // مشاور 
-        $G4 =  0 ; // دبیر هیات مدیره
 
+	$gh = 0; // قراردادی ها 
+	$G2 = 0; // عضو هیات مدیره 
+	$G3 = 0; // مشاور 
+	$G4 = 0; // دبیر هیات مدیره
 	//......................  وضعیت استخدامی ................
 
 	for ($i = 0; $i < count($_POST); $i++) {
@@ -26,44 +25,44 @@ if (isset($_REQUEST["show"])) {
 			$arr = preg_split('/_/', $keys[$i]);
 			if (isset($arr[1]))
 				$WhereEmpstate .= ($WhereEmpstate != "") ? "," . $arr[1] : $arr[1];
-                        
-                        if($arr[1] == 1 ) 
-                            $gh = 1 ; 
-                        
-                        if( $arr[1] == 2 )
-                            $G2 =1 ; 
-                        
-                        if( $arr[1] == 3 )
-                            $G3 =1 ; 
-                        
-                        if( $arr[1] == 4 )
-                            $G4 =1 ;
+
+			if ($arr[1] == 1)
+				$gh = 1;
+
+			if ($arr[1] == 2)
+				$G2 = 1;
+
+			if ($arr[1] == 3)
+				$G3 = 1;
+
+			if ($arr[1] == 4)
+				$G4 = 1;
 		}
 	}
-	
-	$WhereUnit = "" ; 
-	if(!empty($_POST['DomainID'])){
-		$WhereUnit = " AND bj.UnitID = ".$_POST['DomainID'] ; 
+
+	$WhereUnit = "";
+	if (!empty($_POST['DomainID'])) {
+		$WhereUnit = " AND bj.UnitID = " . $_POST['DomainID'];
 	}
-	
+
 	$query = "		
                         select  hp.pfname , hp.plname , pit.pay_year, pit.pay_month,
                         SUM(if( sit.salary_item_type_id = 1 , pit.param7 , 0  ))  item1 , 
-                        SUM(if( sit.salary_item_type_id = 1 , (pit.pay_value ) , 0  )) item2 ,
-                        SUM(if( sit.salary_item_type_id = 2 , (pit.pay_value ) , 0  )) item3 ,
-                        SUM(if( sit.salary_item_type_id = 9 , (pit.pay_value ) , 0  )) item4 ,
-                        SUM(if( sit.salary_item_type_id = 4 , (pit.pay_value ) , 0  )) item5 ,
-                        SUM(if( sit.salary_item_type_id = 5 , (pit.pay_value ) , 0  )) item6 ,
-                        SUM(if( sit.salary_item_type_id = 6 , (pit.pay_value ) , 0  )) item7 ,
-                        SUM(if( sit.salary_item_type_id = 12 , (pit.pay_value ) , 0  ))   item9 ,
+                        SUM(if( sit.salary_item_type_id = 1 , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef ) , 0  )) item2 ,
+                        SUM(if( sit.salary_item_type_id in (2,37) , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef ) , 0  )) item3 ,
+                        SUM(if( sit.salary_item_type_id = 9 , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef ) , 0  )) item4 ,
+                        SUM(if( sit.salary_item_type_id = 4 , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef ) , 0  )) item5 ,
+                        SUM(if( sit.salary_item_type_id = 5 , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef ) , 0  )) item6 ,
+                        SUM(if( sit.salary_item_type_id = 6 , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef ) , 0  )) item7 ,
+                        SUM(if( sit.salary_item_type_id = 12 , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef ) , 0  ))   item9 ,
                         SUM(if( sit.salary_item_type_id = 12 , (pit.param2 + pit.diff_param2 * pit.diff_value_coef) , 0  ))   item8,
-                        SUM(if( sit.salary_item_type_id = 7 , (pit.param1 + pit.diff_param1) , 0  )) item10 ,
-                        SUM(if( sit.salary_item_type_id = 20 , (pit.pay_value  ) , 0  )) item11 /*حق سنوات*/,
-                        SUM(if( sit.salary_item_type_id = 25 , (pit.pay_value  ) , 0  )) item26 /*ماموریت خارج حکم*/ ,
-                        SUM(if( sit.salary_item_type_id = 8 , pit.param1  , 0  )) item12 ,
-                        SUM(if( sit.salary_item_type_id = 24 , (pit.pay_value  ) , 0  )) item13 ,
-                        SUM(if( sit.salary_item_type_id = 7 , (pit.param2 + pit.diff_param2) , 0  )) item14 ,
-                        SUM(if( sit.salary_item_type_id = 7 , (pit.param3 + pit.diff_param3) , 0  )) item14_1 ,
+                        SUM(if( sit.salary_item_type_id = 7 , (pit.param1 + pit.diff_param1 * pit.diff_value_coef) , 0  )) item10 ,
+                        SUM(if( sit.salary_item_type_id = 20 , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef ) , 0  )) item11 /*حق سنوات*/,
+                        SUM(if( sit.salary_item_type_id in ( 25,30) , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef ) , 0  )) item26 /*ماموریت خارج حکم*/ ,
+                        SUM(if( sit.salary_item_type_id = 8 , (pit.param1 + pit.diff_param1 * pit.diff_value_coef ) , 0  )) item12 ,
+                        SUM(if( sit.salary_item_type_id = 24 , (pit.pay_value + pit.diff_pay_value * pit.diff_value_coef ) , 0  )) item13 ,
+                        SUM(if( sit.salary_item_type_id = 7 , (pit.param2 + pit.diff_param2 * pit.diff_value_coef ) , 0  )) item14 ,
+                        SUM(if( sit.salary_item_type_id = 7 , (pit.param3 + pit.diff_param3 * pit.diff_value_coef ) , 0  )) item14_1 ,
                         SUM(if( sit.salary_item_type_id = 7 , (pit.get_value + pit.diff_get_value * pit.diff_value_coef) , 0  )) item15 ,
                         SUM(if( sit.salary_item_type_id = 8 , (pit.get_value + pit.diff_get_value * pit.diff_value_coef) , 0  )) item16 ,
                         SUM(if( sit.salary_item_type_id = 11 , (pit.get_value + pit.diff_get_value * pit.diff_value_coef) , 0  ))  item17  ,
@@ -121,7 +120,7 @@ if (isset($_REQUEST["show"])) {
 							pit.payment_type = " . $_POST['PayType'];
 
 	$query .= ($WhereEmpstate != "" ) ? " AND w.emp_state in (" . $WhereEmpstate . ") " : "";
-	$query .= $WhereUnit ; 
+	$query .= $WhereUnit;
 
 	$query .= "  group by hp.personID , pay_year, pay_month 
 	having sum(pit.pay_value + pit.diff_pay_value * pit.diff_value_coef) > 0 
@@ -129,9 +128,8 @@ if (isset($_REQUEST["show"])) {
 				 ";
 
 	$dataTable = PdoDataAccess::runquery($query);
-/*echo PdoDataAccess::GetLatestQueryString() ;
-die();*/
-
+	/* echo PdoDataAccess::GetLatestQueryString() ;
+	  die(); */
 	?>
 	<style>
 		.reportGenerator {border-collapse: collapse;border: 1px solid black;font-family: B Nazanin;font-size: 8pt;
@@ -153,296 +151,290 @@ die();*/
 	echo "</td></tr></table>";
 
 
-$RS = "" ;
- if($G2 == 1 || $G3 == 1 || $G4 == 1 ) {
-     $RS = " rowspan = '2' " ;
- }
+	$RS = "";
+	if ($G2 == 1 || $G3 == 1 || $G4 == 1) {
+		$RS = " rowspan = '2' ";
+	}
 
 	echo '<table  class="reportGenerator" style="text-align: right;width:100%!important" cellpadding="4" cellspacing="0">
 
 	<tr class="header">
         
-	<td  '.$RS.' >نام و نام خانوادگی</td>';
-        
-        if($gh == 1 ) {
-            
-        echo
-	'<td  >کارکرد روز</td>          
-	<td >حقوق پایه</td>
-	<td  >فوق العاده جذب</td>
-	<td  >پایه سنواتی</td>
-	<td  >تفاوت تطبیق</td>
-	<td  >اقلام مصرفی</td>
-	<td  >حق مسکن</td>
-        <td  >حق اولاد</td>'; 
-        
-        }
-        if($G2 == 1 ) {
-	echo 
-        '<td > حق الجلسه هیئت مدیره
-        </td>'
-      . '<td  >حق الجلسه کارگروه اصلی</td>]'     
-      . '<td  >حق الجلسه کارگروه پشتیبانی</td>'
-      . '<td  >حق حضور خارج از جلسات</td>' ;
-        
-        }
-        if($G3 == 1 ) {
-	echo 
-        '<td>حق المشاوره</td>'; 
-        
-        }
-         if($G4 == 1 ) {
-	echo 
-        '<td>تهیه صورتجلسات</td>'
-      . '<td>تهیه دعوتنامه</td>]'
-      . '<td>هماهنگی جلسات</td>'
-      . '<td>حضور در جلسه</td>'
-      . '<td>کارانه</td>'
-      . '<td>همکاری با مدیر عامل</td>'
-      . '<td>همکاری با کارگروه ها</td>'
-      . '<td>سایر</td>'; 
-        
-        }
-	if($gh == 1 ) {
-             echo 
-        '<td>اضافه کار</td>
-	<td>مبلغ اضافه کار</td>
-	<td>حق ماموریت</td>
+	<td  ' . $RS . ' >نام و نام خانوادگی</td>';
+
+	if ($gh == 1) {
+
+		echo
+		'<td  >کارکرد روز</td>          
+		<td >حقوق پایه</td>
+		<td  >کارانه</td>
+		<td  >پایه سنواتی</td>
+		<td  >حق مدیریت</td>
+		<td  >اقلام مصرفی</td>
+		<td  >حق مسکن</td>
+        <td  >حق اولاد</td>';
+	}
+	if ($G2 == 1) {
+		echo
+		'<td > حق الجلسه هیئت مدیره</td>'
+		. '<td  >حق الجلسه کارگروه اصلی</td>'
+		. '<td  >حق الجلسه کارگروه پشتیبانی</td>'
+		. '<td  >حق حضور خارج از جلسات</td>';
+	}
+	if ($G3 == 1) {
+		echo
+		'<td>حق المشاوره</td>';
+	}
+	if ($G4 == 1) {
+		echo
+		'<td>تهیه صورتجلسات</td>'
+		. '<td>تهیه دعوتنامه</td>'
+		. '<td>هماهنگی جلسات</td>'
+		. '<td>حضور در جلسه</td>'
+		. '<td>کارانه</td>'
+		. '<td>همکاری با مدیر عامل</td>'
+		. '<td>همکاری با کارگروه ها</td>'
+		. '<td>سایر</td>';
+	}
+	if ($gh == 1) {
+		echo
+		'<td>اضافه کار</td>
+		<td>مبلغ اضافه کار</td>
+		<td>حق ماموریت</td>
         <td>جمع مشمول کسر بیمه</td>
-	 <td>حق سنوات</td>
-         '; 
-        
-        }
-        echo ' <td '.$RS.' >سایر اضافات</td>';
-        echo ' <td '.$RS.' >معوقات</td>';
-        
-	echo 
-        '
-	 <td '.$RS.' >جمع مشمول مالیات</td> ';
-        if($gh == 1 ) {
-	echo 
-            '   <td '.$RS.' >بیمه سهم کارفرما</td>
-                <td '.$RS.' > بیمه بیکاری</td>
-                <td '.$RS.' >بیمه سهم مجری</td>';
-        }
-        
-	echo ' <td '.$RS.' >مالیات</td>';
-        
-        if($gh == 1 ) {
-	 echo '<td '.$RS.'  >بیمه تکمیلی</td>';
-        }
-        
-	echo '<td '.$RS.' >سایر کسور</td>
-              <td '.$RS.' >جمع کسورات</td>
-              <td '.$RS.' >قابل پرداخت</td>			 
+		<td>حق سنوات</td>
+         ';
+	}
+	echo ' <td ' . $RS . ' >سایر اضافات</td>';
+	echo ' <td ' . $RS . ' >معوقات</td>';
+
+	echo
+	'
+	 <td ' . $RS . ' >جمع مشمول مالیات</td> ';
+	if ($gh == 1) {
+		echo
+			'<td ' . $RS . ' >بیمه سهم کارفرما</td>
+			<td ' . $RS . ' > بیمه بیکاری</td>
+			<td ' . $RS . ' >بیمه سهم مجری</td>';
+	}
+
+	echo ' <td ' . $RS . ' >مالیات</td>';
+
+	if ($gh == 1) {
+		echo '<td ' . $RS . '  >بیمه تکمیلی</td>';
+	}
+
+	echo '<td ' . $RS . ' >سایر کسور</td>
+              <td ' . $RS . ' >جمع کسورات</td>
+              <td ' . $RS . ' >قابل پرداخت</td>			 
 	</tr>';
-        
-        if($G2 == 1   ) {
-        echo '<tr class="header" >'
-            . '<td>ساعت</td><td>ساعت</td><td>ساعت</td><td>ساعت</td>' ;
-        
-        echo '</tr>' ; 
-        }
-        if($G3 == 1) {
-             echo '<tr class="header" >'
-            . '<td>ساعت</td>' ;
-        
-        echo '</tr>' ; 
-        }
-        if( $G4 == 1  ){
-             echo '<tr class="header" >'
-            . '<td>ساعت</td><td>ساعت</td><td>ساعت</td><td>ساعت</td><td>ساعت</td><td>ساعت</td><td>ساعت</td><td>ساعت</td>' ;
-        
-        echo '</tr>' ; 
-        }
+
+	if ($G2 == 1) {
+		echo '<tr class="header" >'
+		. '<td>ساعت</td><td>ساعت</td><td>ساعت</td><td>ساعت</td>';
+
+		echo '</tr>';
+	}
+	if ($G3 == 1) {
+		echo '<tr class="header" >'
+		. '<td>ساعت</td>';
+
+		echo '</tr>';
+	}
+	if ($G4 == 1) {
+		echo '<tr class="header" >'
+		. '<td>ساعت</td><td>ساعت</td><td>ساعت</td><td>ساعت</td><td>ساعت</td><td>ساعت</td><td>ساعت</td><td>ساعت</td>';
+
+		echo '</tr>';
+	}
 
 	$Item_1 = $Item_2 = $Item_3 = $Item_4 = $Item_5 = $Item_6 = $Item_7 = $Item_8 = $Item_9 = $Item_10 = 0;
-	$Item_11 = $Item_12 = $Item_13 = $Item_14 = $Item_14_1 = $Item_15 = $Item_16 = $Item_17 = 0; 
+	$Item_11 = $Item_12 = $Item_13 = $Item_14 = $Item_14_1 = $Item_15 = $Item_16 = $Item_17 = 0;
 	$Item_18 = $Item_19 = $Item_20 = $Item_23 = $Item_24 = $Item_25 = 0;
-        $Item2_1 = $Item2_2 = $Item2_3 = $Item2_4 = 0 ;
-        $Item3_1 =  0 ;
-        $Item4_1 = $Item4_2 = $Item4_3 = $Item4_4 = $Item4_5 = $Item4_6 =$Item4_7 =$Item4_8= 0 ;
+	$Item2_1 = $Item2_2 = $Item2_3 = $Item2_4 = 0;
+	$Item3_1 = 0;
+	$Item4_1 = $Item4_2 = $Item4_3 = $Item4_4 = $Item4_5 = $Item4_6 = $Item4_7 = $Item4_8 = 0;
 
 	$PY = $dataTable[0]['pay_year'];
 	$PM = $dataTable[0]['pay_month'];
-	$SumGetVal = $SumPayVal = 0 ; 
-	for ($i = 0; $i < count($dataTable); $i++ ) {		
-	    
-		$SumGetVal = $dataTable[$i]['item18'] + $dataTable[$i]['item17'] +$dataTable[$i]['item16'] +$dataTable[$i]['item15'] ; 
-		$SumPayVal = $dataTable[$i]['item2'] + 
-                             $dataTable[$i]['item3'] +
-                             $dataTable[$i]['item4'] + 
-                             $dataTable[$i]['item5'] + 
-                             $dataTable[$i]['item6'] + 
-                             $dataTable[$i]['item7']+ 
-                             $dataTable[$i]['item23'] + 
-                             $dataTable[$i]['item24'] + 
-                             $dataTable[$i]['item9'] + 
-                             $dataTable[$i]['item11']  + $dataTable[$i]['item13'] ;
-        $style = "" ;        
-        if($i%2 ==0 ) {
-            $style = "bgcolor='#e6f9ff'" ; 
-        }
-	echo " <tr $style >					
-	<td ".$RS." >" . $dataTable[$i]['pfname'].' '.$dataTable[$i]['plname']. "</td> " ;
-        if($gh == 1 ) {
-	echo 
-        "<td>" . $dataTable[$i]['item1'] . "</td>	
-	<td>" . number_format($dataTable[$i]['item2'] ,0, '.', ',') . "</td>					
-	<td>" . number_format($dataTable[$i]['item3'] ,0, '.', ',') . "</td>		
-	<td>" . number_format($dataTable[$i]['item4'] ,0, '.', ',') . "</td>		
-	<td>" . number_format($dataTable[$i]['item5'] ,0, '.', ',') . "</td>		
-	<td>" . number_format($dataTable[$i]['item6'] ,0, '.', ',') . "</td>		
-	<td>" . number_format($dataTable[$i]['item7'] ,0, '.', ',') . "</td>
-        <td>" . number_format($dataTable[$i]['item23'] ,0, '.', ',') . "</td>	" ; 
-        
-        }	
-        if($G2 == 1 ) {
-        echo "<td>" . number_format($dataTable[$i]['item2_1'] ,0, '.', ',') . "</td>"; 
-        echo "<td>" . number_format($dataTable[$i]['item2_2'] ,0, '.', ',') . "</td>";         
-        echo "<td>" . number_format($dataTable[$i]['item2_4'] ,0, '.', ',') . "</td>"; 
-        echo "<td>" . number_format($dataTable[$i]['item2_3'] ,0, '.', ',') . "</td>"; 
-        
-        }
-        if($G3 == 1 ) {
-        echo "<td>" . number_format($dataTable[$i]['item3_1'] ,0, '.', ',') . "</td>"; 
-        }
-        if($G4 == 1 ) {
-        echo "<td>" . number_format($dataTable[$i]['item4_1'] ,0, '.', ',') . "</td>"; 
-        echo "<td>" . number_format($dataTable[$i]['item4_2'] ,0, '.', ',') . "</td>"; 
-        echo "<td>" . number_format($dataTable[$i]['item4_3'] ,0, '.', ',') . "</td>"; 
-        echo "<td>" . number_format($dataTable[$i]['item4_4'] ,0, '.', ',') . "</td>"; 
-        echo "<td>" . number_format($dataTable[$i]['item4_5'] ,0, '.', ',') . "</td>"; 
-        echo "<td>" . number_format($dataTable[$i]['item4_6'] ,0, '.', ',') . "</td>"; 
-        echo "<td>" . number_format($dataTable[$i]['item4_7'] ,0, '.', ',') . "</td>"; 
-        echo "<td>" . number_format($dataTable[$i]['item4_8'] ,0, '.', ',') . "</td>"; 
-        
-        }
-        if($gh == 1 ) {
-            
-	echo "  <td>" . $dataTable[$i]['item8'] . "</td>		
-                <td>" . number_format($dataTable[$i]['item9'] ,0, '.', ',') . "</td>
-                <td>" . number_format($dataTable[$i]['item13'] ,0, '.', ',') . "</td>	
-                <td>" . number_format($dataTable[$i]['item10'] ,0, '.', ',') . "</td>		
-                <td>" . number_format($dataTable[$i]['item11'] ,0, '.', ',') . "</td>" ; 
-        
-        }
-        
-        echo "<td ".$RS."  >" . number_format($dataTable[$i]['item26'] ,0, '.', ',') . "</td> ";/*سایر اضافات*/
-        echo "<td ".$RS."  >" . number_format($dataTable[$i]['item25_1'] ,0, '.', ',') . "</td> ";/*معوقات*/
-        
-	echo "<td ".$RS."  >" . number_format($dataTable[$i]['item12'] ,0, '.', ',') . "</td> ";					
-        if($gh == 1 ) { 
-            echo "<td ".$RS." >" . number_format($dataTable[$i]['item14'] ,0, '.', ',') . "</td>
-                  <td ".$RS." >" . number_format($dataTable[$i]['item14_1'] ,0, '.', ',') . "</td>		
-                  <td ".$RS." >" . number_format($dataTable[$i]['item15'] ,0, '.', ',') . "</td>";
-        }
-	echo " <td ".$RS." >" . number_format($dataTable[$i]['item16'] ,0, '.', ',') . "</td>";
-       if($gh == 1 ) { 
-            echo     "<td ".$RS." >" . number_format($dataTable[$i]['item17'] ,0, '.', ',') . "</td>" ; 
-       }
-    echo "<td ".$RS." >" . number_format($dataTable[$i]['item18'] ,0, '.', ',') . "</td>	
-	<td ".$RS."  >" . number_format($SumGetVal ,0, '.', ',') . "</td>	
-	<td ".$RS."  >" . number_format($dataTable[$i]['item25'] - $dataTable[$i]['item21'] /*($SumPayVal - $SumGetVal)*/,0, '.', ',') . "</td>
-	</tr >";
-        
-        if($G2 == 1   ) {
-        $st =  preg_split( "/\./", $dataTable[$i]['Pitem2_1'] );
-        if(count ( $st ) > 1 && $dataTable[$i]['Pitem2_1'] > 0 )
-            $minSt1 = $st [count ( $st ) - 2] .":".round($st [count ( $st ) - 1] * 60 / 100) ;
-        else $minSt1 = $dataTable[$i]['Pitem2_1'] ; 
-        
-        $st =  preg_split( "/\./", $dataTable[$i]['Pitem2_2'] );
-        if(count ( $st ) > 1 && $dataTable[$i]['Pitem2_2'] > 0 )
-             $minSt2 = $st [count ( $st ) - 2] .":".round($st [count ( $st ) - 1] * 60 / 100) ;
-        else $minSt2 = $dataTable[$i]['Pitem2_2'] ; 
-        
-        $st =  preg_split( "/\./", $dataTable[$i]['Pitem2_4'] );
-        if(count ( $st ) > 1 && $dataTable[$i]['Pitem2_4'] > 0 )
-            $minSt4 = $st [count ( $st ) - 2] .":".round($st [count ( $st ) - 1] * 60 / 100) ;
-        else $minSt4 = $dataTable[$i]['Pitem2_4'] ;
-        
-        $st =  preg_split( "/\./", $dataTable[$i]['Pitem2_3'] );
-        if(count ( $st ) > 1 && $dataTable[$i]['Pitem2_3'] > 0 )
-            $minSt3 = $st [count ( $st ) - 2] .":".round($st [count ( $st ) - 1] * 60 / 100) ;
-        else $minSt3 = $dataTable[$i]['Pitem2_3'] ;
-        
-        echo '<tr '.$style.' >';
-        echo "<td>" . $minSt1 . "</td>"; 
-        echo "<td>" . $minSt2 . "</td>";          
-        echo "<td>" . $minSt4 . "</td>"; 
-        echo "<td>" . $minSt3 . "</td>";       
-        echo '</tr>' ; 
-        }
-        if($G3 == 1) {
-            echo '<tr  '.$style.' >' ;
-            echo "<td>" . $dataTable[$i]['Pitem3_1'] . "</td>";         
-            echo '</tr>' ; 
-        }
-        if( $G4 == 1  ){
-            echo '<tr  '.$style.' >' ;
-                echo "<td>" . $dataTable[$i]['Pitem4_1']. "</td>"; 
-                echo "<td>" . $dataTable[$i]['Pitem4_2'] . "</td>"; 
-                echo "<td>" . $dataTable[$i]['Pitem4_3'] . "</td>"; 
-                echo "<td>" . $dataTable[$i]['Pitem4_4'] . "</td>"; 
-                echo "<td>" . $dataTable[$i]['Pitem4_5'] . "</td>"; 
-                echo "<td>" . $dataTable[$i]['Pitem4_6'] . "</td>"; 
-                echo "<td>" . $dataTable[$i]['Pitem4_7'] . "</td>"; 
-                echo "<td>" . $dataTable[$i]['Pitem4_8'] . "</td>";         
-            echo '</tr>' ; 
-        }
- 
-        $Item_2_1 +=$dataTable[$i]['item2_1'] ;
-        $Item_2_2 +=$dataTable[$i]['item2_2'] ;
-        $Item_2_3 +=$dataTable[$i]['item2_3'] ;
-        $Item_2_4 +=$dataTable[$i]['item2_4'] ;     
-        
-        $Item_3_1 +=$dataTable[$i]['item3_1'] ;
-        
-        $Item_4_1 +=$dataTable[$i]['item4_1'] ;
-        $Item_4_2 +=$dataTable[$i]['item4_2'] ;
-        $Item_4_3 +=$dataTable[$i]['item4_3'] ;
-        $Item_4_4 +=$dataTable[$i]['item4_4'] ;   
-        $Item_4_5 +=$dataTable[$i]['item4_5'] ;   
-        $Item_4_6 +=$dataTable[$i]['item4_6'] ;   
-        $Item_4_7 +=$dataTable[$i]['item4_7'] ;   
-        $Item_4_8 +=$dataTable[$i]['item4_8'] ;   
-                
-	$Item_1 += $dataTable[$i]['item1'];
-	$Item_2 += $dataTable[$i]['item2'];
-	$Item_3 += $dataTable[$i]['item3'];
-	$Item_4 += $dataTable[$i]['item4'];
-	$Item_5 += $dataTable[$i]['item5'];
-	$Item_6 += $dataTable[$i]['item6'];
-	$Item_7 += $dataTable[$i]['item7'];
- // 	$Item_8 += $dataTable[$i]['item8'];
-	/****************************/
-        $iparr = split ("\.", $dataTable[$i]['item8']); 
-               
-        $Item_h_8 += $iparr[0] ;
-        $Item_m_8 += $iparr[1] ;
-	/****************************/
-	$Item_9 += $dataTable[$i]['item9'];
-	$Item_10 += $dataTable[$i]['item10'];
-	$Item_11 += $dataTable[$i]['item11'];
-	$Item_12 += $dataTable[$i]['item12'];
-	$Item_13 += $dataTable[$i]['item13'];
-	$Item_14 += $dataTable[$i]['item14'];
-	$Item_14_1 += $dataTable[$i]['item14_1'];
-	$Item_15 += $dataTable[$i]['item15'];
-	$Item_16 += $dataTable[$i]['item16'];
-	$Item_17 += $dataTable[$i]['item17'];
-	$Item_18 += $dataTable[$i]['item18'];
-	$Item_23 += $dataTable[$i]['item23'];
-	$Item_24 += $dataTable[$i]['item24'];
-	$Item_19 += $dataTable[$i]['item21'] ;        
-	$Item_20 += $dataTable[$i]['item25'] - $dataTable[$i]['item21']  ;
+	$SumGetVal = $SumPayVal = 0;
+	for ($i = 0; $i < count($dataTable); $i++) {
 
+		$SumGetVal = $dataTable[$i]['item18'] + $dataTable[$i]['item17'] + $dataTable[$i]['item16'] + $dataTable[$i]['item15'];
+		$SumPayVal = $dataTable[$i]['item2'] +
+				$dataTable[$i]['item3'] +
+				$dataTable[$i]['item4'] +
+				$dataTable[$i]['item5'] +
+				$dataTable[$i]['item6'] +
+				$dataTable[$i]['item7'] +
+				$dataTable[$i]['item23'] +
+				$dataTable[$i]['item24'] +
+				$dataTable[$i]['item9'] +
+				$dataTable[$i]['item11'] + $dataTable[$i]['item13'];
+		$style = "";
+		if ($i % 2 == 0) {
+			$style = "bgcolor='#e6f9ff'";
+		}
+		echo " <tr $style >					
+				<td " . $RS . " >" . $dataTable[$i]['pfname'] . ' ' . $dataTable[$i]['plname'] . "</td> ";
+		if ($gh == 1) {
+			echo
+			"<td>" . $dataTable[$i]['item1'] . "</td>	
+			<td>" . number_format($dataTable[$i]['item2'], 0, '.', ',') . "</td>					
+			<td>" . number_format($dataTable[$i]['item3'], 0, '.', ',') . "</td>		
+			<td>" . number_format($dataTable[$i]['item4'], 0, '.', ',') . "</td>		
+			<td>" . number_format($dataTable[$i]['item5'], 0, '.', ',') . "</td>		
+			<td>" . number_format($dataTable[$i]['item6'], 0, '.', ',') . "</td>		
+			<td>" . number_format($dataTable[$i]['item7'], 0, '.', ',') . "</td>
+			<td>" . number_format($dataTable[$i]['item23'], 0, '.', ',') . "</td>	";
+		}
+		if ($G2 == 1) {
+			echo "<td>" . number_format($dataTable[$i]['item2_1'], 0, '.', ',') . "</td>";
+			echo "<td>" . number_format($dataTable[$i]['item2_2'], 0, '.', ',') . "</td>";
+			echo "<td>" . number_format($dataTable[$i]['item2_4'], 0, '.', ',') . "</td>";
+			echo "<td>" . number_format($dataTable[$i]['item2_3'], 0, '.', ',') . "</td>";
+		}
+		if ($G3 == 1) {
+			echo "<td>" . number_format($dataTable[$i]['item3_1'], 0, '.', ',') . "</td>";
+		}
+		if ($G4 == 1) {
+			echo "<td>" . number_format($dataTable[$i]['item4_1'], 0, '.', ',') . "</td>";
+			echo "<td>" . number_format($dataTable[$i]['item4_2'], 0, '.', ',') . "</td>";
+			echo "<td>" . number_format($dataTable[$i]['item4_3'], 0, '.', ',') . "</td>";
+			echo "<td>" . number_format($dataTable[$i]['item4_4'], 0, '.', ',') . "</td>";
+			echo "<td>" . number_format($dataTable[$i]['item4_5'], 0, '.', ',') . "</td>";
+			echo "<td>" . number_format($dataTable[$i]['item4_6'], 0, '.', ',') . "</td>";
+			echo "<td>" . number_format($dataTable[$i]['item4_7'], 0, '.', ',') . "</td>";
+			echo "<td>" . number_format($dataTable[$i]['item4_8'], 0, '.', ',') . "</td>";
+		}
+		if ($gh == 1) {
+
+			echo "  <td>" . $dataTable[$i]['item8'] . "</td>		
+                <td>" . number_format($dataTable[$i]['item9'], 0, '.', ',') . "</td>
+                <td>" . number_format($dataTable[$i]['item13'], 0, '.', ',') . "</td>	
+                <td>" . number_format($dataTable[$i]['item10'], 0, '.', ',') . "</td>		
+                <td>" . number_format($dataTable[$i]['item11'], 0, '.', ',') . "</td>";
+		}
+
+		echo "<td " . $RS . "  >" . number_format($dataTable[$i]['item26'], 0, '.', ',') . "</td> "; /* سایر اضافات */
+		echo "<td " . $RS . "  >" . number_format($dataTable[$i]['item25_1'], 0, '.', ',') . "</td> "; /* معوقات */
+
+		echo "<td " . $RS . "  >" . number_format($dataTable[$i]['item12'], 0, '.', ',') . "</td> "; /*جمع مشمول مالیات*/
+		
+		if ($gh == 1) {
+			echo "<td " . $RS . " >" . number_format($dataTable[$i]['item14'], 0, '.', ',') . "</td>
+                  <td " . $RS . " >" . number_format($dataTable[$i]['item14_1'], 0, '.', ',') . "</td>		
+                  <td " . $RS . " >" . number_format($dataTable[$i]['item15'], 0, '.', ',') . "</td>";
+		}
+		echo " <td " . $RS . " >" . number_format($dataTable[$i]['item16'], 0, '.', ',') . "</td>";
+		if ($gh == 1) {
+			echo "<td " . $RS . " >" . number_format($dataTable[$i]['item17'], 0, '.', ',') . "</td>";
+		}
+		echo "<td " . $RS . " >" . number_format($dataTable[$i]['item18'], 0, '.', ',') . "</td>	
+			<td " . $RS . "  >" . number_format($SumGetVal, 0, '.', ',') . "</td>	
+			<td " . $RS . "  >" . number_format($dataTable[$i]['item25'] - $dataTable[$i]['item21'] /* ($SumPayVal - $SumGetVal) */, 0, '.', ',') . "</td>
+			</tr >";
+
+		if ($G2 == 1) {
+			$st = preg_split("/\./", $dataTable[$i]['Pitem2_1']);
+			if (count($st) > 1 && $dataTable[$i]['Pitem2_1'] > 0)
+				$minSt1 = $st [count($st) - 2] . ":" . round($st [count($st) - 1] * 60 / 100);
+			else
+				$minSt1 = $dataTable[$i]['Pitem2_1'];
+
+			$st = preg_split("/\./", $dataTable[$i]['Pitem2_2']);
+			if (count($st) > 1 && $dataTable[$i]['Pitem2_2'] > 0)
+				$minSt2 = $st [count($st) - 2] . ":" . round($st [count($st) - 1] * 60 / 100);
+			else
+				$minSt2 = $dataTable[$i]['Pitem2_2'];
+
+			$st = preg_split("/\./", $dataTable[$i]['Pitem2_4']);
+			if (count($st) > 1 && $dataTable[$i]['Pitem2_4'] > 0)
+				$minSt4 = $st [count($st) - 2] . ":" . round($st [count($st) - 1] * 60 / 100);
+			else
+				$minSt4 = $dataTable[$i]['Pitem2_4'];
+
+			$st = preg_split("/\./", $dataTable[$i]['Pitem2_3']);
+			if (count($st) > 1 && $dataTable[$i]['Pitem2_3'] > 0)
+				$minSt3 = $st [count($st) - 2] . ":" . round($st [count($st) - 1] * 60 / 100);
+			else
+				$minSt3 = $dataTable[$i]['Pitem2_3'];
+
+			echo '<tr ' . $style . ' >';
+			echo "<td>" . $minSt1 . "</td>";
+			echo "<td>" . $minSt2 . "</td>";
+			echo "<td>" . $minSt4 . "</td>";
+			echo "<td>" . $minSt3 . "</td>";
+			echo '</tr>';
+		}
+		if ($G3 == 1) {
+			echo '<tr  ' . $style . ' >';
+			echo "<td>" . $dataTable[$i]['Pitem3_1'] . "</td>";
+			echo '</tr>';
+		}
+		if ($G4 == 1) {
+			echo '<tr  ' . $style . ' >';
+			echo "<td>" . $dataTable[$i]['Pitem4_1'] . "</td>";
+			echo "<td>" . $dataTable[$i]['Pitem4_2'] . "</td>";
+			echo "<td>" . $dataTable[$i]['Pitem4_3'] . "</td>";
+			echo "<td>" . $dataTable[$i]['Pitem4_4'] . "</td>";
+			echo "<td>" . $dataTable[$i]['Pitem4_5'] . "</td>";
+			echo "<td>" . $dataTable[$i]['Pitem4_6'] . "</td>";
+			echo "<td>" . $dataTable[$i]['Pitem4_7'] . "</td>";
+			echo "<td>" . $dataTable[$i]['Pitem4_8'] . "</td>";
+			echo '</tr>';
+		}
+
+		$Item_2_1 +=$dataTable[$i]['item2_1'];
+		$Item_2_2 +=$dataTable[$i]['item2_2'];
+		$Item_2_3 +=$dataTable[$i]['item2_3'];
+		$Item_2_4 +=$dataTable[$i]['item2_4'];
+
+		$Item_3_1 +=$dataTable[$i]['item3_1'];
+
+		$Item_4_1 +=$dataTable[$i]['item4_1'];
+		$Item_4_2 +=$dataTable[$i]['item4_2'];
+		$Item_4_3 +=$dataTable[$i]['item4_3'];
+		$Item_4_4 +=$dataTable[$i]['item4_4'];
+		$Item_4_5 +=$dataTable[$i]['item4_5'];
+		$Item_4_6 +=$dataTable[$i]['item4_6'];
+		$Item_4_7 +=$dataTable[$i]['item4_7'];
+		$Item_4_8 +=$dataTable[$i]['item4_8'];
+
+		$Item_1 += $dataTable[$i]['item1'];
+		$Item_2 += $dataTable[$i]['item2'];
+		$Item_3 += $dataTable[$i]['item3'];
+		$Item_4 += $dataTable[$i]['item4'];
+		$Item_5 += $dataTable[$i]['item5'];
+		$Item_6 += $dataTable[$i]['item6'];
+		$Item_7 += $dataTable[$i]['item7'];
+		// 	$Item_8 += $dataTable[$i]['item8'];
+		/*		 * ************************* */
+		$iparr = split("\.", $dataTable[$i]['item8']);
+
+		$Item_h_8 += $iparr[0];
+		$Item_m_8 += $iparr[1];
+		/*		 * ************************* */
+		$Item_9 += $dataTable[$i]['item9'];
+		$Item_10 += $dataTable[$i]['item10'];
+		$Item_11 += $dataTable[$i]['item11'];
+		$Item_12 += $dataTable[$i]['item12'];
+		$Item_13 += $dataTable[$i]['item13'];
+		$Item_14 += $dataTable[$i]['item14'];
+		$Item_14_1 += $dataTable[$i]['item14_1'];
+		$Item_15 += $dataTable[$i]['item15'];
+		$Item_16 += $dataTable[$i]['item16'];
+		$Item_17 += $dataTable[$i]['item17'];
+		$Item_18 += $dataTable[$i]['item18'];
+		$Item_23 += $dataTable[$i]['item23'];
+		$Item_24 += $dataTable[$i]['item24'];
+		$Item_19 += $dataTable[$i]['item21'];
+		$Item_20 += $dataTable[$i]['item25'] - $dataTable[$i]['item21'];
 	}
 	echo '<tr>
 	<td>جمع : </td>';
-        if($gh == 1 ) {
-	echo '<td>'.$Item_1.'</td>     	 
+	if ($gh == 1) {
+		echo '<td>' . $Item_1 . '</td>     	 
         <td>' . number_format($Item_2, 0, '.', ',') . '</td>
 	<td>' . number_format($Item_3, 0, '.', ',') . '</td>
 	<td>' . number_format($Item_4, 0, '.', ',') . '</td>
@@ -450,58 +442,55 @@ $RS = "" ;
 	<td>' . number_format($Item_6, 0, '.', ',') . '</td>
 	<td>' . number_format($Item_7, 0, '.', ',') . '</td>
 	<td>' . number_format($Item_23, 0, '.', ',') . '</td>';
-        }
-        if($G2 ==1  ) {
-            echo '<td>' . number_format($Item_2_1, 0, '.', ',') . '</td>'; 
-            echo '<td>' . number_format($Item_2_2, 0, '.', ',') . '</td>';             
-            echo '<td>' . number_format($Item_2_4, 0, '.', ',') . '</td>'; 
-            echo '<td>' . number_format($Item_2_3, 0, '.', ',') . '</td>'; 
+	}
+	if ($G2 == 1) {
+		echo '<td>' . number_format($Item_2_1, 0, '.', ',') . '</td>';
+		echo '<td>' . number_format($Item_2_2, 0, '.', ',') . '</td>';
+		echo '<td>' . number_format($Item_2_4, 0, '.', ',') . '</td>';
+		echo '<td>' . number_format($Item_2_3, 0, '.', ',') . '</td>';
+	}
+	if ($G3 == 1) {
+		echo '<td>' . number_format($Item_3_1, 0, '.', ',') . '</td>';
+	}
+	if ($G4 == 1) {
+		echo '<td>' . number_format($Item_4_1, 0, '.', ',') . '</td>';
+		echo '<td>' . number_format($Item_4_2, 0, '.', ',') . '</td>';
+		echo '<td>' . number_format($Item_4_3, 0, '.', ',') . '</td>';
+		echo '<td>' . number_format($Item_4_4, 0, '.', ',') . '</td>';
+		echo '<td>' . number_format($Item_4_5, 0, '.', ',') . '</td>';
+		echo '<td>' . number_format($Item_4_6, 0, '.', ',') . '</td>';
+		echo '<td>' . number_format($Item_4_7, 0, '.', ',') . '</td>';
+		echo '<td>' . number_format($Item_4_8, 0, '.', ',') . '</td>';
+	}
+	if ($gh == 1) {
 
-        }
-        if($G3 ==1  ) {
-            echo '<td>' . number_format($Item_3_1, 0, '.', ',') . '</td>'; 
-        }
-        if($G4 ==1  ) {
-            echo '<td>' . number_format($Item_4_1, 0, '.', ',') . '</td>'; 
-            echo '<td>' . number_format($Item_4_2, 0, '.', ',') . '</td>'; 
-            echo '<td>' . number_format($Item_4_3, 0, '.', ',') . '</td>'; 
-            echo '<td>' . number_format($Item_4_4, 0, '.', ',') . '</td>'; 
-            echo '<td>' . number_format($Item_4_5, 0, '.', ',') . '</td>'; 
-            echo '<td>' . number_format($Item_4_6, 0, '.', ',') . '</td>'; 
-            echo '<td>' . number_format($Item_4_7, 0, '.', ',') . '</td>'; 
-            echo '<td>' . number_format($Item_4_8, 0, '.', ',') . '</td>'; 
+		$Item_h_8 += intval(($Item_m_8 / 60));
+		$Item_m_8 = ($Item_m_8 % 60 );
 
-        }
-        if($gh == 1 ) {
-            
-        $Item_h_8 += intval(($Item_m_8/60))  ;
-        $Item_m_8 = ($Item_m_8 % 60 ) ;
-             
-	echo '<td>' . $Item_h_8 .':'.$Item_m_8  . '</td>
+		echo '<td>' . $Item_h_8 . ':' . $Item_m_8 . '</td>
 	<td>' . number_format($Item_9, 0, '.', ',') . '</td>
 	<td>' . number_format($Item_13, 0, '.', ',') . '</td>	
 	<td>' . number_format($Item_10, 0, '.', ',') . '</td>
 	<td>' . number_format($Item_11, 0, '.', ',') . '</td>';
-	
-          }
-        echo '<td>' . number_format(0, 0, '.', ',') . '</td>  '; /*معوقات*/
-        echo '<td>' . number_format(0, 0, '.', ',') . '</td>  '; /*سایر اضافات*/
-        
-        echo '<td>' . number_format($Item_12, 0, '.', ',') . '</td>  ';
-       if($gh == 1 ) { 
-        echo 
-        '<td>' . number_format($Item_14, 0, '.', ',') . '</td>
+	}
+	echo '<td>' . number_format(0, 0, '.', ',') . '</td>  '; /* معوقات */
+	echo '<td>' . number_format(0, 0, '.', ',') . '</td>  '; /* سایر اضافات */
+
+	echo '<td>' . number_format($Item_12, 0, '.', ',') . '</td>  ';
+	if ($gh == 1) {
+		echo
+		'<td>' . number_format($Item_14, 0, '.', ',') . '</td>
 	<td>' . number_format($Item_14_1, 0, '.', ',') . '</td>
 	<td>' . number_format($Item_15, 0, '.', ',') . '</td>';
-       }
+	}
 	echo '<td>' . number_format($Item_16, 0, '.', ',') . '</td>';
-        
-        if($gh == 1 ) {
-            echo '<td>' . number_format($Item_17, 0, '.', ',') . '</td>';
-        }
-        
-	echo 
-        '<td>' . number_format($Item_18, 0, '.', ',') . '</td>
+
+	if ($gh == 1) {
+		echo '<td>' . number_format($Item_17, 0, '.', ',') . '</td>';
+	}
+
+	echo
+	'<td>' . number_format($Item_18, 0, '.', ',') . '</td>
 	 <td>' . number_format($Item_19, 0, '.', ',') . '</td>
 	 <td>' . number_format($Item_20, 0, '.', ',') . '</td>							
 	 </tr>';
@@ -511,15 +500,15 @@ $RS = "" ;
 	<tr style="height:200px;font-family:B Nazanin;font-size:16px">
 	<td align ="center" > &nbsp;امور مالی</td>
 	<td align ="center" > &nbsp; مدیر عامل</td>
-	<td align ="center" > &nbsp; رییس هیات مدیره</td> </tr></table></center>' ; 
+	</tr></table></center>';
 	die();
-	}
-	?>
+}
+?>
 
-	<script>
-		PayItemList.prototype = {
-			TabID: '<?= $_REQUEST["ExtTabID"] ?>',
-			address_prefix: "<?= $js_prefix_address ?>",
+<script>
+	PayItemList.prototype = {
+		TabID: '<?= $_REQUEST["ExtTabID"] ?>',
+		address_prefix: "<?= $js_prefix_address ?>",
 		get: function (elementID) {
 			return findChild(this.TabID, elementID);
 		}
@@ -670,9 +659,9 @@ $RS = "" ;
 					}
 				},
 				{
-					xtype : "hidden",
-					name : "DomainID",
-					colspan : 2
+					xtype: "hidden",
+					name: "DomainID",
+					colspan: 2
 				}
 
 			],
@@ -746,7 +735,7 @@ $RS = "" ;
 				selectHandler: function (id, name) {
 					PayItemListObject.filterPanel.down("[name=DomainDesc]").setValue(name);
 					PayItemListObject.filterPanel.down("[name=DomainID]").setValue(id);
-					
+
 				}
 			}
 		});

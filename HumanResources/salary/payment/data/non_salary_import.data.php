@@ -84,7 +84,7 @@ function exe_taxtable_sql($PayYear, $PayMonth, &$taxTable) {
                         ORDER BY ttype.person_type,ttype.tax_table_type_id,ttable.from_date,titem.from_value
                         ");
 
-    //	echo 	PdoDataAccess::GetLatestQueryString(); die(); 
+    
 
     for ($i = 0; $i < count($tmp_rs); $i++) {
         $taxTable[$tmp_rs[$i]['tax_table_type_id']][] = array(
@@ -186,7 +186,7 @@ function process_tax_normalize($staffID, $PayVal, $PayYear, $PayMonth) {
 
 				FROM    HRM_staff_tax_history sth 
 
-				WHERE end_date IS NULL OR end_date = '0000-00-00' OR  end_date > '" . $SDate . "' AND
+				WHERE (end_date IS NULL OR end_date = '0000-00-00' OR  end_date > '" . $SDate . "' ) AND
 					  start_date < '" . $EDate . "' AND  sth.staff_id = " . $staffID . " 
 				ORDER BY sth.staff_id,sth.start_date			
 				
@@ -202,6 +202,8 @@ function process_tax_normalize($staffID, $PayVal, $PayYear, $PayMonth) {
     $year_avg_tax_include = (( $taxRes[0]['sum_tax_include'] + $PayVal + $taxHisRes[0]['payed_tax_value']) - $taxRes[0]['sum_BimeMoaf']) / ($EPayMonth - $SPayMonth + 1);
     $sum_normalized_tax = $tax_table_type_id = 0; //متغيري جهت نگهداري ماليات تعديل شده براي cur_staff در تمام طول سال
 
+
+ 
    reset($taxTable);
 
     for ($m = 1; $m <= $PayMonth; $m++) {
@@ -226,6 +228,7 @@ function process_tax_normalize($staffID, $PayVal, $PayYear, $PayMonth) {
             continue;
         }
         if (!key_exists($tax_table_type_id, $taxTable)) {
+            
             return;
         }
 
@@ -290,20 +293,23 @@ function InsertData() {
     $PayYear = $_POST["pay_year"];
     $PayMonth = $_POST["pay_month"];
 
+
     $success_count = 0;
     $unsuccess_count = 0;
 
     //.......پرداخت کارانه.......................................................      
-    if ($FileType == 4) {
+    if ($FileType == 4 || $FileType == 3 ) {
 
         $pdo = PdoDataAccess::getPdoObject();
         $pdo->beginTransaction();
 
-        $PaymentObj = new manage_payments();
-        $PayItmObj = new manage_payment_items();
+       
 
         for ($i = 1; $i < $data->sheets[0]['numRows']; $i++) {
-
+        
+             $PaymentObj = new manage_payments();
+             $PayItmObj = new manage_payment_items(); 
+        
             if (!isset($data->sheets[0]['cells'][$i][0]))
                 break;
 
@@ -342,8 +348,12 @@ function InsertData() {
 
                     continue;
                 }
-                $SID = 26 ; //کد قلم مربوط به کارانه
+                if( $FileType == 4 )
+                    $SID = 26 ; //کد قلم مربوط به کارانه
+                else if ( $FileType == 3 )
+                    $SID = 45 ; //کد قلم مربوط به پاداش
                 //............ مرکز هزینه .....................
+
 
                 $PayItmObj->pay_year = $PayYear;
                 $PayItmObj->pay_month = $PayMonth;
@@ -353,6 +363,7 @@ function InsertData() {
                 $PayItmObj->get_value = 0 ; 
                 $PayItmObj->cost_center_id = 1;
                 $PayItmObj->payment_type = $FileType;
+
 
                 if ($PayItmObj->Add() === false) {
                     $log_obj->make_unsuccess_rows($data->sheets[0]['cells'][$i][0], "-", " خطا ");

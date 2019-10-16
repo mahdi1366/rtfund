@@ -56,7 +56,10 @@ class manage_payments extends PdoDataAccess
 																					p.writ_ver = w.writ_ver and
 																					p.staff_id = w.staff_id
 																					
-																		left join BSC_units bu on bu.UnitID  = w.ouid
+																		/*left join BSC_units bu on bu.UnitID  = w.ouid*/
+																		
+																			LEFT join BSC_jobs j on    j.PersonID = per.RefPersonID AND j.IsMain = 'YES'
+     LEFT JOIN BSC_units bu on bu.UnitID = j.UnitID
 
 									where per.personid =:pid
 																		

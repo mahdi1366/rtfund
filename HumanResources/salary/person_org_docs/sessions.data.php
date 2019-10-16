@@ -44,6 +44,9 @@ function SaveBank()
 	$st = preg_split('/:/',$obj->PersonID);
 	$obj->PersonID = $st[0];
 	
+	$sit = preg_split('/:/',$obj->salary_item_type_id);
+	$obj->salary_item_type_id = $sit[0];
+	
 	
 	if($obj->SessionID)        
 		$return = $obj->Edit();	
