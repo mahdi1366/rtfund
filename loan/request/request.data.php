@@ -862,7 +862,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 	}
 	else
 	{
-		$TotalAmount = LON_requests::GetPayedAmount($RequestID);
+		$TotalAmount = LON_requests::GetPayedAmount($RequestID) + LON_requests::TotalAddedToBackPay($RequestID);
 		$allPay = ComputeInstallmentAmount($TotalAmount,$obj->InstallmentCount, $obj->PayInterval);
 
 		if($obj->InstallmentCount > 1)
