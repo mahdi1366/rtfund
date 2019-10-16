@@ -67,8 +67,15 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
 					
      
     for($i=0;$i<count($dataTable);$i++){
-		
-        $SUM = ATN_traffic::Compute($SD, $TD, $dataTable[$i]["RefPersonID"], false);
+        
+		if($dataTable[$i]["emp_mode"] == 3 || $dataTable[$i]["emp_mode"] == 4 ){
+            if($TD < $dataTable[$i]["lastDate"])
+               $dataTable[$i]["lastDate"] = $TD;
+        }
+        else 
+            $dataTable[$i]["lastDate"] = $TD ;
+        
+        $SUM = ATN_traffic::Compute($SD, $dataTable[$i]["lastDate"] , $dataTable[$i]["RefPersonID"], false);
         if($SUM === false)
 		{
 			$dataTable[$i]["UsedLeave"] = 0 ; 
@@ -86,12 +93,7 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
 			$dataTable[$i]["DailyAbsence"] = $SUM["DailyAbsence"] ;
 		}
         
-        if($dataTable[$i]["emp_mode"] == 3 || $dataTable[$i]["emp_mode"] == 4 ){
-            if($TD < $dataTable[$i]["lastDate"])
-               $dataTable[$i]["lastDate"] = $TD;
-        }
-        else 
-            $dataTable[$i]["lastDate"] = $TD ;
+        
              
         unset($arr);      
         $arr = preg_split('/\//',DateModules::miladi_to_shamsi($dataTable[$i]["lastDate"]) );
