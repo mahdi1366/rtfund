@@ -33,6 +33,9 @@ class ATN_traffic extends OperationClass
 		
 		require_once getenv("DOCUMENT_ROOT") . '/attendance/baseinfo/shift.class.php';
 		
+		$StartDate = DateModules::shamsi_to_miladi($StartDate, "-");
+		$EndDate = DateModules::shamsi_to_miladi($EndDate, "-");
+		
 		$StartDateParam = $StartDate;
 		$holidays = ATN_holidays::Get(" AND TheDate between ? AND ? order by TheDate", 
 				array($StartDate, $EndDate));

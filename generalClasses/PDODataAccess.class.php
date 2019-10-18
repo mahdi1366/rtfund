@@ -11,7 +11,7 @@
 
 define("PDONULL", "%pdonull%");
 //define("PDONOW", "now()");
-define("PDONOW", "ADDTIME(now(), '02:30:00') ");
+define("PDONOW", "ADDTIME(now(), '01:30:00') ");
 
 define("DEBUGQUERY", false);
 require_once 'ExceptionHandler.class.php';
@@ -1096,13 +1096,20 @@ abstract class OperationClass extends PdoDataAccess {
 		return PdoDataAccess::GetLastID(static::TableName, static::TableKey, "", array(), $pdo)+1;
 	}
 	
-    public function Add($pdo = null) {
+	public function SaveTrigger($pdo = null){
+		return true;
+	}
 
+	public function Add($pdo = null) {
+
+		if(!$this->SaveTrigger($pdo))
+			return false;
+		
         if (!parent::insert(static::TableName, $this, $pdo))
 		{
 			ExceptionHandler::PushException(self::ERR_Add);
 			return false;
-		}
+		} 
 
         $this->{static::TableKey} = parent::InsertID($pdo);
 		
@@ -1116,6 +1123,10 @@ abstract class OperationClass extends PdoDataAccess {
     }
 
     public function Edit($pdo = null) {
+		
+		if(!$this->SaveTrigger($pdo))
+			return false;
+		
         if (parent::update(static::TableName, $this, static::TableKey . 
 			" =:id ", array(":id" => $this->{static::TableKey}), $pdo) === false) 
 		{
@@ -1148,8 +1159,15 @@ abstract class OperationClass extends PdoDataAccess {
 
         return true;
     }
-	
+    
+	public function BeforeRemoveTrigger($pdo = null){
+		return true;
+	}
+
     public function Remove($pdo = null) {
+		
+		if(!$this->BeforeRemoveTrigger($pdo))
+			return false;
 		
         if (!parent::delete(static::TableName, 
 				static::TableKey . "=:id", array(":id" => $this->{static::TableKey}), $pdo))

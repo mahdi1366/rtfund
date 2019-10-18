@@ -8,8 +8,8 @@ require_once getenv("DOCUMENT_ROOT") .'/attendance/traffic/traffic.class.php';
 
 function salary_receipt_list()
 {
-	$query = " select	ps.pfname, ps.plname,
-        s.person_type, sit.effect_type,ps.RefPersonID ,
+	$query = " select	ps.pfname, ps.plname,ps.national_code , 
+        s.person_type, sit.effect_type,ps.RefPersonID , bu.UnitName full_unit_title ,
         sit.print_title salary_item_title,
         pai.pay_value,
         pai.get_value, (pai.diff_pay_value * diff_value_coef) diff_pay_value,
@@ -26,8 +26,13 @@ function salary_receipt_list()
 
      INNER JOIN HRM_salary_item_types sit ON (pai.salary_item_type_id = sit.salary_item_type_id)
      LEFT JOIN HRM_writs w ON ((pa.writ_id = w.writ_id) AND (pa.writ_ver = w.writ_ver) AND (pa.staff_id = w.staff_id) )
+     
      INNER JOIN HRM_staff s ON (pa.staff_id = s.staff_id)
      INNER JOIN HRM_persons ps ON (s.PersonID = ps.PersonID)
+     
+     LEFT join BSC_jobs j on    j.PersonID = ps.RefPersonID AND j.IsMain = 'YES'
+     LEFT JOIN BSC_units bu on bu.UnitID = j.UnitID
+           
      LEFT OUTER JOIN HRM_banks b ON (s.bank_id = b.bank_id)
      INNER JOIN BaseInfo BI ON BI.typeid = 78 and BI.infoid = pa.pay_month
 
@@ -49,7 +54,7 @@ function salary_receipt_list()
 
 	$dt = PdoDataAccess::runquery($query, $whereParam);
 
-	//echo PdoDataAccess::GetLatestQueryString() ; die() ; 
+//	echo PdoDataAccess::GetLatestQueryString() ; die() ; 
 
 	return $dt ; 
 	
@@ -180,8 +185,10 @@ function generateReport()
 				   '<!--staff_id-->' => $dt[0]['staff_id'] ,
 				   '<!--pfname-->' => $dt[0]['pfname']  ,
 				   '<!--name-->' => $dt[0]['name'] ,
+				   '<!--national_code-->' => $dt[0]['national_code'] ,
 				   '<!--month_title-->' => $dt[0]['month_title'],
 				   '<!--pay_year-->' => $dt[0]['pay_year'],
+				   '<!--full_unit_title-->' => $dt[0]['full_unit_title'],
 				   '<!--total_pay_diffpay-->' => CurrencyModulesclass::toCurrency(($pay_sum + $pay_diff_sum)),
 				   '<!--total_pay-->' => CurrencyModulesclass::toCurrency($pay_sum) ,
 				   '<!--total_diffpay-->' => CurrencyModulesclass::toCurrency($pay_diff_sum) ,
@@ -213,7 +220,7 @@ function generateReport()
 	$SUM["LegalExtra"] = TimeModules::SecondsToTime($SUM["LegalExtra"]);
 	echo "<br>
 		  <center>
-			<table  width='40%' border='1' cellpadding='3' cellspacing='0' align='center' >
+			<table  width='40%' border='1' cellpadding='3' cellspacing='0' align='center' class='no-print'>
 				<tr><td colspan='4' align='center' style='font-family:b titr;font-weight:bold;font-size:15px' >خلاصه کارکرد سال 
 				&nbsp;".$dt[0]['pay_year']."</td></tr>
 				<tr><td colspan='2'>حضور</td><td colspan='2' align='center'>" . TimeModules::ShowTime($SUM["attend"]) . "</td></tr>
@@ -227,6 +234,15 @@ function generateReport()
 }
 
 ?>
+<style>
+@media print
+{    
+    .no-print, .no-print *
+    {
+        display: none !important;
+    }
+}
+</style>
 <html dir='rtl'>
 	<head>
 		<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>

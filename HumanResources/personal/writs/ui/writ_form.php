@@ -31,7 +31,8 @@ if( !empty($_REQUEST["WID"]) )
 		
 	$FullWrt = manage_writ::GetWritInfo($where ,$whereParam);
 
-
+/*echo PdoDataAccess::GetLatestQueryString(); 
+die(); */
 	if(count($FullWrt) == 0)
 	   $FullWrt = NULL;
 }

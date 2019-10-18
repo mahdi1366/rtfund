@@ -555,7 +555,7 @@ function RegisterPayPartDoc($ReqObj, $PartObj, $PayObj, $BankTafsili, $AccountTa
 		$itemObj->details = "سهم کارمزد وام شماره " . $ReqObj->RequestID;
 		$itemObj->CostID = $CostCode_agent_wage;
 		$itemObj->DebtorAmount = 0;
-		$itemObj->CreditorAmount = $amount;
+		$itemObj->CreditorAmount = $TotalAgentWage;
 		$itemObj->TafsiliType2 = TAFTYPE_PERSONS;
 		$itemObj->TafsiliID2 = $ReqPersonTafsili;
 		$itemObj->Add($pdo);
@@ -3291,7 +3291,7 @@ function EditIncomeCheque($InChequeObj, $newAmount, $pdo){
 }
 
 //---------------------------------------------------------------
-function ComputeCostProfit($CostID, $TafsiliID, $FromDate, $ToDate){
+function ComputeCostDailyProfit($CostID, $TafsiliID, $FromDate, $ToDate){
 	
 	//------------ get percents ------------------------
 	$percents = PdoDataAccess::runquery_fetchMode("select * from ACC_DepositePercents 
@@ -3448,6 +3448,33 @@ function ComputeCostProfit($CostID, $TafsiliID, $FromDate, $ToDate){
 	return array($DepositeAmount, $TraceArr);
 }
 
+function ComputeCostMonthlyProfit($CostID, $TafsiliID, $TafsiliID2, $FromDate, $ToDate){
+	
+	//------------ get percents ------------------------
+	$percents = PdoDataAccess::runquery_fetchMode("select * from ACC_DepositePercents 
+		where TafsiliID=? AND ToDate>? order by FromDate",array($TafsiliID, $FromDate));
+	if($percents->rowCount() == 0)
+	{
+		echo Response::createObjectiveResponse(false, "در بازه مربوطه درصد سود تفصیلی " . $TafsiliID . " تعریف نشده است");
+		die();
+	}
+	$percentRecord = $percents->fetch();
+	//------------ get min remain of deposites in month ----------------
+	$minAmount = 0;
+	$TheDate = $FromDate;
+	while($TheDate <= $ToDate)
+	{
+		$amount = ACC_docs::GetRemainOfCost($CostID, $TafsiliID, $TafsiliID2, $TheDate);
+		$minAmount = min($minAmount, $amount);
+		$TheDate = DateModules::AddToGDate($TheDate, 1);
+	}
+	
+	if($minAmount <= 0)
+		return 0;
+	
+	return $minAmount * $percentRecord["percent"] /12;
+}
+
 function ComputeDepositeProfit($ToDate, $TafsiliArr, $ReportMode = false, $IsFlow = false){
 	
 	if(!$ReportMode)
@@ -3502,7 +3529,7 @@ function ComputeDepositeProfit($ToDate, $TafsiliArr, $ReportMode = false, $IsFlo
 		}
 		//----------------------------------------------------------
 		
-		$result = ComputeCostProfit($CostID, $TafsiliID, $LatestComputeDate, $ToDate);
+		$result = ComputeCostDailyProfit($CostID, $TafsiliID, $LatestComputeDate, $ToDate);
 		$TraceArr = array_merge($TraceArr, $result[1]);	
 		$TafsiliArr[$i]["deposite"] = $result[0];
 	}

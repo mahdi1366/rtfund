@@ -997,13 +997,13 @@ class LON_requests extends PdoDataAccess{
 	}
 	
 	/**
-	 مبالغی که به پرداختی به مشتری باید اضافه گردد.
+	 مبالغی که به باز پرداخت  مشتری باید اضافه گردد.
 	 * @param type $RequestID
 	 * @param type $PartObj
 	 * @param type $TanzilCompute
 	 * @return boolean
 	 */
-	static function TotalAddedToPayAmount($RequestID, $PartObj = null)
+	static function TotalAddedToBackPay($RequestID, $PartObj = null)
 	{
 		$PartObj = $PartObj == null ? LON_ReqParts::GetValidPartObj($RequestID) : $PartObj;
 		/*@var $PartObj LON_ReqParts */
@@ -1039,7 +1039,7 @@ class LON_requests extends PdoDataAccess{
 		if($PartObj->ComputeMode == "NEW")
 			$amount = $PartObj->PartAmount*1 - self::TotalSubtractsOfPayAmount($RequestID, $PartObj);
 		else
-			$amount = $PartObj->PartAmount*1 + self::TotalAddedToPayAmount($RequestID, $PartObj);
+			$amount = $PartObj->PartAmount*1 - self::TotalSubtractsOfPayAmount($RequestID, $PartObj);
 		
 		return round($amount);		
 	}
@@ -1465,7 +1465,7 @@ class LON_Computes extends PdoDataAccess{
 			for($i=0; $i<count($pays)-1; $i++)
 			{
 				if($i == 0)
-					$total += $pays[$i]["PurePayAmount"];// - $result["CustomerDelay"];
+					$total += $pays[$i]["PurePayAmount"] ;//- $result["CustomerDelay"];
 				else
 					$total += $pays[$i]["PurePayAmount"];
 				
@@ -1588,6 +1588,8 @@ class LON_Computes extends PdoDataAccess{
 				$records[$i]["late"] = 0;
 				$records[$i]["pnlt"] = 0;
 				$records[$i]["early"] = 0;
+				$records[$i]["totallate"] = 0;
+				$records[$i]["totalpnlt"] = 0;
 				
 				$records[$i]["remain_pure"] = $records[$i]["pure"];
 				$records[$i]["remain_wage"] = $records[$i]["wage"];
@@ -1605,6 +1607,8 @@ class LON_Computes extends PdoDataAccess{
 				$records[$i]["late"] = 0;
 				$records[$i]["pnlt"] = 0;
 				$records[$i]["early"] = 0;			
+				$records[$i]["totallate"] = 0;
+				$records[$i]["totalpnlt"] = 0;
 				$records[$i]["remain_pure"] = 0;
 				$records[$i]["remain_wage"] = 0;
 				$records[$i]["remain_late"] = 0;
@@ -1673,6 +1677,8 @@ class LON_Computes extends PdoDataAccess{
 
 						$records[$i]["late"] = $Late;
 						$records[$i]["pnlt"] = $Pnlt;
+						$records[$i]["totallate"] += $Late;
+						$records[$i]["totalpnlt"] += $Pnlt;
 						$records[$i]["remain_late"] += $Late;
 						$records[$i]["remain_pnlt"] += $Pnlt;
 						$records[$i]["LastDiffDays"] = $diffDays;
@@ -1748,6 +1754,8 @@ class LON_Computes extends PdoDataAccess{
 					$PayRecord["wage"] += $minWage;
 					$PayRecord["late"] += $minLate;
 					$PayRecord["pnlt"] += $minPnlt;
+					$PayRecord["totallate"] += $minLate;
+					$PayRecord["totalpnlt"] += $minPnlt;
 
 					$remainPure -= $minPure;
 					$remainWage -= $minWage;
@@ -1918,6 +1926,8 @@ class LON_Computes extends PdoDataAccess{
 
 				$records[$i]["late"] = $Late;
 				$records[$i]["pnlt"] = $Pnlt;
+				$records[$i]["totallate"] += $Late;
+				$records[$i]["totalpnlt"] += $Pnlt;
 				$records[$i]["remain_late"] += $Late;
 				$records[$i]["remain_pnlt"] += $Pnlt;
 			
@@ -2492,15 +2502,6 @@ class LON_payments extends OperationClass{
 	
 	static function Get($where = '', $whereParams = array(), $order = "") {
 		
-		return parent::runquery_fetchMode("select p.*,d.DocID,d.LocalNo,d.StatusID ,
-			p.PayAmount - p.OldFundDelayAmount - p.OldAgentDelayAmount - p.OldFundWage - p.OldAgentWage PurePayAmount
-			from LON_payments p
-			left join ACC_DocItems di on(di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
-				AND di.SourceID1=p.RequestID AND di.SourceID3=p.PayID) 
-			left join ACC_docs d on(di.DocID=d.DocID)
-			where 1=1 " . $where .  
-			" group by p.PayID " . $order, $whereParams);
-			
 		return parent::runquery_fetchMode("
 			select p.*,d.DocID,d.LocalNo,d.StatusID,
 				PayAmount - ifnull(OldFundDelayAmount,0) 

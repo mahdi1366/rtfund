@@ -23,6 +23,13 @@ tpl : new Ext.XTemplate( '<tpl for=".">',
 	'<tr class="x-boundlist-item" style="border-left:0;border-right:0;">',
 	'</tpl>')
 --------------------------------------------------------------------------------
+BaseObject.grid.plugins[0].on("beforeedit",function(rowEditor,e){
+	
+	var record = BaseObject.grid.getStore().getAt(e.rowIdx);
+	if(record.data.RowID != "")
+		return false;
+});
+--------------------------------------------------------------------------------
 p.tdAttr = "data-qtip='text'"
 --------------------------------------------------------------------------------
 {name : "fullDesc",	convert : function(value,record){} }
@@ -100,3 +107,22 @@ grid.plugins[0].editor.form.findField('TafsiliDesc').disable();
 Ext.MessageBox.prompt('', 'لطفا نام مهمان را وارد کنید:', function(btn, text){
 		if(btn == "cancel")
 			return;
+
+********************************************************************************
+xtype : "treecombo",
+selectChildren: true,
+canSelectFolders: false,
+fieldLabel: 'حوزه فعالیت',
+store : new Ext.data.TreeStore({
+	proxy: {
+		type: 'ajax',
+		url: '/framework/baseInfo/baseInfo.data.php?task=SelectDomainNodes' 
+	},
+	root: {
+		text: "حوزه فعالیت",
+		id: 'src',
+		expanded: true
+	}
+}),
+multiselect : true,
+hiddenName : "FILTERPERSON_DomainID"

@@ -75,6 +75,12 @@ $col = $dg->addColumn("فرستنده/گیرنده نامه", "OrgPost", "");
 $col->renderer = "function(v,p,r){return (v == null ? '-' : v) + ' ' + (r.data.organization == null ? '' : r.data.organization);}";
 $col->width = 250;
 
+if($mode == "receive")
+{
+	$col = $dg->addColumn("تاریخ دریافت", "_SendDate", GridColumn::ColumnType_date);
+	$col->width = 100;
+}
+
 $col = $dg->addColumn("عملیات", "");
 $col->renderer = "function(v,p,r){return MyLetter.OperationRender(v,p,r);}";
 $col->width = 120; 

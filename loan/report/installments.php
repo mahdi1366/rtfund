@@ -32,18 +32,30 @@ $col = $page_rpg->addColumn("تاریخ قسط", "InstallmentDate");
 $col->type = "date";
 $page_rpg->addColumn("مبلغ قسط", "InstallmentAmount");
 
-$col = $page_rpg->addColumn("مبلغ تاخیر", "forfeit");	
-$col->IsQueryField = false;
+//...........................
+$col = $page_rpg->addColumn("کارمزد تاخیر", "SumLate");									$col->IsQueryField = false;
+$col = $page_rpg->addColumn("جریمه", "SumPnlt", "ReportMoneyRender");					$col->IsQueryField = false;
+$col = $page_rpg->addColumn("پرداخت مشتری", "SumPayedAmount", "ReportMoneyRender");		$col->IsQueryField = false;
+//...........................
+$col = $page_rpg->addColumn("اصل", "pure", "ReportMoneyRender");						$col->IsQueryField = false;
+$col = $page_rpg->addColumn("کارمزد", "wage", "ReportMoneyRender");						$col->IsQueryField = false;
+$col = $page_rpg->addColumn("تاریخ پرداخت", "PayedDate", "ReportDateRender");			$col->IsQueryField = false;
+$col = $page_rpg->addColumn("مبلغ پرداخت", "PayedAmount", "ReportMoneyRender");			$col->IsQueryField = false;
+$col = $page_rpg->addColumn("روز تعجیل", "EarlyDays");									$col->IsQueryField = false;
+$col = $page_rpg->addColumn("مبلغ تعجیل", "EarlyAmount", "ReportMoneyRender");			$col->IsQueryField = false;
+$col = $page_rpg->addColumn("روز تاخیر", "PnltDays");									$col->IsQueryField = false;
+$col = $page_rpg->addColumn("کارمزد تاخیر", "cur_late", "ReportMoneyRender");			$col->IsQueryField = false;
+$col = $page_rpg->addColumn("جریمه", "cur_pnlt", "ReportMoneyRender");					$col->IsQueryField = false;
+$col = $page_rpg->addColumn("پرداخت از اصل", "pay_pure", "ReportMoneyRender");			$col->IsQueryField = false;
+$col = $page_rpg->addColumn("پرداخت از کارمزد", "pay_wage", "ReportMoneyRender");		$col->IsQueryField = false;
+$col = $page_rpg->addColumn("پرداخت از کارمزد تاخیر", "pay_late", "ReportMoneyRender");	$col->IsQueryField = false;
+$col = $page_rpg->addColumn("پرداخت از جریمه", "pay_pnlt", "ReportMoneyRender");		$col->IsQueryField = false;
+$col = $page_rpg->addColumn("مانده اصل", "remain_pure", "ReportMoneyRender");			$col->IsQueryField = false;
+$col = $page_rpg->addColumn("مانده کارمزد", "remain_wage", "ReportMoneyRender");		$col->IsQueryField = false;
+$col = $page_rpg->addColumn("مانده کارمزد تاخیر", "remain_late", "ReportMoneyRender");	$col->IsQueryField = false;
+$col = $page_rpg->addColumn("مانده جریمه", "remain_pnlt", "ReportMoneyRender");			$col->IsQueryField = false;
+$col = $page_rpg->addColumn("مانده قسط", "remain", "ReportMoneyRender");				$col->IsQueryField = false;
 
-$col = $page_rpg->addColumn("تاریخ پرداخت", "PayedDate");
-$col->type = "date";
-$col->IsQueryField = false;
-
-$col = $page_rpg->addColumn("مبلغ پرداخت", "PayedAmount");
-$col->IsQueryField = false;
-
-$col = $page_rpg->addColumn("مانده قسط", "remain");
-$col->IsQueryField = false;
 
 function MakeWhere(&$where, &$whereParam){
 
@@ -161,7 +173,19 @@ function GetData(){
 		//print_r(ExceptionHandler::PopAllExceptions());
 		//echo PdoDataAccess::GetLatestQueryString();
 	}
-	
+	//.....................................
+	$payColumns = array("pure","wage","PayedDate","PayedAmount","EarlyDays","EarlyAmount","PnltDays",
+			"cur_late","cur_pnlt","pay_pure", "pay_wage", "pay_late", "pay_pnlt", "remain_pure", "remain_wage",
+			"remain_late","remain_pnlt");
+	foreach($payColumns as $key)
+	{
+		if(!empty($_POST["reportcolumn_ord_" . $key]))
+		{
+			$_POST["IsPayRowsInclude"] = true;
+			break;
+		}
+	}
+		
 	//.....................................
 	$computeArr = array();
 	$returnArr = array();

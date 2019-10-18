@@ -75,7 +75,7 @@ function onCalcField(&$rec)
 		
 		
 
-		$rec['monthly_premium'] = $rec['monthly_fee'] - $rec['monthly_insure_include']   ;
+	//	$rec['monthly_premium'] = $rec['monthly_fee'] - $rec['monthly_insure_include']   ;
 		$rec['other_gets'] = $rec['gets'] - $rec['worker_insure_include'];
 		return true;
 }			
@@ -191,7 +191,9 @@ if(isset($_REQUEST["task"]))
   SUM(CASE WHEN (pai.salary_item_type_id = 1 )
    THEN (pai.param7) ELSE '-'  END) work_sheet,
   '-' description ,
-   SUM(pai.pay_value + pai.diff_pay_value * pai.diff_value_coef) monthly_fee,
+  /* SUM(pai.pay_value + pai.diff_pay_value * pai.diff_value_coef) monthly_fee,*/
+  SUM(if(pai.salary_item_type_id not in (5,6),(pai.pay_value + pai.diff_pay_value * pai.diff_value_coef), 0 ) ) monthly_fee,
+  SUM(if(pai.salary_item_type_id  in (5,6),(pai.pay_value + pai.diff_pay_value * pai.diff_value_coef), 0 ) ) monthly_premium,
    SUM(pai.pay_value + pai.diff_pay_value * pai.diff_value_coef) pay,
    SUM(CASE WHEN (pai.salary_item_type_id = 7 )
    THEN (pai.param1 + pai.diff_param1 * pai.diff_param1_coef) END) monthly_insure_include,
@@ -244,7 +246,7 @@ if(isset($_REQUEST["task"]))
                w.contract_start_date,w.contract_end_date, w.ouid, w.salary_pay_proc,
                pa.start_date, pa.end_date  ");
 									 
-//	echo   PdoDataAccess::GetLatestQueryString() ; 		die()			 ; 
+	echo   PdoDataAccess::GetLatestQueryString() ; 		die()			 ; 
 								  
 	PdoDataAccess::runquery('ALTER TABLE HRM_temp_insure_list ADD INDEX(staff_id);');
 	
@@ -286,14 +288,14 @@ if(isset($_REQUEST["task"]))
 				
 				from HRM_temp_insure_list s
 				where  (pay_year = ".$_POST['pay_year'].") AND
-					   (pay_month = ".$_POST['pay_month'].")  
+					   (pay_month = ".$_POST['pay_month'].")  AND staff_id = 12
 					  
 				order by pay_year,pay_month,daily_work_place_no,plname,pfname   
                                  " ; 
 									
 		$res = PdoDataAccess::runquery($query) ; 	
 /*echo PdoDataAccess::GetLatestQueryString() ;
-die(); */
+die();*/
 		$qry = " select bi.Title month_title 
                         from  Basic_Info bi 
                                 where  bi.typeid = 78 AND InfoID = ".$_POST["pay_month"] ; 
@@ -344,7 +346,7 @@ die(); */
 			unset($arr);
 			if($res[$i]['contract_end_date'] != '0000-00-00')
 			{
-				$arr = preg_split('/\//',DateModules::Miladi_to_Shamsi($res[$i]['contract_end_date']));  	
+			/*	$arr = preg_split('/\//',DateModules::Miladi_to_Shamsi($res[$i]['contract_end_date']));  	
 				$year = $arr[0];
 				$month = $arr[1]; 
 				$day = $arr[2];						
@@ -355,7 +357,8 @@ die(); */
 					if ($next_writ == 0 && $res[$i]['salary_pay_proc'] == 1) {
 						$contract_end_date = DateModules::Miladi_to_Shamsi($res[$i]['contract_end_date']);
 					}				
-				}
+				}*/
+				$contract_end_date = DateModules::Miladi_to_Shamsi($res[$i]['contract_end_date']);
 			
 			} else
 			$contract_end_date = NULL; //'1397/12/29';
@@ -391,7 +394,7 @@ die(); */
                                 27,
                                 $cnv->convertStringMs2Dos(iconv('UTF-8', 'WINDOWS-1256', $res[$i]['JobCode'])),/* DSW_JOB */
                                 substr($res[$i]['national_code'],0,10));	 
-						//	echo "***"; die();
+						
 	
 			$counter++;
 			$work_sheet += $res[$i]['work_sheet'];
@@ -460,7 +463,7 @@ die(); */
                                     '27',
                                      0,
                                      0 ) ; 
-                        
+                    print_r($record2).'----'; die();    
                                 $file = "DSKKAR00.DBF" ;
                              /*   if (file_exists(InsureDIRPATH.$file)) {
                                      unlink(InsureDIRPATH.$file);
@@ -584,9 +587,10 @@ die(); */
 			else echo "<td>&nbsp;</td>" ; 
                    
 			if(!empty($res[$i]['contract_end_date']) && $res[$i]['contract_end_date'] !='0000-00-00' ){
+			    
 				list($year,$month,$day) = preg_split('/[\/]/',DateModules::miladi_to_shamsi($res[$i]['contract_end_date']));		
 				if ($year * $month == $res[$i]['pay_year'] * $res[$i]['pay_month']){
-					
+			/*		
 					$qry = " select  count(*) cn
 								from writs
 									where execute_date > '".$res[$i]['contract_end_date']."' and staff_id = ".$res[$i]['staff_id']."
@@ -594,7 +598,7 @@ die(); */
 							" ; 
 					$NWRes = PdoDataAccess::runquery($qry) ; 
 					
-						if($NWRes[0]['cn'] == 0 && $res[$i]['salary_pay_proc'] == 1 )									
+						if($NWRes[0]['cn'] == 0 && $res[$i]['salary_pay_proc'] == 1 )		*/							
 							echo "<td> ".DateModules::miladi_to_shamsi($res[$i]['contract_end_date'])." </td>" ; 
 				}
 				else echo "<td>&nbsp;</td>" ; 

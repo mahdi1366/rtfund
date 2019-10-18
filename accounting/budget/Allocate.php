@@ -86,22 +86,25 @@ function ACC_BudgetAlloc(){
 		defaults : {width : 300},
 		title : "تخصیص بودجه",
 		items : [{
-			xtype : "combo",
-			fieldLabel : "بودجه",
-			store: new Ext.data.Store({
-				fields:["BudgetID","BudgetDesc"],
-				proxy: {
-					type: 'jsonp',
-					url: this.address_prefix + 'budget.data.php?task=SelectBudgets',
-					reader: {root: 'rows',totalProperty: 'totalCount'}
-				},
-				autoLoad : true
-			}),
-			queryMode : "local",
+			xtype : "treecombo",
+			selectChildren: true,
+			canSelectFolders: false,
+			multiselect : false,
 			name : "BudgetID",
 			colspan : 2,
-			valueField : "BudgetID",
-			displayField : "BudgetDesc"
+			width : 620,
+			fieldLabel: "بودجه",
+			store : new Ext.data.TreeStore({
+				proxy: {
+					type: 'ajax',
+					url:  this.address_prefix + 'budget.data.php?task=GetBudgetTree' 
+				},
+				root: {
+					text: "بودجه",
+					id: 'src',
+					expanded: true
+				}
+			})
 		},{
 			xtype : "shdatefield",
 			fieldLabel : "تاریخ تخصیص",

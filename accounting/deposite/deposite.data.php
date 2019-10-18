@@ -40,6 +40,7 @@ function selectDeposites() {
 
 function DepositeProfit(){
 	
+	$ComputeFn = $_POST["ComputeFn"];
 	$TafsiliArr = array();
 	$keys = array_keys($_POST);
 	foreach($keys as $key)
@@ -59,7 +60,7 @@ function DepositeProfit(){
 	}
 		
 	$ToDate = DateModules::shamsi_to_miladi($_POST["ToDate"]);
-	ComputeDepositeProfit($ToDate, $TafsiliArr);
+	ComputeDepositeProfit($ToDate, $TafsiliArr, $ComputeFn);
 	die();
 }
 

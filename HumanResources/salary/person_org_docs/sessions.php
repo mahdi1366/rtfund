@@ -31,7 +31,7 @@ $col->renderer = "function(v,p,r){return r.data.full_title }";
 $col->editor = "bankObject.SITCombo";
 $col->width = 200;
 
-$col = $dg->addColumn("ساعات", "TotalHour", "string");
+$col = $dg->addColumn("ساعات/جلسه", "TotalHour", "string");
 $col->editor = ColumnEditor::TextField(true);
 $col->width = 80;    
 

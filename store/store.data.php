@@ -7,32 +7,37 @@
 require_once '../header.inc.php';
 require_once(inc_response);
 require_once inc_dataReader;
-require_once './budget.class.php';
+require_once './store.class.php';
 require_once 'TreeModules.class.php';
 
-//ini_set("display_errors", "On");
+ini_set("display_errors", "On");
 
 $task = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
 switch ($task) {
 
-	case "SelectBudgets":
-	case "SaveBudget":
-	case "DeleteBudget":
-	case "ActivateBudget":
-	case "GetBudgetTree":
-	
-	case "GetBudgetCostCodes":
-	case "SaveBudgetCostCode":
-	case "RemoveBudgetCostCode":
+	case "SelectGoods":
+	case "SaveGood":
+	case "DeleteGood":
+	case "GetGoodsTree":
+	case "SelectGoodScales":
 		
-	case "SelectBudgetAllocs":
-	case "SaveBudgetAlloc":	
-	case "DeleteBudgetAlloc":
+	case "SelectProperties":
+	case "SaveProperty":
+	case "DeleteProperty":
+		
+	case "SelectAllAssets":	
+	case "selectPropertyValues":
+	case "SaveAsset":
+	case "DeleteAsset":
+	
+	case "SelectAllAssetFlow":
+	case "SaveFlow":
+	case "DeleteFlow":
 		
 		$task();
 };
 
-function SelectBudgets() {
+function SelectGoods() {
 
     $where = " AND IsActive='YES'";
     $param = array();
@@ -42,8 +47,14 @@ function SelectBudgets() {
         $where .= ' and ' . $field . ' like :' . $field;
         $param[':' . $field] = '%' . $_REQUEST['query'] . '%';
     }
+	
+	if(!empty($_GET["GoodID"]))
+	{
+		$where .= " AND GoodID=:g";
+		$param[":g"] = (int)$_GET["GoodID"];
+	}
 
-	$list = ACC_budgets::Get($where . dataReader::makeOrder(), $param);
+	$list = STO_goods::Get($where . dataReader::makeOrder(), $param);
 	print_r(ExceptionHandler::PopAllExceptions());
     $count = $list->rowCount();
 
@@ -56,80 +67,93 @@ function SelectBudgets() {
     die();
 }
 
-function SaveBudget() {
+function SaveGood() {
 
-    $obj = new ACC_budgets();
+    $obj = new STO_goods();
     pdoDataAccess::FillObjectByArray($obj, $_POST);
 
-    if ($obj->BudgetID == '')
+    if ($obj->GoodID == '')
         $result = $obj->Add();
     else
         $result = $obj->Edit();
-	
+	//print_r(ExceptionHandler::PopAllExceptions());
     Response::createObjectiveResponse($result, "");
     die();
 }
 
-function DeleteBudget() {
+function DeleteGood() {
 
-	$obj = new ACC_budgets($_POST["BudgetID"]*1);
+	$obj = new STO_goods($_POST["GoodID"]*1);
 	$obj->IsActive = "NO";
 	$result = $obj->Edit();
     Response::createObjectiveResponse($result, '');
     die();
 }
 
-function ActivateBudget(){
-	
-	$obj = new ACC_budgets($_POST["BudgetID"]*1);
-	$obj->IsActive = "YES";
-	$result = $obj->Edit();
-    Response::createObjectiveResponse($result, '');
-    die();
-}
-
-function GetBudgetTree() {
+function GetGoodsTree() {
 
 	$nodes = PdoDataAccess::runquery("
-			select * from ACC_budgets  where IsActive='YES'
-			order by ParentID,BudgetDesc");
-	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes, "ParentID", "BudgetID", "BudgetDesc");
+			select * from STO_goods  where IsActive='YES'
+			order by ParentID,GoodName");
+	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes, "ParentID", "GoodID", "GoodName");
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo json_encode($returnArr);
 	die();
 }
 
+function SelectGoodScales(){
+	
+	$list = PdoDataAccess::runquery("select * from BaseInfo where TypeID=94");
+	echo dataReader::getJsonData($list, count($list), $_GET['callback']);
+    die();
+} 
+
 //...................................
 
-function GetBudgetCostCodes(){
+function SelectProperties(){
 	
-	$dt = ACC_BudgetCostCodes::Get(" AND BudgetID=?", array($_REQUEST["BudgetID"]));
-	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount());
+	$where = " AND IsActive='YES'";
+	$params = array();
+	
+	if(!empty($_GET["GoodID"]))
+	{
+		$where .= " AND GoodID=?";
+		$params[] = (int)$_GET["GoodID"];
+	}
+	
+	$dt = STO_GoodProperties::Get($where, $params);
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
 }
 
-function SaveBudgetCostCode(){
+function SaveProperty(){
 	
-	$obj = new ACC_BudgetCostCodes();
+	$obj = new STO_GoodProperties();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
-	$result = $obj->Add();
+	
+	if($obj->PropertyID > 0)
+		$result = $obj->Edit();
+	else
+		$result = $obj->Add();
+
+	//print_r(ExceptionHandler::PopAllExceptions());
 	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 
-function RemoveBudgetCostCode(){
+function DeleteProperty(){
 	
-	$obj = new ACC_BudgetCostCodes($_REQUEST["RowID"]);
-	$result = $obj->Remove();
-	echo Response::createObjectiveResponse($result, "");
+	$obj = new STO_GoodProperties($_POST["PropertyID"]);
+	$result =  $obj->Remove();
+	echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
 	die();
 }
 
 //...................................
 
-function SelectBudgetAllocs() {
+function SelectAllAssets() {
 
-    $where = " AND IsActive='YES'";
+    $where = "";
     $param = array();
 
     if (!empty($_REQUEST['query'])) {
@@ -138,7 +162,7 @@ function SelectBudgetAllocs() {
         $param[':' . $field] = '%' . $_REQUEST['query'] . '%';
     }
 
-	$list = ACC_BudgetAlloc::Get($where . dataReader::makeOrder(), $param);
+	$list = STO_Assets::Get($where . dataReader::makeOrder(), $param);
 	print_r(ExceptionHandler::PopAllExceptions());
     $count = $list->rowCount();
 
@@ -151,24 +175,105 @@ function SelectBudgetAllocs() {
     die();
 }
 
-function SaveBudgetAlloc() {
+function selectPropertyValues(){
+	
+	$dt = STO_AssetProperties::Get(" AND AssetID=?", array((int)$_REQUEST["AssetID"]));
+	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
+	die();
+}
 
-    $obj = new ACC_BudgetAlloc();
+function SaveAsset() {
+
+    $obj = new STO_Assets();
     pdoDataAccess::FillObjectByArray($obj, $_POST);
 
-    if ($obj->AllocID == '')
-        $result = $obj->Add();
+    if ($obj->AssetID == '')
+	{
+		$obj->StatusID = STO_STEPID_RAW;
+		$result = $obj->Add();
+		STO_AssetFlow::AddFlow($obj->AssetID, $obj->StatusID);
+	}
     else
         $result = $obj->Edit();
 	
+	//-------------- params ------------------
+	PdoDataAccess::runquery("delete from STO_AssetProperties where AssetID=?", array($obj->AssetID));
+	$arr = array_keys($_POST);
+	foreach($arr as $key)
+	{
+		if(strpos($key, "Property_") !== false)
+		{
+			PdoDataAccess::runquery("insert into STO_AssetProperties values(?,?,?)",
+				array($obj->AssetID, preg_replace("/Property_/", "", $key), $_POST[$key] ));
+		}
+	}
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
     Response::createObjectiveResponse($result, "");
     die();
 }
 
-function DeleteBudgetAlloc() {
+function DeleteAsset() {
 
-	$obj = new ACC_BudgetAlloc($_POST["AllocID"]*1);
-	$result = $obj->Remove();
+	$obj = new STO_Assets((int)$_POST["AssetID"]);
+	$result = $obj->remove();
+    Response::createObjectiveResponse($result, '');
+    die();
+}
+
+//...................................
+
+function SelectAllAssetFlow(){
+	
+	$where = " AND af.IsActive='YES' AND AssetID=:a";
+    $param = array(":a" => $_REQUEST["AssetID"]);
+
+    if (!empty($_REQUEST['query'])) {
+		$field = isset($_REQUEST['fields']) ? $_REQUEST['fields'] : "BudgetDesc";
+        $where .= ' and ' . $field . ' like :' . $field;
+        $param[':' . $field] = '%' . $_REQUEST['query'] . '%';
+    }
+	
+	
+
+	$list = STO_AssetFlow::Get($where . dataReader::makeOrder(), $param);
+	print_r(ExceptionHandler::PopAllExceptions());
+    $count = $list->rowCount();
+
+    if (isset($_GET["start"]) && !isset($_GET["All"]))
+        $list = PdoDataAccess::fetchAll($list, $_GET["start"], $_GET["limit"]);
+    else
+        $list = $list->fetchAll();
+
+    echo dataReader::getJsonData($list, $count, $_GET['callback']);
+    die();
+}
+
+function SaveFlow() {
+
+    $obj = new STO_AssetFlow();
+    pdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+	$obj->IsUsable = $obj->IsUsable == "true" ? "YES" : "NO";
+	
+	
+    if ($obj->FlowID == '')
+	{
+		$obj->ActDate = PDONOW;
+		$obj->ActPersonID = $_SESSION["USER"]["PersonID"];
+		$result = $obj->Add();
+	}
+    else
+        $result = $obj->Edit();
+	
+	//print_r(ExceptionHandler::PopAllExceptions());
+    Response::createObjectiveResponse($result, "");
+    die();
+}
+
+function DeleteFlow() {
+
+	$obj = new STO_AssetFlow((int)$_POST["FlowID"]);
+	$result = $obj->remove();
     Response::createObjectiveResponse($result, '');
     die();
 }

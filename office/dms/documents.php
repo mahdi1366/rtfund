@@ -79,6 +79,7 @@ switch($ObjectType)
 	case "BeneficiaryDocs":
 	case "orgdoc":
 	case "package":
+	case "asset":
 		$access = true;
 		break;
 	//......................................................

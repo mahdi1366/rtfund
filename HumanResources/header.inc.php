@@ -47,9 +47,10 @@ define("HR_ImagePath", "/HumanResources/img/");
 define("HR_TemlDirPath", "/HumanResources/tempDir/");
 define("inc_QueryHelper", $address_prefix . "/HumanResources/global/report/QueryHelper.php");
 
-$js_prefix_address = implode("/" , 
-		array_splice(preg_split('/\//', $_SERVER["SCRIPT_NAME"]),0,
-		count(preg_split('/\//', $_SERVER["SCRIPT_NAME"]))-1)) . "/";
+$address_prefix = getenv("DOCUMENT_ROOT");
+$script = preg_split('/\//', $_SERVER["SCRIPT_NAME"]);
+$script = array_splice($script,0,	count($script)-1);
+$js_prefix_address = implode("/" , $script) . "/";
 
 if(isset($_REQUEST["framework"]))
 {

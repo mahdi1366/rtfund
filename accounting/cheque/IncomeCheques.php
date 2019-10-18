@@ -184,13 +184,16 @@ IncomeCheque.prototype.MakeFilterPanel = function(){
 						"task=SelectIncomeChequeStatuses",
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},
-				fields : ['InfoID','InfoDesc'],
+				/*fields : ['InfoID','InfoDesc'],*/
+				fields : ['TafsiliID','TafsiliDesc'],
 				autoLoad : true
 			}),
 			fieldLabel : "وضعیت چک",
-			displayField : "InfoDesc",
-			queryMode : "local",
-			valueField : "InfoID",
+			/*displayField : "InfoDesc",
+			valueField : "InfoID",*/
+			displayField : "TafsiliDesc",
+			valueField : "TafsiliID",
+			queryMode : "local",			
 			hiddenName :"ChequeStatus"
 		}],
 		buttons :[{
@@ -596,11 +599,14 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 						url: this.address_prefix + 'cheques.data.php?task=selectValidChequeStatuses',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
-					fields :  ['InfoID',"InfoDesc"]
+					/*fields :  ['InfoID',"InfoDesc"]*/
+					fields :  ['TafsiliID',"TafsiliDesc"]
 				}),
 				queryMode : "local",
-				displayField: 'InfoDesc',
-				valueField : "InfoID",
+				displayField: 'TafsiliDesc',
+				valueField : "TafsiliID",
+				/*displayField: 'InfoDesc',
+				valueField : "InfoID",*/
 				width : 400,
 				name : "DstID",
 				listeners : {

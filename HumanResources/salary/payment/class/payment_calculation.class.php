@@ -6,8 +6,9 @@
 require_once '../../salary_params/class/salary_params.class.php';
 require_once '../../person_org_docs/subtracts.class.php';
 require_once getenv("DOCUMENT_ROOT") .'/attendance/traffic/traffic.class.php';
+ini_set('max_execution_time', 1000); //300 seconds = 5 minutes
 
-ini_set("display_errors","Off");
+//ini_set("display_errors","on");
 class manage_payment_calculation extends PdoDataAccess
 {
 	public $month_start; //از ورودي
@@ -426,7 +427,7 @@ $Remainder = $this->subRow['receipt'] ;
 			$entry_title_empty => 0,
 			'param1' => $param1,
 			'param2' => $this->subRow['subtract_id'],
-			'param3' => NULL,
+			'param3' => ( ($key == 11) ? $this->subRow['get_value'] : NULL ) ,
 			'param4' => /*$this->subRow['remainder']*/ $Remainder + $this->subRow['get_value']* $multiply, 
 			'cost_center_id' => 0,
 			'payment_type' => NORMAL
@@ -802,8 +803,8 @@ $Remainder = $this->subRow['receipt'] ;
 		$sum_normalized_tax = $tax_table_type_id = 0; //متغيري جهت نگهداري ماليات تعديل شده براي cur_staff در تمام طول سال
 		
 	 
-echo $this->taxRow['sum_tax_include'] .'--sti---'. $this->sum_tax_include.'---stiii---'.  	 $this->taxHisRow['payed_tax_value'].'--ptv--'.
-  ($this->__MONTH - $this->__START_NORMALIZE_TAX_MONTH + 1).'---m---'.$year_avg_tax_include ;  die();
+/*echo $this->taxRow['sum_tax_include'] .'--sti---'. $this->sum_tax_include.'---stiii---'.  	 $this->taxHisRow['payed_tax_value'].'--ptv--'.
+  ($this->__MONTH - $this->__START_NORMALIZE_TAX_MONTH + 1).'---m---'.$year_avg_tax_include ;  die(); */ 
 
 		reset($this->tax_tables);
 
@@ -1763,6 +1764,8 @@ if($this->backpay)
 	if( parent::AffectedRows() == 0 )
 	{
 		
+		//echo PdoDataAccess::GetLatestQueryString() ; die();
+		
 		$this->log('FAIL' ,'خطا در افزودن اطلاعات به جدول اقلام حقوقی');
 		$pdo->rollBack();
 		ob_clean();				
@@ -2578,7 +2581,10 @@ return true ;
                         GROUP BY w.staff_id;
                 ");		
                 
-                
+           /* if($this->__MONTH == 8 ) {
+              echo PdoDataAccess::GetLatestQueryString().'***<br>' ; 
+                    
+                }    */
 
 		parent::runquery("						
 						insert into HRM_mwv
@@ -2600,7 +2606,10 @@ return true ;
                 );
 		
 	   
-
+   /*if($this->__MONTH == 8 ) {
+              echo PdoDataAccess::GetLatestQueryString().'*eeeeeee*<br>' ; 
+                    
+                }   */
 		/*
 		 اقلام آخرین حکم افراد
 		  union all
@@ -2662,8 +2671,10 @@ return true ;
 							
                         ORDER BY staff_id,execute_date,writ_id,writ_ver
                 ');		
-                
-            //  echo PdoDataAccess::GetLatestQueryString().'***' ; die(); 
+              /*  if($this->__MONTH == 8 ) {
+              echo PdoDataAccess::GetLatestQueryString().'***' ; die(); 
+                    
+                }*/
 		
 		
 	}
@@ -2954,10 +2965,9 @@ return true ;
 															ps.account_no,
 															ps.loan_no
 															") ;  
-		
-		
-	
-												
+														
+																	
+									
 	}
 	
 	
