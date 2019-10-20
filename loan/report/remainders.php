@@ -90,7 +90,7 @@ function showReport(){
 			join LON_ReqParts p on(r.RequestID=p.RequestID AND p.IsHistory='NO')
 			left join BSC_persons p1 on(p1.PersonID=r.ReqPersonID)
 			left join BSC_persons p2 on(p2.PersonID=r.LoanPersonID)
-		where IsEnded='NO' $where
+		where $where
 		group by r.RequestID ,p.PartID
 		order by r.RequestID", $whereParam);
 	

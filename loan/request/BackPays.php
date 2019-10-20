@@ -34,7 +34,6 @@ $dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "PayTypeDesc","", true);
 $dg->addColumn("", "DocID","", true);
 $dg->addColumn("", "LocalNo","", true);
-$dg->addColumn("", "StatusID","", true);
 $dg->addColumn("", "ChequeStatus","", true);
 $dg->addColumn("", "IsGroup","", true);
 $dg->addColumn("", "EqualizationID","", true);
@@ -329,6 +328,9 @@ LoanPay.DeleteRender = function(v,p,r){
 	
 	if(r.data.PayType == "<?= BACKPAY_PAYTYPE_CHEQUE ?>" || r.data.PayType == "<?= BACKPAY_PAYTYPE_CORRECT ?>")
 		return "";
+		
+	if(r.data.DocID*1 > 0)
+		return "";
 	
 	return "<div align='center' title='حذف' class='remove' "+
 		"onclick='LoanPayObject.DeletePay();' " +
@@ -343,15 +345,9 @@ LoanPay.RegDocRender = function(v,p,r){
 		||  r.data.PayType == "<?= BACKPAY_PAYTYPE_CORRECT ?>")
 		return st = "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+r.data.LocalNo+"</a>";
 	
-	if(r.data.LocalNo == null)
+	if(r.data.DocID*1 == 0)
 		return "<div align='center' title='صدور سند' class='send' "+
-		"onclick='LoanPayObject.BeforeRegisterDoc(1);' " +
-		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";
-	else if(r.data.StatusID == "<?= ACC_STEPID_RAW ?>")
-		return "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+ 
-			r.data.LocalNo + "</a>" + "<div align='center' title='ویرایش سند' class='edit' "+
-		"onclick='LoanPayObject.BeforeRegisterDoc(2);' " +
+		"onclick='LoanPayObject.ExecuteEvent();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
 	else

@@ -211,7 +211,7 @@ define("EVENT_LOANDAILY_innerSource", 161);
 define("EVENT_LOANDAILY_agentSource_committal", 1722);
 define("EVENT_LOANDAILY_agentSource_non_committal", 1723);
 define("EVENT_LOANDAILY_innerLate", 1724);
-define("EVENT_LOANDAILY_agentlate", 1725);
+define("EVENT_LOANDAILY_agentlate", 1725);  
 define("EVENT_LOANDAILY_innerPenalty", 1726);
 define("EVENT_LOANDAILY_agentPenalty", 1727);
 

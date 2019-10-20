@@ -474,7 +474,8 @@ function ChangeChequeStatus(){
 
 			$eventobj = new ExecuteEvent($EventID);
 			$eventobj->Sources = array($ReqObj->RequestID, $partObj->PartID, $PayObj->BackPayID);
-			$eventobj->AllRowsAmount = $PayObj->PayAmount;
+			if($Status != INCOMECHEQUE_VOSUL)
+				$eventobj->AllRowsAmount = $PayObj->PayAmount;
 			$eventobj->DocObj = $DocObj;
 			$result = $eventobj->RegisterEventDoc($pdo);
 			if(!$result)

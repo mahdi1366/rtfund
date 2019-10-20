@@ -24,7 +24,6 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "request.data.php?task=GetPa
 
 $dg->addColumn("", "PayID","", true);
 $dg->addColumn("", "RequestID","", true);
-$dg->addColumn("", "StatusID","", true);
 $dg->addColumn("", "DocID","", true);
 $dg->addColumn("", "ComputeMode","", true);
 
@@ -132,7 +131,7 @@ PartPayment.RemainRender = function(v,p,r){
 
 PartPayment.DeleteRender = function(v,p,r){
 	
-	if(r.data.LocalNo != "" && r.data.LocalNo != null)
+	if(r.data.DocID*1 > 0)
 		return "";
 	return "<div align='center' title='حذف' class='remove' "+
 		"onclick='PartPaymentObject.DeletePayment();' " +
@@ -141,38 +140,15 @@ PartPayment.DeleteRender = function(v,p,r){
 }
 
 PartPayment.DocRender = function(v,p,r){
-	
-	st = "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+v+"</a>";
-	
-	if(PartPaymentObject.StatusID != "<?= LON_REQ_STATUS_CONFIRM ?>")
-		return st;
-	if(r.data.LocalNo != "" && r.data.LocalNo != null)
+		
+	if(r.data.DocID*1 == 0)
 	{
-		if(r.data.StatusID == "<?= ACC_STEPID_RAW ?>")
-		{
-			st += "<div align='center' title='برگشت سند' class='undo' "+
-				"onclick='PartPaymentObject.ReturnPayPartDoc();' " +
-				"style='float:left;background-repeat:no-repeat;background-position:center;" +
-				"cursor:pointer;width:16px;height:16'></div>";
-			
-			st += "&nbsp;&nbsp;&nbsp;<div align='center' title='اصلاح سند' class='edit' "+
-				"onclick='PartPaymentObject.BeforeRegDoc(2);' " +
-				"style='float:left;background-repeat:no-repeat;background-position:center;" +
-				"cursor:pointer;width:16px;height:16'></div>";
-		}
-		return st;
-	}
-	
-	if(r.data.ComputeMode == "NEW")
 		return "<div align='center' title='صدور سند' class='send' "+
 		"onclick='PartPaymentObject.ExecuteEvent();' " +
 		"style='float:right;background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
-	else
-		return "<div align='center' title='صدور سند' class='send' "+
-		"onclick='PartPaymentObject.BeforeRegDoc(1);' " +
-		"style='float:right;background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";
+	}
+	return "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+v+"</a>";
 }
 
 PartPaymentObject = new PartPayment();

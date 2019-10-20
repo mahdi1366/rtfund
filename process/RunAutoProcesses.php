@@ -4,63 +4,45 @@
 // create Date: 97.12
 //---------------------------
 
+ini_set("display_errors", "On");
 ob_start();
 
 require_once '../framework/configurations.inc.php';
+set_include_path(DOCUMENT_ROOT . "/generalClasses");
 
 $fp = fopen(DOCUMENT_ROOT . "/storage/loanDaily.html", "w");
-set_include_path(DOCUMENT_ROOT . "/generalClasses");
 
 require_once '../definitions.inc.php';
 require_once DOCUMENT_ROOT . '/generalClasses/InputValidation.class.php';
 require_once DOCUMENT_ROOT . '/generalClasses/PDODataAccess.class.php';
 require_once DOCUMENT_ROOT . '/generalClasses/DataAudit.class.php';
+require_once DOCUMENT_ROOT . '/generalClasses/DateModules.class.php';
+
+define("SYSTEMID", 1);
+session_start();
+$_SESSION["USER"] = array("PersonID" => 1000);
+$_SESSION['LIPAddress'] = '';
+$_SESSION["accounting"]["CycleID"] = DateModules::GetYear(DateModules::shNow());
 
 require_once '../office/dms/dms.class.php';
-
 require_once '../loan/request/request.class.php';
-require_once '../commitment/ExecuteEvent.class.php';
+//require_once '../commitment/ExecuteEvent.class.php';
 
-if(empty($_POST["manual"]))
-{
-	define("SYSTEMID", 1);
-	session_start();
-	$_SESSION["USER"] = array("PersonID" => 1000);
-	$_SESSION['LIPAddress'] = '';
-	$_SESSION["accounting"]["CycleID"] = DateModules::GetYear(DateModules::shNow());
-}
+echo "--------";
+$htmlStr = ob_get_contents();
+ob_end_clean(); 
+$htmlStr = preg_replace('/\\n/', "<br>", $htmlStr);
+fwrite($fp, $htmlStr);
+fclose($fp);
+die(); 
 
-if(!empty($_POST["manual"]))
-{
-	$params = array();
-	$query = "
-	select * 
-	from LON_requests  r
-	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
-	, jdate d
-	where ComputeMode='NEW' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
-		AND d.Jdate between :sd AND :ed
-		" ;
-	if(!empty($_POST["RequestID"]))
-	{
-		$query .= " AND  r.RequestID=:r";
-		$params[":r"] = (int)$_POST["RequestID"];
-	}
-	$params[":sd"] = $_POST["FromComputeDate"];
-	$params[":ed"] = $_POST["ToComputeDate"];	
-	
-	$reqs = PdoDataAccess::runquery($query, $params);
-}
-else
-{
-	$query = "
-	select * 
-	from LON_requests  r
-	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
-	where ComputeMode='NEW' AND StatusID=" . LON_REQ_STATUS_CONFIRM;
-	
-	$reqs = PdoDataAccess::runquery($query);
-}
+
+
+$query = " select * from LON_requests  r
+join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
+where ComputeMode='NEW' AND StatusID=" . LON_REQ_STATUS_CONFIRM;
+
+$reqs = PdoDataAccess::runquery_fetchMode($query);
 
 //........................................................
 
@@ -78,14 +60,12 @@ $objArr = array(
 $pdo = PdoDataAccess::getPdoObject();
 $pdo->beginTransaction();
 	
-$ComputeDate = !empty($_POST["manual"]) ? null : DateModules::Now();
+$ComputeDate = DateModules::Now();
 echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8"><body dir=rtl>';
 echo "<br>****************************<BR>" . DateModules::miladi_to_shamsi($ComputeDate) . 
 		"<br>****************************<br>";
-foreach($reqs as $row)
+while($row = $reqs->fetch())
 {
-	$ComputeDate = !empty($_POST["manual"]) ? $row["gdate"] : DateModules::Now();
-	
 	$eventID = "";
 	$LateEvent = "";
 	$PenaltyEvent = "";
@@ -103,16 +83,16 @@ foreach($reqs as $row)
 		else
 			$eventID = EVENT_LOANDAILY_agentSource_non_committal;
 		
-		$LateEvent = EVENT_LOANDAILY_agentLate;
+		$LateEvent = EVENT_LOANDAILY_agentlate;
 		$PenaltyEvent = EVENT_LOANDAILY_agentPenalty;
 	}
-	
 	if($objArr[$eventID] != null)
 		$obj = &$objArr[$eventID];
 	else {
 		$objArr[$eventID] = new ExecuteEvent($eventID);
 		$obj = &$objArr[$eventID];
 	}
+	$obj->DocDate = $ComputeDate;
 	$obj->Sources = array($row["RequestID"], $row["PartID"] , $ComputeDate);
 	$result = $obj->RegisterEventDoc($pdo);
 	if(!$result || ExceptionHandler::GetExceptionCount() > 0)
@@ -130,6 +110,7 @@ foreach($reqs as $row)
 		$objArr[$LateEvent] = new ExecuteEvent($LateEvent);
 		$obj = &$objArr[$LateEvent];
 	}
+	$obj->DocDate = $ComputeDate;
 	$obj->Sources = array($row["RequestID"], $row["PartID"] , $ComputeDate);
 	$result = $obj->RegisterEventDoc($pdo);
 	if(!$result || ExceptionHandler::GetExceptionCount() > 0)
@@ -147,6 +128,7 @@ foreach($reqs as $row)
 		$objArr[$PenaltyEvent] = new ExecuteEvent($PenaltyEvent);
 		$obj = &$objArr[$PenaltyEvent];
 	}
+	$obj->DocDate = $ComputeDate;
 	$obj->Sources = array($row["RequestID"], $row["PartID"] , $ComputeDate);
 	$result = $obj->RegisterEventDoc($pdo);
 	if(!$result || ExceptionHandler::GetExceptionCount() > 0)
@@ -166,4 +148,5 @@ $htmlStr = preg_replace('/\\n/', "<br>", $htmlStr);
 fwrite($fp, $htmlStr);
 fclose($fp);
 
+die(); 
 ?>

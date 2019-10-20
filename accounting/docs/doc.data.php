@@ -380,45 +380,16 @@ function selectDocItems() {
 		}
 	}
 	$where .= dataReader::makeOrder();
-	$no = ACC_DocItems::GetAllCount($where, $whereParam);
+	
+	//$no = ACC_DocItems::GetAllCount($where, $whereParam);
+	//$temp = ACC_DocItems::GetAll($where . " limit " . $_REQUEST["start"] . "," . $_REQUEST["limit"], $whereParam);
+	//$temp = $temp->fetchAll();
+	
+	$temp = ACC_DocItems::GetAll($where, $whereParam);
+	$no = $temp->rowCount();
+	$temp = PdoDataAccess::fetchAll($temp, $_REQUEST["start"], $_REQUEST["limit"]);
 
-	$temp = ACC_DocItems::GetAll($where . " limit " . $_REQUEST["start"] . "," . $_REQUEST["limit"], $whereParam);
-	print_r(ExceptionHandler::PopAllExceptions());
-	$temp = $temp->fetchAll();
-	//............. fill paramValues ........................
-	/*for($i=0; $i<count($temp); $i++)
-	{
-		$CostObj = new ACC_CostCodes($temp[$i]["CostID"]);
-		
-		for($j=1; $j<=3; $j++)
-		{
-			$temp[$i]["paramDesc" . $j] = "";
-			$temp[$i]["ParamValue" . $j] = "";
-			
-			if($CostObj->{"param" . $j} == "" || $temp[$i]["param" . $j] == "")
-				continue;
-			
-			$paramObj = new ACC_CostCodeParams($CostObj->{"param" . $j});
-			$temp[$i]["paramDesc" . $j] = $paramObj->ParamDesc;
-					
-			if(!empty($paramObj->SrcTable))
-			{
-				$dt = PdoDataAccess::runquery("select ". $paramObj->SrcDisplayField . " as title " .
-					" from " . $paramObj->SrcTable . 
-					" where " . $paramObj->SrcValueField . "=?", array($temp[$i]["param" . $j]));
-				if(count($dt) > 0)
-					$temp[$i]["ParamValue" . $j] = $dt[0]["title"];
-			}
-			else if($paramObj->ParamType == "combo")
-			{
-				$dt = PdoDataAccess::runquery("select ParamValue as title " .
-					" from ACC_CostCodeParamItems where ItemID=?", array($temp[$i]["param" . $j]));
-				if(count($dt) > 0)
-					$temp[$i]["ParamValue" . $j] = $dt[0]["title"]; 
-			}
-		}
-	}*/
-	//..........................................................................
+	print_r(ExceptionHandler::PopAllExceptions());	
 	$dt = PdoDataAccess::runquery("
 		select sum(DebtorAmount) bd,sum(CreditorAmount) bs
 		from ACC_DocItems
@@ -1175,15 +1146,30 @@ function selectParamItems(){
 			array($_GET["ParamID"]));
 	if($dt[0]["SrcTable"] != "")
 	{
-		$dt = PdoDataAccess::runquery("select ".$dt[0]["SrcValueField"]." as id, "
-			.$dt[0]["SrcDisplayField"] . " as title from " . $dt[0]["SrcTable"]
-			. ($dt[0]["SrcWhere"] != "" ? " where " . $dt[0]["SrcWhere"] : ""));
+		$params = array();
+		$query = "select ".$dt[0]["SrcValueField"]." as id, "
+			.$dt[0]["SrcDisplayField"] . " as title from " . $dt[0]["SrcTable"] . " where 1=1 "
+			. ($dt[0]["SrcWhere"] != "" ? " AND " . $dt[0]["SrcWhere"] : "");
+		if(!empty($_GET["query"]))
+		{
+			$query .= " AND concat(".$dt[0]["SrcValueField"].",".$dt[0]["SrcDisplayField"].") like :q ";
+			$params[":q"] = "%" . $_GET["query"] . "%";
+		}
+		$dt = PdoDataAccess::runquery($query,$params);
 	}
 	else
-		$dt = PdoDataAccess::runquery("select ItemID as id,ParamValue as title"
-				. " from ACC_CostCodeParamItems where ParamID=?", 
-			array($_GET["ParamID"]));
-
+	{
+		$params = array(":p" => $_GET["ParamID"]);
+		$query = "select ItemID as id,ParamValue as title"
+				. " from ACC_CostCodeParamItems where ParamID=:p";
+		if(!empty($_GET["query"]))
+		{
+			$query .= " AND ParamValue like :q ";
+			$params[":q"] = "%" . $_GET["query"] . "%";
+		}
+		$dt = PdoDataAccess::runquery($query,$params);
+	}
+	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();
 }

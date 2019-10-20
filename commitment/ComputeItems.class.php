@@ -148,6 +148,7 @@ class EventComputeItems {
 					$ComputeArr = LON_Computes::ComputePayments($ReqObj->RequestID);
 					self::$LoanComputeArray[ $ReqObj->RequestID ] = $ComputeArr;
 				}
+				print_r($ComputeArr);
 				foreach($ComputeArr as $row)
 				{
 					if($row["type"] != "pay" || $row["BackPayID"] != $BackPayObj->BackPayID)
@@ -217,8 +218,7 @@ class EventComputeItems {
 		if($ItemID == "80" || $ItemID == "81")
 		{
 
-			if($PartObj->CustomerWage*1 == 0 || 
-				( $PartObj->ComputeMode != "NEW" && $PartObj->ComputeMode != "NOAVARI"))
+			if($PartObj->CustomerWage*1 == 0)
 				return 0; 
 
 			if(isset(self::$LoanPuresArray[ $ReqObj->RequestID ]))
@@ -259,7 +259,7 @@ class EventComputeItems {
 				return $AgentWage;
 		}
 		
-		$Today = DateModules::Now();
+		$Today = $ComputeDate;
 		$Yesterday = DateModules::AddToGDate($Today, -1);
 		
 		if(isset(self::$LoanComputeArray[ $ReqObj->RequestID ][ $Today ]))

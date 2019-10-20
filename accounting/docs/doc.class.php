@@ -515,7 +515,7 @@ class ACC_DocItems extends PdoDataAccess {
 	static function GetAll($where = "", $whereParam = array()) {
 
 		$query = "select si.*,cc.CostCode,
-			concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc) CostDesc,
+			concat_ws('-',b1.blockDesc,b2.BlockDesc,b3.BlockDesc,b4.BlockDesc) CostDesc,
 			t.TafsiliDesc,bi.InfoDesc TafsiliGroupDesc,
 			t2.TafsiliDesc as Tafsili2Desc,bi2.InfoDesc Tafsili2GroupDesc,
 			t3.TafsiliDesc as Tafsili3Desc,bi3.InfoDesc Tafsili3GroupDesc,
@@ -530,9 +530,10 @@ class ACC_DocItems extends PdoDataAccess {
 			
 		from ACC_DocItems si
 			join ACC_CostCodes cc using(CostID)
-			join ACC_blocks b1 on(cc.level1=b1.blockID)
-			join ACC_blocks b2 on(cc.level2=b2.blockID)
-			join ACC_blocks b3 on(cc.level3=b3.blockID)
+			left join ACC_blocks b1 on(cc.level1=b1.blockID)
+			left join ACC_blocks b2 on(cc.level2=b2.blockID)
+			left join ACC_blocks b3 on(cc.level3=b3.blockID)
+			left join ACC_blocks b4 on(cc.level4=b4.blockID)
 			
 			left join BaseInfo bi on(si.TafsiliType=InfoID AND TypeID=2)
 			left join BaseInfo bi2 on(si.TafsiliType2=bi2.InfoID AND bi2.TypeID=2)

@@ -170,7 +170,7 @@ class ACC_CostCodes extends PdoDataAccess {
 			left join ACC_blocks b2 on(b2.levelID=2 AND b2.blockID=c.level2)
 			left join ACC_blocks b3 on(b3.levelID=3 AND b3.blockID=c.level3)
 			left join ACC_blocks b4 on(b4.levelID=4 AND b4.blockID=c.level4)
-			set c.CostCode=concat_ws('-', b1.blockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode)
+			set c.CostCode=concat_ws('', b1.blockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode)
 			where CostID=?";
         $res = parent::runquery($query, array($this->CostID), $db);
         if ($res === false) {
@@ -237,7 +237,7 @@ class ACC_CostCodes extends PdoDataAccess {
 			left join ACC_blocks b2 on(b2.levelID=2 AND b2.blockID=c.level2)
 			left join ACC_blocks b3 on(b3.levelID=3 AND b3.blockID=c.level3)
 			left join ACC_blocks b4 on(b4.levelID=4 AND b4.blockID=c.level4)
-			set c.CostCode=concat_ws('-', b1.blockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode)
+			set c.CostCode=concat_ws('', b1.blockCode,b2.BlockCode,b3.BlockCode,b4.BlockCode)
 			where CostID=?";
         $res = parent::runquery($query, array($this->CostID), $db);
         if ($res === false) {

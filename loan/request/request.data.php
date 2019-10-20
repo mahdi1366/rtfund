@@ -905,6 +905,8 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 				if($returnMode)
 					return false;
 				$pdo->rollBack();
+				print_r($obj2);
+				print_r(ExceptionHandler::PopAllExceptions());
 				echo Response::createObjectiveResponse(false, "2");
 				die();
 			}

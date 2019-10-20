@@ -10,7 +10,7 @@ require_once inc_dataGrid;
 $accessObj = FRW_access::GetAccess($_POST["MenuID"]);
 //...................................................
 
-$dg_cost = new sadaf_datagrid('cost',$js_prefix_address."baseinfo.data.php?task=SelectCostCode&All=true",'divCost');
+$dg_cost = new sadaf_datagrid('cost',$js_prefix_address."baseinfo.data.php?task=SelectCostCode",'divCost');
 
 $dg_cost->addcolumn('','IsActive',"",true);
 $dg_cost->addcolumn('','IsNew',"",true);

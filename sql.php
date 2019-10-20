@@ -1,5 +1,18 @@
 <?php
 /*
+insert into aa select DocID,@i:=@i+1 from (select a.* from ACC_docs a, 
+ * (select @i:=0)t where cycleID=1398 AND DocDate>1 order by DocDate)t 
+
+ * update aa join ACC_docs using(DocID) set LocalNo=no 
+
+ * update ACC_DocItems join ACC_docs using(DocID) join LON_BackPays b on(IncomeChequeID=SourceID2)
+join LON_ReqParts p on(IsHistory='NO' AND b.RequestID=p.RequestID) set DocDate=if(PartDate>'2019-03-21',PartDate,'2019-03-21') where EventID=1766
+ * 
+ *  */
+
+
+
+/*
 insert into STO_AssetFlow(AssetID,ActDate,ActPersonID,StatusID,IsUsable,ReceiverPersonID) 
 select RowID,now(),1000,2,'YES', case `col 5` when 'اشرفی' then 2313
 when 'آخوند زاده' then 2537 
@@ -87,7 +100,18 @@ insert into ACC_tafsilis(TafsiliCode,TafsiliType,TafsiliDesc,ObjectID)
 
 */
 
-
+/*
+	$StartDate = "1400-01-01"	;
+	$toDate = '1500-01-01';
+	
+	while($StartDate < $toDate)
+	{
+		PdoDataAccess::runquery("insert into dates values(?,?)", array(
+		DateModules::shamsi_to_miladi($StartDate,"-"),$StartDate
+		));
+		$StartDate = DateModules::AddToJDate($StartDate, 1);
+	}
+ *  */
 
 ALTER TABLE `framewor_rtfund`.`ACC_ChequeHistory` ADD COLUMN `DocID` INTEGER UNSIGNED DEFAULT 0 AFTER `details`;
 

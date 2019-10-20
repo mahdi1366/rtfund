@@ -5,14 +5,14 @@
 //-----------------------------
 
 require_once DOCUMENT_ROOT . '/accounting/docs/doc.class.php';
-require_once "ComputeItems.class.php";
+require_once DOCUMENT_ROOT . "/commitment/ComputeItems.class.php";
 
 class ExecuteEvent {
 	
 	private $pdo; 
 	public $EventID;
 	public $BranchID;
-	
+	public $DocDate;
 	public $DocObj;
 	
 	public $EventFunction;
@@ -123,7 +123,7 @@ class ExecuteEvent {
 
 		if(count($eventRows) == 0)
 		{
-			ExceptionHandler::PushException("رویداد فاقد ردیف می باشد");
+			ExceptionHandler::PushException("رویداد ".$this->EventID." فاقد ردیف می باشد");
 			return false;
 		}
 
@@ -141,7 +141,7 @@ class ExecuteEvent {
 			$this->DocObj = new ACC_docs();
 			$this->DocObj->RegDate = PDONOW;
 			$this->DocObj->regPersonID = $_SESSION['USER']["PersonID"];
-			$this->DocObj->DocDate = PDONOW;
+			$this->DocObj->DocDate = empty($this->DocDate) ? PDONOW : $this->DocDate;
 			$this->DocObj->CycleID = $_SESSION["accounting"]["CycleID"];
 			$this->DocObj->BranchID = $this->BranchID;
 			$this->DocObj->DocType = DOCTYPE_EXECUTE_EVENT;

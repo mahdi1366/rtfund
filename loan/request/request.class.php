@@ -1521,6 +1521,7 @@ class LON_Computes extends PdoDataAccess{
 	
 	static function ComputePayments($RequestID, $ComputeDate = null, $pdo = null, $ComputePenalty = true){
 
+		$bankCompute = false;
 		$obj = LON_ReqParts::GetValidPartObj($RequestID);
 		$LatePercent = $obj->LatePercent;
 		$ForfeitPercent = $ComputePenalty ? $obj->ForfeitPercent : 0;
@@ -1574,7 +1575,7 @@ class LON_Computes extends PdoDataAccess{
 				}
 				else
 				{
-					if($obj->ComputeMode == "BANK")
+					if($obj->ComputeMode == "BANK" && $bankCompute)
 					{
 						$records[$i]["pure"] = $records[$i]["RecordAmount"]*1;
 						$records[$i]["wage"] = 0;
@@ -1649,7 +1650,7 @@ class LON_Computes extends PdoDataAccess{
 						
 						if($pays[ count($pays)-1 ]["PayedDate"] != $PayRecords[$j-1]["RecordDate"])
 						{
-							if($obj->ComputeMode == "BANK")
+							if($obj->ComputeMode == "BANK" && $bankCompute)
 							{
 								if($obj->PayCompute == "forfeit")
 								{
@@ -1694,7 +1695,7 @@ class LON_Computes extends PdoDataAccess{
 			$total = $total_pure + $total_wage + $total_late + $total_pnlt;
 			if($total > 0)
 			{
-				if($obj->ComputeMode == "BANK")
+				if($obj->ComputeMode == "BANK" && $bankCompute)
 				{
 					if($obj->PayCompute == "installment")
 					{
@@ -1807,7 +1808,7 @@ class LON_Computes extends PdoDataAccess{
 				$total = $records[$k]["remain_pure"] + $records[$k]["remain_wage"];
 				if($total > 0)
 				{
-					if($obj->ComputeMode == "BANK")
+					if($obj->ComputeMode == "BANK" && $bankCompute)
 					{
 						$diffDays = 0;
 						$EarlyAmount = 0;
@@ -1892,7 +1893,7 @@ class LON_Computes extends PdoDataAccess{
 				
 				if($pays[ count($pays)-1 ]["PayedDate"] != $PayRecords[count($PayRecords)-1]["RecordDate"])
 				{
-					if($obj->ComputeMode == "BANK")
+					if($obj->ComputeMode == "BANK" && $bankCompute)
 					{
 						if($obj->PayCompute == "forfeit")
 						{	
@@ -2382,10 +2383,9 @@ class LON_BackPays extends PdoDataAccess{
 		 		i.ChequeNo,
 				i.ChequeStatus,
 				t.TafsiliDesc ChequeStatusDesc,
-				bi.InfoDesc PayTypeDesc, 				
-				d.DocID,
-				d.LocalNo,
-				d.StatusID
+				bi.InfoDesc PayTypeDesc,
+				concat_ws('',d.DocID,t1.DocID) DocID,
+				concat_ws('',d.LocalNo,t1.LocalNo) LocalNo
 			from LON_BackPays p
 			left join BaseInfo bi on(bi.TypeID=6 AND bi.InfoID=p.PayType)
 			left join ACC_IncomeCheques i using(IncomeChequeID)
@@ -2394,6 +2394,14 @@ class LON_BackPays extends PdoDataAccess{
 			left join ACC_DocItems di on(SourceID1=RequestID AND SourceID2=BackPayID AND SourceType in(8,5))
 			left join ACC_docs d on(di.DocID=d.DocID)
 			
+			left join (
+				select di2.SourceID3 ,d2.DocID,LocalNo 
+				from COM_events e
+					join ACC_docs d2 on(e.EventID=d2.EventID) 
+					join ACC_DocItems di2 on(d2.DocID=di2.DocID)
+				where ComputeFn='LoanBackPay'
+				group by di2.SourceID3
+			)t1 on(p.BackPayID=t1.SourceID3)
 			where " . $where . " group by BackPayID " . $order, $param);
 			
 		/*return PdoDataAccess::runquery("
@@ -2518,12 +2526,25 @@ class LON_payments extends OperationClass{
 	
 	static function FullSelect($where = '', $whereParams = array(), $order = "") {
 		
-		return parent::runquery_fetchMode("select p.*,rp.ComputeMode,d.DocID,d.LocalNo,d.StatusID 
+		return parent::runquery_fetchMode("select p.*,rp.ComputeMode,
+				concat_ws('',d.DocID,t1.DocID) DocID,
+				concat_ws('',d.LocalNo,t1.LocalNo) LocalNo
 			from LON_payments p
 			join LON_ReqParts rp on(p.RequestID=rp.RequestID AND rp.IsHistory='NO')
+			
 			left join ACC_DocItems di on(di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
 				AND di.SourceID1=p.RequestID AND di.SourceID3=p.PayID) 
 			left join ACC_docs d on(di.DocID=d.DocID)
+			
+			left join (
+				select di2.SourceID3 ,d2.DocID,LocalNo 
+				from COM_events e
+					join ACC_docs d2 on(e.EventID=d2.EventID) 
+					join ACC_DocItems di2 on(d2.DocID=di2.DocID)
+				where ComputeFn='PayLoan'
+				group by di2.SourceID3
+			)t1 on(p.PayID=t1.SourceID3)
+			
 			where 1=1 " . $where .  
 			" group by p.PayID " . $order, $whereParams);
 	}

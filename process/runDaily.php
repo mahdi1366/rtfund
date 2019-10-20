@@ -41,12 +41,12 @@ function process_rundaily(){
 		},{
 			xtype : "shdatefield",
 			fieldLabel : "از تاریخ",
-			name : "FromComputeDate",
+			name : "fdate",
 			allowBlank : false
 		},{
 			xtype : "shdatefield",
 			fieldLabel : "تا تاریخ",
-			name : "ToComputeDate",
+			name : "tdate",
 			allowBlank : false
 		}],
 		buttons: [{
@@ -63,6 +63,14 @@ process_rundaily.prototype.Run = function(){
 	
 	if(!this.wizardPanel.getForm().isValid())
 		return;
+	
+	RequestID = this.wizardPanel.down("[name=RequestID]").getValue();
+	
+	window.open(this.address_prefix + "98dailyRegister.php?" +
+			"fdate=" + this.wizardPanel.down("[name=fdate]").getRawValue() + 
+			"&tdate=" +	this.wizardPanel.down("[name=tdate]").getRawValue() +
+			(RequestID*1>0 ? "&RequestID=" + RequestID : "" ));
+	return;
 	
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg:'در حال ذخیره سازی ...'});
 	mask.show();

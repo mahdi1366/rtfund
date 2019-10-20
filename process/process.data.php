@@ -28,11 +28,4 @@ function SendRegisterProcess(){
 	die();
 }
 
-function RunDaily(){
-	
-	$_POST["manual"] = true;
-	require_once './RunAutoProcesses.php';
-	echo Response::createObjectiveResponse(true, "");
-	die();
-}
 ?>
