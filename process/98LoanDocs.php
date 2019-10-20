@@ -24,7 +24,7 @@ $GToDate = '2019-10-19'; //1398/07/27
 $reqs = PdoDataAccess::runquery_fetchMode(" select r.RequestID from LON_requests r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
 	where 1=1  " . 
-		(!empty($_REQUEST["ReqID"]) ? " AND r.RequestID >= ".$_REQUEST["ReqID"] : "" ) . "
+		(!empty($_REQUEST["ReqID"]) ? " AND r.RequestID = ".$_REQUEST["ReqID"] : "" ) . "
 		AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
 		order by RequestID ");
 //echo PdoDataAccess::GetLatestQueryString();
@@ -41,7 +41,7 @@ while($requset=$reqs->fetch())
 	$reqObj = new LON_requests($requset["RequestID"]);
 	$partObj = LON_ReqParts::GetValidPartObj($requset["RequestID"]);
 	
-	$DocObj[ $reqObj->RequestID ] = null;
+	/*$DocObj[ $reqObj->RequestID ] = null;
 	if($partObj->PartDate >= $GFromDate)
 	{
 		Allocate($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
@@ -54,15 +54,16 @@ while($requset=$reqs->fetch())
 	$DocObj[ $reqObj->RequestID ] = null;
 	PaymentCheque($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
 	$DocObj[ $reqObj->RequestID ] = null;
+	*/
 	BackPayCheques($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
 	$DocObj[ $reqObj->RequestID ] = null;
 
-	BackPay($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	/*BackPay($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
 	$DocObj[ $reqObj->RequestID ] = null;
 	//DailyIncome($reqObj, $partObj, $pdo);
 	//DailyWage($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
 	$DocObj[ $reqObj->RequestID ] = null;
-	
+	*/
 	//--------------------------------------------------
 	$pdo->commit();
 
@@ -208,9 +209,10 @@ function BackPayCheques($reqObj , $partObj, &$DocObj, $pdo){
 	global $GFromDate;
 	$result = true;
 	$cheques = PdoDataAccess::runquery(
-			"select * from LON_BackPays
-				join ACC_IncomeCheques i using(IncomeChequeID) 
-				where RequestID=? AND i.ChequeDate>='$GFromDate' order by PayDate"
+			"select *,substr(ATS,1,10) regDate from LON_BackPays
+                join ACC_IncomeCheques i using(IncomeChequeID) 
+                join ACC_ChequeHistory h on(i.IncomeChequeID=h.IncomeChequeID) 
+                where RequestID=? AND substr(ATS,1,10)>='$GFromDate' AND i.ChequeStatus=".INCOMECHEQUE_NOTVOSUL." order by ATS"
 			, array($reqObj->RequestID));
 	foreach($cheques as $bpay)
 	{
@@ -222,7 +224,7 @@ function BackPayCheques($reqObj , $partObj, &$DocObj, $pdo){
 		$eventobj = new ExecuteEvent($EventID);
 		$eventobj->Sources = array($reqObj->RequestID, $bpay["IncomeChequeID"]);
 		$eventobj->DocObj = $DocObj;
-		$eventobj->DocDate = $bpay["ChequeDate"];
+		$eventobj->DocDate = $bpay["regDate"];
 		$eventobj->AllRowsAmount = $bpay["PayAmount"];
 		$result = $eventobj->RegisterEventDoc($pdo);
 		if($result)
@@ -239,10 +241,10 @@ function BackPayCheques($reqObj , $partObj, &$DocObj, $pdo){
 	ob_flush();flush();
 	//--------------در جریان وصول------------------------
 	$cheques = PdoDataAccess::runquery(
-			"select * from LON_BackPays
-				join ACC_IncomeCheques i using(IncomeChequeID) 
-				where RequestID=? AND i.ChequeDate>='$GFromDate'
-				AND ChequeStatus <>".INCOMECHEQUE_NOTVOSUL." order by PayDate"
+			"select *,substr(ATS,1,10) regDate from LON_BackPays
+                join ACC_IncomeCheques i using(IncomeChequeID) 
+                join ACC_ChequeHistory h on(i.IncomeChequeID=h.IncomeChequeID) 
+                where RequestID=? AND substr(ATS,1,10)>='$GFromDate' AND i.ChequeStatus<>".INCOMECHEQUE_NOTVOSUL." order by PayDate"
 			, array($reqObj->RequestID));
 	foreach($cheques as $bpay)
 	{
@@ -254,7 +256,7 @@ function BackPayCheques($reqObj , $partObj, &$DocObj, $pdo){
 		$eventobj = new ExecuteEvent($EventID);
 		$eventobj->Sources = array($reqObj->RequestID, $bpay["IncomeChequeID"]);
 		$eventobj->DocObj = $DocObj;
-		$eventobj->DocDate = $bpay["ChequeDate"];
+		$eventobj->DocDate = $bpay["regDate"];
 		$eventobj->AllRowsAmount = $bpay["PayAmount"];
 		$result = $eventobj->RegisterEventDoc($pdo);
 		if($result)
@@ -271,11 +273,12 @@ function BackPayCheques($reqObj , $partObj, &$DocObj, $pdo){
 	ob_flush();flush();
 	//--------------برگشتی------------------------
 	$cheques = PdoDataAccess::runquery(
-			"select * from LON_BackPays
-				join ACC_IncomeCheques i using(IncomeChequeID) 
-				where RequestID=? AND i.ChequeDate>='$GFromDate'
-				AND ChequeStatus=".INCOMECHEQUE_BARGASHTI." order by PayDate"
+			"select *,substr(ATS,1,10) regDate from LON_BackPays
+                join ACC_IncomeCheques i using(IncomeChequeID) 
+                join ACC_ChequeHistory h on(i.IncomeChequeID=h.IncomeChequeID) 
+                where RequestID=? AND substr(ATS,1,10)>='$GFromDate' AND i.ChequeStatus=".INCOMECHEQUE_BARGASHTI." order by PayDate"
 			, array($reqObj->RequestID));
+	
 	foreach($cheques as $bpay)
 	{
 		if($reqObj->ReqPersonID*1 > 0)
@@ -286,7 +289,7 @@ function BackPayCheques($reqObj , $partObj, &$DocObj, $pdo){
 		$eventobj = new ExecuteEvent($EventID);
 		$eventobj->Sources = array($reqObj->RequestID, $bpay["IncomeChequeID"]);
 		$eventobj->DocObj = $DocObj;
-		$eventobj->DocDate = $bpay["ChequeDate"];
+		$eventobj->DocDate = $bpay["regDate"];
 		$eventobj->AllRowsAmount = $bpay["PayAmount"];
 		$result = $eventobj->RegisterEventDoc($pdo);
 		if($result)
@@ -303,12 +306,12 @@ function BackPayCheques($reqObj , $partObj, &$DocObj, $pdo){
 	ob_flush();flush();
 	//----------------مسترد و تعویض----------------------------
 	$cheques = PdoDataAccess::runquery(
-			"select * from LON_BackPays
-				join ACC_IncomeCheques i using(IncomeChequeID) 
-				where RequestID=? AND i.ChequeDate>='$GFromDate'
-				AND ChequeStatus in(".INCOMECHEQUE_CHANGE.",".INCOMECHEQUE_MOSTARAD.")
-				order by PayDate"
+			"select *,substr(ATS,1,10) regDate from LON_BackPays
+                join ACC_IncomeCheques i using(IncomeChequeID) 
+                join ACC_ChequeHistory h on(i.IncomeChequeID=h.IncomeChequeID) 
+                where RequestID=? AND substr(ATS,1,10)>='$GFromDate' AND ChequeStatus in(".INCOMECHEQUE_CHANGE.",".INCOMECHEQUE_MOSTARAD.") order by PayDate"
 			, array($reqObj->RequestID));
+	
 	foreach($cheques as $bpay)
 	{
 		if($reqObj->ReqPersonID*1 > 0)
@@ -319,7 +322,7 @@ function BackPayCheques($reqObj , $partObj, &$DocObj, $pdo){
 		$eventobj = new ExecuteEvent($EventID);
 		$eventobj->Sources = array($reqObj->RequestID, $bpay["IncomeChequeID"]);
 		$eventobj->DocObj = $DocObj;
-		$eventobj->DocDate = $bpay["ChequeDate"];
+		$eventobj->DocDate = $bpay["regDate"];
 		$eventobj->AllRowsAmount = $bpay["PayAmount"];
 		$result = $eventobj->RegisterEventDoc($pdo);
 		if($result)
@@ -336,10 +339,10 @@ function BackPayCheques($reqObj , $partObj, &$DocObj, $pdo){
 	ob_flush();flush();
 	//-------------------برگشتی مسترد-------------------------
 	$cheques = PdoDataAccess::runquery(
-			"select * from LON_BackPays
-				join ACC_IncomeCheques i using(IncomeChequeID) 
-				where RequestID=? AND i.ChequeDate>='$GFromDate'
-				AND ChequeStatus=".INCOMECHEQUE_BARGASHTI_MOSTARAD." order by PayDate"
+			"select *,substr(ATS,1,10) regDate from LON_BackPays
+                join ACC_IncomeCheques i using(IncomeChequeID) 
+                join ACC_ChequeHistory h on(i.IncomeChequeID=h.IncomeChequeID) 
+                where RequestID=? AND substr(ATS,1,10)>='$GFromDate' AND ChequeStatus=".INCOMECHEQUE_BARGASHTI_MOSTARAD." order by PayDate"
 			, array($reqObj->RequestID));
 	foreach($cheques as $bpay)
 	{
@@ -351,7 +354,7 @@ function BackPayCheques($reqObj , $partObj, &$DocObj, $pdo){
 		$eventobj = new ExecuteEvent($EventID);
 		$eventobj->Sources = array($reqObj->RequestID, $bpay["IncomeChequeID"]);
 		$eventobj->DocObj = $DocObj;
-		$eventobj->DocDate = $bpay["ChequeDate"];
+		$eventobj->DocDate = $bpay["regDate"];
 		$eventobj->AllRowsAmount = $bpay["PayAmount"];
 		$result = $eventobj->RegisterEventDoc($pdo);
 		if($result)
