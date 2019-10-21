@@ -531,11 +531,15 @@ class EventComputeItems {
 						break;
 
 					case ACC_COST_PARAM_CHEQUE_date:
+						if($EventID == EVENT_LOANPAYMENT_innerSource || $EventID == EVENT_LOANPAYMENT_agentSource)
+							break;
 						$IncChequObj = new ACC_IncomeCheques($params[1]);
 						$obj->{ "param" . $i } = DateModules::miladi_to_shamsi($IncChequObj->ChequeDate);
 						break;
 
 					case ACC_COST_PARAM_BANK:
+						if($EventID == EVENT_LOANPAYMENT_innerSource || $EventID == EVENT_LOANPAYMENT_agentSource)
+							break;
 						$IncChequObj = new ACC_IncomeCheques($params[1]);
 						$obj->{ "param" . $i } = $IncChequObj->ChequeBank;
 						break;

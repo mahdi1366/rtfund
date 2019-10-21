@@ -43,7 +43,7 @@ function AccDocs(){
 		valueField : "TafsiliID",
 		displayField : "TafsiliDesc"
 	});
-	
+	*/
 	this.accountCombo = new Ext.form.ComboBox({
 		store: new Ext.data.Store({
 			fields:["AccountID","AccountDesc","StartNo","EndNo","StartNo2","EndNo2"],
@@ -54,7 +54,8 @@ function AccDocs(){
 					root: 'rows',
 					totalProperty: 'totalCount'
 				}
-			}		
+			},
+			autoLoad : true
 		}),
 		emptyText:'انتخاب حساب ....',
 		queryMode : 'local',
@@ -62,7 +63,7 @@ function AccDocs(){
 		valueField : "AccountID",
 		displayField : "AccountDesc"
 	});
-	*/
+	
 	this.ChequeStatusCombo = new Ext.form.ComboBox({
 		store: new Ext.data.Store({
 			autoLoad : true,
@@ -1055,7 +1056,30 @@ AccDocs.prototype.check_Add = function(){
 	
 	var record = this.grid.getStore().getAt(0);
 	if(!(record.data.StatusID == "<?= ACC_STEPID_RAW ?>" || (record.data.StepID == "1" && record.data.ActionType == "REJECT")))
+	{
+		Ext.MessageBox.alert("امکان صدور چک نمی باشد");
 		return;
+	}
+		
+	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال صدور چک ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		url: this.address_prefix + 'doc.data.php?task=CreatePayCheque',
+		params:{
+			DocID: record.data.DocID
+		},
+		method: 'POST',
+
+		success: function(response){
+			mask.hide();
+			AccDocsObject.checkGrid.getStore().load();
+		},
+		failure: function(){}
+	});	
+		
+	return;
+	
 	var modelClass = this.checkGrid.getStore().model;
 	var record = new modelClass({
 		DocChequeID: "",

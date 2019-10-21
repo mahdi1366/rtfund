@@ -24,6 +24,7 @@ switch($task)
 	case "GetLastLocalNo":
 	case "GetSearchCount":
 	case "GroupStartFlow":
+	case "CreatePayCheque":
 		
 	case "selectDocItems":
 	case "saveDocItem":
@@ -327,6 +328,25 @@ function GroupStartFlow(){
 	die();
 }
 
+function CreatePayCheque(){
+	
+	$DocID = $_POST["DocID"]*1;
+	
+	PdoDataAccess::runquery("insert into ACC_DocCheques(DocID,AccountID,CheckDate,amount,CheckStatus) 
+		select DocID,ObjectID,gdate,sum(CreditorAmount),3001 
+		from ACC_DocItems di left 
+			join ACC_tafsilis t on(di.TafsiliID2=t.TafsiliID)  
+			left join dates on(jdate=param2)
+		where DocID=? AND CostID=1107", array($DocID));
+	
+	if(PdoDataAccess::AffectedRows() == 0)
+	{
+		echo Response::createObjectiveResponse(false , "ردیف با کد حساب 3030101 یافت تشد");
+		die();	
+	}
+	echo Response::createObjectiveResponse(true , "");
+	die();	
+}
 //............................
 
 function selectDocItems() {
@@ -459,16 +479,7 @@ function removeDocItem() {
 function SelectAccounts(){
 	
 	$DocID = $_GET["DocID"];
-	$temp = PdoDataAccess::runquery("
-		select * from ACC_accounts where AccountID in(
-				select ObjectID from ACC_DocItems d
-				join ACC_tafsilis t1 on(d.TafsiliType=".TAFTYPE_ACCOUNTS." and d.tafsiliID=t1.TafsiliID)
-				where docID=:d
-			union all
-				select ObjectID from ACC_DocItems d
-				join ACC_tafsilis t2 on(d.TafsiliType2=".TAFTYPE_ACCOUNTS." and d.tafsiliID2=t2.TafsiliID)
-				where docID=:d
-			)", array(":d" => $DocID));
+	$temp = PdoDataAccess::runquery("select * from ACC_accounts ");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -571,7 +582,7 @@ function removeChecks() {
 	
 	$result = ACC_DocCheques::Remove($_POST["DocChequeID"]);
 	
-	echo $result ? "true" : "conflict";
+	echo Response::createObjectiveResponse($result, "");
 	die();
 }
 

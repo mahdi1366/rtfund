@@ -175,15 +175,15 @@ $col->width = 150;
 
 $col = $dgh->addColumn("شماره چک", "CheckNo");
 $col->editor = ColumnEditor::TextField(true, "cmp_CheckNo");
-$col->width = 70;
+$col->width = 100;
 
 $col = $dgh->addColumn("تاریخ چک", "CheckDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
-$col->width = 70;
+$col->width = 90;
 
 $col = $dgh->addColumn("مبلغ", "amount", GridColumn::ColumnType_money);
 $col->editor = ColumnEditor::CurrencyField();
-$col->width = 80;
+$col->width = 200;
 
 $col = $dgh->addColumn("در وجه", "TafsiliID");
 $col->renderer = "function(v,p,r){return r.data.TafsiliDesc;}";
@@ -219,7 +219,6 @@ $dgh->addColumn("", "CheckStatus","",true);
 $dgh->addColumn("", "PrintPage1","",true);
 $dgh->addColumn("", "PrintPage2","",true);
 
-$dgh->width = 780;
 $dgh->DefaultSortField = "DocChequeID";
 $dgh->autoExpandColumn = "description";
 $dgh->emptyTextOfHiddenColumns = true;
