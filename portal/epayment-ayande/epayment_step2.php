@@ -5,8 +5,8 @@
 //-------------------------
 require_once '../header.inc.php';
 require_once getenv("DOCUMENT_ROOT") . '/loan/request/request.class.php';
-require_once getenv("DOCUMENT_ROOT") . '/accounting/docs/import.data.php';
-require_once getenv("DOCUMENT_ROOT") . '/accounting/baseinfo/baseinfo.class.php';
+require_once getenv("DOCUMENT_ROOT") . '/commitment/ExecuteEvent.class.php';
+
 require_once 'nusoap.php';
 
 ini_set("display_errors", "On");
@@ -41,27 +41,34 @@ function RegDoc($RequestID, $amount,  $PayRefNo){
 
 	if(!$obj->Add($pdo))
 		return false;
-
-	$CostID = 253; // bank
-	$TafsiliID = 3049; // ayande
-	$TafsiliID2 = 3052; // kootahmodat
 	
-	$ReqObj = new LON_requests($obj->RequestID);
-	
-	$PersonObj = new BSC_persons($ReqObj->ReqPersonID);
-	if($PersonObj->IsSupporter == "YES")
-		$res = RegisterSHRTFUNDCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, $pdo);
+	$reqObj = new LON_requests($RequestID);
+	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
+	if($reqObj->ReqPersonID*1 > 0)
+	{
+		if($reqObj->FundGuarantee == "YES")
+			$EventID = EVENT_LOANBACKPAY_agentSource_committal_non_cheque;
+		else
+			$EventID = EVENT_LOANBACKPAY_agentSource_non_committal_non_cheque;
+	}
 	else
-		$res = RegisterCustomerPayDoc(null, $obj, $CostID, $TafsiliID, $TafsiliID2, $pdo);
+		$EventID = EVENT_LOANBACKPAY_innerSource_non_cheque;
 
-	if(!$res)
+	$_POST["TafsiliID1_168"] = 4025; //حساب جاری
+	$_POST["TafsiliID2_168"] = 3052; //حساب سپرده کوتاه مدت بانک آینده
+	$_POST["param1_168"] = "آینده کوتاه مدت 0202075850000";
+	
+	$eventobj = new ExecuteEvent($EventID);
+	$eventobj->Sources = array($RequestID, $partObj->PartID, $obj->BackPayID);
+	$result = $eventobj->RegisterEventDoc($pdo);
+	if(!$result)
 	{
 		$pdo->rollBack();
 		return false;
 	}
-
+	
 	$pdo->commit();
-	return true;
+	return true;	
 }
 
 $dt = PdoDataAccess::runquery("select * from ACC_EPays where PayID=?", array($OrderId));

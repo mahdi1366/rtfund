@@ -5,12 +5,12 @@
 //-----------------------------
 require_once "header.inc.php";
 
-if($_SESSION["USER"]["UserName"] != "admin")
+/*if($_SESSION["USER"]["UserName"] != "admin")
 {
 	echo '<META http-equiv=Content-Type content="text/html; charset=UTF-8" >';
 	echo "<center><h2>" . "سیستم در حال بروز رسانی می باشد" ;
 	die();
-}
+}*/
 
 require_once $address_prefix . '/framework/management/framework.class.php';
 require_once $address_prefix . '/framework/person/persons.class.php';

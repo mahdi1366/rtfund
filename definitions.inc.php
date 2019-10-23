@@ -78,7 +78,7 @@ define("COSTID_Bank", "253");
 define("COSTID_share", "313"); 
 define("COSTID_ShareProfit", "167");
 define("COSTID_Commitment", "165");
-define("COSTID_saving", "65");
+define("COSTID_saving", "1114");
 define("COSTID_current", "202");
 define("COSTID_BRANCH_PARK", "17"); // 499 park branch
 define("COSTID_BRANCH_UM", "205"); // 900 um branch

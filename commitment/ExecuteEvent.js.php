@@ -119,7 +119,7 @@ function ExecuteEvent(){
 					}),
 					emptyText:'انتخاب تفصیلی ...',
 					allowBlank : false,
-					name : "TafsiliID_" + record.data.RowID,
+					hiddenName : "TafsiliID1_" + record.data.RowID,
 					valueField : "TafsiliID",
 					displayField : "TafsiliDesc"
 				});
@@ -140,7 +140,7 @@ function ExecuteEvent(){
 					}),
 					emptyText:'انتخاب تفصیلی ...',
 					allowBlank : false,
-					name : "TafsiliID2" + record.data.RowID,
+					hiddenName : "TafsiliID2_" + record.data.RowID,
 					valueField : "TafsiliID",
 					displayField : "TafsiliDesc"
 				});
@@ -161,7 +161,7 @@ function ExecuteEvent(){
 					}),
 					emptyText:'انتخاب تفصیلی ...',
 					allowBlank : false,
-					name : "TafsiliID3" + record.data.RowID,
+					hiddenName : "TafsiliID3_" + record.data.RowID,
 					valueField : "TafsiliID",
 					displayField : "TafsiliDesc"
 				});

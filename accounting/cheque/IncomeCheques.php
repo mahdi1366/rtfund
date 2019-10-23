@@ -872,6 +872,11 @@ IncomeCheque.prototype.ChangeStatus = function(){
 		params.PayedDate = this.commentWin.down("[name=PayedDate]").getRawValue();
 		params.UpdateLoanBackPay = this.commentWin.down("[name=UpdateLoanBackPay]").getValue();
 		
+		if(params.PayedDate > new Ext.SHDate().format("Y/m/d"))
+		{
+			Ext.MessageBox.alert("Error","تنها بعد از تاریخ وصول چک می توانید سند مربوطه را صادر کنید");
+			return;
+		}
 		//params = mergeObjects(params, this.BankWin.down('form').getForm().getValues());
 	}	
 	

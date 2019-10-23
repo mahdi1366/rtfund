@@ -427,9 +427,9 @@ class EventComputeItems {
 	
 	static function SetSpecialTafsilis($EventID, $EventRow, $params){
 		
-		$t1 = array("TafsiliID" => "0", "TafsiliDesc" => "");
-		$t2 = array("TafsiliID" => "0", "TafsiliDesc" => "");
-		$t3 = array("TafsiliID" => "0", "TafsiliDesc" => "");
+		$t1 = array("TafsiliID" => isset($_POST["TafsiliID1_" . $EventRow["RowID"]]) ? $_POST["TafsiliID1_" . $EventRow["RowID"]] : 0, "TafsiliDesc" => "");
+		$t2 = array("TafsiliID" => isset($_POST["TafsiliID2_" . $EventRow["RowID"]]) ? $_POST["TafsiliID2_" . $EventRow["RowID"]] : 0, "TafsiliDesc" => "");
+		$t3 = array("TafsiliID" => isset($_POST["TafsiliID3_" . $EventRow["RowID"]]) ? $_POST["TafsiliID3_" . $EventRow["RowID"]] : 0, "TafsiliDesc" => "");
 						
 		switch($EventID)
 		{
