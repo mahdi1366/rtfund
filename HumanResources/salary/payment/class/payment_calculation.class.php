@@ -2555,7 +2555,8 @@ return true ;
 								WHERE p.person_type IN(3) AND  ' . $this->__WHERE , $this->__WHEREPARAM ); 	
 						
 	
-    
+    echo PdoDataAccess::GetLatestQueryString();
+    die();
 	}
 
 	/* اجراي query استخراج احکام تاثيرگذار در حکم */

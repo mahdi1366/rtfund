@@ -78,9 +78,7 @@ class manage_payment_calculation extends PdoDataAccess
 	public function run()
 	{
         
-        echo "**********";
-        //PdoDataAccess::GetLatestQueryString();
-die();
+        
 
 		if(!$this->prologue()) 
 			return false;
