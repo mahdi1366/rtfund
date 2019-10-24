@@ -98,8 +98,7 @@ function ProcessPayment() {
 
 	$paymentCalcObj->__WHERE = $where . " AND w.emp_state in (" . $WhereEmpstate . " ) ";
 	$paymentCalcObj->__WHEREPARAM = $whereParam;
-echo "111";
-die();
+
 	if (isset($_POST["compute_backpay"]))
 		$res = $paymentCalcObj->run_back();
 	else
