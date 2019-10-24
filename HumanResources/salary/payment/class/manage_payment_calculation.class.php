@@ -77,6 +77,11 @@ class manage_payment_calculation extends PdoDataAccess
 	/*پردازش مربوط به احکام که حلقه اصلي محاسبه است*/
 	public function run()
 	{
+        
+        echo "**********"
+        //PdoDataAccess::GetLatestQueryString();
+die();
+
 		if(!$this->prologue()) 
 			return false;
 		
@@ -401,8 +406,7 @@ echo  "****" ; die();
 														w.staff_id=s.staff_id AND w.person_type=s.person_type)
 								INNER JOIN org_new_units o ON(w.ouid = o.ouid)
 							WHERE p.person_type NOT IN(' . HR_RETIRED . ') AND ' . $this->__WHERE);
-echo PdoDataAccess::GetLatestQueryString();
-die();
+
 		parent::runquery('ALTER TABLE limit_staff ADD INDEX (staff_id)');
 	}
 
