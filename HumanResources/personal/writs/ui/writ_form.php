@@ -128,7 +128,7 @@ $drp_emp_mode = manage_domains::DRP_EMP_MODE_WST("emp_mode", $objWrt->emp_mode ,
 if(!$is_new_corrective)
 { 	
 			    
-	$prior_writ_object = $objWrt->get_prior_writ(); 
+	/*$prior_writ_object = $objWrt->get_prior_writ(); 
 	      
 	if ($prior_writ_object)
 	{
@@ -153,7 +153,7 @@ if(!$is_new_corrective)
 		$dg->height = 350;
 		$prevItemsGrid = $dg->makeGrid_returnObjects();
 
-	} 
+	} */
             
 	$dg = new sadaf_datagrid("curWritItem",$js_prefix_address . "../data/writ.data.php?task=selectItemWrit&WID=" . $objWrt->writ_id .
 		"&WVER=" . $objWrt->writ_ver . "&STID=" . $objWrt->staff_id ,"WGRID");
@@ -233,10 +233,10 @@ WritForm.prototype.afterLoad = function()
 	   
     <?	}	?>
 
-    <?if(isset($prevItemsGrid)){?>
-	    this.prevItemsGrid = <?= $prevItemsGrid?>;
-	    //this.prevItemsGrid.render(this.get("PreWGRID"));
-    <?}if(isset($curItemsGrid)){?>		
+    <?php/*if(isset($prevItemsGrid)){?>
+	    this.prevItemsGrid = <?= $prevItemsGrid*/?>;
+	    
+    <?/*}*/if(isset($curItemsGrid)){?>		
 	    this.curItemsGrid = <?= $curItemsGrid?>;
 		this.curItemsGrid.getView().getRowClass = function(record,index)
                                         {  
