@@ -251,6 +251,10 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 			background-image:url('icons/calendar.png') !important;
 			background-size: 30px 30px;
 		}
+        .framework-Messages{
+			background-image:url('icons/Messages.png') !important;
+			background-size: 30px 30px;
+		}
 	</style>
 	<script type="text/javascript">
 	//-----------------------------
@@ -442,7 +446,16 @@ $CalendarReminders = FRW_CalendarEvents::SelectTodayReminders(true);
 					handler : function(){
 						framework.OpenPage('../framework/calendar.php','تقویم');
 					}	
-				}]
+				}/*,{
+					xtype : "button",
+					tooltip : "پیام رسان",
+					scale: 'large',
+					iconCls : "framework-Messages",
+					style : "margin: 3px;height:35px",
+					handler : function(){						
+                        window.open('../messenger/MyMessenger.php',"_blank");                      
+					}	
+				}*/]
 				
 			},{
 				xtype : "container",

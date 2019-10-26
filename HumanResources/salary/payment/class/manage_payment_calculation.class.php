@@ -77,6 +77,9 @@ class manage_payment_calculation extends PdoDataAccess
 	/*پردازش مربوط به احکام که حلقه اصلي محاسبه است*/
 	public function run()
 	{
+        
+        
+
 		if(!$this->prologue()) 
 			return false;
 		
