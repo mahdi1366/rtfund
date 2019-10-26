@@ -222,7 +222,7 @@ class manage_payment_calculation extends PdoDataAccess
 				
 				$resS = PdoDataAccess::runquery($query) ; 
 		
-			//echo PdoDataAccess::GetLatestQueryString()."---<br>" ;
+			echo PdoDataAccess::GetLatestQueryString()."---<br>" ;
             
                 if(isset($resS[0]['TotalMin']) && $resS[0]['TotalMin'] > 0 ){
                  $resS[0]['TotalHour'] += round(($resS[0]['TotalMin']/60),2) ;
@@ -2555,8 +2555,6 @@ return true ;
 								WHERE p.person_type IN(3) AND  ' . $this->__WHERE , $this->__WHEREPARAM ); 	
 						
 	
-    echo PdoDataAccess::GetLatestQueryString();
-    die();
 	}
 
 	/* اجراي query استخراج احکام تاثيرگذار در حکم */
