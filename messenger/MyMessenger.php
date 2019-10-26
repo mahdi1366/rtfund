@@ -190,17 +190,11 @@ function MyMessenger(){
                         xtype : "textfield",
                         name : "MsgTxt",
                         itemId : "MsgTxt",
-                        colspan:4,
+                        style : "margin:4px",
+                        colspan:3,
                         height:40,
-                        width : 400
+                        width : 400,
                        },
-                       {
-                        xtype: "filefield",
-                        name: "FileType",
-                        fieldLabel: "پیوست فایل",                        
-                        itemId: 'FileType',                        
-                        width: 200
-                        },
                        {
                         xtype: 'button',
                         height: 30,
@@ -213,7 +207,14 @@ function MyMessenger(){
                             {                                                       
                               MyMessengerObject.SaveSendingMsg();
                             }
-                       }
+                       },
+                       {
+                        xtype: "filefield",
+                        name: "FileType",
+                        //fieldLabel: "پیوست فایل",                        
+                        itemId: 'FileType',                        
+                        width: 400
+                        }
                 ]
                 
                })
