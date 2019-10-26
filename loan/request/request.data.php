@@ -862,7 +862,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 	}
 	else
 	{
-		$TotalAmount = LON_requests::GetPayedAmount($RequestID) + LON_requests::TotalAddedToBackPay($RequestID);
+		$TotalAmount = LON_requests::GetPurePayedAmount($RequestID) + LON_requests::TotalAddedToBackPay($RequestID);
 		$allPay = ComputeInstallmentAmount($TotalAmount,$obj->InstallmentCount, $obj->PayInterval);
 
 		if($obj->InstallmentCount > 1)
@@ -905,8 +905,6 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 				if($returnMode)
 					return false;
 				$pdo->rollBack();
-				print_r($obj2);
-				print_r(ExceptionHandler::PopAllExceptions());
 				echo Response::createObjectiveResponse(false, "2");
 				die();
 			}
