@@ -103,6 +103,20 @@ function WFM_NewRequest() {
 		}]
 	});
 	
+	this.historyDiv = new Ext.form.Panel({
+		plain: true,            
+		frame: false,
+		border : false,
+		width: 200,
+		autoHeight : true,
+		minHeight : 200,
+		renderTo: this.get("historyDiv"),
+		loader : {
+			url : this.address_prefix + "history.php?RequestID=" + this.RequestID,
+			scripts : true
+		}
+	});
+	
 	this.FormItemsStore = new Ext.data.Store({
 		fields: ['FormItemID',"GroupID","GroupDesc","FormID", 'ItemName',
 			"DisplayType","DisplayField","DisplayValue", 'ItemType', "ComboValues", "access"],
@@ -780,6 +794,7 @@ WFM_NewRequest.prototype.ShowTplItemsForm = function () {
 </script>
 <br>
 <center>
-    <div id="SelectTplComboDIV"></div>
+    <div id="SelectTplComboDIV" style="float:right;width:700px"></div>
+	<div id="historyDiv" style="float:left;width:200px"></div>
 </center>
 <br>

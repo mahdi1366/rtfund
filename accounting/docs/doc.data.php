@@ -409,7 +409,7 @@ function selectDocItems() {
 	$no = $temp->rowCount();
 	$temp = PdoDataAccess::fetchAll($temp, $_REQUEST["start"], $_REQUEST["limit"]);
 
-	print_r(ExceptionHandler::PopAllExceptions());	
+	//print_r(ExceptionHandler::PopAllExceptions());	
 	$dt = PdoDataAccess::runquery("
 		select sum(DebtorAmount) bd,sum(CreditorAmount) bs
 		from ACC_DocItems
