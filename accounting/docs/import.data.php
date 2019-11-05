@@ -3345,6 +3345,17 @@ function ComputeCostDailyProfit($CostID, $TafsiliID, $FromDate, $ToDate){
 			"profit" => 0,
 			"ReturnProfit" => 0
 		);
+		$TraceArr[] = array(
+			"row" => null,
+			"remainAmount" => 0,
+			"EndDate" => $FromDate,
+			"percent" => $percentRecord["percent"],
+			"ReturnPercent" => $percentRecord["ReturnPercent"],
+			"MaxAmount" => $percentRecord["MaxAmount"],
+			"profit" => 0,
+			"ReturnProfit" => 0,
+			"days" => 0
+		);
 	}	
 
 	//------------ get the Deposite amount -------------
@@ -3483,12 +3494,21 @@ function ComputeDepositeProfit($ToDate, $TafsiliArr, $ReportMode = false, $IsFlo
 	$FirstYearDay = DateModules::shamsi_to_miladi($_SESSION["accounting"]["CycleID"] . "-01-01", "-");	
 	$TraceArr = array();
 	$DepositeArr = array();
-	
+	$DocItemCostID = "";
 	for($i=0; $i<count($TafsiliArr); $i++)
 	{
 		$CostID = $TafsiliArr[$i]["CostID"];
 		$TafsiliID = $TafsiliArr[$i]["TafsiliID"];
-		$DocItemCostID = COSTID_DepositeProfit;
+		if($CostID == COSTID_ShortDeposite)
+			$DocItemCostID = COSTID_DepositeProfit;
+		if($CostID == COSTID_SupportDeposite)
+			$DocItemCostID = COSTID_DepositeProfitSupport;
+		if($DocItemCostID == "")
+		{
+			echo Response::createObjectiveResponse(false, "کد حساب سود سپرده مترادف یافت نشد");
+			die();
+		}
+		
 		//-------------- get latest deposite compute -------------
 		if(!$IsFlow)
 		{

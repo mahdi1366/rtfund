@@ -161,7 +161,7 @@ function ATN_SummaryReport()
 				store: new Ext.data.Store({
 					proxy:{
 						type: 'jsonp',
-						url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff',
+						url: '/framework/person/persons.data.php?task=selectPersons&UserType=IsStaff&IncludeInactive=true',
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
 					fields :  ['PersonID','fullname']

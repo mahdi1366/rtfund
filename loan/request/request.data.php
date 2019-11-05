@@ -724,25 +724,8 @@ function DefrayRequest(){
 	$remain = LON_Computes::GetTotalRemainAmount($RequestID);
 	if($remain > 0)
 	{		
-		$obj = new LON_costs();
-		$obj->CostDate = PDONOW;
-		$obj->RequestID = $RequestID;
-		$obj->CostDesc = "بابت تسویه حساب وام";
-		$obj->CostAmount = -1*$remain;
-		if(!$obj->Add($pdo))
-		{
-			ExceptionHandler::PushException("خطا در ایجاد هزینه");
-			return false;
-		}
-		//............................................
-		$LoanObj = new LON_loans($ReqObj->LoanID);
-		$CostCode_wage = FindCostID("750" . "-" . $LoanObj->_BlockCode);
-		if(!RegisterLoanCost($obj, $CostCode_wage, null, null, $pdo))
-		{
-			$pdo->rollback();
-			echo Response::createObjectiveResponse(false, "خطا در صدور سند");
-			die();
-		}
+		echo Response::createObjectiveResponse(false, "مانده وام " . number_format($remain) . " ریال می باشد و تا زمانی که صفر نشود قادر به تسویه وام نمی باشید");
+		die();
 	}
 	
 	ChangeStatus($ReqObj->RequestID,LON_REQ_STATUS_DEFRAY,"", false, $pdo);
@@ -750,7 +733,7 @@ function DefrayRequest(){
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true, "");
 	die();
-}
+} 
 
 //--------------------------------------------------
 
@@ -1977,11 +1960,11 @@ function SaveCosts(){
 			echo Response::createObjectiveResponse(false, "خطا در ثبت هزینه");
 			die();
 		}
-		if(!RegisterLoanCost($obj, $_POST["CostID"], $_POST["TafsiliID"], $_POST["TafsiliID2"], $pdo))
+		/*if(!RegisterLoanCost($obj, $_POST["CostID"], $_POST["TafsiliID"], $_POST["TafsiliID2"], $pdo))
 		{
 			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 			die();
-		}
+		}*/
 	}
 	else
 	{

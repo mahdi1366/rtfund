@@ -33,7 +33,7 @@ function GetData(){
 			left join ACC_tafsilis t on(di.TafsiliID=t.TafsiliID)
 			left join ACC_tafsilis t2 on(di.TafsiliID2=t2.TafsiliID)
 			join BSC_persons p on(RegPersonID=PersonID)
-			where d.CycleID=" . $_SESSION["accounting"]["CycleID"];
+			where 1=1 ";
 	
 	$whereParam = array();
 	
@@ -49,8 +49,14 @@ function GetData(){
 	}	
 	if(!empty($_POST["CycleID"]))
 	{
-		$query .= " AND CycleID=:c";
+		$query .= " AND d.CycleID=:c";
 		$whereParam[":c"] = $_POST["CycleID"];
+	}
+	else 
+	{
+		$query .= " AND d.CycleID=:c";
+		$whereParam[":c"] = $_SESSION["accounting"]["CycleID"];
+		
 	}
 	if(!empty($_POST["DocType"]))
 	{
@@ -145,7 +151,10 @@ function GetData(){
 	$query .= $group == "" ? " order by DocDate,LocalNo" : " order by " . $group;
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
-	
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		//echo PdoDataAccess::GetLatestQueryString();
+	}
 	return $dataTable;
 }
 

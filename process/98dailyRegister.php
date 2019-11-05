@@ -94,15 +94,27 @@ foreach($days as $dayRow)
 			$LateEvent = EVENT_LOANDAILY_agentlate;
 			$PenaltyEvent = EVENT_LOANDAILY_agentPenalty;
 		}
-		if($objArr[$eventID] != null)
-			$obj = &$objArr[$eventID];
-		else {
-			$objArr[$eventID] = new ExecuteEvent($eventID);
-			$obj = &$objArr[$eventID];
-		}
+		
+		$obj = new ExecuteEvent($eventID);
+		$obj->DocObj = isset($objArr[$eventID]) ? $objArr[$eventID] : null;
 		$obj->DocDate = $ComputeDate;
 		$obj->Sources = array($row["RequestID"], $row["PartID"] , $ComputeDate);
 		$result = $obj->RegisterEventDoc($pdo);
+		$objArr[$eventID] = $obj->DocObj;
+		if(!$result || ExceptionHandler::GetExceptionCount() > 0)
+		{
+			echo "وام " .  $row["RequestID"] . " : <br>";
+			echo ExceptionHandler::GetExceptionsToString("<br>");
+			print_r(ExceptionHandler::PopAllExceptions());
+			echo "\n--------------------------------------------\n";
+		}
+
+		$obj = new ExecuteEvent($LateEvent);
+		$obj->DocObj = isset($objArr[$LateEvent]) ? $objArr[$LateEvent] : null;
+		$obj->DocDate = $ComputeDate;
+		$obj->Sources = array($row["RequestID"], $row["PartID"] , $ComputeDate);
+		$result = $obj->RegisterEventDoc($pdo);
+		$objArr[$LateEvent] = $obj->DocObj;
 		if(!$result || ExceptionHandler::GetExceptionCount() > 0)
 		{
 			echo "وام " .  $row["RequestID"] . " : <br>";
@@ -112,33 +124,12 @@ foreach($days as $dayRow)
 		}
 
 
-		if($objArr[$LateEvent] != null)
-			$obj = &$objArr[$LateEvent];
-		else {
-			$objArr[$LateEvent] = new ExecuteEvent($LateEvent);
-			$obj = &$objArr[$LateEvent];
-		}
+		$obj = new ExecuteEvent($PenaltyEvent);
+		$obj->DocObj = isset($objArr[$PenaltyEvent]) ? $objArr[$PenaltyEvent] : null;
 		$obj->DocDate = $ComputeDate;
 		$obj->Sources = array($row["RequestID"], $row["PartID"] , $ComputeDate);
 		$result = $obj->RegisterEventDoc($pdo);
-		if(!$result || ExceptionHandler::GetExceptionCount() > 0)
-		{
-			echo "وام " .  $row["RequestID"] . " : <br>";
-			echo ExceptionHandler::GetExceptionsToString("<br>");
-			print_r(ExceptionHandler::PopAllExceptions());
-			echo "\n--------------------------------------------\n";
-		}
-
-
-		if($objArr[$PenaltyEvent] != null)
-			$obj = &$objArr[$PenaltyEvent];
-		else {
-			$objArr[$PenaltyEvent] = new ExecuteEvent($PenaltyEvent);
-			$obj = &$objArr[$PenaltyEvent];
-		}
-		$obj->DocDate = $ComputeDate;
-		$obj->Sources = array($row["RequestID"], $row["PartID"] , $ComputeDate);
-		$result = $obj->RegisterEventDoc($pdo);
+		$objArr[$PenaltyEvent] = $obj->DocObj;
 		if(!$result || ExceptionHandler::GetExceptionCount() > 0)
 		{
 			echo "وام " .  $row["RequestID"] . " : <br>";
@@ -150,6 +141,7 @@ foreach($days as $dayRow)
 	}
 	$pdo->commit();
 	print_r(ExceptionHandler::PopAllExceptions());
+	//print_r($objArr);
 	echo "true";
 }
 ?>
