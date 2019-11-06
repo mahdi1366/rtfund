@@ -43,13 +43,30 @@ class ExecuteEvent {
 				$this->EventFunction = "EventComputeItems::PayLoan";
 				break;
 			
-			case EVENT_LOANBACKPAY_innerSource_cheque:
 			case EVENT_LOANBACKPAY_innerSource_non_cheque:
-			case EVENT_LOANBACKPAY_agentSource_committal_cheque:
 			case EVENT_LOANBACKPAY_agentSource_committal_non_cheque:
-			case EVENT_LOANBACKPAY_agentSource_non_committal_cheque:
 			case EVENT_LOANBACKPAY_agentSource_non_committal_non_cheque:
 				$this->EventFunction = "EventComputeItems::LoanBackPay";
+				break;
+			
+			case EVENT_LOANBACKPAY_agentSource_committal_cheque:
+			case EVENT_LOANBACKPAY_agentSource_non_committal_cheque:
+			case EVENT_LOANBACKPAY_innerSource_cheque:
+				//$this->AfterTriggerFunction = "ACC_IncomeCheques::EventTrigger_changeStatus";
+				$this->EventFunction = "EventComputeItems::LoanBackPay";
+				break;
+			
+			case EVENT_CHEQUE_SANDOGHAMANAT_inner:
+			case EVENT_CHEQUE_SANDOGHAMANAT_agent:
+			case EVENT_CHEQUE_SENDTOBANKFROMAMANAT_inner:
+			case EVENT_CHEQUE_SENDTOBANKFROMAMANAT_agent:
+			case EVENT_CHEQUE_SENDTOBANK_inner:
+			case EVENT_CHEQUE_SENDTOBANK_agent:
+			case EVENT_CHEQUE_BARGASHT_inner:
+			case EVENT_CHEQUE_BARGASHT_agent:
+			case EVENT_CHEQUE_BARGASHTHOGHUGHI_inner:
+			case EVENT_CHEQUE_BARGASHTHOGHUGHI_agent:
+				//$this->AfterTriggerFunction = "ACC_IncomeCheques::EventTrigger_changeStatus";
 				break;
 			
 			case EVENT_LOANDAILY_innerSource:
@@ -100,6 +117,7 @@ class ExecuteEvent {
 				$this->AfterTriggerFunction = "WAR_requests::EventTrigger_reduce";				
 				$this->EventFunction = "EventComputeItems::Warrenty";
 				break;	
+			
 		}
 	}
 	
@@ -129,7 +147,7 @@ class ExecuteEvent {
 
 		//------------------ run trigger --------------------
 		if($this->TriggerFunction != "")
-			if(!call_user_func($this->TriggerFunction, $this->Sources))
+			if(!call_user_func($this->TriggerFunction, $this->Sources, $this, $pdo))
 			{
 				ExceptionHandler::PushException("خطا در اجرای  Trigger");
 				return false;
@@ -161,8 +179,9 @@ class ExecuteEvent {
 		}
 		//------------------ run trigger --------------------
 		if($this->AfterTriggerFunction != "")
-			if(!call_user_func($this->AfterTriggerFunction, $this->Sources))
+			if(!call_user_func($this->AfterTriggerFunction, $this->Sources, $this, $pdo))
 			{
+				$this->pdo->rollBack();
 				ExceptionHandler::PushException("خطا در اجرای  Trigger");	
 				return false;
 			}
@@ -178,7 +197,7 @@ class ExecuteEvent {
 		$obj = new ACC_DocItems();
 		$obj->DocID = $this->DocObj->DocID;
 		$obj->CostID = $eventRow["CostID"];
-		$obj->locked = "YES";
+		$obj->locked = ($obj->CostID == "1001") ? "NO" : "YES";
 		
 		//------------------ set amounts ------------------------
 		if($this->AllRowsAmount*1 > 0)

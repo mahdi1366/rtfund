@@ -90,7 +90,7 @@ class ACC_IncomeCheques extends OperationClass{
 		return PdoDataAccess::runquery("
 			select * from LON_BackPays 
 				join LON_requests using(RequestID)
-				left join ACC_tafsilis t2 on(t2.TafsiliType=".TAFTYPE_PERSONS." AND t2.ObjectID=LoanPersonID)
+				left join ACC_tafsilis t2 on(t2.TafsiliType=".TAFSILITYPE_PERSON." AND t2.ObjectID=LoanPersonID)
 			where IncomeChequeID=?", 
 				array($this->IncomeChequeID), $pdo);
 	}
@@ -123,6 +123,34 @@ class ACC_IncomeCheques extends OperationClass{
 			join ACC_ChequeHistory using(DocID)
 			where IncomeChequeID=? AND d.StatusID = " . ACC_STEPID_RAW, array($this->IncomeChequeID),$pdo);
 		
+	}
+	
+	static function EventTrigger_changeStatus($SourceObjects, $exeEventObj, $pdo){
+		
+		$PayObj = new LON_BackPays((int)$SourceObjects[2]);
+		
+		$obj = new ACC_IncomeCheques($PayObj->IncomeChequeID);
+		$Status = $SourceObjects[3];
+		$PayedDate = isset($SourceObjects[4]) ? $SourceObjects[4] : PDONOW;
+		$obj->ChequeStatus = $Status;
+		if($Status == INCOMECHEQUE_VOSUL)
+			$obj->PayedDate = $PayedDate;
+		if(!$obj->Edit($pdo))
+			return false;
+
+		if($Status == INCOMECHEQUE_VOSUL && $obj->PayedDate != "")
+		{
+			$PayObj->PayDate = $obj->PayedDate;
+			$result = $PayObj->Edit($pdo);
+			if(!$result)
+			{
+				ExceptionHandler::PushException("خطا در بروزرسانی تاریخ پرداخت مشتری");
+				return false;
+			}	
+		}
+		
+		ACC_IncomeCheques::AddToHistory($obj->IncomeChequeID, $Status, $exeEventObj->DocObj->DocID, $pdo);
+		return true;
 	}
 }
 

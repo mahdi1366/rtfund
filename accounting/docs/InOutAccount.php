@@ -24,7 +24,7 @@ $col = $dg->addColumn("پس انداز", "pasandaz",  GridColumn::ColumnType_mon
 $col->renderer = "InOutAccount.AccountDetailRender";
 $col->width = 110;
 
-$col = $dg->addColumn("کوتاه مدت", "kootah",  GridColumn::ColumnType_money);
+/*$col = $dg->addColumn("کوتاه مدت", "kootah",  GridColumn::ColumnType_money);
 $col->renderer = "InOutAccount.AccountDetailRender";
 $col->width = 110;
 
@@ -34,7 +34,7 @@ $col->width = 110;
 
 $col = $dg->addColumn("جاری", "jari",  GridColumn::ColumnType_money);
 $col->renderer = "InOutAccount.AccountDetailRender";
-$col->width = 110;
+$col->width = 110;*/
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 220;

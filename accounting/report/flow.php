@@ -33,8 +33,8 @@ function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 	
 	if(session::IsPortal() && isset($_REQUEST["dashboard_show"]))
 	{
-		$where .= " AND (t.TafsiliType=".TAFTYPE_PERSONS." AND t.ObjectID=" . $_SESSION["USER"]["PersonID"] .
-			" OR t2.TafsiliType=".TAFTYPE_PERSONS." AND t2.ObjectID=" . $_SESSION["USER"]["PersonID"] . ")";
+		$where .= " AND (t.TafsiliType=".TAFSILITYPE_PERSON." AND t.ObjectID=" . $_SESSION["USER"]["PersonID"] .
+			" OR t2.TafsiliType=".TAFSILITYPE_PERSON." AND t2.ObjectID=" . $_SESSION["USER"]["PersonID"] . ")";
 	}
 	
 	if(isset($_REQUEST["taraz"])){

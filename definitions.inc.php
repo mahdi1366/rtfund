@@ -53,7 +53,6 @@ define("DOCTYPE_EDITINCOMECHEQUE", "23");
 define("DOCTYPE_EXECUTE_EVENT", "26");
 
 //............  TypeID=2 ....................
-define("TAFTYPE_PERSONS", "1");
 define("TAFTYPE_YEARS", "2");
 define("TAFTYPE_ACCOUNTS", "3");
 define("TAFTYPE_SUBAGENT", "4");

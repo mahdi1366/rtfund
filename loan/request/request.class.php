@@ -2323,7 +2323,7 @@ class LON_installments extends PdoDataAccess{
 		
 	}
 	
-	static function GetLastInstallmentObj($RequestID){
+	static function GetLastInstallmentObj($RequestID){ 
 		
 		$obj = new LON_installments();
 		PdoDataAccess::FillObject($obj, "

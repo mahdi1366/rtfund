@@ -859,6 +859,22 @@ IncomeCheque.prototype.ChangeStatus = function(){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
 	StatusID = this.commentWin.down("[name=DstID]").getValue();
+	PayedDate = "";
+	/*if(StatusID == "<?= INCOMECHEQUE_VOSUL ?>")
+	{
+		PayedDate = this.commentWin.down("[name=PayedDate]").getRawValue();
+		params.UpdateLoanBackPay = this.commentWin.down("[name=UpdateLoanBackPay]").getValue();
+		
+		if(PayedDate > new Ext.SHDate().format("Y/m/d"))
+		{
+			Ext.MessageBox.alert("Error","تنها بعد از تاریخ وصول چک می توانید سند مربوطه را صادر کنید");
+			return;
+		}
+		//params = mergeObjects(params, this.BankWin.down('form').getForm().getValues());
+	}	*/
+	
+	//this.ExecuteEvent(StatusID,PayedDate);
+	//return;
 	
 	params = {
 		task : "ChangeChequeStatus",
@@ -1427,6 +1443,33 @@ IncomeCheque.prototype.beforeEdit = function(){
 		
 	this.editWin.show();
 	this.editWin.center();
+}
+
+IncomeCheque.prototype.ExecuteEvent = function(StatusID,PayedDate){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+
+	Ext.Ajax.request({
+		url : this.address_prefix + "cheques.data.php?task=GetBackPays",
+		method : "POST",
+		params: {
+			IncomeChequeID : record.data.IncomeChequeID,
+			StatusID : StatusID
+		},
+		success : function(response){
+			result = Ext.decode(response.responseText);
+			
+			if(result.success)
+			{
+				result = result.data.split("_");
+				if(result.length == 0)
+					this.grid.getStore().load();
+				else
+					framework.ExecuteEvent(result[0], new Array(
+					result[1],result[2],result[3],StatusID,PayedDate));
+			}
+		}
+	})
 }
 
 </script>

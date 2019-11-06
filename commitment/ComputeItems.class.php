@@ -8,7 +8,7 @@ require_once DOCUMENT_ROOT . '/loan/request/request.class.php';
 require_once DOCUMENT_ROOT . '/accounting/cheque/cheque.class.php';
 require_once DOCUMENT_ROOT . '/loan/warrenty/request.class.php';
 
-
+			
 class EventComputeItems {
 	
 	static $LoanComputeArray = array();
@@ -513,7 +513,7 @@ class EventComputeItems {
 	static function SetParams($EventID, $EventRow, $params, &$obj){
 		
 		if(count($params) > 0)
-		{	
+		{	 
 			for($i=1; $i<=3; $i++)
 			{
 				switch($EventRow["param" . $i])

@@ -121,7 +121,7 @@ class BSC_persons extends PdoDataAccess{
 		$obj->ObjectID = $this->PersonID;
 		$obj->TafsiliCode = $this->PersonID;
 		$obj->TafsiliDesc = trim($this->fname . " " . $this->lname . " " . $this->CompanyName);
-		$obj->TafsiliType = TAFTYPE_PERSONS;
+		$obj->TafsiliType = TAFSILITYPE_PERSON;
 		$obj->AddTafsili();
 		
 		return true;

@@ -80,7 +80,7 @@ function DepositePercent()
 			proxy:{
 				type: 'jsonp',
 				url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis&'+
-					'TafsiliType=<?= TAFTYPE_PERSONS ?>',
+					'TafsiliType=<?= TAFSILITYPE_PERSON ?>',
 				reader: {root: 'rows',totalProperty: 'totalCount'}
 			},
 			fields :  ['TafsiliID','TafsiliDesc']

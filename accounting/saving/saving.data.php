@@ -31,7 +31,7 @@ function selectPersons() {
 		":c" => $_SESSION["accounting"]["CycleID"],
 		":b" => $_REQUEST["BranchID"],
 		":cost" => COSTID_saving,
-		":t" => TAFTYPE_PERSONS
+		":t" => TAFSILITYPE_PERSON
 	);
 	if(!empty($_REQUEST["query"]))
 	{
@@ -65,7 +65,7 @@ function GetSavingFlow() {
 		":c" => $_SESSION["accounting"]["CycleID"],
 		":b" => $_SESSION["accounting"]["BranchID"],
 		":cost" => COSTID_saving,
-		":t" => TAFTYPE_PERSONS,
+		":t" => TAFSILITYPE_PERSON,
 		":p" => $_REQUEST["PersonID"]
 	);
 	
@@ -90,7 +90,7 @@ function GetSavingLoanInfo($ReportMode = false){
 	{
 		/*$dt = PdoDataAccess::runquery("select group_concat(distinct LocalNo) from ACC_docs 
 			join ACC_DocItems using(DocID) join ACC_tafsilis t using(TafsiliType,TafsiliID)
-			where TafsiliType=" . TAFTYPE_PERSONS . " 
+			where TafsiliType=" . TAFSILITYPE_PERSON . " 
 				AND ObjectID = ? AND CostID in(" . COSTID_saving . ")
 				AND StatusID <> ".ACC_STEPID_CONFIRM."
 				AND BranchID=?
@@ -109,7 +109,7 @@ function GetSavingLoanInfo($ReportMode = false){
 			join ACC_docs d using(DocID)
 			join ACC_tafsilis t using(TafsiliType,TafsiliID)
 		
-		where TafsiliType=" . TAFTYPE_PERSONS . " 
+		where TafsiliType=" . TAFSILITYPE_PERSON . " 
 			AND ObjectID = ?
 			AND CostID in(" . COSTID_saving . ")
 			AND BranchID=" . $BranchID . "
