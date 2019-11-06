@@ -82,6 +82,7 @@ define("COSTID_current", "202");
 define("COSTID_BRANCH_PARK", "17"); // 499 park branch
 define("COSTID_BRANCH_UM", "205"); // 900 um branch
 define("COSTID_DepositeProfit", "416");
+define("COSTID_DepositeProfitSupport", "768");
 define("COSTID_GetDelay", "444");
 
 define("ShareBaseAmount", "1100000");
@@ -205,6 +206,8 @@ define("EVENT_LOANBACKPAY_agentSource_committal_cheque", 155);
 define("EVENT_LOANBACKPAY_agentSource_committal_non_cheque", 156);
 define("EVENT_LOANBACKPAY_agentSource_non_committal_cheque", 153);
 define("EVENT_LOANBACKPAY_agentSource_non_committal_non_cheque", 154);
+
+define("EVENT_LOAN_COST", 1851);
 
 define("EVENT_LOANDAILY_innerSource", 161);
 define("EVENT_LOANDAILY_agentSource_committal", 1722);

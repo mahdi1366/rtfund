@@ -146,8 +146,19 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
 			<th>مرخصی بدون حقوق</th>
 			<th>غیبت روزانه</th>
 			 </tr>';
-
+    $TotalHours = 0 ; 
+    $TotalSecond = 0 ; 
 	for ($i = 0; $i < count($dataTable); $i++) {
+        
+        $TotalHours = 0 ; 
+        $TotalSecond = 0 ; 
+        print_r($dataTable[$i]['Off']) ;
+        echo "-----------" ;
+        die();
+        
+        preg_split(':', $dataTable[$i]['Off']);
+        $TotalHours = 0 ; 
+        $TotalSecond = 0 ; 
 
 		echo " <tr>					
 					<td>" . $dataTable[$i]['staff_id'] . "</td> 
@@ -157,7 +168,7 @@ if (isset($_GET['showRes']) && $_GET['showRes'] == 1) {
 					<td>" . DateModules::miladi_to_shamsi($dataTable[$i]["lastDate"]) . "</td>	 
 					<td>" . $dataTable[$i]["AllowedLeave"] . "</td>	
 					<td>" . $dataTable[$i]["DailyOff_2"] . "</td>	
-					<td>" . ($dataTable[$i]["AllowedLeave"] - $dataTable[$i]["DailyOff_2"]  )  . "</td>	
+					<td>" . ($dataTable[$i]["AllowedLeave"] - $dataTable[$i]["DailyOff_2"] - $dataTable[$i]['DailyAbsence']  )  . "</td>	
 					<td>" . number_format(( $dataTable[$i]['sv'] ), 0, '.', ',') . "</td>
 					<td>" . number_format(( ($dataTable[$i]['sv'] / 30 ) * ($dataTable[$i]["AllowedLeave"] - $dataTable[$i]["UsedLeave"]  ) ), 0, '.', ',') . "</td>
 					

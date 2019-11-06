@@ -222,8 +222,10 @@ class manage_payment_calculation extends PdoDataAccess
 				
 				$resS = PdoDataAccess::runquery($query) ; 
 		
-			//echo PdoDataAccess::GetLatestQueryString()."---<br>" ;
-            
+          echo PdoDataAccess::GetLatestQueryString()."---<br>" ;
+          if($this->__MONTH == 7 ) 
+              die();
+          
                 if(isset($resS[0]['TotalMin']) && $resS[0]['TotalMin'] > 0 ){
                  $resS[0]['TotalHour'] += round(($resS[0]['TotalMin']/60),2) ;
                                 }

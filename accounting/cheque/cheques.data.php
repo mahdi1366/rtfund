@@ -436,6 +436,10 @@ function GetBackPays(){
 				$EventID = $IsInner ? EVENT_CHEQUE_BARGASHTHOGHUGHI_inner : 
 					EVENT_CHEQUE_BARGASHTHOGHUGHI_agent;
 				break;
+			case INCOMECHEQUE_BARGASHTI_MOSTARAD:
+				$EventID = $IsInner ? EVENT_CHEQUE_BARGASHTMOSTARAD_inner : 
+					EVENT_CHEQUE_BARGASHTMOSTARAD_agent;
+				break;
 		}
 		echo Response::createObjectiveResponse("true", $EventID."_".
 				$ReqObj->RequestID."_".$partObj->PartID."_".$PayObj->BackPayID);
@@ -484,6 +488,10 @@ function GetBackPays(){
 			case INCOMECHEQUE_BARGASHTI_HOGHUGHI:
 				$EventID = $IsInner ? EVENT_CHEQUE_BARGASHTHOGHUGHI_inner : 
 					EVENT_CHEQUE_BARGASHTHOGHUGHI_agent;
+				break;
+			case INCOMECHEQUE_BARGASHTI_MOSTARAD:
+				$EventID = $IsInner ? EVENT_CHEQUE_BARGASHTMOSTARAD_inner : 
+					EVENT_CHEQUE_BARGASHTMOSTARAD_agent;
 				break;
 		}
 		$eventobj = new ExecuteEvent($EventID);
@@ -581,6 +589,10 @@ function ChangeChequeStatus(){
 				case INCOMECHEQUE_BARGASHTI_HOGHUGHI:
 					$EventID = $IsInner ? EVENT_CHEQUE_BARGASHTHOGHUGHI_inner : 
 						EVENT_CHEQUE_BARGASHTHOGHUGHI_agent;
+					break;
+				case INCOMECHEQUE_BARGASHTI_MOSTARAD:
+					$EventID = $IsInner ? EVENT_CHEQUE_BARGASHTMOSTARAD_inner : 
+						EVENT_CHEQUE_BARGASHTMOSTARAD_agent;
 					break;
 			}
 

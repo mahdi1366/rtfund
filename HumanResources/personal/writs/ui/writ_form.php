@@ -127,7 +127,7 @@ $drp_emp_mode = manage_domains::DRP_EMP_MODE_WST("emp_mode", $objWrt->emp_mode ,
 
 if(!$is_new_corrective)
 { 	
-			    
+	echo "***" ; die(); 		    
 	$prior_writ_object = $objWrt->get_prior_writ(); 
 	      
 	if ($prior_writ_object)
@@ -233,10 +233,10 @@ WritForm.prototype.afterLoad = function()
 	   
     <?	}	?>
 
-    <?if(isset($prevItemsGrid)){?>
-	    this.prevItemsGrid = <?= $prevItemsGrid?>;
-	    //this.prevItemsGrid.render(this.get("PreWGRID"));
-    <?}if(isset($curItemsGrid)){?>		
+    <?php/*if(isset($prevItemsGrid)){?>
+	    this.prevItemsGrid = <?= $prevItemsGrid*/?>;
+	    
+    <?/*}*/if(isset($curItemsGrid)){?>		
 	    this.curItemsGrid = <?= $curItemsGrid?>;
 		this.curItemsGrid.getView().getRowClass = function(record,index)
                                         {  

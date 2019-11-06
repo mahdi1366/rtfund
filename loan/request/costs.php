@@ -36,7 +36,7 @@ $col->width = 80;
 if($accessObj->AddFlag)
 {
 	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(store,record){return LoanCostObject.BeforeSaveCost(record);}";
+	$dg->rowEditOkHandler = "function(store,record){return LoanCostObject.SaveCost(record);}";
 	$dg->addButton("AddBtn", "ایجاد ردیف هزینه", "add", "function(){LoanCostObject.AddCost();}");
 }
 if($accessObj->RemoveFlag)
@@ -242,16 +242,13 @@ LoanCost.prototype.SaveCost = function(record){
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 	
-	params = {
-		task: "SaveCosts",
-		record: Ext.encode(record.data)
-	};
-	params = mergeObjects(params, this.BankWin.down('form').getForm().getValues());
-
 	Ext.Ajax.request({
 		url: this.address_prefix +'request.data.php',
 		method: "POST",
-		params : params,
+		params : {
+			task: "SaveCosts",
+			record: Ext.encode(record.data)
+		},
 		
 		success: function(response){
 			mask.hide();
@@ -260,7 +257,6 @@ LoanCost.prototype.SaveCost = function(record){
 			if(st.success)
 			{   
 				LoanCostObject.grid.getStore().load();
-				LoanCostObject.BankWin.hide();
 			}
 			else
 			{
@@ -274,8 +270,16 @@ LoanCost.prototype.SaveCost = function(record){
 	});
 }
 
-LoanCost.prototype.AddCost = function(){
+LoanCost.prototype.ExecuteEvent = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
 
+	eventID = "<?= EVENT_LOAN_COST ?>";
+	framework.ExecuteEvent(eventID, new Array(
+		record.data.RequestID,record.data.CostID));
+}
+
+LoanCost.prototype.AddCost = function(){
 
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({

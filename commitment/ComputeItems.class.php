@@ -216,7 +216,9 @@ class EventComputeItems {
 		
 		if($ItemID == "80" || $ItemID == "81")
 		{
-
+			if($ComputeDate < $PartObj->PartDate)
+				return 0;
+			
 			if($PartObj->CustomerWage*1 == 0)
 				return 0; 
 
