@@ -112,11 +112,12 @@ function selectIncomeCheques() {
 
 		union all
 
-			select i.*,t1.TafsiliDesc fullname, 
+			select i.*,concat_ws('',t1.TafsiliDesc,t2.TafsiliDesc ) fullname, 
 				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) CostDesc,br.BranchName
 			from ACC_IncomeCheques i
 			left join BSC_branches br on(i.BranchID=br.BranchID)
 			left join ACC_tafsilis t1 using(TafsiliID)
+			left join ACC_tafsilis t2 on(i.TafsiliID2=t2.TafsiliID)
 			join ACC_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
 			left join ACC_blocks b2 on(cc.level2=b2.BlockID)

@@ -422,11 +422,7 @@ RequestInfo.prototype.MakePartsPanel = function(){
 						if(v == "CHEQUE") return 'چک';
 						if(v == "NEXTYEARCHEQUE") return 'چک سالهای بعد';
 					}
-				},{
-					fieldLabel: 'درصد بخشش',
-					name: 'ForgivePercent'	,		
-					renderer : function(v){ return v + " %"}
-				},{
+				},{ 
 					name : "AgentReturn",
 					fieldLabel: 'کارمزد سرمایه گذار',
 					renderer : function(v){
@@ -441,13 +437,14 @@ RequestInfo.prototype.MakePartsPanel = function(){
 						if(v == "INSTALLMENT") return 'طی اقساط';
 						if(v == "CHEQUE") return 'چک';
 						if(v == "NEXTYEARCHEQUE") return 'چک سالهای بعد';
-					}
-				},{
+					},
+					colspan : 3
+				}/*,{
 					name : "MaxFundWage",
 					labelWidth : 110,
 					fieldLabel: 'سقف کارمزد صندوق',
 					renderer : function(v){ return Ext.util.Format.Money(v)	}
-				}/*,{
+				},{
 					colspan : 3,
 					name : "BackPayComputeDesc",
 					width : 500,
@@ -1222,7 +1219,7 @@ RequestInfo.prototype.CustomizeForm = function(record){
 			this.PartsPanel.down("[name=WageReturn]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=ComputeMode]").getEl().dom.style.display = "none";
 			//this.PartsPanel.down("[name=PayCompute]").getEl().dom.style.display = "none";
-			this.PartsPanel.down("[name=MaxFundWage]").getEl().dom.style.display = "none";
+			//this.PartsPanel.down("[name=MaxFundWage]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=AgentReturn]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=AgentDelayReturn]").getEl().dom.style.display = "none";
 			this.PartsPanel.down("[name=DelayReturn]").getEl().dom.style.display = "none";
@@ -2065,7 +2062,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						name : "AgentDelayReturn",
 						inputValue : "NEXTYEARCHEQUE"
 					}]
-				},{
+				}/*,{
 					xtype : "fieldset",
 					colspan :2,
 					width : 450,
@@ -2099,7 +2096,7 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 						xtype : "container",
 						html : "این کارمزد بر اساس نحوه دریافت کارمزد محاسبه می گردد."
 					}]
-				},{
+				}*/,{
 					xtype : "hidden",
 					name : "PartID"
 				}]				
@@ -2126,8 +2123,8 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 			this.PartWin.down("[itemId=fs_AgentWageCompute]").hide();
 			this.PartWin.down("[itemId=fs_DelayCompute]").hide();
 			this.PartWin.down("[itemId=fs_AgentDelayCompute]").hide();
-			this.PartWin.down("[itemId=fs_PayCompute]").hide();
-			this.PartWin.down("[itemId=fs_MaxFundWage]").hide();
+			//this.PartWin.down("[itemId=fs_PayCompute]").hide();
+			//this.PartWin.down("[itemId=fs_MaxFundWage]").hide();
 			this.PartWin.down("[name=PartAmount]").colspan = 2;
 			this.PartWin.setHeight(250);
 		}
@@ -2160,12 +2157,12 @@ RequestInfo.prototype.PartInfo = function(EditMode){
 
 RequestInfo.prototype.SavePart = function(){
 
-	if(this.PartWin.down('[name=MaxFundWage]').getValue()*1 > 0 && 
+	/*if(this.PartWin.down('[name=MaxFundWage]').getValue()*1 > 0 && 
 		this.PartWin.down('[name=FundWage]').getValue()*1 > 0 )
 	{
 		Ext.MessageBox.alert("Error","در صورتی که سقف کارمزد صندوق را تعیین می کنید باید کارمزد صندوق را صفر نمایید");
 		return;
-	}
+	}*/
 
 	mask = new Ext.LoadMask(this.PartWin, {msg:'در حال ذخیره سازی ...'});
 	mask.show();

@@ -835,6 +835,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 			$obj->InstallmentDate = DateModules::shamsi_to_miladi($installmentArray[$i]["InstallmentDate"]);
 			$obj->InstallmentAmount = $installmentArray[$i]["InstallmentAmount"];
 			$obj->wage = $installmentArray[$i]["wage"];
+			$obj->PureWage = $installmentArray[$i]["PureWage"];
 			if(!$obj->AddInstallment($pdo))
 			{
 				$pdo->rollBack();
@@ -1592,7 +1593,7 @@ function GetEndedRequests(){
 function GetPartPayments(){
 	
 	$dt = LON_payments::FullSelect(" AND p.RequestID=? ", array($_REQUEST["RequestID"]),dataReader::makeOrder());
-	//print_r(ExceptionHandler::PopAllExceptions());
+	print_r(ExceptionHandler::PopAllExceptions());
 	echo dataReader::getJsonData($dt->fetchAll(), $dt->rowCount(), $_GET["callback"]);
 	die();
 }

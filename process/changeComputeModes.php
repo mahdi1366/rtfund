@@ -8,7 +8,7 @@ ini_set('max_execution_time', 3000);
 //phpinfo();die();
 
 $dt = PdoDataAccess::runquery("select RequestID from LON_requests where StatusID=70 "
-		. "and ReqPersonID not in(1003,2051) ");
+		. "and ReqPersonID in(2051) ");
 
 	header("X-Accel-Buffering: no");
 	ob_start();

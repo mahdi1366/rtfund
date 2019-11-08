@@ -1455,6 +1455,7 @@ class LON_Computes extends PdoDataAccess{
 				$installmentArray[$i]["InstallmentAmount"] = $x;
 		}
 		//------ compute wages of installments -----------
+		
 		// compute wage for payment steps 
 		$paymentWage = 0;
 		if(count($pays) > 1)
@@ -1483,17 +1484,18 @@ class LON_Computes extends PdoDataAccess{
 			$days = DateModules::JDateMinusJDate($installmentArray[$i]["InstallmentDate"],$ComputeDate);
 
 			if($i == 0)
-				$installmentArray[$i]["wage"] = round(
+				$installmentArray[$i]["PureWage"] = round(
 					($remainPure + $paymentWage)*
 					$partObj->CustomerWage*$days/36500) + $paymentWage;   
 			else
-				$installmentArray[$i]["wage"] = round(
+				$installmentArray[$i]["PureWage"] = round(
 					$remainPure*$partObj->CustomerWage*$days/36500);  
 			
-			$remainPure -= $installmentArray[$i]["InstallmentAmount"] - $installmentArray[$i]["wage"];
+			$remainPure -= $installmentArray[$i]["InstallmentAmount"] - $installmentArray[$i]["PureWage"];
 			$ComputeDate  = $installmentArray[$i]["InstallmentDate"];
 		}
 		//------------------------------------------------	
+		$total = 0;
 		$difference = 0;
 		for($i=0; $i<count($installmentArray);$i++)
 		{
@@ -1507,7 +1509,17 @@ class LON_Computes extends PdoDataAccess{
 			{
 				$installmentArray[$i]["InstallmentAmount"] -= $difference;
 			}
+			$total += $installmentArray[$i]["InstallmentAmount"];
 		}
+		//--------------------------------------------------
+		$zarib = $TotalPureAmount/$total;
+		for($i=0; $i<count($installmentArray);$i++)
+		{
+			$installmentArray[$i]["wage"] = $installmentArray[$i]["InstallmentAmount"] - 
+					round($zarib*$installmentArray[$i]["InstallmentAmount"]);
+		}
+		
+		
 		return $installmentArray;
 	}
 	
@@ -2054,6 +2066,7 @@ class LON_Computes extends PdoDataAccess{
 		
 		$PartObj = LON_ReqParts::GetValidPartObj($RequestID);
 		$temp = LON_installments::GetValidInstallments($RequestID);
+
 		//.............................
 		$returnArr = array();
 		//$extra = LON_requests::TotalSubtractsOfPayAmount($RequestID, $PartObj);
@@ -2080,12 +2093,12 @@ class LON_Computes extends PdoDataAccess{
 		for($i=0; $i< count($temp); $i++)
 		{
 			$row = $temp[$i];
-			$totalPure -= $row["InstallmentAmount"] - $row["wage"];
+			$totalPure -= $row["InstallmentAmount"] - $row["PureWage"];
 			$returnArr[] = array(
 				"InstallmentDate" => $row["InstallmentDate"],
 				"InstallmentAmount" => $row["InstallmentAmount"],
-				"wage" => $row["wage"],
-				"pure" => $row["InstallmentAmount"] - $row["wage"],
+				"wage" => $row["PureWage"],
+				"pure" => $row["InstallmentAmount"] - $row["PureWage"],
 				"totalPure" => $totalPure 
 			);
 		}
@@ -2260,6 +2273,7 @@ class LON_installments extends PdoDataAccess{
 	public $InstallmentDate;
 	public $InstallmentAmount;
 	public $wage;	
+	public $PureWage;
 	public $IsDelayed;
 	public $history;
 			

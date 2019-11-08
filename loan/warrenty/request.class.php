@@ -4,7 +4,7 @@
 // create Date: 95.06
 //---------------------------
 
-require_once getenv("DOCUMENT_ROOT") . '/office/dms/dms.class.php';
+require_once DOCUMENT_ROOT . '/office/dms/dms.class.php';
 
 class WAR_requests extends OperationClass
 {

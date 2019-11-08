@@ -3,23 +3,29 @@
 // programmer:	Jafarkhani
 // create Date: 97.12
 //---------------------------
-require_once '../header.inc.php';
+
 ini_set("display_errors", "On");
 ini_set('max_execution_time', 30000000);
 ini_set('memory_limit','4000M');
-header("X-Accel-Buffering: no");
+
 ob_start();
-//set_time_limit(0);
-//error_reporting(0);
 
 require_once '../framework/configurations.inc.php';
-
 set_include_path(DOCUMENT_ROOT . "/generalClasses");
+
+$fp = fopen(DOCUMENT_ROOT . "/process/loanDaily.html", "w");
 
 require_once '../definitions.inc.php';
 require_once DOCUMENT_ROOT . '/generalClasses/InputValidation.class.php';
 require_once DOCUMENT_ROOT . '/generalClasses/PDODataAccess.class.php';
 require_once DOCUMENT_ROOT . '/generalClasses/DataAudit.class.php';
+require_once DOCUMENT_ROOT . '/generalClasses/DateModules.class.php';
+
+define("SYSTEMID", 1);
+session_start();
+$_SESSION["USER"] = array("PersonID" => 1000);
+$_SESSION['LIPAddress'] = '';
+$_SESSION["accounting"]["CycleID"] = DateModules::GetYear(DateModules::shNow());
 
 require_once '../office/dms/dms.class.php';
 
@@ -31,8 +37,8 @@ $params = array();
 $query = "
 select * from dates where jdate between :sd AND :ed" ;
 
-$params[":sd"] = $_GET["fdate"];
-$params[":ed"] = $_GET["tdate"];	
+$params[":sd"] = '1398/07/11';
+$params[":ed"] = '1398/07/30';	
 
 $days = PdoDataAccess::runquery_fetchMode($query, $params);
 echo "days:" . $days->rowCount() . "<br>";
@@ -46,11 +52,7 @@ foreach($days as $dayRow)
 	from LON_requests  r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
 	where ComputeMode='NEW' AND StatusID=" . LON_REQ_STATUS_CONFIRM ;
-	if(!empty($_GET["RequestID"]))
-	{
-		$query .= " AND  r.RequestID=:r";
-		$params[":r"] = (int)$_GET["RequestID"];
-	}
+	
 	$reqs = PdoDataAccess::runquery_fetchMode($query,$params);
 	
 	$objArr = array(
@@ -150,8 +152,12 @@ foreach($days as $dayRow)
 
 	}
 	$pdo->commit();
-	print_r(ExceptionHandler::PopAllExceptions());
-	//print_r($objArr);
-	echo "true";
 }
+echo "--------";
+$htmlStr = ob_get_contents();
+ob_end_clean(); 
+$htmlStr = preg_replace('/\\n/', "<br>", $htmlStr);
+fwrite($fp, $htmlStr);
+fclose($fp);
+die(); 
 ?>

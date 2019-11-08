@@ -56,8 +56,13 @@ $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::Column
 if(session::IsFramework())
 {
 	$col = $dg->addColumn("کارمزد", "wage", GridColumn::ColumnType_money);
+	$col->width = 80;
 	$col = $dg->addColumn("اصل", "", GridColumn::ColumnType_money);
 	$col->renderer = "function(v,p,r){return r.data.InstallmentAmount - r.data.wage;}";
+	$col->width = 80;
+	
+	$col = $dg->addColumn("خالص کارمزد", "PureWage", GridColumn::ColumnType_money);
+	$col->width = 80;
 }
 
 $col = $dg->addColumn("مانده قسط", "remain", GridColumn::ColumnType_money);
