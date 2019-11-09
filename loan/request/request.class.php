@@ -2534,6 +2534,16 @@ class LON_payments extends OperationClass{
 			left join ACC_DocItems di on(di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
 				AND di.SourceID1=p.RequestID AND di.SourceID3=p.PayID) 
 			left join ACC_docs d on(di.DocID=d.DocID)
+			
+			left join (
+				select di2.SourceID3 ,d2.DocID,LocalNo 
+				from COM_events e
+					join ACC_docs d2 on(e.EventID=d2.EventID) 
+					join ACC_DocItems di2 on(d2.DocID=di2.DocID)
+				where ComputeFn='PayLoan'
+				group by di2.SourceID3
+			)t1 on(p.PayID=t1.SourceID3)
+			
 			where 1=1 " . $where .  
 			" group by p.PayID " . $order, $whereParams);
 	}

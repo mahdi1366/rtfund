@@ -62,7 +62,8 @@ class WAR_requests extends OperationClass
 				p.NationalID,
 				p.PhoneNo,
 				p.mobile,
-				bf.InfoDesc TypeDesc,d.DocID,group_concat(distinct d.LocalNo) LocalNo, d.StatusID DocStatusID , 
+				bf.InfoDesc TypeDesc,
+				t1.DocID,group_concat(distinct t1.LocalNo) LocalNo, 
 				BranchName,
 				if(lst.RequestID=r.RequestID, 'YES', 'NO') IsCurrent,
 				concat(if(fr.ActionType='REJECT','رد ',''),sp.StepDesc) StepDesc,
@@ -77,9 +78,15 @@ class WAR_requests extends OperationClass
 				left join WFM_FlowRows fr on(fr.IsLastRow='YES' AND fr.ObjectID=r.RequestID 
 					AND fr.StepRowID=sp.StepRowID AND fr.FlowID=sp.FlowID)
 			
-				left join ACC_DocItems on(r.RequestID=SourceID2 AND 
-					SourceType in(" . DOCTYPE_WARRENTY . ",".DOCTYPE_WARRENTY_END.",".DOCTYPE_WARRENTY_EXTEND."))
-				left join ACC_docs d using(DocID)
+				left join (
+				select di2.SourceID1,d2.DocID,LocalNo 
+					from COM_events e
+						join ACC_docs d2 on(e.EventID=d2.EventID) 
+						join ACC_DocItems di2 on(d2.DocID=di2.DocID)
+					where ComputeFn='Warrenty'
+					group by di2.SourceID1
+				)t1 on(r.RequestID=t1.SourceID1)
+				
 				left join (
 						select max(RequestID) RequestID,RefRequestID
 						from WAR_requests 

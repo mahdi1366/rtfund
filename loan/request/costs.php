@@ -30,8 +30,10 @@ $col = $dg->addColumn("مبلغ", "CostAmount", GridColumn::ColumnType_money);
 $col->editor = ColumnEditor::CurrencyField();
 $col->width = 100;
 
-$col = $dg->addColumn("سند", "LocalNo");
-$col->width = 80;
+$col = $dg->addColumn("شماره سند حسابداری", "LocalNo");
+$col->align = "center";
+$col->renderer = "function(v,p,r){return LoanCost.DocRender(v,p,r);}";
+$col->width = 100;
 
 if($accessObj->AddFlag)
 {
@@ -101,6 +103,18 @@ LoanCost.DeleteRender = function(v,p,r){
 		"onclick='LoanCostObject.DeleteCost();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+LoanCost.DocRender = function(v,p,r){
+		
+	if(r.data.DocID*1 == 0)
+	{
+		return "<div align='center' title='صدور سند' class='send' "+
+		"onclick='LoanCostObject.ExecuteEvent();' " +
+		"style='float:right;background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+	}
+	return "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+v+"</a>";
 }
 
 LoanCost.prototype.BeforeSaveCost = function(record){
