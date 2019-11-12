@@ -334,14 +334,15 @@ function CreatePayCheque(){
 	
 	PdoDataAccess::runquery("insert into ACC_DocCheques(DocID,AccountID,CheckDate,amount,CheckStatus) 
 		select DocID,ObjectID,gdate,sum(CreditorAmount),3001 
-		from ACC_DocItems di left 
-			join ACC_tafsilis t on(di.TafsiliID2=t.TafsiliID)  
-			left join dates on(jdate=param2)
-		where DocID=? AND CostID=1107", array($DocID));
+		from ACC_DocItems di 
+			join ACC_CostCodes cc using(CostID)
+			left join ACC_tafsilis t on(di.TafsiliID2=t.TafsiliID)  
+			left join dates on(jdate=di.param2) 
+		where DocID=? AND IsCheque='YES' group by cc.CostID", array($DocID));
 	
 	if(PdoDataAccess::AffectedRows() == 0)
 	{
-		echo Response::createObjectiveResponse(false , "ردیف با کد حساب 3030101 یافت تشد");
+		echo Response::createObjectiveResponse(false , "کد حسابی که قابلیت صدور چک داشته باشد یافت نشد");
 		die();	
 	}
 	echo Response::createObjectiveResponse(true , "");

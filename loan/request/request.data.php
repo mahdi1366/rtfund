@@ -2103,6 +2103,7 @@ function ComputeManualInstallments(){
 		$obj->InstallmentDate = DateModules::shamsi_to_miladi($installmentArray[$i]["InstallmentDate"]);
 		$obj->InstallmentAmount = $installmentArray[$i]["InstallmentAmount"];
 		$obj->wage = isset($installmentArray[$i]["wage"]) ? $installmentArray[$i]["wage"] : 0;
+		$obj->PureWage = isset($installmentArray[$i]["PureWage"]) ? $installmentArray[$i]["PureWage"] : 0;
 		if(!$obj->AddInstallment($pdo))
 		{
 			$pdo->rollBack();

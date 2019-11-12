@@ -795,6 +795,9 @@ Installment.prototype.ComputeManualInstallments = function(){
 		items = items.substring(0, items.length - 1);
 	items += "]";
 	
+	mask = new Ext.LoadMask(this.AddWin, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+		
 	Ext.Ajax.request({
 		url : this.address_prefix + "request.data.php?task=ComputeManualInstallments",
 		method : "POST",
@@ -808,6 +811,7 @@ Installment.prototype.ComputeManualInstallments = function(){
 		},
 		
 		success : function(response){
+			mask.hide();
 			sd = Ext.decode(response.responseText);
 			if(sd.success)
 			{

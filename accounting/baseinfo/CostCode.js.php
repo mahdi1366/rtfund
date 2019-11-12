@@ -226,6 +226,11 @@ function CostCode(){
 				boxLabel : "این حساب قابل بلوکه شدن است",
 				name : "IsBlockable"
 			},{
+				xtype : "checkbox",
+				inputValue : "YES",
+				boxLabel : "این حساب قابلیت صدور چک را دارد",
+				name : "IsCheque"
+			},{
 				buttons: [{
 					text : "ذخیره",
 					iconCls : "save",

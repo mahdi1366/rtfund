@@ -1346,6 +1346,7 @@ class LON_Computes extends PdoDataAccess{
 		$sum = 0;
 		$totalZarib = 0;
 		$startDate = $ComputeDate;
+		$totalSubs = 0;
 		for($i=0; $i<count($installmentArray);$i++)
 		{
 			$days = DateModules::JDateMinusJDate($installmentArray[$i]["InstallmentDate"],$startDate);
@@ -1372,7 +1373,7 @@ class LON_Computes extends PdoDataAccess{
 			{
 				if($i < count($installmentArray)-1)
 				{
-					$amount -= $installmentArray[$i]["InstallmentAmount"]/$zarib;
+					$totalSubs += $installmentArray[$i]["InstallmentAmount"]/$zarib;
 				}
 			}
 			$startDate = $installmentArray[$i]["InstallmentDate"];
@@ -1394,7 +1395,7 @@ class LON_Computes extends PdoDataAccess{
 		if($ComputeWage == "YES")
 			$x = round($amount*$paymentZarib/$totalZarib);
 		else
-			$x = round($amount*$paymentZarib*$zarib);
+			$x = round($amount*$paymentZarib - $totalSubs)*$zarib;
 
 		//-------- compute again if installment wage payed at first ------------
 		/*		
@@ -1502,7 +1503,7 @@ class LON_Computes extends PdoDataAccess{
 			if($i < count($installmentArray)-1)
 			{
 				$a = $installmentArray[$i]["InstallmentAmount"];
-				$installmentArray[$i]["InstallmentAmount"] = roundUp($a,-4);
+				$installmentArray[$i]["InstallmentAmount"] = roundUp($a,-3);
 				$difference += $installmentArray[$i]["InstallmentAmount"] - $a;
 			}
 			else
@@ -2660,6 +2661,7 @@ class LON_payments extends OperationClass{
 		}
 		
 		$dt = LON_payments::Get(" AND p.RequestID=? ", $RequestID, "order by PayDate desc");
+		//print_r(ExceptionHandler::PopAllExceptions());
 		$dt = $dt->fetchAll();
 		if(count($dt) == 0)
 		{
