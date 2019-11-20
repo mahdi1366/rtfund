@@ -208,8 +208,6 @@ class EventComputeItems {
 	
 	static function LoanDaily($ItemID, $SourceObjects){
 						
-		require_once '../loan/request/request.class.php';
-		
 		$ReqObj = new LON_requests((int)$SourceObjects[0]);
 		$PartObj = new LON_ReqParts((int)$SourceObjects[1]);
 		$ComputeDate = $SourceObjects[2];
@@ -239,19 +237,16 @@ class EventComputeItems {
 			if($PureArr === 0)
 				return 0;
 			
-			$LastPureAmount = 0;
 			for($i=1; $i < count($PureArr);$i++)
 			{
 				if($ComputeDate < $PureArr[$i]["InstallmentDate"])
 				{
-					$LastPureAmount = $PureArr[$i-1]["totalPure"];
+					$totalDays = DateModules::GDateMinusGDate($PureArr[$i]["InstallmentDate"],$PureArr[$i-1]["InstallmentDate"]);
+					$wage = round($PureArr[$i]["wage"]/$totalDays);
 					break;
 				}
 			}
-			$wage = round($LastPureAmount*$PartObj->CustomerWage/36500);
-
-			$wagePercent = $PartObj->CustomerWage;
-			$FundWage = round(($PartObj->FundWage/$wagePercent)*$wage);
+			$FundWage = round(($PartObj->FundWage/$PartObj->CustomerWage)*$wage);
 			$AgentWage = $wage - $FundWage;
 
 			if($ItemID == "80")
@@ -305,6 +300,16 @@ class EventComputeItems {
 				return $penalty - $fundPenalty;
 		}
 
+	}
+	
+	static function LoanCost($ItemID, $SourceObjects){
+		
+		$ReqObj = new LON_requests((int)$SourceObjects[0]);
+		$PartObj = new LON_ReqParts((int)$SourceObjects[1]);
+		$CostObj = new LON_costs((int)$SourceObjects[2]);
+
+		if($ItemID == "140")
+			return $CostObj->CostAmount;
 	}
 	
 	//--------------------------------------------------------
