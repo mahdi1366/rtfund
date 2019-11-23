@@ -208,11 +208,12 @@ $grid = $dg->makeGrid_returnObjects();
             height: 430,
             store: store,
             verticalScrollerType: 'paginggridscroller',
-            loadMask: true,
+           // loadMask: true,
             disableSelection: true,
             invalidateScrollerOnRefresh: false,
             viewConfig: {
-                trackOver: false
+                trackOver: false,
+                loadMask: false
             },
             columns: [{menuDisabled: true,
                     align: 'center',
@@ -340,6 +341,9 @@ $grid = $dg->makeGrid_returnObjects();
                             handler:
                             function ()
                             {
+                                MyMessengerObject.grid2.getStore().load();
+                              //  MyMessengerObject.GoToMsg(279);
+                               
                                 MyMessengerObject.grid2.getView().scrollBy(0, 999999, true);
                                 MyMessengerObject.SeenMsg();
                             }
@@ -351,6 +355,9 @@ $grid = $dg->makeGrid_returnObjects();
                             handler:
                             function ()
                             {
+                                MyMessengerObject.grid2.getStore().load();
+                              //  MyMessengerObject.GoToMsg(279);
+                                
                                 MyMessengerObject.grid2.getView().scrollBy(0, 999999, true);
                                 MyMessengerObject.SeenMsg();                                
                             }
@@ -604,8 +611,8 @@ $grid = $dg->makeGrid_returnObjects();
                 start: 0,
                 limit: 40,
                 callback: function () {
-                    store.guaranteeRange(0,20); 
-                    //store.load();
+                    //store.guaranteeRange(0,20); 
+                    store.load();
                     if (MyMessengerObject.IsFirstLoad === false) {
                         /*
                          * var records = Ext.getCmp('prGrid').getStore().data.length + 1;
@@ -892,7 +899,7 @@ $grid = $dg->makeGrid_returnObjects();
                             MyMessengerObject.grid2.getView().scrollBy(0, 999999, true);
                             MyMessengerObject.formpanel.down("[itemId=MsgTxt]").setValue("");
                             MyMessengerObject.formpanel.down("[itemId=FileType]").setValue("");
-                            Ext.getCmp("Field2").hide();
+                            Ext.getCmp("Field2").hide(); 
                         } else
                             Ext.MessageBox.alert("", "عملیات مورد نظر با شکست مواجه شد.");
 
@@ -907,8 +914,7 @@ $grid = $dg->makeGrid_returnObjects();
     }
     
     MyMessenger.prototype.SeenMsg = function ()
-    {        
-       
+    {               
         Ext.Ajax.request({
                 url: MyMessengerObject.address_prefix + 'ManageGroup.data.php',
                 params:{
