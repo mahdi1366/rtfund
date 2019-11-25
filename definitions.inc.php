@@ -63,6 +63,7 @@ define("TAFSILITYPE_PERSON", "200");
 define("TAFSILITYPE_LOAN", "130");
 define("TAFSILITYPE_PROCESS", "150");
 define("TAFSILITYPE_BRANCH", "300");
+define("TAFSILITYPE_SOURCE", "320");
 
 //...............................
 
@@ -207,7 +208,8 @@ define("EVENT_LOANBACKPAY_agentSource_committal_non_cheque", 156);
 define("EVENT_LOANBACKPAY_agentSource_non_committal_cheque", 153);
 define("EVENT_LOANBACKPAY_agentSource_non_committal_non_cheque", 154);
 
-define("EVENT_LOAN_COST", 1851);
+define("EVENT_LOAN_COST_INNER", 1866);
+define("EVENT_LOAN_COST_AGENT", 1867);
 
 define("EVENT_LOANDAILY_innerSource", 161);
 define("EVENT_LOANDAILY_agentSource_committal", 1722);
@@ -216,6 +218,8 @@ define("EVENT_LOANDAILY_innerLate", 1724);
 define("EVENT_LOANDAILY_agentlate", 1725);  
 define("EVENT_LOANDAILY_innerPenalty", 1726);
 define("EVENT_LOANDAILY_agentPenalty", 1727);
+
+define("EVENT_LOAN_CHANGE", 171);
 
 define("EVENT_LOANCHEQUE_payed", 1755);
 define("EVENT_LOANCHEQUE_innerSource", 1766);

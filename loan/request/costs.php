@@ -30,7 +30,7 @@ $col = $dg->addColumn("مبلغ", "CostAmount", GridColumn::ColumnType_money);
 $col->editor = ColumnEditor::CurrencyField();
 $col->width = 100;
 
-$col = $dg->addColumn("شماره سند حسابداری", "LocalNo");
+$col = $dg->addColumn("سند حسابداری", "LocalNo");
 $col->align = "center";
 $col->renderer = "function(v,p,r){return LoanCost.DocRender(v,p,r);}";
 $col->width = 100;
@@ -287,10 +287,28 @@ LoanCost.prototype.SaveCost = function(record){
 LoanCost.prototype.ExecuteEvent = function(){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
-
-	eventID = "<?= EVENT_LOAN_COST ?>";
-	framework.ExecuteEvent(eventID, new Array(
-		record.data.RequestID,record.data.CostID));
+	
+	var loanStore = new Ext.data.Store({
+		proxy:{
+			type: 'jsonp',
+			url: this.address_prefix + "request.data.php?task=SelectAllRequests&RequestID=" + record.data.RequestID,
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		},
+		fields : ["RequestID","ReqPersonID","PartID"]
+	});
+	loanStore.load({
+		callback : function(){
+			var eventID = "";
+			ReqRecord = this.getAt(0);
+			if(ReqRecord.data.ReqPersonID*1 > 0)
+				eventID = "<?= EVENT_LOAN_COST_AGENT ?>";
+			else
+				eventID = "<?= EVENT_LOAN_COST_INNER ?>";
+			
+			framework.ExecuteEvent(eventID, new Array(
+				ReqRecord.data.RequestID,ReqRecord.data.PartID,record.data.CostID));
+		}
+	})
 }
 
 LoanCost.prototype.AddCost = function(){

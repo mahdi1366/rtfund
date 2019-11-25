@@ -237,6 +237,7 @@ class EventComputeItems {
 			if($PureArr === 0)
 				return 0;
 			
+			$wage = 0;
 			for($i=1; $i < count($PureArr);$i++)
 			{
 				if($ComputeDate < $PureArr[$i]["InstallmentDate"])
@@ -246,6 +247,7 @@ class EventComputeItems {
 					break;
 				}
 			}
+			
 			$FundWage = round(($PartObj->FundWage/$PartObj->CustomerWage)*$wage);
 			$AgentWage = $wage - $FundWage;
 
@@ -475,6 +477,14 @@ class EventComputeItems {
 					$t2 = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->LoanPersonID);
 				if($EventRow["TafsiliType3"] == TAFSILITYPE_PERSON && $ReqObj->ReqPersonID*1 > 0)
 					$t3 = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->ReqPersonID);
+				
+				if($EventRow["TafsiliType1"] == TAFSILITYPE_SOURCE)
+					$t1 = self::FindTafsili(TAFSILITYPE_SOURCE, $ReqObj->ReqPersonID);
+				if($EventRow["TafsiliType2"] == TAFSILITYPE_SOURCE)
+					$t2 = self::FindTafsili(TAFSILITYPE_SOURCE, $ReqObj->ReqPersonID);
+				if($EventRow["TafsiliType3"] == TAFSILITYPE_SOURCE)
+					$t3 = self::FindTafsili(TAFSILITYPE_SOURCE, $ReqObj->ReqPersonID);
+				
 				break;
 				
 			case EVENT_WAR_REG_2:
@@ -512,6 +522,13 @@ class EventComputeItems {
 					$t1 = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->PersonID);
 				if($EventRow["TafsiliType2"] == TAFSILITYPE_PERSON)
 					$t2 = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->PersonID);
+				
+				if($EventRow["TafsiliType1"] == TAFSILITYPE_SOURCE)
+					$t1 = self::FindTafsili(TAFSILITYPE_SOURCE, 0);
+				if($EventRow["TafsiliType2"] == TAFSILITYPE_SOURCE)
+					$t2 = self::FindTafsili(TAFSILITYPE_SOURCE, 0);
+				if($EventRow["TafsiliType3"] == TAFSILITYPE_SOURCE)
+					$t3 = self::FindTafsili(TAFSILITYPE_SOURCE, 0);
 				break;
 		}
 		return array($t1,$t2,$t3);

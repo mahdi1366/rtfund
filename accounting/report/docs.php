@@ -63,6 +63,10 @@ function GetData(){
 		$query .= " AND DocType=:dt";
 		$whereParam[":dt"] = $_POST["DocType"];
 	}	
+	if(!empty($_POST["EventID"]))
+	{
+		$query .= " AND EventID in(" . $_POST["EventID"] . ")";
+	}
 	if(!empty($_POST["FromLocalNo"]))
 	{
 		$query .= " AND d.LocalNo >= :td ";
@@ -351,6 +355,26 @@ function AccReport_docs()
 			displayField : "InfoDesc",
 			valueField : "InfoID",
 			hiddenName : "DocType"
+		},{
+			xtype : "treecombo",
+			selectChildren: true,
+			canSelectFolders: false,
+			multiselect : true,
+			hiddenName : "EventID",
+			colspan : 2,
+			width : 620,
+			fieldLabel: "رویداد مالی",
+			store : new Ext.data.TreeStore({
+				proxy: {
+					type: 'ajax',
+					url:  '/commitment/baseinfo/baseinfo.data.php?task=GetEventsTree' 
+				},
+				root: {
+					text: "رویدادهای مالی",
+					id: 'src',
+					expanded: true
+				}
+			})
 		},{
 			xtype : "numberfield",
 			name : "FromLocalNo",

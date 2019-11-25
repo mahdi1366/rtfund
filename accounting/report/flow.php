@@ -61,6 +61,11 @@ function MakeWhere(&$where, &$whereParam , $ForRemain = false){
 	if(!isset($_REQUEST["IncludeRaw"]))
 		$where .= " AND d.StatusID != " . ACC_STEPID_RAW;
 
+	if(!empty($_REQUEST["EventID"]))
+	{
+		$where .= " AND d.EventID in (" . $_REQUEST["EventID"] . ")";
+	}
+		
 	if(!empty($_REQUEST["BranchID"]))
 	{
 		$where .= " AND BranchID=:b";

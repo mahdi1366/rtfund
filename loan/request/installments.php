@@ -80,18 +80,20 @@ if(session::IsFramework())
 }
 if($editable && $accessObj->EditFlag)
 {
-	$dg->addButton("", "محاسبه اقساط", "list", 
+	$dg->addButton("", "محاسبه اقساط", "process", 
 			"function(){InstallmentObject.ComputeInstallments();}");
+	
+	$dg->addButton("", "محاسبه قسط آخر", "process", 
+			"function(){InstallmentObject.ComputeLatestInstallment();}");
 	
 	//$dg->enableRowEdit = true;
 	//$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SaveInstallment(store,record);}";
 	
 	$dg->addButton("", "ایجاد اقساط", "add", "function(){InstallmentObject.AddInstallments();}");
-	
-	$dg->addButton("", "تغییر اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
+	//$dg->addButton("", "تغییر اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
 }
 
-if(session::IsFramework())
+if(session::IsFramework()) 
 {
 	$dg->addButton("cmp_report2", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport();}");
 }
@@ -429,7 +431,47 @@ Installment.prototype.ComputeInstallments = function(){
 			method: "POST",
 			params: {
 				task: "ComputeInstallments",
-				RequestID : me.RequestID
+				RequestID : me.RequestID,
+				IsLastest : "false"
+			},
+			success: function(response){
+				mask.hide();
+				
+				result = Ext.decode(response.responseText);
+				if(!result.success)
+				{
+					if(result.data == "DocExists")
+						Ext.MessageBox.alert("Error", "این وام دارای سند اختلاف قسط می باشد و قادر به محاسبه مجدد نمی باشید");
+					else if(result.data == "")
+						Ext.MessageBox.alert("", "عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("", result.data);
+				}
+				
+				InstallmentObject.grid.getStore().load();
+			}
+		});
+	});	
+}
+
+Installment.prototype.ComputeLatestInstallment = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایلید که شرایط جدید فقط روی قسط آخر محاسبه شود؟",function(btn){
+		if(btn == "no")
+			return;
+		
+		me = InstallmentObject;
+	
+		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "ComputeInstallments",
+				RequestID : me.RequestID,
+				IsLastest : "true"
 			},
 			success: function(response){
 				mask.hide();

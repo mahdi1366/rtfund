@@ -52,7 +52,7 @@ function selectEventRows(){
 		$list[$i]["TafsiliID2"] = $result[1]["TafsiliID"];
 		$list[$i]["TafsiliDesc2"] = $result[1]["TafsiliDesc"];
 		$list[$i]["TafsiliID3"] = $result[2]["TafsiliID"];
-		$list[$i]["TafsiliDesc3"] = $result[2]["TafsiliDesc"];
+		$list[$i]["TafsiliDesc3"] = $result[2]["TafsiliDesc"]; 
 		
 		$obj = new ACC_DocItems();
 		$result = EventComputeItems::SetParams($eObj->EventID, $list[$i], $SourcesArr, $obj);
@@ -66,6 +66,7 @@ function selectEventRows(){
 			
 			if(is_array($value))
 			{
+				continue;
 				if(isset($value["amount"]))
 				{
 					if($list[$i]["CostType"] == "DEBTOR")

@@ -77,7 +77,12 @@ class ExecuteEvent {
 			case EVENT_LOANDAILY_innerPenalty:
 			case EVENT_LOANDAILY_agentPenalty:
 				$this->EventFunction = "EventComputeItems::LoanDaily";
-				break;			
+				break;	
+			
+			case EVENT_LOAN_COST_AGENT:
+			case EVENT_LOAN_COST_INNER:
+				$this->EventFunction = "EventComputeItems::LoanCost";
+				break;	
 
 			case EVENT_WAR_CANCEL_2:
 			case EVENT_WAR_CANCEL_3:
