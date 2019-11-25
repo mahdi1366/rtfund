@@ -329,13 +329,13 @@ class ReportGenerator {
 
 		}//..............................................
 		echo "</caption>";
-		echo "<thead> <tr class='breakPage' bgcolor = '$this->header_color'>";            //New Edition
+		echo "<thead> <tr class='breakPage' bgcolor = '$this->header_color'>";
 
 		// row number ---------------------------
 		if ($this->rowNumber)
 			echo "<td " . ($GroupHeaderFlag ? "rowspan=2" : "") . 
 				" align='center' style='padding:2px' border='$this->border' height='21px'><font
-				color = '$this->header_textcolor' style='font-size:".$this->fontSize."'><b>&nbsp;ردیف</b></font></th>";
+				color = '$this->header_textcolor' style='font-size:".$this->fontSize."'><b>&nbsp;ردیف</b></font></td>";
 
 		//---------------------------------------
 		// Draw Header
@@ -396,10 +396,10 @@ class ReportGenerator {
 			if ($this->columns[$i]->HaveSum != -1)
 				$this->EnableSumRow = true;
 		}
-		echo "</tr> </thead>";            //New Edition
+		echo "</tr> "; 
 		if($secondRow != "")
 			echo "<tr bgcolor = '$this->header_color'>" . $secondRow . "</tr>";
-		
+		echo "</thead>";
 		//$this->pageRecordCounter++;
 		//$this->pageRecordCounter++;
 	}
