@@ -31,14 +31,14 @@ $dg->emptyTextOfHiddenColumns = true;
 $grid1 = $dg->makeGrid_returnObjects();
 
 //--------------- news -----------------
-/*$temp = FRW_news::ShowNews();
+$temp = FRW_news::ShowNews();
 $temp = $temp->fetchAll();
 $returnStr = "";
 foreach($temp as $row)
 {
 	$returnStr .= '<font style="color:#17C5FF;">◄&nbsp;' . $row["NewsTitle"] . 
 			"</font><div style='width:100%;padding-right:20px'> ".$row["context"]."</div><br>"; 
-}*/
+}
 
 ?>
 <script>
@@ -90,22 +90,26 @@ function FrameworkStartPage(){
 		items : this.grid1,
 		frame : true
 	});
-	new Ext.panel.Panel({
-		renderTo : this.get("panel3"),
-		title : "ثبت ورود و خروج",
-        width: 100,
-        height: 200,
-		frame : true,
-        layout: 'fit',
-        loader : {
-			url : "../attendance/traffic/AddTraffic.php?StartPage=true",
-			params : {
-				ExtTabID : this.TabID
-			},
-			scripts : true,
-			autoLoad : true
-		}
-    });
+	
+	if(<?= $_SESSION["USER"]["UserName"] == "jannati" || $_SESSION["USER"]["UserName"] == "mokhtari" ? "true" : "false" ?>)
+	{
+		new Ext.panel.Panel({
+			renderTo : this.get("panel3"),
+			title : "ثبت ورود و خروج",
+			width: 100,
+			height: 200,
+			frame : true,
+			layout: 'fit',
+			loader : {
+				url : "../attendance/traffic/AddTraffic.php?StartPage=true",
+				params : {
+					ExtTabID : this.TabID
+				},
+				scripts : true,
+				autoLoad : true
+			}
+		});
+	}
 	new Ext.panel.Panel({
 		renderTo : this.get("panelNotes"),
 		title : "یادآوری ها",

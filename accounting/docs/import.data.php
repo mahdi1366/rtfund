@@ -1322,6 +1322,19 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	$ReqObj = new LON_requests($RequestID);
 	$NewPartObj = new LON_ReqParts($NewPartID);
 	
+	$obj = new ACC_docs();
+	$obj->RegDate = PDONOW;
+	$obj->regPersonID = $_SESSION['USER']["PersonID"];
+	$obj->DocDate = PDONOW;
+	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
+	$obj->BranchID = $ReqObj->BranchID;
+	$obj->EventID = EVENT_LOAN_CHANGE; 
+	$obj->description = "سند تغییر شرایط وام شماره " . $ReqObj->RequestID . " به نام " . $ReqObj->_LoanPersonFullname;
+	if(!$obj->Add($pdo))
+	{
+		ExceptionHandler::PushException("خطا در ایجاد سند");
+		return false;
+	}
 	
 	$process = new DiffLoanProcess();
 	$process->ReqObj = $ReqObj;
@@ -1339,8 +1352,6 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	PdoDataAccess::runquery("update ACC_DocItems d join (select d.ItemID,DebtorAmount,CreditorAmount from ACC_DocItems d where DocID=?)t using(ItemID)
 		set d.DebtorAmount = t.CreditorAmount,d.CreditorAmount = t.DebtorAmount ", array($process->DocObj->DocID), $process->pdo);
 	
-	return $process->DocObj;
-	
 	PdoDataAccess::runquery("insert into ACC_DocItems(DocID, CostID, TafsiliType, TafsiliID, TafsiliType2, TafsiliID2, TafsiliType3, TafsiliID3, 
 		DebtorAmount, CreditorAmount, details, locked, SourceType, SourceID1, SourceID2, SourceID3, SourceID4, param1, param2, param3)
 		
@@ -1356,9 +1367,11 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 		group by CostID, TafsiliID, TafsiliID2, TafsiliID3
 	", array(
 		":cycle" => $_SESSION["accounting"]["CycleID"],
-		":d" => $process->DocObj->DocID,
+		":d" => $obj->DocID,
 		":reqId" => $process->ReqObj->RequestID
 	), $process->pdo);
+	
+	ACC_docs::Remove($process->DocObj->DocID, $pdo);
 	
 	return $obj;
 }

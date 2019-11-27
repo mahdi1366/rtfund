@@ -11,7 +11,7 @@
  * All properties are changable.
  *
  */
-
+				
 class ReportGenerator {
 
 	const TempFolderAddress = "/tmp/temp.xls";

@@ -38,6 +38,19 @@ function ImportTraffic(){
 			name : "attach",
 			width : 300
 		},{
+			xtype : "combo",
+			name : "device",
+			store : new Ext.data.SimpleStore({
+				data : [
+					['park' , "فایل دستگاه شعبه پارک علم و فناوری" ],
+					["um" , "فایل دستگاه شعبه دانشگاه فردوسی" ]
+				],
+				fields : ['id','value']
+			}),
+			displayField : "value",
+			valueField : "id",
+			width : 300
+		},{
 			text : "container",
 			html : "فایل باید حتما به فرمت xls باشد"			
 		},{
@@ -50,7 +63,7 @@ function ImportTraffic(){
 			handler : function(){
 
 				mask = new Ext.LoadMask(ImportTrafficObject.MainForm, {msg:'در حال انتقال ...'});
-				//mask.show();
+				mask.show();
 
 				ImportTrafficObject.MainForm.getForm().submit({
 					url : ImportTrafficObject.address_prefix + "traffic.data.php?task=ImportTrafficsFromExcel",

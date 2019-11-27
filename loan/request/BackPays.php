@@ -340,20 +340,19 @@ LoanPay.DeleteRender = function(v,p,r){
 
 LoanPay.RegDocRender = function(v,p,r){
 	
-	if(	r.data.PayType == "<?= BACKPAY_PAYTYPE_CHEQUE ?>" 
-		||  r.data.PayType == "<?= BACKPAY_PAYTYPE_EPAY ?>"
-		||  r.data.PayType == "<?= BACKPAY_PAYTYPE_CORRECT ?>")
-		return st = "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+r.data.LocalNo+"</a>";
+	st = "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+r.data.LocalNo+"</a>";
 	
-	if(r.data.DocID*1 == 0)
+	if(r.data.DocID*1 > 0)
+		return st;
+	
+	if(	r.data.PayType != "<?= BACKPAY_PAYTYPE_CHEQUE ?>" 
+		&&  r.data.PayType != "<?= BACKPAY_PAYTYPE_EPAY ?>"
+		&&  r.data.PayType != "<?= BACKPAY_PAYTYPE_CORRECT ?>")
+		
 		return "<div align='center' title='صدور سند' class='send' "+
 		"onclick='LoanPayObject.ExecuteEvent();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
-		"cursor:pointer;width:100%;height:16'></div>";
-	else
-		return "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+ 
-			r.data.LocalNo + "</a>";
-	
+		"cursor:pointer;width:100%;height:16'></div>";	
 }
 
 var LoanPayObject = new LoanPay();
