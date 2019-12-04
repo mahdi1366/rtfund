@@ -41,10 +41,17 @@ function GetData(&$rpg){
 	global $level;
 	$level = empty($_REQUEST["level"]) ? "l1" : $_REQUEST["level"];
 	
+	$IncludeFirstCycle = $_REQUEST["resultColumns"]*1 >= 6;
+	
 	$query = "select 
 		di.CostID,
 		sum(di.DebtorAmount) DebtorAmount,
-		sum(di.CreditorAmount) CreditorAmount,
+		sum(di.CreditorAmount) CreditorAmount," . 
+			
+		($IncludeFirstCycle ? 
+		"(tdt.StartCycleDebtor) StartDebtorAmount,
+		(tdt.StartCycleCreditor) StartCreditorAmount," : "" ) . " 
+
 		b0.BlockDesc level0Desc,
 		b1.BlockDesc level1Desc,
 		b2.BlockDesc level2Desc,
@@ -91,10 +98,7 @@ function GetData(&$rpg){
 
 		p1.paramDesc paramDesc1,
 		p2.paramDesc paramDesc2,
-		p3.paramDesc paramDesc3,
-		
-		(tdt.StartCycleDebtor) StartDebtorAmount,
-		(tdt.StartCycleCreditor) StartCreditorAmount
+		p3.paramDesc paramDesc3
 		
 		from ACC_DocItems di 
 			join ACC_docs d using(DocID)
@@ -111,9 +115,10 @@ function GetData(&$rpg){
 			
 			left join ACC_CostCodeParams p1 on(p1.ParamID=cc.param1)
 			left join ACC_CostCodeParams p2 on(p2.ParamID=cc.param2)
-			left join ACC_CostCodeParams p3 on(p3.ParamID=cc.param3)
+			left join ACC_CostCodeParams p3 on(p3.ParamID=cc.param3)" . 
 
-			left join (
+			($IncludeFirstCycle ? 
+			"left join (
 				select CycleID,CostID,di.TafsiliID,di.TafsiliID2,di.TafsiliID3,di.param1,di.param2,di.param3,
 						sum(DebtorAmount) StartCycleDebtor,
 						sum(CreditorAmount) StartCycleCreditor
@@ -128,8 +133,7 @@ function GetData(&$rpg){
 					AND di.TafsiliID3=tdt.TafsiliID3
 					AND di.param1=tdt.param1
 					AND di.param2=tdt.param2
-					AND di.param3=tdt.param3)
-	";
+					AND di.param3=tdt.param3)" : "");
 	$group = "";
 	if($level >= "l0")
 	{
@@ -414,9 +418,10 @@ function GetData(&$rpg){
 	
 	$query = "select tbl.*,
 					sum(DebtorAmount) bdAmount,
-					sum(CreditorAmount) bsAmount,
+					sum(CreditorAmount) bsAmount" . 
+					($IncludeFirstCycle ? ",
 					sum(StartDebtorAmount) StartCycleDebtor,
-					sum(StartCreditorAmount)StartCycleCreditor
+					sum(StartCreditorAmount)StartCycleCreditor" : "") . " 
 			from ( " .
 			$query . "
 			where 1=1 " . $where . " 
