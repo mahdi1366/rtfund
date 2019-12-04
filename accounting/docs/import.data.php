@@ -1322,18 +1322,25 @@ function RegisterDifferncePartsDoc($RequestID, $NewPartID, $pdo, $DocID=""){
 	$ReqObj = new LON_requests($RequestID);
 	$NewPartObj = new LON_ReqParts($NewPartID);
 	
-	$obj = new ACC_docs();
-	$obj->RegDate = PDONOW;
-	$obj->regPersonID = $_SESSION['USER']["PersonID"];
-	$obj->DocDate = PDONOW;
-	$obj->CycleID = $_SESSION["accounting"]["CycleID"];
-	$obj->BranchID = $ReqObj->BranchID;
-	$obj->EventID = EVENT_LOAN_CHANGE; 
-	$obj->description = "سند تغییر شرایط وام شماره " . $ReqObj->RequestID . " به نام " . $ReqObj->_LoanPersonFullname;
-	if(!$obj->Add($pdo))
+	if($DocID*1 > 0)
 	{
-		ExceptionHandler::PushException("خطا در ایجاد سند");
-		return false;
+		$obj = new ACC_docs($DocID);
+	}
+	else
+	{
+		$obj = new ACC_docs();
+		$obj->RegDate = PDONOW;
+		$obj->regPersonID = $_SESSION['USER']["PersonID"];
+		$obj->DocDate = PDONOW;
+		$obj->CycleID = $_SESSION["accounting"]["CycleID"];
+		$obj->BranchID = $ReqObj->BranchID;
+		$obj->EventID = EVENT_LOAN_CHANGE; 
+		$obj->description = "سند تغییر شرایط وام شماره " . $ReqObj->RequestID . " به نام " . $ReqObj->_LoanPersonFullname;
+		if(!$obj->Add($pdo))
+		{
+			ExceptionHandler::PushException("خطا در ایجاد سند");
+			return false;
+		}
 	}
 	
 	$process = new DiffLoanProcess();

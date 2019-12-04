@@ -449,8 +449,11 @@ class LON_requests extends PdoDataAccess{
 			{
 				if($PartObj->FundWage <= $PartObj->CustomerWage)
 				{
-					$FundWage = $TotalWage*$PartObj->FundWage/$PartObj->CustomerWage;
-					$AgentWage = $TotalWage - $FundWage;
+					if($PartObj->CustomerWage*1 != 0)
+						$FundWage = $TotalWage*$PartObj->FundWage/$PartObj->CustomerWage;
+					else
+						$FundWage = $TotalWage*$PartObj->FundWage;
+			 		$AgentWage = $TotalWage - $FundWage;
 				}
 				else
 				{

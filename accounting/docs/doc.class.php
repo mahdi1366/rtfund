@@ -697,8 +697,11 @@ class ACC_DocCheques extends PdoDataAccess {
 	public $TafsiliID;
 	public $description;
 
-	function __construct() {
+	function __construct($id = "") {
+		
 		$this->DT_CheckDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		if($id != "")
+			return PdoDataAccess::FillObject($this, "select * from ACC_DocCheques where DocChequeID=?", array($id));
 	}
 
 	static function GetAll($where = "", $whereParam = array()) {

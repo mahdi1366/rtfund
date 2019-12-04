@@ -11,12 +11,13 @@ require_once inc_dataReader;
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "cheques.data.php?task=selectOutcomeCheques", "grid_div");
 
 $col = $dg->addColumn("", "DocChequeID", "", true);
+$col = $dg->addColumn("", "CheckStatus", "", true);
 
 $col = $dg->addColumn("شماره سند", "LocalNo");
 $col->width = 80;
 
 $col = $dg->addColumn("حساب", "AccountDesc");
-$col->width = 120;
+$col->width = 150;
 
 $col = $dg->addColumn("شماره چک", "CheckNo");
 $col->width = 70;
@@ -35,9 +36,10 @@ $col->width = 90;
 
 $col = $dg->addColumn("توضیحات", "description", "");
 
+$dg->addButton("", "تغییر وضعیت", "refresh", "function(){OutcomeChequeObject.beforeChangeStatus();}");
+
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 400;
-$dg->width = 800;
 $dg->title = "چک های پرداختی";
 $dg->DefaultSortField = "CheckDate";
 $dg->DefaultSortDir = "Desc";
@@ -62,7 +64,7 @@ function OutcomeCheque(){
 		renderTo : this.get("div_form"),
 		width : 600,
 		frame : true,
-		title : "تنظیمات گزارش",
+		title : "فیلتر لیست",
 		layout : {
 			type : "table",
 			columns : 2			
@@ -184,14 +186,102 @@ function OutcomeCheque(){
 		
 	this.grid = <?= $grid ?>;
 	this.grid.getStore().proxy.form = this.get("MainForm");
-	//this.grid.render(this.get("div_grid"));
+	this.grid.render(this.get("div_grid"));
 }
 
 OutcomeChequeObject = new OutcomeCheque();
 
-OutcomeCheque.prototype.FilterGrid = function(item){
-	alert(item);
+OutcomeCheque.prototype.beforeChangeStatus = function(){
 	
+	if(!this.commentWin)
+	{
+		this.commentWin = new Ext.window.Window({
+			width : 414,
+			height : 150,
+			modal : true,
+			bodyStyle : "background-color:white",
+			items : [{
+				xtype : "combo",
+				store: new Ext.data.Store({
+					proxy:{
+						type: 'jsonp',
+						url: this.address_prefix + 'cheques.data.php?task=selectValidChequeStatuses',
+						reader: {root: 'rows',totalProperty: 'totalCount'}
+					},
+					/*fields :  ['InfoID',"InfoDesc"]*/
+					fields :  ['TafsiliID',"TafsiliDesc"]
+				}),
+				queryMode : "local",
+				displayField: 'TafsiliDesc',
+				valueField : "TafsiliID",
+				/*displayField: 'InfoDesc',
+				valueField : "InfoID",*/
+				width : 400,
+				name : "DstID"
+			}],
+			closeAction : "hide",
+			buttons : [{
+				text : "تغییر وضعیت",				
+				iconCls : "refresh",
+				itemId : "btn_save"
+			},{
+				text : "بازگشت",
+				iconCls : "undo",
+				handler : function(){this.up('window').hide();}
+			}]
+		});
+		
+		Ext.getCmp(this.TabID).add(this.commentWin);
+	}
+	var record = this.grid.getSelectionModel().getLastSelected();
+	this.commentWin.down("[name=DstID]").setValue();
+	this.commentWin.down("[name=DstID]").getStore().proxy.extraParams.SrcID = record.data.CheckStatus;
+	this.commentWin.down("[name=DstID]").getStore().load();
+	
+	this.commentWin.down("[itemId=btn_save]").setHandler(function(){
+		status = this.up('window').down("[name=DstID]").getValue();
+		OutcomeChequeObject.ChangeStatus();
+	});
+		
+	this.commentWin.show();
+	this.commentWin.center();
+}
+
+OutcomeCheque.prototype.ChangeStatus = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	StatusID = this.commentWin.down("[name=DstID]").getValue();
+	
+	if(StatusID == null || StatusID == "")
+		return;
+	
+	this.commentWin.hide();		
+	mask = new Ext.LoadMask(this.grid, {msg:'در حال تغییر وضعیت ...'});
+	mask.show();
+
+	Ext.Ajax.request({
+		methos : "post",
+		url : this.address_prefix + "cheques.data.php",
+		params : {
+			task : "ChangeOutcomeChequeStatus",
+			DocChequeID : record.data.DocChequeID,
+			StatusID : StatusID
+		},
+
+		success : function(response){
+			mask.hide();
+
+			result = Ext.decode(response.responseText);
+			if(result.success)
+				OutcomeChequeObject.grid.getStore().load();
+			else if(result.data != "")
+				Ext.MessageBox.alert("",result.data);
+			else
+				Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+
+
+		}
+	});
 }
 
 </script>
@@ -201,5 +291,5 @@ OutcomeCheque.prototype.FilterGrid = function(item){
 		<div id="div_form"></div>
 	</form>
 	<br>
-	<div id="div_grid"></div>
+	<div style="width:98%" id="div_grid"></div>
 </center>

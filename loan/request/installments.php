@@ -423,7 +423,7 @@ Installment.prototype.ComputeInstallments = function(){
 		
 		me = InstallmentObject;
 	
-		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
 		mask.show();
 
 		Ext.Ajax.request({
@@ -435,7 +435,6 @@ Installment.prototype.ComputeInstallments = function(){
 				IsLastest : "false"
 			},
 			success: function(response){
-				mask.hide();
 				
 				result = Ext.decode(response.responseText);
 				if(!result.success)
@@ -447,7 +446,7 @@ Installment.prototype.ComputeInstallments = function(){
 					else
 						Ext.MessageBox.alert("", result.data);
 				}
-				
+				mask.hide();
 				InstallmentObject.grid.getStore().load();
 			}
 		});

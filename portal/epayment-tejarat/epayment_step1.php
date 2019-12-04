@@ -28,7 +28,7 @@ $_SESSION['admin_email'] = BANK_TEJARAT_ADMINEMAIL;
 $_SESSION['amount'] = $PayObj->amount;
 $_SESSION['PayOrderId'] = $PayObj->PayID;
 
-$revertURL = "http://framework.krrtf.ir/portal/epayment-tejarat/epayment_step2.php";
+$revertURL = "http://saja.krrtf.ir/portal/epayment-tejarat/epayment_step2.php";
 
 $client = new SoapClient('https://ikc.shaparak.ir/XToken/Tokens.xml', array('soap_version'   => SOAP_1_1));
 

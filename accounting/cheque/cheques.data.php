@@ -622,6 +622,23 @@ function ChangeChequeStatus(){
 	die();
 }
 
+function ChangeOutcomeChequeStatus(){
+	
+	$DocChequeID = $_POST["DocChequeID"];
+	$Status = $_POST["StatusID"];
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$obj = new ACC_DocCheques($DocChequeID);
+	$obj->CheckStatus = $Status;
+	$result = $obj->Edit($pdo);
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
 function ReturnLatestOperation($returnMode = false){
 	
 	$OuterObj = new ACC_IncomeCheques($_POST["IncomeChequeID"]);
