@@ -4,7 +4,6 @@
 //-----------------------------
 require_once '../header.inc.php';
 require_once inc_dataGrid;
-ini_set("display_errors", "On");
 
 echo '<head><meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>			
         <link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-all.css" />
@@ -153,6 +152,8 @@ $grid = $dg->makeGrid_returnObjects();
         WinID: document.body,
         address_prefix: "<?= $js_prefix_address ?>",
         IsFirstLoad: false,
+        ScrollPosition : 0, 
+        FullMsg : " ", 
         get: function (elementID) {
             return findChild(this.WinID, elementID);
         }
@@ -163,7 +164,7 @@ $grid = $dg->makeGrid_returnObjects();
 //...................................................................
         var store = Ext.create('Ext.data.Store', {
             remoteSort: true,
-            buffered: true,
+            //buffered: true,
             fields: [{name: 'MSGID'}, {name: 'GID'}, {name: 'MID'}, {name: 'fname'}, {name: 'lname'}, {name: 'message'},
                 {name: 'FileType'}, {name: 'ParentMsg'}, {name: 'ParentMSGID'}, {name: 'SendingDate'}],
             proxy: {
@@ -184,7 +185,7 @@ $grid = $dg->makeGrid_returnObjects();
 
         var SearchStore = Ext.create('Ext.data.Store', {
             remoteSort: true,
-            buffered: true,
+           // buffered: true,
             fields: [{name: 'MSGID'}, {name: 'MID'}, {name: 'message'}],
             proxy: {
                 type: 'jsonp',
@@ -207,14 +208,19 @@ $grid = $dg->makeGrid_returnObjects();
             // width: 600,
             height: 430,
             store: store,
-            verticalScrollerType: 'paginggridscroller',
-           // loadMask: true,
+            verticalScrollerType: 'paginggridscroller',          
             disableSelection: true,
             invalidateScrollerOnRefresh: false,
             viewConfig: {
                 trackOver: false,
                 loadMask: false
             },
+            plugins:[{
+                    ptype:'bufferedrenderer',
+                    trailingBufferZone : 10 ,
+                    leadingBufferZone : 20 ,
+                    numFromEdge: 7
+            }],
             columns: [{menuDisabled: true,
                     align: 'center',
                     header: '',
@@ -500,7 +506,7 @@ $grid = $dg->makeGrid_returnObjects();
                                     width: 40,
                                     fieldCls: "button",
                                     border: false,
-                                    style: "border-radius: 1%;background: #f0f0f0 url(../messenger/MsgDocuments/send5.png);",
+                                    style: "border-radius: 1%;background: #f0f0f0 url(../messenger/MsgDocuments/send.png);",
                                     name: 'button1',
                                     autoEl: {tag: 'center'},
                                     text: '',
@@ -598,7 +604,6 @@ $grid = $dg->makeGrid_returnObjects();
         this.grid = <?= $grid ?>;
         this.grid.render(this.get("DivGrid"));
 
-
         this.grid.on("cellclick", function () {
             MyMessengerObject.newItemPanel.show();
             var record = MyMessengerObject.grid.getSelectionModel().getLastSelected();
@@ -606,28 +611,29 @@ $grid = $dg->makeGrid_returnObjects();
             MyMessengerObject.grid2.getStore().proxy.extraParams.GID = record.data.GID;
             MyMessengerObject.formpanel.down("[itemId=GID]").setValue(record.data.GID);
             MyMessengerObject.formpanel.down("[itemId=MID]").setValue(record.data.MID);
-
             store.prefetch({
                 start: 0,
-                limit: 40,
-                callback: function () {
-                    //store.guaranteeRange(0,20); 
+                limit: 200,
+                callback: function () {                    
+                    //store.guaranteeRange(0,99); 
                     store.load();
-                    if (MyMessengerObject.IsFirstLoad === false) {
+                    MyMessengerObject.grid2.getView().scrollBy(0, 999999, true);
+                    //if (MyMessengerObject.IsFirstLoad === false) {                        
                         /*
                          * var records = Ext.getCmp('prGrid').getStore().data.length + 1;
                          * var scrollPosition = 100;   
                          YourGrid.getEl().down('.x-grid-view').scroll('bottom', scrollPosition, true);
                          */
-                        MyMessengerObject.grid2.getView().scrollBy(0, 999999, true);
-                        MyMessengerObject.IsFirstLoad = true;
-                    }
+                      
+                      // MyMessengerObject.ScrollPosition = MyMessengerObject.grid2.getEl().down('.x-grid-view').getScroll().top ; 
+                      // MyMessengerObject.IsFirstLoad = true;
+                   // }
 
                 }
             });
             MyMessengerObject.grid.hide();
+            MyMessengerObject.SeenMsg();
             setInterval(function () {MyMessengerObject.loadNotification()}, 1000);
-
         });
 
     }
@@ -652,9 +658,14 @@ $grid = $dg->makeGrid_returnObjects();
                             Ext.getCmp('btn1').show();
                             Ext.getCmp('btn1').setText("<div class='blueText MsgInfoBox2'  style='height:40px;width:40px' > " +
                                         "<div> " + st.data + " </div></div>");
-                        }
-                        //alert("حذف با موفقیت انجام شد.");
-                        //EvaluationListObject.grid.getStore().load();
+                        }   
+                        
+                        diffPo = MyMessengerObject.grid2.getEl().down('.x-grid-view').getScroll().top  - MyMessengerObject.ScrollPosition ; 
+                        
+                        if(diffPo < 190 )
+                        {
+                            MyMessengerObject.grid2.getStore().load();                              
+                        }                       
                     }
                     else
                     {
@@ -708,16 +719,16 @@ $grid = $dg->makeGrid_returnObjects();
         }
 
         var MemberID = MyMessengerObject.formpanel.down("[itemId=MID]").getValue();
-
+        
         if (record.data.MID == MemberID) {
-
+            
             if (record.data.ParentMSGID > 0)
                 ShowMsg = "<div style='background-color:#f2f0f0;width:98%;'> " + Ext.String.ellipsis(record.data.ParentMsg, 200) + " </div>";
 
             return  "<div class=' MyChatBox'  style='width:90%;float:right;margin:2px;' > " +
                     "<table style='width:100%'>" +
                     "<tr><td style='float:right;width:70%' ><font class='blueText'>" + FullName + "</font></td> " +
-                    "<td title='عملیات' align='left' class='Expand' onclick='MyMessengerObject.MyOperationMenu(event,\"" + FullTxt + "\");' " +
+                    "<td title='عملیات' align='left' class='Expand' onclick='MyMessengerObject.MyOperationMenu(event," + record.data.MSGID + " );' " +
                     "style='float:left;width:30%;clear: left;background-repeat:no-repeat;" +
                     "background-position:right;cursor:pointer;width:30px;height:30' >&nbsp;</td></tr>" +
                     "</table>" +
@@ -733,7 +744,7 @@ $grid = $dg->makeGrid_returnObjects();
             return   "<div class='ChatBox'  style='width:90%;float:left;margin-left:5px' >" +
                     "<table style='width:100%'>" +
                     "<tr><td style='float:right;width:70%' ><font class='blueText'>" + FullName + "</font></td>  " +
-                    "<td title='عملیات' align='left' class='Expand' onclick='MyMessengerObject.OtherOperationMenu(event,\"" + FullTxt + "\");' " +
+                    "<td title='عملیات' align='left' class='Expand' onclick='MyMessengerObject.OtherOperationMenu(event," + record.data.MSGID + " );' " +
                     "style='float:left;width:30%;clear: left;background-repeat:no-repeat;" +
                     "background-position:right;cursor:pointer;width:30px;height:30' >&nbsp;</td></tr>" +
                     "</table>" +
@@ -767,12 +778,15 @@ $grid = $dg->makeGrid_returnObjects();
 
     MyMessenger.prototype.ReplyMsg = function (i) {
 
-        var res = i.split(":");
-
+        var index = MyMessengerObject.grid2.getStore().find('MSGID', i);
+        fname = MyMessengerObject.grid2.getStore().getAt(index).data.fname;
+        lname = MyMessengerObject.grid2.getStore().getAt(index).data.lname;
+        message = MyMessengerObject.grid2.getStore().getAt(index).data.message; 
+                 
         Ext.getCmp("Field2").show();
-        MyMessengerObject.newItemPanel.down("[itemId=PersonName]").setValue(res[1]);
-        MyMessengerObject.newItemPanel.down("[itemId=PMsg]").setValue(res[2]);
-        MyMessengerObject.formpanel.down("[itemId=ParentMSGID]").setValue(res[0]);
+        MyMessengerObject.newItemPanel.down("[itemId=PersonName]").setValue(fname +' '+ lname);
+        MyMessengerObject.newItemPanel.down("[itemId=PMsg]").setValue(message);
+        MyMessengerObject.formpanel.down("[itemId=ParentMSGID]").setValue(i);
         MyMessengerObject.formpanel.down("[itemId=MsgTxt]").setValue("");
 
         return;
@@ -798,20 +812,26 @@ $grid = $dg->makeGrid_returnObjects();
     };
 
     MyMessenger.prototype.EditMsg = function (i) {
-        var res = i.split(":");
+       
+        var index = MyMessengerObject.grid2.getStore().find('MSGID', i);
+        fname = MyMessengerObject.grid2.getStore().getAt(index).data.fname;
+        lname = MyMessengerObject.grid2.getStore().getAt(index).data.lname;
+        message = MyMessengerObject.grid2.getStore().getAt(index).data.message; 
+         
         Ext.getCmp("Field2").show();
-        MyMessengerObject.formpanel.down("[itemId=MSGID]").setValue(res[0]);
-        MyMessengerObject.newItemPanel.down("[itemId=PersonName]").setValue(res[1]);
-        MyMessengerObject.newItemPanel.down("[itemId=PMsg]").setValue(res[2]);
-        MyMessengerObject.formpanel.down("[itemId=MsgTxt]").setValue(res[2]);
-
+        MyMessengerObject.formpanel.down("[itemId=MSGID]").setValue(i);
+        MyMessengerObject.newItemPanel.down("[itemId=PersonName]").setValue(fname + lname);
+        MyMessengerObject.newItemPanel.down("[itemId=PMsg]").setValue(message);
+        MyMessengerObject.formpanel.down("[itemId=MsgTxt]").setValue(message);
+        
         return;
     }
 
     MyMessenger.prototype.DeleteMsg = function (i) {
 
-        var res = i.split(":");
-        MyMessengerObject.formpanel.down("[itemId=MSGID]").setValue(res[0]);
+        var index = MyMessengerObject.grid2.getStore().find('MSGID', i);
+        
+        MyMessengerObject.formpanel.down("[itemId=MSGID]").setValue(i);
         Ext.MessageBox.confirm("", "آیا مایل به حذف می باشید؟", function (btn) {
             if (btn == "no")
                 return;
@@ -847,6 +867,7 @@ $grid = $dg->makeGrid_returnObjects();
     {
         Ext.getCmp("Field2").hide();
         MyMessengerObject.newItemPanel.down("[itemId=MsgTxt]").setValue("");
+        MyMessengerObject.formpanel.down("[itemId=MSGID]").setValue("");
         return;
     }
 
@@ -899,6 +920,7 @@ $grid = $dg->makeGrid_returnObjects();
                             MyMessengerObject.grid2.getView().scrollBy(0, 999999, true);
                             MyMessengerObject.formpanel.down("[itemId=MsgTxt]").setValue("");
                             MyMessengerObject.formpanel.down("[itemId=FileType]").setValue("");
+                            MyMessengerObject.formpanel.down("[itemId=MSGID]").setValue("");
                             Ext.getCmp("Field2").hide(); 
                         } else
                             Ext.MessageBox.alert("", "عملیات مورد نظر با شکست مواجه شد.");
@@ -948,7 +970,7 @@ $grid = $dg->makeGrid_returnObjects();
         }
 
         this.searchGrid.getStore().proxy.extraParams.SearchTxt = this.SearchPanel.down("[name=SearchTxt]").getValue();
-        this.searchGrid.getStore().proxy.extraParams.GID = 3;
+        this.searchGrid.getStore().proxy.extraParams.GID = MyMessengerObject.formpanel.down("[itemId=GID]").getValue();
 
         if (!this.searchGrid.rendered)
             this.searchGrid.render(this.get("SearchPanel"));
