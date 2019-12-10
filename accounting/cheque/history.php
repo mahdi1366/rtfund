@@ -30,7 +30,7 @@ else
 	for ($i=0; $i<count($Logs); $i++)
 	{
 		$tbl_content .= "<tr " . ($i%2 == 1 ? "style='background-color:#efefef'" : "") . ">
-			<td width=120px>[" . ($i+1) . "]". ($i+1<10 ? "&nbsp;" : "") . "&nbsp;
+			<td >[" . ($i+1) . "]". ($i+1<10 ? "&nbsp;" : "") . "&nbsp;
 				<img align='top' src='/generalUI/ext4/resources/themes/icons/user_comment.gif'>&nbsp;
 				" . ($Logs[$i]["StatusID"] == "0" ? "تغییر چک" : $Logs[$i]["StatusDesc"]) . "</td>
 			<td  >" . $Logs[$i]["fullname"] . "</td>

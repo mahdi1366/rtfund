@@ -867,7 +867,8 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 		PdoDataAccess::runquery("delete from LON_installments "
 			. "where RequestID=? AND history='NO' AND IsDelayed='NO'", array($RequestID));
 		
-		$TotalAmount = LON_requests::GetPurePayedAmount($RequestID) + LON_requests::TotalAddedToBackPay($RequestID);
+		//$TotalAmount = LON_requests::GetPurePayedAmount($RequestID) + LON_requests::TotalAddedToBackPay($RequestID);
+		$TotalAmount = LON_payments::GetTotalPureAmount($partObj->RequestID, $partObj);
 		$allPay = ComputeInstallmentAmount($TotalAmount,$partObj->InstallmentCount, $partObj->PayInterval);
 
 		if($partObj->InstallmentCount > 1)
@@ -894,7 +895,7 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 			$obj2->InstallmentAmount = $i == $partObj->InstallmentCount*1-1 ? $LastPay : $allPay;
 			
 			if($partObj->ComputeMode == "PERCENT")
-				$obj2->wage = $obj2->InstallmentAmount - $partObj->PartAmount/$partObj->InstallmentCount;
+				$obj2->wage = $obj2->InstallmentAmount - $TotalAmount/$partObj->InstallmentCount;
 			
 			if(!$obj2->AddInstallment($pdo))
 			{
@@ -1696,6 +1697,9 @@ function RegPayPartDoc($ReturnMode = false, $pdo = null){
 	
 	if($ReturnMode)
 		return true;
+	
+	$PayObj->RealPayedDate = PDONOW;
+	$PayObj->Edit($pdo);
 	
 	$pdo->commit();
 	echo Response::createObjectiveResponse(true,"");

@@ -5,7 +5,7 @@ ini_set("display_errors", "On");
 
 $dt = PdoDataAccess::runquery("select * from LON_payments p join LON_requests using(RequestID) 
 			join LON_ReqParts rp on(rp.RequestID=p.RequestID AND isHistory='NO')
-		 where StatusID=70 and ReqPersonID in(2051) 
+		 where StatusID=70 and ReqPersonID in(1003) 
 		  and (DelayReturn != 'INSTALLMENT' OR AgentDelayReturn != 'INSTALLMENT')");
 flush();
 ob_flush();

@@ -600,11 +600,11 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
 					/*fields :  ['InfoID',"InfoDesc"]*/
-					fields :  ['TafsiliID',"TafsiliDesc"]
+					fields :  ['InfoID',"InfoDesc"]
 				}),
 				queryMode : "local",
-				displayField: 'TafsiliDesc',
-				valueField : "TafsiliID",
+				displayField: 'InfoDesc',
+				valueField : "InfoID",
 				/*displayField: 'InfoDesc',
 				valueField : "InfoID",*/
 				width : 400,
