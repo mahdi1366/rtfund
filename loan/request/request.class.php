@@ -2736,23 +2736,7 @@ class LON_payments extends OperationClass{
 				ifnull(RealPayedDate, PayDate) as PurePayDate
 				
 			from LON_payments p
-			left join (
-				select di.SourceID3 PayID,d.DocID,d.LocalNo,d.StatusID 
-				from ACC_DocItems di 
-				join ACC_docs d on(di.DocID=d.DocID)
-				where di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
-				group by di.SourceID3 
-				
-				UNION ALL
-			
-				select di2.SourceID3 ,d2.DocID,LocalNo ,StatusID
-				from COM_events e
-					join ACC_docs d2 on(e.EventID=d2.EventID) 
-					join ACC_DocItems di2 on(d2.DocID=di2.DocID)
-				where ComputeFn='PayLoan'
-				group by di2.SourceID3
-				
-			)d on(p.PayID=d.PayID)
+			left join LON_PayDocs d on(p.PayID=d.PayID)
 			
 			where 1=1 " . $where .  
 			" group by p.PayID " . $order, $whereParams);
@@ -2767,23 +2751,7 @@ class LON_payments extends OperationClass{
 			from LON_payments p
 			join LON_ReqParts rp on(p.RequestID=rp.RequestID AND rp.IsHistory='NO')
 			
-			left join (
-				select di.SourceID3 PayID,d.DocID,d.LocalNo,d.StatusID 
-				from ACC_DocItems di 
-				join ACC_docs d on(di.DocID=d.DocID)
-				where di.SourceType=" . DOCTYPE_LOAN_PAYMENT . " 
-				group by di.SourceID3 
-				
-				UNION ALL
-			
-				select di2.SourceID3 ,d2.DocID,LocalNo ,StatusID
-				from COM_events e
-					join ACC_docs d2 on(e.EventID=d2.EventID) 
-					join ACC_DocItems di2 on(d2.DocID=di2.DocID)
-				where ComputeFn='PayLoan'
-				group by di2.SourceID3
-				
-			)d on(p.PayID=d.PayID)
+			left join LON_PayDocs d on(p.PayID=d.PayID)
 			
 			where 1=1 " . $where .  
 			" group by p.PayID " . $order, $whereParams);
