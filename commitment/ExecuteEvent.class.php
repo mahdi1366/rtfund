@@ -161,11 +161,15 @@ class ExecuteEvent {
 		
 		if(!$this->DocObj)
 		{
+			$CycleID = isset($_SESSION["accounting"]["CycleID"]) ? 
+				$_SESSION["accounting"]["CycleID"] : 
+				substr(DateModules::shNow(), 0 , 4);
+			
 			$this->DocObj = new ACC_docs();
 			$this->DocObj->RegDate = PDONOW;
 			$this->DocObj->regPersonID = $_SESSION['USER']["PersonID"];
 			$this->DocObj->DocDate = empty($this->DocDate) ? PDONOW : $this->DocDate;
-			$this->DocObj->CycleID = $_SESSION["accounting"]["CycleID"];
+			$this->DocObj->CycleID = $CycleID;
 			$this->DocObj->BranchID = $this->BranchID;
 			$this->DocObj->DocType = DOCTYPE_EXECUTE_EVENT;
 			$this->DocObj->EventID = $this->EventID;

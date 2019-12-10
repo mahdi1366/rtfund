@@ -14,7 +14,7 @@ if(empty($_REQUEST["RequestID"]))
 }
 
 $PayObj = new ACC_EPays();
-$PayObj->amount = $_REQUEST["amount"];
+$PayObj->amount = $_REQUEST["amount"]; 
 $PayObj->PayDate = PDONOW;
 $PayObj->PersonID = $_SESSION["USER"]["PersonID"];
 $PayObj->RequestID = $_REQUEST["RequestID"];
@@ -22,7 +22,7 @@ $PayObj->Add();
 
 ini_set ( "soap.wsdl_cache_enabled", "0" );
 $wsdl_url = "https://pec.shaparak.ir/NewIPGServices/Sale/SaleService.asmx?WSDL";
-$callbackUrl = "http://saja.krrtf.ir/portal/epayment-ayande/epayment_step2.php";
+$callbackUrl = "https://saja.krrtf.ir/portal/epayment-ayande/epayment_step2.php";
 $amount = $_REQUEST["amount"];
 $pin = BANK_AYANDEH_PIN;
 $orderId = $PayObj->PayID;
