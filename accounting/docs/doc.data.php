@@ -480,7 +480,6 @@ function removeDocItem() {
 
 function SelectAccounts(){
 	
-	$DocID = $_GET["DocID"];
 	$temp = PdoDataAccess::runquery("select * from ACC_accounts ");
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();

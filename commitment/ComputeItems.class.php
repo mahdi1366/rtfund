@@ -39,6 +39,7 @@ class EventComputeItems {
 				return $PartObj->PartAmount;
 			
 			case 3 : //مبلغ قابل پرداخت دراین مرحله	
+				
 				return $PayObj->PayAmount;
 				
 			case 5 : // مبلغ قابل پرداخت به مشتری

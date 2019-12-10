@@ -35,8 +35,13 @@ class ExecuteEvent {
 			case EVENT_LOAN_ALLOCATE:
 				$this->EventFunction = "EventComputeItems::LoanAllocate";
 				break;	
+			
 			case EVENT_LOANPAYMENT_agentSource:
 			case EVENT_LOANPAYMENT_innerSource:
+				$this->TriggerFunction = "LON_payments::UpdateRealPayed";
+				$this->EventFunction = "EventComputeItems::PayLoan";
+				break;
+			
 			case EVENT_LOANCONTRACT_innerSource:
 			case EVENT_LOANCONTRACT_agentSource_committal:
 			case EVENT_LOANCONTRACT_agentSource_non_committal:

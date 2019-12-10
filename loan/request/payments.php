@@ -27,11 +27,11 @@ $dg->addColumn("", "RequestID","", true);
 $dg->addColumn("", "DocID","", true);
 $dg->addColumn("", "ComputeMode","", true);
 
-$col = $dg->addColumn("تاریخ پرداخت", "PayDate", GridColumn::ColumnType_date);
+$col = $dg->addColumn("تاریخ پرداخت مصوب", "PayDate", GridColumn::ColumnType_date);
 $col->editor = ColumnEditor::SHDateField();
 $col->align = "center";
 
-$col = $dg->addColumn("مبلغ پرداخت", "PayAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("مبلغ پرداخت مصوب", "PayAmount", GridColumn::ColumnType_money);
 $col->editor = ColumnEditor::CurrencyField();
 $col->width = 120;
 $col->summaryType = GridColumn::SummeryType_sum;
@@ -50,7 +50,11 @@ $col->summaryType = GridColumn::SummeryType_sum;
 $col->summaryRenderer = "function(v){return Ext.util.Format.Money(v);}";
 $col->align = "center";
 
-$col = $dg->addColumn("پرداخت به مشتری", "PayAmount", GridColumn::ColumnType_money);
+$col = $dg->addColumn("تاریخ پرداخت به مشتری", "RealPayedDate", GridColumn::ColumnType_date);
+$col->width = 120;
+$col->align = "center";
+
+$col = $dg->addColumn("مبلغ پرداخت به مشتری", "PayAmount", GridColumn::ColumnType_money);
 $col->width = 120;
 $col->renderer = "PartPayment.RemainRender";
 $col->align = "center";
@@ -412,11 +416,14 @@ PartPayment.prototype.ExecuteEvent = function(){
 				eventID = "<?= EVENT_LOANPAYMENT_innerSource ?>";
 			
 			framework.ExecuteEvent(eventID, new Array(
-				ReqRecord.data.RequestID,ReqRecord.data.PartID,record.data.PayID));
+				ReqRecord.data.RequestID,ReqRecord.data.PartID,record.data.PayID), "PartPaymentObject.AfterEvent");
 		}
 	})
 }
 
+PartPayment.prototype.AfterEvent = function(){
+	PartPaymentObject.grid.getStore().load();
+}
 
 </script>
 <center>
