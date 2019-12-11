@@ -624,6 +624,7 @@ function LoanReport_installments()
 			fieldLabel : "وضعیت وام",
 			queryMode : 'local',
 			width : 370,
+			value : "70",
 			displayField : "InfoDesc",
 			valueField : "InfoID",
 			hiddenName : "StatusID"

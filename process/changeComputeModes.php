@@ -24,7 +24,7 @@ foreach($dt as $row)
 	$obj->ComputeMode = "NEW";
 	$obj->EditPart();
 	
-	$result = ComputeInstallments($row["RequestID"], true, null);
+	$result = LON_installments::ComputeInstallments($row["RequestID"]);
 	print_r(ExceptionHandler::PopAllExceptions());
 	echo ($result ? "true" : "false") . "<br>";
 	ob_flush();

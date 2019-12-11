@@ -95,6 +95,9 @@ else
 				$result = "خطا در اتصال به بانک";
 			}
 			// this is a succcessfull payment	
+			$PayObj->StatusCode = $_REQUEST["resultCode"];
+			$PayObj->PayRefNo = $referenceId;
+			$PayObj->Edit();
 			$DocRegResult = RegDoc($PayObj->RequestID, $PayObj->amount, $RRN);
 			if(!$DocRegResult)
 			{

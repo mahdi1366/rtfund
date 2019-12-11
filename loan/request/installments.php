@@ -86,6 +86,9 @@ if($editable && $accessObj->EditFlag)
 	$dg->addButton("", "محاسبه قسط آخر", "process", 
 			"function(){InstallmentObject.ComputeLatestInstallment();}");
 	
+	$dg->addButton("", "محاسبه اقساط بر اساس سیستم قدیم", "undo", 
+			"function(){InstallmentObject.ComputeOldInstallments();}");
+	
 	//$dg->enableRowEdit = true;
 	//$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SaveInstallment(store,record);}";
 	
@@ -492,6 +495,41 @@ Installment.prototype.ComputeLatestInstallment = function(){
 	});	
 }
 
+Installment.prototype.ComputeOldInstallments = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایله به تغییر مبلغ اقساط به مبلغ محاسبات قدیم می باشید؟",function(btn){
+		if(btn == "no")
+			return;
+		
+		me = InstallmentObject;
+	
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "ComputeOldInstallments",
+				RequestID : me.RequestID
+			},
+			success: function(response){
+				
+				result = Ext.decode(response.responseText);
+				if(!result.success)
+				{
+					if(result.data == "")
+						Ext.MessageBox.alert("", "عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("", result.data);
+				}
+				mask.hide();
+				InstallmentObject.grid.getStore().load();
+			}
+		});
+	});	
+}
+
 Installment.prototype.SaveInstallment = function(store, record){
 
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
@@ -751,7 +789,7 @@ Installment.prototype.AddInstallments = function(){
 			}
 		};
 		
-		this.AddWin = new Ext.window.Window({
+		/*this.AddWin = new Ext.window.Window({
 			width : 510,
 			height : 460,
 			title : "ثبت دستی اقساط",
@@ -799,8 +837,46 @@ Installment.prototype.AddInstallments = function(){
 					InstallmentObject.AddWin.hide();
 				}				
 			}]
-		});
+		});*/
 		
+		this.AddWin = new Ext.window.Window({
+			width : 510,
+			height : 460,
+			title : "ثبت دستی اقساط",
+			items : [
+				this.formPanel = new Ext.form.Panel({
+					defaults: {border: false},
+					height : 400,
+					width : 500,
+					frame: true,
+					bodyPadding: '5 5 0',
+					layout: "card",
+					activeItem: 0,
+					items : [{
+						xtype : "container",
+						layout :{
+							type : "table",
+							columns : 2
+						},
+						items : [this.addRecord, this.AddGrid,{
+							xtype : "button",
+							iconCls : "process",
+							text : "محاسبه اقساط",
+							style : "text-align:center",
+							handler : function(){ InstallmentObject.ComputeManualInstallments();}
+						}]
+					}]					
+				})
+			],
+			closeAction : "hide",
+			buttons : [{
+				text : "بازگشت",				
+				iconCls : "undo",
+				handler : function(){
+					InstallmentObject.AddWin.hide();
+				}				
+			}]
+		});
 		Ext.getCmp(this.TabID).add(this.AddWin);
 	}
 	
@@ -844,10 +920,10 @@ Installment.prototype.ComputeManualInstallments = function(){
 		method : "POST",
 		params : {
 			RequestID : this.RequestID,
-			ComputeDate : this.formPanel.down("[itemId=CMP_remain]").getValue() ?
-								this.formPanel.down("[name=ComputeDate]").getRawValue() : "",
-			ComputeWage : this.formPanel.down("[name=ComputeWage]").getValue() ? "YES" : "NO",
-			WithWage : this.formPanel.down("[name=WithWage]").getValue() ? "YES" : "NO",
+			//ComputeDate : this.formPanel.down("[itemId=CMP_remain]").getValue() ?
+			//this.formPanel.down("[name=ComputeDate]").getRawValue() : "",
+			//ComputeWage : this.formPanel.down("[name=ComputeWage]").getValue() ? "YES" : "NO",
+			//WithWage : this.formPanel.down("[name=WithWage]").getValue() ? "YES" : "NO",
 			records : items
 		},
 		

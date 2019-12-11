@@ -166,7 +166,7 @@ class ExecuteEvent {
 		
 		if(!$this->DocObj)
 		{
-			$CycleID = isset($_SESSION["accounting"]["CycleID"]) ? 
+			$CycleID = isset($_SESSION["accounting"]) ? 
 				$_SESSION["accounting"]["CycleID"] : 
 				substr(DateModules::shNow(), 0 , 4);
 			

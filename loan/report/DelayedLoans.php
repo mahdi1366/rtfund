@@ -516,6 +516,7 @@ function LoanReport_DelayedInstalls()
 			width : 370,
 			displayField : "InfoDesc",
 			valueField : "InfoID",
+			value : "70",
 			hiddenName : "StatusID"
 		},{
 			xtype : "numberfield",

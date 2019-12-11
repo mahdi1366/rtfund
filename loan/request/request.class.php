@@ -2269,6 +2269,7 @@ class LON_installments extends PdoDataAccess{
 	public $PureWage;
 	public $IsDelayed;
 	public $history;
+	public $ComputeType;
 			
 	function __construct($InstallmentID = "") {
 		

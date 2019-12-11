@@ -52,6 +52,7 @@ $col->align = "center";
 
 $col = $dg->addColumn("تاریخ پرداخت به مشتری", "RealPayedDate", GridColumn::ColumnType_date);
 $col->width = 120;
+$col->renderer = "function(v,p,r){if(r.data.DocID*1 == 0)return '';  return v;}";
 $col->align = "center";
 
 $col = $dg->addColumn("مبلغ پرداخت به مشتری", "PayAmount", GridColumn::ColumnType_money);
@@ -125,6 +126,10 @@ function PartPayment()
 }
 
 PartPayment.RemainRender = function(v,p,r){
+	
+	if(r.data.DocID*1 == 0)
+		return 0;
+	
 	amount = r.data.PayAmount*1;
 	if(r.data.OldFundDelayAmount*1 > 0)
 		amount -= r.data.OldFundDelayAmount*1;

@@ -40,7 +40,7 @@ switch($task)
 		
 	case "GetInstallments":
 	case "ComputeInstallments":
-	case "ComputeInstallmentsShekoofa":
+	case "ComputeOldInstallments":
 	case "SaveInstallment":
 	case "DelayInstallments":
 	case "SetHistory":
@@ -466,7 +466,7 @@ function SavePart(){
 		$pobj->Add();
 		
 		$result = $obj->EditPart();
-		ComputeInstallments($obj->RequestID, true, null, false, false);
+		LON_installments::ComputeInstallments($obj->RequestID);
 		
 		echo Response::createObjectiveResponse(true, "");
 		die();
@@ -530,7 +530,7 @@ function SavePart(){
 			die();
 		}
 		$msg = "سند اختلاف با شماره " . $DiffDoc->LocalNo . " با موفقیت صادر گردید.";
-		ComputeInstallments($obj->RequestID, true, $pdo, false, true);
+		LON_installments::ComputeInstallments($obj->RequestID, null, true);
 	}
 	
 	//--------------------------------------------------------------------------
@@ -769,237 +769,60 @@ function ComputeInstallments($RequestID = "", $returnMode = false, $pdo2 = null,
 	$RequestID = empty($RequestID) ? $_REQUEST["RequestID"] : $RequestID;
 	if(isset($_REQUEST["IsLastest"]))
 		$IsLastest = $_REQUEST["IsLastest"] == "true" ? true : false;
-	//------------------- check for docs -------------------
-	/*$dt = PdoDataAccess::runquery("select * from ACC_DocItems
-		join LON_installments on(SourceID1=RequestID AND SourceID2=InstallmentID)
-		where SourceType=" . DOCTYPE_INSTALLMENT_CHANGE . " AND SourceID1=? AND 
-			history='NO' AND IsDelayed='NO'", array($RequestID));
-	if(count($dt) > 0)
-	{
-		if($returnMode)
-			return false;
-
-		echo Response::createObjectiveResponse(false, "DocExists");
-		die();
-	}*/
-	//-----------------------------------------------
-	$obj2 = new LON_requests($RequestID);
-	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
 	
-	if($partObj->ComputeMode == "NOAVARI")
-		return ComputeInstallmentsShekoofa($RequestID, $returnMode, $pdo2);
-	//------------------------------------------------------
-	
-	if($pdo2 == null)
-	{
-		$pdo = PdoDataAccess::getPdoObject();
-		$pdo->beginTransaction();
-	}
+	$result = LON_installments::ComputeInstallments($RequestID, null, $IsLastest);
+	if(!$result)
+		echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
 	else
-		$pdo = $pdo2;
-	//-----------------------------------------------
-	if($partObj->ComputeMode == "NEW")
-	{
-		$installmentArray = array();
-		$jdate = DateModules::miladi_to_shamsi($partObj->PartDate);
-		$jdate = DateModules::AddToJDate($jdate, $partObj->DelayDays, $partObj->DelayMonths);
-		$jdate = DateModules::AddToJDate($jdate, 0, $partObj->PayDuration*1);
-		
-		$temp = PdoDataAccess::runquery("select * from LON_installments "
-				. " where RequestID=? AND IsDelayed='NO' AND history='NO'", array($RequestID));
-		if($IsLastest && count($temp) > 0)
-		{
-			for ($i = 0; $i < count($temp); $i++) {
-				$installmentArray[] = array(
-					"InstallmentAmount" => $temp[$i]["InstallmentAmount"],
-					"InstallmentDate" => DateModules::miladi_to_shamsi($temp[$i]["InstallmentDate"])
-				);
-			}	
-			$ComputeWage = "NO";
-		}
-		else
-		{
-			for($i=0; $i < $partObj->InstallmentCount; $i++)
-			{
-				$installmentArray[] = array(
-					"InstallmentAmount" => 0,
-					"InstallmentDate" => DateModules::AddToJDate($jdate, 
-					$partObj->IntervalType == "DAY" ? $partObj->PayInterval*($i+1) : 0, 
-					$partObj->IntervalType == "MONTH" ? $partObj->PayInterval*($i+1) : 0)
-				);
-			}
-			$ComputeWage = "YES";
-		}
-		PdoDataAccess::runquery("delete from LON_installments "
-			. "where RequestID=? AND history='NO' AND IsDelayed='NO'", array($RequestID));
-		
-		$installmentArray = LON_Computes::ComputeInstallment($partObj, $installmentArray, null, $ComputeWage);
-		if(!$installmentArray)
-		{
-			if($returnMode)
-			{
-				if($pdo2 == null)
-					$pdo->rollBack();
-				return false;
-			}
-			echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
-			die();
-		}
-
-		for($i=0; $i < count($installmentArray); $i++)
-		{
-			$obj = new LON_installments();
-			$obj->RequestID = $RequestID;
-			$obj->InstallmentDate = DateModules::shamsi_to_miladi($installmentArray[$i]["InstallmentDate"]);
-			$obj->InstallmentAmount = $installmentArray[$i]["InstallmentAmount"];
-			$obj->wage = $installmentArray[$i]["wage"];
-			$obj->PureWage = $installmentArray[$i]["PureWage"];
-			if(!$obj->AddInstallment($pdo))
-			{
-				$pdo->rollBack();
-				echo Response::createObjectiveResponse(false, "");
-				die();
-			}
-		}		
-	}
-	else
-	{
-		PdoDataAccess::runquery("delete from LON_installments "
-			. "where RequestID=? AND history='NO' AND IsDelayed='NO'", array($RequestID));
-		
-		//$TotalAmount = LON_requests::GetPurePayedAmount($RequestID) + LON_requests::TotalAddedToBackPay($RequestID);
-		$TotalAmount = LON_payments::GetTotalPureAmount($partObj->RequestID, $partObj);
-		$allPay = ComputeInstallmentAmount($TotalAmount,$partObj->InstallmentCount, $partObj->PayInterval);
-
-		if($partObj->InstallmentCount > 1)
-			$allPay = roundUp($allPay,-3);
-		else
-			$allPay = round($allPay);
-
-		$LastPay = $TotalAmount - $allPay*($partObj->InstallmentCount-1);
-
-		//---------------------------------------------------------------------
-
-		$jdate = DateModules::miladi_to_shamsi($partObj->PartDate);
-		$jdate = DateModules::AddToJDate($jdate, $partObj->DelayDays, $partObj->DelayMonths);
-		
-		for($i=0; $i < $partObj->InstallmentCount; $i++)
-		{
-			$obj2 = new LON_installments();
-			$obj2->RequestID = $RequestID;
-
-			$obj2->InstallmentDate = DateModules::AddToJDate($jdate, 
-				$partObj->IntervalType == "DAY" ? $partObj->PayInterval*($i+1) : 0, 
-				$partObj->IntervalType == "MONTH" ? $partObj->PayInterval*($i+1) : 0);
-
-			$obj2->InstallmentAmount = $i == $partObj->InstallmentCount*1-1 ? $LastPay : $allPay;
-			
-			if($partObj->ComputeMode == "PERCENT")
-				$obj2->wage = $obj2->InstallmentAmount - $TotalAmount/$partObj->InstallmentCount;
-			
-			if(!$obj2->AddInstallment($pdo))
-			{
-				if($returnMode)
-				{
-					if($pdo2 == null)
-						$pdo->rollBack();
-					return false;
-				}
-				$pdo->rollBack();
-				echo Response::createObjectiveResponse(false, "2");
-				die();
-			}
-		}
-	}
-	
-	if($returnMode)
-	{
-		if($pdo2 == null)
-			$pdo->commit();	
-		return true;
-	}
-	
-	$pdo->commit();	
-	echo Response::createObjectiveResponse(true, "");
+		echo Response::createObjectiveResponse(true, "");
 	die();
 }
 
-function ComputeInstallmentsShekoofa($RequestID = "", $returnMode = false, $pdo2 = null, $ReturnAmounts = false){
+function ComputeOldInstallments(){
 	
-	$RequestID = empty($RequestID) ? $_REQUEST["RequestID"] : $RequestID;
-	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
-	
-	$payments = LON_payments::Get(" AND RequestID=?", array($RequestID), "order by PayDate");
-	$payments = $payments->fetchAll();
-	
-	if(count($payments) == 0)
-		return true;
-	
-	PdoDataAccess::runquery("delete from LON_installments "
-			. "where RequestID=? AND history='NO' AND IsDelayed='NO'", array($RequestID));
-	
-	//--------------- total pay months -------------
-	$paymentPeriod = $partObj->PayDuration*1;
-	//----------------------------------------------	
-	if($partObj->AgentReturn == "CUSTOMER")
-		$totalWage = 0;
-	else
-		$totalWage = LON_NOAVARI_compute::ComputeWage($partObj);
-	
-	if($ReturnAmounts)
+	$RequestID = (int)$_POST["RequestID"];
+	$dt = PdoDataAccess::runquery("select * from `TABLE 235` where id=?", array($RequestID)); 
+	if(count($dt) == 0)
 	{
-		$amount = round($partObj->PartAmount/$partObj->InstallmentCount) + round($totalWage/$partObj->InstallmentCount);
-		return array("AllPay" => $amount, "LastPay" => $amount);		
-	}				
-	
-	if($pdo2 == null)
-	{
-		$pdo = PdoDataAccess::getPdoObject();
-		$pdo->beginTransaction();
+		echo Response::createObjectiveResponse(false, "مبلغ محاسبات قدیم موجود نمی باشد");
+		die();
 	}
-	else
-		$pdo = $pdo2;
 	
-	for($i=0; $i < $partObj->InstallmentCount; $i++)
-	{
-		$installmentDate = DateModules::miladi_to_shamsi($payments[0]["PayDate"]);
-		$monthplus = $paymentPeriod + $partObj->DelayMonths*1;
-		$dayplus = 0;
-		
-		if($partObj->DelayDays*1 > 0)
-			$dayplus += $partObj->DelayDays*1;
-		
-		if($partObj->IntervalType == "MONTH")
-			$monthplus += ($i+1)*$partObj->PayInterval*1;
-		else
-			$dayplus += ($i+1)*$partObj->PayInterval*1;
+	$oldAmount = $dt[0]["amount"];
+	
+	$installmentArray = array();
+	$temp = PdoDataAccess::runquery("select * from LON_installments where RequestID=? AND IsDelayed='NO' AND history='NO'", array($RequestID));
+	for ($i = 0; $i < count($temp); $i++) {
+		$installmentArray[] = array(
+			"InstallmentAmount" => $oldAmount,
+			"InstallmentDate" => DateModules::miladi_to_shamsi($temp[$i]["InstallmentDate"])
+		);
+	}
+	$installmentArray = ExtraModules::array_sort($installmentArray, "InstallmentDate");
+	$partObj = LON_ReqParts::GetValidPartObj($RequestID);
+	$installmentArray = LON_Computes::ComputeInstallment($partObj, $installmentArray, "", "NO");
 
-		$installmentDate = DateModules::AddToJDate($installmentDate, + $dayplus, $monthplus);
-		$installmentDate = DateModules::shamsi_to_miladi($installmentDate);
-			
-		$obj2 = new LON_installments();
-		$obj2->RequestID = $RequestID;
-		$obj2->InstallmentDate = $installmentDate;
-		$obj2->wage = round($totalWage/$partObj->InstallmentCount);
-		$obj2->PureWage = round($totalWage/$partObj->InstallmentCount);
-		$obj2->InstallmentAmount = round($partObj->PartAmount/$partObj->InstallmentCount) + 
-				round($totalWage/$partObj->InstallmentCount);
-		
-		if(!$obj2->AddInstallment($pdo))
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	PdoDataAccess::runquery("delete from LON_installments "
+			. "where RequestID=? AND history='NO' AND IsDelayed='NO'", array($RequestID), $pdo);
+
+	for($i=0; $i < count($installmentArray); $i++)
+	{
+		$obj = new LON_installments();
+		$obj->RequestID = $RequestID;
+		$obj->InstallmentDate = DateModules::shamsi_to_miladi($installmentArray[$i]["InstallmentDate"]);
+		$obj->InstallmentAmount = $installmentArray[$i]["InstallmentAmount"];
+		$obj->wage = isset($installmentArray[$i]["wage"]) ? $installmentArray[$i]["wage"] : 0;
+		$obj->PureWage = isset($installmentArray[$i]["PureWage"]) ? $installmentArray[$i]["PureWage"] : 0;
+		if(!$obj->AddInstallment($pdo))
 		{
 			$pdo->rollBack();
-			echo Response::createObjectiveResponse(false, "");
-			die();
+			print_r(ExceptionHandler::PopAllExceptions());
+			echo "false";
 		}
 	}
-	
-	if($returnMode)
-	{
-		if($pdo2 == null)
-			$pdo->commit();	
-		return true;
-	}
-	
+
 	$pdo->commit();	
 	echo Response::createObjectiveResponse(true, "");
 	die();
@@ -2128,6 +1951,7 @@ function ComputeManualInstallments(){
 		$obj->InstallmentAmount = $installmentArray[$i]["InstallmentAmount"];
 		$obj->wage = isset($installmentArray[$i]["wage"]) ? $installmentArray[$i]["wage"] : 0;
 		$obj->PureWage = isset($installmentArray[$i]["PureWage"]) ? $installmentArray[$i]["PureWage"] : 0;
+		$obj->ComputeType = "USER";
 		if(!$obj->AddInstallment($pdo))
 		{
 			$pdo->rollBack();
