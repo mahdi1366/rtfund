@@ -1059,7 +1059,7 @@ function SendToMessageList(){
 	$param = array(":q" => "%" . $_REQUEST["query"] . "%");
 	
 	$query = "select 'Person' type, concat('p_',PersonID)  id, concat_ws(' ',fname,lname,CompanyName) name
-			from BSC_persons where IsStaff='YES'				
+			from BSC_persons where IsStaff='YES' AND IsActive='YES'				
 			
 			union All 
 			

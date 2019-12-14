@@ -522,7 +522,9 @@ function SavePart(){
 			}
 		}
 
-		$DiffDoc = RegisterDifferncePartsDoc($obj->RequestID, $obj->PartID, $pdo, $OldDocID);
+		$NewPartID = LON_ReqParts::GetValidPartObj($obj->RequestID);
+				
+		$DiffDoc = RegisterDifferncePartsDoc($obj->RequestID, $NewPartID, $pdo, $OldDocID);
 		if($DiffDoc == false)
 		{
 			$pdo->rollBack();
@@ -530,7 +532,7 @@ function SavePart(){
 			die();
 		}
 		$msg = "سند اختلاف با شماره " . $DiffDoc->LocalNo . " با موفقیت صادر گردید.";
-		LON_installments::ComputeInstallments($obj->RequestID, null, true);
+		LON_installments::ComputeInstallments($obj->RequestID, $pdo, true);
 	}
 	
 	//--------------------------------------------------------------------------

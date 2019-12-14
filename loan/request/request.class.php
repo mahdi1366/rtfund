@@ -1258,6 +1258,11 @@ class LON_NOAVARI_compute extends PdoDataAccess{
 
 class LON_Computes extends PdoDataAccess{
 	
+	static function roundUp($number, $digits){
+		$factor = pow(10,$digits);
+		return ceil($number*$factor) / $factor;
+	}
+
 	static function SplitYears($startDate, $endDate, $TotalAmount){
 	
 		$startDate = DateModules::miladi_to_shamsi($startDate);
@@ -1496,7 +1501,7 @@ class LON_Computes extends PdoDataAccess{
 			if($i < count($installmentArray)-1)
 			{
 				$a = $installmentArray[$i]["InstallmentAmount"];
-				$installmentArray[$i]["InstallmentAmount"] = roundUp($a,-3);
+				$installmentArray[$i]["InstallmentAmount"] = LON_Computes::roundUp($a,-3);
 				$difference += $installmentArray[$i]["InstallmentAmount"] - $a;
 			}
 			else
@@ -2161,7 +2166,7 @@ class LON_ReqParts extends PdoDataAccess{
 	public $_param3;
 	public $_param4;
 	
-	function __construct($PartID = "") {
+	function __construct($PartID = "", $pdo = null) {
 		
 		$this->DT_PartDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		$this->DT_PartStartDate = DataMember::CreateDMA(DataMember::DT_DATE);
@@ -2176,7 +2181,7 @@ class LON_ReqParts extends PdoDataAccess{
 					bf.param4 _param4
 				from LON_ReqParts p
 				join BaseInfo bf on(TypeID=81 AND InfoID=BackPayCompute)
-				where PartID=?", array($PartID));
+				where PartID=?", array($PartID), $pdo);
 	}
 	
 	static function SelectAll($where = "", $param = array()){
@@ -2236,14 +2241,14 @@ class LON_ReqParts extends PdoDataAccess{
 	 	return true;
 	}
 	
-	static function GetValidPartObj($RequestID){
+	static function GetValidPartObj($RequestID, $pdo=null){
 		
 		$dt = PdoDataAccess::runquery("select * from LON_ReqParts 
-			where IsHistory='NO' AND RequestID=? order by PartID desc limit 1",array($RequestID));
+			where IsHistory='NO' AND RequestID=? order by PartID desc limit 1",array($RequestID), $pdo);
 		if(count($dt) == 0)
 			return null;
 		
-		return new LON_ReqParts($dt[0]["PartID"]);
+		return new LON_ReqParts($dt[0]["PartID"], $pdo);
 	}
 	
 	static function GetRejectParts(){
@@ -2515,7 +2520,7 @@ class LON_installments extends PdoDataAccess{
 			$allPay = ComputeInstallmentAmount($TotalAmount,$partObj->InstallmentCount, $partObj->PayInterval);
 
 			if($partObj->InstallmentCount > 1)
-				$allPay = roundUp($allPay,-3);
+				$allPay = LON_Computes::roundUp($allPay,-3);
 			else
 				$allPay = round($allPay);
 
@@ -2894,13 +2899,13 @@ class LON_payments extends OperationClass{
 		return round($amount);	
 	}
 	
-	static function UpdateRealPayed($SourceObjects){
+	static function UpdateRealPayed($SourceObjects, $eventObj, $pdo){
 		
 		$ReqObj = new LON_payments((int)$SourceObjects[2]);
 		$ReqObj->RealPayedDate = PDONOW;
 		$ReqObj->Edit();
 		
-		LON_installments::ComputeInstallments($ReqObj->RequestID);
+		LON_installments::ComputeInstallments($ReqObj->RequestID, $pdo);
 		
 		return true;
 	}
