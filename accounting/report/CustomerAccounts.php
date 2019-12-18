@@ -121,7 +121,7 @@ function showFlow(){
 		where d.CycleID=:c 
 			AND d.BranchID=:b AND 
 			di.CostID in(".implode(",",$costs).") 
-			AND di.TafsiliType = " . TAFTYPE_PERSONS . " $where			
+			AND di.TafsiliType = " . TAFSILITYPE_PERSON . " $where			
 		order by DocDate ";
 	
 	
@@ -322,7 +322,7 @@ function AccReport_CustomerAccount()
 				proxy: {
 					type: 'jsonp',
 					url: this.address_prefix + '../baseinfo/baseinfo.data.php?task=GetAllTafsilis&'+
-						'TafsiliType=<?= TAFTYPE_PERSONS ?>',
+						'TafsiliType=<?= TAFSILITYPE_PERSON ?>',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				}
 			})

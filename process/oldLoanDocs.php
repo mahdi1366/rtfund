@@ -19,8 +19,8 @@ $GToDate = '2019-03-20'; //1397/12/29
 $reqs = PdoDataAccess::runquery_fetchMode(" select r.RequestID from LON_requests r
 	join LON_ReqParts p on(r.RequestID=p.RequestID AND IsHistory='NO')
 	where PartDate<='$GToDate'  " . 
-		(!empty($_REQUEST["ReqID"]) ? " AND r.RequestID >= ".$_REQUEST["ReqID"] : "" ) . "
-		AND ComputeMode<>'NEW' AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
+		(!empty($_REQUEST["ReqID"]) ? " AND r.RequestID = ".$_REQUEST["ReqID"] : "" ) . "
+		 AND IsEnded='NO' AND StatusID=" . LON_REQ_STATUS_CONFIRM . " 
 		order by RequestID");
 //echo PdoDataAccess::GetLatestQueryString();
 $pdo = PdoDataAccess::getPdoObject();
@@ -38,7 +38,7 @@ while($requset=$reqs->fetch())
 	
 	$DocObj[ $reqObj->RequestID ] = null;
 	
-	Allocate($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	/*Allocate($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
 	$DocObj[ $reqObj->RequestID ] = null;
 	Contract($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
 	$DocObj[ $reqObj->RequestID ] = null;
@@ -49,10 +49,10 @@ while($requset=$reqs->fetch())
 	BackPayCheques($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
 	$DocObj[ $reqObj->RequestID ] = null;
 	BackPay($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-	$DocObj[ $reqObj->RequestID ] = null;
+	$DocObj[ $reqObj->RequestID ] = null;*/
 	DailyIncome($reqObj, $partObj, $pdo);
-	DailyWage($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
-	$DocObj[ $reqObj->RequestID ] = null;
+	//DailyWage($reqObj, $partObj, $DocObj[ $reqObj->RequestID ], $pdo);
+	//$DocObj[ $reqObj->RequestID ] = null;
 	
 	//--------------------------------------------------
 	$pdo->commit();
@@ -422,13 +422,26 @@ function DailyIncome($reqObj , $partObj, $pdo){
 			$EventID = EVENT_LOANDAILY_agentSource_non_committal;
 	}
 	$EventObj = new ExecuteEvent($EventID);
+	$EventObj->Sources = array($reqObj->RequestID, $partObj->PartID);
 	$EventObj->ComputedItems[ "80" ] = 0;
 	$EventObj->ComputedItems[ "81" ] = 0;
-	while($day = $days->fetch())
+	unset($EventObj->EventFunction);
+	
+	$PureArr = LON_requests::ComputePures($reqObj->RequestID);
+	$ComputeDate = DateModules::AddToGDate($PureArr[0]["InstallmentDate"],1);
+	for($i=1; $i < count($PureArr);$i++)
 	{
-		$EventObj->Sources = array($reqObj->RequestID, $partObj->PartID, $day["gdate"]);
-		$EventObj->ComputedItems[ 80 ] += EventComputeItems::LoanDaily("80",$EventObj->Sources)*1;
-		$EventObj->ComputedItems[ 81 ] += EventComputeItems::LoanDaily("81",$EventObj->Sources)*1;
+		if($ComputeDate > $GToDate)
+			break;
+		
+		$days = DateModules::GDateMinusGDate(min($GToDate, $PureArr[$i]["InstallmentDate"]),$ComputeDate);
+		$totalDays = DateModules::GDateMinusGDate($PureArr[$i]["InstallmentDate"],$ComputeDate);
+		$wage = round(($PureArr[$i]["wage"]/$totalDays)*$days);
+		$FundWage = round(($partObj->FundWage/$partObj->CustomerWage)*$wage);
+		$AgentWage = $wage - $FundWage;
+		$EventObj->ComputedItems[ "80" ] += $FundWage;
+		$EventObj->ComputedItems[ "81" ] += $AgentWage;
+		$ComputeDate = min($GToDate, $PureArr[$i]["InstallmentDate"]);
 	}
 	$result = $EventObj->RegisterEventDoc($pdo);
 	echo "روزانه : " . ($result ? "true" : "false") . "<br>";

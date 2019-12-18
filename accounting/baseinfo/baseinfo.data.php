@@ -269,6 +269,8 @@ function SaveCostCode() {
 	
 	if(empty($_POST["IsBlockable"]))
 		$cc->IsBlockable = "NO";
+	if(empty($_POST["IsCheque"]))
+		$cc->IsCheque = "NO";
 
     if ($cc->CostID == '')
     {

@@ -57,7 +57,7 @@ function DeleteGroup(){
 
 function GetAllLoans() {
 	
-	$where = "1=1";
+	$where = " l.IsActive='YES' ";
 	$whereParam = array();
 	
 	if(isset($_GET["IsCustomer"]))
@@ -84,8 +84,9 @@ function GetAllLoans() {
 	}
 
 	$temp = LON_loans::SelectAll($where, $whereParam);
+	//print_r(ExceptionHandler::PopAllExceptions());
 	$no = $temp->rowCount();
-	$temp = $temp->fetchAll();
+	$temp = $temp->fetchAll();	
 	echo dataReader::getJsonData($temp, $no, $_GET["callback"]);
 	die();
 }

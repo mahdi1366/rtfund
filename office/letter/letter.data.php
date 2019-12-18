@@ -1059,7 +1059,7 @@ function SendToMessageList(){
 	$param = array(":q" => "%" . $_REQUEST["query"] . "%");
 	
 	$query = "select 'Person' type, concat('p_',PersonID)  id, concat_ws(' ',fname,lname,CompanyName) name
-			from BSC_persons where IsStaff='YES'				
+			from BSC_persons where IsStaff='YES' AND IsActive='YES'				
 			
 			union All 
 			
@@ -1451,7 +1451,7 @@ function SmsCustomer(){
 	{
 		$SendError = "";
 		$context = "یک نامه جدید در پرتال صندوق پژوهش و فناوری شما وارد شده است \n\n" . 
-				"http://framework.krrtf.ir";
+				"http://saja.krrtf.ir";
 		$result = ariana2_sendSMS($PObj->mobile, $context, "number", $SendError);
 		if(!$result)
 			ExceptionHandler::PushException ("ارسال پیامک به دلیل خطای زیر انجام نگردید" . "[" . $SendError . "]");

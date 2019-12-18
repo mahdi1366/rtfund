@@ -135,9 +135,9 @@ class ACC_CostCodes extends PdoDataAccess {
 	public $ObjectType1;
 	public $ObjectType2;
 	public $ObjectType3;
-	
-	
+		
 	public $IsBlockable;
+	public $IsCheque;
 
     function __construct($CstID = '') {
 

@@ -30,13 +30,15 @@ $col = $dg->addColumn("مبلغ", "CostAmount", GridColumn::ColumnType_money);
 $col->editor = ColumnEditor::CurrencyField();
 $col->width = 100;
 
-$col = $dg->addColumn("سند", "LocalNo");
-$col->width = 80;
+$col = $dg->addColumn("سند حسابداری", "LocalNo");
+$col->align = "center";
+$col->renderer = "function(v,p,r){return LoanCost.DocRender(v,p,r);}";
+$col->width = 100;
 
 if($accessObj->AddFlag)
 {
 	$dg->enableRowEdit = true;
-	$dg->rowEditOkHandler = "function(store,record){return LoanCostObject.BeforeSaveCost(record);}";
+	$dg->rowEditOkHandler = "function(store,record){return LoanCostObject.SaveCost(record);}";
 	$dg->addButton("AddBtn", "ایجاد ردیف هزینه", "add", "function(){LoanCostObject.AddCost();}");
 }
 if($accessObj->RemoveFlag)
@@ -101,6 +103,18 @@ LoanCost.DeleteRender = function(v,p,r){
 		"onclick='LoanCostObject.DeleteCost();' " +
 		"style='background-repeat:no-repeat;background-position:center;" +
 		"cursor:pointer;width:100%;height:16'></div>";
+}
+
+LoanCost.DocRender = function(v,p,r){
+		
+	if(r.data.DocID*1 == 0)
+	{
+		return "<div align='center' title='صدور سند' class='send' "+
+		"onclick='LoanCostObject.ExecuteEvent();' " +
+		"style='float:right;background-repeat:no-repeat;background-position:center;" +
+		"cursor:pointer;width:100%;height:16'></div>";
+	}
+	return "<a target=_blank href=/accounting/docs/print_doc.php?DocID=" + r.data.DocID + ">"+v+"</a>";
 }
 
 LoanCost.prototype.BeforeSaveCost = function(record){
@@ -242,16 +256,13 @@ LoanCost.prototype.SaveCost = function(record){
 	mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخیره سازی ...'});
 	mask.show();
 	
-	params = {
-		task: "SaveCosts",
-		record: Ext.encode(record.data)
-	};
-	params = mergeObjects(params, this.BankWin.down('form').getForm().getValues());
-
 	Ext.Ajax.request({
 		url: this.address_prefix +'request.data.php',
 		method: "POST",
-		params : params,
+		params : {
+			task: "SaveCosts",
+			record: Ext.encode(record.data)
+		},
 		
 		success: function(response){
 			mask.hide();
@@ -260,7 +271,6 @@ LoanCost.prototype.SaveCost = function(record){
 			if(st.success)
 			{   
 				LoanCostObject.grid.getStore().load();
-				LoanCostObject.BankWin.hide();
 			}
 			else
 			{
@@ -274,8 +284,34 @@ LoanCost.prototype.SaveCost = function(record){
 	});
 }
 
-LoanCost.prototype.AddCost = function(){
+LoanCost.prototype.ExecuteEvent = function(){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+	
+	var loanStore = new Ext.data.Store({
+		proxy:{
+			type: 'jsonp',
+			url: this.address_prefix + "request.data.php?task=SelectAllRequests&RequestID=" + record.data.RequestID,
+			reader: {root: 'rows',totalProperty: 'totalCount'}
+		},
+		fields : ["RequestID","ReqPersonID","PartID"]
+	});
+	loanStore.load({
+		callback : function(){
+			var eventID = "";
+			ReqRecord = this.getAt(0);
+			if(ReqRecord.data.ReqPersonID*1 > 0)
+				eventID = "<?= EVENT_LOAN_COST_AGENT ?>";
+			else
+				eventID = "<?= EVENT_LOAN_COST_INNER ?>";
+			
+			framework.ExecuteEvent(eventID, new Array(
+				ReqRecord.data.RequestID,ReqRecord.data.PartID,record.data.CostID));
+		}
+	})
+}
 
+LoanCost.prototype.AddCost = function(){
 
 	var modelClass = this.grid.getStore().model;
 	var record = new modelClass({

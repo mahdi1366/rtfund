@@ -18,7 +18,7 @@ $col = $dg->addColumn("عنوان آیتم", "ParamValue");
 $col->editor = ColumnEditor::TextField();
 
 
-$col = $dg->addColumn("پارامتر اول", "f1", "");
+$col = $dg->addColumn("پارامتر اول", "f1", ""); 
 $col->editor = ColumnEditor::TextField(true);
 $col->width = 100;
 
@@ -40,7 +40,7 @@ if($accessObj->RemoveFlag)
 $dg->enableRowEdit = true;
 $dg->rowEditOkHandler = "function(){return CostCodeParamItemObject.SaveItem();}";
 
-$dg->title = "لیست تفصیلی ها";
+$dg->title = "لیست مقادیر";
 $dg->height = 460;
 $dg->DefaultSortField = "ItemID";
 $dg->DefaultSortDir = "ASC";
@@ -113,7 +113,10 @@ function CostCodeParamItem(){
 					url: this.address_prefix + 'baseinfo.data.php?task=selectParams',
 					reader: {root: 'rows',totalProperty: 'totalCount'}
 				},				
-				fields : ['ParamID','ParamDesc','SrcTable'],
+				fields : ['ParamID','ParamDesc','SrcTable',{
+						name : "fulltitle",
+						convert : function(v,r){return "[" + r.data.ParamID + "] " + r.data.ParamDesc;}
+				}],
 				autoLoad : true
 			}),
 			valueField : "ParamID",
@@ -122,7 +125,7 @@ function CostCodeParamItem(){
 			autoScroll : true,
 			height : 400,
 			name : "ParamID",
-			displayField : "ParamDesc"
+			displayField : "fulltitle"
 		}]
 	});
 	

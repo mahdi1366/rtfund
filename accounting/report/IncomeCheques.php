@@ -46,7 +46,7 @@ function GetData(){
 			
 		from ACC_IncomeCheques i
 			left join ACC_tafsilis t1 using(TafsiliID)
-			left join BSC_persons p2 on(t1.TafsiliType=" . TAFTYPE_PERSONS ." AND t1.ObjectID=p2.PersonID)
+			left join BSC_persons p2 on(t1.TafsiliType=" . TAFSILITYPE_PERSON ." AND t1.ObjectID=p2.PersonID)
 			left join ACC_CostCodes cc using(CostID)
 			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
 			left join ACC_blocks b2 on(cc.level2=b2.BlockID)

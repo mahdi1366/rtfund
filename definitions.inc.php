@@ -53,7 +53,6 @@ define("DOCTYPE_EDITINCOMECHEQUE", "23");
 define("DOCTYPE_EXECUTE_EVENT", "26");
 
 //............  TypeID=2 ....................
-define("TAFTYPE_PERSONS", "1");
 define("TAFTYPE_YEARS", "2");
 define("TAFTYPE_ACCOUNTS", "3");
 define("TAFTYPE_SUBAGENT", "4");
@@ -64,6 +63,7 @@ define("TAFSILITYPE_PERSON", "200");
 define("TAFSILITYPE_LOAN", "130");
 define("TAFSILITYPE_PROCESS", "150");
 define("TAFSILITYPE_BRANCH", "300");
+define("TAFSILITYPE_SOURCE", "320");
 
 //...............................
 
@@ -83,6 +83,7 @@ define("COSTID_current", "202");
 define("COSTID_BRANCH_PARK", "17"); // 499 park branch
 define("COSTID_BRANCH_UM", "205"); // 900 um branch
 define("COSTID_DepositeProfit", "416");
+define("COSTID_DepositeProfitSupport", "768");
 define("COSTID_GetDelay", "444");
 
 define("ShareBaseAmount", "1100000");
@@ -207,6 +208,9 @@ define("EVENT_LOANBACKPAY_agentSource_committal_non_cheque", 156);
 define("EVENT_LOANBACKPAY_agentSource_non_committal_cheque", 153);
 define("EVENT_LOANBACKPAY_agentSource_non_committal_non_cheque", 154);
 
+define("EVENT_LOAN_COST_INNER", 1866);
+define("EVENT_LOAN_COST_AGENT", 1867);
+
 define("EVENT_LOANDAILY_innerSource", 161);
 define("EVENT_LOANDAILY_agentSource_committal", 1722);
 define("EVENT_LOANDAILY_agentSource_non_committal", 1723);
@@ -215,9 +219,12 @@ define("EVENT_LOANDAILY_agentlate", 1725);
 define("EVENT_LOANDAILY_innerPenalty", 1726);
 define("EVENT_LOANDAILY_agentPenalty", 1727);
 
+define("EVENT_LOAN_CHANGE", 171);
+
 define("EVENT_LOANCHEQUE_payed", 1755);
 define("EVENT_LOANCHEQUE_innerSource", 1766);
 define("EVENT_LOANCHEQUE_agentSource", 1772);
+
 define("EVENT_CHEQUE_SANDOGHAMANAT_inner", 1768);
 define("EVENT_CHEQUE_SANDOGHAMANAT_agent", 1773);
 define("EVENT_CHEQUE_SENDTOBANK_inner", 1769);
@@ -232,6 +239,10 @@ define("EVENT_CHEQUE_MOSTARAD_inner", 1781);
 define("EVENT_CHEQUE_MOSTARAD_agent", 1779);
 define("EVENT_CHEQUE_BARGASHTMOSTARAD_inner", 1782);
 define("EVENT_CHEQUE_BARGASHTMOSTARAD_agent", 1780);
+define("EVENT_CHEQUE_RETURNBANK_inner", 1868);
+define("EVENT_CHEQUE_RETURNBANK_agent", 1871);
+define("EVENT_CHEQUE_BARGHASHTITOVOSUL_inner", 1868);
+define("EVENT_CHEQUE_BARGHASHTITOVOSUL_agent", 1871);
 
 define("EVENT_WAR_REG_2", 1797);
 define("EVENT_WAR_REG_3", 1809);
@@ -273,6 +284,7 @@ define("CostCode_param_loan", "3");
 //------------- TypeIDs -----------
 define("TYPEID_MeetingType", 88);
 define("TYPEID_MeetingStatusID", 89);
+define("TYPEID_ContractType", 18);
 
 define("POSTID_MODIRAMEL", 77);
 

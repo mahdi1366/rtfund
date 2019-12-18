@@ -56,8 +56,13 @@ $col = $dg->addColumn("مبلغ قسط", "InstallmentAmount", GridColumn::Column
 if(session::IsFramework())
 {
 	$col = $dg->addColumn("کارمزد", "wage", GridColumn::ColumnType_money);
+	$col->width = 80;
 	$col = $dg->addColumn("اصل", "", GridColumn::ColumnType_money);
 	$col->renderer = "function(v,p,r){return r.data.InstallmentAmount - r.data.wage;}";
+	$col->width = 80;
+	
+	$col = $dg->addColumn("خالص کارمزد", "PureWage", GridColumn::ColumnType_money);
+	$col->width = 80;
 }
 
 $col = $dg->addColumn("مانده قسط", "remain", GridColumn::ColumnType_money);
@@ -75,18 +80,23 @@ if(session::IsFramework())
 }
 if($editable && $accessObj->EditFlag)
 {
-	$dg->addButton("", "محاسبه اقساط", "list", 
+	$dg->addButton("", "محاسبه اقساط", "process", 
 			"function(){InstallmentObject.ComputeInstallments();}");
+	
+	$dg->addButton("", "محاسبه قسط آخر", "process", 
+			"function(){InstallmentObject.ComputeLatestInstallment();}");
+	
+	$dg->addButton("", "محاسبه اقساط بر اساس سیستم قدیم", "undo", 
+			"function(){InstallmentObject.ComputeOldInstallments();}");
 	
 	//$dg->enableRowEdit = true;
 	//$dg->rowEditOkHandler = "function(store,record){return InstallmentObject.SaveInstallment(store,record);}";
 	
 	$dg->addButton("", "ایجاد اقساط", "add", "function(){InstallmentObject.AddInstallments();}");
-	
-	$dg->addButton("", "تغییر اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
+	//$dg->addButton("", "تغییر اقساط", "delay", "function(){InstallmentObject.DelayInstallments();}");
 }
 
-if(session::IsFramework())
+if(session::IsFramework()) 
 {
 	$dg->addButton("cmp_report2", "گزارش پرداخت", "report", "function(){InstallmentObject.PayReport();}");
 }
@@ -416,6 +426,44 @@ Installment.prototype.ComputeInstallments = function(){
 		
 		me = InstallmentObject;
 	
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "ComputeInstallments",
+				RequestID : me.RequestID,
+				IsLastest : "false"
+			},
+			success: function(response){
+				
+				result = Ext.decode(response.responseText);
+				if(!result.success)
+				{
+					if(result.data == "DocExists")
+						Ext.MessageBox.alert("Error", "این وام دارای سند اختلاف قسط می باشد و قادر به محاسبه مجدد نمی باشید");
+					else if(result.data == "")
+						Ext.MessageBox.alert("", "عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("", result.data);
+				}
+				mask.hide();
+				InstallmentObject.grid.getStore().load();
+			}
+		});
+	});	
+}
+
+Installment.prototype.ComputeLatestInstallment = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایلید که شرایط جدید فقط روی قسط آخر محاسبه شود؟",function(btn){
+		if(btn == "no")
+			return;
+		
+		me = InstallmentObject;
+	
 		mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
 		mask.show();
 
@@ -424,7 +472,8 @@ Installment.prototype.ComputeInstallments = function(){
 			method: "POST",
 			params: {
 				task: "ComputeInstallments",
-				RequestID : me.RequestID
+				RequestID : me.RequestID,
+				IsLastest : "true"
 			},
 			success: function(response){
 				mask.hide();
@@ -440,6 +489,41 @@ Installment.prototype.ComputeInstallments = function(){
 						Ext.MessageBox.alert("", result.data);
 				}
 				
+				InstallmentObject.grid.getStore().load();
+			}
+		});
+	});	
+}
+
+Installment.prototype.ComputeOldInstallments = function(){
+	
+	Ext.MessageBox.confirm("","آیا مایله به تغییر مبلغ اقساط به مبلغ محاسبات قدیم می باشید؟",function(btn){
+		if(btn == "no")
+			return;
+		
+		me = InstallmentObject;
+	
+		mask = new Ext.LoadMask(Ext.getCmp(me.TabID), {msg:'در حال ذخیره سازی ...'});
+		mask.show();
+
+		Ext.Ajax.request({
+			url: me.address_prefix +'request.data.php',
+			method: "POST",
+			params: {
+				task: "ComputeOldInstallments",
+				RequestID : me.RequestID
+			},
+			success: function(response){
+				
+				result = Ext.decode(response.responseText);
+				if(!result.success)
+				{
+					if(result.data == "")
+						Ext.MessageBox.alert("", "عملیات مورد نظر با شکست مواجه شد");
+					else
+						Ext.MessageBox.alert("", result.data);
+				}
+				mask.hide();
 				InstallmentObject.grid.getStore().load();
 			}
 		});
@@ -705,7 +789,7 @@ Installment.prototype.AddInstallments = function(){
 			}
 		};
 		
-		this.AddWin = new Ext.window.Window({
+		/*this.AddWin = new Ext.window.Window({
 			width : 510,
 			height : 460,
 			title : "ثبت دستی اقساط",
@@ -753,8 +837,46 @@ Installment.prototype.AddInstallments = function(){
 					InstallmentObject.AddWin.hide();
 				}				
 			}]
-		});
+		});*/
 		
+		this.AddWin = new Ext.window.Window({
+			width : 510,
+			height : 460,
+			title : "ثبت دستی اقساط",
+			items : [
+				this.formPanel = new Ext.form.Panel({
+					defaults: {border: false},
+					height : 400,
+					width : 500,
+					frame: true,
+					bodyPadding: '5 5 0',
+					layout: "card",
+					activeItem: 0,
+					items : [{
+						xtype : "container",
+						layout :{
+							type : "table",
+							columns : 2
+						},
+						items : [this.addRecord, this.AddGrid,{
+							xtype : "button",
+							iconCls : "process",
+							text : "محاسبه اقساط",
+							style : "text-align:center",
+							handler : function(){ InstallmentObject.ComputeManualInstallments();}
+						}]
+					}]					
+				})
+			],
+			closeAction : "hide",
+			buttons : [{
+				text : "بازگشت",				
+				iconCls : "undo",
+				handler : function(){
+					InstallmentObject.AddWin.hide();
+				}				
+			}]
+		});
 		Ext.getCmp(this.TabID).add(this.AddWin);
 	}
 	
@@ -790,19 +912,23 @@ Installment.prototype.ComputeManualInstallments = function(){
 		items = items.substring(0, items.length - 1);
 	items += "]";
 	
+	mask = new Ext.LoadMask(this.AddWin, {msg:'در حال ذخیره سازی ...'});
+	mask.show();
+		
 	Ext.Ajax.request({
 		url : this.address_prefix + "request.data.php?task=ComputeManualInstallments",
 		method : "POST",
 		params : {
 			RequestID : this.RequestID,
-			ComputeDate : this.formPanel.down("[itemId=CMP_remain]").getValue() ?
-								this.formPanel.down("[name=ComputeDate]").getRawValue() : "",
-			ComputeWage : this.formPanel.down("[name=ComputeWage]").getValue() ? "YES" : "NO",
-			WithWage : this.formPanel.down("[name=WithWage]").getValue() ? "YES" : "NO",
+			//ComputeDate : this.formPanel.down("[itemId=CMP_remain]").getValue() ?
+			//this.formPanel.down("[name=ComputeDate]").getRawValue() : "",
+			//ComputeWage : this.formPanel.down("[name=ComputeWage]").getValue() ? "YES" : "NO",
+			//WithWage : this.formPanel.down("[name=WithWage]").getValue() ? "YES" : "NO",
 			records : items
 		},
 		
 		success : function(response){
+			mask.hide();
 			sd = Ext.decode(response.responseText);
 			if(sd.success)
 			{

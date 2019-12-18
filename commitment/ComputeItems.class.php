@@ -8,7 +8,7 @@ require_once DOCUMENT_ROOT . '/loan/request/request.class.php';
 require_once DOCUMENT_ROOT . '/accounting/cheque/cheque.class.php';
 require_once DOCUMENT_ROOT . '/loan/warrenty/request.class.php';
 
-
+			
 class EventComputeItems {
 	
 	static $LoanComputeArray = array();
@@ -39,6 +39,7 @@ class EventComputeItems {
 				return $PartObj->PartAmount;
 			
 			case 3 : //مبلغ قابل پرداخت دراین مرحله	
+				
 				return $PayObj->PayAmount;
 				
 			case 5 : // مبلغ قابل پرداخت به مشتری
@@ -208,15 +209,15 @@ class EventComputeItems {
 	
 	static function LoanDaily($ItemID, $SourceObjects){
 						
-		require_once '../loan/request/request.class.php';
-		
 		$ReqObj = new LON_requests((int)$SourceObjects[0]);
 		$PartObj = new LON_ReqParts((int)$SourceObjects[1]);
 		$ComputeDate = $SourceObjects[2];
 		
 		if($ItemID == "80" || $ItemID == "81")
 		{
-
+			if($ComputeDate < $PartObj->PartDate)
+				return 0;
+			
 			if($PartObj->CustomerWage*1 == 0)
 				return 0; 
 
@@ -237,19 +238,18 @@ class EventComputeItems {
 			if($PureArr === 0)
 				return 0;
 			
-			$LastPureAmount = 0;
+			$wage = 0;
 			for($i=1; $i < count($PureArr);$i++)
 			{
 				if($ComputeDate < $PureArr[$i]["InstallmentDate"])
 				{
-					$LastPureAmount = $PureArr[$i-1]["totalPure"];
+					$totalDays = DateModules::GDateMinusGDate($PureArr[$i]["InstallmentDate"],$PureArr[$i-1]["InstallmentDate"]);
+					$wage = round($PureArr[$i]["wage"]/$totalDays);
 					break;
 				}
 			}
-			$wage = round($LastPureAmount*$PartObj->CustomerWage/36500);
-
-			$wagePercent = $PartObj->CustomerWage;
-			$FundWage = round(($PartObj->FundWage/$wagePercent)*$wage);
+			
+			$FundWage = round(($PartObj->FundWage/$PartObj->CustomerWage)*$wage);
 			$AgentWage = $wage - $FundWage;
 
 			if($ItemID == "80")
@@ -303,6 +303,16 @@ class EventComputeItems {
 				return $penalty - $fundPenalty;
 		}
 
+	}
+	
+	static function LoanCost($ItemID, $SourceObjects){
+		
+		$ReqObj = new LON_requests((int)$SourceObjects[0]);
+		$PartObj = new LON_ReqParts((int)$SourceObjects[1]);
+		$CostObj = new LON_costs((int)$SourceObjects[2]);
+
+		if($ItemID == "140")
+			return $CostObj->CostAmount;
 	}
 	
 	//--------------------------------------------------------
@@ -468,6 +478,14 @@ class EventComputeItems {
 					$t2 = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->LoanPersonID);
 				if($EventRow["TafsiliType3"] == TAFSILITYPE_PERSON && $ReqObj->ReqPersonID*1 > 0)
 					$t3 = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->ReqPersonID);
+				
+				if($EventRow["TafsiliType1"] == TAFSILITYPE_SOURCE)
+					$t1 = self::FindTafsili(TAFSILITYPE_SOURCE, $ReqObj->ReqPersonID);
+				if($EventRow["TafsiliType2"] == TAFSILITYPE_SOURCE)
+					$t2 = self::FindTafsili(TAFSILITYPE_SOURCE, $ReqObj->ReqPersonID);
+				if($EventRow["TafsiliType3"] == TAFSILITYPE_SOURCE)
+					$t3 = self::FindTafsili(TAFSILITYPE_SOURCE, $ReqObj->ReqPersonID);
+				
 				break;
 				
 			case EVENT_WAR_REG_2:
@@ -505,6 +523,13 @@ class EventComputeItems {
 					$t1 = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->PersonID);
 				if($EventRow["TafsiliType2"] == TAFSILITYPE_PERSON)
 					$t2 = self::FindTafsili(TAFSILITYPE_PERSON, $ReqObj->PersonID);
+				
+				if($EventRow["TafsiliType1"] == TAFSILITYPE_SOURCE)
+					$t1 = self::FindTafsili(TAFSILITYPE_SOURCE, 0);
+				if($EventRow["TafsiliType2"] == TAFSILITYPE_SOURCE)
+					$t2 = self::FindTafsili(TAFSILITYPE_SOURCE, 0);
+				if($EventRow["TafsiliType3"] == TAFSILITYPE_SOURCE)
+					$t3 = self::FindTafsili(TAFSILITYPE_SOURCE, 0);
 				break;
 		}
 		return array($t1,$t2,$t3);
@@ -513,7 +538,7 @@ class EventComputeItems {
 	static function SetParams($EventID, $EventRow, $params, &$obj){
 		
 		if(count($params) > 0)
-		{	
+		{	 
 			for($i=1; $i<=3; $i++)
 			{
 				switch($EventRow["param" . $i])

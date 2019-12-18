@@ -1073,7 +1073,11 @@ AccDocs.prototype.check_Add = function(){
 
 		success: function(response){
 			mask.hide();
-			AccDocsObject.checkGrid.getStore().load();
+			result = Ext.decode(response.responseText);
+			if(!result.success)
+				Ext.MessageBox.alert("خطا", result.data == "" ? "عملیات مورد نظر با شکست مواجه شد" : result.data);
+			else
+				AccDocsObject.checkGrid.getStore().load();
 		},
 		failure: function(){}
 	});	

@@ -121,7 +121,10 @@ function process_tax_normalize($staffID, $PayVal, $PayYear, $PayMonth) {
 							  end_date >= '" . $EDate . "' OR end_date > '" . $SDate . "' ) ";
 							  
     $res = PdoDataAccess::runquery($qry);
-
+	if (count($res) == 0)
+	{
+		return;
+	}
     if ($res[0]['tax_include'] == 0) {
         return;
     }

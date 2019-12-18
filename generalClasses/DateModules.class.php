@@ -3,6 +3,7 @@
 // programmer:	Sh.Jafarkhani
 // Create Date:	86.09
 //-------------------------
+date_default_timezone_set('Asia/Tehran');
 
 class DateModules
 {

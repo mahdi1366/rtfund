@@ -519,7 +519,7 @@ class WFM_FlowRows extends PdoDataAccess {
 		
 		return array(
 			"StepRowID" => count($dt) > 0 ? $dt[0]["StepRowID"] : 0,
-			"IsStarted" => count($dt) > 0 ? true : false,
+			"IsStarted" => count($dt) > 0 && $JustStarted ? true : false,
 			"ActionType" => count($dt) > 0 ? $dt[0]["ActionType"] : "",
 			"ActionComment" => count($dt) > 0 ? $dt[0]["ActionComment"] : "" ,
 			"IsEnded" => count($dt) > 0 && $dt[0]["IsEnded"] == "YES" ? true : false,

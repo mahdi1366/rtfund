@@ -52,7 +52,7 @@ function selectEventRows(){
 		$list[$i]["TafsiliID2"] = $result[1]["TafsiliID"];
 		$list[$i]["TafsiliDesc2"] = $result[1]["TafsiliDesc"];
 		$list[$i]["TafsiliID3"] = $result[2]["TafsiliID"];
-		$list[$i]["TafsiliDesc3"] = $result[2]["TafsiliDesc"];
+		$list[$i]["TafsiliDesc3"] = $result[2]["TafsiliDesc"]; 
 		
 		$obj = new ACC_DocItems();
 		$result = EventComputeItems::SetParams($eObj->EventID, $list[$i], $SourcesArr, $obj);
@@ -66,6 +66,7 @@ function selectEventRows(){
 			
 			if(is_array($value))
 			{
+				continue;
 				if(isset($value["amount"]))
 				{
 					if($list[$i]["CostType"] == "DEBTOR")
@@ -154,30 +155,6 @@ function RegisterEventDoc(){
 	$pdo->commit();
 	Response::createObjectiveResponse(true, "سند شماره " . $obj->DocObj->LocalNo . " با موفقیت صادر گردید");
 	die();
-	
-	/*
-	//-------------- ایجاد چک --------------------
-	
-	$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_ACCOUNTS . 
-			" AND TafsiliID=? ", array($AccountTafsili));
-	$AccountID = (count($dt) > 0) ? $dt[0]["ObjectID"] : "";
-	
-	$chequeObj = new ACC_DocCheques();
-	$chequeObj->DocID = $obj->DocObj->DocID;
-	$chequeObj->CheckDate = $PayObj->PayDate;
-	$chequeObj->amount = EventComputeItems::PayLoan(3, $obj->EventFunctionParams);
-	$chequeObj->TafsiliID = EventComputeItems::GetTafsilis(EventComputeItems::Tafsili_LoanPersonID, TAFTYPE_PERSONS);
-	$chequeObj->CheckNo = $ChequeNo;
-	$chequeObj->AccountID = $AccountID ;
-	$chequeObj->description = " پرداخت وام شماره " . $ReqObj->RequestID;
-	$chequeObj->Add($pdo);
-	
-	//---------------------------------------------------------
-	
-	if(ExceptionHandler::GetExceptionCount() > 0)
-		return false;
-	
-	return $obj->DocObj->DocID;*/
 	
 }
 

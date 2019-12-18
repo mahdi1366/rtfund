@@ -41,10 +41,17 @@ function GetData(&$rpg){
 	global $level;
 	$level = empty($_REQUEST["level"]) ? "l1" : $_REQUEST["level"];
 	
+	$IncludeFirstCycle = $_REQUEST["resultColumns"]*1 >= 6;
+	
 	$query = "select 
 		di.CostID,
 		sum(di.DebtorAmount) DebtorAmount,
-		sum(di.CreditorAmount) CreditorAmount,
+		sum(di.CreditorAmount) CreditorAmount," . 
+			
+		($IncludeFirstCycle ? 
+		"(tdt.StartCycleDebtor) StartDebtorAmount,
+		(tdt.StartCycleCreditor) StartCreditorAmount," : "" ) . " 
+
 		b0.BlockDesc level0Desc,
 		b1.BlockDesc level1Desc,
 		b2.BlockDesc level2Desc,
@@ -62,10 +69,9 @@ function GetData(&$rpg){
 		ifnull(b2.BlockCode,'00') level2Code,
 		ifnull(b3.BlockCode,'00') level3Code,
 		ifnull(b4.BlockCode,'00') level4Code,
-		b.InfoDesc TafsiliTypeDesc,
+		
 		t.TafsiliDesc TafsiliDesc,
 		t.TafsiliCode TafsiliCode,
-		bi2.InfoDesc TafsiliTypeDesc2,
 		t2.TafsiliDesc TafsiliDesc2,
 		t2.TafsiliCode TafsiliCode2,
 		t3.TafsiliDesc TafsiliDesc3,
@@ -86,8 +92,13 @@ function GetData(&$rpg){
 		di.TafsiliID2,
 		di.TafsiliID3,
 		
-		(tdt.StartCycleDebtor) StartDebtorAmount,
-		(tdt.StartCycleCreditor) StartCreditorAmount
+		di.param1,
+		di.param2,
+		di.param3,
+
+		p1.paramDesc paramDesc1,
+		p2.paramDesc paramDesc2,
+		p3.paramDesc paramDesc3
 		
 		from ACC_DocItems di 
 			join ACC_docs d using(DocID)
@@ -97,22 +108,32 @@ function GetData(&$rpg){
 			left join ACC_blocks b2 on(level2=b2.BlockID)
 			left join ACC_blocks b3 on(level3=b3.BlockID)
 			left join ACC_blocks b4 on(level4=b4.BlockID)
-			left join BaseInfo b on(TypeID=2 AND di.TafsiliType=InfoID)
+			
 			left join ACC_tafsilis t using(TafsiliID)
-			left join BaseInfo bi2 on(bi2.TypeID=2 AND di.TafsiliType2=bi2.InfoID)
 			left join ACC_tafsilis t2 on(t2.TafsiliID=di.TafsiliID2)
 			left join ACC_tafsilis t3 on(t3.TafsiliID=di.TafsiliID3)
+			
+			left join ACC_CostCodeParams p1 on(p1.ParamID=cc.param1)
+			left join ACC_CostCodeParams p2 on(p2.ParamID=cc.param2)
+			left join ACC_CostCodeParams p3 on(p3.ParamID=cc.param3)" . 
 
-			left join (
-				select CycleID,CostID,di.TafsiliID,di.TafsiliID2,sum(DebtorAmount) StartCycleDebtor,
+			($IncludeFirstCycle ? 
+			"left join (
+				select CycleID,CostID,di.TafsiliID,di.TafsiliID2,di.TafsiliID3,di.param1,di.param2,di.param3,
+						sum(DebtorAmount) StartCycleDebtor,
 						sum(CreditorAmount) StartCycleCreditor
 				from ACC_DocItems di join ACC_docs using(DocID)
 				where DocType=1 " .
 				(!empty($_POST["CycleID"]) ? " AND CycleID=:c" : "") . 
 				(!empty($_POST["BranchID"]) ? " AND BranchID=:b" : "") . "	
-				group by CostID,TafsiliID,TafsiliID2
-			)tdt on(d.CycleID=tdt.CycleID AND di.CostID=tdt.CostID AND di.TafsiliID=tdt.TafsiliID AND di.TafsiliID2=tdt.TafsiliID2)
-	";
+				group by di.CostID,di.TafsiliID,di.TafsiliID2,di.TafsiliID3,di.param1,di.param2,di.param3
+			)tdt on(d.CycleID=tdt.CycleID AND di.CostID=tdt.CostID 
+					AND di.TafsiliID=tdt.TafsiliID 
+					AND di.TafsiliID2=tdt.TafsiliID2
+					AND di.TafsiliID3=tdt.TafsiliID3
+					AND di.param1=tdt.param1
+					AND di.param2=tdt.param2
+					AND di.param3=tdt.param3)" : "");
 	$group = "";
 	if($level >= "l0")
 	{
@@ -149,28 +170,18 @@ function GetData(&$rpg){
 		$col = $rpg->addColumn("معین3", "level4Desc", $level =="l4" ? "levelRender" : "");
 		$col->ExcelRender = false;
 	}
-	if($level == "l5" || $level == "l6")
+	if($level == "l5")
 	{
-		function uniqueRender($row,$val){
+		/*function uniqueRender($row,$val){
 			return $row["CostID"] . "-" . ($row["TafsiliID"] == "" ? 0 :$row["TafsiliID"]) . "-" . 
 					($row["TafsiliID2"] == "" ? 0 :$row["TafsiliID2"]);
 		}
-		$col = $rpg->addColumn("کد یکتا", "CostID", "uniqueRender");
+		$col = $rpg->addColumn("کد یکتا", "CostID", "uniqueRender");*/
 		
 		$group .= ",tbl.TafsiliID";
 		$col = $rpg->addColumn("کد تفصیلی1", "TafsiliID");
 		$col = $rpg->addColumn("تفصیلی1", "TafsiliDesc", "levelRender");
 		$col->ExcelRender = false;
-		
-		/*$group .= ",di.TafsiliID2";
-		$col = $rpg->addColumn("کد تفصیلی2", "TafsiliCode2");
-		$col = $rpg->addColumn("تفصیلی2", "TafsiliDesc2", "levelRender");
-		$col->ExcelRender = false;
-		
-		$group .= ",di.TafsiliID3";
-		$col = $rpg->addColumn("کد تفصیلی3", "TafsiliCode3");
-		$col = $rpg->addColumn("تفصیلی3", "TafsiliDesc3", "levelRender");
-		$col->ExcelRender = false;*/
 	}
 	if($level == "l6")
 	{
@@ -184,6 +195,27 @@ function GetData(&$rpg){
 		$group .= ",tbl.TafsiliID3";
 		$col = $rpg->addColumn("کد تفصیلی3", "TafsiliCode3");
 		$col = $rpg->addColumn("تفصیلی3", "TafsiliDesc3", "levelRender");
+		$col->ExcelRender = false;
+	}
+	if($level == "l8")
+	{
+		$group .= ",tbl.param1";
+		$col = $rpg->addColumn("عنوان آیتم1", "paramDesc1");
+		$col = $rpg->addColumn("آیتم1", "param1", "levelRender");
+		$col->ExcelRender = false;
+	}
+	if($level == "l9")
+	{
+		$group .= ",tbl.param2";
+		$col = $rpg->addColumn("عنوان آیتم2", "paramDesc2");
+		$col = $rpg->addColumn("آیتم2", "param2", "levelRender");
+		$col->ExcelRender = false;
+	}
+	if($level == "l10")
+	{
+		$group .= ",tbl.param3";
+		$col = $rpg->addColumn("عنوان آیتم3", "paramDesc3");
+		$col = $rpg->addColumn("آیتم3", "param3", "levelRender");
 		$col->ExcelRender = false;
 	}
 		
@@ -208,8 +240,8 @@ function GetData(&$rpg){
  
 		if(session::IsPortal() && isset($_REQUEST["dashboard_show"]))
 		{
-			$where .= " AND (t.TafsiliType=".TAFTYPE_PERSONS." AND t.ObjectID=" . $_SESSION["USER"]["PersonID"] .
-				" OR t2.TafsiliType=".TAFTYPE_PERSONS." AND t2.ObjectID=" . $_SESSION["USER"]["PersonID"] . ")";
+			$where .= " AND (t.TafsiliType=".TAFSILITYPE_PERSON." AND t.ObjectID=" . $_SESSION["USER"]["PersonID"] .
+				" OR t2.TafsiliType=".TAFSILITYPE_PERSON." AND t2.ObjectID=" . $_SESSION["USER"]["PersonID"] . ")";
 		}
 		if(empty($_POST["IncludeRaw"]))
 		{
@@ -227,6 +259,10 @@ function GetData(&$rpg){
 		{
 			$where .= " AND cc.CostGroupID=:ccid";
 			$whereParam[":ccid"] = $_REQUEST["CostGroupID"];
+		}
+		if(!empty($_REQUEST["EventID"]))
+		{
+			$where .= " AND d.EventID in (" . $_REQUEST["EventID"] . ")";
 		}
 		if(isset($_REQUEST["level0"]))
 		{
@@ -382,9 +418,10 @@ function GetData(&$rpg){
 	
 	$query = "select tbl.*,
 					sum(DebtorAmount) bdAmount,
-					sum(CreditorAmount) bsAmount,
+					sum(CreditorAmount) bsAmount" . 
+					($IncludeFirstCycle ? ",
 					sum(StartDebtorAmount) StartCycleDebtor,
-					sum(StartCreditorAmount)StartCycleCreditor
+					sum(StartCreditorAmount)StartCycleCreditor" : "") . " 
 			from ( " .
 			$query . "
 			where 1=1 " . $where . " 
@@ -404,9 +441,9 @@ function GetData(&$rpg){
 	$dt = PdoDataAccess::runquery($query, $whereParam);
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
-		/*BeginReport();
+		BeginReport();
 		print_r(ExceptionHandler::PopAllExceptions());
-		echo PdoDataAccess::GetLatestQueryString ();*/
+		echo PdoDataAccess::GetLatestQueryString ();
 	}
 	return $dt;
 }
@@ -422,7 +459,10 @@ function ListData($IsDashboard = false){
 		"l4" => "معین3",
 		"l5" => "تفصیلی",
 		"l6" => "تفصیلی2",
-		"l7" => "تفصیلی3"
+		"l7" => "تفصیلی3",
+		"l8" => "آیتم1",
+		"l9" => "آیتم2",
+		"l10" => "آیتم3"
 		);
 	$dt = PdoDataAccess::runquery("select * from BSC_branches");
 	$branches = array();
@@ -740,6 +780,26 @@ function AccReport_taraz()
 			displayField : "CycleDesc",
 			valueField : "CycleID",
 			hiddenName : "CycleID"
+		},{
+			xtype : "treecombo",
+			selectChildren: true,
+			canSelectFolders: false,
+			multiselect : true, 
+			hiddenName : "EventID",
+			colspan : 2,
+			width : 620,
+			fieldLabel: "رویداد مالی",
+			store : new Ext.data.TreeStore({
+				proxy: {
+					type: 'ajax',
+					url:  '/commitment/baseinfo/baseinfo.data.php?task=GetEventsTree' 
+				},
+				root: {
+					text: "رویدادهای مالی",
+					id: 'src',
+					expanded: true
+				}
+			})
 		},{
 			xtype : "checkcombo",
 			fieldLabel : "گروه حساب",
@@ -1121,6 +1181,11 @@ function AccReport_taraz()
 				html :  "<input type='radio' name='level' id='level-l5' value='l5' > تفصیلی1" + "<br>" +  
 						"<input type='radio' name='level' id='level-l6' value='l6' >تفصیلی 2" + "<br>" +  
 						"<input type='radio' name='level' id='level-l7' value='l7' >تفصیلی 3"
+			},{
+				xtype : "container",
+				html :  "<input type='radio' name='level' id='level-l8' value='l8' > آیتم 1" + "<br>" +  
+						"<input type='radio' name='level' id='level-l9' value='l9' >آیتم 2" + "<br>" +  
+						"<input type='radio' name='level' id='level-l10' value='l10' >آیتم 3"
 			},{
 				xtype : "container",
 				html : "ستون های تراز: "

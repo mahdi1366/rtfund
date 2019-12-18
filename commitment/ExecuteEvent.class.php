@@ -35,21 +35,43 @@ class ExecuteEvent {
 			case EVENT_LOAN_ALLOCATE:
 				$this->EventFunction = "EventComputeItems::LoanAllocate";
 				break;	
+			
 			case EVENT_LOANPAYMENT_agentSource:
 			case EVENT_LOANPAYMENT_innerSource:
+				$this->TriggerFunction = "LON_payments::UpdateRealPayed";
+				$this->EventFunction = "EventComputeItems::PayLoan";
+				break;
+			
 			case EVENT_LOANCONTRACT_innerSource:
 			case EVENT_LOANCONTRACT_agentSource_committal:
 			case EVENT_LOANCONTRACT_agentSource_non_committal:
 				$this->EventFunction = "EventComputeItems::PayLoan";
 				break;
 			
-			case EVENT_LOANBACKPAY_innerSource_cheque:
 			case EVENT_LOANBACKPAY_innerSource_non_cheque:
-			case EVENT_LOANBACKPAY_agentSource_committal_cheque:
 			case EVENT_LOANBACKPAY_agentSource_committal_non_cheque:
-			case EVENT_LOANBACKPAY_agentSource_non_committal_cheque:
 			case EVENT_LOANBACKPAY_agentSource_non_committal_non_cheque:
 				$this->EventFunction = "EventComputeItems::LoanBackPay";
+				break;
+			
+			case EVENT_LOANBACKPAY_agentSource_committal_cheque:
+			case EVENT_LOANBACKPAY_agentSource_non_committal_cheque:
+			case EVENT_LOANBACKPAY_innerSource_cheque:
+				//$this->AfterTriggerFunction = "ACC_IncomeCheques::EventTrigger_changeStatus";
+				$this->EventFunction = "EventComputeItems::LoanBackPay";
+				break;
+			
+			case EVENT_CHEQUE_SANDOGHAMANAT_inner:
+			case EVENT_CHEQUE_SANDOGHAMANAT_agent:
+			case EVENT_CHEQUE_SENDTOBANKFROMAMANAT_inner:
+			case EVENT_CHEQUE_SENDTOBANKFROMAMANAT_agent:
+			case EVENT_CHEQUE_SENDTOBANK_inner:
+			case EVENT_CHEQUE_SENDTOBANK_agent:
+			case EVENT_CHEQUE_BARGASHT_inner:
+			case EVENT_CHEQUE_BARGASHT_agent:
+			case EVENT_CHEQUE_BARGASHTHOGHUGHI_inner:
+			case EVENT_CHEQUE_BARGASHTHOGHUGHI_agent:
+				//$this->AfterTriggerFunction = "ACC_IncomeCheques::EventTrigger_changeStatus";
 				break;
 			
 			case EVENT_LOANDAILY_innerSource:
@@ -60,7 +82,12 @@ class ExecuteEvent {
 			case EVENT_LOANDAILY_innerPenalty:
 			case EVENT_LOANDAILY_agentPenalty:
 				$this->EventFunction = "EventComputeItems::LoanDaily";
-				break;			
+				break;	
+			
+			case EVENT_LOAN_COST_AGENT:
+			case EVENT_LOAN_COST_INNER:
+				$this->EventFunction = "EventComputeItems::LoanCost";
+				break;	
 
 			case EVENT_WAR_CANCEL_2:
 			case EVENT_WAR_CANCEL_3:
@@ -100,6 +127,7 @@ class ExecuteEvent {
 				$this->AfterTriggerFunction = "WAR_requests::EventTrigger_reduce";				
 				$this->EventFunction = "EventComputeItems::Warrenty";
 				break;	
+			
 		}
 	}
 	
@@ -129,7 +157,7 @@ class ExecuteEvent {
 
 		//------------------ run trigger --------------------
 		if($this->TriggerFunction != "")
-			if(!call_user_func($this->TriggerFunction, $this->Sources))
+			if(!call_user_func($this->TriggerFunction, $this->Sources, $this, $pdo))
 			{
 				ExceptionHandler::PushException("خطا در اجرای  Trigger");
 				return false;
@@ -138,11 +166,15 @@ class ExecuteEvent {
 		
 		if(!$this->DocObj)
 		{
+			$CycleID = isset($_SESSION["accounting"]) ? 
+				$_SESSION["accounting"]["CycleID"] : 
+				substr(DateModules::shNow(), 0 , 4);
+			
 			$this->DocObj = new ACC_docs();
 			$this->DocObj->RegDate = PDONOW;
 			$this->DocObj->regPersonID = $_SESSION['USER']["PersonID"];
 			$this->DocObj->DocDate = empty($this->DocDate) ? PDONOW : $this->DocDate;
-			$this->DocObj->CycleID = $_SESSION["accounting"]["CycleID"];
+			$this->DocObj->CycleID = $CycleID;
 			$this->DocObj->BranchID = $this->BranchID;
 			$this->DocObj->DocType = DOCTYPE_EXECUTE_EVENT;
 			$this->DocObj->EventID = $this->EventID;
@@ -161,8 +193,9 @@ class ExecuteEvent {
 		}
 		//------------------ run trigger --------------------
 		if($this->AfterTriggerFunction != "")
-			if(!call_user_func($this->AfterTriggerFunction, $this->Sources))
+			if(!call_user_func($this->AfterTriggerFunction, $this->Sources, $this, $pdo))
 			{
+				$this->pdo->rollBack();
 				ExceptionHandler::PushException("خطا در اجرای  Trigger");	
 				return false;
 			}
@@ -178,7 +211,7 @@ class ExecuteEvent {
 		$obj = new ACC_DocItems();
 		$obj->DocID = $this->DocObj->DocID;
 		$obj->CostID = $eventRow["CostID"];
-		$obj->locked = "YES";
+		$obj->locked = ($obj->CostID == "1001") ? "NO" : "YES";
 		
 		//------------------ set amounts ------------------------
 		if($this->AllRowsAmount*1 > 0)

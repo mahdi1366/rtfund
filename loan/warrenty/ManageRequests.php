@@ -22,7 +22,6 @@ $dg->addColumn("", "IsEnded", "", true);
 $dg->addColumn("", "LetterNo", "", true);
 $dg->addColumn("", "LetterDate", "", true);
 $dg->addColumn("", "DocID", "", true);
-$dg->addColumn("", "DocStatusID", "", true);
 $dg->addColumn("", "IsBlock", "", true);
 $dg->addColumn("", "BranchID", "", true);
 $dg->addColumn("", "BranchName", "", true);

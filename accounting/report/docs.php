@@ -33,14 +33,14 @@ function GetData(){
 			left join ACC_tafsilis t on(di.TafsiliID=t.TafsiliID)
 			left join ACC_tafsilis t2 on(di.TafsiliID2=t2.TafsiliID)
 			join BSC_persons p on(RegPersonID=PersonID)
-			where d.CycleID=" . $_SESSION["accounting"]["CycleID"];
+			where 1=1 ";
 	
 	$whereParam = array();
 	
 	if(session::IsPortal() && isset($_REQUEST["dashboard_show"]))
 	{
-		$query .= " AND (t.TafsiliType=".TAFTYPE_PERSONS." AND t.ObjectID=" . $_SESSION["USER"]["PersonID"] .
-			" OR t2.TafsiliType=".TAFTYPE_PERSONS." AND t2.ObjectID=" . $_SESSION["USER"]["PersonID"] . ")";
+		$query .= " AND (t.TafsiliType=".TAFSILITYPE_PERSON." AND t.ObjectID=" . $_SESSION["USER"]["PersonID"] .
+			" OR t2.TafsiliType=".TAFSILITYPE_PERSON." AND t2.ObjectID=" . $_SESSION["USER"]["PersonID"] . ")";
 	}
 	if(!empty($_POST["BranchID"]))
 	{
@@ -49,14 +49,24 @@ function GetData(){
 	}	
 	if(!empty($_POST["CycleID"]))
 	{
-		$query .= " AND CycleID=:c";
+		$query .= " AND d.CycleID=:c";
 		$whereParam[":c"] = $_POST["CycleID"];
+	}
+	else 
+	{
+		$query .= " AND d.CycleID=:c";
+		$whereParam[":c"] = $_SESSION["accounting"]["CycleID"];
+		
 	}
 	if(!empty($_POST["DocType"]))
 	{
 		$query .= " AND DocType=:dt";
 		$whereParam[":dt"] = $_POST["DocType"];
 	}	
+	if(!empty($_POST["EventID"]))
+	{
+		$query .= " AND EventID in(" . $_POST["EventID"] . ")";
+	}
 	if(!empty($_POST["FromLocalNo"]))
 	{
 		$query .= " AND d.LocalNo >= :td ";
@@ -145,7 +155,10 @@ function GetData(){
 	$query .= $group == "" ? " order by DocDate,LocalNo" : " order by " . $group;
 	
 	$dataTable = PdoDataAccess::runquery($query, $whereParam);
-	
+	if($_SESSION["USER"]["UserName"] == "admin")
+	{
+		//echo PdoDataAccess::GetLatestQueryString();
+	}
 	return $dataTable;
 }
 
@@ -342,6 +355,26 @@ function AccReport_docs()
 			displayField : "InfoDesc",
 			valueField : "InfoID",
 			hiddenName : "DocType"
+		},{
+			xtype : "treecombo",
+			selectChildren: true,
+			canSelectFolders: false,
+			multiselect : true,
+			hiddenName : "EventID",
+			colspan : 2,
+			width : 620,
+			fieldLabel: "رویداد مالی",
+			store : new Ext.data.TreeStore({
+				proxy: {
+					type: 'ajax',
+					url:  '/commitment/baseinfo/baseinfo.data.php?task=GetEventsTree' 
+				},
+				root: {
+					text: "رویدادهای مالی",
+					id: 'src',
+					expanded: true
+				}
+			})
 		},{
 			xtype : "numberfield",
 			name : "FromLocalNo",

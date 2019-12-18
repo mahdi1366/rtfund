@@ -9,6 +9,8 @@ require_once getenv("DOCUMENT_ROOT") . '/generalClasses/PDODataAccess.class.php'
 require_once getenv("DOCUMENT_ROOT") . '/generalClasses/ReportGenerator.class.php';
 require_once getenv("DOCUMENT_ROOT") . '/definitions.inc.php';
 
+ini_set("display_errors", "On");
+
 function ShowInfo(&$errorMsg){
 	
 	//-------------------- captcha check ----------------
@@ -60,22 +62,68 @@ function ShowInfo(&$errorMsg){
 	$rpt->addColumn("مبلغ ضمانت نامه", "amount", "ReportMoneyRender");
 	$rpt->addColumn("تاریخ شروع", "StartDate", "ReportDateRender");
 	$rpt->addColumn("تاریخ پایان", "EndDate", "ReportDateRender");
-
+	
 	echo "<center>";
 	echo $rpt->generateReport();
+	echo "<a href='WarrentyInquery.php?task=DownloadFile&ObjectID=".$_POST["RequestID"]."&NationalID=".$_POST["NationalID"]."'>دانلود تصویر ضمانتنامه </a>";
 	echo "</center>";
 	
 	//require_once 'PrintWarrenty.php';
 	
-	$_REQUEST["ObjectID"] = $_POST["RequestID"];
-	$_REQUEST["DocType"] = "69,70";
-	
-	require_once '../../office/dms/ShowFile.php';
 	
 	return true;
 }
 
+function DownloadFile(){
+	
+	$RequestID = (int)$_REQUEST["ObjectID"];
+	$NationalID = $_REQUEST["NationalID"];
+	
+	$dt = PdoDataAccess::runquery("select w.*,NationalID from WAR_requests w join BSC_persons using(PersonID) where RefRequestID=?",
+			array($RequestID));
+	if(count($dt) == 0)
+	{
+		$errorMsg =  "ضمانت نامه ایی با این شماره در سیستم صندوق ثبت نشده است";
+		return false;
+	}
+	
+	if($dt[0]["NationalID"] != $NationalID)
+	{
+		$errorMsg = "کدملی / شناسه ملی وارد شده مطابق با ضمانت نامه موجود نمی باشد";
+		return false;
+	}
+	$dt = PdoDataAccess::runquery("select RowID,PageNo,FileType,FileContent,DocumentID,ObjectID,DocDesc
+	from DMS_DocFiles df join DMS_documents d using(DocumentID)
+	where ObjectID=? AND d.DocType in(69,70) order by PageNo", array($RequestID));
+	
+	$FileContent = $dt[0]["FileContent"] . file_get_contents(getenv("DOCUMENT_ROOT") . "/storage/documents/" . 
+	$dt[0]["RowID"] . "." . $dt[0]["FileType"]);
+
+	$file = "file"; 
+	if(array_search ($dt[0]["FileType"], array("jpg","jpeg","png","gif")) !== false)
+		$file = "image/" . $dt[0]["FileType"];
+	if($dt[0]["FileType"] == "pdf" )
+		$file = "application/" . $dt[0]["FileType"];
+
+	header('Content-disposition:inline; filename=file.' . $dt[0]["FileType"]);
+	header('Content-type: '. $file);
+	header('Pragma: no-cache');
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	header("Content-Transfer-Encoding: binary");
+
+	echo $FileContent;
+	die();	
+}
+
 $errorMsg = "";
+if(!empty($_REQUEST["task"]) && $_REQUEST["task"] == "DownloadFile")
+{
+	DownloadFile();
+	die();
+}
+
 if(!empty($_POST["RequestID"]))
 {
 	$result = ShowInfo($errorMsg);

@@ -319,26 +319,46 @@ function ImportTrafficsFromExcel(){
 	$pdo->beginTransaction();
 	
 	$errors = "";
+	$device = $_POST["device"];
 	
 	for ($i = 1; $i < $data->sheets[0]['numRows']; $i++) 
 	{
 		$row = $data->sheets[0]['cells'][$i];
-		$dt = PdoDataAccess::runquery("select PersonID from BSC_persons where AttCode=?", array($row[2]));
+		
+		if($device == "park")
+		{
+			$AttCode = $row[2];
+			$TrafficDate = $row[0];
+			$TrafficTime = isset($row[4]) && trim($row[4]) ? $row[4] : "";
+			$TrafficTime2 = isset($row[5]) && trim($row[5]) ? $row[5] : "";
+		}
+		else
+		{
+			$AttCode = $row[0];
+			$TrafficDate = $row[3];
+			$TrafficTime = isset($row[4]) && trim($row[4]) ? $row[4] : "";
+			$TrafficTime2 = "";
+		}
+		
+		$dt = PdoDataAccess::runquery("select PersonID from BSC_persons where AttCode=?", array($AttCode));
 		if(count($dt) == 0)
 		{
-			$errors .= "کد عضو " . $row[2] . " در ذینفعان یافت نشد." . "<br>";
+			$errors .= "کد عضو " . $AttCode . " در ذینفعان یافت نشد." . "<br>";
 			continue;
 		}
 		
 		$obj = new ATN_traffic();
 		$obj->PersonID = $dt[0][0];
-		$obj->TrafficDate = DateModules::shamsi_to_miladi($row[0], "-");
+		$obj->TrafficDate = DateModules::shamsi_to_miladi($TrafficDate, "-");
 		$obj->IsSystemic = 'NO'; 
 		$obj->IsActive = "YES";
-			
-		if(isset($row[4]) && trim($row[4]) != "")
+		
+		PdoDataAccess::runquery("update ATN_traffic set IsActive='NO' where PersonID=? AND TrafficDate=? AND IsSystemic='YES'", array(
+				$obj->PersonID, $obj->TrafficDate));
+		
+		if($TrafficTime != "")
 		{
-			$obj->TrafficTime = $row[4];
+			$obj->TrafficTime = $TrafficTime;
 			
 			$dt = PdoDataAccess::runquery("select * from ATN_traffic where PersonID=? AND TrafficDate=? AND TrafficTime=?", array(
 				$obj->PersonID, $obj->TrafficDate , $obj->TrafficTime));
@@ -355,10 +375,10 @@ function ImportTrafficsFromExcel(){
 				}
 			}
 		}
-		if(isset($row[5]) && trim($row[5]) != "")
+		if($TrafficTime2 != "")
 		{
 			unset($obj->TrafficID);
-			$obj->TrafficTime = $row[5];
+			$obj->TrafficTime = $TrafficTime2;
 			
 			$dt = PdoDataAccess::runquery("select * from ATN_traffic where PersonID=? AND TrafficDate=? AND TrafficTime=?", array(
 				$obj->PersonID, $obj->TrafficDate , $obj->TrafficTime));

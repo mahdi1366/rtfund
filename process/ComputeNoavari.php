@@ -12,7 +12,7 @@ foreach($dt as $row)
 {
 	echo $i++ . " - " . $row["RequestID"] . " : ";
 	
-	$result = ComputeInstallments($row["RequestID"], true, null);
+	$result = LON_installments::ComputeInstallments($row["RequestID"]);
 	print_r(ExceptionHandler::PopAllExceptions());
 	echo ($result ? "true" : "false") . "<br>";
 	flush();

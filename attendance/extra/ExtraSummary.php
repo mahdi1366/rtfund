@@ -231,7 +231,7 @@ ExtraSummary.prototype.ConfirmSummary = function(){
 		Ext.Ajax.request({
 			url: me.address_prefix + 'extra.data.php?task=ConfirmSummary',
 			method: 'POST',
-			form : this.get("ExtraMainForm"),
+			form : me.get("ExtraMainForm"),
 			params  :{
 				SummaryYear : me.SummaryYear,
 				SummaryMonth : me.SummaryMonth

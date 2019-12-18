@@ -18,7 +18,7 @@ $dg->addColumn("", "IncomeChequeID", "", true);
 $dg->addColumn("", "BackPayID", "", true);  
 $dg->addColumn("", "ChequeStatus", "", true);
 $dg->addColumn("", "BankDesc", "", true);
-$dg->addColumn("", "ChequeBranch", "", true);
+$dg->addColumn("", "ChequeAccNo", "", true);
 $dg->addColumn("", "description", "", true);
 $dg->addColumn("", "EqualizationID", "", true);
 
@@ -452,7 +452,7 @@ IncomeCheque.HistoryRender = function(){
 IncomeCheque.ChequeNoRender = function(v,p,r){
 	
 	st = "بانک : <b>" + r.data.BankDesc + "</b><br>شعبه : <b>" + 
-		r.data.ChequeBranch + "</b><br>توضیحات : <b>" + r.data.description + "</b>";
+		r.data.ChequeBranch + "</b><br>شماره حساب چک : <b>" + r.data.ChequeAccNo + "</b><br>توضیحات : <b>" + r.data.description + "</b>";
 	p.tdAttr = "data-qtip='" + st + "'";
 	return v;
 }
@@ -495,7 +495,7 @@ function IncomeCheque(){
 	
 	this.ChequeInfoWin = new Ext.window.Window({
 		width : 900,
-		height : 370,
+		height : 400,
 		modal : true,
 		closeAction : "hide",
 		items : new Ext.form.Panel({
@@ -559,6 +559,11 @@ function IncomeCheque(){
 				fieldLabel : "شعبه"
 			},{
 				xtype : "textfield",
+				name : "ChequeAccNo",
+				colspan : 2,
+				fieldLabel : "شماره حساب چک"
+			},{
+				xtype : "textfield",
 				colspan : 2,
 				width : 650,
 				name : "description",
@@ -600,11 +605,11 @@ IncomeCheque.prototype.beforeChangeStatus = function(){
 						reader: {root: 'rows',totalProperty: 'totalCount'}
 					},
 					/*fields :  ['InfoID',"InfoDesc"]*/
-					fields :  ['TafsiliID',"TafsiliDesc"]
+					fields :  ['InfoID',"InfoDesc"]
 				}),
 				queryMode : "local",
-				displayField: 'TafsiliDesc',
-				valueField : "TafsiliID",
+				displayField: 'InfoDesc',
+				valueField : "InfoID",
 				/*displayField: 'InfoDesc',
 				valueField : "InfoID",*/
 				width : 400,
@@ -859,6 +864,22 @@ IncomeCheque.prototype.ChangeStatus = function(){
 	
 	var record = this.grid.getSelectionModel().getLastSelected();
 	StatusID = this.commentWin.down("[name=DstID]").getValue();
+	PayedDate = "";
+	/*if(StatusID == "<?= INCOMECHEQUE_VOSUL ?>")
+	{
+		PayedDate = this.commentWin.down("[name=PayedDate]").getRawValue();
+		params.UpdateLoanBackPay = this.commentWin.down("[name=UpdateLoanBackPay]").getValue();
+		
+		if(PayedDate > new Ext.SHDate().format("Y/m/d"))
+		{
+			Ext.MessageBox.alert("Error","تنها بعد از تاریخ وصول چک می توانید سند مربوطه را صادر کنید");
+			return;
+		}
+		//params = mergeObjects(params, this.BankWin.down('form').getForm().getValues());
+	}	*/
+	
+	//this.ExecuteEvent(StatusID,PayedDate);
+	//return;
 	
 	params = {
 		task : "ChangeChequeStatus",
@@ -1084,7 +1105,7 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 	{
 		this.LoanChequeWin = new Ext.window.Window({
 			width : 900,
-			height : 430,
+			height : 450,
 			modal : true,
 			closeAction : "hide",
 			items : new Ext.form.Panel({
@@ -1215,6 +1236,10 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 					fieldLabel : "شعبه"
 				},{
 					xtype : "textfield",
+					name : "ChequeAccNo",
+					fieldLabel : "شماره حساب چک"
+				},{
+					xtype : "textfield",
 					width : 650,
 					name : "description",
 					fieldLabel : "توضیحات"
@@ -1234,6 +1259,7 @@ IncomeCheque.prototype.AddLoanCheque = function(){
 								ChequeNo : parent.down("[name=ChequeNo]").getValue(),
 								ChequeBank : parent.down("[name=ChequeBank]").getValue(),
 								ChequeBranch : parent.down("[name=ChequeBranch]").getValue(),
+								ChequeAccNo : parent.down("[name=ChequeAccNo]").getValue(),
 								description : parent.down("[name=description]").getValue()
 							});
 							
@@ -1295,6 +1321,7 @@ IncomeCheque.prototype.SaveLoanCheque = function(){
 			ChequeNo : record.data.ChequeNo,
 			ChequeBank : record.data.ChequeBank,
 			ChequeBranch : record.data.ChequeBranch,
+			ChequeAccNo : record.data.ChequeAccNo,
 			description : record.data.description
 		}));
 	});
@@ -1427,6 +1454,33 @@ IncomeCheque.prototype.beforeEdit = function(){
 		
 	this.editWin.show();
 	this.editWin.center();
+}
+
+IncomeCheque.prototype.ExecuteEvent = function(StatusID,PayedDate){
+	
+	var record = this.grid.getSelectionModel().getLastSelected();
+
+	Ext.Ajax.request({
+		url : this.address_prefix + "cheques.data.php?task=GetBackPays",
+		method : "POST",
+		params: {
+			IncomeChequeID : record.data.IncomeChequeID,
+			StatusID : StatusID
+		},
+		success : function(response){
+			result = Ext.decode(response.responseText);
+			
+			if(result.success)
+			{
+				result = result.data.split("_");
+				if(result.length == 0)
+					this.grid.getStore().load();
+				else
+					framework.ExecuteEvent(result[0], new Array(
+					result[1],result[2],result[3],StatusID,PayedDate));
+			}
+		}
+	})
 }
 
 </script>

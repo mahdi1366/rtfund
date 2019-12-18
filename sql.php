@@ -10,7 +10,10 @@ join LON_ReqParts p on(IsHistory='NO' AND b.RequestID=p.RequestID) set DocDate=i
  * 
  *  */
 
-
+/*
+select max(DocDate),g2j(max(DocDate)) from ACC_docs where EventID in(161,1722,1723,1724,1725,1726,1727) and DocDate<'2019-10-22'
+select DocID from ACC_docs where EventID in(161,1722,1723,1724,1725,1726,1727) group by EventID,DocDate having count(DocID)>1
+ *  */
 
 /*
 insert into STO_AssetFlow(AssetID,ActDate,ActPersonID,StatusID,IsUsable,ReceiverPersonID) 

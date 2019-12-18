@@ -393,11 +393,11 @@ class ACC_docs extends PdoDataAccess {
 				<br><br><br><br>
 		';
 	}
-	
+	 
 	static function GetPureRemainOfSaving($PersonID, $BranchID){
 		
 		//------------- find Tafsili -----------------
-		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFTYPE_PERSONS .  
+		$dt = PdoDataAccess::runquery("select * from ACC_tafsilis where TafsiliType=" . TAFSILITYPE_PERSON .  
 				" AND ObjectID=?", array($PersonID));
 		if(count($dt) == 0)
 		{
@@ -418,13 +418,13 @@ class ACC_docs extends PdoDataAccess {
 				":y" => substr(DateModules::shNow(),0,4),
 				":b" => $BranchID,
 				":cost" => COSTID_saving,
-				":tt" => TAFTYPE_PERSONS,
+				":tt" => TAFSILITYPE_PERSON,
 				":t" => $TafsiliID
 		));
 		$SavingAmount = count($dt) == 0 ? 0 : $dt[0][0];
 		
 		//------------- minus block accounts -----------------
-		$BlockedAmount = ACC_CostBlocks::GetBlockAmount(COSTID_saving, TAFTYPE_PERSONS, $TafsiliID);
+		$BlockedAmount = ACC_CostBlocks::GetBlockAmount(COSTID_saving, TAFSILITYPE_PERSON, $TafsiliID);
 
 		//------------------------------------------------
 		return $SavingAmount*1 - $BlockedAmount*1;
@@ -697,8 +697,11 @@ class ACC_DocCheques extends PdoDataAccess {
 	public $TafsiliID;
 	public $description;
 
-	function __construct() {
+	function __construct($id = "") {
+		
 		$this->DT_CheckDate = DataMember::CreateDMA(DataMember::DT_DATE);
+		if($id != "")
+			return PdoDataAccess::FillObject($this, "select * from ACC_DocCheques where DocChequeID=?", array($id));
 	}
 
 	static function GetAll($where = "", $whereParam = array()) {
@@ -706,7 +709,7 @@ class ACC_DocCheques extends PdoDataAccess {
 					from ACC_DocCheques c
 					left join ACC_accounts a using(AccountID)
 					left join ACC_banks bk on(a.BankID=bk.BankID)
-					left join ACC_tafsilis t on(TafsiliType=" . TAFTYPE_PERSONS . " AND t.TafsiliID=c.TafsiliID)
+					left join ACC_tafsilis t on(TafsiliType=" . TAFSILITYPE_PERSON . " AND t.TafsiliID=c.TafsiliID)
 					join BaseInfo b on(b.typeID=4 AND b.InfoID=CheckStatus)
 			";
 		$query .= ($where != "") ? " where " . $where : "";

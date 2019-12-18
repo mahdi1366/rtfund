@@ -23,6 +23,7 @@ $dg_cost->addcolumn('','TafsiliType1',"",true);
 $dg_cost->addcolumn('','TafsiliType2',"",true);
 $dg_cost->addcolumn('','TafsiliType3',"",true);
 $dg_cost->addcolumn('','IsBlockable',"",true);
+$dg_cost->addcolumn('','IsCheque',"",true);
 $dg_cost->addcolumn('','param1',"",true);
 $dg_cost->addcolumn('','param2',"",true);
 $dg_cost->addcolumn('','param3',"",true);

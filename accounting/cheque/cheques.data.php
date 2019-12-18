@@ -81,55 +81,6 @@ function selectIncomeCheques() {
 	MakeWhere($where, $param);
 	  
 	$query = "
-		select t.*,b.BankDesc, t3.TafsiliDesc ChequeStatusDesc
-		from
-		(
-			select i.*,
-				group_concat(concat_ws(' ','[ وام ',r.RequestID,']',p.CompanyName,p.fname,p.lname) 
-					SEPARATOR '<br>') as fullname,
-					group_concat(l.LoanDesc SEPARATOR '<br>') CostDesc,
-					br.BranchName
-			from ACC_IncomeCheques i
-			join LON_BackPays bp using(IncomeChequeID)
-			join LON_requests r on(bp.RequestID=r.RequestID)
-			join BSC_persons p on(p.PersonID=r.LoanPersonID)
-			join LON_loans l using(LoanID)
-			join BSC_branches br on(r.BranchID=br.BranchID)
-			group by i.IncomeChequeID
-
-		union all
-
-			select i.*,group_concat(concat_ws(' ','[ وام ',r.RequestID,']',p.CompanyName,p.fname,p.lname) 
-					SEPARATOR '<br>') as fullname,
-					group_concat(l.LoanDesc SEPARATOR '<br>') CostDesc,
-					br.BranchName
-			from ACC_IncomeCheques i
-			join LON_requests r on(i.LoanRequestID=r.RequestID)
-			join BSC_persons p on(p.PersonID=r.LoanPersonID)
-			join LON_loans l using(LoanID)
-			join BSC_branches br on(r.BranchID=br.BranchID)
-			group by i.IncomeChequeID
-
-		union all
-
-			select i.*,t1.TafsiliDesc fullname, 
-				concat_ws('-', b1.blockDesc, b2.blockDesc, b3.blockDesc, b4.blockDesc) CostDesc,br.BranchName
-			from ACC_IncomeCheques i
-			left join BSC_branches br on(i.BranchID=br.BranchID)
-			left join ACC_tafsilis t1 using(TafsiliID)
-			join ACC_CostCodes cc using(CostID)
-			left join ACC_blocks b1 on(cc.level1=b1.BlockID)
-			left join ACC_blocks b2 on(cc.level2=b2.BlockID)
-			left join ACC_blocks b3 on(cc.level3=b3.BlockID)
-			left join ACC_blocks b4 on(cc.level4=b4.BlockID)
-			group by i.IncomeChequeID
-		)t
-
-		left join ACC_banks b on(ChequeBank=BankID)
-		left join ACC_tafsilis t3 on(t3.TafsiliType=7 AND t3.TafsiliID=ChequeStatus)
-		where " . $where ;
-	/*
-		$query = "
 		select t.*,b.BankDesc, bf.InfoDesc ChequeStatusDesc
 		from
 		(
@@ -177,7 +128,7 @@ function selectIncomeCheques() {
 		left join ACC_banks b on(ChequeBank=BankID)
 		left join BaseInfo bf on(bf.TypeID=4 AND bf.InfoID=ChequeStatus)
 		where " . $where ;
-		*/
+		
 	//.........................................................
 	$query .= dataReader::makeOrder();
 	$temp = PdoDataAccess::runquery_fetchMode($query, $param);
@@ -248,15 +199,10 @@ function selectValidChequeStatuses(){
 	
 	$SrcID = $_REQUEST["SrcID"];
 	$temp = PdoDataAccess::runquery("
-		select TafsiliID,TafsiliDesc
-		from ACC_tafsilis join ACC_ChequeStatuses on(SrcID=? AND DstID=TafsiliID)
-		where TafsiliType=" . TAFTYPE_ChequeStatus, array($SrcID));
-	/*
-	$temp = PdoDataAccess::runquery("
 		select InfoID,InfoDesc
 		from BaseInfo join ACC_ChequeStatuses on(SrcID=? AND DstID=InfoID)
 		where TypeID=4", array($SrcID));
-	*/
+	
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
@@ -556,65 +502,63 @@ function ChangeChequeStatus(){
 				}	
 			}
 
-			switch($Status)
+			if($Status == INCOMECHEQUE_VOSUL)
 			{
-				case INCOMECHEQUE_VOSUL :
-					if(!$IsInner)
-					{
-						if($ReqObj->FundGuarantee == "YES")
-							$EventID = EVENT_LOANBACKPAY_agentSource_committal_cheque;
-						else
-							$EventID = EVENT_LOANBACKPAY_agentSource_non_committal_cheque;
-					}
+				if(!$IsInner)
+				{
+					if($ReqObj->FundGuarantee == "YES")
+						$EventID = EVENT_LOANBACKPAY_agentSource_committal_cheque;
 					else
-						$EventID = EVENT_LOANBACKPAY_innerSource_cheque;
-					break;
-
-				case INCOMECHEQUE_SANDOGHAMANAT :
-					$EventID = $IsInner ? EVENT_CHEQUE_SANDOGHAMANAT_inner : 
-						EVENT_CHEQUE_SANDOGHAMANAT_agent;
-					break;
-				case INCOMECHEQUE_FLOW_VOSUL :
-					if($PreStatus == INCOMECHEQUE_SANDOGHAMANAT)
-						$EventID = $IsInner ? EVENT_CHEQUE_SENDTOBANKFROMAMANAT_inner : 								
-							EVENT_CHEQUE_SENDTOBANKFROMAMANAT_agent;
-					else
-						$EventID = $IsInner ? EVENT_CHEQUE_SENDTOBANK_inner : 
-							EVENT_CHEQUE_SENDTOBANK_agent;
-					break;
-				case INCOMECHEQUE_BARGASHTI :
-					$EventID = $IsInner ? EVENT_CHEQUE_BARGASHT_inner : 
-						EVENT_CHEQUE_BARGASHT_agent;
-					break;
-				case INCOMECHEQUE_BARGASHTI_HOGHUGHI:
-					$EventID = $IsInner ? EVENT_CHEQUE_BARGASHTHOGHUGHI_inner : 
-						EVENT_CHEQUE_BARGASHTHOGHUGHI_agent;
-					break;
-				case INCOMECHEQUE_BARGASHTI_MOSTARAD:
-					$EventID = $IsInner ? EVENT_CHEQUE_BARGASHTMOSTARAD_inner : 
-						EVENT_CHEQUE_BARGASHTMOSTARAD_agent;
-					break;
+						$EventID = EVENT_LOANBACKPAY_agentSource_non_committal_cheque;
+				}
+				else
+					$EventID = EVENT_LOANBACKPAY_innerSource_cheque;
 			}
-
-			$eventobj = new ExecuteEvent($EventID);
-			$eventobj->Sources = array($ReqObj->RequestID, $partObj->PartID, $PayObj->BackPayID);
-			if($Status != INCOMECHEQUE_VOSUL)
-				$eventobj->AllRowsAmount = $PayObj->PayAmount;
-			$eventobj->DocObj = $DocObj;
-			$result = $eventobj->RegisterEventDoc($pdo);
-			if(!$result)
+			else
 			{
-				$pdo->rollBack();
-				Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
-				die();
+				$dt = PdoDataAccess::runquery("select * from BaseInfo where TypeID=4 AND InfoID=?", array($Status));
+				$StatusInfo = $dt[0];
+				$EventID = $IsInner ? $StatusInfo["param1"] : $StatusInfo["param2"];
 			}
-			$DocObj = $eventobj->DocObj;
-			$RegDocID = $eventobj->DocObj->DocID;
+			if($EventID != "")
+			{
+				$eventobj = new ExecuteEvent($EventID);
+				$eventobj->Sources = array($ReqObj->RequestID, $partObj->PartID, $PayObj->BackPayID);
+				if($Status != INCOMECHEQUE_VOSUL)
+					$eventobj->AllRowsAmount = $PayObj->PayAmount;
+				$eventobj->DocObj = $DocObj;
+				$result = $eventobj->RegisterEventDoc($pdo);
+				if(!$result)
+				{
+					$pdo->rollBack();
+					Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+					die();
+				}
+				$DocObj = $eventobj->DocObj;
+				$RegDocID = $eventobj->DocObj->DocID;
+			}
 		}
 	}
 	//---------------------------------------------------------------
 	
 	ACC_IncomeCheques::AddToHistory($IncomeChequeID, $Status, $RegDocID, $pdo);
+	
+	$pdo->commit();
+	echo Response::createObjectiveResponse($result, "");
+	die();
+}
+
+function ChangeOutcomeChequeStatus(){
+	
+	$DocChequeID = $_POST["DocChequeID"];
+	$Status = $_POST["StatusID"];
+	
+	$pdo = PdoDataAccess::getPdoObject();
+	$pdo->beginTransaction();
+	
+	$obj = new ACC_DocCheques($DocChequeID);
+	$obj->CheckStatus = $Status;
+	$result = $obj->Edit($pdo);
 	
 	$pdo->commit();
 	echo Response::createObjectiveResponse($result, "");
@@ -628,8 +572,8 @@ function ReturnLatestOperation($returnMode = false){
 	$pdo = PdoDataAccess::getPdoObject();
 	$pdo->beginTransaction();
 	
-	$dt = PdoDataAccess::runquery("select h.* from ACC_ChequeHistory h join ACC_Docs using(DocID)
-		where IncomeChequeID=? order by RowID desc",	array($OuterObj->IncomeChequeID), $pdo);
+	$dt = PdoDataAccess::runquery("select h.* from ACC_ChequeHistory h where IncomeChequeID=? AND details not like '%برگشت%' order by RowID desc",	
+			array($OuterObj->IncomeChequeID), $pdo);
 	$DocID = $dt[0]["DocID"]*1;	
 	
 	if(count($dt) < 2)
