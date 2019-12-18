@@ -49,6 +49,9 @@ switch ( $task) {
         
     case "SeenMsg" : 
         SeenMsg();
+        
+    case "GetInfo" : 
+        GetInfo();
 }
 
 function SelectGrop()
@@ -89,7 +92,7 @@ function SelectGrop()
 
 	$where .=  dataReader::makeOrder(); 
 
-	$temp = manage_msg_group::GetAll($where,$whereParam);
+	$temp = manage_MSG_group::GetAll($where,$whereParam);
 	$no = count($temp);
         //..........................secure section ........................
         $start = (int)$_GET["start"] ;
@@ -115,7 +118,7 @@ function SaveGrp()
             die();
     }
     
-    $obj = new manage_msg_group();
+    $obj = new manage_MSG_group();
     PdoDataAccess::FillObjectByArray($obj, $_POST);
     
     if (empty($obj->GID)) {
@@ -209,7 +212,7 @@ function SaveGrp()
     die();
     
     //......................
-	/*$obj = new manage_msg_group();
+	/*$obj = new manage_MSG_group();
     PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	
 	if(empty($obj->GID))
@@ -236,7 +239,7 @@ function removeGrp()
     }
     //.......................................................
 
-	$return = manage_msg_group::Remove($_POST["GID"]);
+	$return = manage_MSG_group::Remove($_POST["GID"]);
 	Response::createObjectiveResponse($return, (!$return ? ExceptionHandler::popExceptionDescription() : ""));
 	die();
 }
@@ -255,8 +258,8 @@ function SelectMembers()
 	$where = " GID =". $_GET['GID'];
 	$where .=  dataReader::makeOrder();
     
-    $temp = manage_msg_members::GetAll($where);
-   
+    $temp = manage_MSG_members::GetAll($where);
+  
 	$no = count($temp);
         //..........................secure section ........................
         $start = (int)$_GET["start"] ;
@@ -276,7 +279,7 @@ function SelectMembers()
 
 function SaveMember()
 { 
-	$obj = new manage_msg_members();   
+	$obj = new manage_MSG_members();   
    
     PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 
@@ -312,7 +315,7 @@ function removeMember()
     }
     //.......................................................
 
-    $return = manage_msg_members::Remove($_POST["GID"],$_POST["MID"]);
+    $return = manage_MSG_members::Remove($_POST["GID"],$_POST["MID"]);
 	Response::createObjectiveResponse($return, (!$return ? ExceptionHandler::popExceptionDescription() : ""));
 	die();
 }
@@ -322,8 +325,8 @@ function SelectMyMessage()
     $where = "" ; 
     $whereParam = array(":PID" => $_SESSION["USER"]["PersonID"] );
     
-	$temp = manage_msg_messages::GetAllMyMessage($where,$whereParam);
- 
+	$temp = manage_MSG_messages::GetAllMyMessage($where,$whereParam);
+  
 	$no = count($temp);
         //..........................secure section ........................
         $start = (int)$_GET["start"] ;
@@ -345,7 +348,7 @@ function SelectMessageGrp()
     $where = "" ; 
     $whereParam = array(":GID" => $_REQUEST['GID']);
   
-	$temp = manage_msg_messages::GetAllGroupMessage($where,$whereParam);     
+	$temp = manage_MSG_messages::GetAllGroupMessage($where,$whereParam);     
 	$no = count($temp);
     
     //..........................secure section ........................
@@ -364,12 +367,12 @@ function SelectMessageGrp()
 }
 
 function SearchMsg()
-{        
+{                
     $where = "" ; 
     $whereParam = array(":PID" => $_SESSION["USER"]["PersonID"],":GID" => $_REQUEST['GID'],":STxt" => "%".$_REQUEST['SearchTxt']."%" );
     
-	$temp = manage_msg_messages::GetSearchMessage($where,$whereParam);
-    
+	$temp = manage_MSG_messages::GetSearchMessage($where,$whereParam);
+
 	$no = count($temp);
     //..........................secure section ........................
     $start = (int)$_GET["start"] ;
@@ -408,19 +411,16 @@ function SaveMsg()
         die();
     }
         
-    $obj = new manage_msg_messages();    
+    $obj = new manage_MSG_messages();    
     $obj->GID = $_REQUEST['GID'] ; 
     $obj->MID = $_REQUEST['MID'] ; 
     $obj->ParentMSGID = $_REQUEST['ParentMSGID'] ; 
     $obj->MSGID =  $_REQUEST['MSGID'] ; 
     $obj->message = (empty($_REQUEST['MsgTxt']) ? " " : $_REQUEST['MsgTxt'] ) ;
-    $obj->SendingDate = DateModules::NowDateTime() ; 
+    $obj->SendingDate = PDONOW ;  
        
     if (empty($obj->MSGID) && !($obj->MSGID > 0) ) {
-        
-        echo "**111**";
-        die();
-        
+       
         $size = $_FILES['FileType']['size'];
 
         if ($size > 2097152) { 
@@ -444,7 +444,7 @@ function SaveMsg()
          
             $filetype = $obj->FileType = $extension; 
             $return = $obj->Add();    
-               
+       
             $filename = $obj->MSGID;
 
             if(!empty($_FILES ['FileType'] ['name'])) 
@@ -462,9 +462,6 @@ function SaveMsg()
     } 
     elseif(!empty($obj->MSGID)) 
     {
-        
-        echo "**222**";
-        die();
         
         $size = $_FILES['FileType']['size'];
 
@@ -527,7 +524,7 @@ function DelMsg()
    
     //.......................................................
 
-    $return = manage_msg_messages::Remove($_POST["MsgId"]);
+    $return = manage_MSG_messages::Remove($_POST["MsgId"]);
 	Response::createObjectiveResponse($return, (!$return ? ExceptionHandler::popExceptionDescription() : ""));
 	die();
 }
@@ -543,11 +540,11 @@ function GetNotNumber()
     }   
     //.......................................................    
     $qry = " select me.GID , count(*) MsgNo
-                        from msg_messages me
-                        inner join msg_members mb 
+                        from MSG_messages me
+                        inner join MSG_members mb 
                                on me.GID = mb.GID
-                        left join msg_messagestatus st
-                               on me.MSGID = st.MSGID and me.MID = st.MID
+                        left join MSG_messagestatus st
+                               on me.MSGID = st.MSGID and mb.MID = st.MID
                      where mb.PersonID = :PID and me.GID = :GID and mb.MID <> me.MID and  st.MSID is null";
     $res = PdoDataAccess::runquery($qry, array(":PID" => $_SESSION["USER"]["PersonID"] , ":GID" => $_POST["GID"] ));
     
@@ -565,11 +562,38 @@ function SeenMsg()
             die();
     }   
     //.......................................................    
-    manage_msg_messages::InsertSeenMsg("", array(":GID" => $_POST["GID"] )); 
+    manage_MSG_messages::InsertSeenMsg("", array(":GID" => $_POST["GID"] )); 
     
     echo Response::createObjectiveResponse(true," ") ;
     die();
     
 }
 
+
+function GetInfo() 
+{
+    
+    //.................. secure section .....................
+    if (!InputValidation::validate($_POST["MSGID"], InputValidation::Pattern_Num, false)) 
+    {
+            echo Response::createObjectiveResponse(false, ExceptionHandler::GetExceptionsToString());
+            die();
+    }   
+    
+    //.......................................................    
+    $qry = " SELECT ms.MSGID , ms.message message , concat(fname,' ', lname) FullName
+             FROM MSG_messages ms
+                            inner join MSG_members m
+                                    on ms.GID = m.GID and ms.MID = m.MID
+                            inner join BSC_persons pr using(PersonID)
+                            left join MSG_messages pms 
+                                    on ms.ParentMSGID = pms.MSGID                                    
+                    where ms.MSGID = :MSGID
+                    order by MSGID  ASC";
+    $res = PdoDataAccess::runquery($qry, array(":MSGID" => $_POST["MSGID"] ));
+    
+    echo Response::createObjectiveResponse(true,"{MSGID:".$res[0]['MSGID']." ,FullName:".$res[0]['FullName'].",message:".$res[0]['message']."}" ) ;
+    die();
+    
+}
 	

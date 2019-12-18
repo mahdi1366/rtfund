@@ -4,14 +4,14 @@
 //-----------------------------
 require_once '../header.inc.php';
 require_once inc_dataGrid;
-
+       
 echo '<head><meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>			
-        <link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-all.css" />
-        <link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-rtl.css?v=1" />
+        
+        <link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-rtl-mobile.css?v=1" />
+        <link rel="stylesheet" type="text/css" href="/generalUI/ext4/resources/css/ext-all-mobile.css?v=1" />
         <link rel="stylesheet" type="text/css" href="/generalUI/icons/icons.css?v=1" />
         <script type="text/javascript" src="/generalUI/ext4/resources/ext-all.js?v=1"></script>
         <script type="text/javascript" src="/generalUI/ext4/resources/ext-extend.js?v=1"></script>
-
         <script type="text/javascript" src="/generalUI/ext4/ux/component.js?v=1"></script>
         <script type="text/javascript" src="/generalUI/ext4/ux/message.js?v=1"></script>
         <script type="text/javascript" src="/generalUI/ext4/ux/grid/SearchField.js?v=1"></script>
@@ -23,6 +23,9 @@ echo '<head><meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
         <script type="text/javascript" src="/generalUI/jquery-3.4.1.min.js"></script>
       </head>';
 
+
+//echo "<font style = 'font-size:2rem' >"."سلام شبنم"."</font>" ;
+//die();
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "ManageGroup.data.php?task=SelectMyMessage", "DivGrid");
 
 $dg->addColumn("", "GID", "int", true);
@@ -164,7 +167,7 @@ $grid = $dg->makeGrid_returnObjects();
 //...................................................................
         var store = Ext.create('Ext.data.Store', {
             remoteSort: true,
-            //buffered: true,
+            buffered: true,
             fields: [{name: 'MSGID'}, {name: 'GID'}, {name: 'MID'}, {name: 'fname'}, {name: 'lname'}, {name: 'message'},
                 {name: 'FileType'}, {name: 'ParentMsg'}, {name: 'ParentMSGID'}, {name: 'SendingDate'}],
             proxy: {
@@ -185,7 +188,7 @@ $grid = $dg->makeGrid_returnObjects();
 
         var SearchStore = Ext.create('Ext.data.Store', {
             remoteSort: true,
-           // buffered: true,
+            buffered: true,
             fields: [{name: 'MSGID'}, {name: 'MID'}, {name: 'message'}],
             proxy: {
                 type: 'jsonp',
@@ -215,12 +218,6 @@ $grid = $dg->makeGrid_returnObjects();
                 trackOver: false,
                 loadMask: false
             },
-            plugins:[{
-                    ptype:'bufferedrenderer',
-                    trailingBufferZone : 10 ,
-                    leadingBufferZone : 20 ,
-                    numFromEdge: 7
-            }],
             columns: [{menuDisabled: true,
                     align: 'center',
                     header: '',
@@ -613,11 +610,11 @@ $grid = $dg->makeGrid_returnObjects();
             MyMessengerObject.formpanel.down("[itemId=MID]").setValue(record.data.MID);
             store.prefetch({
                 start: 0,
-                limit: 200,
+                limit: 10,
                 callback: function () {                    
-                    //store.guaranteeRange(0,99); 
-                    store.load();
-                    MyMessengerObject.grid2.getView().scrollBy(0, 999999, true);
+                    store.guaranteeRange(0,5); 
+                    //store.load();
+                   // MyMessengerObject.grid2.getView().scrollBy(0, 999999, true);
                     //if (MyMessengerObject.IsFirstLoad === false) {                        
                         /*
                          * var records = Ext.getCmp('prGrid').getStore().data.length + 1;
@@ -631,9 +628,11 @@ $grid = $dg->makeGrid_returnObjects();
 
                 }
             });
+            
             MyMessengerObject.grid.hide();
             MyMessengerObject.SeenMsg();
-            setInterval(function () {MyMessengerObject.loadNotification()}, 1000);
+         //   setInterval(function () {MyMessengerObject.loadNotification()}, 1000);
+           // MyMessengerObject.grid2.getView().scrollBy(0, 999999, true);
         });
 
     }
