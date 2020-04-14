@@ -181,13 +181,13 @@ LoanStartPage.ShowGrid = function(gridName){
 					<div id="div_grid_pay"></div>
 				</td>
 			</tr>			
-			<tr>
+			<!--<tr>
 				<td><img src="/generalUI/ext4/resources/themes/icons/receive.png" style="width:24px;vertical-align: middle;">
 					  درخواست های رسیده جدید
-					<a href="javascript:LoanStartPage.ShowGrid('grid_rec')">( <?= $receivedCount ?> )</a>	
+					<a href="javascript:LoanStartPage.ShowGrid('grid_rec')">( <?/*= $receivedCount */?> )</a>
 					<div id="div_grid_rec"></div>
 				</td>
-			</tr>
+			</tr>-->
 		</table>
 	</div>
 </center>
