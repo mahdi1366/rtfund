@@ -28,7 +28,7 @@ function RequestInfo()
 			url: this.address_prefix + "Request.data.php?task=selectRequests&PersonID=" + this.PersonID ,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["IDReq","IsRegister","PersonID","askerName","askerMob","askerID","IsPresent","referalDate","referalTime","LetterID" ,"IsInfoORService","serviceType","otherService","InformationDesc","IsRelated","referPersonID","referDesc","Poll"],
+		fields : ["IDReq","IsRegister","PersonID","MobCustomer","askerName","askerMob","askerID","IsPresent","referalDate","referalTime","LetterID" ,"IsInfoORService","serviceType","otherService","InformationDesc","IsRelated","referPersonID","referDesc","Poll"],
 		autoLoad : true,
 		listeners :{
 			load : function(){
@@ -199,7 +199,7 @@ RequestInfo.prototype.MakeInfoPanel = function(RequestRecord){
     xtype: 'radiofield',
     boxLabel: 'غیرحضوری',
     name: 'IsPresent',
-    inputValue: 'NO'
+    inputValue: 'No'
 }
     ]
 }
@@ -381,7 +381,7 @@ RequestInfo.prototype.MakeInfoPanel = function(RequestRecord){
     xtype: 'radiofield',
     boxLabel: 'خیر',
     name: 'IsRelated',
-    inputValue: 'NO'
+    inputValue: 'No'
 }
     ]
 },

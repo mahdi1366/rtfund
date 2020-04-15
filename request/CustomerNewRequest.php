@@ -116,33 +116,79 @@ function NewServiceRequest(){
 			style: {'color': 'red'},
 			renderTo : this.get("div_plan"),
 			items : [
-			            {
-                            xtype : "combo",
-                            store : new Ext.data.SimpleStore({
-                                proxy: {
-                                    type: 'jsonp',
-                                    url: this.address_prefix +'../../framework/person/persons.data.php?task=selectPersonInfoTypes&TypeID=96&PersonID='+ this.PersonID,
-                                    reader: {root: 'rows',totalProperty: 'totalCount'}
-                                },
-                                /*fields : ['BranchID','BranchName'],*/
-                                fields : ['TypeID','InfoID','InfoDesc'],
-                                autoLoad : true
-                            }),
-                            fieldLabel : "نوع خدمت", /*new create*/
-                            queryMode : 'local',
-                            /*allowBlank : false,
-                            beforeLabelTextTpl: required,*/
-                            width : 350,
-                            displayField : "InfoDesc",
-                            valueField : "InfoDesc",
-                            name : "serviceType"
-                        },{
-                            xtype : "textarea",
-                            fieldLabel : "شرح خدمت",
-                            name : "otherService",
-                            itemId : "otherService",
-                            width : 350
+                {
+                    xtype: 'radio',
+                    name: 'IsInfoORService',
+                    hideLabel: false,
+                    boxLabel: 'درخواست خدمت',
+                    checked : true,
+                    width : 100,
+                    listeners: {
+                        change : function() {
+                            console.log('Yessssssssssssss');
+                            if(this.getValue())
+                            {
+                                console.log('Service');
+                                NewServiceRequestObject.planFS.down("[name=serviceType]").enable();
+                                NewServiceRequestObject.planFS.down("[name=otherService]").enable();
+                                NewServiceRequestObject.planFS.down("[name=InformationDesc]").disable();
+                            }
+                            else
+                            {
+                                console.log('Info');
+                                NewServiceRequestObject.planFS.down("[name=serviceType]").disable();
+                                NewServiceRequestObject.planFS.down("[name=otherService]").disable();
+                                NewServiceRequestObject.planFS.down("[name=InformationDesc]").enable();
+                            }
                         }
+                    },
+                    inputValue:'Service'
+
+                },
+                {
+                    xtype : "combo",
+                    store : new Ext.data.SimpleStore({
+                        proxy: {
+                            type: 'jsonp',
+                            url: this.address_prefix +'../../framework/person/persons.data.php?task=selectPersonInfoTypes&TypeID=96&PersonID='+ this.PersonID,
+                            reader: {root: 'rows',totalProperty: 'totalCount'}
+                        },
+                        /*fields : ['BranchID','BranchName'],*/
+                        fields : ['TypeID','InfoID','InfoDesc'],
+                        autoLoad : true
+                    }),
+                    fieldLabel : "نوع خدمت", /*new create*/
+                    queryMode : 'local',
+                    /*allowBlank : false,
+                    beforeLabelTextTpl: required,*/
+                    width : 350,
+                    displayField : "InfoDesc",
+                    valueField : "InfoDesc",
+                    name : "serviceType"
+                },{
+                    xtype : "textarea",
+                    fieldLabel : "شرح خدمت",
+                    name : "otherService",
+                    itemId : "otherService",
+                    width : 350
+                }
+                ,
+                {
+                    xtype: 'radio',
+                    name: 'IsInfoORService',
+                    boxLabel: 'درخواست اطلاعات',
+                    colspan : 2,
+                    width : 100,
+                    inputValue:'Info'
+
+                },{
+                    xtype : "textarea",
+                    fieldLabel : "شرح اطلاعات",
+                    name : "InformationDesc",
+                    itemId : "InformationDesc",
+                    disabled : true,
+                    width : 350
+                }
 			/*,{
 				xtype : "button",
 				disabled : this.AddAccess ? false : true,
@@ -166,7 +212,6 @@ function NewServiceRequest(){
                                 NewServiceRequestObject.planFS.getForm().reset();
                                 Ext.MessageBox.alert("Success", "عملیات مورد نظر با موفقیت شد");
                                 /*framework.CloseTab(NewAlterPersonObject.TabID);*/
-                                framework.OpenPage("request/RequestManage.php", "مدیریت درخواست ها", {MenuID : NewServiceRequestObject.MenuID});
                                 /*framework.OpenPage("plan/plan/PlanInfo.php", "جداول اطلاعاتی طرح", {
                                     MenuID : NewAlterPersonObject.MenuID,
                                     PlanID : result.data});*/

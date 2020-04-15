@@ -89,7 +89,7 @@ class request extends PdoDataAccess{
         select tTable.*, askerName, askerMob from 
 			(select fTable.*, concat_ws(' ',fname, lname,CompanyName) refername
 			 FROM (select f.*,
-				concat_ws(' ',fname, lname,CompanyName) fullname 
+				concat_ws(' ',fname, lname,CompanyName) fullname , mobile MobCustomer
 			from request f 
 				left join BSC_persons b using(PersonID)) AS fTable
 				left join BSC_persons b ON fTable.referPersonID = b.PersonID) AS tTable
