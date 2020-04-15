@@ -62,6 +62,16 @@ FolowUps.prototype.OpenObject = function(ObjectID, type){
 		case "package":
 			framework.OpenPage("/office/dms/packages.php", "مدیریت پرونده ها",{MenuID : 116});
 			break;
+        case "meetingRecord":
+            framework.OpenPage("/meeting/MeetingInfo.php", "اطلاعات جلسه",
+                {
+                    MeetingID : ObjectID,
+                    MenuID : 281
+                });
+            break;
+        case "request":
+            framework.OpenPage("/request/RequestInfo.php", "اطلاعات درخواست", {PersonID : ObjectID});
+            break;
 	}
 	
 }

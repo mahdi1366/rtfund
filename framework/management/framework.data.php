@@ -466,7 +466,21 @@ function SelectFollowUps(){
 		
 		select 'package' type, 'رویداد پرونده' title, PackageID, EventTitle
 		from DMS_PackageEvents 
-		where FollowUpDate= substr(" . PDONOW . ",1,10) AND FollowUpPersonID=:p"  
+		where FollowUpDate= substr(" . PDONOW . ",1,10) AND FollowUpPersonID=:p
+		union all
+		
+		select  'meetingRecord' type,'مصوبه' title, MeetingID ObjectID,
+		concat_ws(' ','[',subject,']',details) description
+		from MTG_MeetingRecords mr left join MTG_RecordExecutors  re using(RecordID) 
+		where re.PersonID=:p AND mr.FollowUpDate between CURDATE() and CURDATE() + INTERVAL 3 DAY 
+		
+		union all
+		
+		select  'request' type,'درخواست جدید' title, IDReq ObjectID,
+		IF(IsInfoORService='Service','درخواست خدمت','درخواست اطلاعات')  description
+		from request r 
+		where r.referPersonID=:p AND r.referalDate between CURDATE() - INTERVAL 1 DAY and CURDATE() 
+		"
 		
 	, array(":p" => $_SESSION["USER"]["PersonID"]));
 	
