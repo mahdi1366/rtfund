@@ -27,18 +27,18 @@ function MakeWhere(&$where, &$whereParam){
 
 	foreach($_POST as $key => $value)
 	{
-		if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" || 
+		if($key == "excel" || $key == "OrderBy" || $key == "OrderByDirection" ||
 				$value === "" || strpos($key, "combobox") !== false || strpos($key, "rpcmp") !== false ||
 				strpos($key, "reportcolumn_fld") !== false || strpos($key, "reportcolumn_ord") !== false)
 			continue;
-		
+
 		$prefix = "mr.";
-		
+
 		if($key == "fromFollowUpDate" || $key == "toFollowUpDate")
 			$value = DateModules::shamsi_to_miladi($value, "-");
 		if($key == "MeetingType" )
 			$prefix = "m.";
-		
+
 		if(strpos($key, "from") === 0)
 		{
 			$where .= " AND " . $prefix . substr($key,4) . " >= :$key";
@@ -51,33 +51,40 @@ function MakeWhere(&$where, &$whereParam){
 			$whereParam[":$key"] = $value;
 			continue;
 		}
-		else
-			$where .= " AND " . $prefix . $key . " like :$key";
-		$whereParam[":$key"] = "%" . $value . "%";
+		else{
+
+            if($key == "PersonID"){$where .= " AND " . $prefix . $key . " = :$key";
+                $whereParam[":$key"] = $value;}
+            else{$where .= " AND " . $prefix . $key . " like :$key";
+                $whereParam[":$key"] = "%" . $value . "%";
+            }
+        }
+
 	}
-}	
+}
 
 function GetData(){
 	$where = "";
 	$whereParam = array();
 	$userFields = ReportGenerator::UserDefinedFields();
 	MakeWhere($where, $whereParam);
-	
-	$query = "select mr.*,m.MeetingNo, b.InfoDesc MeetingTypeDesc,
-		concat_ws(' ',fname,lname,CompanyName) fullname" . 
+
+	$query = "select mr.*,m.MeetingNo, b.InfoDesc MeetingTypeDesc,op.PersonID,
+		concat_ws(' ',fname,lname,CompanyName) fullname" .
 		($userFields != "" ? "," . $userFields : "")."
 			from MTG_MeetingRecords mr 
 			join MTG_meetings m using(meetingID)
 			join BaseInfo b on(MeetingType=InfoID and TypeID=".TYPEID_MeetingType.")
-			left join BSC_persons p using(PersonID)
+			left JOIN MTG_RecordExecutors op on(mr.RecordID=op.RecordID)
+			left join BSC_persons p on(p.PersonID=op.PersonID)
 			where 1=1 " . $where ;
-	
+
 	$group = ReportGenerator::GetSelectedColumnsStr();
 	$query .= $group == "" ? " " : " group by " . $group;
 	$query .= $group == "" ? " order by FollowUpDate" : " order by " . $group;
-	
+
 	$dataTable = PdoDataAccess::runquery_fetchMode($query, $whereParam);
-	
+
 	if($_SESSION["USER"]["UserName"] == "admin")
 	{
 		//echo PdoDataAccess::GetLatestQueryString();
@@ -85,16 +92,16 @@ function GetData(){
 	}
 	return $dataTable;
 }
-	
+
 function ListDate($IsDashboard = false){
-	
+
 	$rpg = new ReportGenerator();
 	$rpg->excel = !empty($_POST["excel"]);
 	$rpg->mysql_resource = GetData();
-	
+
 	if($_SESSION["USER"]["UserName"] == "admin")
 		echo PdoDataAccess::GetLatestQueryString ();
-		
+
 	$rpg->addColumn("نوع جلسه", "MeetingTypeDesc");
 	$rpg->addColumn("شماره جلسه", "MeetingNo");
 	$rpg->addColumn("موضوع", "subject");
@@ -103,7 +110,7 @@ function ListDate($IsDashboard = false){
 	$rpg->addColumn("مسئول اجرا", "fullname");
 	$rpg->addColumn("تاریخ پیگیری", "FollowUpDate", "ReportDateRender");
 	$rpg->addColumn("وضعیت", "RecordStatus", "statusRender");
-	
+
 	if(!$rpg->excel && !$IsDashboard)
 	{
 		BeginReport();
@@ -112,7 +119,7 @@ function ListDate($IsDashboard = false){
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
 					گزارش مصوبات
 				</td>
-				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : " 
+				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>تاریخ تهیه گزارش : "
 			. DateModules::shNow() . "<br>";
 		if(!empty($_POST["fromFollowUpDate"]))
 		{
@@ -151,11 +158,11 @@ if(isset($_REQUEST["dashboard_show"]))
 {
 	$chart = ReportGenerator::DashboardSetParams($_REQUEST["rpcmp_ReportID"]);
 	if(!$chart)
-		ListDate(true);	
-	
+		ListDate(true);
+
 	$page_rpg->mysql_resource = GetData();
 	$page_rpg->GenerateChart(false, $_REQUEST["rpcmp_ReportID"]);
-	die();	
+	die();
 }
 ?>
 <script>
@@ -180,7 +187,7 @@ MeetingReport_records.prototype.showReport = function(btn, e)
 }
 
 function MeetingReport_records()
-{		
+{
 	this.formPanel = new Ext.form.Panel({
 		renderTo : this.get("main"),
 		frame : true,
@@ -280,12 +287,12 @@ function MeetingReport_records()
 			handler : function(){
 				MeetingReport_recordsObj.formPanel.getForm().reset();
 				MeetingReport_recordsObj.get("mainForm").reset();
-			}			
+			}
 		}]
 	});
-	
+
 	this.formPanel.getEl().addKeyListener(Ext.EventObject.ENTER, function(keynumber,e){
-		
+
 		MeetingReport_recordsObj.showReport();
 		e.preventDefault();
 		e.stopEvent();
