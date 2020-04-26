@@ -11,7 +11,7 @@ $RequsetID = $_REQUEST["RequestID"];
 
 $access = false;
 $obj = new LON_requests($RequsetID);
-if($_SESSION["USER"]["IsCustomer"] == "YES" && in_array($obj->StatusID, array("40","60")) )
+if($_SESSION["USER"]["IsCustomer"] == "YES" && in_array($obj->StatusID, array("40","60","70")) )
 	$access = true;
 if($_SESSION["USER"]["IsStaff"] == "YES" && $obj->StatusID != LON_REQ_STATUS_CONFIRM)
 	$access = true;
