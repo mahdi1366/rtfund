@@ -313,10 +313,14 @@ function DeleteBaseInfo(){
 
 function SelectDomainNodes(){
 
-	$dt = PdoDataAccess::runquery("
+	/*$dt = PdoDataAccess::runquery("
 		SELECT 
 			ParentID,DomainID id,DomainDesc as text,'true' as leaf, 'javascript:void(0)' href,d.*
-		FROM BSC_ActDomain d order by ParentID,DomainDesc");
+		FROM BSC_ActDomain d order by ParentID,DomainDesc");*/
+    $dt = PdoDataAccess::runquery("
+		SELECT 
+			ParentID,DomainID id,DomainDesc as text,'true' as leaf, 'javascript:void(0)' href,d.*
+		FROM BSC_ActDomain d where d.DomainID = 113 or d.ParentID = 113 order by ParentID,DomainDesc");
 
     $returnArray = array();
     $refArray = array();
