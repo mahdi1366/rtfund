@@ -189,9 +189,9 @@ if(isset($_REQUEST["show"]))
                 <td><?= $opInApproved  ?></td>
                 <td><?= $monthOpInApproved  ?></td>
                 <td><?= $performanceOpInApp  ?></td>
-                <td><?= $opInAppRealPerc  ?></td>
+                <td><?= $opInAppRealPerc  ?>%</td>
                 <td><?= $opInPrevision  ?></td>
-                <td><?= $PreToAppPercent  ?></td>
+                <td><?= $PreToAppPercent  ?>%</td>
             </tr>
             <tr>
                 <td>
@@ -201,9 +201,9 @@ if(isset($_REQUEST["show"]))
                 <td><?= $nonOpInApproved  ?></td>
                 <td><?= $monthNonOpInApproved  ?></td>
                 <td><?= $performanceNonOpInApp  ?></td>
-                <td><?= $nonOpInAppRealPerc  ?></td>
+                <td><?= $nonOpInAppRealPerc  ?>%</td>
                 <td><?= $nonOpInPrevision  ?></td>
-                <td><?= $NPreToAppPercent  ?></td>
+                <td><?= $NPreToAppPercent  ?>%</td>
             </tr>
             <tr>
                 <td>
@@ -213,9 +213,9 @@ if(isset($_REQUEST["show"]))
                 <td><?= $CostApproved  ?></td>
                 <td><?= $monthCostApproved  ?></td>
                 <td><?= $performanceCostPre  ?></td>
-                <td><?= $CostRealPerc  ?></td>
+                <td><?= $CostRealPerc  ?>%</td>
                 <td><?= $CostPrevision  ?></td>
-                <td><?= $CostPreToAppPercent  ?></td>
+                <td><?= $CostPreToAppPercent  ?>%</td>
             </tr>
             </tbody>
 
@@ -300,37 +300,37 @@ if(isset($_REQUEST["show"]))
                 hideTrigger : true,
                 width : 300,
                 name : "opInApproved",
-                fieldLabel : "مبلغ مصوب درآمد عملیاتی 98"
+                fieldLabel : "مبلغ مصوب درآمد عملیاتی سال"
             },{
                 xtype : "numberfield",
                 hideTrigger : true,
                 width : 300,
                 name : "opInPrevision",
-                fieldLabel : "مبلغ پیش بینی درآمد عملیاتی 99"
+                fieldLabel : "مبلغ پیش بینی درآمد عملیاتی سال آتی"
             },{
                 xtype : "numberfield",
                 hideTrigger : true,
                 width : 300,
                 name : "nonOpInApproved",
-                fieldLabel : "مبلغ مصوب درآمد غیر عملیاتی 98"
+                fieldLabel : "مبلغ مصوب درآمد غیر عملیاتی سال"
             },{
                 xtype : "numberfield",
                 hideTrigger : true,
                 width : 300,
                 name : "nonOpInPrevision",
-                fieldLabel : "مبلغ پیش بینی درآمد غیرعملیاتی 99"
+                fieldLabel : "مبلغ پیش بینی درآمد غیرعملیاتی سال آتی"
             },{
                 xtype : "numberfield",
                 hideTrigger : true,
                 width : 300,
                 name : "CostApproved",
-                fieldLabel : "مبلغ مصوب هزینه 98"
+                fieldLabel : "مبلغ مصوب هزینه سال"
             },{
                 xtype : "numberfield",
                 hideTrigger : true,
                 width : 300,
                 name : "CostPrevision",
-                fieldLabel : "مبلغ پیش بینی هزینه 99"
+                fieldLabel : "مبلغ پیش بینی هزینه سال آتی"
             }],
             buttons : [{
                 text : "مشاهده گزارش",
