@@ -187,12 +187,12 @@ if(isset($_REQUEST["show"]))
     <tr>
         <th style="background-color: rgb(189, 205, 229)" rowspan="8">اطلاعات قرارداد و متمم ها</th>
         <tr><th>موضوع طرح</th><td>  <?= $ReqObj->PlanTitle ?> </td></tr>
-    
-        <tr><th>شماره قرارداد</th><td> <?= $RequestID ?> </td>
-        <th>تاریخ قرارداد</th><td> <?= DateModules::miladi_to_shamsi($partObj->PartDate) ?> </td></tr>
-        
+
+        <tr><th>شماره وام</th><td> <?= $RequestID ?> </td>
+         <th>تاریخ پرداخت</th><td> <?= DateModules::miladi_to_shamsi($partObj->PartDate) ?> </td></tr>
+
         <tr><th>مبلغ تسهیلات پرداخت شده به ریال</th><td> <?= number_format($partObj->PartAmount) ?> </td>
-        <th>تاریخ پرداخت</th> <td> <?= DateModules::miladi_to_shamsi($partObj->PartDate) ?> </td></tr>
+        <th>مبلغ هر قسط</th> <td> <?= number_format($InstallmentsAmounts[0]['InstallmentAmount']) ?> </td></tr>
     
         <tr><th>مدت زمان تنفس</th><td> <?= $partObj->DelayMonths  ?>ماه و  <?= $partObj->DelayDays ?> روز </td>
         <th>تعداد اقساط</th> <td> <?= $partObj->InstallmentCount ?> </td></tr>
