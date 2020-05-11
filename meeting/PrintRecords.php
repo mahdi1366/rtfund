@@ -165,7 +165,7 @@ $absents = $absents->fetchAll();
                         <td><b>ساعت پایان: </b><?= substr($MeetingObj->EndTime,0,5) ?></td>
                     </tr>
                     <tr style="height:30px;">
-                        <td colspan="4"><b>مکان برگزاری: </b><?= $MeetingObj->place ?></td>
+                        <td colspan="4" style="text-align: right;padding-right: 35px;"><b>مکان برگزاری: </b><?= $MeetingObj->place ?></td>
                     </tr>
                 </table>
             </td>
