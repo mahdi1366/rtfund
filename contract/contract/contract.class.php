@@ -332,7 +332,7 @@ class CNT_contracts extends OperationClass {
 				}
 				return $returnStr;
 			//..................................................................
-			case "guarantors":
+			/*case "guarantors":
 				if($this->ContractType == "1")
 					$dt = PdoDataAccess::runquery("select * from LON_guarantors "
 					. "where RequestID=? AND PersonType='GUARANTOR'", array($this->LoanRequestID));
@@ -348,11 +348,44 @@ class CNT_contracts extends OperationClass {
 				else
 					$dt = PdoDataAccess::runquery("select * from WAR_guarantors "
 					. "where RequestID=? AND PersonType='SPONSOR'", array($this->WarrentyRequestID));
-				break;
-			//..................................................................
+				break;*/
+            case "guarantors":
+                if($this->ContractType == "1"){
+                    $dt = PdoDataAccess::runquery("select * from LON_guarantors "
+                        . "where RequestID=? AND PersonType='GUARANTOR' AND FormType=1", array($this->LoanRequestID));
+
+                    $dts = PdoDataAccess::runquery("select * from LON_guarantors "
+                        . "where RequestID=? AND PersonType='GUARANTOR' AND FormType=2", array($this->LoanRequestID));
+                }else{
+                    $dt = PdoDataAccess::runquery("select * from WAR_guarantors "
+                        . "where RequestID=? AND PersonType='GUARANTOR' AND FormType=1", array($this->WarrentyRequestID));
+
+                    $dts = PdoDataAccess::runquery("select * from WAR_guarantors "
+                        . "where RequestID=? AND PersonType='GUARANTOR' AND FormType=2", array($this->WarrentyRequestID));
+                }
+                break;
+            //..................................................................
+            case "sponsors":
+                if($this->ContractType == "1"){
+                    $dt = PdoDataAccess::runquery("select * from LON_guarantors "
+                        . "where RequestID=? AND PersonType='SPONSOR' AND FormType=1", array($this->LoanRequestID));
+                    $dts = PdoDataAccess::runquery("select * from LON_guarantors "
+                        . "where RequestID=? AND PersonType='SPONSOR' AND FormType=2", array($this->LoanRequestID));
+                }
+
+                else{
+                    $dt = PdoDataAccess::runquery("select * from WAR_guarantors "
+                        . "where RequestID=? AND PersonType='SPONSOR' AND FormType=1", array($this->WarrentyRequestID));
+                    $dts = PdoDataAccess::runquery("select * from WAR_guarantors "
+                        . "where RequestID=? AND PersonType='SPONSOR' AND FormType=2", array($this->WarrentyRequestID));
+                }
+
+                break;
+
+            //..................................................................
 		}
 		
-		if(count($dt) == 0)
+		/*if(count($dt) == 0)
 			return "";
 		$returnStr = "<table width=100% border=1 style=border-collapse:collapse>
 			<tr>
@@ -380,7 +413,70 @@ class CNT_contracts extends OperationClass {
 				<td>" . $row["address"] . "</td>
 			</tr>";
 		}				
-		return $returnStr . "</table>";
+		return $returnStr . "</table>";*/
+		if (isset($dt) && !empty($dt)){
+            $returnStr = "<table width=100% border=1 style=border-collapse:collapse>
+               <caption>حقیقی</caption>
+			<tr>
+				<td>نام و نام خانوادگی</td>
+				<td>نام پدر</td>
+				<td>کد ملی</td>
+				<td>شماره شناسنامه</td>
+				<td>تاریخ تولد</td>
+				<td>محل تولد</td>
+				<td>تلفن ثابت</td>
+				<td>تلفن همراه</td>
+				<td>آدرس</td>
+			</tr>
+		";
+            foreach($dt as $row){
+                    $returnStr .= "<tr>
+				<td>" . ($row["sex"] == "MALE" ? "آقای " : "خانم ") . $row["fullname"] . "</td>
+				<td>" . $row["father"] . "</td>
+				<td>" . $row["NationalCode"] . "</td>
+				<td>" . $row["ShNo"] . "</td>
+				<td>" . DateModules::miladi_to_shamsi($row["BirthDate"]) . "</td>
+				<td>" . $row["ShCity"] . "</td>
+				<td>" . $row["phone"] . "</td>
+				<td>" . $row["mobile"] . "</td>
+				<td>" . $row["address"] . "</td>
+			</tr>";
+            }
+            $returnStr = $returnStr . "</table>";
+		}
+		if (isset($dts) && !empty($dts)){
+            $returnStr .= "<table width=100% border=1 style=border-collapse:collapse>
+                 <caption>حقوقی</caption>
+                <tr>
+                    <td>نام شرکت</td>
+                    <td>شماره ثبت</td>
+                  <td>شناسه ملی</td>
+            <td>کد اقتصادی</td>
+            <td>تاریخ روزنامه</td>
+            <td>شماره آگهی روزنامه</td>
+            <td>تلفن ثابت</td>
+            <td>موبایل مدیرعامل</td>
+            <td>آدرس</td>
+                </tr>
+            ";
+            foreach($dts as $row){
+                $returnStr .= "<tr>
+                    <td>" . $row["fullname"] . "</td>
+            <td>" . $row["ShNo"] . "</td>
+            <td>" . $row["NationalCode"] . "</td>
+            <td>" . $row["EconomicID"] . "</td>
+            <td>" . DateModules::miladi_to_shamsi($row["BirthDate"]) . "</td>
+            <td>" . $row["NewspaperAdsNum"] . "</td>
+            <td>" . $row["phone"] . "</td>
+            <td>" . $row["mobile"] . "</td>
+            <td>" . $row["address"] . "</td>
+                </tr>";
+            }
+            $returnStr = $returnStr . "</table>";
+
+		}
+		return $returnStr;
+
 	}
 	
 	public function Remove()

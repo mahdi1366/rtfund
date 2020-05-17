@@ -447,7 +447,8 @@ function SavePrintSetting(){
 
 function GetGuarantors(){
 	
-	$temp = WAR_guarantors::Get("AND RequestID=?", array($_REQUEST["RequestID"]));
+	/*$temp = WAR_guarantors::Get("AND RequestID=?", array($_REQUEST["RequestID"]));*/
+    $temp = WAR_guarantors::Get("AND FormType=? AND RequestID=?", array($_REQUEST["FormType"],$_REQUEST["RequestID"]));
 	$res = $temp->fetchAll();
 	echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
 	die();
