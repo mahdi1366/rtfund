@@ -1012,8 +1012,9 @@ function SelectReadyToPayParts($returnCount = false){
 
 function SelectReceivedRequests($returnCount = false){
 	
-	$where = "StatusID in (10,50)";
-	 
+	/*$where = "StatusID in (10,50)";*/
+    $where = "StatusID in (80,90)";
+
 	$branches = FRW_access::GetAccessBranches();
 	$where .= " AND BranchID in(" . implode(",", $branches) . ")";
 	
