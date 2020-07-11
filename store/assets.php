@@ -29,6 +29,13 @@ $col->width = 100;
 
 $col = $dg->addColumn("جزئیات", "details");
 
+
+$col = $dg->addColumn("دوره نت پيشگيرانه", "NetPeriod");
+$col->width = 100;
+
+$col = $dg->addColumn("نحوه نت پيشگيرانه", "NetMethod");
+
+
 $col = $dg->addColumn("تاریخ خرید", "BuyDate", GridColumn::ColumnType_date);
 $col->width = 100;
 
@@ -276,6 +283,14 @@ function STO_Asset(){
 			layout : "column",
 			columns : 2
 		},{
+            xtype : "textfield",
+            fieldLabel : "دوره نت پيشگيرانه",
+            name : "NetPeriod"
+        },{
+            xtype : "textfield",
+            name : "NetMethod",
+            fieldLabel : "نحوه نت پيشگيرانه"
+        },{
 			xtype : "textarea",
 			name : "details",
 			fieldLabel : "جزئیات",

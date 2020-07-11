@@ -72,6 +72,8 @@ class STO_Assets extends OperationClass {
     public $details;
     public $BuyDate;
     public $StatusID;
+    public $NetPeriod; //new added
+    public $NetMethod; //new added
 
     function __construct($AssetID = "") {
 	
