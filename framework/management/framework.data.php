@@ -480,6 +480,13 @@ function SelectFollowUps(){
 		IF(IsInfoORService='Service','درخواست خدمت','درخواست اطلاعات')  description
 		from request r 
 		where r.referPersonID=:p AND r.referalDate between CURDATE() - INTERVAL 1 DAY and CURDATE() 
+		
+		union all
+
+                select 'asset' type, (case when(actionType = 1) then 'نت پیشگیرانه' else 'نت موردی' end) as title, 
+                eventID ObjectID, FollowUpDesc description
+                from STO_AssetEvent ae
+                where ae.FollowUpPID=:p AND ae.FollowUpDate between CURDATE() and CURDATE() + INTERVAL 3 DAY
 		"
 		
 	, array(":p" => $_SESSION["USER"]["PersonID"]));
