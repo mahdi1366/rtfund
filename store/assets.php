@@ -341,7 +341,14 @@ STO_Asset.prototype.OperationMenu = function(e){
 		op_menu.add({text: 'اطلاعات اموال',iconCls: 'info', 
 			handler : function(){ return STO_AssetObject.InfoAsset(); }});
 	}
-	
+
+    //new added
+    op_menu.add({text: 'رويدادها',iconCls: 'task',
+        handler : function(){ return STO_AssetObject.ShowEvents(); }});
+    op_menu.add({text: 'برنامه نت',iconCls: 'process',
+        handler : function(){ return STO_AssetObject.ShowNets(); }});
+    //end new added
+
 	if(this.EditAccess && record.data.StatusID == "<?= WAR_STEPID_CONFIRM ?>")
 	{
 		
@@ -509,6 +516,87 @@ STO_Asset.prototype.SaveAsset = function(){
 		}
 	});
 }
+
+//new added
+STO_Asset.prototype.ShowEvents = function(){
+
+    if(!this.EventsWin)
+    {
+        this.EventsWin = new Ext.window.Window({
+            title: 'رویدادهای مرتبط با اموال',
+            modal : true,
+            autoScroll : true,
+            width: 1000,
+            height : 400,
+            bodyStyle : "background-color:white",
+            closeAction : "hide",
+            loader : {
+                url : this.address_prefix + "events.php",
+                scripts : true
+            },
+            buttons : [{
+                text : "بازگشت",
+                iconCls : "undo",
+                handler : function(){
+                    this.up('window').hide();
+                }
+            }]
+        });
+        Ext.getCmp(this.TabID).add(this.EventsWin);
+    }
+    this.EventsWin.show();
+    this.EventsWin.center();
+    record = this.grid.getSelectionModel().getLastSelected();
+    this.EventsWin.loader.load({
+        params : {
+            ExtTabID : this.EventsWin.getEl().id,
+            AssetID : record.data.AssetID,
+            MenuID : this.MenuID
+        }
+    });
+    this.get("excel").value = "";
+}
+
+STO_Asset.prototype.ShowNets = function(){
+
+    if(!this.NetsWin)
+    {
+        this.NetsWin = new Ext.window.Window({
+            title: 'برنامه نگهداری و تعمیرات',
+            modal : true,
+            autoScroll : true,
+            width: 600,
+            height : 400,
+            bodyStyle : "background-color:white",
+            closeAction : "hide",
+            loader : {
+                url : this.address_prefix + "nets.php",
+                scripts : true
+            },
+            buttons : [{
+                text : "بازگشت",
+                iconCls : "undo",
+                handler : function(){
+                    this.up('window').hide();
+                }
+            }]
+        });
+        Ext.getCmp(this.TabID).add(this.NetsWin);
+    }
+    this.NetsWin.show();
+    this.NetsWin.center();
+    record = this.grid.getSelectionModel().getLastSelected();
+    this.NetsWin.loader.load({
+        params : {
+            ExtTabID : this.NetsWin.getEl().id,
+            AssetID : record.data.AssetID,
+            MenuID : this.MenuID
+        }
+    });
+    this.get("excel").value = "";
+}
+
+//end new added
 
 STO_Asset.prototype.Documents = function(ObjectType){
 
