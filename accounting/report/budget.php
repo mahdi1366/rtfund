@@ -44,39 +44,95 @@ if(isset($_REQUEST["show"]))
     $diff=$datetime1->diff($datetime2);
     $diffDateSign = $diff->format('%R');
     $diffDate = $diff->format('%a');
+    $diffDate = (isset($_POST["fromDate"]) && !empty($_POST["fromDate"]) && isset($_POST["fromDate"]) && !empty($_POST["fromDate"]))? $diffDate : 365; //new added
+
+    // new calculate
+    $ParentIDOpIn = [87]; //daramde amaliyati
+    $ParentIDnOpIn = [88];  //daramde gheyre amaliyati
+    $ParentIDCost = [26,40,50,54,69,72,81,84];  //hazine
+
+    $queryLoc="select b.ParentID, ba.*
+		from acc_budgetapproved ba 
+		left JOIN acc_budgets b ON(b.BudgetID=ba.BudgetID) 
+			where ba.CycleID=? AND b.ParentID =?";
+
+    $totalOpInApp=0;
+    $totalOpInPre=0;
+    foreach ($ParentIDOpIn as $dtLoc){
+        $OpIn = PdoDataAccess::runquery($queryLoc,array($CycleID,$dtLoc));
+        $appAmount=0;
+        $PreAmount=0;
+        foreach ($OpIn as $item){
+            $appAmount+= $item['approvedAmount'];
+            $PreAmount+= $item['PrevisionAmount'];
+        }
+        $totalOpInApp+= $appAmount;
+        $totalOpInPre+= $PreAmount;
+    }
+
+    $totalnOpInApp=0;
+    $totalnOpInPre=0;
+    foreach ($ParentIDnOpIn as $dtLoc){
+        $nOpIn = PdoDataAccess::runquery($queryLoc,array($CycleID,$dtLoc));
+        $appAmount=0;
+        $PreAmount=0;
+        foreach ($nOpIn as $item){
+            $appAmount+= $item['approvedAmount'];
+            $PreAmount+= $item['PrevisionAmount'];
+        }
+        $totalnOpInApp+= $appAmount;
+        $totalnOpInPre+= $PreAmount;
+    }
+
+    $totalCostApp=0;
+    $totalCostPre=0;
+    foreach ($ParentIDCost as $dtLoc){
+        $cost = PdoDataAccess::runquery($queryLoc,array($CycleID,$dtLoc));
+        $appAmount=0;
+        $PreAmount=0;
+        foreach ($cost as $item){
+            $appAmount+= $item['approvedAmount'];
+            $PreAmount+= $item['PrevisionAmount'];
+        }
+        $totalCostApp+= $appAmount;
+        $totalCostPre+= $PreAmount;
+
+    }
+    // end new calculate
+
 
     // daramade amaliyati
-    $opInApproved = $_POST["opInApproved"];  //mablaghe mosavab
+    $opInApproved = $totalOpInApp;  //mablaghe mosavab new Editted
     $monthOpInApproved = $opInApproved*$diffDate/365;
     $monthOpInApproved = number_format($monthOpInApproved, 0);
     $performanceOpInApp = number_format($dt[0]['CreditorAmount']-$dt[0]['DebtorAmount']);
     $opInAppRealPerc = $performanceOpInApp/$monthOpInApproved*100;
     $opInAppRealPerc = number_format($opInAppRealPerc,2);
-    $opInPrevision = $_POST["opInPrevision"];  //mablaghe pishbini
+    $opInPrevision = $totalOpInPre;  //mablaghe pishbini new Editted
     $monthOpInPrevision = $opInPrevision*$diffDate/365;
     $PreToAppPercent=$monthOpInPrevision/$performanceOpInApp*100;
     $PreToAppPercent = number_format($PreToAppPercent,2);
 
     // daramade gheyre amaliyati
-    $nonOpInApproved = $_POST["nonOpInApproved"];   //mablaghe mosavab
+    $nonOpInApproved = $totalnOpInApp;   //mablaghe mosavab new Editted
     $monthNonOpInApproved = ($nonOpInApproved*$diffDate)/365;
     $monthNonOpInApproved = number_format($monthNonOpInApproved, 0);
     $performanceNonOpInApp = number_format($dt[1]['CreditorAmount']-$dt[1]['DebtorAmount']);
     $nonOpInAppRealPerc = ($performanceNonOpInApp/$monthNonOpInApproved)*100;
     $nonOpInAppRealPerc = number_format($nonOpInAppRealPerc, 2);
-    $nonOpInPrevision = $_POST["nonOpInPrevision"];   //mablaghe pishbini
+    $nonOpInPrevision = $totalnOpInPre;   //mablaghe pishbini new Editted
     $monthNonOpInPrevision = ($nonOpInPrevision*$diffDate)/365;
     $NPreToAppPercent=($monthNonOpInPrevision/$performanceNonOpInApp)*100;
     $NPreToAppPercent = number_format($NPreToAppPercent, 2);
 
     // hazine amaliyati
-    $CostApproved = $_POST["CostApproved"];   //mablaghe mosavab
+    $CostApproved = $totalCostApp;   //mablaghe mosavab new Editted
     $monthCostApproved = $CostApproved*$diffDate/365;
     $monthCostApproved = number_format($monthCostApproved, 0);
     $performanceCostPre = number_format($dt[2]['DebtorAmount']-$dt[2]['CreditorAmount']);
     $CostRealPerc = $performanceCostPre/$monthCostApproved*100;
     $CostRealPerc = number_format($CostRealPerc,2);
-    $CostPrevision = $_POST["CostPrevision"];   //mablaghe pishbini
+    $CostPrevision = $totalCostPre;   //mablaghe pishbini new Editted
     $monthCostPrevision = $CostPrevision*$diffDate/365;
     $CostPreToAppPercent=$monthCostPrevision/$performanceCostPre*100;
     $CostPreToAppPercent=number_format($CostPreToAppPercent,2);
@@ -295,7 +351,7 @@ if(isset($_REQUEST["show"]))
                 name : "toDate",
                 width : 300,
                 fieldLabel : "تا تاریخ"
-            },{
+            }/*,{
                 xtype : "numberfield",
                 hideTrigger : true,
                 width : 300,
@@ -331,7 +387,7 @@ if(isset($_REQUEST["show"]))
                 width : 300,
                 name : "CostPrevision",
                 fieldLabel : "مبلغ پیش بینی هزینه سال آتی"
-            }],
+            }*/],
             buttons : [{
                 text : "مشاهده گزارش",
                 handler : Ext.bind(this.showReport,this),
