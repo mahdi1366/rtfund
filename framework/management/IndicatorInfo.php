@@ -12,7 +12,6 @@ $IndicatorTypeID = !empty($_POST["IndicatorTypeID"]) ? $_POST["IndicatorTypeID"]
 $IndexObj = new FRW_indicator($indexID);
 $IndicatorType = $IndexObj->indexType;
 
-
 //................  GET ACCESS  .....................
 if(isset($_POST["MenuID"]))
 	$accessObj = FRW_access::GetAccess($_POST["MenuID"]);
