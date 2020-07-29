@@ -90,6 +90,9 @@ $dg->addObject("this.deletedBtnObj");
 if($mode == "receive")
 {
 	$dg->addButton("", "خوانده نشده", "view", "function(){MyLetterObject.UnSeen();}");
+    $dg->addButton("", "گروهی خوانده نشده","view", "function(){MyLetterObject.GroupUnSeen();}"); //new added
+    $dg->addButton("", "گروهی خوانده شده","tick", "function(){MyLetterObject.GroupSeen();}"); //new added
+
 	$dg->addButton("", "امضاء گروهی", "sign", "function(){MyLetterObject.GroupSignLetter();}");
 	$dg->addButton("", "ارجاع گروهی", "sendLetter", "function(){MyLetterObject.SendLetter(true);}");
 	$dg->addButton("", "حذف گروهی", "remove", "function(){MyLetterObject.GroupDeleteSend();}");
@@ -557,6 +560,68 @@ MyLetter.prototype.UnSeen = function(){
 		}
 	})
 }
+
+// new added
+MyLetter.prototype.GroupSeen = function(){
+    record = this.grid.getSelectionModel().getLastSelected();
+    if(!record)
+    {
+        Ext.MessageBox.alert("","ابتدا ردیف مورد نظر را انتخاب کنید");
+        return;
+    }
+
+    mask = new Ext.LoadMask(Ext.getCmp
+    (this.TabID),{msg:'در حال ذخیره سازی ...'});
+    mask.show();
+
+    Ext.Ajax.request({
+        url : this.address_prefix +"letter.data.php?task=GroupSeenSend",
+        form : me.get("mainForm"),
+        method : "post",
+
+        success : function(response){
+            mask.hide();
+            result = Ext.decode(response.responseText);
+            if(result.success)
+                MyLetterObject.grid.getStore().load();
+            else
+            {
+                Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+            }
+        }
+    })
+}
+MyLetter.prototype.GroupUnSeen =
+    function(){
+
+        record = this.grid.getSelectionModel().getLastSelected();
+        if(!record)
+        {
+            Ext.MessageBox.alert("","ابتدا ردیف مورد نظر را انتخاب کنید");
+            return;
+        }
+
+        mask = new Ext.LoadMask(Ext.getCmp(this.TabID),{msg:'در حال ذخیره سازی ...'});
+        mask.show();
+
+        Ext.Ajax.request({
+            url : this.address_prefix +"letter.data.php?task=GroupUnSeenSend",
+            form : me.get("mainForm"),
+            method : "post",
+
+            success : function(response){
+                mask.hide();
+                result = Ext.decode(response.responseText);
+                if(result.success)
+                    MyLetterObject.grid.getStore().load();
+                else
+                {
+                    Ext.MessageBox.alert ("Error", "عملیات مورد نظر با شکست مواجه شد");
+                }
+            }
+        })
+    }
+// end new added
 
 MyLetter.prototype.GroupDeleteSend = function(){
 	

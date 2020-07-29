@@ -777,6 +777,49 @@ function GroupDeleteSend(){
 	die();
 }
 
+//add new function for seen or unseen select group
+function GroupUnSeenSend(){
+
+    foreach($_POST as $key=>$val)
+    {
+        if(strpos($key, "chk_") !== false)
+        {
+            $SendID = preg_replace("/chk_/", "", $key);
+            $obj = new OFC_send($SendID);
+            if($obj->ToPersonID == $_SESSION["USER"]["PersonID"])
+            {
+                $obj->IsSeen = "NO";
+                $result = $obj->EditSend();
+            }
+        }
+    }
+
+    echo Response::createObjectiveResponse($result, "");
+    die();
+}
+function GroupSeenSend(){
+
+    foreach($_POST as $key=>$val)
+    {
+        if(strpos($key, "chk_") !== false)
+        {
+            $SendID = preg_replace("/chk_/", "", $key);
+            $obj = new OFC_send($SendID);
+            if($obj->ToPersonID == $_SESSION["USER"]["PersonID"])
+            {
+                $obj->IsSeen = "YES";
+                $result = $obj->EditSend();
+            }
+        }
+    }
+
+    echo Response::createObjectiveResponse($result, "");
+    die();
+}
+//end add new function for seen or unseen select group
+
+
+
 function DeleteSender(){
 	
 	$mode = $_POST["mode"];
