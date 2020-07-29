@@ -1,6 +1,7 @@
 <?php
 //-----------------------------
-//	Date		: 1397.11
+//  m.mokhtari
+//	Date		: 1399.05
 //-----------------------------
 
 require_once '../../header.inc.php';
@@ -47,9 +48,6 @@ $grid = $dg->makeGrid_returnObjects();
 </form>
 
 <script>
-    //-----------------------------
-    //	Date		: 1397.11
-    //-----------------------------
 
     Indicators.prototype = {
         TabID : '<?= $_REQUEST["ExtTabID"]?>',
