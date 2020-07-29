@@ -128,6 +128,90 @@ function SelectPersonAndGroups(){
 	echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
 	die();
 }
+
+//--------------------------------------------------
+//add new
+function selectIndicatorTypes(){
+    $dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=104 AND IsActive='YES' order by InfoID");
+    echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+    die();
+}
+
+function SelectAllIndicators(){
+    $param = array();
+    $where = "";
+
+    if(!empty($_REQUEST["indexID"]))
+    {
+        $where .= " AND indexID=:m";
+        $param[":m"] = $_REQUEST["indexID"]*1;
+    }
+
+    if(!empty($_REQUEST["param1"]))
+    {
+        $where .= " AND b2.param1=:p";
+        $param[":p"] = $_REQUEST["param1"];
+    }
+    else if(!empty($_REQUEST["indexType"]))
+    {
+        $where .= " AND indexType=:mt";
+        $param[":mt"] = $_REQUEST["indexType"]*1;
+    }
+
+
+
+    if (!empty($_REQUEST['fields']) && !empty($_REQUEST['query'])) {
+        $field = $_REQUEST['fields'];
+        $field = $field == "indexTypeDesc" ? "b2.InfoDesc" : $field;
+
+        $where .= ' and ' . $field . ' like :fld';
+        $param[':fld'] = '%' . $_REQUEST['query'] . '%';
+    }
+
+    $where .= dataReader::makeOrder();
+    $dt = FRW_indicator::Get($where, $param);
+    //print_r(ExceptionHandler::PopAllExceptions());
+    //echo PdoDataAccess::GetLatestQueryString();
+    $count = $dt->rowCount();
+    $dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+    echo dataReader::getJsonData($dt, $count, $_GET["callback"]);
+    die();
+}
+
+function SaveIndicator(){
+
+    $obj = new FRW_indicator();
+    pdoDataAccess::FillObjectByArray($obj, $_POST);
+    $pdo = PdoDataAccess::getPdoObject();
+    $pdo->beginTransaction();
+
+    if ($obj->indexID == '')
+    {
+        $res = $obj->Add($pdo);
+    }
+    else{
+        $res = $obj->Edit($pdo);
+    }
+
+
+    if($res)
+        $pdo->commit();
+    else
+        $pdo->rollBack();
+    //print_r(ExceptionHandler::PopAllExceptions());
+    Response::createObjectiveResponse($res, $res ? "{indexID:" . $obj->indexID . ",indexType:" . $obj->indexType . "}" : "");
+    die();
+
+}
+
+function DeleteIndicator(){
+
+    $obj = new FRW_indicator($_POST["indexID"]);
+    $result = $obj->Remove();
+    echo Response::createObjectiveResponse($result, "");
+    die();
+}
+//end new added
 //--------------------------------------------------
 
 function selectAccess(){
