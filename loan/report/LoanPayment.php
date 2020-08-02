@@ -208,6 +208,11 @@ if(isset($_REQUEST["show"]))
 			</td>
 			<td>
 				<table >
+                    <tr>
+                        <td>نوع وام :  </td>
+                        <td><b><?= $ReqObj->_LoanDesc ?>
+                            </b></td>
+                    </tr>
 					<tr>
 						<td>مبلغ وام :  </td>
 						<td><b><?= number_format($partObj->PartAmount) ?> ریال
