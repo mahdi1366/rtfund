@@ -137,6 +137,29 @@ function selectIndicatorTypes(){
     die();
 }
 
+/*function selectIndexypes(){
+    $dt = PdoDataAccess::runquery("select * , IF(param1 != '', param2, InfoDesc) descInfo from
+  BaseInfo where typeID=104 AND IsActive='YES' group by param1 order by InfoID");
+    echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+    die();
+}
+function selectSubIndexType(){
+	$groupID = '';
+	if (isset($_REQUEST["groupID"])){
+        $groupID = $_REQUEST["groupID"];
+	}
+    $dts = PdoDataAccess::runquery("select param1 from
+  BaseInfo where typeID=104 AND IsActive='YES' AND InfoID=? order by InfoID",$groupID);
+    $param1=$dts[0][0];
+    if ($param1 != ''){
+        $dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=104 AND IsActive='YES' AND param1=? order by InfoID",$param1);
+	}else{
+        $dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=104 AND IsActive='YES' AND InfoID=? order by InfoID",$groupID);
+	}
+    echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+    die();
+}*/
+
 function SelectAllIndicators(){
     $param = array();
     $where = "";

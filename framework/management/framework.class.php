@@ -289,7 +289,7 @@ class FRW_indicator extends OperationClass {
 
         return parent::runquery_fetchMode("
 			select m.*,
-				b2.InfoDesc indexTypeDesc
+				b2.InfoDesc indexTypeDesc, b2.param3 indexConcept, b2.param1, b2.InfoID indexSubType
 			from FRW_indicator m
 			join BaseInfo b2 on(b2.TypeID=104 AND b2.InfoID=indexType)
 			where 1=1 " . $where, $whereParams);

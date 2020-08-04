@@ -55,7 +55,8 @@ function IndicatorInfo(){
 			url: this.address_prefix + "framework.data.php?task=SelectAllIndicators&indexID=" + this.indexID,
 			reader: {root: 'rows',totalProperty: 'totalCount'}
 		},
-		fields : ["indexID","indexType","indexTypeDesc","indexName","indexDesc","measurConcept","measurPeriod","measurTimePeriod","optDirection"],
+		fields : ["indexID","indexType","indexTypeDesc","indexName","indexDesc","measurConcept","measurPeriod",
+                  "measurTimePeriod","optDirection","param1","indexSubType"],
 		
 		listeners : {
 			load : function(){
@@ -96,39 +97,54 @@ IndicatorInfo.prototype.BuildForms = function(){
 		autoHeight: true,
 		plain:true,
 		items :[{
-			title : "اطلاعات شاخص",
-			items : this.MeetingPanel = new Ext.form.Panel({
-				border : false,
-				layout : {
-					type : "table",
-					columns : 2
-				},
-				defaults : {
-					labelWidth : 110,
-                    style : "margin-top:10px",
-					width : 370
-				},
-
-				width: 780,
-				items : [{
-					xtype : "combo",
-					readOnly : readOnly,
-					name : "indexType",
-					store: new Ext.data.Store({
-						proxy:{
-							type: 'jsonp',
-							url: this.address_prefix + 'framework.data.php?task=selectIndicatorTypes',
-							reader: {root: 'rows',totalProperty: 'totalCount'}
-						},
-						fields :  ['InfoID','InfoDesc'],
-						autoLoad : true
-					}),
-					fieldLabel : "نوع شاخص",
-					queryMode : "local",
-					displayField: 'InfoDesc',
-					valueField : "InfoID",
-					allowBlank : false
-				},{
+            xtype : "combo",
+            /*readOnly : readOnly,*/
+            name : "indexType",
+            store: new Ext.data.Store({
+                proxy:{
+                    type: 'jsonp',
+                    url: this.address_prefix + 'framework.data.php?task=selectIndicatorTypes',
+                    reader: {root: 'rows',totalProperty: 'totalCount'}
+                },
+                fields :  ['InfoID','InfoDesc','param1','param2','descInfo'],
+                autoLoad : true
+            }),
+            fieldLabel : "گروه شاخص",
+            queryMode : "local",
+            displayField: 'param2',
+            valueField : "InfoID",
+            allowBlank : false,
+            itemId : "indexGroup",
+            listeners :{
+                change : function(){
+                    IndicatorInfoObject.TabPanel.down("[name=indexSubType]").setValue("");
+                },
+                select : function(record){
+                    el = IndicatorInfoObject.TabPanel.down("[itemId=indexSubGroup]");
+                    el.getStore().proxy.extraParams["groupID"] = this.getValue();
+                    el.getStore().load();
+                }
+            }
+        },{
+            xtype : "combo",
+            /*readOnly : readOnly,*/
+            name : "indexSubType",
+            store: new Ext.data.Store({
+                proxy:{
+                    type: 'jsonp',
+                    url: this.address_prefix + 'framework.data.php?task=selectIndicatorTypes',
+                    reader: {root: 'rows',totalProperty: 'totalCount'}
+                },
+                fields :  ['InfoID','InfoDesc','param1','param2','descInfo'],
+                autoLoad : true
+            }),
+            fieldLabel : "زیرگروه شاخص",
+            queryMode : "local",
+            displayField: 'InfoDesc',
+            valueField : "InfoID",
+            allowBlank : false,
+            itemId : "indexSubGroup",
+        },{
 					xtype : "textfield",
                     readOnly : readOnly,
 					fieldLabel : "نام شاخص",
