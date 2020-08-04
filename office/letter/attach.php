@@ -17,7 +17,7 @@ $LetterObj = new OFC_letters($LetterID);
 
 $AddAccess = true;
 $DelAccess = true;
-$DelAccess = $LetterObj->IsSigned == "YES" ? false : true;
+/*$DelAccess = $LetterObj->IsSigned == "YES" ? false : true;*/
 $DelAccess = $SendID != "0" ? true : $DelAccess;
 $AddAccess = session::IsPortal() ? false : $AddAccess;
 
