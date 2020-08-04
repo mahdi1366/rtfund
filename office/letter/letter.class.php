@@ -490,10 +490,12 @@ class OFC_LetterNotes extends OperationClass{
 	public $NoteDesc;
 	public $ReminderDate;
 	public $IsSeen;
+    public $createDate; // new added
 	
 	public function __construct($id = '') {
 		
 		$this->DT_ReminderDate = DataMember::CreateDMA(DataMember::DT_DATE);		
+		$this->DT_createDate = DataMember::CreateDMA(DataMember::DT_DATE);		// new added
 		parent::__construct($id);
 	}
 	

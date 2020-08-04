@@ -1040,9 +1040,11 @@ function SaveLetterNote(){
 	$obj = new OFC_LetterNotes();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
 	$obj->PersonID = $_SESSION["USER"]["PersonID"];
-	
-	if($obj->NoteID == "")
-		$result = $obj->Add();
+
+    if($obj->NoteID == ""){
+        $obj->createDate = PDONOW;
+        $result = $obj->Add();
+    }
 	else
 		$result = $obj->Edit();
 	
