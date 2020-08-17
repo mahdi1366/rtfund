@@ -136,7 +136,20 @@ function selectIndicatorTypes(){
     echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
     die();
 }
-
+function selectIndicatorTypes1(){
+    $dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=104 AND IsActive='YES' group by param1");
+    echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+    die();
+}
+function selectIndicatorTypes2(){
+    $InfoID= (isset($_REQUEST["InfoID"])) ? $_REQUEST["InfoID"] : '';
+    $dt1 = PdoDataAccess::runquery("select param1 from BaseInfo where typeID=104 AND IsActive='YES' AND InfoID=?",$InfoID);
+    $param1 = $dt1[0]['param1'];
+    $dt2 = PdoDataAccess::runquery("select * from BaseInfo where typeID=104 AND IsActive='YES' AND param1=? order by InfoID",$param1);
+    $dt = PdoDataAccess::runquery("select * from BaseInfo where typeID=104 AND IsActive='YES' AND param1=? order by InfoID",$InfoID);
+    echo dataReader::getJsonData($dt2, count($dt2), $_GET["callback"]);
+    die();
+}
 /*function selectIndexypes(){
     $dt = PdoDataAccess::runquery("select * , IF(param1 != '', param2, InfoDesc) descInfo from
   BaseInfo where typeID=104 AND IsActive='YES' group by param1 order by InfoID");
