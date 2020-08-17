@@ -24,11 +24,11 @@ function ListDate(){
 				left join BSC_branches using(BranchID)
 				left join BSC_persons p using(PersonID)
 				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
-			where PersonID=" . $personid;
+			where StatusID != 100 AND PersonID=" . $personid;
 
     $query2 = "select r.* 
 			from LON_requests r 
-			where LoanPersonID=" . $personid;
+			where (StatusID=70 OR StatusID=95 OR StatusID=101) AND LoanPersonID=" . $personid;
     $temp0 = PdoDataAccess::runquery($query0);
     $temp1 = PdoDataAccess::runquery($query1);
     $temp2 = PdoDataAccess::runquery($query2);
@@ -36,11 +36,6 @@ function ListDate(){
 
     foreach($_POST as $key => $value){
         $exp_key = explode('_', $key);
-        /*echo '<br>';
-        echo '<br>';
-        echo var_dump($exp_key);
-        echo '<br>';
-        echo '<br>';*/
 
         if($exp_key[0] == 'GuarType'){
             $GuarType[] = $value;
@@ -64,225 +59,225 @@ function ListDate(){
     $rowspan4 = 2+$GuarCount;
 
 
-        BeginReport();
-        echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
-        echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
+    BeginReport();
+    echo "<div style=display:none>" . PdoDataAccess::GetLatestQueryString() . "</div>";
+    echo "<table style='border:2px groove #9BB1CD;border-collapse:collapse;width:100%'><tr>
 				<td width=60px><img src='/framework/icons/logo.jpg' style='width:120px'></td>
 				<td align='center' style='height:100px;vertical-align:middle;font-family:titr;font-size:15px'>
-					فرم صدور ضمانت نامه
+					فرم صدور ضمانتنامه
 				</td>
 				
 				<td width='200px' align='center' style='font-family:tahoma;font-size:11px'>کد فرم: KF-2030200F01/00
 				<br>
 				تاریخ تهیه گزارش : "
-            . DateModules::shNow() . "<br>";
+        . DateModules::shNow() . "<br>";
 
-        echo "</td></tr></table>";
+    echo "</td></tr></table>";
 
-        ?>
+    ?>
 
 
-        <style>
-            .newTable  td, th {
-                border: 1px solid #dddddd;
-                text-align: right;
-                padding: 8px;
-            }
-            .newTable  th {
-                color: rgb(21, 66, 139);
-                background-color: rgb(189, 211, 239);
-            }
-            .newTable  td{
-                text-align: center;
-            }
-            .newTable table{
-                border:2px groove #9BB1CD;border-collapse:collapse;width:100%;font-family: nazanin;
-                font-size: 16px;line-height: 20px;
-            }
-            .verticaltext {
-                transform: rotate(-90deg);
-                transform-origin: right, top;
-                -ms-transform: rotate(-90deg);
-                -ms-transform-origin:right, top;
-                -webkit-transform: rotate(-90deg);
-                -webkit-transform-origin:right, top;
-                position: absolute;
-                right: -670px;
-                width: 100%;
-                /*color: #ed217c;*/
-            }
+    <style>
+        .newTable  td, th {
+            border: 1px solid #dddddd;
+            text-align: center;
+            padding: 8px;
+        }
+        .newTable  th {
+            color: rgb(21, 66, 139);
+            background-color: rgb(189, 211, 239);
+        }
+        .newTable  td{
+            text-align: center;
+        }
+        .newTable table{
+            border:2px groove #9BB1CD;border-collapse:collapse;width:100%;font-family: nazanin;
+            font-size: 16px;line-height: 20px;
+        }
+        .verticaltext {
+            transform: rotate(-90deg);
+            transform-origin: right, top;
+            -ms-transform: rotate(-90deg);
+            -ms-transform-origin:right, top;
+            -webkit-transform: rotate(-90deg);
+            -webkit-transform-origin:right, top;
+            position: absolute;
+            right: -670px;
+            width: 100%;
+            /*color: #ed217c;*/
+        }
 
-        </style>
-        <div class="newTable">
+    </style>
+    <div class="newTable">
 
-            <table>
-                <tr>
-                    <td style="width: 40px;" rowspan="<?= $rowspan1 ?>"><span class="verticaltext">این قسمت توسط واحد ارزیابی و نظارت تکمیل می گردد</span></td>
-                    <td rowspan="10" >شرح درخواست</td>
-                </tr>
-                <tr>
-                    <td><span>نام شخص حقیقی/حقوقی</span></td>
-                    <td colspan="5"><span style="width: 500px;"><?= $personName ?></span></td>
-                </tr>
-                <tr>
-                    <td><span>نوع ضمانتنامه</span></td>
-                    <td colspan="5"><span><?= $warType ?></span></td>
-                </tr>
-                <tr>
-                    <td><span>موضوع قرارداد</span></td>
-                    <td colspan="5"><span><?= $_POST['contractTitle'] ?></span></td>
-                </tr>
-                <tr>
-                    <td><span>شرکت ضمانت گیرنده</span></td>
-                    <td colspan="5"><span><?= $_POST['organization'] ?></span></td>
-                </tr>
-                <tr>
-                    <td><span>مبلغ ضمانت نامه</span></td>
-                    <td colspan="5"><span><?= $_POST['warAmount'] ?></span></td>
-                </tr>
-                <tr>
-                    <td><span>مدت ضمانت نامه</span></td>
-                    <td colspan="5"><span><?= $_POST['warDate'] ?></span></td>
-                </tr>
-                <tr>
-                    <td><span>وثایق پیشنهادی</span></td>
-                    <td colspan="5"><span><?= $_POST['ProposedGuarantee'] ?></span></td>
-                </tr>
-                <tr>
-                    <td><span>توضیح تکمیلی</span></td>
-                    <td colspan="5"><span><?= $_POST['SupplementaryExplanation'] ?></span></td>
-                </tr><tr>
-                    <td><span>مدارک پیوست فرم</span></td>
-                    <td colspan="5"><span>1-نامه رسمی درخواست متقاضی</span><span>2-نامه رسمی درخواست ضمانت گیرنده</span></td>
-                </tr>
+        <table>
+            <tr>
+                <td style="width: 40px;" rowspan="<?= $rowspan1 ?>"><span class="verticaltext"><b>این قسمت توسط واحد ارزیابی و نظارت تکمیل می‌گردد</b></span></td>
+                <td rowspan="10" ><span><b>شرح درخواست</b></span></td>
+            </tr>
+            <tr>
+                <td><span><b>نام شخص حقیقی/ حقوقی</b></span></td>
+                <td colspan="5"><span style="width: 500px;"><?= $personName ?></span></td>
+            </tr>
+            <tr>
+                <td><span><b>نوع ضمانتنامه</b></span></td>
+                <td colspan="5"><span><?= $warType ?></span></td>
+            </tr>
+            <tr>
+                <td><span><b>موضوع قرارداد</b></span></td>
+                <td colspan="5"><span><?= $_POST['contractTitle'] ?></span></td>
+            </tr>
+            <tr>
+                <td><span><b>شرکت/ سازمان ضمانت‌گیرنده</b></span></td>
+                <td colspan="5"><span><?= $_POST['organization'] ?></span></td>
+            </tr>
+            <tr>
+                <td><span><b>مبلغ ضمانتنامه</b></span></td>
+                <td colspan="5"><span><?= number_format($_POST['warAmount']) ?></span></td>
+            </tr>
+            <tr>
+                <td><span><b>مدت ضمانتنامه</b></span></td>
+                <td colspan="5"><span><?= $_POST['warDate'] ?></span></td>
+            </tr>
+            <tr>
+                <td><span><b>وثایق پیشنهادی</b></span></td>
+                <td colspan="5"><span><?= $_POST['ProposedGuarantee'] ?></span></td>
+            </tr>
+            <tr>
+                <td><span><b>توضیح تکمیلی</b></span></td>
+                <td colspan="5"><span><?= $_POST['SupplementaryExplanation'] ?></span></td>
+            </tr><tr>
+                <td><span><b>مدارک پیوست فرم</b></span></td>
+                <td colspan="5"><span>1-نامه رسمی درخواست متقاضی</span><span>2-نامه رسمی درخواست ضمانت‌گیرنده</span></td>
+            </tr>
 
-                <!--warrenty History-->
-                <tr>
-                    <td rowspan="<?= $rowspan2 ?>">سوابق ضمانتنامه های دریافتی</td>
-                    <th><span>سال دریافت</span></th>
-                    <th><span>عنوان ضمانتنامه</span></th>
-                    <th><span>ضمانت گیرنده</span></th>
-                    <th><span>مبلغ(ریال)</span></th>
-                    <th><span>تاریخ ابطال</span></th>
-                    <th><span>مبلغ فعال(ریال)</span></th>
-                </tr>
+            <!--warrenty History-->
+            <tr>
+                <td rowspan="<?= $rowspan2 ?>"><b>سوابق ضمانت‌نامه‌های دریافتی</b></td>
+                <th><span>سال دریافت</span></th>
+                <th><span>عنوان ضمانتنامه</span></th>
+                <th><span>ضمانت‌گیرنده</span></th>
+                <th><span>مبلغ (ریال)</span></th>
+                <th><span>تاریخ ابطال</span></th>
+                <th><span>مبلغ فعال (ریال)</span></th>
+            </tr>
 
+            <?php
+            $activeAmount = 0;
+            $totActiveAmount = 0;
+            foreach ($temp1 as $temp){
+                $today = date("Y-m-d");
+                $activeAmount = ($temp['StatusID'] == 130 || $temp['EndDate'] < $today ) ? "0" : $temp['amount'];
+                $totActiveAmount += $activeAmount;
+                ?>
+                <tr>
+                    <td><span><?= DateModules::miladi_to_shamsi($temp['StartDate']) ?></span></td>
+                    <td><span><?= $temp['TypeDesc'] ?></span></td>
+                    <td><span><?= $temp['organization'] ?></span></td>
+                    <td><span><?= number_format($temp['amount']) ?></span></td>
+                    <td><span><?= DateModules::miladi_to_shamsi($temp['EndDate']) ?></span></td>
+                    <td><span><?= number_format($activeAmount) ?></span></td>
+                </tr>
                 <?php
-                $activeAmount = 0;
-                $totActiveAmount = 0;
-                foreach ($temp1 as $temp){
-                    $today = date("Y-m-d");
-                    $activeAmount = ($temp['StatusID'] == 130 || $temp['EndDate'] < $today ) ? "0" : $temp['amount'];
-                    $totActiveAmount += $activeAmount;
+            }
+            ?>
+            <tr>
+                <td colspan="5"><span><b>جمع ضمانتنامه‌های دريافتي</b></span></td>
+                <td><span><b><?= number_format($totActiveAmount) ?></b></span></td>
+            </tr>
+
+            <!--loan History-->
+            <tr>
+                <td rowspan="<?= $rowspan3 ?>"><span><b>سوابق تسهیلات دریافتی</b></span></td>
+                <th><span>سال دریافت</span></th>
+                <th><span>نوع تسهیلات</span></th>
+                <th colspan="2"><span>مبلغ (ریال)</span></th>
+                <th colspan="2"><span>مبلغ مانده (ریال)</span></th>
+            </tr>
+
+            <?php
+            $totPartAmount = 0;
+            $totTotalRemain = 0;
+            foreach ($temp2 as $temp){
+                $RequestID = $temp["RequestID"];
+                $ReqObj = new LON_requests($RequestID);
+                $partObj = LON_ReqParts::GetValidPartObj($RequestID);
+                $ComputeArr = LON_Computes::ComputePayments($RequestID, "", null, true);
+                $TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
+
+                $totPartAmount += $partObj->PartAmount;
+                $totTotalRemain += $TotalRemain;
+                ?>
+                <tr>
+                    <td><span><?= DateModules::miladi_to_shamsi($partObj->PartDate) ?></span></td>
+                    <td><span><?= $ReqObj->_LoanDesc ?></span></td>
+                    <td colspan="2"><span><?= number_format($partObj->PartAmount) ?></span></td>
+                    <td colspan="2"><span><?= number_format($TotalRemain) ?></span></td>
+                </tr>
+                <?php
+            }
+            ?>
+            <tr>
+                <td colspan="2"><span><b>جمع کل تسهیلات دريافتي</b></span></td>
+                <td colspan="2"><span><b><?= number_format($totPartAmount) ?></b></span></td>
+                <td colspan="2"><span><b><?= number_format($totTotalRemain) ?></b></span></td>
+            </tr>
+
+
+            <!--required guarantee-->
+            <tr>
+                <td rowspan="<?= $rowspan4 ?>"><span><b>وثایق موردنیاز</b></span></td>
+                <th colspan="1"><span>ردیف</span></th>
+                <th colspan="3"><span>نوع وثیقه</span></th>
+                <th colspan="2"><span>ارزش وثیقه (ریال)</span></th>
+            </tr>
+            <?php
+            if (count($TypeItem) > 0 || count($AmountItem) > 0){
+                $num=count($TypeItem);
+                for ($x = 0; $x < $num; $x++) {
+                    $i = $x+1;
                     ?>
+
                     <tr>
-                        <td><span><?= DateModules::miladi_to_shamsi($temp['StartDate']) ?></span></td>
-                        <td><span><?= $temp['TypeDesc'] ?></span></td>
-                        <td><span><?= $temp['organization'] ?></span></td>
-                        <td><span><?= $temp['amount'] ?></span></td>
-                        <td><span><?= DateModules::miladi_to_shamsi($temp['EndDate']) ?></span></td>
-                        <td><span><?= $activeAmount ?></span></td>
+                        <td><span><?= $i ?></span></td>
+                        <td colspan="3"><span><?= $GuarType[$x] ?></span></td>
+                        <td colspan="2"><span><?= number_format($GuarAmount[$x]) ?></span></td>
                     </tr>
                     <?php
                 }
-                ?>
-                <tr>
-                    <td colspan="5"><span>جمع ضمانت نامه هاي دريافتي</span></td>
-                    <td><span><?= $totActiveAmount ?></span></td>
-                </tr>
+            }else{ }
+            ?>
 
-                <!--loan History-->
-                <tr>
-                    <td rowspan="<?= $rowspan3 ?>">سوابق تسهیلات دریافتی</td>
-                    <th><span>سال دریافت</span></th>
-                    <th><span>نوع تسهیلات</span></th>
-                    <th colspan="2"><span>مبلغ(ریال)</span></th>
-                    <th colspan="2"><span>مبلغ مانده(ریال)</span></th>
-                </tr>
+            <tr>
+                <td colspan="4"><span><b>جمع کل وثایق</b></span></td>
+                <td colspan="3"><span><b><?= number_format(array_sum($GuarAmount)) ?></b></span></td>
+            </tr>
 
-                <?php
-                $totPartAmount = 0;
-                $totTotalRemain = 0;
-                foreach ($temp2 as $temp){
-                    $RequestID = $temp["RequestID"];
-                    $ReqObj = new LON_requests($RequestID);
-                    $partObj = LON_ReqParts::GetValidPartObj($RequestID);
-                    $ComputeArr = LON_Computes::ComputePayments($RequestID, "", null, true);
-                    $TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
+            <!--additional comments and suggestions-->
+            <tr style="height: 100px;">
+                <td><b>نظرات و پیشنهادات تکمیلی</b></td>
+                <td colspan="6"><span><?= $_POST['CommentSuggest'] ?></td>
+            </tr>
+            <tr>
+                <td><span><b>تکمیل‌کننده</b></span></td>
+                <td colspan="3" style="text-align: right"><span>نام و نام خانوادگی:</span></td>
+                <td colspan="3" style="text-align: right"><span>تاریخ و امضا:</span></td>
+            </tr>
+            <tr>
+                <td colspan="2"><span><b>نظر واحد حسابداری</b></span></td>
+                <td colspan="3" style="text-align: right"><span></span></td>
+                <td colspan="3" style="text-align: right">تاریخ و امضا:</td>
 
-                    $totPartAmount += $partObj->PartAmount;
-                    $totTotalRemain += $TotalRemain;
-                    ?>
-                    <tr>
-                        <td><span><?= DateModules::miladi_to_shamsi($partObj->PartDate) ?></span></td>
-                        <td><span><b><?= $ReqObj->_LoanDesc ?></b></span></td>
-                        <td colspan="2"><span><b><?= number_format($partObj->PartAmount) ?></b></span></td>
-                        <td colspan="2"><span><b><?= number_format($TotalRemain) ?></b></span></td>
-                    </tr>
-                    <?php
-                }
-                ?>
-                <tr>
-                    <td colspan="2"><span>جمع کل تسهیلات دريافتي</span></td>
-                    <td colspan="2"><span><?= number_format($totPartAmount) ?></span></td>
-                    <td colspan="2"><span><?= number_format($totTotalRemain) ?></span></td>
-                </tr>
+            </tr>
+            <tr>
+                <td colspan="2"><span><b>نظر مدیرعامل</b></span></td>
+                <td colspan="3" style="text-align: right"><span></span></td>
+                <td colspan="3" style="text-align: right">تاریخ و امضا:</td>
+            </tr>
+        </table>
+    </div>
 
-
-                <!--required guarantee-->
-                <tr>
-                    <td rowspan="<?= $rowspan4 ?>">وثایق موردنیاز</td>
-                    <th colspan="1"><span>ردیف</span></th>
-                    <th colspan="3"><span>نوع وثیقه</span></th>
-                    <th colspan="2"><span>ارزش وثیقه(ریال)</span></th>
-                </tr>
-                <?php
-                if (count($TypeItem) > 0 || count($AmountItem) > 0){
-                    $num=count($TypeItem);
-                    for ($x = 0; $x < $num; $x++) {
-                        $i = $x+1;
-                        ?>
-
-                        <tr>
-                            <td><span><?= $i ?></span></td>
-                            <td colspan="3"><span><?= $GuarType[$x] ?></span></td>
-                            <td colspan="2"><span><?= $GuarAmount[$x] ?></span></td>
-                        </tr>
-                        <?php
-                    }
-                }else{ }
-                ?>
-
-                <tr>
-                    <td colspan="4"><span>جمع کل وثایق</span></td>
-                    <td colspan="3"><span><?= number_format(array_sum($GuarAmount)) ?></span></td>
-                </tr>
-
-                <!--additional comments and suggestions-->
-                <tr style="height: 100px;">
-                    <td>نظرات و پیشنهادات تکمیلی</td>
-                    <td colspan="6"><span><?= $_POST['CommentSuggest'] ?></td>
-                </tr>
-                <tr>
-                    <td>تکمیل کننده</td>
-                    <td colspan="3" style="text-align: right"><span>نام و نام خانوادگی:</span></td>
-                    <td colspan="3" style="text-align: right"><span>تاریخ و امضا:</span></td>
-                </tr>
-                <tr>
-                    <td colspan="2"><span>نظر واحد حسابداری</span></td>
-                    <td colspan="3" style="text-align: right"><span></span></td>
-                    <td colspan="3" style="text-align: right">تاریخ و امضا:</td>
-
-                </tr>
-                <tr>
-                    <td colspan="2"><span>نظر مدیرعامل</span></td>
-                    <td colspan="3" style="text-align: right"><span></span></td>
-                    <td colspan="3" style="text-align: right">تاریخ و امضا:</td>
-                </tr>
-            </table>
-        </div>
-
-<?php
+    <?php
 
     die();
 }
@@ -416,34 +411,34 @@ if(isset($_REQUEST["show"]))
                         fieldLabel : "ارزش وثیقه(به ریال)",
                         name : "GuarAmount_1"
                     },{
-                    xtype : "button",
-                    text : "افزودن وثیقه",
-                    colspan : 2,
-                    iconCls : "add",
-                    handler : function(){
-                        me = WarrentyReport_totalObj;
-                        me.pageIndex++;
-                        fs = this.up("fieldset");
-                        fs.insert(fs.items.length-1, [{
-                            xtype : "displayfield",
-                            hideTrigger : true,
-                            labelWidth : 50,
-                            width : 80,
-                            fieldCls : "blueText",
-                            value : "وثیقه [ " + me.pageIndex + " ]"
-                        },{
-                            xtype : "textfield",
-                            width : 300,
-                            fieldLabel : "نوع وثیقه",
-                            name : "GuarType_" + me.pageIndex
-                        },{
-                            xtype : "textfield",
-                            width : 300,
-                            fieldLabel : "ارزش وثیقه(به ریال)",
-                            name : "GuarAmount_" + me.pageIndex
-                        }]);
-                    }
-                }]
+                        xtype : "button",
+                        text : "افزودن وثیقه",
+                        colspan : 2,
+                        iconCls : "add",
+                        handler : function(){
+                            me = WarrentyReport_totalObj;
+                            me.pageIndex++;
+                            fs = this.up("fieldset");
+                            fs.insert(fs.items.length-1, [{
+                                xtype : "displayfield",
+                                hideTrigger : true,
+                                labelWidth : 50,
+                                width : 80,
+                                fieldCls : "blueText",
+                                value : "وثیقه [ " + me.pageIndex + " ]"
+                            },{
+                                xtype : "textfield",
+                                width : 300,
+                                fieldLabel : "نوع وثیقه",
+                                name : "GuarType_" + me.pageIndex
+                            },{
+                                xtype : "textfield",
+                                width : 300,
+                                fieldLabel : "ارزش وثیقه(به ریال)",
+                                name : "GuarAmount_" + me.pageIndex
+                            }]);
+                        }
+                    }]
             },{
                 xtype : "textarea",
                 width : 700,
@@ -452,7 +447,7 @@ if(isset($_REQUEST["show"]))
                 name : "CommentSuggest"
             }
 
-],
+            ],
             buttons : [{
                 text : "مشاهده گزارش",
                 handler : Ext.bind(this.showReport,this),
