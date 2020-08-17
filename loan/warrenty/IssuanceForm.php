@@ -256,7 +256,7 @@ function ListDate(){
             <!--additional comments and suggestions-->
             <tr style="height: 100px;">
                 <td><b>نظرات و پیشنهادات تکمیلی</b></td>
-                <td colspan="6"><span><?= $_POST['CommentSuggest'] ?></td>
+                <td colspan="6"><span><?= $_POST['CommentSuggest'] ?></span></td>
             </tr>
             <tr>
                 <td><span><b>تکمیل‌کننده</b></span></td>

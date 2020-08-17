@@ -445,7 +445,7 @@ PersonInfo.prototype.MakeInfoPanel = function(PersonRecord){
 			beforeLabelTextTpl: required,
 			name: 'CompanyType'
 		},{
-			xtype : "numberfield",
+			xtype : "textfield",
 			allowBlank : false,
 			hideTrigger : true,
 			beforeLabelTextTpl: required,
