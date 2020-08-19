@@ -10,6 +10,7 @@ require_once inc_dataGrid;
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "management/framework.data.php?task=SelectFollowUps", "grid_div");
 
 $dg->addColumn("", "type", "", true);
+$dg->addColumn("", "item1", "", true);
 
 $col = $dg->addColumn("موضوع", "title", "");
 $col->width = 120;
@@ -45,6 +46,11 @@ FolowUps.ObjectRender = function(v,p,r){
 	
 	if(v == null)
 		return "";
+
+    if (r.data.type == 'meetingRecord')
+        return "<a onclick='FolowUpsObject.OpenObject(" + v + ",\""+r.data.type+"\")' "+
+            "href=javascript:void(1) >" + r.data.item1 + "</a>";
+
 	return "<a onclick='FolowUpsObject.OpenObject(" + v + ",\""+r.data.type+"\")' "+
 			"href=javascript:void(1) >" + v + "</a>";
 }

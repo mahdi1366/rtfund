@@ -555,7 +555,7 @@ function DeleteGroupList() {
 
 //---------------------------------------------------
 
-function SelectFollowUps(){
+/*function SelectFollowUps(){
 
 	$dt = PdoDataAccess::runquery(" 
 		select 'letter' type, 'یادداشت نامه' title, LetterID ObjectID, 
@@ -613,8 +613,68 @@ function SelectFollowUps(){
 	
 	echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
 	die();			
-}
+}*/
+function SelectFollowUps(){
 
+    $dt = PdoDataAccess::runquery(" 
+		select 'letter' type, 'یادداشت نامه' title, LetterID ObjectID, 1 item1,
+		concat_ws(' ','[',NoteTitle,']',NoteDesc) description
+		from OFC_LetterNotes where PersonID=:p AND ReminderDate=substr(" . PDONOW . ",1,10) 
+		
+		union all
+		
+		select 'letter' type, 'پاسخ به نامه' title, LetterID ObjectID, 1 item1,
+		concat_ws(' ',LetterTitle,'[',SendComment,']')
+		from OFC_send join OFC_letters using(LetterID)
+		where ToPersonID=:p AND ResponseTimeout=substr(" . PDONOW . ",1,10)
+		
+		union all
+		
+		select 'letter' type, 'پیگیری نامه' title, LetterID ObjectID, 1 item1,
+		concat_ws(' ',LetterTitle,'[',SendComment,']')
+		from OFC_send join OFC_letters using(LetterID)
+		where FromPersonID=:p AND FollowUpDate=substr(" . PDONOW . ",1,10)
+	
+		union all
+		
+		select 'loan' type, 'رویداد وام' title, RequestID, 1 item1, EventTitle
+		from LON_events 
+		where FollowUpDate= substr(" . PDONOW . ",1,10) AND FollowUpPersonID=:p
+		
+		union all
+		
+		select 'package' type, 'رویداد پرونده' title, PackageID, 1 item1, EventTitle
+		from DMS_PackageEvents 
+		where FollowUpDate= substr(" . PDONOW . ",1,10) AND FollowUpPersonID=:p
+		
+		union all
+		
+		select  'meetingRecord' type,'مصوبه' title, mr.MeetingID ObjectID, m.MeetingNo item1,
+		concat_ws(' ','[',mr.subject,']',mr.details) description
+		from MTG_MeetingRecords mr left join MTG_RecordExecutors  re using(RecordID) 
+                left join MTG_meetings m using(MeetingID) 
+		where re.PersonID=:p AND mr.FollowUpDate between CURDATE() and CURDATE() + INTERVAL 3 DAY 
+		
+		union all
+		
+		select  'request' type,'درخواست جدید' title, IDReq ObjectID, 1 item1,
+		IF(IsInfoORService='Service','درخواست خدمت','درخواست اطلاعات')  description
+		from request r 
+		where r.referPersonID=:p AND r.StatusID=2 AND r.referalDate between CURDATE() - INTERVAL 1 DAY and CURDATE() 
+		
+                union all
+
+                select 'asset' type, (case when(actionType = 1) then '&#1606;&#1578; &#1662;&#1740;&#1588;&#1711;&#1740;&#1585;&#1575;&#1606;&#1607;' else '&#1606;&#1578; &#1605;&#1608;&#1585;&#1583;&#1740;' end) as title, 
+                eventID ObjectID, 1 item1, FollowUpDesc description
+                from STO_AssetEvent ae
+                where ae.FollowUpPID=:p AND ae.FollowUpDate between CURDATE() and CURDATE() + INTERVAL 3 DAY
+                "
+
+        , array(":p" => $_SESSION["USER"]["PersonID"]));
+
+    echo dataReader::getJsonData($dt, count($dt), $_GET["callback"]);
+    die();
+}
 //---------------------------------------------------
 
 function GetPics(){
