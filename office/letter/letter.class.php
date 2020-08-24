@@ -258,7 +258,7 @@ class OFC_letters extends PdoDataAccess{
 		}
 		if($this->LetterType == "OUTCOME")
 		{
-			$content .= $this->OrgPost . " " . $this->organization . "<br>" ;
+			$content .= $this->OrgPost . " <br> " . $this->organization . "<br>" ;
 			$content .= "<br> موضوع : " . $this->LetterTitle . "<br><br></b>";
 			$content .= str_replace("\r\n", "", $this->context);
 
