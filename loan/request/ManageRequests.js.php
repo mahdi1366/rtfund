@@ -179,8 +179,10 @@ ManageRequest.prototype.OperationMenu = function(e){
 		handler : function(){ return ManageRequestObject.ShowEvents(); }});
 
     /*new added*/
+    if(record.data.StatusID == "101"){
     op_menu.add({text: 'سوابق مشتری',iconCls: 'history',
     handler : function(){ return ManageRequestObject.loanHistory(); }});
+}
     /*end new added*/
 
 	op_menu.add({text: 'چک لیست',iconCls: 'check', 
