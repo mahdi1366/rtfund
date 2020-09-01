@@ -2978,6 +2978,39 @@ class LON_events extends OperationClass {
 	
 }
 
+/* new added */
+class LON_history extends OperationClass {
+
+    const TableName = "LON_history";
+    const TableKey = "HistoryID";
+
+    public $HistoryID;
+    public $RequestID;
+    public $RegPersonID;
+    public $HistoryTitle;
+    public $HistoryDate;
+    public $HistoryDesc;
+
+
+    function __construct($id = ""){
+
+        $this->DT_HistoryDate = DataMember::CreateDMA(DataMember::DT_DATE);
+
+        parent::__construct($id);
+    }
+
+    static function Get($where = '', $whereParams = array(), $pdo = null) {
+
+        return PdoDataAccess::runquery_fetchMode("
+			select h.*, concat_ws(' ',p1.CompanyName,p1.fname,p1.lname) RegFullname
+			from LON_history h 
+				left join BSC_persons p1 on(p1.PersonID=h.RegPersonID)
+			where 1=1 " . $where, $whereParams, $pdo);
+    }
+
+}
+/* end new added */
+
 class LON_costs extends OperationClass{
 	
 	const TableName = "LON_costs";

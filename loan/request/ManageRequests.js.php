@@ -177,7 +177,12 @@ ManageRequest.prototype.OperationMenu = function(e){
 	
 	op_menu.add({text: 'رویدادها',iconCls: 'task', 
 		handler : function(){ return ManageRequestObject.ShowEvents(); }});
-	
+
+    /*new added*/
+    op_menu.add({text: 'سوابق مشتری',iconCls: 'history',
+    handler : function(){ return ManageRequestObject.loanHistory(); }});
+    /*end new added*/
+
 	op_menu.add({text: 'چک لیست',iconCls: 'check', 
 		handler : function(){ return ManageRequestObject.ShowCheckList(); }});
 	
@@ -452,7 +457,47 @@ ManageRequest.prototype.ShowEvents = function(){
 	});
 }
 
-//.........................................................
+
+    //.........................new added................................
+    ManageRequest.prototype.loanHistory = function(){
+
+    if(!this.lonHsitoWin)
+{
+    this.lonHsitoWin = new Ext.window.Window({
+    title: 'سوابق مشتری مرتبط با تسهیلات',
+    modal : true,
+    autoScroll : true,
+    width: 1000,
+    height : 400,
+    bodyStyle : "background-color:white",
+    closeAction : "hide",
+    loader : {
+    url : this.address_prefix + "lonHistory.php",
+    scripts : true
+},
+    buttons : [{
+    text : "بازگشت",
+    iconCls : "undo",
+    handler : function(){
+    this.up('window').hide();
+}
+}]
+});
+    Ext.getCmp(this.TabID).add(this.lonHsitoWin);
+}
+    this.lonHsitoWin.show();
+    this.lonHsitoWin.center();
+    record = this.grid.getSelectionModel().getLastSelected();
+    this.lonHsitoWin.loader.load({
+    params : {
+    ExtTabID : this.lonHsitoWin.getEl().id,
+    RequestID : record.data.RequestID,
+    MenuID : this.MenuID
+}
+});
+}
+    //.......................end new added..................................
+
 
 ManageRequest.prototype.LoadInstallments = function(){
 	

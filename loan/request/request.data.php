@@ -72,6 +72,9 @@ switch($task)
 	case "GetEvents":
 	case "SaveEvents":
 	case "DeleteEvents":
+    case "GetLonHistory":  /*new added*/
+    case "SaveLonHistory":  /*new added*/
+    case "DeleteLonHistory":  /*new added*/
 	case "GetCosts":
 	case "SaveCosts":
 	case "DeleteCosts":
@@ -1786,7 +1789,48 @@ function DeleteEvents(){
 	die();	
 }
 
-//------------------------------------------------
+
+//---------------- new added --------------------------------
+function GetLonHistory(){
+
+    $temp = LON_history::Get("AND RequestID=?", array($_REQUEST["RequestID"]));
+    /*var_dump($temp);*/
+    //print_r(ExceptionHandler::PopAllExceptions());
+    $res = $temp->fetchAll();
+    echo dataReader::getJsonData($res, $temp->rowCount(), $_GET["callback"]);
+    die();
+}
+
+function SaveLonHistory(){
+
+    $obj = new LON_history();
+    PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
+
+
+    if(empty($obj->HistoryID))
+    {
+        $obj->RegPersonID = $_SESSION["USER"]["PersonID"];
+        $obj->HistoryDate = PDONOW;
+        $result = $obj->Add();
+    }
+    else
+        $result = $obj->Edit();
+
+    echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+    die();
+}
+
+function DeleteLonHistory(){
+
+    $obj = new LON_history();
+    $obj->HistoryID = $_POST["HistoryID"];
+    $result = $obj->Remove();
+    echo Response::createObjectiveResponse($result, ExceptionHandler::GetExceptionsToString());
+    die();
+}
+
+//-----------------------end new added-------------------------
+
 
 function GetCosts(){
 	
