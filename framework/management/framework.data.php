@@ -649,7 +649,8 @@ function SelectFollowUps(){
 		
 		union all
 		
-		select  'meetingRecord' type,'مصوبه' title, mr.MeetingID ObjectID, m.MeetingNo item1,
+		select  'meetingRecord' type,'مصوبه' title, mr.MeetingID ObjectID, 
+		MeetingID ObjectID, concat(m.MeetingNo,'-',mr.ItemNum) item1,
 		concat_ws(' ','[',mr.subject,']',mr.details) description
 		from MTG_MeetingRecords mr left join MTG_RecordExecutors  re using(RecordID) 
                 left join MTG_meetings m using(MeetingID) 
