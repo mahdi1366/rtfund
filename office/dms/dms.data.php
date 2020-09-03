@@ -40,6 +40,8 @@ function SelectAll(){
 	
 	if(!empty($_REQUEST["ObjectType"]) && $_REQUEST["ObjectType"] == "package")
 		$temp = DMS_documents::SelectFullPackage($_REQUEST["ObjectID"]);
+    else if (!empty($_REQUEST["ObjectType"]) && $_REQUEST["ObjectType"] == "letterAttach")
+        $temp = DMS_documents::SelectAllLet($where, $param);
 	else
 		$temp = DMS_documents::SelectAll($where, $param);
 	

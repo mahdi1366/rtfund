@@ -36,6 +36,9 @@ $dg->addColumn("", "param1Title", "", true);
 $dg->addColumn("", "DocTypeDesc", "", true);
 $dg->addColumn("", "param1", "", true);
 $dg->addColumn("", "DocType", "", true);
+$dg->addColumn("", "IsSigned", "", true); /*new added*/
+$dg->addColumn("", "LetterType", "", true); /*new added*/
+$dg->addColumn("", "sendCount", "", true); /*new added*/
 
 $col = $dg->addColumn("عنوان پیوست", "DocDesc", "");
 
@@ -149,9 +152,20 @@ ManageDocument.ShowFile = function(DocumentID, ObjectID, RowID){
 
 ManageDocument.OperationRender = function(v,p,r){
 	
-	if(r.data.IsConfirm == "YES" || r.data.RegPersonID != "<?= $_SESSION["USER"]["PersonID"] ?>")
-		return "";
-	
+	/*if(r.data.IsConfirm == "YES" || r.data.RegPersonID != "<?= $_SESSION["USER"]["PersonID"] ?>")
+		return "";*/
+    var Condition = false;
+    if (r.data.LetterType == "OUTCOME"){
+        if (r.data.IsSigned == "YES")
+            Condition = true;
+    } else {
+        if (r.data.sendCount > 0)
+            Condition = true;
+    }
+    if(<?= $_SESSION["USER"]["PersonID"] ?> != "<?= BSC_jobs::GetModirAmelPerson()->PersonID ?>" &&
+    (Condition || r.data.RegPersonID != "<?= $_SESSION["USER"]["PersonID"] ?>" ) )
+    return "";
+
 	var st = "";
 	if(ManageDocumentObject.AddAccess)
 		st += "<div align='center' title='ویرایش' class='edit' "+
