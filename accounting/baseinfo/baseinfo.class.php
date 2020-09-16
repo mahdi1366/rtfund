@@ -374,14 +374,22 @@ class ACC_tafsilis extends PdoDataAccess{
 			PdoDataAccess::FillObject ($this, "select * from ACC_tafsilis where TafsiliID=?", array($TafsiliID));
 	}
 	
-	static function SelectAll($where = "", $param = array()){
+	/*static function SelectAll($where = "", $param = array()){
 		
 		return PdoDataAccess::runquery_fetchMode(
 			"select t.* from ACC_tafsilis t
 				left join BSC_persons p on(t.TafsiliType=1 AND t.ObjectID=p.PersonID)
 
 				where " . $where, $param);
-	}
+	}*/
+    static function SelectAll($where = "", $param = array()){
+
+        return PdoDataAccess::runquery_fetchMode(
+            "select t.* from ACC_tafsilis t
+				left join BSC_persons p on(t.ObjectID=p.PersonID)
+
+				where " . $where, $param);
+    }
 	
 	function AddTafsili($pdo = null)
 	{
