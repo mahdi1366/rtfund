@@ -42,6 +42,12 @@ $col->width = 80;
 $col = $dg->addColumn("مبلغ درخواست", "ReqAmount", GridColumn::ColumnType_money);
 $col->width = 100;
 
+$col = $dg->addColumn("نوع وام", "LoanDesc");
+$col->width = 100;
+
+$col = $dg->addColumn("منبع", "ReqFullname");
+$col->width = 100;
+
 $col = $dg->addColumn("معرفی کننده", "ReqFullname");
 $col->width = 100;
 
