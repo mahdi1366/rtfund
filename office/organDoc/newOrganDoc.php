@@ -66,6 +66,22 @@ function NewOrgDoc() {
             queryMode : "local",
             displayField: 'InfoDesc',
             valueField : "InfoID",
+            listeners: {
+                change : function() {
+                    if(this.getValue() == 128 || this.getValue() == 134)
+                    {
+                        NewOrgDocObj.MainForm.down("[name=endDate]").disable();
+                        NewOrgDocObj.MainForm.down("[name=PersonID2]").disable();
+                        NewOrgDocObj.MainForm.down("[name=endDate]").setValue("");
+                        NewOrgDocObj.MainForm.down("[name=PersonID2]").setValue("");
+                    }
+                    else
+                    {
+                        NewOrgDocObj.MainForm.down("[name=endDate]").enable();
+                        NewOrgDocObj.MainForm.down("[name=PersonID2]").enable();
+                    }
+                }
+            },
             allowBlank : false
         },/*{
 			xtype : "combo",
