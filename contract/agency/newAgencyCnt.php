@@ -91,6 +91,14 @@ function NewAgencyCnt() {
         },{
             xtype : "textfield",
             readOnly : this.readOnly,
+            fieldLabel: 'شماره قرارداد',
+            name : "contractNum",
+            itemId: 'contractNum',
+            width: 350,
+            allowBlank : false
+        },{
+            xtype : "textfield",
+            readOnly : this.readOnly,
             fieldLabel: 'عنوان قرارداد',
             name : "title",
             itemId: 'title',
@@ -174,7 +182,7 @@ function NewAgencyCnt() {
 
 	
 	this.AgencyCntStore = new Ext.data.Store({
-		fields: ['agencyCntID', "AgencyID", 'title', 'startDate', "endDate", "agencyWage", "selfWage", "commitAmount", "receiptOption", "defrayTime"],
+		fields: ['agencyCntID', "AgencyID", 'contractNum' , 'title', 'startDate', "endDate", "agencyWage", "selfWage", "commitAmount", "receiptOption", "defrayTime"],
 		proxy: {
 			type: 'jsonp',
 			url: this.address_prefix + "AgencyCnt.data.php?task=SelectAgencyCnt&agencyCntID="+this.agencyCntID,

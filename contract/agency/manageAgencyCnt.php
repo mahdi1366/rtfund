@@ -20,6 +20,10 @@ $dg->addColumn("", "commitAmount", "", true);
 $dg->addColumn("", "receiptOption", "", true);
 $dg->addColumn("", "defrayTime", "", true);
 
+$col = $dg->addColumn("شماره قرارداد", "contractNum");
+$col->align = "center";
+$col->width = 200;
+
 $col = $dg->addColumn("عنوان قرارداد", "title");
 $col->align = "center";
 $col->width = 350;
@@ -40,7 +44,7 @@ $dg->DefaultSortField = "agencyCntID";
 $dg->DefaultSortDir = "desc";
 /*$dg->autoExpandColumn = "PersonFullname";*/
 $dg->emptyTextOfHiddenColumns = true;
-$dg->width = 640;
+$dg->width = 840;
 $dg->height = 500;
 $dg->pageSize = 10;
 $dg->EnableRowNumber = true;

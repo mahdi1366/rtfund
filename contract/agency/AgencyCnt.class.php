@@ -14,6 +14,7 @@ class agencyContract extends OperationClass {
 
     public $agencyCntID;
     public $AgencyID;
+    public $contractNum;
     public $title;
     public $startDate;
     public $endDate;
