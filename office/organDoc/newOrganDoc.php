@@ -19,7 +19,7 @@ var_dump($_REQUEST);
 NewOrgDoc.prototype = {
 	TabID: '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix: "<?= $js_prefix_address ?>",
-
+    framework : <?= session::IsPortal() ? "true" : "false" ?>,
     orgDocID : <?= $orgDocID ?>,
 	readOnly : <?= $readOnly ? "true" : "false" ?>,
 	
@@ -212,7 +212,7 @@ NewOrgDoc.prototype.SaveOrgDoc = function (print) {
 		
 		success: function (form,action) {
 			mask.hide();
-
+            framework.CloseTab(NewOrgDocObj.TabID);
             /*NewOrgDocObj.grid.getStore().load();
             NewOrgDocObj.MainForm.hide();*/
 
