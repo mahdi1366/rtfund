@@ -20,7 +20,7 @@ var_dump($readOnly);*/
     NewAgencyCnt.prototype = {
 	TabID: '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix: "<?= $js_prefix_address ?>",
-        framework : <?= session::IsPortal() ? "true" : "false" ?>,
+    framework : <?= session::IsPortal() ? "true" : "false" ?>,
     agencyCntID : <?= $agencyCntID ?>,
 	readOnly : <?= $readOnly ? "true" : "false" ?>,
 	
