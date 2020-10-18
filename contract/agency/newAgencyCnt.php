@@ -20,7 +20,7 @@ var_dump($readOnly);*/
     NewAgencyCnt.prototype = {
 	TabID: '<?= $_REQUEST["ExtTabID"] ?>',
 	address_prefix: "<?= $js_prefix_address ?>",
-
+        framework : <?= session::IsPortal() ? "true" : "false" ?>,
     agencyCntID : <?= $agencyCntID ?>,
 	readOnly : <?= $readOnly ? "true" : "false" ?>,
 	
@@ -246,7 +246,7 @@ function NewAgencyCnt() {
 		
 		success: function (form,action) {
 			mask.hide();
-
+            framework.CloseTab(NewAgencyCntObj.TabID);
             NewAgencyCntObj.MainForm.getComponent('agencyCntID').setValue(action.result.data);
 			if (print) 
 			{
