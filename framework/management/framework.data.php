@@ -663,12 +663,19 @@ function SelectFollowUps(){
 		from request r 
 		where r.referPersonID=:p AND r.StatusID=2 AND r.referalDate between CURDATE() - INTERVAL 1 DAY and CURDATE() 
 		
-                union all
+        union all
 
                 select 'asset' type, (case when(actionType = 1) then '&#1606;&#1578; &#1662;&#1740;&#1588;&#1711;&#1740;&#1585;&#1575;&#1606;&#1607;' else '&#1606;&#1578; &#1605;&#1608;&#1585;&#1583;&#1740;' end) as title, 
                 eventID ObjectID, 1 item1, FollowUpDesc description
                 from STO_AssetEvent ae
                 where ae.FollowUpPID=:p AND ae.FollowUpDate between CURDATE() and CURDATE() + INTERVAL 3 DAY
+                
+        union all
+
+                select 'agencyContract' type, 'سررسید قرارداد عاملیت' as title, 
+                agencyCntID ObjectID, 1 item1, title description
+                from agencyContract ac
+                where 2166=:p AND ac.endDate between CURDATE() and CURDATE() + INTERVAL 30 DAY         
                 "
 
         , array(":p" => $_SESSION["USER"]["PersonID"]));
