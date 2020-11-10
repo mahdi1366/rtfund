@@ -63,6 +63,7 @@ function selectPersons(){
 			case "IsStaff":		$where .= " AND IsStaff='YES'";break;
 			case "IsSupporter":	$where .= " AND IsSupporter='YES'";break;
 			case "IsExpert":	$where .= " AND IsExpert='YES'";break;
+            case "IsAsker":	    $where .= " AND (PersonID=0 OR PersonID=1003 OR PersonID=2051 OR PersonID=1001 OR PersonID=1002 OR PersonID=2345)";break;
 		}
 	}
 	
