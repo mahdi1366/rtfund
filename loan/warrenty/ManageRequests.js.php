@@ -147,9 +147,12 @@ function WarrentyRequest(){
 			colspan : 2,
 			fieldLabel : "سازمان مربوطه"
 		},{
+    xtype : "textfield",
+    name : "orgNationalID",
+    fieldLabel : "&#1588;&#1606;&#1575;&#1587;&#1607; &#1605;&#1604;&#1740; &#1587;&#1575;&#1586;&#1605;&#1575;&#1606;"
+},{
 			xtype : "currencyfield",
 			name : "amount",
-			colspan : 2,
 			hideTrigger : true,
 			allowBlank : false,
 			fieldLabel : "مبلغ ضمانت نامه"
@@ -364,6 +367,7 @@ WarrentyRequest.prototype.editRequest = function(){
 		this.MainPanel.down("[name=PersonID]").disable();
 		this.MainPanel.down("[name=TypeID]").disable();
 		this.MainPanel.down("[name=organization]").disable();
+        this.MainPanel.down("[name=orgNationalID]").disable();  //new added
 		this.MainPanel.down("[name=amount]").disable();
 		this.MainPanel.down("[name=IsBlock]").disable();
 	}
@@ -373,6 +377,7 @@ WarrentyRequest.prototype.editRequest = function(){
 		this.MainPanel.down("[name=PersonID]").enable();
 		this.MainPanel.down("[name=TypeID]").enable();
 		this.MainPanel.down("[name=organization]").enable();
+        this.MainPanel.down("[name=orgNationalID]").enable();  //new added
 		this.MainPanel.down("[name=amount]").enable();
 		this.MainPanel.down("[name=IsBlock]").enable();
 	}

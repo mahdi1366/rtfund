@@ -17,6 +17,7 @@ class WAR_requests extends OperationClass
 	public $SubjectDesc;
 	public $SubjectNO;
 	public $organization;
+    public $orgNationalID;
 	public $ReqDate;
 	public $amount;
 	public $StartDate;
