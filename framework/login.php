@@ -101,6 +101,7 @@ $index = rand(0, count($pics)-1);
 	<meta http-equiv="pragma" content="no-cache">
     <title>نرم افزار <?= SoftwareName?></title>
 	<?php require_once 'md5.php'; ?>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 	<script>
 		var xmlhttp;
 		if (window.XMLHttpRequest)
@@ -319,7 +320,38 @@ $index = rand(0, count($pics)-1);
 			document.getElementById("forgetDIV").style.display ="none";
 			document.getElementById("registerDIV").style.display ="none";
 		}
-		
+
+        function restrictInputOtherThanArabic($field)
+        {
+            // Arabic characters fall in the Unicode range 0600 - 06FF
+            var arabicCharUnicodeRange = /[\u0600-\u06FF]/;
+
+            $field.bind("keypress", function(event)
+            {
+                var key = event.which;
+                // 0 = numpad
+                // 8 = backspace
+                // 32 = space
+                if (key==8 || key==0 || key === 32)
+                {
+                    return true;
+                }
+
+                var str = String.fromCharCode(key);
+                if ( arabicCharUnicodeRange.test(str) )
+                {
+                    return true;
+                }
+
+                return false;
+            });
+        }
+
+        jQuery(document).ready(function() {
+            // allow arabic characters only for following fields
+            restrictInputOtherThanArabic($('#fname'));
+            restrictInputOtherThanArabic($('#lname'));
+        });
 	</script>
 	 <style>
 	body, td, div, button{

@@ -18,8 +18,105 @@
 };
 
 function ManageOrgDocs() {
+    this.panel = new Ext.panel.Panel({
+        renderTo : this.get("DivPanel"),
+        //border : false,
+        layout : "hbox",
+        height : 500,
+        items : [{
+            xtype : "container",
+            flex : 1,
+            html : "<div id=div_dg width=100%></div>"    /*new Edit*/
+            /*html : "<div id=div_grid width=100%></div>"*/   /*new Comment*/
+        },{
+            xtype : "container",
+            width : 150,
+            autoScroll : true,
+            height: 500,
+            style : "border-left : 1px solid #99bce8;margin-left:5px",
+            layout : "vbox",
+            itemId : "cmp_buttons"
+        }]
+    });
+
+    new Ext.data.Store({
+    proxy : {
+    type: 'jsonp',
+    url: this.address_prefix + "organDoc.data.php?task=selectOrgDocTypes",
+    reader: {root: 'rows',totalProperty: 'totalCount'}
+},
+    fields : ["InfoID","InfoDesc","param1","param2"],
+    autoLoad : true,
+    listeners : {
+    load : function(){
+    console.log(this.totalCount);
+    me = ManageOrgDocObj;
+    console.log(me);
+    //..........................................................
+    me.panel.down("[itemId=cmp_buttons]").removeAll();
+    for(var i=0; i<this.totalCount; i++)
+{
+    record = this.getAt(i);
+    console.log(record);
+    if(record.data.param2 != "" && record.data.param2 != 0 )
+{
+    console.log('فرعیییییی');
+    btn = me.panel.down("[itemId=g_" + record.data.param2 + "]");
+    if(!btn)
+{
+    console.log('دکمه وجود ندارد');
+    btn = me.panel.down("[itemId=cmp_buttons]").add({
+    xtype : "button",
+    width : 130,
+    height : 50,
+    autoScroll : true,
+    scale : "large",
+    style : "margin-bottom:10px",
+    itemId : "g_" + record.data.param2,
+    text : record.data.param3,
+    menu : []
+});
+}
+
+    btn.menu.add({
+    itemId : record.data.InfoID,
+    text : record.data.InfoDesc,
+    handler : function(){ManageOrgDocs.LoadGrid(this)}
+});
+}
+    else{
+    console.log('اصلیییییی');
+    me.panel.down("[itemId=cmp_buttons]").add({
+    xtype : "button",
+    width : 130,
+    height : 50,
+    autoScroll : true,
+    scale : "large",
+    style : "margin-bottom:10px",
+    itemId : record.data.InfoID,       /*New Edited*/
+    /*itemId : record.data.InfoID + "_" + record.data.param1,*/          /*New Commented*/
+    text : (record.data.param2 != "" && record.data.param2 != 0) ? record.data.param2 : record.data.InfoDesc,
+    handler : function(){ManageOrgDocs.LoadGrid(this)}
+});
+}
 
 }
+}
+}
+});
+
+}
+
+    ManageOrgDocs.LoadGrid = function(btn){
+    console.log(btn);
+    ManageOrgDocObj.grid.getStore().proxy.extraParams.orgDocType = btn.itemId;
+    ManageOrgDocObj.grid.setTitle(btn.text);
+    if(ManageOrgDocObj.grid.rendered)
+    ManageOrgDocObj.grid.getStore().loadPage(1);
+    else
+    ManageOrgDocObj.grid.render(ManageOrgDocObj.get("div_dg"));
+     }
+
 
     ManageOrgDocs.prototype.OperationRender = function () {
 
@@ -67,7 +164,7 @@ function ManageOrgDocs() {
     op_menu.add({text: ' حذف', iconCls: 'remove',
     handler: function () {	ManageOrgDocObj.delete(record.data.orgDocID);	}});
 
-	op_menu.add({text: 'پیوست های سند سازمانی', iconCls: 'attach',
+	op_menu.add({text: '&#1587;&#1606;&#1583; &#1587;&#1575;&#1586;&#1605;&#1575;&#1606;&#1740;', iconCls: 'attach',
 		handler: function () {
     ManageOrgDocObj.orgDocAttach('orgdoc');
 		}});

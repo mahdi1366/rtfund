@@ -68,18 +68,50 @@ function NewOrgDoc() {
             valueField : "InfoID",
             listeners: {
                 change : function() {
-                    if(this.getValue() == 128 || this.getValue() == 134)
+                    if(this.getValue() == 142)
                     {
+                        NewOrgDocObj.MainForm.down("[name=field1]").enable();
+                        NewOrgDocObj.MainForm.down("[name=field2]").enable();
+                        NewOrgDocObj.MainForm.down("[name=field3]").enable();
+                        NewOrgDocObj.MainForm.down("[name=field4]").enable();
+                        NewOrgDocObj.MainForm.down("[name=field5]").enable();
+
+                        NewOrgDocObj.MainForm.down("[name=title]").disable();
+                        NewOrgDocObj.MainForm.down("[name=date]").disable();
                         NewOrgDocObj.MainForm.down("[name=endDate]").disable();
                         NewOrgDocObj.MainForm.down("[name=PersonID2]").disable();
+                        NewOrgDocObj.MainForm.down("[name=title]").setValue("");
+                        NewOrgDocObj.MainForm.down("[name=date]").setValue("");
                         NewOrgDocObj.MainForm.down("[name=endDate]").setValue("");
                         NewOrgDocObj.MainForm.down("[name=PersonID2]").setValue("");
                     }
                     else
                     {
-                        NewOrgDocObj.MainForm.down("[name=endDate]").enable();
-                        NewOrgDocObj.MainForm.down("[name=PersonID2]").enable();
+                        NewOrgDocObj.MainForm.down("[name=field1]").disable();
+                        NewOrgDocObj.MainForm.down("[name=field2]").disable();
+                        NewOrgDocObj.MainForm.down("[name=field3]").disable();
+                        NewOrgDocObj.MainForm.down("[name=field4]").disable();
+                        NewOrgDocObj.MainForm.down("[name=field5]").disable();
+                        NewOrgDocObj.MainForm.down("[name=field1]").setValue("");
+                        NewOrgDocObj.MainForm.down("[name=field2]").setValue("");
+                        NewOrgDocObj.MainForm.down("[name=field3]").setValue("");
+                        NewOrgDocObj.MainForm.down("[name=field4]").setValue("");
+                        NewOrgDocObj.MainForm.down("[name=field5]").setValue("");
+
+                        if(this.getValue() == 128 || this.getValue() == 134 || this.getValue() == 140 || this.getValue() == 141)
+                        {
+                            NewOrgDocObj.MainForm.down("[name=endDate]").disable();
+                            NewOrgDocObj.MainForm.down("[name=PersonID2]").disable();
+                            NewOrgDocObj.MainForm.down("[name=endDate]").setValue("");
+                            NewOrgDocObj.MainForm.down("[name=PersonID2]").setValue("");
+                        }
+                        else
+                        {
+                            NewOrgDocObj.MainForm.down("[name=endDate]").enable();
+                            NewOrgDocObj.MainForm.down("[name=PersonID2]").enable();
+                        }
                     }
+
                 }
             },
             allowBlank : false
@@ -135,8 +167,57 @@ function NewOrgDoc() {
 			width: 350,
 			valueField : "PersonID",
 			name : "PersonID2",
+            colspan : 2,
 			itemId : "PersonID2"
-		}],
+		},{
+            xtype : "textfield",
+            fieldLabel: '&#1593;&#1576;&#1575;&#1585;&#1578; &#1601;&#1575;&#1585;&#1587;&#1740;',
+            name : "field1",
+            itemId: 'field1'
+        },{
+            xtype : "textfield",
+            fieldLabel: '&#1593;&#1576;&#1575;&#1585;&#1578; &#1575;&#1606;&#1711;&#1604;&#1740;&#1587;&#1740;',
+            name : "field2",
+            itemId: 'field2'
+        },{
+            xtype : "textarea",
+            fieldLabel: '&#1588;&#1585;&#1581;',
+            name : "field3",
+            colspan : 2,
+            width: 510,
+            itemId: 'field3'
+        },{
+            xtype : "combo",
+            fieldLabel: '&#1605;&#1575;&#1582;&#1584;',
+            store : new Ext.data.Store({
+                fields:["id","title"],
+                data : [{"id" : 300, "title" : '&#1583;&#1575;&#1582;&#1604;&#1740;'},{"id" : 200, "title" : "&#1587;&#1575;&#1740;&#1585;"}]
+            }),
+            displayField : "title",
+            queryMode: 'local',
+            valueField : "id",
+            name : "field4",
+            itemId: 'field4',
+            value : 300,
+            listeners: {
+                change : function() {
+                    if(this.getValue() == 200)
+                    {
+                        NewOrgDocObj.MainForm.down("[name=field5]").enable();
+                    }
+                    else
+                    {
+                        NewOrgDocObj.MainForm.down("[name=field5]").disable();
+                        NewOrgDocObj.MainForm.down("[name=field5]").setValue("");
+                    }
+                }
+            }
+        },{
+            xtype : "textfield",
+            fieldLabel: '&#1593;&#1606;&#1608;&#1575;&#1606; &#1605;&#1575;&#1582;&#1584;',
+            name : "field5",
+            itemId: 'field5'
+        }],
 		buttons: [{
 			text: "  ذخیره",
 			handler: function () {
