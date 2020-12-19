@@ -675,7 +675,19 @@ function SelectFollowUps(){
                 select 'agencyContract' type, 'سررسید قرارداد عاملیت' as title, 
                 agencyCntID ObjectID, 1 item1, title description
                 from agencyContract ac
-                where 2166=:p AND ac.endDate between CURDATE() and CURDATE() + INTERVAL 30 DAY         
+                where 2166=:p AND ac.endDate between CURDATE() and CURDATE() + INTERVAL 30 DAY 
+        
+        union all
+		
+		select  'organDoc' type, (case when(orgDocType = 129) then 'پایان تفاهم نامه' else 'پایان قرارداد' end) as title,
+		 orgDocID ObjectID, 1 item1,
+		 CONCAT_WS(' ',
+    CASE WHEN orgDocType=129 THEN 'پایان ' END,
+    CASE WHEN orgDocType=130 THEN 'پایان قرارداد' END
+  ,title) as description		 
+		from organDoc 
+		where 2633=:p AND (orgDocType='129' OR orgDocType='130') AND endDate between CURDATE() - INTERVAL 5 DAY and CURDATE() + INTERVAL 50 DAY       
+		                
                 "
 
         , array(":p" => $_SESSION["USER"]["PersonID"]));

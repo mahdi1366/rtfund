@@ -85,6 +85,10 @@ FolowUps.prototype.OpenObject = function(ObjectID, type){
             framework.OpenPage("/contract/agency/newAgencyCnt.php", "قرارداد عاملیت",{agencyCntID : ObjectID,
                 readOnly : true});
             break;
+        case "organDoc":
+            framework.OpenPage("/office/organDoc/newOrganDoc.php", "اسناد سازمانی",{orgDocID : ObjectID,
+                readOnly : true});
+            break;
 	}
 	
 }

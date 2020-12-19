@@ -64,7 +64,7 @@ if ($orgDocType == 142){
 
 $dg->title = "لیست قراردادها";
 $dg->DefaultSortField = "orgDocID";
-$dg->DefaultSortDir = "desc";
+$dg->DefaultSortDir = "asc";
 $dg->autoExpandColumn = "PersonFullname";
 $dg->width = 640;
 $dg->height = 500;

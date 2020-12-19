@@ -352,8 +352,11 @@ function DeleteOrganization(){
 function SaveLetter($dieing = true) {
 
     $Letter = new OFC_letters();
+    $ObjectOfPerson = new BSC_persons($_POST['SignerPersonID']);
     pdoDataAccess::FillObjectByArray($Letter, $_POST);
-	/*$Letter->context = InputValidation::filteyByHTMLPurifier($Letter->context);*/
+    $Letter->SignPostID = $ObjectOfPerson->PostID;
+    /*pdoDataAccess::FillObjectByArray($Letter, $_POST);
+	$Letter->context = InputValidation::filteyByHTMLPurifier($Letter->context);*/
 	
 	//------------ add organiation ----------------
 	if(!empty($Letter->organization))
