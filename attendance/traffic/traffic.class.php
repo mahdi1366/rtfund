@@ -88,6 +88,15 @@ class ATN_traffic extends OperationClass
 		$index = 0;
 		for($i=0; $i<count($dt); $i++)
 		{
+            if ($PersonID=='2430' || $PersonID=='2869'){
+                if ($dt[$i]["TrafficTime"] < '06:30:00'){
+                    $dt[$i]["TrafficTime"] = '06:30:00';
+                }
+            }else{
+                if ($dt[$i]["TrafficTime"] < '07:00:00'){
+                    $dt[$i]["TrafficTime"] = '07:00:00';
+                }
+            }
 			if($dt[$i]["ReqType"] == "" || $dt[$i]["ReqType"] == "CORRECT" )
 			{
 				if($currentDate == $dt[$i]["TrafficDate"])
