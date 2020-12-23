@@ -45,6 +45,10 @@ $col = $dg->addColumn("عنوان پیوست", "DocDesc", "");
 $col = $dg->addColumn("ثبت کننده", "regfullname", "");
 $col->width = 150;
 
+$col = $dg->addColumn("تاریخ ثبت", "RegDate", GridColumn::ColumnType_date);
+$col->editor = ColumnEditor::SHDateField();
+$col->width = 80;
+
 $col = $dg->addColumn("فایل", "HaveFile", "");
 $col->renderer = "function(v,p,r){return ManageDocument.FileRender(v,p,r)}";
 $col->align = "center";
