@@ -4,6 +4,7 @@
 // create Date: 94.07
 //---------------------------
 
+
 class DMS_documents extends PdoDataAccess
 {
 	public $DocumentID;
