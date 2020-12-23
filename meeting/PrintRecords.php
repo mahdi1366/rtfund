@@ -85,10 +85,15 @@ $col->align = "center";
 
 //..........................................
 
-$presents = MTG_MeetingPersons::Get(" AND MeetingID=? AND IsPresent='YES'", array($MeetingID));
+$presents = MTG_MeetingPersons::Get(" AND MeetingID=? AND AttendType='MEMBER' AND IsPresent='YES'", array($MeetingID));
 $presents = $presents->fetchAll();
-$absents = MTG_MeetingPersons::Get(" AND MeetingID=? AND IsPresent='NO'", array($MeetingID));
+
+$guests = MTG_MeetingPersons::Get(" AND MeetingID=? AND AttendType='GUEST'", array($MeetingID));
+$guests = $guests->fetchAll();
+
+$absents = MTG_MeetingPersons::Get(" AND MeetingID=? AND AttendType='MEMBER' AND IsPresent='NO'", array($MeetingID));
 $absents = $absents->fetchAll();
+
 ?>
 <html>
 
@@ -240,6 +245,21 @@ $absents = $absents->fetchAll();
             <tr>
                 <td style="background-color: #eee;font-weight: bold">دبیر جلسه</td>
                 <td style="text-align: right;padding-right: 5px;"><?= $MeetingObj->_secretaryName ?></td>
+            </tr>
+            <tr>
+                <td style="background-color: #eee;font-weight: bold">مهمانان جلسه</td>
+                <td style="text-align: right;padding-right: 5px;">
+                    <? foreach($guests as $guest){
+                        if ($guest === end($guests)){
+                            echo $guest['fullname'];
+                        }else{
+                            echo $guest['fullname'];
+                            echo '، ';
+                        }
+
+                    }
+                    ?>
+                </td>
             </tr>
         </table>
     </div>
