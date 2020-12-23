@@ -256,7 +256,6 @@ $absents = $absents->fetchAll();
                             echo $guest['fullname'];
                             echo '، ';
                         }
-
                     }
                     ?>
                 </td>
