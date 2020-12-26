@@ -253,8 +253,11 @@ class OFC_letters extends PdoDataAccess{
 			$sign = $dt[0]["regSign"] != "" ? "background-image:url(\"" .
 					data_uri($dt[0]["regSign"],'image/jpeg') . "\")" : "";
 
-			$content .= "<table width=100%><tr><td><div class=signDiv style=" . $sign . "><b>" . 
-					$dt[0]["RegPersonName"] . "</b><br><br>" . $dt[0]["PostName"] . "</div></td></tr></table>";
+			/*$content .= "<table width=100%><tr><td><div class=signDiv style=" . $sign . "><b>" .
+					$dt[0]["RegPersonName"] . "</b><br><br>" . $dt[0]["PostName"] . "</div></td></tr></table>";*/
+            $content .= "<table width=100%><tr><td><div class=signDiv style=" . $sign . "><b>" .
+                $dt[0]["RegPersonName"] . "</b><br><br></div></td></tr></table>";
+
 		}
 		if($this->LetterType == "OUTCOME")
 		{
