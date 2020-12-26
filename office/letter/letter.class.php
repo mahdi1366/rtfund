@@ -246,7 +246,6 @@ class OFC_letters extends PdoDataAccess{
 				$content .= $row["sex"] == "MALE" ? "جناب آقای " : "سرکار خانم ";
 				$content .= $row['ToPersonName'] . "<br>";
 			}
-
 			$content .= "<br> موضوع : " . $this->LetterTitle . "<br><br></b>";
 			$content .= str_replace("\r\n", "", $this->context);
 
