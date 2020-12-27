@@ -87,7 +87,7 @@ function CustomerLetters($returnMode = false){
 	$list = PdoDataAccess::runquery("
 		select * from OFC_letters l join OFC_LetterCustomers c using(LetterID)
 		where c.IsHide='NO' AND l.AccessType=".OFC_ACCESSTYPE_NORMAL." 
-			AND c.PersonID=" . $_SESSION["USER"]["PersonID"]);
+			AND c.PersonID=" . $_SESSION["USER"]["PersonID"] ." ORDER BY LetterDate DESC");
 
 	if($returnMode)
 		return $list;
