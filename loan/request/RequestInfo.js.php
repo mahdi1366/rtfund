@@ -634,7 +634,7 @@ RequestInfo.prototype.BuildForms = function(){
 			displayField : "BranchName",
 			valueField : "BranchID",
 			name : "BranchID"
-		},{
+		}/*,{
 			xtype : "trigger",
 			colspan : 2,
 			width : 700,
@@ -650,7 +650,43 @@ RequestInfo.prototype.BuildForms = function(){
 						RequestInfoObject.companyPanel.down("[name=DomainID]").setValue();
 				}
 			}
-		},{
+		}*/,{
+    xtype : "combo",
+    store : new Ext.data.SimpleStore({
+    proxy: {
+    type: 'jsonp',
+    url: this.address_prefix + 'request.data.php?' +
+    "task=SelectContractType",
+    reader: {root: 'rows',totalProperty: 'totalCount'}
+},
+    fields : ['InfoID','InfoDesc'],
+    autoLoad : true
+}),
+    fieldLabel : "نوع قرارداد",
+    queryMode : 'local',
+    displayField : "InfoDesc",
+    valueField : "InfoID",
+    name : "ContractType"
+},{
+    xtype : "combo",
+    colspan : 2,
+    width : 700,
+    store : new Ext.data.SimpleStore({
+    proxy: {
+    type: 'jsonp',
+    url: this.address_prefix + 'request.data.php?' +
+    "task=SelectDomainType",
+    reader: {root: 'rows',totalProperty: 'totalCount'}
+},
+    fields : ['InfoID','InfoDesc','param1'],
+    autoLoad : true
+}),
+    fieldLabel: 'حوزه فناوری',
+    queryMode : 'local',
+    displayField : "InfoDesc",
+    valueField : "param1",
+    name : "DomainID"
+},{
 			xtype : "container",
 			layout : "hbox",
 			colspan : 2,
