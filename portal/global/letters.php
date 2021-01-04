@@ -42,7 +42,7 @@ $dg->height = 500;
 $dg->title = "لیست نامه های مربوط به شما";
 /*$dg->DefaultSortField = "LetterDate";*/
 $dg->autoExpandColumn = "LetterTitle";
-$dg->EnableSearch = false;
+$dg->EnableSearch = true;
 $dg->EnablePaging = false;
 $grid = $dg->makeGrid_returnObjects();	
 ?>
