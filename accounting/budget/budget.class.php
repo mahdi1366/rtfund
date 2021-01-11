@@ -12,6 +12,8 @@ class ACC_budgets extends OperationClass {
 	public $BudgetID;
 	public $ParentID;
 	public $BudgetDesc;
+	public $BudgetCoding;
+	public $orderKey;
 	public $IsActive;
 }
 
