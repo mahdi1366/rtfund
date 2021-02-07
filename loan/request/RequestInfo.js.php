@@ -667,7 +667,7 @@ RequestInfo.prototype.BuildForms = function(){
     displayField : "InfoDesc",
     valueField : "InfoID",
     name : "ContractType"
-},{
+},/*{
     xtype : "combo",
     colspan : 2,
     width : 700,
@@ -685,6 +685,25 @@ RequestInfo.prototype.BuildForms = function(){
     queryMode : 'local',
     displayField : "InfoDesc",
     valueField : "param1",
+    name : "DomainID"
+}*/{
+    xtype : "combo",
+    colspan : 2,
+    width : 700,
+    store : new Ext.data.SimpleStore({
+    proxy: {
+    type: 'jsonp',
+    url: this.address_prefix + 'request.data.php?' +
+    "task=SelectDomainType",
+    reader: {root: 'rows',totalProperty: 'totalCount'}
+},
+    fields : ['InfoID','InfoDesc','param1'],
+    autoLoad : true
+}),
+    fieldLabel: 'حوزه فناوری',
+    queryMode : 'local',
+    displayField : "InfoDesc",
+    valueField : "InfoID",
     name : "DomainID"
 },{
 			xtype : "container",

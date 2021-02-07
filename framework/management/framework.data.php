@@ -654,7 +654,7 @@ function SelectFollowUps(){
 		concat_ws(' ','[',mr.subject,']',mr.details) description
 		from MTG_MeetingRecords mr left join MTG_RecordExecutors  re using(RecordID) 
                 left join MTG_meetings m using(MeetingID) 
-		where re.PersonID=:p AND mr.FollowUpDate between CURDATE() and CURDATE() + INTERVAL 3 DAY 
+		where (re.PersonID=:p OR '2869'=:p) AND mr.FollowUpDate between CURDATE() and CURDATE() + INTERVAL 3 DAY 
 		
 		union all
 		
