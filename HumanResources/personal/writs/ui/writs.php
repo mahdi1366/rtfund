@@ -30,6 +30,13 @@ $col = $dg->addColumn("تاریخ اجرا", "execute_date", "string");
 $col->renderer = "function(v){return MiladiToShamsi(v);}";
 $col->width = 70;
 
+// new added
+$col = $dg->addColumn("پیوست", "");
+$col->sortable = false;
+$col->renderer = "function(v,p,r){return WritList.attachRender(v,p,r);}";
+$col->width = 50;
+// end new added
+
 $col = $dg->addColumn("فقط ثبت سابقه؟", "history_only_title", "string");
 $col->width = 70;
 

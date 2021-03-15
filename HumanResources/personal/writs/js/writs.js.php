@@ -38,6 +38,14 @@ WritList.opRender = function(value, p, record)
 	return st;
 }
 
+    WritList.attachRender = function(v,p,r){
+
+    return "<div align='center' title='پیوست' class='attach' "+
+    "onclick='WritListObject.RecordDocuments();' " +
+    "style='background-repeat:no-repeat;background-position:center;" +
+    "cursor:pointer;width:100%;height:16'></div>";
+}
+
 WritList.prototype.editInfo = function(record)
 {
 	var record = this.grid.getSelectionModel().getLastSelected();
@@ -86,5 +94,41 @@ WritList.prototype.deletePersonWrt = function()
 	});
 }
 
+    WritList.prototype.RecordDocuments = function(){
+
+    if(!this.documentWin)
+{
+    this.documentWin = new Ext.window.Window({
+    width : 720,
+    height : 440,
+    modal : true,
+    bodyStyle : "background-color:white;padding: 0 10px 0 10px",
+    closeAction : "hide",
+    loader : {
+    url : "../../office/dms/documents.php",
+    scripts : true
+},
+    buttons :[{
+    text : "بازگشت",
+    iconCls : "undo",
+    handler : function(){this.up('window').hide();}
+}]
+});
+    Ext.getCmp(this.TabID).add(this.documentWin);
+}
+
+    this.documentWin.show();
+    this.documentWin.center();
+
+    var record = this.grid.getSelectionModel().getLastSelected();
+    this.documentWin.loader.load({
+    scripts : true,
+    params : {
+    ExtTabID : this.documentWin.getEl().id,
+    ObjectType : 'writs',
+    ObjectID : record.data.writ_id
+}
+});
+}
 
 </script>

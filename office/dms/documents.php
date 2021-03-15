@@ -80,6 +80,7 @@ switch($ObjectType)
 	case "orgdoc":
 	case "safeBox":
 	case "package":
+    case "writs": // new added for ahkam in modiriyat personel
 	case "asset":
 		$access = true;
 		break;
