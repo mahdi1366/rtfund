@@ -27,6 +27,11 @@ $dg->addColumn("", "target", "", true);
 $dg->addColumn("", "param4", "", true);
 $dg->addColumn("", "LoanRequestID", "", true);
 $dg->addColumn("", "IsEnded", "", true);
+$dg->addColumn("", "maxStepID", "", true); //new added
+$dg->addColumn("", "haveNext", "", true); //new added
+$dg->addColumn("", "IsFinalFlow", "", true); //new added
+$dg->addColumn("", "nextStepDesc", "", true); //new added
+$dg->addColumn("", "nextStepRowID", "", true); //new added
 
 if(!$IsSend)
 {
@@ -142,14 +147,43 @@ MyForm.prototype.OperationMenu = function(e){
 	
 	op_menu.add({text: 'اطلاعات آیتم',iconCls: 'info2', 
 		handler : function(){ return MyFormObject.FormInfo(); }});
-	if(!this.IsSend)
+	/*if(!this.IsSend)
 	{
 		op_menu.add({text: 'تایید درخواست',iconCls: 'tick', 
 		handler : function(){ return MyFormObject.beforeChangeStatus('CONFIRM'); }});
 
 		op_menu.add({text: 'رد درخواست',iconCls: 'cross',
 		handler : function(){ return MyFormObject.beforeChangeStatus('REJECT'); }});
-	}
+	}*/
+    if(!this.IsSend)
+    {
+        if (record.data.haveNext == 'YES' || record.data.IsFinalFlow == 'YES') {
+            if (record.data.maxStepID == 'YES' && record.data.IsFinalFlow != 'YES') {
+                op_menu.add({text: 'انتخاب مسیر درخواست',iconCls: 'process',
+                    handler : function(){ return MyFormObject.beforeChangeStatus('BREAK'); }});
+            }else {
+                op_menu.add({text: 'تایید درخواست(جدید)',iconCls: 'tick',
+                    handler : function(){ return MyFormObject.beforeChangeStatus('NEWCONFIRM'); }});
+            }
+        }else {
+            op_menu.add({text: 'تایید درخواست',iconCls: 'tick',
+                handler : function(){ return MyFormObject.beforeChangeStatus('CONFIRM'); }});
+            op_menu.add({text: 'رد درخواست',iconCls: 'cross',
+                handler : function(){ return MyFormObject.beforeChangeStatus('REJECT'); }});
+        }
+
+        /*if (record.data.haveNext != 'YES' || record.data.maxStepID != 'YES') {
+            console.log(record.data.haveNext);
+            op_menu.add({text: 'تایید درخواست',iconCls: 'tick',
+                handler : function(){ return MyFormObject.beforeChangeStatus('CONFIRM'); }});
+            if (!record.data.haveNext || record.data.haveNext === null || record.data.haveNext == 'NO'){
+                op_menu.add({text: 'رد درخواست',iconCls: 'cross',
+                    handler : function(){ return MyFormObject.beforeChangeStatus('REJECT'); }});
+            }
+
+        }*/
+
+    }
 	op_menu.add({text: 'پیوستها',iconCls: 'attach', 
 		handler : function(){ return MyFormObject.ShowAttaches(); }});
 	
@@ -171,38 +205,106 @@ MyForm.prototype.beforeChangeStatus = function(mode){
 		});
 		return;
 	}
-	if(!this.commentWin)
-	{
-		this.commentWin = new Ext.window.Window({
-			width : 412,
-			height : 320,
-			modal : true,
-			title : "دلیل عدم تایید",
-			bodyStyle : "background-color:white",
-			items : [{
-				xtype : "textarea",
-				width : 400,
-				rows : 8,
-				name : "ActionComment"
-			}],
-			closeAction : "hide",
-			buttons : [{
-				text : "اعمال",				
-				iconCls : "save",
-				itemId : "btn_save"
-			},{
-				text : "بازگشت",
-				iconCls : "undo",
-				handler : function(){this.up('window').hide();}
-			}]
-		});
-		
-		Ext.getCmp(this.TabID).add(this.commentWin);
-	}
-	this.commentWin.down("[itemId=btn_save]").setHandler(function(){
-		MyFormObject.ChangeStatus(mode, this.up('window').down("[name=ActionComment]").getValue());});
-	this.commentWin.show();
-	this.commentWin.center();
+    if(mode == "REJECT")
+    {
+        if (!this.commentWin) {
+            this.commentWin = new Ext.window.Window({
+                width: 412,
+                height: 320,
+                modal: true,
+                title: "دلیل عدم تایید",
+                bodyStyle: "background-color:white",
+                items: [{
+                    xtype: "textarea",
+                    width: 400,
+                    rows: 8,
+                    name: "ActionComment"
+                }],
+                closeAction: "hide",
+                buttons: [{
+                    text: "اعمال",
+                    iconCls: "save",
+                    itemId: "btn_save"
+                }, {
+                    text: "بازگشت",
+                    iconCls: "undo",
+                    handler: function () {
+                        this.up('window').hide();
+                    }
+                }]
+            });
+
+            Ext.getCmp(this.TabID).add(this.commentWin);
+        }
+        this.commentWin.down("[itemId=btn_save]").setHandler(function () {
+            MyFormObject.ChangeStatus(mode, this.up('window').down("[name=ActionComment]").getValue());
+        });
+        this.commentWin.show();
+        this.commentWin.center();
+    }
+
+    if(mode == "NEWCONFIRM")
+    {
+        Ext.MessageBox.confirm("","آیا مایل به تایید می باشید؟", function(btn){
+            if(btn == "no")
+                return;
+
+            MyFormObject.NEWChangeStatus(mode, "");
+        });
+        return;
+    }
+    if(mode == "BREAK")
+    {
+        if(!this.selectFlowWin)
+        {
+            this.selectFlowWin = new Ext.window.Window({
+                width : 412,
+                height : 320,
+                modal : true,
+                title : "انتخاب مسیر",
+                bodyStyle : "background-color:white",
+                items : [{
+                    xtype : "combo",
+                    store : new Ext.data.Store({
+                        proxy:{
+                            type: 'jsonp',
+                            url: this.address_prefix + 'wfm.data.php?task=GetNextSteps&StepRowID='+record.data.nextStepRowID,
+                            reader: {root: 'rows',totalProperty: 'totalCount'}
+                        },
+                        fields :  ["nextFlowID", "title"]
+                    }),
+                    displayField: 'title',
+                    valueField : "nextFlowID",
+                    name : "selectFlow",
+                    allowBlank : false,
+                    fieldLabel : record.data.nextStepDesc
+                }/*,{
+                    xtype : "textarea",
+                    width : 400,
+                    rows : 8,
+                    name : "ActionComment"
+                }*/],
+                closeAction : "hide",
+                buttons : [{
+                    text : "اعمال",
+                    iconCls : "save",
+                    itemId : "btn_save"
+                },{
+                    text : "بازگشت",
+                    iconCls : "undo",
+                    handler : function(){this.up('window').hide();}
+                }]
+            });
+
+            Ext.getCmp(this.TabID).add(this.selectFlowWin);
+        }
+        this.selectFlowWin.down("[itemId=btn_save]").setHandler(function(){
+            MyFormObject.NEWChangeStatus(mode, this.up('window').down("[name=selectFlow]").getValue());});
+        this.selectFlowWin.show();
+        this.selectFlowWin.center();
+    }
+
+
 }
 
 MyForm.prototype.ChangeStatus = function(mode, ActionComment){
@@ -240,6 +342,46 @@ MyForm.prototype.ChangeStatus = function(mode, ActionComment){
 				MyFormObject.commentWin.hide();
 		}
 	});
+}
+
+MyForm.prototype.NEWChangeStatus = function(mode, selectFlow){
+
+    record = this.grid.getSelectionModel().getLastSelected();
+
+    mask = new Ext.LoadMask(this.grid, {msg:'در حال ذخيره سازي...'});
+    mask.show();
+
+    Ext.Ajax.request({
+        methos : "post",
+        url : this.address_prefix + "wfm.data.php",
+        form : this.get("mainForm"),
+        params : {
+            task : "NewChangeStatus",
+            RowID : record ? record.data.RowID : "",
+            mode : mode,
+            selectFlow : selectFlow
+        },
+
+        success : function(response){
+            mask.hide();
+
+            result = Ext.decode(response.responseText);
+            if(!result.success)
+            {
+                if(result.data == "")
+                    Ext.MessageBox.alert("","عملیات مورد نظر با شکست مواجه شد");
+                else
+                    Ext.MessageBox.alert("",result.data);
+            }
+
+            MyFormObject.grid.getStore().load();
+            /*console.log(MyFormObject);*/
+            if(MyFormObject.commentWin)
+                MyFormObject.commentWin.hide();
+            if(MyFormObject.selectFlowWin)
+                MyFormObject.selectFlowWin.hide();
+        }
+    });
 }
 
 MyForm.prototype.FormInfo = function(){

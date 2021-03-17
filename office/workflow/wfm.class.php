@@ -10,6 +10,8 @@ class WFM_flows extends PdoDataAccess {
 	public $ObjectType;
 	public $FlowDesc;
 	public $IsSystemic;
+    public $IsFinalFlow;  //new added
+    public $haveNext;  //new added
 
 	public $_ObjectType;
 	
@@ -189,6 +191,8 @@ class WFM_FlowRows extends PdoDataAccess {
 	public $IsEnded;
 	public $StepDesc;
 	public $IsLastRow;
+    public $repeatNum;  //new added
+    public $prevRowID;  //new added
 	
 	public $_StepID;
 	public $_ObjectType;
@@ -446,8 +450,124 @@ class WFM_FlowRows extends PdoDataAccess {
         return true;
     }
 
+    function NewAddFlowRow($StepID , $pdo = null) {
+
+        PdoDataAccess::runquery("update WFM_FlowRows set IsLastRow='NO' "
+            . " where FlowID=? AND ObjectID=? AND ObjectID2=?",
+            array($this->FlowID, $this->ObjectID, $this->ObjectID2), $pdo);
+
+        //.......... get StepRowID ...................
+        $dt = PdoDataAccess::runquery("select StepRowID, StepDesc from WFM_FlowSteps 
+			where IsActive='YES' AND FlowID=? AND StepID=?" , array($this->FlowID, $StepID));
+        if(count($dt) == 0)
+        {
+            ExceptionHandler::PushException("خطا در تعریف وضعیت ها");
+            return false;
+        }
+        $this->StepRowID = $dt[0]["StepRowID"];
+        $this->StepDesc = $dt[0]["StepDesc"];
+
+        //..............................................
+
+        if (!parent::insert("WFM_FlowRows", $this, $pdo)) {
+            return false;
+        }
+
+        $this->UpdateSourceStatus($StepID);
+
+        $this->RowID = parent::InsertID($pdo);
+
+        //new code for define end flow
+        $FlowRowObj = new WFM_FlowRows($this->RowID);
+
+        $FlowID = $FlowRowObj->FlowID;
+        $ObjectID = $FlowRowObj->ObjectID;
+        $query = "select fr.* ,fs.StepID, fs.IsOuter,bf.*,
+				ifnull(fr.StepDesc, ifnull(fs.StepDesc,'ارسال اولیه')) StepDesc,
+				concat_ws(' ',fname, lname,CompanyName) fullname
+			from WFM_FlowRows fr
+			join WFM_flows f using(FlowID)
+			join BaseInfo bf on(bf.TypeID=11 AND f.ObjectType=bf.InfoID)
+			left join WFM_FlowSteps fs on(fr.StepRowID=fs.StepRowID)
+			join BSC_persons p on(fr.PersonID=p.PersonID)
+			where fr.FlowID=? AND fr.ObjectID=?
+			order by RowID";
+        $Logs = PdoDataAccess::runquery($query, array($FlowID, $ObjectID));
+        if(count($Logs) != 0)
+        {
+            $i = count($Logs);
+            //------------------------ get next one ------------------------------------
+
+            $LastRecord = $Logs[$i-1];
+
+            $StepID = $LastRecord["StepID"] == "" ? 0 :
+                ($LastRecord["ActionType"] == "CONFIRM" ? $LastRecord["StepID"] + 1 : $LastRecord["StepID"] - 1);
+            $query = "select StepDesc,PostName,
+					concat_ws(' ',fname, lname,CompanyName) fullname
+				from WFM_FlowSteps fs
+				left join BSC_jobs j on(fs.JobID=j.JobID or fs.PostID=j.PostID)
+				left join BSC_posts ps on(j.PostID=ps.PostID)
+				left join BSC_persons p on(j.PersonID=p.PersonID or fs.PersonID=p.PersonID)
+				where fs.IsActive='YES' AND fs.FlowID=? AND fs.StepID=?";
+            $nextOne = PdoDataAccess::runquery($query, array($FlowID, $StepID));
+
+            if(count($nextOne) == 0)
+            {
+                $RequestID = $ObjectID;
+                $queryString="select RequestNo,PersonID,f.FormTitle
+              from WFM_requests r
+              join WFM_forms f using(FormID) 
+              where r.RequestID=?";
+                $findEnd = PdoDataAccess::runquery_fetchMode($queryString, array($RequestID));
+                if ($findEnd->rowCount() > 0) {
+                    $resultant = $findEnd->fetchAll();
+                    $RequestNo=$resultant[0]['RequestNo'];
+                    $PersonID=$resultant[0]['PersonID'];
+                    $FormTitle=$resultant[0]['FormTitle'];
+                    $_POST['MsgTitle']='تایید فرم';
+                    $_POST['MsgDesc']="با سلام. فرم ".$FormTitle."  شما با شماره ".$RequestNo." مورد تایید قرار گرفت.";
+                    $_POST['PersonID']=1000;
 
 
+                    $obj = new OFC_messages();
+                    PdoDataAccess::FillObjectByArray($obj, $_POST);
+
+                    $obj->MsgDate = PDONOW;
+                    $pdoobj = PdoDataAccess::getPdoObject();
+
+                    if(!$obj->Add($pdoobj))
+                    {
+                        $pdoobj->rollBack();
+                        echo Response::createObjectiveResponse(false, "خطا در ایجاد پیام");
+                        die();
+                    }
+                    $obj2 = new OFC_MessageReceivers();
+                    $obj2->MessageID = $obj->MessageID;
+                    $obj2->PersonID = $PersonID;
+                    $obj2->Add($pdoobj);
+                }
+
+            }
+            else
+            {
+
+            }
+        }else{
+
+        }
+        //end new code for define end flow
+
+
+
+
+        $daObj = new DataAudit();
+        $daObj->ActionType = DataAudit::Action_add;
+        $daObj->MainObjectID = $this->RowID;
+        $daObj->TableName = "WFM_FlowRows";
+        $daObj->execute($pdo);
+
+        return true;
+    }
 
 
 
