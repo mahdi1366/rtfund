@@ -120,6 +120,13 @@ function StartWarrentyFlow(){
 	die();
 }
 
+function NewStartWarrentyFlow(){
+    $RequestID = $_REQUEST["RequestID"];
+    $result = WFM_FlowRows::StartFlow(FLOWID_WARRENTY_NEW, $RequestID);
+    echo Response::createObjectiveResponse($result, "");
+    die();
+}
+
 function RegWarrentyDoc(){
 	
 	$ReqObj = new WAR_requests($_POST["RequestID"]);

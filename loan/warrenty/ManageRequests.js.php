@@ -249,6 +249,8 @@ WarrentyRequest.prototype.OperationMenu = function(e){
 		{
 			op_menu.add({text: 'ارسال ضمانت نامه',iconCls: 'refresh',
 			handler : function(){ return WarrentyRequestObject.StartFlow(); }});
+			op_menu.add({text: 'ارسال ضمانت نامه آزمایشی',iconCls: 'refresh',
+            handler : function(){ return WarrentyRequestObject.StartFlowTest(); }});
 		
 			op_menu.add({text: 'ویرایش ضمانت نامه',iconCls: 'edit', 
 			handler : function(){ return WarrentyRequestObject.editRequest(); }});
@@ -500,6 +502,34 @@ WarrentyRequest.prototype.StartFlow = function(){
 			}
 		});
 	});
+}
+
+    WarrentyRequest.prototype.StartFlowTest = function(){
+
+    Ext.MessageBox.confirm("","آیا مایل به ارسال آزمایشی ضمانت نامه می باشید؟",function(btn){
+
+        if(btn == "no")
+            return;
+
+        me = WarrentyRequestObject;
+        var record = me.grid.getSelectionModel().getLastSelected();
+
+        mask = new Ext.LoadMask(me.grid, {msg:'در حال ذخیره سازی ...'});
+        mask.show();
+
+        Ext.Ajax.request({
+            url: me.address_prefix +'request.data.php',
+            method: "POST",
+            params: {
+                task: "NewStartWarrentyFlow",
+                RequestID : record.data.RequestID
+            },
+            success: function(response){
+                mask.hide();
+                WarrentyRequestObject.grid.getStore().load();
+            }
+        });
+    });
 }
 
 WarrentyRequest.prototype.ReturnStartFlow = function(){
