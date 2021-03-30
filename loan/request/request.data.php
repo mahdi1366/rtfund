@@ -88,9 +88,77 @@ switch($task)
 	case "emptyDataTable":
 	case "ComputeManualInstallments":
 	case "selectBackPayComputes":
-		
 	case "CustomerDefrayRequest":
+    case "SelectAllLegalActions":  /*new added*/
+    case "SaveLegalActions":  /*new added*/
+    case "DeleteLegalActions":  /*new added*/
 		$task();
+}
+
+function DeleteLegalActions(){
+
+    $obj = new LON_legalActions($_POST["legalActionID"]);
+
+    if(!$obj->Remove())
+    {
+        echo Response::createObjectiveResponse(false, "خطا در حذف اقدام");
+        die();
+    }
+
+    echo Response::createObjectiveResponse(true, "");
+    die();
+}
+function SaveLegalActions(){
+
+    $obj = new LON_legalActions();
+    PdoDataAccess::FillObjectByArray($obj, $_POST);
+
+    if(empty($obj->legalActionID))
+    {
+        $obj->RegDate = PDONOW;
+        $obj->legalActionID = LON_legalActions::LastID();
+        $result = $obj->Add();
+    }
+    else
+    {
+        $result = $obj->Edit();
+    }
+
+    //print_r(ExceptionHandler::PopAllExceptions());
+    echo Response::createObjectiveResponse($result, $obj->RequestID);
+    die();
+}
+function SelectAllLegalActions(){
+    $param = array();
+    $where = "1=1 ";
+    if(!empty($_REQUEST["RequestID"]))
+    {
+        $where .= " AND r.RequestID=:r";
+        $param[":r"] = $_REQUEST["RequestID"];
+    }
+
+    if ( !empty($_REQUEST['query'])) {
+        $field = isset($_REQUEST['fields']) ? $_REQUEST['fields'] : "fullname";
+        $field = $field == "LoanFullname" ? "concat_ws(' ',p1.fname,p1.lname,p1.CompanyName)" : $field;
+        $field = $field == "ReqFullname" ? "concat_ws(' ',p2.fname,p2.lname,p2.CompanyName)" : $field;
+
+        $where .= ' and ' . $field . ' like :fld';
+        $param[':fld'] = '%' . $_REQUEST['query'] . '%';
+    }
+
+    if (empty($_REQUEST['fields']) && !empty($_REQUEST['query'])) {
+        $where .= ' and r.RequestID = :rid';
+        $param[':rid'] = $_REQUEST['query'];
+    }
+
+    $dt = LON_legalActions::Get($where, $param, dataReader::makeOrder());
+    print_r(ExceptionHandler::PopAllExceptions());
+    //echo PdoDataAccess::GetLatestQueryString();
+    $count = $dt->rowCount();
+    $dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+
+    echo dataReader::getJsonData($dt, $count, $_GET["callback"]);
+    die();
 }
 
 function SaveLoanRequest(){
@@ -387,6 +455,7 @@ function SelectContractType(){
     echo dataReader::getJsonData($temp, count($temp), $_GET["callback"]);
     die();
 }
+
 function SelectDomainType(){
 
     $temp = PdoDataAccess::runquery("select * from BaseInfo where TypeID=107");

@@ -81,6 +81,7 @@ switch($ObjectType)
 	case "safeBox":
 	case "package":
     case "writs": // new added for ahkam in modiriyat personel
+    case "LegalActions": // new added for eghdamate hoghoghi
 	case "asset":
 		$access = true;
 		break;
