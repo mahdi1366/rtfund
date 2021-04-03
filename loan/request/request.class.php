@@ -3113,12 +3113,10 @@ class LON_legalActions extends OperationClass{
         return PdoDataAccess::runquery_fetchMode("
 			select la.*, concat_ws(' ',p1.fname,p1.lname,p1.CompanyName) LoanFullname 
 			, concat_ws(' ',p2.fname,p2.lname,p2.CompanyName) ReqFullname 
-			, sum(PayAmount) TotalPayAmount
 			from LON_legalActions la
 			join LON_requests r using(RequestID)
 			left join BSC_persons p1 on(p1.PersonID=r.LoanPersonID)
-			left join BSC_persons p2 on(p2.PersonID=r.ReqPersonID)
-			left join LON_BackPays using (RequestID)					
+			left join BSC_persons p2 on(p2.PersonID=r.ReqPersonID)				
 			where 1=1 AND " . $where ." group by RequestID " , $whereParams, $pdo);
     }
 

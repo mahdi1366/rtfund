@@ -156,7 +156,22 @@ function SelectAllLegalActions(){
     //echo PdoDataAccess::GetLatestQueryString();
     $count = $dt->rowCount();
     $dt = PdoDataAccess::fetchAll($dt, $_GET["start"], $_GET["limit"]);
+    for( $i=0 ; $i<$count ; $i++ ){
 
+        $RequestID = $dt[$i]['RequestID'];
+        $ComputeDate = !empty($_REQUEST["ComputeDate"]) ? $_REQUEST["ComputeDate"] : "";
+        $ComputePenalty = !empty($_REQUEST["ComputePenalty"]) && $_REQUEST["ComputePenalty"] == "false" ?
+            false : true;
+        $ComputeArr = LON_Computes::ComputePayments($RequestID, $ComputeDate, null, $ComputePenalty);
+        $TotalRemain = LON_Computes::GetTotalRemainAmount($RequestID, $ComputeArr);
+        $TotalPay = LON_BackPays::GetRealPaid($RequestID);
+        $totalPayed = 0;
+        foreach($TotalPay as $row)
+            $totalPayed += $row["PayAmount"]*1;
+        $dt[$i]['TotalRemain'] = $TotalRemain;
+        $dt[$i]['TotalPayAmount'] = $totalPayed;
+        /*var_dump($dt[$i]);*/
+    }
     echo dataReader::getJsonData($dt, $count, $_GET["callback"]);
     die();
 }
