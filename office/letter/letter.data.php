@@ -860,9 +860,11 @@ function GroupDeleteSender(){
 function GetLetterComments(){
 	
 	$dt = PdoDataAccess::runquery("
-		select s.* ,concat_ws(' ',fname, lname,CompanyName) fromPerson
+		select s.* ,concat_ws(' ',p1.fname, p1.lname, p1.CompanyName) fromPerson
+		,concat_ws(' ',p2.fname, p2.lname, p2.CompanyName) toPerson
 		from OFC_send s
-			join BSC_persons on(PersonID=FromPersonID)
+			join BSC_persons p1 on(p1.PersonID=FromPersonID)
+			join BSC_persons p2 on(p2.PersonID=ToPersonID)
 		where LetterID=? AND SendComment<>'' AND SendComment is not null
 		group by FromPersonID,SendComment
 		order by SendID desc", 

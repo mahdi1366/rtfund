@@ -83,6 +83,7 @@ $dg = new sadaf_datagrid("dg", $js_prefix_address . "letter.data.php?task=GetLet
 		$LetterID, "grid_div");
 
 $dg->addColumn("", "fromPerson", "", true);
+$dg->addColumn("", "toPerson", "", true);
 $dg->addColumn("", "SendDate", "", true);
 
 $col = $dg->addColumn("", "SendComment");
@@ -392,7 +393,7 @@ function LetterInfo(){
 
 LetterInfo.CommentsRender = function(v,p,r){
 	
-	return "<font style=color:gray>" + r.data.fromPerson + "<br>" + 
+	return "<font style=color:gray>" + r.data.fromPerson + " به " + r.data.toPerson + "<br>" +
 		MiladiToShamsi(r.data.SendDate) + "</font><br><br>" + v;
 }
 
