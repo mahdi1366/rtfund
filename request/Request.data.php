@@ -58,6 +58,31 @@ function SaveCustomerRequest(){
         echo '<br>';*/
         $result = $obj->AddReq();
     }
+
+    //-----------  save Letter pic ----------------
+    if(!empty($_FILES['LetterPic']['tmp_name']))
+    {
+        if($_FILES['LetterPic']['size'] > 200000)
+        {
+            echo Response::createObjectiveResponse(false, "حداکثر حجم مجاز فایل 200 کیلوبایت می باشد");
+            die();
+        }
+        $st = preg_split("/\./", $_FILES['LetterPic']['name']);
+        $extension = strtolower($st [count($st) - 1]);
+        if(array_search($extension, array("gif","jpg","jpeg","png")) === false)
+        {
+            echo Response::createObjectiveResponse(false, "فقط موارد زیر برای نوع فایل مجاز می باشد: <br>" .
+                "gif , jpg , jpeg , png");
+            die();
+        }
+        if(!empty($_FILES['LetterPic']['tmp_name']))
+        {
+            PdoDataAccess::runquery_photo("update request set LetterPic=:pdata where IDReq=:p",
+                array(":pdata" => fread(fopen($_FILES['LetterPic']['tmp_name'], 'r' ),$_FILES['LetterPic']['size'])),
+                array(":p" => $obj->IDReq));
+        }
+    }
+
     echo Response::createObjectiveResponse($result, !$result ? ExceptionHandler::GetExceptionsToString() : "");
 
 }

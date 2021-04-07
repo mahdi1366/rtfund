@@ -188,6 +188,10 @@ function NewServiceRequest(){
                     itemId : "InformationDesc",
                     disabled : true,
                     width : 350
+                },{
+                    xtype : "filefield",
+                    name : "LetterPic",
+                    fieldLabel : "تصویر نامه"
                 }
 			/*,{
 				xtype : "button",
@@ -200,26 +204,7 @@ function NewServiceRequest(){
                 text : "ذخیره",
                 iconCls : "arrow_left",
                 handler : function(btn){
-                    var data = this.up('form').getForm();
-                    Ext.Ajax.request({
-                        methos : "post",
-                        url : "../request/" + "Request.data.php?task=SaveCustomerRequest",
-                        params : data.getValues(),
-                        success : function(response){
-                            result = Ext.decode(response.responseText);
-                            if(result.success)
-                            {
-                                NewServiceRequestObject.planFS.getForm().reset();
-                                Ext.MessageBox.alert("Success", "عملیات مورد نظر با موفقیت شد");
-                                /*framework.CloseTab(NewAlterPersonObject.TabID);*/
-                                /*framework.OpenPage("plan/plan/PlanInfo.php", "جداول اطلاعاتی طرح", {
-                                    MenuID : NewAlterPersonObject.MenuID,
-                                    PlanID : result.data});*/
-                            }
-                            else
-                                Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
-                        }
-                    });
+                    NewServiceRequestObject.SaveData();
                 }
             }]
 		});
@@ -266,7 +251,28 @@ NewServiceRequest.OperationRender = function(v,p,record){
 }
 
 NewServiceRequestObject = new NewServiceRequest();
+NewServiceRequest.prototype.SaveData = function() {
 
+    this.planFS.getForm().submit({
+        methos : "post",
+        IsUpload : true,
+        url : "../request/" + "Request.data.php?task=SaveCustomerRequest",
+        /*params : data.getValues(),*/
+        success : function(form,result){
+            resultant = Ext.decode(result.response.responseText);
+            console.log(result.response);
+            if(resultant.success)
+            {
+                NewServiceRequestObject.planFS.getForm().reset();
+                Ext.MessageBox.alert("","اطلاعات با موفقیت ذخیره شد");
+
+            }
+            else
+                Ext.MessageBox.alert("Error", "عملیات مورد نظر با شکست مواجه شد");
+        }
+
+    });
+}
 NewServiceRequest.prototype.SaveNewServiceRequest = function(){
 
 	mask = new Ext.LoadMask(Ext.getCmp(this.TabID), {msg:'در حال ذخيره سازي...'});

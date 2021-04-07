@@ -25,6 +25,7 @@ class request extends PdoDataAccess{
     public $referPersonID;
     public $referDesc;
     public $Poll;
+    public $LetterPic;
 
 	function __construct($IDReq = "") {
         $this->DT_referalDate = DataMember::CreateDMA(DataMember::DT_DATE);
@@ -83,7 +84,7 @@ class request extends PdoDataAccess{
         return true;
     }
 
-    static function SelectAll($where = "", $param = array(), $order= ""){
+    /*static function SelectAll($where = "", $param = array(), $order= ""){
 
         return PdoDataAccess::runquery_fetchMode("
         select tTable.*, askerName, askerMob from 
@@ -94,6 +95,19 @@ class request extends PdoDataAccess{
 				left join BSC_persons b using(PersonID)) AS fTable
 				left join BSC_persons b ON fTable.referPersonID = b.PersonID) AS tTable
 				left join askerperson a ON tTable.askerID = a.askerID
+				
+			where " . $where . $order , $param);
+    }*/
+
+    static function SelectAll($where = "", $param = array(), $order= ""){
+
+        return PdoDataAccess::runquery_fetchMode("
+        select f.*, askerName, askerMob, concat_ws(' ',b1.fname, b1.lname, b1.CompanyName) fullname , b1.mobile MobCustomer
+        , concat_ws(' ',b2.fname, b2.lname, b2.CompanyName) refername  , null LetterPic      	
+			from request f 
+				left join BSC_persons b1 using(PersonID)
+				left join BSC_persons b2 ON (f.referPersonID = b2.PersonID)
+				left join askerperson a using (askerID)
 				
 			where " . $where . $order , $param);
     }

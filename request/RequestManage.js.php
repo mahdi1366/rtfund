@@ -246,6 +246,12 @@ function Request()
         "cursor:pointer;width:100%;height:16'></div>";
     }
 
+    Request.LetterPicRender = function(v,p,record){
+    return "<div  title='تصویر نامه' class='info2' " +
+    "onclick='Request.ShowFile(" + record.data.IDReq + ");' " +
+    "style='background-repeat:no-repeat;background-position:center;" +
+    "cursor:pointer;width:16px;height:16;float:right'></div>";
+    }
 Request.OpenLetter = function(LetterID){
 
     framework.OpenPage('/office/letter/LetterInfo.php','مشخصات نامه',
@@ -259,6 +265,10 @@ Request.OpenLetter = function(LetterID){
 
 }
 
+    Request.ShowFile = function(IDReq){
+
+    window.open("/request/showImage.php?IDReq=" + IDReq);
+    }
     Request.prototype.Deleting = function()
     {
         var record = this.grid.getSelectionModel().getLastSelected();

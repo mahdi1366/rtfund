@@ -42,6 +42,11 @@ $col->renderer ="function(v){return (v=='1') ? 'ضعیف' : (v=='2') ? 'متوس
 /*$col=$dg->addColumn("جنسیت","sex","string");
 $col->renderer ="function(v){return (v=='MALE') ? 'مرد' : (v=='FEMALE') ? 'زن' : '' ;}";*/
 
+$col = $dg->addColumn('تصویرنامه درخواست', 'LetterPic', '');
+$col->renderer = "Request.LetterPicRender";
+$col->width = 70;
+$col->align = "center";
+
 $col = $dg->addColumn('عملیات', '', 'string');
 $col->renderer = "Request.OperationRender";
 $col->width = 50;
@@ -60,7 +65,7 @@ $dg->addObject("RequestObject.FilterObj");
 $dg->EnableSearch = true;
 $dg->height = 500;
 $dg->pageSize = 15;
-$dg->width = 880;
+$dg->width = 950;
 /*$dg->autoExpandColumn = "PID";*/
 $dg->DefaultSortField = "IDReq";
 $dg->DefaultSortDir = "desc";
