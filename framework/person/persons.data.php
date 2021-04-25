@@ -344,7 +344,7 @@ function ConfirmPendingPerson(){
         die();
     }else{
         require_once 'sms.php';
-        $context = 'کاربر گرامی: ثبت نام شما با موفقیت انجام گردید. صندوق پژوهش و فناوری خراسان';
+        $context = 'کاربر گرامی: ثبت نام شما با موفقیت انجام گردید. شما می توانید از زبانه درخواست ارایه خدمت، تصویر نامه درخواست به همراه معرفی نامه/نامه کارفرمای خود را بارگزاری نمایید. صندوق پژوهش و فناوری خراسان';
         $resultant = ariana2_sendSMS($mobile, $context, "number", $SendError);
         if(!$resultant)
         {
