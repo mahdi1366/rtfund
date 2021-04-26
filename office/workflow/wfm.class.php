@@ -698,7 +698,8 @@ class WFM_FlowRows extends PdoDataAccess {
 						else
 						{
 							$SendError = "";
-							$context = "ثبت نام شما در پورتال " . SoftwareName . " تایید گردید";
+							/*$context = "ثبت نام شما در پورتال " . SoftwareName . " تایید گردید";*/
+   $context = "ثبت نام شما در پورتال " . SoftwareName . " تایید گردید. شما می توانید از زبانه درخواست ارایه خدمت، تصویر نامه درخواست به همراه معرفی نامه/نامه کارفرمای خود را بارگذاری نمایید. ";
 							$result = ariana2_sendSMS($personObj->mobile, $context, "number", $SendError);
 							if(!$result)
 								ExceptionHandler::PushException ("ارسال پیامک به دلیل خطای زیر انجام نگردید" . "[" . $SendError . "]");
@@ -709,7 +710,38 @@ class WFM_FlowRows extends PdoDataAccess {
 		
 		return true;
 	}
-	
+    static function RejectObjectFlow($ObjectType, $ObjectID, $ObjectID2, $pdo = null){
+
+        switch($ObjectType)
+        {
+            case "process":
+                switch($ObjectID)
+                {
+                    case PROCESS_REGISTRATION :
+                        /*PdoDataAccess::runquery("update BSC_persons set IsActive='PENDING' where PersonID=?",
+                            array($ObjectID2));*/
+                        require_once 'sms.php';
+                        require_once '../../framework/person/persons.class.php';
+                        $personObj = new BSC_persons($ObjectID2);
+                        if($personObj->mobile == "")
+                        {
+                            ExceptionHandler::PushException ("ارسال پیامک به دلیل عدم تکمیل شماره پیامک مشتری انجام نگردید");
+                        }
+                        else
+                        {
+                            $SendError = "";
+                            $context = "ثبت نام شما در پورتال " . SoftwareName . " تایید نگردید. لطفا با مراجعه به پرتال اطلاعات را تکمیل نمایید.";
+                            $result = ariana2_sendSMS($personObj->mobile, $context, "number", $SendError);
+                            if(!$result)
+                                ExceptionHandler::PushException ("ارسال پیامک به دلیل خطای زیر انجام نگردید" . "[" . $SendError . "]");
+                        }
+                        return true;
+                }
+        }
+
+        return true;
+
+    }
 	function EditFlowRow($pdo = null) {
 		
 		if (parent::update("WFM_FlowRows", $this, " RowID=:did", array(":did" => $this->RowID), $pdo) === false)

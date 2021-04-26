@@ -605,7 +605,14 @@ function ChangeStatus(){
 		}
 		$pdo->commit();
 	}
-	
+
+    if($newObj->ActionType == "REJECT"){
+        if ($mode == "REJECT"){
+            $result = WFM_FlowRows::RejectObjectFlow($FlowObj->_ObjectType,
+                $newObj->ObjectID, $newObj->ObjectID2, $pdo);
+        }
+    }
+
 	echo Response::createObjectiveResponse($errors == "", $errors);
 	die();
 }
