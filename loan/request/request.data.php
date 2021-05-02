@@ -89,6 +89,7 @@ switch($task)
 	case "ComputeManualInstallments":
 	case "selectBackPayComputes":
 	case "CustomerDefrayRequest":
+
     case "SelectAllLegalActions":  /*new added*/
     case "SaveLegalActions":  /*new added*/
     case "DeleteLegalActions":  /*new added*/
