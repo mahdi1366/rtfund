@@ -30,7 +30,10 @@ $page_rpg->addColumn("زیرواحد سرمایه گذار", "SubDesc");
 $col = $page_rpg->addColumn("تاریخ درخواست", "ReqDate");
 $col->type = "date";	
 $col = $page_rpg->addColumn("تاریخ خاتمه", "EndReqDate");
-$col->type = "date";	
+$col->type = "date";
+$col = $page_rpg->addColumn("تاریخ اولین پرداخت", "FirstPayDate");
+$col->type = "date";
+
 $page_rpg->addColumn("سند خاتمه", "EndDocNo");
 $page_rpg->addColumn("مبلغ درخواست", "ReqAmount");
 $page_rpg->addColumn("وام بالاعوض", "IsFree", "IsFreeRender");
@@ -151,6 +154,13 @@ function MakeWhere(&$where, &$pay_where, &$whereParam){
 			case "toEndReqDate":
 				$value = DateModules::shamsi_to_miladi($value, "-");
 				break;
+
+            case "fromFirstPayDate": //new added
+            case "toFirstPayDate":   //new added
+                $prefix = "t_pay.";
+                $value = DateModules::shamsi_to_miladi($value, "-");
+                break;
+
 			case "fromReqAmount":
 			case "toReqAmount":
 			case "fromPartAmount":
@@ -203,6 +213,8 @@ function GetData($mode = "list"){
 				p2.email,
 				p2.WebSite,
 				
+				t_pay.FirstPayDate,
+				
 				doc.EndReqDate,
 				doc.EndDocNo,
 
@@ -243,7 +255,7 @@ function GetData($mode = "list"){
 			) doc on(r.RequestID=doc.RequestID)
 
 			left join (
-				select RequestID,sum(PayAmount) SumPayments 
+				select RequestID,sum(PayAmount) SumPayments , min(PayDate) FirstPayDate
 				from LON_payments p
 				join LON_PayDocs d on(p.PayID=d.PayID)
 				where 1=1 $pay_where
@@ -384,6 +396,8 @@ function ListData($IsDashboard = false){
 	$rpg->addColumn("وام بالاعوض", "IsFree", "IsFreeRender");
 	$rpg->addColumn("تاریخ خاتمه", "EndReqDate", "ReportDateRender");
 	$rpg->addColumn("سند خاتمه", "EndDocNo");
+
+    $rpg->addColumn("تاریخ اولین پرداخت", "FirstPayDate", "ReportDateRender");
 	
 	$rpg->addColumn("مشتری", "LoanFullname");
 	$rpg->addColumn("شماره پرونده", "PackNo");	
@@ -805,6 +819,14 @@ function LoanReport_total()
 			name : "toEndReqDate",
 			fieldLabel : "تا تاریخ"
 		},{
+            xtype : "shdatefield",
+            name : "fromFirstPayDate",
+            fieldLabel : "تاریخ اولین پرداخت از"
+        },{
+            xtype : "shdatefield",
+            name : "toFirstPayDate",
+            fieldLabel : "تا تاریخ"
+        },{
 			xtype : "shdatefield",
 			name : "EffectiveDate",
 			fieldLabel : "تاریخ موثر",
