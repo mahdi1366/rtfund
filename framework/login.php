@@ -611,8 +611,8 @@ $index = rand(0, count($pics)-1);
 						<input type="radio" id="isReal" name="IsReal" value="YES" onclick="ChangePersonType(this);" checked> شخص حقیقی
 						<input type="radio" id="noReal" name="IsReal" value="NO" onclick="ChangePersonType(this);" value="LEGAL"> شخص حقوقی
 					</div>
-					<input type="text" name="fname" class="textfield2" id="fname" placeholder="...نام" required="required" style="text-align: right;" dir="rtl"/>
-					<input type="text" name="lname" class="textfield2" id="lname" placeholder="...نام خانوادگی" required="required" style="text-align: right;" dir="rtl"/>
+					<input type="text" name="fname" onkeypress="return (event.charCode > 1575)" class="textfield2" id="fname" placeholder="...نام" required="required" style="text-align: right;" dir="rtl"/>
+					<input type="text" name="lname" onkeypress="return (event.charCode > 1575)" class="textfield2" id="lname" placeholder="...نام خانوادگی" required="required" style="text-align: right;" dir="rtl"/>
 					<input type="text" name="CompanyName" class="textfield2" id="CompanyName" style="display:none;text-align: right;" placeholder="نام شرکت ..." dir="rtl"/>
 					<input type="text" name="mobile" id="mobile" class="textfield2" placeholder="تلفن همراه ..." required="required" dir="ltr"/>
 					<input type="email" name="email" id="email" class="textfield2" placeholder="پست الکترونیک ..." required="required" dir="ltr"/>
