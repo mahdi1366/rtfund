@@ -103,7 +103,7 @@ function GetBudgetTree() {
 	$nodes = PdoDataAccess::runquery("
 			select * from ACC_budgets  where IsActive='YES'
 			order by ParentID,BudgetDesc");
-	$returnArr = TreeModulesclass::MakeHierarchyArray($nodes, "ParentID", "BudgetID", "BudgetDesc", true);
+	$returnArr = TreeModulesclass::MakeHierarchyArrayNew($nodes, "ParentID", "BudgetID", "BudgetDesc", "OperationalDef", true);
 	//print_r(ExceptionHandler::PopAllExceptions());
 	echo json_encode($returnArr);
 	die();
@@ -270,7 +270,7 @@ function GetBudgetArchiveTree() {
     $nodes = PdoDataAccess::runquery("
 			select * from ACC_BudgetsArchive  where CycleID=" . $cycleid . "
 			order by ParentID,BudgetDesc");
-    $returnArr = TreeModulesclass::MakeHierarchyArray($nodes, "ParentID", "BudgetArchiveID", "BudgetDesc", true);
+    $returnArr = TreeModulesclass::MakeHierarchyArrayNew($nodes, "ParentID", "BudgetArchiveID", "BudgetDesc", "OperationalDef", true);
     //print_r(ExceptionHandler::PopAllExceptions());
     echo json_encode($returnArr);
     die();
