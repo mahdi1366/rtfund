@@ -69,7 +69,7 @@ class TreeModulesclass
 			$node["id"] = $node[$idFieldName];
 			/*$node["text"] = $node[$textFieldName];*/
 			$title ="'". $node[$textFieldDesc] ."'" ;
-			$node["text"] = '<span title='.$title.'>' .$node[$textFieldName]. '</span>';
+			$node["text"] = '<span data-qtip='.$title.'>' .$node[$textFieldName]. '</span>';
 			$node["parentId"] = $node[$parentFieldName];
 			//------------------------------------------------------------------
 
