@@ -108,7 +108,7 @@ function SaveDocNotReal() {
 	$obj->ObjectID = $_POST["ObjectID"];
 	$obj->ObjectID2 = isset($_POST["ObjectID2"]) ? $_POST["ObjectID2"] : "0";
 	$obj->ObjectType = $_POST["ObjectType"];
-	$obj->DocType = 141;
+	$obj->DocType = 144;
 
 	if($obj->DocMode == "ELEC")
 		$obj->place = PDONULL;
@@ -239,7 +239,7 @@ function SaveDocReal() {
 	$obj->ObjectID = $_POST["ObjectID"];
 	$obj->ObjectID2 = isset($_POST["ObjectID2"]) ? $_POST["ObjectID2"] : "0";
 	$obj->ObjectType = $_POST["ObjectType"];
-	$obj->DocType = 141;
+	$obj->DocType = 144;
 
 	if($obj->DocMode == "ELEC")
 		$obj->place = PDONULL;
