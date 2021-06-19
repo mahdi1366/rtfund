@@ -24,6 +24,9 @@ $col = $page_rpg->addColumn("تاریخ نامه معرفی", "LetterDate");
 $col->type = "date";
 $page_rpg->addColumn("وضعیت", "StepDesc");
 $page_rpg->addColumn("نسخه", "version");
+$page_rpg->addColumn("مبلغ سپرده", "WAR_SepordeAmount");//new added
+$page_rpg->addColumn("مبلغ کارمزد", "WAR_WageAmount");//new adde
+$page_rpg->addColumn("کد سپاس", "SepasCode");//new added
 
 function MakeWhere(&$where, &$whereParam){
 
@@ -85,7 +88,7 @@ function MakeWhere(&$where, &$whereParam){
 	}
 }	
 		
-function GetData(){
+/*function GetData(){
 	
 	$where = "1=1";
 	$whereParam = array();
@@ -110,6 +113,57 @@ function GetData(){
 	$query .= $group == "" ? " order by r.RequestID" : " order by " . $group;
 	
 	return PdoDataAccess::runquery($query, $whereParam);
+}*/
+
+function GetData(){
+
+    $where = "1=1";
+    $whereParam = array();
+    $userFields = ReportGenerator::UserDefinedFields();
+    MakeWhere($where, $whereParam);
+
+    $query = "select r.* , concat_ws(' ',fname,lname,CompanyName) fullname, sp.StepDesc,
+				bf.InfoDesc TypeDesc ,
+				BranchName".
+        ($userFields != "" ? "," . $userFields : "")
+        ."
+			from WAR_requests r 
+				join (select RefRequestID,max(RequestID) RequestID from WAR_requests group by RefRequestID)t
+					using(RequestID,RefRequestID)
+				left join BSC_branches using(BranchID)
+				left join BSC_persons p using(PersonID)
+				left join BaseInfo bf on(bf.TypeID=74 AND InfoID=r.TypeID)
+				join WFM_FlowSteps sp on(sp.FlowID=" . FLOWID_WARRENTY . " AND sp.StepID=r.StatusID)
+				
+			where " . $where;
+
+    $group = ReportGenerator::GetSelectedColumnsStr();
+    $query .= $group == "" ? " group by r.RequestID" : " group by " . $group;
+    $query .= $group == "" ? " order by r.RequestID" : " order by " . $group;
+
+    $temp = PdoDataAccess::runquery($query, $whereParam);
+    $count=count($temp);
+    if($_SESSION["USER"]["UserName"] == "admin")
+    {
+        //echo PdoDataAccess::GetLatestQueryString();
+        //print_r(ExceptionHandler::PopAllExceptions());
+    }
+    //---------------------- Warrenty Info --------------------------
+    for ($i=0; $i<$count; $i++ ){
+        if($temp[$i]['RequestID'] > 0)
+        {
+            require_once getenv("DOCUMENT_ROOT") . '/loan/warrenty/request.class.php';
+            $warObj = new WAR_requests($temp[$i]['RequestID']);
+            $days = DateModules::GDateMinusGDate($warObj->EndDate,$warObj->StartDate);
+            $days -= 1;
+            $TotalWage = round($days*$warObj->amount*(1-$warObj->SavePercent/100)*$warObj->wage/36500);
+
+            $temp[$i]["WAR_WageAmount"] = $TotalWage;
+            $temp[$i]["WAR_SepordeAmount"] = $warObj->amount*$warObj->SavePercent/100;
+        }
+    }
+    //------------------------------------------------------------------
+    return $temp;
 }
 
 function ListDate($IsDashboard = false){
@@ -135,6 +189,9 @@ function ListDate($IsDashboard = false){
 	$rpg->addColumn("تاریخ نامه معرفی", "LetterDate", "ReportDateRender");
 	$rpg->addColumn("وضعیت", "StepDesc");
 	$rpg->addColumn("نسخه", "version", "RefReasonRender");
+    $rpg->addColumn("مبلغ سپرده", "WAR_SepordeAmount", "ReportMoneyRender");//new added
+    $rpg->addColumn("مبلغ کارمزد", "WAR_WageAmount", "ReportMoneyRender");//new adde
+    $rpg->addColumn("کد سپاس", "SepasCode");//new added
 	
 	function RefReasonRender($row, $value){
 		switch($value)
