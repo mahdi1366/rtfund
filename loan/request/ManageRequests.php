@@ -47,6 +47,7 @@ $col->width = 100;
 
 $col = $dg->addColumn("منبع", "ReqFullname");
 $col->width = 100;
+$col->renderer = "function(v,p,r){return v == '' ? 'داخلی' : v;}";
 
 $col = $dg->addColumn("معرفی کننده", "ReqFullname");
 $col->width = 100;
