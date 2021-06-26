@@ -111,8 +111,14 @@ function DeleteLegalActions(){
 }
 function SaveLegalActions(){
 
+	$temp = LON_events::Get("AND RequestID=?", array($_POST["RequestID"]));
+
+	$res = $temp->fetchAll();
+	$endRes = end($res);
+
     $obj = new LON_legalActions();
     PdoDataAccess::FillObjectByArray($obj, $_POST);
+	$obj->actionTaken = $endRes['EventTitle'];
 
     if(empty($obj->legalActionID))
     {
