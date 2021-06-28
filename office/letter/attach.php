@@ -49,6 +49,12 @@ $col = $dg->addColumn("تاریخ ثبت", "RegDate", GridColumn::ColumnType_dat
 $col->editor = ColumnEditor::SHDateField();
 $col->width = 80;
 
+$col = $dg->addColumn("مشاهده ذینفع", "IsHide");
+$col->editor = ColumnEditor::CheckField("","NO");
+$col->renderer = "function(v,p,r){return v == 'NO' ? '<span style=color:green;font-weight:bold >√</span>' : ''}";
+$col->width = 100;
+$col->align = "center";
+
 $col = $dg->addColumn("فایل", "HaveFile", "");
 $col->renderer = "function(v,p,r){return ManageDocument.FileRender(v,p,r)}";
 $col->align = "center";
@@ -65,7 +71,7 @@ $dg->addButton("", "دانلود کلیه فایل ها", "archive", "ManageDocu
 
 $dg->emptyTextOfHiddenColumns = true;
 $dg->height = 310;
-$dg->width = 600;
+$dg->width = 730;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
 $dg->DefaultSortField = "DocTypeDesc";
@@ -94,7 +100,7 @@ function ManageDocument(){
 	{
 		this.formPanel = new Ext.form.Panel({
 			renderTo: this.get("MainForm"),      
-			width : 600,
+			width : 730,
 			style : "margin-top:10px",
 			bodyPadding: '8 0 8 0',
 			defaults :{
@@ -115,13 +121,21 @@ function ManageDocument(){
 				name : "FileType",
 				style : "margin-right:20px"
 			},{
+                xtype : "checkbox",
+                name : "IsHide",
+                /*colspan : 2,*/
+                boxLabel : "مشاهده ذینفع",
+                inputValue : "NO"
+            },{
 				xtype : "button",
+                width : 70,
 				text : "ذخیره",
 				style : "border-width:1px;",
 				iconCls : "save",
 				handler : function(){ ManageDocumentObject.SaveDocument(); }
 			},{
 				xtype : "button",
+                width : 70,
 				text : "پاکن",
 				style : "border-width:1px;",
 				iconCls : "clear",

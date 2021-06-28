@@ -329,6 +329,7 @@ function SaveDocument() {
 	
 	$obj = new DMS_documents();
 	PdoDataAccess::FillObjectByArray($obj, $_POST);
+	$obj->IsHide = !isset($_POST['IsHide'])  ? "YES" : "NO"; // new added
 	$obj->ObjectID = $_POST["ObjectID"];
 	$obj->ObjectID2 = isset($_POST["ObjectID2"]) ? $_POST["ObjectID2"] : "0";
 	$obj->ObjectType = $_POST["ObjectType"];

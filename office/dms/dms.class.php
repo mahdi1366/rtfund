@@ -19,9 +19,11 @@ class DMS_documents extends PdoDataAccess
 	public $RejectDesc;
 	public $DocMode;
 	public $place;
+	public $RegDate;
+	public $IsHide;
 			
 	function __construct($DocumentID = "") {
-		
+		$this->DT_RegDate = DataMember::CreateDMA(DataMember::DT_DATE);
 		if($DocumentID != "")
 			PdoDataAccess::FillObject ($this, "select * from DMS_documents where DocumentID=?", array($DocumentID));
 	}
@@ -172,7 +174,8 @@ left join ofc_send os on(os.LetterID=d.ObjectID)
 	
 	function AddDocument(){
 		$this->RegPersonID = $_SESSION["USER"]["PersonID"];
-		
+		$this->RegDate = PDONOW;
+
 	 	if(!parent::insert("DMS_documents",$this))
 			return false;
 		$this->DocumentID = parent::InsertID();
