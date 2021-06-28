@@ -37,7 +37,12 @@ function SelectAll(){
 	{
 		$where .= " AND RegPersonID=" . $_SESSION["USER"]["PersonID"];
 	}
-	
+
+	if(!($_REQUEST["IsPortal"]))
+	{
+		$where .= " AND d.IsHide= 'NO' ";
+	}
+
 	if(!empty($_REQUEST["ObjectType"]) && $_REQUEST["ObjectType"] == "package")
 		$temp = DMS_documents::SelectFullPackage($_REQUEST["ObjectID"]);
     else if (!empty($_REQUEST["ObjectType"]) && $_REQUEST["ObjectType"] == "letterAttach")
