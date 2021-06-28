@@ -20,6 +20,7 @@ $DelAccess = true;
 /*$DelAccess = $LetterObj->IsSigned == "YES" ? false : true;*/
 $DelAccess = $SendID != "0" ? true : $DelAccess;
 $AddAccess = session::IsPortal() ? false : $AddAccess;
+$IsPortal = session::IsPortal() ? 'NO' : 'YES';
 
 //------------------------------------------------------
 /*$dg = new sadaf_datagrid("dg", $js_prefix_address . "../dms/dms.data.php?" .
@@ -27,7 +28,7 @@ $AddAccess = session::IsPortal() ? false : $AddAccess;
 		($SendID > 0 ? "&checkRegPerson=true&ObjectID2=" . $SendID : ""), "grid_div");*/
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "../dms/dms.data.php?" .
     "task=SelectAll&ObjectType=letterAttach&ObjectID=" . $LetterID .
-    ($SendID > 0 ? "&checkRegPerson=true&ObjectID2=" . $SendID : "&IsPortal=". $AddAccess .""), "grid_div");
+    ($SendID > 0 ? "&checkRegPerson=true&ObjectID2=" . $SendID : "&IsPortal=". $IsPortal .""), "grid_div");
 
 $dg->addColumn("", "RowID", "", true);
 $dg->addColumn("", "DocumentID", "", true);

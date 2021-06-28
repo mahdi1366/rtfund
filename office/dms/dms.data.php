@@ -38,7 +38,7 @@ function SelectAll(){
 		$where .= " AND RegPersonID=" . $_SESSION["USER"]["PersonID"];
 	}
 
-	if(!($_REQUEST["IsPortal"]))
+	if(isset($_REQUEST["IsPortal"]) && $_REQUEST["IsPortal"] == 'NO')
 	{
 		$where .= " AND d.IsHide= 'NO' ";
 	}
