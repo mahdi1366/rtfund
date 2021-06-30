@@ -10,6 +10,8 @@ require_once inc_component;
 $dg = new sadaf_datagrid("dg", $js_prefix_address . "global.data.php?task=CustomerLetters" , "grid_div");
 
 $dg->addColumn("", "LetterID", "", true);
+$dg->addColumn("", "RowID", "", true); //new added
+$dg->addColumn("", "IsSeen", "", true); //new added
 $dg->addColumn("", "LetterDate", "", true);
 
 $col = $dg->addColumn("<img src=/office/icons/LetterType.gif>", "LetterType", "");
@@ -61,6 +63,12 @@ function PortalLetters(){
 	
 	this.grid = <?= $grid ?>;
 	this.grid.render(this.get("DivPanel"));
+    this.grid.getView().getRowClass = function(record, index)
+    {
+        if(record.data.IsSeen == "NO"){
+            return "yellowRow";
+        }
+    }
 }
 
 PortalLetters.LetterTypeRender = function(v,p,r){
@@ -94,7 +102,8 @@ PortalLetters.prototype.LetterInfo = function(){
 			height : 580,
 			closeAction : "hide",
 			loader : {
-				url : "/office/letter/LetterInfo.php?ReadOnly=true",
+				/*url : "/office/letter/LetterInfo.php?ReadOnly=true",*/
+                url : "/office/letter/LetterInfo.php?ReadOnly=true&IsSeen=true&RowID="+ this.grid.getSelectionModel().getLastSelected().data.RowID ,
 				scripts : true
 			},
 			buttons : [{
