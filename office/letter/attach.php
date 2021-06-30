@@ -78,6 +78,7 @@ $dg->height = 310;
 $dg->width = 730;
 $dg->EnableSearch = false;
 $dg->EnablePaging = false;
+$dg->EnableRowNumber = true;
 $dg->DefaultSortField = "DocTypeDesc";
 $dg->autoExpandColumn = "DocDesc";
 $grid = $dg->makeGrid_returnObjects();
