@@ -331,6 +331,43 @@ Request.OpenLetter = function(LetterID){
 }
 
 
+    Request.prototype.Documents = function(ObjectType){
+
+    record = this.grid.getSelectionModel().getLastSelected();
+    if(!this.documentWin)
+{
+    this.documentWin = new Ext.window.Window({
+    width : 920,
+    height : 440,
+    modal : true,
+    autoScroll:true,
+    bodyStyle : "background-color:white;padding: 4px 4px 4px 4px",
+    closeAction : "hide",
+    loader : {
+    url : "../../office/dms/documents.php",
+    scripts : true
+},
+    buttons :[{
+    text : "بازگشت",
+    iconCls : "undo",
+    handler : function(){this.up('window').hide();}
+}]
+});
+    Ext.getCmp(this.TabID).add(this.documentWin);
+}
+
+    this.documentWin.show();
+    this.documentWin.center();
+
+    this.documentWin.loader.load({
+    scripts : true,
+    params : {
+    ExtTabID : this.documentWin.getEl().id,
+    ObjectType : ObjectType,
+    ObjectID : record.data.IDReq
+}
+});
+}
 
 
     Request.OperationRender = function(value, p, record){
@@ -349,6 +386,9 @@ Request.OpenLetter = function(LetterID){
 
         op_menu.add({text: 'چک لیست',iconCls: 'check',
         handler : function(){ return RequestObject.ShowCheckList(); }});
+
+        op_menu.add({text: 'مدارک تخصصی',iconCls: 'attach',
+        handler : function(){ return RequestObject.Documents('ReqProfessionalDoc'); }});
 
         /*if(record.data.StatusID == "1")
     {

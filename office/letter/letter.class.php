@@ -468,6 +468,7 @@ class OFC_LetterCustomers extends OperationClass{
 	public $PersonID;
 	public $IsHide;
 	public $LetterTitle;
+	public $IsSeen;
 }
 
 class OFC_templates extends OperationClass{

@@ -83,6 +83,11 @@ switch($ObjectType)
     case "writs": // new added for ahkam in modiriyat personel
     case "LegalActions": // new added for eghdamate hoghoghi
 	case "asset":
+    case "extInteractions":
+    case "IssuanceForm":
+    case "PersonBasicDoc":        //new added for basic doc in portal
+    case "ReqProfessionalDoc":    //new added for professional doc in my request in portal
+
 		$access = true;
 		break;
 	//......................................................

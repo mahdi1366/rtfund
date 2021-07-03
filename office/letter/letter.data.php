@@ -980,7 +980,7 @@ function RemoveLetterFromFolder(){
 function GetLetterCustomerss(){
 
 	$dt = PdoDataAccess::runquery("
-		select RowID,LetterID,IsHide,LetterTitle,o.PersonID,concat_ws(' ',CompanyName,fname,lname) fullname 
+		select RowID,LetterID,IsHide,LetterTitle,IsSeen,o.PersonID,concat_ws(' ',CompanyName,fname,lname) fullname 
 		from OFC_LetterCustomers o join BSC_persons using(PersonID)
 		where LetterID=?", array($_REQUEST["LetterID"]));
 	
