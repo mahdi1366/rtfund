@@ -253,7 +253,7 @@ function LetterInfo(){
 			}
 		},{
 			title : "سابقه",
-			hidden : this.IsCustomer,
+			hidden : this.ReadOnly,
 			loader : {
 				url : this.address_prefix + "history.php",
 				method: "POST",
