@@ -992,7 +992,10 @@ function SaveLetterCustomer(){
 	
 	$obj = new OFC_LetterCustomers();
 	PdoDataAccess::FillObjectByJsonData($obj, $_POST["record"]);
-	$obj->IsHide = $obj->IsHide ? "YES" : "NO";
+	if ($obj->IsHide == "")
+		$obj->IsHide = "YES";
+	else
+		$obj->IsHide = $obj->IsHide ? "YES" : "NO";
 	
 	if($obj->RowID == "")
 		$result = $obj->Add();
