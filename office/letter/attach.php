@@ -20,6 +20,7 @@ $DelAccess = true;
 /*$DelAccess = $LetterObj->IsSigned == "YES" ? false : true;*/
 $DelAccess = $SendID != "0" ? true : $DelAccess;
 $AddAccess = session::IsPortal() ? false : $AddAccess;
+if($_SESSION["USER"]["PersonID"] == '2161' || $_SESSION["USER"]["PersonID"] == '2869' || $_SESSION["USER"]["PersonID"] == '2633'){ $EditAccess = true; }else{ $EditAccess = false; }
 $IsPortal = session::IsPortal() ? 'NO' : 'YES';
 
 //------------------------------------------------------
@@ -103,54 +104,100 @@ ManageDocument.prototype = {
 function ManageDocument(){
 	if(this.AddAccess)
 	{
-		this.formPanel = new Ext.form.Panel({
-			renderTo: this.get("MainForm"),      
-			width : 730,
-			style : "margin-top:10px",
-			bodyPadding: '8 0 8 0',
-			defaults :{
-				labelWidth : 70
-			},
-			frame: true,
-			layout : "hbox",
-			items : [{
-				xtype : "textfield",
-				width : 250,
-				fieldLabel : "شرح پیوست",
-				name : "DocDesc"
-			},{
-				xtype : "filefield",
-				width : 200,
-				allowBlank : false,
-				fieldLabel : "فایل مدرک",
-				name : "FileType",
-				style : "margin-right:20px"
-			},{
-                xtype : "checkbox",
-                name : "IsHide",
-                /*colspan : 2,*/
-                boxLabel : "مشاهده ذینفع",
-                inputValue : "NO"
-            },{
-				xtype : "button",
-                width : 70,
-				text : "ذخیره",
-				style : "border-width:1px;",
-				iconCls : "save",
-				handler : function(){ ManageDocumentObject.SaveDocument(); }
-			},{
-				xtype : "button",
-                width : 70,
-				text : "پاکن",
-				style : "border-width:1px;",
-				iconCls : "clear",
-				handler : function(){ ManageDocumentObject.formPanel.getForm().reset(); }
+        if(this.EditAccess){
+            this.formPanel = new Ext.form.Panel({
+                renderTo: this.get("MainForm"),
+                width : 730,
+                style : "margin-top:10px",
+                bodyPadding: '8 0 8 0',
+                defaults :{
+                    labelWidth : 70
+                },
+                frame: true,
+                layout : "hbox",
+                items : [{
+                    xtype : "textfield",
+                    width : 250,
+                    fieldLabel : "شرح پیوست",
+                    name : "DocDesc"
+                },{
+                    xtype : "filefield",
+                    width : 200,
+                    allowBlank : false,
+                    fieldLabel : "فایل مدرک",
+                    name : "FileType",
+                    style : "margin-right:20px"
+                },{
+                    xtype : "checkbox",
+                    name : "IsHide",
+                    /*colspan : 2,*/
+                    boxLabel : "مشاهده ذینفع",
+                    inputValue : "NO"
+                },{
+                    xtype : "button",
+                    width : 70,
+                    text : "ذخیره",
+                    style : "border-width:1px;",
+                    iconCls : "save",
+                    handler : function(){ ManageDocumentObject.SaveDocument(); }
+                },{
+                    xtype : "button",
+                    width : 70,
+                    text : "پاکن",
+                    style : "border-width:1px;",
+                    iconCls : "clear",
+                    handler : function(){ ManageDocumentObject.formPanel.getForm().reset(); }
 
-			},{
-				xtype : "hidden",
-				name : "DocumentID"
-			}]
-		});
+                },{
+                    xtype : "hidden",
+                    name : "DocumentID"
+                }]
+            });
+        }else {
+            this.formPanel = new Ext.form.Panel({
+                renderTo: this.get("MainForm"),
+                width : 730,
+                style : "margin-top:10px",
+                bodyPadding: '8 0 8 0',
+                defaults :{
+                    labelWidth : 70
+                },
+                frame: true,
+                layout : "hbox",
+                items : [{
+                    xtype : "textfield",
+                    width : 250,
+                    fieldLabel : "شرح پیوست",
+                    name : "DocDesc"
+                },{
+                    xtype : "filefield",
+                    width : 200,
+                    allowBlank : false,
+                    fieldLabel : "فایل مدرک",
+                    name : "FileType",
+                    style : "margin-right:20px"
+                },{
+                    xtype : "button",
+                    width : 70,
+                    text : "ذخیره",
+                    style : "border-width:1px;",
+                    iconCls : "save",
+                    handler : function(){ ManageDocumentObject.SaveDocument(); }
+                },{
+                    xtype : "button",
+                    width : 70,
+                    text : "پاکن",
+                    style : "border-width:1px;",
+                    iconCls : "clear",
+                    handler : function(){ ManageDocumentObject.formPanel.getForm().reset(); }
+
+                },{
+                    xtype : "hidden",
+                    name : "DocumentID"
+                }]
+            });
+        }
+
 	}
 	this.grid = <?= $grid ?>;
 	this.grid.render(this.get("div_grid"));
