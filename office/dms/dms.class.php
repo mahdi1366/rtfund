@@ -21,6 +21,7 @@ class DMS_documents extends PdoDataAccess
 	public $place;
 	public $RegDate;
 	public $IsHide;
+
 			
 	function __construct($DocumentID = "") {
 		$this->DT_RegDate = DataMember::CreateDMA(DataMember::DT_DATE);
